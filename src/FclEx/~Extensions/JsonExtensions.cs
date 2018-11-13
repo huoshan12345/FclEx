@@ -51,7 +51,7 @@ namespace FclEx
         }
 
         public static T ToEnum<T>(this JToken token, T defaultVaule = default(T))
-            where T : struct, IConvertible
+            where T : struct, Enum
         {
             return token.ToString().ToEnum(defaultVaule);
         }

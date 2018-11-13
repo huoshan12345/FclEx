@@ -5,7 +5,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageProjectUrl>https://github.com/huoshan12345/FclEx</PackageProjectUrl>
     <PackageTags>extensions;helpers</PackageTags>
-    <Version>1.6.8</Version>
+    <Version>1.6.9</Version>
     <Authors>huoshan12345</Authors>
     <Description>Some basic useful extensions and helpers for C# fundamental class libraries</Description>
     <RepositoryUrl>https://github.com/huoshan12345/FclEx</RepositoryUrl>

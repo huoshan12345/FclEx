@@ -50,8 +50,7 @@ namespace FclEx.Http
 
         public static void ClearCookies(this IHttpService http, Uri uri)
         {
-            var cookies = http.GetCookies(uri);
-            foreach (var cookie in cookies)
+            foreach (var cookie in http.GetCookies(uri))
             {
                 cookie.Expired = true;
             }
@@ -61,6 +60,14 @@ namespace FclEx.Http
         {
             var uri = new Uri(url);
             http.ClearCookies(uri);
+        }
+
+        public static void ClearAllCookies(this IHttpService http)
+        {
+            foreach (var cookie in http.GetAllCookies())
+            {
+                cookie.Expired = true;
+            }
         }
 
         public static void AddCookies(this IHttpService http, IEnumerable<Cookie> cookies, string url = null)
