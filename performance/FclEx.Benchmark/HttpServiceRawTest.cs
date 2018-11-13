@@ -15,17 +15,20 @@ namespace FclEx.Benchmark
     {
         public static IList<string> Urls => new[]
         {
-            "http://www.baidu.com/",
-            "http://www.sina.com.cn/",
-            "https://weibo.com/",
-            "http://www.sohu.com/",
-            "http://www.qq.com/",
+            "https://www.baidu.com/",
+            "https://www.sina.com.cn/",
+            "https://www.sohu.com/",
+            "https://www.qq.com/",
+            "https://www.163.com/",
+            "http://www.ifeng.com/",
+            "https://www.taobao.com/",
+            "https://www.zhihu.com/",
         };
 
         public static IList<IHttpService> Services => new IHttpService[]
         {
-            new HttpClientService(),
             new HttpClientExtService(),
+            new HttpClientService(),
             new LightHttpService()
         };
 
@@ -45,21 +48,30 @@ namespace FclEx.Benchmark
 
         public static async ValueTask RawTest(IHttpService service, IList<HttpReq> reqs, int rounds)
         {
+            var name = service.GetType().SimpleName();
             var before = GC.GetTotalMemory(true);
             var t = await SimpleWatch.DoAsync(async () =>
             {
                 for (var i = 0; i < rounds; i++)
                 {
-                    foreach (var req in reqs)
+                    if (i % 100 == 0 && i > 0)
                     {
-                        var res = await service.ExecuteAsync(req).DonotCapture();
-                        res.ThrowIfError();
+                        Console.WriteLine($"[{name}]: Finished {i} Rounds");
                     }
+
+                    var resList = await reqs.Select(m => service.ExecuteAsync(m)).WhenAll().DonotCapture();
+                    resList.ForEach(m => m.ThrowIfError());
+
+                    //foreach (var req in reqs)
+                    //{
+                    //    var res = await service.ExecuteAsync(req).DonotCapture();
+                    //    res.ThrowIfError();
+                    //}
                 }
             }).DonotCapture();
             var after = GC.GetTotalMemory(true);
-            Console.WriteLine($"[{service.GetType().SimpleName()}]: " +
-                              $"Round: {rounds}, " +
+            Console.WriteLine($"[{name}]: " +
+                              $"Total Round: {rounds}, " +
                               $"Time: {t.TotalSeconds:f2}s, " +
                               $"Memory: {after - before}byte");
         }

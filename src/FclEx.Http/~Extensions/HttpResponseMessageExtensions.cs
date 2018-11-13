@@ -7,13 +7,9 @@ namespace FclEx.Http
 {
     public static class HttpResponseMessageExtensions
     {
-        public static bool IfRedirect(this HttpResponseMessage response)
+        public static bool IsRedirect(this HttpResponseMessage response)
         {
-            var flag = response.StatusCode == HttpStatusCode.Redirect
-                   || response.StatusCode == HttpStatusCode.Moved
-                   || response.StatusCode == HttpStatusCode.SeeOther
-                   || response.StatusCode == HttpStatusCode.RedirectKeepVerb;
-            return flag && response.Headers.Location != null;
+            return response.StatusCode.IsRedirect() && response.Headers.Location != null;
         }
 
         public static Uri GetRedirectUri(this HttpResponseMessage response)
@@ -22,6 +18,16 @@ namespace FclEx.Http
             if (!uri.IsAbsoluteUri)
                 uri = new Uri(response.RequestMessage.RequestUri, uri);
             return uri;
+        }
+
+        public static HttpResponseMessage EnsureSuccess(this HttpResponseMessage httpResponse)
+        {
+            if (!httpResponse.IsSuccessStatusCode)
+            {
+                throw new WebException($"call {httpResponse.RequestMessage.RequestUri} return unsuccessful code: " +
+                                       $"{httpResponse.StatusCode}/{httpResponse.StatusCode.ToInt()}");
+            }
+            return httpResponse;
         }
     }
 }

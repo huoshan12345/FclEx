@@ -111,7 +111,7 @@ namespace FclEx.Http.Services
                 if (httpReq.ReadResultCookie)
                     ReadCookies(response, responseItem);
 
-                while (response.IfRedirect())
+                while (response.IsRedirect())
                 {
                     var uri = response.GetRedirectUri();
                     var req = new HttpRequestMessage(HttpMethod.Get, uri);
@@ -130,7 +130,7 @@ namespace FclEx.Http.Services
                     ReadHeader(response, responseItem);
 
                 if (httpReq.ThrowOnNonSuccessCode)
-                    response.EnsureSuccessStatusCode();
+                    response.EnsureSuccess();
 
                 if (httpReq.ReadResultContent)
                 {

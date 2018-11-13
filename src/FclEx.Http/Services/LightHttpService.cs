@@ -169,7 +169,7 @@ namespace FclEx.Http.Services
                 if (httpReq.ReadResultCookie)
                     ReadCookies(response);
 
-                while (response.IfRedirect())
+                while (response.IsRedirect())
                 {
                     var uri = response.GetRedirectUri();
                     var tempReq = BuildRequest(HttpReq.Get(uri), WebProxy, _cookieContainer);
@@ -189,7 +189,7 @@ namespace FclEx.Http.Services
                     await ReadContent(response, responseItem).DonotCapture();
 
                 if (httpReq.ThrowOnNonSuccessCode)
-                    response.EnsureSuccessStatusCode();
+                    response.EnsureSuccess();
 
                 return responseItem;
             }

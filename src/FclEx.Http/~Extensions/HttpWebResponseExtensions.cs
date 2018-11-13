@@ -5,12 +5,12 @@ namespace FclEx.Http
 {
     public static class HttpWebResponseExtensions
     {
-        public static HttpWebResponse EnsureSuccessStatusCode(this HttpWebResponse httpResponse)
+        public static HttpWebResponse EnsureSuccess(this HttpWebResponse httpResponse)
         {
-            if (httpResponse.StatusCode != HttpStatusCode.Created
-                && httpResponse.StatusCode != HttpStatusCode.OK)
+            if (!httpResponse.StatusCode.IsSuccess())
             {
-                throw new WebException($"call {httpResponse.ResponseUri} return unsuccessful code: {httpResponse.StatusCode}/{httpResponse.StatusCode.ToInt()}");
+                throw new WebException($"call {httpResponse.ResponseUri} return unsuccessful code: " +
+                                       $"{httpResponse.StatusCode}/{httpResponse.StatusCode.ToInt()}");
             }
             return httpResponse;
         }
@@ -23,12 +23,10 @@ namespace FclEx.Http
             return uri;
         }
 
-        public static bool IfRedirect(this HttpWebResponse response)
+        public static bool IsRedirect(this HttpWebResponse response)
         {
-            return response.StatusCode == HttpStatusCode.Redirect
-                   || response.StatusCode == HttpStatusCode.Moved
-                   || response.StatusCode == HttpStatusCode.SeeOther
-                   || response.StatusCode == HttpStatusCode.RedirectKeepVerb;
+            return response.StatusCode.IsRedirect() 
+                   && response.Headers[HttpResponseHeader.Location] != null;
         }
     }
 }
