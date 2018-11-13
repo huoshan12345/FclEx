@@ -10,6 +10,11 @@ namespace FclEx
 {
     public static class StringExtensions
     {
+        public static string StripPrefix(this string text, string prefix)
+        {
+            return text.StartsWith(prefix) ? text.Substring(prefix.Length) : text;
+        }
+
         public static byte[] HexTobytes(this string hex)
         {
             return Enumerable.Range(0, hex.Length / 2)
