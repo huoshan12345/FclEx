@@ -10,22 +10,22 @@ namespace FclEx
     {
         public static Task<ExcuteResult> Ok(this Task<ExcuteResult> @this, Action action)
         {
-            return @this.On(r => r.Success, t => action());
+            return @this.On(r => r.Successful, t => action());
         }
 
         public static Task<ExcuteResult> Error(this Task<ExcuteResult> @this, Action<Exception> action)
         {
-            return @this.On(r => !r.Success, t => action(t.Exception));
+            return @this.On(r => !r.Successful, t => action(t.Exception));
         }
 
         public static Task<ExcuteResult> Ok(this Task<ExcuteResult> @this, Func<Task> action)
         {
-            return @this.On(r => r.Success, t => action());
+            return @this.On(r => r.Successful, t => action());
         }
 
         public static Task<ExcuteResult> Error(this Task<ExcuteResult> @this, Func<Exception, Task> action)
         {
-            return @this.On(r => !r.Success, t => action(t.Exception));
+            return @this.On(r => !r.Successful, t => action(t.Exception));
         }
 
         public static Task<ExcuteResult<T>> Ok<T>(this Task<ExcuteResult<T>> @this, Action<T> action)

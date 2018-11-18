@@ -7,34 +7,30 @@ namespace FclEx.Utils
     {
         public static TimeSpan Do(Action action)
         {
-            var start = DateTime.UtcNow;
+            var watch = ValueStopwatch.StartNew();
             action();
-            var end = DateTime.UtcNow;
-            return end - start;
+            return watch.GetElapsedTime();
         }
 
         public static async Task<TimeSpan> DoAsync(Func<Task> action)
         {
-            var start = DateTime.UtcNow;
+            var watch = ValueStopwatch.StartNew();
             await action().DonotCapture();
-            var end = DateTime.UtcNow;
-            return end - start;
+            return watch.GetElapsedTime();
         }
 
         public static (T Ret, TimeSpan TimeSpan) Do<T>(Func<T> action)
         {
-            var start = DateTime.UtcNow;
+            var watch = ValueStopwatch.StartNew();
             var ret = action();
-            var end = DateTime.UtcNow;
-            return (ret, end - start);
+            return (ret, watch.GetElapsedTime());
         }
 
         public static async Task<(T Ret, TimeSpan TimeSpan)> DoAsync<T>(Func<Task<T>> action)
         {
-            var start = DateTime.UtcNow;
+            var watch = ValueStopwatch.StartNew();
             var ret = await action().DonotCapture();
-            var end = DateTime.UtcNow;
-            return (ret, end - start);
+            return (ret, watch.GetElapsedTime());
         }
     }
 }

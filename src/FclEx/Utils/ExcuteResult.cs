@@ -6,35 +6,52 @@ namespace FclEx.Utils
 {
     public struct ExcuteResult
     {
-        public ExcuteResult(Exception ex) : this(-1, ex)
+        public bool Successful => Code == 0;
+        public int Code { get; }
+        public Exception Exception { get; }
+        public TimeSpan Elapsed { get; }
+
+        public static ExcuteResult Success { get; } = new ExcuteResult(TimeSpan.Zero);
+
+        public static ExcuteResult NotImplemented { get; }
+            = new ExcuteResult(-2, new NotImplementedException("this function is not implemented"));
+
+        internal ExcuteResult(int code, Exception ex)
         {
+            Code = Check.NotEqual(code, 0, nameof(code));
+            Exception = Check.NotNull(ex, nameof(ex));
+            Elapsed = default;
         }
 
-        public ExcuteResult(int code, Exception ex)
-        {
-            Code = code;
-            Exception = code == 0 ? null : ex;
-        }
-
-        public ExcuteResult(int code, string msg, string stackTrace)
+        internal ExcuteResult(int code, string msg, string stackTrace = null)
             : this(code, msg == null ? null : new SimpleException(msg, stackTrace))
         {
         }
 
-        public ExcuteResult(bool successful, string msg)
-            : this(successful ? 0 : -1, new SimpleException(msg))
+        internal ExcuteResult(TimeSpan elapsed)
         {
+            Code = 0;
+            Exception = null;
+            Elapsed = elapsed;
         }
 
-        public bool Success => Code == 0;
+        public ExcuteResult<T> ToExplicit<T>()
+        {
+            if (Successful)
+                throw new InvalidOperationException("cannot convert to explicit when result is successful");
+            else
+                return new ExcuteResult<T>(Code, Exception);
+        }
 
-        public int Code { get; }
-        
-        public Exception Exception { get; }
+        public static ExcuteResult CreateSuccess(TimeSpan elapsed)
+        {
+            return new ExcuteResult(elapsed);
+        }
 
-        public static ExcuteResult SuccessResult { get; } = new ExcuteResult(true, null);
-
-        public ExcuteResult<T> ToExplicit<T>() => new ExcuteResult<T>(Code, Exception);
+        public static ExcuteResult CreateError(int code, string error)
+        {
+            return new ExcuteResult(code, error);
+        }
 
         public static implicit operator ExcuteResult(Exception ex)
         {
@@ -46,17 +63,13 @@ namespace FclEx.Utils
             return new ExcuteResult(-1, error, null);
         }
 
-        public static ExcuteResult CreateError(string error)
-        {
-            return new ExcuteResult(false, error);
-        }
-
         public static ExcuteResult Excute(Action action)
         {
             try
             {
+                var watch = ValueStopwatch.StartNew();
                 action();
-                return SuccessResult;
+                return CreateSuccess(watch.GetElapsedTime());
             }
             catch (Exception ex)
             {
@@ -68,8 +81,9 @@ namespace FclEx.Utils
         {
             try
             {
+                var watch = ValueStopwatch.StartNew();
                 await action().DonotCapture();
-                return SuccessResult;
+                return CreateSuccess(watch.GetElapsedTime());
             }
             catch (Exception ex)
             {
@@ -81,8 +95,9 @@ namespace FclEx.Utils
         {
             try
             {
+                var watch = ValueStopwatch.StartNew();
                 var result = action();
-                return ExcuteResult<T>.CreateSuccess(result);
+                return ExcuteResult<T>.CreateSuccess(result, watch.GetElapsedTime());
             }
             catch (Exception ex)
             {
@@ -94,8 +109,9 @@ namespace FclEx.Utils
         {
             try
             {
+                var watch = ValueStopwatch.StartNew();
                 var result = await action().DonotCapture();
-                return ExcuteResult<T>.CreateSuccess(result);
+                return ExcuteResult<T>.CreateSuccess(result, watch.GetElapsedTime());
             }
             catch (Exception ex)
             {
@@ -110,55 +126,57 @@ namespace FclEx.Utils
         public int Code { get; }
         public Exception Exception { get; }
         public T Result { get; }
+        public TimeSpan Elapsed { get; }
 
-        public ExcuteResult(Exception ex) : this(-1, ex)
+        internal ExcuteResult(int code, Exception ex)
         {
-        }
-
-        public ExcuteResult(int code, Exception ex)
-        {
-            Code = code;
-            Exception = code == 0 ? null : ex;
+            Code = Check.NotEqual(code, 0, nameof(code));
+            Exception = Check.NotNull(ex, nameof(ex));
+            Elapsed = TimeSpan.Zero;
             Result = default;
         }
 
-        public ExcuteResult(T result)
+        internal ExcuteResult(T result, TimeSpan elapsed)
         {
             Result = result;
             Code = 0;
             Exception = null;
+            Elapsed = elapsed;
         }
 
         public static implicit operator ExcuteResult(ExcuteResult<T> result)
         {
-            return new ExcuteResult(result.Code, result.Exception);
+            if (result.Success)
+                return new ExcuteResult(result.Elapsed);
+            else
+            {
+                return new ExcuteResult(result.Code, result.Exception);
+            }
         }
 
-        public static implicit operator ExcuteResult<T>(T item)
+        public static implicit operator ExcuteResult<T>(ExcuteResult result)
         {
-            return item == null
-                ? new ExcuteResult<T>(-1, new SimpleException("结果为空"))
-                : new ExcuteResult<T>(item);
+            return result.ToExplicit<T>();
         }
 
         public static implicit operator ExcuteResult<T>(Exception ex)
         {
-            return new ExcuteResult<T>(ex);
+            return new ExcuteResult<T>(-1, ex);
         }
 
         public static implicit operator ExcuteResult<T>(string error)
         {
-            return CreateError(error);
-        }
-
-        public static ExcuteResult<T> CreateSuccess(T item)
-        {
-            return new ExcuteResult<T>(item);
-        }
-
-        public static ExcuteResult<T> CreateError(string error)
-        {
             return new ExcuteResult<T>(-1, new SimpleException(error));
+        }
+
+        public static ExcuteResult<T> CreateSuccess(T item, TimeSpan elapsed)
+        {
+            return new ExcuteResult<T>(item, elapsed);
+        }
+
+        public static ExcuteResult<T> CreateError(int code, string error)
+        {
+            return new ExcuteResult<T>(code, new SimpleException(error));
         }
     }
 }

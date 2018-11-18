@@ -14,6 +14,13 @@ namespace FclEx.Utils
             return value;
         }
 
+        public static T NotEqual<T>(T value, T notEqual, string parameterName)
+        {
+            if (value == null)
+                throw new ArgumentException($"{parameterName} can not be equal to {notEqual}", parameterName);
+            return value;
+        }
+
         public static string NotNullOrEmpty(string value, string parameterName)
         {
             if (value.IsNullOrEmpty())
