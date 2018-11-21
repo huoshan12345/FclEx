@@ -122,7 +122,7 @@ namespace FclEx.Utils
 
     public struct ExcuteResult<T>
     {
-        public bool Success => Code == 0;
+        public bool Successful => Code == 0;
         public int Code { get; }
         public Exception Exception { get; }
         public T Result { get; }
@@ -146,7 +146,7 @@ namespace FclEx.Utils
 
         public static implicit operator ExcuteResult(ExcuteResult<T> result)
         {
-            if (result.Success)
+            if (result.Successful)
                 return new ExcuteResult(result.Elapsed);
             else
             {

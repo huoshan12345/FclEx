@@ -30,22 +30,22 @@ namespace FclEx
 
         public static ValueTask<ExcuteResult<T>> Ok<T>(this ValueTask<ExcuteResult<T>> @this, Action<T> action)
         {
-            return @this.On(r => r.Success, t => action(t.Result));
+            return @this.On(r => r.Successful, t => action(t.Result));
         }
 
         public static ValueTask<ExcuteResult<T>> Error<T>(this ValueTask<ExcuteResult<T>> @this, Action<Exception> action)
         {
-            return @this.On(r => !r.Success, t => action(t.Exception));
+            return @this.On(r => !r.Successful, t => action(t.Exception));
         }
 
         public static ValueTask<ExcuteResult<T>> Ok<T>(this ValueTask<ExcuteResult<T>> @this, Func<T, ValueTask> action)
         {
-            return @this.On(r => r.Success, t => action(t.Result));
+            return @this.On(r => r.Successful, t => action(t.Result));
         }
 
         public static ValueTask<ExcuteResult<T>> Error<T>(this ValueTask<ExcuteResult<T>> @this, Func<Exception, ValueTask> action)
         {
-            return @this.On(r => !r.Success, t => action(t.Exception));
+            return @this.On(r => !r.Successful, t => action(t.Exception));
         }
     }
 }
