@@ -37,8 +37,7 @@ namespace FclEx.Http.Services
             IWebProxyExt proxy = null,
             bool useCookie = true)
             : this(new HttpClientOptions { Proxy = proxy, UseCookie = useCookie },
-                DefaultHttpClientFactory.Default,
-                NullLogger<HttpClientExtService>.Instance)
+                DefaultHttpClientFactory.Default)
         {
         }
 
@@ -52,8 +51,8 @@ namespace FclEx.Http.Services
         public HttpClientExtService(
             HttpClientOptions options,
             IHttpClientFactory clientFactory,
-            ILogger<HttpClientExtService> logger)
-            : base(options.UseCookie, options.Proxy, logger)
+            ILoggerFactory loggerFactory = null)
+            : base(options.UseCookie, options.Proxy, loggerFactory)
         {
             _clientFactory = clientFactory;
             _options = Check.NotNull(options, nameof(options));

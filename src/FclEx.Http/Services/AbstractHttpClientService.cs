@@ -25,8 +25,8 @@ namespace FclEx.Http.Services
         protected AbstractHttpClientService(
             bool useCookie, 
             IWebProxyExt proxy = null,
-            ILogger logger = null) 
-            : base(useCookie, proxy, logger)
+            ILoggerFactory loggerFactory = null) 
+            : base(useCookie, proxy, loggerFactory)
         {
         }
 

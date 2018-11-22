@@ -10,24 +10,24 @@ namespace FclEx.Http.Services
     public class HttpClientExtServiceFactory
     {
         private readonly IHttpClientFactory _clientFactory;
-        private readonly ILogger<HttpClientExtService> _logger;
+        private readonly ILoggerFactory _loggerFactory;
 
         public HttpClientExtServiceFactory(
             IHttpClientFactory clientFactory,
-            ILogger<HttpClientExtService> logger)
+            ILoggerFactory loggerFactory)
         {
             _clientFactory = clientFactory;
-            _logger = logger;
+            _loggerFactory = loggerFactory;
         }
 
         public HttpClientExtService Create(HttpClientOptions options = null)
         {
             options = options ?? HttpClientOptions.Default;
-            return new HttpClientExtService(options, _clientFactory, _logger);
+            return new HttpClientExtService(options, _clientFactory, _loggerFactory);
         }
 
         public static HttpClientExtServiceFactory Default { get; }
             = new HttpClientExtServiceFactory(DefaultHttpClientFactory.Default,
-                NullLogger<HttpClientExtService>.Instance);
+                NullLoggerFactory.Instance);
     }
 }

@@ -28,10 +28,11 @@ namespace FclEx.Http.Services
         protected AbstractHttpService(
             bool useCookie,
             IWebProxyExt proxy = null,
-            ILogger logger = null)
+            ILoggerFactory loggerFactory = null)
         {
             WebProxy = proxy;
-            Logger = logger ?? NullLogger.Instance;
+            loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
+            Logger = loggerFactory.CreateLogger(GetType());
             if (useCookie)
                 _cookieContainer = new CookieContainer();
         }

@@ -33,6 +33,7 @@ namespace FclEx.Http.HttpClientExt
             return client;
         }
 
-        public static DefaultHttpClientFactory Default { get; } = new DefaultHttpClientFactory(DefaultHttpMessageHandlerFactory.Default);
+        public static DefaultHttpClientFactory Default { get; } 
+            = new DefaultHttpClientFactory(DefaultHttpMessageHandlerFactory.Default);
     }
 }

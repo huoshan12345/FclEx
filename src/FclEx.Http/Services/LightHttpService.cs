@@ -27,17 +27,17 @@ namespace FclEx.Http.Services
             HttpConstants.ContentLength,
         };
 
-        public LightHttpService(Uri uri, ILogger<LightHttpService> logger = null, bool useCookie = true)
-            : this(useCookie, WebProxyExt.Create(uri), logger) { }
+        public LightHttpService(Uri uri, ILoggerFactory loggerFactory = null, bool useCookie = true)
+            : this(useCookie, WebProxyExt.Create(uri), loggerFactory) { }
 
-        public LightHttpService(string url, ILogger<LightHttpService> logger = null, bool useCookie = true)
-            : this(useCookie, WebProxyExt.Create(url), logger) { }
+        public LightHttpService(string url, ILoggerFactory loggerFactory = null, bool useCookie = true)
+            : this(useCookie, WebProxyExt.Create(url), loggerFactory) { }
 
         public LightHttpService(
             bool useCookie = true,
             IWebProxyExt proxy = null,
-            ILogger<LightHttpService> logger = null)
-            : base(useCookie, proxy, logger)
+            ILoggerFactory loggerFactory = null)
+            : base(useCookie, proxy, loggerFactory)
         {
 
         }

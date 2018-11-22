@@ -51,15 +51,16 @@ namespace FclEx.Http.HttpClientExt
         private readonly ConcurrentQueue<ExpiredHandlerTrackingEntry> _expiredHandlers
             = new ConcurrentQueue<ExpiredHandlerTrackingEntry>();
 
-        public DefaultHttpMessageHandlerFactory(ILogger<DefaultHttpMessageHandlerFactory> logger)
+        public DefaultHttpMessageHandlerFactory(ILoggerFactory loggerFactory)
         {
-            _logger = Check.NotNull(logger, nameof(logger));
+            Check.NotNull(loggerFactory, nameof(loggerFactory));
+            _logger = loggerFactory.CreateLogger<DefaultHttpMessageHandlerFactory>();
             _entryFactory = o => new Lazy<ActiveHandlerTrackingEntry>(()
-                => CreateHandlerEntry(o), LazyThreadSafetyMode.ExecutionAndPublication);
+                 => CreateHandlerEntry(o), LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
         public static DefaultHttpMessageHandlerFactory Default { get; }
-            = new DefaultHttpMessageHandlerFactory(NullLogger<DefaultHttpMessageHandlerFactory>.Instance);
+            = new DefaultHttpMessageHandlerFactory(NullLoggerFactory.Instance);
 
         private ActiveHandlerTrackingEntry CreateHandlerEntry(HttpClientOptions options)
         {

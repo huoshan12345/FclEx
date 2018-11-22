@@ -113,8 +113,8 @@ namespace FclEx.Http.Services
             HttpMessageHandler handler,
             bool useCookie,
             IWebProxyExt proxy = null,
-            ILogger logger = null)
-            : base(useCookie, proxy, logger)
+            ILoggerFactory loggerFactory = null)
+            : base(useCookie, proxy, loggerFactory)
         {
             _handler = Check.NotNull(handler, nameof(handler));
             SetHttpClient();
