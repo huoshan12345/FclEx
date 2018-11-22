@@ -23,9 +23,9 @@ namespace FclEx.Http.Services
         };
 
         protected AbstractHttpClientService(
-            bool useCookie, 
+            bool useCookie,
             IWebProxyExt proxy = null,
-            ILoggerFactory loggerFactory = null) 
+            ILoggerFactory loggerFactory = null)
             : base(useCookie, proxy, loggerFactory)
         {
         }
@@ -69,10 +69,14 @@ namespace FclEx.Http.Services
 
         protected static HttpRequestMessage GetHttpRequest(HttpReq req, CookieContainer cc)
         {
-            var request = new HttpRequestMessage(new HttpMethod(req.Method.ToString().ToUpper()), req.GetUrl())
+            var request = new HttpRequestMessage(new HttpMethod(req.Method.ToString().ToUpper()), req.GetUrl());
+            if (req.Method != HttpMethodType.Get)
             {
-                Content = new ByteArrayContent(req.GetBinaryData()) { Headers = { ContentType = MediaTypeHeaderValue.Parse(req.ContentType) } }
-            };
+                request.Content = new ByteArrayContent(req.GetBinaryData())
+                {
+                    Headers = { ContentType = MediaTypeHeaderValue.Parse(req.ContentType) }
+                };
+            }
 
             foreach (var header in req.HeaderMap.Where(h => !_notAddHeaderNames.Contains(h.Key)))
             {
@@ -90,8 +94,8 @@ namespace FclEx.Http.Services
         }
 
         protected async ValueTask<HttpRes> ExecuteAsync(
-            HttpClient httpClient, 
-            HttpReq httpReq, 
+            HttpClient httpClient,
+            HttpReq httpReq,
             CancellationToken token = default)
         {
             token.ThrowIfCancellationRequested();
