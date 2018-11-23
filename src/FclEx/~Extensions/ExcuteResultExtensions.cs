@@ -10,7 +10,12 @@ namespace FclEx
     {
         public static ExcuteResult Ok(this ExcuteResult @this, Action action)
         {
-            return @this.On(r => r.Successful, t => action());
+            return @this.Ok(t => action());
+        }
+
+        public static ExcuteResult Ok(this ExcuteResult @this, Action<TimeSpan> action)
+        {
+            return @this.On(r => r.Successful, t => action(t.Elapsed));
         }
 
         public static ExcuteResult Error(this ExcuteResult @this, Action<Exception> action)
@@ -20,7 +25,12 @@ namespace FclEx
 
         public static ExcuteResult<T> Ok<T>(this ExcuteResult<T> @this, Action<T> action)
         {
-            return @this.On(r => r.Successful, t => action(t.Result));
+            return @this.Ok((r, t) => action(r));
+        }
+
+        public static ExcuteResult<T> Ok<T>(this ExcuteResult<T> @this, Action<T, TimeSpan> action)
+        {
+            return @this.On(r => r.Successful, t => action(t.Result, t.Elapsed));
         }
 
         public static ExcuteResult<T> Error<T>(this ExcuteResult<T> @this, Action<Exception> action)
