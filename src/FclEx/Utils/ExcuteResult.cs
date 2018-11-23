@@ -138,7 +138,7 @@ namespace FclEx.Utils
 
         internal ExcuteResult(T result, TimeSpan elapsed)
         {
-            Result = Check.NotNull(result, nameof(result));
+            Result = result;
             Code = 0;
             Exception = null;
             Elapsed = elapsed;

@@ -12,6 +12,7 @@ namespace FclEx.Consumers
         where TSelf : AbstractConsumer<TSelf, T>
     {
         protected bool _isDisposed;
+        protected bool _isStarted;
         protected CancellationTokenSource _cts;
         protected BlockingCollection<ProcItem<T>> _items;
         protected ManualResetEvent _finish;
@@ -57,34 +58,50 @@ namespace FclEx.Consumers
             }
             _finish.Set();
         }
+        
+        protected void EnsureAvailable()
+        {
+            if (!_isStarted)
+                throw new InvalidOperationException("The consumer has not been started yet.");
+
+            if (_isDisposed)
+                throw new ObjectDisposedException("The consumer has been disposed already.");
+        }
 
         public Task Start()
         {
-            CheckDisposed();
+            EnsureAvailable();
             _cts = new CancellationTokenSource();
             _finish = new ManualResetEvent(true);
             _items = new BlockingCollection<ProcItem<T>>();
+            _isStarted = true;
             return Task.Run(Process);
         }
 
         public virtual void Add(T item)
         {
-            CheckDisposed();
+            EnsureAvailable();
             _items.Add(new ProcItem<T>(item));
+        }
+
+        public virtual void AddRange(ICollection<T> items)
+        {
+            EnsureAvailable();
+            foreach (var item in items)
+            {
+                Add(item);
+            }
         }
 
         public virtual void Dispose()
         {
-            _cts.Cancel();
-            _finish.WaitOne();
-            _items?.Dispose();
-            _isDisposed = true;
-        }
-
-        protected void CheckDisposed()
-        {
             if (_isDisposed)
-                throw new ObjectDisposedException(nameof(AbstractConsumer<TSelf, T>));
+            {
+                _cts.Cancel();
+                _finish.WaitOne();
+                _items?.Dispose();
+                _isDisposed = true;
+            }
         }
     }
 }

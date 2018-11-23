@@ -16,7 +16,7 @@ namespace FclEx.Consumers
 
         public AutoRetryConsumer(int maxRetryTimes, Func<int, int> retryDelay)
         {
-            if (maxRetryTimes < 0) throw new ArgumentOutOfRangeException(nameof(maxRetryTimes));
+            Check.AtLeast(maxRetryTimes, nameof(maxRetryTimes), 0);
             _maxRetryTimes = maxRetryTimes;
             _retryDelay = retryDelay ?? (x => x);
 

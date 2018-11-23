@@ -97,14 +97,5 @@ namespace FclEx.Consumers
             }
             _finish.Set();
         }
-
-        public void AddRange(ICollection<T> items)
-        {
-            CheckDisposed();
-            foreach (var item in items)
-            {
-                Add(item);
-            }
-        }
     }
 }
