@@ -5,19 +5,45 @@ using System.Xml.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using Formatting = Newtonsoft.Json.Formatting;
 
 namespace FclEx
 {
     public static class JsonExtensions
     {
-        private static readonly JsonSerializerSettings _ignoreSettings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+        private static readonly JsonSerializerSettings _ignoreSettings = new JsonSerializerSettings
+        {
+            NullValueHandling = NullValueHandling.Ignore
+        };
+        private static readonly JsonSerializer _defaultSerializer = JsonSerializer.CreateDefault();
 
-        private static readonly JsonSerializer _defaultJsonSerializer = JsonSerializer.CreateDefault();
+        private static readonly JsonSerializerSettings _camelSettings = new JsonSerializerSettings
+        {
+            ContractResolver = new CamelCasePropertyNamesContractResolver(),
+            NullValueHandling = NullValueHandling.Ignore
+        };
+
+        private static readonly JsonSerializerSettings _camelIgnoreNullSettings = new JsonSerializerSettings
+        {
+            ContractResolver = new CamelCasePropertyNamesContractResolver(),
+        };
+
+        public static string ToJson(this object obj,
+            JsonSerializerSettings settings,
+            Formatting formatting = Formatting.None)
+        {
+            return JsonConvert.SerializeObject(obj, formatting, settings);
+        }
 
         public static string ToJson(this object obj, Formatting formatting = Formatting.None, bool ignoreNull = false)
         {
-            return JsonConvert.SerializeObject(obj, formatting, ignoreNull ? _ignoreSettings : null);
+            return ToJson(obj, ignoreNull ? _ignoreSettings : null, formatting);
+        }
+
+        public static string ToJsonCamel(this object obj, Formatting formatting = Formatting.None, bool ignoreNull = false)
+        {
+            return ToJson(obj, ignoreNull ? _camelIgnoreNullSettings : _camelSettings, formatting);
         }
 
         public static JToken ToJToken(this string str)
@@ -84,12 +110,22 @@ namespace FclEx
 
         public static JToken ToJToken(this object obj, JsonSerializer jsonSerializer = null)
         {
-            return JToken.FromObject(obj, jsonSerializer ?? _defaultJsonSerializer);
+            return JToken.FromObject(obj, jsonSerializer ?? _defaultSerializer);
         }
 
         public static JObject ToJObject(this object obj, JsonSerializer jsonSerializer = null)
         {
-            return JObject.FromObject(obj, jsonSerializer ?? _defaultJsonSerializer);
+            return JObject.FromObject(obj, jsonSerializer ?? _defaultSerializer);
+        }
+
+        public static Dictionary<string, string> ToStrDic(this JObject jObject)
+        {
+            var dic = new Dictionary<string, string>(jObject.Count);
+            foreach (var m in jObject)
+            {
+                dic[m.Key] = m.Value.ToStringOrNull();
+            }
+            return dic;
         }
     }
 }

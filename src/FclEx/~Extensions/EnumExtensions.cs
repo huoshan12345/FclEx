@@ -15,6 +15,16 @@ namespace FclEx
             return value;
         }
 
+        public static int ToInt(this Enum enumValue)
+        {
+            return Convert.ToInt32(enumValue);
+        }
+
+        public static string ToIntStr(this Enum enumValue)
+        {
+            return enumValue.ToInt().ToString();
+        }
+
         public static int ToInt<TEnum>(this TEnum enumValue)
             where TEnum : unmanaged, Enum
         {

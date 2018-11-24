@@ -13,7 +13,7 @@ namespace FclEx.Http
 {
     public static class HttpReqExtensions
     {
-        public static HttpReq AddQueryValue(this HttpReq req, string key, object value) => req.AddQueryValue(key, value.ToStringSafely());
+        public static HttpReq AddQueryValue(this HttpReq req, string key, object value) => req.AddQueryValue(key, value.ToStringOrEmpty());
 
         public static HttpReq AddQueryValue(this HttpReq req, KeyValuePair<string, string> pair) => req.AddQueryValue(pair.Key, pair.Value);
 
@@ -33,7 +33,7 @@ namespace FclEx.Http
             return req.AddQueryValue(pair[0], pair.Length > 1 ? pair[1] : "");
         }
 
-        public static HttpReq AddFormValue(this HttpReq req, string key, object value) => req.AddFormValue(key, value.ToStringSafely());
+        public static HttpReq AddFormValue(this HttpReq req, string key, object value) => req.AddFormValue(key, value.ToStringOrEmpty());
 
         public static HttpReq AddFormValue(this HttpReq req, KeyValuePair<string, string> pair) => req.AddFormValue(pair.Key, pair.Value);
 
@@ -72,7 +72,7 @@ namespace FclEx.Http
 
         public static HttpReq AddData<T>(this HttpReq req, string key, T value)
         {
-            return AddData(req, key, value.ToStringSafely());
+            return AddData(req, key, value.ToStringOrEmpty());
         }
 
         public static HttpReq AddData(this HttpReq req, IEnumerable<KeyValuePair<string, string>> paras)

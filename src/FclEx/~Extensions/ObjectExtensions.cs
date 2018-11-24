@@ -6,7 +6,6 @@ using FclEx;
 
 namespace FclEx
 {
-
     public static class ObjectExtensions
     {
         public static bool IsDefault<T>(this T obj) => EqualityComparer<T>.Default.Equals(obj, default);
@@ -35,13 +34,24 @@ namespace FclEx
             }
         }
 
-        public static string ToStringSafely<T>(this T obj) => obj == null ? string.Empty : obj.ToString();
+        public static string ToTrimStringOrNull(this object obj)
+        {
+            return obj?.ToString().Trim();
+        }
+
+        public static string ToStringOrNull(this object obj)
+        {
+            return obj?.ToString();
+        }
+
+        public static string ToStringOrEmpty(this object obj)
+        {
+            return obj == null ? "" : obj.ToString();
+        }
 
         public static int GetHashCodeSafely<T>(this T obj)
         {
             return obj == null ? 0 : obj.GetHashCode();
         }
-
-
     }
 }

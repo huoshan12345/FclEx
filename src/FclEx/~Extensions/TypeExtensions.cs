@@ -155,5 +155,18 @@ namespace FclEx
             var paraName = string.Join(", ", type.GenericTypeArguments.Select(m => m.ShortName()));
             return typeName + "<" + paraName + ">";
         }
+
+        public static bool IsInteger(this Type type)
+        {
+            type = Nullable.GetUnderlyingType(type) ?? type;
+            return type == typeof(long)
+                   || type == typeof(ulong)
+                   || type == typeof(int)
+                   || type == typeof(uint)
+                   || type == typeof(short)
+                   || type == typeof(ushort)
+                   || type == typeof(byte)
+                   || type == typeof(sbyte);
+        }
     }
 }
