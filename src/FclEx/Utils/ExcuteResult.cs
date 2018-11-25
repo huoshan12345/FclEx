@@ -53,6 +53,11 @@ namespace FclEx.Utils
             return new ExcuteResult(code, error);
         }
 
+        public static ExcuteResult CreateError(string error)
+        {
+            return CreateError(-1, error);
+        }
+
         public static implicit operator ExcuteResult(Exception ex)
         {
             return new ExcuteResult(-1, ex);
@@ -91,6 +96,20 @@ namespace FclEx.Utils
             }
         }
 
+        public static async ValueTask<ExcuteResult> ExcuteValueAsync(Func<ValueTask> action)
+        {
+            try
+            {
+                var watch = ValueStopwatch.StartNew();
+                await action().DonotCapture();
+                return CreateSuccess(watch.GetElapsedTime());
+            }
+            catch (Exception ex)
+            {
+                return ex;
+            }
+        }
+
         public static ExcuteResult<T> Excute<T>(Func<T> action)
         {
             try
@@ -106,6 +125,20 @@ namespace FclEx.Utils
         }
 
         public static async Task<ExcuteResult<T>> ExcuteAsync<T>(Func<Task<T>> action)
+        {
+            try
+            {
+                var watch = ValueStopwatch.StartNew();
+                var result = await action().DonotCapture();
+                return ExcuteResult<T>.CreateSuccess(result, watch.GetElapsedTime());
+            }
+            catch (Exception ex)
+            {
+                return ex;
+            }
+        }
+
+        public static async ValueTask<ExcuteResult<T>> ExcuteValueAsync<T>(Func<ValueTask<T>> action)
         {
             try
             {
@@ -177,6 +210,11 @@ namespace FclEx.Utils
         public static ExcuteResult<T> CreateError(int code, string error)
         {
             return new ExcuteResult<T>(code, new SimpleException(error));
+        }
+
+        public static ExcuteResult<T> CreateError(string error)
+        {
+            return CreateError(-1, error);
         }
     }
 }

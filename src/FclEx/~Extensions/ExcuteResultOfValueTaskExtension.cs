@@ -6,7 +6,7 @@ using FclEx.Utils;
 
 namespace FclEx
 {
-    public static class ValueTaskExcuteResultExtension
+    public static class ExcuteResultOfValueTaskExtension
     {
         public static ValueTask<ExcuteResult> Ok(this ValueTask<ExcuteResult> @this, Action action)
         {
@@ -21,6 +21,11 @@ namespace FclEx
         public static ValueTask<ExcuteResult> Error(this ValueTask<ExcuteResult> @this, Action<Exception> action)
         {
             return @this.On(r => !r.Successful, t => action(t.Exception));
+        }
+
+        public static ValueTask<ExcuteResult> ThrowIfErro(this ValueTask<ExcuteResult> @this)
+        {
+            return @this.Error(e => e.ReThrow());
         }
 
         public static ValueTask<ExcuteResult> Ok(this ValueTask<ExcuteResult> @this, Func<ValueTask> action)
@@ -51,6 +56,11 @@ namespace FclEx
         public static ValueTask<ExcuteResult<T>> Error<T>(this ValueTask<ExcuteResult<T>> @this, Action<Exception> action)
         {
             return @this.On(r => !r.Successful, t => action(t.Exception));
+        }
+
+        public static ValueTask<ExcuteResult<T>> ThrowIfError<T>(this ValueTask<ExcuteResult<T>> @this)
+        {
+            return @this.Error(e => e.ReThrow());
         }
 
         public static ValueTask<ExcuteResult<T>> Ok<T>(this ValueTask<ExcuteResult<T>> @this, Func<T, ValueTask> action)

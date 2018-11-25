@@ -23,6 +23,11 @@ namespace FclEx
             return @this.On(r => !r.Successful, t => action(t.Exception));
         }
 
+        public static ExcuteResult ThrowIfError(this ExcuteResult @this)
+        {
+            return @this.Error(e => e.ReThrow());
+        }
+
         public static ExcuteResult<T> Ok<T>(this ExcuteResult<T> @this, Action<T> action)
         {
             return @this.Ok((r, t) => action(r));
@@ -36,6 +41,11 @@ namespace FclEx
         public static ExcuteResult<T> Error<T>(this ExcuteResult<T> @this, Action<Exception> action)
         {
             return @this.On(r => !r.Successful, t => action(t.Exception));
+        }
+
+        public static ExcuteResult ThrowIfError<T>(this ExcuteResult<T> @this)
+        {
+            return @this.Error(e => e.ReThrow());
         }
     }
 }
