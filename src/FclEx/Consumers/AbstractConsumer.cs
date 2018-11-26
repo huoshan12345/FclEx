@@ -58,19 +58,28 @@ namespace FclEx.Consumers
             }
             _finish.Set();
         }
-        
-        protected void EnsureAvailable()
-        {
-            if (!_isStarted)
-                throw new InvalidOperationException("The consumer has not been started yet.");
 
+        protected void EnsureNonDisposed()
+        {
             if (_isDisposed)
                 throw new ObjectDisposedException("The consumer has been disposed already.");
         }
 
+        protected void EnsureStarted()
+        {
+            if (!_isStarted)
+                throw new InvalidOperationException("The consumer has not been started yet.");
+        }
+
+        protected void EnsureAvailable()
+        {
+            EnsureNonDisposed();
+            EnsureStarted();
+        }
+
         public Task Start()
         {
-            EnsureAvailable();
+            EnsureNonDisposed();
             _cts = new CancellationTokenSource();
             _finish = new ManualResetEvent(true);
             _items = new BlockingCollection<ProcItem<T>>();
@@ -97,8 +106,8 @@ namespace FclEx.Consumers
         {
             if (_isDisposed)
             {
-                _cts.Cancel();
-                _finish.WaitOne();
+                _cts?.Cancel();
+                _finish?.WaitOne();
                 _items?.Dispose();
                 _isDisposed = true;
             }
