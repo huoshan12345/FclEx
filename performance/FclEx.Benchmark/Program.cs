@@ -10,12 +10,14 @@ namespace FclEx.Benchmark
 {
     internal class Program
     {
-        internal static async Task Main(string[] args)
+        internal static void Main(string[] args)
         {
             //BenchmarkRunner.Run<HttpServiceTest>();
             //Console.Read();
-            await ExcuteResult.ExcuteAsync(async () => await HttpServiceRawTest.RawTest(500).DonotCapture())
-                .Error(e => Console.WriteLine(e));
+            //await ExcuteResult.ExcuteAsync(async () => await HttpServiceRawTest.RawTest(500).DonotCapture())
+            //    .Error(e => Console.WriteLine(e));
+
+            BenchmarkRunner.Run<CastTest>();
         }
     }
 }

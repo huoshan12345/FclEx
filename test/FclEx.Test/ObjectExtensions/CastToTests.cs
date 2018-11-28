@@ -1,17 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using FclEx.Test.Enums;
 using Xunit;
 
-namespace FclEx.Test
+namespace FclEx.Test.ObjectExtensions
 {
-    public enum EnumTest
-    {
-        No = 0,
-        Yes = 1,
-    }
-
-    public class ObjectExtensionsTests
+    public class CastToTests
     {
         [Fact]
         public void ObjectToIntCastTest()
@@ -53,15 +45,33 @@ namespace FclEx.Test
         public void IntToEnumCastTest()
         {
             var i = 1;
-            var actual = i.CastTo<EnumTest>();
-            var expected = (EnumTest)i;
+            var actual = i.CastTo<IntEnum>();
+            var expected = (IntEnum)i;
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void IntToShortEnumCastTest()
+        {
+            var i = 1;
+            var actual = i.CastTo<ShortEnum>();
+            var expected = (ShortEnum)i;
             Assert.Equal(expected, actual);
         }
 
         [Fact]
         public void EnumToIntCastTest()
         {
-            var i = EnumTest.Yes;
+            var i = IntEnum.Yes;
+            var actual = i.CastTo<int>();
+            var expected = (int)i;
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void ShortEnumToIntCastTest()
+        {
+            var i = ShortEnum.Yes;
             var actual = i.CastTo<int>();
             var expected = (int)i;
             Assert.Equal(expected, actual);

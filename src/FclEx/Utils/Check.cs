@@ -16,8 +16,15 @@ namespace FclEx.Utils
 
         public static T NotEqual<T>(T value, T notEqual, string parameterName)
         {
-            if (value == null)
+            if (EqualityComparer<T>.Default.Equals(value, notEqual))
                 throw new ArgumentException($"{parameterName} can not be equal to {notEqual}", parameterName);
+            return value;
+        }
+
+        public static T Equal<T>(T value, T equal, string parameterName)
+        {
+            if (!EqualityComparer<T>.Default.Equals(value, equal))
+                throw new ArgumentException($"{parameterName} must equal to {equal}", parameterName);
             return value;
         }
 
@@ -68,7 +75,7 @@ namespace FclEx.Utils
         public static int Between(int value, string parameterName, int min, int max)
         {
             if (value > max || value < min)
-                throw new ArgumentOutOfRangeException(nameof(value), value, 
+                throw new ArgumentOutOfRangeException(nameof(value), value,
                     $"value cannot be less than {min} nor greater than {max}");
             return value;
         }

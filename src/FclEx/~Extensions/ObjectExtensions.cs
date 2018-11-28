@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using FclEx;
+using FclEx.TypeCasters;
+using FclEx.Utils;
 
 namespace FclEx
 {
@@ -18,20 +19,7 @@ namespace FclEx
 
         public static T CastTo<T>(this object obj)
         {
-            var type = typeof(T);
-            return type.IsValueType && !type.IsEnum
-                ? (T)ChangeType(obj, type)
-                : (T)obj;
-
-            object ChangeType(object value, Type t)
-            {
-                if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>))
-                {
-                    if (value == null) return default;
-                    t = Nullable.GetUnderlyingType(t);
-                }
-                return Convert.ChangeType(value, t);
-            }
+            return DelegateTypeCaster.Instance.CastTo<object, T>(obj);
         }
 
         public static string ToTrimStringOrNull(this object obj)

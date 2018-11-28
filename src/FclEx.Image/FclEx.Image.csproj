@@ -5,7 +5,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageProjectUrl>https://github.com/huoshan12345/FclEx</PackageProjectUrl>
     <PackageTags>extensions;helpers</PackageTags>
-    <Version>1.8.4</Version>
+    <Version>1.8.6</Version>
     <Authors>huoshan12345</Authors>
     <Description>Some basic useful extensions and helpers for C# fundamental class libraries</Description>
     <RepositoryUrl>https://github.com/huoshan12345/FclEx</RepositoryUrl>
@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FclEx\FclEx.csproj" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0005" />
+    <PackageReference Include="System.Drawing.Common" Version="4.5.1" />
   </ItemGroup>
 
 </Project>
