@@ -14,7 +14,7 @@ namespace FclEx.Test.Enums
         No = 0,
         Yes = 1,
     }
-    public enum IntEnum
+    public enum IntEnum : int
     {
         No = 0,
         Yes = 1,

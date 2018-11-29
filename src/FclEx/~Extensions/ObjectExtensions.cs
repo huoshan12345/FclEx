@@ -19,7 +19,7 @@ namespace FclEx
 
         public static T CastTo<T>(this object obj)
         {
-            return DelegateTypeCaster.Instance.CastTo<object, T>(obj);
+            return DynamicTypeCaster.Instance.CastTo<object, T>(obj);
         }
 
         public static string ToTrimStringOrNull(this object obj)
