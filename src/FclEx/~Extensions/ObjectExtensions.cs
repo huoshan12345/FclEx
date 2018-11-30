@@ -42,7 +42,7 @@ namespace FclEx
             return obj == null ? "" : obj.ToString();
         }
 
-        public static int GetHashCodeSafely<T>(this T obj) where T : class
+        public static int GetHashCodeSafely<T>(this T obj)
         {
             return obj == null ? 0 : obj.GetHashCode();
         }
