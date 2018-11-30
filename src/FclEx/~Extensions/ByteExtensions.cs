@@ -4,6 +4,8 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using FclEx.Helpers;
+using FclEx.Utils;
 
 namespace FclEx
 {
@@ -74,28 +76,28 @@ namespace FclEx
         public static byte[] ToBytes(this List<bool> bits) => ToBytes(bits, bits.Count);
 
         public static short ToInt16(this byte[] bytes, int startIndex = 0) => BitConverter.ToInt16(bytes, startIndex);
-        public static short ReadInt16(this byte[] bytes, ref int startIndex) => ReadUnmanagedStruct<short>(bytes, ref startIndex);
+        public static short ReadInt16(this byte[] bytes, ref int startIndex) => ToUnmanagedStruct<short>(bytes, ref startIndex);
 
         public static ushort ToUInt16(this byte[] bytes, int startIndex = 0) => BitConverter.ToUInt16(bytes, startIndex);
-        public static ushort ReadUInt16(this byte[] bytes, ref int startIndex) => ReadUnmanagedStruct<ushort>(bytes, ref startIndex);
+        public static ushort ReadUInt16(this byte[] bytes, ref int startIndex) => ToUnmanagedStruct<ushort>(bytes, ref startIndex);
 
         public static int ToInt32(this byte[] bytes, int startIndex = 0) => BitConverter.ToInt32(bytes, startIndex);
-        public static int ReadInt32(this byte[] bytes, ref int startIndex) => ReadUnmanagedStruct<int>(bytes, ref startIndex);
+        public static int ReadInt32(this byte[] bytes, ref int startIndex) => ToUnmanagedStruct<int>(bytes, ref startIndex);
 
         public static uint ToUInt32(this byte[] bytes, int startIndex = 0) => BitConverter.ToUInt32(bytes, startIndex);
-        public static uint ReadUInt32(this byte[] bytes, ref int startIndex) => ReadUnmanagedStruct<uint>(bytes, ref startIndex);
+        public static uint ReadUInt32(this byte[] bytes, ref int startIndex) => ToUnmanagedStruct<uint>(bytes, ref startIndex);
 
         public static long ToInt64(this byte[] bytes, int startIndex = 0) => BitConverter.ToInt64(bytes, startIndex);
-        public static long ReadInt64(this byte[] bytes, ref int startIndex) => ReadUnmanagedStruct<long>(bytes, ref startIndex);
+        public static long ReadInt64(this byte[] bytes, ref int startIndex) => ToUnmanagedStruct<long>(bytes, ref startIndex);
 
         public static ulong ToUInt64(this byte[] bytes, int startIndex = 0) => BitConverter.ToUInt64(bytes, startIndex);
-        public static ulong ReadUInt64(this byte[] bytes, ref int startIndex) => ReadUnmanagedStruct<ulong>(bytes, ref startIndex);
+        public static ulong ReadUInt64(this byte[] bytes, ref int startIndex) => ToUnmanagedStruct<ulong>(bytes, ref startIndex);
 
         public static float ToFloat(this byte[] bytes, int startIndex = 0) => BitConverter.ToSingle(bytes, startIndex);
-        public static float ReadFloat(this byte[] bytes, ref int startIndex) => ReadUnmanagedStruct<float>(bytes, ref startIndex);
+        public static float ReadFloat(this byte[] bytes, ref int startIndex) => ToUnmanagedStruct<float>(bytes, ref startIndex);
 
         public static double ToDouble(this byte[] bytes, int startIndex = 0) => BitConverter.ToDouble(bytes, startIndex);
-        public static double ReadDouble(this byte[] bytes, ref int startIndex) => ReadUnmanagedStruct<double>(bytes, ref startIndex);
+        public static double ReadDouble(this byte[] bytes, ref int startIndex) => ToUnmanagedStruct<double>(bytes, ref startIndex);
 
         public static int IndexOf(this byte[] buffer, int startIndex, params byte[] subBytes)
         {
@@ -103,15 +105,12 @@ namespace FclEx
 
             var i = startIndex; // 主串的位置
             var j = 0; // 模式串的位置
-
             var next = GetNextArray(subBytes);
-
             while (i < buffer.Length && j < subBytes.Length)
             {
                 if (j == -1 || buffer[i] == subBytes[j])
                 {
-                    // 当j为-1时，要移动的是i，当然j也要归0
-                    i++;
+                    i++; // 当j为-1时，要移动的是i，当然j也要归0
                     j++;
                 }
                 else
@@ -137,48 +136,103 @@ namespace FclEx
                 if (k == -1 || subBytes[j] == subBytes[k])
                 {
                     if (subBytes[++j] == subBytes[++k])
-                    {
-                        // 当两个字符相等时要跳过
-                        next[j] = next[k];
-                    }
+                        next[j] = next[k]; // 当两个字符相等时要跳过
                     else
-                    {
                         next[j] = k;
-                    }
                 }
                 else
-                {
                     k = next[k];
-                }
             }
             return next;
-
         }
-
-        public static T ToUnmanagedStruct<T>(this byte[] bytes, int startIndex = 0) where T : struct
+        
+        public static T ToUnmanagedStruct<T>(this byte[] bytes, ref int startIndex)
+            where T : struct
         {
-            return ReadUnmanagedStruct<T>(bytes, ref startIndex);
+            Check.NotNull(bytes, nameof(bytes));
+            Check.AtLeast(startIndex, nameof(startIndex), 0);
+
+            var length = Marshal.SizeOf<T>();
+            Check.AtLeast(bytes.Length, nameof(bytes.Length), length + startIndex);
+
+            using (var ptr = MarshalHelper.AllocHGlobal(length))
+            {
+                var p = ptr.Ptr;
+                Marshal.Copy(bytes, startIndex, p, length);
+                var obj = Marshal.PtrToStructure<T>(p);
+                startIndex += length;
+                return obj;
+            }
         }
 
-        public static T ReadUnmanagedStruct<T>(this byte[] bytes, ref int startIndex) where T : struct
+        public static T ToUnmanagedStruct<T>(this byte[] bytes)
+            where T : struct
+        {
+            var i = 0;
+            return ToUnmanagedStruct<T>(bytes, ref i);
+        }
+
+        public static T[] ToUnmanagedStructs<T>(this byte[] bytes, ref int startIndex, int count)
+            where T : struct
+        {
+            Check.NotNull(bytes, nameof(bytes));
+            Check.AtLeast(startIndex, nameof(startIndex), 0);
+            Check.AtLeast(count, nameof(count), 1);
+
+            var length = Marshal.SizeOf<T>();
+            var totalBytes = length * count;
+            Check.AtLeast(bytes.Length, nameof(bytes.Length), totalBytes + startIndex);
+
+            var result = new T[count];
+            using (var ptr = MarshalHelper.AllocHGlobal(length))
+            {
+                var p = ptr.Ptr;
+                for (var i = 0; i < count; i++)
+                {
+                    Marshal.Copy(bytes, startIndex, p, length);
+                    var obj = Marshal.PtrToStructure<T>(p);
+                    startIndex += length;
+                    result[i] = obj;
+                }
+            }
+            return result;
+        }
+
+        public static T[] ToUnmanagedStructs<T>(this byte[] bytes)
+            where T : struct
         {
             var length = Marshal.SizeOf<T>();
-            var ptr = Marshal.AllocHGlobal(length);
-            Marshal.Copy(bytes, startIndex, ptr, length);
-            var obj = Marshal.PtrToStructure<T>(ptr);
-            Marshal.FreeHGlobal(ptr);
-            startIndex += length;
-            return obj;
+            var i = 0;
+            return ToUnmanagedStructs<T>(bytes, ref i, bytes.Length / length);
         }
 
         public static byte[] ToUnmanagedBytes<T>(this T obj) where T : struct
         {
-            var length = Marshal.SizeOf(obj);
+            var length = Marshal.SizeOf<T>();
             var bufByte = new byte[length];
             var ptr = Marshal.AllocHGlobal(length);
             Marshal.StructureToPtr(obj, ptr, true);
             Marshal.Copy(ptr, bufByte, 0, length);
             Marshal.FreeHGlobal(ptr);
+            return bufByte;
+        }
+
+        public static byte[] ToUnmanagedBytes<T>(this IList<T> list) where T : struct
+        {
+            Check.NotNullOrEmpty(list, nameof(list));
+
+            var length = Marshal.SizeOf<T>();
+            var totalBytes = length * list.Count;
+            var bufByte = new byte[totalBytes];
+            using (var ptr = MarshalHelper.AllocHGlobal(length))
+            {
+                var p = ptr.Ptr;
+                for (var i = 0; i < list.Count; i++)
+                {
+                    Marshal.StructureToPtr(list[i], p, true);
+                    Marshal.Copy(p, bufByte, i * length, length);
+                }
+            }
             return bufByte;
         }
 

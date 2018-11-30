@@ -40,7 +40,9 @@ namespace FclEx
 
         public static string GetOrEmpty(this string str) => str ?? "";
 
-        public static string JoinWith(this IEnumerable<string> strs, string separator) => string.Join(separator, strs);
+        public static string JoinWith(this IEnumerable<string> strs, string separator = "") => string.Join(separator, strs);
+
+        public static string JoinWith<T>(this IEnumerable<T> strs, string separator = "") => string.Join(separator, strs);
 
         public static bool Contains(this string source, string toCheck, StringComparison comp)
         {

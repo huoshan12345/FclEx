@@ -10,7 +10,14 @@ namespace FclEx
 {
     public static class TypeExtensions
     {
-        public static Type GetUnderlyingType(this Type type)
+        public static bool IsNullable(this Type type)
+        {
+            return type.IsValueType
+                && type.IsGenericType
+                && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+        }
+
+        public static Type UnwarpNullable(this Type type)
         {
             return Nullable.GetUnderlyingType(type) ?? type;
         }

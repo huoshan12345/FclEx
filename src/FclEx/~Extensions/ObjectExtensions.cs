@@ -22,6 +22,11 @@ namespace FclEx
             return DynamicTypeCaster.Instance.CastTo<object, T>(obj);
         }
 
+        public static TTarget CastTo<T, TTarget>(this T obj)
+        {
+            return ExpressionTypeCaster.Instance.CastTo<T, TTarget>(obj);
+        }
+
         public static string ToTrimStringOrNull(this object obj)
         {
             return obj?.ToString().Trim();
@@ -37,7 +42,7 @@ namespace FclEx
             return obj == null ? "" : obj.ToString();
         }
 
-        public static int GetHashCodeSafely<T>(this T obj)
+        public static int GetHashCodeSafely<T>(this T obj) where T : class
         {
             return obj == null ? 0 : obj.GetHashCode();
         }

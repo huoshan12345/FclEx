@@ -16,7 +16,6 @@ namespace FclEx.TypeCasters
         private static class ConvertHelper<TOutput>
         {
             private delegate TOutput Converter(object obj);
-
             private static readonly ConcurrentDictionary<Type, Converter> _dic
                 = new ConcurrentDictionary<Type, Converter>();
 

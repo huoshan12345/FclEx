@@ -59,7 +59,10 @@ namespace FclEx
             return source.SelectMany(m => source, resultSelector);
         }
 
-        public static IEnumerable<T> Except<T>(this IEnumerable<T> source, T item, IEqualityComparer<T> comparer = null)
+        public static IEnumerable<T> Except<T>(
+            this IEnumerable<T> source,
+            T item,
+            IEqualityComparer<T> comparer = null)
         {
             comparer = comparer ?? EqualityComparer<T>.Default;
             return source.Where(m => !comparer.Equals(m, item));
