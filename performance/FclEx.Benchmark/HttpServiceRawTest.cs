@@ -29,7 +29,7 @@ namespace FclEx.Benchmark
         {
             new HttpClientExtService(),
             new HttpClientService(),
-            new LightHttpService()
+            new HttpWebRequestService()
         };
 
         public static async ValueTask RawTest(int rounds)

@@ -14,7 +14,7 @@ namespace FclEx.Benchmark
     {
         private static readonly IHttpService _httpClientService = new HttpClientService();
         private static readonly IHttpService _httpClientExtService = new HttpClientExtService();
-        private static readonly IHttpService _lightHttpService = new LightHttpService();
+        private static readonly IHttpService _lightHttpService = new HttpWebRequestService();
 
         public static IEnumerable<object> Cases => new[]
         {

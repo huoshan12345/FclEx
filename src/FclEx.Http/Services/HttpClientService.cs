@@ -21,12 +21,16 @@ namespace FclEx.Http.Services
     public sealed class HttpClientService : AbstractHttpClientService
     {
         public static TimerLazy<HttpClientService> Default { get; } = new TimerLazy<HttpClientService>(() =>
-                new HttpClientService(null, false),
+                new HttpClientService(false, null, null),
                 LazyThreadSafetyMode.ExecutionAndPublication,
                 TimeSpan.FromMinutes(2));
 
-        private HttpClient _httpClient;
-        private HttpMessageHandler _handler;
+        private static readonly TimerLazy<HttpClient> _httpClient =
+            new TimerLazy<HttpClient>(() => CreateHttpClient(_funcOfHandler()),
+            LazyThreadSafetyMode.ExecutionAndPublication,
+            TimeSpan.FromMinutes(2));
+
+        private static Func<HttpMessageHandler> _funcOfHandler;
 
         private static HttpClientHandler CreateDefaultHandler(IWebProxyExt proxy = null)
         {
@@ -50,79 +54,63 @@ namespace FclEx.Http.Services
             return handler;
         }
 
-        private void SetHttpClient()
+        private static HttpMessageHandler CreateHandler(IWebProxyExt proxy)
         {
-            Check.NotNull(_handler, nameof(_handler));
-            var httpClient = new HttpClient(_handler, false);
+            switch (proxy.Type)
+            {
+                case ProxyType.None:
+                case ProxyType.Http:
+                case ProxyType.Https:
+                    return CreateDefaultHandler(proxy);
+
+                case ProxyType.Socks5:
+                {
+                    return new ProxyClientHandler<Socks5>(new ProxySettings
+                    {
+                        Port = proxy.Port,
+                        Host = proxy.Host,
+                        Credentials = proxy.Credentials as NetworkCredential
+                    });
+                }
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(proxy.Type), proxy.Type, null);
+            }
+        }
+
+        private static HttpClient CreateHttpClient(HttpMessageHandler handler)
+        {
+            var httpClient = new HttpClient(handler, true);
             httpClient.DefaultRequestHeaders.Add(HttpConstants.UserAgent, HttpConstants.DefaultUserAgent);
             httpClient.DefaultRequestHeaders.Add("Connection", "keep-alive");
-            _httpClient = httpClient;
+            return httpClient;
         }
 
         protected override void SetProxy(IWebProxyExt proxy)
         {
             proxy = proxy ?? WebProxyExt.None;
             if (Equals(_webProxy, proxy)) return;
-
-            switch (proxy.Type)
-            {
-                case ProxyType.None:
-                case ProxyType.Http:
-                case ProxyType.Https:
-                {
-                    _handler?.Dispose();
-                    _handler = CreateDefaultHandler(_webProxy);
-                    break;
-                }
-                case ProxyType.Socks5:
-                {
-                    _handler?.Dispose();
-                    _handler = new ProxyClientHandler<Socks5>(new ProxySettings
-                    {
-                        Port = proxy.Port,
-                        Host = proxy.Host,
-                        Credentials = proxy.Credentials as NetworkCredential
-                    });
-                    break;
-                }
-
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(proxy.Type), proxy.Type, null);
-            }
             _webProxy = proxy;
-            _httpClient?.Dispose();
-            SetHttpClient();
+            _httpClient.Recreate();
         }
 
         public override ValueTask<HttpRes> ExecuteAsync(HttpReq httpReq, CancellationToken token = default)
         {
             token.ThrowIfCancellationRequested();
-            return ExecuteAsync(_httpClient, httpReq, token);
+            return ExecuteAsync(_httpClient.Value, httpReq, token);
         }
 
         public HttpClientService(
-            IWebProxyExt proxy = null,
-            bool useCookie = true)
-            : base(useCookie, proxy)
-        {
-            _handler = CreateDefaultHandler(proxy);
-            SetHttpClient();
-        }
-
-        public HttpClientService(
-            HttpMessageHandler handler,
-            bool useCookie,
+            bool useCookie = true,
             IWebProxyExt proxy = null,
             ILoggerFactory loggerFactory = null)
             : base(useCookie, proxy, loggerFactory)
         {
-            _handler = Check.NotNull(handler, nameof(handler));
-            SetHttpClient();
+            _funcOfHandler = () => CreateHandler(_webProxy);
         }
 
         public override void Dispose()
         {
-            _handler.Dispose();
             _httpClient.Dispose();
         }
     }

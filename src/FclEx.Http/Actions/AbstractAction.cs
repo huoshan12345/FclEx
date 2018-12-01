@@ -12,7 +12,7 @@ namespace FclEx.Http.Actions
 {
     public abstract class AbstractAction : IAction
     {
-        protected static ActionEventListener NullListener { get; }= (sender, @event) => @event.ToValueTask();
+        protected static ActionEventListener NullListener { get; } = (sender, @event) => @event.ToValueTask();
         protected string ActionName => GetType().GetDescription();
         protected virtual int MaxReTryTimes { get; set; } = 3;
         protected int ExcuteTimes { get; set; }
@@ -106,10 +106,7 @@ namespace FclEx.Http.Actions
 
         private static Exception CreateEx(string msg) => new SimpleException(msg);
 
-        protected virtual ValueTask<ActionEvent> ExecuteInternalAsync(CancellationToken token)
-        {
-            return ActionEvent.EmptyOkEvent.ToValueTask();
-        }
+        protected abstract ValueTask<ActionEvent> ExecuteInternalAsync(CancellationToken token);
 
         public async ValueTask<ActionEvent> ExecuteAsync(CancellationToken token)
         {

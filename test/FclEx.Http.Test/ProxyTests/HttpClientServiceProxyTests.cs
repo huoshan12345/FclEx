@@ -23,7 +23,7 @@ namespace FclEx.Http.Test.ProxyTests
         {
             new WebProxyExt(ProxyType.Http, "127.0.0.1", 1080),
             new WebProxyExt(ProxyType.Https, "127.0.0.1", 1080),
-            new WebProxyExt(ProxyType.Socks5, "127.0.0.1", 1080),
+            // new WebProxyExt(ProxyType.Socks5, "127.0.0.1", 1080),
         };
 
         public static IEnumerable<object[]> Cases { get; } = ProxyList.Select(m => new object[] { m });
@@ -32,9 +32,9 @@ namespace FclEx.Http.Test.ProxyTests
         [MemberData(nameof(Cases))]
         public async Task Test(IWebProxyExt proxy)
         {
-            var service = new HttpClientService(proxy);
+            var service = new HttpClientService(true, proxy);
             var res = await service.SendAsync(HttpReq.Get("https://www.google.com/"));
-            if(res.HasError)
+            if (res.HasError)
                 _output.WriteLine(res.Exception.ToString());
             Assert.False(res.HasError);
         }

@@ -32,7 +32,7 @@ namespace FclEx.Http.Test.HttpReqTests
         {
             new HttpClientService(),
             new HttpClientExtService(),
-            new LightHttpService()
+            new HttpWebRequestService()
         };
 
         public static IEnumerable<object[]> Cases => Services

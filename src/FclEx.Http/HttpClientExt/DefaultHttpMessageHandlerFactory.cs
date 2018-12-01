@@ -1,21 +1,15 @@
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
-using FclEx.Helpers;
 using FclEx.Utils;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 
 namespace FclEx.Http.HttpClientExt
 {
-    internal class DefaultHttpMessageHandlerFactory : IHttpMessageHandlerFactory
+    public class DefaultHttpMessageHandlerFactory : IHttpMessageHandlerFactory
     {
         private static readonly TimerCallback<DefaultHttpMessageHandlerFactory> _cleanupCallback =
             s => s.CleanupTimer_Tick();

@@ -20,7 +20,7 @@ namespace FclEx.Http.Test
         [InlineData("http://localhost:1080")]
         public void Constructor_Test(string proxy)
         {
-            var http = new LightHttpService(proxy);
+            var http = new HttpWebRequestService(proxy);
             Assert.Equal(WebProxyExt.Create(proxy), http.WebProxy);
         }
     }

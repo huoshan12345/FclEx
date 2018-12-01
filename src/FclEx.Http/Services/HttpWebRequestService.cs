@@ -15,7 +15,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace FclEx.Http.Services
 {
-    public class LightHttpService : AbstractHttpService
+    public class HttpWebRequestService : AbstractHttpService
     {
         private static readonly string[] _notAddHeaderNames =
         {
@@ -27,13 +27,13 @@ namespace FclEx.Http.Services
             HttpConstants.ContentLength,
         };
 
-        public LightHttpService(Uri uri, ILoggerFactory loggerFactory = null, bool useCookie = true)
+        public HttpWebRequestService(Uri uri, ILoggerFactory loggerFactory = null, bool useCookie = true)
             : this(useCookie, WebProxyExt.Create(uri), loggerFactory) { }
 
-        public LightHttpService(string url, ILoggerFactory loggerFactory = null, bool useCookie = true)
+        public HttpWebRequestService(string url, ILoggerFactory loggerFactory = null, bool useCookie = true)
             : this(useCookie, WebProxyExt.Create(url), loggerFactory) { }
 
-        public LightHttpService(
+        public HttpWebRequestService(
             bool useCookie = true,
             IWebProxyExt proxy = null,
             ILoggerFactory loggerFactory = null)
