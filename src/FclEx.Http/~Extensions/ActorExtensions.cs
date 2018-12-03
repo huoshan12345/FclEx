@@ -19,14 +19,17 @@ namespace FclEx.Http
         /// <param name="actor"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        public static async ValueTask<ActionEvent> ExecuteAutoAsync(this IActor actor, CancellationToken token = default)
+        public static async ValueTask<ActionEvent> ExecuteAutoAsync(
+            this IActor actor,
+            CancellationToken token = default)
         {
             ActionEvent result;
             do
             {
                 result = await actor.ExecuteAsync(token).DonotCapture();
             } while (!token.IsCancellationRequested
-                     && (result.Type == ActionEventType.EvtRepeat || result.Type == ActionEventType.EvtRetry));
+                     && (result.Type == ActionEventType.EvtRepeat
+                         || result.Type == ActionEventType.EvtRetry));
             return result;
         }
 
@@ -35,19 +38,24 @@ namespace FclEx.Http
         /// </summary>
         /// <param name="actor"></param>
         /// <param name="endCondition"></param>
+        /// <param name="token"></param>
         /// <returns></returns>
-        public static async ValueTask<ActionEvent> ExecuteForeverAsync(this IActor actor, Func<ActionEvent, bool> endCondition = null)
+        public static async ValueTask<ActionEvent> ExecuteForeverAsync(
+            this IActor actor,
+            Func<ActionEvent, bool> endCondition = null,
+            CancellationToken token = default)
         {
+            endCondition = endCondition ?? (e => false);
             ActionEvent result;
             do
             {
-                result = await actor.ExecuteAutoAsync().DonotCapture();
-            } while (endCondition == null || !endCondition(result));
+                result = await actor.ExecuteAutoAsync(token).DonotCapture();
+            } while (!token.IsCancellationRequested && !endCondition(result));
             return result;
         }
 
-        public static async ValueTask<ActionEvent[]> Execute<T>(this ICollection<T> actors, int parallelism = 0, 
-            CancellationToken token = default) 
+        public static async ValueTask<ActionEvent[]> Execute<T>(this ICollection<T> actors, int parallelism = 0,
+            CancellationToken token = default)
             where T : IActor
         {
             parallelism = parallelism < 1 ? Environment.ProcessorCount : parallelism;
@@ -59,6 +67,16 @@ namespace FclEx.Http
                 list.AddRange(groupResult);
             }
             return list.ToArray();
+        }
+
+        public static IActor Update(this IActor actor, Func<ActionEvent, ActionEvent> func)
+        {
+            return new UpdateResultAction(actor, func);
+        }
+
+        public static IActor Repeat(this IActor actor, Func<ActionEvent, bool> func)
+        {
+            return new UpdateResultAction(actor, e => func(e) ? ActionEvent.Repeat() : e);
         }
     }
 }

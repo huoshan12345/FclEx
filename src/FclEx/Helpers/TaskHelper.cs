@@ -49,5 +49,12 @@ namespace FclEx.Helpers
                 ? Task.Delay(seconds * 1000) 
                 : Task.CompletedTask;
         }
+
+        public static Task DelayMilli(int milliSeconds)
+        {
+            return milliSeconds > 0
+                ? Task.Delay(milliSeconds)
+                : Task.CompletedTask;
+        }
     }
 }

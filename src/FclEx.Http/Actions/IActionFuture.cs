@@ -13,6 +13,6 @@ namespace FclEx.Http.Actions
         /// </summary>
         /// <param name="func"></param>
         /// <returns></returns>
-        IActionFuture PushAction(Func<object[], IAction> func);
+        IActionFuture PushAction(Func<object[], IActor> func);
     }
 }

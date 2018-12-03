@@ -23,6 +23,11 @@ namespace FclEx.Utils
             _timer = new Timer(o => Recreate(), null, span, span);
         }
 
+        public TimerLazy(Func<T> valueFactory, TimeSpan span)
+            : this(valueFactory, LazyThreadSafetyMode.None, span)
+        {
+        }
+
         public T Value => _lazy.Value;
 
         public void SetValueFactory(Func<T> valueFactory)

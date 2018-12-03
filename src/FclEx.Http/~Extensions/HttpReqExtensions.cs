@@ -180,6 +180,11 @@ namespace FclEx.Http
             return HttpClientService.Default.Value.SendAsync(req, retryTimes, 0);
         }
 
+        public static ValueTask<HttpRes> SendAsync(this HttpReq req, IHttpService service, int retryTimes = 0)
+        {
+            return service.SendAsync(req, retryTimes, 0);
+        }
+
         public static HttpReq ResultType(this HttpReq req, HttpResultType type)
         {
             req.ResultType = type;

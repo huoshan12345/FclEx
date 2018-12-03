@@ -9,12 +9,12 @@ namespace FclEx.Http.Actions
 {
     public class ActionFuture : IActionFuture
     {
-        private readonly List<Func<object[], IAction>> _queue = new List<Func<object[], IAction>>();
+        private readonly List<Func<object[], IActor>> _queue = new List<Func<object[], IActor>>();
 
         public virtual async ValueTask<ActionEvent> ExecuteAsync(CancellationToken token)
         {
             var results = new object[_queue.Count];
-            var actions = new IAction[_queue.Count];
+            var actions = new IActor[_queue.Count];
             var lastEvent = ActionEvent.EmptyOkEvent;
             for (var i = 0; i < _queue.Count; i++)
             {
@@ -48,7 +48,7 @@ namespace FclEx.Http.Actions
 
         public int Count => _queue.Count;
 
-        public IActionFuture PushAction(Func<object[], IAction> func)
+        public IActionFuture PushAction(Func<object[], IActor> func)
         {
             Check.NotNull(func, nameof(func));
             _queue.Add(func);

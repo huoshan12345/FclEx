@@ -89,7 +89,7 @@ namespace FclEx.Http.Services
         protected override void SetProxy(IWebProxyExt proxy)
         {
             proxy = proxy ?? WebProxyExt.None;
-            if (Equals(_webProxy, proxy)) return;
+            if (Equals(WebProxy, proxy)) return;
             _webProxy = proxy;
             _httpClient.Recreate();
         }
@@ -106,7 +106,7 @@ namespace FclEx.Http.Services
             ILoggerFactory loggerFactory = null)
             : base(useCookie, proxy, loggerFactory)
         {
-            _funcOfHandler = () => CreateHandler(_webProxy);
+            _funcOfHandler = () => CreateHandler(WebProxy);
         }
 
         public override void Dispose()
