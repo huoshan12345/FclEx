@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using FclEx.Helpers;
@@ -17,7 +18,7 @@ namespace FclEx.Http.Actions
         protected AbstractHttpAction(
             IHttpService httpService,
             ILogger logger = null,
-            ActionEventListener listener = null) 
+            ActionEventListener listener = null)
             : base(logger, listener)
         {
             HttpService = httpService;
@@ -52,17 +53,23 @@ namespace FclEx.Http.Actions
             }
             catch (Exception ex)
             {
+                var result = await HandleExceptionAsync(ObjectException.Create(req, ex.Message, ex))
+                    .DonotCapture();
+
                 if (Logger.IsEnabled(LogLevel.Trace) && req != null)
                 {
                     // 此处用于生成请求信息，然后用fiddler等工具测试
+                    var msg = new StringBuilder(1024);
+                    msg.AppendLine($"[Action={ActionName}, Http Dump: ");
                     var url = req.GetUrl();
                     var header = req.GetRequestHeader(HttpService.GetCookies(req.Uri));
-                    Logger.LogTrace(ex.ToString());
-                    Logger.LogTrace(url);
-                    Logger.LogTrace(header);
+                    msg.AppendLine("url: " + url);
+                    msg.AppendLine("header: ");
+                    msg.Append(header);
+                    Logger.LogTrace(msg.ToString());
                 }
-                return await HandleExceptionAsync(ObjectException.Create(req, ex.Message, ex))
-                    .DonotCapture();
+
+                return result;
             }
             finally
             {

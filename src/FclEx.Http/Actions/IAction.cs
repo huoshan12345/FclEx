@@ -6,5 +6,6 @@ namespace FclEx.Http.Actions
     public interface IAction : IActor
     {
         ILogger Logger { get; }
+        event ActionEventListener OnEvent;
     }
 }

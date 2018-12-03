@@ -11,6 +11,7 @@ namespace FclEx.Http.Actions
     public class OkAction : AbstractAction
     {
         private readonly object _obj;
+
         public OkAction(object obj, ILogger logger = null, ActionEventListener listener = null) 
             : base(logger, listener)
         {

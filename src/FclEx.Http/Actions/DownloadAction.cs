@@ -12,7 +12,7 @@ namespace FclEx.Http.Actions
         protected readonly string _url;
 
         public DownloadAction(string url, 
-            IHttpService httpService, 
+            IHttpService httpService,
             ILogger logger = null,
             ActionEventListener listener = null)
             : base(httpService, logger, listener)

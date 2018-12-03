@@ -1,16 +1,15 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageProjectUrl>https://github.com/huoshan12345/FclEx</PackageProjectUrl>
     <PackageTags>extensions;helpers</PackageTags>
-    <Version>1.9.4</Version>
+    <Version>1.9.6</Version>
     <Authors>huoshan12345</Authors>
     <Description>Some basic useful extensions and helpers for C# fundamental class libraries</Description>
     <RepositoryUrl>https://github.com/huoshan12345/FclEx</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageLicenseUrl>https://github.com/huoshan12345/FclEx/blob/master/LICENSE.TXT</PackageLicenseUrl>
     <Copyright>huoshan12345</Copyright>
   </PropertyGroup>
 

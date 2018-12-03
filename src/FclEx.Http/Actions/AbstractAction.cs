@@ -12,18 +12,22 @@ namespace FclEx.Http.Actions
 {
     public abstract class AbstractAction : IAction
     {
-        protected static ActionEventListener NullListener { get; } = (sender, @event) => @event.ToValueTask();
         protected string ActionName => GetType().GetDescription();
         protected virtual int MaxReTryTimes { get; set; } = 3;
         protected int ExcuteTimes { get; set; }
         protected int ErrorTimes { get; set; }
-        protected ActionEventListener Listener { get; }
         public ILogger Logger { get; }
+        public event ActionEventListener OnEvent;
 
         protected AbstractAction(ILogger logger = null, ActionEventListener listener = null)
         {
-            Listener = listener ?? NullListener;
-            Logger = logger ?? NullLogger.Instance;
+            OnEvent += (sender, @event) =>
+            {
+                LogActionEvent(@event);
+                return new ValueTask(Task.CompletedTask);
+            };
+            OnEvent += listener;
+            Logger = Logger ?? NullLogger.Instance;
         }
 
         protected virtual void LogActionEvent(ActionEvent actionEvent)
@@ -40,14 +44,14 @@ namespace FclEx.Http.Actions
                 {
                     var ex = (Exception)target;
                     var msg = ex.ToString().TrimEnd();
-                    Logger.LogTrace($"[Action={ActionName}, Result={typeName}, {msg}]");
+                    Logger.LogTrace(ex, $"[Action={ActionName}, Result={typeName}, {msg}]");
                     break;
                 }
 
                 case ActionEventType.EvtRetry:
                 {
                     var ex = (Exception)target;
-                    Logger.LogTrace($"[Action={ActionName}, Result={typeName}, ErrorTimes={ErrorTimes}][{ex}]");
+                    Logger.LogTrace(ex, $"[Action={ActionName}, Result={typeName}, ErrorTimes={ErrorTimes}][{ex}]");
                     break;
                 }
 
@@ -61,28 +65,28 @@ namespace FclEx.Http.Actions
             }
         }
 
-        protected virtual ValueTask<ActionEvent> NotifyActionEventAsync(ActionEvent actionEvent)
+        protected virtual async ValueTask<ActionEvent> NotifyActionEventAsync(ActionEvent actionEvent)
         {
             try
             {
-                LogActionEvent(actionEvent);
-                return Listener(this, actionEvent);
+                await OnEvent.InvokeAsync(this, actionEvent).DonotCapture();
+                return actionEvent;
             }
             catch (Exception ex)
             {
-                return HandleExceptionAsync(ex);
+                return await HandleExceptionAsync(ex).DonotCapture();
             }
         }
 
-        protected virtual ValueTask<ActionEvent> HandleExceptionAsync(Exception ex)
+        protected virtual async ValueTask<ActionEvent> HandleExceptionAsync(Exception ex)
         {
             ++ErrorTimes;
             try
             {
                 var @event = ActionEvent.Create(ErrorTimes < MaxReTryTimes ?
                     ActionEventType.EvtRetry : ActionEventType.EvtError, ex);
-                LogActionEvent(@event);
-                return Listener(this, @event);
+                await OnEvent.InvokeAsync(this, @event).DonotCapture();
+                return @event;
             }
             catch (Exception e)
             {

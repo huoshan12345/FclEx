@@ -36,7 +36,7 @@ namespace FclEx.Http.Actions
             });
         }
 
-        protected CommonHttpAction(IHttpService httpService, 
+        protected CommonHttpAction(IHttpService httpService,
             ILogger logger = null,
             ActionEventListener listener = null)
             : base(httpService, logger, listener)

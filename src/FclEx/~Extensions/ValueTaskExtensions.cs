@@ -10,9 +10,14 @@ namespace FclEx
     {
         public static void Forget<T>(this ValueTask<T> task) { }
 
+        public static Task WhenAll(this IEnumerable<ValueTask> tasks)
+        {
+            return tasks.Select(t => t.AsTask()).WhenAll();
+        }
+
         public static Task<T[]> WhenAll<T>(this IEnumerable<ValueTask<T>> tasks)
         {
-            return Task.WhenAll(tasks.Select(t => t.AsTask()));
+            return tasks.Select(t => t.AsTask()).WhenAll();
         }
 
         public static ValueTask<T> ToValueTask<T>(this T obj) => new ValueTask<T>(obj);
