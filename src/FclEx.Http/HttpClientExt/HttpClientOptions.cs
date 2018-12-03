@@ -38,9 +38,11 @@ namespace FclEx.Http.HttpClientExt
 
         public bool UseCookie { get; set; } = true;
 
-        public IList<Action<HttpMessageHandlerBuilder>> HttpMessageHandlerBuilderActions { get; } = new List<Action<HttpMessageHandlerBuilder>>();
+        public IList<Action<HttpMessageHandlerBuilder>> HttpMessageHandlerBuilderActions { get; }
+            = new List<Action<HttpMessageHandlerBuilder>>();
 
-        public IList<Action<HttpClient>> HttpClientActions { get; } = new List<Action<HttpClient>>();
+        public IList<Action<HttpClient>> HttpClientActions { get; }
+            = new List<Action<HttpClient>>();
 
         public static HttpClientOptions Default { get; } = new HttpClientOptions();
     }

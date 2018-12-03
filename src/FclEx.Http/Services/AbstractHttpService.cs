@@ -24,6 +24,7 @@ namespace FclEx.Http.Services
 
         protected readonly CookieContainer _cookieContainer;
         protected IWebProxyExt _webProxy = WebProxyExt.None;
+        private ILogger _logger;
 
         protected AbstractHttpService(
             bool useCookie,
@@ -86,7 +87,11 @@ namespace FclEx.Http.Services
             _webProxy = proxy ?? WebProxyExt.None;
         }
 
-        public ILogger Logger { get; }
+        public ILogger Logger
+        {
+            get => _logger = (_logger ?? NullLogger.Instance);
+            set => _logger = value;
+        }
 
         protected void SaveCookies(Uri responseUri, string cookieStr)
         {

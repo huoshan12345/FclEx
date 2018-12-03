@@ -22,7 +22,7 @@ namespace FclEx.Http.Services
         private readonly HttpClientOptions _options;
 
         public static TimerLazy<HttpClientExtService> Default { get; } = new TimerLazy<HttpClientExtService>(() =>
-                new HttpClientExtService(null, false),
+                new HttpClientExtService(false),
             LazyThreadSafetyMode.ExecutionAndPublication,
             TimeSpan.FromMinutes(2));
 
@@ -34,10 +34,11 @@ namespace FclEx.Http.Services
         }
 
         public HttpClientExtService(
+            bool useCookie = true,
             IWebProxyExt proxy = null,
-            bool useCookie = true)
+            ILoggerFactory loggerFactory = null)
             : this(new HttpClientOptions { Proxy = proxy, UseCookie = useCookie },
-                DefaultHttpClientFactory.Default)
+                DefaultHttpClientFactory.Default, loggerFactory)
         {
         }
 

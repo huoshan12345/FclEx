@@ -17,6 +17,8 @@ namespace FclEx.Http.HttpClientExt
             Check.NotNull(options, nameof(options));
             var handler = _httpMessageHandlerFactory.CreateHandler(options);
             var client = new HttpClient(handler, disposeHandler: false);
+            foreach (var action in options.HttpClientActions)
+                action(client);
             return client;
         }
 

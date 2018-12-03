@@ -23,6 +23,6 @@ namespace FclEx.Http.Services
 
         IWebProxyExt WebProxy { get; set; }
 
-        ILogger Logger { get; }
+        ILogger Logger { get; set; }
     }
 }

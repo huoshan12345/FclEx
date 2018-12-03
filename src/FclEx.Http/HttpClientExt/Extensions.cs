@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using FclEx.Http.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FclEx.Http.HttpClientExt
