@@ -68,7 +68,7 @@ namespace FclEx.Http.HttpClientExt
                 {
                     const string msg = "The '{0}' property must be null. '{1}' instances provided to '{2}' " +
                                        "must not be reused or cached.{3}Handler: '{4}'";
-                    var message = msg.Format(
+                    var message = msg.Fmt(
                         nameof(DelegatingHandler.InnerHandler),
                         nameof(DelegatingHandler),
                         nameof(HttpMessageHandlerBuilder),

@@ -7,9 +7,9 @@ namespace FclEx
     {
         private static readonly Regex _regMd5 = new Regex(@"^([a-fA-F0-9]{32})$");
 
-        public static string ToMd5String(this byte[] input)
+        public static string ToMd5String(this byte[] input, bool upperCase = false)
         {
-            return input.ToMd5().ToHexString();
+            return input.ToMd5().ToHexString(upperCase);
         }
 
         public static byte[] ToMd5(this byte[] input)

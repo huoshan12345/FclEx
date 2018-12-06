@@ -19,12 +19,19 @@ namespace FclEx
 
         public static string ToBase64String(this byte[] bytes) => Convert.ToBase64String(bytes);
 
-        public static string ToHexString(this byte[] bytes)
+        public static string ToHexString(this byte[] bytes, bool upperCase = false)
         {
-            var builder = new StringBuilder();
-            foreach (var @byte in bytes)
+            var builder = new StringBuilder(bytes.Length);
+            if (upperCase)
             {
-                builder.Append(@byte.ToString("X2"));
+                foreach (var @byte in bytes)
+                    builder.Append(@byte.ToString("X2"));
+            }
+            else
+            {
+                foreach (var @byte in bytes)
+                    builder.Append(@byte.ToString("x2"));
+
             }
             return builder.ToString();
         }

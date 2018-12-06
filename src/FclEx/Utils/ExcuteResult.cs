@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace FclEx.Utils
 {
@@ -8,8 +9,11 @@ namespace FclEx.Utils
     {
         public bool Successful => Code == 0;
         public int Code { get; }
+        [JsonIgnore]
         public Exception Exception { get; }
         public TimeSpan Elapsed { get; }
+        public string Msg => Exception?.Message;
+        public string StackTrace => Exception?.StackTrace;
 
         public static ExcuteResult Success { get; } = new ExcuteResult(TimeSpan.Zero);
 
@@ -54,6 +58,21 @@ namespace FclEx.Utils
         }
 
         public static ExcuteResult CreateError(string error)
+        {
+            return CreateError(-1, error);
+        }
+
+        public static ExcuteResult<T> CreateSuccess<T>(T item, TimeSpan elapsed)
+        {
+            return new ExcuteResult<T>(item, elapsed);
+        }
+
+        public static ExcuteResult<T> CreateError<T>(int code, string error)
+        {
+            return new ExcuteResult<T>(code, new SimpleException(error));
+        }
+
+        public static ExcuteResult<T> CreateError<T>(string error)
         {
             return CreateError(-1, error);
         }
@@ -116,7 +135,7 @@ namespace FclEx.Utils
             {
                 var watch = ValueStopwatch.StartNew();
                 var result = action();
-                return ExcuteResult<T>.CreateSuccess(result, watch.GetElapsedTime());
+                return ExcuteResult.CreateSuccess(result, watch.GetElapsedTime());
             }
             catch (Exception ex)
             {
@@ -130,7 +149,7 @@ namespace FclEx.Utils
             {
                 var watch = ValueStopwatch.StartNew();
                 var result = await action().DonotCapture();
-                return ExcuteResult<T>.CreateSuccess(result, watch.GetElapsedTime());
+                return ExcuteResult.CreateSuccess(result, watch.GetElapsedTime());
             }
             catch (Exception ex)
             {
@@ -144,7 +163,7 @@ namespace FclEx.Utils
             {
                 var watch = ValueStopwatch.StartNew();
                 var result = await action().DonotCapture();
-                return ExcuteResult<T>.CreateSuccess(result, watch.GetElapsedTime());
+                return ExcuteResult.CreateSuccess(result, watch.GetElapsedTime());
             }
             catch (Exception ex)
             {
@@ -157,9 +176,12 @@ namespace FclEx.Utils
     {
         public bool Successful => Code == 0;
         public int Code { get; }
+        [JsonIgnore]
         public Exception Exception { get; }
         public T Result { get; }
         public TimeSpan Elapsed { get; }
+        public string Msg => Exception?.Message;
+        public string StackTrace => Exception?.StackTrace;
 
         internal ExcuteResult(int code, Exception ex)
         {
@@ -202,19 +224,19 @@ namespace FclEx.Utils
             return new ExcuteResult<T>(-1, new SimpleException(error));
         }
 
-        public static ExcuteResult<T> CreateSuccess(T item, TimeSpan elapsed)
+        public static implicit operator ExcuteResult<T>(T item)
         {
-            return new ExcuteResult<T>(item, elapsed);
+            return item == null
+                ? ExcuteResult.CreateError<T>(-1, "结果为空")
+                : ExcuteResult.CreateSuccess(item, TimeSpan.Zero);
         }
 
-        public static ExcuteResult<T> CreateError(int code, string error)
+        public ExcuteResult<TTarget> ToExplicit<TTarget>()
         {
-            return new ExcuteResult<T>(code, new SimpleException(error));
-        }
-
-        public static ExcuteResult<T> CreateError(string error)
-        {
-            return CreateError(-1, error);
+            if (Successful)
+                throw new InvalidOperationException("cannot convert to explicit when result is successful");
+            else
+                return new ExcuteResult<TTarget>(Code, Exception);
         }
     }
 }
