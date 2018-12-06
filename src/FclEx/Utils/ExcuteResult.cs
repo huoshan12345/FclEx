@@ -5,13 +5,14 @@ using Newtonsoft.Json;
 
 namespace FclEx.Utils
 {
-    public struct ExcuteResult
+    public class ExcuteResult
     {
         public bool Successful => Code == 0;
         public int Code { get; }
+
         [JsonIgnore]
         public Exception Exception { get; }
-        public TimeSpan Elapsed { get; }
+        public TimeSpan Elapsed { get; protected set; }
         public string Msg => Exception?.Message;
         public string StackTrace => Exception?.StackTrace;
 
@@ -74,7 +75,7 @@ namespace FclEx.Utils
 
         public static ExcuteResult<T> CreateError<T>(string error)
         {
-            return CreateError(-1, error);
+            return CreateError<T>(-1, error);
         }
 
         public static implicit operator ExcuteResult(Exception ex)
@@ -172,46 +173,18 @@ namespace FclEx.Utils
         }
     }
 
-    public struct ExcuteResult<T>
+    public class ExcuteResult<T> : ExcuteResult
     {
-        public bool Successful => Code == 0;
-        public int Code { get; }
-        [JsonIgnore]
-        public Exception Exception { get; }
         public T Result { get; }
-        public TimeSpan Elapsed { get; }
-        public string Msg => Exception?.Message;
-        public string StackTrace => Exception?.StackTrace;
 
-        internal ExcuteResult(int code, Exception ex)
+        internal ExcuteResult(int code, Exception ex) : base(code, ex)
         {
-            Code = Check.NotEqual(code, 0, nameof(code));
-            Exception = Check.NotNull(ex, nameof(ex));
-            Elapsed = TimeSpan.Zero;
             Result = default;
         }
 
-        internal ExcuteResult(T result, TimeSpan elapsed)
+        internal ExcuteResult(T result, TimeSpan elapsed) : base(elapsed)
         {
             Result = result;
-            Code = 0;
-            Exception = null;
-            Elapsed = elapsed;
-        }
-
-        public static implicit operator ExcuteResult(ExcuteResult<T> result)
-        {
-            if (result.Successful)
-                return new ExcuteResult(result.Elapsed);
-            else
-            {
-                return new ExcuteResult(result.Code, result.Exception);
-            }
-        }
-
-        public static implicit operator ExcuteResult<T>(ExcuteResult result)
-        {
-            return result.ToExplicit<T>();
         }
 
         public static implicit operator ExcuteResult<T>(Exception ex)
@@ -229,14 +202,6 @@ namespace FclEx.Utils
             return item == null
                 ? ExcuteResult.CreateError<T>(-1, "结果为空")
                 : ExcuteResult.CreateSuccess(item, TimeSpan.Zero);
-        }
-
-        public ExcuteResult<TTarget> ToExplicit<TTarget>()
-        {
-            if (Successful)
-                throw new InvalidOperationException("cannot convert to explicit when result is successful");
-            else
-                return new ExcuteResult<TTarget>(Code, Exception);
         }
     }
 }

@@ -30,7 +30,7 @@ Set-Location $packFolder
 
 $PSGallerySourceUri = 'https://www.myget.org/F/huoshan12345/api/v2/package'
 $APIKey = 'fbc0486a-55ff-4760-b246-bef3e0ee952d'
-& dotnet nuget push *.nupkg -k $APIKey -s $PSGallerySourceUri --timeout 30
+& dotnet nuget push *.nupkg -k $APIKey -s $PSGallerySourceUri --timeout 50
 if ($Lastexitcode -ne 0)	{
 	throw "failed with exit code $LastExitCode"
 }
