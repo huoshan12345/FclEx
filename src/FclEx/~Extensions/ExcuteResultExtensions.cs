@@ -43,7 +43,7 @@ namespace FclEx
             return @this.On(r => !r.Successful, t => action(t.Exception));
         }
 
-        public static ExcuteResult ThrowIfError<T>(this ExcuteResult<T> @this)
+        public static ExcuteResult<T> ThrowIfError<T>(this ExcuteResult<T> @this)
         {
             return @this.Error(e => e.ReThrow());
         }

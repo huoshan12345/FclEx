@@ -5,14 +5,13 @@ using Newtonsoft.Json;
 
 namespace FclEx.Utils
 {
-    public class ExcuteResult
+    public struct ExcuteResult : IExcuteResult
     {
         public bool Successful => Code == 0;
         public int Code { get; }
-
         [JsonIgnore]
         public Exception Exception { get; }
-        public TimeSpan Elapsed { get; protected set; }
+        public TimeSpan Elapsed { get; }
         public string Msg => Exception?.Message;
         public string StackTrace => Exception?.StackTrace;
 
@@ -170,38 +169,6 @@ namespace FclEx.Utils
             {
                 return ex;
             }
-        }
-    }
-
-    public class ExcuteResult<T> : ExcuteResult
-    {
-        public T Result { get; }
-
-        internal ExcuteResult(int code, Exception ex) : base(code, ex)
-        {
-            Result = default;
-        }
-
-        internal ExcuteResult(T result, TimeSpan elapsed) : base(elapsed)
-        {
-            Result = result;
-        }
-
-        public static implicit operator ExcuteResult<T>(Exception ex)
-        {
-            return new ExcuteResult<T>(-1, ex);
-        }
-
-        public static implicit operator ExcuteResult<T>(string error)
-        {
-            return new ExcuteResult<T>(-1, new SimpleException(error));
-        }
-
-        public static implicit operator ExcuteResult<T>(T item)
-        {
-            return item == null
-                ? ExcuteResult.CreateError<T>(-1, "结果为空")
-                : ExcuteResult.CreateSuccess(item, TimeSpan.Zero);
         }
     }
 }

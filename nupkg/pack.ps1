@@ -30,9 +30,13 @@ Set-Location $packFolder
 
 $PSGallerySourceUri = 'https://www.myget.org/F/huoshan12345/api/v2/package'
 $APIKey = 'fbc0486a-55ff-4760-b246-bef3e0ee952d'
-& dotnet nuget push *.nupkg -k $APIKey -s $PSGallerySourceUri --timeout 50
-if ($Lastexitcode -ne 0)	{
-	throw "failed with exit code $LastExitCode"
+
+$files = Get-ChildItem ./*.nupkg
+foreach ($file in $files) {
+	& dotnet nuget push $file -k $APIKey -s $PSGallerySourceUri --timeout 50
+	if ($Lastexitcode -ne 0) {
+		throw "failed with exit code $LastExitCode"
+	}
 }
 
 Write-Output "Finished. Press any key to exit."
