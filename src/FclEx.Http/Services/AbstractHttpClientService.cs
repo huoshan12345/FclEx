@@ -15,7 +15,7 @@ namespace FclEx.Http.Services
 {
     public abstract class AbstractHttpClientService : AbstractHttpService
     {
-        protected static readonly string[] _notAddHeaderNames =
+        protected static readonly string[] NotAddHeaderNames =
         {
             HttpConstants.ContentType,
             HttpConstants.Cookie,
@@ -78,7 +78,7 @@ namespace FclEx.Http.Services
                 };
             }
 
-            foreach (var header in req.HeaderMap.Where(h => !_notAddHeaderNames.Contains(h.Key)))
+            foreach (var header in req.HeaderMap.Where(h => !NotAddHeaderNames.Contains(h.Key)))
             {
                 request.Headers.Add(header.Key, header.Value);
             }

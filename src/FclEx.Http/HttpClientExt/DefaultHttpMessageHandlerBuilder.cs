@@ -5,11 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
-using FclEx.Http.Core;
 using FclEx.Http.Proxy;
+using FclEx.Http.Utils;
 using FclEx.Utils;
-using SocksSharp;
-using SocksSharp.Proxy;
 
 namespace FclEx.Http.HttpClientExt
 {
@@ -23,46 +21,7 @@ namespace FclEx.Http.HttpClientExt
 
         protected static HttpMessageHandler Create(IWebProxyExt proxy)
         {
-            switch (proxy.Type)
-            {
-                case ProxyType.None: return CreateHttpClientHandler(null);
-
-                case ProxyType.Http:
-                case ProxyType.Https:
-                    return CreateHttpClientHandler(proxy);
-
-                case ProxyType.Socks5:
-                    return new ProxyClientHandler<Socks5>(new ProxySettings
-                    {
-                        Port = proxy.Port,
-                        Host = proxy.Host,
-                        Credentials = proxy.Credentials as NetworkCredential
-                    });
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        private static HttpClientHandler CreateHttpClientHandler(IWebProxy proxy)
-        {
-            var handler = new HttpClientHandler
-            {
-                AllowAutoRedirect = false,
-                UseCookies = false,
-                MaxConnectionsPerServer = 64,
-                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-            };
-            if (proxy != null)
-            {
-                handler.UseProxy = true;
-                handler.Proxy = proxy;
-            }
-            else
-            {
-                handler.UseProxy = false;
-                handler.Proxy = null;
-            }
-            return handler;
+            return HttpHandlerHelper.Create(proxy);
         }
 
         public override HttpMessageHandler PrimaryHandler { get; }

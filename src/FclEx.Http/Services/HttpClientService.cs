@@ -1,20 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using FclEx.Helpers;
 using FclEx.Http.Core;
 using FclEx.Http.Proxy;
+using FclEx.Http.Utils;
 using FclEx.Utils;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using SocksSharp;
-using SocksSharp.Proxy;
 
 namespace FclEx.Http.Services
 {
@@ -32,50 +24,9 @@ namespace FclEx.Http.Services
 
         private static Func<HttpMessageHandler> _funcOfHandler;
 
-        private static HttpClientHandler CreateDefaultHandler(IWebProxyExt proxy = null)
-        {
-            var handler = new HttpClientHandler
-            {
-                AllowAutoRedirect = false,
-                UseCookies = false,
-                MaxConnectionsPerServer = 64,
-                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-            };
-            if (proxy != null)
-            {
-                handler.UseProxy = true;
-                handler.Proxy = proxy;
-            }
-            else
-            {
-                handler.UseProxy = false;
-                handler.Proxy = null;
-            }
-            return handler;
-        }
-
         private static HttpMessageHandler CreateHandler(IWebProxyExt proxy)
         {
-            switch (proxy.Type)
-            {
-                case ProxyType.None:
-                case ProxyType.Http:
-                case ProxyType.Https:
-                    return CreateDefaultHandler(proxy);
-
-                case ProxyType.Socks5:
-                {
-                    return new ProxyClientHandler<Socks5>(new ProxySettings
-                    {
-                        Port = proxy.Port,
-                        Host = proxy.Host,
-                        Credentials = proxy.Credentials as NetworkCredential
-                    });
-                }
-
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(proxy.Type), proxy.Type, null);
-            }
+            return HttpHandlerHelper.Create(proxy);
         }
 
         private static HttpClient CreateHttpClient(HttpMessageHandler handler)
