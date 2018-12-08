@@ -21,11 +21,21 @@ namespace FclEx.Utils
             return value;
         }
 
+        public static T NotEqual<T>(T value, string parameterName, T equal)
+        {
+            return NotEqual(value, equal, parameterName);
+        }
+
         public static T Equal<T>(T value, T equal, string parameterName)
         {
             if (!EqualityComparer<T>.Default.Equals(value, equal))
                 throw new ArgumentException($"{parameterName} must equal to {equal}", parameterName);
             return value;
+        }
+
+        public static T Equal<T>(T value, string parameterName, T equal)
+        {
+            return Equal(value, equal, parameterName);
         }
 
         public static string NotNullOrEmpty(string value, string parameterName)

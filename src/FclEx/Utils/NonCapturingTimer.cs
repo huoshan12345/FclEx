@@ -6,7 +6,7 @@ namespace FclEx.Utils
     // A convenience API for interacting with System.Threading.Timer in a way
     // that doesn't capture the ExecutionContext. We should be using this (or equivalent)
     // everywhere we use timers to avoid rooting any values stored in asynclocals.
-    internal static class NonCapturingTimer
+    public static class NonCapturingTimer
     {
         public static Timer<T> Create<T>(
             TimerCallback<T> callback,

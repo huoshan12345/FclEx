@@ -5,10 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 
-[assembly: InternalsVisibleTo("FclEx.Http")]
 namespace FclEx
 {
-    internal static class EventExtensions
+    public static class EventExtensions
     {
         public static T On<T>(this T t, Func<T, bool> condition, Action<T> action)
         {

@@ -10,7 +10,7 @@ namespace FclEx.Utils
     {
         private readonly object _lock = new object();
         private volatile Lazy<T> _lazy;
-        private readonly Timer _timer;
+        private readonly Timer<T> _timer;
         private volatile Func<T> _valueFactory;
         private readonly LazyThreadSafetyMode _mode;
 
@@ -20,7 +20,7 @@ namespace FclEx.Utils
             _mode = mode;
 
             _lazy = new Lazy<T>(_valueFactory, _mode);
-            _timer = new Timer(o => Recreate(), null, span, span);
+            _timer = NonCapturingTimer.Create<T>(o => Recreate(), default, span, span);
         }
 
         public TimerLazy(Func<T> valueFactory, TimeSpan span)

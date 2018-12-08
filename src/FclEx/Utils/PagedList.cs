@@ -6,7 +6,7 @@ namespace FclEx.Utils
     public interface IPagedList
     {
         int PageCount { get; }
-        long TotalItemCount { get; }
+        int TotalItemCount { get; }
         int PageIndex { get; }
         int PageNumber { get; }
         int PageSize { get; }
@@ -61,7 +61,7 @@ namespace FclEx.Utils
         }
 
         public int PageCount { get; private set; }
-        public long TotalItemCount { get; private set; }
+        public int TotalItemCount { get; private set; }
         public int PageIndex { get; private set; }
         public int PageNumber { get; private set; }
         public int PageSize { get; private set; }
