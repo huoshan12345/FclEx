@@ -32,20 +32,17 @@ namespace FclEx.Utils
 
         }
 
-        public PagedList(ICollection<T> items, int pageIndex, int pageSize, long totalItemCount)
+        public PagedList(ICollection<T> items, int pageIndex, int pageSize, int totalItemCount)
             : base(items)
         {
-            if (pageIndex < 0)
-                throw new ArgumentOutOfRangeException("pageIndex", pageIndex, "Value can not be below 0.");
-
-            if (totalItemCount < 0)
-                throw new ArgumentOutOfRangeException("totalItemCount", totalItemCount, "Value can not be less than 0.");
+            Check.AtLeast(pageIndex, nameof(pageIndex), 0);
+            Check.AtLeast(totalItemCount, nameof(totalItemCount), 0);
 
             if (pageSize < 1 && totalItemCount > 0)
-                throw new ArgumentOutOfRangeException("pageSize", pageSize, "Value can not be less than 1.");
+                throw new ArgumentOutOfRangeException(nameof(pageSize), pageSize, "Value can not be less than 1.");
 
             if (pageSize < 0 && totalItemCount == 0)
-                throw new ArgumentOutOfRangeException("pageSize", pageSize, "Value can not be less than 0.");
+                throw new ArgumentOutOfRangeException(nameof(pageSize), pageSize, "Value can not be less than 0.");
 
             PageIndex = pageIndex;
             PageNumber = pageIndex + 1;

@@ -60,5 +60,12 @@ namespace FclEx.Utils
                 ? ExcuteResult.CreateError<T>(-1, "结果为空")
                 : ExcuteResult.CreateSuccess(item, TimeSpan.Zero);
         }
+
+        public ExcuteResult<TTagert> ToExplicit<TTagert>()
+        {
+            return Successful 
+                ? new ExcuteResult<TTagert>(Result.CastTo<TTagert>(), Elapsed)
+                : new ExcuteResult<TTagert>(Code, Exception);
+        }
     }
 }
