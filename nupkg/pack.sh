@@ -7,6 +7,7 @@ projects=(
 "FclEx"
 "FclEx.Http"
 "FclEx.Image"
+"FclEx.Npoi"
 )
 
 rm -f *.nupkg
