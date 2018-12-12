@@ -8,6 +8,16 @@ namespace FclEx
 {
     public static class ExcuteResultExtensions
     {
+        public static bool IsStrErr(this IExcuteResult r)
+        {
+            return r.Code == ExcuteResultCodes.FromString;
+        }
+
+        public static bool IsExErr(this IExcuteResult r)
+        {
+            return r.Code == ExcuteResultCodes.FromException;
+        }
+
         public static ExcuteResult Ok(this ExcuteResult @this, Action action)
         {
             return @this.Ok(t => action());

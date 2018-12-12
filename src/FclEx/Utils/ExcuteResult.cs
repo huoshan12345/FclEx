@@ -7,7 +7,7 @@ namespace FclEx.Utils
 {
     public struct ExcuteResult : IExcuteResult
     {
-        public bool Successful => Code == 0;
+        public bool Successful => Code == ExcuteResultCodes.Success;
         public int Code { get; }
         [JsonIgnore]
         public Exception Exception { get; }
@@ -18,11 +18,12 @@ namespace FclEx.Utils
         public static ExcuteResult Success { get; } = new ExcuteResult(TimeSpan.Zero);
 
         public static ExcuteResult NotImplemented { get; }
-            = new ExcuteResult(-2, new NotImplementedException("this function is not implemented"));
+            = new ExcuteResult(ExcuteResultCodes.NotImplemented, 
+                new NotImplementedException("this function is not implemented"));
 
         internal ExcuteResult(int code, Exception ex)
         {
-            Code = Check.NotEqual(code, 0, nameof(code));
+            Code = Check.NotEqual(code, ExcuteResultCodes.Success, nameof(code));
             Exception = Check.NotNull(ex, nameof(ex));
             Elapsed = default;
         }
@@ -34,7 +35,7 @@ namespace FclEx.Utils
 
         internal ExcuteResult(TimeSpan elapsed)
         {
-            Code = 0;
+            Code = ExcuteResultCodes.Success;
             Exception = null;
             Elapsed = elapsed;
         }
@@ -59,7 +60,7 @@ namespace FclEx.Utils
 
         public static ExcuteResult CreateError(string error)
         {
-            return CreateError(-1, error);
+            return CreateError(ExcuteResultCodes.FromString, error);
         }
 
         public static ExcuteResult<T> CreateSuccess<T>(T item, TimeSpan elapsed)
@@ -74,17 +75,17 @@ namespace FclEx.Utils
 
         public static ExcuteResult<T> CreateError<T>(string error)
         {
-            return CreateError<T>(-1, error);
+            return CreateError<T>(ExcuteResultCodes.FromString, error);
         }
 
         public static implicit operator ExcuteResult(Exception ex)
         {
-            return new ExcuteResult(-1, ex);
+            return new ExcuteResult(ExcuteResultCodes.FromException, ex);
         }
 
         public static implicit operator ExcuteResult(string error)
         {
-            return new ExcuteResult(-1, error, null);
+            return new ExcuteResult(ExcuteResultCodes.FromString, error, null);
         }
 
         public static ExcuteResult Excute(Action action)

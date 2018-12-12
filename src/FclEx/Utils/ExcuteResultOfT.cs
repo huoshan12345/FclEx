@@ -7,7 +7,7 @@ namespace FclEx.Utils
 {
     public class ExcuteResult<T> : IExcuteResult<T>
     {
-        public bool Successful => Code == 0;
+        public bool Successful => Code == ExcuteResultCodes.Success;
         public int Code { get; }
         [JsonIgnore]
         public Exception Exception { get; }
@@ -18,7 +18,7 @@ namespace FclEx.Utils
 
         internal ExcuteResult(int code, Exception ex)
         {
-            Code = Check.NotEqual(code, 0, nameof(code));
+            Code = Check.NotEqual(code, ExcuteResultCodes.Success, nameof(code));
             Exception = Check.NotNull(ex, nameof(ex));
             Elapsed = default;
             Result = default;
@@ -26,7 +26,7 @@ namespace FclEx.Utils
 
         internal ExcuteResult(T result, TimeSpan elapsed)
         {
-            Code = 0;
+            Code = ExcuteResultCodes.Success;
             Exception = null;
             Elapsed = elapsed;
             Result = result;
@@ -46,18 +46,18 @@ namespace FclEx.Utils
 
         public static implicit operator ExcuteResult<T>(Exception ex)
         {
-            return new ExcuteResult<T>(-1, ex);
+            return new ExcuteResult<T>(ExcuteResultCodes.FromException, ex);
         }
 
         public static implicit operator ExcuteResult<T>(string error)
         {
-            return new ExcuteResult<T>(-1, new SimpleException(error));
+            return new ExcuteResult<T>(ExcuteResultCodes.FromString, new SimpleException(error));
         }
 
         public static implicit operator ExcuteResult<T>(T item)
         {
             return item == null
-                ? ExcuteResult.CreateError<T>(-1, "结果为空")
+                ? ExcuteResult.CreateError<T>(ExcuteResultCodes.NullData, "结果为空")
                 : ExcuteResult.CreateSuccess(item, TimeSpan.Zero);
         }
 
