@@ -80,6 +80,7 @@ namespace FclEx.Npoi
             return new HSSFWorkbook();
         }
         #endregion
+
         /// <summary>
         /// 导出Excel,如果Excel类型为Office2003，那么数据行数不能超过65535，如果超过，则会被拆分到多个工作区中。
         /// </summary>
@@ -90,7 +91,7 @@ namespace FclEx.Npoi
         /// <param name="saveStream">保存到的文件流</param>
         /// <param name="columns">导出列</param>
         public static void ExportExcel<T>(
-            IList<T> dataSource,
+            ICollection<T> dataSource,
             OfficeType excelType,
             string sheetName,
             Stream saveStream,
@@ -217,17 +218,16 @@ namespace FclEx.Npoi
             book.Write(saveStream);
         }
 
-        public static void ExportExcel<T, TColumn>(
-            IList<T> dataSource,
-            IList<TColumn> columns,
+        public static void ExportExcel<T>(
+            ICollection<T> dataSource,
+            IList<IExportColumn<T>> columns,
             string path,
             string sheetName = "sheet1",
             OfficeType excelType = OfficeType.Office2007)
-                where TColumn : IExportColumn<T>
         {
             using (var fs = File.OpenWrite(path))
             {
-                ExportExcel(dataSource, excelType, sheetName, fs, columns.OfType<IExportColumn<T>>().ToList());
+                ExportExcel(dataSource, excelType, sheetName, fs, columns);
             }
         }
         #endregion
