@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using FclEx.Test.TypeCasters;
 using Xunit;
 
-namespace FclEx.Test.ByteExtensions
+namespace FclEx.Test.Extensions.ByteExtensions
 {
     public class UnmanagedTests
     {

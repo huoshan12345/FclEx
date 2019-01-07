@@ -1,7 +1,7 @@
 ﻿using FclEx.Test.Enums;
 using Xunit;
 
-namespace FclEx.Test.ObjectExtensions
+namespace FclEx.Test.Extensions.ObjectExtensions
 {
     public class CastToTests
     {

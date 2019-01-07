@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Xunit;
 
-namespace FclEx.Test.StringExtensions
+namespace FclEx.Test.Extensions.StringExtensions
 {
     public class ToIntTests
     {

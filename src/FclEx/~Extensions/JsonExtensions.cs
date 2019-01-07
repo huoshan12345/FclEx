@@ -12,22 +12,33 @@ namespace FclEx
 {
     public static class JsonExtensions
     {
+        private static readonly IContractResolver _camelResolver = new CamelCasePropertyNamesContractResolver
+        {
+            NamingStrategy = new CamelCaseNamingStrategy
+            {
+                ProcessDictionaryKeys = true,
+                OverrideSpecifiedNames = true
+            }
+        };
+
         private static readonly JsonSerializerSettings _ignoreSettings = new JsonSerializerSettings
         {
             NullValueHandling = NullValueHandling.Ignore
         };
-        private static readonly JsonSerializer _defaultSerializer = JsonSerializer.CreateDefault();
 
         private static readonly JsonSerializerSettings _camelSettings = new JsonSerializerSettings
         {
-            ContractResolver = new CamelCasePropertyNamesContractResolver(),
-            NullValueHandling = NullValueHandling.Ignore
+            ContractResolver = _camelResolver
         };
 
         private static readonly JsonSerializerSettings _camelIgnoreNullSettings = new JsonSerializerSettings
         {
-            ContractResolver = new CamelCasePropertyNamesContractResolver(),
+            ContractResolver = _camelResolver,
+            NullValueHandling = NullValueHandling.Ignore
         };
+
+        private static readonly JsonSerializer _defaultSerializer = JsonSerializer.CreateDefault();
+        private static readonly JsonSerializer _camelSerializer = JsonSerializer.Create(_camelSettings);
 
         public static string ToJson(this object obj,
             JsonSerializerSettings settings,
@@ -108,15 +119,12 @@ namespace FclEx
             }));
         }
 
-        public static JToken ToJToken(this object obj, JsonSerializer jsonSerializer = null)
-        {
-            return JToken.FromObject(obj, jsonSerializer ?? _defaultSerializer);
-        }
-
-        public static JObject ToJObject(this object obj, JsonSerializer jsonSerializer = null)
-        {
-            return JObject.FromObject(obj, jsonSerializer ?? _defaultSerializer);
-        }
+        public static JToken ToJToken(this object obj, JsonSerializer jsonSerializer = null) => JToken.FromObject(obj, jsonSerializer ?? _defaultSerializer);
+        public static JToken ToJTokenCamel(this object obj) => JToken.FromObject(obj, _camelSerializer);
+        public static JObject ToJObject(this object obj, JsonSerializer jsonSerializer = null) => JObject.FromObject(obj, jsonSerializer ?? _defaultSerializer);
+        public static JObject ToJObjectCamel(this object obj) => JObject.FromObject(obj, _camelSerializer);
+        public static JArray ToJArray(this object obj, JsonSerializer jsonSerializer = null) => JArray.FromObject(obj, jsonSerializer ?? _defaultSerializer);
+        public static JArray ToJArrayCamel(this object obj) => JArray.FromObject(obj, _camelSerializer);
 
         public static Dictionary<string, string> ToStrDic(this JObject jObject)
         {

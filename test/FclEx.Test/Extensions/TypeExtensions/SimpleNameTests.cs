@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Xunit;
 
-namespace FclEx.Test.TypeExtensions
+namespace FclEx.Test.Extensions.TypeExtensions
 {
     public class SimpleNameTests
     {
