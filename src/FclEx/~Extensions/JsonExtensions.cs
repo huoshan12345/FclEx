@@ -12,13 +12,9 @@ namespace FclEx
 {
     public static class JsonExtensions
     {
-        private static readonly IContractResolver _camelResolver = new CamelCasePropertyNamesContractResolver
+        private static readonly IContractResolver _camelResolver = new DefaultContractResolver
         {
-            NamingStrategy = new CamelCaseNamingStrategy
-            {
-                ProcessDictionaryKeys = true,
-                OverrideSpecifiedNames = true
-            }
+            NamingStrategy = new CamelCaseNamingStrategy()
         };
 
         private static readonly JsonSerializerSettings _ignoreSettings = new JsonSerializerSettings
