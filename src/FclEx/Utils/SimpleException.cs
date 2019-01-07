@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using static System.Environment;
 
@@ -7,23 +8,28 @@ namespace FclEx.Utils
 {
     public class SimpleException : Exception
     {
-        public SimpleException(string msg) : this(msg, Environment.StackTrace)
+        private static string GetStackTrace()
+        {
+            return EnhancedStackTrace.Current().ToString();
+        }
+
+        public SimpleException(string msg) : this(msg, GetStackTrace())
         {
         }
 
-        public SimpleException(string msg, Exception inner) : this(msg, Environment.StackTrace, inner)
+        public SimpleException(string msg, Exception inner) : this(msg, GetStackTrace(), inner)
         {
         }
 
 
         public SimpleException(string msg, string stackTrace) : base(msg)
         {
-            StackTrace = stackTrace ?? Environment.StackTrace;
+            StackTrace = stackTrace ?? GetStackTrace();
         }
 
         public SimpleException(string msg, string stackTrace, Exception inner) : base(msg, inner)
         {
-            StackTrace = stackTrace ?? Environment.StackTrace;
+            StackTrace = stackTrace ?? GetStackTrace();
         }
 
         public override string StackTrace { get; }
