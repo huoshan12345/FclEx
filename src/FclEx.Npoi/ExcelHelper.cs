@@ -113,7 +113,7 @@ namespace FclEx.Npoi
             headerCellStyle.SetFont(headerFont);
             var dateStyle = book.CreateCellStyle();
             var format = book.CreateDataFormat();
-            dateStyle.DataFormat = format.GetFormat("yyyy-mm-dd");
+            dateStyle.DataFormat = format.GetFormat(DateTimeExtensions.CnTimeFormat);
 
             //Sheet计算
             int sheetDataCount;
