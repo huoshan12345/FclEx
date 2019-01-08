@@ -26,13 +26,13 @@ namespace FclEx.Consumers
             _maxRetryTimes = maxRetryTimes;
         }
 
-        public event EventHandler<BatchConsumer<T>, ProcExItem<IReadOnlyList<ProcItem<T>>>> OnException
+        public event EventHandler<BatchConsumer<T>, IReadOnlyList<ProcExItem<T>>> OnException
             = (sender, e) => { };
 
         public event AsyncEventHandler<BatchConsumer<T>, IReadOnlyList<T>> OnConsume
             = (sender, e) => Task.CompletedTask;
 
-        public event EventHandler<BatchConsumer<T>, IReadOnlyList<T>> OnDiscard = (sender, e) => { };
+        public event EventHandler<BatchConsumer<T>, IReadOnlyList<ProcExItem<T>>> OnDiscard = (sender, e) => { };
 
         private List<ProcItem<T>> GetItems()
         {
@@ -73,8 +73,9 @@ namespace FclEx.Consumers
             }
             catch (Exception ex)
             {
-                var list = items.CastTo<IReadOnlyList<ProcItem<T>>>();
-                OnException.Invoke(this, ProcItem.CreateEx(list, ex, -1));
+                items.ForEach(m => m.LastEx = ex);
+                var list = items.Select(m => ProcItem.CreateEx(m)).ToArray();
+                OnException.Invoke(this, list);
             }
 
             var (retry, discard) = items.Partition(m => m.ErrorTimes < _maxRetryTimes);
@@ -83,7 +84,7 @@ namespace FclEx.Consumers
                 m.ErrorTimes++;
                 _items.TryAdd(m);
             });
-            var toDiscard = discard.Select(m => m.Item).ToArray();
+            var toDiscard = discard.Select(m => ProcItem.CreateEx(m)).ToArray();
             if (toDiscard.Any())
                 OnDiscard.Invoke(this, toDiscard);
         }

@@ -14,9 +14,9 @@ namespace FclEx.Utils
             return new ProcExItem<T>(item, exception, errorTimes);
         }
 
-        public static ProcExItem<T> CreateEx<T>(ProcItem<T> item, Exception exception)
+        public static ProcExItem<T> CreateEx<T>(ProcItem<T> item)
         {
-            return new ProcExItem<T>(item.Item, exception, item.ErrorTimes);
+            return new ProcExItem<T>(item.Item, item.LastEx, item.ErrorTimes);
         }
     }
 
@@ -26,9 +26,11 @@ namespace FclEx.Utils
         {
             Item = item;
             ErrorTimes = errorTimes;
+            LastEx = null;
         }
 
         public int ErrorTimes { get; set; }
         public T Item { get; }
+        public Exception LastEx { get; set; }
     }
 }

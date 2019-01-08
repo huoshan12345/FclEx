@@ -17,7 +17,7 @@ namespace FclEx.Consumers
         protected BlockingCollection<ProcItem<T>> _items;
         protected ManualResetEvent _finish;
 
-        protected event AsyncEventHandler<TSelf, ProcExItem<ProcItem<T>>> OnExceptionInternal
+        protected event AsyncEventHandler<TSelf, ProcExItem<T>> OnExceptionInternal
             = (sender, args) => Task.CompletedTask;
 
         protected event AsyncEventHandler<TSelf, ProcItem<T>> OnConsumeInternal
@@ -52,7 +52,8 @@ namespace FclEx.Consumers
                 catch (Exception ex)
                 {
                     item.ErrorTimes++;
-                    var args = ProcItem.CreateEx(item, ex, item.ErrorTimes);
+                    item.LastEx = ex;
+                    var args = ProcItem.CreateEx(item);
                     await OnExceptionInternal.InvokeAsync((TSelf)this, args).DonotCapture();
                 }
             }
@@ -71,7 +72,19 @@ namespace FclEx.Consumers
                 throw new InvalidOperationException("The consumer has not been started yet.");
         }
 
-        protected void EnsureAvailable()
+        protected void EnsureNonStarted()
+        {
+            if (_isStarted)
+                throw new InvalidOperationException("The consumer is running now");
+        }
+
+        protected void EnsureRunnable()
+        {
+            EnsureNonDisposed();
+            EnsureNonStarted();
+        }
+
+        protected void EnsureRunning()
         {
             EnsureNonDisposed();
             EnsureStarted();
@@ -79,7 +92,7 @@ namespace FclEx.Consumers
 
         public Task Start()
         {
-            EnsureNonDisposed();
+            EnsureRunnable();
             _cts = new CancellationTokenSource();
             _finish = new ManualResetEvent(true);
             _items = new BlockingCollection<ProcItem<T>>();
@@ -89,13 +102,13 @@ namespace FclEx.Consumers
 
         public virtual void Add(T item)
         {
-            EnsureAvailable();
+            EnsureRunning();
             _items.Add(new ProcItem<T>(item));
         }
 
         public virtual void AddRange(ICollection<T> items)
         {
-            EnsureAvailable();
+            EnsureRunning();
             foreach (var item in items)
             {
                 Add(item);
@@ -104,11 +117,12 @@ namespace FclEx.Consumers
 
         public virtual void Dispose()
         {
-            if (_isDisposed)
+            if (!_isDisposed)
             {
                 _cts?.Cancel();
                 _finish?.WaitOne();
                 _items?.Dispose();
+                _isStarted = false;
                 _isDisposed = true;
             }
         }

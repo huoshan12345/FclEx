@@ -7,22 +7,18 @@ namespace FclEx.Consumers
 {
     public class AutoRetryConsumer<T> : AbstractConsumer<AutoRetryConsumer<T>, T>
     {
-        private readonly int _maxRetryTimes;
-        private readonly Func<int, int> _retryDelay;
-
         public event EventHandler<AutoRetryConsumer<T>, ProcExItem<T>> OnException = (sender, args) => { };
         public event AsyncEventHandler<AutoRetryConsumer<T>, T> OnConsume = (sender, e) => Task.CompletedTask;
-        public event EventHandler<AutoRetryConsumer<T>, T> OnDiscard = (sender, e) => { };
+        public event EventHandler<AutoRetryConsumer<T>, ProcExItem<T>> OnDiscard = (sender, e) => { };
 
         public AutoRetryConsumer(int maxRetryTimes, Func<int, int> retryDelay)
         {
             Check.AtLeast(maxRetryTimes, nameof(maxRetryTimes), 0);
-            _maxRetryTimes = maxRetryTimes;
-            _retryDelay = retryDelay ?? (x => x);
+            retryDelay = retryDelay ?? (x => x);
 
             OnConsumeInternal += async (sender, item) =>
             {
-                var delay = _retryDelay(item.ErrorTimes);
+                var delay = retryDelay(item.ErrorTimes);
                 await TaskHelper.Delay(delay);
                 await OnConsume(sender, item.Item).DonotCapture();
             };
@@ -30,16 +26,17 @@ namespace FclEx.Consumers
             OnExceptionInternal += (sender, args) =>
             {
                 var item = args.Item;
-                OnException.Invoke(sender, ProcItem.CreateEx(item.Item, args.Exception, args.ErrorTimes));
+                OnException.Invoke(sender, args);
 
+                var procItem = ProcItem.Create(item, args.ErrorTimes);
                 // 以下是失败后的补救措施
-                if (item.ErrorTimes++ < _maxRetryTimes)
+                if (procItem.ErrorTimes++ < maxRetryTimes)
                 {
-                    _items.TryAdd(item);
+                    _items.TryAdd(procItem);
                 }
                 else
                 {
-                    OnDiscard.Invoke(sender, item.Item);
+                    OnDiscard.Invoke(sender, args);
                 }
 
                 return Task.CompletedTask;

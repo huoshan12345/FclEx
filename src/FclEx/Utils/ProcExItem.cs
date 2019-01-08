@@ -2,7 +2,7 @@
 
 namespace FclEx.Utils
 {
-    public struct ProcExItem<T>
+    public readonly struct ProcExItem<T>
     {
         public ProcExItem(T item, Exception exception, int errorTimes)
         {
