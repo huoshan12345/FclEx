@@ -136,6 +136,9 @@ namespace FclEx.Utils
             }
         }
 
+        public static ExcuteResult Excute(Func<ExcuteResult> action)
+            => Excute<ExcuteResult>(action).Unwrap();
+
         public static ExcuteResult<T> Excute<T>(Func<ExcuteResult<T>> action) 
             => Excute<ExcuteResult<T>>(action).Unwrap();
 
@@ -153,6 +156,9 @@ namespace FclEx.Utils
             }
         }
 
+        public static async Task<ExcuteResult> ExcuteAsync(Func<Task<ExcuteResult>> action)
+            => (await ExcuteAsync<ExcuteResult>(action)).Unwrap();
+
         public static async Task<ExcuteResult<T>> ExcuteAsync<T>(Func<Task<ExcuteResult<T>>> action)
             =>(await ExcuteAsync<ExcuteResult<T>>(action)).Unwrap();
 
@@ -169,6 +175,9 @@ namespace FclEx.Utils
                 return ex;
             }
         }
+
+        public static async ValueTask<ExcuteResult> ExcuteValueAsync(Func<ValueTask<ExcuteResult>> action)
+            => (await ExcuteValueAsync<ExcuteResult>(action)).Unwrap();
 
         public static async ValueTask<ExcuteResult<T>> ExcuteValueAsync<T>(Func<ValueTask<ExcuteResult<T>>> action)
             => (await ExcuteValueAsync<ExcuteResult<T>>(action)).Unwrap();
