@@ -8,6 +8,28 @@ namespace FclEx
 {
     public static class ExcuteResultExtensions
     {
+        public static ExcuteResult<T> ToExplicit<T>(this IExcuteResult result)
+        {
+            if (result.Successful)
+                throw new InvalidOperationException("cannot convert to explicit when result is successful");
+            else
+                return new ExcuteResult<T>(result.Code, result.Exception);
+        }
+
+        public static ExcuteResult Unwrap(this ExcuteResult<ExcuteResult> result)
+        {
+            if (result.Successful && result.Result.Successful) return ExcuteResult.CreateSuccess(result.Elapsed);
+            else if (!result.Successful) return result;
+            else return result.Result;
+        }
+
+        public static ExcuteResult<T> Unwrap<T>(this ExcuteResult<ExcuteResult<T>> result)
+        {
+            if (result.Successful && result.Result.Successful) return ExcuteResult.CreateSuccess(result.Result.Result, result.Elapsed);
+            else if (!result.Successful) return result.ToExplicit<T>();
+            else return result.Result;
+        }
+
         public static bool IsStrErr(this IExcuteResult r)
         {
             return r.Code == ExcuteResultCodes.FromString;

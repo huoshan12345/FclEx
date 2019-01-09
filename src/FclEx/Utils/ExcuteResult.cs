@@ -18,7 +18,7 @@ namespace FclEx.Utils
         public static ExcuteResult Success { get; } = new ExcuteResult(TimeSpan.Zero);
 
         public static ExcuteResult NotImplemented { get; }
-            = new ExcuteResult(ExcuteResultCodes.NotImplemented, 
+            = new ExcuteResult(ExcuteResultCodes.NotImplemented,
                 new NotImplementedException("this function is not implemented"));
 
         internal ExcuteResult(int code, Exception ex)
@@ -38,14 +38,6 @@ namespace FclEx.Utils
             Code = ExcuteResultCodes.Success;
             Exception = null;
             Elapsed = elapsed;
-        }
-
-        public ExcuteResult<T> ToExplicit<T>()
-        {
-            if (Successful)
-                throw new InvalidOperationException("cannot convert to explicit when result is successful");
-            else
-                return new ExcuteResult<T>(Code, Exception);
         }
 
         public static ExcuteResult CreateSuccess(TimeSpan elapsed)
@@ -144,6 +136,9 @@ namespace FclEx.Utils
             }
         }
 
+        public static ExcuteResult<T> Excute<T>(Func<ExcuteResult<T>> action) 
+            => Excute<ExcuteResult<T>>(action).Unwrap();
+
         public static async Task<ExcuteResult<T>> ExcuteAsync<T>(Func<Task<T>> action)
         {
             try
@@ -158,6 +153,9 @@ namespace FclEx.Utils
             }
         }
 
+        public static async Task<ExcuteResult<T>> ExcuteAsync<T>(Func<Task<ExcuteResult<T>>> action)
+            =>(await ExcuteAsync<ExcuteResult<T>>(action)).Unwrap();
+
         public static async ValueTask<ExcuteResult<T>> ExcuteValueAsync<T>(Func<ValueTask<T>> action)
         {
             try
@@ -171,5 +169,8 @@ namespace FclEx.Utils
                 return ex;
             }
         }
+
+        public static async ValueTask<ExcuteResult<T>> ExcuteValueAsync<T>(Func<ValueTask<ExcuteResult<T>>> action)
+            => (await ExcuteValueAsync<ExcuteResult<T>>(action)).Unwrap();
     }
 }
