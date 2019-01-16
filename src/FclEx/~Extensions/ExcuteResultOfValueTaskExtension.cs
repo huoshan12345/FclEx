@@ -23,7 +23,7 @@ namespace FclEx
             return @this.On(r => !r.Successful, t => action(t.Exception));
         }
 
-        public static ValueTask<ExcuteResult> ThrowIfErro(this ValueTask<ExcuteResult> @this)
+        public static ValueTask<ExcuteResult> ThrowIfError(this ValueTask<ExcuteResult> @this)
         {
             return @this.Error(e => e.ReThrow());
         }
