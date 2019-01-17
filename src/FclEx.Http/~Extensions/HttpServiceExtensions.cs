@@ -25,7 +25,7 @@ namespace FclEx.Http
         {
             return await ActionHelper.TryAsync(async ()
                 => await http.ExecuteAsync(req).DonotCapture(),
-                retryTimes, delaySeconds, HttpRes.CreateError, false, null)
+                retryTimes, delaySeconds, e => HttpRes.CreateError(req, e), false, null)
                 .DonotCapture();
         }
 

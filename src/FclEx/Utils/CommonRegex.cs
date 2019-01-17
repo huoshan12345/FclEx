@@ -9,5 +9,6 @@ namespace FclEx.Utils
     {
         public static Regex HostPort { get; } = new Regex(@"([^:]+)(?::(\d+))?", RegexOptions.Compiled);
         public static Regex Ipv6HostPort { get; } = new Regex(@"\[[^\[^\]]+\](?::(\d+))?", RegexOptions.Compiled);
+        public static Regex Scheme { get; } = new Regex(@"(\S+)://", RegexOptions.Compiled);
     }
 }

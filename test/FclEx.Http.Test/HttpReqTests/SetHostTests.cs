@@ -48,5 +48,16 @@ namespace FclEx.Http.Test.HttpReqTests
             Assert.Equal(newHost, req.Host);
             Assert.Equal(newPort, req.Port);
         }
+
+        [Fact]
+        public void SetHostWithSchemeTest()
+        {
+            var req = HttpReq.Get("/teacher/app/clean-redis-cache")
+                .Host("https://betassapinew.knowbox.cn:9002");
+
+            Assert.Equal("https", req.Scheme);
+            Assert.Equal("betassapinew.knowbox.cn", req.Host);
+            Assert.Equal(9002, req.Port);
+        }
     }
 }

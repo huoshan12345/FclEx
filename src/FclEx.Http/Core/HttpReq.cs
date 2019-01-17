@@ -149,12 +149,17 @@ namespace FclEx.Http.Core
             get => _uriBuilder.Host;
             set
             {
-                var m = CommonRegex.HostPort.Match(value);
-                if (!m.Success) m = CommonRegex.Ipv6HostPort.Match(value);
-                if (m.Success)
+                CommonRegex.Scheme.MatchAndDo(value, m =>
                 {
-                    var h = m.Groups[1].Value;
-                    var p = m.TryGetInt(2, 80);
+                    Scheme = m.Groups[1].Value;
+                    value = value.StripPrefix(m.Value);
+                });
+                var match = CommonRegex.HostPort.Match(value);
+                if (!match.Success) match = CommonRegex.Ipv6HostPort.Match(value);
+                if (match.Success)
+                {
+                    var h = match.Groups[1].Value;
+                    var p = match.TryGetInt(2, 80);
                     if (h != Host || p != Port)
                     {
                         _uriBuilder.Host = h;

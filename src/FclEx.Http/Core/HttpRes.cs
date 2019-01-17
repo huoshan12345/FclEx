@@ -22,6 +22,6 @@ namespace FclEx.Http.Core
         public HttpStatusCode StatusCode { get; internal set; }
         public List<Uri> RedirectUris => _redirectUris ?? (_redirectUris = new List<Uri>());
 
-        public static HttpRes CreateError(Exception e) => new HttpRes { Exception = e };
+        public static HttpRes CreateError(HttpReq req, Exception e) => new HttpRes { Req = req, Exception = e };
     }
 }
