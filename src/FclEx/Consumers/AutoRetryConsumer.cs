@@ -7,9 +7,9 @@ namespace FclEx.Consumers
 {
     public class AutoRetryConsumer<T> : AbstractConsumer<AutoRetryConsumer<T>, T>
     {
-        public event EventHandler<AutoRetryConsumer<T>, ProcExItem<T>> OnException = (sender, args) => { };
+        public event EventHandler<AutoRetryConsumer<T>, ProcItem<T>> OnException = (sender, args) => { };
         public event AsyncEventHandler<AutoRetryConsumer<T>, T> OnConsume = (sender, e) => Task.CompletedTask;
-        public event EventHandler<AutoRetryConsumer<T>, ProcExItem<T>> OnDiscard = (sender, e) => { };
+        public event EventHandler<AutoRetryConsumer<T>, ProcItem<T>> OnDiscard = (sender, e) => { };
 
         public AutoRetryConsumer(int maxRetryTimes, Func<int, int> retryDelay)
         {
@@ -25,19 +25,12 @@ namespace FclEx.Consumers
 
             OnExceptionInternal += (sender, args) =>
             {
-                var item = args.Item;
                 OnException.Invoke(sender, args);
 
-                var procItem = ProcItem.Create(item, args.ErrorTimes);
-                // 以下是失败后的补救措施
-                if (procItem.ErrorTimes++ < maxRetryTimes)
-                {
-                    _items.TryAdd(procItem);
-                }
+                if (args.ErrorTimes < maxRetryTimes)
+                    _items.TryAdd(args);
                 else
-                {
                     OnDiscard.Invoke(sender, args);
-                }
 
                 return Task.CompletedTask;
             };

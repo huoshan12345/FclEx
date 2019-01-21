@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,13 +12,13 @@ namespace FclEx.Consumers
     public abstract class AbstractConsumer<TSelf, T> : IDisposable
         where TSelf : AbstractConsumer<TSelf, T>
     {
-        protected bool _isDisposed;
-        protected bool _isStarted;
+        protected volatile bool _isDisposed;
+        protected volatile bool _isStarted;
+        protected volatile bool _isAddingCompleted;
         protected CancellationTokenSource _cts;
         protected BlockingCollection<ProcItem<T>> _items;
-        protected ManualResetEvent _finish;
 
-        protected event AsyncEventHandler<TSelf, ProcExItem<T>> OnExceptionInternal
+        protected event AsyncEventHandler<TSelf, ProcItem<T>> OnExceptionInternal
             = (sender, args) => Task.CompletedTask;
 
         protected event AsyncEventHandler<TSelf, ProcItem<T>> OnConsumeInternal
@@ -39,7 +40,7 @@ namespace FclEx.Consumers
 
         protected virtual async Task Process()
         {
-            while (!_items.IsCompleted && !_cts.IsCancellationRequested)
+            while (!_items.Any() && _isAddingCompleted && !_cts.IsCancellationRequested)
             {
                 if (!TryGetItem(out var item))
                     continue;
@@ -47,17 +48,14 @@ namespace FclEx.Consumers
                 try
                 {
                     await OnConsumeInternal.InvokeAsync((TSelf)this, item).DonotCapture();
-                    item.ErrorTimes = 0;
                 }
                 catch (Exception ex)
                 {
-                    item.ErrorTimes++;
-                    item.LastEx = ex;
-                    var args = ProcItem.CreateEx(item);
-                    await OnExceptionInternal.InvokeAsync((TSelf)this, args).DonotCapture();
+                    item.AddError(ex);
+                    await OnExceptionInternal.InvokeAsync((TSelf)this, item).DonotCapture();
                 }
             }
-            _finish.Set();
+            _isStarted = false;
         }
 
         protected void EnsureNonDisposed()
@@ -94,7 +92,6 @@ namespace FclEx.Consumers
         {
             EnsureRunnable();
             _cts = new CancellationTokenSource();
-            _finish = new ManualResetEvent(true);
             _items = new BlockingCollection<ProcItem<T>>();
             _isStarted = true;
             return Task.Run(Process);
@@ -115,12 +112,17 @@ namespace FclEx.Consumers
             }
         }
 
+        public void CompleteAdding()
+        {
+            EnsureRunning();
+            _isAddingCompleted = true;
+        }
+
         public virtual void Dispose()
         {
             if (!_isDisposed)
             {
                 _cts?.Cancel();
-                _finish?.WaitOne();
                 _items?.Dispose();
                 _isStarted = false;
                 _isDisposed = true;

@@ -26,13 +26,13 @@ namespace FclEx.Consumers
             _maxRetryTimes = maxRetryTimes;
         }
 
-        public event EventHandler<BatchConsumer<T>, IReadOnlyList<ProcExItem<T>>> OnException
+        public event EventHandler<BatchConsumer<T>, IReadOnlyList<ProcItem<T>>> OnException
             = (sender, e) => { };
 
         public event AsyncEventHandler<BatchConsumer<T>, IReadOnlyList<T>> OnConsume
             = (sender, e) => Task.CompletedTask;
 
-        public event EventHandler<BatchConsumer<T>, IReadOnlyList<ProcExItem<T>>> OnDiscard = (sender, e) => { };
+        public event EventHandler<BatchConsumer<T>, IReadOnlyList<ProcItem<T>>> OnDiscard = (sender, e) => { };
 
         private List<ProcItem<T>> GetItems()
         {
@@ -62,7 +62,7 @@ namespace FclEx.Consumers
             return list;
         }
 
-        private async ValueTask Consume(ICollection<ProcItem<T>> items)
+        private async ValueTask Consume(List<ProcItem<T>> items)
         {
             try
             {
@@ -73,30 +73,24 @@ namespace FclEx.Consumers
             }
             catch (Exception ex)
             {
-                items.ForEach(m => m.LastEx = ex);
-                var list = items.Select(m => ProcItem.CreateEx(m)).ToArray();
-                OnException.Invoke(this, list);
+                items.ForEach(m => m.AddError(ex));
+                OnException.Invoke(this, items);
             }
 
-            var (retry, discard) = items.Partition(m => m.ErrorTimes < _maxRetryTimes);
-            retry.ForEach(m =>
-            {
-                m.ErrorTimes++;
-                _items.TryAdd(m);
-            });
-            var toDiscard = discard.Select(m => ProcItem.CreateEx(m)).ToArray();
-            if (toDiscard.Any())
-                OnDiscard.Invoke(this, toDiscard);
+            var (retry, discard) = items.PartitionToArray(m => m.ErrorTimes < _maxRetryTimes);
+            retry.ForEach(m => _items.TryAdd(m));
+            if (discard.Any())
+                OnDiscard.Invoke(this, discard);
         }
 
         protected override async Task Process()
         {
-            while (!_items.IsCompleted && !_cts.IsCancellationRequested)
+            while (!_items.Any() && _isAddingCompleted && !_cts.IsCancellationRequested)
             {
                 var items = GetItems();
                 await Consume(items).DonotCapture();
             }
-            _finish.Set();
+            _isStarted = false;
         }
     }
 }

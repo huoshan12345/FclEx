@@ -4,33 +4,29 @@ namespace FclEx.Utils
 {
     public static class ProcItem
     {
-        public static ProcItem<T> Create<T>(T item, int errorTimes = 0)
+        public static ProcItem<T> Create<T>(T item)
         {
-            return new ProcItem<T>(item, errorTimes);
-        }
-
-        public static ProcExItem<T> CreateEx<T>(T item, Exception exception, int errorTimes)
-        {
-            return new ProcExItem<T>(item, exception, errorTimes);
-        }
-
-        public static ProcExItem<T> CreateEx<T>(ProcItem<T> item)
-        {
-            return new ProcExItem<T>(item.Item, item.LastEx, item.ErrorTimes);
+            return new ProcItem<T>(item);
         }
     }
 
-    public struct ProcItem<T>
+    public class ProcItem<T>
     {
-        public ProcItem(T item, int errorTimes = 0)
+        public ProcItem(T item)
         {
             Item = item;
-            ErrorTimes = errorTimes;
-            LastEx = null;
+            ErrorTimes = 0;
+            Exception = null;
         }
 
-        public int ErrorTimes { get; set; }
+        public int ErrorTimes { get; private set; }
         public T Item { get; }
-        public Exception LastEx { get; set; }
+        public Exception Exception { get; private set; }
+
+        internal void AddError(Exception ex)
+        {
+            Exception = ex;
+            ++ErrorTimes;
+        }
     }
 }

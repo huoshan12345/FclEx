@@ -8,7 +8,7 @@ namespace FclEx.Consumers
 {
     public class CommonConsumer<T> : AbstractConsumer<CommonConsumer<T>, T>
     {
-        public event EventHandler<CommonConsumer<T>, ProcExItem<T>> OnException = (sender, args) => { };
+        public event EventHandler<CommonConsumer<T>, ProcItem<T>> OnException = (sender, args) => { };
         public event AsyncEventHandler<CommonConsumer<T>, T> OnConsume = (sender, e) => Task.CompletedTask;
 
         public CommonConsumer()
