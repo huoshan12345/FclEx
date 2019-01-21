@@ -17,6 +17,9 @@ namespace FclEx.Consumers
         protected volatile bool _isAddingCompleted;
         protected CancellationTokenSource _cts;
         protected BlockingCollection<ProcItem<T>> _items;
+        protected bool IsComplete => _items.Count == 0 && _isAddingCompleted;
+
+        public int Count => _items?.Count ?? 0;
 
         protected event AsyncEventHandler<TSelf, ProcItem<T>> OnExceptionInternal
             = (sender, args) => Task.CompletedTask;
@@ -40,7 +43,7 @@ namespace FclEx.Consumers
 
         protected virtual async Task Process()
         {
-            while (!_items.Any() && _isAddingCompleted && !_cts.IsCancellationRequested)
+            while (!IsComplete && !_cts.IsCancellationRequested)
             {
                 if (!TryGetItem(out var item))
                     continue;

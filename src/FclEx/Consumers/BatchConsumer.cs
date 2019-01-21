@@ -38,7 +38,7 @@ namespace FclEx.Consumers
         {
             var startTime = DateTime.UtcNow;
             var list = new List<ProcItem<T>>(_batchSize);
-            var timeout = (HasTimeout ? 1 : 60) * 1000;
+            var timeout = (HasTimeout ? 1 : 5) * 1000;
             while (list.Count < _batchSize)
             {
                 try
@@ -85,7 +85,7 @@ namespace FclEx.Consumers
 
         protected override async Task Process()
         {
-            while (!_items.Any() && _isAddingCompleted && !_cts.IsCancellationRequested)
+            while (!IsComplete && !_cts.IsCancellationRequested)
             {
                 var items = GetItems();
                 await Consume(items).DonotCapture();

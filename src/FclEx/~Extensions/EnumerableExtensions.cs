@@ -36,6 +36,13 @@ namespace FclEx
             return Task.WhenAll(sequence.Select(action).ToArray());
         }
 
+        public static Task ForEachAsync<T>(
+            this IEnumerable<T> sequence,
+            Func<T, Task> action)
+        {
+            return Task.WhenAll(sequence.Select(action).ToArray());
+        }
+
         public static (T[] True, T[] False) PartitionToArray<T>(
             this IEnumerable<T> source, 
             Func<T, bool> predicate)
