@@ -25,7 +25,7 @@ namespace FclEx.Test.Consumers
         [Fact]
         public async Task Test()
         {
-            var consumer = new BatchConsumer<int>(5, 1);
+            var consumer = new BatchConsumer<int>(5, 1, 1);
             consumer.OnConsume += (sender, ints) =>
             {
                 _output.WriteLine("OnConsume");
@@ -51,6 +51,10 @@ namespace FclEx.Test.Consumers
             });
             consumer.CompleteAdding();
             await task;
+            Assert.Equal(0, consumer.Count);
+            Assert.Equal(0, consumer.Counter.Consume);
+            Assert.Equal(6, consumer.Counter.Exception);
+            Assert.Equal(3, consumer.Counter.Discard);
         }
     }
 }

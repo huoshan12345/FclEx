@@ -10,7 +10,7 @@ namespace FclEx.Utils
         }
     }
 
-    public class ProcItem<T>
+    public struct ProcItem<T>
     {
         public ProcItem(T item)
         {
@@ -23,10 +23,9 @@ namespace FclEx.Utils
         public T Item { get; }
         public Exception Exception { get; private set; }
 
-        internal void AddError(Exception ex)
+        public ProcItem<T> AddError(Exception ex)
         {
-            Exception = ex;
-            ++ErrorTimes;
+            return new ProcItem<T>(this.Item) { ErrorTimes = ErrorTimes + 1, Exception = ex };
         }
     }
 }

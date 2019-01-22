@@ -69,18 +69,24 @@ namespace FclEx.Consumers
                 if (items.IsNullOrEmpty()) return;
                 var list = items.Select(m => m.Item).ToArray();
                 await OnConsume.InvokeAsync(this, list).DonotCapture();
+                Counter.IncreConsume(list.Length);
                 return;
             }
             catch (Exception ex)
             {
-                items.ForEach(m => m.AddError(ex));
+                for (var i = 0; i < items.Count; i++)
+                    items[i] = items[i].AddError(ex);
                 OnException.Invoke(this, items);
+                Counter.IncreException(items.Count);
             }
 
-            var (retry, discard) = items.PartitionToArray(m => m.ErrorTimes < _maxRetryTimes);
+            var (retry, discard) = items.PartitionToArray(m => m.ErrorTimes <= _maxRetryTimes);
             retry.ForEach(m => _items.TryAdd(m));
             if (discard.Any())
+            {
                 OnDiscard.Invoke(this, discard);
+                Counter.IncreDiscard(discard.Length);
+            }
         }
 
         protected override async Task Process()
@@ -90,7 +96,7 @@ namespace FclEx.Consumers
                 var items = GetItems();
                 await Consume(items).DonotCapture();
             }
-            _isStarted = false;
+            _locker.Do(() => _isRunning = false);
         }
     }
 }

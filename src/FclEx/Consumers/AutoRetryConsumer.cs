@@ -30,7 +30,10 @@ namespace FclEx.Consumers
                 if (args.ErrorTimes < maxRetryTimes)
                     _items.TryAdd(args);
                 else
+                {
                     OnDiscard.Invoke(sender, args);
+                    Counter.IncreDiscard();
+                }
 
                 return Task.CompletedTask;
             };
