@@ -54,6 +54,5 @@ namespace FclEx.Http
         public static Exception GetEx(this IActionEvent @event) => @event.IsError() ? (Exception)@event.Target : null;
 
         public static string GetExMsg(this IActionEvent @event) => @event.GetEx()?.Message;
-
     }
 }

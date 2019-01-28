@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FclEx.Collections;
+using FclEx.Utils;
 using MoreLinq;
 
 namespace FclEx
@@ -73,6 +75,14 @@ namespace FclEx
         {
             comparer = comparer ?? EqualityComparer<T>.Default;
             return source.Where(m => !comparer.Equals(m, item));
+        }
+
+        public static MultiValueDictionary<TKey, TValue> ToMultiValueDic<T, TKey, TValue>(
+            this IEnumerable<T> enumerable,
+            Func<T, TKey> keySelector,
+            Func<T, IReadOnlyCollection<TValue>> valueSelector)
+        {
+            return new MultiValueDictionary<TKey, TValue>(enumerable.Select(m => KvPair.For(keySelector(m), valueSelector(m))));
         }
     }
 }

@@ -45,8 +45,8 @@ namespace FclEx.Helpers
 
         public static Task Delay(int seconds)
         {
-            return seconds > 0 
-                ? Task.Delay(seconds * 1000) 
+            return seconds > 0
+                ? Task.Delay(seconds * 1000)
                 : Task.CompletedTask;
         }
 
@@ -56,5 +56,17 @@ namespace FclEx.Helpers
                 ? Task.Delay(milliSeconds)
                 : Task.CompletedTask;
         }
+
+        /// <summary>
+        /// Runs a TPL Task fire-and-forget style, the right way - in the
+        /// background, separate from the current thread, with no risk
+        /// of it trying to rejoin the current thread.
+        /// </summary>
+        public static void RunBg(Action action) => Task.Run(action).DonotCapture();
+        public static void RunBg<T>(Func<T> action) => Task.Run(action).DonotCapture();
+        public static void RunBg(Func<Task> fn) => Task.Run(fn).DonotCapture();
+        public static void RunBg<T>(Func<Task<T>> fn) => Task.Run(fn).DonotCapture();
+        public static void RunBg(Func<ValueTask> fn) => Task.Run(async () => await fn().DonotCapture()).DonotCapture();
+        public static void RunBg<T>(Func<ValueTask<T>> fn) => Task.Run(async () => await fn().DonotCapture()).DonotCapture();
     }
 }

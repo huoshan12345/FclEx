@@ -11,7 +11,7 @@ namespace FclEx.Http
 {
     public static class ActorExtensions
     {
-        public static ValueTask<ActionEvent> ExecuteAsync(this IActor actor) => actor.ExecuteAsync(default);
+        public static Task<ActionEvent> ExecuteAsync(this IActor actor) => actor.ExecuteAsync(default);
 
         /// <summary>
         /// 当结果是重试或重复的时候自动再次执行
@@ -19,7 +19,7 @@ namespace FclEx.Http
         /// <param name="actor"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        public static async ValueTask<ActionEvent> ExecuteAutoAsync(
+        public static async Task<ActionEvent> ExecuteAutoAsync(
             this IActor actor,
             CancellationToken token = default)
         {
@@ -40,7 +40,7 @@ namespace FclEx.Http
         /// <param name="endCondition"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        public static async ValueTask<ActionEvent> ExecuteForeverAsync(
+        public static async Task<ActionEvent> ExecuteForeverAsync(
             this IActor actor,
             Func<ActionEvent, bool> endCondition = null,
             CancellationToken token = default)

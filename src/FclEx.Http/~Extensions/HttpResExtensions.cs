@@ -1,6 +1,8 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Threading.Tasks;
 using FclEx.Http.Core;
+using Newtonsoft.Json.Linq;
 
 namespace FclEx.Http
 {
@@ -29,11 +31,24 @@ namespace FclEx.Http
             return res;
         }
 
-        public static async ValueTask<HttpRes> ThrowIfError(this ValueTask<HttpRes> task)
+        public static async Task<T> ReadJsonAs<T>(this Task<HttpRes> task)
         {
             var res = await task.DonotCapture();
             res.ThrowIfError();
-            return res;
+            if (res.Req.ResultType == HttpResultType.Byte)
+                throw new InvalidOperationException("Can not deserialize json from byte array.");
+            var resObj = res.ResponseString.ToJToken().ToObject<T>();
+            return resObj;
+        }
+
+        public static async Task<JToken> ReadAsJson(this Task<HttpRes> task)
+        {
+            var res = await task.DonotCapture();
+            res.ThrowIfError();
+            if (res.Req.ResultType == HttpResultType.Byte)
+                throw new InvalidOperationException("Can not deserialize json from byte array.");
+            var resObj = res.ResponseString.ToJToken();
+            return resObj;
         }
     }
 }

@@ -81,5 +81,34 @@ namespace FclEx
         {
             return new DateTime(dt.Year, dt.Month, 1, hour, minute, second);
         }
+
+        public static DateTime GetMaxTimeOfDate(this DateTime dt)
+        {
+            return dt.Date.AddDays(1).AddTicks(-1);
+        }
+
+        public static DateTime? GetMaxTimeOfDate(this DateTime? dt)
+        {
+            return dt?.GetMaxTimeOfDate();
+        }
+
+        public static DateTime? GetDate(this DateTime? dt)
+        {
+            return dt?.Date;
+        }
+
+        public static string ToStringOrEmpty(this DateTime dt, string format = CnTimeFormat)
+        {
+            return dt.IsDefault()
+                ? string.Empty
+                : dt.ToString(format);
+        }
+
+        public static string ToStringOrEmpty(this DateTime? dt, string format = CnTimeFormat)
+        {
+            return dt.HasValue
+                ? ToStringOrEmpty(dt.Value, format)
+                : string.Empty;
+        }
     }
 }

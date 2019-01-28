@@ -62,7 +62,7 @@ namespace FclEx.Consumers
             return list;
         }
 
-        private async ValueTask Consume(List<ProcItem<T>> items)
+        private async Task Consume(List<ProcItem<T>> items)
         {
             try
             {

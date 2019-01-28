@@ -11,7 +11,7 @@ namespace FclEx.Http.Services
 {
     public interface IHttpService : IDisposable
     {
-        ValueTask<HttpRes> ExecuteAsync(HttpReq httpReq, CancellationToken token = default);
+        Task<HttpRes> ExecuteAsync(HttpReq httpReq, CancellationToken token = default);
 
         void AddCookie(Cookie cookie, Uri uri);
 

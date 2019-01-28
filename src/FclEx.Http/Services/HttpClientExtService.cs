@@ -26,7 +26,7 @@ namespace FclEx.Http.Services
             LazyThreadSafetyMode.ExecutionAndPublication,
             TimeSpan.FromMinutes(2));
 
-        public override ValueTask<HttpRes> ExecuteAsync(HttpReq httpReq, CancellationToken token = default)
+        public override Task<HttpRes> ExecuteAsync(HttpReq httpReq, CancellationToken token = default)
         {
             token.ThrowIfCancellationRequested();
             var httpClient = _clientFactory.CreateClient(_options);

@@ -201,7 +201,7 @@ namespace FclEx.Http.Core
         public string GetUrl()
         {
             if (!HasQuery) return Uri.ToString();
-            _uriBuilder.Query = _queryMap.Select(m => $"{m.Key.UrlEncode()}={m.Value.UrlEncode()}").JoinWith("&");
+            _uriBuilder.Query = _queryMap.ToQueryStr();
             var url = Uri.AbsoluteUri;
             _uriBuilder.Query = string.Empty;
             return url;

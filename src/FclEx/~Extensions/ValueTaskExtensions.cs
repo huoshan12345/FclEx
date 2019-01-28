@@ -8,8 +8,6 @@ namespace FclEx
 {
     public static class ValueTaskExtensions
     {
-        public static void Forget<T>(this ValueTask<T> task) { }
-
         public static Task WhenAll(this IEnumerable<ValueTask> tasks)
         {
             return tasks.Select(t => t.AsTask()).WhenAll();

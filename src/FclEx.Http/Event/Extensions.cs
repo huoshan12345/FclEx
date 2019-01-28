@@ -10,7 +10,7 @@ namespace FclEx.Http.Event
 {
     public static class Extensions
     {
-        public static async ValueTask InvokeAsync(
+        public static async Task InvokeAsync(
             this ActionEventListener listener,
             IAction sender,
             ActionEvent actionEvent)

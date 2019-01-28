@@ -76,24 +76,32 @@ namespace FclEx
             return str ?? "";
         }
 
-        public static string Format(this string str, params object[] args)
+        public static string Format(this string str, params object[] args) => string.Format(str, args);
+
+        public static string Fmt(this string str, params object[] args) => string.Format(str, args);
+
+        public static string Fmt(this string str, object arg0) => string.Format(str, arg0);
+
+        public static string Fmt(this string str, object arg0, object arg1) => string.Format(str, arg0, arg1);
+
+        public static bool IsValid(this string x)
         {
-            return string.Format(str, args);
+            return !x.IsNullOrEmpty();
         }
 
-        public static string Fmt(this string str, params object[] args)
+        public static string IfEmpty(this string x, string y)
         {
-            return string.Format(str, args);
+            return x.IsValid() ? x : y;
         }
 
-        public static string Fmt(this string str, object arg0)
+        public static string IfEmpty(this string x, string y, string z)
         {
-            return string.Format(str, arg0);
-        }
+            return x.IsValid()
+                ? x
+                : y.IsValid()
+                    ? y
+                    : z;
 
-        public static string Fmt(this string str, object arg0, object arg1)
-        {
-            return string.Format(str, arg0, arg1);
         }
     }
 }

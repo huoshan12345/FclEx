@@ -19,7 +19,7 @@ namespace FclEx.Http.Actions
             _func = func ?? (r => r);
         }
 
-        protected override async ValueTask<ActionEvent> ExecuteInternalAsync(CancellationToken token)
+        protected override async Task<ActionEvent> ExecuteInternalAsync(CancellationToken token)
         {
             var r = await _actor.ExecuteAutoAsync(token);
             r = _func(r);

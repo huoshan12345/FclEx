@@ -5,7 +5,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageProjectUrl>https://github.com/huoshan12345/FclEx</PackageProjectUrl>
     <PackageTags>http</PackageTags>
-    <Version>2.3.0</Version>
+    <Version>2.3.2</Version>
     <Authors>huoshan12345</Authors>
     <Description>a simple http lib</Description>
     <RepositoryUrl>https://github.com/huoshan12345/FclEx</RepositoryUrl>

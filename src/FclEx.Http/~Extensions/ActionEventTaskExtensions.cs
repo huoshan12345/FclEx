@@ -67,11 +67,5 @@ namespace FclEx.Http
             var result = await @this.DonotCapture();
             return result.ToExplicit<T>();
         }
-
-        public static async ValueTask<ActionEvent<T>> ToExplicit<T>(this ValueTask<ActionEvent> @this)
-        {
-            var result = await @this.DonotCapture();
-            return result.ToExplicit<T>();
-        }
     }
 }

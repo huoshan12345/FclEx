@@ -22,13 +22,13 @@ namespace FclEx.Utils
             _semaphore = new SemaphoreSlim(initialCount, maxCount);
         }
 
-        public async ValueTask<IDisposable> LockAsync(CancellationToken token = default)
+        public async Task<IDisposable> LockAsync(CancellationToken token = default)
         {
             await _semaphore.WaitAsync(token).DonotCapture();
             return this;
         }
 
-        public async ValueTask<IDisposable> LockAsync(TimeSpan span)
+        public async Task<IDisposable> LockAsync(TimeSpan span)
         {
             await _semaphore.WaitAsync(span).DonotCapture();
             return this;

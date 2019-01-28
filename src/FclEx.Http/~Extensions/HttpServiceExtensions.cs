@@ -12,7 +12,7 @@ namespace FclEx.Http
 {
     public static class HttpServiceExtensions
     {
-        public static ValueTask<HttpRes> GetAsync(this IHttpService http, string url, string charSet = null, int? timeout = 10 * 1000, int retryTimes = 3, int delaySeconds = 0)
+        public static Task<HttpRes> GetAsync(this IHttpService http, string url, string charSet = null, int? timeout = 10 * 1000, int retryTimes = 3, int delaySeconds = 0)
         {
             var req = HttpReq.Get(url)
                 .Compress()
@@ -21,7 +21,7 @@ namespace FclEx.Http
             return SendAsync(http, req, retryTimes, delaySeconds);
         }
 
-        public static async ValueTask<HttpRes> SendAsync(this IHttpService http, HttpReq req, int retryTimes = 1, int delaySeconds = 0)
+        public static async Task<HttpRes> SendAsync(this IHttpService http, HttpReq req, int retryTimes = 1, int delaySeconds = 0)
         {
             return await ActionHelper.TryAsync(async ()
                 => await http.ExecuteAsync(req).DonotCapture(),

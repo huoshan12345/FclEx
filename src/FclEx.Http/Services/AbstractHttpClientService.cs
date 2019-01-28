@@ -97,7 +97,7 @@ namespace FclEx.Http.Services
             return request;
         }
 
-        protected async ValueTask<HttpRes> ExecuteAsync(
+        protected async Task<HttpRes> ExecuteAsync(
             HttpClient httpClient,
             HttpReq httpReq,
             CancellationToken token = default)
@@ -119,7 +119,7 @@ namespace FclEx.Http.Services
                 if (httpReq.ReadResultCookie)
                     ReadCookies(response, responseItem);
 
-                while (response.IsRedirect())
+                while (response.IsRedirection())
                 {
                     var uri = response.GetRedirectUri();
                     var req = new HttpRequestMessage(HttpMethod.Get, uri);

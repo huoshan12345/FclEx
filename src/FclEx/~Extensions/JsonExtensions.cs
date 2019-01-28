@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using Newtonsoft.Json;
@@ -130,6 +131,22 @@ namespace FclEx
                 dic[m.Key] = m.Value.ToStringOrNull();
             }
             return dic;
+        }
+
+        public static bool IsPossibleJson(this string data)
+        {
+            return (!data.IsNullOrEmpty() && (data.First() == '{' && data.Last() == '}'
+                                              || data.First() == '[' && data.Last() == ']'));
+        }
+
+        public static bool IsPossibleJObject(this string data)
+        {
+            return (!data.IsNullOrEmpty() && (data.First() == '{' && data.Last() == '}'));
+        }
+
+        public static bool IsPossibleJArray(this string data)
+        {
+            return (!data.IsNullOrEmpty() && (data.First() == '[' && data.Last() == ']'));
         }
     }
 }

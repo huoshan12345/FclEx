@@ -18,7 +18,7 @@ namespace FclEx.Http.Actions
             _obj = obj;
         }
 
-        protected override ValueTask<ActionEvent> ExecuteInternalAsync(CancellationToken token)
+        protected override Task<ActionEvent> ExecuteInternalAsync(CancellationToken token)
         {
             return NotifyOkEventAsync(_obj);
         }

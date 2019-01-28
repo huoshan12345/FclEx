@@ -23,9 +23,9 @@ namespace FclEx.Http
             return uri;
         }
 
-        public static bool IsRedirect(this HttpWebResponse response)
+        public static bool IsRedirection(this HttpWebResponse response)
         {
-            return response.StatusCode.IsRedirect() 
+            return response.StatusCode.IsRedirection() 
                    && response.Headers[HttpResponseHeader.Location] != null;
         }
     }

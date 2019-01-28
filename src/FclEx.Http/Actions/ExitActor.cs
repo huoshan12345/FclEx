@@ -9,9 +9,9 @@ namespace FclEx.Http.Actions
     /// </summary>
     public class ExitActor : IActor
     {
-        public ValueTask<ActionEvent> ExecuteAsync(CancellationToken token)
+        public Task<ActionEvent> ExecuteAsync(CancellationToken token)
         {
-            return ActionEvent.EmptyOkEvent.ToValueTask();
+            return ActionEvent.EmptyOkEvent.ToTask();
         }
     }
 }

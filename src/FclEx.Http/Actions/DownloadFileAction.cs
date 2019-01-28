@@ -20,7 +20,7 @@ namespace FclEx.Http.Actions
         {
         }
 
-        protected override ValueTask<ActionEvent> HandleResponse(HttpRes response)
+        protected override Task<ActionEvent> HandleResponse(HttpRes response)
         {
             try
             {

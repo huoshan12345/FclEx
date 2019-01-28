@@ -11,7 +11,7 @@ namespace FclEx.Http.Actions
     {
         private readonly List<Func<object[], IActor>> _queue = new List<Func<object[], IActor>>();
 
-        public virtual async ValueTask<ActionEvent> ExecuteAsync(CancellationToken token)
+        public virtual async Task<ActionEvent> ExecuteAsync(CancellationToken token)
         {
             var results = new object[_queue.Count];
             var actions = new IActor[_queue.Count];

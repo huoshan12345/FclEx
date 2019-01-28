@@ -44,7 +44,7 @@ namespace FclEx.Http.Services
         {
         }
 
-        public abstract ValueTask<HttpRes> ExecuteAsync(
+        public abstract Task<HttpRes> ExecuteAsync(
             HttpReq httpReq,
             CancellationToken token = default);
 

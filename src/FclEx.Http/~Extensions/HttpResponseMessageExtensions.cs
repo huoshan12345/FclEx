@@ -7,9 +7,9 @@ namespace FclEx.Http
 {
     public static class HttpResponseMessageExtensions
     {
-        public static bool IsRedirect(this HttpResponseMessage response)
+        public static bool IsRedirection(this HttpResponseMessage response)
         {
-            return response.StatusCode.IsRedirect() && response.Headers.Location != null;
+            return response.StatusCode.IsRedirection() && response.Headers.Location != null;
         }
 
         public static Uri GetRedirectUri(this HttpResponseMessage response)

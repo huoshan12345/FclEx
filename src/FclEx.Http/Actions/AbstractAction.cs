@@ -24,7 +24,7 @@ namespace FclEx.Http.Actions
             OnEvent += (sender, @event) =>
             {
                 LogActionEvent(@event);
-                return new ValueTask(Task.CompletedTask);
+                return Task.CompletedTask;
             };
             OnEvent += listener;
             Logger = Logger ?? NullLogger.Instance;
@@ -65,7 +65,7 @@ namespace FclEx.Http.Actions
             }
         }
 
-        protected virtual async ValueTask<ActionEvent> NotifyActionEventAsync(ActionEvent actionEvent)
+        protected virtual async Task<ActionEvent> NotifyActionEventAsync(ActionEvent actionEvent)
         {
             try
             {
@@ -78,7 +78,7 @@ namespace FclEx.Http.Actions
             }
         }
 
-        protected virtual async ValueTask<ActionEvent> HandleExceptionAsync(Exception ex)
+        protected virtual async Task<ActionEvent> HandleExceptionAsync(Exception ex)
         {
             ++ErrorTimes;
             try
@@ -94,25 +94,25 @@ namespace FclEx.Http.Actions
             }
         }
 
-        protected ValueTask<ActionEvent> NotifyActionEventAsync(ActionEventType type, object target = null)
+        protected Task<ActionEvent> NotifyActionEventAsync(ActionEventType type, object target = null)
             => NotifyActionEventAsync(ActionEvent.Create(type, target));
 
-        protected ValueTask<ActionEvent> NotifyOkEventAsync(object target = null)
+        protected Task<ActionEvent> NotifyOkEventAsync(object target = null)
             => NotifyActionEventAsync(ActionEventType.EvtOk, target);
 
-        protected ValueTask<ActionEvent> NotifyRetryEventAsync(Exception ex) => NotifyActionEventAsync(ActionEventType.EvtRetry, ex);
-        protected ValueTask<ActionEvent> NotifyRetryEventAsync(string msg = null) => NotifyActionEventAsync(ActionEventType.EvtRetry, CreateEx(msg));
-        protected ValueTask<ActionEvent> NotifyCancelEventAsync() => NotifyActionEventAsync(ActionEventType.EvtCanceled, this);
-        protected ValueTask<ActionEvent> NotifyErrorAsync(Exception ex) => NotifyActionEventAsync(ActionEvent.Create(ActionEventType.EvtError, ex));
-        protected ValueTask<ActionEvent> NotifyErrorAsync(string msg = null) => NotifyErrorAsync(CreateEx(msg));
-        protected ValueTask<ActionEvent> NotifyObjectErrorAsync<T>(T obj, string msg = null, Exception innerException = null)
+        protected Task<ActionEvent> NotifyRetryEventAsync(Exception ex) => NotifyActionEventAsync(ActionEventType.EvtRetry, ex);
+        protected Task<ActionEvent> NotifyRetryEventAsync(string msg = null) => NotifyActionEventAsync(ActionEventType.EvtRetry, CreateEx(msg));
+        protected Task<ActionEvent> NotifyCancelEventAsync() => NotifyActionEventAsync(ActionEventType.EvtCanceled, this);
+        protected Task<ActionEvent> NotifyErrorAsync(Exception ex) => NotifyActionEventAsync(ActionEvent.Create(ActionEventType.EvtError, ex));
+        protected Task<ActionEvent> NotifyErrorAsync(string msg = null) => NotifyErrorAsync(CreateEx(msg));
+        protected Task<ActionEvent> NotifyObjectErrorAsync<T>(T obj, string msg = null, Exception innerException = null)
             => NotifyErrorAsync(ObjectException.Create(obj, msg, innerException));
 
         private static Exception CreateEx(string msg) => new SimpleException(msg);
 
-        protected abstract ValueTask<ActionEvent> ExecuteInternalAsync(CancellationToken token);
+        protected abstract Task<ActionEvent> ExecuteInternalAsync(CancellationToken token);
 
-        public async ValueTask<ActionEvent> ExecuteAsync(CancellationToken token)
+        public async Task<ActionEvent> ExecuteAsync(CancellationToken token)
         {
             if (Logger.IsEnabled(LogLevel.Trace))
             {

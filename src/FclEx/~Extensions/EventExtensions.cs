@@ -28,19 +28,5 @@ namespace FclEx
             if (condition(r)) await action(r).DonotCapture();
             return r;
         }
-
-        public static async ValueTask<T> On<T>(this ValueTask<T> t, Func<T, bool> condition, Action<T> action)
-        {
-            var r = await t.DonotCapture();
-            if (condition(r)) action(r);
-            return r;
-        }
-
-        public static async ValueTask<T> On<T>(this ValueTask<T> t, Func<T, bool> condition, Func<T, ValueTask> action)
-        {
-            var r = await t.DonotCapture();
-            if (condition(r)) await action(r).DonotCapture();
-            return r;
-        }
     }
 }

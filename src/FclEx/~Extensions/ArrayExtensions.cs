@@ -36,5 +36,12 @@ namespace FclEx
             var i = r.Next(0, col.Count - 1);
             return col[i];
         }
+
+        public static IList<T> TrySet<T>(this IList<T> list, int index, T value)
+        {
+            if (list != null && index >= 0 && index < list.Count)
+                list[index] = value;
+            return list;
+        }
     }
 }

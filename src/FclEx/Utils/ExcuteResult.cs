@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using FclEx.Helpers;
 using Newtonsoft.Json;
 
 namespace FclEx.Utils
@@ -40,45 +41,21 @@ namespace FclEx.Utils
             Elapsed = elapsed;
         }
 
-        public static ExcuteResult CreateSuccess(TimeSpan elapsed)
-        {
-            return new ExcuteResult(elapsed);
-        }
+        public static ExcuteResult CreateSuccess(TimeSpan elapsed) => new ExcuteResult(elapsed);
 
-        public static ExcuteResult CreateError(int code, string error)
-        {
-            return new ExcuteResult(code, error);
-        }
+        public static ExcuteResult CreateError(int code, string error) => new ExcuteResult(code, error);
 
-        public static ExcuteResult CreateError(string error)
-        {
-            return CreateError(ExcuteResultCodes.FromString, error);
-        }
+        public static ExcuteResult CreateError(string error) => CreateError(ExcuteResultCodes.FromString, error);
 
-        public static ExcuteResult<T> CreateSuccess<T>(T item, TimeSpan elapsed)
-        {
-            return new ExcuteResult<T>(item, elapsed);
-        }
+        public static ExcuteResult<T> CreateSuccess<T>(T item, TimeSpan elapsed) => new ExcuteResult<T>(item, elapsed);
 
-        public static ExcuteResult<T> CreateError<T>(int code, string error)
-        {
-            return new ExcuteResult<T>(code, new SimpleException(error));
-        }
+        public static ExcuteResult<T> CreateError<T>(int code, string error) => new ExcuteResult<T>(code, new SimpleException(error));
 
-        public static ExcuteResult<T> CreateError<T>(string error)
-        {
-            return CreateError<T>(ExcuteResultCodes.FromString, error);
-        }
+        public static ExcuteResult<T> CreateError<T>(string error) => CreateError<T>(ExcuteResultCodes.FromString, error);
 
-        public static implicit operator ExcuteResult(Exception ex)
-        {
-            return new ExcuteResult(ExcuteResultCodes.FromException, ex);
-        }
+        public static implicit operator ExcuteResult(Exception ex) => new ExcuteResult(ExcuteResultCodes.FromException, ex);
 
-        public static implicit operator ExcuteResult(string error)
-        {
-            return new ExcuteResult(ExcuteResultCodes.FromString, error, null);
-        }
+        public static implicit operator ExcuteResult(string error) => new ExcuteResult(ExcuteResultCodes.FromString, error, null);
 
         public static ExcuteResult Excute(Action action)
         {
@@ -86,34 +63,6 @@ namespace FclEx.Utils
             {
                 var watch = ValueStopwatch.StartNew();
                 action();
-                return CreateSuccess(watch.GetElapsedTime());
-            }
-            catch (Exception ex)
-            {
-                return ex;
-            }
-        }
-
-        public static async Task<ExcuteResult> ExcuteAsync(Func<Task> action)
-        {
-            try
-            {
-                var watch = ValueStopwatch.StartNew();
-                await action().DonotCapture();
-                return CreateSuccess(watch.GetElapsedTime());
-            }
-            catch (Exception ex)
-            {
-                return ex;
-            }
-        }
-
-        public static async ValueTask<ExcuteResult> ExcuteValueAsync(Func<ValueTask> action)
-        {
-            try
-            {
-                var watch = ValueStopwatch.StartNew();
-                await action().DonotCapture();
                 return CreateSuccess(watch.GetElapsedTime());
             }
             catch (Exception ex)
@@ -136,11 +85,23 @@ namespace FclEx.Utils
             }
         }
 
-        public static ExcuteResult Excute(Func<ExcuteResult> action)
-            => Excute<ExcuteResult>(action).Unwrap();
+        public static ExcuteResult Excute(Func<ExcuteResult> action) => Excute<ExcuteResult>(action).Unwrap();
 
-        public static ExcuteResult<T> Excute<T>(Func<ExcuteResult<T>> action) 
-            => Excute<ExcuteResult<T>>(action).Unwrap();
+        public static ExcuteResult<T> Excute<T>(Func<ExcuteResult<T>> action) => Excute<ExcuteResult<T>>(action).Unwrap();
+
+        public static async Task<ExcuteResult> ExcuteAsync(Func<Task> action)
+        {
+            try
+            {
+                var watch = ValueStopwatch.StartNew();
+                await action().DonotCapture();
+                return CreateSuccess(watch.GetElapsedTime());
+            }
+            catch (Exception ex)
+            {
+                return ex;
+            }
+        }
 
         public static async Task<ExcuteResult<T>> ExcuteAsync<T>(Func<Task<T>> action)
         {
@@ -156,11 +117,11 @@ namespace FclEx.Utils
             }
         }
 
-        public static async Task<ExcuteResult> ExcuteAsync(Func<Task<ExcuteResult>> action)
+        public static async Task<ExcuteResult> ExcuteAsync(Func<Task<ExcuteResult>> action) 
             => (await ExcuteAsync<ExcuteResult>(action)).Unwrap();
 
-        public static async Task<ExcuteResult<T>> ExcuteAsync<T>(Func<Task<ExcuteResult<T>>> action)
-            =>(await ExcuteAsync<ExcuteResult<T>>(action)).Unwrap();
+        public static async Task<ExcuteResult<T>> ExcuteAsync<T>(Func<Task<ExcuteResult<T>>> action) 
+            => (await ExcuteAsync<ExcuteResult<T>>(action)).Unwrap();
 
         public static async ValueTask<ExcuteResult<T>> ExcuteValueAsync<T>(Func<ValueTask<T>> action)
         {
@@ -176,10 +137,39 @@ namespace FclEx.Utils
             }
         }
 
-        public static async ValueTask<ExcuteResult> ExcuteValueAsync(Func<ValueTask<ExcuteResult>> action)
+        public static async ValueTask<ExcuteResult> ExcuteValueAsync(Func<ValueTask<ExcuteResult>> action) 
             => (await ExcuteValueAsync<ExcuteResult>(action)).Unwrap();
 
-        public static async ValueTask<ExcuteResult<T>> ExcuteValueAsync<T>(Func<ValueTask<ExcuteResult<T>>> action)
+        public static async ValueTask<ExcuteResult> ExcuteValueAsync(Func<ValueTask> action)
+        {
+            try
+            {
+                var watch = ValueStopwatch.StartNew();
+                await action().DonotCapture();
+                return CreateSuccess(watch.GetElapsedTime());
+            }
+            catch (Exception ex)
+            {
+                return ex;
+            }
+        }
+
+        public static async ValueTask<ExcuteResult<T>> ExcuteValueAsync<T>(Func<ValueTask<ExcuteResult<T>>> action) 
             => (await ExcuteValueAsync<ExcuteResult<T>>(action)).Unwrap();
+
+        public static void ExcuteBg(Action action) => TaskHelper.RunBg(() => ExcuteResult.Excute(action));
+        public static void ExcuteBg<T>(Func<T> action) => TaskHelper.RunBg(() => ExcuteResult.Excute(action));
+        public static void ExcuteBg(Func<ExcuteResult> action) => TaskHelper.RunBg(() => ExcuteResult.Excute(action));
+        public static void ExcuteBg<T>(Func<ExcuteResult<T>> action) => TaskHelper.RunBg(() => ExcuteResult.Excute(action));
+
+        public static void ExcuteBgAsync(Func<Task> action) => TaskHelper.RunBg(() => ExcuteResult.ExcuteAsync(action));
+        public static void ExcuteBgAsync<T>(Func<Task<T>> action) => TaskHelper.RunBg(() => ExcuteResult.ExcuteAsync(action));
+        public static void ExcuteBgAsync(Func<Task<ExcuteResult>> action) => TaskHelper.RunBg(() => ExcuteResult.ExcuteAsync(action));
+        public static void ExcuteBgAsync<T>(Func<Task<ExcuteResult<T>>> action) => TaskHelper.RunBg(() => ExcuteResult.ExcuteAsync(action));
+
+        public static void ExcuteBgValueAsync(Func<ValueTask> action) => TaskHelper.RunBg(() => ExcuteResult.ExcuteValueAsync(action));
+        public static void ExcuteBgValueAsync<T>(Func<ValueTask<T>> action) => TaskHelper.RunBg(() => ExcuteResult.ExcuteValueAsync(action));
+        public static void ExcuteBgValueAsync(Func<ValueTask<ExcuteResult>> action) => TaskHelper.RunBg(() => ExcuteResult.ExcuteValueAsync(action));
+        public static void ExcuteBgValueAsync<T>(Func<ValueTask<ExcuteResult<T>>> action) => TaskHelper.RunBg(() => ExcuteResult.ExcuteValueAsync(action));
     }
 }

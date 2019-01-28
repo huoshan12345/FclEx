@@ -26,14 +26,14 @@ namespace FclEx.Http.Actions
 
         protected abstract HttpReq BuildRequest();
 
-        protected abstract ValueTask<ActionEvent> HandleResponse(HttpRes response);
+        protected abstract Task<ActionEvent> HandleResponse(HttpRes response);
 
         protected virtual void PreCheckResponse(HttpRes response)
         {
             response.EnsureSuccessStatusCode();
         }
 
-        protected override async ValueTask<ActionEvent> ExecuteInternalAsync(CancellationToken token)
+        protected override async Task<ActionEvent> ExecuteInternalAsync(CancellationToken token)
         {
             if (token.IsCancellationRequested)
                 return await NotifyCancelEventAsync().DonotCapture();

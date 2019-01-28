@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.Serialization.Formatters.Binary;
 using FclEx.TypeCasters;
 using FclEx.Utils;
 
@@ -45,6 +47,30 @@ namespace FclEx
         public static int GetHashCodeSafely<T>(this T obj)
         {
             return obj == null ? 0 : obj.GetHashCode();
+        }
+
+        public static T DeepClone<T>(this T obj)
+        {
+            if (typeof(T).IsSerializable)
+            {
+                using (var ms = new MemoryStream())
+                {
+                    var formatter = new BinaryFormatter();
+                    formatter.Serialize(ms, obj);
+                    ms.Position = 0;
+                    return (T)formatter.Deserialize(ms);
+                }
+            }
+            else
+            {
+                return obj.ToJson().ToJToken().ToObject<T>();
+            }
+        }
+
+        public static T EnsureNotNull<T>(this T obj)
+            where T : class, new()
+        {
+            return obj ?? new T();
         }
     }
 }

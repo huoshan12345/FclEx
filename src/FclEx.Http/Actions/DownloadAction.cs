@@ -31,7 +31,7 @@ namespace FclEx.Http.Actions
 
         protected virtual void ModifyRequest(HttpReq req) { }
 
-        protected override ValueTask<ActionEvent> HandleResponse(HttpRes response)
+        protected override Task<ActionEvent> HandleResponse(HttpRes response)
         {
             return NotifyOkEventAsync(response.ResponseBytes);
         }

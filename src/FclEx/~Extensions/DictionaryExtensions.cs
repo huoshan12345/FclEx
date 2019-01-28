@@ -15,10 +15,21 @@ namespace FclEx
             return result;
         }
 
-        public static TValue GetOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey key, 
+        public static TValue GetOrDefault<TKey, TValue>(
+            this IDictionary<TKey, TValue> dic,
+            TKey key,
             TValue defaultValue = default)
         {
             return dic.TryGetValue(key, out var value) ? value : defaultValue;
+        }
+
+        public static TProp GetOrDefault<TKey, TValue, TProp>(
+            this IReadOnlyDictionary<TKey, TValue> dic, 
+            TKey key,
+            Func<TValue, TProp> selector,
+            TProp defaultValue = default)
+        {
+            return dic.TryGetValue(key, out var value) ? selector(value) : defaultValue;
         }
 
         public static TValue GetFirstOrDefault<TKey, TValue>(this MultiValueDictionary<TKey, TValue> dic, TKey key,
@@ -135,6 +146,16 @@ namespace FclEx
             where TCol : ICollection<TValue>, new()
         {
             return dic.TryGetValue(key, out var col) && (col?.Contains(value) ?? false);
+        }
+
+        public static string ToQueryRawStr(this IDictionary<string, string> dic)
+        {
+            return dic.Select(m => $"{m.Key}={m.Value.ToStringOrEmpty()}").JoinWith("&");
+        }
+
+        public static string ToQueryStr(this IDictionary<string, string> dic)
+        {
+            return dic.Select(m => $"{m.Key.UrlEncode()}={m.Value.ToStringOrEmpty().UrlEncode()}").JoinWith("&");
         }
     }
 }

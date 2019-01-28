@@ -18,7 +18,7 @@ namespace FclEx.Http.Actions
             _ex = ex;
         }
 
-        protected override ValueTask<ActionEvent> ExecuteInternalAsync(CancellationToken token)
+        protected override Task<ActionEvent> ExecuteInternalAsync(CancellationToken token)
         {
             return NotifyErrorAsync(_ex);
         }

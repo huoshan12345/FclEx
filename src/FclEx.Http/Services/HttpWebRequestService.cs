@@ -137,7 +137,7 @@ namespace FclEx.Http.Services
             }
         }
 
-        public override async ValueTask<HttpRes> ExecuteAsync(HttpReq httpReq, CancellationToken token = default)
+        public override async Task<HttpRes> ExecuteAsync(HttpReq httpReq, CancellationToken token = default)
         {
             token.ThrowIfCancellationRequested();
             var responses = new List<HttpWebResponse>();
@@ -169,7 +169,7 @@ namespace FclEx.Http.Services
                 if (httpReq.ReadResultCookie)
                     ReadCookies(response);
 
-                while (response.IsRedirect())
+                while (response.IsRedirection())
                 {
                     var uri = response.GetRedirectUri();
                     var tempReq = BuildRequest(HttpReq.Get(uri), WebProxy, _cookieContainer);

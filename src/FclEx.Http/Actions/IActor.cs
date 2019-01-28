@@ -6,6 +6,6 @@ namespace FclEx.Http.Actions
 {
     public interface IActor
     {
-        ValueTask<ActionEvent> ExecuteAsync(CancellationToken token);
+        Task<ActionEvent> ExecuteAsync(CancellationToken token);
     }
 }
