@@ -19,7 +19,7 @@ namespace FclEx.Http.Services
         static AbstractHttpService()
         {
             ServicePointManager.DefaultConnectionLimit = int.MaxValue;
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            FclExStartup.Init();
         }
 
         protected readonly CookieContainer _cookieContainer;

@@ -15,6 +15,11 @@ namespace FclEx.Npoi
     /// </summary>
     public static class ExcelHelper
     {
+        static ExcelHelper()
+        {
+            FclExStartup.Init();
+        }
+
         /// <summary>
         /// 格式化Excel文件名，根据Excel类型，为Excel增加后缀。
         /// </summary>
@@ -198,7 +203,8 @@ namespace FclEx.Npoi
                     {
                         var cell = sheet.GetRow(0).GetCell(i);
                         cell.CellStyle = headerCellStyle;
-                        sheet.SetColumnWidth(i, (arrColumnWidth[i] + 1) * 256);
+                        var colWidth = (arrColumnWidth[i] + 1) * 256;
+                        sheet.SetColumnWidth(i, FixColumnWidth(colWidth));
                     }
                     rowIndex = 0;
                     sheetIndex++;
@@ -212,10 +218,16 @@ namespace FclEx.Npoi
                 {
                     var cell = sheet.GetRow(0).GetCell(i);
                     cell.CellStyle = headerCellStyle;
-                    sheet.SetColumnWidth(i, (arrColumnWidth[i] + 1) * 256);
+                    var colWidth = (arrColumnWidth[i] + 1) * 256;
+                    sheet.SetColumnWidth(i, FixColumnWidth(colWidth));
                 }
             }
             book.Write(saveStream);
+
+            int FixColumnWidth(int width)
+            {
+                return width < 255 * 256 ? width < 3000 ? 3000 : width : 6000;
+            }
         }
 
         public static void ExportExcel<T>(
