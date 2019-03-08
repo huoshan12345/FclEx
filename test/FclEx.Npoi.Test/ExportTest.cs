@@ -34,5 +34,12 @@ namespace FclEx.Npoi.Test
             var bytes = new[] { data }.ToExcelBytes(Data.Columns);
             File.WriteAllBytes(nameof(LargeWidthColumn_Test) + ".xlsx", bytes);
         }
+
+        [Fact]
+        public void EmptyList_Test()
+        {
+            var bytes = Array.Empty<Data>().ToExcelBytes(Data.Columns);
+            File.WriteAllBytes(nameof(EmptyList_Test) + ".xlsx", bytes);
+        }
     }
 }

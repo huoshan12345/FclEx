@@ -201,10 +201,17 @@ namespace FclEx.Npoi
                     //设置列样式
                     for (int i = 0; i < columns.Count; i++)
                     {
-                        var cell = sheet.GetRow(0).GetCell(i);
-                        cell.CellStyle = headerCellStyle;
-                        var colWidth = (arrColumnWidth[i] + 1) * 256;
-                        sheet.SetColumnWidth(i, FixColumnWidth(colWidth));
+                        var firstRow = sheet.GetRow(0);
+                        if (firstRow != null)
+                        {
+                            var cell = firstRow.GetCell(i);
+                            cell.CellStyle = headerCellStyle;
+                        }
+                        if (i < arrColumnWidth.Length)
+                        {
+                            var colWidth = (arrColumnWidth[i] + 1) * 256;
+                            sheet.SetColumnWidth(i, FixColumnWidth(colWidth));
+                        }
                     }
                     rowIndex = 0;
                     sheetIndex++;
@@ -216,10 +223,17 @@ namespace FclEx.Npoi
                 var sheet = sheetList[sheetList.Count - 1];
                 for (int i = 0; i < columns.Count; i++)
                 {
-                    var cell = sheet.GetRow(0).GetCell(i);
-                    cell.CellStyle = headerCellStyle;
-                    var colWidth = (arrColumnWidth[i] + 1) * 256;
-                    sheet.SetColumnWidth(i, FixColumnWidth(colWidth));
+                    var firstRow = sheet.GetRow(0);
+                    if (firstRow != null)
+                    {
+                        var cell = firstRow.GetCell(i);
+                        cell.CellStyle = headerCellStyle;
+                    }
+                    if (i < arrColumnWidth.Length)
+                    {
+                        var colWidth = (arrColumnWidth[i] + 1) * 256;
+                        sheet.SetColumnWidth(i, FixColumnWidth(colWidth));
+                    }
                 }
             }
             book.Write(saveStream);
