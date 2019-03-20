@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FclEx.Utils;
+using Microsoft.Extensions.Logging;
 using MoreLinq;
 
 namespace FclEx.Consumers
@@ -43,7 +44,7 @@ namespace FclEx.Consumers
             {
                 try
                 {
-                    if (_items.TryTake(out var item, timeout, _cts.Token))
+                    if (Items.TryTake(out var item, timeout, Cts.Token))
                     {
                         list.Add(item);
                     }
@@ -74,29 +75,56 @@ namespace FclEx.Consumers
             }
             catch (Exception ex)
             {
-                for (var i = 0; i < items.Count; i++)
-                    items[i] = items[i].AddError(ex);
-                OnException.Invoke(this, items);
-                Counter.IncreException(items.Count);
+                Counter.IncreException();
+                try
+                {
+                    for (var i = 0; i < items.Count; i++)
+                        items[i] = items[i].AddError(ex);
+                    OnException.Invoke(this, items);
+                }
+                catch (Exception e)
+                {
+                    Counter.IncreException();
+                    Logger.LogError(e, $"[{GetType().Name}]Error encountered when invoking {nameof(OnException)}");
+                }
             }
 
-            var (retry, discard) = items.PartitionToArray(m => m.ErrorTimes <= _maxRetryTimes);
-            retry.ForEach(m => _items.TryAdd(m));
-            if (discard.Any())
+            try
             {
-                OnDiscard.Invoke(this, discard);
-                Counter.IncreDiscard(discard.Length);
+                var (retry, discard) = items.PartitionToArray(m => m.ErrorTimes <= _maxRetryTimes);
+                retry.ForEach(m => Items.TryAdd(m));
+                if (discard.Any())
+                {
+                    OnDiscard.Invoke(this, discard);
+                    Counter.IncreDiscard(discard.Length);
+                }
+            }
+            catch(Exception e)
+            {
+                Counter.IncreException();
+                Logger.LogError(e, $"[{GetType().Name}]Error encountered when invoking {nameof(Consume)}");
             }
         }
 
         protected override async Task Process()
         {
-            while (!IsComplete && !_cts.IsCancellationRequested)
+            try
             {
-                var items = GetItems();
-                await Consume(items).DonotCapture();
+                while (!IsComplete && !Cts.IsCancellationRequested)
+                {
+                    var items = GetItems();
+                    await Consume(items).DonotCapture();
+                }
             }
-            _locker.Do(() => _isRunning = false);
+            catch (Exception e)
+            {
+                Counter.IncreException();
+                Logger.LogCritical(e, $"[{GetType().Name}]Error encountered when invoking {nameof(Process)}");
+            }
+            finally
+            {
+                Locker.Do(() => IsRunning = false);
+            }
         }
     }
 }

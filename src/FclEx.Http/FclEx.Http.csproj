@@ -5,7 +5,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageProjectUrl>https://github.com/huoshan12345/FclEx</PackageProjectUrl>
     <PackageTags>http</PackageTags>
-    <Version>2.3.5</Version>
+    <Version>2.3.6</Version>
     <Authors>huoshan12345</Authors>
     <Description>a simple http lib</Description>
     <RepositoryUrl>https://github.com/huoshan12345/FclEx</RepositoryUrl>
@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.2.0" />
     <PackageReference Include="MimeTypeMap.Core" Version="1.0.0" />
     <PackageReference Include="HttpMultipartParser" Version="2.2.4" />
   </ItemGroup>

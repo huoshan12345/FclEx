@@ -28,7 +28,7 @@ namespace FclEx.Consumers
                 OnException.Invoke(sender, args);
 
                 if (args.ErrorTimes < maxRetryTimes)
-                    _items.TryAdd(args);
+                    Items.TryAdd(args);
                 else
                 {
                     OnDiscard.Invoke(sender, args);
