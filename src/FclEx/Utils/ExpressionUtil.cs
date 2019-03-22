@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 
-namespace FclEx.Helpers
+namespace FclEx.Utils
 {
-    public static class ExpressionHelper
+    public static class ExpressionUtil
     {
         public static PropertyInfo GetProp<TSource, TProperty>(Expression<Func<TSource, TProperty>> propertyLambda)
         {

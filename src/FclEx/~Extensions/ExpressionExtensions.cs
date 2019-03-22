@@ -3,6 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using FclEx.Helpers;
+using FclEx.Utils;
 
 namespace FclEx
 {
@@ -50,7 +51,7 @@ namespace FclEx
             Func<TSource, TProperty, bool> condition, TProperty newValue)
         {
             if (condition == null) throw new ArgumentNullException(nameof(condition));
-            var propertyInfo = ExpressionHelper.GetProp(propertyLambda);
+            var propertyInfo = ExpressionUtil.GetProp(propertyLambda);
             var value = propertyInfo.GetValue(source).CastTo<TProperty>();
             if (condition(source, value))
                 propertyInfo.SetValue(source, newValue);
@@ -68,7 +69,7 @@ namespace FclEx
             Expression<Func<TSource, TProperty>> propertyLambda,
             TProperty newValue)
         {
-            var propertyInfo = ExpressionHelper.GetProp(propertyLambda);
+            var propertyInfo = ExpressionUtil.GetProp(propertyLambda);
             propertyInfo.SetValue(source, newValue);
             return source;
         }
@@ -94,7 +95,7 @@ namespace FclEx
         {
             if (newValueCondition == null || newValueCondition(newValue))
             {
-                var propertyInfo = ExpressionHelper.GetProp(propertyLambda);
+                var propertyInfo = ExpressionUtil.GetProp(propertyLambda);
                 propertyInfo.SetValue(source, newValue);
             }
             return source;
