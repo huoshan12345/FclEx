@@ -17,7 +17,14 @@ namespace FclEx.Benchmark
             //await ExcuteResult.ExcuteAsync(async () => await HttpServiceRawTest.RawTest(500).DonotCapture())
             //    .Error(e => Console.WriteLine(e));
 
-            BenchmarkRunner.Run<CastTest>();
+            // BenchmarkRunner.Run<SortTest>();
+
+            var test = new SortTest();
+
+            for (int i = 0; i < 100; i++)
+            {
+                test.Comparison_Prop();
+            }
         }
     }
 }

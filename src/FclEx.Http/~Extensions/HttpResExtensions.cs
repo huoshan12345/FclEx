@@ -40,15 +40,5 @@ namespace FclEx.Http
             var resObj = res.ResponseString.ToJToken().ToObject<T>();
             return resObj;
         }
-
-        public static async Task<JToken> ReadAsJson(this Task<HttpRes> task)
-        {
-            var res = await task.DonotCapture();
-            res.ThrowIfError();
-            if (res.Req.ResultType == HttpResultType.Byte)
-                throw new InvalidOperationException("Can not deserialize json from byte array.");
-            var resObj = res.ResponseString.ToJToken();
-            return resObj;
-        }
     }
 }

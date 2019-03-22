@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using FclEx.Helpers;
 
 namespace FclEx
 {
@@ -42,31 +43,14 @@ namespace FclEx
             return condition ? And(left, right) : left;
         }
 
-        public static PropertyInfo GetProp<TSource, TProperty>(this TSource source,
-            Expression<Func<TSource, TProperty>> propertyLambda)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (propertyLambda == null) throw new ArgumentNullException(nameof(propertyLambda));
-
-            if (!(propertyLambda.Body is MemberExpression member))
-                throw new ArgumentException($"Expression '{propertyLambda}' refers to a method, not a property.");
-
-            if (!(member.Member is PropertyInfo propInfo))
-                throw new ArgumentException($"Expression '{propertyLambda}' refers to a field, not a property.");
-
-            var type = typeof(TSource);
-            if (type != propInfo.ReflectedType && !type.IsSubclassOf(propInfo.ReflectedType))
-                throw new ArgumentException($"Expression '{propertyLambda}' refers to a property that is not from type {type}.");
-
-            return propInfo;
-        }
+       
 
         public static TSource SetPropIf<TSource, TProperty>(this TSource source,
             Expression<Func<TSource, TProperty>> propertyLambda,
             Func<TSource, TProperty, bool> condition, TProperty newValue)
         {
             if (condition == null) throw new ArgumentNullException(nameof(condition));
-            var propertyInfo = source.GetProp(propertyLambda);
+            var propertyInfo = ExpressionHelper.GetProp(propertyLambda);
             var value = propertyInfo.GetValue(source).CastTo<TProperty>();
             if (condition(source, value))
                 propertyInfo.SetValue(source, newValue);
@@ -84,7 +68,7 @@ namespace FclEx
             Expression<Func<TSource, TProperty>> propertyLambda,
             TProperty newValue)
         {
-            var propertyInfo = source.GetProp(propertyLambda);
+            var propertyInfo = ExpressionHelper.GetProp(propertyLambda);
             propertyInfo.SetValue(source, newValue);
             return source;
         }
@@ -110,7 +94,7 @@ namespace FclEx
         {
             if (newValueCondition == null || newValueCondition(newValue))
             {
-                var propertyInfo = source.GetProp(propertyLambda);
+                var propertyInfo = ExpressionHelper.GetProp(propertyLambda);
                 propertyInfo.SetValue(source, newValue);
             }
             return source;
