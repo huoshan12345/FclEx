@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
+using FclEx.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -147,6 +148,51 @@ namespace FclEx
         public static bool IsPossibleJArray(this string data)
         {
             return (!data.IsNullOrEmpty() && (data.First() == '[' && data.Last() == ']'));
+        }
+
+        public static bool TryToJToken(this string str, out JToken token)
+        {
+            token = null;
+            if (str.IsPossibleJson())
+            {
+                var r = ExcuteResult.Excute(() => JToken.Parse(str));
+                if (r.Successful)
+                {
+                    token = r.Result;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static bool TryToJObject(this string str, out JObject token)
+        {
+            token = null;
+            if (str.IsPossibleJson())
+            {
+                var r = ExcuteResult.Excute(() => JObject.Parse(str));
+                if (r.Successful)
+                {
+                    token = r.Result;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static bool TryToJArray(this string str, out JArray token)
+        {
+            token = null;
+            if (str.IsPossibleJson())
+            {
+                var r = ExcuteResult.Excute(() => JArray.Parse(str));
+                if (r.Successful)
+                {
+                    token = r.Result;
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
