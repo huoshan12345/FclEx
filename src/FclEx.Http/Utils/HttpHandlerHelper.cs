@@ -37,7 +37,6 @@ namespace FclEx.Http.Utils
             {
                 AllowAutoRedirect = false,
                 UseCookies = false,
-                MaxConnectionsPerServer = 64,
                 AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
             };
             if (proxy != null)
