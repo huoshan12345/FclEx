@@ -44,9 +44,32 @@ namespace FclEx.Http.Services
         {
         }
 
-        public abstract Task<HttpRes> ExecuteAsync(
+        protected abstract  Task ExecuteAsyncInternal(
             HttpReq httpReq,
-            CancellationToken token = default);
+            HttpRes httpRes,
+            CancellationToken token);
+
+        public async Task<HttpRes> ExecuteAsync(
+            HttpReq httpReq,
+            CancellationToken token = default)
+        {
+            token.ThrowIfCancellationRequested();
+            var res = new HttpRes { Req = httpReq };
+            var watch = ValueStopwatch.StartNew();
+            try
+            {
+                await ExecuteAsyncInternal(httpReq, res, token).DonotCapture();
+            }
+            catch (Exception e)
+            {
+                res.Exception = e;
+            }
+            finally
+            {
+                res.ExcuteTime = watch.GetElapsedTime();
+            }
+            return res;
+        }
 
         public Cookie GetCookie(Uri uri, string name)
         {

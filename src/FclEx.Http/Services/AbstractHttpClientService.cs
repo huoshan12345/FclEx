@@ -97,9 +97,10 @@ namespace FclEx.Http.Services
             return request;
         }
 
-        protected async Task<HttpRes> ExecuteAsync(
+        protected async Task ExecuteAsyncInternal(
             HttpClient httpClient,
             HttpReq httpReq,
+            HttpRes httpRes,
             CancellationToken token = default)
         {
             token.ThrowIfCancellationRequested();
@@ -110,32 +111,32 @@ namespace FclEx.Http.Services
                 {
                     token = new CancellationTokenSource(httpReq.Timeout.Value).Token;
                 }
-                var responseItem = new HttpRes { Req = httpReq };
                 var httpRequest = GetHttpRequest(httpReq, _cookieContainer);
                 var response = await httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, token).DonotCapture();
                 responses.Add(response);
-                responseItem.RedirectUris.Add(response.RequestMessage.RequestUri);
+                httpRes.RedirectUris.Add(response.RequestMessage.RequestUri);
 
                 if (httpReq.ReadResultCookie)
-                    ReadCookies(response, responseItem);
+                    ReadCookies(response, httpRes);
 
                 while (response.IsRedirection())
                 {
+                    token.ThrowIfCancellationRequested();
                     var uri = response.GetRedirectUri();
                     var req = new HttpRequestMessage(HttpMethod.Get, uri);
                     var cookies = _cookieContainer?.GetCookieHeader(uri);
                     if (!cookies.IsNullOrEmpty()) req.Headers.Add(HttpConstants.Cookie, cookies);
                     response = await httpClient.SendAsync(req, token).DonotCapture();
                     responses.Add(response);
-                    responseItem.RedirectUris.Add(response.RequestMessage.RequestUri);
+                    httpRes.RedirectUris.Add(response.RequestMessage.RequestUri);
 
                     if (httpReq.ReadResultCookie)
-                        ReadCookies(response, responseItem);
+                        ReadCookies(response, httpRes);
                 }
-                responseItem.StatusCode = response.StatusCode;
+                httpRes.StatusCode = response.StatusCode;
 
                 if (httpReq.ReadResultHeader)
-                    ReadHeader(response, responseItem);
+                    ReadHeader(response, httpRes);
 
                 if (httpReq.ThrowOnNonSuccessCode)
                     response.EnsureSuccess();
@@ -143,7 +144,7 @@ namespace FclEx.Http.Services
                 if (httpReq.ReadResultContent)
                 {
                     var contentType = response.Content.Headers.ContentType;
-                    responseItem.ResponseChartSet = contentType?.CharSet;
+                    httpRes.ResponseChartSet = contentType?.CharSet;
                     if (!httpReq.ResultCharSet.IsNullOrEmpty())
                     {
                         if (contentType == null)
@@ -153,10 +154,8 @@ namespace FclEx.Http.Services
                         }
                         contentType.CharSet = httpReq.ResultCharSet;
                     }
-                    await ReadContentAsync(response, responseItem).DonotCapture();
+                    await ReadContentAsync(response, httpRes).DonotCapture();
                 }
-
-                return responseItem;
             }
             finally
             {

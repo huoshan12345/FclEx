@@ -17,6 +17,7 @@ namespace FclEx.Http.Core
         public byte[] ResponseBytes { get; internal set; }
         public string ResponseChartSet { get; internal set; }
         public Exception Exception { get; internal set; }
+        public TimeSpan ExcuteTime { get; internal set; }
         public MultiValueDictionary<string, string> Headers => 
             _headers ?? (_headers = new MultiValueDictionary<string, string>(StringComparer.InvariantCultureIgnoreCase));
         public HttpStatusCode StatusCode { get; internal set; }

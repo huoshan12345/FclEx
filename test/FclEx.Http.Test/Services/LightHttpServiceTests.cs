@@ -3,7 +3,7 @@ using FclEx.Http.Services;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace FclEx.Http.Test
+namespace FclEx.Http.Test.Services
 {
     public class LightHttpServiceTests
     {

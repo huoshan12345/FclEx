@@ -46,9 +46,10 @@ namespace FclEx.Http.Proxy
 
         public static WebProxyExt Create(string url, NetworkCredential credentials = null)
         {
-            var uri = url == null ? null : new Uri(url);
-            return Create(uri, credentials);}
-        
+            var uri = url.IsValid() ? new Uri(url) : null;
+            return Create(uri, credentials);
+        }
+
         public static WebProxyExt None { get; set; } = new WebProxyExt(ProxyType.None, null, 0);
 
         public Uri GetProxy(Uri destination) => _uri;

@@ -45,10 +45,9 @@ namespace FclEx.Http.Services
             _httpClient.Recreate();
         }
 
-        public override Task<HttpRes> ExecuteAsync(HttpReq httpReq, CancellationToken token = default)
+        protected override Task ExecuteAsyncInternal(HttpReq httpReq, HttpRes httpRes, CancellationToken token)
         {
-            token.ThrowIfCancellationRequested();
-            return ExecuteAsync(_httpClient.Value, httpReq, token);
+            return ExecuteAsyncInternal(_httpClient.Value, httpReq, httpRes, token);
         }
 
         public HttpClientService(

@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace FclEx.Http.Services
 {
+    [Obsolete]
     public class HttpWebRequestService : AbstractHttpService
     {
         private static readonly string[] _notAddHeaderNames =
@@ -136,12 +137,9 @@ namespace FclEx.Http.Services
                 }
             }
         }
-
-        public override async Task<HttpRes> ExecuteAsync(HttpReq httpReq, CancellationToken token = default)
+        protected override async Task ExecuteAsyncInternal(HttpReq httpReq, HttpRes httpRes, CancellationToken token)
         {
-            token.ThrowIfCancellationRequested();
             var responses = new List<HttpWebResponse>();
-
             try
             {
                 var webRequest = BuildRequest(httpReq, WebProxy, _cookieContainer);
@@ -160,38 +158,36 @@ namespace FclEx.Http.Services
                         await stream.WriteAsync(data, 0, data.Length, token).DonotCapture();
                     }
                 }
-                var responseItem = new HttpRes { Req = httpReq };
                 var response = await webRequest.GetHttpResponseAsync().DonotCapture();
 
                 responses.Add(response);
-                responseItem.RedirectUris.Add(response.ResponseUri);
+                httpRes.RedirectUris.Add(response.ResponseUri);
 
                 if (httpReq.ReadResultCookie)
                     ReadCookies(response);
 
                 while (response.IsRedirection())
                 {
+                    token.ThrowIfCancellationRequested();
                     var uri = response.GetRedirectUri();
                     var tempReq = BuildRequest(HttpReq.Get(uri), WebProxy, _cookieContainer);
                     response = await tempReq.GetHttpResponseAsync().DonotCapture();
                     responses.Add(response);
-                    responseItem.RedirectUris.Add(response.ResponseUri);
+                    httpRes.RedirectUris.Add(response.ResponseUri);
 
                     if (httpReq.ReadResultCookie)
                         ReadCookies(response);
                 }
-                responseItem.StatusCode = response.StatusCode;
+                httpRes.StatusCode = response.StatusCode;
 
                 if (httpReq.ReadResultHeader)
-                    ReadHeader(response, responseItem);
+                    ReadHeader(response, httpRes);
 
                 if (httpReq.ReadResultContent)
-                    await ReadContent(response, responseItem).DonotCapture();
+                    await ReadContent(response, httpRes).DonotCapture();
 
                 if (httpReq.ThrowOnNonSuccessCode)
                     response.EnsureSuccess();
-
-                return responseItem;
             }
             finally
             {

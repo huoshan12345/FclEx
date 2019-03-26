@@ -23,10 +23,10 @@ namespace FclEx.Http.Test.Actions
             }
 
 
-            protected override ValueTask<ActionEvent> ExecuteInternalAsync(CancellationToken token)
+            protected override Task<ActionEvent> ExecuteInternalAsync(CancellationToken token)
             {
                 Interlocked.Increment(ref _times);
-                return ActionEvent.Ok((object)Times).ToValueTask();
+                return ActionEvent.Ok((object)Times).ToTask();
             }
         }
 

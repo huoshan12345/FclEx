@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FclEx.Helpers;
 using FclEx.Http.Core;
+using FclEx.Http.Proxy;
 using FclEx.Http.Services;
 using FclEx.Utils;
 using Xunit;
@@ -19,6 +20,16 @@ namespace FclEx.Http.Test.Services
         public HttpClientServiceTests(ITestOutputHelper output)
         {
             _output = output;
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("http://localhost:1080")]
+        public void Constructor_Test(string proxy)
+        {
+            var http = new HttpClientService(proxy: WebProxyExt.Create(proxy));
+            Assert.Equal(WebProxyExt.Create(proxy), http.WebProxy);
         }
 
         [Fact]
