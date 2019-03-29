@@ -2,23 +2,29 @@
 {
     public class PagedListModel<T>
     {
-        public static PagedListModel<T> Empty { get; } = new PagedListModel<T>(PagedList<T>.Empty);
+        private IPagedList<T> _list = PagedList<T>.Empty;
 
-        public PagedListModel(IPagedList<T> list)
+        public PagedListModel(IPagedList<T> list = null)
         {
             List = list;
-            Total = list.TotalItemCount;
-            PageNumber = list.PageNumber;
-            PageSize = list.PageSize;
-            ItemStart = list.ItemStart;
-            ItemEnd = list.ItemEnd;
         }
 
-        public IPagedList<T> List { get; set; }
-        public int Total { get; set; }
-        public int PageNumber { get; set; }
-        public int PageSize { get; set; }
-        public long ItemStart { get; set; }
-        public long ItemEnd { get; set; }
+        public IPagedList<T> List
+        {
+            get => _list;
+            set => _list = value ?? _list;
+        }
+
+        public int Total => List.TotalItemCount;
+        public int PageNumber => List.PageNumber;
+        public int PageSize => List.PageSize;
+        public long ItemStart => List.ItemStart;
+        public long ItemEnd => List.ItemEnd;
+    }
+
+    public class PagedListModel<T, TSelf> : PagedListModel<T> 
+        where TSelf : PagedListModel<T>, new()
+    {
+        public static TSelf Empty { get; } = new TSelf();
     }
 }
