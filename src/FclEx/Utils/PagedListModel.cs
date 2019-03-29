@@ -23,7 +23,7 @@
     }
 
     public class PagedListModel<T, TSelf> : PagedListModel<T> 
-        where TSelf : PagedListModel<T>, new()
+        where TSelf : PagedListModel<T, TSelf>, new()
     {
         public static TSelf Empty { get; } = new TSelf();
     }
