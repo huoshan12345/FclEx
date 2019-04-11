@@ -24,7 +24,7 @@ namespace FclEx
         }
 
         public static TProp GetOrDefault<TKey, TValue, TProp>(
-            this IReadOnlyDictionary<TKey, TValue> dic, 
+            this IReadOnlyDictionary<TKey, TValue> dic,
             TKey key,
             Func<TValue, TProp> selector,
             TProp defaultValue = default)
@@ -108,12 +108,6 @@ namespace FclEx
             AddOrUpdateRange(dic, items, func);
         }
 
-        public static string ToQueryString(this IDictionary<string, string> dic)
-        {
-            return dic.IsNullOrEmpty() ? string.Empty :
-                string.Join("&", dic.Select(item => $"{item.Key.UrlEncode()}={item.Value.UrlEncode()}"));
-        }
-
         public static bool GetAndDo<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey key, Action<TValue> action)
         {
             var item = dic.GetOrDefault(key);
@@ -148,14 +142,16 @@ namespace FclEx
             return dic.TryGetValue(key, out var col) && (col?.Contains(value) ?? false);
         }
 
-        public static string ToQueryRawStr(this IDictionary<string, string> dic)
+        public static string ToUncodedQueryStr(this IEnumerable<KeyValuePair<string, string>> dic)
         {
-            return dic.Select(m => $"{m.Key}={m.Value.ToStringOrEmpty()}").JoinWith("&");
+            return dic.Select(m => $"{m.Key}={m.Value.GetOrEmpty()}").JoinWith("&");
         }
 
-        public static string ToQueryStr(this IDictionary<string, string> dic)
+        public static string ToQueryStr(this IEnumerable<KeyValuePair<string, string>> dic)
         {
-            return dic.Select(m => $"{m.Key.UrlEncode()}={m.Value.ToStringOrEmpty().UrlEncode()}").JoinWith("&");
+            return dic == null
+                ? string.Empty
+                : dic.Select(m => $"{m.Key.UrlEncode()}={m.Value.GetOrEmpty().UrlEncode()}").JoinWith("&");
         }
     }
 }

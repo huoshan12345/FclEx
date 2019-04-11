@@ -244,7 +244,7 @@ namespace FclEx.Http.Core
             var type = HeaderMap.GetOrDefault(HttpConstants.ContentType);
             switch (type)
             {
-                case HttpConstants.FormContentType: return FormMap.ToQueryString().ToBytes(Encoding);
+                case HttpConstants.FormContentType: return FormMap.ToQueryStr().ToBytes(Encoding);
                 case HttpConstants.MultiPartContentType:
                 {
                     using (var mem = new MemoryStream())
