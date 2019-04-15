@@ -37,26 +37,23 @@ namespace FclEx.Consumers
 
         private List<ProcItem<T>> GetItems()
         {
-            var startTime = DateTime.UtcNow;
+            var watch = ValueStopwatch.StartNew();
             var list = new List<ProcItem<T>>(_batchSize);
             var timeout = (HasTimeout ? 1 : 5) * 1000;
             while (list.Count < _batchSize)
             {
                 try
                 {
-                    if (Items.TryTake(out var item, timeout, Cts.Token))
-                    {
+                    if (_items.TryTake(out var item, timeout, _cts.Token))
                         list.Add(item);
-                    }
                 }
                 catch (OperationCanceledException)
                 {
                     break;
                 }
-
                 if (HasTimeout)
                 {
-                    var seconds = (int)Math.Ceiling((DateTime.UtcNow - startTime).TotalSeconds);
+                    var seconds = watch.GetElapsedTime().TotalSeconds;
                     if (seconds >= _batchSecondsTimeout) break;
                 }
             }
@@ -92,14 +89,14 @@ namespace FclEx.Consumers
             try
             {
                 var (retry, discard) = items.PartitionToArray(m => m.ErrorTimes <= _maxRetryTimes);
-                retry.ForEach(m => Items.TryAdd(m));
+                retry.ForEach(m => _items.TryAdd(m));
                 if (discard.Any())
                 {
                     OnDiscard.Invoke(this, discard);
                     Counter.IncreDiscard(discard.Length);
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Counter.IncreException();
                 Logger.LogError(e, $"[{GetType().Name}]Error encountered when invoking {nameof(Consume)}");
@@ -110,7 +107,7 @@ namespace FclEx.Consumers
         {
             try
             {
-                while (!IsComplete && !Cts.IsCancellationRequested)
+                while (!IsComplete && !_cts.IsCancellationRequested)
                 {
                     var items = GetItems();
                     await Consume(items).DonotCapture();
@@ -123,7 +120,7 @@ namespace FclEx.Consumers
             }
             finally
             {
-                Locker.Do(() => IsRunning = false);
+                _locker.Do(() => _isRunning = false);
             }
         }
     }
