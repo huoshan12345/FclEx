@@ -24,7 +24,7 @@ namespace FclEx.Test.Utils
             var r = ExcuteResult.Excute((Func<object>)(() => throw new SimpleException("")));
             Assert.True(!r.Successful);
             Assert.Null(r.Result);
-            Assert.Equal(default, r.Elapsed);
+            Assert.NotEqual(default, r.Elapsed);
             Assert.NotNull(r.Exception);
         }
     }

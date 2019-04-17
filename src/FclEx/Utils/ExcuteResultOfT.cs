@@ -16,11 +16,11 @@ namespace FclEx.Utils
         public string StackTrace => Exception?.StackTrace;
         public T Result { get; }
 
-        internal ExcuteResult(int code, Exception ex)
+        internal ExcuteResult(int code, TimeSpan elapsed, Exception ex)
         {
             Code = Check.NotEqual(code, ExcuteResultCodes.Success, nameof(code));
             Exception = Check.NotNull(ex, nameof(ex));
-            Elapsed = default;
+            Elapsed = elapsed;
             Result = default;
         }
 
@@ -36,7 +36,7 @@ namespace FclEx.Utils
         {
             return result.Successful
                 ? new ExcuteResult(result.Elapsed)
-                : new ExcuteResult(result.Code, result.Exception);
+                : new ExcuteResult(result.Code, result.Elapsed, result.Exception);
         }
 
         public static implicit operator ExcuteResult<T>(ExcuteResult result)
@@ -46,12 +46,12 @@ namespace FclEx.Utils
 
         public static implicit operator ExcuteResult<T>(Exception ex)
         {
-            return new ExcuteResult<T>(ExcuteResultCodes.FromException, ex);
+            return new ExcuteResult<T>(ExcuteResultCodes.FromException, TimeSpan.Zero, ex);
         }
 
         public static implicit operator ExcuteResult<T>(string error)
         {
-            return new ExcuteResult<T>(ExcuteResultCodes.FromString, new SimpleException(error));
+            return new ExcuteResult<T>(ExcuteResultCodes.FromString, TimeSpan.Zero, new SimpleException(error));
         }
 
         public static implicit operator ExcuteResult<T>(T item)
@@ -65,7 +65,7 @@ namespace FclEx.Utils
         {
             return Successful 
                 ? new ExcuteResult<TTagert>(Result.CastTo<TTagert>(), Elapsed)
-                : new ExcuteResult<TTagert>(Code, Exception);
+                : new ExcuteResult<TTagert>(Code, Elapsed, Exception);
         }
     }
 }

@@ -34,9 +34,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Image.Test", "test\Fc
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Npoi", "src\FclEx.Npoi\FclEx.Npoi.csproj", "{8F6084B4-BE4D-4C3C-9FEA-6E04B56E4F5D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FclEx.Npoi.Test", "test\FclEx.Npoi.Test\FclEx.Npoi.Test.csproj", "{16A94692-9EFF-42F0-A2A6-29678543AFAD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Npoi.Test", "test\FclEx.Npoi.Test\FclEx.Npoi.Test.csproj", "{16A94692-9EFF-42F0-A2A6-29678543AFAD}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Microsoft.Experimental.Collections", "src\Microsoft.Experimental.Collections\Microsoft.Experimental.Collections.shproj", "{D80D0F2E-E613-4DAC-9612-C709050A3E8D}"
 EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		src\Microsoft.Experimental.Collections\Microsoft.Experimental.Collections.projitems*{d80d0f2e-e613-4dac-9612-c709050a3e8d}*SharedItemsImports = 13
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -92,6 +97,7 @@ Global
 		{CD4A3387-77CD-4173-BCEA-F246F65EE14D} = {F25BD2B5-2E68-4CC8-90F0-6F1C1574D34A}
 		{8F6084B4-BE4D-4C3C-9FEA-6E04B56E4F5D} = {ABBD6045-5447-4C9B-AF77-E9ACF4EE2641}
 		{16A94692-9EFF-42F0-A2A6-29678543AFAD} = {F25BD2B5-2E68-4CC8-90F0-6F1C1574D34A}
+		{D80D0F2E-E613-4DAC-9612-C709050A3E8D} = {ABBD6045-5447-4C9B-AF77-E9ACF4EE2641}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F79FC760-FDD2-442C-897B-0CAE0A3E857F}
