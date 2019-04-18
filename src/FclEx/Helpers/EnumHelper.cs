@@ -7,27 +7,27 @@ namespace FclEx.Helpers
 {
     public static class EnumHelper
     {
-        public static T[] GetValues<T>() where T : struct, IConvertible
+        public static T[] GetValues<T>() where T : Enum
         {
             return Enum.GetValues(typeof(T)).CastTo<T[]>();
         }
 
-        public static T ParseFromStrNum<T>(string number, T defaultValue) where T : struct, IConvertible
+        public static T ParseFromStrNum<T>(string number, T defaultValue) where T : Enum
         {
             return ParseFromStrNum(number, input => defaultValue);
         }
 
-        public static T ParseFromStrNum<T>(string number) where T : struct, IConvertible
+        public static T ParseFromStrNum<T>(string number) where T : Enum
         {
             return ParseFromStrNum<T>(number, input => throw new ArgumentOutOfRangeException(nameof(number)));
         }
 
-        public static T ParseFromStrNum<T>(string number, Func<string, T> defaultValueFunc) where T : struct, IConvertible
+        public static T ParseFromStrNum<T>(string number, Func<string, T> defaultValueFunc) where T : Enum
         {
             if (int.TryParse(number, out var val))
             {
                 if (typeof(T).IsEnumDefined(val))
-                    return (T)Enum.ToObject(typeof(T), val);
+                    return val.CastTo<T>();
             }
             return defaultValueFunc(number);
         }

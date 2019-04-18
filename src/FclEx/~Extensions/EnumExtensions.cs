@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using FclEx.Helpers;
 
 namespace FclEx
 {
@@ -25,39 +28,60 @@ namespace FclEx
             return enumValue.ToInt().ToString();
         }
 
-        public static int ToInt<TEnum>(this TEnum enumValue)
-            where TEnum : unmanaged, Enum
+        public static int ToInt<TEnum>(this TEnum enumValue) where TEnum : Enum
         {
+            // The approved types for an enum are: 
+            // byte, sbyte,
+            // short, ushort,
+            // int, uint,
+            // long, ulong. 
             int value;
-            if (Unsafe.SizeOf<TEnum>() == Unsafe.SizeOf<byte>()) value = Unsafe.As<TEnum, byte>(ref enumValue);
-            else if (Unsafe.SizeOf<TEnum>() == Unsafe.SizeOf<short>()) value = Unsafe.As<TEnum, short>(ref enumValue);
-            else if (Unsafe.SizeOf<TEnum>() == Unsafe.SizeOf<int>()) value = Unsafe.As<TEnum, int>(ref enumValue);
+            var size = Unsafe.SizeOf<TEnum>();
+            if (size == Unsafe.SizeOf<byte>()) value = Unsafe.As<TEnum, byte>(ref enumValue);
+            else if (size == Unsafe.SizeOf<short>()) value = Unsafe.As<TEnum, short>(ref enumValue);
+            else if (size == Unsafe.SizeOf<int>()) value = Unsafe.As<TEnum, int>(ref enumValue);
             else throw new InvalidCastException($"Cannot cast {enumValue.GetType().Name} to int");
             return value;
         }
 
-        public static long ToLong<TEnum>(this TEnum enumValue)
-            where TEnum : unmanaged, Enum
+        public static long ToLong<TEnum>(this TEnum enumValue) where TEnum : Enum
         {
             long value;
-            if (Unsafe.SizeOf<TEnum>() == Unsafe.SizeOf<byte>()) value = Unsafe.As<TEnum, byte>(ref enumValue);
-            else if (Unsafe.SizeOf<TEnum>() == Unsafe.SizeOf<short>()) value = Unsafe.As<TEnum, short>(ref enumValue);
-            else if (Unsafe.SizeOf<TEnum>() == Unsafe.SizeOf<int>()) value = Unsafe.As<TEnum, int>(ref enumValue);
-            else if (Unsafe.SizeOf<TEnum>() == Unsafe.SizeOf<long>()) value = Unsafe.As<TEnum, long>(ref enumValue);
+            var size = Unsafe.SizeOf<TEnum>();
+            if (size == Unsafe.SizeOf<byte>()) value = Unsafe.As<TEnum, byte>(ref enumValue);
+            else if (size == Unsafe.SizeOf<short>()) value = Unsafe.As<TEnum, short>(ref enumValue);
+            else if (size == Unsafe.SizeOf<int>()) value = Unsafe.As<TEnum, int>(ref enumValue);
+            else if (size == Unsafe.SizeOf<long>()) value = Unsafe.As<TEnum, long>(ref enumValue);
             else throw new InvalidCastException($"Cannot cast {enumValue.GetType().Name} to long");
             return value;
         }
 
-        public static T ToEnum<T>(this string value, T defaultValue)
-            where T : struct, Enum
+        public static T ToEnum<T>(this string value, T defaultValue) where T : struct, Enum
         {
             return ToEnum(value, s => defaultValue);
         }
 
-        public static T ToEnum<T>(this string value, Func<string, T> defaultValueFunc)
-            where T : struct, Enum
+        public static T ToEnum<T>(this string value, Func<string, T> defaultValueFunc) where T : struct, Enum
         {
             return Enum.TryParse<T>(value, true, out var result) ? result : defaultValueFunc(value);
+        }
+
+        public static T ToEnum<T>(this string value)
+            where T : struct, Enum
+        {
+            return value.ToEnum<T>(s => throw new FormatException($"Cannot parse to type of {typeof(T).ShortName()} from this value: " + s));
+        }
+
+        public static bool IsValid<T>(this T value) where T : Enum
+        {
+            var validValues = EnumHelper.GetValues<T>();
+            return validValues.Contains(value);
+        }
+
+        public static bool IsEachValid<T>(this IEnumerable<T> values) where T : Enum
+        {
+            var validValues = EnumHelper.GetValues<T>();
+            return values.All(m => validValues.Contains(m));
         }
     }
 }
