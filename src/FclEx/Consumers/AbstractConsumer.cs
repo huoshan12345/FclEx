@@ -24,6 +24,7 @@ namespace FclEx.Consumers
             }
         }
         public Counter Counter { get; } = new Counter();
+        protected string TypeName { get; }
         protected AsyncLocker _locker = new AsyncLocker();
         protected CancellationTokenSource _cts = new CancellationTokenSource();
         protected BlockingCollection<ProcItem<T>> _items = new BlockingCollection<ProcItem<T>>();
@@ -31,15 +32,17 @@ namespace FclEx.Consumers
         protected volatile bool _isAddingCompleted;
         protected volatile bool _isDisposed;
         private ILogger _logger = NullLogger.Instance;
-
         public int Count => _items.Count;
         public bool IsComplete => _items.Count == 0 && _isAddingCompleted;
-
         protected event AsyncEventHandler<TSelf, ProcItem<T>> OnExceptionInternal
             = (sender, args) => Task.CompletedTask;
-
         protected event AsyncEventHandler<TSelf, ProcItem<T>> OnConsumeInternal
             = (sender, e) => Task.CompletedTask;
+
+        protected AbstractConsumer()
+        {
+            TypeName = GetType().ShortName();
+        }
 
         private bool TryGetItem(out ProcItem<T> item)
         {
@@ -78,7 +81,7 @@ namespace FclEx.Consumers
                         catch (Exception e)
                         {
                             Counter.IncreException();
-                            Logger.LogError(e, $"[{GetType().Name}]Error encountered when invoking {nameof(OnExceptionInternal)}");
+                            Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(OnExceptionInternal)}: " + e.Message);
                         }
                     }
                 }
@@ -86,7 +89,7 @@ namespace FclEx.Consumers
             catch (Exception e)
             {
                 Counter.IncreException();
-                Logger.LogCritical(e, $"[{GetType().Name}]Error encountered when invoking {nameof(Process)}");
+                Logger.LogCritical(e, $"[{TypeName}]Error encountered when invoking {nameof(Process)}: " + e.Message);
             }
             finally
             {

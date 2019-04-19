@@ -82,7 +82,7 @@ namespace FclEx.Consumers
                 catch (Exception e)
                 {
                     Counter.IncreException();
-                    Logger.LogError(e, $"[{GetType().Name}]Error encountered when invoking {nameof(OnException)}");
+                    Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(OnException)}: " + e.Message);
                 }
             }
 
@@ -99,7 +99,7 @@ namespace FclEx.Consumers
             catch (Exception e)
             {
                 Counter.IncreException();
-                Logger.LogError(e, $"[{GetType().Name}]Error encountered when invoking {nameof(Consume)}");
+                Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(Consume)}: " + e.Message);
             }
         }
 
@@ -116,7 +116,7 @@ namespace FclEx.Consumers
             catch (Exception e)
             {
                 Counter.IncreException();
-                Logger.LogCritical(e, $"[{GetType().Name}]Error encountered when invoking {nameof(Process)}");
+                Logger.LogCritical(e, $"[{TypeName}]Error encountered when invoking {nameof(Process)}: " + e.Message);
             }
             finally
             {

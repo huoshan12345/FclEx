@@ -13,6 +13,7 @@ namespace FclEx.Consumers
 {
     public sealed class BatchRetryConsumer<T> : IConsumer<T>
     {
+        private string TypeName { get; }
         private ILogger _logger = NullLogger.Instance;
         private readonly int _retryPartCount;
         private readonly AutoRetryConsumer<List<T>> _retryConsumer;
@@ -26,6 +27,7 @@ namespace FclEx.Consumers
             int maxBatchRetryTimes = 0,
             int retryPartCount = 4)
         {
+            TypeName = GetType().ShortName();
             _retryPartCount = Check.AtLeast(retryPartCount, nameof(retryPartCount), 2);
             _batchConsumer = new BatchConsumer<T>(batchSize, batchSecondsTimeout, maxBatchRetryTimes);
             _batchConsumer.OnConsume += async (sender, list) =>
@@ -115,7 +117,7 @@ namespace FclEx.Consumers
             catch (Exception e)
             {
                 Counter.IncreException();
-                Logger.LogError(e, $"[{GetType().Name}]Error encountered when invoking {nameof(HandleDiscard)}");
+                Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(HandleDiscard)}: " + e.Message);
             }
         }
 
@@ -131,7 +133,7 @@ namespace FclEx.Consumers
             catch (Exception e)
             {
                 Counter.IncreException();
-                Logger.LogError(e, $"[{GetType().Name}]Error encountered when invoking {nameof(HandleException)}");
+                Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(HandleException)}: " + e.Message);
             }
         }
 
