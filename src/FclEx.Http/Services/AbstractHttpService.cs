@@ -44,7 +44,7 @@ namespace FclEx.Http.Services
         {
         }
 
-        protected abstract  Task ExecuteAsyncInternal(
+        protected abstract Task ExecuteAsyncInternal(
             HttpReq httpReq,
             HttpRes httpRes,
             CancellationToken token);
@@ -54,8 +54,8 @@ namespace FclEx.Http.Services
             CancellationToken token = default)
         {
             token.ThrowIfCancellationRequested();
-            var res = new HttpRes { Req = httpReq };
             var watch = ValueStopwatch.StartNew();
+            var res = new HttpRes { Req = httpReq, RequestTime = DateTime.Now };
             try
             {
                 await ExecuteAsyncInternal(httpReq, res, token).DonotCapture();
