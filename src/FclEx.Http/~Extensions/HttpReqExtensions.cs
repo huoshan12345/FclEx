@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using FclEx.Extensions;
 using FclEx.Http.Core;
 using FclEx.Http.Services;
 using MoreLinq;

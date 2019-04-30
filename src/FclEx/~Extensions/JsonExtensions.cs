@@ -14,45 +14,43 @@ namespace FclEx
 {
     public static class JsonExtensions
     {
-        private static readonly IContractResolver _camelResolver = new DefaultContractResolver
+        internal static IContractResolver CamelResolver { get; } = new DefaultContractResolver
         {
             NamingStrategy = new CamelCaseNamingStrategy()
         };
 
-        private static readonly JsonSerializerSettings _ignoreSettings = new JsonSerializerSettings
+        internal static JsonSerializerSettings IgnoreSettings { get; } = new JsonSerializerSettings
         {
             NullValueHandling = NullValueHandling.Ignore
         };
 
-        private static readonly JsonSerializerSettings _camelSettings = new JsonSerializerSettings
+        internal static JsonSerializerSettings CamelSettings { get; } = new JsonSerializerSettings
         {
-            ContractResolver = _camelResolver
+            ContractResolver = CamelResolver
         };
 
-        private static readonly JsonSerializerSettings _camelIgnoreNullSettings = new JsonSerializerSettings
+        internal static JsonSerializerSettings CamelIgnoreNullSettings { get; } = new JsonSerializerSettings
         {
-            ContractResolver = _camelResolver,
+            ContractResolver = CamelResolver,
             NullValueHandling = NullValueHandling.Ignore
         };
 
-        private static readonly JsonSerializer _defaultSerializer = JsonSerializer.CreateDefault();
-        private static readonly JsonSerializer _camelSerializer = JsonSerializer.Create(_camelSettings);
+        internal static JsonSerializer DefaultSerializer { get; } = JsonSerializer.CreateDefault();
+        internal static JsonSerializer CamelSerializer { get; } = JsonSerializer.Create(CamelSettings);
 
-        public static string ToJson(this object obj,
-            JsonSerializerSettings settings,
-            Formatting formatting = Formatting.None)
+        public static string ToJson(this object obj, JsonSerializerSettings settings, Formatting formatting = Formatting.None)
         {
             return JsonConvert.SerializeObject(obj, formatting, settings);
         }
 
         public static string ToJson(this object obj, Formatting formatting = Formatting.None, bool ignoreNull = false)
         {
-            return ToJson(obj, ignoreNull ? _ignoreSettings : null, formatting);
+            return ToJson(obj, ignoreNull ? IgnoreSettings : null, formatting);
         }
 
         public static string ToJsonCamel(this object obj, Formatting formatting = Formatting.None, bool ignoreNull = false)
         {
-            return ToJson(obj, ignoreNull ? _camelIgnoreNullSettings : _camelSettings, formatting);
+            return ToJson(obj, ignoreNull ? CamelIgnoreNullSettings : CamelSettings, formatting);
         }
 
         public static JToken ToJToken(this string str)
@@ -117,82 +115,14 @@ namespace FclEx
             }));
         }
 
-        public static JToken ToJToken(this object obj, JsonSerializer jsonSerializer = null) => JToken.FromObject(obj, jsonSerializer ?? _defaultSerializer);
-        public static JToken ToJTokenCamel(this object obj) => JToken.FromObject(obj, _camelSerializer);
-        public static JObject ToJObject(this object obj, JsonSerializer jsonSerializer = null) => JObject.FromObject(obj, jsonSerializer ?? _defaultSerializer);
-        public static JObject ToJObjectCamel(this object obj) => JObject.FromObject(obj, _camelSerializer);
-        public static JArray ToJArray(this object obj, JsonSerializer jsonSerializer = null) => JArray.FromObject(obj, jsonSerializer ?? _defaultSerializer);
-        public static JArray ToJArrayCamel(this object obj) => JArray.FromObject(obj, _camelSerializer);
-
         public static Dictionary<string, string> ToStrDic(this JObject jObject)
         {
             var dic = new Dictionary<string, string>(jObject.Count);
-            foreach (var m in jObject)
+            foreach (var (key, value) in jObject)
             {
-                dic[m.Key] = m.Value.ToStringOrNull();
+                dic[key] = value.ToStringOrNull();
             }
             return dic;
-        }
-
-        public static bool IsPossibleJson(this string data)
-        {
-            return (!data.IsNullOrEmpty() && (data.First() == '{' && data.Last() == '}'
-                                              || data.First() == '[' && data.Last() == ']'));
-        }
-
-        public static bool IsPossibleJObject(this string data)
-        {
-            return (!data.IsNullOrEmpty() && (data.First() == '{' && data.Last() == '}'));
-        }
-
-        public static bool IsPossibleJArray(this string data)
-        {
-            return (!data.IsNullOrEmpty() && (data.First() == '[' && data.Last() == ']'));
-        }
-
-        public static bool TryToJToken(this string str, out JToken token)
-        {
-            token = null;
-            if (str.IsPossibleJson())
-            {
-                var r = ExcuteResult.Excute(() => JToken.Parse(str));
-                if (r.Successful)
-                {
-                    token = r.Result;
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public static bool TryToJObject(this string str, out JObject token)
-        {
-            token = null;
-            if (str.IsPossibleJson())
-            {
-                var r = ExcuteResult.Excute(() => JObject.Parse(str));
-                if (r.Successful)
-                {
-                    token = r.Result;
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public static bool TryToJArray(this string str, out JArray token)
-        {
-            token = null;
-            if (str.IsPossibleJson())
-            {
-                var r = ExcuteResult.Excute(() => JArray.Parse(str));
-                if (r.Successful)
-                {
-                    token = r.Result;
-                    return true;
-                }
-            }
-            return false;
         }
     }
 }

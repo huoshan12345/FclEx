@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
+using FclEx.Extensions;
 using FclEx.Utils;
 
 namespace FclEx.Http.Core
@@ -152,7 +153,7 @@ namespace FclEx.Http.Core
                 CommonRegex.Scheme.MatchAndDo(value, m =>
                 {
                     Scheme = m.Groups[1].Value;
-                    value = value.StripPrefix(m.Value);
+                    value = value.TrimStart(m.Value);
                 });
                 var match = CommonRegex.HostPort.Match(value);
                 if (!match.Success) match = CommonRegex.Ipv6HostPort.Match(value);
@@ -210,21 +211,21 @@ namespace FclEx.Http.Core
         public HttpReq AddQueryValue(string key, string value)
         {
             Check.NotNull(key, nameof(key));
-            QueryMap[key.Trim()] = value.EnsureNotNull().Trim();
+            QueryMap[key.Trim()] = value.GetOrEmpty().Trim();
             return this;
         }
 
         public HttpReq AddFormValue(string key, string value)
         {
             Check.NotNull(key, nameof(key));
-            FormMap[key.Trim()] = value.EnsureNotNull().Trim();
+            FormMap[key.Trim()] = value.GetOrEmpty().Trim();
             return this;
         }
 
         public HttpReq AddHeader(string key, string value)
         {
             Check.NotNull(key, nameof(key));
-            HeaderMap[key.Trim()] = value.EnsureNotNull().Trim();
+            HeaderMap[key.Trim()] = value.GetOrEmpty().Trim();
             return this;
         }
 
@@ -233,7 +234,7 @@ namespace FclEx.Http.Core
             Check.NotNull(key, nameof(key));
             var k = key.Trim();
             if (!HeaderMap.ContainsKey(k))
-                HeaderMap[k] = value.EnsureNotNull().Trim();
+                HeaderMap[k] = value.GetOrEmpty().Trim();
             return this;
         }
 

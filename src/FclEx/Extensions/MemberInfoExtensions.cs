@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace FclEx
+namespace FclEx.Extensions
 {
     public static class MemberInfoExtensions
     {

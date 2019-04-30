@@ -1,4 +1,6 @@
-﻿namespace FclEx.Http.Core
+﻿using FclEx.Extensions;
+
+namespace FclEx.Http.Core
 {
     public static class HttpConstants
     {
