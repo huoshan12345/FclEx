@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using Xunit;
 using FclEx;
+using FclEx.Extensions;
 
 namespace FclEx.Image.Test
 {

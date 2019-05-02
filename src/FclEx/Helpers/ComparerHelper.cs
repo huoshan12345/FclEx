@@ -11,41 +11,22 @@ namespace FclEx.Helpers
             return new KeyComparer<T, TKey>(keySelector, comparer);
         }
 
-        private class KeyComparer<T, TKey> : IComparer<T>
-        {
-            private readonly Func<T, TKey> _keySelector;
-            private readonly IComparer<TKey> _comparer;
-
-            public KeyComparer(Func<T, TKey> keySelector, IComparer<TKey> comparer = null)
-            {
-                _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
-                _comparer = comparer ?? Comparer<TKey>.Default;
-            }
-
-            public int Compare(T x, T y)
-            {
-                return _comparer.Compare(_keySelector(x), _keySelector(y));
-            }
-        }
-
         public static IComparer<T> Create<T>(Comparison<T> compareFunc)
         {
             return new CommonComparer<T>(compareFunc);
         }
+    }
 
-        private class CommonComparer<T> : IComparer<T>
+    public static class ComparerHelper<T>
+    {
+        public static IComparer<T> Create<TKey>(Func<T, TKey> keySelector, IComparer<TKey> comparer = null)
         {
-            private readonly Comparison<T> _compareFunc;
+            return new KeyComparer<T, TKey>(keySelector, comparer);
+        }
 
-            public CommonComparer(Comparison<T> compareFunc)
-            {
-                _compareFunc = compareFunc ?? throw new ArgumentNullException(nameof(compareFunc));
-            }
-
-            public int Compare(T x, T y)
-            {
-                return _compareFunc(x, y);
-            }
+        public static IComparer<T> Create(Comparison<T> compareFunc)
+        {
+            return new CommonComparer<T>(compareFunc);
         }
     }
 }
