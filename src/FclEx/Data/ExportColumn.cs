@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FclEx.Npoi
+namespace FclEx.Data
 {
     public static class ExportColumn
     {

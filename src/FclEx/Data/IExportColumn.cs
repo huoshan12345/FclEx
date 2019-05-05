@@ -1,4 +1,4 @@
-﻿namespace FclEx.Npoi
+﻿namespace FclEx.Data
 {
     /// <summary>
     /// 导出列接口

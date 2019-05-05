@@ -1,0 +1,56 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+
+namespace FclEx.Data
+{
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+    public class ExportAttribute : Attribute
+    {
+        public string Name { get; set; }
+        public int Order { get; set; }
+
+        public ExportAttribute() { }
+
+        public ExportAttribute(string name)
+        {
+            Name = name;
+        }
+    }
+
+    public abstract class ExportModel<TSelf> where TSelf : ExportModel<TSelf>, new()
+    {
+        private static IList<IExportColumn<TSelf>> _columns;
+        public static IList<IExportColumn<TSelf>> Columns => _columns ?? (_columns = new TSelf().GetColumnsRaw());
+
+        protected static ExportColumn<TSelf> CreateColumn(string name, Func<TSelf, object> selector)
+            => new ExportColumn<TSelf>(name, selector);
+
+        protected static ExportColumn<TSelf> CreateColumn(string name, Func<TSelf, int, object> selector)
+            => new ExportColumn<TSelf>(name, selector);
+
+        protected virtual IList<IExportColumn<TSelf>> GetColumnsRaw()
+        {
+            var props = typeof(TSelf).GetProperties()
+                .Where(m => m.CanRead)
+                .Select((m, i) => (Index: i, Prop: m, ExportAttr: m.GetCustomAttribute<ExportAttribute>()))
+                .Where(m => m.ExportAttr != null)
+                .Select(m => (m.Index, m.Prop, m.ExportAttr, Title: m.ExportAttr.Name.IfEmpty(m.Prop.Name)))
+                .OrderBy(m => m.ExportAttr.Order)
+                .ThenBy(m => m.Index)
+                .ThenBy(m => m.Title)
+                .ToArray();
+
+            return props.Select(m =>
+            {
+                var paraExp = Expression.Parameter(typeof(TSelf));
+                var propExp = Expression.Property(paraExp, m.Prop);
+                var e = Expression.Convert(propExp, typeof(object));
+                var func = Expression.Lambda<Func<TSelf, object>>(e, paraExp);
+                return CreateColumn(m.Title, func.Compile());
+            }).Cast<IExportColumn<TSelf>>().ToArray();
+        }
+    }
+}

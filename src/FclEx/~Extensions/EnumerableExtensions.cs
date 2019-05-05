@@ -10,6 +10,11 @@ namespace FclEx
 {
     public static class EnumerableExtensions
     {
+        public static string JoinWith<T>(this IEnumerable<T> strs, string separator)
+        {
+            return string.Join(separator, strs.Select(m => m.ToString()));
+        }
+
         public static IEnumerable<T> NotNull<T>(this IEnumerable<T> col)
         {
             return col.Where(m => m != null);
@@ -105,5 +110,23 @@ namespace FclEx
         {
             return new OrderedDictionary<TKey, TValue>(enumerable);
         }
+
+        public static (IEnumerable<TProp> True, IEnumerable<TProp> False) Partition<T, TProp>(this IEnumerable<T> enumerable,
+            Func<T, bool> predicate, Func<T, TProp> selector)
+        {
+            var (@true, @false) = enumerable.Partition(predicate);
+            return (@true.Select(selector), @false.Select(selector));
+        }
+
+        public static (T[] True, T[] False) ToArray<T>(this (IEnumerable<T> True, IEnumerable<T> False) enumerable)
+        {
+            return (enumerable.True.ToArray(), enumerable.False.ToArray());
+        }
+
+        public static (List<T> True, List<T> False) ToList<T>(this (IEnumerable<T> True, IEnumerable<T> False) enumerable)
+        {
+            return (enumerable.True.ToList(), enumerable.False.ToList());
+        }
+
     }
 }
