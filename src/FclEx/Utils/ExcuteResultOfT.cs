@@ -39,11 +39,6 @@ namespace FclEx.Utils
                 : new ExcuteResult(result.Code, result.Elapsed, result.Exception);
         }
 
-        public static implicit operator ExcuteResult<T>(ExcuteResult result)
-        {
-            return result.ToExplicit<T>();
-        }
-
         public static implicit operator ExcuteResult<T>(Exception ex)
         {
             return new ExcuteResult<T>(ExcuteResultCodes.FromException, TimeSpan.Zero, ex);

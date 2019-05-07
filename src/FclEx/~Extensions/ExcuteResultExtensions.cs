@@ -13,14 +13,6 @@ namespace FclEx
             return !result.Successful;
         }
 
-        public static ExcuteResult<T> ToExplicit<T>(this IExcuteResult result)
-        {
-            if (result.Successful)
-                throw new InvalidOperationException("cannot convert to explicit when result is successful");
-            else
-                return new ExcuteResult<T>(result.Code, result.Elapsed, result.Exception);
-        }
-
         public static ExcuteResult Unwrap(this ExcuteResult<ExcuteResult> result)
         {
             if (result.Successful && result.Result.Successful) return ExcuteResult.CreateSuccess(result.Elapsed);

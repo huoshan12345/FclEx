@@ -19,7 +19,7 @@ namespace FclEx.Utils
         public static ExcuteResult Success { get; } = new ExcuteResult(TimeSpan.Zero);
 
         public static ExcuteResult NotImplemented { get; }
-            = new ExcuteResult(ExcuteResultCodes.NotImplemented, TimeSpan.Zero, 
+            = new ExcuteResult(ExcuteResultCodes.NotImplemented, TimeSpan.Zero,
                 new NotImplementedException("this function is not implemented"));
 
         internal ExcuteResult(int code, TimeSpan elapsed, Exception ex)
@@ -39,6 +39,14 @@ namespace FclEx.Utils
             Code = ExcuteResultCodes.Success;
             Exception = null;
             Elapsed = elapsed;
+        }
+
+        public ExcuteResult<T> ToExplicit<T>()
+        {
+            if (Successful)
+                throw new InvalidOperationException("cannot convert to explicit when result is successful");
+            else
+                return new ExcuteResult<T>(Code, Elapsed, Exception);
         }
 
         public static ExcuteResult CreateSuccess(TimeSpan elapsed) => new ExcuteResult(elapsed);
@@ -87,7 +95,7 @@ namespace FclEx.Utils
             }
             catch (Exception ex)
             {
-                return CreateError(ex, watch.GetElapsedTime());
+                return CreateError<T>(ex, watch.GetElapsedTime());
             }
         }
 
@@ -119,7 +127,7 @@ namespace FclEx.Utils
             }
             catch (Exception ex)
             {
-                return CreateError(ex, watch.GetElapsedTime());
+                return CreateError<T>(ex, watch.GetElapsedTime());
             }
         }
 
@@ -139,7 +147,7 @@ namespace FclEx.Utils
             }
             catch (Exception ex)
             {
-                return CreateError(ex, watch.GetElapsedTime());
+                return CreateError<T>(ex, watch.GetElapsedTime());
             }
         }
 
