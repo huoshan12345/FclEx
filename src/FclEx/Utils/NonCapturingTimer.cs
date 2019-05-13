@@ -8,11 +8,7 @@ namespace FclEx.Utils
     // everywhere we use timers to avoid rooting any values stored in asynclocals.
     public static class NonCapturingTimer
     {
-        public static Timer<T> Create<T>(
-            TimerCallback<T> callback,
-            T state, 
-            TimeSpan dueTime, 
-            TimeSpan period)
+        public static Timer<T> Create<T>(TimerCallback<T> callback, T state, TimeSpan dueTime, TimeSpan period)
         {
             if (callback == null)
             {

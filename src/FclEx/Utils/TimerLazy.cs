@@ -6,53 +6,33 @@ using FclEx.Helpers;
 
 namespace FclEx.Utils
 {
-    public class TimerLazy<T> : IDisposable
+    public class TimerLazy<T> : ReLazy<T>
     {
-        private readonly object _lock = new object();
-        private volatile Lazy<T> _lazy;
         private readonly Timer<T> _timer;
-        private volatile Func<T> _valueFactory;
-        private readonly LazyThreadSafetyMode _mode;
 
-        public TimerLazy(Func<T> valueFactory, LazyThreadSafetyMode mode, TimeSpan span)
+        public TimerLazy(Func<T> valueFactory, LazyThreadSafetyMode mode, TimeSpan dueTime, TimeSpan period) : base(valueFactory, mode)
         {
-            _valueFactory = valueFactory;
-            _mode = mode;
-
-            _lazy = new Lazy<T>(_valueFactory, _mode);
-            _timer = NonCapturingTimer.Create<T>(o => Recreate(), default, span, span);
+            _timer = NonCapturingTimer.Create<T>(o => Recreate(), default, dueTime, period);
         }
 
-        public TimerLazy(Func<T> valueFactory, TimeSpan span)
-            : this(valueFactory, LazyThreadSafetyMode.None, span)
+        public TimerLazy(Func<T> valueFactory, TimeSpan dueTime, TimeSpan period)
+            : this(valueFactory, LazyThreadSafetyMode.None, dueTime, period)
         {
         }
 
-        public T Value => _lazy.Value;
-
-        public void SetValueFactory(Func<T> valueFactory)
+        public TimerLazy(Func<T> valueFactory, LazyThreadSafetyMode mode, TimeSpan period)
+            : this(valueFactory, mode, TimeSpan.Zero, period)
         {
-            LockHelper.DoubleCheckAndDo(() => _valueFactory != valueFactory, _lock, () =>
-             {
-                 if (_lazy.IsValueCreated && _lazy.Value is IDisposable disposable)
-                     disposable.Dispose();
-                 _valueFactory = valueFactory;
-                 _lazy = new Lazy<T>(valueFactory, _mode);
-             });
         }
 
-        public void Recreate()
+        public TimerLazy(Func<T> valueFactory, TimeSpan period)
+            : this(valueFactory, LazyThreadSafetyMode.None, TimeSpan.Zero, period)
         {
-            LockHelper.DoubleCheckAndDo(() => _lazy.IsValueCreated, _lock, () =>
-            {
-                if (_lazy.Value is IDisposable disposable)
-                    disposable.Dispose();
-                _lazy = new Lazy<T>(_valueFactory, _mode);
-            });
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
+            base.Dispose();
             _timer.Dispose();
         }
     }
