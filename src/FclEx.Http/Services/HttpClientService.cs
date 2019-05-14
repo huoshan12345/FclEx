@@ -15,12 +15,12 @@ namespace FclEx.Http.Services
         public static TimerLazy<HttpClientService> Default { get; } = new TimerLazy<HttpClientService>(() =>
                 new HttpClientService(false, null, null),
                 LazyThreadSafetyMode.ExecutionAndPublication,
-                TimeSpan.FromMinutes(2));
+                TimeSpan.FromMinutes(2), false);
 
         private static readonly TimerLazy<HttpClient> _httpClient =
             new TimerLazy<HttpClient>(() => CreateHttpClient(_funcOfHandler()),
             LazyThreadSafetyMode.ExecutionAndPublication,
-            TimeSpan.FromMinutes(2));
+            TimeSpan.FromMinutes(2), false);
 
         private static Func<HttpMessageHandler> _funcOfHandler;
 
@@ -31,7 +31,7 @@ namespace FclEx.Http.Services
 
         private static HttpClient CreateHttpClient(HttpMessageHandler handler)
         {
-            var httpClient = new HttpClient(handler, true);
+            var httpClient = new HttpClient(handler, false) { Timeout = Timeout.InfiniteTimeSpan };
             httpClient.DefaultRequestHeaders.Add(HttpConstants.UserAgent, HttpConstants.DefaultUserAgent);
             httpClient.DefaultRequestHeaders.Add("Connection", "keep-alive");
             return httpClient;
@@ -61,7 +61,6 @@ namespace FclEx.Http.Services
 
         public override void Dispose()
         {
-            _httpClient.Dispose();
         }
     }
 }

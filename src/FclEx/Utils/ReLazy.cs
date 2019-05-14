@@ -11,16 +11,18 @@ namespace FclEx.Utils
         protected volatile Func<T> _valueFactory;
         protected readonly LazyThreadSafetyMode _mode;
         protected readonly bool _disposable = typeof(IDisposable).IsAssignableFrom(typeof(T));
+        protected readonly bool _disposeObj;
 
-        public ReLazy(Func<T> valueFactory, LazyThreadSafetyMode mode)
+        public ReLazy(Func<T> valueFactory, LazyThreadSafetyMode mode, bool disposeObj = false)
         {
             _valueFactory = valueFactory;
             _mode = mode;
+            _disposeObj = disposeObj;
             _lazy = new Lazy<T>(_valueFactory, _mode);
         }
 
-        public ReLazy(Func<T> valueFactory)
-            : this(valueFactory, LazyThreadSafetyMode.None)
+        public ReLazy(Func<T> valueFactory, bool disposeObj = false)
+            : this(valueFactory, LazyThreadSafetyMode.None, disposeObj)
         {
         }
 
@@ -48,7 +50,7 @@ namespace FclEx.Utils
 
         protected virtual void DisposeObj()
         {
-            if (_lazy.IsValueCreated && _disposable)
+            if (_lazy.IsValueCreated && _disposable && _disposeObj)
                 ((IDisposable)_lazy.Value).Dispose();
         }
 

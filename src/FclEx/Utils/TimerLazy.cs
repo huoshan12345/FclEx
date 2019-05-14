@@ -10,23 +10,23 @@ namespace FclEx.Utils
     {
         private readonly Timer<T> _timer;
 
-        public TimerLazy(Func<T> valueFactory, LazyThreadSafetyMode mode, TimeSpan dueTime, TimeSpan period) : base(valueFactory, mode)
+        public TimerLazy(Func<T> valueFactory, LazyThreadSafetyMode mode, TimeSpan dueTime, TimeSpan period, bool disposeObj = false) : base(valueFactory, mode, disposeObj)
         {
             _timer = NonCapturingTimer.Create<T>(o => Recreate(), default, dueTime, period);
         }
 
-        public TimerLazy(Func<T> valueFactory, TimeSpan dueTime, TimeSpan period)
-            : this(valueFactory, LazyThreadSafetyMode.None, dueTime, period)
+        public TimerLazy(Func<T> valueFactory, TimeSpan dueTime, TimeSpan period, bool disposeObj = false)
+            : this(valueFactory, LazyThreadSafetyMode.None, dueTime, period, disposeObj)
         {
         }
 
-        public TimerLazy(Func<T> valueFactory, LazyThreadSafetyMode mode, TimeSpan period)
-            : this(valueFactory, mode, TimeSpan.Zero, period)
+        public TimerLazy(Func<T> valueFactory, LazyThreadSafetyMode mode, TimeSpan period, bool disposeObj = false)
+            : this(valueFactory, mode, TimeSpan.Zero, period, disposeObj)
         {
         }
 
-        public TimerLazy(Func<T> valueFactory, TimeSpan period)
-            : this(valueFactory, LazyThreadSafetyMode.None, TimeSpan.Zero, period)
+        public TimerLazy(Func<T> valueFactory, TimeSpan period, bool disposeObj = false)
+            : this(valueFactory, LazyThreadSafetyMode.None, TimeSpan.Zero, period, disposeObj)
         {
         }
 

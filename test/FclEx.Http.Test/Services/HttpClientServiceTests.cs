@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,6 +34,46 @@ namespace FclEx.Http.Test.Services
         }
 
         [Fact]
+        public async Task Tests()
+        {
+            var service = new HttpClientService(false);
+            for (var i = 0; i < 5; i++)
+            {
+                var res = await HttpReq.Get("http://www.baidu.com")
+                    .SendAsync(service);
+
+                if (res.HasError)
+                    _output.WriteLine(res.Exception.ToString());
+
+                Assert.False(res.HasError);
+            }
+        }
+
+        [Fact]
+        public async Task ReLazyTests()
+        {
+            var service = new ReLazy<HttpClientService>(() => new HttpClientService(false),
+                LazyThreadSafetyMode.ExecutionAndPublication);
+            
+            var first = service.Value;
+            var last = service.Value;
+            for (var i = 0; i < 5; i++)
+            {
+                last = service.Value;
+                var res = await HttpReq.Get("http://www.baidu.com")
+                    .SendAsync(last);
+
+                if (res.HasError)
+                    _output.WriteLine(res.Exception.ToString());
+
+                Assert.False(res.HasError);
+                service.Recreate();
+            }
+            Assert.NotEqual(first, last);
+        }
+
+
+        [Fact]
         public async Task TimerLazyTests()
         {
             var service = new TimerLazy<HttpClientService>(() => new HttpClientService(false),
@@ -44,9 +85,9 @@ namespace FclEx.Http.Test.Services
             for (var i = 0; i < 5; i++)
             {
                 last = service.Value;
-                var res = await HttpReq.Get("http://www.baidu.com")
-                    .UserAgent(HttpConstants.DefaultUserAgent)
+                var res = await HttpReq.Get("https://www.baidu.com")
                     .SendAsync(last);
+
                 if (res.HasError)
                     _output.WriteLine(res.Exception.ToString());
 

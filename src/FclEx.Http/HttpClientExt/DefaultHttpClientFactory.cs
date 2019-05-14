@@ -1,4 +1,6 @@
+using System;
 using System.Net.Http;
+using System.Threading;
 using FclEx.Utils;
 
 namespace FclEx.Http.HttpClientExt
@@ -16,13 +18,13 @@ namespace FclEx.Http.HttpClientExt
         {
             Check.NotNull(options, nameof(options));
             var handler = _httpMessageHandlerFactory.CreateHandler(options);
-            var client = new HttpClient(handler, disposeHandler: false);
+            var client = new HttpClient(handler, disposeHandler: false) { Timeout = Timeout.InfiniteTimeSpan };
             foreach (var action in options.HttpClientActions)
                 action(client);
             return client;
         }
 
-        public static DefaultHttpClientFactory Default { get; } 
+        public static DefaultHttpClientFactory Default { get; }
             = new DefaultHttpClientFactory(DefaultHttpMessageHandlerFactory.Default);
     }
 }
