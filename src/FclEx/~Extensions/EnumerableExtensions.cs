@@ -90,7 +90,7 @@ namespace FclEx
             return new MultiValueDictionary<TKey, TValue>(enumerable.Select(m => KvPair.For(keySelector(m), valueSelector(m))));
         }
 
-        public static MultiValueDictionary<TKey, TValue> ToMultiValueDic<T, TKey, TValue>(
+        public static MultiValueDictionary<TKey, TValue> ToMultiValueDic<TKey, TValue>(
             this IEnumerable<KeyValuePair<TKey, TValue>> enumerable)
         {
             var col = enumerable.GroupBy(m => m.Key)

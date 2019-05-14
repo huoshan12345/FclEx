@@ -29,12 +29,23 @@ namespace FclEx
         }
 
         public static TValue GetFirstOrDefault<TKey, TValue>(this MultiValueDictionary<TKey, TValue> dic,
-            TKey key,TValue defaultValue = default)
+            TKey key, TValue defaultValue = default)
         {
             return dic.TryGetValue(key, out var list) && list.Count > 0 ? list.First() : defaultValue;
         }
 
-        public static void Add<TCol, TKey, TValue>(this IDictionary<TKey, TCol> dic, 
+        public static bool TryAdd<TKey, TValue>(this Dictionary<TKey, TValue> dic,
+            TKey key, TValue value)
+        {
+            if (dic.ContainsKey(key))
+            {
+                dic.Add(key, value);
+                return true;
+            }
+            return false;
+        }
+
+        public static void Add<TCol, TKey, TValue>(this IDictionary<TKey, TCol> dic,
             TKey key, TValue value) where TCol : ICollection<TValue>, new()
         {
             if (dic.ContainsKey(key) && dic[key] != null)
@@ -47,7 +58,7 @@ namespace FclEx
             }
         }
 
-        public static void AddRange<TKey, TValue>(this IDictionary<TKey, TValue> dic, 
+        public static void AddRange<TKey, TValue>(this IDictionary<TKey, TValue> dic,
             IEnumerable<KeyValuePair<TKey, TValue>> pairs)
         {
             foreach (var pair in pairs)
@@ -59,7 +70,7 @@ namespace FclEx
             }
         }
 
-        public static void AddRange<TKey, TValue>(this IDictionary<TKey, TValue> dic, 
+        public static void AddRange<TKey, TValue>(this IDictionary<TKey, TValue> dic,
             IEnumerable<TValue> items, Func<TValue, TKey> func)
         {
             foreach (var item in items)
@@ -72,7 +83,7 @@ namespace FclEx
             }
         }
 
-        public static bool GetAndDo<TKey, TValue>(this IDictionary<TKey, TValue> dic, 
+        public static bool GetAndDo<TKey, TValue>(this IDictionary<TKey, TValue> dic,
             TKey key, Action<TValue> action)
         {
             var item = dic.GetOrDefault(key);
@@ -96,14 +107,14 @@ namespace FclEx
             col.Add(value);
         }
 
-        public static bool Remove<TKey, TValue, TCol>(this IDictionary<TKey, TCol> dic, 
+        public static bool Remove<TKey, TValue, TCol>(this IDictionary<TKey, TCol> dic,
             TKey key, TValue value)
             where TCol : ICollection<TValue>, new()
         {
             return dic.TryGetValue(key, out var col) && (col?.Remove(value) ?? false);
         }
 
-        public static bool Contains<TKey, TValue, TCol>(this IDictionary<TKey, TCol> dic, 
+        public static bool Contains<TKey, TValue, TCol>(this IDictionary<TKey, TCol> dic,
             TKey key, TValue value)
             where TCol : ICollection<TValue>, new()
         {

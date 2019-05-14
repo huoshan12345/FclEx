@@ -82,6 +82,12 @@ namespace FclEx
             return new DateTime(dt.Year, dt.Month, 1, hour, minute, second);
         }
 
+        public static DateTime LastTickOfMonth(this DateTime dt, int hour = 0, int minute = 0, int second = 0)
+        {
+            var lastDay = dt.EndOfMonth();
+            return lastDay.AddDays(1).AddTicks(-1);
+        }
+
         public static DateTime GetMaxTimeOfDate(this DateTime dt)
         {
             return dt.Date.AddDays(1).AddTicks(-1);

@@ -28,31 +28,71 @@ namespace FclEx
             value = kvp.Value;
         }
 
-        public static KeyValuePair<string, string>[] ToPairs(this NameValueCollection col)
+        public static IEnumerable<KeyValuePair<string, string>> ToPair(this NameValueCollection col)
         {
-            var q = from k in col.AllKeys
+            var q = from k in col.AllKeys.NotNull()
                     from v in col.GetValues(k).Touch()
                     select KvPair.For(k, v);
-            return q.ToArray();
+            return q;
+        }
+
+        public static KeyValuePair<string, string>[] ToPairs(this NameValueCollection col)
+        {
+            return col.ToPair().ToArray();
+        }
+
+
+        public static Dictionary<string, string> ToDictionary(this NameValueCollection nvc, DupPolicy policy = DupPolicy.OnlyLast)
+        {
+            if (policy == DupPolicy.Array)
+                throw new NotSupportedException();
+
+            var dic = new Dictionary<string, string>(nvc.Count);
+            foreach (var (k, v) in nvc.ToPair())
+            {
+                switch (policy)
+                {
+                    case DupPolicy.OnlyLast:
+                    {
+                        dic[k] = v;
+                        break;
+                    }
+                    case DupPolicy.OnlyFirst:
+                    {
+                        dic.TryAdd(k, v);
+                        break;
+                    }
+                    case DupPolicy.Throw:
+                    {
+                        if (dic.TryGetValue(k, out var old))
+                        {
+                            if (old != v)
+                                throw new ArgumentException($"duplicate key: {k} with different values: {old},{v}");
+                        }
+                        else
+                        {
+                            dic.Add(k, v);
+                        }
+                        break;
+                    }
+                    default: throw new ArgumentOutOfRangeException(nameof(policy), policy, null);
+                }
+            }
+            return dic;
         }
 
         private static JToken ToJToken(HashSet<string> values, DupPolicy policy)
         {
-            if (values == null) throw new ArgumentNullException(nameof(values));
+            Check.NotNull(values, nameof(values));
             if (values.Count == 0) throw new ArgumentException("the collection of values is empty", nameof(values));
-            if (values.Count == 1) JToken.FromObject(values.First());
+            if (values.Count == 1) return JToken.FromObject(values.First());
             switch (policy)
             {
-                case DupPolicy.OnlyLast:
-                    return JToken.FromObject(values.Last());
-                case DupPolicy.OnlyFirst:
-                    return JToken.FromObject(values.First());
-                case DupPolicy.Throw:
-                    throw new InvalidOperationException("the collection contains more than one value");
-                case DupPolicy.Array:
-                    return JArray.FromObject(values);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(policy), policy, null);
+                case DupPolicy.OnlyLast: return JToken.FromObject(values.Last());
+                case DupPolicy.OnlyFirst: return JToken.FromObject(values.First());
+                case DupPolicy.Array: return JArray.FromObject(values);
+                case DupPolicy.Throw: throw new InvalidOperationException("the collection contains more than one value");
+                default: throw new ArgumentOutOfRangeException(nameof(policy), policy, null);
             }
         }
 
@@ -60,7 +100,7 @@ namespace FclEx
             DupPolicy policy = DupPolicy.OnlyLast)
         {
             var obj = new JObject();
-            foreach (var pair in pairs.GroupBy(m => m.Key))
+            foreach (var pair in pairs.Where(m => m.Key != null).GroupBy(m => m.Key))
             {
                 var values = pair.Select(m => m.Value).ToHashSet();
                 if (values.Count > 0)
@@ -69,11 +109,11 @@ namespace FclEx
             return obj;
         }
 
-        public static JObject ToJObject(this NameValueCollection col, 
+        public static JObject ToJObject(this NameValueCollection col,
             DupPolicy policy = DupPolicy.OnlyLast)
         {
             var obj = new JObject();
-            foreach (var k in col.AllKeys)
+            foreach (var k in col.AllKeys.NotNull())
             {
                 var values = col.GetValues(k).Touch().ToHashSet();
                 if (values.Count > 0)
