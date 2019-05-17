@@ -30,7 +30,7 @@ namespace FclEx.Utils
         }
 
         internal ExcuteResult(int code, TimeSpan elapsed, string msg, string stackTrace = null)
-            : this(code, elapsed, msg == null ? null : new SimpleException(msg, stackTrace))
+            : this(code, elapsed, new SimpleException(msg.GetOrEmpty(), stackTrace))
         {
         }
 
