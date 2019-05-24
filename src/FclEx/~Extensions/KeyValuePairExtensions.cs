@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
+using FclEx.Extensions;
 using FclEx.Utils;
 using MoreLinq.Extensions;
 using Newtonsoft.Json.Linq;
@@ -40,7 +41,6 @@ namespace FclEx
         {
             return col.ToPair().ToArray();
         }
-
 
         public static Dictionary<string, string> ToDictionary(this NameValueCollection nvc, DupPolicy policy = DupPolicy.OnlyLast)
         {
@@ -121,5 +121,19 @@ namespace FclEx
             }
             return obj;
         }
+
+
+        public static string ToUncodedQueryStr(this IEnumerable<KeyValuePair<string, string>> dic)
+        {
+            return dic.Select(m => $"{m.Key}={m.Value.GetOrEmpty()}").JoinWith("&");
+        }
+
+        public static string ToQueryStr(this IEnumerable<KeyValuePair<string, string>> dic)
+        {
+            return dic == null
+                ? string.Empty
+                : dic.Select(m => $"{m.Key.UrlEncode()}={m.Value.GetOrEmpty().UrlEncode()}").JoinWith("&");
+        }
+
     }
 }

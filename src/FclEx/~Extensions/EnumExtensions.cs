@@ -83,5 +83,10 @@ namespace FclEx
             var validValues = EnumHelper.GetValues<T>();
             return values.All(m => validValues.Contains(m));
         }
+
+        public static TEnum IfNotValid<TEnum>(this TEnum e, TEnum defaultValue = default) where TEnum : Enum
+        {
+            return e.IsValid() ? e : defaultValue;
+        }
     }
 }

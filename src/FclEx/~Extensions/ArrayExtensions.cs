@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace FclEx
 {
@@ -42,6 +43,23 @@ namespace FclEx
             if (list != null && index >= 0 && index < list.Count)
                 list[index] = value;
             return list;
+        }
+
+        public static ArraySegment<T> ToSegment<T>(this T[] arr)
+        {
+            return new ArraySegment<T>(arr);
+        }
+
+        public static ArraySegment<T> ToSegment<T>(this T[] arr, int offset, int count)
+        {
+            return new ArraySegment<T>(arr, offset, count);
+        }
+
+        public static IList<T> ConvertOrToIList<T>(this IEnumerable<T> raw)
+        {
+            if (raw is List<T> list) return list;
+            if (raw is T[] arr) return arr;
+            return raw.ToList();
         }
     }
 }

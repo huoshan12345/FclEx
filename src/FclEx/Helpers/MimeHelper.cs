@@ -6,19 +6,19 @@ namespace FclEx.Helpers
 {
     public static class MimeHelper
     {
-        private static readonly Dictionary<string, string> MimeMap;
+        private static readonly Dictionary<string, string> _mimeMap;
 
         public static string GetMimeMapping(string fileName)
         {
             var ext = Path.GetExtension(fileName);
             var key = string.IsNullOrEmpty(ext) ? ".*" : ext;
-            var text = MimeMap.GetOrDefault(key, MimeMap[".*"]);
+            var text = _mimeMap.GetOrDefault(key, _mimeMap[".*"]);
             return text;
         }
 
         static MimeHelper()
         {
-            MimeMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            _mimeMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
                 {".323", "text/h323"},
                 {".asx", "video/x-ms-asf"},

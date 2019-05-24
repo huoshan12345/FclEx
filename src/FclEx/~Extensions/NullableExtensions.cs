@@ -24,5 +24,11 @@ namespace FclEx
         {
             return !EqualityComparer<T>.Default.Equals(t.Get(), default);
         }
+
+        public static bool IsNotValid<T>(this T? t)
+            where T : struct
+        {
+            return !t.IsValid();
+        }
     }
 }

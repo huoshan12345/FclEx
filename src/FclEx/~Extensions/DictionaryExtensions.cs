@@ -27,13 +27,7 @@ namespace FclEx
         {
             return dic.TryGetValue(key, out var value) ? selector(value) : defaultValue;
         }
-
-        public static TValue GetFirstOrDefault<TKey, TValue>(this MultiValueDictionary<TKey, TValue> dic,
-            TKey key, TValue defaultValue = default)
-        {
-            return dic.TryGetValue(key, out var list) && list.Count > 0 ? list.First() : defaultValue;
-        }
-
+        
         public static bool TryAdd<TKey, TValue>(this Dictionary<TKey, TValue> dic,
             TKey key, TValue value)
         {
@@ -121,16 +115,20 @@ namespace FclEx
             return dic.TryGetValue(key, out var col) && (col?.Contains(value) ?? false);
         }
 
-        public static string ToUncodedQueryStr(this IEnumerable<KeyValuePair<string, string>> dic)
+        public static TValue GetOrAdd<TKey, TValue>(this Dictionary<TKey, TValue> dic,
+            TKey key, Func<TKey, TValue> valueFactory)
         {
-            return dic.Select(m => $"{m.Key}={m.Value.GetOrEmpty()}").JoinWith("&");
+            if (!dic.TryGetValue(key, out var value))
+            {
+                value = valueFactory(key);
+                dic[key] = value;
+            }
+            return value;
         }
 
-        public static string ToQueryStr(this IEnumerable<KeyValuePair<string, string>> dic)
+        public static TValue[] GetOrEmptyArr<TKey, TValue>(this IDictionary<TKey, TValue[]> dic, TKey key)
         {
-            return dic == null
-                ? string.Empty
-                : dic.Select(m => $"{m.Key.UrlEncode()}={m.Value.GetOrEmpty().UrlEncode()}").JoinWith("&");
+            return dic.TryGetValue(key, out var value) ? value : Array.Empty<TValue>();
         }
     }
 }

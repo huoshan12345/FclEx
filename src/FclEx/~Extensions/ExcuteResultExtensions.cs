@@ -76,5 +76,15 @@ namespace FclEx
         {
             return @this.Error(e => e.ReThrow());
         }
+
+        public static ExcuteResult ExErr(this ExcuteResult @this, Action<Exception> action)
+        {
+            return @this.On(r => !r.Successful && r.IsExErr(), t => action(t.Exception));
+        }
+
+        public static ExcuteResult NonExErr(this ExcuteResult @this, Action<Exception> action)
+        {
+            return @this.On(r => !r.Successful && !r.IsExErr(), t => action(t.Exception));
+        }
     }
 }

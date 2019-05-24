@@ -32,7 +32,7 @@ namespace FclEx.Http.Services
         private static HttpClient CreateHttpClient(HttpMessageHandler handler)
         {
             var httpClient = new HttpClient(handler, false) { Timeout = Timeout.InfiniteTimeSpan };
-            httpClient.DefaultRequestHeaders.Add(HttpConstants.UserAgent, HttpConstants.DefaultUserAgent);
+            httpClient.DefaultRequestHeaders.Add(HttpKnownHeaderNames.UserAgent, HttpConstants.DefaultUserAgent);
             httpClient.DefaultRequestHeaders.Add("Connection", "keep-alive");
             return httpClient;
         }

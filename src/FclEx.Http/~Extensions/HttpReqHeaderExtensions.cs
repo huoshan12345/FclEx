@@ -40,7 +40,7 @@ namespace FclEx.Http
             return req.AddHeader("X-Requested-With", "XMLHttpRequest");
         }
 
-        public static HttpReq Compress(this HttpReq req) => req.AddHeader(HttpConstants.AcceptEncoding, "gzip, deflate");
+        public static HttpReq Compress(this HttpReq req) => req.AddHeader(HttpKnownHeaderNames.AcceptEncoding, "gzip, deflate");
 
         public static HttpReq Referrer(this HttpReq req, string referrer)
         {
@@ -95,8 +95,8 @@ namespace FclEx.Http
             var sb = new StringBuilder();
             foreach (var pair in req.HeaderMap)
                 sb.AppendLine($"{pair.Key}: { pair.Value}");
-            if (!req.HeaderMap.ContainsKey(HttpConstants.Cookie) && !cookieHeader.IsNullOrEmpty())
-                sb.Append(HttpConstants.Cookie + ": " + cookieHeader);
+            if (!req.HeaderMap.ContainsKey(HttpKnownHeaderNames.Cookie) && !cookieHeader.IsNullOrEmpty())
+                sb.Append(HttpKnownHeaderNames.Cookie + ": " + cookieHeader);
             return sb.ToString();
         }
 

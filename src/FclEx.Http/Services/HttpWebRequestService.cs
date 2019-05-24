@@ -20,12 +20,12 @@ namespace FclEx.Http.Services
     {
         private static readonly string[] _notAddHeaderNames =
         {
-            HttpConstants.ContentType,
-            HttpConstants.Cookie,
-            HttpConstants.Referrer,
-            HttpConstants.Host,
-            HttpConstants.UserAgent,
-            HttpConstants.ContentLength,
+            HttpKnownHeaderNames.ContentType,
+            HttpKnownHeaderNames.Cookie,
+            HttpKnownHeaderNames.Referrer,
+            HttpKnownHeaderNames.Host,
+            HttpKnownHeaderNames.UserAgent,
+            HttpKnownHeaderNames.ContentLength,
         };
 
         public HttpWebRequestService(Uri uri, ILoggerFactory loggerFactory = null, bool useCookie = true)
@@ -43,7 +43,6 @@ namespace FclEx.Http.Services
 
         }
 
-
         private static HttpWebRequest BuildRequest(HttpReq request, IWebProxyExt proxy, CookieContainer cc)
         {
             var req = (HttpWebRequest)WebRequest.Create(request.GetUrl());
@@ -53,6 +52,7 @@ namespace FclEx.Http.Services
             req.Referer = request.Referrer;
             req.Host = request.Host;
             req.UserAgent = request.UserAgent;
+            req.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 
             if (request.Timeout.HasValue)
                 req.Timeout = request.Timeout.Value;
@@ -68,18 +68,18 @@ namespace FclEx.Http.Services
                 req.Headers.Add(header.Key, header.Value);
             }
 
-            var cookies = request.HeaderMap.GetOrDefault(HttpConstants.Cookie)
+            var cookies = request.HeaderMap.GetOrDefault(HttpKnownHeaderNames.Cookie)
                             ?? cc?.GetCookieHeader(req.RequestUri);
 
             if (!cookies.IsNullOrEmpty())
-                req.Headers.Add(HttpConstants.Cookie, cookies);
+                req.Headers.Add(HttpKnownHeaderNames.Cookie, cookies);
 
             return req;
         }
 
         private void ReadCookies(HttpWebResponse response)
         {
-            var cookieStr = response.Headers[HttpConstants.SetCookie];
+            var cookieStr = response.Headers[HttpKnownHeaderNames.SetCookie];
             if (cookieStr.IsNullOrEmpty()) return;
             SaveCookies(response.ResponseUri, cookieStr);
         }
@@ -102,17 +102,8 @@ namespace FclEx.Http.Services
             {
                 using (var stream = response.GetResponseStream())
                 {
-                    if (response.ContentEncoding?.ToLowerInvariant() == "gzip")
-                    {
-                        using (var gZipStream = new GZipStream(stream, CompressionMode.Decompress))
-                            await gZipStream.CopyToAsync(mem).DonotCapture();
-                    }
-                    else
-                    {
-                        await stream.CopyToAsync(mem).DonotCapture();
-                    }
+                    await stream.CopyToAsync(mem).DonotCapture();
                 }
-
                 switch (res.Req.ResultType)
                 {
                     case HttpResultType.String:
@@ -195,7 +186,7 @@ namespace FclEx.Http.Services
                 responses.Clear();
             }
         }
-        
+
         public void ClearCookies(Uri uri)
         {
             var cookies = GetCookies(uri);
