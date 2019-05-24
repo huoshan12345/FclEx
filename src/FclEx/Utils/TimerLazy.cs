@@ -21,12 +21,12 @@ namespace FclEx.Utils
         }
 
         public TimerLazy(Func<T> valueFactory, LazyThreadSafetyMode mode, TimeSpan period, bool disposeObj = false)
-            : this(valueFactory, mode, TimeSpan.Zero, period, disposeObj)
+            : this(valueFactory, mode, period, period, disposeObj)
         {
         }
 
         public TimerLazy(Func<T> valueFactory, TimeSpan period, bool disposeObj = false)
-            : this(valueFactory, LazyThreadSafetyMode.None, TimeSpan.Zero, period, disposeObj)
+            : this(valueFactory, LazyThreadSafetyMode.None, period, period, disposeObj)
         {
         }
 
