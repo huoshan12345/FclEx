@@ -11,13 +11,13 @@ namespace FclEx
         public static TValue GetFirstOrDefault<TKey, TValue>(this MultiValueDictionary<TKey, TValue> dic,
             TKey key, TValue defaultValue = default)
         {
-            return key != null && dic.TryGetValue(key, out var list) && list.Count > 0 ? list.First() : defaultValue;
+            return key != null && dic != null && dic.TryGetValue(key, out var list) && list.Count > 0 ? list.First() : defaultValue;
         }
 
         public static IReadOnlyCollection<TValue> GetOrDefault<TKey, TValue>(this MultiValueDictionary<TKey, TValue> dic,
             TKey key, IReadOnlyCollection<TValue> defaultValues = default)
         {
-            return key != null && dic.TryGetValue(key, out var value) ? value : defaultValues;
+            return key != null && dic != null && dic.TryGetValue(key, out var value) ? value : defaultValues;
         }
 
         public static IReadOnlyCollection<TValue> GetOrEmptyArr<TKey, TValue>(this MultiValueDictionary<TKey, TValue> dic, TKey key)
@@ -28,7 +28,7 @@ namespace FclEx
         public static TProp GetOrDefault<TKey, TValue, TProp>(this MultiValueDictionary<TKey, TValue> dic,
             TKey key, Func<IReadOnlyCollection<TValue>, TProp> selector, TProp defaultValue = default)
         {
-            return key != null && dic.TryGetValue(key, out var value) ? selector(value) : defaultValue;
+            return key != null && dic != null && dic.TryGetValue(key, out var value) ? selector(value) : defaultValue;
         }
     }
 }
