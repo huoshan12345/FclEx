@@ -28,6 +28,11 @@ namespace FclEx
         {
             return key != null && dic.TryGetValue(key, out var value) ? selector(value) : defaultValue;
         }
+        
+        public static TValue[] GetOrEmptyArr<TKey, TValue>(this IDictionary<TKey, TValue[]> dic, TKey key)
+        {
+            return dic.GetOrDefault(key, Array.Empty<TValue>());
+        }
 
         public static bool TryAdd<TKey, TValue>(this Dictionary<TKey, TValue> dic,
             TKey key, TValue value)
@@ -127,11 +132,6 @@ namespace FclEx
                 dic[key] = value;
             }
             return value;
-        }
-
-        public static TValue[] GetOrEmptyArr<TKey, TValue>(this IDictionary<TKey, TValue[]> dic, TKey key)
-        {
-            return key != null && dic.TryGetValue(key, out var value) ? value : Array.Empty<TValue>();
         }
     }
 }

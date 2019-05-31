@@ -11,22 +11,22 @@ namespace FclEx.Extensions
 {
     public static class JsonExtensions
     {
-        public static JToken ToJToken(this object obj, JsonSerializer jsonSerializer = null)
+        public static JToken SerializeToJToken(this object obj, JsonSerializer jsonSerializer = null)
             => JToken.FromObject(obj, jsonSerializer ?? DefaultSerializer);
 
-        public static JToken ToJTokenCamel(this object obj) 
+        public static JToken SerializeToJTokenCamel(this object obj) 
             => JToken.FromObject(obj, CamelSerializer);
 
-        public static JObject ToJObject(this object obj, JsonSerializer jsonSerializer = null)
+        public static JObject SerializeToJObject(this object obj, JsonSerializer jsonSerializer = null)
             => JObject.FromObject(obj, jsonSerializer ?? DefaultSerializer);
 
-        public static JObject ToJObjectCamel(this object obj) 
+        public static JObject SerializeToJObjectCamel(this object obj) 
             => JObject.FromObject(obj, CamelSerializer);
 
-        public static JArray ToJArray(this object obj, JsonSerializer jsonSerializer = null) 
+        public static JArray SerializeToJArray(this object obj, JsonSerializer jsonSerializer = null) 
             => JArray.FromObject(obj, jsonSerializer ?? DefaultSerializer);
 
-        public static JArray ToJArrayCamel(this object obj) 
+        public static JArray SerializeToJArrayCamel(this object obj) 
             => JArray.FromObject(obj, CamelSerializer);
         
         public static bool IsPossibleJson(this string data)

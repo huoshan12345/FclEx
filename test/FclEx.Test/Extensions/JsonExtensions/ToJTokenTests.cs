@@ -20,7 +20,7 @@ namespace FclEx.Test.Extensions.JsonExtensions
         public void ToJTokenCamel_Test()
         {
             var obj = new Tester();
-            var json = obj.ToJTokenCamel().ToString(Formatting.None);
+            var json = obj.SerializeToJTokenCamel().ToString(Formatting.None);
             Assert.Equal("{\"name\":null,\"Count\":0}", json);
         }
     }

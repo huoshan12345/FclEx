@@ -21,21 +21,29 @@ namespace FclEx
 
         internal static JsonSerializerSettings IgnoreSettings { get; } = new JsonSerializerSettings
         {
+            DateTimeZoneHandling = DateTimeZoneHandling.Utc,
             NullValueHandling = NullValueHandling.Ignore
+        };
+
+        internal static JsonSerializerSettings DefaultSettings { get; } = new JsonSerializerSettings
+        {
+            DateTimeZoneHandling = DateTimeZoneHandling.Utc,
         };
 
         internal static JsonSerializerSettings CamelSettings { get; } = new JsonSerializerSettings
         {
+            DateTimeZoneHandling = DateTimeZoneHandling.Utc,
             ContractResolver = CamelResolver
         };
 
         internal static JsonSerializerSettings CamelIgnoreNullSettings { get; } = new JsonSerializerSettings
         {
+            DateTimeZoneHandling = DateTimeZoneHandling.Utc,
             ContractResolver = CamelResolver,
             NullValueHandling = NullValueHandling.Ignore
         };
 
-        internal static JsonSerializer DefaultSerializer { get; } = JsonSerializer.CreateDefault();
+        internal static JsonSerializer DefaultSerializer { get; } = JsonSerializer.Create(DefaultSettings);
         internal static JsonSerializer CamelSerializer { get; } = JsonSerializer.Create(CamelSettings);
 
         public static string ToJson(this object obj, JsonSerializerSettings settings, Formatting formatting = Formatting.None)
