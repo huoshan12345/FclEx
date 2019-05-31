@@ -11,12 +11,12 @@ namespace FclEx
         public static TValue GetFirstOrDefault<TKey, TValue>(this MultiValueDictionary<TKey, TValue> dic,
             TKey key, TValue defaultValue = default)
         {
-            return dic.TryGetValue(key, out var list) && list.Count > 0 ? list.First() : defaultValue;
+            return key != null && dic.TryGetValue(key, out var list) && list.Count > 0 ? list.First() : defaultValue;
         }
 
         public static IReadOnlyCollection<TValue> GetOrEmptyArr<TKey, TValue>(this MultiValueDictionary<TKey, TValue> dic, TKey key)
         {
-            return dic.TryGetValue(key, out var value) ? value : Array.Empty<TValue>();
+            return key != null && dic.TryGetValue(key, out var value) ? value : Array.Empty<TValue>();
         }
     }
 }

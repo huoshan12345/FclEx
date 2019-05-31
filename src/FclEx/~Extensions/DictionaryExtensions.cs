@@ -11,6 +11,7 @@ namespace FclEx
         public static bool TryGetAndDo<TKey, TValue>(this IDictionary<TKey, TValue> dic,
             TKey key, Action<TValue> action)
         {
+            if (key == null) return false;
             var result = dic.TryGetValue(key, out var value);
             if (result) action(value);
             return result;
@@ -19,18 +20,19 @@ namespace FclEx
         public static TValue GetOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dic,
             TKey key, TValue defaultValue = default)
         {
-            return dic.TryGetValue(key, out var value) ? value : defaultValue;
+            return key != null && dic.TryGetValue(key, out var value) ? value : defaultValue;
         }
 
-        public static TProp GetOrDefault<TKey, TValue, TProp>(this IReadOnlyDictionary<TKey, TValue> dic,
+        public static TProp GetOrDefault<TKey, TValue, TProp>(this IDictionary<TKey, TValue> dic,
             TKey key, Func<TValue, TProp> selector, TProp defaultValue = default)
         {
-            return dic.TryGetValue(key, out var value) ? selector(value) : defaultValue;
+            return key != null && dic.TryGetValue(key, out var value) ? selector(value) : defaultValue;
         }
-        
+
         public static bool TryAdd<TKey, TValue>(this Dictionary<TKey, TValue> dic,
             TKey key, TValue value)
         {
+            if (key == null) return false;
             if (dic.ContainsKey(key))
             {
                 dic.Add(key, value);
@@ -80,6 +82,7 @@ namespace FclEx
         public static bool GetAndDo<TKey, TValue>(this IDictionary<TKey, TValue> dic,
             TKey key, Action<TValue> action)
         {
+            if (key == null) return false;
             var item = dic.GetOrDefault(key);
             if (item != null)
             {
@@ -128,7 +131,7 @@ namespace FclEx
 
         public static TValue[] GetOrEmptyArr<TKey, TValue>(this IDictionary<TKey, TValue[]> dic, TKey key)
         {
-            return dic.TryGetValue(key, out var value) ? value : Array.Empty<TValue>();
+            return key != null && dic.TryGetValue(key, out var value) ? value : Array.Empty<TValue>();
         }
     }
 }
