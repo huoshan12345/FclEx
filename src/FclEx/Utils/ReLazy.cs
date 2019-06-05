@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using FclEx.Helpers;
 
@@ -12,6 +13,8 @@ namespace FclEx.Utils
         protected readonly LazyThreadSafetyMode _mode;
         protected readonly bool _disposable = typeof(IDisposable).IsAssignableFrom(typeof(T));
         protected readonly bool _disposeObj;
+        protected readonly List<T> _expiredItems = new List<T>();
+        public IReadOnlyList<T> ExpiredItems => _expiredItems;
 
         public ReLazy(Func<T> valueFactory, LazyThreadSafetyMode mode, bool disposeObj = false)
         {
@@ -28,7 +31,7 @@ namespace FclEx.Utils
 
         public T Value => _lazy.Value;
         public bool IsValueCreated => _lazy.IsValueCreated;
-        
+
         public void SetValueFactory(Func<T> valueFactory)
         {
             LockHelper.DoubleCheckAndDo(() => _valueFactory != valueFactory, _lock, () =>
@@ -50,13 +53,20 @@ namespace FclEx.Utils
 
         protected virtual void DisposeObj()
         {
-            if (_lazy.IsValueCreated && _disposable && _disposeObj)
-                ((IDisposable)_lazy.Value).Dispose();
+            if (!_disposable) return;
+
+            if (_lazy.IsValueCreated)
+                _expiredItems.Add(_lazy.Value);
         }
 
         public virtual void Dispose()
         {
             DisposeObj();
+            if (_disposable && _disposeObj)
+            {
+                _expiredItems.ForEach(m => ((IDisposable)m).Dispose());
+            }
+            _expiredItems.Clear();
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using FclEx.Utils;
 using Microsoft.Collections.Extensions;
 
 namespace FclEx
@@ -29,6 +30,16 @@ namespace FclEx
             TKey key, Func<IReadOnlyCollection<TValue>, TProp> selector, TProp defaultValue = default)
         {
             return key != null && dic != null && dic.TryGetValue(key, out var value) ? selector(value) : defaultValue;
+        }
+
+        public static KeyValuePair<string, string>[] ToPairs(this MultiValueDictionary<string, string> col)
+        {
+            return col.ToPair().ToArray();
+        }
+
+        public static IEnumerable<KeyValuePair<string, string>> ToPair(this MultiValueDictionary<string, string> col)
+        {
+            return col.SelectMany(m => m.Value, (k, v) => KvPair.For(k.Key, v.ToStringOrEmpty()));
         }
     }
 }

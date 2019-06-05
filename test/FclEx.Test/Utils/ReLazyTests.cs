@@ -60,7 +60,7 @@ namespace FclEx.Test.Utils
             Assert.Equal(value, valueAgain);
 
             lazy.Recreate();
-            Assert.True(value.IsDisposed == dispose);
+            Assert.False(value.IsDisposed);
 
             var newValue = lazy.Value;
             Assert.True(lazy.IsValueCreated);

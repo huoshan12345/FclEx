@@ -71,5 +71,41 @@ namespace FclEx
                     : z;
 
         }
+
+        public static string LeftPart(this string strVal, char needle)
+        {
+            if (strVal == null) return null;
+            var pos = strVal.IndexOf(needle);
+            return pos == -1
+                ? strVal
+                : strVal.Substring(0, pos);
+        }
+
+        public static string LeftPart(this string strVal, string needle)
+        {
+            if (strVal == null) return null;
+            var pos = strVal.IndexOf(needle, StringComparison.OrdinalIgnoreCase);
+            return pos == -1
+                ? strVal
+                : strVal.Substring(0, pos);
+        }
+
+        public static string RightPart(this string strVal, char needle)
+        {
+            if (strVal == null) return null;
+            var pos = strVal.IndexOf(needle);
+            return pos == -1
+                ? strVal
+                : strVal.Substring(pos + 1);
+        }
+
+        public static string RightPart(this string strVal, string needle)
+        {
+            if (strVal == null) return null;
+            var pos = strVal.IndexOf(needle, StringComparison.OrdinalIgnoreCase);
+            return pos == -1
+                ? strVal
+                : strVal.Substring(pos + needle.Length);
+        }
     }
 }

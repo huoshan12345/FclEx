@@ -24,7 +24,7 @@ namespace FclEx.Test.Utils
 
             ThreadHelper.Sleep((int)Math.Ceiling(span.TotalSeconds));
             Assert.False(lazy.IsValueCreated);
-            Assert.True(value.IsDisposed == dispose);
+            Assert.False(value.IsDisposed);
 
             var newValue = lazy.Value;
             Assert.True(lazy.IsValueCreated);
