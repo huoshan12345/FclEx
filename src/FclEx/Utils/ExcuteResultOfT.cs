@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 using Newtonsoft.Json;
+using OperateResult = FclEx.Utils.IOperateResult<FclEx.Utils.IUnit>;
 
 namespace FclEx.Utils
 {
+    [Obsolete("使用" + nameof(OperateResult))]
     public class ExcuteResult<T> : IExcuteResult<T>
     {
         public bool Successful => Code == ExcuteResultCodes.Success;

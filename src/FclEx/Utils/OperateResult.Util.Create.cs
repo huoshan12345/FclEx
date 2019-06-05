@@ -7,6 +7,10 @@ namespace FclEx.Utils
 {
     public static partial class OperateUtil
     {
+        public static OperateResult Success { get; } = CreateSuccess(TimeSpan.Zero);
+
+        public static OperateResult NotImplemented { get; } = CreateNotImplemented();
+
         public static OperateResult<T> CreateNotImplemented<T>() => CreateError<T>(OperateResultCodes.NotImplemented, "the operate was not implemented", default);
 
         public static OperateResult<T> CreateCancel<T>(Exception ex, TimeSpan elapsed) => new OperateResult<T>(OperateResultCodes.Cancel, ex, elapsed);

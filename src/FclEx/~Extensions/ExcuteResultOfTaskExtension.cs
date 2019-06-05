@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using FclEx.Utils;
+using OperateResult = FclEx.Utils.IOperateResult<FclEx.Utils.IUnit>;
 
 namespace FclEx
 {
+    [Obsolete("使用" + nameof(OperateResult))]
     public static class ExcuteResultOfTaskExtension
     {
         public static Task<ExcuteResult> Ok(this Task<ExcuteResult> @this, Action action)

@@ -3,9 +3,11 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using FclEx.Helpers;
 using Newtonsoft.Json;
+using OperateResult = FclEx.Utils.IOperateResult<FclEx.Utils.IUnit>;
 
 namespace FclEx.Utils
 {
+    [Obsolete("使用" + nameof(OperateResult))]
     public struct ExcuteResult : IExcuteResult
     {
         public bool Successful => Code == ExcuteResultCodes.Success;

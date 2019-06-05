@@ -42,6 +42,7 @@ namespace FclEx.Utils
             else return result.Result;
         }
 
+
         public static IOperateResult<T> Ok<T>(this IOperateResult<T> @this, Action<T, TimeSpan> action)
         {
             return @this.On(r => r.Successful, t => action(t.Result, t.Elapsed));

@@ -4,6 +4,7 @@ using System.Text;
 
 namespace FclEx.Utils
 {
+    [Obsolete]
     public static class ExcuteResultCodes
     {
         public const int Success = 0;
