@@ -1,5 +1,5 @@
 ﻿using System;
-using IOperateResult = FclEx.Utils.IOperateResult<FclEx.Utils.IUnit>;
+
 
 namespace FclEx.Utils
 {
@@ -42,13 +42,21 @@ namespace FclEx.Utils
             else return result.Result;
         }
 
+        public static OperateResult Unwrap(this IOperateResult<OperateResult> result)
+        {
+            if (result.Successful && result.Result.Successful)
+                return OperateUtil.CreateSuccess(result.Elapsed);
+            else if (!result.Successful)
+                return OperateUtil.CreateError(result.Exception, result.Elapsed);
+            else return result.Result;
+        }
 
         public static IOperateResult<T> Ok<T>(this IOperateResult<T> @this, Action<T, TimeSpan> action)
         {
             return @this.On(r => r.Successful, t => action(t.Result, t.Elapsed));
         }
 
-        public static IOperateResult Ok(this IOperateResult @this, Action<TimeSpan> action)
+        public static OperateResult Ok(this OperateResult @this, Action<TimeSpan> action)
         {
             return @this.On(r => r.Successful, t => action(t.Elapsed));
         }
