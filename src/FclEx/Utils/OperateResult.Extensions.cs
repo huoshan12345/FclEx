@@ -25,12 +25,13 @@ namespace FclEx.Utils
             return r.Code == OperateResultCodes.Cancel;
         }
 
-        public static IOperateResult<TTarget> ToExplicit<T, TTarget>(this IOperateResult<T> r)
+        public static OperateResult<T> Unwrap<T>(this IOperateResult<OperateResult<T>> result)
         {
-            if (r.Successful)
-                throw new InvalidOperationException("cannot convert to explicit when result is successful");
-            else
-                return new OperateResult<TTarget>(r.Code, r.Exception, r.Elapsed);
+            if (result.Successful && result.Result.Successful)
+                return OperateUtil.CreateSuccess<T>(result.Result.Result, result.Elapsed);
+            else if (!result.Successful)
+                return OperateUtil.CreateError<T>(result.Exception, result.Elapsed);
+            else return result.Result;
         }
 
         public static IOperateResult<T> Unwrap<T>(this IOperateResult<IOperateResult<T>> result)

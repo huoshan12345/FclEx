@@ -15,5 +15,6 @@ namespace FclEx.Utils
         string Msg { get; }
         string StackTrace { get; }
         T Result { get; }
+        OperateResult<TTarget> ToExplicit<TTarget>();
     }
 }

@@ -45,7 +45,28 @@ namespace FclEx.Utils
 
         public static implicit operator OperateResult<T>(T item)
         {
-            return OperateUtil.CreateSuccess<T>(item, TimeSpan.Zero);
+            return OperateUtil.CreateSuccess(item, TimeSpan.Zero);
+        }
+
+        public static implicit operator OperateResult<T>(OperateResult r)
+        {
+            return r.ToExplicit<T>();
+        }
+
+        public static implicit operator OperateResult(OperateResult<T> r)
+        {
+            if (r.Successful)
+                throw new InvalidOperationException("cannot convert to explicit when result is successful");
+            else
+                return new OperateResult(r.Code, r.Exception, r.Elapsed);
+        }
+
+        public OperateResult<TTarget> ToExplicit<TTarget>()
+        {
+            if (Successful)
+                throw new InvalidOperationException("cannot convert to explicit when result is successful");
+            else
+                return new OperateResult<TTarget>(Code, Exception, Elapsed);
         }
     }
 }

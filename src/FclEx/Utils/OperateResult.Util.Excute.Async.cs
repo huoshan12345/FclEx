@@ -21,7 +21,7 @@ namespace FclEx.Utils
             }
         }
 
-        public static async Task<IOperateResult<T>> ExcuteAsync<T>(Func<Task<T>> action)
+        public static async Task<OperateResult<T>> ExcuteAsync<T>(Func<Task<T>> action)
         {
             var watch = ValueStopwatch.StartNew();
             try
@@ -38,10 +38,10 @@ namespace FclEx.Utils
         public static async Task<OperateResult> ExcuteAsync(Func<Task<OperateResult>> action)
             => (await ExcuteAsync<OperateResult>(action)).Unwrap();
 
-        public static async Task<IOperateResult<T>> ExcuteAsync<T>(Func<Task<IOperateResult<T>>> action)
-            => (await ExcuteAsync<IOperateResult<T>>(action)).Unwrap();
+        public static async Task<OperateResult<T>> ExcuteAsync<T>(Func<Task<OperateResult<T>>> action)
+            => (await ExcuteAsync<OperateResult<T>>(action)).Unwrap();
 
-        public static async ValueTask<IOperateResult<T>> ExcuteValueAsync<T>(Func<ValueTask<T>> action)
+        public static async ValueTask<OperateResult<T>> ExcuteValueAsync<T>(Func<ValueTask<T>> action)
         {
             var watch = ValueStopwatch.StartNew();
             try
@@ -72,17 +72,17 @@ namespace FclEx.Utils
             }
         }
 
-        public static async ValueTask<IOperateResult<T>> ExcuteValueAsync<T>(Func<ValueTask<IOperateResult<T>>> action)
-            => (await ExcuteValueAsync<IOperateResult<T>>(action)).Unwrap();
+        public static async ValueTask<OperateResult<T>> ExcuteValueAsync<T>(Func<ValueTask<OperateResult<T>>> action)
+            => (await ExcuteValueAsync<OperateResult<T>>(action)).Unwrap();
         
         public static void ExcuteBgAsync(Func<Task> action) => TaskHelper.RunBg(() => ExcuteAsync(action));
         public static void ExcuteBgAsync<T>(Func<Task<T>> action) => TaskHelper.RunBg(() => ExcuteAsync(action));
         public static void ExcuteBgAsync(Func<Task<OperateResult>> action) => TaskHelper.RunBg(() => ExcuteAsync(action));
-        public static void ExcuteBgAsync<T>(Func<Task<IOperateResult<T>>> action) => TaskHelper.RunBg(() => ExcuteAsync(action));
+        public static void ExcuteBgAsync<T>(Func<Task<OperateResult<T>>> action) => TaskHelper.RunBg(() => ExcuteAsync(action));
 
         public static void ExcuteBgValueAsync(Func<ValueTask> action) => TaskHelper.RunBg(() => ExcuteValueAsync(action));
         public static void ExcuteBgValueAsync<T>(Func<ValueTask<T>> action) => TaskHelper.RunBg(() => ExcuteValueAsync(action));
         public static void ExcuteBgValueAsync(Func<ValueTask<OperateResult>> action) => TaskHelper.RunBg(() => ExcuteValueAsync(action));
-        public static void ExcuteBgValueAsync<T>(Func<ValueTask<IOperateResult<T>>> action) => TaskHelper.RunBg(() => ExcuteValueAsync(action));
+        public static void ExcuteBgValueAsync<T>(Func<ValueTask<OperateResult<T>>> action) => TaskHelper.RunBg(() => ExcuteValueAsync(action));
     }
 }

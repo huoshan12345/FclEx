@@ -17,6 +17,14 @@ namespace FclEx.Utils
         public string StackTrace => Exception?.StackTrace;
         public IUnit Result { get; }
 
+        public OperateResult<TTarget> ToExplicit<TTarget>()
+        {
+            if (Successful)
+                throw new InvalidOperationException("cannot convert to explicit when result is successful");
+            else
+                return new OperateResult<TTarget>(Code, Exception, Elapsed);
+        }
+
         internal OperateResult(int code, Exception ex, TimeSpan elapsed)
         {
             Code = Check.NotEqual(code, OperateResultCodes.Success, nameof(code));

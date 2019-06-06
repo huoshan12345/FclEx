@@ -22,7 +22,7 @@ namespace FclEx.Utils
             }
         }
 
-        public static IOperateResult<T> Excute<T>(Func<T> action)
+        public static OperateResult<T> Excute<T>(Func<T> action)
         {
             var watch = ValueStopwatch.StartNew();
             try
@@ -38,11 +38,11 @@ namespace FclEx.Utils
 
         public static OperateResult Excute(Func<OperateResult> action) => Excute<OperateResult>(action).Unwrap();
 
-        public static IOperateResult<T> Excute<T>(Func<IOperateResult<T>> action) => Excute<IOperateResult<T>>(action).Unwrap();
+        public static OperateResult<T> Excute<T>(Func<OperateResult<T>> action) => Excute<OperateResult<T>>(action).Unwrap();
 
         public static void ExcuteBg(Action action) => TaskHelper.RunBg(() => Excute(action));
         public static void ExcuteBg<T>(Func<T> action) => TaskHelper.RunBg(() => Excute(action));
         public static void ExcuteBg(Func<OperateResult> action) => TaskHelper.RunBg(() => Excute(action));
-        public static void ExcuteBg<T>(Func<IOperateResult<T>> action) => TaskHelper.RunBg(() => Excute(action));
+        public static void ExcuteBg<T>(Func<OperateResult<T>> action) => TaskHelper.RunBg(() => Excute(action));
     }
 }
