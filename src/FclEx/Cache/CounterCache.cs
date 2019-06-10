@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using FclEx.Helpers;
 using FclEx.Utils;
 using MoreLinq;
 
@@ -15,11 +17,11 @@ namespace FclEx.Cache
     /// </summary>
     /// <typeparam name="TKey"></typeparam>
     /// <typeparam name="TValue"></typeparam>
-    [DebuggerTypeProxy(typeof(TinyCacheDebugView<,>))]
     [DebuggerDisplay("Count = {" + nameof(Count) + "}")]
-    public sealed class CounterCache<TKey, TValue>
+    public sealed class CounterCache<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
     {
-        private readonly IDictionary<TKey, Counter> _dic;
+        private readonly LinkedList<KvCount> _list;
+        private readonly IDictionary<TKey, LinkedListNode<KvCount>> _dic;
         private readonly ReaderWriterLockSlim _lock;
         private readonly int? _capacity;
 
@@ -30,20 +32,61 @@ namespace FclEx.Cache
 
             comparer = comparer ?? EqualityComparer<TKey>.Default;
             _lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
-            _dic = new Dictionary<TKey, Counter>(comparer);
+            _dic = new Dictionary<TKey, LinkedListNode<KvCount>>(comparer);
+            _list = new LinkedList<KvCount>();
+        }
+
+        public bool TryGet(TKey key, out TValue value)
+        {
+            _lock.EnterReadLock();
+            try
+            {
+                if (_dic.TryGetValue(key, out var node))
+                {
+                    value = node.Value.Value;
+                    return true;
+                }
+                else
+                {
+                    value = default;
+                    return false;
+                }
+            }
+            finally
+            {
+                _lock.ExitReadLock();
+            }
         }
 
         public TValue GetOrAdd(TKey key, Func<TKey, TValue> activator)
         {
-            Counter counter;
+            LinkedListNode<KvCount> node;
             bool success;
 
             _lock.EnterReadLock();
-
             try
             {
-                success = _dic.TryGetValue(key, out counter);
-                if (success) counter.Incre();
+                success = _dic.TryGetValue(key, out node);
+                if (success)
+                {
+                    node.Value.Incre();
+                    var cur = node;
+                    while (true)
+                    {
+                        var prev = cur.Previous;
+                        if (prev == null) break;
+
+                        var count = cur.Value.Count;
+                        var pCount = prev.Value.Count;
+                        if (count <= pCount)
+                            break;
+
+                        var tmp = cur.Value;
+                        cur.Value = prev.Value;
+                        prev.Value = tmp;
+                        cur = prev;
+                    }
+                }
             }
             finally
             {
@@ -59,20 +102,21 @@ namespace FclEx.Cache
                     {
                         if (_dic.Count >= _capacity)
                         {
-                            var min = _dic.MinBy(m => m.Value.Count).OrderBy(m => m.Key).First();
-                            _dic.Remove(min);
+                            var last = _list.Last;
+                            _dic.Remove(last.Value.Key);
+                            _list.RemoveLast();
                         }
                     }
-                    counter = new Counter();
-                    _dic[key] = counter;
+                    node = new LinkedListNode<KvCount>(new KvCount(key, activator(key)));
+                    _list.AddLast(node);
+                    _dic[key] = node;
                 }
                 finally
                 {
                     _lock.ExitWriteLock();
                 }
             }
-
-            return counter.Item.Get(() => activator(key));
+            return node.Value.Value;
         }
 
         public int Count => Read(() => _dic.Count);
@@ -80,9 +124,9 @@ namespace FclEx.Cache
         public void Clear()
         {
             _lock.EnterWriteLock();
-
             try
             {
+                _list.Clear();
                 _dic.Clear();
             }
             finally
@@ -91,15 +135,29 @@ namespace FclEx.Cache
             }
         }
 
-        public TKey[] GetAllKeys() => Read(() => _dic.Keys.ToArray());
+        public IReadOnlyList<TKey> GetAllKeys() => Read(() => _list.Select(m => m.Key).ToArray());
 
         public bool IsFull() => Read(() => _dic.Count >= _capacity);
 
-        internal class Counter
+        internal class KvCount
         {
-            public void Incre() => ++Count;
-            public int Count { get; private set; } = 0;
-            public LazyLock<TValue> Item { get; } = new LazyLock<TValue>();
+            public KvCount(TKey key, TValue value)
+            {
+                Key = key;
+                Value = value;
+            }
+
+            public TKey Key { get; }
+            public TValue Value { get; }
+            public int Count { get; private set; }
+            public int Incre() => ++Count;
+
+            public void Deconstruct(out TKey key, out TValue value, out int count)
+            {
+                key = Key;
+                value = Value;
+                count = Count;
+            }
         }
 
         private T Read<T>(Func<T> func)
@@ -114,18 +172,66 @@ namespace FclEx.Cache
                 _lock.ExitReadLock();
             }
         }
-    }
 
-    internal sealed class TinyCacheDebugView<TKey, TValue>
-    {
-        private readonly CounterCache<TKey, TValue> _dic;
+        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => new Enumerator(this);
 
-        public TinyCacheDebugView(CounterCache<TKey, TValue> dictionary)
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        /// <summary>
+        /// Enumerator
+        /// </summary>
+        public struct Enumerator : IEnumerator<KeyValuePair<TKey, TValue>>
         {
-            _dic = dictionary ?? throw new ArgumentNullException(nameof(dictionary));
-        }
+            private readonly CounterCache<TKey, TValue> _dictionary;
+            private LinkedListNode<KvCount> _node;
 
-        [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-        public TKey[] Items => _dic.GetAllKeys();
+            internal Enumerator(CounterCache<TKey, TValue> dictionary)
+            {
+                _dictionary = dictionary;
+                _node = default;
+            }
+
+            /// <summary>
+            /// Move to next
+            /// </summary>
+            public bool MoveNext()
+            {
+                var list = _dictionary._list;
+                _node = _node == null ? list.First : _node.Next;
+                if (_node == null)
+                {
+                    Current = default;
+                    return false;
+                }
+                else
+                {
+                    Current = GetCur();
+                    return true;
+                }
+            }
+
+            private KeyValuePair<TKey, TValue> GetCur()
+            {
+                return KvPair.For(_node.Value.Key, _node.Value.Value);
+            }
+
+            /// <summary>
+            /// Get current value
+            /// </summary>
+            public KeyValuePair<TKey, TValue> Current { get; private set; }
+
+            object IEnumerator.Current => _node;
+
+            void IEnumerator.Reset()
+            {
+                Current = default;
+                _node = default;
+            }
+
+            /// <summary>
+            /// Dispose the enumerator
+            /// </summary>
+            public void Dispose() { }
+        }
     }
 }
