@@ -5,22 +5,22 @@ namespace FclEx.Utils
 {
     public static partial class OperateResultExtensions
     {
-        public static bool HasError<T>(this IOperateResult<T> result)
+        public static bool HasError(this IOperateResult result)
         {
             return !result.Successful;
         }
 
-        public static bool IsStrErr<T>(this IOperateResult<T> r)
+        public static bool IsStrErr(this IOperateResult r)
         {
             return r.Code == OperateResultCodes.FromString;
         }
 
-        public static bool IsExErr<T>(this IOperateResult<T> r)
+        public static bool IsExErr(this IOperateResult r)
         {
             return r.Code == OperateResultCodes.FromException;
         }
 
-        public static bool IsCancelErr<T>(this IOperateResult<T> r)
+        public static bool IsCancelErr(this IOperateResult r)
         {
             return r.Code == OperateResultCodes.Cancel;
         }
@@ -60,6 +60,11 @@ namespace FclEx.Utils
         public static OperateResult Ok(this OperateResult @this, Action<TimeSpan> action)
         {
             return @this.On(r => r.Successful, t => action(t.Elapsed));
+        }
+
+        public static OperateResult<T> Ok<T>(this OperateResult<T> @this, Action<T> action)
+        {
+            return @this.On(r => r.Successful, t => action(t.Result));
         }
 
         public static IOperateResult<T> Error<T>(this IOperateResult<T> @this, Action<Exception> action)

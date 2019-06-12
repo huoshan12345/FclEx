@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 
 namespace FclEx.Utils
 {
+    [Obsolete("使用" + nameof(IOperateResult))]
     public interface IExcuteResult
     {
         bool Successful { get; }
@@ -16,6 +17,7 @@ namespace FclEx.Utils
         string StackTrace { get; }
     }
 
+    [Obsolete("使用" + nameof(IOperateResult))]
     public interface IExcuteResult<out T> : IExcuteResult
     {
         T Result { get; }

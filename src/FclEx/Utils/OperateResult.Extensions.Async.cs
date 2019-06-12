@@ -13,6 +13,11 @@ namespace FclEx.Utils
             return @this.On(r => r.Successful, t => action(t.Result, t.Elapsed));
         }
 
+        public static Task<OperateResult<T>> Ok<T>(this Task<OperateResult<T>> @this, Action<T> action)
+        {
+            return @this.Ok((o, _) => action(o));
+        }
+
         public static Task<OperateResult> Ok(this Task<OperateResult> @this, Action<TimeSpan> action)
         {
             return @this.On(r => r.Successful, t => action(t.Elapsed));
@@ -21,6 +26,11 @@ namespace FclEx.Utils
         public static Task<OperateResult<T>> Ok<T>(this Task<OperateResult<T>> @this, Func<T, TimeSpan, Task> action)
         {
             return @this.On(r => r.Successful, t => action(t.Result, t.Elapsed));
+        }
+
+        public static Task<OperateResult<T>> Ok<T>(this Task<OperateResult<T>> @this, Func<T, Task> action)
+        {
+            return @this.Ok((o, _) => action(o));
         }
 
         public static Task<OperateResult> Ok(this Task<OperateResult> @this, Func<TimeSpan, Task> action)
@@ -103,7 +113,7 @@ namespace FclEx.Utils
             return @this.On(r => r.IsCancelErr(), action);
         }
 
-        public static Task<OperateResult> CancelResult<T>(this Task<OperateResult> @this, Func<OperateResult, Task> action)
+        public static Task<OperateResult> CancelResult(this Task<OperateResult> @this, Func<OperateResult, Task> action)
         {
             return @this.On(r => r.IsCancelErr(), action);
         }
@@ -113,7 +123,7 @@ namespace FclEx.Utils
             return @this.On(m => !m.Successful, action);
         }
 
-        public static Task<OperateResult> ErrorResult<T>(this Task<OperateResult> @this, Func<OperateResult, Task> action)
+        public static Task<OperateResult> ErrorResult(this Task<OperateResult> @this, Func<OperateResult, Task> action)
         {
             return @this.On(m => !m.Successful, action);
         }

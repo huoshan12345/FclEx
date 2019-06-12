@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace FclEx.Utils
 {
-    public interface IOperateResult<out T>
+    public interface IOperateResult
     {
         bool Successful { get; }
         int Code { get; }
@@ -14,7 +14,11 @@ namespace FclEx.Utils
         TimeSpan Elapsed { get; }
         string Msg { get; }
         string StackTrace { get; }
-        T Result { get; }
         OperateResult<TTarget> ToExplicit<TTarget>();
+    }
+
+    public interface IOperateResult<out T> : IOperateResult
+    {
+        T Result { get; }
     }
 }
