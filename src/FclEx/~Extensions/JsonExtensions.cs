@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization.Formatters;
 using System.Xml;
 using System.Xml.Linq;
 using FclEx.Utils;
@@ -12,6 +14,65 @@ using Formatting = Newtonsoft.Json.Formatting;
 
 namespace FclEx
 {
+    public readonly struct JsonOptions : IEquatable<JsonOptions>
+    {
+        public JsonOptions(Formatting formatting = Formatting.None,
+            bool ignoreNull = false,
+            DateTimeZoneHandling dateTimeZoneHandling = DateTimeZoneHandling.Local,
+            bool useCamelCase = false,
+            string dateTimeFormat = DateTimeExtensions.CnTimeFormat)
+        {
+            Formatting = formatting;
+            IgnoreNull = ignoreNull;
+            DateTimeZoneHandling = dateTimeZoneHandling;
+            UseCamelCase = useCamelCase;
+            DateTimeFormat = dateTimeFormat;
+        }
+
+        public Formatting Formatting { get; }
+        public bool IgnoreNull { get; }
+        public DateTimeZoneHandling DateTimeZoneHandling { get; }
+        public bool UseCamelCase { get; }
+        public string DateTimeFormat { get; }
+
+        public bool Equals(JsonOptions other)
+        {
+            return Formatting == other.Formatting
+                   && IgnoreNull == other.IgnoreNull
+                   && DateTimeZoneHandling == other.DateTimeZoneHandling
+                   && UseCamelCase == other.UseCamelCase
+                   && string.Equals(DateTimeFormat, other.DateTimeFormat);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is JsonOptions other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (int)Formatting;
+                hashCode = (hashCode * 397) ^ IgnoreNull.GetHashCode();
+                hashCode = (hashCode * 397) ^ (int)DateTimeZoneHandling;
+                hashCode = (hashCode * 397) ^ UseCamelCase.GetHashCode();
+                hashCode = (hashCode * 397) ^ DateTimeFormat.GetHashCodeSafely();
+                return hashCode;
+            }
+        }
+
+        public static bool operator ==(JsonOptions left, JsonOptions right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(JsonOptions left, JsonOptions right)
+        {
+            return !left.Equals(right);
+        }
+    }
+
     public static class JsonExtensions
     {
         internal static IContractResolver CamelResolver { get; } = new DefaultContractResolver
@@ -19,46 +80,50 @@ namespace FclEx
             NamingStrategy = new CamelCaseNamingStrategy()
         };
 
-        internal static JsonSerializerSettings IgnoreSettings { get; } = new JsonSerializerSettings
-        {
-            DateTimeZoneHandling = DateTimeZoneHandling.Utc,
-            NullValueHandling = NullValueHandling.Ignore
-        };
+        private static readonly ConcurrentDictionary<JsonOptions, JsonSerializerSettings> _serializerSettings
+            = new ConcurrentDictionary<JsonOptions, JsonSerializerSettings>();
 
-        internal static JsonSerializerSettings DefaultSettings { get; } = new JsonSerializerSettings
+        internal static JsonSerializerSettings GetSettings(JsonOptions options)
         {
-            DateTimeZoneHandling = DateTimeZoneHandling.Utc,
-        };
-
-        internal static JsonSerializerSettings CamelSettings { get; } = new JsonSerializerSettings
-        {
-            DateTimeZoneHandling = DateTimeZoneHandling.Utc,
-            ContractResolver = CamelResolver
-        };
-
-        internal static JsonSerializerSettings CamelIgnoreNullSettings { get; } = new JsonSerializerSettings
-        {
-            DateTimeZoneHandling = DateTimeZoneHandling.Utc,
-            ContractResolver = CamelResolver,
-            NullValueHandling = NullValueHandling.Ignore
-        };
-
-        internal static JsonSerializer DefaultSerializer { get; } = JsonSerializer.Create(DefaultSettings);
-        internal static JsonSerializer CamelSerializer { get; } = JsonSerializer.Create(CamelSettings);
-
-        public static string ToJson(this object obj, JsonSerializerSettings settings, Formatting formatting = Formatting.None)
-        {
-            return JsonConvert.SerializeObject(obj, formatting, settings);
+            return _serializerSettings.GetOrAdd(options, k =>
+            {
+                var settings = new JsonSerializerSettings
+                {
+                    DateTimeZoneHandling = k.DateTimeZoneHandling,
+                    Formatting = Formatting.None,
+                    NullValueHandling = k.IgnoreNull ? NullValueHandling.Ignore : NullValueHandling.Include,
+                };
+                if (k.DateTimeFormat.IsValid())
+                    settings.DateFormatString = k.DateTimeFormat;
+                if (k.UseCamelCase)
+                    settings.ContractResolver = CamelResolver;
+                return settings;
+            });
         }
 
-        public static string ToJson(this object obj, Formatting formatting = Formatting.None, bool ignoreNull = false)
+        public static string ToJson(this object obj, JsonOptions options)
         {
-            return ToJson(obj, ignoreNull ? IgnoreSettings : null, formatting);
+            var settings = GetSettings(options);
+            return JsonConvert.SerializeObject(obj, settings);
         }
 
-        public static string ToJsonCamel(this object obj, Formatting formatting = Formatting.None, bool ignoreNull = false)
+        public static string ToJson(this object obj,
+            Formatting formatting = Formatting.None,
+            bool ignoreNull = false,
+            DateTimeZoneHandling dateTimeZoneHandling = DateTimeZoneHandling.Local,
+            bool useCamelCase = false,
+            string dateTimeFormat = DateTimeExtensions.CnTimeFormat)
         {
-            return ToJson(obj, ignoreNull ? CamelIgnoreNullSettings : CamelSettings, formatting);
+            return obj.ToJson(new JsonOptions( formatting, ignoreNull, dateTimeZoneHandling, useCamelCase, dateTimeFormat));
+        }
+
+        public static string ToJsonCamel(this object obj, 
+            Formatting formatting = Formatting.None, 
+            bool ignoreNull = false, 
+            DateTimeZoneHandling dateTimeZoneHandling = DateTimeZoneHandling.Local, 
+            string dateTimeFormat = DateTimeExtensions.CnTimeFormat)
+        {
+            return obj.ToJson(new JsonOptions(formatting, ignoreNull, dateTimeZoneHandling, true, dateTimeFormat));
         }
 
         public static JToken ToJToken(this string str)

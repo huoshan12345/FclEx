@@ -11,6 +11,9 @@ namespace FclEx.Extensions
 {
     public static class JsonExtensions
     {
+        internal static JsonSerializer DefaultSerializer { get; } = JsonSerializer.Create(GetSettings(new JsonOptions()));
+        internal static JsonSerializer CamelSerializer { get; } = JsonSerializer.Create(GetSettings(new JsonOptions(useCamelCase: true)));
+
         public static JToken SerializeToJToken(this object obj, JsonSerializer jsonSerializer = null)
             => JToken.FromObject(obj, jsonSerializer ?? DefaultSerializer);
 

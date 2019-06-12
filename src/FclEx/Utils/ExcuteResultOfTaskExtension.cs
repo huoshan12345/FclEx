@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
-using FclEx.Utils;
-using OperateResult = FclEx.Utils.IOperateResult<FclEx.Utils.IUnit>;
 
-namespace FclEx
+namespace FclEx.Utils
 {
     [Obsolete("使用" + nameof(OperateResult))]
     public static class ExcuteResultOfTaskExtension

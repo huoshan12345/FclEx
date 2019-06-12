@@ -67,6 +67,21 @@ namespace FclEx.Utils
             return @this.On(r => !r.Successful, t => action(t.Exception));
         }
 
+        public static IOperateResult<T> StrError<T>(this IOperateResult<T> @this, Action<Exception> action)
+        {
+            return @this.On(r => r.IsStrErr(), t => action(t.Exception));
+        }
+
+        public static IOperateResult<T> ExError<T>(this IOperateResult<T> @this, Action<Exception> action)
+        {
+            return @this.On(r => r.IsExErr(), t => action(t.Exception));
+        }
+
+        public static IOperateResult<T> NonExError<T>(this IOperateResult<T> @this, Action<Exception> action)
+        {
+            return @this.On(r => r.HasError() && !r.IsExErr(), t => action(t.Exception));
+        }
+
         public static IOperateResult<T> Cancel<T>(this IOperateResult<T> @this, Action<Exception> action)
         {
             return @this.On(r => r.IsCancelErr(), t => action(t.Exception));
