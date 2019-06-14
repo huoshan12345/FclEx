@@ -20,7 +20,7 @@ foreach($project in $projects) {
     $projectFolder = Join-Path $srcPath $project
     # Create nuget pack
     Set-Location $projectFolder
-    & dotnet pack -c Release --include-symbols -v q --output $packFolder
+    & dotnet pack -c Release --include-symbols --no-restore -v q --output $packFolder
 	if ($Lastexitcode -ne 0)	{
 		throw "failed with exit code $LastExitCode"
 	}

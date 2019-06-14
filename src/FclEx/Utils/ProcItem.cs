@@ -25,7 +25,7 @@ namespace FclEx.Utils
 
         public ProcItem<T> AddError(Exception ex)
         {
-            return new ProcItem<T>(this.Item) { ErrorTimes = ErrorTimes + 1, Exception = ex };
+            return new ProcItem<T>(Item) { ErrorTimes = ErrorTimes + 1, Exception = ex };
         }
 
         public ProcItem<T1> ToType<T1>(T1 item)

@@ -20,7 +20,7 @@ namespace FclEx
             bool ignoreNull = false,
             DateTimeZoneHandling dateTimeZoneHandling = DateTimeZoneHandling.Local,
             bool useCamelCase = false,
-            string dateTimeFormat = DateTimeExtensions.CnTimeFormat)
+            string dateTimeFormat = null)
         {
             Formatting = formatting;
             IgnoreNull = ignoreNull;
@@ -112,16 +112,16 @@ namespace FclEx
             bool ignoreNull = false,
             DateTimeZoneHandling dateTimeZoneHandling = DateTimeZoneHandling.Local,
             bool useCamelCase = false,
-            string dateTimeFormat = DateTimeExtensions.CnTimeFormat)
+            string dateTimeFormat = null)
         {
-            return obj.ToJson(new JsonOptions( formatting, ignoreNull, dateTimeZoneHandling, useCamelCase, dateTimeFormat));
+            return obj.ToJson(new JsonOptions(formatting, ignoreNull, dateTimeZoneHandling, useCamelCase, dateTimeFormat));
         }
 
-        public static string ToJsonCamel(this object obj, 
-            Formatting formatting = Formatting.None, 
-            bool ignoreNull = false, 
-            DateTimeZoneHandling dateTimeZoneHandling = DateTimeZoneHandling.Local, 
-            string dateTimeFormat = DateTimeExtensions.CnTimeFormat)
+        public static string ToJsonCamel(this object obj,
+            Formatting formatting = Formatting.None,
+            bool ignoreNull = false,
+            DateTimeZoneHandling dateTimeZoneHandling = DateTimeZoneHandling.Local,
+            string dateTimeFormat = null)
         {
             return obj.ToJson(new JsonOptions(formatting, ignoreNull, dateTimeZoneHandling, true, dateTimeFormat));
         }

@@ -43,12 +43,12 @@ namespace FclEx.Utils
 
         public static implicit operator OperateResult(Exception ex)
         {
-            return OperateResult.CreateError(ex, TimeSpan.Zero);
+            return CreateError(ex, TimeSpan.Zero);
         }
 
         public static implicit operator OperateResult(string error)
         {
-            return OperateResult.CreateError(error, TimeSpan.Zero);
+            return CreateError(error, TimeSpan.Zero);
         }
     }
 }

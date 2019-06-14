@@ -1,37 +1,44 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using FclEx.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using static FclEx.JsonExtensions;
 
 namespace FclEx.Extensions
 {
     public static class JsonExtensions
     {
-        internal static JsonSerializer DefaultSerializer { get; } = JsonSerializer.Create(GetSettings(new JsonOptions()));
-        internal static JsonSerializer CamelSerializer { get; } = JsonSerializer.Create(GetSettings(new JsonOptions(useCamelCase: true)));
+        private static readonly ConcurrentDictionary<JsonOptions, JsonSerializer> _serializers
+            = new ConcurrentDictionary<JsonOptions, JsonSerializer>();
 
-        public static JToken SerializeToJToken(this object obj, JsonSerializer jsonSerializer = null)
-            => JToken.FromObject(obj, jsonSerializer ?? DefaultSerializer);
+        internal static JsonSerializer CamelSerializer { get; } = GetSerializer(new JsonOptions(useCamelCase: true));
 
-        public static JToken SerializeToJTokenCamel(this object obj) 
+        internal static JsonSerializer GetSerializer(JsonOptions options)
+        {
+            return _serializers.GetOrAdd(options, k => JsonSerializer.Create(FclEx.JsonExtensions.GetSettings(k)));
+        }
+
+        public static JToken SerializeToJToken(this object obj, JsonOptions options = default)
+            => JToken.FromObject(obj, GetSerializer(options));
+
+        public static JToken SerializeToJTokenCamel(this object obj)
             => JToken.FromObject(obj, CamelSerializer);
 
-        public static JObject SerializeToJObject(this object obj, JsonSerializer jsonSerializer = null)
-            => JObject.FromObject(obj, jsonSerializer ?? DefaultSerializer);
+        public static JObject SerializeToJObject(this object obj, JsonOptions options = default)
+            => JObject.FromObject(obj, GetSerializer(options));
 
-        public static JObject SerializeToJObjectCamel(this object obj) 
+        public static JObject SerializeToJObjectCamel(this object obj)
             => JObject.FromObject(obj, CamelSerializer);
 
-        public static JArray SerializeToJArray(this object obj, JsonSerializer jsonSerializer = null) 
-            => JArray.FromObject(obj, jsonSerializer ?? DefaultSerializer);
+        public static JArray SerializeToJArray(this object obj, JsonOptions options = default)
+            => JArray.FromObject(obj, GetSerializer(options));
 
-        public static JArray SerializeToJArrayCamel(this object obj) 
+        public static JArray SerializeToJArrayCamel(this object obj)
             => JArray.FromObject(obj, CamelSerializer);
-        
+
         public static bool IsPossibleJson(this string data)
         {
             return (!data.IsNullOrEmpty() && (data.First() == '{' && data.Last() == '}'

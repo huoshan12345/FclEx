@@ -55,18 +55,16 @@ namespace FclEx.Utils
 
         public static implicit operator OperateResult(OperateResult<T> r)
         {
-            if (r.Successful)
-                throw new InvalidOperationException("cannot convert to explicit when result is successful");
-            else
-                return new OperateResult(r.Code, r.Exception, r.Elapsed);
+            return r.Successful 
+                ? new OperateResult(r.Elapsed) 
+                : new OperateResult(r.Code, r.Exception, r.Elapsed);
         }
 
         public OperateResult<TTarget> ToExplicit<TTarget>()
         {
-            if (Successful)
-                throw new InvalidOperationException("cannot convert to explicit when result is successful");
-            else
-                return new OperateResult<TTarget>(Code, Exception, Elapsed);
+            return Successful 
+                ? new OperateResult<TTarget>(Result.CastTo<TTarget>(), Elapsed)
+                : new OperateResult<TTarget>(Code, Exception, Elapsed);
         }
     }
 }
