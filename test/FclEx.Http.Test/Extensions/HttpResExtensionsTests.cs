@@ -54,7 +54,7 @@ namespace FclEx.Http.Test.Extensions
         public async Task ThrowIfError_ValueTask_Excute_Test()
         {
             var flag = false;
-            var r = await OperateUtil.ExcuteAsync(() => TimeoutRequestWrap())
+            var r = await OperateResult.ExcuteAsync(() => TimeoutRequestWrap())
                 .Ok(_ => flag = true)
                 .Error(e =>
                 {
@@ -69,7 +69,7 @@ namespace FclEx.Http.Test.Extensions
         public async Task Excute_Test()
         {
             var flag = false;
-            var r = await OperateUtil.ExcuteAsync(() => SuccessRequestWrap())
+            var r = await OperateResult.ExcuteAsync(() => SuccessRequestWrap())
                 .Ok(_ => flag = true)
                 .Error(e =>
                 {

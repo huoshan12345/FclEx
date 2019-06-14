@@ -5,7 +5,7 @@ using FclEx.Helpers;
 
 namespace FclEx.Utils
 {
-    public static partial class OperateUtil
+    public partial struct OperateResult
     {
         public static async Task<OperateResult> ExcuteAsync(Func<Task> action)
         {

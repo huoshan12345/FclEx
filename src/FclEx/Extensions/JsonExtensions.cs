@@ -53,7 +53,7 @@ namespace FclEx.Extensions
             token = null;
             if (str.IsPossibleJson())
             {
-                var r = OperateUtil.Excute(() => JToken.Parse(str));
+                var r = OperateResult.Excute(() => JToken.Parse(str));
                 if (r.Successful)
                 {
                     token = r.Result;
@@ -68,7 +68,7 @@ namespace FclEx.Extensions
             token = null;
             if (str.IsPossibleJson())
             {
-                var r = OperateUtil.Excute(() => JObject.Parse(str));
+                var r = OperateResult.Excute(() => JObject.Parse(str));
                 if (r.Successful)
                 {
                     token = r.Result;
@@ -83,7 +83,7 @@ namespace FclEx.Extensions
             token = null;
             if (str.IsPossibleJson())
             {
-                var r = OperateUtil.Excute(() => JArray.Parse(str));
+                var r = OperateResult.Excute(() => JArray.Parse(str));
                 if (r.Successful)
                 {
                     token = r.Result;

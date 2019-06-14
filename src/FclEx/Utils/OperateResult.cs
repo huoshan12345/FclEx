@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 
 namespace FclEx.Utils
 {
-    public struct OperateResult<T> : IOperateResult<T>
+    public partial struct OperateResult : IOperateResult<IUnit>
     {
         public bool Successful => Code == OperateResultCodes.Success;
         public int Code { get; }
@@ -15,7 +15,15 @@ namespace FclEx.Utils
         public TimeSpan Elapsed { get; }
         public string Msg => Exception?.Message;
         public string StackTrace => Exception?.StackTrace;
-        public T Result { get; }
+        public IUnit Result { get; }
+
+        public OperateResult<TTarget> ToExplicit<TTarget>()
+        {
+            if (Successful)
+                throw new InvalidOperationException("cannot convert to explicit when result is successful");
+            else
+                return new OperateResult<TTarget>(Code, Exception, Elapsed);
+        }
 
         internal OperateResult(int code, Exception ex, TimeSpan elapsed)
         {
@@ -25,48 +33,22 @@ namespace FclEx.Utils
             Result = default;
         }
 
-        internal OperateResult(T result, TimeSpan elapsed)
+        internal OperateResult(TimeSpan elapsed)
         {
             Code = OperateResultCodes.Success;
             Exception = null;
             Elapsed = elapsed;
-            Result = result;
+            Result = default;
         }
 
-        public static implicit operator OperateResult<T>(Exception ex)
+        public static implicit operator OperateResult(Exception ex)
         {
-            return OperateUtil.CreateError<T>(ex, TimeSpan.Zero);
+            return OperateResult.CreateError(ex, TimeSpan.Zero);
         }
 
-        public static implicit operator OperateResult<T>(string error)
+        public static implicit operator OperateResult(string error)
         {
-            return OperateUtil.CreateError<T>(error, TimeSpan.Zero);
-        }
-
-        public static implicit operator OperateResult<T>(T item)
-        {
-            return OperateUtil.CreateSuccess(item, TimeSpan.Zero);
-        }
-
-        public static implicit operator OperateResult<T>(OperateResult r)
-        {
-            return r.ToExplicit<T>();
-        }
-
-        public static implicit operator OperateResult(OperateResult<T> r)
-        {
-            if (r.Successful)
-                throw new InvalidOperationException("cannot convert to explicit when result is successful");
-            else
-                return new OperateResult(r.Code, r.Exception, r.Elapsed);
-        }
-
-        public OperateResult<TTarget> ToExplicit<TTarget>()
-        {
-            if (Successful)
-                throw new InvalidOperationException("cannot convert to explicit when result is successful");
-            else
-                return new OperateResult<TTarget>(Code, Exception, Elapsed);
+            return OperateResult.CreateError(error, TimeSpan.Zero);
         }
     }
 }

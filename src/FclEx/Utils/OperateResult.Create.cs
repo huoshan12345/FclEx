@@ -1,11 +1,20 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace FclEx.Utils
 {
-    public static partial class OperateUtil
+    public partial struct OperateResult
     {
-        public static OperateResult Success { get; } = CreateSuccess(TimeSpan.Zero);
+        private static bool IsCancelException(Exception ex)
+        {
+            var t = ex.GetType();
+            var isCancel = t == typeof(TaskCanceledException) || t == typeof(OperationCanceledException);
+            return isCancel;
+        }
+
+        public static OperateResult Success { get; } = CreateSuccess();
 
         public static OperateResult NotImplemented { get; } = CreateNotImplemented();
 
@@ -21,9 +30,7 @@ namespace FclEx.Utils
 
         public static OperateResult CreateError(Exception ex, TimeSpan elapsed = default)
         {
-            var t = ex.GetType();
-            var isCancel = t == typeof(TaskCanceledException) || t == typeof(OperationCanceledException);
-            return new OperateResult(isCancel ? OperateResultCodes.Cancel : OperateResultCodes.FromException, ex, elapsed);
+            return new OperateResult(IsCancelException(ex) ? OperateResultCodes.Cancel : OperateResultCodes.FromException, ex, elapsed);
         }
 
         public static OperateResult CreateNotImplemented() => CreateError(OperateResultCodes.NotImplemented, "the operate was not implemented", default);

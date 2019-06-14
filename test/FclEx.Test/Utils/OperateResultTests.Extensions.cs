@@ -12,7 +12,7 @@ namespace FclEx.Test.Utils
         public void TestExcuteOkAfterOk()
         {
             var i = 0;
-            var r = OperateUtil.Excute(() => new object())
+            var r = OperateResult.Excute(() => new object())
                 .Ok((_, t) => ++i)
                 .Ok((_, t) => ++i)
                 .Error(e => ++i)
@@ -28,7 +28,7 @@ namespace FclEx.Test.Utils
         public void TestExcuteErrorAfterError()
         {
             var i = 0;
-            var r = OperateUtil.Excute((Func<object>)(() => throw new SimpleException("")))
+            var r = OperateResult.Excute((Func<object>)(() => throw new SimpleException("")))
                 .Ok((_, t) => ++i)
                 .Ok((_, t) => ++i)
                 .Error(e => ++i)

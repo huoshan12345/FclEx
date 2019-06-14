@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Threading.Tasks;
 using FclEx.Helpers;
-
-using OperateResult = FclEx.Utils.OperateResult<FclEx.Utils.IUnit>;
 
 namespace FclEx.Utils
 {
-    public static partial class OperateUtil
+    public partial struct OperateResult
     {
         public static OperateResult Excute(Action action)
         {
