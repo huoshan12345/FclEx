@@ -27,7 +27,6 @@ namespace FclEx.Benchmark
 
         public static IList<IHttpService> Services => new IHttpService[]
         {
-            new HttpClientExtService(),
             new HttpClientService(),
             new HttpWebRequestService()
         };

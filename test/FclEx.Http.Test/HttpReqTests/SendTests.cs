@@ -31,7 +31,6 @@ namespace FclEx.Http.Test.HttpReqTests
         public static IList<IHttpService> Services => new IHttpService[]
         {
             new HttpClientService(),
-            new HttpClientExtService(),
             new HttpWebRequestService()
         };
 

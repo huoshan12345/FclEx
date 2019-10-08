@@ -107,7 +107,7 @@ namespace FclEx.Http.Proxy
             if (ReferenceEquals(left, right)) return true;
 
             // If one is null, but not both, return false.
-            if (ReferenceEquals(left, null) || ReferenceEquals(right, null)) return false;
+            if (left is null || right is null) return false;
 
             return left.Equals(right);
         }

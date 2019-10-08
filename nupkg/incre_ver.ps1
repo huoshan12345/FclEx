@@ -7,7 +7,6 @@ $srcPath = Join-Path $slnPath "src"
 $projects = (
 "FclEx",
 "FclEx.Http",
-"FclEx.Image",
 "FclEx.Npoi"
 )
 
@@ -29,7 +28,7 @@ foreach($project in $projects) {
 		$build = $ver % 10
 
 		"$major.$minor.$build"
-		#"1.5.0"
+		#"3.0.0"
 	}
 	foreach ($i in $l){
 		$path = $i.FullName

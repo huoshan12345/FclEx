@@ -9,7 +9,6 @@ $srcPath = Join-Path $slnPath "src"
 $projects = (
 "FclEx",
 "FclEx.Http",
-"FclEx.Image",
 "FclEx.Npoi"
 )
 

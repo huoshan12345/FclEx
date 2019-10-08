@@ -6,7 +6,6 @@ srcPath="$slnPath/src"
 projects=(
 "FclEx"
 "FclEx.Http"
-"FclEx.Image"
 "FclEx.Npoi"
 )
 

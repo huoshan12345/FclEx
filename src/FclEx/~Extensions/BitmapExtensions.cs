@@ -2,7 +2,7 @@
 using System.Drawing.Imaging;
 using System.IO;
 
-namespace FclEx.Image
+namespace FclEx
 {
     public static class BitmapExtensions
     {
