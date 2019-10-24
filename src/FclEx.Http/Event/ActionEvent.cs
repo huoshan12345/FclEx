@@ -45,5 +45,21 @@ namespace FclEx.Http.Event
 
         [JsonIgnore]
         public static ActionEvent EmptyOkEvent { get; } = new ActionEvent(ActionEventType.EvtOk, null);
+
+        public static implicit operator OperateResult(ActionEvent actionEvent)
+        {
+            switch (actionEvent.Type)
+            {
+                case ActionEventType.EvtOk: return OperateResult.CreateSuccess();
+                case ActionEventType.EvtError: return OperateResult.CreateError(actionEvent.Exception);
+                case ActionEventType.EvtCanceled: return OperateResult.CreateCancel();
+                case ActionEventType.EvtRetry:
+                case ActionEventType.EvtRepeat:
+                    return OperateResult.CreateError(OperateResultCodes.NotFinished, "the operate was not finished");
+                default: throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        public OperateResult ToOperateResult() => this;
     }
 }

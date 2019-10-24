@@ -40,12 +40,12 @@ namespace FclEx.Http.Event
         {
             switch (actionEvent.Type)
             {
-                case ActionEventType.EvtOk: return OperateResult.CreateSuccess(actionEvent.Result);
-                case ActionEventType.EvtError: return OperateResult.CreateError(actionEvent.Exception);
-                case ActionEventType.EvtCanceled: return OperateResult.CreateCancel();
+                case ActionEventType.EvtOk: return OperateResult.CreateSuccess<T>(actionEvent.Result);
+                case ActionEventType.EvtError: return OperateResult.CreateError<T>(actionEvent.Exception);
+                case ActionEventType.EvtCanceled: return OperateResult.CreateCancel<T>();
                 case ActionEventType.EvtRetry:
                 case ActionEventType.EvtRepeat:
-                    return OperateResult.CreateError(OperateResultCodes.NotFinished, "the operate was not finished");
+                    return OperateResult.CreateError<T>(OperateResultCodes.NotFinished, "the operate was not finished");
                 default: throw new ArgumentOutOfRangeException();
             }
         }
