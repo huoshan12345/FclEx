@@ -1,43 +1,26 @@
-# Paths
-$packFolder = (Get-Item -Path "./" -Verbose).FullName
-$slnPath = Join-Path $packFolder "../"
-$srcPath = Join-Path $slnPath "src"
+$reg = [regex]"(?<=<Version>)(\d+)\.(\d+)\.(\d+)(?=</Version>)";
+$callback = {
+	$m = $args[0]
+	$major = [int]$m.Groups[1].Value
+	$minor = [int]$m.Groups[2].Value
+	$build = [int]$m.Groups[3].Value
+	$ver = $major * 100 + $minor * 10 + $build
+	$ver++
 
-# List of projects
-$projects = (
-"FclEx",
-"FclEx.Http",
-"FclEx.Npoi"
-)
-
-Set-Location $slnPath
-foreach($project in $projects) {    
-    $projectFolder = Join-Path $srcPath $project	
-	$outputDir = New-Object System.IO.DirectoryInfo -ArgumentList @($projectFolder)
-	$l = $outputDir.GetFiles("*.csproj", [System.IO.SearchOption]::TopDirectoryOnly);
-	$reg =  [regex]"(?<=<Version>)(\d+)\.(\d+)\.(\d+)(?=</Version>)";
-	$callback = {
-		$m = $args[0]
-		$major = [int]$m.Groups[1].Value
-		$minor = [int]$m.Groups[2].Value
-		$build = [int]$m.Groups[3].Value
-		$ver = $major * 100 + $minor * 10 + $build
-		$ver++
-		$major = ($ver - $ver % 100) / 100
-		$minor = ($ver % 100 - $ver % 10) / 10
-		$build = $ver % 10
-
-		"$major.$minor.$build"
-		#"3.0.0"
+	$digits = New-Object System.Collections.Generic.List[int]
+	$number = $ver
+	For ($i = 3; $i -gt 0; $i--) {
+		$digit = $number % 10
+		$number = ($number - $digit) / 10;
+		$digits.Add($digit);
 	}
-	foreach ($i in $l){
-		$path = $i.FullName
-        (Get-Content -Path $path) | % { $reg.Replace($_, $callback) } | Set-Content $path
-	}
+	$digits.Reverse()
+	$str = [system.String]::Join(".", $digits)
+	$str
+	#"2.3.0"
 }
-
-# Go back to the pack folder
-Set-Location $packFolder
+$path = ".\version.props"
+(Get-Content -Path $path) | % { $reg.Replace($_, $callback) } | Set-Content $path
 
 Write-Output "Finished. Press any key to exit."
 Read-Host

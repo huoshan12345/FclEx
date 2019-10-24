@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using FclEx.Utils;
 using Newtonsoft.Json;
 
 namespace FclEx.Http.Event
@@ -34,5 +35,21 @@ namespace FclEx.Http.Event
         public static implicit operator ActionEvent<T>(Exception ex) => new ActionEvent<T>(ActionEventType.EvtError, ex);
         public static implicit operator Task<ActionEvent<T>>(ActionEvent<T> actionEvent) => actionEvent.ToTask();
         public static implicit operator ValueTask<ActionEvent<T>>(ActionEvent<T> actionEvent) => actionEvent.ToValueTask();
+
+        public static implicit operator OperateResult<T>(ActionEvent<T> actionEvent)
+        {
+            switch (actionEvent.Type)
+            {
+                case ActionEventType.EvtOk: return OperateResult.CreateSuccess(actionEvent.Result);
+                case ActionEventType.EvtError: return OperateResult.CreateError(actionEvent.Exception);
+                case ActionEventType.EvtCanceled: return OperateResult.CreateCancel();
+                case ActionEventType.EvtRetry:
+                case ActionEventType.EvtRepeat:
+                    return OperateResult.CreateError(OperateResultCodes.NotFinished, "the operate was not finished");
+                default: throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        public OperateResult<T> ToOperateResult() => this;
     }
 }

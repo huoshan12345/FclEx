@@ -1,32 +1,18 @@
 $Env:DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER = 0
 $ErrorActionPreference = "Stop"
 
-# Paths
-$packFolder = (Get-Item -Path "./" -Verbose).FullName
-$slnPath = Join-Path $packFolder "../"
-$srcPath = Join-Path $slnPath "src"
-# List of projects
-$projects = (
-"FclEx",
-"FclEx.Http",
-"FclEx.Npoi"
-)
+. "./share.ps1"
 
+# Go back to the pack folder
+Set-Location $packFolder
 Remove-Item *.nupkg
-Set-Location $slnPath
-# Copy all nuget packages to the pack folder
-foreach($project in $projects) {    
-    $projectFolder = Join-Path $srcPath $project
-    # Create nuget pack
-    Set-Location $projectFolder
-    & dotnet pack -c Release --include-symbols --no-restore -v q --output $packFolder
+
+foreach($path in $projectPaths) { 
+    & dotnet pack $path -c Release --no-restore --include-symbols -v q --output $packFolder
 	if ($Lastexitcode -ne 0)	{
 		throw "failed with exit code $LastExitCode"
 	}
 }
-
-# Go back to the pack folder
-Set-Location $packFolder
 
 $PSGallerySourceUri = 'https://www.myget.org/F/huoshan12345/api/v2/package'
 $APIKey = 'fbc0486a-55ff-4760-b246-bef3e0ee952d'

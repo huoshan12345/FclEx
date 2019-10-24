@@ -12,5 +12,6 @@ namespace FclEx.Utils
         public const int NotImplemented = -3;
         public const int NullData = -4;
         public const int Cancel = -5;
+        public const int NotFinished = -6;
     }
 }

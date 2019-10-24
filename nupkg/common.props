@@ -1,0 +1,14 @@
+<Project>
+  <Import Project="version.props" />
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageProjectUrl>https://github.com/huoshan12345/FclEx</PackageProjectUrl>
+    <PackageTags>extensions;helpers</PackageTags>
+    <Authors>huoshan12345</Authors>
+    <Description>Some basic useful extensions and helpers for C# fundamental class libraries</Description>
+    <RepositoryUrl>https://github.com/huoshan12345/FclEx</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Copyright>huoshan12345</Copyright>
+  </PropertyGroup>
+</Project>

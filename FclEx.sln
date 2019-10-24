@@ -7,10 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{ABBD6045-544
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E25A1CA7-1304-44D5-89BD-170AE8F0DED4}"
 	ProjectSection(SolutionItems) = preProject
-		nupkg\incre_ver.ps1 = nupkg\incre_ver.ps1
 		NuGet.config = NuGet.config
-		nupkg\pack.ps1 = nupkg\pack.ps1
-		nupkg\pack.sh = nupkg\pack.sh
 		README.md = README.md
 	EndProjectSection
 EndProject
@@ -33,6 +30,19 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Npoi.Test", "test\FclEx.Npoi.Test\FclEx.Npoi.Test.csproj", "{16A94692-9EFF-42F0-A2A6-29678543AFAD}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Microsoft.Experimental.Collections", "src\Microsoft.Experimental.Collections\Microsoft.Experimental.Collections.shproj", "{D80D0F2E-E613-4DAC-9612-C709050A3E8D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "props", "props", "{D2C9E138-A766-4FEB-9029-A0D5270B7285}"
+	ProjectSection(SolutionItems) = preProject
+		nupkg\common.props = nupkg\common.props
+		nupkg\version.props = nupkg\version.props
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{93386705-90E4-4C54-9800-4CCA92A7EC15}"
+	ProjectSection(SolutionItems) = preProject
+		nupkg\incre_ver.ps1 = nupkg\incre_ver.ps1
+		nupkg\pack.ps1 = nupkg\pack.ps1
+		nupkg\share.ps1 = nupkg\share.ps1
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -84,6 +94,8 @@ Global
 		{8F6084B4-BE4D-4C3C-9FEA-6E04B56E4F5D} = {ABBD6045-5447-4C9B-AF77-E9ACF4EE2641}
 		{16A94692-9EFF-42F0-A2A6-29678543AFAD} = {F25BD2B5-2E68-4CC8-90F0-6F1C1574D34A}
 		{D80D0F2E-E613-4DAC-9612-C709050A3E8D} = {ABBD6045-5447-4C9B-AF77-E9ACF4EE2641}
+		{D2C9E138-A766-4FEB-9029-A0D5270B7285} = {E25A1CA7-1304-44D5-89BD-170AE8F0DED4}
+		{93386705-90E4-4C54-9800-4CCA92A7EC15} = {E25A1CA7-1304-44D5-89BD-170AE8F0DED4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F79FC760-FDD2-442C-897B-0CAE0A3E857F}
