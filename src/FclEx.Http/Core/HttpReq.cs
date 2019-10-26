@@ -36,13 +36,13 @@ namespace FclEx.Http.Core
         public Dictionary<string, string> HeaderMap { get; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         private Dictionary<string, string> _queryMap;
-        public Dictionary<string, string> QueryMap => _queryMap ?? (_queryMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
+        public Dictionary<string, string> QueryMap => _queryMap ??= new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         private Dictionary<string, string> _formMap;
-        public Dictionary<string, string> FormMap => _formMap ?? (_formMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
+        public Dictionary<string, string> FormMap => _formMap ??= new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         private Dictionary<HttpFileInfo, byte[]> _fileMap;
-        public Dictionary<HttpFileInfo, byte[]> FileMap => _fileMap ?? (_fileMap = new Dictionary<HttpFileInfo, byte[]>());
+        public Dictionary<HttpFileInfo, byte[]> FileMap => _fileMap ??= new Dictionary<HttpFileInfo, byte[]>();
 
         public string ContentType
         {

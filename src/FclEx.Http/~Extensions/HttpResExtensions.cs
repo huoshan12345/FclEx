@@ -13,7 +13,7 @@ namespace FclEx.Http
             if (res.StatusCode != HttpStatusCode.Created
                 && res.StatusCode != HttpStatusCode.OK)
             {
-                throw new WebException($"call {res.Req.GetUrl()} return unsuccessful code: {res.StatusCode}/{res.StatusCode.ToInt()}");
+                throw new WebException($"call {res.Req.GetUrl()} with {res.Req.Method} return unsuccessful code: {res.StatusCode}/{res.StatusCode.ToInt()}");
             }
             return res;
         }

@@ -39,7 +39,7 @@ namespace FclEx.Http.Services
 
         protected override void SetProxy(IWebProxyExt proxy)
         {
-            proxy = proxy ?? WebProxyExt.None;
+            proxy ??= WebProxyExt.None;
             if (Equals(WebProxy, proxy)) return;
             _webProxy = proxy;
             _httpClient.Recreate();
