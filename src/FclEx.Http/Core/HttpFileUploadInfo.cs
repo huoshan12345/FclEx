@@ -1,8 +1,8 @@
 ﻿namespace FclEx.Http.Core
 {
-    public struct HttpFileInfo
+    public readonly struct HttpFileUploadInfo
     {
-        public HttpFileInfo(string name, string fileName, string contentType)
+        public HttpFileUploadInfo(string name, string fileName, string contentType)
         {
             Name = name;
             FileName = fileName;

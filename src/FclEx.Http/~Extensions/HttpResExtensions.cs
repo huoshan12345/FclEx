@@ -1,7 +1,14 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
 using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Mime;
+using System.Text;
 using System.Threading.Tasks;
+using FclEx.Extensions;
 using FclEx.Http.Core;
+using MimeTypes.Core;
 using Newtonsoft.Json.Linq;
 
 namespace FclEx.Http
@@ -40,5 +47,59 @@ namespace FclEx.Http
             var resObj = res.ResponseString.ToJToken().ToObject<T>();
             return resObj;
         }
+
+        public static Encoding GetResultEncoding(this HttpRes res)
+        {
+            return res.ResponseChartSet.IsValid()
+                ? Encoding.GetEncoding(res.ResponseChartSet)
+                : Encoding.UTF8;
+        }
+
+        internal static HttpFileDownloadInfo GetDownloadInfo(this HttpRes res)
+        {
+            var realUrl = res.RedirectUris.Last();
+            var fileNameWithExt = Path.GetFileName(realUrl.LocalPath);
+            var ext = Path.GetExtension(fileNameWithExt);
+            var fileName = fileNameWithExt.TrimEnd(ext);
+            if (fileName.IsNullOrEmpty())
+            {
+                fileName = (realUrl.Host + realUrl.LocalPath).RegexReplace(@"\W", "_").TrimEnd("_");
+            }
+            if (ext.IsNullOrEmpty())
+            {
+                var mimeType = res.Headers.GetFirstOrDefault(HttpKnownHeaderNames.ContentType);
+                if (mimeType.IsValid())
+                {
+                    if (mimeType.Contains(";"))
+                    {
+                        var contentType = new ContentType(mimeType);
+                        mimeType = contentType.MediaType;
+                    }
+                    if (MimeTypeMap.TryGetExtension(MimeTypeFix(mimeType), out var extension))
+                        ext = extension;
+                }
+            }
+            ext ??= string.Empty;
+
+            var bytes = res.Req.ResultType == HttpResultType.Byte
+                ? res.ResponseBytes
+                : res.GetResultEncoding().GetBytes(res.ResponseString);
+
+            var info = new HttpFileDownloadInfo(realUrl, fileName, ext, bytes);
+            return info;
+        }
+
+        internal static string MimeTypeFix(string mimeType)
+        {
+            // avoid throwing exceptions in MimeTypeMap.TryGetExtension.
+            switch (mimeType)
+            {
+                case null: return string.Empty;
+                case "image/jpg": return "image/jpeg";
+                default: return mimeType.TrimStart(".");
+            }
+        }
     }
+
+
 }

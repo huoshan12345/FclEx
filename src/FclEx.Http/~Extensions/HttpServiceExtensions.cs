@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using FclEx.Helpers;
 using FclEx.Http.Core;
 using FclEx.Http.Services;
+using FclEx.Utils;
 
 namespace FclEx.Http
 {
@@ -46,7 +47,6 @@ namespace FclEx.Http
             var uri = new Uri(url);
             return http.GetCookies(uri);
         }
-
 
         public static void ClearCookies(this IHttpService http, Uri uri)
         {
@@ -88,5 +88,20 @@ namespace FclEx.Http
         }
 
         public static void AddCookies(this IHttpService http, CookieCollection cc, string url = null) => AddCookies(http, cc.OfType<Cookie>(), url);
+
+        public static async Task<OperateResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, Uri uri, HttpMethodType method = HttpMethodType.Get)
+        {
+            var req = new HttpReq(uri, method)
+                .ResultType(HttpResultType.Byte);
+
+            var res = await http.SendAsync(req);
+            if (res.HasError)
+                return OperateResult.CreateError(res.Exception, res.ExcuteTime);
+            else
+                return res.GetDownloadInfo();
+        }
+
+        public static Task<OperateResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, string url, HttpMethodType method = HttpMethodType.Get)
+            => http.DownloadAsync(new Uri(url), method);
     }
 }

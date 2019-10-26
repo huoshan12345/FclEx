@@ -79,6 +79,5 @@ namespace FclEx.Http.Test.Extensions
             Assert.True(flag);
             Assert.True(r.Successful);
         }
-
     }
 }

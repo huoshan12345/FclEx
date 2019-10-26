@@ -32,7 +32,7 @@ namespace FclEx.Http.Services
             ILoggerFactory loggerFactory = null)
         {
             WebProxy = proxy;
-            loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
+            loggerFactory ??= NullLoggerFactory.Instance;
             Logger = loggerFactory.CreateLogger(GetType());
             if (useCookie)
                 _cookieContainer = new CookieContainer();
@@ -55,7 +55,7 @@ namespace FclEx.Http.Services
         {
             token.ThrowIfCancellationRequested();
             var watch = ValueStopwatch.StartNew();
-            var res = new HttpRes { Req = httpReq, RequestTime = DateTime.Now };
+            var res = new HttpRes { Req = httpReq, RequestUtcTime = DateTime.UtcNow };
             try
             {
                 await ExecuteAsyncInternal(httpReq, res, token).DonotCapture();

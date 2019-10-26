@@ -101,9 +101,9 @@ namespace FclEx.Http
             return req;
         }
 
-        public static HttpReq AddFile(this HttpReq req, HttpFileInfo file, byte[] fileBytes)
+        public static HttpReq AddFile(this HttpReq req, HttpFileUploadInfo fileUpload, byte[] fileBytes)
         {
-            req.FileMap[file] = fileBytes;
+            req.FileMap[fileUpload] = fileBytes;
             return req;
         }
 

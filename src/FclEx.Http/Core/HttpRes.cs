@@ -18,11 +18,10 @@ namespace FclEx.Http.Core
         public string ResponseChartSet { get; internal set; }
         public Exception Exception { get; internal set; }
         public TimeSpan ExcuteTime { get; internal set; }
-        public DateTime RequestTime { get; internal set; }
-        public MultiValueDictionary<string, string> Headers => 
-            _headers ?? (_headers = new MultiValueDictionary<string, string>(StringComparer.InvariantCultureIgnoreCase));
+        public DateTime RequestUtcTime { get; internal set; }
+        public MultiValueDictionary<string, string> Headers => _headers ??= new MultiValueDictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
         public HttpStatusCode StatusCode { get; internal set; }
-        public List<Uri> RedirectUris => _redirectUris ?? (_redirectUris = new List<Uri>());
+        public List<Uri> RedirectUris => _redirectUris ??= new List<Uri>();
 
         public static HttpRes CreateError(HttpReq req, Exception e) => new HttpRes { Req = req, Exception = e };
     }

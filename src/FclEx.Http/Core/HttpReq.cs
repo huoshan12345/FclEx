@@ -41,8 +41,8 @@ namespace FclEx.Http.Core
         private Dictionary<string, string> _formMap;
         public Dictionary<string, string> FormMap => _formMap ??= new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        private Dictionary<HttpFileInfo, byte[]> _fileMap;
-        public Dictionary<HttpFileInfo, byte[]> FileMap => _fileMap ??= new Dictionary<HttpFileInfo, byte[]>();
+        private Dictionary<HttpFileUploadInfo, byte[]> _fileMap;
+        public Dictionary<HttpFileUploadInfo, byte[]> FileMap => _fileMap ??= new Dictionary<HttpFileUploadInfo, byte[]>();
 
         public string ContentType
         {
