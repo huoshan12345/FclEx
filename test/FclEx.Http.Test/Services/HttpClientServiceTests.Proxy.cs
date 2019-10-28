@@ -8,17 +8,10 @@ using FclEx.Http.Services;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace FclEx.Http.Test.ProxyTests
+namespace FclEx.Http.Test.Services
 {
-    public class HttpClientServiceProxyTests
+    public partial class HttpClientServiceTests
     {
-        private readonly ITestOutputHelper _output;
-
-        public HttpClientServiceProxyTests(ITestOutputHelper output)
-        {
-            _output = output;
-        }
-
         public static IWebProxyExt[] ProxyList { get; } =
         {
             new WebProxyExt(ProxyType.Http, "127.0.0.1", 1080),

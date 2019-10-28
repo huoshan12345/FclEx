@@ -14,7 +14,7 @@ using Xunit.Abstractions;
 
 namespace FclEx.Http.Test.Services
 {
-    public class HttpClientServiceTests
+    public partial class HttpClientServiceTests
     {
         private readonly ITestOutputHelper _output;
 
@@ -71,8 +71,7 @@ namespace FclEx.Http.Test.Services
             }
             Assert.NotEqual(first, last);
         }
-
-
+        
         [Fact]
         public async Task TimerLazyTests()
         {

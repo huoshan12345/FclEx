@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using FclEx.Extensions;
 using FclEx.Utils;
 
 namespace FclEx.Http.Proxy
@@ -36,7 +37,18 @@ namespace FclEx.Http.Proxy
             _uri = uri;
             Host = uri.Host;
             Port = uri.Port;
-            _credentials = credentials;
+            if (credentials == null)
+            {
+                var userInfo = uri.UserInfo.Split(':');
+                if (userInfo.Length == 2)
+                {
+                    _credentials = new NetworkCredential(userInfo[0].UrlDecode(), userInfo[1].UrlDecode());
+                }
+            }
+            else
+            {
+                _credentials = credentials;
+            }
         }
 
         public static WebProxyExt Create(Uri uri, NetworkCredential credentials = null)
