@@ -17,6 +17,14 @@ namespace FclEx.Utils
         public string StackTrace => Exception?.StackTrace;
         public T Result { get; }
 
+        public void Deconstruct(out bool successful, out TimeSpan elapsed, out T result, out Exception exception)
+        {
+            successful = Successful;
+            exception = Exception;
+            elapsed = Elapsed;
+            result = Result;
+        }
+
         internal OperateResult(int code, Exception ex, TimeSpan elapsed)
         {
             Code = Check.NotEqual(code, OperateResultCodes.Success, nameof(code));
@@ -55,14 +63,14 @@ namespace FclEx.Utils
 
         public static implicit operator OperateResult(OperateResult<T> r)
         {
-            return r.Successful 
-                ? new OperateResult(r.Elapsed) 
+            return r.Successful
+                ? new OperateResult(r.Elapsed)
                 : new OperateResult(r.Code, r.Exception, r.Elapsed);
         }
 
         public OperateResult<TTarget> ToExplicit<TTarget>()
         {
-            return Successful 
+            return Successful
                 ? new OperateResult<TTarget>(Result.CastTo<TTarget>(), Elapsed)
                 : new OperateResult<TTarget>(Code, Exception, Elapsed);
         }

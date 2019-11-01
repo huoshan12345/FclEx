@@ -9,7 +9,8 @@ namespace FclEx.Helpers
     /// </summary>
     public static class EncodingHelper
     {
-        private static readonly Encoding Utf8WithoutBom = new UTF8Encoding(false);
+        private static Encoding Utf8WithoutBom { get; } = new UTF8Encoding(false);
+
         /// <summary>
         /// 给定文件的路径，读取文件的二进制数据，判断文件的编码类型
         /// </summary>

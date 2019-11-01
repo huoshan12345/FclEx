@@ -13,7 +13,6 @@ namespace FclEx.Benchmark
     public class HttpServiceTest
     {
         private static readonly IHttpService _httpClientService = new HttpClientService();
-        private static readonly IHttpService _lightHttpService = new HttpWebRequestService();
 
         public static IEnumerable<object> Cases => new[]
         {
@@ -31,13 +30,6 @@ namespace FclEx.Benchmark
         public async ValueTask HttpClientService_Test(string url)
         {
             await _httpClientService.ExecuteAsync(HttpReq.Get(url)).DonotCapture();
-        }
-
-        [Benchmark]
-        [ArgumentsSource(nameof(Cases))]
-        public async ValueTask LightHttpService_Test(string url)
-        {
-            await _lightHttpService.ExecuteAsync(HttpReq.Get(url)).DonotCapture();
         }
     }
 }

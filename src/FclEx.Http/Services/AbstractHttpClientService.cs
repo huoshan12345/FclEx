@@ -61,9 +61,9 @@ namespace FclEx.Http.Services
                     res.ResponseBytes = await response.Content.ReadAsByteArrayAsync().DonotCapture();
                     break;
             }
-            foreach (var header in response.Content.Headers)
+            foreach (var (key, value) in response.Content.Headers)
             {
-                res.Headers.AddRange(header.Key, header.Value);
+                res.Headers.AddRange(key, value);
             }
         }
 
@@ -78,9 +78,9 @@ namespace FclEx.Http.Services
                 };
             }
 
-            foreach (var header in req.HeaderMap.Where(h => !NotAddHeaderNames.Contains(h.Key)))
+            foreach (var (key, value) in req.HeaderMap.Where(h => !NotAddHeaderNames.Contains(h.Key)))
             {
-                request.Headers.Add(header.Key, header.Value);
+                request.Headers.Add(key, value);
             }
 
             var cookies = req.HeaderMap.GetOrDefault(HttpKnownHeaderNames.Cookie);
@@ -97,20 +97,19 @@ namespace FclEx.Http.Services
             return request;
         }
 
-        protected async Task ExecuteAsyncInternal(
-            HttpClient httpClient,
-            HttpReq httpReq,
-            HttpRes httpRes,
-            CancellationToken token = default)
+        protected async Task ExecuteAsyncInternal(HttpClient httpClient, HttpReq httpReq, HttpRes httpRes, CancellationToken token = default)
         {
+            var cts = CancellationTokenSource.CreateLinkedTokenSource(token);
+            if (httpReq.Timeout.HasValue)
+            {
+                cts.CancelAfter(httpReq.Timeout.Value);
+            }
+            token = cts.Token;
             token.ThrowIfCancellationRequested();
+
             var responses = new List<HttpResponseMessage>();
             try
             {
-                if (httpReq.Timeout.HasValue && token.IsDefault())
-                {
-                    token = new CancellationTokenSource(httpReq.Timeout.Value).Token;
-                }
                 var httpRequest = GetHttpRequest(httpReq, _cookieContainer);
                 var response = await httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, token).DonotCapture();
                 responses.Add(response);
@@ -159,6 +158,7 @@ namespace FclEx.Http.Services
             }
             finally
             {
+                cts.Dispose();
                 responses.ForEach(m => m?.Dispose());
                 responses.Clear();
             }

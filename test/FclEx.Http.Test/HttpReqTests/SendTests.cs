@@ -30,8 +30,7 @@ namespace FclEx.Http.Test.HttpReqTests
 
         public static IList<IHttpService> Services => new IHttpService[]
         {
-            new HttpClientService(),
-            new HttpWebRequestService()
+            new HttpClientService()
         };
 
         public static IEnumerable<object[]> Cases => Services

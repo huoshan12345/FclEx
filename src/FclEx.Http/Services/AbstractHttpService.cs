@@ -26,10 +26,7 @@ namespace FclEx.Http.Services
         protected IWebProxyExt _webProxy = WebProxyExt.None;
         private ILogger _logger;
 
-        protected AbstractHttpService(
-            bool useCookie,
-            IWebProxyExt proxy = null,
-            ILoggerFactory loggerFactory = null)
+        protected AbstractHttpService(bool useCookie, IWebProxyExt proxy = null, ILoggerFactory loggerFactory = null)
         {
             WebProxy = proxy;
             loggerFactory ??= NullLoggerFactory.Instance;
@@ -40,18 +37,11 @@ namespace FclEx.Http.Services
 
         protected bool UseCookie => _cookieContainer != null;
 
-        public virtual void Dispose()
-        {
-        }
+        public virtual void Dispose() { }
 
-        protected abstract Task ExecuteAsyncInternal(
-            HttpReq httpReq,
-            HttpRes httpRes,
-            CancellationToken token);
+        protected abstract Task ExecuteAsyncInternal(HttpReq httpReq, HttpRes httpRes, CancellationToken token);
 
-        public async Task<HttpRes> ExecuteAsync(
-            HttpReq httpReq,
-            CancellationToken token = default)
+        public async Task<HttpRes> ExecuteAsync(HttpReq httpReq, CancellationToken token = default)
         {
             token.ThrowIfCancellationRequested();
             var watch = ValueStopwatch.StartNew();
@@ -165,6 +155,34 @@ namespace FclEx.Http.Services
                 {
                     Logger.LogWarning($"A cookie has been discarded. [{cookieStr}][{ex.Message}]");
                 }
+            }
+        }
+
+        protected static bool TryGetEncodingFromCharSet(string charset, out Encoding encoding)
+        {
+            encoding = null;
+
+            if (charset == null)
+                return false;
+
+            try
+            {
+                // Remove at most a single set of quotes.
+                if (charset.Length > 2 &&
+                    charset.First() == '\"' && charset.Last() == '\"')
+                {
+                    encoding = Encoding.GetEncoding(charset.Substring(1, charset.Length - 2));
+                }
+                else
+                {
+                    encoding = Encoding.GetEncoding(charset);
+                }
+
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
     }

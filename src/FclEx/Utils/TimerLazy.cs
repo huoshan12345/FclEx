@@ -10,7 +10,8 @@ namespace FclEx.Utils
     {
         private readonly Timer<T> _timer;
 
-        public TimerLazy(Func<T> valueFactory, LazyThreadSafetyMode mode, TimeSpan dueTime, TimeSpan period, bool disposeObj = false) : base(valueFactory, mode, disposeObj)
+        public TimerLazy(Func<T> valueFactory, LazyThreadSafetyMode mode, TimeSpan dueTime, TimeSpan period, bool disposeObj = false)
+            : base(valueFactory, mode, disposeObj)
         {
             _timer = NonCapturingTimer.Create<T>(o => Recreate(), default, dueTime, period);
         }

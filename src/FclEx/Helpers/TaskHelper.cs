@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FclEx.Helpers
@@ -43,18 +44,20 @@ namespace FclEx.Helpers
             return Task.WhenAll(tasks);
         }
 
-        public static Task Delay(int seconds)
+        public static Task Delay(int seconds, CancellationToken token = default)
         {
-            return seconds > 0
-                ? Task.Delay(seconds * 1000)
-                : Task.CompletedTask;
+            return DelayMilli(unchecked(seconds * 1000), token);
         }
 
-        public static Task DelayMilli(int milliSeconds)
+        public static async Task DelayMilli(int milliSeconds, CancellationToken token = default)
         {
-            return milliSeconds > 0
-                ? Task.Delay(milliSeconds)
-                : Task.CompletedTask;
+            if (milliSeconds <= 0)
+                return;
+            try
+            {
+                await Task.Delay(milliSeconds, token);
+            }
+            catch (TaskCanceledException) { }
         }
 
         /// <summary>

@@ -17,6 +17,13 @@ namespace FclEx.Utils
         public string StackTrace => Exception?.StackTrace;
         public IUnit Result { get; }
 
+        public void Deconstruct(out bool successful, out TimeSpan elapsed, out Exception exception)
+        {
+            successful = Successful;
+            exception = Exception;
+            elapsed = Elapsed;
+        }
+
         public OperateResult<TTarget> ToExplicit<TTarget>()
         {
             if (Successful)

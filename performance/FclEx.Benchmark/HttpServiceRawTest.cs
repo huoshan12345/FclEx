@@ -27,8 +27,7 @@ namespace FclEx.Benchmark
 
         public static IList<IHttpService> Services => new IHttpService[]
         {
-            new HttpClientService(),
-            new HttpWebRequestService()
+            new HttpClientService()
         };
 
         public static async ValueTask RawTest(int rounds)
