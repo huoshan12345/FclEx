@@ -9,14 +9,12 @@ namespace FclEx.Test.Utils
 {
     public class TimerLazyTests
     {
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public void Recreate_Test(bool dispose)
+        [Fact]
+        public void Recreate_Test()
         {
             var span = TimeSpan.FromMilliseconds(900);
 
-            var lazy = new TimerLazy<ReLazyTests.DisposableTester>(() => new ReLazyTests.DisposableTester(), span, dispose);
+            var lazy = new TimerLazy<ReLazyTests.DisposableTester>(() => new ReLazyTests.DisposableTester(), span);
             Assert.False(lazy.IsValueCreated);
             var value = lazy.Value;
             Assert.NotNull(value);
@@ -32,7 +30,6 @@ namespace FclEx.Test.Utils
             Assert.NotEqual(value, newValue);
 
             lazy.Dispose();
-            Assert.True(value.IsDisposed == dispose);
         }
     }
 }

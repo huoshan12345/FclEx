@@ -55,14 +55,12 @@ namespace FclEx.Http.Test.Extensions
         {
             var flag = false;
             var r = await OperateResult.ExcuteAsync(() => TimeoutRequestWrap())
-                .Ok(_ => flag = true)
                 .Error(e =>
                 {
                     flag = true;
                     Assert.IsType<OperationCanceledException>(e);
                 });
-            Assert.True(flag);
-            Assert.False(r.Successful);
+            Assert.False(!flag ^ r.Successful);
         }
 
         [Fact]
@@ -70,14 +68,12 @@ namespace FclEx.Http.Test.Extensions
         {
             var flag = false;
             var r = await OperateResult.ExcuteAsync(() => SuccessRequestWrap())
-                .Ok(_ => flag = true)
                 .Error(e =>
                 {
                     flag = true;
                     Assert.IsType<OperationCanceledException>(e);
                 });
-            Assert.True(flag);
-            Assert.True(r.Successful);
+            Assert.False(!flag ^ r.Successful);
         }
     }
 }

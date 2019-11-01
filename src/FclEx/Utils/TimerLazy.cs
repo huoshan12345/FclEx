@@ -8,26 +8,26 @@ namespace FclEx.Utils
 {
     public class TimerLazy<T> : ReLazy<T>
     {
-        private readonly Timer<T> _timer;
+        private readonly StatelessTimer _timer;
 
-        public TimerLazy(Func<T> valueFactory, LazyThreadSafetyMode mode, TimeSpan dueTime, TimeSpan period, bool disposeObj = false)
-            : base(valueFactory, mode, disposeObj)
+        public TimerLazy(Func<T> valueFactory, LazyThreadSafetyMode mode, TimeSpan dueTime, TimeSpan period, EventHandler<T> discardValueHandler = null)
+            : base(valueFactory, mode, discardValueHandler)
         {
-            _timer = NonCapturingTimer.Create<T>(o => Recreate(), default, dueTime, period);
+            _timer = NonCapturingTimer.Create(Recreate, dueTime, period);
         }
 
-        public TimerLazy(Func<T> valueFactory, TimeSpan dueTime, TimeSpan period, bool disposeObj = false)
-            : this(valueFactory, LazyThreadSafetyMode.None, dueTime, period, disposeObj)
-        {
-        }
-
-        public TimerLazy(Func<T> valueFactory, LazyThreadSafetyMode mode, TimeSpan period, bool disposeObj = false)
-            : this(valueFactory, mode, period, period, disposeObj)
+        public TimerLazy(Func<T> valueFactory, TimeSpan dueTime, TimeSpan period, EventHandler<T> discardValueHandler = null)
+            : this(valueFactory, LazyThreadSafetyMode.ExecutionAndPublication, dueTime, period, discardValueHandler)
         {
         }
 
-        public TimerLazy(Func<T> valueFactory, TimeSpan period, bool disposeObj = false)
-            : this(valueFactory, LazyThreadSafetyMode.None, period, period, disposeObj)
+        public TimerLazy(Func<T> valueFactory, LazyThreadSafetyMode mode, TimeSpan period, EventHandler<T> discardValueHandler = null)
+            : this(valueFactory, mode, period, period, discardValueHandler)
+        {
+        }
+
+        public TimerLazy(Func<T> valueFactory, TimeSpan period, EventHandler<T> discardValueHandler = null)
+            : this(valueFactory, LazyThreadSafetyMode.ExecutionAndPublication, period, period, discardValueHandler)
         {
         }
 

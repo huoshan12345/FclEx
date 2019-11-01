@@ -14,7 +14,7 @@ namespace FclEx.Http.Test.Services
     {
         public static IWebProxyExt[] ProxyList { get; } =
         {
-            new WebProxyExt(ProxyType.Http, "127.0.0.1", 1080),
+            GlobalConstants.DefaultProxy
             // new WebProxyExt(ProxyType.Https, "127.0.0.1", 1080),
             // new WebProxyExt(ProxyType.Socks5, "127.0.0.1", 1080),
         };

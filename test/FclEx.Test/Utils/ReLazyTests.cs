@@ -44,12 +44,10 @@ namespace FclEx.Test.Utils
             lazy.Dispose();
         }
 
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public void Recreate_Dispose_Test(bool dispose)
+        [Fact]
+        public void Recreate_Dispose_Test()
         {
-            var lazy = new ReLazy<DisposableTester>(() => new DisposableTester(), dispose);
+            var lazy = new ReLazy<DisposableTester>(() => new DisposableTester());
             Assert.False(lazy.IsValueCreated);
 
             var value = lazy.Value;
@@ -68,7 +66,6 @@ namespace FclEx.Test.Utils
             Assert.NotEqual(value, newValue);
 
             lazy.Dispose();
-            Assert.True(newValue.IsDisposed == dispose);
         }
     }
 }

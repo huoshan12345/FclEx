@@ -13,25 +13,13 @@ namespace FclEx.Http.Services
     public sealed class HttpClientService : AbstractHttpClientService
     {
         public static TimerLazy<HttpClientService> Default { get; } = new TimerLazy<HttpClientService>(() =>
-                new HttpClientService(false, null, null),
-                LazyThreadSafetyMode.ExecutionAndPublication,
-                TimeSpan.FromMinutes(2), false);
+                new HttpClientService(false, null, null), TimeSpan.FromMinutes(2));
 
-        private static readonly TimerLazy<HttpClient> _httpClient =
-            new TimerLazy<HttpClient>(() => CreateHttpClient(_funcOfHandler()),
-            LazyThreadSafetyMode.ExecutionAndPublication,
-            TimeSpan.FromMinutes(2), false);
-
-        private static Func<HttpMessageHandler> _funcOfHandler;
-
-        private static HttpMessageHandler CreateHandler(IWebProxyExt proxy)
-        {
-            return HttpHandlerHelper.Create(proxy);
-        }
+        private readonly TimerLazy<HttpClient> _httpClient;
 
         private static HttpClient CreateHttpClient(HttpMessageHandler handler)
         {
-            var httpClient = new HttpClient(handler, false) { Timeout = Timeout.InfiniteTimeSpan };
+            var httpClient = new HttpClient(handler, disposeHandler: false) { Timeout = Timeout.InfiniteTimeSpan };
             httpClient.DefaultRequestHeaders.Add(HttpKnownHeaderNames.UserAgent, HttpConstants.DefaultUserAgent);
             httpClient.DefaultRequestHeaders.Add("Connection", "keep-alive");
             return httpClient;
@@ -40,9 +28,9 @@ namespace FclEx.Http.Services
         protected override void SetProxy(IWebProxyExt proxy)
         {
             proxy ??= WebProxyExt.None;
-            if (Equals(WebProxy, proxy)) return;
+            if (Equals(_webProxy, proxy)) return;
             _webProxy = proxy;
-            _httpClient.Recreate();
+            _httpClient?.Recreate();
         }
 
         protected override Task ExecuteAsyncInternal(HttpReq httpReq, HttpRes httpRes, CancellationToken token)
@@ -53,7 +41,7 @@ namespace FclEx.Http.Services
         public HttpClientService(bool useCookie = true, IWebProxyExt proxy = null, ILoggerFactory loggerFactory = null)
             : base(useCookie, proxy, loggerFactory)
         {
-            _funcOfHandler = () => CreateHandler(WebProxy);
+            _httpClient = new TimerLazy<HttpClient>(() => CreateHttpClient(HttpHandlerHelper.Create(WebProxy)), TimeSpan.FromMinutes(2));
         }
 
         public override void Dispose()

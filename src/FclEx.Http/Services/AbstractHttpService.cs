@@ -23,7 +23,7 @@ namespace FclEx.Http.Services
         }
 
         protected readonly CookieContainer _cookieContainer;
-        protected IWebProxyExt _webProxy = WebProxyExt.None;
+        protected volatile IWebProxyExt _webProxy = WebProxyExt.None;
         private ILogger _logger;
 
         protected AbstractHttpService(bool useCookie, IWebProxyExt proxy = null, ILoggerFactory loggerFactory = null)
