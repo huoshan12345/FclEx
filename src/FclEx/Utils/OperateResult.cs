@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using Dawn;
 using Newtonsoft.Json;
 
 namespace FclEx.Utils
@@ -34,8 +35,8 @@ namespace FclEx.Utils
 
         internal OperateResult(int code, Exception ex, TimeSpan elapsed)
         {
-            Code = Check.NotEqual(code, OperateResultCodes.Success, nameof(code));
-            Exception = Check.NotNull(ex, nameof(ex));
+            Code = Guard.Argument(code, nameof(code)).NotEqual(OperateResultCodes.Success);
+            Exception = Guard.Argument(ex, nameof(ex)).NotNull();
             Elapsed = elapsed;
             Result = default;
         }

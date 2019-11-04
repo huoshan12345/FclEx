@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using Dawn;
 using FclEx.Utils;
 
 namespace FclEx
@@ -87,7 +88,7 @@ namespace FclEx
 
         public static object CreateObject(this Type type, params object[] args)
         {
-            Check.NotNull(type, nameof(type));
+            Guard.Argument(type, nameof(type)).NotNull();
 
             if (args.IsNullOrEmpty()) return Activator.CreateInstance(type);
 

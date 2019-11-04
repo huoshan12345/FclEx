@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Dawn;
 using FclEx.Utils;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -28,7 +29,7 @@ namespace FclEx.Consumers
             int retryPartCount = 4)
         {
             TypeName = GetType().ShortName();
-            _retryPartCount = Check.AtLeast(retryPartCount, nameof(retryPartCount), 2);
+            _retryPartCount = Guard.Argument(retryPartCount, nameof(retryPartCount)).Min(2);
             _batchConsumer = new BatchConsumer<T>(batchSize, batchSecondsTimeout, maxBatchRetryTimes);
             _batchConsumer.OnConsume += async (sender, list) =>
             {

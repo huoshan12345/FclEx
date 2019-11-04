@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Dawn;
 
 namespace FclEx.Utils
 {
@@ -35,8 +36,8 @@ namespace FclEx.Utils
         public PagedList(ICollection<T> items, int pageIndex, int pageSize, int totalItemCount)
             : base(items)
         {
-            Check.AtLeast(pageIndex, nameof(pageIndex), 0);
-            Check.AtLeast(totalItemCount, nameof(totalItemCount), 0);
+            Guard.Argument(pageIndex, nameof(pageIndex)).Min(0);
+            Guard.Argument(totalItemCount, nameof(totalItemCount)).Min(0);
 
             if (pageSize < 1 && totalItemCount > 0)
                 throw new ArgumentOutOfRangeException(nameof(pageSize), pageSize, "Value can not be less than 1.");

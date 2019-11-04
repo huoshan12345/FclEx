@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using Dawn;
 using FclEx.Extensions;
 using FclEx.Utils;
 
@@ -27,7 +28,7 @@ namespace FclEx.Http.Proxy
 
         private WebProxyExt(Uri uri, NetworkCredential credentials)
         {
-            Check.NotNull(uri, nameof(uri));
+            Guard.Argument(uri, nameof(uri)).NotNull();
             if (uri.Scheme == Uri.UriSchemeHttp)
                 Type = ProxyType.Http;
             else if (uri.Scheme == Uri.UriSchemeHttps)
@@ -77,7 +78,7 @@ namespace FclEx.Http.Proxy
                 if (value != null)
                 {
                     _credentials = value as NetworkCredential;
-                    Check.NotNull(_credentials, nameof(Credentials));
+                    Guard.Argument(_credentials, nameof(_credentials)).NotNull();
                 }
                 else
                 {

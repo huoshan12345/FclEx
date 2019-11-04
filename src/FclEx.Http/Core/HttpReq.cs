@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
+using Dawn;
 using FclEx.Extensions;
 using FclEx.Utils;
 
@@ -210,28 +211,28 @@ namespace FclEx.Http.Core
 
         public HttpReq AddQueryValue(string key, string value)
         {
-            Check.NotNull(key, nameof(key));
+            Guard.Argument(key, nameof(key)).NotNull();
             QueryMap[key.Trim()] = value.GetOrEmpty().Trim();
             return this;
         }
 
         public HttpReq AddFormValue(string key, string value)
         {
-            Check.NotNull(key, nameof(key));
+            Guard.Argument(key, nameof(key)).NotNull();
             FormMap[key.Trim()] = value.GetOrEmpty().Trim();
             return this;
         }
 
         public HttpReq AddHeader(string key, string value)
         {
-            Check.NotNull(key, nameof(key));
+            Guard.Argument(key, nameof(key)).NotNull();
             HeaderMap[key.Trim()] = value.GetOrEmpty().Trim();
             return this;
         }
 
         public HttpReq TryAddHeader(string key, string value)
         {
-            Check.NotNull(key, nameof(key));
+            Guard.Argument(key, nameof(key)).NotNull();
             var k = key.Trim();
             if (!HeaderMap.ContainsKey(k))
                 HeaderMap[k] = value.GetOrEmpty().Trim();

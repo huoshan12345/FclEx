@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using Dawn;
 using FclEx.Helpers;
 using FclEx.Utils;
 
@@ -152,15 +153,15 @@ namespace FclEx
             }
             return next;
         }
-        
+
         public static T ToUnmanagedStruct<T>(this byte[] bytes, ref int startIndex)
             where T : struct
         {
-            Check.NotNull(bytes, nameof(bytes));
-            Check.AtLeast(startIndex, nameof(startIndex), 0);
+            Guard.Argument(bytes, nameof(bytes)).NotNull();
+            Guard.Argument(startIndex, nameof(startIndex)).Min(0);
 
             var length = Marshal.SizeOf<T>();
-            Check.AtLeast(bytes.Length, nameof(bytes.Length), length + startIndex);
+            Guard.Argument(bytes.Length, nameof(bytes.Length)).Min(length + startIndex);
 
             using (var ptr = MarshalHelper.AllocHGlobal(length))
             {
@@ -182,13 +183,13 @@ namespace FclEx
         public static T[] ToUnmanagedStructs<T>(this byte[] bytes, ref int startIndex, int count)
             where T : struct
         {
-            Check.NotNull(bytes, nameof(bytes));
-            Check.AtLeast(startIndex, nameof(startIndex), 0);
-            Check.AtLeast(count, nameof(count), 1);
+            Guard.Argument(bytes, nameof(bytes)).NotNull();
+            Guard.Argument(startIndex, nameof(startIndex)).Min(0);
+            Guard.Argument(count, nameof(count)).Min(1);
 
             var length = Marshal.SizeOf<T>();
             var totalBytes = length * count;
-            Check.AtLeast(bytes.Length, nameof(bytes.Length), totalBytes + startIndex);
+            Guard.Argument(bytes.Length, nameof(bytes.Length)).Min(totalBytes + startIndex);
 
             var result = new T[count];
             using (var ptr = MarshalHelper.AllocHGlobal(length))
@@ -226,7 +227,7 @@ namespace FclEx
 
         public static byte[] ToUnmanagedBytes<T>(this IList<T> list) where T : struct
         {
-            Check.NotNullOrEmpty(list, nameof(list));
+            Guard.Argument(list, nameof(list)).NotNull().NotEmpty();
 
             var length = Marshal.SizeOf<T>();
             var totalBytes = length * list.Count;

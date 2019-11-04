@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
+using Dawn;
 using FclEx.Extensions;
 using FclEx.Utils;
 using MoreLinq.Extensions;
@@ -83,8 +84,7 @@ namespace FclEx
 
         private static JToken ToJToken(HashSet<string> values, DupPolicy policy)
         {
-            Check.NotNull(values, nameof(values));
-            if (values.Count == 0) throw new ArgumentException("the collection of values is empty", nameof(values));
+            Guard.Argument(values, nameof(values)).NotNull().NotEmpty();
             if (values.Count == 1) return JToken.FromObject(values.First());
             switch (policy)
             {

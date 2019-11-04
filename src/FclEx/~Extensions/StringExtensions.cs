@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
+using Dawn;
 using FclEx.Utils;
 using static System.Environment;
 
@@ -13,13 +14,13 @@ namespace FclEx
     {
         public static string TrimStart(this string text, string prefix)
         {
-            Check.NotNull(text, nameof(text));
+            Guard.Argument(text, nameof(text)).NotNull();
             return text.IsValid() && prefix.IsValid() && text.StartsWith(prefix) ? text.Substring(prefix.Length) : text;
         }
 
         public static string TrimEnd(this string text, string suffix)
         {
-            Check.NotNull(text, nameof(text));
+            Guard.Argument(text, nameof(text)).NotNull();
             return text.IsValid() && suffix.IsValid() && text.EndsWith(suffix) ? text.Substring(0, text.Length - suffix.Length) : text;
         }
 

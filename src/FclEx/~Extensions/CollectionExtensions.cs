@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Dawn;
 using FclEx.Utils;
 using MoreLinq;
 
@@ -73,8 +74,8 @@ namespace FclEx
         /// <returns>Returns True if added, returns False if not.</returns>
         public static bool AddIfNotContains<T>(this ICollection<T> source, T item)
         {
-            Check.NotNull(source, nameof(source));
- 
+            Guard.Argument(source, nameof(source)).NotNull();
+
             if (source.Contains(item)) return false;
 
             source.Add(item);

@@ -4,14 +4,14 @@ using Dawn;
 
 namespace FclEx.Utils
 {
-    public class Timer<T> : IDisposable
+    public class StatelessTimer : IDisposable
     {
         private Timer _timer;
 
-        public Timer(TimerCallback<T> callback, T state, TimeSpan dueTime, TimeSpan period)
+        public StatelessTimer(StatelessTimerCallback callback, TimeSpan dueTime, TimeSpan period)
         {
             Guard.Argument(callback, nameof(callback)).NotNull();
-            _timer = new Timer(s => callback(s.CastTo<T>()), state, dueTime, period);
+            _timer = new Timer(s => callback(), null, dueTime, period);
         }
 
         public void Dispose()

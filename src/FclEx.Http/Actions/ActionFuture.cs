@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Dawn;
 using FclEx.Http.Event;
 using FclEx.Utils;
 
@@ -50,7 +51,7 @@ namespace FclEx.Http.Actions
 
         public IActionFuture PushAction(Func<object[], IActor> func)
         {
-            Check.NotNull(func, nameof(func));
+            Guard.Argument(func, nameof(func)).NotNull();
             _queue.Add(func);
             return this;
         }
