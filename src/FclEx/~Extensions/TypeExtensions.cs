@@ -164,6 +164,16 @@ namespace FclEx
             return typeName + "<" + paraName + ">";
         }
 
+        /// <summary>
+        /// Get name of type with generic parameters with namespace.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static string LongName(this Type type)
+        {
+            return type.Namespace + type.ShortName();
+        }
+
         public static bool IsInteger(this Type type)
         {
             type = Nullable.GetUnderlyingType(type) ?? type;

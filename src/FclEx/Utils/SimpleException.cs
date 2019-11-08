@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using FclEx.Helpers;
 using static System.Environment;
 
 namespace FclEx.Utils
@@ -13,20 +14,17 @@ namespace FclEx.Utils
 
         private static string[] SkipMethodNames { get; } =
         {
-            "System.Runtime.CompilerServices.AsyncTaskMethodBuilder",
-            "System.Runtime.CompilerServices.AsyncMethodBuilderCore",
-            "System.Threading.Tasks.Task`1.InnerInvoke",
-            "System.Threading.ExecutionContext.RunInternal",
-            "System.Threading.Tasks.Task.ExecuteWithThreadLocal",
-            "System.Threading.Tasks.Task.ExecuteEntry",
-            "System.Threading.Tasks.SynchronizationContextTaskScheduler"
+            "System.Threading",
+            "System.Runtime.CompilerServices",
         };
 
         private static string GetStackTrace()
         {
-            var sb = new StringBuilder(byte.MaxValue);
+            using var disposable = ObjectPoolHelper.StringBuilderPool.GetAsDisposable();
+            var sb = disposable.Value;
+
             var stackTrace = new StackTrace(3);
-            var lines = stackTrace.ToString().Split(NewLineChars, StringSplitOptions.RemoveEmptyEntries);
+            var lines = stackTrace.ToString().Split(NewLineChars).Where(m => !m.IsNullOrWhiteSpace());
             var lastLine = string.Empty;
             var count = 1;
             foreach (var line in lines)
@@ -61,7 +59,6 @@ namespace FclEx.Utils
         {
         }
 
-
         public SimpleException(string msg, string stackTrace) : base(msg)
         {
             StackTrace = stackTrace ?? GetStackTrace();
@@ -76,12 +73,14 @@ namespace FclEx.Utils
 
         public override string ToString()
         {
-            var sb = new StringBuilder(GetType().ShortName(), 256);
-            sb.AppendLineIf(() => ": " + Message, !Message.IsNullOrEmpty());
+            using var disposable = ObjectPoolHelper.StringBuilderPool.GetAsDisposable();
+            var sb = disposable.Value;
+            sb.Append(GetType().LongName());
+            sb.AppendLine(Message.IsValid() ? ": " + Message : string.Empty);
             var p = InnerException;
             while (p != null)
             {
-                sb.AppendLine(" ---> " + p.GetType().ShortName());
+                sb.AppendLine(" ---> " + p.GetType().LongName());
                 p = p.InnerException;
             }
             sb.AppendLineIf(StackTrace, !StackTrace.IsNullOrEmpty());

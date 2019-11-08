@@ -178,7 +178,7 @@ namespace FclEx.Http
 
         public static Task<HttpRes> SendAsync(this HttpReq req, int retryTimes = 0)
         {
-            return HttpClientService.Default.Value.SendAsync(req, retryTimes, 0);
+            return HttpClientService.Default.SendAsync(req, retryTimes, 0);
         }
 
         public static Task<HttpRes> SendAsync(this HttpReq req, IHttpService service, int retryTimes = 0)

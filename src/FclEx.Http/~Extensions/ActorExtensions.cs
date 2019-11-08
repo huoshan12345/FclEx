@@ -45,7 +45,7 @@ namespace FclEx.Http
             Func<ActionEvent, bool> endCondition = null,
             CancellationToken token = default)
         {
-            endCondition = endCondition ?? (e => false);
+            endCondition ??= (e => false);
             ActionEvent result;
             do
             {

@@ -17,8 +17,7 @@ namespace FclEx.Http
     {
         public static HttpRes EnsureSuccessStatusCode(this HttpRes res)
         {
-            if (res.StatusCode != HttpStatusCode.Created
-                && res.StatusCode != HttpStatusCode.OK)
+            if (res.StatusCode.IsSuccess())
             {
                 throw new WebException($"call {res.Req.GetUrl()} with {res.Req.Method} return unsuccessful code: {res.StatusCode}/{res.StatusCode.ToInt()}");
             }

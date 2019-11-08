@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using System.Text;
+using Microsoft.Extensions.ObjectPool;
 
 namespace FclEx.Helpers
 {
@@ -40,5 +42,6 @@ namespace FclEx.Helpers
                 ? source.PadLeft(totalWidth, padChar)
                 : source.PadRight(totalWidth, padChar);
         }
+
     }
 }

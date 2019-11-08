@@ -30,7 +30,10 @@ namespace FclEx.Http.Actions
 
         protected virtual void PreCheckResponse(HttpRes response)
         {
-            response.EnsureSuccessStatusCode();
+            if (response.HasError)
+                response.Exception.ReThrow();
+            else
+                response.EnsureSuccessStatusCode();
         }
 
         protected override async Task<ActionEvent> ExecuteInternalAsync(CancellationToken token)
