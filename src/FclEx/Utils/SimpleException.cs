@@ -51,22 +51,14 @@ namespace FclEx.Utils
             return sb.ToString();
         }
 
-        public SimpleException(string msg) : this(msg, GetStackTrace())
+        public SimpleException(string msg) : base(msg)
         {
+            StackTrace = GetStackTrace();
         }
-
-        public SimpleException(string msg, Exception inner) : this(msg, GetStackTrace(), inner)
+        
+        public SimpleException(string msg, Exception inner) : base(msg, inner)
         {
-        }
-
-        public SimpleException(string msg, string stackTrace) : base(msg)
-        {
-            StackTrace = stackTrace ?? GetStackTrace();
-        }
-
-        public SimpleException(string msg, string stackTrace, Exception inner) : base(msg, inner)
-        {
-            StackTrace = stackTrace ?? GetStackTrace();
+            StackTrace = GetStackTrace();
         }
 
         public override string StackTrace { get; }

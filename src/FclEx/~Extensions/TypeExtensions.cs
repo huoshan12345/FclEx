@@ -171,7 +171,7 @@ namespace FclEx
         /// <returns></returns>
         public static string LongName(this Type type)
         {
-            return type.Namespace + type.ShortName();
+            return type.Namespace + "." + type.ShortName();
         }
 
         public static bool IsInteger(this Type type)
