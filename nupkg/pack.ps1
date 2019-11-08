@@ -8,7 +8,7 @@ Set-Location $packFolder
 Remove-Item *.nupkg
 
 foreach($path in $projectPaths) { 
-    & dotnet pack $path -c Release --no-restore --include-symbols -v q --output $packFolder
+    & dotnet pack $path -c Release --include-symbols -v q --output $packFolder
 	if ($Lastexitcode -ne 0)	{
 		throw "failed with exit code $LastExitCode"
 	}
