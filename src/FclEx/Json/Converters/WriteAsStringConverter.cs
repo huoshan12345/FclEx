@@ -4,13 +4,9 @@ using Newtonsoft.Json.Serialization;
 
 namespace FclEx.Json.Converters
 {
-    public class WriteAsStringConverter : JsonConverter
+    public class WriteAsStringConverter : ConverterWithDefault<WriteAsStringConverter>
     {
-        public override bool CanConvert(Type objectType)
-        {
-            return objectType.IsPrimitive;
-        }
-
+        public override bool CanConvert(Type objectType) => true;
         public override bool CanRead => false;
         public override bool CanWrite => true;
 
@@ -21,7 +17,22 @@ namespace FclEx.Json.Converters
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            writer.WriteValue(value.ToString());
+            if (value == null)
+            {
+                writer.WriteNull();
+            }
+            else
+            {
+                var type = value.GetType();
+                if (type == typeof(string) || type.IsPrimitive || type.IsNullable() && type.UnwarpNullable().IsPrimitive)
+                {
+                    writer.WriteValue(value);
+                }
+                else
+                {
+                    writer.WriteValue(JsonConvert.SerializeObject(value, DefaultSettings));
+                }
+            }
         }
     }
 }

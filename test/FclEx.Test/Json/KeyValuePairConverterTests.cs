@@ -24,7 +24,6 @@ namespace FclEx.Test.Json
         {
             public MyListWithCtor(IEnumerable<T> collection) : base(collection)
             {
-
             }
         }
 
