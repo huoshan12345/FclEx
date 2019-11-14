@@ -11,79 +11,79 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace FclEx.Consumers
 {
-    public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>
+    public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>,
+        ICancellationListener<TSelf, IReadOnlyList<T>>
         where TSelf : AbstractConsumer<TSelf, T>
     {
+        private ILogger _logger = NullLogger.Instance;
+        protected string TypeName { get; }
+        protected readonly AsyncLocker _locker = new AsyncLocker();
+        protected readonly BlockingCollection<ProcItem<T>> _items = new BlockingCollection<ProcItem<T>>();
+        protected volatile bool _isRunning;
+        protected volatile bool _isAddingCompleted;
+        protected volatile bool _isDisposed;
+        protected bool IsCompleteNoLock => (_isDisposed || _items.Count == 0) && _isAddingCompleted;
+        protected CancellationTokenSource _cts = new CancellationTokenSource();
+
         public ILogger Logger
         {
             get => _logger;
             set
             {
-                if (value != null && value != _logger)
-                    _logger = value;
+                value ??= NullLogger.Instance;
+                _logger = value;
             }
         }
         public Counter Counter { get; } = new Counter();
-        protected string TypeName { get; }
-        protected AsyncLocker _locker = new AsyncLocker();
-        protected CancellationTokenSource _cts = new CancellationTokenSource();
-        protected BlockingCollection<ProcItem<T>> _items = new BlockingCollection<ProcItem<T>>();
-        protected volatile bool _isRunning;
-        protected volatile bool _isAddingCompleted;
-        protected volatile bool _isDisposed;
-        private ILogger _logger = NullLogger.Instance;
-        public int Count => _items.Count;
-        public bool IsComplete => _items.Count == 0 && _isAddingCompleted;
-        protected event AsyncEventHandler<TSelf, ProcItem<T>> OnExceptionInternal
-            = (sender, args) => Task.CompletedTask;
-        protected event AsyncEventHandler<TSelf, ProcItem<T>> OnConsumeInternal
-            = (sender, e) => Task.CompletedTask;
+        public int Count => _locker.Do(() => _isDisposed ? 0 : _items.Count);
+        public bool IsComplete => _locker.Do(() => IsCompleteNoLock);
+        public event EventHandler<TSelf, IReadOnlyList<T>> CancellationHandler = (sender, list) => { };
 
         protected AbstractConsumer()
         {
             TypeName = GetType().ShortName();
         }
 
-        private bool TryGetItem(out ProcItem<T> item)
+        protected virtual void HandleCancelation()
         {
+            if (_isDisposed)
+                return;
+
+            var list = new List<T>();
             try
             {
-                if (_items.TryTake(out item, 10 * 1000, _cts.Token))
-                    return true;
+                while (!_isDisposed && _items.TryTake(out var item))
+                    list.Add(item.Item);
             }
-            catch (OperationCanceledException) { }
-            item = default;
-            return false;
+            catch (Exception ex)
+            {
+                Counter.IncreException();
+                Logger.LogError(ex, $"[{TypeName}]Error encountered when invoking {nameof(_items.TryTake)}: " + ex.Message);
+            }
+
+            if (list.IsEmpty())
+                return;
+
+            try
+            {
+                CancellationHandler.Invoke((TSelf)this, list);
+            }
+            catch (Exception ex)
+            {
+                Counter.IncreException();
+                Logger.LogError(ex, $"[{TypeName}]Error encountered when invoking {nameof(HandleCancelation)}: " + ex.Message);
+            }
         }
+
+        protected abstract Task ProcessAction();
 
         protected virtual async Task Process()
         {
             try
             {
-                while (!IsComplete && !_cts.IsCancellationRequested)
+                while (!IsCompleteNoLock && !_cts.IsCancellationRequested)
                 {
-                    if (!TryGetItem(out var item))
-                        continue;
-
-                    try
-                    {
-                        await OnConsumeInternal.InvokeAsync((TSelf)this, item).DonotCapture();
-                        Counter.IncreConsume();
-                    }
-                    catch (Exception ex)
-                    {
-                        Counter.IncreException();
-                        try
-                        {
-                            item = item.AddError(ex);
-                            await OnExceptionInternal.InvokeAsync((TSelf)this, item).DonotCapture();
-                        }
-                        catch (Exception e)
-                        {
-                            Counter.IncreException();
-                            Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(OnExceptionInternal)}: " + e.Message);
-                        }
-                    }
+                    await ProcessAction().DonotCapture();
                 }
             }
             catch (Exception e)
@@ -115,6 +115,12 @@ namespace FclEx.Consumers
                 throw new InvalidOperationException("The consumer has been running already.");
         }
 
+        protected void EnsureNotCompleteAdding()
+        {
+            if (_isAddingCompleted)
+                throw new InvalidOperationException("The consumer has been marked as complete with regards to additions.");
+        }
+
         public virtual Task Start(bool clear = false)
         {
             using (_locker.Lock())
@@ -125,7 +131,8 @@ namespace FclEx.Consumers
                 {
                     _items.Clear();
                 }
-                _cts = new CancellationTokenSource();
+                if (_cts.IsCancellationRequested)
+                    _cts = new CancellationTokenSource();
                 _isRunning = true;
                 return Task.Run(Process);
             }
@@ -133,6 +140,14 @@ namespace FclEx.Consumers
 
         public virtual void Add(T item)
         {
+            EnsureNotCompleteAdding();
+            EnsureNonDisposed();
+            _items.Add(new ProcItem<T>(item));
+        }
+
+        internal virtual void AddWithoutCheckingCompleteAdding(T item)
+        {
+            EnsureNonDisposed();
             _items.Add(new ProcItem<T>(item));
         }
 
@@ -140,6 +155,7 @@ namespace FclEx.Consumers
         {
             using (_locker.Lock())
             {
+                EnsureNonDisposed();
                 EnsureRunnning();
                 _isAddingCompleted = true;
             }
@@ -150,25 +166,26 @@ namespace FclEx.Consumers
             using (_locker.Lock())
             {
                 EnsureNonDisposed();
-                if (_isRunning)
-                {
-                    _cts.Cancel();
-                    _isRunning = false;
-                }
-
+                EnsureRunnning();
+                _cts.Cancel();
+                HandleCancelation();
+                _isRunning = false;
             }
         }
 
         public virtual void Dispose()
         {
-            _locker.DoubleCheckAndDo(() => !_isDisposed, () =>
-             {
-                 _cts.Cancel();
-                 _items.Dispose();
-                 _isRunning = false;
-                 _isDisposed = true;
-                 GC.SuppressFinalize(this);
-             });
+            EnsureNonDisposed();
+
+            _cts.Cancel();
+            HandleCancelation();
+
+            _cts.Dispose();
+            _items.Dispose();
+            _locker.Dispose();
+
+            _isRunning = false;
+            _isDisposed = true;
         }
     }
 }

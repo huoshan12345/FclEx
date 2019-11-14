@@ -5,26 +5,21 @@ using FclEx.Helpers;
 
 namespace FclEx.Utils
 {
-    public class ReLazy<T> : IDisposable
+    public class ReLazy<TSelf, T> : IDisposable where TSelf : ReLazy<TSelf, T>
     {
         protected readonly object _lock = new object();
         protected volatile Lazy<T> _lazy;
         protected volatile Func<T> _valueFactory;
-        protected readonly LazyThreadSafetyMode _mode;
+        protected readonly bool _isThreadSafe;
 
-        public event EventHandler<T> OnDiscardValue = t => { };
+        public event EventHandler<TSelf, T> OnDiscardValue = (sender, e) => { };
 
-        public ReLazy(Func<T> valueFactory, LazyThreadSafetyMode mode, EventHandler<T> discardValueHandler = null)
+        public ReLazy(Func<T> valueFactory, bool isThreadSafe = true, EventHandler<TSelf, T> discardValueHandler = null)
         {
             _valueFactory = valueFactory;
-            _mode = mode;
-            _lazy = new Lazy<T>(_valueFactory, _mode);
+            _isThreadSafe = isThreadSafe;
+            _lazy = new Lazy<T>(_valueFactory, isThreadSafe);
             OnDiscardValue += discardValueHandler;
-        }
-
-        public ReLazy(Func<T> valueFactory, EventHandler<T> discardValueHandler = null)
-            : this(valueFactory, LazyThreadSafetyMode.ExecutionAndPublication, discardValueHandler)
-        {
         }
 
         public T Value => _lazy.Value;
@@ -36,7 +31,7 @@ namespace FclEx.Utils
             {
                 DiscardValue();
                 _valueFactory = valueFactory;
-                _lazy = new Lazy<T>(valueFactory, _mode);
+                _lazy = new Lazy<T>(valueFactory, _isThreadSafe);
             });
         }
 
@@ -45,19 +40,27 @@ namespace FclEx.Utils
             LockHelper.DoubleCheckAndDo(() => _lazy.IsValueCreated, _lock, () =>
             {
                 DiscardValue();
-                _lazy = new Lazy<T>(_valueFactory, _mode);
+                _lazy = new Lazy<T>(_valueFactory, _isThreadSafe);
             });
         }
 
         protected virtual void DiscardValue()
         {
             if (_lazy.IsValueCreated)
-                OnDiscardValue(_lazy.Value);
+                OnDiscardValue((TSelf)this, _lazy.Value);
         }
 
         public virtual void Dispose()
         {
             DiscardValue();
+        }
+    }
+
+    public class ReLazy<T> : ReLazy<ReLazy<T>, T>
+    {
+        public ReLazy(Func<T> valueFactory, bool isThreadSafe = true, EventHandler<ReLazy<T>, T> discardValueHandler = null) 
+            : base(valueFactory, isThreadSafe, discardValueHandler)
+        {
         }
     }
 }

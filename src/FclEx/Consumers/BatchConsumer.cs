@@ -4,43 +4,40 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Dawn;
 using FclEx.Utils;
 using Microsoft.Extensions.Logging;
 using MoreLinq;
 
 namespace FclEx.Consumers
 {
-    public class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>
+    public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
+        IAsyncConsumer<BatchConsumer<T>, IReadOnlyList<T>>,
+        IDiscardListener<BatchConsumer<T>, IReadOnlyList<ProcItem<T>>>,
+        IExceptionListener<BatchConsumer<T>, IReadOnlyList<ProcItem<T>>>
     {
-        private readonly int _maxRetryTimes;
-        private readonly int _batchSecondsTimeout;
         private readonly int _batchSize;
-        private bool HasTimeout => _batchSecondsTimeout > 0;
+        private readonly int _maxRetryTimes;
+        private readonly TimeSpan _batchSecondsTimeout;
+        private bool HasTimeout => _batchSecondsTimeout > TimeSpan.Zero;
 
-        public BatchConsumer(int batchSize, int batchSecondsTimeout, int maxRetryTimes = 3)
+        public event AsyncEventHandler<BatchConsumer<T>, IReadOnlyList<T>> ConsumingHandler = (sender, list) => Task.CompletedTask;
+        public event EventHandler<BatchConsumer<T>, IReadOnlyList<ProcItem<T>>> DiscardHandler = (sender, list) => { };
+        public event EventHandler<BatchConsumer<T>, IReadOnlyList<ProcItem<T>>> ExceptionHandler = (sender, list) => { };
+
+        public BatchConsumer(int batchSize, TimeSpan batchTimeout, int maxRetryTimes = 3)
         {
-            if (batchSize < 1) throw new ArgumentOutOfRangeException(nameof(batchSize));
-            _batchSize = batchSize;
-
-            if (batchSecondsTimeout < 0) throw new ArgumentOutOfRangeException(nameof(batchSecondsTimeout));
-            _batchSecondsTimeout = batchSecondsTimeout;
-            _maxRetryTimes = maxRetryTimes;
+            _batchSize = Guard.Argument(batchSize, nameof(batchSize)).Min(1);
+            _batchSecondsTimeout = Guard.Argument(batchTimeout, nameof(batchTimeout)).Min(TimeSpan.Zero);
+            _maxRetryTimes = Guard.Argument(maxRetryTimes, nameof(maxRetryTimes)).Min(0);
         }
-
-        public event EventHandler<BatchConsumer<T>, IReadOnlyList<ProcItem<T>>> OnException
-            = (sender, e) => { };
-
-        public event AsyncEventHandler<BatchConsumer<T>, IReadOnlyList<T>> OnConsume
-            = (sender, e) => Task.CompletedTask;
-
-        public event EventHandler<BatchConsumer<T>, IReadOnlyList<ProcItem<T>>> OnDiscard = (sender, e) => { };
 
         private List<ProcItem<T>> GetItems()
         {
             var watch = ValueStopwatch.StartNew();
             var list = new List<ProcItem<T>>(_batchSize);
             var timeout = (HasTimeout ? 1 : 5) * 1000;
-            while (list.Count < _batchSize)
+            while (!_isDisposed && list.Count < _batchSize)
             {
                 try
                 {
@@ -53,75 +50,76 @@ namespace FclEx.Consumers
                 }
                 if (HasTimeout)
                 {
-                    var seconds = watch.GetElapsedTime().TotalSeconds;
-                    if (seconds >= _batchSecondsTimeout) break;
+                    var seconds = watch.GetElapsedTime();
+                    if (seconds >= _batchSecondsTimeout)
+                        break;
                 }
             }
             return list;
         }
 
-        private async Task Consume(List<ProcItem<T>> items)
+        private void HandleException(List<ProcItem<T>> items, Exception ex)
         {
+            Counter.IncreException();
             try
             {
-                if (items.IsNullOrEmpty()) return;
-                var list = items.Select(m => m.Item).ToArray();
-                await OnConsume.InvokeAsync(this, list).DonotCapture();
-                Counter.IncreConsume(list.Length);
-                return;
+                for (var i = 0; i < items.Count; i++)
+                    items[i] = items[i].AddError(ex);
+                ExceptionHandler.Invoke(this, items);
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
                 Counter.IncreException();
-                try
-                {
-                    for (var i = 0; i < items.Count; i++)
-                        items[i] = items[i].AddError(ex);
-                    OnException.Invoke(this, items);
-                }
-                catch (Exception e)
-                {
-                    Counter.IncreException();
-                    Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(OnException)}: " + e.Message);
-                }
+                Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(HandleException)}: " + e.Message);
             }
+        }
 
+        private void HandleDiscard(List<ProcItem<T>> items)
+        {
             try
             {
                 var (retry, discard) = items.PartitionToArray(m => m.ErrorTimes <= _maxRetryTimes);
                 retry.ForEach(m => _items.TryAdd(m));
                 if (discard.Any())
                 {
-                    OnDiscard.Invoke(this, discard);
+                    DiscardHandler.Invoke(this, discard);
                     Counter.IncreDiscard(discard.Length);
                 }
             }
             catch (Exception e)
             {
                 Counter.IncreException();
-                Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(Consume)}: " + e.Message);
+                Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(HandleDiscard)}: " + e.Message);
             }
         }
 
-        protected override async Task Process()
+        protected override async Task ProcessAction()
         {
+            List<ProcItem<T>> items = null;
             try
             {
-                while (!IsComplete && !_cts.IsCancellationRequested)
-                {
-                    var items = GetItems();
-                    await Consume(items).DonotCapture();
-                }
+                items = GetItems();
             }
             catch (Exception e)
             {
-                Counter.IncreException();
-                Logger.LogCritical(e, $"[{TypeName}]Error encountered when invoking {nameof(Process)}: " + e.Message);
+                Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(GetItems)}: " + e.Message);
             }
-            finally
+
+            if (items == null || items.Count == 0)
+                return;
+
+            try
             {
-                _locker.Do(() => _isRunning = false);
+                var list = items.Select(m => m.Item).ToList();
+                await ConsumingHandler.InvokeAsync(this, list).DonotCapture();
+                Counter.IncreConsume(list.Count);
+                return;
             }
+            catch (Exception ex)
+            {
+                HandleException(items, ex);
+            }
+            HandleDiscard(items);
         }
     }
 }

@@ -26,12 +26,24 @@ namespace FclEx
             }
         }
 
+        public static void Shuffle<T>(this IList<T> list, Random random = null)
+        {
+            var r = random ?? _random.Value;
+            for (var i = list.Count - 1; i > 0; --i)
+            {
+                var randomIndex = r.Next(i + 1);
+                T temp = list[i];
+                list[i] = list[randomIndex];
+                list[randomIndex] = temp;
+            }
+        }
+
         public static T GetAtOrDefault<T>(this IList<T> list, int index, T defaultValue = default(T))
         {
             return list != null && list.Count > index ? list[index] : defaultValue;
         }
 
-        public static T Random<T>(this IList<T> col, Random random = null)
+        public static T GetRandomly<T>(this IList<T> col, Random random = null)
         {
             var r = random ?? _random.Value;
             var i = r.Next(0, col.Count - 1);

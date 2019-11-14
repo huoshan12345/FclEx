@@ -33,4 +33,12 @@ namespace FclEx.Utils
             return new ProcItem<T1>(item) { ErrorTimes = ErrorTimes, Exception = Exception };
         }
     }
+
+    public static class ProcItemExtensions
+    {
+        public static bool HasError<T>(this ProcItem<T> item)
+        {
+            return item.ErrorTimes > 0;
+        }
+    }
 }

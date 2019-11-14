@@ -26,14 +26,14 @@ namespace FclEx.Test.Consumers
         public async Task Test()
         {
             const int maxRetry = 3;
-            var consumer = new BatchConsumer<int>(5, 1, maxRetry);
-            consumer.OnConsume += (sender, ints) =>
+            using var consumer = new BatchConsumer<int>(5, TimeSpan.FromSeconds(1), maxRetry);
+            consumer.ConsumingHandler += (sender, ints) =>
             {
                 _output.WriteLine("OnConsume");
                 throw new Exception();
             };
             var exceptions = 0;
-            consumer.OnException += (sender, args) =>
+            consumer.ExceptionHandler += (sender, args) =>
             {
                 exceptions++;
                 args.ForEach(m =>
@@ -43,7 +43,7 @@ namespace FclEx.Test.Consumers
                     Assert.IsAssignableFrom<Exception>(m.Exception);
                 });
             };
-            consumer.OnDiscard += (sender, args) => args.ForEach(m =>
+            consumer.DiscardHandler += (sender, args) => args.ForEach(m =>
             {
                 _output.WriteLine("OnDiscard");
                 Assert.NotNull(m.Exception);
@@ -51,7 +51,7 @@ namespace FclEx.Test.Consumers
             });
             var task = consumer.Start();
             var items = Enumerable.Range(1, 3).ToArray();
-            await items.ForEachAsync(async m =>
+            await items.ToSeriallyExecutedTask(async m =>
             {
                 consumer.Add(m);
                 await TaskHelper.DelayMilli(100);

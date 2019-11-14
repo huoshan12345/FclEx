@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using FclEx.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace FclEx.Consumers
@@ -16,5 +17,25 @@ namespace FclEx.Consumers
         void Add(T item);
         void CompleteAdding();
         void Stop();
+    }
+
+    public interface IExceptionListener<out TSelf, out T>
+    {
+        event EventHandler<TSelf, T> ExceptionHandler;
+    }
+
+    public interface ICancellationListener<out TSelf, out T>
+    {
+        event EventHandler<TSelf, T> CancellationHandler;
+    }
+
+    public interface IAsyncConsumer<out TSelf, out T>
+    {
+        event AsyncEventHandler<TSelf, T> ConsumingHandler;
+    }
+
+    public interface IDiscardListener<out TSelf, out T>
+    {
+        event EventHandler<TSelf, T> DiscardHandler;
     }
 }

@@ -7,7 +7,7 @@ using Dawn;
 
 namespace FclEx.Utils
 {
-    public class AsyncLocker : IDisposable
+    public sealed class AsyncLocker : IDisposable
     {
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
 

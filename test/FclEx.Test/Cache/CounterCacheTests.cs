@@ -19,7 +19,7 @@ namespace FclEx.Test.Cache
 
             for (var i = 0; i < numbers.Length * capacity; i++)
             {
-                var num = numbers.Random(random);
+                var num = numbers.GetRandomly(random);
                 dic[num] = dic[num].Get(-1) + 1;
                 var keys = cache.GetAllKeys();
                 var removeFlag = cache.IsFull() && !keys.Contains(num);

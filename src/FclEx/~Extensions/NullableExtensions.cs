@@ -7,28 +7,25 @@ namespace FclEx
     public static class NullableExtensions
     {
         /// <summary>
-        /// 功能同GetValueOrDefault(仅仅就是把方法名缩短而已)
+        /// Exactly same as GetValueOrDefault but with shorter name.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="t"></param>
         /// <param name="defaultValue"></param>
         /// <returns></returns>
-        public static T Get<T>(this T? t, T defaultValue = default)
-            where T : struct
+        public static T Get<T>(this T? t, T defaultValue = default) where T : struct
         {
             return t.GetValueOrDefault(defaultValue);
         }
 
-        public static bool IsValid<T>(this T? t)
-            where T : struct
+        public static bool IsValid<T>(this T? t) where T : struct
         {
-            return !EqualityComparer<T>.Default.Equals(t.Get(), default);
+            return !t.IsNullOrDefault();
         }
 
-        public static bool IsNotValid<T>(this T? t)
-            where T : struct
+        public static bool IsNullOrDefault<T>(this T? t) where T : struct
         {
-            return !t.IsValid();
+            return EqualityComparer<T>.Default.Equals(t.Get(), default);
         }
     }
 }

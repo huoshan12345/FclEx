@@ -52,9 +52,8 @@ namespace FclEx.Http.Test.Services
         [Fact]
         public async Task ReLazyTests()
         {
-            var service = new ReLazy<HttpClientService>(() => new HttpClientService(false),
-                LazyThreadSafetyMode.ExecutionAndPublication);
-            
+            var service = new ReLazy<HttpClientService>(() => new HttpClientService(false));
+
             var first = service.Value;
             var last = service.Value;
             for (var i = 0; i < 5; i++)
@@ -71,7 +70,7 @@ namespace FclEx.Http.Test.Services
             }
             Assert.NotEqual(first, last);
         }
-        
+
         [Fact]
         public async Task TimerLazyTests()
         {

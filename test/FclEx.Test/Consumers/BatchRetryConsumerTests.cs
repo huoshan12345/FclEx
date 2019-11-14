@@ -32,22 +32,22 @@ namespace FclEx.Test.Consumers
         {
             const int retryTimes = 3;
             var numbers = Enumerable.Range(1, 10).Select(m => new Tester { Number = m }).ToArray();
-            var consumer = new BatchRetryConsumer<Tester>(5, 1, retryTimes);
-            consumer.OnConsume += (sender, list) =>
+            var consumer = new BatchRetryConsumer<Tester>(5, TimeSpan.FromSeconds(1), retryTimes);
+            consumer.ConsumingHandler += (sender, list) =>
             {
-                _output.WriteLine(nameof(consumer.OnConsume));
+                _output.WriteLine(nameof(consumer.ConsumingHandler));
                 if (list.Any(m => m.Number % 3 == 0))
                     throw new Exception();
                 return Task.CompletedTask;
             };
-            consumer.OnException += (sender, args) =>
+            consumer.ExceptionHandler += (sender, args) =>
             {
-                _output.WriteLine(nameof(consumer.OnException));
+                _output.WriteLine(nameof(consumer.ExceptionHandler));
                 Assert.NotNull(args.Exception);
             };
-            consumer.OnDiscard += (sender, args) =>
+            consumer.DiscardHandler += (sender, args) =>
             {
-                _output.WriteLine(nameof(consumer.OnDiscard));
+                _output.WriteLine(nameof(consumer.DiscardHandler));
                 Assert.NotNull(args.Exception);
                 Assert.Equal(retryTimes, args.ErrorTimes);
             };
@@ -61,6 +61,35 @@ namespace FclEx.Test.Consumers
             Assert.Equal(numbers.Length - errors, consumer.Counter.Consume);
             Assert.Equal(errors * retryTimes, consumer.Counter.Exception);
             Assert.Equal(errors, consumer.Counter.Discard);
+        }
+
+        [Fact]
+        public async Task Dispose_AfterStart_Test()
+        {
+            var consumer = new BatchRetryConsumer<Tester>(5, TimeSpan.FromSeconds(1), 1);
+            consumer.ConsumingHandler += (sender, list) => TaskHelper.DelayMilli(100);
+            var task = consumer.Start();
+            await TaskHelper.Delay(1);
+
+            consumer.Dispose();
+            await TaskHelper.Delay(1);
+            Assert.True(task.IsCompleted);
+        }
+
+        [Fact]
+        public async Task Dispose_DuringConsuming_Test()
+        {
+            var consumer = new BatchRetryConsumer<Tester>(5, TimeSpan.FromSeconds(1), 1);
+            consumer.ConsumingHandler += (sender, list) => TaskHelper.Delay(3);
+            var task = consumer.Start();
+            consumer.Add(new Tester());
+            await TaskHelper.Delay(1);
+
+            consumer.Dispose();
+            await TaskHelper.Delay(1);
+            Assert.False(task.IsCompleted);
+            var finishTask = await Task.WhenAny(task, TaskHelper.Delay(10));
+            Assert.Equal(task, finishTask);
         }
     }
 }

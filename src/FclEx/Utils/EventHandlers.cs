@@ -8,8 +8,6 @@ namespace FclEx.Utils
 
     public delegate void EventHandler<in TSender, in TEventArgs>(TSender sender, TEventArgs e);
 
-    public delegate void EventHandler<in TSender>(TSender sender);
-
     public delegate void TimerCallback<in T>(T state);
 
     public delegate void StatelessTimerCallback();

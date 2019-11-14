@@ -10,103 +10,72 @@ using static System.Environment;
 
 namespace FclEx
 {
-    public static class StringExtensions
+    public static partial class StringExtensions
     {
-        public static string TrimStart(this string text, string prefix)
+        public static string GetUntil(this string str, string stopAt, StringComparison comp = StringComparison.Ordinal)
         {
-            Guard.Argument(text, nameof(text)).NotNull();
-            return text.IsValid() && prefix.IsValid() && text.StartsWith(prefix) ? text.Substring(prefix.Length) : text;
+            Guard.Argument(str, nameof(str)).NotNull();
+            Guard.Argument(stopAt, nameof(stopAt)).NotNull();
+
+            var location = str.IndexOf(stopAt, comp);
+            return location >= 0 ? str.Substring(0, location) : str;
         }
 
-        public static string TrimEnd(this string text, string suffix)
+        public static string GetWhile(this string str, string stopAt, StringComparison comp = StringComparison.Ordinal)
         {
-            Guard.Argument(text, nameof(text)).NotNull();
-            return text.IsValid() && suffix.IsValid() && text.EndsWith(suffix) ? text.Substring(0, text.Length - suffix.Length) : text;
+            Guard.Argument(str, nameof(str)).NotNull();
+            Guard.Argument(stopAt, nameof(stopAt)).NotNull();
+
+            var location = str.IndexOf(stopAt, comp);
+            return location >= 0 ? str.Substring(0, location + stopAt.Length) : str;
         }
 
-        public static bool IsNullOrEmpty(this string str) => string.IsNullOrEmpty(str);
-
-        public static bool IsNullOrWhiteSpace(this string str) => string.IsNullOrWhiteSpace(str);
-
-        public static string GetOrEmpty(this string str) => str ?? "";
-
-        public static string JoinWith(this IEnumerable<string> strs, string separator = "") => string.Join(separator, strs);
-
-        public static bool Contains(this string source, string toCheck, StringComparison comp)
+        public static string TrimEndWhile(this string str, string stopAt, StringComparison comp = StringComparison.Ordinal)
         {
-            return source != null && toCheck != null && source.IndexOf(toCheck, comp) >= 0;
+            Guard.Argument(str, nameof(str)).NotNull();
+            Guard.Argument(stopAt, nameof(stopAt)).NotNull();
+
+            var location = str.LastIndexOf(stopAt, comp);
+            return location >= 0 ? str.Substring(0, location) : str;
         }
 
-        public static bool ContainsAny(this string src, IEnumerable<string> items,
-            StringComparison comp = StringComparison.CurrentCulture)
-            => items.Any(m => src.Contains(m, comp));
-
-        public static bool ContainsAll(this string src, IEnumerable<string> items,
-            StringComparison comp = StringComparison.CurrentCulture)
-            => items.Any(m => src.Contains(m, comp));
-
-        public static string Format(this string str, params object[] args) => string.Format(str, args);
-
-        public static string Fmt(this string str, params object[] args) => string.Format(str, args);
-
-        public static string Fmt(this string str, object arg0) => string.Format(str, arg0);
-
-        public static string Fmt(this string str, object arg0, object arg1) => string.Format(str, arg0, arg1);
-
-        public static bool IsValid(this string x)
+        public static string TrimEndUntil(this string str, string stopAt, StringComparison comp = StringComparison.Ordinal)
         {
-            return !x.IsNullOrEmpty();
+            Guard.Argument(str, nameof(str)).NotNull();
+            Guard.Argument(stopAt, nameof(stopAt)).NotNull();
+
+            var location = str.LastIndexOf(stopAt, comp);
+            return location >= 0 ? str.Substring(0, location + stopAt.Length) : str;
         }
 
-        public static string IfEmpty(this string x, string y)
+        public static string TrimStartUntil(this string str, string stopAt, StringComparison comp = StringComparison.Ordinal)
         {
-            return x.IsValid() ? x : y;
+            Guard.Argument(str, nameof(str)).NotNull();
+            Guard.Argument(stopAt, nameof(stopAt)).NotNull();
+
+            var location = str.IndexOf(stopAt, comp);
+            return location >= 0 ? str.Substring(location) : str;
         }
 
-        public static string IfEmpty(this string x, string y, string z)
+        public static string TrimStartWhile(this string str, string stopAt, StringComparison comp = StringComparison.Ordinal)
         {
-            return x.IsValid()
-                ? x
-                : y.IsValid()
-                    ? y
-                    : z;
+            Guard.Argument(str, nameof(str)).NotNull();
+            Guard.Argument(stopAt, nameof(stopAt)).NotNull();
 
+            var location = str.IndexOf(stopAt, comp);
+            return location >= 0 ? str.Substring(location + stopAt.Length) : str;
         }
 
-        public static string LeftPart(this string strVal, char needle)
+        public static string TrimStart(this string str, string prefix, StringComparison comp = StringComparison.Ordinal)
         {
-            if (strVal == null) return null;
-            var pos = strVal.IndexOf(needle);
-            return pos == -1
-                ? strVal
-                : strVal.Substring(0, pos);
+            Guard.Argument(str, nameof(str)).NotNull();
+            return str.IsValid() && prefix.IsValid() && str.StartsWith(prefix, comp) ? str.Substring(prefix.Length) : str;
         }
 
-        public static string LeftPart(this string strVal, string needle)
+        public static string TrimEnd(this string str, string suffix, StringComparison comp = StringComparison.Ordinal)
         {
-            if (strVal == null) return null;
-            var pos = strVal.IndexOf(needle, StringComparison.OrdinalIgnoreCase);
-            return pos == -1
-                ? strVal
-                : strVal.Substring(0, pos);
-        }
-
-        public static string RightPart(this string strVal, char needle)
-        {
-            if (strVal == null) return null;
-            var pos = strVal.IndexOf(needle);
-            return pos == -1
-                ? strVal
-                : strVal.Substring(pos + 1);
-        }
-
-        public static string RightPart(this string strVal, string needle)
-        {
-            if (strVal == null) return null;
-            var pos = strVal.IndexOf(needle, StringComparison.OrdinalIgnoreCase);
-            return pos == -1
-                ? strVal
-                : strVal.Substring(pos + needle.Length);
+            Guard.Argument(str, nameof(str)).NotNull();
+            return str.IsValid() && suffix.IsValid() && str.EndsWith(suffix, comp) ? str.Substring(0, str.Length - suffix.Length) : str;
         }
     }
 }
