@@ -39,7 +39,7 @@ namespace FclEx.Utils
             var watch = ValueStopwatch.StartNew();
             try
             {
-                await action().TimeoutAfter(timeout).DonotCapture();
+                await action.TimeoutAfter(timeout).DonotCapture();
                 return CreateSuccess(watch.GetElapsedTime());
             }
             catch (Exception ex)
@@ -67,7 +67,7 @@ namespace FclEx.Utils
             var watch = ValueStopwatch.StartNew();
             try
             {
-                var result = await action().TimeoutAfter(timeout).DonotCapture();
+                var result = await action.TimeoutAfter(timeout).DonotCapture();
                 return CreateSuccess(result, watch.GetElapsedTime());
             }
             catch (Exception ex)

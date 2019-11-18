@@ -44,11 +44,11 @@ namespace FclEx
             return NoSyncContextScope.Run(task);
         }
 
-        public static async Task<TResult> TimeoutAfter<TResult>(this Task<TResult> task, TimeSpan timeout)
+        internal static async Task<TResult> TimeoutAfter<TResult>(this Func<Task<TResult>> task, TimeSpan timeout)
         {
             using var cts = new CancellationTokenSource();
             var delayTask = Task.Delay(timeout, cts.Token);
-            var completedTask = await Task.WhenAny(delayTask, Task.Run(() => task)).DonotCapture();
+            var completedTask = await Task.WhenAny(delayTask, Task.Run(task)).DonotCapture();
             if (completedTask != delayTask)
             {
                 cts.Cancel();
@@ -60,11 +60,11 @@ namespace FclEx
             }
         }
 
-        public static async Task TimeoutAfter(this Task task, TimeSpan timeout)
+        internal static async Task TimeoutAfter(this Func<Task> task, TimeSpan timeout)
         {
             using var cts = new CancellationTokenSource();
             var delayTask = Task.Delay(timeout, cts.Token);
-            var completedTask = await Task.WhenAny(delayTask, Task.Run(() => task)).DonotCapture();
+            var completedTask = await Task.WhenAny(delayTask, Task.Run(task)).DonotCapture();
             if (completedTask != delayTask)
             {
                 cts.Cancel();
