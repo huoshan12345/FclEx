@@ -19,7 +19,7 @@ namespace FclEx
         {
             return Task.WhenAll(tasks);
         }
-        
+
         public static ConfiguredTaskAwaitable DonotCapture(this Task task)
         {
             return task.ConfigureAwait(false);
@@ -47,30 +47,32 @@ namespace FclEx
         public static async Task<TResult> TimeoutAfter<TResult>(this Task<TResult> task, TimeSpan timeout)
         {
             using var cts = new CancellationTokenSource();
-            var completedTask = await Task.WhenAny(task, TaskHelper.Delay(timeout, cts.Token));
-            if (completedTask == task)
+            var delayTask = Task.Delay(timeout, cts.Token);
+            var completedTask = await Task.WhenAny(delayTask, Task.Run(() => task)).DonotCapture();
+            if (completedTask != delayTask)
             {
                 cts.Cancel();
-                return await task.DonotCapture(); 
+                return await ((Task<TResult>)completedTask).DonotCapture();
             }
             else
             {
-                throw new TimeoutException("The operation has timed out.");
+                throw new TimeoutException($"Task timed out after {timeout}");
             }
         }
 
         public static async Task TimeoutAfter(this Task task, TimeSpan timeout)
         {
             using var cts = new CancellationTokenSource();
-            var completedTask = await Task.WhenAny(task, TaskHelper.Delay(timeout, cts.Token));
-            if (completedTask == task)
+            var delayTask = Task.Delay(timeout, cts.Token);
+            var completedTask = await Task.WhenAny(delayTask, Task.Run(() => task)).DonotCapture();
+            if (completedTask != delayTask)
             {
                 cts.Cancel();
-                await task.DonotCapture();
+                await completedTask.DonotCapture();
             }
             else
             {
-                throw new TimeoutException("The operation has timed out.");
+                throw new TimeoutException($"Task timed out after {timeout}");
             }
         }
     }

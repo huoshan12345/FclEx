@@ -6,7 +6,7 @@ using Xunit;
 
 namespace FclEx.Test.Utils
 {
-    public partial class OperateResultTests
+    partial class OperateResultTests
     {
         [Fact]
         public void TestExcuteOkAfterOk()

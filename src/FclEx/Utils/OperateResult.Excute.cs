@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using FclEx.Helpers;
 
 namespace FclEx.Utils

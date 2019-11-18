@@ -60,7 +60,7 @@ namespace FclEx.Helpers
                 return;
             try
             {
-                await Task.Delay(span, token);
+                await Task.Delay(span, token).DonotCapture();
             }
             catch (TaskCanceledException) { }
         }

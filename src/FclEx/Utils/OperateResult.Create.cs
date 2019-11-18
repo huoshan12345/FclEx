@@ -18,6 +18,8 @@ namespace FclEx.Utils
 
         public static OperateResult NotImplemented { get; } = CreateNotImplemented();
 
+        public static OperateResult Cancel { get; } = CreateCancel();
+
         public static OperateResult CreateCancel(Exception ex, TimeSpan elapsed = default) => new OperateResult(OperateResultCodes.Cancel, ex, elapsed);
 
         public static OperateResult CreateCancel(TimeSpan elapsed = default) => CreateError(OperateResultCodes.Cancel, "the operate was canceled", elapsed);
