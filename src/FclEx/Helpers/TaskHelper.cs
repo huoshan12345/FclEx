@@ -46,16 +46,21 @@ namespace FclEx.Helpers
 
         public static Task Delay(int seconds, CancellationToken token = default)
         {
-            return DelayMilli(unchecked(seconds * 1000), token);
+            return Delay(TimeSpan.FromSeconds(seconds), token);
         }
 
-        public static async Task DelayMilli(int milliSeconds, CancellationToken token = default)
+        public static Task DelayMilli(int milliSeconds, CancellationToken token = default)
         {
-            if (milliSeconds <= 0)
+            return Delay(TimeSpan.FromMilliseconds(milliSeconds), token);
+        }
+
+        public static async Task Delay(TimeSpan span, CancellationToken token = default)
+        {
+            if (span.Ticks <= 0)
                 return;
             try
             {
-                await Task.Delay(milliSeconds, token);
+                await Task.Delay(span, token);
             }
             catch (TaskCanceledException) { }
         }

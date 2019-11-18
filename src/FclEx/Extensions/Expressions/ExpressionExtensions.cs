@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Text;
 using FclEx.Utils;
 
-namespace FclEx.Extensions
+namespace FclEx.Extensions.Expressions
 {
     public static class ExpressionExtensions
     {
-        public static TSource SetPropIf<TSource, TProperty>(this TSource source,
-            Expression<Func<TSource, TProperty>> propertyLambda,
+        public static TSource SetPropIf<TSource, TProperty>(this TSource source, Expression<Func<TSource, TProperty>> propertyLambda,
             Func<TSource, TProperty, bool> condition, TProperty newValue)
         {
             if (condition == null) throw new ArgumentNullException(nameof(condition));
@@ -20,16 +17,14 @@ namespace FclEx.Extensions
             return source;
         }
 
-        public static TSource SetPropIf<TSource, TProperty>(this TSource source,
-            Expression<Func<TSource, TProperty>> propertyLambda,
+        public static TSource SetPropIf<TSource, TProperty>(this TSource source, Expression<Func<TSource, TProperty>> propertyLambda,
             Func<TProperty, bool> condition, TProperty newValue)
         {
             return SetPropIf(source, propertyLambda, (s, p) => condition(p), newValue);
         }
 
         public static TSource SetProp<TSource, TProperty>(this TSource source,
-            Expression<Func<TSource, TProperty>> propertyLambda,
-            TProperty newValue)
+            Expression<Func<TSource, TProperty>> propertyLambda, TProperty newValue)
         {
             var propertyInfo = ExpressionUtil.GetProp(propertyLambda);
             propertyInfo.SetValue(source, newValue);
@@ -37,22 +32,25 @@ namespace FclEx.Extensions
         }
 
         public static TSource SetPropIfNull<TSource, TProperty>(this TSource source,
-            Expression<Func<TSource, TProperty>> propertyLambda,
-            TProperty newValue)
+            Expression<Func<TSource, TProperty>> propertyLambda, TProperty newValue)
         {
             return SetPropIf(source, propertyLambda, (s, p) => p == null, newValue);
         }
 
+        public static TSource SetPropIfNullOrEmpty<TSource>(this TSource source,
+            Expression<Func<TSource, string>> propertyLambda, string newValue)
+        {
+            return SetPropIf(source, propertyLambda, (s, p) => p.IsNullOrEmpty(), newValue);
+        }
+
         public static TSource SetPropIfDefault<TSource, TProperty>(this TSource source,
-            Expression<Func<TSource, TProperty>> propertyLambda,
-            TProperty newValue)
+            Expression<Func<TSource, TProperty>> propertyLambda, TProperty newValue)
         {
             return SetPropIf(source, propertyLambda, (s, p) => p.IsDefault(), newValue);
         }
 
-        public static TSource UpdateProp<TSource, TProperty>(this TSource source,
-            Expression<Func<TSource, TProperty>> propertyLambda,
-            TProperty newValue,
+        public static TSource UpdatePropIf<TSource, TProperty>(this TSource source,
+            Expression<Func<TSource, TProperty>> propertyLambda, TProperty newValue,
             Func<TProperty, bool> newValueCondition = null)
         {
             if (newValueCondition == null || newValueCondition(newValue))
@@ -63,11 +61,10 @@ namespace FclEx.Extensions
             return source;
         }
 
-        public static TSource UpdatePropIfNotEmpty<TSource>(this TSource source,
-            Expression<Func<TSource, string>> propertyLambda,
-            string newValue)
+        public static TSource UpdatePropIfValid<TSource>(this TSource source,
+            Expression<Func<TSource, string>> propertyLambda, string newValue)
         {
-            return UpdateProp(source, propertyLambda, newValue, n => !n.IsNullOrEmpty());
+            return UpdatePropIf(source, propertyLambda, newValue, n => n.IsValid());
         }
     }
 }

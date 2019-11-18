@@ -21,7 +21,7 @@ namespace FclEx.Cache
             if (capacity > 0)
                 _capacity = capacity;
 
-            comparer = comparer ?? EqualityComparer<TKey>.Default;
+            comparer ??= EqualityComparer<TKey>.Default;
             _lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
             _dic = new Dictionary<TKey, LinkedListNode<KeyValuePair<TKey, TValue>>>(comparer);
             _list = new LinkedList<KeyValuePair<TKey, TValue>>();

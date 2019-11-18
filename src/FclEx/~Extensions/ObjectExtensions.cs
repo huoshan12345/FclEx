@@ -13,7 +13,7 @@ namespace FclEx
     public static class ObjectExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsNull<T>(this T obj) => obj == null;
+        public static bool IsNull<T>(this T obj) => obj is null;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsNotNull<T>(this T obj) => !obj.IsNull();
@@ -34,12 +34,6 @@ namespace FclEx
         public static TTarget CastTo<T, TTarget>(this T obj)
         {
             return ExpressionTypeCaster.Instance.CastTo<T, TTarget>(obj);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ToTrimStringOrNull(this object obj)
-        {
-            return obj?.ToString().Trim();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -80,7 +74,7 @@ namespace FclEx
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T EnsureNotNull<T>(this T obj)
+        public static T GetOrEmpty<T>(this T obj)
             where T : class, new()
         {
             return obj ?? new T();

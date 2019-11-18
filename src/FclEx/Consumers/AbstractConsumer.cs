@@ -141,8 +141,7 @@ namespace FclEx.Consumers
         public virtual void Add(T item)
         {
             EnsureNotCompleteAdding();
-            EnsureNonDisposed();
-            _items.Add(new ProcItem<T>(item));
+            AddWithoutCheckingCompleteAdding(item);
         }
 
         internal virtual void AddWithoutCheckingCompleteAdding(T item)

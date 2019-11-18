@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using System.Linq;
-using System.Text;
 using FclEx.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace FclEx.Extensions
+namespace FclEx.Extensions.Json
 {
     public static class JsonExtensions
     {
@@ -41,18 +38,21 @@ namespace FclEx.Extensions
 
         public static bool IsPossibleJson(this string data)
         {
-            return (!data.IsNullOrEmpty() && (data.First() == '{' && data.Last() == '}'
-                                              || data.First() == '[' && data.Last() == ']'));
+            return data.IsValid() && data.Length >= 2
+                                   && (data.First() == '{' && data.Last() == '}'
+                                       || data.First() == '[' && data.Last() == ']');
         }
 
         public static bool IsPossibleJObject(this string data)
         {
-            return (!data.IsNullOrEmpty() && (data.First() == '{' && data.Last() == '}'));
+            return data.IsValid() && data.Length >= 2
+                                  && (data.First() == '{' && data.Last() == '}');
         }
 
         public static bool IsPossibleJArray(this string data)
         {
-            return (!data.IsNullOrEmpty() && (data.First() == '[' && data.Last() == ']'));
+            return data.IsValid() && data.Length >= 2
+                                  && (data.First() == '[' && data.Last() == ']');
         }
 
         public static bool TryToJToken(this string str, out JToken token)
