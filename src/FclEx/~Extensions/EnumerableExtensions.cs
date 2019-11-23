@@ -46,5 +46,10 @@ namespace FclEx
             comparer ??= EqualityComparer<T>.Default;
             return source.Where(m => !comparer.Equals(m, item));
         }
+
+        public static SortedSet<T> ToSortedSet<T>(this IEnumerable<T> enumerable, IComparer<T> comparer = null)
+        {
+            return new SortedSet<T>(enumerable, comparer ?? Comparer<T>.Default);
+        }
     }
 }

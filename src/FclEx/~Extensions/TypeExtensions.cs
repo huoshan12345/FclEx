@@ -171,7 +171,40 @@ namespace FclEx
         /// <returns></returns>
         public static string LongName(this Type type)
         {
-            return type.Namespace + "." + type.ShortName();
+            return type.GetTypePrefix() + type.ShortName();
+        }
+
+        private static string GetTypePrefix(this Type type)
+        {
+            if (type.IsNested)
+            {
+                var t = type.DeclaringType;
+                return type.DeclaringType.GetTypePrefix() + t.ShortName() + ".";
+            }
+            else
+            {
+                if (type.IsGenericParameter)
+                {
+                    if (type.DeclaringMethod != null)
+                    {
+                        return type.DeclaringType.LongName()
+                               + "." + type.DeclaringMethod.Name
+                               + ".";
+                    }
+                    else
+                    {
+                        return type.DeclaringType.LongName() + ".";
+                    }
+                }
+                if (type.Namespace == null)
+                {
+                    return "global::";
+                }
+                else
+                {
+                    return type.Namespace + ".";
+                }
+            }
         }
 
         public static bool IsInteger(this Type type)
@@ -185,6 +218,30 @@ namespace FclEx
                    || type == typeof(ushort)
                    || type == typeof(byte)
                    || type == typeof(sbyte);
+        }
+
+        public static bool IsNumeric(this Type type)
+        {
+            type = Nullable.GetUnderlyingType(type) ?? type;
+            return type == typeof(long)
+                   || type == typeof(ulong)
+                   || type == typeof(int)
+                   || type == typeof(uint)
+                   || type == typeof(short)
+                   || type == typeof(ushort)
+                   || type == typeof(byte)
+                   || type == typeof(sbyte)
+                   || type == typeof(float)
+                   || type == typeof(double)
+                   || type == typeof(decimal);
+        }
+
+        public static bool IsFloatingPoint(this Type type)
+        {
+            type = Nullable.GetUnderlyingType(type) ?? type;
+            return type == typeof(float)
+                   || type == typeof(double)
+                   || type == typeof(decimal);
         }
 
         public static bool IsSubclassOfRawGeneric(this Type toCheck, Type generic)
