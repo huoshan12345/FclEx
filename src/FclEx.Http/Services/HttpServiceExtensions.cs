@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
+using Dawn;
 using FclEx.Helpers;
 using FclEx.Http.Core;
-using FclEx.Http.Services;
+using FclEx.Http.Core.Cookies;
 using FclEx.Utils;
 
-namespace FclEx.Http
+namespace FclEx.Http.Services
 {
     public static class HttpServiceExtensions
     {
@@ -73,21 +74,42 @@ namespace FclEx.Http
         public static void AddCookies(this IHttpService http, IEnumerable<Cookie> cookies, string url = null)
         {
             var uri = url == null ? null : new Uri(url);
-            foreach (var cookie in cookies)
-            {
-                http.AddCookie(cookie, uri);
-            }
+            http.AddCookies(cookies, uri);
         }
 
+        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         public static void AddCookies(this IHttpService http, IEnumerable<Cookie> cookies, Uri uri)
         {
+            Guard.Argument(http, nameof(http)).NotNull();
+            Guard.Argument(cookies, nameof(cookies)).NotNull();
             foreach (var cookie in cookies)
-            {
                 http.AddCookie(cookie, uri);
-            }
         }
 
-        public static void AddCookies(this IHttpService http, CookieCollection cc, string url = null) => AddCookies(http, cc.OfType<Cookie>(), url);
+        public static void AddCookies(this IHttpService http, IEnumerable<SimpleCookie> cookies, Uri uri)
+            => http.AddCookies(cookies.Select(m => m.ToCookie()), uri);
+
+        public static void AddCookies(this IHttpService http, IEnumerable<SimpleCookie> cookies, string url = null)
+        {
+            var uri = url == null ? null : new Uri(url);
+            http.AddCookies(cookies, uri);
+        }
+
+        public static IReadOnlyList<SimpleCookie> GetAllSimpleCookies(this IHttpService http)
+        {
+            Guard.Argument(http, nameof(http)).NotNull();
+            return http.GetAllCookies().Select(m => m.ToSimpleCookie()).ToList();
+        }
+
+        public static void AddCookie(this IHttpService http, SimpleCookie cookie)
+        {
+            Guard.Argument(http, nameof(http)).NotNull();
+            Guard.Argument(cookie, nameof(cookie)).NotNull();
+            http.AddCookie(cookie.ToCookie());
+        }
+
+        public static void AddCookies(this IHttpService http, CookieCollection cc, string url = null) 
+            => AddCookies(http, cc.OfType<Cookie>(), url);
 
         public static async Task<OperateResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, Uri uri, HttpMethodType method = HttpMethodType.Get)
         {

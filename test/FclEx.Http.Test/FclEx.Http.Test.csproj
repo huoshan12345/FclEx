@@ -14,4 +14,10 @@
     <ProjectReference Include="..\..\src\FclEx.Http\FclEx.Http.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="~TestData\SimpleCookies.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

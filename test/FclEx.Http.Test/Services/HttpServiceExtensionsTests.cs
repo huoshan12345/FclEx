@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using FclEx.Http.Services;
 using FclEx.Utils;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace FclEx.Http.Test.Extensions
+namespace FclEx.Http.Test.Services
 {
     public class HttpServiceExtensionsTests
     {
