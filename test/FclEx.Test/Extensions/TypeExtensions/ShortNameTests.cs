@@ -35,7 +35,15 @@ namespace FclEx.Test.Extensions.TypeExtensions
                     Assert.Equal(simpleName, shortName);
                 }
             }
+        }
 
+        [Fact]
+        public void GenericParameter_Test()
+        {
+            var type = typeof(List<>).GetGenericArguments().First();
+            Assert.True(type.IsGenericParameter);
+            var shortName = type.ShortName();
+            Assert.NotNull(shortName);
         }
     }
 }
