@@ -31,7 +31,7 @@ namespace FclEx
                 var settings = new JsonSerializerSettings
                 {
                     DateTimeZoneHandling = k.DateTimeZoneHandling,
-                    Formatting = Formatting.None,
+                    Formatting = k.Formatting,
                     NullValueHandling = k.IgnoreNull ? NullValueHandling.Ignore : NullValueHandling.Include,
                 };
                 if (k.DateTimeFormat.IsValid())
