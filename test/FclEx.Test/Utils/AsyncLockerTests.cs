@@ -50,7 +50,7 @@ namespace FclEx.Test.Utils
                 using (await locker.LockAsync(cts.Token))
                 {
                     ++executeTimes;
-                    await TaskHelper.DelayMilli(500);
+                    await TaskHelper.DelayMilli(1000);
                 }
             }));
             await Assert.ThrowsAsync<OperationCanceledException>(() => tasks.WhenAll());
@@ -65,10 +65,9 @@ namespace FclEx.Test.Utils
             const int count = 10;
             var tasks = Enumerable.Range(1, count).Select(m => Task.Run(async () =>
             {
-                using (await locker.LockAsync(TimeSpan.FromSeconds(0.5)))
+                using (await locker.LockAsync(TimeSpan.FromSeconds(1)))
                 {
                     ++executeTimes;
-                    await TaskHelper.DelayMilli(500);
                 }
             }));
             await tasks.WhenAll(); // no exception here

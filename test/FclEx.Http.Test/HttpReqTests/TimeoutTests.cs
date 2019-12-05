@@ -13,40 +13,19 @@ namespace FclEx.Http.Test.HttpReqTests
 {
     public class TimeoutTests
     {
-        private readonly ITestOutputHelper _output;
-        public TimeoutTests(ITestOutputHelper output)
-        {
-            _output = output;
-        }
-
-        public static string[] Urls { get; } =
-        {
-            "http://10.10.213.134/config/lookup",
-            "http://10.10.213.134",
-            "http://10.10.216.96/config/lookup",
-            "http://10.10.216.96"
-        };
-
-        public static int[] Timeouts { get; } = { 3, 5, 7 };
-
-        public static IEnumerable<object[]> CtorCases { get; } =
-            Urls.SelectMany(m => Timeouts, (u, m) => new object[] { u, m });
-
         [Theory]
-        [MemberData(nameof(CtorCases))]
-        public async Task TestCtor(string url, int timeout)
+        [InlineData(1)]
+        [InlineData(3)]
+        public async Task TestCtor(int timeout)
         {
-            var req = HttpReq.Get(url).Timeout(timeout * 1000);
+            var req = HttpReq.Get("http://127.0.0.0").Timeout(timeout * 1000);
 
-            var time = await SimpleWatch.DoAsync(async () => await req.SendAsync());
-            _output.WriteLine("耗时:" + time.TimeSpan.TotalSeconds + "秒");
-            if (time.Ret.HasError)
-            {
-                _output.WriteLine("异常类型:" + time.Ret.Exception.GetInnermost().GetType());
-                if (time.Ret.Exception is WebException e && e.Status == WebExceptionStatus.Timeout)
-                    Assert.True(time.TimeSpan.TotalSeconds > timeout
-                                && time.TimeSpan.TotalSeconds < timeout + 1);
-            }
+            var (successful, elapsed, _, exception) = await OperateResult.ExcuteAsync(async () => await req.SendAsync().ThrowIfError());
+            Assert.False(successful);
+            Assert.IsType<TaskCanceledException>(exception);
+            var seconds = elapsed.TotalSeconds;
+            Assert.True(seconds < timeout + 0.2);
+            Assert.True(seconds > timeout - 0.2);
         }
     }
 }
