@@ -2,9 +2,9 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace FclEx.Utils
+namespace FclEx.Helpers
 {
-    public static class ExpressionUtil
+    public static class ExpressionHelper
     {
         public static PropertyInfo GetProp<TSource, TProperty>(Expression<Func<TSource, TProperty>> propertyLambda)
         {

@@ -16,7 +16,7 @@ namespace FclEx.Test.Helpers
         {
             var obj = new Person() { Age = 10 };
             Expression<Func<Person, int>> exp = m => m.Age;
-            var unTypedExp = ExpressionUtil.ErasureType(exp);
+            var unTypedExp = ExpressionHelper.ErasureType(exp);
             var actual = unTypedExp.Compile()(obj);
             Assert.IsType<int>(actual);
             Assert.Equal(obj.Age, actual);
@@ -27,7 +27,7 @@ namespace FclEx.Test.Helpers
         {
             var obj = new Person() { Name = nameof(ErasureType_String_Test) };
             Expression<Func<Person, string>> exp = m => m.Name;
-            var unTypedExp = ExpressionUtil.ErasureType(exp);
+            var unTypedExp = ExpressionHelper.ErasureType(exp);
             var actual = unTypedExp.Compile()(obj);
             Assert.IsType<string>(actual);
             Assert.Equal(obj.Name, (string)actual);
@@ -39,7 +39,7 @@ namespace FclEx.Test.Helpers
             var o = new object();
             var obj = new Person() { Obj = o };
             Expression<Func<Person, object>> exp = m => m.Obj;
-            var unTypedExp = ExpressionUtil.ErasureType(exp);
+            var unTypedExp = ExpressionHelper.ErasureType(exp);
             var actual = unTypedExp.Compile()(obj);
             Assert.IsType<object>(actual);
             Assert.Equal(o, actual);
@@ -52,7 +52,7 @@ namespace FclEx.Test.Helpers
             object o = 10;
             var obj = new Person() { Obj = o };
             Expression<Func<Person, object>> exp = m => m.Obj;
-            var unTypedExp = ExpressionUtil.ErasureType(exp);
+            var unTypedExp = ExpressionHelper.ErasureType(exp);
             var actual = unTypedExp.Compile()(obj);
             Assert.IsType<int>(actual);
             Assert.Equal((int)o, (int)actual);

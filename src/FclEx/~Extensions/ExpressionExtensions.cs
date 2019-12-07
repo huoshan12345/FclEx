@@ -9,36 +9,32 @@ namespace FclEx
 {
     public static class ExpressionExtensions
     {
-        private static Expression<T> Compose<T>(this Expression<T> left,
-            Expression<T> right, Func<Expression, Expression, Expression> merge)
+        public static Expression<Func<T, bool>> Or<T>(this Expression<Func<T, bool>> left, Expression<Func<T, bool>> right)
         {
+            if (left == null && right == null)
+                throw new ArgumentNullException($"{nameof(left)}, {nameof(right)} cannot be null at the same time");
             if (left == null) return right;
-            var invExpr = Expression.Invoke(right, left.Parameters);
-            return Expression.Lambda<T>(merge(left.Body, invExpr), left.Parameters);
+            if (right == null) return left;
+
+            var parameter = left.Parameters[0];
+            var r = ExpressionReplacer.Replace(right.Body, right.Parameters[0], parameter);
+            var body = Expression.OrElse(left.Body, r);
+            var lambda = Expression.Lambda<Func<T, bool>>(body, parameter);
+            return lambda;
         }
 
-        public static Expression<Func<T, bool>> Or<T>(this Expression<Func<T, bool>> left,
-            Expression<Func<T, bool>> right)
+        public static Expression<Func<T, bool>> And<T>(this Expression<Func<T, bool>> left, Expression<Func<T, bool>> right)
         {
-            return left.Compose(right, Expression.OrElse);
-        }
+            if (left == null && right == null)
+                throw new ArgumentNullException($"{nameof(left)}, {nameof(right)} cannot be null at the same time");
+            if (left == null) return right;
+            if (right == null) return left;
 
-        public static Expression<Func<T, bool>> OrIf<T>(this Expression<Func<T, bool>> left,
-            bool condition, Expression<Func<T, bool>> right)
-        {
-            return condition ? Or(left, right) : left;
-        }
-
-        public static Expression<Func<T, bool>> And<T>(this Expression<Func<T, bool>> left,
-            Expression<Func<T, bool>> right)
-        {
-            return left.Compose(right, Expression.AndAlso);
-        }
-
-        public static Expression<Func<T, bool>> AndIf<T>(this Expression<Func<T, bool>> left,
-            bool condition, Expression<Func<T, bool>> right)
-        {
-            return condition ? And(left, right) : left;
+            var parameter = left.Parameters[0];
+            var r = ExpressionReplacer.Replace(right.Body, right.Parameters[0], parameter);
+            var body = Expression.AndAlso(left.Body, r);
+            var lambda = Expression.Lambda<Func<T, bool>>(body, parameter);
+            return lambda;
         }
     }
 }

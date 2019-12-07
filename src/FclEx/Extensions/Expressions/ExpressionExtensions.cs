@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using FclEx.Helpers;
 using FclEx.Utils;
 
 namespace FclEx.Extensions.Expressions
@@ -10,7 +11,7 @@ namespace FclEx.Extensions.Expressions
             Func<TSource, TProperty, bool> condition, TProperty newValue)
         {
             if (condition == null) throw new ArgumentNullException(nameof(condition));
-            var propertyInfo = ExpressionUtil.GetProp(propertyLambda);
+            var propertyInfo = ExpressionHelper.GetProp(propertyLambda);
             var value = propertyInfo.GetValue(source).CastTo<TProperty>();
             if (condition(source, value))
                 propertyInfo.SetValue(source, newValue);
@@ -26,7 +27,7 @@ namespace FclEx.Extensions.Expressions
         public static TSource SetProp<TSource, TProperty>(this TSource source,
             Expression<Func<TSource, TProperty>> propertyLambda, TProperty newValue)
         {
-            var propertyInfo = ExpressionUtil.GetProp(propertyLambda);
+            var propertyInfo = ExpressionHelper.GetProp(propertyLambda);
             propertyInfo.SetValue(source, newValue);
             return source;
         }
@@ -55,7 +56,7 @@ namespace FclEx.Extensions.Expressions
         {
             if (newValueCondition == null || newValueCondition(newValue))
             {
-                var propertyInfo = ExpressionUtil.GetProp(propertyLambda);
+                var propertyInfo = ExpressionHelper.GetProp(propertyLambda);
                 propertyInfo.SetValue(source, newValue);
             }
             return source;

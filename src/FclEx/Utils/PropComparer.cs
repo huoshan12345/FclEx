@@ -37,7 +37,7 @@ namespace FclEx.Utils
 
         public PropComparer<T> OrderBy<TProp>(Expression<Func<T, TProp>> selector, bool desc = false)
         {
-            var unTypedExp = ExpressionUtil.ErasureType(selector);
+            var unTypedExp = ExpressionHelper.ErasureType(selector);
             var prop = new OrderProperty(unTypedExp.Compile(), desc, Comparer<TProp>.Default);
             _orderProperties.Add(prop);
             return this;
