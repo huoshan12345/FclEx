@@ -32,12 +32,12 @@ namespace FclEx
 
         public static void RunWithoutSyncContext(this ValueTask task)
         {
-            NoSyncContextScope.Run(task);
+            NoSyncContext.Run(task);
         }
 
         public static T RunWithoutSyncContext<T>(this ValueTask<T> task)
         {
-            return NoSyncContextScope.Run(task);
+            return NoSyncContext.Run(task);
         }
     }
 }

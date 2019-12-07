@@ -36,12 +36,12 @@ namespace FclEx
 
         public static void RunWithoutSyncContext(this Task task)
         {
-            NoSyncContextScope.Run(task);
+            NoSyncContext.Run(task);
         }
 
         public static T RunWithoutSyncContext<T>(this Task<T> task)
         {
-            return NoSyncContextScope.Run(task);
+            return NoSyncContext.Run(task);
         }
 
         internal static async Task<TResult> TimeoutAfter<TResult>(this Func<Task<TResult>> task, TimeSpan timeout)

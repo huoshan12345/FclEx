@@ -16,48 +16,48 @@ namespace FclEx.Utils
 
         private struct Disposable : IDisposable
         {
-            private readonly SynchronizationContext _synchronizationContext;
+            private readonly SynchronizationContext _context;
 
-            public Disposable(SynchronizationContext synchronizationContext)
+            public Disposable(SynchronizationContext context)
             {
-                _synchronizationContext = synchronizationContext;
+                _context = context;
             }
 
             public void Dispose()
             {
-                SynchronizationContext.SetSynchronizationContext(_synchronizationContext);
+                SynchronizationContext.SetSynchronizationContext(_context);
             }
         }
 
-        public static void Run(ValueTask task)
+        public static T Run<T>(Func<Task<T>> action)
         {
             using (Enter())
             {
-                task.GetAwaiter().GetResult();
+                return action().GetAwaiter().GetResult();
             }
         }
 
-        public static T Run<T>(ValueTask<T> task)
+        public static void Run(Func<Task> action)
         {
             using (Enter())
             {
-                return task.GetAwaiter().GetResult();
+                action().GetAwaiter().GetResult();
             }
         }
 
-        public static void Run(Task task)
+        public static async Task RunAsync(Func<Task> action)
         {
             using (Enter())
             {
-                task.GetAwaiter().GetResult();
+                await action();
             }
         }
 
-        public static T Run<T>(Task<T> task)
+        public static async Task<T> RunAsync<T>(Func<Task<T>> action)
         {
             using (Enter())
             {
-                return task.GetAwaiter().GetResult();
+                return await action();
             }
         }
     }

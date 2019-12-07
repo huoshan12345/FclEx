@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -11,6 +12,7 @@ using MoreLinq;
 
 namespace FclEx
 {
+    [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
     partial class EnumerableExtensions
     {
         public static Task<(List<(T Input, TResult Output)> Success, List<(T Input, OperateResult<TResult> Output)> Failure)>

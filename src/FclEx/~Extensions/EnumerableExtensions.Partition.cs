@@ -12,8 +12,9 @@ using MoreLinq;
 namespace FclEx
 {
     partial class EnumerableExtensions
-    {public static (IEnumerable<TProp> True, IEnumerable<TProp> False) Partition<T, TProp>(this IEnumerable<T> enumerable,
-            Func<T, bool> predicate, Func<T, TProp> selector)
+    {
+        public static (IEnumerable<TProp> True, IEnumerable<TProp> False) Partition<T, TProp>(this IEnumerable<T> enumerable,
+               Func<T, bool> predicate, Func<T, TProp> selector)
         {
             var (@true, @false) = enumerable.Partition(predicate);
             return (@true.Select(selector), @false.Select(selector));

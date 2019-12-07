@@ -12,6 +12,7 @@ using MoreLinq;
 
 namespace FclEx
 {
+    [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
     public static partial class EnumerableExtensions
     {
         public static string JoinWith<T>(this IEnumerable<T> strs, string separator)
@@ -34,7 +35,6 @@ namespace FclEx
             return condition ? source.Where(predicate) : source;
         }
 
-        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         public static IEnumerable<TResult> SelectMany<TSource, TResult>(this IEnumerable<TSource> source,
             Func<TSource, TSource, TResult> resultSelector)
         {
@@ -51,5 +51,16 @@ namespace FclEx
         {
             return new SortedSet<T>(enumerable, comparer ?? Comparer<T>.Default);
         }
+
+        public static IReadOnlyCollection<T> CastOrToReadOnlyCollection<T>(this IEnumerable<T> enumerable)
+        {
+            return enumerable is IReadOnlyCollection<T> col ? col : enumerable.ToList();
+        }
+
+        public static IReadOnlyList<T> CastOrToReadOnlyList<T>(this IEnumerable<T> enumerable)
+        {
+            return enumerable is IReadOnlyList<T> col ? col : enumerable.ToList();
+        }
+
     }
 }
