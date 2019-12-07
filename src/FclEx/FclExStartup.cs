@@ -1,24 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 using FclEx.Utils;
 
+[assembly: InternalsVisibleTo("FclEx.Test")]
 namespace FclEx
 {
     public static class FclExStartup
     {
-        private static bool _inited;
-        private static readonly AsyncLocker _locker = new AsyncLocker();
-
+        private static readonly Initializer _initializer = new Initializer();
         public static void Init()
         {
-            _locker.DoubleCheckAndDo(() => !_inited, InitInternal);
-
-            void InitInternal()
-            {
-                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-                _inited = true;
-            }
+            _initializer.Init(() => Encoding.RegisterProvider(CodePagesEncodingProvider.Instance));
         }
     }
 }

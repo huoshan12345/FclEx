@@ -29,15 +29,5 @@ namespace FclEx
         {
             return task.ConfigureAwait(false);
         }
-
-        public static void RunWithoutSyncContext(this ValueTask task)
-        {
-            NoSyncContext.Run(task);
-        }
-
-        public static T RunWithoutSyncContext<T>(this ValueTask<T> task)
-        {
-            return NoSyncContext.Run(task);
-        }
     }
 }

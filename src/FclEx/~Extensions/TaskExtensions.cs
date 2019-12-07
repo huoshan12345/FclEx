@@ -33,17 +33,7 @@ namespace FclEx
         public static Task<T> ToTask<T>(this T obj) => Task.FromResult(obj);
 
         public static ValueTask<T> ToValueTask<T>(this Task<T> task) => new ValueTask<T>(task);
-
-        public static void RunWithoutSyncContext(this Task task)
-        {
-            NoSyncContext.Run(task);
-        }
-
-        public static T RunWithoutSyncContext<T>(this Task<T> task)
-        {
-            return NoSyncContext.Run(task);
-        }
-
+        
         internal static async Task<TResult> TimeoutAfter<TResult>(this Func<Task<TResult>> task, TimeSpan timeout)
         {
             using var cts = new CancellationTokenSource();
