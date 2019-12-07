@@ -15,6 +15,11 @@ namespace FclEx
     [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
     public static partial class EnumerableExtensions
     {
+        public static IEnumerable<T> Touch<T>(this IEnumerable<T> col)
+        {
+            return col ?? Array.Empty<T>();
+        }
+
         public static string JoinWith<T>(this IEnumerable<T> strs, string separator)
         {
             return string.Join(separator, strs.Select(m => m.ToString()));

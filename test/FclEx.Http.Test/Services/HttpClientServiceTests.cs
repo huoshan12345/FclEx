@@ -35,12 +35,12 @@ namespace FclEx.Http.Test.Services
         }
 
         [Fact]
-        public async Task Tests()
+        public async Task SendAsync_Success()
         {
             using var service = new HttpClientService(false);
             for (var i = 0; i < 5; i++)
             {
-                var res = await HttpReq.Get("http://www.baidu.com")
+                var res = await HttpReq.Get("https://www.baidu.com")
                     .SendAsync(service);
 
                 if (res.HasError)
@@ -135,6 +135,7 @@ namespace FclEx.Http.Test.Services
                 foreach (var actualCookie in actualCookies)
                 {
                     Assert.True(cookies.TryGetValue(actualCookie.Name, out var cookie));
+                    Assert.NotNull(cookie);
                     Assert.Equal(cookie.Value, actualCookie.Value);
                     Assert.Equal(cookie.Domain, actualCookie.Domain);
                 }

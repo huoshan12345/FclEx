@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace FclEx.Utils
 {
-    public struct OperateResult<T> : IOperateResult<T>
+    public readonly struct OperateResult<T> : IOperateResult<T>
     {
         public bool Successful => Code == OperateResultCodes.Success;
         public int Code { get; }
