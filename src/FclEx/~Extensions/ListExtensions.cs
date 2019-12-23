@@ -21,5 +21,16 @@ namespace FclEx
                 }
             }
         }
+
+        public static void Swap<T>(this IList<T> list, int left, int right)
+        {
+            Guard.Argument(list, nameof(list)).NotNull();
+            Guard.Argument(left, nameof(left)).NotNegative().Require(m => m < list.Count);
+            Guard.Argument(right, nameof(right)).NotNegative().Require(m => m < list.Count);
+
+            var tmp = list[left];
+            list[left] = list[right];
+            list[right] = tmp;
+        }
     }
 }

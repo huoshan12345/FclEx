@@ -6,7 +6,7 @@ using Xunit;
 
 namespace FclEx.Test.Cache
 {
-    public class CounterCacheTests
+    public class LfuCacheTests
     {
         [Fact]
         public void Test()
@@ -14,17 +14,18 @@ namespace FclEx.Test.Cache
             const int capacity = 10;
             var random = new Random(31);
             var numbers = Enumerable.Range(-8, 16).ToArray();
-            var cache = new CounterCache<int, string>(capacity);
+            var cache = new LfuCache<int, string>(capacity);
             var dic = numbers.ToDictionary(m => m, k => default(int?));
 
             for (var i = 0; i < numbers.Length * capacity; i++)
             {
                 var num = numbers.GetRandomly(random);
                 dic[num] = dic[num].Get(-1) + 1;
-                var keys = cache.GetAllKeys();
+                var keys = cache.GetKeys();
                 var removeFlag = cache.IsFull() && !keys.Contains(num);
-                cache.GetOrAdd(num, k => k.ToString());
-                var newKeys = cache.GetAllKeys();
+                var value = cache.GetOrAdd(num, k => k.ToString());
+                Assert.Equal(num.ToString(), value);
+                var newKeys = cache.GetKeys();
 
                 Assert.True(cache.Count <= capacity);
 
@@ -36,9 +37,7 @@ namespace FclEx.Test.Cache
                     var expectedRemoveItems = expectedCachedItem.Where(m => m.Key != num)
                         .MinBy(m => m.Value).Select(m => m.Key).ToArray();
 
-                    var removedKeys = keys.Except(newKeys).ToArray();
-                    Assert.Single(removedKeys);
-                    var removedKey = removedKeys[0];
+                    var removedKey = keys.Except(newKeys).Single();
                     Assert.Contains(removedKey, expectedRemoveItems);
 
                     var addedKeys = newKeys.Except(keys).ToArray();

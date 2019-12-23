@@ -58,13 +58,30 @@ namespace FclEx.Consumers
             return list;
         }
 
-        private void HandleException(List<ProcItem<T>> items, Exception ex)
+        private List<ProcItem<T>> HandleException(List<ProcItem<T>> items, Exception ex)
         {
+            if (items == null || items.Count == 0)
+                return items;
+
+            List<ProcItem<T>> nextItems = null;
             Counter.IncreException();
+
             try
             {
                 for (var i = 0; i < items.Count; i++)
-                    items[i] = items[i].AddError(ex);
+                {
+                    var item = items[i].AddError(ex);
+                    items[i] = item;
+                    if (item.ErrorTimes <= _maxRetryTimes)
+                    {
+                        _items.TryAdd(item);
+                    }
+                    else
+                    {
+                        nextItems ??= new List<ProcItem<T>>();
+                        nextItems.Add(item);
+                    }
+                }
                 ExceptionHandler.Invoke(this, items);
             }
             catch (Exception e)
@@ -72,19 +89,18 @@ namespace FclEx.Consumers
                 Counter.IncreException();
                 Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(HandleException)}: " + e.Message);
             }
+            return nextItems;
         }
 
         private void HandleDiscard(List<ProcItem<T>> items)
         {
+            if (items == null || items.Count == 0)
+                return;
+
             try
             {
-                var (retry, discard) = items.PartitionToArray(m => m.ErrorTimes <= _maxRetryTimes);
-                retry.ForEach(m => _items.TryAdd(m));
-                if (discard.Any())
-                {
-                    DiscardHandler.Invoke(this, discard);
-                    Counter.IncreDiscard(discard.Length);
-                }
+                DiscardHandler.Invoke(this, items);
+                Counter.IncreDiscard(items.Count);
             }
             catch (Exception e)
             {
@@ -117,7 +133,7 @@ namespace FclEx.Consumers
             }
             catch (Exception ex)
             {
-                HandleException(items, ex);
+                items = HandleException(items, ex);
             }
             HandleDiscard(items);
         }

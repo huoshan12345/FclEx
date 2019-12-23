@@ -122,9 +122,7 @@ namespace FclEx.Http.Services
                 {
                     token.ThrowIfCancellationRequested();
                     var uri = response.GetRedirectUri();
-                    var req = new HttpRequestMessage(HttpMethod.Get, uri);
-                    var cookies = _cookieContainer?.GetCookieHeader(uri);
-                    if (!cookies.IsNullOrEmpty()) req.Headers.Add(HttpKnownHeaderNames.Cookie, cookies);
+                    var req = GetHttpRequest(HttpReq.Get(uri), _cookieContainer);
                     response = await httpClient.SendAsync(req, token).DonotCapture();
                     responses.Add(response);
                     httpRes.RedirectUris.Add(response.RequestMessage.RequestUri);

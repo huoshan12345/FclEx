@@ -107,7 +107,7 @@ namespace FclEx.Consumers
 
         private void HandleDiscard(ProcItem<List<T>> list)
         {
-            if (list.Item == null || list.Item.Count < 1) return;
+            if (list.Item == null || list.Item.Count == 0) return;
             var procItem = list.ToType(list.Item.First());
             try
             {
@@ -123,7 +123,7 @@ namespace FclEx.Consumers
 
         private void HandleException(ProcItem<List<T>> list)
         {
-            if (list.Item == null || list.Item.Count < 1) return;
+            if (list.Item == null || list.Item.Count == 0) return;
             var procItem = list.ToType(list.Item.First());
             try
             {
