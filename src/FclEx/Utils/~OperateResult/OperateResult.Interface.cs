@@ -15,6 +15,7 @@ namespace FclEx.Utils
         string Msg { get; }
         string StackTrace { get; }
         OperateResult<TTarget> ToExplicit<TTarget>();
+        IOperateResult WithElapsed(TimeSpan span);
     }
 
     public interface IOperateResult<out T> : IOperateResult

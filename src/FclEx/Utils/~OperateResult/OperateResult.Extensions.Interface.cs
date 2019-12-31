@@ -1,6 +1,5 @@
 ﻿using System;
 
-
 namespace FclEx.Utils
 {
     public static partial class OperateResultExtensions
@@ -50,6 +49,14 @@ namespace FclEx.Utils
             else if (!result.Successful)
                 return OperateResult.CreateError(result.Exception, result.Elapsed);
             else return result.Result;
+        }
+
+        public static IOperateResult Unwrap(this OperateResult<IOperateResult> result)
+        {
+            var (successful, elapsed, innerResult, exception) = result;
+            return successful
+                ? innerResult.WithElapsed(elapsed)
+                : OperateResult.CreateError(exception, elapsed);
         }
     }
 }

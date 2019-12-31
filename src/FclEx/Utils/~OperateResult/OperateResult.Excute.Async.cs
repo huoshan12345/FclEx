@@ -77,16 +77,19 @@ namespace FclEx.Utils
         }
 
         public static async Task<OperateResult> ExcuteAsync(Func<Task<OperateResult>> action)
-            => (await ExcuteAsync<OperateResult>(action)).Unwrap();
+            => (await ExcuteAsync<OperateResult>(action).DonotCapture()).Unwrap();
+
+        public static async Task<IOperateResult> ExcuteAsync(Func<Task<IOperateResult>> action)
+            => (await ExcuteAsync<IOperateResult>(action).DonotCapture()).Unwrap();
 
         public static async Task<OperateResult> ExcuteAsync(Func<Task<OperateResult>> action, TimeSpan timeout)
-            => (await ExcuteAsync<OperateResult>(action, timeout)).Unwrap();
+            => (await ExcuteAsync<OperateResult>(action, timeout).DonotCapture()).Unwrap();
 
         public static async Task<OperateResult<T>> ExcuteAsync<T>(Func<Task<OperateResult<T>>> action)
-            => (await ExcuteAsync<OperateResult<T>>(action)).Unwrap();
+            => (await ExcuteAsync<OperateResult<T>>(action).DonotCapture()).Unwrap();
 
         public static async Task<OperateResult<T>> ExcuteAsync<T>(Func<Task<OperateResult<T>>> action, TimeSpan timeout)
-            => (await ExcuteAsync<OperateResult<T>>(action, timeout)).Unwrap();
+            => (await ExcuteAsync<OperateResult<T>>(action, timeout).DonotCapture()).Unwrap();
 
         public static async ValueTask<OperateResult<T>> ExcuteValueAsync<T>(Func<ValueTask<T>> action)
         {

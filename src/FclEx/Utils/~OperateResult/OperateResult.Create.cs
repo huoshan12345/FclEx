@@ -30,9 +30,20 @@ namespace FclEx.Utils
 
         public static OperateResult CreateError(string error, TimeSpan elapsed = default) => CreateError(OperateResultCodes.FromString, error, elapsed);
 
+        public static OperateResult CreateObjError<T>(T obj, string error, TimeSpan elapsed = default)
+        {
+            return new OperateResult(OperateResultCodes.FromString, ObjectException.Create(obj, error), elapsed);
+        }
+
         public static OperateResult CreateError(Exception ex, TimeSpan elapsed = default)
         {
             return new OperateResult(IsCancelException(ex) ? OperateResultCodes.Cancel : OperateResultCodes.FromException, ex, elapsed);
+        }
+
+        public static OperateResult CreateObjError<T>(T obj, Exception ex, TimeSpan elapsed = default)
+        {
+            return new OperateResult(IsCancelException(ex) ? OperateResultCodes.Cancel : OperateResultCodes.FromException,
+                ObjectException.Create(obj, ex.Message, ex), elapsed);
         }
 
         public static OperateResult CreateNotImplemented() => CreateError(OperateResultCodes.NotImplemented, "the operate was not implemented", default);

@@ -3,57 +3,75 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Dawn;
-using FclEx.Http.Event;
 using FclEx.Utils;
 
 namespace FclEx.Http.Actions
 {
     public class ActionFuture : IActionFuture
     {
-        private readonly List<Func<object[], IActor>> _queue = new List<Func<object[], IActor>>();
+        private readonly List<MetaData> _queue = new List<MetaData>();
+        private readonly bool _stopOnError;
 
-        public virtual async Task<ActionEvent> ExecuteAsync(CancellationToken token)
+        public ActionFuture(bool stopOnError = true)
         {
-            var results = new object[_queue.Count];
+            _stopOnError = stopOnError;
+        }
+
+        public virtual async Task<IOperateResult> ExecuteAsync(CancellationToken token = default)
+        {
+            var watch = ValueStopwatch.StartNew();
+            var results = new IOperateResult[_queue.Count];
             var actions = new IActor[_queue.Count];
-            var lastEvent = ActionEvent.EmptyOkEvent;
+            var lastEvent = (IOperateResult)OperateResult.Success;
             for (var i = 0; i < _queue.Count; i++)
             {
                 if (token.IsCancellationRequested)
-                    return ActionEvent.Cancel(this);
+                    return OperateResult.Cancel;
 
-                actions[i] = actions[i] ?? _queue[i](results); // action只生成一次
+                actions[i] = actions[i] ?? _queue[i].ActorSelector(results); // action只生成一次
                 var action = actions[i];
-                if (action == null) continue;
+                if (action == null)
+                    continue;
 
-                var result = await action.ExecuteAutoAsync(token).DonotCapture();
-                results[i] = result.Target;
-                switch (result.Type)
+                var result = await OperateResult.ExcuteAsync(() => action.ExecuteAsync(token))
+                    .DonotCapture();
+
+                results[i] = result;
+                lastEvent = result;
+
+                var termination = _queue[i].TerminationCondition;
+                if (termination == null)
                 {
-                    case ActionEventType.EvtError:
-                    case ActionEventType.EvtCanceled:
-                        return result;
-
-                    case ActionEventType.EvtRetry:
-                    case ActionEventType.EvtRepeat:
-                        --i; // 回退，即重复执行
-                        break;
-
-                    default:
-                        lastEvent = result;
+                    if (_stopOnError && result.HasError())
                         break;
                 }
+                else if (termination(result))
+                {
+                    break;
+                }
             }
-            return lastEvent;
+            return lastEvent.WithElapsed(watch.GetElapsedTime());
         }
 
         public int Count => _queue.Count;
 
-        public IActionFuture PushAction(Func<object[], IActor> func)
+        public IActionFuture PushAction(Func<IOperateResult[], IActor> actorSelector, Func<IOperateResult, bool> terminationCondition = null)
         {
-            Guard.Argument(func, nameof(func)).NotNull();
-            _queue.Add(func);
+            Guard.Argument(actorSelector, nameof(actorSelector)).NotNull();
+            _queue.Add(new MetaData(actorSelector, terminationCondition));
             return this;
+        }
+
+        private readonly struct MetaData
+        {
+            public MetaData(Func<IOperateResult[], IActor> actorSelector, Func<IOperateResult, bool> terminationCondition)
+            {
+                ActorSelector = actorSelector;
+                TerminationCondition = terminationCondition;
+            }
+
+            public Func<IOperateResult[], IActor> ActorSelector { get; }
+            public Func<IOperateResult, bool> TerminationCondition { get; }
         }
     }
 }

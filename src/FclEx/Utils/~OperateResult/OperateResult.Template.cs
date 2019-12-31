@@ -75,5 +75,12 @@ namespace FclEx.Utils
                 ? new OperateResult<TTarget>(Result.CastTo<TTarget>(), Elapsed)
                 : new OperateResult<TTarget>(Code, Exception, Elapsed);
         }
+
+        public IOperateResult WithElapsed(TimeSpan span)
+        {
+            return Successful
+                ? new OperateResult<T>(Result, span)
+                : new OperateResult<T>(Code, Exception, span);
+        }
     }
 }

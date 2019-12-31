@@ -33,6 +33,13 @@ namespace FclEx.Utils
                 return new OperateResult<TTarget>(Code, Exception, Elapsed);
         }
 
+        public IOperateResult WithElapsed(TimeSpan span)
+        {
+            return Successful 
+                ? new OperateResult(span) 
+                : new OperateResult(Code, Exception, span);
+        }
+
         internal OperateResult(int code, Exception ex, TimeSpan elapsed)
         {
             Code = Guard.Argument(code, nameof(code)).NotEqual(OperateResultCodes.Success);

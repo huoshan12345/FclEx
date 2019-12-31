@@ -1,11 +1,11 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using FclEx.Http.Event;
+using FclEx.Utils;
 
 namespace FclEx.Http.Actions
 {
     public interface IActor
     {
-        Task<ActionEvent> ExecuteAsync(CancellationToken token);
+        Task<IOperateResult> ExecuteAsync(CancellationToken token = default);
     }
 }

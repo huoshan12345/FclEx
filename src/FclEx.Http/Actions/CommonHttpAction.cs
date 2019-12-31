@@ -2,9 +2,7 @@
 using System.Collections.Concurrent;
 using System.Reflection;
 using FclEx.Http.Core;
-using FclEx.Http.Event;
 using FclEx.Http.Services;
-using Microsoft.Extensions.Logging;
 
 namespace FclEx.Http.Actions
 {
@@ -36,10 +34,7 @@ namespace FclEx.Http.Actions
             });
         }
 
-        protected CommonHttpAction(IHttpService httpService,
-            ILogger logger = null,
-            ActionEventListener listener = null)
-            : base(httpService, logger, listener)
+        protected CommonHttpAction(IHttpService httpService) : base(httpService)
         {
         }
     }
