@@ -1,20 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 
-namespace Seismic.EmailServiceDispatcher.Api.Utilities
+namespace FclEx.Utils
 {
     /// <summary>
     /// A generic object comparerer that would only use object's reference, 
     /// ignoring any <see cref="IEquatable{T}"/> or <see cref="object.Equals(object)"/>  overrides.
     /// see details via https://stackoverflow.com/questions/1890058/iequalitycomparert-that-uses-referenceequals
     /// </summary>
-    public sealed class ObjectReferenceEqualityComparer<T> : IEqualityComparer<T> where T : class
+    public sealed class ObjRefeEqualityComparer<T> : IEqualityComparer<T> where T : class
     {
         private static readonly Lazy<IEqualityComparer<T>> _defaultComparer
-            = new Lazy<IEqualityComparer<T>>(() => new ObjectReferenceEqualityComparer<T>(), true);
+            = new Lazy<IEqualityComparer<T>>(() => new ObjRefeEqualityComparer<T>(), true);
         public static IEqualityComparer<T> Default => _defaultComparer.Value;
 
         public bool Equals(T x, T y)
