@@ -77,6 +77,21 @@ namespace FclEx.Utils
                 : new OperateResult(r.Code, r.Exception, r.Elapsed);
         }
 
+        public static implicit operator Task<IOperateResult>(OperateResult<T> result)
+        {
+            return ((IOperateResult)result).ToTask();
+        }
+
+        public static implicit operator Task<IOperateResult<T>>(OperateResult<T> result)
+        {
+            return ((IOperateResult<T>)result).ToTask();
+        }
+
+        public static implicit operator Task<OperateResult<T>>(OperateResult<T> result)
+        {
+            return result.ToTask();
+        }
+
         public OperateResult<TTarget> ToExplicit<TTarget>()
         {
             return Successful

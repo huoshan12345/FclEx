@@ -32,8 +32,8 @@ namespace FclEx.Utils
 
         public IOperateResult WithElapsed(TimeSpan span)
         {
-            return Successful 
-                ? new OperateResult(span) 
+            return Successful
+                ? new OperateResult(span)
                 : new OperateResult(Code, Exception, span);
         }
 
@@ -71,6 +71,16 @@ namespace FclEx.Utils
         public static implicit operator OperateResult(string error)
         {
             return CreateError(error, TimeSpan.Zero);
+        }
+
+        public static implicit operator Task<IOperateResult>(OperateResult result)
+        {
+            return ((IOperateResult)result).ToTask();
+        }
+
+        public static implicit operator Task<OperateResult>(OperateResult result)
+        {
+            return result.ToTask();
         }
     }
 }
