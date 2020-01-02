@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace FclEx.Utils
 {
@@ -64,6 +65,16 @@ namespace FclEx.Utils
             return result.Successful
                 ? new OperateResult(result.Elapsed)
                 : new OperateResult(result.Code, result.Exception, result.Elapsed);
+        }
+
+        public static async Task<OperateResult> ToUntyped(this Task<IOperateResult> task)
+        {
+            return (await task.DonotCapture()).ToUntyped();
+        }
+
+        public static async Task<OperateResult<T>> ToExplicit<T>(this Task<IOperateResult> task)
+        {
+            return (await task.DonotCapture()).ToExplicit<T>();
         }
     }
 }

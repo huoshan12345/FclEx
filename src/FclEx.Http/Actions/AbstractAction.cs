@@ -13,42 +13,59 @@ namespace FclEx.Http.Actions
     {
         public virtual ILogger Logger { get; } = NullLogger.Instance;
 
+        protected virtual int RetryTimes { get; } = 2;
+        protected virtual TimeSpan RetryDelay { get; } = TimeSpan.Zero;
         protected string ActionName => GetType().GetDescription();
-        protected virtual AsyncRetryPolicy<IOperateResult> RetryPolicy { get; } = Policy<IOperateResult>
-            .Handle<Exception>()
-            .WaitAndRetryAsync(2, i => TimeSpan.FromSeconds(0));
+        protected virtual AsyncRetryPolicy<IOperateResult> RetryPolicy { get; }
+
+        protected AbstractAction()
+        {
+            RetryPolicy = Policy<IOperateResult>
+                .Handle<Exception>()
+                .WaitAndRetryAsync(RetryTimes, i => RetryDelay);
+        }
 
         protected abstract Task<IOperateResult> ExecuteInternalAsync(CancellationToken token = default);
+
+        protected virtual Task<IOperateResult> HandleCancellationAsync(Exception ex)
+        {
+            return OperateResult.CreateCancel(ex);
+        }
+
+        protected virtual Task<IOperateResult> HandleExceptionAsync(Exception ex)
+        {
+            return OperateResult.CreateError(ex);
+        }
 
         public async Task<IOperateResult> ExecuteAsync(CancellationToken token = default)
         {
             var watch = ValueStopwatch.StartNew();
+            IOperateResult result;
             try
             {
                 if (Logger.IsEnabled(LogLevel.Trace))
                     Logger.LogTrace($"[Action={ActionName} Begin]");
-                var result = await RetryPolicy.ExecuteAsync(() => ExecuteInternalAsync(token))
+                result = await RetryPolicy.ExecuteAsync(() => ExecuteInternalAsync(token))
                     .ThrowIfError()
                     .DonotCapture();
-                return result.WithElapsed(watch.GetElapsedTime());
             }
             catch (TaskCanceledException ex)
             {
                 if (Logger.IsEnabled(LogLevel.Trace))
                     Logger.LogTrace(ex, $"[Action={ActionName} Canceled]");
-                return OperateResult.CreateCancel(ex, watch.GetElapsedTime());
+                result = await HandleCancellationAsync(ex);
             }
             catch (Exception ex)
             {
                 if (Logger.IsEnabled(LogLevel.Trace))
                     Logger.LogTrace(ex, $"[Action={ActionName}, Error={ex.Message}]");
-                return OperateResult.CreateError(ex, watch.GetElapsedTime());
+                result = await HandleExceptionAsync(ex);
             }
-            finally
-            {
-                if (Logger.IsEnabled(LogLevel.Trace))
-                    Logger.LogTrace($"[Action={ActionName} End, {watch.GetElapsedTime().TotalMilliseconds:f3} ms]");
-            }
+
+            var time = watch.GetElapsedTime();
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace($"[Action={ActionName} End, {time.TotalMilliseconds:f3} ms]");
+            return result.WithElapsed(time);
         }
     }
 }
