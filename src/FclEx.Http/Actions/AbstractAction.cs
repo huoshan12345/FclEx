@@ -32,7 +32,7 @@ namespace FclEx.Http.Actions
             return OperateResult.CreateCancel(ex);
         }
 
-        protected virtual Task<IOperateResult> HandleExceptionAsync(Exception ex)
+        protected virtual Task<IOperateResult> HandleErrorAsync(Exception ex)
         {
             return OperateResult.CreateError(ex);
         }
@@ -59,7 +59,7 @@ namespace FclEx.Http.Actions
             {
                 if (Logger.IsEnabled(LogLevel.Trace))
                     Logger.LogTrace(ex, $"[Action={ActionName}, Error={ex.Message}]");
-                result = await HandleExceptionAsync(ex);
+                result = await HandleErrorAsync(ex);
             }
 
             var time = watch.GetElapsedTime();
