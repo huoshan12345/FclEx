@@ -14,6 +14,13 @@ namespace FclEx.Http.Actions
             return future.PushAction(objs => action);
         }
 
+        public static IActionFuture PushAction(this IActionFuture future, int dependentResultIndex,
+            Func<IOperateResult, IActor> func)
+        {
+            Guard.Argument(func, nameof(func)).NotNull();
+            return future.PushAction((IOperateResult[] objs) => func(objs[dependentResultIndex]));
+        }
+
         public static IActionFuture PushAction<TResult>(this IActionFuture future, int dependentResultIndex,
             Func<TResult, IActor> func)
         {
@@ -41,14 +48,14 @@ namespace FclEx.Http.Actions
         }
 
         public static IActionFuture PushActionIf<TResult>(this IActionFuture future, Func<TResult, bool> predicate,
-            Func<TResult, IAction> func)
+            Func<TResult, IActor> func)
         {
             Guard.Argument(predicate, nameof(predicate)).NotNull();
             return PushAction<TResult>(future, o => predicate(o) ? func(o) : null);
         }
 
-        public static IActionFuture PushActionIf<TLastResult, TDependentResult>(this IActionFuture future, Func<TLastResult, bool> predicate, int dependentIndex,
-            Func<TDependentResult, IAction> func)
+        public static IActionFuture PushActionIf<TLastResult, TDependentResult>(this IActionFuture future,
+            Func<TLastResult, bool> predicate, int dependentIndex, Func<TDependentResult, IActor> func)
         {
             Guard.Argument(predicate, nameof(predicate)).NotNull();
             return future.PushAction((IOperateResult[] objs) =>
