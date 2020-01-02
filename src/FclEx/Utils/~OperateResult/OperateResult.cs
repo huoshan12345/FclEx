@@ -37,7 +37,13 @@ namespace FclEx.Utils
                 : new OperateResult(Code, Exception, span);
         }
 
-        internal OperateResult(int code, Exception ex, TimeSpan elapsed)
+        /// <summary>
+        /// Create an erroneous result
+        /// </summary>
+        /// <param name="code"></param>
+        /// <param name="ex"></param>
+        /// <param name="elapsed"></param>
+        public OperateResult(int code, Exception ex, TimeSpan elapsed)
         {
             Code = Guard.Argument(code, nameof(code)).NotEqual(OperateResultCodes.Success);
             Exception = Guard.Argument(ex, nameof(ex)).NotNull();
@@ -45,7 +51,11 @@ namespace FclEx.Utils
             Result = default;
         }
 
-        internal OperateResult(TimeSpan elapsed)
+        /// <summary>
+        /// Create an successful result
+        /// </summary>
+        /// <param name="elapsed"></param>
+        public OperateResult(TimeSpan elapsed)
         {
             Code = OperateResultCodes.Success;
             Exception = null;

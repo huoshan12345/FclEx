@@ -58,5 +58,12 @@ namespace FclEx.Utils
                 ? innerResult.WithElapsed(elapsed)
                 : OperateResult.CreateError(exception, elapsed);
         }
+
+        public static OperateResult ToUntyped(this IOperateResult result)
+        {
+            return result.Successful
+                ? new OperateResult(result.Elapsed)
+                : new OperateResult(result.Code, result.Exception, result.Elapsed);
+        }
     }
 }
