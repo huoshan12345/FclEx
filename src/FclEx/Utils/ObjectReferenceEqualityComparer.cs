@@ -9,10 +9,10 @@ namespace FclEx.Utils
     /// ignoring any <see cref="IEquatable{T}"/> or <see cref="object.Equals(object)"/>  overrides.
     /// see details via https://stackoverflow.com/questions/1890058/iequalitycomparert-that-uses-referenceequals
     /// </summary>
-    public sealed class ObjRefeEqualityComparer<T> : IEqualityComparer<T> where T : class
+    public sealed class ObjectReferenceEqualityComparer<T> : IEqualityComparer<T> where T : class
     {
         private static readonly Lazy<IEqualityComparer<T>> _defaultComparer
-            = new Lazy<IEqualityComparer<T>>(() => new ObjRefeEqualityComparer<T>(), true);
+            = new Lazy<IEqualityComparer<T>>(() => new ObjectReferenceEqualityComparer<T>(), true);
         public static IEqualityComparer<T> Default => _defaultComparer.Value;
 
         public bool Equals(T x, T y)
