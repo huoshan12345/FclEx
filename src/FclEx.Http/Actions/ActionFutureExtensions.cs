@@ -58,9 +58,11 @@ namespace FclEx.Http.Actions
             Func<TLastResult, bool> predicate, int dependentIndex, Func<TDependentResult, IActor> func)
         {
             Guard.Argument(predicate, nameof(predicate)).NotNull();
+
+            var deptIndex = future.Count - 1;
             return future.PushAction((IOperateResult[] objs) =>
             {
-                var last = objs.Last().CastTo<TLastResult>();
+                var last = objs[deptIndex].ToExplicit<TLastResult>().Result;
                 if (!predicate(last)) return null;
                 var dependent = objs[dependentIndex].ToExplicit<TDependentResult>().Result;
                 return func(dependent);

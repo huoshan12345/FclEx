@@ -10,22 +10,31 @@ namespace FclEx.Http.Actions
 {
     public class HttpGetAction : AbstractHttpAction
     {
-        public override ILogger Logger { get; }
-
         private readonly Uri _url;
         private readonly HttpResultType _resultType;
-
-        public HttpGetAction(string url, IHttpService httpService, HttpResultType resultType = HttpResultType.String, ILogger logger = null)
-            : this(new Uri(url), httpService, resultType, logger)
-        {
-        }
 
         public HttpGetAction(Uri url, IHttpService httpService, HttpResultType resultType = HttpResultType.String, ILogger logger = null)
             : base(httpService)
         {
             _url = url;
             _resultType = resultType;
-            Logger = logger ?? NullLogger.Instance;
+            Logger = logger;
+        }
+
+        public static HttpGetAction GetString(string url, IHttpService httpService, ILogger logger = null)
+            => GetString(new Uri(url), httpService, logger);
+
+        public static HttpGetAction GetString(Uri url, IHttpService httpService, ILogger logger = null)
+        {
+            return new HttpGetAction(url, httpService, HttpResultType.String, logger);
+        }
+
+        public static HttpGetAction GetBytes(string url, IHttpService httpService, ILogger logger = null)
+            => GetBytes(new Uri(url), httpService, logger);
+
+        public static HttpGetAction GetBytes(Uri url, IHttpService httpService, ILogger logger = null)
+        {
+            return new HttpGetAction(url, httpService, HttpResultType.Byte, logger);
         }
 
         protected override HttpReq BuildRequest()

@@ -11,7 +11,17 @@ namespace FclEx.Http.Actions
 {
     public abstract class AbstractAction : IAction
     {
-        public virtual ILogger Logger { get; } = NullLogger.Instance;
+        private ILogger _logger = NullLogger.Instance;
+
+        public ILogger Logger
+        {
+            get => _logger;
+            protected set
+            {
+                if (value != null)
+                    _logger = value;
+            }
+        }
 
         protected virtual int RetryTimes { get; } = 2;
         protected virtual TimeSpan RetryDelay { get; } = TimeSpan.Zero;
