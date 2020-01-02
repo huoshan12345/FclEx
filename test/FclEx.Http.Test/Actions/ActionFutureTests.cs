@@ -122,7 +122,6 @@ namespace FclEx.Http.Test.Actions
             Assert.True(actions.All(m => m.ExecuteTimes == 1));
         }
 
-
         [Fact]
         public async Task PushAction_DonotStopOnException()
         {

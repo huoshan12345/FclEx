@@ -11,7 +11,7 @@ namespace FclEx.Http.Actions
 {
     public abstract class AbstractAction : IAction
     {
-        public ILogger Logger { get; } = NullLogger.Instance;
+        public virtual ILogger Logger { get; } = NullLogger.Instance;
 
         protected string ActionName => GetType().GetDescription();
         protected virtual AsyncRetryPolicy<IOperateResult> RetryPolicy { get; } = Policy<IOperateResult>

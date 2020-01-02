@@ -9,11 +9,8 @@ namespace FclEx.Utils
     {
         bool Successful { get; }
         int Code { get; }
-        [JsonIgnore]
         Exception Exception { get; }
         TimeSpan Elapsed { get; }
-        string Msg { get; }
-        string StackTrace { get; }
         OperateResult<TTarget> ToExplicit<TTarget>();
         IOperateResult WithElapsed(TimeSpan span);
     }

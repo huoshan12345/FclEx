@@ -11,11 +11,8 @@ namespace FclEx.Utils
     {
         public bool Successful => Code == OperateResultCodes.Success;
         public int Code { get; }
-        [JsonIgnore]
         public Exception Exception { get; }
         public TimeSpan Elapsed { get; }
-        public string Msg => Exception?.Message;
-        public string StackTrace => Exception?.StackTrace;
         public IUnit Result { get; }
 
         public void Deconstruct(out bool successful, out TimeSpan elapsed, out Exception exception)

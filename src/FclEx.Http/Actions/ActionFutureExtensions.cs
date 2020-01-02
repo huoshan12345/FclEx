@@ -31,6 +31,15 @@ namespace FclEx.Http.Actions
             return PushAction<TResult>(future, future.Count - 1, func);
         }
 
+        public static IActionFuture PushActions(this IActionFuture future, IEnumerable<IActor> actions)
+        {
+            foreach (var action in actions)
+            {
+                PushAction(future, action);
+            }
+            return future;
+        }
+
         public static IActionFuture PushActionIf<TResult>(this IActionFuture future, Func<TResult, bool> predicate,
             Func<TResult, IAction> func)
         {
@@ -49,15 +58,6 @@ namespace FclEx.Http.Actions
                 var dependent = objs[dependentIndex].ToExplicit<TDependentResult>().Result;
                 return func(dependent);
             });
-        }
-
-        public static IActionFuture PushActions(this IActionFuture future, IEnumerable<IActor> actions)
-        {
-            foreach (var action in actions)
-            {
-                PushAction(future, action);
-            }
-            return future;
         }
     }
 }
