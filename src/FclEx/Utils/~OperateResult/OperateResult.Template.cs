@@ -15,12 +15,12 @@ namespace FclEx.Utils
         public TimeSpan Elapsed { get; }
         public T Result { get; }
 
-        public void Deconstruct(out bool successful, out TimeSpan elapsed, out T result, out Exception exception)
+        public void Deconstruct(out bool successful, out TimeSpan elapsed, out T obj, out Exception ex)
         {
             successful = Successful;
-            exception = Exception;
+            ex = Exception;
             elapsed = Elapsed;
-            result = Result;
+            obj = Result;
         }
 
         /// <summary>

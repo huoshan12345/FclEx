@@ -8,10 +8,27 @@ namespace FclEx.Http.Actions
 {
     public static class ActionFutureExtensions
     {
+        public static T GetPossibleResultObject<T>(this IOperateResult result)
+        {
+            var (successful, _, obj, ex) = result.ToExplicit<T>();
+            if (successful) return obj;
+            else if (ex is ObjectException<T> objEx) return objEx.Target;
+            return default;
+        }
+
         public static IActionFuture PushAction(this IActionFuture future, IActor action)
         {
             Guard.Argument(action, nameof(action)).NotNull();
             return future.PushAction(objs => action);
+        }
+
+        public static IActionFuture PushActions(this IActionFuture future, IEnumerable<IActor> actions)
+        {
+            foreach (var action in actions)
+            {
+                PushAction(future, action);
+            }
+            return future;
         }
 
         public static IActionFuture PushAction(this IActionFuture future, int dependentResultIndex,
@@ -25,10 +42,10 @@ namespace FclEx.Http.Actions
             Func<TResult, IActor> func)
         {
             Guard.Argument(func, nameof(func)).NotNull();
-            return future.PushAction((IOperateResult[] objs) =>
+            return future.PushAction(dependentResultIndex, r =>
             {
-                var r = objs[dependentResultIndex];
-                return func(r.ToExplicit<TResult>().Result);
+                var obj = r.GetPossibleResultObject<TResult>();
+                return func(obj);
             });
         }
 
@@ -37,16 +54,6 @@ namespace FclEx.Http.Actions
             Guard.Argument(func, nameof(func)).NotNull();
             return PushAction<TResult>(future, future.Count - 1, func);
         }
-
-        public static IActionFuture PushActions(this IActionFuture future, IEnumerable<IActor> actions)
-        {
-            foreach (var action in actions)
-            {
-                PushAction(future, action);
-            }
-            return future;
-        }
-
         public static IActionFuture PushActionIf<TResult>(this IActionFuture future, Func<TResult, bool> predicate,
             Func<TResult, IActor> func)
         {
@@ -54,18 +61,34 @@ namespace FclEx.Http.Actions
             return PushAction<TResult>(future, o => predicate(o) ? func(o) : null);
         }
 
-        public static IActionFuture PushActionIf<TLastResult, TDependentResult>(this IActionFuture future,
-            Func<TLastResult, bool> predicate, int dependentIndex, Func<TDependentResult, IActor> func)
+        public static IActionFuture PushActionIf(this IActionFuture future,
+            Func<IOperateResult, bool> predicate, int dependentIndex, Func<IOperateResult, IActor> func)
         {
             Guard.Argument(predicate, nameof(predicate)).NotNull();
 
             var deptIndex = future.Count - 1;
             return future.PushAction((IOperateResult[] objs) =>
             {
-                var last = objs[deptIndex].ToExplicit<TLastResult>().Result;
+                var last = objs[deptIndex];
                 if (!predicate(last)) return null;
-                var dependent = objs[dependentIndex].ToExplicit<TDependentResult>().Result;
+                var dependent = objs[dependentIndex];
                 return func(dependent);
+            });
+        }
+
+        public static IActionFuture PushActionIf<TLastResult, TDependentResult>(this IActionFuture future,
+            Func<TLastResult, bool> predicate, int dependentIndex, Func<TDependentResult, IActor> func)
+        {
+            Guard.Argument(predicate, nameof(predicate)).NotNull();
+            return future.PushActionIf(r =>
+            {
+                var lastObj = r.GetPossibleResultObject<TLastResult>();
+                return predicate(lastObj);
+            }, dependentIndex,
+            r =>
+            {
+                var dependentObj = r.GetPossibleResultObject<TDependentResult>();
+                return func(dependentObj);
             });
         }
     }
