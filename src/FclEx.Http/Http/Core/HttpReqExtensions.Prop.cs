@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using FclEx.Http.Core;
+﻿using FclEx.Helpers;
 
-namespace FclEx.Http
+namespace FclEx.Http.Core
 {
-    public static class HttpReqPropExtensions
+    public static partial class HttpReqExtensions
     {
         public static HttpReq ReadResultCookie(this HttpReq req, bool read)
         {
@@ -73,6 +70,31 @@ namespace FclEx.Http
             return req;
         }
 
+        public static HttpReq Method(this HttpReq req, HttpMethodType method)
+        {
+            req.Method = method;
+            return req;
+        }
 
+        public static HttpReq Method(this HttpReq req, string method)
+        {
+            return req.Method(method.ToEnum<HttpMethodType>());
+        }
+
+        public static HttpReq Auth(this HttpReq req, string auth)
+        {
+            return req.AddHeader(HttpKnownHeaderNames.Authorization, auth);
+        }
+
+        public static HttpReq BasicAuth(this HttpReq req, string userName, string password)
+        {
+            var userInfo = userName + ":" + password;
+            return req.AddHeader(HttpKnownHeaderNames.Authorization, "Basic " + userInfo.ToBytes().ToBase64String());
+        }
+
+        public static HttpReq BearerAuth(this HttpReq req, string token)
+        {
+            return req.AddHeader(HttpKnownHeaderNames.Authorization, "Bearer " + token);
+        }
     }
 }

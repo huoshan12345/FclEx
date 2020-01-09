@@ -4,7 +4,7 @@ using System.Reflection;
 using FclEx.Http.Core;
 using FclEx.Http.Services;
 
-namespace FclEx.Http.Actions
+namespace FclEx.Actions
 {
     public abstract class CommonHttpAction : AbstractHttpAction
     {

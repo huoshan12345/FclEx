@@ -83,7 +83,7 @@ namespace FclEx.Http.Services
                 request.Headers.Add(key, value);
             }
 
-            var cookies = req.HeaderMap.GetOrDefault(HttpKnownHeaderNames.Cookie);
+            var cookies = req.HeaderMap.GetOr(HttpKnownHeaderNames.Cookie);
             if (!cookies.IsNullOrEmpty())
             {
                 request.Headers.Add(HttpKnownHeaderNames.Cookie, cookies);

@@ -17,13 +17,19 @@ namespace FclEx
             return result;
         }
 
-        public static TValue GetOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dic,
+        public static TValue GetOr<TKey, TValue>(this IDictionary<TKey, TValue> dic,
             TKey key, TValue defaultValue = default)
         {
-            return key != null && dic != null && dic.TryGetValue(key, out var value) ? value : defaultValue;
+            return dic.GetOr(key, k => defaultValue);
         }
 
-        public static TProp GetOrDefault<TKey, TValue, TProp>(this IDictionary<TKey, TValue> dic,
+        public static TValue GetOr<TKey, TValue>(this IDictionary<TKey, TValue> dic,
+            TKey key, Func<TKey, TValue> fac)
+        {
+            return key != null && dic != null && dic.TryGetValue(key, out var value) ? value : fac(key);
+        }
+
+        public static TProp GetOr<TKey, TValue, TProp>(this IDictionary<TKey, TValue> dic,
             TKey key, Func<TValue, TProp> selector, TProp defaultValue = default)
         {
             return key != null && dic != null && dic.TryGetValue(key, out var value) ? selector(value) : defaultValue;
@@ -31,7 +37,7 @@ namespace FclEx
 
         public static TValue[] GetOrEmptyArr<TKey, TValue>(this IDictionary<TKey, TValue[]> dic, TKey key)
         {
-            return dic.GetOrDefault(key, Array.Empty<TValue>());
+            return dic.GetOr(key, Array.Empty<TValue>());
         }
 
         public static bool TryAdd<TKey, TValue>(this Dictionary<TKey, TValue> dic,
@@ -88,7 +94,7 @@ namespace FclEx
             TKey key, Action<TValue> action)
         {
             if (key == null) return false;
-            var item = dic.GetOrDefault(key);
+            var item = dic.GetOr(key);
             if (item != null)
             {
                 action(item);

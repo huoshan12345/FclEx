@@ -4,9 +4,8 @@ using FclEx.Http.Core;
 using FclEx.Http.Services;
 using FclEx.Utils;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
-namespace FclEx.Http.Actions
+namespace FclEx.Actions
 {
     public class HttpGetAction : AbstractHttpAction
     {

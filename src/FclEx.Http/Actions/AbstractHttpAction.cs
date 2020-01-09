@@ -6,7 +6,7 @@ using FclEx.Http.Services;
 using FclEx.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace FclEx.Http.Actions
+namespace FclEx.Actions
 {
     public abstract class AbstractHttpAction : AbstractAction
     {

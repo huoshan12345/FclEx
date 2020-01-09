@@ -9,7 +9,7 @@ namespace FclEx
 {
     public static class EventExtensions
     {
-        public static T On<T>(this T t, Func<T, bool> condition, Action<T> action)
+        internal static T On<T>(this T t, Func<T, bool> condition, Action<T> action)
         {
             if (condition(t)) action(t);
             return t;

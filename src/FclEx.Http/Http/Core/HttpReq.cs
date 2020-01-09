@@ -49,7 +49,7 @@ namespace FclEx.Http.Core
         {
             get
             {
-                var type = HeaderMap.GetOrDefault(HttpKnownHeaderNames.ContentType);
+                var type = HeaderMap.GetOr(HttpKnownHeaderNames.ContentType);
                 return type == HttpConstants.MultiPartContentType
                     ? "multipart/form-data; boundary=" + Boundary
                     : type;
@@ -59,25 +59,25 @@ namespace FclEx.Http.Core
 
         public string Referrer
         {
-            get => HeaderMap.GetOrDefault(HttpKnownHeaderNames.Referrer);
+            get => HeaderMap.GetOr(HttpKnownHeaderNames.Referrer);
             set => HeaderMap[HttpKnownHeaderNames.Referrer] = value;
         }
 
         public string Origin
         {
-            get => HeaderMap.GetOrDefault(HttpKnownHeaderNames.Origin);
+            get => HeaderMap.GetOr(HttpKnownHeaderNames.Origin);
             set => HeaderMap[HttpKnownHeaderNames.Origin] = value;
         }
 
         public string UserAgent
         {
-            get => HeaderMap.GetOrDefault(HttpKnownHeaderNames.UserAgent);
+            get => HeaderMap.GetOr(HttpKnownHeaderNames.UserAgent);
             set => HeaderMap[HttpKnownHeaderNames.UserAgent] = value;
         }
 
         public string Boundary
         {
-            get => HeaderMap.GetOrDefault(HttpConstants.Boundary);
+            get => HeaderMap.GetOr(HttpConstants.Boundary);
             set => HeaderMap[HttpConstants.Boundary] = value;
         }
 
@@ -100,6 +100,10 @@ namespace FclEx.Http.Core
             ContentType = method == HttpMethodType.Get ? HttpConstants.DefaultGetContentType : HttpConstants.DefaultPostContentType;
             Method = method;
             AddHeader(HttpKnownHeaderNames.UserAgent, HttpConstants.DefaultUserAgent);
+            if (UserName.IsValid() && Password.IsValid())
+            {
+                this.BasicAuth(UserName, Password);
+            }
         }
 
         public HttpReq(HttpMethodType method, string rawUrl)
@@ -243,7 +247,7 @@ namespace FclEx.Http.Core
         {
             if (!ByteArrayData.IsNullOrEmpty()) return ByteArrayData;
 
-            var type = HeaderMap.GetOrDefault(HttpKnownHeaderNames.ContentType);
+            var type = HeaderMap.GetOr(HttpKnownHeaderNames.ContentType);
             switch (type)
             {
                 case HttpConstants.FormContentType: return FormMap.ToQueryStr().ToBytes(Encoding);

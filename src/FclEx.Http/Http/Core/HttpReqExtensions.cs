@@ -1,18 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Linq;
-using System.Net;
-using System.Text;
 using System.Threading.Tasks;
-using FclEx.Extensions;
-using FclEx.Http.Core;
 using FclEx.Http.Services;
 using MoreLinq;
 
-namespace FclEx.Http
+namespace FclEx.Http.Core
 {
-    public static class HttpReqExtensions
+    public static partial class HttpReqExtensions
     {
         public static HttpReq AddQueryValue(this HttpReq req, string key, object value) => req.AddQueryValue(key, value.ToStringOrEmpty());
 
@@ -92,13 +87,18 @@ namespace FclEx.Http
 
         public static HttpReq RawData(this HttpReq req, string data)
         {
-            return RawData(req, data.ToBytes(req.Encoding));
+            return req.RawData(data.ToBytes(req.Encoding));
         }
 
         public static HttpReq RawData(this HttpReq req, byte[] data)
         {
             req.ByteArrayData = data;
             return req;
+        }
+
+        public static HttpReq JsonData<T>(this HttpReq req, T data, JsonOptions options = default)
+        {
+            return req.RawData(data.ToJson(options));
         }
 
         public static HttpReq AddFile(this HttpReq req, HttpFileUploadInfo fileUpload, byte[] fileBytes)

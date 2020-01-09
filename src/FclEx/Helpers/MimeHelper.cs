@@ -12,7 +12,7 @@ namespace FclEx.Helpers
         {
             var ext = Path.GetExtension(fileName);
             var key = string.IsNullOrEmpty(ext) ? ".*" : ext;
-            var text = _mimeMap.GetOrDefault(key, _mimeMap[".*"]);
+            var text = _mimeMap.GetOr(key, _mimeMap[".*"]);
             return text;
         }
 

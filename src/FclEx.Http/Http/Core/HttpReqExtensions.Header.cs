@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
-using FclEx.Http.Core;
 using MoreLinq;
 
-namespace FclEx.Http
+namespace FclEx.Http.Core
 {
-    public static class HttpReqHeaderExtensions
+    public static partial class HttpReqExtensions
     {
         public static HttpReq AddHeader(this HttpReq req, IEnumerable<KeyValuePair<string, string>> paras)
         {
@@ -50,7 +48,7 @@ namespace FclEx.Http
 
         public static HttpReq TryReferrer(this HttpReq req, string referrer)
         {
-            req.Referrer = req.Referrer ?? referrer;
+            req.Referrer ??= referrer;
             return req;
         }
 
@@ -62,7 +60,7 @@ namespace FclEx.Http
 
         public static HttpReq TryUserAgent(this HttpReq req, string userAgent)
         {
-            req.UserAgent = req.UserAgent ?? userAgent;
+            req.UserAgent ??= userAgent;
             return req;
         }
 
@@ -74,7 +72,7 @@ namespace FclEx.Http
 
         public static HttpReq TryChartSet(this HttpReq req, string chartSet)
         {
-            req.ResultCharSet = req.ResultCharSet ?? chartSet;
+            req.ResultCharSet ??= chartSet;
             return req;
         }
 
@@ -86,7 +84,7 @@ namespace FclEx.Http
 
         public static HttpReq TryTimeout(this HttpReq req, int? timeout)
         {
-            req.Timeout = req.Timeout ?? timeout;
+            req.Timeout ??= timeout;
             return req;
         }
 

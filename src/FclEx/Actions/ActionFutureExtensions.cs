@@ -91,5 +91,18 @@ namespace FclEx.Http.Actions
                 return func(dependentObj);
             });
         }
+
+        public static IActionFuture PushActionIf(this IActionFuture future, Func<IOperateResult, bool> predicate,
+            Func<IOperateResult, IActor> func)
+        {
+            Guard.Argument(predicate, nameof(predicate)).NotNull();
+            var deptIndex = future.Count - 1;
+            return future.PushAction((IOperateResult[] objs) =>
+            {
+                var last = objs[deptIndex];
+                if (!predicate(last)) return null;
+                return func(last);
+            });
+        }
     }
 }

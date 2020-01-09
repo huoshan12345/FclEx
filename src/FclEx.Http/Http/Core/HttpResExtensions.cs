@@ -2,17 +2,13 @@
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
-using FclEx.Extensions;
 using FclEx.Extensions.System;
-using FclEx.Http.Core;
 using MimeTypes.Core;
-using Newtonsoft.Json.Linq;
 
-namespace FclEx.Http
+namespace FclEx.Http.Core
 {
     public static class HttpResExtensions
     {

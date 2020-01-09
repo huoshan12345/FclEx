@@ -70,7 +70,7 @@ namespace FclEx
         public static byte[] ToUtf8Bytes(this string input) => input.ToBytes(Encoding.UTF8);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte[] ToBytes(this string input, Encoding encoding) => encoding.GetBytes(input);
+        public static byte[] ToBytes(this string input, Encoding encoding = null) => (encoding ?? Encoding.UTF8).GetBytes(input);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string UrlEncode(this string url) => WebUtility.UrlEncode(url);

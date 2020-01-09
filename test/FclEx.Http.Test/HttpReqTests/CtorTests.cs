@@ -28,5 +28,13 @@ namespace FclEx.Http.Test.HttpReqTests
             req.Host("localhost");
             var realUrl = req.GetUrl();
         }
+
+        [Fact]
+        public void Ctor_WithUserInfo()
+        {
+            var req = HttpReq.Get("http://lijing:lijing@captcha.mooncatling.fun/api/captcha/save");
+            Assert.True(req.HeaderMap.TryGetValue("Authorization", out var auth));
+            Assert.Equal("Basic bGlqaW5nOmxpamluZw==", auth);
+        }
     }
 }
