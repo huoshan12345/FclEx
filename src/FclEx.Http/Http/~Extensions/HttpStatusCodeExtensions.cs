@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
-using FclEx.Http.Utils;
+using FclEx.Utils;
 
 namespace FclEx.Http
 {

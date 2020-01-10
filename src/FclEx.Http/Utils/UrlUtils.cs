@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 
-namespace FclEx.Http.Utils
+namespace FclEx.Utils
 {
 	/// <summary>
 	/// Code from https://github.com/tmenier/Flurl

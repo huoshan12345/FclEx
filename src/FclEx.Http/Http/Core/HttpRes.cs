@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using Microsoft.Collections.Extensions;
+using FclEx.Microsoft.Collections.Extensions;
 
 namespace FclEx.Http.Core
 {

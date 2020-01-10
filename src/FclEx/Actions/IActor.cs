@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using FclEx.Utils;
 
-namespace FclEx.Http.Actions
+namespace FclEx.Actions
 {
     public interface IActor
     {

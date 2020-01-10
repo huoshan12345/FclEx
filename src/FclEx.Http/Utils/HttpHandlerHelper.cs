@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
 using FclEx.Http.HttpClientFactory;
 using FclEx.Http.Proxy;
-using FclEx.Utils;
 
-namespace FclEx.Http.Utils
+namespace FclEx.Utils
 {
     public static class HttpHandlerHelper
     {

@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Dawn;
 using FclEx.Utils;
 
-namespace FclEx.Http.Actions
+namespace FclEx.Actions
 {
     public static class ActionFutureExtensions
     {

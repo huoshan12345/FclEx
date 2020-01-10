@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Dawn;
 using FclEx.Helpers;
 using FclEx.Utils;
-using Microsoft.Collections.Extensions;
 using MoreLinq;
 
 namespace FclEx

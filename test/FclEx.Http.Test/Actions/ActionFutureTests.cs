@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using FclEx.Http.Actions;
+using FclEx.Actions;
 using FclEx.Utils;
 using Xunit;
 

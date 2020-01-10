@@ -1,7 +1,7 @@
 ﻿using System;
 using FclEx.Utils;
 
-namespace FclEx.Http.Actions
+namespace FclEx.Actions
 {
     public interface IActionFuture : IActor
     {

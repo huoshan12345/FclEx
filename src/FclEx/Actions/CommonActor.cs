@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FclEx.Utils;
 
-namespace FclEx.Http.Actions
+namespace FclEx.Actions
 {
     public class CommonActor : IActor
     {

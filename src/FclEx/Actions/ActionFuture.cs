@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Dawn;
 using FclEx.Utils;
 
-namespace FclEx.Http.Actions
+namespace FclEx.Actions
 {
     public class ActionFuture : IActionFuture
     {

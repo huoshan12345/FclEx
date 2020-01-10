@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using FclEx.Extensions;
-using Microsoft.Collections.Extensions;
 
 namespace FclEx
 {

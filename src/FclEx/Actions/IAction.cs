@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace FclEx.Http.Actions
+namespace FclEx.Actions
 {  
     public interface IAction : IActor
     {

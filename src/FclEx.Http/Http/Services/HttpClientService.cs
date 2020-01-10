@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using FclEx.Http.Core;
 using FclEx.Http.Proxy;
-using FclEx.Http.Utils;
 using FclEx.Utils;
 using Microsoft.Extensions.Logging;
 
