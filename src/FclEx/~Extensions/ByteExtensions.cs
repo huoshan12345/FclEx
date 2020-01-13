@@ -18,9 +18,9 @@ namespace FclEx
 
         public static string GetString(this byte[] bytes) => bytes.GetString(Encoding.UTF8);
 
-        public static string ToBase64String(this byte[] bytes) => Convert.ToBase64String(bytes);
+        public static string ToBase64(this byte[] bytes) => Convert.ToBase64String(bytes);
 
-        public static string ToHexString(this byte[] bytes, bool upperCase = false)
+        public static string ToHex(this byte[] bytes, bool upperCase = false)
         {
             var builder = new StringBuilder(bytes.Length);
             if (upperCase)

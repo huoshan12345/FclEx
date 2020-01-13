@@ -10,7 +10,7 @@ namespace FclEx
 
         public static string ToMd5String(this byte[] input, bool upperCase = false)
         {
-            return input.Md5().ToHexString(upperCase);
+            return input.Md5().ToHex(upperCase);
         }
 
         public static byte[] Hash(this HashAlgorithm algorithm, byte[] input)

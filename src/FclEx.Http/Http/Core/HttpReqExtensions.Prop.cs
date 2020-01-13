@@ -89,7 +89,7 @@ namespace FclEx.Http.Core
         public static HttpReq BasicAuth(this HttpReq req, string userName, string password)
         {
             var userInfo = userName + ":" + password;
-            return req.AddHeader(HttpKnownHeaderNames.Authorization, "Basic " + userInfo.ToBytes().ToBase64String());
+            return req.AddHeader(HttpKnownHeaderNames.Authorization, "Basic " + userInfo.ToBytes().ToBase64());
         }
 
         public static HttpReq BearerAuth(this HttpReq req, string token)
