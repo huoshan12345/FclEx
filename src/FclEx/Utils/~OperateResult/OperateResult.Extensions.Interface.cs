@@ -76,5 +76,24 @@ namespace FclEx.Utils
         {
             return (await task.DonotCapture()).ToExplicit<T>();
         }
+
+        public static bool IsObjErr<T>(this IOperateResult result, out T item)
+        {
+            if (result.Exception is ObjectException<T> ex)
+            {
+                item = ex.Target;
+                return true;
+            }
+            else
+            {
+                item = default;
+                return false;
+            }
+        }
+
+        public static bool IsObjErr<T>(this IOperateResult result, Func<T, bool> predicate)
+        {
+            return result.Exception is ObjectException<T> ex && predicate(ex.Target);
+        }
     }
 }
