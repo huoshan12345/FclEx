@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -38,7 +39,8 @@ namespace FclEx.Http.Core
             return req.AddHeader("X-Requested-With", "XMLHttpRequest");
         }
 
-        public static HttpReq Compress(this HttpReq req) => req.AddHeader(HttpKnownHeaderNames.AcceptEncoding, "gzip, deflate");
+        public static HttpReq Compress(this HttpReq req)
+            => req.AddHeader(HttpKnownHeaderNames.AcceptEncoding, "gzip, deflate");
 
         public static HttpReq Referrer(this HttpReq req, string referrer)
         {
@@ -61,30 +63,6 @@ namespace FclEx.Http.Core
         public static HttpReq TryUserAgent(this HttpReq req, string userAgent)
         {
             req.UserAgent ??= userAgent;
-            return req;
-        }
-
-        public static HttpReq ChartSet(this HttpReq req, string chartSet)
-        {
-            req.ResultCharSet = chartSet;
-            return req;
-        }
-
-        public static HttpReq TryChartSet(this HttpReq req, string chartSet)
-        {
-            req.ResultCharSet ??= chartSet;
-            return req;
-        }
-
-        public static HttpReq Timeout(this HttpReq req, int? timeout)
-        {
-            req.Timeout = timeout;
-            return req;
-        }
-
-        public static HttpReq TryTimeout(this HttpReq req, int? timeout)
-        {
-            req.Timeout ??= timeout;
             return req;
         }
 

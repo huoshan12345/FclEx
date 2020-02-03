@@ -1,4 +1,5 @@
-﻿using FclEx.Helpers;
+﻿using System;
+using FclEx.Helpers;
 
 namespace FclEx.Http.Core
 {
@@ -95,6 +96,35 @@ namespace FclEx.Http.Core
         public static HttpReq BearerAuth(this HttpReq req, string token)
         {
             return req.AddHeader(HttpKnownHeaderNames.Authorization, "Bearer " + token);
+        }
+
+        public static HttpReq ChartSet(this HttpReq req, string chartSet)
+        {
+            req.ResultCharSet = chartSet;
+            return req;
+        }
+
+        public static HttpReq TryChartSet(this HttpReq req, string chartSet)
+        {
+            req.ResultCharSet ??= chartSet;
+            return req;
+        }
+
+        public static HttpReq Timeout(this HttpReq req, int? timeout)
+        {
+            return req.Timeout(timeout.HasValue ? TimeSpan.FromMilliseconds(timeout.Value) : (TimeSpan?)null);
+        }
+
+        public static HttpReq Timeout(this HttpReq req, TimeSpan? timeout)
+        {
+            req.Timeout = timeout;
+            return req;
+        }
+
+        public static HttpReq TryTimeout(this HttpReq req, TimeSpan? timeout)
+        {
+            req.Timeout ??= timeout;
+            return req;
         }
     }
 }

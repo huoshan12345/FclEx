@@ -12,6 +12,7 @@ using FclEx.Utils;
 
 namespace FclEx.Http.Services
 {
+    [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
     public static class HttpServiceExtensions
     {
         public static Task<HttpRes> GetAsync(this IHttpService http, string url, string charSet = null, int? timeout = 10 * 1000, int retryTimes = 3, int delaySeconds = 0)
@@ -77,7 +78,6 @@ namespace FclEx.Http.Services
             http.AddCookies(cookies, uri);
         }
 
-        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         public static void AddCookies(this IHttpService http, IEnumerable<Cookie> cookies, Uri uri)
         {
             Guard.Argument(http, nameof(http)).NotNull();
@@ -108,22 +108,26 @@ namespace FclEx.Http.Services
             http.AddCookie(cookie.ToCookie());
         }
 
-        public static void AddCookies(this IHttpService http, CookieCollection cc, string url = null) 
+        public static void AddCookies(this IHttpService http, CookieCollection cc, string url = null)
             => AddCookies(http, cc.OfType<Cookie>(), url);
 
-        public static async Task<OperateResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, Uri uri, HttpMethodType method = HttpMethodType.Get)
+        public static async Task<OperateResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, Uri uri, 
+            HttpMethodType method = HttpMethodType.Get, TimeSpan? timeout = null)
         {
             var req = new HttpReq(uri, method)
-                .ResultType(HttpResultType.Byte);
+                .ResultType(HttpResultType.Byte)
+                .Timeout(timeout)
+                .Compress();
 
-            var res = await http.SendAsync(req);
+            var res = await http.SendAsync(req).DonotCapture();
             if (res.HasError)
                 return OperateResult.CreateError(res.Exception, res.ExcuteTime);
             else
                 return res.GetDownloadInfo();
         }
 
-        public static Task<OperateResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, string url, HttpMethodType method = HttpMethodType.Get)
-            => http.DownloadAsync(new Uri(url), method);
+        public static Task<OperateResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, string url, 
+            HttpMethodType method = HttpMethodType.Get, TimeSpan? timeout = null)
+            => http.DownloadAsync(new Uri(url), method, timeout);
     }
 }
