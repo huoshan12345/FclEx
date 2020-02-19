@@ -111,7 +111,7 @@ namespace FclEx.Http.Services
         public static void AddCookies(this IHttpService http, CookieCollection cc, string url = null)
             => AddCookies(http, cc.OfType<Cookie>(), url);
 
-        public static async Task<OperateResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, Uri uri, 
+        public static async Task<OperateResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, Uri uri,
             HttpMethodType method = HttpMethodType.Get, TimeSpan? timeout = null)
         {
             var req = new HttpReq(uri, method)
@@ -121,12 +121,12 @@ namespace FclEx.Http.Services
 
             var res = await http.SendAsync(req).DonotCapture();
             if (res.HasError)
-                return OperateResult.CreateError(res.Exception, res.ExcuteTime);
+                return OperateResult.CreateObjError(res, res.Exception, res.ExcuteTime);
             else
                 return res.GetDownloadInfo();
         }
 
-        public static Task<OperateResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, string url, 
+        public static Task<OperateResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, string url,
             HttpMethodType method = HttpMethodType.Get, TimeSpan? timeout = null)
             => http.DownloadAsync(new Uri(url), method, timeout);
     }
