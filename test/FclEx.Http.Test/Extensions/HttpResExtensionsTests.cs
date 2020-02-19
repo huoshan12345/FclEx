@@ -58,7 +58,7 @@ namespace FclEx.Http.Test.Extensions
                 .Error(e =>
                 {
                     flag = true;
-                    Assert.IsType<OperationCanceledException>(e);
+                    Assert.IsType<TaskCanceledException>(e);
                 });
             Assert.False(!flag ^ r.Successful);
         }

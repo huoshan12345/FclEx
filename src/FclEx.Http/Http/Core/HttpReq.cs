@@ -27,6 +27,7 @@ namespace FclEx.Http.Core
         public bool UseDefaultProxy { get; set; } = false;
         public byte[] ByteArrayData { get; set; }
         public HttpMethodType Method { get; set; }
+        public TimeSpan? TotalTimeout { get; set; } 
         public TimeSpan? Timeout { get; set; } = TimeSpan.FromSeconds(10);
         public string ResultCharSet { get; set; }
         public HttpResultType ResultType { get; set; }

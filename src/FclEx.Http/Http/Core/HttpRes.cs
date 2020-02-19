@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Text;
 using Microsoft.Collections.Extensions;
 
 namespace FclEx.Http.Core
@@ -14,8 +15,8 @@ namespace FclEx.Http.Core
         public bool HasError => Exception != null;
         public HttpReq Req { get; internal set; }
         public string ResponseString { get; internal set; }
+        public Encoding Encoding { get; internal set; }
         public byte[] ResponseBytes { get; internal set; }
-        public string ResponseChartSet { get; internal set; }
         public Exception Exception { get; internal set; }
         public TimeSpan ExcuteTime { get; internal set; }
         public DateTime RequestUtcTime { get; internal set; }

@@ -1,5 +1,7 @@
-﻿using System.IO;
+﻿using System.Buffers;
+using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FclEx
@@ -8,10 +10,8 @@ namespace FclEx
     {
         public static string ToString(this Stream stream, Encoding encoding = null)
         {
-            using (var sr = new StreamReader(stream, encoding ?? Encoding.UTF8))
-            {
-                return sr.ReadToEnd();
-            }
+            using var sr = new StreamReader(stream, encoding ?? Encoding.UTF8);
+            return sr.ReadToEnd();
         }
 
         public static byte[] ToBytes(this Stream stream)

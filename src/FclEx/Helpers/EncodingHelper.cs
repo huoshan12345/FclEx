@@ -7,7 +7,7 @@ namespace FclEx.Helpers
     /// <summary>
     /// 获取文件的编码格式
     /// </summary>
-    public static class EncodingHelper
+    public static partial class EncodingHelper
     {
         private static Encoding Utf8WithoutBom { get; } = new UTF8Encoding(false);
 

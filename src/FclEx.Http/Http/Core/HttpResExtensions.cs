@@ -44,13 +44,6 @@ namespace FclEx.Http.Core
             return resObj;
         }
 
-        public static Encoding GetResultEncoding(this HttpRes res)
-        {
-            return res.ResponseChartSet.IsValid()
-                ? Encoding.GetEncoding(res.ResponseChartSet)
-                : Encoding.UTF8;
-        }
-
         internal static HttpFileDownloadInfo GetDownloadInfo(this HttpRes res)
         {
             var realUrl = res.RedirectUris.Last();
@@ -76,12 +69,7 @@ namespace FclEx.Http.Core
                 }
             }
             ext ??= string.Empty;
-
-            var bytes = res.Req.ResultType == HttpResultType.Byte
-                ? res.ResponseBytes
-                : res.GetResultEncoding().GetBytes(res.ResponseString);
-
-            var info = new HttpFileDownloadInfo(realUrl, fileName, ext, bytes);
+            var info = new HttpFileDownloadInfo(realUrl, fileName, ext, res.ResponseBytes);
             return info;
         }
 
