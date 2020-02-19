@@ -121,6 +121,12 @@ namespace FclEx.Http.Core
             return req;
         }
 
+        public static HttpReq TotalTimeout(this HttpReq req, TimeSpan? timeout)
+        {
+            req.TotalTimeout = timeout;
+            return req;
+        }
+
         public static HttpReq TryTimeout(this HttpReq req, TimeSpan? timeout)
         {
             req.Timeout ??= timeout;
