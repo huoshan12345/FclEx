@@ -27,9 +27,11 @@ namespace FclEx.Http.Core
         public bool UseDefaultProxy { get; set; } = false;
         public byte[] ByteArrayData { get; set; }
         public HttpMethodType Method { get; set; }
-        public TimeSpan? TotalTimeout { get; set; } 
-        public TimeSpan? Timeout { get; set; } = TimeSpan.FromSeconds(10);
-        public string ResultCharSet { get; set; }
+        public TimeSpan? TotalTimeout { get; set; }
+        public TimeSpan? Timeout { get; set; } = TimeSpan.FromSeconds(20);
+        public string CharSet { get; set; }
+        public bool DetectCharSetFromHtmlMeta { get; set; }
+        public string FallbackCharSet { get; set; }
         public HttpResultType ResultType { get; set; }
         public bool ReadResultCookie { get; set; } = true;
         public bool ReadResultHeader { get; set; } = true;

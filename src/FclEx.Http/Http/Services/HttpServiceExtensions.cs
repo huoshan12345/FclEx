@@ -20,7 +20,7 @@ namespace FclEx.Http.Services
             var req = HttpReq.Get(url)
                 .Compress()
                 .Timeout(timeout)
-                .ChartSet(charSet);
+                .CharSet(charSet);
             return SendAsync(http, req, retryTimes, delaySeconds);
         }
 

@@ -98,15 +98,33 @@ namespace FclEx.Http.Core
             return req.AddHeader(HttpKnownHeaderNames.Authorization, "Bearer " + token);
         }
 
-        public static HttpReq ChartSet(this HttpReq req, string chartSet)
+        public static HttpReq CharSet(this HttpReq req, string chartSet)
         {
-            req.ResultCharSet = chartSet;
+            req.CharSet = chartSet;
             return req;
         }
 
-        public static HttpReq TryChartSet(this HttpReq req, string chartSet)
+        public static HttpReq TryCharSet(this HttpReq req, string chartSet)
         {
-            req.ResultCharSet ??= chartSet;
+            req.CharSet ??= chartSet;
+            return req;
+        }
+
+        public static HttpReq DetectCharSetFromHtmlMeta(this HttpReq req, bool flag = true)
+        {
+            req.DetectCharSetFromHtmlMeta = flag;
+            return req;
+        }
+
+        public static HttpReq FallbackCharSet(this HttpReq req, string chartSet)
+        {
+            req.FallbackCharSet = chartSet;
+            return req;
+        }
+
+        public static HttpReq TryFallbackCharSet(this HttpReq req, string chartSet)
+        {
+            req.FallbackCharSet ??= chartSet;
             return req;
         }
 
@@ -121,15 +139,33 @@ namespace FclEx.Http.Core
             return req;
         }
 
+        public static HttpReq TryTimeout(this HttpReq req, TimeSpan? timeout)
+        {
+            req.Timeout ??= timeout;
+            return req;
+        }
+
         public static HttpReq TotalTimeout(this HttpReq req, TimeSpan? timeout)
         {
             req.TotalTimeout = timeout;
             return req;
         }
 
-        public static HttpReq TryTimeout(this HttpReq req, TimeSpan? timeout)
+        public static HttpReq TryTotalTimeout(this HttpReq req, TimeSpan? timeout)
         {
-            req.Timeout ??= timeout;
+            req.TotalTimeout ??= timeout;
+            return req;
+        }
+
+        public static HttpReq Origin(this HttpReq req, string url)
+        {
+            req.Origin = url;
+            return req;
+        }
+
+        public static HttpReq TryOrigin(this HttpReq req, string url)
+        {
+            req.Origin ??= url;
             return req;
         }
     }

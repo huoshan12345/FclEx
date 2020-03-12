@@ -6,7 +6,7 @@ namespace FclEx.Utils
 	/// <summary>
 	/// Code from https://github.com/tmenier/Flurl
 	/// </summary>
-	public static class UrlUtils
+	public static class UrlUtil
     {
 		#region static utility methods
 		/// <summary>

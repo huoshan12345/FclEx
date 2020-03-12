@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using FclEx.Helpers;
 using FclEx.Http.Core;
 using FclEx.Http.Proxy;
+using FclEx.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace FclEx.Http.Services
@@ -61,7 +62,8 @@ namespace FclEx.Http.Services
             var bytes = await CopyToMemoryAsync(response.Content, token, res.Req.Timeout).DonotCapture();
             res.ResponseBytes = bytes;
 
-            switch (res.Req.ResultType)
+            var req = res.Req;
+            switch (req.ResultType)
             {
                 case HttpResultType.Byte:
                 {
@@ -70,24 +72,39 @@ namespace FclEx.Http.Services
                 }
                 case HttpResultType.String:
                 {
-                    var headers = response.Content.Headers;
-                    if (res.Req.ResultCharSet.IsValid())
-                    {
-                        if (headers.ContentType == null)
-                        {
-                            headers.ContentType = new MediaTypeHeaderValue(HttpConstants.DefaultGetContentType);
-                        }
-                        headers.ContentType.CharSet = res.Req.ResultCharSet;
-                    }
                     var buffer = new ArraySegment<byte>(bytes.ToArray());
-                    (res.ResponseString, res.Encoding) = ReadBufferAsString(buffer, headers);
+                    (res.ResponseString, res.Encoding) = ReadBufferAsString(buffer, response.Content.Headers, req.CharSet, req.DetectCharSetFromHtmlMeta, req.FallbackCharSet);
                     break;
                 }
                 default: throw new ArgumentOutOfRangeException();
             }
         }
 
-        internal static (string, Encoding) ReadBufferAsString(ArraySegment<byte> buffer, HttpContentHeaders headers)
+        internal static Encoding GetEncodingFromCharSet(string charset)
+        {
+            if (charset.IsNullOrEmpty())
+                return null;
+            try
+            {
+                // Remove at most a single set of quotes.
+                if (charset.Length > 2 &&
+                    charset[0] == '\"' &&
+                    charset[charset.Length - 1] == '\"')
+                {
+                    return Encoding.GetEncoding(charset.Substring(1, charset.Length - 2));
+                }
+                else
+                {
+                    return Encoding.GetEncoding(charset);
+                }
+            }
+            catch (ArgumentException e)
+            {
+                throw new InvalidOperationException("The character set provided in ContentType is invalid", e);
+            }
+        }
+
+        internal static (string, Encoding) ReadBufferAsString(ArraySegment<byte> buffer, HttpContentHeaders headers, string charSet, bool detectCharSetFromHtmlMeta, string defaultCharSet)
         {
             // We don't validate the Content-Encoding header: If the content was encoded, it's the caller's
             // responsibility to make sure to only call ReadAsString() on already decoded content. E.g. if the
@@ -96,33 +113,15 @@ namespace FclEx.Http.Services
 
             Encoding encoding = null;
             var bomLength = -1;
-            var charset = headers.ContentType?.CharSet;
 
+            charSet = charSet.IfEmpty(headers.ContentType?.CharSet);
             // If we do have encoding information in the 'Content-Type' header, use that information to convert
             // the content to a string.
-            if (charset != null)
+            if (charSet != null)
             {
-                try
-                {
-                    // Remove at most a single set of quotes.
-                    if (charset.Length > 2 &&
-                        charset[0] == '\"' &&
-                        charset[charset.Length - 1] == '\"')
-                    {
-                        encoding = Encoding.GetEncoding(charset.Substring(1, charset.Length - 2));
-                    }
-                    else
-                    {
-                        encoding = Encoding.GetEncoding(charset);
-                    }
-
-                    // Byte-order-mark (BOM) characters may be present even if a charset was specified.
-                    bomLength = EncodingHelper.GetPreambleLength(buffer, encoding);
-                }
-                catch (ArgumentException e)
-                {
-                    throw new InvalidOperationException("The character set provided in ContentType is invalid", e);
-                }
+                encoding = GetEncodingFromCharSet(charSet);
+                // Byte-order-mark (BOM) characters may be present even if a charset was specified.
+                bomLength = EncodingHelper.GetPreambleLength(buffer, encoding);
             }
 
             // If no content encoding is listed in the ContentType HTTP header, or no Content-Type header present,
@@ -131,18 +130,40 @@ namespace FclEx.Http.Services
             {
                 if (!EncodingHelper.TryDetectEncoding(buffer, out encoding, out bomLength))
                 {
-                    // Use the default encoding (UTF8) if we couldn't detect one.
-                    encoding = DefaultStringEncoding;
-
                     // We already checked to see if the data had a UTF8 BOM in TryDetectEncoding
                     // and DefaultStringEncoding is UTF8, so the bomLength is 0.
                     bomLength = 0;
+
+                    if (detectCharSetFromHtmlMeta)
+                    {
+                        var media = headers.ContentType?.MediaType;
+                        if (media != null && media.Contains("html")) // html or xhtml
+                        {
+                            encoding = DetectCharSetFromHtmlMeta(buffer);
+                        }
+                    }
                 }
+            }
+
+            if (encoding == null)
+            {
+                // Use the default encoding (UTF8) if we couldn't detect one.
+                encoding = GetEncodingFromCharSet(defaultCharSet) ?? DefaultStringEncoding;
             }
 
             // Drop the BOM when decoding the data.
             var str = encoding.GetString(buffer.Array, buffer.Offset + bomLength, buffer.Count - bomLength);
             return (str, encoding);
+        }
+
+        private static Encoding DetectCharSetFromHtmlMeta(ArraySegment<byte> buffer)
+        {
+            if (buffer.Array.Length == 0)
+                return null;
+
+            var prefix = Encoding.Default.GetString(buffer.Array, 0, Math.Min(1024, buffer.Array.Length));
+            var charSet = HtmlUtil.GetMetaCharSet(prefix);
+            return charSet == null ? null : Encoding.GetEncoding(charSet);
         }
 
         private static async Task<byte[]> CopyToMemoryAsync(HttpContent content, CancellationToken token, TimeSpan? timeout)
@@ -158,7 +179,7 @@ namespace FclEx.Http.Services
         private static async Task CopyToAsync(Stream source, Stream dest, CancellationToken token, TimeSpan? timeout)
         {
             var pool = ArrayPool<byte>.Shared;
-            var buffer = pool.Rent(1024 * 1024);
+            var buffer = pool.Rent(256 * 1024);
             try
             {
                 int bytesCopied;
