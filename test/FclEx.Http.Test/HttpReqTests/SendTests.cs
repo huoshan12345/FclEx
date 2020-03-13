@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using FclEx.Http.Core;
 using FclEx.Http.Services;
+using FclEx.Utils;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -12,13 +14,7 @@ namespace FclEx.Http.Test.HttpReqTests
 {
     public class SendTests
     {
-        private readonly ITestOutputHelper _output;
-
-        public SendTests(ITestOutputHelper output)
-        {
-            _output = output;
-        }
-
+        public const string TestUrl = "https://www.fastmock.site/mock/b7b0bc89cb82e6d1ffc3dc5090d39407/fclex";
         public static IList<string> Urls => new[]
         {
             "http://www.baidu.com/",
@@ -28,24 +24,48 @@ namespace FclEx.Http.Test.HttpReqTests
             "http://www.qq.com/",
         };
 
-        public static IList<IHttpService> Services => new IHttpService[]
-        {
-            new HttpClientService()
-        };
-
-        public static IEnumerable<object[]> Cases => Services
-            .SelectMany(m => Urls, (i, j) => (Service: i, Url: j))
-            .Select(m => new object[] { m.Service, m.Url });
+        public static IEnumerable<object[]> Cases => Urls
+            .Select(m => new object[] { m });
 
         [Theory]
         [MemberData(nameof(Cases))]
-        public async ValueTask ReqTest(IHttpService service, string url)
+        public async Task Get_Test(string url)
         {
-            for (var i = 0; i < 3; i++)
-            {
-                var res = await service.SendAsync(HttpReq.Get(url)).DonotCapture();
-                res.ThrowIfError();
-            }
+            var res = await HttpReq.Get(url)
+                .SendAsync()
+                .DonotCapture();
+            res.ThrowIfError();
+        }
+
+        [Fact]
+        public async Task Form_Test()
+        {
+            var random = new Random(1024);
+            var expected = Enumerable.Range(1, 3).ToDictionary(m => m.ToString(), m => random.NextString(5));
+            var res = await HttpReq.Form(UrlUtil.Combine(TestUrl, "/api/post"))
+                .AddData(expected)
+                .SendAsync()
+                .DonotCapture();
+            Assert.False(res.HasError);
+            var body = res.ResponseString.ToJToken()["body"];
+            Assert.NotNull(body);
+            var actual = body.ToObject<Dictionary<string, string>>();
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public async Task Json_Test()
+        {
+            var list = Enumerable.Range(1, 10).ToList();
+            var res = await HttpReq.Json(UrlUtil.Combine(TestUrl, "/api/post"))
+                .JsonBody(list)
+                .SendAsync()
+                .DonotCapture();
+            Assert.False(res.HasError);
+            var body = res.ResponseString.ToJToken()["body"];
+            Assert.NotNull(body);
+            var actual = body.ToObject<List<int>>();
+            Assert.True(list.SequenceEqual(actual));
         }
     }
 }

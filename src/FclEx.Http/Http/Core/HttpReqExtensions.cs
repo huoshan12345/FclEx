@@ -85,20 +85,32 @@ namespace FclEx.Http.Core
                 : req.AddFormPair(queryPair, sepetator);
         }
 
-        public static HttpReq RawData(this HttpReq req, string data)
+        public static HttpReq Body(this HttpReq req, string data)
         {
-            return req.RawData(data.ToBytes(req.Encoding));
+            return req.Body(data.ToBytes(req.Encoding));
         }
 
-        public static HttpReq RawData(this HttpReq req, byte[] data)
+        public static HttpReq Body(this HttpReq req, byte[] data)
         {
-            req.ByteArrayData = data;
+            req.Body = data.ToSegment();
             return req;
         }
 
-        public static HttpReq JsonData<T>(this HttpReq req, T data, JsonOptions options = default)
+        public static HttpReq Body(this HttpReq req, byte[] data, int offset, int count)
         {
-            return req.RawData(data.ToJson(options));
+            req.Body = data.ToSegment(offset, count);
+            return req;
+        }
+
+        public static HttpReq Body(this HttpReq req, ArraySegment<byte> data)
+        {
+            req.Body = data;
+            return req;
+        }
+
+        public static HttpReq JsonBody<T>(this HttpReq req, T data, JsonOptions options = default)
+        {
+            return req.Body(data.ToJson(options));
         }
 
         public static HttpReq AddFile(this HttpReq req, HttpFileUploadInfo fileUpload, byte[] fileBytes)

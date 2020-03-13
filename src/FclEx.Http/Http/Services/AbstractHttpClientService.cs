@@ -106,6 +106,8 @@ namespace FclEx.Http.Services
 
         internal static (string, Encoding) ReadBufferAsString(ArraySegment<byte> buffer, HttpContentHeaders headers, string charSet, bool detectCharSetFromHtmlMeta, string defaultCharSet)
         {
+            Debug.Assert(buffer.Array != null);
+
             // We don't validate the Content-Encoding header: If the content was encoded, it's the caller's
             // responsibility to make sure to only call ReadAsString() on already decoded content. E.g. if the
             // Content-Encoding is 'gzip' the user should set HttpClientHandler.AutomaticDecompression to get a
@@ -158,6 +160,8 @@ namespace FclEx.Http.Services
 
         private static Encoding DetectCharSetFromHtmlMeta(ArraySegment<byte> buffer)
         {
+            Debug.Assert(buffer.Array != null);
+
             if (buffer.Array.Length == 0)
                 return null;
 
@@ -171,47 +175,18 @@ namespace FclEx.Http.Services
             var len = content.Headers.ContentLength ?? 0;
             using var ms = new MemoryStream((int)len);
             using (var stream = await content.ReadAsStreamAsync().DonotCapture())
-                await CopyToAsync(stream, ms, token, timeout);
+                await stream.CopyToAsync(ms, token, timeout);
             ms.Seek(0, SeekOrigin.Begin);
             return ms.ToArray();
         }
 
-        private static async Task CopyToAsync(Stream source, Stream dest, CancellationToken token, TimeSpan? timeout)
-        {
-            var pool = ArrayPool<byte>.Shared;
-            var buffer = pool.Rent(256 * 1024);
-            try
-            {
-                int bytesCopied;
-                do
-                {
-                    using var cts = CreateCts(token, timeout);
-                    bytesCopied = await source.ReadAsync(buffer, 0, buffer.Length, cts.Token).DonotCapture();
-                    await dest.WriteAsync(buffer, 0, bytesCopied, cts.Token).DonotCapture();
-                } while (bytesCopied > 0);
-            }
-            finally
-            {
-                pool.Return(buffer);
-            }
-        }
-
-        private static CancellationTokenSource CreateCts(CancellationToken token, TimeSpan? timeout)
-        {
-            var cts = CancellationTokenSource.CreateLinkedTokenSource(token);
-            if (timeout.HasValue)
-            {
-                cts.CancelAfter(timeout.Value);
-            }
-            return cts;
-        }
-
-        protected static HttpRequestMessage GetHttpRequest(HttpReq req, CookieContainer cc)
+        protected static HttpRequestMessage GetHttpRequest(HttpReq req, CookieContainer cc, CancellationToken token)
         {
             var request = new HttpRequestMessage(new HttpMethod(req.Method.ToString().ToUpper()), req.GetUrl());
             if (req.Method != HttpMethodType.Get)
             {
-                request.Content = new ByteArrayContent(req.GetBinaryData())
+                var bytes = req.GetData();
+                request.Content = new ArraySegmentContent(bytes, token, req.Timeout)
                 {
                     Headers = { ContentType = MediaTypeHeaderValue.Parse(req.ContentType) }
                 };
@@ -238,15 +213,14 @@ namespace FclEx.Http.Services
 
         private async Task<HttpResponseMessage> SendAsync(HttpClient httpClient, HttpReq httpReq, CancellationToken token, HttpCompletionOption httpCompletionOption = HttpCompletionOption.ResponseHeadersRead)
         {
-            using var cts = CreateCts(token, httpReq.Timeout);
-            var httpRequest = GetHttpRequest(httpReq, _cookieContainer);
-            var res = await httpClient.SendAsync(httpRequest, httpCompletionOption, cts.Token).DonotCapture();
+            var httpRequest = GetHttpRequest(httpReq, _cookieContainer, token);
+            var res = await httpClient.SendAsync(httpRequest, httpCompletionOption, token).DonotCapture();
             return res;
         }
 
         protected async Task ExecuteAsyncInternal(HttpClient httpClient, HttpReq httpReq, HttpRes httpRes, CancellationToken token = default)
         {
-            var cts = CreateCts(token, httpReq.TotalTimeout);
+            var cts = token.WithTimeout(httpReq.TotalTimeout);
             token = cts.Token;
             var responses = new List<HttpResponseMessage>();
             try

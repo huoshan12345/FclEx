@@ -14,26 +14,19 @@ namespace FclEx
     {
         public static MemoryStream ToStream(this byte[] bytes) => new MemoryStream(bytes);
 
-        public static string GetString(this byte[] bytes, Encoding encoding) => encoding.GetString(bytes);
+        public static string GetString(this byte[] bytes, Encoding encoding = null) => (encoding ?? Encoding.UTF8).GetString(bytes);
 
-        public static string GetString(this byte[] bytes) => bytes.GetString(Encoding.UTF8);
+        public static string GetString(this ArraySegment<byte> bytes, Encoding encoding = null) => (encoding ?? Encoding.UTF8).GetString(bytes.Array, bytes.Offset, bytes.Count);
 
         public static string ToBase64(this byte[] bytes) => Convert.ToBase64String(bytes);
 
         public static string ToHex(this byte[] bytes, bool upperCase = false)
         {
-            var builder = new StringBuilder(bytes.Length);
-            if (upperCase)
-            {
-                foreach (var @byte in bytes)
-                    builder.Append(@byte.ToString("X2"));
-            }
-            else
-            {
-                foreach (var @byte in bytes)
-                    builder.Append(@byte.ToString("x2"));
-
-            }
+            using var cache = ObjectPoolHelper.StringBuilderPool.GetAsDisposable();
+            var builder = cache.Value;
+            var format = upperCase ? "X2" : "x2";
+            foreach (var @byte in bytes)
+                builder.Append(@byte.ToString(format));
             return builder.ToString();
         }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using Dawn;
 
 namespace FclEx.Helpers
 {
@@ -37,6 +38,9 @@ namespace FclEx.Helpers
 
         public static int GetPreambleLength(ArraySegment<byte> buffer, Encoding encoding)
         {
+            Guard.Argument(encoding, nameof(encoding)).NotNull();
+            Guard.Argument(buffer.Array, nameof(buffer.Array)).NotNull();
+
             var data = buffer.Array;
             var offset = buffer.Offset;
             var dataLength = buffer.Count;

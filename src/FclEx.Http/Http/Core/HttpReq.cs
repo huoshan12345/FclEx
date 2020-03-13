@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Dawn;
 using FclEx.Extensions;
+using FclEx.Helpers;
 using FclEx.Utils;
 
 namespace FclEx.Http.Core
@@ -25,9 +26,9 @@ namespace FclEx.Http.Core
 
         public bool ThrowOnNonSuccessCode { get; set; } = true;
         public bool UseDefaultProxy { get; set; } = false;
-        public byte[] ByteArrayData { get; set; }
+        public ArraySegment<byte> Body { get; set; }
         public HttpMethodType Method { get; set; }
-        public TimeSpan? TotalTimeout { get; set; }
+        public TimeSpan? TotalTimeout { get; set; } = TimeSpan.FromMinutes(2);
         public TimeSpan? Timeout { get; set; } = TimeSpan.FromSeconds(20);
         public string CharSet { get; set; }
         public bool DetectCharSetFromHtmlMeta { get; set; }
@@ -246,46 +247,49 @@ namespace FclEx.Http.Core
             return this;
         }
 
-        public byte[] GetBinaryData()
+        public ArraySegment<byte> GetData()
         {
-            if (!ByteArrayData.IsNullOrEmpty()) return ByteArrayData;
+            if (!Body.IsNullOrEmpty()) 
+                return Body;
 
             var type = HeaderMap.GetOr(HttpKnownHeaderNames.ContentType);
             switch (type)
             {
-                case HttpConstants.FormContentType: return FormMap.ToQueryStr().ToBytes(Encoding);
+                case HttpConstants.FormContentType: return FormMap.ToQueryStr().ToBytes(Encoding).ToSegment();
                 case HttpConstants.MultiPartContentType:
                 {
-                    using (var mem = new MemoryStream())
+                    using var mem = new MemoryStream();
+                    using var stringBuilder = ObjectPoolHelper.StringBuilderPool.GetAsDisposable();
+                    var sb = stringBuilder.Value;
+                    // Write the values
+                    foreach (var (key, value) in FormMap)
                     {
-                        var sb = new StringBuilder(1024);
-                        // Write the values
-                        foreach (var pair in FormMap)
-                        {
-                            sb.AppendHttpLine(HttpConstants.EncapsulationBoundary + Boundary);
-                            sb.AppendFormat("Content-Disposition: form-data; name=\"{0}\"{1}{1}", pair.Key, HttpConstants.NewLine);
-                            sb.AppendHttpLine(pair.Value);
-                        }
-                        sb.ToString().ToUtf8Bytes().WriteTo(mem);
-                        // Write the files
-                        foreach (var file in FileMap)
-                        {
-                            var data = new StringBuilder(192);
-                            data.AppendHttpLine(HttpConstants.EncapsulationBoundary + Boundary);
-                            data.AppendFormat("Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"{2}", file.Key.Name, file.Key.FileName, HttpConstants.NewLine);
-                            data.AppendFormat("Content-Type: {0}{1}{1}", file.Key.ContentType, HttpConstants.NewLine);
-                            data.ToString().ToUtf8Bytes().WriteTo(mem);
-                            file.Value.WriteTo(mem);
-                            HttpConstants.NewLineBytes.WriteTo(mem);
-                        }
-                        (HttpConstants.EncapsulationBoundary + Boundary + HttpConstants.EncapsulationBoundary).ToUtf8Bytes().WriteTo(mem);
-                        return mem.ToArray();
+                        sb.AppendHttpLine(HttpConstants.EncapsulationBoundary + Boundary);
+                        sb.AppendFormat("Content-Disposition: form-data; name=\"{0}\"{1}{1}", key, HttpConstants.NewLine);
+                        sb.AppendHttpLine(value);
                     }
+                    sb.ToString().ToUtf8Bytes().WriteTo(mem);
+
+                    // Write the files
+                    foreach (var (key, value) in FileMap)
+                    {
+                        var data = new StringBuilder(192);
+                        data.AppendHttpLine(HttpConstants.EncapsulationBoundary + Boundary);
+                        data.AppendFormat("Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"{2}", key.Name, key.FileName, HttpConstants.NewLine);
+                        data.AppendFormat("Content-Type: {0}{1}{1}", key.ContentType, HttpConstants.NewLine);
+                        data.ToString().ToUtf8Bytes().WriteTo(mem);
+                        value.WriteTo(mem);
+                        HttpConstants.NewLineBytes.WriteTo(mem);
+                    }
+                    (HttpConstants.EncapsulationBoundary + Boundary + HttpConstants.EncapsulationBoundary).ToUtf8Bytes().WriteTo(mem);
+                    return mem.ToArray().ToSegment();
                 }
                 case HttpConstants.JsonContentType:
                 case HttpConstants.ByteArrayContentType:
                 default:
-                    return ByteArrayData ?? Array.Empty<byte>();
+                    return Body.Array == null
+                        ? Array.Empty<byte>().ToSegment()
+                        : Body;
             }
         }
     }

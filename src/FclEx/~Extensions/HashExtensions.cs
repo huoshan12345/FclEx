@@ -47,5 +47,23 @@ namespace FclEx
         {
             return _regMd5.IsMatch(input);
         }
+
+        public static byte[] Hash(this HashAlgorithm algorithm, ArraySegment<byte> input)
+        {
+            return input.Array.IsNullOrEmpty()
+                ? Array.Empty<byte>()
+                : algorithm.ComputeHash(input.Array, input.Offset, input.Count);
+        }
+
+        public static byte[] Md5(this ArraySegment<byte> input)
+        {
+            using var md5 = MD5.Create();
+            return md5.Hash(input);
+        }
+
+        public static string ToMd5String(this ArraySegment<byte> input, bool upperCase = false)
+        {
+            return input.Md5().ToHex(upperCase);
+        }
     }
 }
