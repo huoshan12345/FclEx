@@ -25,7 +25,7 @@ namespace FclEx.Test.Extensions.EnumerableExtensions
         [Fact]
         public void ToOrderedDic_Test()
         {
-            var dic = Enumerable.Range(1, 10).Select(m => KvPair.For(m, m));
+            var dic = Enumerable.Range(1, 10).Select(m => KvPair.Create(m, m));
             var ordered = dic.ToOrderedDic();
             CheckIsOrdered(ordered);
 
@@ -55,7 +55,7 @@ namespace FclEx.Test.Extensions.EnumerableExtensions
         [Fact]
         public void ToOrderedDic_Selector_Throw_Test()
         {
-            var dic = Enumerable.Range(1, 10).Select(m => KvPair.For(m % 5, m));
+            var dic = Enumerable.Range(1, 10).Select(m => KvPair.Create(m % 5, m));
             Assert.Throws<ArgumentException>(() => dic.ToOrderedDic());
         }
     }

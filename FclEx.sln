@@ -47,6 +47,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{9338
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		src\Microsoft.Experimental.Collections\Microsoft.Experimental.Collections.projitems*{c69bfe99-48df-4508-b479-4ed6b6fd1c7c}*SharedItemsImports = 5
 		src\Microsoft.Experimental.Collections\Microsoft.Experimental.Collections.projitems*{d80d0f2e-e613-4dac-9612-c709050a3e8d}*SharedItemsImports = 13
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

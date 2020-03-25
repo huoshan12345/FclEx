@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
@@ -56,15 +57,11 @@ namespace FclEx
             return new SortedSet<T>(enumerable, comparer ?? Comparer<T>.Default);
         }
 
-        public static IReadOnlyCollection<T> CastOrToReadOnlyCollection<T>(this IEnumerable<T> enumerable)
+        public static ReadOnlyCollection<T> AsReadOnly<T>(this IEnumerable<T> enumerable)
         {
-            return enumerable is IReadOnlyCollection<T> col ? col : enumerable.ToList();
+            if (enumerable is ReadOnlyCollection<T> col) return col;
+            var list = enumerable is IList<T> l ? l : enumerable.ToList();
+            return new ReadOnlyCollection<T>(list);
         }
-
-        public static IReadOnlyList<T> CastOrToReadOnlyList<T>(this IEnumerable<T> enumerable)
-        {
-            return enumerable is IReadOnlyList<T> col ? col : enumerable.ToList();
-        }
-
     }
 }

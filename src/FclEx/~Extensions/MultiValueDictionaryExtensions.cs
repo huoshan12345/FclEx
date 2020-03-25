@@ -38,7 +38,7 @@ namespace FclEx
 
         public static IEnumerable<KeyValuePair<string, string>> ToPair(this MultiValueDictionary<string, string> col)
         {
-            return col.SelectMany(m => m.Value, (k, v) => KvPair.For(k.Key, v.ToStringOrEmpty()));
+            return col.SelectMany(m => m.Value, (k, v) => KvPair.Create(k.Key, v.ToStringOrEmpty()));
         }
     }
 }

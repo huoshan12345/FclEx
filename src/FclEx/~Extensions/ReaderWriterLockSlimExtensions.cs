@@ -19,5 +19,11 @@ namespace FclEx
             locker.EnterWriteLock();
             return new ActionDisposable(locker.ExitWriteLock);
         }
+
+        public static IDisposable LockUpgradeableRead(this ReaderWriterLockSlim locker)
+        {
+            locker.EnterUpgradeableReadLock();
+            return new ActionDisposable(locker.ExitUpgradeableReadLock);
+        }
     }
 }

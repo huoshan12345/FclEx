@@ -6,10 +6,5 @@
         {
             return cache.Count >= cache.Capacity;
         }
-
-        public static bool Contains<TKey, TValue>(this IMemoryCache<TKey, TValue> cache, TKey key)
-        {
-            return cache.TryGet(key, out _);
-        }
     }
 }
