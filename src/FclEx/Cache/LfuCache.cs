@@ -36,25 +36,23 @@ namespace FclEx.Cache
             Stats = new CacheStats();
         }
 
-        public bool TryGet(TKey key, out TValue value)
+        public bool TryGetValue(TKey key, out TValue value)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
 
-            using (_lock.LockRead())
+            using var _ = _lock.LockRead();
+            if (_dic.TryGetValue(key, out var node))
             {
-                if (_dic.TryGetValue(key, out var node))
-                {
-                    node = UpdateInternal(node);
-                    Stats.OnHit();
-                    value = node.Value.Value;
-                    return true;
-                }
-                else
-                {
-                    Stats.OnMiss();
-                    value = default;
-                    return false;
-                }
+                node = UpdateInternal(node);
+                Stats.OnHit();
+                value = node.Value.Value;
+                return true;
+            }
+            else
+            {
+                Stats.OnMiss();
+                value = default;
+                return false;
             }
         }
 
@@ -107,13 +105,9 @@ namespace FclEx.Cache
             if (key == null) throw new ArgumentNullException(nameof(key));
             if (activator == null) throw new ArgumentNullException(nameof(activator));
 
-            LinkedListNode<KvCount> node;
-            bool exist;
+            using var _ = _lock.LockUpgradeableRead();
 
-            using (_lock.LockRead())
-            {
-                exist = _dic.TryGetValue(key, out node);
-            }
+            var exist = _dic.TryGetValue(key, out var node);
             if (exist)
             {
                 Debug.Assert(node != null);
@@ -137,14 +131,9 @@ namespace FclEx.Cache
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
 
-            LinkedListNode<KvCount> node;
-            bool exist;
+            using var _ = _lock.LockUpgradeableRead();
 
-            using (_lock.LockRead())
-            {
-                exist = _dic.TryGetValue(key, out node);
-            }
-
+            var exist = _dic.TryGetValue(key, out var node);
             if (exist)
             {
                 Debug.Assert(node != null);
@@ -172,14 +161,9 @@ namespace FclEx.Cache
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
 
-            LinkedListNode<KvCount> node;
-            bool exist;
+            using var _ = _lock.LockUpgradeableRead();
 
-            using (_lock.LockRead())
-            {
-                exist = _dic.TryGetValue(key, out node);
-            }
-
+            var exist = _dic.TryGetValue(key, out var node);
             if (exist)
             {
                 Debug.Assert(node != null);
@@ -203,15 +187,10 @@ namespace FclEx.Cache
 
         public void Clear()
         {
-            _lock.EnterWriteLock();
-            try
+            using (_lock.LockWrite())
             {
                 _list.Clear();
                 _dic.Clear();
-            }
-            finally
-            {
-                _lock.ExitWriteLock();
             }
         }
 
@@ -242,7 +221,7 @@ namespace FclEx.Cache
 
         public CacheStats Stats { get; }
 
-        public IReadOnlyList<TKey> GetKeys() => Read(() => _list.Select(m => m.Key).ToArray());
+        public ICollection<TKey> Keys => Read(() => _list.Select(m => m.Key).AsReadOnly());
 
         [DebuggerDisplay("({Key}, {Value}), {Count}")]
         internal readonly struct KvCount

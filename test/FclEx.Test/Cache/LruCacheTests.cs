@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using FclEx.Cache;
 using FclEx.Utils;
 using Xunit;
@@ -11,7 +13,7 @@ namespace FclEx.Test.Cache
     public class LruCacheTests
     {
         [Fact]
-        public void GetOrAdd_Test()
+        public void Test()
         {
             const int capacity = 10;
             var random = new Random(31);
@@ -25,7 +27,7 @@ namespace FclEx.Test.Cache
                 var exist = dic.TryGetValue(num, out var existTime) && existTime.HasValue;
                 dic[num] = DateTime.UtcNow;
 
-                var keys = cache.GetKeys();
+                var keys = cache.Keys;
                 Assert.Equal(exist, keys.Contains(num));
 
                 var last = cache.LastOrDefault();
@@ -35,7 +37,7 @@ namespace FclEx.Test.Cache
                 Assert.Equal(num, cache.First().Key);
                 Assert.True(cache.Count <= capacity);
 
-                var newKeys = cache.GetKeys();
+                var newKeys = cache.Keys;
                 if (exist)
                 {
                     var list = new List<int>(newKeys.Count) { num };
@@ -60,6 +62,183 @@ namespace FclEx.Test.Cache
                     .OrderByDescending(m => m.Value.Get())
                     .Select(m => m.Key);
                 Assert.Equal(expectedCacheItems, newKeys);
+            }
+        }
+
+        [Fact]
+        public async Task BasicScenarios_Test()
+        {
+            var cd = new LruCache<int, int>(10);
+
+            var tks = new Task[2];
+            tks[0] = Task.Run(() =>
+            {
+                var ret = cd.TryAdd(1, 11);
+                if (!ret)
+                {
+                    var value = cd.AddOrUpdate(1, 11);
+                    Assert.Equal(11, value);
+                }
+
+                ret = cd.TryAdd(2, 22);
+                if (!ret)
+                {
+                    var value = cd.AddOrUpdate(2, 22);
+                    Assert.Equal(22, value);
+                }
+            });
+
+            tks[1] = Task.Run(() =>
+            {
+                var ret = cd.TryAdd(2, 222);
+                if (!ret)
+                {
+                    var value = cd.AddOrUpdate(2, 222);
+                    Assert.Equal(222, value);
+                }
+
+                ret = cd.TryAdd(1, 111);
+                if (!ret)
+                {
+                    var value = cd.AddOrUpdate(1, 111);
+                    Assert.Equal(111, value);
+                }
+            });
+
+            await Task.WhenAll(tks);
+        }
+
+        [Fact]
+        public void Add_Test()
+        {
+            TestAdd1(1, 1, 1, 10000);
+            TestAdd1(5, 1, 1, 10000);
+            TestAdd1(1, 1, 2, 5000);
+            TestAdd1(1, 1, 5, 2000);
+            TestAdd1(4, 0, 4, 2000);
+            TestAdd1(16, 31, 4, 2000);
+            TestAdd1(64, 5, 5, 5000);
+            TestAdd1(5, 5, 5, 2500);
+        }
+
+        private static void TestAdd1(int cLevel, int initSize, int threads, int addsPerThread)
+        {
+            var dict = new LruCache<int, int>();
+
+            var count = threads;
+            using (var mre = new ManualResetEvent(false))
+            {
+                for (var i = 0; i < threads; i++)
+                {
+                    var ii = i;
+                    Task.Run(() =>
+                    {
+                        for (var j = 0; j < addsPerThread; j++)
+                        {
+                            dict.Add(j + ii * addsPerThread, -(j + ii * addsPerThread));
+                        }
+                        if (Interlocked.Decrement(ref count) == 0) mre.Set();
+                    });
+                }
+                mre.WaitOne();
+            }
+
+            foreach (var pair in dict)
+            {
+                Assert.Equal(pair.Key, -pair.Value);
+            }
+
+            var gotKeys = new List<int>();
+            foreach (var pair in dict)
+                gotKeys.Add(pair.Key);
+
+            gotKeys.Sort();
+
+            var expectKeys = new List<int>();
+            var itemCount = threads * addsPerThread;
+            for (var i = 0; i < itemCount; i++)
+                expectKeys.Add(i);
+
+            Assert.Equal(expectKeys.Count, gotKeys.Count);
+
+            for (var i = 0; i < expectKeys.Count; i++)
+            {
+                Assert.True(expectKeys[i].Equals(gotKeys[i]),
+                    string.Format("The set of keys in the dictionary is are not the same as the expected" + Environment.NewLine +
+                            "TestAdd1(cLevel={0}, initSize={1}, threads={2}, addsPerThread={3})", cLevel, initSize, threads, addsPerThread)
+                   );
+            }
+
+            // Finally, let's verify that the count is reported correctly.
+            var expectedCount = threads * addsPerThread;
+            Assert.Equal(expectedCount, dict.Count);
+            Assert.Equal(expectedCount, dict.ToArray().Length);
+        }
+
+        [Fact]
+        public static void Update_Test()
+        {
+            TestUpdate1(1, 1, 10000);
+            TestUpdate1(5, 1, 10000);
+            TestUpdate1(1, 2, 5000);
+            TestUpdate1(1, 5, 2001);
+            TestUpdate1(4, 4, 2001);
+            TestUpdate1(15, 5, 2001);
+            TestUpdate1(64, 5, 5000);
+            TestUpdate1(5, 5, 25000);
+        }
+
+        private static void TestUpdate1(int cLevel, int threads, int updatesPerThread)
+        {
+            var dict = new LruCache<int, int>();
+
+            for (var i = 1; i <= updatesPerThread; i++) dict[i] = i;
+
+            var running = threads;
+            using (var mre = new ManualResetEvent(false))
+            {
+                for (var i = 0; i < threads; i++)
+                {
+                    var ii = i;
+                    Task.Run(() =>
+                    {
+                        for (var j = 1; j <= updatesPerThread; j++)
+                        {
+                            dict[j] = (ii + 2) * j;
+                        }
+                        if (Interlocked.Decrement(ref running) == 0) mre.Set();
+                    });
+                }
+                mre.WaitOne();
+            }
+
+            foreach (var pair in dict)
+            {
+                var div = pair.Value / pair.Key;
+                var rem = pair.Value % pair.Key;
+
+                Assert.Equal(0, rem);
+                Assert.True(div > 1 && div <= threads + 1,
+                    string.Format("* Invalid value={3}! TestUpdate1(cLevel={0}, threads={1}, updatesPerThread={2})", cLevel, threads, updatesPerThread, div));
+            }
+
+            var gotKeys = new List<int>();
+            foreach (var pair in dict)
+                gotKeys.Add(pair.Key);
+            gotKeys.Sort();
+
+            var expectKeys = new List<int>();
+            for (var i = 1; i <= updatesPerThread; i++)
+                expectKeys.Add(i);
+
+            Assert.Equal(expectKeys.Count, gotKeys.Count);
+
+            for (var i = 0; i < expectKeys.Count; i++)
+            {
+                Assert.True(expectKeys[i].Equals(gotKeys[i]),
+                   string.Format("The set of keys in the dictionary is are not the same as the expected." + Environment.NewLine +
+                           "TestUpdate1(cLevel={0}, threads={1}, updatesPerThread={2})", cLevel, threads, updatesPerThread)
+                  );
             }
         }
     }

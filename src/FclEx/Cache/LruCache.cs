@@ -10,43 +10,23 @@ using FclEx.Utils;
 namespace FclEx.Cache
 {
     [DebuggerDisplay("Count = {" + nameof(Count) + "}")]
-    public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue>
+    public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue>, IDictionary<TKey, TValue>
     {
-        private readonly LinkedList<KeyValue> _list;
-        private readonly IDictionary<TKey, LinkedListNode<KeyValue>> _dic;
+        private readonly LinkedList<KeyValuePair<TKey, TValue>> _list;
+        private readonly IDictionary<TKey, LinkedListNode<KeyValuePair<TKey, TValue>>> _dic;
         private readonly ReaderWriterLockSlim _lock;
         private static readonly IEqualityComparer<TValue> _valueComparer = EqualityComparer<TValue>.Default;
+        private readonly IEqualityComparer<TKey> _keyComparer;
 
         public LruCache(int? capacity = null, IEqualityComparer<TKey> comparer = null)
         {
             if (capacity.HasValue && capacity <= 0) throw new ArgumentOutOfRangeException(nameof(capacity));
             Capacity = capacity ?? ushort.MaxValue;
-            comparer ??= EqualityComparer<TKey>.Default;
+            _keyComparer = comparer ?? EqualityComparer<TKey>.Default;
             _lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
-            _dic = new Dictionary<TKey, LinkedListNode<KeyValue>>(comparer);
-            _list = new LinkedList<KeyValue>();
+            _dic = new Dictionary<TKey, LinkedListNode<KeyValuePair<TKey, TValue>>>(_keyComparer);
+            _list = new LinkedList<KeyValuePair<TKey, TValue>>();
             Stats = new CacheStats();
-        }
-
-        public bool TryGet(TKey key, out TValue value)
-        {
-            if (key == null) throw new ArgumentNullException(nameof(key));
-
-            using (_lock.LockRead())
-            {
-                if (_dic.TryGetValue(key, out var node))
-                {
-                    UpdateInternal(node);
-                    Stats.OnHit();
-                    value = node.Value.Value;
-                    return true;
-                }
-                else
-                {
-                    value = default;
-                    return false;
-                }
-            }
         }
 
         public TValue GetOrAdd(TKey key, Func<TKey, TValue> activator)
@@ -54,14 +34,9 @@ namespace FclEx.Cache
             if (key == null) throw new ArgumentNullException(nameof(key));
             if (activator == null) throw new ArgumentNullException(nameof(activator));
 
-            LinkedListNode<KeyValue> node;
-            bool exist;
+            using var _ = _lock.LockUpgradeableRead();
 
-            using (_lock.LockRead())
-            {
-                exist = _dic.TryGetValue(key, out node);
-            }
-
+            var exist = _dic.TryGetValue(key, out var node);
             if (exist)
             {
                 Debug.Assert(node != null);
@@ -86,14 +61,9 @@ namespace FclEx.Cache
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
 
-            LinkedListNode<KeyValue> node;
-            bool exist;
+            using var _ = _lock.LockUpgradeableRead();
 
-            using (_lock.LockRead())
-            {
-                exist = _dic.TryGetValue(key, out node);
-            }
-
+            var exist = _dic.TryGetValue(key, out var node);
             if (exist)
             {
                 Debug.Assert(node != null);
@@ -121,14 +91,9 @@ namespace FclEx.Cache
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
 
-            LinkedListNode<KeyValue> node;
-            bool exist;
+            using var _ = _lock.LockUpgradeableRead();
 
-            using (_lock.LockRead())
-            {
-                exist = _dic.TryGetValue(key, out node);
-            }
-
+            var exist = _dic.TryGetValue(key, out var node);
             if (exist)
             {
                 Debug.Assert(node != null);
@@ -147,7 +112,7 @@ namespace FclEx.Cache
             return !exist;
         }
 
-        private LinkedListNode<KeyValue> UpdateInternal(LinkedListNode<KeyValue> node)
+        private LinkedListNode<KeyValuePair<TKey, TValue>> UpdateInternal(LinkedListNode<KeyValuePair<TKey, TValue>> node)
         {
             Debug.Assert(node != null);
             var first = _list.First;
@@ -159,13 +124,13 @@ namespace FclEx.Cache
             return node;
         }
 
-        private LinkedListNode<KeyValue> UpdateInternal(LinkedListNode<KeyValue> node, TValue value)
+        private LinkedListNode<KeyValuePair<TKey, TValue>> UpdateInternal(LinkedListNode<KeyValuePair<TKey, TValue>> node, TValue value)
         {
             node.Value = node.Value.SetValue(value);
             return UpdateInternal(node);
         }
 
-        private LinkedListNode<KeyValue> AddInternal(TKey key, TValue value)
+        private LinkedListNode<KeyValuePair<TKey, TValue>> AddInternal(TKey key, TValue value)
         {
             if (_dic.Count >= Capacity)
             {
@@ -173,31 +138,40 @@ namespace FclEx.Cache
                 _dic.Remove(toRemove.Value.Key);
                 _list.Remove(toRemove);
             }
-            var node = LinkedListNodeHelper.Create(KeyValue.Create(key, value));
+            var node = LinkedListNodeHelper.Create(KvPair.For(key, value));
             _list.AddFirst(node);
             _dic[key] = node;
             return node;
         }
 
-        [DebuggerDisplay("({Key}, {Value})")]
-        internal readonly struct KeyValue
+        private bool TryRemove(TKey key, bool matchValue, TValue oldValue)
         {
-            private KeyValue(TKey key, TValue value)
+            if (key == null) throw new ArgumentNullException(nameof(key));
+
+            using var _ = _lock.LockUpgradeableRead();
+
+            var success = _dic.TryGetValue(key, out var node);
+            if (success)
             {
-                Key = key;
-                Value = value;
+                Debug.Assert(node != null);
+                Debug.Assert(_keyComparer.Equals(key, node.Value.Key));
+
+                if (matchValue && !_valueComparer.Equals(oldValue, node.Value.Value))
+                    return false;
+
+                using (_lock.LockWrite())
+                {
+                    _list.Remove(node);
+                    _dic.Remove(key);
+                }
             }
-            public TKey Key { get; }
-            public TValue Value { get; }
-            public static KeyValue Create(TKey key, TValue value) => new KeyValue(key, value);
-            public KeyValue SetValue(TValue value) => new KeyValue(Key, value);
-            public static implicit operator KeyValuePair<TKey, TValue>(KeyValue kv) => KvPair.For(kv.Key, kv.Value);
+            return success;
         }
 
         internal readonly struct SafeEnumerator : IEnumerator<KeyValuePair<TKey, TValue>>
         {
             private readonly ReaderWriterLockSlim _lock;
-            private readonly IEnumerator<KeyValue> _inner;
+            private readonly IEnumerator<KeyValuePair<TKey, TValue>> _inner;
 
             public SafeEnumerator(LruCache<TKey, TValue> cache)
             {
@@ -226,63 +200,100 @@ namespace FclEx.Cache
             }
         }
 
+        public bool Remove(KeyValuePair<TKey, TValue> item)
+        {
+            return TryRemove(item.Key, true, item.Value);
+        }
+
         public int Count => Read(() => _list.Count);
+        public bool IsReadOnly { get; } = false;
         public int Capacity { get; }
+
+        public void Add(KeyValuePair<TKey, TValue> item)
+        {
+            Add(item.Key, item.Value);
+        }
 
         public void Clear()
         {
-            _lock.EnterWriteLock();
-
-            try
+            using (_lock.LockWrite())
             {
                 _list.Clear();
                 _dic.Clear();
             }
-            finally
+        }
+
+        public bool Contains(KeyValuePair<TKey, TValue> item)
+        {
+            if (!TryGetValue(item.Key, out var value))
+                return false;
+            return _valueComparer.Equals(value, item.Value);
+        }
+
+        public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
+        {
+            using (_lock.LockRead())
             {
-                _lock.ExitWriteLock();
+                _list.CopyTo(array, arrayIndex);
             }
+        }
+
+        public void Add(TKey key, TValue value)
+        {
+            if (!TryAdd(key, value))
+                throw new ArgumentException($"The key {key} already existed");
+        }
+
+        public bool ContainsKey(TKey key)
+        {
+            return TryGetValue(key, out _);
         }
 
         public bool Remove(TKey key)
         {
-            if (key == null) throw new ArgumentNullException(nameof(key));
-
-            LinkedListNode<KeyValue> node;
-            bool success;
-
-            using (_lock.LockRead())
-            {
-                success = _dic.TryGetValue(key, out node);
-            }
-            if (success)
-            {
-                Debug.Assert(node != null);
-                Debug.Assert(key.Equals(node.Value.Key));
-
-                using (_lock.LockWrite())
-                {
-                    _list.Remove(node);
-                    _dic.Remove(key);
-                }
-            }
-            return success;
+            return TryRemove(key, false, default);
         }
 
-        public IReadOnlyList<TKey> GetKeys() => Read(() => _list.Select(m => m.Key).ToArray());
+        public bool TryGetValue(TKey key, out TValue value)
+        {
+            if (key == null) throw new ArgumentNullException(nameof(key));
+
+            using var _ = _lock.LockRead();
+            if (_dic.TryGetValue(key, out var node))
+            {
+                UpdateInternal(node);
+                Stats.OnHit();
+                value = node.Value.Value;
+                return true;
+            }
+            else
+            {
+                value = default;
+                return false;
+            }
+        }
+
+        public TValue this[TKey key]
+        {
+            get
+            {
+                if (!TryGetValue(key, out var value))
+                    throw new KeyNotFoundException($"The given key {key} was not present");
+                return value;
+            }
+            set => AddOrUpdate(key, value);
+        }
+
+        public ICollection<TKey> Keys => Read(() => _list.Select(m => m.Key).AsReadOnly());
+        public ICollection<TValue> Values => Read(() => _list.Select(m => m.Value).AsReadOnly());
 
         public CacheStats Stats { get; }
 
         private T Read<T>(Func<T> func)
         {
-            _lock.EnterReadLock();
-            try
+            using (_lock.LockRead())
             {
                 return func();
-            }
-            finally
-            {
-                _lock.ExitReadLock();
             }
         }
 

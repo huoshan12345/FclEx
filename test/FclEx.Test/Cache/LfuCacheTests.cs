@@ -21,11 +21,11 @@ namespace FclEx.Test.Cache
             {
                 var num = numbers.GetRandomly(random);
                 dic[num] = dic[num].Get(-1) + 1;
-                var keys = cache.GetKeys();
+                var keys = cache.Keys;
                 var removeFlag = cache.IsFull() && !keys.Contains(num);
                 var value = cache.GetOrAdd(num, k => k.ToString());
                 Assert.Equal(num.ToString(), value);
-                var newKeys = cache.GetKeys();
+                var newKeys = cache.Keys;
 
                 Assert.True(cache.Count <= capacity);
 
