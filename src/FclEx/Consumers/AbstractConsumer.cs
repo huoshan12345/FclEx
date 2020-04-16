@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using FclEx.Utils;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Nito.AsyncEx;
 
 namespace FclEx.Consumers
 {
@@ -17,7 +18,7 @@ namespace FclEx.Consumers
     {
         private ILogger _logger = NullLogger.Instance;
         protected string TypeName { get; }
-        protected readonly AsyncLocker _locker = new AsyncLocker();
+        protected readonly AsyncLock _locker = new AsyncLock();
         protected readonly BlockingCollection<ProcItem<T>> _items = new BlockingCollection<ProcItem<T>>();
         protected volatile bool _isRunning;
         protected volatile bool _isAddingCompleted;
@@ -181,7 +182,6 @@ namespace FclEx.Consumers
 
             _cts.Dispose();
             _items.Dispose();
-            _locker.Dispose();
 
             _isRunning = false;
             _isDisposed = true;

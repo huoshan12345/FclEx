@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Nito.AsyncEx;
 
 namespace FclEx.Utils
 {
+    [Obsolete("Use " + nameof(AsyncLock))]
     public sealed class AsyncLocker : IDisposable
     {
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);

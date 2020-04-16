@@ -2,18 +2,19 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using Nito.AsyncEx;
 
 namespace FclEx.Utils
 {
     public class Initializer
     {
         private volatile bool _isInitialized;
-        private readonly AsyncLocker _asyncLocker;
+        private readonly AsyncLock _asyncLock;
 
         public Initializer(bool isThreadSafe = true)
         {
             if (isThreadSafe)
-                _asyncLocker = new AsyncLocker();
+                _asyncLock = new AsyncLock();
         }
 
 
@@ -21,7 +22,7 @@ namespace FclEx.Utils
         {
             if (!_isInitialized)
             {
-                using (_asyncLocker?.Lock())
+                using (_asyncLock?.Lock())
                 {
                     if (!_isInitialized)
                     {
@@ -36,7 +37,7 @@ namespace FclEx.Utils
         {
             if (!_isInitialized)
             {
-                using (_asyncLocker?.Lock())
+                using (_asyncLock?.Lock())
                 {
                     if (!_isInitialized)
                     {

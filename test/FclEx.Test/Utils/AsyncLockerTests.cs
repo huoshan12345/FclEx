@@ -10,6 +10,7 @@ using Xunit;
 
 namespace FclEx.Test.Utils
 {
+    [Obsolete]
     public class AsyncLockerTests
     {
         [Fact]
@@ -50,7 +51,7 @@ namespace FclEx.Test.Utils
                 using (await locker.LockAsync(cts.Token))
                 {
                     ++executeTimes;
-                    await TaskHelper.DelayMilli(1000);
+                    await TaskHelper.DelayMilli(100);
                 }
             }));
             await Assert.ThrowsAsync<OperationCanceledException>(() => tasks.WhenAll());

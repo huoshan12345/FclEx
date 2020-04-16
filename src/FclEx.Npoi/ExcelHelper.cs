@@ -115,7 +115,7 @@ namespace FclEx.Npoi
             headerCellStyle.Alignment = HorizontalAlignment.Center;
             var headerFont = book.CreateFont();
             headerFont.FontHeightInPoints = 10;
-            headerFont.Boldweight = 700;
+            headerFont.IsBold = true;
             headerCellStyle.SetFont(headerFont);
             var dateStyle = book.CreateCellStyle();
             var format = book.CreateDataFormat();

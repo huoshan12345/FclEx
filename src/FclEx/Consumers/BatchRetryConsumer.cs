@@ -7,6 +7,7 @@ using Dawn;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using MoreLinq;
+using Nito.AsyncEx;
 
 namespace FclEx.Consumers
 {
@@ -21,7 +22,7 @@ namespace FclEx.Consumers
         private readonly int _retryPartCount;
         private readonly AutoRetryConsumer<List<T>> _retryConsumer;
         private readonly BatchConsumer<T> _batchConsumer;
-        private readonly AsyncLocker _locker = new AsyncLocker();
+        private readonly AsyncLock _locker = new AsyncLock();
 
         public bool IsComplete => _retryConsumer.IsComplete;
         public int Count => _locker.Do(() => _retryConsumer.Count + _batchConsumer.Count);

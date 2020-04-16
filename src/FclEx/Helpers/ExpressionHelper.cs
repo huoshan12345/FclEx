@@ -6,26 +6,66 @@ namespace FclEx.Helpers
 {
     public static class ExpressionHelper
     {
-        public static PropertyInfo GetProp<TSource, TProperty>(Expression<Func<TSource, TProperty>> propertyLambda)
+        public static PropertyInfo GetProp<TSource, TMember>(Expression<Func<TSource, TMember>> selector)
         {
-            if (propertyLambda == null) throw new ArgumentNullException(nameof(propertyLambda));
+            var member = GetMember(selector);
+            if (member is PropertyInfo info) return info;
+            throw new ArgumentException($"Expression '{selector}' does not refer to a property.");
+        }
 
-            if (!(propertyLambda.Body is MemberExpression member))
-                throw new ArgumentException($"Expression '{propertyLambda}' refers to a method, not a property.");
+        public static FieldInfo GetField<TSource, TMember>(Expression<Func<TSource, TMember>> selector)
+        {
+            var member = GetMember(selector);
+            if (member is FieldInfo info) return info;
+            throw new ArgumentException($"Expression '{selector}' does not refer to a field.");
+        }
 
-            if (!(member.Member is PropertyInfo propInfo))
-                throw new ArgumentException($"Expression '{propertyLambda}' refers to a field, not a property.");
+        public static MethodInfo GetMethod<TSource, TMember>(Expression<Func<TSource, TMember>> selector)
+        {
+            var member = GetMember(selector);
+            if (member is MethodInfo info) return info;
+            throw new ArgumentException($"Expression '{selector}' does not refer to a method.");
+        }
+
+        public static MemberInfo GetMember<T, TMember>(Expression<Func<T, TMember>> selector)
+        {
+            if (selector == null) throw new ArgumentNullException(nameof(selector));
+
+            if (!(selector.Body is MemberExpression member))
+                throw new ArgumentException($"Expression '{selector}' refers to a method, not a property.");
+
+            var reflectedType = member.Member.ReflectedType;
 
             //If the MemberInfo object is a global member (that is, if it was obtained from the Module.GetMethods method,
             //which returns global methods on a module), the returned DeclaringType will be null.
-            if (propInfo.ReflectedType == null)
-                throw new ArgumentException($"Expression '{propertyLambda}' does not refer to a property of a class.");
+            if (reflectedType == null)
+                throw new ArgumentException($"Expression '{selector}' does not refer to a property of a class.");
 
-            var type = typeof(TSource);
-            if (type != propInfo.ReflectedType && !type.IsSubclassOf(propInfo.ReflectedType))
-                throw new ArgumentException($"Expression '{propertyLambda}' refers to a property that is not from type {type}.");
+            var type = typeof(T);
+            if (type != reflectedType && !type.IsSubclassOf(reflectedType))
+                throw new ArgumentException($"Expression '{selector}' refers to a property that is not from type {type}.");
 
-            return propInfo;
+            return member.Member;
+        }
+
+        public static Action<T, TMember> GetSetter<T, TMember>(Expression<Func<T, TMember>> selector)
+        {
+            var member = GetMember(selector);
+            switch (member)
+            {
+                case PropertyInfo propInfo:
+                {
+                    var setter = (Action<T, TMember>)((o, v) => propInfo.SetValue(o, v));
+                    return setter;
+                }
+                case FieldInfo fieldInfo:
+                {
+                    var setter = (Action<T, TMember>)((o, v) => fieldInfo.SetValue(o, v));
+                    return setter;
+                }
+                default:
+                    throw new ArgumentException($"Expression '{selector}' refers to neither a field nor a property.");
+            }
         }
 
         public static Expression<Func<T, object>> ErasureType<T, TProp>(Expression<Func<T, TProp>> selector)
