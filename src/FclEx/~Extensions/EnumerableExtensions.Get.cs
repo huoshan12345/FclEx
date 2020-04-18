@@ -37,25 +37,17 @@ namespace FclEx
 
         public static bool TryGetFirst<T>(this IEnumerable<T> source, out T value)
         {
-            value = default;
-            var items = source.Take(1).ToArray();
-            if (items.Any())
+            if (source != null)
             {
-                value = items.First();
-                return true;
+                using var e = source.GetEnumerator();
+                if (e.MoveNext())
+                {
+                    value = e.Current;
+                    return true;
+                }
             }
-            return false;
-        }
-
-        public static bool TryGetFirst<T>(this IEnumerable<T> source, Func<T, bool> filter, out T value)
-        {
+            
             value = default;
-            var items = source.Where(filter).Take(1).ToArray();
-            if (items.Any())
-            {
-                value = items.First();
-                return true;
-            }
             return false;
         }
     }

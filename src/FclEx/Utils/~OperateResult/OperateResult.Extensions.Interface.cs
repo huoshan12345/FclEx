@@ -67,6 +67,11 @@ namespace FclEx.Utils
                 : new OperateResult(result.Code, result.Exception, result.Elapsed);
         }
 
+        public static Task<IOperateResult> Ok(this Task<IOperateResult> @this, Action<TimeSpan> action)
+        {
+            return @this.On(r => r.Successful, t => action(t.Elapsed));
+        }
+
         public static async Task<OperateResult> ToUntyped(this Task<IOperateResult> task)
         {
             return (await task.DonotCapture()).ToUntyped();

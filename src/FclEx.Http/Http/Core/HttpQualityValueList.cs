@@ -26,6 +26,8 @@ namespace FclEx.Http.Core
 
         #region Fields
 
+        public int Count { get; private set; }
+
         #endregion
 
         #region Constructors
@@ -87,12 +89,13 @@ namespace FclEx.Http.Core
         /// <param name="item">The item to add</param>
         public void Add(HttpQualityValue item)
         {
-            if (!_dic.TryGetValue(item.Weight, out var l))
+            if (!_dic.TryGetValue(item.Weight, out var list))
             {
-                l = new List<HttpQualityValue>();
-                _dic[item.Weight] = l;
+                list = new List<HttpQualityValue>();
+                _dic[item.Weight] = list;
             }
-            l.Add(item);
+            list.Add(item);
+            Count++;
         }
 
         public HttpQualityValue Find(Func<HttpQualityValue, bool> predicate) => this.FirstOrDefault(predicate);
@@ -125,7 +128,7 @@ namespace FclEx.Http.Core
                     if (AcceptWildcard)
                         return new HttpQualityValue(candidate);
 
-                    if (list.TryGetFirst(m => candidate.Equals(m.Name, StringComparison.OrdinalIgnoreCase) && m.CanAccept, out var item))
+                    if (list.Where(m => candidate.Equals(m.Name, StringComparison.OrdinalIgnoreCase) && m.CanAccept).TryGetFirst(out var item))
                         return item;
                 }
             }

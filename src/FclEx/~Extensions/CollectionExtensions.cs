@@ -10,14 +10,12 @@ namespace FclEx
 {
     public static class CollectionExtensions
     {
-        public static bool IsEmpty<T>(this ICollection<T> col)
+        public static ICollection<T> AddIfNotNull<T>(this ICollection<T> source, T item)
         {
-            return col.Count == 0;
-        }
-
-        public static bool IsNullOrEmpty<T>(this ICollection<T> col)
-        {
-            return col == null || col.Count == 0;
+            Guard.Argument(source, nameof(source)).NotNull();
+            if (!(item is null))
+                source.Add(item);
+            return source;
         }
 
         public static void AddRangeSafely<T>(this ICollection<T> col, IEnumerable<T> items)

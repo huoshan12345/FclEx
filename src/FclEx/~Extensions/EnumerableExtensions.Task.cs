@@ -124,6 +124,55 @@ namespace FclEx
             return list;
         }
 
+
+        public static async Task<OperateResult<List<T>>> ToSeriallyExecutedTask<T>(this IEnumerable<T> enumerable,
+            Func<T, Task<OperateResult<T>>> taskSelector, int intervalSeconds = 0, CancellationToken token = default, bool terminateOnFirstError = false)
+        {
+            Guard.Argument(enumerable, nameof(enumerable)).NotNull();
+            Guard.Argument(taskSelector, nameof(taskSelector)).NotNull();
+            var span = TimeSpan.Zero;
+            var list = new List<T>();
+            IList<Exception> exceptions = null;
+            foreach (var obj in enumerable)
+            {
+                if (!token.IsCancellationRequested)
+                {
+                    var r = await taskSelector(obj).DonotCapture();
+                    span += r.Elapsed;
+                    if (r.Successful)
+                    {
+                        list.Add(r.Result);
+                    }
+                    else
+                    {
+                        if (terminateOnFirstError)
+                        {
+                            return r.ToExplicit<List<T>>();
+                        }
+                        else
+                        {
+                            exceptions ??= new List<Exception>();
+                            exceptions.Add(r.Exception);
+                        }
+                    }
+                    await TaskHelper.Delay(intervalSeconds, token);
+
+                }
+                else
+                {
+                    break;
+                }
+            }
+            if (exceptions.IsValid())
+            {
+                return OperateResult.CreateError(new AggregateException(exceptions), span);
+            }
+            else
+            {
+                return OperateResult.CreateSuccess(list, span);
+            }
+        }
+
         public static async Task<List<TResult>> ToParallellyExecutedTask<T, TResult>(this IEnumerable<T> enumerable,
             Func<T, Task<TResult>> taskSelector, int batchSize, CancellationToken token = default)
         {
