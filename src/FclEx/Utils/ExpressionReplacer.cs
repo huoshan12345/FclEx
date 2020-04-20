@@ -8,26 +8,21 @@ using Microsoft.Extensions.ObjectPool;
 
 namespace FclEx.Utils
 {
-    public class ExpressionReplacer : ExpressionVisitor, IDisposable
+    public class ExpressionReplacer : ExpressionVisitor
     {
-        private static readonly ObjectPool<ExpressionReplacer> _pool
-            = new DefaultObjectPool<ExpressionReplacer>(new DefaultPooledObjectPolicy<ExpressionReplacer>());
+        private readonly Expression _oldValue;
+        private readonly Expression _newValue;
 
-        private Expression _oldValue;
-        private Expression _newValue;
-
-        private void Init(Expression oldExp, Expression newExp)
+        private ExpressionReplacer(Expression oldExp, Expression newExp)
         {
             _oldValue = oldExp;
             _newValue = newExp;
         }
 
-
         public static Expression Replace(Expression exp, Expression oldExp, Expression newExp)
         {
-            using var p = _pool.GetAsDisposable();
-            p.Value.Init(oldExp, newExp);
-            return p.Value.Visit(exp); // no thread switching
+            var replacer = new ExpressionReplacer(oldExp, newExp);
+            return replacer.Visit(exp);
         }
 
         public override Expression Visit(Expression node)
@@ -35,12 +30,6 @@ namespace FclEx.Utils
             return node == _oldValue
                 ? _newValue
                 : base.Visit(node);
-        }
-
-        public void Dispose()
-        {
-            _oldValue = null;
-            _newValue = null;
         }
     }
 }

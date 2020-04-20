@@ -12,14 +12,14 @@ namespace FclEx.Utils
         protected volatile Func<T> _valueFactory;
         protected readonly bool _isThreadSafe;
 
-        public event EventHandler<TSelf, T> OnDiscardValue = (sender, e) => { };
+        private readonly Action<TSelf, T>? _onDiscardValue;
 
-        public ReLazy(Func<T> valueFactory, bool isThreadSafe = true, EventHandler<TSelf, T> discardValueHandler = null)
+        public ReLazy(Func<T> valueFactory, bool isThreadSafe = true, Action<TSelf, T>? discardValueHandler = null)
         {
             _valueFactory = valueFactory;
             _isThreadSafe = isThreadSafe;
             _lazy = new Lazy<T>(_valueFactory, isThreadSafe);
-            OnDiscardValue += discardValueHandler;
+            _onDiscardValue = discardValueHandler;
         }
 
         public T Value => _lazy.Value;
@@ -46,8 +46,8 @@ namespace FclEx.Utils
 
         protected virtual void DiscardValue()
         {
-            if (_lazy.IsValueCreated)
-                OnDiscardValue((TSelf)this, _lazy.Value);
+            if (_lazy.IsValueCreated && _onDiscardValue != null)
+                _onDiscardValue((TSelf)this, _lazy.Value);
         }
 
         public virtual void Dispose()
@@ -58,7 +58,7 @@ namespace FclEx.Utils
 
     public class ReLazy<T> : ReLazy<ReLazy<T>, T>
     {
-        public ReLazy(Func<T> valueFactory, bool isThreadSafe = true, EventHandler<ReLazy<T>, T> discardValueHandler = null) 
+        public ReLazy(Func<T> valueFactory, bool isThreadSafe = true, Action<ReLazy<T>, T>? discardValueHandler = null)
             : base(valueFactory, isThreadSafe, discardValueHandler)
         {
         }

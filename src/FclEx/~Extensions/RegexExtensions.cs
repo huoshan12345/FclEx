@@ -8,7 +8,7 @@ namespace FclEx
 {
     public static class RegexExtensions
     {
-        public static string TryGet(this Match m, int index = 0, string defaultValue = default)
+        public static string? TryGet(this Match m, int index = 0, string? defaultValue = default)
         {
             return m.Success && index >= 0 && index < m.Groups.Count
                 ? m.Groups[index].Value
@@ -23,10 +23,10 @@ namespace FclEx
                 : defaultValue;
         }
 
-        public static bool MatchAndDo(this Regex regex, string input, Action<Match> onSuccess, Action onFail = null)
+        public static bool MatchAndDo(this Regex regex, string input, Action<Match> onSuccess, Action? onFail = null)
         {
-            onSuccess = onSuccess ?? (m => { });
-            onFail = onFail ?? (() => { });
+            onSuccess ??= (m => { });
+            onFail ??= (() => { });
             var match = regex.Match(input);
             if (match.Success)
                 onSuccess(match);
@@ -35,10 +35,10 @@ namespace FclEx
             return match.Success;
         }
 
-        public static async Task<bool> MatchAndDoAsync(this Regex regex, string input, Func<Match, Task> onSuccess, Func<Task> onFail = null)
+        public static async Task<bool> MatchAndDoAsync(this Regex regex, string input, Func<Match, Task> onSuccess, Func<Task>? onFail = null)
         {
-            onSuccess = onSuccess ?? (m => Task.CompletedTask);
-            onFail = onFail ?? (() => Task.CompletedTask);
+            onSuccess ??= (m => Task.CompletedTask);
+            onFail ??= (() => Task.CompletedTask);
             var match = regex.Match(input);
             if (match.Success)
                 await onSuccess(match).DonotCapture();

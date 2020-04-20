@@ -15,7 +15,7 @@ namespace FclEx.Http.Services
     [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
     public static class HttpServiceExtensions
     {
-        public static Task<HttpRes> GetAsync(this IHttpService http, string url, string charSet = null, int? timeout = 10 * 1000, int retryTimes = 3, int delaySeconds = 0)
+        public static Task<HttpRes> GetAsync(this IHttpService http, string url, string? charSet = null, int? timeout = 10 * 1000, int retryTimes = 3, int delaySeconds = 0)
         {
             var req = HttpReq.Get(url)
                 .Compress()
@@ -28,17 +28,17 @@ namespace FclEx.Http.Services
         {
             return await ActionHelper.TryAsync(async ()
                 => await http.ExecuteAsync(req).DonotCapture(),
-                retryTimes, delaySeconds, e => HttpRes.CreateError(req, e), false, null)
+                retryTimes, delaySeconds, e => HttpRes.CreateError(req, e), false, HttpRes.EmptyRes)
                 .DonotCapture();
         }
 
-        public static void AddCookie(this IHttpService http, Cookie cookie, string url = null)
+        public static void AddCookie(this IHttpService http, Cookie cookie, string? url = null)
         {
             var uri = url == null ? null : new Uri(url);
             http.AddCookie(cookie, uri);
         }
 
-        public static Cookie GetCookie(this IHttpService http, string url, string name)
+        public static Cookie? GetCookie(this IHttpService http, string url, string name)
         {
             var uri = new Uri(url);
             return http.GetCookie(uri, name);
@@ -72,13 +72,13 @@ namespace FclEx.Http.Services
             }
         }
 
-        public static void AddCookies(this IHttpService http, IEnumerable<Cookie> cookies, string url = null)
+        public static void AddCookies(this IHttpService http, IEnumerable<Cookie> cookies, string? url = null)
         {
             var uri = url == null ? null : new Uri(url);
             http.AddCookies(cookies, uri);
         }
 
-        public static void AddCookies(this IHttpService http, IEnumerable<Cookie> cookies, Uri uri)
+        public static void AddCookies(this IHttpService http, IEnumerable<Cookie> cookies, Uri? uri = null)
         {
             Guard.Argument(http, nameof(http)).NotNull();
             Guard.Argument(cookies, nameof(cookies)).NotNull();
@@ -86,10 +86,10 @@ namespace FclEx.Http.Services
                 http.AddCookie(cookie, uri);
         }
 
-        public static void AddCookies(this IHttpService http, IEnumerable<SimpleCookie> cookies, Uri uri)
+        public static void AddCookies(this IHttpService http, IEnumerable<SimpleCookie> cookies, Uri? uri = null)
             => http.AddCookies(cookies.Select(m => m.ToCookie()), uri);
 
-        public static void AddCookies(this IHttpService http, IEnumerable<SimpleCookie> cookies, string url = null)
+        public static void AddCookies(this IHttpService http, IEnumerable<SimpleCookie> cookies, string? url = null)
         {
             var uri = url == null ? null : new Uri(url);
             http.AddCookies(cookies, uri);
@@ -108,7 +108,7 @@ namespace FclEx.Http.Services
             http.AddCookie(cookie.ToCookie());
         }
 
-        public static void AddCookies(this IHttpService http, CookieCollection cc, string url = null)
+        public static void AddCookies(this IHttpService http, CookieCollection cc, string? url = null)
             => AddCookies(http, cc.OfType<Cookie>(), url);
 
         public static async Task<OperateResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, Uri uri,
@@ -121,7 +121,7 @@ namespace FclEx.Http.Services
 
             var res = await http.SendAsync(req).DonotCapture();
             if (res.HasError)
-                return OperateResult.CreateObjError(res, res.Exception, res.ExcuteTime);
+                return OperateResult.CreateObjError(res, res.Exception!, res.ExcuteTime);
             else
                 return res.GetDownloadInfo();
         }

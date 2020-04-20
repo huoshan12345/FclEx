@@ -14,11 +14,9 @@ namespace FclEx.Http.Core.Cookies
             Domain = domain ?? throw new ArgumentNullException(nameof(domain));
         }
 
-        public string Name { get; set; }
-
-        public string Value { get; set; }
-
-        public string Domain { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Value { get; set; } = string.Empty;
+        public string Domain { get; set; } = string.Empty;
 
         public Cookie ToCookie()
         {

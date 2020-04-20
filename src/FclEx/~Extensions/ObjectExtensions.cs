@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -12,20 +13,9 @@ namespace FclEx
 {
     public static class ObjectExtensions
     {
+        [return: MaybeNull]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsNull<T>(this T obj) => obj is null;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsNotNull<T>(this T obj) => !obj.IsNull();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsDefault<T>(this T obj) => EqualityComparer<T>.Default.Equals(obj, default);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsNotDefault<T>(this T obj) => !IsDefault(obj);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T CastTo<T>(this object obj)
+        public static T CastTo<T>([MaybeNull]this object obj)
         {
             return DynamicTypeCaster.Instance.CastTo<object, T>(obj);
         }
@@ -37,47 +27,36 @@ namespace FclEx
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ToStringOrNull<T>(this T obj)
-        {
-            return obj.IsNull() ? null : obj.ToString();
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ToStringOrEmpty<T>(this T obj)
         {
-            return obj.IsNull() ? "" : obj.ToString();
+            return obj is null ? string.Empty : obj.ToString();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int GetHashCodeSafely<T>(this T obj)
         {
-            return obj.IsNull() ? 0 : obj.GetHashCode();
+            return obj is null ? 0 : obj.GetHashCode();
         }
 
+        [return: MaybeNull]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T DeepClone<T>(this T obj)
         {
+            if (obj is null)
+                return default;
+
             if (typeof(T).IsSerializable)
             {
-                using (var ms = new MemoryStream())
-                {
-                    var formatter = new BinaryFormatter();
-                    formatter.Serialize(ms, obj);
-                    ms.Position = 0;
-                    return (T)formatter.Deserialize(ms);
-                }
+                using var ms = new MemoryStream();
+                var formatter = new BinaryFormatter();
+                formatter.Serialize(ms, obj);
+                ms.Position = 0;
+                return (T)formatter.Deserialize(ms);
             }
             else
             {
                 return obj.ToJson().ToJToken().ToObject<T>();
             }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T GetOrEmpty<T>(this T obj)
-            where T : class, new()
-        {
-            return obj ?? new T();
         }
     }
 }

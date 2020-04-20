@@ -12,7 +12,7 @@ namespace FclEx.Utils
     public static class HttpHandlerHelper
     {
         private static readonly TimeSpan _defaultCleanupInterval = TimeSpan.FromSeconds(10);
-        private static StatelessTimer _cleanupTimer;
+        private static StatelessTimer? _cleanupTimer;
         private static readonly object _cleanupTimerLock = new object();
         private static readonly object _cleanupActiveLock = new object();
 
@@ -69,7 +69,7 @@ namespace FclEx.Utils
             }
         }
 
-        private static HttpClientHandler CreateDefaultHandler(IWebProxy proxy)
+        private static HttpClientHandler CreateDefaultHandler(IWebProxy? proxy)
         {
             var handler = new HttpClientHandler
             {
@@ -124,7 +124,7 @@ namespace FclEx.Utils
         {
             lock (_cleanupTimerLock)
             {
-                _cleanupTimer.Dispose();
+                _cleanupTimer!.Dispose();
                 _cleanupTimer = null;
             }
         }
@@ -162,7 +162,7 @@ namespace FclEx.Utils
                     _expiredHandlers.TryDequeue(out var entry);
                     Debug.Assert(entry != null, "Entry was null, we should always get an entry back from TryDequeue");
 
-                    if (entry.CanDispose)
+                    if (entry!.CanDispose)
                     {
                         try
                         {

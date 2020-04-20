@@ -29,7 +29,7 @@ namespace FclEx.Http.Core
             return req;
         }
 
-        public static HttpReq Host(this HttpReq req, string host)
+        public static HttpReq Host(this HttpReq req, string? host)
         {
             req.Host = host;
             return req;
@@ -41,31 +41,31 @@ namespace FclEx.Http.Core
             return req;
         }
 
-        public static HttpReq Fragment(this HttpReq req, string fragment)
+        public static HttpReq Fragment(this HttpReq req, string? fragment)
         {
             req.Fragment = fragment;
             return req;
         }
 
-        public static HttpReq UserName(this HttpReq req, string userName)
+        public static HttpReq UserName(this HttpReq req, string? userName)
         {
             req.UserName = userName;
             return req;
         }
 
-        public static HttpReq Password(this HttpReq req, string password)
+        public static HttpReq Password(this HttpReq req, string? password)
         {
             req.Password = password;
             return req;
         }
 
-        public static HttpReq Path(this HttpReq req, string path)
+        public static HttpReq Path(this HttpReq req, string? path)
         {
             req.Path = path;
             return req;
         }
 
-        public static HttpReq Scheme(this HttpReq req, string scheme)
+        public static HttpReq Scheme(this HttpReq req, string? scheme)
         {
             req.Scheme = scheme;
             return req;
@@ -82,12 +82,12 @@ namespace FclEx.Http.Core
             return req.Method(method.ToEnum<HttpMethodType>());
         }
 
-        public static HttpReq Auth(this HttpReq req, string auth)
+        public static HttpReq Auth(this HttpReq req, string? auth)
         {
             return req.AddHeader(HttpKnownHeaderNames.Authorization, auth);
         }
 
-        public static HttpReq BasicAuth(this HttpReq req, string userName, string password)
+        public static HttpReq BasicAuth(this HttpReq req, string? userName, string? password)
         {
             var userInfo = userName + ":" + password;
             return req.AddHeader(HttpKnownHeaderNames.Authorization, "Basic " + userInfo.ToBytes().ToBase64());
@@ -98,13 +98,13 @@ namespace FclEx.Http.Core
             return req.AddHeader(HttpKnownHeaderNames.Authorization, "Bearer " + token);
         }
 
-        public static HttpReq CharSet(this HttpReq req, string chartSet)
+        public static HttpReq CharSet(this HttpReq req, string? chartSet)
         {
             req.CharSet = chartSet;
             return req;
         }
 
-        public static HttpReq TryCharSet(this HttpReq req, string chartSet)
+        public static HttpReq TryCharSet(this HttpReq req, string? chartSet)
         {
             req.CharSet ??= chartSet;
             return req;
@@ -116,13 +116,13 @@ namespace FclEx.Http.Core
             return req;
         }
 
-        public static HttpReq FallbackCharSet(this HttpReq req, string chartSet)
+        public static HttpReq FallbackCharSet(this HttpReq req, string? chartSet)
         {
             req.FallbackCharSet = chartSet;
             return req;
         }
 
-        public static HttpReq TryFallbackCharSet(this HttpReq req, string chartSet)
+        public static HttpReq TryFallbackCharSet(this HttpReq req, string? chartSet)
         {
             req.FallbackCharSet ??= chartSet;
             return req;
@@ -157,13 +157,13 @@ namespace FclEx.Http.Core
             return req;
         }
 
-        public static HttpReq Origin(this HttpReq req, string url)
+        public static HttpReq Origin(this HttpReq req, string? url)
         {
             req.Origin = url;
             return req;
         }
 
-        public static HttpReq TryOrigin(this HttpReq req, string url)
+        public static HttpReq TryOrigin(this HttpReq req, string? url)
         {
             req.Origin ??= url;
             return req;

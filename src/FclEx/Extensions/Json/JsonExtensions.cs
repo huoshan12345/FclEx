@@ -55,7 +55,7 @@ namespace FclEx.Extensions.Json
                                   && (data.First() == '[' && data.Last() == ']');
         }
 
-        public static bool TryToJToken(this string str, out JToken token)
+        public static bool TryToJToken(this string str, out JToken? token)
         {
             token = null;
             if (str.IsPossibleJson())
@@ -70,7 +70,7 @@ namespace FclEx.Extensions.Json
             return false;
         }
 
-        public static bool TryToJObject(this string str, out JObject token)
+        public static bool TryToJObject(this string str, out JObject? token)
         {
             token = null;
             if (str.IsPossibleJson())
@@ -85,7 +85,7 @@ namespace FclEx.Extensions.Json
             return false;
         }
 
-        public static bool TryToJArray(this string str, out JArray token)
+        public static bool TryToJArray(this string str, out JArray? token)
         {
             token = null;
             if (str.IsPossibleJson())

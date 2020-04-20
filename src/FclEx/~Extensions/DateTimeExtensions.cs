@@ -105,7 +105,7 @@ namespace FclEx
 
         public static string ToStringOrEmpty(this DateTime dt, string format = CnTimeFormat)
         {
-            return dt.IsDefault()
+            return dt == default
                 ? string.Empty
                 : dt.ToString(format);
         }

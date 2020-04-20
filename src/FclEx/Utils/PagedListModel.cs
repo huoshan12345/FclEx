@@ -4,15 +4,15 @@
     {
         private IPagedList<T> _list = PagedList<T>.Empty;
 
-        public PagedListModel(IPagedList<T> list = null)
+        public PagedListModel(IPagedList<T>? list = null)
         {
-            List = list;
+            List = list ?? PagedList<T>.Empty;
         }
 
         public IPagedList<T> List
         {
             get => _list;
-            set => _list = value ?? _list;
+            set => _list = value ?? PagedList<T>.Empty;
         }
 
         public int PageCount => List.PageCount;

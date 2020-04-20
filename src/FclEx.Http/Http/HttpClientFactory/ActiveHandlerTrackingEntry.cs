@@ -16,8 +16,8 @@ namespace FclEx.Http.HttpClientFactory
         private static readonly TimerCallback<ActiveHandlerTrackingEntry> _timerCallback = (s) => s.Timer_Tick();
         private readonly object _lock = new object();
         private bool _timerInitialized;
-        private Timer<ActiveHandlerTrackingEntry> _timer;
-        private TimerCallback<ActiveHandlerTrackingEntry> _callback;
+        private Timer<ActiveHandlerTrackingEntry>? _timer;
+        private TimerCallback<ActiveHandlerTrackingEntry>? _callback;
 
         public ActiveHandlerTrackingEntry(IWebProxyExt proxy, LifetimeTrackingHttpMessageHandler handler, TimeSpan lifetime)
         {
@@ -66,9 +66,6 @@ namespace FclEx.Http.HttpClientFactory
 
         private void Timer_Tick()
         {
-            Debug.Assert(_callback != null);
-            Debug.Assert(_timer != null);
-
             lock (_lock)
             {
                 if (_timer != null)
@@ -76,7 +73,7 @@ namespace FclEx.Http.HttpClientFactory
                     _timer.Dispose();
                     _timer = null;
 
-                    _callback(this);
+                    _callback!(this);
                 }
             }
         }

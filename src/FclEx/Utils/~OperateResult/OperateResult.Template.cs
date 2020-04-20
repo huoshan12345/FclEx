@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Threading.Tasks;
 using Dawn;
@@ -9,13 +10,13 @@ namespace FclEx.Utils
 {
     public readonly struct OperateResult<T> : IOperateResult<T>
     {
-        public bool Successful => Code == OperateResultCodes.Success;
+        public bool Successful => Exception is null;
         public int Code { get; }
-        public Exception Exception { get; }
+        public Exception? Exception { get; }
         public TimeSpan Elapsed { get; }
-        public T Result { get; }
+        [AllowNull] public T Result { get; }
 
-        public void Deconstruct(out bool successful, out TimeSpan elapsed, out T obj, out Exception ex)
+        public void Deconstruct(out bool successful, out TimeSpan elapsed, out T obj, out Exception? ex)
         {
             successful = Successful;
             ex = Exception;
@@ -29,10 +30,10 @@ namespace FclEx.Utils
         /// <param name="code"></param>
         /// <param name="ex"></param>
         /// <param name="elapsed"></param>
-        public OperateResult(int code, Exception ex, TimeSpan elapsed)
+        public OperateResult(int code, [DisallowNull]Exception? ex, TimeSpan elapsed)
         {
             Code = Guard.Argument(code, nameof(code)).NotEqual(OperateResultCodes.Success);
-            Exception = Guard.Argument(ex, nameof(ex)).NotNull();
+            Exception = ex ?? throw new ArgumentNullException(nameof(ex));
             Elapsed = elapsed;
             Result = default;
         }
@@ -42,7 +43,7 @@ namespace FclEx.Utils
         /// </summary>
         /// <param name="result"></param>
         /// <param name="elapsed"></param>
-        public OperateResult(T result, TimeSpan elapsed)
+        public OperateResult([AllowNull]T result, TimeSpan elapsed)
         {
             Code = OperateResultCodes.Success;
             Exception = null;
@@ -95,15 +96,15 @@ namespace FclEx.Utils
         public OperateResult<TTarget> ToExplicit<TTarget>()
         {
             return Successful
-                ? new OperateResult<TTarget>(Result.CastTo<TTarget>(), Elapsed)
-                : new OperateResult<TTarget>(Code, Exception, Elapsed);
+                ? new OperateResult<TTarget>(Result!.CastTo<TTarget>(), Elapsed)
+                : new OperateResult<TTarget>(Code, Exception!, Elapsed);
         }
 
         public IOperateResult WithElapsed(TimeSpan span)
         {
             return Successful
                 ? new OperateResult<T>(Result, span)
-                : new OperateResult<T>(Code, Exception, span);
+                : new OperateResult<T>(Code, Exception!, span);
         }
     }
 }

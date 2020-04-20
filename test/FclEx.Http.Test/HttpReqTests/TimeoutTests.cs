@@ -16,9 +16,10 @@ namespace FclEx.Http.Test.HttpReqTests
         [Theory]
         [InlineData(1)]
         [InlineData(3)]
-        public async Task TestCtor(int timeout)
+        public async Task TotalTimeout_Test(int timeout)
         {
-            var req = HttpReq.Get("http://127.0.0.0").Timeout(timeout * 1000);
+            var req = HttpReq.Get("http://127.0.0.0")
+                .TotalTimeout(TimeSpan.FromSeconds(timeout));
 
             var (successful, elapsed, _, exception) = await OperateResult.ExcuteAsync(async () => await req.SendAsync().ThrowIfError());
             Assert.False(successful);

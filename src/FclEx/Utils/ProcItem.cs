@@ -21,7 +21,7 @@ namespace FclEx.Utils
 
         public int ErrorTimes { get; private set; }
         public T Item { get; }
-        public Exception Exception { get; private set; }
+        public Exception? Exception { get; private set; }
 
         public ProcItem<T> AddError(Exception ex)
         {

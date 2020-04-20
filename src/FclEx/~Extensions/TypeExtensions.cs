@@ -59,7 +59,7 @@ namespace FclEx
             return true;
         }
 
-        public static object GetDefault(this Type t)
+        public static object? GetDefault(this Type t)
         {
             if (t.IsValueType && Nullable.GetUnderlyingType(t) == null)
                 return Activator.CreateInstance(t);
@@ -112,14 +112,14 @@ namespace FclEx
             return GetGenericInterface(type, genericType) != null;
         }
 
-        public static Type GetGenericInterface(this Type type, Type genericType)
+        public static Type? GetGenericInterface(this Type type, Type genericType)
         {
             return type.GetInterfaces().FirstOrDefault(x =>
                 x.IsGenericType &&
                 x.GetGenericTypeDefinition() == genericType);
         }
 
-        public static Type GetAnyElementType(this Type type)
+        public static Type? GetAnyElementType(this Type type)
         {
             // Type is Array
             // short-circuit if you expect lots of arrays 

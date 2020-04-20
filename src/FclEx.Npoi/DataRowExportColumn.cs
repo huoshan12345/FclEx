@@ -17,7 +17,7 @@ namespace FclEx.Npoi
         {
 
         }
-        public DataRowExportColumn(string name, string title, Func<object, int, object> funcFormatValue)
+        public DataRowExportColumn(string name, string title, Func<object, int, object>? funcFormatValue)
         {
             if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
             this.Name = name;
@@ -27,7 +27,7 @@ namespace FclEx.Npoi
 
         public string Name { get; private set; }
         private readonly string _title;
-        private readonly Func<object, int, object> _funcFormatValue;
+        private readonly Func<object, int, object>? _funcFormatValue;
         public string Title => string.IsNullOrEmpty(this._title) ? this.Name : this._title;
 
         public object GetValue(DataRow row, int index)

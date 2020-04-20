@@ -66,7 +66,7 @@ namespace FclEx.Http.Core
             return req;
         }
 
-        public static string GetRequestHeader(this HttpReq req, string cookieHeader = null)
+        public static string GetRequestHeader(this HttpReq req, string? cookieHeader = null)
         {
             var sb = new StringBuilder();
             foreach (var pair in req.HeaderMap)

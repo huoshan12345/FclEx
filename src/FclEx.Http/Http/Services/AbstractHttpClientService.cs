@@ -29,7 +29,7 @@ namespace FclEx.Http.Services
             // HttpKnownHeaderNames.UserAgent
         };
 
-        protected AbstractHttpClientService(bool useCookie, IWebProxyExt proxy = null, ILoggerFactory loggerFactory = null)
+        protected AbstractHttpClientService(bool useCookie, IWebProxyExt? proxy = null, ILoggerFactory? loggerFactory = null)
             : base(useCookie, proxy, loggerFactory)
         {
         }
@@ -80,14 +80,15 @@ namespace FclEx.Http.Services
             }
         }
 
-        internal static Encoding GetEncodingFromCharSet(string charset)
+        internal static Encoding? GetEncodingFromCharSet(string? charset)
         {
             if (charset.IsNullOrEmpty())
                 return null;
+
             try
             {
                 // Remove at most a single set of quotes.
-                if (charset.Length > 2 &&
+                if (charset!.Length > 2 &&
                     charset[0] == '\"' &&
                     charset[charset.Length - 1] == '\"')
                 {
@@ -104,7 +105,7 @@ namespace FclEx.Http.Services
             }
         }
 
-        internal static (string, Encoding) ReadBufferAsString(ArraySegment<byte> buffer, HttpContentHeaders headers, string charSet, bool detectCharSetFromHtmlMeta, string defaultCharSet)
+        internal static (string, Encoding) ReadBufferAsString(ArraySegment<byte> buffer, HttpContentHeaders headers, string? charSet, bool detectCharSetFromHtmlMeta, string? defaultCharSet)
         {
             Debug.Assert(buffer.Array != null);
 
@@ -113,7 +114,7 @@ namespace FclEx.Http.Services
             // Content-Encoding is 'gzip' the user should set HttpClientHandler.AutomaticDecompression to get a
             // decoded response stream.
 
-            Encoding encoding = null;
+            Encoding? encoding = null;
             var bomLength = -1;
 
             charSet = charSet.IfEmpty(headers.ContentType?.CharSet);
@@ -123,7 +124,7 @@ namespace FclEx.Http.Services
             {
                 encoding = GetEncodingFromCharSet(charSet);
                 // Byte-order-mark (BOM) characters may be present even if a charset was specified.
-                bomLength = EncodingHelper.GetPreambleLength(buffer, encoding);
+                bomLength = EncodingHelper.GetPreambleLength(buffer, encoding!);
             }
 
             // If no content encoding is listed in the ContentType HTTP header, or no Content-Type header present,
@@ -158,14 +159,13 @@ namespace FclEx.Http.Services
             return (str, encoding);
         }
 
-        private static Encoding DetectCharSetFromHtmlMeta(ArraySegment<byte> buffer)
+        private static Encoding? DetectCharSetFromHtmlMeta(ArraySegment<byte> buffer)
         {
-            Debug.Assert(buffer.Array != null);
-
-            if (buffer.Array.Length == 0)
+            var data = buffer.Array ?? throw new ArgumentNullException(nameof(buffer.Array));
+            if (data.Length == 0)
                 return null;
 
-            var prefix = Encoding.Default.GetString(buffer.Array, 0, Math.Min(1024, buffer.Array.Length));
+            var prefix = Encoding.Default.GetString(data, 0, Math.Min(1024, data.Length));
             var charSet = HtmlUtil.GetMetaCharSet(prefix);
             return charSet == null ? null : Encoding.GetEncoding(charSet);
         }

@@ -9,7 +9,7 @@ namespace FclEx
             bool ignoreNull = false,
             DateTimeZoneHandling dateTimeZoneHandling = DateTimeZoneHandling.Local,
             bool useCamelCase = false,
-            string dateTimeFormat = null)
+            string? dateTimeFormat = null)
         {
             Formatting = formatting;
             IgnoreNull = ignoreNull;
@@ -22,7 +22,7 @@ namespace FclEx
         public bool IgnoreNull { get; }
         public DateTimeZoneHandling DateTimeZoneHandling { get; }
         public bool UseCamelCase { get; }
-        public string DateTimeFormat { get; }
+        public string? DateTimeFormat { get; }
 
         public bool Equals(JsonOptions other)
         {

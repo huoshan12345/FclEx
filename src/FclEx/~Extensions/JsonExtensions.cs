@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.Serialization.Formatters;
 using System.Xml;
@@ -35,34 +36,34 @@ namespace FclEx
                     NullValueHandling = k.IgnoreNull ? NullValueHandling.Ignore : NullValueHandling.Include,
                 };
                 if (k.DateTimeFormat.IsValid())
-                    settings.DateFormatString = k.DateTimeFormat;
+                    settings.DateFormatString = k.DateTimeFormat!;
                 if (k.UseCamelCase)
                     settings.ContractResolver = CamelResolver;
                 return settings;
             });
         }
 
-        public static string ToJson(this object obj, JsonOptions options)
+        public static string ToJson(this object? obj, JsonOptions options)
         {
             var settings = GetSettings(options);
             return JsonConvert.SerializeObject(obj, settings);
         }
 
-        public static string ToJson(this object obj,
+        public static string ToJson(this object? obj,
             Formatting formatting = Formatting.None,
             bool ignoreNull = false,
             DateTimeZoneHandling dateTimeZoneHandling = DateTimeZoneHandling.Local,
             bool useCamelCase = false,
-            string dateTimeFormat = null)
+            string? dateTimeFormat = null)
         {
             return obj.ToJson(new JsonOptions(formatting, ignoreNull, dateTimeZoneHandling, useCamelCase, dateTimeFormat));
         }
 
-        public static string ToJsonCamel(this object obj,
+        public static string ToJsonCamel(this object? obj,
             Formatting formatting = Formatting.None,
             bool ignoreNull = false,
             DateTimeZoneHandling dateTimeZoneHandling = DateTimeZoneHandling.Local,
-            string dateTimeFormat = null)
+            string? dateTimeFormat = null)
         {
             return obj.ToJson(new JsonOptions(formatting, ignoreNull, dateTimeZoneHandling, true, dateTimeFormat));
         }
@@ -72,11 +73,13 @@ namespace FclEx
             return JToken.Parse(str);
         }
 
+        [return: MaybeNull]
         public static JObject ToJObject(this JToken token)
         {
             return token.ToObject<JObject>();
         }
 
+        [return: MaybeNull]
         public static JArray ToJArray(this JToken token)
         {
             return token.ToObject<JArray>();
@@ -113,7 +116,7 @@ namespace FclEx
             return token.ToObject<XmlDocument>(JsonSerializer.Create(new JsonSerializerSettings
             {
                 Converters = new JsonConverter[] { converter }
-            }));
+            }))!;
         }
 
         public static XDocument ToXNode(this JToken token, string deserializeRootElementName, bool writeArrayAttribute)
@@ -126,15 +129,15 @@ namespace FclEx
             return token.ToObject<XDocument>(JsonSerializer.Create(new JsonSerializerSettings
             {
                 Converters = new JsonConverter[] { converter }
-            }));
+            }))!;
         }
 
-        public static Dictionary<string, string> ToStrDic(this JObject jObject)
+        public static Dictionary<string, string?> ToStrDic(this JObject jObject)
         {
-            var dic = new Dictionary<string, string>(jObject.Count);
+            var dic = new Dictionary<string, string?>(jObject.Count);
             foreach (var (key, value) in jObject)
             {
-                dic[key] = value.ToStringOrNull();
+                dic[key] = value?.ToString();
             }
             return dic;
         }

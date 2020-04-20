@@ -4,6 +4,7 @@ using FclEx.Http.Core;
 using FclEx.Http.Services;
 using FclEx.Utils;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace FclEx.Actions
 {
@@ -12,26 +13,26 @@ namespace FclEx.Actions
         private readonly Uri _url;
         private readonly HttpResultType _resultType;
 
-        public HttpGetAction(Uri url, IHttpService httpService, HttpResultType resultType = HttpResultType.String, ILogger logger = null)
+        public HttpGetAction(Uri url, IHttpService httpService, HttpResultType resultType = HttpResultType.String, ILogger? logger = null)
             : base(httpService)
         {
             _url = url;
             _resultType = resultType;
-            Logger = logger;
+            Logger = logger ?? NullLogger.Instance;
         }
 
-        public static HttpGetAction GetString(string url, IHttpService httpService, ILogger logger = null)
+        public static HttpGetAction GetString(string url, IHttpService httpService, ILogger? logger = null)
             => GetString(new Uri(url), httpService, logger);
 
-        public static HttpGetAction GetString(Uri url, IHttpService httpService, ILogger logger = null)
+        public static HttpGetAction GetString(Uri url, IHttpService httpService, ILogger? logger = null)
         {
             return new HttpGetAction(url, httpService, HttpResultType.String, logger);
         }
 
-        public static HttpGetAction GetBytes(string url, IHttpService httpService, ILogger logger = null)
+        public static HttpGetAction GetBytes(string url, IHttpService httpService, ILogger? logger = null)
             => GetBytes(new Uri(url), httpService, logger);
 
-        public static HttpGetAction GetBytes(Uri url, IHttpService httpService, ILogger logger = null)
+        public static HttpGetAction GetBytes(Uri url, IHttpService httpService, ILogger? logger = null)
         {
             return new HttpGetAction(url, httpService, HttpResultType.Byte, logger);
         }

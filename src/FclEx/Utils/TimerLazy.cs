@@ -11,13 +11,13 @@ namespace FclEx.Utils
         private readonly StatelessTimer _timer;
 
         public TimerLazy(Func<T> valueFactory, TimeSpan dueTime, TimeSpan period, bool isThreadSafe = true,
-            EventHandler<TimerLazy<T>, T> discardValueHandler = null)
+            Action<TimerLazy<T>, T>? discardValueHandler = null)
             : base(valueFactory, isThreadSafe, discardValueHandler)
         {
             _timer = NonCapturingTimer.Create(Recreate, dueTime, period);
         }
 
-        public TimerLazy(Func<T> valueFactory, TimeSpan period, EventHandler<TimerLazy<T>, T> discardValueHandler = null)
+        public TimerLazy(Func<T> valueFactory, TimeSpan period, Action<TimerLazy<T>, T>? discardValueHandler = null)
             : this(valueFactory, period, period, true, discardValueHandler)
         {
         }

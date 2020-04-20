@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Linq;
 using System.Text;
 using Dawn;
 using FclEx.Utils;
@@ -10,6 +9,8 @@ using Newtonsoft.Json.Linq;
 
 namespace FclEx
 {
+    using System.Linq;
+
     public static class NameValueCollectionExtensions
     {
         public static IEnumerable<KeyValuePair<string, string>> ToPair(this NameValueCollection col)

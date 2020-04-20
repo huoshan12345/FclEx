@@ -9,13 +9,14 @@ namespace FclEx.Utils
 {
     public readonly partial struct OperateResult : IOperateResult<IUnit>
     {
+        private readonly IUnit _result;
         public bool Successful => Code == OperateResultCodes.Success;
         public int Code { get; }
-        public Exception Exception { get; }
+        public Exception? Exception { get; }
         public TimeSpan Elapsed { get; }
-        public IUnit Result { get; }
+        IUnit IOperateResult<IUnit>.Result => _result;
 
-        public void Deconstruct(out bool successful, out TimeSpan elapsed, out Exception ex)
+        public void Deconstruct(out bool successful, out TimeSpan elapsed, out Exception? ex)
         {
             successful = Successful;
             ex = Exception;
@@ -27,7 +28,7 @@ namespace FclEx.Utils
             if (Successful)
                 throw new InvalidOperationException("cannot convert to explicit when result is successful");
             else
-                return new OperateResult<TTarget>(Code, Exception, Elapsed);
+                return new OperateResult<TTarget>(Code, Exception!, Elapsed);
         }
 
         public IOperateResult WithElapsed(TimeSpan span)
@@ -43,12 +44,12 @@ namespace FclEx.Utils
         /// <param name="code"></param>
         /// <param name="ex"></param>
         /// <param name="elapsed"></param>
-        public OperateResult(int code, Exception ex, TimeSpan elapsed)
+        public OperateResult(int code, Exception? ex, TimeSpan elapsed)
         {
             Code = Guard.Argument(code, nameof(code)).NotEqual(OperateResultCodes.Success);
-            Exception = Guard.Argument(ex, nameof(ex)).NotNull();
+            Exception = ex ?? throw new ArgumentNullException(nameof(ex));
             Elapsed = elapsed;
-            Result = default;
+            _result = new Unit();
         }
 
         /// <summary>
@@ -60,7 +61,7 @@ namespace FclEx.Utils
             Code = OperateResultCodes.Success;
             Exception = null;
             Elapsed = elapsed;
-            Result = default;
+            _result = new Unit();
         }
 
         public static implicit operator OperateResult(Exception ex)

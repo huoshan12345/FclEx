@@ -45,6 +45,7 @@ namespace FclEx.Http.Test.HttpReqTests
             var res = await HttpReq.Form(UrlUtil.Combine(TestUrl, "/api/post"))
                 .AddData(expected)
                 .SendAsync()
+                .ThrowIfError()
                 .DonotCapture();
             Assert.False(res.HasError);
             var body = res.ResponseString.ToJToken()["body"];
@@ -60,6 +61,7 @@ namespace FclEx.Http.Test.HttpReqTests
             var res = await HttpReq.Json(UrlUtil.Combine(TestUrl, "/api/post"))
                 .JsonBody(list)
                 .SendAsync()
+                .ThrowIfError()
                 .DonotCapture();
             Assert.False(res.HasError);
             var body = res.ResponseString.ToJToken()["body"];

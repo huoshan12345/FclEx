@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Dawn;
 
 namespace FclEx.Http.Services
 {
@@ -17,6 +18,7 @@ namespace FclEx.Http.Services
 
         public ArraySegmentContent(ArraySegment<byte> content, CancellationToken token, TimeSpan? timeout)
         {
+            Guard.Argument(content.Array, nameof(content.Array)).NotNull();
             _content = content;
             _token = token;
             _timeout = timeout;

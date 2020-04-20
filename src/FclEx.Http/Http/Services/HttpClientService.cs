@@ -39,7 +39,7 @@ namespace FclEx.Http.Services
             return ExecuteAsyncInternal(_httpClient.Value, httpReq, httpRes, token);
         }
 
-        public HttpClientService(bool useCookie = true, IWebProxyExt proxy = null, ILoggerFactory loggerFactory = null)
+        public HttpClientService(bool useCookie = true, IWebProxyExt? proxy = null, ILoggerFactory? loggerFactory = null)
             : base(useCookie, proxy, loggerFactory)
         {
             _httpClient = new TimerLazy<HttpClient>(() => CreateHttpClient(HttpHandlerHelper.Create(WebProxy)), TimeSpan.FromMinutes(2));

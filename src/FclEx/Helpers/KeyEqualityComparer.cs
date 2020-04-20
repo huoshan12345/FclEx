@@ -8,7 +8,7 @@ namespace FclEx.Helpers
         private readonly Func<T, TKey> _keySelector;
         private readonly IEqualityComparer<TKey> _comparer;
 
-        public KeyEqualityComparer(Func<T, TKey> keySelector, IEqualityComparer<TKey> comparer)
+        public KeyEqualityComparer(Func<T, TKey> keySelector, IEqualityComparer<TKey>? comparer)
         {
             _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
             _comparer = comparer ?? EqualityComparer<TKey>.Default;

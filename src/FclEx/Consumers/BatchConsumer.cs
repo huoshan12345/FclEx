@@ -58,12 +58,12 @@ namespace FclEx.Consumers
             return list;
         }
 
-        private List<ProcItem<T>> HandleException(List<ProcItem<T>> items, Exception ex)
+        private List<ProcItem<T>>? HandleException(List<ProcItem<T>> items, Exception ex)
         {
             if (items == null || items.Count == 0)
                 return items;
 
-            List<ProcItem<T>> nextItems = null;
+            List<ProcItem<T>>? nextItems = null;
             Counter.IncreException();
 
             try
@@ -92,7 +92,7 @@ namespace FclEx.Consumers
             return nextItems;
         }
 
-        private void HandleDiscard(List<ProcItem<T>> items)
+        private void HandleDiscard(List<ProcItem<T>>? items)
         {
             if (items == null || items.Count == 0)
                 return;
@@ -111,7 +111,7 @@ namespace FclEx.Consumers
 
         protected override async Task ProcessAction()
         {
-            List<ProcItem<T>> items = null;
+            List<ProcItem<T>>? items = null;
             try
             {
                 items = GetItems();

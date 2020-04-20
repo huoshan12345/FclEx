@@ -9,7 +9,7 @@ namespace FclEx.Helpers
     {
         public static T[] GetValues<T>() where T : Enum
         {
-            return Enum.GetValues(typeof(T)).CastTo<T[]>();
+            return (T[])Enum.GetValues(typeof(T));
         }
 
         public static T ParseFromStrNum<T>(string number, T defaultValue) where T : Enum
@@ -27,7 +27,7 @@ namespace FclEx.Helpers
             if (int.TryParse(number, out var val))
             {
                 if (typeof(T).IsEnumDefined(val))
-                    return val.CastTo<T>();
+                    return val.CastTo<T>()!;
             }
             return defaultValueFunc(number);
         }

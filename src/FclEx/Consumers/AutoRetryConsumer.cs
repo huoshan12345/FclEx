@@ -19,11 +19,11 @@ namespace FclEx.Consumers
         public event EventHandler<AutoRetryConsumer<T>, ProcItem<T>> DiscardHandler = (sender, e) => { };
         public event EventHandler<AutoRetryConsumer<T>, ProcItem<T>> ExceptionHandler = (sender, e) => { };
 
-        public AutoRetryConsumer(int maxRetryTimes = 3, Func<int, int> retryDelay = null)
+        public AutoRetryConsumer(int maxRetryTimes = 3, Func<int, int>? retryDelay = null)
         {
             Guard.Argument(maxRetryTimes, nameof(maxRetryTimes)).Min(0);
             _maxRetryTimes = maxRetryTimes;
-            _retryDelay = retryDelay;
+            _retryDelay = retryDelay ?? (x => x);
         }
 
         private bool TryGetItem(out ProcItem<T> item)

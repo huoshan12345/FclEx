@@ -11,7 +11,7 @@ namespace FclEx.Helpers
         }
 
         public static IEqualityComparer<T> Create<T, TKey>(Func<T, TKey> keySelector,
-            IEqualityComparer<TKey> comparer = null)
+            IEqualityComparer<TKey>? comparer = null)
         {
             return new KeyEqualityComparer<T, TKey>(keySelector, comparer);
         }
@@ -25,7 +25,7 @@ namespace FclEx.Helpers
         }
 
         public static IEqualityComparer<T> Create<TKey>(Func<T, TKey> keySelector,
-            IEqualityComparer<TKey> comparer = null)
+            IEqualityComparer<TKey>? comparer = null)
         {
             return new KeyEqualityComparer<T, TKey>(keySelector, comparer);
         }

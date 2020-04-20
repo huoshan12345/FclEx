@@ -47,7 +47,7 @@ namespace FclEx.Json.Converters
                 if (colType.IsInheritedFromGenericType(typeof(ICollection<>)))
                 {
                     var obj = objectType.CreateObject();
-                    var addMethod = objectType.GetMethod(nameof(ICollection<object>.Add));
+                    var addMethod = objectType.GetMethod(nameof(ICollection<object>.Add)) ?? throw new MissingMethodException("Cannot find a method named Add");
                     foreach (var item in list)
                     {
                         addMethod.Invoke(obj, new[] { item });
@@ -59,33 +59,35 @@ namespace FclEx.Json.Converters
             return list;
         }
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
         {
             throw new NotImplementedException();
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        private static object GetActualValue(Type t, string value)
+        {
+            if (t == typeof(string)) return value;
+            else if (t == typeof(char)) return value[0];
+            else return JsonConvert.DeserializeObject(value, t)!;
+        }
+
+        public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
         {
             if (reader.TokenType == JsonToken.Null) return null;
 
-            var kvType = objectType.GetAnyElementType();
+            var kvType = objectType.GetAnyElementType()!;
             var keyType = kvType.GenericTypeArguments[0];
             var valueType = kvType.GenericTypeArguments[1];
 
-            var list = typeof(List<>).MakeGenericType(kvType).CreateObject().CastTo<IList>();
-            var pairCtor = kvType.GetConstructor(kvType.GenericTypeArguments);
-
-            Func<string, object> keyFunc = keyType == typeof(string)
-                ? s => s
-                : keyType == typeof(char)
-                    ? (Func<string, object>)(s => s[0])
-                    : s => JsonConvert.DeserializeObject(s, keyType);
+            var list = (IList)typeof(List<>).MakeGenericType(kvType).CreateObject();
+            var pairCtor = kvType.GetConstructor(kvType.GenericTypeArguments) ?? throw new MissingMethodException("Can not find a suitable constructor");
 
             var token = JToken.ReadFrom(reader);
-            foreach (var t in token.ToJObject())
+
+            foreach (var (s, jToken) in token.ToJObject()!)
             {
-                var key = keyFunc(t.Key);
-                var value = t.Value.ToObject(valueType);
+                var key = GetActualValue(keyType, s);
+                var value = jToken?.ToObject(valueType);
                 var pair = pairCtor.Invoke(new[] { key, value });
                 list.Add(pair);
             }

@@ -27,16 +27,10 @@ namespace FclEx.Http.Test.Extensions
             await TaskHelper.Delay(3);
         }
 
-        private static async ValueTask TimeoutRequest()
-        {
-            await HttpReq.Get("https://www.google.com")
-                .SendAsync()
-                .ThrowIfError();
-        }
-
         private static async Task TimeoutRequestWrap()
         {
             await HttpReq.Get("https://www.google.com")
+                .TotalTimeout(TimeSpan.FromSeconds(5))
                 .SendAsync()
                 .ThrowIfError();
         }

@@ -12,18 +12,16 @@ namespace FclEx.Data
         public string Name { get; set; }
         public int Order { get; set; }
 
-        public ExportAttribute() { }
-
-        public ExportAttribute(string name)
+        public ExportAttribute(string? name = null)
         {
-            Name = name;
+            Name = name ?? string.Empty;
         }
     }
 
     public abstract class ExportModel<TSelf> where TSelf : ExportModel<TSelf>, new()
     {
-        private static IList<IExportColumn<TSelf>> _columns;
-        public static IList<IExportColumn<TSelf>> Columns => _columns ?? (_columns = new TSelf().GetColumnsRaw());
+        private static IList<IExportColumn<TSelf>>? _columns;
+        public static IList<IExportColumn<TSelf>> Columns => _columns ??= new TSelf().GetColumnsRaw();
 
         protected static ExportColumn<TSelf> CreateColumn(string name, Func<TSelf, object> selector)
             => new ExportColumn<TSelf>(name, selector);
@@ -49,7 +47,7 @@ namespace FclEx.Data
                 var propExp = Expression.Property(paraExp, m.Prop);
                 var e = Expression.Convert(propExp, typeof(object));
                 var func = Expression.Lambda<Func<TSelf, object>>(e, paraExp);
-                return CreateColumn(m.Title, func.Compile());
+                return CreateColumn(m.Title ?? string.Empty, func.Compile());
             }).Cast<IExportColumn<TSelf>>().ToArray();
         }
     }

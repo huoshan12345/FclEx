@@ -9,7 +9,7 @@ namespace FclEx.Utils
     {
         bool Successful { get; }
         int Code { get; }
-        Exception Exception { get; }
+        Exception? Exception { get; }
         TimeSpan Elapsed { get; }
         OperateResult<TTarget> ToExplicit<TTarget>();
         IOperateResult WithElapsed(TimeSpan span);

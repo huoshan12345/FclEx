@@ -21,7 +21,7 @@ namespace FclEx.Actions
         {
             var watch = ValueStopwatch.StartNew();
             var results = new IOperateResult[_queue.Count];
-            var actions = new IActor[_queue.Count];
+            var actions = new IActor?[_queue.Count];
             var lastEvent = (IOperateResult)OperateResult.Success;
             for (var i = 0; i < _queue.Count; i++)
             {
@@ -55,7 +55,7 @@ namespace FclEx.Actions
 
         public int Count => _queue.Count;
 
-        public IActionFuture PushAction(Func<IOperateResult[], IActor> actorSelector, Func<IOperateResult, bool> terminationCondition = null)
+        public IActionFuture PushAction(Func<IOperateResult[], IActor?> actorSelector, Func<IOperateResult, bool>? terminationCondition = null)
         {
             Guard.Argument(actorSelector, nameof(actorSelector)).NotNull();
             _queue.Add(new MetaData(actorSelector, terminationCondition));
@@ -64,14 +64,14 @@ namespace FclEx.Actions
 
         private readonly struct MetaData
         {
-            public MetaData(Func<IOperateResult[], IActor> actorSelector, Func<IOperateResult, bool> terminationCondition)
+            public MetaData(Func<IOperateResult[], IActor?> actorSelector, Func<IOperateResult, bool>? terminationCondition)
             {
                 ActorSelector = actorSelector;
                 TerminationCondition = terminationCondition;
             }
 
-            public Func<IOperateResult[], IActor> ActorSelector { get; }
-            public Func<IOperateResult, bool> TerminationCondition { get; }
+            public Func<IOperateResult[], IActor?> ActorSelector { get; }
+            public Func<IOperateResult, bool>? TerminationCondition { get; }
         }
     }
 }

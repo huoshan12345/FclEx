@@ -23,7 +23,7 @@ namespace FclEx.Http.Core
 
         public static HttpRes ThrowIfError(this HttpRes res)
         {
-            if (res.HasError) res.Exception.ReThrow();
+            if (res.HasError) res.Exception!.ReThrow();
             return res;
         }
 
@@ -40,8 +40,10 @@ namespace FclEx.Http.Core
             res.ThrowIfError();
             if (res.Req.ResultType == HttpResultType.Byte)
                 throw new InvalidOperationException("Can not deserialize json from byte array.");
-            var resObj = res.ResponseString.ToJToken().ToObject<T>();
-            return resObj;
+            if (res.ResponseString.IsNullOrEmpty())
+                throw new InvalidOperationException("Can not deserialize json from empty response string.");
+            var resObj = res.ResponseString!.ToJToken().ToObject<T>();
+            return resObj!;
         }
 
         internal static HttpFileDownloadInfo GetDownloadInfo(this HttpRes res)
@@ -59,7 +61,7 @@ namespace FclEx.Http.Core
                 var mimeType = res.Headers.GetFirstOrDefault(HttpKnownHeaderNames.ContentType);
                 if (mimeType.IsValid())
                 {
-                    if (mimeType.Contains(";"))
+                    if (mimeType!.Contains(";"))
                     {
                         var contentType = new ContentType(mimeType);
                         mimeType = contentType.MediaType;

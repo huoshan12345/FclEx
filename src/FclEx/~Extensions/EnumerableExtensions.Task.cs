@@ -132,7 +132,7 @@ namespace FclEx
             Guard.Argument(taskSelector, nameof(taskSelector)).NotNull();
             var span = TimeSpan.Zero;
             var list = new List<T>();
-            IList<Exception> exceptions = null;
+            IList<Exception>? exceptions = null;
             foreach (var obj in enumerable)
             {
                 if (!token.IsCancellationRequested)
@@ -152,7 +152,7 @@ namespace FclEx
                         else
                         {
                             exceptions ??= new List<Exception>();
-                            exceptions.Add(r.Exception);
+                            exceptions.Add(r.Exception!);
                         }
                     }
                     await TaskHelper.Delay(intervalSeconds, token);

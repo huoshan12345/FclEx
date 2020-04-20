@@ -151,7 +151,7 @@ namespace FclEx.Http.Core
                         namePos++;
                 }
 
-                string name;
+                string? name;
                 if (valuePos == -1)
                 {
                     name = null;

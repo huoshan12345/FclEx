@@ -6,12 +6,12 @@ namespace FclEx.Utils
 {
     public class Timer<T> : IDisposable
     {
-        private Timer _timer;
+        private Timer? _timer;
 
         public Timer(TimerCallback<T> callback, T state, TimeSpan dueTime, TimeSpan period)
         {
             Guard.Argument(callback, nameof(callback)).NotNull();
-            _timer = new Timer(s => callback(s.CastTo<T>()), state, dueTime, period);
+            _timer = new Timer(s => callback((T)s), state, dueTime, period);
         }
 
         public void Dispose()

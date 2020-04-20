@@ -12,7 +12,7 @@ namespace FclEx.Utils
 
         public T Value { get; }
         public List<TreeNode<T>> Children { get; } = new List<TreeNode<T>>();
-        public TreeNode<T> Parent { get; private set; }
+        public TreeNode<T>? Parent { get; private set; }
 
         public TreeNode<T> AddChild(T value)
         {
@@ -27,10 +27,10 @@ namespace FclEx.Utils
             values.ForEach(m => AddChild(m));
         }
 
-        public bool DeepEquals(TreeNode<T> y, IEqualityComparer<T> comparer = null)
+        public bool DeepEquals(TreeNode<T> y, IEqualityComparer<T>? comparer = null)
         {
             if (y == null) return false;
-            comparer = comparer ?? EqualityComparer<T>.Default;
+            comparer ??= EqualityComparer<T>.Default;
             var x = this;
             var map = new Dictionary<TreeNode<T>, TreeNode<T>> { { x, y } };
             var queue = new Queue<TreeNode<T>>();

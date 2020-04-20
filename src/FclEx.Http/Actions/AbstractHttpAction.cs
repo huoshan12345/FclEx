@@ -24,14 +24,14 @@ namespace FclEx.Actions
         protected virtual void PreCheckResponse(HttpRes response)
         {
             if (response.HasError)
-                response.Exception.ReThrow();
+                response.Exception!.ReThrow();
             else
                 response.EnsureSuccessStatusCode();
         }
 
         protected override async Task<IOperateResult> ExecuteInternalAsync(CancellationToken token = default)
         {
-            HttpReq req = null;
+            HttpReq? req = null;
             try
             {
                 req = BuildRequest();

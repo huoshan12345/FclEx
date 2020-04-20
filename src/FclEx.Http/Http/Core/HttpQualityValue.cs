@@ -35,17 +35,9 @@ namespace FclEx.Http.Core
 
         #region Constructors
 
-        /// <summary>
-        /// Creates a new QValue by parsing the given value 
-        /// for name and weight (qvalue) and assigns the given 
-        /// ordinal
-        /// </summary>
-        /// <param name="value">The value to be parsed e.g. gzip=0.3</param>
-        /// <param name="ordinal">The ordinal/index where the item 
-        /// was found in the original list.</param>
         public HttpQualityValue(string value)
         {
-            _name = null;
+            _name = string.Empty;
             _weight = 0;
             ParseInternal(ref this, value);
         }
@@ -86,7 +78,7 @@ namespace FclEx.Http.Core
         /// <param name="value">The string to parse</param>
         public static HttpQualityValue Parse(string value)
         {
-            HttpQualityValue item = new HttpQualityValue();
+            var item = new HttpQualityValue();
             ParseInternal(ref item, value);
             return item;
         }

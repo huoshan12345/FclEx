@@ -13,6 +13,6 @@ namespace FclEx.Actions
         /// <param name="actorSelector"></param>
         /// <param name="terminationCondition"></param>
         /// <returns></returns>
-        IActionFuture PushAction(Func<IOperateResult[], IActor> actorSelector, Func<IOperateResult, bool> terminationCondition = null);
+        IActionFuture PushAction(Func<IOperateResult[], IActor?> actorSelector, Func<IOperateResult, bool>? terminationCondition = null);
     }
 }

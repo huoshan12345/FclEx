@@ -5,6 +5,6 @@ namespace FclEx.Json.Converters
 {
     public class ReadSingleOrLastConverter : ReadSingleConverter
     {
-        protected override Func<JArray, JToken> SingleFunc { get; } = array => array.Last;
+        protected override Func<JArray, JToken?> SingleFunc { get; } = array => array.Last;
     }
 }

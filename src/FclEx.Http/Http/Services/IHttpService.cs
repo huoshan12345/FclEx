@@ -13,9 +13,9 @@ namespace FclEx.Http.Services
     {
         Task<HttpRes> ExecuteAsync(HttpReq httpReq, CancellationToken token = default);
 
-        void AddCookie(Cookie cookie, Uri uri);
+        void AddCookie(Cookie cookie, Uri? uri = null);
 
-        Cookie GetCookie(Uri uri, string name);
+        Cookie? GetCookie(Uri uri, string name);
 
         IReadOnlyList<Cookie> GetCookies(Uri uri);
 

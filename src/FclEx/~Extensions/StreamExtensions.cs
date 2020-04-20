@@ -8,7 +8,7 @@ namespace FclEx
 {
     public static class StreamExtensions
     {
-        public static string ToString(this Stream stream, Encoding encoding = null)
+        public static string ToString(this Stream stream, Encoding? encoding = null)
         {
             using var sr = new StreamReader(stream, encoding ?? Encoding.UTF8);
             return sr.ReadToEnd();

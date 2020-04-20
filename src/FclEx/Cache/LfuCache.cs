@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -26,7 +27,7 @@ namespace FclEx.Cache
         private static readonly IEqualityComparer<TValue> _valueComparer = EqualityComparer<TValue>.Default;
         private readonly IEqualityComparer<TKey> _keyComparer;
 
-        public LfuCache(int? capacity = null, IEqualityComparer<TKey> comparer = null)
+        public LfuCache(int? capacity = null, IEqualityComparer<TKey>? comparer = null)
         {
             if (capacity.HasValue && capacity <= 0) throw new ArgumentOutOfRangeException(nameof(capacity));
             Capacity = capacity ?? ushort.MaxValue;
@@ -37,7 +38,7 @@ namespace FclEx.Cache
             Stats = new CacheStats();
         }
 
-        public bool TryGetValue(TKey key, out TValue value)
+        public bool TryGetValue(TKey key, [MaybeNull] out TValue value)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
 
@@ -57,6 +58,7 @@ namespace FclEx.Cache
             }
         }
 
+        [MaybeNull]
         public TValue this[TKey key]
         {
             get
@@ -78,7 +80,6 @@ namespace FclEx.Cache
             var exist = _dic.TryGetValue(key, out var node);
             if (exist)
             {
-                Debug.Assert(node != null);
                 Debug.Assert(key.Equals(node.Value.Key));
                 Stats.OnHit();
             }
@@ -104,7 +105,6 @@ namespace FclEx.Cache
             var exist = _dic.TryGetValue(key, out var node);
             if (exist)
             {
-                Debug.Assert(node != null);
                 Debug.Assert(key.Equals(node.Value.Key));
                 Stats.OnHit();
             }
@@ -134,7 +134,6 @@ namespace FclEx.Cache
             var exist = _dic.TryGetValue(key, out var node);
             if (exist)
             {
-                Debug.Assert(node != null);
                 Debug.Assert(key.Equals(node.Value.Key));
                 Stats.OnHit();
             }
@@ -177,7 +176,9 @@ namespace FclEx.Cache
         {
             if (!TryGetValue(item.Key, out var value))
                 return false;
+#pragma warning disable CS8604 // Possible null reference argument.
             return _valueComparer.Equals(value, item.Value);
+#pragma warning restore CS8604 // Possible null reference argument.
         }
 
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
@@ -234,7 +235,6 @@ namespace FclEx.Cache
 
         private LinkedListNode<KvCount> UpdateInternal(LinkedListNode<KvCount> node)
         {
-            Debug.Assert(node != null);
             var count = (node.Value = node.Value.Incre()).Count;
             var cur = node;
             while (cur.Previous != null)
@@ -270,7 +270,7 @@ namespace FclEx.Cache
             return node;
         }
 
-        private bool TryRemove(TKey key, bool matchValue, TValue oldValue)
+        private bool TryRemove(TKey key, bool matchValue, [AllowNull]TValue oldValue)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
 
@@ -279,10 +279,11 @@ namespace FclEx.Cache
             var success = _dic.TryGetValue(key, out var node);
             if (success)
             {
-                Debug.Assert(node != null);
                 Debug.Assert(_keyComparer.Equals(key, node.Value.Key));
 
+#pragma warning disable CS8604 // Possible null reference argument.
                 if (matchValue && !_valueComparer.Equals(oldValue, node.Value.Value))
+#pragma warning restore CS8604 // Possible null reference argument.
                     return false;
 
                 using (_lock.LockWrite())

@@ -24,18 +24,18 @@ namespace FclEx.Http.Services
 
         protected readonly CookieContainer _cookieContainer;
         protected volatile IWebProxyExt _webProxy = WebProxyExt.None;
-        private ILogger _logger;
+        private ILogger _logger = NullLogger.Instance;
 
-        protected AbstractHttpService(bool useCookie, IWebProxyExt proxy = null, ILoggerFactory loggerFactory = null)
+        protected AbstractHttpService(bool useCookie, IWebProxyExt? proxy = null, ILoggerFactory? loggerFactory = null)
         {
-            WebProxy = proxy;
+            WebProxy = proxy ?? WebProxyExt.None;
             loggerFactory ??= NullLoggerFactory.Instance;
             Logger = loggerFactory.CreateLogger(GetType());
-            if (useCookie)
-                _cookieContainer = new CookieContainer();
+            _cookieContainer = new CookieContainer();
+            UseCookie = useCookie;
         }
 
-        protected bool UseCookie => _cookieContainer != null;
+        protected bool UseCookie { get; }
 
         public virtual void Dispose() { }
 
@@ -45,7 +45,7 @@ namespace FclEx.Http.Services
         {
             token.ThrowIfCancellationRequested();
             var watch = ValueStopwatch.StartNew();
-            var res = new HttpRes { Req = httpReq, RequestUtcTime = DateTime.UtcNow };
+            var res = new HttpRes(httpReq) { RequestUtcTime = DateTime.UtcNow };
             try
             {
                 await ExecuteAsyncInternal(httpReq, res, token).DonotCapture();
@@ -61,7 +61,7 @@ namespace FclEx.Http.Services
             return res;
         }
 
-        public Cookie GetCookie(Uri uri, string name)
+        public Cookie? GetCookie(Uri uri, string name)
         {
             return UseCookie
                 ? _cookieContainer.GetCookies(uri)[name]
@@ -75,7 +75,7 @@ namespace FclEx.Http.Services
                 : Array.Empty<Cookie>();
         }
 
-        public void AddCookie(Cookie cookie, Uri uri)
+        public void AddCookie(Cookie cookie, Uri? uri = null)
         {
             if (!UseCookie) return;
             if (uri == null)
@@ -161,7 +161,7 @@ namespace FclEx.Http.Services
             }
         }
 
-        protected static bool TryGetEncodingFromCharSet(string charset, out Encoding encoding)
+        protected static bool TryGetEncodingFromCharSet(string charset, out Encoding? encoding)
         {
             encoding = null;
 

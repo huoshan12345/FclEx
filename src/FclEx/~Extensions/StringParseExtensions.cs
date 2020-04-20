@@ -9,7 +9,7 @@ namespace FclEx
     {
         public static int ToInt(this string str,
             NumberStyles style = NumberStyles.Integer,
-            IFormatProvider provider = null,
+            IFormatProvider? provider = null,
             int defaultValue = default)
         {
             return int.TryParse(str, style, provider, out var r) ? r : defaultValue;
@@ -22,14 +22,14 @@ namespace FclEx
 
         public static double ToDouble(this string str,
             NumberStyles style = NumberStyles.Float | NumberStyles.AllowThousands,
-            IFormatProvider provider = null,
+            IFormatProvider? provider = null,
             double defaultValue = default)
         {
             return double.TryParse(str, style, provider, out var r) ? r : defaultValue;
         }
 
         public static DateTime ToDateTime(this string str, 
-            IFormatProvider provider = null, 
+            IFormatProvider? provider = null, 
             DateTimeStyles styles = DateTimeStyles.None,
             DateTime defaultValue = default)
         {

@@ -9,12 +9,12 @@ namespace FclEx.Http.Proxy
     public sealed class WebProxyExt : IWebProxyExt, IEquatable<WebProxyExt>
     {
         public ProxyType Type { get; }
-        public string Host { get; }
+        public string? Host { get; }
         public int Port { get; }
-        private readonly Uri _uri;
-        private NetworkCredential _credentials;
+        private readonly Uri? _uri;
+        private NetworkCredential? _credentials;
 
-        public WebProxyExt(ProxyType type, string host, int port, NetworkCredential credentials = null)
+        public WebProxyExt(ProxyType type, string? host, int port, NetworkCredential? credentials = null)
         {
             Type = type;
             Host = host;
@@ -26,7 +26,7 @@ namespace FclEx.Http.Proxy
                 _uri = new UriBuilder(Uri.UriSchemeHttp, host, port).Uri;
         }
 
-        private WebProxyExt(Uri uri, NetworkCredential credentials)
+        private WebProxyExt(Uri uri, NetworkCredential? credentials)
         {
             Guard.Argument(uri, nameof(uri)).NotNull();
             if (uri.Scheme == Uri.UriSchemeHttp)
@@ -52,12 +52,12 @@ namespace FclEx.Http.Proxy
             }
         }
 
-        public static WebProxyExt Create(Uri uri, NetworkCredential credentials = null)
+        public static WebProxyExt Create(Uri? uri, NetworkCredential? credentials = null)
         {
             return uri == null ? None : new WebProxyExt(uri, credentials);
         }
 
-        public static WebProxyExt Create(string url, NetworkCredential credentials = null)
+        public static WebProxyExt Create(string url, NetworkCredential? credentials = null)
         {
             var uri = url.IsValid() ? new Uri(url) : null;
             return Create(uri, credentials);
@@ -65,11 +65,11 @@ namespace FclEx.Http.Proxy
 
         public static WebProxyExt None { get; set; } = new WebProxyExt(ProxyType.None, null, 0);
 
-        public Uri GetProxy(Uri destination) => _uri;
+        public Uri? GetProxy(Uri destination) => _uri;
 
         public bool IsBypassed(Uri uri) => uri.IsLoopback;
 
-        public ICredentials Credentials
+        public ICredentials? Credentials
         {
             get => _credentials;
             set
@@ -78,7 +78,7 @@ namespace FclEx.Http.Proxy
                 if (value != null)
                 {
                     _credentials = value as NetworkCredential;
-                    Guard.Argument(_credentials, nameof(_credentials)).NotNull();
+                    Guard.Argument(_credentials!, nameof(_credentials)).NotNull();
                 }
                 else
                 {
@@ -92,9 +92,9 @@ namespace FclEx.Http.Proxy
             return obj is WebProxyExt o && Equals(o);
         }
 
-        public bool Equals(WebProxyExt other)
+        public bool Equals(WebProxyExt? other)
         {
-            return other != null
+            return !(other is null)
                 && _uri == other._uri
                 && Type == other.Type
                 && Host == other.Host

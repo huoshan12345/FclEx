@@ -15,7 +15,7 @@ namespace FclEx
     [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
     public static partial class EnumerableExtensions
     {
-        public static bool IsValid<T>(this IEnumerable<T> source)
+        public static bool IsValid<T>([AllowNull]this IEnumerable<T>? source)
         {
             return !source.IsNullOrEmpty();
         }
@@ -25,20 +25,19 @@ namespace FclEx
             return !source.Any();
         }
 
-        public static bool IsNullOrEmpty<T>(this IEnumerable<T> source)
+        public static bool IsNullOrEmpty<T>([AllowNull]this IEnumerable<T>? source)
         {
             return source == null || !source.Any();
         }
 
-
-        public static IEnumerable<T> Touch<T>(this IEnumerable<T> source)
+        public static IEnumerable<T> Touch<T>([AllowNull]this IEnumerable<T> source)
         {
             return source ?? Enumerable.Empty<T>();
         }
 
         public static string JoinWith<T>(this IEnumerable<T> strs, string separator)
         {
-            return string.Join(separator, strs.Select(m => m.ToString()));
+            return string.Join(separator, strs.Select(m => m?.ToString()));
         }
 
         public static IEnumerable<T> NotNull<T>(this IEnumerable<T> col)
@@ -62,13 +61,13 @@ namespace FclEx
             return source.SelectMany(m => source, resultSelector);
         }
 
-        public static IEnumerable<T> Except<T>(this IEnumerable<T> source, T item, IEqualityComparer<T> comparer = null)
+        public static IEnumerable<T> Except<T>(this IEnumerable<T> source, T item, IEqualityComparer<T>? comparer = null)
         {
             comparer ??= EqualityComparer<T>.Default;
             return source.Where(m => !comparer.Equals(m, item));
         }
 
-        public static SortedSet<T> ToSortedSet<T>(this IEnumerable<T> enumerable, IComparer<T> comparer = null)
+        public static SortedSet<T> ToSortedSet<T>(this IEnumerable<T> enumerable, IComparer<T>? comparer = null)
         {
             return new SortedSet<T>(enumerable, comparer ?? Comparer<T>.Default);
         }
@@ -79,7 +78,7 @@ namespace FclEx
             var list = enumerable is IList<T> l ? l : enumerable.ToList();
             return new ReadOnlyCollection<T>(list);
         }
-        
+
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         public static TProp[] ToArrayByIndex<T, TProp>(this IEnumerable<T> enumerable, Func<T, int> indexSelector, Func<T, TProp> valueSelector)
         {

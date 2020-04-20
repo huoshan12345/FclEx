@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
 namespace FclEx.Utils
@@ -30,7 +31,7 @@ namespace FclEx.Utils
             if (result.Successful && result.Result.Successful)
                 return OperateResult.CreateSuccess<T>(result.Result.Result, result.Elapsed);
             else if (!result.Successful)
-                return OperateResult.CreateError<T>(result.Exception, result.Elapsed);
+                return OperateResult.CreateError<T>(result.Exception!, result.Elapsed);
             else return result.Result;
         }
 
@@ -39,7 +40,7 @@ namespace FclEx.Utils
             if (result.Successful && result.Result.Successful)
                 return OperateResult.CreateSuccess<T>(result.Result.Result, result.Elapsed);
             else if (!result.Successful)
-                return OperateResult.CreateError<T>(result.Exception, result.Elapsed);
+                return OperateResult.CreateError<T>(result.Exception!, result.Elapsed);
             else return result.Result;
         }
 
@@ -48,7 +49,7 @@ namespace FclEx.Utils
             if (result.Successful && result.Result.Successful)
                 return OperateResult.CreateSuccess(result.Elapsed);
             else if (!result.Successful)
-                return OperateResult.CreateError(result.Exception, result.Elapsed);
+                return OperateResult.CreateError(result.Exception!, result.Elapsed);
             else return result.Result;
         }
 
@@ -57,7 +58,7 @@ namespace FclEx.Utils
             var (successful, elapsed, innerResult, exception) = result;
             return successful
                 ? innerResult.WithElapsed(elapsed)
-                : OperateResult.CreateError(exception, elapsed);
+                : OperateResult.CreateError(exception!, elapsed);
         }
 
         public static OperateResult ToUntyped(this IOperateResult result)
@@ -82,7 +83,7 @@ namespace FclEx.Utils
             return (await task.DonotCapture()).ToExplicit<T>();
         }
 
-        public static bool IsObjErr<T>(this IOperateResult result, out T item)
+        public static bool IsObjErr<T>(this IOperateResult result, [MaybeNull] out T item)
         {
             if (result.Exception is ObjectException<T> ex)
             {

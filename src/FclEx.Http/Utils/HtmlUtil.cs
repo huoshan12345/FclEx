@@ -10,7 +10,7 @@ namespace FclEx.Utils
         private static Regex RegOfCharSet { get; } = new Regex("<meta[^<]*charset=([^<]*)[\"']", RegexOptions.Compiled);
         private static char[] TrimChars { get; } = { '\'', '"', ';' };
 
-        public static string GetMetaCharSet(string html)
+        public static string? GetMetaCharSet(string html)
         {
             if (html.IsNullOrEmpty())
                 return null;

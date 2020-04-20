@@ -6,7 +6,7 @@ namespace FclEx.Utils
 {
     public class StatelessTimer : IDisposable
     {
-        private Timer _timer;
+        private Timer? _timer;
 
         public StatelessTimer(StatelessTimerCallback callback, TimeSpan dueTime, TimeSpan period)
         {

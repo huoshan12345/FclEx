@@ -8,22 +8,27 @@ namespace FclEx.Http.Core
 {
     public class HttpRes
     {
-        private List<Uri> _redirectUris;
-        private MultiValueDictionary<string, string> _headers;
+        public HttpRes(HttpReq req)
+        {
+            Req = req ?? throw new ArgumentNullException(nameof(req));
+        }
+        private List<Uri>? _redirectUris;
+        private MultiValueDictionary<string, string?>? _headers;
 
-        public string Location => Headers.GetFirstOrDefault(HttpKnownHeaderNames.Location);
+        public string? Location => Headers.GetFirstOrDefault(HttpKnownHeaderNames.Location);
         public bool HasError => Exception != null;
-        public HttpReq Req { get; internal set; }
-        public string ResponseString { get; internal set; }
-        public Encoding Encoding { get; internal set; }
-        public byte[] ResponseBytes { get; internal set; }
-        public Exception Exception { get; internal set; }
+        public HttpReq Req { get; }
+        public string? ResponseString { get; internal set; }
+        public Encoding? Encoding { get; internal set; }
+        public byte[] ResponseBytes { get; internal set; } = Array.Empty<byte>();
+        public Exception? Exception { get; internal set; }
         public TimeSpan ExcuteTime { get; internal set; }
         public DateTime RequestUtcTime { get; internal set; }
-        public MultiValueDictionary<string, string> Headers => _headers ??= new MultiValueDictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+        public MultiValueDictionary<string, string?> Headers => _headers ??= new MultiValueDictionary<string, string?>(StringComparer.InvariantCultureIgnoreCase);
         public HttpStatusCode StatusCode { get; internal set; }
         public List<Uri> RedirectUris => _redirectUris ??= new List<Uri>();
 
-        public static HttpRes CreateError(HttpReq req, Exception e) => new HttpRes { Req = req, Exception = e };
+        internal static readonly HttpRes EmptyRes = new HttpRes(new HttpReq(string.Empty, HttpMethodType.Get));
+        public static HttpRes CreateError(HttpReq req, Exception e) => new HttpRes(req) { Exception = e };
     }
 }

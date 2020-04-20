@@ -39,14 +39,10 @@ namespace FclEx.Helpers
         public static int GetPreambleLength(ArraySegment<byte> buffer, Encoding encoding)
         {
             Guard.Argument(encoding, nameof(encoding)).NotNull();
-            Guard.Argument(buffer.Array, nameof(buffer.Array)).NotNull();
 
-            var data = buffer.Array;
+            var data = buffer.Array ?? throw new ArgumentNullException(nameof(buffer.Array));
             var offset = buffer.Offset;
             var dataLength = buffer.Count;
-
-            Debug.Assert(data != null);
-            Debug.Assert(encoding != null);
 
             switch (encoding.CodePage)
             {
@@ -92,13 +88,11 @@ namespace FclEx.Helpers
             return true;
         }
 
-        public static bool TryDetectEncoding(ArraySegment<byte> buffer, out Encoding encoding, out int preambleLength)
+        public static bool TryDetectEncoding(ArraySegment<byte> buffer, out Encoding? encoding, out int preambleLength)
         {
-            var data = buffer.Array;
+            var data = buffer.Array ?? throw new ArgumentNullException(nameof(buffer.Array));
             var offset = buffer.Offset;
             var dataLength = buffer.Count;
-
-            Debug.Assert(data != null);
 
             if (dataLength >= 2)
             {

@@ -5,18 +5,19 @@ using FclEx.Utils;
 
 namespace FclEx.Actions
 {
-    public class CommonActor : IActor
+    public readonly struct CommonActor : IActor
     {
         private readonly Func<CancellationToken, Task> _func;
 
         public CommonActor(Func<CancellationToken, Task> func)
         {
-            _func = func;
+            _func = func ?? throw new ArgumentNullException(nameof(func));
         }
 
         public async Task<IOperateResult> ExecuteAsync(CancellationToken token = default)
         {
-            return await OperateResult.ExcuteAsync(() => _func(token)).DonotCapture();
+            var func = _func;
+            return await OperateResult.ExcuteAsync(() => func(token)).DonotCapture();
         }
 
         public static CommonActor<T> Create<T>(Func<CancellationToken, Task<T>> func)
@@ -46,18 +47,19 @@ namespace FclEx.Actions
         }
     }
 
-    public class CommonActor<T> : IActor
+    public readonly struct CommonActor<T> : IActor
     {
         private readonly Func<CancellationToken, Task<T>> _func;
 
         public CommonActor(Func<CancellationToken, Task<T>> func)
         {
-            _func = func;
+            _func = func ?? throw new ArgumentNullException(nameof(func));
         }
 
         public async Task<IOperateResult> ExecuteAsync(CancellationToken token = default)
         {
-            return await OperateResult.ExcuteAsync(() => _func(token)).DonotCapture();
+            var func = _func;
+            return await OperateResult.ExcuteAsync(() => func(token)).DonotCapture();
         }
     }
 }

@@ -14,15 +14,15 @@ namespace FclEx
             return key != null && dic != null && dic.TryGetValue(key, out var list) && list.Count > 0 ? list.First() : defaultValue;
         }
 
-        public static IReadOnlyCollection<TValue> GetOrDefault<TKey, TValue>(this MultiValueDictionary<TKey, TValue> dic,
-            TKey key, IReadOnlyCollection<TValue> defaultValues = default)
+        public static IReadOnlyCollection<TValue>? GetOrDefault<TKey, TValue>(this MultiValueDictionary<TKey, TValue> dic,
+            TKey key, IReadOnlyCollection<TValue>? defaultValues = default)
         {
             return key != null && dic != null && dic.TryGetValue(key, out var value) ? value : defaultValues;
         }
 
         public static IReadOnlyCollection<TValue> GetOrEmptyArr<TKey, TValue>(this MultiValueDictionary<TKey, TValue> dic, TKey key)
         {
-            return dic.GetOrDefault(key, Array.Empty<TValue>());
+            return dic.GetOrDefault(key) ?? Array.Empty<TValue>();
         }
 
         public static TProp GetOrDefault<TKey, TValue, TProp>(this MultiValueDictionary<TKey, TValue> dic,

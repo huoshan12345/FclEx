@@ -20,12 +20,12 @@ namespace FclEx.Utils
 
         public static Task<TResult> Error<TResult>(this Task<TResult> @this, Action<Exception> action) where TResult : IOperateResult
         {
-            return @this.On(r => r.HasError(), t => action(t.Exception));
+            return @this.On(r => r.HasError(), t => action(t.Exception!));
         }
 
         public static Task<TResult> Error<TResult>(this Task<TResult> @this, Func<Exception, Task> action) where TResult : IOperateResult
         {
-            return @this.On(r => r.HasError(), t => action(t.Exception));
+            return @this.On(r => r.HasError(), t => action(t.Exception!));
         }
 
         public static Task<TResult> ThrowIfError<TResult>(this Task<TResult> @this) where TResult : IOperateResult
@@ -35,7 +35,7 @@ namespace FclEx.Utils
 
         public static Task<TResult> Cancel<TResult>(this Task<TResult> @this, Func<Exception, Task> action) where TResult : IOperateResult
         {
-            return @this.On(r => r.IsCancelErr(), t => action(t.Exception));
+            return @this.On(r => r.IsCancelErr(), t => action(t.Exception!));
         }
 
         public static Task<TResult> OkResult<TResult>(this Task<TResult> @this, Action<TResult> action) where TResult : IOperateResult

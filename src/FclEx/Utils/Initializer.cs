@@ -9,7 +9,7 @@ namespace FclEx.Utils
     public class Initializer
     {
         private volatile bool _isInitialized;
-        private readonly AsyncLock _asyncLock;
+        private readonly AsyncLock? _asyncLock;
 
         public Initializer(bool isThreadSafe = true)
         {

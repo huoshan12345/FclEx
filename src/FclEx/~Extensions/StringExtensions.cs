@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
@@ -14,17 +15,17 @@ namespace FclEx
     partial class StringExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsNullOrEmpty(this string str) => string.IsNullOrEmpty(str);
+        public static bool IsNullOrEmpty(this string? str) => string.IsNullOrEmpty(str);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsNullOrWhiteSpace(this string str) => string.IsNullOrWhiteSpace(str);
+        public static bool IsNullOrWhiteSpace(this string? str) => string.IsNullOrWhiteSpace(str);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string GetOrEmpty(this string str) => str ?? "";
+        public static string GetOrEmpty(this string? str) => str ?? "";
 
         public static string JoinWith(this IEnumerable<string> strs, string separator = "") => string.Join(separator, strs);
 
-        public static bool Contains(this string source, string toCheck, StringComparison comp)
+        public static bool Contains(this string? source, string toCheck, StringComparison comp)
         {
             return source != null && toCheck != null && source.IndexOf(toCheck, comp) >= 0;
         }
@@ -44,33 +45,29 @@ namespace FclEx
         public static string Fmt(this string str, object arg0, object arg1) => string.Format(str, arg0, arg1);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsValid(this string x)
-        {
-            return !x.IsNullOrEmpty();
-        }
+        public static bool IsValid(this string? x) => !x.IsNullOrEmpty();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string IfEmpty(this string x, string y)
+        public static string? IfEmpty([AllowNull]this string? x, string? y)
         {
             return x.IsValid() ? x : y;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string IfEmpty(this string x, string y, string z)
+        public static string? IfEmpty(this string? x, string? y, string? z)
         {
             return x.IsValid()
                 ? x
                 : y.IsValid()
                     ? y
                     : z;
-
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] ToUtf8Bytes(this string input) => input.ToBytes(Encoding.UTF8);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte[] ToBytes(this string input, Encoding encoding = null) => (encoding ?? Encoding.UTF8).GetBytes(input);
+        public static byte[] ToBytes(this string input, Encoding? encoding = null) => (encoding ?? Encoding.UTF8).GetBytes(input);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string UrlEncode(this string url) => WebUtility.UrlEncode(url);

@@ -10,16 +10,18 @@ namespace FclEx.Json.Converters
         public override bool CanRead => true;
         public override bool CanWrite => false;
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
         {
-            if (reader.TokenType == JsonToken.Null) return null;
+            if (reader.TokenType == JsonToken.Null) 
+                return null;
+
             var token = JToken.ReadFrom(reader);
             return token.Type == JTokenType.String 
                 ? token.Value<string>()
                 : token.ToString(Formatting.None);
         }
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
         {
             throw new NotImplementedException();
         }

@@ -7,9 +7,9 @@ namespace FclEx.Actions
 {
     public class CancellationAction : AbstractAction
     {
-        private readonly Exception _exception;
+        private readonly Exception? _exception;
 
-        public CancellationAction(Exception exception = null)
+        public CancellationAction(Exception? exception = null)
         {
             _exception = exception;
         }
