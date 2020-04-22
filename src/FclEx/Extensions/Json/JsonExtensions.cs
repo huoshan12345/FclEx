@@ -36,9 +36,9 @@ namespace FclEx.Extensions.Json
         public static JArray SerializeToJArrayCamel(this object obj)
             => JArray.FromObject(obj, CamelSerializer);
 
-        public static bool IsPossibleJson(this string data)
+        public static bool IsPossibleJson(this string? data)
         {
-            return data.IsValid() && data.Length >= 2
+            return data.IsValid() && data!.Length >= 2
                                    && (data.First() == '{' && data.Last() == '}'
                                        || data.First() == '[' && data.Last() == ']');
         }

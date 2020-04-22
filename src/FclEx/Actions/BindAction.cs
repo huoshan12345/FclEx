@@ -7,12 +7,12 @@ using FclEx.Utils;
 
 namespace FclEx.Actions
 {
-    public readonly struct MapAction<T, TDest> : IAction<TDest>
+    public readonly struct BindAction<T, TDest> : IAction<TDest>
     {
         private readonly IAction<T> _action;
-        private readonly Func<T, TDest> _map;
+        private readonly Func<T, OperateResult<TDest>> _map;
 
-        public MapAction(IAction<T> action, Func<T, TDest> map)
+        public BindAction(IAction<T> action, Func<T, OperateResult<TDest>> map)
         {
             _action = action ?? throw new ArgumentNullException(nameof(action));
             _map = map ?? throw new ArgumentNullException(nameof(_map));
@@ -21,7 +21,8 @@ namespace FclEx.Actions
         public async Task<IOperateResult<TDest>> ExecuteAsync(CancellationToken token = default)
         {
             var result = await _action.ExecuteAsync(token).DonotCapture();
-            return result.Map(_map);
+            return result.Bind(_map);
+
         }
     }
 }

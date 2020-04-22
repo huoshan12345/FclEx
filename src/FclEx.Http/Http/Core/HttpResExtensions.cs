@@ -5,8 +5,11 @@ using System.Net;
 using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
+using FclEx.Extensions.Json;
 using FclEx.Extensions.System;
+using FclEx.Utils;
 using MimeTypes.Core;
+using Newtonsoft.Json.Linq;
 
 namespace FclEx.Http.Core
 {
@@ -44,6 +47,22 @@ namespace FclEx.Http.Core
                 throw new InvalidOperationException("Can not deserialize json from empty response string.");
             var resObj = res.ResponseString!.ToJToken().ToObject<T>();
             return resObj!;
+        }
+
+        public static OperateResult<T> ReadJson<T>(this HttpRes res, string? path = null)
+        {
+            var str = res.ResponseString;
+            if (!str.IsPossibleJson())
+                return OperateResult.CreateError<T>("Can not parse json from empty string");
+
+            JToken? token = str!.ToJToken();
+            if (path.IsValid())
+                token = token.SelectToken(path!);
+
+            if (token == null)
+                return OperateResult.CreateError<T>("The path does not exist in json: " + path);
+
+            return token.ToObject<T>()!;
         }
 
         internal static HttpFileDownloadInfo GetDownloadInfo(this HttpRes res)

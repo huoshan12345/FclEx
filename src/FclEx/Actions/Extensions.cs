@@ -1,4 +1,5 @@
 ﻿using System;
+using FclEx.Utils;
 
 namespace FclEx.Actions
 {
@@ -9,9 +10,24 @@ namespace FclEx.Actions
             return new MapAction<T, T2>(action, map);
         }
 
+        public static IAction<T2> Bind<T, T2>(this IAction<T> action, Func<T, OperateResult<T2>> map)
+        {
+            return new BindAction<T, T2>(action, map);
+        }
+
         public static IAction<(T Cur, TNext Next)> Union<T, TNext>(this IAction<T> action, Func<T, IAction<TNext>> next)
         {
             return new UnionAction<T, TNext>(action, next);
+        }
+
+        public static IAction<(T Cur, TNext Next)> Union<T, TNext>(this IAction<T> action, Func<T, OperateResult<TNext>> next)
+        {
+            return new UnionAction<T, TNext>(action, m => CommonAction.Create(() => next(m)));
+        }
+
+        public static IAction<(T1, T2, TNext)> Union<T1, T2, TNext>(this IAction<(T1, T2)> action, Func<T1, T2, IAction<TNext>> next)
+        {
+            return new UnionAction<(T1, T2), TNext>(action, m => next(m.Item1, m.Item2)).Map(m => (m.Item1.Item1, m.Item1.Item2, m.Item2));
         }
 
         public static IAction<TNext> Next<T, TNext>(this IAction<T> action, Func<T, IAction<TNext>> next)
@@ -24,9 +40,9 @@ namespace FclEx.Actions
             return action.Next(_ => next());
         }
 
-        public static IAction<(T1, T2, TNext)> Union<T1, T2, TNext>(this IAction<(T1, T2)> action, Func<T1, T2, IAction<TNext>> next)
+        public static IAction<TNext> Next<T1, T2, TNext>(this IAction<(T1, T2)> action, Func<T1, T2, IAction<TNext>> next)
         {
-            return new UnionAction<(T1, T2), TNext>(action, m => next(m.Item1, m.Item2)).Map(m => (m.Item1.Item1, m.Item1.Item2, m.Item2));
+            return new UnionAction<(T1, T2), TNext>(action, m => next(m.Item1, m.Item2)).Map(m => m.Item2);
         }
     }
 }

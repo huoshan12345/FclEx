@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
 using Dawn;
 
 namespace FclEx.Utils
@@ -66,6 +65,14 @@ namespace FclEx.Utils
             Guard.Argument(func, nameof(func)).NotNull();
             return result.Successful
                 ? OperateResult.CreateSuccess(func(result.Result))
+                : result.ToExplicit<TDest>();
+        }
+
+        public static IOperateResult<TDest> Bind<T, TDest>(this IOperateResult<T> result, Func<T, OperateResult<TDest>> func)
+        {
+            Guard.Argument(func, nameof(func)).NotNull();
+            return result.Successful
+                ? func(result.Result)
                 : result.ToExplicit<TDest>();
         }
     }
