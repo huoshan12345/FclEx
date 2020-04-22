@@ -11,12 +11,15 @@ namespace FclEx.Utils
         int Code { get; }
         Exception? Exception { get; }
         TimeSpan Elapsed { get; }
-        OperateResult<TTarget> ToExplicit<TTarget>();
+        OperateResult<TDest> ToExplicit<TDest>();
         IOperateResult WithElapsed(TimeSpan span);
+        void Deconstruct(out bool successful, out TimeSpan elapsed, out Exception? ex);
     }
 
-    public interface IOperateResult<out T> : IOperateResult
+    public interface IOperateResult<T> : IOperateResult
     {
         T Result { get; }
+        new IOperateResult<T> WithElapsed(TimeSpan span);
+        void Deconstruct(out bool successful, out TimeSpan elapsed, out T obj, out Exception? ex);
     }
 }

@@ -5,9 +5,9 @@ namespace FclEx.Utils
 {
     public static partial class OperateResultExtensions
     {
-        public static TResult Ok<T, TResult>(this TResult @this, Action<T, TimeSpan> action) where TResult : IOperateResult<T>
+        public static OperateResult Ok(this OperateResult @this, Action<TimeSpan> action)
         {
-            return @this.On(r => r.Successful, t => action(t.Result, t.Elapsed));
+            return @this.On(r => r.Successful, t => action(t.Elapsed));
         }
 
         public static TResult Error<TResult>(this TResult @this, Action<Exception> action) where TResult : IOperateResult

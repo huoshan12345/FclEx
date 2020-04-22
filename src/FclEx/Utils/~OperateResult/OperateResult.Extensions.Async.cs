@@ -8,14 +8,9 @@ namespace FclEx.Utils
 {
     public static partial class OperateResultExtensions
     {
-        public static Task<TResult> Ok<T, TResult>(this Task<TResult> @this, Action<T, TimeSpan> action) where TResult : IOperateResult<T>
+        public static Task<OperateResult> Ok(this Task<OperateResult> @this, Func<TimeSpan, Task> action)
         {
-            return @this.On(r => r.Successful, r => action(r.Result, r.Elapsed));
-        }
-
-        public static Task<TResult> Ok<T, TResult>(this Task<TResult> @this, Func<T, TimeSpan, Task> action) where TResult : IOperateResult<T>
-        {
-            return @this.On(r => r.Successful, r => action(r.Result, r.Elapsed));
+            return @this.On(r => r.Successful, t => action(t.Elapsed));
         }
 
         public static Task<TResult> Error<TResult>(this Task<TResult> @this, Action<Exception> action) where TResult : IOperateResult

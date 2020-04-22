@@ -78,9 +78,9 @@ namespace FclEx.Utils
                 : new OperateResult(r.Code, r.Exception, r.Elapsed);
         }
 
-        public static implicit operator Task<IOperateResult>(OperateResult<T> result)
+        public static implicit operator Task<OperateResult>(OperateResult<T> result)
         {
-            return ((IOperateResult)result).ToTask();
+            return ((OperateResult)result).ToTask();
         }
 
         public static implicit operator Task<IOperateResult<T>>(OperateResult<T> result)
@@ -100,11 +100,27 @@ namespace FclEx.Utils
                 : new OperateResult<TTarget>(Code, Exception!, Elapsed);
         }
 
-        public IOperateResult WithElapsed(TimeSpan span)
+        public OperateResult<T> WithElapsed(TimeSpan span)
         {
             return Successful
                 ? new OperateResult<T>(Result, span)
                 : new OperateResult<T>(Code, Exception!, span);
+        }
+
+        void IOperateResult.Deconstruct(out bool successful, out TimeSpan elapsed, out Exception? ex)
+        {
+            successful = Successful;
+            ex = Exception;
+            elapsed = Elapsed;
+        }
+
+        IOperateResult IOperateResult.WithElapsed(TimeSpan span)
+        {
+            return WithElapsed(span);
+        }
+        IOperateResult<T> IOperateResult<T>.WithElapsed(TimeSpan span)
+        {
+            return WithElapsed(span);
         }
     }
 }
