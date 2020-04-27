@@ -25,7 +25,9 @@ namespace FclEx.Http.Test.Actions
                 .ReadJson<Dictionary<string, string>>("body")
                 .ExecuteAsync()
                 .DonotCapture();
+
             Assert.True(successful);
+
             var dic = Enumerable.Range(1, 10)
                 .Select(x => x.ToString())
                 .ToDictionary(x => x, x => x + x);
