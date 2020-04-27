@@ -1,9 +1,13 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using FclEx.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace FclEx.Actions
-{  
-    public interface IAction : IActor
+{
+    public interface IAction<T>
     {
-        ILogger Logger { get; }
+        Task<IOperateResult<T>> ExecuteAsync(CancellationToken token = default);
     }
 }

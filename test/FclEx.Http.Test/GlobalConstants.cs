@@ -18,6 +18,7 @@ namespace FclEx.Http.Test
             };
         }
 
+        public const string TestUrl = "https://www.fastmock.site/mock/b7b0bc89cb82e6d1ffc3dc5090d39407/fclex";
         public static IWebProxyExt DefaultProxy { get; } = WebProxyExt.Create(GetDefaultProxyUrl());
 
         public static IReadOnlyList<SimpleCookie> SimpleCookies { get; }

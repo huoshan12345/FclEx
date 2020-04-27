@@ -7,14 +7,14 @@ using Newtonsoft.Json;
 
 namespace FclEx.Utils
 {
-    public readonly partial struct OperateResult : IOperateResult<IUnit>
+    public readonly partial struct OperateResult : IOperateResult<Unit>
     {
-        private readonly IUnit _result;
+        private readonly Unit _result;
         public bool Successful => Code == OperateResultCodes.Success;
         public int Code { get; }
         public Exception? Exception { get; }
         public TimeSpan Elapsed { get; }
-        IUnit IOperateResult<IUnit>.Result => _result;
+        Unit IOperateResult<Unit>.Result => _result;
 
         public void Deconstruct(out bool successful, out TimeSpan elapsed, out Exception? ex)
         {
@@ -31,11 +31,28 @@ namespace FclEx.Utils
                 return new OperateResult<TTarget>(Code, Exception!, Elapsed);
         }
 
-        public IOperateResult WithElapsed(TimeSpan span)
+        public OperateResult WithElapsed(TimeSpan span)
         {
             return Successful
                 ? new OperateResult(span)
                 : new OperateResult(Code, Exception, span);
+        }
+
+        void IOperateResult<Unit>.Deconstruct(out bool successful, out TimeSpan elapsed, out Unit obj, out Exception? ex)
+        {
+            successful = Successful;
+            ex = Exception;
+            elapsed = Elapsed;
+            obj = _result;
+        }
+
+        IOperateResult IOperateResult.WithElapsed(TimeSpan span)
+        {
+            return WithElapsed(span);
+        }
+        IOperateResult<Unit> IOperateResult<Unit>.WithElapsed(TimeSpan span)
+        {
+            return WithElapsed(span);
         }
 
         /// <summary>
@@ -74,9 +91,9 @@ namespace FclEx.Utils
             return CreateError(error, TimeSpan.Zero);
         }
 
-        public static implicit operator Task<IOperateResult>(OperateResult result)
+        public static implicit operator Task<IOperateResult<Unit>>(OperateResult result)
         {
-            return ((IOperateResult)result).ToTask();
+            return ((IOperateResult<Unit>)result).ToTask();
         }
 
         public static implicit operator Task<OperateResult>(OperateResult result)

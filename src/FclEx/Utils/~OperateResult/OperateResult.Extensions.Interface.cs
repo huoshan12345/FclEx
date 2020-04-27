@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
+using Dawn;
 
 namespace FclEx.Utils
 {
@@ -26,33 +26,6 @@ namespace FclEx.Utils
             return r.Code == OperateResultCodes.Cancel;
         }
 
-        public static OperateResult<T> Unwrap<T>(this IOperateResult<OperateResult<T>> result)
-        {
-            if (result.Successful && result.Result.Successful)
-                return OperateResult.CreateSuccess<T>(result.Result.Result, result.Elapsed);
-            else if (!result.Successful)
-                return OperateResult.CreateError<T>(result.Exception!, result.Elapsed);
-            else return result.Result;
-        }
-
-        public static IOperateResult<T> Unwrap<T>(this IOperateResult<IOperateResult<T>> result)
-        {
-            if (result.Successful && result.Result.Successful)
-                return OperateResult.CreateSuccess<T>(result.Result.Result, result.Elapsed);
-            else if (!result.Successful)
-                return OperateResult.CreateError<T>(result.Exception!, result.Elapsed);
-            else return result.Result;
-        }
-
-        public static OperateResult Unwrap(this IOperateResult<OperateResult> result)
-        {
-            if (result.Successful && result.Result.Successful)
-                return OperateResult.CreateSuccess(result.Elapsed);
-            else if (!result.Successful)
-                return OperateResult.CreateError(result.Exception!, result.Elapsed);
-            else return result.Result;
-        }
-
         public static IOperateResult Unwrap(this OperateResult<IOperateResult> result)
         {
             var (successful, elapsed, innerResult, exception) = result;
@@ -66,21 +39,6 @@ namespace FclEx.Utils
             return result.Successful
                 ? new OperateResult(result.Elapsed)
                 : new OperateResult(result.Code, result.Exception, result.Elapsed);
-        }
-
-        public static Task<IOperateResult> Ok(this Task<IOperateResult> @this, Action<TimeSpan> action)
-        {
-            return @this.On(r => r.Successful, t => action(t.Elapsed));
-        }
-
-        public static async Task<OperateResult> ToUntyped(this Task<IOperateResult> task)
-        {
-            return (await task.DonotCapture()).ToUntyped();
-        }
-
-        public static async Task<OperateResult<T>> ToExplicit<T>(this Task<IOperateResult> task)
-        {
-            return (await task.DonotCapture()).ToExplicit<T>();
         }
 
         public static bool IsObjErr<T>(this IOperateResult result, [MaybeNull] out T item)
@@ -100,6 +58,22 @@ namespace FclEx.Utils
         public static bool IsObjErr<T>(this IOperateResult result, Func<T, bool> predicate)
         {
             return result.Exception is ObjectException<T> ex && predicate(ex.Target);
+        }
+
+        public static IOperateResult<TDest> Map<T, TDest>(this IOperateResult<T> result, Func<T, TDest> func)
+        {
+            Guard.Argument(func, nameof(func)).NotNull();
+            return result.Successful
+                ? OperateResult.CreateSuccess(func(result.Result))
+                : result.ToExplicit<TDest>();
+        }
+
+        public static IOperateResult<TDest> Bind<T, TDest>(this IOperateResult<T> result, Func<T, OperateResult<TDest>> func)
+        {
+            Guard.Argument(func, nameof(func)).NotNull();
+            return result.Successful
+                ? func(result.Result)
+                : result.ToExplicit<TDest>();
         }
     }
 }

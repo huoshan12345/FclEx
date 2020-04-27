@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using FclEx.Http.Core;
@@ -8,7 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace FclEx.Actions
 {
-    public abstract class AbstractHttpAction : AbstractAction
+    public abstract class AbstractHttpAction<T> : AbstractAction<T>
     {
         protected IHttpService HttpService { get; set; }
 
@@ -17,9 +20,7 @@ namespace FclEx.Actions
             HttpService = httpService;
         }
 
-        protected abstract HttpReq BuildRequest();
-
-        protected abstract Task<IOperateResult> HandleResponse(HttpRes response);
+        protected abstract Task<IOperateResult<T>> HandleResponse(HttpRes response);
 
         protected virtual void PreCheckResponse(HttpRes response)
         {
@@ -29,7 +30,7 @@ namespace FclEx.Actions
                 response.EnsureSuccessStatusCode();
         }
 
-        protected override async Task<IOperateResult> ExecuteInternalAsync(CancellationToken token = default)
+        protected override async Task<IOperateResult<T>> ExecuteInternalAsync(CancellationToken token = default)
         {
             HttpReq? req = null;
             try
@@ -60,6 +61,39 @@ namespace FclEx.Actions
                 }
                 throw;
             }
+        }
+
+        protected abstract string Url { get; }
+
+        protected abstract HttpReqType ReqType { get; }
+
+        protected virtual HttpReq BuildRequest()
+        {
+            var req = HttpReq.Create(Url, ReqType)
+                .Compress();
+            ModifyRequest(req);
+            return req;
+        }
+
+        protected virtual void ModifyRequest(HttpReq req) { }
+
+        protected string GetUrl(ConcurrentDictionary<Type, string> apiDic, Type apiType)
+        {
+            var actionType = GetType();
+            return apiDic.GetOrAdd(actionType, key =>
+            {
+                var urlName = key.Name.Replace("Action", "");
+                var value = apiType.GetTypeInfo().GetField(urlName)?.GetValue(null);
+                if (value == null) throw new Exception("Failed to get url by name: " + key.Name);
+                return value.ToString();
+            });
+        }
+    }
+
+    public abstract class AbstractHttpAction : AbstractHttpAction<Unit>
+    {
+        protected AbstractHttpAction(IHttpService httpService) : base(httpService)
+        {
         }
     }
 }

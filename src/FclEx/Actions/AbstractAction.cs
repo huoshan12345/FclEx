@@ -9,7 +9,7 @@ using Polly.Retry;
 
 namespace FclEx.Actions
 {
-    public abstract class AbstractAction : IAction
+    public abstract class AbstractAction<T> : IAction<T>
     {
         private ILogger _logger = NullLogger.Instance;
 
@@ -26,31 +26,23 @@ namespace FclEx.Actions
         protected virtual int RetryTimes { get; } = 2;
         protected virtual TimeSpan RetryDelay { get; } = TimeSpan.Zero;
         protected string ActionName => GetType().GetDescription();
-        protected virtual AsyncRetryPolicy<IOperateResult> RetryPolicy { get; }
+        protected virtual AsyncRetryPolicy<IOperateResult<T>> RetryPolicy { get; }
 
         protected AbstractAction()
         {
-            RetryPolicy = Policy<IOperateResult>
+            RetryPolicy = Policy<IOperateResult<T>>
                 .Handle<Exception>()
                 .WaitAndRetryAsync(RetryTimes, i => RetryDelay);
         }
 
-        protected abstract Task<IOperateResult> ExecuteInternalAsync(CancellationToken token = default);
+        protected abstract Task<IOperateResult<T>> ExecuteInternalAsync(CancellationToken token = default);
+        protected virtual Task<IOperateResult<T>> HandleCancellationAsync(Exception ex) => OperateResult.CreateCancel<T>(ex);
+        protected virtual Task<IOperateResult<T>> HandleErrorAsync(Exception ex) => OperateResult.CreateError<T>(ex);
 
-        protected virtual Task<IOperateResult> HandleCancellationAsync(Exception ex)
-        {
-            return OperateResult.CreateCancel(ex);
-        }
-
-        protected virtual Task<IOperateResult> HandleErrorAsync(Exception ex)
-        {
-            return OperateResult.CreateError(ex);
-        }
-
-        public async Task<IOperateResult> ExecuteAsync(CancellationToken token = default)
+        public async Task<IOperateResult<T>> ExecuteAsync(CancellationToken token = default)
         {
             var watch = ValueStopwatch.StartNew();
-            IOperateResult result;
+            IOperateResult<T> result;
             try
             {
                 if (Logger.IsEnabled(LogLevel.Trace))
@@ -77,5 +69,9 @@ namespace FclEx.Actions
                 Logger.LogTrace($"[Action={ActionName} End, {time.TotalMilliseconds:f3} ms]");
             return result.WithElapsed(time);
         }
+    }
+
+    public abstract class AbstractAction : AbstractAction<Unit>
+    {
     }
 }

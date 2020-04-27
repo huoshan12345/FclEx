@@ -14,7 +14,7 @@ namespace FclEx.Http.Test.HttpReqTests
 {
     public class SendTests
     {
-        public const string TestUrl = "https://www.fastmock.site/mock/b7b0bc89cb82e6d1ffc3dc5090d39407/fclex";
+ 
         public static IList<string> Urls => new[]
         {
             "http://www.baidu.com/",
@@ -42,7 +42,7 @@ namespace FclEx.Http.Test.HttpReqTests
         {
             var random = new Random(1024);
             var expected = Enumerable.Range(1, 3).ToDictionary(m => m.ToString(), m => random.NextString(5));
-            var res = await HttpReq.Form(UrlUtil.Combine(TestUrl, "/api/post"))
+            var res = await HttpReq.Form(UrlUtil.Combine(GlobalConstants.TestUrl, "/api/post"))
                 .AddData(expected)
                 .SendAsync()
                 .ThrowIfError()
@@ -58,7 +58,7 @@ namespace FclEx.Http.Test.HttpReqTests
         public async Task Json_Test()
         {
             var list = Enumerable.Range(1, 10).ToList();
-            var res = await HttpReq.Json(UrlUtil.Combine(TestUrl, "/api/post"))
+            var res = await HttpReq.Json(UrlUtil.Combine(GlobalConstants.TestUrl, "/api/post"))
                 .JsonBody(list)
                 .SendAsync()
                 .ThrowIfError()
