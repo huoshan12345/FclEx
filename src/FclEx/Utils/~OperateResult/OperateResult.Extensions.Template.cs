@@ -39,5 +39,13 @@ namespace FclEx.Utils
                 ? OperateResult.CreateSuccess(func(result.Result))
                 : result.ToExplicit<TDest>();
         }
+
+        public static OperateResult<TDest> Bind<T, TDest>(this OperateResult<T> result, Func<T, OperateResult<TDest>> func)
+        {
+            Guard.Argument(func, nameof(func)).NotNull();
+            return result.Successful
+                ? func(result.Result)
+                : result.ToExplicit<TDest>();
+        }
     }
 }
