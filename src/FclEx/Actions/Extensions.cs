@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 using FclEx.Utils;
 
 namespace FclEx.Actions
@@ -44,5 +46,21 @@ namespace FclEx.Actions
         {
             return new UnionAction<(T1, T2), TNext>(action, m => next(m.Item1, m.Item2)).Map(m => m.Item2);
         }
+
+        public static Task<OperateResult> RunAsync<T>(this IAction<T> action, CancellationToken token = default)
+        {
+            return action.ExecuteAsync(token).ToUntyped();
+        }
+
+        public static Task<OperateResult<T>> YieldAsync<T>(this IAction<T> action, CancellationToken token = default)
+        {
+            return action.ExecuteAsync(token).Implement();
+        }
+
+        public static IAction<TNext> Next<T, TNext>(this IAction<T> action, IAction<TNext> next)
+        {
+            return action.Next(_ => next);
+        }
+
     }
 }

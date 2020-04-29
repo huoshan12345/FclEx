@@ -165,11 +165,11 @@ namespace FclEx
             }
             if (exceptions.IsValid())
             {
-                return OperateResult.CreateError(new AggregateException(exceptions), span);
+                return (new AggregateException(exceptions), span);
             }
             else
             {
-                return OperateResult.CreateSuccess(list, span);
+                return (list, span);
             }
         }
 

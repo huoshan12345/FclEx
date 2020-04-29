@@ -10,7 +10,7 @@ namespace FclEx.Utils
             return @this.On(r => r.Successful, t => action());
         }
 
-        public static TResult Ok<TResult>(this TResult @this, Action<TimeSpan> action) where TResult : IOperateResult
+        public static OperateResult Ok(this OperateResult @this, Action<TimeSpan> action)
         {
             return @this.On(r => r.Successful, t => action(t.Elapsed));
         }

@@ -20,7 +20,7 @@ namespace FclEx.Actions
             HttpService = httpService;
         }
 
-        protected abstract Task<IOperateResult<T>> HandleResponse(HttpRes response);
+        protected abstract Task<IOperateResult<T>> HandleResponseAsync(HttpRes response);
 
         protected virtual void PreCheckResponse(HttpRes response)
         {
@@ -38,7 +38,7 @@ namespace FclEx.Actions
                 req = BuildRequest();
                 var response = await HttpService.ExecuteAsync(req, token).DonotCapture();
                 PreCheckResponse(response);
-                var result = await HandleResponse(response).DonotCapture();
+                var result = await HandleResponseAsync(response).DonotCapture();
                 return result;
             }
             catch (TaskCanceledException)

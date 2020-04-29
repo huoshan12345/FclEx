@@ -13,12 +13,12 @@ namespace FclEx.Utils
             return @this.On(r => r.Successful, t => action());
         }
 
-        public static Task<TResult> Ok<TResult>(this Task<TResult> @this, Action<TimeSpan> action) where TResult : IOperateResult
+        public static Task<OperateResult> Ok(this Task<OperateResult> @this, Action<TimeSpan> action)
         {
             return @this.On(r => r.Successful, t => action(t.Elapsed));
         }
 
-        public static Task<TResult> Ok<TResult>(this Task<TResult> @this, Func<TimeSpan, Task> action) where TResult : IOperateResult
+        public static Task<OperateResult> Ok(this Task<OperateResult> @this, Func<TimeSpan, Task> action)
         {
             return @this.On(r => r.Successful, t => action(t.Elapsed));
         }

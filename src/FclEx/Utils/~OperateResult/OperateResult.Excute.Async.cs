@@ -72,7 +72,7 @@ namespace FclEx.Utils
             }
             catch (Exception ex)
             {
-                return CreateError(ex, watch.GetElapsedTime());
+                return CreateError<T>(ex, watch.GetElapsedTime());
             }
         }
 

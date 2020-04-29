@@ -6,6 +6,16 @@ namespace FclEx.Utils
 {
     public static partial class OperateResultExtensions
     {
+        public static IOperateResult Ok(this IOperateResult @this, Action<TimeSpan> action)
+        {
+            return @this.On(r => r.Successful, t => action(t.Elapsed));
+        }
+
+        public static IOperateResult<Unit> Ok(this IOperateResult<Unit> @this, Action<TimeSpan> action)
+        {
+            return @this.On(r => r.Successful, t => action(t.Elapsed));
+        }
+
         public static bool HasError(this IOperateResult result)
         {
             return !result.Successful;
@@ -74,6 +84,16 @@ namespace FclEx.Utils
             return result.Successful
                 ? func(result.Result)
                 : result.ToExplicit<TDest>();
+        }
+
+        public static OperateResult<T> Implement<T>(this IOperateResult<T> result)
+        {
+            if (result is OperateResult<T> r) return r;
+
+            var (successful, elapsed, obj, exception) = result;
+            return successful
+                ? OperateResult.CreateSuccess(obj, elapsed)
+                : OperateResult.CreateError<T>(exception!, elapsed);
         }
     }
 }

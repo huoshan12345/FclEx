@@ -61,14 +61,24 @@ namespace FclEx.Utils
             return OperateResult.CreateError<T>(error, TimeSpan.Zero);
         }
 
+        public static implicit operator OperateResult<T>((string, TimeSpan) paras)
+        {
+            return OperateResult.CreateError<T>(paras.Item1, paras.Item2);
+        }
+
+        public static implicit operator OperateResult<T>((Exception, TimeSpan) paras)
+        {
+            return OperateResult.CreateError<T>(paras.Item1, paras.Item2);
+        }
+
         public static implicit operator OperateResult<T>(T item)
         {
             return OperateResult.CreateSuccess(item, TimeSpan.Zero);
         }
 
-        public static implicit operator OperateResult<T>(OperateResult r)
+        public static implicit operator OperateResult<T>((T, TimeSpan) paras)
         {
-            return r.ToExplicit<T>();
+            return OperateResult.CreateSuccess(paras.Item1, paras.Item2);
         }
 
         public static implicit operator OperateResult(OperateResult<T> r)
