@@ -19,7 +19,7 @@ namespace FclEx.Cache
     /// <typeparam name="TKey"></typeparam>
     /// <typeparam name="TValue"></typeparam>
     [DebuggerDisplay("Count = {" + nameof(Count) + "}")]
-    public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue>, IDictionary<TKey, TValue>
+    public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue>
     {
         private readonly LinkedList<KvCount> _list;
         private readonly IDictionary<TKey, LinkedListNode<KvCount>> _dic;
@@ -58,18 +58,21 @@ namespace FclEx.Cache
             }
         }
 
-        [MaybeNull]
+        [MaybeNull, AllowNull]
         public TValue this[TKey key]
         {
             get
             {
                 if (!TryGetValue(key, out var value))
                     throw new KeyNotFoundException($"The given key {key} was not present.");
+#pragma warning disable 8603
                 return value;
+#pragma warning restore 8603
             }
             set => AddOrUpdate(key, value);
         }
 
+        [return: MaybeNull]
         public TValue GetOrAdd(TKey key, Func<TKey, TValue> activator)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
@@ -96,7 +99,8 @@ namespace FclEx.Cache
             return node.Value.Value;
         }
 
-        public TValue AddOrUpdate(TKey key, TValue value)
+        [return: MaybeNull]
+        public TValue AddOrUpdate(TKey key, [AllowNull] TValue value)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
 
@@ -113,7 +117,7 @@ namespace FclEx.Cache
                 Stats.OnMiss();
             }
 
-            if (!(exist && _valueComparer.Equals(node.Value.Value, value)))
+            if (!(exist && _valueComparer.Equals(node.Value.Value!, value!)))
             {
                 using (_lock.LockWrite())
                 {
@@ -125,7 +129,7 @@ namespace FclEx.Cache
             return node.Value.Value;
         }
 
-        public bool TryAdd(TKey key, TValue value)
+        public bool TryAdd(TKey key, [AllowNull] TValue value)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
 
@@ -216,7 +220,6 @@ namespace FclEx.Cache
         public CacheStats Stats { get; }
 
         public ICollection<TKey> Keys => Read(() => _list.Select(m => m.Key).AsReadOnly());
-        public ICollection<TValue> Values => Read(() => _list.Select(m => m.Value).AsReadOnly());
 
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => new SafeEnumerator(this);
 
@@ -227,7 +230,7 @@ namespace FclEx.Cache
             _lock?.Dispose();
         }
 
-        private LinkedListNode<KvCount> UpdateInternal(LinkedListNode<KvCount> node, TValue value)
+        private LinkedListNode<KvCount> UpdateInternal(LinkedListNode<KvCount> node, [AllowNull] TValue value)
         {
             node.Value = node.Value.SetValue(value);
             return UpdateInternal(node);
@@ -256,7 +259,7 @@ namespace FclEx.Cache
             return node;
         }
 
-        private LinkedListNode<KvCount> AddInternal(TKey key, TValue value)
+        private LinkedListNode<KvCount> AddInternal(TKey key, [AllowNull] TValue value)
         {
             if (_dic.Count >= Capacity)
             {
@@ -270,7 +273,7 @@ namespace FclEx.Cache
             return node;
         }
 
-        private bool TryRemove(TKey key, bool matchValue, [AllowNull]TValue oldValue)
+        private bool TryRemove(TKey key, bool matchValue, [AllowNull] TValue oldValue)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
 
@@ -298,19 +301,19 @@ namespace FclEx.Cache
         [DebuggerDisplay("({Key}, {Value}), {Count}")]
         internal readonly struct KvCount
         {
-            private KvCount(TKey key, TValue value, int count = 0)
+            private KvCount(TKey key, [AllowNull] TValue value, int count = 0)
             {
                 Key = key;
                 Value = value;
                 Count = count;
             }
             public TKey Key { get; }
-            public TValue Value { get; }
+            [MaybeNull, AllowNull] public TValue Value { get; }
             public int Count { get; }
-            public static KvCount Create(TKey key, TValue value) => new KvCount(key, value);
+            public static KvCount Create(TKey key, [AllowNull] TValue value) => new KvCount(key, value);
             public KvCount Incre() => new KvCount(Key, Value, Count + 1);
-            public KvCount SetValue(TValue value) => new KvCount(Key, value, Count);
-            public static implicit operator KeyValuePair<TKey, TValue>(KvCount kv) => KvPair.Create(kv.Key, kv.Value);
+            public KvCount SetValue([AllowNull] TValue value) => new KvCount(Key, value, Count);
+            public static implicit operator KeyValuePair<TKey, TValue>(KvCount kv) => KvPair.Create(kv.Key, kv.Value!);
         }
 
         internal readonly struct SafeEnumerator : IEnumerator<KeyValuePair<TKey, TValue>>
