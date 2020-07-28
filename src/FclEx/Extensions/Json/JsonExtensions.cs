@@ -8,34 +8,6 @@ namespace FclEx.Extensions.Json
 {
     public static class JsonExtensions
     {
-        private static readonly ConcurrentDictionary<JsonOptions, JsonSerializer> _serializers
-            = new ConcurrentDictionary<JsonOptions, JsonSerializer>();
-
-        internal static JsonSerializer CamelSerializer { get; } = GetSerializer(new JsonOptions(useCamelCase: true));
-
-        internal static JsonSerializer GetSerializer(JsonOptions options)
-        {
-            return _serializers.GetOrAdd(options, k => JsonSerializer.Create(FclEx.JsonExtensions.GetSettings(k)));
-        }
-
-        public static JToken SerializeToJToken(this object obj, JsonOptions options = default)
-            => JToken.FromObject(obj, GetSerializer(options));
-
-        public static JToken SerializeToJTokenCamel(this object obj)
-            => JToken.FromObject(obj, CamelSerializer);
-
-        public static JObject SerializeToJObject(this object obj, JsonOptions options = default)
-            => JObject.FromObject(obj, GetSerializer(options));
-
-        public static JObject SerializeToJObjectCamel(this object obj)
-            => JObject.FromObject(obj, CamelSerializer);
-
-        public static JArray SerializeToJArray(this object obj, JsonOptions options = default)
-            => JArray.FromObject(obj, GetSerializer(options));
-
-        public static JArray SerializeToJArrayCamel(this object obj)
-            => JArray.FromObject(obj, CamelSerializer);
-
         public static bool IsPossibleJson(this string? data)
         {
             return data.IsValid() && data!.Length >= 2
@@ -43,15 +15,15 @@ namespace FclEx.Extensions.Json
                                        || data.First() == '[' && data.Last() == ']');
         }
 
-        public static bool IsPossibleJObject(this string data)
+        public static bool IsPossibleJObject(this string? data)
         {
-            return data.IsValid() && data.Length >= 2
+            return data.IsValid() && data!.Length >= 2
                                   && (data.First() == '{' && data.Last() == '}');
         }
 
-        public static bool IsPossibleJArray(this string data)
+        public static bool IsPossibleJArray(this string? data)
         {
-            return data.IsValid() && data.Length >= 2
+            return data.IsValid() && data!.Length >= 2
                                   && (data.First() == '[' && data.Last() == ']');
         }
 
@@ -70,12 +42,12 @@ namespace FclEx.Extensions.Json
             return false;
         }
 
-        public static bool TryToJObject(this string str, out JObject? token)
+        public static bool TryToJObject(this string? str, out JObject? token)
         {
             token = null;
             if (str.IsPossibleJson())
             {
-                var r = OperateResult.Excute(() => JObject.Parse(str));
+                var r = OperateResult.Excute(() => JObject.Parse(str!));
                 if (r.Successful)
                 {
                     token = r.Result;

@@ -119,7 +119,7 @@ namespace FclEx.Npoi
             headerCellStyle.SetFont(headerFont);
             var dateStyle = book.CreateCellStyle();
             var format = book.CreateDataFormat();
-            dateStyle.DataFormat = format.GetFormat(DateTimeExtensions.CnTimeFormat);
+            dateStyle.DataFormat = format.GetFormat(DateTimeExtensions.CommonTimeFormat);
 
             //Sheet计算
             int sheetDataCount;

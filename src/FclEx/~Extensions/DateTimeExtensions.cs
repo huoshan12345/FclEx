@@ -7,7 +7,7 @@ namespace FclEx
         private static readonly DateTime _jan1St1970 = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         public const string ShortTimeFormat = "yyyyMMddHHmmss";
-        public const string CnTimeFormat = "yyyy-MM-dd HH:mm:ss";
+        public const string CommonTimeFormat = "yyyy-MM-dd HH:mm:ss";
 
         /// <summary>
         /// Unix时间戳
@@ -15,19 +15,19 @@ namespace FclEx
         /// </summary>
         /// <param name="d"></param>
         /// <returns></returns>
-        public static long ToTimestamp(this DateTime d)
+        public static long ToUnixTimeSeconds(this DateTime d)
         {
             return (long)(d.ToUniversalTime() - _jan1St1970).TotalSeconds;
         }
 
-        public static long ToTimestampMilli(this DateTime d)
+        public static long ToUnixTimeMilli(this DateTime d)
         {
             return (long)(d.ToUniversalTime() - _jan1St1970).TotalMilliseconds;
         }
 
         public static string ToShort(this DateTime @this) => @this.ToString(ShortTimeFormat);
 
-        public static string ToCn(this DateTime @this) => @this.ToString(CnTimeFormat);
+        public static string ToCommon(this DateTime @this) => @this.ToString(CommonTimeFormat);
 
         public static DateTime AddWeek(this DateTime dateTime) => AddWeeks(dateTime, 1);
 
@@ -103,14 +103,14 @@ namespace FclEx
             return dt?.Date;
         }
 
-        public static string ToStringOrEmpty(this DateTime dt, string format = CnTimeFormat)
+        public static string ToStringOrEmpty(this DateTime dt, string format = CommonTimeFormat)
         {
             return dt == default
                 ? string.Empty
                 : dt.ToString(format);
         }
 
-        public static string ToStringOrEmpty(this DateTime? dt, string format = CnTimeFormat)
+        public static string ToStringOrEmpty(this DateTime? dt, string format = CommonTimeFormat)
         {
             return dt.HasValue
                 ? ToStringOrEmpty(dt.Value, format)

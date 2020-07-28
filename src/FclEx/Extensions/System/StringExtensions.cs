@@ -24,13 +24,33 @@ namespace FclEx.Extensions.System
                 : str + NewLine;
         }
 
-        public static byte[] HexTobytes(this string hex)
+        public static byte[] ToBytesFromHex(this string hex)
         {
-            return Enumerable.Range(0, hex.Length / 2)
-                .Select(x => Convert.ToByte(hex.Substring(x * 2, 2), 16))
-                .ToArray();
+            if (hex == null) throw new ArgumentNullException(nameof(hex));
+            if (hex.Length == 0) return Array.Empty<byte>();
+            if (hex.Length % 2 == 1) throw new Exception("The binary key cannot have an odd number of digits");
+
+            var len = hex.Length >> 1;
+            var arr = new byte[len];
+
+            for (var i = 0; i < len; ++i)
+            {
+                arr[i] = (byte)((GetHexVal(hex[i << 1]) << 4) + (GetHexVal(hex[(i << 1) + 1])));
+            }
+            return arr;
+
+            static int GetHexVal(char hex)
+            {
+                var val = (int)hex;
+                //For uppercase A-F letters:
+                //return val - (val < 58 ? 48 : 55);
+                //For lowercase a-f letters:
+                //return val - (val < 58 ? 48 : 87);
+                //Or the two combined, but a bit slower:
+                return val - (val < 58 ? 48 : (val < 97 ? 55 : 87));
+            }
         }
 
-        public static byte[] Base64ToBytes(this string base64String) => Convert.FromBase64String(base64String);
+        public static byte[] ToBytesFromBase64(this string base64String) => Convert.FromBase64String(base64String);
     }
 }
