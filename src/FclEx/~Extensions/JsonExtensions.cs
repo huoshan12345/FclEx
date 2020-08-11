@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.Serialization.Formatters;
 using System.Xml;
 using System.Xml.Linq;
+using FclEx.Helpers;
 using FclEx.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -17,35 +18,9 @@ namespace FclEx
 {
     public static class JsonExtensions
     {
-        internal static IContractResolver CamelResolver { get; } = new DefaultContractResolver
-        {
-            NamingStrategy = new CamelCaseNamingStrategy()
-        };
-
-        private static readonly ConcurrentDictionary<JsonOptions, JsonSerializerSettings> _serializerSettings
-            = new ConcurrentDictionary<JsonOptions, JsonSerializerSettings>();
-
-        internal static JsonSerializerSettings GetSettings(JsonOptions options)
-        {
-            return _serializerSettings.GetOrAdd(options, k =>
-            {
-                var settings = new JsonSerializerSettings
-                {
-                    DateTimeZoneHandling = k.DateTimeZoneHandling,
-                    Formatting = k.Formatting,
-                    NullValueHandling = k.IgnoreNull ? NullValueHandling.Ignore : NullValueHandling.Include,
-                };
-                if (k.DateTimeFormat.IsValid())
-                    settings.DateFormatString = k.DateTimeFormat!;
-                if (k.UseCamelCase)
-                    settings.ContractResolver = CamelResolver;
-                return settings;
-            });
-        }
-
         public static string ToJson(this object? obj, JsonOptions options)
         {
-            var settings = GetSettings(options);
+            var settings = JsonHelper.GetSettings(options);
             return JsonConvert.SerializeObject(obj, settings);
         }
 

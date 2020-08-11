@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using FclEx.Helpers;
 using Newtonsoft.Json;
 using Xunit;
 
@@ -28,24 +29,24 @@ namespace FclEx.Test.Extensions.JsonExtensions
         public void GetSettings_SameOptions_SameResult()
         {
             var options = new JsonOptions();
-            var settings = FclEx.JsonExtensions.GetSettings(options);
-            var settings2 = FclEx.JsonExtensions.GetSettings(options);
+            var settings = JsonHelper.GetSettings(options);
+            var settings2 = JsonHelper.GetSettings(options);
             Assert.Same(settings, settings2);
         }
 
         [Fact]
         public void GetSettings_EquatableOptions_SameResult()
         {
-            var settings = FclEx.JsonExtensions.GetSettings(new JsonOptions(Formatting.Indented));
-            var settings2 = FclEx.JsonExtensions.GetSettings(new JsonOptions(Formatting.Indented));
+            var settings = JsonHelper.GetSettings(new JsonOptions(Formatting.Indented));
+            var settings2 = JsonHelper.GetSettings(new JsonOptions(Formatting.Indented));
             Assert.Same(settings, settings2);
         }
 
         [Fact]
         public void GetSettings_NonEquatableOptions_DifferentResult()
         {
-            var settings = FclEx.JsonExtensions.GetSettings(new JsonOptions(Formatting.Indented));
-            var settings2 = FclEx.JsonExtensions.GetSettings(new JsonOptions(Formatting.None));
+            var settings = JsonHelper.GetSettings(new JsonOptions(Formatting.Indented));
+            var settings2 = JsonHelper.GetSettings(new JsonOptions(Formatting.None));
             Assert.NotSame(settings, settings2);
         }
     }
