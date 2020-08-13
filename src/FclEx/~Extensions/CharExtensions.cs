@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace FclEx
@@ -13,5 +14,8 @@ namespace FclEx
         public static char ToLower(this char c, CultureInfo culture) => char.ToLower(c, culture);
         public static char ToLower(this char c) => char.ToLower(c);
         public static char ToLowerInvariant(this char c) => char.ToLowerInvariant(c);
+        public static bool IsDigit(this char ch) => char.IsDigit(ch);
+        public static bool IsLetter(this char ch) => char.IsLetter(ch);
+        public static bool IsLetterOrDigit(this char ch) => char.IsLetterOrDigit(ch);
     }
 }
