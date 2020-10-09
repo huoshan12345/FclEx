@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -63,6 +64,33 @@ namespace FclEx
                 var length = i + 1 == count ? array.Length - i * maxSize : maxSize;
                 yield return array.ToSegment(i * maxSize, length);
             }
+        }
+
+        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
+        public static T[] Concat<T>(this IEnumerable<T[]> arrays)
+        {
+            Guard.Argument(arrays, nameof(arrays)).NotNull();
+
+            var len = 0;
+            foreach (var array in arrays)
+            {
+                Guard.Argument(array, nameof(array)).NotNull();
+                len += array.Length;
+            }
+
+            var z = new T[len];
+            var index = 0;
+            foreach (var array in arrays)
+            {
+                array.CopyTo(z, index);
+                index += array.Length;
+            }
+            return z;
+        }
+
+        public static T[] Concat<T>(this T[] source, params T[][] arrays)
+        {
+            return arrays.Prepend(source).Concat();
         }
     }
 }

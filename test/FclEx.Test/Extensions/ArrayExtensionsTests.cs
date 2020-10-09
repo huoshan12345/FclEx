@@ -36,5 +36,33 @@ namespace FclEx.Test.Extensions
             var arr = Enumerable.Range(1, 10).ToArray();
             Assert.Throws<ArgumentOutOfRangeException>(() => arr.Segments(0).ToList());
         }
+
+        [Theory]
+        [InlineData(10)]
+        [InlineData(50)]
+        [InlineData(100)]
+        public void Concat_Test(int length)
+        {
+            var arr = Enumerable.Range(1, length).Select(m => Enumerable.Range(1, m).ToArray()).Concat();
+
+            var index = 0;
+            for (var i = 0; i < length; i++)
+            {
+                for (var j = 0; j < i; j++)
+                {
+                    Assert.Equal(j + 1, arr[index + j]);
+                }
+                index += i;
+            }
+        }
+
+        [Fact]
+        public void Concat_With_Test()
+        {
+            var x = new[] { 1, 2 };
+            var y = new[] { 3, 4, 5 };
+            var z = x.Concat(y);
+            Assert.Equal(new[] { 1, 2, 3, 4, 5 }, z);
+        }
     }
 }

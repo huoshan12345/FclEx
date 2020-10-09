@@ -25,7 +25,7 @@ namespace FclEx
 
         public static string JoinWith(this IEnumerable<string> strs, string separator = "") => string.Join(separator, strs);
 
-        public static bool Contains(this string? source, string toCheck, StringComparison comp)
+        public static bool Contains(this string? source, string? toCheck, StringComparison comp)
         {
             return source != null && toCheck != null && source.IndexOf(toCheck, comp) >= 0;
         }
@@ -74,5 +74,17 @@ namespace FclEx
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string UrlDecode(this string url) => WebUtility.UrlDecode(url);
+
+        public static string TruncateSafely(this string str, int maxLength)
+        {
+            if (maxLength <= 0)
+                return string.Empty;
+
+            if (str.IsNullOrEmpty() || maxLength >= str.Length)
+                return str ?? string.Empty;
+
+            var count = (maxLength + 1) / 2;
+            return str.Substring(0, count) + " ... " + str.Substring(str.Length - count);
+        }
     }
 }

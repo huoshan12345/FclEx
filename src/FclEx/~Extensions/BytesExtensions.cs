@@ -10,13 +10,23 @@ using FclEx.Utils;
 
 namespace FclEx
 {
-    public static class ByteExtensions
+    public static class BytesExtensions
     {
         public static MemoryStream ToStream(this byte[] bytes) => new MemoryStream(bytes);
 
-        public static string GetString(this byte[] bytes, Encoding? encoding = null) => (encoding ?? Encoding.UTF8).GetString(bytes);
+        public static string GetString(this byte[] bytes, Encoding? encoding = null)
+        {
+            return bytes.Length == 0
+                ? string.Empty
+                : (encoding ?? Encoding.UTF8).GetString(bytes);
+        }
 
-        public static string GetString(this ArraySegment<byte> bytes, Encoding? encoding = null) => (encoding ?? Encoding.UTF8).GetString(bytes.Array, bytes.Offset, bytes.Count);
+        public static string GetString(this ArraySegment<byte> bytes, Encoding? encoding = null)
+        {
+            return bytes.Count == 0
+                ? string.Empty
+                : (encoding ?? Encoding.UTF8).GetString(bytes.Array!, bytes.Offset, bytes.Count);
+        }
 
         public static string ToBase64(this byte[] bytes) => Convert.ToBase64String(bytes);
 
