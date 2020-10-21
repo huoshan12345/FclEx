@@ -15,7 +15,7 @@ namespace FclEx
     [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
     public static partial class EnumerableExtensions
     {
-        public static bool IsValid<T>([AllowNull]this IEnumerable<T>? source)
+        public static bool IsValid<T>(this IEnumerable<T>? source)
         {
             return !source.IsNullOrEmpty();
         }
@@ -25,12 +25,12 @@ namespace FclEx
             return !source.Any();
         }
 
-        public static bool IsNullOrEmpty<T>([AllowNull]this IEnumerable<T>? source)
+        public static bool IsNullOrEmpty<T>(this IEnumerable<T>? source)
         {
             return source == null || !source.Any();
         }
 
-        public static IEnumerable<T> Touch<T>([AllowNull]this IEnumerable<T> source)
+        public static IEnumerable<T> Touch<T>(this IEnumerable<T>? source)
         {
             return source ?? Enumerable.Empty<T>();
         }

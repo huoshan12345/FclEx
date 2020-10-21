@@ -86,6 +86,16 @@ namespace FclEx.Utils
             return CreateError(ex, TimeSpan.Zero);
         }
 
+        public static implicit operator OperateResult(OperateResult<Unit> result)
+        {
+            return result.ToUntyped();
+        }
+
+        public static implicit operator OperateResult<Unit>(OperateResult result)
+        {
+            return result.ToExplicit<Unit>();
+        }
+
         public static implicit operator OperateResult(string error)
         {
             return CreateError(error, TimeSpan.Zero);

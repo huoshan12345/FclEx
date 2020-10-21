@@ -35,7 +35,7 @@ namespace FclEx
             return false;
         }
 
-        public static bool TryGetFirst<T>(this IEnumerable<T> source, [MaybeNull]out T value)
+        public static bool TryGetFirst<T>(this IEnumerable<T>? source, [MaybeNull]out T value)
         {
             if (source != null)
             {

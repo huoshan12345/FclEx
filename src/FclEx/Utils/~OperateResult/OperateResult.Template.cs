@@ -30,7 +30,7 @@ namespace FclEx.Utils
         /// <param name="code"></param>
         /// <param name="ex"></param>
         /// <param name="elapsed"></param>
-        public OperateResult(int code, [DisallowNull]Exception? ex, TimeSpan elapsed)
+        public OperateResult(int code, Exception ex, TimeSpan elapsed)
         {
             Code = Guard.Argument(code, nameof(code)).NotEqual(OperateResultCodes.Success);
             Exception = ex ?? throw new ArgumentNullException(nameof(ex));
