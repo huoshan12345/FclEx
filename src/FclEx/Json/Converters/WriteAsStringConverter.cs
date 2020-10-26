@@ -4,7 +4,7 @@ using Newtonsoft.Json.Serialization;
 
 namespace FclEx.Json.Converters
 {
-    public class WriteAsStringConverter : ConverterWithDefault<WriteAsStringConverter>
+    public class WriteAsStringConverter : JsonConverterWithDefault<WriteAsStringConverter>
     {
         public override bool CanConvert(Type objectType) => true;
         public override bool CanRead => false;
@@ -23,10 +23,14 @@ namespace FclEx.Json.Converters
             }
             else
             {
-                var type = value.GetType();
-                if (type == typeof(string) || type.IsPrimitive || type.IsNullable() && type.UnwarpNullable().IsPrimitive)
+                var type = value.GetType().UnwarpNullable();
+                if (type == typeof(string))
                 {
-                    writer.WriteValue(value);
+                    writer.WriteValue((string)value);
+                }
+                else if (type.IsPrimitive)
+                {
+                    writer.WriteValue(value.ToString());
                 }
                 else
                 {

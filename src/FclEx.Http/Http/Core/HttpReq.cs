@@ -159,7 +159,10 @@ namespace FclEx.Http.Core
             set
             {
                 if (value.IsNullOrEmpty())
+                {
                     _uriBuilder.Host = value;
+                    return;
+                }
 
                 CommonRegex.Scheme.MatchAndDo(value!, m =>
                 {

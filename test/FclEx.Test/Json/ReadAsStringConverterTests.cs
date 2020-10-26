@@ -28,11 +28,12 @@ namespace FclEx.Test.Json
         [Fact]
         public void Test()
         {
-            var json = "{\"matchId\":\"11\",\"grades\":[{\"grade\":\"1\",\"lessonId\":\"123\"}]}";
+            var json = "{\"matchId\":11,\"grades\":[{\"grade\":\"1\",\"lessonId\":\"123\"}]}";
             var obj = json.ToJToken().ToObject<Tester>();
+            Assert.NotNull(obj);
             var grades = obj.Grades.ToJToken().ToObject<GradeItem[]>();
             Assert.Equal("11", obj.MatchId);
-            Assert.Single(grades);
+            Assert.Single(grades.Touch());
         }
     }
 }

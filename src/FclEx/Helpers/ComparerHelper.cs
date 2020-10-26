@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using FclEx.Comparers;
 
 namespace FclEx.Helpers
 {

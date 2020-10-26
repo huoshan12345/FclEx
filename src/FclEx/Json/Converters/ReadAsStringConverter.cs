@@ -16,7 +16,7 @@ namespace FclEx.Json.Converters
                 return null;
 
             var token = JToken.ReadFrom(reader);
-            return token.Type == JTokenType.String 
+            return token.Type == JTokenType.String
                 ? token.Value<string>()
                 : token.ToString(Formatting.None);
         }

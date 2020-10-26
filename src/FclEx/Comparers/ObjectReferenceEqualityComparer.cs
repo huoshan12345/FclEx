@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace FclEx.Utils
+namespace FclEx.Comparers
 {
     /// <summary>
     /// A generic object comparerer that would only use object's reference, 

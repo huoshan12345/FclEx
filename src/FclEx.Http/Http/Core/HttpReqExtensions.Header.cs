@@ -9,6 +9,16 @@ namespace FclEx.Http.Core
 {
     public static partial class HttpReqExtensions
     {
+        public static HttpReq AddHeaderIfValid(this HttpReq req, string key, string value)
+        {
+            return req.AddHeaderIf(value.IsValid(), key, value);
+        }
+
+        public static HttpReq AddHeaderIf(this HttpReq req, bool condition, string key, string value)
+        {
+            return condition ? req.AddHeader(key, value) : req;
+        }
+
         public static HttpReq AddHeader(this HttpReq req, IEnumerable<KeyValuePair<string, string>> paras)
         {
             paras?.ForEach(m => req.AddHeader(m));

@@ -252,9 +252,7 @@ namespace FclEx.Http.Services
                     response.EnsureSuccess();
 
                 if (httpReq.ReadResultContent)
-                {
                     await ReadContentAsync(response, httpRes, token).DonotCapture();
-                }
             }
             finally
             {

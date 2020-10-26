@@ -59,5 +59,10 @@ namespace FclEx
         {
             return KvPair.Create(kv.Key, value);
         }
+
+        public static (T1, T2) AsTuple<T1, T2>(this KeyValuePair<T1, T2> pair)
+        {
+            return (pair.Key, pair.Value);
+        }
     }
 }

@@ -116,5 +116,10 @@ namespace FclEx
             }
             return dic;
         }
+
+        public static bool Equals(this JToken token, string value, StringComparison comparison = StringComparison.Ordinal)
+        {
+            return token is JValue jValue && string.Equals(jValue.Value as string, value, comparison);
+        }
     }
 }

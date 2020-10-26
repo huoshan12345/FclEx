@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace FclEx.Helpers
+namespace FclEx.Comparers
 {
     internal class CommonEqualityComparer<T> : IEqualityComparer<T>
     {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using FclEx.Utils;
 
 namespace FclEx
 {
@@ -20,5 +21,10 @@ namespace FclEx
             => enumerable.Select(m => m.ToValue());
         public static IEnumerable<(T1, T2, T3, T4)> ToValue<T1, T2, T3, T4>(this IEnumerable<Tuple<T1, T2, T3, T4>> enumerable)
             => enumerable.Select(m => m.ToValue());
+
+        public static KeyValuePair<T1, T2> AsKeyValue<T1, T2>(this ValueTuple<T1, T2> tuple)
+        {
+            return KvPair.Create(tuple.Item1, tuple.Item2);
+        }
     }
 }

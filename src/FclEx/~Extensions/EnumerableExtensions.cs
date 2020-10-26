@@ -98,5 +98,15 @@ namespace FclEx
             }
             return list;
         }
+
+        public static IEnumerable<KeyValuePair<T1, T2>> AsKeyValue<T1, T2>(this IEnumerable<ValueTuple<T1, T2>> enumerable)
+        {
+            return enumerable.Select(m => m.AsKeyValue());
+        }
+
+        public static IEnumerable<ValueTuple<T1, T2>> AsTuple<T1, T2>(this IEnumerable<KeyValuePair<T1, T2>> enumerable)
+        {
+            return enumerable.Select(m => m.AsTuple());
+        }
     }
 }
