@@ -8,7 +8,7 @@ namespace FclEx.Comparers
         private readonly Func<T, T, bool> _compareFunc;
         private readonly Func<T, int> _hashFunc;
 
-        public CommonEqualityComparer(Func<T, T, bool> compareFunc, Func<T, int> hashFunc)
+        public CommonEqualityComparer(Func<T, T, bool> compareFunc, Func<T, int>? hashFunc = null)
         {
             _compareFunc = compareFunc ?? throw new ArgumentNullException(nameof(compareFunc));
             _hashFunc = hashFunc ?? (x => x.GetHashCodeSafely());

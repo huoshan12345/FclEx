@@ -25,4 +25,6 @@
   </ItemGroup>
 
   <Import Project="..\Microsoft.Experimental.Collections\Microsoft.Experimental.Collections.projitems" Label="Shared" />
+
+  <Import Project="..\Combinatorics\Combinatorics.projitems" Label="Shared" />
 </Project>

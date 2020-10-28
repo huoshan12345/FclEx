@@ -10,7 +10,7 @@ namespace FclEx.TypeCasters
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [return: MaybeNull]
-        public override TOutput CastTo<TInput, TOutput>(TInput obj)
+        public override TOutput CastTo<TInput, TOutput>([MaybeNull] TInput obj)
         {
             return (TOutput)((dynamic?)obj);
         }

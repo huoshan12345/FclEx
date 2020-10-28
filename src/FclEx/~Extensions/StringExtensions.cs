@@ -19,10 +19,7 @@ namespace FclEx
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsNullOrWhiteSpace(this string? str) => string.IsNullOrWhiteSpace(str);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string GetOrEmpty(this string? str) => str ?? "";
-
+        
         public static string JoinWith(this IEnumerable<string> strs, string separator = "") => string.Join(separator, strs);
 
         public static bool Contains(this string? source, string? toCheck, StringComparison comp)
@@ -46,34 +43,20 @@ namespace FclEx
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsValid(this string? x) => !x.IsNullOrEmpty();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string? IfEmpty([AllowNull]this string? x, string? y)
-        {
-            return x.IsValid() ? x : y;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string? IfEmpty(this string? x, string? y, string? z)
-        {
-            return x.IsValid()
-                ? x
-                : y.IsValid()
-                    ? y
-                    : z;
-        }
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] ToUtf8Bytes(this string input) => input.ToBytes(Encoding.UTF8);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] ToBytes(this string input, Encoding? encoding = null) => (encoding ?? Encoding.UTF8).GetBytes(input);
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NotNullIfNotNull("url")]
+        public static string? UrlEncode(this string? url) => WebUtility.UrlEncode(url);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string UrlEncode(this string url) => WebUtility.UrlEncode(url);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string UrlDecode(this string url) => WebUtility.UrlDecode(url);
+        [return: NotNullIfNotNull("url")]
+        public static string? UrlDecode(this string? url) => WebUtility.UrlDecode(url);
 
         public static string TruncateSafely(this string str, int maxLength)
         {

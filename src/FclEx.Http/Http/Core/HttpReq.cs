@@ -222,21 +222,21 @@ namespace FclEx.Http.Core
         public HttpReq AddQueryValue(string key, string? value)
         {
             Guard.Argument(key, nameof(key)).NotNull();
-            QueryMap[key.Trim()] = value.GetOrEmpty().Trim();
+            QueryMap[key.Trim()] = value.ToStringOrEmpty().Trim();
             return this;
         }
 
         public HttpReq AddFormValue(string key, string? value)
         {
             Guard.Argument(key, nameof(key)).NotNull();
-            FormMap[key.Trim()] = value.GetOrEmpty().Trim();
+            FormMap[key.Trim()] = value.ToStringOrEmpty().Trim();
             return this;
         }
 
         public HttpReq AddHeader(string key, string? value)
         {
             Guard.Argument(key, nameof(key)).NotNull();
-            HeaderMap[key.Trim()] = value.GetOrEmpty().Trim();
+            HeaderMap[key.Trim()] = value.ToStringOrEmpty().Trim();
             return this;
         }
 
@@ -245,7 +245,7 @@ namespace FclEx.Http.Core
             Guard.Argument(key, nameof(key)).NotNull();
             var k = key.Trim();
             if (!HeaderMap.ContainsKey(k))
-                HeaderMap[k] = value.GetOrEmpty().Trim();
+                HeaderMap[k] = value.ToStringOrEmpty().Trim();
             return this;
         }
 

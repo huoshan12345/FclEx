@@ -9,23 +9,23 @@ namespace FclEx.Http.Core
 {
     public static partial class HttpReqExtensions
     {
-        public static HttpReq AddHeaderIfValid(this HttpReq req, string key, string value)
+        public static HttpReq AddHeaderIfValid(this HttpReq req, string key, string? value)
         {
             return req.AddHeaderIf(value.IsValid(), key, value);
         }
 
-        public static HttpReq AddHeaderIf(this HttpReq req, bool condition, string key, string value)
+        public static HttpReq AddHeaderIf(this HttpReq req, bool condition, string key, string? value)
         {
             return condition ? req.AddHeader(key, value) : req;
         }
 
-        public static HttpReq AddHeader(this HttpReq req, IEnumerable<KeyValuePair<string, string>> paras)
+        public static HttpReq AddHeader(this HttpReq req, IEnumerable<KeyValuePair<string, string?>> paras)
         {
-            paras?.ForEach(m => req.AddHeader(m));
+            paras.Touch().ForEach(m => req.AddHeader(m));
             return req;
         }
 
-        public static HttpReq AddHeader(this HttpReq req, KeyValuePair<string, string> pair) => req.AddHeader(pair.Key, pair.Value);
+        public static HttpReq AddHeader(this HttpReq req, KeyValuePair<string, string?> pair) => req.AddHeader(pair.Key, pair.Value);
 
         public static HttpReq AddHeaderPair(this HttpReq req, string queryPair, char sepetator = ':')
         {
@@ -52,25 +52,25 @@ namespace FclEx.Http.Core
         public static HttpReq Compress(this HttpReq req)
             => req.AddHeader(HttpKnownHeaderNames.AcceptEncoding, "gzip, deflate");
 
-        public static HttpReq Referrer(this HttpReq req, string referrer)
+        public static HttpReq Referrer(this HttpReq req, string? referrer)
         {
             req.Referrer = referrer;
             return req;
         }
 
-        public static HttpReq TryReferrer(this HttpReq req, string referrer)
+        public static HttpReq TryReferrer(this HttpReq req, string? referrer)
         {
             req.Referrer ??= referrer;
             return req;
         }
 
-        public static HttpReq UserAgent(this HttpReq req, string userAgent)
+        public static HttpReq UserAgent(this HttpReq req, string? userAgent)
         {
             req.UserAgent = userAgent;
             return req;
         }
 
-        public static HttpReq TryUserAgent(this HttpReq req, string userAgent)
+        public static HttpReq TryUserAgent(this HttpReq req, string? userAgent)
         {
             req.UserAgent ??= userAgent;
             return req;

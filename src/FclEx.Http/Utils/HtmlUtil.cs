@@ -47,7 +47,7 @@ namespace FclEx.Utils
                 if (nextMatch.Success)
                 {
                     var g = nextMatch.Groups;
-                    return g[2].Value.IfEmpty(g[3].Value);
+                    return (g[2].Value, g[3].Value).FirstValid();
                 }
 
                 return null;

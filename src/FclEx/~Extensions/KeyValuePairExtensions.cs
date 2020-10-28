@@ -45,14 +45,12 @@ namespace FclEx
 
         public static string ToUncodedQueryStr(this IEnumerable<KeyValuePair<string, string>> dic)
         {
-            return dic.Select(m => $"{m.Key}={m.Value.GetOrEmpty()}").JoinWith("&");
+            return dic.Select(m => $"{m.Key}={m.Value.ToStringOrEmpty()}").JoinWith("&");
         }
 
         public static string ToQueryStr(this IEnumerable<KeyValuePair<string, string>> dic)
         {
-            return dic == null
-                ? string.Empty
-                : dic.Select(m => $"{m.Key.UrlEncode()}={m.Value.GetOrEmpty().UrlEncode()}").JoinWith("&");
+            return dic.Select(m => $"{m.Key.UrlEncode()}={m.Value.ToStringOrEmpty().UrlEncode()}").JoinWith("&");
         }
 
         public static KeyValuePair<TKey, TValue> ValueOf<TKey, TValue>(this KeyValuePair<TKey, TValue> kv, TValue value)

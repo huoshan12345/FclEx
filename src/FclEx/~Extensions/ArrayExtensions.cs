@@ -11,13 +11,13 @@ namespace FclEx
     public static class ArrayExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int IndexOf<T>([AllowNull] this T[] items, T item)
+        public static int IndexOf<T>(this T[]? items, T item)
         {
             return items != null ? Array.IndexOf(items, item) : -1;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int LastIndexOf<T>([AllowNull] this T[] items, T item)
+        public static int LastIndexOf<T>(this T[]? items, T item)
         {
             return items != null ? Array.LastIndexOf(items, item) : -1;
         }
@@ -38,13 +38,6 @@ namespace FclEx
         public static ArraySegment<T> ToSegment<T>(this T[] arr, int offset, int count)
         {
             return new ArraySegment<T>(arr, offset, count);
-        }
-
-        public static IList<T> ConvertOrToIList<T>(this IEnumerable<T> raw)
-        {
-            if (raw is List<T> list) return list;
-            if (raw is T[] arr) return arr;
-            return raw.ToList();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

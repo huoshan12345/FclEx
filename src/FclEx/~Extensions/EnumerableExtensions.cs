@@ -108,5 +108,51 @@ namespace FclEx
         {
             return enumerable.Select(m => m.AsTuple());
         }
+
+        public static ICollection<T> CastOrToCollection<T>(this IEnumerable<T> source) // avoid to create new list as possible as we can
+        {
+            return source switch
+            {
+                null => throw new ArgumentNullException(nameof(source)),
+                ICollection<T> col => col,
+                _ => new ReadOnlyCollection<T>(source.ToList())
+            };
+        }
+
+        public static IReadOnlyList<T> CastOrToReadOnlyList<T>(this IEnumerable<T> source) // avoid to create new list as possible as we can
+        {
+            return source switch
+            {
+                null => throw new ArgumentNullException(nameof(source)),
+                List<T> list => list,
+                T[] array => array,
+                ReadOnlyCollection<T> collection => collection,
+                _ => new ReadOnlyCollection<T>(source.ToList())
+            };
+        }
+
+        public static List<T> CastOrToList<T>(this IEnumerable<T> source)
+        {
+            return source is List<T> list ? list : source.ToList();
+        }
+
+        public static T[] CastOrToArray<T>(this IEnumerable<T> source)
+        {
+            return source is T[] arr ? arr : source.ToArray();
+        }
+
+        public static IEnumerable<T> Concat<T>(this T firstElement, IEnumerable<T>? secondSequence)
+        {
+            yield return firstElement;
+            if (secondSequence == null)
+            {
+                yield break;
+            }
+
+            foreach (var item in secondSequence)
+            {
+                yield return item;
+            }
+        }
     }
 }

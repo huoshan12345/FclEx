@@ -56,18 +56,17 @@ namespace FclEx
             return value;
         }
 
-        public static T ToEnum<T>(this string value, T defaultValue) where T : struct, Enum
+        public static T ToEnum<T>(this string? value, T defaultValue) where T : struct, Enum
         {
-            return ToEnum(value, s => defaultValue);
+            return value.ToEnum(s => defaultValue);
         }
 
-        public static T ToEnum<T>(this string value, Func<string, T> defaultValueFunc) where T : struct, Enum
+        public static T ToEnum<T>(this string? value, Func<string?, T> defaultValueFunc) where T : struct, Enum
         {
             return Enum.TryParse<T>(value, true, out var result) ? result : defaultValueFunc(value);
         }
 
-        public static T ToEnum<T>(this string value)
-            where T : struct, Enum
+        public static T ToEnum<T>(this string? value) where T : struct, Enum
         {
             return value.ToEnum<T>(s => throw new FormatException($"Cannot parse to type of {typeof(T).ShortName()} from this value: " + s));
         }

@@ -117,7 +117,7 @@ namespace FclEx.Http.Services
             Encoding? encoding = null;
             var bomLength = -1;
 
-            charSet = charSet.IfEmpty(headers.ContentType?.CharSet);
+            charSet = (charSet, headers.ContentType?.CharSet).FirstValid();
             // If we do have encoding information in the 'Content-Type' header, use that information to convert
             // the content to a string.
             if (charSet != null)

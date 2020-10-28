@@ -12,7 +12,7 @@ namespace FclEx.Helpers
 
         public static ObjectPool<T> GetPool<T>() where T : class, new() => Cache<T>.Pool;
 
-        public static ArrayPool<T> GetArrayPool<T>() where T : class, new() => ArrayPool<T>.Shared;
+        public static ArrayPool<T> GetArrayPool<T>() => ArrayPool<T>.Shared;
 
         internal static class Cache<T> where T : class, new()
         {
