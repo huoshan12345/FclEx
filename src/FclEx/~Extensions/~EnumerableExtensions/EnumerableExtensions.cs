@@ -72,13 +72,6 @@ namespace FclEx
             return new SortedSet<T>(enumerable, comparer ?? Comparer<T>.Default);
         }
 
-        public static ReadOnlyCollection<T> AsReadOnly<T>(this IEnumerable<T> enumerable)
-        {
-            if (enumerable is ReadOnlyCollection<T> col) return col;
-            var list = enumerable is IList<T> l ? l : enumerable.ToList();
-            return new ReadOnlyCollection<T>(list);
-        }
-
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         public static TProp[] ToArrayByIndex<T, TProp>(this IEnumerable<T> enumerable, Func<T, int> indexSelector, Func<T, TProp> valueSelector)
         {
@@ -109,36 +102,12 @@ namespace FclEx
             return enumerable.Select(m => m.AsTuple());
         }
 
-        public static ICollection<T> CastOrToCollection<T>(this IEnumerable<T> source) // avoid to create new list as possible as we can
+        /// <summary>
+        /// Wraps this object instance into an IEnumerable
+        /// </summary>
+        public static IEnumerable<T> Yield<T>(this T item)
         {
-            return source switch
-            {
-                null => throw new ArgumentNullException(nameof(source)),
-                ICollection<T> col => col,
-                _ => new ReadOnlyCollection<T>(source.ToList())
-            };
-        }
-
-        public static IReadOnlyList<T> CastOrToReadOnlyList<T>(this IEnumerable<T> source) // avoid to create new list as possible as we can
-        {
-            return source switch
-            {
-                null => throw new ArgumentNullException(nameof(source)),
-                List<T> list => list,
-                T[] array => array,
-                ReadOnlyCollection<T> collection => collection,
-                _ => new ReadOnlyCollection<T>(source.ToList())
-            };
-        }
-
-        public static List<T> CastOrToList<T>(this IEnumerable<T> source)
-        {
-            return source is List<T> list ? list : source.ToList();
-        }
-
-        public static T[] CastOrToArray<T>(this IEnumerable<T> source)
-        {
-            return source is T[] arr ? arr : source.ToArray();
+            yield return item;
         }
 
         public static IEnumerable<T> Concat<T>(this T firstElement, IEnumerable<T>? secondSequence)
