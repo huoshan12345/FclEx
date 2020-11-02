@@ -106,6 +106,11 @@ namespace FclEx.Utils
             return CreateError(paras.Item1, paras.Item2);
         }
 
+        public static implicit operator Task<IOperateResult>(OperateResult result)
+        {
+            return ((IOperateResult)result).ToTask();
+        }
+
         public static implicit operator Task<IOperateResult<Unit>>(OperateResult result)
         {
             return ((IOperateResult<Unit>)result).ToTask();

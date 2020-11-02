@@ -43,7 +43,7 @@ namespace FclEx.Utils
         /// </summary>
         /// <param name="result"></param>
         /// <param name="elapsed"></param>
-        public OperateResult([AllowNull]T result, TimeSpan elapsed)
+        public OperateResult([AllowNull] T result, TimeSpan elapsed)
         {
             Code = OperateResultCodes.Success;
             Exception = null;
@@ -66,9 +66,19 @@ namespace FclEx.Utils
             return OperateResult.CreateError<T>(paras.Item1, paras.Item2);
         }
 
+        public static implicit operator OperateResult<T>((TimeSpan, string) paras)
+        {
+            return OperateResult.CreateError<T>(paras.Item2, paras.Item1);
+        }
+
         public static implicit operator OperateResult<T>((Exception, TimeSpan) paras)
         {
             return OperateResult.CreateError<T>(paras.Item1, paras.Item2);
+        }
+
+        public static implicit operator OperateResult<T>((TimeSpan, Exception) paras)
+        {
+            return OperateResult.CreateError<T>(paras.Item2, paras.Item1);
         }
 
         public static implicit operator OperateResult<T>(T item)
@@ -86,6 +96,16 @@ namespace FclEx.Utils
             return r.Successful
                 ? new OperateResult(r.Elapsed)
                 : new OperateResult(r.Code, r.Exception, r.Elapsed);
+        }
+
+        public static implicit operator OperateResult<T>(OperateResult r)
+        {
+            return r.ToExplicit<T>();
+        }
+
+        public static implicit operator Task<IOperateResult>(OperateResult<T> result)
+        {
+            return ((IOperateResult)result).ToTask();
         }
 
         public static implicit operator Task<OperateResult>(OperateResult<T> result)
