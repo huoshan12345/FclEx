@@ -18,8 +18,8 @@ namespace FclEx.Consumers
     {
         private readonly int _batchSize;
         private readonly int _maxRetryTimes;
-        private readonly TimeSpan _batchSecondsTimeout;
-        private bool HasTimeout => _batchSecondsTimeout > TimeSpan.Zero;
+        private readonly TimeSpan _batchTimeout;
+        private bool HasTimeout => _batchTimeout > TimeSpan.Zero;
 
         public event AsyncEventHandler<BatchConsumer<T>, IReadOnlyList<T>> ConsumingHandler = (sender, list) => Task.CompletedTask;
         public event EventHandler<BatchConsumer<T>, IReadOnlyList<ProcItem<T>>> DiscardHandler = (sender, list) => { };
@@ -28,7 +28,7 @@ namespace FclEx.Consumers
         public BatchConsumer(int batchSize, TimeSpan batchTimeout, int maxRetryTimes = 3)
         {
             _batchSize = Guard.Argument(batchSize, nameof(batchSize)).Min(1);
-            _batchSecondsTimeout = Guard.Argument(batchTimeout, nameof(batchTimeout)).Min(TimeSpan.Zero);
+            _batchTimeout = Guard.Argument(batchTimeout, nameof(batchTimeout)).Min(TimeSpan.Zero);
             _maxRetryTimes = Guard.Argument(maxRetryTimes, nameof(maxRetryTimes)).Min(0);
         }
 
@@ -36,12 +36,11 @@ namespace FclEx.Consumers
         {
             var watch = ValueStopwatch.StartNew();
             var list = new List<ProcItem<T>>(_batchSize);
-            var timeout = (HasTimeout ? 1 : 5) * 1000;
             while (!_isDisposed && list.Count < _batchSize)
             {
                 try
                 {
-                    if (_items.TryTake(out var item, timeout, _cts.Token))
+                    if (_items.TryTake(out var item, 1 * 1000, _cts.Token))
                         list.Add(item);
                 }
                 catch (OperationCanceledException)
@@ -50,8 +49,8 @@ namespace FclEx.Consumers
                 }
                 if (HasTimeout)
                 {
-                    var seconds = watch.GetElapsedTime();
-                    if (seconds >= _batchSecondsTimeout)
+                    var elapsedTime = watch.GetElapsedTime();
+                    if (elapsedTime >= _batchTimeout)
                         break;
                 }
             }

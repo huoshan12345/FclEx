@@ -83,9 +83,7 @@ namespace FclEx.Consumers
             try
             {
                 while (!IsCompleteNoLock && !_cts.IsCancellationRequested)
-                {
                     await ProcessAction().DonotCapture();
-                }
             }
             catch (Exception e)
             {
@@ -156,7 +154,6 @@ namespace FclEx.Consumers
             using (_locker.Lock())
             {
                 EnsureNonDisposed();
-                EnsureRunnning();
                 _isAddingCompleted = true;
             }
         }

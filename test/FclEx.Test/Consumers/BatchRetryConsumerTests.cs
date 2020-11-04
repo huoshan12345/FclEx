@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using FclEx.Consumers;
 using FclEx.Helpers;
 using FclEx.Test.TypeCasters;
+using FclEx.Utils;
 using MoreLinq.Extensions;
 using Xunit;
 using Xunit.Abstractions;
@@ -90,6 +91,33 @@ namespace FclEx.Test.Consumers
             Assert.False(task.IsCompleted);
             var finishTask = await Task.WhenAny(task, TaskHelper.Delay(10));
             Assert.Equal(task, finishTask);
+        }
+
+        [Fact]
+        public async Task CompleteAdding_BeforeStart_Test()
+        {
+            var consumer = new BatchRetryConsumer<int>(5, TimeSpan.FromSeconds(1), 1);
+            consumer.ConsumingHandler += (sender, list) => Task.CompletedTask;
+            consumer.AddRange(Enumerable.Range(1, 10));
+            consumer.CompleteAdding();
+            var r = await OperateResult.ExcuteAsync(() => consumer.Start(), TimeSpan.FromSeconds(5));
+            Assert.True(r.Successful);
+            Assert.True(consumer.IsComplete);
+            Assert.Equal(10, consumer.Counter.Consume);
+        }
+
+        [Fact]
+        public async Task CompleteAdding_AfterStart_Test()
+        {
+            var consumer = new BatchRetryConsumer<int>(5, TimeSpan.FromSeconds(1), 1);
+            consumer.ConsumingHandler += (sender, list) => Task.CompletedTask;
+            var task = OperateResult.ExcuteAsync(() => consumer.Start(), TimeSpan.FromSeconds(5));
+            consumer.AddRange(Enumerable.Range(1, 10));
+            consumer.CompleteAdding();
+            var r = await task;
+            Assert.True(r.Successful);
+            Assert.True(consumer.IsComplete);
+            Assert.Equal(10, consumer.Counter.Consume);
         }
     }
 }

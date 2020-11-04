@@ -42,11 +42,7 @@ namespace FclEx.Consumers
                 await ConsumingHandler.InvokeAsync(this, list).DonotCapture();
                 Counter.IncreConsume(list.Count);
             };
-            _batchConsumer.DiscardHandler += (sender, list) =>
-            {
-                _retryConsumer.Add(list.Select(m => m.Item).ToList());
-                SetRetryConsumerCompleteAdding();
-            };
+            _batchConsumer.DiscardHandler += (sender, list) => _retryConsumer.Add(list.Select(m => m.Item).ToList());
             _batchConsumer.CancellationHandler += (sender, list) => CancellationHandler.Invoke(this, list);
 
             _retryConsumer = new AutoRetryConsumer<List<T>>(maxRetryTimes, x => 0);
@@ -74,7 +70,7 @@ namespace FclEx.Consumers
 
         public Task Start(bool clear = false)
         {
-            return Task.WhenAll(_retryConsumer.Start(clear), _batchConsumer.Start(clear));
+            return Task.WhenAll(_retryConsumer.Start(clear), _batchConsumer.Start(clear).ContinueWith(t => _retryConsumer.CompleteAdding()));
         }
 
         public void Add(T item)
@@ -85,13 +81,6 @@ namespace FclEx.Consumers
         public void CompleteAdding()
         {
             _batchConsumer.CompleteAdding();
-            SetRetryConsumerCompleteAdding();
-        }
-
-        private void SetRetryConsumerCompleteAdding()
-        {
-            if (_batchConsumer.IsComplete)
-                _retryConsumer.CompleteAdding();
         }
 
         public void Dispose()
@@ -138,7 +127,7 @@ namespace FclEx.Consumers
             }
         }
 
-        private async Task Retry(IReadOnlyList<T> items)
+        private async Task Retry(IReadOnlyList<T>? items)
         {
             if (items == null || items.Count == 0) return;
             try

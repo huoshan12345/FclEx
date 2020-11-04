@@ -30,7 +30,7 @@ namespace FclEx.Consumers
         {
             try
             {
-                if (_items.TryTake(out item, 10 * 1000, _cts.Token))
+                if (_items.TryTake(out item, 1 * 1000, _cts.Token))
                     return true;
             }
             catch (OperationCanceledException) { }
