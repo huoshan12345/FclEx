@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Combinatorics.Collections;
 using FclEx.Extensions.Combinatorics.Collections;
 using MoreLinq.Extensions;
 using Xunit;

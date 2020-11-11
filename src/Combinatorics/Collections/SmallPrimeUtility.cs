@@ -1,11 +1,11 @@
 // Copyright 2008 Adrian Akison
 // Distributed under license terms of CPOL http://www.codeproject.com/info/cpol10.aspx
 
-using System.Collections.Generic;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 
-namespace Combinatorics.Collections {
+namespace Collections {
     /// <summary>
     /// Utility class that maintains a small table of prime numbers and provides
     /// simple implementations of Prime Factorization algorithms.  

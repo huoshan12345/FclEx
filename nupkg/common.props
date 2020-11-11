@@ -13,4 +13,11 @@
     <RepositoryType>git</RepositoryType>
     <Copyright>huoshan12345</Copyright>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Nullable" Version="1.3.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 </Project>

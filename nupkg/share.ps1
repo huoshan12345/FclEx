@@ -9,7 +9,8 @@ $srcPaths = @(
 $projectNames = (
 "FclEx",
 "FclEx.Http",
-"FclEx.Npoi"
+"FclEx.Npoi",
+"FclEx.Xunit"
 )
 
 $projectPaths = new-object 'System.Collections.Generic.List[string]'

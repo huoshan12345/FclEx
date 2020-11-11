@@ -6,7 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Combinatorics.Collections {
+namespace Collections {
     /// <summary>
     /// Permutations defines a meta-collection, typically a list of lists, of all
     /// possible orderings of a set of values.  This list is enumerable and allows

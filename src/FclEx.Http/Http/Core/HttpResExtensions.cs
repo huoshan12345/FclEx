@@ -77,7 +77,7 @@ namespace FclEx.Http.Core
             }
             if (ext.IsNullOrEmpty())
             {
-                var mimeType = res.Headers.GetFirstOrDefault(HttpKnownHeaderNames.ContentType);
+                var mimeType = res.Headers.GetFirstOr(HttpKnownHeaderNames.ContentType);
                 if (mimeType.IsValid())
                 {
                     if (mimeType!.Contains(";"))

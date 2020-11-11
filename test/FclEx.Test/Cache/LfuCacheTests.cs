@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using FclEx.Cache;
+using FclEx.Caches;
 using MoreLinq;
 using Xunit;
 

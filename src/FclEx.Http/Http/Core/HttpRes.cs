@@ -15,7 +15,7 @@ namespace FclEx.Http.Core
         private List<Uri>? _redirectUris;
         private MultiValueDictionary<string, string?>? _headers;
 
-        public string? Location => Headers.GetFirstOrDefault(HttpKnownHeaderNames.Location);
+        public string? Location => Headers.GetFirstOr(HttpKnownHeaderNames.Location);
         public bool HasError => Exception != null;
         public HttpReq Req { get; }
         public string ResponseString { get; internal set; } = string.Empty;

@@ -5,7 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Combinatorics.Collections {
+namespace Collections {
     /// <summary>
     /// Combinations defines a meta-collection, typically a list of lists, of all possible 
     /// subsets of a particular size from the set of values.  This list is enumerable and 

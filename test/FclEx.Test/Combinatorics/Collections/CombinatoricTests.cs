@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Combinatorics.Collections;
+using Collections;
 using Xunit;
 using Xunit.Abstractions;
 

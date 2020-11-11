@@ -47,6 +47,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{9338
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Combinatorics", "src\Combinatorics\Combinatorics.shproj", "{5C10FC58-CE82-49DB-B22C-C9C560A4E107}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Xunit", "src\FclEx.Xunit\FclEx.Xunit.csproj", "{B6B0D4F5-8E10-4D7F-8E67-079A3714104F}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		src\Combinatorics\Combinatorics.projitems*{5c10fc58-ce82-49db-b22c-c9c560a4e107}*SharedItemsImports = 13
@@ -87,6 +89,10 @@ Global
 		{16A94692-9EFF-42F0-A2A6-29678543AFAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{16A94692-9EFF-42F0-A2A6-29678543AFAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{16A94692-9EFF-42F0-A2A6-29678543AFAD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6B0D4F5-8E10-4D7F-8E67-079A3714104F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6B0D4F5-8E10-4D7F-8E67-079A3714104F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6B0D4F5-8E10-4D7F-8E67-079A3714104F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6B0D4F5-8E10-4D7F-8E67-079A3714104F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -103,6 +109,7 @@ Global
 		{D2C9E138-A766-4FEB-9029-A0D5270B7285} = {E25A1CA7-1304-44D5-89BD-170AE8F0DED4}
 		{93386705-90E4-4C54-9800-4CCA92A7EC15} = {E25A1CA7-1304-44D5-89BD-170AE8F0DED4}
 		{5C10FC58-CE82-49DB-B22C-C9C560A4E107} = {ABBD6045-5447-4C9B-AF77-E9ACF4EE2641}
+		{B6B0D4F5-8E10-4D7F-8E67-079A3714104F} = {ABBD6045-5447-4C9B-AF77-E9ACF4EE2641}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F79FC760-FDD2-442C-897B-0CAE0A3E857F}
