@@ -8,12 +8,15 @@ namespace FclEx.TypeCasters
     public class CommonTypeCaster : AbstractTypeCaster<CommonTypeCaster>
     {
         [return: MaybeNull]
-        public override TOutput CastTo<TInput, TOutput>(TInput obj)
+        public override TOutput CastTo<TInput, TOutput>([AllowNull] TInput obj)
         {
+            if (obj == null)
+                return default;
+
             var type = typeof(TOutput);
             return type.IsValueType
-                ? ChangeType<TInput, TOutput>(obj, type)
-                : (TOutput)(object?)obj;
+                ? ChangeType<TInput, TOutput>(obj!, type)
+                : (TOutput)(object)obj;
         }
 
         [return: MaybeNull]
@@ -22,7 +25,7 @@ namespace FclEx.TypeCasters
             if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>))
             {
                 if (value == null) return default;
-                t = Nullable.GetUnderlyingType(t);
+                t = Nullable.GetUnderlyingType(t)!;
             }
             else if (t.IsEnum)
             {

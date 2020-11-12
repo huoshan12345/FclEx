@@ -27,7 +27,7 @@ namespace FclEx.Utils
         }
     }
 
-    public static class DisposableExtensions
+    public static class ValueDisposableExtensions
     {
         public static ValueDisposable<T> AsDisposable<T>(this T value)
         {

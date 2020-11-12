@@ -9,9 +9,12 @@ namespace FclEx.TypeCasters
 {
     public class DelegateTypeCaster : AbstractTypeCaster<DelegateTypeCaster>
     {
-        public override TOutput CastTo<TInput, TOutput>([DisallowNull]TInput obj)
+        [return: MaybeNull]
+        public override TOutput CastTo<TInput, TOutput>([AllowNull]TInput obj)
         {
-            return ConvertHelper<TOutput>.ConvertTo(obj);
+            return obj == null
+                ? default
+                : ConvertHelper<TOutput>.ConvertTo(obj);
         }
 
         private static class ConvertHelper<TOutput>

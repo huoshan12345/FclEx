@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace FclEx.TypeCasters
@@ -8,6 +9,8 @@ namespace FclEx.TypeCasters
         where TCaster : AbstractTypeCaster<TCaster>, new()
     {
         public static TCaster Instance { get; } = new TCaster();
-        public abstract TOutput CastTo<TInput, TOutput>(TInput obj);
+
+        [return: MaybeNull]
+        public abstract TOutput CastTo<TInput, TOutput>([AllowNull] TInput obj);
     }
 }

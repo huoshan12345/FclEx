@@ -6,9 +6,16 @@ namespace FclEx.Utils
 {
     public static partial class OperateResultExtensions
     {
+        public static OperateResult<T> WithElapsed<T>(this OperateResult<T> @this, TimeSpan span)
+        {
+            return @this.Successful
+                ? new OperateResult<T>(@this.Result, span)
+                : new OperateResult<T>(@this.Code, @this.Exception!, span);
+        }
+
         public static OperateResult<T> Ok<T>(this OperateResult<T> @this, Action<T, TimeSpan> action)
         {
-            return @this.On(r => r.Successful, t => action(t.Result, t.Elapsed));
+            return @this.On(r => r.Successful, t => action(t.Result!, t.Elapsed));
         }
 
         public static OperateResult<T> Ok<T>(this OperateResult<T> @this, Action<T> action)
@@ -36,7 +43,7 @@ namespace FclEx.Utils
         {
             Guard.Argument(func, nameof(func)).NotNull();
             return result.Successful
-                ? OperateResult.CreateSuccess(func(result.Result))
+                ? OperateResult.CreateSuccess(func(result.Result!))
                 : result.ToExplicit<TDest>();
         }
 
@@ -44,7 +51,7 @@ namespace FclEx.Utils
         {
             Guard.Argument(func, nameof(func)).NotNull();
             return result.Successful
-                ? func(result.Result)
+                ? func(result.Result!)
                 : result.ToExplicit<TDest>();
         }
     }

@@ -15,7 +15,7 @@ namespace FclEx
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [return: MaybeNull]
-        public static T CastTo<T>(this object obj)
+        public static T CastTo<T>(this object? obj)
         {
             return DynamicTypeCaster.Instance.CastTo<object, T>(obj);
         }

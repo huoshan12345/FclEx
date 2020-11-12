@@ -10,7 +10,7 @@ namespace FclEx.Utils
     {
         public static Task<OperateResult<T>> Ok<T>(this Task<OperateResult<T>> @this, Action<T, TimeSpan> action)
         {
-            return @this.On(r => r.Successful, t => action(t.Result, t.Elapsed));
+            return @this.On(r => r.Successful, t => action(t.Result!, t.Elapsed));
         }
 
         public static Task<OperateResult<T>> Ok<T>(this Task<OperateResult<T>> @this, Action<T> action)
@@ -20,7 +20,7 @@ namespace FclEx.Utils
 
         public static Task<OperateResult<T>> Ok<T>(this Task<OperateResult<T>> @this, Func<T, TimeSpan, Task> action)
         {
-            return @this.On(r => r.Successful, t => action(t.Result, t.Elapsed));
+            return @this.On(r => r.Successful, t => action(t.Result!, t.Elapsed));
         }
 
         public static Task<OperateResult<T>> Ok<T>(this Task<OperateResult<T>> @this, Func<T, Task> action)

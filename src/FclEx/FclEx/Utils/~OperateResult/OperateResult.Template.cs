@@ -12,11 +12,12 @@ namespace FclEx.Utils
     {
         public bool Successful => Exception is null;
         public int Code { get; }
+        // [MemberNotNullWhen(false, nameof(Successful))]
         public Exception? Exception { get; }
         public TimeSpan Elapsed { get; }
-        [AllowNull] public T Result { get; }
+        [AllowNull, MaybeNull] public T Result { get; }
 
-        public void Deconstruct(out bool successful, out TimeSpan elapsed, out T obj, out Exception? ex)
+        public void Deconstruct(out bool successful, out TimeSpan elapsed, [MaybeNull] out T obj, out Exception? ex)
         {
             successful = Successful;
             ex = Exception;
@@ -93,9 +94,7 @@ namespace FclEx.Utils
 
         public static implicit operator OperateResult(OperateResult<T> r)
         {
-            return r.Successful
-                ? new OperateResult(r.Elapsed)
-                : new OperateResult(r.Code, r.Exception, r.Elapsed);
+            return r.ToUntyped();
         }
 
         public static implicit operator OperateResult<T>(OperateResult r)
@@ -126,15 +125,8 @@ namespace FclEx.Utils
         public OperateResult<TTarget> ToExplicit<TTarget>()
         {
             return Successful
-                ? new OperateResult<TTarget>(Result!.CastTo<TTarget>(), Elapsed)
+                ? new OperateResult<TTarget>(Result.CastTo<TTarget>(), Elapsed)
                 : new OperateResult<TTarget>(Code, Exception!, Elapsed);
-        }
-
-        public OperateResult<T> WithElapsed(TimeSpan span)
-        {
-            return Successful
-                ? new OperateResult<T>(Result, span)
-                : new OperateResult<T>(Code, Exception!, span);
         }
 
         void IOperateResult.Deconstruct(out bool successful, out TimeSpan elapsed, out Exception? ex)
@@ -142,15 +134,6 @@ namespace FclEx.Utils
             successful = Successful;
             ex = Exception;
             elapsed = Elapsed;
-        }
-
-        IOperateResult IOperateResult.WithElapsed(TimeSpan span)
-        {
-            return WithElapsed(span);
-        }
-        IOperateResult<T> IOperateResult<T>.WithElapsed(TimeSpan span)
-        {
-            return WithElapsed(span);
         }
     }
 }

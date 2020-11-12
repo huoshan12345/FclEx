@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using FclEx.Utils;
@@ -13,6 +14,7 @@ namespace FclEx.Actions
     {
         private ILogger _logger = NullLogger.Instance;
 
+        [AllowNull]
         public ILogger Logger
         {
             get => _logger;
@@ -26,23 +28,23 @@ namespace FclEx.Actions
         protected virtual int RetryTimes { get; } = 2;
         protected virtual TimeSpan RetryDelay { get; } = TimeSpan.Zero;
         protected string ActionName => GetType().GetDescription();
-        protected virtual AsyncRetryPolicy<IOperateResult<T>> RetryPolicy { get; }
+        protected virtual AsyncRetryPolicy<OperateResult<T>> RetryPolicy { get; }
 
         protected AbstractAction()
         {
-            RetryPolicy = Policy<IOperateResult<T>>
+            RetryPolicy = Policy<OperateResult<T>>
                 .Handle<Exception>()
                 .WaitAndRetryAsync(RetryTimes, i => RetryDelay);
         }
 
-        protected abstract Task<IOperateResult<T>> ExecuteInternalAsync(CancellationToken token = default);
-        protected virtual Task<IOperateResult<T>> HandleCancellationAsync(Exception ex) => OperateResult.CreateCancel<T>(ex);
-        protected virtual Task<IOperateResult<T>> HandleErrorAsync(Exception ex) => OperateResult.CreateError<T>(ex);
+        protected abstract Task<OperateResult<T>> ExecuteInternalAsync(CancellationToken token = default);
+        protected virtual Task<OperateResult<T>> HandleCancellationAsync(Exception ex) => OperateResult.CreateCancel<T>(ex);
+        protected virtual Task<OperateResult<T>> HandleErrorAsync(Exception ex) => OperateResult.CreateError<T>(ex);
 
-        public async Task<IOperateResult<T>> ExecuteAsync(CancellationToken token = default)
+        public async Task<OperateResult<T>> ExecuteAsync(CancellationToken token = default)
         {
             var watch = ValueStopwatch.StartNew();
-            IOperateResult<T> result;
+            OperateResult<T> result;
             try
             {
                 if (Logger.IsEnabled(LogLevel.Trace))

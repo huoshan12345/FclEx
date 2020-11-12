@@ -40,7 +40,7 @@ namespace FclEx.Utils
         {
             var (successful, elapsed, innerResult, exception) = result;
             return successful
-                ? innerResult.WithElapsed(elapsed)
+                ? innerResult!.ToUntyped()
                 : OperateResult.CreateError(exception!, elapsed);
         }
 
@@ -48,7 +48,7 @@ namespace FclEx.Utils
         {
             return result.Successful
                 ? new OperateResult(result.Elapsed)
-                : new OperateResult(result.Code, result.Exception, result.Elapsed);
+                : new OperateResult(result.Code, result.Exception!, result.Elapsed);
         }
 
         public static bool IsObjErr<T>(this IOperateResult result, [MaybeNull] out T item)
@@ -74,7 +74,7 @@ namespace FclEx.Utils
         {
             Guard.Argument(func, nameof(func)).NotNull();
             return result.Successful
-                ? OperateResult.CreateSuccess(func(result.Result))
+                ? OperateResult.CreateSuccess(func(result.Result!))
                 : result.ToExplicit<TDest>();
         }
 
@@ -82,7 +82,7 @@ namespace FclEx.Utils
         {
             Guard.Argument(func, nameof(func)).NotNull();
             return result.Successful
-                ? func(result.Result)
+                ? func(result.Result!)
                 : result.ToExplicit<TDest>();
         }
 
@@ -92,7 +92,7 @@ namespace FclEx.Utils
 
             var (successful, elapsed, obj, exception) = result;
             return successful
-                ? OperateResult.CreateSuccess(obj, elapsed)
+                ? OperateResult.CreateSuccess(obj!, elapsed)
                 : OperateResult.CreateError<T>(exception!, elapsed);
         }
     }

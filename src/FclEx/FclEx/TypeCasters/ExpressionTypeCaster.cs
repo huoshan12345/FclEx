@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Text;
 
@@ -7,9 +8,12 @@ namespace FclEx.TypeCasters
 {
     public class Caster<TInput>
     {
-        public static TOutput CastTo<TOutput>(TInput s)
+        [return: MaybeNull]
+        public static TOutput CastTo<TOutput>([AllowNull] TInput obj)
         {
-            return Cache<TOutput>.Caster(s);
+            return obj == null 
+                ? default 
+                : Cache<TOutput>.Caster(obj);
         }
 
         private static class Cache<TOutput>
@@ -27,7 +31,8 @@ namespace FclEx.TypeCasters
 
     public class ExpressionTypeCaster : AbstractTypeCaster<ExpressionTypeCaster>
     {
-        public override TOutput CastTo<TInput, TOutput>(TInput obj)
+        [return: MaybeNull]
+        public override TOutput CastTo<TInput, TOutput>([AllowNull] TInput obj)
         {
             return Caster<TInput>.CastTo<TOutput>(obj);
         }

@@ -31,13 +31,6 @@ namespace FclEx.Utils
                 return new OperateResult<TTarget>(Code, Exception!, Elapsed);
         }
 
-        public OperateResult WithElapsed(TimeSpan span)
-        {
-            return Successful
-                ? new OperateResult(span)
-                : new OperateResult(Code, Exception, span);
-        }
-
         void IOperateResult<Unit>.Deconstruct(out bool successful, out TimeSpan elapsed, out Unit obj, out Exception? ex)
         {
             successful = Successful;
@@ -46,22 +39,13 @@ namespace FclEx.Utils
             obj = _result;
         }
 
-        IOperateResult IOperateResult.WithElapsed(TimeSpan span)
-        {
-            return WithElapsed(span);
-        }
-        IOperateResult<Unit> IOperateResult<Unit>.WithElapsed(TimeSpan span)
-        {
-            return WithElapsed(span);
-        }
-
         /// <summary>
         /// Create an erroneous result
         /// </summary>
         /// <param name="code"></param>
         /// <param name="ex"></param>
         /// <param name="elapsed"></param>
-        public OperateResult(int code, Exception? ex, TimeSpan elapsed)
+        public OperateResult(int code, Exception ex, TimeSpan elapsed)
         {
             Code = Guard.Argument(code, nameof(code)).NotEqual(OperateResultCodes.Success);
             Exception = ex ?? throw new ArgumentNullException(nameof(ex));

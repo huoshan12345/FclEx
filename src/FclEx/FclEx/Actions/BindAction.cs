@@ -18,11 +18,10 @@ namespace FclEx.Actions
             _map = map ?? throw new ArgumentNullException(nameof(_map));
         }
 
-        public async Task<IOperateResult<TDest>> ExecuteAsync(CancellationToken token = default)
+        public async Task<OperateResult<TDest>> ExecuteAsync(CancellationToken token = default)
         {
             var result = await _action.ExecuteAsync(token).DonotCapture();
             return result.Bind(_map);
-
         }
     }
 }

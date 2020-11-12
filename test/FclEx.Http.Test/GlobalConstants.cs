@@ -13,7 +13,6 @@ namespace FclEx.Http.Test
         {
             return Environment.MachineName switch
             {
-                "JEREMYLI" => "http://jeremyli:huoshan%40123@10.32.184.8:8888",
                 _ => "http://localhost:1080",
             };
         }

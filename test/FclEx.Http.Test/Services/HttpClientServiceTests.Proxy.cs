@@ -32,9 +32,9 @@ namespace FclEx.Http.Test.Services
         public async Task SendAsync_WithProxy_Success(IWebProxyExt proxy, string url)
         {
             var service = new HttpClientService(true, proxy);
-            var res = await service.SendAsync(HttpReq.Get(url).Timeout(10 * 1000));
+            var res = await service.SendAsync(HttpReq.Get(url).Timeout(15 * 1000));
             if (res.HasError)
-                _output.WriteLine(res.Exception.ToString());
+                _output.WriteLine(res.Exception!.ToString());
             Assert.False(res.HasError);
         }
     }

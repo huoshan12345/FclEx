@@ -8,6 +8,6 @@ namespace FclEx.Actions
 {
     public interface IAction<T>
     {
-        Task<IOperateResult<T>> ExecuteAsync(CancellationToken token = default);
+        Task<OperateResult<T>> ExecuteAsync(CancellationToken token = default);
     }
 }

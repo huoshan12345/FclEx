@@ -20,7 +20,7 @@ namespace FclEx.Actions
             HttpService = httpService;
         }
 
-        protected abstract Task<IOperateResult<T>> HandleResponseAsync(HttpRes response);
+        protected abstract Task<OperateResult<T>> HandleResponseAsync(HttpRes response);
 
         protected virtual void PreCheckResponse(HttpRes response)
         {
@@ -30,7 +30,7 @@ namespace FclEx.Actions
                 response.EnsureSuccessStatusCode();
         }
 
-        protected override async Task<IOperateResult<T>> ExecuteInternalAsync(CancellationToken token = default)
+        protected override async Task<OperateResult<T>> ExecuteInternalAsync(CancellationToken token = default)
         {
             HttpReq? req = null;
             try

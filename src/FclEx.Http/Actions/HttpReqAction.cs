@@ -23,7 +23,7 @@ namespace FclEx.Actions
             _unwrapError = unwrapError;
         }
 
-        public async Task<IOperateResult<HttpRes>> ExecuteAsync(CancellationToken token = default)
+        public async Task<OperateResult<HttpRes>> ExecuteAsync(CancellationToken token = default)
         {
             var res = await _httpService.ExecuteAsync(_req, token).DonotCapture();
             return (res.HasError && _unwrapError)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using Newtonsoft.Json;
 
@@ -12,14 +13,12 @@ namespace FclEx.Utils
         Exception? Exception { get; }
         TimeSpan Elapsed { get; }
         OperateResult<TDest> ToExplicit<TDest>();
-        IOperateResult WithElapsed(TimeSpan span);
         void Deconstruct(out bool successful, out TimeSpan elapsed, out Exception? ex);
     }
 
     public interface IOperateResult<T> : IOperateResult
     {
-        T Result { get; }
-        new IOperateResult<T> WithElapsed(TimeSpan span);
-        void Deconstruct(out bool successful, out TimeSpan elapsed, out T obj, out Exception? ex);
+        [AllowNull, MaybeNull] T Result { get; }
+        void Deconstruct(out bool successful, out TimeSpan elapsed, [MaybeNull] out T obj, out Exception? ex);
     }
 }

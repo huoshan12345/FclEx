@@ -44,7 +44,7 @@ namespace FclEx
                     foreach (var (i, o) in rs)
                     {
                         if (o.Successful)
-                            success.Add((i, o.Result));
+                            success.Add((i, o.Result!));
                         else
                             failure.Add((i, o));
                     }
@@ -80,7 +80,7 @@ namespace FclEx
                 {
                     var r = await OperateResult.ExcuteAsync(() => taskSelector(item));
                     if (r.Successful)
-                        success.Add((item, r.Result));
+                        success.Add((item, r.Result!));
                     else
                         failure.Add((item, r));
                 }
@@ -124,7 +124,6 @@ namespace FclEx
             return list;
         }
 
-
         public static async Task<OperateResult<List<T>>> ToSeriallyExecutedTask<T>(this IEnumerable<T> enumerable,
             Func<T, Task<OperateResult<T>>> taskSelector, int intervalSeconds = 0, CancellationToken token = default, bool terminateOnFirstError = false)
         {
@@ -141,7 +140,7 @@ namespace FclEx
                     span += r.Elapsed;
                     if (r.Successful)
                     {
-                        list.Add(r.Result);
+                        list.Add(r.Result!);
                     }
                     else
                     {

@@ -116,5 +116,26 @@ namespace FclEx
                 ? ToStringOrEmpty(dt.Value, format)
                 : string.Empty;
         }
+
+        public static DateTime ToUtc(this DateTime time)
+        {
+            return time.Kind switch
+            {
+                DateTimeKind.Local => time.ToUniversalTime(),
+                DateTimeKind.Unspecified => time.SpecifyKind(DateTimeKind.Utc),
+                DateTimeKind.Utc => time,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        }
+
+        public static DateTime SpecifyKind(this DateTime time, DateTimeKind kind)
+        {
+            return DateTime.SpecifyKind(time, kind);
+        }
+
+        public static DateTime ToCnTime(this DateTime time)
+        {
+            return time.ToUtc().AddHours(8);
+        }
     }
 }

@@ -51,6 +51,11 @@ namespace FclEx
             return random.NextDouble() >= 0.5;
         }
 
+        public static bool IsTrueByPercentage(this Random random, int percentage)
+        {
+            return random.Next(0, 100) < percentage;
+        }
+
         //private static object Next(this Random random, TypeCode typeCode)
         //{
         //    switch (typeCode)

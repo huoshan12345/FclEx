@@ -123,5 +123,41 @@ namespace FclEx
                 yield return item;
             }
         }
+
+        [return: MaybeNull]
+        public static TResult MaxOr<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, TResult> selector, TResult defaultValue = default)
+        {
+            return source.Any() ? source.Max(selector) : defaultValue;
+        }
+
+        [return: MaybeNull]
+        public static TSource MaxOr<TSource>(this IEnumerable<TSource> source, TSource defaultValue = default)
+        {
+            return source.Any() ? source.Max() : defaultValue;
+        }
+
+        [return: MaybeNull]
+        public static TResult MinOr<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, TResult> selector, TResult defaultValue = default)
+        {
+            return source.Any() ? source.Min(selector) : defaultValue;
+        }
+
+        [return: MaybeNull]
+        public static TSource MinOr<TSource>(this IEnumerable<TSource> source, TSource defaultValue = default)
+        {
+            return source.Any() ? source.Min() : defaultValue;
+        }
+
+        public static TimeSpan Average<TSource>(this IEnumerable<TSource> source, Func<TSource, TimeSpan> selector)
+        {
+            var ticks = (long)source.Select(m => selector(m).Ticks).Average();
+            return TimeSpan.FromTicks(ticks);
+        }
+
+        public static TimeSpan Sum<TSource>(this IEnumerable<TSource> source, Func<TSource, TimeSpan> selector)
+        {
+            var ticks = source.Select(m => selector(m).Ticks).Sum();
+            return TimeSpan.FromTicks(ticks);
+        }
     }
 }

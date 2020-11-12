@@ -1,16 +1,17 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using MoreLinq.Extensions;
 
 namespace FclEx.Utils
 {
     public class TreeNode<T>
     {
-        public TreeNode(T value)
+        public TreeNode([AllowNull] T value)
         {
             Value = value;
         }
 
-        public T Value { get; }
+        [AllowNull, MaybeNull] public T Value { get; }
         public List<TreeNode<T>> Children { get; } = new List<TreeNode<T>>();
         public TreeNode<T>? Parent { get; private set; }
 
@@ -27,9 +28,11 @@ namespace FclEx.Utils
             values.ForEach(m => AddChild(m));
         }
 
-        public bool DeepEquals(TreeNode<T> y, IEqualityComparer<T>? comparer = null)
+        public bool DeepEquals(TreeNode<T>? y, IEqualityComparer<T>? comparer = null)
         {
-            if (y == null) return false;
+            if (y == null)
+                return false;
+
             comparer ??= EqualityComparer<T>.Default;
             var x = this;
             var map = new Dictionary<TreeNode<T>, TreeNode<T>> { { x, y } };
@@ -38,9 +41,14 @@ namespace FclEx.Utils
             while (queue.Count != 0)
             {
                 var left = queue.Dequeue();
-                if (!map.TryGetValue(left, out var right)) return false;
-                if (!comparer.Equals(left.Value, right.Value)) return false;
-                if (left.Children.Count != right.Children.Count) return false;
+
+                if (!map.TryGetValue(left, out var right))
+                    return false;
+                if (!comparer.Equals(left.Value!, right.Value!))
+                    return false;
+                if (left.Children.Count != right.Children.Count)
+                    return false;
+
                 left.Children.ForEach((m, i) =>
                 {
                     queue.Enqueue(m);
@@ -48,6 +56,39 @@ namespace FclEx.Utils
                 });
             }
             return true;
+        }
+    }
+
+    public static class TreeNodeExtensions
+    {
+        public static IEnumerable<TreeNode<T>> GetPathToRoot<T>(this TreeNode<T> node)
+        {
+            var p = node;
+            while (p != null)
+            {
+                yield return p;
+                p = p.Parent;
+            }
+        }
+
+        public static IEnumerable<T> TraversalByLevel<T>(this TreeNode<T>? root)
+        {
+            if (root == null)
+                yield break;
+
+            var queue = new Queue<TreeNode<T>>();
+            queue.Enqueue(root);
+
+            while (queue.Count > 0)
+            {
+                var cur = queue.Dequeue();
+                yield return cur.Value!;
+
+                foreach (var child in cur.Children)
+                {
+                    queue.Enqueue(child);
+                }
+            }
         }
     }
 }

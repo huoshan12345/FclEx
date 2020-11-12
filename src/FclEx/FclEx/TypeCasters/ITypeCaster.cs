@@ -1,7 +1,10 @@
-﻿namespace FclEx.TypeCasters
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace FclEx.TypeCasters
 {
     public interface ITypeCaster
     {
-        TOutput CastTo<TInput, TOutput>(TInput obj);
+        [return: MaybeNull]
+        TOutput CastTo<TInput, TOutput>([AllowNull] TInput obj);
     }
 }
