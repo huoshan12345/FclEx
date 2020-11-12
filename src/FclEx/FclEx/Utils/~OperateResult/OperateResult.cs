@@ -70,16 +70,6 @@ namespace FclEx.Utils
             return CreateError(ex, TimeSpan.Zero);
         }
 
-        public static implicit operator OperateResult(OperateResult<Unit> result)
-        {
-            return result.ToUntyped();
-        }
-
-        public static implicit operator OperateResult<Unit>(OperateResult result)
-        {
-            return result.ToExplicit<Unit>();
-        }
-
         public static implicit operator OperateResult(string error)
         {
             return CreateError(error, TimeSpan.Zero);
@@ -90,9 +80,29 @@ namespace FclEx.Utils
             return CreateError(paras.Item1, paras.Item2);
         }
 
+        public static implicit operator OperateResult((TimeSpan, string) paras)
+        {
+            return CreateError(paras.Item2, paras.Item1);
+        }
+
+        public static implicit operator OperateResult((Exception, TimeSpan) paras)
+        {
+            return CreateError(paras.Item1, paras.Item2);
+        }
+
+        public static implicit operator OperateResult((TimeSpan, Exception) paras)
+        {
+            return CreateError(paras.Item2, paras.Item1);
+        }
+
         public static implicit operator Task<IOperateResult>(OperateResult result)
         {
             return ((IOperateResult)result).ToTask();
+        }
+
+        public static implicit operator Task<OperateResult>(OperateResult result)
+        {
+            return result.ToTask();
         }
 
         public static implicit operator Task<IOperateResult<Unit>>(OperateResult result)
@@ -100,9 +110,9 @@ namespace FclEx.Utils
             return ((IOperateResult<Unit>)result).ToTask();
         }
 
-        public static implicit operator Task<OperateResult>(OperateResult result)
+        public static implicit operator Task<OperateResult<Unit>>(OperateResult result)
         {
-            return result.ToTask();
+            return ((OperateResult<Unit>)result).ToTask();
         }
     }
 }

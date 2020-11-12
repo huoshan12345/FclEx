@@ -17,13 +17,13 @@ namespace FclEx.Http.Proxy
         public WebProxyExt(ProxyType type, string? host, int port, NetworkCredential? credentials = null)
         {
             Type = type;
-            Host = host;
+            Host = host ?? "localhost";
             Port = port;
             _credentials = credentials;
             if (Type == ProxyType.Http)
-                _uri = new UriBuilder(Uri.UriSchemeHttp, host, port).Uri;
+                _uri = new UriBuilder(Uri.UriSchemeHttp, Host, port).Uri;
             else if (Type == ProxyType.Https)
-                _uri = new UriBuilder(Uri.UriSchemeHttp, host, port).Uri;
+                _uri = new UriBuilder(Uri.UriSchemeHttp, Host, port).Uri;
         }
 
         private WebProxyExt(Uri uri, NetworkCredential? credentials)
@@ -57,7 +57,7 @@ namespace FclEx.Http.Proxy
             return uri == null ? None : new WebProxyExt(uri, credentials);
         }
 
-        public static WebProxyExt Create(string url, NetworkCredential? credentials = null)
+        public static WebProxyExt Create(string? url, NetworkCredential? credentials = null)
         {
             var uri = url.IsValid() ? new Uri(url) : null;
             return Create(uri, credentials);
