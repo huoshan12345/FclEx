@@ -55,7 +55,7 @@ namespace FclEx.Extensions.Json
                                   && (data.First() == '[' && data.Last() == ']');
         }
 
-        public static bool TryToJToken(this string str, [MaybeNullWhen(false)] out JToken? token)
+        public static bool TryToJToken(this string str, [NotNullWhen(true), MaybeNullWhen(false)] out JToken? token)
         {
             token = null;
             if (str.IsPossibleJson())
@@ -63,14 +63,14 @@ namespace FclEx.Extensions.Json
                 var r = OperateResult.Excute(() => JToken.Parse(str));
                 if (r.Successful)
                 {
-                    token = r.Result;
+                    token = r.Result!;
                     return true;
                 }
             }
             return false;
         }
 
-        public static bool TryToJObject(this string? str, [MaybeNullWhen(false)] out JObject? token)
+        public static bool TryToJObject(this string? str, [NotNullWhen(true), MaybeNullWhen(false)] out JObject? token)
         {
             token = null;
             if (str.IsPossibleJObject())
@@ -78,14 +78,14 @@ namespace FclEx.Extensions.Json
                 var r = OperateResult.Excute(() => JObject.Parse(str!));
                 if (r.Successful)
                 {
-                    token = r.Result;
+                    token = r.Result!;
                     return true;
                 }
             }
             return false;
         }
 
-        public static bool TryToJArray(this string str, [MaybeNullWhen(false)] out JArray? token)
+        public static bool TryToJArray(this string str, [NotNullWhen(true), MaybeNullWhen(false)] out JArray? token)
         {
             token = null;
             if (str.IsPossibleJArray())
@@ -93,7 +93,7 @@ namespace FclEx.Extensions.Json
                 var r = OperateResult.Excute(() => JArray.Parse(str));
                 if (r.Successful)
                 {
-                    token = r.Result;
+                    token = r.Result!;
                     return true;
                 }
             }

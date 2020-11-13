@@ -23,29 +23,6 @@ namespace FclEx.Serilog.Models
         public IList<string>? Renderings { get; set; }
         public string? LoggerName { get; set; }
 
-        [JsonProperty]
-        public static string? EntryAssembly { get; set; } = Assembly.GetEntryAssembly()?.GetName().Name;
-
-        [JsonProperty]
-        public static string OsType { get; set; } = GetOs();
-
-        [JsonProperty]
-        public static string OsName { get; set; } = Environment.OSVersion.Platform.ToString();
-
-        [JsonProperty]
-        public static string HostName { get; set; } = Environment.MachineName;
-
-        [JsonProperty]
-        public static string OsInfo { get; set; } = Environment.OSVersion.ToString();
-
-        public static string GetOs()
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) return nameof(OSPlatform.Linux);
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return nameof(OSPlatform.Windows);
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) return nameof(OSPlatform.OSX);
-            return RuntimeInformation.OSDescription;
-        }
-
         public static JObject Create(LogEvent logEvent, IList<string>? excludePaths)
         {
             var @event = new AbpLogEvent

@@ -19,7 +19,7 @@ namespace FclEx.Serilog.Models
         public IDictionary? Data { get; set; }
         public JsonEx? InnerException { get; set; }
 
-        public static JsonEx? Create(Exception ex)
+        public static JsonEx? Create(Exception? ex)
         {
             if (ex == null)
                 return null;

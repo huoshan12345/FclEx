@@ -14,8 +14,7 @@ namespace FclEx.Serilog.Formatting
 {
     public class LogstashJsonFormatter : ElasticsearchJsonFormatter
     {
-        private static readonly ConcurrentDictionary<string, string> Map
-            = new ConcurrentDictionary<string, string>();
+        private static readonly ConcurrentDictionary<string, string> Map = new ConcurrentDictionary<string, string>();
 
         private readonly bool _useCamelCase;
 
@@ -32,11 +31,7 @@ namespace FclEx.Serilog.Formatting
             _useCamelCase = useCamelCase;
         }
 
-        protected override void WriteJsonProperty(
-            string name,
-            object value,
-            ref string precedingDelimiter,
-            TextWriter output)
+        protected override void WriteJsonProperty(string name, object value, ref string precedingDelimiter, TextWriter output)
         {
             if (_useCamelCase && name.IsValid())
             {
