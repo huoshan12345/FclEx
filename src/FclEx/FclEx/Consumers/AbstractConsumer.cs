@@ -151,11 +151,7 @@ namespace FclEx.Consumers
 
         public virtual void CompleteAdding()
         {
-            using (_locker.Lock())
-            {
-                EnsureNonDisposed();
-                _isAddingCompleted = true;
-            }
+            _locker.Do(() => _isAddingCompleted = true);
         }
 
         public virtual void Stop()
@@ -172,7 +168,8 @@ namespace FclEx.Consumers
 
         public virtual void Dispose()
         {
-            EnsureNonDisposed();
+            if (_isDisposed)
+                return;
 
             _cts.Cancel();
             HandleCancelation();
