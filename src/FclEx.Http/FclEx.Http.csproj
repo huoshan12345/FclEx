@@ -1,9 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <Import Project="..\..\nupkg\common.props" />
-  <PropertyGroup>
-    <RootNamespace>FclEx</RootNamespace>
-  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="MimeTypeMap.Core" Version="1.0.0" />

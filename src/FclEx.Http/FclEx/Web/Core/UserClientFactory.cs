@@ -1,0 +1,26 @@
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using FclEx.Http.Services;
+using FclEx.Web.Models;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace FclEx.Web.Core
+{
+    public class UserClientFactory<TClient> : IUserClientFactory<TClient> where TClient : IUserClient
+    {
+        public UserClientFactory(IServiceProvider serviceProvider)
+        {
+            ServiceProvider = serviceProvider;
+        }
+
+        public IServiceProvider ServiceProvider { get; }
+
+        public virtual TClient Create(IUserAccount account, IHttpService? httpService = null)
+        {
+            var client = ServiceProvider.GetRequiredService<TClient>();
+            client.Account = account;
+            client.HttpService = httpService;
+            return client;
+        }
+    }
+}

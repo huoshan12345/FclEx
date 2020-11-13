@@ -10,7 +10,7 @@ namespace FclEx.Extensions.Json
 {
     public static class JsonExtensions
     {
-        public static bool IsPossibleJson(this string? data)
+        public static bool IsPossibleJson([NotNullWhen(true)] this string? data)
         {
             /*
              * In JSON, values must be one of the following data types:
@@ -43,19 +43,19 @@ namespace FclEx.Extensions.Json
             return false;
         }
 
-        public static bool IsPossibleJObject(this string? data)
+        public static bool IsPossibleJObject([NotNullWhen(true)] this string? data)
         {
             return data.IsValid() && data!.Length >= 2
                                   && (data.First() == '{' && data.Last() == '}');
         }
 
-        public static bool IsPossibleJArray(this string? data)
+        public static bool IsPossibleJArray([NotNullWhen(true)] this string? data)
         {
             return data.IsValid() && data!.Length >= 2
                                   && (data.First() == '[' && data.Last() == ']');
         }
 
-        public static bool TryToJToken(this string str, [NotNullWhen(true), MaybeNullWhen(false)] out JToken? token)
+        public static bool TryToJToken(this string str, [NotNullWhen(true)] out JToken? token)
         {
             token = null;
             if (str.IsPossibleJson())
@@ -70,7 +70,7 @@ namespace FclEx.Extensions.Json
             return false;
         }
 
-        public static bool TryToJObject(this string? str, [NotNullWhen(true), MaybeNullWhen(false)] out JObject? token)
+        public static bool TryToJObject(this string? str, [NotNullWhen(true)] out JObject? token)
         {
             token = null;
             if (str.IsPossibleJObject())
@@ -85,7 +85,7 @@ namespace FclEx.Extensions.Json
             return false;
         }
 
-        public static bool TryToJArray(this string str, [NotNullWhen(true), MaybeNullWhen(false)] out JArray? token)
+        public static bool TryToJArray(this string str, [NotNullWhen(true)] out JArray? token)
         {
             token = null;
             if (str.IsPossibleJArray())
