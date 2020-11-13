@@ -7,17 +7,21 @@ $ErrorActionPreference = "Stop"
 Set-Location $packFolder
 Remove-Item *.nupkg
 
+Write-Output "Packing..."
 foreach($path in $projectPaths) { 
-    & dotnet pack $path -c Release --include-symbols -v q --output $packFolder
+    & dotnet pack $path --nologo -c Release --include-symbols -v q --output $packFolder
 	if ($Lastexitcode -ne 0)	{
 		throw "failed with exit code $LastExitCode"
 	}
+	Write-Output "Packed $($path)"
 }
 
 $PSGallerySourceUri = 'https://www.myget.org/F/huoshan12345/api/v2/package'
 $APIKey = 'fbc0486a-55ff-4760-b246-bef3e0ee952d'
 
 $files = Get-ChildItem ./*.nupkg
+
+Write-Output "Uploading..."
 foreach ($file in $files) {
 	& dotnet nuget push $file -k $APIKey -s $PSGallerySourceUri --timeout 50
 	if ($Lastexitcode -ne 0) {

@@ -5,7 +5,7 @@ using Xunit;
 
 namespace FclEx.Helpers
 {
-    public class ExpressionHelperTests
+    public class ErasureTypeTests
     {
         [Fact]
         public void ErasureType_Int_Test()

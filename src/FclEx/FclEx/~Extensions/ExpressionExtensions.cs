@@ -9,11 +9,11 @@ namespace FclEx
 {
     public static class ExpressionExtensions
     {
-        public static Expression<Func<T, bool>> Or<T>(this Expression<Func<T, bool>> left, Expression<Func<T, bool>> right)
+        public static Expression<Func<T, bool>> Or<T>(this Expression<Func<T, bool>>? left, Expression<Func<T, bool>>? right)
         {
             if (left == null && right == null)
                 throw new ArgumentNullException($"{nameof(left)}, {nameof(right)} cannot be null at the same time");
-            if (left == null) return right;
+            if (left == null) return right!;
             if (right == null) return left;
 
             var parameter = left.Parameters[0];
@@ -23,11 +23,11 @@ namespace FclEx
             return lambda;
         }
 
-        public static Expression<Func<T, bool>> And<T>(this Expression<Func<T, bool>> left, Expression<Func<T, bool>> right)
+        public static Expression<Func<T, bool>> And<T>(this Expression<Func<T, bool>>? left, Expression<Func<T, bool>>? right)
         {
             if (left == null && right == null)
                 throw new ArgumentNullException($"{nameof(left)}, {nameof(right)} cannot be null at the same time");
-            if (left == null) return right;
+            if (left == null) return right!;
             if (right == null) return left;
 
             var parameter = left.Parameters[0];

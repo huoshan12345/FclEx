@@ -6,7 +6,7 @@ namespace FclEx.Helpers
 {
     public static class ExpressionHelper
     {
-        public static PropertyInfo GetProp<TSource, TMember>(Expression<Func<TSource, TMember>> selector)
+        public static PropertyInfo GetProperty<TSource, TMember>(Expression<Func<TSource, TMember>> selector)
         {
             var member = GetMember(selector);
             if (member is PropertyInfo info) return info;
@@ -20,6 +20,13 @@ namespace FclEx.Helpers
             throw new ArgumentException($"Expression '{selector}' does not refer to a field.");
         }
 
+        public static MethodInfo GetMethod<TSource>(Expression<Action<TSource>> selector)
+        {
+            var member = GetMember(selector);
+            if (member is MethodInfo info) return info;
+            throw new ArgumentException($"Expression '{selector}' does not refer to a method.");
+        }
+
         public static MethodInfo GetMethod<TSource, TMember>(Expression<Func<TSource, TMember>> selector)
         {
             var member = GetMember(selector);
@@ -27,45 +34,68 @@ namespace FclEx.Helpers
             throw new ArgumentException($"Expression '{selector}' does not refer to a method.");
         }
 
-        public static MemberInfo GetMember<T, TMember>(Expression<Func<T, TMember>> selector)
+        public static MemberInfo GetMember(Expression expression)
         {
-            if (selector == null) throw new ArgumentNullException(nameof(selector));
+            if (expression == null)
+                throw new ArgumentNullException(nameof(expression));
 
-            if (!(selector.Body is MemberExpression member))
-                throw new ArgumentException($"Expression '{selector}' refers to a method, not a property.");
+            return expression switch
+            {
+                MethodCallExpression methodCall => methodCall.Method,
+                LambdaExpression lambda => GetMember(lambda.Body),
+                UnaryExpression unary => GetMember(unary.Operand),
+                MemberExpression member => member.Member,
+                _ => throw new ArgumentException($"Expression '{expression}' does not refer to a member.")
+            };
+        }
 
-            var reflectedType = member.Member.ReflectedType;
+        public static MemberInfo GetMember(Expression expression, Type type)
+        {
+            var member = GetMember(expression);
 
-            //If the MemberInfo object is a global member (that is, if it was obtained from the Module.GetMethods method,
-            //which returns global methods on a module), the returned DeclaringType will be null.
+            var reflectedType = member.ReflectedType;
+
+            // If the MemberInfo object is a global member (that is, if it was obtained from the Module.GetMethods method,
+            // which returns global methods on a module), the returned DeclaringType will be null.
             if (reflectedType == null)
-                throw new ArgumentException($"Expression '{selector}' does not refer to a property of a class.");
+                throw new ArgumentException($"Expression '{expression}' does not refer to a member of a class.");
 
-            var type = typeof(T);
             if (type != reflectedType && !type.IsSubclassOf(reflectedType))
-                throw new ArgumentException($"Expression '{selector}' refers to a property that is not from type {type}.");
+                throw new ArgumentException($"Expression '{expression}' refers to a member that is not from type {type.LongName()}.");
 
-            return member.Member;
+            return member;
+        }
+
+        public static MemberInfo GetMember<T>(Expression<Func<T, object>> selector)
+        {
+            return GetMember(selector, typeof(T));
+        }
+
+        public static MemberInfo GetMember<T>(Expression<Action<T>> selector)
+        {
+            return GetMember(selector, typeof(T));
+        }
+
+        public static MemberInfo GetDataMember<T, TMember>(Expression<Func<T, TMember>> selector)
+        {
+            var member = GetMember(selector);
+            return member switch
+            {
+                PropertyInfo prop => prop,
+                FieldInfo field => field,
+                _ => throw new ArgumentException($"Expression '{selector}' refers to neither a field nor a property.")
+            };
         }
 
         public static Action<T, TMember> GetSetter<T, TMember>(Expression<Func<T, TMember>> selector)
         {
-            var member = GetMember(selector);
-            switch (member)
+            var member = GetDataMember(selector);
+            return member switch
             {
-                case PropertyInfo propInfo:
-                {
-                    var setter = (Action<T, TMember>)((o, v) => propInfo.SetValue(o, v));
-                    return setter;
-                }
-                case FieldInfo fieldInfo:
-                {
-                    var setter = (Action<T, TMember>)((o, v) => fieldInfo.SetValue(o, v));
-                    return setter;
-                }
-                default:
-                    throw new ArgumentException($"Expression '{selector}' refers to neither a field nor a property.");
-            }
+                PropertyInfo propInfo => ((o, v) => propInfo.SetValue(o, v)),
+                FieldInfo fieldInfo => ((o, v) => fieldInfo.SetValue(o, v)),
+                _ => throw new ArgumentException($"Expression '{selector}' refers to neither a field nor a property.")
+            };
         }
 
         public static Expression<Func<T, object>> ErasureType<T, TProp>(Expression<Func<T, TProp>> selector)
@@ -80,6 +110,16 @@ namespace FclEx.Helpers
             {
                 return Expression.Lambda<Func<T, object>>(selector.Body, selector.Parameters);
             }
+        }
+
+        public static Type GetDataMemberType(this MemberInfo member)
+        {
+            return member switch
+            {
+                PropertyInfo propInfo => propInfo.PropertyType,
+                FieldInfo fieldInfo => fieldInfo.FieldType,
+                _ => throw new ArgumentException($"MemberInfo '{member.Name}' refers to neither a field nor a property.")
+            };
         }
     }
 }

@@ -12,12 +12,14 @@ namespace FclEx.Utils
         public Type MemberType { get; }
         public bool CanRead { get; }
         public bool CanWrite { get; }
+        public MemberInfo MemberInfo { get; }
         internal Func<object, object> GetValueFunc { get; }
         internal Action<object, object> SetValueFunc { get; }
 
         public DataMemberInfo(FieldInfo fieldInfo)
         {
             Guard.Argument(fieldInfo, nameof(fieldInfo)).NotNull();
+            MemberInfo = fieldInfo;
             Name = fieldInfo.Name;
             MemberType = fieldInfo.FieldType;
             CanRead = true;
@@ -29,6 +31,7 @@ namespace FclEx.Utils
         public DataMemberInfo(PropertyInfo propertyInfo)
         {
             Guard.Argument(propertyInfo, nameof(propertyInfo)).NotNull();
+            MemberInfo = propertyInfo;
             Name = propertyInfo.Name;
             MemberType = propertyInfo.PropertyType;
             CanRead = propertyInfo.CanRead;
