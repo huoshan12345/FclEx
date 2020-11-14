@@ -3,9 +3,9 @@ using System.Linq;
 using FclEx.Testers;
 using Xunit;
 
-namespace FclEx.Utils
+namespace FclEx.Comparers
 {
-    public class PropComparerTests
+    public class MemberComparerTests
     {
         private static string CreateRondomString(int length, Random random)
         {
@@ -37,7 +37,7 @@ namespace FclEx.Utils
                     .ThenByDescending(m => m.Height)
                     .ToList();
 
-                var cmp = PropComparer<Person>
+                var cmp = MemberComparer<Person>
                     .Create(m => m.Age)
                     .OrderBy(m => m.Name)
                     .OrderBy(m => m.Height, true)

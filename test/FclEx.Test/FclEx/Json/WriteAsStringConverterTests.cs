@@ -1,4 +1,5 @@
-﻿using FclEx.Helpers;
+﻿using FclEx.Comparers;
+using FclEx.Helpers;
 using FclEx.Json.Converters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

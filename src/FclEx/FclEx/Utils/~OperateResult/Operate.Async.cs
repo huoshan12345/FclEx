@@ -6,7 +6,7 @@ using FclEx.Helpers;
 
 namespace FclEx.Utils
 {
-    public partial struct OperateResult
+    partial class Operate
     {
         public static async Task<OperateResult> ExcuteAsync(Func<Task> action)
         {
@@ -14,11 +14,11 @@ namespace FclEx.Utils
             try
             {
                 await action().DonotCapture();
-                return CreateSuccess(watch.GetElapsedTime());
+                return (watch.GetElapsedTime());
             }
             catch (Exception ex)
             {
-                return CreateError(ex, watch.GetElapsedTime());
+                return (ex, watch.GetElapsedTime());
             }
         }
 
@@ -40,11 +40,11 @@ namespace FclEx.Utils
             try
             {
                 await action.TimeoutAfter(timeout).DonotCapture();
-                return CreateSuccess(watch.GetElapsedTime());
+                return (watch.GetElapsedTime());
             }
             catch (Exception ex)
             {
-                return CreateError(ex, watch.GetElapsedTime());
+                return (ex, watch.GetElapsedTime());
             }
         }
 
@@ -54,11 +54,11 @@ namespace FclEx.Utils
             try
             {
                 var result = await action().DonotCapture();
-                return CreateSuccess(result, watch.GetElapsedTime());
+                return (result, watch.GetElapsedTime());
             }
             catch (Exception ex)
             {
-                return CreateError<T>(ex, watch.GetElapsedTime());
+                return (ex, watch.GetElapsedTime());
             }
         }
 
@@ -68,11 +68,11 @@ namespace FclEx.Utils
             try
             {
                 var result = await action.TimeoutAfter(timeout).DonotCapture();
-                return CreateSuccess(result, watch.GetElapsedTime());
+                return (result, watch.GetElapsedTime());
             }
             catch (Exception ex)
             {
-                return CreateError<T>(ex, watch.GetElapsedTime());
+                return (ex, watch.GetElapsedTime());
             }
         }
 
@@ -97,11 +97,11 @@ namespace FclEx.Utils
             try
             {
                 var result = await action().DonotCapture();
-                return CreateSuccess(result, watch.GetElapsedTime());
+                return (result, watch.GetElapsedTime());
             }
             catch (Exception ex)
             {
-                return CreateError<T>(ex, watch.GetElapsedTime());
+                return (ex, watch.GetElapsedTime());
             }
         }
 
@@ -114,11 +114,11 @@ namespace FclEx.Utils
             try
             {
                 await action().DonotCapture();
-                return CreateSuccess(watch.GetElapsedTime());
+                return watch.GetElapsedTime();
             }
             catch (Exception ex)
             {
-                return CreateError(ex, watch.GetElapsedTime());
+                return (ex, watch.GetElapsedTime());
             }
         }
 

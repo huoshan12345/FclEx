@@ -72,7 +72,7 @@ namespace FclEx.Actions
         {
             var func = _func;
             return _excuteSafely
-                ? OperateResult.ExcuteAsync(() => func(token))
+                ? Operate.ExcuteAsync(() => func(token))
                 : func(token);
         }
     }
@@ -92,7 +92,7 @@ namespace FclEx.Actions
         {
             var func = _func;
             return _excuteSafely
-                ? OperateResult.ExcuteAsync(() => func(token))
+                ? Operate.ExcuteAsync(() => func(token))
                 : func(token);
         }
     }

@@ -12,14 +12,12 @@ namespace FclEx.Http.Services
         public static IWebProxyExt[] ProxyList { get; } =
         {
             GlobalConstants.DefaultProxy
-            // new WebProxyExt(ProxyType.Https, "127.0.0.1", 1080),
-            // new WebProxyExt(ProxyType.Socks5, "127.0.0.1", 1080),
         };
 
         public static string[] Urls { get; } =
         {
             "https://www.google.com/",
-            "https://www.twitter.com/",
+            "https://www.instagram.com/",
         };
 
         public static IEnumerable<object[]> Cases { get; } = ProxyList.SelectMany(m => Urls, (x, y) => new object[] { x, y });

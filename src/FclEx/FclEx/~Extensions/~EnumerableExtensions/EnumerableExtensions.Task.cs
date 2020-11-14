@@ -40,7 +40,7 @@ namespace FclEx
                 }
                 else
                 {
-                    var rs = await batch.Select(async m => (m, await OperateResult.ExcuteAsync(() => taskSelector(m)))).WhenAll();
+                    var rs = await batch.Select(async m => (m, await Operate.ExcuteAsync(() => taskSelector(m)))).WhenAll();
                     foreach (var (i, o) in rs)
                     {
                         if (o.Successful)
@@ -78,7 +78,7 @@ namespace FclEx
                 }
                 else
                 {
-                    var r = await OperateResult.ExcuteAsync(() => taskSelector(item));
+                    var r = await Operate.ExcuteAsync(() => taskSelector(item));
                     if (r.Successful)
                         success.Add((item, r.Result!));
                     else

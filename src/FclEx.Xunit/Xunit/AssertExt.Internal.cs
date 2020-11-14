@@ -4,11 +4,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using FclEx;
 using FclEx.Utils;
-using MoreLinq;
-using Xunit.Sdk;
 
 namespace Xunit
 {
@@ -77,7 +74,7 @@ namespace Xunit
             foreach (var path in paths)
             {
                 var cur = root;
-                foreach (var (index, node) in path.Index())
+                foreach (var (index, node) in path.Select((m, i) => (i, m)))
                 {
                     var child = cur.Children.FirstOrDefault(m => m.Value.Name == node);
                     if (child == null)
@@ -169,7 +166,7 @@ namespace Xunit
             if (equalsMethod != null)
                 return (equalsMethod(value1, value2), value1, value2);
 
-            if (type1.IsEnumerableType() && type2.IsEnumerableType())
+            if (type1.IsEnumerable() && type2.IsEnumerable())
             {
                 using var e1 = ((IEnumerable)value1).GetEnumerator().AsDisposable();
                 using var e2 = ((IEnumerable)value2).GetEnumerator().AsDisposable();

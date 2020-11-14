@@ -4,7 +4,7 @@ using FclEx.Helpers;
 
 namespace FclEx.Utils
 {
-    public partial struct OperateResult
+    public static partial class Operate
     {
         public static OperateResult Excute(Action action)
         {
@@ -12,11 +12,11 @@ namespace FclEx.Utils
             try
             {
                 action();
-                return CreateSuccess(watch.GetElapsedTime());
+                return watch.GetElapsedTime();
             }
             catch (Exception ex)
             {
-                return CreateError(ex, watch.GetElapsedTime());
+                return (ex, watch.GetElapsedTime());
             }
         }
 
@@ -26,11 +26,11 @@ namespace FclEx.Utils
             try
             {
                 var result = action();
-                return CreateSuccess(result, watch.GetElapsedTime());
+                return (result, watch.GetElapsedTime());
             }
             catch (Exception ex)
             {
-                return CreateError<T>(ex, watch.GetElapsedTime());
+                return (ex, watch.GetElapsedTime());
             }
         }
 

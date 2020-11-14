@@ -8,7 +8,7 @@ namespace FclEx.Utils
         [Fact]
         public void TestExcute()
         {
-            var r = OperateResult.Excute(() => new object());
+            var r = Operate.Excute(() => new object());
 
             Assert.True(r.Successful);
             Assert.NotNull(r.Result);
@@ -18,7 +18,7 @@ namespace FclEx.Utils
         [Fact]
         public void TestExcuteError()
         {
-            var r = OperateResult.Excute((Func<object>)(() => throw new SimpleException("")));
+            var r = Operate.Excute((Func<object>)(() => throw new SimpleException("")));
             Assert.True(!r.Successful);
             Assert.Null(r.Result);
             Assert.NotEqual(default, r.Elapsed);

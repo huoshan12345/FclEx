@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using BenchmarkDotNet.Attributes;
+using FclEx.Comparers;
 using FclEx.Utils;
 
 namespace FclEx.Benchmark
@@ -23,7 +24,7 @@ namespace FclEx.Benchmark
         };
 
         private static readonly Comparison<Person> _comparisonOfProp = 
-            PropComparer<Person>
+            MemberComparer<Person>
             .Create(m => m.Age)
             .OrderBy(m => m.Name)
             .OrderBy(m => m.Height, true)

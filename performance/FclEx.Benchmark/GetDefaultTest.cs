@@ -20,16 +20,16 @@ namespace FclEx.Benchmark
 
         [Benchmark]
         [ArgumentsSource(nameof(Cases))]
-        public void GetDefault(Type type)
+        public void DefaultValue(Type type)
         {
-            type.GetDefault();
+            type.DefaultValue();
         }
 
         [Benchmark]
         [ArgumentsSource(nameof(Cases))]
-        public void GetDefaultByExp(Type type)
+        public void DefaultValueByExp(Type type)
         {
-            type.GetDefaultByExp();
+            type.DefaultValueByExp();
         }
     }
 }

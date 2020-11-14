@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
-using FclEx.Comparers;
 
-namespace FclEx.Helpers
+namespace FclEx.Comparers
 {
     public static class ComparerHelper
     {
@@ -23,11 +21,6 @@ namespace FclEx.Helpers
         public static IComparer<T> Create<TKey>(Func<T, TKey> keySelector, IComparer<TKey>? comparer = null)
         {
             return new KeyComparer<T, TKey>(keySelector, comparer);
-        }
-
-        public static IComparer<T> Create(Comparison<T> compareFunc)
-        {
-            return new CommonComparer<T>(compareFunc);
         }
     }
 }

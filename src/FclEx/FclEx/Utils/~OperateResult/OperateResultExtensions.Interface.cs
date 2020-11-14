@@ -65,9 +65,14 @@ namespace FclEx.Utils
             }
         }
 
+        public static bool IsObjErr<T>([NotNullWhen(true)] this Exception? exception, Func<T, bool> predicate)
+        {
+            return exception is ObjectException<T> ex && predicate(ex.Target);
+        }
+
         public static bool IsObjErr<T>(this IOperateResult result, Func<T, bool> predicate)
         {
-            return result.Exception is ObjectException<T> ex && predicate(ex.Target);
+            return result.Exception.IsObjErr(predicate);
         }
 
         public static IOperateResult<TDest> Map<T, TDest>(this IOperateResult<T> result, Func<T, TDest> func)

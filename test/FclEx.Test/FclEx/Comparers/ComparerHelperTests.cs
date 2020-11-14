@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using Xunit;
 
-namespace FclEx.Helpers
+namespace FclEx.Comparers
 {
     public class ComparerHelperTests
     {
@@ -32,9 +32,16 @@ namespace FclEx.Helpers
         {
             var testers = Generate();
             var testersOrdered = testers.OrderBy(m => m.Id).ToArray();
-            var comparer = ComparerHelper.Create<Tester, int>(m => m.Id);
-            var sortList = new SortedSet<Tester>(testers, comparer);
-            Assert.True(testersOrdered.SequenceEqual(sortList));
+            {
+                var comparer = ComparerHelper.Create<Tester, int>(m => m.Id);
+                var sortList = new SortedSet<Tester>(testers, comparer);
+                Assert.True(testersOrdered.SequenceEqual(sortList));
+            }
+            {
+                var comparer = ComparerHelper<Tester>.Create(m => m.Id);
+                var sortList = new SortedSet<Tester>(testers, comparer);
+                Assert.True(testersOrdered.SequenceEqual(sortList));
+            }
         }
 
         [Fact]

@@ -14,12 +14,11 @@ namespace FclEx.Json.Converters
         public override bool CanRead { get; } = true;
         public override bool CanWrite { get; } = false;
 
-        private static readonly MethodInfo _toArrayMethod = typeof(Enumerable).GetMethod(nameof(Enumerable.ToArray));
-
+        private static readonly MethodInfo MethodOfToArray = typeof(Enumerable).GetMethod(nameof(Enumerable.ToArray))!;
 
         public override bool CanConvert(Type objectType)
         {
-            var colItemType = objectType.GetAnyElementType();
+            var colItemType = objectType.EnumerableType();
             if (colItemType == null) return false;
             var kvType = colItemType.GetGenericTypeDefinition();
             if (kvType != typeof(KeyValuePair<,>)) return false;
@@ -31,7 +30,7 @@ namespace FclEx.Json.Converters
         {
             if (objectType.IsArray)
             {
-                return _toArrayMethod.MakeGenericMethod(eleType).Invoke(null, new object[] { list });
+                return MethodOfToArray.MakeGenericMethod(eleType).Invoke(null, new object[] { list });
             }
 
             var colType = objectType.GetGenericTypeDefinition();
@@ -75,7 +74,7 @@ namespace FclEx.Json.Converters
         {
             if (reader.TokenType == JsonToken.Null) return null;
 
-            var kvType = objectType.GetAnyElementType()!;
+            var kvType = objectType.EnumerableType()!;
             var keyType = kvType.GenericTypeArguments[0];
             var valueType = kvType.GenericTypeArguments[1];
 

@@ -9,12 +9,12 @@ namespace FclEx
     {
         public static Task<OperateResult<T>> OperateExecuteAsync<T>(this IAsyncPolicy<T> policy, Func<Task<T>> action)
         {
-            return OperateResult.ExcuteAsync(() => policy.ExecuteAsync(action));
+            return Operate.ExcuteAsync(() => policy.ExecuteAsync(action));
         }
 
         public static Task<OperateResult<T>> OperateExecuteAsync<T>(this IAsyncPolicy<OperateResult<T>> policy, Func<Task<OperateResult<T>>> action)
         {
-            return OperateResult.ExcuteAsync(() => policy.ExecuteAsync(action));
+            return Operate.ExcuteAsync(() => policy.ExecuteAsync(action));
         }
     }
 }

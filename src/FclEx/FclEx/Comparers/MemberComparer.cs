@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using FclEx.Helpers;
 
-namespace FclEx.Utils
+namespace FclEx.Comparers
 {
-    public class PropComparer<T>
+    public class MemberComparer<T>
     {
         private readonly struct OrderProperty
         {
@@ -24,18 +24,18 @@ namespace FclEx.Utils
 
         private readonly IList<OrderProperty> _orderProperties = new List<OrderProperty>();
 
-        public static PropComparer<T> Create()
+        public static MemberComparer<T> Create()
         {
-            return new PropComparer<T>();
+            return new MemberComparer<T>();
         }
 
-        public static PropComparer<T> Create<TProp>(Expression<Func<T, TProp>> selector, bool desc = false)
+        public static MemberComparer<T> Create<TMember>(Expression<Func<T, TMember>> selector, bool desc = false)
         {
-            var cmp = new PropComparer<T>();
+            var cmp = new MemberComparer<T>();
             return cmp.OrderBy(selector, desc);
         }
 
-        public PropComparer<T> OrderBy<TProp>(Expression<Func<T, TProp>> selector, bool desc = false)
+        public MemberComparer<T> OrderBy<TProp>(Expression<Func<T, TProp>> selector, bool desc = false)
         {
             var unTypedExp = ExpressionHelper.ErasureType(selector);
             var prop = new OrderProperty(unTypedExp.Compile(), desc, Comparer<TProp>.Default);

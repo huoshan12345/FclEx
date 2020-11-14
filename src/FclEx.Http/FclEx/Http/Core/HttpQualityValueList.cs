@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using FclEx.Comparers;
 using FclEx.Helpers;
 using FclEx.Utils;
 
@@ -20,7 +21,7 @@ namespace FclEx.Http.Core
     {
         private static readonly char[] _delimiters = { ',' };
         private static readonly IComparer<float> _comparer
-            = PropComparer<float>.Create(m => m, true).ToComparer();
+            = MemberComparer<float>.Create(m => m, true).ToComparer();
         private readonly SortedDictionary<float, List<HttpQualityValue>> _dic
             = new SortedDictionary<float, List<HttpQualityValue>>(_comparer);
 

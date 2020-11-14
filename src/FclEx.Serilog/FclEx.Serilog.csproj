@@ -1,11 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <Import Project="../../nupkg/common.props" />
-  <PropertyGroup>
-    <LangVersion>latest</LangVersion>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <RootNamespace />
-  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Serilog.Extensions.Logging" Version="3.0.1" />

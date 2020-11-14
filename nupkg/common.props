@@ -2,10 +2,11 @@
   <Import Project="version.props" />
   <PropertyGroup>
     <RootNamespace></RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
     <WarningsAsErrors>CS8600;CS8602;CS8603;CS8625;CS8618;CS8601;CS8610;CS8604;CS8613;CS8609;CS8614;CS8620;CS8634</WarningsAsErrors>
     <LangVersion>latest</LangVersion>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <PackageProjectUrl>https://github.com/huoshan12345/FclEx</PackageProjectUrl>
     <PackageTags>extensions;helpers</PackageTags>
     <Authors>huoshan12345</Authors>
@@ -15,10 +16,4 @@
     <Copyright>huoshan12345</Copyright>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Nullable" Version="1.3.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
 </Project>

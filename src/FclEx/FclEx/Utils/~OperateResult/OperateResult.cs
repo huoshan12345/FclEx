@@ -65,6 +65,11 @@ namespace FclEx.Utils
             _result = new Unit();
         }
 
+        public static implicit operator OperateResult(TimeSpan elapsed)
+        {
+            return new OperateResult(elapsed);
+        }
+
         public static implicit operator OperateResult(Exception ex)
         {
             return CreateError(ex, TimeSpan.Zero);

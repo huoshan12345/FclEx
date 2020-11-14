@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Dawn;
-using FclEx.Extensions;
 using FclEx.Utils;
-using MoreLinq.Extensions;
 using Newtonsoft.Json.Linq;
 
 namespace FclEx
