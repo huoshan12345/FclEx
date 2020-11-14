@@ -1,66 +1,99 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Dawn;
 using FclEx.Utils;
 
 namespace FclEx.Actions
 {
     public class CommonAction
     {
-        public static CommonAction<T> Create<T>(Func<CancellationToken, T> func)
+        public static CommonAction<T> Create<T>(Func<CancellationToken, T> func, bool excuteSafely = false)
         {
-            return new CommonAction<T>(t => func(t).ToTask());
+            return new CommonAction<T>(t => OperateResult.CreateSuccess(func(t)), excuteSafely);
         }
 
-        public static CommonAction<T> Create<T>(Func<CancellationToken, Task<T>> func)
+        public static CommonAction<T> Create<T>(Func<CancellationToken, Task<T>> func, bool excuteSafely = false)
         {
-            return new CommonAction<T>(func);
+            return new CommonAction<T>(async t => OperateResult.CreateSuccess(await func(t).DonotCapture()), excuteSafely);
         }
 
-        public static CommonAction<T> Create<T>(Func<T> func)
+        public static CommonAction<T> Create<T>(Func<CancellationToken, OperateResult<T>> func, bool excuteSafely = false)
         {
-            return new CommonAction<T>(t => func().ToTask());
+            return new CommonAction<T>(t => func(t).ToTask(), excuteSafely);
         }
 
-        public static WrappedCommonAction<T> Create<T>(Func<CancellationToken, Task<OperateResult<T>>> func)
+        public static CommonAction<T> Create<T>(Func<CancellationToken, Task<OperateResult<T>>> func, bool excuteSafely = false)
         {
-            return new WrappedCommonAction<T>(func);
+            return new CommonAction<T>(func, excuteSafely);
         }
 
-        public static WrappedCommonAction<T> Create<T>(Func<CancellationToken, OperateResult<T>> func)
+        public static VoidCommonAction Create(Action<CancellationToken> func, bool excuteSafely = false)
         {
-            return new WrappedCommonAction<T>(t => func(t).ToTask());
+            return new VoidCommonAction(t =>
+            {
+                func(t);
+                return OperateResult.CreateSuccess(default(Unit));
+            }, excuteSafely);
         }
 
-        public static CommonAction<T> Create<T>(Func<Task<T>> func)
+        public static VoidCommonAction Create(Func<CancellationToken, Task> func, bool excuteSafely = false)
         {
-            return new CommonAction<T>(t => func());
+            return new VoidCommonAction(async t =>
+            {
+                await func(t).DonotCapture();
+                return OperateResult.CreateSuccess(default(Unit));
+            }, excuteSafely);
         }
 
-        public static WrappedCommonAction<T> Create<T>(Func<Task<OperateResult<T>>> func)
+        public static VoidCommonAction Create(Func<CancellationToken, OperateResult> func, bool excuteSafely = false)
         {
-            return new WrappedCommonAction<T>(t => func());
+            return new VoidCommonAction(t => func(t), excuteSafely);
         }
 
-        public static WrappedCommonAction<T> Create<T>(Func<OperateResult<T>> func)
+        public static VoidCommonAction Create(Func<CancellationToken, Task<OperateResult>> func, bool excuteSafely = false)
         {
-            return new WrappedCommonAction<T>(t => func().ToTask());
+            return new VoidCommonAction(async t => await func(t).DonotCapture(), excuteSafely);
         }
     }
 
     public readonly struct CommonAction<T> : IAction<T>
     {
-        private readonly Func<CancellationToken, Task<T>> _func;
+        private readonly bool _excuteSafely;
+        private readonly Func<CancellationToken, Task<OperateResult<T>>> _func;
 
-        public CommonAction(Func<CancellationToken, Task<T>> func)
+        public CommonAction(Func<CancellationToken, Task<OperateResult<T>>> func, bool excuteSafely)
         {
-            _func = func ?? throw new ArgumentNullException(nameof(func));
+            _excuteSafely = excuteSafely;
+            _func = Guard.Argument(func, nameof(func)).NotNull();
         }
 
-        public async Task<OperateResult<T>> ExecuteAsync(CancellationToken token = default)
+        public Task<OperateResult<T>> ExecuteAsync(CancellationToken token = default)
         {
             var func = _func;
-            return await OperateResult.ExcuteAsync(() => func(token)).DonotCapture();
+            return _excuteSafely
+                ? OperateResult.ExcuteAsync(() => func(token))
+                : func(token);
+        }
+    }
+
+    public readonly struct VoidCommonAction : IAction<Unit>
+    {
+        private readonly bool _excuteSafely;
+        private readonly Func<CancellationToken, Task<OperateResult<Unit>>> _func;
+
+        public VoidCommonAction(Func<CancellationToken, Task<OperateResult<Unit>>> func, bool excuteSafely)
+        {
+            _excuteSafely = excuteSafely;
+            _func = Guard.Argument(func, nameof(func)).NotNull();
+        }
+
+        public Task<OperateResult<Unit>> ExecuteAsync(CancellationToken token = default)
+        {
+            var func = _func;
+            return _excuteSafely
+                ? OperateResult.ExcuteAsync(() => func(token))
+                : func(token);
         }
     }
 }

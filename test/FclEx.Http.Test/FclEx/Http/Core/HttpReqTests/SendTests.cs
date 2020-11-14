@@ -14,7 +14,6 @@ namespace FclEx.Http.Core.HttpReqTests
         {
             "http://www.baidu.com/",
             "http://www.sina.com.cn/",
-            "https://weibo.com/",
             "http://www.sohu.com/",
             "http://www.qq.com/",
         };
@@ -62,7 +61,7 @@ namespace FclEx.Http.Core.HttpReqTests
             var body = res.ResponseString.ToJToken()["body"];
             Assert.NotNull(body);
             var actual = body.ToObject<List<int>>();
-            Assert.True(list.SequenceEqual(actual));
+            Assert.True(list.SequenceEqual(actual!));
         }
     }
 }

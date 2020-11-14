@@ -4,7 +4,7 @@ namespace FclEx.TypeCasters
 {
     public interface ITypeCaster
     {
-        [return: MaybeNull]
+        [return: NotNullIfNotNull("obj"), MaybeNull]
         TOutput CastTo<TInput, TOutput>([AllowNull] TInput obj);
     }
 }

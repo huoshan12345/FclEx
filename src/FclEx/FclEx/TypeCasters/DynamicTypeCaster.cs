@@ -9,11 +9,11 @@ namespace FclEx.TypeCasters
     public class DynamicTypeCaster : AbstractTypeCaster<DynamicTypeCaster>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [return: MaybeNull]
+        [return: NotNullIfNotNull("obj"), MaybeNull]
         public override TOutput CastTo<TInput, TOutput>([AllowNull] TInput obj)
         {
-            return obj == null 
-                ? default 
+            return obj == null
+                ? default
                 : (TOutput)((dynamic)obj);
         }
     }

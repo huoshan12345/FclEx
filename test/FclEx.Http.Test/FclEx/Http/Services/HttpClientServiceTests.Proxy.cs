@@ -7,7 +7,7 @@ using Xunit;
 
 namespace FclEx.Http.Services
 {
-    public partial class HttpClientServiceTests
+    partial class HttpClientServiceTests
     {
         public static IWebProxyExt[] ProxyList { get; } =
         {
@@ -30,9 +30,7 @@ namespace FclEx.Http.Services
         {
             var service = new HttpClientService(true, proxy);
             var res = await service.SendAsync(HttpReq.Get(url).Timeout(15 * 1000));
-            if (res.HasError)
-                _output.WriteLine(res.Exception!.ToString());
-            Assert.False(res.HasError);
+            AssertExt.False(res.HasError, () => res.Exception!.ToString());
         }
     }
 }

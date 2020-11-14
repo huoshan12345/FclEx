@@ -10,7 +10,6 @@ using FclEx.Utils;
 using MoreLinq;
 using Xunit.Sdk;
 
-[assembly: InternalsVisibleTo("FclEx.Abp.Test")]
 namespace Xunit
 {
     public static partial class AssertExt
@@ -23,7 +22,7 @@ namespace Xunit
         private static readonly ConcurrentDictionary<Type, Func<object, object, bool>?> TypeEqualsDic
             = new ConcurrentDictionary<Type, Func<object, object, bool>?>();
 
-        private static IReadOnlyList<DataMemberInfo> GetDataMembers(Type type)
+        internal static IReadOnlyList<DataMemberInfo> GetDataMembers(Type type)
         {
             return TypeDataMemberDic.GetOrAdd(type, GetDataMembersInternal);
 
@@ -40,7 +39,7 @@ namespace Xunit
             }
         }
 
-        private static Func<object, object, bool>? GetEqualsMethod(Type? type)
+        internal static Func<object, object, bool>? GetEqualsMethod(Type? type)
         {
             return type == null
                 ? null
@@ -271,39 +270,7 @@ namespace Xunit
             }
         }
 
-        public static void EveryMemberEqual<T>(T expected, T actual, params string[] excludeMemberPaths)
-        {
-            var tree = BuildExcludeMemberTree(excludeMemberPaths);
-            var result = Equal(expected, actual, tree, false);
-            if (!result.equal)
-                throw new EqualException(result.expected, result.actual);
-        }
-
-        public static void NotEveryMemberEqual<T>(T expected, T actual, params string[] excludeMemberPaths)
-        {
-            var tree = BuildExcludeMemberTree(excludeMemberPaths);
-            var result = Equal(expected, actual, tree, false);
-            if (result.equal)
-                throw new NotEqualException(result.expected?.ToString(), result.actual?.ToString());
-        }
-
-        public static void EverySameNameMemberEqual<T1, T2>(T1 expected, T2 actual, params string[] excludeMemberPaths)
-        {
-            var tree = BuildExcludeMemberTree(excludeMemberPaths);
-            var result = Equal(expected, actual, tree, true);
-            if (!result.equal)
-                throw new EqualException(result.expected, result.actual);
-        }
-
-        public static void NotEverySameNameMemberEqual<T1, T2>(T1 expected, T2 actual, params string[] excludeMemberPaths)
-        {
-            var tree = BuildExcludeMemberTree(excludeMemberPaths);
-            var result = Equal(expected, actual, tree, true);
-            if (result.equal)
-                throw new NotEqualException(result.expected?.ToString(), result.actual?.ToString());
-        }
-
-        public readonly struct ExcludeMember
+        internal readonly struct ExcludeMember
         {
             public ExcludeMember(string name, bool isExcluded)
             {

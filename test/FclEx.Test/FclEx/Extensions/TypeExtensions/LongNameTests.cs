@@ -29,7 +29,7 @@ namespace FclEx.Extensions.TypeExtensions
             var type = method.GetGenericArguments().First();
             Assert.True(type.IsGenericParameter);
             var name = type.LongName();
-            Assert.Equal("FclEx.Test.Extensions.TypeExtensions.LongNameTests.Tester.T", name);
+            Assert.Equal("FclEx.Extensions.TypeExtensions.LongNameTests.Tester.T", name);
         }
     }
 }

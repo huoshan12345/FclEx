@@ -9,6 +9,8 @@ using FclEx.Helpers;
 using FclEx.Http.Core;
 using FclEx.Http.Core.Cookies;
 using FclEx.Utils;
+using Polly;
+using Polly.Retry;
 
 namespace FclEx.Http.Services
 {
@@ -18,14 +20,14 @@ namespace FclEx.Http.Services
         public static Task<HttpRes> GetAsync(this IHttpService http, string url, string? charSet = null, int? timeout = 10 * 1000, int retryTimes = 3, int delaySeconds = 0)
         {
             var req = HttpReq.Get(url)
-                .Compress()
                 .Timeout(timeout)
                 .CharSet(charSet);
-            return SendAsync(http, req, retryTimes, delaySeconds);
+            return http.SendAsync(req, retryTimes, delaySeconds);
         }
 
         public static async Task<HttpRes> SendAsync(this IHttpService http, HttpReq req, int retryTimes = 1, int delaySeconds = 0)
         {
+
             return await ActionHelper.TryAsync(async ()
                 => await http.ExecuteAsync(req).DonotCapture(),
                 retryTimes, delaySeconds, e => HttpRes.CreateError(req, e), false, HttpRes.EmptyRes)

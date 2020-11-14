@@ -113,7 +113,9 @@ namespace FclEx.Helpers
             if (throwOnFail && lastEx != null) throw lastEx;
             // waiting for https://github.com/dotnet/csharplang/issues/2946
 #pragma warning disable CS8603 // Possible null reference return.
-            return onFail == null || lastEx == null ? default : onFail(lastEx);
+            return onFail == null || lastEx == null 
+                ? defaultValue 
+                : onFail(lastEx);
 #pragma warning restore CS8603 // Possible null reference return.
         }
     }

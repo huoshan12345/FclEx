@@ -4,7 +4,6 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using FclEx.Utils;
 
-[assembly: InternalsVisibleTo("FclEx.Test")]
 namespace FclEx
 {
     public static class FclExStartup

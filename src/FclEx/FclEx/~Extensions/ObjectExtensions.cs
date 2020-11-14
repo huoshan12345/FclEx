@@ -14,14 +14,14 @@ namespace FclEx
     public static class ObjectExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [return: MaybeNull]
+        [return: NotNullIfNotNull("obj"), MaybeNull]
         public static T CastTo<T>(this object? obj)
         {
-            return DynamicTypeCaster.Instance.CastTo<object, T>(obj);
+            return DynamicTypeCaster.Instance.CastTo<object?, T>(obj);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [return: MaybeNull]
+        [return: NotNullIfNotNull("obj"), MaybeNull]
         public static TTarget CastTo<T, TTarget>([MaybeNull] this T obj)
         {
             return ExpressionTypeCaster.Instance.CastTo<T, TTarget>(obj);
@@ -40,7 +40,7 @@ namespace FclEx
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [return: MaybeNull]
+        [return: NotNullIfNotNull("obj"), MaybeNull]
         public static T DeepClone<T>([MaybeNull] this T obj)
         {
             if (obj is null)
@@ -56,7 +56,7 @@ namespace FclEx
             }
             else
             {
-                return obj.ToJson().ToJToken().ToObject<T>();
+                return obj.ToJson().ToJToken().ToObject<T>()!;
             }
         }
     }

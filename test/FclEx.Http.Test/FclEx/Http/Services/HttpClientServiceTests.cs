@@ -37,11 +37,7 @@ namespace FclEx.Http.Services
             {
                 var res = await HttpReq.Get("https://www.baidu.com")
                     .SendAsync(service);
-
-                if (res.HasError)
-                    _output.WriteLine(res.Exception.ToString());
-
-                Assert.False(res.HasError);
+                AssertExt.False(res.HasError, () => res.Exception!.ToString());
             }
         }
 
@@ -58,10 +54,8 @@ namespace FclEx.Http.Services
                 var res = await HttpReq.Get("http://www.baidu.com")
                     .SendAsync(last);
 
-                if (res.HasError)
-                    _output.WriteLine(res.Exception.ToString());
+                AssertExt.False(res.HasError, () => res.Exception!.ToString());
 
-                Assert.False(res.HasError);
                 service.Recreate();
             }
             Assert.NotEqual(first, last);
@@ -81,10 +75,8 @@ namespace FclEx.Http.Services
                 var res = await HttpReq.Get("https://www.baidu.com")
                     .SendAsync(last);
 
-                if (res.HasError)
-                    _output.WriteLine(res.Exception.ToString());
+                AssertExt.False(res.HasError, () => res.Exception!.ToString());
 
-                Assert.False(res.HasError);
                 await TaskHelper.DelayMilli(50);
             }
             Assert.NotEqual(first, last);
