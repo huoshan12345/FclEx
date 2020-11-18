@@ -20,6 +20,7 @@ namespace FclEx.Actions
             get => _logger;
             protected set
             {
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                 if (value != null)
                     _logger = value;
             }

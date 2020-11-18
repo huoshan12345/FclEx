@@ -11,7 +11,7 @@ namespace Xunit
         public static void True(bool condition, Func<string>? userMessage = null)
         {
             if (!condition)
-                Assert.False(condition, userMessage?.Invoke());
+                Assert.True(condition, userMessage?.Invoke());
         }
 
         public static void False(bool condition, Func<string>? userMessage = null)
