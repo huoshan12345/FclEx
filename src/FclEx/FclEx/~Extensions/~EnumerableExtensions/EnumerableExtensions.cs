@@ -40,9 +40,14 @@ namespace FclEx
             return string.Join(separator, strs.Select(m => m?.ToString()));
         }
 
-        public static IEnumerable<T> NotNull<T>(this IEnumerable<T> col)
+        public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> col) where T : class
         {
-            return col.Where(m => m != null);
+            return col.Where(m => m != null)!;
+        }
+
+        public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> col) where T : struct
+        {
+            return col.Where(m => m != null).Select(m => m.Get());
         }
 
         public static IEnumerable<T> WhereIf<T>(this IEnumerable<T> source, Func<T, bool> predicate, bool condition)

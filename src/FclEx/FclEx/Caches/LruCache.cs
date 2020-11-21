@@ -211,7 +211,8 @@ namespace FclEx.Caches
 
         public CacheStats Stats { get; }
 
-        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => new SafeEnumerator(this);
+        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
+            => LockEnumerator.Create(_list.Select(m => KvPair.Create(m.Key, m.Value)).GetEnumerator(), _lock);
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
@@ -298,38 +299,5 @@ namespace FclEx.Caches
             public KeyValue SetValue([AllowNull] TValue value) => new KeyValue(Key, value);
             public static implicit operator KeyValuePair<TKey, TValue>(KeyValue kv) => KvPair.Create(kv.Key, kv.Value!);
         }
-
-        internal readonly struct SafeEnumerator : IEnumerator<KeyValuePair<TKey, TValue>>
-        {
-            private readonly ReaderWriterLockSlim _lock;
-            private readonly IEnumerator<KeyValue> _inner;
-
-            public SafeEnumerator(LruCache<TKey, TValue> cache)
-            {
-                _lock = cache._lock;
-                _inner = cache._list.GetEnumerator();
-                _lock.EnterReadLock();
-            }
-
-            public bool MoveNext()
-            {
-                return _inner.MoveNext();
-            }
-
-            public void Reset()
-            {
-                _inner.Reset();
-            }
-
-            public KeyValuePair<TKey, TValue> Current => _inner.Current;
-
-            object IEnumerator.Current => Current;
-
-            public void Dispose()
-            {
-                _lock.ExitReadLock();
-            }
-        }
-
     }
 }

@@ -214,7 +214,8 @@ namespace FclEx.Caches
 
         public ICollection<TKey> Keys => Read(() => _list.Select(m => m.Key).AsReadOnly());
 
-        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => new SafeEnumerator(this);
+        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() 
+            => LockEnumerator.Create(_list.Select(m => KvPair.Create(m.Key, m.Value)).GetEnumerator(), _lock);
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
@@ -307,38 +308,6 @@ namespace FclEx.Caches
             public KvCount Incre() => new KvCount(Key, Value, Count + 1);
             public KvCount SetValue([AllowNull] TValue value) => new KvCount(Key, value, Count);
             public static implicit operator KeyValuePair<TKey, TValue>(KvCount kv) => KvPair.Create(kv.Key, kv.Value!);
-        }
-
-        internal readonly struct SafeEnumerator : IEnumerator<KeyValuePair<TKey, TValue>>
-        {
-            private readonly ReaderWriterLockSlim _lock;
-            private readonly IEnumerator<KvCount> _inner;
-
-            public SafeEnumerator(LfuCache<TKey, TValue> cache)
-            {
-                _lock = cache._lock;
-                _inner = cache._list.GetEnumerator();
-                _lock.EnterReadLock();
-            }
-
-            public bool MoveNext()
-            {
-                return _inner.MoveNext();
-            }
-
-            public void Reset()
-            {
-                _inner.Reset();
-            }
-
-            public KeyValuePair<TKey, TValue> Current => _inner.Current;
-
-            object IEnumerator.Current => Current;
-
-            public void Dispose()
-            {
-                _lock.ExitReadLock();
-            }
         }
 
         private T Read<T>(Func<T> func)
