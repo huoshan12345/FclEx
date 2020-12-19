@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using FclEx.Http.Services;
 using MoreLinq;
@@ -9,17 +10,17 @@ namespace FclEx.Http.Core
 {
     public static partial class HttpReqExtensions
     {
-        public static HttpReq AddQueryValue(this HttpReq req, string key, object value) => req.AddQueryValue(key, value.ToStringOrEmpty());
+        public static HttpReq AddQueryValue<T>(this HttpReq req, string key, T? value) => req.AddQueryValue(key, value.ToStringOrEmpty());
 
-        public static HttpReq AddQueryValue(this HttpReq req, KeyValuePair<string, string> pair) => req.AddQueryValue(pair.Key, pair.Value);
+        public static HttpReq AddQueryValue(this HttpReq req, KeyValuePair<string, string?> pair) => req.AddQueryValue(pair.Key, pair.Value);
 
-        public static HttpReq AddQueryValue(this HttpReq req, Tuple<string, string> pair) => req.AddQueryValue(pair.Item1, pair.Item2);
+        public static HttpReq AddQueryValue(this HttpReq req, Tuple<string, string?> pair) => req.AddQueryValue(pair.Item1, pair.Item2);
 
-        public static HttpReq AddQueryValue(this HttpReq req, (string, string) pair) => req.AddQueryValue(pair.Item1, pair.Item2);
+        public static HttpReq AddQueryValue(this HttpReq req, (string, string?) pair) => req.AddQueryValue(pair.Item1, pair.Item2);
 
-        public static HttpReq AddQueryValue(this HttpReq req, IEnumerable<KeyValuePair<string, string>> paras)
+        public static HttpReq AddQueryValue(this HttpReq req, IEnumerable<KeyValuePair<string, string?>> paras)
         {
-            paras?.ForEach(m => req.AddQueryValue(m));
+            paras.ForEach(m => req.AddQueryValue(m));
             return req;
         }
 
@@ -29,15 +30,15 @@ namespace FclEx.Http.Core
             return req.AddQueryValue(pair[0], pair.Length > 1 ? pair[1] : "");
         }
 
-        public static HttpReq AddFormValue(this HttpReq req, string key, object value) => req.AddFormValue(key, value.ToStringOrEmpty());
+        public static HttpReq AddFormValue<T>(this HttpReq req, string key, T? value) => req.AddFormValue(key, value.ToStringOrEmpty());
 
-        public static HttpReq AddFormValue(this HttpReq req, KeyValuePair<string, string> pair) => req.AddFormValue(pair.Key, pair.Value);
+        public static HttpReq AddFormValue(this HttpReq req, KeyValuePair<string, string?> pair) => req.AddFormValue(pair.Key, pair.Value);
 
-        public static HttpReq AddFormValue(this HttpReq req, Tuple<string, string> pair) => req.AddFormValue(pair.Item1, pair.Item2);
+        public static HttpReq AddFormValue(this HttpReq req, Tuple<string, string?> pair) => req.AddFormValue(pair.Item1, pair.Item2);
 
-        public static HttpReq AddFormValue(this HttpReq req, (string, string) pair) => req.AddFormValue(pair.Item1, pair.Item2);
+        public static HttpReq AddFormValue(this HttpReq req, (string, string?) pair) => req.AddFormValue(pair.Item1, pair.Item2);
 
-        public static HttpReq AddFormValue(this HttpReq req, IEnumerable<KeyValuePair<string, string>> paras)
+        public static HttpReq AddFormValue(this HttpReq req, IEnumerable<KeyValuePair<string, string?>> paras)
         {
             paras?.ForEach(m => req.AddFormValue(m));
             return req;
@@ -49,29 +50,29 @@ namespace FclEx.Http.Core
             return req.AddFormValue(pair[0], pair.Length > 1 ? pair[1] : "");
         }
 
-        public static HttpReq AddDataIfNotEmpty(this HttpReq req, string key, string value)
+        public static HttpReq AddDataIfNotEmpty(this HttpReq req, string key, string? value)
         {
             return AddDataIf(req, !value.IsNullOrEmpty(), key, value);
         }
 
-        public static HttpReq AddDataIf(this HttpReq req, bool condition, string key, string value)
+        public static HttpReq AddDataIf(this HttpReq req, bool condition, string key, string? value)
         {
             return condition ? AddData(req, key, value) : req;
         }
 
-        public static HttpReq AddData(this HttpReq req, string key, string value)
+        public static HttpReq AddData(this HttpReq req, string key, string? value)
         {
             return req.Method == HttpMethodType.Get
                 ? req.AddQueryValue(key, value)
                 : req.AddFormValue(key, value);
         }
 
-        public static HttpReq AddData<T>(this HttpReq req, string key, T value)
+        public static HttpReq AddData<T>(this HttpReq req, string key, T? value)
         {
             return AddData(req, key, value.ToStringOrEmpty());
         }
 
-        public static HttpReq AddData(this HttpReq req, IEnumerable<KeyValuePair<string, string>> paras)
+        public static HttpReq AddData(this HttpReq req, IEnumerable<KeyValuePair<string, string?>> paras)
         {
             return req.Method == HttpMethodType.Get
                 ? req.AddQueryValue(paras)
@@ -184,7 +185,7 @@ namespace FclEx.Http.Core
         {
             if (query == null) throw new ArgumentNullException(nameof(query));
             var index = query.IndexOf("?", StringComparison.Ordinal);
-            if (index >= 0) query = query.Substring(index + 1);
+            if (index >= 0) query = query[(index + 1)..];
             return ParseQueryStringInternal(query);
         }
 

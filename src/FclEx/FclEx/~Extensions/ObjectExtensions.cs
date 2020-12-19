@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Linq.Expressions;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization.Formatters.Binary;
 using FclEx.TypeCasters;
-using FclEx.Utils;
 
 namespace FclEx
 {
@@ -22,26 +17,26 @@ namespace FclEx
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [return: NotNullIfNotNull("obj"), MaybeNull]
-        public static TTarget CastTo<T, TTarget>([MaybeNull] this T obj)
+        public static TTarget CastTo<T, TTarget>([AllowNull] this T obj)
         {
             return ExpressionTypeCaster.Instance.CastTo<T, TTarget>(obj);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ToStringOrEmpty<T>([MaybeNull] this T obj)
+        public static string ToStringOrEmpty<T>([AllowNull] this T obj)
         {
             return obj is null ? string.Empty : obj.ToString();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int GetHashCodeSafely<T>([MaybeNull] this T obj)
+        public static int GetHashCodeSafely<T>([AllowNull] this T obj)
         {
             return obj is null ? 0 : obj.GetHashCode();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [return: NotNullIfNotNull("obj"), MaybeNull]
-        public static T DeepClone<T>([MaybeNull] this T obj)
+        public static T DeepClone<T>([AllowNull] this T obj)
         {
             if (obj is null)
                 return obj;

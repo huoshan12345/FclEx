@@ -60,7 +60,7 @@ namespace Microsoft.Extensions.Logging
 
         public static IDisposable PushProperty<T>(this ILogger logger, IEnumerable<KeyValuePair<string, T>> properties)
         {
-            return logger.PushProperty(properties.Touch().Select(m => KvPair.Create(m.Key, (object)m.Value)));
+            return logger.PushProperty(properties.Touch().Select(m => KvPair.Create(m.Key, (object)m.Value!)));
         }
 
         public static IDisposable PushProperty(this ILogger logger, params KeyValuePair<string, object>[] properties)

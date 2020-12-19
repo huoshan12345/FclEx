@@ -26,9 +26,20 @@ namespace FclEx.Utils
         public OperateResult<TTarget> ToExplicit<TTarget>()
         {
             if (Successful)
-                throw new InvalidOperationException("cannot convert to explicit when result is successful");
+            {
+                if (typeof(TTarget) == typeof(Unit))
+                {
+                    return CreateSuccess(default(TTarget)!, Elapsed);
+                }
+                else
+                {
+                    throw new InvalidOperationException("cannot convert to explicit when result is successful");
+                }
+            }
             else
+            {
                 return new OperateResult<TTarget>(Code, Exception!, Elapsed);
+            }
         }
 
         void IOperateResult<Unit>.Deconstruct(out bool successful, out TimeSpan elapsed, out Unit obj, out Exception? ex)

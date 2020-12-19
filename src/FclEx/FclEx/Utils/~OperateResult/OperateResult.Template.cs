@@ -122,11 +122,16 @@ namespace FclEx.Utils
             return result.ToTask();
         }
 
-        public OperateResult<TTarget> ToExplicit<TTarget>()
+        public OperateResult<TDest> ToExplicit<TDest>(Func<T, TDest> func)
         {
             return Successful
-                ? new OperateResult<TTarget>(Result.CastTo<TTarget>(), Elapsed)
-                : new OperateResult<TTarget>(Code, Exception!, Elapsed);
+                ? new OperateResult<TDest>(func(Result!), Elapsed)
+                : new OperateResult<TDest>(Code, Exception!, Elapsed);
+        }
+
+        public OperateResult<TDest> ToExplicit<TDest>()
+        {
+            return ToExplicit(m => m.CastTo<TDest>())!;
         }
 
         void IOperateResult.Deconstruct(out bool successful, out TimeSpan elapsed, out Exception? ex)
