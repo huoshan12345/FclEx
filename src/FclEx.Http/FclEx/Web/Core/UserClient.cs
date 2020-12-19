@@ -22,37 +22,39 @@ namespace FclEx.Web.Core
         private IUserAccount? _account;
         private IHttpService? _httpService;
 
-        protected AsyncLock LockerOfLogin { get; } = new AsyncLock();
+        protected AsyncLock LoginLocker { get; } = new();
         protected bool _isDisposed;
 
-        public int Id { get; } = Interlocked.Increment(ref _id);
+        public virtual int Id { get; } = Interlocked.Increment(ref _id);
+
         [AllowNull]
-        public IHttpService HttpService
+        public virtual IHttpService HttpService
         {
             get => _httpService ??= new HttpClientService { Logger = Logger };
             set
             {
-                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                if (value != null)
-                {
-                    _httpService = value;
-                    _httpService.Logger = Logger;
-                }
-            }
-        }
-        public IUserAccount? Account
-        {
-            get => _account;
-            set
-            {
-                if (_account == null && value == null)
+                if (value == null)
                     return;
 
-                _account = value;
+                _httpService = value;
+                _httpService.Logger = Logger;
+            }
+        }
+
+        [AllowNull]
+        public virtual IUserAccount Account
+        {
+            get => _account ??= new UserAccount();
+            set
+            {
+                if (value != null)
+                {
+                    _account = value;
+                }
                 AccountStatus = AccountStatus.Normal;
             }
         }
-        public AccountStatus AccountStatus
+        public virtual AccountStatus AccountStatus
         {
             get => _accountStatus;
             set
@@ -64,10 +66,10 @@ namespace FclEx.Web.Core
                 OnAccountStatusChanged.Invoke(_accountStatus);
             }
         }
-        public ILogger Logger => _logger.Value;
-        public event Action<AccountStatus> OnAccountStatusChanged = status => { };
-        public ISession Session { get; } = new Session();
-        public bool IsOnline => Session.State == SessionState.Online;
+        public virtual ILogger Logger => _logger.Value;
+        public virtual event Action<AccountStatus> OnAccountStatusChanged = status => { };
+        public virtual ISession Session { get; } = new Session();
+        public virtual bool IsOnline => Session.State == SessionState.Online;
 
         protected UserClient(IUserAccount? account = null, ILoggerFactory? loggerFactory = null)
         {
@@ -124,30 +126,29 @@ namespace FclEx.Web.Core
                 return OperateResult.Success;
             }
 
-            using (await LockerOfLogin.LockAsync(token))
+            using var _ = await LoginLocker.LockAsync(token);
+            
+            if (IsOnline)
             {
-                if (IsOnline)
-                {
-                    Logger.LogTrace("Already online");
-                    return OperateResult.Success;
-                }
+                Logger.LogTrace("Already online");
+                return OperateResult.Success;
+            }
 
-                if (token.IsCancellationRequested)
-                    return OperateResult.Cancel;
+            if (token.IsCancellationRequested)
+                return OperateResult.Cancel;
 
-                try
-                {
-                    Session.State = SessionState.Logining;
-                    var res = await loginAction(token)
-                        .Ok(_ => Session.Online())
-                        .DonotCapture();
-                    return res;
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError(ex, "An error occured when logging in: " + ex.Message);
-                    return ex;
-                }
+            try
+            {
+                Session.State = SessionState.Logining;
+                var res = await loginAction(token)
+                    .Ok(_ => Session.Online())
+                    .DonotCapture();
+                return res;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "An error occured when logging in: " + ex.Message);
+                return ex;
             }
         }
 
@@ -158,7 +159,7 @@ namespace FclEx.Web.Core
 
         public async Task WaitForLogin(CancellationToken token = default)
         {
-            using (await LockerOfLogin.LockAsync(token)) { }
+            using (await LoginLocker.LockAsync(token)) { }
         }
 
         public Task<OperateResult> Logout(CancellationToken token = default)
@@ -190,11 +191,11 @@ namespace FclEx.Web.Core
 
         public void Dispose()
         {
-            if (!_isDisposed)
-            {
-                DisposeInternal();
-                _isDisposed = true;
-            }
+            if (_isDisposed)
+                return;
+
+            _isDisposed = true;
+            DisposeInternal();
         }
     }
 }

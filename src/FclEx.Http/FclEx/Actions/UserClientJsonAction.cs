@@ -129,21 +129,9 @@ namespace FclEx.Actions
             return OperateResult.CreateError<TResult>("The response string is empty", response.ExcuteTime);
         }
 
-        protected override async Task<OperateResult<TResult>> ExecuteInternalAsync(CancellationToken token = default)
-        {
-            var result = await base.ExecuteInternalAsync(token).DonotCapture();
-            if (!result.Successful && !Client.IsOnline && LoginAndRetry)
-            {
-                await Client.FakeLogin(true, token).DonotCapture();
-                result = await base.ExecuteInternalAsync(token).DonotCapture();
-            }
-            return result;
-        }
-
         protected abstract override string Url { get; }
         protected abstract override HttpReqType ReqType { get; }
         protected virtual string? JsonResultPath { get; } = null;
-        protected virtual bool LoginAndRetry { get; } = false;
     }
 
     public abstract class UserClientJsonAction<TClient, TResult> : UserClientJsonAction<TClient, TResult, TResult>
