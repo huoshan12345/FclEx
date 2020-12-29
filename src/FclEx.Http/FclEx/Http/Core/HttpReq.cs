@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -14,16 +15,8 @@ namespace FclEx.Http.Core
 {
     public class HttpReq
     {
-        private Encoding _encoding = Encoding.UTF8;
-        private readonly UriBuilder _uriBuilder;
-        public Uri Uri => _uriBuilder.Uri;
-
-        public Encoding Encoding
-        {
-            get => _encoding;
-            set => _encoding = value ?? throw new ArgumentNullException(nameof(Encoding));
-        }
-
+        private readonly UriCreator _uriCreator;
+        public Encoding Encoding { get; set; } = Encoding.UTF8;
         public bool ThrowOnNonSuccessCode { get; set; } = true;
         public ArraySegment<byte> Body { get; set; }
         public HttpMethodType Method { get; set; }
@@ -37,22 +30,16 @@ namespace FclEx.Http.Core
         public bool ReadResultHeader { get; set; } = true;
         public bool ReadResultContent { get; set; } = true;
 
-        public Dictionary<string, string?> HeaderMap { get; } = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
-
-        private Dictionary<string, string>? _queryMap;
-        public Dictionary<string, string> QueryMap => _queryMap ??= new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-        private Dictionary<string, string>? _formMap;
-        public Dictionary<string, string> FormMap => _formMap ??= new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-        private Dictionary<HttpFileUploadInfo, byte[]>? _fileMap;
-        public Dictionary<HttpFileUploadInfo, byte[]> FileMap => _fileMap ??= new Dictionary<HttpFileUploadInfo, byte[]>();
+        public NameValueCollection QueryMap => _uriCreator.QueryMap;
+        public Dictionary<string, string?> HeaderMap { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, string> FormMap { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<HttpFileUploadInfo, byte[]> FileMap{ get; } = new();
 
         public string? ContentType
         {
             get
             {
-                var type = HeaderMap.GetOr(HttpKnownHeaderNames.ContentType);
+                var type = HeaderMap.Get(HttpKnownHeaderNames.ContentType);
                 return type == HttpConstants.MultiPartContentType
                     ? "multipart/form-data; boundary=" + Boundary
                     : type;
@@ -62,47 +49,40 @@ namespace FclEx.Http.Core
 
         public string? Referrer
         {
-            get => HeaderMap.GetOr(HttpKnownHeaderNames.Referrer);
+            get => HeaderMap.Get(HttpKnownHeaderNames.Referrer);
             set => HeaderMap[HttpKnownHeaderNames.Referrer] = value;
         }
 
         public string? Origin
         {
-            get => HeaderMap.GetOr(HttpKnownHeaderNames.Origin);
+            get => HeaderMap.Get(HttpKnownHeaderNames.Origin);
             set => HeaderMap[HttpKnownHeaderNames.Origin] = value;
         }
 
         public string? UserAgent
         {
-            get => HeaderMap.GetOr(HttpKnownHeaderNames.UserAgent);
+            get => HeaderMap.Get(HttpKnownHeaderNames.UserAgent);
             set => HeaderMap[HttpKnownHeaderNames.UserAgent] = value;
         }
 
         public string? Boundary
         {
-            get => HeaderMap.GetOr(HttpConstants.Boundary);
+            get => HeaderMap.Get(HttpConstants.Boundary);
             set => HeaderMap[HttpConstants.Boundary] = value;
         }
 
         public HttpReq(Uri rawUrl, HttpMethodType method)
         {
-            _uriBuilder = rawUrl.IsAbsoluteUri
-                ? new UriBuilder(rawUrl)
-                : new UriBuilder(Uri.UriSchemeHttp, "localhost", 80, rawUrl.ToString());
+            _uriCreator = new UriCreator(rawUrl);
 
-            if (!_uriBuilder.Query.IsNullOrEmpty())
-            {
-                var dic = _uriBuilder.Query.ParseQueryString();
-                foreach (string key in dic)
-                {
-                    if (key != null)
-                        QueryMap.Add(key, dic[key]);
-                }
-                _uriBuilder.Query = string.Empty;
-            }
-            ContentType = method == HttpMethodType.Get ? HttpConstants.DefaultGetContentType : HttpConstants.DefaultPostContentType;
+            ContentType = method == HttpMethodType.Get
+                ? HttpConstants.DefaultGetContentType
+                : HttpConstants.DefaultPostContentType;
+
             Method = method;
+
             AddHeader(HttpKnownHeaderNames.UserAgent, HttpConstants.DefaultUserAgent);
+
             if (UserName.IsValid() && Password.IsValid())
             {
                 this.BasicAuth(UserName, Password);
@@ -115,19 +95,19 @@ namespace FclEx.Http.Core
         public HttpReq(string rawUrl, HttpMethodType method)
             : this(new Uri(rawUrl, UriKind.RelativeOrAbsolute), method) { }
 
-        public static HttpReq Json(Uri url) => new HttpReq(url, HttpMethodType.Post) { ContentType = HttpConstants.JsonContentType };
+        public static HttpReq Json(Uri url) => new(url, HttpMethodType.Post) { ContentType = HttpConstants.JsonContentType };
         public static HttpReq Json(string url) => Json(new Uri(url, UriKind.RelativeOrAbsolute));
 
-        public static HttpReq Form(Uri url) => new HttpReq(url, HttpMethodType.Post) { ContentType = HttpConstants.FormContentType };
+        public static HttpReq Form(Uri url) => new(url, HttpMethodType.Post) { ContentType = HttpConstants.FormContentType };
         public static HttpReq Form(string url) => Form(new Uri(url, UriKind.RelativeOrAbsolute));
 
-        public static HttpReq Get(Uri url) => new HttpReq(url, HttpMethodType.Get) { ContentType = HttpConstants.DefaultGetContentType };
+        public static HttpReq Get(Uri url) => new(url, HttpMethodType.Get) { ContentType = HttpConstants.DefaultGetContentType };
         public static HttpReq Get(string url) => Get(new Uri(url, UriKind.RelativeOrAbsolute));
 
-        public static HttpReq Upload(Uri url) => new HttpReq(url, HttpMethodType.Post) { ContentType = HttpConstants.ByteArrayContentType };
+        public static HttpReq Upload(Uri url) => new(url, HttpMethodType.Post) { ContentType = HttpConstants.ByteArrayContentType };
         public static HttpReq Upload(string url) => Upload(new Uri(url, UriKind.RelativeOrAbsolute));
 
-        public static HttpReq MultiPart(Uri url) => new HttpReq(url, HttpMethodType.Post)
+        public static HttpReq MultiPart(Uri url) => new(url, HttpMethodType.Post)
         {
             Boundary = "----WebKitFormBoundaryImw0tVH7wlMdFALP",
             ContentType = HttpConstants.MultiPartContentType,
@@ -148,76 +128,43 @@ namespace FclEx.Http.Core
         }
         public static HttpReq Create(string url, HttpReqType reqType) => Create(new Uri(url, UriKind.RelativeOrAbsolute), reqType);
 
-        public string? Fragment
+        public string Fragment
         {
-            get => _uriBuilder.Fragment;
-            set => _uriBuilder.Fragment = value;
+            get => _uriCreator.Fragment;
+            set => _uriCreator.Fragment = value;
         }
-        public string? Host
+        public string Host
         {
-            get => _uriBuilder.Host;
-            set
-            {
-                if (value.IsNullOrEmpty())
-                {
-                    _uriBuilder.Host = value;
-                    return;
-                }
-
-                CommonRegex.Scheme.MatchAndDo(value!, m =>
-                {
-                    Scheme = m.Groups[1].Value;
-                    value = value!.TrimStart(m.Value);
-                });
-                var match = CommonRegex.HostPort.Match(value);
-                if (!match.Success) match = CommonRegex.Ipv6HostPort.Match(value);
-                if (match.Success)
-                {
-                    var h = match.Groups[1].Value;
-                    var p = match.TryGetInt(2, 80);
-                    if (h != Host || p != Port)
-                    {
-                        _uriBuilder.Host = h;
-                        _uriBuilder.Port = p;
-                    }
-                }
-                else _uriBuilder.Host = value;
-            }
+            get => _uriCreator.Host;
+            set => _uriCreator.Host = value;
         }
-        public string? UserName
+        public string UserName
         {
-            get => _uriBuilder.UserName;
-            set => _uriBuilder.UserName = value;
+            get => _uriCreator.UserName;
+            set => _uriCreator.UserName = value;
         }
-        public string? Password
+        public string Password
         {
-            get => _uriBuilder.Password;
-            set => _uriBuilder.Password = value;
+            get => _uriCreator.Password;
+            set => _uriCreator.Password = value;
         }
-        public string? Path
+        public string Path
         {
-            get => _uriBuilder.Path;
-            set => _uriBuilder.Path = value;
+            get => _uriCreator.Path;
+            set => _uriCreator.Path = value;
         }
         public int Port
         {
-            get => _uriBuilder.Port;
-            set => _uriBuilder.Port = value;
+            get => _uriCreator.Port;
+            set => _uriCreator.Port = value;
         }
-        public string? Scheme
+        public string Scheme
         {
-            get => _uriBuilder.Scheme;
-            set => _uriBuilder.Scheme = value;
+            get => _uriCreator.Scheme;
+            set => _uriCreator.Scheme = value;
         }
-        
-        public string GetUrl()
-        {
-            if (_queryMap.IsNullOrEmpty()) return Uri.ToString();
-            _uriBuilder.Query = _queryMap!.ToQueryStr();
-            var url = Uri.AbsoluteUri;
-            _uriBuilder.Query = string.Empty;
-            return url;
-        }
+
+        public Uri GetUri() => _uriCreator.GetUri();
 
         public HttpReq AddQueryValue(string key, string? value)
         {
@@ -240,21 +187,12 @@ namespace FclEx.Http.Core
             return this;
         }
 
-        public HttpReq TryAddHeader(string key, string? value)
-        {
-            Guard.Argument(key, nameof(key)).NotNull();
-            var k = key.Trim();
-            if (!HeaderMap.ContainsKey(k))
-                HeaderMap[k] = value.ToStringOrEmpty().Trim();
-            return this;
-        }
-
         public ArraySegment<byte> GetData()
         {
             if (!Body.Array.IsNullOrEmpty())
                 return Body;
 
-            var type = HeaderMap.GetOr(HttpKnownHeaderNames.ContentType);
+            var type = HeaderMap.Get(HttpKnownHeaderNames.ContentType);
             switch (type)
             {
                 case HttpConstants.FormContentType: return FormMap.ToQueryStr().ToBytes(Encoding).ToSegment();

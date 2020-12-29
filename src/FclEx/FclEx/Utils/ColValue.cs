@@ -12,12 +12,13 @@ namespace FclEx.Utils
         public static IList<T> EmptyList<T>() => Array.Empty<T>();
         public static IReadOnlyList<T> EmptyReadOnlyList<T>() => Array.Empty<T>();
 
-        public static ReadOnlyDictionary<TKey, TValue> EmptyReadOnlyDic<TKey, TValue>() => Cache<TKey, TValue>.EmptyDic;
+        public static ReadOnlyDictionary<TKey, TValue> EmptyReadOnlyDic<TKey, TValue>() where TKey : notnull
+            => Cache<TKey, TValue>.EmptyDic;
 
-        internal class Cache<TKey, TValue>
+        internal class Cache<TKey, TValue> where TKey : notnull
         {
             public static readonly ReadOnlyDictionary<TKey, TValue> EmptyDic
-                = new ReadOnlyDictionary<TKey, TValue>(new Dictionary<TKey, TValue>());
+                = new(new Dictionary<TKey, TValue>());
         }
     }
 }

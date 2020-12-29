@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Dawn;
+using FclEx.Helpers;
 using FclEx.Utils;
 
 namespace FclEx.Actions
@@ -43,6 +44,73 @@ namespace FclEx.Actions
         {
             IAction<T> seed = new SuccessAction<T>(default!);
             return actions.Aggregate(seed, (sum, next) => sum.Next(next), m => m);
+        }
+
+        public static Task<OperateResult<T>> ExecuteAsync<T>(this IAction<T> action, CancellationToken token = default)
+        {
+            return action.ExecuteAsync(token);
+        }
+        
+        public static IAction<T> InsertIf<T, TNext>(this IAction<T> action, Func<T, bool> condition, Func<T, IAction<TNext>> next)
+        {
+            Guard.Argument(condition, nameof(condition)).NotNull();
+            Guard.Argument(next, nameof(next)).NotNull();
+
+            return action.Next(t => condition(t)
+                ? next(t).Map(m => t)
+                : new SuccessAction<T>(t));
+        }
+
+        public static IAction<Unit> ToUnTyped<T>(this IAction<T> action)
+        {
+            return action.Map(m => default(Unit));
+        }
+
+        public static IAction<T> RepeatUntil<T>(this IAction<T> actor, Func<T, bool>? until, TimeSpan delay = default, TimeSpan? timeout = null)
+        {
+            return CommonAction.Create<T>(async t =>
+            {
+                using var cts = t.WithTimeout(timeout > TimeSpan.Zero ? timeout : null);
+                while (!cts.IsCancellationRequested)
+                {
+                    var r = await actor.ExecuteAsync(t).DonotCapture();
+                    if (!r.Successful)
+                        return r;
+
+                    if (until != null && until(r.Result!))
+                        return r;
+
+                    await TaskHelper.Delay(delay, t);
+                }
+                return OperateResult.CreateCancel<T>();
+            });
+        }
+
+        public static IAction<T> RepeatUntil<T>(this IAction<T> actor, Func<T, bool>? until, int delayInSeconds = default, int? timeoutInSeconds = null)
+        {
+            return actor.RepeatUntil(until, TimeSpan.FromSeconds(delayInSeconds), timeoutInSeconds.HasValue ? TimeSpan.FromSeconds(timeoutInSeconds.Value) : null);
+        }
+
+        public static IAction<T> Error<T>(this IAction<T> action, Func<T, string> errorFunc)
+        {
+            Guard.Argument(errorFunc, nameof(errorFunc)).NotNull();
+            return action.Next(t => new ErrorAction<T>(errorFunc(t)));
+        }
+
+        public static IAction<TNext> Error<T, TNext>(this IAction<T> action, Func<T, string> errorFunc)
+        {
+            Guard.Argument(errorFunc, nameof(errorFunc)).NotNull();
+            return action.Next(t => new ErrorAction<T>(errorFunc(t))).Map(m => default(TNext))!;
+        }
+
+        public static IAction<T> Error<T>(this IAction<T> action, string? error)
+        {
+            return action.Error(_ => error ?? string.Empty);
+        }
+
+        public static IAction<TNext> Error<T, TNext>(this IAction<T> action, string? error)
+        {
+            return action.Error<T, TNext>(_ => error ?? string.Empty);
         }
     }
 }

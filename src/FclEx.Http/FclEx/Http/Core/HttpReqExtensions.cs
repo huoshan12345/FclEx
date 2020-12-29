@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
+using System.Web;
 using FclEx.Http.Services;
 using MoreLinq;
 
@@ -120,75 +121,6 @@ namespace FclEx.Http.Core
             return req;
         }
 
-        internal static NameValueCollection ParseQueryStringInternal(string query)
-        {
-            var result = new NameValueCollection();
-            if (query.Length == 0) return result;
-
-            var decoded = query;
-            var decodedLength = decoded.Length;
-            var namePos = 0;
-            var first = true;
-            while (namePos <= decodedLength)
-            {
-                int valuePos = -1, valueEnd = -1;
-                for (var q = namePos; q < decodedLength; q++)
-                {
-                    if ((valuePos == -1) && (decoded[q] == '='))
-                    {
-                        valuePos = q + 1;
-                    }
-                    else if (decoded[q] == '&')
-                    {
-                        valueEnd = q;
-                        break;
-                    }
-                }
-
-                if (first)
-                {
-                    first = false;
-                    if (decoded[namePos] == '?')
-                        namePos++;
-                }
-
-                string? name;
-                if (valuePos == -1)
-                {
-                    name = null;
-                    valuePos = namePos;
-                }
-                else
-                {
-                    name = decoded.Substring(namePos, valuePos - namePos - 1).UrlDecode();
-                }
-                if (valueEnd < 0)
-                {
-                    namePos = -1;
-                    valueEnd = decoded.Length;
-                }
-                else
-                {
-                    namePos = valueEnd + 1;
-                }
-                var value = decoded.Substring(valuePos, valueEnd - valuePos).UrlDecode();
-
-                result.Add(name, value);
-                if (namePos == -1)
-                    break;
-            }
-
-            return result;
-        }
-
-        public static NameValueCollection ParseQueryString(this string query)
-        {
-            if (query == null) throw new ArgumentNullException(nameof(query));
-            var index = query.IndexOf("?", StringComparison.Ordinal);
-            if (index >= 0) query = query[(index + 1)..];
-            return ParseQueryStringInternal(query);
-        }
-
         public static Task<HttpRes> SendAsync(this HttpReq req, int retryTimes = 0)
         {
             return HttpClientService.Default.SendAsync(req, retryTimes, 0);
@@ -208,5 +140,10 @@ namespace FclEx.Http.Core
         public static HttpReq AcceptString(this HttpReq req) => req.ResultType(HttpResultType.String);
 
         public static HttpReq AcceptBytes(this HttpReq req) => req.ResultType(HttpResultType.Byte);
+
+        public static HttpReq AddDataIfValid(this HttpReq req, string key, string? value)
+        {
+            return req.AddDataIf(value.IsValid(), key, value!);
+        }
     }
 }

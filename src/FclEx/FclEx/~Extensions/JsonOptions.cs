@@ -33,7 +33,7 @@ namespace FclEx
                    && string.Equals(DateTimeFormat, other.DateTimeFormat);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is JsonOptions other && Equals(other);
         }

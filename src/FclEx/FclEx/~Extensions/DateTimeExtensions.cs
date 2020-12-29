@@ -137,5 +137,10 @@ namespace FclEx
         {
             return time.ToUtc().AddHours(8);
         }
+
+        public static string ToCnTimeStr(this DateTime time)
+        {
+            return time.ToCnTime().ToCommon();
+        }
     }
 }

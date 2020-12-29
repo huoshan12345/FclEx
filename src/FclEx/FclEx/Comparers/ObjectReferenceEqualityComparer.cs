@@ -12,10 +12,10 @@ namespace FclEx.Comparers
     public sealed class ObjectReferenceEqualityComparer<T> : IEqualityComparer<T> where T : class
     {
         private static readonly Lazy<IEqualityComparer<T>> _defaultComparer
-            = new Lazy<IEqualityComparer<T>>(() => new ObjectReferenceEqualityComparer<T>(), true);
+            = new(() => new ObjectReferenceEqualityComparer<T>(), true);
         public static IEqualityComparer<T> Default => _defaultComparer.Value;
 
-        public bool Equals(T x, T y)
+        public bool Equals(T? x, T? y)
         {
             return ReferenceEquals(x, y);
         }

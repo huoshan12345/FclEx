@@ -31,12 +31,12 @@ namespace FclEx.Helpers
             return WriteLines(filePath, lines, encoding, FileMode.Create);
         }
 
-        public static string FirstExistOrNull(IEnumerable<string> paths)
+        public static string? FirstExistOrNull(IEnumerable<string> paths)
         {
             return paths.Touch().NotNull().FirstOrDefault(File.Exists);
         }
 
-        public static string LastExistOrNull(IEnumerable<string> paths)
+        public static string? LastExistOrNull(IEnumerable<string> paths)
         {
             return paths.Touch().NotNull().LastOrDefault(File.Exists);
         }

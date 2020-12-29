@@ -3,10 +3,6 @@
   <Import Project="..\..\nupkg\common.test.props" />
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\FclEx.Npoi\FclEx.Npoi.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="Files\dup.xlsx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

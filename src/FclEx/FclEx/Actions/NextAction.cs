@@ -25,7 +25,7 @@ namespace FclEx.Actions
             if (!result.Successful)
                 return result.ToExplicit<TNext>();
 
-            var nextActor = _next(result.Result!);
+            var nextActor = _next(result.Result);
             if (nextActor == null)
                 return Constant.NullNextError;
 
@@ -40,11 +40,11 @@ namespace FclEx.Actions
     public readonly struct NextAction<T> : IAction<T>
     {
         private readonly IAction<T> _action;
-        private readonly Func<T, IAction<T>> _next;
+        private readonly Func<T, IAction<T>?> _next;
         private readonly bool _errorWhenNextNull;
         private readonly bool _prevWhenNextError;
 
-        public NextAction(IAction<T> action, Func<T, IAction<T>> next,
+        public NextAction(IAction<T> action, Func<T, IAction<T>?> next,
             bool errorWhenNextNull, bool prevWhenNextError)
         {
             _errorWhenNextNull = errorWhenNextNull;

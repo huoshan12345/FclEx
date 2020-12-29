@@ -18,15 +18,15 @@ namespace FclEx.Http.Services
 
         public ArraySegmentContent(ArraySegment<byte> content, CancellationToken token, TimeSpan? timeout)
         {
-            Guard.Argument(content.Array, nameof(content.Array)).NotNull();
+            Guard.Argument(content.Array!, nameof(content.Array)).NotNull();
             _content = content;
             _token = token;
             _timeout = timeout;
         }
 
-        protected override async Task SerializeToStreamAsync(Stream stream, TransportContext context)
+        protected override async Task SerializeToStreamAsync(Stream stream, TransportContext? context)
         {
-            using var ms = CreateContentReadStream();
+            await using var ms = CreateContentReadStream();
             await ms.CopyToAsync(stream, _token, _timeout);
         }
 
@@ -43,7 +43,7 @@ namespace FclEx.Http.Services
 
         private Stream CreateContentReadStream()
         {
-            return new MemoryStream(_content.Array, _content.Offset, _content.Count, false);
+            return new MemoryStream(_content.Array!, _content.Offset, _content.Count, false);
         }
     }
 }

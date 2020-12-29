@@ -47,10 +47,10 @@ namespace FclEx.Web.Core
             get => _account ??= new UserAccount();
             set
             {
-                if (value != null)
-                {
-                    _account = value;
-                }
+                if (value == null)
+                    return;
+
+                _account = value;
                 AccountStatus = AccountStatus.Normal;
             }
         }
@@ -127,7 +127,7 @@ namespace FclEx.Web.Core
             }
 
             using var _ = await LoginLocker.LockAsync(token);
-            
+
             if (IsOnline)
             {
                 Logger.LogTrace("Already online");
@@ -142,6 +142,11 @@ namespace FclEx.Web.Core
                 Session.State = SessionState.Logining;
                 var res = await loginAction(token)
                     .Ok(_ => Session.Online())
+                    .Error(_ =>
+                    {
+                        if (Session.IsLogining())
+                            Session.Offline();
+                    })
                     .DonotCapture();
                 return res;
             }

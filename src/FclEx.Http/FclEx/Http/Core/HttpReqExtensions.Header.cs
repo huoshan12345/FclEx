@@ -3,12 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using Dawn;
 using MoreLinq;
 
 namespace FclEx.Http.Core
 {
     public static partial class HttpReqExtensions
     {
+        public static HttpReq TryAddHeader(this HttpReq req, string key, string? value)
+        {
+            var k = key.Trim();
+            if (!req.HeaderMap.ContainsKey(k))
+                req.HeaderMap[k] = value.ToStringOrEmpty().Trim();
+            return req;
+        }
+        
         public static HttpReq AddHeaderIfValid(this HttpReq req, string key, string? value)
         {
             return req.AddHeaderIf(value.IsValid(), key, value);

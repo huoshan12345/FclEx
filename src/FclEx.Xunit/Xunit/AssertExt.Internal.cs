@@ -142,7 +142,8 @@ namespace Xunit
             }
         }
 
-        internal static (bool equal, object? expected, object? actual) Equal(object? value1, object? value2, TreeNode<ExcludeMember>? excludeMemberTree, bool onlyCheckSameNameMembers, HashSet<(object, object)>? visited = null)
+        internal static (bool equal, object? expected, object? actual) Equal(object? value1, object? value2,
+            TreeNode<ExcludeMember>? excludeMemberTree, bool onlyCheckSameNameMembers, HashSet<(object, object)>? visited = null)
         {
             if (value1 == null && value2 == null)
                 return (true, null, null);
@@ -225,7 +226,7 @@ namespace Xunit
                     var v1 = m1.GetValue(value1);
                     var v2 = m2.GetValue(value2);
 
-                    if (visited.Contains((v1, v2)))
+                    if (v1 != null && v2 != null && visited.Contains((v1, v2)))
                         continue;
 
                     var result = Equal(v1, v2, exclude, onlyCheckSameNameMembers, visited);
@@ -248,8 +249,8 @@ namespace Xunit
 
                     var v1 = member.GetValue(value1);
                     var v2 = member.GetValue(value2);
-
-                    if (visited.Contains((v1, v2)))
+                    
+                    if (v1 != null && v2 != null && visited.Contains((v1, v2)))
                         continue;
 
                     var result = Equal(v1, v2, exclude, onlyCheckSameNameMembers, visited);

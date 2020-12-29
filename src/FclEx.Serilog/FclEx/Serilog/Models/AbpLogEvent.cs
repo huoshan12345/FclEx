@@ -66,7 +66,7 @@ namespace FclEx.Serilog.Models
                 var list = excludePaths.NotNull()
                     .SelectMany(m => jObj.SelectTokens(m))
                     .NotNull()
-                    .Distinct(m => m.Path)
+                    .Distinct(m => m!.Path)
                     .ToList();
                 list.ForEach(m => m.Parent?.Remove());
             }

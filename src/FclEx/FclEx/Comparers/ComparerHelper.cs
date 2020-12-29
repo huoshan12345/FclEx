@@ -5,12 +5,12 @@ namespace FclEx.Comparers
 {
     public static class ComparerHelper
     {
-        public static IComparer<T> Create<T, TKey>(Func<T, TKey> keySelector, IComparer<TKey>? comparer = null)
+        public static IComparer<T> Create<T, TKey>(Func<T?, TKey> keySelector, IComparer<TKey>? comparer = null)
         {
             return new KeyComparer<T, TKey>(keySelector, comparer);
         }
 
-        public static IComparer<T> Create<T>(Comparison<T> compareFunc)
+        public static IComparer<T> Create<T>(Comparison<T?> compareFunc)
         {
             return new CommonComparer<T>(compareFunc);
         }
@@ -18,7 +18,7 @@ namespace FclEx.Comparers
 
     public static class ComparerHelper<T>
     {
-        public static IComparer<T> Create<TKey>(Func<T, TKey> keySelector, IComparer<TKey>? comparer = null)
+        public static IComparer<T> Create<TKey>(Func<T?, TKey> keySelector, IComparer<TKey>? comparer = null)
         {
             return new KeyComparer<T, TKey>(keySelector, comparer);
         }

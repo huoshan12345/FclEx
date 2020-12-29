@@ -2,7 +2,7 @@
   <PropertyGroup>
     <RootNamespace></RootNamespace>
     <LangVersion>latest</LangVersion>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>

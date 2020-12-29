@@ -42,7 +42,7 @@ namespace FclEx.Http.Services
                 return;
 
             res.Headers.AddRange(HttpKnownHeaderNames.SetCookie, arr);
-            SaveCookies(response.RequestMessage.RequestUri, arr);
+            SaveCookies(response.RequestMessage?.RequestUri!, arr);
         }
 
         protected static void ReadHeader(HttpResponseMessage response, HttpRes res)
@@ -173,8 +173,8 @@ namespace FclEx.Http.Services
         private static async Task<byte[]> CopyToMemoryAsync(HttpContent content, CancellationToken token, TimeSpan? timeout)
         {
             var len = content.Headers.ContentLength ?? 0;
-            using var ms = new MemoryStream((int)len);
-            using (var stream = await content.ReadAsStreamAsync().DonotCapture())
+            await using var ms = new MemoryStream((int)len);
+            await using (var stream = await content.ReadAsStreamAsync(token).DonotCapture())
                 await stream.CopyToAsync(ms, token, timeout);
             ms.Seek(0, SeekOrigin.Begin);
             return ms.ToArray();
@@ -182,7 +182,7 @@ namespace FclEx.Http.Services
 
         protected static HttpRequestMessage GetHttpRequest(HttpReq req, CookieContainer cc, CancellationToken token)
         {
-            var request = new HttpRequestMessage(new HttpMethod(req.Method.ToString().ToUpper()), req.GetUrl());
+            var request = new HttpRequestMessage(new HttpMethod(req.Method.ToString().ToUpper()), req.GetUri());
             if (req.Method != HttpMethodType.Get)
             {
                 var bytes = req.GetData();
@@ -197,21 +197,20 @@ namespace FclEx.Http.Services
                 request.Headers.Add(key, value);
             }
 
-            var cookies = req.HeaderMap.GetOr(HttpKnownHeaderNames.Cookie);
+            var cookies = req.HeaderMap.Get(HttpKnownHeaderNames.Cookie);
             if (!cookies.IsNullOrEmpty())
             {
                 request.Headers.Add(HttpKnownHeaderNames.Cookie, cookies);
             }
-            if (cc != null)
-            {
-                var cookiesInCc = cc.GetCookieHeader(request.RequestUri);
-                request.Headers.Add(HttpKnownHeaderNames.Cookie, cookiesInCc);
-            }
+
+            var cookiesInCc = cc.GetCookieHeader(request.RequestUri!);
+            request.Headers.Add(HttpKnownHeaderNames.Cookie, cookiesInCc);
 
             return request;
         }
 
-        private async Task<HttpResponseMessage> SendAsync(HttpClient httpClient, HttpReq httpReq, CancellationToken token, HttpCompletionOption httpCompletionOption = HttpCompletionOption.ResponseHeadersRead)
+        private async Task<HttpResponseMessage> SendAsync(HttpClient httpClient, HttpReq httpReq, CancellationToken token,
+            HttpCompletionOption httpCompletionOption = HttpCompletionOption.ResponseHeadersRead)
         {
             var httpRequest = GetHttpRequest(httpReq, _cookieContainer, token);
             var res = await httpClient.SendAsync(httpRequest, httpCompletionOption, token).DonotCapture();
@@ -231,14 +230,13 @@ namespace FclEx.Http.Services
                     token.ThrowIfCancellationRequested();
                     var res = await SendAsync(httpClient, curReq, token).DonotCapture();
                     responses.Add(res);
-                    httpRes.RedirectUris.Add(res.RequestMessage.RequestUri);
+                    httpRes.RedirectUris.Add(res.RequestMessage?.RequestUri!);
                     if (httpReq.ReadResultCookie)
                         ReadCookies(res, httpRes);
 
-                    if (!res.IsRedirection())
+                    if (!res.TryGetRedirection(out var uri))
                         break;
 
-                    var uri = res.GetRedirectUri();
                     curReq = HttpReq.Get(uri);
                 }
 

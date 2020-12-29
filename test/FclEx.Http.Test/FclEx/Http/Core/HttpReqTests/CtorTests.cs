@@ -24,7 +24,7 @@ namespace FclEx.Http.Core.HttpReqTests
         {
             var req = new HttpReq(url, method);
             req.Host("localhost");
-            var realUrl = req.GetUrl();
+            var realUrl = req.GetUri();
         }
 
         [Fact]

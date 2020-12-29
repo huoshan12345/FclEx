@@ -16,7 +16,7 @@ namespace FclEx.Caches
     /// <typeparam name="TKey"></typeparam>
     /// <typeparam name="TValue"></typeparam>
     [DebuggerDisplay("Count = {" + nameof(Count) + "}")]
-    public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue>
+    public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : notnull
     {
         private readonly LinkedList<KvCount> _list;
         private readonly IDictionary<TKey, LinkedListNode<KvCount>> _dic;
@@ -78,7 +78,7 @@ namespace FclEx.Caches
             var exist = _dic.TryGetValue(key, out var node);
             if (exist)
             {
-                Debug.Assert(key.Equals(node.Value.Key));
+                Debug.Assert(key.Equals(node!.Value.Key));
                 Stats.OnHit();
             }
             else
@@ -88,7 +88,7 @@ namespace FclEx.Caches
             using (_lock.LockWrite())
             {
                 node = exist
-                    ? UpdateInternal(node)
+                    ? UpdateInternal(node!)
                     : AddInternal(key, activator(key));
             }
             return node.Value.Value;
@@ -104,7 +104,7 @@ namespace FclEx.Caches
             var exist = _dic.TryGetValue(key, out var node);
             if (exist)
             {
-                Debug.Assert(key.Equals(node.Value.Key));
+                Debug.Assert(key.Equals(node!.Value.Key));
                 Stats.OnHit();
             }
             else
@@ -112,12 +112,12 @@ namespace FclEx.Caches
                 Stats.OnMiss();
             }
 
-            if (!(exist && _valueComparer.Equals(node.Value.Value!, value!)))
+            if (!(exist && _valueComparer.Equals(node!.Value.Value!, value!)))
             {
                 using (_lock.LockWrite())
                 {
                     node = exist
-                        ? UpdateInternal(node, value)
+                        ? UpdateInternal(node!, value)
                         : AddInternal(key, value);
                 }
             }
@@ -133,7 +133,7 @@ namespace FclEx.Caches
             var exist = _dic.TryGetValue(key, out var node);
             if (exist)
             {
-                Debug.Assert(key.Equals(node.Value.Key));
+                Debug.Assert(key.Equals(node!.Value.Key));
                 Stats.OnHit();
             }
             else
@@ -214,7 +214,7 @@ namespace FclEx.Caches
 
         public ICollection<TKey> Keys => Read(() => _list.Select(m => m.Key).AsReadOnly());
 
-        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() 
+        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
             => LockEnumerator.Create(_list.Select(m => KvPair.Create(m.Key, m.Value)).GetEnumerator(), _lock);
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
@@ -258,7 +258,7 @@ namespace FclEx.Caches
             if (_dic.Count >= Capacity)
             {
                 var toRemove = _list.Last;
-                _dic.Remove(toRemove.Value.Key);
+                _dic.Remove(toRemove!.Value.Key);
                 _list.Remove(toRemove);
             }
             var node = LinkedListNodeHelper.Create(KvCount.Create(key, value));
@@ -276,11 +276,9 @@ namespace FclEx.Caches
             var success = _dic.TryGetValue(key, out var node);
             if (success)
             {
-                Debug.Assert(_keyComparer.Equals(key, node.Value.Key));
+                Debug.Assert(_keyComparer.Equals(key, node!.Value.Key));
 
-#pragma warning disable CS8604 // Possible null reference argument.
                 if (matchValue && !_valueComparer.Equals(oldValue, node.Value.Value))
-#pragma warning restore CS8604 // Possible null reference argument.
                     return false;
 
                 using (_lock.LockWrite())

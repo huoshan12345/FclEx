@@ -17,7 +17,10 @@ namespace FclEx.Http
 
         public static Uri GetRedirectUri(this HttpWebResponse response)
         {
-            var uri = new Uri(response.Headers[HttpResponseHeader.Location], UriKind.RelativeOrAbsolute);
+            var loc = response.Headers[HttpResponseHeader.Location] 
+                      ?? throw new ArgumentNullException(HttpResponseHeader.Location.ToString());
+            
+            var uri = new Uri(loc, UriKind.RelativeOrAbsolute);
             if (!uri.IsAbsoluteUri)
                 uri = new Uri(response.ResponseUri, uri);
             return uri;
@@ -25,7 +28,7 @@ namespace FclEx.Http
 
         public static bool IsRedirection(this HttpWebResponse response)
         {
-            return response.StatusCode.IsRedirection() 
+            return response.StatusCode.IsRedirection()
                    && response.Headers[HttpResponseHeader.Location] != null;
         }
     }

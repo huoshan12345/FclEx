@@ -87,7 +87,7 @@ namespace FclEx.Http.Proxy
             }
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is WebProxyExt o && Equals(o);
         }

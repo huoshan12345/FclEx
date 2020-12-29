@@ -20,6 +20,6 @@ namespace FclEx.Http.HttpClientFactory
         }
 
         public bool CanDispose => !_livenessTracker.IsAlive;
-        public HttpMessageHandler InnerHandler { get; }
+        public HttpMessageHandler? InnerHandler { get; }
     }
 }

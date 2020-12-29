@@ -6,6 +6,7 @@ using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using Chinese;
 using Dawn;
 using FclEx.Utils;
 using static System.Environment;
@@ -74,6 +75,64 @@ namespace FclEx
 
             var count = (maxLength + 1) / 2;
             return str.Substring(0, count) + " ... " + str.Substring(str.Length - count);
+        }
+
+        private static readonly Regex RegexOfXmlProlog = new(@"^<\?xml.+\?>");
+        private static readonly Regex RegexOfXmlStart = new(@"^<\S+>");
+        private static readonly Regex RegexOfXmlEnd = new(@"</\S+>$");
+
+        public static bool IsPossibleXml([NotNullWhen(true)] this string? data)
+        {
+            /*  
+                XML documents must have a root element
+                XML elements must have a closing tag
+                XML tags are case sensitive
+                XML elements must be properly nested
+                XML attribute values must be quoted
+                
+                <?xml version="1.0" encoding="UTF-8"?> 
+                The XML prolog is optional. If it exists, it must come first in the document.
+                
+                <root>
+                  <child>
+                    <subchild>.....</subchild>
+                  </child>
+                </root>
+             */
+
+            if (!data.IsValid())
+                return false;
+
+            if (!RegexOfXmlProlog.IsMatch(data) && !RegexOfXmlStart.IsMatch(data))
+                return false;
+
+            if (!RegexOfXmlEnd.IsMatch(data))
+                return false;
+
+            return true;
+        }
+
+        public static bool IsPossibleHtml([NotNullWhen(true)] this string? data)
+        {
+            if (!data.IsValid())
+                return false;
+
+            return true;
+        }
+
+        public static (string Left, string Right) SplitTwo(this string? str, string separator)
+        {
+            if (str.IsNullOrEmpty())
+                return ("", "");
+
+            var index = str.IndexOf(separator, StringComparison.Ordinal);
+            if (index < 0) return (str, "");
+            return (str[..index], str[(index + separator.Length)..]);
+        }
+
+        public static string ToZhCn(this string str)
+        {
+            return ChineseConverter.ToSimplified(str);
         }
     }
 }

@@ -26,7 +26,7 @@ namespace FclEx.Json.Converters
             return keyType.IsPrimitive || keyType.IsEnum || keyType == typeof(string);
         }
 
-        private static object Convert(Type objectType, Type eleType, IList list)
+        private static object? Convert(Type objectType, Type eleType, IList list)
         {
             if (objectType.IsArray)
             {
@@ -78,7 +78,7 @@ namespace FclEx.Json.Converters
             var keyType = kvType.GenericTypeArguments[0];
             var valueType = kvType.GenericTypeArguments[1];
 
-            var list = (IList)typeof(List<>).MakeGenericType(kvType).CreateObject();
+            var list = (IList)typeof(List<>).MakeGenericType(kvType).CreateObject()!;
             var pairCtor = kvType.GetConstructor(kvType.GenericTypeArguments) ?? throw new MissingMethodException("Can not find a suitable constructor");
 
             var token = JToken.ReadFrom(reader);

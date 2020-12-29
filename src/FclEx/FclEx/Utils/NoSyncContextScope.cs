@@ -14,11 +14,11 @@ namespace FclEx.Utils
             return new Disposable(context);
         }
 
-        private struct Disposable : IDisposable
+        private readonly struct Disposable : IDisposable
         {
-            private readonly SynchronizationContext _context;
+            private readonly SynchronizationContext? _context;
 
-            public Disposable(SynchronizationContext context)
+            public Disposable(SynchronizationContext? context)
             {
                 _context = context;
             }

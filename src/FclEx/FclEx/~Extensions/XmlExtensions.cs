@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
+using System.Xml.Serialization;
 using FclEx.Utils;
 using MoreLinq.Extensions;
 using Newtonsoft.Json;
@@ -19,16 +21,12 @@ namespace FclEx
             return xml;
         }
 
-        public static string ToJson(this XNode xml, 
-            Formatting formatting = Formatting.None, 
-            bool omitRootObject = false)
+        public static string ToJson(this XNode xml, Formatting formatting = Formatting.None, bool omitRootObject = false)
         {
             return JsonConvert.SerializeXNode(xml);
         }
 
-        public static string ToJson(this XmlNode xml,
-            Formatting formatting = Formatting.None,
-            bool omitRootObject = false)
+        public static string ToJson(this XmlNode xml, Formatting formatting = Formatting.None, bool omitRootObject = false)
         {
             return JsonConvert.SerializeXmlNode(xml);
         }
@@ -54,6 +52,15 @@ namespace FclEx
                 });
             }
             return root;
+        }
+
+        private static readonly ConcurrentDictionary<Type, XmlSerializer> XmlSerializers = new();
+
+        public static T ToObject<T>(this XElement element)
+        {
+            var serializer = XmlSerializers.GetOrAdd(typeof(T), t => new XmlSerializer(t));
+            using var reader = element.CreateReader();
+            return (T)serializer.Deserialize(reader)!;
         }
     }
 }

@@ -25,7 +25,7 @@ namespace FclEx.Helpers
 
         public static string LoadStringFromEmbededResource(Assembly assembly, string resourceName, Encoding encoding) => LoadEmbededResource(assembly, resourceName, s =>
         {
-            using var sr = new StreamReader(s, encoding);
+            using var sr = new StreamReader(s!, encoding);
             return sr.ReadToEnd();
         });
 

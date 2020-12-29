@@ -5,7 +5,7 @@ namespace Microsoft.Extensions.DependencyInjection
 {
     public class ServiceDescriptorEqualityComparer : IEqualityComparer<ServiceDescriptor>
     {
-        public bool Equals(ServiceDescriptor x, ServiceDescriptor y)
+        public bool Equals(ServiceDescriptor? x, ServiceDescriptor? y)
         {
             if (ReferenceEquals(x, y)) return true;
             if (x is null || y is null) return false;

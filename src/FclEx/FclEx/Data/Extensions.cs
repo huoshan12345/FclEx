@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -7,10 +8,10 @@ namespace FclEx.Data
 {
     public static class Extensions
     {
-        private static string ConvertToCsvCell(this object obj)
+        private static string ConvertToCsvCell(this object? obj)
         {
             if (obj == null) return "";
-            var value = obj.ToString();
+            var value = obj.ToString() ?? string.Empty;
 
             var mustQuote = value.Any(x => x == ',' || x == '\"' || x == '\r' || x == '\n');
             if (!mustQuote)

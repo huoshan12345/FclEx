@@ -9,7 +9,6 @@ $srcPaths = @(
 $projectNames = (
 "FclEx",
 "FclEx.Http",
-"FclEx.Npoi",
 "FclEx.Xunit",
 "FclEx.Serilog"
 )

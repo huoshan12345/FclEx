@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Threading.Tasks;
 using Dawn;
@@ -10,7 +11,9 @@ namespace FclEx.Utils
     public readonly partial struct OperateResult : IOperateResult<Unit>
     {
         private readonly Unit _result;
-        public bool Successful => Code == OperateResultCodes.Success;
+        
+        [MemberNotNullWhen(false, nameof(Exception))]
+        public bool Successful => Exception is null;
         public int Code { get; }
         public Exception? Exception { get; }
         public TimeSpan Elapsed { get; }
@@ -78,7 +81,7 @@ namespace FclEx.Utils
 
         public static implicit operator OperateResult(TimeSpan elapsed)
         {
-            return new OperateResult(elapsed);
+            return new(elapsed);
         }
 
         public static implicit operator OperateResult(Exception ex)

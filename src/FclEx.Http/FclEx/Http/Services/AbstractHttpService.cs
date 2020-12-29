@@ -71,7 +71,7 @@ namespace FclEx.Http.Services
         public IReadOnlyList<Cookie> GetCookies(Uri uri)
         {
             return UseCookie
-                ? _cookieContainer.GetCookies(uri).OfType<Cookie>().ToArray()
+                ? _cookieContainer.GetCookies(uri).ToArray()
                 : Array.Empty<Cookie>();
         }
 

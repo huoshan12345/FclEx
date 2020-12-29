@@ -10,27 +10,27 @@ namespace FclEx.Actions
     {
         public static CommonAction<T> Create<T>(Func<CancellationToken, T> func, bool excuteSafely = false)
         {
-            return new CommonAction<T>(t => OperateResult.CreateSuccess(func(t)), excuteSafely);
+            return new(t => OperateResult.CreateSuccess(func(t)), excuteSafely);
         }
 
         public static CommonAction<T> Create<T>(Func<CancellationToken, Task<T>> func, bool excuteSafely = false)
         {
-            return new CommonAction<T>(async t => OperateResult.CreateSuccess(await func(t).DonotCapture()), excuteSafely);
+            return new(async t => OperateResult.CreateSuccess(await func(t).DonotCapture()), excuteSafely);
         }
 
         public static CommonAction<T> Create<T>(Func<CancellationToken, OperateResult<T>> func, bool excuteSafely = false)
         {
-            return new CommonAction<T>(t => func(t).ToTask(), excuteSafely);
+            return new(t => func(t).ToTask(), excuteSafely);
         }
 
         public static CommonAction<T> Create<T>(Func<CancellationToken, Task<OperateResult<T>>> func, bool excuteSafely = false)
         {
-            return new CommonAction<T>(func, excuteSafely);
+            return new(func, excuteSafely);
         }
 
         public static VoidCommonAction Create(Action<CancellationToken> func, bool excuteSafely = false)
         {
-            return new VoidCommonAction(t =>
+            return new(t =>
             {
                 func(t);
                 return OperateResult.CreateSuccess(default(Unit));
@@ -39,7 +39,7 @@ namespace FclEx.Actions
 
         public static VoidCommonAction Create(Func<CancellationToken, Task> func, bool excuteSafely = false)
         {
-            return new VoidCommonAction(async t =>
+            return new(async t =>
             {
                 await func(t).DonotCapture();
                 return OperateResult.CreateSuccess(default(Unit));
@@ -48,12 +48,12 @@ namespace FclEx.Actions
 
         public static VoidCommonAction Create(Func<CancellationToken, OperateResult> func, bool excuteSafely = false)
         {
-            return new VoidCommonAction(t => func(t), excuteSafely);
+            return new(t => func(t), excuteSafely);
         }
 
         public static VoidCommonAction Create(Func<CancellationToken, Task<OperateResult>> func, bool excuteSafely = false)
         {
-            return new VoidCommonAction(async t => await func(t).DonotCapture(), excuteSafely);
+            return new(async t => await func(t).DonotCapture(), excuteSafely);
         }
     }
 

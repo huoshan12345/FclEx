@@ -13,8 +13,7 @@ namespace FclEx
 {
     partial class TypeExtensions
     {
-        private static readonly ConcurrentDictionary<Type, TypeInfoExt> TypeInfoDic
-            = new ConcurrentDictionary<Type, TypeInfoExt>();
+        private static readonly ConcurrentDictionary<Type, TypeInfoExt> TypeInfoDic = new();
 
         public static TypeInfoExt GetTypeInfoExt(this Type type)
         {

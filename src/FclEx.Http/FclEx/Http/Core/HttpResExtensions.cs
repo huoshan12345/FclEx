@@ -20,7 +20,7 @@ namespace FclEx.Http.Core
         {
             if (!res.StatusCode.IsSuccess())
             {
-                throw new WebException($"call {res.Req.GetUrl()} with {res.Req.Method} return unsuccessful code: {res.StatusCode}/{res.StatusCode.ToInt()}");
+                throw new WebException($"call {res.Req.GetUri()} with {res.Req.Method} return unsuccessful code: {res.StatusCode}/{res.StatusCode.ToInt()}");
             }
             return res;
         }
@@ -106,11 +106,7 @@ namespace FclEx.Http.Core
             }
         }
 
-        public static SubmitInfo? GetFormSubmitInfo(this HttpRes response, string formSelector)
-        {
-            var document = HtmlHelper.ParseBody(response.ResponseString);
-            return HtmlHelper.GetFormSubmitInfo(response.RedirectUris.Last(), document, formSelector);
-        }
+        public static Uri LastUri(this HttpRes res) => res.RedirectUris.Last();
     }
 
 

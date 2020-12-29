@@ -1,7 +1,6 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.IO;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using System.Runtime.Serialization.Formatters.Binary;
 using FclEx.TypeCasters;
 
 namespace FclEx
@@ -17,15 +16,15 @@ namespace FclEx
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [return: NotNullIfNotNull("obj"), MaybeNull]
-        public static TTarget CastTo<T, TTarget>([AllowNull] this T obj)
+        public static TTarget CastTo<T, TTarget>(this T? obj)
         {
             return ExpressionTypeCaster.Instance.CastTo<T, TTarget>(obj);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ToStringOrEmpty<T>([AllowNull] this T obj)
+        public static string ToStringOrEmpty<T>(this T? obj)
         {
-            return obj is null ? string.Empty : obj.ToString();
+            return obj?.ToString() ?? string.Empty;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -38,21 +37,10 @@ namespace FclEx
         [return: NotNullIfNotNull("obj"), MaybeNull]
         public static T DeepClone<T>([AllowNull] this T obj)
         {
-            if (obj is null)
-                return obj;
-
-            if (typeof(T).IsSerializable)
-            {
-                using var ms = new MemoryStream();
-                var formatter = new BinaryFormatter();
-                formatter.Serialize(ms, obj);
-                ms.Position = 0;
-                return (T)formatter.Deserialize(ms);
-            }
-            else
-            {
-                return obj.ToJson().ToJToken().ToObject<T>()!;
-            }
+            return obj.ToJson().ToJToken().ToObject<T>()!;
         }
+
+        [return: MaybeNull]
+        public static TTarget Map<TSource, TTarget>(this TSource obj, Func<TSource, TTarget> func) => func(obj);
     }
 }

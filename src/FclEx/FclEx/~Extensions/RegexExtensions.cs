@@ -1,50 +1,65 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace FclEx
 {
     public static class RegexExtensions
     {
-        public static string? TryGet(this Match m, int index = 0, string? defaultValue = default)
+        public static string? Get(this Match m, int index = 0, string? defaultValue = default)
         {
             return m.Success && index >= 0 && index < m.Groups.Count
                 ? m.Groups[index].Value
                 : defaultValue;
         }
 
-        public static int TryGetInt(this Match m, int index = 0, int defaultValue = default)
+        public static int GetInt(this Match m, int index = 0, int defaultValue = default)
         {
-            var s = TryGet(m, index);
+            var s = m.Get(index);
             return s != null && int.TryParse(s, out var i)
                 ? i
                 : defaultValue;
         }
 
-        public static bool MatchAndDo(this Regex regex, string input, Action<Match> onSuccess, Action? onFail = null)
+        public static T? Get<T>(this Regex regex, string? input, Func<Match, T> func, T? defaultValue = default)
         {
-            onSuccess ??= (m => { });
-            onFail ??= (() => { });
-            var match = regex.Match(input);
-            if (match.Success)
-                onSuccess(match);
-            else
-                onFail();
-            return match.Success;
+            if (input == null)
+                return defaultValue;
+
+            var m = regex.Match(input);
+            return m.Success
+                ? func(m)
+                : defaultValue;
         }
 
-        public static async Task<bool> MatchAndDoAsync(this Regex regex, string input, Func<Match, Task> onSuccess, Func<Task>? onFail = null)
+        public static string Get(this Regex regex, string? input, int groupIndex = 0, string defaultValue = "")
         {
-            onSuccess ??= (m => Task.CompletedTask);
-            onFail ??= (() => Task.CompletedTask);
-            var match = regex.Match(input);
+            return regex.Get(input, m => m.Get(groupIndex)) ?? defaultValue;
+        }
+
+        public static bool TryMatch(this Regex regex, string? input, [NotNullWhen(true)] out Match? match)
+        {
+            if (input != null)
+            {
+                match = regex.Match(input);
+                return match.Success;
+            }
+
+            match = null;
+            return false;
+        }
+
+        public static bool TryMatch(this Regex regex, string? input, int groupIndex, [NotNullWhen(true)] out string? value)
+        {
+            var match = regex.Match(input ?? string.Empty);
             if (match.Success)
-                await onSuccess(match).DonotCapture();
-            else
-                await onFail().DonotCapture();
-            return match.Success;
+            {
+                value = match.Groups[groupIndex].Value;
+                return true;
+            }
+
+            value = null;
+            return false;
         }
     }
 }

@@ -12,62 +12,52 @@ namespace FclEx
         {
             if (key == null || dic == null) return false;
             var result = dic.TryGetValue(key, out var value);
-            if (result) action(value);
+            if (result) action(value!);
             return result;
         }
 
-        [return: MaybeNull]
-        public static TValue GetOr<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey key, TValue defaultValue = default)
+        public static TValue? Get<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey key, TValue? defaultValue = default)
         {
-#pragma warning disable CS8620
-            return dic.GetOr(key, k => defaultValue);
-#pragma warning restore CS8620
+            return dic.Get(key, k => defaultValue);
         }
 
-        [return: MaybeNull]
-        public static TValue GetOr<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey key, Func<TKey, TValue> fac)
+        public static TValue? Get<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey key, Func<TKey, TValue?> fac)
         {
             return dic.TryGetValue(key, out var value) && value != null ? value : fac(key);
         }
 
-        [return: MaybeNull]
-        public static TProp GetOr<TKey, TValue, TProp>(this IDictionary<TKey, TValue> dic, TKey key, Func<TValue, TProp> selector, TProp defaultValue = default)
+        public static TProp? Get<TKey, TValue, TProp>(this IDictionary<TKey, TValue> dic, TKey key, Func<TValue, TProp?> selector, TProp? defaultValue = default)
         {
             return dic.TryGetValue(key, out var value) && value != null ? selector(value) : defaultValue;
         }
 
-        [return: MaybeNull]
-        public static TValue[] GetOrEmptyArr<TKey, TValue>(this IDictionary<TKey, TValue[]?> dic, TKey key)
+        public static TValue[] GetOrEmptyArr<TKey, TValue>(this IDictionary<TKey, TValue[]> dic, TKey key)
         {
-            return dic.GetOr(key, Array.Empty<TValue>());
+            return dic.Get(key) ?? Array.Empty<TValue>();
         }
 
-        public static bool TryAdd<TKey, TValue>(this Dictionary<TKey, TValue> dic, TKey key, [AllowNull] TValue value)
+        public static bool TryAdd<TKey, TValue>(this Dictionary<TKey, TValue> dic, TKey? key, TValue value) where TKey : notnull
         {
-            if (key == null) return false;
+            if (key == null) 
+                return false;
+            
             if (!dic.ContainsKey(key))
             {
-#pragma warning disable 8604
                 dic.Add(key, value);
-#pragma warning restore 8604
                 return true;
             }
             return false;
         }
 
-        public static void Add<TCol, TKey, TValue>(this IDictionary<TKey, TCol> dic, TKey key, [AllowNull] TValue value) where TCol : ICollection<TValue>, new()
+        public static void Add<TCol, TKey, TValue>(this IDictionary<TKey, TCol> dic, TKey key, TValue? value) where TCol : ICollection<TValue?>, new()
         {
             if (dic.ContainsKey(key) && dic[key] != null)
             {
-#pragma warning disable 8604
                 dic[key].Add(value);
-#pragma warning restore 8604
             }
             else
             {
-#pragma warning disable 8604
                 dic[key] = new TCol { value };
-#pragma warning restore 8604
             }
         }
 
@@ -94,12 +84,10 @@ namespace FclEx
             }
         }
 
-        public static bool GetAndDo<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey key, Action<TValue> action)
+        public static bool GetAndDo<TKey, TValue>(this IDictionary<TKey, TValue?> dic, TKey key, Action<TValue?> action)
         {
             if (key == null) return false;
-#pragma warning disable CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
-            var item = dic.GetOr(key);
-#pragma warning restore CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
+            var item = dic.Get(key);
             if (item != null)
             {
                 action(item);
@@ -131,7 +119,7 @@ namespace FclEx
             return dic.TryGetValue(key, out var col) && (col?.Contains(value) ?? false);
         }
 
-        public static TValue GetOrAdd<TKey, TValue>(this Dictionary<TKey, TValue> dic, TKey key, Func<TKey, TValue> valueFactory)
+        public static TValue GetOrAdd<TKey, TValue>(this Dictionary<TKey, TValue> dic, TKey key, Func<TKey, TValue> valueFactory) where TKey : notnull
         {
             if (!dic.TryGetValue(key, out var value))
             {

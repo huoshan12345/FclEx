@@ -20,7 +20,7 @@ namespace Microsoft.Extensions.Logging
 
             if (factory is LoggerFactory fac)
             {
-                var options = (LoggerFilterOptions)FieldOfFilterOptions.GetValue(fac);
+                var options = (LoggerFilterOptions)FieldOfFilterOptions.GetValue(fac)!;
                 options.MinLevel = minLevel;
             }
             else

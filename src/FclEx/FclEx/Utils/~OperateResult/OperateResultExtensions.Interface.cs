@@ -51,20 +51,6 @@ namespace FclEx.Utils
                 : new OperateResult(result.Code, result.Exception!, result.Elapsed);
         }
 
-        public static bool IsObjErr<T>(this IOperateResult result, [MaybeNull] out T item)
-        {
-            if (result.Exception is ObjectException<T> ex)
-            {
-                item = ex.Target;
-                return true;
-            }
-            else
-            {
-                item = default;
-                return false;
-            }
-        }
-
         public static bool IsObjErr<T>([NotNullWhen(true)] this Exception? exception, Func<T, bool> predicate)
         {
             return exception is ObjectException<T> ex && predicate(ex.Target);
@@ -99,6 +85,25 @@ namespace FclEx.Utils
             return successful
                 ? OperateResult.CreateSuccess(obj!, elapsed)
                 : OperateResult.CreateError<T>(exception!, elapsed);
+        }
+
+        public static bool IsObjErr<T>(this IOperateResult result, [NotNullWhen(true)] out T item)
+        {
+            if (result.Exception is ObjectException<T> ex)
+            {
+                item = ex.Target!;
+                return true;
+            }
+            else
+            {
+                item = default!;
+                return false;
+            }
+        }
+
+        public static bool IsObjErr<T>(this IOperateResult<T> result, Func<T, bool> predicate)
+        {
+            return result.Exception.IsObjErr(predicate);
         }
     }
 }

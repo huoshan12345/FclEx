@@ -9,13 +9,13 @@ namespace FclEx
 {
     public static class CookieContainerExtensions
     {
-        private static readonly FieldInfo FieldOfDomainTable = typeof(CookieContainer).GetField("m_domainTable", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly FieldInfo FieldOfDomainTable = typeof(CookieContainer).GetField("m_domainTable", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         public static List<Cookie> GetAllCookies(this CookieContainer cookieJar)
         {
             var list = new List<Cookie>(cookieJar.Count);
 
-            var table = (Hashtable)FieldOfDomainTable.GetValue(cookieJar);
+            var table = (Hashtable)FieldOfDomainTable.GetValue(cookieJar)!;
 
             var cookieLists = new List<SortedList>();
             lock (table.SyncRoot)
@@ -28,7 +28,7 @@ namespace FclEx
                         BindingFlags.Instance,
                         null,
                         pathList,
-                        new object[] { });
+                        new object[] { })!;
 
                     cookieLists.Add(cookieList);
                 }
@@ -40,7 +40,7 @@ namespace FclEx
                 {
                     foreach (CookieCollection cookieCollection in cookieList.Values)
                     {
-                        list.AddRange(cookieCollection.Cast<Cookie>());
+                        list.AddRange(cookieCollection);
                     }
                 }
             }

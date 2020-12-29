@@ -35,8 +35,8 @@ namespace FclEx.Data
                 .Where(m => m.CanRead)
                 .Select((m, i) => (Index: i, Prop: m, ExportAttr: m.GetCustomAttribute<ExportAttribute>()))
                 .Where(m => m.ExportAttr != null)
-                .Select(m => (m.Index, m.Prop, m.ExportAttr, Title: (m.ExportAttr.Name, m.Prop.Name).FirstValid()))
-                .OrderBy(m => m.ExportAttr.Order)
+                .Select(m => (m.Index, m.Prop, m.ExportAttr, Title: (m.ExportAttr!.Name, m.Prop.Name).FirstValid()))
+                .OrderBy(m => m.ExportAttr!.Order)
                 .ThenBy(m => m.Index)
                 .ThenBy(m => m.Title)
                 .ToArray();

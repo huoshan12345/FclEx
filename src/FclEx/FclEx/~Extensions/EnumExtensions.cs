@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using FclEx.Attributes;
 using FclEx.Helpers;
 
 namespace FclEx
@@ -86,6 +90,22 @@ namespace FclEx
         public static TEnum IfNotValid<TEnum>(this TEnum e, TEnum defaultValue = default) where TEnum : struct, Enum
         {
             return e.IsValid() ? e : defaultValue;
+        }
+
+        private static readonly ConcurrentDictionary<Enum, string> EnumValueDic = new();
+
+        [return: MaybeNull]
+        public static TAttr GetAttribute<TAttr>(this Enum e) where TAttr : Attribute
+        {
+            var type = e.GetType();
+            var field = type.GetField(e.ToString())!;
+            var attr = field.GetCustomAttribute<TAttr>(false);
+            return attr;
+        }
+
+        public static string GetValue(this Enum e)
+        {
+            return EnumValueDic.GetOrAdd(e, m => m.GetAttribute<EnumValueAttribute>()?.Value ?? e.ToString());
         }
     }
 }

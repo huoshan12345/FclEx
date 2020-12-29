@@ -14,7 +14,7 @@ namespace FclEx.Web.Core
         int Id { get; }
         ILogger Logger { get; }
         bool IsOnline { get; }
-        IUserAccount? Account { get; set; }
+        IUserAccount Account { get; set; }
         ISession Session { get; }
         AccountStatus AccountStatus { get; set; }
         event Action<AccountStatus> OnAccountStatusChanged;

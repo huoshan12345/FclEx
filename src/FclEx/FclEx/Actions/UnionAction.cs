@@ -9,11 +9,11 @@ namespace FclEx.Actions
     public readonly struct UnionAction<T, TNext> : IAction<(T, TNext)>
     {
         private readonly IAction<T> _action;
-        private readonly Func<T, IAction<TNext>> _next;
+        private readonly Func<T, IAction<TNext>?> _next;
         private readonly bool _errorWhenNextNull;
         private readonly bool _prevWhenNextError;
 
-        public UnionAction(IAction<T> action, Func<T, IAction<TNext>> next,
+        public UnionAction(IAction<T> action, Func<T, IAction<TNext>?> next,
             bool errorWhenNextNull = true, bool prevWhenNextError = false)
         {
             _action = Guard.Argument(action, nameof(action)).NotNull().Value;
@@ -34,17 +34,13 @@ namespace FclEx.Actions
             {
                 return _errorWhenNextNull
                     ? (OperateResult<(T, TNext)>)Constant.NullNextError
-#pragma warning disable 8619
-                    : ((item, default), result.Elapsed);
-#pragma warning restore 8619
+                    : ((item, default!), result.Elapsed);
             }
 
             var nextResult = await nextActor.ExecuteAsync(token).DonotCapture();
             if (!nextResult.Successful)
                 return _prevWhenNextError
-#pragma warning disable 8619
-                    ? ((item, default), result.Elapsed)
-#pragma warning restore 8619
+                    ? ((item, default!), result.Elapsed)
                     : nextResult.ToExplicit<(T, TNext)>();
 
             return ((item, nextResult.Result!), result.Elapsed + nextResult.Elapsed);

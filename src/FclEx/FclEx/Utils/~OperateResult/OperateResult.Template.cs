@@ -10,12 +10,15 @@ namespace FclEx.Utils
 {
     public readonly struct OperateResult<T> : IOperateResult<T>
     {
+        [MemberNotNullWhen(true, nameof(Result))]
+        [MemberNotNullWhen(false, nameof(Exception))]
+#pragma warning disable CS8775 // Member must have a non-null value when exiting in some condition.
         public bool Successful => Exception is null;
+#pragma warning restore CS8775 // Member must have a non-null value when exiting in some condition.
         public int Code { get; }
-        // [MemberNotNullWhen(false, nameof(Successful))]
         public Exception? Exception { get; }
         public TimeSpan Elapsed { get; }
-        [AllowNull, MaybeNull] public T Result { get; }
+        [AllowNull] public T Result { get; }
 
         public void Deconstruct(out bool successful, out TimeSpan elapsed, [MaybeNull] out T obj, out Exception? ex)
         {
@@ -44,7 +47,7 @@ namespace FclEx.Utils
         /// </summary>
         /// <param name="result"></param>
         /// <param name="elapsed"></param>
-        public OperateResult([AllowNull] T result, TimeSpan elapsed)
+        public OperateResult([DisallowNull] T result, TimeSpan elapsed)
         {
             Code = OperateResultCodes.Success;
             Exception = null;
@@ -125,7 +128,7 @@ namespace FclEx.Utils
         public OperateResult<TDest> ToExplicit<TDest>(Func<T, TDest> func)
         {
             return Successful
-                ? new OperateResult<TDest>(func(Result!), Elapsed)
+                ? new OperateResult<TDest>(func(Result)!, Elapsed)
                 : new OperateResult<TDest>(Code, Exception!, Elapsed);
         }
 

@@ -96,7 +96,7 @@ namespace FclEx.Utils
             // our entry in the collection, then this is a bug.
             var removed = _activeHandlers.TryRemove(active.Proxy, out var found);
             Debug.Assert(removed, "Entry not found. We should always be able to remove the entry");
-            Debug.Assert(ReferenceEquals(active, found.Value), "Different entry found. The entry should not have been replaced");
+            Debug.Assert(ReferenceEquals(active, found?.Value), "Different entry found. The entry should not have been replaced");
 
             // At this point the handler is no longer 'active' and will not be handed out to any new clients.
             // However we haven't dropped our strong reference to the handler, so we can't yet determine if
@@ -166,7 +166,7 @@ namespace FclEx.Utils
                     {
                         try
                         {
-                            entry.InnerHandler.Dispose();
+                            entry.InnerHandler?.Dispose();
                         }
                         catch { }
                     }

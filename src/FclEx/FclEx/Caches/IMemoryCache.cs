@@ -4,10 +4,10 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace FclEx.Caches
 {
-    public interface IMemoryCache<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, IDisposable
+    public interface IMemoryCache<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, IDisposable where TKey : notnull
     {
-        [return: MaybeNull] TValue GetOrAdd(TKey key, Func<TKey, TValue> activator);
-        [return: MaybeNull] TValue AddOrUpdate(TKey key, [AllowNull] TValue value);
+        TValue? GetOrAdd(TKey key, Func<TKey, TValue> activator);
+        TValue? AddOrUpdate(TKey key, [AllowNull] TValue value);
         bool TryAdd(TKey key, [AllowNull] TValue value);
         [MaybeNull] TValue this[TKey key] { get; set; }
         int Capacity { get; }

@@ -18,7 +18,7 @@ namespace FclEx.Actions
             _timeSpan = timeSpan;
         }
 
-        public Task<OperateResult<T>> ExecuteAsync(CancellationToken token = new CancellationToken())
+        public Task<OperateResult<T>> ExecuteAsync(CancellationToken token = default)
         {
             return OperateResult.CreateSuccess(_obj, _timeSpan);
         }

@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 using Dawn;
-using FclEx.Utils;
+using FclEx.Helpers;
 
 namespace FclEx
 {
@@ -31,13 +28,14 @@ namespace FclEx
             return e.Compile()();
         }
 
-        public static object CreateObject(this Type type, params object[] args)
+        public static object? CreateObject(this Type type, params object?[] args)
         {
             Guard.Argument(type, nameof(type)).NotNull();
 
-            if (args.IsNullOrEmpty()) return Activator.CreateInstance(type);
+            if (args.IsNullOrEmpty())
+                return Activator.CreateInstance(type);
 
-            var argsType = args.Select(a => a.GetType()).ToArray();
+            var argsType = args.Select(a => a?.GetType() ?? typeof(object)).ToArray();
             var ctor = type.GetConstructors().FirstOrDefault(m => m.ArgumentListMatches(argsType));
             if (ctor != null)
             {
@@ -102,7 +100,7 @@ namespace FclEx
                 x.GetGenericTypeDefinition() == genericType);
         }
 
-        public static bool IsSubclassOfRawGeneric(this Type toCheck, Type generic)
+        public static bool IsSubclassOfRawGeneric(this Type? toCheck, Type generic)
         {
             while (toCheck != null && toCheck != typeof(object))
             {
@@ -115,5 +113,7 @@ namespace FclEx
             }
             return false;
         }
+
+        public static DataMemberInfo? GetDataMember(this Type type, string name) => ReflectionHelper.GetDataMembers(type)!.Get(name);
     }
 }

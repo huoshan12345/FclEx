@@ -164,5 +164,16 @@ namespace FclEx
             var ticks = source.Select(m => selector(m).Ticks).Sum();
             return TimeSpan.FromTicks(ticks);
         }
+
+        public static int BitsToInt(this IEnumerable<bool> bits)
+        {
+            var num = 0;
+            foreach (var (i, b) in bits.Index())
+            {
+                var bit = b ? 1 : 0;
+                num &= (bit << i);
+            }
+            return num;
+        }
     }
 }
