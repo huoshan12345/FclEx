@@ -8,7 +8,7 @@ namespace FclEx.Helpers
 {
     public static class MarshalHelper
     {
-        public static IntPtrDisposable AllocHGlobal(int cb)
+        public static ValueDisposable<IntPtr> AllocHGlobal(int cb)
         {
             return Marshal.AllocHGlobal(cb).AsDisposable();
         }

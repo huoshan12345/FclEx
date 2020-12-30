@@ -29,9 +29,9 @@ namespace FclEx.Utils
 
     public static class ValueDisposableExtensions
     {
-        public static ValueDisposable<T> AsDisposable<T>(this T value)
+        public static ValueDisposable<T> AsDisposable<T>(this T value, Action<T>? disposeAction = null)
         {
-            return new ValueDisposable<T>(value);
+            return new(value, disposeAction);
         }
     }
 }

@@ -5,7 +5,7 @@ using Dawn;
 
 namespace FclEx.Utils
 {
-    public struct ActionDisposable : IDisposable
+    public readonly struct ActionDisposable : IDisposable
     {
         private readonly Action _action;
 

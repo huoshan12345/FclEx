@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using FclEx.Extensions.Combinatorics.Collections;
 using MoreLinq.Extensions;
 using Xunit;
 using Xunit.Abstractions;

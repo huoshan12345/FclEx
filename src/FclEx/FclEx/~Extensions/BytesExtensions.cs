@@ -166,14 +166,12 @@ namespace FclEx
             var length = Marshal.SizeOf<T>();
             Guard.Argument(bytes.Length, nameof(bytes.Length)).Min(length + startIndex);
 
-            using (var ptr = MarshalHelper.AllocHGlobal(length))
-            {
-                var p = ptr.Ptr;
-                Marshal.Copy(bytes, startIndex, p, length);
-                var obj = Marshal.PtrToStructure<T>(p);
-                startIndex += length;
-                return obj;
-            }
+            using var ptr = MarshalHelper.AllocHGlobal(length);
+            var p = ptr.Value;
+            Marshal.Copy(bytes, startIndex, p, length);
+            var obj = Marshal.PtrToStructure<T>(p);
+            startIndex += length;
+            return obj;
         }
 
         public static T ToUnmanagedStruct<T>(this byte[] bytes)
@@ -195,17 +193,16 @@ namespace FclEx
             Guard.Argument(bytes.Length, nameof(bytes.Length)).Min(totalBytes + startIndex);
 
             var result = new T[count];
-            using (var ptr = MarshalHelper.AllocHGlobal(length))
+            using var ptr = MarshalHelper.AllocHGlobal(length);
+            var p = ptr.Value;
+            for (var i = 0; i < count; i++)
             {
-                var p = ptr.Ptr;
-                for (var i = 0; i < count; i++)
-                {
-                    Marshal.Copy(bytes, startIndex, p, length);
-                    var obj = Marshal.PtrToStructure<T>(p);
-                    startIndex += length;
-                    result[i] = obj;
-                }
+                Marshal.Copy(bytes, startIndex, p, length);
+                var obj = Marshal.PtrToStructure<T>(p);
+                startIndex += length;
+                result[i] = obj;
             }
+
             return result;
         }
 
@@ -235,15 +232,14 @@ namespace FclEx
             var length = Marshal.SizeOf<T>();
             var totalBytes = length * list.Count;
             var bufByte = new byte[totalBytes];
-            using (var ptr = MarshalHelper.AllocHGlobal(length))
+            using var ptr = MarshalHelper.AllocHGlobal(length);
+            var p = ptr.Value;
+            for (var i = 0; i < list.Count; i++)
             {
-                var p = ptr.Ptr;
-                for (var i = 0; i < list.Count; i++)
-                {
-                    Marshal.StructureToPtr(list[i], p, true);
-                    Marshal.Copy(p, bufByte, i * length, length);
-                }
+                Marshal.StructureToPtr(list[i], p, true);
+                Marshal.Copy(p, bufByte, i * length, length);
             }
+
             return bufByte;
         }
 

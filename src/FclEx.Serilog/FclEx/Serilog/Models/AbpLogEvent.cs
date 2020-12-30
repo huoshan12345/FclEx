@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using FclEx.Extensions.Json;
+
 using FclEx.Helpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
