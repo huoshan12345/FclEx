@@ -21,7 +21,7 @@ namespace FclEx.Actions
             HttpService = client.HttpService;
         }
 
-        public ISession Session => Client.Session;
+        public virtual ISession Session => Client.Session;
         public IUserAccount Account => Client.Account ?? throw new ArgumentNullException(nameof(Account));
         public abstract HttpReqType ReqType { get; }
         public TClient Client { get; }
