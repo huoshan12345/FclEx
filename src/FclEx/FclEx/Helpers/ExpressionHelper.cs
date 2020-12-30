@@ -87,15 +87,22 @@ namespace FclEx.Helpers
             };
         }
 
+        public static DataMemberInfo GetDataMemberInfo<T, TMember>(Expression<Func<T, TMember>> selector)
+        {
+            var member = GetMember(selector);
+            return member.ToDataMemberInfo();
+        }
+
         public static Action<T, TMember> GetSetter<T, TMember>(Expression<Func<T, TMember>> selector)
         {
-            var member = GetDataMember(selector);
-            return member switch
-            {
-                PropertyInfo propInfo => ((o, v) => propInfo.SetValue(o, v)),
-                FieldInfo fieldInfo => ((o, v) => fieldInfo.SetValue(o, v)),
-                _ => throw new ArgumentException($"Expression '{selector}' refers to neither a field nor a property.")
-            };
+            var member = GetDataMemberInfo(selector);
+            return (o, v) => member.SetValue(o, v);
+        }
+
+        public static Func<T, TMember?> GetGetter<T, TMember>(Expression<Func<T, TMember?>> selector)
+        {
+            var member = GetDataMemberInfo(selector);
+            return o => member.GetValue(o).CastTo<TMember>();
         }
 
         public static Expression<Func<T, object>> ErasureType<T, TProp>(Expression<Func<T, TProp>> selector)

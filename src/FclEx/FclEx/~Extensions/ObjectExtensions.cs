@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using FclEx.TypeCasters;
 
@@ -40,7 +41,16 @@ namespace FclEx
             return obj.ToJson().ToJToken().ToObject<T>()!;
         }
 
-        [return: MaybeNull]
-        public static TTarget Map<TSource, TTarget>(this TSource obj, Func<TSource, TTarget> func) => func(obj);
+        public static TTarget? Map<TSource, TTarget>(this TSource obj, Func<TSource, TTarget> func) => func(obj);
+
+        public static object? GetMemberValue<T>(this T obj, string name)
+        {
+            return typeof(T).GetMemberValue<object>(name, obj);
+        }
+
+        public static TResult? GetMemberValue<T, TResult>(this T obj, string name)
+        {
+            return typeof(T).GetMemberValue<TResult>(name, obj);
+        }
     }
 }

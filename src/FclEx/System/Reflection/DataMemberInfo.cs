@@ -1,8 +1,10 @@
-﻿using System.Linq;
+﻿using System.Diagnostics;
+using System.Linq;
 using Dawn;
 
 namespace System.Reflection
 {
+    [DebuggerDisplay("{" + nameof(Name) + "}")]
     public class DataMemberInfo : MemberInfo
     {
         public DataMemberInfo(FieldInfo field)
@@ -13,6 +15,8 @@ namespace System.Reflection
             GetValueFunc = field.GetValue;
             SetValueFunc = field.SetValue;
             IsStatic = field.IsStatic;
+            IsField = true;
+            IsProperty = false;
         }
 
         public DataMemberInfo(PropertyInfo property)
@@ -24,6 +28,8 @@ namespace System.Reflection
             SetValueFunc = property.SetValue;
             var accessors = property.GetAccessors(true);
             IsStatic = accessors.Any(m => m.IsStatic);
+            IsField = false;
+            IsProperty = true;
         }
 
         public override object[] GetCustomAttributes(bool inherit)
@@ -48,5 +54,7 @@ namespace System.Reflection
         internal Func<object?, object?> GetValueFunc { get; }
         internal Action<object?, object?> SetValueFunc { get; }
         public MemberInfo MemberInfo { get; }
+        public bool IsField { get; }
+        public bool IsProperty { get; }
     }
 }

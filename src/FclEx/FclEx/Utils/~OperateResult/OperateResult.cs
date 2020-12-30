@@ -116,7 +116,7 @@ namespace FclEx.Utils
 
         public static implicit operator Task<IOperateResult>(OperateResult result)
         {
-            return ((IOperateResult)result).ToTask();
+            return ((IOperateResult)result).ToTask()!;
         }
 
         public static implicit operator Task<OperateResult>(OperateResult result)
@@ -126,7 +126,7 @@ namespace FclEx.Utils
 
         public static implicit operator Task<IOperateResult<Unit>>(OperateResult result)
         {
-            return ((IOperateResult<Unit>)result).ToTask();
+            return ((IOperateResult<Unit>)result).ToTask()!;
         }
 
         public static implicit operator Task<OperateResult<Unit>>(OperateResult result)

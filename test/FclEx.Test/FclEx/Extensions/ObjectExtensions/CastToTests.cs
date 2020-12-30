@@ -1,16 +1,19 @@
-﻿using FclEx.Enums;
+﻿using System.Diagnostics.CodeAnalysis;
+using FclEx.Enums;
 using Xunit;
 
 namespace FclEx.Extensions.ObjectExtensions
 {
+    [SuppressMessage("ReSharper", "MergeConditionalExpression")]
     public class CastToTests
     {
-        [Fact]
-        public void ObjectToIntCastTest()
+        [Theory]
+        [InlineData(5)]
+        [InlineData(null)]
+        public void ObjectToIntCastTest(object obj)
         {
-            object i = 5;
-            var actual = i.CastTo<int>();
-            var expected = (int)i;
+            var actual = obj.CastTo<int>();
+            var expected = obj == null ? default : (int)obj;
             Assert.Equal(expected, actual);
         }
 
@@ -37,7 +40,7 @@ namespace FclEx.Extensions.ObjectExtensions
         {
             var i = 5;
             var actual = i.CastTo<double>();
-            var expected = (double) i;
+            var expected = (double)i;
             Assert.Equal(expected, actual);
         }
 
@@ -59,12 +62,13 @@ namespace FclEx.Extensions.ObjectExtensions
             Assert.Equal(expected, actual);
         }
 
-        [Fact]
-        public void EnumToIntCastTest()
+        [Theory]
+        [InlineData(IntEnum.Yes)]
+        [InlineData(null)]
+        public void EnumToIntCastTest(IntEnum? i)
         {
-            var i = IntEnum.Yes;
             var actual = i.CastTo<int>();
-            var expected = (int)i;
+            var expected = (int)i.Get();
             Assert.Equal(expected, actual);
         }
 
@@ -77,21 +81,23 @@ namespace FclEx.Extensions.ObjectExtensions
             Assert.Equal(expected, actual);
         }
 
-        [Fact]
-        public void IntToNullableCastTest()
+        [Theory]
+        [InlineData(1)]
+        [InlineData(0)]
+        public void IntToNullableCastTest(int i)
         {
-            var i = 1;
             var actual = i.CastTo<int?>();
             var expected = (int?)i;
             Assert.Equal(expected, actual);
         }
 
-        [Fact]
-        public void NullableToIntCastTest()
+        [Theory]
+        [InlineData(5)]
+        [InlineData(null)]
+        public void NullableToIntCastTest(int? i)
         {
-            int? i = 1;
             var actual = i.CastTo<int>();
-            var expected = (int)i;
+            var expected = i.Get();
             Assert.Equal(expected, actual);
         }
     }

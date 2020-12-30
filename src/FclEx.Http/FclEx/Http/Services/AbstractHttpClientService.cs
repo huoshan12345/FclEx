@@ -120,7 +120,7 @@ namespace FclEx.Http.Services
             charSet = (charSet, headers.ContentType?.CharSet).FirstValid();
             // If we do have encoding information in the 'Content-Type' header, use that information to convert
             // the content to a string.
-            if (charSet != null)
+            if (charSet.IsValid())
             {
                 encoding = GetEncodingFromCharSet(charSet);
                 // Byte-order-mark (BOM) characters may be present even if a charset was specified.
@@ -148,11 +148,7 @@ namespace FclEx.Http.Services
                 }
             }
 
-            if (encoding == null)
-            {
-                // Use the default encoding (UTF8) if we couldn't detect one.
-                encoding = GetEncodingFromCharSet(defaultCharSet) ?? DefaultStringEncoding;
-            }
+            encoding ??= GetEncodingFromCharSet(defaultCharSet) ?? DefaultStringEncoding;
 
             // Drop the BOM when decoding the data.
             var str = encoding.GetString(buffer.Array, buffer.Offset + bomLength, buffer.Count - bomLength);

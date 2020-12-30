@@ -32,12 +32,13 @@ namespace FclEx
 
         public static Task<T> ToTask<T>(this T obj) => Task.FromResult(obj);
 
-        public static ValueTask<T> ToValueTask<T>(this Task<T> task) => new ValueTask<T>(task);
+        public static ValueTask<T> ToValueTask<T>(this Task<T> task) => new(task);
         
         internal static async Task<TResult> TimeoutAfter<TResult>(this Func<Task<TResult>> task, TimeSpan timeout)
         {
             using var cts = new CancellationTokenSource();
             var delayTask = Task.Delay(timeout, cts.Token);
+            // ReSharper disable once MethodSupportsCancellation
             var completedTask = await Task.WhenAny(delayTask, Task.Run(task)).DonotCapture();
             if (completedTask != delayTask)
             {
@@ -54,6 +55,7 @@ namespace FclEx
         {
             using var cts = new CancellationTokenSource();
             var delayTask = Task.Delay(timeout, cts.Token);
+            // ReSharper disable once MethodSupportsCancellation
             var completedTask = await Task.WhenAny(delayTask, Task.Run(task)).DonotCapture();
             if (completedTask != delayTask)
             {

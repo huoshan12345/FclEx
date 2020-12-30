@@ -17,8 +17,10 @@ namespace FclEx.Helpers
 
             static Dictionary<string, DataMemberInfo> GetDataMembersInternal(Type type)
             {
-                var props = type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
-                var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+                // this does not include private members of the base class
+                var flag = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy;
+                var props = type.GetProperties(flag);
+                var fields = type.GetFields(flag);
                 var members = props
                     .Select(m => new DataMemberInfo(m))
                     .Concat(fields.Select(m => new DataMemberInfo(m)))

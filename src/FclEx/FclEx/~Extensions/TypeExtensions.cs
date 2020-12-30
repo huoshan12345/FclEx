@@ -16,7 +16,7 @@ namespace FclEx
 
             // We want an Func<object> which returns the default.
             // Create that expression here.
-            var e = Expression.Lambda<Func<object>>(
+            var e = Expression.Lambda<Func<object?>>(
                 // Have to convert to object.
                 Expression.Convert(
                     // The default value, always get what the *code* tells us.
@@ -28,12 +28,12 @@ namespace FclEx
             return e.Compile()();
         }
 
-        public static object? CreateObject(this Type type, params object?[] args)
+        public static object CreateObject(this Type type, params object?[] args)
         {
             Guard.Argument(type, nameof(type)).NotNull();
 
             if (args.IsNullOrEmpty())
-                return Activator.CreateInstance(type);
+                return Activator.CreateInstance(type)!;
 
             var argsType = args.Select(a => a?.GetType() ?? typeof(object)).ToArray();
             var ctor = type.GetConstructors().FirstOrDefault(m => m.ArgumentListMatches(argsType));
@@ -114,6 +114,24 @@ namespace FclEx
             return false;
         }
 
-        public static DataMemberInfo? GetDataMember(this Type type, string name) => ReflectionHelper.GetDataMembers(type)!.Get(name);
+        public static IReadOnlyCollection<DataMemberInfo> GetDataMembers(this Type type) => ReflectionHelper.GetDataMembers(type).Values;
+
+        public static DataMemberInfo? GetDataMember(this Type type, string name) => ReflectionHelper.GetDataMembers(type).Get(name);
+
+        public static T? GetMemberValue<T>(this Type type, string name)
+        {
+            var flags = BindingFlags.Static
+                        | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy
+                        | BindingFlags.GetField | BindingFlags.GetProperty;
+            return type.InvokeMember(name, flags, null, null, null).CastTo<T>();
+        }
+
+        public static T? GetMemberValue<T>(this Type type, string name, object? obj)
+        {
+            var flags = BindingFlags.Instance
+                        | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy
+                        | BindingFlags.GetField | BindingFlags.GetProperty;
+            return type.InvokeMember(name, flags, null, obj, null).CastTo<T>();
+        }
     }
 }

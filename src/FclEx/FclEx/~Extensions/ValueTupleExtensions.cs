@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using FclEx.Helpers;
@@ -33,7 +34,8 @@ namespace FclEx
             return KvPair.Create(tuple.Item1, tuple.Item2);
         }
 
-        public static string FirstValid(this IEnumerable<string?> values, int? count = null, string defaultValue = "")
+        [return: NotNullIfNotNull("defaultValue")]
+        public static string? FirstValid(this IEnumerable<string?> values, int? count = null, string? defaultValue = "")
         {
             var q = values;
             if (count.HasValue)
@@ -41,7 +43,8 @@ namespace FclEx
             return q.FirstOrDefault(m => m.IsValid()) ?? defaultValue;
         }
 
-        public static string FirstValid(this (string?, string?) tuple, string defaultValue = "")
+        [return: NotNullIfNotNull("defaultValue")]
+        public static string? FirstValid(this (string?, string?) tuple, string? defaultValue = "")
         {
             const int count = 2;
             using var disposable = ObjectPoolHelper.GetArrayPool<string?>().GetAsDisposable(count);
@@ -51,7 +54,8 @@ namespace FclEx
             return arr.FirstValid(count, defaultValue);
         }
 
-        public static string FirstValid(this (string?, string?, string?) tuple, string defaultValue = "")
+        [return: NotNullIfNotNull("defaultValue")]
+        public static string? FirstValid(this (string?, string?, string?) tuple, string? defaultValue = "")
         {
             const int count = 3;
             using var disposable = ObjectPoolHelper.GetArrayPool<string?>().GetAsDisposable(count);
@@ -62,7 +66,8 @@ namespace FclEx
             return arr.FirstValid(count, defaultValue);
         }
 
-        public static string FirstValid(this (string?, string?, string?, string?) tuple, string defaultValue = "")
+        [return: NotNullIfNotNull("defaultValue")]
+        public static string? FirstValid(this (string?, string?, string?, string?) tuple, string? defaultValue = "")
         {
             const int count = 4;
             using var disposable = ObjectPoolHelper.GetArrayPool<string?>().GetAsDisposable(count);
