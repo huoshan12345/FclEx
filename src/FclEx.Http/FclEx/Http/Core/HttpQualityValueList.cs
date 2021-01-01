@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using FclEx.Comparers;
-using FclEx.Helpers;
-using FclEx.Utils;
 
 namespace FclEx.Http.Core
 {

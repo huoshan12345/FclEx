@@ -12,13 +12,11 @@ namespace FclEx.Extensions.TypeExtensions
     {
         public abstract class Tester<T>
         {
-            private Random Random { get; } = new(0);
-
             public T Property { get; set; }
             protected T PropertyProtected { get; set; }
             public static T PropertyStatic { get; set; }
             protected static T PropertyProtectedStatic { get; set; }
-            
+
             public T Field;
             protected T FieldProtected;
             public static T FieldStatic;
@@ -71,28 +69,42 @@ namespace FclEx.Extensions.TypeExtensions
         {
             var obj = new T();
             var type = typeof(T);
-            var members = type.GetDataMembers();
+            const BindingFlags flag = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
+
+            var members = new HashSet<DataMemberInfo>();
+            while (type != null)
+            {
+                var ms = type.GetMembers(flag)
+                    .Where(m => m is PropertyInfo || m is FieldInfo)
+                    .Select(m => m.ToDataMemberInfo())
+                    .Where(m => !m.IsCompilerGenerated)
+                    .ToList();
+
+                foreach (var member in ms)
+                {
+                    if (member.IsStatic)
+                    {
+                        var actual = type.GetMemberValue<TMember>(member.Name);
+                        var expected = member.GetValue(null).CastTo<TMember>();
+                        Assert.Equal(expected, actual);
+                    }
+                    else
+                    {
+                        var actual = type.GetMemberValue<TMember>(member.Name, obj);
+                        var expected = member.GetValue(obj).CastTo<TMember>();
+                        Assert.Equal(expected, actual);
+                    }
+                    members.Add(member);
+                }
+                type = type.BaseType;
+            }
+
             Assert.Equal(8, members.Count);
             Assert.Equal(4, members.Count(m => m.IsProperty));
             Assert.Equal(4, members.Count(m => m.IsField));
             Assert.Equal(4, members.Count(m => m.IsStatic));
             Assert.Equal(4, members.Count(m => !m.IsStatic));
 
-            foreach (var member in type.GetDataMembers())
-            {
-                if (member.IsStatic)
-                {
-                    var actual = type.GetMemberValue<TMember>(member.Name);
-                    var expected = member.GetValue(null).CastTo<TMember>();
-                    Assert.Equal(expected, actual);
-                }
-                else
-                {
-                    var actual = type.GetMemberValue<TMember>(member.Name, obj);
-                    var expected = member.GetValue(obj).CastTo<TMember>();
-                    Assert.Equal(expected, actual);
-                }
-            }
         }
     }
 }

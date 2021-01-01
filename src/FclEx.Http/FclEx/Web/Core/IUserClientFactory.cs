@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using FclEx.Http.Services;
-using FclEx.Web.Models;
 
 namespace FclEx.Web.Core
 {

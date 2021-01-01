@@ -5,7 +5,6 @@ using FclEx.Http.Services;
 using FclEx.Utils;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics.CodeAnalysis;
-using FclEx.Web.Models;
 
 namespace FclEx.Web.Core
 {
@@ -20,7 +19,7 @@ namespace FclEx.Web.Core
         event Action<AccountStatus> OnAccountStatusChanged;
         [AllowNull] IHttpService HttpService { get; set; }
         Task<OperateResult> Login(CancellationToken token = default);
-        Task<OperateResult> FakeLogin(bool appendLoginIfFail = true, CancellationToken token = default);
+        Task<OperateResult> FakeLogin(bool loginIfFail = true, CancellationToken token = default);
         Task<OperateResult> Logout(CancellationToken token = default);
         Task WaitForLogin(CancellationToken token = default);
     }

@@ -21,5 +21,10 @@
         {
             session.State = SessionState.Online;
         }
+
+        public static void Logining(this ISession session)
+        {
+            session.State = SessionState.Logining;
+        }
     }
 }

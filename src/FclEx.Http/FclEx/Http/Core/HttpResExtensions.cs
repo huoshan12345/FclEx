@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Mime;
 using System.Threading.Tasks;
-using FclEx.Extensions;
 using FclEx.Utils;
 using MimeTypes.Core;
 using Newtonsoft.Json.Linq;

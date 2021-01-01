@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Dawn;
 
 using FclEx.Http.Core;
 using FclEx.Http.Services;
-using FclEx.Utils;
-using Newtonsoft.Json.Linq;
 
 namespace FclEx.Actions
 {
@@ -36,7 +32,7 @@ namespace FclEx.Actions
             return action.Next(data => func(data).ToAction(httpService, unwrapError));
         }
 
-        public static IAction<HttpRes>? TryRedirect(this HttpRes res, IHttpService httpService, Func<HttpRes, string> urlFunc)
+        public static IAction<HttpRes>? TryRedirect(this HttpRes res, IHttpService httpService, Func<HttpRes, string?> urlFunc)
         {
             Guard.Argument(urlFunc, nameof(urlFunc)).NotNull();
             var url = urlFunc(res);

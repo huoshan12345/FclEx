@@ -1,5 +1,4 @@
 ﻿using FclEx.Web.Core;
-using FclEx.Web.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 

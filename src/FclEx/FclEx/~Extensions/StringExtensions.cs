@@ -50,13 +50,13 @@ namespace FclEx
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsValid([NotNullWhen(true)] this string? x) => !x.IsNullOrEmpty();
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] ToUtf8Bytes(this string input) => input.ToBytes(Encoding.UTF8);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] ToBytes(this string input, Encoding? encoding = null) => (encoding ?? Encoding.UTF8).GetBytes(input);
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [return: NotNullIfNotNull("url")]
         public static string? UrlEncode(this string? url) => WebUtility.UrlEncode(url);
@@ -195,5 +195,7 @@ namespace FclEx
         }
 
         public static byte[] ToBytesFromBase64(this string base64String) => Convert.FromBase64String(base64String);
+
+        public static Uri ToUri(this string str, UriKind uriKind = UriKind.Absolute) => new(str, uriKind);
     }
 }

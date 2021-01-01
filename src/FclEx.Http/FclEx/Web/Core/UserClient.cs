@@ -5,10 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using FclEx.Http.Services;
 using FclEx.Utils;
-using FclEx.Web.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using MoreLinq;
 using Nito.AsyncEx;
 
 namespace FclEx.Web.Core
@@ -137,9 +135,10 @@ namespace FclEx.Web.Core
             if (token.IsCancellationRequested)
                 return OperateResult.Cancel;
 
+            var time = ValueStopwatch.StartNew();
             try
             {
-                Session.State = SessionState.Logining;
+                Session.Logining();
                 var res = await loginAction(token)
                     .Ok(_ => Session.Online())
                     .Error(_ =>
@@ -148,12 +147,17 @@ namespace FclEx.Web.Core
                             Session.Offline();
                     })
                     .DonotCapture();
-                return res;
+                return res.WithElapsed(time.GetElapsedTime());
             }
             catch (Exception ex)
             {
                 Logger.LogError(ex, "An error occured when logging in: " + ex.Message);
-                return ex;
+                return (ex, time.GetElapsedTime());
+            }
+            finally
+            {
+                if (Logger.IsEnabled(LogLevel.Trace))
+                    Logger.LogTrace($"It takes {time.GetElapsedTime().TotalSeconds:f3} seconds to login");
             }
         }
 
@@ -176,7 +180,7 @@ namespace FclEx.Web.Core
             return OperateResult.Success.ToTask();
         }
 
-        public Task<OperateResult> FakeLogin(bool appendLoginIfFail = true, CancellationToken token = default)
+        public Task<OperateResult> FakeLogin(bool loginIfFail = true, CancellationToken token = default)
         {
             return DoLoginAction(async t =>
             {
@@ -186,7 +190,7 @@ namespace FclEx.Web.Core
                     .Error(ex => Logger.LogWarning(ex, "Failed to fake login : " + ex.Message))
                     .DonotCapture();
 
-                if (result.HasError() && appendLoginIfFail)
+                if (result.HasError() && loginIfFail)
                 {
                     result = await DoLoginInternal(t).DonotCapture();
                 }

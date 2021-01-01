@@ -9,8 +9,6 @@ using FclEx.Helpers;
 using FclEx.Http.Core;
 using FclEx.Http.Core.Cookies;
 using FclEx.Utils;
-using Polly;
-using Polly.Retry;
 
 namespace FclEx.Http.Services
 {
@@ -91,7 +89,7 @@ namespace FclEx.Http.Services
         public static void AddCookies(this IHttpService http, IEnumerable<SimpleCookie> cookies, Uri? uri = null)
             => http.AddCookies(cookies.Select(m => m.ToCookie()), uri);
 
-        public static void AddCookies(this IHttpService http, IEnumerable<SimpleCookie> cookies, string? url = null)
+        public static void AddCookies(this IHttpService http, IEnumerable<SimpleCookie> cookies, string? url)
         {
             var uri = url == null ? null : new Uri(url);
             http.AddCookies(cookies, uri);

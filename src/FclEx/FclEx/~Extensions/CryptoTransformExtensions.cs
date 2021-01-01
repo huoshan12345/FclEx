@@ -1,9 +1,8 @@
 ﻿using System.Security.Cryptography;
-using FclEx.Extensions;
 
 namespace FclEx
 {
-    public static class CryptoExtensions
+    public static class CryptoTransformExtensions
     {
         public static byte[] Transform(this ICryptoTransform xfrm, byte[] plain) => xfrm.TransformFinalBlock(plain, 0, plain.Length);
 

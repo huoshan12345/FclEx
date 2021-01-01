@@ -120,17 +120,17 @@ namespace FclEx
 
         public static T? GetMemberValue<T>(this Type type, string name)
         {
-            var flags = BindingFlags.Static
-                        | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy
-                        | BindingFlags.GetField | BindingFlags.GetProperty;
+            const BindingFlags flags = BindingFlags.Static
+                                       | BindingFlags.Public | BindingFlags.NonPublic
+                                       | BindingFlags.GetField | BindingFlags.GetProperty;
             return type.InvokeMember(name, flags, null, null, null).CastTo<T>();
         }
 
         public static T? GetMemberValue<T>(this Type type, string name, object? obj)
         {
-            var flags = BindingFlags.Instance
-                        | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy
-                        | BindingFlags.GetField | BindingFlags.GetProperty;
+            const BindingFlags flags = BindingFlags.Instance
+                                       | BindingFlags.Public | BindingFlags.NonPublic
+                                       | BindingFlags.GetField | BindingFlags.GetProperty;
             return type.InvokeMember(name, flags, null, obj, null).CastTo<T>();
         }
     }

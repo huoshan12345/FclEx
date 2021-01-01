@@ -1,7 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using FclEx.Http.Proxy;
+﻿using FclEx.Http.Proxy;
 using FclEx.Http.Services;
-using FclEx.Web.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 

@@ -36,5 +36,7 @@ namespace FclEx
             var lambda = Expression.Lambda<Func<T, bool>>(body, parameter);
             return lambda;
         }
+
+        public static LambdaExpression AsLambda(this Expression e) => Expression.Lambda(e);
     }
 }

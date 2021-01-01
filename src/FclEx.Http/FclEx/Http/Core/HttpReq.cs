@@ -2,12 +2,8 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
-using System.Linq;
-using System.Net.Http;
 using System.Text;
-using System.Text.RegularExpressions;
 using Dawn;
-using FclEx.Extensions;
 using FclEx.Helpers;
 using FclEx.Utils;
 
@@ -17,7 +13,7 @@ namespace FclEx.Http.Core
     {
         private readonly UriCreator _uriCreator;
         public Encoding Encoding { get; set; } = Encoding.UTF8;
-        public bool ThrowOnNonSuccessCode { get; set; } = true;
+        public bool ThrowOnFailedCode { get; set; } = true;
         public ArraySegment<byte> Body { get; set; }
         public HttpMethodType Method { get; set; }
         public TimeSpan? TotalTimeout { get; set; } = TimeSpan.FromMinutes(2);

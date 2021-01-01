@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -242,7 +241,7 @@ namespace FclEx.Http.Services
                 if (httpReq.ReadResultHeader)
                     ReadHeader(response, httpRes);
 
-                if (httpReq.ThrowOnNonSuccessCode)
+                if (httpReq.ThrowOnFailedCode)
                     response.EnsureSuccess();
 
                 if (httpReq.ReadResultContent)

@@ -1,5 +1,4 @@
 ﻿using System;
-using FclEx.Helpers;
 
 namespace FclEx.Http.Core
 {
@@ -23,9 +22,9 @@ namespace FclEx.Http.Core
             return req;
         }
 
-        public static HttpReq ThrowOnNonSuccessCode(this HttpReq req, bool ifThrow)
+        public static HttpReq ThrowOnFailedCode(this HttpReq req, bool ifThrow)
         {
-            req.ThrowOnNonSuccessCode = ifThrow;
+            req.ThrowOnFailedCode = ifThrow;
             return req;
         }
 

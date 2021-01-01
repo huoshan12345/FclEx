@@ -175,5 +175,15 @@ namespace FclEx
             }
             return num;
         }
+
+        public static IEnumerable<(T1, T2)> CrossJoin<T1, T2>(this IEnumerable<T1> left, IEnumerable<T2> right)
+        {
+            return left.SelectMany(m => right, (t1, t2) => (t1, t2));
+        }
+
+        public static IEnumerable<T3> Select<T1, T2, T3>(this IEnumerable<(T1, T2)> source, Func<T1, T2, int, T3> selector)
+        {
+            return source.Select((m, i) => selector(m.Item1, m.Item2, i));
+        }
     }
 }

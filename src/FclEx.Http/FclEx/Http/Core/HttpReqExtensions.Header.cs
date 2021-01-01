@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
-using Dawn;
+using FclEx.Http.Services;
 using MoreLinq;
 
 namespace FclEx.Http.Core
@@ -17,7 +16,7 @@ namespace FclEx.Http.Core
                 req.HeaderMap[k] = value.ToStringOrEmpty().Trim();
             return req;
         }
-        
+
         public static HttpReq AddHeaderIfValid(this HttpReq req, string key, string? value)
         {
             return req.AddHeaderIf(value.IsValid(), key, value);
@@ -88,8 +87,8 @@ namespace FclEx.Http.Core
         public static string GetRequestHeader(this HttpReq req, string? cookieHeader = null)
         {
             var sb = new StringBuilder();
-            foreach (var pair in req.HeaderMap)
-                sb.AppendLine($"{pair.Key}: { pair.Value}");
+            foreach (var (key, value) in req.HeaderMap)
+                sb.AppendLine($"{key}: { value}");
             if (!req.HeaderMap.ContainsKey(HttpKnownHeaderNames.Cookie) && !cookieHeader.IsNullOrEmpty())
                 sb.Append(HttpKnownHeaderNames.Cookie + ": " + cookieHeader);
             return sb.ToString();
@@ -97,8 +96,17 @@ namespace FclEx.Http.Core
 
         public static string GetRequestHeader(this HttpReq req, IEnumerable<Cookie> cookies)
         {
-            return GetRequestHeader(req, cookies.Select(m => m.ToString()).JoinWith("; "));
+            return req.GetRequestHeader(cookies.Select(m => m.ToString()).JoinWith("; "));
         }
 
+        public static string GetRequestHeader(this HttpReq req, CookieContainer cc)
+        {
+            return req.GetRequestHeader(cc.GetCookies(req.GetUri()));
+        }
+
+        public static string GetRequestHeader(this HttpReq req, IHttpService service)
+        {
+            return req.GetRequestHeader(service.GetCookies(req.GetUri()));
+        }
     }
 }

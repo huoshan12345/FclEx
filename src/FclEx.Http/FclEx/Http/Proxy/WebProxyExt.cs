@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Net;
 using Dawn;
-using FclEx.Extensions;
-using FclEx.Utils;
 
 namespace FclEx.Http.Proxy
 {

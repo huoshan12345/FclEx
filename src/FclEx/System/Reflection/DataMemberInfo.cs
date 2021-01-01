@@ -1,15 +1,17 @@
 ﻿using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Dawn;
 
 namespace System.Reflection
 {
     [DebuggerDisplay("{" + nameof(Name) + "}")]
-    public class DataMemberInfo : MemberInfo
+    public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>
     {
         public DataMemberInfo(FieldInfo field)
         {
             MemberInfo = Guard.Argument(field, nameof(field)).NotNull();
+            IsCompilerGenerated = MemberInfo.IsDefined(typeof(CompilerGeneratedAttribute), false);
             CanRead = true;
             CanWrite = true;
             GetValueFunc = field.GetValue;
@@ -22,6 +24,7 @@ namespace System.Reflection
         public DataMemberInfo(PropertyInfo property)
         {
             MemberInfo = Guard.Argument(property, nameof(property)).NotNull();
+            IsCompilerGenerated = MemberInfo.IsDefined(typeof(CompilerGeneratedAttribute), false);
             CanRead = property.CanRead;
             CanWrite = property.CanWrite;
             GetValueFunc = property.GetValue;
@@ -56,5 +59,26 @@ namespace System.Reflection
         public MemberInfo MemberInfo { get; }
         public bool IsField { get; }
         public bool IsProperty { get; }
+        public bool IsCompilerGenerated { get; }
+
+        public bool Equals(DataMemberInfo? other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return base.Equals(other) && MemberInfo.Equals(other.MemberInfo);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((DataMemberInfo)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(base.GetHashCode(), MemberInfo);
+        }
     }
 }
