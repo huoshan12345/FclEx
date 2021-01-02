@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Dawn;
 using FclEx.Helpers;
 
@@ -132,6 +133,11 @@ namespace FclEx
                                        | BindingFlags.Public | BindingFlags.NonPublic
                                        | BindingFlags.GetField | BindingFlags.GetProperty;
             return type.InvokeMember(name, flags, null, obj, null).CastTo<T>();
+        }
+        
+        public static bool IsDynamic(this Type type)
+        {
+            return type.IsDefined<DynamicAttribute>(true);
         }
     }
 }

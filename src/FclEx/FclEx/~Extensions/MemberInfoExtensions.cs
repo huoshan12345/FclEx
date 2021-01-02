@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace FclEx
@@ -9,7 +10,7 @@ namespace FclEx
     {
         public static bool IsDefined<T>(this MemberInfo memberInfo, bool inherit = true)
         {
-            return Attribute.IsDefined(memberInfo, typeof(T), inherit);
+            return memberInfo.IsDefined(typeof(T), inherit);
         }
 
         public static DataMemberInfo ToDataMemberInfo(this MemberInfo memberInfo)
@@ -21,6 +22,11 @@ namespace FclEx
                 _ => throw new ArgumentException(
                     $"MemberInfo '{memberInfo.Name}' refers to neither a field nor a property.")
             };
+        }
+
+        public static bool IsCompilerGenerated(this MemberInfo memberInfo, bool inherit = true)
+        {
+            return memberInfo.IsDefined<CompilerGeneratedAttribute>(false);
         }
     }
 }

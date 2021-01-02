@@ -34,25 +34,33 @@ namespace FclEx.Actions
                 req = BuildRequest();
                 var response = await HttpService.ExecuteAsync(req, token).DonotCapture();
                 if (response.HasError)
+                {
+                    Dump(Logger, req, HttpService);
                     return (response.Exception!, response.ExcuteTime);
+                }
                 return await HandleResponseAsync(response).DonotCapture();
             }
             catch (Exception ex)
             {
-                if (Logger.IsEnabled(LogLevel.Trace) && req != null)
-                {
-                    // 此处用于生成请求信息，然后用fiddler等工具测试
-                    var msg = new StringBuilder(1024);
-                    msg.AppendLine($"[{GetName()}]Http Dump: ");
-                    var url = req.GetUri();
-                    var header = req.GetRequestHeader(HttpService);
-                    msg.AppendLine("url: " + url);
-                    msg.AppendLine("header: ");
-                    msg.Append(header);
-                    Logger.LogTrace(msg.ToString());
-                }
+                Dump(Logger, req, HttpService);
                 return ex;
             }
+        }
+
+        private static void Dump(ILogger logger, HttpReq? req, IHttpService service)
+        {
+            if (!logger.IsEnabled(LogLevel.Trace) || req == null)
+                return;
+
+            // 此处用于生成请求信息，然后用fiddler等工具测试
+            var msg = new StringBuilder(1024);
+            msg.AppendLine("Http Dump: ");
+            var url = req.GetUri();
+            var header = req.GetRequestHeader(service);
+            msg.AppendLine("url: " + url);
+            msg.AppendLine("header: ");
+            msg.Append(header);
+            logger.LogTrace(msg.ToString());
         }
 
         HttpReq BuildRequest()

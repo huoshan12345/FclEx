@@ -39,7 +39,7 @@ namespace FclEx.Actions
             return url == null ? null : HttpReq.Get(url).ToAction(httpService);
         }
 
-        public static IAction<HttpRes>? TryRedirect(this HttpRes res, IHttpService httpService, string url)
+        public static IAction<HttpRes>? TryRedirect(this HttpRes res, IHttpService httpService, string? url)
         {
             return res.TryRedirect(httpService, r => url);
         }

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using FclEx.Helpers;
 using FclEx.TypeCasters;
 
 namespace FclEx
@@ -65,6 +67,12 @@ namespace FclEx
             if (comparer.Compare(obj, max) > 0)
                 return max;
             return obj;
+        }
+        
+        public static (string Name, TMember value) GetNamedValue<T, TMember>(this T obj, Expression<Func<T, TMember>> selector)
+        {
+            var member = ExpressionHelper.GetDataMemberInfo(selector);
+            return (member.Name, member.GetValue(obj).CastTo<TMember>())!;
         }
     }
 }
