@@ -28,7 +28,7 @@ namespace FclEx
             return p;
         }
 
-        public static void HandleAll(this Exception ex, Action<Exception> action)
+        public static void HandleAll(this Exception ex, Action<Exception>? action)
         {
             if (action == null) return;
 
@@ -62,6 +62,17 @@ namespace FclEx
                 if (exception != null && !handled.Contains(exception))
                     q.Enqueue(exception);
             }
+        }
+
+        public static Exception Unwrap(this Exception ex)
+        {
+            if (ex is AggregateException agg)
+            {
+                agg = agg.Flatten(); // agg does not contain AggregateException now.
+                if (agg.InnerExceptions.Count == 1)
+                    return agg.InnerExceptions[0];
+            }
+            return ex;
         }
     }
 }

@@ -59,7 +59,7 @@ namespace FclEx.Consumers
 
         private List<ProcItem<T>>? HandleException(List<ProcItem<T>> items, Exception ex)
         {
-            if (items == null || items.Count == 0)
+            if (items.IsNullOrEmpty())
                 return items;
 
             List<ProcItem<T>>? nextItems = null;

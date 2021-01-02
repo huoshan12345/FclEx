@@ -11,14 +11,14 @@ namespace FclEx.Http.Core
     {
         public HttpRes(HttpReq req)
         {
-            Req = req ?? throw new ArgumentNullException(nameof(req));
+            HttpReq = req ?? throw new ArgumentNullException(nameof(req));
         }
         
         [MemberNotNullWhen(true, nameof(Exception))]
         public bool HasError => Exception != null;
         public Exception? Exception { get; internal set; }
 
-        public HttpReq Req { get; }
+        public HttpReq HttpReq { get; }
         public string ResponseString { get; internal set; } = string.Empty;
         public Encoding? Encoding { get; internal set; }
         public byte[] ResponseBytes { get; internal set; } = Array.Empty<byte>();

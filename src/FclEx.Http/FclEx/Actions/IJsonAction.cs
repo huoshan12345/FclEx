@@ -1,25 +1,28 @@
-﻿using FclEx.Http.Core;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Xml.Linq;
+using FclEx.Http.Core;
 using FclEx.Utils;
 using Newtonsoft.Json.Linq;
 
 namespace FclEx.Actions
 {
-    public interface IJsonAction<T>
+    public interface IJsonAction<T> : IHttpResHandler<T>
     {
         string? JsonResultPath { get; }
 
-        OperateResult<T> GetResult(HttpRes response)
+        OperateResult<T> IHttpResHandler<T>.GetResult(HttpRes res)
         {
-            var (successful, _, json, ex) = GetJsonString(response);
+            var (successful, _, str, ex) = GetJsonString(res);
             if (!successful)
                 return ex!;
 
-            var token = json!.ToJToken();
-            var resultToken = JsonResultPath == null
-                ? token
-                : token.SelectToken(JsonResultPath);
+            var context = new JsonActionContext(res, str!, JsonResultPath);
 
-            return GetResult(response, json!, token, resultToken!);
+            if (IsFailed(context))
+                return HandleFailed(context);
+
+            return GetResult(context);
         }
 
         OperateResult<string> GetJsonString(HttpRes response)
@@ -27,33 +30,48 @@ namespace FclEx.Actions
             var str = response.ResponseString;
             return str.IsPossibleJson()
                 ? OperateResult.CreateSuccess(response.ResponseString)
-                : OperateResult.CreateError<string>("The response string is not a valid json: " + str.TruncateSafely(256));
+                : OperateResult.CreateError<string>("The res string is not a valid json: " + str.TruncateSafely(256));
         }
 
-        StringError GetJTokenError(HttpRes response, string json, JToken token, JToken? resultToken)
+        bool IsFailed(JsonActionContext context) => !context.ResultTokens.Any();
+
+        OperateResult<T> HandleFailed(JsonActionContext context)
         {
-            if (resultToken == null)
-            {
-                const string msg = "The result object does not exist in json";
-                var error = JsonResultPath == null ? msg : msg + " at " + JsonResultPath;
-                error = error + ": " + json.TruncateSafely(256);
-                return (true, error);
-            }
-            return (false, string.Empty);
+            const string msg = "The result object does not exist in json";
+            var error = JsonResultPath == null ? msg : msg + " at " + JsonResultPath;
+            error = error + ": " + context.Json.TruncateSafely(256);
+            return error;
         }
 
-        OperateResult<T> GetResult(HttpRes response, string json, JToken token, JToken? resultToken)
+        OperateResult<T> GetResult(JsonActionContext context)
         {
-            var (hasError, error) = GetJTokenError(response, json, token, resultToken);
-            if (hasError)
-                return error;
-            return resultToken!.ToObject<T>()!;
+            return context.ResultToken!.ToObject<T>()!;
         }
     }
 
     public interface IJsonAction : IJsonAction<Unit>
     {
-        OperateResult<Unit> IJsonAction<Unit>.GetResult(HttpRes response, string json, JToken token, JToken? resultToken)
-            => OperateResult.Success;
+        OperateResult<Unit> IJsonAction<Unit>.GetResult(JsonActionContext context) => OperateResult.Success;
+    }
+
+    public readonly struct JsonActionContext
+    {
+        public JsonActionContext(HttpRes httpRes, string json, string? path)
+        {
+            HttpRes = httpRes;
+            Json = json;
+            Path = path;
+            Token = JToken.Parse(json);
+            ResultTokens = path == null
+                ? Token.Yield()
+                : Token.SelectTokens(path)!;
+        }
+
+        public HttpRes HttpRes { get; }
+        public string? Path { get; }
+        public string Json { get; }
+        public JToken Token { get; }
+        public IEnumerable<JToken> ResultTokens { get; }
+        public JToken? ResultToken => ResultTokens.FirstOrDefault();
     }
 }

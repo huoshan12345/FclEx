@@ -16,7 +16,7 @@ namespace FclEx.Http.Core
         {
             if (!res.StatusCode.IsSuccess())
             {
-                throw new WebException($"call {res.Req.GetUri()} with {res.Req.Method} return unsuccessful code: {res.StatusCode}/{res.StatusCode.ToInt()}");
+                throw new WebException($"call {res.HttpReq.GetUri()} with {res.HttpReq.Method} return unsuccessful code: {res.StatusCode}/{res.StatusCode.ToInt()}");
             }
             return res;
         }
@@ -38,7 +38,7 @@ namespace FclEx.Http.Core
         {
             var res = await task.DonotCapture();
             res.ThrowIfError();
-            if (res.Req.ResultType == HttpResultType.Byte)
+            if (res.HttpReq.ResultType == HttpResultType.Byte)
                 throw new InvalidOperationException("Can not deserialize json from byte array.");
             if (res.ResponseString.IsNullOrEmpty())
                 throw new InvalidOperationException("Can not deserialize json from empty response string.");

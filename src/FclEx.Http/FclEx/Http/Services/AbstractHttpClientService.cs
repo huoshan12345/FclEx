@@ -58,10 +58,10 @@ namespace FclEx.Http.Services
             {
                 res.Headers.AddRange(key, value);
             }
-            var bytes = await CopyToMemoryAsync(response.Content, token, res.Req.Timeout).DonotCapture();
+            var bytes = await CopyToMemoryAsync(response.Content, token, res.HttpReq.Timeout).DonotCapture();
             res.ResponseBytes = bytes;
 
-            var req = res.Req;
+            var req = res.HttpReq;
             switch (req.ResultType)
             {
                 case HttpResultType.Byte:

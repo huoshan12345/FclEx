@@ -1,6 +1,7 @@
 ﻿using FclEx.Utils;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using Dawn;
@@ -22,7 +23,7 @@ namespace FclEx.Consumers
         private readonly int _retryPartCount;
         private readonly AutoRetryConsumer<List<T>> _retryConsumer;
         private readonly BatchConsumer<T> _batchConsumer;
-        private readonly AsyncLock _locker = new AsyncLock();
+        private readonly AsyncLock _locker = new();
 
         public bool IsComplete => _retryConsumer.IsComplete;
         public int Count => _locker.Do(() => _retryConsumer.Count + _batchConsumer.Count);
@@ -53,6 +54,7 @@ namespace FclEx.Consumers
             _batchConsumer.CancellationHandler += (sender, list) => CancellationHandler.Invoke(this, list);
         }
 
+        [AllowNull]
         public ILogger Logger
         {
             get => _logger;
@@ -67,11 +69,14 @@ namespace FclEx.Consumers
             }
         }
 
-        public Counter Counter { get; } = new Counter();
+        public Counter Counter { get; } = new();
 
         public Task Start(bool clear = false)
         {
-            return Task.WhenAll(_retryConsumer.Start(clear), _batchConsumer.Start(clear).ContinueWith(t => _retryConsumer.CompleteAdding()));
+            return Task.WhenAll(
+                _retryConsumer.Start(clear), 
+                _batchConsumer.Start(clear)
+                    .ContinueWith(t => _retryConsumer.CompleteAdding()));
         }
 
         public void Add(T item)
@@ -98,7 +103,9 @@ namespace FclEx.Consumers
 
         private void HandleDiscard(ProcItem<List<T>> list)
         {
-            if (list.Item == null || list.Item.Count == 0) return;
+            if (list.Item.IsNullOrEmpty())
+                return;
+            
             var procItem = list.ToType(list.Item.First());
             try
             {
@@ -114,7 +121,9 @@ namespace FclEx.Consumers
 
         private void HandleException(ProcItem<List<T>> list)
         {
-            if (list.Item == null || list.Item.Count == 0) return;
+            if (list.Item.IsNullOrEmpty()) 
+                return;
+            
             var procItem = list.ToType(list.Item.First());
             try
             {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -18,14 +19,15 @@ namespace FclEx.Consumers
     {
         private ILogger _logger = NullLogger.Instance;
         protected string TypeName { get; }
-        protected readonly AsyncLock _locker = new AsyncLock();
-        protected readonly BlockingCollection<ProcItem<T>> _items = new BlockingCollection<ProcItem<T>>();
+        protected readonly AsyncLock _locker = new();
+        protected readonly BlockingCollection<ProcItem<T>> _items = new();
         protected volatile bool _isRunning;
         protected volatile bool _isAddingCompleted;
         protected volatile bool _isDisposed;
         protected bool IsCompleteNoLock => (_isDisposed || _items.Count == 0) && _isAddingCompleted;
-        protected CancellationTokenSource _cts = new CancellationTokenSource();
+        protected CancellationTokenSource _cts = new();
 
+        [AllowNull]
         public ILogger Logger
         {
             get => _logger;
@@ -35,7 +37,7 @@ namespace FclEx.Consumers
                 _logger = value;
             }
         }
-        public Counter Counter { get; } = new Counter();
+        public Counter Counter { get; } = new();
         public int Count => _locker.Do(() => _isDisposed ? 0 : _items.Count);
         public bool IsComplete => _locker.Do(() => IsCompleteNoLock);
         public event EventHandler<TSelf, IReadOnlyList<T>> CancellationHandler = (sender, list) => { };

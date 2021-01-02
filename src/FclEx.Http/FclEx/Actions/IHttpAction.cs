@@ -15,15 +15,12 @@ namespace FclEx.Actions
         IHttpService HttpService { get; }
         Uri Uri { get; }
         HttpReqType ReqType { get; }
-        bool IgnoreFailedStatus { get; }
-        bool IgnoreEmptyResponse { get; }
 
-        Task<OperateResult<T>> HandleResponseAsync(HttpRes response)
+        Task<OperateResult<T>> HandleResponseAsync(HttpRes res)
         {
-            var (hasError, error) = GetResponseError(response);
-            if (hasError)
-                return OperateResult.CreateError<T>(error);
-            return GetResultAsync(response);
+            if (IsFailed(res))
+                return HandleFailed(res);
+            return GetResultAsync(res);
         }
 
         async Task<OperateResult<T>> IAbstractAction<T>.ExecuteAsyncBody(CancellationToken token)
@@ -32,13 +29,13 @@ namespace FclEx.Actions
             try
             {
                 req = BuildRequest();
-                var response = await HttpService.ExecuteAsync(req, token).DonotCapture();
-                if (response.HasError)
+                var res = await HttpService.ExecuteAsync(req, token).DonotCapture();
+                if (res.HasError)
                 {
                     Dump(Logger, req, HttpService);
-                    return (response.Exception!, response.ExcuteTime);
+                    return (res.Exception!, res.ExcuteTime);
                 }
-                return await HandleResponseAsync(response).DonotCapture();
+                return await HandleResponseAsync(res).DonotCapture();
             }
             catch (Exception ex)
             {
@@ -66,6 +63,7 @@ namespace FclEx.Actions
         HttpReq BuildRequest()
         {
             var req = HttpReq.Create(Uri, ReqType)
+                .ThrowOnFailedCode(false)
                 .Compress();
             ModifyRequest(req);
             return req;
@@ -86,23 +84,18 @@ namespace FclEx.Actions
             return uri;
         }
 
-        StringError GetResponseError(HttpRes response)
+        bool IsFailed(HttpRes res) => !res.StatusCode.IsSuccess();
+
+        OperateResult<T> HandleFailed(HttpRes res)
         {
-            if (!response.StatusCode.IsSuccess() && !IgnoreFailedStatus)
-            {
-                var error = $"The response with status code {response.StatusCode} is unsuccessful: "
-                         + response.ResponseString.TruncateSafely(256);
-                return (true, error);
-            }
-            if (response.ResponseString.IsNullOrEmpty() && !IgnoreEmptyResponse)
-            {
-                var error = "The response string is empty";
-                return (true, error);
-            }
-            return (false, "");
+            var code = res.StatusCode;
+            var error = $"The res with status code {code.ToString()}/{code.ToInt()} is unsuccessful: "
+                        + res.ResponseString.TruncateSafely(256);
+            return error;
         }
 
         Task<OperateResult<T>> GetResultAsync(HttpRes response) => GetResult(response);
+
         OperateResult<T> GetResult(HttpRes response);
     }
 }

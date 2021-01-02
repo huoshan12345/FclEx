@@ -89,17 +89,17 @@ namespace FclEx.Utils
             return CreateError(ex, TimeSpan.Zero);
         }
 
-        public static implicit operator OperateResult(string error)
+        public static implicit operator OperateResult(string? error)
         {
             return CreateError(error, TimeSpan.Zero);
         }
 
-        public static implicit operator OperateResult((string, TimeSpan) paras)
+        public static implicit operator OperateResult((string?, TimeSpan) paras)
         {
             return CreateError(paras.Item1, paras.Item2);
         }
 
-        public static implicit operator OperateResult((TimeSpan, string) paras)
+        public static implicit operator OperateResult((TimeSpan, string?) paras)
         {
             return CreateError(paras.Item2, paras.Item1);
         }
