@@ -24,10 +24,7 @@ namespace FclEx.Comparers
 
         private readonly IList<OrderProperty> _orderProperties = new List<OrderProperty>();
 
-        public static MemberComparer<T> Create()
-        {
-            return new MemberComparer<T>();
-        }
+        public static MemberComparer<T> Create() => new();
 
         public static MemberComparer<T> Create<TMember>(Expression<Func<T?, TMember?>> selector, bool desc = false)
         {

@@ -49,10 +49,10 @@ namespace FclEx
             }
         }
 
-        [return: MaybeNull]
-        public static T GetAt<T>(this IList<T> list, int index, T defaultValue = default)
+        [return: NotNullIfNotNull("defaultValue")]
+        public static T? TryGet<T>(this IList<T>? list, int index, T defaultValue = default)
         {
-            return list.Count > index ? list[index] : defaultValue;
+            return list != null && 0 <= index && index < list.Count ? list[index] : defaultValue;
         }
 
         public static T GetRandomly<T>(this IList<T> list, Random? random = null)
@@ -63,10 +63,9 @@ namespace FclEx
             return list[i];
         }
 
-        [return: MaybeNull]
-        public static IList<T> TrySet<T>([AllowNull] this IList<T> list, int index, T value)
+        public static IList<T>? TrySet<T>(IList<T>? list, int index, T value)
         {
-            if (list != null && index >= 0 && index < list.Count)
+            if (list != null && 0 <= index && index < list.Count)
                 list[index] = value;
             return list;
         }
