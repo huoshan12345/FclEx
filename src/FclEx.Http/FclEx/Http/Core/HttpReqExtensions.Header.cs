@@ -7,7 +7,7 @@ using MoreLinq;
 
 namespace FclEx.Http.Core
 {
-    public static partial class HttpReqExtensions
+    partial class HttpReqExtensions
     {
         public static HttpReq TryAddHeader(this HttpReq req, string key, string? value)
         {

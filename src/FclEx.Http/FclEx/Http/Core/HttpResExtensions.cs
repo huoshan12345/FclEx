@@ -38,7 +38,7 @@ namespace FclEx.Http.Core
         {
             var res = await task.DonotCapture();
             res.ThrowIfError();
-            if (res.HttpReq.ResultType == HttpResultType.Byte)
+            if (res.HttpReq.ResultType == HttpResultType.Bytes)
                 throw new InvalidOperationException("Can not deserialize json from byte array.");
             if (res.ResponseString.IsNullOrEmpty())
                 throw new InvalidOperationException("Can not deserialize json from empty response string.");
@@ -103,6 +103,21 @@ namespace FclEx.Http.Core
         }
 
         public static Uri LastUri(this HttpRes res) => res.RedirectUris.Last();
+
+        public static Task<HttpRes> Error(this Task<HttpRes> task, Action<Exception> action)
+        {
+            return task.On(m => m.HasError, m => action(m.Exception!));
+        }
+
+        public static Task<HttpRes> Ok(this Task<HttpRes> task, Action<HttpRes> action)
+        {
+            return task.On(m => !m.HasError, action);
+        }
+
+        public static Task<HttpRes> Ok(this Task<HttpRes> task, Func<HttpRes, Task> action)
+        {
+            return task.On(m => !m.HasError, action);
+        }
     }
 
 

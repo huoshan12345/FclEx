@@ -6,7 +6,7 @@
     public enum HttpResultType
     {
         String,
-        Byte,
+        Bytes,
         // Stream,
     }
 }

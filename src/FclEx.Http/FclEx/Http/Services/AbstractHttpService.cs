@@ -16,12 +16,6 @@ namespace FclEx.Http.Services
 {
     public abstract class AbstractHttpService : IHttpService
     {
-        static AbstractHttpService()
-        {
-            ServicePointManager.DefaultConnectionLimit = int.MaxValue;
-            FclExStartup.Init();
-        }
-
         protected readonly CookieContainer _cookieContainer;
         protected volatile IWebProxyExt _webProxy = WebProxyExt.None;
         private ILogger _logger = NullLogger.Instance;

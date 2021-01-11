@@ -115,7 +115,7 @@ namespace FclEx.Http.Services
             HttpMethodType method = HttpMethodType.Get, TimeSpan? timeout = null)
         {
             var req = new HttpReq(uri, method)
-                .ResultType(HttpResultType.Byte)
+                .ResultType(HttpResultType.Bytes)
                 .Timeout(timeout)
                 .Compress();
 

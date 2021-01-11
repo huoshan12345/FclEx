@@ -2,7 +2,7 @@
 
 namespace FclEx.Http.Core
 {
-    public static partial class HttpReqExtensions
+    partial class HttpReqExtensions
     {
         public static HttpReq ReadResultCookie(this HttpReq req, bool read)
         {
@@ -167,5 +167,15 @@ namespace FclEx.Http.Core
             req.Origin ??= url;
             return req;
         }
+
+        public static HttpReq ResultType(this HttpReq req, HttpResultType type)
+        {
+            req.ResultType = type;
+            return req;
+        }
+
+        public static HttpReq ReadAsString(this HttpReq req) => req.ResultType(HttpResultType.String);
+
+        public static HttpReq ReadAsBytes(this HttpReq req) => req.ResultType(HttpResultType.Bytes);
     }
 }

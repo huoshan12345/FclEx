@@ -64,7 +64,7 @@ namespace FclEx.Http.Services
             var req = res.HttpReq;
             switch (req.ResultType)
             {
-                case HttpResultType.Byte:
+                case HttpResultType.Bytes:
                 {
                     res.ResponseBytes = bytes;
                     break;

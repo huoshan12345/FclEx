@@ -20,32 +20,33 @@ namespace FclEx.Utils
 
         public void Init(Action action)
         {
-            if (!_isInitialized)
+            if (_isInitialized)
+                return;
+
+            using (_asyncLock?.Lock())
             {
-                using (_asyncLock?.Lock())
-                {
-                    if (!_isInitialized)
-                    {
-                        action();
-                        _isInitialized = true;
-                    }
-                }
+                if (_isInitialized)
+                    return;
+
+                action();
+                _isInitialized = true;
             }
         }
 
         public async Task InitAsync(Func<Task> action)
         {
-            if (!_isInitialized)
+            if (_isInitialized)
+                return;
+
+            using (_asyncLock?.Lock())
             {
-                using (_asyncLock?.Lock())
-                {
-                    if (!_isInitialized)
-                    {
-                        await action().DonotCapture();
-                        _isInitialized = true;
-                    }
-                }
+                if (_isInitialized)
+                    return;
+
+                await action().DonotCapture();
+                _isInitialized = true;
             }
+
         }
     }
 }
