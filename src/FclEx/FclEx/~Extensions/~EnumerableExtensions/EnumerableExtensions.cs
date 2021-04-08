@@ -130,25 +130,25 @@ namespace FclEx
         }
 
         [return: MaybeNull]
-        public static TResult MaxOr<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, TResult> selector, TResult defaultValue = default)
+        public static TResult MaxOr<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, TResult> selector, TResult? defaultValue = default)
         {
             return source.Any() ? source.Max(selector) : defaultValue;
         }
 
         [return: MaybeNull]
-        public static TSource MaxOr<TSource>(this IEnumerable<TSource> source, TSource defaultValue = default)
+        public static TSource MaxOr<TSource>(this IEnumerable<TSource> source, TSource? defaultValue = default)
         {
             return source.Any() ? source.Max() : defaultValue;
         }
 
         [return: MaybeNull]
-        public static TResult MinOr<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, TResult> selector, TResult defaultValue = default)
+        public static TResult MinOr<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, TResult> selector, TResult? defaultValue = default)
         {
             return source.Any() ? source.Min(selector) : defaultValue;
         }
 
         [return: MaybeNull]
-        public static TSource MinOr<TSource>(this IEnumerable<TSource> source, TSource defaultValue = default)
+        public static TSource MinOr<TSource>(this IEnumerable<TSource> source, TSource? defaultValue = default)
         {
             return source.Any() ? source.Min() : defaultValue;
         }

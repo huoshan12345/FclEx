@@ -12,7 +12,6 @@ using FclEx.Utils;
 
 namespace FclEx.Http.Services
 {
-    [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
     public static class HttpServiceExtensions
     {
         public static Task<HttpRes> GetAsync(this IHttpService http, string url, string? charSet = null, int? timeout = 10 * 1000, int retryTimes = 3, int delaySeconds = 0)
@@ -26,9 +25,8 @@ namespace FclEx.Http.Services
         public static async Task<HttpRes> SendAsync(this IHttpService http, HttpReq req, int retryTimes = 1, int delaySeconds = 0)
         {
 
-            return await ActionHelper.TryAsync(async ()
-                => await http.ExecuteAsync(req).DonotCapture(),
-                retryTimes, delaySeconds, e => HttpRes.CreateError(req, e), false, HttpRes.EmptyRes)
+            return await ActionHelper.TryAsync(() => http.ExecuteAsync(req), 
+                    retryTimes, delaySeconds, e => HttpRes.CreateError(req, e), false, HttpRes.EmptyRes)
                 .DonotCapture();
         }
 
@@ -78,6 +76,7 @@ namespace FclEx.Http.Services
             http.AddCookies(cookies, uri);
         }
 
+        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         public static void AddCookies(this IHttpService http, IEnumerable<Cookie> cookies, Uri? uri = null)
         {
             Guard.Argument(http, nameof(http)).NotNull();

@@ -26,9 +26,9 @@ namespace FclEx.Json.Converters
             if (token.Type == JTokenType.String)
             {
                 var str = token.Value<string>();
-                token = str.ToJToken();
+                token = str?.ToJToken();
             }
-            return token.ToObject(objectType);
+            return token?.ToObject(objectType);
         }
 
         public override bool CanConvert(Type objectType) => true;

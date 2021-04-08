@@ -31,7 +31,8 @@ namespace FclEx.TypeCasters
             {
                 t = t.GetEnumUnderlyingType();
             }
-            return (TOutput)Convert.ChangeType(value, t);
+            var obj = Convert.ChangeType(value, t);
+            return obj == null ? default : (TOutput)obj;
         }
     }
 }

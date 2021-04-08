@@ -50,7 +50,7 @@ namespace FclEx
         }
 
         [return: NotNullIfNotNull("defaultValue")]
-        public static T? TryGet<T>(this IList<T>? list, int index, T defaultValue = default)
+        public static T? TryGet<T>(this IList<T>? list, int index, T? defaultValue = default)
         {
             return list != null && 0 <= index && index < list.Count ? list[index] : defaultValue;
         }

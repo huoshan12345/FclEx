@@ -92,7 +92,7 @@ namespace FclEx.Helpers
         }
 
         public static async Task<T> TryAsync<T>(Func<Task<T>> func, int retryTimes = 3, int delaySeconds = 0,
-            Func<Exception, T>? onFail = null, bool throwOnFail = false, T defaultValue = default)
+            Func<Exception, T>? onFail = null, bool throwOnFail = false, T defaultValue = default!)
         {
             if (func == null) throw new ArgumentNullException(nameof(func));
             var lastEx = default(Exception);
@@ -110,13 +110,12 @@ namespace FclEx.Helpers
                 }
             }
 
-            if (throwOnFail && lastEx != null) throw lastEx;
-            // waiting for https://github.com/dotnet/csharplang/issues/2946
-#pragma warning disable CS8603 // Possible null reference return.
+            if (throwOnFail && lastEx != null) 
+                throw lastEx;
+
             return onFail == null || lastEx == null 
                 ? defaultValue 
                 : onFail(lastEx);
-#pragma warning restore CS8603 // Possible null reference return.
         }
     }
 }

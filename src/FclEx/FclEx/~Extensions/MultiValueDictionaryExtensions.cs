@@ -10,13 +10,13 @@ namespace FclEx
     public static class MultiValueDictionaryExtensions
     {
         [return: MaybeNull]
-        public static TValue GetFirstOr<TKey, TValue>(this MultiValueDictionary<TKey, TValue> dic, TKey key, TValue defaultValue = default)
+        public static TValue GetFirstOr<TKey, TValue>(this MultiValueDictionary<TKey, TValue> dic, TKey key, TValue? defaultValue = default)
         {
             return dic.TryGetValue(key, out var list) && list.Count > 0 ? list.First() : defaultValue;
         }
 
         [return: MaybeNull]
-        public static TValue GetLastOr<TKey, TValue>(this MultiValueDictionary<TKey, TValue> dic, TKey key, TValue defaultValue = default)
+        public static TValue GetLastOr<TKey, TValue>(this MultiValueDictionary<TKey, TValue> dic, TKey key, TValue? defaultValue = default)
         {
             return dic.TryGetValue(key, out var list) && list.Count > 0 ? list.Last() : defaultValue;
         }
@@ -32,7 +32,7 @@ namespace FclEx
         }
 
         [return: MaybeNull]
-        public static TProp GetOr<TKey, TValue, TProp>(this MultiValueDictionary<TKey, TValue> dic, TKey key, Func<IReadOnlyCollection<TValue>, TProp> selector, TProp defaultValue = default)
+        public static TProp GetOr<TKey, TValue, TProp>(this MultiValueDictionary<TKey, TValue> dic, TKey key, Func<IReadOnlyCollection<TValue>, TProp> selector, TProp? defaultValue = default)
         {
             return dic.TryGetValue(key, out var value) ? selector(value) : defaultValue;
         }

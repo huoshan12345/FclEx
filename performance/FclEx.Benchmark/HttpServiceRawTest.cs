@@ -33,10 +33,11 @@ namespace FclEx.Benchmark
         public static async ValueTask RawTest(int rounds)
         {
             var reqs = Urls.Select(m => HttpReq.Get(m)
-                .ReadResultCookie(false)
-                .ReadResultContent(false)
-                .ReadResultHeader(false)
-                .AcceptBytes()).ToArray();
+                    .ReadResultCookie(false)
+                    .ReadResultContent(false)
+                    .ReadResultHeader(false)
+                    .ReadAsBytes())
+                .ToArray();
 
             foreach (var service in Services)
             {
