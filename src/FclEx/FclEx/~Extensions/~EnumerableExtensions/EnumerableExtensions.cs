@@ -107,14 +107,6 @@ namespace FclEx
             return enumerable.Select(m => m.AsTuple());
         }
 
-        /// <summary>
-        /// Wraps this object instance into an IEnumerable
-        /// </summary>
-        public static IEnumerable<T> Yield<T>(this T item)
-        {
-            yield return item;
-        }
-
         public static IEnumerable<T> Concat<T>(this T firstElement, IEnumerable<T>? secondSequence)
         {
             yield return firstElement;

@@ -197,5 +197,10 @@ namespace FclEx
         public static byte[] ToBytesFromBase64(this string base64String) => Convert.FromBase64String(base64String);
 
         public static Uri ToUri(this string str, UriKind uriKind = UriKind.Absolute) => new(str, uriKind);
+
+        public static string IfEmpty(this string? str, string defaultValue)
+        {
+            return str.IsValid() ? str : defaultValue;
+        }
     }
 }

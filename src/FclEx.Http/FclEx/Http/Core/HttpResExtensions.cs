@@ -62,7 +62,7 @@ namespace FclEx.Http.Core
             return token.ToObject<T>()!;
         }
 
-        internal static HttpFileDownloadInfo GetDownloadInfo(this HttpRes res)
+        public static HttpFileDownloadInfo GetDownloadInfo(this HttpRes res)
         {
             var realUrl = res.RedirectUris.Last();
             var fileNameWithExt = Path.GetFileName(realUrl.LocalPath);
@@ -72,9 +72,10 @@ namespace FclEx.Http.Core
             {
                 fileName = (realUrl.Host + realUrl.LocalPath).RegexReplace(@"\W", "_").TrimEnd("_");
             }
+
+            var mimeType = res.Headers.GetFirstOr(HttpKnownHeaderNames.ContentType);
             if (ext.IsNullOrEmpty())
             {
-                var mimeType = res.Headers.GetFirstOr(HttpKnownHeaderNames.ContentType);
                 if (mimeType.IsValid())
                 {
                     if (mimeType!.Contains(";"))
@@ -87,19 +88,20 @@ namespace FclEx.Http.Core
                 }
             }
             ext ??= string.Empty;
-            var info = new HttpFileDownloadInfo(realUrl, fileName, ext, res.ResponseBytes);
+            mimeType ??= "application/octet-stream";
+            var info = new HttpFileDownloadInfo(realUrl, fileName, ext, res.ResponseBytes, mimeType);
             return info;
         }
 
         internal static string MimeTypeFix(string mimeType)
         {
             // avoid throwing exceptions in MimeTypeMap.TryGetExtension.
-            switch (mimeType)
+            return mimeType switch
             {
-                case null: return string.Empty;
-                case "image/jpg": return "image/jpeg";
-                default: return mimeType.TrimStart(".");
-            }
+                null => string.Empty,
+                "image/jpg" => "image/jpeg",
+                _ => mimeType.TrimStart(".")
+            };
         }
 
         public static Uri LastUri(this HttpRes res) => res.RedirectUris.Last();

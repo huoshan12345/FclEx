@@ -38,5 +38,16 @@ namespace FclEx
         }
 
         public static LambdaExpression AsLambda(this Expression e) => Expression.Lambda(e);
+
+        public static void Visit(this BlockExpression block, Action<Expression> action)
+        {
+            foreach (var exp in block.Expressions)
+            {
+                if (exp is BlockExpression b)
+                    Visit(b, action);
+                else
+                    action(exp);
+            }
+        }
     }
 }
