@@ -28,6 +28,6 @@ namespace AngleSharp.Dom
             path = Path;
         }
 
-        public static readonly HtmlAnchor Empty = new(HtmlHelper.Parse("<a></a>").QuerySelector<IHtmlAnchorElement>("a"));
+        public static readonly HtmlAnchor Empty = new(HtmlHelper.Parse("<a></a>").QuerySelector<IHtmlAnchorElement>("a")!);
     }
 }

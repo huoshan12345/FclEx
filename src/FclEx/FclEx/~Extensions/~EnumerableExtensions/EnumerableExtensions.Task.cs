@@ -205,5 +205,57 @@ namespace FclEx
                 await batch.Select(taskSelector).WhenAll();
             }
         }
+
+        public static Task WhenAnySuccess(this IEnumerable<Task> tasks)
+        {
+            var tcs = new TaskCompletionSource();
+
+            var count = tasks.Count();
+            var completedCount = 0;
+
+            foreach (var task in tasks)
+            {
+                task.ContinueWith(t =>
+                {
+                    if (t.IsCompletedSuccessfully)
+                    {
+                        tcs.TrySetResult();
+                    }
+
+                    if (Interlocked.Increment(ref completedCount) >= count)
+                    {
+                        tcs.SetException(new InvalidOperationException("All tasks failed"));
+                    }
+                });
+            }
+
+            return tcs.Task;
+        }
+
+        public static Task<T> WhenAny<T>(this IEnumerable<Task<T>> tasks, Func<T, bool> predicate)
+        {
+            var tcs = new TaskCompletionSource<T>();
+
+            var count = tasks.Count();
+            var completedCount = 0;
+
+            foreach (var task in tasks)
+            {
+                task.ContinueWith(t =>
+                {
+                    if (t.IsCompletedSuccessfully && predicate(t.Result))
+                    {
+                        tcs.TrySetResult(t.Result);
+                    }
+
+                    if (Interlocked.Increment(ref completedCount) >= count)
+                    {
+                        tcs.SetException(new InvalidOperationException("All tasks failed"));
+                    }
+                });
+            }
+
+            return tcs.Task;
+        }
     }
 }

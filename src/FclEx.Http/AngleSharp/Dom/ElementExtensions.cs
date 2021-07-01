@@ -43,15 +43,18 @@ namespace AngleSharp.Dom
 
         public static SubmitInfo? GetFormSubmitInfo(this IElement? e, string formSelector, Uri? htmlUrl)
         {
-            var form = e?.QuerySelector(formSelector);
-            if (form == null) 
+            if (e?.QuerySelector(formSelector) is not { } form)
                 return null;
 
-            var info = new SubmitInfo(new Uri(form.GetAttribute("action"), UriKind.RelativeOrAbsolute));
+            if (form.GetAttribute("action") is not { } action)
+                return null;
+
+
+            var info = new SubmitInfo(new Uri(action, UriKind.RelativeOrAbsolute));
 
             if (!info.SubmitUrl.IsAbsoluteUri)
             {
-                var baseUri = htmlUrl ?? e!.BaseUrl;
+                var baseUri = htmlUrl ?? (e.BaseUrl is { } u ? (Uri)u : null);
                 if (baseUri != null)
                 {
                     info.SubmitUrl = new Uri(baseUri, info.SubmitUrl);
