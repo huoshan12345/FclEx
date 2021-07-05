@@ -11,8 +11,7 @@ namespace FclEx.Http.Services
 {
     public sealed class HttpClientService : AbstractHttpClientService
     {
-        private static readonly TimerLazy<HttpClientService> _default = new TimerLazy<HttpClientService>(() =>
-                new HttpClientService(false, null, null), TimeSpan.FromMinutes(2));
+        private static readonly TimerLazy<HttpClientService> _default = new(() => new HttpClientService(false, null, null), TimeSpan.FromMinutes(2));
 
         public static HttpClientService Default => _default.Value;
 

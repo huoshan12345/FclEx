@@ -18,6 +18,7 @@ namespace FclEx.Http.Services
         {
             "https://www.google.com/",
             "https://www.instagram.com/",
+            "https://www.limetorrents.com/"
         };
 
         public static IEnumerable<object[]> Cases { get; } = ProxyList.SelectMany(m => Urls, (x, y) => new object[] { x, y });
