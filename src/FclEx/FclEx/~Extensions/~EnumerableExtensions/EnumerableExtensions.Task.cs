@@ -12,7 +12,6 @@ using MoreLinq;
 
 namespace FclEx
 {
-    [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
     partial class EnumerableExtensions
     {
         public static Task<(List<(T Input, TResult Output)> Success, List<(T Input, OperateResult<TResult> Output)> Failure)>
@@ -22,16 +21,19 @@ namespace FclEx
             return enumerable.ToParallellyExecutedTaskOfPair(async m => OperateResult.CreateSuccess(await taskSelector(m)), batchSize, token);
         }
 
+
         public static async Task<(List<(T Input, TResult Output)> Success, List<(T Input, OperateResult<TResult> Output)> Failure)>
             ToParallellyExecutedTaskOfPair<T, TResult>(this IEnumerable<T> enumerable, Func<T, Task<OperateResult<TResult>>> taskSelector,
                 int batchSize, CancellationToken token = default)
         {
+            // ReSharper disable once PossibleMultipleEnumeration
             Guard.Argument(enumerable, nameof(enumerable)).NotNull();
             Guard.Argument(taskSelector, nameof(taskSelector)).NotNull();
             Guard.Argument(batchSize, nameof(batchSize)).Min(1);
 
             var success = new List<(T, TResult)>();
             var failure = new List<(T, OperateResult<TResult>)>();
+            // ReSharper disable once PossibleMultipleEnumeration
             foreach (var batch in enumerable.Batch(batchSize))
             {
                 if (token.IsCancellationRequested)
@@ -64,12 +66,14 @@ namespace FclEx
             ToSeriallyExecutedTaskOfPair<T, TResult>(this IEnumerable<T> enumerable, Func<T, Task<OperateResult<TResult>>> taskSelector,
                 int intervalSeconds = 0, CancellationToken token = default)
         {
+            // ReSharper disable once PossibleMultipleEnumeration
             Guard.Argument(enumerable, nameof(enumerable)).NotNull();
             Guard.Argument(taskSelector, nameof(taskSelector)).NotNull();
 
             var success = new List<(T, TResult)>();
             var failure = new List<(T, OperateResult<TResult>)>();
 
+            // ReSharper disable once PossibleMultipleEnumeration
             foreach (var item in enumerable)
             {
                 if (token.IsCancellationRequested)
@@ -108,10 +112,12 @@ namespace FclEx
         public static async Task<List<TResult>> ToSeriallyExecutedTask<T, TResult>(this IEnumerable<T> enumerable, Func<T, Task<TResult>> taskSelector,
             int intervalSeconds = 0, CancellationToken token = default)
         {
+            // ReSharper disable once PossibleMultipleEnumeration
             Guard.Argument(enumerable, nameof(enumerable)).NotNull();
             Guard.Argument(taskSelector, nameof(taskSelector)).NotNull();
 
             var list = new List<TResult>();
+            // ReSharper disable once PossibleMultipleEnumeration
             foreach (var item in enumerable)
             {
                 if (token.IsCancellationRequested)
@@ -175,11 +181,13 @@ namespace FclEx
         public static async Task<List<TResult>> ToParallellyExecutedTask<T, TResult>(this IEnumerable<T> enumerable,
             Func<T, Task<TResult>> taskSelector, int batchSize, CancellationToken token = default)
         {
+            // ReSharper disable once PossibleMultipleEnumeration
             Guard.Argument(enumerable, nameof(enumerable)).NotNull();
             Guard.Argument(taskSelector, nameof(taskSelector)).NotNull();
             Guard.Argument(batchSize, nameof(batchSize)).Min(1);
 
             var list = new List<TResult>();
+            // ReSharper disable once PossibleMultipleEnumeration
             foreach (var batch in enumerable.Batch(batchSize))
             {
                 if (token.IsCancellationRequested)
@@ -194,10 +202,12 @@ namespace FclEx
         public static async Task ToParallellyExecutedTask<T>(this IEnumerable<T> enumerable,
             Func<T, Task> taskSelector, int batchSize, CancellationToken token = default)
         {
+            // ReSharper disable once PossibleMultipleEnumeration
             Guard.Argument(enumerable, nameof(enumerable)).NotNull();
             Guard.Argument(taskSelector, nameof(taskSelector)).NotNull();
             Guard.Argument(batchSize, nameof(batchSize)).Min(1);
 
+            // ReSharper disable once PossibleMultipleEnumeration
             foreach (var batch in enumerable.Batch(batchSize))
             {
                 if (token.IsCancellationRequested)
@@ -206,25 +216,30 @@ namespace FclEx
             }
         }
 
-        public static Task WhenAnySuccess(this IEnumerable<Task> tasks)
+        public static async Task<T> WhenAny<T>(this IEnumerable<Task<T>> tasks)
         {
-            var tcs = new TaskCompletionSource();
+            return await (await Task.WhenAny(tasks));
+        }
 
-            var count = tasks.Count();
+        private static Task<T> WhenAnySuccess<T>(this IEnumerable<Task<T>> tasks, Func<T, bool> predicate, Action<TaskCompletionSource<T>> onNoResult)
+        {
+            var tcs = new TaskCompletionSource<T>();
+            var taskList = tasks.AsIReadOnlyList();
+            var count = taskList.Count;
             var completedCount = 0;
 
-            foreach (var task in tasks)
+            foreach (var task in taskList)
             {
                 task.ContinueWith(t =>
                 {
-                    if (t.IsCompletedSuccessfully)
+                    if (t.IsCompletedSuccessfully && predicate(t.Result))
                     {
-                        tcs.TrySetResult();
+                        tcs.TrySetResult(t.Result);
                     }
 
                     if (Interlocked.Increment(ref completedCount) >= count)
                     {
-                        tcs.SetException(new InvalidOperationException("All tasks failed"));
+                        onNoResult(tcs);
                     }
                 });
             }
@@ -232,20 +247,30 @@ namespace FclEx
             return tcs.Task;
         }
 
-        public static Task<T> WhenAny<T>(this IEnumerable<Task<T>> tasks, Func<T, bool> predicate)
+        public static Task<T> WhenAnySuccess<T>(this IEnumerable<Task<T>> tasks, Func<T, bool> predicate, Func<T> defaultResultFunc)
         {
-            var tcs = new TaskCompletionSource<T>();
+            return tasks.WhenAnySuccess(predicate, tcs => tcs.TrySetResult(defaultResultFunc()));
+        }
 
-            var count = tasks.Count();
+        public static Task<T> WhenAnySuccess<T>(this IEnumerable<Task<T>> tasks, Func<T, bool> predicate)
+        {
+            return tasks.WhenAnySuccess(predicate, tcs => tcs.SetException(new InvalidOperationException("All tasks failed")));
+        }
+
+        public static Task WhenAnySuccess(this IEnumerable<Task> tasks)
+        {
+            var tcs = new TaskCompletionSource();
+            var taskList = tasks.AsIReadOnlyList();
+            var count = taskList.Count;
             var completedCount = 0;
 
-            foreach (var task in tasks)
+            foreach (var task in taskList)
             {
                 task.ContinueWith(t =>
                 {
-                    if (t.IsCompletedSuccessfully && predicate(t.Result))
+                    if (t.IsCompletedSuccessfully)
                     {
-                        tcs.TrySetResult(t.Result);
+                        tcs.TrySetResult();
                     }
 
                     if (Interlocked.Increment(ref completedCount) >= count)

@@ -33,39 +33,5 @@ namespace FclEx
         public static Task<T> ToTask<T>(this T obj) => Task.FromResult(obj);
 
         public static ValueTask<T> ToValueTask<T>(this Task<T> task) => new(task);
-        
-        internal static async Task<TResult> TimeoutAfter<TResult>(this Func<Task<TResult>> task, TimeSpan timeout)
-        {
-            using var cts = new CancellationTokenSource();
-            var delayTask = Task.Delay(timeout, cts.Token);
-            // ReSharper disable once MethodSupportsCancellation
-            var completedTask = await Task.WhenAny(delayTask, Task.Run(task)).DonotCapture();
-            if (completedTask != delayTask)
-            {
-                cts.Cancel();
-                return await ((Task<TResult>)completedTask).DonotCapture();
-            }
-            else
-            {
-                throw new TimeoutException($"Task timed out after {timeout}");
-            }
-        }
-
-        internal static async Task TimeoutAfter(this Func<Task> task, TimeSpan timeout)
-        {
-            using var cts = new CancellationTokenSource();
-            var delayTask = Task.Delay(timeout, cts.Token);
-            // ReSharper disable once MethodSupportsCancellation
-            var completedTask = await Task.WhenAny(delayTask, Task.Run(task)).DonotCapture();
-            if (completedTask != delayTask)
-            {
-                cts.Cancel();
-                await completedTask.DonotCapture();
-            }
-            else
-            {
-                throw new TimeoutException($"Task timed out after {timeout}");
-            }
-        }
     }
 }
