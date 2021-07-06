@@ -16,8 +16,10 @@ namespace FclEx.Http.Core
         public bool ThrowOnFailedCode { get; set; } = true;
         public ArraySegment<byte> Body { get; set; }
         public HttpMethodType Method { get; set; }
+        public int BufferSize { get; set; } = 256 * 1024;
         public TimeSpan? TotalTimeout { get; set; } = TimeSpan.FromMinutes(2);
-        public TimeSpan? Timeout { get; set; } = TimeSpan.FromSeconds(20);
+        public TimeSpan? ReadBufferTimeout { get; set; } = TimeSpan.FromSeconds(10);
+        public TimeSpan? ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
         public string? CharSet { get; set; }
         public bool DetectCharSetFromHtmlMeta { get; set; }
         public string? FallbackCharSet { get; set; }
@@ -29,7 +31,7 @@ namespace FclEx.Http.Core
         public NameValueCollection QueryMap => _uriCreator.QueryMap;
         public Dictionary<string, string?> HeaderMap { get; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, string> FormMap { get; } = new(StringComparer.OrdinalIgnoreCase);
-        public Dictionary<HttpFileUploadInfo, byte[]> FileMap{ get; } = new();
+        public Dictionary<HttpFileUploadInfo, byte[]> FileMap { get; } = new();
 
         public string? ContentType
         {
@@ -112,15 +114,15 @@ namespace FclEx.Http.Core
 
         public static HttpReq Create(Uri url, HttpReqType reqType)
         {
-            switch (reqType)
+            return reqType switch
             {
-                case HttpReqType.Get: return Get(url);
-                case HttpReqType.Form: return Form(url);
-                case HttpReqType.Json: return Json(url);
-                case HttpReqType.Upload: return Upload(url);
-                case HttpReqType.MultiPart: return MultiPart(url);
-                default: throw new ArgumentOutOfRangeException(nameof(reqType), reqType, null);
-            }
+                HttpReqType.Get => Get(url),
+                HttpReqType.Form => Form(url),
+                HttpReqType.Json => Json(url),
+                HttpReqType.Upload => Upload(url),
+                HttpReqType.MultiPart => MultiPart(url),
+                _ => throw new ArgumentOutOfRangeException(nameof(reqType), reqType, null)
+            };
         }
         public static HttpReq Create(string url, HttpReqType reqType) => Create(new Uri(url, UriKind.RelativeOrAbsolute), reqType);
 
@@ -223,9 +225,7 @@ namespace FclEx.Http.Core
                 case HttpConstants.JsonContentType:
                 case HttpConstants.ByteArrayContentType:
                 default:
-                    return Body.Array == null
-                        ? Array.Empty<byte>().ToSegment()
-                        : Body;
+                    return Body.Array.ToSegmentOrEmpty();
             }
         }
     }

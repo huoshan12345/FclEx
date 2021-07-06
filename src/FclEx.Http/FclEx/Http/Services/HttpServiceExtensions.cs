@@ -17,7 +17,7 @@ namespace FclEx.Http.Services
         public static Task<HttpRes> GetAsync(this IHttpService http, string url, string? charSet = null, int? timeout = 10 * 1000, int retryTimes = 3, int delaySeconds = 0)
         {
             var req = HttpReq.Get(url)
-                .Timeout(timeout)
+                .TryConnectTimeout(timeout == null ? null : TimeSpan.FromMilliseconds(timeout.Value))
                 .CharSet(charSet);
             return http.SendAsync(req, retryTimes, delaySeconds);
         }
@@ -25,7 +25,7 @@ namespace FclEx.Http.Services
         public static async Task<HttpRes> SendAsync(this IHttpService http, HttpReq req, int retryTimes = 1, int delaySeconds = 0)
         {
 
-            return await ActionHelper.TryAsync(() => http.ExecuteAsync(req), 
+            return await ActionHelper.TryAsync(() => http.ExecuteAsync(req),
                     retryTimes, delaySeconds, e => HttpRes.CreateError(req, e), false, HttpRes.EmptyRes)
                 .DonotCapture();
         }
@@ -115,7 +115,7 @@ namespace FclEx.Http.Services
         {
             var req = new HttpReq(uri, method)
                 .ResultType(HttpResultType.Bytes)
-                .Timeout(timeout)
+                .ReadBufferTimeout(timeout)
                 .Compress();
 
             var res = await http.SendAsync(req).DonotCapture();

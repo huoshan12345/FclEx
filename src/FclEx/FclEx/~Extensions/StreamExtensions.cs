@@ -32,7 +32,7 @@ namespace FclEx
 
         public static Task WriteAsync(this Stream stream, byte[] bytes) => stream.WriteAsync(bytes, 0, bytes.Length);
 
-        public static async Task CopyToAsync(this Stream source, Stream dest, CancellationToken token, TimeSpan? timeout, int bufferSize = 256 * 1024)
+        public static async Task CopyToAsync(this Stream source, Stream dest, int bufferSize = 256 * 1024, TimeSpan? readBufferTimeout = null, CancellationToken token = default)
         {
             var pool = ArrayPool<byte>.Shared;
             var buffer = pool.Rent(bufferSize);
@@ -41,7 +41,7 @@ namespace FclEx
                 int bytesCopied;
                 do
                 {
-                    using var cts = token.WithTimeout(timeout);
+                    using var cts = token.WithTimeout(readBufferTimeout);
                     bytesCopied = await source.ReadAsync(buffer, 0, buffer.Length, cts.Token).DonotCapture();
                     await dest.WriteAsync(buffer, 0, bytesCopied, cts.Token).DonotCapture();
                 } while (bytesCopied > 0);

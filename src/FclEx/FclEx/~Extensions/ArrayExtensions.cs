@@ -29,15 +29,21 @@ namespace FclEx
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ArraySegment<T> ToSegmentOrEmpty<T>(this T[]? arr)
+        {
+            return new(arr ?? Array.Empty<T>());
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ArraySegment<T> ToSegment<T>(this T[] arr)
         {
-            return new ArraySegment<T>(arr);
+            return new(arr);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ArraySegment<T> ToSegment<T>(this T[] arr, int offset, int count)
         {
-            return new ArraySegment<T>(arr, offset, count);
+            return new(arr, offset, count);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -59,29 +65,12 @@ namespace FclEx
             }
         }
 
-        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
-        public static T[] Concat<T>(this IEnumerable<T[]> arrays)
+        public static IEnumerable<T> Concat<T>(this IEnumerable<IEnumerable<T>> arrays)
         {
-            Guard.Argument(arrays, nameof(arrays)).NotNull();
-
-            var len = 0;
-            foreach (var array in arrays)
-            {
-                Guard.Argument(array, nameof(array)).NotNull();
-                len += array.Length;
-            }
-
-            var z = new T[len];
-            var index = 0;
-            foreach (var array in arrays)
-            {
-                array.CopyTo(z, index);
-                index += array.Length;
-            }
-            return z;
+            return arrays.SelectMany(m => m);
         }
 
-        public static T[] Concat<T>(this T[] source, params T[][] arrays)
+        public static IEnumerable<T> Concat<T>(this T[] source, params IEnumerable<T>[] arrays)
         {
             return arrays.Prepend(source).Concat();
         }

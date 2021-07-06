@@ -25,7 +25,7 @@ namespace FclEx.Http.Services
         protected override async Task SerializeToStreamAsync(Stream stream, TransportContext? context)
         {
             await using var ms = CreateContentReadStream();
-            await ms.CopyToAsync(stream, _token, _timeout);
+            await ms.CopyToAsync(dest: stream, readBufferTimeout: _timeout, token: _token);
         }
 
         protected override bool TryComputeLength(out long length)

@@ -54,14 +54,14 @@ namespace FclEx.Http.Services
 
         protected static async Task ReadContentAsync(HttpResponseMessage response, HttpRes res, CancellationToken token)
         {
+            var req = res.HttpReq;
             foreach (var (key, value) in response.Content.Headers)
             {
                 res.Headers.AddRange(key, value);
             }
-            var bytes = await CopyToMemoryAsync(response.Content, token, res.HttpReq.Timeout).DonotCapture();
+            var bytes = await CopyToMemoryAsync(response.Content, req.BufferSize, req.ReadBufferTimeout, token).DonotCapture();
             res.ResponseBytes = bytes;
 
-            var req = res.HttpReq;
             switch (req.ResultType)
             {
                 case HttpResultType.Bytes:
@@ -165,12 +165,12 @@ namespace FclEx.Http.Services
             return charSet == null ? null : Encoding.GetEncoding(charSet);
         }
 
-        private static async Task<byte[]> CopyToMemoryAsync(HttpContent content, CancellationToken token, TimeSpan? timeout)
+        private static async Task<byte[]> CopyToMemoryAsync(HttpContent content, int bufferSize, TimeSpan? readBufferTimeout, CancellationToken token)
         {
             var len = content.Headers.ContentLength ?? 0;
             await using var ms = new MemoryStream((int)len);
             await using (var stream = await content.ReadAsStreamAsync(token).DonotCapture())
-                await stream.CopyToAsync(ms, token, timeout);
+                await stream.CopyToAsync(ms, bufferSize, readBufferTimeout, token);
             ms.Seek(0, SeekOrigin.Begin);
             return ms.ToArray();
         }
@@ -181,7 +181,7 @@ namespace FclEx.Http.Services
             if (req.Method != HttpMethodType.Get)
             {
                 var bytes = req.GetData();
-                request.Content = new ArraySegmentContent(bytes, token, req.Timeout)
+                request.Content = new ArraySegmentContent(bytes, token, req.ReadBufferTimeout)
                 {
                     Headers = { ContentType = MediaTypeHeaderValue.Parse(req.ContentType) }
                 };
@@ -214,16 +214,15 @@ namespace FclEx.Http.Services
 
         protected async Task ExecuteAsyncInternal(HttpClient httpClient, HttpReq httpReq, HttpRes httpRes, CancellationToken token = default)
         {
-            var cts = token.WithTimeout(httpReq.TotalTimeout);
-            token = cts.Token;
+            using var cts = token.WithTimeout(httpReq.TotalTimeout);
             var responses = new List<HttpResponseMessage>();
             try
             {
                 var curReq = httpReq;
                 while (true)
                 {
-                    token.ThrowIfCancellationRequested();
-                    var res = await SendAsync(httpClient, curReq, token).DonotCapture();
+                    using var ctsPerReq = cts.Token.WithTimeout(httpReq.ConnectTimeout);
+                    var res = await SendAsync(httpClient, curReq, ctsPerReq.Token).DonotCapture();
                     responses.Add(res);
                     httpRes.RedirectUris.Add(res.RequestMessage?.RequestUri!);
                     if (httpReq.ReadResultCookie)
@@ -245,7 +244,7 @@ namespace FclEx.Http.Services
                     response.EnsureSuccess();
 
                 if (httpReq.ReadResultContent)
-                    await ReadContentAsync(response, httpRes, token).DonotCapture();
+                    await ReadContentAsync(response, httpRes, cts.Token).DonotCapture();
             }
             finally
             {

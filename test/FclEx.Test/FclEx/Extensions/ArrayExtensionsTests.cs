@@ -43,7 +43,10 @@ namespace FclEx.Extensions
         [InlineData(100)]
         public void Concat_Test(int length)
         {
-            var arr = Enumerable.Range(1, length).Select(m => Enumerable.Range(1, m).ToArray()).Concat();
+            var arr = Enumerable.Range(1, length)
+                .Select(m => Enumerable.Range(1, m))
+                .Concat()
+                .ToArray();
 
             var index = 0;
             for (var i = 0; i < length; i++)

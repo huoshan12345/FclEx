@@ -42,7 +42,7 @@ namespace FclEx.Extensions
                 .Select(m => (Str: m, Bytes: Encoding.UTF8.GetBytes(m)))
                 .ToList();
 
-            var arr = bytesList.Select(m => m.Bytes).Concat();
+            var arr = bytesList.Select(m => m.Bytes).Concat().ToArray();
 
             var seed = (Offset: 0, List: new List<(string Str, ArraySegment<byte> Seg)>());
             var (_, list) = bytesList.Aggregate(seed, (x, y) =>

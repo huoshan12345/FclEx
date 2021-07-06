@@ -127,20 +127,28 @@ namespace FclEx.Http.Core
             return req;
         }
 
-        public static HttpReq Timeout(this HttpReq req, int? timeout)
+        public static HttpReq ConnectTimeout(this HttpReq req, TimeSpan? timeout)
         {
-            return req.Timeout(timeout.HasValue ? TimeSpan.FromMilliseconds(timeout.Value) : (TimeSpan?)null);
-        }
-
-        public static HttpReq Timeout(this HttpReq req, TimeSpan? timeout)
-        {
-            req.Timeout = timeout;
+            req.ConnectTimeout = timeout;
             return req;
         }
 
-        public static HttpReq TryTimeout(this HttpReq req, TimeSpan? timeout)
+        public static HttpReq TryConnectTimeout(this HttpReq req, TimeSpan? timeout)
         {
-            req.Timeout ??= timeout;
+            req.ConnectTimeout ??= timeout;
+            return req;
+        }
+
+
+        public static HttpReq ReadBufferTimeout(this HttpReq req, TimeSpan? timeout)
+        {
+            req.ReadBufferTimeout = timeout;
+            return req;
+        }
+
+        public static HttpReq TryReadBufferTimeout(this HttpReq req, TimeSpan? timeout)
+        {
+            req.ReadBufferTimeout ??= timeout;
             return req;
         }
 

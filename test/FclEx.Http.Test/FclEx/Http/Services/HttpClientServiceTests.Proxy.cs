@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FclEx.Http.Core;
@@ -28,7 +29,7 @@ namespace FclEx.Http.Services
         public async Task SendAsync_WithProxy_Success(IWebProxyExt proxy, string url)
         {
             var service = new HttpClientService(true, proxy);
-            var res = await service.SendAsync(HttpReq.Get(url).Timeout(15 * 1000));
+            var res = await service.SendAsync(HttpReq.Get(url).ConnectTimeout(TimeSpan.FromSeconds(5)));
             AssertExt.False(res.HasError, () => res.Exception!.ToString());
         }
     }

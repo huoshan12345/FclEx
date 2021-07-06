@@ -10,17 +10,16 @@ namespace FclEx.Http.Core.HttpReqTests
         [Theory]
         [InlineData(1)]
         [InlineData(3)]
-        public async Task TotalTimeout_Test(int timeout)
+        public async Task ConnectTimeout_Test(int timeoutSeconds)
         {
+            var timeout = TimeSpan.FromSeconds(timeoutSeconds);
             var req = HttpReq.Get("http://127.0.0.0")
-                .TotalTimeout(TimeSpan.FromSeconds(timeout));
+                .ConnectTimeout(timeout);
 
             var (successful, elapsed, _, exception) = await Operate.ExcuteAsync(async () => await req.SendAsync().ThrowIfError());
             Assert.False(successful);
             Assert.IsType<TaskCanceledException>(exception);
-            var seconds = elapsed.TotalSeconds;
-            Assert.True(seconds < timeout + 0.2);
-            Assert.True(seconds > timeout - 0.2);
+            AssertExt.Equal(timeout, elapsed, TimeSpan.FromSeconds(0.1));
         }
     }
 }

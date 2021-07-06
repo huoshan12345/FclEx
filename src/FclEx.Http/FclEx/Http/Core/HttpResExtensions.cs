@@ -73,22 +73,19 @@ namespace FclEx.Http.Core
                 fileName = (realUrl.Host + realUrl.LocalPath).RegexReplace(@"\W", "_").TrimEnd("_");
             }
 
-            var mimeType = res.Headers.GetFirstOr(HttpKnownHeaderNames.ContentType);
-            if (ext.IsNullOrEmpty())
+            var mimeType = res.Headers.GetFirstOr(HttpKnownHeaderNames.ContentType) ?? "";
+            if (mimeType.IsValid())
             {
-                if (mimeType.IsValid())
+                if (mimeType!.Contains(";"))
                 {
-                    if (mimeType!.Contains(";"))
-                    {
-                        var contentType = new ContentType(mimeType);
-                        mimeType = contentType.MediaType;
-                    }
-                    if (MimeTypeMap.TryGetExtension(MimeTypeFix(mimeType), out var extension))
-                        ext = extension;
+                    var contentType = new ContentType(mimeType);
+                    mimeType = contentType.MediaType;
                 }
+                if (MimeTypeMap.TryGetExtension(MimeTypeFix(mimeType), out var extension))
+                    ext = extension;
             }
+
             ext ??= string.Empty;
-            mimeType ??= "application/octet-stream";
             var info = new HttpFileDownloadInfo(realUrl, fileName, ext, res.ResponseBytes, mimeType);
             return info;
         }
