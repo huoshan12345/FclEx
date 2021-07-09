@@ -91,7 +91,7 @@ namespace FclEx.Http.Services
             set => SetProxy(value);
         }
 
-        protected virtual void SetProxy(IWebProxyExt proxy)
+        protected virtual void SetProxy(IWebProxyExt? proxy)
         {
             if (Equals(_webProxy, proxy)) return;
             _webProxy = proxy ?? WebProxyExt.None;

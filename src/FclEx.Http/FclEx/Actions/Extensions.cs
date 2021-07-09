@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Dawn;
 
 using FclEx.Http.Core;
 using FclEx.Http.Services;
+using FclEx.Utils;
 
 namespace FclEx.Actions
 {
@@ -48,6 +50,26 @@ namespace FclEx.Actions
         {
             Guard.Argument(httpReq, nameof(httpReq)).NotNull();
             return action.NextReq(m => httpReq, httpService, unwrapError);
+        }
+
+        public static IAction<T> Error<T>(this IAction<T> action, Action<Exception> onError)
+        {
+            Guard.Argument(onError, nameof(onError)).NotNull();
+            return action.NextResultIf(m => !m.Successful, m =>
+            {
+                Operate.Excute(() => onError(m.Exception!));
+                return new ResultAction<T>(m);
+            });
+        }
+
+        public static IAction<TNext> Next<T, TNext>(this IAction<T> action, Func<T, TNext> next)
+        {
+            return new NextAction<T, TNext>(action, m => CommonAction.Create(t => next(m)));
+        }
+
+        public static IAction<TNext> Next<T, TNext>(this IAction<T> action, Func<T, Task<TNext>> next)
+        {
+            return new NextAction<T, TNext>(action, m => CommonAction.Create(t => next(m)));
         }
     }
 }

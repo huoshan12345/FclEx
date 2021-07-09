@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Xunit;
 
-namespace FclEx.Extensions
+namespace FclEx.Extensions.ByteExtensions
 {
-    public class BytesExtensionsTests
+    public class GetStringExtensions
     {
         public static readonly IEnumerable<object[]> Strings = new[]
         {

@@ -19,7 +19,7 @@ namespace FclEx.Http.Core
         public int BufferSize { get; set; } = 256 * 1024;
         public TimeSpan? TotalTimeout { get; set; } = TimeSpan.FromMinutes(2);
         public TimeSpan? ReadBufferTimeout { get; set; } = TimeSpan.FromSeconds(10);
-        public TimeSpan? ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
+        public TimeSpan? ConnectTimeout { get; set; } = TimeSpan.FromSeconds(10);
         public string? CharSet { get; set; }
         public bool DetectCharSetFromHtmlMeta { get; set; }
         public string? FallbackCharSet { get; set; }

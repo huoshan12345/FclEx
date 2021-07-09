@@ -10,7 +10,7 @@ using FclEx.Utils;
 
 namespace FclEx
 {
-    public static class BytesExtensions
+    public static partial class BytesExtensions
     {
         public static MemoryStream ToStream(this byte[] bytes) => new MemoryStream(bytes);
 

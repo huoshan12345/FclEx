@@ -43,16 +43,24 @@ namespace FclEx
             for (var i = list.Count - 1; i > 0; --i)
             {
                 var randomIndex = r.Next(i + 1);
-                T temp = list[i];
+                var temp = list[i];
                 list[i] = list[randomIndex];
                 list[randomIndex] = temp;
             }
         }
 
         [return: NotNullIfNotNull("defaultValue")]
+        public static T? TryGet<T>(this List<T>? list, int index, T? defaultValue = default)
+        {
+            return ((IList<T>?)list).TryGet(index, defaultValue);
+        }
+
+        [return: NotNullIfNotNull("defaultValue")]
         public static T? TryGet<T>(this IList<T>? list, int index, T? defaultValue = default)
         {
-            return list != null && 0 <= index && index < list.Count ? list[index] : defaultValue;
+            return list != null && 0 <= index && index < list.Count
+                ? list[index]
+                : defaultValue;
         }
 
         public static T GetRandomly<T>(this IList<T> list, Random? random = null)
@@ -69,6 +77,5 @@ namespace FclEx
                 list[index] = value;
             return list;
         }
-
     }
 }
