@@ -25,24 +25,9 @@ namespace FclEx.Actions
             return action.Next(_ => next);
         }
 
-        public static IAction<Unit> Next<T>(this IAction<T> action, Action<T> next)
-        {
-            return action.Next(r => CommonAction.Create(t => next(r), excuteSafely: false));
-        }
-
-        public static IAction<Unit> Next<T>(this IAction<T> action, Func<T, Task> next)
-        {
-            return action.Next(r => CommonAction.Create(t => next(r), excuteSafely: false));
-        }
-
         public static IAction<TNext> Next<T1, T2, TNext>(this IAction<(T1, T2)> action, Func<T1, T2, IAction<TNext>> next)
         {
             return action.Next(m => next(m.Item1, m.Item2));
-        }
-
-        public static IAction<TNext> Next<T, TNext>(this IAction<T> action, OperateResult<TNext> result)
-        {
-            return action.Next(_ => new ResultAction<TNext>(result));
         }
 
         public static IAction<T> TryNext<T>(this IAction<T> action, Func<T, IAction<T>?> next,
@@ -56,7 +41,7 @@ namespace FclEx.Actions
             Guard.Argument(condition, nameof(condition)).NotNull();
             Guard.Argument(@true, nameof(@true)).NotNull();
             Guard.Argument(@false, nameof(@false)).NotNull();
-            
+
             return action.Next(t => condition(t) ? @true(t) : @false(t));
         }
 
@@ -70,7 +55,7 @@ namespace FclEx.Actions
             Guard.Argument(condition, nameof(condition)).NotNull();
             Guard.Argument(@true, nameof(@true)).NotNull();
             Guard.Argument(@false, nameof(@false)).NotNull();
-            
+
             return action.Next(t => condition(t) ? @true(t) : @false(t));
         }
 
@@ -80,6 +65,16 @@ namespace FclEx.Actions
             Guard.Argument(next, nameof(next)).NotNull();
 
             return action.Next(t => condition(t) ? next(t) : new SuccessAction<Unit>(default));
+        }
+
+        public static IAction<Unit> Do<T>(this IAction<T> action, Action<T> next)
+        {
+            return action.Next(r => CommonAction.Create(t => next(r), excuteSafely: false));
+        }
+
+        public static IAction<Unit> Do<T>(this IAction<T> action, Func<T, Task> next)
+        {
+            return action.Next(r => CommonAction.Create(t => next(r), excuteSafely: false));
         }
     }
 }

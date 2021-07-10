@@ -10,23 +10,34 @@ namespace FclEx.Actions
 {
     partial class Extensions
     {
-        public static IAction<T> NextResult<T>(this IAction<T> action, Func<OperateResult<T>, IAction<T>> next, bool errorWhenNextNull = true)
+        public static IAction<TNext> NextResult<T, TNext>(this IAction<T> action, TNext result)
         {
-            return new NextResultAction<T>(action, next, errorWhenNextNull);
+            return action.Next(_ => new ResultAction<TNext>(OperateResult.CreateSuccess(result)));
         }
 
-        public static IAction<TNext> NextResult<T, TNext>(this IAction<T> action, Func<OperateResult<T>, IAction<TNext>> next)
+        public static IAction<TNext> NextResult<T, TNext>(this IAction<T> action, OperateResult<TNext> result)
         {
-            Guard.Argument(next, nameof(next)).NotNull();
-            return new NextResultAction<T, TNext>(action, next);
+            return action.Next(_ => new ResultAction<TNext>(result));
         }
 
-        public static IAction<T> NextResultIf<T>(this IAction<T> action, Func<OperateResult<T>, bool> condition, Func<OperateResult<T>, IAction<T>> next)
+        public static IAction<TNext> NextResult<T, TNext>(this IAction<T> action, Func<T, TNext> next)
         {
-            Guard.Argument(condition, nameof(condition)).NotNull();
-            Guard.Argument(next, nameof(next)).NotNull();
+            return new NextAction<T, TNext>(action, m => CommonAction.Create(t => next(m)));
+        }
 
-            return action.NextResult(r => condition(r) ? next(r) : new ResultAction<T>(r));
+        public static IAction<TNext> NextResult<T, TNext>(this IAction<T> action, Func<T, OperateResult<TNext>> next)
+        {
+            return new NextAction<T, TNext>(action, m => CommonAction.Create(t => next(m)));
+        }
+
+        public static IAction<TNext> NextResult<T, TNext>(this IAction<T> action, Func<T, Task<TNext>> next)
+        {
+            return new NextAction<T, TNext>(action, m => CommonAction.Create(t => next(m)));
+        }
+
+        public static IAction<TNext> NextResult<T, TNext>(this IAction<T> action, Func<T, Task<OperateResult<TNext>>> next)
+        {
+            return new NextAction<T, TNext>(action, m => CommonAction.Create(t => next(m)));
         }
     }
 }

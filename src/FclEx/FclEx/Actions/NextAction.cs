@@ -11,9 +11,9 @@ namespace FclEx.Actions
     public readonly struct NextAction<T, TNext> : IAction<TNext>
     {
         private readonly IAction<T> _action;
-        private readonly Func<T, IAction<TNext>> _next;
+        private readonly Func<T, IAction<TNext>?> _next;
 
-        public NextAction(IAction<T> action, Func<T, IAction<TNext>> next)
+        public NextAction(IAction<T> action, Func<T, IAction<TNext>?> next)
         {
             _action = Guard.Argument(action, nameof(action)).NotNull().Value;
             _next = Guard.Argument(next, nameof(next)).NotNull();

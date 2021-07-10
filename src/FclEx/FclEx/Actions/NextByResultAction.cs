@@ -8,12 +8,12 @@ using FclEx.Utils;
 
 namespace FclEx.Actions
 {
-    public readonly struct NextResultAction<T, TNext> : IAction<TNext>
+    public readonly struct NextByResultAction<T, TNext> : IAction<TNext>
     {
         private readonly IAction<T> _action;
         private readonly Func<OperateResult<T>, IAction<TNext>?> _next;
 
-        public NextResultAction(IAction<T> action, Func<OperateResult<T>, IAction<TNext>?> next)
+        public NextByResultAction(IAction<T> action, Func<OperateResult<T>, IAction<TNext>?> next)
         {
             _action = Guard.Argument(action, nameof(action)).NotNull().Value;
             _next = Guard.Argument(next, nameof(next)).NotNull();
@@ -32,13 +32,13 @@ namespace FclEx.Actions
         }
     }
 
-    public readonly struct NextResultAction<T> : IAction<T>
+    public readonly struct NextByResultAction<T> : IAction<T>
     {
         private readonly IAction<T> _action;
         private readonly Func<OperateResult<T>, IAction<T>?> _next;
         private readonly bool _errorWhenNextNull;
 
-        public NextResultAction(IAction<T> action, Func<OperateResult<T>, IAction<T>?> next, bool errorWhenNextNull = true)
+        public NextByResultAction(IAction<T> action, Func<OperateResult<T>, IAction<T>?> next, bool errorWhenNextNull = true)
         {
             _errorWhenNextNull = errorWhenNextNull;
             _action = Guard.Argument(action, nameof(action)).NotNull().Value;

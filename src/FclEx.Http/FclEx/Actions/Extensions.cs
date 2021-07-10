@@ -61,15 +61,5 @@ namespace FclEx.Actions
                 return new ResultAction<T>(m);
             });
         }
-
-        public static IAction<TNext> Next<T, TNext>(this IAction<T> action, Func<T, TNext> next)
-        {
-            return new NextAction<T, TNext>(action, m => CommonAction.Create(t => next(m)));
-        }
-
-        public static IAction<TNext> Next<T, TNext>(this IAction<T> action, Func<T, Task<TNext>> next)
-        {
-            return new NextAction<T, TNext>(action, m => CommonAction.Create(t => next(m)));
-        }
     }
 }
