@@ -55,7 +55,7 @@ namespace FclEx.Actions
         public static IAction<T> Error<T>(this IAction<T> action, Action<Exception> onError)
         {
             Guard.Argument(onError, nameof(onError)).NotNull();
-            return action.NextResultIf(m => !m.Successful, m =>
+            return action.NextByResultIf(m => !m.Successful, m =>
             {
                 Operate.Excute(() => onError(m.Exception!));
                 return new ResultAction<T>(m);
