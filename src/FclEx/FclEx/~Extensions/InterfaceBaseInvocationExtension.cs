@@ -4,22 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using FclEx.Helpers;
 
 namespace FclEx
 {
     public static partial class InterfaceBaseInvocationExtension
     {
-        private static readonly ConcurrentDictionary<(Type, Type, MethodInfo), (IntPtr, MethodInfo)> MethodMap = new();
-
-        private static readonly Dictionary<int, Type> ActionTypes = typeof(Action).Assembly
-            .GetExportedTypes()
-            .Where(m => m.SimpleName() == nameof(Action))
-            .ToDictionary(m => m.GetTypeInfo().GenericTypeParameters.Length);
-
-        private static readonly Dictionary<int, Type> FuncTypes = typeof(Func<>).Assembly
-            .GetExportedTypes()
-            .Where(m => m.SimpleName() == nameof(Func<int>))
-            .ToDictionary(m => m.GetTypeInfo().GenericTypeParameters.Length);
+        private static readonly ConcurrentDictionary<InterfaceMethodInfo, (IntPtr, MethodInfo)> MethodMap = new();
 
         public static void Base<TInterface>(this TInterface instance, Expression<Action<TInterface>> selector)
         {
@@ -84,7 +76,7 @@ namespace FclEx
 
             var (method, args) = GetMethodArgs(selector);
             var interfaceType = typeof(TInterface);
-            var (pointer, invoke) = MethodMap.GetOrAdd((instance.GetType(), interfaceType, method), m => GetInterfaceMethodPointer(m.Item1, m.Item2, m.Item3));
+            var (pointer, invoke) = MethodMap.GetOrAdd(new(instance.GetType(), interfaceType, method), m => GetInterfaceMethodPointer(m.InstanceType, m.InterfaceType, m.Method));
             var func = Activator.CreateInstance(invoke.DeclaringType!, instance, pointer);
             return (invoke, func!, args);
         }
@@ -100,8 +92,8 @@ namespace FclEx
         private static Type GetDelegateType(bool ifReturnVoid, int len)
         {
             var (key, dic, t) = ifReturnVoid
-                ? (len, ActionTypes, nameof(Action))
-                : (len + 1, FuncTypes, nameof(Func<object>));
+                ? (len, TypeHelper.ActionTypeDic, nameof(Action))
+                : (len + 1, TypeHelper.FuncTypeDic, nameof(Func<int>));
             return dic.Get(key) ?? throw new NotSupportedException($"Cannot find {t} type with {key} arguments");
         }
 
@@ -109,7 +101,7 @@ namespace FclEx
         {
             LambdaExpression lambda => GetMethodArgs(lambda.Body),
             UnaryExpression unary => GetMethodArgs(unary.Operand),
-            MethodCallExpression methodCall => (methodCall.Method!, methodCall.Arguments.GetArgumentValues()),
+            MethodCallExpression methodCall => (methodCall.Method!, methodCall.Arguments.GetArgumentValues().ToArray()),
             MemberExpression { Member: PropertyInfo prop } => (prop.GetRequiredGetMethod(), Array.Empty<object?>()),
             _ => throw new InvalidOperationException("The expression refers to neither a method nor a readable property.")
         };

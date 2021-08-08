@@ -56,13 +56,13 @@ namespace FclEx
             }
         }
 
-        public static object?[] GetArgumentValues(this IEnumerable<Expression> arguments)
+        public static IEnumerable<object?> GetArgumentValues(this IEnumerable<Expression> arguments)
         {
             return arguments.Select(e => e switch
             {
                 ConstantExpression constant => constant.Value,
                 _ => e.Convert(typeof(object)).Lambda<Func<object>>().Compile().Invoke()
-            }).ToArray();
+            });
         }
     }
 }

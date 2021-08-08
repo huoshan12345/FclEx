@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using BenchmarkDotNet.Attributes;
 using FclEx.Comparers;
-using FclEx.Utils;
 
-namespace FclEx.Benchmark
+namespace FclEx.Benchmarks
 {
     [MemoryDiagnoser]
     public class SortTest

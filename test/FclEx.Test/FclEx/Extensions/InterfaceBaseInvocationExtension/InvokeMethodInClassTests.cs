@@ -24,26 +24,23 @@ namespace FclEx.Extensions.InterfaceBaseInvocationExtension
             int I0.Compute(int number) => number + 2;
         }
 
-        public class WithI2 : I2
+        public class InheritI2 : I2
         {
-            int I0.Compute(int number) => this.BaseByDynamicMethod<I2, int>(m => m.Compute(number));
-            public int Compute(int number) => this.BaseByDynamicMethod<I1, int>(m => m.Compute(number));
         }
 
         [Fact]
-        public void Implicit_Impl_Test()
+        public void AbstractMethod_Test()
         {
-            var c = new WithI2();
-            Assert.Equal(1, c.Compute(0));
+            var c = new InheritI2();
+            Assert.Throws<InvalidOperationException>(() => c.BaseByDynamicMethod<I0, int>(m => m.Compute(0)));
         }
 
         [Fact]
-        public void Explicit_Impl_Test()
+        public void Inherit_Test()
         {
-            var c = new WithI2();
-            Assert.Equal(2, ((I0)c).Compute(0));
-            Assert.Equal(2, ((I1)c).Compute(0));
-            Assert.Equal(2, ((I2)c).Compute(0));
+            var c = new InheritI2();
+            Assert.Equal(1, c.BaseByDynamicMethod<I1, int>(m => m.Compute(0)));
+            Assert.Equal(2, c.BaseByDynamicMethod<I2, int>(m => m.Compute(0)));
         }
     }
 }

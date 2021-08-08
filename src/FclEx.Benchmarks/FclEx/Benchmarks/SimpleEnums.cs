@@ -1,4 +1,4 @@
-﻿namespace FclEx.Benchmark
+﻿namespace FclEx.Benchmarks
 {
     public enum ByteEnum : byte
     {

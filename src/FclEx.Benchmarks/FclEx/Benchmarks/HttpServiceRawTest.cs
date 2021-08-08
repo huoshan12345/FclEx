@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using FclEx.Http;
 using FclEx.Http.Core;
 using FclEx.Http.Services;
 using FclEx.Utils;
 using MoreLinq;
 
-namespace FclEx.Benchmark
+namespace FclEx.Benchmarks
 {
     public class HttpServiceRawTest
     {
