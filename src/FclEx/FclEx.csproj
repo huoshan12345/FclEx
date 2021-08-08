@@ -20,6 +20,10 @@
     <PackageReference Include="Chinese" Version="0.4.6" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="FclEx\~Extensions\~ExpressionExtensions\" />
+  </ItemGroup>
+
   <Import Project="..\Microsoft.Experimental.Collections\Microsoft.Experimental.Collections.projitems" Label="Shared" />
 
   <Import Project="..\Combinatorics\Combinatorics.projitems" Label="Shared" />

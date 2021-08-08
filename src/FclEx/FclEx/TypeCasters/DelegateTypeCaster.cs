@@ -7,7 +7,7 @@ using System.Text;
 
 namespace FclEx.TypeCasters
 {
-    public class DelegateTypeCaster : AbstractTypeCaster<DelegateTypeCaster>
+    public sealed class DelegateTypeCaster : AbstractTypeCaster<DelegateTypeCaster>
     {
         [return: MaybeNull]
         public override TOutput CastTo<TInput, TOutput>([AllowNull]TInput obj)
@@ -20,8 +20,7 @@ namespace FclEx.TypeCasters
         private static class ConvertHelper<TOutput>
         {
             private delegate TOutput Converter(object obj);
-            private static readonly ConcurrentDictionary<Type, Converter> _dic
-                = new ConcurrentDictionary<Type, Converter>();
+            private static readonly ConcurrentDictionary<Type, Converter> _dic = new();
 
             public static TOutput ConvertTo(object obj)
             {

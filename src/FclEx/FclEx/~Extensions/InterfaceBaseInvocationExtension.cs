@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace FclEx
 {
-    public static class InterfaceBaseInvocationExtension
+    public static partial class InterfaceBaseInvocationExtension
     {
         private static readonly ConcurrentDictionary<(Type, Type, MethodInfo), (IntPtr, MethodInfo)> MethodMap = new();
 
@@ -33,23 +33,38 @@ namespace FclEx
             return invoke.Invoke(func, args).CastTo<TReturn>()!;
         }
 
-        private static (IntPtr pointer, MethodInfo invoke) GetInterfaceMethod(Type instanceType, Type interfaceType, MethodInfo method)
+        private static (MethodInfo method, Type[] ParaTypes) GetInterfaceMethod(Type instanceType, Type interfaceType, MethodInfo method)
         {
             var paras = method.GetParameters();
             var paraTypes = paras.Select(t => t.ParameterType).ToArray();
             var map = instanceType.GetInterfaceMap(interfaceType);
-            var interfaceMethod = map.InterfaceMethods.FirstOrDefault(m => InterfaceMethodNameMatch(interfaceType, method, m)
-                                                                           && m.GetParameters().Select(x => x.ParameterType).SequenceEqual(paraTypes));
-            if (interfaceMethod == null)
+            var interfaceMethods = map.InterfaceMethods
+                .Where(m => InterfaceMethodNameMatch(interfaceType, method, m) && m.GetParameters().Select(x => x.ParameterType).SequenceEqual(paraTypes))
+                .ToArray();
+
+            if (interfaceMethods.Length == 0)
                 throw new MissingMethodException($"Can not find method {method.Name} in type {instanceType.LongName()}");
+
+            if (interfaceMethods.Length > 1)
+                throw new AmbiguousMatchException($"Found more than one method {method.Name} in type {instanceType.LongName()}");
+
+            var interfaceMethod = interfaceMethods[0];
+
             if (interfaceMethod.IsAbstract)
                 throw new InvalidOperationException($"The method {interfaceMethod.Name} is abstract");
 
             if (method.IsGenericMethod)
                 interfaceMethod = interfaceMethod.MakeGenericMethod(method.GetGenericArguments());
 
+            return (interfaceMethod, paraTypes);
+        }
+
+        private static (IntPtr pointer, MethodInfo invoke) GetInterfaceMethodPointer(Type instanceType, Type interfaceType, MethodInfo method)
+        {
+            var (interfaceMethod, paraTypes) = GetInterfaceMethod(instanceType, interfaceType, method);
+
             var ifReturnVoid = method.ReturnType == typeof(void);
-            var actionType = GetDelegateType(ifReturnVoid, paras.Length);
+            var actionType = GetDelegateType(ifReturnVoid, paraTypes.Length);
 
             var types = ifReturnVoid
                 ? paraTypes
@@ -69,12 +84,9 @@ namespace FclEx
 
             var (method, args) = GetMethodArgs(selector);
             var interfaceType = typeof(TInterface);
-            var (pointer, invoke) = MethodMap.GetOrAdd((instance.GetType(), interfaceType, method),
-                m => GetInterfaceMethod(m.Item1, m.Item2, m.Item3));
-
+            var (pointer, invoke) = MethodMap.GetOrAdd((instance.GetType(), interfaceType, method), m => GetInterfaceMethodPointer(m.Item1, m.Item2, m.Item3));
             var func = Activator.CreateInstance(invoke.DeclaringType!, instance, pointer);
             return (invoke, func!, args);
-
         }
 
         private static bool InterfaceMethodNameMatch(Type interfaceType, MethodInfo method, MethodInfo interfaceMethod)
@@ -93,25 +105,13 @@ namespace FclEx
             return dic.Get(key) ?? throw new NotSupportedException($"Cannot find {t} type with {key} arguments");
         }
 
-        private static object?[] GetArguments(this MethodCallExpression exp)
-        {
-            return exp.Arguments.Select(e => e switch
-            {
-                ConstantExpression constant => constant.Value,
-                _ => e.AsLambda().Compile().DynamicInvoke()
-            }).ToArray();
-        }
-
-#pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
         private static (MethodInfo method, object?[] args) GetMethodArgs(Expression exp) => exp switch
         {
             LambdaExpression lambda => GetMethodArgs(lambda.Body),
             UnaryExpression unary => GetMethodArgs(unary.Operand),
-            MethodCallExpression methodCall => (methodCall.Method!, methodCall.GetArguments()),
-            MemberExpression { Member: PropertyInfo prop } => (prop.GetGetMethod() 
-                                                               ?? throw new InvalidOperationException($"No public getter in propery {prop.Name}"), Array.Empty<object?>()),
+            MethodCallExpression methodCall => (methodCall.Method!, methodCall.Arguments.GetArgumentValues()),
+            MemberExpression { Member: PropertyInfo prop } => (prop.GetRequiredGetMethod(), Array.Empty<object?>()),
             _ => throw new InvalidOperationException("The expression refers to neither a method nor a readable property.")
         };
-#pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
     }
 }

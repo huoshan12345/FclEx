@@ -14,5 +14,10 @@ namespace FclEx
             var value = info.GetValue(obj);
             return value == null ? default : (T)value;
         }
+
+        public static MethodInfo GetRequiredGetMethod(this PropertyInfo prop)
+        {
+            return prop.GetGetMethod(true) ?? throw new MissingMethodException($"No getter in propery {prop.Name}");
+        }
     }
 }

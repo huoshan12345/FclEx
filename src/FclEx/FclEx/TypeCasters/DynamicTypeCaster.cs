@@ -10,7 +10,7 @@ namespace FclEx.TypeCasters
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [return: NotNullIfNotNull("obj"), MaybeNull]
-        public override TOutput CastTo<TInput, TOutput>([AllowNull] TInput obj)
+        public sealed override TOutput CastTo<TInput, TOutput>([AllowNull] TInput obj)
         {
             return obj == null
                 ? default

@@ -8,7 +8,7 @@ namespace FclEx.TypeCasters
     public class CommonTypeCaster : AbstractTypeCaster<CommonTypeCaster>
     {
         [return: MaybeNull]
-        public override TOutput CastTo<TInput, TOutput>([AllowNull] TInput obj)
+        public sealed override TOutput CastTo<TInput, TOutput>([AllowNull] TInput obj)
         {
             if (obj == null)
                 return default;
