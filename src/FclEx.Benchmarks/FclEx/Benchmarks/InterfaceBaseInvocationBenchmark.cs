@@ -26,9 +26,32 @@ namespace FclEx.Benchmarks
         }
 
         private static readonly InheritI2 _inheritI2 = new();
+        private static readonly C2 _c2 = new();
+
+        public abstract class C0
+        {
+            public abstract int Compute(int number);
+        }
+
+        public class C1 : C0
+        {
+            public override int Compute(int number) => number + 1;
+        }
+
+        public class C2 : C1
+        {
+            public override int Compute(int number) => base.Compute(number) + 1;
+        }
+
+        [Benchmark(Baseline = true)]
+        public void Base()
+        {
+            var r1 = _c2.Compute(0);
+            var r2 = _c2.Compute(0);
+        }
 
         [Benchmark]
-        public void Base()
+        public void BaseByFunctionPointer()
         {
             var r1 = _inheritI2.Base<I1, int>(m => m.Compute(0));
             var r2 = _inheritI2.Base<I2, int>(m => m.Compute(0));
