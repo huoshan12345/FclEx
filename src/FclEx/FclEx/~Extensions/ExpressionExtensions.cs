@@ -38,12 +38,12 @@ namespace FclEx
             return lambda;
         }
 
-        public static Expression<TDelegate> Lambda<TDelegate>(this Expression e) where TDelegate : Delegate
-            => Expression.Lambda<TDelegate>(e);
+        public static Expression<TDelegate> Lambda<TDelegate>(this Expression e, params ParameterExpression[] parameters) where TDelegate : Delegate
+            => Expression.Lambda<TDelegate>(e, parameters);
 
         public static Expression Convert(this Expression e, Type type) => Expression.Convert(e, type);
 
-        public static LambdaExpression Lambda(this Expression e) => Expression.Lambda(e);
+        public static LambdaExpression Lambda(this Expression e, params ParameterExpression[] parameters) => Expression.Lambda(e, parameters);
 
         public static void Visit(this BlockExpression block, Action<Expression> action)
         {

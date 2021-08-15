@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -9,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Dawn;
 using FclEx.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace FclEx
 {
@@ -78,7 +80,8 @@ namespace FclEx
             var func = _delegates.GetOrAdd(new(instance.GetType(), typeof(TInterface), method), k =>
             {
                 var (interfaceMethod, _) = GetInterfaceMethod(k.InstanceType, k.InterfaceType, k.Method);
-                var dynamicMethod = GetDynamicMethod(k.InterfaceType, interfaceMethod, args.Select(m => m.Type));
+                // var dynamicMethod = GetDynamicMethod(k.InterfaceType, interfaceMethod, args.Select(m => m.Type));
+                var dynamicMethod = BuildMethod(k.InterfaceType, interfaceMethod, args.Select(m => m.Type));
                 var ifReturnVoid = method.ReturnType == typeof(void);
                 return ifReturnVoid
                     ? dynamicMethod.CreateDelegate<Action<TInterface, object[]>>()
@@ -92,7 +95,7 @@ namespace FclEx
             var dynamicMethod = new DynamicMethod(
                 name: "__IL_" + method.GetFullName(),
                 returnType: method.ReturnType,
-                parameterTypes: new[] { interfaceType, typeof(IEnumerable<object>) },
+                parameterTypes: new[] { interfaceType, typeof(object[]) },
                 owner: typeof(object),
                 skipVisibility: true);
 
@@ -109,7 +112,6 @@ namespace FclEx
                 {
                     il.Emit(OpCodes.Unbox_Any, argumentType);
                 }
-
                 ++i;
             }
             il.Emit(OpCodes.Call, method);
@@ -125,5 +127,64 @@ namespace FclEx
             MemberExpression { Member: PropertyInfo prop } => (prop.GetRequiredGetMethod(), Array.Empty<Expression>()),
             _ => throw new InvalidOperationException("The expression refers to neither a method nor a readable property.")
         };
+
+        private const string ProxyNameSpace = "FclEx.DynamicGenerated";
+        private const string ProxyAssemblyName = "FclEx.DynamicProxy.Generator";
+        private static TypeBuilder GetTypeBuilder(string className)
+        {
+            var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(ProxyAssemblyName), AssemblyBuilderAccess.RunAndCollect);
+            var moduleBuilder = assemblyBuilder.DefineDynamicModule("MainModule");
+            var typeBuilder = moduleBuilder.DefineType($"{ProxyNameSpace}.{className}",
+                TypeAttributes.Public |
+                TypeAttributes.Class |
+                TypeAttributes.AutoClass |
+                TypeAttributes.AnsiClass |
+                TypeAttributes.BeforeFieldInit |
+                TypeAttributes.AutoLayout,
+                typeof(object));
+            return typeBuilder;
+        }
+
+        private static MethodInfo BuildMethod(Type interfaceType, MethodInfo method, IEnumerable<Type> argumentTypes)
+        {
+            var paraTypes = new[] { interfaceType, typeof(object[]) };
+            var typeBuilder = GetTypeBuilder(method.DeclaringType!.Name);
+            var methodBuilder = typeBuilder.DefineMethod(
+                name: method.Name,
+                attributes: MethodAttributes.Public | MethodAttributes.Static,
+                callingConvention: CallingConventions.Standard,
+                returnType: method.ReturnType,
+                parameterTypes: paraTypes);
+
+            var il = methodBuilder.GetILGenerator();
+            il.Emit(OpCodes.Ldarg_0);
+
+            var i = 0;
+            foreach (var argumentType in argumentTypes)
+            {
+                il.Emit(OpCodes.Ldarg_1);
+                il.Emit(OpCodes.Ldc_I4, i);
+                il.Emit(OpCodes.Ldelem, typeof(object));
+                if (argumentType.IsValueType)
+                {
+                    il.Emit(OpCodes.Unbox_Any, argumentType);
+                }
+                ++i;
+            }
+
+            if (Environment.Is64BitProcess)
+            {
+                il.Emit(OpCodes.Ldc_I8, method.MethodHandle.GetFunctionPointer().ToInt64());
+            }
+            else
+            {
+                il.Emit(OpCodes.Ldc_I4, method.MethodHandle.GetFunctionPointer().ToInt32());
+            }
+            // use Calli instead of Call to avoid MethodAccessException
+            il.EmitCalli(OpCodes.Calli, CallingConventions.Standard, method.ReturnType, paraTypes, null);
+            il.Emit(OpCodes.Ret);
+
+            return typeBuilder.CreateType()!.GetMethod(methodBuilder.Name, paraTypes)!;
+        }
     }
 }
