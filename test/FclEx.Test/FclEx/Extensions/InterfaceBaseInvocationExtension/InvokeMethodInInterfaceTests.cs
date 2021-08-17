@@ -16,7 +16,7 @@ namespace FclEx.Extensions.InterfaceBaseInvocationExtension
 
         public interface I2 : I1
         {
-            int I0.Count() => this.Base<I1, int>(m => m.Count()) + 1;
+            int I0.Count() => this.BaseByDelegate<I1, int>(m => m.Count()) + 1;
         }
 
         public class WithI2 : I2
@@ -25,14 +25,14 @@ namespace FclEx.Extensions.InterfaceBaseInvocationExtension
 
         public class ImplI2CallI1 : I2
         {
-            int I0.Count() => this.Base<I1, int>(m => m.Count()) + 1;
-            public int Count() => this.Base<I1, int>(m => m.Count()) + 1;
+            int I0.Count() => this.BaseByDelegate<I1, int>(m => m.Count()) + 1;
+            public int Count() => this.BaseByDelegate<I1, int>(m => m.Count()) + 1;
         }
 
         public class ImplI2CallI2 : I2
         {
-            int I0.Count() => this.Base<I2, int>(m => m.Count()) + 1;
-            public int Count() => this.Base<I2, int>(m => m.Count()) + 1;
+            int I0.Count() => this.BaseByDelegate<I2, int>(m => m.Count()) + 1;
+            public int Count() => this.BaseByDelegate<I2, int>(m => m.Count()) + 1;
         }
 
         [Fact]

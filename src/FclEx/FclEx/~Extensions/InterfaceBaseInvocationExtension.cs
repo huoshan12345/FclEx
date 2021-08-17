@@ -11,39 +11,62 @@ namespace FclEx
 {
     public static partial class InterfaceBaseInvocationExtension
     {
-        private static readonly ConcurrentDictionary<InterfaceMethodInfo, (IntPtr, MethodInfo)> MethodMap = new();
-
-        public static void Base<TInterface>(this TInterface instance, Expression<Action<TInterface>> selector)
+        internal readonly struct InterfaceMethodInfo
         {
-            var (invoke, func, args) = GetInterfaceFunc(instance, selector);
-            invoke.Invoke(func, args);
+            public bool Equals(InterfaceMethodInfo other)
+            {
+                return InstanceType == other.InstanceType
+                       && InterfaceType == other.InterfaceType
+                       && Method.Equals(other.Method);
+            }
+
+            public override bool Equals(object? obj)
+            {
+                return obj is InterfaceMethodInfo other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                return HashCode.Combine(InstanceType, InterfaceType, Method);
+            }
+
+            public readonly Type InstanceType;
+            public readonly Type InterfaceType;
+            public readonly MethodInfo Method;
+
+            public InterfaceMethodInfo(Type instanceType, Type interfaceType, MethodInfo method)
+            {
+                InstanceType = instanceType;
+                InterfaceType = interfaceType;
+                Method = method;
+            }
+
+            public void Deconstruct(out Type instanceType, out Type interfaceType, out MethodInfo method)
+            {
+                instanceType = InstanceType;
+                interfaceType = InterfaceType;
+                method = Method;
+            }
         }
 
-        public static TReturn Base<TInterface, TReturn>(this TInterface instance, Expression<Func<TInterface, TReturn>> selector)
+        private static (MethodInfo method, Type[] ParaTypes) GetInterfaceMethod(InterfaceMethodInfo info)
         {
-            var (invoke, func, args) = GetInterfaceFunc(instance, selector);
-            return invoke.Invoke(func, args).CastTo<TReturn>()!;
-        }
-
-        private static (MethodInfo method, Type[] ParaTypes) GetInterfaceMethod(Type instanceType, Type interfaceType, MethodInfo method)
-        {
+            var (instanceType, interfaceType, method) = info;
             var paras = method.GetParameters();
             var paraTypes = paras.Select(t => t.ParameterType).ToArray();
-            var map = instanceType.GetInterfaceMap(interfaceType);
-            var interfaceMethods = map.InterfaceMethods
+            var interfaceMethods = instanceType
+                .GetInterfaceMap(interfaceType)
+                .InterfaceMethods
                 .Where(m => InterfaceMethodNameMatch(interfaceType, method, m) && m.GetParameters().Select(x => x.ParameterType).SequenceEqual(paraTypes))
                 .ToArray();
 
-            if (interfaceMethods.Length == 0)
-                throw new MissingMethodException($"Can not find method {method.Name} in type {instanceType.LongName()}");
-
-            if (interfaceMethods.Length > 1)
-                throw new AmbiguousMatchException($"Found more than one method {method.Name} in type {instanceType.LongName()}");
-
-            var interfaceMethod = interfaceMethods[0];
-
-            if (interfaceMethod.IsAbstract)
-                throw new InvalidOperationException($"The method {interfaceMethod.Name} is abstract");
+            var interfaceMethod = interfaceMethods.Length switch
+            {
+                0 => throw new MissingMethodException($"Can not find method {method.Name} in type {instanceType.LongName()}"),
+                > 1 => throw new AmbiguousMatchException($"Found more than one method {method.Name} in type {instanceType.LongName()}"),
+                1 when interfaceMethods[0].IsAbstract => throw new InvalidOperationException($"The method {interfaceMethods[0].Name} is abstract"),
+                _ => interfaceMethods[0]
+            };
 
             if (method.IsGenericMethod)
                 interfaceMethod = interfaceMethod.MakeGenericMethod(method.GetGenericArguments());
@@ -51,58 +74,20 @@ namespace FclEx
             return (interfaceMethod, paraTypes);
         }
 
-        private static (IntPtr pointer, MethodInfo invoke) GetInterfaceMethodPointer(Type instanceType, Type interfaceType, MethodInfo method)
-        {
-            var (interfaceMethod, paraTypes) = GetInterfaceMethod(instanceType, interfaceType, method);
-
-            var ifReturnVoid = method.ReturnType == typeof(void);
-            var actionType = GetDelegateType(ifReturnVoid, paraTypes.Length);
-
-            var types = ifReturnVoid
-                ? paraTypes
-                : paraTypes.Append(method.ReturnType).ToArray();
-
-            var genericType = actionType.MakeGenericType(types);
-            var functionPointer = interfaceMethod.MethodHandle.GetFunctionPointer();
-            return (functionPointer, genericType.GetMethod(nameof(Action.Invoke))!);
-        }
-
-        private static (MethodInfo invoke, object func, object?[] args) GetInterfaceFunc<TInterface>(this TInterface instance, LambdaExpression selector)
-        {
-            if (instance == null)
-                throw new ArgumentNullException(nameof(instance));
-            if (selector == null)
-                throw new ArgumentNullException(nameof(selector));
-
-            var (method, args) = GetMethodArgs(selector);
-            var interfaceType = typeof(TInterface);
-            var (pointer, invoke) = MethodMap.GetOrAdd(new(instance.GetType(), interfaceType, method), m => GetInterfaceMethodPointer(m.InstanceType, m.InterfaceType, m.Method));
-            var func = Activator.CreateInstance(invoke.DeclaringType!, instance, pointer);
-            return (invoke, func!, args);
-        }
-
         private static bool InterfaceMethodNameMatch(Type interfaceType, MethodInfo method, MethodInfo interfaceMethod)
         {
             var iName = interfaceMethod.Name;
-            var isNewMethod = interfaceType == method.DeclaringType; // method with new keyword
-            return isNewMethod && method.Name == iName
-                   || !isNewMethod && iName.Contains(method.Name) && iName.Contains(method.DeclaringType!.SimpleName());
+            var isSameType = interfaceType == method.DeclaringType;
+            return isSameType && method.Name == iName
+                   || !isSameType && iName.EndsWith("." + method.Name);
         }
 
-        private static Type GetDelegateType(bool ifReturnVoid, int len)
+        private static (MethodInfo method, IReadOnlyList<Expression> args) GetMethodAndArguments(Expression exp) => exp switch
         {
-            var (key, dic, t) = ifReturnVoid
-                ? (len, TypeHelper.ActionTypeDic, nameof(Action))
-                : (len + 1, TypeHelper.FuncTypeDic, nameof(Func<int>));
-            return dic.Get(key) ?? throw new NotSupportedException($"Cannot find {t} type with {key} arguments");
-        }
-
-        private static (MethodInfo method, object?[] args) GetMethodArgs(Expression exp) => exp switch
-        {
-            LambdaExpression lambda => GetMethodArgs(lambda.Body),
-            UnaryExpression unary => GetMethodArgs(unary.Operand),
-            MethodCallExpression methodCall => (methodCall.Method!, methodCall.Arguments.GetArgumentValues().ToArray()),
-            MemberExpression { Member: PropertyInfo prop } => (prop.GetRequiredGetMethod(), Array.Empty<object?>()),
+            LambdaExpression lambda => GetMethodAndArguments(lambda.Body),
+            UnaryExpression unary => GetMethodAndArguments(unary.Operand),
+            MethodCallExpression methodCall => (methodCall.Method!, methodCall.Arguments),
+            MemberExpression { Member: PropertyInfo prop } => (prop.GetRequiredGetMethod(), Array.Empty<Expression>()),
             _ => throw new InvalidOperationException("The expression refers to neither a method nor a readable property.")
         };
     }

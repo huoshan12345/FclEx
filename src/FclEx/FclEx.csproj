@@ -3,6 +3,7 @@
   <Import Project="..\..\nupkg\common.props" />
 
   <ItemGroup>
+    <PackageReference Include="Lokad.ILPack" Version="0.1.6" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
