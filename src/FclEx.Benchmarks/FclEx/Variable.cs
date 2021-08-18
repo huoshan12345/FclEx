@@ -1,6 +1,6 @@
 ﻿using FclEx.Benchmarks;
 
-namespace FclEx.Benchmark
+namespace FclEx
 {
     internal static class Variable
     {

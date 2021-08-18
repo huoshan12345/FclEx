@@ -1,7 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
-using FclEx.Benchmark;
 using FclEx.TypeCasters;
-using static FclEx.Benchmark.Variable;
+using static FclEx.Variable;
 
 namespace FclEx.Benchmarks
 {

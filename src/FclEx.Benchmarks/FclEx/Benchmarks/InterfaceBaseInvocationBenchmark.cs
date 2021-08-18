@@ -1,4 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
+using InterfaceBaseInvoke;
 
 namespace FclEx.Benchmarks
 {
@@ -26,6 +27,11 @@ namespace FclEx.Benchmarks
             public int Compute(int number) => _classDelegate.BaseByDynamicMethod<I1, int>(m => m.Compute(0));
         }
 
+        public class ClassIL : I1
+        {
+            public int Compute(int number) => _classDelegate.Base<I1>().Compute(0);
+        }
+
         public abstract class C0
         {
             public abstract int Compute(int number);
@@ -43,9 +49,8 @@ namespace FclEx.Benchmarks
 
         private static readonly ClassDynamicMethod _classDynamicMethod = new();
         private static readonly ClassDelegate _classDelegate = new();
+        private static readonly ClassIL _classIL = new();
         private static readonly C2 _c2 = new();
-
-
 
         [Benchmark(Baseline = true)]
         public void Base()
@@ -63,6 +68,12 @@ namespace FclEx.Benchmarks
         public void BaseByDynamicMethod()
         {
             var r1 = _classDynamicMethod.Compute(0);
+        }
+
+        [Benchmark]
+        public void BaseByDyIL()
+        {
+            var r1 = _classIL.Compute(0);
         }
     }
 }
