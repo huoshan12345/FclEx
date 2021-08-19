@@ -3,77 +3,94 @@ using InterfaceBaseInvoke;
 
 namespace FclEx.Benchmarks
 {
+    public interface IEmptyMethod
+    {
+        int Compute(int number);
+    }
+
+    public interface IDefaultMethod
+    {
+        int Compute(int number) => number + 1;
+    }
+
+    public interface IOverridedMethod : IEmptyMethod
+    {
+        int IEmptyMethod.Compute(int number) => number + 1;
+    }
+
+    public class InheritIOverridedMethodWithDelegate : IOverridedMethod
+    {
+        public int Compute(int number) => this.BaseByDelegate<IOverridedMethod, int>(m => m.Compute(0));
+    }
+
+    public class InheritIOverridedMethodWithDynamicMethod : IOverridedMethod
+    {
+        public int Compute(int number) => this.BaseByDynamicMethod<IOverridedMethod, int>(m => m.Compute(0));
+    }
+
+    public class InheritIOverridedMethodWithIL : IOverridedMethod
+    {
+        public int Compute(int number) => this.Base<IOverridedMethod>().Compute(0);
+    }
+
+    public class InheritIDefaultMethodWithIL : IDefaultMethod
+    {
+        public int Compute(int number) => this.Base<IDefaultMethod>().Compute(0);
+    }
+
+    public abstract class Ancestor
+    {
+        public abstract int Compute(int number);
+    }
+
+    public class Parent : Ancestor
+    {
+        public override int Compute(int number) => number + 1;
+    }
+
+    public class Child : Parent
+    {
+        public override int Compute(int number) => base.Compute(number) + 1;
+    }
+
     [MemoryDiagnoser]
     [StopOnFirstError]
     public class InterfaceBaseInvocationBenchmark
     {
-        public interface I0
-        {
-            int Compute(int number);
-        }
-
-        public interface I1 : I0
-        {
-            int I0.Compute(int number) => number + 1;
-        }
-
-        public class ClassDelegate : I1
-        {
-            public int Compute(int number) => _classDelegate.BaseByDelegate<I1, int>(m => m.Compute(0));
-        }
-
-        public class ClassDynamicMethod : I1
-        {
-            public int Compute(int number) => _classDelegate.BaseByDynamicMethod<I1, int>(m => m.Compute(0));
-        }
-
-        public class ClassIL : I1
-        {
-            public int Compute(int number) => _classDelegate.Base<I1>().Compute(0);
-        }
-
-        public abstract class C0
-        {
-            public abstract int Compute(int number);
-        }
-
-        public class C1 : C0
-        {
-            public override int Compute(int number) => number + 1;
-        }
-
-        public class C2 : C1
-        {
-            public override int Compute(int number) => base.Compute(number) + 1;
-        }
-
-        private static readonly ClassDynamicMethod _classDynamicMethod = new();
-        private static readonly ClassDelegate _classDelegate = new();
-        private static readonly ClassIL _classIL = new();
-        private static readonly C2 _c2 = new();
+        private static readonly InheritIOverridedMethodWithDynamicMethod _inheritIOverridedMethodWithDynamicMethod = new();
+        private static readonly InheritIOverridedMethodWithDelegate _inheritIOverridedMethodWithDelegate = new();
+        private static readonly InheritIOverridedMethodWithIL _inheritIOverridedMethodWithIL = new();
+        private static readonly InheritIDefaultMethodWithIL _inheritIDefaultMethodWithIL = new();
+        private static readonly Child _child = new();
 
         [Benchmark(Baseline = true)]
         public void Base()
         {
-            var r1 = _c2.Compute(0);
+            var r1 = _child.Compute(0);
         }
 
         [Benchmark]
-        public void BaseByDelegate()
+        public void Base_Delegate()
         {
-            var r1 = _classDelegate.Compute(0);
+            var r1 = _inheritIOverridedMethodWithDelegate.Compute(0);
         }
 
         [Benchmark]
-        public void BaseByDynamicMethod()
+        public void Base_DynamicMethod()
         {
-            var r1 = _classDynamicMethod.Compute(0);
+            var r1 = _inheritIOverridedMethodWithDynamicMethod.Compute(0);
         }
 
         [Benchmark]
-        public void BaseByDyIL()
+        public void Base_IL()
         {
-            var r1 = _classIL.Compute(0);
+            var r1 = _inheritIDefaultMethodWithIL.Compute(0);
+        }
+
+        [Benchmark]
+        public void Base_IL_MultiLevel()
+        {
+            var r1 = _inheritIOverridedMethodWithIL.Compute(0);
         }
     }
 }
