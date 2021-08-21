@@ -243,3 +243,6 @@ ModelManifest.xml
 
 # Benchmark Results
 BenchmarkDotNet.Artifacts/
+
+# rider
+.idea/
