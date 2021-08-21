@@ -8,7 +8,7 @@ namespace FclEx
 {
     public static partial class InterfaceBaseInvocationExtension
     {
-        internal readonly record struct InterfaceMethodInfo(Type InstanceType, Type InterfaceType, MethodInfo Method) { }
+        internal readonly record struct InterfaceMethodInfo(Type InstanceType, Type InterfaceType, MethodInfo Method);
 
         private static (MethodInfo method, Type[] ParaTypes) GetInterfaceMethod(InterfaceMethodInfo info)
         {
