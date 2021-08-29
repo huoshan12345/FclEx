@@ -125,6 +125,7 @@ namespace FclEx.Helpers
             {
                 PropertyInfo propInfo => propInfo.PropertyType,
                 FieldInfo fieldInfo => fieldInfo.FieldType,
+                DataMemberInfo dataMemberInfo => dataMemberInfo.DataMemberType,
                 _ => throw new ArgumentException($"MemberInfo '{member.Name}' refers to neither a field nor a property.")
             };
         }
