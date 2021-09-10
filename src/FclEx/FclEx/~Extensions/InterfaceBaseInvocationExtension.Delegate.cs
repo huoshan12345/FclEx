@@ -20,13 +20,13 @@ namespace FclEx
     {
         private static readonly ConcurrentDictionary<InterfaceMethodInfo, (IntPtr, MethodInfo)> MethodMap = new();
 
-        public static void BaseByDelegate<TInterface>(this TInterface instance, Expression<Action<TInterface>> selector)
+        internal static void BaseByDelegate<TInterface>(this TInterface instance, Expression<Action<TInterface>> selector)
         {
             var (invoke, invoker, args) = GetInterfaceFunc(instance, selector);
             invoke.Invoke(invoker, args);
         }
 
-        public static TReturn BaseByDelegate<TInterface, TReturn>(this TInterface instance, Expression<Func<TInterface, TReturn>> selector)
+        internal static TReturn BaseByDelegate<TInterface, TReturn>(this TInterface instance, Expression<Func<TInterface, TReturn>> selector)
         {
             var (invoke, invoker, args) = GetInterfaceFunc(instance, selector);
             return invoke.Invoke(invoker, args).CastTo<TReturn>()!;
@@ -53,6 +53,16 @@ namespace FclEx
             var (pointer, invoke) = MethodMap.GetOrAdd(new(instance.GetType(), interfaceType, method), m => GetInterfaceMethodDelegate(m));
             var invoker = Activator.CreateInstance(invoke.DeclaringType!, instance, pointer);
             return (invoke, invoker!, evaluatedArguments);
+        }
+
+        public static void Base<TInterface>(this TInterface instance, Expression<Action<TInterface>> selector)
+        {
+            instance.BaseByDynamicMethod(selector);
+        }
+
+        public static TReturn Base<TInterface, TReturn>(this TInterface instance, Expression<Func<TInterface, TReturn>> selector)
+        {
+            return instance.BaseByDynamicMethod(selector);
         }
     }
 }

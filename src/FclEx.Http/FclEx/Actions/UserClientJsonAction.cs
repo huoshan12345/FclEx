@@ -14,15 +14,15 @@ namespace FclEx.Actions
         }
 
         public override OperateResult<T> GetResult(HttpRes response)
-            => this.BaseByDelegate<IJsonAction<T>, OperateResult<T>>(m => m.GetResult(response));
+            => this.Base<IJsonAction<T>, OperateResult<T>>(m => m.GetResult(response));
 
         public virtual bool IsFailed(JsonActionContext context)
-            => this.BaseByDelegate<IJsonAction<T>, bool>(m => m.IsFailed(context));
+            => this.Base<IJsonAction<T>, bool>(m => m.IsFailed(context));
 
         public virtual OperateResult<T> HandleFailed(JsonActionContext context)
-            => this.BaseByDelegate<IJsonAction<T>, OperateResult<T>>(m => m.HandleFailed(context));
+            => this.Base<IJsonAction<T>, OperateResult<T>>(m => m.HandleFailed(context));
 
         public virtual OperateResult<T> GetResult(JsonActionContext context)
-            => this.BaseByDelegate<IJsonAction<T>, OperateResult<T>>(m => m.GetResult(context));
+            => this.Base<IJsonAction<T>, OperateResult<T>>(m => m.GetResult(context));
     }
 }

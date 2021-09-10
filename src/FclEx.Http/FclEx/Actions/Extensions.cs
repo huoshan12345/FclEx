@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Threading.Tasks;
 using Dawn;
-
 using FclEx.Http.Core;
 using FclEx.Http.Services;
 using FclEx.Utils;

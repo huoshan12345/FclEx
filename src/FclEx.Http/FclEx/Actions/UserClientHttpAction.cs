@@ -23,13 +23,13 @@ namespace FclEx.Actions
         public abstract Uri Uri { get; }
         public abstract HttpReqType ReqType { get; }
 
-        public virtual bool IsFailed(HttpRes res) => this.BaseByDelegate<IHttpAction<T>, bool>(m => m.IsFailed(res));
-        public virtual OperateResult<T> HandleFailed(HttpRes res) => this.BaseByDelegate<IHttpAction<T>, OperateResult<T>>(m => m.HandleFailed(res));
+        public virtual bool IsFailed(HttpRes res) => this.Base<IHttpAction<T>, bool>(m => m.IsFailed(res));
+        public virtual OperateResult<T> HandleFailed(HttpRes res) => this.Base<IHttpAction<T>, OperateResult<T>>(m => m.HandleFailed(res));
         public abstract OperateResult<T> GetResult(HttpRes response);
-        public virtual HttpReq BuildRequest() => this.BaseByDelegate<IHttpAction<T>, HttpReq>(m => m.BuildRequest());
+        public virtual HttpReq BuildRequest() => this.Base<IHttpAction<T>, HttpReq>(m => m.BuildRequest());
         public virtual void ModifyRequest(HttpReq req) { }
         public virtual Task<OperateResult<T>> GetResultAsync(HttpRes response) => GetResult(response);
         public override Task<OperateResult<T>> ExecuteAsyncBody(CancellationToken token = default)
-            => this.BaseByDelegate<IHttpAction<T>, Task<OperateResult<T>>>(m => m.ExecuteAsyncBody(token));
+            => this.Base<IHttpAction<T>, Task<OperateResult<T>>>(m => m.ExecuteAsyncBody(token));
     }
 }
