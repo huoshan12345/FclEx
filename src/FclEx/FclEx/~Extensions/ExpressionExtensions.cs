@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -37,7 +38,12 @@ namespace FclEx
             return lambda;
         }
 
-        public static LambdaExpression AsLambda(this Expression e) => Expression.Lambda(e);
+        public static Expression<TDelegate> Lambda<TDelegate>(this Expression e, params ParameterExpression[] parameters) where TDelegate : Delegate
+            => Expression.Lambda<TDelegate>(e, parameters);
+
+        public static Expression Convert(this Expression e, Type type) => Expression.Convert(e, type);
+
+        public static LambdaExpression Lambda(this Expression e, params ParameterExpression[] parameters) => Expression.Lambda(e, parameters);
 
         public static void Visit(this BlockExpression block, Action<Expression> action)
         {
@@ -48,6 +54,15 @@ namespace FclEx
                 else
                     action(exp);
             }
+        }
+
+        public static IEnumerable<object?> GetArgumentValues(this IEnumerable<Expression> arguments)
+        {
+            return arguments.Select(e => e switch
+            {
+                ConstantExpression constant => constant.Value,
+                _ => e.Convert(typeof(object)).Lambda<Func<object>>().Compile().Invoke()
+            });
         }
     }
 }

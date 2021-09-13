@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using FclEx.Http.Core;
 using FclEx.Http.Services;
 
-namespace FclEx.Benchmark
+namespace FclEx.Benchmarks
 {
     [MemoryDiagnoser]
     public class HttpServiceTest

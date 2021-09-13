@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using BenchmarkDotNet.Attributes;
-using FclEx;
 
-namespace FclEx.Benchmark
+namespace FclEx.Benchmarks
 {
     [MemoryDiagnoser]
     public class CreateObjectTest

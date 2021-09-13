@@ -29,7 +29,7 @@ namespace FclEx.TypeCasters
         }
     }
 
-    public class ExpressionTypeCaster : AbstractTypeCaster<ExpressionTypeCaster>
+    public sealed class ExpressionTypeCaster : AbstractTypeCaster<ExpressionTypeCaster>
     {
         [return: MaybeNull]
         public override TOutput CastTo<TInput, TOutput>([AllowNull] TInput obj)

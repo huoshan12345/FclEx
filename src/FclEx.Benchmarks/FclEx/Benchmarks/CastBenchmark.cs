@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using BenchmarkDotNet.Attributes;
+﻿using BenchmarkDotNet.Attributes;
 using FclEx.TypeCasters;
-using FclEx.Utils;
-using static FclEx.Benchmark.Variable;
+using static FclEx.Variable;
 
-namespace FclEx.Benchmark
+namespace FclEx.Benchmarks
 {
     [MemoryDiagnoser]
-    public class CastTest
+    public class CastBenchmark
     {
         private static readonly CommonTypeCaster CommonTypeCaster = CommonTypeCaster.Instance;
         private static readonly ExpressionTypeCaster ExpressionTypeCaster = ExpressionTypeCaster.Instance;

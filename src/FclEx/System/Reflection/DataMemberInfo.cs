@@ -19,6 +19,7 @@ namespace System.Reflection
             IsStatic = field.IsStatic;
             IsField = true;
             IsProperty = false;
+            DataMemberType = field.FieldType;
         }
 
         public DataMemberInfo(PropertyInfo property)
@@ -33,6 +34,7 @@ namespace System.Reflection
             IsStatic = accessors.Any(m => m.IsStatic);
             IsField = false;
             IsProperty = true;
+            DataMemberType = property.PropertyType;
         }
 
         public override object[] GetCustomAttributes(bool inherit)
@@ -49,6 +51,7 @@ namespace System.Reflection
         public override string Name => MemberInfo.Name;
         public override Type? ReflectedType => MemberInfo.ReflectedType;
 
+        public Type DataMemberType { get; }
         public object? GetValue(object? obj) => GetValueFunc(obj);
         public void SetValue(object? obj, object? value) => SetValueFunc(obj, value);
         public bool CanRead { get; }

@@ -240,4 +240,9 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
-/performance/FclEx.Benchmark/BenchmarkDotNet.Artifacts
+
+# Benchmark Results
+BenchmarkDotNet.Artifacts/
+
+# rider
+.idea/
