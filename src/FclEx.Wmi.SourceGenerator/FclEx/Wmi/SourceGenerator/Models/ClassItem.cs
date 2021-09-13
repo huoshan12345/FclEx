@@ -23,9 +23,14 @@ namespace FclEx.Wmi.SourceGenerator.Models
         public string Description { get; set; } = "";
 
         /// <summary>
-        /// Gets or sets the properties of the class
+        /// Gets the properties of the class
         /// </summary>
-        public List<PropertyItem> Properties { get; } = new();
+        public List<PropertyItem> Properties { get; set; } = new();
+
+        /// <summary>
+        /// Gets the list with the qualifiers
+        /// </summary>
+        public List<string> Qualifiers { get; set; } = new();
 
         /// <summary>
         /// Returns the name of the class

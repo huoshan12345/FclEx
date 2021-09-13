@@ -10,6 +10,7 @@ namespace FclEx.Wmi.SourceGenerator.Sources
     {
         private readonly StringWriter _writer;
         private readonly IndentedTextWriter _indentedWriter;
+        private static readonly char[] _newLineChars = { '\r', '\n' };
 
         public SourceBuilder()
         {
@@ -58,6 +59,21 @@ namespace FclEx.Wmi.SourceGenerator.Sources
         {
             _indentedWriter.WriteLine("{");
             _indentedWriter.Indent++;
+
+            return this;
+        }
+
+        public SourceBuilder WriteSummary(string text)
+        {
+            var lines = text.Split(_newLineChars, StringSplitOptions.RemoveEmptyEntries);
+            _indentedWriter.WriteLine("/// <summary>");
+            foreach (var line in lines)
+            {
+                _indentedWriter.Write("/// ");
+                _indentedWriter.Write(line);
+                _indentedWriter.WriteLine(" <br/>");
+            }
+            _indentedWriter.WriteLine("/// </summary>");
 
             return this;
         }

@@ -2,9 +2,9 @@
 
 namespace System.Management
 {
-    public static class ManagementObjectHelper
+    public static class ManagementObjectExtensions
     {
-        public static T ReadAs<T>(this ManagementObject obj) where T : new()
+        public static T ReadAs<T>(this ManagementBaseObject obj) where T : new()
         {
             return Cache<T>.ReflectionConverter.Invoke(obj);
         }
@@ -19,9 +19,9 @@ namespace System.Management
 
         internal static class Cache<T> where T : new()
         {
-            public static readonly Func<ManagementObject, T> ReflectionConverter = BuildReflectionConverter();
+            public static readonly Func<ManagementBaseObject, T> ReflectionConverter = BuildReflectionConverter();
 
-            public static Func<ManagementObject, T> BuildReflectionConverter()
+            public static Func<ManagementBaseObject, T> BuildReflectionConverter()
             {
                 var fields = typeof(T).GetFields(BindingFlags.Public | BindingFlags.Instance);
 

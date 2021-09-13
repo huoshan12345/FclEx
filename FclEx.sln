@@ -54,7 +54,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Wmi", "src\FclEx.Wmi\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Wmi.SourceGenerator", "src\FclEx.Wmi.SourceGenerator\FclEx.Wmi.SourceGenerator.csproj", "{61F3CC36-00D8-4251-89F4-BCE4BE91AC4A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FclEx.Wmi.Tests", "test\FclEx.Wmi.Tests\FclEx.Wmi.Tests.csproj", "{F6546BC9-75F6-4D4B-B477-E5DFD6876F46}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Wmi.Tests", "test\FclEx.Wmi.Tests\FclEx.Wmi.Tests.csproj", "{F6546BC9-75F6-4D4B-B477-E5DFD6876F46}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7B9B8FCA-B26E-439B-9BFB-6D42B7DDC718} = {7B9B8FCA-B26E-439B-9BFB-6D42B7DDC718}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution

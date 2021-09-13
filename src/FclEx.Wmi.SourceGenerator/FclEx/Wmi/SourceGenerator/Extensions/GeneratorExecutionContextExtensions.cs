@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.CodeAnalysis;
 
-namespace FclEx.Wmi.SourceGenerator
+namespace FclEx.Wmi.SourceGenerator.Extensions
 {
     public static class GeneratorExecutionContextExtensions
     {

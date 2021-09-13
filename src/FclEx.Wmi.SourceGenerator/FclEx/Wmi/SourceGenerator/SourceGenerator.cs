@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Management;
 using System.Runtime.CompilerServices;
+using FclEx.Wmi.SourceGenerator.Extensions;
 using FclEx.Wmi.SourceGenerator.Models;
 using FclEx.Wmi.SourceGenerator.Sources;
 using Microsoft.CodeAnalysis;
@@ -25,6 +26,11 @@ namespace FclEx.Wmi.SourceGenerator
                 context.ReportDiagnostic(ex);
             }
         }
+
+        private static readonly string[] Namespaces =
+        {
+            @"Root\CIMV2",
+        };
 
         private static IEnumerable<string> LoadNamespaces(GeneratorExecutionContext context)
         {
@@ -65,15 +71,17 @@ namespace FclEx.Wmi.SourceGenerator
                 {
                     Options = { UseAmendedQualifiers = true }
                 };
+                var (desc, qualifiers) = GetQualifierData(mClass.Qualifiers);
                 var classItem = new ClassItem(className)
                 {
-                    Description = GetDescription(mClass.Qualifiers),
+                    Description = desc,
+                    Qualifiers = qualifiers
                 };
                 foreach (var property in mClass.Properties)
                 {
-                    var item = new PropertyItem(property.Name, property.Type)
+                    var item = new PropertyItem(property.Name, property.Type, property.IsArray)
                     {
-                        Description = GetDescription(property.Qualifiers),
+                        Description = GetQualifierData(property.Qualifiers).Description,
                     };
                     classItem.Properties.Add(item);
                 }
@@ -81,7 +89,7 @@ namespace FclEx.Wmi.SourceGenerator
             }
         }
 
-        private static string GetDescription(QualifierDataCollection collection)
+        private static (string Description, List<string> Qualifiers) GetQualifierData(QualifierDataCollection collection)
         {
             var descriptionList = new List<string>
             {
@@ -100,18 +108,18 @@ namespace FclEx.Wmi.SourceGenerator
             }
             var description = string.Join(Environment.NewLine, descriptionList) + Environment.NewLine
                 + "Qualifiers:" + Environment.NewLine + string.Join(", ", qualifierList);
-            return description;
+            return (description, qualifierList);
         }
 
         //By not inlining we make sure we can catch assembly loading errors when jitting this method
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private void ExecuteInternal(GeneratorExecutionContext context)
+        private static void ExecuteInternal(GeneratorExecutionContext context)
         {
-            foreach (var ns in LoadNamespaces(context))
+            foreach (var ns in Namespaces)
             {
-                foreach (var @class in LoadClasses(ns))
+                foreach (var @class in LoadClasses(ns).Where(m => !m.Qualifiers.Contains("abstract")))
                 {
-                    var (name, code) = ClassItemSource.Generate(@class);
+                    var (name, code) = ClassItemSource.Generate(ns, @class);
                     context.AddSource(name, code);
                 }
             }

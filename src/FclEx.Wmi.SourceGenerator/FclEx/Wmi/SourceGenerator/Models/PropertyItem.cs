@@ -23,13 +23,20 @@ namespace FclEx.Wmi.SourceGenerator.Models
         public string Type { get; }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="PropertyItem"/>
+        /// Gets the CIM type of the property
         /// </summary>
-        /// <param name="name">The name of the property</param>
-        /// <param name="type">The type of the property</param>
-        public PropertyItem(string name, CimType type)
+        public CimType CimType { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether the property is an array.
+        /// </summary>
+        public bool IsArray { get; }
+
+        public PropertyItem(string name, CimType type, bool isArray)
         {
             Name = name;
+            CimType = type;
+            IsArray = isArray;
             Type = GetType(type);
         }
 
