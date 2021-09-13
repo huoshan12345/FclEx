@@ -60,14 +60,5 @@ namespace FclEx.Wmi.SourceGenerator.Models
                 _ => type.ToString()
             };
         }
-
-        /// <summary>
-        /// Returns the name of the property
-        /// </summary>
-        /// <returns>The name</returns>
-        public override string ToString()
-        {
-            return Name;
-        }
     }
 }

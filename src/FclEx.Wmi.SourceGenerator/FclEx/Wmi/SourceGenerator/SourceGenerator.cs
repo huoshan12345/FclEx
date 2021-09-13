@@ -1,24 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Management;
 using System.Runtime.CompilerServices;
+using System.Text;
 using FclEx.Wmi.SourceGenerator.Extensions;
 using FclEx.Wmi.SourceGenerator.Models;
 using FclEx.Wmi.SourceGenerator.Sources;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
+using EnumerationOptions = System.Management.EnumerationOptions;
 
 namespace FclEx.Wmi.SourceGenerator
 {
     [Generator]
     public class SourceGenerator : ISourceGenerator
     {
+        public static void Generate(string folder)
+        {
+            var di = new DirectoryInfo(folder);
+            di.Create();
+            ExecuteInternal(new OutputOptions(OutputType.File, di.FullName), default);
+        }
+
         public void Execute(GeneratorExecutionContext context)
         {
             try
             {
-                ExecuteInternal(context);
+                ExecuteInternal(new OutputOptions(OutputType.Context, null), context);
             }
             catch (Exception ex)
             {
@@ -62,22 +73,18 @@ namespace FclEx.Wmi.SourceGenerator
 
         private static IEnumerable<ClassItem> LoadClasses(string namespaceName)
         {
-            var ns = new ManagementScope(namespaceName);
-            var searcher = new ManagementObjectSearcher(ns, new WqlObjectQuery("SELECT * FROM meta_class"));
-            foreach (var wmiClass in searcher.Get())
+            var ns = new ManagementScope(namespaceName, new ConnectionOptions { Locale = "MS_409" });
+            var searcher = new ManagementObjectSearcher(ns, new WqlObjectQuery("SELECT * FROM meta_class"), new EnumerationOptions { UseAmendedQualifiers = true });
+            foreach (var wmiClass in searcher.Get().Cast<ManagementClass>())
             {
-                var className = wmiClass["__CLASS"].ToString()!;
-                var mClass = new ManagementClass(ns, new ManagementPath(className), null)
-                {
-                    Options = { UseAmendedQualifiers = true }
-                };
-                var (desc, qualifiers) = GetQualifierData(mClass.Qualifiers);
+                var className = wmiClass.Path.ClassName;
+                var (desc, qualifiers) = GetQualifierData(wmiClass.Qualifiers);
                 var classItem = new ClassItem(className)
                 {
                     Description = desc,
                     Qualifiers = qualifiers
                 };
-                foreach (var property in mClass.Properties)
+                foreach (var property in wmiClass.Properties)
                 {
                     var item = new PropertyItem(property.Name, property.Type, property.IsArray)
                     {
@@ -91,10 +98,7 @@ namespace FclEx.Wmi.SourceGenerator
 
         private static (string Description, List<string> Qualifiers) GetQualifierData(QualifierDataCollection collection)
         {
-            var descriptionList = new List<string>
-            {
-                "Description:"
-            };
+            var descriptionList = new List<string>();
             var qualifierList = new List<string>();
 
             foreach (var entry in collection)
@@ -107,33 +111,44 @@ namespace FclEx.Wmi.SourceGenerator
                 }
             }
             var description = string.Join(Environment.NewLine, descriptionList) + Environment.NewLine
-                + "Qualifiers:" + Environment.NewLine + string.Join(", ", qualifierList);
+                + "Qualifiers: " + string.Join(", ", qualifierList);
             return (description, qualifierList);
         }
 
         //By not inlining we make sure we can catch assembly loading errors when jitting this method
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void ExecuteInternal(GeneratorExecutionContext context)
+        private static void ExecuteInternal(OutputOptions options, GeneratorExecutionContext context)
         {
             foreach (var ns in Namespaces)
             {
                 foreach (var @class in LoadClasses(ns).Where(m => !m.Qualifiers.Contains("abstract")))
                 {
                     var (name, code) = ClassItemSource.Generate(ns, @class);
-                    context.AddSource(name, code);
+
+                    switch (options.OutputType)
+                    {
+                        case OutputType.File:
+                            var fi = new FileInfo(Path.Combine(options.Folder ?? ".", ns, name));
+                            fi.Directory!.Create();
+                            File.WriteAllText(fi.FullName, code);
+                            break;
+                        default:
+                            context.AddSource(name, code);
+                            break;
+                    }
                 }
             }
         }
 
         public void Initialize(GeneratorInitializationContext context)
         {
-#if DEBUG
-            if (!Debugger.IsAttached)
-            {
-                Debugger.Launch();
-            }
-            Debug.WriteLine("Initalize code generator");
-#endif
+            //#if DEBUG
+            //            if (!Debugger.IsAttached)
+            //            {
+            //                Debugger.Launch();
+            //            }
+            //            Debug.WriteLine("Initalize code generator");
+            //#endif
         }
     }
 }

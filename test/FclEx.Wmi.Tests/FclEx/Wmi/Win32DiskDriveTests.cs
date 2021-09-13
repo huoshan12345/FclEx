@@ -5,11 +5,11 @@ using CIMV2;
 
 namespace FclEx.Wmi
 {
-    public class Win32_DiskDriveTests
+    public class Win32DiskDriveTests
     {
         private readonly ITestOutputHelper _output;
 
-        public Win32_DiskDriveTests(ITestOutputHelper output)
+        public Win32DiskDriveTests(ITestOutputHelper output)
         {
             _output = output;
         }
@@ -20,7 +20,7 @@ namespace FclEx.Wmi
             var drives = new ManagementObjectSearcher("SELECT * FROM Win32_DiskDrive").Get();
             foreach (var drive in drives)
             {
-                var disk = drive.ReadAs<Win32_DiskDrive>();
+                var disk = drive.ReadAs<Win32DiskDrive>();
                 _output.WriteLine(disk.SerialNumber);
             }
         }

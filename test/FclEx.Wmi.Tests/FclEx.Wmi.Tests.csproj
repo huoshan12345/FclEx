@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <Import Project="..\..\nupkg\common.test.props" />
   <PropertyGroup>
@@ -12,9 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="FclEx.Wmi">
-      <HintPath>..\..\src\FclEx.Wmi\bin\$(Configuration)\net5.0-windows\FclEx.Wmi.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\..\src\FclEx.Wmi\FclEx.Wmi.csproj" />
   </ItemGroup>
 
 </Project>

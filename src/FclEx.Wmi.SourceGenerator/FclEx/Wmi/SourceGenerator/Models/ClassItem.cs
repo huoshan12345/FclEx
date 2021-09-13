@@ -32,13 +32,7 @@ namespace FclEx.Wmi.SourceGenerator.Models
         /// </summary>
         public List<string> Qualifiers { get; set; } = new();
 
-        /// <summary>
-        /// Returns the name of the class
-        /// </summary>
-        /// <returns>The name</returns>
-        public override string ToString()
-        {
-            return Name;
-        }
+
+
     }
 }
