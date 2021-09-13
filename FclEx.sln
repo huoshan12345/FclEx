@@ -50,9 +50,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Serilog.Test", "test\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Benchmarks", "src\FclEx.Benchmarks\FclEx.Benchmarks.csproj", "{D8A6D90D-42F3-48B0-BEE5-0A08A3EAB07B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FclEx.Wmi", "src\FclEx.Wmi\FclEx.Wmi.csproj", "{7B9B8FCA-B26E-439B-9BFB-6D42B7DDC718}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Wmi", "src\FclEx.Wmi\FclEx.Wmi.csproj", "{7B9B8FCA-B26E-439B-9BFB-6D42B7DDC718}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FclEx.Wmi.SourceGenerator", "src\FclEx.Wmi.SourceGenerator\FclEx.Wmi.SourceGenerator.csproj", "{61F3CC36-00D8-4251-89F4-BCE4BE91AC4A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Wmi.SourceGenerator", "src\FclEx.Wmi.SourceGenerator\FclEx.Wmi.SourceGenerator.csproj", "{61F3CC36-00D8-4251-89F4-BCE4BE91AC4A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FclEx.Wmi.Tests", "test\FclEx.Wmi.Tests\FclEx.Wmi.Tests.csproj", "{F6546BC9-75F6-4D4B-B477-E5DFD6876F46}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -106,6 +108,10 @@ Global
 		{61F3CC36-00D8-4251-89F4-BCE4BE91AC4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{61F3CC36-00D8-4251-89F4-BCE4BE91AC4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{61F3CC36-00D8-4251-89F4-BCE4BE91AC4A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6546BC9-75F6-4D4B-B477-E5DFD6876F46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6546BC9-75F6-4D4B-B477-E5DFD6876F46}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6546BC9-75F6-4D4B-B477-E5DFD6876F46}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6546BC9-75F6-4D4B-B477-E5DFD6876F46}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -125,6 +131,7 @@ Global
 		{D8A6D90D-42F3-48B0-BEE5-0A08A3EAB07B} = {82145F29-EBC3-49B3-A96C-0CA1F040E231}
 		{7B9B8FCA-B26E-439B-9BFB-6D42B7DDC718} = {ABBD6045-5447-4C9B-AF77-E9ACF4EE2641}
 		{61F3CC36-00D8-4251-89F4-BCE4BE91AC4A} = {ABBD6045-5447-4C9B-AF77-E9ACF4EE2641}
+		{F6546BC9-75F6-4D4B-B477-E5DFD6876F46} = {F25BD2B5-2E68-4CC8-90F0-6F1C1574D34A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F79FC760-FDD2-442C-897B-0CAE0A3E857F}

@@ -1,8 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <Import Project="..\..\nupkg\common.props" />
+  <PropertyGroup>
+    <TargetFramework>net5.0-windows</TargetFramework>
+  </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.Management" Version="5.0.0" />
     <ProjectReference Include="..\FclEx.Wmi.SourceGenerator\FclEx.Wmi.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
