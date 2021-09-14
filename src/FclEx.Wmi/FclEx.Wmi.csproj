@@ -4,14 +4,13 @@
   <PropertyGroup>
     <TargetFramework>net5.0-windows</TargetFramework>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Remove="build\**" />
-    <EmbeddedResource Remove="build\**" />
-    <None Remove="build\**" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Management" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FclEx.Wmi.SourceGenerator\FclEx.Wmi.SourceGenerator.csproj" PrivateAssets="all" />
   </ItemGroup>
 
   <Target Name="GenerateCode" BeforeTargets="CoreCompile">
@@ -20,21 +19,21 @@
       <ToolName>FclEx.Wmi.SourceGenerator</ToolName>
       <ToolProjectDir>$(ProjectDir)..\$(ToolName)\</ToolProjectDir>
       <ToolPath>$(ToolProjectDir)bin\$(Configuration)\$(TargetFramework)\$(ToolName).dll</ToolPath>
-      <SourcePath>$(ProjectDir)build\</SourcePath>
+      <SourceDir>$(ProjectDir)obj\generated\</SourceDir>
     </PropertyGroup>
     <ItemGroup>
       <!--MSBuild maintains an item list named FileWrites that contains the files that need to be cleaned.
       This list is persisted to a file inside the obj folder that is referred to as the "clean cache."
       You can place additional values into the FileWrites item list so that they are removed when the project is cleaned up.-->
-      <FileWrites Include="$(SourcePath)" />
+      <FileWrites Include="$(SourceDir)" />
     </ItemGroup>
-    <RemoveDir Directories="$(SourcePath)" />
-    <Exec Command="dotnet $(ToolPath) $(SourcePath)">
+    <RemoveDir Directories="$(SourceDir)" />
+    <Exec Command="dotnet $(ToolPath) $(SourceDir)">
       <Output TaskParameter="ExitCode" PropertyName="_RunExitCode" />
     </Exec>
     <Error Condition="'$(_RunExitCode)' != '0'" Text="Run $(ToolName) failed" />
     <ItemGroup>
-      <Compile Include="$(SourcePath)*$(DefaultLanguageSourceExtension)" Exclude="@(Compile)" />
+      <Compile Include="$(SourceDir)**\*$(DefaultLanguageSourceExtension)" Exclude="@(Compile)" />
     </ItemGroup>
 
   </Target>

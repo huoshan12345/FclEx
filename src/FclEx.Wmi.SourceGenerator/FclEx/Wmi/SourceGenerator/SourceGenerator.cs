@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Management;
 using System.Runtime.CompilerServices;
-using System.Text;
 using FclEx.Wmi.SourceGenerator.Extensions;
 using FclEx.Wmi.SourceGenerator.Models;
 using FclEx.Wmi.SourceGenerator.Sources;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
-using EnumerationOptions = System.Management.EnumerationOptions;
 
 namespace FclEx.Wmi.SourceGenerator
 {
@@ -21,7 +17,11 @@ namespace FclEx.Wmi.SourceGenerator
         public static void Generate(string folder)
         {
             var di = new DirectoryInfo(folder);
-            di.Create();
+            if (di.Exists)
+            {
+                di.Delete(true);
+                di.Create();
+            }
             ExecuteInternal(new OutputOptions(OutputType.File, di.FullName), default);
         }
 
@@ -74,7 +74,7 @@ namespace FclEx.Wmi.SourceGenerator
         private static IEnumerable<ClassItem> LoadClasses(string namespaceName)
         {
             var ns = new ManagementScope(namespaceName, new ConnectionOptions { Locale = "MS_409" });
-            var searcher = new ManagementObjectSearcher(ns, new WqlObjectQuery("SELECT * FROM meta_class"), new EnumerationOptions { UseAmendedQualifiers = true });
+            var searcher = new ManagementObjectSearcher(ns, new WqlObjectQuery("SELECT * FROM meta_class"), new() { UseAmendedQualifiers = true });
             foreach (var wmiClass in searcher.Get().Cast<ManagementClass>())
             {
                 var className = wmiClass.Path.ClassName;

@@ -12,4 +12,7 @@
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.2" />
   </ItemGroup>
 
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="powershell.exe -Command &quot;get-wmiobject win32_process -Filter 'name = \&quot;dotnet.exe\&quot;' | where commandline -like '*$(ProjectName)*'  |  remove-wmiobject&quot;" />
+  </Target>
 </Project>
