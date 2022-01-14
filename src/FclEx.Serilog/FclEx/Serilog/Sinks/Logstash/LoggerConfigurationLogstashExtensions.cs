@@ -2,6 +2,7 @@
 using Serilog;
 using Serilog.Configuration;
 using Serilog.Events;
+using Serilog.Sinks.PeriodicBatching;
 
 namespace FclEx.Serilog.Sinks.Logstash
 {
@@ -9,9 +10,17 @@ namespace FclEx.Serilog.Sinks.Logstash
     {
         public static LoggerConfiguration Logstash(this LoggerSinkConfiguration config, LogstashSinkOptions options)
         {
-            Guard.Argument(options, nameof(options)).NotNull();
+            Guard.Argument(value: options, name: nameof(options)).NotNull();
 
-            return config.Sink(new LogstashSink(options),
+            var op = new PeriodicBatchingSinkOptions
+            {
+                EagerlyEmitFirstEvent = false,
+                BatchSizeLimit = options.BatchSizeLimit,
+                Period = options.Period,
+                QueueLimit = options.QueueLimit
+            };
+            return config.Sink(
+                logEventSink: new PeriodicBatchingSink(new LogstashSink(options), op),
                 restrictedToMinimumLevel: options.MinimumLogEventLevel ?? LevelAlias.Minimum,
                 levelSwitch: options.LevelSwitch
             );

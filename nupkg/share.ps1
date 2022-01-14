@@ -10,8 +10,8 @@ $projectNames = (
 "FclEx",
 "FclEx.Http",
 "FclEx.Xunit",
-"FclEx.Serilog",
-"FclEx.Wmi"
+# "FclEx.Wmi".
+"FclEx.Serilog"
 )
 
 $projectPaths = new-object 'System.Collections.Generic.List[string]'

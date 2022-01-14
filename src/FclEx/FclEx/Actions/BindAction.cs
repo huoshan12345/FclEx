@@ -15,7 +15,7 @@ namespace FclEx.Actions
         public BindAction(IAction<T> action, Func<T, OperateResult<TDest>> map)
         {
             _action = action ?? throw new ArgumentNullException(nameof(action));
-            _map = map ?? throw new ArgumentNullException(nameof(_map));
+            _map = map ?? throw new ArgumentNullException(nameof(map));
         }
 
         public async Task<OperateResult<TDest>> ExecuteAsync(CancellationToken token = default)

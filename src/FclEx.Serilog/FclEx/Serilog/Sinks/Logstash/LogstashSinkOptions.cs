@@ -40,23 +40,6 @@ namespace FclEx.Serilog.Sinks.Logstash
         public ITextFormatter? Formatter { get; set; }
 
         /// <summary>
-        /// Specifies how failing emits should be handled.
-        /// </summary>
-        public EmitEventFailureHandling EmitEventFailure { get; set; } = EmitEventFailureHandling.WriteToSelfLog;
-
-        /// <summary>
-        /// Sink to use when Logstash is unable to accept the events.
-        /// This is optional and depends on the EmitEventFailure setting.
-        /// </summary>
-        public ILogEventSink? FailureSink { get; set; }
-
-        /// <summary>
-        /// A callback which can be used to handle logevents which are not submitted to Logstash
-        /// like when it is unable to accept the events. This is optional and depends on the EmitEventFailure setting.
-        /// </summary>
-        public Action<LogEvent>? FailureCallback { get; set; }
-
-        /// <summary>
         /// The minimum log event level required in order to write an event to the sink.
         /// Ignored when LoggingLevelSwitch is specified.
         /// </summary>
