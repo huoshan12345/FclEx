@@ -10,7 +10,7 @@ $projectNames = (
 "FclEx",
 "FclEx.Http",
 "FclEx.Xunit",
-# "FclEx.Wmi".
+"FclEx.Wmi",
 "FclEx.Serilog"
 )
 

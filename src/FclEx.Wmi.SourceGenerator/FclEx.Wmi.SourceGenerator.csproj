@@ -3,7 +3,7 @@
   <Import Project="..\..\nupkg\common.props" />
   <PropertyGroup>
     <OutputType>exe</OutputType>
-    <TargetFramework>net5.0-windows</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,7 +15,4 @@
     </PackageReference>
   </ItemGroup>
 
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="powershell.exe -Command &quot;get-wmiobject win32_process -Filter 'name = \&quot;dotnet.exe\&quot;' | where commandline -like '*$(ProjectName)*'  |  remove-wmiobject&quot;" />
-  </Target>
 </Project>

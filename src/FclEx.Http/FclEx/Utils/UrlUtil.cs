@@ -73,7 +73,7 @@ namespace FclEx.Utils
 			return Uri.UnescapeDataString(interpretPlusAsSpace ? s.Replace("+", " ") : s);
 		}
 
-		private const int MAX_URL_LENGTH = 65519;
+		private const int MaxUrlLength = 65519;
 
 		/// <summary>
 		/// URL-encodes a string, including reserved characters such as '/' and '?'.
@@ -86,14 +86,14 @@ namespace FclEx.Utils
 			if (string.IsNullOrEmpty(s))
 				return s;
 
-			if (s.Length > MAX_URL_LENGTH)
+			if (s.Length > MaxUrlLength)
 			{
 				// Uri.EscapeDataString is going to throw because the string is "too long", so break it into pieces and concat them
-				var parts = new string[(int)Math.Ceiling((double)s.Length / MAX_URL_LENGTH)];
+				var parts = new string[(int)Math.Ceiling((double)s.Length / MaxUrlLength)];
 				for (var i = 0; i < parts.Length; i++)
 				{
-					var start = i * MAX_URL_LENGTH;
-					var len = Math.Min(MAX_URL_LENGTH, s.Length - start);
+					var start = i * MaxUrlLength;
+					var len = Math.Min(MaxUrlLength, s.Length - start);
 					parts[i] = Uri.EscapeDataString(s.Substring(start, len));
 				}
 				s = string.Concat(parts);
@@ -124,13 +124,13 @@ namespace FclEx.Utils
 
 			// no % characters, so avoid the regex overhead
 			if (!s.Contains("%"))
-				return Uri.EscapeUriString(s);
+				return Uri.EscapeDataString(s);
 
 			// pick out all %-hex-hex matches and avoid double-encoding 
 			return Regex.Replace(s, "(.*?)((%[0-9A-Fa-f]{2})|$)", c => {
 				var a = c.Groups[1].Value; // group 1 is a sequence with no %-encoding - encode illegal characters
 				var b = c.Groups[2].Value; // group 2 is a valid 3-character %-encoded sequence - leave it alone!
-				return Uri.EscapeUriString(a) + b;
+				return Uri.EscapeDataString(a) + b;
 			});
 		}
 

@@ -70,7 +70,7 @@ namespace FclEx.Wmi.SourceGenerator.Sources
             foreach (var line in lines)
             {
                 _indentedWriter.Write("/// ");
-                _indentedWriter.Write(line);
+                _indentedWriter.Write(line.Trim());
                 _indentedWriter.WriteLine(" <br/>");
             }
             _indentedWriter.WriteLine("/// </summary>");

@@ -74,8 +74,8 @@ namespace FclEx.Wmi.SourceGenerator
         private static IEnumerable<ClassItem> LoadClasses(string namespaceName)
         {
             var ns = new ManagementScope(namespaceName, new ConnectionOptions { Locale = "MS_409" });
-            var searcher = new ManagementObjectSearcher(ns, new WqlObjectQuery("SELECT * FROM meta_class"), new() { UseAmendedQualifiers = true });
-            foreach (var wmiClass in searcher.Get().Cast<ManagementClass>().Where(m => m.Path.ClassName.StartsWith("Win32_")))
+            var searcher = new ManagementObjectSearcher(ns, new WqlObjectQuery("SELECT * FROM Meta_Class WHERE __Class LIKE \"Win32_%\" AND NOT __Class LIKE \"Win32_Perf%\""), new() { UseAmendedQualifiers = true });
+            foreach (var wmiClass in searcher.Get().Cast<ManagementClass>())
             {
                 var className = wmiClass.Path.ClassName;
                 var (desc, qualifiers) = GetQualifierData(wmiClass.Qualifiers);
@@ -132,6 +132,7 @@ namespace FclEx.Wmi.SourceGenerator
                             fi.Directory!.Create();
                             File.WriteAllText(fi.FullName, code);
                             break;
+                        case OutputType.Context:
                         default:
                             context.AddSource(name, code);
                             break;
