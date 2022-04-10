@@ -6,9 +6,6 @@ using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using Chinese;
-using Dawn;
-using FclEx.Utils;
 using static System.Environment;
 
 namespace FclEx
@@ -128,11 +125,6 @@ namespace FclEx
             var index = str.IndexOf(separator, StringComparison.Ordinal);
             if (index < 0) return (str, "");
             return (str[..index], str[(index + separator.Length)..]);
-        }
-
-        public static string ToZhCn(this string str)
-        {
-            return ChineseConverter.ToSimplified(str);
         }
 
         public static string GetSub(this string str, char[] separators, Func<string[], string> selector)

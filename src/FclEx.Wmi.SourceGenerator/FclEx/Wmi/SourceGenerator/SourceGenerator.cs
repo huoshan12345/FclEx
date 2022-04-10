@@ -75,7 +75,7 @@ namespace FclEx.Wmi.SourceGenerator
         {
             var ns = new ManagementScope(namespaceName, new ConnectionOptions { Locale = "MS_409" });
             var searcher = new ManagementObjectSearcher(ns, new WqlObjectQuery("SELECT * FROM meta_class"), new() { UseAmendedQualifiers = true });
-            foreach (var wmiClass in searcher.Get().Cast<ManagementClass>())
+            foreach (var wmiClass in searcher.Get().Cast<ManagementClass>().Where(m => m.Path.ClassName.StartsWith("Win32_")))
             {
                 var className = wmiClass.Path.ClassName;
                 var (desc, qualifiers) = GetQualifierData(wmiClass.Qualifiers);
