@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Text.RegularExpressions;
+#pragma warning disable CS0618
+#pragma warning disable SYSLIB0013
 
 namespace FclEx.Utils
 {
@@ -7,7 +9,16 @@ namespace FclEx.Utils
 	/// Code from https://github.com/tmenier/Flurl
 	/// </summary>
 	public static class UrlUtil
-    {
+	{
+        internal static bool OrdinalContains(this string? s, string value, bool ignoreCase = false) =>
+            s != null && s.IndexOf(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) >= 0;
+
+        internal static bool OrdinalStartsWith(this string? s, string value, bool ignoreCase = false) =>
+            s != null && s.StartsWith(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+
+        internal static bool OrdinalEndsWith(this string? s, string value, bool ignoreCase = false) =>
+            s != null && s.EndsWith(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+
 		#region static utility methods
 		/// <summary>
 		/// Basically a Path.Combine for URLs. Ensures exactly one '/' separates each segment,
@@ -35,9 +46,9 @@ namespace FclEx.Utils
 				if (string.IsNullOrEmpty(part))
 					continue;
 
-				if (result.EndsWith("?") || part.StartsWith("?"))
+				if (result.OrdinalEndsWith("?") || part.OrdinalStartsWith("?"))
 					result = CombineEnsureSingleSeparator(result, part, '?');
-				else if (result.EndsWith("#") || part.StartsWith("#"))
+				else if (result.OrdinalEndsWith("#") || part.OrdinalStartsWith("#"))
 					result = CombineEnsureSingleSeparator(result, part, '#');
 				else if (inFragment)
 					result += part;
@@ -46,12 +57,12 @@ namespace FclEx.Utils
 				else
 					result = CombineEnsureSingleSeparator(result, part, '/');
 
-				if (part.Contains("#"))
+				if (part.OrdinalContains("#"))
 				{
 					inQuery = false;
 					inFragment = true;
 				}
-				else if (!inFragment && part.Contains("?"))
+				else if (!inFragment && part.OrdinalContains("?"))
 				{
 					inQuery = true;
 				}
@@ -73,7 +84,7 @@ namespace FclEx.Utils
 			return Uri.UnescapeDataString(interpretPlusAsSpace ? s.Replace("+", " ") : s);
 		}
 
-		private const int MaxUrlLength = 65519;
+		private const int MAX_URL_LENGTH = 65519;
 
 		/// <summary>
 		/// URL-encodes a string, including reserved characters such as '/' and '?'.
@@ -86,14 +97,14 @@ namespace FclEx.Utils
 			if (string.IsNullOrEmpty(s))
 				return s;
 
-			if (s.Length > MaxUrlLength)
+			if (s.Length > MAX_URL_LENGTH)
 			{
 				// Uri.EscapeDataString is going to throw because the string is "too long", so break it into pieces and concat them
-				var parts = new string[(int)Math.Ceiling((double)s.Length / MaxUrlLength)];
+				var parts = new string[(int)Math.Ceiling((double)s.Length / MAX_URL_LENGTH)];
 				for (var i = 0; i < parts.Length; i++)
 				{
-					var start = i * MaxUrlLength;
-					var len = Math.Min(MaxUrlLength, s.Length - start);
+					var start = i * MAX_URL_LENGTH;
+					var len = Math.Min(MAX_URL_LENGTH, s.Length - start);
 					parts[i] = Uri.EscapeDataString(s.Substring(start, len));
 				}
 				s = string.Concat(parts);
@@ -123,14 +134,14 @@ namespace FclEx.Utils
 			// in that % isn't illegal if it's the start of a %-encoded sequence https://stackoverflow.com/a/47636037/62600
 
 			// no % characters, so avoid the regex overhead
-			if (!s.Contains("%"))
-				return Uri.EscapeDataString(s);
+			if (!s.OrdinalContains("%"))
+				return Uri.EscapeUriString(s);
 
-			// pick out all %-hex-hex matches and avoid double-encoding 
+			// pick out all %-hex-hex matches and avoid double-encoding
 			return Regex.Replace(s, "(.*?)((%[0-9A-Fa-f]{2})|$)", c => {
 				var a = c.Groups[1].Value; // group 1 is a sequence with no %-encoding - encode illegal characters
 				var b = c.Groups[2].Value; // group 2 is a valid 3-character %-encoded sequence - leave it alone!
-				return Uri.EscapeDataString(a) + b;
+				return Uri.EscapeUriString(a) + b;
 			});
 		}
 

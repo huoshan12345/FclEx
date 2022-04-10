@@ -15,7 +15,7 @@ namespace FclEx.Actions
         {
             var uri = UrlUtil.Combine(GlobalConstants.TestUrl, "/api/post");
             using var http = HttpClientService.Default;
-            var (successful, _, data, _) = await HttpReq.Json(uri).JsonBody(Enumerable.Range(1, 10).ToList())
+            var (successful, _, data, ex) = await HttpReq.Json(uri).JsonBody(Enumerable.Range(1, 10).ToList())
                 .ToAction(http)
                 .ReadJson<List<int>>("body")
                 .NextReq(m => HttpReq.Json(uri).JsonBody(m.Select(x => x.ToString()).ToDictionary(x => x, x => x + x)), http)
@@ -23,7 +23,7 @@ namespace FclEx.Actions
                 .ExecuteAsync()
                 .DonotCapture();
 
-            Assert.True(successful);
+            Assert.True(successful, ex?.Message);
 
             var dic = Enumerable.Range(1, 10)
                 .Select(x => x.ToString())
