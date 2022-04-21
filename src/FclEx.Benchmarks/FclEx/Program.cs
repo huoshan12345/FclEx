@@ -7,7 +7,7 @@ namespace FclEx
     {
         internal static void Main(string[] args)
         {
-            BenchmarkRunner.Run<InterfaceBaseInvocationBenchmark>();
+            BenchmarkRunner.Run<EnumerateSingleBenchmark>();
         }
     }
 }
