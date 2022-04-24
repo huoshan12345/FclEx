@@ -3,6 +3,8 @@
     <RootNamespace></RootNamespace>
     <LangVersion>latest</LangVersion>
     <TargetFramework>net6.0</TargetFramework>
+    <NoWarn>xUnit2013</NoWarn>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>

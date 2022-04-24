@@ -2,11 +2,11 @@
 
 namespace FclEx.Utils
 {
-    public class Counter
+    public class ThreadsafeCounter
     {
-        private int _count;
+        private volatile int _count;
 
-        public Counter(int count = 0)
+        public ThreadsafeCounter(int count = 0)
         {
             _count = count;
         }

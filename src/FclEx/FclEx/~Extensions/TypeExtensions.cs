@@ -115,9 +115,9 @@ namespace FclEx
             return false;
         }
 
-        public static IEnumerable<DataMemberInfo> GetDataMembers(this Type type) => ReflectionHelper.GetDataMembers(type).SelectMany(m => m.Value);
+        public static IReadOnlyCollection<DataMemberInfo> GetDataMembers(this Type type) => ReflectionHelper.GetDataMembers(type).Values;
 
-        public static DataMemberInfo? GetDataMember(this Type type, string name) => ReflectionHelper.GetDataMembers(type).GetOrEmptyArr(name).LastOrDefault();
+        public static DataMemberInfo? GetDataMember(this Type type, string name) => ReflectionHelper.GetDataMembers(type).Get(name);
 
         public static T? GetMemberValue<T>(this Type type, string name)
         {
