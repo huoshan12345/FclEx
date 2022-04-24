@@ -11,7 +11,6 @@ namespace FclEx.Wmi.SourceGenerator.Sources
     {
         private readonly StringWriter _writer;
         private readonly IndentedTextWriter _indentedWriter;
-        private static readonly char[] _newLineChars = { '\r', '\n' };
 
         public SourceBuilder()
         {
@@ -64,10 +63,10 @@ namespace FclEx.Wmi.SourceGenerator.Sources
             return this;
         }
 
-        public SourceBuilder WriteSummary(string text)
+        public SourceBuilder WriteSummary(IEnumerable<string> lines)
         {
             _indentedWriter.WriteLine("/// <summary>");
-            foreach (var line in text.Split(_newLineChars, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var line in lines)
             {
                 var tagText = SecurityElement.Escape(line).Trim();
                 _indentedWriter.Write("/// ");

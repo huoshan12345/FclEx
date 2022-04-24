@@ -115,9 +115,9 @@ namespace FclEx
             return false;
         }
 
-        public static IReadOnlyCollection<DataMemberInfo> GetDataMembers(this Type type) => ReflectionHelper.GetDataMembers(type).Values;
+        public static IEnumerable<DataMemberInfo> GetDataMembers(this Type type) => ReflectionHelper.GetDataMembers(type).SelectMany(m => m.Value);
 
-        public static DataMemberInfo? GetDataMember(this Type type, string name) => ReflectionHelper.GetDataMembers(type).Get(name);
+        public static DataMemberInfo? GetDataMember(this Type type, string name) => ReflectionHelper.GetDataMembers(type).GetOrEmptyArr(name).LastOrDefault();
 
         public static T? GetMemberValue<T>(this Type type, string name)
         {
@@ -134,7 +134,7 @@ namespace FclEx
                                        | BindingFlags.GetField | BindingFlags.GetProperty;
             return type.InvokeMember(name, flags, null, obj, null).CastTo<T>();
         }
-        
+
         public static bool IsDynamic(this Type type)
         {
             return type.IsDefined<DynamicAttribute>(true);

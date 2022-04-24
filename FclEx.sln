@@ -62,9 +62,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Wmi.SourceGenerator", "src\FclEx.Wmi.SourceGenerator\FclEx.Wmi.SourceGenerator.csproj", "{0732D35F-E1A9-4CAB-9F84-7AFBEFBA6B62}"
 EndProject
 Global
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		src\Combinatorics\Combinatorics.projitems*{c69bfe99-48df-4508-b479-4ed6b6fd1c7c}*SharedItemsImports = 5
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU

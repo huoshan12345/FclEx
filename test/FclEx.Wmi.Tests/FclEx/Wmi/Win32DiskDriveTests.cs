@@ -21,6 +21,7 @@ namespace FclEx.Wmi
             foreach (var drive in drives)
             {
                 var disk = drive.ReadAs<Win32DiskDrive>();
+                Assert.NotNull(disk.SerialNumber);
                 _output.WriteLine(disk.SerialNumber);
             }
         }

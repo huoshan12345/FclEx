@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Management;
+using System.Text;
 using System.Text.RegularExpressions;
 using FclEx.Wmi.SourceGenerator.Extensions;
 using FclEx.Wmi.SourceGenerator.Models;
@@ -31,7 +32,7 @@ namespace FclEx.Wmi.SourceGenerator.Sources
                    .WriteOpeningBracket();
 
             // Class description
-            builder.WriteSummary(classItem.Description);
+            WriteQualifiers(builder, classItem.Qualifiers);
 
             var className = _regex.Replace(classItem.Name, "");
             // Class declaration
@@ -41,7 +42,7 @@ namespace FclEx.Wmi.SourceGenerator.Sources
             foreach (var property in classItem.Properties.Where(m => m.CimType != CimType.Reference))
             {
                 // Property description
-                builder.WriteSummary(property.Description);
+                WriteQualifiers(builder, property.Qualifiers);
 
                 var type = property.Type;
                 if (property.IsArray)
@@ -58,6 +59,30 @@ namespace FclEx.Wmi.SourceGenerator.Sources
             builder.WriteClosingBracket();
 
             return ($"{ns}.{classItem.Name}.g.cs", builder.ToString());
+        }
+
+        internal static void WriteQualifiers(SourceBuilder builder, Qualifiers qualifiers)
+        {
+            var lines = new List<string>();
+            lines.AddRange(qualifiers.Descriptions);
+            lines.Add(string.Empty);
+            foreach (var (key, values) in qualifiers.Others)
+            {
+                var sb = new StringBuilder(256);
+                sb.Append(key);
+                sb.Append(": ");
+                foreach (var (value, _, _, isLast) in values.IndexExt())
+                {
+                    sb.Append(value);
+                    if (!isLast)
+                    {
+                        sb.Append(", ");
+                    }
+                }
+                lines.Add(sb.ToString());
+                lines.Add(string.Empty);
+            }
+            builder.WriteSummary(lines);
         }
     }
 }

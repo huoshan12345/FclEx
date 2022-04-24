@@ -1,4 +1,5 @@
-﻿using System.Management;
+﻿using System.Collections.Generic;
+using System.Management;
 
 namespace FclEx.Wmi.SourceGenerator.Models
 {
@@ -13,9 +14,9 @@ namespace FclEx.Wmi.SourceGenerator.Models
         public string Name { get; }
 
         /// <summary>
-        /// Gets or sets the description of the property
+        /// Gets the list with the qualifiers
         /// </summary>
-        public string Description { get; set; } = "";
+        public Qualifiers Qualifiers { get; }
 
         /// <summary>
         /// Gets the type of the property
@@ -32,11 +33,12 @@ namespace FclEx.Wmi.SourceGenerator.Models
         /// </summary>
         public bool IsArray { get; }
 
-        public PropertyItem(string name, CimType type, bool isArray)
+        public PropertyItem(string name, CimType type, bool isArray, Qualifiers qualifiers)
         {
             Name = name;
             CimType = type;
             IsArray = isArray;
+            Qualifiers = qualifiers;
             Type = GetType(type);
         }
 

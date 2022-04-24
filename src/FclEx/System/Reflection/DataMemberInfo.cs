@@ -20,6 +20,8 @@ namespace System.Reflection
             IsField = true;
             IsProperty = false;
             DataMemberType = field.FieldType;
+            HasPublicSetter = true;
+            HasPublicGetter = true;
         }
 
         public DataMemberInfo(PropertyInfo property)
@@ -34,6 +36,8 @@ namespace System.Reflection
             IsStatic = accessors.Any(m => m.IsStatic);
             IsField = false;
             IsProperty = true;
+            HasPublicSetter = property.GetSetMethod(true)?.IsPublic == true;
+            HasPublicGetter = property.GetGetMethod(true)?.IsPublic == true;
             DataMemberType = property.PropertyType;
         }
 
@@ -63,6 +67,8 @@ namespace System.Reflection
         public bool IsField { get; }
         public bool IsProperty { get; }
         public bool IsCompilerGenerated { get; }
+        public bool HasPublicSetter { get; }
+        public bool HasPublicGetter { get; }
 
         public bool Equals(DataMemberInfo? other)
         {

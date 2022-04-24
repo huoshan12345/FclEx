@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Management;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using FclEx.Wmi.SourceGenerator.Extensions;
 using FclEx.Wmi.SourceGenerator.Models;
 using FclEx.Wmi.SourceGenerator.Sources;
@@ -78,41 +79,47 @@ namespace FclEx.Wmi.SourceGenerator
             foreach (var wmiClass in searcher.Get().Cast<ManagementClass>())
             {
                 var className = wmiClass.Path.ClassName;
-                var (desc, qualifiers) = GetQualifierData(wmiClass.Qualifiers);
-                var classItem = new ClassItem(className)
-                {
-                    Description = desc,
-                    Qualifiers = qualifiers
-                };
+                var qualifiers = Read(wmiClass.Qualifiers);
+                var classItem = new ClassItem(className, qualifiers);
                 foreach (var property in wmiClass.Properties)
                 {
-                    var item = new PropertyItem(property.Name, property.Type, property.IsArray)
-                    {
-                        Description = GetQualifierData(property.Qualifiers).Description,
-                    };
+                    var q = Read(property.Qualifiers);
+                    var item = new PropertyItem(property.Name, property.Type, property.IsArray, q);
                     classItem.Properties.Add(item);
                 }
                 yield return classItem;
             }
         }
 
-        private static (string Description, List<string> Qualifiers) GetQualifierData(QualifierDataCollection collection)
+        private static readonly Regex _dot = new(@"\. ", RegexOptions.Compiled);
+        private static readonly char[] LineSeps = { '\r', '\n' };
+        private static Qualifiers Read(QualifierDataCollection collection)
         {
-            var descriptionList = new List<string>();
-            var qualifierList = new List<string>();
-
-            foreach (var entry in collection)
+            var qualifiers = new Qualifiers();
+            foreach (QualifierData entry in collection)
             {
-                qualifierList.Add(entry.Name);
+                if (entry.Value is not string value)
+                    continue;
 
-                if ("description".Equals(entry.Name, StringComparison.OrdinalIgnoreCase) && entry.Value is string value)
+                var name = entry.Name.ToLower();
+                if (name == "description")
                 {
-                    descriptionList.Add(value);
+                    var lines = _dot.Replace(value, ".\r\n")
+                        .Split(LineSeps)
+                        .Select(m => m.Trim())
+                        .Where(m => m.IsValid());
+
+                    foreach (var line in lines)
+                    {
+                        qualifiers.Descriptions.Add(line);
+                    }
+                }
+                else
+                {
+                    qualifiers.Others.Add(name, value.Trim());
                 }
             }
-            var description = string.Join(Environment.NewLine, descriptionList) + Environment.NewLine
-                + "Qualifiers: " + string.Join(", ", qualifierList);
-            return (description, qualifierList);
+            return qualifiers;
         }
 
         //By not inlining we make sure we can catch assembly loading errors when jitting this method
@@ -121,7 +128,7 @@ namespace FclEx.Wmi.SourceGenerator
         {
             foreach (var ns in Namespaces)
             {
-                foreach (var @class in LoadClasses(ns).Where(m => !m.Qualifiers.Contains("abstract")))
+                foreach (var @class in LoadClasses(ns).Where(m => !m.Qualifiers.Others.ContainsKey("abstract")))
                 {
                     var (name, code) = ClassItemSource.Generate(ns, @class);
 

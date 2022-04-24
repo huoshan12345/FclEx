@@ -9,7 +9,7 @@ namespace FclEx
     partial class EnumerableExtensions
     {
         public static MultiValueDictionary<TKey, TValue> ToMultiValueDic<T, TKey, TValue>(this IEnumerable<T> enumerable,
-            Func<T, TKey> keySelector, Func<T, IReadOnlyCollection<TValue>> valueSelector)
+            Func<T, TKey> keySelector, Func<T, IEnumerable<TValue>> valueSelector)
         {
             return new MultiValueDictionary<TKey, TValue>(enumerable.Select(m => KvPair.Create(keySelector(m), valueSelector(m))));
         }
@@ -17,7 +17,7 @@ namespace FclEx
         public static MultiValueDictionary<TKey, TValue> ToMultiValueDic<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> enumerable)
         {
             var col = enumerable.GroupBy(m => m.Key)
-                .Select(m => KvPair.Create(m.Key, (IReadOnlyCollection<TValue>)m.Select(x => x.Value).ToArray()));
+                .Select(m => KvPair.Create(m.Key, m.Select(x => x.Value)));
             return new MultiValueDictionary<TKey, TValue>(col);
         }
 

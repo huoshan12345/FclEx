@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿using System.Linq;
+using System.Reflection;
+using FclEx;
 
 namespace System.Management
 {
@@ -23,7 +25,7 @@ namespace System.Management
 
             public static Func<ManagementBaseObject, T> BuildReflectionConverter()
             {
-                var fields = typeof(T).GetFields(BindingFlags.Public | BindingFlags.Instance);
+                var fields = typeof(T).GetDataMembers().Where(m => m.HasPublicGetter && m.HasPublicSetter);
 
                 return m =>
                 {

@@ -9,6 +9,7 @@ Remove-Item *.nupkg
 
 Write-Output "Packing..."
 foreach($path in $projectPaths) { 
+	& dotnet clean $path -v q
     & dotnet pack $path --nologo -c Release --include-symbols -v q --output $packFolder
 	if ($Lastexitcode -ne 0)	{
 		throw "failed with exit code $LastExitCode"

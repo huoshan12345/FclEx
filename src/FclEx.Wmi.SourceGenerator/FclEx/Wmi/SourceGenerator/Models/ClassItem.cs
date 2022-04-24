@@ -7,32 +7,25 @@ namespace FclEx.Wmi.SourceGenerator.Models
     /// </summary>
     internal class ClassItem
     {
-        public ClassItem(string name)
+        public ClassItem(string name, Qualifiers qualifiers)
         {
             Name = name;
+            Qualifiers = qualifiers;
         }
 
         /// <summary>
         /// Gets the name of the class
         /// </summary>
         public string Name { get; }
-
-        /// <summary>
-        /// Gets or sets the description of the class
-        /// </summary>
-        public string Description { get; set; } = "";
-
+        
         /// <summary>
         /// Gets the properties of the class
         /// </summary>
-        public List<PropertyItem> Properties { get; set; } = new();
+        public List<PropertyItem> Properties { get; } = new();
 
         /// <summary>
         /// Gets the list with the qualifiers
         /// </summary>
-        public List<string> Qualifiers { get; set; } = new();
-
-
-
+        public Qualifiers Qualifiers { get; }
     }
 }

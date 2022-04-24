@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FclEx.Wmi.SourceGenerator\FclEx.Wmi.SourceGenerator.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\FclEx\FclEx.csproj" />
   </ItemGroup>
 
   <Target Name="GenerateCode" BeforeTargets="CoreCompile">

@@ -115,7 +115,7 @@ namespace Microsoft.Collections.Extensions
         /// </summary>
         /// <param name="enumerable">IEnumerable to copy elements into this from</param>
         /// <exception cref="ArgumentNullException">enumerable must be non-null</exception>
-        public MultiValueDictionary(IEnumerable<KeyValuePair<TKey, IReadOnlyCollection<TValue>>> enumerable)
+        public MultiValueDictionary(IEnumerable<KeyValuePair<TKey, IEnumerable<TValue>>> enumerable)
             : this(enumerable, null)
         { }
 
@@ -128,7 +128,7 @@ namespace Microsoft.Collections.Extensions
         /// <param name="comparer">Specified comparer to use for the <typeparamref name="TKey"/>s</param>
         /// <exception cref="ArgumentNullException">enumerable must be non-null</exception>
         /// <remarks>If <paramref name="comparer"/> is set to null, then the default <see cref="IEqualityComparer" /> for <typeparamref name="TKey"/> is used.</remarks>
-        public MultiValueDictionary(IEnumerable<KeyValuePair<TKey, IReadOnlyCollection<TValue>>> enumerable, IEqualityComparer<TKey> comparer)
+        public MultiValueDictionary(IEnumerable<KeyValuePair<TKey, IEnumerable<TValue>>> enumerable, IEqualityComparer<TKey> comparer)
         {
             if (enumerable == null)
                 throw new ArgumentNullException(nameof(enumerable));

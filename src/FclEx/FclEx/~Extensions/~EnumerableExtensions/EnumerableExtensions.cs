@@ -1,14 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Dawn;
-using FclEx.Helpers;
-using FclEx.Utils;
-using MoreLinq;
 
 namespace FclEx
 {
@@ -48,6 +42,11 @@ namespace FclEx
         public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> col) where T : struct
         {
             return col.Where(m => m != null).Select(m => m.Get());
+        }
+
+        public static IEnumerable<T> Not<T>(this IEnumerable<T> source, Func<T, bool> predicate)
+        {
+            return source.Where(m => !predicate(m));
         }
 
         public static IEnumerable<T> WhereIf<T>(this IEnumerable<T> source, Func<T, bool> predicate, bool condition)
@@ -121,26 +120,22 @@ namespace FclEx
             }
         }
 
-        [return: MaybeNull]
-        public static TResult MaxOr<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, TResult> selector, TResult? defaultValue = default)
+        public static TResult? MaxOr<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, TResult> selector, TResult? defaultValue = default)
         {
             return source.Any() ? source.Max(selector) : defaultValue;
         }
 
-        [return: MaybeNull]
-        public static TSource MaxOr<TSource>(this IEnumerable<TSource> source, TSource? defaultValue = default)
+        public static TSource? MaxOr<TSource>(this IEnumerable<TSource> source, TSource? defaultValue = default)
         {
             return source.Any() ? source.Max() : defaultValue;
         }
 
-        [return: MaybeNull]
-        public static TResult MinOr<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, TResult> selector, TResult? defaultValue = default)
+        public static TResult? MinOr<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, TResult> selector, TResult? defaultValue = default)
         {
             return source.Any() ? source.Min(selector) : defaultValue;
         }
 
-        [return: MaybeNull]
-        public static TSource MinOr<TSource>(this IEnumerable<TSource> source, TSource? defaultValue = default)
+        public static TSource? MinOr<TSource>(this IEnumerable<TSource> source, TSource? defaultValue = default)
         {
             return source.Any() ? source.Min() : defaultValue;
         }
@@ -160,7 +155,7 @@ namespace FclEx
         public static int BitsToInt(this IEnumerable<bool> bits)
         {
             var num = 0;
-            foreach (var (i, b) in bits.Index())
+            foreach (var (b, i, _, _) in bits.IndexExt())
             {
                 var bit = b ? 1 : 0;
                 num &= (bit << i);
