@@ -6,7 +6,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Collections {
+namespace Combinatorics.Collections
+{
     /// <summary>
     /// Permutations defines a meta-collection, typically a list of lists, of all
     /// possible orderings of a set of values.  This list is enumerable and allows
@@ -107,7 +108,7 @@ namespace Collections {
         /// </summary>
         public class Enumerator : IEnumerator<IList<T>>
         {
-            
+
             #region Constructors
 
             /// <summary>
@@ -155,11 +156,11 @@ namespace Collections {
                         _myPosition = Position.InSet;
                         break;
                     case Position.InSet:
-                        if(MyValues.Count < 2)
+                        if (MyValues.Count < 2)
                         {
                             _myPosition = Position.AfterLast;
                         }
-                        else if(!NextPermutation())
+                        else if (!NextPermutation())
                         {
                             _myPosition = Position.AfterLast;
                         }
@@ -179,7 +180,7 @@ namespace Collections {
             {
                 get
                 {
-                    if(_myPosition == Position.InSet)
+                    if (_myPosition == Position.InSet)
                     {
                         return new List<T>(MyValues);
                     }
@@ -194,7 +195,7 @@ namespace Collections {
             {
                 get
                 {
-                    if(_myPosition == Position.InSet)
+                    if (_myPosition == Position.InSet)
                     {
                         return new List<T>(MyValues);
                     }
@@ -232,7 +233,7 @@ namespace Collections {
                 while (_myLexicographicalOrders[i - 1] >= _myLexicographicalOrders[i])
                 {
                     --i;
-                    if(i == 0)
+                    if (i == 0)
                     {
                         return false;
                     }
@@ -384,8 +385,8 @@ namespace Collections {
             _myLexicographicOrders = new int[_myValues.Count];
 
             if (type == GenerateOption.WithRepetition)
-            { 
-                for(var i = 0; i < _myLexicographicOrders.Length; ++i)
+            {
+                for (var i = 0; i < _myLexicographicOrders.Length; ++i)
                 {
                     _myLexicographicOrders[i] = i;
                 }
@@ -396,14 +397,14 @@ namespace Collections {
 
                 _myValues.Sort(comparer);
                 var j = 1;
-                if(_myLexicographicOrders.Length > 0)
+                if (_myLexicographicOrders.Length > 0)
                 {
                     _myLexicographicOrders[0] = j;
                 }
 
-                for(var i = 1; i < _myLexicographicOrders.Length; ++i)
+                for (var i = 1; i < _myLexicographicOrders.Length; ++i)
                 {
-                    if(comparer.Compare(_myValues[i - 1], _myValues[i]) != 0)
+                    if (comparer.Compare(_myValues[i - 1], _myValues[i]) != 0)
                     {
                         ++j;
                     }
@@ -430,13 +431,13 @@ namespace Collections {
             {
                 numerators.AddRange(SmallPrimeUtility.Factor(i + 1));
 
-                if(_myLexicographicOrders[i] == _myLexicographicOrders[i - 1])
+                if (_myLexicographicOrders[i] == _myLexicographicOrders[i - 1])
                 {
                     ++runCount;
                 }
                 else
                 {
-                    for(var f = 2; f <= runCount; ++f)
+                    for (var f = 2; f <= runCount; ++f)
                     {
                         divisors.AddRange(SmallPrimeUtility.Factor(f));
                     }
@@ -444,7 +445,7 @@ namespace Collections {
                 }
             }
 
-            for(var f = 2; f <= runCount; ++f)
+            for (var f = 2; f <= runCount; ++f)
             {
                 divisors.AddRange(SmallPrimeUtility.Factor(f));
             }

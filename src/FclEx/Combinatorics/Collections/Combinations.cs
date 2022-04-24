@@ -5,7 +5,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Collections {
+namespace Combinatorics.Collections
+{
     /// <summary>
     /// Combinations defines a meta-collection, typically a list of lists, of all possible 
     /// subsets of a particular size from the set of values.  This list is enumerable and 
@@ -92,8 +93,9 @@ namespace Collections {
         /// <summary>
         /// The enumerator that enumerates each meta-collection of the enclosing Combinations class.
         /// </summary>
-        public class Enumerator : IEnumerator<IList<T>> {
-            
+        public class Enumerator : IEnumerator<IList<T>>
+        {
+
             #region Constructors
 
             /// <summary>
@@ -116,7 +118,7 @@ namespace Collections {
             {
                 _myPermutationsEnumerator.Reset();
             }
-            
+
             /// <summary>
             /// Advances to the next combination of items from the set.
             /// </summary>
@@ -161,7 +163,7 @@ namespace Collections {
             /// </summary>
             public void Dispose()
             {
-                
+
             }
 
             #endregion
@@ -206,10 +208,10 @@ namespace Collections {
                 var currentPermutation = _myPermutationsEnumerator.Current;
                 foreach (var p in currentPermutation)
                 {
-                    if(!p)
+                    if (!p)
                     {
                         _myCurrentList.Add(_myParent._myValues[index]);
-                        if(_myParent.Type == GenerateOption.WithoutRepetition)
+                        if (_myParent.Type == GenerateOption.WithoutRepetition)
                         {
                             ++index;
                         }
@@ -220,7 +222,7 @@ namespace Collections {
                     }
                 }
             }
-        
+
             #endregion
 
             #region Data
@@ -239,7 +241,7 @@ namespace Collections {
             /// An enumertor of the parents list of lexicographic orderings.
             /// </summary>
             private Permutations<bool>.Enumerator _myPermutationsEnumerator;
-            
+
             #endregion
         }
         #endregion
@@ -266,8 +268,10 @@ namespace Collections {
         /// <summary>
         /// The lower index of the meta-collection, equal to the number of items returned each iteration.
         /// </summary>
-        public int LowerIndex {
-            get {
+        public int LowerIndex
+        {
+            get
+            {
                 return _myLowerIndex;
             }
         }
@@ -305,17 +309,17 @@ namespace Collections {
             _myLowerIndex = lowerIndex;
             _myValues = values.ToList();
             var myMap = new List<bool>();
-            if(type == GenerateOption.WithoutRepetition)
+            if (type == GenerateOption.WithoutRepetition)
             {
                 myMap.AddRange(_myValues.Select((t, i) => i < _myValues.Count - _myLowerIndex));
             }
             else
             {
-                for(var i = 0; i < _myValues.Count - 1; ++i)
+                for (var i = 0; i < _myValues.Count - 1; ++i)
                 {
                     myMap.Add(true);
                 }
-                for(var i = 0; i < _myLowerIndex; ++i)
+                for (var i = 0; i < _myLowerIndex; ++i)
                 {
                     myMap.Add(false);
                 }

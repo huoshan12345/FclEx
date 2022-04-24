@@ -48,7 +48,7 @@ namespace FclEx.Wmi.SourceGenerator.Sources
                 {
                     type += "[]";
                 }
-                builder.WriteLine($"public {type} {property.Name};");
+                builder.WriteLine($"public {type} {property.Name} {{ get; set; }}");
             }
 
             // End class declaration

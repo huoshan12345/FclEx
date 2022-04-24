@@ -3,6 +3,7 @@ using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security;
 
 namespace FclEx.Wmi.SourceGenerator.Sources
 {
@@ -65,12 +66,12 @@ namespace FclEx.Wmi.SourceGenerator.Sources
 
         public SourceBuilder WriteSummary(string text)
         {
-            var lines = text.Split(_newLineChars, StringSplitOptions.RemoveEmptyEntries);
             _indentedWriter.WriteLine("/// <summary>");
-            foreach (var line in lines)
+            foreach (var line in text.Split(_newLineChars, StringSplitOptions.RemoveEmptyEntries))
             {
+                var tagText = SecurityElement.Escape(line).Trim();
                 _indentedWriter.Write("/// ");
-                _indentedWriter.Write(line.Trim());
+                _indentedWriter.Write(tagText);
                 _indentedWriter.WriteLine(" <br/>");
             }
             _indentedWriter.WriteLine("/// </summary>");

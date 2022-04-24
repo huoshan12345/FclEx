@@ -5,7 +5,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Collections {
+namespace Combinatorics.Collections
+{
     /// <summary>
     /// Variations defines a meta-collection, typically a list of lists, of all possible 
     /// ordered subsets of a particular size from the set of values.  
@@ -68,7 +69,7 @@ namespace Collections {
         /// <returns>The enumerator.</returns>
         public IEnumerator<IList<T>> GetEnumerator()
         {
-            if(Type == GenerateOption.WithRepetition)
+            if (Type == GenerateOption.WithRepetition)
             {
                 return new EnumeratorWithRepetition(this);
             }
@@ -81,7 +82,7 @@ namespace Collections {
         /// <returns>The enumerator.</returns>
         IEnumerator IEnumerable.GetEnumerator()
         {
-            if(Type == GenerateOption.WithRepetition)
+            if (Type == GenerateOption.WithRepetition)
             {
                 return new EnumeratorWithRepetition(this);
             }
@@ -134,10 +135,10 @@ namespace Collections {
             public bool MoveNext()
             {
                 var carry = 1;
-                if(_myListIndexes == null)
+                if (_myListIndexes == null)
                 {
                     _myListIndexes = new List<int>();
-                    for(var i = 0; i < _myParent.LowerIndex; ++i)
+                    for (var i = 0; i < _myParent.LowerIndex; ++i)
                     {
                         _myListIndexes.Add(0);
                     }
@@ -145,7 +146,7 @@ namespace Collections {
                 }
                 else
                 {
-                    for(var i = _myListIndexes.Count - 1; i >= 0 && carry > 0; --i)
+                    for (var i = _myListIndexes.Count - 1; i >= 0 && carry > 0; --i)
                     {
                         _myListIndexes[i] += carry;
                         carry = 0;
@@ -154,7 +155,7 @@ namespace Collections {
                         {
                             continue;
                         }
-                        
+
                         _myListIndexes[i] = 0;
                         carry = 1;
                     }
@@ -192,7 +193,7 @@ namespace Collections {
             /// </summary>
             public void Dispose()
             {
-            
+
             }
 
             #endregion
@@ -309,7 +310,7 @@ namespace Collections {
             /// </summary>
             public void Dispose()
             {
-                
+
             }
 
             #endregion
@@ -349,10 +350,10 @@ namespace Collections {
 
                 foreach (var position in currentPermutation)
                 {
-                    if(position != int.MaxValue)
+                    if (position != int.MaxValue)
                     {
                         _myCurrentList[position] = _myParent._myValues[index];
-                        if(_myParent.Type == GenerateOption.WithoutRepetition)
+                        if (_myParent.Type == GenerateOption.WithoutRepetition)
                         {
                             ++index;
                         }
@@ -400,7 +401,7 @@ namespace Collections {
         {
             get
             {
-                if(Type == GenerateOption.WithoutRepetition)
+                if (Type == GenerateOption.WithoutRepetition)
                 {
                     return _myPermutations.Count;
                 }
@@ -447,7 +448,7 @@ namespace Collections {
 
             var myMap = new List<int>();
             var index = 0;
-            for(var i = 0; i < _myValues.Count; ++i)
+            for (var i = 0; i < _myValues.Count; ++i)
             {
                 myMap.Add(i >= _myValues.Count - LowerIndex ? index++ : int.MaxValue);
             }

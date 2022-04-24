@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using MoreLinq;
 using Xunit;
 
 namespace FclEx.Caches
 {
+    using MoreLinq;
+
     public class LfuCacheTests
     {
         [Fact]

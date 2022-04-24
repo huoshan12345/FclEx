@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29326.143
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32414.318
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{ABBD6045-5447-4C9B-AF77-E9ACF4EE2641}"
 EndProject
@@ -26,8 +26,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Http.Test", "test\Fcl
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmark", "benchmark", "{82145F29-EBC3-49B3-A96C-0CA1F040E231}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Microsoft.Experimental.Collections", "src\Microsoft.Experimental.Collections\Microsoft.Experimental.Collections.shproj", "{D80D0F2E-E613-4DAC-9612-C709050A3E8D}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "props", "props", "{D2C9E138-A766-4FEB-9029-A0D5270B7285}"
 	ProjectSection(SolutionItems) = preProject
 		nupkg\common.props = nupkg\common.props
@@ -42,8 +40,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{9338
 		nupkg\share.ps1 = nupkg\share.ps1
 		nupkg\test_all.ps1 = nupkg\test_all.ps1
 	EndProjectSection
-EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Combinatorics", "src\Combinatorics\Combinatorics.shproj", "{5C10FC58-CE82-49DB-B22C-C9C560A4E107}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Xunit", "src\FclEx.Xunit\FclEx.Xunit.csproj", "{B6B0D4F5-8E10-4D7F-8E67-079A3714104F}"
 EndProject
@@ -67,10 +63,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Wmi.SourceGenerator",
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		src\Combinatorics\Combinatorics.projitems*{5c10fc58-ce82-49db-b22c-c9c560a4e107}*SharedItemsImports = 13
 		src\Combinatorics\Combinatorics.projitems*{c69bfe99-48df-4508-b479-4ed6b6fd1c7c}*SharedItemsImports = 5
-		src\Microsoft.Experimental.Collections\Microsoft.Experimental.Collections.projitems*{c69bfe99-48df-4508-b479-4ed6b6fd1c7c}*SharedItemsImports = 5
-		src\Microsoft.Experimental.Collections\Microsoft.Experimental.Collections.projitems*{d80d0f2e-e613-4dac-9612-c709050a3e8d}*SharedItemsImports = 13
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -130,10 +123,8 @@ Global
 		{9BFAB3FA-CF18-4B88-9FCE-B0B76A704807} = {F25BD2B5-2E68-4CC8-90F0-6F1C1574D34A}
 		{58CD6355-DFEC-4383-B04D-60150270DEA2} = {ABBD6045-5447-4C9B-AF77-E9ACF4EE2641}
 		{E62BB49F-1731-4C68-8654-20D2E49EB0A0} = {F25BD2B5-2E68-4CC8-90F0-6F1C1574D34A}
-		{D80D0F2E-E613-4DAC-9612-C709050A3E8D} = {ABBD6045-5447-4C9B-AF77-E9ACF4EE2641}
 		{D2C9E138-A766-4FEB-9029-A0D5270B7285} = {E25A1CA7-1304-44D5-89BD-170AE8F0DED4}
 		{93386705-90E4-4C54-9800-4CCA92A7EC15} = {E25A1CA7-1304-44D5-89BD-170AE8F0DED4}
-		{5C10FC58-CE82-49DB-B22C-C9C560A4E107} = {ABBD6045-5447-4C9B-AF77-E9ACF4EE2641}
 		{B6B0D4F5-8E10-4D7F-8E67-079A3714104F} = {ABBD6045-5447-4C9B-AF77-E9ACF4EE2641}
 		{AAFEBA15-D66E-4CB1-A520-DF42DAD93D79} = {ABBD6045-5447-4C9B-AF77-E9ACF4EE2641}
 		{CB94B9E0-D1D3-4B37-B9E3-47EE4C84B76A} = {F25BD2B5-2E68-4CC8-90F0-6F1C1574D34A}
