@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -12,19 +11,31 @@ namespace FclEx
 {
     public static class EnumExtensions
     {
-        // size-specific version
-        public static TInt AsInt<TEnum, TInt>(this TEnum enumValue)
-            where TEnum : unmanaged, Enum
-            where TInt : unmanaged
+        public static TInteger ToInteger<TEnum, TInteger>(this TEnum enumValue)
+            where TEnum : struct, Enum
+            where TInteger : unmanaged
         {
-            if (Unsafe.SizeOf<TEnum>() == Unsafe.SizeOf<TInt>()) throw new Exception("type mismatch");
-            var value = Unsafe.As<TEnum, TInt>(ref enumValue);
-            return value;
+            if (enumValue.TryToInteger(out TInteger value))
+            {
+                return value;
+            }
+            throw new InvalidCastException($"Cannot cast {typeof(TEnum).Name} to {typeof(TInteger).Name}");
         }
 
-        public static int ToInt(this Enum enumValue)
+        public static bool TryToInteger<TEnum, TInteger>(this TEnum enumValue, out TInteger integer)
+            where TEnum : struct, Enum
+            where TInteger : unmanaged
         {
-            return Convert.ToInt32(enumValue);
+            if (Unsafe.SizeOf<TEnum>() == Unsafe.SizeOf<TInteger>())
+            {
+                integer = Unsafe.As<TEnum, TInteger>(ref enumValue);
+                return true;
+            }
+            else
+            {
+                integer = default;
+                return false;
+            }
         }
 
         public static string ToIntStr(this Enum enumValue)
@@ -39,25 +50,27 @@ namespace FclEx
             // short, ushort,
             // int, uint,
             // long, ulong. 
-            int value;
             var size = Unsafe.SizeOf<TEnum>();
-            if (size == Unsafe.SizeOf<byte>()) value = Unsafe.As<TEnum, byte>(ref enumValue);
-            else if (size == Unsafe.SizeOf<short>()) value = Unsafe.As<TEnum, short>(ref enumValue);
-            else if (size == Unsafe.SizeOf<int>()) value = Unsafe.As<TEnum, int>(ref enumValue);
-            else throw new InvalidCastException($"Cannot cast {enumValue.GetType().Name} to int");
-            return value;
+            return size switch
+            {
+                1 => Unsafe.As<TEnum, byte>(ref enumValue),
+                2 => Unsafe.As<TEnum, short>(ref enumValue),
+                4 => Unsafe.As<TEnum, int>(ref enumValue),
+                _ => throw new InvalidCastException($"Cannot cast {typeof(TEnum).Name} to int")
+            };
         }
 
         public static long ToLong<TEnum>(this TEnum enumValue) where TEnum : Enum
         {
-            long value;
             var size = Unsafe.SizeOf<TEnum>();
-            if (size == Unsafe.SizeOf<byte>()) value = Unsafe.As<TEnum, byte>(ref enumValue);
-            else if (size == Unsafe.SizeOf<short>()) value = Unsafe.As<TEnum, short>(ref enumValue);
-            else if (size == Unsafe.SizeOf<int>()) value = Unsafe.As<TEnum, int>(ref enumValue);
-            else if (size == Unsafe.SizeOf<long>()) value = Unsafe.As<TEnum, long>(ref enumValue);
-            else throw new InvalidCastException($"Cannot cast {enumValue.GetType().Name} to long");
-            return value;
+            return size switch
+            {
+                1 => Unsafe.As<TEnum, byte>(ref enumValue),
+                2 => Unsafe.As<TEnum, short>(ref enumValue),
+                4 => Unsafe.As<TEnum, int>(ref enumValue),
+                8 => Unsafe.As<TEnum, long>(ref enumValue),
+                _ => throw new InvalidCastException($"Cannot cast {typeof(TEnum).Name} to long")
+            };
         }
 
         public static T ToEnum<T>(this string? value, T defaultValue) where T : struct, Enum
@@ -93,9 +106,8 @@ namespace FclEx
         }
 
         private static readonly ConcurrentDictionary<Enum, string> EnumValueDic = new();
-
-        [return: MaybeNull]
-        public static TAttr GetAttribute<TAttr>(this Enum e) where TAttr : Attribute
+        
+        public static TAttr? GetAttribute<TAttr>(this Enum e) where TAttr : Attribute
         {
             var type = e.GetType();
             var field = type.GetField(e.ToString())!;

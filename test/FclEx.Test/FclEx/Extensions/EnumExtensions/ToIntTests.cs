@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using FclEx.Helpers;
 using Xunit;
 
@@ -36,22 +37,22 @@ namespace FclEx.Extensions.EnumExtensions
             Max = long.MaxValue,
         }
 
-        private static void ToIntTest<T>() where T : Enum
+        private static void ToIntTest<T>() where T : struct, Enum, IConvertible
         {
             var values = EnumHelper.GetValues<T>();
             foreach (var value in values)
             {
-                var expected = (int)(dynamic) value;
+                var expected = value.ToInt32(null);
                 Assert.Equal(expected, value.ToInt());
             }
         }
 
-        private static void ToLongTest<T>() where T : Enum
+        private static void ToLongTest<T>() where T : struct, Enum, IConvertible
         {
             var values = EnumHelper.GetValues<T>();
             foreach (var value in values)
             {
-                var expected = (long)(dynamic)value;
+                var expected = value.ToInt64(null);
                 Assert.Equal(expected, value.ToLong());
             }
         }
@@ -77,7 +78,7 @@ namespace FclEx.Extensions.EnumExtensions
         [Fact]
         public void ToLong_Test()
         {
-            var types = new[] { typeof(TesterOfInt), typeof(TesterOfShort), typeof(TesterOfByte), typeof(TesterOfLong)};
+            var types = new[] { typeof(TesterOfInt), typeof(TesterOfShort), typeof(TesterOfByte), typeof(TesterOfLong) };
             foreach (var type in types)
             {
                 var method = _methodOfToLongTest.MakeGenericMethod(type);

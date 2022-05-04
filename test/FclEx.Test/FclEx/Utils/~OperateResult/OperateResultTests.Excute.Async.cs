@@ -50,9 +50,10 @@ namespace FclEx.Utils
                 ThreadHelper.Sleep(1);
                 return Task.FromResult(1);
             }, TimeSpan.FromSeconds(10));
+
             Assert.True(successful);
             Assert.Equal(1, result);
-            Assert.True(elapsed < TimeSpan.FromSeconds(1.2), "Actual time is " + elapsed);
+            Assert.True(elapsed < TimeSpan.FromSeconds(1.5), "Actual time is " + elapsed);
         }
     }
 }

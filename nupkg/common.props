@@ -16,6 +16,7 @@
     <RepositoryType>git</RepositoryType>
     <Copyright>huoshan12345</Copyright>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
 </Project>
