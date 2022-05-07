@@ -30,10 +30,24 @@ namespace FclEx.Actions
             return action.Next(m => next(m.Item1, m.Item2));
         }
 
-        public static IAction<T> TryNext<T>(this IAction<T> action, Func<T, IAction<T>?> next,
-            bool errorWhenNextNull = false, bool prevWhenNextError = true)
+        public static IAction<T> Next<T>(this IAction<T> action, Func<T, IAction<T>?> next, bool errorWhenNextNull = false, bool prevWhenNextError = true)
         {
             return new NextAction<T>(action, next, errorWhenNextNull, prevWhenNextError);
+        }
+
+        public static IAction<Unit> Next<T>(this IAction<T> action, Action<T> next)
+        {
+            return action.Next(r => CommonAction.Create(t => next(r), excuteSafely: false));
+        }
+
+        public static IAction<Unit> Next<T>(this IAction<T> action, Func<T, Task> next)
+        {
+            return action.Next(r => CommonAction.Create(t => next(r), excuteSafely: false));
+        }
+        
+        public static IAction<TNext> Next<T, TNext>(this IAction<T> action, TNext result)
+        {
+            return action.Next<T, TNext>(_ => new ResultAction<TNext>(OperateResult.CreateSuccess(result)));
         }
 
         public static IAction<T> NextIf<T>(this IAction<T> action, Func<T, bool> condition, Func<T, IAction<T>> @true, Func<T, IAction<T>> @false)
@@ -67,14 +81,5 @@ namespace FclEx.Actions
             return action.Next(t => condition(t) ? next(t) : new SuccessAction<Unit>(default));
         }
 
-        public static IAction<Unit> Do<T>(this IAction<T> action, Action<T> next)
-        {
-            return action.Next(r => CommonAction.Create(t => next(r), excuteSafely: false));
-        }
-
-        public static IAction<Unit> Do<T>(this IAction<T> action, Func<T, Task> next)
-        {
-            return action.Next(r => CommonAction.Create(t => next(r), excuteSafely: false));
-        }
     }
 }

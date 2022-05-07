@@ -22,7 +22,7 @@ namespace FclEx.Actions
                 Logger.LogTrace($"[{GetName()}]Begin");
 
             var future = CommonAction.Create(ExecuteAsyncBody, true)
-                .NextByResult(r => r.Successful
+                .NextResultIf(r => r.Successful
                     ? new SuccessAction<T>(r.Result, r.Elapsed)
                     : r.IsCancelErr()
                         ? CommonAction.Create(t => HandleCancellationAsync(r.Exception), true)
