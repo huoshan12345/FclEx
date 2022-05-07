@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using System.Linq.Expressions;
-using FclEx.Helpers;
 
 namespace FclEx
 {
@@ -10,7 +9,7 @@ namespace FclEx
         {
             var param = Expression.Parameter(typeof(T));
             var property = Expression.Property(param, propertyName);
-            var sort = LambdaHelper<T>.GetPropertyLambdaExp(propertyName);
+            var sort = LambdaHelper.GetPropertyLambdaExp<T>(propertyName);
             var call = Expression.Call(typeof(Queryable),
                 (!anotherLevel ? "OrderBy" : "ThenBy") + (descending ? "Descending" : string.Empty),
                 new[] { typeof(T), property.Type },

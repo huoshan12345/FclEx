@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 
 namespace FclEx.Utils
 {
     public class ReaderWriterLocker<TImpl, TIRead, TIWrite> where TImpl : TIWrite, TIRead
     {
-        private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
+        private readonly ReaderWriterLockSlim _lock = new();
         private readonly TImpl _shared;
 
         public ReaderWriterLocker(TImpl shared)

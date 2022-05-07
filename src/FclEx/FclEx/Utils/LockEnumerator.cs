@@ -6,8 +6,7 @@ namespace FclEx.Utils
 {
     public class LockEnumerator
     {
-        public static LockEnumerator<T> Create<T>(IEnumerator<T> inner, ReaderWriterLockSlim @lock)
-            => new LockEnumerator<T>(inner, @lock);
+        public static LockEnumerator<T> Create<T>(IEnumerator<T> inner, ReaderWriterLockSlim @lock) => new(inner, @lock);
     }
 
     public struct LockEnumerator<T> : IEnumerator<T>

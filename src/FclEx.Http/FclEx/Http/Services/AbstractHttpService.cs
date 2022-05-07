@@ -62,10 +62,10 @@ namespace FclEx.Http.Services
                 : null;
         }
 
-        public IReadOnlyList<Cookie> GetCookies(Uri uri)
+        public IReadOnlyCollection<Cookie> GetCookies(Uri uri)
         {
             return UseCookie
-                ? _cookieContainer.GetCookies(uri).ToArray()
+                ? _cookieContainer.GetCookies(uri)
                 : Array.Empty<Cookie>();
         }
 
@@ -78,10 +78,10 @@ namespace FclEx.Http.Services
                 _cookieContainer.Add(uri, cookie);
         }
 
-        public IReadOnlyList<Cookie> GetAllCookies()
+        public IReadOnlyCollection<Cookie> GetAllCookies()
         {
             return UseCookie
-                ? (IReadOnlyList<Cookie>)_cookieContainer.GetAllCookies()
+                ? (IReadOnlyCollection<Cookie>)_cookieContainer.GetAllCookies()
                 : Array.Empty<Cookie>();
         }
 

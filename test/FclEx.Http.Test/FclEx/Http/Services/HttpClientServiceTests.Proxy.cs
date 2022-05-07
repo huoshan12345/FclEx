@@ -24,7 +24,7 @@ namespace FclEx.Http.Services
 
         public static IEnumerable<object[]> Cases { get; } = ProxyList.SelectMany(m => Urls, (x, y) => new object[] { x, y });
 
-        [Theory]
+        [Theory(Skip = "no proxy")]
         [MemberData(nameof(Cases))]
         public async Task SendAsync_WithProxy_Success(IWebProxyExt proxy, string url)
         {

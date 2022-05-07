@@ -4,6 +4,7 @@ using System.Linq;
 using System.Management;
 using System.Text;
 using System.Text.RegularExpressions;
+using FclEx.SourceGenerator.Sources;
 using FclEx.Wmi.SourceGenerator.Extensions;
 using FclEx.Wmi.SourceGenerator.Models;
 

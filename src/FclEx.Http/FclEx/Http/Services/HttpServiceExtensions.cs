@@ -42,7 +42,7 @@ namespace FclEx.Http.Services
             return http.GetCookie(uri, name);
         }
 
-        public static IReadOnlyList<Cookie> GetCookies(this IHttpService http, string url)
+        public static IReadOnlyCollection<Cookie> GetCookies(this IHttpService http, string url)
         {
             var uri = new Uri(url);
             return http.GetCookies(uri);

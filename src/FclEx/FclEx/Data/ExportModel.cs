@@ -23,11 +23,9 @@ namespace FclEx.Data
         private static IList<IExportColumn<TSelf>>? _columns;
         public static IList<IExportColumn<TSelf>> Columns => _columns ??= new TSelf().GetColumnsRaw();
 
-        protected static ExportColumn<TSelf> CreateColumn(string name, Func<TSelf, object> selector)
-            => new ExportColumn<TSelf>(name, selector);
+        protected static ExportColumn<TSelf> CreateColumn(string name, Func<TSelf, object> selector) => new(name, selector);
 
-        protected static ExportColumn<TSelf> CreateColumn(string name, Func<TSelf, int, object> selector)
-            => new ExportColumn<TSelf>(name, selector);
+        protected static ExportColumn<TSelf> CreateColumn(string name, Func<TSelf, int, object> selector) => new(name, selector);
 
         protected virtual IList<IExportColumn<TSelf>> GetColumnsRaw()
         {

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using FclEx.Helpers;
 using Xunit;
@@ -13,7 +14,7 @@ namespace FclEx.Http.Core.HttpReqTests
             "/parent/change-old-passwd"
         };
 
-        public static HttpMethodType[] Methods { get; } = EnumHelper.GetValues<HttpMethodType>();
+        public static HttpMethodType[] Methods { get; } = Enum.GetValues<HttpMethodType>();
 
         public static IEnumerable<object[]> CtorCases { get; } =
             Urls.SelectMany(m => Methods, (u, m) => new object[] { u, m });

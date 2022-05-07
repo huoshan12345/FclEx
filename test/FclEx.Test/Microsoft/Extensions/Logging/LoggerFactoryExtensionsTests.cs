@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using FclEx.Helpers;
@@ -11,7 +12,7 @@ namespace Microsoft.Extensions.Logging
     public class LoggerFactoryExtensionsTests
     {
         public static IEnumerable<object[]> LogLevelCases { get; } =
-            EnumHelper.GetValues<LogLevel>().Select(m => new object[] { m });
+            Enum.GetValues<LogLevel>().Select(m => new object[] { m });
 
         [Theory]
         [MemberData(nameof(LogLevelCases))]

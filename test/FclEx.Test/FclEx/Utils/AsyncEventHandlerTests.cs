@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using FclEx.Helpers;
 using Xunit;
 using Xunit.Abstractions;
@@ -16,15 +17,12 @@ namespace FclEx.Utils
 
         private class Tester
         {
-            private readonly ITestOutputHelper _helper;
-
             public Tester(ITestOutputHelper helper)
             {
-                _helper = helper;
                 OnNotify += async (sender, tester) =>
                 {
                     await TaskHelper.Delay(5);
-                    _helper.WriteLine("default");
+                    helper.WriteLine("default");
                 };
             }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 
 namespace FclEx
@@ -36,9 +37,9 @@ namespace FclEx
 
         public static bool TryAdd<TKey, TValue>(this Dictionary<TKey, TValue> dic, TKey? key, TValue value) where TKey : notnull
         {
-            if (key == null) 
+            if (key == null)
                 return false;
-            
+
             if (!dic.ContainsKey(key))
             {
                 dic.Add(key, value);
@@ -125,6 +126,16 @@ namespace FclEx
                 dic[key] = value;
             }
             return value;
+        }
+
+        public static IReadOnlyDictionary<TKey, TValue> AsReadOnlyDictionary<TKey, TValue>(this IDictionary<TKey, TValue>? dic) where TKey : notnull
+        {
+            return dic switch
+            {
+                null => throw new ArgumentNullException(nameof(dic)),
+                IReadOnlyDictionary<TKey, TValue> col => col,
+                _ => new ReadOnlyDictionary<TKey, TValue>(dic!)
+            };
         }
     }
 }

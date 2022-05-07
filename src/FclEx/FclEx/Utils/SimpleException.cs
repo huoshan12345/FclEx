@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using FclEx.Helpers;
+using Microsoft.Extensions.ObjectPool;
 using static System.Environment;
 
 namespace FclEx.Utils

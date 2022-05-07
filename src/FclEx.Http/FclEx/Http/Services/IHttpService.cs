@@ -17,9 +17,9 @@ namespace FclEx.Http.Services
 
         Cookie? GetCookie(Uri uri, string name);
 
-        IReadOnlyList<Cookie> GetCookies(Uri uri);
+        IReadOnlyCollection<Cookie> GetCookies(Uri uri);
 
-        IReadOnlyList<Cookie> GetAllCookies();
+        IReadOnlyCollection<Cookie> GetAllCookies();
 
         IWebProxyExt WebProxy { get; set; }
 

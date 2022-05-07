@@ -88,15 +88,15 @@ namespace FclEx
             return value.ToEnum<T>(s => throw new FormatException($"Cannot parse to type of {typeof(T).ShortName()} from this value: " + s));
         }
 
-        public static bool IsValid<T>(this T value) where T : Enum
+        public static bool IsValid<T>(this T value) where T : struct, Enum
         {
-            var validValues = EnumHelper.GetValues<T>();
+            var validValues = Enum.GetValues<T>();
             return validValues.Contains(value);
         }
 
-        public static bool IsEachValid<T>(this IEnumerable<T> values) where T : Enum
+        public static bool IsEachValid<T>(this IEnumerable<T> values) where T : struct, Enum
         {
-            var validValues = EnumHelper.GetValues<T>();
+            var validValues = Enum.GetValues<T>();
             return values.All(m => validValues.Contains(m));
         }
 
@@ -106,7 +106,7 @@ namespace FclEx
         }
 
         private static readonly ConcurrentDictionary<Enum, string> EnumValueDic = new();
-        
+
         public static TAttr? GetAttribute<TAttr>(this Enum e) where TAttr : Attribute
         {
             var type = e.GetType();

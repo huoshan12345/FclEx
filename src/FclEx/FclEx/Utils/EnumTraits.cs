@@ -13,7 +13,7 @@ namespace FclEx.Utils
         private static readonly HashSet<TEnum> _valuesSet;
         static EnumTraits()
         {
-            EnumValues = EnumHelper.GetValues<TEnum>();
+            EnumValues = Enum.GetValues<TEnum>();
             _valuesSet = new HashSet<TEnum>(EnumValues);
 
             var longValues = EnumValues

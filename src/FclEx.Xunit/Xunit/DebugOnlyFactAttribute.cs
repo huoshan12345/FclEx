@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 using FclEx;
 using FclEx.Utils;
 
@@ -19,7 +20,7 @@ namespace Xunit
                     if (!assembly.IsDebug())
                         return $"The entry assembly {assembly.GetName().Name} is not in debug mode";
                 }
-                if (DebuggerRequired && !RuntimeInfo.IsDebuggerAttached)
+                if (DebuggerRequired && !Debugger.IsAttached)
                     return "The debugger is not attached";
                 return null;
             }

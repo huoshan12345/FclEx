@@ -39,7 +39,7 @@ namespace FclEx.Extensions.EnumExtensions
 
         private static void ToIntTest<T>() where T : struct, Enum, IConvertible
         {
-            var values = EnumHelper.GetValues<T>();
+            var values = Enum.GetValues<T>();
             foreach (var value in values)
             {
                 var expected = value.ToInt32(null);
@@ -49,7 +49,7 @@ namespace FclEx.Extensions.EnumExtensions
 
         private static void ToLongTest<T>() where T : struct, Enum, IConvertible
         {
-            var values = EnumHelper.GetValues<T>();
+            var values = Enum.GetValues<T>();
             foreach (var value in values)
             {
                 var expected = value.ToInt64(null);
