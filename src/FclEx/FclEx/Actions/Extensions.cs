@@ -50,7 +50,7 @@ namespace FclEx.Actions
         {
             return action.ExecuteAsync(token);
         }
-        
+
         public static IAction<T> InsertIf<T, TNext>(this IAction<T> action, Func<T, bool> condition, Func<T, IAction<TNext>> next)
         {
             Guard.Argument(condition, nameof(condition)).NotNull();
@@ -66,7 +66,7 @@ namespace FclEx.Actions
             return action.Map(m => default(Unit));
         }
 
-        public static IAction<T> RepeatUntil<T>(this IAction<T> actor, Func<T, bool>? until, TimeSpan delay = default, TimeSpan? timeout = null)
+        public static IAction<T> RepeatUntil<T>(this IAction<T> actor, Func<T, bool>? until, TimeSpan delay = default, TimeSpan? timeout = null, bool excuteSafely = true)
         {
             return CommonAction.Create<T>(async t =>
             {
@@ -83,7 +83,7 @@ namespace FclEx.Actions
                     await TaskHelper.Delay(delay, t);
                 }
                 return OperateResult.CreateCancel<T>();
-            });
+            }, excuteSafely);
         }
 
         public static IAction<T> RepeatUntil<T>(this IAction<T> actor, Func<T, bool>? until, int delayInSeconds = default, int? timeoutInSeconds = null)
