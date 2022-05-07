@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Dawn;
@@ -37,43 +35,43 @@ namespace FclEx.Actions
         }
     }
 
-    public readonly struct NextAction<T> : IAction<T>
-    {
-        private readonly IAction<T> _action;
-        private readonly Func<T, IAction<T>?> _next;
-        private readonly bool _errorWhenNextNull;
-        private readonly bool _prevWhenNextError;
+    //public readonly struct NextAction<T> : IAction<T>
+    //{
+    //    private readonly IAction<T> _action;
+    //    private readonly Func<T, IAction<T>?> _next;
+    //    private readonly bool _errorWhenNextNull;
+    //    private readonly bool _prevWhenNextError;
 
-        public NextAction(IAction<T> action, Func<T, IAction<T>?> next,
-            bool errorWhenNextNull, bool prevWhenNextError)
-        {
-            _errorWhenNextNull = errorWhenNextNull;
-            _prevWhenNextError = prevWhenNextError;
-            _action = Guard.Argument(action, nameof(action)).NotNull().Value;
-            _next = Guard.Argument(next, nameof(next)).NotNull();
-        }
+    //    public NextAction(IAction<T> action, Func<T, IAction<T>?> next,
+    //        bool errorWhenNextNull, bool prevWhenNextError)
+    //    {
+    //        _errorWhenNextNull = errorWhenNextNull;
+    //        _prevWhenNextError = prevWhenNextError;
+    //        _action = Guard.Argument(action, nameof(action)).NotNull().Value;
+    //        _next = Guard.Argument(next, nameof(next)).NotNull();
+    //    }
 
-        public async Task<OperateResult<T>> ExecuteAsync(CancellationToken token = default)
-        {
-            var result = await _action.ExecuteAsync(token).DonotCapture();
-            if (!result.Successful)
-                return result;
+    //    public async Task<OperateResult<T>> ExecuteAsync(CancellationToken token = default)
+    //    {
+    //        var result = await _action.ExecuteAsync(token).DonotCapture();
+    //        if (!result.Successful)
+    //            return result;
 
-            var nextActor = _next(result.Result!);
-            if (nextActor == null)
-            {
-                return _errorWhenNextNull
-                    ? Constant.NullNextError
-                    : result;
-            }
+    //        var nextActor = _next(result.Result!);
+    //        if (nextActor == null)
+    //        {
+    //            return _errorWhenNextNull
+    //                ? Constant.NullNextError
+    //                : result;
+    //        }
 
-            var nextResult = await nextActor.ExecuteAsync(token).DonotCapture();
-            if (!nextResult.Successful)
-                return _prevWhenNextError
-                    ? result
-                    : nextResult;
+    //        var nextResult = await nextActor.ExecuteAsync(token).DonotCapture();
+    //        if (!nextResult.Successful)
+    //            return _prevWhenNextError
+    //                ? result
+    //                : nextResult;
 
-            return nextResult.WithElapsed(result.Elapsed + nextResult.Elapsed);
-        }
-    }
+    //        return nextResult.WithElapsed(result.Elapsed + nextResult.Elapsed);
+    //    }
+    //}
 }
