@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using FclEx.Helpers;
-using Microsoft.Extensions.ObjectPool;
 using Serilog.Events;
 using Serilog.Formatting;
 using Serilog.Parsing;

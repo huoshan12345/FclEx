@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection.InteropServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Dawn;
 using FclEx.Helpers;
 using FclEx.Utils;
-using Microsoft.Extensions.ObjectPool;
 
 namespace FclEx
 {

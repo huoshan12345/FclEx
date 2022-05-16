@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 
 using FclEx.Helpers;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Serilog.Core;
 using Serilog.Events;

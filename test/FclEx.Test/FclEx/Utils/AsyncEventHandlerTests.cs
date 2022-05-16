@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using FclEx.Helpers;
 using Xunit;
 using Xunit.Abstractions;

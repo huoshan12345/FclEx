@@ -136,8 +136,7 @@ namespace FclEx.Http.Core.Cookies
                                         {
                                             cookie.Expires = expires;
                                         }
-                                        else if (DateTime.TryParseExact(unQuotedValue, _dateTimeFormats,
-                                            DateTimeCultureInfo.TwoDigitYear, style, out expires))
+                                        else if (DateTime.TryParseExact(unQuotedValue, _dateTimeFormats, CultureInfoHelper.TwoDigitYear, style, out expires))
                                         {
                                             cookie.Expires = expires;
                                         }

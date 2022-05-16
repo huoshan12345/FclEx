@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using MoreLinq;
 using Nito.AsyncEx;
+using FclEx.Helpers;
 
 namespace FclEx.Consumers
 {

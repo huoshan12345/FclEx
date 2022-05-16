@@ -6,7 +6,6 @@ using System.Text;
 using Dawn;
 using FclEx.Helpers;
 using FclEx.Utils;
-using Microsoft.Extensions.ObjectPool;
 
 namespace FclEx.Http.Core
 {

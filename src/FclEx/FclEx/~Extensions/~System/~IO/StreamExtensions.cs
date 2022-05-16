@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using FclEx.Helpers;
-using Microsoft.Extensions.ObjectPool;
 
 namespace FclEx
 {

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Dawn;
+using FclEx.Helpers;
 using FclEx.Utils;
 using Microsoft.Extensions.Logging;
 using MoreLinq;

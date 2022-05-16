@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using FclEx.Helpers;
+using System.Linq;
 using Xunit;
 
 namespace System.Reflection

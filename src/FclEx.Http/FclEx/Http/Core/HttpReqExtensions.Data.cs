@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using FclEx.Helpers;
 using FclEx.Http.Services;
 using MoreLinq;
-using Newtonsoft.Json;
 
 namespace FclEx.Http.Core
 {
