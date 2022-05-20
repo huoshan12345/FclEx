@@ -19,8 +19,7 @@ namespace FclEx.TypeCasters
                 : (TOutput)(object)obj;
         }
 
-        [return: MaybeNull]
-        private static TOutput ChangeType<TInput, TOutput>(TInput value, Type t)
+        private static TOutput? ChangeType<TInput, TOutput>(TInput value, Type t)
         {
             if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>))
             {

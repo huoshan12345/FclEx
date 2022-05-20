@@ -50,14 +50,14 @@ namespace FclEx.Http.Core
         {
             var str = res.ResponseString;
             if (!str.IsPossibleJson())
-                return OperateResult.CreateError<T>("Can not parse json from empty string");
+                return Operate.CreateError<T>("Can not parse json from empty string");
 
             JToken? token = str!.ToJToken();
             if (path.IsValid())
                 token = token.SelectToken(path!);
 
             if (token == null)
-                return OperateResult.CreateError<T>("The path does not exist in json: " + path);
+                return Operate.CreateError<T>("The path does not exist in json: " + path);
 
             return token.ToObject<T>()!;
         }

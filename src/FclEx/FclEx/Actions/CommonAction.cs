@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Dawn;
+using FclEx;
 using FclEx.Utils;
 
 namespace FclEx.Actions
@@ -10,12 +11,12 @@ namespace FclEx.Actions
     {
         public static CommonAction<T> Create<T>(Func<CancellationToken, T> func, bool excuteSafely = true)
         {
-            return new(t => OperateResult.CreateSuccess(func(t)), excuteSafely);
+            return new(t => Operate.CreateSuccess(func(t)), excuteSafely);
         }
 
         public static CommonAction<T> Create<T>(Func<CancellationToken, Task<T>> func, bool excuteSafely = true)
         {
-            return new(async t => OperateResult.CreateSuccess(await func(t).DonotCapture()), excuteSafely);
+            return new(async t => Operate.CreateSuccess(await func(t).DonotCapture()), excuteSafely);
         }
 
         public static CommonAction<T> Create<T>(Func<CancellationToken, OperateResult<T>> func, bool excuteSafely = true)
@@ -33,7 +34,7 @@ namespace FclEx.Actions
             return new(t =>
             {
                 func(t);
-                return OperateResult.CreateSuccess(default(Unit));
+                return Operate.CreateSuccess(default(Unit)).ToTask();
             }, excuteSafely);
         }
 
@@ -42,13 +43,13 @@ namespace FclEx.Actions
             return new(async t =>
             {
                 await func(t).DonotCapture();
-                return OperateResult.CreateSuccess(default(Unit));
+                return Operate.CreateSuccess(default(Unit));
             }, excuteSafely);
         }
 
         public static VoidCommonAction Create(Func<CancellationToken, OperateResult> func, bool excuteSafely = true)
         {
-            return new(t => func(t), excuteSafely);
+            return new(t => func(t).ToTask(), excuteSafely);
         }
 
         public static VoidCommonAction Create(Func<CancellationToken, Task<OperateResult>> func, bool excuteSafely = true)
@@ -80,9 +81,9 @@ namespace FclEx.Actions
     public readonly struct VoidCommonAction : IAction<Unit>
     {
         private readonly bool _excuteSafely;
-        private readonly Func<CancellationToken, Task<OperateResult<Unit>>> _func;
+        private readonly Func<CancellationToken, Task<OperateResult>> _func;
 
-        public VoidCommonAction(Func<CancellationToken, Task<OperateResult<Unit>>> func, bool excuteSafely)
+        public VoidCommonAction(Func<CancellationToken, Task<OperateResult>> func, bool excuteSafely)
         {
             _excuteSafely = excuteSafely;
             _func = Guard.Argument(func, nameof(func)).NotNull();

@@ -1,7 +1,7 @@
 ﻿using FclEx.Json.Converters;
 using Newtonsoft.Json;
 
-namespace System
+namespace FclEx
 {
     [JsonConverter(typeof(IgnoreJsonConverter))]
     public readonly struct Unit { }

@@ -23,7 +23,7 @@ namespace FclEx.Actions
             if (!result.Successful)
                 return result.ToExplicit<TNext>();
 
-            var nextActor = _next(result.Result);
+            var nextActor = _next(result.Value);
             if (nextActor == null)
                 return Constant.NullNextError;
 
@@ -31,7 +31,7 @@ namespace FclEx.Actions
             if (!nextResult.Successful)
                 return nextResult;
 
-            return nextResult.WithElapsed(result.Elapsed + nextResult.Elapsed);
+            return nextResult.Elapsed(result.Elapsed + nextResult.Elapsed);
         }
     }
 
@@ -57,7 +57,7 @@ namespace FclEx.Actions
     //        if (!result.Successful)
     //            return result;
 
-    //        var nextActor = _next(result.Result!);
+    //        var nextActor = _next(result.Value!);
     //        if (nextActor == null)
     //        {
     //            return _errorWhenNextNull

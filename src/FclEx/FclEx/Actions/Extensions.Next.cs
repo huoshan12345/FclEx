@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Dawn;
+using FclEx;
 using FclEx.Utils;
 
 namespace FclEx.Actions
@@ -12,7 +13,7 @@ namespace FclEx.Actions
     {
         public static IAction<TNext> Next<T, TNext>(this IAction<T> action, TNext result)
         {
-            return action.Next<T, TNext>(OperateResult.CreateSuccess(result));
+            return action.Next<T, TNext>(Operate.CreateSuccess(result));
         }
 
         public static IAction<TNext> Next<T, TNext>(this IAction<T> action, OperateResult<TNext> result)

@@ -45,7 +45,7 @@ namespace FclEx.Utils
                     number++;
                 })));
 
-            var (successful, elapsed, _) = await Operate.ExcuteAsync(() => tasks.Select(m => m()).WhenAll(),
+            var (successful, ex, elapsed) = await Operate.ExcuteAsync(() => tasks.Select(m => m()).WhenAll(),
                 TimeSpan.FromSeconds(3));
 
             Assert.True(successful);
@@ -58,7 +58,7 @@ namespace FclEx.Utils
         {
             var number = 0;
             var initializer = new Initializer(false);
-            var (successful, elapsed, _) = await Operate.ExcuteAsync(async () =>
+            var (successful, _, elapsed) = await Operate.ExcuteAsync(async () =>
             {
                 for (var i = 0; i < 100000; i++)
                 {

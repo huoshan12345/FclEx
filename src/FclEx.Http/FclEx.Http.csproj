@@ -9,6 +9,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\FclEx\Using.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\FclEx\FclEx.csproj" />
   </ItemGroup>
   

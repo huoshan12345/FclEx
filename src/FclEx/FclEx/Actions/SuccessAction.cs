@@ -20,7 +20,7 @@ namespace FclEx.Actions
 
         public Task<OperateResult<T>> ExecuteAsync(CancellationToken token = default)
         {
-            return OperateResult.CreateSuccess(_obj, _timeSpan);
+            return Operate.CreateSuccess(_obj, _timeSpan);
         }
     }
 }

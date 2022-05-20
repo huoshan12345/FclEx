@@ -1,7 +1,6 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
+﻿using System.Linq;
 using AngleSharp.Dom;
+using FclEx;
 using FclEx.Http.Core;
 using FclEx.Utils;
 
@@ -13,26 +12,26 @@ namespace FclEx.Actions
 
         OperateResult<T> IHttpResHandler<T>.GetResult(HttpRes res)
         {
-            var (successful, _, str, ex) = GetHtmlString(res);
+            var (successful, str, ex, _) = GetHtml(res);
             if (!successful)
                 return ex!;
 
             var context = new HtmlActionContext(res, str!, HtmlResultPath);
-            
+
             if (IsFailed(context))
                 return HandleFailed(context);
 
             return GetResult(context);
         }
 
-        OperateResult<string> GetHtmlString(HttpRes response)
+        OperateResult<string> GetHtml(HttpRes response)
         {
             var str = response.ResponseString;
             return str switch
             {
-                _ when str.IsNullOrEmpty() => OperateResult.CreateError("The res string is empty"),
-                _ when str.IsPossibleHtml() => OperateResult.CreateSuccess(response.ResponseString),
-                _ => OperateResult.CreateError("The res string is not a valid html: " + str.TruncateSafely(256))
+                _ when str.IsNullOrEmpty() => Operate.CreateError<string>("The res string is empty"),
+                _ when str.IsPossibleHtml() => Operate.CreateSuccess(response.ResponseString),
+                _ => Operate.CreateError<string>("The res string is not a valid html: " + str.TruncateSafely(256))
             };
         }
 
@@ -51,7 +50,7 @@ namespace FclEx.Actions
 
     public interface IHtmlAction : IHtmlAction<Unit>
     {
-        OperateResult<Unit> IHtmlAction<Unit>.GetResult(HtmlActionContext context) => OperateResult.Success;
+        OperateResult<Unit> IHtmlAction<Unit>.GetResult(HtmlActionContext context) => Operate.Success;
     }
 
     public readonly struct HtmlActionContext

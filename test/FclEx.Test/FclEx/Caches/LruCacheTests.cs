@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FclEx.Utils;
 using Xunit;
 
 namespace FclEx.Caches
@@ -132,7 +133,7 @@ namespace FclEx.Caches
                     {
                         for (var j = 0; j < addsPerThread; j++)
                         {
-                            dict.Add(j + ii * addsPerThread, -(j + ii * addsPerThread));
+                            dict.TryAdd(j + ii * addsPerThread, -(j + ii * addsPerThread));
                         }
                         if (Interlocked.Decrement(ref count) == 0) mre.Set();
                     });

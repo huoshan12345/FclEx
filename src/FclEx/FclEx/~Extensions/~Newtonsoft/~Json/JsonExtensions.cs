@@ -175,7 +175,7 @@ namespace FclEx
                 var r = Operate.Excute(() => JToken.Parse(str));
                 if (r.Successful)
                 {
-                    token = r.Result!;
+                    token = r.Value!;
                     return true;
                 }
             }
@@ -190,7 +190,7 @@ namespace FclEx
                 var r = Operate.Excute(() => JObject.Parse(str!));
                 if (r.Successful)
                 {
-                    token = r.Result!;
+                    token = r.Value!;
                     return true;
                 }
             }
@@ -205,7 +205,7 @@ namespace FclEx
                 var r = Operate.Excute(() => JArray.Parse(str));
                 if (r.Successful)
                 {
-                    token = r.Result!;
+                    token = r.Value!;
                     return true;
                 }
             }

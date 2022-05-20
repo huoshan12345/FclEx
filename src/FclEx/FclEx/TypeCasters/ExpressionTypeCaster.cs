@@ -8,8 +8,7 @@ namespace FclEx.TypeCasters
 {
     public class Caster<TInput>
     {
-        [return: MaybeNull]
-        public static TOutput CastTo<TOutput>([AllowNull] TInput obj)
+        public static TOutput? CastTo<TOutput>(TInput? obj)
         {
             return obj == null 
                 ? default 

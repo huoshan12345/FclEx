@@ -14,7 +14,7 @@ namespace FclEx.Web
 
         protected override Task<OperateResult> LoginInternal(CancellationToken token)
         {
-            return OperateResult.Success.ToTask();
+            return Operate.Success.ToTask();
         }
     }
 }

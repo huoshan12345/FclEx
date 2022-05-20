@@ -21,7 +21,7 @@ namespace FclEx
         /// <param name="right"></param>
         /// <param name="item"></param>
         /// <returns></returns>
-        public static bool TryGetFirstOfDiffSet<T>(this ICollection<T> left, IEnumerable<T> right, [MaybeNull]out T item)
+        public static bool TryGetFirstOfDiffSet<T>(this ICollection<T> left, IEnumerable<T> right, out T? item)
         {
             item = default;
             foreach (var check in right)
@@ -35,7 +35,7 @@ namespace FclEx
             return false;
         }
 
-        public static bool TryGetFirst<T>(this IEnumerable<T>? source, [MaybeNull]out T value)
+        public static bool TryGetFirst<T>(this IEnumerable<T>? source, out T? value)
         {
             if (source != null)
             {

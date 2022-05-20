@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.ExceptionServices;
+using FclEx.Utils;
 using MoreLinq;
 
 namespace FclEx
@@ -9,7 +11,7 @@ namespace FclEx
     public static class ExceptionExtensions
     {
         public static void ReThrow(this Exception ex) => ExceptionDispatchInfo.Capture(ex).Throw();
-        
+
         public static Exception GetInnermost(this Exception ex)
         {
             var p = ex;
@@ -71,6 +73,25 @@ namespace FclEx
                     return agg.InnerExceptions[0];
             }
             return ex;
+        }
+
+        public static bool IsObjEx<T>(this Exception ex, [NotNullWhen(true)] out T? value) where T : notnull
+        {
+            if (ex is ObjectException<T> objEx)
+            {
+                value = objEx.Value;
+                return true;
+            }
+            else
+            {
+                value = default;
+                return false;
+            }
+        }
+
+        public static bool IsObjEx<T>(this Exception ex, Func<T, bool> condition) where T : notnull
+        {
+            return ex is ObjectException<T> objEx && condition(objEx.Value);
         }
     }
 }

@@ -120,7 +120,7 @@ namespace FclEx.Http.Services
 
             var res = await http.SendAsync(req).DonotCapture();
             if (res.HasError)
-                return OperateResult.CreateObjError(res, res.Exception!, res.ExcuteTime).ToExplicit<HttpFileDownloadInfo>();
+                return Operate.CreateObjError(res, res.Exception!, res.ExcuteTime).ToExplicit<HttpFileDownloadInfo>();
             else
                 return res.GetDownloadInfo();
         }

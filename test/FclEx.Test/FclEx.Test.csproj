@@ -4,6 +4,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\FclEx\FclEx.csproj" />
+    <Compile Include="..\..\src\FclEx\Using.cs" />
   </ItemGroup>
 
   <ItemGroup>

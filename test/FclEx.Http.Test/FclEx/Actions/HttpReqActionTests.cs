@@ -15,7 +15,8 @@ namespace FclEx.Actions
         {
             var uri = UrlUtil.Combine(GlobalConstants.TestUrl, "/api/post");
             using var http = HttpClientService.Default;
-            var (successful, _, data, ex) = await HttpReq.Json(uri).JsonBody(Enumerable.Range(1, 10).ToList())
+            var (successful, data, ex, _) = await HttpReq.Json(uri)
+                .JsonBody(Enumerable.Range(1, 10).ToList())
                 .ToAction(http)
                 .ReadJson<List<int>>("body")
                 .NextReq(m => HttpReq.Json(uri).JsonBody(m.Select(x => x.ToString()).ToDictionary(x => x, x => x + x)), http)

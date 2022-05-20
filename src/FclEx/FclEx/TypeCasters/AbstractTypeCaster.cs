@@ -10,7 +10,6 @@ namespace FclEx.TypeCasters
     {
         public static TCaster Instance { get; } = new TCaster();
 
-        [return: NotNullIfNotNull("obj"), MaybeNull]
-        public abstract TOutput CastTo<TInput, TOutput>([AllowNull] TInput obj);
+        public abstract TOutput? CastTo<TInput, TOutput>(TInput? obj);
     }
 }

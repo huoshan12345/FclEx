@@ -31,8 +31,8 @@ namespace FclEx.Actions
         public Task<OperateResult<T>> ExecuteAsync(CancellationToken token = default)
         {
             return _ex is null 
-                ? OperateResult.CreateError<T>(_error, _timeSpan)
-                : OperateResult.CreateError<T>(_ex, _timeSpan);
+                ? Operate.CreateError<T>(_error, _timeSpan)
+                : Operate.CreateError<T>(_ex, _timeSpan);
         }
     }
 }

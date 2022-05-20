@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using FclEx.Utils;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Xunit;
 
 namespace FclEx.Json

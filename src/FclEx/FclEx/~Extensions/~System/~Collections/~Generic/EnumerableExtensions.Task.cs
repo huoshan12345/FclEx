@@ -18,7 +18,7 @@ namespace FclEx
             ToParallellyExecutedTaskOfPair<T, TResult>(this IEnumerable<T> enumerable, Func<T, Task<TResult>> taskSelector,
          int batchSize, CancellationToken token = default)
         {
-            return enumerable.ToParallellyExecutedTaskOfPair(async m => OperateResult.CreateSuccess(await taskSelector(m)), batchSize, token);
+            return enumerable.ToParallellyExecutedTaskOfPair(async m => Operate.CreateSuccess(await taskSelector(m)), batchSize, token);
         }
 
 
@@ -38,7 +38,7 @@ namespace FclEx
             {
                 if (token.IsCancellationRequested)
                 {
-                    failure.AddRange(batch.Select(m => (m, OperateResult.CreateCancel<TResult>())));
+                    failure.AddRange(batch.Select(m => (m, Operate.CreateCancel<TResult>())));
                 }
                 else
                 {
@@ -46,7 +46,7 @@ namespace FclEx
                     foreach (var (i, o) in rs)
                     {
                         if (o.Successful)
-                            success.Add((i, o.Result!));
+                            success.Add((i, o.Value!));
                         else
                             failure.Add((i, o));
                     }
@@ -59,7 +59,7 @@ namespace FclEx
             ToSeriallyExecutedTaskOfPair<T, TResult>(this IEnumerable<T> enumerable, Func<T, Task<TResult>> taskSelector,
                 int intervalSeconds = 0, CancellationToken token = default)
         {
-            return enumerable.ToSeriallyExecutedTaskOfPair(async m => OperateResult.CreateSuccess(await taskSelector(m)), intervalSeconds, token);
+            return enumerable.ToSeriallyExecutedTaskOfPair(async m => Operate.CreateSuccess(await taskSelector(m)), intervalSeconds, token);
         }
 
         public static async Task<(List<(T Input, TResult Output)> Success, List<(T Input, OperateResult<TResult> Output)> Failure)>
@@ -78,13 +78,13 @@ namespace FclEx
             {
                 if (token.IsCancellationRequested)
                 {
-                    failure.Add((item, OperateResult.CreateCancel<TResult>()));
+                    failure.Add((item, Operate.CreateCancel<TResult>()));
                 }
                 else
                 {
                     var r = await Operate.ExcuteAsync(() => taskSelector(item));
                     if (r.Successful)
-                        success.Add((item, r.Result!));
+                        success.Add((item, r.Value!));
                     else
                         failure.Add((item, r));
                 }
@@ -146,7 +146,7 @@ namespace FclEx
                     span += r.Elapsed;
                     if (r.Successful)
                     {
-                        list.Add(r.Result!);
+                        list.Add(r.Value!);
                     }
                     else
                     {

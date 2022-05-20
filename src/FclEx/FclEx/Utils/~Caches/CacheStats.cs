@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 
-namespace FclEx.Caches
+namespace FclEx.Utils
 {
     public class CacheStats
     {

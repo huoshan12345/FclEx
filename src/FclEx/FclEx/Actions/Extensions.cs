@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Dawn;
+using FclEx;
 using FclEx.Helpers;
 using FclEx.Utils;
 
@@ -23,7 +24,7 @@ namespace FclEx.Actions
 
         public static Task<OperateResult> RunAsync<T>(this IAction<T> action, CancellationToken token = default)
         {
-            return action.ExecuteAsync(token).ToUntyped();
+            return action.ExecuteAsync(token).Untype();
         }
 
         public static IAction<T> RepeatOnce<T>(this IAction<T> actor, Func<T, bool> condition)
@@ -77,12 +78,12 @@ namespace FclEx.Actions
                     if (!r.Successful)
                         return r;
 
-                    if (until != null && until(r.Result!))
+                    if (until != null && until(r.Value!))
                         return r;
 
                     await TaskHelper.Delay(delay, t);
                 }
-                return OperateResult.CreateCancel<T>();
+                return Operate.CreateCancel<T>();
             }, excuteSafely);
         }
 

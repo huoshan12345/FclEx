@@ -9,7 +9,7 @@ namespace FclEx.Actions
         [Fact]
         public async Task Union_Success_Test()
         {
-            var (successful, _, result, _) = await CommonAction.Create(t => Task.FromResult(1))
+            var (successful, result, _, _) = await CommonAction.Create(t => Task.FromResult(1))
                 .Union(r => CommonAction.Create(t => Task.FromResult(1 + r)))
                 .Union((a, b) => CommonAction.Create(t => Task.FromResult(1 + a + b)))
                 .ExecuteAsync();
@@ -22,7 +22,7 @@ namespace FclEx.Actions
         public async Task Union_Error_Begin_Test()
         {
             var flag = false;
-            var (successful, _, _, ex) = await CommonAction.Create(t => OperateResult.CreateError<int>("error"))
+            var (successful, _, ex, _) = await CommonAction.Create(t => Operate.CreateError<int>("error"))
                 .Union(r => CommonAction.Create(t =>
                 {
                     flag = true;
@@ -40,11 +40,11 @@ namespace FclEx.Actions
         public async Task Union_Error_Middle_Test()
         {
             var flag = false;
-            var (successful, _, _, ex) = await CommonAction.Create(t => Task.FromResult(1))
+            var (successful, _, ex, _) = await CommonAction.Create(t => Task.FromResult(1))
                 .Union(r =>
                 {
                     Assert.Equal(1, r);
-                    return CommonAction.Create(t => OperateResult.CreateError<int>("error"));
+                    return CommonAction.Create(t => Operate.CreateError<int>("error"));
                 })
                 .Union((a, b) =>
                 {
@@ -61,13 +61,13 @@ namespace FclEx.Actions
         [Fact]
         public async Task Union_Error_End_Test()
         {
-            var (successful, _, _, ex) = await CommonAction.Create(t => Task.FromResult(1))
+            var (successful, _, ex, _) = await CommonAction.Create(t => Task.FromResult(1))
                 .Union(r => CommonAction.Create(t => Task.FromResult(1 + r)))
                 .Union((a, b) =>
                 {
                     Assert.Equal(1, a);
                     Assert.Equal(2, b);
-                    return CommonAction.Create(t => OperateResult.CreateError<int>("error"));
+                    return CommonAction.Create(t => Operate.CreateError<int>("error"));
                 })
                 .ExecuteAsync();
 
@@ -78,8 +78,8 @@ namespace FclEx.Actions
         [Fact]
         public async Task Union_Errors_Test()
         {
-            var (successful, _, _, ex) = await CommonAction.Create(t => OperateResult.CreateError<int>("error1"))
-                .Union(r => CommonAction.Create(t => OperateResult.CreateError<int>("error2")))
+            var (successful, _, ex, _) = await CommonAction.Create(t => Operate.CreateError<int>("error1"))
+                .Union(r => CommonAction.Create(t => Operate.CreateError<int>("error2")))
                 .ExecuteAsync();
 
             Assert.False(successful);

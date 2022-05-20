@@ -28,7 +28,7 @@ namespace FclEx.Actions
             if (!result.Successful)
                 return result.ToExplicit<(T, TNext)>();
 
-            var item = result.Result!;
+            var item = result.Value!;
             var nextActor = _next(item);
             if (nextActor == null)
             {
@@ -43,7 +43,7 @@ namespace FclEx.Actions
                     ? ((item, default!), result.Elapsed)
                     : nextResult.ToExplicit<(T, TNext)>();
 
-            return ((item, nextResult.Result!), result.Elapsed + nextResult.Elapsed);
+            return ((item, nextResult.Value!), result.Elapsed + nextResult.Elapsed);
         }
     }
 }

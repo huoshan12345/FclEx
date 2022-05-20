@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using FclEx;
 using FclEx.Http.Core;
 using FclEx.Utils;
 
@@ -14,7 +15,7 @@ namespace FclEx.Actions
 
         OperateResult<T> IHttpResHandler<T>.GetResult(HttpRes res)
         {
-            var (successful, _, str, ex) = GetXmlString(res);
+            var (successful, str, ex, _) = GetXml(res);
             if (!successful)
                 return ex!;
 
@@ -36,12 +37,12 @@ namespace FclEx.Actions
             return error;
         }
 
-        OperateResult<string> GetXmlString(HttpRes response)
+        OperateResult<string> GetXml(HttpRes response)
         {
             var str = response.ResponseString;
             return str.IsPossibleXml()
-                ? OperateResult.CreateSuccess(response.ResponseString)
-                : OperateResult.CreateError<string>("The res string is not a valid xml: " + str.TruncateSafely(256));
+                ? Operate.CreateSuccess(response.ResponseString)
+                : Operate.CreateError<string>("The res string is not a valid xml: " + str.TruncateSafely(256));
         }
 
         OperateResult<T> GetResult(XmlActionContext context) => context.ResultElement!.ToObject<T>()!;
@@ -49,7 +50,7 @@ namespace FclEx.Actions
 
     public interface IXmlAction : IXmlAction<Unit>
     {
-        OperateResult<Unit> IXmlAction<Unit>.GetResult(XmlActionContext context) => OperateResult.Success;
+        OperateResult<Unit> IXmlAction<Unit>.GetResult(XmlActionContext context) => Operate.Success;
     }
 
     public readonly struct XmlActionContext

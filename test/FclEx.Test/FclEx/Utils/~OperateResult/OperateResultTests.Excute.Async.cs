@@ -10,7 +10,7 @@ namespace FclEx.Utils
         [Fact]
         public async Task ExcuteAsync_Timeout_Test()
         {
-            var (successful, elapsed, exception) = await Operate.ExcuteAsync(() => TaskHelper.Delay(10), TimeSpan.FromSeconds(1));
+            var (successful, exception, elapsed) = await Operate.ExcuteAsync(() => TaskHelper.Delay(10), TimeSpan.FromSeconds(1));
             Assert.False(successful);
             Assert.True(elapsed < TimeSpan.FromSeconds(1.1));
             Assert.IsType<TimeoutException>(exception);
@@ -19,7 +19,7 @@ namespace FclEx.Utils
         [Fact]
         public async Task ExcuteAsync_Timeout_Success_Test()
         {
-            var (successful, elapsed, result, _) = await Operate.ExcuteAsync(async () =>
+            var (successful, result, _, elapsed) = await Operate.ExcuteAsync(async () =>
             {
                 await TaskHelper.Delay(1).DonotCapture();
                 return 1;
@@ -32,7 +32,7 @@ namespace FclEx.Utils
         [Fact]
         public async Task ExcuteAsync_Timeout_SyncBody_Test()
         {
-            var (successful, elapsed, exception) = await Operate.ExcuteAsync(() =>
+            var (successful, exception, elapsed) = await Operate.ExcuteAsync(() =>
             {
                 ThreadHelper.Sleep(10);
                 return Task.CompletedTask;
@@ -45,7 +45,7 @@ namespace FclEx.Utils
         [Fact]
         public async Task ExcuteAsync_Timeout_SyncBody_Success_Test()
         {
-            var (successful, elapsed, result, _) = await Operate.ExcuteAsync(() =>
+            var (successful, result, _, elapsed) = await Operate.ExcuteAsync(() =>
             {
                 ThreadHelper.Sleep(1);
                 return Task.FromResult(1);

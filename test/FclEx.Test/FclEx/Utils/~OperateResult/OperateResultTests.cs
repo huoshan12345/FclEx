@@ -11,7 +11,7 @@ namespace FclEx.Utils
             const int expected = 1;
             var r = Test(expected);
             Assert.True(r.Successful);
-            Assert.Equal(expected, r.Result);
+            Assert.Equal(expected, r.Value);
 
             OperateResult<int> Test(int input)
             {

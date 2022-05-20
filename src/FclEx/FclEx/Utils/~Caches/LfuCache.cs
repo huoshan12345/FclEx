@@ -6,9 +6,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using FclEx.Helpers;
-using FclEx.Utils;
 
-namespace FclEx.Caches
+namespace FclEx.Utils
 {
     /// <summary>
     /// A very simple memory-cache which has the capacity.
@@ -55,8 +54,7 @@ namespace FclEx.Caches
                 return false;
             }
         }
-
-        [MaybeNull]
+        
         public TValue this[TKey key]
         {
             get
@@ -68,7 +66,6 @@ namespace FclEx.Caches
             set => AddOrUpdate(key, value);
         }
 
-        [return: MaybeNull]
         public TValue GetOrAdd(TKey key, Func<TKey, TValue> activator)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
@@ -95,8 +92,7 @@ namespace FclEx.Caches
             return node.Value.Value;
         }
 
-        [return: MaybeNull]
-        public TValue AddOrUpdate(TKey key, [AllowNull] TValue value)
+        public TValue AddOrUpdate(TKey key, TValue value)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
 
@@ -125,7 +121,7 @@ namespace FclEx.Caches
             return node.Value.Value;
         }
 
-        public bool TryAdd(TKey key, [AllowNull] TValue value)
+        public bool TryAdd(TKey key, TValue value)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
 
@@ -225,7 +221,7 @@ namespace FclEx.Caches
             _lock.Dispose();
         }
 
-        private LinkedListNode<KvCount> UpdateInternal(LinkedListNode<KvCount> node, [AllowNull] TValue value)
+        private LinkedListNode<KvCount> UpdateInternal(LinkedListNode<KvCount> node, TValue value)
         {
             node.Value = node.Value.SetValue(value);
             return UpdateInternal(node);
@@ -254,7 +250,7 @@ namespace FclEx.Caches
             return node;
         }
 
-        private LinkedListNode<KvCount> AddInternal(TKey key, [AllowNull] TValue value)
+        private LinkedListNode<KvCount> AddInternal(TKey key, TValue value)
         {
             if (_dic.Count >= Capacity)
             {
@@ -268,7 +264,7 @@ namespace FclEx.Caches
             return node;
         }
 
-        private bool TryRemove(TKey key, bool matchValue, [AllowNull] TValue oldValue)
+        private bool TryRemove(TKey key, bool matchValue, TValue? oldValue)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
 
@@ -294,18 +290,18 @@ namespace FclEx.Caches
         [DebuggerDisplay("({Key}, {Value}), {Count}")]
         internal readonly struct KvCount
         {
-            private KvCount(TKey key, [AllowNull] TValue value, int count = 0)
+            private KvCount(TKey key, TValue value, int count = 0)
             {
                 Key = key;
                 Value = value;
                 Count = count;
             }
             public TKey Key { get; }
-            [MaybeNull, AllowNull] public TValue Value { get; }
+            public TValue Value { get; }
             public int Count { get; }
-            public static KvCount Create(TKey key, [AllowNull] TValue value) => new KvCount(key, value);
-            public KvCount Incre() => new KvCount(Key, Value, Count + 1);
-            public KvCount SetValue([AllowNull] TValue value) => new KvCount(Key, value, Count);
+            public static KvCount Create(TKey key, TValue value) => new(key, value);
+            public KvCount Incre() => new(Key, Value, Count + 1);
+            public KvCount SetValue(TValue value) => new(Key, value, Count);
             public static implicit operator KeyValuePair<TKey, TValue>(KvCount kv) => KvPair.Create(kv.Key, kv.Value!);
         }
 

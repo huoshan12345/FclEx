@@ -1,137 +1,119 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Text;
 using System.Threading.Tasks;
 using Dawn;
-using Newtonsoft.Json;
+using static FclEx.Utils.Operate;
 
-namespace FclEx.Utils
+namespace FclEx.Utils;
+
+public readonly struct OperateResult<T>
 {
-    public readonly partial struct OperateResult : IOperateResult<Unit>
+    public int Code { get; }
+    public Exception? Exception { get; }
+    public TimeSpan Elapsed { get; }
+    public T? Value { get; }
+
+    [MemberNotNullWhen(true, nameof(Value))]
+    [MemberNotNullWhen(false, nameof(Exception))]
+    public bool Successful => Exception is null;
+
+    [MemberNotNullWhen(false, nameof(Value))]
+    [MemberNotNullWhen(true, nameof(Exception))]
+    public bool HasError => Exception is not null;
+
+    /// <summary>
+    /// Create an erroneous result
+    /// </summary>
+    /// <param name="code"></param>
+    /// <param name="ex"></param>
+    /// <param name="elapsed"></param>
+    public OperateResult(int code, Exception ex, TimeSpan elapsed)
     {
-        private readonly Unit _result;
-        
-        [MemberNotNullWhen(false, nameof(Exception))]
-        public bool Successful => Exception is null;
-        public int Code { get; }
-        public Exception? Exception { get; }
-        public TimeSpan Elapsed { get; }
-        Unit IOperateResult<Unit>.Result => _result;
+        Code = Guard.Argument(code, nameof(code)).NotEqual(OperateResultCodes.Success);
+        Exception = ex ?? throw new ArgumentNullException(nameof(ex));
+        Elapsed = elapsed;
+        Value = default;
+    }
 
-        public void Deconstruct(out bool successful, out TimeSpan elapsed, out Exception? ex)
-        {
-            successful = Successful;
-            ex = Exception;
-            elapsed = Elapsed;
-        }
+    /// <summary>
+    /// Create an successful result
+    /// </summary>
+    /// <param name="result"></param>
+    /// <param name="elapsed"></param>
+    public OperateResult(T result, TimeSpan elapsed)
+    {
+        Code = OperateResultCodes.Success;
+        Exception = null;
+        Elapsed = elapsed;
+        Value = result;
+    }
 
-        public OperateResult<TTarget> ToExplicit<TTarget>()
-        {
-            if (Successful)
-            {
-                if (typeof(TTarget) == typeof(Unit))
-                {
-                    return CreateSuccess(default(TTarget)!, Elapsed);
-                }
-                else
-                {
-                    throw new InvalidOperationException("cannot convert to explicit when result is successful");
-                }
-            }
-            else
-            {
-                return new OperateResult<TTarget>(Code, Exception!, Elapsed);
-            }
-        }
+    public static implicit operator OperateResult<T>(Exception ex)
+    {
+        return CreateError<T>(ex, TimeSpan.Zero);
+    }
 
-        void IOperateResult<Unit>.Deconstruct(out bool successful, out TimeSpan elapsed, out Unit obj, out Exception? ex)
-        {
-            successful = Successful;
-            ex = Exception;
-            elapsed = Elapsed;
-            obj = _result;
-        }
+    public static implicit operator OperateResult<T>(string? error)
+    {
+        return CreateError<T>(error, TimeSpan.Zero);
+    }
 
-        /// <summary>
-        /// Create an erroneous result
-        /// </summary>
-        /// <param name="code"></param>
-        /// <param name="ex"></param>
-        /// <param name="elapsed"></param>
-        public OperateResult(int code, Exception ex, TimeSpan elapsed)
-        {
-            Code = Guard.Argument(code, nameof(code)).NotEqual(OperateResultCodes.Success);
-            Exception = ex ?? throw new ArgumentNullException(nameof(ex));
-            Elapsed = elapsed;
-            _result = new Unit();
-        }
+    public static implicit operator OperateResult<T>((string?, TimeSpan) paras)
+    {
+        return CreateError<T>(paras.Item1, paras.Item2);
+    }
 
-        /// <summary>
-        /// Create an successful result
-        /// </summary>
-        /// <param name="elapsed"></param>
-        public OperateResult(TimeSpan elapsed)
-        {
-            Code = OperateResultCodes.Success;
-            Exception = null;
-            Elapsed = elapsed;
-            _result = new Unit();
-        }
+    public static implicit operator OperateResult<T>((TimeSpan, string?) paras)
+    {
+        return CreateError<T>(paras.Item2, paras.Item1);
+    }
 
-        public static implicit operator OperateResult(TimeSpan elapsed)
-        {
-            return new(elapsed);
-        }
+    public static implicit operator OperateResult<T>((Exception, TimeSpan) paras)
+    {
+        return CreateError<T>(paras.Item1, paras.Item2);
+    }
 
-        public static implicit operator OperateResult(Exception ex)
-        {
-            return CreateError(ex, TimeSpan.Zero);
-        }
+    public static implicit operator OperateResult<T>((TimeSpan, Exception) paras)
+    {
+        return CreateError<T>(paras.Item2, paras.Item1);
+    }
 
-        public static implicit operator OperateResult(string? error)
-        {
-            return CreateError(error, TimeSpan.Zero);
-        }
+    public static implicit operator OperateResult<T>(T item)
+    {
+        return CreateSuccess(item, TimeSpan.Zero);
+    }
 
-        public static implicit operator OperateResult((string?, TimeSpan) paras)
-        {
-            return CreateError(paras.Item1, paras.Item2);
-        }
+    public static implicit operator OperateResult<T>((T, TimeSpan) paras)
+    {
+        return CreateSuccess(paras.Item1, paras.Item2);
+    }
 
-        public static implicit operator OperateResult((TimeSpan, string?) paras)
-        {
-            return CreateError(paras.Item2, paras.Item1);
-        }
+    public static implicit operator OperateResult(OperateResult<T> result)
+    {
+        return result.Successful
+            ? CreateSuccess(result.Elapsed)
+            : CreateError(result.Code, result.Exception!, result.Elapsed);
+    }
 
-        public static implicit operator OperateResult((Exception, TimeSpan) paras)
-        {
-            return CreateError(paras.Item1, paras.Item2);
-        }
+    public static implicit operator Task<OperateResult>(OperateResult<T> result)
+    {
+        return ((OperateResult)result).ToTask();
+    }
 
-        public static implicit operator OperateResult((TimeSpan, Exception) paras)
-        {
-            return CreateError(paras.Item2, paras.Item1);
-        }
+    public static implicit operator Task<OperateResult<T>>(OperateResult<T> result)
+    {
+        return result.ToTask();
+    }
 
-        public static implicit operator Task<IOperateResult>(OperateResult result)
-        {
-            return ((IOperateResult)result).ToTask()!;
-        }
+    public OperateResult<TDest> ToExplicit<TDest>(Func<T, TDest> func)
+    {
+        return Successful
+            ? new OperateResult<TDest>(func(Value)!, Elapsed)
+            : new OperateResult<TDest>(Code, Exception!, Elapsed);
+    }
 
-        public static implicit operator Task<OperateResult>(OperateResult result)
-        {
-            return result.ToTask();
-        }
-
-        public static implicit operator Task<IOperateResult<Unit>>(OperateResult result)
-        {
-            return ((IOperateResult<Unit>)result).ToTask()!;
-        }
-
-        public static implicit operator Task<OperateResult<Unit>>(OperateResult result)
-        {
-            return ((OperateResult<Unit>)result).ToTask();
-        }
+    public OperateResult<TDest> ToExplicit<TDest>()
+    {
+        return ToExplicit(m => m.CastTo<TDest>())!;
     }
 }

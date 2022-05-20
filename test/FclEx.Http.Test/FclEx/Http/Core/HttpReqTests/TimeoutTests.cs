@@ -16,7 +16,7 @@ namespace FclEx.Http.Core.HttpReqTests
             var req = HttpReq.Get("http://127.0.0.0")
                 .ConnectTimeout(timeout);
 
-            var (successful, elapsed, _, exception) = await Operate.ExcuteAsync(async () => await req.SendAsync().ThrowIfError());
+            var (successful, _, exception, elapsed) = await Operate.ExcuteAsync(async () => await req.SendAsync().ThrowIfError());
             Assert.False(successful);
             Assert.IsType<TaskCanceledException>(exception);
             AssertExt.Equal(timeout, elapsed, TimeSpan.FromSeconds(0.1));

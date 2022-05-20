@@ -11,7 +11,7 @@ namespace FclEx.Utils
 
     public class TreeNode<T>
     {
-        public TreeNode([AllowNull] T value)
+        public TreeNode(T? value)
         {
             Value = value;
         }

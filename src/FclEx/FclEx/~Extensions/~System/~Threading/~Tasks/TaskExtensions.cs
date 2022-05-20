@@ -31,12 +31,6 @@ namespace FclEx
 
         public static ValueTask<T> ToValueTask<T>(this Task<T> task) => new(task);
 
-        internal static T On<T>(this T t, Func<T, bool> condition, Action<T> action)
-        {
-            if (condition(t)) action(t);
-            return t;
-        }
-
         public static Task<T> On<T>(this Task<T> task, Func<T, bool> condition, Action<T> action)
         {
             return task.ContinueWith(t =>

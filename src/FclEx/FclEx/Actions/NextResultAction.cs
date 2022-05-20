@@ -26,7 +26,7 @@ namespace FclEx.Actions
                 return Constant.NullNextError;
 
             var nextResult = await nextActor.ExecuteAsync(token).DonotCapture();
-            return nextResult.WithElapsed(result.Elapsed + nextResult.Elapsed);
+            return nextResult.Elapsed(result.Elapsed + nextResult.Elapsed);
         }
     }
 
@@ -56,7 +56,7 @@ namespace FclEx.Actions
             }
 
             var nextResult = await nextActor.ExecuteAsync(token).DonotCapture();
-            return nextResult.WithElapsed(result.Elapsed + nextResult.Elapsed);
+            return nextResult.Elapsed(result.Elapsed + nextResult.Elapsed);
         }
     }
 }

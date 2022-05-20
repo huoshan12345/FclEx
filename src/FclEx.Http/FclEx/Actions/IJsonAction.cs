@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using FclEx;
 using FclEx.Http.Core;
 using FclEx.Utils;
 using Newtonsoft.Json.Linq;
@@ -14,7 +15,7 @@ namespace FclEx.Actions
 
         OperateResult<T> IHttpResHandler<T>.GetResult(HttpRes res)
         {
-            var (successful, _, str, ex) = GetJsonString(res);
+            var (successful, str, ex, _) = GetJson(res);
             if (!successful)
                 return ex!;
 
@@ -26,12 +27,12 @@ namespace FclEx.Actions
             return GetResult(context);
         }
 
-        OperateResult<string> GetJsonString(HttpRes response)
+        OperateResult<string> GetJson(HttpRes response)
         {
             var str = response.ResponseString;
             return str.IsPossibleJson()
-                ? OperateResult.CreateSuccess(response.ResponseString)
-                : OperateResult.CreateError<string>("The res string is not a valid json: " + str.TruncateSafely(256));
+                ? Operate.CreateSuccess(response.ResponseString)
+                : Operate.CreateError<string>("The res string is not a valid json: " + str.TruncateSafely(256));
         }
 
         bool IsFailed(JsonActionContext context) => !context.ResultTokens.Any();
@@ -52,7 +53,7 @@ namespace FclEx.Actions
 
     public interface IJsonAction : IJsonAction<Unit>
     {
-        OperateResult<Unit> IJsonAction<Unit>.GetResult(JsonActionContext context) => OperateResult.Success;
+        OperateResult<Unit> IJsonAction<Unit>.GetResult(JsonActionContext context) => Operate.Success;
     }
 
     public readonly struct JsonActionContext
