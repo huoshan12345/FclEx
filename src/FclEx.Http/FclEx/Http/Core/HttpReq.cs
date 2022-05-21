@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Text;
 using Dawn;
+using FclEx.Extensions;
 using FclEx.Helpers;
 using FclEx.Utils;
 

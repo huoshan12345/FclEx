@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using FclEx.Extensions;
 using FclEx.Http.Core;
 using FclEx.Http.Core.Cookies;
 using FclEx.Http.Proxy;

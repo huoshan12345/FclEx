@@ -5,6 +5,7 @@ using System.Reflection;
 using FclEx.Helpers;
 using Xunit;
 using FclEx;
+using FclEx.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.Extensions.Logging

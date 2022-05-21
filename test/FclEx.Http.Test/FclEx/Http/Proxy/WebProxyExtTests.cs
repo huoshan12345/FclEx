@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using FclEx.Extensions;
 using Xunit;
 
 namespace FclEx.Http.Proxy

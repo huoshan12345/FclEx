@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using FclEx.Extensions;
 using FclEx.Serilog.Models;
 using Serilog.Core;
 using Serilog.Events;

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using FclEx;
+using FclEx.Extensions;
 using FclEx.Utils;
 
 namespace Xunit

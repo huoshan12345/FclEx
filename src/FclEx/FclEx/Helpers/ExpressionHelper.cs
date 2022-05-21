@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using FclEx;
+using FclEx.Extensions;
 
 namespace FclEx.Helpers
 {

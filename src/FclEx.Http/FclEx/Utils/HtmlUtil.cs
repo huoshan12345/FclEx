@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using FclEx.Extensions;
 
 namespace FclEx.Utils
 {

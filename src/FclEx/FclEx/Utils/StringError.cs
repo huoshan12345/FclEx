@@ -1,4 +1,6 @@
-﻿namespace FclEx.Utils
+﻿using FclEx.Extensions;
+
+namespace FclEx.Utils
 {
     public readonly struct StringError
     {

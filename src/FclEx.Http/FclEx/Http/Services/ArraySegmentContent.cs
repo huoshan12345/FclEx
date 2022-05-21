@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Dawn;
+using FclEx.Extensions;
 
 namespace FclEx.Http.Services
 {

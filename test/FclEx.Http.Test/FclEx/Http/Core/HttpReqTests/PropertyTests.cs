@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using FclEx.Extensions;
 using FclEx.Http.Services;
 using Xunit;
 

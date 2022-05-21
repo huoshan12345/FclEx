@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using FclEx;
+using FclEx.Extensions;
 
 namespace FclEx.Helpers
 {

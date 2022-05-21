@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using FclEx.Extensions;
+using Newtonsoft.Json;
 using Xunit;
 
 namespace FclEx.Json

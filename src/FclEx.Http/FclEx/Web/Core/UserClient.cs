@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
+using FclEx.Extensions;
 using FclEx.Http.Services;
 using FclEx.Utils;
 using Microsoft.Extensions.Logging;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using FclEx.Extensions;
 using FclEx.Helpers;
 using Xunit;
 

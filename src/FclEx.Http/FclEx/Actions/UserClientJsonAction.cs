@@ -1,4 +1,5 @@
-﻿using FclEx.Http.Core;
+﻿using FclEx.Extensions;
+using FclEx.Http.Core;
 using FclEx.Utils;
 using FclEx.Web.Core;
 

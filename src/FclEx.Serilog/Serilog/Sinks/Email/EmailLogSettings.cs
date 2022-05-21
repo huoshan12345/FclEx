@@ -2,6 +2,7 @@
 using System.Net;
 using Dawn;
 using FclEx;
+using FclEx.Extensions;
 using FclEx.Serilog;
 using Microsoft.Extensions.Logging;
 using Serilog.Configuration;

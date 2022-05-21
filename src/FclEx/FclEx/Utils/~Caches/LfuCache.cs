@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
+using FclEx.Extensions;
 using FclEx.Helpers;
 
 namespace FclEx.Utils

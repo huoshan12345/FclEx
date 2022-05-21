@@ -1,4 +1,5 @@
 ﻿using FclEx;
+using FclEx.Extensions;
 
 namespace FclEx.Helpers
 {

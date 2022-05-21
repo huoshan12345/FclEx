@@ -4,6 +4,10 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.1.32414.318
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{ABBD6045-5447-4C9B-AF77-E9ACF4EE2641}"
+	ProjectSection(SolutionItems) = preProject
+		src\Directory.Build.props = src\Directory.Build.props
+		src\Directory.Build.targets = src\Directory.Build.targets
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E25A1CA7-1304-44D5-89BD-170AE8F0DED4}"
 	ProjectSection(SolutionItems) = preProject
@@ -12,11 +16,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx", "src\FclEx\FclEx.csproj", "{C69BFE99-48DF-4508-B479-4ED6B6FD1C7C}"
-	ProjectSection(ProjectDependencies) = postProject
-		{0732D35F-E1A9-4CAB-9F84-7AFBEFBA6B62} = {0732D35F-E1A9-4CAB-9F84-7AFBEFBA6B62}
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{F25BD2B5-2E68-4CC8-90F0-6F1C1574D34A}"
+	ProjectSection(SolutionItems) = preProject
+		test\Directory.Build.props = test\Directory.Build.props
+		test\Directory.Build.targets = test\Directory.Build.targets
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Test", "test\FclEx.Test\FclEx.Test.csproj", "{9BFAB3FA-CF18-4B88-9FCE-B0B76A704807}"
 EndProject
@@ -26,20 +31,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Http.Test", "test\Fcl
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmark", "benchmark", "{82145F29-EBC3-49B3-A96C-0CA1F040E231}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "props", "props", "{D2C9E138-A766-4FEB-9029-A0D5270B7285}"
-	ProjectSection(SolutionItems) = preProject
-		nupkg\common.props = nupkg\common.props
-		nupkg\common.test.props = nupkg\common.test.props
-		nupkg\version.props = nupkg\version.props
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{93386705-90E4-4C54-9800-4CCA92A7EC15}"
-	ProjectSection(SolutionItems) = preProject
-		nupkg\incre_ver.ps1 = nupkg\incre_ver.ps1
-		nupkg\pack.ps1 = nupkg\pack.ps1
-		nupkg\share.ps1 = nupkg\share.ps1
-		nupkg\test_all.ps1 = nupkg\test_all.ps1
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Xunit", "src\FclEx.Xunit\FclEx.Xunit.csproj", "{B6B0D4F5-8E10-4D7F-8E67-079A3714104F}"
 EndProject
@@ -61,7 +53,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Wmi.Tests", "test\Fcl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Wmi.SourceGenerator", "src\FclEx.Wmi.SourceGenerator\FclEx.Wmi.SourceGenerator.csproj", "{0732D35F-E1A9-4CAB-9F84-7AFBEFBA6B62}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FclEx.SourceGenerator", "src\FclEx.SourceGenerator\FclEx.SourceGenerator.csproj", "{AFC38DBA-D2F4-45A0-A162-38800045BA8E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.SourceGenerator", "src\FclEx.SourceGenerator\FclEx.SourceGenerator.csproj", "{AFC38DBA-D2F4-45A0-A162-38800045BA8E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -126,7 +118,6 @@ Global
 		{9BFAB3FA-CF18-4B88-9FCE-B0B76A704807} = {F25BD2B5-2E68-4CC8-90F0-6F1C1574D34A}
 		{58CD6355-DFEC-4383-B04D-60150270DEA2} = {ABBD6045-5447-4C9B-AF77-E9ACF4EE2641}
 		{E62BB49F-1731-4C68-8654-20D2E49EB0A0} = {F25BD2B5-2E68-4CC8-90F0-6F1C1574D34A}
-		{D2C9E138-A766-4FEB-9029-A0D5270B7285} = {E25A1CA7-1304-44D5-89BD-170AE8F0DED4}
 		{93386705-90E4-4C54-9800-4CCA92A7EC15} = {E25A1CA7-1304-44D5-89BD-170AE8F0DED4}
 		{B6B0D4F5-8E10-4D7F-8E67-079A3714104F} = {ABBD6045-5447-4C9B-AF77-E9ACF4EE2641}
 		{AAFEBA15-D66E-4CB1-A520-DF42DAD93D79} = {ABBD6045-5447-4C9B-AF77-E9ACF4EE2641}

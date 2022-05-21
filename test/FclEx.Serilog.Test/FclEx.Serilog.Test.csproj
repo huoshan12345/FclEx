@@ -1,7 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\..\nupkg\common.test.props" />
-
   <ItemGroup>
     <PackageReference Include="Serilog.Sinks.XUnit" Version="3.0.3" />
     <ProjectReference Include="..\..\src\FclEx.Serilog\FclEx.Serilog.csproj" />

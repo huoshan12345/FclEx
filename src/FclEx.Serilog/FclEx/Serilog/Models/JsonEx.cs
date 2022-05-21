@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using FclEx.Extensions;
 using Newtonsoft.Json;
 
 namespace FclEx.Serilog.Models

@@ -1,6 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\..\nupkg\common.test.props" />
   <PropertyGroup>
     <TargetFramework>net6.0-windows</TargetFramework>
     <IsPackable>false</IsPackable>

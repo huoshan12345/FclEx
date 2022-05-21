@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Dawn;
+using FclEx.Extensions;
 using static FclEx.Utils.Operate;
 
 namespace FclEx.Utils;

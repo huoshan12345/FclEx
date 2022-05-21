@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using FclEx;
+using FclEx.Extensions;
 
 namespace FclEx.Helpers
 {

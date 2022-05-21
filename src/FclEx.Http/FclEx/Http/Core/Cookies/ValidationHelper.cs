@@ -2,6 +2,7 @@
 using System;
 using System.Globalization;
 using System.Net;
+using FclEx.Extensions;
 
 namespace FclEx.Http.Core.Cookies
 {

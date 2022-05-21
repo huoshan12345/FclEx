@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using FclEx.Extensions;
 using FclEx.Http.Core;
 using FclEx.Utils;
 using Xunit;

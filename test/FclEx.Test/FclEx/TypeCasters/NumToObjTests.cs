@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using FclEx.Extensions;
 using Xunit;
 
 namespace FclEx.TypeCasters

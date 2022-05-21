@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using FclEx.Extensions;
 using Nito.AsyncEx;
 
 namespace FclEx.Utils

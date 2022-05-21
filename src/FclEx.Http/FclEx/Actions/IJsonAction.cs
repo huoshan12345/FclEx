@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using FclEx;
+using FclEx.Extensions;
 using FclEx.Http.Core;
 using FclEx.Utils;
 using Newtonsoft.Json.Linq;

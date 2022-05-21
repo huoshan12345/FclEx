@@ -1,6 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <Import Project="..\..\nupkg\common.props" />
+  
   <PropertyGroup>
     <!--To fix the error 'The library 'hostpolicy.dll' required to execute the application was not found'-->
     <OutputType>exe</OutputType>

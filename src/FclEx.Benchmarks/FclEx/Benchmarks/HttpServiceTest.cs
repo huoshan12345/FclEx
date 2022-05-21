@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
+using FclEx.Extensions;
 using FclEx.Http.Core;
 using FclEx.Http.Services;
 

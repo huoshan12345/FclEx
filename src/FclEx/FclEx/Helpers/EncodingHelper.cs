@@ -1,6 +1,8 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Text;
 
-namespace System.Text
+namespace FclEx.Helpers
 {
     /// <summary>
     /// 获取文件的编码格式

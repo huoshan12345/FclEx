@@ -1,10 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\..\nupkg\common.test.props" />
-
   <ItemGroup>
     <ProjectReference Include="..\..\src\FclEx\FclEx.csproj" />
-    <Compile Include="..\..\src\FclEx\Using.cs" />
   </ItemGroup>
 
   <ItemGroup>

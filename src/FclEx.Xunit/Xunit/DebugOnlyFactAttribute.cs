@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 using FclEx;
+using FclEx.Extensions;
 using FclEx.Utils;
 
 namespace Xunit

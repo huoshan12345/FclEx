@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using FclEx;
+using FclEx.Extensions;
 
 namespace Microsoft.Extensions.DependencyInjection
 {

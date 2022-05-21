@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using FclEx;
+using FclEx.Extensions;
 
 namespace Microsoft.Extensions.Logging
 {

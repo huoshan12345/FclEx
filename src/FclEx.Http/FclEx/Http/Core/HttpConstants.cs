@@ -1,4 +1,6 @@
-﻿namespace FclEx.Http.Core
+﻿using FclEx.Extensions;
+
+namespace FclEx.Http.Core
 {
     /// <summary>
     /// Contains the standard set of headers applicable to an HTTP request.

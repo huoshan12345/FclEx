@@ -16,7 +16,7 @@ namespace FclEx.SourceGenerator.Sources
         internal static (string FileName, string Code) Generate()
         {
             const string className = "MethodHelper";
-            const string methodName = "public static MethodInfo GetMethodInfo";
+            const string methodName = "public static MethodInfo GetMethod";
 
             using var builder = new SourceBuilder()
                 .WriteLine(GeneratedFilesHeader)

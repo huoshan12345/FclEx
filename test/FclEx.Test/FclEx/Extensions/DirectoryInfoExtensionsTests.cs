@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using FclEx.Extensions;
 using Xunit;
 
 namespace FclEx

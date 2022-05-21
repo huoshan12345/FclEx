@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FclEx;
+using FclEx.Extensions;
 
 namespace FclEx.Helpers
 {

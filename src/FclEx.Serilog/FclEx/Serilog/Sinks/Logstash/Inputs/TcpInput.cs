@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using FclEx.Extensions;
 
 namespace FclEx.Serilog.Sinks.Logstash.Inputs
 {

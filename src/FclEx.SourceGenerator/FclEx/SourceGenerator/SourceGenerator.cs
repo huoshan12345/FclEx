@@ -15,6 +15,7 @@ namespace FclEx.SourceGenerator
                 var codes = new[]
                 {
                     MethodHelperSource.Generate(),
+                    TypeExtensionsSource.Generate(),
                 };
 
                 foreach (var (file, code) in codes)

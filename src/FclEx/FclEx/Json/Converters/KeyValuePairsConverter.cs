@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
+using FclEx.Extensions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 

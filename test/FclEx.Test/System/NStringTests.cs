@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FclEx;
+using FclEx.Extensions;
 using Xunit;
 
 namespace System

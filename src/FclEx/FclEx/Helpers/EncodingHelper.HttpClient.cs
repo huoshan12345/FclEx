@@ -1,7 +1,9 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using Dawn;
 
-namespace System.Text
+namespace FclEx.Helpers
 {
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     partial class EncodingHelper

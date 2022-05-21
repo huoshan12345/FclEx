@@ -1,4 +1,5 @@
-﻿using FclEx.Json.Converters;
+﻿using FclEx.Extensions;
+using FclEx.Json.Converters;
 using Newtonsoft.Json;
 using Xunit;
 

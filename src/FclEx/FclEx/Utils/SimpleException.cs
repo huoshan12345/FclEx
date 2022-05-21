@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using FclEx.Extensions;
 using FclEx.Helpers;
 using static System.Environment;
 

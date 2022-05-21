@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using FclEx;
+using FclEx.Extensions;
 using FclEx.Http.Core.Cookies;
 using FclEx.Http.Proxy;
 

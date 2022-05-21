@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Dawn;
+using FclEx.Extensions;
 using FclEx.Helpers;
 using FclEx.Http.Core;
 using FclEx.Http.Core.Cookies;

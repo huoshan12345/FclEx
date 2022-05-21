@@ -1,4 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
+using FclEx.Extensions;
 using InterfaceBaseInvoke;
 
 namespace FclEx.Benchmarks

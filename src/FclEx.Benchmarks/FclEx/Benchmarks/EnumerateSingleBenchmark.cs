@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
+using FclEx.Extensions;
 
 namespace FclEx.Benchmarks
 {
@@ -29,7 +30,7 @@ namespace FclEx.Benchmarks
             }
 
             public T Current => _parent._value;
-            object IEnumerator.Current => Current;
+            object? IEnumerator.Current => Current;
 
             public void Dispose() { }
 

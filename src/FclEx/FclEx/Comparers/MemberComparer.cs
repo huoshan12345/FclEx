@@ -10,14 +10,14 @@ namespace FclEx.Comparers
     {
         private readonly struct OrderProperty
         {
-            public OrderProperty(Func<T?, object?> selector, bool desc, IComparer comparer)
+            public OrderProperty(Func<T, object?> selector, bool desc, IComparer comparer)
             {
                 Selector = selector;
                 Desc = desc;
                 Comparer = comparer;
             }
 
-            public readonly Func<T?, object?> Selector;
+            public readonly Func<T, object?> Selector;
             public readonly bool Desc;
             public readonly IComparer Comparer;
         }
@@ -26,21 +26,21 @@ namespace FclEx.Comparers
 
         public static MemberComparer<T> Create() => new();
 
-        public static MemberComparer<T> Create<TMember>(Expression<Func<T?, TMember?>> selector, bool desc = false)
+        public static MemberComparer<T> Create<TMember>(Expression<Func<T, TMember>> selector, bool desc = false)
         {
             var cmp = new MemberComparer<T>();
             return cmp.OrderBy(selector, desc);
         }
 
-        public MemberComparer<T> OrderBy<TProp>(Expression<Func<T?, TProp?>> selector, bool desc = false)
+        public MemberComparer<T> OrderBy<TProp>(Expression<Func<T, TProp>> selector, bool desc = false)
         {
             var unTypedExp = ExpressionHelper.ErasureType(selector);
-            var prop = new OrderProperty(unTypedExp.Compile(), desc, Comparer<TProp?>.Default);
+            var prop = new OrderProperty(unTypedExp.Compile(), desc, Comparer<TProp>.Default);
             _orderProperties.Add(prop);
             return this;
         }
 
-        private static int Compare(T? x, T? y, OrderProperty property)
+        private static int Compare(T x, T y, OrderProperty property)
         {
             var left = property.Selector(x);
             var right = property.Selector(y);
@@ -49,7 +49,7 @@ namespace FclEx.Comparers
                 : property.Comparer.Compare(left, right);
         }
 
-        public Comparison<T?> ToComparison()
+        public Comparison<T> ToComparison()
         {
             return (x, y) =>
             {
