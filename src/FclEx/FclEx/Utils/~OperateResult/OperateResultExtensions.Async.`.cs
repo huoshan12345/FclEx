@@ -8,22 +8,22 @@ partial class OperateResultExtensions
 {
     public static Task<OperateResult<T>> OkResult<T>(this Task<OperateResult<T>> @this, Action<OperateResult<T>> action)
     {
-        return @this.On(m => m.Successful, action);
+        return @this.On(m => m.Success, action);
     }
 
     public static Task<OperateResult<T>> OkResult<T>(this Task<OperateResult<T>> @this, Func<OperateResult<T>, Task> action)
     {
-        return @this.On(m => m.Successful, action);
+        return @this.On(m => m.Success, action);
     }
 
     public static Task<OperateResult<T>> ErrorResult<T>(this Task<OperateResult<T>> @this, Action<OperateResult<T>> action)
     {
-        return @this.On(r => r.HasError, action);
+        return @this.On(r => r.Error, action);
     }
 
     public static Task<OperateResult<T>> ErrorResult<T>(this Task<OperateResult<T>> @this, Func<OperateResult<T>, Task> action)
     {
-        return @this.On(r => r.HasError, action);
+        return @this.On(r => r.Error, action);
     }
 
     public static Task<OperateResult<T>> CancelResult<T>(this Task<OperateResult<T>> @this, Action<OperateResult<T>> action)
@@ -84,5 +84,17 @@ partial class OperateResultExtensions
     public static Task<OperateResult> Untype<T>(this Task<OperateResult<T>> task)
     {
         return task.ContinueWith(t => t.Result.Untype());
+    }
+
+    public static Task<OperateResult<TNext>> Next<T, TNext>(this Task<OperateResult<T>> task, Func<T, Task<OperateResult<TNext>>> func)
+    {
+        return task.ContinueWith<OperateResult<T>, OperateResult<TNext>>(t => t.Result.Success 
+            ? func(t.Result.Value) 
+            : t.Result.ToExplicit<TNext>().ToTask());
+    }
+
+    public static Task<OperateResult<TNext>> NextResult<T, TNext>(this Task<OperateResult<T>> task, Func<OperateResult<T>, Task<OperateResult<TNext>>> func)
+    {
+        return task.ContinueWith<OperateResult<T>, OperateResult<TNext>>(t => func(t.Result));
     }
 }

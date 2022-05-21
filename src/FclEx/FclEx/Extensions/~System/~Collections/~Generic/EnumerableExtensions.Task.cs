@@ -43,7 +43,7 @@ namespace FclEx.Extensions
                     var rs = await batch.Select(async m => (m, await Operate.ExcuteAsync(() => taskSelector(m)))).WhenAll();
                     foreach (var (i, o) in rs)
                     {
-                        if (o.Successful)
+                        if (o.Success)
                             success.Add((i, o.Value!));
                         else
                             failure.Add((i, o));
@@ -81,7 +81,7 @@ namespace FclEx.Extensions
                 else
                 {
                     var r = await Operate.ExcuteAsync(() => taskSelector(item));
-                    if (r.Successful)
+                    if (r.Success)
                         success.Add((item, r.Value!));
                     else
                         failure.Add((item, r));
@@ -142,7 +142,7 @@ namespace FclEx.Extensions
                 {
                     var r = await taskSelector(obj).DonotCapture();
                     span += r.Elapsed;
-                    if (r.Successful)
+                    if (r.Success)
                     {
                         list.Add(r.Value!);
                     }

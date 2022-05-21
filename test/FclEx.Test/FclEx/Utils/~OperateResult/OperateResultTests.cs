@@ -10,7 +10,7 @@ namespace FclEx.Utils
         {
             const int expected = 1;
             var r = Test(expected);
-            Assert.True(r.Successful);
+            Assert.True(r.Success);
             Assert.Equal(expected, r.Value);
 
             OperateResult<int> Test(int input)
@@ -23,7 +23,7 @@ namespace FclEx.Utils
         public void ImplicitOperator_FromString()
         {
             var r = Test();
-            Assert.False(r.Successful);
+            Assert.False(r.Success);
             Assert.IsType<SimpleException>(r.Exception);
 
             OperateResult<int> Test()
@@ -37,7 +37,7 @@ namespace FclEx.Utils
         {
             var ex = new ArgumentException();
             var r = Test(ex);
-            Assert.False(r.Successful);
+            Assert.False(r.Success);
             Assert.IsType(ex.GetType(), r.Exception);
 
             OperateResult<int> Test(Exception e)

@@ -26,7 +26,7 @@ namespace FclEx.Actions
         public async Task<OperateResult<(T, TNext)>> ExecuteAsync(CancellationToken token = default)
         {
             var result = await _action.ExecuteAsync(token).DonotCapture();
-            if (!result.Successful)
+            if (!result.Success)
                 return result.ToExplicit<(T, TNext)>();
 
             var item = result.Value!;
@@ -39,7 +39,7 @@ namespace FclEx.Actions
             }
 
             var nextResult = await nextActor.ExecuteAsync(token).DonotCapture();
-            if (!nextResult.Successful)
+            if (!nextResult.Success)
                 return _prevWhenNextError
                     ? ((item, default!), result.Elapsed)
                     : nextResult.ToExplicit<(T, TNext)>();

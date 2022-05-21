@@ -16,7 +16,7 @@ namespace FclEx.Utils
                 .ToTask()
                 .Ok((_, t) => timeSpan = t);
 
-            Assert.True(result.Successful);
+            Assert.True(result.Success);
             Assert.Equal(elapsed, timeSpan);
         }
     }

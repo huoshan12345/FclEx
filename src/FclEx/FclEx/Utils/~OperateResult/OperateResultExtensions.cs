@@ -11,7 +11,7 @@ public static partial class OperateResultExtensions
 {
     public static void Deconstruct(this OperateResult result, out bool successful, out Exception? ex, out TimeSpan elapsed)
     {
-        successful = result.Successful;
+        successful = result.Success;
         elapsed = result.Elapsed;
         ex = result.Exception;
     }
@@ -19,7 +19,7 @@ public static partial class OperateResultExtensions
     [SuppressMessage("ReSharper", "UseDeconstructionOnParameter")]
     public static void Deconstruct(this OperateResult result, out bool successful, out Exception? ex)
     {
-        successful = result.Successful;
+        successful = result.Success;
         ex = result.Exception;
     }
     

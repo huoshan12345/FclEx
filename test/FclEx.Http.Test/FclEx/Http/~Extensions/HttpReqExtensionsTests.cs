@@ -52,7 +52,7 @@ namespace FclEx.Http
                     flag = true;
                     Assert.IsType<TaskCanceledException>(e);
                 });
-            Assert.False(!flag ^ r.Successful);
+            Assert.False(!flag ^ r.Success);
         }
 
         [Fact]
@@ -65,7 +65,7 @@ namespace FclEx.Http
                     flag = true;
                     Assert.IsType<OperationCanceledException>(e);
                 });
-            Assert.False(!flag ^ r.Successful);
+            Assert.False(!flag ^ r.Success);
         }
     }
 }

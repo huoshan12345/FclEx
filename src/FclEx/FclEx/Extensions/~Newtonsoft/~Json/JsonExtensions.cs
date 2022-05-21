@@ -173,7 +173,7 @@ namespace FclEx.Extensions
             if (str.IsPossibleJson())
             {
                 var r = Operate.Excute(() => JToken.Parse(str));
-                if (r.Successful)
+                if (r.Success)
                 {
                     token = r.Value!;
                     return true;
@@ -188,7 +188,7 @@ namespace FclEx.Extensions
             if (str.IsPossibleJObject())
             {
                 var r = Operate.Excute(() => JObject.Parse(str!));
-                if (r.Successful)
+                if (r.Success)
                 {
                     token = r.Value!;
                     return true;
@@ -203,7 +203,7 @@ namespace FclEx.Extensions
             if (str.IsPossibleJArray())
             {
                 var r = Operate.Excute(() => JArray.Parse(str));
-                if (r.Successful)
+                if (r.Success)
                 {
                     token = r.Value!;
                     return true;

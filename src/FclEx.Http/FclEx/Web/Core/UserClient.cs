@@ -191,7 +191,7 @@ namespace FclEx.Web.Core
                     .Error(ex => Logger.LogWarning(ex, "Failed to fake login : " + ex.Message))
                     .DonotCapture();
 
-                if (result.HasError && loginIfFail)
+                if (result.Error && loginIfFail)
                 {
                     result = await DoLoginInternal(t).DonotCapture();
                 }

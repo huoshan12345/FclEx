@@ -29,7 +29,7 @@ namespace FclEx.Web
             var account = new UserAccount("user", "password");
             var client = new TestUserClient(ServiceProvider.GetRequiredService<ILoggerFactory>());
             var result = await client.Login();
-            Assert.True(result.Successful);
+            Assert.True(result.Success);
         }
     }
 }

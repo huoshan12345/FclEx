@@ -55,7 +55,7 @@ namespace FclEx.Actions
             Guard.Argument(onError, nameof(onError)).NotNull();
             return action.NextResult(r =>
             {
-                if (!r.Successful)
+                if (!r.Success)
                 {
                     Operate.Excute(() => onError(r.Exception!));
                 }

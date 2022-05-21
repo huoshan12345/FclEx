@@ -76,7 +76,7 @@ namespace FclEx.Actions
                 while (!cts.IsCancellationRequested)
                 {
                     var r = await actor.ExecuteAsync(t).DonotCapture();
-                    if (!r.Successful)
+                    if (!r.Success)
                         return r;
 
                     if (until != null && until(r.Value!))

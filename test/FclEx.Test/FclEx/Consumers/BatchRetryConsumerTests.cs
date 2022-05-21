@@ -95,7 +95,7 @@ namespace FclEx.Consumers
             consumer.AddRange(Enumerable.Range(1, 10));
             consumer.CompleteAdding();
             var r = await Operate.ExcuteAsync(() => consumer.Start(), TimeSpan.FromSeconds(5));
-            Assert.True(r.Successful);
+            Assert.True(r.Success);
             Assert.True(consumer.IsComplete);
             Assert.Equal(10, consumer.Counter.Consume);
         }
@@ -109,7 +109,7 @@ namespace FclEx.Consumers
             consumer.AddRange(Enumerable.Range(1, 10));
             consumer.CompleteAdding();
             var r = await task;
-            Assert.True(r.Successful);
+            Assert.True(r.Success);
             Assert.True(consumer.IsComplete);
             Assert.Equal(10, consumer.Counter.Consume);
         }

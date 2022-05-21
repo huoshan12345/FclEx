@@ -16,11 +16,11 @@ public readonly struct OperateResult<T>
 
     [MemberNotNullWhen(true, nameof(Value))]
     [MemberNotNullWhen(false, nameof(Exception))]
-    public bool Successful => Exception is null;
+    public bool Success => Exception is null;
 
     [MemberNotNullWhen(false, nameof(Value))]
     [MemberNotNullWhen(true, nameof(Exception))]
-    public bool HasError => Exception is not null;
+    public bool Error => Exception is not null;
 
     /// <summary>
     /// Create an erroneous result
@@ -91,7 +91,7 @@ public readonly struct OperateResult<T>
 
     public static implicit operator OperateResult(OperateResult<T> result)
     {
-        return result.Successful
+        return result.Success
             ? CreateSuccess(result.Elapsed)
             : CreateError(result.Code, result.Exception!, result.Elapsed);
     }
@@ -108,7 +108,7 @@ public readonly struct OperateResult<T>
 
     public OperateResult<TDest> ToExplicit<TDest>(Func<T, TDest> func)
     {
-        return Successful
+        return Success
             ? new OperateResult<TDest>(func(Value)!, Elapsed)
             : new OperateResult<TDest>(Code, Exception!, Elapsed);
     }
