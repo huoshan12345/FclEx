@@ -15,7 +15,7 @@ namespace FclEx.Helpers
             var watch = ValueStopwatch.StartNew();
             await TaskHelper.Delay(10, cts.Token);
             var time = watch.GetElapsedTime();
-            Assert.True(time.TotalSeconds < 1, time.TotalSeconds.ToString());
+            Assert.True(time.TotalSeconds < 2, time.TotalSeconds.ToString());
         }
 
         [Fact]
