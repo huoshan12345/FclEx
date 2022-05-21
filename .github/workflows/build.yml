@@ -18,10 +18,11 @@ jobs:
     steps:
     - name: Set variables
       run: |
-        VER=$(cat /build/version)
+        VER=$(cat ./build/version)
         echo "VERSION=$VER" >> $GITHUB_ENV
     
   build-windows:
+    needs: pre_build
     runs-on: windows-latest
     steps:
       - name: Checkout
