@@ -15,7 +15,7 @@ namespace FclEx.Utils
         }
 
         public TimerLazy(Func<T> valueFactory, TimeSpan period, Action<TimerLazy<T>, T>? discardValueHandler = null)
-            : this(valueFactory, period, period, true, discardValueHandler)
+            : this(valueFactory, default, period, true, discardValueHandler)
         {
         }
 
