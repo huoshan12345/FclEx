@@ -32,6 +32,14 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmark", "benchmark", "{82145F29-EBC3-49B3-A96C-0CA1F040E231}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{93386705-90E4-4C54-9800-4CCA92A7EC15}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\build.yml = .github\workflows\build.yml
+		build\incre_ver.ps1 = build\incre_ver.ps1
+		build\pack.ps1 = build\pack.ps1
+		build\share.ps1 = build\share.ps1
+		build\test_all.ps1 = build\test_all.ps1
+		build\version = build\version
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Xunit", "src\FclEx.Xunit\FclEx.Xunit.csproj", "{B6B0D4F5-8E10-4D7F-8E67-079A3714104F}"
 EndProject
