@@ -245,3 +245,6 @@ BenchmarkDotNet.Artifacts/
 
 # rider
 .idea/
+
+
+~Generated/
