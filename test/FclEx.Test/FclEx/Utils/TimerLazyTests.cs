@@ -17,7 +17,7 @@ namespace FclEx.Utils
             Assert.NotNull(value);
             Assert.True(lazy.IsValueCreated);
 
-            ThreadHelper.Sleep((int)Math.Ceiling(span.TotalSeconds));
+            ThreadHelper.Sleep((int)Math.Ceiling(span.TotalSeconds) + 1);
             Assert.False(lazy.IsValueCreated);
             Assert.False(value.IsDisposed);
 

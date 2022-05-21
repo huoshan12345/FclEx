@@ -18,9 +18,15 @@ namespace FclEx.Extensions.JsonExtensions
         [Fact]
         public void DateTimeToJsonCamel_Test()
         {
-            var obj = new DateTimeTester() { DateTime = new DateTime(2019, 1, 2, 3, 4, 5, DateTimeKind.Unspecified) };
-            var json = obj.ToJsonCamel();
-            Assert.Equal("{\"name\":null,\"dateTime\":\"2019-01-02T03:04:05+08:00\"}", json);
+            foreach (var kind in Enum.GetValues<DateTimeKind>())
+            {
+                var obj = new DateTimeTester() { DateTime = new DateTime(2019, 1, 2, 3, 4, 5, kind) };
+                var json = obj.ToJsonCamel();
+                var obj2 = json.ToJToken().ToObject<DateTimeTester>();
+                Assert.Equal(obj.Name, obj2.Name);
+                Assert.Equal(obj.DateTime.ToUtc(), obj2.DateTime.ToUtc());
+            }
+
         }
 
         [Fact]

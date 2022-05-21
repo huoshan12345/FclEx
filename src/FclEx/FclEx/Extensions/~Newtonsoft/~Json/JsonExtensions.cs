@@ -24,7 +24,7 @@ namespace FclEx.Extensions
         public static string ToJson(this object? obj,
             Formatting formatting = Formatting.None,
             bool ignoreNull = false,
-            DateTimeZoneHandling dateTimeZoneHandling = DateTimeZoneHandling.Local,
+            DateTimeZoneHandling dateTimeZoneHandling = DateTimeZoneHandling.Utc,
             bool useCamelCase = false,
             string? dateTimeFormat = null)
         {
@@ -34,7 +34,7 @@ namespace FclEx.Extensions
         public static string ToJsonCamel(this object? obj,
             Formatting formatting = Formatting.None,
             bool ignoreNull = false,
-            DateTimeZoneHandling dateTimeZoneHandling = DateTimeZoneHandling.Local,
+            DateTimeZoneHandling dateTimeZoneHandling = DateTimeZoneHandling.Utc,
             string? dateTimeFormat = null)
         {
             return obj.ToJson(new JsonOptions(formatting, ignoreNull, dateTimeZoneHandling, true, dateTimeFormat));

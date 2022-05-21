@@ -11,25 +11,21 @@ namespace FclEx.Helpers
         [Fact]
         public async Task Delay_WithToken_Test()
         {
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(0.5)))
-            {
-                var watch = ValueStopwatch.StartNew();
-                await TaskHelper.Delay(10, cts.Token);
-                var time = watch.GetElapsedTime();
-                Assert.True(time.TotalSeconds < 1);
-            }
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(0.5));
+            var watch = ValueStopwatch.StartNew();
+            await TaskHelper.Delay(10, cts.Token);
+            var time = watch.GetElapsedTime();
+            Assert.True(time.TotalSeconds < 1, time.TotalSeconds.ToString());
         }
 
         [Fact]
         public async Task DelayMilli_WithToken_Test()
         {
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(0.5)))
-            {
-                var watch = ValueStopwatch.StartNew();
-                await TaskHelper.DelayMilli(10 * 1000, cts.Token);
-                var time = watch.GetElapsedTime();
-                Assert.True(time.TotalSeconds < 1);
-            }
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(0.5));
+            var watch = ValueStopwatch.StartNew();
+            await TaskHelper.DelayMilli(10 * 1000, cts.Token);
+            var time = watch.GetElapsedTime();
+            Assert.True(time.TotalSeconds < 1, time.TotalSeconds.ToString());
         }
     }
 }
