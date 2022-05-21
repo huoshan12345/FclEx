@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Dawn;
 using FclEx.Extensions;
 using FclEx.Helpers;
 using FclEx.Utils;
@@ -22,7 +21,7 @@ namespace FclEx.Consumers
 
         public AutoRetryConsumer(int maxRetryTimes = 3, Func<int, int>? retryDelay = null)
         {
-            Guard.Argument(maxRetryTimes, nameof(maxRetryTimes)).Min(0);
+            Check.NotLessThan(maxRetryTimes, 0);
             _maxRetryTimes = maxRetryTimes;
             _retryDelay = retryDelay ?? (x => x);
         }

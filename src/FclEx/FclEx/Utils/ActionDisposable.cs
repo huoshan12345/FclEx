@@ -1,5 +1,4 @@
 ﻿using System;
-using Dawn;
 
 namespace FclEx.Utils
 {
@@ -9,7 +8,7 @@ namespace FclEx.Utils
 
         public ActionDisposable(Action action)
         {
-            _action = Guard.Argument(action, nameof(action)).NotNull();
+            _action = Check.NotNull(action);
         }
 
         public void Dispose()

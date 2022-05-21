@@ -1,4 +1,4 @@
-﻿using Dawn;
+﻿using FclEx;
 
 namespace FclEx.Extensions
 {
@@ -6,8 +6,8 @@ namespace FclEx.Extensions
     {
         public static int PageCount(this int total, int pageSize)
         {
-            Guard.Argument(total, nameof(total)).NotNegative();
-            Guard.Argument(pageSize, nameof(pageSize)).Positive();
+            Check.NotNegative(total);
+            Check.Positive(pageSize);
 
             if (total == 0) return 0;
             return (total - 1) / pageSize + 1;

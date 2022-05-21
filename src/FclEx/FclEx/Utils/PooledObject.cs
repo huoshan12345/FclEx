@@ -1,5 +1,4 @@
 ﻿using System;
-using Dawn;
 using Microsoft.Extensions.ObjectPool;
 
 namespace FclEx.Utils
@@ -12,7 +11,7 @@ namespace FclEx.Utils
 
         public PooledObject(ObjectPool<T> pool)
         {
-            _pool = Guard.Argument(pool, nameof(pool)).NotNull();
+            _pool = Check.NotNull(pool);
             _value = pool.Get();
             _isDisposed = false;
         }

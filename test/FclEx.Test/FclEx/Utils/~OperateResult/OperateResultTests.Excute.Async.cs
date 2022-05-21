@@ -13,7 +13,7 @@ namespace FclEx.Utils
         {
             var (successful, exception, elapsed) = await Operate.ExcuteAsync(() => TaskHelper.Delay(10), TimeSpan.FromSeconds(1));
             Assert.False(successful);
-            Assert.True(elapsed < TimeSpan.FromSeconds(1.1));
+            Assert.True(elapsed < TimeSpan.FromSeconds(2), elapsed.ToString());
             Assert.IsType<TimeoutException>(exception);
         }
 

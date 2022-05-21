@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Dawn;
 
 namespace FclEx.Extensions
 {
@@ -79,9 +79,9 @@ namespace FclEx.Extensions
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         public static TProp[] ToArrayByIndex<T, TProp>(this IEnumerable<T> enumerable, Func<T, int> indexSelector, Func<T, TProp> valueSelector)
         {
-            Guard.Argument(enumerable, nameof(enumerable)).NotNull();
-            Guard.Argument(indexSelector, nameof(indexSelector)).NotNull();
-            Guard.Argument(valueSelector, nameof(valueSelector)).NotNull();
+            Check.NotNull(enumerable);
+            Check.NotNull(indexSelector);
+            Check.NotNull(valueSelector);
 
             if (!enumerable.Any())
                 return Array.Empty<TProp>();
@@ -205,6 +205,17 @@ namespace FclEx.Extensions
 
                 yield return (current, i, i == 0, true);
             }
+        }
+
+        public static bool AnyExt<T>(this IEnumerable<T> enumerable)
+        {
+            Check.NotNull(enumerable);
+
+            if (enumerable is IReadOnlyCollection<T> collection)
+            {
+                return collection.Count > 0;
+            }
+            return enumerable.Any();
         }
     }
 }

@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using Dawn;
 using FclEx;
 
 namespace System.Reflection
@@ -12,7 +11,7 @@ namespace System.Reflection
     {
         public DataMemberInfo(FieldInfo field)
         {
-            MemberInfo = Guard.Argument(field, nameof(field)).NotNull();
+            MemberInfo = Check.NotNull(field);
             IsCompilerGenerated = MemberInfo.IsDefined(typeof(CompilerGeneratedAttribute), false);
             CanRead = true;
             CanWrite = true;
@@ -28,7 +27,7 @@ namespace System.Reflection
 
         public DataMemberInfo(PropertyInfo property)
         {
-            MemberInfo = Guard.Argument(property, nameof(property)).NotNull();
+            MemberInfo = Check.NotNull(property);
             IsCompilerGenerated = MemberInfo.IsDefined(typeof(CompilerGeneratedAttribute), false);
             CanRead = property.CanRead;
             CanWrite = property.CanWrite;

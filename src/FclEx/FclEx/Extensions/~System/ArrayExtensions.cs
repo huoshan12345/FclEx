@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using Dawn;
 
 namespace FclEx.Extensions
 {
@@ -52,8 +51,8 @@ namespace FclEx.Extensions
 
         public static IEnumerable<ArraySegment<T>> Segments<T>(this T[] array, int maxSize)
         {
-            Guard.Argument(array, nameof(array)).NotNull();
-            Guard.Argument(maxSize, nameof(maxSize)).GreaterThan(0, (value, other) => "The size of segment cannot be less than " + other);
+            Check.NotNull(array);
+            Check.GreaterThan(maxSize, 0);
 
             var count = (array.Length - 1) / maxSize + 1;
             for (var i = 0; i < count; i++)

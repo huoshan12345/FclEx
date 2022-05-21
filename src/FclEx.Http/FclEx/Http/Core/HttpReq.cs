@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Text;
-using Dawn;
 using FclEx.Extensions;
 using FclEx.Helpers;
 using FclEx.Utils;
@@ -167,21 +166,21 @@ namespace FclEx.Http.Core
 
         public HttpReq AddQueryValue(string key, string? value)
         {
-            Guard.Argument(key, nameof(key)).NotNull();
+            Check.NotNull(key);
             QueryMap[key.Trim()] = value.ToStringOrEmpty().Trim();
             return this;
         }
 
         public HttpReq AddFormValue(string key, string? value)
         {
-            Guard.Argument(key, nameof(key)).NotNull();
+            Check.NotNull(key);
             FormMap[key.Trim()] = value.ToStringOrEmpty().Trim();
             return this;
         }
 
         public HttpReq AddHeader(string key, string? value)
         {
-            Guard.Argument(key, nameof(key)).NotNull();
+            Check.NotNull(key);
             HeaderMap[key.Trim()] = value.ToStringOrEmpty().Trim();
             return this;
         }

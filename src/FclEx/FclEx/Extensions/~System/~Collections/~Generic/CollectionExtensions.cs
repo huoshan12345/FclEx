@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Dawn;
 
 namespace FclEx.Extensions
 {
@@ -7,7 +6,7 @@ namespace FclEx.Extensions
     {
         public static ICollection<T> AddIfNotNull<T>(this ICollection<T> source, T item)
         {
-            Guard.Argument(source, nameof(source)).NotNull();
+            Check.NotNull(source);
             if (!(item is null))
                 source.Add(item);
             return source;

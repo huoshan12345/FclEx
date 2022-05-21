@@ -1,5 +1,4 @@
-﻿using Dawn;
-using Serilog;
+﻿using Serilog;
 using Serilog.Configuration;
 using Serilog.Events;
 using Serilog.Sinks.PeriodicBatching;
@@ -10,7 +9,8 @@ namespace FclEx.Serilog.Sinks.Logstash
     {
         public static LoggerConfiguration Logstash(this LoggerSinkConfiguration config, LogstashSinkOptions options)
         {
-            Guard.Argument(value: options, name: nameof(options)).NotNull();
+            Check.NotNull(config);
+            Check.NotNull(options);
 
             var op = new PeriodicBatchingSinkOptions
             {

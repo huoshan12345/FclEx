@@ -4,7 +4,6 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using Dawn;
 using FclEx.Helpers;
 
 namespace FclEx.Extensions
@@ -159,11 +158,11 @@ namespace FclEx.Extensions
         public static T ToUnmanagedStruct<T>(this byte[] bytes, ref int startIndex)
             where T : struct
         {
-            Guard.Argument(bytes, nameof(bytes)).NotNull();
-            Guard.Argument(startIndex, nameof(startIndex)).Min(0);
+            Check.NotNull(bytes);
+            Check.NotLessThan(startIndex, 0);
 
             var length = Marshal.SizeOf<T>();
-            Guard.Argument(bytes.Length, nameof(bytes.Length)).Min(length + startIndex);
+            Check.NotLessThan(bytes.Length, length + startIndex);
 
             using var ptr = MarshalHelper.AllocHGlobal(length);
             var p = ptr.Value;
@@ -183,13 +182,13 @@ namespace FclEx.Extensions
         public static T[] ToUnmanagedStructs<T>(this byte[] bytes, ref int startIndex, int count)
             where T : struct
         {
-            Guard.Argument(bytes, nameof(bytes)).NotNull();
-            Guard.Argument(startIndex, nameof(startIndex)).Min(0);
-            Guard.Argument(count, nameof(count)).Min(1);
+            Check.NotNull(bytes);
+            Check.NotLessThan(startIndex, 0);
+            Check.NotLessThan(count, 1);
 
             var length = Marshal.SizeOf<T>();
             var totalBytes = length * count;
-            Guard.Argument(bytes.Length, nameof(bytes.Length)).Min(totalBytes + startIndex);
+            Check.NotLessThan(bytes.Length, totalBytes + startIndex);
 
             var result = new T[count];
             using var ptr = MarshalHelper.AllocHGlobal(length);
@@ -226,7 +225,8 @@ namespace FclEx.Extensions
 
         public static byte[] ToUnmanagedBytes<T>(this IList<T> list) where T : struct
         {
-            Guard.Argument(list, nameof(list)).NotNull().NotEmpty();
+            Check.NotNull(list);
+            Check.NotEmpty(list);
 
             var length = Marshal.SizeOf<T>();
             var totalBytes = length * list.Count;

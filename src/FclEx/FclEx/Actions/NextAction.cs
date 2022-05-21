@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Dawn;
 using FclEx.Extensions;
 using FclEx.Utils;
 
@@ -14,8 +13,8 @@ namespace FclEx.Actions
 
         public NextAction(IAction<T> action, Func<T, IAction<TNext>?> next)
         {
-            _action = Guard.Argument(action, nameof(action)).NotNull().Value;
-            _next = Guard.Argument(next, nameof(next)).NotNull();
+            _action = Check.NotNull(action);
+            _next = Check.NotNull(next);
         }
 
         public async Task<OperateResult<TNext>> ExecuteAsync(CancellationToken token = default)
@@ -48,8 +47,8 @@ namespace FclEx.Actions
     //    {
     //        _errorWhenNextNull = errorWhenNextNull;
     //        _prevWhenNextError = prevWhenNextError;
-    //        _action = Guard.Argument(action, nameof(action)).NotNull().Value;
-    //        _next = Guard.Argument(next, nameof(next)).NotNull();
+    //        _action = Check.NotNull(action).Value;
+    //        _next = Check.NotNull(next);
     //    }
 
     //    public async Task<OperateResult<T>> ExecuteAsync(CancellationToken token = default)

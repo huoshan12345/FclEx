@@ -1,5 +1,4 @@
 ﻿using System;
-using Dawn;
 using FclEx.Http.Core;
 using FclEx.Http.Services;
 using FclEx.Utils;
@@ -21,20 +20,20 @@ namespace FclEx.Actions
         public static IAction<HttpRes> NextReq<T>(this IAction<(HttpRes, T)> action, Func<T, HttpReq> func,
             IHttpService? httpService = null, bool unwrapError = true)
         {
-            Guard.Argument(func, nameof(func)).NotNull();
+            Check.NotNull(func);
             return action.Next((res, data) => func(data).ToAction(httpService, unwrapError));
         }
 
         public static IAction<HttpRes> NextReq<T>(this IAction<T> action, Func<T, HttpReq> func,
             IHttpService? httpService = null, bool unwrapError = true)
         {
-            Guard.Argument(func, nameof(func)).NotNull();
+            Check.NotNull(func);
             return action.Next(data => func(data).ToAction(httpService, unwrapError));
         }
 
         public static IAction<HttpRes>? TryRedirect(this HttpRes res, IHttpService httpService, Func<HttpRes, string?> urlFunc)
         {
-            Guard.Argument(urlFunc, nameof(urlFunc)).NotNull();
+            Check.NotNull(urlFunc);
             var url = urlFunc(res);
             return url == null ? null : HttpReq.Get(url).ToAction(httpService);
         }
@@ -46,13 +45,13 @@ namespace FclEx.Actions
 
         public static IAction<HttpRes> NextReq<T>(this IAction<T> action, HttpReq httpReq, IHttpService? httpService = null, bool unwrapError = true)
         {
-            Guard.Argument(httpReq, nameof(httpReq)).NotNull();
+            Check.NotNull(httpReq);
             return action.NextReq(m => httpReq, httpService, unwrapError);
         }
 
         public static IAction<T> Error<T>(this IAction<T> action, Action<Exception> onError)
         {
-            Guard.Argument(onError, nameof(onError)).NotNull();
+            Check.NotNull(onError);
             return action.NextResult(r =>
             {
                 if (!r.Success)

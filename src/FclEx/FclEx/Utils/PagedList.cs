@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Dawn;
 
 namespace FclEx.Utils
 {
@@ -37,9 +36,9 @@ namespace FclEx.Utils
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         public PagedList(IEnumerable<T> items, int pageIndex, int pageSize, int totalCount)
         {
-            Guard.Argument(items, nameof(items)).NotNull();
-            Guard.Argument(pageIndex, nameof(pageIndex)).Min(0);
-            Guard.Argument(totalCount, nameof(totalCount)).Min(0);
+            Check.NotNull(items);
+            Check.NotLessThan(pageIndex, 0);
+            Check.NotLessThan(totalCount, 0);
 
             if (pageSize < 1 && totalCount > 0)
                 throw new ArgumentOutOfRangeException(nameof(pageSize), pageSize, "Value can not be less than 1.");

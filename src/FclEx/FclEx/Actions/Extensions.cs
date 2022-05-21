@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Dawn;
 using FclEx;
 using FclEx.Extensions;
 using FclEx.Helpers;
@@ -35,8 +34,8 @@ namespace FclEx.Actions
 
         public static IAction<T> ErrorIf<T>(this IAction<T> action, Func<T, bool> condition, Func<T, string> errorFunc)
         {
-            Guard.Argument(condition, nameof(condition)).NotNull();
-            Guard.Argument(errorFunc, nameof(errorFunc)).NotNull();
+            Check.NotNull(condition);
+            Check.NotNull(errorFunc);
             return action.Next(t => condition(t)
                 ? (IAction<T>)new ErrorAction<T>(errorFunc(t))
                 : new SuccessAction<T>(t));
@@ -55,8 +54,8 @@ namespace FclEx.Actions
 
         public static IAction<T> InsertIf<T, TNext>(this IAction<T> action, Func<T, bool> condition, Func<T, IAction<TNext>> next)
         {
-            Guard.Argument(condition, nameof(condition)).NotNull();
-            Guard.Argument(next, nameof(next)).NotNull();
+            Check.NotNull(condition);
+            Check.NotNull(next);
 
             return action.Next(t => condition(t)
                 ? next(t).Map(m => t)
@@ -95,13 +94,13 @@ namespace FclEx.Actions
 
         public static IAction<T> Error<T>(this IAction<T> action, Func<T, string> errorFunc)
         {
-            Guard.Argument(errorFunc, nameof(errorFunc)).NotNull();
+            Check.NotNull(errorFunc);
             return action.Next(t => new ErrorAction<T>(errorFunc(t)));
         }
 
         public static IAction<TNext> Error<T, TNext>(this IAction<T> action, Func<T, string> errorFunc)
         {
-            Guard.Argument(errorFunc, nameof(errorFunc)).NotNull();
+            Check.NotNull(errorFunc);
             return action.Next(t => new ErrorAction<T>(errorFunc(t))).Map(m => default(TNext))!;
         }
 

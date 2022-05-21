@@ -1,5 +1,4 @@
 ﻿using System;
-using Dawn;
 
 namespace FclEx.Extensions
 {
@@ -9,7 +8,7 @@ namespace FclEx.Extensions
 
         public static string NextString(this Random random, int length)
         {
-            Guard.Argument(random, nameof(random)).NotNull();
+            Check.NotNull(random);
             var stringChars = new char[length];
             for (var i = 0; i < stringChars.Length; ++i)
             {
@@ -20,21 +19,21 @@ namespace FclEx.Extensions
 
         public static long NextLong(this Random random, long max = long.MaxValue)
         {
-            Guard.Argument(random, nameof(random)).NotNull();
-            Guard.Argument(max, nameof(max)).NotNegative();
+            Check.NotNull(random);
+            Check.NotNegative(max);
             return (long)(random.NextDouble() * max);
         }
 
         public static short NextShort(this Random random, short max = short.MaxValue)
         {
-            Guard.Argument(random, nameof(random)).NotNull();
-            Guard.Argument(max, nameof(max)).NotNegative();
+            Check.NotNull(random);
+            Check.NotNegative(max);
             return (short)(random.NextDouble() * max);
         }
 
         public static DateTime NextDateTime(this Random random, DateTime? min = null, DateTime? max = null)
         {
-            Guard.Argument(random, nameof(random)).NotNull();
+            Check.NotNull(random);
 
             if (min.HasValue && max.HasValue && min > max)
                 throw new ArgumentOutOfRangeException(nameof(min), "the min value cannot be greater than the max value.");
@@ -47,7 +46,7 @@ namespace FclEx.Extensions
 
         public static bool NextBool(this Random random)
         {
-            Guard.Argument(random, nameof(random)).NotNull();
+            Check.NotNull(random);
             return random.NextDouble() >= 0.5;
         }
 
@@ -99,8 +98,8 @@ namespace FclEx.Extensions
 
         //public static object NextObject(this Random random, Type type)
         //{
-        //    Guard.Argument(random, nameof(random)).NotNull();
-        //    Guard.Argument(type, nameof(type)).NotNull();
+        //    Check.NotNull(random);
+        //    Check.NotNull(type);
 
         //    var obj = Activator.CreateInstance(type);
         //    var props = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)

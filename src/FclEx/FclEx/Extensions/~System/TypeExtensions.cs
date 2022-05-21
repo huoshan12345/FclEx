@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Dawn;
 using FclEx.Helpers;
 
 namespace FclEx.Extensions
@@ -13,7 +12,7 @@ namespace FclEx.Extensions
     {
         public static object? DefaultValueByExp(this Type type)
         {
-            Guard.Argument(type, nameof(type)).NotNull();
+            Check.NotNull(type);
 
             // We want an Func<object> which returns the default.
             // Create that expression here.
@@ -31,7 +30,7 @@ namespace FclEx.Extensions
 
         public static object CreateObject(this Type type, params object?[] args)
         {
-            Guard.Argument(type, nameof(type)).NotNull();
+            Check.NotNull(type);
 
             if (args.IsNullOrEmpty())
                 return Activator.CreateInstance(type)!;
@@ -53,7 +52,7 @@ namespace FclEx.Extensions
 
         public static MethodInfo GetMethod(this Type type, string methodName, int pParametersCount = 0, int pGenericArgumentsCount = 0)
         {
-            Guard.Argument(type, nameof(type)).NotNull();
+            Check.NotNull(type);
 
             return type.GetMethods()
                     .Where(m => m.Name == methodName)

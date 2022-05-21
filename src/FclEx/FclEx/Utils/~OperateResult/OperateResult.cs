@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
-using Dawn;
 using FclEx.Extensions;
 using static FclEx.Utils.Operate;
 
@@ -30,7 +29,7 @@ public readonly struct OperateResult<T>
     /// <param name="elapsed"></param>
     public OperateResult(int code, Exception ex, TimeSpan elapsed)
     {
-        Code = Guard.Argument(code, nameof(code)).NotEqual(OperateResultCodes.Success);
+        Code = Check.NotEqualTo(code, OperateResultCodes.Success);
         Exception = ex ?? throw new ArgumentNullException(nameof(ex));
         Elapsed = elapsed;
         Value = default;

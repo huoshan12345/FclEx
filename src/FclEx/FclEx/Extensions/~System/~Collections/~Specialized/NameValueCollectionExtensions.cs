@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using Dawn;
 using FclEx.Utils;
 using Newtonsoft.Json.Linq;
 
@@ -67,7 +66,7 @@ namespace FclEx.Extensions
             var obj = new JObject();
             foreach (var k in col.AllKeys.NotNull())
             {
-                var values = Enumerable.ToHashSet(col.GetValues(k).Touch());
+                var values = col.GetValues(k).Touch().ToHashSet();
                 if (values.Count > 0)
                     obj.Add(k, values.ToJToken(policy));
             }
@@ -76,7 +75,9 @@ namespace FclEx.Extensions
 
         internal static JToken ToJToken(this ISet<string> values, DupPolicy policy)
         {
-            Guard.Argument(values, nameof(values)).NotNull().NotEmpty();
+            Check.NotNull(values);
+            Check.NotEmpty(values);
+
             if (values.Count == 1) return JToken.FromObject(values.First());
             switch (policy)
             {

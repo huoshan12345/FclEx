@@ -4,12 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Dawn;
 using FclEx.Extensions;
 using FclEx.Helpers;
 using FclEx.Utils;
 using Microsoft.Extensions.Logging;
 using MoreLinq;
+using FclEx;
 
 namespace FclEx.Consumers
 {
@@ -29,9 +29,9 @@ namespace FclEx.Consumers
 
         public BatchConsumer(int batchSize, TimeSpan batchTimeout, int maxRetryTimes = 3)
         {
-            _batchSize = Guard.Argument(batchSize, nameof(batchSize)).Min(1);
-            _batchTimeout = Guard.Argument(batchTimeout, nameof(batchTimeout)).Min(TimeSpan.Zero);
-            _maxRetryTimes = Guard.Argument(maxRetryTimes, nameof(maxRetryTimes)).Min(0);
+            _batchSize = Check.GreaterThan(batchSize, 0);
+            _batchTimeout = Check.NotLessThan(batchTimeout, TimeSpan.Zero);
+            _maxRetryTimes = Check.NotLessThan(maxRetryTimes, 0);
         }
 
         private List<ProcItem<T>> GetItems()

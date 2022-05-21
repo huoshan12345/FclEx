@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using Dawn;
 using FclEx.Extensions;
 using FclEx.Helpers;
 using FclEx.Http.Core;
@@ -80,8 +79,8 @@ namespace FclEx.Http.Services
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         public static void AddCookies(this IHttpService http, IEnumerable<Cookie> cookies, Uri? uri = null)
         {
-            Guard.Argument(http, nameof(http)).NotNull();
-            Guard.Argument(cookies, nameof(cookies)).NotNull();
+            Check.NotNull(http);
+            Check.NotNull(cookies);
             foreach (var cookie in cookies)
                 http.AddCookie(cookie, uri);
         }
@@ -97,14 +96,14 @@ namespace FclEx.Http.Services
 
         public static IReadOnlyList<SimpleCookie> GetAllSimpleCookies(this IHttpService http)
         {
-            Guard.Argument(http, nameof(http)).NotNull();
+            Check.NotNull(http);
             return http.GetAllCookies().Select(m => m.ToSimpleCookie()).ToList();
         }
 
         public static void AddCookie(this IHttpService http, SimpleCookie cookie)
         {
-            Guard.Argument(http, nameof(http)).NotNull();
-            Guard.Argument(cookie, nameof(cookie)).NotNull();
+            Check.NotNull(http);
+            Check.NotNull(cookie);
             http.AddCookie(cookie.ToCookie());
         }
 

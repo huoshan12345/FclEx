@@ -1,5 +1,4 @@
 ﻿using System;
-using Dawn;
 
 namespace FclEx.Extensions
 {
@@ -7,8 +6,8 @@ namespace FclEx.Extensions
     {
         public static string GetUntil(this string str, string stopAt, StringComparison comp = StringComparison.Ordinal)
         {
-            Guard.Argument(str, nameof(str)).NotNull();
-            Guard.Argument(stopAt, nameof(stopAt)).NotNull();
+            Check.NotNull(str);
+            Check.NotNull(stopAt);
 
             var location = str.IndexOf(stopAt, comp);
             return location >= 0 ? str.Substring(0, location) : str;
@@ -16,8 +15,8 @@ namespace FclEx.Extensions
 
         public static string GetWhile(this string str, string stopAt, StringComparison comp = StringComparison.Ordinal)
         {
-            Guard.Argument(str, nameof(str)).NotNull();
-            Guard.Argument(stopAt, nameof(stopAt)).NotNull();
+            Check.NotNull(str);
+            Check.NotNull(stopAt);
 
             var location = str.IndexOf(stopAt, comp);
             return location >= 0 ? str.Substring(0, location + stopAt.Length) : str;
@@ -25,8 +24,8 @@ namespace FclEx.Extensions
 
         public static string TrimEndWhile(this string str, string stopAt, StringComparison comp = StringComparison.Ordinal)
         {
-            Guard.Argument(str, nameof(str)).NotNull();
-            Guard.Argument(stopAt, nameof(stopAt)).NotNull();
+            Check.NotNull(str);
+            Check.NotNull(stopAt);
 
             var location = str.LastIndexOf(stopAt, comp);
             return location >= 0 ? str.Substring(0, location) : str;
@@ -34,8 +33,8 @@ namespace FclEx.Extensions
 
         public static string TrimEndUntil(this string str, string stopAt, StringComparison comp = StringComparison.Ordinal)
         {
-            Guard.Argument(str, nameof(str)).NotNull();
-            Guard.Argument(stopAt, nameof(stopAt)).NotNull();
+            Check.NotNull(str);
+            Check.NotNull(stopAt);
 
             var location = str.LastIndexOf(stopAt, comp);
             return location >= 0 ? str.Substring(0, location + stopAt.Length) : str;
@@ -43,8 +42,8 @@ namespace FclEx.Extensions
 
         public static string TrimStartUntil(this string str, string stopAt, StringComparison comp = StringComparison.Ordinal)
         {
-            Guard.Argument(str, nameof(str)).NotNull();
-            Guard.Argument(stopAt, nameof(stopAt)).NotNull();
+            Check.NotNull(str);
+            Check.NotNull(stopAt);
 
             var location = str.IndexOf(stopAt, comp);
             return location >= 0 ? str.Substring(location) : str;
@@ -52,8 +51,8 @@ namespace FclEx.Extensions
 
         public static string TrimStartWhile(this string str, string stopAt, StringComparison comp = StringComparison.Ordinal)
         {
-            Guard.Argument(str, nameof(str)).NotNull();
-            Guard.Argument(stopAt, nameof(stopAt)).NotNull();
+            Check.NotNull(str);
+            Check.NotNull(stopAt);
 
             var location = str.IndexOf(stopAt, comp);
             return location >= 0 ? str.Substring(location + stopAt.Length) : str;
@@ -61,13 +60,13 @@ namespace FclEx.Extensions
 
         public static string TrimStart(this string str, string prefix, StringComparison comp = StringComparison.Ordinal)
         {
-            Guard.Argument(str, nameof(str)).NotNull();
+            Check.NotNull(str);
             return str.IsValid() && prefix.IsValid() && str.StartsWith(prefix, comp) ? str.Substring(prefix.Length) : str;
         }
 
         public static string TrimEnd(this string str, string suffix, StringComparison comp = StringComparison.Ordinal)
         {
-            Guard.Argument(str, nameof(str)).NotNull();
+            Check.NotNull(str);
             return str.IsValid() && suffix.IsValid() && str.EndsWith(suffix, comp) ? str.Substring(0, str.Length - suffix.Length) : str;
         }
     }

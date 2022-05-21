@@ -4,7 +4,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Dawn;
 
 namespace FclEx.Extensions
 {
@@ -14,7 +13,7 @@ namespace FclEx.Extensions
 
         public static TypeInfoExt GetTypeInfoExt(this Type type)
         {
-            Guard.Argument(type, nameof(type)).NotNull();
+            Check.NotNull(type);
             return TypeInfoDic.GetOrAdd(type, GetTypeInfoExtInternal);
 
             static TypeInfoExt GetTypeInfoExtInternal(Type type)

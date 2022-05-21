@@ -1,5 +1,4 @@
 ﻿using System;
-using Dawn;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting;
@@ -10,7 +9,7 @@ namespace FclEx.Serilog.Sinks.Logstash
     {
         public LogstashSinkOptions(string uri)
         {
-            Guard.Argument(uri, nameof(uri)).NotNull().NotEmpty();
+            Check.NotEmpty(uri);
             Uri = uri;
         }
 

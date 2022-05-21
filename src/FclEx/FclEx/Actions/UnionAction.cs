@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Dawn;
 using FclEx.Extensions;
 using FclEx.Utils;
 
@@ -17,8 +16,8 @@ namespace FclEx.Actions
         public UnionAction(IAction<T> action, Func<T, IAction<TNext>?> next,
             bool errorWhenNextNull = true, bool prevWhenNextError = false)
         {
-            _action = Guard.Argument(action, nameof(action)).NotNull().Value;
-            _next = Guard.Argument(next, nameof(next)).NotNull();
+            _action = Check.NotNull(action);
+            _next = Check.NotNull(next);
             _errorWhenNextNull = errorWhenNextNull;
             _prevWhenNextError = prevWhenNextError;
         }

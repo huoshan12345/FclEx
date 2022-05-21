@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Dawn;
 using FclEx;
 using FclEx.Utils;
 
@@ -23,7 +22,7 @@ namespace FclEx.Actions
 
         public static IAction<TNext> Next<T, TNext>(this IAction<T> action, IAction<TNext> next)
         {
-            Guard.Argument(next, nameof(next)).NotNull();
+            Check.NotNull(next);
             return action.Next(_ => next);
         }
 
@@ -72,9 +71,9 @@ namespace FclEx.Actions
 
         public static IAction<T> NextIf<T>(this IAction<T> action, Func<T, bool> condition, Func<T, IAction<T>> @true, Func<T, IAction<T>> @false)
         {
-            Guard.Argument(condition, nameof(condition)).NotNull();
-            Guard.Argument(@true, nameof(@true)).NotNull();
-            Guard.Argument(@false, nameof(@false)).NotNull();
+            Check.NotNull(condition);
+            Check.NotNull(@true);
+            Check.NotNull(@false);
 
             return action.Next(t => condition(t) ? @true(t) : @false(t));
         }
@@ -86,17 +85,17 @@ namespace FclEx.Actions
 
         public static IAction<TNext> NextIf<T, TNext>(this IAction<T> action, Func<T, bool> condition, Func<T, IAction<TNext>> @true, Func<T, IAction<TNext>> @false)
         {
-            Guard.Argument(condition, nameof(condition)).NotNull();
-            Guard.Argument(@true, nameof(@true)).NotNull();
-            Guard.Argument(@false, nameof(@false)).NotNull();
+            Check.NotNull(condition);
+            Check.NotNull(@true);
+            Check.NotNull(@false);
 
             return action.Next(t => condition(t) ? @true(t) : @false(t));
         }
 
         public static IAction<Unit> NextIf<T>(this IAction<T> action, Func<T, bool> condition, Func<T, IAction<Unit>> next)
         {
-            Guard.Argument(condition, nameof(condition)).NotNull();
-            Guard.Argument(next, nameof(next)).NotNull();
+            Check.NotNull(condition);
+            Check.NotNull(next);
 
             return action.Next(t => condition(t) ? next(t) : new SuccessAction<Unit>(default));
         }

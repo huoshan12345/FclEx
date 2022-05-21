@@ -1,5 +1,4 @@
-﻿using Dawn;
-using FclEx.Helpers;
+﻿using FclEx.Helpers;
 using FclEx.Utils;
 
 namespace System.Threading
@@ -10,7 +9,7 @@ namespace System.Threading
 
         public StatelessTimer(StatelessTimerCallback callback, TimeSpan dueTime, TimeSpan period)
         {
-            Guard.Argument(callback, nameof(callback)).NotNull();
+            Check.NotNull(callback);
             _timer = new Timer(s => callback(), null, dueTime, period);
         }
 

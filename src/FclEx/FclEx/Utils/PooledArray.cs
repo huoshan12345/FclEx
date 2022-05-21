@@ -1,5 +1,4 @@
-﻿using Dawn;
-using System;
+﻿using System;
 using System.Buffers;
 
 namespace FclEx.Utils
@@ -14,7 +13,7 @@ namespace FclEx.Utils
         public PooledArray(ArrayPool<T> pool, int minimumLength, bool clearArray = false)
         {
             _clearArray = clearArray;
-            _pool = Guard.Argument(pool, nameof(pool)).NotNull();
+            _pool = Check.NotNull(pool);
             _value = pool.Rent(minimumLength);
             _isDisposed = false;
         }

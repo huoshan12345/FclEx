@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Dawn;
 using FclEx;
 using FclEx.Extensions;
 using FclEx.Utils;
@@ -67,7 +66,7 @@ namespace FclEx.Actions
         public CommonAction(Func<CancellationToken, Task<OperateResult<T>>> func, bool excuteSafely)
         {
             _excuteSafely = excuteSafely;
-            _func = Guard.Argument(func, nameof(func)).NotNull();
+            _func = Check.NotNull(func);
         }
 
         public Task<OperateResult<T>> ExecuteAsync(CancellationToken token = default)
@@ -87,7 +86,7 @@ namespace FclEx.Actions
         public VoidCommonAction(Func<CancellationToken, Task<OperateResult>> func, bool excuteSafely)
         {
             _excuteSafely = excuteSafely;
-            _func = Guard.Argument(func, nameof(func)).NotNull();
+            _func = Check.NotNull(func);
         }
 
         public Task<OperateResult<Unit>> ExecuteAsync(CancellationToken token = default)

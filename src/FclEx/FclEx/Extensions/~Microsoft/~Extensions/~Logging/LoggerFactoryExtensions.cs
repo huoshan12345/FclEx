@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reflection;
-using Dawn;
 using Microsoft.Extensions.Logging;
 
 namespace FclEx.Extensions
@@ -11,7 +10,7 @@ namespace FclEx.Extensions
 
         public static void SetMinimumLevel(this ILoggerFactory factory, LogLevel minLevel)
         {
-            Guard.Argument(factory, nameof(factory)).NotNull();
+            Check.NotNull(factory);
 
             if (factory is LoggerFactory fac)
             {

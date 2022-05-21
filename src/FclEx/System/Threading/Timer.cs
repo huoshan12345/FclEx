@@ -1,5 +1,4 @@
-﻿using Dawn;
-using FclEx;
+﻿using FclEx;
 using FclEx.Extensions;
 using FclEx.Utils;
 
@@ -13,7 +12,7 @@ namespace System.Threading
 
         public Timer(TimerCallback<T> callback, T state, TimeSpan dueTime, TimeSpan period)
         {
-            Guard.Argument(callback, nameof(callback)).NotNull();
+            Check.NotNull(callback);
             _timer = new Timer(s => callback(s.CastTo<T>()!), state, dueTime, period);
         }
 

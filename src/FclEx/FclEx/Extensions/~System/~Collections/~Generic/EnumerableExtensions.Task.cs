@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Dawn;
 using FclEx.Helpers;
 using FclEx.Utils;
 using MoreLinq;
@@ -25,9 +24,9 @@ namespace FclEx.Extensions
                 int batchSize, CancellationToken token = default)
         {
             // ReSharper disable once PossibleMultipleEnumeration
-            Guard.Argument(enumerable, nameof(enumerable)).NotNull();
-            Guard.Argument(taskSelector, nameof(taskSelector)).NotNull();
-            Guard.Argument(batchSize, nameof(batchSize)).Min(1);
+            Check.NotNull(enumerable);
+            Check.NotNull(taskSelector);
+            Check.NotLessThan(batchSize, 1);
 
             var success = new List<(T, TResult)>();
             var failure = new List<(T, OperateResult<TResult>)>();
@@ -65,8 +64,8 @@ namespace FclEx.Extensions
                 int intervalSeconds = 0, CancellationToken token = default)
         {
             // ReSharper disable once PossibleMultipleEnumeration
-            Guard.Argument(enumerable, nameof(enumerable)).NotNull();
-            Guard.Argument(taskSelector, nameof(taskSelector)).NotNull();
+            Check.NotNull(enumerable);
+            Check.NotNull(taskSelector);
 
             var success = new List<(T, TResult)>();
             var failure = new List<(T, OperateResult<TResult>)>();
@@ -94,8 +93,8 @@ namespace FclEx.Extensions
         public static async Task ToSeriallyExecutedTask<T>(this IEnumerable<T> enumerable, Func<T, Task> taskSelector,
                 int intervalSeconds = 0, CancellationToken token = default)
         {
-            Guard.Argument(enumerable, nameof(enumerable)).NotNull();
-            Guard.Argument(taskSelector, nameof(taskSelector)).NotNull();
+            Check.NotNull(enumerable);
+            Check.NotNull(taskSelector);
 
             foreach (var item in enumerable)
             {
@@ -111,8 +110,8 @@ namespace FclEx.Extensions
             int intervalSeconds = 0, CancellationToken token = default)
         {
             // ReSharper disable once PossibleMultipleEnumeration
-            Guard.Argument(enumerable, nameof(enumerable)).NotNull();
-            Guard.Argument(taskSelector, nameof(taskSelector)).NotNull();
+            Check.NotNull(enumerable);
+            Check.NotNull(taskSelector);
 
             var list = new List<TResult>();
             // ReSharper disable once PossibleMultipleEnumeration
@@ -131,8 +130,8 @@ namespace FclEx.Extensions
         public static async Task<OperateResult<List<T>>> ToSeriallyExecutedTask<T>(this IEnumerable<T> enumerable,
             Func<T, Task<OperateResult<T>>> taskSelector, int intervalSeconds = 0, CancellationToken token = default, bool terminateOnFirstError = false)
         {
-            Guard.Argument(enumerable, nameof(enumerable)).NotNull();
-            Guard.Argument(taskSelector, nameof(taskSelector)).NotNull();
+            Check.NotNull(enumerable);
+            Check.NotNull(taskSelector);
             var span = TimeSpan.Zero;
             var list = new List<T>();
             IList<Exception>? exceptions = null;
@@ -180,9 +179,9 @@ namespace FclEx.Extensions
             Func<T, Task<TResult>> taskSelector, int batchSize, CancellationToken token = default)
         {
             // ReSharper disable once PossibleMultipleEnumeration
-            Guard.Argument(enumerable, nameof(enumerable)).NotNull();
-            Guard.Argument(taskSelector, nameof(taskSelector)).NotNull();
-            Guard.Argument(batchSize, nameof(batchSize)).Min(1);
+            Check.NotNull(enumerable);
+            Check.NotNull(taskSelector);
+            Check.NotLessThan(batchSize, 1);
 
             var list = new List<TResult>();
             // ReSharper disable once PossibleMultipleEnumeration
@@ -201,9 +200,9 @@ namespace FclEx.Extensions
             Func<T, Task> taskSelector, int batchSize, CancellationToken token = default)
         {
             // ReSharper disable once PossibleMultipleEnumeration
-            Guard.Argument(enumerable, nameof(enumerable)).NotNull();
-            Guard.Argument(taskSelector, nameof(taskSelector)).NotNull();
-            Guard.Argument(batchSize, nameof(batchSize)).Min(1);
+            Check.NotNull(enumerable);
+            Check.NotNull(taskSelector);
+            Check.NotLessThan(batchSize, 1);
 
             // ReSharper disable once PossibleMultipleEnumeration
             foreach (var batch in enumerable.Batch(batchSize))

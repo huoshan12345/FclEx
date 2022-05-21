@@ -11,6 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{ABBD6045-544
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E25A1CA7-1304-44D5-89BD-170AE8F0DED4}"
 	ProjectSection(SolutionItems) = preProject
+		src\FclEx\FclEx\Utils\Check.cs = src\FclEx\FclEx\Utils\Check.cs
 		NuGet.config = NuGet.config
 		README.md = README.md
 	EndProjectSection

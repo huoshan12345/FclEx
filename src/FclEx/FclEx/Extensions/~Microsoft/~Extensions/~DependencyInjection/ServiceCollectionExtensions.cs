@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Dawn;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -13,7 +12,7 @@ namespace FclEx.Extensions
         public static IServiceCollection Add<T, TImpl>(this IServiceCollection services, ServiceLifetime lifetime)
             where T : class where TImpl : class, T
         {
-            Guard.Argument(services, nameof(services)).NotNull();
+            Check.NotNull(services);
             services.Add(new ServiceDescriptor(typeof(T), typeof(TImpl), lifetime));
             return services;
         }
@@ -21,7 +20,7 @@ namespace FclEx.Extensions
         public static IServiceCollection TryAdd<T, TImpl>(this IServiceCollection services, ServiceLifetime lifetime)
             where T : class where TImpl : class, T
         {
-            Guard.Argument(services, nameof(services)).NotNull();
+            Check.NotNull(services);
             services.TryAdd(new ServiceDescriptor(typeof(T), typeof(TImpl), lifetime));
             return services;
         }
@@ -110,8 +109,9 @@ namespace FclEx.Extensions
             where TService : class
             where TImplementation : class, TService
         {
-            Guard.Argument(services, nameof(services)).NotNull();
-            Guard.Argument(args, nameof(args)).NotNull().Require(m => m.All(x => !(x is null)));
+            Check.NotNull(services);
+            Check.NotNull(args);
+            Check.HasNoNulls(args);
 
             if (args.IsEmpty())
             {

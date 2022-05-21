@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net;
-using Dawn;
 using FclEx;
 using FclEx.Extensions;
 using FclEx.Serilog;
@@ -42,7 +41,7 @@ namespace Serilog.Sinks.Email
         public static LoggerConfiguration Email(this LoggerSinkConfiguration loggerConfiguration,
             EmailLogSettings settings)
         {
-            Guard.Argument(settings, nameof(settings)).NotNull();
+            Check.NotNull(settings);
 
             var info = new EmailConnectionInfo
             {

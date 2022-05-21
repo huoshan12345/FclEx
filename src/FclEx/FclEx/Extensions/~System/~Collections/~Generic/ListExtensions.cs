@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Dawn;
 
 namespace FclEx.Extensions
 {
@@ -11,8 +10,8 @@ namespace FclEx.Extensions
 
         public static void RemoveAll<T>(this IList<T> list, Func<T, bool> filter)
         {
-            Guard.Argument(list, nameof(list)).NotNull();
-            Guard.Argument(filter, nameof(filter)).NotNull();
+            Check.NotNull(list);
+            Check.NotNull(filter);
 
             for (var i = list.Count - 1; i >= 0; --i)
             {
@@ -26,16 +25,18 @@ namespace FclEx.Extensions
 
         public static void Swap<T>(this IList<T> list, int left, int right)
         {
-            Guard.Argument(list, nameof(list)).NotNull();
-            Guard.Argument(left, nameof(left)).NotNegative().Require(m => m < list.Count);
-            Guard.Argument(right, nameof(right)).NotNegative().Require(m => m < list.Count);
+            Check.NotNull(list);
+            Check.NotNegative(left);
+            Check.NotNegative(right);
+            Check.LessThan(left, list.Count);
+            Check.LessThan(right, list.Count);
 
             (list[left], list[right]) = (list[right], list[left]);
         }
 
         public static void Shuffle<T>(this IList<T> list, Random? random = null)
         {
-            Guard.Argument(list, nameof(list)).NotNull();
+            Check.NotNull(list);
             var r = random ?? _random.Value;
             for (var i = list.Count - 1; i > 0; --i)
             {
@@ -60,7 +61,7 @@ namespace FclEx.Extensions
 
         public static T GetRandomly<T>(this IList<T> list, Random? random = null)
         {
-            Guard.Argument(list, nameof(list)).NotNull();
+            Check.NotNull(list);
             var r = random ?? _random.Value;
             var i = r.Next(0, list.Count - 1);
             return list[i];

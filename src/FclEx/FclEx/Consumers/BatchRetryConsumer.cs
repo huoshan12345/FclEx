@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
-using Dawn;
 using FclEx.Extensions;
 using FclEx.Extensions._Nito;
 using Microsoft.Extensions.Logging;
@@ -15,6 +14,7 @@ using FclEx.Helpers;
 
 namespace FclEx.Consumers
 {
+    [SuppressMessage("ReSharper", "MemberInitializerValueIgnored")]
     public sealed class BatchRetryConsumer<T> : IConsumer<T>,
         ICancellationListener<BatchRetryConsumer<T>, IReadOnlyList<T>>,
         IAsyncConsumer<BatchRetryConsumer<T>, IReadOnlyList<T>>,
@@ -38,7 +38,7 @@ namespace FclEx.Consumers
 
         public BatchRetryConsumer(int batchSize, TimeSpan batchTimeout, int maxRetryTimes = 3, int retryPartCount = 4)
         {
-            _retryPartCount = Guard.Argument(retryPartCount, nameof(retryPartCount)).Min(2);
+            _retryPartCount = Check.NotLessThan(retryPartCount, 2);
             TypeName = GetType().ShortName();
 
             _retryConsumer = new AutoRetryConsumer<List<T>>(maxRetryTimes, x => 0);
@@ -77,7 +77,7 @@ namespace FclEx.Consumers
         public Task Start(bool clear = false)
         {
             return Task.WhenAll(
-                _retryConsumer.Start(clear), 
+                _retryConsumer.Start(clear),
                 _batchConsumer.Start(clear)
                     .ContinueWith(t => _retryConsumer.CompleteAdding()));
         }
@@ -108,7 +108,7 @@ namespace FclEx.Consumers
         {
             if (list.Item.IsNullOrEmpty())
                 return;
-            
+
             var procItem = list.ToType(list.Item.First());
             try
             {
@@ -124,9 +124,9 @@ namespace FclEx.Consumers
 
         private void HandleException(ProcItem<List<T>> list)
         {
-            if (list.Item.IsNullOrEmpty()) 
+            if (list.Item.IsNullOrEmpty())
                 return;
-            
+
             var procItem = list.ToType(list.Item.First());
             try
             {

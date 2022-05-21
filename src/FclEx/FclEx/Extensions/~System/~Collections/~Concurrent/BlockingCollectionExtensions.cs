@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
-using Dawn;
 
 namespace FclEx.Extensions
 {
@@ -8,13 +7,13 @@ namespace FclEx.Extensions
     {
         public static void Clear<T>(this BlockingCollection<T> col)
         {
-            Guard.Argument(col, nameof(col)).NotNull();
+            Check.NotNull(col);
             while (col.TryTake(out _)) { }
         }
 
         public static List<T> TakeAll<T>(this BlockingCollection<T> col)
         {
-            Guard.Argument(col, nameof(col)).NotNull();
+            Check.NotNull(col);
             var list = new List<T>();
             while (col.TryTake(out var item))
                 list.Add(item);
