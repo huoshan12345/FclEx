@@ -18,7 +18,7 @@ jobs:
     steps:
     - name: Set variables
       run: |
-        VER=$(cat ./build/version)
+        VER=$(cat /build/pkg.version)
         echo "VERSION=$VER" >> $GITHUB_ENV
     
   build-windows:
