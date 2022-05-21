@@ -65,5 +65,29 @@ namespace FclEx.Helpers
             }
             catch (TaskCanceledException) { }
         }
+
+        public static Task<TResult> Run<TResult>(Func<Task<TResult>> task, TimeSpan? timeout = null)
+        {
+            return timeout is { } time
+                ? Task.Run(task).WaitAsync(time)
+                : task();
+        }
+
+        public static Task<TResult> Run<TResult>(Func<ValueTask<TResult>> task, TimeSpan? timeout = null)
+        {
+            return Run((Func<Task<TResult>>)(async () => await task()), timeout);
+        }
+
+        public static Task Run(Func<Task> task, TimeSpan? timeout = null)
+        {
+            return timeout is { } time
+                ? Task.Run(task).WaitAsync(time)
+                : task();
+        }
+
+        public static Task Run(Func<ValueTask> task, TimeSpan? timeout = null)
+        {
+            return Run((Func<Task>)(async () => await task()), timeout);
+        }
     }
 }

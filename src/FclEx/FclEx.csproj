@@ -31,8 +31,8 @@
   </Target>
 
   <ItemGroup>
-    <Compile Remove="$(GeneratedPath)\**" />
-    <Content Include="$(GeneratedPath)\**" />
+    <Compile Remove="**\*.g.cs" />
+    <Content Include="**\*.g.cs" />
   </ItemGroup>
 
 
