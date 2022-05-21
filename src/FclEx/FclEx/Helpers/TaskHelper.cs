@@ -65,51 +65,5 @@ namespace FclEx.Helpers
             }
             catch (TaskCanceledException) { }
         }
-
-        public static async Task<TResult> TimeoutAfter<TResult>(Func<Task<TResult>> task, TimeSpan timeout)
-        {
-            using var cts = new CancellationTokenSource();
-            var delayTask = Task.Delay(timeout, cts.Token);
-            // ReSharper disable once MethodSupportsCancellation
-            var completedTask = await Task.WhenAny(delayTask, Task.Run(task)).DonotCapture();
-            if (completedTask != delayTask)
-            {
-                cts.Cancel();
-                return await ((Task<TResult>)completedTask).DonotCapture();
-            }
-            else
-            {
-                throw new TimeoutException($"Task timed out after {timeout}");
-            }
-        }
-
-        public static async Task TimeoutAfter(Func<Task> task, TimeSpan timeout)
-        {
-            using var cts = new CancellationTokenSource();
-            var delayTask = Task.Delay(timeout, cts.Token);
-            // ReSharper disable once MethodSupportsCancellation
-            var completedTask = await Task.WhenAny(delayTask, Task.Run(task)).DonotCapture();
-            if (completedTask != delayTask)
-            {
-                cts.Cancel();
-                await completedTask.DonotCapture();
-            }
-            else
-            {
-                throw new TimeoutException($"Task timed out after {timeout}");
-            }
-        }
-
-        /// <summary>
-        /// Runs a TPL Task fire-and-forget style, the right way - in the
-        /// background, separate from the current thread, with no risk
-        /// of it trying to rejoin the current thread.
-        /// </summary>
-        public static void RunBg(Action action) => Task.Run(action).DonotCapture();
-        public static void RunBg<T>(Func<T> action) => Task.Run(action).DonotCapture();
-        public static void RunBg(Func<Task> fn) => Task.Run(fn).DonotCapture();
-        public static void RunBg<T>(Func<Task<T>> fn) => Task.Run(fn).DonotCapture();
-        public static void RunBg(Func<ValueTask> fn) => Task.Run(async () => await fn().DonotCapture()).DonotCapture();
-        public static void RunBg<T>(Func<ValueTask<T>> fn) => Task.Run(async () => await fn().DonotCapture()).DonotCapture();
     }
 }

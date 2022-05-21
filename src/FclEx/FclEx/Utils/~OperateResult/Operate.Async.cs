@@ -40,7 +40,7 @@ partial class Operate
         var watch = ValueStopwatch.StartNew();
         try
         {
-            await TaskHelper.TimeoutAfter(action, timeout).DonotCapture();
+            await action().WaitAsync(timeout).DonotCapture();
             return CreateSuccess(watch.GetElapsedTime());
         }
         catch (Exception ex)
@@ -68,7 +68,7 @@ partial class Operate
         var watch = ValueStopwatch.StartNew();
         try
         {
-            var result = await TaskHelper.TimeoutAfter(action, timeout).DonotCapture();
+            var result = await action().WaitAsync(timeout).DonotCapture();
             return (result, watch.GetElapsedTime());
         }
         catch (Exception ex)
