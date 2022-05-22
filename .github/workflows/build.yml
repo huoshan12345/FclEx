@@ -49,7 +49,7 @@ jobs:
       - name: Set variables
         run: |
           $ver = Get-Content -Path ./build/pkg.version
-          echo "VERSION=$ver" >> $GITHUB_ENV
+          echo "VERSION=$ver" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
           echo $ver
 
       - name: Create Tag
