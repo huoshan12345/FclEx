@@ -30,4 +30,10 @@
     <Compile Include="$(ProjectDir)..\FclEx\Using.cs" />
   </ItemGroup>
 
+  <ItemGroup Label="FilesToCopy" Condition="$(IsPackable) == 'true'">
+    <Content Include="Using.cs" Pack="true" PackagePath="contentFiles\any\any" BuildAction="Compile">
+      <PackageCopyToOutput>true</PackageCopyToOutput>
+    </Content>
+  </ItemGroup>
+
 </Project>
