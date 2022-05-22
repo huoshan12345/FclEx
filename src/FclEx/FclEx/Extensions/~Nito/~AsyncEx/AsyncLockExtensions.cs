@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Nito.AsyncEx;
 
-namespace FclEx.Extensions._Nito
+namespace FclEx.Extensions
 {
     public static class AsyncLockExtensions
     {
@@ -40,7 +40,7 @@ namespace FclEx.Extensions._Nito
 
         public static void DoubleCheckAndDo(this AsyncLock locker, Func<bool> condition, Action action)
         {
-            if (condition() && action != null)
+            if (condition())
             {
                 using (locker.Lock())
                 {
@@ -54,7 +54,7 @@ namespace FclEx.Extensions._Nito
 
         public static async Task DoubleCheckAndDoAsync(this AsyncLock locker, Func<bool> condition, Func<Task> action)
         {
-            if (condition() && action != null)
+            if (condition())
             {
                 using (await locker.LockAsync())
                 {
