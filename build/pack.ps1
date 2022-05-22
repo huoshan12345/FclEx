@@ -17,8 +17,10 @@ foreach($path in $projectPaths) {
 	Write-Output "Packed $($path)"
 }
 
+Write-Output "Packing finished."
+
 $PSGallerySourceUri = 'https://www.myget.org/F/huoshan12345/api/v2/package'
-$APIKey = 'fbc0486a-55ff-4760-b246-bef3e0ee952d'
+$APIKey = $Env:MYGET_APIKEY
 
 $files = Get-ChildItem ./*.nupkg
 
@@ -30,5 +32,4 @@ foreach ($file in $files) {
 	}
 }
 
-Write-Output "Finished. Press any key to exit."
-Read-Host
+Write-Output "Uploading finished. Press any key to exit."
