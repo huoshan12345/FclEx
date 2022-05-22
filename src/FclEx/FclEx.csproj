@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup Label="FilesToCopy">
-    <Content Include="Using.cs" Pack="true" PackagePath="contentFiles\">
+    <Content Include="Using.cs" Pack="true" PackagePath="contentFiles\" BuildAction="Compile">
       <PackageCopyToOutput>true</PackageCopyToOutput>
     </Content>
   </ItemGroup>
