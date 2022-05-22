@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup Label="FilesToCopy">
-    <Content Include="Using.cs" Pack="true" BuildAction="None" PackagePath="content\" />
+    <Content Include="Using.cs" Pack="true" BuildAction="None" PackagePath="contentFiles\any\any\" />
     <Content Include="FclEx.targets" Pack="true" BuildAction="None" PackagePath="build\" />
   </ItemGroup>
 
