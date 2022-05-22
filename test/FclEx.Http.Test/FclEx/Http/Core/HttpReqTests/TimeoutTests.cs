@@ -19,7 +19,7 @@ namespace FclEx.Http.Core.HttpReqTests
             var (successful, _, exception, elapsed) = await Operate.ExcuteAsync(async () => await req.SendAsync().ThrowIfError());
             Assert.False(successful);
             Assert.IsType<TaskCanceledException>(exception);
-            AssertExt.Equal(timeout, elapsed, TimeSpan.FromSeconds(0.1));
+            AssertExt.Equal(timeout, elapsed, TimeSpan.FromSeconds(1));
         }
     }
 }

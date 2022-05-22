@@ -11,7 +11,7 @@ on:
 env:
   DOTNET_NOLOGO: 1
   SLN_PATH: FclEx.sln
-  MYGET_APIKEY: '${{ secrets.MYGET_APIKEY }}'
+  MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
 
 jobs:
   build-windows:
@@ -24,6 +24,7 @@ jobs:
         run: |
           $VERSION = (Get-Content -Path ./build/pkg.version)
           echo "VERSION=$VERSION" >> $env:GITHUB_ENV
+          Write-Output ${{ env.VERSION }}
 
       - name: Setup .NET 6
         uses: actions/setup-dotnet@v1
