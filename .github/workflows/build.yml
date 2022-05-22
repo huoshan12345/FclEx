@@ -48,8 +48,8 @@ jobs:
 
       - name: Set variables
         run: |
-          $Env.VERSION = Get-Content -Path ./build/pkg.version
-          echo "VERSION=$VER" >> $GITHUB_ENV
+          $ver = Get-Content -Path ./build/pkg.version
+          echo "VERSION=$ver" >> $GITHUB_ENV
           echo ${{ env.VERSION }}
 
       - name: Create Tag
