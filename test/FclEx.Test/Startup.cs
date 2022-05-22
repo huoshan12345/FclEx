@@ -6,7 +6,7 @@ public static class Startup
     [ModuleInitializer]
     public static void Init()
     {
-        ThreadPool.SetMinThreads(4, 4);
+        ThreadPool.SetMinThreads(16, 16);
         FclExStartup.Init();
     }
 }
