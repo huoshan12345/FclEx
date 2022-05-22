@@ -24,6 +24,7 @@ jobs:
         run: |
           VER=$(cat ./build/pkg.version)
           echo "VERSION=$VER" >> $GITHUB_ENV
+          (Get-Content -Path $path) | 
 
       - name: Setup .NET 6
         uses: actions/setup-dotnet@v1
