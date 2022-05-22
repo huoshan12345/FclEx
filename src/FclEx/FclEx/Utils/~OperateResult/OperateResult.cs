@@ -6,7 +6,7 @@ using static FclEx.Utils.Operate;
 
 namespace FclEx.Utils;
 
-public readonly struct OperateResult<T>
+public readonly struct OperateResult<T> : IOperateResult
 {
     public int Code { get; }
     public Exception? Exception { get; }

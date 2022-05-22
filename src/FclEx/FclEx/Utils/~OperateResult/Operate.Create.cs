@@ -20,9 +20,9 @@ public partial class Operate
 
     public static OperateResult Cancel { get; } = CreateCancel();
 
-    public static OperateResult CreateCancel(Exception ex, TimeSpan elapsed = default) => new(OperateResultCodes.Cancel, ex, elapsed);
+    public static OperateResult CreateCancel(Exception ex, TimeSpan elapsed = default) => new(OperateResultCodes.Canceled, ex, elapsed);
 
-    public static OperateResult CreateCancel(TimeSpan elapsed = default) => CreateError(OperateResultCodes.Cancel, "the operate was canceled", elapsed);
+    public static OperateResult CreateCancel(TimeSpan elapsed = default) => CreateError(OperateResultCodes.Canceled, "the operate was canceled", elapsed);
 
     public static OperateResult CreateSuccess(TimeSpan elapsed = default) => new(default, elapsed);
 
@@ -30,21 +30,21 @@ public partial class Operate
 
     public static OperateResult CreateError(int code, string? error, TimeSpan elapsed = default) => CreateError(code, new SimpleException(error), elapsed);
 
-    public static OperateResult CreateError(string? error, TimeSpan elapsed = default) => CreateError(OperateResultCodes.FromString, error, elapsed);
+    public static OperateResult CreateError(string? error, TimeSpan elapsed = default) => CreateError(OperateResultCodes.Error, error, elapsed);
 
     public static OperateResult CreateObjError<T>(T obj, string error, TimeSpan elapsed = default) where T : notnull
     {
-        return new(OperateResultCodes.FromString, ObjectException.Create(obj, error), elapsed);
+        return new(OperateResultCodes.Error, ObjectException.Create(obj, error), elapsed);
     }
 
     public static OperateResult CreateError(Exception ex, TimeSpan elapsed = default)
     {
-        return new(IsCancelException(ex) ? OperateResultCodes.Cancel : OperateResultCodes.FromException, ex, elapsed);
+        return new(IsCancelException(ex) ? OperateResultCodes.Canceled : OperateResultCodes.Exception, ex, elapsed);
     }
 
     public static OperateResult CreateObjError<T>(T obj, Exception ex, TimeSpan elapsed = default) where T : notnull
     {
-        return new(IsCancelException(ex) ? OperateResultCodes.Cancel : OperateResultCodes.FromException,
+        return new(IsCancelException(ex) ? OperateResultCodes.Canceled : OperateResultCodes.Exception,
             ObjectException.Create(obj, ex.Message, ex), elapsed);
     }
 

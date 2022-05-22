@@ -15,17 +15,17 @@ partial class OperateResultExtensions
 
     public static bool IsStrErr<T>(this OperateResult<T> r)
     {
-        return r.Code == OperateResultCodes.FromString;
+        return r.Code == OperateResultCodes.Error;
     }
 
     public static bool IsExErr<T>(this OperateResult<T> r)
     {
-        return r.Code == OperateResultCodes.FromException;
+        return r.Code == OperateResultCodes.Exception;
     }
 
     public static bool IsCancelErr<T>(this OperateResult<T> r)
     {
-        return r.Code == OperateResultCodes.Cancel;
+        return r.Code == OperateResultCodes.Canceled;
     }
 
     public static OperateResult Untype<T>(this OperateResult<T> result) => result;
