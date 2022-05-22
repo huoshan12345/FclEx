@@ -24,9 +24,9 @@ jobs:
         VER=$(cat ./build/pkg.version)
         echo "VERSION=$VER" >> $GITHUB_ENV
     
-  build-windows:
+  build-linux:
     needs: pre_build
-    runs-on: windows-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -52,6 +52,7 @@ jobs:
         run: dotnet test -c Release --no-build ${{ env.SLN_PATH }}
 
       - name: NuGet Publish
+        shell: pwsh
         if: ${{ github.ref == 'refs/heads/master' }}
         run: |
           $dir = [IO.Path]::Combine(".", "output")

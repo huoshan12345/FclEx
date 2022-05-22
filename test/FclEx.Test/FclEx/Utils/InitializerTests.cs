@@ -72,7 +72,7 @@ namespace FclEx.Utils
             }, TimeSpan.FromSeconds(3));
 
             Assert.True(successful);
-            Assert.True(elapsed < TimeSpan.FromSeconds(2));
+            Assert.True(elapsed < TimeSpan.FromSeconds(2), elapsed.ToString());
             Assert.Equal(1, number);
         }
     }
