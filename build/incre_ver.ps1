@@ -18,7 +18,8 @@ $callback = {
 	$str = [system.String]::Join(".", $digits)
 	$str
 }
-$path = ".\pkg.version"
+$root = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$path = Join-Path $root "pkg.version"
 (Get-Content -Path $path) | % { $reg.Replace($_, $callback) } | Set-Content $path
 
 Write-Output "Finished. Press any key to exit."

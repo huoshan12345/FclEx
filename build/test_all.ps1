@@ -1,6 +1,6 @@
 # Paths
-$packFolder = (Get-Item -Path "./" -Verbose).FullName
-$slnPath = Join-Path $packFolder "../"
+$root = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$slnPath = Join-Path $root "../"
 $srcPaths = @(
 ([io.path]::combine($slnPath, "test"))
 )

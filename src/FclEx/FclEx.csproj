@@ -20,20 +20,4 @@
     <ProjectReference Include="..\FclEx.SourceGenerator\FclEx.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <GeneratedPath>~Generated</GeneratedPath>
-    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-    <CompilerGeneratedFilesOutputPath>$(GeneratedPath)</CompilerGeneratedFilesOutputPath>
-  </PropertyGroup>
-
-  <Target Name="CleanSourceGeneratedFiles" BeforeTargets="BeforeBuild" DependsOnTargets="$(BeforeBuildDependsOn)">
-    <RemoveDir Directories="$(GeneratedPath)" />
-  </Target>
-
-  <ItemGroup>
-    <Compile Remove="**\*.g.cs" />
-    <Content Include="**\*.g.cs" />
-  </ItemGroup>
-
-
 </Project>
