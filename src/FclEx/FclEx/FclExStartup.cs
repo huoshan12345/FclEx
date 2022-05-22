@@ -12,7 +12,7 @@ namespace FclEx
         {
             _initializer.Init(() =>
             {
-                ServicePointManager.DefaultConnectionLimit = int.MaxValue;
+                ServicePointManager.DefaultConnectionLimit = short.MaxValue;
                 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             });
         }
