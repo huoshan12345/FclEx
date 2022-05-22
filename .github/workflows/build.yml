@@ -22,9 +22,8 @@ jobs:
         
       - name: Set variables
         run: |
-          VER=$(cat ./build/pkg.version)
-          echo "VERSION=$VER" >> $GITHUB_ENV
-          (Get-Content -Path $path) | 
+          $VERSION = (Get-Content -Path ./build/pkg.version)
+          echo "VERSION=$VERSION" >> $env:GITHUB_ENV
 
       - name: Setup .NET 6
         uses: actions/setup-dotnet@v1
