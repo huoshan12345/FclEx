@@ -31,7 +31,11 @@
   </ItemGroup>
 
   <ItemGroup Label="FilesToCopy" Condition="$(IsPackable) == 'true'">
-    <Content Include="..\FclEx\Using.cs" Pack="true" PackagePath="contentFiles\any\any" BuildAction="Compile"/>
+    <Content Include="..\FclEx\Using.cs"
+             Pack="true" 
+             PackagePath="contentFiles\any\any" 
+             BuildAction="Compile"
+             Link="FclExUsing.cs"/>
   </ItemGroup>
 
 </Project>
