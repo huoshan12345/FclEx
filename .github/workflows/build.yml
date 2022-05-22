@@ -14,19 +14,7 @@ env:
   MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
 
 jobs:
-  pre_build:
-    runs-on: ubuntu-20.04
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-
-    - name: Set variables
-      run: |
-        VER=$(cat ./build/pkg.version)
-        echo "VERSION=$VER" >> $GITHUB_ENV
-    
   build-windows:
-    needs: pre_build
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -57,6 +45,12 @@ jobs:
         shell: pwsh
         run: |
           ./build/pack.ps1
+
+      - name: Set variables
+        run: |
+          $Env.VERSION = Get-Content -Path ./build/pkg.version
+          echo "VERSION=$VER" >> $GITHUB_ENV
+          echo ${{ env.VERSION }}
 
       - name: Create Tag
         if: ${{ github.ref == 'refs/heads/master' }}
