@@ -1,0 +1,7 @@
+﻿<ItemGroup>
+  <Target Name="CopyUsing" BeforeTargets="BeforeBuild" Condition="$(DisableFclExUsing) != 'true'">
+    <ItemGroup>
+      <Compile Include="$(MSBuildProjectDirectory)\content\Using.cs" />
+    </ItemGroup>
+  </Target>
+</ItemGroup>
