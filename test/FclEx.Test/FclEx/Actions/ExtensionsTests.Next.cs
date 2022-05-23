@@ -1,89 +1,50 @@
-﻿using System.Threading.Tasks;
-using FclEx.Utils;
-using Xunit;
+﻿using Xunit;
 
 namespace FclEx.Actions
 {
-    public partial class ExtensionsTests
+    partial class ExtensionsTests
     {
         [Fact]
-        public async Task Union_Success_Test()
+        public async Task Next_OperateResult_T()
         {
-            var (successful, result, _, _) = await CommonAction.Create(t => Task.FromResult(1))
-                .Union(r => CommonAction.Create(t => Task.FromResult(1 + r)))
-                .Union((a, b) => CommonAction.Create(t => Task.FromResult(1 + a + b)))
+            var (success, value, _, _) = await ResultAction.Create(1)
+                .Next(Operate.CreateSuccess(1))
                 .ExecuteAsync();
 
-            Assert.True(successful);
-            Assert.Equal((1, 2, 4), result);
+            Assert.True(success);
+            Assert.Equal(1, value);
         }
 
         [Fact]
-        public async Task Union_Error_Begin_Test()
+        public async Task Next_OperateResult()
         {
-            var flag = false;
-            var (successful, _, ex, _) = await CommonAction.Create(t => Operate.CreateError<int>("error"))
-                .Union(r => CommonAction.Create(t =>
-                {
-                    flag = true;
-                    return Task.FromResult(1 + r);
-                }))
+            var (success, _, _, _) = await ResultAction.Create(1)
+                .Next(Operate.Success)
                 .ExecuteAsync();
 
-            Assert.False(flag);
-            Assert.False(successful);
-            Assert.Equal("error", ex.Message);
-        }
-
-
-        [Fact]
-        public async Task Union_Error_Middle_Test()
-        {
-            var flag = false;
-            var (successful, _, ex, _) = await CommonAction.Create(t => Task.FromResult(1))
-                .Union(r =>
-                {
-                    Assert.Equal(1, r);
-                    return CommonAction.Create(t => Operate.CreateError<int>("error"));
-                })
-                .Union((a, b) =>
-                {
-                    flag = true;
-                    return CommonAction.Create(t => Task.FromResult(1 + a + b));
-                })
-                .ExecuteAsync();
-
-            Assert.False(flag);
-            Assert.False(successful);
-            Assert.Equal("error", ex.Message);
+            Assert.True(success);
         }
 
         [Fact]
-        public async Task Union_Error_End_Test()
+        public async Task Next_Action()
         {
-            var (successful, _, ex, _) = await CommonAction.Create(t => Task.FromResult(1))
-                .Union(r => CommonAction.Create(t => Task.FromResult(1 + r)))
-                .Union((a, b) =>
-                {
-                    Assert.Equal(1, a);
-                    Assert.Equal(2, b);
-                    return CommonAction.Create(t => Operate.CreateError<int>("error"));
-                })
+            var (success, value, _, _) = await ResultAction.Create(1)
+                .Next(ResultAction.Create(1))
                 .ExecuteAsync();
 
-            Assert.False(successful);
-            Assert.Equal("error", ex.Message);
+            Assert.True(success);
+            Assert.Equal(1, value);
         }
 
         [Fact]
-        public async Task Union_Errors_Test()
+        public async Task Next_Func_Action()
         {
-            var (successful, _, ex, _) = await CommonAction.Create(t => Operate.CreateError<int>("error1"))
-                .Union(r => CommonAction.Create(t => Operate.CreateError<int>("error2")))
+            var (success, value, _, _) = await ResultAction.Create(1)
+                .Next(m => ResultAction.Create(m + 1))
                 .ExecuteAsync();
 
-            Assert.False(successful);
-            Assert.Equal("error1", ex.Message);
+            Assert.True(success);
+            Assert.Equal(2, value);
         }
     }
 }

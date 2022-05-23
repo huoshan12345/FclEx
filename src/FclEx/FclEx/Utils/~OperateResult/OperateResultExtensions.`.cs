@@ -5,14 +5,6 @@ namespace FclEx.Utils;
 
 partial class OperateResultExtensions
 {
-    public static void Deconstruct<T>(this OperateResult<T> result, out bool successful, out T? value, out Exception? ex, out TimeSpan elapsed)
-    {
-        successful = result.Success;
-        ex = result.Exception;
-        elapsed = result.Elapsed;
-        value = result.Value;
-    }
-
     public static bool IsStrErr<T>(this OperateResult<T> r)
     {
         return r.Code == OperateResultCodes.Error;

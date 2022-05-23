@@ -9,17 +9,17 @@ namespace FclEx.Utils;
 
 public static partial class OperateResultExtensions
 {
-    public static void Deconstruct(this OperateResult result, out bool successful, out Exception? ex, out TimeSpan elapsed)
+    public static void Deconstruct(this OperateResult result, out bool success, out Exception? ex, out TimeSpan elapsed)
     {
-        successful = result.Success;
+        success = result.Success;
         elapsed = result.Elapsed;
         ex = result.Exception;
     }
 
     [SuppressMessage("ReSharper", "UseDeconstructionOnParameter")]
-    public static void Deconstruct(this OperateResult result, out bool successful, out Exception? ex)
+    public static void Deconstruct(this OperateResult result, out bool success, out Exception? ex)
     {
-        successful = result.Success;
+        success = result.Success;
         ex = result.Exception;
     }
     

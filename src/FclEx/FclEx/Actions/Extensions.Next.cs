@@ -10,10 +10,11 @@ namespace FclEx.Actions
 {
     partial class Extensions
     {
-        public static IAction<TNext> Next<T, TNext>(this IAction<T> action, TNext result)
-        {
-            return action.Next<T, TNext>(Operate.CreateSuccess(result));
-        }
+        // don't add this method, otherwise there will be a conflict or unexpected method selecting.
+        //public static IAction<TNext> Next<T, TNext>(this IAction<T> action, TNext result)
+        //{
+        //    return action.Next<T, TNext>(Operate.CreateSuccess(result));
+        //}
 
         public static IAction<TNext> Next<T, TNext>(this IAction<T> action, OperateResult<TNext> result)
         {

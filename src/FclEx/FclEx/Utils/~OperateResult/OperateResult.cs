@@ -36,7 +36,7 @@ public readonly struct OperateResult<T> : IOperateResult
     }
 
     /// <summary>
-    /// Create an successful result
+    /// Create an success result
     /// </summary>
     /// <param name="result"></param>
     /// <param name="elapsed"></param>
@@ -115,5 +115,13 @@ public readonly struct OperateResult<T> : IOperateResult
     public OperateResult<TDest> ToExplicit<TDest>()
     {
         return ToExplicit(m => m.CastTo<TDest>())!;
+    }
+
+    public void Deconstruct(out bool success, out T? value, out Exception? ex, out TimeSpan elapsed)
+    {
+        success = Success;
+        ex = Exception;
+        elapsed = Elapsed;
+        value = Value;
     }
 }
