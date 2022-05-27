@@ -1,19 +1,27 @@
-# Paths
+$ErrorActionPreference = "Stop"
+
+$mode = if ($args[0] -eq 'Release') { "Release" } else { "Debug" }
+$isProd = if ($args[1] -eq 'prod') { $true } else { $false }
+
+Write-Output "mode = $mode, isProd = $isProd"
+
 $root = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$slnPath = Join-Path $root "../"
-$srcPaths = @(
-([io.path]::combine($slnPath, "test"))
+$slnPath = [io.path]::combine($root, "..")
+$testDirs = (
+  [io.path]::combine($slnPath, "src\FclEx\test"),
+  [io.path]::combine($slnPath, "src\FclEx.Abp\test")
 )
 
-$projectPaths = new-object 'System.Collections.Generic.List[string]'
-foreach($srcPath in $srcPaths) {
-	$items = Get-ChildItem -Path $srcPath -Include *.csproj -File -Recurse | % { $_.FullName }
-	$projectPaths.AddRange( ([string[]]$items) )
-}
+$excludeInNonLocal = (
+  "FclEx.Abp.RabbitMQ.Test",
+  "FclEx.Abp.RedisCache.Test"
+)
 
-foreach($path in $projectPaths) { 
-    & dotnet test $path -v q
-	if ($Lastexitcode -ne 0)	{
-		throw "failed with exit code $LastExitCode"
-	}
+$projects = $testDirs  | ForEach-Object { Get-ChildItem -Path $_ -Include *.csproj -Recurse } | Where-Object { $isProd -eq $false -or ($isProd -and ($excludeInNonLocal -notcontains $_.Basename)) }
+
+foreach ($path in $projects) { 
+  & dotnet test $path --nologo -v q -c $mode
+  if ($Lastexitcode -ne 0) {
+    throw "failed with exit code $LastExitCode"
+  }
 }
