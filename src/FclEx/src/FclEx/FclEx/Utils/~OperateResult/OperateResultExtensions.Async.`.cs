@@ -6,34 +6,34 @@ namespace FclEx.Utils;
 
 partial class OperateResultExtensions
 {
-    public static Task<OperateResult<T>> OkResult<T>(this Task<OperateResult<T>> @this, Action<OperateResult<T>> action)
+    public static Task<OperateResult<T>> OkResult<T>(this Task<OperateResult<T>> task, Action<OperateResult<T>> action)
     {
-        return @this.On(m => m.Success, action);
+        return task.On(m => m.Success, action);
     }
 
-    public static Task<OperateResult<T>> OkResult<T>(this Task<OperateResult<T>> @this, Func<OperateResult<T>, Task> action)
+    public static Task<OperateResult<T>> OkResult<T>(this Task<OperateResult<T>> task, Func<OperateResult<T>, Task> action)
     {
-        return @this.On(m => m.Success, action);
+        return task.On(m => m.Success, action);
     }
 
-    public static Task<OperateResult<T>> ErrorResult<T>(this Task<OperateResult<T>> @this, Action<OperateResult<T>> action)
+    public static Task<OperateResult<T>> ErrorResult<T>(this Task<OperateResult<T>> task, Action<OperateResult<T>> action)
     {
-        return @this.On(r => r.Error, action);
+        return task.On(r => r.Error, action);
     }
 
-    public static Task<OperateResult<T>> ErrorResult<T>(this Task<OperateResult<T>> @this, Func<OperateResult<T>, Task> action)
+    public static Task<OperateResult<T>> ErrorResult<T>(this Task<OperateResult<T>> task, Func<OperateResult<T>, Task> action)
     {
-        return @this.On(r => r.Error, action);
+        return task.On(r => r.Error, action);
     }
 
-    public static Task<OperateResult<T>> CancelResult<T>(this Task<OperateResult<T>> @this, Action<OperateResult<T>> action)
+    public static Task<OperateResult<T>> CancelResult<T>(this Task<OperateResult<T>> task, Action<OperateResult<T>> action)
     {
-        return @this.On(r => r.IsCancelErr(), action);
+        return task.On(r => r.IsCanceled(), action);
     }
 
-    public static Task<OperateResult<T>> CancelResult<T>(this Task<OperateResult<T>> @this, Func<OperateResult<T>, Task> action)
+    public static Task<OperateResult<T>> CancelResult<T>(this Task<OperateResult<T>> task, Func<OperateResult<T>, Task> action)
     {
-        return @this.On(r => r.IsCancelErr(), action);
+        return task.On(r => r.IsCanceled(), action);
     }
 
     public static Task<OperateResult<T>> Ok<T>(this Task<OperateResult<T>> task, Action<T, TimeSpan> action)
@@ -56,29 +56,29 @@ partial class OperateResultExtensions
         return task.Ok((r, t) => action(r));
     }
 
-    public static Task<OperateResult<T>> Error<T>(this Task<OperateResult<T>> @this, Action<Exception, TimeSpan> action)
+    public static Task<OperateResult<T>> Error<T>(this Task<OperateResult<T>> task, Action<Exception, TimeSpan> action)
     {
-        return @this.ErrorResult(t => action(t.Exception!, t.Elapsed));
+        return task.ErrorResult(t => action(t.Exception!, t.Elapsed));
     }
 
-    public static Task<OperateResult<T>> Error<T>(this Task<OperateResult<T>> @this, Action<Exception> action)
+    public static Task<OperateResult<T>> Error<T>(this Task<OperateResult<T>> task, Action<Exception> action)
     {
-        return @this.Error((e, t) => action(e));
+        return task.Error((e, t) => action(e));
     }
 
-    public static Task<OperateResult<T>> Error<T>(this Task<OperateResult<T>> @this, Func<Exception, TimeSpan, Task> action)
+    public static Task<OperateResult<T>> Error<T>(this Task<OperateResult<T>> task, Func<Exception, TimeSpan, Task> action)
     {
-        return @this.ErrorResult(t => action(t.Exception!, t.Elapsed));
+        return task.ErrorResult(t => action(t.Exception!, t.Elapsed));
     }
 
-    public static Task<OperateResult<T>> Error<T>(this Task<OperateResult<T>> @this, Func<Exception, Task> action)
+    public static Task<OperateResult<T>> Error<T>(this Task<OperateResult<T>> task, Func<Exception, Task> action)
     {
-        return @this.Error((e, t) => action(e));
+        return task.Error((e, t) => action(e));
     }
 
-    public static Task<OperateResult<T>> ThrowIfError<T>(this Task<OperateResult<T>> @this)
+    public static Task<OperateResult<T>> ThrowIfError<T>(this Task<OperateResult<T>> task)
     {
-        return @this.Error(e => e.ReThrow());
+        return task.Error(e => e.ReThrow());
     }
 
     public static Task<OperateResult> Untype<T>(this Task<OperateResult<T>> task)

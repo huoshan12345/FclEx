@@ -25,7 +25,7 @@ namespace FclEx.Actions
             var future = CommonAction.Create(ExecuteAsyncBody, true)
                 .NextResult<T, T>(r => r.Success
                     ? new SuccessAction<T>(r.Value, r.Elapsed)
-                    : r.IsCancelErr()
+                    : r.IsCanceled()
                         ? CommonAction.Create(t => HandleCancellationAsync(r.Exception), true)
                         : CommonAction.Create(t => HandleErrorAsync(r.Exception), true));
 

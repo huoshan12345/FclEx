@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace FclEx.Utils;
@@ -30,11 +28,11 @@ public partial class Operate
 
     public static OperateResult CreateError(int code, string? error, TimeSpan elapsed = default) => CreateError(code, new SimpleException(error), elapsed);
 
-    public static OperateResult CreateError(string? error, TimeSpan elapsed = default) => CreateError(OperateResultCodes.Error, error, elapsed);
+    public static OperateResult CreateError(string? error, TimeSpan elapsed = default) => CreateError(OperateResultCodes.StringError, error, elapsed);
 
     public static OperateResult CreateObjError<T>(T obj, string error, TimeSpan elapsed = default) where T : notnull
     {
-        return new(OperateResultCodes.Error, ObjectException.Create(obj, error), elapsed);
+        return new(OperateResultCodes.StringError, ObjectException.Create(obj, error), elapsed);
     }
 
     public static OperateResult CreateError(Exception ex, TimeSpan elapsed = default)

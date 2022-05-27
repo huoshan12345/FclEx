@@ -5,6 +5,10 @@ namespace FclEx.Utils
 {
     public interface IOperateResult
     {
+        /// <summary>
+        /// <see cref="OperateResultCodes"/>>
+        /// </summary>
+        public int Code { get; }
         public Exception? Exception { get; }
         public TimeSpan Elapsed { get; }
 

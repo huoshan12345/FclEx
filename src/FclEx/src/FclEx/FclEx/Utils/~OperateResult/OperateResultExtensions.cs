@@ -37,4 +37,30 @@ public static partial class OperateResultExtensions
             _ => CreateError(new AggregateException(exceptions), time)
         };
     }
+
+    public static bool IsObjError<T>(this OperateResult<T> result, Func<T, bool> condition) where T : notnull
+    {
+        return result.Error && result.Exception.IsObjEx(condition);
+    }
+
+    public static bool IsObjError<T>(this IOperateResult result, Func<T, bool> condition) where T : notnull
+    {
+        return result.Error && result.Exception.IsObjEx(condition);
+    }
+
+    public static bool IsStrErr(this IOperateResult result)
+    {
+        return result.Code == OperateResultCodes.StringError;
+    }
+
+    public static bool IsExErr(this IOperateResult result)
+    {
+        return result.Code == OperateResultCodes.Exception;
+    }
+
+    public static bool IsCanceled(this IOperateResult result)
+    {
+        return result.Code == OperateResultCodes.Canceled;
+    }
+
 }

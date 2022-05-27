@@ -42,6 +42,11 @@ namespace FclEx.Actions
             return action.Next(r => CommonAction.Create(t => next(r), excuteSafely));
         }
 
+        public static IAction<TNext> Next<T1, T2, TNext>(this IAction<(T1, T2)> action, Func<T1, T2, IAction<TNext>> next)
+        {
+            return action.Next(m => next(m.Item1, m.Item2));
+        }
+        
 
         public static IAction<Unit> Next<T>(this IAction<T> action, Action<T> next, bool excuteSafely = true)
         {
@@ -61,12 +66,6 @@ namespace FclEx.Actions
         public static IAction<Unit> Next<T>(this IAction<T> action, Func<T, Task<OperateResult>> next, bool excuteSafely = true)
         {
             return action.Next(r => CommonAction.Create(t => next(r), excuteSafely));
-        }
-
-
-        public static IAction<TNext> Next<T1, T2, TNext>(this IAction<(T1, T2)> action, Func<T1, T2, IAction<TNext>> next)
-        {
-            return action.Next(m => next(m.Item1, m.Item2));
         }
 
 
@@ -101,5 +100,10 @@ namespace FclEx.Actions
             return action.Next(t => condition(t) ? next(t) : new SuccessAction<Unit>(default));
         }
 
+
+        public static IAction<T> TryNext<T>(this IAction<T> action, Func<T, IAction<T>?> func)
+        {
+            return action.Next(m => func(m) ?? ResultAction.Create(m));
+        }
     }
 }

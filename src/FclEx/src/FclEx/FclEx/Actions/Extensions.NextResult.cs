@@ -53,5 +53,20 @@ namespace FclEx.Actions
         {
             return action.NextResult<T, Unit>(r => CommonAction.Create(t => next(r), excuteSafely));
         }
+
+        public static IAction<T> NextResultIf<T>(this IAction<T> action, Func<OperateResult<T>, bool> condition,
+            Func<OperateResult<T>, IAction<T>> @true, Func<OperateResult<T>, IAction<T>> @false)
+        {
+            Check.NotNull(condition);
+            Check.NotNull(@true);
+            Check.NotNull(@false);
+
+            return action.NextResult(t => condition(t) ? @true(t) : @false(t));
+        }
+
+        public static IAction<T> NextResultIf<T>(this IAction<T> action, Func<OperateResult<T>, bool> condition, Func<OperateResult<T>, IAction<T>> next)
+        {
+            return action.NextResultIf<T>(condition, next, m => ResultAction.Create(m));
+        }
     }
 }

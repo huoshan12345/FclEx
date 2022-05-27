@@ -14,7 +14,7 @@ public partial class Operate
 
     public static OperateResult<T> CreateError<T>(int code, string? error, TimeSpan elapsed = default) => new(code, new SimpleException(error), elapsed);
 
-    public static OperateResult<T> CreateError<T>(string? error, TimeSpan elapsed = default) => CreateError<T>(OperateResultCodes.Error, error, elapsed);
+    public static OperateResult<T> CreateError<T>(string? error, TimeSpan elapsed = default) => CreateError<T>(OperateResultCodes.StringError, error, elapsed);
 
     public static OperateResult<T> CreateError<T>(Exception ex, TimeSpan elapsed = default)
     {

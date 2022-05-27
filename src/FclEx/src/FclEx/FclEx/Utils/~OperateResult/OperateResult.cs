@@ -94,12 +94,7 @@ public readonly struct OperateResult<T> : IOperateResult
             ? CreateSuccess(result.Elapsed)
             : CreateError(result.Code, result.Exception!, result.Elapsed);
     }
-
-    public static implicit operator Task<OperateResult>(OperateResult<T> result)
-    {
-        return ((OperateResult)result).ToTask();
-    }
-
+    
     public static implicit operator Task<OperateResult<T>>(OperateResult<T> result)
     {
         return result.ToTask();
