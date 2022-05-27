@@ -1,0 +1,27 @@
+﻿using System;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
+using Volo.Abp;
+using Volo.Abp.DependencyInjection;
+
+namespace Microsoft.Extensions.DependencyInjection
+{
+    public static class ServiceProviderExtensions
+    {
+        public static IServiceProvider UseAbp(this IServiceProvider provider)
+        {
+            provider.GetRequiredService<IAbpApplicationWithExternalServiceProvider>().Initialize(provider);
+            return provider;
+        }
+
+        public static T GetOptions<T>(this IServiceProvider provider) where T : class, new()
+            => provider.GetRequiredService<IOptions<T>>().Value;
+
+        public static T GetObject<T>(this IServiceProvider provider)
+        {
+            return provider.GetRequiredService<IObjectAccessor<T>>().Value;
+        }
+    }
+}

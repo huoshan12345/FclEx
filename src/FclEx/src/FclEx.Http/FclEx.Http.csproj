@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="MimeTypeMap.Core" Version="1.0.0" />
+    <PackageReference Include="HttpMultipartParser" Version="5.1.0" />
+    <PackageReference Include="AngleSharp" Version="0.16.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FclEx\FclEx.csproj" />
+  </ItemGroup>
+  
+</Project>

@@ -1,0 +1,20 @@
+<Project>
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
+    <NoWarn>CS1591;CS2002</NoWarn>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <LangVersion>preview</LangVersion>
+    <TargetFramework>net6.0</TargetFramework>
+    <PackageProjectUrl>https://github.com/huoshan12345/FclEx</PackageProjectUrl>
+    <PackageTags>extensions;helpers</PackageTags>
+    <Authors>huoshan12345</Authors>
+    <Description>Some basic useful extensions and helpers for C# fundamental class libraries</Description>
+    <RepositoryUrl>https://github.com/huoshan12345/FclEx</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Copyright>huoshan12345</Copyright>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <LangVersion>preview</LangVersion>
+  </PropertyGroup>
+
+</Project>

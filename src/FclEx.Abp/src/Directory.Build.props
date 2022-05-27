@@ -1,0 +1,15 @@
+<Project>
+  <Import Project="..\..\FclEx\src\Directory.Build.props" />
+  <PropertyGroup>
+    <Description>Extensions for abp vnext(https://github.com/abpframework/abp)</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(ProjectDir)..\..\..\FclEx\src\FclEx\FclExUsing.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="FclEx.Utils" />
+    <Using Include="FclEx.Extensions" />
+  </ItemGroup>
+
+</Project>

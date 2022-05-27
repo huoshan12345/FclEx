@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>ServiceStack.OrmLite.MySql</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MySql.Data" Version="[8.0.21]" />
+    <ProjectReference Include="..\ServiceStack.OrmLite\ServiceStack.OrmLite.Custom.csproj" />
+  </ItemGroup>
+
+</Project>

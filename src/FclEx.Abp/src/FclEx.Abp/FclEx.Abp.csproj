@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="AspectCore.Extensions.LightInject" Version="2.2.0" />
+    <!--<PackageReference Include="AspectCore.Core" Version="2.2.0" />-->
+    <PackageReference Include="LightInject" Version="6.4.1" />
+    <PackageReference Include="EasyCaching.InMemory" Version="1.6.0" />
+    <PackageReference Include="EasyCaching.Serialization.Json" Version="1.6.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
+    <PackageReference Include="Volo.Abp.AutoMapper" Version="5.2.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\FclEx\src\FclEx.Http\FclEx.Http.csproj" />
+  </ItemGroup>
+</Project>

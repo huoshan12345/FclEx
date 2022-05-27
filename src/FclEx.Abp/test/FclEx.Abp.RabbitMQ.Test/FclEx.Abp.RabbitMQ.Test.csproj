@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\FclEx.Abp.RabbitMQ\FclEx.Abp.RabbitMQ.csproj" />
+    <ProjectReference Include="..\..\src\FclEx.Abp.Xunit\FclEx.Abp.Xunit.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.jeremyli-lap.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

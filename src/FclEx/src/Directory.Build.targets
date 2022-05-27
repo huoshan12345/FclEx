@@ -1,0 +1,20 @@
+<Project>
+  <PropertyGroup>
+    <!--Empty RootNamespace does not work in Directory.Build.props, so put it in this file as a workaround-->
+    <RootNamespace></RootNamespace>
+  </PropertyGroup>  
+
+  <ItemGroup>
+    <ProjectItems Include="FclEx.Http" />
+    <ProjectItems Include="FclEx.Serilog" />
+    <ProjectItems Include="FclEx.Wmi" />
+    <ProjectItems Include="FclEx.Xunit" />
+    <ProjectItems2 Include="@(ProjectItems)" Exclude="$(ProjectName)"/>
+  </ItemGroup>
+
+  <!--To check if ProjectItems contains current project-->
+  <ItemGroup Condition="@(ProjectItems->Count()) != @(ProjectItems2->Count())">
+    <Compile Include="$(ProjectDir)..\FclEx\FclExUsing.cs" />
+  </ItemGroup>
+  
+</Project>
