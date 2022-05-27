@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FclEx.Extensions;
-using FclEx.Http.Core;
-using FclEx.Http.Services;
+using FclEx.Http;
 using FclEx.Utils;
 using MoreLinq;
 

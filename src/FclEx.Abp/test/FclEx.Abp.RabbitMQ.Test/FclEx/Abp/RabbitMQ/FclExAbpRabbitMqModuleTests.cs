@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using FclEx.Abp.RabbitMQ.MsgRoles.Testers;
+﻿using FclEx.Abp.RabbitMQ.MsgRoles.Testers;
 using FclEx.Abp.Xunit;
 using Microsoft.Extensions.DependencyInjection;
-using Volo.Abp.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
 

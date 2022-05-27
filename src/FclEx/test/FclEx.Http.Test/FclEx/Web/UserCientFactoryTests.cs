@@ -1,5 +1,5 @@
-﻿using FclEx.Http.Proxy;
-using FclEx.Web.Core;
+﻿using FclEx.Http;
+using FclEx.Http.Proxy;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;

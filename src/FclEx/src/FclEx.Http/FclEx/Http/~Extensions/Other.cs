@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using FclEx.Http.Core;
 
 namespace FclEx.Http
 {

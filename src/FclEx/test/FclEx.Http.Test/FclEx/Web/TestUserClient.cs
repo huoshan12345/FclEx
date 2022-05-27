@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using FclEx.Extensions;
 using FclEx.Utils;
-using FclEx.Web.Core;
 using Microsoft.Extensions.Logging;
 
 namespace FclEx.Web

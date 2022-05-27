@@ -4,7 +4,8 @@ using System.IO;
 using System.Text;
 using FclEx;
 using FclEx.Extensions;
-using FclEx.Http.Core.Cookies;
+using FclEx.Http;
+using FclEx.Http.Cookies;
 using FclEx.Http.Proxy;
 
 public static class GlobalConstants

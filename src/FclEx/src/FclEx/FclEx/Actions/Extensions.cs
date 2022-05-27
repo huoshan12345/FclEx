@@ -62,7 +62,7 @@ namespace FclEx.Actions
                 : new SuccessAction<T>(t));
         }
 
-        public static IAction<Unit> ToUnTyped<T>(this IAction<T> action)
+        public static IAction<Unit> Untype<T>(this IAction<T> action)
         {
             return action.Map(m => default(Unit));
         }
@@ -112,6 +112,12 @@ namespace FclEx.Actions
         public static IAction<TNext> Error<T, TNext>(this IAction<T> action, string? error)
         {
             return action.Error<T, TNext>(_ => error ?? string.Empty);
+        }
+
+        public static IAction<T> Error<T>(this IAction<T> action, Action<Exception> onError, bool excuteSafely = true)
+        {
+            Check.NotNull(onError);
+            return action.NextResultIf(r => r.Error, r => CommonAction.Create(t => onError(r.Exception!), excuteSafely).Next(r));
         }
     }
 }

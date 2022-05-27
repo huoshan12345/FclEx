@@ -22,17 +22,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ServiceStack.OrmLite.Custom
 		ref\ServiceStack.OrmLite.Custom\Directory.Build.props = ref\ServiceStack.OrmLite.Custom\Directory.Build.props
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceStack.OrmLite.Custom", "ref\ServiceStack.OrmLite.Custom\ServiceStack.OrmLite\ServiceStack.OrmLite.Custom.csproj", "{90374F64-53C1-43DD-9FEC-D4594055947E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceStack.OrmLite.Custom", "FclEx.Abp\ref\ServiceStack.OrmLite.Custom\ServiceStack.OrmLite\ServiceStack.OrmLite.Custom.csproj", "{90374F64-53C1-43DD-9FEC-D4594055947E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceStack.OrmLite.MySql.Custom", "ref\ServiceStack.OrmLite.Custom\ServiceStack.OrmLite.MySql\ServiceStack.OrmLite.MySql.Custom.csproj", "{2BB0C51B-6860-444F-88CF-2051646A238E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceStack.OrmLite.MySql.Custom", "FclEx.Abp\ref\ServiceStack.OrmLite.Custom\ServiceStack.OrmLite.MySql\ServiceStack.OrmLite.MySql.Custom.csproj", "{2BB0C51B-6860-444F-88CF-2051646A238E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceStack.OrmLite.PostgreSQL.Custom", "ref\ServiceStack.OrmLite.Custom\ServiceStack.OrmLite.PostgreSQL\ServiceStack.OrmLite.PostgreSQL.Custom.csproj", "{360CDBD0-DA52-4CDB-B342-F4043427C8D9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceStack.OrmLite.PostgreSQL.Custom", "FclEx.Abp\ref\ServiceStack.OrmLite.Custom\ServiceStack.OrmLite.PostgreSQL\ServiceStack.OrmLite.PostgreSQL.Custom.csproj", "{360CDBD0-DA52-4CDB-B342-F4043427C8D9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceStack.OrmLite.Sqlite.Custom", "ref\ServiceStack.OrmLite.Custom\ServiceStack.OrmLite.Sqlite\ServiceStack.OrmLite.Sqlite.Custom.csproj", "{A3181C89-8686-420C-8500-1E32B8309F12}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceStack.OrmLite.Sqlite.Custom", "FclEx.Abp\ref\ServiceStack.OrmLite.Custom\ServiceStack.OrmLite.Sqlite\ServiceStack.OrmLite.Sqlite.Custom.csproj", "{A3181C89-8686-420C-8500-1E32B8309F12}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceStack.OrmLite.SqlServer.Custom", "ref\ServiceStack.OrmLite.Custom\ServiceStack.OrmLite.SqlServer\ServiceStack.OrmLite.SqlServer.Custom.csproj", "{D9B76DA4-C46E-4563-AB84-A25B93CC4E49}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceStack.OrmLite.SqlServer.Custom", "FclEx.Abp\ref\ServiceStack.OrmLite.Custom\ServiceStack.OrmLite.SqlServer\ServiceStack.OrmLite.SqlServer.Custom.csproj", "{D9B76DA4-C46E-4563-AB84-A25B93CC4E49}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceStack.OrmLite.Oracle.Custom", "ref\ServiceStack.OrmLite.Custom\ServiceStack.OrmLite.Oracle\ServiceStack.OrmLite.Oracle.Custom.csproj", "{EA45A083-5E40-40D3-8041-5544AA037C1C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceStack.OrmLite.Oracle.Custom", "FclEx.Abp\ref\ServiceStack.OrmLite.Custom\ServiceStack.OrmLite.Oracle\ServiceStack.OrmLite.Oracle.Custom.csproj", "{EA45A083-5E40-40D3-8041-5544AA037C1C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Abp.Xunit", "FclEx.Abp\src\FclEx.Abp.Xunit\FclEx.Abp.Xunit.csproj", "{E9832632-4A39-4BF3-B4A8-E91850E9C47B}"
 EndProject

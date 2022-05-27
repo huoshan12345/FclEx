@@ -46,7 +46,7 @@ namespace FclEx.Actions
         {
             return action.Next(m => next(m.Item1, m.Item2));
         }
-        
+
 
         public static IAction<Unit> Next<T>(this IAction<T> action, Action<T> next, bool excuteSafely = true)
         {
@@ -69,18 +69,9 @@ namespace FclEx.Actions
         }
 
 
-        public static IAction<T> NextIf<T>(this IAction<T> action, Func<T, bool> condition, Func<T, IAction<T>> @true, Func<T, IAction<T>> @false)
-        {
-            Check.NotNull(condition);
-            Check.NotNull(@true);
-            Check.NotNull(@false);
-
-            return action.Next(t => condition(t) ? @true(t) : @false(t));
-        }
-
         public static IAction<T> NextIf<T>(this IAction<T> action, Func<T, bool> condition, Func<T, IAction<T>> next)
         {
-            return action.NextIf<T>(condition, next, m => new SuccessAction<T>(m));
+            return action.NextIf<T, T>(condition, next, m => new SuccessAction<T>(m));
         }
 
         public static IAction<TNext> NextIf<T, TNext>(this IAction<T> action, Func<T, bool> condition, Func<T, IAction<TNext>> @true, Func<T, IAction<TNext>> @false)

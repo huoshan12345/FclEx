@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using FclEx.Extensions;
 using FclEx.Utils;
-using FclEx.Web.Core;
+using FclEx.Web;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 

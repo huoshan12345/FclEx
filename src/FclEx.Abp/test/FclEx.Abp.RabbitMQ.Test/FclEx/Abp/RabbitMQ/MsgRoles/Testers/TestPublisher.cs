@@ -1,7 +1,4 @@
-﻿using FclEx.Abp.RabbitMQ.Serializers;
-using FclEx.Abp.Serializers;
-using Microsoft.Extensions.Logging.Abstractions;
-using RabbitMQ.Client;
+﻿using RabbitMQ.Client;
 
 namespace FclEx.Abp.RabbitMQ.MsgRoles.Testers
 {

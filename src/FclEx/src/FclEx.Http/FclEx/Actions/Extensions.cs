@@ -1,6 +1,5 @@
 ﻿using System;
-using FclEx.Http.Core;
-using FclEx.Http.Services;
+using FclEx.Http;
 using FclEx.Utils;
 
 namespace FclEx.Actions
@@ -47,19 +46,6 @@ namespace FclEx.Actions
         {
             Check.NotNull(httpReq);
             return action.NextReq(m => httpReq, httpService, unwrapError);
-        }
-
-        public static IAction<T> Error<T>(this IAction<T> action, Action<Exception> onError)
-        {
-            Check.NotNull(onError);
-            return action.NextResult(r =>
-            {
-                if (!r.Success)
-                {
-                    Operate.Excute(() => onError(r.Exception!));
-                }
-                return r;
-            });
         }
     }
 }

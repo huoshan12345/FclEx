@@ -5,8 +5,6 @@ using FclEx.Abp.Xunit;
 using FclEx.Extensions;
 using FclEx.Utils;
 using FclEx.Web;
-using FclEx.Web.Core;
-using FclEx.Web.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xunit;

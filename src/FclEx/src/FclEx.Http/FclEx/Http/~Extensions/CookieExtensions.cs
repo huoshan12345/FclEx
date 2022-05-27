@@ -1,5 +1,5 @@
 ﻿using System.Net;
-using FclEx.Http.Core.Cookies;
+using FclEx.Http.Cookies;
 
 namespace FclEx.Http
 {

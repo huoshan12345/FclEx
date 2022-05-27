@@ -5,7 +5,7 @@ using System.Xml.Linq;
 using System.Xml.XPath;
 using FclEx;
 using FclEx.Extensions;
-using FclEx.Http.Core;
+using FclEx.Http;
 using FclEx.Utils;
 
 namespace FclEx.Actions

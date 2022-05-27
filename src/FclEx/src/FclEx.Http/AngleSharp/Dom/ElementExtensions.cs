@@ -5,7 +5,7 @@ using AngleSharp.Html.Dom;
 using FclEx;
 using FclEx.Extensions;
 using FclEx.Utils;
-using FclEx.Web.Models;
+using FclEx.Web;
 
 namespace AngleSharp.Dom
 {

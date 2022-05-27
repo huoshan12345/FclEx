@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using AspectCore.DynamicProxy;
 using FclEx.Utils;
-using FclEx.Web.Core;
+using FclEx.Web;
 
 namespace FclEx.Abp.Aop
 {

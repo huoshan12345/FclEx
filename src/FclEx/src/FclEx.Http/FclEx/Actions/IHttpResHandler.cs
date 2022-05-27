@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using FclEx.Http.Core;
+using FclEx.Http;
 using FclEx.Utils;
 
 namespace FclEx.Actions

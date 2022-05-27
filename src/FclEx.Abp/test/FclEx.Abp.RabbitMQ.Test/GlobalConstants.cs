@@ -1,5 +1,4 @@
-﻿using System;
-using FclEx.Abp.RabbitMQ;
+﻿using FclEx.Abp.RabbitMQ;
 using Microsoft.Extensions.Configuration;
 using Xunit;
 

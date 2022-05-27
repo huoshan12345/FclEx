@@ -1,7 +1,7 @@
 ﻿using FclEx.Extensions;
-using FclEx.Http.Core;
+using FclEx.Http;
 using FclEx.Utils;
-using FclEx.Web.Core;
+using FclEx.Web;
 
 namespace FclEx.Actions
 {

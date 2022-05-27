@@ -1,12 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Threading.Tasks;
-
-using FclEx.Abp.RabbitMQ.Serializers;
-using FclEx.Extensions;
-using FclEx.Utils;
-using Microsoft.Extensions.Logging.Abstractions;
-using RabbitMQ.Client;
+﻿using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
 namespace FclEx.Abp.RabbitMQ.MsgRoles.Testers
@@ -25,7 +17,7 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles.Testers
         }
 
         public TestConsumer(ConsumerSettings settings, Func<T, OperateResult> action, int maxRetryTimes = 3, Func<int, TimeSpan> delay = null)
-            : this(settings, (_, m) => Operate.Excute(() => action(m).ToTask()), maxRetryTimes, delay)
+            : this(settings, (_, m) => Operate.Excute(() => action(m)), maxRetryTimes, delay)
         {
         }
 

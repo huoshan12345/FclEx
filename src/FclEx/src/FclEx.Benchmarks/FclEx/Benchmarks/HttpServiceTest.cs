@@ -2,8 +2,7 @@
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using FclEx.Extensions;
-using FclEx.Http.Core;
-using FclEx.Http.Services;
+using FclEx.Http;
 
 namespace FclEx.Benchmarks
 {

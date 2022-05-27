@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using FclEx.Abp.RabbitMQ.MsgRoles.Testers;
+﻿using FclEx.Abp.RabbitMQ.MsgRoles.Testers;
 using Xunit;
 
 namespace FclEx.Abp.RabbitMQ.MsgRoles
