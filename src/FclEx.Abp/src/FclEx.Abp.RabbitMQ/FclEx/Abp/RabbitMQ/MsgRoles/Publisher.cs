@@ -18,9 +18,9 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles
         {
         }
 
-        protected override IEnumerable<(string, object)> GetLogProperties()
+        protected override IEnumerable<LoggerProperty> GetLogProperties()
         {
-            return new (string, object)[]
+            return new LoggerProperty[]
             {
                 ("PublisherType", GetType().ShortName()),
                 ("TargetExchange", Settings!.Exchange.Name),

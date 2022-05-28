@@ -1,28 +1,53 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using FclEx;
 using FclEx.Extensions;
 
 namespace Microsoft.Extensions.Logging;
 
+public readonly record struct LoggerProperty(string Key, object? Value)
+{
+    public static implicit operator LoggerProperty(KeyValuePair<string, object?> pair)
+    {
+        return new(pair.Key, pair.Value);
+    }
+
+    public static implicit operator LoggerProperty((string Key, object? Value) pair)
+    {
+        return new(pair.Key, pair.Value);
+    }
+}
+
+public readonly record struct LazyLoggerProperty(string Key, Func<object?> Value)
+{
+    public static implicit operator LazyLoggerProperty(KeyValuePair<string, Func<object?>> pair)
+    {
+        return new(pair.Key, pair.Value);
+    }
+
+    public static implicit operator LazyLoggerProperty((string Key, Func<object?> Value) pair)
+    {
+        return new(pair.Key, pair.Value);
+    }
+}
+
 public class PropertiesLogger : ILogger
 {
     private readonly ILogger _logger;
-    private readonly IEnumerable<KeyValuePair<string, object>> _properties;
-    private readonly IEnumerable<KeyValuePair<string, Func<object>>> _lazyProperties;
+    private readonly IEnumerable<LoggerProperty> _properties;
+    private readonly IEnumerable<LazyLoggerProperty> _lazyProperties;
 
     public PropertiesLogger(ILogger logger,
-        IEnumerable<KeyValuePair<string, object>>? properties = null,
-        IEnumerable<KeyValuePair<string, Func<object>>>? lazyProperties = null)
+        IEnumerable<LoggerProperty>? properties = null,
+        IEnumerable<LazyLoggerProperty>? lazyProperties = null)
     {
-        lazyProperties ??= Enumerable.Empty<KeyValuePair<string, Func<object>>>();
-        properties ??= Enumerable.Empty<KeyValuePair<string, object>>();
-        if (logger is PropertiesLogger scopeLogger)
+        properties ??= Enumerable.Empty<LoggerProperty>();
+        lazyProperties ??= Enumerable.Empty<LazyLoggerProperty>();
+        if (logger is PropertiesLogger inner)
         {
-            _logger = scopeLogger._logger;
-            _properties = scopeLogger._properties.Concat(properties);
-            _lazyProperties = scopeLogger._lazyProperties.Concat(lazyProperties);
+            _logger = inner._logger;
+            _properties = inner._properties.Concat(properties);
+            _lazyProperties = inner._lazyProperties.Concat(lazyProperties);
         }
         else
         {
@@ -30,14 +55,6 @@ public class PropertiesLogger : ILogger
             _properties = properties;
             _lazyProperties = lazyProperties;
         }
-    }
-
-    public PropertiesLogger(ILogger logger,
-        IEnumerable<(string, object)>? properties = null,
-        IEnumerable<(string, Func<object>)>? lazyProperties = null)
-        : this(logger, properties!.Touch().AsKeyValue(), lazyProperties.Touch().AsKeyValue())
-    {
-
     }
 
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)

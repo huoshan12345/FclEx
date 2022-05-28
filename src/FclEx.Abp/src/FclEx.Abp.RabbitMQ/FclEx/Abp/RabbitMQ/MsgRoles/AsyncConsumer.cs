@@ -60,9 +60,9 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles
             Logger.LogInformation("Started an instance");
         }
 
-        protected override IEnumerable<(string, object)> GetLogProperties()
+        protected override IEnumerable<LoggerProperty> GetLogProperties()
         {
-            return new (string, object)[]
+            return new LoggerProperty[]
             {
                 ("ConsumerType", GetType().ShortName()),
                 (nameof(Settings.Queue), Settings!.Queue.Name),

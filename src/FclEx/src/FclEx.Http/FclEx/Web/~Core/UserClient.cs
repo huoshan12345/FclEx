@@ -73,25 +73,23 @@ public abstract class UserClient : IUserClient, IDisposable
     protected UserClient(IUserAccount? account = null, ILoggerFactory? loggerFactory = null)
     {
         _account = account;
-        var innerLogger = loggerFactory == null
-            ? NullLogger.Instance
-            : loggerFactory.CreateLogger(GetType());
+        var innerLogger = loggerFactory?.CreateLogger(GetType()) ?? NullLogger.Instance;
         _logger = new Lazy<ILogger>(() => new PropertiesLogger(innerLogger, GetLogProperties(), GetLogLazyProperties()), true);
     }
 
-    protected virtual IEnumerable<(string, object)> GetLogProperties()
+    protected virtual IEnumerable<LoggerProperty> GetLogProperties()
     {
-        return new[]
+        return new LoggerProperty[]
         {
-            ("ClientType", (object)GetType().ShortName()),
+            ("ClientType", GetType().ShortName()),
         };
     }
 
-    protected virtual IEnumerable<(string, Func<object>)> GetLogLazyProperties()
+    protected virtual IEnumerable<LazyLoggerProperty> GetLogLazyProperties()
     {
-        return new (string, Func<object>)[]
+        return new LazyLoggerProperty[]
         {
-            (nameof(Account), () => Account!),
+            (nameof(Account), () => Account),
             (nameof(IsOnline), () => IsOnline),
             (nameof(SessionState), () => Session.State)
         };

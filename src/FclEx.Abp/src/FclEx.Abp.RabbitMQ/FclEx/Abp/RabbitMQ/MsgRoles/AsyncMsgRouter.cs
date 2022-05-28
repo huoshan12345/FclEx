@@ -24,10 +24,10 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles
             Converter = converter;
         }
 
-        protected override IEnumerable<(string, object)> GetLogProperties()
+        protected override IEnumerable<LoggerProperty> GetLogProperties()
         {
             var s = Settings!;
-            return new (string, object)[]
+            return new LoggerProperty[]
             {
                 ("RouterType", GetType().ShortName()),
                 (nameof(Settings.Queue), s.Queue.Name),
