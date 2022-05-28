@@ -13,7 +13,7 @@ public static class UserClientFactoryExtensions
         return factory.Create(account, http);
     }
 
-    public static TClient Create<TClient>(this IUserClientFactory<TClient> factory, IUserAccount account, string proxy) where TClient : IUserClient
+    public static TClient Create<TClient>(this IUserClientFactory<TClient> factory, IUserAccount account, string? proxy) where TClient : IUserClient
     {
         return factory.Create(account, WebProxyExt.Create(proxy));
     }
