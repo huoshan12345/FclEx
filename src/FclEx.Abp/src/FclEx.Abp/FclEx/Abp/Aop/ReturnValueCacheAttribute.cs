@@ -132,12 +132,12 @@ namespace FclEx.Abp.Aop
         private static ReturnValueCacheAttributeInfo GetOrSetInfo(IServiceProvider provider)
         {
             _locker.DoubleCheckAndDo(() => _info == null, () =>
-             {
+            {
                  var logger = provider.CreateLogger<ReturnValueCacheAttribute>();
                  var cacheManager = provider.GetRequiredService<ICacheManager>();
                  var serializer = cacheManager.ProviderInfo.Serializer ?? new DefaultJsonSerializer("json", default);
                  _info = new ReturnValueCacheAttributeInfo(cacheManager, serializer, logger);
-             });
+            });
             return _info!;
         }
     }

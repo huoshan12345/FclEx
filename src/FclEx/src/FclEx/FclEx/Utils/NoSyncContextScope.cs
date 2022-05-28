@@ -2,63 +2,62 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FclEx.Utils
+namespace FclEx.Utils;
+
+public static class NoSyncContextScope
 {
-    public static class NoSyncContextScope
+    // See: https://stackoverflow.com/questions/28305968/use-task-run-in-synchronous-method-to-avoid-deadlock-waiting-on-async-method
+    public static IDisposable Enter()
     {
-        // See: https://stackoverflow.com/questions/28305968/use-task-run-in-synchronous-method-to-avoid-deadlock-waiting-on-async-method
-        public static IDisposable Enter()
+        var context = SynchronizationContext.Current;
+        SynchronizationContext.SetSynchronizationContext(null);
+        return new Disposable(context);
+    }
+
+    private readonly struct Disposable : IDisposable
+    {
+        private readonly SynchronizationContext? _context;
+
+        public Disposable(SynchronizationContext? context)
         {
-            var context = SynchronizationContext.Current;
-            SynchronizationContext.SetSynchronizationContext(null);
-            return new Disposable(context);
+            _context = context;
         }
 
-        private readonly struct Disposable : IDisposable
+        public void Dispose()
         {
-            private readonly SynchronizationContext? _context;
-
-            public Disposable(SynchronizationContext? context)
-            {
-                _context = context;
-            }
-
-            public void Dispose()
-            {
-                SynchronizationContext.SetSynchronizationContext(_context);
-            }
+            SynchronizationContext.SetSynchronizationContext(_context);
         }
+    }
 
-        public static T Run<T>(Func<Task<T>> action)
+    public static T Run<T>(Func<Task<T>> action)
+    {
+        using (Enter())
         {
-            using (Enter())
-            {
-                return action().GetAwaiter().GetResult();
-            }
+            return action().GetAwaiter().GetResult();
         }
+    }
 
-        public static void Run(Func<Task> action)
+    public static void Run(Func<Task> action)
+    {
+        using (Enter())
         {
-            using (Enter())
-            {
-                action().GetAwaiter().GetResult();
-            }
+            action().GetAwaiter().GetResult();
         }
+    }
 
-        public static async Task RunAsync(Func<Task> action)
+    public static async Task RunAsync(Func<Task> action)
+    {
+        using (Enter())
         {
-            using (Enter())
-            {
-                await action();
-            }
+            await action();
         }
+    }
 
-        public static async Task<T> RunAsync<T>(Func<Task<T>> action)
+    public static async Task<T> RunAsync<T>(Func<Task<T>> action)
+    {
+        using (Enter())
         {
-            using (Enter())
-            {
-                return await action();
-            }
+            return await action();
         }
     }
 }

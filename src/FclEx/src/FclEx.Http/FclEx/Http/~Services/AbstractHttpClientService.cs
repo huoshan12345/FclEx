@@ -14,244 +14,243 @@ using FclEx.Helpers;
 using FclEx.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace FclEx.Http
+namespace FclEx.Http;
+
+public abstract class AbstractHttpClientService : AbstractHttpService
 {
-    public abstract class AbstractHttpClientService : AbstractHttpService
+    protected static readonly Encoding DefaultStringEncoding = Encoding.UTF8;
+
+    protected static readonly string[] NotAddHeaderNames =
     {
-        protected static readonly Encoding DefaultStringEncoding = Encoding.UTF8;
+        HttpKnownHeaderNames.ContentType,
+        HttpKnownHeaderNames.Cookie,
+        // HttpKnownHeaderNames.UserAgent
+    };
 
-        protected static readonly string[] NotAddHeaderNames =
-        {
-            HttpKnownHeaderNames.ContentType,
-            HttpKnownHeaderNames.Cookie,
-            // HttpKnownHeaderNames.UserAgent
-        };
+    protected AbstractHttpClientService(bool useCookie, IWebProxyExt? proxy = null, ILoggerFactory? loggerFactory = null)
+        : base(useCookie, proxy, loggerFactory)
+    {
+    }
 
-        protected AbstractHttpClientService(bool useCookie, IWebProxyExt? proxy = null, ILoggerFactory? loggerFactory = null)
-            : base(useCookie, proxy, loggerFactory)
+    protected void ReadCookies(HttpResponseMessage response, HttpRes res)
+    {
+        if (!response.Headers.TryGetValues(HttpKnownHeaderNames.SetCookie, out var cookies)) return;
+        var arr = cookies.ToArray();
+        if (arr.IsEmpty())
+            return;
+
+        res.Headers.AddRange(HttpKnownHeaderNames.SetCookie, arr);
+        SaveCookies(response.RequestMessage?.RequestUri!, arr);
+    }
+
+    protected static void ReadHeader(HttpResponseMessage response, HttpRes res)
+    {
+        foreach (var (key, values) in response.Headers.Where(m => m.Key != HttpKnownHeaderNames.SetCookie))
         {
+            res.Headers.AddRange(key, values);
         }
+    }
 
-        protected void ReadCookies(HttpResponseMessage response, HttpRes res)
+    protected static async Task ReadContentAsync(HttpResponseMessage response, HttpRes res, CancellationToken token)
+    {
+        var req = res.HttpReq;
+        foreach (var (key, value) in response.Content.Headers)
         {
-            if (!response.Headers.TryGetValues(HttpKnownHeaderNames.SetCookie, out var cookies)) return;
-            var arr = cookies.ToArray();
-            if (arr.IsEmpty())
-                return;
-
-            res.Headers.AddRange(HttpKnownHeaderNames.SetCookie, arr);
-            SaveCookies(response.RequestMessage?.RequestUri!, arr);
+            res.Headers.AddRange(key, value);
         }
+        var bytes = await CopyToMemoryAsync(response.Content, req.BufferSize, req.ReadBufferTimeout, token).DonotCapture();
+        res.ResponseBytes = bytes;
 
-        protected static void ReadHeader(HttpResponseMessage response, HttpRes res)
+        switch (req.ResultType)
         {
-            foreach (var (key, values) in response.Headers.Where(m => m.Key != HttpKnownHeaderNames.SetCookie))
+            case HttpResultType.Bytes:
             {
-                res.Headers.AddRange(key, values);
+                res.ResponseBytes = bytes;
+                break;
             }
+            case HttpResultType.String:
+            {
+                var buffer = new ArraySegment<byte>(bytes.ToArray());
+                (res.ResponseString, res.Encoding) = ReadBufferAsString(buffer, response.Content.Headers, req.CharSet, req.DetectCharSetFromHtmlMeta, req.FallbackCharSet);
+                break;
+            }
+            default: throw new ArgumentOutOfRangeException();
         }
+    }
 
-        protected static async Task ReadContentAsync(HttpResponseMessage response, HttpRes res, CancellationToken token)
+    internal static Encoding? GetEncodingFromCharSet(string? charset)
+    {
+        if (charset.IsNullOrEmpty())
+            return null;
+
+        try
         {
-            var req = res.HttpReq;
-            foreach (var (key, value) in response.Content.Headers)
+            // Remove at most a single set of quotes.
+            if (charset!.Length > 2 &&
+                charset[0] == '\"' &&
+                charset[charset.Length - 1] == '\"')
             {
-                res.Headers.AddRange(key, value);
+                return Encoding.GetEncoding(charset.Substring(1, charset.Length - 2));
             }
-            var bytes = await CopyToMemoryAsync(response.Content, req.BufferSize, req.ReadBufferTimeout, token).DonotCapture();
-            res.ResponseBytes = bytes;
-
-            switch (req.ResultType)
+            else
             {
-                case HttpResultType.Bytes:
-                {
-                    res.ResponseBytes = bytes;
-                    break;
-                }
-                case HttpResultType.String:
-                {
-                    var buffer = new ArraySegment<byte>(bytes.ToArray());
-                    (res.ResponseString, res.Encoding) = ReadBufferAsString(buffer, response.Content.Headers, req.CharSet, req.DetectCharSetFromHtmlMeta, req.FallbackCharSet);
-                    break;
-                }
-                default: throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        internal static Encoding? GetEncodingFromCharSet(string? charset)
-        {
-            if (charset.IsNullOrEmpty())
-                return null;
-
-            try
-            {
-                // Remove at most a single set of quotes.
-                if (charset!.Length > 2 &&
-                    charset[0] == '\"' &&
-                    charset[charset.Length - 1] == '\"')
-                {
-                    return Encoding.GetEncoding(charset.Substring(1, charset.Length - 2));
-                }
-                else
-                {
-                    return Encoding.GetEncoding(charset);
-                }
-            }
-            catch (ArgumentException e)
-            {
-                throw new InvalidOperationException("The character set provided in ContentType is invalid", e);
+                return Encoding.GetEncoding(charset);
             }
         }
-
-        internal static (string, Encoding) ReadBufferAsString(ArraySegment<byte> buffer, HttpContentHeaders headers, string? charSet, bool detectCharSetFromHtmlMeta, string? defaultCharSet)
+        catch (ArgumentException e)
         {
-            Debug.Assert(buffer.Array != null);
+            throw new InvalidOperationException("The character set provided in ContentType is invalid", e);
+        }
+    }
 
-            // We don't validate the Content-Encoding header: If the content was encoded, it's the caller's
-            // responsibility to make sure to only call ReadAsString() on already decoded content. E.g. if the
-            // Content-Encoding is 'gzip' the user should set HttpClientHandler.AutomaticDecompression to get a
-            // decoded response stream.
+    internal static (string, Encoding) ReadBufferAsString(ArraySegment<byte> buffer, HttpContentHeaders headers, string? charSet, bool detectCharSetFromHtmlMeta, string? defaultCharSet)
+    {
+        Debug.Assert(buffer.Array != null);
 
-            Encoding? encoding = null;
-            var bomLength = -1;
+        // We don't validate the Content-Encoding header: If the content was encoded, it's the caller's
+        // responsibility to make sure to only call ReadAsString() on already decoded content. E.g. if the
+        // Content-Encoding is 'gzip' the user should set HttpClientHandler.AutomaticDecompression to get a
+        // decoded response stream.
 
-            charSet = (charSet, headers.ContentType?.CharSet).FirstValid();
-            // If we do have encoding information in the 'Content-Type' header, use that information to convert
-            // the content to a string.
-            if (charSet.IsValid())
+        Encoding? encoding = null;
+        var bomLength = -1;
+
+        charSet = (charSet, headers.ContentType?.CharSet).FirstValid();
+        // If we do have encoding information in the 'Content-Type' header, use that information to convert
+        // the content to a string.
+        if (charSet.IsValid())
+        {
+            encoding = GetEncodingFromCharSet(charSet);
+            // Byte-order-mark (BOM) characters may be present even if a charset was specified.
+            bomLength = EncodingHelper.GetPreambleLength(buffer, encoding!);
+        }
+
+        // If no content encoding is listed in the ContentType HTTP header, or no Content-Type header present,
+        // then check for a BOM in the data to figure out the encoding.
+        if (encoding == null)
+        {
+            if (!EncodingHelper.TryDetectEncoding(buffer, out encoding, out bomLength))
             {
-                encoding = GetEncodingFromCharSet(charSet);
-                // Byte-order-mark (BOM) characters may be present even if a charset was specified.
-                bomLength = EncodingHelper.GetPreambleLength(buffer, encoding!);
-            }
+                // We already checked to see if the data had a UTF8 BOM in TryDetectEncoding
+                // and DefaultStringEncoding is UTF8, so the bomLength is 0.
+                bomLength = 0;
 
-            // If no content encoding is listed in the ContentType HTTP header, or no Content-Type header present,
-            // then check for a BOM in the data to figure out the encoding.
-            if (encoding == null)
-            {
-                if (!EncodingHelper.TryDetectEncoding(buffer, out encoding, out bomLength))
+                if (detectCharSetFromHtmlMeta)
                 {
-                    // We already checked to see if the data had a UTF8 BOM in TryDetectEncoding
-                    // and DefaultStringEncoding is UTF8, so the bomLength is 0.
-                    bomLength = 0;
-
-                    if (detectCharSetFromHtmlMeta)
+                    var media = headers.ContentType?.MediaType;
+                    if (media != null && media.Contains("html")) // html or xhtml
                     {
-                        var media = headers.ContentType?.MediaType;
-                        if (media != null && media.Contains("html")) // html or xhtml
-                        {
-                            encoding = DetectCharSetFromHtmlMeta(buffer);
-                        }
+                        encoding = DetectCharSetFromHtmlMeta(buffer);
                     }
                 }
             }
-
-            encoding ??= GetEncodingFromCharSet(defaultCharSet) ?? DefaultStringEncoding;
-
-            // Drop the BOM when decoding the data.
-            var str = encoding.GetString(buffer.Array, buffer.Offset + bomLength, buffer.Count - bomLength);
-            return (str, encoding);
         }
 
-        private static Encoding? DetectCharSetFromHtmlMeta(ArraySegment<byte> buffer)
-        {
-            var data = buffer.Array ?? throw new ArgumentNullException(nameof(buffer.Array));
-            if (data.Length == 0)
-                return null;
+        encoding ??= GetEncodingFromCharSet(defaultCharSet) ?? DefaultStringEncoding;
 
-            var prefix = Encoding.Default.GetString(data, 0, Math.Min(1024, data.Length));
-            var charSet = HtmlUtil.GetMetaCharSet(prefix);
-            return charSet == null ? null : Encoding.GetEncoding(charSet);
-        }
-
-        private static async Task<byte[]> CopyToMemoryAsync(HttpContent content, int bufferSize, TimeSpan? readBufferTimeout, CancellationToken token)
-        {
-            var len = content.Headers.ContentLength ?? 0;
-            await using var ms = new MemoryStream((int)len);
-            await using (var stream = await content.ReadAsStreamAsync(token).DonotCapture())
-                await stream.CopyToAsync(ms, bufferSize, readBufferTimeout, token);
-            ms.Seek(0, SeekOrigin.Begin);
-            return ms.ToArray();
-        }
-
-        protected static HttpRequestMessage GetHttpRequest(HttpReq req, CookieContainer cc, CancellationToken token)
-        {
-            var request = new HttpRequestMessage(new HttpMethod(req.Method.ToString().ToUpper()), req.GetUri());
-            if (req.Method != HttpMethodType.Get)
-            {
-                var bytes = req.GetData();
-                request.Content = new ArraySegmentContent(bytes, token, req.ReadBufferTimeout)
-                {
-                    Headers = { ContentType = MediaTypeHeaderValue.Parse(req.ContentType) }
-                };
-            }
-
-            foreach (var (key, value) in req.HeaderMap.Where(h => !NotAddHeaderNames.Contains(h.Key)))
-            {
-                request.Headers.Add(key, value);
-            }
-
-            var cookies = req.HeaderMap.Get(HttpKnownHeaderNames.Cookie);
-            if (!cookies.IsNullOrEmpty())
-            {
-                request.Headers.Add(HttpKnownHeaderNames.Cookie, cookies);
-            }
-
-            var cookiesInCc = cc.GetCookieHeader(request.RequestUri!);
-            request.Headers.Add(HttpKnownHeaderNames.Cookie, cookiesInCc);
-
-            return request;
-        }
-
-        private async Task<HttpResponseMessage> SendAsync(HttpClient httpClient, HttpReq httpReq, CancellationToken token,
-            HttpCompletionOption httpCompletionOption = HttpCompletionOption.ResponseHeadersRead)
-        {
-            var httpRequest = GetHttpRequest(httpReq, _cookieContainer, token);
-            var res = await httpClient.SendAsync(httpRequest, httpCompletionOption, token).DonotCapture();
-            return res;
-        }
-
-        protected async Task ExecuteAsyncInternal(HttpClient httpClient, HttpReq httpReq, HttpRes httpRes, CancellationToken token = default)
-        {
-            using var cts = token.WithTimeout(httpReq.TotalTimeout);
-            var responses = new List<HttpResponseMessage>();
-            try
-            {
-                var curReq = httpReq;
-                while (true)
-                {
-                    using var ctsPerReq = cts.Token.WithTimeout(httpReq.ConnectTimeout);
-                    var res = await SendAsync(httpClient, curReq, ctsPerReq.Token).DonotCapture();
-                    responses.Add(res);
-                    httpRes.RedirectUris.Add(res.RequestMessage?.RequestUri!);
-                    if (httpReq.ReadResultCookie)
-                        ReadCookies(res, httpRes);
-
-                    if (!res.TryGetRedirection(out var uri))
-                        break;
-
-                    curReq = HttpReq.Get(uri);
-                }
-
-                var response = responses.Last(); // responses should not be empty
-                httpRes.StatusCode = response.StatusCode;
-
-                if (httpReq.ReadResultHeader)
-                    ReadHeader(response, httpRes);
-
-                if (httpReq.ThrowOnFailedCode)
-                    response.EnsureSuccess();
-
-                if (httpReq.ReadResultContent)
-                    await ReadContentAsync(response, httpRes, cts.Token).DonotCapture();
-            }
-            finally
-            {
-                cts.Dispose();
-                responses.ForEach(m => m?.Dispose());
-                responses.Clear();
-            }
-        }
-
+        // Drop the BOM when decoding the data.
+        var str = encoding.GetString(buffer.Array, buffer.Offset + bomLength, buffer.Count - bomLength);
+        return (str, encoding);
     }
+
+    private static Encoding? DetectCharSetFromHtmlMeta(ArraySegment<byte> buffer)
+    {
+        var data = buffer.Array ?? throw new ArgumentNullException(nameof(buffer.Array));
+        if (data.Length == 0)
+            return null;
+
+        var prefix = Encoding.Default.GetString(data, 0, Math.Min(1024, data.Length));
+        var charSet = HtmlUtil.GetMetaCharSet(prefix);
+        return charSet == null ? null : Encoding.GetEncoding(charSet);
+    }
+
+    private static async Task<byte[]> CopyToMemoryAsync(HttpContent content, int bufferSize, TimeSpan? readBufferTimeout, CancellationToken token)
+    {
+        var len = content.Headers.ContentLength ?? 0;
+        await using var ms = new MemoryStream((int)len);
+        await using (var stream = await content.ReadAsStreamAsync(token).DonotCapture())
+            await stream.CopyToAsync(ms, bufferSize, readBufferTimeout, token);
+        ms.Seek(0, SeekOrigin.Begin);
+        return ms.ToArray();
+    }
+
+    protected static HttpRequestMessage GetHttpRequest(HttpReq req, CookieContainer cc, CancellationToken token)
+    {
+        var request = new HttpRequestMessage(new HttpMethod(req.Method.ToString().ToUpper()), req.GetUri());
+        if (req.Method != HttpMethodType.Get)
+        {
+            var bytes = req.GetData();
+            request.Content = new ArraySegmentContent(bytes, token, req.ReadBufferTimeout)
+            {
+                Headers = { ContentType = MediaTypeHeaderValue.Parse(req.ContentType) }
+            };
+        }
+
+        foreach (var (key, value) in req.HeaderMap.Where(h => !NotAddHeaderNames.Contains(h.Key)))
+        {
+            request.Headers.Add(key, value);
+        }
+
+        var cookies = req.HeaderMap.Get(HttpKnownHeaderNames.Cookie);
+        if (!cookies.IsNullOrEmpty())
+        {
+            request.Headers.Add(HttpKnownHeaderNames.Cookie, cookies);
+        }
+
+        var cookiesInCc = cc.GetCookieHeader(request.RequestUri!);
+        request.Headers.Add(HttpKnownHeaderNames.Cookie, cookiesInCc);
+
+        return request;
+    }
+
+    private async Task<HttpResponseMessage> SendAsync(HttpClient httpClient, HttpReq httpReq, CancellationToken token,
+        HttpCompletionOption httpCompletionOption = HttpCompletionOption.ResponseHeadersRead)
+    {
+        var httpRequest = GetHttpRequest(httpReq, _cookieContainer, token);
+        var res = await httpClient.SendAsync(httpRequest, httpCompletionOption, token).DonotCapture();
+        return res;
+    }
+
+    protected async Task ExecuteAsyncInternal(HttpClient httpClient, HttpReq httpReq, HttpRes httpRes, CancellationToken token = default)
+    {
+        using var cts = token.WithTimeout(httpReq.TotalTimeout);
+        var responses = new List<HttpResponseMessage>();
+        try
+        {
+            var curReq = httpReq;
+            while (true)
+            {
+                using var ctsPerReq = cts.Token.WithTimeout(httpReq.ConnectTimeout);
+                var res = await SendAsync(httpClient, curReq, ctsPerReq.Token).DonotCapture();
+                responses.Add(res);
+                httpRes.RedirectUris.Add(res.RequestMessage?.RequestUri!);
+                if (httpReq.ReadResultCookie)
+                    ReadCookies(res, httpRes);
+
+                if (!res.TryGetRedirection(out var uri))
+                    break;
+
+                curReq = HttpReq.Get(uri);
+            }
+
+            var response = responses.Last(); // responses should not be empty
+            httpRes.StatusCode = response.StatusCode;
+
+            if (httpReq.ReadResultHeader)
+                ReadHeader(response, httpRes);
+
+            if (httpReq.ThrowOnFailedCode)
+                response.EnsureSuccess();
+
+            if (httpReq.ReadResultContent)
+                await ReadContentAsync(response, httpRes, cts.Token).DonotCapture();
+        }
+        finally
+        {
+            cts.Dispose();
+            responses.ForEach(m => m?.Dispose());
+            responses.Clear();
+        }
+    }
+
 }

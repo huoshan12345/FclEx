@@ -3,47 +3,46 @@ using System.Collections.Generic;
 using System.Net;
 using System.Reflection;
 
-namespace FclEx.Extensions
+namespace FclEx.Extensions;
+
+public static class CookieContainerExtensions
 {
-    public static class CookieContainerExtensions
+    private static readonly FieldInfo FieldOfDomainTable = typeof(CookieContainer).GetField("m_domainTable", BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+    public static List<Cookie> GetAllCookies(this CookieContainer cookieJar)
     {
-        private static readonly FieldInfo FieldOfDomainTable = typeof(CookieContainer).GetField("m_domainTable", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var list = new List<Cookie>(cookieJar.Count);
 
-        public static List<Cookie> GetAllCookies(this CookieContainer cookieJar)
+        var table = (Hashtable)FieldOfDomainTable.GetValue(cookieJar)!;
+
+        var cookieLists = new List<SortedList>();
+        lock (table.SyncRoot)
         {
-            var list = new List<Cookie>(cookieJar.Count);
-
-            var table = (Hashtable)FieldOfDomainTable.GetValue(cookieJar)!;
-
-            var cookieLists = new List<SortedList>();
-            lock (table.SyncRoot)
+            foreach (var pathList in table.Values)
             {
-                foreach (var pathList in table.Values)
-                {
-                    var cookieList = (SortedList)pathList.GetType().InvokeMember("m_list",
-                        BindingFlags.NonPublic |
-                        BindingFlags.GetField |
-                        BindingFlags.Instance,
-                        null,
-                        pathList,
-                        new object[] { })!;
+                var cookieList = (SortedList)pathList.GetType().InvokeMember("m_list",
+                    BindingFlags.NonPublic |
+                    BindingFlags.GetField |
+                    BindingFlags.Instance,
+                    null,
+                    pathList,
+                    new object[] { })!;
 
-                    cookieLists.Add(cookieList);
-                }
+                cookieLists.Add(cookieList);
             }
-
-            foreach (var cookieList in cookieLists)
-            {
-                lock (cookieList.SyncRoot)
-                {
-                    foreach (CookieCollection cookieCollection in cookieList.Values)
-                    {
-                        list.AddRange(cookieCollection);
-                    }
-                }
-            }
-
-            return list;
         }
+
+        foreach (var cookieList in cookieLists)
+        {
+            lock (cookieList.SyncRoot)
+            {
+                foreach (CookieCollection cookieCollection in cookieList.Values)
+                {
+                    list.AddRange(cookieCollection);
+                }
+            }
+        }
+
+        return list;
     }
 }

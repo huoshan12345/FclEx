@@ -1,13 +1,12 @@
 ﻿using System.Reflection;
 
-namespace FclEx.Extensions
+namespace FclEx.Extensions;
+
+public static class FieldInfoExtensions
 {
-    public static class FieldInfoExtensions
+    public static T? GetValue<T>(this FieldInfo info, object? obj)
     {
-        public static T? GetValue<T>(this FieldInfo info, object? obj)
-        {
-            var value = info.GetValue(obj);
-            return value is null ? default : (T)value;
-        }
+        var value = info.GetValue(obj);
+        return value is null ? default : (T)value;
     }
 }

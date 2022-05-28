@@ -1,41 +1,40 @@
 ﻿using System;
 using Microsoft.Extensions.ObjectPool;
 
-namespace FclEx.Utils
+namespace FclEx.Utils;
+
+public struct PooledObject<T> : IDisposable where T : class
 {
-    public struct PooledObject<T> : IDisposable where T : class
+    private readonly T _value;
+    private bool _isDisposed;
+    private readonly ObjectPool<T> _pool;
+
+    public PooledObject(ObjectPool<T> pool)
     {
-        private readonly T _value;
-        private bool _isDisposed;
-        private readonly ObjectPool<T> _pool;
+        _pool = Check.NotNull(pool);
+        _value = pool.Get();
+        _isDisposed = false;
+    }
 
-        public PooledObject(ObjectPool<T> pool)
-        {
-            _pool = Check.NotNull(pool);
-            _value = pool.Get();
-            _isDisposed = false;
-        }
+    private void CheckDisposed()
+    {
+        if (_isDisposed)
+            throw new ObjectDisposedException("The object has been disposed already.");
+    }
 
-        private void CheckDisposed()
+    public T Value
+    {
+        get
         {
-            if (_isDisposed)
-                throw new ObjectDisposedException("The object has been disposed already.");
+            CheckDisposed();
+            return _value;
         }
+    }
 
-        public T Value
-        {
-            get
-            {
-                CheckDisposed();
-                return _value;
-            }
-        }
-
-        public void Dispose()
-        {
-            if (_isDisposed) return;
-            _pool.Return(_value);
-            _isDisposed = true;
-        }
+    public void Dispose()
+    {
+        if (_isDisposed) return;
+        _pool.Return(_value);
+        _isDisposed = true;
     }
 }

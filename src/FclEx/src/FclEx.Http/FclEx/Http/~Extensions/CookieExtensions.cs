@@ -1,13 +1,11 @@
 ﻿using System.Net;
-using FclEx.Http.Cookies;
 
-namespace FclEx.Http
+namespace FclEx.Http;
+
+public static class SimpleCookieExtensions
 {
-    public static class SimpleCookieExtensions
+    public static SimpleCookie ToSimpleCookie(this Cookie cookie)
     {
-        public static SimpleCookie ToSimpleCookie(this Cookie cookie)
-        {
-            return new SimpleCookie(cookie.Name, cookie.Value, cookie.Domain);
-        }
+        return new SimpleCookie(cookie.Name, cookie.Value, cookie.Domain);
     }
 }

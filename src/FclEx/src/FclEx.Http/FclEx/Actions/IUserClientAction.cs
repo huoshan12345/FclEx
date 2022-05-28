@@ -1,11 +1,10 @@
 ﻿using FclEx.Web;
 
-namespace FclEx.Actions
+namespace FclEx.Actions;
+
+public interface IUserClientAction<out TClient, T> : IAbstractAction<T> where TClient : IUserClient
 {
-    public interface IUserClientAction<out TClient, T> : IAbstractAction<T> where TClient : IUserClient
-    {
-        public TClient Client { get; }
-        public ISession Session => Client.Session;
-        public IUserAccount Account => Client.Account;
-    }
+    public TClient Client { get; }
+    public ISession Session => Client.Session;
+    public IUserAccount Account => Client.Account;
 }

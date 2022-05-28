@@ -1,15 +1,14 @@
 ﻿using System;
 
-namespace FclEx.Attributes
-{
-    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
-    public class EnumValueAttribute : Attribute
-    {
-        public EnumValueAttribute(string? value)
-        {
-            Value = value;
-        }
+namespace FclEx.Attributes;
 
-        public string? Value { get; }
+[AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
+public class EnumValueAttribute : Attribute
+{
+    public EnumValueAttribute(string? value)
+    {
+        Value = value;
     }
+
+    public string? Value { get; }
 }

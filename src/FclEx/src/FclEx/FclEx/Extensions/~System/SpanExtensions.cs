@@ -1,26 +1,25 @@
 ﻿using System;
 using System.Text;
 
-namespace FclEx.Extensions
+namespace FclEx.Extensions;
+
+public static class SpanExtensions
 {
-    public static class SpanExtensions
+    public static unsafe string GetString(this ReadOnlySpan<byte> bytes, Encoding? encoding = null)
     {
-        public static unsafe string GetString(this ReadOnlySpan<byte> bytes, Encoding? encoding = null)
-        {
-            if (bytes.IsEmpty)
-                return string.Empty;
+        if (bytes.IsEmpty)
+            return string.Empty;
 
-            encoding ??= Encoding.UTF8;
-            fixed (byte* bp = bytes)
-            {
-                var str = encoding.GetString(bp, bytes.Length);
-                return str;
-            }
-        }
-
-        public static string GetString(this Span<byte> bytes, Encoding? encoding = null)
+        encoding ??= Encoding.UTF8;
+        fixed (byte* bp = bytes)
         {
-            return ((ReadOnlySpan<byte>)bytes).GetString(encoding);
+            var str = encoding.GetString(bp, bytes.Length);
+            return str;
         }
+    }
+
+    public static string GetString(this Span<byte> bytes, Encoding? encoding = null)
+    {
+        return ((ReadOnlySpan<byte>)bytes).GetString(encoding);
     }
 }

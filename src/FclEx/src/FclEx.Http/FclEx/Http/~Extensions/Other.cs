@@ -1,12 +1,11 @@
 ﻿using System.Text;
 
-namespace FclEx.Http
+namespace FclEx.Http;
+
+public static class Other
 {
-    public static class Other
+    public static StringBuilder AppendHttpLine(this StringBuilder sb, string value)
     {
-        public static StringBuilder AppendHttpLine(this StringBuilder sb, string value)
-        {
-            return sb.Append(value + HttpConstants.NewLine);
-        }
+        return sb.Append(value + HttpConstants.NewLine);
     }
 }

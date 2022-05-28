@@ -1,19 +1,18 @@
 ﻿using System;
 
-namespace FclEx.Utils
+namespace FclEx.Utils;
+
+public readonly struct ActionDisposable : IDisposable
 {
-    public readonly struct ActionDisposable : IDisposable
+    private readonly Action _action;
+
+    public ActionDisposable(Action action)
     {
-        private readonly Action _action;
+        _action = Check.NotNull(action);
+    }
 
-        public ActionDisposable(Action action)
-        {
-            _action = Check.NotNull(action);
-        }
-
-        public void Dispose()
-        {
-            _action();
-        }
+    public void Dispose()
+    {
+        _action();
     }
 }

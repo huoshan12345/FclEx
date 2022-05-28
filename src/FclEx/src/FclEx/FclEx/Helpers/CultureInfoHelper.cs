@@ -1,9 +1,8 @@
 ﻿using System.Globalization;
 
-namespace FclEx.Helpers
+namespace FclEx.Helpers;
+
+public static class CultureInfoHelper
 {
-    public static class CultureInfoHelper
-    {
-        public static CultureInfo TwoDigitYear { get; } = new(CultureInfo.InvariantCulture.LCID) { Calendar = { TwoDigitYearMax = 2099 } };
-    }
+    public static CultureInfo TwoDigitYear { get; } = new(CultureInfo.InvariantCulture.LCID) { Calendar = { TwoDigitYearMax = 2099 } };
 }

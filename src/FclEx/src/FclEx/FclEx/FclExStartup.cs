@@ -2,19 +2,18 @@
 using System.Text;
 using FclEx.Utils;
 
-namespace FclEx
-{
-    public static class FclExStartup
-    {
-        private static readonly Initializer _initializer = new();
+namespace FclEx;
 
-        public static void Init()
+public static class FclExStartup
+{
+    private static readonly Initializer _initializer = new();
+
+    public static void Init()
+    {
+        _initializer.Init(() =>
         {
-            _initializer.Init(() =>
-            {
-                ServicePointManager.DefaultConnectionLimit = short.MaxValue;
-                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            });
-        }
+            ServicePointManager.DefaultConnectionLimit = short.MaxValue;
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        });
     }
 }

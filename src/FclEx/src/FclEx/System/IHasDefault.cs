@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace System
+namespace System;
+
+public interface IHasDefault<out TSelf> where TSelf : new()
 {
-    public interface IHasDefault<out TSelf> where TSelf : new()
-    {
-        static TSelf Default { get; } = new();
-    }
+    static TSelf Default { get; } = new();
 }

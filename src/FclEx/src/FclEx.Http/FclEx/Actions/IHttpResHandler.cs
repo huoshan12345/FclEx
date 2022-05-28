@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 using FclEx.Http;
 using FclEx.Utils;
 
-namespace FclEx.Actions
+namespace FclEx.Actions;
+
+public interface IHttpResHandler<T>
 {
-    public interface IHttpResHandler<T>
-    {
-        OperateResult<T> GetResult(HttpRes res);
-    }
+    OperateResult<T> GetResult(HttpRes res);
 }

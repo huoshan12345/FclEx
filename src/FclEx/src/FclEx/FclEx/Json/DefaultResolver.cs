@@ -5,17 +5,16 @@ using FclEx.Json.Converters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace FclEx.Json
+namespace FclEx.Json;
+
+public class DefaultResolver<T> : DefaultContractResolver
+    where T : JsonConverter
 {
-    public class DefaultResolver<T> : DefaultContractResolver
-        where T : JsonConverter
+    protected override JsonObjectContract CreateObjectContract(Type objectType)
     {
-        protected override JsonObjectContract CreateObjectContract(Type objectType)
-        {
-            var contract = base.CreateObjectContract(objectType);
-            if (contract.Converter != null && contract.Converter.GetType() == typeof(T))
-                contract.Converter = null;
-            return contract;
-        }
+        var contract = base.CreateObjectContract(objectType);
+        if (contract.Converter != null && contract.Converter.GetType() == typeof(T))
+            contract.Converter = null;
+        return contract;
     }
 }

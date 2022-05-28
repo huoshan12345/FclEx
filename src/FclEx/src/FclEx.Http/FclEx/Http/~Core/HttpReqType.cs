@@ -1,11 +1,10 @@
-﻿namespace FclEx.Http
+﻿namespace FclEx.Http;
+
+public enum HttpReqType
 {
-    public enum HttpReqType
-    {
-        Get,
-        Form,
-        Json,
-        Upload,
-        MultiPart
-    }
+    Get,
+    Form,
+    Json,
+    Upload,
+    MultiPart
 }

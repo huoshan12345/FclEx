@@ -1,21 +1,20 @@
 ﻿using System;
 
-namespace FclEx.Helpers
+namespace FclEx.Helpers;
+
+public static class LockHelper
 {
-    public static class LockHelper
+    public static void DoubleCheckAndDo(Func<bool> condition, object lockObj, Action action)
     {
-        public static void DoubleCheckAndDo(Func<bool> condition, object lockObj, Action action)
+        if (!condition())
+            return;
+
+        lock (lockObj)
         {
             if (!condition())
                 return;
 
-            lock (lockObj)
-            {
-                if (!condition())
-                    return;
-
-                action();
-            }
+            action();
         }
     }
 }

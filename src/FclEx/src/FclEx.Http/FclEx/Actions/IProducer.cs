@@ -5,10 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using FclEx.Utils;
 
-namespace FclEx.Actions
+namespace FclEx.Actions;
+
+public interface IProducer<in TIn, TOut>
 {
-    public interface IProducer<in TIn, TOut>
-    {
-        Task<OperateResult<TOut>> ProduceAsync(TIn input);
-    }
+    Task<OperateResult<TOut>> ProduceAsync(TIn input);
 }

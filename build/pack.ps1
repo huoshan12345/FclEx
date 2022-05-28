@@ -45,7 +45,7 @@ $srcDir = ([io.path]::combine($root, "..", "src"))
 $projects = Get-ChildItem -Path $srcDir -Include *.csproj -Recurse | Where-Object { $projectNames -Contains $_.Basename } 
 
 foreach ($path in $projects) { 
-  Write-Output "Packing $path"
+  Write-Output "Packing $($path.Basename)"
   & dotnet clean $path --nologo -v q
   & dotnet pack $path --nologo -v q -c Release --include-symbols --output $root -p:PackageVersion=$ver
   if ($Lastexitcode -ne 0)	{
@@ -60,7 +60,7 @@ $files = Get-ChildItem $pkgPath
 
 Write-Output "Uploading..."
 foreach ($file in $files) {
-  Write-Output "Uploading $file"
+  Write-Output "Uploading $($file.Basename)"
   & dotnet nuget push $file -k $key --source $myget -t 50
   if ($Lastexitcode -ne 0) {
     throw "failed with exit code $LastExitCode"

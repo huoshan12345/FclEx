@@ -1,42 +1,41 @@
 ﻿using System;
 using System.Threading;
 
-namespace FclEx.Utils
+namespace FclEx.Utils;
+
+public class ReaderWriterLocker<TImpl, TIRead, TIWrite> where TImpl : TIWrite, TIRead
 {
-    public class ReaderWriterLocker<TImpl, TIRead, TIWrite> where TImpl : TIWrite, TIRead
+    private readonly ReaderWriterLockSlim _lock = new();
+    private readonly TImpl _shared;
+
+    public ReaderWriterLocker(TImpl shared)
     {
-        private readonly ReaderWriterLockSlim _lock = new();
-        private readonly TImpl _shared;
+        _shared = shared;
+    }
 
-        public ReaderWriterLocker(TImpl shared)
+    public void Read(Action<TIRead> functor)
+    {
+        _lock.EnterReadLock();
+        try
         {
-            _shared = shared;
+            functor(_shared);
         }
-
-        public void Read(Action<TIRead> functor)
+        finally
         {
-            _lock.EnterReadLock();
-            try
-            {
-                functor(_shared);
-            }
-            finally
-            {
-                _lock.ExitReadLock();
-            }
+            _lock.ExitReadLock();
         }
+    }
 
-        public void Write(Action<TIWrite> functor)
+    public void Write(Action<TIWrite> functor)
+    {
+        _lock.EnterWriteLock();
+        try
         {
-            _lock.EnterWriteLock();
-            try
-            {
-                functor(_shared);
-            }
-            finally
-            {
-                _lock.ExitWriteLock();
-            }
+            functor(_shared);
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
         }
     }
 }

@@ -3,27 +3,26 @@ using FclEx.Http;
 using FclEx.Utils;
 using FclEx.Web;
 
-namespace FclEx.Actions
+namespace FclEx.Actions;
+
+public abstract class UserClientJsonAction<TClient, T> : UserClientHttpAction<TClient, T>, IJsonAction<T>
+    where TClient : IUserClient
 {
-    public abstract class UserClientJsonAction<TClient, T> : UserClientHttpAction<TClient, T>, IJsonAction<T>
-        where TClient : IUserClient
+    public virtual string? JsonResultPath { get; } = null;
+
+    protected UserClientJsonAction(TClient client) : base(client)
     {
-        public virtual string? JsonResultPath { get; } = null;
-
-        protected UserClientJsonAction(TClient client) : base(client)
-        {
-        }
-
-        public override OperateResult<T> GetResult(HttpRes response)
-            => this.Base<IJsonAction<T>, OperateResult<T>>(m => m.GetResult(response));
-
-        public virtual bool IsFailed(JsonActionContext context)
-            => this.Base<IJsonAction<T>, bool>(m => m.IsFailed(context));
-
-        public virtual OperateResult<T> HandleFailed(JsonActionContext context)
-            => this.Base<IJsonAction<T>, OperateResult<T>>(m => m.HandleFailed(context));
-
-        public virtual OperateResult<T> GetResult(JsonActionContext context)
-            => this.Base<IJsonAction<T>, OperateResult<T>>(m => m.GetResult(context));
     }
+
+    public override OperateResult<T> GetResult(HttpRes response)
+        => this.Base<IJsonAction<T>, OperateResult<T>>(m => m.GetResult(response));
+
+    public virtual bool IsFailed(JsonActionContext context)
+        => this.Base<IJsonAction<T>, bool>(m => m.IsFailed(context));
+
+    public virtual OperateResult<T> HandleFailed(JsonActionContext context)
+        => this.Base<IJsonAction<T>, OperateResult<T>>(m => m.HandleFailed(context));
+
+    public virtual OperateResult<T> GetResult(JsonActionContext context)
+        => this.Base<IJsonAction<T>, OperateResult<T>>(m => m.GetResult(context));
 }

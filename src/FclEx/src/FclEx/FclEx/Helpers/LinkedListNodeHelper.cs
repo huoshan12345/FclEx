@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
 
-namespace FclEx.Helpers
+namespace FclEx.Helpers;
+
+public static class LinkedListNodeHelper
 {
-    public static class LinkedListNodeHelper
+    public static LinkedListNode<T> Create<T>(T item)
     {
-        public static LinkedListNode<T> Create<T>(T item)
-        {
-            return new LinkedListNode<T>(item);
-        }
+        return new LinkedListNode<T>(item);
     }
 }

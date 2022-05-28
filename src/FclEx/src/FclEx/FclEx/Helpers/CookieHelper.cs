@@ -2,14 +2,13 @@
 using System.Linq;
 using System.Net;
 
-namespace FclEx.Helpers
+namespace FclEx.Helpers;
+
+public static class CookieHelper
 {
-    public static class CookieHelper
+    public static List<Cookie> GetCookies(string cookieStr)
     {
-        public static List<Cookie> GetCookies(string cookieStr)
-        {
-            return cookieStr.Split(';').Select(m => m.Split('=')).Where(m => m.Length == 2)
-                .Select(m => new Cookie(m[0].Trim(), m[1].Trim())).ToList();
-        }
+        return cookieStr.Split(';').Select(m => m.Split('=')).Where(m => m.Length == 2)
+            .Select(m => new Cookie(m[0].Trim(), m[1].Trim())).ToList();
     }
 }

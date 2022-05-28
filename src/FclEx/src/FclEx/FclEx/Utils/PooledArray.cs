@@ -1,43 +1,42 @@
 ﻿using System;
 using System.Buffers;
 
-namespace FclEx.Utils
+namespace FclEx.Utils;
+
+public struct PooledArray<T> : IDisposable
 {
-    public struct PooledArray<T> : IDisposable
+    private readonly T[] _value;
+    private readonly ArrayPool<T> _pool;
+    private readonly bool _clearArray;
+    private bool _isDisposed;
+
+    public PooledArray(ArrayPool<T> pool, int minimumLength, bool clearArray = false)
     {
-        private readonly T[] _value;
-        private readonly ArrayPool<T> _pool;
-        private readonly bool _clearArray;
-        private bool _isDisposed;
+        _clearArray = clearArray;
+        _pool = Check.NotNull(pool);
+        _value = pool.Rent(minimumLength);
+        _isDisposed = false;
+    }
 
-        public PooledArray(ArrayPool<T> pool, int minimumLength, bool clearArray = false)
-        {
-            _clearArray = clearArray;
-            _pool = Check.NotNull(pool);
-            _value = pool.Rent(minimumLength);
-            _isDisposed = false;
-        }
+    private void CheckDisposed()
+    {
+        if (_isDisposed)
+            throw new ObjectDisposedException("The object has been disposed already.");
+    }
 
-        private void CheckDisposed()
+    public T[] Value
+    {
+        get
         {
-            if (_isDisposed)
-                throw new ObjectDisposedException("The object has been disposed already.");
+            CheckDisposed();
+            return _value;
         }
+    }
 
-        public T[] Value
-        {
-            get
-            {
-                CheckDisposed();
-                return _value;
-            }
-        }
-
-        public void Dispose()
-        {
-            if (_isDisposed) return;
-            _pool.Return(_value, _clearArray);
-            _isDisposed = true;
-        }
+    public void Dispose()
+    {
+        if (_isDisposed) return;
+        _pool.Return(_value, _clearArray);
+        _isDisposed = true;
     }
 }

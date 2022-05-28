@@ -1,19 +1,18 @@
-﻿namespace FclEx.Utils
+﻿namespace FclEx.Utils;
+
+public struct Bound<T> where T : struct
 {
-    public struct Bound<T> where T : struct
+    public Bound(T? value, bool includeEqual) : this()
     {
-        public Bound(T? value, bool includeEqual) : this()
-        {
-            Value = value;
-            IncludeEqual = includeEqual;
-        }
+        Value = value;
+        IncludeEqual = includeEqual;
+    }
 
-        public T? Value { get; private set; }
-        public bool IncludeEqual { get; private set; }
+    public T? Value { get; private set; }
+    public bool IncludeEqual { get; private set; }
 
-        public static implicit operator Bound<T>(T? value)
-        {
-            return new Bound<T>(value, true);
-        }
+    public static implicit operator Bound<T>(T? value)
+    {
+        return new Bound<T>(value, true);
     }
 }

@@ -1,10 +1,9 @@
-﻿namespace FclEx.Web
+﻿namespace FclEx.Web;
+
+public enum SessionState
 {
-    public enum SessionState
-    {
-        Offline,
-        Logining,
-        CaptchaRequired,
-        Online
-    }
+    Offline,
+    Logining,
+    CaptchaRequired,
+    Online
 }

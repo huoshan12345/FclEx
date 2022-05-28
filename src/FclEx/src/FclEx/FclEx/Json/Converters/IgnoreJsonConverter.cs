@@ -3,20 +3,19 @@ using System.Collections.Generic;
 using System.Text;
 using Newtonsoft.Json;
 
-namespace FclEx.Json.Converters
+namespace FclEx.Json.Converters;
+
+public class IgnoreJsonConverter : JsonConverter
 {
-    public class IgnoreJsonConverter : JsonConverter
+    public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
     {
-        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
-        {
 
-        }
-
-        public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
-        {
-            return default;
-        }
-
-        public override bool CanConvert(Type objectType) => false;
     }
+
+    public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
+    {
+        return default;
+    }
+
+    public override bool CanConvert(Type objectType) => false;
 }

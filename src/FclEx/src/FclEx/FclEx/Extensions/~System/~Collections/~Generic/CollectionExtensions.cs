@@ -1,32 +1,31 @@
 ﻿using System.Collections.Generic;
 
-namespace FclEx.Extensions
+namespace FclEx.Extensions;
+
+public static class CollectionExtensions
 {
-    public static class CollectionExtensions
+    public static ICollection<T> AddIfNotNull<T>(this ICollection<T> source, T item)
     {
-        public static ICollection<T> AddIfNotNull<T>(this ICollection<T> source, T item)
+        Check.NotNull(source);
+        if (!(item is null))
+            source.Add(item);
+        return source;
+    }
+
+    public static void AddRangeSafely<T>(this ICollection<T> col, IEnumerable<T>? items)
+    {
+        if (items == null)
+            return;
+
+        if (col is List<T> list)
         {
-            Check.NotNull(source);
-            if (!(item is null))
-                source.Add(item);
-            return source;
+            list.AddRange(items);
         }
-
-        public static void AddRangeSafely<T>(this ICollection<T> col, IEnumerable<T>? items)
+        else
         {
-            if (items == null)
-                return;
-
-            if (col is List<T> list)
+            foreach (var item in items)
             {
-                list.AddRange(items);
-            }
-            else
-            {
-                foreach (var item in items)
-                {
-                    col.Add(item);
-                }
+                col.Add(item);
             }
         }
     }

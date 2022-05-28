@@ -5,22 +5,21 @@ using System.Threading;
 using System.Threading.Tasks;
 using FclEx.Utils;
 
-namespace FclEx.Actions
+namespace FclEx.Actions;
+
+public readonly struct SuccessAction<T> : IAction<T>
 {
-    public readonly struct SuccessAction<T> : IAction<T>
+    private readonly T _obj;
+    private readonly TimeSpan _timeSpan;
+
+    public SuccessAction(T obj, TimeSpan timeSpan = default)
     {
-        private readonly T _obj;
-        private readonly TimeSpan _timeSpan;
+        _obj = obj;
+        _timeSpan = timeSpan;
+    }
 
-        public SuccessAction(T obj, TimeSpan timeSpan = default)
-        {
-            _obj = obj;
-            _timeSpan = timeSpan;
-        }
-
-        public Task<OperateResult<T>> ExecuteAsync(CancellationToken token = default)
-        {
-            return Operate.CreateSuccess(_obj, _timeSpan);
-        }
+    public Task<OperateResult<T>> ExecuteAsync(CancellationToken token = default)
+    {
+        return Operate.CreateSuccess(_obj, _timeSpan);
     }
 }

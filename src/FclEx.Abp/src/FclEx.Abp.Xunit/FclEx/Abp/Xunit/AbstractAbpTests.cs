@@ -1,6 +1,4 @@
 ﻿using System;
-using FclEx.Extensions;
-using FclEx.Utils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -37,6 +35,7 @@ namespace FclEx.Abp.Xunit
                     builder.AddXunitTest(_output, false);
                     builder.AddDebug();
                     builder.AddFilter("Volo.Abp.Modularity.ModuleManager", LogLevel.Warning);
+                    builder.AddFilter("Volo.Abp.AbpApplicationBase", LogLevel.Warning);
                 });
 
             var provider = services.UseAbp();

@@ -1,10 +1,9 @@
-﻿namespace FclEx.Http
+﻿namespace FclEx.Http;
+
+public enum ProxyType
 {
-    public enum ProxyType
-    {
-        None, 
-        Http,
-        Https,
-        Socks5
-    }
+    None, 
+    Http,
+    Https,
+    Socks5
 }

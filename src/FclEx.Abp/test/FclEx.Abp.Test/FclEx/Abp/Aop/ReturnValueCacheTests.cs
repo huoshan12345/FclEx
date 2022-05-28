@@ -107,8 +107,8 @@ namespace FclEx.Abp.Aop
                 var (tempItemFromInstace, timeFromInstace) = SimpleWatch.Do(() => tempService.Get(no));
                 Assert.Equal(itemFromStatic.Id, tempitemFromStatic.Id);
                 Assert.Equal($"{tempService.Id}_{no}", tempItemFromInstace.Id);
-                Assert.True(timeFromStatic.TotalMilliseconds < CacheMaxMilliseconds);
-                Assert.True(Math.Abs(timeFromInstace.TotalMilliseconds - SleepMilliseconds) < 50);
+                Assert.True(timeFromStatic.TotalMilliseconds < CacheMaxMilliseconds, timeFromStatic.TotalMilliseconds.ToString());
+                Assert.True(timeFromInstace.TotalMilliseconds > SleepMilliseconds, timeFromInstace.TotalMilliseconds.ToString());
             }
         }
     }

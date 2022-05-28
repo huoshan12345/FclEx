@@ -11,157 +11,155 @@ using MoreLinq;
 using Nito.AsyncEx;
 using FclEx.Helpers;
 
-namespace FclEx.Consumers
+namespace FclEx.Consumers;
+
+[SuppressMessage("ReSharper", "MemberInitializerValueIgnored")]
+public sealed class BatchRetryConsumer<T> : IConsumer<T>,
+    ICancellationListener<BatchRetryConsumer<T>, IReadOnlyList<T>>,
+    IAsyncConsumer<BatchRetryConsumer<T>, IReadOnlyList<T>>,
+    IDiscardListener<BatchRetryConsumer<T>, ProcItem<T>>,
+    IExceptionListener<BatchRetryConsumer<T>, ProcItem<T>>
 {
-    [SuppressMessage("ReSharper", "MemberInitializerValueIgnored")]
-    public sealed class BatchRetryConsumer<T> : IConsumer<T>,
-        ICancellationListener<BatchRetryConsumer<T>, IReadOnlyList<T>>,
-        IAsyncConsumer<BatchRetryConsumer<T>, IReadOnlyList<T>>,
-        IDiscardListener<BatchRetryConsumer<T>, ProcItem<T>>,
-        IExceptionListener<BatchRetryConsumer<T>, ProcItem<T>>
+    private string TypeName { get; }
+    private ILogger _logger = NullLogger.Instance;
+    private readonly int _retryPartCount;
+    private readonly AutoRetryConsumer<List<T>> _retryConsumer;
+    private readonly BatchConsumer<T> _batchConsumer;
+    private readonly AsyncLock _locker = new();
+
+    public bool IsComplete => _retryConsumer.IsComplete;
+    public int Count => _locker.Do(() => _retryConsumer.Count + _batchConsumer.Count);
+
+    public event AsyncEventHandler<BatchRetryConsumer<T>, IReadOnlyList<T>> ConsumingHandler = (sender, list) => Task.CompletedTask;
+    public event EventHandler<BatchRetryConsumer<T>, ProcItem<T>> DiscardHandler = (sender, list) => { };
+    public event EventHandler<BatchRetryConsumer<T>, ProcItem<T>> ExceptionHandler = (sender, list) => { };
+    public event EventHandler<BatchRetryConsumer<T>, IReadOnlyList<T>> CancellationHandler = (sender, list) => { };
+
+    public BatchRetryConsumer(int batchSize, TimeSpan batchTimeout, int maxRetryTimes = 3, int retryPartCount = 4)
     {
-        private string TypeName { get; }
-        private ILogger _logger = NullLogger.Instance;
-        private readonly int _retryPartCount;
-        private readonly AutoRetryConsumer<List<T>> _retryConsumer;
-        private readonly BatchConsumer<T> _batchConsumer;
-        private readonly AsyncLock _locker = new();
+        _retryPartCount = Check.NotLessThan(retryPartCount, 2);
+        TypeName = GetType().ShortName();
 
-        public bool IsComplete => _retryConsumer.IsComplete;
-        public int Count => _locker.Do(() => _retryConsumer.Count + _batchConsumer.Count);
+        _retryConsumer = new AutoRetryConsumer<List<T>>(maxRetryTimes, x => 0);
+        _retryConsumer.ConsumingHandler += (sender, list) => Retry(list);
+        _retryConsumer.ExceptionHandler += (sender, list) => HandleException(list);
+        _retryConsumer.DiscardHandler += (sender, list) => HandleDiscard(list);
+        _retryConsumer.CancellationHandler += (sender, list) => CancellationHandler.Invoke(this, list.SelectMany(m => m).ToList());
 
-        public event AsyncEventHandler<BatchRetryConsumer<T>, IReadOnlyList<T>> ConsumingHandler = (sender, list) => Task.CompletedTask;
-        public event EventHandler<BatchRetryConsumer<T>, ProcItem<T>> DiscardHandler = (sender, list) => { };
-        public event EventHandler<BatchRetryConsumer<T>, ProcItem<T>> ExceptionHandler = (sender, list) => { };
-        public event EventHandler<BatchRetryConsumer<T>, IReadOnlyList<T>> CancellationHandler = (sender, list) => { };
-
-        public BatchRetryConsumer(int batchSize, TimeSpan batchTimeout, int maxRetryTimes = 3, int retryPartCount = 4)
+        _batchConsumer = new BatchConsumer<T>(batchSize, batchTimeout, 0);
+        _batchConsumer.ConsumingHandler += async (sender, list) =>
         {
-            _retryPartCount = Check.NotLessThan(retryPartCount, 2);
-            TypeName = GetType().ShortName();
+            await ConsumingHandler.InvokeAsync(this, list).DonotCapture();
+            Counter.IncreConsume(list.Count);
+        };
+        _batchConsumer.DiscardHandler += (sender, list) => _retryConsumer.Add(list.Select(m => m.Item).ToList());
+        _batchConsumer.CancellationHandler += (sender, list) => CancellationHandler.Invoke(this, list);
+    }
 
-            _retryConsumer = new AutoRetryConsumer<List<T>>(maxRetryTimes, x => 0);
-            _retryConsumer.ConsumingHandler += (sender, list) => Retry(list);
-            _retryConsumer.ExceptionHandler += (sender, list) => HandleException(list);
-            _retryConsumer.DiscardHandler += (sender, list) => HandleDiscard(list);
-            _retryConsumer.CancellationHandler += (sender, list) => CancellationHandler.Invoke(this, list.SelectMany(m => m).ToList());
-
-            _batchConsumer = new BatchConsumer<T>(batchSize, batchTimeout, 0);
-            _batchConsumer.ConsumingHandler += async (sender, list) =>
-            {
-                await ConsumingHandler.InvokeAsync(this, list).DonotCapture();
-                Counter.IncreConsume(list.Count);
-            };
-            _batchConsumer.DiscardHandler += (sender, list) => _retryConsumer.Add(list.Select(m => m.Item).ToList());
-            _batchConsumer.CancellationHandler += (sender, list) => CancellationHandler.Invoke(this, list);
-        }
-
-        [AllowNull]
-        public ILogger Logger
+    [AllowNull]
+    public ILogger Logger
+    {
+        get => _logger;
+        set
         {
-            get => _logger;
-            set
+            if (value != null && value != _logger)
             {
-                if (value != null && value != _logger)
-                {
-                    _logger = value;
-                    _retryConsumer.Logger = value;
-                    _batchConsumer.Logger = value;
-                }
+                _logger = value;
+                _retryConsumer.Logger = value;
+                _batchConsumer.Logger = value;
             }
         }
+    }
 
-        public Counter Counter { get; } = new();
+    public Counter Counter { get; } = new();
 
-        public Task Start(bool clear = false)
+    public Task Start(bool clear = false)
+    {
+        return Task.WhenAll(
+            _retryConsumer.Start(clear),
+            _batchConsumer.Start(clear)
+                .ContinueWith(t => _retryConsumer.CompleteAdding()));
+    }
+
+    public void Add(T item)
+    {
+        _batchConsumer.Add(item);
+    }
+
+    public void CompleteAdding()
+    {
+        _batchConsumer.CompleteAdding();
+    }
+
+    public void Dispose()
+    {
+        _retryConsumer.Dispose();
+        _batchConsumer.Dispose();
+    }
+
+    public void Stop()
+    {
+        _retryConsumer.Stop();
+        _batchConsumer.Stop();
+    }
+
+    private void HandleDiscard(ProcItem<List<T>> list)
+    {
+        if (list.Item.IsNullOrEmpty())
+            return;
+
+        var procItem = list.ToType(list.Item.First());
+        try
         {
-            return Task.WhenAll(
-                _retryConsumer.Start(clear),
-                _batchConsumer.Start(clear)
-                    .ContinueWith(t => _retryConsumer.CompleteAdding()));
+            DiscardHandler.Invoke(this, procItem);
+            Counter.IncreDiscard();
         }
-
-        public void Add(T item)
+        catch (Exception e)
         {
-            _batchConsumer.Add(item);
+            Counter.IncreException();
+            Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(HandleDiscard)}: " + e.Message);
         }
+    }
 
-        public void CompleteAdding()
+    private void HandleException(ProcItem<List<T>> list)
+    {
+        if (list.Item.IsNullOrEmpty())
+            return;
+
+        var procItem = list.ToType(list.Item.First());
+        try
         {
-            _batchConsumer.CompleteAdding();
+            ExceptionHandler.Invoke(this, procItem);
+            Counter.IncreException();
         }
-
-        public void Dispose()
+        catch (Exception e)
         {
-            _retryConsumer.Dispose();
-            _batchConsumer.Dispose();
+            Counter.IncreException();
+            Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(HandleException)}: " + e.Message);
         }
+    }
 
-        public void Stop()
+    private async Task Retry(IReadOnlyList<T>? items)
+    {
+        if (items == null || items.Count == 0) return;
+        try
         {
-            _retryConsumer.Stop();
-            _batchConsumer.Stop();
+            await ConsumingHandler.InvokeAsync(this, items).DonotCapture();
+            Counter.IncreConsume(items.Count);
+            return;
         }
-
-        private void HandleDiscard(ProcItem<List<T>> list)
+        catch
         {
-            if (list.Item.IsNullOrEmpty())
-                return;
-
-            var procItem = list.ToType(list.Item.First());
-            try
+            if (items.Count > 1)
             {
-                DiscardHandler.Invoke(this, procItem);
-                Counter.IncreDiscard();
-            }
-            catch (Exception e)
-            {
-                Counter.IncreException();
-                Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(HandleDiscard)}: " + e.Message);
-            }
-        }
-
-        private void HandleException(ProcItem<List<T>> list)
-        {
-            if (list.Item.IsNullOrEmpty())
-                return;
-
-            var procItem = list.ToType(list.Item.First());
-            try
-            {
-                ExceptionHandler.Invoke(this, procItem);
-                Counter.IncreException();
-            }
-            catch (Exception e)
-            {
-                Counter.IncreException();
-                Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(HandleException)}: " + e.Message);
-            }
-        }
-
-        private async Task Retry(IReadOnlyList<T>? items)
-        {
-            if (items == null || items.Count == 0) return;
-            try
-            {
-                await ConsumingHandler.InvokeAsync(this, items).DonotCapture();
-                Counter.IncreConsume(items.Count);
+                items.Batch((int)Math.Ceiling(items.Count / (double)_retryPartCount))
+                    .ForEach(m => _retryConsumer.AddWithoutCheckingCompleteAdding(m.ToList()));
                 return;
             }
-            catch
+            else
             {
-                if (items.Count > 1)
-                {
-                    items.Batch((int)Math.Ceiling(items.Count / (double)_retryPartCount))
-                        .ForEach(m => _retryConsumer.AddWithoutCheckingCompleteAdding(m.ToList()));
-                    return;
-                }
-                else
-                {
-                    throw;
-                }
+                throw;
             }
         }
     }
 }
-

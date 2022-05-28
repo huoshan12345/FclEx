@@ -6,23 +6,22 @@ using System.Threading.Tasks;
 using FclEx.Extensions;
 using FclEx.Utils;
 
-namespace FclEx.Actions
+namespace FclEx.Actions;
+
+public readonly struct MapAction<T, TDest> : IAction<TDest>
 {
-    public readonly struct MapAction<T, TDest> : IAction<TDest>
+    private readonly IAction<T> _action;
+    private readonly Func<T, TDest> _map;
+
+    public MapAction(IAction<T> action, Func<T, TDest> map)
     {
-        private readonly IAction<T> _action;
-        private readonly Func<T, TDest> _map;
+        _action = action ?? throw new ArgumentNullException(nameof(action));
+        _map = map ?? throw new ArgumentNullException(nameof(_map));
+    }
 
-        public MapAction(IAction<T> action, Func<T, TDest> map)
-        {
-            _action = action ?? throw new ArgumentNullException(nameof(action));
-            _map = map ?? throw new ArgumentNullException(nameof(_map));
-        }
-
-        public async Task<OperateResult<TDest>> ExecuteAsync(CancellationToken token = default)
-        {
-            var result = await _action.ExecuteAsync(token).DonotCapture();
-            return result.Map(_map);
-        }
+    public async Task<OperateResult<TDest>> ExecuteAsync(CancellationToken token = default)
+    {
+        var result = await _action.ExecuteAsync(token).DonotCapture();
+        return result.Map(_map);
     }
 }

@@ -2,29 +2,28 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-namespace FclEx.Extensions
+namespace FclEx.Extensions;
+
+public static class MemberInfoExtensions
 {
-    public static class MemberInfoExtensions
+    public static bool IsDefined<T>(this MemberInfo memberInfo, bool inherit = true)
     {
-        public static bool IsDefined<T>(this MemberInfo memberInfo, bool inherit = true)
-        {
-            return memberInfo.IsDefined(typeof(T), inherit);
-        }
+        return memberInfo.IsDefined(typeof(T), inherit);
+    }
 
-        public static DataMemberInfo ToDataMemberInfo(this MemberInfo memberInfo)
+    public static DataMemberInfo ToDataMemberInfo(this MemberInfo memberInfo)
+    {
+        return memberInfo switch
         {
-            return memberInfo switch
-            {
-                PropertyInfo propInfo => new DataMemberInfo(propInfo),
-                FieldInfo fieldInfo => new DataMemberInfo(fieldInfo),
-                _ => throw new ArgumentException(
-                    $"MemberInfo '{memberInfo.Name}' refers to neither a field nor a property.")
-            };
-        }
+            PropertyInfo propInfo => new DataMemberInfo(propInfo),
+            FieldInfo fieldInfo => new DataMemberInfo(fieldInfo),
+            _ => throw new ArgumentException(
+                $"MemberInfo '{memberInfo.Name}' refers to neither a field nor a property.")
+        };
+    }
 
-        public static bool IsCompilerGenerated(this MemberInfo memberInfo, bool inherit = true)
-        {
-            return memberInfo.IsDefined<CompilerGeneratedAttribute>(false);
-        }
+    public static bool IsCompilerGenerated(this MemberInfo memberInfo, bool inherit = true)
+    {
+        return memberInfo.IsDefined<CompilerGeneratedAttribute>(false);
     }
 }

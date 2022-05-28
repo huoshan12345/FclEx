@@ -5,82 +5,81 @@ using FclEx.Helpers;
 using FclEx.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace FclEx.Consumers
+namespace FclEx.Consumers;
+
+public sealed class AutoRetryConsumer<T> : AbstractConsumer<AutoRetryConsumer<T>, T>,
+    IAsyncConsumer<AutoRetryConsumer<T>, T>,
+    IDiscardListener<AutoRetryConsumer<T>, ProcItem<T>>,
+    IExceptionListener<AutoRetryConsumer<T>, ProcItem<T>>
 {
-    public sealed class AutoRetryConsumer<T> : AbstractConsumer<AutoRetryConsumer<T>, T>,
-        IAsyncConsumer<AutoRetryConsumer<T>, T>,
-        IDiscardListener<AutoRetryConsumer<T>, ProcItem<T>>,
-        IExceptionListener<AutoRetryConsumer<T>, ProcItem<T>>
+    private readonly int _maxRetryTimes;
+    private readonly Func<int, int> _retryDelay;
+
+    public event AsyncEventHandler<AutoRetryConsumer<T>, T> ConsumingHandler = (sender, e) => Task.CompletedTask;
+    public event EventHandler<AutoRetryConsumer<T>, ProcItem<T>> DiscardHandler = (sender, e) => { };
+    public event EventHandler<AutoRetryConsumer<T>, ProcItem<T>> ExceptionHandler = (sender, e) => { };
+
+    public AutoRetryConsumer(int maxRetryTimes = 3, Func<int, int>? retryDelay = null)
     {
-        private readonly int _maxRetryTimes;
-        private readonly Func<int, int> _retryDelay;
+        Check.NotLessThan(maxRetryTimes, 0);
+        _maxRetryTimes = maxRetryTimes;
+        _retryDelay = retryDelay ?? (x => x);
+    }
 
-        public event AsyncEventHandler<AutoRetryConsumer<T>, T> ConsumingHandler = (sender, e) => Task.CompletedTask;
-        public event EventHandler<AutoRetryConsumer<T>, ProcItem<T>> DiscardHandler = (sender, e) => { };
-        public event EventHandler<AutoRetryConsumer<T>, ProcItem<T>> ExceptionHandler = (sender, e) => { };
-
-        public AutoRetryConsumer(int maxRetryTimes = 3, Func<int, int>? retryDelay = null)
+    private bool TryGetItem(out ProcItem<T> item)
+    {
+        try
         {
-            Check.NotLessThan(maxRetryTimes, 0);
-            _maxRetryTimes = maxRetryTimes;
-            _retryDelay = retryDelay ?? (x => x);
+            if (_items.TryTake(out item, 1 * 1000, _cts.Token))
+                return true;
         }
+        catch (OperationCanceledException) { }
+        item = default;
+        return false;
+    }
 
-        private bool TryGetItem(out ProcItem<T> item)
+    protected override async Task ProcessAction()
+    {
+        if (!TryGetItem(out var item))
+            return;
+
+        try
         {
+            var delay = _retryDelay(item.ErrorTimes);
+            await TaskHelper.Delay(delay);
+            await ConsumingHandler.InvokeAsync(this, item.Item).DonotCapture();
+            Counter.IncreConsume();
+        }
+        catch (Exception ex)
+        {
+            Counter.IncreException();
             try
             {
-                if (_items.TryTake(out item, 1 * 1000, _cts.Token))
-                    return true;
+                item = item.AddError(ex);
+                ExceptionHandler.Invoke(this, item);
             }
-            catch (OperationCanceledException) { }
-            item = default;
-            return false;
-        }
-
-        protected override async Task ProcessAction()
-        {
-            if (!TryGetItem(out var item))
-                return;
-
-            try
-            {
-                var delay = _retryDelay(item.ErrorTimes);
-                await TaskHelper.Delay(delay);
-                await ConsumingHandler.InvokeAsync(this, item.Item).DonotCapture();
-                Counter.IncreConsume();
-            }
-            catch (Exception ex)
+            catch (Exception e)
             {
                 Counter.IncreException();
-                try
-                {
-                    item = item.AddError(ex);
-                    ExceptionHandler.Invoke(this, item);
-                }
-                catch (Exception e)
-                {
-                    Counter.IncreException();
-                    Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(ExceptionHandler)}: " + e.Message);
-                }
+                Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(ExceptionHandler)}: " + e.Message);
+            }
 
-                try
+            try
+            {
+                if (item.ErrorTimes < _maxRetryTimes)
                 {
-                    if (item.ErrorTimes < _maxRetryTimes)
-                    {
-                        _items.TryAdd(item);
-                    }
-                    else
-                    {
-                        DiscardHandler.Invoke(this, item);
-                        Counter.IncreDiscard();
-                    }
+                    _items.TryAdd(item);
                 }
-                catch (Exception e)
+                else
                 {
-                    Counter.IncreException();
-                    Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(DiscardHandler)}: " + e.Message);
+                    DiscardHandler.Invoke(this, item);
+                    Counter.IncreDiscard();
                 }
+            }
+            catch (Exception e)
+            {
+                Counter.IncreException();
+                Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(DiscardHandler)}: " + e.Message);
             }
         }
     }

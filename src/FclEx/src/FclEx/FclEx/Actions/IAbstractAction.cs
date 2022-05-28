@@ -5,37 +5,36 @@ using FclEx.Extensions;
 using FclEx.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace FclEx.Actions
+namespace FclEx.Actions;
+
+public interface IAbstractAction<T> : IAction<T>
 {
-    public interface IAbstractAction<T> : IAction<T>
+    ILogger Logger { get; }
+
+    Task<OperateResult<T>> ExecuteAsyncBody(CancellationToken token = default);
+    Task<OperateResult<T>> HandleCancellationAsync(Exception ex) => Operate.CreateCancel<T>(ex);
+    Task<OperateResult<T>> HandleErrorAsync(Exception ex) => Operate.CreateError<T>(ex);
+
+    async Task<OperateResult<T>> IAction<T>.ExecuteAsync(CancellationToken token)
     {
-        ILogger Logger { get; }
+        var time = ValueStopwatch.StartNew();
 
-        Task<OperateResult<T>> ExecuteAsyncBody(CancellationToken token = default);
-        Task<OperateResult<T>> HandleCancellationAsync(Exception ex) => Operate.CreateCancel<T>(ex);
-        Task<OperateResult<T>> HandleErrorAsync(Exception ex) => Operate.CreateError<T>(ex);
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace($"[{GetName()}]Begin");
 
-        async Task<OperateResult<T>> IAction<T>.ExecuteAsync(CancellationToken token)
-        {
-            var time = ValueStopwatch.StartNew();
+        var future = CommonAction.Create(ExecuteAsyncBody, true)
+            .NextResult<T, T>(r => r.Success
+                ? new SuccessAction<T>(r.Value, r.Elapsed)
+                : r.IsCanceled()
+                    ? CommonAction.Create(t => HandleCancellationAsync(r.Exception), true)
+                    : CommonAction.Create(t => HandleErrorAsync(r.Exception), true));
 
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace($"[{GetName()}]Begin");
+        var result = await future.ExecuteAsync(token).DonotCapture();
+        result = result.Elapsed(time.GetElapsedTime());
 
-            var future = CommonAction.Create(ExecuteAsyncBody, true)
-                .NextResult<T, T>(r => r.Success
-                    ? new SuccessAction<T>(r.Value, r.Elapsed)
-                    : r.IsCanceled()
-                        ? CommonAction.Create(t => HandleCancellationAsync(r.Exception), true)
-                        : CommonAction.Create(t => HandleErrorAsync(r.Exception), true));
+        if (Logger.IsEnabled(LogLevel.Trace))
+            Logger.LogTrace($"[{GetName()}]End, after {result.Elapsed.TotalMilliseconds:f3} ms]");
 
-            var result = await future.ExecuteAsync(token).DonotCapture();
-            result = result.Elapsed(time.GetElapsedTime());
-
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace($"[{GetName()}]End, after {result.Elapsed.TotalMilliseconds:f3} ms]");
-
-            return result;
-        }
+        return result;
     }
 }

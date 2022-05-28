@@ -1,13 +1,12 @@
-﻿namespace FclEx.Http
+﻿namespace FclEx.Http;
+
+public enum HttpMethodType
 {
-    public enum HttpMethodType
-    {
-        Get,
-        Post,
-        Put,
-        Delete,
-        Head,
-        Options,
-        Trace
-    }
+    Get,
+    Post,
+    Put,
+    Delete,
+    Head,
+    Options,
+    Trace
 }
