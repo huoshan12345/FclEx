@@ -12,13 +12,13 @@ partial class InterfaceBaseInvocationExtension
 {
     private static readonly ConcurrentDictionary<InterfaceMethodInfo, Delegate> _delegates = new();
 
-    internal static void BaseByDynamicMethod<TInterface>(this TInterface instance, Expression<Action<TInterface>> selector)
+    public static void BaseByDynamicMethod<TInterface>(this TInterface instance, Expression<Action<TInterface>> selector)
     {
         var (func, args) = GetDynamicMethod<TInterface, Unit>(instance, selector);
         ((Action<TInterface, object?[]>)func)(instance, args);
     }
 
-    internal static TReturn BaseByDynamicMethod<TInterface, TReturn>(this TInterface instance, Expression<Func<TInterface, TReturn>> selector)
+    public static TReturn BaseByDynamicMethod<TInterface, TReturn>(this TInterface instance, Expression<Func<TInterface, TReturn>> selector)
     {
         var (func, args) = GetDynamicMethod<TInterface, TReturn>(instance, selector);
         return ((Func<TInterface, object?[], TReturn>)func)(instance, args);
