@@ -26,8 +26,8 @@ namespace FclEx.Extensions.InterfaceBaseInvocationExtension
 
         public class WithI2 : I2
         {
-            int I0.Count => this.BaseByDelegate<I2, int>(m => m.Count);
-            public int Count => this.BaseByDelegate<I1, int>(m => m.Count);
+            int I0.Count => this.BaseByFunctionPointer<I2, int>(m => m.Count);
+            public int Count => this.BaseByFunctionPointer<I1, int>(m => m.Count);
         }
 
         [Fact]

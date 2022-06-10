@@ -19,9 +19,9 @@ namespace FclEx.Benchmarks
         int IEmptyMethod.Compute(int number) => number + 1;
     }
 
-    public class InheritIOverridedMethodWithDelegate : IOverridedMethod
+    public class InheritIOverridedMethodWithFunctionPointer : IOverridedMethod
     {
-        public int Compute(int number) => this.BaseByDelegate<IOverridedMethod, int>(m => m.Compute(0));
+        public int Compute(int number) => this.BaseByFunctionPointer<IOverridedMethod, int>(m => m.Compute(0));
     }
 
     public class InheritIOverridedMethodWithDynamicMethod : IOverridedMethod
@@ -59,37 +59,37 @@ namespace FclEx.Benchmarks
     public class InterfaceBaseInvocationBenchmark
     {
         private static readonly InheritIOverridedMethodWithDynamicMethod _inheritIOverridedMethodWithDynamicMethod = new();
-        private static readonly InheritIOverridedMethodWithDelegate _inheritIOverridedMethodWithDelegate = new();
+        private static readonly InheritIOverridedMethodWithFunctionPointer _inheritIOverridedMethodWithFunctionPointer = new();
         private static readonly InheritIOverridedMethodWithIL _inheritIOverridedMethodWithIL = new();
         private static readonly InheritIDefaultMethodWithIL _inheritIDefaultMethodWithIL = new();
         private static readonly Child _child = new();
 
-        [Benchmark(Baseline = true)]
-        public void Base()
+        [Benchmark]
+        public void Class_Base()
         {
             var r1 = _child.Compute(0);
         }
 
         [Benchmark]
-        public void Base_Delegate()
+        public void Interface_Base_FunctionPointer()
         {
-            var r1 = _inheritIOverridedMethodWithDelegate.Compute(0);
+            var r1 = _inheritIOverridedMethodWithFunctionPointer.Compute(0);
         }
 
         [Benchmark]
-        public void Base_DynamicMethod()
+        public void Interface_Base_DynamicMethod()
         {
             var r1 = _inheritIOverridedMethodWithDynamicMethod.Compute(0);
         }
 
         [Benchmark]
-        public void Base_IL()
+        public void Interface_Base_IL()
         {
             var r1 = _inheritIDefaultMethodWithIL.Compute(0);
         }
 
-        [Benchmark]
-        public void Base_IL_MultiLevel()
+        // [Benchmark]
+        public void Interface_Base_IL_MultiLevel()
         {
             var r1 = _inheritIOverridedMethodWithIL.Compute(0);
         }

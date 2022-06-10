@@ -12,18 +12,18 @@ partial class InterfaceBaseInvocationExtension
 {
     private static readonly ConcurrentDictionary<InterfaceMethodInfo, (IntPtr, MethodInfo)> MethodMap = new();
 
-    public static void BaseByDelegate<TInterface>(this TInterface instance, Expression<Action<TInterface>> selector)
+    public static void BaseByFunctionPointer<TInterface>(this TInterface instance, Expression<Action<TInterface>> selector)
     {
         var (invoke, invoker, args) = GetInterfaceFunc(instance, selector);
         invoke.Invoke(invoker, args);
     }
 
-    public static TReturn BaseByDelegate<TInterface, TReturn>(this TInterface instance, Expression<Func<TInterface, TReturn>> selector)
+    public static TReturn BaseByFunctionPointer<TInterface, TReturn>(this TInterface instance, Expression<Func<TInterface, TReturn>> selector)
     {
         var (invoke, invoker, args) = GetInterfaceFunc(instance, selector);
         return invoke.Invoke(invoker, args).CastTo<TReturn>()!;
     }
-        
+
     private static (IntPtr pointer, MethodInfo invoke) GetInterfaceMethodDelegate(InterfaceMethodInfo info)
     {
         var (interfaceMethod, paraTypes) = GetInterfaceMethod(info);

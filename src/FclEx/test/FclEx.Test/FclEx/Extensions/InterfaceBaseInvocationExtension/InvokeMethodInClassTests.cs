@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Xunit;
+﻿using Xunit;
 
 namespace FclEx.Extensions.InterfaceBaseInvocationExtension
 {
@@ -42,15 +37,27 @@ namespace FclEx.Extensions.InterfaceBaseInvocationExtension
         }
 
         [Fact]
-        public void Inherit_Test()
+        public void Inherit_FunctionPointer_Test()
         {
             var c = new InheritI2();
 
-            Assert.Equal(1, c.BaseByDelegate<I1, int>(m => m.Compute(0)));
-            Assert.Equal(2, c.BaseByDelegate<I2, int>(m => m.Compute(0)));
+            Assert.Equal(1, c.BaseByFunctionPointer<I1, int>(m => m.Compute(0)));
+            Assert.Equal(2, c.BaseByFunctionPointer<I2, int>(m => m.Compute(0)));
 
-            c.BaseByDelegate<I1>(m => m.Call());
-            c.BaseByDelegate<I2>(m => m.Call());
+            c.BaseByFunctionPointer<I1>(m => m.Call());
+            c.BaseByFunctionPointer<I2>(m => m.Call());
+        }
+
+        [Fact]
+        public void Inherit_DynamicMethod_Test()
+        {
+            var c = new InheritI2();
+
+            Assert.Equal(1, c.BaseByDynamicMethod<I1, int>(m => m.Compute(0)));
+            Assert.Equal(2, c.BaseByDynamicMethod<I2, int>(m => m.Compute(0)));
+
+            c.BaseByDynamicMethod<I1>(m => m.Call());
+            c.BaseByDynamicMethod<I2>(m => m.Call());
         }
     }
 }
