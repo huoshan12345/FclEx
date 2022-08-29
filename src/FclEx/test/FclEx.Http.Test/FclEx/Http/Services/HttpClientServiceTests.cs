@@ -1,11 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using FclEx.Helpers;
-using FclEx.Http.Core;
-using FclEx.Http.Proxy;
-using FclEx.Utils;
-using Xunit;
+﻿using Xunit;
 using Xunit.Abstractions;
 
 namespace FclEx.Http.Services
@@ -39,47 +32,6 @@ namespace FclEx.Http.Services
                     .SendAsync(service);
                 AssertExt.False(res.HasError, () => res.Exception!.ToString());
             }
-        }
-
-        [Fact]
-        public async Task ReLazyTests()
-        {
-            using var service = new ReLazy<HttpClientService>(() => new HttpClientService(false));
-
-            var first = service.Value;
-            var last = service.Value;
-            for (var i = 0; i < 5; i++)
-            {
-                last = service.Value;
-                var res = await HttpReq.Get("http://www.baidu.com")
-                    .SendAsync(last);
-
-                AssertExt.False(res.HasError, () => res.Exception!.ToString());
-
-                service.Recreate();
-            }
-            Assert.NotEqual(first, last);
-        }
-
-        [Fact]
-        public async Task TimerLazyTests()
-        {
-            using var service = new TimerLazy<HttpClientService>(() => new HttpClientService(false),
-                TimeSpan.FromMilliseconds(100));
-
-            var first = service.Value;
-            var last = service.Value;
-            for (var i = 0; i < 5; i++)
-            {
-                last = service.Value;
-                var res = await HttpReq.Get("https://www.baidu.com")
-                    .SendAsync(last);
-
-                AssertExt.False(res.HasError, () => res.Exception!.ToString());
-
-                await TaskHelper.DelayMilli(50);
-            }
-            Assert.NotEqual(first, last);
         }
 
         [Theory]
