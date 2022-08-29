@@ -1,48 +1,66 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using FclEx.Abp.Xunit;
+﻿using FclEx.Abp.Xunit;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace FclEx.Abp.DependencyInjection
+namespace FclEx.Abp.DependencyInjection;
+
+public class OpenGenericConventionalRegistrarTests : AbpTests<AbpTestModule>
 {
-    public class OpenGenericConventionalRegistrarTests : AbpTests<AbpTestModule>
+    public interface IGenericSingleton<out T> : ISingletonDependency { }
+    public class GenericSingleton<T> : IGenericSingleton<T> { }
+
+    public interface IGenericTransient<T> : ITransientDependency { }
+    public class GenericTransient<T> : IGenericTransient<T> { }
+
+    public interface INonGenericTransient : ITransientDependency { }
+    public class NonGenericTransient<T> : INonGenericTransient { }
+
+    public OpenGenericConventionalRegistrarTests(ITestOutputHelper output) : base(output)
     {
-        public interface IGenericSingleton<out T> : ISingletonDependency{}
-        public class GenericSingleton<T> : IGenericSingleton<T>{}
+    }
 
-        public interface IGenericTransient<T> : ITransientDependency { }
-        public class GenericTransient<T> : IGenericTransient<T> { }
+    [Fact]
+    public void GenericSingleton_Test()
+    {
+        Test<int>();
+        Test<string>();
 
-        public OpenGenericConventionalRegistrarTests(ITestOutputHelper output) : base(output)
+        void Test<T>()
         {
+            var obj = ServiceProvider.GetRequiredService<IGenericSingleton<T>>();
+            var obj2 = ServiceProvider.GetRequiredService<IGenericSingleton<T>>();
+            var obj3 = ServiceProvider.GetRequiredService<GenericSingleton<T>>();
+            Assert.Equal(obj, obj2);
+            Assert.NotEqual(obj, obj3); // they are not equal because an open generic type cannot be redirected to implementation type.
         }
+    }
 
-        [Fact]
-        public void GenericSingleton_Test()
+    [Fact]
+    public void GenericTransient_Test()
+    {
+        Test<int>();
+        Test<string>();
+
+        void Test<T>()
         {
-            var objInt = ServiceProvider.GetRequiredService<IGenericSingleton<int>>();
-            var objInt2 = ServiceProvider.GetRequiredService<IGenericSingleton<int>>();
-            Assert.Equal(objInt, objInt2);
-
-            var objStr = ServiceProvider.GetRequiredService<IGenericSingleton<string>>();
-            var objStr2 = ServiceProvider.GetRequiredService<IGenericSingleton<string>>();
-            Assert.Equal(objStr, objStr2);
+            var obj = ServiceProvider.GetRequiredService<IGenericTransient<T>>();
+            var obj2 = ServiceProvider.GetRequiredService<IGenericTransient<T>>();
+            var obj3 = ServiceProvider.GetRequiredService<GenericTransient<T>>();
+            Assert.NotEqual(obj, obj2);
+            Assert.NotEqual(obj, obj3);
+            Assert.NotEqual(obj2, obj3);
         }
+    }
 
-        [Fact]
-        public void GenericTransient_Test()
-        {
-            var objInt = ServiceProvider.GetRequiredService<IGenericTransient<int>>();
-            var objInt2 = ServiceProvider.GetRequiredService<IGenericTransient<int>>();
-            Assert.NotEqual(objInt, objInt2);
+    [Fact]
+    public void NonGenericTransient_Test()
+    {
+        var obj = ServiceProvider.GetService<INonGenericTransient>();
+        Assert.Null(obj);
 
-            var objStr = ServiceProvider.GetRequiredService<IGenericTransient<string>>();
-            var objStr2 = ServiceProvider.GetRequiredService<IGenericTransient<string>>();
-            Assert.NotEqual(objStr, objStr2);
-        }
+        var obj2 = ServiceProvider.GetService<NonGenericTransient<int>>();
+        Assert.NotNull(obj2);
     }
 }

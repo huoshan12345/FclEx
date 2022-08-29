@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using FclEx.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Volo.Abp.DependencyInjection;
 
 namespace FclEx.Abp.DependencyInjection
 {
+    /// <summary>
+    /// Register non generic classes like <strong>Service</strong> with generic interfaces like <strong>IService&lt;int&gt;</strong><br/>
+    /// NOTE: this feature has been implemented in Volo.Abp already.
+    /// </summary>
     public class GenericInterfaceConventionalRegistrar : DefaultConventionalRegistrar
     {
         public override void AddType(IServiceCollection services, Type type)

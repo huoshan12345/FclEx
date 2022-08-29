@@ -15,7 +15,7 @@ namespace FclEx.Abp
         {
             FclExStartup.Init();
             context.Services.AddConventionalRegistrar(new OpenGenericConventionalRegistrar());
-            context.Services.AddConventionalRegistrar(new GenericInterfaceConventionalRegistrar());
+            // context.Services.AddConventionalRegistrar(new GenericInterfaceConventionalRegistrar());
         }
 
         public override void ConfigureServices(ServiceConfigurationContext context)

@@ -11,17 +11,17 @@ using Volo.Abp.DependencyInjection;
 
 namespace FclEx.Abp.DependencyInjection
 {
+    /// <summary>
+    /// Register open generic classes like <strong>Service&lt;T&gt;</strong>
+    /// </summary>
     public class OpenGenericConventionalRegistrar : DefaultConventionalRegistrar
     {
         public override void AddAssembly(IServiceCollection services, Assembly assembly)
         {
             var types = GetAllTypes(assembly)
-                .Where(type => type != null
-                               && type.IsClass
-                               && !type.IsAbstract
-                               && type.IsGenericType
-                               && !type.IsDefined(typeof(CompilerGeneratedAttribute), true)
-                               ).ToArray();
+                .Where(type => type is { IsClass: true, IsAbstract: false, IsGenericTypeDefinition: true }
+                               && !type.IsDefined(typeof(CompilerGeneratedAttribute), true))
+                .ToArray();
             AddTypes(services, types);
         }
 
@@ -36,17 +36,14 @@ namespace FclEx.Abp.DependencyInjection
             if (lifeTime == null)
                 return;
 
-            var serviceTypes = ExposedServiceExplorer.GetExposedServices(type);
+            var serviceTypes = GetExposedServices(type);
 
             TriggerServiceExposing(services, type, serviceTypes);
 
             foreach (var serviceType in serviceTypes)
             {
-                var t = IsOpenGenericType(serviceType)
-                    ? serviceType.GetGenericTypeDefinition()
-                    : serviceType;
-
-                var serviceDescriptor = ServiceDescriptor.Describe(t, type, lifeTime.Value);
+                // NOTE: an open generic type cannot be redirected to implementation type
+                var serviceDescriptor = ServiceDescriptor.Describe(serviceType, type, lifeTime.Value);
 
                 if (dependencyAttribute?.ReplaceServices == true)
                 {
@@ -58,16 +55,27 @@ namespace FclEx.Abp.DependencyInjection
                 }
                 else
                 {
-                    services.AddIfNotExist(serviceDescriptor);
+                    services.Add(serviceDescriptor);
                 }
             }
         }
 
-        private static bool IsOpenGenericType(Type type)
+        private static List<Type> GetExposedServices(Type type)
         {
-            return type.IsGenericType
-                   && !type.IsGenericTypeDefinition
-                   && type.GenericTypeArguments.Any(x => x.IsGenericParameter);
+            var serviceTypes = new List<Type> { type };
+
+            foreach (var interfaceType in type.GetTypeInfo().GetInterfaces())
+            {
+                var interfaceName = interfaceType.Name.TrimStart("I");
+
+                // NOTE: we use type.Name instead of type.SimpleName() here to ensure the interface type has the same generic typeDefinition
+                if (type.Name.EndsWith(interfaceName))
+                {
+                    serviceTypes.Add(interfaceType.GetGenericTypeDefinition());
+                }
+            }
+
+            return serviceTypes;
         }
 
         public static IReadOnlyList<Type> GetAllTypes(Assembly assembly)
@@ -78,7 +86,7 @@ namespace FclEx.Abp.DependencyInjection
             }
             catch (ReflectionTypeLoadException ex)
             {
-                return ex.Types!;
+                return ex.Types.NotNull().ToArray();
             }
         }
     }
