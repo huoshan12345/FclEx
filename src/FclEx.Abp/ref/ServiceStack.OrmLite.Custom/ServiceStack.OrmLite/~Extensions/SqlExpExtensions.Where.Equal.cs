@@ -10,7 +10,7 @@ namespace ServiceStack.OrmLite
 
     public static partial class SqlExpExtensions
     {
-        private static readonly ConcurrentDictionary<Type, (object, object)> CacheOfDefaultValue = new ConcurrentDictionary<Type, (object, object)>();
+        private static readonly ConcurrentDictionary<Type, (object, object)> CacheOfDefaultValue = new();
 
         private static (object Null, object Default) GetDefaultValue(Type type)
         {

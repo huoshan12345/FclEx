@@ -267,7 +267,7 @@ public partial class OrderedDictionary<TKey, TValue> : IDictionary<TKey, TValue>
     /// Returns an enumerator that iterates through the <see cref="OrderedDictionary{TKey, TValue}" />.
     /// </summary>
     /// <returns>An <see cref="OrderedDictionary{TKey, TValue}.Enumerator" /> structure for the <see cref="OrderedDictionary{TKey, TValue}" />.</returns>
-    public Enumerator GetEnumerator() => new Enumerator(this);
+    public Enumerator GetEnumerator() => new(this);
 
     /// <summary>
     /// Adds a key/value pair to the <see cref="OrderedDictionary{TKey, TValue}" /> if the key does not already exist as an O(1) operation.

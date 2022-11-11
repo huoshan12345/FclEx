@@ -6,7 +6,7 @@ namespace FclEx.Extensions;
 
 public static class ListExtensions
 {
-    private static readonly Lazy<Random> _random = new Lazy<Random>(() => new Random());
+    private static readonly Lazy<Random> _random = new(() => new Random());
 
     public static void RemoveAll<T>(this IList<T> list, Func<T, bool> filter)
     {

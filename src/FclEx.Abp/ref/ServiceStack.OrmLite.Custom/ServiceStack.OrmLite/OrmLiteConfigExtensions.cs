@@ -23,7 +23,7 @@ namespace ServiceStack.OrmLite
 {
     internal static class OrmLiteConfigExtensions
     {
-        private static Dictionary<Type, ModelDefinition> typeModelDefinitionMap = new Dictionary<Type, ModelDefinition>();
+        private static Dictionary<Type, ModelDefinition> typeModelDefinitionMap = new();
 
         internal static bool CheckForIdField(IEnumerable<PropertyInfo> objProperties)
         {

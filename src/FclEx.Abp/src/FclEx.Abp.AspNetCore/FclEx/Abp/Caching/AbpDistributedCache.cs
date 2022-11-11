@@ -33,7 +33,7 @@ namespace FclEx.Abp.Caching
             return Cache.Get(key).Value;
         }
 
-        public async Task<byte[]> GetAsync(string key, CancellationToken token = new CancellationToken())
+        public async Task<byte[]?> GetAsync(string key, CancellationToken token = new())
         {
             var v = await Cache.GetAsync(key).DonotCapture();
             return v.Value;
@@ -47,8 +47,7 @@ namespace FclEx.Abp.Caching
                 CacheOfExpiration.Set(key, timeSpan, timeSpan);
         }
 
-        public async Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options,
-            CancellationToken token = new CancellationToken())
+        public async Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = new())
         {
             var exp = GetExpiration(options);
             await Cache.SetAsync(key, value, exp).DonotCapture();
@@ -66,7 +65,7 @@ namespace FclEx.Abp.Caching
             }
         }
 
-        public async Task RefreshAsync(string key, CancellationToken token = new CancellationToken())
+        public async Task RefreshAsync(string key, CancellationToken token = new())
         {
             if (CacheOfExpiration.TryGet(key, out var timeSpan)
                 && Cache.TryGet(key, out var bytes))
@@ -82,7 +81,7 @@ namespace FclEx.Abp.Caching
             CacheOfExpiration.Remove(key);
         }
 
-        public async Task RemoveAsync(string key, CancellationToken token = new CancellationToken())
+        public async Task RemoveAsync(string key, CancellationToken token = new())
         {
             await Cache.RemoveAsync(key).DonotCapture();
             await CacheOfExpiration.RemoveAsync(key).DonotCapture();

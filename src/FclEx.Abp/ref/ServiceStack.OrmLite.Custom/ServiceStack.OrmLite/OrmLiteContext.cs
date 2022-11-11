@@ -12,7 +12,7 @@ namespace ServiceStack.OrmLite
 {
     public class OrmLiteContext
     {
-        public static readonly OrmLiteContext Instance = new OrmLiteContext();
+        public static readonly OrmLiteContext Instance = new();
 
         /// <summary>
         /// Tell ServiceStack to use ThreadStatic Items Collection for Context Scoped items.

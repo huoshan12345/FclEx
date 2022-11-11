@@ -6,7 +6,7 @@ namespace FclEx.Extensions;
 
 public static class HashExtensions
 {
-    private static readonly Regex _regMd5 = new Regex(@"^([a-fA-F0-9]{32})$", RegexOptions.Compiled);
+    private static readonly Regex _regMd5 = new(@"^([a-fA-F0-9]{32})$", RegexOptions.Compiled);
 
     public static string ToMd5String(this byte[] input, bool upperCase = false)
     {

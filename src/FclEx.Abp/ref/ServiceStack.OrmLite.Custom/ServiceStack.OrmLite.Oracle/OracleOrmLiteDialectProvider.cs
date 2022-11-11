@@ -21,11 +21,11 @@ namespace ServiceStack.OrmLite.Oracle
         public string AutoIdGuidFunction { get; set; } = "SYS_GUID()";
         public bool UseReturningForLastInsertId { get; set; } = true;
         
-        public static readonly OracleOrmLiteDialectProvider Instance = new OracleOrmLiteDialectProvider();
+        public static readonly OracleOrmLiteDialectProvider Instance = new();
         public static string RowVersionTriggerFormat = "{0}RowVersionUpdateTrigger";
 
         // TODO refactor to hashset (case insensitive
-        protected readonly List<string> ReservedNames = new List<string>
+        protected readonly List<string> ReservedNames = new()
         {
             "ACCESS", "DEFAULT", "INTEGER", "ONLINE", "START", "ADD", "DELETE", "INTERSECT", "OPTION", "SUCCESSFUL", "ALL", "DESC",
             "INTO", "OR", "SYNONYM", "ALTER", "DISTINCT", "IS", "ORDER", "SYSDATE", "AND", "DROP", "LEVEL", "PCTFREE", "TABLE", "ANY",
@@ -40,7 +40,7 @@ namespace ServiceStack.OrmLite.Oracle
         };
 
         // TODO refactor to hashset (case insensitive
-        protected readonly List<string> ReservedParameterNames = new List<string>
+        protected readonly List<string> ReservedParameterNames = new()
         {
             "ACCESS", "DEFAULT", "INTEGER", "ONLINE", "START", "ADD", "DELETE", "INTERSECT", "OPTION", "SUCCESSFUL", "ALL", "DESC",
             "INTO", "OR", "SYNONYM", "ALTER", "DISTINCT", "IS", "ORDER", "SYSDATE", "AND", "DROP", "LEVEL", "PCTFREE", "TABLE", "ANY",

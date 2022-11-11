@@ -116,7 +116,7 @@ namespace ServiceStack.OrmLite
         [Obsolete("Use TableAlias")]
         public static JoinFormatDelegate JoinAlias(this IDbConnection db, string alias) => OrmLiteUtils.JoinAlias(alias);
 
-        public static TableOptions TableAlias(this IDbConnection db, string alias) => new TableOptions { Alias = alias };
+        public static TableOptions TableAlias(this IDbConnection db, string alias) => new() { Alias = alias };
 
         public static string GetTableName<T>(this IDbConnection db) => db.GetDialectProvider().GetTableName(ModelDefinition<T>.Definition);
 

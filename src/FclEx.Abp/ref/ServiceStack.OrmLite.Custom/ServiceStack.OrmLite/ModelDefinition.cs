@@ -81,7 +81,7 @@ namespace ServiceStack.OrmLite
 
         public FieldDefinition[] AllFieldDefinitionsArray { get; private set; }
 
-        private readonly object fieldDefLock = new object();
+        private readonly object fieldDefLock = new();
         private Dictionary<string, FieldDefinition> fieldDefinitionMap;
         private Func<string, string> fieldNameSanitizer;
         

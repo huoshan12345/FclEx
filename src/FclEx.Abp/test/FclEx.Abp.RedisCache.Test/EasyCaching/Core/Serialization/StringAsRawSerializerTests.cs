@@ -15,15 +15,15 @@ namespace EasyCaching.Core.Serialization
             public int Age { get; set; }
         }
 
-        [Fact]
-        public void Serialize_BinarySerializer_Test()
-        {
-            var stringAsRawSerializer = new StringAsRawEasyCachingSerializer(
-                new DefaultBinaryFormatterSerializer(), Encoding.UTF8);
+        //[Fact]
+        //public void Serialize_BinarySerializer_Test()
+        //{
+        //    var stringAsRawSerializer = new StringAsRawEasyCachingSerializer(
+        //        new DefaultBinaryFormatterSerializer(), Encoding.UTF8);
 
-            var obj = new Tester { Age = 10, Name = "xxxxxxxxx" };
-            Assert.Throws<SerializationException>(() => stringAsRawSerializer.SerializeObject(obj));
-        }
+        //    var obj = new Tester { Age = 10, Name = "xxxxxxxxx" };
+        //    Assert.Throws<SerializationException>(() => stringAsRawSerializer.SerializeObject(obj));
+        //}
 
 
         [Fact]

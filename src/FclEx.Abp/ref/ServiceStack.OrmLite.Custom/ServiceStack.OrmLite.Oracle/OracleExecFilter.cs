@@ -18,7 +18,7 @@ namespace ServiceStack.OrmLite.Oracle
             return command;
         }
 
-        private static readonly ConcurrentDictionary<Type, Action<IDbCommand, bool>> Cache = new ConcurrentDictionary<Type, Action<IDbCommand, bool>>();
+        private static readonly ConcurrentDictionary<Type, Action<IDbCommand, bool>> Cache = new();
         private static Action<IDbCommand, bool> GetBindByNameSetter(Type commandType)
         {
             if (commandType == null) return null;

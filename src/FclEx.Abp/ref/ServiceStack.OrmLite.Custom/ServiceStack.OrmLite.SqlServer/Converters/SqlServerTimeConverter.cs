@@ -5,7 +5,7 @@ namespace ServiceStack.OrmLite.SqlServer.Converters
 {
     public class SqlServerTimeConverter : OrmLiteConverter
     {
-        private static readonly DateTime timeSpanOffset = new DateTime(1900, 01, 01);
+        private static readonly DateTime timeSpanOffset = new(1900, 01, 01);
 
         public int? Precision { get; set; }
 

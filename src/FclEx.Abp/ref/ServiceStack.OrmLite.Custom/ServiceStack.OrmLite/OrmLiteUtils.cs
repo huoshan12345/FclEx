@@ -31,7 +31,7 @@ namespace ServiceStack.OrmLite
 
         const int maxCachedIndexFields = 10000;
         private static readonly Dictionary<IndexFieldsCacheKey, Tuple<FieldDefinition, int, IOrmLiteConverter>[]> indexFieldsCache 
-            = new Dictionary<IndexFieldsCacheKey, Tuple<FieldDefinition, int, IOrmLiteConverter>[]>(maxCachedIndexFields);
+            = new(maxCachedIndexFields);
 
         internal static ILog Log = LogManager.GetLogger(typeof(OrmLiteUtils));
 
@@ -457,10 +457,10 @@ namespace ServiceStack.OrmLite
             return "{0}".SqlFmt(value);
         }
 
-        public static Regex VerifyFragmentRegEx = new Regex("([^\\w]|^)+(--|;--|;|%|/\\*|\\*/|@@|@|char|nchar|varchar|nvarchar|alter|begin|cast|create|cursor|declare|delete|drop|end|exec|execute|fetch|insert|kill|open|select|sys|sysobjects|syscolumns|table|update)([^\\w]|$)+",
+        public static Regex VerifyFragmentRegEx = new("([^\\w]|^)+(--|;--|;|%|/\\*|\\*/|@@|@|char|nchar|varchar|nvarchar|alter|begin|cast|create|cursor|declare|delete|drop|end|exec|execute|fetch|insert|kill|open|select|sys|sysobjects|syscolumns|table|update)([^\\w]|$)+",
             RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        public static Regex VerifySqlRegEx = new Regex("([^\\w]|^)+(--|;--|;|%|/\\*|\\*/|@@|@|char|nchar|varchar|nvarchar|alter|begin|cast|create|cursor|declare|delete|drop|end|exec|execute|fetch|insert|kill|open|table|update)([^\\w]|$)+",
+        public static Regex VerifySqlRegEx = new("([^\\w]|^)+(--|;--|;|%|/\\*|\\*/|@@|@|char|nchar|varchar|nvarchar|alter|begin|cast|create|cursor|declare|delete|drop|end|exec|execute|fetch|insert|kill|open|table|update)([^\\w]|$)+",
             RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         public static Func<string,string> SqlVerifyFragmentFn { get; set; }
@@ -723,7 +723,7 @@ namespace ServiceStack.OrmLite
             return NotFound;
         }
 
-        private static readonly Regex AllowedPropertyCharsRegex = new Regex(@"[^0-9a-zA-Z_]",
+        private static readonly Regex AllowedPropertyCharsRegex = new(@"[^0-9a-zA-Z_]",
             RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         private static int TryGuessColumnIndex(string fieldName, Dictionary<string, int> dbFieldMap)

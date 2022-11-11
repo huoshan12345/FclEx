@@ -147,6 +147,6 @@ public class SmallPrimeUtility
     /// </summary>
     public static IList<int> PrimeTable => _myPrimes;
 
-    private static List<int> _myPrimes = new List<int>();
+    private static List<int> _myPrimes = new();
 
 }

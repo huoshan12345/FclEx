@@ -17,7 +17,7 @@ public static class Range
 
 public struct Range<T> where T : struct
 {
-    public static readonly Range<T> Empty = new Range<T>(null, null);
+    public static readonly Range<T> Empty = new(null, null);
 
     public Range(Bound<T> min, Bound<T> max) : this()
     {

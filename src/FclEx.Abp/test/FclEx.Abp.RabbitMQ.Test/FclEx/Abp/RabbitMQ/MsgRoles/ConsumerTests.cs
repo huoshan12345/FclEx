@@ -6,7 +6,7 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles
 {
     public class ConsumerTests
     {
-        public static ExchangeSettings DefaultExchange { get; } = new ExchangeSettings
+        public static ExchangeSettings DefaultExchange { get; } = new()
         {
             Name = "test.comsumer",
             Type = "topic",

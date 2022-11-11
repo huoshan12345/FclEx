@@ -22,7 +22,7 @@ namespace FclEx.Abp.Caching.Configuration
             set => _globalPrefix = value;
         }
 
-        private readonly List<ICacheConfigurator> _configurators = new List<ICacheConfigurator>();
+        private readonly List<ICacheConfigurator> _configurators = new();
         public IReadOnlyList<ICacheConfigurator> Configurators => _configurators;
 
         public AbpCacheOptions Configure(string name, Action<CacheOptions> action)

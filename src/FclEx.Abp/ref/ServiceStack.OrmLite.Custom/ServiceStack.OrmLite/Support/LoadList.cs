@@ -130,7 +130,7 @@ namespace ServiceStack.OrmLite.Support
 
         public class CaseInsensitiveObjectComparer : IEqualityComparer<object>
         {
-            public static CaseInsensitiveObjectComparer Instance = new CaseInsensitiveObjectComparer();
+            public static CaseInsensitiveObjectComparer Instance = new();
 
             public new bool Equals(object x, object y)
             {

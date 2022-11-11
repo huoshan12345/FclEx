@@ -61,7 +61,7 @@ public sealed class WebProxyExt : IWebProxyExt, IEquatable<WebProxyExt>
         return Create(uri, credentials);
     }
 
-    public static WebProxyExt None { get; set; } = new WebProxyExt(ProxyType.None, null, 0);
+    public static WebProxyExt None { get; set; } = new(ProxyType.None, null, 0);
 
     public Uri? GetProxy(Uri destination) => _uri;
 

@@ -12,7 +12,7 @@ namespace Overby.Extensions.Attachments
     internal static class AttachmentExtensions
     {
         private static readonly ConditionalWeakTable<object, ConcurrentDictionary<string, object>> _attachmentTable =
-            new ConditionalWeakTable<object, ConcurrentDictionary<string, object>>();
+            new();
 
         /// <summary>
         /// Copies attachments from one object to another.

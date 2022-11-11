@@ -5,9 +5,9 @@ namespace FclEx.Utils;
 
 public static class HtmlUtil
 {
-    public static Regex RegexOfMetaRefresh { get; } = new Regex(@"<meta +http-equiv=""refresh"" +content=""(.+)""/>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-    public static Regex RegexOfMetaRefreshUrl { get; } = new Regex(@"^\s*(\d+)(?:\s*;(?:\s*url\s*=)?\s*(?:[""']\s*(.*?)\s*['""]|(.*?)))?\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-    public static Regex RegOfCharSet { get; } = new Regex("<meta[^<]*charset=([^<]*)[\"']", RegexOptions.Compiled);
+    public static Regex RegexOfMetaRefresh { get; } = new(@"<meta +http-equiv=""refresh"" +content=""(.+)""/>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    public static Regex RegexOfMetaRefreshUrl { get; } = new(@"^\s*(\d+)(?:\s*;(?:\s*url\s*=)?\s*(?:[""']\s*(.*?)\s*['""]|(.*?)))?\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    public static Regex RegOfCharSet { get; } = new("<meta[^<]*charset=([^<]*)[\"']", RegexOptions.Compiled);
     private static char[] TrimChars { get; } = { '\'', '"', ';' };
 
     public static string? GetMetaCharSet(string html)

@@ -8,7 +8,7 @@ namespace ServiceStack.OrmLite.Oracle
     /// </summary>
     public class Oracle11OrmLiteDialectProvider : OracleOrmLiteDialectProvider
     {
-        public new static Oracle11OrmLiteDialectProvider Instance = new Oracle11OrmLiteDialectProvider();
+        public new static Oracle11OrmLiteDialectProvider Instance = new();
 
         protected new const int MaxNameLength = 128;
 

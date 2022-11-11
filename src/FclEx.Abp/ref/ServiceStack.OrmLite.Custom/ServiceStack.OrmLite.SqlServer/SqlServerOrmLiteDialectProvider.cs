@@ -21,7 +21,7 @@ namespace ServiceStack.OrmLite.SqlServer
 {
     public partial class SqlServerOrmLiteDialectProvider : OrmLiteDialectProviderBase<SqlServerOrmLiteDialectProvider>
     {
-        public static SqlServerOrmLiteDialectProvider Instance = new SqlServerOrmLiteDialectProvider();
+        public static SqlServerOrmLiteDialectProvider Instance = new();
 
         public SqlServerOrmLiteDialectProvider()
         {

@@ -31,6 +31,5 @@ public class ServiceDescriptorEqualityComparer : IEqualityComparer<ServiceDescri
         }
     }
 
-    public static ServiceDescriptorEqualityComparer Instance { get; }
-        = new ServiceDescriptorEqualityComparer();
+    public static ServiceDescriptorEqualityComparer Instance { get; } = new();
 }

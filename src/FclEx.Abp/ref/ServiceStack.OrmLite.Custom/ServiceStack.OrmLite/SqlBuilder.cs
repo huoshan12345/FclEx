@@ -19,7 +19,7 @@ namespace ServiceStack.OrmLite
     /// </summary>
     public class SqlBuilder
     {
-        readonly Dictionary<string, Clauses> data = new Dictionary<string, Clauses>();
+        readonly Dictionary<string, Clauses> data = new();
         int seq;
 
         class Clause
@@ -44,7 +44,7 @@ namespace ServiceStack.OrmLite
                 public readonly object Value;
             }
 
-            private readonly List<Property> properties = new List<Property>();
+            private readonly List<Property> properties = new();
 
             public DynamicParameters(object initParams)
             {
@@ -198,7 +198,7 @@ namespace ServiceStack.OrmLite
                 this.builder = builder;
             }
 
-            static readonly Regex regex = new Regex(@"\/\*\*.+\*\*\/", RegexOptions.Compiled | RegexOptions.Multiline);
+            static readonly Regex regex = new(@"\/\*\*.+\*\*\/", RegexOptions.Compiled | RegexOptions.Multiline);
 
             void ResolveSql()
             {

@@ -5,13 +5,33 @@ services:
     image: postgres:13
     restart: always
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=111111
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 111111
     ports:
       - '5432:5432'
     volumes: 
       - postgres:/var/lib/postgresql/data
       
+  mysql:
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: lijing
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql:/var/lib/mysql
+      
+  redis:
+    image: redis:7
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --requirepass a.o7a@bj
+    volumes: 
+      - redis:/data
+      
 volumes:
   postgres:
-    driver: local
+  mysql:
+  redis:

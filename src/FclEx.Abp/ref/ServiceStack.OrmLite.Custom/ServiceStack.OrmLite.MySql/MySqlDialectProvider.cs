@@ -8,7 +8,7 @@ namespace ServiceStack.OrmLite.MySql
 {
     public class MySqlDialectProvider : MySqlDialectProviderBase<MySqlDialectProvider>
     {
-        public static MySqlDialectProvider Instance = new MySqlDialectProvider();
+        public static MySqlDialectProvider Instance = new();
 
         private const string TextColumnDefinition = "TEXT";
 
@@ -30,7 +30,7 @@ namespace ServiceStack.OrmLite.MySql
     
     public class MySql55DialectProvider : MySqlDialectProviderBase<MySqlDialectProvider>
     {
-        public static MySql55DialectProvider Instance = new MySql55DialectProvider();
+        public static MySql55DialectProvider Instance = new();
 
         private const string TextColumnDefinition = "TEXT";
 

@@ -12,13 +12,11 @@ namespace Xunit
 {
     public static partial class AssertExt
     {
-        private static readonly HashSet<string> _emptySet = new HashSet<string>();
+        private static readonly HashSet<string> _emptySet = new();
 
-        private static readonly ConcurrentDictionary<Type, IReadOnlyList<DataMemberInfo>> TypeDataMemberDic
-            = new ConcurrentDictionary<Type, IReadOnlyList<DataMemberInfo>>();
+        private static readonly ConcurrentDictionary<Type, IReadOnlyList<DataMemberInfo>> TypeDataMemberDic = new();
 
-        private static readonly ConcurrentDictionary<Type, Func<object, object, bool>?> TypeEqualsDic
-            = new ConcurrentDictionary<Type, Func<object, object, bool>?>();
+        private static readonly ConcurrentDictionary<Type, Func<object, object, bool>?> TypeEqualsDic = new();
 
         internal static IReadOnlyList<DataMemberInfo> GetDataMembers(Type type)
         {

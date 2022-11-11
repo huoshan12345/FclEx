@@ -14,7 +14,7 @@ namespace FclEx.Abp.Caching
     {
         protected readonly AbpCacheOptions _options;
         protected readonly IEasyCachingProvider _provider;
-        protected readonly ConcurrentDictionary<string, ICache> _caches = new ConcurrentDictionary<string, ICache>();
+        protected readonly ConcurrentDictionary<string, ICache> _caches = new();
 
         public CacheManager(IEasyCachingProvider provider,
             IOptions<AbpCacheOptions> options)

@@ -53,7 +53,7 @@ namespace ServiceStack.OrmLite.MySql
 
         public static string RowVersionTriggerFormat = "{0}RowVersionUpdateTrigger";
 
-        public static HashSet<string> ReservedWords = new HashSet<string>(new[]
+        public static HashSet<string> ReservedWords = new(new[]
         {
 		  "ACCESSIBLE",
 		  "ADD",

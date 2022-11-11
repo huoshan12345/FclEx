@@ -1531,7 +1531,7 @@ namespace ServiceStack.OrmLite
             return "";
         }
 
-        public virtual List<string> SequenceList(Type tableType) => new List<string>();
+        public virtual List<string> SequenceList(Type tableType) => new();
 
         public virtual Task<List<string>> SequenceListAsync(Type tableType, CancellationToken token = default) => new List<string>().InTask();
 

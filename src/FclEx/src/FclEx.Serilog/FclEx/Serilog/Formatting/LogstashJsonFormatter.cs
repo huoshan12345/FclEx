@@ -15,7 +15,7 @@ namespace FclEx.Serilog.Formatting
 {
     public class LogstashJsonFormatter : ElasticsearchJsonFormatter
     {
-        private static readonly ConcurrentDictionary<string, string> Map = new ConcurrentDictionary<string, string>();
+        private static readonly ConcurrentDictionary<string, string> Map = new();
 
         private readonly bool _useCamelCase;
 

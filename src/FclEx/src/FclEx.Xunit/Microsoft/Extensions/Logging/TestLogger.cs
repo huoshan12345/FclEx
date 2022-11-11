@@ -11,7 +11,7 @@ namespace Microsoft.Extensions.Logging
         private readonly ITestOutputHelper _output;
         private readonly string _name;
         private readonly bool _needToCheckDisposed;
-        private readonly object _lock = new object();
+        private readonly object _lock = new();
         private bool _isDisposed;
 
         private static readonly FieldInfo _field = typeof(TestOutputHelper).GetField("buffer", BindingFlags.NonPublic | BindingFlags.Instance)!;
@@ -66,7 +66,7 @@ namespace Microsoft.Extensions.Logging
             return true;
         }
 
-        public IDisposable BeginScope<TState>(TState state)
+        public IDisposable BeginScope<TState>(TState state) where TState : notnull
         {
             return EmptyDisposable.Instance;
         }

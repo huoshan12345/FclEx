@@ -21,7 +21,7 @@ namespace FclEx.Abp.OrmLite
     [DependsOn(typeof(FclExAbpModule))]
     public class FclExAbpOrmLiteModule : AbpModule
     {
-        private static readonly Initializer _initializer = new Initializer();
+        private static readonly Initializer _initializer = new();
 
         static FclExAbpOrmLiteModule()
         {

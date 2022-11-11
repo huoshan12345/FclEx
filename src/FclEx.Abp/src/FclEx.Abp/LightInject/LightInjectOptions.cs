@@ -10,6 +10,6 @@ namespace LightInject
         public bool EnableDebuggerLogging { get; set; } = false;
         public bool ThrowOnWarningLog { get; set; } = false;
 
-        internal static LightInjectOptions Default { get; } = new LightInjectOptions();
+        internal static LightInjectOptions Default { get; } = new();
     }
 }

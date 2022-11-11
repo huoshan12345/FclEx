@@ -11,5 +11,5 @@ public class SubmitInfo
     }
 
     public Uri SubmitUrl { get; set; }
-    public Dictionary<string, string?> Paras { get; set; } = new Dictionary<string, string?>();
+    public Dictionary<string, string?> Paras { get; set; } = new();
 }

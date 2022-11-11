@@ -5,7 +5,7 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles
 {
     public class PublisherTests
     {
-        public static ExchangeSettings DefaultExchange { get; } = new ExchangeSettings
+        public static ExchangeSettings DefaultExchange { get; } = new()
         {
             Name = "test.publisher",
             Type = "topic",

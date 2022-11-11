@@ -21,8 +21,7 @@ public sealed class HttpQualityValueList : IEnumerable<HttpQualityValue>
     private static readonly char[] _delimiters = { ',' };
     private static readonly IComparer<float> _comparer
         = MemberComparer<float>.Create(m => m, true).ToComparer();
-    private readonly SortedDictionary<float, List<HttpQualityValue>> _dic
-        = new SortedDictionary<float, List<HttpQualityValue>>(_comparer);
+    private readonly SortedDictionary<float, List<HttpQualityValue>> _dic = new(_comparer);
 
     #region Fields
 

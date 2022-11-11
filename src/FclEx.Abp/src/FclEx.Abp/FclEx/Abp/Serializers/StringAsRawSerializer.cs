@@ -27,6 +27,6 @@ namespace FclEx.Abp.Serializers
                 : _serializer.Serialize(obj);
         }
 
-        public static StringAsRawSerializer Instance { get; } = new StringAsRawSerializer(JsonStringSerializer.Instance);
+        public static StringAsRawSerializer Instance { get; } = new(JsonStringSerializer.Instance);
     }
 }

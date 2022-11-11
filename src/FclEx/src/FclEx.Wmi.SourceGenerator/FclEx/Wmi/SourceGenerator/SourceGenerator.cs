@@ -55,7 +55,7 @@ namespace FclEx.Wmi.SourceGenerator
                 ManagementClass nsClass;
                 try
                 {
-                    nsClass = new ManagementClass(new ManagementScope(cur), new ManagementPath("__namespace"), null);
+                    nsClass = new ManagementClass(new ManagementScope(cur), new ManagementPath("__namespace"), new());
                 }
                 catch (ManagementException ex)
                 {

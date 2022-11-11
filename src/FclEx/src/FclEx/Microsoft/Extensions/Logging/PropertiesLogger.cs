@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using FclEx.Extensions;
+using FclEx.Utils;
 
 namespace Microsoft.Extensions.Logging;
 
@@ -68,5 +69,6 @@ public class PropertiesLogger : ILogger
 
     public bool IsEnabled(LogLevel logLevel) => _logger.IsEnabled(logLevel);
 
-    public IDisposable BeginScope<TState>(TState state) => _logger.BeginScope(state);
+    public IDisposable BeginScope<TState>(TState state) where TState : notnull
+        => _logger.BeginScope(state) ?? EmptyDisposable.Instance;
 }

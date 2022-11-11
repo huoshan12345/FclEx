@@ -10,7 +10,7 @@ namespace FclEx.Extensions;
 
 public static partial class BytesExtensions
 {
-    public static MemoryStream ToStream(this byte[] bytes) => new MemoryStream(bytes);
+    public static MemoryStream ToStream(this byte[] bytes) => new(bytes);
 
     public static string GetString(this byte[] bytes, Encoding? encoding = null)
     {

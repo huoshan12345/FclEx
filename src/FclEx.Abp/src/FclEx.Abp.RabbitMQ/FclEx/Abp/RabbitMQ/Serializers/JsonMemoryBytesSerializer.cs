@@ -15,7 +15,7 @@ namespace FclEx.Abp.RabbitMQ.Serializers
             _stringSerializer = stringSerializer;
         }
 
-        public static JsonMemoryBytesSerializer Instance { get; } = new JsonMemoryBytesSerializer(StringAsRawSerializer.Instance);
+        public static JsonMemoryBytesSerializer Instance { get; } = new(StringAsRawSerializer.Instance);
 
         public ReadOnlyMemory<byte> Serialize(object? obj) => _stringSerializer.Serialize(obj).ToBytes(Encoding.UTF8);
 

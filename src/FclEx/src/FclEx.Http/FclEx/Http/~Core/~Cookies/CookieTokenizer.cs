@@ -441,25 +441,25 @@ internal class CookieTokenizer
     //
 
     static RecognizedAttribute[] RecognizedAttributes = {
-        new RecognizedAttribute(CookieInternal.PathAttributeName, CookieToken.Path),
-        new RecognizedAttribute(CookieInternal.MaxAgeAttributeName, CookieToken.MaxAge),
-        new RecognizedAttribute(CookieInternal.ExpiresAttributeName, CookieToken.Expires),
-        new RecognizedAttribute(CookieInternal.VersionAttributeName, CookieToken.Version),
-        new RecognizedAttribute(CookieInternal.DomainAttributeName, CookieToken.Domain),
-        new RecognizedAttribute(CookieInternal.SecureAttributeName, CookieToken.Secure),
-        new RecognizedAttribute(CookieInternal.DiscardAttributeName, CookieToken.Discard),
-        new RecognizedAttribute(CookieInternal.PortAttributeName, CookieToken.Port),
-        new RecognizedAttribute(CookieInternal.CommentAttributeName, CookieToken.Comment),
-        new RecognizedAttribute(CookieInternal.CommentUrlAttributeName, CookieToken.CommentUrl),
-        new RecognizedAttribute(CookieInternal.HttpOnlyAttributeName, CookieToken.HttpOnly),
+        new(CookieInternal.PathAttributeName, CookieToken.Path),
+        new(CookieInternal.MaxAgeAttributeName, CookieToken.MaxAge),
+        new(CookieInternal.ExpiresAttributeName, CookieToken.Expires),
+        new(CookieInternal.VersionAttributeName, CookieToken.Version),
+        new(CookieInternal.DomainAttributeName, CookieToken.Domain),
+        new(CookieInternal.SecureAttributeName, CookieToken.Secure),
+        new(CookieInternal.DiscardAttributeName, CookieToken.Discard),
+        new(CookieInternal.PortAttributeName, CookieToken.Port),
+        new(CookieInternal.CommentAttributeName, CookieToken.Comment),
+        new(CookieInternal.CommentUrlAttributeName, CookieToken.CommentUrl),
+        new(CookieInternal.HttpOnlyAttributeName, CookieToken.HttpOnly),
     };
 
     static RecognizedAttribute[] RecognizedServerAttributes = {
-        new RecognizedAttribute('$' + CookieInternal.PathAttributeName, CookieToken.Path),
-        new RecognizedAttribute('$' + CookieInternal.VersionAttributeName, CookieToken.Version),
-        new RecognizedAttribute('$' + CookieInternal.DomainAttributeName, CookieToken.Domain),
-        new RecognizedAttribute('$' + CookieInternal.PortAttributeName, CookieToken.Port),
-        new RecognizedAttribute('$' + CookieInternal.HttpOnlyAttributeName, CookieToken.HttpOnly),
+        new('$' + CookieInternal.PathAttributeName, CookieToken.Path),
+        new('$' + CookieInternal.VersionAttributeName, CookieToken.Version),
+        new('$' + CookieInternal.DomainAttributeName, CookieToken.Domain),
+        new('$' + CookieInternal.PortAttributeName, CookieToken.Port),
+        new('$' + CookieInternal.HttpOnlyAttributeName, CookieToken.HttpOnly),
     };
 
     internal CookieToken TokenFromName(bool parseResponseCookies)

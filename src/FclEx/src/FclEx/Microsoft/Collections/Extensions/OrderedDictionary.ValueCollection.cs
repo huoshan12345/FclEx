@@ -51,7 +51,7 @@ public partial class OrderedDictionary<TKey, TValue>
         /// Returns an enumerator that iterates through the <see cref="OrderedDictionary{TKey, TValue}.ValueCollection" />.
         /// </summary>
         /// <returns>A <see cref="OrderedDictionary{TKey, TValue}.ValueCollection.Enumerator" /> for the <see cref="OrderedDictionary{TKey, TValue}.ValueCollection" />.</returns>
-        public Enumerator GetEnumerator() => new Enumerator(_orderedDictionary);
+        public Enumerator GetEnumerator() => new(_orderedDictionary);
 
         IEnumerator<TValue> IEnumerable<TValue>.GetEnumerator() => GetEnumerator();
 

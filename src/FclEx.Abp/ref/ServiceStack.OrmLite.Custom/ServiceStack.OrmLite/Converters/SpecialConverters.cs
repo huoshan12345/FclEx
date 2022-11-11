@@ -24,7 +24,7 @@ namespace ServiceStack.OrmLite.Converters
     {
         public EnumConverter() : base(255) {}
 
-        static Dictionary<Type, EnumKind> enumTypeCache = new Dictionary<Type, EnumKind>();
+        static Dictionary<Type, EnumKind> enumTypeCache = new();
 
         public static EnumKind GetEnumKind(Type enumType)
         {

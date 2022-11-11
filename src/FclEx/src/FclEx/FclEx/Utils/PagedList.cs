@@ -29,7 +29,7 @@ public class PagedList<T> : IPagedList<T>
 {
     private readonly IEnumerable<T> _items;
 
-    public static PagedList<T> Empty { get; } = new PagedList<T>(Array.Empty<T>(), 0, 1, 0);
+    public static PagedList<T> Empty { get; } = new(Array.Empty<T>(), 0, 1, 0);
 
     public PagedList(T item) : this(new[] { item }, 0, 1, 1) { }
 

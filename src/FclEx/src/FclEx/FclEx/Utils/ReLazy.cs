@@ -7,7 +7,7 @@ namespace FclEx.Utils;
 
 public class ReLazy<TSelf, T> : IDisposable where TSelf : ReLazy<TSelf, T>
 {
-    protected readonly object _lock = new object();
+    protected readonly object _lock = new();
     protected volatile Lazy<T> _lazy;
     protected volatile Func<T> _valueFactory;
     protected readonly bool _isThreadSafe;

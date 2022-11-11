@@ -293,7 +293,7 @@ public class DictionarySlim<TKey, TValue> : IReadOnlyCollection<KeyValuePair<TKe
     /// <summary>
     /// Gets an enumerator over the dictionary
     /// </summary>
-    public Enumerator GetEnumerator() => new Enumerator(this); // avoid boxing
+    public Enumerator GetEnumerator() => new(this); // avoid boxing
 
     /// <summary>
     /// Gets an enumerator over the dictionary

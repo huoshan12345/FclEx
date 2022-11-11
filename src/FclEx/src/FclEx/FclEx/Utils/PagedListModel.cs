@@ -31,5 +31,5 @@ public class PagedListModel<T> : IPagedList
 public class PagedListModel<T, TSelf> : PagedListModel<T>
     where TSelf : PagedListModel<T, TSelf>, new()
 {
-    public static TSelf Empty { get; } = new TSelf();
+    public static TSelf Empty { get; } = new();
 }

@@ -10,8 +10,8 @@ namespace ServiceStack.OrmLite
         public DbType DbType;
         public string TextDefinition;
         public bool ShouldQuoteValue;
-        public Dictionary<Type, string> ColumnTypeMap = new Dictionary<Type, string>();
-        public Dictionary<Type, DbType> ColumnDbTypeMap = new Dictionary<Type, DbType>();
+        public Dictionary<Type, string> ColumnTypeMap = new();
+        public Dictionary<Type, DbType> ColumnDbTypeMap = new();
 
         public void Set<T>(DbType dbType, string fieldDefinition)
         {

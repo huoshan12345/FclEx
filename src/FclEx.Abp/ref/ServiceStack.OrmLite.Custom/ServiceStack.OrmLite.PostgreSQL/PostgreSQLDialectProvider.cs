@@ -621,7 +621,7 @@ namespace ServiceStack.OrmLite.PostgreSQL
             return "; " + SelectIdentitySql;
         }
         
-        public Dictionary<Type,NpgsqlDbType> TypesMap { get; } = new Dictionary<Type, NpgsqlDbType>
+        public Dictionary<Type,NpgsqlDbType> TypesMap { get; } = new()
         {
             [typeof(bool)] = NpgsqlDbType.Boolean,
             [typeof(short)] = NpgsqlDbType.Smallint,
@@ -671,7 +671,8 @@ namespace ServiceStack.OrmLite.PostgreSQL
             throw new NotSupportedException($"Type '{type.Name}' not found in 'TypesMap'");
         }
         
-        public Dictionary<string, NpgsqlDbType> NativeTypes = new Dictionary<string, NpgsqlDbType> {
+        public Dictionary<string, NpgsqlDbType> NativeTypes = new()
+        {
             { "json", NpgsqlDbType.Json },
             { "jsonb", NpgsqlDbType.Jsonb },
             { "hstore", NpgsqlDbType.Hstore },
