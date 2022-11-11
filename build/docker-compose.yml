@@ -31,6 +31,15 @@ services:
     volumes: 
       - redis:/data
       
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: rmq
+      RABBITMQ_DEFAULT_PASS: lijing
+    ports:
+      - 5672:5672
+      
 volumes:
   postgres:
   mysql:
