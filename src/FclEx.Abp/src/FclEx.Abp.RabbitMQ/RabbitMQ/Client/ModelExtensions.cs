@@ -7,7 +7,7 @@ namespace RabbitMQ.Client
     public static class ModelExtensions
     {
         public static void ExchangeDeclareWithAlternate(this IModel channel, string exchange, string type, bool durable,
-            bool autoDelete, IDictionary<string, object> arguments, string alternateExchange, bool isDelayed)
+            bool autoDelete, IDictionary<string, object>? arguments, bool isDelayed)
         {
             arguments ??= new Dictionary<string, object>();
             // AlternateExchange and DelayExchange can not work together
@@ -18,12 +18,7 @@ namespace RabbitMQ.Client
             }
             else
             {
-                var ae = alternateExchange.IsNullOrEmpty() ? $"{exchange}.Alternate" : alternateExchange;
-                arguments[FclExAbpRabbitMqConstants.AlternateExchange] = ae;
                 channel.ExchangeDeclare(exchange, type, durable, autoDelete, arguments);
-                channel.ExchangeDeclare(ae, "fanout", durable, autoDelete);
-                var queue = channel.QueueDeclare($"{ae}.Unrouted", durable, false, autoDelete);
-                channel.QueueBind(queue.QueueName, ae, "");
             }
         }
 

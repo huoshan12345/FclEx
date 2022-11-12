@@ -10,8 +10,7 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles
         {
             Name = "test.comsumer",
             Type = "topic",
-            IsDelayed = true,
-            AlternateName = null
+            IsDelayed = true
         };
 
         [Fact]

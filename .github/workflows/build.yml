@@ -15,6 +15,45 @@ env:
 jobs:
   build-windows:
     runs-on: windows-latest
+    
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: 111111
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        command: redis-server --requirepass a.o7a@bj
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        
+      rabbitmq:
+        image: heidiks/rabbitmq-delayed-message-exchange:latest
+        env:
+          RABBITMQ_DEFAULT_USER: rmq
+          RABBITMQ_DEFAULT_PASS: lijing
+        ports:
+          - 5672:5672
+        options: >-
+          --health-cmd "rabbitmqctl node_health_check"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          
+          
     steps:
       - name: Checkout
         uses: actions/checkout@v2

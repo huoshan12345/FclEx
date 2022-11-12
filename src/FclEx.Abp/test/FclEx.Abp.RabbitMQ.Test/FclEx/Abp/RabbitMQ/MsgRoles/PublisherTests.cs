@@ -10,7 +10,6 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles
             Name = "test.publisher",
             Type = "topic",
             IsDelayed = true,
-            AlternateName = null
         };
 
         private static TestPublisher CreatePublisher()

@@ -50,7 +50,6 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles
                 durable: true,
                 autoDelete: false,
                 arguments: null!,
-                alternateExchange: s.TargetExchange.AlternateName,
                 isDelayed: s.TargetExchange.IsDelayed);
         }
 
