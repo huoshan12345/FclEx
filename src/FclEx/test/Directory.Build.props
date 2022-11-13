@@ -5,7 +5,6 @@
     <TargetFramework>net6.0</TargetFramework>
     <NoWarn>xUnit2013</NoWarn>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <LangVersion>preview</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 

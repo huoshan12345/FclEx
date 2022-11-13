@@ -16,7 +16,6 @@ namespace FclEx.Benchmarks
             "http://www.baidu.com/",
             "http://www.sina.com.cn/",
             "https://weibo.com/",
-            "http://www.sohu.com/",
             "http://www.qq.com/",
         };
         // for single argument it's an IEnumerable of objects (object)
