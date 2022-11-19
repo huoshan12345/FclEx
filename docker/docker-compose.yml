@@ -6,7 +6,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 111111
+      POSTGRES_PASSWORD: a.o7a@bj
     ports:
       - 5432:5432
     volumes: 
@@ -16,7 +16,7 @@ services:
     image: mysql:8
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: lijing
+      MYSQL_ROOT_PASSWORD: a.o7a@bj
     ports:
       - 3306:3306
     volumes:
@@ -37,11 +37,15 @@ services:
     restart: always
     environment:
       RABBITMQ_DEFAULT_USER: rmq
-      RABBITMQ_DEFAULT_PASS: lijing
+      RABBITMQ_DEFAULT_PASS: a.o7a@bj
     ports:
       - 5672:5672
+    volumes: 
+      - rabbitmq:/var/lib/rabbitmq
+      
       
 volumes:
   postgres:
   mysql:
   redis:
+  rabbitmq:
