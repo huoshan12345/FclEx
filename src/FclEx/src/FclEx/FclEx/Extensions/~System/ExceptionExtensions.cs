@@ -75,7 +75,7 @@ public static class ExceptionExtensions
         return ex;
     }
 
-    public static bool IsObjEx<T>(this Exception? ex, [NotNullWhen(true)] out T? value) where T : notnull
+    public static bool IsObjEx<T>([NotNullWhen(true)] this Exception? ex, [NotNullWhen(true)] out T? value) where T : notnull
     {
         if (ex is ObjectException<T> objEx)
         {
@@ -89,7 +89,7 @@ public static class ExceptionExtensions
         }
     }
 
-    public static bool IsObjEx<T>(this Exception? ex, Func<T, bool> condition) where T : notnull
+    public static bool IsObjEx<T>([NotNullWhen(true)] this Exception? ex, Func<T, bool> condition) where T : notnull
     {
         return ex is ObjectException<T> objEx && condition(objEx.Value);
     }
