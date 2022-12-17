@@ -17,7 +17,6 @@ namespace FclEx.Http.Services
         [Theory]
         [InlineData("https://www.baidu.com/", "www_baidu_com.html")]
         [InlineData("https://www.cnblogs.com/kevinchoi/p/11716636.html#_label_h2_2", "11716636.html")]
-        [InlineData("https://www.baidu.com/s?wd=asdf&rsv_spt=1&rsv_iqid=0xb83160ce001946fb&issp=1&f=8&rsv_bp=1", "s.html")]
         public async Task DownloadAsync_Test(string uri, string fileName)
         {
             using var http = new HttpClientService();

@@ -77,7 +77,7 @@ public static class HttpResExtensions
         var mimeType = res.Headers.GetFirstOr(HttpKnownHeaderNames.ContentType) ?? "";
         if (mimeType.IsValid())
         {
-            if (mimeType!.Contains(";"))
+            if (mimeType.Contains(';'))
             {
                 var contentType = new ContentType(mimeType);
                 mimeType = contentType.MediaType;
