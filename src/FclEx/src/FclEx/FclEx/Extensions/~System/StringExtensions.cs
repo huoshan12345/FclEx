@@ -62,7 +62,7 @@ partial class StringExtensions
     [return: NotNullIfNotNull("url")]
     public static string? UrlDecode(this string? url) => WebUtility.UrlDecode(url);
 
-    public static string TruncateSafely(this string? str, int maxLength)
+    public static string Truncate(this string? str, int maxLength)
     {
         if (maxLength <= 0)
             return string.Empty;
@@ -70,8 +70,7 @@ partial class StringExtensions
         if (str.IsNullOrEmpty() || maxLength >= str.Length)
             return str ?? string.Empty;
 
-        var count = (maxLength + 1) / 2;
-        return str.Substring(0, count) + " ... " + str.Substring(str.Length - count);
+        return str.Substring(0, maxLength) + "...";
     }
 
     private static readonly Regex RegexOfXmlProlog = new(@"^<\?xml.+\?>");

@@ -89,7 +89,7 @@ public interface IHttpAction<T> : IAbstractAction<T>
     {
         var code = res.StatusCode;
         var error = $"The res with status code {code.ToString()}/{code.ToInt()} is unsuccessful: "
-                    + res.ResponseString.TruncateSafely(256);
+                    + res.ResponseString.Truncate(256);
         return error;
     }
 

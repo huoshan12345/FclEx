@@ -32,7 +32,7 @@ public interface IHtmlAction<T> : IHttpResHandler<T>
         {
             _ when str.IsNullOrEmpty() => Operate.CreateError<string>("The res string is empty"),
             _ when str.IsPossibleHtml() => Operate.CreateSuccess(response.ResponseString),
-            _ => Operate.CreateError<string>("The res string is not a valid html: " + str.TruncateSafely(256))
+            _ => Operate.CreateError<string>("The res string is not a valid html: " + str.Truncate(256))
         };
     }
 
@@ -42,7 +42,7 @@ public interface IHtmlAction<T> : IHttpResHandler<T>
     {
         const string msg = "The result object does not exist in html";
         var error = HtmlResultPath == null ? msg : msg + " at " + HtmlResultPath;
-        error = error + ": " + context.Html.TruncateSafely(256);
+        error = error + ": " + context.Html.Truncate(256);
         return error;
     }
 

@@ -34,7 +34,7 @@ public interface IXmlAction<T> : IHttpResHandler<T>
     {
         const string msg = "The result object does not exist in xml";
         var error = XmlResultPath == null ? msg : msg + " at " + XmlResultPath;
-        error = error + ": " + context.Xml.TruncateSafely(256);
+        error = error + ": " + context.Xml.Truncate(256);
         return error;
     }
 
@@ -43,7 +43,7 @@ public interface IXmlAction<T> : IHttpResHandler<T>
         var str = response.ResponseString;
         return str.IsPossibleXml()
             ? Operate.CreateSuccess(response.ResponseString)
-            : Operate.CreateError<string>("The res string is not a valid xml: " + str.TruncateSafely(256));
+            : Operate.CreateError<string>("The res string is not a valid xml: " + str.Truncate(256));
     }
 
     OperateResult<T> GetResult(XmlActionContext context) => context.ResultElement!.ToObject<T>()!;

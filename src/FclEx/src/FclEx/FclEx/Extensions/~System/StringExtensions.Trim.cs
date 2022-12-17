@@ -1,72 +1,65 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace FclEx.Extensions;
 
 public static partial class StringExtensions
 {
-    public static string GetUntil(this string str, string stopAt, StringComparison comp = StringComparison.Ordinal)
+    [return: NotNullIfNotNull("target")]
+    public static string? TrimStart(this string? target, string? trimString)
     {
-        Check.NotNull(str);
-        Check.NotNull(stopAt);
+        if (string.IsNullOrEmpty(target) || string.IsNullOrEmpty(trimString))
+            return target;
 
-        var location = str.IndexOf(stopAt, comp);
-        return location >= 0 ? str.Substring(0, location) : str;
+        var result = target;
+        while (result.StartsWith(trimString))
+        {
+            result = result[trimString.Length..];
+        }
+        return result;
     }
 
-    public static string GetWhile(this string str, string stopAt, StringComparison comp = StringComparison.Ordinal)
+    [return: NotNullIfNotNull("target")]
+    public static string? TrimEnd(this string? target, string? trimString)
     {
-        Check.NotNull(str);
-        Check.NotNull(stopAt);
+        if (string.IsNullOrEmpty(target) || string.IsNullOrEmpty(trimString))
+            return target;
 
-        var location = str.IndexOf(stopAt, comp);
-        return location >= 0 ? str.Substring(0, location + stopAt.Length) : str;
+        var result = target;
+        while (result.EndsWith(trimString))
+        {
+            result = result[..^trimString.Length];
+        }
+        return result;
     }
 
-    public static string TrimEndWhile(this string str, string stopAt, StringComparison comp = StringComparison.Ordinal)
+    public static string SkipUntil(this string source, string separator, bool skipSeparator = true)
     {
-        Check.NotNull(str);
-        Check.NotNull(stopAt);
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (separator == null) throw new ArgumentNullException(nameof(separator));
 
-        var location = str.LastIndexOf(stopAt, comp);
-        return location >= 0 ? str.Substring(0, location) : str;
+        var location = source.IndexOf(separator, StringComparison.Ordinal);
+        if (location < 0)
+            return source;
+
+        if (skipSeparator)
+            location += separator.Length;
+
+        return source[location..];
     }
 
-    public static string TrimEndUntil(this string str, string stopAt, StringComparison comp = StringComparison.Ordinal)
+    public static string TakeUntil(this string source, string separator, bool includeSeparator = true)
     {
-        Check.NotNull(str);
-        Check.NotNull(stopAt);
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (separator == null) throw new ArgumentNullException(nameof(separator));
 
-        var location = str.LastIndexOf(stopAt, comp);
-        return location >= 0 ? str.Substring(0, location + stopAt.Length) : str;
-    }
+        var location = source.IndexOf(separator, StringComparison.Ordinal);
+        if (location < 0)
+            return source;
 
-    public static string TrimStartUntil(this string str, string stopAt, StringComparison comp = StringComparison.Ordinal)
-    {
-        Check.NotNull(str);
-        Check.NotNull(stopAt);
+        if (includeSeparator)
+            location += separator.Length;
 
-        var location = str.IndexOf(stopAt, comp);
-        return location >= 0 ? str.Substring(location) : str;
-    }
-
-    public static string TrimStartWhile(this string str, string stopAt, StringComparison comp = StringComparison.Ordinal)
-    {
-        Check.NotNull(str);
-        Check.NotNull(stopAt);
-
-        var location = str.IndexOf(stopAt, comp);
-        return location >= 0 ? str.Substring(location + stopAt.Length) : str;
-    }
-
-    public static string TrimStart(this string str, string prefix, StringComparison comp = StringComparison.Ordinal)
-    {
-        Check.NotNull(str);
-        return str.IsValid() && prefix.IsValid() && str.StartsWith(prefix, comp) ? str.Substring(prefix.Length) : str;
-    }
-
-    public static string TrimEnd(this string str, string suffix, StringComparison comp = StringComparison.Ordinal)
-    {
-        Check.NotNull(str);
-        return str.IsValid() && suffix.IsValid() && str.EndsWith(suffix, comp) ? str.Substring(0, str.Length - suffix.Length) : str;
+        return source[..location];
     }
 }

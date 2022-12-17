@@ -33,7 +33,7 @@ public interface IJsonAction<T> : IHttpResHandler<T>
         var str = response.ResponseString;
         return str.IsPossibleJson()
             ? Operate.CreateSuccess(response.ResponseString)
-            : Operate.CreateError<string>("The res string is not a valid json: " + str.TruncateSafely(256));
+            : Operate.CreateError<string>("The res string is not a valid json: " + str.Truncate(256));
     }
 
     bool IsFailed(JsonActionContext context) => !context.ResultTokens.Any();
@@ -42,7 +42,7 @@ public interface IJsonAction<T> : IHttpResHandler<T>
     {
         const string msg = "The result object does not exist in json";
         var error = JsonResultPath == null ? msg : msg + " at " + JsonResultPath;
-        error = error + ": " + context.Json.TruncateSafely(256);
+        error = error + ": " + context.Json.Truncate(256);
         return error;
     }
 

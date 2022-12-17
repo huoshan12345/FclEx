@@ -1,9 +1,10 @@
 ﻿using System;
-using FclEx.Extensions;
 using Volo.Abp.DependencyInjection;
 
 namespace FclEx.Abp.Serializers
 {
+    using FclEx.Extensions;
+
     public class JsonStringSerializer : IStringSerializer, ISingletonDependency
     {
         public static readonly JsonStringSerializer Instance = new();
