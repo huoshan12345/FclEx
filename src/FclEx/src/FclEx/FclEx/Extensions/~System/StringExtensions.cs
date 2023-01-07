@@ -126,7 +126,7 @@ partial class StringExtensions
         return (str[..index], str[(index + separator.Length)..]);
     }
 
-    public static string GetSub(this string str, char[] separators, Func<string[], string> selector)
+    public static string Sub(this string str, char[] separators, Func<string[], string> selector)
     {
         if (str == null)
             throw new ArgumentNullException(nameof(str));
@@ -140,12 +140,12 @@ partial class StringExtensions
 
     public static string FirstSub(this string str, char[] separators)
     {
-        return str.GetSub(separators, arr => arr.First());
+        return str.Sub(separators, arr => arr.First());
     }
 
     public static string LastSub(this string str, char[] separators)
     {
-        return str.GetSub(separators, arr => arr.Last());
+        return str.Sub(separators, arr => arr.Last());
     }
 
     public static string RegexReplace(this string str, string rex, string replacement)

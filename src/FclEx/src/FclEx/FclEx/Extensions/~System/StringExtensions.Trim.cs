@@ -33,12 +33,15 @@ public static partial class StringExtensions
         return result;
     }
 
-    public static string SkipUntil(this string source, string separator, bool skipSeparator = true)
+    public static string SkipUntil(this string source, string separator, bool skipSeparator = true, StringComparison comparison = StringComparison.Ordinal, bool untilLast = false)
     {
         if (source == null) throw new ArgumentNullException(nameof(source));
         if (separator == null) throw new ArgumentNullException(nameof(separator));
 
-        var location = source.IndexOf(separator, StringComparison.Ordinal);
+        var location = untilLast
+            ? source.LastIndexOf(separator, comparison)
+            : source.IndexOf(separator, comparison);
+
         if (location < 0)
             return source;
 
@@ -48,12 +51,15 @@ public static partial class StringExtensions
         return source[location..];
     }
 
-    public static string TakeUntil(this string source, string separator, bool includeSeparator = true)
+    public static string TakeUntil(this string source, string separator, bool includeSeparator = true, StringComparison comparison = StringComparison.Ordinal, bool untilLast = false)
     {
         if (source == null) throw new ArgumentNullException(nameof(source));
         if (separator == null) throw new ArgumentNullException(nameof(separator));
 
-        var location = source.IndexOf(separator, StringComparison.Ordinal);
+        var location = untilLast
+            ? source.LastIndexOf(separator, comparison)
+            : source.IndexOf(separator, comparison);
+
         if (location < 0)
             return source;
 

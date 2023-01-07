@@ -99,38 +99,65 @@ namespace FclEx.Extensions.StringExtensions
         [Fact]
         public void SkipUntil_SkipSeparator()
         {
-            var base64 = Base64Img.SkipUntil(",");
-            Assert.Equal(Base64ImgContent, base64);
+            const string text = "data.ext.ext2";
+            var newText = text.SkipUntil(".");
+            Assert.Equal("ext.ext2", newText);
         }
 
         [Fact]
-        public void SkipUntil_DonotSkipSeparator()
+        public void SkipUntil_DoesNotSkipSeparator()
         {
-            var base64 = Base64Img.SkipUntil(",", false);
-            Assert.StartsWith(",", base64);
-            Assert.Equal(Base64ImgContent, base64.TrimStart(','));
+            const string text = "data.ext.ext2";
+            var newText = text.SkipUntil(".", skipSeparator: false);
+            Assert.Equal(".ext.ext2", newText);
         }
 
         [Fact]
-        public void TakeUntil_DoesNotContainsSeparator()
+        public void SkipUntil_SkipSeparator_UntilLast()
         {
-            const string text = "data";
-            var result = text.TakeUntil(",");
-            Assert.Equal(text, result);
+            const string text = "data.ext.ext2";
+            var newText = text.SkipUntil(".", untilLast: true);
+            Assert.Equal("ext2", newText);
+        }
+
+        [Fact]
+        public void SkipUntil_DoesNotSkipSeparator_UntilLast()
+        {
+            const string text = "data.ext.ext2";
+            var newText = text.SkipUntil(".", skipSeparator: false, untilLast: true);
+            Assert.Equal(".ext2", newText);
         }
 
         [Fact]
         public void TakeUntil_IncludeSeparator()
         {
-            var base64 = Base64Img.TakeUntil(",");
-            Assert.Equal(Base64ImgPrefix + ",", base64);
+            const string text = "data.ext.ext2";
+            var newText = text.TakeUntil(".", includeSeparator: true);
+            Assert.Equal("data.", newText);
         }
 
         [Fact]
-        public void TakeUntil_DonotIncludeSeparator()
+        public void TakeUntil_IncludeSeparator_UntilLast()
         {
-            var base64 = Base64Img.TakeUntil(",", false);
-            Assert.Equal(Base64ImgPrefix, base64);
+            const string text = "data.ext.ext2";
+            var newText = text.TakeUntil(".", includeSeparator: true, untilLast: true);
+            Assert.Equal("data.ext.", newText);
+        }
+
+        [Fact]
+        public void TakeUntil_DoesNotIncludeSeparator()
+        {
+            const string text = "data.ext.ext2";
+            var newText = text.TakeUntil(".", includeSeparator: false);
+            Assert.Equal("data", newText);
+        }
+
+        [Fact]
+        public void TakeUntil_DoesNotIncludeSeparator_UntilLast()
+        {
+            const string text = "data.ext.ext2";
+            var newText = text.TakeUntil(".", includeSeparator: false, untilLast: true);
+            Assert.Equal("data.ext", newText);
         }
     }
 }
