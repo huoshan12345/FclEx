@@ -82,7 +82,7 @@ namespace FclEx.Abp.Aop
 
             var (_, tempItem, _, t) = Operate.Excute(() => service.GetStatic(no));
             Assert.Equal(itemFromStatic.Id, tempItem.Id);
-            Assert.True(t.TotalMilliseconds < CacheMaxMilliseconds);
+            Assert.True(t.TotalMilliseconds < CacheMaxMilliseconds, t.TotalSeconds.ToString());
         }
 
         [Theory]
@@ -93,9 +93,9 @@ namespace FclEx.Abp.Aop
             var itemFromStatic = service.GetStatic(no);
 
             var tempService = ServiceProvider.GetRequiredService<IService>();
-            var (_, tempitemFromStatic, _, timeFromStatic) = Operate.Excute(() => tempService.GetStatic(no));
+            var (_, tempitemFromStatic, _, t) = Operate.Excute(() => tempService.GetStatic(no));
             Assert.Equal(itemFromStatic.Id, tempitemFromStatic.Id);
-            Assert.True(timeFromStatic.TotalMilliseconds < CacheMaxMilliseconds);
+            Assert.True(t.TotalMilliseconds < CacheMaxMilliseconds, t.TotalSeconds.ToString());
         }
 
 
@@ -108,7 +108,7 @@ namespace FclEx.Abp.Aop
 
             var (_, tempItem, _, t) = Operate.Excute(() => service.Get(no));
             Assert.Equal(itemFromInstace.Id, tempItem.Id);
-            Assert.True(t.TotalMilliseconds < CacheMaxMilliseconds);
+            Assert.True(t.TotalMilliseconds < CacheMaxMilliseconds, t.TotalSeconds.ToString());
         }
 
         [Theory]
@@ -119,10 +119,10 @@ namespace FclEx.Abp.Aop
             var itemFromInstace = service.Get(no);
 
             var tempService = ServiceProvider.GetRequiredService<IService>();
-            var (_, tempItemFromInstace, _, timeFromInstace) = Operate.Excute(() => tempService.Get(no));
+            var (_, tempItemFromInstace, _, t) = Operate.Excute(() => tempService.Get(no));
             Assert.NotEqual(itemFromInstace.Id, tempItemFromInstace.Id);
             Assert.Equal($"{tempService.Id}_{no}", tempItemFromInstace.Id);
-            Assert.True(timeFromInstace.TotalMilliseconds > SleepMilliseconds);
+            Assert.True(t.TotalMilliseconds > SleepMilliseconds, t.TotalSeconds.ToString());
         }
     }
 }

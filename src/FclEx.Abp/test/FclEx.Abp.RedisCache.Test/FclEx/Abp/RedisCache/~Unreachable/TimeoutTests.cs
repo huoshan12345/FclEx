@@ -59,12 +59,9 @@ namespace FclEx.Abp.RedisCache
             var con = conStrs.Single();
             var provider = ServiceProvider.GetRequiredService<IEasyCachingProvider>();
             var timeout = con.ConnectTimeout;
-            var (successful, _, _, elapsed) = await Operate.ExcuteAsync(() => provider.GetAsync<string>("test"),
-                TimeSpan.FromMilliseconds(timeout))
-                .Unwrap();
+            var (successful, _, _, elapsed) = await Operate.ExcuteAsync(() => provider.GetAsync<string>("test"), TimeSpan.FromMilliseconds(timeout)).Unwrap();
             Assert.False(successful);
-            Assert.True(elapsed.TotalMilliseconds < timeout + 1000);
-            _output.WriteLine($"{elapsed.TotalSeconds:f3}");
+            Assert.True(elapsed.TotalMilliseconds < timeout + 1000, elapsed.TotalSeconds.ToString());
         }
     }
 }
