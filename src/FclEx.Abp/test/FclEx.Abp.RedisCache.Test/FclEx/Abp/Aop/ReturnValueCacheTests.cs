@@ -13,7 +13,7 @@ namespace FclEx.Abp.Aop
 {
     public class ReturnValueCacheTests : AbpRedisTests
     {
-        public const int CacheMaxMilliseconds = 100;
+        public const int CacheMaxMilliseconds = 300;
         public const int SleepMilliseconds = 500;
 
         public static IEnumerable<object[]> Numbers { get; } = new[] { -1, 0, 1, 10 }
