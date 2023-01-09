@@ -14,7 +14,7 @@ namespace FclEx.Abp.RedisCache
         public override void ConfigureServices(ServiceConfigurationContext context)
         {
             var config = context.Services.GetConfiguration();
-            context.Services.Configure<AbpRedisOptions>(config.GetSection(RedisConStrName));
+            context.Services.Configure<AbpRedisOptions>(config.GetRequiredSection(RedisConStrName));
             context.Services.Configure<AbpRedisOptions>(m => m.ConfigureAll(x => x.UseGlobalPrefix = true));
         }
     }

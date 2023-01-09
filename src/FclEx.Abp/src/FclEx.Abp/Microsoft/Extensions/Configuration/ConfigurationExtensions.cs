@@ -40,6 +40,7 @@ namespace Microsoft.Extensions.Configuration
                 .Build();
         }
 
+        // ReSharper disable once InconsistentNaming
         public static T GetRequiredValue<T>(this IConfiguration config, string key)
         {
             var section = config.GetSection(key);
