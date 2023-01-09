@@ -2,7 +2,7 @@
 {
     public interface IAccountGenerator
     {
-        string GenerateUsername();
+        string GenerateUserName();
 
         string GeneratePassword();
     }

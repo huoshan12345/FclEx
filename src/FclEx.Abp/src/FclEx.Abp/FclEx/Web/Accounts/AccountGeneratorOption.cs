@@ -1,8 +1,8 @@
 ﻿namespace FclEx.Web.Accounts
 {
-    public class UsernameOption
+    public class UserNameOption
     {
-        public UsernameOption(int requiredLength)
+        public UserNameOption(int requiredLength)
         {
             RequiredLength = requiredLength;
         }
@@ -34,15 +34,15 @@
 
     public class AccountGeneratorOption
     {
-        public AccountGeneratorOption(UsernameOption usernameOption, PasswordOption passwordOption)
+        public AccountGeneratorOption(UserNameOption usernameOption, PasswordOption passwordOption)
         {
-            UsernameOption = usernameOption;
+            UserNameOption = usernameOption;
             PasswordOption = passwordOption;
         }
 
-        public AccountGeneratorOption() : this(new UsernameOption(10), new PasswordOption(10, false, true, true, false)) { }
+        public AccountGeneratorOption() : this(new UserNameOption(10), new PasswordOption(10, false, true, true, false)) { }
 
-        public UsernameOption UsernameOption { get; }
+        public UserNameOption UserNameOption { get; }
 
         public PasswordOption PasswordOption { get; }
 

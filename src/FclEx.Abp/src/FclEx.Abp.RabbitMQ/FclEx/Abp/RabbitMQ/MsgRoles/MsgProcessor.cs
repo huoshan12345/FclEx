@@ -32,6 +32,7 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles
             Logger = (loggerFactory ?? NullLoggerFactory.Instance).CreateLogger(GetType());
         }
 
+        // ReSharper disable once InconsistentNaming
         protected virtual IEnumerable<LoggerProperty> GetLogProperties()
         {
             return Enumerable.Empty<LoggerProperty>();

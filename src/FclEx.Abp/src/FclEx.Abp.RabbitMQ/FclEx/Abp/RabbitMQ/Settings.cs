@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Web;
 using RabbitMQ.Client;
 
 namespace FclEx.Abp.RabbitMQ
@@ -20,13 +21,13 @@ namespace FclEx.Abp.RabbitMQ
     public class ConnectionSettings
     {
         public string Host { get; set; } = "localhost";
-        public string Username { get; set; } = "guest";
+        public string UserName { get; set; } = "guest";
         public string Password { get; set; } = "guest";
         public int Port { get; set; } = 5672;
 
         public override string ToString()
         {
-            return $"amqp://{Username}:{Password}@{Host}:{Port}";
+            return $"amqp://{HttpUtility.UrlEncode(UserName)}:{HttpUtility.UrlEncode(Password)}@{Host}:{Port}";
         }
     }
 

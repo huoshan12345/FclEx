@@ -9,7 +9,7 @@ namespace FclEx.Web.Accounts
         private const string Digits = "0123456789";
         private const string OtherChars = "`~!@#$%^&*()-_+={}[]";
         private const string Letters = SmallLetters + BigLetters;
-        private const string UsernameChars = Letters + Digits;
+        private const string UserNameChars = Letters + Digits;
         private const string PasswordChars = Letters + Digits + OtherChars;
 
         private readonly AccountGeneratorOption _option;
@@ -21,14 +21,14 @@ namespace FclEx.Web.Accounts
 
         public AccountGenerator() : this(new AccountGeneratorOption()) { }
 
-        public string GenerateUsername()
+        public string GenerateUserName()
         {
-            var stringChars = new char[_option.UsernameOption.RequiredLength];
+            var stringChars = new char[_option.UserNameOption.RequiredLength];
             var random = new Random();
             stringChars[0] = Letters[random.Next(Letters.Length)];
             for (var i = 1; i < stringChars.Length; i++)
             {
-                stringChars[i] = UsernameChars[random.Next(0, UsernameChars.Length - 1)];
+                stringChars[i] = UserNameChars[random.Next(0, UserNameChars.Length - 1)];
             }
             return new string(stringChars);
         }
