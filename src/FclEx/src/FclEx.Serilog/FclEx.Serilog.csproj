@@ -5,8 +5,10 @@
     <PackageReference Include="Serilog.Formatting.Elasticsearch" Version="8.4.1" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
     <PackageReference Include="Serilog.Sinks.PeriodicBatching" Version="3.1.0" />
-    <PackageReference Include="Serilog.Sinks.Email" Version="2.4.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+    <!-- ReSharper disable once VulnerablePackage -->
+    <PackageReference Include="Serilog.Sinks.Email" Version="2.4.0" />
+    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
   </ItemGroup>
 
   <ItemGroup>

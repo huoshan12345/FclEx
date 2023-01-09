@@ -12,8 +12,7 @@ $testDirs = (
   [io.path]::combine($slnPath, "src\FclEx.Abp\test")
 )
 
-$excludeInNonLocal = (
-)
+$excludeInNonLocal = @()
 
 $projects = $testDirs  | ForEach-Object { Get-ChildItem -Path $_ -Include *.csproj -Recurse } | Where-Object { $isProd -eq $false -or ($isProd -and ($excludeInNonLocal -notcontains $_.Basename)) }
 
