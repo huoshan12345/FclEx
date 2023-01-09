@@ -14,7 +14,7 @@ namespace FclEx.Abp.Aop
     public class ReturnValueCacheTests : AbpRedisTests
     {
         public const int CacheMaxMilliseconds = 100;
-        public const int SleepMilliseconds = 200;
+        public const int SleepMilliseconds = 500;
 
         public static IEnumerable<object[]> Numbers { get; } = new[] { -1, 0, 1, 10 }
             .Select(m => new object[] { m }).ToArray();
@@ -30,6 +30,7 @@ namespace FclEx.Abp.Aop
             int Id { get; }
 
             [ReturnValueCache(IsStatic = true)]
+            // ReSharper disable once InconsistentNaming
             Model GetStatic(int id);
 
             [ReturnValueCache]
