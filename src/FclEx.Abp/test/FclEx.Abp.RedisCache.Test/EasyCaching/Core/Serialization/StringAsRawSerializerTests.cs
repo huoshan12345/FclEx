@@ -1,5 +1,4 @@
-﻿using System.Runtime.Serialization;
-using System.Text;
+﻿using System.Text;
 using EasyCaching.Serialization.Json;
 using EasyCaching.Serialization.MessagePack;
 using Microsoft.Extensions.DependencyInjection;

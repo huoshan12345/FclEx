@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using FclEx.Abp.Domain.Entities;
+﻿using FclEx.Abp.Domain.Entities;
 using FclEx.Abp.Xunit;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.ObjectMapping;

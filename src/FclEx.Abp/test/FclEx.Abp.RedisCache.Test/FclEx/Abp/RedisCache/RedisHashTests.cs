@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CSRedis;
-using EasyCaching.Core;
-using FclEx.Abp.RedisCache.Collections;
+﻿using EasyCaching.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;

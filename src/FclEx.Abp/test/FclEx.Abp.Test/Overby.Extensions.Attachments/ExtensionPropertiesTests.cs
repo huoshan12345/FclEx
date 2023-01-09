@@ -1,5 +1,4 @@
-﻿using System;
-using Xunit;
+﻿using Xunit;
 // these aliases just make the extension property signatures shorter
 
 namespace Overby.Extensions.Attachments

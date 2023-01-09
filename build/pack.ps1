@@ -1,5 +1,7 @@
 $ErrorActionPreference = "Stop"
 
+$restore = if ($args[0] -eq 'no-restore') { $false } else { $true }
+
 $root = Split-Path -Parent $MyInvocation.MyCommand.Definition
 
 $pkgPath = ([io.path]::combine($root, "*.nupkg"))
@@ -46,8 +48,14 @@ $projects = Get-ChildItem -Path $srcDir -Include *.csproj -Recurse | Where-Objec
 
 foreach ($path in $projects) { 
   Write-Output "Packing $($path.Basename)"
-  & dotnet clean $path --nologo -v q
-  & dotnet pack $path --nologo -v q -c Release --include-symbols --output $root -p:PackageVersion=$ver
+  dotnet clean $path --nologo -v q
+
+  $command = 'dotnet pack $path --nologo -v q -c Release --include-symbols --output $root -p:PackageVersion=$ver'
+  if($restore -eq $false) {
+      $command = $command + " --no-restore"
+  }
+  Invoke-Expression $command
+  
   if ($Lastexitcode -ne 0)	{
     throw "failed with exit code $LastExitCode"
   }

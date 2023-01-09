@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FclEx.Abp.RedisCache
+﻿namespace FclEx.Abp.RedisCache
 {
     public class CacheTester : IEquatable<CacheTester>
     {

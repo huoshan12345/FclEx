@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using AspectCore.DynamicProxy;
+﻿using AspectCore.DynamicProxy;
 using FclEx.Abp.RedisCache;
-using FclEx.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
@@ -13,8 +8,8 @@ namespace FclEx.Abp.Aop
 {
     public class ReturnValueCacheTests : AbpRedisTests
     {
-        public const int CacheMaxMilliseconds = 300;
-        public const int SleepMilliseconds = 500;
+        public const int CacheMaxMilliseconds = 800;
+        public const int SleepMilliseconds = 1000;
 
         public static IEnumerable<object[]> Numbers { get; } = new[] { -1, 0, 1, 10 }
             .Select(m => new object[] { m }).ToArray();
@@ -30,7 +25,6 @@ namespace FclEx.Abp.Aop
             int Id { get; }
 
             [ReturnValueCache(IsStatic = true)]
-            // ReSharper disable once InconsistentNaming
             Model GetStatic(int id);
 
             [ReturnValueCache]

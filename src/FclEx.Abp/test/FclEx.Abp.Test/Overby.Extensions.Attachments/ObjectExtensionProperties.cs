@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Overby.Extensions.Attachments
+﻿namespace Overby.Extensions.Attachments
 {
     /// <summary>
     /// Examples of extension properties on System.Object.

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using FclEx;
-using FclEx.Extensions;
-using Xunit;
+﻿using Xunit;
 
 namespace AutoMapper
 {

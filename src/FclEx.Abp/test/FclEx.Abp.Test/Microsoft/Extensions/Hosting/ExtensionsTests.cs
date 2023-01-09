@@ -1,17 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using FclEx.Abp;
-using FclEx.Utils;
-using LightInject;
-using Microsoft.Extensions.Configuration;
+﻿using FclEx.Abp;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.Extensions.Hosting
 {

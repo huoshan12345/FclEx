@@ -1,5 +1,4 @@
-﻿using FclEx.Abp.Caching.Configuration;
-using FclEx.Abp.RedisCache.Configuration;
+﻿using FclEx.Abp.RedisCache.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.Modularity;

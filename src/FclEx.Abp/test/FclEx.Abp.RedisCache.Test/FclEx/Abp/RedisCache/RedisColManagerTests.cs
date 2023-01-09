@@ -1,6 +1,5 @@
 ﻿using EasyCaching.Core;
 using FclEx.Abp.RedisCache.Collections;
-using FclEx.Abp.RedisCache.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;

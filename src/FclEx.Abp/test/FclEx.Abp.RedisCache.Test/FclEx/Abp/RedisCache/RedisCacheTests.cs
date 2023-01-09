@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using EasyCaching.Core;
+﻿using EasyCaching.Core;
 using EasyCaching.Core.Serialization;
 using EasyCaching.CSRedis;
 using EasyCaching.Serialization.Json;
 using EasyCaching.Serialization.MessagePack;
 using FclEx.Abp.Caching;
-using FclEx.Abp.Caching.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;

@@ -11,6 +11,7 @@ on:
 env:
   DOTNET_NOLOGO: 1
   MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
+  SOLUTION: src/FclEx.All.sln
 
 jobs:    
   build-windows:
@@ -24,20 +25,23 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 6.0.x
+          
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION }} -v q
 
       - name: Test Debug
         run: |
-          ./build/test_all.ps1 Debug prod
+          ./build/test_all.ps1 Debug prod no-restore
 
       - name: Test Release
         run: |
-          ./build/test_all.ps1 Release prod
+          ./build/test_all.ps1 Release prod no-restore
 
       - name: NuGet Publish
         if: ${{ github.ref == 'refs/heads/master' }}
         shell: pwsh
         run: |
-          ./build/pack.ps1
+          ./build/pack.ps1 no-restore
 
       - name: Set variables
         run: |

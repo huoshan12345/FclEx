@@ -1,10 +1,8 @@
-﻿using System;
-using FclEx.Abp.Caching.Configuration;
+﻿using FclEx.Abp.Caching.Configuration;
 using FclEx.Abp.RedisCache.Configuration;
 using FclEx.Abp.Xunit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace FclEx.Abp.RedisCache
