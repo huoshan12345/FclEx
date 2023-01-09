@@ -14,7 +14,6 @@ namespace FclEx.Http.Core.HttpReqTests
         {
             "https://www.baidu.com/",
             "https://www.sina.com.cn/",
-            "https://www.sohu.com/",
             "https://www.qq.com/",
         };
 
