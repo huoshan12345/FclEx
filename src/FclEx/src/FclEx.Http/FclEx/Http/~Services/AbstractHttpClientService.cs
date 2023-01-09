@@ -88,7 +88,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             // Remove at most a single set of quotes.
             if (charset!.Length > 2 &&
                 charset[0] == '\"' &&
-                charset[charset.Length - 1] == '\"')
+                charset[^1] == '\"')
             {
                 return Encoding.GetEncoding(charset.Substring(1, charset.Length - 2));
             }
@@ -97,9 +97,9 @@ public abstract class AbstractHttpClientService : AbstractHttpService
                 return Encoding.GetEncoding(charset);
             }
         }
-        catch (ArgumentException e)
+        catch (ArgumentException ex)
         {
-            throw new InvalidOperationException("The character set provided in ContentType is invalid", e);
+            throw new InvalidOperationException($"The character set '{charset}' provided in ContentType is invalid due to {ex.Message}", ex);
         }
     }
 
