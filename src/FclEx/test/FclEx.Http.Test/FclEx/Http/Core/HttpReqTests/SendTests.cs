@@ -10,13 +10,12 @@ namespace FclEx.Http.Core.HttpReqTests
 {
     public class SendTests
     {
- 
         public static IList<string> Urls => new[]
         {
-            "http://www.baidu.com/",
-            "http://www.sina.com.cn/",
-            "http://www.sohu.com/",
-            "http://www.qq.com/",
+            "https://www.baidu.com/",
+            "https://www.sina.com.cn/",
+            "https://www.sohu.com/",
+            "https://www.qq.com/",
         };
 
         public static IEnumerable<object[]> Cases => Urls
