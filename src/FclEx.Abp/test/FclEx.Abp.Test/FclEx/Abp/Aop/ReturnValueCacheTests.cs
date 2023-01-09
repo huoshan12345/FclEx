@@ -82,13 +82,13 @@ namespace FclEx.Abp.Aop
 
             for (var i = 0; i < 3; i++)
             {
-                var (tempItem, t) = SimpleWatch.Do(() => service.Get(no));
+                var (_, tempItem, _, t) = Operate.Excute(() => service.Get(no));
                 Assert.Equal(itemFromInstace.Id, tempItem.Id);
                 Assert.True(t.TotalMilliseconds < CacheMaxMilliseconds);
             }
             for (var i = 0; i < 3; i++)
             {
-                var (tempItem, t) = SimpleWatch.Do(() => service.GetStatic(no));
+                var (_, tempItem, _, t) = Operate.Excute(() => service.GetStatic(no));
                 Assert.Equal(itemFromStatic.Id, tempItem.Id);
                 Assert.True(t.TotalMilliseconds < CacheMaxMilliseconds);
             }
@@ -103,8 +103,8 @@ namespace FclEx.Abp.Aop
             for (var i = 0; i < 3; i++)
             {
                 var tempService = ServiceProvider.GetRequiredService<IService>();
-                var (tempitemFromStatic, timeFromStatic) = SimpleWatch.Do(() => tempService.GetStatic(no));
-                var (tempItemFromInstace, timeFromInstace) = SimpleWatch.Do(() => tempService.Get(no));
+                var (_, tempitemFromStatic, _, timeFromStatic) = Operate.Excute(() => tempService.GetStatic(no));
+                var (_, tempItemFromInstace, _, timeFromInstace) = Operate.Excute(() => tempService.Get(no));
                 Assert.Equal(itemFromStatic.Id, tempitemFromStatic.Id);
                 Assert.Equal($"{tempService.Id}_{no}", tempItemFromInstace.Id);
                 Assert.True(timeFromStatic.TotalMilliseconds < CacheMaxMilliseconds, timeFromStatic.TotalMilliseconds.ToString());

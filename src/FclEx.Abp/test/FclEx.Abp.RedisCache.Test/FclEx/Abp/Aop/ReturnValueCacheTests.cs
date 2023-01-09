@@ -79,7 +79,7 @@ namespace FclEx.Abp.Aop
             var service = ServiceProvider.GetRequiredService<IService>();
             var itemFromStatic = service.GetStatic(no);
 
-            var (tempItem, t) = SimpleWatch.Do(() => service.GetStatic(no));
+            var (_, tempItem, _, t) = Operate.Excute(() => service.GetStatic(no));
             Assert.Equal(itemFromStatic.Id, tempItem.Id);
             Assert.True(t.TotalMilliseconds < CacheMaxMilliseconds);
         }
@@ -92,7 +92,7 @@ namespace FclEx.Abp.Aop
             var itemFromStatic = service.GetStatic(no);
 
             var tempService = ServiceProvider.GetRequiredService<IService>();
-            var (tempitemFromStatic, timeFromStatic) = SimpleWatch.Do(() => tempService.GetStatic(no));
+            var (_, tempitemFromStatic, _, timeFromStatic) = Operate.Excute(() => tempService.GetStatic(no));
             Assert.Equal(itemFromStatic.Id, tempitemFromStatic.Id);
             Assert.True(timeFromStatic.TotalMilliseconds < CacheMaxMilliseconds);
         }
@@ -105,7 +105,7 @@ namespace FclEx.Abp.Aop
             var service = ServiceProvider.GetRequiredService<IService>();
             var itemFromInstace = service.Get(no);
 
-            var (tempItem, t) = SimpleWatch.Do(() => service.Get(no));
+            var (_, tempItem, _, t) = Operate.Excute(() => service.Get(no));
             Assert.Equal(itemFromInstace.Id, tempItem.Id);
             Assert.True(t.TotalMilliseconds < CacheMaxMilliseconds);
         }
@@ -118,7 +118,7 @@ namespace FclEx.Abp.Aop
             var itemFromInstace = service.Get(no);
 
             var tempService = ServiceProvider.GetRequiredService<IService>();
-            var (tempItemFromInstace, timeFromInstace) = SimpleWatch.Do(() => tempService.Get(no));
+            var (_, tempItemFromInstace, _, timeFromInstace) = Operate.Excute(() => tempService.Get(no));
             Assert.NotEqual(itemFromInstace.Id, tempItemFromInstace.Id);
             Assert.Equal($"{tempService.Id}_{no}", tempItemFromInstace.Id);
             Assert.True(timeFromInstace.TotalMilliseconds > SleepMilliseconds);

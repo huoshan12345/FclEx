@@ -13,8 +13,6 @@ $testDirs = (
 )
 
 $excludeInNonLocal = (
-  "FclEx.Abp.RabbitMQ.Test",
-  "FclEx.Abp.RedisCache.Test"
 )
 
 $projects = $testDirs  | ForEach-Object { Get-ChildItem -Path $_ -Include *.csproj -Recurse } | Where-Object { $isProd -eq $false -or ($isProd -and ($excludeInNonLocal -notcontains $_.Basename)) }

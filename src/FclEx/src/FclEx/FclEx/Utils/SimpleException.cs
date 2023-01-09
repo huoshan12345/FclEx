@@ -19,18 +19,19 @@ public class SimpleException : Exception
         "System.Runtime.CompilerServices",
     };
 
+    // ReSharper disable once InconsistentNaming
     private static string GetStackTrace()
     {
         using var disposable = ObjectPoolHelper.StringBuilderPool.GetAsDisposable();
         var sb = disposable.Value;
 
         var stackTrace = new StackTrace(3);
-        var lines = stackTrace.ToString().Split(NewLineChars).Where(m => !m.IsNullOrWhiteSpace());
+        var lines = stackTrace.ToString().Split(NewLineChars, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         var lastLine = string.Empty;
         var count = 1;
         foreach (var line in lines)
         {
-            if (SkipMethodNames.Any(m => line.Contains(m, StringComparison.Ordinal)))
+            if (line.ContainsAll(SkipMethodNames))
                 continue;
 
             if (line != lastLine)
@@ -56,7 +57,7 @@ public class SimpleException : Exception
     {
         StackTrace = GetStackTrace();
     }
-        
+
     public SimpleException(string? msg, Exception? inner) : base(msg, inner)
     {
         StackTrace = GetStackTrace();

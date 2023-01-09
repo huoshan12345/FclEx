@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,6 +35,7 @@ public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
         _maxRetryTimes = Check.NotLessThan(maxRetryTimes, 0);
     }
 
+    // ReSharper disable once InconsistentNaming
     private List<ProcItem<T>> GetItems()
     {
         var watch = ValueStopwatch.StartNew();
