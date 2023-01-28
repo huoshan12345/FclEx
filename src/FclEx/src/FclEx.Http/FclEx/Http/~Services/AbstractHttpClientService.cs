@@ -180,10 +180,9 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         if (req.Method != HttpMethodType.Get)
         {
             var bytes = req.GetData();
-            request.Content = new ArraySegmentContent(bytes, token, req.ReadBufferTimeout)
-            {
-                Headers = { ContentType = MediaTypeHeaderValue.Parse(req.ContentType) }
-            };
+            request.Content = req.GZip
+                ? HttpContentHelper.ToGZipContent(bytes, req.ContentType)
+                : HttpContentHelper.ToArraySegmentContent(bytes, req.ReadBufferTimeout, req.ContentType, token);
         }
 
         foreach (var (key, value) in req.HeaderMap.Where(h => !NotAddHeaderNames.Contains(h.Key)))
@@ -224,7 +223,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
                 var res = await SendAsync(httpClient, curReq, ctsPerReq.Token).DonotCapture();
                 responses.Add(res);
                 httpRes.RedirectUris.Add(res.RequestMessage?.RequestUri!);
-                if (httpReq.ReadResultCookie)
+                if (httpReq.ReadCookie)
                     ReadCookies(res, httpRes);
 
                 if (!res.TryGetRedirection(out var uri))
@@ -236,13 +235,13 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             var response = responses.Last(); // responses should not be empty
             httpRes.StatusCode = response.StatusCode;
 
-            if (httpReq.ReadResultHeader)
+            if (httpReq.ReadHeader)
                 ReadHeader(response, httpRes);
 
-            if (httpReq.ThrowOnFailedCode)
+            if (httpReq.ThrowIfFailed)
                 response.EnsureSuccess();
 
-            if (httpReq.ReadResultContent)
+            if (httpReq.ReadContent)
                 await ReadContentAsync(response, httpRes, cts.Token).DonotCapture();
         }
         finally

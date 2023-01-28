@@ -8,18 +8,18 @@ using FclEx.Extensions;
 
 namespace FclEx.Http;
 
-internal class ArraySegmentContent : HttpContent
+public class ArraySegmentContent : HttpContent
 {
     private readonly ArraySegment<byte> _content;
     private readonly CancellationToken _token;
     private readonly TimeSpan? _timeout;
 
-    public ArraySegmentContent(ArraySegment<byte> content, CancellationToken token, TimeSpan? timeout)
+    public ArraySegmentContent(ArraySegment<byte> content, TimeSpan? timeout, CancellationToken token)
     {
         Check.NotNull(content.Array!);
         _content = content;
-        _token = token;
         _timeout = timeout;
+        _token = token;
     }
 
     protected override async Task SerializeToStreamAsync(Stream stream, TransportContext? context)

@@ -57,8 +57,14 @@ partial class HttpReqExtensions
         return req.AddHeader("X-Requested-With", "XMLHttpRequest");
     }
 
-    public static HttpReq Compress(this HttpReq req)
+    public static HttpReq AcceptCompress(this HttpReq req)
         => req.AddHeader(HttpKnownHeaderNames.AcceptEncoding, "gzip, deflate");
+
+    public static HttpReq GZip(this HttpReq req, bool gzip = true)
+    {
+        req.GZip = gzip;
+        return req;
+    }
 
     public static HttpReq Referrer(this HttpReq req, string? referrer)
     {
@@ -88,7 +94,7 @@ partial class HttpReqExtensions
     {
         var sb = new StringBuilder();
         foreach (var (key, value) in req.HeaderMap)
-            sb.AppendLine($"{key}: { value}");
+            sb.AppendLine($"{key}: {value}");
         if (!req.HeaderMap.ContainsKey(HttpKnownHeaderNames.Cookie) && !cookieHeader.IsNullOrEmpty())
             sb.Append(HttpKnownHeaderNames.Cookie + ": " + cookieHeader);
         return sb.ToString();

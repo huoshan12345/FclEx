@@ -7,25 +7,25 @@ partial class HttpReqExtensions
 {
     public static HttpReq ReadResultCookie(this HttpReq req, bool read)
     {
-        req.ReadResultCookie = read;
+        req.ReadCookie = read;
         return req;
     }
 
     public static HttpReq ReadResultHeader(this HttpReq req, bool read)
     {
-        req.ReadResultHeader = read;
+        req.ReadHeader = read;
         return req;
     }
 
     public static HttpReq ReadResultContent(this HttpReq req, bool read)
     {
-        req.ReadResultContent = read;
+        req.ReadContent = read;
         return req;
     }
 
     public static HttpReq ThrowOnFailedCode(this HttpReq req, bool ifThrow)
     {
-        req.ThrowOnFailedCode = ifThrow;
+        req.ThrowIfFailed = ifThrow;
         return req;
     }
 

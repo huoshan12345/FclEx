@@ -217,4 +217,14 @@ public static partial class EnumerableExtensions
         }
         return enumerable.Any();
     }
+
+    public static IEnumerable<T> Concat<T>(this IEnumerable<IEnumerable<T>> arrays)
+    {
+        return arrays.SelectMany(m => m);
+    }
+
+    public static IEnumerable<T> Concat<T>(this IEnumerable<T> source, IEnumerable<T>[] arrays)
+    {
+        return arrays.Prepend(source).Concat();
+    }
 }

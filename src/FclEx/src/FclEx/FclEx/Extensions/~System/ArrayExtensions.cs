@@ -43,12 +43,6 @@ public static class ArrayExtensions
         return new(arr, offset, count);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsNullOrEmpty<T>(this ArraySegment<T> source)
-    {
-        return source.Array.IsNullOrEmpty();
-    }
-
     public static IEnumerable<ArraySegment<T>> Segments<T>(this T[] array, int maxSize)
     {
         Check.NotNull(array);
@@ -60,16 +54,6 @@ public static class ArrayExtensions
             var length = i + 1 == count ? array.Length - i * maxSize : maxSize;
             yield return array.ToSegment(i * maxSize, length);
         }
-    }
-
-    public static IEnumerable<T> Concat<T>(this IEnumerable<IEnumerable<T>> arrays)
-    {
-        return arrays.SelectMany(m => m);
-    }
-
-    public static IEnumerable<T> Concat<T>(this T[] source, params IEnumerable<T>[] arrays)
-    {
-        return arrays.Prepend(source).Concat();
     }
 
     public static void ForEach<T>(this T[] array, Action<T> action)

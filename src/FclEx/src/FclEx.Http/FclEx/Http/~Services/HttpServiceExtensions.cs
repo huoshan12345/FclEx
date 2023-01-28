@@ -114,7 +114,7 @@ public static class HttpServiceExtensions
         var req = new HttpReq(uri, method)
             .ResultType(HttpResultType.Bytes)
             .ReadBufferTimeout(timeout)
-            .Compress();
+            .AcceptCompress();
 
         var res = await http.SendAsync(req).DonotCapture();
         if (res.HasError)

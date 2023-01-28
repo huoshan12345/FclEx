@@ -63,7 +63,7 @@ public interface IHttpAction<T> : IAbstractAction<T>
     {
         var req = HttpReq.Create(Uri, ReqType)
             .ThrowOnFailedCode(false)
-            .Compress();
+            .AcceptCompress();
         ModifyRequest(req);
         return req;
     }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using FclEx.Extensions;
@@ -9,11 +10,12 @@ using FclEx.Utils;
 
 namespace FclEx.Http;
 
+[SuppressMessage("ReSharper", "PropertyCanBeMadeInitOnly.Global")]
 public class HttpReq
 {
     private readonly UriCreator _uriCreator;
     public Encoding Encoding { get; set; } = Encoding.UTF8;
-    public bool ThrowOnFailedCode { get; set; } = true;
+    public bool ThrowIfFailed { get; set; } = true;
     public ArraySegment<byte> Body { get; set; }
     public HttpMethodType Method { get; set; }
     public int BufferSize { get; set; } = 256 * 1024;
@@ -24,9 +26,10 @@ public class HttpReq
     public bool DetectCharSetFromHtmlMeta { get; set; }
     public string? FallbackCharSet { get; set; }
     public HttpResultType ResultType { get; set; }
-    public bool ReadResultCookie { get; set; } = true;
-    public bool ReadResultHeader { get; set; } = true;
-    public bool ReadResultContent { get; set; } = true;
+    public bool ReadCookie { get; set; } = true;
+    public bool ReadHeader { get; set; } = true;
+    public bool ReadContent { get; set; } = true;
+    public bool GZip { get; set; } = false;
 
     public NameValueCollection QueryMap => _uriCreator.QueryMap;
     public Dictionary<string, string?> HeaderMap { get; } = new(StringComparer.OrdinalIgnoreCase);
@@ -187,7 +190,7 @@ public class HttpReq
 
     public ArraySegment<byte> GetData()
     {
-        if (!Body.Array.IsNullOrEmpty())
+        if (Body.Array.IsValid())
             return Body;
 
         var type = HeaderMap.Get(HttpKnownHeaderNames.ContentType);
