@@ -55,5 +55,33 @@ namespace FclEx.Http.Core.HttpReqTests
                 .DonotCapture();
             Assert.Equal(setProp, res.ResponseString.Contains(CharSetTestCase.Keyword));
         }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task GZip_Test(bool setProp)
+        {
+            var random = new Random(1024);
+            var expected = Enumerable.Range(1, 3).ToDictionary(m => m.ToString(), m => random.NextString(5));
+            var res = await HttpReq.Form(UrlUtil.Combine(GlobalConstants.TestUrl, "/api/gzip"))
+                .AddData(expected)
+                .ConnectTimeout(TimeSpan.FromSeconds(30))
+                .GZip(setProp)
+                .SendAsync()
+                .ThrowIfError()
+                .DonotCapture();
+            Assert.False(res.HasError);
+
+            var token = res.ResponseString.ToJToken();
+
+            var gzip = token["gzip"];
+            Assert.NotNull(gzip);
+            Assert.Equal(setProp, gzip.ToObject<bool>());
+
+            var body = token["body"];
+            Assert.NotNull(body);
+            var actual = body.ToObject<Dictionary<string, string>>();
+            Assert.Equal(expected, actual);
+        }
     }
 }

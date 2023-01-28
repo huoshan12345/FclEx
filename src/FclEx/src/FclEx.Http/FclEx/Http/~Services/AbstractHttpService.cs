@@ -153,32 +153,4 @@ public abstract class AbstractHttpService : IHttpService
             }
         }
     }
-
-    protected static bool TryGetEncodingFromCharSet(string charset, out Encoding? encoding)
-    {
-        encoding = null;
-
-        if (charset == null)
-            return false;
-
-        try
-        {
-            // Remove at most a single set of quotes.
-            if (charset.Length > 2 &&
-                charset.First() == '\"' && charset.Last() == '\"')
-            {
-                encoding = Encoding.GetEncoding(charset.Substring(1, charset.Length - 2));
-            }
-            else
-            {
-                encoding = Encoding.GetEncoding(charset);
-            }
-
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
 }

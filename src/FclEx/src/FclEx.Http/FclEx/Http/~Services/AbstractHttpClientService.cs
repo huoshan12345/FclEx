@@ -78,7 +78,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         }
     }
 
-    internal static Encoding? GetEncodingFromCharSet(string? charset)
+    protected static Encoding? GetEncodingFromCharSet(string? charset)
     {
         if (charset.IsNullOrEmpty())
             return null;
@@ -103,7 +103,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         }
     }
 
-    internal static (string, Encoding) ReadBufferAsString(ArraySegment<byte> buffer, HttpContentHeaders headers, string? charSet, bool detectCharSetFromHtmlMeta, string? defaultCharSet)
+    protected static (string, Encoding) ReadBufferAsString(ArraySegment<byte> buffer, HttpContentHeaders headers, string? charSet, bool detectCharSetFromHtmlMeta, string? defaultCharSet)
     {
         Debug.Assert(buffer.Array != null);
 
@@ -185,13 +185,13 @@ public abstract class AbstractHttpClientService : AbstractHttpService
                 : HttpContentHelper.ToArraySegmentContent(bytes, req.ReadBufferTimeout, req.ContentType, token);
         }
 
-        foreach (var (key, value) in req.HeaderMap.Where(h => !NotAddHeaderNames.Contains(h.Key)))
+        foreach (var (key, value) in req.HeaderMap.Where(h => NotAddHeaderNames.Contains(h.Key) == false))
         {
             request.Headers.Add(key, value);
         }
 
         var cookies = req.HeaderMap.Get(HttpKnownHeaderNames.Cookie);
-        if (!cookies.IsNullOrEmpty())
+        if (cookies.IsValid())
         {
             request.Headers.Add(HttpKnownHeaderNames.Cookie, cookies);
         }
