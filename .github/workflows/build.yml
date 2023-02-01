@@ -51,19 +51,11 @@ jobs:
           dotnet-version: | 
             6.0.x
             7.0.x
-          
-      - name: Restore
-        run: dotnet restore ${{ env.SOLUTION }} -v q
-
-      - name: Test Debug
-        shell: pwsh
-        run: |
-          ./build/test_all.ps1 Debug no-restore
 
       - name: Test Release
         shell: pwsh
         run: |
-          ./build/test_all.ps1 Release no-restore
+          ./build/test_all.ps1 Release
 
   build-windows:
     needs: build
@@ -78,18 +70,11 @@ jobs:
         with:
           dotnet-version: | 
             6.0.x
-            7.0.x
-          
-      - name: Restore
-        run: dotnet restore ${{ env.SOLUTION }} -v q
-
-      - name: Test Debug
-        run: |
-          ./build/test_all.ps1 Debug no-restore
+            7.0.x 
 
       - name: Test Release
         run: |
-          ./build/test_all.ps1 Release no-restore
+          ./build/test_all.ps1 Release
 
   pack:
     needs: [build, build-windows]
