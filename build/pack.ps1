@@ -1,6 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $restore = if ($args[0] -eq 'no-restore') { $false } else { $true }
+$isGithub = $Env:GITHUB_ACTION
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Definition
 
@@ -42,9 +43,14 @@ $projectNames = (
   "FclEx.Abp.Xunit"
 )
 
+$onlyWin = ("FclEx.Wmi")
+
+
 $srcDir = ([io.path]::combine($root, "..", "src"))
 
-$projects = Get-ChildItem -Path $srcDir -Include *.csproj -Recurse | Where-Object { $projectNames -Contains $_.Basename } 
+$projects = Get-ChildItem -Path $srcDir -Include *.csproj -Recurse `
+| Where-Object { $projectNames -Contains $_.Basename } `
+| Where-Object { $isGithub -eq $false -or ( ($IsWindows -and $onlyWin -contains $_.Basename) -or ($IsWindows -eq $false -and $onlyWin -notcontains $_.Basename) ) }
 
 foreach ($path in $projects) { 
   Write-Output "Packing $($path.Basename)"
