@@ -56,10 +56,12 @@ jobs:
         run: dotnet restore ${{ env.SOLUTION }} -v q
 
       - name: Test Debug
+        shell: pwsh
         run: |
           ./build/test_all.ps1 Debug no-restore
 
       - name: Test Release
+        shell: pwsh
         run: |
           ./build/test_all.ps1 Release no-restore
 
@@ -117,30 +119,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
-      - name: Setup dotnet
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: | 
-            6.0.x
-            7.0.x
-          
-      - name: Restore
-        run: dotnet restore ${{ env.SOLUTION }} -v q
-
-      - name: Test Debug
-        run: |
-          ./build/test_all.ps1 Debug prod no-restore
-
-      - name: Test Release
-        run: |
-          ./build/test_all.ps1 Release prod no-restore
-
-      - name: NuGet Publish
-        if: ${{ github.ref == 'refs/heads/master' }}
-        shell: pwsh
-        run: |
-          ./build/pack.ps1 no-restore
 
       - name: Set variables
         run: |
