@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace FclEx.Abp.RedisCache
+﻿namespace FclEx.Abp.RedisCache
 {
     public class CsRedisCoreConStr
     {
@@ -20,39 +18,10 @@ namespace FclEx.Abp.RedisCache
 
         public override string ToString()
         {
-            using var sb = new ValueStringBuilder();
-            sb.Append(Host);
-            sb.Append(':');
-            sb.Append(Port.ToString());
-            if (Password.IsValid())
-            {
-                sb.Append(",password=");
-                sb.Append(Password);
-            }
-            sb.Append(",defaultDatabase=");
-            sb.Append(DefaultDatabase.ToString());
-            sb.Append(",connectTimeout=");
-            sb.Append(ConnectTimeout.ToString());
-            sb.Append(",syncTimeout=");
-            sb.Append(SyncTimeout.ToString());
-            sb.Append(",testcluster=");
-            sb.Append(false.ToLower());
-            sb.Append(",poolsize=");
-            sb.Append(Poolsize.ToString());
-            sb.Append(",ssl=");
-            sb.Append(Ssl.ToLower());
-            sb.Append(",writeBuffer=");
-            sb.Append(WriteBuffer.ToString());
-            sb.Append(",prefix=");
-            sb.Append(Prefix);
-            sb.Append(",tryit=");
-            sb.Append(TryIt.ToString());
-            sb.Append(",name=");
-            sb.Append(Name);
-            sb.Append(",preheat=");
-            sb.Append(PreHeat.ToString());
-
-            return sb.ToString();
+            return $"{Host}:{Port},password={Password},defaultDatabase={DefaultDatabase}," +
+                   $"connectTimeout={ConnectTimeout},syncTimeout={SyncTimeout},testcluster=false" +
+                   $"poolsize={Poolsize},ssl={Ssl.ToString().ToLower()},writeBuffer={WriteBuffer}," +
+                   $"prefix={Prefix},tryit={TryIt},name={Name},preheat={PreHeat.ToString().ToLower()}";
         }
     }
 }
