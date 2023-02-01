@@ -1,8 +1,6 @@
-﻿using System.IO;
-using FclEx.Extensions;
-using Xunit;
+﻿using Xunit;
 
-namespace FclEx
+namespace FclEx.Extensions
 {
     public class DirectoryInfoExtensionsTests
     {
@@ -11,10 +9,10 @@ namespace FclEx
         {
             var path = Path.Combine(nameof(MoveToRecycleBin_Test), "test.txt");
             var fi = new FileInfo(path);
-            fi.Directory.TryCreate();
+            fi.Directory!.TryCreate();
             File.WriteAllText(path, "xxxxxxxxxx");
             Assert.True(fi.Exists);
-            fi.MoveToRecycleBin();
+            fi.Delete();
         }
     }
 }
