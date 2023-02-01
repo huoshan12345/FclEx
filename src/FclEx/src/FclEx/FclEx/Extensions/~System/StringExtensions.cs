@@ -193,4 +193,14 @@ partial class StringExtensions
     {
         return str.IsValid() ? str : defaultValue;
     }
+
+    public static readonly char[] NewLineChars = { '\r', '\n' };
+    public const StringSplitOptions SplitOptions = StringSplitOptions.RemoveEmptyEntries;
+
+    public static string[] SplitToLines(this string? str, StringSplitOptions options = SplitOptions)
+    {
+        return string.IsNullOrEmpty(str)
+            ? Array.Empty<string>()
+            : str!.Split(NewLineChars, options);
+    }
 }

@@ -4,7 +4,7 @@
     <RootNamespace>ServiceStack.OrmLite.Oracle</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.80" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.90" />
     <ProjectReference Include="..\ServiceStack.OrmLite\ServiceStack.OrmLite.Custom.csproj" />
   </ItemGroup>
 

@@ -191,13 +191,10 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         }
 
         var cookies = req.HeaderMap.Get(HttpKnownHeaderNames.Cookie);
-        if (cookies.IsValid())
-        {
-            request.Headers.Add(HttpKnownHeaderNames.Cookie, cookies);
-        }
+        request.AddCookie(cookies);
 
         var cookiesInCc = cc.GetCookieHeader(request.RequestUri!);
-        request.Headers.Add(HttpKnownHeaderNames.Cookie, cookiesInCc);
+        request.AddCookie(cookiesInCc);
 
         return request;
     }
