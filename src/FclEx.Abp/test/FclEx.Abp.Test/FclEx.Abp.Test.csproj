@@ -6,6 +6,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\FclEx.Abp.AspNetCore\FclEx.Abp.AspNetCore.csproj" />
     <ProjectReference Include="..\..\src\FclEx.Abp.Xunit\FclEx.Abp.Xunit.csproj" />
   </ItemGroup>
 
