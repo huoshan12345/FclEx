@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $restore = if ($args[0] -eq 'no-restore') { $false } else { $true }
-$isGithub = $Env:GITHUB_ACTION
+$isGithub = [bool]$Env:GITHUB_ACTION
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Definition
 

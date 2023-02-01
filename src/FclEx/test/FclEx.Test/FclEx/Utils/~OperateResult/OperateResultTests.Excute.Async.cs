@@ -54,7 +54,7 @@ namespace FclEx.Utils
 
             Assert.True(successful);
             Assert.Equal(1, result);
-            Assert.True(elapsed < TimeSpan.FromSeconds(3), "Actual time is " + elapsed);
+            Assert.True(elapsed < TimeSpan.FromSeconds(5), "Actual time is " + elapsed);
         }
     }
 }

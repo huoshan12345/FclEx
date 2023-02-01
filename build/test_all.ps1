@@ -2,7 +2,7 @@ $ErrorActionPreference = "Stop"
 
 $mode = if ($args[0] -eq 'Release') { "Release" } else { "Debug" }
 $restore = if ($args[1] -eq 'no-restore') { $false } else { $true }
-$isGithub = $Env:GITHUB_ACTION
+$isGithub = [bool]$Env:GITHUB_ACTION
 Write-Output "mode = $mode, isGithub = $isGithub, restore = $restore"
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Definition
