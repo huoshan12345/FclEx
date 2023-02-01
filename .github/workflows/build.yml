@@ -61,7 +61,7 @@ jobs:
         if: ${{ github.ref == 'refs/heads/master' }}
         shell: pwsh
         run: |
-          ./build/pack.ps1
+          ./build/pack.ps1 no-restore
 
   build-windows:
     needs: build
@@ -87,7 +87,7 @@ jobs:
         if: ${{ github.ref == 'refs/heads/master' }}
         shell: pwsh
         run: |
-          ./build/pack.ps1
+          ./build/pack.ps1 no-restore
 
       - name: Set variables
         run: |
