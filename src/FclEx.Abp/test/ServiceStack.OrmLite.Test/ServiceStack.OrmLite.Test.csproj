@@ -7,7 +7,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\FclEx\src\FclEx.Xunit\FclEx.Xunit.csproj" />
+    <ProjectReference Include="..\..\ref\ServiceStack.OrmLite.Custom\ServiceStack.OrmLite.MySql\ServiceStack.OrmLite.MySql.Custom.csproj" />
+    <ProjectReference Include="..\..\ref\ServiceStack.OrmLite.Custom\ServiceStack.OrmLite.Oracle\ServiceStack.OrmLite.Oracle.Custom.csproj" />
+    <ProjectReference Include="..\..\ref\ServiceStack.OrmLite.Custom\ServiceStack.OrmLite.PostgreSQL\ServiceStack.OrmLite.PostgreSQL.Custom.csproj" />
     <ProjectReference Include="..\..\ref\ServiceStack.OrmLite.Custom\ServiceStack.OrmLite.Sqlite\ServiceStack.OrmLite.Sqlite.Custom.csproj" />
+    <ProjectReference Include="..\..\ref\ServiceStack.OrmLite.Custom\ServiceStack.OrmLite.SqlServer\ServiceStack.OrmLite.SqlServer.Custom.csproj" />
   </ItemGroup>
 
 </Project>
