@@ -9,4 +9,6 @@ public static class Startup
         ThreadPool.SetMinThreads(100, 100);
         FclExStartup.Init();
     }
+
+    public static readonly bool IsGithubAction = Environment.GetEnvironmentVariable("GITHUB_ACTION").IsValid();
 }

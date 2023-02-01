@@ -8,7 +8,7 @@ namespace FclEx.Abp.RedisCache
     [DependsOn(typeof(FclExAbpRedisModule))]
     public class AbpRedisTestModule : AbpModule
     {
-        public const string RedisConStrName = "ConnectionStrings:Redis";
+        public const string RedisConStrName = "Redis";
 
         public override void ConfigureServices(ServiceConfigurationContext context)
         {

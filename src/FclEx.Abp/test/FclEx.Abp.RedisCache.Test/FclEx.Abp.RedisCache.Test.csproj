@@ -12,6 +12,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="appsettings.github.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="appsettings.Unreachable.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

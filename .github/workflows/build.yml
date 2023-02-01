@@ -14,9 +14,106 @@ env:
   SOLUTION: src/FclEx.All.sln
 
 jobs:    
-  build-windows:
-    runs-on: windows-latest
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      rabbitmq:
+        image: rabbitmq:3.8
+        env:
+          RABBITMQ_DEFAULT_USER: guest
+          RABBITMQ_DEFAULT_PASS: guest
+        ports:
+          - 5672
+        options: >-
+          --health-cmd "rabbitmqctl node_health_check"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: | 
+            6.0.x
+            7.0.x
           
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION }} -v q
+
+      - name: Test Debug
+        run: |
+          ./build/test_all.ps1 Debug no-restore
+
+      - name: Test Release
+        run: |
+          ./build/test_all.ps1 Release no-restore
+
+  build-windows:
+    needs: build
+    runs-on: windows-latest    
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: | 
+            6.0.x
+            7.0.x
+          
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION }} -v q
+
+      - name: Test Debug
+        run: |
+          ./build/test_all.ps1 Debug no-restore
+
+      - name: Test Release
+        run: |
+          ./build/test_all.ps1 Release no-restore
+
+  pack:
+    needs: [build, build-windows]
+    runs-on: windows-latest    
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: | 
+            6.0.x
+            7.0.x
+
+      - name: NuGet Publish
+        if: ${{ github.ref == 'refs/heads/master' }}
+        shell: pwsh
+        run: |
+          ./build/pack.ps1
+
+  create-tag:
+    needs: pack
+    runs-on: windows-latest    
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -58,3 +155,12 @@ jobs:
           tag_name: ${{ env.VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release
+        if: github.ref == 'refs/heads/master'
+        uses: ncipollo/release-action@v1
+        with:
+          name: ${{ env.VERSION }}
+          tag: ${{ env.VERSION }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          skipIfReleaseExists: true

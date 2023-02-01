@@ -25,7 +25,8 @@ namespace FclEx.Abp.RedisCache.Configuration
             return this;
         }
 
-        public void Deconstruct(out bool useMessagePack,
+        public void Deconstruct(
+            out bool useMessagePack,
             out bool serializeStringAsRaw,
             out List<CsRedisCoreConStr> conStrs,
             out IReadOnlyList<IRedisColConfigurator> configurators)
