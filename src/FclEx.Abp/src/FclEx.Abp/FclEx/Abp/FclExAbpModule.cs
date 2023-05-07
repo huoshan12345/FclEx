@@ -22,7 +22,6 @@ namespace FclEx.Abp
         {
             context.Services.AddMaps(GetType().Assembly)
                 .AddEasyCaching(o => o.UseInMemory().WithJson())
-                .AddSingleton<AutoMapper.IMapper>(s => s.GetRequiredService<IObjectMapper>().GetMapper())
                 .AddSingleton<ICacheManager, CacheManager>()
                 .AddSingleton<IStringSerializer>(StringAsRawSerializer.Instance);
         }
