@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using FclEx;
 using FclEx.Extensions;
@@ -28,7 +29,7 @@ namespace Serilog.Sinks.Email
 
     public static class EmailLogSettingsExtensions
     {
-        public static bool IsValid(this EmailLogSettings? settings)
+        public static bool IsValid([NotNullWhen(true)] this EmailLogSettings? settings)
         {
             return settings != null
                    && settings.MailServer.IsValid()
