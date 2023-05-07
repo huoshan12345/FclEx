@@ -11,7 +11,7 @@ public static class GlobalConstants
         return new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", true, false)
-            .AddJsonFileIf(Startup.IsGithubAction, "appsettings.github.json", true, false)
+            // .AddJsonFileIf(Startup.IsGithubAction, "appsettings.github.json", true, false)
             .AddJsonFile($"appsettings.{env}.json", true, false)
             .Build();
     }
