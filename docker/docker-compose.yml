@@ -6,7 +6,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: a.o7a@bj
+      POSTGRES_PASSWORD: 111111
     ports:
       - 5432:5432
     volumes: 
@@ -16,7 +16,7 @@ services:
     image: mysql:8
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: a.o7a@bj
+      MYSQL_ROOT_PASSWORD: 111111
     ports:
       - 3306:3306
     volumes:
@@ -27,7 +27,7 @@ services:
     restart: always
     ports:
       - 6379:6379
-    command: redis-server --requirepass a.o7a@bj
+    command: redis-server --requirepass 111111
     volumes: 
       - redis:/data
       
@@ -37,7 +37,7 @@ services:
     restart: always
     environment:
       RABBITMQ_DEFAULT_USER: rmq
-      RABBITMQ_DEFAULT_PASS: a.o7a@bj
+      RABBITMQ_DEFAULT_PASS: 111111
     ports:
       - 5672:5672
     volumes: 
