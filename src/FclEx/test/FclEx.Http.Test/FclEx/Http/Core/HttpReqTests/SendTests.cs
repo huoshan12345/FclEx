@@ -15,6 +15,7 @@ namespace FclEx.Http.Core.HttpReqTests
             "https://www.baidu.com/",
             "https://www.sina.com.cn/",
             "https://www.qq.com/",
+            "https://www.google.com.hk/"
         };
 
         public static IEnumerable<object[]> Cases => Urls

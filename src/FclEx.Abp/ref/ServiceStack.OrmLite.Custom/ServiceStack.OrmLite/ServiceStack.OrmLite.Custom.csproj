@@ -6,7 +6,7 @@
     <DefineConstants>$(DefineConstants);NETCORE;DISABLE_FCLEX_USING</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="ServiceStack.Common" Version="6.5.0" />
+    <PackageReference Include="ServiceStack.Common" Version="6.8.0" />
     <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
     <PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
     <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />

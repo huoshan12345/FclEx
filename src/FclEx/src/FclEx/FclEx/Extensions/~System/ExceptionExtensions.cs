@@ -10,6 +10,7 @@ namespace FclEx.Extensions;
 
 public static class ExceptionExtensions
 {
+    [DoesNotReturn]
     public static void ReThrow(this Exception ex) => ExceptionDispatchInfo.Capture(ex).Throw();
 
     public static Exception GetInnermost(this Exception ex)
