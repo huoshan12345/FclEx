@@ -32,14 +32,14 @@ namespace FclEx.Serilog.Formatting
             _useCamelCase = useCamelCase;
         }
 
-        protected override void WriteJsonProperty(string name, object value, ref string precedingDelimiter, TextWriter output)
+        protected override void WriteJsonProperty(string name, object? value, ref string precedingDelimiter, TextWriter output)
         {
             if (_useCamelCase && name.IsValid())
             {
                 var ch = name[0];
-                if ('A' <= ch && ch <= 'Z')
+                if (ch is >= 'A' and <= 'Z')
                 {
-                    name = Map.GetOrAdd(name, m => (char)(ch + 32) + name.Substring(1));
+                    name = Map.GetOrAdd(name, m => (char)(ch + 32) + m[1..]);
                 }
             }
             base.WriteJsonProperty(name, value, ref precedingDelimiter, output);
