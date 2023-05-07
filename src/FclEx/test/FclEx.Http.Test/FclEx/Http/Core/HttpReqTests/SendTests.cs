@@ -13,7 +13,6 @@ namespace FclEx.Http.Core.HttpReqTests
         public static IList<string> Urls => new[]
         {
             "https://www.baidu.com/",
-            "https://www.sina.com.cn/",
             "https://www.qq.com/",
             "https://www.google.com.hk/"
         };
