@@ -23,7 +23,7 @@ public sealed class HttpClientService : AbstractHttpClientService
         {
             AllowAutoRedirect = false,
             AutomaticDecompression = DecompressionMethods.All,
-            ConnectTimeout = Timeout.InfiniteTimeSpan,
+            ConnectTimeout = TimeSpan.FromMinutes(1),
             MaxConnectionsPerServer = int.MaxValue,
             PooledConnectionLifetime = TimeSpan.FromMinutes(2),
             Proxy = null,

@@ -26,6 +26,7 @@ namespace FclEx.Http.Core.HttpReqTests
         public async Task Get_Test(string url)
         {
             var res = await HttpReq.Get(url)
+                .ConnectTimeout(TimeSpan.FromSeconds(5))
                 .SendAsync()
                 .DonotCapture();
             res.ThrowIfError();
@@ -38,6 +39,7 @@ namespace FclEx.Http.Core.HttpReqTests
             var expected = Enumerable.Range(1, 3).ToDictionary(m => m.ToString(), m => random.NextString(5));
             var res = await HttpReq.Form(UrlUtil.Combine(GlobalConstants.TestUrl, "/api/post"))
                 .AddData(expected)
+                .ConnectTimeout(TimeSpan.FromSeconds(5))
                 .SendAsync()
                 .ThrowIfError()
                 .DonotCapture();
