@@ -1,42 +1,40 @@
 ﻿using System;
 using System.Linq;
 using FclEx.Extensions;
-using Xunit;
 
-namespace FclEx.Utils
+namespace FclEx.Utils;
+
+public class CompositeDisposableTests
 {
-    public class CompositeDisposableTests
+    public class Tester : IDisposable
     {
-        public class Tester : IDisposable
+        public int Count { get; set; }
+
+        public void Dispose()
         {
-            public int Count { get; set; }
-
-            public void Dispose()
-            {
-                Count = -1;
-            }
+            Count = -1;
         }
+    }
 
-        [Fact]
-        public void Create_Test()
+    [Fact]
+    public void Create_Test()
+    {
+        var test = new Tester();
+
+        test.Yield().Select(m =>
         {
-            var test = new Tester();
+            m.Count = 1;
+            return m;
+        }).AsComposite();
 
-            test.Yield().Select(m =>
-            {
-                m.Count = 1;
-                return m;
-            }).AsComposite();
+        Assert.Equal(1, test.Count);
+    }
 
-            Assert.Equal(1, test.Count);
-        }
-
-        [Fact]
-        public void Dispose_Test()
-        {
-            var test = new Tester();
-            using (test.Yield().AsComposite()) { }
-            Assert.Equal(-1, test.Count);
-        }
+    [Fact]
+    public void Dispose_Test()
+    {
+        var test = new Tester();
+        using (test.Yield().AsComposite()) { }
+        Assert.Equal(-1, test.Count);
     }
 }

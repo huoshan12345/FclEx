@@ -1,16 +1,14 @@
 ﻿using System.Linq;
-using Xunit;
 
-namespace FclEx.Extensions.ListExtensions
+namespace FclEx.Extensions.ListExtensions;
+
+public class RemoveTests
 {
-    public class RemoveTests
+    [Fact]
+    public void Remove_Filter_Test()
     {
-        [Fact]
-        public void Remove_Filter_Test()
-        {
-            var col = Enumerable.Range(1, 10).ToList();
-            col.RemoveAll(m => m % 2 != 0);
-            Assert.Equal(Enumerable.Range(1, 5).Select(m => m * 2), col);
-        }
+        var col = Enumerable.Range(1, 10).ToList();
+        col.RemoveAll(m => m % 2 != 0);
+        Assert.Equal(Enumerable.Range(1, 5).Select(m => m * 2), col);
     }
 }

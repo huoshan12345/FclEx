@@ -1,20 +1,15 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using FclEx.Extensions;
-using FclEx.Utils;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 
-namespace FclEx.Web
+namespace FclEx.Web;
+
+public class TestUserClient : UserClient
 {
-    public class TestUserClient : UserClient
+    public TestUserClient(ILoggerFactory loggerFactory) : base(loggerFactory: loggerFactory)
     {
-        public TestUserClient(ILoggerFactory loggerFactory) : base(loggerFactory: loggerFactory)
-        {
-        }
+    }
 
-        protected override Task<OperateResult> LoginInternal(CancellationToken token)
-        {
-            return Operate.Success.ToTask();
-        }
+    protected override Task<OperateResult> LoginInternal(CancellationToken token)
+    {
+        return Operate.Success.ToTask();
     }
 }

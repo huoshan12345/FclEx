@@ -3,37 +3,35 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using FclEx.Helpers;
-using Xunit;
 using FclEx;
 using FclEx.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Microsoft.Extensions.Logging
+namespace Microsoft.Extensions.Logging;
+
+public class LoggerFactoryExtensionsTests
 {
-    public class LoggerFactoryExtensionsTests
+    public static IEnumerable<object[]> LogLevelCases { get; } =
+        Enum.GetValues<LogLevel>().Select(m => new object[] { m });
+
+    [Theory]
+    [MemberData(nameof(LogLevelCases))]
+    public void SetMinimumLevel_Test(LogLevel logLevel)
     {
-        public static IEnumerable<object[]> LogLevelCases { get; } =
-            Enum.GetValues<LogLevel>().Select(m => new object[] { m });
+        var services = new ServiceCollection()
+            .AddLogging()
+            .BuildServiceProvider();
 
-        [Theory]
-        [MemberData(nameof(LogLevelCases))]
-        public void SetMinimumLevel_Test(LogLevel logLevel)
-        {
-            var services = new ServiceCollection()
-                .AddLogging()
-                .BuildServiceProvider();
+        var fac = services.GetRequiredService<ILoggerFactory>();
+        fac.SetMinimumLevel(logLevel);
 
-            var fac = services.GetRequiredService<ILoggerFactory>();
-            fac.SetMinimumLevel(logLevel);
+        var options = (LoggerFilterOptions)fac.GetType().InvokeMember(
+            name: "_filterOptions",
+            invokeAttr: BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField,
+            binder: null,
+            target: fac,
+            args: null);
 
-            var options = (LoggerFilterOptions)fac.GetType().InvokeMember(
-                name: "_filterOptions",
-                invokeAttr: BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField,
-                binder: null,
-                target: fac,
-                args: null);
-
-            Assert.Equal(logLevel, options?.MinLevel);
-        }
+        Assert.Equal(logLevel, options?.MinLevel);
     }
 }

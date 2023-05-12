@@ -1,8 +1,7 @@
-﻿using FclEx.Comparers;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
-namespace FclEx.Helpers;
+namespace FclEx.Comparers;
 
 public static class ComparerHelper
 {

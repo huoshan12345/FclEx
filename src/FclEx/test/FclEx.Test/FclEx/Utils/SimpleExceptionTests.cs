@@ -1,23 +1,21 @@
 ﻿using System;
-using Xunit;
 using Xunit.Abstractions;
 
-namespace FclEx.Utils
+namespace FclEx.Utils;
+
+public class SimpleExceptionTests
 {
-    public class SimpleExceptionTests
+    private readonly ITestOutputHelper _outputHelper;
+
+    public SimpleExceptionTests(ITestOutputHelper outputHelper)
     {
-        private readonly ITestOutputHelper _outputHelper;
+        _outputHelper = outputHelper;
+    }
 
-        public SimpleExceptionTests(ITestOutputHelper outputHelper)
-        {
-            _outputHelper = outputHelper;
-        }
-
-        [Fact]
-        public void StackTrace_Test()
-        {
-            var ex = new SimpleException("test", new Exception("inner"));
-            _outputHelper.WriteLine(ex.ToString());
-        }
+    [Fact]
+    public void StackTrace_Test()
+    {
+        var ex = new SimpleException("test", new Exception("inner"));
+        _outputHelper.WriteLine(ex.ToString());
     }
 }

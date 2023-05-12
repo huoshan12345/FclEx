@@ -1,32 +1,30 @@
 ﻿using System;
 using FclEx.Helpers;
-using Xunit;
 
-namespace FclEx.Utils
+namespace FclEx.Utils;
+
+public class TimerLazyTests
 {
-    public class TimerLazyTests
+    [Fact]
+    public void Recreate_Test()
     {
-        [Fact]
-        public void Recreate_Test()
-        {
-            var span = TimeSpan.FromMilliseconds(900);
+        var span = TimeSpan.FromMilliseconds(900);
 
-            var lazy = new TimerLazy<ReLazyTests.DisposableTester>(() => new ReLazyTests.DisposableTester(), span);
-            Assert.False(lazy.IsValueCreated);
-            var value = lazy.Value;
-            Assert.NotNull(value);
-            Assert.True(lazy.IsValueCreated);
+        var lazy = new TimerLazy<ReLazyTests.DisposableTester>(() => new ReLazyTests.DisposableTester(), span);
+        Assert.False(lazy.IsValueCreated);
+        var value = lazy.Value;
+        Assert.NotNull(value);
+        Assert.True(lazy.IsValueCreated);
 
-            ThreadHelper.Sleep((int)Math.Ceiling(span.TotalSeconds) + 1);
-            Assert.False(lazy.IsValueCreated);
-            Assert.False(value.IsDisposed);
+        ThreadHelper.Sleep((int)Math.Ceiling(span.TotalSeconds) + 1);
+        Assert.False(lazy.IsValueCreated);
+        Assert.False(value.IsDisposed);
 
-            var newValue = lazy.Value;
-            Assert.True(lazy.IsValueCreated);
-            Assert.NotNull(newValue);
-            Assert.NotEqual(value, newValue);
+        var newValue = lazy.Value;
+        Assert.True(lazy.IsValueCreated);
+        Assert.NotNull(newValue);
+        Assert.NotEqual(value, newValue);
 
-            lazy.Dispose();
-        }
+        lazy.Dispose();
     }
 }

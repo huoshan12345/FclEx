@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using FclEx;
-using FclEx.Extensions;
-using FclEx.Http;
-using FclEx.Http.Proxy;
-
-public static class GlobalConstants
+﻿public static class GlobalConstants
 {
     public static string GetDefaultProxyUrl()
     {

@@ -2,62 +2,60 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
-using Xunit;
 
-namespace FclEx.Utils
+namespace FclEx.Utils;
+
+public class UriCreatorTests
 {
-    public class UriCreatorTests
+    public static readonly string[] RelativeUris =
     {
-        public static readonly string[] RelativeUris =
-        {
-            "forum.php",
-            "forum.php?mod=viewthread&tid=6762066&pid=138135937&page=1&extra=1",
-            "forum.php?mod=viewthread&tid=6762066&pid=138135937&page=1&extra=1#pid138135937",
-            "forum.php?mod=viewthread&tid=6762066&pid=138135937&page=1&extra=1&extra=2#pid138135937",
-            "forum.php#pid138135937",
-        };
+        "forum.php",
+        "forum.php?mod=viewthread&tid=6762066&pid=138135937&page=1&extra=1",
+        "forum.php?mod=viewthread&tid=6762066&pid=138135937&page=1&extra=1#pid138135937",
+        "forum.php?mod=viewthread&tid=6762066&pid=138135937&page=1&extra=1&extra=2#pid138135937",
+        "forum.php#pid138135937",
+    };
 
-        public static readonly IEnumerable<object[]> RelativeUriCases = RelativeUris.Select(m => new object[] { m });
-        public static readonly IEnumerable<object[]> AbsoluteUriCases = RelativeUris.Select(m => new object[] { "http://localhost/" + m });
+    public static readonly IEnumerable<object[]> RelativeUriCases = RelativeUris.Select(m => new object[] { m });
+    public static readonly IEnumerable<object[]> AbsoluteUriCases = RelativeUris.Select(m => new object[] { "http://localhost/" + m });
 
-        private static void TestExtra(Uri uri, UriCreator uriCreator)
+    private static void TestExtra(Uri uri, UriCreator uriCreator)
+    {
+        Assert.Equal(uri.Fragment, uriCreator.Fragment);
+        var map = HttpUtility.ParseQueryString(uri.Query);
+        foreach (var key in map.AllKeys)
         {
-            Assert.Equal(uri.Fragment, uriCreator.Fragment);
-            var map = HttpUtility.ParseQueryString(uri.Query);
-            foreach (var key in map.AllKeys)
+            var values = map.GetValues(key);
+            var actual = uriCreator.QueryMap.GetValues(key);
+            Assert.NotNull(actual);
+            foreach (var value in values!)
             {
-                var values = map.GetValues(key);
-                var actual = uriCreator.QueryMap.GetValues(key);
-                Assert.NotNull(actual);
-                foreach (var value in values!)
-                {
-                    Assert.Contains(value, actual!);
-                }
+                Assert.Contains(value, actual!);
             }
         }
+    }
 
-        [Theory]
-        [MemberData(nameof(RelativeUriCases))]
-        public void Relative_Test(string str)
-        {
-            var uri = new Uri(new Uri("http://localhost"), str);
-            var uriCreator = new UriCreator(str);
+    [Theory]
+    [MemberData(nameof(RelativeUriCases))]
+    public void Relative_Test(string str)
+    {
+        var uri = new Uri(new Uri("http://localhost"), str);
+        var uriCreator = new UriCreator(str);
 
-            Assert.Equal(str, uriCreator.GetUri().ToString());
-            Assert.Equal(uri.AbsolutePath.TrimStart('/'), uriCreator.Path);
-            TestExtra(uri, uriCreator);
-        }
+        Assert.Equal(str, uriCreator.GetUri().ToString());
+        Assert.Equal(uri.AbsolutePath.TrimStart('/'), uriCreator.Path);
+        TestExtra(uri, uriCreator);
+    }
 
-        [Theory]
-        [MemberData(nameof(AbsoluteUriCases))]
-        public void Absolute_Test(string str)
-        {
-            var uri = new Uri(str);
-            var uriCreator = new UriCreator(str);
+    [Theory]
+    [MemberData(nameof(AbsoluteUriCases))]
+    public void Absolute_Test(string str)
+    {
+        var uri = new Uri(str);
+        var uriCreator = new UriCreator(str);
             
-            Assert.Equal(str, uriCreator.GetUri().ToString());
-            Assert.Equal(uri.AbsolutePath, uriCreator.Path);
-            TestExtra(uri, uriCreator);
-        }
+        Assert.Equal(str, uriCreator.GetUri().ToString());
+        Assert.Equal(uri.AbsolutePath, uriCreator.Path);
+        TestExtra(uri, uriCreator);
     }
 }

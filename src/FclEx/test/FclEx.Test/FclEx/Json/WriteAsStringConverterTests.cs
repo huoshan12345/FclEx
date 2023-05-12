@@ -4,59 +4,57 @@ using FclEx.Helpers;
 using FclEx.Json.Converters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Xunit;
 
-namespace FclEx.Json
+namespace FclEx.Json;
+
+public class WriteAsStringConverterTests
 {
-    public class WriteAsStringConverterTests
+    private class Tester
     {
-        private class Tester
-        {
-            [JsonConverter(typeof(WriteAsStringConverter))]
-            public int MatchId { get; set; }
-            [JsonConverter(typeof(WriteAsStringConverter))]
-            public GradeItem[] Grades { get; set; }
-        }
+        [JsonConverter(typeof(WriteAsStringConverter))]
+        public int MatchId { get; set; }
+        [JsonConverter(typeof(WriteAsStringConverter))]
+        public GradeItem[] Grades { get; set; }
+    }
 
-        private class GradeItem
-        {
-            public string Grade { get; set; }
-            public string LessonId { get; set; }
-        }
+    private class GradeItem
+    {
+        public string Grade { get; set; }
+        public string LessonId { get; set; }
+    }
 
-        [Fact]
-        public void Test()
+    [Fact]
+    public void Test()
+    {
+        var obj = new Tester
         {
-            var obj = new Tester
+            MatchId = 11,
+            Grades = new[]
             {
-                MatchId = 11,
-                Grades = new[]
+                new GradeItem
                 {
-                    new GradeItem
-                    {
-                        Grade = "1",
-                        LessonId = "123"
-                    },
-                }
-            };
+                    Grade = "1",
+                    LessonId = "123"
+                },
+            }
+        };
 
-            var json = obj.ToJson(useCamelCase: true);
+        var json = obj.ToJson(useCamelCase: true);
 
-            var tokenOfMatchId = json.ToJToken()["matchId"];
-            Assert.NotNull(tokenOfMatchId);
-            Assert.Equal(JTokenType.String, tokenOfMatchId.Type);
+        var tokenOfMatchId = json.ToJToken()["matchId"];
+        Assert.NotNull(tokenOfMatchId);
+        Assert.Equal(JTokenType.String, tokenOfMatchId.Type);
 
-            var tokenOfGrades = json.ToJToken()["grades"];
-            Assert.NotNull(tokenOfGrades);
-            Assert.Equal(JTokenType.String, tokenOfGrades.Type);
+        var tokenOfGrades = json.ToJToken()["grades"];
+        Assert.NotNull(tokenOfGrades);
+        Assert.Equal(JTokenType.String, tokenOfGrades.Type);
 
-            var tokenUnwrapped = tokenOfGrades.ToString().ToJToken();
-            Assert.NotNull(tokenUnwrapped);
-            Assert.Equal(JTokenType.Array, tokenUnwrapped.Type);
+        var tokenUnwrapped = tokenOfGrades.ToString().ToJToken();
+        Assert.NotNull(tokenUnwrapped);
+        Assert.Equal(JTokenType.Array, tokenUnwrapped.Type);
 
-            var grades = tokenUnwrapped.ToObject<GradeItem[]>();
+        var grades = tokenUnwrapped.ToObject<GradeItem[]>();
 
-            Assert.Equal(obj.Grades, grades, EqualityComparerHelper<GradeItem>.Create(m => (m.LessonId, m.Grade)));
-        }
+        Assert.Equal(obj.Grades, grades, EqualityComparerHelper<GradeItem>.Create(m => (m.LessonId, m.Grade)));
     }
 }

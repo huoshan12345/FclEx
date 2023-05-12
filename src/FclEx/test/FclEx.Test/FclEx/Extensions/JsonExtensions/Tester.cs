@@ -1,10 +1,9 @@
 ﻿using Newtonsoft.Json;
 
-namespace FclEx.Extensions.JsonExtensions
+namespace FclEx.Extensions.JsonExtensions;
+
+internal class Tester
 {
-    internal class Tester
-    {
-        public string Name { get; set; } = "Name";
-        [JsonProperty("Count")] public int Count { get; set; } = 1;
-    }
+    public string Name { get; set; } = "Name";
+    [JsonProperty("Count")] public int Count { get; set; } = 1;
 }
