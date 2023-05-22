@@ -38,10 +38,10 @@ public class HttpReqExtensionsTests
     }
 
     [Fact]
-    public async Task ThrowIfError_ValueTask_Excute_Test()
+    public async Task ThrowIfError_ValueTask_Execute_Test()
     {
         var flag = false;
-        var r = await Operate.ExcuteAsync(() => TimeoutRequestWrap())
+        var r = await Operate.ExecuteAsync(() => TimeoutRequestWrap())
             .Error(e =>
             {
                 flag = true;
@@ -51,10 +51,10 @@ public class HttpReqExtensionsTests
     }
 
     [Fact]
-    public async Task Excute_Test()
+    public async Task Execute_Test()
     {
         var flag = false;
-        var r = await Operate.ExcuteAsync(() => SuccessRequestWrap())
+        var r = await Operate.ExecuteAsync(() => SuccessRequestWrap())
             .Error(e =>
             {
                 flag = true;

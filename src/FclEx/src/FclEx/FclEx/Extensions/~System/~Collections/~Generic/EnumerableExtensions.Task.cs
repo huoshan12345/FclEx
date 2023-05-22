@@ -39,7 +39,7 @@ partial class EnumerableExtensions
             }
             else
             {
-                var rs = await batch.Select(async m => (m, await Operate.ExcuteAsync(() => taskSelector(m)))).WhenAll();
+                var rs = await batch.Select(async m => (m, await Operate.ExecuteAsync(() => taskSelector(m)))).WhenAll();
                 foreach (var (i, o) in rs)
                 {
                     if (o.Success)
@@ -79,7 +79,7 @@ partial class EnumerableExtensions
             }
             else
             {
-                var r = await Operate.ExcuteAsync(() => taskSelector(item));
+                var r = await Operate.ExecuteAsync(() => taskSelector(item));
                 if (r.Success)
                     success.Add((item, r.Value!));
                 else

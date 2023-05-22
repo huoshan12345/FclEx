@@ -10,13 +10,13 @@ namespace FclEx.Utils;
 
 partial class Operate
 {
-    public static Task<OperateResult> ExcuteAsync(Action action, TimeSpan? timeout = null)
-        => ExcuteAsync(() => Task.Run(action), timeout);
+    public static Task<OperateResult> ExecuteAsync(Action action, TimeSpan? timeout = null)
+        => ExecuteAsync(() => Task.Run(action), timeout);
 
-    public static Task<OperateResult> ExcuteAsync(Func<OperateResult> action, TimeSpan? timeout = null)
-        => ExcuteAsync(() => Task.Run(action), timeout);
+    public static Task<OperateResult> ExecuteAsync(Func<OperateResult> action, TimeSpan? timeout = null)
+        => ExecuteAsync(() => Task.Run(action), timeout);
 
-    public static async Task<OperateResult> ExcuteAsync(Func<Task> action, TimeSpan? timeout = null)
+    public static async Task<OperateResult> ExecuteAsync(Func<Task> action, TimeSpan? timeout = null)
     {
         var watch = ValueStopwatch.StartNew();
         try
@@ -30,20 +30,20 @@ partial class Operate
         }
     }
 
-    public static async Task<OperateResult> ExcuteAsync(Func<Task<OperateResult>> action, TimeSpan? timeout = null)
-        => (await ExcuteAsync<OperateResult>(action, timeout).DonotCapture()).Unwrap();
+    public static async Task<OperateResult> ExecuteAsync(Func<Task<OperateResult>> action, TimeSpan? timeout = null)
+        => (await ExecuteAsync<OperateResult>(action, timeout).DonotCapture()).Unwrap();
 
 
-    public static Task<OperateResult<T>> ExcuteAsync<T>(Func<T> action, TimeSpan? timeout = null)
-        => ExcuteAsync(() => Task.Run(action), timeout);
+    public static Task<OperateResult<T>> ExecuteAsync<T>(Func<T> action, TimeSpan? timeout = null)
+        => ExecuteAsync(() => Task.Run(action), timeout);
 
-    public static Task<OperateResult<T>> ExcuteAsync<T>(Func<OperateResult<T>> action, TimeSpan? timeout = null)
-        => ExcuteAsync(() => Task.Run(action), timeout);
+    public static Task<OperateResult<T>> ExecuteAsync<T>(Func<OperateResult<T>> action, TimeSpan? timeout = null)
+        => ExecuteAsync(() => Task.Run(action), timeout);
 
-    public static async Task<OperateResult<T>> ExcuteAsync<T>(Func<Task<OperateResult<T>>> action, TimeSpan? timeout = null)
-       => (await ExcuteAsync<OperateResult<T>>(action, timeout).DonotCapture()).Unwrap();
+    public static async Task<OperateResult<T>> ExecuteAsync<T>(Func<Task<OperateResult<T>>> action, TimeSpan? timeout = null)
+       => (await ExecuteAsync<OperateResult<T>>(action, timeout).DonotCapture()).Unwrap();
 
-    public static async Task<OperateResult<T>> ExcuteAsync<T>(Func<Task<T>> action, TimeSpan? timeout = null)
+    public static async Task<OperateResult<T>> ExecuteAsync<T>(Func<Task<T>> action, TimeSpan? timeout = null)
     {
         var watch = ValueStopwatch.StartNew();
         try
@@ -57,8 +57,7 @@ partial class Operate
         }
     }
 
-
-    public static async ValueTask<OperateResult<T>> ExcuteValueAsync<T>(Func<ValueTask<T>> action, TimeSpan? timeout = null)
+    public static async ValueTask<OperateResult<T>> ExecuteValueAsync<T>(Func<ValueTask<T>> action, TimeSpan? timeout = null)
     {
         var watch = ValueStopwatch.StartNew();
         try
@@ -72,10 +71,10 @@ partial class Operate
         }
     }
 
-    public static async ValueTask<OperateResult> ExcuteValueAsync(Func<ValueTask<OperateResult>> action, TimeSpan? timeout = null)
-        => (await ExcuteValueAsync<OperateResult>(action, timeout)).Unwrap();
+    public static async ValueTask<OperateResult> ExecuteValueAsync(Func<ValueTask<OperateResult>> action, TimeSpan? timeout = null)
+        => (await ExecuteValueAsync<OperateResult>(action, timeout)).Unwrap();
 
-    public static async ValueTask<OperateResult> ExcuteValueAsync(Func<ValueTask> action, TimeSpan? timeout = null)
+    public static async ValueTask<OperateResult> ExecuteValueAsync(Func<ValueTask> action, TimeSpan? timeout = null)
     {
         var watch = ValueStopwatch.StartNew();
         try
@@ -89,6 +88,6 @@ partial class Operate
         }
     }
 
-    public static async ValueTask<OperateResult<T>> ExcuteValueAsync<T>(Func<ValueTask<OperateResult<T>>> action, TimeSpan? timeout = null)
-        => (await ExcuteValueAsync<OperateResult<T>>(action)).Unwrap();
+    public static async ValueTask<OperateResult<T>> ExecuteValueAsync<T>(Func<ValueTask<OperateResult<T>>> action, TimeSpan? timeout = null)
+        => (await ExecuteValueAsync<OperateResult<T>>(action)).Unwrap();
 }

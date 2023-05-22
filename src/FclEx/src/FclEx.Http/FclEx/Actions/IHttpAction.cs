@@ -32,7 +32,7 @@ public interface IHttpAction<T> : IAbstractAction<T>
             if (res.HasError)
             {
                 Dump(Logger, req, HttpService);
-                return (res.Exception!, res.ExcuteTime);
+                return (res.Exception!, res.ExecuteTime);
             }
             return await HandleResponseAsync(res).DonotCapture();
         }

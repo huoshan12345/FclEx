@@ -45,7 +45,7 @@ public class InitializerTests
                 number++;
             })));
 
-        var (successful, ex, elapsed) = await Operate.ExcuteAsync(() => tasks.Select(m => m()).WhenAll(),
+        var (successful, ex, elapsed) = await Operate.ExecuteAsync(() => tasks.Select(m => m()).WhenAll(),
             TimeSpan.FromSeconds(3));
 
         Assert.True(successful);
@@ -58,7 +58,7 @@ public class InitializerTests
     {
         var number = 0;
         var initializer = new Initializer(false);
-        var (successful, _, elapsed) = await Operate.ExcuteAsync(async () =>
+        var (successful, _, elapsed) = await Operate.ExecuteAsync(async () =>
         {
             for (var i = 0; i < 100000; i++)
             {

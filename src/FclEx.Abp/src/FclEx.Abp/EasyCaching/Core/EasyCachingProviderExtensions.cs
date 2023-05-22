@@ -10,7 +10,7 @@ namespace EasyCaching.Core
         public static bool TryGet<T>(this IEasyCachingProvider provider, string key, [NotNullWhen(true)] out T? item)
         {
             item = default;
-            var (success, value, _, _) = Operate.Excute(() => provider.Get<T>(key));
+            var (success, value, _, _) = Operate.Execute(() => provider.Get<T>(key));
             if (!success) return false;
             item = value!.Value;
             return value.HasValue;

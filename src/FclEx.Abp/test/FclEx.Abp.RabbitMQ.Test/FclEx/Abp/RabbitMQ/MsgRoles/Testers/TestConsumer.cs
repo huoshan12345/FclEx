@@ -17,12 +17,12 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles.Testers
         }
 
         public TestConsumer(ConsumerSettings settings, Func<T, OperateResult> action, int maxRetryTimes = 3, Func<int, TimeSpan> delay = null)
-            : this(settings, (_, m) => Operate.Excute(() => action(m)), maxRetryTimes, delay)
+            : this(settings, (_, m) => Operate.Execute(() => action(m)), maxRetryTimes, delay)
         {
         }
 
         public TestConsumer(ConsumerSettings settings, Action<T> action, int maxRetryTimes = 3, Func<int, TimeSpan> delay = null)
-            : this(settings, m => Operate.Excute(() => action(m)), maxRetryTimes, delay)
+            : this(settings, m => Operate.Execute(() => action(m)), maxRetryTimes, delay)
         {
         }
 

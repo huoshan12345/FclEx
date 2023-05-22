@@ -8,18 +8,18 @@ namespace FclEx.Utils;
 partial class OperateResultTests
 {
     [Fact]
-    public async Task ExcuteAsync_Timeout_Test()
+    public async Task ExecuteAsync_Timeout_Test()
     {
-        var (successful, exception, elapsed) = await Operate.ExcuteAsync(() => TaskHelper.Delay(10), TimeSpan.FromSeconds(1));
+        var (successful, exception, elapsed) = await Operate.ExecuteAsync(() => TaskHelper.Delay(10), TimeSpan.FromSeconds(1));
         Assert.False(successful);
         Assert.True(elapsed < TimeSpan.FromSeconds(2), elapsed.ToString());
         Assert.IsType<TimeoutException>(exception);
     }
 
     [Fact]
-    public async Task ExcuteAsync_Timeout_Success_Test()
+    public async Task ExecuteAsync_Timeout_Success_Test()
     {
-        var (successful, result, _, elapsed) = await Operate.ExcuteAsync(async () =>
+        var (successful, result, _, elapsed) = await Operate.ExecuteAsync(async () =>
         {
             await TaskHelper.Delay(1).DonotCapture();
             return 1;
@@ -30,9 +30,9 @@ partial class OperateResultTests
     }
 
     [Fact]
-    public async Task ExcuteAsync_Timeout_SyncBody_Test()
+    public async Task ExecuteAsync_Timeout_SyncBody_Test()
     {
-        var (successful, exception, elapsed) = await Operate.ExcuteAsync(() =>
+        var (successful, exception, elapsed) = await Operate.ExecuteAsync(() =>
         {
             ThreadHelper.Sleep(10);
             return Task.CompletedTask;
@@ -43,9 +43,9 @@ partial class OperateResultTests
     }
 
     [Fact]
-    public async Task ExcuteAsync_Timeout_SyncBody_Success_Test()
+    public async Task ExecuteAsync_Timeout_SyncBody_Success_Test()
     {
-        var (successful, result, _, elapsed) = await Operate.ExcuteAsync(() =>
+        var (successful, result, _, elapsed) = await Operate.ExecuteAsync(() =>
         {
             ThreadHelper.Sleep(1);
             return Task.FromResult(1);

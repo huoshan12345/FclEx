@@ -93,7 +93,7 @@ public class BatchRetryConsumerTests
         consumer.ConsumingHandler += (sender, list) => Task.CompletedTask;
         consumer.AddRange(Enumerable.Range(1, 10));
         consumer.CompleteAdding();
-        var r = await Operate.ExcuteAsync(() => consumer.Start(), TimeSpan.FromSeconds(5));
+        var r = await Operate.ExecuteAsync(() => consumer.Start(), TimeSpan.FromSeconds(5));
         Assert.True(r.Success);
         Assert.True(consumer.IsComplete);
         Assert.Equal(10, consumer.Counter.Consume);
@@ -104,7 +104,7 @@ public class BatchRetryConsumerTests
     {
         var consumer = new BatchRetryConsumer<int>(5, TimeSpan.FromSeconds(1), 1);
         consumer.ConsumingHandler += (sender, list) => Task.CompletedTask;
-        var task = Operate.ExcuteAsync(() => consumer.Start(), TimeSpan.FromSeconds(5));
+        var task = Operate.ExecuteAsync(() => consumer.Start(), TimeSpan.FromSeconds(5));
         consumer.AddRange(Enumerable.Range(1, 10));
         consumer.CompleteAdding();
         var r = await task;

@@ -22,7 +22,7 @@ public class HttpRes
     public string ResponseString { get; internal set; } = string.Empty;
     public Encoding? Encoding { get; internal set; }
     public byte[] ResponseBytes { get; internal set; } = Array.Empty<byte>();
-    public TimeSpan ExcuteTime { get; internal set; }
+    public TimeSpan ExecuteTime { get; internal set; }
     public DateTime RequestUtcTime { get; internal set; }
     public MultiValueDictionary<string, string?> Headers { get; } = new(StringComparer.InvariantCultureIgnoreCase);
     public HttpStatusCode StatusCode { get; internal set; }

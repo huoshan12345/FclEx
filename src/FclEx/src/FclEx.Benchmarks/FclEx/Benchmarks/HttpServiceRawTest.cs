@@ -47,7 +47,7 @@ namespace FclEx.Benchmarks
         {
             var name = service.GetType().SimpleName();
             var before = GC.GetTotalMemory(true);
-            var (success, ex, t) = await Operate.ExcuteAsync(async () =>
+            var (success, ex, t) = await Operate.ExecuteAsync(async () =>
             {
                 for (var i = 0; i < rounds; i++)
                 {

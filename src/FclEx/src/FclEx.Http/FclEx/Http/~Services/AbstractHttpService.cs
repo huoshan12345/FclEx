@@ -49,7 +49,7 @@ public abstract class AbstractHttpService : IHttpService
         }
         finally
         {
-            res.ExcuteTime = watch.GetElapsedTime();
+            res.ExecuteTime = watch.GetElapsedTime();
         }
         return res;
     }

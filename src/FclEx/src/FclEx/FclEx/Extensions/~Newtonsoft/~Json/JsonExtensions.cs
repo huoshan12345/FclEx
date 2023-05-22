@@ -172,7 +172,7 @@ public static class JsonExtensions
         token = null;
         if (str.IsPossibleJson())
         {
-            var r = Operate.Excute(() => JToken.Parse(str));
+            var r = Operate.Execute(() => JToken.Parse(str));
             if (r.Success)
             {
                 token = r.Value!;
@@ -187,7 +187,7 @@ public static class JsonExtensions
         token = null;
         if (str.IsPossibleJObject())
         {
-            var r = Operate.Excute(() => JObject.Parse(str!));
+            var r = Operate.Execute(() => JObject.Parse(str!));
             if (r.Success)
             {
                 token = r.Value!;
@@ -202,7 +202,7 @@ public static class JsonExtensions
         token = null;
         if (str.IsPossibleJArray())
         {
-            var r = Operate.Excute(() => JArray.Parse(str));
+            var r = Operate.Execute(() => JArray.Parse(str));
             if (r.Success)
             {
                 token = r.Value!;

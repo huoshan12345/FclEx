@@ -13,7 +13,7 @@ namespace FclEx.Abp.Caching
         public static Task<OperateResult<T>> GetObjectAsync<T>(this ICacheManager cacheManager, Func<Task<OperateResult<T>>> rawGetter,
             string cacheKey, string cacheName, TimeSpan? expiration = null)
         {
-            return Operate.ExcuteAsync(() =>
+            return Operate.ExecuteAsync(() =>
             {
                 var cache = cacheManager.GetCache<T>(cacheName);
                 return cache.TryGet(cacheKey, out var obj)
@@ -25,13 +25,13 @@ namespace FclEx.Abp.Caching
         public static Task<OperateResult<T>> GetObjectAsync<T>(this ICacheManager cacheManager, Func<Task<T>> rawGetter,
             string cacheKey, string cacheName, TimeSpan? expiration = null)
         {
-            return cacheManager.GetObjectAsync(() => Operate.ExcuteAsync(rawGetter), cacheKey, cacheName, expiration);
+            return cacheManager.GetObjectAsync(() => Operate.ExecuteAsync(rawGetter), cacheKey, cacheName, expiration);
         }
 
         public static Task<OperateResult<T>> SetObjectAsync<T>(this ICacheManager cacheManager, Func<Task<OperateResult<T>>> rawGetter,
             string cacheKey, string cacheName, TimeSpan? expiration = null)
         {
-            return Operate.ExcuteAsync(() =>
+            return Operate.ExecuteAsync(() =>
             {
                 var cache = cacheManager.GetCache<T>(cacheName);
                 var result = rawGetter().Ok((o, t) => cache.TrySet(cacheKey, o, expiration));
@@ -42,7 +42,7 @@ namespace FclEx.Abp.Caching
         public static Task<OperateResult<T>> SetObjectAsync<T>(this ICacheManager cacheManager, Func<Task<T>> rawGetter,
             string cacheKey, string cacheName, TimeSpan? expiration = null)
         {
-            return cacheManager.SetObjectAsync(() => Operate.ExcuteAsync(rawGetter), cacheKey, cacheName, expiration);
+            return cacheManager.SetObjectAsync(() => Operate.ExecuteAsync(rawGetter), cacheKey, cacheName, expiration);
         }
     }
 }

@@ -11,7 +11,7 @@ public class TimeoutTests
         var req = HttpReq.Get("https://httpstat.us/504?sleep=60000")
             .ConnectTimeout(timeout);
 
-        var (successful, _, exception, elapsed) = await Operate.ExcuteAsync(async () => await req.SendAsync().ThrowIfError());
+        var (successful, _, exception, elapsed) = await Operate.ExecuteAsync(async () => await req.SendAsync().ThrowIfError());
         Assert.False(successful);
         Assert.IsType<TaskCanceledException>(exception);
         AssertExt.Equal(timeout, elapsed, TimeSpan.FromSeconds(1));

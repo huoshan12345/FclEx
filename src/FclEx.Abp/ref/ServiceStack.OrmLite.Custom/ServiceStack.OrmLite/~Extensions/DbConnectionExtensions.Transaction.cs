@@ -21,7 +21,7 @@ namespace ServiceStack.OrmLite
         internal static void RollbackWithCheck(this IEnumerable<IDbTransaction> trans, Exception commitException)
         {
             // Ensure that every transaction will be rollbacked.
-            var results = trans.Select(m => Operate.Excute(m.RollbackWithCheck));
+            var results = trans.Select(m => Operate.Execute(m.RollbackWithCheck));
             var errors = results.Where(m => m.Error).ToArray();
             if (errors.Any())
             {

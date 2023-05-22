@@ -119,7 +119,7 @@ public static class HttpServiceExtensions
         var res = await http.SendAsync(req).DonotCapture();
         if (res.HasError)
             return Operate
-                .CreateObjError(res, res.Exception!, res.ExcuteTime)
+                .CreateObjError(res, res.Exception!, res.ExecuteTime)
                 .ToExplicit<HttpFileDownloadInfo>();
         else
             return res.GetDownloadInfo();

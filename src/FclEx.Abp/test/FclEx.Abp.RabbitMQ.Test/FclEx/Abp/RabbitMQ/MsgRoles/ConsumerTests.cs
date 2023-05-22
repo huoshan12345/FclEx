@@ -75,7 +75,7 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles
 
             publisher.Publish(valueToPublish, key);
 
-            var (_, flag, _, t) = await Operate.ExcuteAsync(() => semaphore.WaitAsync(retryTimes + 1, delay + TimeSpan.FromSeconds(3)));
+            var (_, flag, _, t) = await Operate.ExecuteAsync(() => semaphore.WaitAsync(retryTimes + 1, delay + TimeSpan.FromSeconds(3)));
             Assert.True(flag);
             Assert.True(delay < t, $"expected time: {delay}, actual time: {t}");
 

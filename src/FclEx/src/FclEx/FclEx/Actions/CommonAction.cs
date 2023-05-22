@@ -73,7 +73,7 @@ public readonly struct CommonAction<T> : IAction<T>
     {
         var func = _func;
         return _excuteSafely
-            ? Operate.ExcuteAsync(() => func(token))
+            ? Operate.ExecuteAsync(() => func(token))
             : func(token);
     }
 }
@@ -93,7 +93,7 @@ public readonly struct VoidCommonAction : IAction<Unit>
     {
         var func = _func;
         return _excuteSafely
-            ? Operate.ExcuteAsync(() => func(token))
+            ? Operate.ExecuteAsync(() => func(token))
             : func(token);
     }
 }
