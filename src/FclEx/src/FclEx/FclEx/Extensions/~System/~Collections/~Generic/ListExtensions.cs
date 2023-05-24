@@ -61,7 +61,7 @@ public static class ListExtensions
 
     public static T GetRandomly<T>(this IList<T> list, Random? random = null)
     {
-        Check.NotNull(list);
+        Check.NotEmpty(list);
         var r = random ?? _random.Value;
         var i = r.Next(0, list.Count - 1);
         return list[i];

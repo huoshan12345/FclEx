@@ -39,6 +39,11 @@ public static partial class EnumerableExtensions
         return col.Where(m => m != null)!;
     }
 
+    public static IEnumerable<string> Valid(this IEnumerable<string?> col)
+    {
+        return col.Where(m => m.IsValid())!;
+    }
+
     public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> col) where T : struct
     {
         return col.Where(m => m != null).Select(m => m.Get());

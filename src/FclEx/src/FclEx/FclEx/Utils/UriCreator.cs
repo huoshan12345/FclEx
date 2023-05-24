@@ -131,7 +131,7 @@ public class UriCreator
             }
             if (f.IsValid())
             {
-                u = u + f; // "f" contains a '#'
+                u += f; // "f" contains a '#'
             }
             return new Uri(u, UriKind.Relative);
         }
