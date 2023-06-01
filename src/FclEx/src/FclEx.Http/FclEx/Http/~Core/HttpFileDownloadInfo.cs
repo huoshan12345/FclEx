@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 public readonly struct HttpFileDownloadInfo
 {

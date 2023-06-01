@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FclEx.Utils;
+﻿namespace FclEx.Utils;
 
 public static class ProcItem
 {

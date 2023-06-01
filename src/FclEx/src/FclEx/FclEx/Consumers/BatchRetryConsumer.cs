@@ -1,12 +1,7 @@
-﻿using FclEx.Utils;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
-using FclEx.Extensions;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using MoreLinq;
 using Nito.AsyncEx;
 using FclEx.Helpers;

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using FclEx.Helpers;
@@ -32,10 +31,10 @@ public class MemberComparer<T>
         return cmp.OrderBy(selector, desc);
     }
 
-    public MemberComparer<T> OrderBy<TProp>(Expression<Func<T, TProp>> selector, bool desc = false)
+    public MemberComparer<T> OrderBy<TMember>(Expression<Func<T, TMember>> selector, bool desc = false)
     {
         var unTypedExp = ExpressionHelper.ErasureType(selector);
-        var prop = new OrderProperty(unTypedExp.Compile(), desc, Comparer<TProp>.Default);
+        var prop = new OrderProperty(unTypedExp.Compile(), desc, Comparer<TMember>.Default);
         _orderProperties.Add(prop);
         return this;
     }

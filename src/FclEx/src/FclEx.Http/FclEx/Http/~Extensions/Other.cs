@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 public static class Other
 {

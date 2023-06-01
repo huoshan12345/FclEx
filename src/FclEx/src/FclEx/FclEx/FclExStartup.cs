@@ -1,6 +1,4 @@
 ﻿using System.Net;
-using System.Text;
-using FclEx.Utils;
 
 namespace FclEx;
 

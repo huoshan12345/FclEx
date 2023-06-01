@@ -1,9 +1,5 @@
-﻿using System;
-using System.Threading.Tasks;
-using FclEx.Extensions;
+﻿using System.Threading.Tasks;
 using FclEx.Helpers;
-using FclEx.Utils;
-using Microsoft.Extensions.Logging;
 
 namespace FclEx.Consumers;
 

@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using FclEx.Helpers;
 
@@ -48,6 +46,11 @@ public static partial class TypeExtensions
         }
 
         throw new MissingMethodException();
+    }
+
+    public static T CreateObject<T>(this Type type, params object?[] args)
+    {
+        return type.CreateObject(args).CastTo<T>();
     }
 
     public static MethodInfo GetMethod(this Type type, string methodName, int pParametersCount = 0, int pGenericArgumentsCount = 0)
@@ -134,5 +137,17 @@ public static partial class TypeExtensions
     public static bool IsDynamic(this Type type)
     {
         return type.IsDefined<DynamicAttribute>(true);
+    }
+
+    public const BindingFlags MemberBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+
+    public static FieldInfo GetRequiredField(this Type type, string name)
+    {
+        return type.GetField(name, MemberBindingFlags) ?? throw new InvalidOperationException($"Cannot find field '{name}' in type '{type.FullName}'");
+    }
+
+    public static PropertyInfo GetRequiredProperty(this Type type, string name)
+    {
+        return type.GetProperty(name, MemberBindingFlags) ?? throw new InvalidOperationException($"Cannot find property '{name}' in type '{type.FullName}'");
     }
 }

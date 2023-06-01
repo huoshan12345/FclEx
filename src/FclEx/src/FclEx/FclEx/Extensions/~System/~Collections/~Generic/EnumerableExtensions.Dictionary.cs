@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using FclEx.Utils;
 using Microsoft.Collections.Extensions;
 
 namespace FclEx.Extensions;

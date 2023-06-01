@@ -1,10 +1,7 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
-using FclEx.Extensions;
 using Newtonsoft.Json;
 
 namespace FclEx.Http;

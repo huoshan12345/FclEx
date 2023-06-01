@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using FclEx.Utils;
+﻿using System.Threading.Tasks;
 using Polly;
 
 namespace FclEx.Extensions;

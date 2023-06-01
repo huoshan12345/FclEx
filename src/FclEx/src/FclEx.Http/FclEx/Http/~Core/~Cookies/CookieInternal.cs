@@ -1,11 +1,8 @@
 ﻿#nullable disable
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Net;
-using FclEx.Extensions;
-using FclEx.Helpers;
 
 namespace FclEx.Http;
 

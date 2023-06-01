@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Text;
-using FclEx.Extensions;
-using FclEx.Helpers;
-using FclEx.Utils;
 
 namespace FclEx.Http;
 

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FclEx.Data;
+﻿namespace FclEx.Data;
 
 public static class ExportColumn
 {

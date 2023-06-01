@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace FclEx.Comparers;
@@ -11,9 +10,7 @@ namespace FclEx.Comparers;
 /// </summary>
 public sealed class ObjectReferenceEqualityComparer<T> : IEqualityComparer<T> where T : class
 {
-    private static readonly Lazy<IEqualityComparer<T>> _defaultComparer
-        = new(() => new ObjectReferenceEqualityComparer<T>(), true);
-    public static IEqualityComparer<T> Default => _defaultComparer.Value;
+    public static readonly IEqualityComparer<T> Default = new ObjectReferenceEqualityComparer<T>();
 
     public bool Equals(T? x, T? y)
     {

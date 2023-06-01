@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
-using FclEx.Utils;
 using MoreLinq.Extensions;
 using Newtonsoft.Json;
 using Formatting = Newtonsoft.Json.Formatting;

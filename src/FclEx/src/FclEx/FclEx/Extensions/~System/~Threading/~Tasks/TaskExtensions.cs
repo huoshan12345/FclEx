@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -33,24 +32,20 @@ public static class TaskExtensions
 
     public static ValueTask<T> ToValueTask<T>(this Task<T> task) => new(task);
 
-    public static Task<T> On<T>(this Task<T> task, Func<T, bool> condition, Action<T> action)
+    public static async Task<T> On<T>(this Task<T> task, Func<T, bool> condition, Action<T> action)
     {
-        return task.ContinueWith(t =>
-        {
-            if (condition(t.Result))
-                action(t.Result);
-            return t.Result;
-        }, TaskContinuationOptions.OnlyOnRanToCompletion);
+        var result = await NoSyncContextScope.RunAsync(() => task);
+        if (condition(result))
+            action(result);
+        return result;
     }
 
-    public static Task<T> On<T>(this Task<T> task, Func<T, bool> condition, Func<T, Task> action)
+    public static async Task<T> On<T>(this Task<T> task, Func<T, bool> condition, Func<T, Task> action)
     {
-        return task.ContinueWith(t =>
-        {
-            if (condition(t.Result))
-                action(t.Result);
-            return t.Result;
-        }, TaskContinuationOptions.OnlyOnRanToCompletion);
+        var result = await NoSyncContextScope.RunAsync(() => task);
+        if (condition(result))
+            await action(result);
+        return result;
     }
 
     [SuppressMessage("ReSharper", "MethodSupportsCancellation")]

@@ -1,7 +1,4 @@
-﻿using System;
-using Microsoft.Extensions.Logging;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static class LoggerProviderExtensions
 {

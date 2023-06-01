@@ -1,5 +1,4 @@
-﻿using FclEx.Utils;
-using Microsoft.Extensions.ObjectPool;
+﻿using Microsoft.Extensions.ObjectPool;
 
 namespace FclEx.Extensions;
 

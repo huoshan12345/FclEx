@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FclEx.Helpers;
-using FclEx.Utils;
 using MoreLinq;
 
 namespace FclEx.Extensions;

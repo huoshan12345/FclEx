@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using FclEx.Helpers;
-using FclEx.Utils;
 
 namespace FclEx.Extensions;
 

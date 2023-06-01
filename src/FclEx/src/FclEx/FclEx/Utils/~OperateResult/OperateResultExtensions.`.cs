@@ -1,7 +1,4 @@
-﻿using System;
-using FclEx.Extensions;
-
-namespace FclEx.Utils;
+﻿namespace FclEx.Utils;
 
 partial class OperateResultExtensions
 {

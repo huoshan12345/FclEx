@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FclEx.Attributes;
+﻿namespace FclEx.Attributes;
 
 [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
 public class EnumValueAttribute : Attribute

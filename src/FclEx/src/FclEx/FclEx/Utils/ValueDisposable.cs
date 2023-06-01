@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FclEx.Utils;
+﻿namespace FclEx.Utils;
 
 public readonly struct ValueDisposable<T> : IDisposable
 {

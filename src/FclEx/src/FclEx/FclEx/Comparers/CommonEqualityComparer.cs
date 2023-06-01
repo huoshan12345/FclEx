@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using FclEx.Extensions;
+﻿using System.Collections.Generic;
 
 namespace FclEx.Comparers;
 

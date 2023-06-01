@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using FclEx.Helpers;
-using FclEx.Utils;
-using Microsoft.Extensions.Logging;
 
 namespace FclEx.Consumers;
 

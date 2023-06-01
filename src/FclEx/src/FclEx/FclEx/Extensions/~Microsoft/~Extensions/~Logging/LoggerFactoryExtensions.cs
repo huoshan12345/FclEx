@@ -1,8 +1,4 @@
-﻿using System;
-using System.Reflection;
-using Microsoft.Extensions.Logging;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static class LoggerFactoryExtensions
 {
@@ -21,5 +17,10 @@ public static class LoggerFactoryExtensions
         {
             throw new NotSupportedException("Not supported logger factory type: " + factory.GetType().LongName());
         }
+    }
+
+    public static ILoggerFactory Touch(this ILoggerFactory? factory)
+    {
+        return factory ?? NullLoggerFactory.Instance;
     }
 }

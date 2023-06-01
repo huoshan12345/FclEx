@@ -1,9 +1,7 @@
 ﻿using System.Linq;
 using AngleSharp.Dom;
 using FclEx;
-using FclEx.Extensions;
 using FclEx.Http;
-using FclEx.Utils;
 
 namespace FclEx.Actions;
 
@@ -25,13 +23,13 @@ public interface IHtmlAction<T> : IHttpResHandler<T>
         return GetResult(context);
     }
 
-    OperateResult<string> GetHtml(HttpRes response)
+    OperateResult<string> GetHtml(HttpRes res)
     {
-        var str = response.ResponseString;
+        var str = res.ResponseString;
         return str switch
         {
             _ when str.IsNullOrEmpty() => Operate.CreateError<string>("The res string is empty"),
-            _ when str.IsPossibleHtml() => Operate.CreateSuccess(response.ResponseString),
+            _ when str.IsPossibleHtml() => Operate.CreateSuccess(res.ResponseString),
             _ => Operate.CreateError<string>("The res string is not a valid html: " + str.Truncate(256))
         };
     }

@@ -1,7 +1,4 @@
-﻿using System;
-using FclEx.Extensions;
-
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 partial class HttpReqExtensions
 {

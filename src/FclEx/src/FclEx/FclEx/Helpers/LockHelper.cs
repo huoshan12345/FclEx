@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FclEx.Helpers;
+﻿namespace FclEx.Helpers;
 
 public static class LockHelper
 {

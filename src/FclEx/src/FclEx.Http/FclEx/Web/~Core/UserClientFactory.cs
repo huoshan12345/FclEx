@@ -1,5 +1,4 @@
-﻿using System;
-using FclEx.Http;
+﻿using FclEx.Http;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FclEx.Web;

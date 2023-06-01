@@ -1,7 +1,6 @@
 // Copyright 2008 Adrian Akison
 // Distributed under license terms of CPOL http://www.codeproject.com/info/cpol10.aspx
 #nullable disable
-using System;
 using System.Collections;
 using System.Collections.Generic;
 

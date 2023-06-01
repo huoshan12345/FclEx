@@ -1,6 +1,4 @@
-﻿using System;
-using System.Net;
-using FclEx.Extensions;
+﻿using System.Net;
 
 namespace FclEx.Http;
 

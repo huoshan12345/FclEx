@@ -1,7 +1,4 @@
-﻿using System;
-using System.Text;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static class SpanExtensions
 {

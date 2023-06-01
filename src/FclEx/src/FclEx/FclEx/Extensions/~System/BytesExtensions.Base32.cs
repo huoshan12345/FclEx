@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 partial class BytesExtensions
 {

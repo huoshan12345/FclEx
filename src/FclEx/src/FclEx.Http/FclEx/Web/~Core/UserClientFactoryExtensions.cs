@@ -1,6 +1,5 @@
 ﻿using FclEx.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace FclEx.Web;
 

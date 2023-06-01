@@ -1,10 +1,6 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using FclEx.Extensions;
-using FclEx.Utils;
-using Microsoft.Extensions.Logging;
 
 namespace FclEx.Actions;
 

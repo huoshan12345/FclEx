@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
-using FclEx.Extensions;
 using FclEx.Http;
 using FclEx.Utils;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Nito.AsyncEx;
 
@@ -74,8 +71,14 @@ public abstract class UserClient : IUserClient, IDisposable
     protected UserClient(IUserAccount? account = null, ILoggerFactory? loggerFactory = null)
     {
         _account = account;
-        var innerLogger = loggerFactory?.CreateLogger(GetType()) ?? NullLogger.Instance;
-        _logger = new Lazy<ILogger>(() => new PropertiesLogger(innerLogger, GetLogProperties(), GetLogLazyProperties()), true);
+        _logger = new(() => CreateLogger(loggerFactory), true);
+    }
+
+    protected virtual ILogger CreateLogger(ILoggerFactory? factory)
+    {
+        var logger = factory.Touch().CreateLogger(GetType());
+        var logger2 = new PropertiesLogger(logger, GetLogProperties(), GetLogLazyProperties());
+        return new UserClientLogger(logger2, this);
     }
 
     protected virtual IEnumerable<LoggerProperty> GetLogProperties()

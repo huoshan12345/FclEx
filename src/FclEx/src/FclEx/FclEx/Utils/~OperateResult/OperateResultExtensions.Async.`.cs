@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using FclEx.Extensions;
+﻿using System.Threading.Tasks;
 
 namespace FclEx.Utils;
 

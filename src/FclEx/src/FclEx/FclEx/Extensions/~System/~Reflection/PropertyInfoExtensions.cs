@@ -1,18 +1,29 @@
-﻿using System;
-using System.Reflection;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static class PropertyInfoExtensions
 {
-    public static T? GetValue<T>(this PropertyInfo info, object? obj)
+    public static MethodInfo GetRequiredGetMethod(this PropertyInfo property)
     {
-        var value = info.GetValue(obj);
-        return value == null ? default : (T)value;
+        return property.GetGetMethod(true) ?? throw new MissingMethodException($"No getter in propery {property.Name}");
     }
 
-    public static MethodInfo GetRequiredGetMethod(this PropertyInfo prop)
+    public static MethodInfo GetRequiredSetMethod(this PropertyInfo property)
     {
-        return prop.GetGetMethod(true) ?? throw new MissingMethodException($"No getter in propery {prop.Name}");
+        return property.GetSetMethod(true) ?? throw new MissingMethodException($"No setter in propery {property.Name}");
+    }
+
+    public static T? GetValue<T>(this PropertyInfo property, object? obj)
+    {
+        return property.GetValue(obj).CastTo<T>();
+    }
+
+    public static object GetRequiredValue(this PropertyInfo property, object? obj)
+    {
+        return property.GetValue(obj) ?? throw new InvalidOperationException($"The value of property {property.Name} is null");
+    }
+
+    public static T GetRequiredValue<T>(this PropertyInfo property, object? obj)
+    {
+        return property.GetRequiredValue(obj).CastTo<T>();
     }
 }

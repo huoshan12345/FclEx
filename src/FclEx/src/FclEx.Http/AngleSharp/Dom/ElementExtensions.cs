@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Specialized;
+﻿using System.Collections.Specialized;
 using System.Linq;
 using AngleSharp.Html.Dom;
 using FclEx;
-using FclEx.Extensions;
-using FclEx.Utils;
 using FclEx.Web;
 
 namespace AngleSharp.Dom;

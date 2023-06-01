@@ -1,7 +1,4 @@
-﻿using System;
-using System.Reflection;
-
-namespace FclEx.Helpers;
+﻿namespace FclEx.Helpers;
 
 public static partial class MethodHelper
 {

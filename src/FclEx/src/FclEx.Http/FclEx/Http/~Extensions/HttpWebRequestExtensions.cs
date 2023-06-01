@@ -1,6 +1,5 @@
 ﻿using System.Net;
 using System.Threading.Tasks;
-using FclEx.Extensions;
 
 namespace FclEx.Http;
 

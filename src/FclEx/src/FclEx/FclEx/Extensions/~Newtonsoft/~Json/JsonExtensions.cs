@@ -5,7 +5,6 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using FclEx.Helpers;
-using FclEx.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;

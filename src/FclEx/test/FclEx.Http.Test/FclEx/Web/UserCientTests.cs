@@ -23,8 +23,8 @@ public class UserCientTests : WebTests
     [Fact]
     public async Task Login_Test()
     {
-        var account = new UserAccount("user", "password");
         var client = new TestUserClient(ServiceProvider.GetRequiredService<ILoggerFactory>());
+        client.Account = new UserAccount("user", "password");
         var result = await client.Login();
         Assert.True(result.Success);
     }
