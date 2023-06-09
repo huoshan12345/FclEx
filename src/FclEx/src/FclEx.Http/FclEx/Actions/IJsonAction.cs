@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Xml.Linq;
 using FclEx;
 using FclEx.Http;
@@ -45,7 +44,9 @@ public interface IJsonAction<T> : IHttpResHandler<T>
 
     OperateResult<T> GetResult(JsonActionContext context)
     {
-        return context.ResultToken!.ToObject<T>()!;
+        return context.ResultToken is { } token
+            ? token.ToObject<T>()!
+            : nameof(context.ResultToken) + " is null";
     }
 }
 

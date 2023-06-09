@@ -3,7 +3,7 @@
   <ItemGroup>
     <PackageReference Include="MimeTypeMap.Core" Version="1.0.0" />
     <PackageReference Include="HttpMultipartParser" Version="8.1.0" />
-    <PackageReference Include="AngleSharp" Version="1.0.1" />
+    <PackageReference Include="AngleSharp" Version="1.0.3" />
   </ItemGroup>
 
   <ItemGroup>

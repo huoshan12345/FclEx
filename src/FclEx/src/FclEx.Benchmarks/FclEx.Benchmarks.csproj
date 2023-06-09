@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.13.5" />
-    <PackageReference Include="InterfaceBaseInvoke.Fody" Version="0.0.9" />
+    <PackageReference Include="InterfaceBaseInvoke.Fody" Version="0.1.0" />
   </ItemGroup>
 
   <ItemGroup>

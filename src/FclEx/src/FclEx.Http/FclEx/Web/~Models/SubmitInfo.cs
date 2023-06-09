@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace FclEx.Web;
+﻿namespace FclEx.Web;
 
 public class SubmitInfo
 {
