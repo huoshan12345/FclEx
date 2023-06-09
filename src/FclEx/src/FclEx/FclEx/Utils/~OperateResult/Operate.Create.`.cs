@@ -18,4 +18,16 @@ public partial class Operate
     {
         return new OperateResult<T>(IsCancelException(ex) ? OperateResultCodes.Canceled : OperateResultCodes.Exception, ex, elapsed);
     }
+
+    public static OperateResult<T> CreateObjError<T>(T obj, string error, TimeSpan elapsed = default) where T : notnull
+    {
+        return new(OperateResultCodes.StringError, ObjectException.Create(obj, error), elapsed);
+    }
+
+    public static OperateResult<T> CreateObjError<T>(T obj, Exception ex, TimeSpan elapsed = default) where T : notnull
+    {
+        var code = IsCancelException(ex) ? OperateResultCodes.Canceled : OperateResultCodes.Exception;
+        return new(code, ObjectException.Create(obj, ex.Message, ex), elapsed);
+    }
+
 }
