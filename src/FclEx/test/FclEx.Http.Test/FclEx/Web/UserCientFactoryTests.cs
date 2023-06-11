@@ -32,7 +32,7 @@ public class UserCientFactoryTests : WebTests
         var account = new UserAccount("test", "test");
         var factory = ServiceProvider.GetRequiredService<IUserClientFactory<TestUserClient>>();
         var client = factory.Create(account);
-        Assert.Equal(WebProxyHelper.None, client.HttpService.WebProxy);
+        Assert.Null(client.HttpService.WebProxy);
 
         var proxy = WebProxyHelper.Create("http://localhost:8888");
         client = factory.Create(account, proxy);

@@ -9,8 +9,8 @@ public class WebProxyExtTests
     {
         var uriBuilder = new UriBuilder("http://192.168.1.221:8888")
         {
-            UserName = userName.UrlEncode(),
-            Password = password.UrlEncode()
+            UserName = userName.UriEscape(),
+            Password = password.UriEscape()
         };
 
         var proxy = WebProxyHelper.Create(uriBuilder.Uri);

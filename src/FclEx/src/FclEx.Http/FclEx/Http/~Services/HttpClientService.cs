@@ -59,7 +59,7 @@ public sealed class HttpClientService : AbstractHttpClientService
             }
         };
 
-        if (proxy != null && !WebProxyHelper.None.Equals(proxy))
+        if (proxy != null)
         {
             handler.Proxy = proxy;
         }
@@ -72,7 +72,6 @@ public sealed class HttpClientService : AbstractHttpClientService
     
     protected override void SetProxy(IWebProxy? proxy)
     {
-        proxy ??= WebProxyHelper.None;
         if (Equals(_webProxy, proxy)) 
             return;
 

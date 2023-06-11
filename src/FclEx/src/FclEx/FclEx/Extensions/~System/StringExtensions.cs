@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Newtonsoft.Json.Linq;
 using static System.Environment;
 
 namespace FclEx.Extensions;
@@ -62,12 +63,18 @@ partial class StringExtensions
     public static byte[] ToBytes(this string input, Encoding? encoding = null) => (encoding ?? Encoding.UTF8).GetBytes(input);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [return: NotNullIfNotNull("url")]
-    public static string? UrlEncode(this string? url) => WebUtility.UrlEncode(url);
+    [return: NotNullIfNotNull(nameof(value))]
+    public static string? UrlEncode(this string? value) => WebUtility.UrlEncode(value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [return: NotNullIfNotNull("url")]
-    public static string? UrlDecode(this string? url) => WebUtility.UrlDecode(url);
+    [return: NotNullIfNotNull(nameof(value))]
+    public static string? UrlDecode(this string? value) => WebUtility.UrlDecode(value);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string UriEscape(this string value) => Uri.EscapeDataString(value);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string UriUnescape(this string value) => Uri.UnescapeDataString(value);
 
     public static string Truncate(this string? str, int maxLength)
     {

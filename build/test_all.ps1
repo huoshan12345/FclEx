@@ -19,7 +19,7 @@ $projects = $testDirs | ForEach-Object { Get-ChildItem -Path $_ -Include *.cspro
 
 
 foreach ($path in $projects) { 
-  $command = 'dotnet test $path --nologo -v q -c $mode'
+  $command = 'dotnet test $path --nologo -c $mode'
   if ($restore -eq $false) {
     $command = $command + " --no-restore"
   }

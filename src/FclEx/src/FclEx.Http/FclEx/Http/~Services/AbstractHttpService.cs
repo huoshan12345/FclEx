@@ -8,12 +8,12 @@ namespace FclEx.Http;
 public abstract class AbstractHttpService : IHttpService
 {
     protected readonly CookieContainer _cookieContainer;
-    protected volatile IWebProxy _webProxy = WebProxyHelper.None;
+    protected volatile IWebProxy? _webProxy;
     private ILogger _logger = NullLogger.Instance;
 
     protected AbstractHttpService(bool useCookie, IWebProxy? proxy = null, ILoggerFactory? loggerFactory = null)
     {
-        WebProxy = proxy ?? WebProxyHelper.None;
+        WebProxy = proxy;
         loggerFactory ??= NullLoggerFactory.Instance;
         Logger = loggerFactory.CreateLogger(GetType());
         _cookieContainer = new CookieContainer();
@@ -72,11 +72,11 @@ public abstract class AbstractHttpService : IHttpService
     public IReadOnlyCollection<Cookie> GetAllCookies()
     {
         return UseCookie
-            ? (IReadOnlyCollection<Cookie>)_cookieContainer.GetAllCookies()
+            ? _cookieContainer.GetAllCookies()
             : Array.Empty<Cookie>();
     }
 
-    public IWebProxy WebProxy
+    public IWebProxy? WebProxy
     {
         get => _webProxy;
         set => SetProxy(value);
@@ -84,8 +84,10 @@ public abstract class AbstractHttpService : IHttpService
 
     protected virtual void SetProxy(IWebProxy? proxy)
     {
-        if (Equals(_webProxy, proxy)) return;
-        _webProxy = proxy ?? WebProxyHelper.None;
+        if (Equals(_webProxy, proxy)) 
+            return;
+
+        _webProxy = proxy;
     }
 
     public ILogger Logger
