@@ -31,8 +31,10 @@ public sealed class HttpClientService : AbstractHttpClientService
                 // - IP v6: AddressFamily.InterNetworkV6
                 // - IP v4 or IP v6: AddressFamily.Unspecified
                 // note: this method throws a SocketException when there is no IP address for the host
-                var entry = await Dns.GetHostEntryAsync(context.DnsEndPoint.Host, AddressFamily.Unspecified, cancellationToken);
-
+                var ips = IPAddress.TryParse(context.DnsEndPoint.Host, out var ip)
+                    ? new[] { ip }
+                    : (await Dns.GetHostEntryAsync(context.DnsEndPoint.Host, AddressFamily.Unspecified, cancellationToken)).AddressList;
+                
                 // Open the connection to the target host/port
                 var socket = new Socket(SocketType.Stream, ProtocolType.Tcp)
                 {
@@ -41,7 +43,7 @@ public sealed class HttpClientService : AbstractHttpClientService
                 };
 
                 Exception? lastEx = null;
-                foreach (var address in entry.AddressList.OrderBy(m => m.AddressFamily)) // make sure ipv4 addresses are preferred
+                foreach (var address in ips.OrderBy(m => m.AddressFamily)) // make sure ipv4 addresses are preferred
                 {
                     try
                     {
@@ -53,7 +55,7 @@ public sealed class HttpClientService : AbstractHttpClientService
                         lastEx = ex;
                     }
                 }
-                
+
                 socket.Dispose();
                 throw lastEx!; // should not be null here.
             }
@@ -62,6 +64,7 @@ public sealed class HttpClientService : AbstractHttpClientService
         if (proxy != null)
         {
             handler.Proxy = proxy;
+            handler.UseProxy = true;
         }
 
         var httpClient = new HttpClient(handler, disposeHandler: false) { Timeout = Timeout.InfiniteTimeSpan };
@@ -69,10 +72,10 @@ public sealed class HttpClientService : AbstractHttpClientService
         httpClient.DefaultRequestHeaders.Add("Connection", "keep-alive");
         return httpClient;
     }
-    
+
     protected override void SetProxy(IWebProxy? proxy)
     {
-        if (Equals(_webProxy, proxy)) 
+        if (Equals(_webProxy, proxy))
             return;
 
         _webProxy = proxy;
