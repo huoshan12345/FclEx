@@ -28,7 +28,6 @@ partial class HttpClientServiceTests
         //var response = await client.GetAsync(url);
         //Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-
         var http = new HttpClientService(true, proxy);
         var res = await HttpReq.Get(url)
             .ConnectTimeout(TimeSpan.FromSeconds(10))
