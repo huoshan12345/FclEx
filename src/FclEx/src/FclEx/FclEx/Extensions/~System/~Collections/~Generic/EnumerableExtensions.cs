@@ -1,7 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 
 namespace FclEx.Extensions;
 
@@ -230,5 +228,10 @@ public static partial class EnumerableExtensions
     public static IEnumerable<T> Concat<T>(this IEnumerable<T> source, IEnumerable<T>[] arrays)
     {
         return arrays.Prepend(source).Concat();
+    }
+
+    public static IEnumerable<(T Left, T2 Right)> SelectMany<T, T2>(this IEnumerable<T> left, IEnumerable<T2> right)
+    {
+        return left.SelectMany(_ => right, (x, y) => (x, y));
     }
 }

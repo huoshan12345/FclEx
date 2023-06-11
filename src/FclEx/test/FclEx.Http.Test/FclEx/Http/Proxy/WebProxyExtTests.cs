@@ -1,6 +1,4 @@
-﻿using System.Net;
-
-namespace FclEx.Http.Proxy;
+﻿namespace FclEx.Http.Proxy;
 
 public class WebProxyExtTests
 {
@@ -15,7 +13,7 @@ public class WebProxyExtTests
             Password = password.UrlEncode()
         };
 
-        var proxy = WebProxyExt.Create(uriBuilder.Uri);
+        var proxy = WebProxyHelper.Create(uriBuilder.Uri);
         var auth = (NetworkCredential)proxy.Credentials;
         Assert.Equal(userName, auth.UserName);
         Assert.Equal(password, auth.Password);

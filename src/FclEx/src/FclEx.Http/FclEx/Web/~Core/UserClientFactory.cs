@@ -1,7 +1,4 @@
-﻿using FclEx.Http;
-using Microsoft.Extensions.DependencyInjection;
-
-namespace FclEx.Web;
+﻿namespace FclEx.Web;
 
 public class UserClientFactory<TClient> : IUserClientFactory<TClient> where TClient : IUserClient
 {

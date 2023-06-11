@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using FclEx.Helpers;
+﻿using FclEx.Helpers;
 
 namespace FclEx.Consumers;
 

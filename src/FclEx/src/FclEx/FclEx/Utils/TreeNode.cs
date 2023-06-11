@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using MoreLinq.Extensions;
 
 namespace FclEx.Utils;

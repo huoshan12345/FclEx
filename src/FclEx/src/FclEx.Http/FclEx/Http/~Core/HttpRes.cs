@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Net;
 using Microsoft.Collections.Extensions;
 
 namespace FclEx.Http;

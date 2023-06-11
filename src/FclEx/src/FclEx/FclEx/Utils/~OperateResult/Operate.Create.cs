@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace FclEx.Utils;
+﻿namespace FclEx.Utils;
 
 public partial class Operate
 {

@@ -1,6 +1,4 @@
-﻿using System.Threading;
-
-namespace FclEx.Helpers;
+﻿namespace FclEx.Helpers;
 
 public static class ThreadHelper
 {

@@ -1,11 +1,8 @@
 ﻿using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace FclEx.Http;
 
@@ -20,7 +17,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         // HttpKnownHeaderNames.UserAgent
     };
 
-    protected AbstractHttpClientService(bool useCookie, IWebProxyExt? proxy = null, ILoggerFactory? loggerFactory = null)
+    protected AbstractHttpClientService(bool useCookie, IWebProxy? proxy = null, ILoggerFactory? loggerFactory = null)
         : base(useCookie, proxy, loggerFactory)
     {
     }

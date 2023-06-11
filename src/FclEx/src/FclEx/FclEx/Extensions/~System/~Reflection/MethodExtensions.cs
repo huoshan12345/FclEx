@@ -1,7 +1,4 @@
-﻿using System.Linq;
-using System.Runtime.CompilerServices;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static class MethodExtensions
 {

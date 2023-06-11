@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using AngleSharp.Html.Dom;
+﻿using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 
 namespace FclEx.Utils;

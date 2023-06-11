@@ -1,7 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-
-namespace FclEx.Actions;
+﻿namespace FclEx.Actions;
 
 public readonly struct NextResultAction<T, TNext> : IAction<TNext>
 {

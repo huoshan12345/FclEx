@@ -1,5 +1,4 @@
-﻿using FclEx.Http;
-using FclEx.Web;
+﻿using FclEx.Web;
 
 namespace FclEx.Actions;
 

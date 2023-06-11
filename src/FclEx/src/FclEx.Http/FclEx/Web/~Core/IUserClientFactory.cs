@@ -1,6 +1,4 @@
-﻿using FclEx.Http;
-
-namespace FclEx.Web;
+﻿namespace FclEx.Web;
 
 public interface IUserClientFactory<out TClient> where TClient : IUserClient
 {

@@ -1,11 +1,8 @@
-﻿using FclEx.Http;
-using Microsoft.Extensions.DependencyInjection;
-
-namespace FclEx.Web;
+﻿namespace FclEx.Web;
 
 public static class UserClientFactoryExtensions
 {
-    public static TClient Create<TClient>(this IUserClientFactory<TClient> factory, IUserAccount account, IWebProxyExt proxy)
+    public static TClient Create<TClient>(this IUserClientFactory<TClient> factory, IUserAccount account, IWebProxy proxy)
         where TClient : IUserClient
     {
         var http = new HttpClientService(true, proxy, factory.ServiceProvider.GetService<ILoggerFactory>());
@@ -14,6 +11,6 @@ public static class UserClientFactoryExtensions
 
     public static TClient Create<TClient>(this IUserClientFactory<TClient> factory, IUserAccount account, string? proxy) where TClient : IUserClient
     {
-        return factory.Create(account, WebProxyExt.Create(proxy));
+        return factory.Create(account, WebProxyHelper.Create(proxy));
     }
 }

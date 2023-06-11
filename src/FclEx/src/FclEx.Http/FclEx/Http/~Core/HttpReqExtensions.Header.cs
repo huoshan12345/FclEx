@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using System.Net;
 using MoreLinq;
 
 namespace FclEx.Http;

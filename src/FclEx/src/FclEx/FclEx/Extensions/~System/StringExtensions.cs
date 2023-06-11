@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Linq;
-using System.Net;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using static System.Environment;
 
@@ -213,5 +209,15 @@ partial class StringExtensions
         return string.IsNullOrEmpty(str)
             ? Array.Empty<string>()
             : str!.Split(NewLineChars, options);
+    }
+
+    public static bool EndsWithAny(this string str, IEnumerable<string> patterns, StringComparison comparison = StringComparison.Ordinal)
+    {
+        return patterns.Any(m => str.EndsWith(m, comparison));
+    }
+
+    public static bool ContainsAny(this string src, IEnumerable<string> items, CompareOptions comp = CompareOptions.Ordinal)
+    {
+        return items.Any(m => src.Contains(m, comp));
     }
 }

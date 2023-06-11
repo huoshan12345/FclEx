@@ -1,8 +1,5 @@
-﻿using System.IO;
-using System.Linq;
-using System.Net;
+﻿using System.Linq;
 using System.Net.Mime;
-using System.Threading.Tasks;
 using MimeTypes.Core;
 using Newtonsoft.Json.Linq;
 

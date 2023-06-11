@@ -1,6 +1,4 @@
-﻿using FclEx.Http;
-
-namespace FclEx.Actions;
+﻿namespace FclEx.Actions;
 
 public static class Extensions
 {

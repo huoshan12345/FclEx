@@ -1,6 +1,4 @@
-﻿using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Threading;
 
 namespace FclEx.Http;
 
@@ -16,7 +14,7 @@ public interface IHttpService : IDisposable
 
     IReadOnlyCollection<Cookie> GetAllCookies();
 
-    IWebProxyExt WebProxy { get; set; }
+    IWebProxy WebProxy { get; set; }
 
     ILogger Logger { get; set; }
 }

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Collections.Extensions;
 
 namespace FclEx.Extensions;
@@ -39,5 +38,13 @@ public static class MultiValueDictionaryExtensions
     public static IEnumerable<KeyValuePair<string, string>> ToPair(this MultiValueDictionary<string, string> col)
     {
         return col.SelectMany(m => m.Value, (k, v) => KvPair.Create(k.Key, v.ToStringOrEmpty()));
+    }
+
+    public static void AddRange<TKey, TValue, TCol>(this MultiValueDictionary<TKey, TValue> dic, IEnumerable<KeyValuePair<TKey, TCol>> pairs) where TCol : IEnumerable<TValue>
+    {
+        foreach (var (key, value) in pairs)
+        {
+            dic.AddRange(key, value);
+        }
     }
 }

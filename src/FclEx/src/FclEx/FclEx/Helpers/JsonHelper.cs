@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using FclEx;
+﻿using FclEx;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 

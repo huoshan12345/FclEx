@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace FclEx.Utils;
+﻿namespace FclEx.Utils;
 
 public interface IOperateResult
 {

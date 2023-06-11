@@ -4,12 +4,13 @@
     {
         return Environment.MachineName switch
         {
-            _ => "http://localhost:1080",
+            "PC" => "socks5://192.168.1.12:10808",
+            _ => "",
         };
     }
 
     public const string TestUrl = "https://www.fastmock.site/mock/b7b0bc89cb82e6d1ffc3dc5090d39407/fclex";
-    public static IWebProxyExt DefaultProxy { get; } = WebProxyExt.Create(GetDefaultProxyUrl());
+    public static IWebProxy DefaultProxy { get; } = WebProxyHelper.Create(GetDefaultProxyUrl());
 
     public static IReadOnlyList<SimpleCookie> SimpleCookies { get; }
         = File.ReadAllText(Path.Combine("TestData", "SimpleCookies.json"))

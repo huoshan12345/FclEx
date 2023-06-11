@@ -1,6 +1,5 @@
 ﻿#nullable disable
 using System.Globalization;
-using System.Net;
 
 namespace FclEx.Http;
 

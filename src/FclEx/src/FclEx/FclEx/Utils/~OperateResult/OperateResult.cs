@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
-using static FclEx.Utils.Operate;
+﻿using static FclEx.Utils.Operate;
 
 namespace FclEx.Utils;
 

@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using System.Xml.Linq;
 using FclEx;
-using FclEx.Http;
 using Newtonsoft.Json.Linq;
 
 namespace FclEx.Actions;

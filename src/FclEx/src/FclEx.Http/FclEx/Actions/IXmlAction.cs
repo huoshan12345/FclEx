@@ -2,7 +2,6 @@
 using System.Xml.Linq;
 using System.Xml.XPath;
 using FclEx;
-using FclEx.Http;
 
 namespace FclEx.Actions;
 

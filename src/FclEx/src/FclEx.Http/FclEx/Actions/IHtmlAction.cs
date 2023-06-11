@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using AngleSharp.Dom;
 using FclEx;
-using FclEx.Http;
 
 namespace FclEx.Actions;
 

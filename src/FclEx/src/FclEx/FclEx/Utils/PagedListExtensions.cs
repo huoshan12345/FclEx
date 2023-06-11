@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace FclEx.Utils;
+﻿namespace FclEx.Utils;
 
 public static class PagedListExtensions
 {

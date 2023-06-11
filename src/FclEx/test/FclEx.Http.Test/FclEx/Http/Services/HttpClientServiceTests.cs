@@ -17,8 +17,8 @@ public partial class HttpClientServiceTests
     [InlineData("http://localhost:1080")]
     public void Constructor_Test(string proxy)
     {
-        var http = new HttpClientService(proxy: WebProxyExt.Create(proxy));
-        Assert.Equal(WebProxyExt.Create(proxy), http.WebProxy);
+        var http = new HttpClientService(proxy: WebProxyHelper.Create(proxy));
+        Assert.Equal(WebProxyHelper.Create(proxy), http.WebProxy);
     }
 
     [Fact]

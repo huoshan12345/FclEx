@@ -30,4 +30,16 @@ public static class DirectoryInfoExtensions
         di.Create();
         return di;
     }
+
+    public static DirectoryInfo Sub(this DirectoryInfo dir, string name)
+    {
+        return new(Path.Combine(dir.FullName, name));
+    }
+
+    private static readonly ConcurrentDictionary<string, string> _pathWithSepCache = new();
+    public static bool IsSubOf(this DirectoryInfo sub, DirectoryInfo parent)
+    {
+        var path = _pathWithSepCache.GetOrAdd(parent.FullName, m => m + Path.DirectorySeparatorChar);
+        return sub.FullName.StartsWith(path, StringComparison.OrdinalIgnoreCase);
+    }
 }

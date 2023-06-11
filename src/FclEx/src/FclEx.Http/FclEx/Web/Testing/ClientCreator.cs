@@ -1,11 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.IO;
-using System.Threading.Tasks;
-using FclEx.Http;
-using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
-
-namespace FclEx.Web.Testing;
+﻿namespace FclEx.Web.Testing;
 
 public class ClientCreator<TClient> where TClient : IUserClient
 {
@@ -49,7 +42,7 @@ public class ClientCreator<TClient> where TClient : IUserClient
     }
 
     public virtual Task<TClient> CreateClient(UserAccount account, bool login, bool fakeLogin = true, bool useCache = true, bool readCookie = true, string? proxy = null)
-        => CreateClient(account, new LoginOptions(login, fakeLogin, useCache, readCookie, WebProxyExt.Create(proxy)));
+        => CreateClient(account, new LoginOptions(login, fakeLogin, useCache, readCookie, WebProxyHelper.Create(proxy)));
 
     public virtual async Task<TClient> CreateClient(UserAccount account, LoginOptions options)
     {
@@ -76,7 +69,7 @@ public class ClientCreator<TClient> where TClient : IUserClient
         return client;
     }
 
-    public virtual async Task<TClient> CreateClient(UserAccount account, IWebProxyExt proxy, bool readCookie)
+    public virtual async Task<TClient> CreateClient(UserAccount account, IWebProxy? proxy, bool readCookie)
     {
         var factory = _provider.GetRequiredService<IUserClientFactory<TClient>>();
         var client = factory.Create(account, new HttpClientService(proxy: proxy));

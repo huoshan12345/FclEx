@@ -1,8 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Linq;
-using System.Net;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace FclEx.Http;
@@ -10,12 +8,12 @@ namespace FclEx.Http;
 public abstract class AbstractHttpService : IHttpService
 {
     protected readonly CookieContainer _cookieContainer;
-    protected volatile IWebProxyExt _webProxy = WebProxyExt.None;
+    protected volatile IWebProxy _webProxy = WebProxyHelper.None;
     private ILogger _logger = NullLogger.Instance;
 
-    protected AbstractHttpService(bool useCookie, IWebProxyExt? proxy = null, ILoggerFactory? loggerFactory = null)
+    protected AbstractHttpService(bool useCookie, IWebProxy? proxy = null, ILoggerFactory? loggerFactory = null)
     {
-        WebProxy = proxy ?? WebProxyExt.None;
+        WebProxy = proxy ?? WebProxyHelper.None;
         loggerFactory ??= NullLoggerFactory.Instance;
         Logger = loggerFactory.CreateLogger(GetType());
         _cookieContainer = new CookieContainer();
@@ -78,16 +76,16 @@ public abstract class AbstractHttpService : IHttpService
             : Array.Empty<Cookie>();
     }
 
-    public IWebProxyExt WebProxy
+    public IWebProxy WebProxy
     {
         get => _webProxy;
         set => SetProxy(value);
     }
 
-    protected virtual void SetProxy(IWebProxyExt? proxy)
+    protected virtual void SetProxy(IWebProxy? proxy)
     {
         if (Equals(_webProxy, proxy)) return;
-        _webProxy = proxy ?? WebProxyExt.None;
+        _webProxy = proxy ?? WebProxyHelper.None;
     }
 
     public ILogger Logger

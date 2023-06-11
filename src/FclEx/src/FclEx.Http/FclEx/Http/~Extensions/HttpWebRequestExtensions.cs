@@ -1,7 +1,4 @@
-﻿using System.Net;
-using System.Threading.Tasks;
-
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 public static class HttpWebRequestExtensions
 {

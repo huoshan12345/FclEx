@@ -1,7 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-
-namespace FclEx.Actions;
+﻿namespace FclEx.Actions;
 
 public readonly struct UnionAction<T, TNext> : IAction<(T, TNext)>
 {

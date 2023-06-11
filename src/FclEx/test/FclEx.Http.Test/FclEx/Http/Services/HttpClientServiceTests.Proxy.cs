@@ -2,7 +2,7 @@
 
 partial class HttpClientServiceTests
 {
-    public static IWebProxyExt[] ProxyList { get; } =
+    public static IWebProxy[] ProxyList { get; } =
     {
         GlobalConstants.DefaultProxy
     };
@@ -11,15 +11,22 @@ partial class HttpClientServiceTests
     {
         "https://www.google.com/",
         "https://www.instagram.com/",
-        "https://www.limetorrents.com/"
+        "https://www.baidu.com/",
     };
 
     public static IEnumerable<object[]> Cases { get; } = ProxyList.SelectMany(m => Urls, (x, y) => new object[] { x, y });
 
-    [Theory(Skip = "no proxy")]
+    [Theory]
     [MemberData(nameof(Cases))]
-    public async Task SendAsync_WithProxy_Success(IWebProxyExt proxy, string url)
+    public async Task SendAsync_WithProxy_Success(IWebProxy proxy, string url)
     {
+        var client = new HttpClient(new SocketsHttpHandler
+        {
+            Proxy = proxy
+        });
+        var response = await client.GetAsync(url);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
         var service = new HttpClientService(true, proxy);
         var res = await service.SendAsync(HttpReq.Get(url).ConnectTimeout(TimeSpan.FromSeconds(5)));
         AssertExt.False(res.HasError, () => res.Exception!.ToString());

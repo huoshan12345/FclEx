@@ -1,6 +1,4 @@
-﻿using System.Threading;
-
-namespace FclEx.Consumers;
+﻿namespace FclEx.Consumers;
 
 public class Counter
 {

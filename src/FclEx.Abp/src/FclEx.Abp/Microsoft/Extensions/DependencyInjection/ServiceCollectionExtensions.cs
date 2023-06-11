@@ -84,5 +84,21 @@ namespace Microsoft.Extensions.DependencyInjection
             provider.GetRequiredService<IAbpApplicationWithExternalServiceProvider>().Initialize(provider);
             return provider;
         }
+        
+        public static IServiceCollection Configure<TOptions, TService>(this IServiceCollection services, Action<TOptions, TService> configureOptions)
+            where TOptions : class
+            where TService : class
+        {
+            services.AddOptions<TOptions>()
+                .Configure(configureOptions);
+            return services;
+        }
+
+        public static IServiceCollection AddSingletonHostedService<THostedService>(this IServiceCollection services) where THostedService : class, IHostedService
+        {
+            services.AddSingleton<THostedService>();
+            services.AddHostedService(provider => provider.GetRequiredService<THostedService>());
+            return services;
+        }
     }
 }

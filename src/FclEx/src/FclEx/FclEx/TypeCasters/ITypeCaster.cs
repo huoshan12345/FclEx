@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace FclEx.TypeCasters;
+﻿namespace FclEx.TypeCasters;
 
 public interface ITypeCaster
 {

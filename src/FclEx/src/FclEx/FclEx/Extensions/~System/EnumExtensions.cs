@@ -1,13 +1,27 @@
-﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
+﻿using System.Collections.Generic;
 using FclEx.Attributes;
+using FclEx.Helpers;
 
 namespace FclEx.Extensions;
 
 public static class EnumExtensions
 {
+    private static readonly ConcurrentDictionary<Enum, EnumInfo> _infos = new();
+
+    public static EnumInfo Info(this Enum e)
+    {
+        return _infos.GetOrAdd(e, k =>
+        {
+            var str = k.ToString();
+            return new(str, str.ToLower(), str.ToUpper(), k.CastTo<long>());
+        });
+    }
+
+    public static string ToLowerString(this Enum e)
+    {
+        return e.Info().Lower;
+    }
+
     public static TInteger ToInteger<TEnum, TInteger>(this TEnum enumValue)
         where TEnum : struct, Enum
         where TInteger : unmanaged

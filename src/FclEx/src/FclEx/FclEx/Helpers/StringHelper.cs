@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace FclEx.Helpers;
+﻿namespace FclEx.Helpers;
 
 public static class StringHelper
 {

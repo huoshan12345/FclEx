@@ -1,6 +1,4 @@
-﻿using System.Net;
-
-namespace FclEx;
+﻿namespace FclEx;
 
 public static class FclExStartup
 {

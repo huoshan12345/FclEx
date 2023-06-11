@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Collections.Extensions;
 
 namespace FclEx.Extensions;
@@ -23,6 +22,11 @@ partial class EnumerableExtensions
     public static int Count<TKey, TValue>(this MultiValueDictionary<TKey, TValue> dic, TKey key)
     {
         return dic.GetOr(key)?.Count ?? 0;
+    }
+
+    public static bool IsEmpty<TKey, TValue>(this MultiValueDictionary<TKey, TValue> dic, TKey key)
+    {
+        return dic.Count(key) == 0;
     }
 
     public static OrderedDictionary<TKey, TValue> ToOrderedDic<T, TKey, TValue>(this IEnumerable<T> enumerable,

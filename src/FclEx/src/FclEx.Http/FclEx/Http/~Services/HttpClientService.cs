@@ -1,9 +1,7 @@
 ﻿using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Threading;
-using System.Threading.Tasks;
 using MoreLinq;
 
 namespace FclEx.Http;
@@ -61,9 +59,8 @@ public sealed class HttpClientService : AbstractHttpClientService
             }
         };
 
-        if (proxy != null && !WebProxyExt.None.Equals(proxy))
+        if (proxy != null && !WebProxyHelper.None.Equals(proxy))
         {
-            handler.UseProxy = true;
             handler.Proxy = proxy;
         }
 
@@ -72,15 +69,15 @@ public sealed class HttpClientService : AbstractHttpClientService
         httpClient.DefaultRequestHeaders.Add("Connection", "keep-alive");
         return httpClient;
     }
-
-    private HttpClient CreateHttpClient() => CreateHttpClient(WebProxy);
-
-    protected override void SetProxy(IWebProxyExt? proxy)
+    
+    protected override void SetProxy(IWebProxy? proxy)
     {
-        proxy ??= WebProxyExt.None;
-        if (Equals(_webProxy, proxy)) return;
+        proxy ??= WebProxyHelper.None;
+        if (Equals(_webProxy, proxy)) 
+            return;
+
         _webProxy = proxy;
-        _httpClient = CreateHttpClient();
+        _httpClient = CreateHttpClient(_webProxy);
     }
 
     protected override Task ExecuteAsyncInternal(HttpReq httpReq, HttpRes httpRes, CancellationToken token)
@@ -88,10 +85,10 @@ public sealed class HttpClientService : AbstractHttpClientService
         return ExecuteAsyncInternal(_httpClient, httpReq, httpRes, token);
     }
 
-    public HttpClientService(bool useCookie = true, IWebProxyExt? proxy = null, ILoggerFactory? loggerFactory = null)
+    public HttpClientService(bool useCookie = true, IWebProxy? proxy = null, ILoggerFactory? loggerFactory = null)
         : base(useCookie, proxy, loggerFactory)
     {
-        _httpClient = CreateHttpClient();
+        _httpClient = CreateHttpClient(_webProxy);
     }
 
     public override void Dispose()
