@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace FclEx.Abp.Serializers
+namespace FclEx.Abp.Serializers;
+
+public interface IStringSerializer: ITypeSerializer<string>
 {
-    public interface IStringSerializer: ITypeSerializer<string>
-    {
-    }
 }

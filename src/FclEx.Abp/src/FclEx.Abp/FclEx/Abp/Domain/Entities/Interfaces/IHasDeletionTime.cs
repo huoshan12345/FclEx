@@ -1,9 +1,8 @@
 using System;
 
-namespace FclEx.Abp.Domain.Entities.Interfaces
+namespace FclEx.Abp.Domain.Entities.Interfaces;
+
+public interface IHasDeletionTime : ISoftDelete
 {
-    public interface IHasDeletionTime : ISoftDelete
-    {
-        DateTime DeletionTime { get; set; }
-    }
+    DateTime DeletionTime { get; set; }
 }

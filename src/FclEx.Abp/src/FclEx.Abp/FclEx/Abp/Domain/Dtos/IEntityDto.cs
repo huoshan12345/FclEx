@@ -1,10 +1,9 @@
-﻿namespace FclEx.Abp.Domain.Dtos
-{
-    public interface IEntityDto
-    {
-    }
+﻿namespace FclEx.Abp.Domain.Dtos;
 
-    public interface IEntityDto<TPrimaryKey> : IEntityDto, IHasKey<TPrimaryKey>
-    {
-    }
+public interface IEntityDto
+{
+}
+
+public interface IEntityDto<TPrimaryKey> : IEntityDto, IHasKey<TPrimaryKey>
+{
 }

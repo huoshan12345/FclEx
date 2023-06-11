@@ -1,12 +1,11 @@
 ﻿using Volo.Abp.ObjectMapping;
 
-namespace FclEx.Abp.Domain.Dtos
+namespace FclEx.Abp.Domain.Dtos;
+
+public static class DtoExtensions
 {
-    public static class DtoExtensions
+    public static T Map<T>(this IEntityDto dto, IObjectMapper mapper)
     {
-        public static T Map<T>(this IEntityDto dto, IObjectMapper mapper)
-        {
-            return mapper.Map<T>(dto);
-        }
+        return mapper.Map<T>(dto);
     }
 }

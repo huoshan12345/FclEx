@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace FclEx.Abp.Serializers
+namespace FclEx.Abp.Serializers;
+
+public interface IBytesSerializer : ITypeSerializer<byte[]>
 {
-    public interface IBytesSerializer : ITypeSerializer<byte[]>
-    {
-    }
 }

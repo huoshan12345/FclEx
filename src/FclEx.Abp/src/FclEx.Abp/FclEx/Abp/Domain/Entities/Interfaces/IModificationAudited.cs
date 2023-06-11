@@ -1,7 +1,6 @@
-namespace FclEx.Abp.Domain.Entities.Interfaces
+namespace FclEx.Abp.Domain.Entities.Interfaces;
+
+public interface IModificationAudited<TUserId> : IHasModificationTime
 {
-    public interface IModificationAudited<TUserId> : IHasModificationTime
-    {
-        TUserId LastModifierUserId { get; set; }
-    }
+    TUserId LastModifierUserId { get; set; }
 }

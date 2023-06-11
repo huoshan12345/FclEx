@@ -1,21 +1,20 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-namespace LightInject
+namespace LightInject;
+
+internal class LightInjectServiceScopeFactory : IServiceScopeFactory
 {
-    internal class LightInjectServiceScopeFactory : IServiceScopeFactory
+    private readonly IServiceContainer _container;
+
+    public LightInjectServiceScopeFactory(IServiceContainer container)
     {
-        private readonly IServiceContainer _container;
+        _container = container;
+    }
 
-        public LightInjectServiceScopeFactory(IServiceContainer container)
-        {
-            _container = container;
-        }
+    public IServiceScope CreateScope()
+    {
+        var scope = _container.BeginScope();
 
-        public IServiceScope CreateScope()
-        {
-            var scope = _container.BeginScope();
-
-            return new LightInjectServiceScope(scope);
-        }
+        return new LightInjectServiceScope(scope);
     }
 }

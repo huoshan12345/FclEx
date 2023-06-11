@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -24,20 +25,35 @@ namespace FclEx.Abp.Caching
 
         private string GetPrefix()
         {
-            if (!Options.UsePrefix) return "";
+            if (!Options.UsePrefix)
+                return "";
+
             var prefix = Options.Name + _options.Separator;
             if (Options.UseGlobalPrefix)
+            {
                 prefix = _options.GlobalPrefix + _options.Separator + prefix;
+            }
             if (Options.OnlyUseLowerCase)
+            {
                 prefix = prefix.ToLower();
+            }
             return prefix;
         }
 
+        private static readonly ConcurrentDictionary<string, string> _keys = new();
         private string GetKey(string key)
         {
-            if (key.IsNullOrEmpty()) return Prefix;
-            var k = Options.OnlyUseLowerCase ? key.ToLower() : key;
-            return Prefix + k;
+            if (key.IsNullOrEmpty())
+                return Prefix;
+
+            return _keys.GetOrAdd(key, m =>
+            {
+                var k = Options.OnlyUseLowerCase
+                    ? m.ToLower()
+                    : m;
+
+                return Prefix + k;
+            });
         }
 
         private string TrimKeyPrefix(string key) => key.TrimStart(Prefix);

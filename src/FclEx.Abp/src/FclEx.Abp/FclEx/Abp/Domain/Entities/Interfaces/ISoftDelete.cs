@@ -1,7 +1,6 @@
-﻿namespace FclEx.Abp.Domain.Entities.Interfaces
+﻿namespace FclEx.Abp.Domain.Entities.Interfaces;
+
+public interface ISoftDelete
 {
-    public interface ISoftDelete
-    {
-        bool IsDeleted { get; set; }
-    }
+    bool IsDeleted { get; set; }
 }

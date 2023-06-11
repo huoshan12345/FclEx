@@ -1,28 +1,27 @@
 ﻿using System;
 
-namespace LightInject
+namespace LightInject;
+
+public class LightInjectServiceProvider : IServiceProvider, IDisposable
 {
-    public class LightInjectServiceProvider : IServiceProvider, IDisposable
+    private readonly IServiceFactory _serviceFactory;
+    private bool _isDisposed = false;
+
+    public LightInjectServiceProvider(IServiceFactory serviceFactory)
     {
-        private readonly IServiceFactory _serviceFactory;
-        private bool _isDisposed = false;
+        this._serviceFactory = serviceFactory;
+    }
 
-        public LightInjectServiceProvider(IServiceFactory serviceFactory)
-        {
-            this._serviceFactory = serviceFactory;
-        }
+    public void Dispose()
+    {
+        if (_isDisposed) return;
+        _isDisposed = true;
+        if (_serviceFactory is IDisposable disposable)
+            disposable.Dispose();
+    }
 
-        public void Dispose()
-        {
-            if (_isDisposed) return;
-            _isDisposed = true;
-            if (_serviceFactory is IDisposable disposable)
-                disposable.Dispose();
-        }
-
-        public object GetService(Type serviceType)
-        {
-            return _serviceFactory.TryGetInstance(serviceType);
-        }
+    public object GetService(Type serviceType)
+    {
+        return _serviceFactory.TryGetInstance(serviceType);
     }
 }

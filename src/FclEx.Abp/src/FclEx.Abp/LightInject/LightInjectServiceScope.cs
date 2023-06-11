@@ -2,23 +2,22 @@
 using AspectCore.Extensions.LightInject;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace LightInject
+namespace LightInject;
+
+internal class LightInjectServiceScope : IServiceScope
 {
-    internal class LightInjectServiceScope : IServiceScope
+    public LightInjectServiceScope(Scope scope)
     {
-        public LightInjectServiceScope(Scope scope)
-        {
-            Scope = scope;
-            ServiceProvider = new LightInjectServiceResolver(scope);
-        }
+        Scope = scope;
+        ServiceProvider = new LightInjectServiceResolver(scope);
+    }
 
-        public IServiceProvider ServiceProvider { get; }
+    public IServiceProvider ServiceProvider { get; }
 
-        public Scope Scope { get; }
+    public Scope Scope { get; }
 
-        public void Dispose()
-        {
-            Scope.Dispose();
-        }
+    public void Dispose()
+    {
+        Scope.Dispose();
     }
 }

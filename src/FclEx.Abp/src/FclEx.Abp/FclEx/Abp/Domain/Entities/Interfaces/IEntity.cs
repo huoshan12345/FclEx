@@ -1,11 +1,10 @@
-namespace FclEx.Abp.Domain.Entities.Interfaces
-{
-    public interface IEntity
-    {
-    }
+namespace FclEx.Abp.Domain.Entities.Interfaces;
 
-    public interface IEntity<TPrimaryKey> : IEntity
-    {
-        TPrimaryKey Id { get; set; }
-    }
+public interface IEntity
+{
+}
+
+public interface IEntity<TPrimaryKey> : IEntity
+{
+    TPrimaryKey Id { get; set; }
 }

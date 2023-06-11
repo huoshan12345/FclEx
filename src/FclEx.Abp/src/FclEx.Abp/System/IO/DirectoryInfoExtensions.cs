@@ -2,15 +2,14 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace System.IO
+namespace System.IO;
+
+public static class DirectoryInfoExtensions
 {
-    public static class DirectoryInfoExtensions
+    public static DirectoryInfo EnsureExists(this DirectoryInfo di)
     {
-        public static DirectoryInfo EnsureExists(this DirectoryInfo di)
-        {
-            if (!di.Exists)
-                di.Create();
-            return di;
-        }
+        if (!di.Exists)
+            di.Create();
+        return di;
     }
 }

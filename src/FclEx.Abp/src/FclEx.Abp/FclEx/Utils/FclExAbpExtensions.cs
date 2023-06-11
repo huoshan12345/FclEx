@@ -9,33 +9,32 @@ using System.Threading.Tasks;
 using EasyCaching.Core;
 using FclEx.Extensions;
 
-namespace FclEx.Utils
+namespace FclEx.Utils;
+
+public static class FclExAbpExtensions
 {
-    public static class FclExAbpExtensions
+    public static OperateResult<T> Unwrap<T>(this OperateResult<CacheValue<T>> result)
     {
-        public static OperateResult<T> Unwrap<T>(this OperateResult<CacheValue<T>> result)
+        if (result.Success)
         {
-            if (result.Success)
+            var value = result.Value;
+            if (value.HasValue)
             {
-                var value = result.Value;
-                if (value.HasValue)
-                {
-                    return (value.Value, result.Elapsed);
-                }
-                else
-                {
-                    return ("Failed to get value from the cache", result.Elapsed);
-                }
+                return (value.Value, result.Elapsed);
             }
             else
             {
-                return result.ToExplicit<T>();
+                return ("Failed to get value from the cache", result.Elapsed);
             }
         }
-
-        public static async Task<OperateResult<T>> Unwrap<T>(this Task<OperateResult<CacheValue<T>>> result)
+        else
         {
-            return (await result.DonotCapture()).Unwrap();
+            return result.ToExplicit<T>();
         }
+    }
+
+    public static async Task<OperateResult<T>> Unwrap<T>(this Task<OperateResult<CacheValue<T>>> result)
+    {
+        return (await result.DonotCapture()).Unwrap();
     }
 }

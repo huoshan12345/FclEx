@@ -6,24 +6,23 @@ using Volo.Abp.AutoMapper;
 using Volo.Abp.Modularity;
 using Volo.Abp.ObjectMapping;
 
-namespace FclEx.Abp
-{
-    [DependsOn(typeof(AbpAutoMapperModule))]
-    public class FclExAbpModule : AbpModule
-    {
-        public override void PreConfigureServices(ServiceConfigurationContext context)
-        {
-            FclExStartup.Init();
-            context.Services.AddConventionalRegistrar(new OpenGenericConventionalRegistrar());
-            // context.Services.AddConventionalRegistrar(new GenericInterfaceConventionalRegistrar());
-        }
+namespace FclEx.Abp;
 
-        public override void ConfigureServices(ServiceConfigurationContext context)
-        {
-            context.Services.AddMaps(GetType().Assembly)
-                .AddEasyCaching(o => o.UseInMemory().WithJson())
-                .AddSingleton<ICacheManager, CacheManager>()
-                .AddSingleton<IStringSerializer>(StringAsRawSerializer.Instance);
-        }
+[DependsOn(typeof(AbpAutoMapperModule))]
+public class FclExAbpModule : AbpModule
+{
+    public override void PreConfigureServices(ServiceConfigurationContext context)
+    {
+        FclExStartup.Init();
+        context.Services.AddConventionalRegistrar(new OpenGenericConventionalRegistrar());
+        // context.Services.AddConventionalRegistrar(new GenericInterfaceConventionalRegistrar());
+    }
+
+    public override void ConfigureServices(ServiceConfigurationContext context)
+    {
+        context.Services.AddMaps(GetType().Assembly)
+            .AddEasyCaching(o => o.UseInMemory().WithJson())
+            .AddSingleton<ICacheManager, CacheManager>()
+            .AddSingleton<IStringSerializer>(StringAsRawSerializer.Instance);
     }
 }

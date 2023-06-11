@@ -4,30 +4,29 @@ using AspectCore.DynamicProxy;
 using FclEx.Utils;
 using FclEx.Web;
 
-namespace FclEx.Abp.Aop
+namespace FclEx.Abp.Aop;
+
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+public class LoginAndRetryAttribute : AbstractInterceptorAttribute
 {
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
-    public class LoginAndRetryAttribute : AbstractInterceptorAttribute
+    public virtual Func<object, bool> NeedRetry { get; } = o => o is IOperateResult { Error: true };
+
+    public override async Task Invoke(AspectContext context, AspectDelegate next)
     {
-        public virtual Func<object, bool> NeedRetry { get; } = o => o is IOperateResult { Error: true };
+        await context.Invoke(next);
 
-        public override async Task Invoke(AspectContext context, AspectDelegate next)
+        if (context.Implementation is UserClient client)
         {
-            await context.Invoke(next);
+            var result = context.IsAsync()
+                ? (object)(await (dynamic)context.ReturnValue)
+                : context.ReturnValue;
 
-            if (context.Implementation is UserClient client)
+            if (client.IsOnline) return;
+
+            if (NeedRetry(result))
             {
-                var result = context.IsAsync()
-                    ? (object)(await (dynamic)context.ReturnValue)
-                    : context.ReturnValue;
-
-                if (client.IsOnline) return;
-
-                if (NeedRetry(result))
-                {
-                    await client.FakeLogin(true);
-                    await context.Invoke(next);
-                }
+                await client.FakeLogin(true);
+                await context.Invoke(next);
             }
         }
     }

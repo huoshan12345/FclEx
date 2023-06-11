@@ -1,9 +1,8 @@
 using System;
 
-namespace FclEx.Abp.Domain.Entities.Interfaces
+namespace FclEx.Abp.Domain.Entities.Interfaces;
+
+public interface IHasModificationTime
 {
-    public interface IHasModificationTime
-    {
-        DateTime LastModificationTime { get; set; }
-    }
+    DateTime LastModificationTime { get; set; }
 }

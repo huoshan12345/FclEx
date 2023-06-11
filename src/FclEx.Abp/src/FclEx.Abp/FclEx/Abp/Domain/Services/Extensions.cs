@@ -6,19 +6,18 @@ using System.Text;
 using System.Threading.Tasks;
 using FclEx.Extensions;
 
-namespace FclEx.Abp.Domain.Services
-{
-    public static class Extensions
-    {
-        public static async Task<T?> GetAsync<T>(this IEntityService service, Expression<Func<T, bool>> filter)
-        {
-            var list = await service.GetListAsync(filter, 1).DonotCapture();
-            return list.FirstOrDefault();
-        }
+namespace FclEx.Abp.Domain.Services;
 
-        public static Task InsertAsync<T>(this IEntityService service, T entity)
-        {
-            return service.InsertListAsync(new[] { entity });
-        }
+public static class Extensions
+{
+    public static async Task<T?> GetAsync<T>(this IEntityService service, Expression<Func<T, bool>> filter)
+    {
+        var list = await service.GetListAsync(filter, 1).DonotCapture();
+        return list.FirstOrDefault();
+    }
+
+    public static Task InsertAsync<T>(this IEntityService service, T entity)
+    {
+        return service.InsertListAsync(new[] { entity });
     }
 }

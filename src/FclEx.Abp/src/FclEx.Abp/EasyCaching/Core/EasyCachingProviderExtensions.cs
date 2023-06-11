@@ -3,28 +3,27 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using FclEx.Utils;
 
-namespace EasyCaching.Core
-{
-    public static class EasyCachingProviderExtensions
-    {
-        public static bool TryGet<T>(this IEasyCachingProvider provider, string key, [NotNullWhen(true)] out T? item)
-        {
-            item = default;
-            var (success, value, _, _) = Operate.Execute(() => provider.Get<T>(key));
-            if (!success) return false;
-            item = value!.Value;
-            return value.HasValue;
-        }
+namespace EasyCaching.Core;
 
-        public static T GetOrAdd<T>(this IEasyCachingProvider provider, string key,
-            Func<string, T> func, TimeSpan expiration)
+public static class EasyCachingProviderExtensions
+{
+    public static bool TryGet<T>(this IEasyCachingProvider provider, string key, [NotNullWhen(true)] out T? item)
+    {
+        item = default;
+        var (success, value, _, _) = Operate.Execute(() => provider.Get<T>(key));
+        if (!success) return false;
+        item = value!.Value;
+        return value.HasValue;
+    }
+
+    public static T GetOrAdd<T>(this IEasyCachingProvider provider, string key,
+        Func<string, T> func, TimeSpan expiration)
+    {
+        if (!provider.TryGet<T>(key, out var obj))
         {
-            if (!provider.TryGet<T>(key, out var obj))
-            {
-                obj = func(key);
-                provider.Set<T>(key, obj, expiration);
-            }
-            return obj;
+            obj = func(key);
+            provider.Set<T>(key, obj, expiration);
         }
+        return obj;
     }
 }

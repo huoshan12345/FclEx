@@ -1,9 +1,8 @@
-﻿namespace FclEx.Web.Accounts
-{
-    public interface IAccountGenerator
-    {
-        string GenerateUserName();
+﻿namespace FclEx.Web.Accounts;
 
-        string GeneratePassword();
-    }
+public interface IAccountGenerator
+{
+    string GenerateUserName();
+
+    string GeneratePassword();
 }

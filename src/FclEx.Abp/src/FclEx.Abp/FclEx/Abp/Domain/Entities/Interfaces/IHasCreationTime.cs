@@ -1,9 +1,8 @@
 using System;
 
-namespace FclEx.Abp.Domain.Entities.Interfaces
+namespace FclEx.Abp.Domain.Entities.Interfaces;
+
+public interface IHasCreationTime
 {
-    public interface IHasCreationTime
-    {
-        DateTime CreationTime { get; set; }
-    }
+    DateTime CreationTime { get; set; }
 }

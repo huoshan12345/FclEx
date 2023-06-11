@@ -2,18 +2,17 @@
 using FclEx.Abp.Domain.Entities.Interfaces;
 using FclEx.Abp.Orm;
 
-namespace FclEx.Abp.Domain.Entities
+namespace FclEx.Abp.Domain.Entities;
+
+public abstract class CommonEntity<TPrimaryKey> : ICommonEntity<TPrimaryKey>
 {
-    public abstract class CommonEntity<TPrimaryKey> : ICommonEntity<TPrimaryKey>
-    {
-        public DateTime CreationTime { get; set; }
+    public DateTime CreationTime { get; set; }
 
-        public DateTime LastModificationTime { get; set; }
+    public DateTime LastModificationTime { get; set; }
 
-        public bool IsDeleted { get; set; } = false;
+    public bool IsDeleted { get; set; } = false;
 
-        public bool IsActive { get; set; } = true;
+    public bool IsActive { get; set; } = true;
 
-        public TPrimaryKey Id { get; set; } = default!;
-    }
+    public TPrimaryKey Id { get; set; } = default!;
 }

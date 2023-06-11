@@ -1,10 +1,9 @@
-namespace FclEx.Abp.Domain.Dtos
-{
-    public abstract class EntityDto<TPrimaryKey> : IEntityDto<TPrimaryKey>
-    {
-        public TPrimaryKey Id { get; set; } = default!;
+namespace FclEx.Abp.Domain.Dtos;
 
-        protected EntityDto() { }
-        protected EntityDto(TPrimaryKey id) { Id = id; }
-    }
+public abstract class EntityDto<TPrimaryKey> : IEntityDto<TPrimaryKey>
+{
+    public TPrimaryKey Id { get; set; } = default!;
+
+    protected EntityDto() { }
+    protected EntityDto(TPrimaryKey id) { Id = id; }
 }

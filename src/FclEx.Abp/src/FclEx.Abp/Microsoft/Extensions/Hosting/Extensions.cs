@@ -5,20 +5,19 @@ using AspectCore.Extensions.LightInject;
 using LightInject;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Microsoft.Extensions.Hosting
-{
-    public static class Extensions
-    {
-        public static IHostBuilder UseLightInject(this IHostBuilder hostBuilder, Action<LightInjectOptions>? optionsBuilder = null)
-        {
-            var (container, fac) = LightInjectHelper.CreateContainerAndFactory(optionsBuilder);
-            return hostBuilder.ConfigureServices((_, services) => services.AddObjectAccessor<IServiceContainer>(container))
-                .UseServiceProviderFactory(fac);
-        }
+namespace Microsoft.Extensions.Hosting;
 
-        public static IHostBuilder UseLightInject(this IHostBuilder hostBuilder, bool useAop)
-        {
-            return hostBuilder.UseLightInject(o => o.UseAop = useAop);
-        }
+public static class Extensions
+{
+    public static IHostBuilder UseLightInject(this IHostBuilder hostBuilder, Action<LightInjectOptions>? optionsBuilder = null)
+    {
+        var (container, fac) = LightInjectHelper.CreateContainerAndFactory(optionsBuilder);
+        return hostBuilder.ConfigureServices((_, services) => services.AddObjectAccessor<IServiceContainer>(container))
+            .UseServiceProviderFactory(fac);
+    }
+
+    public static IHostBuilder UseLightInject(this IHostBuilder hostBuilder, bool useAop)
+    {
+        return hostBuilder.UseLightInject(o => o.UseAop = useAop);
     }
 }

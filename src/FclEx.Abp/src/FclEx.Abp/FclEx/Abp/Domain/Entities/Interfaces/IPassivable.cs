@@ -1,7 +1,6 @@
-﻿namespace FclEx.Abp.Domain.Entities.Interfaces
+﻿namespace FclEx.Abp.Domain.Entities.Interfaces;
+
+public interface IPassivable
 {
-    public interface IPassivable
-    {
-        bool IsActive { get; set; }
-    }
+    bool IsActive { get; set; }
 }
