@@ -1,20 +1,17 @@
 ﻿namespace FclEx.Dapper.SqlAdapters;
 
-public class SqlServerAdapter : ISqlAdapter
+public class SqlServerAdapter : AbstractSqlAdapter<SqlServerAdapter>
 {
-    public static readonly SqlServerAdapter Instance = new();
+    public override string SelectIdentitySql { get; } = "SELECT SCOPE_IDENTITY()"; // NOTICE: SCOPE_IDENTITY() return a decimal instead of an integer?
 
-    public string GetQuotedTableName(string name) => $"[{name}]";
-    public string GetQuotedColumnName(string name) => $"[{name}]";
+    protected override QuotationMarks QuotationMarks { get; } = new('[', ']');
 
-    public DbParameter CreateParameter(string name, object? value, string? type = null)
+    public override DbParameter CreateParameter(string name, object? value, string? type = null)
     {
         throw new NotImplementedException();
     }
 
-    public string SelectIdentitySql { get; } = "SELECT SCOPE_IDENTITY()"; // NOTICE: SCOPE_IDENTITY() return a decimal instead of an integer?
-
-    public async Task<IAsyncDisposable> EnableIdentityInsertAsync<T>(string schema, IDbCommand cmd)
+    public override async Task<IAsyncDisposable> EnableIdentityInsertAsync<T>(string schema, IDbCommand cmd)
     {
         var tableName = DapperHelper.GetTableNameWithSchema(this, schema, typeof(T));
         await cmd.Connection.ExecuteAsync($"SET IDENTITY_INSERT {tableName} ON");

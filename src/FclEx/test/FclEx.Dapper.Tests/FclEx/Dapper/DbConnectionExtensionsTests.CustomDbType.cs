@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Seismic.Eds.Common.Dapper.Tests;
+namespace FclEx.Dapper;
 
 partial class DbConnectionExtensionsTests
 {

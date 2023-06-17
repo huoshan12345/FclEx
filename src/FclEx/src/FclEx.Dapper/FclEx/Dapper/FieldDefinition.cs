@@ -11,6 +11,7 @@ public class FieldDefinition
     public string FieldName => Alias ?? PropertyInfo.Name;
     public PropertyInfo PropertyInfo { get; }
     public bool IsKey { get; internal init; }
-    public bool IsAutoKey { get; internal init; }
+    public bool IsGenerated { get; internal init; }
+    public bool IsAutoKey => IsKey && IsGenerated;
     public string? DbType { get; internal init; }
 }

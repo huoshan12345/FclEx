@@ -1,13 +1,13 @@
 ﻿using FclEx.Xunit;
 
-namespace Seismic.Eds.Common.Dapper.Tests;
+namespace FclEx.Dapper;
 
 public partial class DbConnectionExtensionsTests : IAsyncLifetime
 {
-    public static readonly string[] Schemas = { "eds", "test" };
+    public static readonly string[] Schemas = { "schema_test_1", "schema_test_2" };
     public static readonly DatabaseType[] DatabaseTypes = LocalTestHelper.IsGithubAction
         ? new[] { DatabaseType.Npgsql }
-        : (DatabaseType[])Enum.GetValues(typeof(DatabaseType));
+        : Enum.GetValues<DatabaseType>().Where(m => m == DatabaseType.Npgsql).ToArray();
 
     public static readonly IEnumerable<object[]> AdapterTestCases = DatabaseTypes
         .SelectMany(m => Schemas, (x, y) => (x, y))

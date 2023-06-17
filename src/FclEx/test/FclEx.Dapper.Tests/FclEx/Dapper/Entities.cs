@@ -1,4 +1,6 @@
-﻿public class EntityWithAutoKey
+﻿namespace FclEx.Dapper;
+
+public class EntityWithAutoKey
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

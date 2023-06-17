@@ -9,8 +9,8 @@ public enum DatabaseType
 // EfCore is used for helping us to do tests
 public class GlobalDbContext : DbContextWithSchema
 {
-    public const string LocalPostgresqlConnectionString = "Server=localhost;Database=test;Port=5432;User Id=postgres;Password=111111";
-    public const string LocalSqlServerConnectionString = @"Data Source=localhost\sqlexpress;Database=test;User Id=sa;Password=a.o7a@bj;Integrated Security=sspi;Encrypt=false";
+    public const string LocalPostgresqlConnectionString = "Server=localhost;Database=fclex-abp-test;Port=5432;User Id=postgres;Password=111111";
+    public const string LocalSqlServerConnectionString = @"Data Source=localhost\sqlexpress;Database=fclex-abp-test;User Id=sa;Password=a.o7a@bj;Integrated Security=sspi;Encrypt=false";
 
     public DatabaseType DatabaseType { get; }
     private readonly Action<DbContextOptionsBuilder> _optionsAction;
@@ -39,6 +39,14 @@ public class GlobalDbContext : DbContextWithSchema
         {
             var e = modelBuilder.Entity<EntityWithPostgresqlJsonb>();
             e.Property(m => m.Json).HasColumnType("jsonb");
+        }
+
+        modelBuilder.Entity<EntityWithoutKey>().HasNoKey();
+
+        foreach (var entity in modelBuilder.Model.GetEntityTypes())
+        {
+            modelBuilder.Entity(entity.Name)
+                .ToTable(entity.ClrType.Name);
         }
     }
 

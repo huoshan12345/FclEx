@@ -36,13 +36,13 @@ public class EntityDefinition
                 {
                     Alias = columnAttr?.Name,
                     IsKey = keyAttr != null,
-                    IsAutoKey = getAttr.DatabaseGeneratedOption == DatabaseGeneratedOption.Identity,
-                    DbType = columnAttr.TypeName,
+                    IsGenerated = getAttr?.DatabaseGeneratedOption == DatabaseGeneratedOption.Identity,
+                    DbType = columnAttr?.TypeName,
                 };
 
         var fields = q.ToList();
         def.Fields = fields;
-        def.InsertFields = fields.Where(m => m.IsAutoKey == false).ToArray();
+        def.InsertFields = fields.Where(m => m.IsGenerated == false).ToArray();
         def.AutoKeys = fields.Where(m => m.IsAutoKey).ToArray();
         def.Keys = fields.Where(m => m.IsKey).ToArray();
 

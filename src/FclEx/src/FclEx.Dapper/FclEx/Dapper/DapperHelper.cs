@@ -11,7 +11,7 @@ public static class DapperHelper
 
     internal static readonly ConcurrentDictionary<string, ISqlAdapter> Adapters = new()
     {
-        ["NpgsqlConnection"] = PostgresAdapter.Instance,
+        ["NpgsqlConnection"] = NpgsqlAdapter.Instance,
         ["SqlConnection"] = SqlServerAdapter.Instance,
     };
     internal static readonly ConcurrentDictionary<Type, EntityDefinition> EntityDefinitions = new();
@@ -81,7 +81,7 @@ public static class DapperHelper
 
     public static ISqlAdapter GetSqlAdapter(IDbConnection connection)
     {
-        return Adapters.GetOrAdd(connection.GetType().Name, conName => PostgresAdapter.Instance); // use postgres as default
+        return Adapters.GetOrAdd(connection.GetType().Name, conName => NpgsqlAdapter.Instance); // use postgres as default
     }
 
     public static string GetTableNameWithSchema(ISqlAdapter sqlAdapter, string schema, Type entityType)

@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using System.Reflection;
 using FclEx.Helpers;
 
 namespace FclEx.Extensions;
@@ -147,9 +148,27 @@ public static partial class TypeExtensions
     {
         return type.GetProperty(name, MemberBindingFlags) ?? throw new InvalidOperationException($"Cannot find property '{name}' in type '{type.FullName}'");
     }
-    
+
     public static MethodInfo GetRequiredMethod(this Type type, string name)
     {
         return type.GetMethod(name, MemberBindingFlags) ?? throw new InvalidOperationException($"Cannot find method '{name}' in type '{type.FullName}'");
+    }
+
+    public static MethodInfo GetRequiredMethod(this Type type, string name, int genericArgumentCount, params Type[] paramTypes)
+    {
+        return type.GetMethods()
+            .Where(m => m.Name == name)
+            .Select(m => (Method: m, Params: m.GetParameters(), Args: m.GetGenericArguments()))
+            .Where(x => x.Args.Length == genericArgumentCount
+                        && x.Params.Length == paramTypes.Length
+                        && x.Params.Select(m => m.ParameterType).SequenceEqual(paramTypes))
+            .Select(x => x.Method)
+            .FirstOrDefault() ?? throw new InvalidOperationException($"Cannot find method '{name}<`{genericArgumentCount}>({paramTypes.Select(m => m.Name).JoinWith(", ")})' in type '{type.FullName}'");
+    }
+
+    public static ConstructorInfo GetRequiredConstructor(this Type type, params Type[] types)
+    {
+        return type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, types)
+               ?? throw new InvalidOperationException($"Cannot find constructor({types.Select(m => m.Name).JoinWith(", ")}) in type '{type.FullName}'");
     }
 }
