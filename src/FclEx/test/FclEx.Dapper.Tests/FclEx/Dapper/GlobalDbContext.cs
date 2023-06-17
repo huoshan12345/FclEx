@@ -1,21 +1,32 @@
-﻿namespace FclEx.Dapper;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure.Internal;
+using Pomelo.EntityFrameworkCore.MySql.Storage.Internal;
+#pragma warning disable EF1001
+
+namespace FclEx.Dapper;
 
 public enum DatabaseType
 {
     Npgsql,
-    SqlServer
+    SqlServer,
+    Sqlite,
+    MySql,
+    MySqlConnector,
 }
 
 // EfCore is used for helping us to do tests
 public class GlobalDbContext : DbContextWithSchema
 {
-    public const string LocalPostgresqlConnectionString = "Server=localhost;Database=fclex-abp-test;Port=5432;User Id=postgres;Password=111111";
-    public const string LocalSqlServerConnectionString = @"Data Source=localhost\sqlexpress;Database=fclex-abp-test;User Id=sa;Password=a.o7a@bj;Integrated Security=sspi;Encrypt=false";
+    public const string PostgresqlConnectionString = "Server=localhost;Database=fclex-abp-test;Port=5432;User Id=postgres;Password=111111";
+    public const string SqlServerConnectionString = @"Data Source=localhost\sqlexpress;Database=fclex-abp-test;User Id=sa;Password=a.o7a@bj;Integrated Security=sspi;Encrypt=false";
+    public const string MySqlConnectionString = @"Server=localhost;Database=fclex_abp_test;Port=3306;User Id=root;Password=111111;SslMode=None";
+    public const string SqliteConnectionString = @"Data Source=./fclex-abp-test.sqlite;";
 
     public DatabaseType DatabaseType { get; }
     private readonly Action<DbContextOptionsBuilder> _optionsAction;
 
-    public GlobalDbContext(DatabaseType databaseType, Action<DbContextOptionsBuilder> optionsAction, string schema) : base(schema)
+    public GlobalDbContext(DatabaseType databaseType, Action<DbContextOptionsBuilder> optionsAction, string? schema) : base(schema)
     {
         _optionsAction = optionsAction;
         DatabaseType = databaseType;
@@ -38,7 +49,21 @@ public class GlobalDbContext : DbContextWithSchema
         if (DatabaseType == DatabaseType.Npgsql)
         {
             var e = modelBuilder.Entity<EntityWithPostgresqlJsonb>();
-            e.Property(m => m.Json).HasColumnType("jsonb");
+        }
+
+        if (DatabaseType == DatabaseType.SqlServer)
+        {
+            var e = modelBuilder.Entity<EntityWithSqlServerXml>();
+        }
+
+        if (DatabaseType == DatabaseType.Sqlite)
+        {
+            var e = modelBuilder.Entity<EntityWithSqliteBlob>();
+        }
+
+        if (DatabaseType is DatabaseType.MySqlConnector or DatabaseType.MySql)
+        {
+            var e = modelBuilder.Entity<EntityWithMySqlBlob>();
         }
 
         modelBuilder.Entity<EntityWithoutKey>().HasNoKey();
@@ -50,13 +75,33 @@ public class GlobalDbContext : DbContextWithSchema
         }
     }
 
-    public static GlobalDbContext Create(DatabaseType databaseType, string schema)
+    private static void UseMySql(DbContextOptionsBuilder builder, string connectionString)
+    {
+        var ver = ServerVersion.AutoDetect(connectionString);
+        builder.UseMySql(connectionString, ver, o => o.SchemaBehavior(MySqlSchemaBehavior.Translate, (schema, table) => table));
+        builder.ReplaceService<ISqlGenerationHelper, CustomMySqlSqlGenerationHelper>();
+    }
+
+    public static GlobalDbContext Create(DatabaseType databaseType, string? schema = null)
     {
         return databaseType switch
         {
-            DatabaseType.Npgsql => new(databaseType, builder => builder.UseNpgsql(LocalPostgresqlConnectionString), schema),
-            DatabaseType.SqlServer => new(databaseType, builder => builder.UseSqlServer(LocalSqlServerConnectionString), schema),
-            _ => throw new ArgumentOutOfRangeException(nameof(databaseType), databaseType, null)
+            DatabaseType.Npgsql => new(databaseType, builder => builder.UseNpgsql(PostgresqlConnectionString), schema),
+            DatabaseType.SqlServer => new(databaseType, builder => builder.UseSqlServer(SqlServerConnectionString), schema),
+            DatabaseType.MySql => new(databaseType, builder => builder.UseMySQL(MySqlConnectionString), null),
+            DatabaseType.MySqlConnector => new(databaseType, builder => UseMySql(builder, MySqlConnectionString), schema),
+            DatabaseType.Sqlite => new(databaseType, builder => builder.UseSqlite(SqliteConnectionString), null),
+            _ => throw new ArgumentOutOfRangeException(nameof(databaseType), databaseType, null),
         };
     }
+}
+
+public class CustomMySqlSqlGenerationHelper : MySqlSqlGenerationHelper
+{
+    public CustomMySqlSqlGenerationHelper(RelationalSqlGenerationHelperDependencies dependencies, IMySqlOptions options)
+        : base(dependencies, options)
+    {
+    }
+
+    public override string GetSchemaName(string name, string schema) => schema;
 }

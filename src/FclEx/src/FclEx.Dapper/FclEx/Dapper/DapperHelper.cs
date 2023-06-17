@@ -11,11 +11,14 @@ public static class DapperHelper
 
     internal static readonly ConcurrentDictionary<string, ISqlAdapter> Adapters = new()
     {
-        ["NpgsqlConnection"] = NpgsqlAdapter.Instance,
-        ["SqlConnection"] = SqlServerAdapter.Instance,
+        ["Npgsql.NpgsqlConnection"] = NpgsqlAdapter.Instance,
+        ["Microsoft.Data.SqlClient.SqlConnection"] = SqlServerAdapter.Instance,
+        ["Microsoft.Data.Sqlite.SqliteConnection"] = SqliteAdapter.Instance,
+        ["MySql.Data.MySqlClient.MySqlConnection"] = MySqlAdapter.Instance,
+        ["MySqlConnector.MySqlConnection"] = MySqlConnectorAdapter.Instance,
     };
     internal static readonly ConcurrentDictionary<Type, EntityDefinition> EntityDefinitions = new();
-    internal static readonly ConcurrentDictionary<(Type AdapterType, string Schema, Type EntityType), string> TableNamesWithSchema = new();
+    internal static readonly ConcurrentDictionary<(Type AdapterType, string? Schema, Type EntityType), string> TableNamesWithSchema = new();
 
     internal class AssemblyLocker
     {
@@ -57,7 +60,8 @@ public static class DapperHelper
 
             var types = assembly.ExportedTypes.ToList();
 
-            var typesWithColumn = types.Where(m => m.GetProperties().Any(x => x.GetCustomAttribute<ColumnAttribute>() != null)).ToArray();
+            var typesWithColumn = types.Where(m => m.GetCustomAttribute<TableAttribute>() != null
+                                                   || m.GetProperties().Any(x => x.GetCustomAttribute<ColumnAttribute>() != null)).ToArray();
             RegisterColumnMapping(typesWithColumn);
 
             locker.Initialized = true;
@@ -79,17 +83,24 @@ public static class DapperHelper
         }
     }
 
-    public static ISqlAdapter GetSqlAdapter(IDbConnection connection)
+    public static ISqlAdapter RegisterSqlAdapter(Type connectionType, ISqlAdapter adapter)
     {
-        return Adapters.GetOrAdd(connection.GetType().Name, conName => NpgsqlAdapter.Instance); // use postgres as default
+        return Adapters[connectionType.FullName!] = adapter;
     }
 
-    public static string GetTableNameWithSchema(ISqlAdapter sqlAdapter, string schema, Type entityType)
+    public static ISqlAdapter GetSqlAdapter(IDbConnection connection)
+    {
+        return Adapters.GetOrAdd(connection.GetType().FullName!, conName => throw new ArgumentException("Unsupported connection type: " + conName));
+    }
+
+    public static string GetTableNameWithSchema(ISqlAdapter sqlAdapter, string? schema, Type entityType)
     {
         return TableNamesWithSchema.GetOrAdd((sqlAdapter.GetType(), schema, entityType), k =>
         {
             var tableName = GetEntityDefinition(k.EntityType).TableName;
-            return $"{sqlAdapter.GetQuotedTableName(k.Schema)}.{sqlAdapter.GetQuotedTableName(tableName)}";
+            return k.Schema == null || sqlAdapter.SupportSchema == false
+                ? sqlAdapter.GetQuotedTableName(tableName)
+                : $"{sqlAdapter.GetQuotedTableName(k.Schema)}.{sqlAdapter.GetQuotedTableName(tableName)}";
         });
     }
 

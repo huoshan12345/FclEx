@@ -107,20 +107,6 @@ public static partial class EnumerableExtensions
         return enumerable.Select(m => m.AsTuple());
     }
 
-    public static IEnumerable<T> Concat<T>(this T firstElement, IEnumerable<T>? secondSequence)
-    {
-        yield return firstElement;
-        if (secondSequence == null)
-        {
-            yield break;
-        }
-
-        foreach (var item in secondSequence)
-        {
-            yield return item;
-        }
-    }
-
     public static TResult? MaxOr<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, TResult> selector, TResult? defaultValue = default)
     {
         return source.Any() ? source.Max(selector) : defaultValue;

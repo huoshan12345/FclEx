@@ -4,31 +4,17 @@ partial class DbConnectionExtensions
 {
     public static async Task<T> DoTransactionAsync<T>(this IDbConnection con, Func<IDbConnection, Task<T>> action, IsolationLevel level = IsolationLevel.ReadUncommitted)
     {
-        var scope = DapperHelper.CreateAsyncTransactionScope(level);
-        try
-        {
-            var result = await action(con);
-            scope.Complete();
-            return result;
-        }
-        finally
-        {
-            scope.Dispose();
-        }
+        using var scope = DapperHelper.CreateAsyncTransactionScope(level);
+        var result = await action(con);
+        scope.Complete();
+        return result;
     }
 
     public static async Task DoTransactionAsync(this IDbConnection con, Func<IDbConnection, Task> action, IsolationLevel level = IsolationLevel.ReadUncommitted)
     {
-        var scope = DapperHelper.CreateAsyncTransactionScope(level);
-        try
-        {
-            await action(con);
-            scope.Complete();
-        }
-        finally
-        {
-            scope.Dispose();
-        }
+        using var scope = DapperHelper.CreateAsyncTransactionScope(level);
+        await action(con);
+        scope.Complete();
     }
 
     public static Task TryOpenAsync(this IDbConnection connection, CancellationToken token = default)

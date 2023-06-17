@@ -44,6 +44,7 @@ public static class ObjectExtensions
     {
         return obj is null ? obj : obj.ToJson().ToJToken().ToObject<T>();
     }
+
     public static T Between<T>(this T obj, T min, T max) where T : IComparable<T>
     {
         var comparer = Comparer<T>.Default;

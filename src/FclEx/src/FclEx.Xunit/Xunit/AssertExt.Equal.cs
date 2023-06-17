@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Xunit.Sdk;
 
@@ -63,5 +64,10 @@ namespace Xunit
             Assert.NotEmpty(value);
         }
 
+        public static void NotEmpty([NotNull] IEnumerable? value)
+        {
+            Assert.NotNull(value);
+            Assert.NotEmpty(value);
+        }
     }
 }

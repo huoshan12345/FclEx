@@ -1,14 +1,9 @@
-﻿using FclEx.Xunit;
+﻿using static FclEx.Dapper.GlobalFixture;
 
 namespace FclEx.Dapper;
 
-public partial class DbConnectionExtensionsTests : IAsyncLifetime
+public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixture>
 {
-    public static readonly string[] Schemas = { "schema_test_1", "schema_test_2" };
-    public static readonly DatabaseType[] DatabaseTypes = LocalTestHelper.IsGithubAction
-        ? new[] { DatabaseType.Npgsql }
-        : Enum.GetValues<DatabaseType>().Where(m => m == DatabaseType.Npgsql).ToArray();
-
     public static readonly IEnumerable<object[]> AdapterTestCases = DatabaseTypes
         .SelectMany(m => Schemas, (x, y) => (x, y))
         .Select(m => new object[] { m.x, m.y });
@@ -21,44 +16,7 @@ public partial class DbConnectionExtensionsTests : IAsyncLifetime
         select new object[] { x, y, z };
 
     public static readonly IEnumerable<object[]> SchemaCases = Schemas.Select(m => new object[] { m });
-
-    // InitializeAsync is called immediately after the class has been created, before it is used.
-    // We use this method to initialize database only once before all tests.
-    public async Task InitializeAsync()
-    {
-        foreach (var databaseType in DatabaseTypes)
-        {
-            var isRecreated = false; // NOTE: we delete database only once for every database instance.
-            foreach (var schema in Schemas)
-            {
-                await using var context = GlobalDbContext.Create(databaseType, schema);
-                if (isRecreated == false)
-                {
-                    await context.Database.EnsureDeletedAsync();
-                    await context.Database.EnsureCreatedAsync();
-                    isRecreated = true;
-                }
-
-                var databaseCreator = (RelationalDatabaseCreator)context.Database.GetService<IDatabaseCreator>();
-
-                try
-                {
-                    await databaseCreator.CreateTablesAsync();
-                }
-                catch (NpgsqlException ex) when (ex.Message.Contains("already exists"))
-                {
-                }
-                catch (SqlException ex) when (ex.Message.Contains("already an object named"))
-                {
-                }
-            }
-        }
-    }
-
-    public Task DisposeAsync()
-    {
-        return Task.CompletedTask;
-    }
+    
 
     [Theory]
     [MemberData(nameof(AdapterTestCases))]
@@ -71,7 +29,7 @@ public partial class DbConnectionExtensionsTests : IAsyncLifetime
             Value = 100,
             Name = Guid.NewGuid().ToString(),
         };
-        var id = (long?)await db.Database.GetDbConnection().InsertAsync(schema, entity);
+        var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity, schema);
         var e = await db.EntityWithAutoKeys.Where(m => m.Name == entity.Name).FirstOrDefaultAsync();
         Assert.NotNull(e);
         Assert.Equal(entity.Value, e.Value);
@@ -90,7 +48,7 @@ public partial class DbConnectionExtensionsTests : IAsyncLifetime
             Value = 100,
             Name = Guid.NewGuid().ToString(),
         };
-        await db.Database.GetDbConnection().InsertAsync(schema, entity, includeAutoKey: true);
+        await db.Database.GetDbConnection().InsertAsync(entity, schema, includeAutoKey: true);
         var e = await db.EntityWithAutoKeys.Where(m => m.Name == entity.Name).FirstOrDefaultAsync();
         Assert.NotNull(e);
         Assert.Equal(entity.Value, e.Value);
@@ -109,7 +67,7 @@ public partial class DbConnectionExtensionsTests : IAsyncLifetime
             Value = 100,
             Order = null,
         };
-        var value = await db.Database.GetDbConnection().InsertAsync(schema, entity);
+        var value = await db.Database.GetDbConnection().InsertAsync(entity, schema);
         Assert.Null(value);
         var e = await db.EntityWithGuidKeys.Where(m => m.Id == entity.Id).FirstAsync();
         Assert.Equal(entity.Value, e.Value);
@@ -126,7 +84,7 @@ public partial class DbConnectionExtensionsTests : IAsyncLifetime
             Name = Guid.NewGuid().ToString(),
             Value = 1
         };
-        await db.Database.GetDbConnection().InsertAsync(schema, entity);
+        await db.Database.GetDbConnection().InsertAsync(entity, schema);
         var e = await db.EntityWithoutKeys.Where(m => m.Name == entity.Name).FirstAsync();
         Assert.Equal(entity.Value, e.Value);
     }
@@ -143,7 +101,7 @@ public partial class DbConnectionExtensionsTests : IAsyncLifetime
             Name = Guid.NewGuid().ToString(),
         }).ToArray();
 
-        var rows = await db.Database.GetDbConnection().BulkInsertAsync(schema, entities);
+        var rows = await db.Database.GetDbConnection().BulkInsertAsync(entities, schema);
         Assert.Equal(count, rows);
 
         foreach (var entity in entities)
@@ -166,7 +124,7 @@ public partial class DbConnectionExtensionsTests : IAsyncLifetime
             Name = Guid.NewGuid().ToString(),
         }).ToArray();
 
-        var rows = await db.Database.GetDbConnection().BulkInsertAsync(schema, entities, true);
+        var rows = await db.Database.GetDbConnection().BulkInsertAsync(entities, schema, true);
         Assert.Equal(count, rows);
 
         foreach (var entity in entities)
@@ -191,7 +149,7 @@ public partial class DbConnectionExtensionsTests : IAsyncLifetime
         await db.EntityWithGuidKeys.AddAsync(entity);
         await db.SaveChangesAsync();
 
-        var e = await db.Database.GetDbConnection().GetAsync<EntityWithGuidKey>(schema, entity.Id);
+        var e = await db.Database.GetDbConnection().GetAsync<EntityWithGuidKey>(entity.Id, schema);
         Assert.Equal(entity.Value, e.Value);
     }
 
@@ -220,7 +178,7 @@ public partial class DbConnectionExtensionsTests : IAsyncLifetime
         await db.EntityWithGuidKeys.AddRangeAsync(entities);
         await db.SaveChangesAsync();
 
-        var count = await db.Database.GetDbConnection().DeleteAsync<EntityWithGuidKey>(schema, entities.First().Id);
+        var count = await db.Database.GetDbConnection().DeleteAsync<EntityWithGuidKey>(entities.First().Id, schema);
         Assert.Equal(1, count);
 
         foreach (var e in entities.Skip(1))
@@ -261,8 +219,8 @@ public partial class DbConnectionExtensionsTests : IAsyncLifetime
 
         var (id, id2) = await con.DoTransactionAsync(async c =>
         {
-            var id = (long?)await c.InsertAsync(schema, entity);
-            var id2 = (long?)await c.InsertAsync(schema, entity2);
+            var id = (long?)await c.InsertAsync(entity, schema);
+            var id2 = (long?)await c.InsertAsync(entity2, schema);
             return (id, id2);
         });
 
@@ -278,16 +236,17 @@ public partial class DbConnectionExtensionsTests : IAsyncLifetime
     public async Task DoTransactionAsync_Rollback_Test(DatabaseType databaseType, string schema)
     {
         await using var db = GlobalDbContext.Create(databaseType, schema);
+        await db.EntityWithGuidKeys.ExecuteDeleteAsync();
 
         var con = db.Database.GetDbConnection();
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => con.DoTransactionAsync(async c =>
         {
-            await c.InsertAsync(schema, new EntityWithGuidKey
+            await c.InsertAsync(new EntityWithGuidKey
             {
                 Id = Guid.NewGuid(),
                 Value = 100,
-            });
+            }, schema);
             throw new InvalidOperationException();
         }));
 

@@ -6,8 +6,8 @@
 namespace FclEx.Dapper;
 
 internal readonly record struct SqlInfo(string Sql, IReadOnlyList<DbParameter> Paras);
-internal readonly record struct EntitySqlKey(ISqlAdapter SqlAdapter, string Schema, Type EntityType);
-internal readonly record struct InsertColumnsKey(ISqlAdapter SqlAdapter, string Schema, Type EntityType, bool IncludeAutoKey);
+internal readonly record struct EntitySqlKey(ISqlAdapter SqlAdapter, string? Schema, Type EntityType);
+internal readonly record struct InsertColumnsKey(ISqlAdapter SqlAdapter, string? Schema, Type EntityType, bool IncludeAutoKey);
 internal readonly record struct InsertValuesKey(Type EntityType, int Count, bool IncludeAutoKey);
 
 public static partial class DbConnectionExtensions
@@ -33,11 +33,8 @@ public static partial class DbConnectionExtensions
     /// <param name="sqlAdapter"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentException"></exception>
-    public static async Task<dynamic?> InsertAsync<T>(this IDbConnection connection, string schema, T entity, bool returnId = true, bool includeAutoKey = false, int? commandTimeout = null, ISqlAdapter? sqlAdapter = null) where T : class
+    public static async Task<dynamic?> InsertAsync<T>(this IDbConnection connection, T entity, string? schema = null, bool returnId = true, bool includeAutoKey = false, int? commandTimeout = null, ISqlAdapter? sqlAdapter = null) where T : class
     {
-        if (string.IsNullOrWhiteSpace(schema))
-            throw new ArgumentException("The schema cannot be empty.", nameof(schema));
-
         var value = await connection.ExecuteAsync(commandTimeout, sqlAdapter, m => GetInsertSql(m, schema, entity, returnId, includeAutoKey), async (a, m) =>
         {
             if (includeAutoKey && EntityDefinition<T>.Definition.HasAutoKey())
@@ -66,11 +63,8 @@ public static partial class DbConnectionExtensions
     /// <param name="sqlAdapter"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentException"></exception>
-    public static Task<int> BulkInsertAsync<T>(this IDbConnection connection, string schema, IReadOnlyCollection<T> entities, bool includeAutoKey = false, int? commandTimeout = null, ISqlAdapter? sqlAdapter = null) where T : class
+    public static Task<int> BulkInsertAsync<T>(this IDbConnection connection, IReadOnlyCollection<T> entities, string? schema = null, bool includeAutoKey = false, int? commandTimeout = null, ISqlAdapter? sqlAdapter = null) where T : class
     {
-        if (string.IsNullOrWhiteSpace(schema))
-            throw new ArgumentException("The schema cannot be empty.", nameof(schema));
-
         if (entities.IsNullOrEmpty())
             return Task.FromResult(0);
 
@@ -93,7 +87,7 @@ public static partial class DbConnectionExtensions
         return ParaNames.GetOrAdd((column, row), _ => $"@{column}_{row}");
     }
 
-    internal static SqlInfo GetBulkInsertSql<T>(ISqlAdapter sqlAdapter, string schema, IReadOnlyCollection<T> entities, bool includeAutoKey)
+    internal static SqlInfo GetBulkInsertSql<T>(ISqlAdapter sqlAdapter, string? schema, IReadOnlyCollection<T> entities, bool includeAutoKey)
     {
         var entityType = typeof(T);
         var def = GetEntityDefinition(entityType);
@@ -120,7 +114,7 @@ public static partial class DbConnectionExtensions
         return new(sb.ToString(), paras);
     }
 
-    internal static string GetInsertColumnsSql(ISqlAdapter sqlAdapter, string schema, Type entityType, bool includeAutoKey)
+    internal static string GetInsertColumnsSql(ISqlAdapter sqlAdapter, string? schema, Type entityType, bool includeAutoKey)
     {
         return InsertColumnsSqls.GetOrAdd(new(sqlAdapter, schema, entityType, includeAutoKey), k => CreateInsertColumnsSql(k));
 
@@ -177,7 +171,7 @@ public static partial class DbConnectionExtensions
         }
     }
 
-    internal static SqlInfo GetInsertSql<T>(ISqlAdapter sqlAdapter, string schema, T entity, bool returnId, bool includeAutoKey)
+    internal static SqlInfo GetInsertSql<T>(ISqlAdapter sqlAdapter, string? schema, T entity, bool returnId, bool includeAutoKey)
     {
         var (sql, paras) = GetBulkInsertSql(sqlAdapter, schema, new[] { entity }, includeAutoKey);
 
@@ -213,7 +207,7 @@ public static partial class DbConnectionExtensions
     /// <param name="sqlAdapter"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentException"></exception>
-    public static Task<T> GetAsync<T>(this IDbConnection connection, string schema, dynamic id, int? commandTimeout = null, ISqlAdapter? sqlAdapter = null)
+    public static Task<T> GetAsync<T>(this IDbConnection connection, dynamic id, string? schema = null, int? commandTimeout = null, ISqlAdapter? sqlAdapter = null)
     {
         if (string.IsNullOrWhiteSpace(schema))
             throw new ArgumentException("The schema cannot be empty.", nameof(schema));
@@ -245,7 +239,7 @@ public static partial class DbConnectionExtensions
     /// <param name="sqlAdapter"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentException"></exception>
-    public static Task<int> DeleteAsync<T>(this IDbConnection connection, string schema, dynamic id, int? commandTimeout = null, ISqlAdapter? sqlAdapter = null)
+    public static Task<int> DeleteAsync<T>(this IDbConnection connection, dynamic id, string? schema = null, int? commandTimeout = null, ISqlAdapter? sqlAdapter = null)
     {
         if (string.IsNullOrWhiteSpace(schema))
             throw new ArgumentException("The schema cannot be empty.", nameof(schema));

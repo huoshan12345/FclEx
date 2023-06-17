@@ -1,4 +1,5 @@
-﻿using System.Xml;
+﻿using System.IO;
+using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using MoreLinq.Extensions;
@@ -55,5 +56,13 @@ public static class XmlExtensions
         var serializer = XmlSerializers.GetOrAdd(typeof(T), t => new XmlSerializer(t));
         using var reader = element.CreateReader();
         return (T)serializer.Deserialize(reader)!;
+    }
+
+    public static string ToXml<T>(this T obj)
+    {
+        var serializer = XmlSerializers.GetOrAdd(typeof(T), t => new XmlSerializer(t));
+        using var writer = new StringWriter();
+        serializer.Serialize(writer, obj);
+        return writer.ToString();
     }
 }

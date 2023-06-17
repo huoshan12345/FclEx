@@ -6,14 +6,18 @@ using System.Threading.Tasks;
 
 namespace FclEx.Dapper.SqlAdapters;
 
-public class SqliteAdapter : AbstractSqlAdapter<NpgsqlAdapter>
+/// <summary>
+/// Adapter for Microsoft.Data.Sqlite
+/// </summary>
+public class SqliteAdapter : AbstractSqlAdapter<SqliteAdapter>
 {
+    public override bool SupportSchema { get; } = false;
     public override string SelectIdentitySql { get; } = "SELECT last_insert_rowid()";
 
     protected override QuotationMarks QuotationMarks { get; } = new('"');
 
-    public override DbParameter CreateParameter(string name, object? value, string? type = null)
+    protected override DbParameterCreater BuildParameterCreater()
     {
-        throw new NotImplementedException();
+        return BuildParameterCreater("Microsoft.Data.Sqlite.SqliteParameter, Microsoft.Data.Sqlite", "SqliteType");
     }
 }
