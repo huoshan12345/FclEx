@@ -1,15 +1,22 @@
-﻿using Newtonsoft.Json;
-
-namespace FclEx.Dapper;
+﻿namespace FclEx.Dapper;
 
 partial class DbConnectionExtensionsTests
 {
+    private readonly ITestOutputHelper _output;
+
+    public DbConnectionExtensionsTests(ITestOutputHelper output)
+    {
+        _output = output;
+    }
+
     [Theory]
     [MemberData(nameof(SchemaCases))]
     public async Task InsertAsync_EntityWithPostgresqlJsonb_Test(string schema)
     {
         if (DatabaseTypes.Contains(DatabaseType.Npgsql) == false)
             return;
+
+        using var x = _output.SetConsole();
 
         await using var db = GlobalDbContext.Create(DatabaseType.Npgsql, schema);
 

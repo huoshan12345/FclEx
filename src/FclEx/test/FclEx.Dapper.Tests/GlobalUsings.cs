@@ -9,5 +9,7 @@ global using Microsoft.Data.SqlClient;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.EntityFrameworkCore.Infrastructure;
 global using Microsoft.EntityFrameworkCore.Storage;
+global using Newtonsoft.Json;
 global using Npgsql;
 global using Xunit;
+global using Xunit.Abstractions;

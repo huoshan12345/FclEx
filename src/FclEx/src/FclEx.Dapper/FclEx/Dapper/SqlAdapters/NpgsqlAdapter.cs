@@ -40,6 +40,9 @@ public class NpgsqlAdapter : AbstractSqlAdapter<NpgsqlAdapter>
         exps.Add(ifThen);
         exps.Add(result);
         var final = Expression.Block(new[] { result }, exps);
+#if DEBUG
+        final.Visit(e => Console.WriteLine(e.ToString()));
+#endif
         return Expression.Lambda<DbParameterCreater>(final, paraOfName, paraOfValue, paraOfType).Compile();
     }
 
