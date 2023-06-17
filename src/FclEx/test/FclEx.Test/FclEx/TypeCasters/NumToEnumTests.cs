@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace FclEx.TypeCasters;
 
 public sealed class NumToEnumTests : AbstractTests
 {
-    private static readonly MethodInfo _method = typeof(NumToEnumTests).GetMethod(
-        nameof(NumToEnum), BindingFlags.NonPublic | BindingFlags.Static);
+    private static readonly MethodInfo _method = typeof(NumToEnumTests).GetRequiredMethod(nameof(NumToEnum));
 
     private static void NumToEnum<TNumeric, TEnum>(ITypeCaster caster)
         where TNumeric : struct, IComparable<TNumeric>, IEquatable<TNumeric>

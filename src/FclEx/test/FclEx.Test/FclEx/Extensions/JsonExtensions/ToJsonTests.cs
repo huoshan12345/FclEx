@@ -21,7 +21,7 @@ public class ToJsonTests
         {
             var obj = new DateTimeTester() { DateTime = new DateTime(2019, 1, 2, 3, 4, 5, kind) };
             var json = obj.ToJsonCamel();
-            var obj2 = json.ToJToken().ToObject<DateTimeTester>();
+            var obj2 = json.ToJToken().ToObject<DateTimeTester>()!;
             Assert.Equal(obj.Name, obj2.Name);
             Assert.Equal(obj.DateTime.ToUtc(), obj2.DateTime.ToUtc());
         }

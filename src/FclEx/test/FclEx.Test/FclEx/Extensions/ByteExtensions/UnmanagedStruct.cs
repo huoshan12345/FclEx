@@ -11,7 +11,7 @@ public struct UnmanagedStruct
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
     public byte[] Arr;
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         var x = this;
         return obj is UnmanagedStruct y

@@ -11,21 +11,21 @@ public class ReadStringAsObjectConverterTests
     private class Tester
     {
         [JsonProperty("username")]
-        public string UserName { get; set; }
+        public string? UserName { get; set; }
 
         [JsonConverter(typeof(ReadStringAsObjectConverter))]
         [JsonProperty("badge_count")]
-        public BadgeCount BadgeCount { get; set; }
+        public BadgeCount? BadgeCount { get; set; }
     }
 
     private class TesterOfString
     {
         [JsonProperty("username")]
-        public string UserName { get; set; }
+        public string? UserName { get; set; }
 
         [JsonConverter(typeof(ReadStringAsObjectConverter))]
         [JsonProperty("badge_count")]
-        public string BadgeCount { get; set; }
+        public string? BadgeCount { get; set; }
     }
 
     private class BadgeCount
@@ -40,7 +40,7 @@ public class ReadStringAsObjectConverterTests
     [Fact]
     public void ReadObject_Test()
     {
-        var obj = TestCase.ToJToken().ToObject<Tester>();
+        var obj = TestCase.ToJToken().ToObject<Tester>()!;
         Assert.NotNull(obj.BadgeCount);
         Assert.Equal(8, obj.BadgeCount.SeqId);
         Assert.Equal(1573226541064, obj.BadgeCount.BadgeCountAtMs);
@@ -50,8 +50,9 @@ public class ReadStringAsObjectConverterTests
     [Fact]
     public void ReadString_Test()
     {
-        var obj = TestCase.ToJToken().ToObject<TesterOfString>();
-        var badgeCount = obj.BadgeCount.ToJToken().ToObject<BadgeCount>();
+        var obj = TestCase.ToJToken().ToObject<TesterOfString>()!;
+        Assert.NotNull(obj.BadgeCount);
+        var badgeCount = obj.BadgeCount.ToJToken().ToObject<BadgeCount>()!;
         Assert.Equal(8, badgeCount.SeqId);
         Assert.Equal(1573226541064, badgeCount.BadgeCountAtMs);
     }

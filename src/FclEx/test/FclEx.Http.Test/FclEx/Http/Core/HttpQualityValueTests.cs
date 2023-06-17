@@ -13,7 +13,7 @@ public class HttpQualityValueTests
         "*"
     };
     public static string[] PreferOrder { get; } = { "gzip", "deflate" };
-    public static string[] ExpectedEncoding { get; } =
+    public static string?[] ExpectedEncoding { get; } =
     {
         "gzip",
         "gzip",
@@ -23,7 +23,7 @@ public class HttpQualityValueTests
         "gzip",
     };
 
-    public static IEnumerable<object[]> Cases { get; } = AcceptEncodings.Zip(ExpectedEncoding, (a, e) => (a, e)).Select(m => new object[] { m.a, m.e });
+    public static IEnumerable<object?[]> Cases { get; } = AcceptEncodings.Zip(ExpectedEncoding, (a, e) => (a, e)).Select(m => new object?[] { m.a, m.e });
 
     [Theory]
     [MemberData(nameof(Cases))]

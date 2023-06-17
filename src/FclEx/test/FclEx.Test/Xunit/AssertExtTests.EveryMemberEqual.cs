@@ -17,17 +17,17 @@ public partial class AssertExtTests
         public float Float { get; set; }
         public double? Double { get; set; }
         public decimal Decimal { get; set; }
-        public string String;
-        public Tester Child { get; set; }
-        public List<Tester> List { get; set; }
+        public string? String;
+        public Tester? Child { get; set; }
+        public List<Tester?>? List { get; set; }
     }
 
     public class Tester2
     {
-        public Tester2 Child { get; set; }
+        public Tester2? Child { get; set; }
     }
 
-    private static Tester CreateTester(bool nested, int level = 0)
+    private static Tester? CreateTester(bool nested, int level = 0)
     {
         if (level >= 3)
             return null;
@@ -99,6 +99,7 @@ public partial class AssertExtTests
     {
         var src = CreateTester(false);
         var dest = src.DeepClone();
+        Assert.NotNull(dest);
         dest.Int++;
 
         Assert.Throws<EqualException>(() => AssertExt.EveryMemberEqual(src, dest));
@@ -119,6 +120,7 @@ public partial class AssertExtTests
         var src = CreateTester(true);
         {
             var dest = src.DeepClone();
+            Assert.NotNull(dest);
             dest.Int++;
             Assert.Throws<EqualException>(() => AssertExt.EveryMemberEqual(src, dest));
             AssertExt.EveryMemberEqual(src, dest, nameof(dest.Int));
@@ -126,7 +128,10 @@ public partial class AssertExtTests
 
         {
             var dest = src.DeepClone();
+            Assert.NotNull(dest);
             dest.Int++;
+
+            Assert.NotNull(dest.Child);
             dest.Child.Int++;
 
             Assert.Throws<EqualException>(() => AssertExt.EveryMemberEqual(src, dest));

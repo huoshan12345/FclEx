@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace FclEx.Actions;
+﻿namespace FclEx.Actions;
 
 public readonly struct BindAction<T, TDest> : IAction<TDest>
 {

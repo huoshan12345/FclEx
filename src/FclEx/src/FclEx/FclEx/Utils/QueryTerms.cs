@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace FclEx.Utils;
+﻿namespace FclEx.Utils;
 
 public readonly struct QueryTerms
 {

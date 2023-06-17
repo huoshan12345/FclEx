@@ -7,7 +7,7 @@ namespace Overby.Extensions.Attachments
         [Fact]
         public void FixedNullAttachmentResultImplicitOperator()
         {
-            AttachmentResult<string> r = null;
+            AttachmentResult<string>? r = null;
             string s = r;
             Assert.Null(s);
         }

@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using FclEx.Helpers;
+﻿using FclEx.Helpers;
 using Nito.AsyncEx;
 
 namespace FclEx.Consumers;

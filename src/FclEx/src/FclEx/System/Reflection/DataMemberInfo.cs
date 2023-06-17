@@ -12,8 +12,8 @@ public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>
         IsCompilerGenerated = MemberInfo.IsDefined(typeof(CompilerGeneratedAttribute), false);
         CanRead = true;
         CanWrite = true;
-        GetValueFunc = field.GetValue;
-        SetValueFunc = field.SetValue;
+        Getter = field.GetValue;
+        Setter = field.SetValue;
         IsStatic = field.IsStatic;
         IsField = true;
         IsProperty = false;
@@ -28,8 +28,8 @@ public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>
         IsCompilerGenerated = MemberInfo.IsDefined(typeof(CompilerGeneratedAttribute), false);
         CanRead = property.CanRead;
         CanWrite = property.CanWrite;
-        GetValueFunc = property.GetValue;
-        SetValueFunc = property.SetValue;
+        Getter = property.GetValue;
+        Setter = property.SetValue;
         var accessors = property.GetAccessors(true);
         IsStatic = accessors.Any(m => m.IsStatic);
         IsField = false;
@@ -54,13 +54,13 @@ public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>
     public override Type? ReflectedType => MemberInfo.ReflectedType;
 
     public Type DataMemberType { get; }
-    public object? GetValue(object? obj) => GetValueFunc(obj);
-    public void SetValue(object? obj, object? value) => SetValueFunc(obj, value);
+    public object? GetValue(object? obj) => Getter(obj);
+    public void SetValue(object? obj, object? value) => Setter(obj, value);
     public bool CanRead { get; }
     public bool CanWrite { get; }
     public bool IsStatic { get; }
-    internal Func<object?, object?> GetValueFunc { get; }
-    internal Action<object?, object?> SetValueFunc { get; }
+    internal Func<object?, object?> Getter { get; }
+    internal Action<object?, object?> Setter { get; }
     public MemberInfo MemberInfo { get; }
     public bool IsField { get; }
     public bool IsProperty { get; }

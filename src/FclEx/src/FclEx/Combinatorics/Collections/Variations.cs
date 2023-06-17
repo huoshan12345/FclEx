@@ -2,7 +2,6 @@
 // Distributed under license terms of CPOL http://www.codeproject.com/info/cpol10.aspx
 #nullable disable
 using System.Collections;
-using System.Collections.Generic;
 
 namespace Combinatorics.Collections;
 

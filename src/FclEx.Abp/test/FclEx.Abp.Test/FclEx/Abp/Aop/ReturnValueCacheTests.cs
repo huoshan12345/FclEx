@@ -78,12 +78,14 @@ namespace FclEx.Abp.Aop
             for (var i = 0; i < 3; i++)
             {
                 var (_, tempItem, _, t) = Operate.Execute(() => service.Get(no));
+                Assert.NotNull(tempItem);
                 Assert.Equal(itemFromInstace.Id, tempItem.Id);
                 Assert.True(t.TotalMilliseconds < CacheMaxMilliseconds);
             }
             for (var i = 0; i < 3; i++)
             {
                 var (_, tempItem, _, t) = Operate.Execute(() => service.GetStatic(no));
+                Assert.NotNull(tempItem);
                 Assert.Equal(itemFromStatic.Id, tempItem.Id);
                 Assert.True(t.TotalMilliseconds < CacheMaxMilliseconds);
             }
@@ -100,8 +102,13 @@ namespace FclEx.Abp.Aop
                 var tempService = ServiceProvider.GetRequiredService<IService>();
                 var (_, tempitemFromStatic, _, timeFromStatic) = Operate.Execute(() => tempService.GetStatic(no));
                 var (_, tempItemFromInstace, _, timeFromInstace) = Operate.Execute(() => tempService.Get(no));
+
+                Assert.NotNull(tempitemFromStatic);
                 Assert.Equal(itemFromStatic.Id, tempitemFromStatic.Id);
+
+                Assert.NotNull(tempItemFromInstace);
                 Assert.Equal($"{tempService.Id}_{no}", tempItemFromInstace.Id);
+
                 Assert.True(timeFromStatic.TotalMilliseconds < CacheMaxMilliseconds, timeFromStatic.TotalMilliseconds.ToString());
                 Assert.True(timeFromInstace.TotalMilliseconds > SleepMilliseconds, timeFromInstace.TotalMilliseconds.ToString());
             }

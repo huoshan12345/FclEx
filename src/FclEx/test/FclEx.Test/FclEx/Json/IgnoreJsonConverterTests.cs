@@ -27,7 +27,7 @@ public class IgnoreJsonConverterTests
         [JsonProperty("retcode")]
         public long Retcode { get; set; }
         [JsonProperty("msg")]
-        public string Msg { get; set; }
+        public string? Msg { get; set; }
         [JsonProperty("data")]
         public Unit Data { get; set; }
     }

@@ -4,7 +4,7 @@ namespace FclEx.Abp.RabbitMQ.Serializers
 {
     public class JsonMemoryBytesSerializerTests
     {
-        private static void Test<T>(T input, EqualityComparer<T> comparer = null)
+        private static void Test<T>(T input, EqualityComparer<T?>? comparer = null)
         {
             var serializer = JsonMemoryBytesSerializer.Instance;
             var bytes = serializer.Serialize(input);

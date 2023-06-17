@@ -9,9 +9,9 @@ namespace LightInject
 
         public class B
         {
-            private readonly A _a;
+            private readonly A? _a;
 
-            public B(A a = null)
+            public B(A? a = null)
             {
                 _a = a;
             }

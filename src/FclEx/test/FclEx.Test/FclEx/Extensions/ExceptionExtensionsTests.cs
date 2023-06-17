@@ -30,7 +30,7 @@ public class ExceptionExtensionsTests
     public void HandleAll_Test(Exception ex)
     {
         var list = new List<InnermostException>();
-        ex.HandleAll(m =>
+        ex.ForEach(m =>
         {
             Assert.Equal(typeof(InnermostException), m.GetType());
             list.Add(m.CastTo<InnermostException>());

@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using FclEx.Json.Converters;
+﻿using FclEx.Json.Converters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 

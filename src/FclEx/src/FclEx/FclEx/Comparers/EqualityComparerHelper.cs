@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace FclEx.Comparers;
+﻿namespace FclEx.Comparers;
 
 public static class EqualityComparerHelper
 {

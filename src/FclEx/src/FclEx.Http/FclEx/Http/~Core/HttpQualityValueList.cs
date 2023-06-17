@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Diagnostics;
-using System.Linq;
 using FclEx.Comparers;
 
 namespace FclEx.Http;

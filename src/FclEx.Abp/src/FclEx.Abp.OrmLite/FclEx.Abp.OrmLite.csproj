@@ -1,8 +1,0 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\ref\ServiceStack.OrmLite.Custom\ServiceStack.OrmLite\ServiceStack.OrmLite.Custom.csproj" />
-    <ProjectReference Include="..\FclEx.Abp\FclEx.Abp.csproj" />
-  </ItemGroup>
-
-</Project>

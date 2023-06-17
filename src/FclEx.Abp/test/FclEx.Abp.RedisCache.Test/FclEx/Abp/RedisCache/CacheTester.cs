@@ -3,11 +3,11 @@
     public class CacheTester : IEquatable<CacheTester>
     {
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string? Name { get; set; }
         public int Age { get; set; }
         public int? CoinCount { get; set; }
 
-        public bool Equals(CacheTester other)
+        public bool Equals(CacheTester? other)
         {
             if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
@@ -17,7 +17,7 @@
                    && CoinCount == other.CoinCount;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;

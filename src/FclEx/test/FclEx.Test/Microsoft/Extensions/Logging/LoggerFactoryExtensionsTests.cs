@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using FclEx.Helpers;
 using FclEx;
 using FclEx.Extensions;
@@ -30,7 +29,7 @@ public class LoggerFactoryExtensionsTests
             invokeAttr: BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField,
             binder: null,
             target: fac,
-            args: null);
+            args: null)!;
 
         Assert.Equal(logLevel, options?.MinLevel);
     }

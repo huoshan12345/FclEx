@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace FclEx.TypeCasters;
+﻿namespace FclEx.TypeCasters;
 
 public abstract class AbstractTypeCaster<TCaster> : ITypeCaster
     where TCaster : AbstractTypeCaster<TCaster>, new()

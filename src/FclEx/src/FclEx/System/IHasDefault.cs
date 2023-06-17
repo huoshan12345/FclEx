@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace System;
+﻿namespace System;
 
 public interface IHasDefault<out TSelf> where TSelf : new()
 {

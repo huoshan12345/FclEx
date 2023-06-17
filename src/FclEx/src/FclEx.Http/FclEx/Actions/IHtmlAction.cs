@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using AngleSharp.Dom;
+﻿using AngleSharp.Dom;
 using FclEx;
 
 namespace FclEx.Actions;

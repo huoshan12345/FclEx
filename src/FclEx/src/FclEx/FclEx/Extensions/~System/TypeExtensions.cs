@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using FclEx.Helpers;
 
 namespace FclEx.Extensions;
@@ -147,5 +146,10 @@ public static partial class TypeExtensions
     public static PropertyInfo GetRequiredProperty(this Type type, string name)
     {
         return type.GetProperty(name, MemberBindingFlags) ?? throw new InvalidOperationException($"Cannot find property '{name}' in type '{type.FullName}'");
+    }
+    
+    public static MethodInfo GetRequiredMethod(this Type type, string name)
+    {
+        return type.GetMethod(name, MemberBindingFlags) ?? throw new InvalidOperationException($"Cannot find method '{name}' in type '{type.FullName}'");
     }
 }

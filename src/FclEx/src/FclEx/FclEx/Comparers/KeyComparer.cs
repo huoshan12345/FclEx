@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace FclEx.Comparers;
+﻿namespace FclEx.Comparers;
 
 internal class KeyComparer<T, TKey> : IComparer<T>
 {

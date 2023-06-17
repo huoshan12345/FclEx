@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 using FclEx.Extensions;
 
@@ -11,17 +10,17 @@ public class ExpressionReplacerTests
 {
     public class Person : IEquatable<Person>
     {
-        public string Name { get; set; } = nameof(Name);
+        public string? Name { get; set; } = nameof(Name);
         public int Age { get; set; }
 
-        public bool Equals(Person other)
+        public bool Equals(Person? other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return Name == other.Name && Age == other.Age;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;

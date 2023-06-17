@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Xunit.Sdk;
 
@@ -56,5 +56,12 @@ namespace Xunit
                     actual: $"{actual} difference {timeSpan} is larger than {precision}");
             }
         }
+
+        public static void NotEmpty([NotNull] string? value)
+        {
+            Assert.NotNull(value);
+            Assert.NotEmpty(value);
+        }
+
     }
 }

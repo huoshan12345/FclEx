@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace FclEx.Comparers;
+﻿namespace FclEx.Comparers;
 
 /// <summary>
 /// A generic object comparerer that would only use object's reference, 

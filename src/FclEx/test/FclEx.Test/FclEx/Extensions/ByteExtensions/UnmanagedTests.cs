@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace FclEx.Extensions.ByteExtensions;
 
 public class UnmanagedTests
 {
-    private static readonly MethodInfo _methodOfSingle = typeof(UnmanagedTests).GetMethod(
-        nameof(Single), BindingFlags.NonPublic | BindingFlags.Static);
-    private static readonly MethodInfo _methodOfArray = typeof(UnmanagedTests).GetMethod(
-        nameof(Array), BindingFlags.NonPublic | BindingFlags.Static);
+    private static readonly MethodInfo _methodOfSingle = typeof(UnmanagedTests).GetRequiredMethod(nameof(Single));
+    private static readonly MethodInfo _methodOfArray = typeof(UnmanagedTests).GetRequiredMethod(nameof(Array));
 
     public static int[] IntArr { get; } = Enumerable.Range(1, 10).ToArray();
 
@@ -70,7 +67,7 @@ public class UnmanagedTests
     [MemberData(nameof(ArrayCase))]
     public void ArrayTest(Array arr)
     {
-        _methodOfArray.MakeGenericMethod(arr.GetValue(0).GetType())
+        _methodOfArray.MakeGenericMethod(arr.GetValue(0)!.GetType())
             .Invoke(null, new object[] { arr });
     }
 }

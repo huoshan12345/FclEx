@@ -14,7 +14,7 @@ namespace FclEx.Abp.RedisCache
                 .Build();
         }
 
-        public AbpRedisUnreachableTests(ITestOutputHelper output, Action<AbpTestsOptions> action = null)
+        public AbpRedisUnreachableTests(ITestOutputHelper output, Action<AbpTestsOptions>? action = null)
             : base(output, action)
         {
         }

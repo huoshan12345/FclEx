@@ -20,7 +20,7 @@ namespace FclEx.Abp.RedisCache
             return GlobalConstants.Config;
         }
 
-        public AbpRedisTests(ITestOutputHelper output, Action<IServiceCollection> action = null)
+        public AbpRedisTests(ITestOutputHelper output, Action<IServiceCollection>? action = null)
             : base(output, action)
         {
             _abpRedisOptions = new Lazy<AbpRedisOptions>(() => ServiceProvider.GetOptions<AbpRedisOptions>(), true);

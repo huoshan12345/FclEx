@@ -1,7 +1,0 @@
-<Project>
-  <PropertyGroup>
-    <LangVersion>latest</LangVersion>
-    <TargetFramework>net6.0</TargetFramework>
-    <Authors>huoshan12345</Authors>
-  </PropertyGroup>
-</Project>

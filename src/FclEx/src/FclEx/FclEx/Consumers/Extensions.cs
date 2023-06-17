@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace FclEx.Consumers;
+﻿namespace FclEx.Consumers;
 
 public static class Extensions
 {

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Microsoft.Extensions.Logging;
+﻿namespace Microsoft.Extensions.Logging;
 
 public readonly record struct LoggerProperty(string Key, object? Value)
 {

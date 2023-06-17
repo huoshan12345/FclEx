@@ -59,7 +59,7 @@ public class PropertyTests
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 3).ToDictionary(m => m.ToString(), m => random.NextString(5));
         var res = await HttpReq.Form(UrlUtil.Combine(GlobalConstants.TestUrl, "/api/gzip"))
-            .AddData(expected)
+            .AddData(expected!)
             .ConnectTimeout(TimeSpan.FromSeconds(30))
             .GZip(setProp)
             .SendAsync()

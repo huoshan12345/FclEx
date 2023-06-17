@@ -25,8 +25,8 @@ public class ArrayExtensionsTests
     [Fact]
     public void Segments_Null_Test()
     {
-        int[] arr = null;
-        Assert.Throws<ArgumentNullException>(() => arr.Segments(4).ToList());
+        int[]? arr = null;
+        Assert.Throws<ArgumentNullException>(() => arr!.Segments(4).ToList());
     }
 
     [Fact]

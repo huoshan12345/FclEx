@@ -31,7 +31,7 @@ public partial class ExtensionsTests
 
         Assert.False(flag);
         Assert.False(successful);
-        Assert.Equal("error", ex.Message);
+        Assert.Equal("error", ex?.Message);
     }
 
 
@@ -54,7 +54,7 @@ public partial class ExtensionsTests
 
         Assert.False(flag);
         Assert.False(successful);
-        Assert.Equal("error", ex.Message);
+        Assert.Equal("error", ex?.Message);
     }
 
     [Fact]
@@ -71,7 +71,7 @@ public partial class ExtensionsTests
             .ExecuteAsync();
 
         Assert.False(successful);
-        Assert.Equal("error", ex.Message);
+        Assert.Equal("error", ex?.Message);
     }
 
     [Fact]
@@ -82,6 +82,6 @@ public partial class ExtensionsTests
             .ExecuteAsync();
 
         Assert.False(successful);
-        Assert.Equal("error1", ex.Message);
+        Assert.Equal("error1", ex?.Message);
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using FclEx;
-using FclEx.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
 

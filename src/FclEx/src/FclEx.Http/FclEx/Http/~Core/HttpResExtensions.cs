@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Net.Mime;
+﻿using System.Net.Mime;
 using MimeTypes.Core;
 using Newtonsoft.Json.Linq;
 

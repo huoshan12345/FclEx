@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace FclEx.Actions;
+﻿namespace FclEx.Actions;
 
 public readonly struct ErrorAction<T> : IAction<T>
 {

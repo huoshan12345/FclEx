@@ -15,7 +15,7 @@ public class IsPossibleJsonTests
     [Fact]
     public void Null_Test()
     {
-        Test((object)null);
+        Test((object?)null);
     }
 
     [Theory]

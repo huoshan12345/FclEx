@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Linq.Expressions;
 
 namespace FclEx.Extensions;
 
@@ -9,14 +8,14 @@ public class ExpressionExtensionsTests
     [Fact]
     public void Or_BothNull_Throw()
     {
-        Expression<Func<object, bool>> left = null;
+        Expression<Func<object, bool>>? left = null;
         Assert.Throws<ArgumentNullException>(() => left.Or(null));
     }
 
     [Fact]
     public void Or_LeftNull_ReturnRight()
     {
-        Expression<Func<object, bool>> left = null;
+        Expression<Func<object, bool>>? left = null;
         Expression<Func<object, bool>> right = m => true;
         var merge = left.Or(right);
         Assert.Same(right, merge);
@@ -26,7 +25,7 @@ public class ExpressionExtensionsTests
     public void Or_RightNull_ReturnLeft()
     {
         Expression<Func<object, bool>> left = m => true;
-        Expression<Func<object, bool>> right = null;
+        Expression<Func<object, bool>>? right = null;
         var merge = left.Or(right);
         Assert.Same(left, merge);
     }
@@ -46,14 +45,14 @@ public class ExpressionExtensionsTests
     [Fact]
     public void And_BothNull_Throw()
     {
-        Expression<Func<object, bool>> left = null;
+        Expression<Func<object, bool>>? left = null;
         Assert.Throws<ArgumentNullException>(() => left.And(null));
     }
 
     [Fact]
     public void And_LeftNull_ReturnRight()
     {
-        Expression<Func<object, bool>> left = null;
+        Expression<Func<object, bool>>? left = null;
         Expression<Func<object, bool>> right = m => true;
         var merge = left.And(right);
         Assert.Same(right, merge);
@@ -63,7 +62,7 @@ public class ExpressionExtensionsTests
     public void And_RightNull_ReturnLeft()
     {
         Expression<Func<object, bool>> left = m => true;
-        Expression<Func<object, bool>> right = null;
+        Expression<Func<object, bool>>? right = null;
         var merge = left.And(right);
         Assert.Same(left, merge);
     }

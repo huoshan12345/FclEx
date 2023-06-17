@@ -16,7 +16,7 @@ namespace LightInject
 
         public class ScopeObj
         {
-            public string Name { get; set; }
+            public string? Name { get; set; }
         }
 
         public class TransientObj

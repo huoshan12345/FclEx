@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-
-namespace FclEx.TypeCasters;
+﻿namespace FclEx.TypeCasters;
 
 public class EnumNullableTests : AbstractTests
 {
-    private static readonly MethodInfo _methodOfEnumToNullable = typeof(EnumNullableTests).GetMethod(
-        nameof(EnumToNullable), BindingFlags.NonPublic | BindingFlags.Static);
-    private static readonly MethodInfo _methodOfNullableToEnum = typeof(EnumNullableTests).GetMethod(
-        nameof(NullableToEnum), BindingFlags.NonPublic | BindingFlags.Static);
+    private static readonly MethodInfo _methodOfEnumToNullable = typeof(EnumNullableTests).GetRequiredMethod(nameof(EnumToNullable));
+    private static readonly MethodInfo _methodOfNullableToEnum = typeof(EnumNullableTests).GetRequiredMethod(nameof(NullableToEnum));
 
     private static void EnumToNullable<TEnum>(ITypeCaster caster)
         where TEnum : struct, Enum

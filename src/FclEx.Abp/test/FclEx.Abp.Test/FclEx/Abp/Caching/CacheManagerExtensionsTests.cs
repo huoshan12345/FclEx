@@ -7,7 +7,7 @@ namespace FclEx.Abp.Caching
 {
     public class CacheManagerExtensionsTests : AbpTests<AbpTestModule>
     {
-        public CacheManagerExtensionsTests(ITestOutputHelper output, Action<AbpTestsOptions> action = null)
+        public CacheManagerExtensionsTests(ITestOutputHelper output, Action<AbpTestsOptions>? action = null)
             : base(output, action)
         {
         }

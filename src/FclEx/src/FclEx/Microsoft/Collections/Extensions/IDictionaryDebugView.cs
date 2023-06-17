@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 // ReSharper disable InconsistentNaming
 
-using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace Microsoft.Collections.Extensions;

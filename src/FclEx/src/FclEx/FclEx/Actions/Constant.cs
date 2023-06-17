@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace FclEx.Actions;
+﻿namespace FclEx.Actions;
 
 public static class Constant
 {

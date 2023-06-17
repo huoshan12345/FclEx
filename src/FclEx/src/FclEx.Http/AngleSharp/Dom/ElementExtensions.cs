@@ -1,5 +1,4 @@
 ﻿using System.Collections.Specialized;
-using System.Linq;
 using AngleSharp.Html.Dom;
 using FclEx;
 using FclEx.Web;

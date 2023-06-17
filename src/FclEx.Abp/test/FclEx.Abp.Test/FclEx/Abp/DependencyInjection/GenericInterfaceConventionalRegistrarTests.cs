@@ -8,7 +8,7 @@ namespace FclEx.Abp.DependencyInjection;
 
 public class GenericInterfaceConventionalRegistrarTests : AbpTests<AbpTestModule>
 {
-    public GenericInterfaceConventionalRegistrarTests(ITestOutputHelper output, Action<AbpTestsOptions> action = null)
+    public GenericInterfaceConventionalRegistrarTests(ITestOutputHelper output, Action<AbpTestsOptions>? action = null)
         : base(output, action)
     {
     }

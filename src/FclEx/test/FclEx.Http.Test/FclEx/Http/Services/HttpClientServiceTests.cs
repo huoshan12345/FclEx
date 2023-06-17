@@ -18,7 +18,7 @@ public partial class HttpClientServiceTests
     public void Constructor_Test(string proxy)
     {
         var http = new HttpClientService(proxy: WebProxyHelper.Create(proxy));
-        Assert.Equal(WebProxyHelper.Create(proxy).CastTo<WebProxy>().Address, http.WebProxy.CastTo<WebProxy>().Address);
+        Assert.Equal(WebProxyHelper.Create(proxy).CastTo<WebProxy>().Address, http.WebProxy.CastTo<WebProxy>()!.Address);
     }
 
     [Fact]

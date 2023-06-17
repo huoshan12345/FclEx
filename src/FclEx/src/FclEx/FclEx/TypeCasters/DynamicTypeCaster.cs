@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace FclEx.TypeCasters;
+﻿namespace FclEx.TypeCasters;
 
 public class DynamicTypeCaster : AbstractTypeCaster<DynamicTypeCaster>
 {

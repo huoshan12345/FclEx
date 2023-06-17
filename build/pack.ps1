@@ -28,14 +28,6 @@ $projectNames = (
   "FclEx.Wmi",
   "FclEx.Serilog",
 
-  "ServiceStack.OrmLite.Custom",
-  "ServiceStack.OrmLite.MySql.Custom",
-  "ServiceStack.OrmLite.PostgreSQL.Custom",
-  "ServiceStack.OrmLite.Sqlite.Custom",
-  "ServiceStack.OrmLite.SqlServer.Custom",
-  "ServiceStack.OrmLite.Oracle.Custom",
-
-  "FclEx.Abp.OrmLite",
   "FclEx.Abp.RabbitMQ",
   "FclEx.Abp",
   "FclEx.Abp.RedisCache",

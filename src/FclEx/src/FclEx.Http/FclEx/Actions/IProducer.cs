@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace FclEx.Actions;
+﻿namespace FclEx.Actions;
 
 public interface IProducer<in TIn, TOut>
 {

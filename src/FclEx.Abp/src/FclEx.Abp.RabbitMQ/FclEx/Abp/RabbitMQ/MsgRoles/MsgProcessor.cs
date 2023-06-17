@@ -37,7 +37,7 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles
         {
             return Enumerable.Empty<LoggerProperty>();
         }
-        
+
         [MemberNotNull(nameof(Connection), nameof(Settings))]
         public virtual void Init(TSettings settings)
         {

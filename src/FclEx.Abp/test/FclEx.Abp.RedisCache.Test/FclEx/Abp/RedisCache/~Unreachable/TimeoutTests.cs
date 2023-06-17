@@ -12,12 +12,11 @@ namespace FclEx.Abp.RedisCache
 {
     public class TimeoutTests : AbpRedisUnreachableTests
     {
-        public static FieldInfo FieldOfRedisOptions { get; }
-            = typeof(DefaultCSRedisCachingProvider).GetField("_options", BindingFlags.NonPublic | BindingFlags.Instance);
+        public static FieldInfo FieldOfRedisOptions { get; } = typeof(DefaultCSRedisCachingProvider).GetRequiredField("_options");
 
         public static readonly Regex RegOfConTimeout = new(@"connectTimeout=(\d)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        public TimeoutTests(ITestOutputHelper output, Action<AbpTestsOptions> action = null)
+        public TimeoutTests(ITestOutputHelper output, Action<AbpTestsOptions>? action = null)
             : base(output, action)
         {
         }
@@ -30,7 +29,7 @@ namespace FclEx.Abp.RedisCache
             var provider = ServiceProvider.GetRequiredService<IEasyCachingProvider>();
             Assert.IsType<DefaultCSRedisCachingProvider>(provider);
             var csRedisProvider = (DefaultCSRedisCachingProvider)provider;
-            var actualOptions = (RedisOptions)FieldOfRedisOptions.GetValue(csRedisProvider);
+            var actualOptions = FieldOfRedisOptions.GetRequiredValue<RedisOptions>(csRedisProvider);
             Assert.Single(actualOptions!.DBConfig.ConnectionStrings);
             var str = actualOptions.DBConfig.ConnectionStrings.First();
 

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Reflection;
-using FclEx.Utils;
-using Xunit.Abstractions;
+﻿using Xunit.Abstractions;
 using Xunit.Sdk;
 
 namespace Microsoft.Extensions.Logging

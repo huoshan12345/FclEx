@@ -10,8 +10,8 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles.Testers
         protected override bool AutomaticRecoveryEnabled { get; } = false;
 
         public DiTestRouter(IAsyncMsgConverter<string, string> converter, 
-            IMemoryBytesSerializer serializer = null,
-            ILoggerFactory loggerFactory = null)
+            IMemoryBytesSerializer? serializer = null,
+            ILoggerFactory? loggerFactory = null)
             : base(converter, serializer, loggerFactory)
         {
         }

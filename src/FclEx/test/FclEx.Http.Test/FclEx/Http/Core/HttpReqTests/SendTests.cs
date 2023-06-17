@@ -29,7 +29,7 @@ public class SendTests
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 3).ToDictionary(m => m.ToString(), m => random.NextString(5));
         var res = await HttpReq.Form(UrlUtil.Combine(GlobalConstants.TestUrl, "/api/post"))
-            .AddData(expected)
+            .AddData(expected!)
             .ConnectTimeout(TimeSpan.FromSeconds(5))
             .SendAsync()
             .ThrowIfError()

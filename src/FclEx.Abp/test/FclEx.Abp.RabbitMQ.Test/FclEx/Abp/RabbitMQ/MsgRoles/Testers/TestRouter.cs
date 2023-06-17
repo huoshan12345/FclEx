@@ -22,7 +22,7 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles.Testers
 
         protected override void DisposeInternal()
         {
-            Channel.QueueDelete(Settings.Queue.Name);
+            Channel.QueueDelete(Settings!.Queue.Name);
             Channel.ExchangeDelete(Settings.Exchange.Name);
             Channel.ExchangeDelete(Settings.TargetExchange.Name);
             base.DisposeInternal();

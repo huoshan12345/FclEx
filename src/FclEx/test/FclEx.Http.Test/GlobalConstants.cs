@@ -15,5 +15,5 @@
     public static IReadOnlyList<SimpleCookie> SimpleCookies { get; }
         = File.ReadAllText(Path.Combine("TestData", "SimpleCookies.json"))
             .ToJToken()
-            .ToObject<List<SimpleCookie>>();
+            .ToObject<List<SimpleCookie>>()!;
 }

@@ -1,6 +1,4 @@
-﻿using Polly;
-
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 public static partial class HttpReqExtensions
 {

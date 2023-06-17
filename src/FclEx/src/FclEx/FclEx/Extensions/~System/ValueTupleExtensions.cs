@@ -1,5 +1,4 @@
 ﻿using System.Buffers;
-using System.Collections.Generic;
 
 namespace FclEx.Extensions;
 

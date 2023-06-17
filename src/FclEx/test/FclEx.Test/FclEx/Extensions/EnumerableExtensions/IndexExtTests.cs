@@ -51,7 +51,7 @@ public class IndexExtTests
     [Fact]
     public void WithIndex_NullEnumerable()
     {
-        IEnumerable<int> enumerable = null;
-        Assert.Throws<ArgumentNullException>(() => enumerable.IndexExt());
+        IEnumerable<int>? enumerable = null;
+        Assert.Throws<ArgumentNullException>(() => enumerable!.IndexExt());
     }
 }

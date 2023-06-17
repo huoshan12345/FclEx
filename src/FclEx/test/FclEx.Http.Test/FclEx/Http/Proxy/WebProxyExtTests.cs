@@ -14,7 +14,7 @@ public class WebProxyExtTests
         };
 
         var proxy = WebProxyHelper.Create(uriBuilder.Uri);
-        var auth = (NetworkCredential)proxy.Credentials;
+        var auth = proxy.Credentials.CastTo<NetworkCredential>()!;
         Assert.Equal(userName, auth.UserName);
         Assert.Equal(password, auth.Password);
     }

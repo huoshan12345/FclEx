@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using FclEx.Extensions;
 
 namespace FclEx.TypeCasters;
 
 public sealed class NumToObjTests : AbstractTests
 {
-    private static readonly MethodInfo _method = typeof(NumToObjTests).GetMethod(
-        nameof(NumToObj), BindingFlags.NonPublic | BindingFlags.Static);
+    private static readonly MethodInfo _method = typeof(NumToObjTests).GetRequiredMethod(nameof(NumToObj));
 
     private static void NumToObj<TNumeric>(ITypeCaster caster)
         where TNumeric : struct, IComparable<TNumeric>, IEquatable<TNumeric>

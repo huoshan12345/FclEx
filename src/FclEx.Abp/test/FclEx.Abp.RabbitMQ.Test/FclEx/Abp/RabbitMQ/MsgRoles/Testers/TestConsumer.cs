@@ -7,28 +7,28 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles.Testers
     {
         public override int MaxRetryTimes { get; }
         protected override bool AutomaticRecoveryEnabled { get; } = false;
-        protected readonly Func<int, TimeSpan> _delay;
+        protected readonly Func<int, TimeSpan>? _delay;
 
-        public TestConsumer(ConsumerSettings settings, ConsumeHandler handler, int maxRetryTimes = 3, Func<int, TimeSpan> delay = null) : base(handler)
+        public TestConsumer(ConsumerSettings settings, ConsumeHandler handler, int maxRetryTimes = 3, Func<int, TimeSpan>? delay = null) : base(handler)
         {
             _delay = delay;
             MaxRetryTimes = maxRetryTimes;
             Init(settings);
         }
 
-        public TestConsumer(ConsumerSettings settings, Func<T, OperateResult> action, int maxRetryTimes = 3, Func<int, TimeSpan> delay = null)
+        public TestConsumer(ConsumerSettings settings, Func<T, OperateResult> action, int maxRetryTimes = 3, Func<int, TimeSpan>? delay = null)
             : this(settings, (_, m) => Operate.Execute(() => action(m)), maxRetryTimes, delay)
         {
         }
 
-        public TestConsumer(ConsumerSettings settings, Action<T> action, int maxRetryTimes = 3, Func<int, TimeSpan> delay = null)
+        public TestConsumer(ConsumerSettings settings, Action<T> action, int maxRetryTimes = 3, Func<int, TimeSpan>? delay = null)
             : this(settings, m => Operate.Execute(() => action(m)), maxRetryTimes, delay)
         {
         }
 
         protected override void DisposeInternal()
         {
-            Channel.QueueDelete(Settings.Queue.Name);
+            Channel.QueueDelete(Settings!.Queue.Name);
             Channel.ExchangeDelete(Settings.Exchange.Name);
             base.DisposeInternal();
         }

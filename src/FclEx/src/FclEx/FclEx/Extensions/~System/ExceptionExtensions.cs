@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Runtime.ExceptionServices;
+﻿using System.Runtime.ExceptionServices;
 using MoreLinq;
 
 namespace FclEx.Extensions;
@@ -11,16 +10,20 @@ public static class ExceptionExtensions
 
     public static Exception GetInnermost(this Exception ex)
     {
-        var p = ex;
-        while (p.InnerException != null)
-        {
-            p = p.InnerException;
-        }
-
-        return p;
+        return ex.EnumerateInner().Last();
     }
 
-    public static void HandleAll(this Exception? ex, Action<Exception>? action)
+    public static IEnumerable<Exception> EnumerateInner(this Exception ex)
+    {
+        var p = ex;
+        while (p != null)
+        {
+            yield return p;
+            p = p.InnerException;
+        }
+    }
+
+    public static void ForEach(this Exception? ex, Action<Exception>? action)
     {
         if (ex is null || action is null)
             return;

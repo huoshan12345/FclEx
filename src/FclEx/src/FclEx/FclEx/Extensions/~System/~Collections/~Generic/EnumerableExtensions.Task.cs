@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using FclEx.Helpers;
+﻿using FclEx.Helpers;
 using MoreLinq;
 
 namespace FclEx.Extensions;

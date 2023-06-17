@@ -18,7 +18,7 @@ namespace FclEx.Sinks
             _output = output;
         }
 
-        [DebugOnlyFact]
+        [LocalOnlyFact]
         public void Tcp_Test()
         {
             Log.Logger = new LoggerConfiguration()

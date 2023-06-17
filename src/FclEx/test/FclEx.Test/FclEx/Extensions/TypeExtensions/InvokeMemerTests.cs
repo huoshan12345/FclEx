@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,15 +10,15 @@ public class InvokeMemerTests
 {
     public abstract class Tester<T>
     {
-        public T Property { get; set; }
-        protected T PropertyProtected { get; set; }
-        public static T PropertyStatic { get; set; }
-        protected static T PropertyProtectedStatic { get; set; }
+        public T? Property { get; set; }
+        protected T? PropertyProtected { get; set; }
+        public static T? PropertyStatic { get; set; }
+        protected static T? PropertyProtectedStatic { get; set; }
 
-        public T Field;
-        protected T FieldProtected;
-        public static T FieldStatic;
-        protected static T FieldProtectedStatic;
+        public T? Field;
+        protected T? FieldProtected;
+        public static T? FieldStatic;
+        protected static T? FieldProtectedStatic;
 
         public void SetValues()
         {

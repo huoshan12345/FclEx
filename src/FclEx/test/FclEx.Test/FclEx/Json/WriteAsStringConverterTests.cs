@@ -14,13 +14,13 @@ public class WriteAsStringConverterTests
         [JsonConverter(typeof(WriteAsStringConverter))]
         public int MatchId { get; set; }
         [JsonConverter(typeof(WriteAsStringConverter))]
-        public GradeItem[] Grades { get; set; }
+        public GradeItem[]? Grades { get; set; }
     }
 
     private class GradeItem
     {
-        public string Grade { get; set; }
-        public string LessonId { get; set; }
+        public string? Grade { get; set; }
+        public string? LessonId { get; set; }
     }
 
     [Fact]
@@ -53,8 +53,8 @@ public class WriteAsStringConverterTests
         Assert.NotNull(tokenUnwrapped);
         Assert.Equal(JTokenType.Array, tokenUnwrapped.Type);
 
-        var grades = tokenUnwrapped.ToObject<GradeItem[]>();
+        var grades = tokenUnwrapped.ToObject<GradeItem[]>()!;
 
-        Assert.Equal(obj.Grades, grades, EqualityComparerHelper<GradeItem>.Create(m => (m.LessonId, m.Grade)));
+        Assert.Equal(obj.Grades, grades, EqualityComparerHelper<GradeItem>.Create(m => (m?.LessonId, m?.Grade)));
     }
 }

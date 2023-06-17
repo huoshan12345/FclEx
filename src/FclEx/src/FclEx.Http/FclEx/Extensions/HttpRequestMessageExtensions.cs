@@ -1,6 +1,4 @@
-﻿using System.Net.Http;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static class HttpRequestMessageExtensions
 {

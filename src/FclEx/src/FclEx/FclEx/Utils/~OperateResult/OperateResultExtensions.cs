@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using static FclEx.Utils.Operate;
+﻿using static FclEx.Utils.Operate;
 
 namespace FclEx.Utils;
 

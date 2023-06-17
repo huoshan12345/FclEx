@@ -15,9 +15,9 @@ namespace Microsoft.Extensions.Logging
 
             Assert.True(NullLogger<int>.Instance.IsNullOrNullLogger());
 
-            Assert.True(((ILogger)null).IsNullOrNullLogger());
+            Assert.True(((ILogger?)null).IsNullOrNullLogger());
 
-            Assert.True(((ILogger<int>)null).IsNullOrNullLogger());
+            Assert.True(((ILogger<int>?)null).IsNullOrNullLogger());
 
             var fac = new ServiceCollection()
                 .AddLogging()

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
@@ -16,7 +15,7 @@ partial class StringExtensions
     public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? str) => string.IsNullOrWhiteSpace(str);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string JoinWith(this IEnumerable<string> strs, string separator = "") => string.Join(separator, strs);
+    public static string JoinWith(this IEnumerable<string?> strs, string separator = "") => string.Join(separator, strs);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Contains(this string source, string toCheck, StringComparison comp)

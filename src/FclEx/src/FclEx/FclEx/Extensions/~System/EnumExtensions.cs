@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using FclEx.Attributes;
+﻿using FclEx.Attributes;
 using FclEx.Helpers;
 
 namespace FclEx.Extensions;

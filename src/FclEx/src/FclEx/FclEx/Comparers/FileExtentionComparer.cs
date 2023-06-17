@@ -1,7 +1,5 @@
 ﻿#nullable enable
 
-using System.Collections.Generic;
-
 namespace FclEx.Comparers;
 
 public class FileExtentionComparer : IEqualityComparer<string>

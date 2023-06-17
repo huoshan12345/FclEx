@@ -13,8 +13,8 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles.Testers
 
         protected override void DisposeInternal()
         {
-            using var channel = Connection.CreateChannel();
-            channel.Model.ExchangeDelete(Settings.Exchange.Name);
+            using var channel = Connection!.CreateChannel();
+            channel.Model.ExchangeDelete(Settings!.Exchange.Name);
             base.DisposeInternal();
         }
     }

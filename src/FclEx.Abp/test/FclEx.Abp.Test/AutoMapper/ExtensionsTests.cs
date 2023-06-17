@@ -7,15 +7,15 @@ namespace AutoMapper
         public class A
         {
             public int Id { get; set; }
-            public string Name { get; set; }
-            public string Tags { get; set; }
+            public string? Name { get; set; }
+            public string? Tags { get; set; }
         }
 
         public class B
         {
             public int Id { get; set; }
-            public string Name { get; set; }
-            public string[] Tags { get; set; }
+            public string? Name { get; set; }
+            public string?[]? Tags { get; set; }
         }
 
         [Fact]
@@ -32,6 +32,7 @@ namespace AutoMapper
             var b = mapper.Map<B>(a);
             Assert.Equal(a.Id, b.Id);
             Assert.Equal(a.Name, b.Name);
+            Assert.NotNull(b.Tags);
             Assert.Equal(a.Tags, b.Tags.JoinWith(","));
         }
 
@@ -49,6 +50,7 @@ namespace AutoMapper
             var b = mapper.Map<B>(a);
             Assert.Equal(a.Id, b.Id);
             Assert.Equal(a.Name, b.Name);
+            Assert.NotNull(b.Tags);
             Assert.Empty(b.Tags);
         }
 

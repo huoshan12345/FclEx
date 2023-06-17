@@ -11,8 +11,8 @@ namespace AutoMapper;
 public static class Extensions
 {
     public static IMappingExpression<TSource, TDestination> MapArrayToStr<TSource, TDestination>(
-        this IMappingExpression<TSource, TDestination> map, Func<TSource, IEnumerable<string>> sourceMember,
-        Expression<Func<TDestination, string>> destinationMember, string separator = "|")
+        this IMappingExpression<TSource, TDestination> map, Func<TSource, IEnumerable<string?>?> sourceMember,
+        Expression<Func<TDestination, string?>> destinationMember, string separator = "|")
     {
         Check.NotNull(map);
         Check.NotNull(destinationMember);
@@ -22,8 +22,8 @@ public static class Extensions
     }
 
     public static IMappingExpression<TSource, TDestination> MapStrToArray<TSource, TDestination>(
-        this IMappingExpression<TSource, TDestination> map, Func<TSource, string> sourceMember,
-        Expression<Func<TDestination, IEnumerable<string>>> destinationMember, string separator = "|")
+        this IMappingExpression<TSource, TDestination> map, Func<TSource, string?> sourceMember,
+        Expression<Func<TDestination, IEnumerable<string?>?>> destinationMember, string separator = "|")
     {
         Check.NotNull(map);
         Check.NotNull(destinationMember);

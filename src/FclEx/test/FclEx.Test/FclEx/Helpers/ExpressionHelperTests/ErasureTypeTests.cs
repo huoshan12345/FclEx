@@ -1,8 +1,4 @@
-﻿using System;
-using System.Linq.Expressions;
-using FclEx.Testers;
-
-namespace FclEx.Helpers;
+﻿namespace FclEx.Helpers.ExpressionHelperTests;
 
 public class ErasureTypeTests
 {
@@ -21,7 +17,7 @@ public class ErasureTypeTests
     public void ErasureType_String_Test()
     {
         var obj = new Person() { Name = nameof(ErasureType_String_Test) };
-        Expression<Func<Person, string>> exp = m => m.Name;
+        Expression<Func<Person, string?>> exp = m => m.Name;
         var unTypedExp = ExpressionHelper.ErasureType(exp);
         var actual = unTypedExp.Compile()(obj);
         Assert.IsType<string>(actual);
@@ -33,7 +29,7 @@ public class ErasureTypeTests
     {
         var o = new object();
         var obj = new Person() { Obj = o };
-        Expression<Func<Person, object>> exp = m => m.Obj;
+        Expression<Func<Person, object?>> exp = m => m.Obj;
         var unTypedExp = ExpressionHelper.ErasureType(exp);
         var actual = unTypedExp.Compile()(obj);
         Assert.IsType<object>(actual);
@@ -46,7 +42,7 @@ public class ErasureTypeTests
     {
         object o = 10;
         var obj = new Person() { Obj = o };
-        Expression<Func<Person, object>> exp = m => m.Obj;
+        Expression<Func<Person, object?>> exp = m => m.Obj;
         var unTypedExp = ExpressionHelper.ErasureType(exp);
         var actual = unTypedExp.Compile()(obj);
         Assert.IsType<int>(actual);

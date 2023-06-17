@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Reflection;
 using FclEx.Extensions;
 using FclEx.Json.Converters;
 using Newtonsoft.Json;
@@ -24,8 +23,7 @@ public class KeyValuePairConverterTests
     }
 
 
-    private static readonly MethodInfo _method = typeof(KeyValuePairConverterTests).GetMethod(
-        nameof(ReadTestGeneric), BindingFlags.NonPublic | BindingFlags.Static);
+    private static readonly MethodInfo _method = typeof(KeyValuePairConverterTests).GetRequiredMethod(nameof(ReadTestGeneric));
 
     private static readonly Type _kvRawType = typeof(KeyValuePair<,>);
 
@@ -66,9 +64,10 @@ public class KeyValuePairConverterTests
 
     private static void ReadTestGeneric<T, TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> raw)
         where T : IEnumerable<KeyValuePair<TKey, TValue>>
+        where TKey : notnull
     {
         var json = raw.ToJson();
-        var pairs = JsonConvert.DeserializeObject<T>(json, new KeyValuePairsConverter());
+        var pairs = JsonConvert.DeserializeObject<T>(json, new KeyValuePairsConverter())!;
 
         var dic = raw.ToDictionary(m => m.Key, m => m.Value);
 
