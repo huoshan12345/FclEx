@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using FclEx.Abp.OrmLite;
+using FclEx.Dapper;
 using Npgsql;
 using ServiceStack.OrmLite;
 using ServiceStack.OrmLite.PostgreSQL;
@@ -51,6 +52,14 @@ public class EntityInsertBenchmark
     {
         using var con = await ConnectionFactory.OpenAsync();
         var count = await con.InsertBulkAsync(Entities);
+        Check.EqualTo(count, Entities.Length);
+    }
+
+    [Benchmark]
+    public async Task Dapper_Insert()
+    {
+        await using var con = new NpgsqlConnection(GlobalDbContext.LocalPostgresqlConnectionString);
+        var count = await con.BulkInsertAsync(Entities);
         Check.EqualTo(count, Entities.Length);
     }
 }

@@ -7,7 +7,7 @@ public class GlobalFixture : IAsyncLifetime
     public static readonly string[] Schemas = { "schema_test_1", "schema_test_2" };
 
     public static readonly DatabaseType[] DatabaseTypes = LocalTestHelper.IsGithubAction
-        ? new[] { DatabaseType.Npgsql }
+        ? new[] { DatabaseType.Npgsql, DatabaseType.Sqlite }
         : Enum.GetValues<DatabaseType>();
 
     // InitializeAsync is called immediately after the class has been created, before it is used.

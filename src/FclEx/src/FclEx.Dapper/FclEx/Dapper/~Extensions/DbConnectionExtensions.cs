@@ -259,9 +259,9 @@ public static partial class DbConnectionExtensions
         var def = GetEntityDefinition(type);
         var keys = def.Keys;
         if (keys.Count > 1)
-            throw new DataException($"Only supports an entity with a single [SeismicKey] property. [Key] Count: {keys.Count}");
+            throw new DataException($"Only supports an entity with a single [Key] property. [Key] Count: {keys.Count}");
         if (keys.Count == 0)
-            throw new DataException("Only supports an entity with a [SeismicKey] property");
+            throw new DataException("Only supports an entity with a [Key] property");
         return keys[0];
     }
 

@@ -50,10 +50,17 @@ public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixtur
             Name = Guid.NewGuid().ToString(),
         };
         await db.Database.GetDbConnection().InsertAsync(entity, schema, includeAutoKey: true);
-        var e = await db.EntityWithAutoKeys.Where(m => m.Name == entity.Name).FirstOrDefaultAsync();
+
+        var e = await db.EntityWithAutoKeys
+            .AsNoTracking()
+            .Where(m => m.Id == entity.Id)
+            .FirstOrDefaultAsync();
+
         Assert.NotNull(e);
         Assert.Equal(entity.Value, e.Value);
         Assert.Equal(entity.Id, e.Id);
+
+        await db.EntityWithAutoKeys.Where(m => m.Id == entity.Id).ExecuteDeleteAsync();
     }
 
     [Theory]
@@ -136,6 +143,9 @@ public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixtur
             Assert.Equal(e.Value, entity.Value);
             Assert.Equal(e.Id, entity.Id);
         }
+
+        var ids = entities.Select(m => m.Id).ToArray();
+        await db.EntityWithAutoKeys.Where(m => ids.Contains(m.Id)).ExecuteDeleteAsync();
     }
 
     [Theory]
@@ -165,7 +175,7 @@ public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixtur
 
         var con = db.Database.GetDbConnection();
         var ex = await Assert.ThrowsAsync<DataException>(() => con.GetAsync<EntityWithoutKey>(schema, "test"));
-        Assert.Contains("Only supports an entity with a [SeismicKey] property", ex.Message);
+        Assert.Contains("Only supports an entity with a [Key] property", ex.Message);
     }
 
     [Theory]
@@ -199,7 +209,7 @@ public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixtur
 
         var con = db.Database.GetDbConnection();
         var ex = await Assert.ThrowsAsync<DataException>(() => con.DeleteAsync<EntityWithoutKey>(schema, "test"));
-        Assert.Contains("Only supports an entity with a [SeismicKey] property", ex.Message);
+        Assert.Contains("Only supports an entity with a [Key] property", ex.Message);
     }
 
     [Theory]

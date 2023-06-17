@@ -15,4 +15,8 @@
     <PackageReference Include="FclEx.Abp.OrmLite" Version="5.3.7" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\FclEx\src\FclEx.Dapper\FclEx.Dapper.csproj" />
+  </ItemGroup>
+
 </Project>
