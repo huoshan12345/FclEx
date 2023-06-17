@@ -1,9 +1,8 @@
-﻿namespace FclEx.Serilog.Sinks.Logstash.Inputs
+﻿namespace FclEx.Serilog.Sinks.Logstash.Inputs;
+
+public enum LogstashInputType
 {
-    public enum LogstashInputType
-    {
-        Udp,
-        Http,
-        Tcp
-    }
+    Udp,
+    Http,
+    Tcp
 }

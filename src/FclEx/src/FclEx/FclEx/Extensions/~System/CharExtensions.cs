@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static class CharExtensions
 {

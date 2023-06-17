@@ -1,4 +1,5 @@
 ﻿using System.Net.Mime;
+using System.Text.RegularExpressions;
 using MimeTypes.Core;
 using Newtonsoft.Json.Linq;
 
@@ -56,6 +57,8 @@ public static class HttpResExtensions
         return token.ToObject<T>()!;
     }
 
+
+    private static readonly Regex _regexOfNonWord = new(@"\W", RegexOptions.Compiled);
     public static HttpFileDownloadInfo GetDownloadInfo(this HttpRes res)
     {
         var realUrl = res.RedirectUris.Last();
@@ -64,7 +67,7 @@ public static class HttpResExtensions
         var fileName = fileNameWithExt.TrimEnd(ext);
         if (fileName.IsNullOrEmpty())
         {
-            fileName = (realUrl.Host + realUrl.LocalPath).RegexReplace(@"\W", "_").TrimEnd("_");
+            fileName = (realUrl.Host + realUrl.LocalPath).Replace(_regexOfNonWord, "_").TrimEnd("_");
         }
 
         var mimeType = res.Headers.GetFirstOr(HttpKnownHeaderNames.ContentType) ?? "";

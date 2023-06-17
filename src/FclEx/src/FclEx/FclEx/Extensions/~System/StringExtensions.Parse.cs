@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 partial class StringExtensions
 {
@@ -15,14 +13,12 @@ partial class StringExtensions
         return bool.TryParse(str, out var r) ? r : defaultValue;
     }
 
-    public static double ToDouble(this string? str, double defaultValue = default,
-        NumberStyles style = NumberStyles.Float | NumberStyles.AllowThousands, IFormatProvider? provider = null)
+    public static double ToDouble(this string? str, double defaultValue = default, NumberStyles style = NumberStyles.Float | NumberStyles.AllowThousands, IFormatProvider? provider = null)
     {
         return double.TryParse(str, style, provider, out var r) ? r : defaultValue;
     }
 
-    public static DateTime ToDateTime(this string? str, DateTime defaultValue = default,
-        IFormatProvider? provider = null, DateTimeStyles styles = DateTimeStyles.None)
+    public static DateTime ToDateTime(this string? str, DateTime defaultValue = default, IFormatProvider? provider = null, DateTimeStyles styles = DateTimeStyles.None)
     {
         return DateTime.TryParse(str, provider, styles, out var r) ? r : defaultValue;
     }

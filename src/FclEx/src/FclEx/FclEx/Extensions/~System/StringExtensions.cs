@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 using static System.Environment;
@@ -18,39 +17,7 @@ partial class StringExtensions
     public static string JoinWith(this IEnumerable<string?> strs, string separator = "") => string.Join(separator, strs);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Contains(this string source, string toCheck, StringComparison comp)
-    {
-        return source.IndexOf(toCheck, comp) >= 0;
-    }
-
-    /// <summary>Returns a value indicating whether a specified string occurs within this string, using the specified comparison rules.</summary>
-    /// <param name="source"></param>
-    /// <param name="value">The string to seek.</param>
-    /// <param name="compareOptions"></param>
-    /// <param name="compareInfo"></param>
-    public static bool Contains(this string source, string value, CompareOptions compareOptions, CompareInfo? compareInfo = null)
-    {
-        compareInfo ??= CultureInfo.InvariantCulture.CompareInfo;
-        return compareInfo.IndexOf(source, value, compareOptions) >= 0;
-    }
-
-    public static bool ContainsAny(this string src, IEnumerable<string> items, StringComparison comp = StringComparison.Ordinal)
-        => items.Any(m => src.Contains(m, comp));
-
-    public static bool ContainsAll(this string src, IEnumerable<string> items, StringComparison comp = StringComparison.Ordinal)
-        => items.Any(m => src.Contains(m, comp));
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string Format(this string str, params object[] args) => string.Format(str, args);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string Fmt(this string str, params object[] args) => string.Format(str, args);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string Fmt(this string str, object arg0) => string.Format(str, arg0);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string Fmt(this string str, object arg0, object arg1) => string.Format(str, arg0, arg1);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsValid([NotNullWhen(true)] this string? x) => !x.IsNullOrEmpty();
@@ -139,39 +106,7 @@ partial class StringExtensions
         return (str[..index], str[(index + separator.Length)..]);
     }
 
-    public static string Sub(this string str, char[] separators, Func<string[], string> selector)
-    {
-        if (str == null)
-            throw new ArgumentNullException(nameof(str));
-
-        if (separators.IsNullOrEmpty())
-            return str;
-
-        var subs = str.Split(separators, StringSplitOptions.RemoveEmptyEntries);
-        return selector(subs);
-    }
-
-    public static string FirstSub(this string str, char[] separators)
-    {
-        return str.Sub(separators, arr => arr.First());
-    }
-
-    public static string LastSub(this string str, char[] separators)
-    {
-        return str.Sub(separators, arr => arr.Last());
-    }
-
-    public static string RegexReplace(this string str, string rex, string replacement)
-        => Regex.Replace(str, rex, replacement);
-
-    public static string EnsureEndWithNewLine(this string str)
-    {
-        return str.EndsWith(NewLine)
-            ? str
-            : str + NewLine;
-    }
-
-    public static byte[] ToBytesFromHex(this string hex)
+    public static byte[] HexToBytes(this string hex)
     {
         if (hex == null) throw new ArgumentNullException(nameof(hex));
         if (hex.Length == 0) return Array.Empty<byte>();
@@ -198,9 +133,7 @@ partial class StringExtensions
         }
     }
 
-    public static byte[] ToBytesFromBase64(this string base64String) => Convert.FromBase64String(base64String);
-
-    public static Uri ToUri(this string str, UriKind uriKind = UriKind.Absolute) => new(str, uriKind);
+    public static byte[] Base64ToBytes(this string base64String) => Convert.FromBase64String(base64String);
 
     public static string IfEmpty(this string? str, string defaultValue)
     {
@@ -217,13 +150,8 @@ partial class StringExtensions
             : str!.Split(NewLineChars, options);
     }
 
-    public static bool EndsWithAny(this string str, IEnumerable<string> patterns, StringComparison comparison = StringComparison.Ordinal)
+    public static string Replace(this string str, Regex regex, string replacement)
     {
-        return patterns.Any(m => str.EndsWith(m, comparison));
-    }
-
-    public static bool ContainsAny(this string src, IEnumerable<string> items, CompareOptions comp = CompareOptions.Ordinal)
-    {
-        return items.Any(m => src.Contains(m, comp));
+        return regex.Replace(str, replacement);
     }
 }

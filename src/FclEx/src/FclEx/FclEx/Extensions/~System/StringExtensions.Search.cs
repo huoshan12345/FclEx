@@ -1,0 +1,33 @@
+﻿namespace FclEx.Extensions;
+
+static partial class StringExtensions
+{
+    /// <summary>Returns a value indicating whether a specified string occurs within this string, using the specified comparison rules.</summary>
+    /// <param name="source"></param>
+    /// <param name="value">The string to seek.</param>
+    /// <param name="compareOptions"></param>
+    /// <param name="compareInfo"></param>
+    public static bool Contains(this string source, string value, CompareOptions compareOptions, CompareInfo? compareInfo = null)
+    {
+        compareInfo ??= CultureInfo.InvariantCulture.CompareInfo;
+        return compareInfo.IndexOf(source, value, compareOptions) >= 0;
+    }
+
+    public static bool ContainsAny(this string source, IEnumerable<string> values, StringComparison comparison = StringComparison.Ordinal)
+        => values.Any(m => source.Contains(m, comparison));
+
+    public static bool ContainsAny(this string source, IEnumerable<string> values, CompareOptions options)
+        => values.Any(m => source.Contains(m, options));
+
+    public static bool ContainsAll(this string source, IEnumerable<string> values, StringComparison comparison = StringComparison.Ordinal)
+        => values.All(m => source.Contains(m, comparison));
+
+    public static bool ContainsAll(this string source, IEnumerable<string> values, CompareOptions options)
+        => values.All(m => source.Contains(m, options));
+
+    public static bool StartsWithAny(this string source, IEnumerable<string> values, StringComparison comparison = StringComparison.Ordinal)
+        => values.Any(m => source.StartsWith(m, comparison));
+
+    public static bool EndsWithAny(this string source, IEnumerable<string> values, StringComparison comparison = StringComparison.Ordinal)
+        => values.Any(m => source.EndsWith(m, comparison));
+}
