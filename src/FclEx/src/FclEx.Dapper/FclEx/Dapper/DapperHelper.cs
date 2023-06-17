@@ -75,6 +75,7 @@ public static class DapperHelper
 
         _isDapperInitialized = true;
 
+        SqlMapper.AddTypeHandler(new GuidTypeHandler());
         //SqlMapper.AddTypeHandler(new DateTimeHandler());
 
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies().Where(p => !p.IsDynamic))

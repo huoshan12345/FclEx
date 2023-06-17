@@ -16,7 +16,7 @@ public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixtur
         select new object[] { x, y, z };
 
     public static readonly IEnumerable<object[]> SchemaCases = Schemas.Select(m => new object[] { m });
-    
+
 
     [Theory]
     [MemberData(nameof(AdapterTestCases))]
@@ -41,10 +41,11 @@ public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixtur
     public async Task InsertAsync_EntityWithAutoKey_IncludeAutoKey_Test(DatabaseType databaseType, string schema)
     {
         await using var db = GlobalDbContext.Create(databaseType, schema);
+        var maxId = await db.EntityWithAutoKeys.MaxAsync(m => (int?)m.Id);
 
         var entity = new EntityWithAutoKey
         {
-            Id = 50,
+            Id = maxId.Get(1) + 50,
             Value = 100,
             Name = Guid.NewGuid().ToString(),
         };
@@ -117,9 +118,11 @@ public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixtur
     {
         await using var db = GlobalDbContext.Create(databaseType, schema);
 
+        var maxId = await db.EntityWithAutoKeys.MaxAsync(m => (int?)m.Id);
+
         var entities = Enumerable.Range(1, count).Select(m => new EntityWithAutoKey
         {
-            Id = m + 100,
+            Id = maxId.Get(1) + m,
             Value = m,
             Name = Guid.NewGuid().ToString(),
         }).ToArray();
