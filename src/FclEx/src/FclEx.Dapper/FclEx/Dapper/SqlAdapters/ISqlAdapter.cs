@@ -7,5 +7,5 @@ public interface ISqlAdapter
     string GetQuotedTableName(string name);
     string GetQuotedColumnName(string name);
     DbParameter CreateParameter(string name, object? value, string? type = null);
-    Task<IAsyncDisposable> EnableIdentityInsertAsync<T>(string? schema, IDbCommand cmd);
+    ValueTask<IAsyncDisposable> EnableIdentityInsertAsync<T>(string? schema, IDbCommand cmd);
 }

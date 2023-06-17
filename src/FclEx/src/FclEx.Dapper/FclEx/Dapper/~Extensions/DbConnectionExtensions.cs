@@ -5,10 +5,12 @@
 
 namespace FclEx.Dapper;
 
-internal readonly record struct SqlInfo(string Sql, IReadOnlyList<DbParameter> Paras);
+internal readonly record struct SqlInfo(string Sql, IReadOnlyList<DbParameter> Params);
 internal readonly record struct EntitySqlKey(ISqlAdapter SqlAdapter, string? Schema, Type EntityType);
 internal readonly record struct InsertColumnsKey(ISqlAdapter SqlAdapter, string? Schema, Type EntityType, bool IncludeAutoKey);
 internal readonly record struct InsertValuesKey(Type EntityType, int Count, bool IncludeAutoKey);
+
+public readonly record struct CommandInfo(int? TimeoutSeconds = null, DbTransaction? Transaction = null, ISqlAdapter? SqlAdapter = null);
 
 public static partial class DbConnectionExtensions
 {
@@ -24,18 +26,18 @@ public static partial class DbConnectionExtensions
     /// Returns identity only if entity has an auto-increment key and includeAutoKey is <see langword="false"/>, otherwise returns <see langword="null"/>.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <param name="connection"></param>
+    /// <param name="con"></param>
     /// <param name="schema"></param>
     /// <param name="entity"></param>
     /// <param name="returnId"></param>
     /// <param name="includeAutoKey"></param>
-    /// <param name="commandTimeout"></param>
-    /// <param name="sqlAdapter"></param>
+    /// <param name="commandInfo"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentException"></exception>
-    public static async Task<dynamic?> InsertAsync<T>(this IDbConnection connection, T entity, string? schema = null, bool returnId = true, bool includeAutoKey = false, int? commandTimeout = null, ISqlAdapter? sqlAdapter = null) where T : class
+    public static async Task<dynamic?> InsertAsync<T>(this DbConnection con, T entity, string? schema = null, bool returnId = true, bool includeAutoKey = false, CommandInfo commandInfo = default)
+        where T : class
     {
-        var value = await connection.ExecuteAsync(commandTimeout, sqlAdapter, m => GetInsertSql(m, schema, entity, returnId, includeAutoKey), async (a, m) =>
+        var value = await con.ExecuteAsync(commandInfo, m => GetInsertSql(m, schema, entity, returnId, includeAutoKey), async (a, m) =>
         {
             if (includeAutoKey && EntityDefinition<T>.Definition.HasAutoKey())
             {
@@ -55,20 +57,20 @@ public static partial class DbConnectionExtensions
     /// Inserts entities into table asynchronously and returns affected rows.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <param name="connection"></param>
+    /// <param name="con"></param>
     /// <param name="schema"></param>
     /// <param name="entities"></param>
     /// <param name="includeAutoKey"></param>
-    /// <param name="commandTimeout"></param>
-    /// <param name="sqlAdapter"></param>
+    /// <param name="commandInfo"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentException"></exception>
-    public static Task<int> BulkInsertAsync<T>(this IDbConnection connection, IReadOnlyCollection<T> entities, string? schema = null, bool includeAutoKey = false, int? commandTimeout = null, ISqlAdapter? sqlAdapter = null) where T : class
+    public static Task<int> BulkInsertAsync<T>(this DbConnection con, IReadOnlyCollection<T> entities, string? schema = null, bool includeAutoKey = false, CommandInfo commandInfo = default)
+        where T : class
     {
         if (entities.IsNullOrEmpty())
             return Task.FromResult(0);
 
-        return connection.ExecuteAsync(commandTimeout, sqlAdapter, m => GetBulkInsertSql(m, schema, entities, includeAutoKey), async (a, m) =>
+        return con.ExecuteAsync(commandInfo, m => GetBulkInsertSql(m, schema, entities, includeAutoKey), async (a, m) =>
         {
             if (includeAutoKey && EntityDefinition<T>.Definition.HasAutoKey())
             {
@@ -203,20 +205,16 @@ public static partial class DbConnectionExtensions
     /// <param name="connection"></param>
     /// <param name="schema"></param>
     /// <param name="id"></param>
-    /// <param name="commandTimeout"></param>
-    /// <param name="sqlAdapter"></param>
+    /// <param name="commandInfo"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentException"></exception>
-    public static Task<T> GetAsync<T>(this IDbConnection connection, dynamic id, string? schema = null, int? commandTimeout = null, ISqlAdapter? sqlAdapter = null)
+    public static Task<T?> GetAsync<T>(this DbConnection connection, object id, string? schema = null, CommandInfo commandInfo = default)
     {
-        if (string.IsNullOrWhiteSpace(schema))
-            throw new ArgumentException("The schema cannot be empty.", nameof(schema));
-
-        var adapter = sqlAdapter ?? GetSqlAdapter(connection);
+        var adapter = commandInfo.SqlAdapter ?? GetSqlAdapter(connection);
         var sql = GetSqls.GetOrAdd(new(adapter, schema, typeof(T)), k => CreateGetSql(k));
         var dynParams = new DynamicParameters();
         dynParams.Add("@id", id);
-        return connection.QueryFirstOrDefaultAsync<T>(sql, dynParams, commandTimeout: commandTimeout);
+        return connection.QueryFirstOrDefaultAsync<T?>(sql, dynParams, commandInfo.Transaction, commandInfo.TimeoutSeconds);
 
         static string CreateGetSql(EntitySqlKey key)
         {
@@ -232,23 +230,19 @@ public static partial class DbConnectionExtensions
     /// Delete an entity by id
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <param name="connection"></param>
+    /// <param name="con"></param>
     /// <param name="schema"></param>
     /// <param name="id"></param>
-    /// <param name="commandTimeout"></param>
-    /// <param name="sqlAdapter"></param>
+    /// <param name="commandInfo"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentException"></exception>
-    public static Task<int> DeleteAsync<T>(this IDbConnection connection, dynamic id, string? schema = null, int? commandTimeout = null, ISqlAdapter? sqlAdapter = null)
+    public static Task<int> DeleteAsync<T>(this DbConnection con, object id, string? schema = null, CommandInfo commandInfo = default)
     {
-        if (string.IsNullOrWhiteSpace(schema))
-            throw new ArgumentException("The schema cannot be empty.", nameof(schema));
-
-        var adapter = sqlAdapter ?? GetSqlAdapter(connection);
+        var adapter = commandInfo.SqlAdapter ?? GetSqlAdapter(con);
         var sql = DeleteSqls.GetOrAdd(new(adapter, schema, typeof(T)), k => CreateDeleteSql(k));
         var dynParams = new DynamicParameters();
         dynParams.Add("@id", id);
-        return connection.ExecuteAsync(sql, dynParams, commandTimeout: commandTimeout);
+        return con.ExecuteAsync(sql, dynParams, commandInfo.Transaction, commandInfo.TimeoutSeconds);
 
         static string CreateDeleteSql(EntitySqlKey key)
         {
@@ -271,24 +265,25 @@ public static partial class DbConnectionExtensions
         return keys[0];
     }
 
-    internal static Task<T> ExecuteAsync<T>(this IDbConnection connection, int? commandTimeout, ISqlAdapter? sqlAdapter, Func<ISqlAdapter, SqlInfo> sqlFunc, Func<IDbCommand, Task<T>> func)
+    internal static Task<T> ExecuteAsync<T>(this DbConnection con, CommandInfo commandInfo, Func<ISqlAdapter, SqlInfo> sqlFunc, Func<DbCommand, Task<T>> func)
     {
-        return connection.ExecuteAsync(commandTimeout, sqlAdapter, sqlFunc, (_, m) => func(m));
+        return con.ExecuteAsync(commandInfo, sqlFunc, (_, m) => func(m));
     }
 
-    internal static async Task<T> ExecuteAsync<T>(this IDbConnection connection, int? commandTimeout, ISqlAdapter? sqlAdapter, Func<ISqlAdapter, SqlInfo> sqlFunc, Func<ISqlAdapter, IDbCommand, Task<T>> func)
+    internal static async Task<T> ExecuteAsync<T>(this DbConnection con, CommandInfo commandInfo, Func<ISqlAdapter, SqlInfo> sqlFunc, Func<ISqlAdapter, DbCommand, Task<T>> func)
     {
-        var adapter = sqlAdapter ?? GetSqlAdapter(connection);
+        var adapter = commandInfo.SqlAdapter ?? GetSqlAdapter(con);
         var (sql, paras) = sqlFunc(adapter);
-        var cmd = connection.CreateCommand(sql, paras, commandTimeout);
-        await connection.TryOpenAsync();
+        var cmd = con.CreateCommand(sql, paras, commandInfo.TimeoutSeconds, commandInfo.Transaction);
+        await con.TryOpenAsync();
         return await func(adapter, cmd);
     }
 
-    public static IDbCommand CreateCommand(this IDbConnection connection, string sql, IEnumerable<DbParameter>? paras = null, int? timeoutSeconds = null)
+    public static DbCommand CreateCommand(this DbConnection con, string sql, IEnumerable<DbParameter>? paras = null, int? timeoutSeconds = null, DbTransaction? transaction = null)
     {
-        var command = connection.CreateCommand()!;
+        var command = con.CreateCommand();
         command.CommandText = sql;
+        command.Transaction = transaction;
         foreach (var item in paras.Touch())
         {
             command.Parameters.Add(item);

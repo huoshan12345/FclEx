@@ -14,7 +14,7 @@ public class SqlServerAdapter : AbstractSqlAdapter<SqlServerAdapter>
         return BuildParameterCreater("Microsoft.Data.SqlClient.SqlParameter, Microsoft.Data.SqlClient", "SqlDbType");
     }
 
-    public override async Task<IAsyncDisposable> EnableIdentityInsertAsync<T>(string? schema, IDbCommand cmd)
+    public override async ValueTask<IAsyncDisposable> EnableIdentityInsertAsync<T>(string? schema, IDbCommand cmd)
     {
         var tableName = DapperHelper.GetTableNameWithSchema(this, schema, typeof(T));
         await cmd.Connection.ExecuteAsync($"SET IDENTITY_INSERT {tableName} ON");

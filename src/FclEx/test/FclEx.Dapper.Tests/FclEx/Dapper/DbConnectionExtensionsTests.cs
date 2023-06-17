@@ -153,6 +153,7 @@ public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixtur
         await db.SaveChangesAsync();
 
         var e = await db.Database.GetDbConnection().GetAsync<EntityWithGuidKey>(entity.Id, schema);
+        Assert.NotNull(e);
         Assert.Equal(entity.Value, e.Value);
     }
 
@@ -220,10 +221,10 @@ public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixtur
             Name = Guid.NewGuid().ToString(),
         };
 
-        var (id, id2) = await con.DoTransactionAsync(async c =>
+        var (id, id2) = await con.DoTransactionAsync(async tran =>
         {
-            var id = (long?)await c.InsertAsync(entity, schema);
-            var id2 = (long?)await c.InsertAsync(entity2, schema);
+            var id = (long?)await tran.InsertAsync(entity, schema);
+            var id2 = (long?)await tran.InsertAsync(entity2, schema);
             return (id, id2);
         });
 
@@ -243,9 +244,9 @@ public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixtur
 
         var con = db.Database.GetDbConnection();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => con.DoTransactionAsync(async c =>
+        await Assert.ThrowsAsync<InvalidOperationException>(() => con.DoTransactionAsync(async tran =>
         {
-            await c.InsertAsync(new EntityWithGuidKey
+            await tran.InsertAsync(new EntityWithGuidKey
             {
                 Id = Guid.NewGuid(),
                 Value = 100,

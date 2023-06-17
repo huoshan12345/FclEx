@@ -46,9 +46,9 @@ public abstract class AbstractSqlAdapter<TSelf> : ISqlAdapter where TSelf : Abst
         return _creater.Value.Invoke(name, value, type);
     }
 
-    public virtual Task<IAsyncDisposable> EnableIdentityInsertAsync<T>(string? schema, IDbCommand cmd)
+    public virtual ValueTask<IAsyncDisposable> EnableIdentityInsertAsync<T>(string? schema, IDbCommand cmd)
     {
-        return AsyncDisposable.EmptyTask;
+        return AsyncDisposable.EmptyValueTask;
     }
 
     protected static DbParameterCreater BuildParameterCreater(string typeName, string dbTypePropName)

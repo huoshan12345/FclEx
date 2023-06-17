@@ -2,57 +2,65 @@
 
 partial class DbConnectionExtensions
 {
-    public static async Task<T> DoTransactionAsync<T>(this IDbConnection con, Func<IDbConnection, Task<T>> action, System.Data.IsolationLevel level = System.Data.IsolationLevel.ReadUncommitted)
+    public static async Task<T> DoTransactionAsync<T>(this DbConnection con, Func<DbTransaction, Task<T>> action, IsolationLevel level = IsolationLevel.ReadUncommitted)
     {
-        using var tran = con.BeginTransaction(level);
+        await con.TryOpenAsync();
+        await using var tran = await con.BeginTransactionAsync(level);
         try
         {
-            var result = await action(con);
-            tran.Commit();
+            var result = await action(tran);
+            await tran.CommitAsync();
             return result;
         }
         catch
         {
-            tran.RollbackWithCheck();
+            await tran.TryRollbackAsync();
             throw;
         }
     }
 
-    public static async Task DoTransactionAsync(this IDbConnection con, Func<IDbConnection, Task> action, System.Data.IsolationLevel level = System.Data.IsolationLevel.ReadUncommitted)
+    public static async Task DoTransactionAsync(this DbConnection con, Func<DbTransaction, Task> action, IsolationLevel level = IsolationLevel.ReadUncommitted)
     {
-        using var tran = con.BeginTransaction(level);
+        await con.TryOpenAsync();
+        await using var tran = await con.BeginTransactionAsync(level);
         try
         {
-            await action(con);
-            tran.Commit();
+            await action(tran);
+            await tran.CommitAsync();
         }
         catch
         {
-            tran.RollbackWithCheck();
+            await tran.TryRollbackAsync();
             throw;
         }
     }
 
-    public static void RollbackWithCheck(this IDbTransaction tran)
+    public static async Task DoTransactionAsync(this IList<DbConnection> cons, Func<IList<DbTransaction>, Task> action,
+        IsolationLevel level = IsolationLevel.ReadUncommitted)
     {
-        if (tran.Connection is not { State: ConnectionState.Open })
-            return;
-
-        tran.Rollback();
+        var trans = await cons.Select(m => m.BeginTransactionAsync(level)).WhenAll();
+        try
+        {
+            await action(trans).DonotCapture();
+            foreach (var tran in trans)
+                await tran.CommitAsync();
+        }
+        catch (Exception ex)
+        {
+            await trans.TryRollbackAsync(ex);
+        }
+        finally
+        {
+            foreach (var tran in trans)
+                await tran.DisposeAsync();
+        }
     }
 
-    public static Task TryOpenAsync(this IDbConnection connection, CancellationToken token = default)
+    public static Task TryOpenAsync(this DbConnection con, CancellationToken token = default)
     {
-        if (connection.State == ConnectionState.Open)
+        if (con.State == ConnectionState.Open)
             return Task.CompletedTask;
 
-        if (connection is DbConnection dbConn)
-        {
-            return dbConn.OpenAsync(token);
-        }
-        else
-        {
-            throw new InvalidOperationException("Async operations require use of a DbConnection or an already-open IDbConnection");
-        }
+        return con.OpenAsync(token);
     }
 }

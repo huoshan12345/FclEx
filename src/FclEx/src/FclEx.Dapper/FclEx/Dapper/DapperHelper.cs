@@ -1,4 +1,6 @@
-﻿namespace FclEx.Dapper;
+﻿using System.Transactions;
+
+namespace FclEx.Dapper;
 
 public static class DapperHelper
 {
@@ -105,7 +107,7 @@ public static class DapperHelper
         });
     }
 
-    public static TransactionScope CreateAsyncTransactionScope(IsolationLevel isolationLevel = IsolationLevel.ReadCommitted)
+    public static TransactionScope CreateAsyncTransactionScope(System.Transactions.IsolationLevel isolationLevel = System.Transactions.IsolationLevel.ReadCommitted)
     {
         var transactionOptions = new TransactionOptions
         {
