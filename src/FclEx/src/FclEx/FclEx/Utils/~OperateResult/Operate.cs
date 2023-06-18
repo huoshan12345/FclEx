@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using FclEx.Helpers;
+﻿using FclEx.Helpers;
 
 namespace FclEx.Utils;
 

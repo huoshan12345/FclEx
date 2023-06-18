@@ -4,32 +4,32 @@ partial class OperateResultExtensions
 {
     public static Task<OperateResult<T>> OkResult<T>(this Task<OperateResult<T>> task, Action<OperateResult<T>> action)
     {
-        return task.On(m => m.Success, action);
+        return task.Do(m => m.Success, action);
     }
 
     public static Task<OperateResult<T>> OkResult<T>(this Task<OperateResult<T>> task, Func<OperateResult<T>, Task> action)
     {
-        return task.On(m => m.Success, action);
+        return task.Do(m => m.Success, action);
     }
 
     public static Task<OperateResult<T>> ErrorResult<T>(this Task<OperateResult<T>> task, Action<OperateResult<T>> action)
     {
-        return task.On(r => r.Error, action);
+        return task.Do(r => r.Error, action);
     }
 
     public static Task<OperateResult<T>> ErrorResult<T>(this Task<OperateResult<T>> task, Func<OperateResult<T>, Task> action)
     {
-        return task.On(r => r.Error, action);
+        return task.Do(r => r.Error, action);
     }
 
     public static Task<OperateResult<T>> CancelResult<T>(this Task<OperateResult<T>> task, Action<OperateResult<T>> action)
     {
-        return task.On(r => r.IsCanceled(), action);
+        return task.Do(r => r.IsCanceled(), action);
     }
 
     public static Task<OperateResult<T>> CancelResult<T>(this Task<OperateResult<T>> task, Func<OperateResult<T>, Task> action)
     {
-        return task.On(r => r.IsCanceled(), action);
+        return task.Do(r => r.IsCanceled(), action);
     }
 
     public static Task<OperateResult<T>> Ok<T>(this Task<OperateResult<T>> task, Action<T, TimeSpan> action)
@@ -82,15 +82,39 @@ partial class OperateResultExtensions
         return task.ContinueWith(t => t.Result.Untype());
     }
 
-    public static Task<OperateResult<TNext>> Next<T, TNext>(this Task<OperateResult<T>> task, Func<T, Task<OperateResult<TNext>>> func)
+    public static Task<OperateResult<TNext>> Next<T, TNext>(this Task<OperateResult<T>> task, Func<T, Task<OperateResult<TNext>>> next)
     {
-        return task.ContinueWith<OperateResult<T>, OperateResult<TNext>>(t => t.Result.Success 
-            ? func(t.Result.Value) 
-            : t.Result.ToExplicit<TNext>().ToTask());
+        var watch = ValueStopwatch.StartNew();
+        return task.ContinueWith(async m =>
+        {
+            var elapsed = watch.GetElapsedTime();
+
+            if (task.Exception is { } ex)
+                return Operate.CreateError<TNext>(ex, elapsed);
+
+            if (task.IsCanceled)
+                return Operate.CreateCancel<TNext>(elapsed);
+
+            return m.Result.Success
+                ? await next(m.Result.Value)
+                : m.Result.ToExplicit<TNext>();
+        }).Unwrap();
     }
 
-    public static Task<OperateResult<TNext>> NextResult<T, TNext>(this Task<OperateResult<T>> task, Func<OperateResult<T>, Task<OperateResult<TNext>>> func)
+    public static Task<OperateResult<TNext>> NextResult<T, TNext>(this Task<OperateResult<T>> task, Func<OperateResult<T>, Task<OperateResult<TNext>>> next)
     {
-        return task.ContinueWith<OperateResult<T>, OperateResult<TNext>>(t => func(t.Result));
+        var watch = ValueStopwatch.StartNew();
+        return task.ContinueWith(async m =>
+        {
+            var elapsed = watch.GetElapsedTime();
+
+            if (task.Exception is { } ex)
+                return Operate.CreateError<TNext>(ex, elapsed);
+
+            if (task.IsCanceled)
+                return Operate.CreateCancel<TNext>(elapsed);
+
+            return await next(m.Result);
+        }).Unwrap();
     }
 }

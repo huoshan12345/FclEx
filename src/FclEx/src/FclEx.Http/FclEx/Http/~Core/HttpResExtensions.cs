@@ -102,16 +102,16 @@ public static class HttpResExtensions
 
     public static Task<HttpRes> Error(this Task<HttpRes> task, Action<Exception> action)
     {
-        return task.On(m => m.HasError, m => action(m.Exception!));
+        return task.Do(m => m.HasError, m => action(m.Exception!));
     }
 
     public static Task<HttpRes> Ok(this Task<HttpRes> task, Action<HttpRes> action)
     {
-        return task.On(m => !m.HasError, action);
+        return task.Do(m => !m.HasError, action);
     }
 
     public static Task<HttpRes> Ok(this Task<HttpRes> task, Func<HttpRes, Task> action)
     {
-        return task.On(m => !m.HasError, action);
+        return task.Do(m => !m.HasError, action);
     }
 }

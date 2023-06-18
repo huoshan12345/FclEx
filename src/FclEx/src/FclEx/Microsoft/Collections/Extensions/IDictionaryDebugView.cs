@@ -3,8 +3,6 @@
 // See the LICENSE file in the project root for more information.
 // ReSharper disable InconsistentNaming
 
-using System.Diagnostics;
-
 namespace Microsoft.Collections.Extensions;
 
 internal sealed class IDictionaryDebugView<K, V>

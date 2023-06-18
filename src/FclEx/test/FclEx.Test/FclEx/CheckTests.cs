@@ -94,7 +94,7 @@ public class CheckTests
             Check.NotEmpty(col);
         }
     }
-        
+
     [Fact]
     public void NotEmpty_HashSet()
     {

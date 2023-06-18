@@ -1,6 +1,4 @@
-﻿using FclEx;
-
-namespace FclEx.Actions;
+﻿namespace FclEx.Actions;
 
 partial class Extensions
 {
@@ -40,7 +38,6 @@ partial class Extensions
     {
         return action.Next(m => next(m.Item1, m.Item2));
     }
-
 
     public static IAction<Unit> Next<T>(this IAction<T> action, Action<T> next, bool excuteSafely = true)
     {

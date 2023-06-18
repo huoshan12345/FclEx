@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace FclEx.Actions;
+﻿namespace FclEx.Actions;
 
 public interface IAbstractAction<T> : IAction<T>
 {

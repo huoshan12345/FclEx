@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static class AssemblyExtensions
 {

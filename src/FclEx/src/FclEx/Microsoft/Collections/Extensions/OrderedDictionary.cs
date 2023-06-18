@@ -6,7 +6,6 @@
 #pragma warning disable CS1658
 
 using System.Collections;
-using System.Diagnostics;
 
 namespace Microsoft.Collections.Extensions;
 

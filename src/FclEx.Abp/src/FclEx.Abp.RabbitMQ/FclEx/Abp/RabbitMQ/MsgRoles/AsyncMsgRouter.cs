@@ -118,7 +118,7 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles
             foreach (var output in outputs)
             {
                 await RouteAsync(args, input, output)
-                    .On(r => true, r => results.Add(r))
+                    .Do(r => true, r => results.Add(r))
                     .DonotCapture();
             }
             return results.Merge();

@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace FclEx.Utils;
+﻿namespace FclEx.Utils;
 
 public struct Timestamp
 {
