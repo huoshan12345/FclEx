@@ -4,4 +4,8 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="7.0.7" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\FclEx\FclEx.csproj" />
+  </ItemGroup>
+
 </Project>
