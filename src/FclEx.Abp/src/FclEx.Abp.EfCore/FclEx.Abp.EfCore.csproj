@@ -1,9 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\FclEx\src\FclEx\FclEx.csproj" />
-    <ProjectReference Include="..\FclEx.Abp\FclEx.Abp.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="FclEx\Abp\EfCore\" />
-  </ItemGroup>
-</Project>
