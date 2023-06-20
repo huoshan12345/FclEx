@@ -163,11 +163,16 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         {
             if (request.Content is { } content)
             {
-                requestMessage.Content = content.ToBuffered(request.UseGZip, request.ReadBufferTimeout, request.BufferSize, token);
+                requestMessage.Content = content;
             }
             else if (request.FormValues.IsValid())
             {
                 requestMessage.Content = new FormUrlEncodedContent(request.FormValues.AsEnumerable());
+            }
+
+            if (requestMessage.Content is { } requestContent)
+            {
+                requestMessage.Content = requestContent.ToBuffered(request.UseGZip, request.ReadBufferTimeout, request.BufferSize, token);
             }
 
             if (requestMessage.Content?.Headers is { ContentType: { } contentType })

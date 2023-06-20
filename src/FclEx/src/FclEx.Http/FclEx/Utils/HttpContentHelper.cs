@@ -2,9 +2,9 @@
 
 public static class HttpContentHelper
 {
-    public static StringContent ToJsonContent(object obj)
+    public static StringContent ToJsonContent(object obj, JsonOptions options = default)
     {
-        var json = JsonConvert.SerializeObject(obj);
+        var json = obj.ToJson(options);
         return new StringContent(json, Encoding.UTF8, HttpMediaTypes.Json);
     }
 
@@ -19,7 +19,7 @@ public static class HttpContentHelper
         stream.Position = 0; // NOTE: very important to reset the position
         return new StreamContent(stream)
         {
-            Headers = 
+            Headers =
             {
                 { "Content-Encoding", "gzip" },
                 { "Content-Type", contentType },

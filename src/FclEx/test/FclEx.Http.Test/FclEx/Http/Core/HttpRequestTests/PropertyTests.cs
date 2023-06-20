@@ -1,4 +1,4 @@
-﻿namespace FclEx.Http.Core.HttpReqTests;
+﻿namespace FclEx.Http.Core.HttpRequestTests;
 
 public class PropertyTests
 {

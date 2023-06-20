@@ -2,7 +2,7 @@
 
 public class GZipContent : BufferedContent
 {
-    public GZipContent(HttpContent content, TimeSpan? timeout = null, int bufferSize = 262144, CancellationToken token = default) 
+    public GZipContent(HttpContent content, TimeSpan? timeout = null, int bufferSize = 262144, CancellationToken token = default)
         : base(content, timeout, bufferSize, token)
     {
         Headers.Add(HttpKnownHeaderNames.ContentEncoding, "gzip");
@@ -12,6 +12,12 @@ public class GZipContent : BufferedContent
     {
         await using var contentStream = await _content.ReadAsStreamAsync(_token);
         await using var gzipStream = new GZipStream(stream, CompressionMode.Compress, true);
-        await contentStream.CopyToAsync(stream, _bufferSize, _timeout, _token);
+        await contentStream.CopyToAsync(gzipStream, _bufferSize, _timeout, _token);
+    }
+
+    protected override bool TryComputeLength(out long length)
+    {
+        length = 0;
+        return false;
     }
 }
