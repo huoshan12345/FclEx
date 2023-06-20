@@ -2,9 +2,9 @@
 
 public static class Extensions
 {
-    public static IAction<HttpResponse> ToAction(this HttpRequest req, IHttpService? httpService = null, bool unwrapError = true)
+    public static IAction<HttpResponse> ToAction(this HttpRequest request, IHttpService? httpService = null, bool unwrapError = true)
     {
-        return (new HttpRequestAction(req, httpService ?? HttpClientService.Default, unwrapError));
+        return (new HttpRequestAction(request, httpService ?? HttpClientService.Default, unwrapError));
     }
 
     public static IAction<T> ReadJson<T>(this IAction<HttpResponse> action, string? path = null)
@@ -38,9 +38,9 @@ public static class Extensions
         return res.TryRedirect(httpService, r => url);
     }
 
-    public static IAction<HttpResponse> NextRequest<T>(this IAction<T> action, HttpRequest httpReq, IHttpService? httpService = null, bool unwrapError = true)
+    public static IAction<HttpResponse> NextRequest<T>(this IAction<T> action, HttpRequest request, IHttpService? httpService = null, bool unwrapError = true)
     {
-        Check.NotNull(httpReq);
-        return action.NextRequest(m => httpReq, httpService, unwrapError);
+        Check.NotNull(request);
+        return action.NextRequest(m => request, httpService, unwrapError);
     }
 }

@@ -5,7 +5,7 @@ namespace FclEx.Http;
 
 public abstract class AbstractHttpClientService : AbstractHttpService
 {
-    protected static readonly Encoding DefaultStringEncoding = Encoding.UTF8;
+    protected static readonly Encoding DefaultEncoding = Encoding.UTF8;
 
     protected static readonly string[] NotAddHeaderNames =
     {
@@ -137,7 +137,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             }
         }
 
-        encoding ??= GetEncodingFromCharSet(defaultCharSet) ?? DefaultStringEncoding;
+        encoding ??= GetEncodingFromCharSet(defaultCharSet) ?? DefaultEncoding;
 
         // Drop the BOM when decoding the data.
         var str = encoding.GetString(buffer.Array, buffer.Offset + bomLength, buffer.Count - bomLength);
