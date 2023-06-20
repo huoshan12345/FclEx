@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Threading;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace FclEx.Http;
@@ -23,13 +22,13 @@ public abstract class AbstractHttpService : IHttpService
 
     public virtual void Dispose() { }
 
-    protected abstract Task ExecuteAsyncInternal(HttpReq httpReq, HttpRes httpRes, CancellationToken token);
+    protected abstract Task ExecuteAsyncInternal(HttpRequest httpReq, HttpResponse httpRes, CancellationToken token);
 
-    public async Task<HttpRes> ExecuteAsync(HttpReq httpReq, CancellationToken token = default)
+    public async Task<HttpResponse> ExecuteAsync(HttpRequest httpReq, CancellationToken token = default)
     {
         token.ThrowIfCancellationRequested();
         var watch = ValueStopwatch.StartNew();
-        var res = new HttpRes(httpReq) { RequestUtcTime = DateTime.UtcNow };
+        var res = new HttpResponse(httpReq) { RequestUtcTime = DateTime.UtcNow };
         try
         {
             await ExecuteAsyncInternal(httpReq, res, token).DonotCapture();

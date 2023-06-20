@@ -5,35 +5,35 @@ using Newtonsoft.Json.Linq;
 
 namespace FclEx.Http;
 
-public static class HttpResExtensions
+public static class HttpResponseExtensions
 {
-    public static HttpRes EnsureSuccessStatusCode(this HttpRes res)
+    public static HttpResponse EnsureSuccessStatusCode(this HttpResponse res)
     {
         if (!res.StatusCode.IsSuccess())
         {
-            throw new WebException($"call {res.HttpReq.GetUri()} with {res.HttpReq.Method} return unsuccessful code: {res.StatusCode}/{res.StatusCode.ToInt()}");
+            throw new WebException($"call {res.Request.GetUri()} with {res.Request.Method} return unsuccessful code: {res.StatusCode}/{res.StatusCode.ToInt()}");
         }
         return res;
     }
 
-    public static HttpRes ThrowIfError(this HttpRes res)
+    public static HttpResponse ThrowIfError(this HttpResponse res)
     {
         if (res.HasError) res.Exception!.ReThrow();
         return res;
     }
 
-    public static async Task<HttpRes> ThrowIfError(this Task<HttpRes> task)
+    public static async Task<HttpResponse> ThrowIfError(this Task<HttpResponse> task)
     {
         var res = await task.DonotCapture();
         res.ThrowIfError();
         return res;
     }
 
-    public static async Task<T> ReadJsonAs<T>(this Task<HttpRes> task)
+    public static async Task<T> ReadJsonAs<T>(this Task<HttpResponse> task)
     {
         var res = await task.DonotCapture();
         res.ThrowIfError();
-        if (res.HttpReq.ResultType == HttpResultType.Bytes)
+        if (res.Request.ResponseType == HttpResponseType.Bytes)
             throw new InvalidOperationException("Can not deserialize json from byte array.");
         if (res.ResponseString.IsNullOrEmpty())
             throw new InvalidOperationException("Can not deserialize json from empty response string.");
@@ -41,7 +41,7 @@ public static class HttpResExtensions
         return resObj!;
     }
 
-    public static OperateResult<T> ReadJson<T>(this HttpRes res, string? path = null)
+    public static OperateResult<T> ReadJson<T>(this HttpResponse res, string? path = null)
     {
         var str = res.ResponseString;
         if (!str.IsPossibleJson())
@@ -59,7 +59,7 @@ public static class HttpResExtensions
 
 
     private static readonly Regex _regexOfNonWord = new(@"\W", RegexOptions.Compiled);
-    public static HttpFileDownloadInfo GetDownloadInfo(this HttpRes res)
+    public static HttpFileDownloadInfo GetDownloadInfo(this HttpResponse res)
     {
         var realUrl = res.RedirectUris.Last();
         var fileNameWithExt = Path.GetFileName(realUrl.LocalPath);
@@ -98,19 +98,19 @@ public static class HttpResExtensions
         };
     }
 
-    public static Uri LastUri(this HttpRes res) => res.RedirectUris.Last();
+    public static Uri LastUri(this HttpResponse res) => res.RedirectUris.Last();
 
-    public static Task<HttpRes> Error(this Task<HttpRes> task, Action<Exception> action)
+    public static Task<HttpResponse> Error(this Task<HttpResponse> task, Action<Exception> action)
     {
         return task.Do(m => m.HasError, m => action(m.Exception!));
     }
 
-    public static Task<HttpRes> Ok(this Task<HttpRes> task, Action<HttpRes> action)
+    public static Task<HttpResponse> Ok(this Task<HttpResponse> task, Action<HttpResponse> action)
     {
         return task.Do(m => !m.HasError, action);
     }
 
-    public static Task<HttpRes> Ok(this Task<HttpRes> task, Func<HttpRes, Task> action)
+    public static Task<HttpResponse> Ok(this Task<HttpResponse> task, Func<HttpResponse, Task> action)
     {
         return task.Do(m => !m.HasError, action);
     }

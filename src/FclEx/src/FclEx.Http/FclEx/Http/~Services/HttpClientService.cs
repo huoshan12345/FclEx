@@ -1,5 +1,4 @@
 ﻿using System.Net.Sockets;
-using System.Threading;
 using MoreLinq;
 
 namespace FclEx.Http;
@@ -80,7 +79,7 @@ public sealed class HttpClientService : AbstractHttpClientService
         _httpClient = CreateHttpClient(_webProxy);
     }
 
-    protected override Task ExecuteAsyncInternal(HttpReq httpReq, HttpRes httpRes, CancellationToken token)
+    protected override Task ExecuteAsyncInternal(HttpRequest httpReq, HttpResponse httpRes, CancellationToken token)
     {
         return ExecuteAsyncInternal(_httpClient, httpReq, httpRes, token);
     }

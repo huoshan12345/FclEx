@@ -8,16 +8,24 @@ public class CtorTests
         "/parent/change-old-passwd"
     };
 
-    public static HttpMethodType[] Methods { get; } = Enum.GetValues<HttpMethodType>();
+    public static HttpMethod[] Methods { get; } =
+    {
+        HttpMethod.Get,
+        HttpMethod.Post,
+        HttpMethod.Put,
+        HttpMethod.Delete,
+        HttpMethod.Head,
+        HttpMethod.Options,
+    };
 
     public static IEnumerable<object[]> CtorCases { get; } =
         Urls.SelectMany(m => Methods, (u, m) => new object[] { u, m });
 
     [Theory]
     [MemberData(nameof(CtorCases))]
-    public void TestCtor(string url, HttpMethodType method)
+    public void TestCtor(string url, HttpMethod method)
     {
-        var req = new HttpReq(url, method);
+        var req = HttpRequest.Create(url, method);
         req.Host("localhost");
         var realUrl = req.GetUri();
     }
@@ -25,8 +33,8 @@ public class CtorTests
     [Fact]
     public void Ctor_WithUserInfo()
     {
-        var req = HttpReq.Get("http://lijing:lijing@captcha.mooncatling.fun/api/captcha/save");
-        Assert.True(req.HeaderMap.TryGetValue("Authorization", out var auth));
+        var req = HttpRequest.Get("http://lijing:lijing@captcha.mooncatling.fun/api/captcha/save");
+        Assert.True(req.Headers.TryGetValue("Authorization", out var auth));
         Assert.Equal("Basic bGlqaW5nOmxpamluZw==", auth);
     }
 }

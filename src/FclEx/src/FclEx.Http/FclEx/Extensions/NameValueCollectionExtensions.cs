@@ -1,6 +1,4 @@
-﻿using System.Collections.Specialized;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static class NameValueCollectionExtensions
 {

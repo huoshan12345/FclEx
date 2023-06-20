@@ -11,7 +11,7 @@ public abstract class UserClientJsonAction<TClient, T> : UserClientHttpAction<TC
     {
     }
 
-    public override OperateResult<T> GetResult(HttpRes response)
+    public override OperateResult<T> GetResult(HttpResponse response)
         => this.Base<IJsonAction<T>, OperateResult<T>>(m => m.GetResult(response));
 
     public virtual bool IsFailed(JsonActionContext context)

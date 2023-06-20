@@ -7,7 +7,7 @@ public interface IHtmlAction<T> : IHttpResHandler<T>
 {
     string? HtmlResultPath { get; }
 
-    OperateResult<T> IHttpResHandler<T>.GetResult(HttpRes res)
+    OperateResult<T> IHttpResHandler<T>.GetResult(HttpResponse res)
     {
         var (successful, str, ex, _) = GetHtml(res);
         if (!successful)
@@ -21,7 +21,7 @@ public interface IHtmlAction<T> : IHttpResHandler<T>
         return GetResult(context);
     }
 
-    OperateResult<string> GetHtml(HttpRes res)
+    OperateResult<string> GetHtml(HttpResponse res)
     {
         var str = res.ResponseString;
         return str switch
@@ -52,7 +52,7 @@ public interface IHtmlAction : IHtmlAction<Unit>
 
 public readonly struct HtmlActionContext
 {
-    public HtmlActionContext(HttpRes httpRes, string html, string? path)
+    public HtmlActionContext(HttpResponse httpRes, string html, string? path)
     {
         HttpRes = httpRes;
         Html = html;
@@ -63,7 +63,7 @@ public readonly struct HtmlActionContext
             : Element.QuerySelectorAll(path)!;
     }
 
-    public HttpRes HttpRes { get; }
+    public HttpResponse HttpRes { get; }
     public string? Path { get; }
     public string Html { get; }
     public IElement Element { get; }

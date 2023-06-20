@@ -8,7 +8,7 @@ public interface IJsonAction<T> : IHttpResHandler<T>
 {
     string? JsonResultPath { get; }
 
-    OperateResult<T> IHttpResHandler<T>.GetResult(HttpRes res)
+    OperateResult<T> IHttpResHandler<T>.GetResult(HttpResponse res)
     {
         var (successful, str, ex, _) = GetJson(res);
         if (!successful)
@@ -22,7 +22,7 @@ public interface IJsonAction<T> : IHttpResHandler<T>
         return GetResult(context);
     }
 
-    OperateResult<string> GetJson(HttpRes response)
+    OperateResult<string> GetJson(HttpResponse response)
     {
         var str = response.ResponseString;
         return str.IsPossibleJson()
@@ -55,7 +55,7 @@ public interface IJsonAction : IJsonAction<Unit>
 
 public readonly struct JsonActionContext
 {
-    public JsonActionContext(HttpRes httpRes, string json, string? path)
+    public JsonActionContext(HttpResponse httpRes, string json, string? path)
     {
         HttpRes = httpRes;
         Json = json;
@@ -66,7 +66,7 @@ public readonly struct JsonActionContext
             : Token.SelectTokens(path)!;
     }
 
-    public HttpRes HttpRes { get; }
+    public HttpResponse HttpRes { get; }
     public string? Path { get; }
     public string Json { get; }
     public JToken Token { get; }

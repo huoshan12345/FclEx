@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 public static class HttpResponseMessageExtensions
 {

@@ -1,6 +1,4 @@
-﻿using System.Threading;
-
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 public class ArraySegmentContent : HttpContent
 {

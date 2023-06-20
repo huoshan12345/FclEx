@@ -1,5 +1,4 @@
-﻿using System.Collections.Specialized;
-using AngleSharp.Html.Dom;
+﻿using AngleSharp.Html.Dom;
 using FclEx;
 using FclEx.Web;
 
@@ -20,9 +19,9 @@ public static class ElementExtensions
             throw new InvalidOperationException("Base uri cannot be null when href is a relative url");
 
         var uriCreator = new UriCreator(uri.IsAbsoluteUri ? uri : new Uri(baseUri!, uri));
-        query?.Invoke(uriCreator.QueryMap);
+        query?.Invoke(uriCreator.QueryValues);
         var u = uriCreator.GetUri();
-        return (u, uriCreator.QueryMap, text);
+        return (u, uriCreator.QueryValues, text);
     }
 
     public static HtmlAnchor GetAnchor(this IElement? e, string? selector = null)

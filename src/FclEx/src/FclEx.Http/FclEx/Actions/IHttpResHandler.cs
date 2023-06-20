@@ -2,5 +2,5 @@
 
 public interface IHttpResHandler<T>
 {
-    OperateResult<T> GetResult(HttpRes res);
+    OperateResult<T> GetResult(HttpResponse res);
 }

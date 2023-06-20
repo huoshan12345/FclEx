@@ -1,0 +1,195 @@
+﻿using System.Net.Mime;
+
+namespace FclEx.Http;
+
+partial class HttpRequestExtensions
+{
+    public static HttpRequest ReadResultCookie(this HttpRequest req, bool read)
+    {
+        req.ReadCookie = read;
+        return req;
+    }
+
+    public static HttpRequest ReadResultHeader(this HttpRequest req, bool read)
+    {
+        req.ReadHeader = read;
+        return req;
+    }
+
+    public static HttpRequest ReadResultContent(this HttpRequest req, bool read)
+    {
+        req.ReadContent = read;
+        return req;
+    }
+
+    public static HttpRequest ThrowOnFailedCode(this HttpRequest req, bool ifThrow)
+    {
+        req.ThrowIfFailed = ifThrow;
+        return req;
+    }
+
+    public static HttpRequest Host(this HttpRequest req, string host)
+    {
+        req.Host = host;
+        return req;
+    }
+
+    public static HttpRequest Port(this HttpRequest req, int port)
+    {
+        req.Port = port;
+        return req;
+    }
+
+    public static HttpRequest Fragment(this HttpRequest req, string fragment)
+    {
+        req.Fragment = fragment;
+        return req;
+    }
+
+    public static HttpRequest UserName(this HttpRequest req, string userName)
+    {
+        req.UserName = userName;
+        return req;
+    }
+
+    public static HttpRequest Password(this HttpRequest req, string password)
+    {
+        req.Password = password;
+        return req;
+    }
+
+    public static HttpRequest Path(this HttpRequest req, string path)
+    {
+        req.Path = path;
+        return req;
+    }
+
+    public static HttpRequest Scheme(this HttpRequest req, string scheme)
+    {
+        req.Scheme = scheme;
+        return req;
+    }
+
+    public static HttpRequest Method(this HttpRequest req, HttpMethod method)
+    {
+        req.Method = method;
+        return req;
+    }
+
+    public static HttpRequest Method(this HttpRequest req, string method)
+    {
+        return req.Method(new HttpMethod(method));
+    }
+
+    public static HttpRequest Auth(this HttpRequest req, string? auth)
+    {
+        return req.AddHeader(HttpKnownHeaderNames.Authorization, auth);
+    }
+
+    public static HttpRequest BasicAuth(this HttpRequest req, string? userName, string? password)
+    {
+        var userInfo = userName + ":" + password;
+        return req.AddHeader(HttpKnownHeaderNames.Authorization, "Basic " + userInfo.ToBytes().ToBase64());
+    }
+
+    public static HttpRequest BearerAuth(this HttpRequest req, string token)
+    {
+        return req.AddHeader(HttpKnownHeaderNames.Authorization, "Bearer " + token);
+    }
+
+    public static HttpRequest CharSet(this HttpRequest req, string? chartSet)
+    {
+        if (req.Content?.Headers?.ContentType is { } contentType)
+        {
+            contentType.CharSet = chartSet;
+        }
+        return req;
+    }
+
+    public static HttpRequest TryCharSet(this HttpRequest req, string? chartSet)
+    {
+        if (req.Content?.Headers?.ContentType is { CharSet: null } contentType)
+        {
+            contentType.CharSet = chartSet;
+        }
+        return req;
+    }
+
+    public static HttpRequest DetectChar(this HttpRequest req, bool flag = true)
+    {
+        req.DetectCharSet = flag;
+        return req;
+    }
+
+    public static HttpRequest FallbackCharSet(this HttpRequest req, string? chartSet)
+    {
+        req.FallbackCharSet = chartSet;
+        return req;
+    }
+
+    public static HttpRequest TryFallbackCharSet(this HttpRequest req, string? chartSet)
+    {
+        req.FallbackCharSet ??= chartSet;
+        return req;
+    }
+
+    public static HttpRequest ConnectTimeout(this HttpRequest req, TimeSpan? timeout)
+    {
+        req.ConnectTimeout = timeout;
+        return req;
+    }
+
+    public static HttpRequest TryConnectTimeout(this HttpRequest req, TimeSpan? timeout)
+    {
+        req.ConnectTimeout ??= timeout;
+        return req;
+    }
+    
+    public static HttpRequest ReadBufferTimeout(this HttpRequest req, TimeSpan? timeout)
+    {
+        req.ReadBufferTimeout = timeout;
+        return req;
+    }
+
+    public static HttpRequest TryReadBufferTimeout(this HttpRequest req, TimeSpan? timeout)
+    {
+        req.ReadBufferTimeout ??= timeout;
+        return req;
+    }
+
+    public static HttpRequest TotalTimeout(this HttpRequest req, TimeSpan? timeout)
+    {
+        req.TotalTimeout = timeout;
+        return req;
+    }
+
+    public static HttpRequest TryTotalTimeout(this HttpRequest req, TimeSpan? timeout)
+    {
+        req.TotalTimeout ??= timeout;
+        return req;
+    }
+
+    public static HttpRequest Origin(this HttpRequest req, string? url)
+    {
+        req.Origin = url;
+        return req;
+    }
+
+    public static HttpRequest TryOrigin(this HttpRequest req, string? url)
+    {
+        req.Origin ??= url;
+        return req;
+    }
+
+    public static HttpRequest ResponseType(this HttpRequest req, HttpResponseType type)
+    {
+        req.ResponseType = type;
+        return req;
+    }
+
+    public static HttpRequest ReadAsString(this HttpRequest req) => req.ResponseType(HttpResponseType.String);
+
+    public static HttpRequest ReadAsBytes(this HttpRequest req) => req.ResponseType(HttpResponseType.Bytes);
+
+    public static HttpRequest ReadAsStream(this HttpRequest req) => req.ResponseType(HttpResponseType.Stream);
+}

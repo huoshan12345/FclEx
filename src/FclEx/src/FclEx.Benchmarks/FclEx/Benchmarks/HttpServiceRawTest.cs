@@ -30,7 +30,7 @@ namespace FclEx.Benchmarks
 
         public static async ValueTask RawTest(int rounds)
         {
-            var reqs = Urls.Select(m => HttpReq.Get(m)
+            var reqs = Urls.Select(m => HttpRequest.Get(m)
                     .ReadResultCookie(false)
                     .ReadResultContent(false)
                     .ReadResultHeader(false)
@@ -43,7 +43,7 @@ namespace FclEx.Benchmarks
             }
         }
 
-        public static async ValueTask RawTest(IHttpService service, IList<HttpReq> reqs, int rounds)
+        public static async ValueTask RawTest(IHttpService service, IList<HttpRequest> reqs, int rounds)
         {
             var name = service.GetType().SimpleName();
             var before = GC.GetTotalMemory(true);

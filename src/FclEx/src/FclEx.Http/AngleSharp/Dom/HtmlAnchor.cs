@@ -1,5 +1,4 @@
-﻿using System.Collections.Specialized;
-using AngleSharp.Html.Dom;
+﻿using AngleSharp.Html.Dom;
 using FclEx;
 
 namespace AngleSharp.Dom;

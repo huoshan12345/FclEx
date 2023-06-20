@@ -27,7 +27,7 @@ public partial class HttpClientServiceTests
         using var service = new HttpClientService(false);
         for (var i = 0; i < 5; i++)
         {
-            var res = await HttpReq.Get("https://www.baidu.com")
+            var res = await HttpRequest.Get("https://www.baidu.com")
                 .SendAsync(service);
             AssertExt.False(res.HasError, () => res.Exception!.ToString());
         }

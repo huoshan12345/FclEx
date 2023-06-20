@@ -20,6 +20,21 @@ public static class MemberInfoExtensions
 
     public static bool IsCompilerGenerated(this MemberInfo memberInfo, bool inherit = true)
     {
-        return memberInfo.IsDefined<CompilerGeneratedAttribute>(false);
+        return memberInfo.IsDefined<CompilerGeneratedAttribute>(inherit);
+    }
+
+    public static T? Invoke<T>(this MethodInfo method, object? obj, object?[] parameters)
+    {
+        return method.Invoke(obj, parameters).CastTo<T>();
+    }
+
+    public static T? InvokeInstance<T>(this MethodInfo method, object obj, params object?[] parameters)
+    {
+        return method.Invoke<T>(obj, parameters);
+    }
+
+    public static T? InvokeStatic<T>(this MethodInfo method, params object?[] parameters)
+    {
+        return method.Invoke<T>(null, parameters);
     }
 }

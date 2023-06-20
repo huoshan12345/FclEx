@@ -29,7 +29,7 @@ public class SetHostTests
     [MemberData(nameof(HostPortsPair))]
     public void TestSetHost(string host, int port, string hp, string newHost, int newPort, string newHp)
     {
-        var req = HttpReq.Get("http://" + host);
+        var req = HttpRequest.Get("http://" + host);
         Assert.Equal(host, req.Host);
         Assert.Equal(80, req.Port);
 
@@ -45,7 +45,7 @@ public class SetHostTests
     [Fact]
     public void SetHostWithSchemeTest()
     {
-        var req = HttpReq.Get("/teacher/app/clean-redis-cache")
+        var req = HttpRequest.Get("/teacher/app/clean-redis-cache")
             .Host("https://betassapinew.knowbox.cn:9002");
 
         Assert.Equal("https", req.Scheme);

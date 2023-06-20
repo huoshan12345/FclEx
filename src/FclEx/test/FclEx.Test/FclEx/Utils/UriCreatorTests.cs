@@ -26,7 +26,7 @@ public class UriCreatorTests
         foreach (var key in map.AllKeys)
         {
             var values = map.GetValues(key);
-            var actual = uriCreator.QueryMap.GetValues(key);
+            var actual = uriCreator.QueryValues.GetValues(key);
             Assert.NotNull(actual);
             foreach (var value in values!)
             {

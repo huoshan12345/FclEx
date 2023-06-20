@@ -1,14 +1,12 @@
-﻿using System.Threading;
-
-namespace FclEx.Actions;
+﻿namespace FclEx.Actions;
 
 public interface IHttpAction<T> : IAbstractAction<T>
 {
     IHttpService HttpService { get; }
     Uri Uri { get; }
-    HttpReqType ReqType { get; }
+    HttpMethod Method { get; }
 
-    Task<OperateResult<T>> HandleResponseAsync(HttpRes res)
+    Task<OperateResult<T>> HandleResponseAsync(HttpResponse res)
     {
         if (IsFailed(res))
             return HandleFailed(res);
@@ -17,7 +15,7 @@ public interface IHttpAction<T> : IAbstractAction<T>
 
     async Task<OperateResult<T>> IAbstractAction<T>.ExecuteAsyncBody(CancellationToken token)
     {
-        HttpReq? req = null;
+        HttpRequest? req = null;
         try
         {
             req = BuildRequest();
@@ -36,7 +34,7 @@ public interface IHttpAction<T> : IAbstractAction<T>
         }
     }
 
-    private static void Dump(ILogger logger, HttpReq? req, IHttpService service)
+    private static void Dump(ILogger logger, HttpRequest? req, IHttpService service)
     {
         if (!logger.IsEnabled(LogLevel.Trace) || req == null)
             return;
@@ -52,16 +50,16 @@ public interface IHttpAction<T> : IAbstractAction<T>
         logger.LogTrace(msg.ToString());
     }
 
-    HttpReq BuildRequest()
+    HttpRequest BuildRequest()
     {
-        var req = HttpReq.Create(Uri, ReqType)
+        var req = HttpRequest.Create(Uri, Method)
             .ThrowOnFailedCode(false)
             .AcceptCompress();
         ModifyRequest(req);
         return req;
     }
 
-    void ModifyRequest(HttpReq req) { }
+    void ModifyRequest(HttpRequest req) { }
 
     static Uri GetUri(Type apiType, Type actionType)
     {
@@ -76,9 +74,9 @@ public interface IHttpAction<T> : IAbstractAction<T>
         return uri;
     }
 
-    bool IsFailed(HttpRes res) => !res.StatusCode.IsSuccess();
+    bool IsFailed(HttpResponse res) => !res.StatusCode.IsSuccess();
 
-    OperateResult<T> HandleFailed(HttpRes res)
+    OperateResult<T> HandleFailed(HttpResponse res)
     {
         var code = res.StatusCode;
         var error = $"The res with status code {code.ToString()}/{code.ToInt()} is unsuccessful: "
@@ -86,7 +84,7 @@ public interface IHttpAction<T> : IAbstractAction<T>
         return error;
     }
 
-    Task<OperateResult<T>> GetResultAsync(HttpRes response) => GetResult(response);
+    Task<OperateResult<T>> GetResultAsync(HttpResponse response) => GetResult(response);
 
-    OperateResult<T> GetResult(HttpRes response);
+    OperateResult<T> GetResult(HttpResponse response);
 }

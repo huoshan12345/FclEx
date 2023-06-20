@@ -7,61 +7,61 @@ public class PropertyTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task CharSet_Test(bool setProp)
+    public async Task CharSet_Test(bool value)
     {
         using var http = new HttpClientService();
-        var req = HttpReq.Get(CharSetTestCase.Url);
-        if (setProp)
+        var req = HttpRequest.Get(CharSetTestCase.Url);
+        if (value)
             req.CharSet(CharSetTestCase.CharSet);
 
         var res = await http.SendAsync(req)
             .ThrowIfError()
             .DonotCapture();
-        Assert.Equal(setProp, res.ResponseString.Contains(CharSetTestCase.Keyword));
+        Assert.Equal(value, res.ResponseString.Contains(CharSetTestCase.Keyword));
     }
 
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task FallbackCharSet_Test(bool setProp)
+    public async Task FallbackCharSet_Test(bool value)
     {
         using var http = new HttpClientService();
-        var req = HttpReq.Get(CharSetTestCase.Url);
-        if (setProp)
+        var req = HttpRequest.Get(CharSetTestCase.Url);
+        if (value)
             req.CharSet(CharSetTestCase.CharSet);
 
         var res = await http.SendAsync(req)
             .ThrowIfError()
             .DonotCapture();
-        Assert.Equal(setProp, res.ResponseString.Contains(CharSetTestCase.Keyword));
+        Assert.Equal(value, res.ResponseString.Contains(CharSetTestCase.Keyword));
     }
 
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task DetectCharSetFromHtmlMeta_Test(bool setProp)
+    public async Task DetectChar_Test(bool value)
     {
         using var http = new HttpClientService();
-        var req = HttpReq.Get(CharSetTestCase.Url);
-        req.DetectCharSetFromHtmlMeta(setProp);
+        var req = HttpRequest.Get(CharSetTestCase.Url);
+        req.DetectChar(value);
 
         var res = await http.SendAsync(req)
             .ThrowIfError()
             .DonotCapture();
-        Assert.Equal(setProp, res.ResponseString.Contains(CharSetTestCase.Keyword));
+        Assert.Equal(value, res.ResponseString.Contains(CharSetTestCase.Keyword));
     }
 
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task GZip_Test(bool setProp)
+    public async Task GZip_Test(bool value)
     {
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 3).ToDictionary(m => m.ToString(), m => random.NextString(5));
-        var res = await HttpReq.Form(UrlUtil.Combine(GlobalConstants.TestUrl, "/api/gzip"))
+        var res = await HttpRequest.Post(UrlUtil.Combine(GlobalConstants.TestUrl, "/api/gzip"))
             .AddData(expected!)
             .ConnectTimeout(TimeSpan.FromSeconds(30))
-            .GZip(setProp)
+            .UseGZip(value)
             .SendAsync()
             .ThrowIfError()
             .DonotCapture();
@@ -71,7 +71,7 @@ public class PropertyTests
 
         var gzip = token["gzip"];
         Assert.NotNull(gzip);
-        Assert.Equal(setProp, gzip.ToObject<bool>());
+        Assert.Equal(value, gzip.ToObject<bool>());
 
         var body = token["body"];
         Assert.NotNull(body);

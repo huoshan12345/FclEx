@@ -6,7 +6,7 @@ public class HttpReqExtensionsTests
 {
     private static async ValueTask SuccessRequest()
     {
-        await HttpReq.Get("https://www.baidu.com")
+        await HttpRequest.Get("https://www.baidu.com")
             .SendAsync()
             .ThrowIfError();
         await TaskHelper.Delay(3);
@@ -14,7 +14,7 @@ public class HttpReqExtensionsTests
 
     private static async Task SuccessRequestWrap()
     {
-        await HttpReq.Get("https://www.baidu.com")
+        await HttpRequest.Get("https://www.baidu.com")
             .SendAsync()
             .ThrowIfError();
         await TaskHelper.Delay(3);
@@ -22,7 +22,7 @@ public class HttpReqExtensionsTests
 
     private static async Task TimeoutRequestWrap()
     {
-        await HttpReq.Get("https://www.google.com")
+        await HttpRequest.Get("https://www.google.com")
             .TotalTimeout(TimeSpan.FromSeconds(5))
             .SendAsync()
             .ThrowIfError();
@@ -32,7 +32,7 @@ public class HttpReqExtensionsTests
     public async Task ThrowIfError_ValueTask_Test()
     {
         await Assert.ThrowsAnyAsync<Exception>(async () =>
-            await HttpReq.Get("http://localhost:9999")
+            await HttpRequest.Get("http://localhost:9999")
                 .SendAsync()
                 .ThrowIfError());
     }

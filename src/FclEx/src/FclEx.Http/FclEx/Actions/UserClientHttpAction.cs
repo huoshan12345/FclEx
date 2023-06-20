@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using FclEx.Web;
+﻿using FclEx.Web;
 
 namespace FclEx.Actions;
 
@@ -13,14 +12,14 @@ public abstract class UserClientHttpAction<TClient, T> : UserClientAction<TClien
 
     public IHttpService HttpService { get; }
     public abstract Uri Uri { get; }
-    public abstract HttpReqType ReqType { get; }
+    public abstract HttpMethod Method { get; }
 
-    public virtual bool IsFailed(HttpRes res) => this.Base<IHttpAction<T>, bool>(m => m.IsFailed(res));
-    public virtual OperateResult<T> HandleFailed(HttpRes res) => this.Base<IHttpAction<T>, OperateResult<T>>(m => m.HandleFailed(res));
-    public abstract OperateResult<T> GetResult(HttpRes response);
-    public virtual HttpReq BuildRequest() => this.Base<IHttpAction<T>, HttpReq>(m => m.BuildRequest());
-    public virtual void ModifyRequest(HttpReq req) { }
-    public virtual Task<OperateResult<T>> GetResultAsync(HttpRes response) => GetResult(response);
+    public virtual bool IsFailed(HttpResponse res) => this.Base<IHttpAction<T>, bool>(m => m.IsFailed(res));
+    public virtual OperateResult<T> HandleFailed(HttpResponse res) => this.Base<IHttpAction<T>, OperateResult<T>>(m => m.HandleFailed(res));
+    public abstract OperateResult<T> GetResult(HttpResponse response);
+    public virtual HttpRequest BuildRequest() => this.Base<IHttpAction<T>, HttpRequest>(m => m.BuildRequest());
+    public virtual void ModifyRequest(HttpRequest req) { }
+    public virtual Task<OperateResult<T>> GetResultAsync(HttpResponse response) => GetResult(response);
     public override Task<OperateResult<T>> ExecuteAsyncBody(CancellationToken token = default)
         => this.Base<IHttpAction<T>, Task<OperateResult<T>>>(m => m.ExecuteAsyncBody(token));
 }

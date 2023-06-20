@@ -3,9 +3,9 @@
 /// <summary>
 /// 返回类型
 /// </summary>
-public enum HttpResultType
+public enum HttpResponseType
 {
     String,
     Bytes,
-    // Stream,
+    Stream,
 }

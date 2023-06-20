@@ -25,7 +25,7 @@ namespace FclEx.Benchmarks
         [ArgumentsSource(nameof(Cases))]
         public async ValueTask HttpClientService_Test(string url)
         {
-            await _httpClientService.ExecuteAsync(HttpReq.Get(url)).DonotCapture();
+            await _httpClientService.ExecuteAsync(HttpRequest.Get(url)).DonotCapture();
         }
     }
 }

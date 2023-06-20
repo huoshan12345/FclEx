@@ -29,5 +29,4 @@ public partial class Operate
         var code = IsCancelException(ex) ? OperateResultCodes.Canceled : OperateResultCodes.Exception;
         return new(code, ObjectException.Create(obj, ex.Message, ex), elapsed);
     }
-
 }

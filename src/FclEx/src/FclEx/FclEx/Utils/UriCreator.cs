@@ -1,9 +1,10 @@
 ﻿using System.Collections.Specialized;
 using System.Web;
+#pragma warning disable IDE0057
 
 namespace FclEx.Utils;
 
-public class UriCreator
+public partial class UriCreator
 {
     public UriCreator(string uri)
         : this(new Uri(uri, UriKind.RelativeOrAbsolute))
@@ -27,13 +28,13 @@ public class UriCreator
             };
         }
 
-        QueryMap = HttpUtility.ParseQueryString(_uriBuilder.Query);
+        QueryValues = HttpUtility.ParseQueryString(_uriBuilder.Query);
         _uriBuilder.Query = string.Empty;
     }
 
     private readonly UriBuilder _uriBuilder;
 
-    public NameValueCollection QueryMap { get; }
+    public NameValueCollection QueryValues { get; }
 
     public string Fragment
     {
@@ -110,10 +111,10 @@ public class UriCreator
     {
         if (Host.IsValid())
         {
-            if (QueryMap.Count == 0)
+            if (QueryValues.Count == 0)
                 return _uriBuilder.Uri;
 
-            _uriBuilder.Query = QueryMap.ToString();
+            _uriBuilder.Query = QueryValues.ToString();
             var uri = _uriBuilder.Uri;
             _uriBuilder.Query = string.Empty;
             return uri;
@@ -121,7 +122,7 @@ public class UriCreator
         else
         {
             var u = _uriBuilder.Path;
-            var (q, f) = (QueryMap.ToString(), Fragment);
+            var (q, f) = (QueryValues.ToString(), Fragment);
             if (q.IsValid())
             {
                 u = u + "?" + q;
@@ -135,6 +136,7 @@ public class UriCreator
 
     }
 
+    [SuppressMessage("ReSharper", "ReplaceSubstringWithRangeIndexer")]
     public static (string Path, string Query, string Fragment) SplitUri(string uri)
     {
         var idx1 = uri.IndexOf('?');

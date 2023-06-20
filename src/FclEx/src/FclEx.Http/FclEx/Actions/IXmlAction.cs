@@ -8,7 +8,7 @@ public interface IXmlAction<T> : IHttpResHandler<T>
 {
     string? XmlResultPath { get; }
 
-    OperateResult<T> IHttpResHandler<T>.GetResult(HttpRes res)
+    OperateResult<T> IHttpResHandler<T>.GetResult(HttpResponse res)
     {
         var (successful, str, ex, _) = GetXml(res);
         if (!successful)
@@ -32,7 +32,7 @@ public interface IXmlAction<T> : IHttpResHandler<T>
         return error;
     }
 
-    OperateResult<string> GetXml(HttpRes response)
+    OperateResult<string> GetXml(HttpResponse response)
     {
         var str = response.ResponseString;
         return str.IsPossibleXml()
@@ -50,7 +50,7 @@ public interface IXmlAction : IXmlAction<Unit>
 
 public readonly struct XmlActionContext
 {
-    public XmlActionContext(HttpRes httpRes, string xml, string? path)
+    public XmlActionContext(HttpResponse httpRes, string xml, string? path)
     {
         HttpRes = httpRes;
         Xml = xml;
@@ -61,7 +61,7 @@ public readonly struct XmlActionContext
             : Element.XPathSelectElements(path)!;
     }
 
-    public HttpRes HttpRes { get; }
+    public HttpResponse HttpRes { get; }
     public string? Path { get; }
     public string Xml { get; }
     public XElement Element { get; }
