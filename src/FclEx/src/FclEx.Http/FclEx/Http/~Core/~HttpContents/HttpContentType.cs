@@ -3,7 +3,7 @@
 /// <summary>
 /// 返回类型
 /// </summary>
-public enum HttpResponseType
+public enum HttpContentType
 {
     String,
     Bytes,

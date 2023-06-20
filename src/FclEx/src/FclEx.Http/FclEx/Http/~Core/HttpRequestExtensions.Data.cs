@@ -80,9 +80,15 @@ public static partial class HttpRequestExtensions
             : req.AddFormPair(queryPair, sepetator);
     }
 
-    public static HttpRequest Content(this HttpRequest req, string data)
+    public static HttpRequest Content(this HttpRequest req, HttpContent content)
     {
-        return req.Content(data.ToBytes(req.Encoding));
+        req.Content = content;
+        return req;
+    }
+
+    public static HttpRequest Content(this HttpRequest req, string data, Encoding? encoding = null)
+    {
+        return req.Content(new StringContent(data, encoding ?? Encoding.UTF8));
     }
 
     public static HttpRequest Content(this HttpRequest req, byte[] data, int offset, int count)

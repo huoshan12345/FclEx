@@ -1,4 +1,5 @@
-﻿using System.Web;
+﻿using System.Net.Mime;
+using System.Web;
 
 namespace FclEx.Http;
 
@@ -6,7 +7,6 @@ namespace FclEx.Http;
 public partial class HttpRequest
 {
     private readonly UriCreator _uriCreator;
-    public Encoding Encoding { get; set; } = Encoding.UTF8;
     public bool ThrowIfFailed { get; set; } = true;
     public HttpMethod Method { get; set; }
     public HttpContent? Content { get; set; }
@@ -14,17 +14,27 @@ public partial class HttpRequest
     public TimeSpan? TotalTimeout { get; set; } = TimeSpan.FromMinutes(2);
     public TimeSpan? ReadBufferTimeout { get; set; } = TimeSpan.FromSeconds(10);
     public TimeSpan? ConnectTimeout { get; set; } = TimeSpan.FromSeconds(10);
+    /// <summary>
+    /// Gets or sets the value that will be used as <see cref="ContentType.MediaType"/>
+    /// </summary>
+    public string? MediaType { get; set; }
+    /// <summary>
+    /// Gets or sets the value that will be used as <see cref="ContentType.CharSet"/>
+    /// </summary>
+    public string? CharSet { get; set; }
     public bool DetectCharSet { get; set; }
     public string? FallbackCharSet { get; set; }
-    public HttpResponseType ResponseType { get; set; }
-    public bool ReadCookie { get; set; } = true;
-    public bool ReadHeader { get; set; } = true;
-    public bool ReadContent { get; set; } = true;
     public bool UseGZip { get; set; } = false;
 
     public NameValueCollection QueryValues => _uriCreator.QueryValues;
     public Dictionary<string, string?> Headers { get; } = new(StringComparer.OrdinalIgnoreCase);
     public NameValueCollection FormValues { get; } = HttpUtility.ParseQueryString(""); // don't use new NameValueCollection() here.
+
+    public HttpContentType ReadType { get; set; } = HttpContentType.String;
+    public bool ReadCookie { get; set; } = true;
+    public bool ReadHeader { get; set; } = true;
+    public bool ReadContent { get; set; } = true;
+
 
     public string? Referrer
     {

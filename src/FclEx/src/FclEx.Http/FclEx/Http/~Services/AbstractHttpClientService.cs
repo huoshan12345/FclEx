@@ -46,27 +46,26 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             response.Headers.AddRange(key, value);
         }
 
-        switch (request.ResponseType)
+        switch (request.ReadType)
         {
-            case HttpResponseType.Stream:
+            case HttpContentType.Stream:
             {
                 response.ResponseStream = await responseMessage.Content.ReadAsStreamAsync(token);
                 break;
             }
-            case HttpResponseType.Bytes:
-            case HttpResponseType.String:
+            case HttpContentType.Bytes:
             {
-                var bytes = await responseMessage.Content.ReadAsByteArrayAsync(request.BufferSize, request.ReadBufferTimeout, token).DonotCapture();
-                response.ResponseBytes = bytes;
-                if (request.ResponseType == HttpResponseType.String)
-                {
-                    var buffer = new ArraySegment<byte>(bytes.ToArray());
-                    (response.ResponseString, response.Encoding) = ReadBufferAsString(buffer, responseMessage.Content.Headers, request.DetectCharSet, request.FallbackCharSet);
-                }
+                response.ResponseBytes = await responseMessage.Content.ReadAsByteArrayAsync(request.BufferSize, request.ReadBufferTimeout, token);
+                break;
+            }
+            case HttpContentType.String:
+            {
+                var bytes = await responseMessage.Content.ReadAsByteArrayAsync(request.BufferSize, request.ReadBufferTimeout, token);
+                (response.ResponseString, response.Encoding) = ReadBufferAsString(bytes, responseMessage.Content.Headers, request.DetectCharSet, request.FallbackCharSet);
                 break;
             }
             default:
-                throw new ArgumentOutOfRangeException(nameof(request.ResponseType), request.ResponseType, null);
+                throw new ArgumentOutOfRangeException(nameof(request.ReadType), request.ReadType, null);
         }
     }
 
@@ -169,6 +168,16 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             else if (request.FormValues.IsValid())
             {
                 requestMessage.Content = new FormUrlEncodedContent(request.FormValues.AsEnumerable());
+            }
+
+            if (requestMessage.Content?.Headers is { ContentType: { } contentType })
+            {
+                contentType.CharSet ??= request.CharSet;
+
+                if (request.MediaType is { } mediaType)
+                {
+                    contentType.MediaType ??= mediaType;
+                }
             }
         }
 

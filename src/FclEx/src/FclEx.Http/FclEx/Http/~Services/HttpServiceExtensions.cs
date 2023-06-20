@@ -101,7 +101,7 @@ public static class HttpServiceExtensions
     public static async Task<OperateResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, Uri uri, HttpMethod? method = null, TimeSpan? timeout = null)
     {
         var request = new HttpRequest(uri, method ?? HttpMethod.Get)
-            .ResponseType(HttpResponseType.Stream)
+            .ReadAs(HttpContentType.Stream)
             .ReadBufferTimeout(timeout)
             .AcceptCompress();
 

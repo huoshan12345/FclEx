@@ -181,15 +181,15 @@ partial class HttpRequestExtensions
         return req;
     }
 
-    public static HttpRequest ResponseType(this HttpRequest req, HttpResponseType type)
+    public static HttpRequest ReadAs(this HttpRequest req, HttpContentType type)
     {
-        req.ResponseType = type;
+        req.ReadType = type;
         return req;
     }
 
-    public static HttpRequest ReadAsString(this HttpRequest req) => req.ResponseType(HttpResponseType.String);
+    public static HttpRequest ReadAsString(this HttpRequest req) => req.ReadAs(HttpContentType.String);
 
-    public static HttpRequest ReadAsBytes(this HttpRequest req) => req.ResponseType(HttpResponseType.Bytes);
+    public static HttpRequest ReadAsBytes(this HttpRequest req) => req.ReadAs(HttpContentType.Bytes);
 
-    public static HttpRequest ReadAsStream(this HttpRequest req) => req.ResponseType(HttpResponseType.Stream);
+    public static HttpRequest ReadAsStream(this HttpRequest req) => req.ReadAs(HttpContentType.Stream);
 }

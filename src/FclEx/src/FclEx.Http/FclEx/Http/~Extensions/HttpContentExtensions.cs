@@ -14,7 +14,7 @@ public static class HttpContentExtensions
 
     public static async Task<byte[]> ReadAsByteArrayAsync(this HttpContent content, int bufferSize, TimeSpan? readBufferTimeout, CancellationToken token)
     {
-        await using var ms = await ReadAsStreamAsync(content, bufferSize, readBufferTimeout, token);
+        await using var ms = await content.ReadAsStreamAsync(bufferSize, readBufferTimeout, token);
         return ms.ToArray();
     }
 
@@ -26,8 +26,8 @@ public static class HttpContentExtensions
 
     public static HttpContent ToBuffered(this HttpContent content, bool useGZip, TimeSpan? timeout = null, int bufferSize = 256 * 1024, CancellationToken token = default)
     {
-        return useGZip 
-            ? content.ToGZip(timeout, bufferSize, token) 
+        return useGZip
+            ? content.ToGZip(timeout, bufferSize, token)
             : content.ToBuffered(timeout, bufferSize, token);
     }
 }
