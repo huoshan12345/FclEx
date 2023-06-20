@@ -4,11 +4,11 @@ using FclEx;
 
 namespace FclEx.Actions;
 
-public interface IXmlAction<T> : IHttpResHandler<T>
+public interface IXmlAction<T> : IHttpResponseHandler<T>
 {
     string? XmlResultPath { get; }
 
-    OperateResult<T> IHttpResHandler<T>.GetResult(HttpResponse res)
+    OperateResult<T> IHttpResponseHandler<T>.GetResult(HttpResponse res)
     {
         var (successful, str, ex, _) = GetXml(res);
         if (!successful)

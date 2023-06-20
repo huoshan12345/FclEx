@@ -1,12 +1,12 @@
 ﻿namespace FclEx.Actions;
 
-public readonly struct HttpReqAction : IAction<HttpResponse>
+public readonly struct HttpRequestAction : IAction<HttpResponse>
 {
     private readonly HttpRequest _req;
     private readonly IHttpService _httpService;
     private readonly bool _unwrapError;
 
-    public HttpReqAction(HttpRequest req, IHttpService httpService, bool unwrapError = true)
+    public HttpRequestAction(HttpRequest req, IHttpService httpService, bool unwrapError = true)
     {
         _req = req;
         _httpService = httpService;

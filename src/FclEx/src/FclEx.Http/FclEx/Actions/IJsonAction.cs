@@ -4,11 +4,11 @@ using Newtonsoft.Json.Linq;
 
 namespace FclEx.Actions;
 
-public interface IJsonAction<T> : IHttpResHandler<T>
+public interface IJsonAction<T> : IHttpResponseHandler<T>
 {
     string? JsonResultPath { get; }
 
-    OperateResult<T> IHttpResHandler<T>.GetResult(HttpResponse res)
+    OperateResult<T> IHttpResponseHandler<T>.GetResult(HttpResponse res)
     {
         var (successful, str, ex, _) = GetJson(res);
         if (!successful)

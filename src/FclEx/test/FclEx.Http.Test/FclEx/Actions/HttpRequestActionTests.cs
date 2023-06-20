@@ -1,17 +1,17 @@
 ﻿namespace FclEx.Actions;
 
-public class HttpReqActionTests
+public class HttpRequestActionTests
 {
     [Fact]
     public async Task MutipleActions_Tests()
     {
         var uri = UrlUtil.Combine(GlobalConstants.TestUrl, "/api/post");
         using var http = HttpClientService.Default;
-        var (successful, data, ex, _) = await HttpRequest.Get(uri)
+        var (successful, data, ex, _) = await HttpRequest.Post(uri)
             .JsonContent(Enumerable.Range(1, 10).ToList())
             .ToAction(http)
             .ReadJson<List<int>>("body")
-            .NextReq(m => HttpRequest.Get(uri).JsonContent(m.Select(x => x.ToString()).ToDictionary(x => x, x => x + x)), http)
+            .NextRequest(m => HttpRequest.Post(uri).JsonContent(m.Select(x => x.ToString()).ToDictionary(x => x, x => x + x)), http)
             .ReadJson<Dictionary<string, string>>("body")
             .ExecuteAsync()
             .DonotCapture();

@@ -17,6 +17,7 @@ public class PropertyTests
         var res = await http.SendAsync(req)
             .ThrowIfError()
             .DonotCapture();
+
         Assert.Equal(value, res.ResponseString.Contains(CharSetTestCase.Keyword));
     }
 

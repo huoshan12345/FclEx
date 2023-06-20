@@ -61,7 +61,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             case HttpContentType.String:
             {
                 var bytes = await responseMessage.Content.ReadAsByteArrayAsync(request.BufferSize, request.ReadBufferTimeout, token);
-                (response.ResponseString, response.Encoding) = ReadBufferAsString(bytes, responseMessage.Content.Headers, request.DetectCharSet, request.FallbackCharSet);
+                (response.ResponseString, response.Encoding) = ReadBufferAsString(bytes, responseMessage.Content.Headers, request.CharSet, request.DetectCharSet, request.FallbackCharSet);
                 break;
             }
             default:
@@ -94,11 +94,11 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         }
     }
 
-    protected static (string, Encoding) ReadBufferAsString(ArraySegment<byte> buffer, HttpContentHeaders headers, bool detectCharSet, string? defaultCharSet)
+    protected static (string, Encoding) ReadBufferAsString(ArraySegment<byte> buffer, HttpContentHeaders headers, string? charSet, bool detectCharSet, string? defaultCharSet)
     {
         Debug.Assert(buffer.Array != null);
 
-        var charSet = headers.ContentType?.CharSet;
+        charSet = (charSet, headers.ContentType?.CharSet).FirstValid();
         // We don't validate the Content-Encoding header: If the content was encoded, it's the caller's
         // responsibility to make sure to only call ReadAsString() on already decoded content. E.g. if the
         // Content-Encoding is 'gzip' the user should set HttpClientHandler.AutomaticDecompression to get a

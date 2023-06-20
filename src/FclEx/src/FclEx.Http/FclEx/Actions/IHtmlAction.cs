@@ -3,11 +3,11 @@ using FclEx;
 
 namespace FclEx.Actions;
 
-public interface IHtmlAction<T> : IHttpResHandler<T>
+public interface IHtmlAction<T> : IHttpResponseHandler<T>
 {
     string? HtmlResultPath { get; }
 
-    OperateResult<T> IHttpResHandler<T>.GetResult(HttpResponse res)
+    OperateResult<T> IHttpResponseHandler<T>.GetResult(HttpResponse res)
     {
         var (successful, str, ex, _) = GetHtml(res);
         if (!successful)

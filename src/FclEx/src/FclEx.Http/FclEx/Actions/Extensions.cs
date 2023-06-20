@@ -4,7 +4,7 @@ public static class Extensions
 {
     public static IAction<HttpResponse> ToAction(this HttpRequest req, IHttpService? httpService = null, bool unwrapError = true)
     {
-        return (new HttpReqAction(req, httpService ?? HttpClientService.Default, unwrapError));
+        return (new HttpRequestAction(req, httpService ?? HttpClientService.Default, unwrapError));
     }
 
     public static IAction<T> ReadJson<T>(this IAction<HttpResponse> action, string? path = null)
@@ -12,14 +12,14 @@ public static class Extensions
         return action.Bind(m => m.ReadJson<T>(path));
     }
 
-    public static IAction<HttpResponse> NextReq<T>(this IAction<(HttpResponse, T)> action, Func<T, HttpRequest> func,
+    public static IAction<HttpResponse> NextRequest<T>(this IAction<(HttpResponse, T)> action, Func<T, HttpRequest> func,
         IHttpService? httpService = null, bool unwrapError = true)
     {
         Check.NotNull(func);
         return action.Next((res, data) => func(data).ToAction(httpService, unwrapError));
     }
 
-    public static IAction<HttpResponse> NextReq<T>(this IAction<T> action, Func<T, HttpRequest> func,
+    public static IAction<HttpResponse> NextRequest<T>(this IAction<T> action, Func<T, HttpRequest> func,
         IHttpService? httpService = null, bool unwrapError = true)
     {
         Check.NotNull(func);
@@ -38,9 +38,9 @@ public static class Extensions
         return res.TryRedirect(httpService, r => url);
     }
 
-    public static IAction<HttpResponse> NextReq<T>(this IAction<T> action, HttpRequest httpReq, IHttpService? httpService = null, bool unwrapError = true)
+    public static IAction<HttpResponse> NextRequest<T>(this IAction<T> action, HttpRequest httpReq, IHttpService? httpService = null, bool unwrapError = true)
     {
         Check.NotNull(httpReq);
-        return action.NextReq(m => httpReq, httpService, unwrapError);
+        return action.NextRequest(m => httpReq, httpService, unwrapError);
     }
 }

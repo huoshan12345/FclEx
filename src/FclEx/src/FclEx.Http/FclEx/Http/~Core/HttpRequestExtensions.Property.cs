@@ -99,19 +99,13 @@ partial class HttpRequestExtensions
 
     public static HttpRequest CharSet(this HttpRequest req, string? chartSet)
     {
-        if (req.Content?.Headers?.ContentType is { } contentType)
-        {
-            contentType.CharSet = chartSet;
-        }
+        req.CharSet = chartSet;
         return req;
     }
 
     public static HttpRequest TryCharSet(this HttpRequest req, string? chartSet)
     {
-        if (req.Content?.Headers?.ContentType is { CharSet: null } contentType)
-        {
-            contentType.CharSet = chartSet;
-        }
+        req.CharSet = chartSet;
         return req;
     }
 
