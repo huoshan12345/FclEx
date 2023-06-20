@@ -1,4 +1,4 @@
-﻿namespace FclEx.Utils;
+﻿namespace FclEx.Helpers;
 
 public static class PollyHelper
 {

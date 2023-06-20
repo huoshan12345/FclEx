@@ -1,9 +1,19 @@
-﻿using System.Text.RegularExpressions;
+﻿namespace FclEx.Helpers;
 
-namespace FclEx.Utils;
-
-public static class HtmlUtil
+public static class HtmlHelper
 {
+    private static readonly HtmlParser DefaultHtmlParser = new();
+
+    public static IHtmlDocument Parse(string html)
+    {
+        return DefaultHtmlParser.ParseDocument(html);
+    }
+
+    public static Task<IHtmlDocument> ParseAsync(string html)
+    {
+        return DefaultHtmlParser.ParseDocumentAsync(html);
+    }
+
     public static Regex RegexOfMetaRefresh { get; } = new(@"<meta +http-equiv=""refresh"" +content=""(.+)""/>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     public static Regex RegexOfMetaRefreshUrl { get; } = new(@"^\s*(\d+)(?:\s*;(?:\s*url\s*=)?\s*(?:[""']\s*(.*?)\s*['""]|(.*?)))?\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     public static Regex RegOfCharSet { get; } = new("<meta[^<]*charset=([^<]*)[\"']", RegexOptions.Compiled);

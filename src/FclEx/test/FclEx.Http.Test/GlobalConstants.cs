@@ -1,4 +1,6 @@
-﻿public static class GlobalConstants
+﻿using FclEx.Helpers;
+
+public static class GlobalConstants
 {
     public static string GetDefaultProxyUrl()
     {

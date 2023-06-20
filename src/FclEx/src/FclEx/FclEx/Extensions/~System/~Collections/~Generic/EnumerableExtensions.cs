@@ -219,4 +219,11 @@ public static partial class EnumerableExtensions
     {
         return left.SelectMany(_ => right, (x, y) => (x, y));
     }
+
+    public static IOrderedEnumerable<TSource> OrderBy<TSource, TKey>(this IEnumerable<TSource> enumerable, Func<TSource, TKey> keySelector, bool desc)
+    {
+        return desc
+            ? enumerable.OrderByDescending(keySelector)
+            : enumerable.OrderBy(keySelector);
+    }
 }

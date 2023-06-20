@@ -57,5 +57,7 @@ public class HttpClientOptions
     /// </summary>
     public TimeSpan TotalTimeout { get; set; } = TimeSpan.FromMinutes(2);
 
+    public IpVersionPreference IpVersionPreference { get; set; } = IpVersionPreference.PreferIpV4;
+
     public static readonly HttpClientOptions Default = new();
 }

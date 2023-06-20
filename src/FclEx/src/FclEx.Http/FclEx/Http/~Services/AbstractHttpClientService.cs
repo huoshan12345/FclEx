@@ -151,7 +151,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             return null;
 
         var prefix = Encoding.Default.GetString(data, 0, Math.Min(1024, data.Length));
-        var charSet = HtmlUtil.GetMetaCharSet(prefix);
+        var charSet = HtmlHelper.GetMetaCharSet(prefix);
         return charSet == null ? null : Encoding.GetEncoding(charSet);
     }
 

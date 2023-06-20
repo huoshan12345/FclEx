@@ -1,5 +1,4 @@
 ﻿using System.Net.Mime;
-using System.Text.RegularExpressions;
 using MimeTypes.Core;
 using Newtonsoft.Json.Linq;
 
