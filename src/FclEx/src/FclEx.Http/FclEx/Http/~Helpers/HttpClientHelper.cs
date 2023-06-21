@@ -32,7 +32,8 @@ public static class HttpClientHelper
             UseCookies = false,
             AllowAutoRedirect = true,
             AutomaticDecompression = DecompressionMethods.All,
-            UseProxy = false,
+            UseProxy = options.Proxy is not null,
+            Proxy = options.Proxy,
             ConnectCallback = async (context, cancellationToken) =>
             {
                 var host = context.DnsEndPoint.Host;

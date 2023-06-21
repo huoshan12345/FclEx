@@ -18,14 +18,14 @@ public partial class HttpClientServiceTests
     [InlineData("http://localhost:1080")]
     public void Constructor_Test(string proxy)
     {
-        var http = new HttpClientService(proxy: WebProxyHelper.Create(proxy));
+        var http = HttpClientService.Create(proxy);
         Assert.Equal(WebProxyHelper.Create(proxy).CastTo<WebProxy>().Address, http.WebProxy.CastTo<WebProxy>()!.Address);
     }
 
     [Fact]
     public async Task SendAsync_Success()
     {
-        using var service = new HttpClientService(false);
+        using var service = HttpClientService.Create(false);
         for (var i = 0; i < 5; i++)
         {
             var res = await HttpRequest.Get("https://www.baidu.com")
@@ -41,7 +41,7 @@ public partial class HttpClientServiceTests
     {
         var uri = new Uri("https://www.instagram.com/");
         var cookies = GlobalConstants.SimpleCookies;
-        using var service = new HttpClientService(useCookie);
+        using var service = HttpClientService.Create(useCookie);
         foreach (var cookie in cookies.Select(m => m.ToCookie()))
             service.AddCookie(cookie, uri);
     }
@@ -52,7 +52,7 @@ public partial class HttpClientServiceTests
     public void AddCookie_NullUri_Test(bool useCookie)
     {
         var cookies = GlobalConstants.SimpleCookies;
-        using var service = new HttpClientService(useCookie);
+        using var service = HttpClientService.Create(useCookie);
         foreach (var cookie in cookies.Select(m => m.ToCookie()))
             service.AddCookie(cookie, null);
     }
@@ -63,7 +63,7 @@ public partial class HttpClientServiceTests
     public void GetAllCookies_Test(bool useCookie)
     {
         var cookies = GlobalConstants.SimpleCookies.Select(m => m.ToCookie()).ToDictionary(m => m.Name);
-        using var service = new HttpClientService(useCookie);
+        using var service = HttpClientService.Create(useCookie);
         foreach (var cookie in cookies.Values)
             service.AddCookie(cookie, null);
 

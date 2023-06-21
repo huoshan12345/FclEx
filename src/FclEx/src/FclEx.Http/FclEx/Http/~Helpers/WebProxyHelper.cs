@@ -2,7 +2,7 @@
 
 public class WebProxyHelper
 {
-    public static IWebProxy Create(Uri? address, bool bypassOnLocal = false, string[]? bypassList = null, ICredentials? credentials = null)
+    public static WebProxy Create(Uri? address, bool bypassOnLocal = false, string[]? bypassList = null, ICredentials? credentials = null)
     {
         if (address is { UserInfo: { Length: > 0 } userInfo } && credentials == null)
         {
@@ -15,6 +15,8 @@ public class WebProxyHelper
         return new WebProxy(address, bypassOnLocal, bypassList, credentials);
     }
 
-    public static IWebProxy Create(string? address, bool bypassOnLocal = false, string[]? bypassList = null, ICredentials? credentials = null)
+    public static WebProxy Create(string? address, bool bypassOnLocal = false, string[]? bypassList = null, ICredentials? credentials = null)
         => Create(address.IsNullOrEmpty() ? null : new Uri(address, UriKind.Absolute), bypassOnLocal, bypassList, credentials);
+
+    public static readonly WebProxy Empty = Create((Uri?)null);
 }

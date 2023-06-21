@@ -14,11 +14,6 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         // HttpKnownHeaderNames.UserAgent
     };
 
-    protected AbstractHttpClientService(bool useCookie, IWebProxy? proxy = null, ILoggerFactory? loggerFactory = null)
-        : base(useCookie, proxy, loggerFactory)
-    {
-    }
-
     protected void ReadCookies(HttpResponseMessage responseMessage, HttpResponse response)
     {
         if (!responseMessage.Headers.TryGetValues(HttpKnownHeaderNames.SetCookie, out var cookies)) return;

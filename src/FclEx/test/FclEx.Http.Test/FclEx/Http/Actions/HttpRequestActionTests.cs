@@ -1,4 +1,4 @@
-﻿namespace FclEx.Actions;
+﻿namespace FclEx.Http.Actions;
 
 public class HttpRequestActionTests
 {

@@ -10,8 +10,7 @@ public class WebProxyEqualityComparer : IEqualityComparer<WebProxy>
         if (x.GetType() != y.GetType()) return false;
 
         return SchemeAndServerEqualityComparer.Instance.Equals(x.Address, y.Address)
-               && x.BypassArrayList.Equals(y.BypassArrayList)
-               && x.BypassList.Equals(y.BypassList)
+               && x.BypassList.SequenceEqual(y.BypassList)
                && x.BypassProxyOnLocal == y.BypassProxyOnLocal
                && Equals(x.Credentials, y.Credentials)
                && x.UseDefaultCredentials == y.UseDefaultCredentials;
@@ -19,7 +18,12 @@ public class WebProxyEqualityComparer : IEqualityComparer<WebProxy>
 
     public int GetHashCode(WebProxy obj)
     {
-        return HashCode.Combine(obj.Address, obj.BypassArrayList, obj.BypassList, obj.BypassProxyOnLocal, obj.Credentials, obj.UseDefaultCredentials);
+        return HashCode.Combine(
+            obj.Address,
+            obj.BypassList,
+            obj.BypassProxyOnLocal,
+            obj.Credentials,
+            obj.UseDefaultCredentials);
     }
 
     public static readonly WebProxyEqualityComparer Instance = new();

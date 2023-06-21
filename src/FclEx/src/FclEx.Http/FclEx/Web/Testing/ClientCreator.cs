@@ -72,7 +72,7 @@ public class ClientCreator<TClient> where TClient : IUserClient
     public virtual async Task<TClient> CreateClient(UserAccount account, IWebProxy? proxy, bool readCookie)
     {
         var factory = _provider.GetRequiredService<IUserClientFactory<TClient>>();
-        var client = factory.Create(account, new HttpClientService(proxy: proxy));
+        var client = factory.Create(account, new HttpClientService());
         if (readCookie)
         {
             var cookies = await ReadCookies(typeof(TClient), account);
