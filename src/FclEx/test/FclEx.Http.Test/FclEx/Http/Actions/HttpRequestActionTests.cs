@@ -5,13 +5,12 @@ public class HttpRequestActionTests
     [Fact]
     public async Task MutipleActions_Tests()
     {
-        var uri = new Uri(GlobalConstants.TestUri, "api/post");
-        using var http = HttpClientService.Default;
-        var (successful, data, ex, _) = await HttpRequest.Post(uri)
+        var path = new Uri("api/post", UriKind.RelativeOrAbsolute);
+        var (successful, data, ex, _) = await HttpRequest.Post(path)
             .JsonContent(Enumerable.Range(1, 10).ToList())
-            .ToAction(http)
+            .ToAction(TestHttp)
             .ReadJson<List<int>>("body")
-            .NextRequest(m => HttpRequest.Post(uri).JsonContent(m.Select(x => x.ToString()).ToDictionary(x => x, x => x + x)), http)
+            .NextRequest(m => HttpRequest.Post(path).JsonContent(m.Select(x => x.ToString()).ToDictionary(x => x, x => x + x)), TestHttp)
             .ReadJson<Dictionary<string, string>>("body")
             .ExecuteAsync()
             .DonotCapture();

@@ -152,7 +152,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         return charSet == null ? null : Encoding.GetEncoding(charSet);
     }
 
-    protected static HttpRequestMessage BuildHttpRequest(HttpRequest request, CookieContainer cc, CancellationToken token)
+    protected static HttpRequestMessage BuildHttpRequest(HttpRequest request, Uri? baseAddress, CookieContainer cc, CancellationToken token)
     {
         var requestMessage = new HttpRequestMessage(request.Method, request.GetUri());
 
@@ -191,16 +191,23 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         var cookies = request.Headers.Get(HttpKnownHeaderNames.Cookie);
         requestMessage.AddCookie(cookies);
 
-        var cookiesInCc = cc.GetCookieHeader(requestMessage.RequestUri!);
-        requestMessage.AddCookie(cookiesInCc);
-
+        var uri = requestMessage.RequestUri!;
+        if (uri.IsAbsoluteUri == false && baseAddress is not null)
+        {
+            uri = baseAddress;
+        }
+        if (uri.IsAbsoluteUri == false)
+        {
+            var cookiesInCc = cc.GetCookieHeader(uri);
+            requestMessage.AddCookie(cookiesInCc);
+        }
         return requestMessage;
     }
 
-    private async Task<HttpResponseMessage> SendAsync(HttpClient httpClient, HttpRequest httpReq, CancellationToken token,
+    private async Task<HttpResponseMessage> SendAsync(HttpClient httpClient, HttpRequest request, CancellationToken token,
         HttpCompletionOption httpCompletionOption = HttpCompletionOption.ResponseHeadersRead)
     {
-        var httpRequest = BuildHttpRequest(httpReq, _cookieContainer, token);
+        var httpRequest = BuildHttpRequest(request, httpClient.BaseAddress, _cookieContainer, token);
         var res = await httpClient.SendAsync(httpRequest, httpCompletionOption, token).DonotCapture();
         return res;
     }

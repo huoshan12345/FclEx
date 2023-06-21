@@ -28,9 +28,9 @@ public class HttpClientService : AbstractHttpClientService
         GC.SuppressFinalize(this);
     }
 
-    private static readonly ConcurrentDictionary<HttpClientOptions, IHttpClientFactory> Factories = new();
+    private static readonly ConcurrentDictionary<HttpClientOptions, IHttpClientFactory> Factories = new(HttpClientOptionsEqualityComparer.Instance);
 
-    protected static IHttpClientFactory GetFactory(HttpClientOptions options)
+    protected internal static IHttpClientFactory GetFactory(HttpClientOptions options)
     {
         return Factories.GetOrAdd(options, m => new ServiceCollection()
             .AddHttpClientWithPolly(string.Empty, options)

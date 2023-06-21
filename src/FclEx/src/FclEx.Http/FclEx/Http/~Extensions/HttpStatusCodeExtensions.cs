@@ -11,7 +11,8 @@ public static class HttpStatusCodeExtensions
     public static HttpStatusCodeType GetCodeType(this HttpStatusCode code)
     {
         var digit = ((int)code) / 100;
-        if (digit >= 0 && digit <= 5) return (HttpStatusCodeType)digit;
-        else return HttpStatusCodeType.Unknown;
+        return digit is >= 0 and <= 5 
+            ? (HttpStatusCodeType)digit
+            : HttpStatusCodeType.Unknown;
     }
 }

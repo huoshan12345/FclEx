@@ -84,4 +84,21 @@ public partial class HttpClientServiceTests
             Assert.Empty(actualCookies);
         }
     }
+
+    [Fact]
+    public void GetFactory_Default_Test()
+    {
+        var fac1 = HttpClientService.GetFactory(HttpClientOptions.Default);
+        var fac2 = HttpClientService.GetFactory(HttpClientOptions.Default);
+        Assert.Equal(fac1, fac2, ReferenceEqualityComparer.Instance);
+    }
+
+    [Fact]
+    public void GetFactory_Proxy_Test()
+    {
+        var uri = new Uri("http://127.0.0.1:8888");
+        var fac1 = HttpClientService.GetFactory(new() { Proxy = WebProxyHelper.Create(uri) });
+        var fac2 = HttpClientService.GetFactory(new() { Proxy = WebProxyHelper.Create(uri) });
+        Assert.Equal(fac1, fac2, ReferenceEqualityComparer.Instance);
+    }
 }

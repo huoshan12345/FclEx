@@ -1,6 +1,4 @@
-﻿using System.Net.Http.Headers;
-using System.Reflection;
-using Newtonsoft.Json;
+﻿
 
 namespace FclEx.Http.Core.HttpRequestTests;
 
@@ -56,8 +54,6 @@ public class PropertyTests
         Assert.Equal(value, res.ResponseString.Contains(CharSetTestCase.Keyword));
     }
 
-    private static readonly HttpClientService Http = HttpClientService.Create("http://127.0.0.1:8888", false);
-
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
@@ -65,11 +61,11 @@ public class PropertyTests
     {
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 100).ToDictionary(m => m.ToString(), m => random.NextString(5));
-        var res = await HttpRequest.Post(new Uri(GlobalConstants.TestUri, "api/gzip"))
+        var res = await HttpRequest.Post("api/gzip")
             .AddData(expected!)
             .ConnectTimeout(TimeSpan.FromSeconds(30))
             .UseGZip(value)
-            .SendAsync(Http)
+            .SendAsync(TestHttp)
             .ThrowIfError()
             .DonotCapture();
 

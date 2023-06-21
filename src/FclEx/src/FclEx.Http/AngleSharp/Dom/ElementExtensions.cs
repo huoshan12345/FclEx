@@ -1,7 +1,4 @@
-﻿using FclEx;
-using FclEx.Web;
-
-namespace AngleSharp.Dom;
+﻿namespace AngleSharp.Dom;
 
 public static class ElementExtensions
 {

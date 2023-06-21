@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Http;
 
-public class HttpClientOptions : SocketsHttpHandlerOptions, IEqualityComparer<HttpClientOptions>
+public class HttpClientOptions : SocketsHttpHandlerOptions
 {
     public static readonly SleepDurationProvider DefaultSleepDurationProvider = retryAttempt => TimeSpan.FromSeconds(1 + retryAttempt);
 
@@ -20,32 +20,4 @@ public class HttpClientOptions : SocketsHttpHandlerOptions, IEqualityComparer<Ht
     public TimeSpan TotalTimeout { get; set; } = TimeSpan.FromMinutes(2);
 
     public new static readonly HttpClientOptions Default = new();
-
-    public bool Equals(HttpClientOptions? x, HttpClientOptions? y)
-    {
-        if (ReferenceEquals(x, y)) return true;
-        if (ReferenceEquals(x, null)) return false;
-        if (ReferenceEquals(y, null)) return false;
-        if (x.GetType() != y.GetType()) return false;
-
-        return base.Equals(x, y)
-               && x.ExecutionTimeout.Equals(y.ExecutionTimeout)
-               && Uri.Compare(x.BaseAddress, y.BaseAddress, UriComponents.AbsoluteUri, UriFormat.SafeUnescaped, StringComparison.OrdinalIgnoreCase) == 0
-               && x.RetryCount == y.RetryCount
-               && x.AutoUpdateTotalTimeout == y.AutoUpdateTotalTimeout
-               && x.SleepDurationProvider.Equals(y.SleepDurationProvider)
-               && x.TotalTimeout.Equals(y.TotalTimeout);
-    }
-
-    public int GetHashCode(HttpClientOptions obj)
-    {
-        return HashCode.Combine(
-            base.GetHashCode(obj),
-            obj.BaseAddress,
-            obj.ExecutionTimeout,
-            obj.RetryCount,
-            obj.AutoUpdateTotalTimeout,
-            obj.SleepDurationProvider,
-            obj.TotalTimeout);
-    }
 }
