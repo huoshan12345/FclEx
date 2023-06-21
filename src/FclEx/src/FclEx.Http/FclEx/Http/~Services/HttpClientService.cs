@@ -3,11 +3,11 @@ using MoreLinq;
 
 namespace FclEx.Http;
 
-public sealed class HttpClientService : AbstractHttpClientService
+public class HttpClientService : AbstractHttpClientService
 {
     public static HttpClientService Default { get; } = new(false);
 
-    private volatile HttpClient _httpClient;
+    protected volatile HttpClient _httpClient;
 
     private static HttpClient CreateHttpClient(IWebProxy? proxy)
     {
@@ -79,9 +79,9 @@ public sealed class HttpClientService : AbstractHttpClientService
         _httpClient = CreateHttpClient(_webProxy);
     }
 
-    protected override Task ExecuteAsyncInternal(HttpRequest httpReq, HttpResponse httpRes, CancellationToken token)
+    protected override Task ExecuteAsyncInternal(HttpRequest request, HttpResponse response, CancellationToken token)
     {
-        return ExecuteAsyncInternal(_httpClient, httpReq, httpRes, token);
+        return ExecuteAsyncInternal(_httpClient, request, response, token);
     }
 
     public HttpClientService(bool useCookie = true, IWebProxy? proxy = null, ILoggerFactory? loggerFactory = null)

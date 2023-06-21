@@ -5,7 +5,7 @@ public class HttpRequestActionTests
     [Fact]
     public async Task MutipleActions_Tests()
     {
-        var uri = UrlUtil.Combine(GlobalConstants.TestUrl, "/api/post");
+        var uri = UriCreator.Combine(GlobalConstants.TestUrl, "/api/post");
         using var http = HttpClientService.Default;
         var (successful, data, ex, _) = await HttpRequest.Post(uri)
             .JsonContent(Enumerable.Range(1, 10).ToList())

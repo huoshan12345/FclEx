@@ -6,7 +6,7 @@ public static class ServiceCollectionExtensions
     {
         options ??= HttpClientOptions.Default;
         return services.AddHttpClient(name, httpClient => httpClient.Timeout = options.TotalTimeout)
-            .ConfigurePrimaryHttpMessageHandler(() => HttpClientHelper.CreateSocketsHttpHandler(options.ConnectTimeout, options.IpVersionPreference))
+            .ConfigurePrimaryHttpMessageHandler(() => HttpClientHelper.CreateSocketsHttpHandler(options))
             .AddRetryPolicy(options.ExecutionTimeout, options.RetryCount, options.AutoUpdateTotalTimeout, options.SleepDurationProvider);
     }
 }

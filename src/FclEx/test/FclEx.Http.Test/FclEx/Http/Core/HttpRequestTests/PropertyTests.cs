@@ -2,7 +2,7 @@
 
 public class PropertyTests
 {
-    public static (string Url, string CharSet, string Keyword) CharSetTestCase = ("https://passport.weibo.com/visitor/visitor", "gb2312", "是否采集设备指纹");
+    public static readonly (string Url, string CharSet, string Keyword) CharSetTestCase = ("https://passport.weibo.com/visitor/visitor", "gb2312", "是否采集设备指纹");
 
     [Theory]
     [InlineData(true)]
@@ -59,7 +59,7 @@ public class PropertyTests
     {
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 3).ToDictionary(m => m.ToString(), m => random.NextString(5));
-        var res = await HttpRequest.Post(UrlUtil.Combine(GlobalConstants.TestUrl, "/api/gzip"))
+        var res = await HttpRequest.Post(UriCreator.Combine(GlobalConstants.TestUrl, "/api/gzip"))
             .AddData(expected!)
             .ConnectTimeout(TimeSpan.FromSeconds(30))
             .UseGZip(value)

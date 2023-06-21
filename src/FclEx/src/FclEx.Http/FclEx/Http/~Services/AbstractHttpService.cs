@@ -22,16 +22,16 @@ public abstract class AbstractHttpService : IHttpService
 
     public virtual void Dispose() { }
 
-    protected abstract Task ExecuteAsyncInternal(HttpRequest httpReq, HttpResponse httpRes, CancellationToken token);
+    protected abstract Task ExecuteAsyncInternal(HttpRequest request, HttpResponse response, CancellationToken token);
 
-    public async Task<HttpResponse> ExecuteAsync(HttpRequest httpReq, CancellationToken token = default)
+    public async Task<HttpResponse> ExecuteAsync(HttpRequest request, CancellationToken token = default)
     {
         token.ThrowIfCancellationRequested();
         var watch = ValueStopwatch.StartNew();
-        var res = new HttpResponse(httpReq) { RequestUtcTime = DateTime.UtcNow };
+        var res = new HttpResponse(request) { RequestUtcTime = DateTime.UtcNow };
         try
         {
-            await ExecuteAsyncInternal(httpReq, res, token).DonotCapture();
+            await ExecuteAsyncInternal(request, res, token).DonotCapture();
         }
         catch (Exception e)
         {

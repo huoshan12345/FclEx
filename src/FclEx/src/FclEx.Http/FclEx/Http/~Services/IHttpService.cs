@@ -2,7 +2,7 @@
 
 public interface IHttpService : IDisposable
 {
-    Task<HttpResponse> ExecuteAsync(HttpRequest httpReq, CancellationToken token = default);
+    Task<HttpResponse> ExecuteAsync(HttpRequest request, CancellationToken token = default);
 
     void AddCookie(Cookie cookie, Uri? uri = null);
 
