@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging.Abstractions;
 
-namespace FclEx.Web._Actions;
+namespace FclEx.Web;
 
 public abstract class UserClientAction<TClient, T> : IUserClientAction<TClient, T> where TClient : IUserClient
 {

@@ -1,4 +1,4 @@
-﻿namespace FclEx.Web._Actions;
+﻿namespace FclEx.Web;
 
 public abstract class UserClientHttpAction<TClient, T> : UserClientAction<TClient, T>, IHttpAction<T>
     where TClient : IUserClient

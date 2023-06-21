@@ -1,4 +1,4 @@
-﻿namespace FclEx.Web._Actions;
+﻿namespace FclEx.Web;
 
 public abstract class UserClientJsonAction<TClient, T> : UserClientHttpAction<TClient, T>, IJsonAction<T>
     where TClient : IUserClient
