@@ -67,7 +67,7 @@ public abstract class AbstractHttpService : IHttpService
             : Array.Empty<Cookie>();
     }
 
-    public virtual IWebProxy? WebProxy { get; set; }
+    public virtual IWebProxy? Proxy { get; set; }
 
     [AllowNull]
     public ILogger Logger

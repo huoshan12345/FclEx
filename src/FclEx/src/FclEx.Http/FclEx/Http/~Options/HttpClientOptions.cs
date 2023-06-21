@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Http;
 
-public class HttpClientOptions : SocketsHttpHandlerOptions
+public record HttpClientOptions : SocketsHttpHandlerOptions
 {
     public static readonly SleepDurationProvider DefaultSleepDurationProvider = retryAttempt => TimeSpan.FromSeconds(1 + retryAttempt);
 

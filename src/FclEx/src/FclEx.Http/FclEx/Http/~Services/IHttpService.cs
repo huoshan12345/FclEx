@@ -12,7 +12,7 @@ public interface IHttpService : IDisposable
 
     IReadOnlyCollection<Cookie> GetAllCookies();
 
-    IWebProxy? WebProxy { get; set; }
+    IWebProxy? Proxy { get; set; }
 
     ILogger Logger { get; set; }
 }

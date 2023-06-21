@@ -1,7 +1,4 @@
-﻿using FclEx.Helpers;
-using Xunit.Abstractions;
-
-namespace FclEx.Http.Services;
+﻿namespace FclEx.Http.Services;
 
 public partial class HttpClientServiceTests
 {
@@ -19,7 +16,7 @@ public partial class HttpClientServiceTests
     public void Constructor_Test(string proxy)
     {
         var http = HttpClientService.Create(proxy);
-        Assert.Equal(WebProxyHelper.Create(proxy).CastTo<WebProxy>().Address, http.WebProxy.CastTo<WebProxy>()!.Address);
+        Assert.Equal(WebProxyHelper.Create(proxy).CastTo<WebProxy>().Address, http.Proxy.CastTo<WebProxy>()!.Address);
     }
 
     [Fact]
@@ -93,6 +90,18 @@ public partial class HttpClientServiceTests
         Assert.Equal(fac1, fac2, ReferenceEqualityComparer.Instance);
     }
 
+    private static void CheckHttpClient(HttpClient client, Uri? baseAddress, IWebProxy? proxy)
+    {
+        Assert.Equal(baseAddress, client.BaseAddress);
+        var handler = client.GetHandler()
+            .EnumerateInner()
+            .OfType<SocketsHttpHandler>()
+            .FirstOrDefault();
+        Assert.NotNull(handler);
+        var webProxy = handler.Proxy.CastTo<IWebProxy>();
+        Assert.Equal<IWebProxy>(proxy, webProxy, IWebProxyEqualityComparer.Instance);
+    }
+
     [Fact]
     public void GetFactory_Proxy_Test()
     {
@@ -100,5 +109,36 @@ public partial class HttpClientServiceTests
         var fac1 = HttpClientService.GetFactory(new() { Proxy = WebProxyHelper.Create(uri) });
         var fac2 = HttpClientService.GetFactory(new() { Proxy = WebProxyHelper.Create(uri) });
         Assert.Equal(fac1, fac2, ReferenceEqualityComparer.Instance);
+        CheckHttpClient(fac1.CreateClient(), null, WebProxyHelper.Create(uri));
+        CheckHttpClient(fac2.CreateClient(), null, WebProxyHelper.Create(uri));
+    }
+
+    [Fact]
+    public void SetProxy_Test()
+    {
+        var http = HttpClientService.Create();
+        {
+            var client = http.CreateClient();
+            Assert.Null(http.Proxy);
+            CheckHttpClient(client, null, null);
+        }
+        {
+            var proxy = WebProxyHelper.Create("http://127.0.0.1:8888");
+            http.Proxy = proxy;
+            var client = http.CreateClient();
+            Assert.Equal(proxy, http.Proxy);
+            CheckHttpClient(client, null, proxy);
+        }
+    }
+
+    [Fact]
+    public void GetFactory_Proxy_NotSame()
+    {
+        var uri = new Uri("http://127.0.0.1:8888");
+        var fac1 = HttpClientService.GetFactory(new() { Proxy = WebProxyHelper.Create(uri) });
+        var fac2 = HttpClientService.GetFactory(new() { Proxy = null });
+        Assert.NotEqual(fac1, fac2, ReferenceEqualityComparer.Instance);
+        CheckHttpClient(fac1.CreateClient(), null, WebProxyHelper.Create(uri));
+        CheckHttpClient(fac2.CreateClient(), null, null);
     }
 }

@@ -56,11 +56,10 @@ public static class HttpResponseExtensions
         return token.ToObject<T>()!;
     }
 
-
     private static readonly Regex _regexOfNonWord = new(@"\W", RegexOptions.Compiled);
-    public static HttpFileDownloadInfo GetDownloadInfo(this HttpResponse res)
+    public static HttpFileDownloadInfo GetDownloadInfo(this HttpResponse response)
     {
-        var realUrl = res.RedirectUris.Last();
+        var realUrl = response.RedirectUris.Last();
         var fileNameWithExt = Path.GetFileName(realUrl.LocalPath);
         var ext = Path.GetExtension(fileNameWithExt);
         var fileName = fileNameWithExt.TrimEnd(ext);
@@ -69,7 +68,7 @@ public static class HttpResponseExtensions
             fileName = (realUrl.Host + realUrl.LocalPath).Replace(_regexOfNonWord, "_").TrimEnd("_");
         }
 
-        var mimeType = res.Headers.GetFirstOr(HttpKnownHeaderNames.ContentType) ?? "";
+        var mimeType = response.Headers.GetFirstOr(HttpKnownHeaderNames.ContentType) ?? "";
         if (mimeType.IsValid())
         {
             if (mimeType.Contains(';'))
@@ -82,7 +81,7 @@ public static class HttpResponseExtensions
         }
 
         ext ??= string.Empty;
-        var info = new HttpFileDownloadInfo(realUrl, fileName, ext, res.ResponseBytes, mimeType);
+        var info = new HttpFileDownloadInfo(realUrl, fileName, ext, response.ResponseBytes, mimeType);
         return info;
     }
 
@@ -113,4 +112,6 @@ public static class HttpResponseExtensions
     {
         return task.Do(m => !m.HasError, action);
     }
+
+
 }

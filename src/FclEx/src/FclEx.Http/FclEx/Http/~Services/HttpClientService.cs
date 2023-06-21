@@ -2,13 +2,13 @@
 
 public class HttpClientService : AbstractHttpClientService
 {
-    protected readonly HttpClientOptions _options;
+    protected HttpClientOptions _options;
 
     public static HttpClientService Default { get; } = new() { UseCookie = false };
 
     protected override Task ExecuteAsyncInternal(HttpRequest request, HttpResponse response, CancellationToken token)
     {
-        var httpClient = GetFactory(_options).CreateClient();
+        var httpClient = CreateClient();
         return ExecuteAsyncInternal(httpClient, request, response, token);
     }
 
@@ -17,10 +17,16 @@ public class HttpClientService : AbstractHttpClientService
         _options = options ?? HttpClientOptions.Default;
     }
 
-    public override IWebProxy? WebProxy
+    public override IWebProxy? Proxy
     {
         get => _options.Proxy;
-        set => _options.Proxy = value;
+        set
+        {
+            if (IWebProxyEqualityComparer.Instance.Equals(_options.Proxy, value))
+                return;
+
+            _options = _options with { Proxy = value };
+        }
     }
 
     public override void Dispose()
@@ -28,7 +34,7 @@ public class HttpClientService : AbstractHttpClientService
         GC.SuppressFinalize(this);
     }
 
-    private static readonly ConcurrentDictionary<HttpClientOptions, IHttpClientFactory> Factories = new(HttpClientOptionsEqualityComparer.Instance);
+    protected static readonly ConcurrentDictionary<HttpClientOptions, IHttpClientFactory> Factories = new(HttpClientOptionsEqualityComparer.Instance);
 
     protected internal static IHttpClientFactory GetFactory(HttpClientOptions options)
     {
@@ -37,6 +43,11 @@ public class HttpClientService : AbstractHttpClientService
             .Services
             .BuildServiceProvider()
             .GetRequiredService<IHttpClientFactory>());
+    }
+
+    protected internal virtual HttpClient CreateClient()
+    {
+        return GetFactory(_options).CreateClient();
     }
 
     public static HttpClientService Create(HttpClientOptions? options = null, bool useCookie = true, ILoggerFactory? loggerFactory = null)
@@ -55,7 +66,7 @@ public class HttpClientService : AbstractHttpClientService
 
     public static HttpClientService Create(Action<HttpClientOptions> configureOptions, bool useCookie = true, ILoggerFactory? loggerFactory = null)
     {
-        var options = HttpClientOptions.Default;
+        var options = new HttpClientOptions();
         configureOptions(options);
         return Create(options, useCookie, loggerFactory);
     }

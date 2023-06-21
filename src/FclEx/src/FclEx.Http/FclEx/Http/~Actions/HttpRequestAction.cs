@@ -19,7 +19,7 @@ public readonly struct HttpRequestAction : IAction<HttpResponse>
     {
         var res = await _httpService.ExecuteAsync(_req, token).DonotCapture();
         return res.HasError && _unwrapError
-            ? Operate.CreateObjError(res, res.Exception!, res.ExecuteTime).ToExplicit<HttpResponse>()
+            ? Operate.CreateObjectError(res, res.Exception!, res.ExecuteTime).ToExplicit<HttpResponse>()
             : Operate.CreateSuccess(res);
     }
 }

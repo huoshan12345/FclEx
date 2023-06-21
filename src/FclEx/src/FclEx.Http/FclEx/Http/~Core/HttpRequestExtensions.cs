@@ -2,13 +2,13 @@
 
 public static partial class HttpRequestExtensions
 {
-    public static Task<HttpResponse> SendAsync(this HttpRequest req, IHttpService? service = null, int retryTimes = 0, int delaySeconds = 0)
+    public static Task<HttpResponse> SendAsync(this HttpRequest request, IHttpService? service = null)
     {
-        return (service ?? HttpClientService.Default).SendAsync(req, retryTimes, delaySeconds);
+        return (service ?? HttpClientService.Default).SendAsync(request);
     }
 
-    public static Task<HttpResponse> SendAsync(this HttpRequest req, IHttpService service, IAsyncPolicy policy)
+    public static Task<HttpResponse> SendAsync(this HttpRequest request, IHttpService service, IAsyncPolicy policy)
     {
-        return policy.ExecuteAsync(() => req.SendAsync(service));
+        return policy.ExecuteAsync(() => request.SendAsync(service));
     }
 }

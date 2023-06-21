@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Http;
 
-public class SocketsHttpHandlerOptions
+public record SocketsHttpHandlerOptions
 {
     public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(10);
     public IPVersionOption IPVersionOption { get; set; } = IPVersionOption.PreferIPv4;

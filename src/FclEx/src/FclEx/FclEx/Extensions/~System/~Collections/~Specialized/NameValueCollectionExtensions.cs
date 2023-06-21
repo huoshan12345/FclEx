@@ -5,7 +5,7 @@ namespace FclEx.Extensions;
 
 public static class NameValueCollectionExtensions
 {
-    public static IEnumerable<KeyValuePair<string, string>> AsEnumerable(this NameValueCollection col)
+    public static IEnumerable<KeyValuePair<string, string>> Enumerate(this NameValueCollection col)
     {
         var q = from k in col.AllKeys.NotNull()
                 from v in col.GetValues(k).EmptyIfNull()
@@ -19,7 +19,7 @@ public static class NameValueCollectionExtensions
             throw new NotSupportedException();
 
         var dic = new Dictionary<string, string>(nvc.Count);
-        foreach (var (k, v) in nvc.AsEnumerable())
+        foreach (var (k, v) in nvc.Enumerate())
         {
             switch (policy)
             {
