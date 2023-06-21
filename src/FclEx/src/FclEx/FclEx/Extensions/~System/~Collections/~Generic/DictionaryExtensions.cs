@@ -22,7 +22,14 @@ public static class DictionaryExtensions
         return dic.TryGetValue(key, out var value) && value != null ? value : fac(key);
     }
 
-    public static TProp? Get<TKey, TValue, TProp>(this IDictionary<TKey, TValue> dic, TKey key, Func<TValue, TProp?> selector, TProp? defaultValue = default)
+    public static TProp? Get<TKey, TValue, TProp>(this IDictionary<TKey, TValue> dic, TKey key, Func<TValue, TProp> selector, TProp? defaultValue = default)
+        where TProp : struct
+    {
+        return dic.TryGetValue(key, out var value) && value != null ? selector(value) : defaultValue;
+    }
+
+    public static TProp? Get<TKey, TValue, TProp>(this IDictionary<TKey, TValue> dic, TKey key, Func<TValue, TProp?> selector, TProp? defaultValue = default) 
+        where TProp : class
     {
         return dic.TryGetValue(key, out var value) && value != null ? selector(value) : defaultValue;
     }

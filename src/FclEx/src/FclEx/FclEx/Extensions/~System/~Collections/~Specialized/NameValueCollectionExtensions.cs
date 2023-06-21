@@ -8,7 +8,7 @@ public static class NameValueCollectionExtensions
     public static IEnumerable<KeyValuePair<string, string>> AsEnumerable(this NameValueCollection col)
     {
         var q = from k in col.AllKeys.NotNull()
-                from v in col.GetValues(k).Touch()
+                from v in col.GetValues(k).EmptyIfNull()
                 select KvPair.Create(k, v);
         return q;
     }
@@ -57,7 +57,7 @@ public static class NameValueCollectionExtensions
         var obj = new JObject();
         foreach (var k in col.AllKeys.NotNull())
         {
-            var values = col.GetValues(k).Touch().ToHashSet();
+            var values = col.GetValues(k).EmptyIfNull().ToHashSet();
             if (values.Count > 0)
                 obj.Add(k, values.ToJToken(policy));
         }

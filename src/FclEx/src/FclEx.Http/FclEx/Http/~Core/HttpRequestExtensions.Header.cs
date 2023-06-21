@@ -24,7 +24,7 @@ partial class HttpRequestExtensions
 
     public static HttpRequest AddHeader(this HttpRequest req, IEnumerable<KeyValuePair<string, string?>> paras)
     {
-        paras.Touch().ForEach(m => req.AddHeader(m));
+        paras.EmptyIfNull().ForEach(m => req.AddHeader(m));
         return req;
     }
 

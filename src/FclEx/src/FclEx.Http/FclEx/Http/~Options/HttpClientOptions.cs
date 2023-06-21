@@ -4,6 +4,7 @@ public class HttpClientOptions : SocketsHttpHandlerOptions, IEqualityComparer<Ht
 {
     public static readonly SleepDurationProvider DefaultSleepDurationProvider = retryAttempt => TimeSpan.FromSeconds(1 + retryAttempt);
 
+    public Uri? BaseAddress { get; set; }
     public TimeSpan ExecutionTimeout { get; set; } = TimeSpan.FromMinutes(1);
     public int RetryCount { get; set; } = 2;
 
@@ -27,9 +28,9 @@ public class HttpClientOptions : SocketsHttpHandlerOptions, IEqualityComparer<Ht
         if (ReferenceEquals(y, null)) return false;
         if (x.GetType() != y.GetType()) return false;
 
-
         return base.Equals(x, y)
                && x.ExecutionTimeout.Equals(y.ExecutionTimeout)
+               && Uri.Compare(x.BaseAddress, y.BaseAddress, UriComponents.AbsoluteUri, UriFormat.SafeUnescaped, StringComparison.OrdinalIgnoreCase) == 0
                && x.RetryCount == y.RetryCount
                && x.AutoUpdateTotalTimeout == y.AutoUpdateTotalTimeout
                && x.SleepDurationProvider.Equals(y.SleepDurationProvider)
@@ -40,6 +41,7 @@ public class HttpClientOptions : SocketsHttpHandlerOptions, IEqualityComparer<Ht
     {
         return HashCode.Combine(
             base.GetHashCode(obj),
+            obj.BaseAddress,
             obj.ExecutionTimeout,
             obj.RetryCount,
             obj.AutoUpdateTotalTimeout,

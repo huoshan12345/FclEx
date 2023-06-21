@@ -16,7 +16,9 @@ public abstract class AbstractHttpClientService : AbstractHttpService
 
     protected void ReadCookies(HttpResponseMessage responseMessage, HttpResponse response)
     {
-        if (!responseMessage.Headers.TryGetValues(HttpKnownHeaderNames.SetCookie, out var cookies)) return;
+        if (!responseMessage.Headers.TryGetValues(HttpKnownHeaderNames.SetCookie, out var cookies))
+            return;
+
         var arr = cookies.ToArray();
         if (arr.IsEmpty())
             return;

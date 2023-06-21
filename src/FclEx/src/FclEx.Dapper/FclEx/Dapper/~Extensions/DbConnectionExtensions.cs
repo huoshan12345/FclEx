@@ -284,7 +284,7 @@ public static partial class DbConnectionExtensions
         var command = con.CreateCommand();
         command.CommandText = sql;
         command.Transaction = transaction;
-        foreach (var item in paras.Touch())
+        foreach (var item in paras.EmptyIfNull())
         {
             command.Parameters.Add(item);
         }

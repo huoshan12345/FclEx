@@ -4,7 +4,7 @@
 
 namespace FclEx.Http;
 
-public partial class UriCreator
+public class UriCreator
 {
     public UriCreator(string uri)
         : this(new Uri(uri, UriKind.RelativeOrAbsolute))

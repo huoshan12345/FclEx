@@ -95,7 +95,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.EfCore.Tests", "FclEx
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmark", "benchmark", "{3FD5D6ED-19E8-43D9-855E-7FD7533704E0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FclEx.Abp.EfCore", "FclEx.Abp\src\FclEx.Abp.EfCore\FclEx.Abp.EfCore.csproj", "{1B8FC570-FB7C-4BD8-813A-A108F1CFB934}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Abp.EfCore", "FclEx.Abp\src\FclEx.Abp.EfCore\FclEx.Abp.EfCore.csproj", "{1B8FC570-FB7C-4BD8-813A-A108F1CFB934}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

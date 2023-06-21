@@ -1,4 +1,5 @@
-﻿using Microsoft.Collections.Extensions;
+﻿using System.Net.Http.Headers;
+using Microsoft.Collections.Extensions;
 
 namespace FclEx.Http;
 

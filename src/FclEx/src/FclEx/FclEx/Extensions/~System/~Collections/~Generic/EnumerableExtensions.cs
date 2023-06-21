@@ -20,7 +20,7 @@ public static partial class EnumerableExtensions
         return source == null || !source.Any();
     }
 
-    public static IEnumerable<T> Touch<T>(this IEnumerable<T>? source)
+    public static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T>? source)
     {
         return source ?? Enumerable.Empty<T>();
     }

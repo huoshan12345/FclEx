@@ -1,4 +1,8 @@
-﻿namespace FclEx.Http.Core.HttpRequestTests;
+﻿using System.Net.Http.Headers;
+using System.Reflection;
+using Newtonsoft.Json;
+
+namespace FclEx.Http.Core.HttpRequestTests;
 
 public class PropertyTests
 {
@@ -52,23 +56,35 @@ public class PropertyTests
         Assert.Equal(value, res.ResponseString.Contains(CharSetTestCase.Keyword));
     }
 
+    private static readonly HttpClientService Http = HttpClientService.Create("http://127.0.0.1:8888", false);
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public async Task GZip_Test(bool value)
     {
         var random = new Random(1024);
-        var expected = Enumerable.Range(1, 3).ToDictionary(m => m.ToString(), m => random.NextString(5));
-        var res = await HttpRequest.Post(UriCreator.Combine(GlobalConstants.TestUrl, "/api/gzip"))
+        var expected = Enumerable.Range(1, 100).ToDictionary(m => m.ToString(), m => random.NextString(5));
+        var res = await HttpRequest.Post(new Uri(GlobalConstants.TestUri, "api/gzip"))
             .AddData(expected!)
             .ConnectTimeout(TimeSpan.FromSeconds(30))
             .UseGZip(value)
-            .SendAsync()
+            .SendAsync(Http)
             .ThrowIfError()
             .DonotCapture();
+
         Assert.False(res.HasError);
 
         var token = res.ResponseString.ToJToken();
+
+        var headers = token["headers"]?.ToString();
+        Assert.NotNull(headers);
+
+        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        JsonConvert.PopulateObject(headers, result);
+
+        var length = result.Get(HttpKnownHeaderNames.ContentLength, m => int.Parse(m));
+        Assert.Equal(value ? 666 : 891, length);
 
         var gzip = token["gzip"];
         Assert.NotNull(gzip);

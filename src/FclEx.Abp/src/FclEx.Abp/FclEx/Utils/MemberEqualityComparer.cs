@@ -14,7 +14,7 @@ public class MemberEqualityComparer<T> : IEqualityComparer<T>
 {
     public MemberEqualityComparer(IEnumerable<string> excludeMemberNames)
     {
-        ExcludeMemberNames = excludeMemberNames.Touch().NotNull().ToHashSet();
+        ExcludeMemberNames = excludeMemberNames.EmptyIfNull().NotNull().ToHashSet();
     }
 
     public HashSet<string> ExcludeMemberNames { get; }

@@ -28,7 +28,7 @@ public class SendTests
     {
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 3).ToDictionary(m => m.ToString(), m => random.NextString(5));
-        var res = await HttpRequest.Post(UriCreator.Combine(GlobalConstants.TestUrl, "/api/post"))
+        var res = await HttpRequest.Post(new Uri(GlobalConstants.TestUri, "api/post"))
             .AddData(expected!)
             .ConnectTimeout(TimeSpan.FromSeconds(5))
             .SendAsync()
@@ -45,7 +45,7 @@ public class SendTests
     public async Task Json_Test()
     {
         var list = Enumerable.Range(1, 10).ToList();
-        var res = await HttpRequest.Post(UriCreator.Combine(GlobalConstants.TestUrl, "/api/post"))
+        var res = await HttpRequest.Post(new Uri(GlobalConstants.TestUri, "api/post"))
             .JsonContent(list)
             .SendAsync()
             .ThrowIfError()

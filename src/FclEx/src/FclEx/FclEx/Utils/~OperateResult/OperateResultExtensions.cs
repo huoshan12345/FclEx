@@ -23,8 +23,8 @@ public static partial class OperateResultExtensions
     {
         ArgumentNullException.ThrowIfNull(enumerable);
         
-        var time = enumerable.Touch().Sum(m => m.Elapsed);
-        var exceptions = enumerable.Touch().Select(m => m.Exception).NotNull().ToList();
+        var time = enumerable.EmptyIfNull().Sum(m => m.Elapsed);
+        var exceptions = enumerable.EmptyIfNull().Select(m => m.Exception).NotNull().ToList();
         return exceptions.Count switch
         {
             0 => CreateSuccess(time),
