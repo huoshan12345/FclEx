@@ -21,8 +21,9 @@
     <SourceDir>$(ProjectDir)obj\generated\</SourceDir>
   </PropertyGroup>
 
-  <!--https://stackoverflow.com/questions/46675782/how-to-make-an-msbuild-target-that-only-runs-once-instead-of-once-before-target-->
-  <Target Name="GenerateCode" BeforeTargets="DispatchToInnerBuilds">
+  <!--Option to run target once per project in multi-targeting build-->
+  <!--https://github.com/dotnet/msbuild/issues/2781-->
+  <Target Name="GenerateCodeBody">
     <Message Importance="High" Text="Started to generate code." />
     <ItemGroup>
       <!--MSBuild maintains an item list named FileWrites that contains the files that need to be cleaned.
@@ -35,6 +36,11 @@
       <Output TaskParameter="ExitCode" PropertyName="_RunExitCode" />
     </Exec>
     <Error Condition="'$(_RunExitCode)' != '0'" Text="Run $(ToolName) failed" />
+  </Target>
+
+  <Target Name="GenerateCode" BeforeTargets="DispatchToInnerBuilds;BeforeBuild">
+    <!--TargetFramework=once is critical here, as it allow will not execute task from same project with same properties twice. -->
+    <MSBuild Projects="$(MSBuildProjectFile)" Targets="GenerateCodeBody" Properties="TargetFramework=once" />
   </Target>
 
   <Target Name="IncludeGeneratedCode" BeforeTargets="CoreCompile">
