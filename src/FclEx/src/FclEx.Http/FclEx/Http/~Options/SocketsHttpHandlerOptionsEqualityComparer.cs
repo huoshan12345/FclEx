@@ -12,7 +12,7 @@ public class SocketsHttpHandlerOptionsEqualityComparer : IEqualityComparer<Socke
         if (ReferenceEquals(y, null)) return false;
         if (x.GetType() != y.GetType()) return false;
         return x.ConnectTimeout.Equals(y.ConnectTimeout)
-               && x.IpVersionOption == y.IpVersionOption
+               && x.IPVersionOption == y.IPVersionOption
                && x.AllowAutoRedirect == y.AllowAutoRedirect
                && x.AutomaticDecompression == y.AutomaticDecompression
                && x.PooledConnectionLifetime.Equals(y.PooledConnectionLifetime)
@@ -28,7 +28,7 @@ public class SocketsHttpHandlerOptionsEqualityComparer : IEqualityComparer<Socke
 
         return HashCode.Combine(
             obj.ConnectTimeout,
-            (int)obj.IpVersionOption,
+            (int)obj.IPVersionOption,
             obj.AllowAutoRedirect,
             (int)obj.AutomaticDecompression,
             obj.PooledConnectionLifetime,

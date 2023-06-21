@@ -37,13 +37,13 @@ public static class HttpClientHelper
             ConnectCallback = async (context, cancellationToken) =>
             {
                 var host = context.DnsEndPoint.Host;
-                var family = options.IpVersionOption switch
+                var family = options.IPVersionOption switch
                 {
                     OnlyIPv4 => AddressFamily.InterNetwork,
                     OnlyIPv6 => AddressFamily.InterNetworkV6,
                     PreferIPv4 => AddressFamily.Unspecified,
                     PreferIPv6 => AddressFamily.Unspecified,
-                    _ => throw new ArgumentOutOfRangeException(nameof(options.IpVersionOption), options.IpVersionOption, null)
+                    _ => throw new ArgumentOutOfRangeException(nameof(options.IPVersionOption), options.IPVersionOption, null)
                 };
 
                 // Use DNS to look up the IP addresses of the target host:
@@ -67,7 +67,7 @@ public static class HttpClientHelper
                     NoDelay = true
                 };
 
-                var desc = options.IpVersionOption is PreferIPv6 or OnlyIPv6;
+                var desc = options.IPVersionOption is PreferIPv6 or OnlyIPv6;
                 Exception? lastEx = null;
                 foreach (var address in ips.OrderBy(m => m.AddressFamily, desc)) // make sure ipv4 addresses are preferred
                 {
