@@ -49,9 +49,9 @@ public interface IXmlAction : IXmlAction<Unit>
 
 public readonly struct XmlActionContext
 {
-    public XmlActionContext(HttpResponse httpRes, string xml, string? path)
+    public XmlActionContext(HttpResponse response, string xml, string? path)
     {
-        HttpRes = httpRes;
+        Response = response;
         Xml = xml;
         Path = path;
         Element = XElement.Parse(xml);
@@ -60,7 +60,7 @@ public readonly struct XmlActionContext
             : Element.XPathSelectElements(path)!;
     }
 
-    public HttpResponse HttpRes { get; }
+    public HttpResponse Response { get; }
     public string? Path { get; }
     public string Xml { get; }
     public XElement Element { get; }

@@ -2,7 +2,7 @@
 
 namespace FclEx.Http;
 
-public class HttpReqExtensionsTests
+public class HttpRequestExtensionsTests
 {
     private static async ValueTask SuccessRequest()
     {

@@ -51,9 +51,9 @@ public interface IHtmlAction : IHtmlAction<Unit>
 
 public readonly struct HtmlActionContext
 {
-    public HtmlActionContext(HttpResponse httpRes, string html, string? path)
+    public HtmlActionContext(HttpResponse response, string html, string? path)
     {
-        HttpRes = httpRes;
+        Response = response;
         Html = html;
         Path = path;
         Element = HtmlHelper.Parse(html).DocumentElement;
@@ -62,7 +62,7 @@ public readonly struct HtmlActionContext
             : Element.QuerySelectorAll(path)!;
     }
 
-    public HttpResponse HttpRes { get; }
+    public HttpResponse Response { get; }
     public string? Path { get; }
     public string Html { get; }
     public IElement Element { get; }

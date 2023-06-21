@@ -53,9 +53,9 @@ public interface IJsonAction : IJsonAction<Unit>
 
 public readonly struct JsonActionContext
 {
-    public JsonActionContext(HttpResponse httpRes, string json, string? path)
+    public JsonActionContext(HttpResponse response, string json, string? path)
     {
-        HttpRes = httpRes;
+        Response = response;
         Json = json;
         Path = path;
         Token = JToken.Parse(json);
@@ -64,7 +64,7 @@ public readonly struct JsonActionContext
             : Token.SelectTokens(path)!;
     }
 
-    public HttpResponse HttpRes { get; }
+    public HttpResponse Response { get; }
     public string? Path { get; }
     public string Json { get; }
     public JToken Token { get; }
