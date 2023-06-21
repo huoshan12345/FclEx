@@ -19,4 +19,9 @@ partial class HttpRequest
     public static HttpRequest Delete(string uri) => Delete(new Uri(uri, UriKind.RelativeOrAbsolute));
     public static HttpRequest Head(string uri) => Head(new Uri(uri, UriKind.RelativeOrAbsolute));
     public static HttpRequest Options(string uri) => Options(new Uri(uri, UriKind.RelativeOrAbsolute));
+
+#if NET7_0_OR_GREATER
+    public static HttpRequest Connect(Uri uri) => Create(uri, HttpMethod.Connect);
+    public static HttpRequest Connect(string uri) => Connect(new Uri(uri, UriKind.RelativeOrAbsolute));
+#endif
 }

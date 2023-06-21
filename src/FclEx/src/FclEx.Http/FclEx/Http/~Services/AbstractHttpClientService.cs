@@ -154,7 +154,8 @@ public abstract class AbstractHttpClientService : AbstractHttpService
 
     protected static HttpRequestMessage BuildHttpRequest(HttpRequest request, Uri? baseAddress, CookieContainer cc, CancellationToken token)
     {
-        var requestMessage = new HttpRequestMessage(request.Method, request.GetUri());
+        var uri = request.GetUri();
+        var requestMessage = new HttpRequestMessage(request.Method, uri);
 
         if (request.Method.IsGet() == false)
         {
@@ -191,14 +192,13 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         var cookies = request.Headers.Get(HttpKnownHeaderNames.Cookie);
         requestMessage.AddCookie(cookies);
 
-        var uri = requestMessage.RequestUri!;
-        if (uri.IsAbsoluteUri == false && baseAddress is not null)
+        var cookieUri = uri.IsAbsoluteUri == false && baseAddress is not null
+            ? baseAddress
+            : uri;
+
+        if (cookieUri.IsAbsoluteUri)
         {
-            uri = baseAddress;
-        }
-        if (uri.IsAbsoluteUri == false)
-        {
-            var cookiesInCc = cc.GetCookieHeader(uri);
+            var cookiesInCc = cc.GetCookieHeader(cookieUri);
             requestMessage.AddCookie(cookiesInCc);
         }
         return requestMessage;

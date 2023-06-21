@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Http;
 
-public enum IPVersionOption
+public enum IPVersionPolicy
 {
     OnlyIPv4,
     OnlyIPv6,

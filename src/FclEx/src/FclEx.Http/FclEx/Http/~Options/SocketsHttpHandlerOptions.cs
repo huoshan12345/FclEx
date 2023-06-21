@@ -3,7 +3,7 @@
 public record SocketsHttpHandlerOptions
 {
     public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(10);
-    public IPVersionOption IPVersionOption { get; set; } = IPVersionOption.PreferIPv4;
+    public IPVersionPolicy IPVersionPolicy { get; set; } = IPVersionPolicy.PreferIPv4;
     public bool AllowAutoRedirect { get; set; } = true;
     public DecompressionMethods AutomaticDecompression { get; set; } = DecompressionMethods.All;
     /// <summary>

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  
+
   <PropertyGroup>
-    <TargetFramework>net6.0-windows</TargetFramework>
+    <TargetFrameworks>net6.0-windows;net7.0-windows</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,14 +13,16 @@
     <ProjectReference Include="..\FclEx\FclEx.csproj" />
   </ItemGroup>
 
-  <Target Name="GenerateCode" BeforeTargets="CoreCompile">
+  <PropertyGroup>
+    <ToolName>FclEx.Wmi.SourceGenerator</ToolName>
+    <ToolFramework>net6.0-windows</ToolFramework>
+    <ToolProjectDir>$(ProjectDir)..\$(ToolName)\</ToolProjectDir>
+    <ToolPath>$(ToolProjectDir)bin\$(Configuration)\$(ToolFramework)\$(ToolName).dll</ToolPath>
+    <SourceDir>$(ProjectDir)obj\generated\</SourceDir>
+  </PropertyGroup>
 
-    <PropertyGroup>
-      <ToolName>FclEx.Wmi.SourceGenerator</ToolName>
-      <ToolProjectDir>$(ProjectDir)..\$(ToolName)\</ToolProjectDir>
-      <ToolPath>$(ToolProjectDir)bin\$(Configuration)\$(TargetFramework)\$(ToolName).dll</ToolPath>
-      <SourceDir>$(ProjectDir)obj\generated\</SourceDir>
-    </PropertyGroup>
+  <!--https://stackoverflow.com/questions/46675782/how-to-make-an-msbuild-target-that-only-runs-once-instead-of-once-before-target-->
+  <Target Name="GenerateCode" BeforeTargets="DispatchToInnerBuilds">
     <ItemGroup>
       <!--MSBuild maintains an item list named FileWrites that contains the files that need to be cleaned.
       This list is persisted to a file inside the obj folder that is referred to as the "clean cache."
@@ -35,6 +37,12 @@
     <ItemGroup>
       <Compile Include="$(SourceDir)**\*$(DefaultLanguageSourceExtension)" Exclude="@(Compile)" />
     </ItemGroup>
-
   </Target>
+
+  <Target Name="IncludeGenerateCode" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <Compile Include="$(SourceDir)**\*$(DefaultLanguageSourceExtension)" Exclude="@(Compile)" />
+    </ItemGroup>
+  </Target>
+
 </Project>

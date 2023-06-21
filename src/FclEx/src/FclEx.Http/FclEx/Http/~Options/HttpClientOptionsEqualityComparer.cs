@@ -14,6 +14,8 @@ public class HttpClientOptionsEqualityComparer : IEqualityComparer<HttpClientOpt
         if (x.GetType() != y.GetType()) return false;
 
         return BaseComparer.Equals(x, y)
+               && x.HttpVersionPolicy == y.HttpVersionPolicy
+               && x.HttpVersion.Equals(y.HttpVersion)
                && x.ExecutionTimeout.Equals(y.ExecutionTimeout)
                && Uri.Compare(x.BaseAddress, y.BaseAddress, UriComponents.AbsoluteUri, UriFormat.SafeUnescaped, StringComparison.OrdinalIgnoreCase) == 0
                && x.RetryCount == y.RetryCount
@@ -24,13 +26,16 @@ public class HttpClientOptionsEqualityComparer : IEqualityComparer<HttpClientOpt
 
     public int GetHashCode(HttpClientOptions obj)
     {
-        return HashCode.Combine(
-            BaseComparer.GetHashCode(obj),
+        var code = HashCode.Combine(
             obj.BaseAddress?.AbsoluteUri,
             obj.ExecutionTimeout,
+            obj.HttpVersion,
+            obj.HttpVersionPolicy,
             obj.RetryCount,
             obj.AutoUpdateTotalTimeout,
             obj.SleepDurationProvider,
             obj.TotalTimeout);
+
+        return HashCode.Combine(BaseComparer.GetHashCode(obj), code);
     }
 }

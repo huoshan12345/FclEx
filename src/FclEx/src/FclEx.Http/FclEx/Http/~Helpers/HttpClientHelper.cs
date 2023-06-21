@@ -1,25 +1,11 @@
 ﻿using System.Net.Sockets;
-using static FclEx.Http.IPVersionOption;
+using static System.Net.WebRequestMethods;
+using static FclEx.Http.IPVersionPolicy;
 
 namespace FclEx.Http;
 
 public static class HttpClientHelper
 {
-    public static async Task<string> GetPublicIpAsync(HttpClient httpClient)
-    {
-        using var res = await httpClient.GetAsync("http://ip4only.me/api/", HttpCompletionOption.ResponseHeadersRead);
-        res.EnsureSuccessStatusCode();
-
-        var str = await res.Content.ReadAsStringAsync();
-        /*
-            Example output
-            IPv4,192.0.2.60,v1.1,,,See http://ip6.me/docs/ for api documentation
-            IPv6,2001:db8:0:0:8:800:200c:417a,v1.1,,,See http://ip6.me/docs for api documentation
-        */
-        var ip = str.Split(',')[1];
-        return ip;
-    }
-
     public static SocketsHttpHandler CreateSocketsHttpHandler(SocketsHttpHandlerOptions? options = null)
     {
         options ??= SocketsHttpHandlerOptions.Default;
@@ -37,13 +23,13 @@ public static class HttpClientHelper
             ConnectCallback = async (context, cancellationToken) =>
             {
                 var host = context.DnsEndPoint.Host;
-                var family = options.IPVersionOption switch
+                var family = options.IPVersionPolicy switch
                 {
                     OnlyIPv4 => AddressFamily.InterNetwork,
                     OnlyIPv6 => AddressFamily.InterNetworkV6,
                     PreferIPv4 => AddressFamily.Unspecified,
                     PreferIPv6 => AddressFamily.Unspecified,
-                    _ => throw new ArgumentOutOfRangeException(nameof(options.IPVersionOption), options.IPVersionOption, null)
+                    _ => throw new ArgumentOutOfRangeException(nameof(options.IPVersionPolicy), options.IPVersionPolicy, null)
                 };
 
                 // Use DNS to look up the IP addresses of the target host:
@@ -67,7 +53,7 @@ public static class HttpClientHelper
                     NoDelay = true
                 };
 
-                var desc = options.IPVersionOption is PreferIPv6 or OnlyIPv6;
+                var desc = options.IPVersionPolicy is PreferIPv6 or OnlyIPv6;
                 Exception? lastEx = null;
                 foreach (var address in ips.OrderBy(m => m.AddressFamily, desc)) // make sure ipv4 addresses are preferred
                 {
