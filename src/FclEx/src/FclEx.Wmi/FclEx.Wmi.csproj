@@ -23,6 +23,7 @@
 
   <!--https://stackoverflow.com/questions/46675782/how-to-make-an-msbuild-target-that-only-runs-once-instead-of-once-before-target-->
   <Target Name="GenerateCode" BeforeTargets="DispatchToInnerBuilds">
+    <Message Importance="High" Text="Started to generate code." />
     <ItemGroup>
       <!--MSBuild maintains an item list named FileWrites that contains the files that need to be cleaned.
       This list is persisted to a file inside the obj folder that is referred to as the "clean cache."
