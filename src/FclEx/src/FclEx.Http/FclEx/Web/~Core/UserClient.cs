@@ -1,6 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading;
 using FclEx.Utils;
 using Microsoft.Extensions.Logging.Abstractions;
 using Nito.AsyncEx;

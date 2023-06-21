@@ -1,7 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Threading;
-
-namespace FclEx.Web;
+﻿namespace FclEx.Web;
 
 public interface IUserClient
 {

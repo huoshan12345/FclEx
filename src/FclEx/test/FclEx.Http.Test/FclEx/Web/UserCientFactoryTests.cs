@@ -1,5 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Xunit.Abstractions;
+﻿using FclEx.Helpers;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FclEx.Web;
 
@@ -32,10 +32,10 @@ public class UserCientFactoryTests : WebTests
         var account = new UserAccount("test", "test");
         var factory = ServiceProvider.GetRequiredService<IUserClientFactory<TestUserClient>>();
         var client = factory.Create(account);
-        Assert.Null(client.HttpService.WebProxy);
+        Assert.Null(client.HttpService.Proxy);
 
         var proxy = WebProxyHelper.Create("http://localhost:8888");
         client = factory.Create(account, proxy);
-        Assert.Equal(proxy, client.HttpService.WebProxy);
+        Assert.Equal(proxy, client.HttpService.Proxy);
     }
 }

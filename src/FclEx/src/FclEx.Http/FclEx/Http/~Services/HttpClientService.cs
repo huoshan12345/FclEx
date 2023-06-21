@@ -1,97 +1,88 @@
-﻿using System.Net.Sockets;
-using System.Threading;
-using MoreLinq;
+﻿namespace FclEx.Http;
 
-namespace FclEx.Http;
-
-public sealed class HttpClientService : AbstractHttpClientService
+public class HttpClientService : AbstractHttpClientService
 {
-    public static HttpClientService Default { get; } = new(false);
+    protected HttpClientOptions _options;
 
-    private volatile HttpClient _httpClient;
+    public static HttpClientService Default { get; } = new() { UseCookie = false };
 
-    private static HttpClient CreateHttpClient(IWebProxy? proxy)
+    protected override Task ExecuteAsyncInternal(HttpRequest request, HttpResponse response, CancellationToken token)
     {
-        var handler = new SocketsHttpHandler
+        var httpClient = CreateClient();
+        return ExecuteAsyncInternal(httpClient, request, response, token);
+    }
+
+    public HttpClientService(HttpClientOptions? options = null)
+    {
+        _options = options ?? HttpClientOptions.Default;
+    }
+
+    public override IWebProxy? Proxy
+    {
+        get => _options.Proxy;
+        set
         {
-            AllowAutoRedirect = false,
-            AutomaticDecompression = DecompressionMethods.All,
-            ConnectTimeout = TimeSpan.FromMinutes(1),
-            MaxConnectionsPerServer = int.MaxValue,
-            PooledConnectionLifetime = TimeSpan.FromMinutes(2),
-            Proxy = null,
-            UseCookies = false,
-            UseProxy = false,
-            ConnectCallback = async (context, cancellationToken) =>
-            {
-                // Use DNS to look up the IP addresses of the target host:
-                // - IP v4: AddressFamily.InterNetwork
-                // - IP v6: AddressFamily.InterNetworkV6
-                // - IP v4 or IP v6: AddressFamily.Unspecified
-                // note: this method throws a SocketException when there is no IP address for the host
-                var ips = IPAddress.TryParse(context.DnsEndPoint.Host, out var ip)
-                    ? new[] { ip }
-                    : (await Dns.GetHostEntryAsync(context.DnsEndPoint.Host, AddressFamily.Unspecified, cancellationToken)).AddressList;
-                
-                // Open the connection to the target host/port
-                var socket = new Socket(SocketType.Stream, ProtocolType.Tcp)
-                {
-                    // Turn off Nagle's algorithm since it degrades performance in most HttpClient scenarios.
-                    NoDelay = true
-                };
+            if (IWebProxyEqualityComparer.Instance.Equals(_options.Proxy, value))
+                return;
 
-                Exception? lastEx = null;
-                foreach (var address in ips.OrderBy(m => m.AddressFamily)) // make sure ipv4 addresses are preferred
-                {
-                    try
-                    {
-                        await socket.ConnectAsync(address, context.DnsEndPoint.Port, cancellationToken);
-                        return new NetworkStream(socket, ownsSocket: true);
-                    }
-                    catch (Exception ex)
-                    {
-                        lastEx = ex;
-                    }
-                }
-
-                socket.Dispose();
-                throw lastEx!; // should not be null here.
-            }
-        };
-
-        if (proxy != null)
-        {
-            handler.Proxy = proxy;
-            handler.UseProxy = true;
+            _options = _options with { Proxy = value };
         }
-
-        var httpClient = new HttpClient(handler, disposeHandler: false) { Timeout = Timeout.InfiniteTimeSpan };
-        httpClient.DefaultRequestHeaders.Add(HttpKnownHeaderNames.UserAgent, HttpConstants.DefaultUserAgent);
-        httpClient.DefaultRequestHeaders.Add("Connection", "keep-alive");
-        return httpClient;
-    }
-
-    protected override void SetProxy(IWebProxy? proxy)
-    {
-        if (Equals(_webProxy, proxy))
-            return;
-
-        _webProxy = proxy;
-        _httpClient = CreateHttpClient(_webProxy);
-    }
-
-    protected override Task ExecuteAsyncInternal(HttpReq httpReq, HttpRes httpRes, CancellationToken token)
-    {
-        return ExecuteAsyncInternal(_httpClient, httpReq, httpRes, token);
-    }
-
-    public HttpClientService(bool useCookie = true, IWebProxy? proxy = null, ILoggerFactory? loggerFactory = null)
-        : base(useCookie, proxy, loggerFactory)
-    {
-        _httpClient = CreateHttpClient(_webProxy);
     }
 
     public override void Dispose()
     {
+        GC.SuppressFinalize(this);
+    }
+
+    protected static readonly ConcurrentDictionary<HttpClientOptions, IHttpClientFactory> Factories = new(HttpClientOptionsEqualityComparer.Instance);
+
+    protected internal static IHttpClientFactory GetFactory(HttpClientOptions options)
+    {
+        return Factories.GetOrAdd(options, m => new ServiceCollection()
+            .AddHttpClientWithPolly(string.Empty, options)
+            .Services
+            .BuildServiceProvider()
+            .GetRequiredService<IHttpClientFactory>());
+    }
+
+    protected internal virtual HttpClient CreateClient()
+    {
+        return GetFactory(_options).CreateClient();
+    }
+
+    public static HttpClientService Create(HttpClientOptions? options = null, bool useCookie = true, ILoggerFactory? loggerFactory = null)
+    {
+        return new HttpClientService(options)
+        {
+            UseCookie = useCookie,
+            Logger = loggerFactory?.CreateLogger<HttpClientService>()
+        };
+    }
+
+    public static HttpClientService Create(bool useCookie, ILoggerFactory? loggerFactory = null)
+    {
+        return Create(HttpClientOptions.Default, useCookie, loggerFactory);
+    }
+
+    public static HttpClientService Create(Action<HttpClientOptions> configureOptions, bool useCookie = true, ILoggerFactory? loggerFactory = null)
+    {
+        var options = new HttpClientOptions();
+        configureOptions(options);
+        return Create(options, useCookie, loggerFactory);
+    }
+
+    public static HttpClientService Create(IWebProxy? proxy, bool useCookie = true, ILoggerFactory? loggerFactory = null)
+    {
+        return Create(m => m.Proxy = proxy, useCookie, loggerFactory);
+    }
+
+    public static HttpClientService Create(Uri? proxy, bool useCookie = true, ILoggerFactory? loggerFactory = null)
+    {
+        return Create(m => m.Proxy = WebProxyHelper.Create(proxy), useCookie, loggerFactory);
+    }
+
+    public static HttpClientService Create(string? proxy, bool useCookie = true, ILoggerFactory? loggerFactory = null)
+    {
+        return Create(m => m.Proxy = WebProxyHelper.Create(proxy), useCookie, loggerFactory);
     }
 }

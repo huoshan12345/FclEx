@@ -1,5 +1,4 @@
-﻿using System.Collections.Specialized;
-using AngleSharp.Html.Dom;
+﻿using System.Web;
 using FclEx;
 
 namespace AngleSharp.Dom;
@@ -10,7 +9,7 @@ public class HtmlAnchor
     {
         Element = element;
         var (l, r) = element.Href.SplitTwo("?");
-        Query = r.ParseQueryString();
+        Query = HttpUtility.ParseQueryString(r);
         Path = l;
     }
 

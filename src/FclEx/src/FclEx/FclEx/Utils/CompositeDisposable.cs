@@ -6,12 +6,12 @@ public readonly struct CompositeDisposable<T> : IDisposable where T : IDisposabl
 
     public CompositeDisposable(IEnumerable<T> enumerable)
     {
-        _disposables = enumerable.Touch().AsICollection(); // cannot use IEnumerable<T> here.
+        _disposables = enumerable.EmptyIfNull().AsICollection(); // cannot use IEnumerable<T> here.
     }
 
     public void Dispose()
     {
-        foreach (var e in _disposables.Touch())
+        foreach (var e in _disposables.EmptyIfNull())
             e?.Dispose();
     }
 }

@@ -12,17 +12,7 @@ public enum DupPolicy
 
 public static class KeyValuePairExtensions
 {
-    public static void Deconstruct<TKey, TValue>(
-        this KeyValuePair<TKey, TValue> kvp,
-        out TKey key,
-        out TValue value)
-    {
-        key = kvp.Key;
-        value = kvp.Value;
-    }
-
-    public static JObject ToJObject(this IEnumerable<KeyValuePair<string, string>> pairs,
-        DupPolicy policy = DupPolicy.OnlyLast)
+    public static JObject ToJObject(this IEnumerable<KeyValuePair<string, string>> pairs, DupPolicy policy = DupPolicy.OnlyLast)
     {
         var obj = new JObject();
         foreach (var pair in pairs.Where(m => m.Key != null).GroupBy(m => m.Key))

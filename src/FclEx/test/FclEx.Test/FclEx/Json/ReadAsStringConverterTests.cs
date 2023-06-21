@@ -30,6 +30,6 @@ public class ReadAsStringConverterTests
 
         var grades = obj.Grades.ToJToken().ToObject<GradeItem[]>();
         Assert.Equal("11", obj.MatchId);
-        Assert.Single(grades.Touch());
+        Assert.Single(grades.EmptyIfNull());
     }
 }

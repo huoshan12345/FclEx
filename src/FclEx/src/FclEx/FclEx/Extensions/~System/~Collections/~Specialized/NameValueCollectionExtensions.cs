@@ -5,17 +5,12 @@ namespace FclEx.Extensions;
 
 public static class NameValueCollectionExtensions
 {
-    public static IEnumerable<KeyValuePair<string, string>> ToPair(this NameValueCollection col)
+    public static IEnumerable<KeyValuePair<string, string>> Enumerate(this NameValueCollection col)
     {
         var q = from k in col.AllKeys.NotNull()
-            from v in col.GetValues(k).Touch()
-            select KvPair.Create(k, v);
+                from v in col.GetValues(k).EmptyIfNull()
+                select KvPair.Create(k, v);
         return q;
-    }
-
-    public static KeyValuePair<string, string>[] ToPairs(this NameValueCollection col)
-    {
-        return col.ToPair().ToArray();
     }
 
     public static Dictionary<string, string> ToDictionary(this NameValueCollection nvc, DupPolicy policy = DupPolicy.OnlyLast)
@@ -24,7 +19,7 @@ public static class NameValueCollectionExtensions
             throw new NotSupportedException();
 
         var dic = new Dictionary<string, string>(nvc.Count);
-        foreach (var (k, v) in nvc.ToPair())
+        foreach (var (k, v) in nvc.Enumerate())
         {
             switch (policy)
             {
@@ -62,7 +57,7 @@ public static class NameValueCollectionExtensions
         var obj = new JObject();
         foreach (var k in col.AllKeys.NotNull())
         {
-            var values = col.GetValues(k).Touch().ToHashSet();
+            var values = col.GetValues(k).EmptyIfNull().ToHashSet();
             if (values.Count > 0)
                 obj.Add(k, values.ToJToken(policy));
         }
@@ -83,6 +78,11 @@ public static class NameValueCollectionExtensions
             case DupPolicy.Throw: throw new InvalidOperationException("the collection contains more than one value");
             default: throw new ArgumentOutOfRangeException(nameof(policy), policy, null);
         }
+    }
+
+    public static bool IsValid([NotNullWhen(true)] this NameValueCollection? col)
+    {
+        return col?.Count > 0;
     }
 
 }

@@ -53,7 +53,7 @@ public static class EmailLogSettingsExtensions
             NetworkCredentials = new NetworkCredential(settings.UserName, settings.Password),
             Port = settings.Port,
             ServerCertificateValidationCallback = (sender, certificate, chain, errors) => true,
-            ToEmail = settings.ToEmails.Touch().JoinWith(",")
+            ToEmail = settings.ToEmails.EmptyIfNull().JoinWith(",")
         };
         return loggerConfiguration.Email(
             connectionInfo: info,

@@ -20,7 +20,7 @@ public static partial class EnumerableExtensions
         return source == null || !source.Any();
     }
 
-    public static IEnumerable<T> Touch<T>(this IEnumerable<T>? source)
+    public static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T>? source)
     {
         return source ?? Enumerable.Empty<T>();
     }
@@ -218,5 +218,12 @@ public static partial class EnumerableExtensions
     public static IEnumerable<(T Left, T2 Right)> SelectMany<T, T2>(this IEnumerable<T> left, IEnumerable<T2> right)
     {
         return left.SelectMany(_ => right, (x, y) => (x, y));
+    }
+
+    public static IOrderedEnumerable<TSource> OrderBy<TSource, TKey>(this IEnumerable<TSource> enumerable, Func<TSource, TKey> keySelector, bool desc)
+    {
+        return desc
+            ? enumerable.OrderByDescending(keySelector)
+            : enumerable.OrderBy(keySelector);
     }
 }

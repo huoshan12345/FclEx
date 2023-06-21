@@ -1,38 +1,30 @@
 ﻿using System.Diagnostics;
-using System.Threading;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace FclEx.Http;
 
 public abstract class AbstractHttpService : IHttpService
 {
-    protected readonly CookieContainer _cookieContainer;
-    protected volatile IWebProxy? _webProxy;
+    protected readonly CookieContainer _cookieContainer = new();
     private ILogger _logger = NullLogger.Instance;
 
-    protected AbstractHttpService(bool useCookie, IWebProxy? proxy = null, ILoggerFactory? loggerFactory = null)
+    public bool UseCookie { get; set; } = true;
+
+    public virtual void Dispose()
     {
-        WebProxy = proxy;
-        loggerFactory ??= NullLoggerFactory.Instance;
-        Logger = loggerFactory.CreateLogger(GetType());
-        _cookieContainer = new CookieContainer();
-        UseCookie = useCookie;
+        GC.SuppressFinalize(this);
     }
 
-    protected bool UseCookie { get; }
+    protected abstract Task ExecuteAsyncInternal(HttpRequest request, HttpResponse response, CancellationToken token);
 
-    public virtual void Dispose() { }
-
-    protected abstract Task ExecuteAsyncInternal(HttpReq httpReq, HttpRes httpRes, CancellationToken token);
-
-    public async Task<HttpRes> ExecuteAsync(HttpReq httpReq, CancellationToken token = default)
+    public async Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken token = default)
     {
         token.ThrowIfCancellationRequested();
         var watch = ValueStopwatch.StartNew();
-        var res = new HttpRes(httpReq) { RequestUtcTime = DateTime.UtcNow };
+        var res = new HttpResponse(request) { RequestUtcTime = DateTime.UtcNow };
         try
         {
-            await ExecuteAsyncInternal(httpReq, res, token).DonotCapture();
+            await ExecuteAsyncInternal(request, res, token).DonotCapture();
         }
         catch (Exception e)
         {
@@ -75,29 +67,20 @@ public abstract class AbstractHttpService : IHttpService
             : Array.Empty<Cookie>();
     }
 
-    public IWebProxy? WebProxy
-    {
-        get => _webProxy;
-        set => SetProxy(value);
-    }
+    public virtual IWebProxy? Proxy { get; set; }
 
-    protected virtual void SetProxy(IWebProxy? proxy)
-    {
-        if (Equals(_webProxy, proxy)) 
-            return;
-
-        _webProxy = proxy;
-    }
-
+    [AllowNull]
     public ILogger Logger
     {
-        get => _logger = (_logger ?? NullLogger.Instance);
-        set => _logger = value;
+        get => _logger;
+        set => _logger = value ?? NullLogger.Instance;
     }
 
     protected void SaveCookies(Uri responseUri, string cookieStr)
     {
-        if (!UseCookie) return;
+        if (UseCookie == false)
+            return;
+
         try
         {
             var parser = new CookieParser(cookieStr);
@@ -133,7 +116,9 @@ public abstract class AbstractHttpService : IHttpService
 
     protected void SaveCookies(Uri responseUri, IEnumerable<string> cookieStrs)
     {
-        if (!UseCookie) return;
+        if (UseCookie == false)
+            return;
+
         foreach (var cookieStr in cookieStrs)
         {
             try

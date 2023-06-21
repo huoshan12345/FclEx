@@ -12,7 +12,7 @@ public class ConsoleTable
     {
         Options = options;
         Rows = new List<object?[]>();
-        Columns = options.Columns.Touch().AsArray();
+        Columns = options.Columns.EmptyIfNull().AsArray();
     }
 
     public void Render(StringBuilder builder)

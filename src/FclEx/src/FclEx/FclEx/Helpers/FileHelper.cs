@@ -26,11 +26,11 @@ public static class FileHelper
 
     public static string? FirstExistOrNull(IEnumerable<string> paths)
     {
-        return paths.Touch().NotNull().FirstOrDefault(File.Exists);
+        return paths.EmptyIfNull().NotNull().FirstOrDefault(File.Exists);
     }
 
     public static string? LastExistOrNull(IEnumerable<string> paths)
     {
-        return paths.Touch().NotNull().LastOrDefault(File.Exists);
+        return paths.EmptyIfNull().NotNull().LastOrDefault(File.Exists);
     }
 }

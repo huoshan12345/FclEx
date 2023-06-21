@@ -20,6 +20,6 @@ public static class MemberInfoExtensions
 
     public static bool IsCompilerGenerated(this MemberInfo memberInfo, bool inherit = true)
     {
-        return memberInfo.IsDefined<CompilerGeneratedAttribute>(false);
+        return memberInfo.IsDefined<CompilerGeneratedAttribute>(inherit);
     }
 }

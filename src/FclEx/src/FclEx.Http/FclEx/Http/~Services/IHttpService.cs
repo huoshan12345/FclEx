@@ -1,10 +1,8 @@
-﻿using System.Threading;
-
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 public interface IHttpService : IDisposable
 {
-    Task<HttpRes> ExecuteAsync(HttpReq httpReq, CancellationToken token = default);
+    Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken token = default);
 
     void AddCookie(Cookie cookie, Uri? uri = null);
 
@@ -14,7 +12,7 @@ public interface IHttpService : IDisposable
 
     IReadOnlyCollection<Cookie> GetAllCookies();
 
-    IWebProxy? WebProxy { get; set; }
+    IWebProxy? Proxy { get; set; }
 
     ILogger Logger { get; set; }
 }

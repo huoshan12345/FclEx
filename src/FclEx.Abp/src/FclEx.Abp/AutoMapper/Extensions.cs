@@ -18,7 +18,7 @@ public static class Extensions
         Check.NotNull(destinationMember);
         Check.NotNull(sourceMember);
 
-        return map.ForMember(destinationMember, o => o.MapFrom(s => sourceMember(s).Touch().JoinWith(separator)));
+        return map.ForMember(destinationMember, o => o.MapFrom(s => sourceMember(s).EmptyIfNull().JoinWith(separator)));
     }
 
     public static IMappingExpression<TSource, TDestination> MapStrToArray<TSource, TDestination>(

@@ -52,27 +52,27 @@ public static class Extensions
 
     public static IDisposable PushProperty<T>(this ILogger logger, IEnumerable<KeyValuePair<string, T?>> properties)
     {
-        return logger.PushProperty(properties.Touch().Select(m => KvPair.Create(m.Key, (object?)m.Value)));
+        return logger.PushProperty(properties.EmptyIfNull().Select(m => KvPair.Create(m.Key, (object?)m.Value)));
     }
 
     public static IDisposable PushProperty(this ILogger logger, params KeyValuePair<string, object?>[] properties)
     {
-        return logger.PushProperty(properties.Touch().AsEnumerable());
+        return logger.PushProperty(properties.EmptyIfNull().AsEnumerable());
     }
 
     public static IDisposable PushProperty(this ILogger logger, IEnumerable<(string, object?)> properties)
     {
-        return logger.PushProperty(properties.Touch().AsKeyValue());
+        return logger.PushProperty(properties.EmptyIfNull().AsKeyValue());
     }
 
     public static IDisposable PushProperty<T>(this ILogger logger, IEnumerable<(string, T?)> properties)
     {
-        return logger.PushProperty(properties.Touch().Select(m => (m.Item1, (object?)m.Item2)));
+        return logger.PushProperty(properties.EmptyIfNull().Select(m => (m.Item1, (object?)m.Item2)));
     }
 
     public static IDisposable PushProperty(this ILogger logger, params (string, object?)[] properties)
     {
-        return logger.PushProperty(properties.Touch().AsEnumerable());
+        return logger.PushProperty(properties.EmptyIfNull().AsEnumerable());
     }
 
     public static IDisposable PushProperty(this ILogger logger, string key, object? value)
