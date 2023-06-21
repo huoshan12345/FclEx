@@ -186,4 +186,16 @@ partial class HttpRequestExtensions
     public static HttpRequest ReadAsBytes(this HttpRequest req) => req.ReadAs(HttpContentType.Bytes);
 
     public static HttpRequest ReadAsStream(this HttpRequest req) => req.ReadAs(HttpContentType.Stream);
+    
+    public static HttpRequest Version(this HttpRequest req, Version version)
+    {
+        req.Version = version;
+        return req;
+    }
+
+    public static HttpRequest VersionPolicy(this HttpRequest req, HttpVersionPolicy policy)
+    {
+        req.VersionPolicy = policy;
+        return req;
+    }
 }

@@ -155,7 +155,11 @@ public abstract class AbstractHttpClientService : AbstractHttpService
     protected static HttpRequestMessage BuildHttpRequest(HttpRequest request, Uri? baseAddress, CookieContainer cc, CancellationToken token)
     {
         var uri = request.GetUri();
-        var requestMessage = new HttpRequestMessage(request.Method, uri);
+        var requestMessage = new HttpRequestMessage(request.Method, uri)
+        {
+            Version = request.Version,
+            VersionPolicy = request.VersionPolicy,
+        };
 
         if (request.Method.IsGet() == false)
         {

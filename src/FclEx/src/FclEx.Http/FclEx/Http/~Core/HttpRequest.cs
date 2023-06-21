@@ -10,6 +10,8 @@ public partial class HttpRequest
     public bool ThrowIfFailed { get; set; } = true;
     public HttpMethod Method { get; set; }
     public HttpContent? Content { get; set; }
+    public HttpVersionPolicy VersionPolicy { get; set; } = HttpVersionPolicy.RequestVersionOrLower;
+    public Version Version { get; set; } = HttpVersion.Version11;
     public int BufferSize { get; set; } = 256 * 1024;
     public TimeSpan? TotalTimeout { get; set; } = TimeSpan.FromMinutes(2);
     public TimeSpan? ReadBufferTimeout { get; set; } = TimeSpan.FromSeconds(10);
