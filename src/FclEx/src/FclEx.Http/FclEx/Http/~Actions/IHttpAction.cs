@@ -21,7 +21,7 @@ public interface IHttpAction<T> : IAbstractAction<T>
         try
         {
             req = BuildRequest();
-            var res = await HttpService.ExecuteAsync(req, token).DonotCapture();
+            var res = await HttpService.SendAsync(req, token).DonotCapture();
             if (res.HasError)
             {
                 Dump(Logger, req, HttpService);

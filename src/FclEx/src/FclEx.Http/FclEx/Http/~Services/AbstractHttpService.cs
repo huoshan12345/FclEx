@@ -17,7 +17,7 @@ public abstract class AbstractHttpService : IHttpService
 
     protected abstract Task ExecuteAsyncInternal(HttpRequest request, HttpResponse response, CancellationToken token);
 
-    public async Task<HttpResponse> ExecuteAsync(HttpRequest request, CancellationToken token = default)
+    public async Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken token = default)
     {
         token.ThrowIfCancellationRequested();
         var watch = ValueStopwatch.StartNew();

@@ -12,11 +12,11 @@ public class PropertyTests
     public async Task CharSet_Test(bool value)
     {
         using var http = new HttpClientService();
-        var req = HttpRequest.Get(CharSetTestCase.Url);
+        var request = HttpRequest.Get(CharSetTestCase.Url);
         if (value)
-            req.CharSet(CharSetTestCase.CharSet);
+            request.CharSet(CharSetTestCase.CharSet);
 
-        var res = await http.SendAsync(req)
+        var res = await request.SendAsync(http)
             .ThrowIfError()
             .DonotCapture();
 
@@ -29,11 +29,11 @@ public class PropertyTests
     public async Task FallbackCharSet_Test(bool value)
     {
         using var http = new HttpClientService();
-        var req = HttpRequest.Get(CharSetTestCase.Url);
+        var request = HttpRequest.Get(CharSetTestCase.Url);
         if (value)
-            req.CharSet(CharSetTestCase.CharSet);
+            request.CharSet(CharSetTestCase.CharSet);
 
-        var res = await http.SendAsync(req)
+        var res = await request.SendAsync(http)
             .ThrowIfError()
             .DonotCapture();
         Assert.Equal(value, res.ResponseString.Contains(CharSetTestCase.Keyword));
@@ -48,7 +48,7 @@ public class PropertyTests
         var req = HttpRequest.Get(CharSetTestCase.Url);
         req.DetectChar(value);
 
-        var res = await http.SendAsync(req)
+        var res = await req.SendAsync(http)
             .ThrowIfError()
             .DonotCapture();
         Assert.Equal(value, res.ResponseString.Contains(CharSetTestCase.Keyword));

@@ -56,7 +56,7 @@ namespace FclEx.Benchmarks
                         Console.WriteLine($"[{name}]: Finished {i} Rounds");
                     }
 
-                    var resList = await reqs.Select(m => service.ExecuteAsync(m)).WhenAll().DonotCapture();
+                    var resList = await reqs.Select(m => service.SendAsync(m)).WhenAll().DonotCapture();
                     resList.ForEach(m => m.ThrowIfError());
 
                     //foreach (var req in reqs)

@@ -10,11 +10,6 @@ public static class HttpServiceExtensions
             .SendAsync(http);
     }
 
-    public static Task<HttpResponse> SendAsync(this IHttpService http, HttpRequest request)
-    {
-        return request.SendAsync(http);
-    }
-
     public static void AddCookie(this IHttpService http, Cookie cookie, string? url = null)
     {
         var uri = url == null ? null : new Uri(url);
@@ -101,7 +96,7 @@ public static class HttpServiceExtensions
             .ReadBufferTimeout(timeout)
             .AcceptCompress();
 
-        var res = await http.SendAsync(request).DonotCapture();
+        var res = await request.SendAsync(http);
         return res.HasError
             ? Operate.CreateObjectError(res, res.Exception!, res.ExecuteTime)
                 .ToExplicit<HttpFileDownloadInfo>()
