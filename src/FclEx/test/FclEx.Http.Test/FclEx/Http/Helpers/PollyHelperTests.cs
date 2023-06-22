@@ -1,7 +1,17 @@
-﻿namespace FclEx.Http.Helpers;
+﻿using Polly.Timeout;
+using Polly;
+
+namespace FclEx.Http.Helpers;
 
 public class PollyHelperTests
 {
+    private readonly ITestOutputHelper _output;
+
+    public PollyHelperTests(ITestOutputHelper output)
+    {
+        _output = output;
+    }
+
     [Theory]
     [InlineData(1, 1)]
     [InlineData(2, 1)]

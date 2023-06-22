@@ -4,6 +4,13 @@ namespace FclEx.Http;
 
 partial class HttpRequestExtensions
 {
+    public static HttpRequest AddHeader(this HttpRequest req, string key, string? value)
+    {
+        Check.NotNull(key);
+        req.Headers[key.Trim()] = value.ToStringOrEmpty().Trim();
+        return req;
+    }
+
     public static HttpRequest TryAddHeader(this HttpRequest req, string key, string? value)
     {
         var k = key.Trim();

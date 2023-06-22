@@ -4,27 +4,15 @@ namespace FclEx.Http;
 
 partial class HttpRequestExtensions
 {
-    public static HttpRequest ReadResultCookie(this HttpRequest req, bool read)
-    {
-        req.ReadCookie = read;
-        return req;
-    }
-
-    public static HttpRequest ReadResultHeader(this HttpRequest req, bool read)
-    {
-        req.ReadHeaders = read;
-        return req;
-    }
-
-    public static HttpRequest ReadResultContent(this HttpRequest req, bool read)
+    public static HttpRequest ReadContent(this HttpRequest req, bool read)
     {
         req.ReadContent = read;
         return req;
     }
 
-    public static HttpRequest ThrowOnFailedCode(this HttpRequest req, bool ifThrow)
+    public static HttpRequest ThrowIfFailedStatusCode(this HttpRequest req, bool ifThrow)
     {
-        req.ThrowIfFailed = ifThrow;
+        req.ThrowIfFailedStatusCode = ifThrow;
         return req;
     }
 
@@ -177,7 +165,7 @@ partial class HttpRequestExtensions
 
     public static HttpRequest ReadAs(this HttpRequest req, HttpContentType type)
     {
-        req.ReadType = type;
+        req.ReadContentType = type;
         return req;
     }
 

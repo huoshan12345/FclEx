@@ -3,6 +3,8 @@ using System.Net.Http.Headers;
 
 namespace FclEx.Http;
 
+public readonly record struct HttpClientContext(HttpClient Client, IAsyncPolicy<HttpResponseMessage> Policy);
+
 public abstract class AbstractHttpClientService : AbstractHttpService
 {
     protected static readonly Encoding DefaultEncoding = Encoding.UTF8;
@@ -43,7 +45,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             response.Headers.AddRange(key, value);
         }
 
-        switch (request.ReadType)
+        switch (request.ReadContentType)
         {
             case HttpContentType.Stream:
             {
@@ -62,7 +64,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
                 break;
             }
             default:
-                throw new ArgumentOutOfRangeException(nameof(request.ReadType), request.ReadType, null);
+                throw new ArgumentOutOfRangeException(nameof(request.ReadContentType), request.ReadContentType, null);
         }
     }
 
@@ -208,29 +210,36 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         return requestMessage;
     }
 
-    private async Task<HttpResponseMessage> SendAsync(HttpClient httpClient, HttpRequest request, CancellationToken token,
-        HttpCompletionOption httpCompletionOption = HttpCompletionOption.ResponseHeadersRead)
+    protected virtual async Task<HttpResponseMessage> SendAsync(HttpClientContext context, HttpRequest request, CancellationToken token)
     {
-        var httpRequest = BuildHttpRequest(request, httpClient.BaseAddress, _cookieContainer, token);
-        var res = await httpClient.SendAsync(httpRequest, httpCompletionOption, token).DonotCapture();
+        var (client, policy) = context;
+        var res = await policy.ExecuteAsync(async () =>
+        {
+            // Create request in every retry to avoid the following error:
+            // The request message was already sent. Cannot send the same request message multiple times.
+            using var httpRequest = BuildHttpRequest(request, client.BaseAddress, _cookieContainer, token);
+            using var cts = token.WithTimeout(request.ReadHeadersTimeout);
+            return await client.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cts.Token);
+        });
         return res;
     }
 
-    protected async Task ExecuteAsyncInternal(HttpClient httpClient, HttpRequest request, HttpResponse response, CancellationToken token = default)
+    protected internal abstract HttpClientContext CreateHttpClientContext();
+
+    protected override async Task ExecuteAsyncInternal(HttpRequest request, HttpResponse response, CancellationToken token)
     {
         using var cts = token.WithTimeout(request.TotalTimeout);
         var responseMessages = new List<HttpResponseMessage>();
         try
         {
+            var context = CreateHttpClientContext();
             var req = request;
             while (true)
             {
-                using var ctsReq = cts.Token.WithTimeout(request.ReadHeadersTimeout);
-                var res = await SendAsync(httpClient, req, ctsReq.Token).DonotCapture();
+                var res = await SendAsync(context, req, cts.Token).DonotCapture();
                 responseMessages.Add(res);
                 response.RedirectUris.Add(res.RequestMessage?.RequestUri!);
-                if (request.ReadCookie)
-                    ReadCookies(res, response);
+                ReadCookies(res, response);
 
                 if (!res.TryGetRedirection(out var uri))
                     break;
@@ -240,11 +249,9 @@ public abstract class AbstractHttpClientService : AbstractHttpService
 
             var responseMessage = responseMessages.Last(); // responses should not be empty
             response.StatusCode = responseMessage.StatusCode;
+            ReadHeader(responseMessage, response);
 
-            if (request.ReadHeaders)
-                ReadHeader(responseMessage, response);
-
-            if (request.ThrowIfFailed)
+            if (request.ThrowIfFailedStatusCode)
                 responseMessage.EnsureSuccess();
 
             if (request.ReadContent)

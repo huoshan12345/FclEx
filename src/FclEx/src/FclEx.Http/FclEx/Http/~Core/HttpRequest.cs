@@ -7,7 +7,8 @@ namespace FclEx.Http;
 public partial class HttpRequest
 {
     private readonly UriCreator _uriCreator;
-    public bool ThrowIfFailed { get; set; } = true;
+
+    public bool ThrowIfFailedStatusCode { get; set; } = true;
     public HttpMethod Method { get; set; }
     public HttpContent? Content { get; set; }
     public HttpVersionPolicy VersionPolicy { get; set; } = HttpVersionPolicy.RequestVersionOrLower;
@@ -26,18 +27,15 @@ public partial class HttpRequest
     public string? CharSet { get; set; }
     public bool DetectCharSet { get; set; }
     public string? FallbackCharSet { get; set; }
-    public bool UseGZip { get; set; } = false;
+    public bool UseGZip { get; set; } = false; 
+    public HttpContentType ReadContentType { get; set; } = HttpContentType.String;
+    public bool ReadContent { get; set; } = true;
 
     public Dictionary<string, string?> Headers { get; } = new(StringComparer.OrdinalIgnoreCase);
     public NameValueCollection QueryValues => _uriCreator.QueryValues;
     public NameValueCollection FormValues { get; } = HttpUtility.ParseQueryString(""); // don't use new NameValueCollection() here.
 
-    public HttpContentType ReadType { get; set; } = HttpContentType.String;
-    public bool ReadCookie { get; set; } = true;
-    public bool ReadHeaders { get; set; } = true;
-    public bool ReadContent { get; set; } = true;
-
-
+    
     public string? Referrer
     {
         get => Headers.Get(HttpKnownHeaderNames.Referrer);
@@ -95,37 +93,19 @@ public partial class HttpRequest
     public HttpRequest(Uri uri, HttpMethod method)
     {
         _uriCreator = new UriCreator(uri);
-
-        Method = method;
-
-        AddHeader(HttpKnownHeaderNames.UserAgent, HttpConstants.DefaultUserAgent);
-
         if (UserName.IsValid() && Password.IsValid())
         {
             this.BasicAuth(UserName, Password);
         }
+        Method = method;
+        Headers[HttpKnownHeaderNames.UserAgent] = HttpConstants.DefaultUserAgent;
     }
 
     public Uri GetUri() => _uriCreator.GetUri();
 
     public HttpRequest AddQueryValue(string key, string? value)
     {
-        Check.NotNull(key);
-        QueryValues.Add(key.Trim(), value.ToStringOrEmpty().Trim());
-        return this;
-    }
-
-    public HttpRequest AddFormValue(string key, string? value)
-    {
-        Check.NotNull(key);
-        FormValues.Add(key.Trim(), value.ToStringOrEmpty().Trim());
-        return this;
-    }
-
-    public HttpRequest AddHeader(string key, string? value)
-    {
-        Check.NotNull(key);
-        Headers[key.Trim()] = value.ToStringOrEmpty().Trim();
+        _uriCreator.AddQueryValue(key, value);
         return this;
     }
 }

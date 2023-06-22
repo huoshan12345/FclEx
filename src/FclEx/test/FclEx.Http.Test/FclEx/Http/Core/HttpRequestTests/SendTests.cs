@@ -1,4 +1,7 @@
-﻿namespace FclEx.Http.Core.HttpRequestTests;
+﻿using Polly.Timeout;
+using Polly;
+
+namespace FclEx.Http.Core.HttpRequestTests;
 
 public class SendTests
 {

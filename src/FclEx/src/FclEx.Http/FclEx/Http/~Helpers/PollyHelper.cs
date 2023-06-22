@@ -26,12 +26,17 @@ public static class PollyHelper
             .WaitAndRetryAsync(retryCount, sleepDurationProvider);
     }
 
+    private static readonly string[] _canceledErrors =
+    {
+        "The operation was canceled.",
+        "A task was canceled.",
+    };
+
     public static IAsyncPolicy<HttpResponseMessage> GetCancelPolicy(int retryCount = 2, SleepDurationProvider? sleepDurationProvider = null)
     {
-        const string defaultMessage = "A task was canceled.";
         sleepDurationProvider ??= DefaultSleepDurationProvider;
         return Policy<HttpResponseMessage>
-            .Handle<TaskCanceledException>(m => m.InnerException is null && m.Message == defaultMessage)
+            .Handle<TaskCanceledException>(m => m.InnerException is null && _canceledErrors.Contains(m.Message))
             .WaitAndRetryAsync(retryCount, sleepDurationProvider);
     }
 }

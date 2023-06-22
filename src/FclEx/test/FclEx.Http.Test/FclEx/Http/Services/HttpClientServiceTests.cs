@@ -82,17 +82,22 @@ public partial class HttpClientServiceTests
         }
     }
 
+    private static IHttpClientFactory GetFactory(HttpClientOptions options)
+    {
+        var provider = HttpClientService.GetProvider(options);
+        return provider.GetRequiredService<IHttpClientFactory>();
+    }
+
     [Fact]
     public void GetFactory_Default_Test()
     {
-        var fac1 = HttpClientService.GetFactory(HttpClientOptions.Default);
-        var fac2 = HttpClientService.GetFactory(HttpClientOptions.Default);
+        var fac1 = GetFactory(HttpClientOptions.Default);
+        var fac2 = GetFactory(HttpClientOptions.Default);
         Assert.Equal(fac1, fac2, ReferenceEqualityComparer.Instance);
     }
 
-    private static void CheckHttpClient(HttpClient client, Uri? baseAddress, IWebProxy? proxy)
+    private static void CheckProxy(HttpClient client, IWebProxy? proxy)
     {
-        Assert.Equal(baseAddress, client.BaseAddress);
         var handler = client.GetHandler()
             .EnumerateInner()
             .OfType<SocketsHttpHandler>()
@@ -106,11 +111,11 @@ public partial class HttpClientServiceTests
     public void GetFactory_Proxy_Test()
     {
         var uri = new Uri("http://127.0.0.1:8888");
-        var fac1 = HttpClientService.GetFactory(new() { Proxy = WebProxyHelper.Create(uri) });
-        var fac2 = HttpClientService.GetFactory(new() { Proxy = WebProxyHelper.Create(uri) });
+        var fac1 = GetFactory(new() { Proxy = WebProxyHelper.Create(uri) });
+        var fac2 = GetFactory(new() { Proxy = WebProxyHelper.Create(uri) });
         Assert.Equal(fac1, fac2, ReferenceEqualityComparer.Instance);
-        CheckHttpClient(fac1.CreateClient(), null, WebProxyHelper.Create(uri));
-        CheckHttpClient(fac2.CreateClient(), null, WebProxyHelper.Create(uri));
+        CheckProxy(fac1.CreateClient(), WebProxyHelper.Create(uri));
+        CheckProxy(fac2.CreateClient(), WebProxyHelper.Create(uri));
     }
 
     [Fact]
@@ -118,16 +123,16 @@ public partial class HttpClientServiceTests
     {
         var http = HttpClientService.Create();
         {
-            var client = http.CreateClient();
+            var client = http.CreateHttpClientContext().Client;
             Assert.Null(http.Proxy);
-            CheckHttpClient(client, null, null);
+            CheckProxy(client, null);
         }
         {
             var proxy = WebProxyHelper.Create("http://127.0.0.1:8888");
             http.Proxy = proxy;
-            var client = http.CreateClient();
+            var client = http.CreateHttpClientContext().Client;
             Assert.Equal(proxy, http.Proxy);
-            CheckHttpClient(client, null, proxy);
+            CheckProxy(client, proxy);
         }
     }
 
@@ -135,10 +140,36 @@ public partial class HttpClientServiceTests
     public void GetFactory_Proxy_NotSame()
     {
         var uri = new Uri("http://127.0.0.1:8888");
-        var fac1 = HttpClientService.GetFactory(new() { Proxy = WebProxyHelper.Create(uri) });
-        var fac2 = HttpClientService.GetFactory(new() { Proxy = null });
+        var fac1 = GetFactory(new() { Proxy = WebProxyHelper.Create(uri) });
+        var fac2 = GetFactory(new() { Proxy = null });
         Assert.NotEqual(fac1, fac2, ReferenceEqualityComparer.Instance);
-        CheckHttpClient(fac1.CreateClient(), null, WebProxyHelper.Create(uri));
-        CheckHttpClient(fac2.CreateClient(), null, null);
+        CheckProxy(fac1.CreateClient(), WebProxyHelper.Create(uri));
+        CheckProxy(fac2.CreateClient(), null);
+    }
+
+    [LocalOnlyTheory]
+    [InlineData(1, 1)]
+    [InlineData(2, 1)]
+    [InlineData(2, 2)]
+    public async Task CreateHttpClientContext_Policy_Test(int retryCount, int timeoutSeconds)
+    {
+        var timeout = TimeSpan.FromSeconds(timeoutSeconds);
+        var http = HttpClientService.Create(m =>
+        {
+            m.ConnectTimeout = TimeSpan.FromMinutes(1);
+            m.SleepDurationProvider = m => TimeSpan.Zero;
+            m.RetryCount = retryCount;
+        });
+        var response = await HttpRequest.Get("https://www.google.com:444/")
+            .ReadHeadersTimeout(timeout)
+            .SendAsync(http);
+
+        Assert.True(response.HasError);
+        _output.WriteLine(response.Exception.ToString());
+
+        Assert.IsType<TaskCanceledException>(response.Exception);
+
+        var expectedTime = TimeSpan.FromSeconds(timeoutSeconds).Multiply(retryCount + 1);
+        AssertExt.Equal(expectedTime, response.Elapsed, TimeSpan.FromSeconds(0.9));
     }
 }

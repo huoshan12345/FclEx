@@ -151,3 +151,13 @@ public class UriCreator
         };
     }
 }
+
+public static class UriCreatorExtensions
+{
+    public static UriCreator AddQueryValue(this UriCreator creator, string key, string? value)
+    {
+        Check.NotNull(key);
+        creator.QueryValues.Add(key.Trim(), value.ToStringOrEmpty().Trim());
+        return creator;
+    }
+}

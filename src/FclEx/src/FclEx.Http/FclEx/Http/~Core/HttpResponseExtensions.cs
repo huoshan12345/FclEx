@@ -32,7 +32,7 @@ public static class HttpResponseExtensions
     {
         var res = await task.DonotCapture();
         res.ThrowIfError();
-        if (res.Request.ReadType == HttpContentType.Bytes)
+        if (res.Request.ReadContentType == HttpContentType.Bytes)
             throw new InvalidOperationException("Can not deserialize json from byte array.");
         if (res.ResponseString.IsNullOrEmpty())
             throw new InvalidOperationException("Can not deserialize json from empty response string.");

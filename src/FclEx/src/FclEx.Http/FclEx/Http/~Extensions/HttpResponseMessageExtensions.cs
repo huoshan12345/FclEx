@@ -18,13 +18,13 @@ public static class HttpResponseMessageExtensions
         }
     }
 
-    public static HttpResponseMessage EnsureSuccess(this HttpResponseMessage httpResponse)
+    public static HttpResponseMessage EnsureSuccess(this HttpResponseMessage response)
     {
-        if (!httpResponse.IsSuccessStatusCode)
+        if (response.IsSuccessStatusCode == false)
         {
-            throw new WebException($"call {httpResponse.RequestMessage?.RequestUri} return unsuccessful code: " +
-                                   $"{httpResponse.StatusCode}/{httpResponse.StatusCode.ToInt()}");
+            throw new WebException($"call {response.RequestMessage?.RequestUri} return unsuccessful code: " +
+                                   $"{response.StatusCode}/{response.StatusCode.ToInt()}");
         }
-        return httpResponse;
+        return response;
     }
 }

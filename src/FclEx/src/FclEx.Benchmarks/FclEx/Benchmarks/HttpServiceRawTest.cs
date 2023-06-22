@@ -31,9 +31,7 @@ namespace FclEx.Benchmarks
         public static async ValueTask RawTest(int rounds)
         {
             var reqs = Urls.Select(m => HttpRequest.Get(m)
-                    .ReadResultCookie(false)
-                    .ReadResultContent(false)
-                    .ReadResultHeader(false)
+                    .ReadContent(false)
                     .ReadAsBytes())
                 .ToArray();
 

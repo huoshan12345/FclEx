@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using Polly.Timeout;
+﻿using Polly.Timeout;
 
 namespace FclEx.Http.Helpers;
 

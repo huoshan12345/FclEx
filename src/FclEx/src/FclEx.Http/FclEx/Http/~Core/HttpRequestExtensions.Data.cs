@@ -4,6 +4,13 @@ namespace FclEx.Http;
 
 public static partial class HttpRequestExtensions
 {
+    public static HttpRequest AddFormValue(this HttpRequest req, string key, string? value)
+    {
+        Check.NotNull(key);
+        req.FormValues.Add(key.Trim(), value.ToStringOrEmpty().Trim());
+        return req;
+    }
+
     public static HttpRequest AddQueryValue<T>(this HttpRequest req, string key, T? value) => req.AddQueryValue(key, value.ToStringOrEmpty());
 
     public static HttpRequest AddQueryValue(this HttpRequest req, KeyValuePair<string, string?> pair) => req.AddQueryValue(pair.Key, pair.Value);

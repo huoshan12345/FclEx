@@ -6,10 +6,12 @@ public class HttpClientService : AbstractHttpClientService
 
     public static HttpClientService Default { get; } = new() { UseCookie = false };
 
-    protected override Task ExecuteAsyncInternal(HttpRequest request, HttpResponse response, CancellationToken token)
+    protected internal override HttpClientContext CreateHttpClientContext()
     {
-        var httpClient = CreateClient();
-        return ExecuteAsyncInternal(httpClient, request, response, token);
+        var provider = GetProvider(_options);
+        var client = provider.GetRequiredService<IHttpClientFactory>().CreateClient();
+        var policy = provider.GetRequiredService<IAsyncPolicy<HttpResponseMessage>>();
+        return new(client, policy);
     }
 
     public HttpClientService(HttpClientOptions? options = null)
@@ -34,20 +36,27 @@ public class HttpClientService : AbstractHttpClientService
         GC.SuppressFinalize(this);
     }
 
-    protected static readonly ConcurrentDictionary<HttpClientOptions, IHttpClientFactory> Factories = new(HttpClientOptionsEqualityComparer.Instance);
+    protected static readonly ConcurrentDictionary<HttpClientOptions, IServiceProvider> Providers = new(HttpClientOptionsEqualityComparer.Instance);
 
-    protected internal static IHttpClientFactory GetFactory(HttpClientOptions options)
+    protected static readonly string[] _canceledErrors =
     {
-        return Factories.GetOrAdd(options, m => new ServiceCollection()
-            .AddHttpClientWithPolly(string.Empty, options)
-            .Services
-            .BuildServiceProvider()
-            .GetRequiredService<IHttpClientFactory>());
-    }
+        new TaskCanceledException(Task.CompletedTask).Message,
+        new OperationCanceledException(CancellationToken.None).Message,
+    };
 
-    protected internal virtual HttpClient CreateClient()
+    protected internal static IServiceProvider GetProvider(HttpClientOptions options)
     {
-        return GetFactory(_options).CreateClient();
+        return Providers.GetOrAdd(options, m =>
+        {
+            var policy = Policy<HttpResponseMessage>
+                .Handle<OperationCanceledException>(m => m.InnerException is null && _canceledErrors.Contains(m.Message))
+                .WaitAndRetryAsync(options.RetryCount, options.SleepDurationProvider);
+            return new ServiceCollection()
+                .AddSingleton<IAsyncPolicy<HttpResponseMessage>>(policy)
+                .AddHttpClientWithPolly(string.Empty, options)
+                .Services
+                .BuildServiceProvider();
+        });
     }
 
     public static HttpClientService Create(HttpClientOptions? options = null, bool useCookie = true, ILoggerFactory? loggerFactory = null)
