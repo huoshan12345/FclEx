@@ -5,8 +5,6 @@
 #pragma warning disable CS1584
 #pragma warning disable CS1658
 
-using System.Collections;
-
 namespace Microsoft.Collections.Extensions;
 
 internal enum InsertionBehavior

@@ -1,8 +1,6 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using FclEx;
-using FclEx.Extensions;
 using FclEx.Serilog;
 using Microsoft.Extensions.Logging;
 using Serilog.Configuration;
@@ -24,7 +22,7 @@ public class EmailLogSettings
     public LogLevel LogLevel { get; set; } = LogLevel.Error;
     public int BatchPostingLimit { get; set; } = 2;
     public int PeriodSenconds { get; set; } = 10;
-    public string OutputTemplate { get; set; } = AbpSerilogConstants.DefaultOutputTemplate;
+    public string OutputTemplate { get; set; } = FclExSerilogConstants.DefaultOutputTemplate;
 }
 
 public static class EmailLogSettingsExtensions

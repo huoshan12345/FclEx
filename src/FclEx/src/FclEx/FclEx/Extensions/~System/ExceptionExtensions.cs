@@ -3,7 +3,7 @@ using MoreLinq;
 
 namespace FclEx.Extensions;
 
-public static class ExceptionExtensions
+public static partial class ExceptionExtensions
 {
     [DoesNotReturn]
     public static void ReThrow(this Exception ex) => ExceptionDispatchInfo.Capture(ex).Throw();
@@ -105,5 +105,24 @@ public static class ExceptionExtensions
     public static Exception SetMessage(this Exception ex, Func<Exception, string> func)
     {
         return ex.SetMessage(func(ex));
+    }
+
+    public static string? GetMessage(this Exception ex)
+    {
+        return Exception_Message.GetValue<string>(ex);
+    }
+
+    public static readonly FieldInfo Exception_StackTrace = typeof(Exception).GetRequiredField("_stackTraceString");
+
+    public static Exception SetStackTrace(this Exception ex, string? trace = null)
+    {
+        trace ??= new StackTrace(1, true).ToString();
+        Exception_StackTrace.SetValue(ex, trace);
+        return ex;
+    }
+
+    public static string? GetStackTrace(this Exception ex)
+    {
+        return Exception_StackTrace.GetValue<string>(ex);
     }
 }

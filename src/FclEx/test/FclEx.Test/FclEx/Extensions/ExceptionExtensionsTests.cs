@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Extensions;
 
-public class ExceptionExtensionsTests
+public partial class ExceptionExtensionsTests
 {
     internal class InnermostException : Exception
     {

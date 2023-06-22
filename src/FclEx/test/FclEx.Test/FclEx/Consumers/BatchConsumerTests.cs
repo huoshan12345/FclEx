@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using FclEx.Helpers;
 using MoreLinq.Extensions;
-using Xunit.Abstractions;
 
 namespace FclEx.Consumers;
 

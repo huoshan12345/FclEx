@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using FclEx.Serilog.Models;
-using Serilog.Events;
+﻿using FclEx.Serilog.Models;
 using Serilog.Formatting;
 
 namespace FclEx.Serilog.Formatting;

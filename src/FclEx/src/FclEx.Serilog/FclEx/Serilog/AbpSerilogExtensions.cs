@@ -1,10 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using FclEx.Extensions;
-using FclEx.Helpers;
-using Serilog.Events;
-using Serilog.Formatting;
-using Serilog.Parsing;
+﻿using Serilog.Formatting;
 
 namespace FclEx.Serilog;
 

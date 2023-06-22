@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using Combinatorics.Collections;
-using Xunit.Abstractions;
 
 namespace FclEx.Combinatorics.Collections;
 

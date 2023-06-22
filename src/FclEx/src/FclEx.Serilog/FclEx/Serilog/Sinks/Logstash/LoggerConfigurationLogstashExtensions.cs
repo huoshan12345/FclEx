@@ -1,6 +1,5 @@
 ﻿using Serilog;
 using Serilog.Configuration;
-using Serilog.Events;
 using Serilog.Sinks.PeriodicBatching;
 
 namespace FclEx.Serilog.Sinks.Logstash;

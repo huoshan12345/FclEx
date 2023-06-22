@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using FclEx.Helpers;
 
 namespace FclEx.Comparers;

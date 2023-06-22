@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using FclEx;
+﻿using FclEx;
 using Newtonsoft.Json;
 
 namespace System;

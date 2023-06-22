@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FclEx.Serilog.Sinks.Logstash.Inputs;
+﻿namespace FclEx.Serilog.Sinks.Logstash.Inputs;
 
 internal class LogstashInputFactory
 {

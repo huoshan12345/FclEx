@@ -1,8 +1,5 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.InteropServices;
-using Serilog.Core;
-using Serilog.Events;
 
 namespace FclEx.Serilog;
 

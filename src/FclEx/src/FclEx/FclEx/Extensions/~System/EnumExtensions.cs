@@ -129,4 +129,18 @@ public static class EnumExtensions
     {
         return EnumValueDic.GetOrAdd(e, m => m.GetAttribute<EnumValueAttribute>()?.Value ?? e.ToString());
     }
+    
+    /// <summary>
+    /// A generic and more efficient implement of <see cref="Enum.HasFlag" />.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="e"></param>
+    /// <param name="flag"></param>
+    /// <returns></returns>
+    public static bool IsSet<T>(this T e, T flag) where T : struct, Enum
+    {
+        var enumInt = e.ToLong();
+        var flagInt = flag.ToLong();
+        return (enumInt & flagInt) == flagInt;
+    }
 }

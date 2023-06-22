@@ -1,6 +1,4 @@
-﻿using System.Collections;
-
-namespace FclEx.Utils;
+﻿namespace FclEx.Utils;
 
 public interface IPagedList
 {

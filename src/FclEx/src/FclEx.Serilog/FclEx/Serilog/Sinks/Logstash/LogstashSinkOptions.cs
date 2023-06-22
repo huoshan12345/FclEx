@@ -1,7 +1,4 @@
-﻿using System;
-using Serilog.Core;
-using Serilog.Events;
-using Serilog.Formatting;
+﻿using Serilog.Formatting;
 
 namespace FclEx.Serilog.Sinks.Logstash;
 

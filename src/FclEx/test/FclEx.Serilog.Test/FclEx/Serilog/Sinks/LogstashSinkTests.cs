@@ -1,13 +1,6 @@
-﻿using System;
-using System.Threading;
-using FclEx.Serilog;
-using FclEx.Serilog.Sinks.Logstash;
-using FclEx.Utils;
-using Serilog;
-using Xunit;
-using Xunit.Abstractions;
+﻿using FclEx.Serilog.Sinks.Logstash;
 
-namespace FclEx.Sinks
+namespace FclEx.Serilog.Sinks
 {
     public class LogstashSinkTests
     {

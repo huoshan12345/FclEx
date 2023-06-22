@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FclEx.Serilog.Sinks.Logstash;
+﻿namespace FclEx.Serilog.Sinks.Logstash;
 
 [Flags]
 public enum EmitEventFailureHandling

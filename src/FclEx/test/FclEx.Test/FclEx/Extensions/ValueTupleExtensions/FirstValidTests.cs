@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using MoreLinq.Extensions;
-using Xunit.Abstractions;
+
 #nullable enable
 
 namespace FclEx.Extensions.ValueTupleExtensions;

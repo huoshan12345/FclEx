@@ -1,15 +1,7 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using FclEx.Extensions;
+﻿using System.Collections.Concurrent;
 using FclEx.Serilog.Models;
-using Serilog.Core;
-using Serilog.Events;
 using Serilog.Extensions.Logging;
 using Serilog.Formatting.Elasticsearch;
-using Serilog.Parsing;
 
 namespace FclEx.Serilog.Formatting;
 
@@ -97,8 +89,7 @@ public class LogstashJsonFormatter : ElasticsearchJsonFormatter
         base.WritePropertiesValues(properties, output);
         var precedingDelimiter = ",";
         if (properties.TryGetValue(Constants.SourceContextPropertyName, out var sourceContextProperty) &&
-            sourceContextProperty is ScalarValue sourceContextValue &&
-            sourceContextValue.Value is string sourceContext)
+            sourceContextProperty is ScalarValue { Value: string sourceContext })
         {
             WriteJsonProperty("loggerName", sourceContext, ref precedingDelimiter, output);
         }
