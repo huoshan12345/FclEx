@@ -241,7 +241,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             var responseMessage = responseMessages.Last(); // responses should not be empty
             response.StatusCode = responseMessage.StatusCode;
 
-            if (request.ReadHeader)
+            if (request.ReadHeaders)
                 ReadHeader(responseMessage, response);
 
             if (request.ThrowIfFailed)

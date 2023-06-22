@@ -34,7 +34,7 @@ public partial class HttpRequest
 
     public HttpContentType ReadType { get; set; } = HttpContentType.String;
     public bool ReadCookie { get; set; } = true;
-    public bool ReadHeader { get; set; } = true;
+    public bool ReadHeaders { get; set; } = true;
     public bool ReadContent { get; set; } = true;
 
 

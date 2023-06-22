@@ -12,7 +12,7 @@ partial class HttpRequestExtensions
 
     public static HttpRequest ReadResultHeader(this HttpRequest req, bool read)
     {
-        req.ReadHeader = read;
+        req.ReadHeaders = read;
         return req;
     }
 
