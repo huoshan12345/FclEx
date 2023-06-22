@@ -1,5 +1,4 @@
-﻿using System.Xml.Linq;
-using static FclEx.Dapper.GlobalFixture;
+﻿using static FclEx.Dapper.GlobalFixture;
 
 namespace FclEx.Dapper;
 

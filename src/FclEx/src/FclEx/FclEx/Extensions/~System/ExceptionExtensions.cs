@@ -93,4 +93,17 @@ public static class ExceptionExtensions
     {
         return ex is ObjectException<T> objEx && condition(objEx.Value);
     }
+
+    public static readonly FieldInfo Exception_Message = typeof(Exception).GetRequiredField("_message");
+
+    public static Exception SetMessage(this Exception ex, string? message)
+    {
+        Exception_Message.SetValue(ex, message);
+        return ex;
+    }
+
+    public static Exception SetMessage(this Exception ex, Func<Exception, string> func)
+    {
+        return ex.SetMessage(func(ex));
+    }
 }

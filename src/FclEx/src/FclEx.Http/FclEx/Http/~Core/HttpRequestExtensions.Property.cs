@@ -127,15 +127,15 @@ partial class HttpRequestExtensions
         return req;
     }
 
-    public static HttpRequest ConnectTimeout(this HttpRequest req, TimeSpan? timeout)
+    public static HttpRequest ReadHeadersTimeout(this HttpRequest req, TimeSpan? timeout)
     {
-        req.ConnectTimeout = timeout;
+        req.ReadHeadersTimeout = timeout;
         return req;
     }
 
-    public static HttpRequest TryConnectTimeout(this HttpRequest req, TimeSpan? timeout)
+    public static HttpRequest TryReadHeadersTimeout(this HttpRequest req, TimeSpan? timeout)
     {
-        req.ConnectTimeout ??= timeout;
+        req.ReadHeadersTimeout ??= timeout;
         return req;
     }
     

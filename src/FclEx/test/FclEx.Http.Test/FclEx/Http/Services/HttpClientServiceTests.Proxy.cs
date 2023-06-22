@@ -30,7 +30,7 @@ partial class HttpClientServiceTests
 
         var http = HttpClientService.Create(proxy);
         var res = await HttpRequest.Get(url)
-            .ConnectTimeout(TimeSpan.FromSeconds(10))
+            .ReadHeadersTimeout(TimeSpan.FromSeconds(10))
             .SendAsync(http);
         AssertExt.False(res.HasError, () => res.Exception!.ToString());
     }

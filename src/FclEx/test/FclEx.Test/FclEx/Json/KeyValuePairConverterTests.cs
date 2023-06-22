@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using FclEx.Extensions;
 using FclEx.Json.Converters;
 using Newtonsoft.Json;
 

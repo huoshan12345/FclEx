@@ -9,7 +9,7 @@ public class TimeoutTests
     {
         var timeout = TimeSpan.FromSeconds(timeoutSeconds);
         var req = HttpRequest.Get("https://httpstat.us/504?sleep=60000")
-            .ConnectTimeout(timeout);
+            .ReadHeadersTimeout(timeout);
 
         var (successful, _, exception, elapsed) = await Operate.ExecuteAsync(async () => await req.SendAsync().ThrowIfError());
         Assert.False(successful);

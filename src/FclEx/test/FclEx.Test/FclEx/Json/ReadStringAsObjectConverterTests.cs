@@ -1,5 +1,4 @@
-﻿using FclEx.Extensions;
-using FclEx.Json.Converters;
+﻿using FclEx.Json.Converters;
 using Newtonsoft.Json;
 
 namespace FclEx.Json;

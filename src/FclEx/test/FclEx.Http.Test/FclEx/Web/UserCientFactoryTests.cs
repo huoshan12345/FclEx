@@ -1,5 +1,4 @@
 ﻿using FclEx.Helpers;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace FclEx.Web;
 

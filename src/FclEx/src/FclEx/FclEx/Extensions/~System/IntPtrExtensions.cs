@@ -5,7 +5,7 @@ namespace FclEx.Extensions;
 
 public static class IntPtrExtensions
 {
-    public static ValueDisposable<IntPtr> AsDisposable(this IntPtr ptr)
+    public static DisposableValue<IntPtr> AsDisposable(this IntPtr ptr)
     {
         return ptr.AsDisposable(Marshal.FreeHGlobal);
     }

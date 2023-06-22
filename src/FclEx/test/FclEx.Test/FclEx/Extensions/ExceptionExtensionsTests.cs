@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public class ExceptionExtensionsTests
 {
@@ -27,7 +22,7 @@ public class ExceptionExtensionsTests
 
     [Theory]
     [MemberData(nameof(Exceptions))]
-    public void HandleAll_Test(Exception ex)
+    public void ForEach_Test(Exception ex)
     {
         var list = new List<InnermostException>();
         ex.ForEach(m =>
@@ -48,5 +43,14 @@ public class ExceptionExtensionsTests
         Assert.NotNull(inner);
         Assert.Null(inner.InnerException);
         Assert.Equal(typeof(InnermostException), inner.GetType());
+    }
+
+    [Fact]
+    public void SetMessage_Test()
+    {
+        const string message = "xxxxxxxxxx";
+        var ex = new SimpleException("x");
+        ex.SetMessage(message);
+        Assert.Equal(message, ex.Message);
     }
 }

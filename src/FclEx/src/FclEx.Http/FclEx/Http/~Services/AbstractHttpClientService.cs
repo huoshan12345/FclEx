@@ -222,11 +222,11 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         var responseMessages = new List<HttpResponseMessage>();
         try
         {
-            var curReq = request;
+            var req = request;
             while (true)
             {
-                using var ctsPerReq = cts.Token.WithTimeout(request.ConnectTimeout);
-                var res = await SendAsync(httpClient, curReq, ctsPerReq.Token).DonotCapture();
+                using var ctsReq = cts.Token.WithTimeout(request.ReadHeadersTimeout);
+                var res = await SendAsync(httpClient, req, ctsReq.Token).DonotCapture();
                 responseMessages.Add(res);
                 response.RedirectUris.Add(res.RequestMessage?.RequestUri!);
                 if (request.ReadCookie)
@@ -235,7 +235,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
                 if (!res.TryGetRedirection(out var uri))
                     break;
 
-                curReq = HttpRequest.Get(uri);
+                req = HttpRequest.Get(uri);
             }
 
             var responseMessage = responseMessages.Last(); // responses should not be empty

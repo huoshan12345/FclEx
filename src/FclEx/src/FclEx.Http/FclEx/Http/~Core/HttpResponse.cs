@@ -1,7 +1,4 @@
-﻿using System.Net.Http.Headers;
-using Microsoft.Collections.Extensions;
-
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 public class HttpResponse
 {
@@ -19,12 +16,12 @@ public class HttpResponse
     public byte[] ResponseBytes { get; internal set; } = Array.Empty<byte>();
     public Stream ResponseStream { get; internal set; } = new MemoryStream(Array.Empty<byte>());
     public Encoding? Encoding { get; internal set; }
-    public TimeSpan ExecuteTime { get; internal set; }
-    public DateTime RequestUtcTime { get; internal set; }
+    public TimeSpan Elapsed { get; internal set; }
+    public DateTimeOffset StartTime { get; internal set; }
+    public DateTimeOffset EndTime => StartTime + Elapsed;
     public MultiValueDictionary<string, string?> Headers { get; } = new(StringComparer.OrdinalIgnoreCase);
     public HttpStatusCode StatusCode { get; internal set; }
     public List<Uri> RedirectUris { get; } = new();
 
-    internal static readonly HttpResponse EmptyRes = new(HttpRequest.Create(string.Empty, HttpMethod.Get));
-    public static HttpResponse CreateError(HttpRequest req, Exception e) => new(req) { Exception = e };
+    public static HttpResponse CreateError(HttpRequest request, Exception ex) => new(request) { Exception = ex };
 }

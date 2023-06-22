@@ -25,7 +25,7 @@ public interface IHttpAction<T> : IAbstractAction<T>
             if (res.HasError)
             {
                 Dump(Logger, req, HttpService);
-                return (res.Exception!, res.ExecuteTime);
+                return (res.Exception!, res.Elapsed);
             }
             return await HandleResponseAsync(res).DonotCapture();
         }

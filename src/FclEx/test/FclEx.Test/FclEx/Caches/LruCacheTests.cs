@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using FclEx.Extensions;
-using FclEx.Utils;
 
 namespace FclEx.Caches;
 

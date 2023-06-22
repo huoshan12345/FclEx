@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using FclEx.Helpers;
 using FclEx;
-using FclEx.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.Extensions.Logging;

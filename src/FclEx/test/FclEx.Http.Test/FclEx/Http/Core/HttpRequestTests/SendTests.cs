@@ -17,7 +17,7 @@ public class SendTests
     public async Task Get_Test(string url)
     {
         var res = await HttpRequest.Get(url)
-            .ConnectTimeout(TimeSpan.FromSeconds(5))
+            .ReadHeadersTimeout(TimeSpan.FromSeconds(5))
             .SendAsync()
             .DonotCapture();
         res.ThrowIfError();
@@ -30,7 +30,7 @@ public class SendTests
         var expected = Enumerable.Range(1, 3).ToDictionary(m => m.ToString(), m => random.NextString(5));
         var res = await HttpRequest.Post("api/post")
             .AddData(expected!)
-            .ConnectTimeout(TimeSpan.FromSeconds(5))
+            .ReadHeadersTimeout(TimeSpan.FromSeconds(5))
             .SendAsync(TestHttp)
             .ThrowIfError()
             .DonotCapture();

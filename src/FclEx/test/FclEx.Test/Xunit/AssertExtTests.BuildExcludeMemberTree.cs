@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using FclEx.Utils;
 
 namespace Xunit;
 

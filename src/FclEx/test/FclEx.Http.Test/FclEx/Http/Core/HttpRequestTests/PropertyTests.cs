@@ -63,7 +63,7 @@ public class PropertyTests
         var expected = Enumerable.Range(1, 100).ToDictionary(m => m.ToString(), m => random.NextString(5));
         var res = await HttpRequest.Post("api/gzip")
             .AddData(expected!)
-            .ConnectTimeout(TimeSpan.FromSeconds(30))
+            .ReadHeadersTimeout(TimeSpan.FromSeconds(30))
             .UseGZip(value)
             .SendAsync(TestHttp)
             .ThrowIfError()

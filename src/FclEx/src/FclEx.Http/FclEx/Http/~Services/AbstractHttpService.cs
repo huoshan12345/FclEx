@@ -21,7 +21,7 @@ public abstract class AbstractHttpService : IHttpService
     {
         token.ThrowIfCancellationRequested();
         var watch = ValueStopwatch.StartNew();
-        var res = new HttpResponse(request) { RequestUtcTime = DateTime.UtcNow };
+        var res = new HttpResponse(request) { StartTime = DateTimeOffset.UtcNow };
         try
         {
             await ExecuteAsyncInternal(request, res, token).DonotCapture();
@@ -32,7 +32,7 @@ public abstract class AbstractHttpService : IHttpService
         }
         finally
         {
-            res.ExecuteTime = watch.GetElapsedTime();
+            res.Elapsed = watch.GetElapsedTime();
         }
         return res;
     }

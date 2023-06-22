@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using FclEx.Helpers;
-using FclEx.Utils;
 using Xunit.Abstractions;
 
 namespace FclEx.Consumers;

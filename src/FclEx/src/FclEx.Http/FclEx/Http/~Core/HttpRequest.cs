@@ -15,7 +15,7 @@ public partial class HttpRequest
     public int BufferSize { get; set; } = 256 * 1024;
     public TimeSpan? TotalTimeout { get; set; } = TimeSpan.FromMinutes(2);
     public TimeSpan? ReadBufferTimeout { get; set; } = TimeSpan.FromSeconds(10);
-    public TimeSpan? ConnectTimeout { get; set; } = TimeSpan.FromSeconds(10);
+    public TimeSpan? ReadHeadersTimeout { get; set; } = TimeSpan.FromSeconds(10);
     /// <summary>
     /// Gets or sets the value that will be used as <see cref="ContentType.MediaType"/>
     /// </summary>
@@ -28,8 +28,8 @@ public partial class HttpRequest
     public string? FallbackCharSet { get; set; }
     public bool UseGZip { get; set; } = false;
 
-    public NameValueCollection QueryValues => _uriCreator.QueryValues;
     public Dictionary<string, string?> Headers { get; } = new(StringComparer.OrdinalIgnoreCase);
+    public NameValueCollection QueryValues => _uriCreator.QueryValues;
     public NameValueCollection FormValues { get; } = HttpUtility.ParseQueryString(""); // don't use new NameValueCollection() here.
 
     public HttpContentType ReadType { get; set; } = HttpContentType.String;

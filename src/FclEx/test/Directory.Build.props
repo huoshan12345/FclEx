@@ -8,10 +8,4 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Using Include="FclEx.Utils" />
-    <Using Include="FclEx.Extensions" />
-  </ItemGroup>
-
 </Project>

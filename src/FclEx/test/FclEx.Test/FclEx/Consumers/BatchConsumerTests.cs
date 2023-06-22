@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using FclEx.Extensions;
 using FclEx.Helpers;
 using MoreLinq.Extensions;
 using Xunit.Abstractions;

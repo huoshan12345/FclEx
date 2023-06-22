@@ -5,7 +5,7 @@ public static class HttpServiceExtensions
     public static Task<HttpResponse> GetAsync(this IHttpService http, string url, string? charSet = null, int? timeoutMilliseconds = 10 * 1000)
     {
         return HttpRequest.Get(url)
-            .TryConnectTimeout(timeoutMilliseconds is { } t ? TimeSpan.FromMilliseconds(t) : null)
+            .TryReadHeadersTimeout(timeoutMilliseconds is { } t ? TimeSpan.FromMilliseconds(t) : null)
             .CharSet(charSet)
             .SendAsync(http);
     }
@@ -98,7 +98,7 @@ public static class HttpServiceExtensions
 
         var res = await request.SendAsync(http);
         return res.HasError
-            ? Operate.CreateObjectError(res, res.Exception!, res.ExecuteTime)
+            ? Operate.CreateObjectError(res, res.Exception!, res.Elapsed)
                 .ToExplicit<HttpFileDownloadInfo>()
             : res.GetDownloadInfo();
     }

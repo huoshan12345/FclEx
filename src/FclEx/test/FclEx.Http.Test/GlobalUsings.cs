@@ -1,7 +1,13 @@
 // Global using directives
 
+global using System.Diagnostics;
 global using System.Net;
+global using FclEx.Extensions;
 global using FclEx.Http;
+global using FclEx.Utils;
+global using FluentAssertions;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Options;
 global using Newtonsoft.Json;
 global using Xunit;
 global using Xunit.Abstractions;

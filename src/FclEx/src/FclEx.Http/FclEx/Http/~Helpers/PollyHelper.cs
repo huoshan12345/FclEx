@@ -25,4 +25,13 @@ public static class PollyHelper
             .Handle<Exception>(m => m.EnumerateInner().Any(m => m.Message.Contains("within the configured ConnectTimeout")))
             .WaitAndRetryAsync(retryCount, sleepDurationProvider);
     }
+
+    public static IAsyncPolicy<HttpResponseMessage> GetCancelPolicy(int retryCount = 2, SleepDurationProvider? sleepDurationProvider = null)
+    {
+        const string defaultMessage = "A task was canceled.";
+        sleepDurationProvider ??= DefaultSleepDurationProvider;
+        return Policy<HttpResponseMessage>
+            .Handle<TaskCanceledException>(m => m.InnerException is null && m.Message == defaultMessage)
+            .WaitAndRetryAsync(retryCount, sleepDurationProvider);
+    }
 }
