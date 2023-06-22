@@ -45,9 +45,10 @@ public class JsonFormatterTests
         }
         catch (Exception ex)
         {
+#if DEBUG
             _output.WriteLine(ex.ToString());
             _output.WriteLine("\n\n\n");
-
+#endif
             await AssertLogMessage(ex);
             AssertConsoleMessage(ex);
         }
@@ -73,7 +74,9 @@ public class JsonFormatterTests
             foreach (var line in lines)
             {
                 Assert.DoesNotContain("at ", line);
+#if DEBUG
                 _output.WriteLine(line);
+#endif
             }
         }
 
