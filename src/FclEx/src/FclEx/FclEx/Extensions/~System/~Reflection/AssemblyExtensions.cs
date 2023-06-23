@@ -1,12 +1,18 @@
 ﻿namespace FclEx.Extensions;
 
+public enum BuildType
+{
+    Debug,
+    Release,
+}
+
 public static class AssemblyExtensions
 {
-    private static (string BuildType, bool IsJitOptimized) GetInfo(this Assembly assembly)
+    private static (BuildType BuildType, bool IsJitOptimized) GetInfo(this Assembly assembly)
     {
-        var (buildType, isJitOptimized) = ("Debug", false);
+        BuildType buildType;
+        bool isJitOptimized;
         var attr = assembly.GetCustomAttribute<DebuggableAttribute>();
-
         // If the 'DebuggableAttribute' is not found then it is definitely an OPTIMIZED build
         if (attr != null)
         {
@@ -14,7 +20,7 @@ public static class AssemblyExtensions
             // it's a DEBUG build; we have to check the JIT Optimization flag
             // i.e. it could have the "generate PDB" checked but have JIT Optimization enabled
             isJitOptimized = !attr.IsJITOptimizerDisabled;
-            buildType = attr.IsJITOptimizerDisabled ? "Debug" : "Release";
+            buildType = attr.IsJITOptimizerDisabled ? BuildType.Debug : BuildType.Release;
 
             // check for Debug Output "full" or "pdb-only"
             //DebugOutput = (debuggableAttribute.DebuggingFlags &
@@ -25,7 +31,7 @@ public static class AssemblyExtensions
         else
         {
             isJitOptimized = true;
-            buildType = "Release";
+            buildType = BuildType.Release;
         }
 
         return (buildType, isJitOptimized);
@@ -33,11 +39,16 @@ public static class AssemblyExtensions
 
     public static bool IsDebug(this Assembly assembly)
     {
-        return assembly.GetInfo().BuildType == "Debug";
+        return assembly.GetInfo().BuildType == BuildType.Debug;
     }
 
     public static bool IsRelease(this Assembly assembly)
     {
-        return assembly.GetInfo().BuildType == "Release";
+        return assembly.GetInfo().BuildType == BuildType.Release;
+    }
+
+    public static Type GetRequiredType(this Assembly assembly, string name, bool ignoreCase = false)
+    {
+        return assembly.GetType(name, true, ignoreCase) ?? throw new InvalidOperationException($"Cannot find type '{name}' in assembly '{assembly.FullName}'");
     }
 }

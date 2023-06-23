@@ -1,5 +1,4 @@
-﻿using System.Net.Mime;
-using System.Web;
+﻿using System.Web;
 
 namespace FclEx.Http;
 

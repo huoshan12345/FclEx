@@ -64,5 +64,5 @@ public class PropertiesLogger : ILogger
     public bool IsEnabled(LogLevel logLevel) => _logger.IsEnabled(logLevel);
 
     public IDisposable BeginScope<TState>(TState state) where TState : notnull
-        => _logger.BeginScope(state) ?? EmptyDisposable.Instance;
+        => _logger.BeginScope(state) ?? Disposable.Empty;
 }

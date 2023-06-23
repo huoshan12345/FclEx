@@ -1,6 +1,4 @@
-﻿using System.Buffers;
-
-namespace FclEx.Utils;
+﻿namespace FclEx.Utils;
 
 public struct PooledArray<T> : IDisposable
 {

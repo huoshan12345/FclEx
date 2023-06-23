@@ -1,22 +1,20 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
-namespace Xunit
-{
-    [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Global")]
-    partial class AssertExt
-    {
-        public static void True(bool condition, Func<string>? userMessage = null)
-        {
-            if (!condition)
-                Assert.True(condition, userMessage?.Invoke());
-        }
+namespace Xunit;
 
-        public static void False(bool condition, Func<string>? userMessage = null)
-        {
-            if (condition)
-                Assert.False(condition, userMessage?.Invoke());
-        }
+[SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Global")]
+partial class AssertExt
+{
+    public static void True(bool condition, Func<string>? userMessage = null)
+    {
+        if (!condition)
+            Assert.True(condition, userMessage?.Invoke());
+    }
+
+    public static void False(bool condition, Func<string>? userMessage = null)
+    {
+        if (condition)
+            Assert.False(condition, userMessage?.Invoke());
     }
 }

@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Management" Version="7.0.1" />
+    <PackageReference Include="System.Management" Version="7.0.2" />
   </ItemGroup>
 
   <ItemGroup>
@@ -44,13 +44,13 @@
   </Target>
 
   <Target Name="IncludeGeneratedCode" BeforeTargets="CoreCompile">
-    <Message Importance="High" Text="[$(TargetFramework)] @(Compile->Count()) code files before code generation." />
+    <Message Importance="High" Text="[$(TargetFramework)] @(Compile-&gt;Count()) code files before code generation." />
     <ItemGroup>
       <_Compile Include="$(SourceDir)**\*$(DefaultLanguageSourceExtension)" />
       <Compile Include="@(_Compile)" />
     </ItemGroup>
-    <Message Importance="High" Text="[$(TargetFramework)] @(Compile->Count()) code after code generation." />
-    <Error Condition="@(_Compile->Count()) == 0" Text="[$(TargetFramework)] No file was generated!" />
+    <Message Importance="High" Text="[$(TargetFramework)] @(Compile-&gt;Count()) code after code generation." />
+    <Error Condition="@(_Compile-&gt;Count()) == 0" Text="[$(TargetFramework)] No file was generated!" />
   </Target>
 
 </Project>

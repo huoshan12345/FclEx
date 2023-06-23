@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.ObjectPool;
-using System.Buffers;
 
 namespace FclEx.Helpers;
 

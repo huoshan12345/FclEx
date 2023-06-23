@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-
-namespace FclEx.Utils;
+﻿namespace FclEx.Utils;
 
 public enum OSPlatformType
 {

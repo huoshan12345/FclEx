@@ -11,7 +11,7 @@ public class UserClientLogger : ILogger
         _client = client;
     }
 
-    private static readonly Type _typeFormattedLogValues = typeof(ILogger).Assembly.GetType("Microsoft.Extensions.Logging.FormattedLogValues") ?? throw new ArgumentNullException(nameof(_typeFormattedLogValues));
+    private static readonly Type _typeFormattedLogValues = typeof(ILogger).Assembly.GetRequiredType("Microsoft.Extensions.Logging.FormattedLogValues");
     private static readonly FieldInfo _values = _typeFormattedLogValues.GetRequiredField("_values");
     private static readonly FieldInfo _originalMessage = _typeFormattedLogValues.GetRequiredField("_originalMessage");
     private const string NullFormat = "[null]";
@@ -49,5 +49,6 @@ public class UserClientLogger : ILogger
 
     public bool IsEnabled(LogLevel logLevel) => _logger.IsEnabled(logLevel);
 
-    public IDisposable BeginScope<TState>(TState state) where TState : notnull => _logger.BeginScope(state) ?? EmptyDisposable.Instance;
+    public IDisposable BeginScope<TState>(TState state) where TState : notnull
+        => _logger.BeginScope(state) ?? Disposable.Empty;
 }

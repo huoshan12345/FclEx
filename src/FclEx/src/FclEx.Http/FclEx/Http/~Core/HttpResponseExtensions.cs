@@ -1,8 +1,4 @@
-﻿using System.Net.Mime;
-using MimeTypes.Core;
-using Newtonsoft.Json.Linq;
-
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 public static class HttpResponseExtensions
 {
@@ -17,15 +13,14 @@ public static class HttpResponseExtensions
 
     public static HttpResponse ThrowIfError(this HttpResponse res)
     {
-        if (res.HasError) res.Exception!.ReThrow();
+        if (res.HasError)
+            res.Exception.ReThrow();
         return res;
     }
 
-    public static async Task<HttpResponse> ThrowIfError(this Task<HttpResponse> task)
+    public static Task<HttpResponse> ThrowIfError(this Task<HttpResponse> task)
     {
-        var res = await task.DonotCapture();
-        res.ThrowIfError();
-        return res;
+        return task.Next(m => m.ThrowIfError());
     }
 
     public static async Task<T> ReadJsonAs<T>(this Task<HttpResponse> task)

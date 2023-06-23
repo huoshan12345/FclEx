@@ -89,7 +89,13 @@ partial class ExceptionExtensions
         "System.Threading.PortableThreadPool.WorkerThread.WorkerThreadStart",
     };
 
-    public static string ToFormattedString(this Exception exception)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="exception"></param>
+    /// <param name="indent">Set the size of an indent (in a number of SPACE characters)</param>
+    /// <returns></returns>
+    public static string ToFormattedString(this Exception exception, int indent = 3)
     {
         var (infos, _) = exception.GetInfos();
 
@@ -116,6 +122,10 @@ partial class ExceptionExtensions
 
                 foreach (var line in lines)
                 {
+                    if (indent > 0)
+                    {
+                        m.Append(' ', indent);
+                    }
                     m.AppendLine(line);
                 }
             }

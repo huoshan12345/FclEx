@@ -1,6 +1,4 @@
-﻿using System.Net.Mime;
-
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 partial class HttpRequestExtensions
 {

@@ -1,6 +1,4 @@
-﻿using FclEx.Helpers;
-
-namespace FclEx.Utils;
+﻿namespace FclEx.Utils;
 
 [SuppressMessage("ReSharper", "StaticMemberInGenericType")]
 public static class EnumTraits<TEnum> where TEnum : struct, Enum

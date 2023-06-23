@@ -1,5 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using FclEx.Helpers;
+﻿using FclEx.Helpers;
 
 namespace FclEx.Extensions;
 

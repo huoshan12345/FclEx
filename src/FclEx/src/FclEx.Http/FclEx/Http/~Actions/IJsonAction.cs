@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 public interface IJsonAction<T> : IHttpResponseHandler<T>
 {

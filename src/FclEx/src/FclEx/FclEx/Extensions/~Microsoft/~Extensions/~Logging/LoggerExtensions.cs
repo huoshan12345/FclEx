@@ -46,8 +46,8 @@ public static class Extensions
     public static IDisposable PushProperty(this ILogger logger, IEnumerable<KeyValuePair<string, object?>> properties)
     {
         return properties.IsNullOrEmpty()
-            ? EmptyDisposable.Instance
-            : logger.BeginScope(properties) ?? EmptyDisposable.Instance;
+            ? Disposable.Empty
+            : logger.BeginScope(properties) ?? Disposable.Empty;
     }
 
     public static IDisposable PushProperty<T>(this ILogger logger, IEnumerable<KeyValuePair<string, T?>> properties)

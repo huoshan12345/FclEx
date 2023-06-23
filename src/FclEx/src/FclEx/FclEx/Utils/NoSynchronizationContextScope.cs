@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Utils;
 
-public static class NoSyncContextScope
+public static class NoSynchronizationContextScope
 {
     // See: https://stackoverflow.com/questions/28305968/use-task-run-in-synchronous-method-to-avoid-deadlock-waiting-on-async-method
     public static IDisposable Enter()

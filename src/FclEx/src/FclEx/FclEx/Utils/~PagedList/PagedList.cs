@@ -1,25 +1,5 @@
 ﻿namespace FclEx.Utils;
 
-public interface IPagedList
-{
-    int PageCount { get; }
-    int TotalCount { get; }
-    int PageIndex { get; }
-    int PageNumber { get; }
-    int PageSize { get; }
-    bool HasPreviousPage { get; }
-    bool HasNextPage { get; }
-    bool IsFirstPage { get; }
-    bool IsLastPage { get; }
-    int ItemStart { get; }
-    int ItemEnd { get; }
-}
-
-public interface IPagedList<out T> : IEnumerable<T>, IPagedList
-{
-
-}
-
 public class PagedList<T> : IPagedList<T>
 {
     private readonly IEnumerable<T> _items;
@@ -28,7 +8,6 @@ public class PagedList<T> : IPagedList<T>
 
     public PagedList(T item) : this(new[] { item }, 0, 1, 1) { }
 
-    [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
     public PagedList(IEnumerable<T> items, int pageIndex, int pageSize, int totalCount)
     {
         Check.NotNull(items);
@@ -57,17 +36,17 @@ public class PagedList<T> : IPagedList<T>
         ItemEnd = Math.Min(PageIndex * PageSize + PageSize, TotalCount);
     }
 
-    public int PageCount { get; private set; }
-    public int TotalCount { get; private set; }
-    public int PageIndex { get; private set; }
-    public int PageNumber { get; private set; }
-    public int PageSize { get; private set; }
-    public bool HasPreviousPage { get; private set; }
-    public bool HasNextPage { get; private set; }
-    public bool IsFirstPage { get; private set; }
-    public bool IsLastPage { get; private set; }
-    public int ItemStart { get; private set; }
-    public int ItemEnd { get; private set; }
+    public int PageCount { get; }
+    public int TotalCount { get; }
+    public int PageIndex { get; }
+    public int PageNumber { get; }
+    public int PageSize { get; }
+    public bool HasPreviousPage { get; }
+    public bool HasNextPage { get; }
+    public bool IsFirstPage { get; }
+    public bool IsLastPage { get; }
+    public int ItemStart { get; }
+    public int ItemEnd { get; }
 
     public IEnumerator<T> GetEnumerator() => _items.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
