@@ -76,4 +76,12 @@ partial class OperateResultExtensions
     {
         return result.ErrorResult(r => action(r.Exception!));
     }
+
+    public static T GetRequiredValue<T>(this OperateResult<T> result)
+    {
+        if (result.Success == false)
+            result.Exception.ReThrow();
+
+        return result.Value;
+    }
 }

@@ -2,20 +2,20 @@
 
 public static class HttpResponseExtensions
 {
-    public static HttpResponse EnsureSuccessStatusCode(this HttpResponse res)
+    public static HttpResponse EnsureSuccessStatusCode(this HttpResponse response)
     {
-        if (!res.StatusCode.IsSuccess())
+        if (!response.StatusCode.IsSuccess())
         {
-            throw new WebException($"call {res.Request.GetUri()} with {res.Request.Method} return unsuccessful code: {res.StatusCode}/{res.StatusCode.ToInt()}");
+            throw new WebException($"call {response.Request.GetUri()} with {response.Request.Method} return unsuccessful code: {response.StatusCode}/{response.StatusCode.ToInt()}");
         }
-        return res;
+        return response;
     }
 
-    public static HttpResponse ThrowIfError(this HttpResponse res)
+    public static HttpResponse ThrowIfError(this HttpResponse response)
     {
-        if (res.HasError)
-            res.Exception.ReThrow();
-        return res;
+        if (response.HasError)
+            response.Exception.ReThrow();
+        return response;
     }
 
     public static Task<HttpResponse> ThrowIfError(this Task<HttpResponse> task)
@@ -23,32 +23,29 @@ public static class HttpResponseExtensions
         return task.Next(m => m.ThrowIfError());
     }
 
-    public static async Task<T> ReadJsonAs<T>(this Task<HttpResponse> task)
+    public static Task<T> ReadJsonAsRequired<T>(this Task<HttpResponse> task, string? path = null)
     {
-        var res = await task.DonotCapture();
-        res.ThrowIfError();
-        if (res.Request.ReadContentType == HttpContentType.Bytes)
-            throw new InvalidOperationException("Can not deserialize json from byte array.");
-        if (res.ResponseString.IsNullOrEmpty())
-            throw new InvalidOperationException("Can not deserialize json from empty response string.");
-        var resObj = res.ResponseString!.ToJToken().ToObject<T>();
-        return resObj!;
+        return task.Next(m => m.ReadJsonAs<T>(path)).GetRequiredValue();
     }
 
-    public static OperateResult<T> ReadJson<T>(this HttpResponse res, string? path = null)
+    public static Task<OperateResult<T>> ReadJsonAs<T>(this Task<HttpResponse> task, string? path = null)
     {
-        var str = res.ResponseString;
+        return task.Next(m => m.ReadJsonAs<T>(path));
+    }
+
+    public static OperateResult<T> ReadJsonAs<T>(this HttpResponse response, string? path = null)
+    {
+        var str = response.ResponseString;
         if (!str.IsPossibleJson())
             return Operate.CreateError<T>("Can not parse json from empty string");
 
-        JToken? token = str!.ToJToken();
+        var token = str.ToJToken();
         if (path.IsValid())
-            token = token.SelectToken(path!);
+            token = token.SelectToken(path);
 
-        if (token == null)
-            return Operate.CreateError<T>("The path does not exist in json: " + path);
-
-        return token.ToObject<T>()!;
+        return token == null
+            ? Operate.CreateError<T>("The path does not exist in json: " + path)
+            : token.ToObject<T>()!;
     }
 
     private static readonly Regex _regexOfNonWord = new(@"\W", RegexOptions.Compiled);

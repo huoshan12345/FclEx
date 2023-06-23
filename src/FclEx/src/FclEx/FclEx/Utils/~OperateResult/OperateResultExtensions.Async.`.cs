@@ -74,7 +74,7 @@ partial class OperateResultExtensions
 
     public static Task<OperateResult<T>> ThrowIfError<T>(this Task<OperateResult<T>> task)
     {
-        return task.Error(e => e.ReThrow());
+        return task.NextResult(m => m.ThrowIfError());
     }
 
     public static Task<OperateResult> Untype<T>(this Task<OperateResult<T>> task)
@@ -101,6 +101,11 @@ partial class OperateResultExtensions
         }).Unwrap();
     }
 
+    public static Task<OperateResult<T>> Next<T>(this Task<OperateResult<T>> task, Func<T, Task<OperateResult<T>>> next)
+    {
+        return task.Next<T, T>(next);
+    }
+
     public static Task<OperateResult<TNext>> NextResult<T, TNext>(this Task<OperateResult<T>> task, Func<OperateResult<T>, Task<OperateResult<TNext>>> next)
     {
         var watch = ValueStopwatch.StartNew();
@@ -116,5 +121,15 @@ partial class OperateResultExtensions
 
             return await next(m.Result);
         }).Unwrap();
+    }
+
+    public static Task<OperateResult<T>> NextResult<T>(this Task<OperateResult<T>> task, Func<OperateResult<T>, Task<OperateResult<T>>> next)
+    {
+        return task.NextResult<T, T>(next);
+    }
+
+    public static Task<T> GetRequiredValue<T>(this Task<OperateResult<T>> task)
+    {
+        return task.ContinueWith(m => m.Result.GetRequiredValue());
     }
 }

@@ -11,7 +11,7 @@ public static class Extensions
 
     public static IAction<T> ReadJson<T>(this IAction<HttpResponse> action, string? path = null)
     {
-        return action.Bind(m => m.ReadJson<T>(path));
+        return action.Bind(m => m.ReadJsonAs<T>(path));
     }
 
     public static IAction<HttpResponse> NextRequest<T>(this IAction<(HttpResponse, T)> action, Func<T, HttpRequest> func,
