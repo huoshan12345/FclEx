@@ -101,9 +101,14 @@ partial class OperateResultExtensions
         }).Unwrap();
     }
 
-    public static Task<OperateResult<T>> Next<T>(this Task<OperateResult<T>> task, Func<T, Task<OperateResult<T>>> next)
+    public static Task<OperateResult<TNext>> Next<T, TNext>(this Task<OperateResult<T>> task, Func<T, OperateResult<TNext>> next)
     {
-        return task.Next<T, T>(next);
+        return task.Next(m => next(m).ToTask());
+    }
+
+    public static Task<OperateResult<TNext>> Next<T, TNext>(this Task<OperateResult<T>> task, Func<T, TNext> next)
+    {
+        return task.Next(m => Operate.CreateSuccess(next(m)));
     }
 
     public static Task<OperateResult<TNext>> NextResult<T, TNext>(this Task<OperateResult<T>> task, Func<OperateResult<T>, Task<OperateResult<TNext>>> next)
@@ -123,9 +128,14 @@ partial class OperateResultExtensions
         }).Unwrap();
     }
 
-    public static Task<OperateResult<T>> NextResult<T>(this Task<OperateResult<T>> task, Func<OperateResult<T>, Task<OperateResult<T>>> next)
+    public static Task<OperateResult<TNext>> NextResult<T, TNext>(this Task<OperateResult<T>> task, Func<OperateResult<T>, OperateResult<TNext>> next)
     {
-        return task.NextResult<T, T>(next);
+        return task.NextResult(m => next(m).ToTask());
+    }
+
+    public static Task<OperateResult<TNext>> NextResult<T, TNext>(this Task<OperateResult<T>> task, Func<OperateResult<T>, TNext> next)
+    {
+        return task.NextResult(m => Operate.CreateSuccess(next(m)));
     }
 
     public static Task<T> GetRequiredValue<T>(this Task<OperateResult<T>> task)

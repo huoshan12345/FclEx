@@ -1,12 +1,9 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿namespace FclEx.Utils;
 
-namespace FclEx.Utils;
-
-public class OperateResultExtensionsTests
+public partial class OperateResultExtensionsTests
 {
     [Fact]
-    public async Task TaskOfOperateResult_Ok_Action_TimeSpan()
+    public async Task OperateResult_Task_Ok_Action_TimeSpan()
     {
         var elapsed = TimeSpan.FromHours(1);
         TimeSpan timeSpan = default;
