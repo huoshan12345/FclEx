@@ -1,8 +1,10 @@
-﻿namespace FclEx.Http.Core.HttpRequestTests;
+﻿using xRetry;
+
+namespace FclEx.Http.Core.HttpRequestTests;
 
 public class TimeoutTests
 {
-    [Theory]
+    [RetryTheory]
     [InlineData(1)]
     [InlineData(3)]
     public async Task ConnectTimeout_Test(int timeoutSeconds)

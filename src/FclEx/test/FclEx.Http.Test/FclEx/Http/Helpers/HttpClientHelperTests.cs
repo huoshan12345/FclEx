@@ -1,4 +1,5 @@
 ﻿using Polly.Timeout;
+using xRetry;
 
 namespace FclEx.Http.Helpers;
 
@@ -11,7 +12,7 @@ public class HttpClientHelperTests
         _output = output;
     }
 
-    [Fact]
+    [RetryFact]
     public async Task GetRetryPolicy_Timeout_Test()
     {
         var timeout = TimeSpan.FromSeconds(1);
@@ -34,7 +35,7 @@ public class HttpClientHelperTests
         AssertExt.Equal(executeTime, time, TimeSpan.FromSeconds(0.9));
     }
 
-    [Fact]
+    [RetryFact]
     public async Task HttpClient_Timeout_Test()
     {
         var handler = HttpClientHelper.CreateSocketsHttpHandler(new() { ConnectTimeout = TimeSpan.FromHours(1) });

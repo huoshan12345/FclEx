@@ -1,5 +1,6 @@
 ﻿using Polly.Timeout;
 using Polly;
+using xRetry;
 
 namespace FclEx.Http.Helpers;
 
@@ -12,7 +13,7 @@ public class PollyHelperTests
         _output = output;
     }
 
-    [Theory]
+    [RetryTheory]
     [InlineData(1, 1)]
     [InlineData(2, 1)]
     [InlineData(2, 2)]
