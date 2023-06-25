@@ -24,6 +24,7 @@ public static class HttpClientBuilderExtensions
         builder.AddPolicyHandler(PollyHelper.GetHttpRetryPolicy(retryCount, sleepDurationProvider));
         builder.AddPolicyHandler(PollyHelper.GetTimeoutPolicy(t));
         builder.AddPolicyHandler(PollyHelper.GetConnectTimeoutPolicy(retryCount, sleepDurationProvider));
+        builder.AddPolicyHandler(PollyHelper.GetIORetryPolicy(retryCount, sleepDurationProvider));
         builder.AddPolicyHandler(PollyHelper.GetCancelPolicy(retryCount, sleepDurationProvider));
         return builder;
     }
