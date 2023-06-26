@@ -84,6 +84,8 @@ partial class ExceptionExtensions
         "System.Threading.Tasks.AwaitTaskContinuation.",
         "Polly.Retry.AsyncRetryEngine.ImplementationAsync",
         "Polly.AsyncPolicy.<>c__DisplayClass",
+        "Polly.AsyncPolicy`1.ExecuteAsync",
+        "Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync",
         "System.Runtime.CompilerServices.AsyncMethodBuilderCore",
         "System.Threading.ThreadPoolWorkQueue.Dispatch",
         "System.Threading.PortableThreadPool.WorkerThread.WorkerThreadStart",
