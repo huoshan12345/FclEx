@@ -20,6 +20,7 @@ public static class HttpClientHelper
             AutomaticDecompression = DecompressionMethods.All,
             UseProxy = options.Proxy is not null,
             Proxy = options.Proxy,
+            EnableMultipleHttp2Connections = options.EnableMultipleHttp2Connections,
             ConnectCallback = async (context, cancellationToken) =>
             {
                 var host = context.DnsEndPoint.Host;
@@ -49,7 +50,7 @@ public static class HttpClientHelper
                 // Open the connection to the target host/port
                 var socket = new Socket(SocketType.Stream, ProtocolType.Tcp)
                 {
-                    // Turn off Nagle's algorithm since it degrades performance in most HttpClient scenarios.
+                    // Turn off Nagle algorithm since it degrades performance in most HttpClient scenarios.
                     NoDelay = true
                 };
 
@@ -69,7 +70,9 @@ public static class HttpClientHelper
                 }
 
                 socket.Dispose();
-                throw lastEx!; // should not be null here.
+
+                lastEx!.ReThrow(); // should not be null here.
+                return default;
             }
         };
     }

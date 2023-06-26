@@ -15,6 +15,7 @@ public class SocketsHttpHandlerOptionsEqualityComparer : IEqualityComparer<Socke
                && x.IPVersionPolicy == y.IPVersionPolicy
                && x.AllowAutoRedirect == y.AllowAutoRedirect
                && x.AutomaticDecompression == y.AutomaticDecompression
+               && x.EnableMultipleHttp2Connections == y.EnableMultipleHttp2Connections
                && x.PooledConnectionLifetime.Equals(y.PooledConnectionLifetime)
                && x.PooledConnectionIdleTimeout.Equals(y.PooledConnectionIdleTimeout)
                && ProxyEqualityComparer.Equals(x.Proxy, y.Proxy);
@@ -22,15 +23,16 @@ public class SocketsHttpHandlerOptionsEqualityComparer : IEqualityComparer<Socke
 
     public int GetHashCode(SocketsHttpHandlerOptions obj)
     {
-        var proxyCode = obj.Proxy is null 
-            ? 0 
+        var proxyCode = obj.Proxy is null
+            ? 0
             : ProxyEqualityComparer.GetHashCode(obj.Proxy);
 
         return HashCode.Combine(
             obj.ConnectTimeout,
-            (int)obj.IPVersionPolicy,
+            obj.IPVersionPolicy,
             obj.AllowAutoRedirect,
-            (int)obj.AutomaticDecompression,
+            obj.AutomaticDecompression,
+            obj.EnableMultipleHttp2Connections,
             obj.PooledConnectionLifetime,
             obj.PooledConnectionIdleTimeout,
             proxyCode);
