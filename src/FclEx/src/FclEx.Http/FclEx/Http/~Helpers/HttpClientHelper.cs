@@ -1,5 +1,4 @@
 ﻿using System.Net.Sockets;
-using static System.Net.WebRequestMethods;
 using static FclEx.Http.IPVersionPolicy;
 
 namespace FclEx.Http;
@@ -21,7 +20,7 @@ public static class HttpClientHelper
             UseProxy = options.Proxy is not null,
             Proxy = options.Proxy,
             EnableMultipleHttp2Connections = options.EnableMultipleHttp2Connections,
-            ConnectCallback = async (context, cancellationToken) =>
+            ConnectCallback = async (context, token) =>
             {
                 var host = context.DnsEndPoint.Host;
                 var family = options.IPVersionPolicy switch
@@ -40,7 +39,7 @@ public static class HttpClientHelper
                 // note: this method throws a SocketException when there is no IP address for the host
                 var ips = IPAddress.TryParse(host, out var ip)
                     ? new[] { ip }
-                    : (await Dns.GetHostEntryAsync(host, family, cancellationToken)).AddressList;
+                    : (await Dns.GetHostEntryAsync(host, family, token)).AddressList;
 
                 if (ips.IsEmpty())
                 {
@@ -51,7 +50,7 @@ public static class HttpClientHelper
                 var socket = new Socket(SocketType.Stream, ProtocolType.Tcp)
                 {
                     // Turn off Nagle algorithm since it degrades performance in most HttpClient scenarios.
-                    NoDelay = true
+                    NoDelay = true,
                 };
 
                 var desc = options.IPVersionPolicy is PreferIPv6 or OnlyIPv6;
@@ -60,7 +59,8 @@ public static class HttpClientHelper
                 {
                     try
                     {
-                        await socket.ConnectAsync(address, context.DnsEndPoint.Port, cancellationToken);
+                        await socket.ConnectAsync(address, context.DnsEndPoint.Port, token);
+                        await CheckSocketConnection(socket);
                         return new NetworkStream(socket, ownsSocket: true);
                     }
                     catch (Exception ex)
@@ -75,5 +75,27 @@ public static class HttpClientHelper
                 return default;
             }
         };
+
+        static async Task CheckSocketConnection(Socket s)
+        {
+            /*
+                s.Poll returns true if
+                    connection is closed, reset, terminated or pending (meaning no active connection)
+                    connection is active and there is data available for reading
+
+                s.Available returns number of bytes available for reading
+
+                if both are true:
+                    there is no data available to read so connection is not active
+            */
+            var part1 = s.Poll(1000, SelectMode.SelectRead);
+            var part2 = s.Available == 0;
+            if (part1 && part2)
+                throw new InvalidOperationException("There is no data available to read from socket.");
+
+            var sentBytesCount = await s.SendAsync(new ArraySegment<byte>(new byte[1], 1, 0), SocketFlags.None);
+            if (sentBytesCount != 1)
+                throw new InvalidOperationException("Cannot send any data via socket.");
+        }
     }
 }

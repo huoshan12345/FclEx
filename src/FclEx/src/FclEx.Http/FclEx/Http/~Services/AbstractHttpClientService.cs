@@ -18,14 +18,14 @@ public abstract class AbstractHttpClientService : AbstractHttpService
 
     protected void ReadCookies(HttpResponseMessage responseMessage, HttpResponse response)
     {
-        if (!responseMessage.Headers.TryGetValues(HttpKnownHeaderNames.SetCookie, out var cookies))
+        if (responseMessage.TryGetCookies(out var cookies) == false)
             return;
 
-        var arr = cookies.ToArray();
+        var arr = cookies.AsICollection();
         if (arr.IsEmpty())
             return;
 
-        response.Headers.AddRange(HttpKnownHeaderNames.SetCookie, arr);
+        response.AddCookies(arr);
         SaveCookies(responseMessage.RequestMessage?.RequestUri!, arr);
     }
 

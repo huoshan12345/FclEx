@@ -27,4 +27,9 @@ public static class HttpResponseMessageExtensions
         }
         return response;
     }
+
+    public static bool TryGetCookies(this HttpResponseMessage response, [NotNullWhen(true)] out IEnumerable<string>? cookies)
+    {
+        return response.Headers.TryGetValues(HttpKnownHeaderNames.SetCookie, out cookies);
+    }
 }

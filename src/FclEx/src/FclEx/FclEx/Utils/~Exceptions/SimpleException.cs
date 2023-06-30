@@ -1,4 +1,6 @@
-﻿namespace FclEx.Utils;
+﻿using System.Runtime.ExceptionServices;
+
+namespace FclEx.Utils;
 
 [Serializable]
 public class SimpleException : Exception

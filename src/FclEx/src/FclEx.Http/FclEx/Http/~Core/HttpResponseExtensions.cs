@@ -104,6 +104,10 @@ public static class HttpResponseExtensions
     {
         return task.Do(m => !m.HasError, action);
     }
-
-
+    
+    public static HttpResponse AddCookies(this HttpResponse response, IEnumerable<string> cookies)
+    {
+        response.Headers.AddRange(HttpKnownHeaderNames.SetCookie, cookies);
+        return response;
+    }
 }

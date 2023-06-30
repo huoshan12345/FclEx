@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Http;
 
-public static class HttpServiceExtensions
+public static class IHttpServiceExtensions
 {
     public static Task<HttpResponse> GetAsync(this IHttpService http, string url, string? charSet = null, int? timeoutMilliseconds = 10 * 1000)
     {

@@ -7,8 +7,8 @@ public static class PollyHelper
     public static IAsyncPolicy<HttpResponseMessage> GetHttpRetryPolicy(int retryCount = 2, SleepDurationProvider? sleepDurationProvider = null)
     {
         sleepDurationProvider ??= DefaultSleepDurationProvider;
-        return HttpPolicyExtensions
-            .HandleTransientHttpError()
+        return Policy<HttpResponseMessage>
+            .HandleResult(m => m.StatusCode.IsServerError() || m.StatusCode == HttpStatusCode.TooManyRequests || m.StatusCode == HttpStatusCode.RequestTimeout)
             .Or<TimeoutRejectedException>() // thrown by Polly's TimeoutPolicy if the inner call times out
             .WaitAndRetryAsync(retryCount, sleepDurationProvider);
     }
