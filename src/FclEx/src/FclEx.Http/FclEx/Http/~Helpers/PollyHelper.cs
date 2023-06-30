@@ -26,26 +26,12 @@ public static class PollyHelper
             .WaitAndRetryAsync(retryCount, sleepDurationProvider);
     }
 
-    private static readonly string[] _canceledErrors =
-    {
-        "The operation was canceled.",
-        "A task was canceled.",
-    };
-
     // ReSharper disable once InconsistentNaming
     public static IAsyncPolicy<HttpResponseMessage> GetIORetryPolicy(int retryCount = 2, SleepDurationProvider? sleepDurationProvider = null)
     {
         sleepDurationProvider ??= DefaultSleepDurationProvider;
         return Policy<HttpResponseMessage>
             .Handle<Exception>(m => m.EnumerateInner().Any(m => m is IOException))
-            .WaitAndRetryAsync(retryCount, sleepDurationProvider);
-    }
-
-    public static IAsyncPolicy<HttpResponseMessage> GetCancelPolicy(int retryCount = 2, SleepDurationProvider? sleepDurationProvider = null)
-    {
-        sleepDurationProvider ??= DefaultSleepDurationProvider;
-        return Policy<HttpResponseMessage>
-            .Handle<TaskCanceledException>(m => m.InnerException is null && _canceledErrors.Contains(m.Message))
             .WaitAndRetryAsync(retryCount, sleepDurationProvider);
     }
 }

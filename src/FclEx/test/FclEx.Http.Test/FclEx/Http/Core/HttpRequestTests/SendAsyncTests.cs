@@ -68,13 +68,14 @@ public class SendAsyncTests
             m.IPVersionPolicy = ipv6
                 ? IPVersionPolicy.OnlyIPv6
                 : IPVersionPolicy.OnlyIPv4;
+            m.ConnectTimeout = TimeSpan.FromSeconds(3);
         });
 
         const string ipv4Url = "https://ip4only.me/api/";
         const string ipv6Url = "https://ip6only.me/api/";
         var url = ipv6 ? ipv6Url : ipv4Url;
         var res = await HttpRequest.Get(url)
-            .ReadHeadersTimeout(TimeSpan.FromSeconds(15))
+            .ReadHeadersTimeout(TimeSpan.FromSeconds(10))
             .SendAsync(http)
             .DonotCapture();
         res.ThrowIfError();

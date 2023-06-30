@@ -60,7 +60,6 @@ public static class HttpClientHelper
                     try
                     {
                         await socket.ConnectAsync(address, context.DnsEndPoint.Port, token);
-                        await CheckSocketConnection(socket);
                         return new NetworkStream(socket, ownsSocket: true);
                     }
                     catch (Exception ex)
