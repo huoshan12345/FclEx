@@ -1,18 +1,32 @@
 ﻿namespace FclEx.Comparers;
 
-internal class CommonEqualityComparer<T> : IEqualityComparer<T>
+public class CommonEqualityComparer
 {
-    private readonly Func<T?, T?, bool> _compareFunc;
+    public static CommonEqualityComparer<T> Create<T>(Func<T, T, bool> compareFunc, Func<T, int> hashFunc)
+    {
+        return new(compareFunc, hashFunc);
+    }
+}
+
+public class CommonEqualityComparer<T> : IEqualityComparer<T>
+{
+    private readonly Func<T, T, bool> _compareFunc;
     private readonly Func<T, int> _hashFunc;
 
-    public CommonEqualityComparer(Func<T?, T?, bool> compareFunc, Func<T, int>? hashFunc = null)
+    public CommonEqualityComparer(Func<T, T, bool> compareFunc, Func<T, int> hashFunc)
     {
         _compareFunc = compareFunc ?? throw new ArgumentNullException(nameof(compareFunc));
-        _hashFunc = hashFunc ?? (x => x.GetHashCodeSafely());
+        _hashFunc = hashFunc ?? throw new ArgumentNullException(nameof(hashFunc));
     }
 
     public bool Equals(T? x, T? y)
     {
+        if (ReferenceEquals(x, y))
+            return true;
+
+        if (x == null || y == null)
+            return false;
+
         return _compareFunc(x, y);
     }
 

@@ -1,13 +1,13 @@
 ﻿namespace FclEx.Comparers;
 
 /// <summary>
-/// A generic object comparerer that would only use object's reference, 
-/// ignoring any <see cref="IEquatable{T}"/> or <see cref="object.Equals(object)"/>  overrides.
+/// A generic object comparer that would only use object's reference, 
+/// ignoring any <see cref="IEquatable{T}"/> or <see cref="object.Equals(object)"/>  overrides. <br/>
 /// see details via https://stackoverflow.com/questions/1890058/iequalitycomparert-that-uses-referenceequals
 /// </summary>
-public sealed class ObjectReferenceEqualityComparer<T> : IEqualityComparer<T> where T : class
+public sealed class ReferenceEqualityComparer<T> : IEqualityComparer<T>, IHasInstance<ReferenceEqualityComparer<T>>
 {
-    public static readonly IEqualityComparer<T> Default = new ObjectReferenceEqualityComparer<T>();
+    public static ReferenceEqualityComparer<T> Instance { get; } = new();
 
     public bool Equals(T? x, T? y)
     {

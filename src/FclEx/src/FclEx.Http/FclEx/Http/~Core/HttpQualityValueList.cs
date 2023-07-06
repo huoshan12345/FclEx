@@ -15,8 +15,10 @@ namespace FclEx.Http;
 public sealed class HttpQualityValueList : IEnumerable<HttpQualityValue>
 {
     private static readonly char[] _delimiters = { ',' };
-    private static readonly IComparer<float> _comparer
-        = MemberComparer<float>.Create(m => m, true).ToComparer();
+    private static readonly IComparer<float> _comparer =
+        MemberComparerBuilder<float>
+            .Create(m => m, true)
+            .Build();
     private readonly SortedDictionary<float, List<HttpQualityValue>> _dic = new(_comparer);
 
     #region Fields
@@ -33,7 +35,7 @@ public sealed class HttpQualityValueList : IEnumerable<HttpQualityValue>
     /// </summary>
     /// <param name="values">The raw string of qvalues to load</param>
     public HttpQualityValueList(string values)
-        : this(null == values ? new string[0] : values.Split(_delimiters, StringSplitOptions.RemoveEmptyEntries))
+        : this(null == values ? Array.Empty<string>() : values.Split(_delimiters, StringSplitOptions.RemoveEmptyEntries))
     {
 
     }

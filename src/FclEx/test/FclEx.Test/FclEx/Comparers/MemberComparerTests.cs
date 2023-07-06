@@ -35,7 +35,7 @@ public class MemberComparerTests
                 .ThenByDescending(m => m.Height)
                 .ToList();
 
-            var cmp = MemberComparer<Person>
+            var cmp = MemberComparerBuilder<Person>
                 .Create(m => m.Age)
                 .OrderBy(m => m.Name)
                 .OrderBy(m => m.Height, true)

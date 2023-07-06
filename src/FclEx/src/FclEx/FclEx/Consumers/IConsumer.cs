@@ -1,6 +1,4 @@
-﻿using FclEx.Helpers;
-
-namespace FclEx.Consumers;
+﻿namespace FclEx.Consumers;
 
 public interface IConsumer<in T> : IDisposable
 {

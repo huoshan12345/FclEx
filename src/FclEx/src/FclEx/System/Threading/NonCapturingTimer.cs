@@ -1,5 +1,3 @@
-using FclEx.Helpers;
-
 namespace System.Threading;
 
 // A convenience API for interacting with System.Threading.Timer in a way

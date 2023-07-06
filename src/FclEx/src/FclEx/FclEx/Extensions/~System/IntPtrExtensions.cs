@@ -1,6 +1,4 @@
-﻿using FclEx.Helpers;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static class IntPtrExtensions
 {

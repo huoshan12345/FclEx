@@ -1,5 +1,4 @@
-﻿using FclEx.Helpers;
-using MoreLinq;
+﻿using MoreLinq;
 using FclEx;
 
 namespace FclEx.Consumers;

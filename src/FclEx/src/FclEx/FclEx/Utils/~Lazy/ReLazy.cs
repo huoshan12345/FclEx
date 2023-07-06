@@ -1,6 +1,4 @@
-﻿using FclEx.Helpers;
-
-namespace FclEx.Utils;
+﻿namespace FclEx.Utils;
 
 public class ReLazy<TSelf, T> : IDisposable where TSelf : ReLazy<TSelf, T>
 {

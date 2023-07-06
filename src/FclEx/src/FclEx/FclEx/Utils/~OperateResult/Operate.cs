@@ -1,6 +1,4 @@
-﻿using FclEx.Helpers;
-
-namespace FclEx.Utils;
+﻿namespace FclEx.Utils;
 
 public static partial class Operate
 {

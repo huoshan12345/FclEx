@@ -1,6 +1,4 @@
-﻿using FclEx.Helpers;
-
-namespace System.Threading;
+﻿namespace System.Threading;
 
 public class StatelessTimer : IDisposable
 {

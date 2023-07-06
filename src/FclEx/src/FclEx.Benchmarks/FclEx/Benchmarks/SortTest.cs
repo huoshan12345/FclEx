@@ -22,11 +22,11 @@ namespace FclEx.Benchmarks
         };
 
         private static readonly Comparison<Person> _comparisonOfProp = 
-            MemberComparer<Person>
-            .Create(m => m.Age)
-            .OrderBy(m => m.Name)
-            .OrderBy(m => m.Height, true)
-            .ToComparison();
+            MemberComparerBuilder<Person>
+                .Create(m => m.Age)
+                .OrderBy(m => m.Name)
+                .OrderBy(m => m.Height, true)
+                .ToComparison();
 
         public SortTest()
         {

@@ -1,6 +1,5 @@
 ﻿using MoreLinq;
 using Nito.AsyncEx;
-using FclEx.Helpers;
 
 namespace FclEx.Consumers;
 

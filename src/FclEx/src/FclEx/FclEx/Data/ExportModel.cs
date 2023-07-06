@@ -1,6 +1,4 @@
-﻿using System.Linq.Expressions;
-
-namespace FclEx.Data;
+﻿namespace FclEx.Data;
 
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
 public class ExportAttribute : Attribute

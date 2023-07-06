@@ -54,6 +54,6 @@ public class WriteAsStringConverterTests
 
         var grades = tokenUnwrapped.ToObject<GradeItem[]>()!;
 
-        Assert.Equal(obj.Grades, grades, EqualityComparerHelper<GradeItem>.Create(m => (m?.LessonId, m?.Grade)));
+        Assert.Equal(obj.Grades, grades, KeyEqualityComparer<GradeItem>.Create(m => (m?.LessonId, m?.Grade)));
     }
 }

@@ -1,20 +1,18 @@
-﻿using System.Linq.Expressions;
-using FclEx.Helpers;
-using FclEx.TypeCasters;
+﻿using FclEx.TypeCasters;
 
 namespace FclEx.Extensions;
 
 public static class ObjectExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [return: NotNullIfNotNull("obj")]
+    [return: NotNullIfNotNull(nameof(obj))]
     public static T? CastTo<T>(this object? obj)
     {
         return DynamicTypeCaster.Instance.CastTo<object?, T>(obj);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [return: NotNullIfNotNull("obj")]
+    [return: NotNullIfNotNull(nameof(obj))]
     public static TTarget? CastTo<T, TTarget>(this T? obj)
     {
         return ExpressionTypeCaster.Instance.CastTo<T, TTarget>(obj);
@@ -39,22 +37,9 @@ public static class ObjectExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [return: NotNullIfNotNull("obj")]
-    public static T? DeepClone<T>(this T? obj)
+    [return: NotNullIfNotNull(nameof(obj))]
+    public static T? CloneByJson<T>(this T? obj)
     {
         return obj is null ? obj : obj.ToJson().ToJToken().ToObject<T>();
-    }
-
-    public static T Between<T>(this T obj, T min, T max) where T : IComparable<T>
-    {
-        var comparer = Comparer<T>.Default;
-        if (comparer.Compare(min, max) > 0)
-            throw new ArgumentOutOfRangeException(nameof(min), "The min value cannot be greater than the max value");
-
-        if (comparer.Compare(obj, min) < 0)
-            return min;
-        if (comparer.Compare(obj, max) > 0)
-            return max;
-        return obj;
     }
 }

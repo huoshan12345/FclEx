@@ -1,6 +1,4 @@
-﻿using FclEx.Helpers;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 // NOTE: StackTraceLines will be from the outermost stack trace frame to the innermost, which is opposite from Exception.StackTrace.
 public readonly record struct ExceptionIofo(Type Type, string Message, IReadOnlyList<string> StackTraceLines, int Index, int ParentIndex);

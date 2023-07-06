@@ -2,7 +2,7 @@
 
 namespace FclEx.Comparers;
 
-public class FileExtentionComparer : IEqualityComparer<string>
+public class FileExtentionEqualityComparer : IEqualityComparer<string>, IHasInstance<FileExtentionEqualityComparer>
 {
     public bool Equals(string? x, string? y)
     {
@@ -23,5 +23,5 @@ public class FileExtentionComparer : IEqualityComparer<string>
         return obj.GetHashCodeSafely();
     }
 
-    public static readonly FileExtentionComparer Instance = new();
+    public static FileExtentionEqualityComparer Instance { get; } = new();
 }

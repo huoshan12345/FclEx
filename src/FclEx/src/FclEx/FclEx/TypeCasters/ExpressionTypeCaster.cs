@@ -1,6 +1,4 @@
-﻿using System.Linq.Expressions;
-
-namespace FclEx.TypeCasters;
+﻿namespace FclEx.TypeCasters;
 
 public class Caster<TInput>
 {

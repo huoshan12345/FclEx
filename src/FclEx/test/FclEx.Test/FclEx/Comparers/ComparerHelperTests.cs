@@ -27,12 +27,12 @@ public class ComparerHelperTests
         var testers = Generate();
         var testersOrdered = testers.OrderBy(m => m.Id).ToArray();
         {
-            var comparer = ComparerHelper.Create<Tester, int>(m => m.Id);
+            var comparer = KeyComparer<Tester>.Create(m => m.Id);
             var sortList = new SortedSet<Tester>(testers, comparer);
             Assert.True(testersOrdered.SequenceEqual(sortList));
         }
         {
-            var comparer = ComparerHelper<Tester>.Create(m => m.Id);
+            var comparer = KeyComparer<Tester>.Create(m => m.Id);
             var sortList = new SortedSet<Tester>(testers, comparer);
             Assert.True(testersOrdered.SequenceEqual(sortList));
         }
@@ -43,7 +43,7 @@ public class ComparerHelperTests
     {
         var testers = Generate();
         var testersOrdered = testers.OrderBy(m => m.Id).ToArray();
-        var comparer = ComparerHelper.Create<Tester>((x, y) => Comparer<int>.Default.Compare(x.Id, y.Id));
+        var comparer = CommonComparer.Create<Tester>((x, y) => Comparer<int>.Default.Compare(x.Id, y.Id));
         var sortList = new SortedSet<Tester>(testers, comparer);
         Assert.True(testersOrdered.SequenceEqual(sortList));
     }

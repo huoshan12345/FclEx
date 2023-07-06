@@ -2,21 +2,19 @@
 
 public static class ComparerHelper
 {
-    public static IComparer<T> Create<T, TKey>(Func<T, TKey> keySelector, IComparer<TKey>? comparer = null)
+    public static bool TryCompare<T>([NotNullWhen(false)] T? x, [NotNullWhen(false)] T? y, bool isNullSmaller, [NotNullWhen(true)] out int? result)
     {
-        return new KeyComparer<T, TKey>(keySelector, comparer);
-    }
+        result = null;
 
-    public static IComparer<T> Create<T>(Comparison<T> compareFunc)
-    {
-        return new CommonComparer<T>(compareFunc);
-    }
-}
+        if (ReferenceEquals(x, y))
+            result = 0;
 
-public static class ComparerHelper<T>
-{
-    public static IComparer<T> Create<TKey>(Func<T, TKey> keySelector, IComparer<TKey>? comparer = null)
-    {
-        return new KeyComparer<T, TKey>(keySelector, comparer);
+        if (x == null)
+            result = isNullSmaller ? -1 : 1;
+
+        if (y == null)
+            result = isNullSmaller ? 1 : -1;
+
+        return result.HasValue;
     }
 }

@@ -1,7 +1,4 @@
-﻿using System.Linq.Expressions;
-using FclEx.Helpers;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 partial class InterfaceBaseInvocationExtension
 {

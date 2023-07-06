@@ -1,6 +1,4 @@
-﻿using System.Linq.Expressions;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static partial class QueryableExtensions
 {

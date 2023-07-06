@@ -1,6 +1,4 @@
-﻿using FclEx.Helpers;
-
-namespace FclEx.Consumers;
+﻿namespace FclEx.Consumers;
 
 public sealed class AutoRetryConsumer<T> : AbstractConsumer<AutoRetryConsumer<T>, T>,
     IAsyncConsumer<AutoRetryConsumer<T>, T>,

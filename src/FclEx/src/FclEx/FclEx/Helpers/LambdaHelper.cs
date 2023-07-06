@@ -1,6 +1,4 @@
-﻿using System.Linq.Expressions;
-
-namespace FclEx.Helpers;
+﻿namespace FclEx.Helpers;
 
 public static class LambdaHelper
 {

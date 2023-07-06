@@ -1,16 +1,28 @@
 ﻿namespace FclEx.Comparers;
 
-internal class CommonComparer<T> : IComparer<T>
+public class CommonComparer
 {
-    private readonly Comparison<T> _compareFunc;
-
-    public CommonComparer(Comparison<T> compareFunc)
+    public static CommonComparer<T> Create<T>(Comparison<T> comparison, bool isNullSmaller = true)
     {
-        _compareFunc = compareFunc ?? throw new ArgumentNullException(nameof(compareFunc));
+        return new(comparison, isNullSmaller);
+    }
+}
+
+public class CommonComparer<T> : IComparer<T>
+{
+    private readonly Comparison<T> _comparison;
+    private readonly bool _isNullSmaller;
+
+    public CommonComparer(Comparison<T> comparison, bool isNullSmaller = true)
+    {
+        _comparison = comparison ?? throw new ArgumentNullException(nameof(comparison));
+        _isNullSmaller = isNullSmaller;
     }
 
     public int Compare(T? x, T? y)
     {
-        return _compareFunc(x!, y!);
+        return ComparerHelper.TryCompare(x, y, _isNullSmaller, out var result)
+            ? result.Value
+            : _comparison(x, y);
     }
 }

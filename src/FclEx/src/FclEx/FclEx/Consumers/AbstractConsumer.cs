@@ -1,5 +1,4 @@
-﻿using FclEx.Helpers;
-using Nito.AsyncEx;
+﻿using Nito.AsyncEx;
 
 namespace FclEx.Consumers;
 
