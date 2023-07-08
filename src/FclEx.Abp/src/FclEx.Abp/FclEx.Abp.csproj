@@ -16,5 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\FclEx\src\FclEx.Http\FclEx.Http.csproj" />
+    <ProjectReference Include="..\..\..\FclEx\src\FclEx.Serilog\FclEx.Serilog.csproj" />
   </ItemGroup>
 </Project>
