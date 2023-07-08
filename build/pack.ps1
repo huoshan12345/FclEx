@@ -27,11 +27,13 @@ $projectNames = (
   "FclEx.Xunit",
   "FclEx.Wmi",
   "FclEx.Serilog",
+  "FclEx.EfCore"
 
   "FclEx.Abp.RabbitMQ",
   "FclEx.Abp",
   "FclEx.Abp.RedisCache",
   "FclEx.Abp.AspNetCore",
+  "FclEx.Abp.EfCore",
   "FclEx.Abp.Xunit"
 )
 
