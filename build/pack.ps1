@@ -27,7 +27,7 @@ $projectNames = (
   "FclEx.Xunit",
   "FclEx.Wmi",
   "FclEx.Serilog",
-  "FclEx.EfCore"
+  "FclEx.EfCore",
 
   "FclEx.Abp.RabbitMQ",
   "FclEx.Abp",
