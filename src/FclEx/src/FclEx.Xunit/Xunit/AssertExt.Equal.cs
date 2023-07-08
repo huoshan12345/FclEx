@@ -6,8 +6,8 @@ partial class AssertExt
     {
         var tree = BuildExcludeMemberTree(excludeMemberPaths);
         var result = Equal(expected, actual, tree, false);
-        if (!result.equal)
-            throw new EqualException(result.expected, result.actual);
+        if (result.equal == false)
+            throw EqualException.ForMismatchedValues(result.expected, result.actual);
     }
 
     public static void NotEveryMemberEqual<T>(T expected, T actual, params string[] excludeMemberPaths)
@@ -15,15 +15,15 @@ partial class AssertExt
         var tree = BuildExcludeMemberTree(excludeMemberPaths);
         var result = Equal(expected, actual, tree, false);
         if (result.equal)
-            throw new NotEqualException(result.expected?.ToString(), result.actual?.ToString());
+            throw NotEqualException.ForEqualValues(result.expected.ToStringOrEmpty(), result.actual.ToStringOrEmpty());
     }
 
     public static void EverySameNameMemberEqual<T1, T2>(T1 expected, T2 actual, params string[] excludeMemberPaths)
     {
         var tree = BuildExcludeMemberTree(excludeMemberPaths);
         var result = Equal(expected, actual, tree, true);
-        if (!result.equal)
-            throw new EqualException(result.expected, result.actual);
+        if (result.equal == false)
+            throw EqualException.ForMismatchedValues(result.expected, result.actual);
     }
 
     public static void NotEverySameNameMemberEqual<T1, T2>(T1 expected, T2 actual, params string[] excludeMemberPaths)
@@ -31,7 +31,7 @@ partial class AssertExt
         var tree = BuildExcludeMemberTree(excludeMemberPaths);
         var result = Equal(expected, actual, tree, true);
         if (result.equal)
-            throw new NotEqualException(result.expected?.ToString(), result.actual?.ToString());
+            throw NotEqualException.ForEqualValues(result.expected.ToStringOrEmpty(), result.actual.ToStringOrEmpty());
     }
 
     /// <summary>
@@ -47,7 +47,7 @@ partial class AssertExt
         var timeSpan = (expected - actual).Duration();
         if (timeSpan > precision)
         {
-            throw new EqualException(
+            throw EqualException.ForMismatchedValues(
                 expected: $"{expected} ",
                 actual: $"{actual} difference {timeSpan} is larger than {precision}");
         }

@@ -42,4 +42,9 @@ public static class DirectoryInfoExtensions
         var path = _pathWithSepCache.GetOrAdd(parent.FullName, m => m + Path.DirectorySeparatorChar);
         return sub.FullName.StartsWith(path, StringComparison.OrdinalIgnoreCase);
     }
+
+    public static bool IsEmpty(this DirectoryInfo dir)
+    {
+        return dir.EnumerateFileSystemInfos().Any() == false;
+    }
 }

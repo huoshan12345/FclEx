@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Volo.Abp;
@@ -56,21 +57,6 @@ public static class ServiceCollectionExtensions
     public static T GetOptions<T>(this IServiceCollection services) where T : class, new()
         => services.BuildServiceProvider().GetRequiredService<IOptions<T>>().Value;
 
-    /// <summary>
-    /// Combine of <see cref="AddAbp{TStartupModule}"/> and <see cref="ServiceProviderExtensions.UseAbp"/>
-    /// </summary>
-    /// <typeparam name="TStartupModule"></typeparam>
-    /// <param name="services"></param>
-    /// <param name="optionsAction"></param>
-    /// <returns></returns>
-    public static IServiceProvider BuildAbp<TStartupModule>(this IServiceCollection services, Action<AbpApplicationCreationOptions>? optionsAction = null)
-        where TStartupModule : IAbpModule
-    {
-        var app = services.AddApplication<TStartupModule>(optionsAction);
-        app.Initialize(services.BuildServiceProviderFromFactory()); // if lightinject is used, the provider will be created from factory
-        return app.ServiceProvider;
-    }
-
     public static IServiceCollection AddAbp<TStartupModule>(this IServiceCollection services, Action<AbpApplicationCreationOptions>? optionsAction = null)
         where TStartupModule : IAbpModule
     {
@@ -81,10 +67,17 @@ public static class ServiceCollectionExtensions
     public static IServiceProvider UseAbp(this IServiceCollection services)
     {
         var provider = services.BuildServiceProviderFromFactory();
-        provider.GetRequiredService<IAbpApplicationWithExternalServiceProvider>().Initialize(provider);
+        provider.UseAbp();
         return provider;
     }
-        
+
+    public static async Task<IServiceProvider> UseAbpAsync(this IServiceCollection services)
+    {
+        var serviceProvider = services.BuildServiceProviderFromFactory();
+        await serviceProvider.UseAbpAsync();
+        return serviceProvider;
+    }
+
     public static IServiceCollection Configure<TOptions, TService>(this IServiceCollection services, Action<TOptions, TService> configureOptions)
         where TOptions : class
         where TService : class

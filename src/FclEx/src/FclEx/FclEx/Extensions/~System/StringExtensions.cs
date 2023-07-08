@@ -14,9 +14,6 @@ partial class StringExtensions
     public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? str) => string.IsNullOrWhiteSpace(str);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string JoinWith(this IEnumerable<string?> strs, string separator = "") => string.Join(separator, strs);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string Format(this string str, params object[] args) => string.Format(str, args);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -1,16 +1,18 @@
-﻿namespace FclEx.Extensions;
+﻿using System.Numerics;
+
+namespace FclEx.Extensions;
 
 [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 public static partial class EnumerableExtensions
 {
-    public static bool IsValid<T>([NotNullWhen(true)] this IEnumerable<T>? source)
+    public static bool IsValid<T>([NotNullWhen(true)] this IEnumerable<T>? enumerable)
     {
-        return !source.IsNullOrEmpty();
+        return !enumerable.IsNullOrEmpty();
     }
 
-    public static bool IsEmpty<T>(this IEnumerable<T> source)
+    public static bool IsEmpty<T>(this IEnumerable<T> enumerable)
     {
-        return !source.Any();
+        return !enumerable.Any();
     }
 
     public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this IEnumerable<T>? source)
@@ -23,39 +25,34 @@ public static partial class EnumerableExtensions
         return source ?? Enumerable.Empty<T>();
     }
 
-    public static string JoinWith<T>(this IEnumerable<T> strs, string separator)
+    public static string JoinWith<T>(this IEnumerable<T> enumerable, string separator)
     {
-        return string.Join(separator, strs.Select(m => m?.ToString()));
+        return string.Join(separator, enumerable);
     }
 
-    public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> col) where T : class
+    public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> enumerable) where T : class
     {
-        return col.Where(m => m != null)!;
+        return enumerable.Where(m => m != null)!;
     }
 
-    public static IEnumerable<string> Valid(this IEnumerable<string?> col)
+    public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> enumerable) where T : struct
     {
-        return col.Where(m => m.IsValid())!;
+        return enumerable.Where(m => m != null).Select(m => m.Get());
     }
 
-    public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> col) where T : struct
+    public static IEnumerable<T> Not<T>(this IEnumerable<T> enumerable, Func<T, bool> predicate)
     {
-        return col.Where(m => m != null).Select(m => m.Get());
+        return enumerable.Where(m => !predicate(m));
     }
 
-    public static IEnumerable<T> Not<T>(this IEnumerable<T> source, Func<T, bool> predicate)
+    public static IEnumerable<T> WhereIf<T>(this IEnumerable<T> enumerable, Func<T, bool> predicate, bool condition)
     {
-        return source.Where(m => !predicate(m));
+        return condition ? enumerable.Where(predicate) : enumerable;
     }
 
-    public static IEnumerable<T> WhereIf<T>(this IEnumerable<T> source, Func<T, bool> predicate, bool condition)
+    public static IEnumerable<T> WhereIf<T>(this IEnumerable<T> enumerable, Func<T, int, bool> predicate, bool condition)
     {
-        return condition ? source.Where(predicate) : source;
-    }
-
-    public static IEnumerable<T> WhereIf<T>(this IEnumerable<T> source, Func<T, int, bool> predicate, bool condition)
-    {
-        return condition ? source.Where(predicate) : source;
+        return condition ? enumerable.Where(predicate) : enumerable;
     }
 
     public static IEnumerable<TResult> SelectMany<TSource, TResult>(this IEnumerable<TSource> source,
@@ -224,4 +221,11 @@ public static partial class EnumerableExtensions
             ? enumerable.OrderByDescending(keySelector)
             : enumerable.OrderBy(keySelector);
     }
+
+#if NET7_0_OR_GREATER
+    public static T Sum<T>(this IEnumerable<T> enumerable) where T : IAdditionOperators<T, T, T>, IAdditiveIdentity<T, T>
+    {
+        return enumerable.Aggregate(T.AdditiveIdentity, (current, item) => current + item);
+    }
+#endif
 }

@@ -1,4 +1,5 @@
 ﻿using System.IO;
+#pragma warning disable SYSLIB0001
 
 namespace FclEx.Helpers;
 
@@ -31,11 +32,8 @@ public static partial class EncodingHelper
         var length = fs.Read(bom, 0, 3);
         if (length > 2)
         {
-#pragma warning disable SYSLIB0001 // Type or member is obsolete
-#pragma warning disable 618
+
             if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76) return Encoding.UTF7;
-#pragma warning restore 618
-#pragma warning restore SYSLIB0001 // Type or member is obsolete
             if (bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF) return Encoding.UTF8;
             if (bom[0] == 0xFE && bom[1] == 0xFF && bom[2] == 0x00) return Encoding.BigEndianUnicode;// 也就是大端的UTF-16
             if (bom[0] == 0xFF && bom[1] == 0xFE && bom[2] == 0x41) return Encoding.Unicode;// 也就是小端的UTF-16

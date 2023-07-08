@@ -2,14 +2,14 @@
 
 namespace FclEx.Data;
 
-public static class Extensions
+public static class CsvHelper
 {
     private static string ConvertToCsvCell(this object? obj)
     {
         if (obj == null) return "";
         var value = obj.ToString() ?? string.Empty;
 
-        var mustQuote = value.Any(x => x == ',' || x == '\"' || x == '\r' || x == '\n');
+        var mustQuote = value.Any(x => x is ',' or '\"' or '\r' or '\n');
         if (!mustQuote)
         {
             return value;
@@ -18,12 +18,12 @@ public static class Extensions
         return $"\"{value}\"";
     }
 
-    public static byte[] ToCsvBytes<T>(this ICollection<T> dataSource) where T : ExportModel<T>, new()
+    public static byte[] ToCsvBytes<T>(IEnumerable<T> dataSource) where T : ExportModel<T>, new()
     {
-        return dataSource.ToCsvBytes(ExportModel<T>.Columns);
+        return ToCsvBytes(dataSource, ExportModel<T>.Columns);
     }
 
-    public static byte[] ToCsvBytes<T>(this ICollection<T> dataSource, IList<IExportColumn<T>> columns)
+    public static byte[] ToCsvBytes<T>(IEnumerable<T> dataSource, IList<IExportColumn<T>> columns)
     {
         using var mem = new MemoryStream();
         using var sw = new StreamWriter(mem, Encoding.UTF8);

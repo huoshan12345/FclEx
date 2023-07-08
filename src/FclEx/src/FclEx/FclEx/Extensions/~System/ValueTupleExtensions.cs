@@ -7,16 +7,7 @@ public static class ValueTupleExtensions
         return KvPair.Create(tuple.Item1, tuple.Item2);
     }
 
-    [return: NotNullIfNotNull("defaultValue")]
-    public static string? FirstValid(this IEnumerable<string?> values, int? count = null, string? defaultValue = "")
-    {
-        var q = values;
-        if (count.HasValue)
-            q = q.Take(count.Value);
-        return q.FirstOrDefault(m => m.IsValid()) ?? defaultValue;
-    }
-
-    [return: NotNullIfNotNull("defaultValue")]
+    [return: NotNullIfNotNull(nameof(defaultValue))]
     public static string? FirstValid(this (string?, string?) tuple, string? defaultValue = "")
     {
         const int count = 2;
@@ -27,7 +18,7 @@ public static class ValueTupleExtensions
         return arr.FirstValid(count, defaultValue);
     }
 
-    [return: NotNullIfNotNull("defaultValue")]
+    [return: NotNullIfNotNull(nameof(defaultValue))]
     public static string? FirstValid(this (string?, string?, string?) tuple, string? defaultValue = "")
     {
         const int count = 3;
@@ -39,7 +30,7 @@ public static class ValueTupleExtensions
         return arr.FirstValid(count, defaultValue);
     }
 
-    [return: NotNullIfNotNull("defaultValue")]
+    [return: NotNullIfNotNull(nameof(defaultValue))]
     public static string? FirstValid(this (string?, string?, string?, string?) tuple, string? defaultValue = "")
     {
         const int count = 4;

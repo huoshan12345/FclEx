@@ -30,4 +30,13 @@ static partial class StringExtensions
 
     public static bool EndsWithAny(this string source, IEnumerable<string> values, StringComparison comparison = StringComparison.Ordinal)
         => values.Any(m => source.EndsWith(m, comparison));
+
+    public static bool ContainsAnyIgnoreCase(this string source, IEnumerable<string> values)
+        => source.ContainsAny(values, StringComparison.OrdinalIgnoreCase);
+
+    public static bool ContainsIgnoreCase(this string source, string value)
+        => source.Contains(value, StringComparison.OrdinalIgnoreCase);
+
+    public static bool EqualsIgnoreCase(this string source, string value)
+        => source.Equals(value, StringComparison.OrdinalIgnoreCase);
 }

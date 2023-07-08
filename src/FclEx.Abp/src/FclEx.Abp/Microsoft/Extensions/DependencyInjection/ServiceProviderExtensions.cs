@@ -16,8 +16,16 @@ public static class ServiceProviderExtensions
         return provider;
     }
 
+    public static async Task<IServiceProvider> UseAbpAsync(this IServiceProvider provider)
+    {
+        await provider.GetRequiredService<IAbpApplicationWithExternalServiceProvider>().InitializeAsync(provider);
+        return provider;
+    }
+
     public static T GetOptions<T>(this IServiceProvider provider) where T : class, new()
-        => provider.GetRequiredService<IOptions<T>>().Value;
+    {
+        return provider.GetRequiredService<IOptions<T>>().Value;
+    }
 
     public static T GetObject<T>(this IServiceProvider provider)
     {
