@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.0" PrivateAssets="all" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.4" />
+    <PackageReference Include="Xunit.Extensions.AssemblyFixture" Version="2.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\FclEx\src\FclEx.Dapper\FclEx.Dapper.csproj" />
+    <ProjectReference Include="..\..\src\FclEx.Abp.EfCore\FclEx.Abp.EfCore.csproj" />
+    <ProjectReference Include="..\..\src\FclEx.Abp.Xunit\FclEx.Abp.Xunit.csproj" />
+  </ItemGroup>
+
+</Project>

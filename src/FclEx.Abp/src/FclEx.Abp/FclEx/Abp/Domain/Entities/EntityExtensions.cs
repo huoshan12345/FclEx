@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
-using FclEx.Abp.Domain.Entities.Interfaces;
 using Volo.Abp.ObjectMapping;
 
 namespace FclEx.Abp.Domain.Entities;

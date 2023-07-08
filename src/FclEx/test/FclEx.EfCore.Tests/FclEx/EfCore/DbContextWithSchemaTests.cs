@@ -1,14 +1,13 @@
-﻿using Dapper;
+﻿namespace FclEx.EfCore;
 
-namespace FclEx.EfCore;
+public readonly record struct DatabaseUser(string Username, string Password, string DefaultSchema);
 
 public class DbContextWithSchemaTests : IAsyncLifetime
 {
-    public readonly record struct DatabaseUser(string Username, string Password, string DefaultSchema);
-
     public static readonly DatabaseUser User = new("userwithschema", "123456", "test_schema");
-    public const string LocalPostgresqlConnectionString = "Server=localhost;Database=test-efcore;Port=5432;User Id=postgres;Password=111111";
-    public static readonly string LocalUserPostgresqlConnectionString = $"Server=localhost;Database=test-efcore;Port=5432;User Id={User.Username};Password={User.Password}";
+    public static readonly string DatabaseName = typeof(GlobalDbContext).Assembly.GetName().Name!.Replace(".", "-").ToLower();
+    public static readonly string LocalPostgresqlConnectionString = $"Server=localhost;Database={DatabaseName};Port=5432;User Id=postgres;Password=111111";
+    public static readonly string LocalUserPostgresqlConnectionString = $"Server=localhost;Database={DatabaseName};Port=5432;User Id={User.Username};Password={User.Password}";
 
     private static async Task CreateUser(DatabaseUser user)
     {

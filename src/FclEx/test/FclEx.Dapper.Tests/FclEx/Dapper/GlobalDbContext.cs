@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
+﻿using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure.Internal;
 using Pomelo.EntityFrameworkCore.MySql.Storage.Internal;
 #pragma warning disable EF1001
@@ -18,10 +17,11 @@ public enum DatabaseType
 // EfCore is used for helping us to do tests
 public class GlobalDbContext : DbContextWithSchema
 {
-    public const string PostgresqlConnectionString = "Server=localhost;Database=fclex-abp-test;Port=5432;User Id=postgres;Password=111111";
-    public const string SqlServerConnectionString = @"Data Source=localhost\sqlexpress;Database=fclex-abp-test;User Id=sa;Password=a.o7a@bj;Integrated Security=sspi;Encrypt=false";
-    public const string MySqlConnectionString = @"Server=localhost;Database=fclex_abp_test;Port=3306;User Id=root;Password=111111;SslMode=None";
-    public const string SqliteConnectionString = @"Data Source=./fclex-abp-test.sqlite;";
+    public static readonly string DatabaseName = typeof(GlobalDbContext).Assembly.GetName().Name!.Replace(".", "-").ToLower();
+    public static readonly string PostgresqlConnectionString = $"Server=localhost;Database={DatabaseName};Port=5432;User Id=postgres;Password=111111";
+    public static readonly string SqlServerConnectionString = $@"Data Source=localhost\sqlexpress;Database={DatabaseName};User Id=sa;Password=a.o7a@bj;Integrated Security=sspi;Encrypt=false";
+    public static readonly string MySqlConnectionString = $@"Server=localhost;Database={DatabaseName};Port=3306;User Id=root;Password=111111;SslMode=None";
+    public static readonly string SqliteConnectionString = $@"Data Source=./{DatabaseName}.sqlite;";
 
     public DatabaseType DatabaseType { get; }
     private readonly Action<DbContextOptionsBuilder> _optionsAction;

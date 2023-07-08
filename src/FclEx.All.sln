@@ -98,6 +98,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmark", "benchmark", "{
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Abp.EfCore", "FclEx.Abp\src\FclEx.Abp.EfCore\FclEx.Abp.EfCore.csproj", "{1B8FC570-FB7C-4BD8-813A-A108F1CFB934}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FclEx.Abp.EfCore.Tests", "FclEx.Abp\test\FclEx.Abp.EfCore.Tests\FclEx.Abp.EfCore.Tests.csproj", "{8D7851E1-E977-40C3-B16E-61A665CE1810}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -208,6 +210,10 @@ Global
 		{1B8FC570-FB7C-4BD8-813A-A108F1CFB934}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1B8FC570-FB7C-4BD8-813A-A108F1CFB934}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1B8FC570-FB7C-4BD8-813A-A108F1CFB934}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D7851E1-E977-40C3-B16E-61A665CE1810}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D7851E1-E977-40C3-B16E-61A665CE1810}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D7851E1-E977-40C3-B16E-61A665CE1810}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D7851E1-E977-40C3-B16E-61A665CE1810}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -245,6 +251,7 @@ Global
 		{C9537E64-13A2-437E-9F46-49C7ADB45B0D} = {C4A4BE1C-25E6-4968-A1A8-AAB1B0950354}
 		{3FD5D6ED-19E8-43D9-855E-7FD7533704E0} = {2CE8C0F4-48B4-4380-BAD1-E1AED5463BB2}
 		{1B8FC570-FB7C-4BD8-813A-A108F1CFB934} = {43A6295D-7C45-49AB-B35A-E2E4C0A050E8}
+		{8D7851E1-E977-40C3-B16E-61A665CE1810} = {41D86DEF-3CED-4F43-B9F8-AF421EB8CA24}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A8ABB718-B200-438A-8C51-18280C33E805}

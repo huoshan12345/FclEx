@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using FclEx;
-using FclEx.Abp.Domain.Entities.Interfaces;
 
 namespace Volo.Abp.Reflection;
 

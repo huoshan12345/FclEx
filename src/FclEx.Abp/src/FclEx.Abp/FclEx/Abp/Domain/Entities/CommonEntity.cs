@@ -1,5 +1,4 @@
 ﻿using System;
-using FclEx.Abp.Domain.Entities.Interfaces;
 using FclEx.Abp.Orm;
 
 namespace FclEx.Abp.Domain.Entities;
