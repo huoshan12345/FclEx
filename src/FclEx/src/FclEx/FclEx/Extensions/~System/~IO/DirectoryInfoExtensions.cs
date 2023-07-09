@@ -7,8 +7,11 @@ public static class DirectoryInfoExtensions
 {
     public static DirectoryInfo TryCreate(this DirectoryInfo di)
     {
-        if (!di.Exists)
+        if (di.Exists == false)
+        {
             di.Create();
+            di.Refresh();
+        }
         return di;
     }
 
