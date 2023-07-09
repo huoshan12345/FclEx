@@ -17,8 +17,8 @@ public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>
         IsField = true;
         IsProperty = false;
         DataMemberType = field.FieldType;
-        HasPublicSetter = true;
-        HasPublicGetter = true;
+        HasPublicSetter = field.IsPublic;
+        HasPublicGetter = field.IsPublic;
     }
 
     public DataMemberInfo(PropertyInfo property)
