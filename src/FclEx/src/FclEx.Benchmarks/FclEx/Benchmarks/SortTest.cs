@@ -26,7 +26,7 @@ namespace FclEx.Benchmarks
                 .Create(m => m.Age)
                 .OrderBy(m => m.Name)
                 .OrderBy(m => m.Height, true)
-                .ToComparison();
+                .CreateComparison();
 
         public SortTest()
         {

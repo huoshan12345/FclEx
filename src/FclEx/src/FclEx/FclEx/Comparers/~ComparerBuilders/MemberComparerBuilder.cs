@@ -51,7 +51,7 @@ public class MemberComparerBuilder<T> : IComparerBuilder<T>
             : member.Comparer.Compare(left, right);
     }
 
-    public Comparison<T?> ToComparison()
+    public Comparison<T?> CreateComparison()
     {
         return (x, y) =>
         {
@@ -69,7 +69,7 @@ public class MemberComparerBuilder<T> : IComparerBuilder<T>
         };
     }
 
-    public IComparer<T> Build() => CommonComparer.Create(ToComparison());
+    public IComparer<T> Build() => CommonComparer.Create(CreateComparison());
 
     private readonly record struct OrderMember(Func<T, object?> Selector, bool Desc, IComparer Comparer);
 }

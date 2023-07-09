@@ -39,7 +39,7 @@ public class MemberComparerTests
                 .Create(m => m.Age)
                 .OrderBy(m => m.Name)
                 .OrderBy(m => m.Height, true)
-                .ToComparison();
+                .CreateComparison();
             list.Sort(cmp);
 
             Assert.True(orderedList.SequenceEqual(orderedList));
