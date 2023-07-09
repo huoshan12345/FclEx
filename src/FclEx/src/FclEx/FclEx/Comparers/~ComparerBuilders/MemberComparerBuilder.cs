@@ -42,11 +42,8 @@ public class MemberComparerBuilder<T> : IComparerBuilder<T>
         return this;
     }
 
-    private int Compare(T? x, T? y, OrderMember member)
+    private static int Compare(T x, T y, OrderMember member)
     {
-        if (ComparerHelper.TryCompare(x, y, _isNullSmaller, out var result))
-            return result.Value;
-
         var left = member.Selector(x);
         var right = member.Selector(y);
         return member.Desc
@@ -58,6 +55,9 @@ public class MemberComparerBuilder<T> : IComparerBuilder<T>
     {
         return (x, y) =>
         {
+            if (ComparerHelper.TryCompare(x, y, _isNullSmaller, out var result))
+                return result.Value;
+
             // ReSharper disable once LoopCanBeConvertedToQuery
             foreach (var member in _members)
             {
