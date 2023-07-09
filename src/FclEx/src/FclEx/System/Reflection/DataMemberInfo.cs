@@ -1,6 +1,4 @@
-﻿using FclEx;
-
-namespace System.Reflection;
+﻿namespace System.Reflection;
 
 [DebuggerDisplay("{" + nameof(Name) + "}")]
 public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>
@@ -52,26 +50,27 @@ public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>
     public override string Name => MemberInfo.Name;
     public override Type? ReflectedType => MemberInfo.ReflectedType;
 
+    public MemberInfo MemberInfo { get; }
     public Type DataMemberType { get; }
-    public object? GetValue(object? obj) => Getter(obj);
-    public void SetValue(object? obj, object? value) => Setter(obj, value);
     public bool CanRead { get; }
     public bool CanWrite { get; }
     public bool IsStatic { get; }
-    internal Func<object?, object?> Getter { get; }
-    internal Action<object?, object?> Setter { get; }
-    public MemberInfo MemberInfo { get; }
     public bool IsField { get; }
     public bool IsProperty { get; }
     public bool IsCompilerGenerated { get; }
     public bool HasPublicSetter { get; }
     public bool HasPublicGetter { get; }
+    public Func<object?, object?> Getter { get; }
+    public Action<object?, object?> Setter { get; }
+
+    public object? GetValue(object? obj) => Getter(obj);
+    public void SetValue(object? obj, object? value) => Setter(obj, value);
 
     public bool Equals(DataMemberInfo? other)
     {
         if (ReferenceEquals(null, other)) return false;
         if (ReferenceEquals(this, other)) return true;
-        return base.Equals(other) && MemberInfo.Equals(other.MemberInfo);
+        return MemberInfo.Equals(other.MemberInfo);
     }
 
     public override bool Equals(object? obj)
@@ -84,6 +83,6 @@ public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(base.GetHashCode(), MemberInfo);
+        return MemberInfo.GetHashCode();
     }
 }

@@ -9,26 +9,7 @@ public static partial class AssertExt
 {
     private static readonly HashSet<string> _emptySet = new();
 
-    private static readonly ConcurrentDictionary<Type, IReadOnlyList<DataMemberInfo>> TypeDataMemberDic = new();
-
     private static readonly ConcurrentDictionary<Type, Func<object, object, bool>?> TypeEqualsDic = new();
-
-    internal static IReadOnlyList<DataMemberInfo> GetDataMembers(Type type)
-    {
-        return TypeDataMemberDic.GetOrAdd(type, GetDataMembersInternal);
-
-        static IReadOnlyList<DataMemberInfo> GetDataMembersInternal(Type type)
-        {
-            var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(m => m.CanRead);
-            var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
-            var members = props
-                .Select(m => new DataMemberInfo(m))
-                .Concat(fields.Select(m => new DataMemberInfo(m)))
-                .OrderBy(m => m.Name)
-                .ToList();
-            return members;
-        }
-    }
 
     internal static Func<object, object, bool>? GetEqualsMethod(Type? type)
     {
@@ -154,8 +135,7 @@ public static partial class AssertExt
         if (IsVisitedType(type1) && IsVisitedType(type2))
             visited.Add((value1, value2));
 
-        Type? typeOfEqual;
-        (value1, value2, typeOfEqual) = GetEqualType(type1, value1, type2, value2);
+        (value1, value2, var typeOfEqual) = GetEqualType(type1, value1, type2, value2);
 
         var equalsMethod = GetEqualsMethod(typeOfEqual);
         if (equalsMethod != null)
@@ -200,8 +180,8 @@ public static partial class AssertExt
         {
             var hasEqual = false;
             var excludeNames = excludeMemberTree?.Children.Where(m => m.Value.IsExcluded).Select(m => m.Value.Name).ToHashSet() ?? _emptySet;
-            var members1 = TypeDataMemberDic.GetOrAdd(type1, GetDataMembers).Where(m => !excludeNames.Contains(m.Name)).ToList();
-            var members2 = TypeDataMemberDic.GetOrAdd(type2, GetDataMembers).Where(m => !excludeNames.Contains(m.Name)).ToList();
+            var members1 = type1.GetDataMembers().Where(m => !excludeNames.Contains(m.Name)).ToList();
+            var members2 = type2.GetDataMembers().Where(m => !excludeNames.Contains(m.Name)).ToList();
 
             if (!onlyCheckSameNameMembers && members1.Count != members2.Count)
                 return (false, value1, value2);
@@ -234,7 +214,7 @@ public static partial class AssertExt
         else
         {
             var hasEqual = false;
-            var members = TypeDataMemberDic.GetOrAdd(type1, GetDataMembers);
+            var members = type1.GetDataMembers();
             foreach (var member in members)
             {
                 var exclude = excludeMemberTree?.Children.FirstOrDefault(m => m.Value.Name == member.Name);

@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using FclEx.Enums;
+﻿using FclEx.Enums;
 
 namespace FclEx.Extensions.ObjectExtensions;
 

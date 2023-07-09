@@ -110,11 +110,17 @@ public static partial class TypeExtensions
         return false;
     }
 
+    public static IEnumerable<MemberInfo> EnumerateProperyOrField(this Type type, BindingFlags bindingFlags)
+    {
+        return type.GetFields(bindingFlags).Cast<MemberInfo>()
+            .Concat(type.GetProperties(bindingFlags));
+    }
+
     public static IReadOnlyCollection<DataMemberInfo> GetDataMembers(this Type type) => ReflectionHelper.GetDataMembers(type).Values;
 
     public static DataMemberInfo? GetDataMember(this Type type, string name) => ReflectionHelper.GetDataMembers(type).Get(name);
 
-    public static T? GetMemberValue<T>(this Type type, string name)
+    public static T? GetDataMemberValue<T>(this Type type, string name)
     {
         const BindingFlags flags = BindingFlags.Static
                                    | BindingFlags.Public | BindingFlags.NonPublic
@@ -122,7 +128,7 @@ public static partial class TypeExtensions
         return type.InvokeMember(name, flags, null, null, null).CastTo<T>();
     }
 
-    public static T? GetMemberValue<T>(this Type type, string name, object? obj)
+    public static T? GetDataMemberValue<T>(this Type type, string name, object? obj)
     {
         const BindingFlags flags = BindingFlags.Instance
                                    | BindingFlags.Public | BindingFlags.NonPublic
@@ -135,7 +141,7 @@ public static partial class TypeExtensions
         return type.IsDefined<DynamicAttribute>(true);
     }
 
-    public const BindingFlags MemberBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+    public const BindingFlags MemberBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
     public static FieldInfo GetRequiredField(this Type type, string name)
     {

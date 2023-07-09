@@ -13,8 +13,7 @@ public static class MemberInfoExtensions
         {
             PropertyInfo propInfo => new DataMemberInfo(propInfo),
             FieldInfo fieldInfo => new DataMemberInfo(fieldInfo),
-            _ => throw new ArgumentException(
-                $"MemberInfo '{memberInfo.Name}' refers to neither a field nor a property.")
+            _ => throw new ArgumentException($"MemberInfo '{memberInfo.Name}' refers to neither a field nor a property.")
         };
     }
 

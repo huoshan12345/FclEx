@@ -73,22 +73,22 @@ public class InvokeMemerTests
         while (type != null)
         {
             var ms = type.GetMembers(flag)
-                .Where(m => m is PropertyInfo || m is FieldInfo)
+                .Where(m => m is PropertyInfo or FieldInfo)
                 .Select(m => m.ToDataMemberInfo())
-                .Where(m => !m.IsCompilerGenerated)
+                .Where(m => m.IsCompilerGenerated == false)
                 .ToList();
 
             foreach (var member in ms)
             {
                 if (member.IsStatic)
                 {
-                    var actual = type.GetMemberValue<TMember>(member.Name);
+                    var actual = type.GetDataMemberValue<TMember>(member.Name);
                     var expected = member.GetValue(null).CastTo<TMember>();
                     Assert.Equal(expected, actual);
                 }
                 else
                 {
-                    var actual = type.GetMemberValue<TMember>(member.Name, obj);
+                    var actual = type.GetDataMemberValue<TMember>(member.Name, obj);
                     var expected = member.GetValue(obj).CastTo<TMember>();
                     Assert.Equal(expected, actual);
                 }
