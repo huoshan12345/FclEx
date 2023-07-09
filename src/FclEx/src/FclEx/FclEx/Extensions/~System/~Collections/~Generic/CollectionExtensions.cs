@@ -2,10 +2,10 @@
 
 public static class CollectionExtensions
 {
-    public static ICollection<T> AddIfNotNull<T>(this ICollection<T> source, T item)
+    public static ICollection<T> AddIfNotNull<T>(this ICollection<T> source, T? item)
     {
         Check.NotNull(source);
-        if (!(item is null))
+        if (item is not null)
             source.Add(item);
         return source;
     }
