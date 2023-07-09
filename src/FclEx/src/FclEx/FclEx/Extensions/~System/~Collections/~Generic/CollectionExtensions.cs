@@ -2,20 +2,25 @@
 
 public static class CollectionExtensions
 {
-    public static ICollection<T> AddIfNotNull<T>(this ICollection<T> source, T? item)
+    public static bool AddIfNotNull<T>(this ICollection<T> collection, [NotNullWhen(true)] T? item)
     {
-        Check.NotNull(source);
+        Check.NotNull(collection);
         if (item is not null)
-            source.Add(item);
-        return source;
+        {
+            collection.Add(item);
+            return true;
+        }
+        return false;
     }
 
-    public static void AddRangeSafely<T>(this ICollection<T> col, IEnumerable<T>? items)
+    public static void AddRangeSafely<T>(this ICollection<T> collection, IEnumerable<T>? items)
     {
+        Check.NotNull(collection);
+
         if (items == null)
             return;
 
-        if (col is List<T> list)
+        if (collection is List<T> list)
         {
             list.AddRange(items);
         }
@@ -23,7 +28,7 @@ public static class CollectionExtensions
         {
             foreach (var item in items)
             {
-                col.Add(item);
+                collection.Add(item);
             }
         }
     }
