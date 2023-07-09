@@ -4,13 +4,13 @@ partial class InterfaceBaseInvocationExtension
 {
     private static readonly ConcurrentDictionary<InterfaceMethodInfo, (IntPtr, MethodInfo)> MethodMap = new();
 
-    public static void BaseByFunctionPointer<TInterface>(this TInterface instance, Expression<Action<TInterface>> selector)
+    internal static void BaseByFunctionPointer<TInterface>(this TInterface instance, Expression<Action<TInterface>> selector)
     {
         var (invoke, invoker, args) = GetInterfaceFunc(instance, selector);
         invoke.Invoke(invoker, args);
     }
 
-    public static TReturn BaseByFunctionPointer<TInterface, TReturn>(this TInterface instance, Expression<Func<TInterface, TReturn>> selector)
+    internal static TReturn BaseByFunctionPointer<TInterface, TReturn>(this TInterface instance, Expression<Func<TInterface, TReturn>> selector)
     {
         var (invoke, invoker, args) = GetInterfaceFunc(instance, selector);
         return invoke.Invoke(invoker, args).CastTo<TReturn>()!;
@@ -37,17 +37,5 @@ partial class InterfaceBaseInvocationExtension
         var (pointer, invoke) = MethodMap.GetOrAdd(new(instance.GetType(), interfaceType, method), m => GetInterfaceMethodDelegate(m));
         var invoker = Activator.CreateInstance(invoke.DeclaringType!, instance, pointer);
         return (invoke, invoker!, evaluatedArguments);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Base<TInterface>(this TInterface instance, Expression<Action<TInterface>> selector)
-    {
-        instance.BaseByDynamicMethod(selector);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TReturn Base<TInterface, TReturn>(this TInterface instance, Expression<Func<TInterface, TReturn>> selector)
-    {
-        return instance.BaseByDynamicMethod(selector);
     }
 }

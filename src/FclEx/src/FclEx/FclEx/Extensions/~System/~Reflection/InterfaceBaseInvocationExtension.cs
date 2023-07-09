@@ -74,4 +74,16 @@ public static partial class InterfaceBaseInvocationExtension
         MemberExpression { Member: PropertyInfo prop } => (prop.GetRequiredGetMethod(), Array.Empty<Expression>()),
         _ => throw new InvalidOperationException("The expression refers to neither a method nor a readable property.")
     };
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Base<TInterface>(this TInterface instance, Expression<Action<TInterface>> selector)
+    {
+        instance.BaseByDynamicMethod(selector);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TReturn Base<TInterface, TReturn>(this TInterface instance, Expression<Func<TInterface, TReturn>> selector)
+    {
+        return instance.BaseByDynamicMethod(selector);
+    }
 }
