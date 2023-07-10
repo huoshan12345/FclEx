@@ -11,7 +11,6 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <IsTestProject>false</IsTestProject>
-    <DefineConstants>$(DefineConstants);XUNIT_VISIBILITY_INTERNAL</DefineConstants>
   </PropertyGroup>
 
 </Project>
