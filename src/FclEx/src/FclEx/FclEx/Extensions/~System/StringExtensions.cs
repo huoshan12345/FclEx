@@ -1,9 +1,4 @@
-﻿using System;
-using System.Text.RegularExpressions;
-using Newtonsoft.Json.Linq;
-using static System.Environment;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 partial class StringExtensions
 {
@@ -50,9 +45,9 @@ partial class StringExtensions
         return str.Substring(0, maxLength) + "...";
     }
 
-    private static readonly Regex RegexOfXmlProlog = new(@"^<\?xml.+\?>");
-    private static readonly Regex RegexOfXmlStart = new(@"^<\S+>");
-    private static readonly Regex RegexOfXmlEnd = new(@"</\S+>$");
+    private static readonly Regex RegexOfXmlProlog = new(@"^<\?xml.+\?>", RegexOptions.Compiled);
+    private static readonly Regex RegexOfXmlStart = new(@"^<\S+>", RegexOptions.Compiled);
+    private static readonly Regex RegexOfXmlEnd = new(@"</\S+>$", RegexOptions.Compiled);
 
     public static bool IsPossibleXml([NotNullWhen(true)] this string? data)
     {
@@ -93,14 +88,18 @@ partial class StringExtensions
         return true;
     }
 
-    public static (string Left, string Right) SplitTwo(this string? str, string separator)
+    public static (string Left, string Right) SplitTwo(this string? str, string separator, bool fromRight = false)
     {
         if (str.IsNullOrEmpty())
             return ("", "");
 
-        var index = str.IndexOf(separator, StringComparison.Ordinal);
-        if (index < 0) return (str, "");
-        return (str[..index], str[(index + separator.Length)..]);
+        var index = fromRight
+            ? str.LastIndexOf(separator, StringComparison.Ordinal)
+            : str.IndexOf(separator, StringComparison.Ordinal);
+
+        return index < 0
+            ? (str, "")
+            : (str[..index], str[(index + separator.Length)..]);
     }
 
     public static byte[] HexToBytes(this string hex)

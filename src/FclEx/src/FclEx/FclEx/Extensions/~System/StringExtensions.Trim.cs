@@ -2,13 +2,13 @@
 
 public static partial class StringExtensions
 {
-    [return: NotNullIfNotNull("target")]
-    public static string? TrimStart(this string? target, string? trimString)
+    [return: NotNullIfNotNull(nameof(source))]
+    public static string? TrimStart(this string? source, string? trimString)
     {
-        if (string.IsNullOrEmpty(target) || string.IsNullOrEmpty(trimString))
-            return target;
+        if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(trimString))
+            return source;
 
-        var result = target;
+        var result = source;
         while (result.StartsWith(trimString))
         {
             result = result[trimString.Length..];
@@ -16,13 +16,13 @@ public static partial class StringExtensions
         return result;
     }
 
-    [return: NotNullIfNotNull("target")]
-    public static string? TrimEnd(this string? target, string? trimString)
+    [return: NotNullIfNotNull(nameof(source))]
+    public static string? TrimEnd(this string? source, string? trimString)
     {
-        if (string.IsNullOrEmpty(target) || string.IsNullOrEmpty(trimString))
-            return target;
+        if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(trimString))
+            return source;
 
-        var result = target;
+        var result = source;
         while (result.EndsWith(trimString))
         {
             result = result[..^trimString.Length];

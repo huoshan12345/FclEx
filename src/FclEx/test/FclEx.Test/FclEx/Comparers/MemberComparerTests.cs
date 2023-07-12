@@ -22,7 +22,7 @@ public class MemberComparerTests
         foreach (var num in Enumerable.Range(100, 5))
         {
             var random = new Random(num);
-            var list = Enumerable.Range(1, 10000).Select(m => new Person()
+            var list = Enumerable.Range(1, 10000).Select(m => random.NextBool(20) ? null : new Person
             {
                 Age = random.Next(1, 100),
                 Name = CreateRondomString(10, random),
@@ -30,9 +30,9 @@ public class MemberComparerTests
             }).ToList();
 
             var orderedList = list
-                .OrderBy(m => m.Age)
-                .ThenBy(m => m.Name)
-                .ThenByDescending(m => m.Height)
+                .OrderBy(m => m?.Age)
+                .ThenBy(m => m?.Name)
+                .ThenByDescending(m => m?.Height)
                 .ToList();
 
             var cmp = MemberComparerBuilder<Person>

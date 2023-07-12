@@ -42,15 +42,10 @@ public static class RandomExtensions
         return new DateTime(minTicks + random.NextLong(maxTicks - minTicks));
     }
 
-    public static bool NextBool(this Random random)
+    public static bool NextBool(this Random random, double truePercentage = 50)
     {
         Check.NotNull(random);
-        return random.NextDouble() >= 0.5;
-    }
-
-    public static bool IsTrueByPercentage(this Random random, int percentage)
-    {
-        return random.Next(0, 100) < percentage;
+        return random.NextDouble() < (truePercentage / 100.0);
     }
 
     //private static object Next(this Random random, TypeCode typeCode)

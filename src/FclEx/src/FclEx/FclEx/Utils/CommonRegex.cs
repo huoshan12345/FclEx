@@ -1,6 +1,4 @@
-﻿using System.Text.RegularExpressions;
-
-namespace FclEx.Utils;
+﻿namespace FclEx.Utils;
 
 public static class CommonRegex
 {

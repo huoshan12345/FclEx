@@ -7,10 +7,13 @@ public static class EqualityComparerHelper
         result = null;
 
         if (ReferenceEquals(x, y))
+        {
             result = true;
-
-        if (x is null || y is null)
+        }
+        else if (x is null || y is null)
+        {
             result = false;
+        }
 
         return result.HasValue;
     }

@@ -7,13 +7,17 @@ public static class ComparerHelper
         result = null;
 
         if (ReferenceEquals(x, y))
+        {
             result = 0;
-
-        if (x == null)
+        }
+        else if (x == null)
+        {
             result = isNullSmaller ? -1 : 1;
-
-        if (y == null)
+        }
+        else if (y == null)
+        {
             result = isNullSmaller ? 1 : -1;
+        }
 
         return result.HasValue;
     }

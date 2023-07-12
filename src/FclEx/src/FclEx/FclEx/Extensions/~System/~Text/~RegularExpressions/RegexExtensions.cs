@@ -1,6 +1,4 @@
-﻿using System.Text.RegularExpressions;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static class RegexExtensions
 {
