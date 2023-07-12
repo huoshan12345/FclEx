@@ -21,4 +21,9 @@ public static class EqualityComparerBuilderExtensions
     {
         return builder.Set(FileExtentionEqualityComparer.Instance);
     }
+
+    public static MemberEqualityComparerBuilder<T> Member<T>(this EqualityComparerBuilder<T> _)
+    {
+        return MemberEqualityComparerBuilder.Create<T>();
+    }
 }

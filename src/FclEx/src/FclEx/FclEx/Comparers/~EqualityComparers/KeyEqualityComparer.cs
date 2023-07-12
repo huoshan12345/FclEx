@@ -29,13 +29,9 @@ public class KeyEqualityComparer<T, TKey> : IEqualityComparer<T>
 
     public bool Equals(T? x, T? y)
     {
-        if (ReferenceEquals(x, y))
-            return true;
-
-        if (x == null || y == null)
-            return false;
-
-        return _keyComparer.Equals(_keySelector(x), _keySelector(y));
+        return EqualityComparerHelper.TryEquals(x, y, out var result) 
+            ? result.Value 
+            : _keyComparer.Equals(_keySelector(x), _keySelector(y));
     }
 
     public int GetHashCode(T obj)

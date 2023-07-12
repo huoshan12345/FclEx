@@ -1,16 +1,11 @@
-﻿#nullable enable
-
-namespace FclEx.Comparers;
+﻿namespace FclEx.Comparers;
 
 public class FileExtentionEqualityComparer : IEqualityComparer<string>, IHasInstance<FileExtentionEqualityComparer>
 {
     public bool Equals(string? x, string? y)
     {
-        if (ReferenceEquals(x, y))
-            return true;
-
-        if (x is null || y is null)
-            return false;
+        if (EqualityComparerHelper.TryEquals(x, y, out var result))
+            return result.Value;
 
         var subx = x.SkipUntil(".", untilLast: true);
         var suby = y.SkipUntil(".", untilLast: true);
@@ -20,7 +15,9 @@ public class FileExtentionEqualityComparer : IEqualityComparer<string>, IHasInst
 
     public int GetHashCode(string obj)
     {
-        return obj.GetHashCodeSafely();
+        return obj
+            .SkipUntil(".", untilLast: true)
+            .GetHashCode(StringComparison.OrdinalIgnoreCase);
     }
 
     public static FileExtentionEqualityComparer Instance { get; } = new();

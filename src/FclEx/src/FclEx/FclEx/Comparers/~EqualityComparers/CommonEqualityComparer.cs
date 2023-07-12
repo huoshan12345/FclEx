@@ -21,13 +21,9 @@ public class CommonEqualityComparer<T> : IEqualityComparer<T>
 
     public bool Equals(T? x, T? y)
     {
-        if (ReferenceEquals(x, y))
-            return true;
-
-        if (x == null || y == null)
-            return false;
-
-        return _compareFunc(x, y);
+        return EqualityComparerHelper.TryEquals(x, y, out var result) 
+            ? result.Value : 
+            _compareFunc(x, y);
     }
 
     public int GetHashCode(T obj)
