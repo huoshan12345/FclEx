@@ -8,7 +8,7 @@ public class HtmlAnchor
     public HtmlAnchor(IHtmlAnchorElement element)
     {
         Element = element;
-        var (l, r) = element.Href.SplitTwo("?");
+        var (l, r) = element.Href.Cleave("?");
         Query = HttpUtility.ParseQueryString(r);
         Path = l;
     }

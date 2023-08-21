@@ -88,7 +88,7 @@ partial class StringExtensions
         return true;
     }
 
-    public static (string Left, string Right) SplitTwo(this string? str, string separator, bool fromRight = false)
+    public static (string Left, string Right) Cleave(this string? str, string separator, bool fromRight = false)
     {
         if (str.IsNullOrEmpty())
             return ("", "");
