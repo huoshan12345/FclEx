@@ -17,7 +17,7 @@ public class DbContextWithSchemaTests : IAsyncLifetime
         await con.ExecuteAsync($"ALTER USER {user.Username} SET SEARCH_PATH TO {user.DefaultSchema}");
     }
 
-    private static async Task<string> GetUserDefaultSchema()
+    private static async Task<string?> GetUserDefaultSchema()
     {
         await using var con = new NpgsqlConnection(LocalUserPostgresqlConnectionString);
         return await con.ExecuteScalarAsync<string>("SHOW SEARCH_PATH;");

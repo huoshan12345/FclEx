@@ -43,7 +43,7 @@ public static class DapperHelper
 
         foreach (var entityType in types)
         {
-            var map = new CustomPropertyTypeMap(entityType, (t, name) => GetEntityDefinition(t).Fields.FirstOrDefault(p => p.FieldName == name)?.PropertyInfo);
+            var map = new CustomPropertyTypeMap(entityType, (t, name) => GetEntityDefinition(t).Fields.FirstOrDefault(p => p.FieldName == name)?.PropertyInfo!);
             SqlMapper.SetTypeMap(entityType, map);
         }
     }

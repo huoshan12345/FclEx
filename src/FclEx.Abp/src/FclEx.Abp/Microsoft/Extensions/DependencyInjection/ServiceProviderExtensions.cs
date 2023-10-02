@@ -27,7 +27,7 @@ public static class ServiceProviderExtensions
         return provider.GetRequiredService<IOptions<T>>().Value;
     }
 
-    public static T GetObject<T>(this IServiceProvider provider)
+    public static T? GetObject<T>(this IServiceProvider provider)
     {
         return provider.GetRequiredService<IObjectAccessor<T>>().Value;
     }

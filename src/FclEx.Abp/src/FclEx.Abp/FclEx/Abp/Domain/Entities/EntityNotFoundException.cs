@@ -21,7 +21,7 @@ public class EntityNotFoundException : AbpException
     }
 
     public EntityNotFoundException(Type entityType, object id, Exception? innerException = null)
-        : base($"There is no such an entity. Entity type: {entityType.FullName}, id: {id}", innerException)
+        : base($"There is no such an entity. Entity type: {entityType.FullName}, id: {id}", innerException!)
     {
         EntityType = entityType;
         Id = id;
