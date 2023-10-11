@@ -176,7 +176,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
 
             if (requestMessage.Content is { } requestContent)
             {
-                requestMessage.Content = requestContent.ToBuffered(request.UseGZip, request.ReadBufferTimeout, request.BufferSize, token);
+                requestMessage.Content = requestContent.ToCompressed(request.CompressionMethod, request.CompressionLevel, request.ReadBufferTimeout, request.BufferSize, token);
             }
 
             if (requestMessage.Content?.Headers is { ContentType: { } contentType })

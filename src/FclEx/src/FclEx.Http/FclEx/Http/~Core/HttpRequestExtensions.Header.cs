@@ -60,11 +60,19 @@ partial class HttpRequestExtensions
     }
 
     public static HttpRequest AcceptCompress(this HttpRequest req)
-        => req.AddHeader(HttpKnownHeaderNames.AcceptEncoding, "gzip, deflate");
-
-    public static HttpRequest UseGZip(this HttpRequest req, bool gzip = true)
     {
-        req.UseGZip = gzip;
+        return req.AddHeader(HttpKnownHeaderNames.AcceptEncoding, "gzip, deflate, br");
+    }
+
+    public static HttpRequest UseGZip(this HttpRequest req, bool gzip = true, CompressionLevel level = CompressionLevel.SmallestSize)
+    {
+        return req.Compression(gzip ? CompressionMethod.GZip : CompressionMethod.None, level);
+    }
+
+    public static HttpRequest Compression(this HttpRequest req, CompressionMethod method, CompressionLevel level = CompressionLevel.SmallestSize)
+    {
+        req.CompressionMethod = method;
+        req.CompressionLevel = level;
         return req;
     }
 

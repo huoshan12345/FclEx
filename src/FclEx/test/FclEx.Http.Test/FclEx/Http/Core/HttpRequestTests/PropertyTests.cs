@@ -54,17 +54,21 @@ public class PropertyTests
         Assert.Equal(value, res.ResponseString.Contains(CharSetTestCase.Keyword));
     }
 
+    public static IEnumerable<object[]> CompressionMethods = Enum.GetValues<CompressionMethod>().Select(m => new object[] { m });
+
     [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public async Task GZip_Test(bool value)
+    [MemberData(nameof(CompressionMethods))]
+    public async Task Compress_Test(CompressionMethod compression)
     {
+        if (compression is CompressionMethod.Brotli or CompressionMethod.Deflate)
+            return; // fastmock 不支持
+
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 100).ToDictionary(m => m.ToString(), m => random.NextString(5));
-        var res = await HttpRequest.Post("api/gzip")
+        var res = await HttpRequest.Post("api/compress")
             .AddData(expected!)
             .ReadHeadersTimeout(TimeSpan.FromSeconds(30))
-            .UseGZip(value)
+            .Compression(compression)
             .SendAsync(TestHttp)
             .ThrowIfError()
             .DonotCapture();
@@ -79,12 +83,20 @@ public class PropertyTests
         var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         JsonConvert.PopulateObject(headers, result);
 
+        var encoding = result.Get(HttpKnownHeaderNames.ContentEncoding);
         var length = result.Get(HttpKnownHeaderNames.ContentLength, m => int.Parse(m));
-        Assert.Equal(value ? 666 : 891, length);
 
-        var gzip = token["gzip"];
-        Assert.NotNull(gzip);
-        Assert.Equal(value, gzip.ToObject<bool>());
+        var (expectedEncoding, expectedLength) = compression switch
+        {
+            CompressionMethod.None => (null, 891),
+            CompressionMethod.GZip => ("gzip", 666),
+            CompressionMethod.Deflate => ("deflate", 891),
+            CompressionMethod.Brotli => ("br", 891),
+            _ => throw new ArgumentOutOfRangeException(nameof(compression), compression, null)
+        };
+
+        Assert.Equal(expectedEncoding, encoding);
+        Assert.Equal(expectedLength, length);
 
         var body = token["body"];
         Assert.NotNull(body);

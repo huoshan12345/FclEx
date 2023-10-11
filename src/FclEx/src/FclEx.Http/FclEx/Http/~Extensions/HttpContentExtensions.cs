@@ -21,13 +21,24 @@ public static class HttpContentExtensions
     public static BufferedContent ToBuffered(this HttpContent content, TimeSpan? timeout = null, int bufferSize = 256 * 1024, CancellationToken token = default)
         => new(content, timeout, bufferSize, token);
 
-    public static GZipContent ToGZip(this HttpContent content, TimeSpan? timeout, int bufferSize = 256 * 1024, CancellationToken token = default)
-        => new(content, timeout, bufferSize, token);
+    public static GZipContent ToGZip(this HttpContent content, CompressionLevel compressionLevel, TimeSpan? timeout, int bufferSize = 256 * 1024, CancellationToken token = default)
+        => new(content, compressionLevel, timeout, bufferSize, token);
 
-    public static HttpContent ToBuffered(this HttpContent content, bool useGZip, TimeSpan? timeout = null, int bufferSize = 256 * 1024, CancellationToken token = default)
+    public static BrotliContent ToBrotli(this HttpContent content, CompressionLevel compressionLevel, TimeSpan? timeout, int bufferSize = 256 * 1024, CancellationToken token = default)
+        => new(content, compressionLevel, timeout, bufferSize, token);
+
+    public static DeflateContent ToDeflate(this HttpContent content, CompressionLevel compressionLevel, TimeSpan? timeout, int bufferSize = 256 * 1024, CancellationToken token = default)
+        => new(content, compressionLevel, timeout, bufferSize, token);
+
+    public static HttpContent ToCompressed(this HttpContent content, CompressionMethod compressionMethod, CompressionLevel compressionLevel, TimeSpan? timeout = null, int bufferSize = 256 * 1024, CancellationToken token = default)
     {
-        return useGZip
-            ? content.ToGZip(timeout, bufferSize, token)
-            : content.ToBuffered(timeout, bufferSize, token);
+        return compressionMethod switch
+        {
+            CompressionMethod.None => content.ToBuffered(timeout, bufferSize, token),
+            CompressionMethod.GZip => content.ToGZip(compressionLevel, timeout, bufferSize, token),
+            CompressionMethod.Deflate => content.ToDeflate(compressionLevel, timeout, bufferSize, token),
+            CompressionMethod.Brotli => content.ToBrotli(compressionLevel, timeout, bufferSize, token),
+            _ => throw new ArgumentOutOfRangeException(nameof(compressionMethod), compressionMethod, null)
+        };
     }
 }

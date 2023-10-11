@@ -10,7 +10,10 @@
     }
 
     public static readonly Uri TestUri = new("https://www.fastmock.site/mock/b7b0bc89cb82e6d1ffc3dc5090d39407/fclex/");
-    public static readonly HttpClientService TestHttp = HttpClientService.Create(m => m.BaseAddress = TestUri);
+    public static readonly HttpClientService TestHttp = HttpClientService.Create(m =>
+    {
+        m.BaseAddress = TestUri;
+    });
 
     public static IWebProxy DefaultProxy { get; } = WebProxyHelper.Create(GetDefaultProxyUrl());
 

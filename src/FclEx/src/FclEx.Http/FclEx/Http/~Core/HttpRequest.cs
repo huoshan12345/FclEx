@@ -26,7 +26,8 @@ public partial class HttpRequest
     public string? CharSet { get; set; }
     public bool DetectCharSet { get; set; }
     public string? FallbackCharSet { get; set; }
-    public bool UseGZip { get; set; } = false; 
+    public CompressionMethod CompressionMethod { get; set; } = CompressionMethod.None;
+    public CompressionLevel CompressionLevel { get; set; } = CompressionLevel.Optimal;
     public HttpContentType ReadContentType { get; set; } = HttpContentType.String;
     public bool ReadContent { get; set; } = true;
 
@@ -34,7 +35,7 @@ public partial class HttpRequest
     public NameValueCollection QueryValues => _uriCreator.QueryValues;
     public NameValueCollection FormValues { get; } = HttpUtility.ParseQueryString(""); // don't use new NameValueCollection() here.
 
-    
+
     public string? Referrer
     {
         get => Headers.Get(HttpKnownHeaderNames.Referrer);
