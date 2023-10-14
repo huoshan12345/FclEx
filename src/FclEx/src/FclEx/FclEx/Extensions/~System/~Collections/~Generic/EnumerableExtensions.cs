@@ -25,7 +25,7 @@ public static partial class EnumerableExtensions
         return source ?? Enumerable.Empty<T>();
     }
 
-    public static string JoinWith<T>(this IEnumerable<T> enumerable, string separator)
+    public static string JoinWith<T>(this IEnumerable<T> enumerable, string? separator)
     {
         return string.Join(separator, enumerable);
     }

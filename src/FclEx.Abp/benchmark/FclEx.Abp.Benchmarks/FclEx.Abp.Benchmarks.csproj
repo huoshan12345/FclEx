@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.13.8" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.13.9" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.11" />
     <PackageReference Include="ServiceStack.OrmLite.PostgreSQL.Custom" Version="5.3.7" />
     <PackageReference Include="FclEx.Abp.OrmLite" Version="5.3.7" />
