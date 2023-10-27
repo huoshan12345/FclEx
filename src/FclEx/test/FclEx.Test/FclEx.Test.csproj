@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\FclEx.Xunit\FclEx.Xunit.csproj" />
     <ProjectReference Include="..\..\src\FclEx\FclEx.csproj" />
   </ItemGroup>
 
@@ -18,7 +19,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>
