@@ -24,7 +24,7 @@ public static class DapperHelper
 
     internal class AssemblyLocker
     {
-        public readonly object LockObj = new();
+        public object LockObj { get; } = new();
         public bool Initialized { get; set; } = false;
     }
     internal static readonly ConcurrentDictionary<Assembly, AssemblyLocker> Lockers = new();

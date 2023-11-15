@@ -62,7 +62,7 @@ public abstract class AbstractSqlAdapter<TSelf> : ISqlAdapter where TSelf : Abst
 
         var obj = Expression.New(ctor, paraOfName, paraOfValue);
         var result = Expression.Variable(type, "result");
-        var exps = new List<Expression>
+        var expList = new List<Expression>
         {
             Expression.Assign(result, obj)
         };
@@ -75,9 +75,9 @@ public abstract class AbstractSqlAdapter<TSelf> : ISqlAdapter where TSelf : Abst
         var assignExp = Expression.Assign(property, convert);
         var nullCheck = Expression.ReferenceNotEqual(paraOfType, Expression.Constant(null, typeof(string)));
         var ifThen = Expression.IfThen(nullCheck, assignExp);
-        exps.Add(ifThen);
-        exps.Add(result);
-        var final = Expression.Block(new[] { result }, exps);
+        expList.Add(ifThen);
+        expList.Add(result);
+        var final = Expression.Block(new[] { result }, expList);
 #if DEBUG
         final.Visit(e => Console.WriteLine(e.ToString()));
 #endif
