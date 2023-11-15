@@ -7,11 +7,11 @@ public readonly record struct QuotationMarks(char Prefix, char Suffix)
 
 public abstract class AbstractSqlAdapter<TSelf> : ISqlAdapter where TSelf : AbstractSqlAdapter<TSelf>, new()
 {
-    protected readonly Lazy<DbParameterCreater> _creater;
+    protected readonly Lazy<DbParameterCreator> _creator;
 
     protected AbstractSqlAdapter()
     {
-        _creater = new(BuildParameterCreator, true);
+        _creator = new(BuildParameterCreator, true);
     }
 
     public static readonly TSelf Instance = new();
@@ -38,12 +38,12 @@ public abstract class AbstractSqlAdapter<TSelf> : ISqlAdapter where TSelf : Abst
         return GetQuotedName(name);
     }
 
-    protected abstract DbParameterCreater BuildParameterCreator();
+    protected abstract DbParameterCreator BuildParameterCreator();
 
     public virtual DbParameter CreateParameter(string name, object? value, string? type = null)
     {
         value ??= DBNull.Value;
-        return _creater.Value.Invoke(name, value, type);
+        return _creator.Value.Invoke(name, value, type);
     }
 
     public virtual ValueTask<IAsyncDisposable> EnableIdentityInsertAsync<T>(string? schema, IDbCommand cmd)
@@ -51,7 +51,7 @@ public abstract class AbstractSqlAdapter<TSelf> : ISqlAdapter where TSelf : Abst
         return AsyncDisposable.EmptyValueTask;
     }
 
-    protected static DbParameterCreater BuildParameterCreater(string typeName, string dbTypePropName)
+    protected static DbParameterCreator BuildParameterCreator(string typeName, string dbTypePropName)
     {
         var type = Type.GetType(typeName, true)!;
         var ctor = type.GetRequiredConstructor(typeof(string), typeof(object));
@@ -69,7 +69,7 @@ public abstract class AbstractSqlAdapter<TSelf> : ISqlAdapter where TSelf : Abst
 
         var propOfDbType = type.GetRequiredProperty(dbTypePropName);
         var methodOfEnumParse = typeof(Enum).GetRequiredMethod(nameof(Enum.Parse), 0, typeof(Type), typeof(string), typeof(bool));
-        var enumParse = Expression.Call(null, methodOfEnumParse, new Expression[] { Expression.Constant(propOfDbType.PropertyType), paraOfType, Expression.Constant(true) });
+        var enumParse = Expression.Call(null, methodOfEnumParse, Expression.Constant(propOfDbType.PropertyType), paraOfType, Expression.Constant(true));
         var convert = Expression.Convert(enumParse, propOfDbType.PropertyType);
         var property = Expression.Property(result, propOfDbType);
         var assignExp = Expression.Assign(property, convert);
@@ -81,6 +81,6 @@ public abstract class AbstractSqlAdapter<TSelf> : ISqlAdapter where TSelf : Abst
 #if DEBUG
         final.Visit(e => Console.WriteLine(e.ToString()));
 #endif
-        return Expression.Lambda<DbParameterCreater>(final, paraOfName, paraOfValue, paraOfType).Compile();
+        return Expression.Lambda<DbParameterCreator>(final, paraOfName, paraOfValue, paraOfType).Compile();
     }
 }

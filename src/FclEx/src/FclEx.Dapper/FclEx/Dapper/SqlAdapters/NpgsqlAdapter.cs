@@ -9,8 +9,8 @@ public class NpgsqlAdapter : AbstractSqlAdapter<NpgsqlAdapter>
 
     protected override QuotationMarks QuotationMarks { get; } = new('"');
     
-    protected override DbParameterCreater BuildParameterCreator()
+    protected override DbParameterCreator BuildParameterCreator()
     {
-        return BuildParameterCreater("Npgsql.NpgsqlParameter, Npgsql", "NpgsqlDbType");
+        return BuildParameterCreator("Npgsql.NpgsqlParameter, Npgsql", "NpgsqlDbType");
     }
 }

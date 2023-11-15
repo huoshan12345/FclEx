@@ -20,4 +20,4 @@ global using FclEx.Dapper.SqlAdapters;
 global using FclEx.Extensions;
 global using FclEx.Helpers;
 global using FclEx.Utils;
-global using DbParameterCreater = System.Func<string, object?, string?, System.Data.Common.DbParameter>;
+global using DbParameterCreator = System.Func<string, object?, string?, System.Data.Common.DbParameter>;

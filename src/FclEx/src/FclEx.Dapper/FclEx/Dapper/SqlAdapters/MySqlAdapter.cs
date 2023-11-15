@@ -10,8 +10,8 @@ public class MySqlAdapter : AbstractSqlAdapter<MySqlAdapter>
 
     protected override QuotationMarks QuotationMarks { get; } = new('`');
 
-    protected override DbParameterCreater BuildParameterCreator()
+    protected override DbParameterCreator BuildParameterCreator()
     {
-        return BuildParameterCreater("MySql.Data.MySqlClient.MySqlParameter, MySql.Data", "MySqlDbType");
+        return BuildParameterCreator("MySql.Data.MySqlClient.MySqlParameter, MySql.Data", "MySqlDbType");
     }
 }

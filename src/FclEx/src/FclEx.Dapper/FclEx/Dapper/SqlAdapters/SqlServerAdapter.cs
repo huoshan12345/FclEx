@@ -9,9 +9,9 @@ public class SqlServerAdapter : AbstractSqlAdapter<SqlServerAdapter>
 
     protected override QuotationMarks QuotationMarks { get; } = new('[', ']');
 
-    protected override DbParameterCreater BuildParameterCreator()
+    protected override DbParameterCreator BuildParameterCreator()
     {
-        return BuildParameterCreater("Microsoft.Data.SqlClient.SqlParameter, Microsoft.Data.SqlClient", "SqlDbType");
+        return BuildParameterCreator("Microsoft.Data.SqlClient.SqlParameter, Microsoft.Data.SqlClient", "SqlDbType");
     }
 
     public override async ValueTask<IAsyncDisposable> EnableIdentityInsertAsync<T>(string? schema, IDbCommand cmd)
