@@ -9,7 +9,7 @@ public class SqlServerAdapter : AbstractSqlAdapter<SqlServerAdapter>
 
     protected override QuotationMarks QuotationMarks { get; } = new('[', ']');
 
-    protected override DbParameterCreater BuildParameterCreater()
+    protected override DbParameterCreater BuildParameterCreator()
     {
         return BuildParameterCreater("Microsoft.Data.SqlClient.SqlParameter, Microsoft.Data.SqlClient", "SqlDbType");
     }

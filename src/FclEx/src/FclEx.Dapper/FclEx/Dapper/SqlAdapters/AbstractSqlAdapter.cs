@@ -11,7 +11,7 @@ public abstract class AbstractSqlAdapter<TSelf> : ISqlAdapter where TSelf : Abst
 
     protected AbstractSqlAdapter()
     {
-        _creater = new(BuildParameterCreater, true);
+        _creater = new(BuildParameterCreator, true);
     }
 
     public static readonly TSelf Instance = new();
@@ -38,7 +38,7 @@ public abstract class AbstractSqlAdapter<TSelf> : ISqlAdapter where TSelf : Abst
         return GetQuotedName(name);
     }
 
-    protected abstract DbParameterCreater BuildParameterCreater();
+    protected abstract DbParameterCreater BuildParameterCreator();
 
     public virtual DbParameter CreateParameter(string name, object? value, string? type = null)
     {

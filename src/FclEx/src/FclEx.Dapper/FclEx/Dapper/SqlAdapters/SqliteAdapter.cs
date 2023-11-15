@@ -16,7 +16,7 @@ public class SqliteAdapter : AbstractSqlAdapter<SqliteAdapter>
 
     protected override QuotationMarks QuotationMarks { get; } = new('"');
 
-    protected override DbParameterCreater BuildParameterCreater()
+    protected override DbParameterCreater BuildParameterCreator()
     {
         return BuildParameterCreater("Microsoft.Data.Sqlite.SqliteParameter, Microsoft.Data.Sqlite", "SqliteType");
     }
