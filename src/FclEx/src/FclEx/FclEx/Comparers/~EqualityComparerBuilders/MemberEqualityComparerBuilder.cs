@@ -87,9 +87,9 @@ public class MemberEqualityComparerBuilder<T> : IEqualityComparerBuilder<T>
 
 public static class MemberEqualityComparerBuilderExtensions
 {
-    private static bool CanRead(this DataMemberInfo member, bool includeNonPblic)
+    private static bool CanRead(this DataMemberInfo member, bool includeNonPublic)
     {
-        return member.CanRead && (includeNonPblic || member.HasPublicGetter);
+        return member.CanRead && (includeNonPublic || member.HasPublicGetter);
     }
 
     private static MemberExpression ToExpression(this DataMemberInfo member, Expression expression)
@@ -105,7 +105,7 @@ public static class MemberEqualityComparerBuilderExtensions
     }
 
     public static MemberEqualityComparerBuilder<T> AddAllDataMembers<T>(this MemberEqualityComparerBuilder<T> builder,
-        bool includeNonPblic = false, params Expression<Func<T, object?>>[] excludeMemberSelectors)
+        bool includeNonPublic = false, params Expression<Func<T, object?>>[] excludeMemberSelectors)
     {
         var exclude = excludeMemberSelectors
             .Select(m => ExpressionHelper.GetDataMemberInfo(m))
@@ -113,7 +113,7 @@ public static class MemberEqualityComparerBuilderExtensions
 
         var paramExp = Expression.Parameter(typeof(T));
 
-        foreach (var member in typeof(T).GetDataMembers().Where(m => m.CanRead(includeNonPblic)))
+        foreach (var member in typeof(T).GetDataMembers().Where(m => m.CanRead(includeNonPublic)))
         {
             if (exclude.Contains(member))
                 continue;

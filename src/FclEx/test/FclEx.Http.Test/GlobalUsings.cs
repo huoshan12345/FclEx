@@ -11,6 +11,8 @@ global using FluentAssertions;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Options;
 global using Newtonsoft.Json;
+global using Polly.Timeout;
+global using xRetry;
 global using Xunit;
 global using Xunit.Abstractions;
 global using static GlobalConstants;

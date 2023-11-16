@@ -50,7 +50,7 @@ public class DataMemberInfoTests
     public void Equals_Test()
     {
         var count = 0;
-        foreach (var member in typeof(Model).EnumerateProperyOrField(Flags))
+        foreach (var member in typeof(Model).EnumeratePropertyOrField(Flags))
         {
             Assert.Equal(member.ToDataMemberInfo(), member.ToDataMemberInfo());
             _output.WriteLine(member.Name);

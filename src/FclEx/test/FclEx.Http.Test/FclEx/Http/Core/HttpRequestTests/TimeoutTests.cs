@@ -1,6 +1,4 @@
-﻿using xRetry;
-
-namespace FclEx.Http.Core.HttpRequestTests;
+﻿namespace FclEx.Http.Core.HttpRequestTests;
 
 public class TimeoutTests
 {

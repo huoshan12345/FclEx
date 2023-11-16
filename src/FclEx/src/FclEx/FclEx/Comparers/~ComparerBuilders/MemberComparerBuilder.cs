@@ -31,8 +31,6 @@ public class MemberComparerBuilder<T> : IComparerBuilder<T>
 
     public MemberComparerBuilder<T> OrderBy<TMember>(Func<T, TMember?> selector, bool desc = false, IComparer<TMember>? memberComparer = null)
     {
-        memberComparer ??= Comparer<TMember>.Default;
-
         IComparer comparer = memberComparer == null
             ? Comparer<TMember>.Default
             : UntypedComparer.Create(memberComparer);

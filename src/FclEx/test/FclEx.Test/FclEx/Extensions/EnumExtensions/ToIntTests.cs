@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using FclEx.Helpers;
 
 namespace FclEx.Extensions.EnumExtensions;
 

@@ -19,7 +19,7 @@ public class FileExtentionEqualityComparerTests
     [InlineData(null, null, true)]
     public void Equals_Test(string? x, string? y, bool equal)
     {
-        Assert.Equal(equal, FileExtentionEqualityComparer.Instance.Equals(x, y));
+        Assert.Equal(equal, FileExtensionEqualityComparer.Instance.Equals(x, y));
     }
 
 }

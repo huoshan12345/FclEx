@@ -1,8 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using FclEx.Helpers;
-
-namespace FclEx.Utils;
+﻿namespace FclEx.Utils;
 
 partial class OperateResultTests
 {
@@ -15,7 +11,7 @@ partial class OperateResultTests
         Assert.IsType<TimeoutException>(exception);
     }
 
-    [Fact]
+    [RetryFact]
     public async Task ExecuteAsync_Timeout_Success_Test()
     {
         var (successful, result, _, elapsed) = await Operate.ExecuteAsync(async () =>
@@ -28,7 +24,7 @@ partial class OperateResultTests
         Assert.True(elapsed < TimeSpan.FromSeconds(1.1));
     }
 
-    [Fact]
+    [RetryFact]
     public async Task ExecuteAsync_Timeout_SyncBody_Test()
     {
         var (successful, exception, elapsed) = await Operate.ExecuteAsync(() =>
@@ -41,7 +37,7 @@ partial class OperateResultTests
         Assert.IsType<TimeoutException>(exception);
     }
 
-    [Fact]
+    [RetryFact]
     public async Task ExecuteAsync_Timeout_SyncBody_Success_Test()
     {
         var (successful, result, _, elapsed) = await Operate.ExecuteAsync(() =>

@@ -110,7 +110,7 @@ public static partial class TypeExtensions
         return false;
     }
 
-    public static IEnumerable<MemberInfo> EnumerateProperyOrField(this Type type, BindingFlags bindingFlags)
+    public static IEnumerable<MemberInfo> EnumeratePropertyOrField(this Type type, BindingFlags bindingFlags)
     {
         return type.GetFields(bindingFlags).Cast<MemberInfo>()
             .Concat(type.GetProperties(bindingFlags));

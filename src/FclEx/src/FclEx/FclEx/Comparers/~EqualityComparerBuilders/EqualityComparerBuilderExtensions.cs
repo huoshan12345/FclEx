@@ -19,7 +19,7 @@ public static class EqualityComparerBuilderExtensions
 
     public static EqualityComparerBuilder<string> FileExtention<T>(this EqualityComparerBuilder<string> builder)
     {
-        return builder.Set(FileExtentionEqualityComparer.Instance);
+        return builder.Set(FileExtensionEqualityComparer.Instance);
     }
 
     public static MemberEqualityComparerBuilder<T> Member<T>(this EqualityComparerBuilder<T> _)

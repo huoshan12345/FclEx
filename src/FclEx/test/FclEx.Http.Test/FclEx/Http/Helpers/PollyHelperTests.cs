@@ -1,6 +1,4 @@
-﻿using Polly.Timeout;
-using Polly;
-using xRetry;
+﻿using Polly;
 
 namespace FclEx.Http.Helpers;
 
