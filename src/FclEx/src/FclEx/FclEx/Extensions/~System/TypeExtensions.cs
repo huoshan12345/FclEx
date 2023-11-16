@@ -160,7 +160,7 @@ public static partial class TypeExtensions
 
     public static MethodInfo GetRequiredMethod(this Type type, string name, int genericArgumentCount, params Type[] paramTypes)
     {
-        return type.GetMethods()
+        return type.GetMethods(MemberBindingFlags)
             .Where(m => m.Name == name)
             .Select(m => (Method: m, Params: m.GetParameters(), Args: m.GetGenericArguments()))
             .Where(x => x.Args.Length == genericArgumentCount
