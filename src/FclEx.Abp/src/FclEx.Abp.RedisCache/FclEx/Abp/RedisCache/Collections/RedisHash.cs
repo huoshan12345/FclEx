@@ -81,7 +81,7 @@ namespace FclEx.Abp.RedisCache.Collections
 
         public async Task<T> HGetAsync(string field)
         {
-            var str = await _provider.HGetAsync(Key, field).DonotCapture();
+            var str = await _provider.HGetAsync(Key, field).IgnoreSyncContext();
             return _stringSerializer.Deserialize<T>(str)!;
         }
 
@@ -93,21 +93,21 @@ namespace FclEx.Abp.RedisCache.Collections
 
         public async Task<Dictionary<string, T>> HGetAllAsync()
         {
-            var vals = await _provider.HGetAllAsync(Key).DonotCapture();
+            var vals = await _provider.HGetAllAsync(Key).IgnoreSyncContext();
             var dic = vals.ToDictionary(m => m.Key, m => _stringSerializer.Deserialize<T>(m.Value));
             return dic!;
         }
 
         public async Task<List<T>> HValsAsync()
         {
-            var vals = await _provider.HValsAsync(Key).DonotCapture();
+            var vals = await _provider.HValsAsync(Key).IgnoreSyncContext();
             var list = vals.Select(m => _stringSerializer.Deserialize<T>(m)).ToList();
             return list!;
         }
 
         public async Task<Dictionary<string, T>> HmGetAsync(IList<string> fields)
         {
-            var vals = await _provider.HMGetAsync(Key, fields).DonotCapture();
+            var vals = await _provider.HMGetAsync(Key, fields).IgnoreSyncContext();
             var dic = vals.ToDictionary(m => m.Key, m => _stringSerializer.Deserialize<T>(m.Value));
             return dic!;
         }

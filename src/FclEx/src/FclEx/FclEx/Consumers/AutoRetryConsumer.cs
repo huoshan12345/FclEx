@@ -40,7 +40,7 @@ public sealed class AutoRetryConsumer<T> : AbstractConsumer<AutoRetryConsumer<T>
         {
             var delay = _retryDelay(item.ErrorTimes);
             await TaskHelper.Delay(delay);
-            await ConsumingHandler.InvokeAsync(this, item.Item).DonotCapture();
+            await ConsumingHandler.InvokeAsync(this, item.Item).IgnoreSyncContext();
             Counter.IncreConsume();
         }
         catch (Exception ex)

@@ -20,7 +20,7 @@ partial class OperateResultTests
     {
         var (successful, result, _, elapsed) = await Operate.ExecuteAsync(async () =>
         {
-            await TaskHelper.Delay(1).DonotCapture();
+            await TaskHelper.Delay(1).IgnoreSyncContext();
             return 1;
         }, TimeSpan.FromSeconds(10));
         Assert.True(successful);

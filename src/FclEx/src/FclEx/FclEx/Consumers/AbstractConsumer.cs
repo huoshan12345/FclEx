@@ -74,7 +74,7 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>,
         try
         {
             while (!IsCompleteNoLock && !_cts.IsCancellationRequested)
-                await ProcessAction().DonotCapture();
+                await ProcessAction().IgnoreSyncContext();
         }
         catch (Exception e)
         {

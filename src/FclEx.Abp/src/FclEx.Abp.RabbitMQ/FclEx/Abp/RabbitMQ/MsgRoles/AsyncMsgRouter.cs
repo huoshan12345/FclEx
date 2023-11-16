@@ -55,8 +55,8 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles
 
         protected virtual async Task<OperateResult> RouteAsync(BasicDeliverEventArgs args, TInput input)
         {
-            var output = await ConvertAsync(args, input).DonotCapture();
-            return await RouteAsync(args, input, output).DonotCapture();
+            var output = await ConvertAsync(args, input).IgnoreSyncContext();
+            return await RouteAsync(args, input, output).IgnoreSyncContext();
         }
 
         protected virtual Task<OperateResult> RouteAsync(BasicDeliverEventArgs args, TInput input, TOutput output)
@@ -111,7 +111,7 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles
         protected override async Task<OperateResult> RouteAsync(BasicDeliverEventArgs args, TInput input)
         {
             var props = args.BasicProperties;
-            var outputs = await ConvertAsync(args, input).DonotCapture();
+            var outputs = await ConvertAsync(args, input).IgnoreSyncContext();
             Logger.LogTrace($"Outputed {outputs.Count} items");
 
             var results = new List<OperateResult>();
@@ -119,7 +119,7 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles
             {
                 await RouteAsync(args, input, output)
                     .Do(r => true, r => results.Add(r))
-                    .DonotCapture();
+                    .IgnoreSyncContext();
             }
             return results.Merge();
         }

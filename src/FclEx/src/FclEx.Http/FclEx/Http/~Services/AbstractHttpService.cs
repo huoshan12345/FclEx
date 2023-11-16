@@ -24,7 +24,7 @@ public abstract class AbstractHttpService : IHttpService
         var res = new HttpResponse(request) { StartTime = DateTimeOffset.UtcNow };
         try
         {
-            await ExecuteAsyncInternal(request, res, token).DonotCapture();
+            await ExecuteAsyncInternal(request, res, token).IgnoreSyncContext();
         }
         catch (Exception e)
         {

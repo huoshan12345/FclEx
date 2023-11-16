@@ -144,7 +144,7 @@ public abstract class UserClient : IUserClient, IDisposable
                     if (Session.IsLogining())
                         Session.Offline();
                 })
-                .DonotCapture();
+                .IgnoreSyncContext();
             return res.Elapsed(time.GetElapsedTime());
         }
         catch (Exception ex)
@@ -186,11 +186,11 @@ public abstract class UserClient : IUserClient, IDisposable
             var result = await FakeLoginInternal(t)
                 .Ok(o => Logger.LogTrace("Fake login successfully"))
                 .Error(ex => Logger.LogWarning(ex, "Failed to fake login : " + ex.Message))
-                .DonotCapture();
+                .IgnoreSyncContext();
 
             if (result.Error && loginIfFail)
             {
-                result = await DoLoginInternal(t).DonotCapture();
+                result = await DoLoginInternal(t).IgnoreSyncContext();
             }
             return result;
         }, token);

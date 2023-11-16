@@ -41,7 +41,7 @@ partial class DbConnectionExtensions
         var trans = await cons.Select(m => m.BeginTransactionAsync(level)).WhenAll();
         try
         {
-            await action(trans).DonotCapture();
+            await action(trans).IgnoreSyncContext();
             foreach (var tran in trans)
                 await tran.CommitAsync();
         }

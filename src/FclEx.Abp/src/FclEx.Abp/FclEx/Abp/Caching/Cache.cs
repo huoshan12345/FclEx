@@ -130,7 +130,7 @@ namespace FclEx.Abp.Caching
 
         public async Task<IDictionary<string, CacheValue<T>>> GetAllAsync(IEnumerable<string> cacheKeys)
         {
-            var dic = await _provider.GetAllAsync<T>(cacheKeys.Select(GetKey)).DonotCapture();
+            var dic = await _provider.GetAllAsync<T>(cacheKeys.Select(GetKey)).IgnoreSyncContext();
             return dic.ToDictionary(m => TrimKeyPrefix(m.Key), m => m.Value);
         }
     }

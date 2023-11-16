@@ -21,13 +21,13 @@ public interface IHttpAction<T> : IAbstractAction<T>
         try
         {
             req = BuildRequest();
-            var res = await HttpService.SendAsync(req, token).DonotCapture();
+            var res = await HttpService.SendAsync(req, token).IgnoreSyncContext();
             if (res.HasError)
             {
                 Dump(Logger, req, HttpService);
                 return (res.Exception!, res.Elapsed);
             }
-            return await HandleResponseAsync(res).DonotCapture();
+            return await HandleResponseAsync(res).IgnoreSyncContext();
         }
         catch (Exception ex)
         {

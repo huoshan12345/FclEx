@@ -13,7 +13,7 @@ public readonly struct NextAction<T, TNext> : IAction<TNext>
 
     public async Task<OperateResult<TNext>> ExecuteAsync(CancellationToken token = default)
     {
-        var result = await _action.ExecuteAsync(token).DonotCapture();
+        var result = await _action.ExecuteAsync(token).IgnoreSyncContext();
         if (!result.Success)
             return result.ToExplicit<TNext>();
 
@@ -21,7 +21,7 @@ public readonly struct NextAction<T, TNext> : IAction<TNext>
         if (nextActor == null)
             return Constant.NullNextError;
 
-        var nextResult = await nextActor.ExecuteAsync(token).DonotCapture();
+        var nextResult = await nextActor.ExecuteAsync(token).IgnoreSyncContext();
         if (!nextResult.Success)
             return nextResult;
 
@@ -47,7 +47,7 @@ public readonly struct NextAction<T, TNext> : IAction<TNext>
 
 //    public async Task<OperateResult<T>> ExecuteAsync(CancellationToken token = default)
 //    {
-//        var result = await _action.ExecuteAsync(token).DonotCapture();
+//        var result = await _action.ExecuteAsync(token).IgnoreSyncContext();
 //        if (!result.Success)
 //            return result;
 
@@ -59,7 +59,7 @@ public readonly struct NextAction<T, TNext> : IAction<TNext>
 //                : result;
 //        }
 
-//        var nextResult = await nextActor.ExecuteAsync(token).DonotCapture();
+//        var nextResult = await nextActor.ExecuteAsync(token).IgnoreSyncContext();
 //        if (!nextResult.Success)
 //            return _prevWhenNextError
 //                ? result

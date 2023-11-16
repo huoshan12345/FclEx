@@ -13,13 +13,13 @@ public readonly struct NextResultAction<T, TNext> : IAction<TNext>
 
     public async Task<OperateResult<TNext>> ExecuteAsync(CancellationToken token = default)
     {
-        var result = await _action.ExecuteAsync(token).DonotCapture();
+        var result = await _action.ExecuteAsync(token).IgnoreSyncContext();
 
         var nextActor = _next(result);
         if (nextActor == null)
             return Constant.NullNextError;
 
-        var nextResult = await nextActor.ExecuteAsync(token).DonotCapture();
+        var nextResult = await nextActor.ExecuteAsync(token).IgnoreSyncContext();
         return nextResult.Elapsed(result.Elapsed + nextResult.Elapsed);
     }
 }
@@ -39,7 +39,7 @@ public readonly struct NextResultAction<T> : IAction<T>
 
     public async Task<OperateResult<T>> ExecuteAsync(CancellationToken token = default)
     {
-        var result = await _action.ExecuteAsync(token).DonotCapture();
+        var result = await _action.ExecuteAsync(token).IgnoreSyncContext();
 
         var nextActor = _next(result);
         if (nextActor == null)
@@ -49,7 +49,7 @@ public readonly struct NextResultAction<T> : IAction<T>
                 : result;
         }
 
-        var nextResult = await nextActor.ExecuteAsync(token).DonotCapture();
+        var nextResult = await nextActor.ExecuteAsync(token).IgnoreSyncContext();
         return nextResult.Elapsed(result.Elapsed + nextResult.Elapsed);
     }
 }

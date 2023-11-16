@@ -77,7 +77,7 @@ public class SendAsyncTests
         var res = await HttpRequest.Get(url)
             .ReadHeadersTimeout(TimeSpan.FromSeconds(10))
             .SendAsync(http)
-            .DonotCapture();
+            .IgnoreSyncContext();
         res.ThrowIfError();
     }
 
@@ -88,7 +88,7 @@ public class SendAsyncTests
         var res = await HttpRequest.Get(url)
             .ReadHeadersTimeout(TimeSpan.FromSeconds(5))
             .SendAsync()
-            .DonotCapture();
+            .IgnoreSyncContext();
         res.ThrowIfError();
     }
 
@@ -102,7 +102,7 @@ public class SendAsyncTests
             .ReadHeadersTimeout(TimeSpan.FromSeconds(5))
             .SendAsync(TestHttp)
             .ThrowIfError()
-            .DonotCapture();
+            .IgnoreSyncContext();
         Assert.False(res.HasError);
         var body = res.ResponseString.ToJToken()["body"];
         Assert.NotNull(body);
@@ -118,7 +118,7 @@ public class SendAsyncTests
             .JsonContent(list)
             .SendAsync(TestHttp)
             .ThrowIfError()
-            .DonotCapture();
+            .IgnoreSyncContext();
         Assert.False(res.HasError);
         var body = res.ResponseString.ToJToken()["body"];
         Assert.NotNull(body);

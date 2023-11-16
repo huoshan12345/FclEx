@@ -39,7 +39,7 @@ public class Initializer
             if (_isInitialized)
                 return;
 
-            await action().DonotCapture();
+            await action().IgnoreSyncContext();
             _isInitialized = true;
         }
 

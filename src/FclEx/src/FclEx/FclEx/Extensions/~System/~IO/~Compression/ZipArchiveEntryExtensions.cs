@@ -18,7 +18,7 @@ public static class ZipArchiveEntryExtensions
         await using (var destination = new FileStream(destinationFileName, mode, FileAccess.Write, FileShare.None, 4096, false))
         {
             await using var stream = source.Open();
-            await stream.CopyToAsync(destination).DonotCapture();
+            await stream.CopyToAsync(destination).IgnoreSyncContext();
         }
         File.SetLastWriteTime(destinationFileName, source.LastWriteTime.DateTime);
     }

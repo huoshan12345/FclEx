@@ -18,7 +18,7 @@ public readonly struct UnionAction<T, TNext> : IAction<(T, TNext)>
 
     public async Task<OperateResult<(T, TNext)>> ExecuteAsync(CancellationToken token = default)
     {
-        var result = await _action.ExecuteAsync(token).DonotCapture();
+        var result = await _action.ExecuteAsync(token).IgnoreSyncContext();
         if (!result.Success)
             return result.ToExplicit<(T, TNext)>();
 
@@ -31,7 +31,7 @@ public readonly struct UnionAction<T, TNext> : IAction<(T, TNext)>
                 : ((item, default!), result.Elapsed);
         }
 
-        var nextResult = await nextActor.ExecuteAsync(token).DonotCapture();
+        var nextResult = await nextActor.ExecuteAsync(token).IgnoreSyncContext();
         if (!nextResult.Success)
             return _prevWhenNextError
                 ? ((item, default!), result.Elapsed)

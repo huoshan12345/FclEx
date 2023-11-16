@@ -18,7 +18,7 @@ public class PropertyTests
 
         var res = await request.SendAsync(http)
             .ThrowIfError()
-            .DonotCapture();
+            .IgnoreSyncContext();
 
         Assert.Equal(value, res.ResponseString.Contains(CharSetTestCase.Keyword));
     }
@@ -35,7 +35,7 @@ public class PropertyTests
 
         var res = await request.SendAsync(http)
             .ThrowIfError()
-            .DonotCapture();
+            .IgnoreSyncContext();
         Assert.Equal(value, res.ResponseString.Contains(CharSetTestCase.Keyword));
     }
 
@@ -50,7 +50,7 @@ public class PropertyTests
 
         var res = await req.SendAsync(http)
             .ThrowIfError()
-            .DonotCapture();
+            .IgnoreSyncContext();
         Assert.Equal(value, res.ResponseString.Contains(CharSetTestCase.Keyword));
     }
 
@@ -71,7 +71,7 @@ public class PropertyTests
             .Compression(compression)
             .SendAsync(TestHttp)
             .ThrowIfError()
-            .DonotCapture();
+            .IgnoreSyncContext();
 
         Assert.False(res.HasError);
 

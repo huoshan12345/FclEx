@@ -11,7 +11,7 @@ public class CommonAction
 
     public static CommonAction<T> Create<T>(Func<CancellationToken, Task<T>> func, bool excuteSafely = true)
     {
-        return new(async t => Operate.CreateSuccess(await func(t).DonotCapture()), excuteSafely);
+        return new(async t => Operate.CreateSuccess(await func(t).IgnoreSyncContext()), excuteSafely);
     }
 
     public static CommonAction<T> Create<T>(Func<CancellationToken, OperateResult<T>> func, bool excuteSafely = true)
@@ -37,7 +37,7 @@ public class CommonAction
     {
         return new(async t =>
         {
-            await func(t).DonotCapture();
+            await func(t).IgnoreSyncContext();
             return Operate.CreateSuccess(default(Unit));
         }, excuteSafely);
     }
@@ -49,7 +49,7 @@ public class CommonAction
 
     public static VoidCommonAction Create(Func<CancellationToken, Task<OperateResult>> func, bool excuteSafely = true)
     {
-        return new(async t => await func(t).DonotCapture(), excuteSafely);
+        return new(async t => await func(t).IgnoreSyncContext(), excuteSafely);
     }
 }
 

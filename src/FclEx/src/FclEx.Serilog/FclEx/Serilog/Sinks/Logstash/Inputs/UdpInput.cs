@@ -19,7 +19,7 @@ internal class UdpInput : ILogstashInput
         foreach (var item in list)
         {
             var bytes = (item + _newLine).ToBytes();
-            await client.SendAsync(bytes, bytes.Length).DonotCapture();
+            await client.SendAsync(bytes, bytes.Length).IgnoreSyncContext();
         }
     }
 }

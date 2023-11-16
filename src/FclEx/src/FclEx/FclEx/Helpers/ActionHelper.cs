@@ -67,7 +67,7 @@ public static class ActionHelper
         {
             try
             {
-                await func().DonotCapture();
+                await func().IgnoreSyncContext();
                 return;
             }
             catch (Exception ex)
@@ -96,7 +96,7 @@ public static class ActionHelper
         {
             try
             {
-                return await func().DonotCapture();
+                return await func().IgnoreSyncContext();
             }
             catch (Exception ex)
             {

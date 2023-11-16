@@ -12,12 +12,12 @@ public static partial class TaskExtensions
         return Task.WhenAll(tasks);
     }
 
-    public static ConfiguredTaskAwaitable DonotCapture(this Task task)
+    public static ConfiguredTaskAwaitable IgnoreSyncContext(this Task task)
     {
         return task.ConfigureAwait(false);
     }
 
-    public static ConfiguredTaskAwaitable<T> DonotCapture<T>(this Task<T> task)
+    public static ConfiguredTaskAwaitable<T> IgnoreSyncContext<T>(this Task<T> task)
     {
         return task.ConfigureAwait(false);
     }

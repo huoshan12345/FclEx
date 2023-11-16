@@ -14,7 +14,7 @@ public static class SemaphoreSlimExtensions
     {
         for (var i = 0; i < count; ++i)
         {
-            var flag = await semaphore.WaitAsync(timeout, cancellationToken).DonotCapture();
+            var flag = await semaphore.WaitAsync(timeout, cancellationToken).IgnoreSyncContext();
             if (!flag) return false; // timeout
         }
         return true;

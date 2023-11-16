@@ -17,7 +17,7 @@ internal class TcpInput : ILogstashInput
     public async Task SendAsync(IReadOnlyList<string> list)
     {
         using var client = new TcpClient();
-        await client.ConnectAsync(_uri.Host, _uri.Port).DonotCapture();
+        await client.ConnectAsync(_uri.Host, _uri.Port).IgnoreSyncContext();
         using var writer = new StreamWriter(client.GetStream());
         foreach (var item in list)
         {
@@ -25,6 +25,6 @@ internal class TcpInput : ILogstashInput
             writer.Write(_newLine);
         }
         //writer.Write(_newLine);
-        await writer.FlushAsync().DonotCapture();
+        await writer.FlushAsync().IgnoreSyncContext();
     }
 }

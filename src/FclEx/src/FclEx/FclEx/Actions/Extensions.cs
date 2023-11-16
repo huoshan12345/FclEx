@@ -66,7 +66,7 @@ public static partial class Extensions
             using var cts = t.WithTimeout(timeout > TimeSpan.Zero ? timeout : null);
             while (!cts.IsCancellationRequested)
             {
-                var r = await actor.ExecuteAsync(t).DonotCapture();
+                var r = await actor.ExecuteAsync(t).IgnoreSyncContext();
                 if (!r.Success)
                     return r;
 

@@ -22,7 +22,7 @@ public interface IAbstractAction<T> : IAction<T>
                     ? CommonAction.Create(t => HandleCancellationAsync(r.Exception), true)
                     : CommonAction.Create(t => HandleErrorAsync(r.Exception), true));
 
-        var result = await future.ExecuteAsync(token).DonotCapture();
+        var result = await future.ExecuteAsync(token).IgnoreSyncContext();
         result = result.Elapsed(time.GetElapsedTime());
 
         if (Logger.IsEnabled(LogLevel.Trace))

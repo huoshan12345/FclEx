@@ -26,7 +26,7 @@ public class HttpResponseExtensionsTests
             .ReadHeadersTimeout(TimeSpan.FromSeconds(5))
             .SendAsync(TestHttp)
             .ReadJsonAs<Dictionary<string, string>>("body")
-            .DonotCapture();
+            .IgnoreSyncContext();
 
         Assert.True(actual.Success, actual.Exception?.ToString());
         Assert.Equal(expected, actual.Value);
@@ -43,7 +43,7 @@ public class HttpResponseExtensionsTests
             .ReadHeadersTimeout(TimeSpan.FromSeconds(5))
             .SendAsync(TestHttp)
             .ReadJsonAsRequired<Dictionary<string, string>>("body")
-            .DonotCapture();
+            .IgnoreSyncContext();
 
         Assert.Equal(expected, actual);
     }

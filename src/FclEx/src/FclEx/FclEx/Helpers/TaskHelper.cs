@@ -56,7 +56,7 @@ public static class TaskHelper
             return;
         try
         {
-            await Task.Delay(span, token).DonotCapture();
+            await Task.Delay(span, token).IgnoreSyncContext();
         }
         catch (TaskCanceledException) { }
     }

@@ -21,7 +21,7 @@ public abstract class AbstractKeyValueService : IKeyValueService
 
     public virtual async Task<T?> GetValue<T>(string objectId, string key, T? defaultValue = default)
     {
-        var v = await GetValue(objectId, key).DonotCapture();
+        var v = await GetValue(objectId, key).IgnoreSyncContext();
         if (v == null) return defaultValue;
         return _stringSerializer.Deserialize<T>(v);
     }
@@ -29,7 +29,7 @@ public abstract class AbstractKeyValueService : IKeyValueService
     public virtual async Task<T> AddOrUpdate<T>(string objectId, string key, T value)
     {
         var obj = value == null ? null : _stringSerializer.Serialize(value);
-        await AddOrUpdate(objectId, key, obj).DonotCapture();
+        await AddOrUpdate(objectId, key, obj).IgnoreSyncContext();
         return value;
     }
 

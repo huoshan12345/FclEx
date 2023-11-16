@@ -6,7 +6,7 @@ public static class HttpContentExtensions
     {
         var len = content.Headers.ContentLength ?? 0;
         var ms = new MemoryStream((int)len);
-        await using (var stream = await content.ReadAsStreamAsync(token).DonotCapture())
+        await using (var stream = await content.ReadAsStreamAsync(token).IgnoreSyncContext())
             await stream.CopyToAsync(ms, bufferSize, readBufferTimeout, token);
         ms.Seek(0, SeekOrigin.Begin);
         return ms;

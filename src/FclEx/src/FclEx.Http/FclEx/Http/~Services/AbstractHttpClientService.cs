@@ -236,7 +236,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             var req = request;
             while (true)
             {
-                var res = await SendAsync(context, req, cts.Token).DonotCapture();
+                var res = await SendAsync(context, req, cts.Token).IgnoreSyncContext();
                 responseMessages.Add(res);
                 response.RedirectUris.Add(res.RequestMessage?.RequestUri!);
                 ReadCookies(res, response);
@@ -255,7 +255,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
                 responseMessage.EnsureSuccess();
 
             if (request.ReadContent)
-                await ReadContentAsync(responseMessage, response, cts.Token).DonotCapture();
+                await ReadContentAsync(responseMessage, response, cts.Token).IgnoreSyncContext();
         }
         finally
         {

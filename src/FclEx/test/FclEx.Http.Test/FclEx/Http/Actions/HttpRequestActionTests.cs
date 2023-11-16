@@ -13,7 +13,7 @@ public class HttpRequestActionTests
             .NextRequest(m => HttpRequest.Post(path).JsonContent(m.Select(x => x.ToString()).ToDictionary(x => x, x => x + x)), TestHttp)
             .ReadJson<Dictionary<string, string>>("body")
             .ExecuteAsync()
-            .DonotCapture();
+            .IgnoreSyncContext();
 
         Assert.True(successful, ex?.Message);
 

@@ -12,7 +12,7 @@ public static class Extensions
 {
     public static async Task<T?> GetAsync<T>(this IEntityService service, Expression<Func<T, bool>> filter)
     {
-        var list = await service.GetListAsync(filter, 1).DonotCapture();
+        var list = await service.GetListAsync(filter, 1).IgnoreSyncContext();
         return list.FirstOrDefault();
     }
 

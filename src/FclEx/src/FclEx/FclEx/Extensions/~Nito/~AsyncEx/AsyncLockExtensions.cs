@@ -58,7 +58,7 @@ public static class AsyncLockExtensions
             {
                 if (condition())
                 {
-                    await action().DonotCapture();
+                    await action().IgnoreSyncContext();
                 }
             }
         }

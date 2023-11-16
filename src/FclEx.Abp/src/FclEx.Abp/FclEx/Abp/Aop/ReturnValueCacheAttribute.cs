@@ -68,7 +68,7 @@ public class ReturnValueCacheAttribute : AbstractInterceptorAttribute
             || returnType == typeof(Task)
             || returnType == typeof(ValueTask))
         {
-            await context.Invoke(next).DonotCapture();
+            await context.Invoke(next).IgnoreSyncContext();
             return;
         }
 

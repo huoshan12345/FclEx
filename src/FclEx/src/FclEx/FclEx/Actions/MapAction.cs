@@ -13,7 +13,7 @@ public readonly struct MapAction<T, TDest> : IAction<TDest>
 
     public async Task<OperateResult<TDest>> ExecuteAsync(CancellationToken token = default)
     {
-        var result = await _action.ExecuteAsync(token).DonotCapture();
+        var result = await _action.ExecuteAsync(token).IgnoreSyncContext();
         return result.Map(_map);
     }
 }

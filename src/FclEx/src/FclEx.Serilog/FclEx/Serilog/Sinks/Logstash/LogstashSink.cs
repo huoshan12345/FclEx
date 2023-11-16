@@ -16,7 +16,7 @@ public class LogstashSink : IBatchedLogEventSink
     public async Task EmitBatchAsync(IEnumerable<LogEvent> events)
     {
         var strs = events.Select(m => m.ToString(_formatter)).ToList();
-        await _input.SendAsync(strs).DonotCapture();
+        await _input.SendAsync(strs).IgnoreSyncContext();
     }
 
     public Task OnEmptyBatchAsync()

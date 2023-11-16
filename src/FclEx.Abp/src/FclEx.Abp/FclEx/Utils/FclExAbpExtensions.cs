@@ -35,6 +35,6 @@ public static class FclExAbpExtensions
 
     public static async Task<OperateResult<T>> Unwrap<T>(this Task<OperateResult<CacheValue<T>>> result)
     {
-        return (await result.DonotCapture()).Unwrap();
+        return (await result.IgnoreSyncContext()).Unwrap();
     }
 }

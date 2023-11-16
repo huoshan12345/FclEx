@@ -97,11 +97,11 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles
             TInput? obj = default;
             try
             {
-                obj = await DeserializeAsync(args).DonotCapture();
+                obj = await DeserializeAsync(args).IgnoreSyncContext();
             }
             catch (Exception ex)
             {
-                await OnDeserializeDiscardAsync(args, ex).DonotCapture();
+                await OnDeserializeDiscardAsync(args, ex).IgnoreSyncContext();
                 Channel!.BasicAck(deliveryTag: args.DeliveryTag, multiple: false);
                 return;
             }
@@ -112,7 +112,7 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles
                 var result = await ConsumeInternalAsync(args, obj)
                     .Ok(t => Logger.LogTrace("Consume successfully"))
                     .Error(e => exception = e)
-                    .DonotCapture();
+                    .IgnoreSyncContext();
 
                 if (result.Success)
                     return;
@@ -127,12 +127,12 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles
                 Logger.LogTrace($"Consume finished, it takes {watch.GetElapsedTime().TotalSeconds:f3} seconds");
                 disposable.Dispose();
 
-                await TaskHelper.Delay(ProcessInterval).DonotCapture();
+                await TaskHelper.Delay(ProcessInterval).IgnoreSyncContext();
                 Channel!.BasicAck(deliveryTag: args.DeliveryTag, multiple: false);
             }
 
             props.IncreErrorTimes();
-            await OnConsumeErrorAsync(args, obj, exception!).DonotCapture();
+            await OnConsumeErrorAsync(args, obj, exception!).IgnoreSyncContext();
         }
 
         protected virtual async Task OnConsumeErrorAsync(BasicDeliverEventArgs args, TInput input, Exception exception)
@@ -144,11 +144,11 @@ namespace FclEx.Abp.RabbitMQ.MsgRoles
             {
                 if (errorTimes <= MaxRetryTimes)
                 {
-                    await OnConsumeRetryAsync(args, input, exception).DonotCapture();
+                    await OnConsumeRetryAsync(args, input, exception).IgnoreSyncContext();
                 }
                 else
                 {
-                    await OnConsumeDiscardAsync(args, input, exception).DonotCapture();
+                    await OnConsumeDiscardAsync(args, input, exception).IgnoreSyncContext();
                 }
             }
             catch (Exception ex)

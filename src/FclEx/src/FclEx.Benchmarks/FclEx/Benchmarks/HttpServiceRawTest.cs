@@ -54,16 +54,16 @@ namespace FclEx.Benchmarks
                         Console.WriteLine($"[{name}]: Finished {i} Rounds");
                     }
 
-                    var resList = await reqs.Select(m => service.SendAsync(m)).WhenAll().DonotCapture();
+                    var resList = await reqs.Select(m => service.SendAsync(m)).WhenAll().IgnoreSyncContext();
                     resList.ForEach(m => m.ThrowIfError());
 
                     //foreach (var req in reqs)
                     //{
-                    //    var res = await service.ExecuteAsync(req).DonotCapture();
+                    //    var res = await service.ExecuteAsync(req).IgnoreSyncContext();
                     //    res.ThrowIfError();
                     //}
                 }
-            }).DonotCapture();
+            }).IgnoreSyncContext();
             var after = GC.GetTotalMemory(true);
             Console.WriteLine($"[{name}]: " +
                               $"Total Round: {rounds}, " +
