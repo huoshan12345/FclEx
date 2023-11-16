@@ -4,8 +4,8 @@ public static class StringBuilderHelper
 {
     public static string Build(Action<StringBuilder> action)
     {
-        using var disposble = CreatePooled();
-        var builder = disposble.Value;
+        using var disposable = CreatePooled();
+        var builder = disposable.Value;
         action(builder);
         return builder.ToString();
     }
