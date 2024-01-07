@@ -20,7 +20,7 @@ public class GlobalDbContext : DbContextWithSchema
     public static readonly string DatabaseName = typeof(GlobalDbContext).Assembly.GetName().Name!.Replace(".", "-").ToLower();
     public static readonly string PostgresqlConnectionString = $"Server=localhost;Database={DatabaseName};Port=5432;User Id=postgres;Password=111111";
     public static readonly string SqlServerConnectionString = $@"Data Source=localhost\sqlexpress;Database={DatabaseName};User Id=sa;Password=a.o7a@bj;Integrated Security=sspi;Encrypt=false";
-    public static readonly string MySqlConnectionString = $@"Server=localhost;Database={DatabaseName};Port=3306;User Id=root;Password=111111;SslMode=None";
+    public static readonly string MySqlConnectionString = $@"Server=localhost;Database={DatabaseName};Port=3306;User Id=root;Password=111111;SslMode=Required";
     public static readonly string SqliteConnectionString = $@"Data Source=./{DatabaseName}.sqlite;";
 
     public DatabaseType DatabaseType { get; }

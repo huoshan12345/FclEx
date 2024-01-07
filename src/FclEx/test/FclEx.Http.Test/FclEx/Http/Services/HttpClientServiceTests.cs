@@ -13,7 +13,7 @@ public partial class HttpClientServiceTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("http://localhost:1080")]
-    public void Constructor_Test(string proxy)
+    public void Constructor_Test(string? proxy)
     {
         var http = HttpClientService.Create(proxy);
         Assert.Equal(WebProxyHelper.Create(proxy).CastTo<WebProxy>().Address, http.Proxy.CastTo<WebProxy>()!.Address);

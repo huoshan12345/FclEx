@@ -17,11 +17,7 @@ public static class OSPlatformTypeExtensions
             OSPlatformType.Windows => OSPlatform.Windows,
             OSPlatformType.Linux => OSPlatform.Linux,
             OSPlatformType.OSX => OSPlatform.OSX,
-#if NETSTANDARD2_0
-            OSPlatformType.FreeBSD => OSPlatform.Create("FREEBSD"),
-#else
             OSPlatformType.FreeBSD => OSPlatform.FreeBSD,
-#endif
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
     }

@@ -1,31 +1,5 @@
 ﻿namespace Microsoft.Extensions.Logging;
 
-public readonly record struct LoggerProperty(string Key, object? Value)
-{
-    public static implicit operator LoggerProperty(KeyValuePair<string, object?> pair)
-    {
-        return new(pair.Key, pair.Value);
-    }
-
-    public static implicit operator LoggerProperty((string Key, object? Value) pair)
-    {
-        return new(pair.Key, pair.Value);
-    }
-}
-
-public readonly record struct LazyLoggerProperty(string Key, Func<object?> Value)
-{
-    public static implicit operator LazyLoggerProperty(KeyValuePair<string, Func<object?>> pair)
-    {
-        return new(pair.Key, pair.Value);
-    }
-
-    public static implicit operator LazyLoggerProperty((string Key, Func<object?> Value) pair)
-    {
-        return new(pair.Key, pair.Value);
-    }
-}
-
 public class PropertiesLogger : ILogger
 {
     private readonly ILogger _logger;

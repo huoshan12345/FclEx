@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Threading.Tasks;
 using FclEx.Abp.RabbitMQ.Serializers;
-using FclEx.Extensions;
 using FclEx.Helpers;
-using FclEx.Utils;
 using Microsoft.Extensions.Logging;
-using MoreLinq;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 

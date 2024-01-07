@@ -8,7 +8,7 @@ public class GlobalFixture : IAsyncLifetime
 
     public static readonly DatabaseType[] DatabaseTypes = LocalTestHelper.IsGithubAction
         ? new[] { DatabaseType.Npgsql, DatabaseType.Sqlite }
-        : Enum.GetValues<DatabaseType>();
+        : new[] { DatabaseType.Npgsql, DatabaseType.Sqlite, DatabaseType.MySqlConnector, DatabaseType.SqlServer };
 
     // InitializeAsync is called immediately after the class has been created, before it is used.
     // We use this method to initialize database only once before all tests.
@@ -26,8 +26,10 @@ public class GlobalFixture : IAsyncLifetime
 
                     if (databaseType is DatabaseType.MySqlConnector && schema.IsValid())
                     {
+#pragma warning disable EF1002 // Risk of vulnerability to SQL injection.
                         await context.Database.ExecuteSqlRawAsync($"DROP DATABASE IF EXISTS `{schema}`;");
                         await context.Database.ExecuteSqlRawAsync($"CREATE DATABASE `{schema}`;");
+#pragma warning restore EF1002 // Risk of vulnerability to SQL injection.
                     }
                     else
                     {

@@ -7,11 +7,7 @@ public static class HttpClientExtensions
     public static readonly OnHttpFailedCode ThrowOnFailedCode = (response, content) =>
     {
         var error = content.Truncate(100);
-#if NETSTANDARD2_0
-        throw new HttpRequestException(error, null);
-#else
         throw new HttpRequestException(error, null, response.StatusCode);
-#endif
     };
 
     public static readonly OnHttpFailedCode IgnoreOnFailedCode = (response, content) => { };
