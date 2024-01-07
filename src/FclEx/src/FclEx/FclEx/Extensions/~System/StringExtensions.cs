@@ -42,7 +42,7 @@ partial class StringExtensions
         if (str.IsNullOrEmpty() || maxLength >= str.Length)
             return str ?? string.Empty;
 
-        return str.Substring(0, maxLength) + "...";
+        return str[..maxLength] + "...";
     }
 
     private static readonly Regex RegexOfXmlProlog = new(@"^<\?xml.+\?>", RegexOptions.Compiled);
