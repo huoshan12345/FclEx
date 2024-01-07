@@ -75,6 +75,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{4FBBC7F5
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 		..\.github\workflows\build.yml = ..\.github\workflows\build.yml
+		..\.github\dependabot.yml = ..\.github\dependabot.yml
 		..\build\incre_ver.ps1 = ..\build\incre_ver.ps1
 		NuGet.Config = NuGet.Config
 		..\build\pack.ps1 = ..\build\pack.ps1
@@ -98,7 +99,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmark", "benchmark", "{
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Abp.EfCore", "FclEx.Abp\src\FclEx.Abp.EfCore\FclEx.Abp.EfCore.csproj", "{1B8FC570-FB7C-4BD8-813A-A108F1CFB934}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FclEx.Abp.EfCore.Tests", "FclEx.Abp\test\FclEx.Abp.EfCore.Tests\FclEx.Abp.EfCore.Tests.csproj", "{8D7851E1-E977-40C3-B16E-61A665CE1810}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Abp.EfCore.Tests", "FclEx.Abp\test\FclEx.Abp.EfCore.Tests\FclEx.Abp.EfCore.Tests.csproj", "{8D7851E1-E977-40C3-B16E-61A665CE1810}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

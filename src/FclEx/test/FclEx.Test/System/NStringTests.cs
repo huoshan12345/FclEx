@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using FclEx;
-
-namespace System;
+﻿namespace System;
 
 public class NStringTests
 {
@@ -31,7 +24,7 @@ public class NStringTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("test")]
-    public void ToJson_Test(string str)
+    public void ToJson_Test(string? str)
     {
         NString nstr = str;
         Assert.Equal(nstr.Value.ToJson(), nstr.ToJson());
@@ -41,7 +34,7 @@ public class NStringTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("test")]
-    public void FromJson_Test(string str)
+    public void FromJson_Test(string? str)
     {
         var json = str.ToJson();
         var token = json.ToJToken();

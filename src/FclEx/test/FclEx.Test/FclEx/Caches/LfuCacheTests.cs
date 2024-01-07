@@ -1,10 +1,6 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using MoreLinq;
 
 namespace FclEx.Caches;
-
-using MoreLinq;
 
 public class LfuCacheTests
 {
@@ -35,7 +31,7 @@ public class LfuCacheTests
                 Assert.True(cache.Count == capacity);
                 Assert.True(expectedCachedItem.Length == capacity + 1);
                 var expectedRemoveItems = expectedCachedItem.Where(m => m.Key != num)
-                    .MinBy(m => m.Value).Select(m => m.Key).ToArray();
+                    .Minima(m => m.Value).Select(m => m.Key).ToArray();
 
                 var removedKey = keys.Except(newKeys).Single();
                 Assert.Contains(removedKey, expectedRemoveItems);

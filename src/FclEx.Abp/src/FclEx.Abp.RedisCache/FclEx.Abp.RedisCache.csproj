@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <PackageReference Include="EasyCaching.CSRedis" Version="1.9.1" />
-    <PackageReference Include="EasyCaching.Serialization.MessagePack" Version="1.9.1" />
+    <PackageReference Include="EasyCaching.CSRedis" Version="1.9.2" />
+    <PackageReference Include="EasyCaching.Serialization.MessagePack" Version="1.9.2" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace FclEx.Abp.EfCore;
 
@@ -13,7 +12,7 @@ public class ModelBuilderExtensionsTests : IAssemblyFixture<GlobalFixture>
         await context.InsertAsync(e);
 
         var con = context.Database.GetDbConnection();
-        // use double quoted to prevent PostgreSQL from folding into lowercase
+        // use double-quoted to prevent PostgreSQL from folding into lowercase
         var count = await con.ExecuteScalarAsync<int>("select count(1) from \"HasPostfix\" where \"Id\" = @Id", new { e.Id });
         Assert.Equal(1, count);
     }
@@ -26,7 +25,7 @@ public class ModelBuilderExtensionsTests : IAssemblyFixture<GlobalFixture>
         await context.InsertAsync(e);
 
         var con = context.Database.GetDbConnection();
-        // use double quoted to prevent PostgreSQL from folding into lowercase
+        // use double-quoted to prevent PostgreSQL from folding into lowercase
         var count = await con.ExecuteScalarAsync<int>("select count(1) from \"has_table_name\" where \"Id\" = @Id", new { e.Id });
         Assert.Equal(1, count);
     }
@@ -35,8 +34,6 @@ public class ModelBuilderExtensionsTests : IAssemblyFixture<GlobalFixture>
     public async Task IEntity_Id_AutoIncrement_Test()
     {
         var context = new GlobalDbContext();
-        await context.EntityWithIdAndIndex.ExecuteDeleteAsync();
-
         var e = new EntityWithIdAndIndex();
         await context.InsertAsync(e);
         Assert.NotEqual(0, e.Id);

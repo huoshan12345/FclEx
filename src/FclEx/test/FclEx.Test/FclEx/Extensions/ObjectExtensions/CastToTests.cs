@@ -8,7 +8,7 @@ public class CastToTests
     [Theory]
     [InlineData(5)]
     [InlineData(null)]
-    public void ObjectToIntCastTest(object obj)
+    public void ObjectToIntCastTest(object? obj)
     {
         var actual = obj.CastTo<int>();
         var expected = obj == null ? default : (int)obj;

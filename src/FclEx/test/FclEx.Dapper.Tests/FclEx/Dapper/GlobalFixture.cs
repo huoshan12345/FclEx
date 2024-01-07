@@ -26,8 +26,8 @@ public class GlobalFixture : IAsyncLifetime
 
                     if (databaseType is DatabaseType.MySqlConnector && schema.IsValid())
                     {
-                        await context.Database.ExecuteSqlRawAsync($"DROP DATABASE IF EXISTS `{schema}`;");
-                        await context.Database.ExecuteSqlRawAsync($"CREATE DATABASE `{schema}`;");
+                        await context.Database.ExecuteSqlAsync($"DROP DATABASE IF EXISTS `{schema}`;");
+                        await context.Database.ExecuteSqlAsync($"CREATE DATABASE `{schema}`;");
                     }
                     else
                     {

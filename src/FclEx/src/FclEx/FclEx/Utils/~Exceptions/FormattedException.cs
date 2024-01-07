@@ -24,6 +24,9 @@ public class FormattedException : Exception
     }
     public override int GetHashCode() => _exception.GetHashCode();
     public override Exception GetBaseException() => _exception.GetBaseException();
+#if NET8_0_OR_GREATER
+    [Obsolete("This API supports obsolete formatter-based serialization. It should not be called or extended by application code.", DiagnosticId = "SYSLIB0051", UrlFormat = "https://aka.ms/dotnet-warnings/{0}")]
+#endif
     public override void GetObjectData(SerializationInfo info, StreamingContext context) => _exception.GetObjectData(info, context);
     public override bool Equals(object? obj) => _exception.Equals(obj);
     public override string ToString() => _exception.ToFormattedString();
