@@ -6,7 +6,7 @@ namespace FclEx
     public static class StringExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string JoinWith(this IEnumerable<string> strs, string separator = "")
-            => string.Join(separator, strs);
+        public static string JoinWith(this IEnumerable<string> enumerable, string separator = "")
+            => string.Join(separator, enumerable);
     }
 }

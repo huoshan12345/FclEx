@@ -6,7 +6,7 @@ namespace FclEx;
 [DebuggerStepThrough]
 public static partial class Check
 {
-    public static T NotNull<T>([NotNull, NoEnumeration] T? value, [CallerArgumentExpression("value")] string? parameterName = null)
+    public static T NotNull<T>([NotNull, NoEnumeration] T? value, [CallerArgumentExpression(nameof(value))] string? parameterName = null)
     {
         if (value is null)
         {
@@ -16,7 +16,7 @@ public static partial class Check
         return value;
     }
 
-    public static string NotEmpty([NotNull] string? value, [CallerArgumentExpression("value")] string? parameterName = null)
+    public static string NotEmpty([NotNull] string? value, [CallerArgumentExpression(nameof(value))] string? parameterName = null)
     {
         var name = parameterName ?? nameof(value);
         if (value is null)
@@ -32,7 +32,7 @@ public static partial class Check
         return value;
     }
 
-    public static void HasNoEmptyElements([NotNull] IEnumerable<string?>? value, [CallerArgumentExpression("value")] string? parameterName = null)
+    public static void HasNoEmptyElements([NotNull] IEnumerable<string?>? value, [CallerArgumentExpression(nameof(value))] string? parameterName = null)
     {
         NotNull(value, parameterName);
 
@@ -43,7 +43,7 @@ public static partial class Check
         }
     }
 
-    public static T LessThan<T>(T value, T max, [CallerArgumentExpression("value")] string? parameterName = null) where T : IComparable<T>
+    public static T LessThan<T>(T value, T max, [CallerArgumentExpression(nameof(value))] string? parameterName = null) where T : IComparable<T>
     {
         if (Comparer<T>.Default.Compare(value, max) >= 0)
         {
@@ -54,7 +54,7 @@ public static partial class Check
         return value;
     }
 
-    public static T NotLessThan<T>(T value, T min, [CallerArgumentExpression("value")] string? parameterName = null) where T : IComparable<T>
+    public static T NotLessThan<T>(T value, T min, [CallerArgumentExpression(nameof(value))] string? parameterName = null) where T : IComparable<T>
     {
         if (Comparer<T>.Default.Compare(value, min) < 0)
         {
@@ -65,7 +65,7 @@ public static partial class Check
         return value;
     }
 
-    public static T GreaterThan<T>(T value, T min, [CallerArgumentExpression("value")] string? parameterName = null) where T : IComparable<T>
+    public static T GreaterThan<T>(T value, T min, [CallerArgumentExpression(nameof(value))] string? parameterName = null) where T : IComparable<T>
     {
         if (Comparer<T>.Default.Compare(value, min) <= 0)
         {
@@ -76,7 +76,7 @@ public static partial class Check
         return value;
     }
 
-    public static T NotGreaterThan<T>(T value, T max, [CallerArgumentExpression("value")] string? parameterName = null) where T : IComparable<T>
+    public static T NotGreaterThan<T>(T value, T max, [CallerArgumentExpression(nameof(value))] string? parameterName = null) where T : IComparable<T>
     {
         if (Comparer<T>.Default.Compare(value, max) > 0)
         {
@@ -87,7 +87,7 @@ public static partial class Check
         return value;
     }
 
-    public static T EqualTo<T>(T value, T expected, [CallerArgumentExpression("value")] string? parameterName = null)
+    public static T EqualTo<T>(T value, T expected, [CallerArgumentExpression(nameof(value))] string? parameterName = null)
     {
         if (Equals(value, expected) == false)
         {
@@ -98,7 +98,7 @@ public static partial class Check
         return value;
     }
 
-    public static T NotEqualTo<T>(T value, T expected, [CallerArgumentExpression("value")] string? parameterName = null)
+    public static T NotEqualTo<T>(T value, T expected, [CallerArgumentExpression(nameof(value))] string? parameterName = null)
     {
         if (Equals(value, expected))
         {
@@ -109,17 +109,17 @@ public static partial class Check
         return value;
     }
 
-    public static T NotNegative<T>(T value, [CallerArgumentExpression("value")] string? parameterName = null) where T : IComparable<T>
+    public static T NotNegative<T>(T value, [CallerArgumentExpression(nameof(value))] string? parameterName = null) where T : IComparable<T>
     {
         return NotLessThan(value, default!, parameterName);
     }
 
-    public static T Positive<T>(T value, [CallerArgumentExpression("value")] string? parameterName = null) where T : IComparable<T>
+    public static T Positive<T>(T value, [CallerArgumentExpression(nameof(value))] string? parameterName = null) where T : IComparable<T>
     {
         return GreaterThan(value, default!, parameterName);
     }
 
-    public static void NotEmpty<T>([NotNull] IReadOnlyCollection<T>? value, [CallerArgumentExpression("value")] string? parameterName = null)
+    public static void NotEmpty<T>([NotNull] IReadOnlyCollection<T>? value, [CallerArgumentExpression(nameof(value))] string? parameterName = null)
     {
         NotNull(value, parameterName);
         if (value.Count == 0)
@@ -129,7 +129,7 @@ public static partial class Check
         }
     }
 
-    public static void NotEmpty<T>([NotNull] IEnumerable<T>? value, [CallerArgumentExpression("value")] string? parameterName = null)
+    public static void NotEmpty<T>([NotNull] IEnumerable<T>? value, [CallerArgumentExpression(nameof(value))] string? parameterName = null)
     {
         NotNull(value, parameterName);
         if (value.AnyExt() == false)
@@ -139,7 +139,7 @@ public static partial class Check
         }
     }
 
-    public static void HasNoNulls<T>([NotNull] IEnumerable<T>? value, [CallerArgumentExpression("value")] string? parameterName = null)
+    public static void HasNoNulls<T>([NotNull] IEnumerable<T>? value, [CallerArgumentExpression(nameof(value))] string? parameterName = null)
     {
         NotNull(value, parameterName);
 

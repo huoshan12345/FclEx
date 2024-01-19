@@ -49,7 +49,7 @@
       <_Compile Include="$(SourceDir)**\*$(DefaultLanguageSourceExtension)" />
       <Compile Include="@(_Compile)" />
     </ItemGroup>
-    <Message Importance="High" Text="[$(TargetFramework)] @(Compile-&gt;Count()) code after code generation." />
+    <Message Importance="High" Text="[$(TargetFramework)] @(Compile-&gt;Count()) code files after code generation." />
     <Error Condition="@(_Compile-&gt;Count()) == 0" Text="[$(TargetFramework)] No file was generated!" />
   </Target>
 
