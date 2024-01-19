@@ -1,22 +1,23 @@
 ﻿namespace FclEx.Http.Services;
 
+[SuppressMessage("ReSharper", "ReturnTypeCanBeEnumerable.Global")]
 partial class HttpClientServiceTests
 {
     public static IWebProxy[] ProxyList { get; } =
-    {
-        GlobalConstants.DefaultProxy
-    };
+    [
+        DefaultProxy
+    ];
 
     public static string[] Urls { get; } =
-    {
+    [
         "https://www.google.com/",
         "https://www.instagram.com/",
-        "https://www.baidu.com/",
-    };
+        "https://www.baidu.com/"
+    ];
 
     public static IEnumerable<object[]> Cases { get; } = ProxyList.SelectMany(m => Urls, (x, y) => new object[] { x, y });
 
-    [Theory]
+    [RetryTheory]
     [MemberData(nameof(Cases))]
     public async Task SendAsync_WithProxy_Success(IWebProxy proxy, string url)
     {

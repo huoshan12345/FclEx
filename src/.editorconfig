@@ -5,3 +5,6 @@ dotnet_diagnostic.IDE0079.severity = none
 
 # CS8321: Local function is declared but never used
 dotnet_diagnostic.CS8321.severity = none
+
+# CS8321: Local function is declared but never used
+dotnet_diagnostic.xUnit1042.severity = none
