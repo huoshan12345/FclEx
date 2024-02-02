@@ -8,3 +8,9 @@ dotnet_diagnostic.CS8321.severity = none
 
 # CS8321: Local function is declared but never used
 dotnet_diagnostic.xUnit1042.severity = none
+
+# CA2254: Template should be a static expression
+dotnet_diagnostic.CA2254.severity = none
+
+# CS1574: XML comment has cref attribute that could not be resolved
+dotnet_diagnostic.CS1574.severity = none

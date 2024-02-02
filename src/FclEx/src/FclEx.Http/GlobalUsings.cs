@@ -26,6 +26,8 @@ global using FclEx.Utils;
 global using FclEx.Web;
 global using Microsoft.Collections.Extensions;
 global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.DependencyInjection.Extensions;
+global using Microsoft.Extensions.Http;
 global using Microsoft.Extensions.Logging;
 global using MimeTypes.Core;
 global using Newtonsoft.Json;

@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection.Extensions;
-
-namespace FclEx.Web;
+﻿namespace FclEx.Web;
 
 public static class Extensions
 {

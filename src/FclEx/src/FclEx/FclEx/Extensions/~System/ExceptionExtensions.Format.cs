@@ -1,18 +1,18 @@
 ﻿namespace FclEx.Extensions;
 
 // NOTE: StackTraceLines will be from the outermost stack trace frame to the innermost, which is opposite from Exception.StackTrace.
-public readonly record struct ExceptionIofo(Type Type, string Message, IReadOnlyList<string> StackTraceLines, int Index, int ParentIndex);
+public readonly record struct ExceptionInfo(Type Type, string Message, IReadOnlyList<string> StackTraceLines, int Index, int ParentIndex);
 
-public readonly record struct ExceptionIofos(IReadOnlyList<ExceptionIofo> Infos, bool MultiBranched);
+public readonly record struct ExceptionInfos(IReadOnlyList<ExceptionInfo> Infos, bool MultiBranched);
 
 partial class ExceptionExtensions
 {
     // NOTE: Infos will be from the outermost exception to the innermost.
-    public static ExceptionIofos GetInfos(this Exception exception)
+    public static ExceptionInfos GetInfos(this Exception exception)
     {
         ArgumentNullException.ThrowIfNull(exception);
 
-        var list = new List<ExceptionIofo>();
+        var list = new List<ExceptionInfo>();
         var queue = new Queue<(Exception, int ParentIndex)>();
         queue.Enqueue((exception, -1));
         var index = 0;
@@ -57,7 +57,7 @@ partial class ExceptionExtensions
         return new(list, multiBranched);
     }
 
-    internal static ExceptionIofo GetInfo(this Exception exception, ref int index, int parentIndex)
+    internal static ExceptionInfo GetInfo(this Exception exception, ref int index, int parentIndex)
     {
         var lines = exception.StackTrace is not { } trace
             ? Array.Empty<string>()
@@ -68,7 +68,7 @@ partial class ExceptionExtensions
                 .Reverse() // reverse frames to be more readable (from the outermost to the innermost).
                 .ToArray();
 
-        var info = new ExceptionIofo(exception.GetType(), exception.Message, lines, index++, parentIndex);
+        var info = new ExceptionInfo(exception.GetType(), exception.Message, lines, index++, parentIndex);
         return info;
     }
 

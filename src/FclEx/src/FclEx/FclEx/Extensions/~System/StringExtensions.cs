@@ -6,6 +6,9 @@ partial class StringExtensions
     public static bool IsNullOrEmpty([NotNullWhen(false)] this string? str) => string.IsNullOrEmpty(str);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsNonEmpty([NotNullWhen(true)] this string? str) => string.IsNullOrEmpty(str) == false;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? str) => string.IsNullOrWhiteSpace(str);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

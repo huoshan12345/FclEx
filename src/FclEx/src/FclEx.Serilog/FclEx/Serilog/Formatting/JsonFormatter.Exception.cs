@@ -7,7 +7,7 @@ partial class JsonFormatter
 {
     protected static readonly Regex _regexOfParas = new(@"\([^(]*\)(?=\s|$)", RegexOptions.Compiled);
 
-    protected virtual void WriteExceptionInfo(string logEventMessage, ExceptionIofo info, TextWriter output, bool writeIndexes)
+    protected virtual void WriteExceptionInfo(string logEventMessage, Extensions.ExceptionInfo info, TextWriter output, bool writeIndexes)
     {
         var (type, message, lines, index, parentIndex) = info;
 

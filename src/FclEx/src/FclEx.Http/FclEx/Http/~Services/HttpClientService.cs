@@ -38,23 +38,24 @@ public class HttpClientService : AbstractHttpClientService
 
     protected static readonly ConcurrentDictionary<HttpClientOptions, IServiceProvider> Providers = new(HttpClientOptionsEqualityComparer.Instance);
 
-    protected static readonly string[] _canceledErrors =
-    {
+    protected static readonly string[] CanceledErrors =
+    [
         new TaskCanceledException(Task.CompletedTask).Message,
-        new OperationCanceledException(CancellationToken.None).Message,
-    };
+        new OperationCanceledException(CancellationToken.None).Message
+    ];
 
     protected internal static IServiceProvider GetProvider(HttpClientOptions options)
     {
         return Providers.GetOrAdd(options, m =>
         {
             var policy = Policy<HttpResponseMessage>
-                .Handle<OperationCanceledException>(m => m.InnerException is null && _canceledErrors.Contains(m.Message))
+                .Handle<OperationCanceledException>(m => m.InnerException is null && CanceledErrors.Contains(m.Message))
                 .WaitAndRetryAsync(options.RetryCount, options.SleepDurationProvider);
             return new ServiceCollection()
                 .AddSingleton<IAsyncPolicy<HttpResponseMessage>>(policy)
                 .AddHttpClientWithPolly(string.Empty, options)
                 .Services
+                .RemoveAll<IHttpMessageHandlerBuilderFilter>()
                 .BuildServiceProvider();
         });
     }
