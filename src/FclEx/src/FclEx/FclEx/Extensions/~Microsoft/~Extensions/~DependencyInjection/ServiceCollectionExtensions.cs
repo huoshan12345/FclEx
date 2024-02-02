@@ -1,7 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static class ServiceCollectionExtensions
 {
@@ -124,13 +121,13 @@ public static class ServiceCollectionExtensions
         }
         return services;
 
-        static MatchResult GetMatchResult(ParameterInfo[] paras, IReadOnlyList<Type> argTyps)
+        static MatchResult GetMatchResult(ParameterInfo[] paras, IReadOnlyList<Type> argTypes)
         {
             var matchItems = new List<MatchItem>(paras.Length);
-            for (int i = 0, j = 0; i < paras.Length && j < argTyps.Count; i++)
+            for (int i = 0, j = 0; i < paras.Length && j < argTypes.Count; i++)
             {
                 var para = paras[i];
-                if (para.ParameterType.IsAssignableFrom(argTyps[j]))
+                if (para.ParameterType.IsAssignableFrom(argTypes[j]))
                 {
                     matchItems.Add(new MatchItem(i, j));
                     ++j;
@@ -191,6 +188,13 @@ public static class ServiceCollectionExtensions
         where TImplementation : class, TService
     {
         return services.Add<TService, TImplementation>(ServiceLifetime.Singleton, args);
+    }
+
+    public static IServiceCollection Remove(this IServiceCollection services, Func<ServiceDescriptor, bool> condition)
+    {
+        var toRemove = services.Where(condition).ToArray();
+        toRemove.ForEach(m => services.Remove(m));
+        return services;
     }
 
     private readonly struct MatchResult

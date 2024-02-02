@@ -24,5 +24,7 @@ global using System.Threading.Tasks;
 global using FclEx.Extensions;
 global using FclEx.Helpers;
 global using FclEx.Utils;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.DependencyInjection.Extensions;
 global using Microsoft.Extensions.Logging;
 global using Microsoft.Extensions.Logging.Abstractions;

@@ -10,6 +10,7 @@ global using FclEx.Http;
 global using FclEx.Utils;
 global using FluentAssertions;
 global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Http;
 global using Microsoft.Extensions.Options;
 global using Newtonsoft.Json;
 global using Polly.Timeout;

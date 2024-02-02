@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static class ServiceProviderExtensions
 {

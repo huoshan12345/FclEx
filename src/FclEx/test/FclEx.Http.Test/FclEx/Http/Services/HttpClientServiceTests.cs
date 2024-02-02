@@ -82,18 +82,26 @@ public partial class HttpClientServiceTests
         }
     }
 
-    private static IHttpClientFactory GetFactory(HttpClientOptions options)
-    {
-        var provider = HttpClientService.GetProvider(options);
-        return provider.GetRequiredService<IHttpClientFactory>();
-    }
-
     [Fact]
     public void GetFactory_Default_Test()
     {
         var fac1 = GetFactory(HttpClientOptions.Default);
         var fac2 = GetFactory(HttpClientOptions.Default);
         Assert.Equal(fac1, fac2, ReferenceEqualityComparer.Instance);
+    }
+
+    [Fact]
+    public void LoggingHttpMessageHandlerBuilderFilter_Remove_Test()
+    {
+        var provider = HttpClientService.GetProvider(HttpClientOptions.Default);
+        var filter = provider.GetService<IHttpMessageHandlerBuilderFilter>();
+        Assert.True(filter is null || filter.GetType().FullName != "Microsoft.Extensions.Http.LoggingHttpMessageHandlerBuilderFilter");
+    }
+
+    private static IHttpClientFactory GetFactory(HttpClientOptions options)
+    {
+        var provider = HttpClientService.GetProvider(options);
+        return provider.GetRequiredService<IHttpClientFactory>();
     }
 
     private static void CheckProxy(HttpClient client, IWebProxy? proxy)
@@ -106,6 +114,8 @@ public partial class HttpClientServiceTests
         var webProxy = handler.Proxy.CastTo<IWebProxy>();
         Assert.Equal<IWebProxy>(proxy, webProxy, IWebProxyEqualityComparer.Instance);
     }
+
+
 
     [Fact]
     public void GetFactory_Proxy_Test()

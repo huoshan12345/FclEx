@@ -51,11 +51,13 @@ public class HttpClientService : AbstractHttpClientService
             var policy = Policy<HttpResponseMessage>
                 .Handle<OperationCanceledException>(m => m.InnerException is null && CanceledErrors.Contains(m.Message))
                 .WaitAndRetryAsync(options.RetryCount, options.SleepDurationProvider);
+
             return new ServiceCollection()
                 .AddSingleton<IAsyncPolicy<HttpResponseMessage>>(policy)
                 .AddHttpClientWithPolly(string.Empty, options)
                 .Services
-                .RemoveAll<IHttpMessageHandlerBuilderFilter>()
+                .Remove(m => m.ServiceType == typeof(IHttpMessageHandlerBuilderFilter)
+                             && m.ImplementationType?.FullName == "Microsoft.Extensions.Http.LoggingHttpMessageHandlerBuilderFilter")
                 .BuildServiceProvider();
         });
     }

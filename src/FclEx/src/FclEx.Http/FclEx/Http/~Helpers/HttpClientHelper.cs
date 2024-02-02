@@ -1,5 +1,4 @@
-﻿using System.Net.Sockets;
-using static FclEx.Http.IPVersionPolicy;
+﻿using static FclEx.Http.IPVersionPolicy;
 
 namespace FclEx.Http;
 
@@ -20,6 +19,10 @@ public static class HttpClientHelper
             UseProxy = options.Proxy is not null,
             Proxy = options.Proxy,
             EnableMultipleHttp2Connections = options.EnableMultipleHttp2Connections,
+            SslOptions = new()
+            {
+                RemoteCertificateValidationCallback = (sender, certificate, chain, errors) => true,
+            },
             ConnectCallback = async (context, token) =>
             {
                 var host = context.DnsEndPoint.Host;
