@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Text;
-
-namespace Xunit;
+﻿namespace Xunit;
 
 [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Global")]
 partial class AssertExt

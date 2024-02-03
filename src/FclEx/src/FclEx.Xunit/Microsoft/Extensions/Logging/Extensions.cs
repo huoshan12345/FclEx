@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using FclEx;
+﻿using FclEx;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
 

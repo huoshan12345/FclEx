@@ -21,7 +21,7 @@ public class EmailLogSettings
     public bool IsBodyHtml { get; set; } = false;
     public LogLevel LogLevel { get; set; } = LogLevel.Error;
     public int BatchPostingLimit { get; set; } = 2;
-    public int PeriodSenconds { get; set; } = 10;
+    public int PeriodSeconds { get; set; } = 10;
     public string OutputTemplate { get; set; } = FclExSerilogConstants.DefaultOutputTemplate;
 }
 
@@ -58,7 +58,7 @@ public static class EmailLogSettingsExtensions
             outputTemplate: settings.OutputTemplate,
             restrictedToMinimumLevel: LevelConvert.ToSerilogLevel(settings.LogLevel),
             batchPostingLimit: settings.BatchPostingLimit,
-            period: TimeSpan.FromSeconds(settings.PeriodSenconds)
+            period: TimeSpan.FromSeconds(settings.PeriodSeconds)
         );
     }
 

@@ -23,7 +23,7 @@ namespace FclEx.Serilog.Sinks
             var logger = new LoggerConfiguration()
                 .Enrich.FromLogContext()
                 .MinimumLevel.Verbose()
-                .WriteTo.Logstash("tcp://localhost:5000")
+                .WriteTo.Logstash("tcp://localhost:5050")
                 .Enrich.With(new LogEnricher(nameof(LogstashSinkTests)))
                 .CreateLogger()
                 .ForContext<LogstashSinkTests>();

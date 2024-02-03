@@ -2,13 +2,12 @@
 
 public class LocalOnlyFactAttribute : FactAttribute
 {
-    public OSPlatformType? LocalOS { get; set; } = OSPlatformType.Windows;
-    public Type? TypeToCheckDebug { get; set; }
+    public OSPlatformType[]? AllowedOSPlatforms { get; set; } = [OSPlatformType.Windows];
 
     private string? _skip;
     public override string? Skip
     {
-        get => LocalTestHelper.GetSkipReason(_skip, LocalOS, TypeToCheckDebug?.Assembly);
+        get => TestHelper.GetSkipReason(new(_skip, BuildTypeOption.Debug, AllowedOSPlatforms, TestHelper.EnvKeyOfGithubAction, null, EnvVarCheckOption.NotExist));
         set => _skip = value;
     }
 }

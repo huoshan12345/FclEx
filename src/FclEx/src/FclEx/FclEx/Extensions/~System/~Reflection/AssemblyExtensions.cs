@@ -8,7 +8,7 @@ public enum BuildType
 
 public static class AssemblyExtensions
 {
-    private static (BuildType BuildType, bool IsJitOptimized) GetInfo(this Assembly assembly)
+    public static (BuildType BuildType, bool IsJitOptimized) GetBuildInfo(this Assembly assembly)
     {
         BuildType buildType;
         bool isJitOptimized;
@@ -39,12 +39,12 @@ public static class AssemblyExtensions
 
     public static bool IsDebug(this Assembly assembly)
     {
-        return assembly.GetInfo().BuildType == BuildType.Debug;
+        return assembly.GetBuildInfo().BuildType == BuildType.Debug;
     }
 
     public static bool IsRelease(this Assembly assembly)
     {
-        return assembly.GetInfo().BuildType == BuildType.Release;
+        return assembly.GetBuildInfo().BuildType == BuildType.Release;
     }
 
     public static Type GetRequiredType(this Assembly assembly, string name, bool ignoreCase = false)

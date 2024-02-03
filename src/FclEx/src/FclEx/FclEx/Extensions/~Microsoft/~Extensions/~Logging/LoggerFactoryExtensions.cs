@@ -2,7 +2,7 @@
 
 public static class LoggerFactoryExtensions
 {
-    private static readonly FieldInfo FieldOfFilterOptions = typeof(LoggerFactory).GetField("_filterOptions", BindingFlags.NonPublic | BindingFlags.Instance)!;
+    private static readonly FieldInfo FieldOfFilterOptions = typeof(LoggerFactory).GetRequiredField("_filterOptions");
 
     public static void SetMinimumLevel(this ILoggerFactory factory, LogLevel minLevel)
     {
@@ -10,7 +10,7 @@ public static class LoggerFactoryExtensions
 
         if (factory is LoggerFactory fac)
         {
-            var options = (LoggerFilterOptions)FieldOfFilterOptions.GetValue(fac)!;
+            var options = FieldOfFilterOptions.GetRequiredValue<LoggerFilterOptions>(fac);
             options.MinLevel = minLevel;
         }
         else

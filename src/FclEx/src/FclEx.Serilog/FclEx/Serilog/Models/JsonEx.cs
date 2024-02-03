@@ -23,7 +23,7 @@ public class JsonEx
             return null;
 
         ex = ex.Unwrap();
-            
+
         var jsonEx = new JsonEx
         {
             Type = ex.GetType().LongName(),
@@ -33,10 +33,10 @@ public class JsonEx
             Data = ex.Data,
             InnerException = Create(ex.InnerException),
         };
-            
-        if (ex is AggregateException agg && agg.InnerExceptions.Count > 1)
+
+        if (ex is AggregateException { InnerExceptions: { Count: > 1 } inners })
         {
-            jsonEx.InnerExceptions = agg.InnerExceptions.Select(m => Create(m)!).ToList();
+            jsonEx.InnerExceptions = inners.Select(m => Create(m)!).ToList();
         }
 
         return jsonEx;

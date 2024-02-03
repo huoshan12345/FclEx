@@ -5,7 +5,7 @@ public enum OSPlatformType
     Windows,
     Linux,
     OSX,
-    FreeBSD
+    FreeBSD,
 }
 
 public static class OSPlatformTypeExtensions

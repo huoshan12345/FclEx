@@ -9,6 +9,7 @@ global using FclEx.Helpers;
 global using FclEx.Testers;
 global using FclEx.Utils;
 global using FluentAssertions;
+global using Microsoft.Extensions.DependencyInjection;
 global using xRetry;
 global using Xunit;
 global using Xunit.Abstractions;
