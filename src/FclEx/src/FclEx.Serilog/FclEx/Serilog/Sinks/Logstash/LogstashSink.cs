@@ -1,10 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
-using FclEx.Serilog.Formatting;
+﻿using FclEx.Serilog.Formatting;
 using FclEx.Serilog.Sinks.Logstash.Inputs;
-using Serilog.Debugging;
-using Serilog.Formatting;
-using Serilog.Sinks.PeriodicBatching;
 
 namespace FclEx.Serilog.Sinks.Logstash;
 

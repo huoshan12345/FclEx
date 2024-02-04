@@ -1,6 +1,4 @@
-﻿using Serilog.Formatting;
-
-namespace FclEx.Serilog.Sinks.Logstash;
+﻿namespace FclEx.Serilog.Sinks.Logstash;
 
 public class LogstashSinkOptions
 {

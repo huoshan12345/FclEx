@@ -1,5 +1,4 @@
 ﻿using System.Net.Sockets;
-using System.Threading.Tasks;
 
 namespace FclEx.Serilog.Sinks.Logstash.Inputs;
 

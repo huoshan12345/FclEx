@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace FclEx.Serilog.Sinks.Logstash.Inputs;
+﻿namespace FclEx.Serilog.Sinks.Logstash.Inputs;
 
 internal interface ILogstashInput
 {

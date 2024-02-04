@@ -8,96 +8,95 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
 using Volo.Abp.DependencyInjection;
 
-namespace FclEx.Abp.Caching
+namespace FclEx.Abp.Caching;
+
+public class AbpDistributedCache : IDistributedCache
 {
-    public class AbpDistributedCache : IDistributedCache
+    public const string CacheNameOfValue = "DistributedCache:Value";
+    public const string CacheNameOfExpiration = "DistributedCache:Expiration";
+
+    protected readonly ICacheManager _cacheManager;
+    protected readonly Lazy<ICache<byte[]>> _cache;
+    protected readonly Lazy<ICache<TimeSpan>> _cacheOfExpiration;
+    protected ICache<byte[]> Cache => _cache.Value;
+    protected ICache<TimeSpan> CacheOfExpiration => _cacheOfExpiration.Value;
+
+    public AbpDistributedCache(ICacheManager cacheManager)
     {
-        public const string CacheNameOfValue = "DistributedCache:Value";
-        public const string CacheNameOfExpiration = "DistributedCache:Expiration";
+        _cacheManager = cacheManager;
+        _cache = new Lazy<ICache<byte[]>>(() => _cacheManager.GetCache<byte[]>(CacheNameOfValue), true);
+        _cacheOfExpiration = new Lazy<ICache<TimeSpan>>(() => _cacheManager.GetCache<TimeSpan>(CacheNameOfExpiration), true);
+    }
 
-        protected readonly ICacheManager _cacheManager;
-        protected readonly Lazy<ICache<byte[]>> _cache;
-        protected readonly Lazy<ICache<TimeSpan>> _cacheOfExpiration;
-        protected ICache<byte[]> Cache => _cache.Value;
-        protected ICache<TimeSpan> CacheOfExpiration => _cacheOfExpiration.Value;
+    public byte[] Get(string key)
+    {
+        return Cache.Get(key).Value;
+    }
 
-        public AbpDistributedCache(ICacheManager cacheManager)
+    public async Task<byte[]?> GetAsync(string key, CancellationToken token = new())
+    {
+        var v = await Cache.GetAsync(key).IgnoreSyncContext();
+        return v.Value;
+    }
+
+    public void Set(string key, byte[] value, DistributedCacheEntryOptions options)
+    {
+        var exp = GetExpiration(options);
+        Cache.Set(key, value, exp);
+        if (exp is { } timeSpan)
+            CacheOfExpiration.Set(key, timeSpan, timeSpan);
+    }
+
+    public async Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = new())
+    {
+        var exp = GetExpiration(options);
+        await Cache.SetAsync(key, value, exp).IgnoreSyncContext();
+        if (exp is { } timeSpan)
+            await CacheOfExpiration.SetAsync(key, timeSpan, timeSpan).IgnoreSyncContext();
+    }
+
+    public void Refresh(string key)
+    {
+        if (CacheOfExpiration.TryGet(key, out var timeSpan)
+            && Cache.TryGet(key, out var bytes))
         {
-            _cacheManager = cacheManager;
-            _cache = new Lazy<ICache<byte[]>>(() => _cacheManager.GetCache<byte[]>(CacheNameOfValue), true);
-            _cacheOfExpiration = new Lazy<ICache<TimeSpan>>(() => _cacheManager.GetCache<TimeSpan>(CacheNameOfExpiration), true);
+            Cache.Set(key, bytes, timeSpan);
+            CacheOfExpiration.Set(key, timeSpan, timeSpan);
         }
+    }
 
-        public byte[] Get(string key)
+    public async Task RefreshAsync(string key, CancellationToken token = new())
+    {
+        if (CacheOfExpiration.TryGet(key, out var timeSpan)
+            && Cache.TryGet(key, out var bytes))
         {
-            return Cache.Get(key).Value;
+            await Cache.SetAsync(key, bytes, timeSpan).IgnoreSyncContext();
+            await CacheOfExpiration.SetAsync(key, timeSpan, timeSpan).IgnoreSyncContext();
         }
+    }
 
-        public async Task<byte[]?> GetAsync(string key, CancellationToken token = new())
-        {
-            var v = await Cache.GetAsync(key).IgnoreSyncContext();
-            return v.Value;
-        }
+    public void Remove(string key)
+    {
+        Cache.Remove(key);
+        CacheOfExpiration.Remove(key);
+    }
 
-        public void Set(string key, byte[] value, DistributedCacheEntryOptions options)
-        {
-            var exp = GetExpiration(options);
-            Cache.Set(key, value, exp);
-            if (exp is { } timeSpan)
-                CacheOfExpiration.Set(key, timeSpan, timeSpan);
-        }
+    public async Task RemoveAsync(string key, CancellationToken token = new())
+    {
+        await Cache.RemoveAsync(key).IgnoreSyncContext();
+        await CacheOfExpiration.RemoveAsync(key).IgnoreSyncContext();
+    }
 
-        public async Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = new())
-        {
-            var exp = GetExpiration(options);
-            await Cache.SetAsync(key, value, exp).IgnoreSyncContext();
-            if (exp is { } timeSpan)
-                await CacheOfExpiration.SetAsync(key, timeSpan, timeSpan).IgnoreSyncContext();
-        }
-
-        public void Refresh(string key)
-        {
-            if (CacheOfExpiration.TryGet(key, out var timeSpan)
-                && Cache.TryGet(key, out var bytes))
-            {
-                Cache.Set(key, bytes, timeSpan);
-                CacheOfExpiration.Set(key, timeSpan, timeSpan);
-            }
-        }
-
-        public async Task RefreshAsync(string key, CancellationToken token = new())
-        {
-            if (CacheOfExpiration.TryGet(key, out var timeSpan)
-                && Cache.TryGet(key, out var bytes))
-            {
-                await Cache.SetAsync(key, bytes, timeSpan).IgnoreSyncContext();
-                await CacheOfExpiration.SetAsync(key, timeSpan, timeSpan).IgnoreSyncContext();
-            }
-        }
-
-        public void Remove(string key)
-        {
-            Cache.Remove(key);
-            CacheOfExpiration.Remove(key);
-        }
-
-        public async Task RemoveAsync(string key, CancellationToken token = new())
-        {
-            await Cache.RemoveAsync(key).IgnoreSyncContext();
-            await CacheOfExpiration.RemoveAsync(key).IgnoreSyncContext();
-        }
-
-        private static TimeSpan? GetExpiration(DistributedCacheEntryOptions? options)
-        {
-            if (options == null)
-                return null;
-            if (options.SlidingExpiration is { } slidingExpiration)
-                return slidingExpiration;
-            if (options.AbsoluteExpiration is { } absoluteExpiration)
-                return absoluteExpiration - DateTimeOffset.UtcNow;
-            if (options.AbsoluteExpirationRelativeToNow is { } absoluteExpirationRelativeToNow)
-                return absoluteExpirationRelativeToNow;
+    private static TimeSpan? GetExpiration(DistributedCacheEntryOptions? options)
+    {
+        if (options == null)
             return null;
-        }
+        if (options.SlidingExpiration is { } slidingExpiration)
+            return slidingExpiration;
+        if (options.AbsoluteExpiration is { } absoluteExpiration)
+            return absoluteExpiration - DateTimeOffset.UtcNow;
+        if (options.AbsoluteExpirationRelativeToNow is { } absoluteExpirationRelativeToNow)
+            return absoluteExpirationRelativeToNow;
+        return null;
     }
 }

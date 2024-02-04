@@ -12,7 +12,7 @@ public record HttpClientOptions : SocketsHttpHandlerOptions
     public int RetryCount { get; set; } = 2;
 
     /// <summary>
-    /// Indicates whether or not update <see cref="TotalTimeout"/> when it is less than a total timeout that is computed with <see cref="ExecutionTimeout"/> and <see cref="RetryCount"/>
+    /// Indicates whether update <see cref="TotalTimeout"/> when it is less than a total timeout that is computed with <see cref="ExecutionTimeout"/> and <see cref="RetryCount"/>
     /// </summary>
     public bool AutoUpdateTotalTimeout { get; set; } = true;
     public SleepDurationProvider SleepDurationProvider { get; set; } = DefaultSleepDurationProvider;

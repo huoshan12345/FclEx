@@ -26,13 +26,13 @@ public class LogEnricher : ILogEventEnricher
         return RuntimeInformation.OSDescription;
     }
 
-    public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
+    public void Enrich(LogEvent logEvent, ILogEventPropertyFactory factory)
     {
-        logEvent.TryAddPropIfValid("@service", _service);
-        logEvent.TryAddPropIfValid(nameof(EntryAssembly), EntryAssembly);
-        logEvent.TryAddPropIfValid(nameof(OsType), OsType);
-        logEvent.TryAddPropIfValid(nameof(OsName), OsName);
-        logEvent.TryAddPropIfValid(nameof(HostName), HostName);
-        logEvent.TryAddPropIfValid(nameof(OsInfo), OsInfo);
+        logEvent.TryAddProperty(factory, "Service", _service);
+        logEvent.TryAddProperty(factory, nameof(EntryAssembly), EntryAssembly);
+        logEvent.TryAddProperty(factory, nameof(OsType), OsType);
+        logEvent.TryAddProperty(factory, nameof(OsName), OsName);
+        logEvent.TryAddProperty(factory, nameof(HostName), HostName);
+        logEvent.TryAddProperty(factory, nameof(OsInfo), OsInfo);
     }
 }

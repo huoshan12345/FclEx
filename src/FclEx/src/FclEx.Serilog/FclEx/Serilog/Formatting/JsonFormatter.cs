@@ -1,6 +1,4 @@
-﻿using Serilog.Formatting;
-
-namespace FclEx.Serilog.Formatting;
+﻿namespace FclEx.Serilog.Formatting;
 
 public partial class JsonFormatter : ITextFormatter
 {

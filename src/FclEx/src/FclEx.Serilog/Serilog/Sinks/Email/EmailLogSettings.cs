@@ -1,7 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Net;
 using FclEx;
-using FclEx.Serilog;
 using Microsoft.Extensions.Logging;
 using Serilog.Configuration;
 using Serilog.Extensions.Logging;
