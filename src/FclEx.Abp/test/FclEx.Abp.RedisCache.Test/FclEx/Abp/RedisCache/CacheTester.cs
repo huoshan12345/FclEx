@@ -1,14 +1,14 @@
-﻿namespace FclEx.Abp.RedisCache
-{
-    public class CacheTester : IEquatable<CacheTester>
-    {
-        public int Id { get; set; }
-        public string? Name { get; set; }
-        public int Age { get; set; }
-        public int? CoinCount { get; set; }
+﻿namespace FclEx.Abp.RedisCache;
 
-        public bool Equals(CacheTester? other)
-        {
+public class CacheTester : IEquatable<CacheTester>
+{
+    public int Id { get; set; }
+    public string? Name { get; set; }
+    public int Age { get; set; }
+    public int? CoinCount { get; set; }
+
+    public bool Equals(CacheTester? other)
+    {
             if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
             return Id == other.Id
@@ -17,16 +17,16 @@
                    && CoinCount == other.CoinCount;
         }
 
-        public override bool Equals(object? obj)
-        {
+    public override bool Equals(object? obj)
+    {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
             return Equals((CacheTester)obj);
         }
 
-        public override int GetHashCode()
-        {
+    public override int GetHashCode()
+    {
             unchecked
             {
                 var hashCode = Id;
@@ -37,14 +37,13 @@
             }
         }
 
-        public static bool operator ==(CacheTester left, CacheTester right)
-        {
+    public static bool operator ==(CacheTester left, CacheTester right)
+    {
             return Equals(left, right);
         }
 
-        public static bool operator !=(CacheTester left, CacheTester right)
-        {
+    public static bool operator !=(CacheTester left, CacheTester right)
+    {
             return !Equals(left, right);
         }
-    }
 }

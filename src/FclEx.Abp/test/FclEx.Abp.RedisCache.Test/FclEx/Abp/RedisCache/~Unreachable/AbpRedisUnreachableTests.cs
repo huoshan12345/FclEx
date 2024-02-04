@@ -1,22 +1,19 @@
-﻿using FclEx.Abp.Xunit;
-using Microsoft.Extensions.Configuration;
-using Xunit.Abstractions;
+﻿using Microsoft.Extensions.Configuration;
 
-namespace FclEx.Abp.RedisCache
+namespace FclEx.Abp.RedisCache;
+
+public class AbpRedisUnreachableTests : AbpTests<AbpRedisTestModule>
 {
-    public class AbpRedisUnreachableTests : AbpTests<AbpRedisTestModule>
+    protected override IConfigurationRoot BuildConfig()
     {
-        protected override IConfigurationRoot BuildConfig()
-        {
-            return new ConfigurationBuilder()
-                .SetBasePath(AppContext.BaseDirectory)
-                .AddJsonFile("appsettings.Unreachable.json", false, false)
-                .Build();
-        }
+        return new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile("appsettings.Unreachable.json", false, false)
+            .Build();
+    }
 
-        public AbpRedisUnreachableTests(ITestOutputHelper output, Action<AbpTestsOptions>? action = null)
-            : base(output, action)
-        {
-        }
+    public AbpRedisUnreachableTests(ITestOutputHelper output, Action<AbpTestsOptions>? action = null)
+        : base(output, action)
+    {
     }
 }

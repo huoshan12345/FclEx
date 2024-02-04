@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Xunit;
 
 public static class GlobalConstants
 {
