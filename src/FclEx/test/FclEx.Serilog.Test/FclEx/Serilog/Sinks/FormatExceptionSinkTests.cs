@@ -1,5 +1,6 @@
 ﻿namespace FclEx.Serilog.Sinks;
 
+[Collection(nameof(Console))]
 public class FormatExceptionSinkTests
 {
     private static readonly ILogger Logger = new LoggerConfiguration().WriteTo

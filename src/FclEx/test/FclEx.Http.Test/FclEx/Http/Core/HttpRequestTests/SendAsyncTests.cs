@@ -35,12 +35,12 @@ internal sealed class HttpEventListener : EventListener
 
 public class SendAsyncTests
 {
-    public static IList<string> Urls => new[]
-    {
+    public static string[] Urls =>
+    [
         "https://www.baidu.com/",
         "https://www.qq.com/",
-        "https://www.google.com.hk/",
-    };
+        "https://www.google.com.hk/"
+    ];
 
     public static IEnumerable<object[]> Cases => Urls
         .Select(m => new object[] { m });

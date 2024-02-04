@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Configuration;
 using Xunit;
 
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
 public static class GlobalConstants
 {
     public static IConfigurationRoot BuildConfig()

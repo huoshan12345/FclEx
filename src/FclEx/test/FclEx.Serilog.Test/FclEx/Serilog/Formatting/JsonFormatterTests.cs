@@ -1,8 +1,9 @@
-﻿using static FclEx.Serilog.Formatting.ExceptionPrintOptions;
+﻿using static FclEx.Serilog.Formatting.ExceptionPrintOption;
 using static FclEx.Serilog.Formatting.ExceptionWriteIndexOptions;
 
 namespace FclEx.Serilog.Formatting;
 
+[Collection(nameof(Console))]
 public class JsonFormatterTests
 {
     private readonly ITestOutputHelper _output;
@@ -16,16 +17,16 @@ public class JsonFormatterTests
         from len in new int?[] { null, 5 }
         from skipParas in new[] { true, false }
         from op in new[] { SingleMessage, MessagesForEachLine }
-        from indexOp in new[] { DonotWrite, Default }
+        from indexOp in new[] { ExceptionWriteIndexOptions.None, Default }
         select new object[] { len, skipParas, op, indexOp };
 
     [Theory]
     [MemberData(nameof(TestCases))]
-    public async Task Format_Test(int? maxLen, bool skipParas, ExceptionPrintOptions printOptions, ExceptionWriteIndexOptions indexOptions)
+    public async Task Format_Test(int? maxLen, bool skipParas, ExceptionPrintOption printOptions, ExceptionWriteIndexOptions indexOptions)
     {
         var options = new JsonFormatterOptions
         {
-            ExceptionPrintOptions = printOptions,
+            ExceptionPrintOption = printOptions,
             ExceptionFormatOptions = new()
             {
                 MaxMessageLength = maxLen,

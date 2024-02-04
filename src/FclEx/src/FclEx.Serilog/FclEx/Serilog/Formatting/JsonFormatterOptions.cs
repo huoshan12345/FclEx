@@ -9,7 +9,7 @@ public class JsonFormatterOptions
     public string ExceptionName { get; set; } = "@x";
 
     /// <summary>
-    /// Indicates whether or not enable formatting for exception. <br/>
+    /// Indicates whether enable formatting for exception. <br/>
     /// <see langword="true" /> to format exception according to <see cref="ExceptionFormatOptions"/>, <br/>
     /// <see langword="false" /> to use <see cref="Exception.ToString()"/>.
     /// </summary>
@@ -20,14 +20,14 @@ public class JsonFormatterOptions
     /// Indicates how to print exception information to <see cref="Console"/>. <br/>
     /// It is useful if the Vector Agent is used to forward log messages from <see cref="Console"/>.
     /// </summary>
-    public ExceptionPrintOptions ExceptionPrintOptions { get; set; } = ExceptionPrintOptions.DonotPrint;
+    public ExceptionPrintOption ExceptionPrintOption { get; set; } = ExceptionPrintOption.SingleMessage;
 
     public static readonly JsonFormatterOptions Default = new();
 }
 
-public enum ExceptionPrintOptions
+public enum ExceptionPrintOption
 {
-    DonotPrint,
+    None,
 
     /// <summary>
     /// Print <see cref="Exception.ToString()"/> to <see cref="Console"/>.
@@ -43,7 +43,7 @@ public enum ExceptionPrintOptions
 [Flags]
 public enum ExceptionWriteIndexOptions
 {
-    DonotWrite = 0,
+    None = 0,
 
     /// <summary>
     /// Write the indexes of exceptions to log message.
@@ -51,7 +51,7 @@ public enum ExceptionWriteIndexOptions
     Write = 1 << 0,
 
     /// <summary>
-    /// Write the indexes of exceptions to log message only when there are more than one exceptions.
+    /// Write the indexes of exceptions to log message only when there are more than one exception.
     /// </summary>
     WriteOnlyForMultiple = 1 << 1,
 
@@ -68,18 +68,18 @@ public class ExceptionFormatOptions
     public int? MaxMessageLength { get; set; } = 100;
 
     /// <summary>
-    /// Indicates whether or not parameters will be skipped when a stack trace is printed.
+    /// Indicates whether parameters will be skipped when a stack trace is printed.
     /// </summary>
     public bool SkipParasInStackTrace { get; set; } = true;
 
     /// <summary>
-    /// Indicates whether or not exception message will be skipped when it already exists in rendered <see cref="MessageTemplate"/>
+    /// Indicates whether exception message will be skipped when it already exists in rendered <see cref="MessageTemplate"/>
     /// </summary>
     public bool SkipMessageIfExists { get; set; } = true;
 
     /// <summary>
     /// Indicates how to print the name of an exception type. <br/>
-    /// <see langword="true" /> to use <see cref="TypeExtensions.SimpleName"/>, <br/>
+    /// <see langword="true" /> to use <see cref="Bedrock.Extensions.TypeExtensions.SimpleName"/>, <br/>
     /// <see langword="false" /> to use <see cref="Type.FullName"/>.
     /// </summary>
     public bool UseSimpleNameForType { get; set; } = true;
@@ -87,7 +87,7 @@ public class ExceptionFormatOptions
     public static readonly ExceptionFormatOptions Default = new();
 
     /// <summary>
-    /// Indicates whether or not the indexes of an exception will be written.
+    /// Indicates whether the indexes of an exception will be written.
     /// </summary>
     public ExceptionWriteIndexOptions WriteIndexOptions { get; set; } = ExceptionWriteIndexOptions.Default;
 }

@@ -14,3 +14,12 @@ dotnet_diagnostic.CA2254.severity = none
 
 # CS1574: XML comment has cref attribute that could not be resolved
 dotnet_diagnostic.CS1574.severity = none
+
+# CA1050: Declare types in namespaces
+dotnet_diagnostic.CA1050.severity = none
+
+# SYSLIB1045: Convert to 'GeneratedRegexAttribute'.
+dotnet_diagnostic.SYSLIB1045.severity = none
+
+# IDE0290: Use primary constructor
+dotnet_diagnostic.IDE0290.severity = none

@@ -10,3 +10,4 @@ global using Serilog.Core;
 global using Serilog.Events;
 global using Xunit;
 global using Xunit.Abstractions;
+global using Xunit.Extensions.AssemblyFixture;

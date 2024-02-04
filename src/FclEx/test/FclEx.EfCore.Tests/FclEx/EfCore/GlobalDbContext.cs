@@ -5,7 +5,7 @@ public class GlobalDbContext : DbContextWithSchema
 {
     public string ConnectionString { get; }
 
-    public GlobalDbContext(string connectionString, string? schema) : base(schema)
+    public GlobalDbContext(string connectionString, string? schema = null) : base(schema)
     {
         ConnectionString = connectionString;
     }

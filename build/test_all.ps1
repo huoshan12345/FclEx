@@ -18,14 +18,20 @@ $projects = $testDirs | ForEach-Object { Get-ChildItem -Path $_ -Include *.cspro
 | Where-Object { $isGithub -eq $false -or ( ($IsWindows -and $onlyWin -contains $_.Basename) -or ($IsWindows -eq $false -and $onlyWin -notcontains $_.Basename) ) }
 
 
-foreach ($path in $projects) { 
-  $command = 'dotnet test $path --nologo -c $mode'
+$result = [ordered]@{}
+foreach ($project in $projects) { 
+  $command = 'dotnet test $project.FullName --nologo -c $mode -v q'
   if ($restore -eq $false) {
     $command = $command + " --no-restore"
   }
-  Invoke-Expression $command
   
-  if ($Lastexitcode -ne 0) {
-    throw "failed with exit code $LastExitCode"
-  }
+  Invoke-Expression $command
+  $success = $Lastexitcode -eq 0
+  $result.Add($project.Name, $success)
+}
+
+$failed = $result.GetEnumerator() | Where-Object { $_.Value -ne $true } | Join-String -Property Name -Separator ', '
+  
+if ($failed) {
+  throw "Failed projects: $failed"
 }

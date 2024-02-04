@@ -1,13 +1,13 @@
-﻿using static FclEx.Serilog.Formatting.ExceptionPrintOptions;
+﻿using static FclEx.Serilog.Formatting.ExceptionPrintOption;
 using static FclEx.Serilog.Formatting.ExceptionWriteIndexOptions;
 
 namespace FclEx.Serilog.Formatting;
 
 partial class JsonFormatter
 {
-    protected static readonly Regex _regexOfParas = new(@"\([^(]*\)(?=\s|$)", RegexOptions.Compiled);
+    protected static readonly Regex RegexOfParas = new(@"\([^(]*\)(?=\s|$)", RegexOptions.Compiled);
 
-    protected virtual void WriteExceptionInfo(string logEventMessage, Extensions.ExceptionInfo info, TextWriter output, bool writeIndexes)
+    protected virtual void WriteExceptionInfo(string logEventMessage, ExceptionInfo info, TextWriter output, bool writeIndexes)
     {
         var (type, message, lines, index, parentIndex) = info;
 
@@ -47,7 +47,7 @@ partial class JsonFormatter
         foreach (var line in lines)
         {
             var l = ExceptionOptions.SkipParasInStackTrace
-                ? _regexOfParas.Replace(line, "", 1)
+                ? RegexOfParas.Replace(line, "", 1)
                 : line;
 
             output.Write(",");
@@ -57,16 +57,16 @@ partial class JsonFormatter
 
     protected virtual void PrintException(Exception ex)
     {
-        var op = Options.ExceptionPrintOptions;
-        if (op == DonotPrint)
+        var op = Options.ExceptionPrintOption;
+        if (op == ExceptionPrintOption.None)
             return;
 
         var str = ex.ToString();
-        var strs = op == SingleMessage
-            ? new[] { str }
+        var lines = op == SingleMessage
+            ? [str]
             : str.SplitToLines();
 
-        foreach (var line in ToJsonObject(strs))
+        foreach (var line in ToJsonObject(lines))
         {
             Console.WriteLine(line);
         }

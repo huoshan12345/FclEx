@@ -14,9 +14,7 @@ public static class HtmlHelper
         return DefaultHtmlParser.ParseDocumentAsync(html);
     }
 
-    public static Regex RegexOfMetaRefresh { get; } = new(@"<meta +http-equiv=""refresh"" +content=""(.+)""/>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-    public static Regex RegexOfMetaRefreshUrl { get; } = new(@"^\s*(\d+)(?:\s*;(?:\s*url\s*=)?\s*(?:[""']\s*(.*?)\s*['""]|(.*?)))?\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-    public static Regex RegOfCharSet { get; } = new("<meta[^<]*charset=([^<]*)[\"']", RegexOptions.Compiled);
+
     private static char[] TrimChars { get; } = { '\'', '"', ';' };
 
     public static string? GetMetaCharSet(string html)
@@ -24,7 +22,7 @@ public static class HtmlHelper
         if (html.IsNullOrEmpty())
             return null;
 
-        var match = RegOfCharSet.Match(html);
+        var match = CommonWebRegexes.CharSet.Match(html);
         if (match.Success)
         {
             return match.Groups[1].Value.Trim(TrimChars);
@@ -40,7 +38,7 @@ public static class HtmlHelper
         if (html.IsNullOrWhiteSpace())
             return null;
 
-        var match = RegexOfMetaRefresh.Match(html);
+        var match = CommonWebRegexes.MetaRefresh.Match(html);
         if (match.Success)
         {
             var refresh = match.Groups[1].Value;
@@ -50,7 +48,7 @@ public static class HtmlHelper
                 .Replace("&#x22;", "\"")
                 .Replace("&#34;", "\"")
                 .Trim();
-            var nextMatch = RegexOfMetaRefreshUrl.Match(refresh);
+            var nextMatch = CommonWebRegexes.MetaRefreshUrl.Match(refresh);
             if (nextMatch.Success)
             {
                 var g = nextMatch.Groups;

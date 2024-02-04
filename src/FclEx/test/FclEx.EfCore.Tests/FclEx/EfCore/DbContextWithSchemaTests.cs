@@ -2,35 +2,8 @@
 
 public readonly record struct DatabaseUser(string Username, string Password, string DefaultSchema);
 
-public class DbContextWithSchemaTests : IAsyncLifetime
+public class DbContextWithSchemaTests : IAssemblyFixture<GlobalFixture>
 {
-    public static readonly DatabaseUser User = new("userwithschema", "123456", "test_schema");
-    public static readonly string DatabaseName = typeof(GlobalDbContext).Assembly.GetName().Name!.Replace(".", "-").ToLower();
-    public static readonly string LocalPostgresqlConnectionString = $"Server=localhost;Database={DatabaseName};Port=5432;User Id=postgres;Password=111111";
-    public static readonly string LocalUserPostgresqlConnectionString = $"Server=localhost;Database={DatabaseName};Port=5432;User Id={User.Username};Password={User.Password}";
-
-    private static async Task CreateUser(DatabaseUser user)
-    {
-        await using var con = new NpgsqlConnection(LocalPostgresqlConnectionString);
-        await con.ExecuteAsync($"DROP ROLE IF EXISTS {user.Username}");
-        await con.ExecuteAsync($"CREATE USER {user.Username} WITH LOGIN SUPERUSER PASSWORD '{user.Password}'"); // so we don't need to assign permissions
-        await con.ExecuteAsync($"ALTER USER {user.Username} SET SEARCH_PATH TO {user.DefaultSchema}");
-    }
-
-    private static async Task<string?> GetUserDefaultSchema()
-    {
-        await using var con = new NpgsqlConnection(LocalUserPostgresqlConnectionString);
-        return await con.ExecuteScalarAsync<string>("SHOW SEARCH_PATH;");
-    }
-
-    public async Task InitializeAsync()
-    {
-        await using var context = new GlobalDbContext(LocalPostgresqlConnectionString, User.DefaultSchema);
-        await context.Database.EnsureDeletedAsync();
-        await context.Database.EnsureCreatedAsync();
-        await CreateUser(User);
-    }
-
     private static async Task TestData(GlobalDbContext context)
     {
         var entity = new EntityWithAutoKey
@@ -51,6 +24,12 @@ public class DbContextWithSchemaTests : IAsyncLifetime
         Assert.NotNull(entityFromDb);
         Assert.Equal(entity.Name, entityFromDb.Name);
         Assert.Equal(entity.Value, entityFromDb.Value);
+    }
+
+    private static async Task<string?> GetUserDefaultSchema()
+    {
+        await using var con = new NpgsqlConnection(LocalUserPostgresqlConnectionString);
+        return await con.ExecuteScalarAsync<string>("SHOW SEARCH_PATH;");
     }
 
     [Fact]
@@ -84,10 +63,5 @@ public class DbContextWithSchemaTests : IAsyncLifetime
         context.EntityWithAutoKeys.AddRange(list);
         var count = await context.SaveChangesAsync();
         Assert.Equal(list.Length, count);
-    }
-
-    public Task DisposeAsync()
-    {
-        return Task.CompletedTask;
     }
 }

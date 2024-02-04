@@ -24,4 +24,8 @@
     <Content Include="FclEx.targets" Pack="true" BuildAction="None" PackagePath="buildTransitive/" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="System\Net\" />
+  </ItemGroup>
+
 </Project>
