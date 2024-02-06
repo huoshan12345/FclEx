@@ -1,5 +1,4 @@
-﻿using System.IO;
-using Microsoft.VisualBasic.FileIO;
+﻿using Microsoft.VisualBasic.FileIO;
 
 namespace FclEx.Extensions;
 

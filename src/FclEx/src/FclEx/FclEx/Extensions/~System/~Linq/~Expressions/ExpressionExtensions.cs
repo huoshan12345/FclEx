@@ -37,14 +37,21 @@ public static class ExpressionExtensions
 
     public static LambdaExpression Lambda(this Expression e, params ParameterExpression[] parameters) => Expression.Lambda(e, parameters);
 
-    public static void Visit(this BlockExpression block, Action<Expression> action)
+    public static IEnumerable<Expression> Enumerate(this BlockExpression block)
     {
         foreach (var exp in block.Expressions)
         {
             if (exp is BlockExpression b)
-                Visit(b, action);
+            {
+                foreach (var m in b.Enumerate())
+                {
+                    yield return m;
+                }
+            }
             else
-                action(exp);
+            {
+                yield return exp;
+            }
         }
     }
 

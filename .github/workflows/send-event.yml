@@ -1,0 +1,54 @@
+name: send-event
+on:
+  pull_request_target:
+    types:
+      - assigned
+      - unassigned
+      - labeled
+      - unlabeled
+      - opened
+      - edited
+      - closed
+      - reopened
+      - synchronize
+      - converted_to_draft
+      - ready_for_review
+      - locked
+      - unlocked
+      - review_requested
+      - review_request_removed
+      - auto_merge_enabled
+      - auto_merge_disabled
+  pull_request_review:
+    types:
+      - submitted
+      - edited
+      - dismissed
+  pull_request_review_comment:
+    types:
+      - created
+      - edited
+      - deleted
+  issue_comment:
+    # NOTE: it includes pull request comment events.
+    # Note: This event will only trigger a workflow run if the workflow file is on the default branch.
+    types:
+      - created
+      - edited
+      - deleted
+  release:
+    types:
+      - published
+
+jobs:
+  send_event:
+    if: false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Event
+        uses: fjogeleit/http-request-action@v1
+        with:          
+          escapeData: 'true'
+          url: https://8.140.21.208/spotter/api/GithubEvent/Add
+          method: "POST"
+          data: '{ "github": ${{ toJSON(github) }} }'

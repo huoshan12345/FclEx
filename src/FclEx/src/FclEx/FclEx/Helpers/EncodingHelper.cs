@@ -1,5 +1,4 @@
-﻿using System.IO;
-#pragma warning disable SYSLIB0001
+﻿#pragma warning disable SYSLIB0001
 
 namespace FclEx.Helpers;
 

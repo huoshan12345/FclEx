@@ -9,6 +9,6 @@ public static class LoggerExtensions
 
     public static ILogger ForContext(this ILogger logger, string name)
     {
-        return logger.ForContext(Constants.SourceContextPropertyName, name);
+        return logger.ForContext(global::Serilog.Core.Constants.SourceContextPropertyName, name);
     }
 }

@@ -9,7 +9,7 @@ public static class ServiceCollectionExtensions
     /// <summary>
     /// Register <see cref="SlackHttp"/> that implements <see cref="SlackNet"/>.<see cref="IHttp"/>.
     /// </summary>
-    public static IServiceCollection AddSlackHttp(this IServiceCollection services, JsonSerializerSettings? jsonSettings = null, HttpClientOptions? options = null)
+    public static IServiceCollection AddSlackNetHttp(this IServiceCollection services, JsonSerializerSettings? jsonSettings = null, HttpClientOptions? options = null)
     {
         services.AddHttpClientWithPolly(HttpClientName, options);
         services.AddSingletonBy<SlackHttp, IHttpClientFactory>(s => new SlackHttp(() => s.CreateClient(HttpClientName), jsonSettings));
@@ -19,11 +19,11 @@ public static class ServiceCollectionExtensions
     /// <summary>
     /// Register services for <see cref="SlackNet"/> and use <see cref="SlackHttp"/> for <see cref="SlackNet"/>.<see cref="IHttp"/>.
     /// </summary>
-    public static IServiceCollection AddSlackNetWithHttp(this IServiceCollection services, Action<ServiceCollectionSlackServiceConfiguration>? configure = null,
+    public static IServiceCollection AddSlackNetExt(this IServiceCollection services, Action<ServiceCollectionSlackServiceConfiguration>? configure = null,
         JsonSerializerSettings? jsonSettings = null, HttpClientOptions? options = null)
     {
         return services
-            .AddSlackHttp(jsonSettings, options)
+            .AddSlackNetHttp(jsonSettings, options)
             .AddSlackNet(c =>
             {
                 c.UseHttp(m => m.GetRequiredService<SlackHttp>());
@@ -39,11 +39,11 @@ public static class ServiceCollectionExtensions
     /// <param name="options"></param>
     /// <param name="configure"></param>
     /// <returns></returns>
-    public static IServiceCollection AddSlackNetAspNetCoreWithHttp(this IServiceCollection services, Action<AspNetSlackServiceConfiguration>? configure = null,
+    public static IServiceCollection AddSlackNetAspNet(this IServiceCollection services, Action<AspNetSlackServiceConfiguration>? configure = null,
         JsonSerializerSettings? jsonSettings = null, HttpClientOptions? options = null)
     {
         return services
-            .AddSlackHttp(jsonSettings, options)
+            .AddSlackNetHttp(jsonSettings, options)
             .AddSlackNet(c =>
             {
                 c.UseHttp(m => m.GetRequiredService<SlackHttp>());

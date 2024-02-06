@@ -1,5 +1,6 @@
 ﻿namespace Microsoft;
 
+[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal class Strings
 {
     public const string Argument_InvalidOffLen = "Offset and length were out of bounds for the array or count is greater than the number of elements from index to the end of the source collection.";

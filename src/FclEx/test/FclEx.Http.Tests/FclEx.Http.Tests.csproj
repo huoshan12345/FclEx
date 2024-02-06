@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\FclEx.Http\FclEx.Http.csproj" />
+    <ProjectReference Include="..\FclEx.Tests\FclEx.Tests.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="TestData\SimpleCookies.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+  </ItemGroup>
+
+</Project>

@@ -1,6 +1,6 @@
 ﻿namespace System;
 
-public readonly struct Optional<T> where T : class
+public readonly struct Optional<T>
 {
     public bool HasValue { get; }
     public T? Value { get; }

@@ -25,9 +25,9 @@ public static partial class HttpRequestExtensions
         return req;
     }
 
-    public static HttpRequest AddQueryPair(this HttpRequest req, string queryPair, char sepetator = ':')
+    public static HttpRequest AddQueryPair(this HttpRequest req, string queryPair, char separator = ':')
     {
-        var pair = queryPair.Split(sepetator);
+        var pair = queryPair.Split(separator);
         return req.AddQueryValue(pair[0], pair.Length > 1 ? pair[1] : "");
     }
 
@@ -45,9 +45,9 @@ public static partial class HttpRequestExtensions
         return req;
     }
 
-    public static HttpRequest AddFormPair(this HttpRequest req, string queryPair, char sepetator = ':')
+    public static HttpRequest AddFormPair(this HttpRequest req, string queryPair, char separator = ':')
     {
-        var pair = queryPair.Split(sepetator);
+        var pair = queryPair.Split(separator);
         return req.AddFormValue(pair[0], pair.Length > 1 ? pair[1] : "");
     }
 
@@ -80,11 +80,11 @@ public static partial class HttpRequestExtensions
             : req.AddFormValue(paras);
     }
 
-    public static HttpRequest AddDataPair(this HttpRequest req, string queryPair, char sepetator = ':')
+    public static HttpRequest AddDataPair(this HttpRequest req, string queryPair, char separator = ':')
     {
         return req.Method == HttpMethod.Get
-            ? req.AddQueryPair(queryPair, sepetator)
-            : req.AddFormPair(queryPair, sepetator);
+            ? req.AddQueryPair(queryPair, separator)
+            : req.AddFormPair(queryPair, separator);
     }
 
     public static HttpRequest Content(this HttpRequest req, HttpContent content)

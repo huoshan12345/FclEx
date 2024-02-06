@@ -2,96 +2,95 @@
 using FclEx.Extensions;
 using InterfaceBaseInvoke;
 
-namespace FclEx.Benchmarks
+namespace FclEx.Benchmarks;
+
+public interface IEmptyMethod
 {
-    public interface IEmptyMethod
+    int Compute(int number);
+}
+
+public interface IDefaultMethod
+{
+    int Compute(int number) => number + 1;
+}
+
+public interface IOverridedMethod : IEmptyMethod
+{
+    int IEmptyMethod.Compute(int number) => number + 1;
+}
+
+public class InheritIOverridedMethodWithFunctionPointer : IOverridedMethod
+{
+    public int Compute(int number) => this.BaseByFunctionPointer<IOverridedMethod, int>(m => m.Compute(0));
+}
+
+public class InheritIOverridedMethodWithDynamicMethod : IOverridedMethod
+{
+    public int Compute(int number) => this.BaseByDynamicMethod<IOverridedMethod, int>(m => m.Compute(0));
+}
+
+public class InheritIOverridedMethodWithIL : IOverridedMethod
+{
+    public int Compute(int number) => this.Base<IOverridedMethod>().Compute(0);
+}
+
+public class InheritIDefaultMethodWithIL : IDefaultMethod
+{
+    public int Compute(int number) => this.Base<IDefaultMethod>().Compute(0);
+}
+
+public abstract class Ancestor
+{
+    public abstract int Compute(int number);
+}
+
+public class Parent : Ancestor
+{
+    public override int Compute(int number) => number + 1;
+}
+
+public class Child : Parent
+{
+    public override int Compute(int number) => base.Compute(number) + 1;
+}
+
+[MemoryDiagnoser]
+[StopOnFirstError]
+public class InterfaceBaseInvocationBenchmark
+{
+    private static readonly InheritIOverridedMethodWithDynamicMethod _inheritIOverridedMethodWithDynamicMethod = new();
+    private static readonly InheritIOverridedMethodWithFunctionPointer _inheritIOverridedMethodWithFunctionPointer = new();
+    private static readonly InheritIOverridedMethodWithIL _inheritIOverridedMethodWithIL = new();
+    private static readonly InheritIDefaultMethodWithIL _inheritIDefaultMethodWithIL = new();
+    private static readonly Child _child = new();
+
+    [Benchmark]
+    public void Class_Base()
     {
-        int Compute(int number);
+        var r1 = _child.Compute(0);
     }
 
-    public interface IDefaultMethod
+    [Benchmark]
+    public void Interface_Base_FunctionPointer()
     {
-        int Compute(int number) => number + 1;
+        var r1 = _inheritIOverridedMethodWithFunctionPointer.Compute(0);
     }
 
-    public interface IOverridedMethod : IEmptyMethod
+    [Benchmark]
+    public void Interface_Base_DynamicMethod()
     {
-        int IEmptyMethod.Compute(int number) => number + 1;
+        var r1 = _inheritIOverridedMethodWithDynamicMethod.Compute(0);
     }
 
-    public class InheritIOverridedMethodWithFunctionPointer : IOverridedMethod
+    [Benchmark]
+    public void Interface_Base_IL()
     {
-        public int Compute(int number) => this.BaseByFunctionPointer<IOverridedMethod, int>(m => m.Compute(0));
+        var r1 = _inheritIDefaultMethodWithIL.Compute(0);
     }
 
-    public class InheritIOverridedMethodWithDynamicMethod : IOverridedMethod
+    // [Benchmark]
+    public void Interface_Base_IL_MultiLevel()
     {
-        public int Compute(int number) => this.BaseByDynamicMethod<IOverridedMethod, int>(m => m.Compute(0));
-    }
-
-    public class InheritIOverridedMethodWithIL : IOverridedMethod
-    {
-        public int Compute(int number) => this.Base<IOverridedMethod>().Compute(0);
-    }
-
-    public class InheritIDefaultMethodWithIL : IDefaultMethod
-    {
-        public int Compute(int number) => this.Base<IDefaultMethod>().Compute(0);
-    }
-
-    public abstract class Ancestor
-    {
-        public abstract int Compute(int number);
-    }
-
-    public class Parent : Ancestor
-    {
-        public override int Compute(int number) => number + 1;
-    }
-
-    public class Child : Parent
-    {
-        public override int Compute(int number) => base.Compute(number) + 1;
-    }
-
-    [MemoryDiagnoser]
-    [StopOnFirstError]
-    public class InterfaceBaseInvocationBenchmark
-    {
-        private static readonly InheritIOverridedMethodWithDynamicMethod _inheritIOverridedMethodWithDynamicMethod = new();
-        private static readonly InheritIOverridedMethodWithFunctionPointer _inheritIOverridedMethodWithFunctionPointer = new();
-        private static readonly InheritIOverridedMethodWithIL _inheritIOverridedMethodWithIL = new();
-        private static readonly InheritIDefaultMethodWithIL _inheritIDefaultMethodWithIL = new();
-        private static readonly Child _child = new();
-
-        [Benchmark]
-        public void Class_Base()
-        {
-            var r1 = _child.Compute(0);
-        }
-
-        [Benchmark]
-        public void Interface_Base_FunctionPointer()
-        {
-            var r1 = _inheritIOverridedMethodWithFunctionPointer.Compute(0);
-        }
-
-        [Benchmark]
-        public void Interface_Base_DynamicMethod()
-        {
-            var r1 = _inheritIOverridedMethodWithDynamicMethod.Compute(0);
-        }
-
-        [Benchmark]
-        public void Interface_Base_IL()
-        {
-            var r1 = _inheritIDefaultMethodWithIL.Compute(0);
-        }
-
-        // [Benchmark]
-        public void Interface_Base_IL_MultiLevel()
-        {
-            var r1 = _inheritIOverridedMethodWithIL.Compute(0);
-        }
+        var r1 = _inheritIOverridedMethodWithIL.Compute(0);
     }
 }

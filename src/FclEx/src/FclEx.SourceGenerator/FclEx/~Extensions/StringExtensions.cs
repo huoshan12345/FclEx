@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace FclEx
+namespace FclEx;
+
+public static class StringExtensions
 {
-    public static class StringExtensions
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string JoinWith(this IEnumerable<string> enumerable, string separator = "")
-            => string.Join(separator, enumerable);
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string JoinWith(this IEnumerable<string> enumerable, string separator = "")
+        => string.Join(separator, enumerable);
 }

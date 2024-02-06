@@ -7,7 +7,7 @@ public class BufferedContent : HttpContent
     public TimeSpan? Timeout { get; }
     public CancellationToken Token { get; }
 
-    protected static readonly MethodInfo _methodOfTryComputeLength
+    protected static readonly MethodInfo MethodOfTryComputeLength
         = typeof(HttpContent).GetRequiredMethod(nameof(TryComputeLength));
 
     public BufferedContent(HttpContent content, TimeSpan? timeout = null, int bufferSize = 256 * 1024, CancellationToken token = default)
@@ -29,7 +29,7 @@ public class BufferedContent : HttpContent
     protected override bool TryComputeLength(out long length)
     {
         var paras = new object?[] { null };
-        var result = _methodOfTryComputeLength.InvokeInstance<bool>(Content, paras);
+        var result = MethodOfTryComputeLength.InvokeInstance<bool>(Content, paras);
         length = paras[0].CastTo<long>();
         return result;
     }

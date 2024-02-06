@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using EasyCaching.Core;
 
 namespace FclEx.Abp.Caching;

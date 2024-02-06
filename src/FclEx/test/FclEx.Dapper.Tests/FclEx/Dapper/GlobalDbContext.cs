@@ -15,7 +15,7 @@ public enum DatabaseType
 }
 
 // EfCore is used for helping us to do tests
-public class GlobalDbContext : DbContextWithSchema
+public class GlobalDbContext : SchemaDbContext
 {
     public static readonly string DatabaseName = typeof(GlobalDbContext).Assembly.GetName().Name!.Replace(".", "-").ToLower();
     public static readonly string PostgresqlConnectionString = $"Server=localhost;Database={DatabaseName};Port=5432;User Id=postgres;Password=111111";

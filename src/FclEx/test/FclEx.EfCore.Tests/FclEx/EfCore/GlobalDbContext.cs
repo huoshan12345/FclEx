@@ -1,7 +1,7 @@
 ﻿namespace FclEx.EfCore;
 
 // EfCore is used for helping us to do tests
-public class GlobalDbContext : DbContextWithSchema
+public class GlobalDbContext : SchemaDbContext
 {
     public string ConnectionString { get; }
 

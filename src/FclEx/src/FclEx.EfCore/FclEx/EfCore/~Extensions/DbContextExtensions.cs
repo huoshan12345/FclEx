@@ -16,7 +16,7 @@ public static class DbContextExtensions
 
     public static ValueTask<T?> GetAsync<T>(this DbContext context, int key, CancellationToken token) where T : class
     {
-        return context.FindAsync<T>(new object?[] { key }, token);
+        return context.FindAsync<T>([key], token);
     }
 
     public static Task<int> InsertAsync<T>(this DbContext context, T item) where T : class

@@ -9,6 +9,7 @@ global using System.Data;
 global using System.Data.Common;
 global using System.Linq;
 global using System.Linq.Expressions;
+global using System.Net;
 global using System.Reflection;
 global using System.Reflection.Emit;
 global using System.Text;

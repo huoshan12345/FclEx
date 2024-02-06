@@ -1,5 +1,4 @@
-﻿using System.Runtime.ExceptionServices;
-using MoreLinq;
+﻿using MoreLinq;
 
 namespace FclEx.Extensions;
 
@@ -94,11 +93,9 @@ public static partial class ExceptionExtensions
         return ex is ObjectException<T> objEx && condition(objEx.Value);
     }
 
-    public static readonly FieldInfo Exception_Message = typeof(Exception).GetRequiredField("_message");
-
     public static Exception SetMessage(this Exception ex, string? message)
     {
-        Exception_Message.SetValue(ex, message);
+        Fields.Exception_Message.SetValue(ex, message);
         return ex;
     }
 
@@ -109,20 +106,18 @@ public static partial class ExceptionExtensions
 
     public static string? GetMessage(this Exception ex)
     {
-        return Exception_Message.GetValue<string>(ex);
+        return Fields.Exception_Message.GetValue<string>(ex);
     }
-
-    public static readonly FieldInfo Exception_StackTrace = typeof(Exception).GetRequiredField("_stackTraceString");
 
     public static Exception SetStackTrace(this Exception ex, string? trace = null)
     {
         trace ??= new StackTrace(1, true).ToString();
-        Exception_StackTrace.SetValue(ex, trace);
+        Fields.Exception_StackTrace.SetValue(ex, trace);
         return ex;
     }
 
     public static string? GetStackTrace(this Exception ex)
     {
-        return Exception_StackTrace.GetValue<string>(ex);
+        return Fields.Exception_StackTrace.GetValue<string>(ex);
     }
 }

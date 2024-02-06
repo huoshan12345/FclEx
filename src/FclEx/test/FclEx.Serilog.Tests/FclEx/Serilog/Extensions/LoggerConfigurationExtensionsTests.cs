@@ -1,0 +1,21 @@
+namespace FclEx.Serilog.Extensions;
+
+public class LoggerConfigurationExtensionsTests
+{
+    [Fact]
+    public async Task NewRelic_Test()
+    {
+        var logger = new LoggerConfiguration()
+            .Enrich.FromLogContext()
+            .WriteTo.NewRelic(GlobalFixture.AppSettings.NewRelic.LicenseKey)
+            .CreateLogger();
+
+        for (var i = 0; i < 10; i++)
+        {
+            logger.Information(i + "_" + Random.Shared.NextString(40));
+        }
+
+        await logger.DisposeAsync();
+        await Task.Delay(TimeSpan.FromSeconds(3));
+    }
+}

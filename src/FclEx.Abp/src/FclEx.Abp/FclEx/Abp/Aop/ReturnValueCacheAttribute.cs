@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reflection;
-using System.Threading.Tasks;
 using AspectCore.DynamicProxy;
 using EasyCaching.Core.Serialization;
 using EasyCaching.Serialization.Json;

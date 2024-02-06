@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace LightInject;
 
-internal static class Extensions
+public static class Extensions
 {
     private static MethodInfo CreateFunc { get; } = typeof(Extensions)
         .GetMethod(nameof(CreateTypedFactoryDelegate),

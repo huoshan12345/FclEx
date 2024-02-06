@@ -7,19 +7,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FclEx.Abp", "FclEx.Abp", "{
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Abp", "FclEx.Abp\src\FclEx.Abp\FclEx.Abp.csproj", "{5586A8C8-258C-41F7-9E3A-139AD9810BD0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Abp.Test", "FclEx.Abp\test\FclEx.Abp.Test\FclEx.Abp.Test.csproj", "{B1971404-92E7-4518-8027-572976CB2FAE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Abp.Tests", "FclEx.Abp\test\FclEx.Abp.Tests\FclEx.Abp.Tests.csproj", "{B1971404-92E7-4518-8027-572976CB2FAE}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Abp.RabbitMQ", "FclEx.Abp\src\FclEx.Abp.RabbitMQ\FclEx.Abp.RabbitMQ.csproj", "{D32B13DF-1BF9-4406-A819-2D4B1D8E0164}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Abp.RedisCache", "FclEx.Abp\src\FclEx.Abp.RedisCache\FclEx.Abp.RedisCache.csproj", "{4D484720-3F85-4D0D-8EC2-A304F30890B8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Abp.RedisCache.Test", "FclEx.Abp\test\FclEx.Abp.RedisCache.Test\FclEx.Abp.RedisCache.Test.csproj", "{5AF06233-A0CA-4693-84BF-4D9C8AF0E9DB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Abp.RedisCache.Tests", "FclEx.Abp\test\FclEx.Abp.RedisCache.Tests\FclEx.Abp.RedisCache.Tests.csproj", "{5AF06233-A0CA-4693-84BF-4D9C8AF0E9DB}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Abp.Xunit", "FclEx.Abp\src\FclEx.Abp.Xunit\FclEx.Abp.Xunit.csproj", "{E9832632-4A39-4BF3-B4A8-E91850E9C47B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Abp.RabbitMQ.Test", "FclEx.Abp\test\FclEx.Abp.RabbitMQ.Test\FclEx.Abp.RabbitMQ.Test.csproj", "{B8997EDA-7A59-4AF9-99F8-6E4140B14684}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Abp.AspNetCore", "FclEx.Abp\src\FclEx.Abp.AspNetCore\FclEx.Abp.AspNetCore.csproj", "{4CFE2B0F-534B-463B-8AFD-F997CCD2E62E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Abp.RabbitMQ.Tests", "FclEx.Abp\test\FclEx.Abp.RabbitMQ.Tests\FclEx.Abp.RabbitMQ.Tests.csproj", "{B8997EDA-7A59-4AF9-99F8-6E4140B14684}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx", "FclEx\src\FclEx\FclEx.csproj", "{708AA9AB-57D5-493A-93FB-5D5B9756E48B}"
 EndProject
@@ -53,13 +51,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{C4A4BE1C-2
 		FclEx\test\Directory.Build.targets = FclEx\test\Directory.Build.targets
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Http.Test", "FclEx\test\FclEx.Http.Test\FclEx.Http.Test.csproj", "{DFADA7DD-E390-4434-A638-70173BFF2531}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Http.Tests", "FclEx\test\FclEx.Http.Tests\FclEx.Http.Tests.csproj", "{DFADA7DD-E390-4434-A638-70173BFF2531}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Serilog.Test", "FclEx\test\FclEx.Serilog.Test\FclEx.Serilog.Test.csproj", "{BA64DE03-F745-4CB5-A85B-AE6A2D7111BD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Serilog.Tests", "FclEx\test\FclEx.Serilog.Tests\FclEx.Serilog.Tests.csproj", "{BA64DE03-F745-4CB5-A85B-AE6A2D7111BD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Test", "FclEx\test\FclEx.Test\FclEx.Test.csproj", "{AFD8FA34-3BC3-42DD-8BB4-E518337CE762}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Tests", "FclEx\test\FclEx.Tests\FclEx.Tests.csproj", "{AFD8FA34-3BC3-42DD-8BB4-E518337CE762}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Wmi.Test", "FclEx\test\FclEx.Wmi.Test\FclEx.Wmi.Test.csproj", "{D2452FA7-5EC7-4444-AA95-21DDD94E525B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Wmi.Tests", "FclEx\test\FclEx.Wmi.Tests\FclEx.Wmi.Tests.csproj", "{D2452FA7-5EC7-4444-AA95-21DDD94E525B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Benchmarks", "FclEx\src\FclEx.Benchmarks\FclEx.Benchmarks.csproj", "{25A8503A-F814-47E2-A552-575539B1FE8B}"
 EndProject
@@ -73,13 +71,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Wmi.SourceGenerator",
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{4FBBC7F5-D6FB-43DC-B674-03C7346A268B}"
 	ProjectSection(SolutionItems) = preProject
-		.editorconfig = .editorconfig
-		..\.github\workflows\build.yml = ..\.github\workflows\build.yml
-		..\.github\dependabot.yml = ..\.github\dependabot.yml
 		..\build\incre_ver.ps1 = ..\build\incre_ver.ps1
-		NuGet.Config = NuGet.Config
+		..\Makefile = ..\Makefile
 		..\build\pack.ps1 = ..\build\pack.ps1
 		..\build\pkg.version = ..\build\pkg.version
+		..\build\render-config.ps1 = ..\build\render-config.ps1
 		..\build\test_all.ps1 = ..\build\test_all.ps1
 	EndProjectSection
 EndProject
@@ -105,17 +101,32 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "github", "github", "{B9E452
 	ProjectSection(SolutionItems) = preProject
 		..\.github\workflows\build.yml = ..\.github\workflows\build.yml
 		..\.github\dependabot.yml = ..\.github\dependabot.yml
+		..\.github\workflows\send-event.yml = ..\.github\workflows\send-event.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C2037C3C-ED43-4531-B36F-F44126C4958A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Messaging", "FclEx\src\FclEx.Messaging\FclEx.Messaging.csproj", "{DB3ECE7D-E075-4172-812F-768A6DE72DF9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FclEx.Cooperation", "FclEx\src\FclEx.Cooperation\FclEx.Cooperation.csproj", "{7FC5995C-680B-487C-9549-43D0C6EE4045}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Cooperation", "FclEx\src\FclEx.Cooperation\FclEx.Cooperation.csproj", "{7FC5995C-680B-487C-9549-43D0C6EE4045}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FclEx.AspNetCore", "FclEx\src\FclEx.AspNetCore\FclEx.AspNetCore.csproj", "{54FA6161-D074-4580-8615-344E6B882187}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.AspNetCore", "FclEx\src\FclEx.AspNetCore\FclEx.AspNetCore.csproj", "{54FA6161-D074-4580-8615-344E6B882187}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FclEx.Cooperation.Tests", "FclEx\test\FclEx.Cooperation.Tests\FclEx.Cooperation.Tests.csproj", "{02D18C73-C4D6-4EBA-B2B7-EFEB53F2E4F6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Cooperation.Tests", "FclEx\test\FclEx.Cooperation.Tests\FclEx.Cooperation.Tests.csproj", "{02D18C73-C4D6-4EBA-B2B7-EFEB53F2E4F6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ansible", "ansible", "{22C7042C-6008-4C79-8EFE-0DDDFFB80153}"
+	ProjectSection(SolutionItems) = preProject
+		..\ansible\vars\main.json = ..\ansible\vars\main.json
+		..\ansible\vars\main_vault.json = ..\ansible\vars\main_vault.json
+		..\ansible\playbooks\render_config.yml = ..\ansible\playbooks\render_config.yml
+		..\ansible\playbooks\render_config_task.yml = ..\ansible\playbooks\render_config_task.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "config", "config", "{DB9BD709-2878-485F-A882-275991601752}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		NuGet.Config = NuGet.Config
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -151,10 +162,6 @@ Global
 		{B8997EDA-7A59-4AF9-99F8-6E4140B14684}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B8997EDA-7A59-4AF9-99F8-6E4140B14684}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B8997EDA-7A59-4AF9-99F8-6E4140B14684}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4CFE2B0F-534B-463B-8AFD-F997CCD2E62E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4CFE2B0F-534B-463B-8AFD-F997CCD2E62E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4CFE2B0F-534B-463B-8AFD-F997CCD2E62E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4CFE2B0F-534B-463B-8AFD-F997CCD2E62E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{708AA9AB-57D5-493A-93FB-5D5B9756E48B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{708AA9AB-57D5-493A-93FB-5D5B9756E48B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{708AA9AB-57D5-493A-93FB-5D5B9756E48B}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -260,7 +267,6 @@ Global
 		{5AF06233-A0CA-4693-84BF-4D9C8AF0E9DB} = {41D86DEF-3CED-4F43-B9F8-AF421EB8CA24}
 		{E9832632-4A39-4BF3-B4A8-E91850E9C47B} = {43A6295D-7C45-49AB-B35A-E2E4C0A050E8}
 		{B8997EDA-7A59-4AF9-99F8-6E4140B14684} = {41D86DEF-3CED-4F43-B9F8-AF421EB8CA24}
-		{4CFE2B0F-534B-463B-8AFD-F997CCD2E62E} = {43A6295D-7C45-49AB-B35A-E2E4C0A050E8}
 		{708AA9AB-57D5-493A-93FB-5D5B9756E48B} = {0564F7F7-BF4A-46E5-A545-40FD729FF63A}
 		{CE84EF4E-3D7D-42CD-A749-CD39C43CE43D} = {0564F7F7-BF4A-46E5-A545-40FD729FF63A}
 		{A9B0DAF8-6145-4C86-97AA-8A1766285D5C} = {0564F7F7-BF4A-46E5-A545-40FD729FF63A}

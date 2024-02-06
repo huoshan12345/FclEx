@@ -4,6 +4,7 @@
 
 namespace Microsoft.Collections.Extensions;
 
+[SuppressMessage("ReSharper", "NotResolvedInText")]
 internal static class ThrowHelper
 {
     [MethodImpl(MethodImplOptions.NoInlining)]

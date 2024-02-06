@@ -1,0 +1,14 @@
+- hosts: localhost
+  environment:
+    ANSIBLE_HASH_BEHAVIOUR: merge
+  vars:
+    test_config_paths:
+      - ../../src/FclEx/test/FclEx.Tests
+    extra:
+      phase: "{{ phase }}"
+    env: "{{ settings.common | combine(settings.envs[phase], recursive=True) | combine(extra, recursive=True) }}"
+  tasks:
+    - include_tasks: render_config_task.yml
+      loop: "{{ test_config_paths }}"
+      loop_control:
+        loop_var: config_path

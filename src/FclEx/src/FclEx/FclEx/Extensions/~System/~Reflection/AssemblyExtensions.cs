@@ -8,6 +8,32 @@ public enum BuildType
 
 public static class AssemblyExtensions
 {
+    public static Stream OpenResource(this Assembly assembly, string name)
+    {
+        var resourceName = assembly.GetManifestResourceNames().FirstOrDefault(p => p.EndsWith(name));
+        if (resourceName == null)
+            throw new ArgumentException($"Cannot find manifest resource name in assembly {assembly.GetName().Name} by name: " + name);
+
+        return assembly.GetManifestResourceStream(resourceName)
+               ?? throw new InvalidOperationException($"Cannot find manifest resource stream in assembly {assembly.GetName().Name} by name: " + resourceName);
+    }
+
+    public static T ReadResource<T>(this Assembly assembly, string name, Func<Stream, T> func)
+    {
+        using var resource = OpenResource(assembly, name);
+        return func(resource);
+    }
+
+    public static string ReadResource(this Assembly assembly, string name, Encoding? encoding = null)
+    {
+        encoding ??= Encoding.UTF8;
+        return ReadResource(assembly, name, s =>
+        {
+            using var sr = new StreamReader(s, encoding);
+            return sr.ReadToEnd();
+        });
+    }
+
     public static (BuildType BuildType, bool IsJitOptimized) GetBuildInfo(this Assembly assembly)
     {
         BuildType buildType;

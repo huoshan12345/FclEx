@@ -2,33 +2,62 @@
 
 namespace FclEx.Extensions;
 
+/// <summary>
+/// The combination of input and output.
+/// </summary>
+/// <typeparam name="TInput"></typeparam>
+/// <typeparam name="TOutput"></typeparam>
+/// <param name="Input"></param>
+/// <param name="Output"></param>
+public readonly record struct Transput<TInput, TOutput>(TInput Input, TOutput Output)
+{
+    public static implicit operator Transput<TInput, TOutput>((TInput Input, TOutput Output) tuple)
+    {
+        return new(tuple.Input, tuple.Output);
+    }
+}
+
+public readonly record struct OperateTransputs<TInput, TOutput>(
+    List<Transput<TInput, TOutput>> Success,
+    List<Transput<TInput, OperateResult<TOutput>>> Failure)
+{
+    public static implicit operator OperateTransputs<TInput, TOutput>((
+        List<Transput<TInput, TOutput>> Success,
+        List<Transput<TInput, OperateResult<TOutput>>> Failure) tuple)
+    {
+        return new(tuple.Success, tuple.Failure);
+    }
+}
+
 partial class EnumerableExtensions
 {
-    public static Task<(List<(T Input, TResult Output)> Success, List<(T Input, OperateResult<TResult> Output)> Failure)>
-        ToParallellyExecutedTaskOfPair<T, TResult>(this IEnumerable<T> enumerable, Func<T, Task<TResult>> taskSelector,
+    public static Task WhenAll(this IEnumerable<Task> tasks) => Task.WhenAll(tasks);
+
+    public static Task<T[]> WhenAll<T>(this IEnumerable<Task<T>> tasks) => Task.WhenAll(tasks);
+
+    public static Task<OperateTransputs<T, TResult>> ToParallellyExecutedTaskOfPair<T, TResult>(this IEnumerable<T> enumerable, Func<T, Task<TResult>> taskSelector,
             int batchSize, CancellationToken token = default)
     {
         return enumerable.ToParallellyExecutedTaskOfPair(async m => Operate.CreateSuccess(await taskSelector(m)), batchSize, token);
     }
 
-
-    public static async Task<(List<(T Input, TResult Output)> Success, List<(T Input, OperateResult<TResult> Output)> Failure)>
-        ToParallellyExecutedTaskOfPair<T, TResult>(this IEnumerable<T> enumerable, Func<T, Task<OperateResult<TResult>>> taskSelector,
-            int batchSize, CancellationToken token = default)
+    public static async Task<OperateTransputs<T, TResult>> ToParallellyExecutedTaskOfPair<T, TResult>(this IEnumerable<T> enumerable,
+        Func<T, Task<OperateResult<TResult>>> taskSelector, int batchSize, CancellationToken token = default)
     {
         // ReSharper disable once PossibleMultipleEnumeration
         Check.NotNull(enumerable);
         Check.NotNull(taskSelector);
         Check.NotLessThan(batchSize, 1);
 
-        var success = new List<(T, TResult)>();
-        var failure = new List<(T, OperateResult<TResult>)>();
-        // ReSharper disable once PossibleMultipleEnumeration
+        var success = new List<Transput<T, TResult>>();
+        var failure = new List<Transput<T, OperateResult<TResult>>>();
+
         foreach (var batch in enumerable.Batch(batchSize))
         {
             if (token.IsCancellationRequested)
             {
-                failure.AddRange(batch.Select(m => (m, Operate.CreateCancel<TResult>())));
+                batch.Select(m => (m, Operate.CreateCancel<TResult>()))
+                    .ForEach(m => failure.Add(m));
             }
             else
             {
@@ -45,25 +74,22 @@ partial class EnumerableExtensions
         return (success, failure);
     }
 
-    public static Task<(List<(T Input, TResult Output)> Success, List<(T Input, OperateResult<TResult> Output)> Failure)>
-        ToSeriallyExecutedTaskOfPair<T, TResult>(this IEnumerable<T> enumerable, Func<T, Task<TResult>> taskSelector,
-            int intervalSeconds = 0, CancellationToken token = default)
+    public static Task<OperateTransputs<T, TResult>> ToSeriallyExecutedTaskOfPair<T, TResult>(this IEnumerable<T> enumerable,
+        Func<T, Task<TResult>> taskSelector, int intervalSeconds = 0, CancellationToken token = default)
     {
         return enumerable.ToSeriallyExecutedTaskOfPair(async m => Operate.CreateSuccess(await taskSelector(m)), intervalSeconds, token);
     }
 
-    public static async Task<(List<(T Input, TResult Output)> Success, List<(T Input, OperateResult<TResult> Output)> Failure)>
-        ToSeriallyExecutedTaskOfPair<T, TResult>(this IEnumerable<T> enumerable, Func<T, Task<OperateResult<TResult>>> taskSelector,
-            int intervalSeconds = 0, CancellationToken token = default)
+    public static async Task<OperateTransputs<T, TResult>> ToSeriallyExecutedTaskOfPair<T, TResult>(this IEnumerable<T> enumerable,
+        Func<T, Task<OperateResult<TResult>>> taskSelector, int intervalSeconds = 0, CancellationToken token = default)
     {
         // ReSharper disable once PossibleMultipleEnumeration
         Check.NotNull(enumerable);
         Check.NotNull(taskSelector);
 
-        var success = new List<(T, TResult)>();
-        var failure = new List<(T, OperateResult<TResult>)>();
+        var success = new List<Transput<T, TResult>>();
+        var failure = new List<Transput<T, OperateResult<TResult>>>();
 
-        // ReSharper disable once PossibleMultipleEnumeration
         foreach (var item in enumerable)
         {
             if (token.IsCancellationRequested)
@@ -83,8 +109,7 @@ partial class EnumerableExtensions
         return (success, failure);
     }
 
-    public static async Task ToSeriallyExecutedTask<T>(this IEnumerable<T> enumerable, Func<T, Task> taskSelector,
-        int intervalSeconds = 0, CancellationToken token = default)
+    public static async Task ToSeriallyExecutedTask<T>(this IEnumerable<T> enumerable, Func<T, Task> taskSelector, int intervalSeconds = 0, CancellationToken token = default)
     {
         Check.NotNull(enumerable);
         Check.NotNull(taskSelector);
@@ -99,8 +124,8 @@ partial class EnumerableExtensions
         }
     }
 
-    public static async Task<List<TResult>> ToSeriallyExecutedTask<T, TResult>(this IEnumerable<T> enumerable, Func<T, Task<TResult>> taskSelector,
-        int intervalSeconds = 0, CancellationToken token = default)
+    public static async Task<List<TResult>> ToSeriallyExecutedTask<T, TResult>(this IEnumerable<T> enumerable,
+        Func<T, Task<TResult>> taskSelector, int intervalSeconds = 0, CancellationToken token = default)
     {
         // ReSharper disable once PossibleMultipleEnumeration
         Check.NotNull(enumerable);
@@ -120,8 +145,8 @@ partial class EnumerableExtensions
         return list;
     }
 
-    public static async Task<OperateResult<List<T>>> ToSeriallyExecutedTask<T>(this IEnumerable<T> enumerable,
-        Func<T, Task<OperateResult<T>>> taskSelector, int intervalSeconds = 0, CancellationToken token = default, bool terminateOnFirstError = false)
+    public static async Task<OperateResult<List<T>>> ToSeriallyExecutedTask<T>(this IEnumerable<T> enumerable, Func<T, Task<OperateResult<T>>> taskSelector,
+        int intervalSeconds = 0, CancellationToken token = default, bool terminateOnFirstError = false)
     {
         Check.NotNull(enumerable);
         Check.NotNull(taskSelector);
@@ -266,6 +291,37 @@ partial class EnumerableExtensions
                 if (Interlocked.Increment(ref completedCount) >= count)
                 {
                     tcs.SetException(new InvalidOperationException("All tasks failed"));
+                }
+            });
+        }
+
+        return tcs.Task;
+    }
+
+    public static Task WhenAllOrError(this IEnumerable<Task> tasks)
+    {
+        var tcs = new TaskCompletionSource<int>();
+        var taskList = tasks.AsIReadOnlyList();
+        var completedCount = 0;
+
+        foreach (var task in taskList)
+        {
+            task.ContinueWith(t =>
+            {
+                if (t.IsCanceled)
+                {
+                    tcs.TrySetCanceled();
+                }
+                else if (t.IsFaulted)
+                {
+                    tcs.TrySetException(t.Exception!.InnerExceptions);
+                }
+                else
+                {
+                    if (Interlocked.Increment(ref completedCount) == taskList.Count)
+                    {
+                        tcs.TrySetResult(0);
+                    }
                 }
             });
         }

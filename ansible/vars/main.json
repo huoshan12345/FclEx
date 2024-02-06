@@ -1,0 +1,15 @@
+{
+  "settings": {
+    "common": {
+      "jira": {
+        "baseUrl": "https://huoshan12345.atlassian.net",
+        "userName": "huoshan12345@hotmail.com"
+      },
+      "slack": {}
+    },
+    "envs": {
+      "local": {},
+      "qa": {}
+    }
+  }
+}

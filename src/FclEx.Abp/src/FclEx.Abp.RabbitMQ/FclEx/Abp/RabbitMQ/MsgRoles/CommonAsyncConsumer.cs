@@ -9,22 +9,21 @@ using Microsoft.Extensions.Logging.Abstractions;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace FclEx.Abp.RabbitMQ.MsgRoles
+namespace FclEx.Abp.RabbitMQ.MsgRoles;
+
+public class CommonAsyncConsumer<TMessage> : AsyncConsumer<TMessage>
 {
-    public class CommonAsyncConsumer<TMessage> : AsyncConsumer<TMessage>
+    protected readonly ConsumeHandler _handler;
+
+    public CommonAsyncConsumer(ConsumeHandler handler, IMemoryBytesSerializer? serializer = null,
+        ILoggerFactory? logger = null)
+        : base(serializer, logger)
     {
-        protected readonly ConsumeHandler _handler;
+        _handler = handler ?? throw new ArgumentNullException(nameof(handler));
+    }
 
-        public CommonAsyncConsumer(ConsumeHandler handler, IMemoryBytesSerializer? serializer = null,
-            ILoggerFactory? logger = null)
-            : base(serializer, logger)
-        {
-            _handler = handler ?? throw new ArgumentNullException(nameof(handler));
-        }
-
-        protected override Task<OperateResult> ConsumeInternalAsync(BasicDeliverEventArgs args, TMessage message)
-        {
-            return _handler(args, message);
-        }
+    protected override Task<OperateResult> ConsumeInternalAsync(BasicDeliverEventArgs args, TMessage message)
+    {
+        return _handler(args, message);
     }
 }

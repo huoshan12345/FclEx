@@ -8,7 +8,7 @@ public static class ModelStateDictionaryExtensions
             return "";
 
         var error = modelState
-            .Select(x => x.Value.Errors)
+            .Select(x => x.Value?.Errors ?? [])
             .Where(y => y.Count > 0)
             .SelectMany(m => m)
             .FirstOrDefault();

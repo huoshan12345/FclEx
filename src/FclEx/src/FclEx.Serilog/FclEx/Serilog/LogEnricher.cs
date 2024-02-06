@@ -1,7 +1,4 @@
-﻿using System.Reflection;
-using System.Runtime.InteropServices;
-
-namespace FclEx.Serilog;
+﻿namespace FclEx.Serilog;
 
 public class LogEnricher : ILogEventEnricher
 {

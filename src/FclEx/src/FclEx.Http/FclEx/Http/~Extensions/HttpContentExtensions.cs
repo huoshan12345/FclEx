@@ -21,16 +21,20 @@ public static class HttpContentExtensions
     public static BufferedContent ToBuffered(this HttpContent content, TimeSpan? timeout = null, int bufferSize = 256 * 1024, CancellationToken token = default)
         => new(content, timeout, bufferSize, token);
 
-    public static GZipContent ToGZip(this HttpContent content, CompressionLevel compressionLevel, TimeSpan? timeout, int bufferSize = 256 * 1024, CancellationToken token = default)
+    public static GZipContent ToGZip(this HttpContent content, CompressionLevel compressionLevel = CompressionLevel.Optimal,
+        TimeSpan? timeout = null, int bufferSize = 256 * 1024, CancellationToken token = default)
         => new(content, compressionLevel, timeout, bufferSize, token);
 
-    public static BrotliContent ToBrotli(this HttpContent content, CompressionLevel compressionLevel, TimeSpan? timeout, int bufferSize = 256 * 1024, CancellationToken token = default)
+    public static BrotliContent ToBrotli(this HttpContent content, CompressionLevel compressionLevel = CompressionLevel.Optimal,
+        TimeSpan? timeout = null, int bufferSize = 256 * 1024, CancellationToken token = default)
         => new(content, compressionLevel, timeout, bufferSize, token);
 
-    public static DeflateContent ToDeflate(this HttpContent content, CompressionLevel compressionLevel, TimeSpan? timeout, int bufferSize = 256 * 1024, CancellationToken token = default)
+    public static DeflateContent ToDeflate(this HttpContent content, CompressionLevel compressionLevel = CompressionLevel.Optimal,
+        TimeSpan? timeout = null, int bufferSize = 256 * 1024, CancellationToken token = default)
         => new(content, compressionLevel, timeout, bufferSize, token);
 
-    public static HttpContent ToCompressed(this HttpContent content, CompressionMethod compressionMethod, CompressionLevel compressionLevel, TimeSpan? timeout = null, int bufferSize = 256 * 1024, CancellationToken token = default)
+    public static HttpContent ToCompressed(this HttpContent content, CompressionMethod compressionMethod, CompressionLevel compressionLevel = CompressionLevel.Optimal,
+        TimeSpan? timeout = null, int bufferSize = 256 * 1024, CancellationToken token = default)
     {
         return compressionMethod switch
         {

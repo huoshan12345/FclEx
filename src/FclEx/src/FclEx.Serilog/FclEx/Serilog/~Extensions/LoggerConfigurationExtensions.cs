@@ -1,14 +1,11 @@
-﻿using FclEx.Serilog.Sinks;
-using Serilog.Configuration;
-
-namespace FclEx.Serilog;
+﻿namespace FclEx.Serilog;
 
 public static class LoggerConfigurationExtensions
 {
     public static LoggerConfiguration Wrap(this LoggerSinkConfiguration configuration,
         Func<ILogEventSink, ILogEventSink> wrapSink, Action<LoggerSinkConfiguration> configureWrappedSink)
     {
-        return LoggerSinkConfiguration.Wrap(configuration, wrapSink, configureWrappedSink, LevelAlias.Minimum, null);
+        return LoggerSinkConfiguration.Wrap(configuration, wrapSink, configureWrappedSink);
     }
 
     public static LoggerConfiguration FormatException(this LoggerSinkConfiguration configuration, Action<LoggerSinkConfiguration> configureWrappedSink)
@@ -28,15 +25,14 @@ public static class LoggerConfigurationExtensions
     /// <returns></returns>
     public static LoggerConfiguration NewRelic(
         this LoggerSinkConfiguration loggerSinkConfiguration,
-        ITextFormatter formatter,
-        string endpointUrl = NewRelicSink.DefaultEndpoint,
         string? licenseKey = null,
+        string? endpointUrl = NewRelicSink.DefaultEndpoint,
+        ITextFormatter? formatter = null,
         LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
         int batchSizeLimit = NewRelicSink.DefaultBatchSizeLimit,
         TimeSpan? period = null)
     {
         ArgumentNullException.ThrowIfNull(loggerSinkConfiguration);
-        ArgumentNullException.ThrowIfNull(formatter);
 
         if (loggerSinkConfiguration == null)
             throw new ArgumentNullException(nameof(loggerSinkConfiguration));
@@ -50,7 +46,7 @@ public static class LoggerConfigurationExtensions
         if (string.IsNullOrWhiteSpace(licenseKey))
             throw new ArgumentException("LicenseKey must be supplied", nameof(licenseKey));
 
-        var sink = new NewRelicSink(endpointUrl, licenseKey, formatter);
+        var sink = new NewRelicSink(licenseKey, endpointUrl, formatter);
         var batchingOptions = new PeriodicBatchingSinkOptions
         {
             BatchSizeLimit = batchSizeLimit,
@@ -60,5 +56,31 @@ public static class LoggerConfigurationExtensions
         };
         var batchingSink = new PeriodicBatchingSink(sink, batchingOptions);
         return loggerSinkConfiguration.Sink(batchingSink, restrictedToMinimumLevel);
+    }
+
+
+    public static LoggerConfiguration Logstash(this LoggerSinkConfiguration config, LogstashSinkOptions options)
+    {
+        Check.NotNull(config);
+        Check.NotNull(options);
+
+        var op = new PeriodicBatchingSinkOptions
+        {
+            EagerlyEmitFirstEvent = false,
+            BatchSizeLimit = options.BatchSizeLimit,
+            Period = options.Period,
+            QueueLimit = options.QueueLimit
+        };
+        return config.Sink(
+            logEventSink: new PeriodicBatchingSink(new LogstashSink(options), op),
+            restrictedToMinimumLevel: options.MinimumLogEventLevel ?? LevelAlias.Minimum,
+            levelSwitch: options.LevelSwitch
+        );
+    }
+
+    public static LoggerConfiguration Logstash(this LoggerSinkConfiguration config, string uri)
+    {
+        var options = new LogstashSinkOptions(uri);
+        return config.Logstash(options);
     }
 }

@@ -8,10 +8,9 @@ using FclEx.Extensions;
 using FclEx.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 
-[assembly: InternalsVisibleTo("FclEx.Abp.Test")]
 namespace LightInject;
 
-internal static class LightInjectHelper
+public static class LightInjectHelper
 {
     private static readonly string[] _ignoreMsg =
     {
@@ -65,7 +64,7 @@ internal static class LightInjectHelper
         return options;
     }
 
-    internal static IServiceContainer CreateContainer(LightInjectOptions? options = null)
+    public static IServiceContainer CreateContainer(LightInjectOptions? options = null)
     {
         options ??= LightInjectOptions.Default;
         var containerOptions = CreateContainerOptions(options.EnableDebuggerLogging, options.ThrowOnWarningLog);

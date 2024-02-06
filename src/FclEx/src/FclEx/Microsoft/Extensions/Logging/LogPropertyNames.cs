@@ -9,7 +9,6 @@ public static class LogPropertyNames
     public const string CloudRegion = "CloudRegion";
     public const string DurationMilliseconds = "DurationMilliseconds";
     public const string DurationSeconds = "DurationSeconds";
-    public const string EndTime = "EndTime";
     public const string Environment = "Environment";
     public const string ExceptionMessage = "ExceptionMessage";
     public const string FailedCount = "FailedCount";
@@ -21,11 +20,10 @@ public static class LogPropertyNames
     public const string Namespace = "Namespace";
     public const string ProcessName = "ProcessName";
     public const string ProcessId = "ProcessId";
-    public const string RequestEndTime = "RequestEndTime";
-    public const string RequestPath = "RequestPath";
-    public const string RequestStartTime = "RequestStartTime";
+    public const string EndTime = "RequestEndTime";
+    public const string Path = "RequestPath";
+    public const string StartTime = "RequestStartTime";
     public const string Service = "Service";
-    public const string StartTime = "StartTime";
     public const string SuccessCount = "SuccessCount";
     public const string TokenScopes = "TokenScopes";
     public const string TraceId = "TraceId";

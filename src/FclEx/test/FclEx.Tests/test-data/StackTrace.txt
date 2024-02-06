@@ -1,0 +1,34 @@
+System.AggregateException: One or more errors occurred. (D1) (One or more errors occurred. (A1) (A2))
+ ---> System.InvalidOperationException: D1
+ ---> System.AggregateException: One or more errors occurred. (A1)
+ ---> System.InvalidOperationException: A1
+ ---> System.Exception: A1
+   at FclEx.Tests.ExceptionCreator.A(Int32 index) in D:\projects\FclEx\src\FclEx\test\FclEx.Tests\FclEx\Tests\ExceptionCreator.cs:line 14
+   at FclEx.Tests.ExceptionCreator.B(Int32 index) in D:\projects\FclEx\src\FclEx\test\FclEx.Tests\FclEx\Tests\ExceptionCreator.cs:line 21
+   --- End of inner exception stack trace ---
+   at FclEx.Tests.ExceptionCreator.B(Int32 index) in D:\projects\FclEx\src\FclEx\test\FclEx.Tests\FclEx\Tests\ExceptionCreator.cs:line 28
+   at FclEx.Tests.TaskExtensions.WhenAllOrAllErrors(IEnumerable`1 tasks) in D:\projects\FclEx\src\FclEx\test\FclEx.Tests\FclEx\Tests\TaskExtensions.cs:line 10
+   --- End of inner exception stack trace ---
+   at FclEx.Tests.TaskExtensions.WhenAllOrAllErrors(IEnumerable`1 tasks) in D:\projects\FclEx\src\FclEx\test\FclEx.Tests\FclEx\Tests\TaskExtensions.cs:line 16
+   at FclEx.Tests.ExceptionCreator.D(Int32 index) in D:\projects\FclEx\src\FclEx\test\FclEx.Tests\FclEx\Tests\ExceptionCreator.cs:line 42
+   --- End of inner exception stack trace ---
+   at FclEx.Tests.ExceptionCreator.D(Int32 index) in D:\projects\FclEx\src\FclEx\test\FclEx.Tests\FclEx\Tests\ExceptionCreator.cs:line 49
+   at FclEx.Tests.TaskExtensions.WhenAllOrAllErrors(IEnumerable`1 tasks) in D:\projects\FclEx\src\FclEx\test\FclEx.Tests\FclEx\Tests\TaskExtensions.cs:line 10
+   --- End of inner exception stack trace ---
+   at FclEx.Tests.TaskExtensions.WhenAllOrAllErrors(IEnumerable`1 tasks) in D:\projects\FclEx\src\FclEx\test\FclEx.Tests\FclEx\Tests\TaskExtensions.cs:line 16
+   at FclEx.Extensions.ExceptionExtensionsTests.GetInfos_Complex_Test() in D:\projects\FclEx\src\FclEx\test\FclEx.Tests\FclEx\Extensions\ExceptionExtensionsTests.Format.cs:line 34
+ ---> (Inner Exception #1) System.AggregateException: One or more errors occurred. (A1) (A2)
+ ---> System.InvalidOperationException: A1
+ ---> System.Exception: A1
+   at FclEx.Tests.ExceptionCreator.A(Int32 index) in D:\projects\FclEx\src\FclEx\test\FclEx.Tests\FclEx\Tests\ExceptionCreator.cs:line 14
+   at FclEx.Tests.ExceptionCreator.B(Int32 index) in D:\projects\FclEx\src\FclEx\test\FclEx.Tests\FclEx\Tests\ExceptionCreator.cs:line 21
+   --- End of inner exception stack trace ---
+   at FclEx.Tests.ExceptionCreator.B(Int32 index) in D:\projects\FclEx\src\FclEx\test\FclEx.Tests\FclEx\Tests\ExceptionCreator.cs:line 28
+   at FclEx.Tests.TaskExtensions.WhenAllOrAllErrors(IEnumerable`1 tasks) in D:\projects\FclEx\src\FclEx\test\FclEx.Tests\FclEx\Tests\TaskExtensions.cs:line 10
+   --- End of inner exception stack trace ---
+   at FclEx.Tests.TaskExtensions.WhenAllOrAllErrors(IEnumerable`1 tasks) in D:\projects\FclEx\src\FclEx\test\FclEx.Tests\FclEx\Tests\TaskExtensions.cs:line 16
+   at FclEx.Tests.ExceptionCreator.D(Int32 index) in D:\projects\FclEx\src\FclEx\test\FclEx.Tests\FclEx\Tests\ExceptionCreator.cs:line 42
+ ---> (Inner Exception #1) System.Exception: A2
+   at FclEx.Tests.ExceptionCreator.A(Int32 index) in D:\projects\FclEx\src\FclEx\test\FclEx.Tests\FclEx\Tests\ExceptionCreator.cs:line 14
+   at FclEx.Tests.ExceptionCreator.B(Int32 index) in D:\projects\FclEx\src\FclEx\test\FclEx.Tests\FclEx\Tests\ExceptionCreator.cs:line 21<---
+<---
