@@ -10,9 +10,9 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <SolutionDir Condition="'$(SolutionDir)'==''">$(MSBuildThisFileDirectory)</SolutionDir>
+    <_RootDir>$(MSBuildThisFileDirectory)../../../</_RootDir>
     <VSTestLogger>trx%3bLogFileName=$(MSBuildProjectName).trx</VSTestLogger>
-    <VSTestResultsDirectory>$(SolutionDir)/TestResults/$(Configuration)/$(TargetFramework)</VSTestResultsDirectory>
+    <VSTestResultsDirectory>$(_RootDir)TestResults/$(Configuration)/$(TargetFramework)</VSTestResultsDirectory>
     <_SettingFile>appsettings.json</_SettingFile>
   </PropertyGroup>
 
