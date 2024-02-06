@@ -20,39 +20,23 @@ if ([string]::IsNullOrEmpty($ver)) {
   throw "the version is empty"
 }
 
-# List of projects
-$projectNames = (
-  "FclEx",
-  "FclEx.Http",
-  "FclEx.Xunit",
-  "FclEx.Wmi",
-  "FclEx.Serilog",
-  "FclEx.EfCore",
-
-  "FclEx.Abp.RabbitMQ",
-  "FclEx.Abp",
-  "FclEx.Abp.RedisCache",
-  "FclEx.Abp.AspNetCore",
-  "FclEx.Abp.EfCore",
-  "FclEx.Abp.Xunit"
-)
-
 $onlyWin = ("FclEx.Wmi")
-
 
 $srcDir = ([io.path]::combine($root, "..", "src"))
 
 $projects = Get-ChildItem -Path $srcDir -Include *.csproj -Recurse `
-| Where-Object { $projectNames -Contains $_.Basename } `
+| Where-Object { $_.Basename.EndsWith('.Tests') -eq $false -and $_.Basename.EndsWith('.Benchmarks') -eq $false } `
 | Where-Object { $isGithub -eq $false -or ( ($IsWindows -and $onlyWin -contains $_.Basename) -or ($IsWindows -eq $false -and $onlyWin -notcontains $_.Basename) ) }
 
 foreach ($path in $projects) { 
   Write-Output "Packing $($path.Basename)"
-  dotnet clean $path --nologo -v q
+  Set-Location -Path $($path.DirectoryName)
 
-  $command = 'dotnet pack $path --nologo -v q -c Release --include-symbols --output $root -p:PackageVersion=$ver'
-  if($restore -eq $false) {
-      $command = $command + " --no-restore"
+  dotnet clean --nologo -v q
+
+  $command = 'dotnet pack --nologo -v q -c Release --include-symbols --output $root -p:PackageVersion=$ver'
+  if ($restore -eq $false) {
+    $command = $command + " --no-restore"
   }
   Invoke-Expression $command
   
@@ -62,7 +46,7 @@ foreach ($path in $projects) {
 }
 
 Write-Output "Packing finished."
-
+Read-Host
 
 $files = Get-ChildItem $pkgPath
 

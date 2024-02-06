@@ -19,26 +19,38 @@
   <PropertyGroup>
     <ToolName>FclEx.Wmi.SourceGenerator</ToolName>
     <ToolFramework>net6.0-windows</ToolFramework>
-    <ToolProjectDir>$(ProjectDir)..\$(ToolName)\</ToolProjectDir>
+    <ToolProjectDir>$(MSBuildProjectDirectory)\..\$(ToolName)\</ToolProjectDir>
     <ToolPath>$(ToolProjectDir)bin\$(Configuration)\$(ToolFramework)\$(ToolName).dll</ToolPath>
-    <SourceDir>$(ProjectDir)obj\generated\</SourceDir>
+    <SourceDir>$(MSBuildProjectDirectory)\obj\generated\</SourceDir>
   </PropertyGroup>
 
   <!--Option to run target once per project in multi-targeting build-->
   <!--https://github.com/dotnet/msbuild/issues/2781-->
   <Target Name="GenerateCodeBody">
-    <Message Importance="High" Text="Started to generate code." />
+    <Message Importance="High" Text="Generating code to $(SourceDir)." />
     <ItemGroup>
       <!--MSBuild maintains an item list named FileWrites that contains the files that need to be cleaned.
       This list is persisted to a file inside the obj folder that is referred to as the "clean cache."
       You can place additional values into the FileWrites item list so that they are removed when the project is cleaned up.-->
       <FileWrites Include="$(SourceDir)" />
     </ItemGroup>
-    <RemoveDir Directories="$(SourceDir)" />
+    <RemoveDir Directories="$(SourceDir)" Condition="Exists($(SourceDir))" />
+
+    <CallTarget Targets="BuildTool" Condition="!Exists($(ToolPath))" />
+
     <Exec Command="dotnet $(ToolPath) $(SourceDir)">
       <Output TaskParameter="ExitCode" PropertyName="_RunExitCode" />
     </Exec>
     <Error Condition="'$(_RunExitCode)' != '0'" Text="Run $(ToolName) failed" />
+
+  </Target>
+
+  <Target Name="BuildTool">
+    <Message Importance="High" Text="Building source generator because it does not exist." />
+    <Exec Command="dotnet build $(ToolProjectDir) --nologo -v q -c $(Configuration) -consoleLoggerParameters:NoSummary">
+      <Output TaskParameter="ExitCode" PropertyName="_RunExitCode" />
+    </Exec>
+    <Error Condition="'$(_RunExitCode)' != '0'" Text="Build $(ToolName) failed" />
   </Target>
 
   <Target Name="GenerateCode" BeforeTargets="DispatchToInnerBuilds;BeforeCompile">
