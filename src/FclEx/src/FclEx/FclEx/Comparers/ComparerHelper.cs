@@ -10,11 +10,11 @@ public static class ComparerHelper
         {
             result = 0;
         }
-        else if (x == null)
+        else if (x is null)
         {
             result = isNullSmaller ? -1 : 1;
         }
-        else if (y == null)
+        else if (y is null)
         {
             result = isNullSmaller ? 1 : -1;
         }

@@ -52,6 +52,11 @@ public static class TestHelper
         .Where(m => m.GetReferencedAssemblies().Any(x => x.FullName == AssemblyFullName))
         .ToArray();
 
+    public static readonly BuildType[] ReferencingAssemblyBuildTypes = ReferencingAssemblies
+        .Select(m => m.GetBuildInfo().BuildType)
+        .Distinct()
+        .ToArray();
+
     public static string? GetSkipReason(SkipReasonInfo info)
     {
         if (info.Reason is { Length: > 0 } reason)
@@ -66,16 +71,16 @@ public static class TestHelper
 
         if (info.RequiredBuildType.ToBuildType() is { } buildType)
         {
-            if (ReferencingAssemblies is [var assembly])
+            if (ReferencingAssemblyBuildTypes is [var type])
             {
-                if (assembly.GetBuildInfo().BuildType != buildType)
+                if (type != buildType)
                 {
                     return $"The calling assembly is not in {buildType} mode";
                 }
             }
             else
             {
-                return $"The count of referencing assemblies is {ReferencingAssemblies.Length}, not 1.";
+                return $"The count of referencing assembly build types is {ReferencingAssemblies.Length}, not 1.";
             }
         }
 

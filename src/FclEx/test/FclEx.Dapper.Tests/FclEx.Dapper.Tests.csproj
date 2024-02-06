@@ -33,7 +33,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\FclEx.Dapper\FclEx.Dapper.csproj" />
     <ProjectReference Include="..\..\src\FclEx.EfCore\FclEx.EfCore.csproj" />
-    <ProjectReference Include="..\FclEx.Test\FclEx.Test.csproj" />
+    <ProjectReference Include="..\FclEx.Tests\FclEx.Tests.csproj" />
   </ItemGroup>
 
 </Project>

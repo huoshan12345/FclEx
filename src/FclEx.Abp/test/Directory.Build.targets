@@ -2,10 +2,5 @@
   <PropertyGroup>
     <!--Empty RootNamespace does not work in Directory.Build.props, so put it in this file as a workaround-->
     <RootNamespace></RootNamespace>
-    <_StartupProject>FclEx.Abp.Test</_StartupProject>
   </PropertyGroup>
-
-  <ItemGroup Condition="$(ProjectName) != $(_StartupProject)">
-    <Compile Include="$(ProjectDir)..\$(_StartupProject)\Startup.cs" />
-  </ItemGroup>
 </Project>

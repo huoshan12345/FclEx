@@ -73,7 +73,7 @@ partial class ExceptionExtensions
     }
 
     public static string[] IgnorableStackTracePrefixes { get; } =
-    {
+    [
         "--- End of ", // --- End of inner exception stack trace --- or --- End of stack trace from previous location ---
         "System.Threading.ExecutionContext.",
         "System.Runtime.CompilerServices.AsyncTaskMethodBuilder",
@@ -86,8 +86,8 @@ partial class ExceptionExtensions
         "Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync",
         "System.Runtime.CompilerServices.AsyncMethodBuilderCore",
         "System.Threading.ThreadPoolWorkQueue.Dispatch",
-        "System.Threading.PortableThreadPool.WorkerThread.WorkerThreadStart",
-    };
+        "System.Threading.PortableThreadPool.WorkerThread.WorkerThreadStart"
+    ];
 
     /// <summary>
     /// 

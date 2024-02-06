@@ -38,29 +38,42 @@ public static class AsyncLockExtensions
 
     public static void DoubleCheckAndDo(this AsyncLock locker, Func<bool> condition, Action action)
     {
-        if (condition())
-        {
-            using (locker.Lock())
-            {
-                if (condition())
-                {
-                    action();
-                }
-            }
-        }
+        if (!condition())
+            return;
+
+        using var disposable = locker.Lock();
+
+        if (!condition())
+            return;
+
+        action();
     }
 
     public static async Task DoubleCheckAndDoAsync(this AsyncLock locker, Func<bool> condition, Func<Task> action)
     {
-        if (condition())
-        {
-            using (await locker.LockAsync())
-            {
-                if (condition())
-                {
-                    await action().IgnoreSyncContext();
-                }
-            }
-        }
+        if (!condition())
+            return;
+
+        using var disposable = await locker.LockAsync();
+
+        if (!condition())
+            return;
+
+        await action().IgnoreSyncContext();
+    }
+
+    /// <summary>
+    /// Dispose the value if it is created.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="instance"></param>
+    /// <returns></returns>
+    public static async ValueTask DisposeValue<T>(this AsyncLazy<T> instance) where T : IDisposable
+    {
+        if (instance.IsStarted == false)
+            return;
+
+        var obj = await instance;
+        obj.Dispose();
     }
 }

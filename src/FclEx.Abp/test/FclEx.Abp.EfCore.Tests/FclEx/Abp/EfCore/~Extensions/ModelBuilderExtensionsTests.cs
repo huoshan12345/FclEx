@@ -1,6 +1,4 @@
-﻿using Dapper;
-
-namespace FclEx.Abp.EfCore;
+﻿namespace FclEx.Abp.EfCore;
 
 public class ModelBuilderExtensionsTests : IAssemblyFixture<GlobalFixture>
 {

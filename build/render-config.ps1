@@ -1,0 +1,1 @@
+﻿bash -c "make --silent render-local -C ../";

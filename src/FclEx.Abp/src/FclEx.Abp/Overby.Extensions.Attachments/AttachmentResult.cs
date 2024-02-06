@@ -5,7 +5,7 @@ namespace Overby.Extensions.Attachments;
 /// The result of getting an attached value from a host object.
 /// </summary>
 /// <typeparam name="T">The value's type.</typeparam>
-public class AttachmentResult<T>
+internal class AttachmentResult<T>
 {
     /// <summary>
     /// Whether the attachment key was found.

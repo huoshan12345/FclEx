@@ -5,13 +5,12 @@ using FclEx.Abp.RabbitMQ.Serializers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace FclEx.Abp.RabbitMQ.MsgRoles
+namespace FclEx.Abp.RabbitMQ.MsgRoles;
+
+public class CommonPublisher<TMsg> : Publisher<TMsg>
 {
-    public class CommonPublisher<TMsg> : Publisher<TMsg>
+    public CommonPublisher(ILoggerFactory? logger = null, IMemoryBytesSerializer? serializer = null)
+        : base(serializer, logger)
     {
-        public CommonPublisher(ILoggerFactory? logger = null, IMemoryBytesSerializer? serializer = null)
-            : base(serializer, logger)
-        {
-        }
     }
 }

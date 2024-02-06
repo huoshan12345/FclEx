@@ -1,6 +1,4 @@
-﻿using System.IO;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static class StreamExtensions
 {

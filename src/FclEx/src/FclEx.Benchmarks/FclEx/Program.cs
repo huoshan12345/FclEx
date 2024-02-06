@@ -1,13 +1,12 @@
 ﻿using BenchmarkDotNet.Running;
 using FclEx.Benchmarks;
 
-namespace FclEx
+namespace FclEx;
+
+internal class Program
 {
-    internal class Program
+    internal static void Main(string[] args)
     {
-        internal static void Main(string[] args)
-        {
-            BenchmarkRunner.Run<InterfaceBaseInvocationBenchmark>();
-        }
+        BenchmarkRunner.Run<InterfaceBaseInvocationBenchmark>();
     }
 }

@@ -1,14 +1,17 @@
 ﻿namespace FclEx.Utils;
 
-public readonly record struct AsyncDisposableValue<T>(T Value, Func<T, ValueTask>? DisposeAction = null) : IAsyncDisposable
+public readonly struct AsyncDisposableValue<T>(T value, Func<T, ValueTask>? disposeAction = null) : IAsyncDisposable
 {
     public static implicit operator T(AsyncDisposableValue<T> disposable) => disposable.Value;
 
+    public T Value { get; } = value;
+    public readonly Func<T, ValueTask>? _disposeAction = disposeAction;
+
     public async ValueTask DisposeAsync()
     {
-        if (DisposeAction != null)
+        if (_disposeAction != null)
         {
-            await DisposeAction.Invoke(Value);
+            await _disposeAction.Invoke(Value);
         }
         // ReSharper disable once ConvertIfStatementToSwitchStatement
         else if (Value is IAsyncDisposable asyncDisposable)

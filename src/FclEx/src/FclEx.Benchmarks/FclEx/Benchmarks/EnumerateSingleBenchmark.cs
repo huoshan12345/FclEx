@@ -5,98 +5,97 @@ using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
 using FclEx.Extensions;
 
-namespace FclEx.Benchmarks
+namespace FclEx.Benchmarks;
+
+internal readonly struct SingleSequence<T> : IEnumerable<T>
 {
-    internal readonly struct SingleSequence<T> : IEnumerable<T>
+    private readonly T _value;
+
+    public SingleSequence(T value)
     {
-        private readonly T _value;
-
-        public SingleSequence(T value)
-        {
-            _value = value;
-        }
-
-        public IEnumerator<T> GetEnumerator() => new SingleEnumerator(in this);
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-        private struct SingleEnumerator : IEnumerator<T>
-        {
-            private readonly SingleSequence<T> _parent;
-            private bool _couldMove;
-            public SingleEnumerator(in SingleSequence<T> parent)
-            {
-                _parent = parent;
-                _couldMove = true;
-            }
-
-            public T Current => _parent._value;
-            object? IEnumerator.Current => Current;
-
-            public void Dispose() { }
-
-            public bool MoveNext()
-            {
-                if (!_couldMove)
-                    return false;
-
-                _couldMove = false;
-                return true;
-            }
-            public void Reset()
-            {
-                _couldMove = true;
-            }
-        }
+        _value = value;
     }
 
-    public static class Extensions
+    public IEnumerator<T> GetEnumerator() => new SingleEnumerator(in this);
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    private struct SingleEnumerator : IEnumerator<T>
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IEnumerable<T> SingleSequence<T>(this T value)
+        private readonly SingleSequence<T> _parent;
+        private bool _couldMove;
+        public SingleEnumerator(in SingleSequence<T> parent)
         {
-            return new SingleSequence<T>(value);
+            _parent = parent;
+            _couldMove = true;
+        }
+
+        public T Current => _parent._value;
+        object? IEnumerator.Current => Current;
+
+        public void Dispose() { }
+
+        public bool MoveNext()
+        {
+            if (!_couldMove)
+                return false;
+
+            _couldMove = false;
+            return true;
+        }
+        public void Reset()
+        {
+            _couldMove = true;
         }
     }
+}
 
-
-    [MemoryDiagnoser]
-    public class EnumerateSingleBenchmark
+public static class Extensions
+{
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static IEnumerable<T> SingleSequence<T>(this T value)
     {
-        [Params(0, 10)]
-        public int Number { get; set; }
+        return new SingleSequence<T>(value);
+    }
+}
 
-        [Benchmark]
-        public double Array()
-        {
-            return Sum(new[] { Number });
-        }
 
-        [Benchmark]
-        public double Yield()
-        {
-            return Sum(Number.Yield());
-        }
+[MemoryDiagnoser]
+public class EnumerateSingleBenchmark
+{
+    [Params(0, 10)]
+    public int Number { get; set; }
 
-        [Benchmark]
-        public double Repeat()
-        {
-            return Sum(Enumerable.Repeat(Number, 1));
-        }
+    [Benchmark]
+    public double Array()
+    {
+        return Sum(new[] { Number });
+    }
 
-        [Benchmark]
-        public double SingleSequence()
-        {
-            return Sum(Number.SingleSequence());
-        }
+    [Benchmark]
+    public double Yield()
+    {
+        return Sum(Number.Yield());
+    }
 
-        private static double Sum(IEnumerable<int> values)
+    [Benchmark]
+    public double Repeat()
+    {
+        return Sum(Enumerable.Repeat(Number, 1));
+    }
+
+    [Benchmark]
+    public double SingleSequence()
+    {
+        return Sum(Number.SingleSequence());
+    }
+
+    private static double Sum(IEnumerable<int> values)
+    {
+        var result = 0;
+        foreach (var value in values)
         {
-            var result = 0;
-            foreach (var value in values)
-            {
-                result += value;
-            }
-            return result;
+            result += value;
         }
+        return result;
     }
 }

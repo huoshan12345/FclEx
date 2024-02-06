@@ -8,32 +8,31 @@ using Volo.Abp.Modularity;
 using Xunit.Abstractions;
 
 // ReSharper disable StaticMemberInGenericType
-namespace FclEx.Abp.Xunit
-{
-    public abstract class AbpStaticInitTests<TModule> : AbstractAbpTests<TModule>
-        where TModule : AbpModule
-    {
-        protected static readonly object Locker = new();
-        protected static bool IsReady { get; set; }
-        public static IServiceProvider ServiceProvider { get; private set; } = default!;
+namespace FclEx.Abp.Xunit;
 
-        protected AbpStaticInitTests(ITestOutputHelper output, Action<AbpTestsOptions>? action = null)
-            : base(output, action)
+public abstract class AbpStaticInitTests<TModule> : AbstractAbpTests<TModule>
+    where TModule : AbpModule
+{
+    protected static readonly object Locker = new();
+    protected static bool IsReady { get; set; }
+    public static IServiceProvider ServiceProvider { get; private set; } = default!;
+
+    protected AbpStaticInitTests(ITestOutputHelper output, Action<AbpTestsOptions>? action = null)
+        : base(output, action)
+    {
+        if (!IsReady)
         {
-            if (!IsReady)
+            lock (Locker)
             {
-                lock (Locker)
+                if (!IsReady)
                 {
-                    if (!IsReady)
-                    {
-                        ServiceProvider = InitApp();
-                        IsReady = true;
-                        return;
-                    }
+                    ServiceProvider = InitApp();
+                    IsReady = true;
+                    return;
                 }
             }
-            var fac = ServiceProvider.GetRequiredService<ILoggerFactory>();
-            fac.AddXunitTest(output, true);
         }
+        var fac = ServiceProvider.GetRequiredService<ILoggerFactory>();
+        fac.AddXunitTest(output, true);
     }
 }

@@ -2,6 +2,8 @@
 
 public static class DateTimeExtensions
 {
+    public static readonly DateTime UnixEpoch = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
     public const string ShortTimeFormat = "yyyyMMddHHmmss";
     public const string CommonTimeFormat = "yyyy-MM-dd HH:mm:ss";
 
@@ -108,17 +110,10 @@ public static class DateTimeExtensions
         return dt?.Date;
     }
 
-    public static string ToStringOrEmpty(this DateTime dt, string format = CommonTimeFormat)
+    public static string ToStringOrEmpty(this DateTime? dateTime, string format = CommonTimeFormat)
     {
-        return dt == default
-            ? string.Empty
-            : dt.ToString(format);
-    }
-
-    public static string ToStringOrEmpty(this DateTime? dt, string format = CommonTimeFormat)
-    {
-        return dt.HasValue
-            ? ToStringOrEmpty(dt.Value, format)
+        return dateTime is { } dt
+            ? dt.ToString(format)
             : string.Empty;
     }
 
@@ -137,7 +132,7 @@ public static class DateTimeExtensions
     {
         return DateTime.SpecifyKind(time, kind);
     }
-
+    
     public static DateTime ToCnTime(this DateTime time)
     {
         return time.ToUtc().AddHours(8);

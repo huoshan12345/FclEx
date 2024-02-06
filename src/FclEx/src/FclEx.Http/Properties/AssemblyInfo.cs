@@ -1,1 +1,1 @@
-﻿[assembly: InternalsVisibleTo("FclEx.Http.Test")]
+﻿[assembly: InternalsVisibleTo("FclEx.Http.Tests")]

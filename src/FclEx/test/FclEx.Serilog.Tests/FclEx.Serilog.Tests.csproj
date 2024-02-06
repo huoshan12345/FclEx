@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Serilog.Sinks.XUnit" Version="3.0.5" />
+    <ProjectReference Include="..\..\src\FclEx.Serilog\FclEx.Serilog.csproj" />
+    <ProjectReference Include="..\FclEx.Tests\FclEx.Tests.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+  </ItemGroup>
+
+</Project>

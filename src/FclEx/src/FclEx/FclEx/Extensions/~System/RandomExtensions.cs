@@ -4,6 +4,12 @@ public static class RandomExtensions
 {
     private const string Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
+    public static char NextChar(this Random random)
+    {
+        var index = random.Next(0, Chars.Length);
+        return Chars[index];
+    }
+
     public static string NextString(this Random random, int length)
     {
         Check.NotNull(random);
@@ -15,13 +21,6 @@ public static class RandomExtensions
         return new string(stringChars);
     }
 
-    public static long NextLong(this Random random, long max = long.MaxValue)
-    {
-        Check.NotNull(random);
-        Check.NotNegative(max);
-        return (long)(random.NextDouble() * max);
-    }
-
     public static short NextShort(this Random random, short max = short.MaxValue)
     {
         Check.NotNull(random);
@@ -29,117 +28,49 @@ public static class RandomExtensions
         return (short)(random.NextDouble() * max);
     }
 
-    public static DateTime NextDateTime(this Random random, DateTime? min = null, DateTime? max = null)
+    public static bool NextBoolean(this Random random, double truePercentage) => random.NextDouble() < (truePercentage / 100.0);
+    public static bool NextBoolean(this Random random) => random.Next(1, 2) == 1;
+    public static sbyte NextSByte(this Random random) => (sbyte)random.Next(sbyte.MinValue, sbyte.MaxValue);
+    public static byte NextByte(this Random random) => (byte)random.Next(byte.MinValue, byte.MaxValue);
+    public static short NextInt16(this Random random) => (short)random.Next(short.MinValue, short.MaxValue);
+    public static ushort NextUInt16(this Random random) => (ushort)random.Next(ushort.MinValue, ushort.MaxValue);
+    public static uint NextUInt32(this Random random) => (uint)random.NextInt64(uint.MinValue, uint.MaxValue);
+    public static ulong NextUInt64(this Random random) => (ulong)random.NextInt64(long.MinValue, long.MaxValue);
+    public static decimal NextDecimal(this Random random) => (decimal)random.NextDouble();
+    public static DateTime NextDateTime(this Random random, DateTime? minValue = null, DateTime? maxValue = null)
     {
-        Check.NotNull(random);
-
-        if (min.HasValue && max.HasValue && min > max)
-            throw new ArgumentOutOfRangeException(nameof(min), "the min value cannot be greater than the max value.");
-
-        var minTicks = (min ?? DateTime.MinValue).Ticks;
-        var maxTicks = (max ?? DateTime.MaxValue).Ticks;
-
-        return new DateTime(minTicks + random.NextLong(maxTicks - minTicks));
+        var min = minValue ?? DateTimeExtensions.UnixEpoch;
+        var max = maxValue ?? DateTime.MaxValue;
+        var ticks = random.NextInt64(min.Ticks, max.Ticks);
+        return new DateTime(ticks);
     }
 
-    public static bool NextBool(this Random random, double truePercentage = 50)
+    public static object? Next(this Random random, Type type)
     {
-        Check.NotNull(random);
-        return random.NextDouble() < (truePercentage / 100.0);
+        if (type == typeof(Guid))
+            return Guid.NewGuid();
+
+        return Type.GetTypeCode(type) switch
+        {
+            TypeCode.Boolean => random.NextBoolean(),
+            TypeCode.Char => random.NextChar(),
+            TypeCode.SByte => random.NextSByte(),
+            TypeCode.Byte => random.NextByte(),
+            TypeCode.Int16 => random.NextInt16(),
+            TypeCode.UInt16 => random.NextUInt16(),
+            TypeCode.Int32 => random.Next(),
+            TypeCode.UInt32 => random.NextUInt32(),
+            TypeCode.Int64 => random.NextInt64(),
+            TypeCode.UInt64 => random.NextUInt64(),
+            TypeCode.Single => random.NextSingle(),
+            TypeCode.Double => random.NextDouble(),
+            TypeCode.Decimal => random.NextDecimal(),
+            TypeCode.DateTime => random.NextDateTime(maxValue: new DateTime(2100, 1, 1, 0, 0, 0, DateTimeKind.Utc)),
+            TypeCode.String => random.NextString(10),
+            TypeCode.Empty => null,
+            TypeCode.Object => new object(),
+            TypeCode.DBNull => DBNull.Value,
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type.Name, null)
+        };
     }
-
-    //private static object Next(this Random random, TypeCode typeCode)
-    //{
-    //    switch (typeCode)
-    //    {
-    //        case TypeCode.Boolean: return random.NextDouble() >= 0.5;
-    //        case TypeCode.Byte: return random.NextDouble() * byte.MaxValue;
-    //        case TypeCode.Char:
-    //            break;
-    //        case TypeCode.DateTime:
-    //            break;
-    //        case TypeCode.DBNull:
-    //            break;
-    //        case TypeCode.Decimal:
-    //            break;
-    //        case TypeCode.Double:
-    //            break;
-    //        case TypeCode.Int16:
-    //            break;
-    //        case TypeCode.Int32:
-    //            break;
-    //        case TypeCode.Int64:
-    //            break;
-    //        case TypeCode.Object:
-    //            break;
-    //        case TypeCode.SByte:
-    //            break;
-    //        case TypeCode.Single:
-    //            break;
-    //        case TypeCode.String:
-    //            break;
-    //        case TypeCode.UInt16:
-    //            break;
-    //        case TypeCode.UInt32:
-    //            break;
-    //        case TypeCode.UInt64:
-    //            break;
-    //        default:
-    //            break;
-    //    }
-    //}
-
-    //public static object NextObject(this Random random, Type type)
-    //{
-    //    Check.NotNull(random);
-    //    Check.NotNull(type);
-
-    //    var obj = Activator.CreateInstance(type);
-    //    var props = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-    //        .Where(m => m.CanRead);
-
-    //    foreach (var prop in props)
-    //    {
-    //        var typeCode = Type.GetTypeCode(prop.PropertyType);
-    //        switch (typeCode)
-    //        {
-    //            case TypeCode.Boolean:
-    //                break;
-    //            case TypeCode.Byte:
-    //                break;
-    //            case TypeCode.Char:
-    //                break;
-    //            case TypeCode.DateTime:
-    //                break;
-    //            case TypeCode.DBNull:
-    //                break;
-    //            case TypeCode.Decimal:
-    //                break;
-    //            case TypeCode.Double:
-    //                break;
-    //            case TypeCode.Int16:
-    //                break;
-    //            case TypeCode.Int32:
-    //                break;
-    //            case TypeCode.Int64:
-    //                break;
-    //            case TypeCode.Object:
-    //                break;
-    //            case TypeCode.SByte:
-    //                break;
-    //            case TypeCode.Single:
-    //                break;
-    //            case TypeCode.String:
-    //                break;
-    //            case TypeCode.UInt16:
-    //                break;
-    //            case TypeCode.UInt32:
-    //                break;
-    //            case TypeCode.UInt64:
-    //                break;
-    //            default:
-    //                break;
-    //        }
-    //    }
-    //}
 }

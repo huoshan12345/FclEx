@@ -1,6 +1,4 @@
-﻿using System.IO;
-
-namespace FclEx.Data;
+﻿namespace FclEx.Data;
 
 public static class CsvHelper
 {

@@ -6,10 +6,13 @@ partial class StringExtensions
     public static bool IsNullOrEmpty([NotNullWhen(false)] this string? str) => string.IsNullOrEmpty(str);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsNonEmpty([NotNullWhen(true)] this string? str) => string.IsNullOrEmpty(str) == false;
+    public static bool IsNotEmpty([NotNullWhen(true)] this string? str) => string.IsNullOrEmpty(str) == false;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? str) => string.IsNullOrWhiteSpace(str);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T? FromJson<T>(this string json) => JsonConvert.DeserializeObject<T>(json);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string Format(this string str, params object[] args) => string.Format(str, args);
@@ -25,11 +28,11 @@ partial class StringExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [return: NotNullIfNotNull(nameof(value))]
-    public static string? UrlEncode(this string? value) => WebUtility.UrlEncode(value);
+    public static string? UrlEncode(this string? value) => HttpUtility.UrlEncode(value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [return: NotNullIfNotNull(nameof(value))]
-    public static string? UrlDecode(this string? value) => WebUtility.UrlDecode(value);
+    public static string? UrlDecode(this string? value) => HttpUtility.UrlDecode(value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string UriEscape(this string value) => Uri.EscapeDataString(value);
@@ -145,7 +148,7 @@ partial class StringExtensions
     public static string[] SplitToLines(this string? str, StringSplitOptions options = SplitOptions)
     {
         return string.IsNullOrEmpty(str)
-            ? Array.Empty<string>()
+            ? []
             : str!.Split(NewLineChars, options);
     }
 

@@ -1,23 +1,22 @@
 ﻿using FclEx.Abp.RedisCache.Configuration;
 
-namespace FclEx.Abp.RedisCache.Collections
+namespace FclEx.Abp.RedisCache.Collections;
+
+public enum RedisColType
 {
-    public enum RedisColType
-    {
-        List = 0,
-        Set = 1,
-        SortedSet = 2,
-        Hash = 3,
-    }
+    List = 0,
+    Set = 1,
+    SortedSet = 2,
+    Hash = 3,
+}
 
-    public interface IRedisCol
-    {
-        string Name { get; }
-        string Key { get; }
-        RedisColType ColType { get; }
-    }
+public interface IRedisCol
+{
+    string Name { get; }
+    string Key { get; }
+    RedisColType ColType { get; }
+}
 
-    public interface IRedisCol<T> : IRedisCol
-    {
-    }
+public interface IRedisCol<T> : IRedisCol
+{
 }

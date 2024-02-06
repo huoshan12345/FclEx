@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace FclEx.Abp.RedisCache.Configuration
+namespace FclEx.Abp.RedisCache.Configuration;
+
+public interface IAbpRedisReadOnlyOptions
 {
-    public interface IAbpRedisReadOnlyOptions
-    {
-        bool SerializeStringAsRaw { get; }
-    }
+    bool SerializeStringAsRaw { get; }
 }

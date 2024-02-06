@@ -37,9 +37,9 @@ partial class HttpRequestExtensions
 
     public static HttpRequest AddHeader(this HttpRequest req, KeyValuePair<string, string?> pair) => req.AddHeader(pair.Key, pair.Value);
 
-    public static HttpRequest AddHeaderPair(this HttpRequest req, string queryPair, char sepetator = ':')
+    public static HttpRequest AddHeaderPair(this HttpRequest req, string queryPair, char separator = ':')
     {
-        var pair = queryPair.Split(sepetator);
+        var pair = queryPair.Split(separator);
         req.AddHeader(pair[0], pair.Length > 1 ? pair[1] : "");
         return req;
     }

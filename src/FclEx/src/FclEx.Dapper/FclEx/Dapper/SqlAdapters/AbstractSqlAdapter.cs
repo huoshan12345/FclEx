@@ -1,4 +1,6 @@
-﻿namespace FclEx.Dapper.SqlAdapters;
+﻿using MoreLinq;
+
+namespace FclEx.Dapper.SqlAdapters;
 
 public readonly record struct QuotationMarks(char Prefix, char Suffix)
 {
@@ -79,7 +81,7 @@ public abstract class AbstractSqlAdapter<TSelf> : ISqlAdapter where TSelf : Abst
         expList.Add(result);
         var final = Expression.Block(new[] { result }, expList);
 #if DEBUG
-        final.Visit(e => Console.WriteLine(e.ToString()));
+        final.Enumerate().ForEach(e => Console.WriteLine(e.ToString()));
 #endif
         return Expression.Lambda<DbParameterCreator>(final, paraOfName, paraOfValue, paraOfType).Compile();
     }

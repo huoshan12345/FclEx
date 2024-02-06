@@ -1,9 +1,8 @@
 ﻿using Volo.Abp.Modularity;
 
-namespace FclEx.Abp.RabbitMQ
+namespace FclEx.Abp.RabbitMQ;
+
+[DependsOn(typeof(FclExAbpModule))]
+public class FclExAbpRabbitMqModule : AbpModule
 {
-    [DependsOn(typeof(FclExAbpModule))]
-    public class FclExAbpRabbitMqModule : AbpModule
-    {
-    }
 }

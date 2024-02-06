@@ -11,8 +11,7 @@ namespace Overby.Extensions.Attachments;
 /// </summary>
 internal static class AttachmentExtensions
 {
-    private static readonly ConditionalWeakTable<object, ConcurrentDictionary<string, object>> _attachmentTable =
-        new();
+    private static readonly ConditionalWeakTable<object, ConcurrentDictionary<string, object>> _attachmentTable = new();
 
     /// <summary>
     /// Copies attachments from one object to another.
@@ -50,7 +49,7 @@ internal static class AttachmentExtensions
         if (factory == null)
             throw new ArgumentNullException(nameof(factory));
 
-        key = key ?? typeof(T).AssemblyQualifiedName;
+        key ??= typeof(T).AssemblyQualifiedName;
         var dict = _attachmentTable.GetOrCreateValue(host);
         var found = true;
         var value = dict.GetOrAdd(key, _ => { found = false; return factory(); });
@@ -71,7 +70,7 @@ internal static class AttachmentExtensions
         if (value == null && key == null)
             throw new ArgumentNullException(key, $"{nameof(value)} or {nameof(key)} must be provided");
 
-        key = key ?? value.GetType().AssemblyQualifiedName;
+        key ??= value.GetType().AssemblyQualifiedName;
         var dict = _attachmentTable.GetOrCreateValue(host);
         dict[key] = value;
     }
@@ -98,7 +97,7 @@ internal static class AttachmentExtensions
             throw new ArgumentNullException(nameof(key));
 
         var dict = _attachmentTable.GetOrCreateValue(host);
-        var found = dict.TryGetValue(key, out object value);
+        var found = dict.TryGetValue(key, out var value);
         return new AttachmentResult<object>(found, value);
     }
 
@@ -115,10 +114,10 @@ internal static class AttachmentExtensions
         if (host == null)
             throw new ArgumentNullException(nameof(host));
 
-        key = key ?? typeof(T).AssemblyQualifiedName;
+        key ??= typeof(T).AssemblyQualifiedName;
         var dict = _attachmentTable.GetOrCreateValue(host);
-        var found = dict.TryGetValue(key, out object value);
-        var castValue = found ? (T)value : default(T);
+        var found = dict.TryGetValue(key, out var value);
+        var castValue = found ? (T)value : default;
         return new AttachmentResult<T>(found, castValue);
     }
 
@@ -130,10 +129,10 @@ internal static class AttachmentExtensions
         if (host == null)
             throw new ArgumentNullException(nameof(host));
 
-        if (_attachmentTable.TryGetValue(host, out ConcurrentDictionary<string, object> dict))
+        if (_attachmentTable.TryGetValue(host, out var dict))
             return dict.Keys;
 
-        return new string[0];
+        return Array.Empty<string>();
     }
 
     /// <summary>
@@ -154,7 +153,7 @@ internal static class AttachmentExtensions
             throw new ArgumentNullException(nameof(key));
 
         var dict = _attachmentTable.GetOrCreateValue(host);
-        var found = dict.TryRemove(key, out object value);
+        var found = dict.TryRemove(key, out var value);
         return new AttachmentResult<object>(found, value);
     }
 
@@ -167,15 +166,15 @@ internal static class AttachmentExtensions
         if (host == null)
             throw new ArgumentNullException(nameof(host));
 
-        key = key ?? typeof(T).AssemblyQualifiedName;
+        key ??= typeof(T).AssemblyQualifiedName;
         var dict = _attachmentTable.GetOrCreateValue(host);
-        var found = dict.TryRemove(key, out object value);
-        var castValue = found ? (T)value : default(T);
+        var found = dict.TryRemove(key, out var value);
+        var castValue = found ? (T)value : default;
         return new AttachmentResult<T>(found, castValue);
     }
 
-    private static string UniquePrefix = Guid.NewGuid().ToString();
-    private static string RefIdKey = $"{UniquePrefix}:{nameof(GetReferenceId)}";
+    private static readonly string UniquePrefix = Guid.NewGuid().ToString();
+    private static readonly string RefIdKey = $"{UniquePrefix}:{nameof(GetReferenceId)}";
 
     /// <summary>
     /// Unique identifier for the object reference.
@@ -186,7 +185,7 @@ internal static class AttachmentExtensions
     /// <summary>
     /// Get's an extension property.
     /// </summary>
-    public static ExtensionProperty<T> GetExtensionProperty<T>(this object host, Optional<T> optionalValue = default(Optional<T>), [CallerMemberName]string propertyName = null)
+    public static ExtensionProperty<T> GetExtensionProperty<T>(this object host, Optional<T> optionalValue = default, [CallerMemberName]string propertyName = null)
     {
         if (host == null)
             throw new ArgumentNullException(nameof(host));
@@ -195,7 +194,7 @@ internal static class AttachmentExtensions
         var extensionProperty = host.GetOrSetAttached(() =>
             new ExtensionProperty<T>(attachmentKey), attachmentKey).Value;
 
-        if (optionalValue.Set)
+        if (optionalValue.HasValue)
             extensionProperty.Value = optionalValue;
 
         return extensionProperty;

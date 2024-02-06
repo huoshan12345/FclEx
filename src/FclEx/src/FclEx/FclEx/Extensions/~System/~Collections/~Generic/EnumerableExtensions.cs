@@ -2,6 +2,8 @@
 
 namespace FclEx.Extensions;
 
+public readonly record struct IndexedItem<T>(T Item, int Index, bool IsFirst, bool IsLast);
+
 [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 public static partial class EnumerableExtensions
 {
@@ -154,9 +156,9 @@ public static partial class EnumerableExtensions
     {
         return source.Select((m, i) => selector(m.Item1, m.Item2, i));
     }
-
+    
     // Extension for MoreLinq.Index()
-    public static IEnumerable<(T item, int index, bool isFirst, bool isLast)> IndexExt<T>(this IEnumerable<T> enumerable)
+    public static IEnumerable<IndexedItem<T>> IndexExt<T>(this IEnumerable<T> enumerable)
     {
         if (enumerable == null)
         {
@@ -167,7 +169,7 @@ public static partial class EnumerableExtensions
         // see details in https://stackoverflow.com/questions/42149895/method-having-yield-return-is-not-throwing-exception
         return WithIndexBody(enumerable);
 
-        static IEnumerable<(T item, int index, bool isFirst, bool isLast)> WithIndexBody(IEnumerable<T> enumerable)
+        static IEnumerable<IndexedItem<T>> WithIndexBody(IEnumerable<T> enumerable)
         {
             using var enumerator = enumerable.GetEnumerator();
 
@@ -180,12 +182,12 @@ public static partial class EnumerableExtensions
             var current = enumerator.Current;
             while (enumerator.MoveNext())
             {
-                yield return (current, i, i == 0, false);
+                yield return new(current, i, i == 0, false);
                 current = enumerator.Current;
                 ++i;
             }
 
-            yield return (current, i, i == 0, true);
+            yield return new(current, i, i == 0, true);
         }
     }
 
@@ -220,6 +222,23 @@ public static partial class EnumerableExtensions
         return desc
             ? enumerable.OrderByDescending(keySelector)
             : enumerable.OrderBy(keySelector);
+    }
+
+    public static async IAsyncEnumerable<TResult> SelectAsync<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, Task<TResult>> selector)
+    {
+        foreach (var item in source)
+        {
+            yield return await selector(item);
+        }
+    }
+
+    public static IEnumerable<T> Do<T>(this IEnumerable<T> source, Action<T> action)
+    {
+        foreach (var item in source)
+        {
+            action(item);
+            yield return item;
+        }
     }
 
 #if NET7_0_OR_GREATER

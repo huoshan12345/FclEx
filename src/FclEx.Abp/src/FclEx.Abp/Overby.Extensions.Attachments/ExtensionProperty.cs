@@ -5,7 +5,7 @@ namespace Overby.Extensions.Attachments;
 /// Stores the value of an extension property.
 /// </summary>
 /// <typeparam name="T">Type of the value</typeparam>
-public class ExtensionProperty<T>
+internal class ExtensionProperty<T>
 {
     public string AttachmentKey { get; }
 

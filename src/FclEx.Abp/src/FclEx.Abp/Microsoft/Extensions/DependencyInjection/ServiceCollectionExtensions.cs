@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
+using FclEx.Abp.Caching;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Volo.Abp;
@@ -91,6 +92,12 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<THostedService>();
         services.AddHostedService(provider => provider.GetRequiredService<THostedService>());
+        return services;
+    }
+
+    public static IServiceCollection AddAbpDistributedCache(this IServiceCollection services)
+    {
+        services.AddSingleton<IDistributedCache, AbpDistributedCache>();
         return services;
     }
 }

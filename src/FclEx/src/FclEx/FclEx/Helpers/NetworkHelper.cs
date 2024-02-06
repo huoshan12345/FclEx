@@ -1,7 +1,6 @@
-﻿namespace FclEx.Helpers
-{
-    public static class NetworkHelper
-    {
+﻿namespace FclEx.Helpers;
 
-    }
+public static class NetworkHelper
+{
+
 }

@@ -32,4 +32,9 @@ public static class CollectionExtensions
             }
         }
     }
+
+    public static int CountSafely<T>(this ICollection<T>? col)
+    {
+        return col?.Count ?? 0;
+    }
 }

@@ -1,6 +1,3 @@
-using System;
-using FclEx.Serilog;
-
 namespace Microsoft.AspNetCore.Builder;
 
 public static class ApplicationBuilderExtensions
@@ -15,7 +12,7 @@ public static class ApplicationBuilderExtensions
                 .CreateLogger(typeof(ApplicationBuilderExtensions));
 
             using var logs = new LoggerProperties(logger)
-                .Push(LogPropertyNames.RequestStartTime, start)
+                .Push(LogPropertyNames.StartTime, start)
                 .Push(LogPropertyNames.TraceId, context.TraceIdentifier)
                 .Push(request);
 
@@ -27,7 +24,7 @@ public static class ApplicationBuilderExtensions
             using var x = new LoggerProperties(logger)
                 .Push(nameof(HttpResponse.StatusCode), context.Response?.StatusCode)
                 .Push(LogPropertyNames.DurationMilliseconds, duration.TotalMilliseconds)
-                .Push(LogPropertyNames.RequestEndTime, end);
+                .Push(LogPropertyNames.EndTime, end);
 
             logger.LogInformation(duration.TotalSeconds > 1
                 ? $"Request finished in {duration.TotalSeconds:f3} seconds."

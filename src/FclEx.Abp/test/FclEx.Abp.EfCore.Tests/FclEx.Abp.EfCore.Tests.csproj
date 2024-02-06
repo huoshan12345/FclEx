@@ -17,6 +17,7 @@
     <ProjectReference Include="..\..\..\FclEx\src\FclEx.Dapper\FclEx.Dapper.csproj" />
     <ProjectReference Include="..\..\src\FclEx.Abp.EfCore\FclEx.Abp.EfCore.csproj" />
     <ProjectReference Include="..\..\src\FclEx.Abp.Xunit\FclEx.Abp.Xunit.csproj" />
+    <ProjectReference Include="..\FclEx.Abp.Tests\FclEx.Abp.Tests.csproj" />
   </ItemGroup>
 
 </Project>

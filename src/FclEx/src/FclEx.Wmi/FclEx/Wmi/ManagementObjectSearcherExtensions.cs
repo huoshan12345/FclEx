@@ -2,13 +2,12 @@
 using System.Linq;
 using System.Management;
 
-namespace FclEx.Wmi
+namespace FclEx.Wmi;
+
+public static class ManagementObjectSearcherExtensions
 {
-    public static class ManagementObjectSearcherExtensions
+    public static IEnumerable<ManagementObject> Enumerate(this ManagementObjectSearcher searcher)
     {
-        public static IEnumerable<ManagementObject> Enumerate(this ManagementObjectSearcher searcher)
-        {
-            return searcher.Get().Cast<ManagementObject>();
-        }
+        return searcher.Get().Cast<ManagementObject>();
     }
 }

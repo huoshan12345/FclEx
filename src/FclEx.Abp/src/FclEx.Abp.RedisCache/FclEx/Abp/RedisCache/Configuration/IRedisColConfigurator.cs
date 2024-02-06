@@ -1,10 +1,9 @@
 ﻿using System;
 
-namespace FclEx.Abp.RedisCache.Configuration
+namespace FclEx.Abp.RedisCache.Configuration;
+
+public interface IRedisColConfigurator
 {
-    public interface IRedisColConfigurator
-    {
-        string CacheName { get; }
-        Action<RedisColOptions> InitAction { get; }
-    }
+    string CacheName { get; }
+    Action<RedisColOptions> InitAction { get; }
 }

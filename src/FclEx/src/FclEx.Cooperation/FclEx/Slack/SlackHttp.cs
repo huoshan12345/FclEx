@@ -1,5 +1,4 @@
 using SlackNet;
-using HttpClientResolver = System.Func<System.Net.Http.HttpClient>;
 
 namespace FclEx.Slack;
 

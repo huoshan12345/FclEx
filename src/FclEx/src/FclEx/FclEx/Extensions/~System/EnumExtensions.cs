@@ -1,6 +1,4 @@
-﻿using FclEx.Attributes;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static class EnumExtensions
 {

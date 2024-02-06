@@ -2,14 +2,9 @@
 
 public static partial class TaskExtensions
 {
-    public static Task WhenAll(this IEnumerable<Task> tasks)
+    public static bool IsSuccessful(this Task task)
     {
-        return Task.WhenAll(tasks);
-    }
-
-    public static Task<T[]> WhenAll<T>(this IEnumerable<Task<T>> tasks)
-    {
-        return Task.WhenAll(tasks);
+        return task is { IsFaulted: false, IsCanceled: false, Status: TaskStatus.RanToCompletion };
     }
 
     public static ConfiguredTaskAwaitable IgnoreSyncContext(this Task task)
@@ -27,5 +22,6 @@ public static partial class TaskExtensions
     public static ValueTask<T> ToValueTask<T>(this Task<T> task) => new(task);
 
     private static readonly Task<Unit> TaskUnit = Task.FromResult(Unit.Default);
+
     public static Task<Unit> ToTaskUnit(this Task task) => TaskUnit;
 }

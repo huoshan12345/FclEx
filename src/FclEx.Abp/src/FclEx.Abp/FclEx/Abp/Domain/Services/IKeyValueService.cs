@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace FclEx.Abp.Domain.Services;
+﻿namespace FclEx.Abp.Domain.Services;
 
 public interface IKeyValueService
 {

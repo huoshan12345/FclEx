@@ -1,9 +1,8 @@
 ﻿using System.Threading.Tasks;
 
-namespace FclEx.Abp.RabbitMQ
+namespace FclEx.Abp.RabbitMQ;
+
+public interface IAsyncMsgConverter<in TSource, TDestination>
 {
-    public interface IAsyncMsgConverter<in TSource, TDestination>
-    {
-        Task<TDestination> Convert(TSource source);
-    }
+    Task<TDestination> Convert(TSource source);
 }

@@ -12,7 +12,7 @@ $testDirs = (
   [io.path]::combine($slnPath, "src\FclEx.Abp\test")
 )
 
-$onlyWin = ("FclEx.Wmi.Test")
+$onlyWin = ("FclEx.Wmi.Tests")
 
 $projects = $testDirs | ForEach-Object { Get-ChildItem -Path $_ -Include *.csproj -Recurse } `
 | Where-Object { $isGithub -eq $false -or ( ($IsWindows -and $onlyWin -contains $_.Basename) -or ($IsWindows -eq $false -and $onlyWin -notcontains $_.Basename) ) }
