@@ -1,6 +1,4 @@
-﻿
-
-namespace FclEx.Http.Core.HttpRequestTests;
+﻿namespace FclEx.Http.Core.HttpRequestTests;
 
 public class PropertyTests
 {
@@ -54,49 +52,78 @@ public class PropertyTests
         Assert.Equal(value, res.ResponseString.Contains(CharSetTestCase.Keyword));
     }
 
-    public static IEnumerable<object[]> CompressionMethods = Enum.GetValues<CompressionMethod>().Select(m => new object[] { m });
+    public static readonly IEnumerable<object[]> CompressionMethods = Enum.GetValues<CompressionMethod>().Select(m => new object[] { m });
+
 
     [Theory]
     [MemberData(nameof(CompressionMethods))]
     public async Task Compress_Test(CompressionMethod compression)
     {
-        if (compression is CompressionMethod.Brotli or CompressionMethod.Deflate)
-            return; // fastmock 不支持
+        if (compression == CompressionMethod.Brotli) // not supported
+            return;
+
+        var random = new Random();
+        var model = new MockApiModel
+        {
+            CreatedAt = DateTimeOffset.UtcNow,
+            Name = random.NextString(10),
+            Avatar = $"https://cloudflare-ipfs.com/ipfs/{random.NextString(10)}/avatar/{random.Next(10, 99)}.jpg",
+            Id = 1
+        };
+        var res = await HttpRequest.Put("https://65c333b1f7e6ea59682c21a5.mockapi.io/api/compress/" + model.Id)
+            .Compression(compression)
+            .JsonContent(model)
+            .SendAsync(TestHttp)
+            .IgnoreSyncContext();
+
+        Assert.True(res.StatusCode.IsSuccess(), res.ResponseString);
+        Assert.False(res.HasError, res.Exception?.Message);
+
+        var returned = res.ResponseString.FromJson<MockApiModel>();
+        AssertExt.EveryMemberEqual(model, returned);
+    }
+
+    [Theory]
+    [MemberData(nameof(CompressionMethods))]
+    public async Task Compress_LocalServer_Test(CompressionMethod compression)
+    {
+        if (compression != CompressionMethod.None && Environment.Version.Major < 7)
+            return; // test server in aspnet 6.0 has not configured decompression.
 
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 100).ToDictionary(m => m.ToString(), m => random.NextString(5));
         var res = await HttpRequest.Post("api/compress")
-            .AddData(expected!)
-            .ReadHeadersTimeout(TimeSpan.FromSeconds(30))
+            .JsonContent(expected)
             .Compression(compression)
             .SendAsync(TestHttp)
-            .ThrowIfError()
             .IgnoreSyncContext();
 
-        Assert.False(res.HasError);
+        Assert.True(res.StatusCode.IsSuccess(), res.ResponseString);
+        Assert.False(res.HasError, res.Exception?.Message);
 
         var token = res.ResponseString.ToJToken();
 
-        var headers = token["headers"]?.ToString();
+        var headers = token["headers"]?.ToObject<Dictionary<string, string>>();
         Assert.NotNull(headers);
 
-        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        JsonConvert.PopulateObject(headers, result);
-
-        var encoding = result.Get(HttpKnownHeaderNames.ContentEncoding);
-        var length = result.Get(HttpKnownHeaderNames.ContentLength, m => int.Parse(m));
+        var encoding = headers.Get(HttpKnownHeaderNames.ContentEncoding);
+        var length = headers.Get(HttpKnownHeaderNames.ContentLength, m => int.Parse(m));
 
         var (expectedEncoding, expectedLength) = compression switch
         {
-            CompressionMethod.None => (null, 891),
+            CompressionMethod.None => (null, 1293),
             CompressionMethod.GZip => ("gzip", 666),
             CompressionMethod.Deflate => ("deflate", 891),
             CompressionMethod.Brotli => ("br", 891),
             _ => throw new ArgumentOutOfRangeException(nameof(compression), compression, null)
         };
 
-        Assert.Equal(expectedEncoding, encoding);
-        Assert.Equal(expectedLength, length);
+        // NOTE: aspnet decompression removes header ContentEncoding and ContentLength, so we don't check them here.
+        //Assert.Equal(expectedEncoding, encoding);
+        //Assert.Equal(expectedLength, length);
+
+        Assert.Null(encoding);
+        Assert.Equal(compression == CompressionMethod.None ? expectedLength : null, length);
 
         var body = token["body"];
         Assert.NotNull(body);

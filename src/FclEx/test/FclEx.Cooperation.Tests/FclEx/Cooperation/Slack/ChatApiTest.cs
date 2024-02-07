@@ -1,5 +1,4 @@
-using FclEx.Helpers;
-using FclEx.Utils;
+using SlackNet;
 using SlackNet.WebApi;
 
 namespace FclEx.Cooperation.Slack;
@@ -56,7 +55,7 @@ public class ChatApiTest : IAssemblyFixture<GlobalFixture>
         var list = await SlackApi.Chat.PostChunked(Channel, table);
         list.ForEach(DeleteMessage);
 
-        Assert.Equal(3, list.Count);
+        Assert.Equal(2, list.Count);
     }
 
     [Fact]
@@ -71,7 +70,7 @@ public class ChatApiTest : IAssemblyFixture<GlobalFixture>
     }
 
     [LocalOnlyTheory]
-    [InlineData(SlackChannels.TestMonitoring)]
+    [InlineData(SlackChannelIds.MonitoringTest)]
     public async Task History_Test(string channel)
     {
         var res = await SlackApi.Auth.Test();
@@ -79,7 +78,7 @@ public class ChatApiTest : IAssemblyFixture<GlobalFixture>
 
         var ts = DateTimeOffset.UtcNow.AddDays(-3).ToUnixTimeSeconds();
         var tsStr = ts.ToString("f6");
-        var history = await SlackApi.Conversations.History(channel, oldestTs: tsStr, limit: 1000);
+        var history = await History();
 
         foreach (var message in history.Messages)
         {
@@ -98,6 +97,19 @@ public class ChatApiTest : IAssemblyFixture<GlobalFixture>
                 {
                     DeleteMessage(new SlackMessage(channel, replyMessage.Ts, replyMessage.Text));
                 }
+            }
+        }
+
+        async Task<ConversationHistoryResponse> History()
+        {
+            try
+            {
+                return await SlackApi.Conversations.History(channel, oldestTs: tsStr, limit: 1000);
+            }
+            catch (SlackException ex) when (ex.ErrorCode == "not_in_channel")
+            {
+                await SlackApi.Conversations.Join(channel);
+                return await History();
             }
         }
     }

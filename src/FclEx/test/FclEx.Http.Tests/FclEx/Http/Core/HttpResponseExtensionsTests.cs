@@ -22,10 +22,10 @@ public class HttpResponseExtensionsTests
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 3).ToDictionary(m => m.ToString(), m => random.NextString(5));
         var actual = await HttpRequest.Post("api/post")
-            .AddData(expected!)
+            .JsonContent(expected)
             .ReadHeadersTimeout(TimeSpan.FromSeconds(5))
             .SendAsync(TestHttp)
-            .ReadJsonAs<Dictionary<string, string>>("body")
+            .ReadJsonAs<Dictionary<string, string>>()
             .IgnoreSyncContext();
 
         Assert.True(actual.Success, actual.Exception?.ToString());
@@ -39,10 +39,10 @@ public class HttpResponseExtensionsTests
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 3).ToDictionary(m => m.ToString(), m => random.NextString(5));
         var actual = await HttpRequest.Post("api/post")
-            .AddData(expected!)
+            .JsonContent(expected)
             .ReadHeadersTimeout(TimeSpan.FromSeconds(5))
             .SendAsync(TestHttp)
-            .ReadJsonAsRequired<Dictionary<string, string>>("body")
+            .ReadJsonAsRequired<Dictionary<string, string>>()
             .IgnoreSyncContext();
 
         Assert.Equal(expected, actual);

@@ -1,4 +1,5 @@
-﻿using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
+﻿using MySqlConnector;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure.Internal;
 using Pomelo.EntityFrameworkCore.MySql.Storage.Internal;
 #pragma warning disable EF1001
@@ -20,8 +21,8 @@ public class GlobalDbContext : SchemaDbContext
     public static readonly string DatabaseName = typeof(GlobalDbContext).Assembly.GetName().Name!.Replace(".", "-").ToLower();
     public static readonly string PostgresqlConnectionString = $"Server=localhost;Database={DatabaseName};Port=5432;User Id=postgres;Password=111111";
     public static readonly string SqlServerConnectionString = $@"Data Source=localhost\sqlexpress;Database={DatabaseName};User Id=sa;Password=a.o7a@bj;Integrated Security=sspi;Encrypt=false";
-    public static readonly string MySqlConnectionString = $@"Server=localhost;Database={DatabaseName};Port=3306;User Id=root;Password=111111;SslMode=Required";
-    public static readonly string SqliteConnectionString = $@"Data Source=./{DatabaseName}.sqlite;";
+    public static readonly string MySqlConnectionString = $"Server=localhost;Database={DatabaseName};Port=3306;User Id=root;Password=111111;SslMode=Required";
+    public static readonly string SqliteConnectionString = $"Data Source=./{DatabaseName}.sqlite;";
 
     public DatabaseType DatabaseType { get; }
     private readonly Action<DbContextOptionsBuilder> _optionsAction;
@@ -75,10 +76,15 @@ public class GlobalDbContext : SchemaDbContext
         }
     }
 
-    private static void UseMySql(DbContextOptionsBuilder builder, string connectionString)
+    private static void UseMySql(DbContextOptionsBuilder builder, string connectionString, string? schema)
     {
+        var sb = new MySqlConnectionStringBuilder(connectionString);
+        if (schema.IsNotEmpty())
+        {
+            sb.Database = schema;
+        }
         var ver = ServerVersion.AutoDetect(connectionString);
-        builder.UseMySql(connectionString, ver, o => o.SchemaBehavior(MySqlSchemaBehavior.Translate, (schema, table) => table));
+        builder.UseMySql(sb.ConnectionString, ver, o => o.SchemaBehavior(MySqlSchemaBehavior.Translate, (schema, table) => table));
         builder.ReplaceService<ISqlGenerationHelper, CustomMySqlSqlGenerationHelper>();
     }
 
@@ -89,7 +95,7 @@ public class GlobalDbContext : SchemaDbContext
             DatabaseType.Npgsql => new(databaseType, builder => builder.UseNpgsql(PostgresqlConnectionString), schema),
             DatabaseType.SqlServer => new(databaseType, builder => builder.UseSqlServer(SqlServerConnectionString), schema),
             DatabaseType.MySql => new(databaseType, builder => builder.UseMySQL(MySqlConnectionString), null),
-            DatabaseType.MySqlConnector => new(databaseType, builder => UseMySql(builder, MySqlConnectionString), schema),
+            DatabaseType.MySqlConnector => new(databaseType, builder => UseMySql(builder, MySqlConnectionString, schema), schema),
             DatabaseType.Sqlite => new(databaseType, builder => builder.UseSqlite(SqliteConnectionString), null),
             _ => throw new ArgumentOutOfRangeException(nameof(databaseType), databaseType, null),
         };

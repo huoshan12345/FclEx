@@ -16,7 +16,7 @@ public abstract class CompressedContent : BufferedContent
 
     protected override async Task SerializeToStreamAsync(Stream stream, TransportContext? context)
     {
-        await using var contentStream = await Content.ReadAsStreamAsync(Token);
+        var contentStream = await Content.ReadAsStreamAsync(Token);
         await using var compressedStream = CreateCompressedStream(stream);
         await contentStream.CopyToAsync(compressedStream, BufferSize, Timeout, Token);
     }

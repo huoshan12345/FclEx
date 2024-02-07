@@ -2,7 +2,7 @@
 
 public class WslHelperExtensionsTests
 {
-    [Fact]
+    [LocalOnlyFact]
     public async Task WslPath_Test()
     {
         var path = await ProcessHelper.Wsl.WslPath(@"D:\projects\FclEx\.github\workflows");

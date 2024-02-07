@@ -24,19 +24,18 @@ if ([string]::IsNullOrEmpty($ver)) {
 }
 
 $srcDirs = (
-  [io.path]::combine($slnDir, "FclEx\src"),
-  [io.path]::combine($slnDir, "FclEx.Abp\src")
+  [io.path]::combine($slnDir, "FclEx", "src"),
+  [io.path]::combine($slnDir, "FclEx.Abp", "src")
 )
 
 $onlyWin = ("FclEx.Wmi")
 
 $projects = $srcDirs | ForEach-Object { Get-ChildItem -Path $_ -Include *.csproj -Recurse } `
-| Where-Object { $_.Basename.EndsWith('.Benchmarks') -eq $false } `
 | Where-Object { $isGithub -eq $false -or ( ($IsWindows -and $onlyWin -contains $_.Basename) -or ($IsWindows -eq $false -and $onlyWin -notcontains $_.Basename) ) }
 
-foreach ($path in $projects) { 
-  Write-Output "Packing $($path.Basename)"
-  Set-Location -Path $($path.DirectoryName)
+foreach ($project in $projects) { 
+  Write-Output "Packing $($project.Basename)"
+  Set-Location -Path $($project.DirectoryName)
 
   dotnet clean --nologo -v q
 

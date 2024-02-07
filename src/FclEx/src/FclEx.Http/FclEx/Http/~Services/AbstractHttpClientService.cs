@@ -9,11 +9,11 @@ public abstract class AbstractHttpClientService : AbstractHttpService
     protected static readonly Encoding DefaultEncoding = Encoding.UTF8;
 
     protected static readonly string[] NotAddHeaderNames =
-    {
+    [
         HttpKnownHeaderNames.ContentType,
-        HttpKnownHeaderNames.Cookie,
+        HttpKnownHeaderNames.Cookie
         // HttpKnownHeaderNames.UserAgent
-    };
+    ];
 
     protected void ReadCookies(HttpResponseMessage responseMessage, HttpResponse response)
     {
@@ -225,42 +225,42 @@ public abstract class AbstractHttpClientService : AbstractHttpService
 
     protected internal abstract HttpClientContext CreateHttpClientContext();
 
-    protected override async Task ExecuteAsyncInternal(HttpRequest request, HttpResponse response, CancellationToken token)
+    protected override async Task ExecuteAsyncInternal(HttpRequest httpRequest, HttpResponse httpResponse, CancellationToken token)
     {
-        using var cts = token.WithTimeout(request.TotalTimeout);
-        var responseMessages = new List<HttpResponseMessage>();
+        var cts = token.WithTimeout(httpRequest.TotalTimeout);
+        var responses = new List<HttpResponseMessage>();
         try
         {
             var context = CreateHttpClientContext();
-            var req = request;
+            var req = httpRequest;
             while (true)
             {
-                var res = await SendAsync(context, req, cts.Token).IgnoreSyncContext();
-                responseMessages.Add(res);
-                response.RedirectUris.Add(res.RequestMessage?.RequestUri!);
-                ReadCookies(res, response);
+                var response = await SendAsync(context, req, cts.Token).IgnoreSyncContext();
+                responses.Add(response);
+                httpResponse.RedirectUris.Add(response.RequestMessage?.RequestUri!);
+                ReadCookies(response, httpResponse);
 
-                if (!res.TryGetRedirection(out var uri))
+                if (!response.TryGetRedirection(out var uri))
                     break;
 
                 req = HttpRequest.Get(uri);
             }
 
-            var responseMessage = responseMessages.Last(); // responses should not be empty
-            response.StatusCode = responseMessage.StatusCode;
-            ReadHeader(responseMessage, response);
+            var last = responses.Last(); // responses should not be empty
+            httpResponse.StatusCode = last.StatusCode;
+            ReadHeader(last, httpResponse);
 
-            if (request.ThrowIfFailedStatusCode)
-                responseMessage.EnsureSuccess();
+            if (httpRequest.EnsureSuccessStatusCode)
+                last.EnsureSuccess();
 
-            if (request.ReadContent)
-                await ReadContentAsync(responseMessage, response, cts.Token).IgnoreSyncContext();
+            if (httpRequest.ReadContent)
+                await ReadContentAsync(last, httpResponse, cts.Token).IgnoreSyncContext();
         }
         finally
         {
             cts.Dispose();
-            responseMessages.ForEach(m => m?.Dispose());
-            responseMessages.Clear();
+            responses.ForEach(m => m.Dispose());
+            responses.Clear();
         }
     }
 

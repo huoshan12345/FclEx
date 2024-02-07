@@ -2,11 +2,11 @@
 using SlackNet;
 using SlackNet.WebApi;
 
-namespace FclEx.Cooperation;
+namespace FclEx.Cooperation.Tests;
 
 public record SlackMessage(string Channel, string Ts, string Text);
 
-public class GlobalFixture : Tests.GlobalFixture
+public class GlobalFixture : FclEx.Tests.GlobalFixture
 {
     private static readonly ConcurrentBag<SlackMessage> Messages = [];
 

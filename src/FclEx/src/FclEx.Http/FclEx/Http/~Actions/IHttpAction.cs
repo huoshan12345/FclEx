@@ -55,7 +55,7 @@ public interface IHttpAction<T> : IAbstractAction<T>
     HttpRequest BuildRequest()
     {
         var req = HttpRequest.Create(Uri, Method)
-            .ThrowIfFailedStatusCode(false)
+            .EnsureSuccessStatusCode(false)
             .AcceptCompress();
         ModifyRequest(req);
         return req;
