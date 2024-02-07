@@ -1,4 +1,4 @@
-﻿using FclEx.AspNetCore;
+﻿using Microsoft.AspNetCore.RequestDecompression;
 
 namespace FclEx.Http.Tests;
 
@@ -35,14 +35,39 @@ public class GlobalFixture : FclEx.Tests.GlobalFixture
     {
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseUrls(TestUri.ToString());
+
 #if NET7_0_OR_GREATER
-        builder.Services.AddRequestDecompression();
+        // Should use ZlibSteam to handle deflate decompression, which has been done since aspnet core 8.
+        // https://github.com/dotnet/runtime/issues/38022
+        Action<RequestDecompressionOptions> action = Environment.Version.Major == 7
+            ? m => m.DecompressionProviders["deflate"] = new ZLibDecompressionProvider()
+            : m => { };
+        builder.Services.AddRequestDecompression(action);
 #endif
         var app = builder.Build();
+
+        app.UseExceptionHandler(m => m.Run(async context =>
+        {
+            var feature = context.Features.Get<IExceptionHandlerPathFeature>();
+
+            if (feature?.Error is { } ex)
+            {
+                await context.Response.WriteAsync(ex.Message);
+            }
+            else
+            {
+                await context.Response.WriteAsync("Unknown error occurred.");
+            }
+        }));
+
         app.UseMiddleware<EnableBufferingMiddleware>();
 #if NET7_0_OR_GREATER
         app.UseRequestDecompression();
 #endif
+        app.MapGet("/api/sleep", async (double seconds) =>
+        {
+            await TaskHelper.Delay(TimeSpan.FromSeconds(seconds));
+        });
 
         app.MapPost("/api/post", async context =>
         {

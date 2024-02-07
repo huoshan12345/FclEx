@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\FclEx.AspNetCore\FclEx.AspNetCore.csproj" />
     <ProjectReference Include="..\..\src\FclEx.Http\FclEx.Http.csproj" />

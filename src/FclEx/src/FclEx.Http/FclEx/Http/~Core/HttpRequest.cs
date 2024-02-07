@@ -5,7 +5,7 @@ public partial class HttpRequest
 {
     private readonly UriCreator _uriCreator;
 
-    public bool EnsureSuccessStatusCode { get; set; } = true;
+    public bool EnsureSuccessStatusCode { get; set; }
     public HttpMethod Method { get; set; }
     public HttpContent? Content { get; set; }
     public HttpVersionPolicy VersionPolicy { get; set; } = HttpVersionPolicy.RequestVersionOrLower;

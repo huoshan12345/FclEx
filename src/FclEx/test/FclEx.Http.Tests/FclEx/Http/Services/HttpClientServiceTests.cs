@@ -163,6 +163,7 @@ public partial class HttpClientServiceTests
     [InlineData(2, 2)]
     public async Task CreateHttpClientContext_Policy_Test(int retryCount, int timeoutSeconds)
     {
+        var expectedTime = TimeSpan.FromSeconds(timeoutSeconds).Multiply(retryCount + 1);
         var timeout = TimeSpan.FromSeconds(timeoutSeconds);
         var http = HttpClientService.Create(m =>
         {
@@ -178,8 +179,6 @@ public partial class HttpClientServiceTests
         _output.WriteLine(response.Exception.ToString());
 
         Assert.IsType<TaskCanceledException>(response.Exception);
-
-        var expectedTime = TimeSpan.FromSeconds(timeoutSeconds).Multiply(retryCount + 1);
         AssertExt.Equal(expectedTime, response.Elapsed, TimeSpan.FromSeconds(0.9));
     }
 }

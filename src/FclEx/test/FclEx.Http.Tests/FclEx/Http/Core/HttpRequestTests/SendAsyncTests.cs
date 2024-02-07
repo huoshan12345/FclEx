@@ -1,4 +1,5 @@
-﻿using System.Web;
+﻿using System.Net.NetworkInformation;
+using System.Web;
 using FclEx.Http.Tests;
 
 namespace FclEx.Http.Core.HttpRequestTests;
@@ -55,12 +56,18 @@ public class SendAsyncTests : IAssemblyFixture<GlobalFixture>
         _output = output;
     }
 
+    private static readonly bool _supportsIPv6 = NetworkInterface.GetAllNetworkInterfaces()
+        .First()
+        .Supports(NetworkInterfaceComponent.IPv6);
 
     [LocalOnlyTheory]
     [InlineData(true)]
     [InlineData(false)]
     public async Task Get_IPVersion_Test(bool ipv6)
     {
+        if (ipv6 && _supportsIPv6 == false)
+            return;
+
         using var x = _output.SetConsole();
 
         // Keep the listener around while you want the logging to continue, dispose it after.

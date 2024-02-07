@@ -12,6 +12,8 @@ public class DeflateContent : CompressedContent
 
     protected override Stream CreateCompressedStream(Stream stream)
     {
-        return new DeflateStream(stream, CompressionLevel, true);
+        // Yes, ZLibStream over DeflateStream.
+        // See this note: https://github.com/dotnet/runtime/blob/7ab969c84ef05ba948c0075392716ce335b47744/src/libraries/System.Net.Http/src/System/Net/Http/SocketsHttpHandler/DecompressionHandler.cs#L231
+        return new ZLibStream(stream, CompressionLevel, true);
     }
 }

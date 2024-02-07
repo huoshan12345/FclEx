@@ -16,7 +16,6 @@ public class BufferedContent : HttpContent
         Timeout = timeout;
         Token = token;
         BufferSize = bufferSize;
-
         content.Headers.CopyTo(Headers);
     }
 
@@ -32,5 +31,14 @@ public class BufferedContent : HttpContent
         var result = MethodOfTryComputeLength.InvokeInstance<bool>(Content, paras);
         length = paras[0].CastTo<long>();
         return result;
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            Content.Dispose();
+        }
+        base.Dispose(disposing);
     }
 }

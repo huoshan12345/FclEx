@@ -15,26 +15,26 @@ public abstract class AbstractHttpService : IHttpService
         GC.SuppressFinalize(this);
     }
 
-    protected abstract Task ExecuteAsyncInternal(HttpRequest request, HttpResponse response, CancellationToken token);
+    protected abstract Task ExecuteAsyncInternal(HttpRequest httpRequest, HttpResponse httpResponse, CancellationToken token);
 
     public async Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken token = default)
     {
         token.ThrowIfCancellationRequested();
         var watch = ValueStopwatch.StartNew();
-        var res = new HttpResponse(request) { StartTime = DateTimeOffset.UtcNow };
+        var response = new HttpResponse(request) { StartTime = DateTimeOffset.UtcNow };
         try
         {
-            await ExecuteAsyncInternal(request, res, token).IgnoreSyncContext();
+            await ExecuteAsyncInternal(request, response, token).IgnoreSyncContext();
         }
         catch (Exception e)
         {
-            res.Exception = e;
+            response.Exception = e;
         }
         finally
         {
-            res.Elapsed = watch.GetElapsedTime();
+            response.Elapsed = watch.GetElapsedTime();
         }
-        return res;
+        return response;
     }
 
     public Cookie? GetCookie(Uri uri, string name)

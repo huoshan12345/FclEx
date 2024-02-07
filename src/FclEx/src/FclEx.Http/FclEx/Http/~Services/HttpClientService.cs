@@ -48,8 +48,9 @@ public class HttpClientService : AbstractHttpClientService
     {
         return Providers.GetOrAdd(options, m =>
         {
+            // this policy is created to retry Task.WithTimeout()
             var policy = Policy<HttpResponseMessage>
-                .Handle<OperationCanceledException>(m => m.InnerException is null && CanceledErrors.Contains(m.Message))
+                .Handle<OperationCanceledException>(IsPureCanceledException)
                 .WaitAndRetryAsync(options.RetryCount, options.SleepDurationProvider);
 
             return new ServiceCollection()
@@ -60,6 +61,22 @@ public class HttpClientService : AbstractHttpClientService
                              && m.ImplementationType?.FullName == "Microsoft.Extensions.Http.LoggingHttpMessageHandlerBuilderFilter")
                 .BuildServiceProvider();
         });
+
+        static bool IsPureCanceledException(Exception? ex)
+        {
+            var p = ex;
+            while (p is OperationCanceledException)
+            {
+                if (CanceledErrors.Contains(p.Message) == false)
+                    return false;
+
+                if (p.InnerException is null)
+                    return true;
+
+                p = p.InnerException;
+            }
+            return false;
+        }
     }
 
     public static HttpClientService Create(HttpClientOptions? options = null, bool useCookie = true, ILoggerFactory? loggerFactory = null)
