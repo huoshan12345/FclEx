@@ -1,10 +1,6 @@
 {
   "Settings": {
     "Common": {
-      "Jira": {
-        "BaseUrl": "https://huoshan12345.atlassian.net",
-        "UserName": "huoshan12345@hotmail.com"
-      },
       "Rmq": {
         "Host": "127.0.0.1",
         "Port": 5672

@@ -23,7 +23,8 @@ public class ChatApiTest : IAssemblyFixture<GlobalFixture>
         var message = new Message()
             .Channel(Channel)
             .AddMarkdown(text);
-        await SlackApi.Chat.PostMessage(message);
+        var res = await SlackApi.Chat.PostMessage(message);
+        DeleteMessage(res);
     }
 
     [LocalOnlyFact]
@@ -43,7 +44,8 @@ public class ChatApiTest : IAssemblyFixture<GlobalFixture>
             .Channel(Channel)
             .AddMarkdown(builder.ToString());
 
-        await SlackApi.Chat.PostMessage(message);
+        var res = await SlackApi.Chat.PostMessage(message);
+        DeleteMessage(res);
     }
 
     [Fact]
