@@ -2,14 +2,10 @@
 
 public static class HttpWebResponseExtensions
 {
-    public static HttpWebResponse EnsureSuccess(this HttpWebResponse httpResponse)
+    public static HttpWebResponse EnsureSuccess(this HttpWebResponse response)
     {
-        if (!httpResponse.StatusCode.IsSuccess())
-        {
-            throw new WebException($"call {httpResponse.ResponseUri} return unsuccessful code: " +
-                                   $"{httpResponse.StatusCode}/{httpResponse.StatusCode.ToInt()}");
-        }
-        return httpResponse;
+        response.StatusCode.EnsureSuccess(response.ResponseUri, response.Method);
+        return response;
     }
 
     public static Uri GetRedirectUri(this HttpWebResponse response)

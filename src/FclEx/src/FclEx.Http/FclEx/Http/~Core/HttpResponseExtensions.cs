@@ -4,10 +4,8 @@ public static class HttpResponseExtensions
 {
     public static HttpResponse EnsureSuccessStatusCode(this HttpResponse response)
     {
-        if (!response.StatusCode.IsSuccess())
-        {
-            throw new WebException($"call {response.Request.GetUri()} with {response.Request.Method} return unsuccessful code: {response.StatusCode}/{response.StatusCode.ToInt()}");
-        }
+        var request = response.Request;
+        response.StatusCode.EnsureSuccess(request.GetUri(), request.Method.Method);
         return response;
     }
 
@@ -35,6 +33,9 @@ public static class HttpResponseExtensions
 
     public static OperateResult<T> ReadJsonAs<T>(this HttpResponse response, string? path = null)
     {
+        if (response.Exception is { } ex)
+            return (ex, response.Elapsed);
+
         var str = response.ResponseString;
         if (!str.IsPossibleJson())
             return Operate.CreateError<T>("Can not parse json from empty string");
@@ -104,7 +105,7 @@ public static class HttpResponseExtensions
     {
         return task.Do(m => !m.HasError, action);
     }
-    
+
     public static HttpResponse AddCookies(this HttpResponse response, IEnumerable<string> cookies)
     {
         response.Headers.AddRange(HttpKnownHeaderNames.SetCookie, cookies);

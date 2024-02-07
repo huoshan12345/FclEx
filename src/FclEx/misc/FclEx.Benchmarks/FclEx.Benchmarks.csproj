@@ -6,6 +6,7 @@
     <LangVersion>preview</LangVersion>
     <RootNamespace></RootNamespace>
     <IsPackable>false</IsPackable>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

@@ -8,9 +8,9 @@ partial class HttpRequestExtensions
         return req;
     }
 
-    public static HttpRequest ThrowIfFailedStatusCode(this HttpRequest req, bool ifThrow)
+    public static HttpRequest EnsureSuccessStatusCode(this HttpRequest req, bool value)
     {
-        req.ThrowIfFailedStatusCode = ifThrow;
+        req.EnsureSuccessStatusCode = value;
         return req;
     }
 

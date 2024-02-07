@@ -4,11 +4,11 @@ namespace FclEx.Dapper;
 
 public class GlobalFixture : IAsyncLifetime
 {
-    public static readonly string[] Schemas = { "schema_test_1", "schema_test_2" };
+    public static readonly string[] Schemas = ["schema_test_1", "schema_test_2"];
 
     public static readonly DatabaseType[] DatabaseTypes = TestHelper.IsGithubAction
-        ? new[] { DatabaseType.Npgsql, DatabaseType.Sqlite }
-        : new[] { DatabaseType.Npgsql, DatabaseType.Sqlite, DatabaseType.MySqlConnector, DatabaseType.SqlServer };
+        ? [DatabaseType.Npgsql, DatabaseType.Sqlite]
+        : [DatabaseType.Npgsql, DatabaseType.Sqlite, DatabaseType.MySqlConnector, DatabaseType.SqlServer];
 
     // InitializeAsync is called immediately after the class has been created, before it is used.
     // We use this method to initialize database only once before all tests.
@@ -23,23 +23,12 @@ public class GlobalFixture : IAsyncLifetime
 
                 try
                 {
-
-                    if (databaseType is DatabaseType.MySqlConnector && schema.IsValid())
+                    if (isRecreated == false)
                     {
-#pragma warning disable EF1002 // Risk of vulnerability to SQL injection.
-                        await context.Database.ExecuteSqlRawAsync($"DROP DATABASE IF EXISTS `{schema}`;");
-                        await context.Database.ExecuteSqlRawAsync($"CREATE DATABASE `{schema}`;");
-#pragma warning restore EF1002 // Risk of vulnerability to SQL injection.
+                        await context.Database.EnsureDeletedAsync();
+                        await context.Database.EnsureCreatedAsync();
                     }
-                    else
-                    {
-                        if (isRecreated == false)
-                        {
-                            await context.Database.EnsureDeletedAsync();
-                            await context.Database.EnsureCreatedAsync();
-                        }
-                        isRecreated = true;
-                    }
+                    isRecreated = true;
 
                     var databaseCreator = (RelationalDatabaseCreator)context.Database.GetService<IDatabaseCreator>();
                     await databaseCreator.CreateTablesAsync();

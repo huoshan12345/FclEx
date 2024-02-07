@@ -60,13 +60,13 @@ public class PropertyTests
     [MemberData(nameof(CompressionMethods))]
     public async Task Compress_Test(CompressionMethod compression)
     {
-        if (compression is CompressionMethod.Brotli or CompressionMethod.Deflate)
-            return; // fastmock 不支持
+        if(compression != CompressionMethod.None && Environment.Version.Major < 7)
+            return; // test server in aspnet 6.0 has not configured decompression.
 
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 100).ToDictionary(m => m.ToString(), m => random.NextString(5));
         var res = await HttpRequest.Post("api/compress")
-            .AddData(expected!)
+            .JsonContent(expected)
             .ReadHeadersTimeout(TimeSpan.FromSeconds(30))
             .Compression(compression)
             .SendAsync(TestHttp)
@@ -77,25 +77,22 @@ public class PropertyTests
 
         var token = res.ResponseString.ToJToken();
 
-        var headers = token["headers"]?.ToString();
+        var headers = token["headers"]?.ToObject<Dictionary<string, string>>();
         Assert.NotNull(headers);
 
-        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        JsonConvert.PopulateObject(headers, result);
-
-        var encoding = result.Get(HttpKnownHeaderNames.ContentEncoding);
-        var length = result.Get(HttpKnownHeaderNames.ContentLength, m => int.Parse(m));
+        var encoding = headers.Get(HttpKnownHeaderNames.ContentEncoding);
+        var length = headers.Get(HttpKnownHeaderNames.ContentLength, m => int.Parse(m));
 
         var (expectedEncoding, expectedLength) = compression switch
         {
-            CompressionMethod.None => (null, 891),
+            CompressionMethod.None => (null, 1293),
             CompressionMethod.GZip => ("gzip", 666),
             CompressionMethod.Deflate => ("deflate", 891),
             CompressionMethod.Brotli => ("br", 891),
             _ => throw new ArgumentOutOfRangeException(nameof(compression), compression, null)
         };
 
-        Assert.Equal(expectedEncoding, encoding);
+        Assert.Null(encoding); // NOTE: aspnet decompression removes header ContentEncoding, so we don't check is here.
         Assert.Equal(expectedLength, length);
 
         var body = token["body"];

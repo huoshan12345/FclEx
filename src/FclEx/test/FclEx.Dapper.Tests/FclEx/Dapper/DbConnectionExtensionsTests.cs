@@ -8,7 +8,7 @@ public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixtur
         .SelectMany(m => Schemas, (x, y) => (x, y))
         .Select(m => new object[] { m.x, m.y });
 
-    public static readonly int[] Counts = { 0, 1, 5 };
+    public static readonly int[] Counts = [0, 1, 5];
     public static readonly IEnumerable<object[]> BulkInsertTestCases =
         from x in DatabaseTypes
         from y in Schemas

@@ -1,4 +1,7 @@
-﻿namespace FclEx.Http.Core.HttpRequestTests;
+﻿using System.Web;
+using FclEx.Http.Tests;
+
+namespace FclEx.Http.Core.HttpRequestTests;
 
 internal sealed class HttpEventListener : EventListener
 {
@@ -33,7 +36,7 @@ internal sealed class HttpEventListener : EventListener
     }
 }
 
-public class SendAsyncTests
+public class SendAsyncTests : IAssemblyFixture<GlobalFixture>
 {
     public static string[] Urls =>
     [
@@ -103,10 +106,11 @@ public class SendAsyncTests
             .SendAsync(TestHttp)
             .ThrowIfError()
             .IgnoreSyncContext();
+
         Assert.False(res.HasError);
-        var body = res.ResponseString.ToJToken()["body"];
+        var body = res.ResponseString;
         Assert.NotNull(body);
-        var actual = body.ToObject<Dictionary<string, string>>();
+        var actual = HttpUtility.ParseQueryString(body).ToDictionary();
         Assert.Equal(expected, actual);
     }
 
@@ -120,7 +124,7 @@ public class SendAsyncTests
             .ThrowIfError()
             .IgnoreSyncContext();
         Assert.False(res.HasError);
-        var body = res.ResponseString.ToJToken()["body"];
+        var body = res.ResponseString.ToJToken();
         Assert.NotNull(body);
         var actual = body.ToObject<List<int>>();
         Assert.True(list.SequenceEqual(actual!));

@@ -1,8 +1,4 @@
-﻿using System.Web;
-
-#pragma warning disable IDE0057
-
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 public class UriCreator
 {

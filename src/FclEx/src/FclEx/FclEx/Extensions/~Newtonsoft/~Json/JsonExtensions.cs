@@ -48,11 +48,6 @@ public static class JsonExtensions
         return token.ToObject<JArray>();
     }
 
-    public static string ToSimpleString(this JToken obj)
-    {
-        return obj.ToString(Formatting.None);
-    }
-
     public static int ToInt(this JToken token)
     {
         return token.ToObject<int>();

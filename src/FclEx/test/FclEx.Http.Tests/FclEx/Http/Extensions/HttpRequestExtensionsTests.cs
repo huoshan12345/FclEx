@@ -1,6 +1,4 @@
-﻿using FclEx.Helpers;
-
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 public class HttpRequestExtensionsTests
 {

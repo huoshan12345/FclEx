@@ -8,7 +8,7 @@ public static class HttpResponseMessageExtensions
         {
             uri = u.IsAbsoluteUri
                 ? u
-                : new Uri(response.RequestMessage?.RequestUri!, u);
+                : new Uri(response.RequestMessage!.RequestUri!, u);
             return true;
         }
         else
@@ -18,13 +18,16 @@ public static class HttpResponseMessageExtensions
         }
     }
 
+    /// <summary>
+    /// Provide more information than <see cref="HttpResponseMessage.EnsureSuccessStatusCode"/>>
+    /// </summary>
+    /// <param name="response"></param>
+    /// <returns></returns>
+    /// <exception cref="WebException"></exception>
     public static HttpResponseMessage EnsureSuccess(this HttpResponseMessage response)
     {
-        if (response.IsSuccessStatusCode == false)
-        {
-            throw new WebException($"call {response.RequestMessage?.RequestUri} return unsuccessful code: " +
-                                   $"{response.StatusCode}/{response.StatusCode.ToInt()}");
-        }
+        var request = response.RequestMessage;
+        response.StatusCode.EnsureSuccess(request?.RequestUri, request?.Method.Method);
         return response;
     }
 

@@ -227,7 +227,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
 
     protected override async Task ExecuteAsyncInternal(HttpRequest request, HttpResponse response, CancellationToken token)
     {
-        using var cts = token.WithTimeout(request.TotalTimeout);
+        var cts = token.WithTimeout(request.TotalTimeout);
         var responseMessages = new List<HttpResponseMessage>();
         try
         {
@@ -250,7 +250,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             response.StatusCode = responseMessage.StatusCode;
             ReadHeader(responseMessage, response);
 
-            if (request.ThrowIfFailedStatusCode)
+            if (request.EnsureSuccessStatusCode)
                 responseMessage.EnsureSuccess();
 
             if (request.ReadContent)

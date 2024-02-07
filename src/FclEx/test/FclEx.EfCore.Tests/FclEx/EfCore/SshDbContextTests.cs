@@ -2,7 +2,6 @@
 
 public class SshDbContextTests
 {
-    public static readonly string DockerPostgresqlConnectionString = new NpgsqlConnectionStringBuilder(LocalPostgresqlConnectionString) { Host = "host.docker.internal" }.ConnectionString;
     public const string SshKeyPath = @"d:\Users\lijing\Documents\keys\local\id_rsa";
 
     private static SshDbContext<GlobalDbContext> CreateNpgsqlContext(string connectionString, ConnectionInfo? ssh)
@@ -26,7 +25,7 @@ public class SshDbContextTests
     public async Task Connect_WitSsh_Test()
     {
         var info = new PrivateKeyConnectionInfo("127.0.0.1", 22, "lijing", new PrivateKeyFile(SshKeyPath));
-        var ctx = CreateNpgsqlContext(DockerPostgresqlConnectionString, info);
+        var ctx = CreateNpgsqlContext(LocalPostgresqlConnectionString, info);
         await ctx.Context.Database.OpenConnectionAsync();
         await ctx.Context.Database.CloseConnectionAsync();
     }

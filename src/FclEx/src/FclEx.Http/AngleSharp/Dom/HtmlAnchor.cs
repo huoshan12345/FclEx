@@ -1,7 +1,4 @@
-﻿using System.Web;
-using FclEx;
-
-namespace AngleSharp.Dom;
+﻿namespace AngleSharp.Dom;
 
 public class HtmlAnchor
 {

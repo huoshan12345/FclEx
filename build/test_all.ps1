@@ -9,8 +9,8 @@ $rootDir = [io.path]::combine($MyInvocation.MyCommand.Definition, "..", "..")
 $slnDir = [io.path]::combine($rootDir, "src")
 
 $testDirs = (
-  [io.path]::combine($slnDir, "FclEx\test"),
-  [io.path]::combine($slnDir, "FclEx.Abp\test")
+  [io.path]::combine($slnDir, "FclEx", "test"),
+  [io.path]::combine($slnDir, "FclEx.Abp", "test")
 )
 
 $onlyWin = ("FclEx.Wmi.Tests")
@@ -20,7 +20,8 @@ $projects = $testDirs | ForEach-Object { Get-ChildItem -Path $_ -Include *.cspro
 
 
 $result = [ordered]@{}
-foreach ($project in $projects) { 
+foreach ($project in $projects) {
+  Write-Output "Testing $($project.Basename)"
   $command = 'dotnet test $project.FullName --nologo -c $mode -v q'
   if ($restore -eq $false) {
     $command = $command + " --no-restore"

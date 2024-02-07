@@ -37,7 +37,7 @@ public partial class HttpClientServiceTests
     public void AddCookie_Test(bool useCookie)
     {
         var uri = new Uri("https://www.instagram.com/");
-        var cookies = GlobalConstants.SimpleCookies;
+        var cookies = SimpleCookies;
         using var service = HttpClientService.Create(useCookie);
         foreach (var cookie in cookies.Select(m => m.ToCookie()))
             service.AddCookie(cookie, uri);
@@ -48,7 +48,7 @@ public partial class HttpClientServiceTests
     [InlineData(false)]
     public void AddCookie_NullUri_Test(bool useCookie)
     {
-        var cookies = GlobalConstants.SimpleCookies;
+        var cookies = SimpleCookies;
         using var service = HttpClientService.Create(useCookie);
         foreach (var cookie in cookies.Select(m => m.ToCookie()))
             service.AddCookie(cookie, null);
@@ -59,7 +59,7 @@ public partial class HttpClientServiceTests
     [InlineData(false)]
     public void GetAllCookies_Test(bool useCookie)
     {
-        var cookies = GlobalConstants.SimpleCookies.Select(m => m.ToCookie()).ToDictionary(m => m.Name);
+        var cookies = SimpleCookies.Select(m => m.ToCookie()).ToDictionary(m => m.Name);
         using var service = HttpClientService.Create(useCookie);
         foreach (var cookie in cookies.Values)
             service.AddCookie(cookie, null);

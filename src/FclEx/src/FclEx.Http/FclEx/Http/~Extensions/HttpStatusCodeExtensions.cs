@@ -11,8 +11,22 @@ public static class HttpStatusCodeExtensions
     public static HttpStatusCodeType GetCodeType(this HttpStatusCode code)
     {
         var digit = ((int)code) / 100;
-        return digit is >= 0 and <= 5 
+        return digit is >= 0 and <= 5
             ? (HttpStatusCodeType)digit
             : HttpStatusCodeType.Unknown;
+    }
+
+    private static readonly ConcurrentDictionary<HttpStatusCode, string> _cache = new();
+    public static string ToPairString(this HttpStatusCode code)
+    {
+        return _cache.GetOrAdd(code, m => $"{m}/{m.ToInt()}");
+    }
+
+    public static void EnsureSuccess(this HttpStatusCode code, Uri? uri, string? method)
+    {
+        if (code.IsSuccess())
+            return;
+
+        throw new HttpRequestException($"Returned {code.ToPairString()} via {method} {uri}", null, code);
     }
 }

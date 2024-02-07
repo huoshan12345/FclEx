@@ -55,8 +55,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Tests", "FclEx\test\F
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Wmi.Tests", "FclEx\test\FclEx.Wmi.Tests\FclEx.Wmi.Tests.csproj", "{D2452FA7-5EC7-4444-AA95-21DDD94E525B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Benchmarks", "FclEx\src\FclEx.Benchmarks\FclEx.Benchmarks.csproj", "{25A8503A-F814-47E2-A552-575539B1FE8B}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Serilog", "FclEx\src\FclEx.Serilog\FclEx.Serilog.csproj", "{C0FA821A-228C-403B-A05E-A917D2287D7D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.SourceGenerator", "FclEx\src\FclEx.SourceGenerator\FclEx.SourceGenerator.csproj", "{89672960-EC8B-4CE4-9A82-18CC323523C0}"
@@ -71,8 +69,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{4FBBC7F5
 		..\Makefile = ..\Makefile
 		..\build\pack.ps1 = ..\build\pack.ps1
 		..\build\pkg.version = ..\build\pkg.version
-		..\build\test_all.ps1 = ..\build\test_all.ps1
 		..\build\render-local.ps1 = ..\build\render-local.ps1
+		..\build\test_all.ps1 = ..\build\test_all.ps1
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmark", "benchmark", "{85D861F7-DB63-4285-8408-0E6D27C7BDDE}"
@@ -87,7 +85,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Dapper.Tests", "FclEx
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.EfCore.Tests", "FclEx\test\FclEx.EfCore.Tests\FclEx.EfCore.Tests.csproj", "{C9537E64-13A2-437E-9F46-49C7ADB45B0D}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmark", "benchmark", "{3FD5D6ED-19E8-43D9-855E-7FD7533704E0}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{3FD5D6ED-19E8-43D9-855E-7FD7533704E0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Abp.EfCore", "FclEx.Abp\src\FclEx.Abp.EfCore\FclEx.Abp.EfCore.csproj", "{1B8FC570-FB7C-4BD8-813A-A108F1CFB934}"
 EndProject
@@ -125,6 +123,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "config", "config", "{DB9BD7
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Messaging.Tests", "FclEx\test\FclEx.Messaging.Tests\FclEx.Messaging.Tests.csproj", "{5B3776DA-F1EB-4112-B5C5-9864FE138983}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Benchmarks", "FclEx\misc\FclEx.Benchmarks\FclEx.Benchmarks.csproj", "{EA21DECA-07BE-4CC1-90D3-63528B752FFD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -180,10 +180,6 @@ Global
 		{D2452FA7-5EC7-4444-AA95-21DDD94E525B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D2452FA7-5EC7-4444-AA95-21DDD94E525B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D2452FA7-5EC7-4444-AA95-21DDD94E525B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{25A8503A-F814-47E2-A552-575539B1FE8B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{25A8503A-F814-47E2-A552-575539B1FE8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{25A8503A-F814-47E2-A552-575539B1FE8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{25A8503A-F814-47E2-A552-575539B1FE8B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C0FA821A-228C-403B-A05E-A917D2287D7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C0FA821A-228C-403B-A05E-A917D2287D7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0FA821A-228C-403B-A05E-A917D2287D7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -248,6 +244,10 @@ Global
 		{5B3776DA-F1EB-4112-B5C5-9864FE138983}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5B3776DA-F1EB-4112-B5C5-9864FE138983}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5B3776DA-F1EB-4112-B5C5-9864FE138983}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA21DECA-07BE-4CC1-90D3-63528B752FFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA21DECA-07BE-4CC1-90D3-63528B752FFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA21DECA-07BE-4CC1-90D3-63528B752FFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA21DECA-07BE-4CC1-90D3-63528B752FFD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -271,7 +271,6 @@ Global
 		{BA64DE03-F745-4CB5-A85B-AE6A2D7111BD} = {C4A4BE1C-25E6-4968-A1A8-AAB1B0950354}
 		{AFD8FA34-3BC3-42DD-8BB4-E518337CE762} = {C4A4BE1C-25E6-4968-A1A8-AAB1B0950354}
 		{D2452FA7-5EC7-4444-AA95-21DDD94E525B} = {C4A4BE1C-25E6-4968-A1A8-AAB1B0950354}
-		{25A8503A-F814-47E2-A552-575539B1FE8B} = {3FD5D6ED-19E8-43D9-855E-7FD7533704E0}
 		{C0FA821A-228C-403B-A05E-A917D2287D7D} = {0564F7F7-BF4A-46E5-A545-40FD729FF63A}
 		{89672960-EC8B-4CE4-9A82-18CC323523C0} = {0564F7F7-BF4A-46E5-A545-40FD729FF63A}
 		{CBD39C27-67F9-4125-933A-45F077345A05} = {0564F7F7-BF4A-46E5-A545-40FD729FF63A}
@@ -290,6 +289,7 @@ Global
 		{54FA6161-D074-4580-8615-344E6B882187} = {0564F7F7-BF4A-46E5-A545-40FD729FF63A}
 		{02D18C73-C4D6-4EBA-B2B7-EFEB53F2E4F6} = {C4A4BE1C-25E6-4968-A1A8-AAB1B0950354}
 		{5B3776DA-F1EB-4112-B5C5-9864FE138983} = {C4A4BE1C-25E6-4968-A1A8-AAB1B0950354}
+		{EA21DECA-07BE-4CC1-90D3-63528B752FFD} = {3FD5D6ED-19E8-43D9-855E-7FD7533704E0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A8ABB718-B200-438A-8C51-18280C33E805}

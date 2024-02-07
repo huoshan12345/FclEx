@@ -1,6 +1,4 @@
-﻿using FclEx.Helpers;
-
-namespace FclEx.Http.Proxy;
+﻿namespace FclEx.Http.Proxy;
 
 public class WebProxyExtTests
 {
