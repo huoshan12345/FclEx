@@ -1,13 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-
-using EasyCaching.Core;
-using FclEx.Abp.Caching.Configuration;
-using FclEx.Abp.RedisCache.Collections;
-using FclEx.Abp.RedisCache.Configuration;
-using Microsoft.Extensions.Options;
 
 namespace FclEx.Abp.RedisCache;
 

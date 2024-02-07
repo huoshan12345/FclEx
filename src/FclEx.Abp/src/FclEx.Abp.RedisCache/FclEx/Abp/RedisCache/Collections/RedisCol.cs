@@ -1,9 +1,5 @@
 ﻿using System;
 
-using EasyCaching.Core;
-using FclEx.Abp.Caching.Configuration;
-using FclEx.Abp.RedisCache.Configuration;
-
 namespace FclEx.Abp.RedisCache.Collections;
 
 internal abstract class RedisCol<T> : IRedisCol<T>

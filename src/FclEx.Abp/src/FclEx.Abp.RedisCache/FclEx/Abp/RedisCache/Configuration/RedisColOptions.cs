@@ -1,5 +1,4 @@
 ﻿using System;
-using FclEx.Abp.Caching.Configuration;
 
 namespace FclEx.Abp.RedisCache.Configuration;
 

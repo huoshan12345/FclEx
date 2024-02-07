@@ -1,6 +1,4 @@
-﻿using FclEx.Abp.RedisCache.Configuration;
-
-namespace FclEx.Abp.RedisCache.Collections;
+﻿namespace FclEx.Abp.RedisCache.Collections;
 
 public enum RedisColType
 {

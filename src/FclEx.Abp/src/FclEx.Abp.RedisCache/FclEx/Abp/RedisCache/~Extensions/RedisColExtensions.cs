@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using FclEx.Abp.RedisCache.Collections;
+﻿using System.Threading.Tasks;
 
 namespace FclEx.Abp.RedisCache;
 

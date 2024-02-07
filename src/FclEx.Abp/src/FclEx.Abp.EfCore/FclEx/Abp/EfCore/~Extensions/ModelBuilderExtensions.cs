@@ -1,7 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
-
-namespace FclEx.Abp.EfCore;
+﻿namespace FclEx.Abp.EfCore;
 
 public static class ModelBuilderExtensions
 {

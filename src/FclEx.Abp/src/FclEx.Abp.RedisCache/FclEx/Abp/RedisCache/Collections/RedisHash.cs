@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using EasyCaching.Core;
-using FclEx.Abp.Caching.Configuration;
 using FclEx.Extensions;
 
 namespace FclEx.Abp.RedisCache.Collections;

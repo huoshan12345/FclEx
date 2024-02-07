@@ -1,9 +1,4 @@
-﻿using System.Collections.Generic;
-using FclEx.Abp.Caching.Configuration;
-using FclEx.Abp.RedisCache.Collections;
-using FclEx.Abp.RedisCache.Configuration;
-
-namespace FclEx.Abp.RedisCache;
+﻿namespace FclEx.Abp.RedisCache;
 
 public interface IRedisColManager
 {

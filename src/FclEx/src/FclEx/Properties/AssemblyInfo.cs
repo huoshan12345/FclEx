@@ -1,2 +1,1 @@
-﻿[assembly: InternalsVisibleTo("FclEx.Tests")]
-[assembly: InternalsVisibleTo("FclEx.Benchmarks")]
+﻿[assembly: InternalsVisibleTo("FclEx.Benchmarks")]

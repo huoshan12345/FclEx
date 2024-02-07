@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using EasyCaching.Core.Configurations;
 
 namespace FclEx.Abp.RedisCache.Configuration;

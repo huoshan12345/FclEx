@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using EasyCaching.Core;
-using FclEx.Abp.Caching.Configuration;
+﻿using System.Threading.Tasks;
 
 namespace FclEx.Abp.RedisCache.Collections;
 

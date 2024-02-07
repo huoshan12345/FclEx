@@ -1,17 +1,12 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 
 using EasyCaching.Core.Configurations;
 using EasyCaching.Core.Serialization;
 using EasyCaching.CSRedis;
 using EasyCaching.Serialization.MessagePack;
-using FclEx.Abp.Caching.Configuration;
-using FclEx.Abp.RedisCache.Configuration;
 using FclEx.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Volo.Abp;
 using Volo.Abp.Modularity;
 
