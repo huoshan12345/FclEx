@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using EasyCaching.Core;
-using FclEx.Extensions;
 
 namespace FclEx.Utils;
 

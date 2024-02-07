@@ -9,11 +9,12 @@ public class GlobalFixture : IAsyncLifetime
             .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", false, false)
             .AddJsonFile($"appsettings.{machineName}.json", true, false)
-            .AddEnvironmentVariables()
+            .AddEnvironmentVariables("FclEx_")
             .Build();
     }
 
-    public static AppSettings AppSettings { get; } = BuildConfig().Get<AppSettings>()!;
+    public static IConfigurationRoot Config { get; } = BuildConfig();
+    public static AppSettings AppSettings { get; } = Config.Get<AppSettings>()!;
 
     public virtual Task InitializeAsync() => Task.CompletedTask;
     public virtual Task DisposeAsync() => Task.CompletedTask;

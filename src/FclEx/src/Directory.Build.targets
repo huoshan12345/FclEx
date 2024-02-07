@@ -5,16 +5,13 @@
   </PropertyGroup>  
 
   <ItemGroup>
-    <ProjectItems Include="FclEx.Http" />
-    <ProjectItems Include="FclEx.Serilog" />
-    <ProjectItems Include="FclEx.Wmi" />
-    <ProjectItems Include="FclEx.Xunit" />
-    <ProjectItems2 Include="@(ProjectItems)" Exclude="$(ProjectName)"/>
+    <_ExcludeFclExUsing Include="FclEx" />
+    <_ExcludeFclExUsing Include="FclEx.SourceGenerator" />
+    <_ExcludeFclExUsing Include="FclEx.Wmi.SourceGenerator" />
   </ItemGroup>
 
-  <!--To check if ProjectItems contains current project-->
-  <ItemGroup Condition="@(ProjectItems->Count()) != @(ProjectItems2->Count())">
-    <Compile Include="$(ProjectDir)..\FclEx\FclExUsing.cs" />
+  <ItemGroup Condition="!@(_ExcludeFclExUsing->AnyHaveMetadataValue('Identity', '$(ProjectName)'))">
+    <Compile Include="$(ProjectDir)..\..\..\FclEx\src\FclEx\FclExUsing.cs" />
   </ItemGroup>
   
 </Project>

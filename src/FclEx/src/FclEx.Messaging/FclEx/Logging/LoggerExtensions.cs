@@ -1,3 +1,5 @@
+using FclEx.Kafka;
+
 namespace FclEx.Logging;
 
 public static class LoggerExtensions

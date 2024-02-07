@@ -4,7 +4,6 @@ using System.Linq.Expressions;
 using System.Text;
 
 using FclEx;
-using FclEx.Extensions;
 
 namespace AutoMapper;
 

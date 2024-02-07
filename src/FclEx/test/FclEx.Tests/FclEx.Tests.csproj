@@ -2,7 +2,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\FclEx.Xunit\FclEx.Xunit.csproj" />
-    <ProjectReference Include="..\..\src\FclEx\FclEx.csproj" />
   </ItemGroup>
 
   <ItemGroup>

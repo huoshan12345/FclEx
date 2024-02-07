@@ -5,11 +5,12 @@ $restore = if ($args[1] -eq 'no-restore') { $false } else { $true }
 $isGithub = [bool]$Env:GITHUB_ACTION
 Write-Output "mode = $mode, isGithub = $isGithub, restore = $restore"
 
-$root = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$slnPath = [io.path]::combine($root, "..")
+$rootDir = [io.path]::combine($MyInvocation.MyCommand.Definition, "..", "..")
+$slnDir = [io.path]::combine($rootDir, "src")
+
 $testDirs = (
-  [io.path]::combine($slnPath, "src\FclEx\test"),
-  [io.path]::combine($slnPath, "src\FclEx.Abp\test")
+  [io.path]::combine($slnDir, "FclEx\test"),
+  [io.path]::combine($slnDir, "FclEx.Abp\test")
 )
 
 $onlyWin = ("FclEx.Wmi.Tests")
@@ -35,3 +36,5 @@ $failed = $result.GetEnumerator() | Where-Object { $_.Value -ne $true } | Join-S
 if ($failed) {
   throw "Failed projects: $failed"
 }
+
+Write-Output "Testing finished."

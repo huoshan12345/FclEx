@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using FclEx;
-using FclEx.Extensions;
 
 namespace System.Xml.Linq;
 

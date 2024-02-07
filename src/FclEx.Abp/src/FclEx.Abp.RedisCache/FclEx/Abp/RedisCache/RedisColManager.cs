@@ -7,7 +7,6 @@ using EasyCaching.Core;
 using FclEx.Abp.Caching.Configuration;
 using FclEx.Abp.RedisCache.Collections;
 using FclEx.Abp.RedisCache.Configuration;
-using FclEx.Abp.Serializers;
 using Microsoft.Extensions.Options;
 
 namespace FclEx.Abp.RedisCache;

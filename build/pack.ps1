@@ -2,13 +2,16 @@ $ErrorActionPreference = "Stop"
 
 $restore = if ($args[0] -eq 'no-restore') { $false } else { $true }
 $isGithub = [bool]$Env:GITHUB_ACTION
+Write-Output "isGithub = $isGithub, restore = $restore"
 
-$root = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$buildDir = [io.path]::combine($MyInvocation.MyCommand.Definition, "..")
+$rootDir = [io.path]::combine($buildDir, "..")
+$slnDir = [io.path]::combine($rootDir, "src")
 
-$pkgPath = ([io.path]::combine($root, "*.nupkg"))
+$pkgPath = ([io.path]::combine($buildDir, "*.nupkg"))
 Remove-Item $pkgPath
 
-$ver_path = Join-Path $root "pkg.version"
+$ver_path = ([io.path]::combine($buildDir, "pkg.version"))
 $ver = Get-Content -Path $ver_path
 $key = $Env:MYGET_APIKEY
 $myget = "https://www.myget.org/F/huoshan12345/api/v2/package"
@@ -20,12 +23,15 @@ if ([string]::IsNullOrEmpty($ver)) {
   throw "the version is empty"
 }
 
+$srcDirs = (
+  [io.path]::combine($slnDir, "FclEx\src"),
+  [io.path]::combine($slnDir, "FclEx.Abp\src")
+)
+
 $onlyWin = ("FclEx.Wmi")
 
-$srcDir = ([io.path]::combine($root, "..", "src"))
-
-$projects = Get-ChildItem -Path $srcDir -Include *.csproj -Recurse `
-| Where-Object { $_.Basename.EndsWith('.Tests') -eq $false -and $_.Basename.EndsWith('.Benchmarks') -eq $false } `
+$projects = $srcDirs | ForEach-Object { Get-ChildItem -Path $_ -Include *.csproj -Recurse } `
+| Where-Object { $_.Basename.EndsWith('.Benchmarks') -eq $false } `
 | Where-Object { $isGithub -eq $false -or ( ($IsWindows -and $onlyWin -contains $_.Basename) -or ($IsWindows -eq $false -and $onlyWin -notcontains $_.Basename) ) }
 
 foreach ($path in $projects) { 
@@ -34,7 +40,7 @@ foreach ($path in $projects) {
 
   dotnet clean --nologo -v q
 
-  $command = 'dotnet pack --nologo -v q -c Release --include-symbols --output $root -p:PackageVersion=$ver'
+  $command = 'dotnet pack --nologo -v q -c Release --include-symbols --output $buildDir -p:PackageVersion=$ver'
   if ($restore -eq $false) {
     $command = $command + " --no-restore"
   }

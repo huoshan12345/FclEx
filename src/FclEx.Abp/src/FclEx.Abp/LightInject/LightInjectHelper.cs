@@ -4,7 +4,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using AspectCore.Extensions.LightInject;
 using FclEx;
-using FclEx.Extensions;
 using FclEx.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 

@@ -8,7 +8,6 @@ using EasyCaching.CSRedis;
 using EasyCaching.Serialization.MessagePack;
 using FclEx.Abp.Caching.Configuration;
 using FclEx.Abp.RedisCache.Configuration;
-using FclEx.Abp.Serializers;
 using FclEx.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

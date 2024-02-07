@@ -14,6 +14,7 @@
     <RepositoryType>git</RepositoryType>
     <Copyright>huoshan12345</Copyright>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <ItemGroup>

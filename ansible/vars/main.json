@@ -1,15 +1,18 @@
 {
-  "settings": {
-    "common": {
-      "jira": {
-        "baseUrl": "https://huoshan12345.atlassian.net",
-        "userName": "huoshan12345@hotmail.com"
+  "Settings": {
+    "Common": {
+      "Jira": {
+        "BaseUrl": "https://huoshan12345.atlassian.net",
+        "UserName": "huoshan12345@hotmail.com"
       },
-      "slack": {}
+      "Rmq": {
+        "Host": "127.0.0.1",
+        "Port": 5672
+      }
     },
-    "envs": {
-      "local": {},
-      "qa": {}
+    "Envs": {
+      "Local": {},
+      "Github": {}
     }
   }
 }

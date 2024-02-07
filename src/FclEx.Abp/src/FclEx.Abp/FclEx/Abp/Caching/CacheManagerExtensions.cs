@@ -1,6 +1,5 @@
 ﻿using System;
 using FclEx.Abp.Caching.Configuration;
-using FclEx.Extensions;
 using FclEx.Utils;
 using Microsoft.Extensions.Logging;
 using Volo.Abp.Modularity;

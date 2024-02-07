@@ -4,7 +4,6 @@ using AspectCore.DynamicProxy;
 using EasyCaching.Core.Serialization;
 using EasyCaching.Serialization.Json;
 using FclEx.Abp.Caching;
-using FclEx.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Nito.AsyncEx;

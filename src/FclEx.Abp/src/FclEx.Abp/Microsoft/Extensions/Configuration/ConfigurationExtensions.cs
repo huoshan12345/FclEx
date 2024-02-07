@@ -1,6 +1,5 @@
 ﻿using System;
 using FclEx;
-using FclEx.Extensions;
 
 namespace Microsoft.Extensions.Configuration;
 

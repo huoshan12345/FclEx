@@ -10,6 +10,7 @@ public class MemberComparerTests
             var random = new Random(num);
             var list = Enumerable.Range(1, 10000).Select(m => random.NextBoolean(20) ? null : new Person
             {
+                Id = 0,
                 Age = random.Next(1, 100),
                 Name = random.NextString(10),
                 Height = random.Next(100, 200),

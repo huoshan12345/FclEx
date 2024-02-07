@@ -64,7 +64,7 @@ jobs:
                 
       - name: Render config file
         run: |
-          make render-local
+          make render-github
 
       - name: Setup dotnet
         uses: actions/setup-dotnet@v3

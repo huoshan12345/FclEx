@@ -1,6 +1,6 @@
 ﻿using FclEx.Abp.Caching;
 using FclEx.Abp.DependencyInjection;
-using FclEx.Abp.Serializers;
+using FclEx.Serializers;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.AutoMapper;
 using Volo.Abp.Modularity;

@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\FclEx.Messaging\FclEx.Messaging.csproj" />
+    <ProjectReference Include="..\FclEx.Tests\FclEx.Tests.csproj" />
+  </ItemGroup>
+
+</Project>
