@@ -6,8 +6,8 @@ public class ArgumentBuilderExtensionsTests
     public interface IB : IA { }
     public interface IC : IB { }
     public interface IX : IA, IB { }
-    public interface IGenecic<T> { }
-    public interface IGenericA<T> : IGenecic<T>, IA { }
+    public interface IGeneric<T> { }
+    public interface IGenericA<T> : IGeneric<T>, IA { }
     public interface IGenericB<T1, T2> : IGenericA<T1>, IA { }
 
     public class A : IA { }
@@ -22,7 +22,7 @@ public class ArgumentBuilderExtensionsTests
 
     public static IEnumerable<Type> AllTypes { get; } = typeof(ArgumentBuilderExtensionsTests).GetNestedTypes()
         .Concat(new[] { typeof(object), typeof(string), typeof(int), typeof(Type) })
-        .Concat(new[] { typeof(IGenecic<>).MakeGenericType(typeof(IGenecic<>)), typeof(GenericA<>).MakeGenericType(typeof(GenericA<>)) });
+        .Concat(new[] { typeof(IGeneric<>).MakeGenericType(typeof(IGeneric<>)), typeof(GenericA<>).MakeGenericType(typeof(GenericA<>)) });
 
     public static IEnumerable<object[]> TypePairs { get; } = AllTypes.SelectMany((x, y) => new object[] { x, y });
 

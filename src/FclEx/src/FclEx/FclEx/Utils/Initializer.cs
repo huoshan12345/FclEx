@@ -6,6 +6,7 @@ public class Initializer
 {
     private volatile bool _isInitialized;
     private readonly AsyncLock? _asyncLock;
+    private static readonly Task<IDisposable> _empty = Task.FromResult(Disposable.Empty);
 
     public Initializer(bool isThreadSafe = true)
     {
@@ -34,7 +35,7 @@ public class Initializer
         if (_isInitialized)
             return;
 
-        using (_asyncLock?.Lock())
+        using (await (_asyncLock?.LockAsync() ?? _empty))
         {
             if (_isInitialized)
                 return;
