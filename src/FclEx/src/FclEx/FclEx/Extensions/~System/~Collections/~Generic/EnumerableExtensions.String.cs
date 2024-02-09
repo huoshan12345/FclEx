@@ -14,7 +14,13 @@ partial class EnumerableExtensions
 
     public static bool ContainsAnyIgnoreCase(this IEnumerable<string> enumerable, IEnumerable<string> values)
         => enumerable.ContainsAny(values, StringComparison.OrdinalIgnoreCase);
-    
+
+    public static bool AnyContains(this IEnumerable<string> enumerable, string value, StringComparison comp = StringComparison.Ordinal)
+        => enumerable.Any(m => m.Contains(value, comp));
+
+    public static bool AnyContainsIgnoreCase(this IEnumerable<string> enumerable, string value)
+        => enumerable.AnyContains(value, StringComparison.OrdinalIgnoreCase);
+
     [return: NotNullIfNotNull(nameof(defaultValue))]
     public static string? FirstValid(this IEnumerable<string?> values, int? count = null, string? defaultValue = "")
     {
