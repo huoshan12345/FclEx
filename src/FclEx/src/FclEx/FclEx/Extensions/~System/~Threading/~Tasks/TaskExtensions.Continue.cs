@@ -11,7 +11,7 @@ partial class TaskExtensions
             throw new TaskCanceledException(task);
     }
 
-    public static Task Next(this Task task, Func<Task> next)
+    public static Task Continue(this Task task, Func<Task> next)
     {
         return task.ContinueWith(m =>
         {
@@ -20,16 +20,16 @@ partial class TaskExtensions
         }).Unwrap();
     }
 
-    public static Task Next(this Task task, Action next)
+    public static Task Continue(this Task task, Action next)
     {
-        return task.Next(() =>
+        return task.Continue(() =>
         {
             next();
             return Task.CompletedTask;
         });
     }
 
-    public static Task<TNext> Next<TNext>(this Task task, Func<Task<TNext>> next)
+    public static Task<TNext> Continue<TNext>(this Task task, Func<Task<TNext>> next)
     {
         return task.ContinueWith(m =>
         {
@@ -38,12 +38,12 @@ partial class TaskExtensions
         }).Unwrap();
     }
 
-    public static Task<TNext> Next<TNext>(this Task task, Func<TNext> next)
+    public static Task<TNext> Continue<TNext>(this Task task, Func<TNext> next)
     {
-        return task.Next(() => next().ToTask());
+        return task.Continue(() => next().ToTask());
     }
 
-    public static Task<TNext> Next<T, TNext>(this Task<T> task, Func<T, Task<TNext>> next)
+    public static Task<TNext> Continue<T, TNext>(this Task<T> task, Func<T, Task<TNext>> next)
     {
         return task.ContinueWith(m =>
         {
@@ -52,14 +52,14 @@ partial class TaskExtensions
         }).Unwrap();
     }
 
-    public static Task<TNext> Next<T, TNext>(this Task<T> task, Func<T, TNext> next)
+    public static Task<TNext> Continue<T, TNext>(this Task<T> task, Func<T, TNext> next)
     {
-        return task.Next(t => next(t).ToTask());
+        return task.Continue(t => next(t).ToTask());
     }
 
     public static Task<T> Do<T>(this Task<T> task, Func<T, Task> action)
     {
-        return task.Next(async m =>
+        return task.Continue(async m =>
         {
             await action(m);
             return m;

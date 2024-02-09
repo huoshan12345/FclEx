@@ -18,17 +18,17 @@ public static class HttpResponseExtensions
 
     public static Task<HttpResponse> ThrowIfError(this Task<HttpResponse> task)
     {
-        return task.Next(m => m.ThrowIfError());
+        return task.Continue(m => m.ThrowIfError());
     }
 
     public static Task<T> ReadJsonAsRequired<T>(this Task<HttpResponse> task, string? path = null)
     {
-        return task.Next(m => m.ReadJsonAs<T>(path)).GetRequiredValue();
+        return task.Continue(m => m.ReadJsonAs<T>(path)).GetRequiredValue();
     }
 
     public static Task<OperateResult<T>> ReadJsonAs<T>(this Task<HttpResponse> task, string? path = null)
     {
-        return task.Next(m => m.ReadJsonAs<T>(path));
+        return task.Continue(m => m.ReadJsonAs<T>(path));
     }
 
     public static OperateResult<T> ReadJsonAs<T>(this HttpResponse response, string? path = null)

@@ -13,6 +13,26 @@ partial class OperateResultExtensionsTests
     }
 
     [Fact]
+    public async Task Task_OperateResult_T_Next_Func_T_Task_OperateResult_TNext_Canceled()
+    {
+        {
+            var result = await Operate.Cancel.ToTask()
+                .Next(m => Operate.CreateSuccess(m + "y").ToTask());
+
+            Assert.False(result.Success);
+            Assert.True(result.IsCanceled());
+        }
+        {
+            var token = new CancellationToken(true);
+            var result = await Task.FromCanceled<OperateResult<string>>(token)
+                .Next(m => Operate.CreateSuccess(m + "y").ToTask());
+
+            Assert.False(result.Success);
+            Assert.True(result.IsCanceled());
+        }
+    }
+
+    [Fact]
     public async Task Task_OperateResult_T_Next_Func_T_OperateResult_TNext()
     {
         var result = await Operate.ExecuteAsync(() => "x")

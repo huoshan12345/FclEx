@@ -2,11 +2,11 @@
 
 namespace FclEx.Extensions.TaskExtensions;
 
-public class NextTests
+public class ContinueTests
 {
     private readonly ITestOutputHelper _output;
 
-    public NextTests(ITestOutputHelper output)
+    public ContinueTests(ITestOutputHelper output)
     {
         _output = output;
     }
@@ -27,53 +27,53 @@ public class NextTests
     }
 
     [Fact]
-    public async Task Task_Next_Action()
+    public async Task Task_Continue_Action()
     {
         {
             var number = 0;
             await Task.Run(() => Task.Delay(TimeSpan.FromMilliseconds(100)))
-                .Next(() => number++);
+                .Continue(() => number++);
 
             Assert.Equal(1, number);
         }
         {
             var task = Task.Run(() => Task.Delay(TimeSpan.FromMilliseconds(100)))
-                .Next(() => Throw());
+                .Continue(() => Throw());
 
             await Assert.ThrowsAsync<NotSupportedException>(() => task);
         }
     }
 
     [Fact]
-    public async Task Task_Next_Action_Faulted()
+    public async Task Task_Continue_Action_Faulted()
     {
         var task = Task.Run(async () =>
         {
             await Task.Delay(TimeSpan.FromMilliseconds(100));
             throw new InvalidOperationException();
-        }).Next(() => Throw());
+        }).Continue(() => Throw());
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => task);
     }
 
     [Fact]
-    public async Task Task_Next_Action_Canceled()
+    public async Task Task_Continue_Action_Canceled()
     {
         var token = new CancellationToken(true);
         var task = Task.FromCanceled(token);
-        var task2 = task.Next(() => Throw());
+        var task2 = task.Continue(() => Throw());
 
         var ex = await Assert.ThrowsAsync<TaskCanceledException>(() => task2);
         Assert.Equal(task, ex.Task);
     }
 
     [Fact]
-    public async Task Task_Next_Func_Task()
+    public async Task Task_Continue_Func_Task()
     {
         {
             var number = 0;
             await Task.Run(() => Task.Delay(TimeSpan.FromMilliseconds(100)))
-                .Next(() =>
+                .Continue(() =>
                 {
                     number++;
                     return Task.CompletedTask;
@@ -83,47 +83,47 @@ public class NextTests
         }
         {
             var task = Task.Run(() => Task.Delay(TimeSpan.FromMilliseconds(100)))
-                .Next(() => ThrowTask());
+                .Continue(() => ThrowTask());
 
             await Assert.ThrowsAsync<NotSupportedException>(() => task);
         }
     }
 
     [Fact]
-    public async Task Task_Next_Func_Task_Faulted()
+    public async Task Task_Continue_Func_Task_Faulted()
     {
         var task = Task.Run(async () =>
         {
             await Task.Delay(TimeSpan.FromMilliseconds(100));
             throw new InvalidOperationException();
-        }).Next(() => ThrowTask());
+        }).Continue(() => ThrowTask());
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => task);
     }
 
     [Fact]
-    public async Task Task_Next_Func_Task_Canceled()
+    public async Task Task_Continue_Func_Task_Canceled()
     {
         var token = new CancellationToken(true);
         var task = Task.FromCanceled(token);
-        var task2 = task.Next(() => ThrowTask());
+        var task2 = task.Continue(() => ThrowTask());
 
         var ex = await Assert.ThrowsAsync<TaskCanceledException>(() => task2);
         Assert.Equal(task, ex.Task);
     }
 
     [Fact]
-    public async Task Task_Next_Func_Task_TNext()
+    public async Task Task_Continue_Func_Task_TNext()
     {
         {
             var number = await Task.Run(() => Task.Delay(TimeSpan.FromMilliseconds(100)))
-                .Next(() => 1.ToTask());
+                .Continue(() => 1.ToTask());
 
             Assert.Equal(1, number);
         }
         {
             var task = Task.Run(() => Task.Delay(TimeSpan.FromMilliseconds(100)))
-                .Next(() => ThrowTask<int>());
+                .Continue(() => ThrowTask<int>());
 
             Assert.IsAssignableFrom<Task<int>>(task);
 
@@ -132,13 +132,13 @@ public class NextTests
     }
 
     [Fact]
-    public async Task Task_Next_Func_Task_TNext_Faulted()
+    public async Task Task_Continue_Func_Task_TNext_Faulted()
     {
         var task = Task.Run(async () =>
         {
             await Task.Delay(TimeSpan.FromMilliseconds(100));
             throw new InvalidOperationException();
-        }).Next(() => ThrowTask<int>());
+        }).Continue(() => ThrowTask<int>());
 
         Assert.IsAssignableFrom<Task<int>>(task);
 
@@ -146,11 +146,11 @@ public class NextTests
     }
 
     [Fact]
-    public async Task Task_Next_Func_Task_TNext_Canceled()
+    public async Task Task_Continue_Func_Task_TNext_Canceled()
     {
         var token = new CancellationToken(true);
         var task0 = Task.FromCanceled(token);
-        var task = task0.Next(() => ThrowTask<int>());
+        var task = task0.Continue(() => ThrowTask<int>());
 
         Assert.IsAssignableFrom<Task<int>>(task);
 

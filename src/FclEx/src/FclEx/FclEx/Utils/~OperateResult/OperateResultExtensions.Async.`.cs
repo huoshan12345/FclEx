@@ -142,4 +142,9 @@ partial class OperateResultExtensions
     {
         return task.ContinueWith(m => m.Result.GetRequiredValue());
     }
+
+    public static Task<Transput<TInput, OperateResult<TOutput>>> ToTransput<TInput, TOutput>(this Task<OperateResult<TOutput>> task, TInput input)
+    {
+        return task.Continue(m => Transput.Create(input, m));
+    }
 }

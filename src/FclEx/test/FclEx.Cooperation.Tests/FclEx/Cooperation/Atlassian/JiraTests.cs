@@ -12,7 +12,7 @@ public class JiraTests
     [Fact]
     public async Task GetProjectsAsync_Test()
     {
-        var projects = await JiraApi.Projects.GetProjectsAsync().Next(m => m.AsIReadOnlyList());
+        var projects = await JiraApi.Projects.GetProjectsAsync().Continue(m => m.AsIReadOnlyList());
         Assert.NotEmpty(projects);
     }
 

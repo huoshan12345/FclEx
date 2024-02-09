@@ -1,8 +1,6 @@
-﻿using FclEx;
+﻿namespace FclEx.Actions;
 
-namespace FclEx.Actions;
-
-public static partial class Extensions
+public static partial class ActionExtensions
 {
     public static IAction<T2> Map<T, T2>(this IAction<T> action, Func<T, T2> map)
     {
@@ -59,7 +57,7 @@ public static partial class Extensions
         return action.Map(m => default(Unit));
     }
 
-    public static IAction<T> RepeatUntil<T>(this IAction<T> actor, Func<T, bool>? until, TimeSpan delay = default, TimeSpan? timeout = null, bool excuteSafely = true)
+    public static IAction<T> RepeatUntil<T>(this IAction<T> actor, Func<T, bool>? until, TimeSpan delay = default, TimeSpan? timeout = null, bool executeSafely = true)
     {
         return CommonAction.Create<T>(async t =>
         {
@@ -76,7 +74,7 @@ public static partial class Extensions
                 await TaskHelper.Delay(delay, t);
             }
             return Operate.CreateCancel<T>();
-        }, excuteSafely);
+        }, executeSafely);
     }
 
     public static IAction<T> RepeatUntil<T>(this IAction<T> actor, Func<T, bool>? until, int delayInSeconds = default, int? timeoutInSeconds = null)
@@ -106,9 +104,9 @@ public static partial class Extensions
         return action.Error<T, TNext>(_ => error ?? string.Empty);
     }
 
-    public static IAction<T> Error<T>(this IAction<T> action, Action<Exception> onError, bool excuteSafely = true)
+    public static IAction<T> Error<T>(this IAction<T> action, Action<Exception> onError, bool executeSafely = true)
     {
         Check.NotNull(onError);
-        return action.NextResultIf(r => r.Error, r => CommonAction.Create(t => onError(r.Exception!), excuteSafely).Next(r));
+        return action.NextResultIf(r => r.Error, r => CommonAction.Create(t => onError(r.Exception!), executeSafely).Next(r));
     }
 }

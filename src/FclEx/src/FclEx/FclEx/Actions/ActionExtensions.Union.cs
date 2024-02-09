@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Actions;
 
-partial class Extensions
+partial class ActionExtensions
 {
     public static IAction<(T Cur, TNext Next)> Union<T, TNext>(this IAction<T> action, Func<T, IAction<TNext>> next)
     {
@@ -9,7 +9,7 @@ partial class Extensions
 
     public static IAction<(T Cur, TNext Next)> Union<T, TNext>(this IAction<T> action, Func<T, OperateResult<TNext>> next)
     {
-        return new UnionAction<T, TNext>(action, m => CommonAction.Create(t => next(m), excuteSafely: false));
+        return new UnionAction<T, TNext>(action, m => CommonAction.Create(t => next(m), executeSafely: false));
     }
 
     public static IAction<(T1, T2, TNext)> Union<T1, T2, TNext>(this IAction<(T1, T2)> action, Func<T1, T2, IAction<TNext>> next)
