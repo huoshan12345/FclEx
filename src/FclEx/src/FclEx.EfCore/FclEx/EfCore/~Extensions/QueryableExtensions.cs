@@ -11,7 +11,7 @@ public static class QueryableExtensions
     private static readonly ConcurrentDictionary<string, string> _contains = new();
     private static string GetContainsPattern(string value)
     {
-        return _contains.GetOrAdd(value, m => $"%{m.Replace("%", @"\%")}%");
+        return _contains.GetOrAdd(value, m => $"%{m}%");
     }
 
     internal static Expression<Func<T, bool>> BuildLike<T>(Expression<Func<T, string>> selector, string pattern, bool suppressValueConverter)
