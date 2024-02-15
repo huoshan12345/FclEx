@@ -14,11 +14,11 @@ public class SchemaDbContext : DbContext, IHasSchema
         Schema = schema;
     }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    protected override void OnConfiguring(DbContextOptionsBuilder builder)
     {
-        base.OnConfiguring(optionsBuilder);
+        base.OnConfiguring(builder);
         // Needed so EF won't cache the tenant schema
-        optionsBuilder.ReplaceService<IModelCacheKeyFactory, SchemaModelCacheKeyFactory>();
+        builder.ReplaceService<IModelCacheKeyFactory, SchemaModelCacheKeyFactory>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

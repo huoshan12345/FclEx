@@ -3,6 +3,8 @@
 global using System.ComponentModel.DataAnnotations;
 global using System.ComponentModel.DataAnnotations.Schema;
 global using Dapper;
+global using FclEx.Extensions;
+global using FclEx.Xunit;
 global using Microsoft.EntityFrameworkCore;
 global using Npgsql;
 global using Renci.SshNet;

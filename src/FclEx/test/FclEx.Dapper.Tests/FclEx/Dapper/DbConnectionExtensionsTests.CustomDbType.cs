@@ -1,6 +1,4 @@
-﻿using static FclEx.Dapper.GlobalFixture;
-
-namespace FclEx.Dapper;
+﻿namespace FclEx.Dapper;
 
 partial class DbConnectionExtensionsTests
 {
@@ -17,7 +15,7 @@ partial class DbConnectionExtensionsTests
     {
         using var x = _output.SetConsole();
 
-        await using var db = GlobalDbContext.Create(DatabaseType.Npgsql, schema);
+        await using var db = GlobalDbContext.Create(DbProviderType.Npgsql, schema);
 
         var payload = new EntityWithGuidKey
         {
@@ -45,7 +43,7 @@ partial class DbConnectionExtensionsTests
     {
         using var x = _output.SetConsole();
 
-        await using var db = GlobalDbContext.Create(DatabaseType.SqlServer, schema);
+        await using var db = GlobalDbContext.Create(DbProviderType.SqlServer, schema);
 
         var payload = new EntityWithGuidKey
         {
@@ -72,7 +70,7 @@ partial class DbConnectionExtensionsTests
     {
         using var x = _output.SetConsole();
 
-        await using var db = GlobalDbContext.Create(DatabaseType.Sqlite);
+        await using var db = GlobalDbContext.Create(DbProviderType.Sqlite);
 
         var payload = new EntityWithGuidKey
         {
@@ -94,13 +92,13 @@ partial class DbConnectionExtensionsTests
         Assert.Equal(payload.Value, actualPayload.Value);
     }
 
-    public static readonly IEnumerable<object[]> MySqlSchemaCases = new[] { DatabaseType.MySqlConnector, DatabaseType.MySql, }
+    public static readonly IEnumerable<object?[]> MySqlSchemaCases = new[] { DbProviderType.MySqlConnector, DbProviderType.MySql, }
         .SelectMany(Schemas)
-        .Select(m => new object[] { m.Left, m.Right });
+        .Select(m => new object?[] { m.Left, m.Right });
 
     [LocalOnlyTheory]
     [MemberData(nameof(MySqlSchemaCases))]
-    public async Task InsertAsync_EntityWithMySqlBlob_Test(DatabaseType type, string schema)
+    public async Task InsertAsync_EntityWithMySqlBlob_Test(DbProviderType type, string schema)
     {
         using var x = _output.SetConsole();
 

@@ -1,13 +1,7 @@
-﻿using static FclEx.Dapper.GlobalFixture;
+﻿namespace FclEx.Dapper;
 
-namespace FclEx.Dapper;
-
-public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixture>
+public partial class DbConnectionExtensionsTests : DbContextTests
 {
-    public static readonly IEnumerable<object[]> AdapterTestCases = DatabaseTypes
-        .SelectMany(m => Schemas, (x, y) => (x, y))
-        .Select(m => new object[] { m.x, m.y });
-
     public static readonly int[] Counts = [0, 1, 5];
     public static readonly IEnumerable<object[]> BulkInsertTestCases =
         from x in DatabaseTypes
@@ -15,14 +9,12 @@ public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixtur
         from z in Counts
         select new object[] { x, y, z };
 
-    public static readonly IEnumerable<object[]> SchemaCases = Schemas.Select(m => new object[] { m });
-
 
     [Theory]
-    [MemberData(nameof(AdapterTestCases))]
-    public async Task InsertAsync_EntityWithAutoKey_Test(DatabaseType databaseType, string schema)
+    [MemberData(nameof(DbSchemaTestCases))]
+    public async Task InsertAsync_EntityWithAutoKey_Test(DbProviderType dbProviderType, string schema)
     {
-        await using var db = GlobalDbContext.Create(databaseType, schema);
+        await using var db = GlobalDbContext.Create(dbProviderType, schema);
 
         var entity = new EntityWithAutoKey
         {
@@ -37,10 +29,10 @@ public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixtur
     }
 
     [Theory]
-    [MemberData(nameof(AdapterTestCases))]
-    public async Task InsertAsync_EntityWithAutoKey_IncludeAutoKey_Test(DatabaseType databaseType, string schema)
+    [MemberData(nameof(DbSchemaTestCases))]
+    public async Task InsertAsync_EntityWithAutoKey_IncludeAutoKey_Test(DbProviderType dbProviderType, string schema)
     {
-        await using var db = GlobalDbContext.Create(databaseType, schema);
+        await using var db = GlobalDbContext.Create(dbProviderType, schema);
         var maxId = await db.EntityWithAutoKeys.MaxAsync(m => (int?)m.Id);
 
         var entity = new EntityWithAutoKey
@@ -64,10 +56,10 @@ public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixtur
     }
 
     [Theory]
-    [MemberData(nameof(AdapterTestCases))]
-    public async Task InsertAsync_EntityWithGuidKey_Test(DatabaseType databaseType, string schema)
+    [MemberData(nameof(DbSchemaTestCases))]
+    public async Task InsertAsync_EntityWithGuidKey_Test(DbProviderType dbProviderType, string schema)
     {
-        await using var db = GlobalDbContext.Create(databaseType, schema);
+        await using var db = GlobalDbContext.Create(dbProviderType, schema);
 
         var entity = new EntityWithGuidKey
         {
@@ -82,10 +74,10 @@ public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixtur
     }
 
     [Theory]
-    [MemberData(nameof(AdapterTestCases))]
-    public async Task InsertAsync_EntityWithoutKey_Test(DatabaseType databaseType, string schema)
+    [MemberData(nameof(DbSchemaTestCases))]
+    public async Task InsertAsync_EntityWithoutKey_Test(DbProviderType dbProviderType, string schema)
     {
-        await using var db = GlobalDbContext.Create(databaseType, schema);
+        await using var db = GlobalDbContext.Create(dbProviderType, schema);
 
         var entity = new EntityWithoutKey
         {
@@ -99,9 +91,9 @@ public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixtur
 
     [Theory]
     [MemberData(nameof(BulkInsertTestCases))]
-    public async Task BulkInsertAsync_EntityWithAutoKey_Test(DatabaseType databaseType, string schema, int count)
+    public async Task BulkInsertAsync_EntityWithAutoKey_Test(DbProviderType dbProviderType, string schema, int count)
     {
-        await using var db = GlobalDbContext.Create(databaseType, schema);
+        await using var db = GlobalDbContext.Create(dbProviderType, schema);
 
         var entities = Enumerable.Range(1, count).Select(m => new EntityWithAutoKey
         {
@@ -121,9 +113,9 @@ public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixtur
 
     [Theory]
     [MemberData(nameof(BulkInsertTestCases))]
-    public async Task BulkInsertAsync_EntityWithAutoKey_IncludeAutoKey_Test(DatabaseType databaseType, string schema, int count)
+    public async Task BulkInsertAsync_EntityWithAutoKey_IncludeAutoKey_Test(DbProviderType dbProviderType, string schema, int count)
     {
-        await using var db = GlobalDbContext.Create(databaseType, schema);
+        await using var db = GlobalDbContext.Create(dbProviderType, schema);
 
         var maxId = await db.EntityWithAutoKeys.MaxAsync(m => (int?)m.Id);
 
@@ -149,10 +141,10 @@ public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixtur
     }
 
     [Theory]
-    [MemberData(nameof(AdapterTestCases))]
-    public async Task GetAsync_EntityWithGuidKey_Test(DatabaseType databaseType, string schema)
+    [MemberData(nameof(DbSchemaTestCases))]
+    public async Task GetAsync_EntityWithGuidKey_Test(DbProviderType dbProviderType, string schema)
     {
-        await using var db = GlobalDbContext.Create(databaseType, schema);
+        await using var db = GlobalDbContext.Create(dbProviderType, schema);
 
         var entity = new EntityWithGuidKey
         {
@@ -168,10 +160,10 @@ public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixtur
     }
 
     [Theory]
-    [MemberData(nameof(AdapterTestCases))]
-    public async Task GetAsync_EntityWithoutKey_RaiseException(DatabaseType databaseType, string schema)
+    [MemberData(nameof(DbSchemaTestCases))]
+    public async Task GetAsync_EntityWithoutKey_RaiseException(DbProviderType dbProviderType, string schema)
     {
-        await using var db = GlobalDbContext.Create(databaseType, schema);
+        await using var db = GlobalDbContext.Create(dbProviderType, schema);
 
         var con = db.Database.GetDbConnection();
         var ex = await Assert.ThrowsAsync<DataException>(() => con.GetAsync<EntityWithoutKey>(schema, "test"));
@@ -179,10 +171,10 @@ public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixtur
     }
 
     [Theory]
-    [MemberData(nameof(AdapterTestCases))]
-    public async Task DeleteAsync_EntityWithGuidKey_Test(DatabaseType databaseType, string schema)
+    [MemberData(nameof(DbSchemaTestCases))]
+    public async Task DeleteAsync_EntityWithGuidKey_Test(DbProviderType dbProviderType, string schema)
     {
-        await using var db = GlobalDbContext.Create(databaseType, schema);
+        await using var db = GlobalDbContext.Create(dbProviderType, schema);
 
         var entities = Enumerable.Range(1, 3).Select(m => new EntityWithGuidKey
         {
@@ -202,10 +194,10 @@ public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixtur
     }
 
     [Theory]
-    [MemberData(nameof(AdapterTestCases))]
-    public async Task DeleteAsync_EntityWithoutKey_RaiseException(DatabaseType databaseType, string schema)
+    [MemberData(nameof(DbSchemaTestCases))]
+    public async Task DeleteAsync_EntityWithoutKey_RaiseException(DbProviderType dbProviderType, string schema)
     {
-        await using var db = GlobalDbContext.Create(databaseType, schema);
+        await using var db = GlobalDbContext.Create(dbProviderType, schema);
 
         var con = db.Database.GetDbConnection();
         var ex = await Assert.ThrowsAsync<DataException>(() => con.DeleteAsync<EntityWithoutKey>(schema, "test"));
@@ -213,10 +205,10 @@ public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixtur
     }
 
     [Theory]
-    [MemberData(nameof(AdapterTestCases))]
-    public async Task DoTransactionAsync_Test(DatabaseType databaseType, string schema)
+    [MemberData(nameof(DbSchemaTestCases))]
+    public async Task DoTransactionAsync_Test(DbProviderType dbProviderType, string schema)
     {
-        await using var db = GlobalDbContext.Create(databaseType, schema);
+        await using var db = GlobalDbContext.Create(dbProviderType, schema);
 
         var con = db.Database.GetDbConnection();
 
@@ -246,10 +238,10 @@ public partial class DbConnectionExtensionsTests : IAssemblyFixture<GlobalFixtur
     }
 
     [Theory]
-    [MemberData(nameof(AdapterTestCases))]
-    public async Task DoTransactionAsync_Rollback_Test(DatabaseType databaseType, string schema)
+    [MemberData(nameof(DbSchemaTestCases))]
+    public async Task DoTransactionAsync_Rollback_Test(DbProviderType dbProviderType, string schema)
     {
-        await using var db = GlobalDbContext.Create(databaseType, schema);
+        await using var db = GlobalDbContext.Create(dbProviderType, schema);
         await db.EntityWithGuidKeys.ExecuteDeleteAsync();
 
         var con = db.Database.GetDbConnection();
