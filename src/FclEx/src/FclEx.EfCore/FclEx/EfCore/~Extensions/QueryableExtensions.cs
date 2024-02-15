@@ -14,7 +14,7 @@ public static class QueryableExtensions
         return _contains.GetOrAdd(value, m => $"%{m}%");
     }
 
-    internal static Expression<Func<T, bool>> BuildLike<T>(Expression<Func<T, string>> selector, string pattern, bool suppressValueConverter)
+    internal static Expression<Func<T, bool>> BuildLike<T>(Expression<Func<T, string?>> selector, string pattern, bool suppressValueConverter)
     {
         var member = selector.Body;
         if (suppressValueConverter)
@@ -28,7 +28,7 @@ public static class QueryableExtensions
         return where;
     }
 
-    public static IQueryable<T> ContainsAny<T>(this IQueryable<T> queryable, Expression<Func<T, string>> selector, IEnumerable<string> keywords, bool suppressValueConverter = false)
+    public static IQueryable<T> ContainsAny<T>(this IQueryable<T> queryable, Expression<Func<T, string?>> selector, IEnumerable<string> keywords, bool suppressValueConverter = false)
     {
         Expression<Func<T, bool>>? where = null;
         // ReSharper disable once LoopCanBeConvertedToQuery

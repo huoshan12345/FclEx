@@ -1,5 +1,6 @@
 ﻿namespace FclEx.EfCore;
 
+[Collection(nameof(DbContextTests))]
 public class DbContextTests : IAssemblyFixture<GlobalFixture>
 {
     public static readonly IEnumerable<object?[]> DbTestCases = DatabaseTypes
