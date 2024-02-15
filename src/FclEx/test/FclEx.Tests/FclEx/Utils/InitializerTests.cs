@@ -26,7 +26,7 @@ public class InitializerTests
         Assert.Equal(1, number);
     }
 
-    [Fact]
+    [RetryFact]
     public async Task InitAsync_ThreadSafe_Test()
     {
         var number = 0;

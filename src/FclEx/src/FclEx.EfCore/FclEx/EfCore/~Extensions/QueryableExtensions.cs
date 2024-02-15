@@ -6,12 +6,12 @@ public static class QueryableExtensions
     internal static MethodInfo ContainsOfString { get; } = typeof(string).GetRequiredMethod(nameof(string.Contains), 0, typeof(string));
 
     internal static MethodInfo EfLike { get; } = typeof(DbFunctionsExtensions)
-        .GetRequiredMethod(nameof(DbFunctionsExtensions.Like), 0, typeof(DbFunctions), typeof(string), typeof(string));
+        .GetRequiredMethod(nameof(DbFunctionsExtensions.Like), 0, typeof(DbFunctions), typeof(string), typeof(string), typeof(string));
 
     private static readonly ConcurrentDictionary<string, string> _contains = new();
     private static string GetContainsPattern(string value)
     {
-        return _contains.GetOrAdd(value, m => $"%{m}%");
+        return _contains.GetOrAdd(value, m => $"%{m.Replace("%", @"\%")}%");
     }
 
     internal static Expression<Func<T, bool>> BuildLike<T>(Expression<Func<T, string?>> selector, string pattern, bool suppressValueConverter)
@@ -23,7 +23,7 @@ public static class QueryableExtensions
             member = Expression.Convert(convertToObject, typeof(string));
         }
         var expPattern = Expression.Constant(pattern, typeof(string));
-        var call = Expression.Call(null, EfLike, EfFunctions, member, expPattern);
+        var call = Expression.Call(null, EfLike, EfFunctions, member, expPattern, Expression.Constant("\\"));
         var where = Expression.Lambda<Func<T, bool>>(call, selector.Parameters);
         return where;
     }
