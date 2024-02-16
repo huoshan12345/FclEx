@@ -105,7 +105,7 @@ public class UriCreator
 
     public Uri GetUri()
     {
-        if (Host.IsValid())
+        if (Host.IsNotEmpty())
         {
             if (QueryValues.Count == 0)
                 return _uriBuilder.Uri;
@@ -119,11 +119,11 @@ public class UriCreator
         {
             var u = _uriBuilder.Path;
             var (q, f) = (QueryValues.ToString(), Fragment);
-            if (q.IsValid())
+            if (q.IsNotEmpty())
             {
                 u = u + "?" + q;
             }
-            if (f.IsValid())
+            if (f.IsNotEmpty())
             {
                 u += f; // "f" contains a '#'
             }

@@ -6,7 +6,7 @@ partial class StringExtensions
     public static bool IsNullOrEmpty([NotNullWhen(false)] this string? str) => string.IsNullOrEmpty(str);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsNotEmpty([NotNullWhen(true)] this string? str) => string.IsNullOrEmpty(str) == false;
+    public static bool IsNotEmpty([NotNullWhen(true)] this string? str) => str.IsNullOrEmpty() == false;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? str) => string.IsNullOrWhiteSpace(str);
@@ -16,9 +16,6 @@ partial class StringExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string Format(this string str, params object[] args) => string.Format(str, args);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsValid([NotNullWhen(true)] this string? x) => !x.IsNullOrEmpty();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte[] ToUtf8Bytes(this string input) => input.ToBytes(Encoding.UTF8);
@@ -74,7 +71,7 @@ partial class StringExtensions
             </root>
          */
 
-        if (!data.IsValid())
+        if (!data.IsNotEmpty())
             return false;
 
         if (!RegexOfXmlProlog.IsMatch(data) && !RegexOfXmlStart.IsMatch(data))
@@ -88,7 +85,7 @@ partial class StringExtensions
 
     public static bool IsPossibleHtml([NotNullWhen(true)] this string? data)
     {
-        if (!data.IsValid())
+        if (!data.IsNotEmpty())
             return false;
 
         return true;
@@ -139,7 +136,7 @@ partial class StringExtensions
 
     public static string IfEmpty(this string? str, string defaultValue)
     {
-        return str.IsValid() ? str : defaultValue;
+        return str.IsNotEmpty() ? str : defaultValue;
     }
 
     public static readonly char[] NewLineChars = { '\r', '\n' };

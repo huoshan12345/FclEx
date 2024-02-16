@@ -39,6 +39,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0564F7F7-BF4
 	ProjectSection(SolutionItems) = preProject
 		FclEx\src\Directory.Build.props = FclEx\src\Directory.Build.props
 		FclEx\src\Directory.Build.targets = FclEx\src\Directory.Build.targets
+		FclEx\src\EmitGeneratedFiles.props = FclEx\src\EmitGeneratedFiles.props
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{C4A4BE1C-25E6-4968-A1A8-AAB1B0950354}"

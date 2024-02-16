@@ -13,7 +13,7 @@ public sealed class StringAsRawEasyCachingSerializer : IEasyCachingSerializer
     {
         Serializer = GetRawSerializer(serializer);
         Encoding = encoding ?? Encoding.UTF8;
-        Name = (name, DefaultName).FirstValid();
+        Name = (name, DefaultName).FirstNotEmpty();
     }
 
     private static IEasyCachingSerializer GetRawSerializer(IEasyCachingSerializer serializer)

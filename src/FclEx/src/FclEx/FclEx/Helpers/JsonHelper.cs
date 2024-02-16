@@ -30,7 +30,7 @@ public static class JsonHelper
                 Formatting = k.Formatting,
                 NullValueHandling = k.IgnoreNull ? NullValueHandling.Ignore : NullValueHandling.Include,
             };
-            if (k.DateTimeFormat.IsValid())
+            if (k.DateTimeFormat.IsNotEmpty())
                 settings.DateFormatString = k.DateTimeFormat!;
             if (k.UseCamelCase)
                 settings.ContractResolver = CamelResolver;

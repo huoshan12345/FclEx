@@ -36,7 +36,7 @@ public readonly struct NString : IEquatable<NString>
 
 public static class NStringExtensions
 {
-    public static bool IsValid(this NString nstr) => ((string)nstr).IsValid();
+    public static bool IsValid(this NString nstr) => ((string)nstr).IsNotEmpty();
 }
 
 public class NStringJsonConverter : JsonConverter

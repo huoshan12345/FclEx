@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace FclEx.SourceGenerator.Sources;
+﻿namespace FclEx.SourceGenerator.Sources;
 
 internal static class MethodHelperSource
 {
@@ -37,6 +35,7 @@ internal static class MethodHelperSource
             var types = Enumerable.Range(1, i).Select(m => "T" + m).JoinWith(", ");
             builder.WriteLine($"{methodName}<{types}>(Action<{types}> action) => action.Method;");
             builder.WriteLine($"{methodName}<{types}, TResult>(Func<{types}, TResult> func) => func.Method;");
+            builder.WriteLine();
         }
 
         // End class declaration

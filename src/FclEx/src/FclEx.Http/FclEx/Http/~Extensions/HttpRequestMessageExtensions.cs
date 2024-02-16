@@ -4,7 +4,7 @@ public static class HttpRequestMessageExtensions
 {
     public static HttpRequestMessage AddCookie(this HttpRequestMessage request, string? cookie)
     {
-        if (cookie.IsValid())
+        if (cookie.IsNotEmpty())
         {
             request.Headers.Add(HttpKnownHeaderNames.Cookie, cookie);
         }

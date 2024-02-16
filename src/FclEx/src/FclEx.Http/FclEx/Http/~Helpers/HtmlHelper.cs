@@ -52,7 +52,7 @@ public static class HtmlHelper
             if (nextMatch.Success)
             {
                 var g = nextMatch.Groups;
-                return (g[2].Value, g[3].Value).FirstValid();
+                return (g[2].Value, g[3].Value).FirstNotEmpty();
             }
 
             return null;

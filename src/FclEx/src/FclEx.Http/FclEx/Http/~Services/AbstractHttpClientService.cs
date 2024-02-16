@@ -96,7 +96,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
     {
         Debug.Assert(buffer.Array != null);
 
-        charSet = (charSet, headers.ContentType?.CharSet).FirstValid();
+        charSet = (charSet, headers.ContentType?.CharSet).FirstNotEmpty();
         // We don't validate the Content-Encoding header: If the content was encoded, it's the caller's
         // responsibility to make sure to only call ReadAsString() on already decoded content. E.g. if the
         // Content-Encoding is 'gzip' the user should set HttpClientHandler.AutomaticDecompression to get a
@@ -107,7 +107,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
 
         // If we do have encoding information in the 'Content-Type' header, use that information to convert
         // the content to a string.
-        if (charSet.IsValid())
+        if (charSet.IsNotEmpty())
         {
             encoding = GetEncodingFromCharSet(charSet);
             // Byte-order-mark (BOM) characters may be present even if a charset was specified.

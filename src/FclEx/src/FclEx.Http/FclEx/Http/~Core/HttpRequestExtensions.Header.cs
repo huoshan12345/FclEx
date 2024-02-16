@@ -21,7 +21,7 @@ partial class HttpRequestExtensions
 
     public static HttpRequest AddHeaderIfValid(this HttpRequest req, string key, string? value)
     {
-        return req.AddHeaderIf(value.IsValid(), key, value);
+        return req.AddHeaderIf(value.IsNotEmpty(), key, value);
     }
 
     public static HttpRequest AddHeaderIf(this HttpRequest req, bool condition, string key, string? value)

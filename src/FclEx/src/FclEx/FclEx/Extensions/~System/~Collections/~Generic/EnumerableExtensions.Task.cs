@@ -82,7 +82,7 @@ partial class EnumerableExtensions
                 break;
             }
         }
-        if (exceptions.IsValid())
+        if (exceptions.IsNotEmpty())
         {
             return (new AggregateException(exceptions), span);
         }

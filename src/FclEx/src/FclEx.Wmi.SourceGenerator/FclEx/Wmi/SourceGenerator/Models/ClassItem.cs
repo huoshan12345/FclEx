@@ -21,7 +21,7 @@ internal class ClassItem
     /// <summary>
     /// Gets the properties of the class
     /// </summary>
-    public List<PropertyItem> Properties { get; } = new();
+    public List<PropertyItem> Properties { get; } = [];
 
     /// <summary>
     /// Gets the list with the qualifiers

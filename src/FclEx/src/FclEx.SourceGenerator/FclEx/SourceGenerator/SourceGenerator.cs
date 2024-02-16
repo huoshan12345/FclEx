@@ -16,6 +16,7 @@ public class SourceGenerator : ISourceGenerator
             {
                 MethodHelperSource.Generate(),
                 TypeExtensionsSource.Generate(),
+                ValueTupleExtensionsSource.Generate(),
             };
 
             foreach (var (file, code) in codes)

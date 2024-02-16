@@ -107,7 +107,7 @@ public static class EnumExtensions
         return values.All(m => validValues.Contains(m));
     }
 
-    public static TEnum IfNotValid<TEnum>(this TEnum e, TEnum defaultValue = default) where TEnum : struct, Enum
+    public static TEnum IfInvalid<TEnum>(this TEnum e, TEnum defaultValue = default) where TEnum : struct, Enum
     {
         return e.IsValid() ? e : defaultValue;
     }

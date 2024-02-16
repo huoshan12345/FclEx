@@ -36,7 +36,7 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>,
         TypeName = GetType().ShortName();
     }
 
-    protected virtual void HandleCancelation()
+    protected virtual void HandleCancellation()
     {
         if (_isDisposed)
             return;
@@ -63,7 +63,7 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>,
         catch (Exception ex)
         {
             Counter.IncreException();
-            Logger.LogError(ex, $"[{TypeName}]Error encountered when invoking {nameof(HandleCancelation)}: " + ex.Message);
+            Logger.LogError(ex, $"[{TypeName}]Error encountered when invoking {nameof(HandleCancellation)}: " + ex.Message);
         }
     }
 
@@ -93,13 +93,13 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>,
             throw new ObjectDisposedException("The consumer has been disposed already.");
     }
 
-    protected void EnsureRunnning()
+    protected void EnsureRunning()
     {
         if (!_isRunning)
             throw new InvalidOperationException("The consumer is no running");
     }
 
-    protected void EnsureNotRunnning()
+    protected void EnsureNotRunning()
     {
         if (_isRunning)
             throw new InvalidOperationException("The consumer has been running already.");
@@ -116,7 +116,7 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>,
         using (_locker.Lock())
         {
             EnsureNonDisposed();
-            EnsureNotRunnning();
+            EnsureNotRunning();
             if (clear)
             {
                 _items.Clear();
@@ -150,9 +150,9 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>,
         using (_locker.Lock())
         {
             EnsureNonDisposed();
-            EnsureRunnning();
+            EnsureRunning();
             _cts.Cancel();
-            HandleCancelation();
+            HandleCancellation();
             _isRunning = false;
         }
     }
@@ -163,7 +163,7 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>,
             return;
 
         _cts.Cancel();
-        HandleCancelation();
+        HandleCancellation();
 
         _cts.Dispose();
         _items.Dispose();

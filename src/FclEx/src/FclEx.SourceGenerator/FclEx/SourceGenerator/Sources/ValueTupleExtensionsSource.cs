@@ -1,6 +1,6 @@
 ﻿namespace FclEx.SourceGenerator.Sources;
 
-internal static class TypeExtensionsSource
+internal class ValueTupleExtensionsSource
 {
     private const int Max = 8;
     private const string RootNamespace = "FclEx.Extensions";
@@ -13,12 +13,13 @@ internal static class TypeExtensionsSource
 
     internal static (string FileName, string Code) Generate()
     {
-        const string className = "TypeExtensions";
-        const string methodName = "public static Type MakeGenericType";
+        const string className = "ValueTupleExtensions";
+        const string methodName = "public static string? FirstNotEmpty";
 
         using var builder = new SourceBuilder()
             .WriteLine(GeneratedFilesHeader)
             .WriteLine()
+            .WriteLine("#nullable enable")
             .WriteUsings(_usings)
             .WriteLine();
 
@@ -30,14 +31,19 @@ internal static class TypeExtensionsSource
         builder.WriteLine($"partial class {className}")
             .WriteOpeningBracket();
 
-        for (var i = 1; i <= Max; i++)
+        for (var i = 2; i <= Max; i++)
         {
-            var types = Enumerable.Range(1, i).Select(m => "T" + m).ToArray();
-            var typeParams = types.JoinWith(", ");
-            builder.WriteLine($"{methodName}<{typeParams}>(this Type type)");
+            builder.WriteLine("[return: NotNullIfNotNull(nameof(defaultValue))]");
+            var types = Enumerable.Repeat("string?", i).JoinWith(", ");
+            builder.WriteLine($"{methodName}(this ({types}) tuple, string? defaultValue = \"\")");
             builder.WriteOpeningBracket();
-            var typeArgs = types.Select(m => $"typeof({m})").JoinWith(", ");
-            builder.WriteLine($"return type.MakeGenericType({typeArgs});");
+            builder.WriteLine($"using var disposable = ArrayPool<string?>.Shared.GetAsDisposable({i});");
+            builder.WriteLine("var arr = disposable.Value;");
+            for (var j = 0; j < i; j++)
+            {
+                builder.WriteLine($"arr[{j}] = tuple.Item{j + 1};");
+            }
+            builder.WriteLine($"return arr.FirstNotEmpty({i}, defaultValue);");
             builder.WriteClosingBracket();
             builder.WriteLine();
         }
@@ -51,5 +57,4 @@ internal static class TypeExtensionsSource
         var str = builder.ToString();
         return ($"{className}.g.cs", str);
     }
-
 }

@@ -116,7 +116,7 @@ public static partial class HttpRequestExtensions
 
     public static HttpRequest AddDataIfValid(this HttpRequest req, string key, string? value)
     {
-        return req.AddDataIf(value.IsValid(), key, value!);
+        return req.AddDataIf(value.IsNotEmpty(), key, value!);
     }
 
     public static HttpRequest JsonContent(this HttpRequest req, object data, JsonOptions options = default)

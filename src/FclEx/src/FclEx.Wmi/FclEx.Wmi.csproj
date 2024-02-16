@@ -68,4 +68,10 @@
     <Error Condition="@(_Compile-&gt;Count()) == 0" Text="[$(TargetFramework)] No file was generated!" />
   </Target>
 
+  <!--<ItemGroup Condition="'$(Configuration)' == 'Debug' AND $(GITHUB_ACTION) == ''">
+    <None Include="$(SourceDir)**\*$(DefaultLanguageSourceExtension)" Condition="Exists($(SourceDir))">
+      <Link>Generated\%(FileName)%(Extension)</Link>
+    </None>
+  </ItemGroup>-->
+
 </Project>

@@ -5,11 +5,11 @@ public static class EmailSinkOptionsExtensions
     public static bool IsValid([NotNullWhen(true)] this EmailSinkOptions? settings)
     {
         return settings != null
-               && settings.MailServer.IsValid()
+               && settings.MailServer.IsNotEmpty()
                && settings.Port != 0
-               && settings.UserName.IsValid()
-               && settings.Password.IsValid()
-               && settings.ToEmails.IsValid();
+               && settings.UserName.IsNotEmpty()
+               && settings.Password.IsNotEmpty()
+               && settings.ToEmails.IsNotEmpty();
     }
 
     public static LoggerConfiguration Email(this LoggerSinkConfiguration loggerConfiguration, EmailSinkOptions settings)
@@ -20,7 +20,7 @@ public static class EmailSinkOptionsExtensions
         {
             EmailSubject = settings.EmailSubject,
             EnableSsl = settings.EnableSsl,
-            FromEmail = (settings.FromEmail, settings.UserName).FirstValid(),
+            FromEmail = (settings.FromEmail, settings.UserName).FirstNotEmpty(),
             IsBodyHtml = settings.IsBodyHtml,
             MailServer = settings.MailServer,
             NetworkCredentials = new NetworkCredential(settings.UserName, settings.Password),

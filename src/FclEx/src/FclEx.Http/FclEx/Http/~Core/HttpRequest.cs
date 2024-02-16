@@ -91,7 +91,7 @@ public partial class HttpRequest
     public HttpRequest(Uri uri, HttpMethod method)
     {
         _uriCreator = new UriCreator(uri);
-        if (UserName.IsValid() && Password.IsValid())
+        if (UserName.IsNotEmpty() && Password.IsNotEmpty())
         {
             this.BasicAuth(UserName, Password);
         }

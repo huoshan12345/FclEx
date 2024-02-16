@@ -1,0 +1,17 @@
+<Project>
+  <PropertyGroup>
+    <SourceDir>$(MSBuildProjectDirectory)\obj\generated\</SourceDir>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>$(SourceDir.TrimEnd('\'))</CompilerGeneratedFilesOutputPath>
+  </PropertyGroup>
+
+  <Target Name="CleanSourceGeneratedFiles" BeforeTargets="BeforeBuild" DependsOnTargets="$(BeforeBuildDependsOn)">
+    <RemoveDir Directories="$(SourceDir)" Condition="Exists($(SourceDir))" ContinueOnError="true" />
+  </Target>
+
+  <ItemGroup>
+    <Content Include="$(SourceDir)**\*$(DefaultLanguageSourceExtension)">
+      <Link>Generated\%(FileName)%(Extension)</Link>
+    </Content>
+  </ItemGroup>
+</Project>

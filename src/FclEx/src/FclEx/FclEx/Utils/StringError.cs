@@ -24,6 +24,6 @@ public readonly struct StringError
 
     public static implicit operator StringError(string? error)
     {
-        return new(error.IsValid(), error ?? "");
+        return new(error.IsNotEmpty(), error ?? "");
     }
 }

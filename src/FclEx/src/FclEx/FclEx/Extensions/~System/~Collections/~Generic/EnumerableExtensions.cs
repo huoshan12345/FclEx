@@ -1,51 +1,29 @@
-﻿using System.Numerics;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public readonly record struct IndexedItem<T>(T Item, int Index, bool IsFirst, bool IsLast);
 
 [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 public static partial class EnumerableExtensions
 {
-    public static bool IsValid<T>([NotNullWhen(true)] this IEnumerable<T>? enumerable)
-    {
-        return !enumerable.IsNullOrEmpty();
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this IEnumerable<T>? source) => source is null || source.Any() == false;
 
-    public static bool IsEmpty<T>(this IEnumerable<T> enumerable)
-    {
-        return !enumerable.Any();
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsEmpty<T>(this IEnumerable<T> source) => source.Any() == false;
 
-    public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this IEnumerable<T>? source)
-    {
-        return source == null || !source.Any();
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsNotEmpty<T>([NotNullWhen(true)] this IEnumerable<T>? enumerable) => enumerable.IsNullOrEmpty() == false;
 
-    public static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T>? source)
-    {
-        return source ?? Enumerable.Empty<T>();
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T>? source) => source ?? [];
 
-    public static string JoinWith<T>(this IEnumerable<T> enumerable, string? separator)
-    {
-        return string.Join(separator, enumerable);
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string JoinWith<T>(this IEnumerable<T> enumerable, string? separator) => string.Join(separator, enumerable);
 
-    public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> enumerable) where T : class
-    {
-        return enumerable.Where(m => m != null)!;
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> enumerable) => enumerable.Where(m => m is not null)!;
 
-    public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> enumerable) where T : struct
-    {
-        return enumerable.Where(m => m != null).Select(m => m.Get());
-    }
-
-    public static IEnumerable<T> Not<T>(this IEnumerable<T> enumerable, Func<T, bool> predicate)
-    {
-        return enumerable.Where(m => !predicate(m));
-    }
+    public static IEnumerable<T> Not<T>(this IEnumerable<T> enumerable, Func<T, bool> predicate) => enumerable.Where(m => predicate(m) == false);
 
     public static IEnumerable<T> WhereIf<T>(this IEnumerable<T> enumerable, Func<T, bool> predicate, bool condition)
     {
@@ -55,6 +33,11 @@ public static partial class EnumerableExtensions
     public static IEnumerable<T> WhereIf<T>(this IEnumerable<T> enumerable, Func<T, int, bool> predicate, bool condition)
     {
         return condition ? enumerable.Where(predicate) : enumerable;
+    }
+
+    public static IEnumerable<T> TryTake<T>(this IEnumerable<T> enumerable, int? count)
+    {
+        return count is { } c ? enumerable.Take(c) : enumerable;
     }
 
     public static IEnumerable<TResult> SelectMany<TSource, TResult>(this IEnumerable<TSource> source,
@@ -156,7 +139,7 @@ public static partial class EnumerableExtensions
     {
         return source.Select((m, i) => selector(m.Item1, m.Item2, i));
     }
-    
+
     // Extension for MoreLinq.Index()
     public static IEnumerable<IndexedItem<T>> IndexExt<T>(this IEnumerable<T> enumerable)
     {

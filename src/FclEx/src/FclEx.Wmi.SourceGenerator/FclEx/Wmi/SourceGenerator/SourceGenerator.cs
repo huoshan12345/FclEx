@@ -92,11 +92,11 @@ public class SourceGenerator : ISourceGenerator
     }
 
     private static readonly Regex _dot = new(@"\. ", RegexOptions.Compiled);
-    private static readonly char[] LineSeps = { '\r', '\n' };
+    private static readonly char[] LineSeparators = ['\r', '\n'];
     private static Qualifiers Read(QualifierDataCollection collection)
     {
         var qualifiers = new Qualifiers();
-        foreach (QualifierData entry in collection)
+        foreach (var entry in collection)
         {
             if (entry.Value is not string value)
                 continue;
@@ -105,7 +105,7 @@ public class SourceGenerator : ISourceGenerator
             if (name == "description")
             {
                 var lines = _dot.Replace(value, ".\r\n")
-                    .Split(LineSeps)
+                    .Split(LineSeparators)
                     .Select(m => m.Trim())
                     .Where(m => m.IsValid());
 
@@ -128,9 +128,11 @@ public class SourceGenerator : ISourceGenerator
     {
         foreach (var ns in Namespaces)
         {
-            foreach (var @class in LoadClasses(ns).Where(m => !m.Qualifiers.Others.ContainsKey("abstract")))
+            foreach (var group in LoadClasses(ns)
+                         .Where(m => !m.Qualifiers.Others.ContainsKey("abstract"))
+                         .GroupBy(m => GetFirstChar(m.Name)))
             {
-                var (name, code) = ClassItemSource.Generate(ns, @class);
+                var (name, code) = ClassItemSource.Generate(ns, group, group.Key.ToString());
 
                 switch (options.OutputType)
                 {
@@ -145,6 +147,16 @@ public class SourceGenerator : ISourceGenerator
                         break;
                 }
             }
+        }
+
+        static char GetFirstChar(string name)
+        {
+            const string prefix = "Win32_";
+            var index = name.IndexOf("Win32_", StringComparison.Ordinal);
+            var ch = index >= 0
+                ? name[index + prefix.Length]
+                : name[0];
+            return char.ToLower(ch);
         }
     }
 

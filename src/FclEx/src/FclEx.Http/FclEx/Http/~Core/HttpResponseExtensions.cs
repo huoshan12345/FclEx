@@ -41,7 +41,7 @@ public static class HttpResponseExtensions
             return Operate.CreateError<T>("Can not parse json from empty string");
 
         var token = str.ToJToken();
-        if (path.IsValid())
+        if (path.IsNotEmpty())
             token = token.SelectToken(path);
 
         return token == null
@@ -62,7 +62,7 @@ public static class HttpResponseExtensions
         }
 
         var mimeType = response.Headers.GetFirstOr(HttpKnownHeaderNames.ContentType) ?? "";
-        if (mimeType.IsValid())
+        if (mimeType.IsNotEmpty())
         {
             if (mimeType.Contains(';'))
             {

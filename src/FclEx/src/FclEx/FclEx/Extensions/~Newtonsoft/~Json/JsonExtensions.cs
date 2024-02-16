@@ -122,10 +122,10 @@ public static class JsonExtensions
             null
          */
 
-        if (data.IsValid())
+        if (data.IsNotEmpty())
         {
-            if (data!.Length == 1 && data[0].IsDigit()) return true; // a single digit
-            else if (data!.Length >= 2)
+            if (data.Length == 1 && data[0].IsDigit()) return true; // a single digit
+            else if (data.Length >= 2)
             {
                 if (data == "null") return true; // null
                 if (data == "true" || data == "false") return true; // a boolean
@@ -145,13 +145,13 @@ public static class JsonExtensions
 
     public static bool IsPossibleJObject([NotNullWhen(true)] this string? data)
     {
-        return data.IsValid() && data!.Length >= 2
+        return data.IsNotEmpty() && data.Length >= 2
                               && (data.First() == '{' && data.Last() == '}');
     }
 
     public static bool IsPossibleJArray([NotNullWhen(true)] this string? data)
     {
-        return data.IsValid() && data!.Length >= 2
+        return data.IsNotEmpty() && data.Length >= 2
                               && (data.First() == '[' && data.Last() == ']');
     }
 
@@ -175,7 +175,7 @@ public static class JsonExtensions
         token = null;
         if (str.IsPossibleJObject())
         {
-            var r = Operate.Execute(() => JObject.Parse(str!));
+            var r = Operate.Execute(() => JObject.Parse(str));
             if (r.Success)
             {
                 token = r.Value!;

@@ -14,9 +14,15 @@ public static class NullableExtensions
         return t.GetValueOrDefault(defaultValue);
     }
 
-    public static bool IsValid<T>(this T? t) where T : struct
+    /// <summary>
+    /// Indicates whether the specified value is both not <see langword="null" /> and not <see langword="default" />.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public static bool IsValid<T>(this T? value) where T : struct
     {
-        return !t.IsNullOrDefault();
+        return !value.IsNullOrDefault();
     }
 
     public static bool IsNullOrDefault<T>(this T? t) where T : struct

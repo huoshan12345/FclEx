@@ -1,6 +1,4 @@
-﻿using System.Numerics;
-
-namespace FclEx.Utils;
+﻿namespace FclEx.Utils;
 
 public static class OperateTransputs
 {

@@ -13,7 +13,7 @@ public static class ModelStateDictionaryExtensions
             .SelectMany(m => m)
             .FirstOrDefault();
 
-        var result = (error?.ErrorMessage, error?.Exception?.Message, defaultError).FirstValid();
+        var result = (error?.ErrorMessage, error?.Exception?.Message, defaultError).FirstNotEmpty();
         return result;
     }
 }

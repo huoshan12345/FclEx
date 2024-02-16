@@ -1,14 +1,13 @@
-﻿using MoreLinq.Extensions;
-
-#nullable enable
+﻿#nullable enable
+using MoreLinq;
 
 namespace FclEx.Extensions.ValueTupleExtensions;
 
-public class FirstValidTests
+public class FirstNotEmptyTests
 {
     private readonly ITestOutputHelper _output;
 
-    public FirstValidTests(ITestOutputHelper output)
+    public FirstNotEmptyTests(ITestOutputHelper output)
     {
         _output = output;
     }
@@ -31,8 +30,8 @@ public class FirstValidTests
         foreach (var (i, items) in new[] { "test", "test2", string.Empty, null }.ToVariations(2).Index())
         {
             Assert.Equal(2, items.Count);
-            var result = (items[0], items[1]).FirstValid(null);
-            Assert.Equal(items.FirstOrDefault(m => m.IsValid()), result);
+            var result = (items[0], items[1]).FirstNotEmpty(null);
+            Assert.Equal(items.FirstOrDefault(m => m.IsNotEmpty()), result);
             Print(i, items, result);
         }
     }
@@ -43,8 +42,8 @@ public class FirstValidTests
         foreach (var (i, items) in new[] { "test", "test2", "test3", string.Empty, null }.ToVariations(3).Index())
         {
             Assert.Equal(3, items.Count);
-            var result = (items[0], items[1], items[2]).FirstValid(null);
-            Assert.Equal(items.FirstOrDefault(m => m.IsValid()), result);
+            var result = (items[0], items[1], items[2]).FirstNotEmpty(null);
+            Assert.Equal(items.FirstOrDefault(m => m.IsNotEmpty()), result);
             Print(i, items, result);
         }
     }
@@ -55,8 +54,8 @@ public class FirstValidTests
         foreach (var (i, items) in new[] { "test", "test2", "test3", "test4", string.Empty, null }.ToVariations(4).Index())
         {
             Assert.Equal(4, items.Count);
-            var result = (items[0], items[1], items[2], items[3]).FirstValid(null);
-            Assert.Equal(items.FirstOrDefault(m => m.IsValid()), result);
+            var result = (items[0], items[1], items[2], items[3]).FirstNotEmpty(null);
+            Assert.Equal(items.FirstOrDefault(m => m.IsNotEmpty()), result);
             Print(i, items, result);
         }
     }
