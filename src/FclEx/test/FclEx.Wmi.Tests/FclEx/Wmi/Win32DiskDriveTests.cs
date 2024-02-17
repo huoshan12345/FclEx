@@ -20,7 +20,7 @@ public class Win32DiskDriveTests
         var drives = new ManagementObjectSearcher("SELECT * FROM Win32_DiskDrive").Get();
         foreach (var drive in drives)
         {
-            var disk = drive.ReadAs<Win32DiskDrive>();
+            var disk = drive.ReadAs<Win32_DiskDrive>();
             _output.WriteLine(disk.PNPDeviceID);
         }
     }
