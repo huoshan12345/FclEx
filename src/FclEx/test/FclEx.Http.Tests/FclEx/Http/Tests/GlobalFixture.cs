@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.RequestDecompression;
+using Microsoft.Extensions.Logging;
 
 namespace FclEx.Http.Tests;
 
@@ -35,6 +36,7 @@ public class GlobalFixture : FclEx.Tests.GlobalFixture
     {
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseUrls(TestUri.ToString());
+        builder.Services.AddLogging(b => b.SetMinimumLevel(LogLevel.Error));
 
 #if NET7_0_OR_GREATER
         // Should use ZlibSteam to handle deflate decompression, which has been done since aspnet core 8.

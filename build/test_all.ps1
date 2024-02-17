@@ -22,7 +22,7 @@ $projects = $testDirs | ForEach-Object { Get-ChildItem -Path $_ -Include *.cspro
 $result = [ordered]@{}
 foreach ($project in $projects) {
   Write-Output "Testing $($project.Basename)"
-  $command = 'dotnet test $project.FullName --nologo -c $mode -v q'
+  $command = 'dotnet test $project.FullName --nologo -c $mode -v m'
   if ($restore -eq $false) {
     $command = $command + " --no-restore"
   }
