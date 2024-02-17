@@ -4,6 +4,11 @@ namespace FclEx.Http;
 
 public static class HttpClientHelper
 {
+    public static HttpClient Create(SocketsHttpHandlerOptions? options = null)
+    {
+        return new(CreateSocketsHttpHandler(options));
+    }
+
     public static SocketsHttpHandler CreateSocketsHttpHandler(SocketsHttpHandlerOptions? options = null)
     {
         options ??= SocketsHttpHandlerOptions.Default;

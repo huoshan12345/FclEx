@@ -20,8 +20,3 @@ updates:
     open-pull-requests-limit: 50
     registries:
       - nuget-public
-    permissions:
-      statuses: write
-      checks: write
-      contents: write
-      pull-requests: write
