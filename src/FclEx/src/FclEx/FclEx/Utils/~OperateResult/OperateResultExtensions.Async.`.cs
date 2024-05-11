@@ -74,7 +74,16 @@ partial class OperateResultExtensions
 
     public static Task<OperateResult<T>> ThrowIfError<T>(this Task<OperateResult<T>> task)
     {
-        return task.NextResult(m => m.ThrowIfError());
+        return task.ContinueWith(m =>
+        {
+            if (task.Exception is { } ex)
+                ex.GetBaseException().ReThrow();
+
+            if (task.IsCanceled)
+                throw new TaskCanceledException();
+
+            return m.Result.ThrowIfError();
+        });
     }
 
     public static Task<OperateResult> Untype<T>(this Task<OperateResult<T>> task)
@@ -90,7 +99,7 @@ partial class OperateResultExtensions
             var elapsed = watch.GetElapsedTime();
 
             if (task.Exception is { } ex)
-                return Operate.CreateError<TNext>(ex, elapsed);
+                return Operate.CreateError<TNext>(ex.GetBaseException(), elapsed);
 
             if (task.IsCanceled)
                 return Operate.CreateCancel<TNext>(elapsed);
@@ -119,7 +128,7 @@ partial class OperateResultExtensions
             var elapsed = watch.GetElapsedTime();
 
             if (task.Exception is { } ex)
-                return Operate.CreateError<TNext>(ex, elapsed);
+                return Operate.CreateError<TNext>(ex.GetBaseException(), elapsed);
 
             if (task.IsCanceled)
                 return Operate.CreateCancel<TNext>(elapsed);

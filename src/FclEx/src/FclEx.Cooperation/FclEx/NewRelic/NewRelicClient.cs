@@ -13,7 +13,7 @@ public class NewRelicClient
     public NewRelicClient(HttpClientResolver httpClientResolver, string apiKey, string? endPoint = null)
     {
         endPoint ??= DefaultEndPoint;
-        _graphQlClient = new GraphQLHttpClient(new() { EndPoint = new(endPoint) }, new NewtonsoftJsonSerializer(), httpClientResolver());
+        _graphQlClient = new GraphQLHttpClient(new GraphQLHttpClientOptions { EndPoint = new(endPoint) }, new NewtonsoftJsonSerializer(), httpClientResolver());
         _graphQlClient.HttpClient.DefaultRequestHeaders.Add("API-Key", apiKey);
     }
 

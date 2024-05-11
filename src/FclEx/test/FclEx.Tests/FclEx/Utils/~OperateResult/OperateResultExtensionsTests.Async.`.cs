@@ -55,9 +55,31 @@ partial class OperateResultExtensionsTests
     [Fact]
     public async Task Task_OperateResult_T_ThrowIfError()
     {
-        var task = Operate.ExecuteAsync((Func<int>)(() => throw new InvalidOperationException()))
-            .ThrowIfError();
+        {
+            var task = Operate.ExecuteAsync((Func<int>)(() => throw new SimpleException("x")))
+                .ThrowIfError();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => task);
+            var ex = await Assert.ThrowsAsync<SimpleException>(() => task);
+            Assert.Equal("x", ex.Message);
+        }
+        {
+            var task = Operate.ExecuteAsync(() => Operate.CreateError("x"))
+                .ThrowIfError();
+
+            var ex = await Assert.ThrowsAsync<SimpleException>(() => task);
+            Assert.Equal("x", ex.Message);
+        }
+        {
+            var task = Throw().ThrowIfError();
+
+            var ex = await Assert.ThrowsAsync<SimpleException>(() => task);
+            Assert.Equal("x", ex.Message);
+
+            static async Task<OperateResult<int>> Throw()
+            {
+                await Task.Yield();
+                throw new SimpleException("x");
+            }
+        }
     }
 }

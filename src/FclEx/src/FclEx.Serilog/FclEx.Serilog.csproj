@@ -2,12 +2,11 @@
 
   <ItemGroup>
     <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
-    <PackageReference Include="Serilog.Formatting.Elasticsearch" Version="9.0.3" />
     <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
-    <PackageReference Include="Serilog.Sinks.PeriodicBatching" Version="3.1.0" />
+    <PackageReference Include="Serilog.Sinks.PeriodicBatching" Version="4.1.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
-    <PackageReference Include="Serilog.Sinks.Email" Version="2.4.0" />
-    <PackageReference Include="Destructurama.Attributed" Version="3.2.0" />
+    <PackageReference Include="Serilog.Sinks.Email" Version="3.0.0" />
+    <PackageReference Include="Destructurama.Attributed" Version="4.0.0" />
   </ItemGroup>
 
   <ItemGroup>

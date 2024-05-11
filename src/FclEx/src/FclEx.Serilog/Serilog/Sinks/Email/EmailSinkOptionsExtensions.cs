@@ -1,40 +1,31 @@
-﻿namespace Serilog.Sinks.Email;
+﻿using Serilog.Formatting.Display;
+
+namespace Serilog.Sinks.Email;
 
 public static class EmailSinkOptionsExtensions
 {
-    public static bool IsValid([NotNullWhen(true)] this EmailSinkOptions? settings)
-    {
-        return settings != null
-               && settings.MailServer.IsNotEmpty()
-               && settings.Port != 0
-               && settings.UserName.IsNotEmpty()
-               && settings.Password.IsNotEmpty()
-               && settings.ToEmails.IsNotEmpty();
-    }
-
-    public static LoggerConfiguration Email(this LoggerSinkConfiguration loggerConfiguration, EmailSinkOptions settings)
+    public static LoggerConfiguration Email(this LoggerSinkConfiguration loggerConfiguration, FclEx.Serilog.EmailSinkOptions settings)
     {
         Check.NotNull(settings);
 
-        var info = new EmailConnectionInfo
+        var info = new EmailSinkOptions()
         {
-            EmailSubject = settings.EmailSubject,
-            EnableSsl = settings.EnableSsl,
-            FromEmail = (settings.FromEmail, settings.UserName).FirstNotEmpty(),
+            Subject = new MessageTemplateTextFormatter(settings.SubjectTemplate),
+            Body = new MessageTemplateTextFormatter(settings.BodyTemplate),
+            ConnectionSecurity = settings.ConnectionSecurity,
+            From = (settings.From, settings.UserName).FirstNotEmpty(),
+            To = settings.To.EmptyIfNull().ToList(),
             IsBodyHtml = settings.IsBodyHtml,
-            MailServer = settings.MailServer,
-            NetworkCredentials = new NetworkCredential(settings.UserName, settings.Password),
+            Host = settings.Host.IfEmpty(""),
+            Credentials = new NetworkCredential(settings.UserName, settings.Password),
             Port = settings.Port,
             ServerCertificateValidationCallback = (sender, certificate, chain, errors) => true,
-            ToEmail = settings.ToEmails.EmptyIfNull().JoinWith(",")
         };
-        return loggerConfiguration.Email(
-            connectionInfo: info,
-            outputTemplate: settings.OutputTemplate,
-            restrictedToMinimumLevel: LevelConvert.ToSerilogLevel(settings.LogLevel),
-            batchPostingLimit: settings.BatchPostingLimit,
-            period: TimeSpan.FromSeconds(settings.PeriodSeconds)
-        );
+        return loggerConfiguration.Email(info, new PeriodicBatchingSinkOptions
+        {
+            BatchSizeLimit = settings.BatchSizeLimit,
+            Period = TimeSpan.FromSeconds(settings.PeriodSeconds),
+        }, LevelConvert.ToSerilogLevel(settings.LogLevel));
     }
 
 }
