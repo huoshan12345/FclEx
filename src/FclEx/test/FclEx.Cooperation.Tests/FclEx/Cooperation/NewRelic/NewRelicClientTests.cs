@@ -2,7 +2,7 @@ namespace FclEx.Cooperation.NewRelic;
 
 public class NewRelicClientTests
 {
-    private static readonly string AccountId = Tests.GlobalFixture.AppSettings.NewRelic.AccountId;
+    private static readonly string AccountId = FclEx.Tests.GlobalFixture.AppSettings.NewRelic.AccountId;
 
     private readonly ITestOutputHelper _output;
 
@@ -11,7 +11,7 @@ public class NewRelicClientTests
         _output = output;
     }
 
-    [Fact]
+    [LocalOnlyFact]
     public async Task NrqlQueryAsync_Test()
     {
         var start = new DateTimeOffset(2024, 2, 6, 0, 0, 0, TimeSpan.Zero);
@@ -30,7 +30,7 @@ public class NewRelicClientTests
         _output.WriteLine(result.Results!.First().ToString(Formatting.Indented));
     }
 
-    [Fact]
+    [LocalOnlyFact]
     public async Task NrqlQueryAsync_FACET_Test()
     {
         var start = new DateTimeOffset(2024, 2, 6, 0, 0, 0, TimeSpan.Zero);
