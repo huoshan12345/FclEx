@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <PackageReference Include="NewRelic.Agent.Api" Version="10.24.0" />
+    <PackageReference Include="NewRelic.Agent.Api" Version="10.25.0" />
     <PackageReference Include="GraphQL.Client" Version="6.0.5" />
     <PackageReference Include="GraphQL.Client.Serializer.Newtonsoft" Version="6.0.5" />
     <PackageReference Include="System.Linq.Async.Queryable" Version="6.0.1" />
