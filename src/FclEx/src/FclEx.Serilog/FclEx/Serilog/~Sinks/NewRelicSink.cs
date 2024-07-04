@@ -27,7 +27,7 @@ public class NewRelicSink : IBatchedLogEventSink
         };
     }
 
-    public virtual async Task EmitBatchAsync(IEnumerable<LogEvent> events)
+    public virtual async Task EmitBatchAsync(IReadOnlyCollection<LogEvent> events)
     {
         try
         {

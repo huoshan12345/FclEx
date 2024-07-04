@@ -1,11 +1,14 @@
-﻿namespace FclEx.Serilog;
+﻿using Serilog.Configuration;
+
+namespace FclEx.Serilog;
 
 public static class LoggerConfigurationExtensions
 {
     public static LoggerConfiguration Wrap(this LoggerSinkConfiguration configuration,
         Func<ILogEventSink, ILogEventSink> wrapSink, Action<LoggerSinkConfiguration> configureWrappedSink)
     {
-        return LoggerSinkConfiguration.Wrap(configuration, wrapSink, configureWrappedSink);
+        var logEventSink = LoggerSinkConfiguration.Wrap(wrapSink, configureWrappedSink);
+        return configuration.Sink(logEventSink);
     }
 
     public static LoggerConfiguration FormatException(this LoggerSinkConfiguration configuration, Action<LoggerSinkConfiguration> configureWrappedSink)
@@ -47,15 +50,14 @@ public static class LoggerConfigurationExtensions
             throw new ArgumentException("LicenseKey must be supplied", nameof(licenseKey));
 
         var sink = new NewRelicSink(licenseKey, endpointUrl, formatter);
-        var batchingOptions = new PeriodicBatchingSinkOptions
+        var batchingOptions = new BatchingOptions
         {
             BatchSizeLimit = batchSizeLimit,
-            Period = period.Value,
+            BufferingTimeLimit = period.Value,
             EagerlyEmitFirstEvent = true,
             QueueLimit = 10000
         };
-        var batchingSink = new PeriodicBatchingSink(sink, batchingOptions);
-        return loggerSinkConfiguration.Sink(batchingSink, restrictedToMinimumLevel);
+        return loggerSinkConfiguration.Sink(sink, batchingOptions, restrictedToMinimumLevel);
     }
 
 
@@ -64,15 +66,14 @@ public static class LoggerConfigurationExtensions
         Check.NotNull(config);
         Check.NotNull(options);
 
-        var op = new PeriodicBatchingSinkOptions
+        var op = new BatchingOptions
         {
             EagerlyEmitFirstEvent = false,
             BatchSizeLimit = options.BatchSizeLimit,
-            Period = options.Period,
+            BufferingTimeLimit = options.Period,
             QueueLimit = options.QueueLimit
         };
-        return config.Sink(
-            logEventSink: new PeriodicBatchingSink(new LogstashSink(options), op),
+        return config.Sink(new LogstashSink(options), op,
             restrictedToMinimumLevel: options.MinimumLogEventLevel ?? LevelAlias.Minimum,
             levelSwitch: options.LevelSwitch
         );

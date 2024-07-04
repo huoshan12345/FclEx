@@ -29,5 +29,3 @@ global using Serilog.Extensions.Logging;
 global using Serilog.Filters;
 global using Serilog.Formatting;
 global using Serilog.Formatting.Json;
-global using Serilog.Parsing;
-global using Serilog.Sinks.PeriodicBatching;

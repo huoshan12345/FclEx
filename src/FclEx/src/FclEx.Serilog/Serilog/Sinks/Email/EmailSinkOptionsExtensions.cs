@@ -8,7 +8,7 @@ public static class EmailSinkOptionsExtensions
     {
         Check.NotNull(settings);
 
-        var info = new EmailSinkOptions()
+        var info = new EmailSinkOptions
         {
             Subject = new MessageTemplateTextFormatter(settings.SubjectTemplate),
             Body = new MessageTemplateTextFormatter(settings.BodyTemplate),
@@ -21,10 +21,10 @@ public static class EmailSinkOptionsExtensions
             Port = settings.Port,
             ServerCertificateValidationCallback = (sender, certificate, chain, errors) => true,
         };
-        return loggerConfiguration.Email(info, new PeriodicBatchingSinkOptions
+        return loggerConfiguration.Email(info, new BatchingOptions
         {
             BatchSizeLimit = settings.BatchSizeLimit,
-            Period = TimeSpan.FromSeconds(settings.PeriodSeconds),
+            BufferingTimeLimit = TimeSpan.FromSeconds(settings.PeriodSeconds),
         }, LevelConvert.ToSerilogLevel(settings.LogLevel));
     }
 

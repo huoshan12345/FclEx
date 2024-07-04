@@ -21,7 +21,7 @@ public class NewRelicSinkTests : IAssemblyFixture<GlobalFixture>
         using var x = writer.SetSelfLog();
 
         var sink = new NewRelicSink(GlobalFixture.AppSettings.NewRelic.LicenseKey);
-        var events = Enumerable.Range(1, 5).Select(m => CreateLogEvent(m));
+        var events = Enumerable.Range(1, 5).Select(m => CreateLogEvent(m)).ToArray();
         await sink.EmitBatchAsync(events);
 
         var str = writer.ToString();
