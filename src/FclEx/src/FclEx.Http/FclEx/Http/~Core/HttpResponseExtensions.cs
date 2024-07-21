@@ -1,4 +1,6 @@
-﻿namespace FclEx.Http;
+﻿using MimeTypes;
+
+namespace FclEx.Http;
 
 public static class HttpResponseExtensions
 {
