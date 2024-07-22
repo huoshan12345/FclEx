@@ -95,7 +95,7 @@ partial class HttpRequestExtensions
         return req;
     }
 
-    public static HttpRequest DetectChar(this HttpRequest req, bool flag = true)
+    public static HttpRequest DetectCharSet(this HttpRequest req, bool flag = true)
     {
         req.DetectCharSet = flag;
         return req;
