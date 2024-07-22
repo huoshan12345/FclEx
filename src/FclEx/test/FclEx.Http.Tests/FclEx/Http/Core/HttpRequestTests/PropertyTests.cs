@@ -40,11 +40,11 @@ public class PropertyTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task DetectChar_Test(bool value)
+    public async Task DetectCharSet_Test(bool value)
     {
         using var http = new HttpClientService();
         var req = HttpRequest.Get(CharSetTestCase.Url);
-        req.DetectChar(value);
+        req.DetectCharSet(value);
 
         var res = await req.SendAsync(http)
             .ThrowIfError()
@@ -68,7 +68,7 @@ public class PropertyTests
             CreatedAt = DateTimeOffset.UtcNow,
             Name = random.NextString(10),
             Avatar = $"https://cloudflare-ipfs.com/ipfs/{random.NextString(10)}/avatar/{random.Next(10, 99)}.jpg",
-            Id = 1
+            Id = 1,
         };
         var res = await HttpRequest.Put("https://65c333b1f7e6ea59682c21a5.mockapi.io/api/compress/" + model.Id)
             .Compression(compression)
