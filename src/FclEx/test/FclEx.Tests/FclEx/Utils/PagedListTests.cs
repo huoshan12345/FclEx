@@ -5,7 +5,7 @@ public class PagedListTests
     [Fact]
     public void EmptyArray_FirstPage_Test()
     {
-        var arr = Enumerable.Empty<int>();
+        var arr = Enumerable.Empty<int>().ToList();
         var pagedList = new PagedList<int>(arr, 0, 10, 0);
         Assert.Equal(0, pagedList.PageCount);
         Assert.Equal(0, pagedList.TotalCount);

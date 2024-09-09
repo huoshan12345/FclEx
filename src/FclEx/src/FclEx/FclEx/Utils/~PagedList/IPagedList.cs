@@ -15,6 +15,6 @@ public interface IPagedList
     int ItemEnd { get; }
 }
 
-public interface IPagedList<out T> : IEnumerable<T>, IPagedList
+public interface IPagedList<out T> : IReadOnlyList<T>, IPagedList
 {
 }

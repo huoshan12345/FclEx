@@ -1,14 +1,20 @@
 ﻿namespace FclEx.Utils;
 
+public class PagedList
+{
+    public static PagedList<T> Create<T>(IReadOnlyList<T> items, int pageIndex, int pageSize, int totalCount)
+        => new(items, pageIndex, pageSize, totalCount);
+}
+
 public class PagedList<T> : IPagedList<T>
 {
-    private readonly IEnumerable<T> _items;
+    private readonly IReadOnlyList<T> _items;
 
     public static PagedList<T> Empty { get; } = new(Array.Empty<T>(), 0, 1, 0);
 
-    public PagedList(T item) : this(new[] { item }, 0, 1, 1) { }
+    public PagedList(T item) : this([item], 0, 1, 1) { }
 
-    public PagedList(IEnumerable<T> items, int pageIndex, int pageSize, int totalCount)
+    public PagedList(IReadOnlyList<T> items, int pageIndex, int pageSize, int totalCount)
     {
         Check.NotNull(items);
         Check.NotLessThan(pageIndex, 0);
@@ -50,4 +56,6 @@ public class PagedList<T> : IPagedList<T>
 
     public IEnumerator<T> GetEnumerator() => _items.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    public int Count => _items.Count;
+    public T this[int index] => _items[index];
 }
