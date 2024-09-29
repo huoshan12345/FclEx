@@ -1,6 +1,5 @@
 using System.Xml.Linq;
 using System.Xml.Serialization;
-using MoreLinq.Extensions;
 
 namespace FclEx.Extensions;
 

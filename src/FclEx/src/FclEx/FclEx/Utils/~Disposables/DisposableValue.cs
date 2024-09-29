@@ -19,7 +19,7 @@ public readonly record struct DisposableValue<T>(T Value, Action<T>? DisposeActi
 
 public static class DisposableValueExtensions
 {
-    public static DisposableValue<T> AsDisposable<T>(this T value, Action<T>? disposeAction = null)
+    public static DisposableValue<T> ToDisposable<T>(this T value, Action<T>? disposeAction = null)
     {
         return new(value, disposeAction);
     }

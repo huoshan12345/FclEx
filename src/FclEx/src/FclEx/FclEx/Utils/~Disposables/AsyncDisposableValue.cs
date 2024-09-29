@@ -27,7 +27,7 @@ public readonly struct AsyncDisposableValue<T>(T value, Func<T, ValueTask>? disp
 
 public static class AsyncDisposableValueExtensions
 {
-    public static AsyncDisposableValue<T> AsAsyncDisposable<T>(this T value, Func<T, ValueTask>? disposeAction = null)
+    public static AsyncDisposableValue<T> ToAsyncDisposable<T>(this T value, Func<T, ValueTask>? disposeAction = null)
     {
         return new AsyncDisposableValue<T>(value, disposeAction);
     }

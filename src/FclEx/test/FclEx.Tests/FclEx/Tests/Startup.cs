@@ -1,4 +1,6 @@
-﻿namespace FclEx.Tests;
+﻿using System.Text;
+
+namespace FclEx.Tests;
 
 public static class Startup
 {
@@ -7,6 +9,7 @@ public static class Startup
     {
         ThreadPool.SetMaxThreads(200, 200);
         ThreadPool.SetMinThreads(100, 100);
-        FclExStartup.Init();
+        ServicePointManager.DefaultConnectionLimit = short.MaxValue;
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
     }
 }

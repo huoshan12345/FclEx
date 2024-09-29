@@ -1,6 +1,4 @@
-﻿using MoreLinq.Extensions;
-
-namespace FclEx.Consumers;
+﻿namespace FclEx.Consumers;
 
 public class BatchConsumerTests
 {
@@ -16,13 +14,13 @@ public class BatchConsumerTests
     {
         const int maxRetry = 3;
         using var consumer = new BatchConsumer<int>(5, TimeSpan.FromSeconds(1), maxRetry);
-        consumer.ConsumingHandler += (sender, ints) =>
+        consumer.ConsumingHandler += (_, _) =>
         {
             _output.WriteLine("OnConsume");
             throw new Exception();
         };
         var exceptions = 0;
-        consumer.ExceptionHandler += (sender, args) =>
+        consumer.ExceptionHandler += (_, args) =>
         {
             exceptions++;
             args.ForEach(m =>
@@ -32,7 +30,7 @@ public class BatchConsumerTests
                 Assert.IsAssignableFrom<Exception>(m.Exception);
             });
         };
-        consumer.DiscardHandler += (sender, args) => args.ForEach(m =>
+        consumer.DiscardHandler += (_, args) => args.ForEach(m =>
         {
             _output.WriteLine("OnDiscard");
             Assert.NotNull(m.Exception);

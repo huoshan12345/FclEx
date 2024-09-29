@@ -56,10 +56,10 @@ public class NewRelicSink : IBatchedLogEventSink
 
     protected internal static string Serialize(IEnumerable<LogEvent> events, ITextFormatter textFormatter)
     {
-        using var disposable = ObjectPoolHelper.StringBuilderPool.GetAsDisposable();
+        using var disposable = ObjectPoolHelper.StringBuilderPool.GetPooled();
         var textWriter = new StringWriter(disposable.Value);
         textWriter.Write("[");
-        foreach (var (item, _, _, isLast) in events.IndexExt())
+        foreach (var (_, item, _, isLast) in events.IndexExt())
         {
             textFormatter.Format(item, textWriter);
 

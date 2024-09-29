@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Extensions;
 
-public readonly record struct IndexedItem<T>(T Item, int Index, bool IsFirst, bool IsLast);
+public readonly record struct IndexedItem<T>(int Index, T Item, bool IsFirst, bool IsLast);
 
 [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 public static partial class EnumerableExtensions
@@ -122,7 +122,7 @@ public static partial class EnumerableExtensions
     public static int BitsToInt(this IEnumerable<bool> bits)
     {
         var num = 0;
-        foreach (var (b, i, _, _) in bits.IndexExt())
+        foreach (var (i, b) in bits.Index())
         {
             var bit = b ? 1 : 0;
             num &= (bit << i);
@@ -140,13 +140,18 @@ public static partial class EnumerableExtensions
         return source.Select((m, i) => selector(m.Item1, m.Item2, i));
     }
 
-    // Extension for MoreLinq.Index()
+    public static IEnumerable<(int, T)> Index<T>(this IEnumerable<T> enumerable)
+    {
+        var i = 0;
+        foreach (var item in enumerable)
+        {
+            yield return (i++, item);
+        }
+    }
+
     public static IEnumerable<IndexedItem<T>> IndexExt<T>(this IEnumerable<T> enumerable)
     {
-        if (enumerable == null)
-        {
-            throw new ArgumentNullException(nameof(enumerable));
-        }
+        ArgumentNullException.ThrowIfNull(enumerable);
 
         // we separate the null check from the method body with yield, otherwise the null check will not be executed until start enumerating.
         // see details in https://stackoverflow.com/questions/42149895/method-having-yield-return-is-not-throwing-exception
@@ -165,12 +170,12 @@ public static partial class EnumerableExtensions
             var current = enumerator.Current;
             while (enumerator.MoveNext())
             {
-                yield return new(current, i, i == 0, false);
+                yield return new(i, current, i == 0, false);
                 current = enumerator.Current;
                 ++i;
             }
 
-            yield return new(current, i, i == 0, true);
+            yield return new(i, current, i == 0, true);
         }
     }
 
@@ -222,6 +227,69 @@ public static partial class EnumerableExtensions
             action(item);
             yield return item;
         }
+    }
+
+    public static async IAsyncEnumerable<T> DoAsync<T>(this IEnumerable<T> source, Func<T, Task> action)
+    {
+        foreach (var item in source)
+        {
+            await action(item);
+            yield return item;
+        }
+    }
+
+    public static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
+    {
+        foreach (var item in source)
+        {
+            action(item);
+        }
+    }
+
+    public static void ForEach<T>(this IEnumerable<T> source, Action<int, T> action)
+    {
+        var i = 0;
+        foreach (var item in source)
+        {
+            action(i++, item);
+        }
+    }
+
+    public static async Task ForEachAsync<T>(this IEnumerable<T> source, Func<T, Task> action)
+    {
+        foreach (var item in source)
+        {
+            await action(item);
+        }
+    }
+
+    public static async Task ForEachAsync<T>(this IEnumerable<T> source, Func<int, T, Task> action)
+    {
+        var i = 0;
+        foreach (var item in source)
+        {
+            await action(i++, item);
+        }
+    }
+
+    public static IEnumerable<KeyValuePair<TKey, TValue>> EnumerateMany<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, IReadOnlyCollection<TValue>>> enumerable)
+    {
+        foreach (var (key, values) in enumerable)
+        {
+            foreach (var value in values)
+            {
+                yield return new(key, value);
+            }
+        }
+    }
+
+    public static IEnumerable<IEnumerable<T>> Split<T>(this IEnumerable<T> list, int parts)
+    {
+        var i = 0;
+        var splits = from item in list
+                     group item by i++ % parts into part
+                     select part;
+        return splits;
     }
 
 #if NET7_0_OR_GREATER

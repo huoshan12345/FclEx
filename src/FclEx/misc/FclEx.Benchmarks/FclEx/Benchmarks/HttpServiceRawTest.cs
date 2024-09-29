@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using FclEx.Extensions;
 using FclEx.Http;
 using FclEx.Utils;
-using MoreLinq;
 
 namespace FclEx.Benchmarks;
 

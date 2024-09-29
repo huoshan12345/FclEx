@@ -1,6 +1,4 @@
-﻿using MoreLinq;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 partial class EnumerableExtensions
 {
@@ -44,7 +42,7 @@ partial class EnumerableExtensions
         var success = new List<Transput<T, TResult>>();
         var failure = new List<Transput<T, OperateResult<TResult>>>();
 
-        foreach (var batch in enumerable.Batch(batchSize))
+        foreach (var batch in enumerable.Chunk(batchSize))
         {
             if (token.IsCancellationRequested)
             {

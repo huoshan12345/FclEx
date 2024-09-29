@@ -41,13 +41,13 @@ public static class ListExtensions
         }
     }
 
-    [return: NotNullIfNotNull("defaultValue")]
+    [return: NotNullIfNotNull(nameof(defaultValue))]
     public static T? TryGet<T>(this List<T>? list, int index, T? defaultValue = default)
     {
         return ((IList<T>?)list).TryGet(index, defaultValue);
     }
 
-    [return: NotNullIfNotNull("defaultValue")]
+    [return: NotNullIfNotNull(nameof(defaultValue))]
     public static T? TryGet<T>(this IList<T>? list, int index, T? defaultValue = default)
     {
         return list != null && 0 <= index && index < list.Count
@@ -63,10 +63,15 @@ public static class ListExtensions
         return list[i];
     }
 
-    public static IList<T>? TrySet<T>(IList<T>? list, int index, T value)
+    public static IList<T>? TrySet<T>(this IList<T>? list, int index, T value)
     {
         if (list != null && 0 <= index && index < list.Count)
             list[index] = value;
         return list;
+    }
+
+    public static Span<T> AsSpan<T>(this List<T>? list)
+    {
+        return CollectionsMarshal.AsSpan(list);
     }
 }

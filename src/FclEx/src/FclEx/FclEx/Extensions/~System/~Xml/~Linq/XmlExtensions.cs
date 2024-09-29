@@ -1,7 +1,5 @@
 ﻿using System.Xml;
 using System.Xml.Linq;
-using System.Xml.Serialization;
-using MoreLinq.Extensions;
 using Formatting = Newtonsoft.Json.Formatting;
 
 namespace FclEx.Extensions;

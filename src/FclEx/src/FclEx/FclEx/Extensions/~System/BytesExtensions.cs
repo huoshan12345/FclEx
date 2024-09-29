@@ -22,7 +22,7 @@ public static partial class BytesExtensions
 
     public static string ToHex(this byte[] bytes, bool upperCase = false)
     {
-        using var cache = ObjectPoolHelper.StringBuilderPool.GetAsDisposable();
+        using var cache = ObjectPoolHelper.StringBuilderPool.GetPooled();
         var builder = cache.Value;
         var format = upperCase ? "X2" : "x2";
         foreach (var @byte in bytes)
@@ -147,8 +147,7 @@ public static partial class BytesExtensions
         return next;
     }
 
-    public static T ToUnmanagedStruct<T>(this byte[] bytes, ref int startIndex)
-        where T : struct
+    public static T ToUnmanagedStruct<T>(this byte[] bytes, ref int startIndex) where T : struct
     {
         Check.NotNull(bytes);
         Check.NotLessThan(startIndex, 0);

@@ -1,6 +1,4 @@
-﻿using MoreLinq;
-
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 partial class HttpRequestExtensions
 {
@@ -36,6 +34,16 @@ partial class HttpRequestExtensions
     }
 
     public static HttpRequest AddHeader(this HttpRequest req, KeyValuePair<string, string?> pair) => req.AddHeader(pair.Key, pair.Value);
+
+    public static HttpRequest AddCookies(this HttpRequest req, string? value)
+    {
+        return req.AddHeader(HttpKnownHeaderNames.Cookie, value);
+    }
+
+    public static HttpRequest AddCookies(this HttpRequest req, IEnumerable<Cookie> cookies)
+    {
+        return req.AddHeader(HttpKnownHeaderNames.Cookie, cookies.JoinWith("; "));
+    }
 
     public static HttpRequest AddHeaderPair(this HttpRequest req, string queryPair, char separator = ':')
     {

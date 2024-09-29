@@ -1,11 +1,27 @@
-﻿using MoreLinq;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 partial class EnumerableExtensions
 {
-    public static (IEnumerable<TProp> True, IEnumerable<TProp> False) Partition<T, TProp>(this IEnumerable<T> enumerable,
-        Func<T, bool> predicate, Func<T, TProp> selector)
+    public static (IReadOnlyList<T> True, IReadOnlyList<T> False) Partition<T>(this IEnumerable<T> enumerable, Func<T, bool> predicate)
+    {
+        List<T>? trueList = null;
+        List<T>? falseList = null;
+
+        foreach (var item in enumerable)
+        {
+            var list = predicate(item)
+                ? trueList
+                : falseList;
+
+            list ??= [];
+            list.Add(item);
+        }
+
+        return (trueList.AsSpan().ToArray(), falseList.AsSpan().ToArray());
+    }
+
+    public static (IEnumerable<TMember> True, IEnumerable<TMember> False) Partition<T, TMember>(this IEnumerable<T> enumerable,
+        Func<T, bool> predicate, Func<T, TMember> selector)
     {
         var (@true, @false) = enumerable.Partition(predicate);
         return (@true.Select(selector), @false.Select(selector));

@@ -27,7 +27,7 @@ public static class StreamExtensions
 
     public static async Task CopyToAsync(this Stream source, Stream dest, int bufferSize = 256 * 1024, TimeSpan? readBufferTimeout = null, CancellationToken token = default)
     {
-        using var disposable = ObjectPoolHelper.GetArrayPool<byte>().GetAsDisposable(bufferSize);
+        using var disposable = ObjectPoolHelper.GetArrayPool<byte>().GetPooled(bufferSize);
         var buffer = disposable.Value;
 
         int bytesCopied;

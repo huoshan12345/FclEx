@@ -141,8 +141,8 @@ public static partial class AssertExt
 
         if (type1.IsEnumerable() && type2.IsEnumerable())
         {
-            using var e1 = ((IEnumerable)value1).GetEnumerator().AsDisposable();
-            using var e2 = ((IEnumerable)value2).GetEnumerator().AsDisposable();
+            using var e1 = ((IEnumerable)value1).GetEnumerator().ToDisposable();
+            using var e2 = ((IEnumerable)value2).GetEnumerator().ToDisposable();
             while (true)
             {
                 var b1 = e1.Value.MoveNext();

@@ -32,7 +32,9 @@ public struct PooledArray<T> : IDisposable
 
     public void Dispose()
     {
-        if (_isDisposed) return;
+        if (_isDisposed)
+            return;
+
         _pool.Return(_value, _clearArray);
         _isDisposed = true;
     }

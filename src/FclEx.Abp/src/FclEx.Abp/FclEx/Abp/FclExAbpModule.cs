@@ -13,7 +13,6 @@ public class FclExAbpModule : AbpModule
 {
     public override void PreConfigureServices(ServiceConfigurationContext context)
     {
-        FclExStartup.Init();
         context.Services.AddConventionalRegistrar(new OpenGenericConventionalRegistrar());
         // context.Services.AddConventionalRegistrar(new GenericInterfaceConventionalRegistrar());
     }

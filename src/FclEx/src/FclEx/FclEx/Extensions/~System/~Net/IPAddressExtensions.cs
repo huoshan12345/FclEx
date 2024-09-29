@@ -44,6 +44,8 @@ public static class IPAddressExtensions
     // ReSharper disable once SuggestBaseTypeForParameter
     private static bool IsPrivateIPv4(byte[] ipv4Bytes)
     {
+        return IsLinkLocal() || IsClassA() || IsClassC() || IsClassB();
+
         // Link local (no IP assigned by DHCP): 169.254.0.0 to 169.254.255.255 (169.254.0.0/16)
         bool IsLinkLocal() => ipv4Bytes[0] == 169 && ipv4Bytes[1] == 254;
 
@@ -55,7 +57,9 @@ public static class IPAddressExtensions
 
         // Class C private range: 192.168.0.0 – 192.168.255.255 (192.168.0.0/16)
         bool IsClassC() => ipv4Bytes[0] == 192 && ipv4Bytes[1] == 168;
-
-        return IsLinkLocal() || IsClassA() || IsClassC() || IsClassB();
     }
+
+    public static bool IsIPv6(this IPAddress ip) => ip.AddressFamily == AddressFamily.InterNetworkV6;
+
+    public static bool IsIPv4(this IPAddress ip) => ip.AddressFamily == AddressFamily.InterNetwork;
 }

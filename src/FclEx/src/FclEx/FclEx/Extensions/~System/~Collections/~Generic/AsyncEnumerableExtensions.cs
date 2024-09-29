@@ -11,4 +11,10 @@ public static class AsyncEnumerableExtensions
         }
         return list;
     }
+
+    public static async Task<TSource[]> ToArrayAsync<TSource>(this IAsyncEnumerable<TSource> source)
+    {
+        var list = await source.ToListAsync();
+        return list.AsSpan().ToArray();
+    }
 }

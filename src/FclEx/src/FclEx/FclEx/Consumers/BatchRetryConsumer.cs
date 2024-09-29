@@ -1,5 +1,4 @@
-﻿using MoreLinq;
-using Nito.AsyncEx;
+﻿using Nito.AsyncEx;
 
 namespace FclEx.Consumers;
 
@@ -142,7 +141,7 @@ public sealed class BatchRetryConsumer<T> : IConsumer<T>,
         {
             if (items.Count > 1)
             {
-                items.Batch((int)Math.Ceiling(items.Count / (double)_retryPartCount))
+                items.Chunk((int)Math.Ceiling(items.Count / (double)_retryPartCount))
                     .ForEach(m => _retryConsumer.AddWithoutCheckingCompleteAdding(m.ToList()));
                 return;
             }

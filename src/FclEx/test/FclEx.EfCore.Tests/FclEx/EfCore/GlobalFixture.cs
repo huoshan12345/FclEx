@@ -82,7 +82,7 @@ public class GlobalFixture : IAsyncLifetime
         foreach (var databaseType in DatabaseTypes)
         {
             var isRecreated = false; // NOTE: we delete database only once for every database instance.
-            foreach (var (schema, _, isFirst, _) in Schemas.IndexExt())
+            foreach (var (_, schema, isFirst, _) in Schemas.IndexExt())
             {
                 await using var context = GlobalDbContext.Create(databaseType, schema);
 

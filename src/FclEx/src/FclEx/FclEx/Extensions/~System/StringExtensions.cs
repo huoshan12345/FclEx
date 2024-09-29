@@ -10,7 +10,7 @@ partial class StringExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? str) => string.IsNullOrWhiteSpace(str);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T? FromJson<T>(this string json) => JsonConvert.DeserializeObject<T>(json);
 
@@ -57,7 +57,7 @@ partial class StringExtensions
         /*  
             XML documents must have a root element
             XML elements must have a closing tag
-            XML tags are case sensitive
+            XML tags are case-sensitive
             XML elements must be properly nested
             XML attribute values must be quoted
             
@@ -66,7 +66,7 @@ partial class StringExtensions
             
             <root>
               <child>
-                <subchild>.....</subchild>
+                <sub-child>.....</sub-child>
               </child>
             </root>
          */
@@ -132,7 +132,23 @@ partial class StringExtensions
         }
     }
 
-    public static byte[] Base64ToBytes(this string base64String) => Convert.FromBase64String(base64String);
+    public static byte[] Base64ToBytes(this string base64, bool autoPad = false)
+    {
+        if (autoPad == false)
+            return Convert.FromBase64String(base64);
+
+        var extraCount = base64.Length % 4;
+        if (extraCount <= 0)
+            return Convert.FromBase64String(base64);
+        
+        var str = StringBuilderHelper.Build(m =>
+        {
+            m.Append(base64);
+            m.Append('=', 4 - extraCount);
+        });
+
+        return Convert.FromBase64String(str);
+    }
 
     public static string IfEmpty(this string? str, string defaultValue)
     {
@@ -146,11 +162,19 @@ partial class StringExtensions
     {
         return string.IsNullOrEmpty(str)
             ? []
-            : str!.Split(NewLineChars, options);
+            : str.Split(NewLineChars, options);
     }
 
     public static string Replace(this string str, Regex regex, string replacement)
     {
         return regex.Replace(str, replacement);
+    }
+
+    public static IEnumerable<string> EnumerateTextElements(this string text)
+    {
+        for (var en = StringInfo.GetTextElementEnumerator(text); en.MoveNext();)
+        {
+            yield return en.GetTextElement();
+        }
     }
 }

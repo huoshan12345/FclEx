@@ -21,7 +21,7 @@ public class ExpressionReplacer : ExpressionVisitor
 
     public static Expression Replace(Expression exp, Expression oldExp, Expression newExp)
     {
-        using var disposable = ObjectPoolHelper.GetPool<ExpressionReplacer>().GetAsDisposable();
+        using var disposable = ObjectPoolHelper.GetPool<ExpressionReplacer>().GetPooled();
         var replacer = disposable.Value.Init(oldExp, newExp);
         return replacer.Visit(exp)!;
     }

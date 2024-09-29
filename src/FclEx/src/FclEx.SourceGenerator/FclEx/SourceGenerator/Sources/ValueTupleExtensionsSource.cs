@@ -37,7 +37,7 @@ internal class ValueTupleExtensionsSource
             var types = Enumerable.Repeat("string?", i).JoinWith(", ");
             builder.WriteLine($"{methodName}(this ({types}) tuple, string? defaultValue = \"\")");
             builder.WriteOpeningBracket();
-            builder.WriteLine($"using var disposable = ArrayPool<string?>.Shared.GetAsDisposable({i});");
+            builder.WriteLine($"using var disposable = ArrayPool<string?>.Shared.GetPooled({i});");
             builder.WriteLine("var arr = disposable.Value;");
             for (var j = 0; j < i; j++)
             {

@@ -5,12 +5,10 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="8.0.6" />
-    <PackageReference Include="morelinq" Version="4.2.0" />
     <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="System.Drawing.Common" Version="8.0.6" />
     <PackageReference Include="YamlDotNet" Version="15.3.0" />
-    <PackageReference Include="PolySharp" Version="1.14.1" />
+    <PackageReference Include="PolySharp" Version="1.14.1" /> <!--to support C# feature like required keyword in lower dotnet versions-->
   </ItemGroup>
 
   <ItemGroup>

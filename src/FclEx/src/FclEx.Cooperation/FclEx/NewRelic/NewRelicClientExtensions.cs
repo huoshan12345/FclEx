@@ -1,4 +1,3 @@
-using MoreLinq;
 using Newtonsoft.Json.Linq;
 
 namespace FclEx.NewRelic;

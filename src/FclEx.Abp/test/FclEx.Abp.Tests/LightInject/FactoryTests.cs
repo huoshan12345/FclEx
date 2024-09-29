@@ -37,7 +37,7 @@ public class FactoryTests
         var obj = provider.GetRequiredService<Tester>();
         Assert.Equal(1, Tester.InstanceCount);
         Assert.Equal(0, obj.DisposedCount);
-        provider.AsDisposable().Dispose();
+        provider.ToDisposable().Dispose();
         Assert.Equal(1, obj.DisposedCount);
     }
 }

@@ -2,7 +2,7 @@ namespace FclEx.Utils;
 
 public class PooledStringBuilder<TSelf> : IDisposable where TSelf : PooledStringBuilder<TSelf>, new()
 {
-    protected PooledObject<StringBuilder> _builder = ObjectPoolHelper.StringBuilderPool.GetAsDisposable();
+    protected PooledObject<StringBuilder> _builder = ObjectPoolHelper.StringBuilderPool.GetPooled();
     
     // ReSharper disable once VirtualMemberNeverOverridden.Global
     public virtual StringBuilder StringBuilder => _builder.Value;

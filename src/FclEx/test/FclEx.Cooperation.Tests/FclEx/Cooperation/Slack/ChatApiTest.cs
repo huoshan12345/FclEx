@@ -30,7 +30,7 @@ public class ChatApiTest : IAssemblyFixture<GlobalFixture>
     [LocalOnlyFact]
     public async Task PostMessage_CodeBlock_Test()
     {
-        using var disposable = ObjectPoolHelper.StringBuilderPool.GetAsDisposable();
+        using var disposable = ObjectPoolHelper.StringBuilderPool.GetPooled();
         var builder = disposable.Value;
 
         builder.AppendLine("```");

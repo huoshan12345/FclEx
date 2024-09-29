@@ -26,7 +26,7 @@ public static class ConsoleTableExtensions
 
     public static string Render(this ConsoleTable table)
     {
-        using var disposable = ObjectPoolHelper.StringBuilderPool.GetAsDisposable();
+        using var disposable = ObjectPoolHelper.StringBuilderPool.GetPooled();
         var builder = disposable.Value;
         table.Render(builder);
         var text = builder.ToString();

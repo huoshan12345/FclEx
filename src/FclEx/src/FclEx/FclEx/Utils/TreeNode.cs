@@ -1,6 +1,4 @@
-﻿using MoreLinq.Extensions;
-
-namespace FclEx.Utils;
+﻿namespace FclEx.Utils;
 
 public static class TreeNode
 {
@@ -53,7 +51,7 @@ public class TreeNode<T>
             if (left.Children.Count != right.Children.Count)
                 return false;
 
-            left.Children.ForEach((m, i) =>
+            left.Children.ForEach((i, m) =>
             {
                 queue.Enqueue(m);
                 map.Add(m, right.Children[i]);

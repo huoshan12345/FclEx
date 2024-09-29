@@ -1,4 +1,4 @@
-﻿using MoreLinq;
+﻿using System.Threading.Tasks.Dataflow;
 
 namespace FclEx.Extensions;
 
@@ -102,7 +102,7 @@ partial class EnumerableExtensions
 
         var list = new List<TResult>();
         // ReSharper disable once PossibleMultipleEnumeration
-        foreach (var batch in enumerable.Batch(batchSize))
+        foreach (var batch in enumerable.Chunk(batchSize))
         {
             if (token.IsCancellationRequested)
                 break;
@@ -122,7 +122,7 @@ partial class EnumerableExtensions
         Check.NotLessThan(batchSize, 1);
 
         // ReSharper disable once PossibleMultipleEnumeration
-        foreach (var batch in enumerable.Batch(batchSize))
+        foreach (var batch in enumerable.Chunk(batchSize))
         {
             if (token.IsCancellationRequested)
                 break;
@@ -226,5 +226,77 @@ partial class EnumerableExtensions
         }
 
         return tcs.Task;
+    }
+
+    public static Task ParallelForEachAsync<T>(this IEnumerable<T> source, ParallelOptions options, Func<T, CancellationToken, ValueTask> body)
+    {
+        return Parallel.ForEachAsync(source, options, body);
+    }
+
+    public static Task ParallelForEachAsync<T>(this IEnumerable<T> source, Func<T, CancellationToken, ValueTask> body, int maxDegreeOfParallelism = DataflowBlockOptions.Unbounded, CancellationToken token = default)
+    {
+        return source.ParallelForEachAsync(new()
+        {
+            CancellationToken = token,
+            MaxDegreeOfParallelism = maxDegreeOfParallelism,
+            TaskScheduler = null,
+        }, body);
+    }
+
+    /// <summary>
+    /// Executes a foreach loop on an enumerable sequence, in which iterations may run
+    /// in parallel, and returns the results of all iterations in the original order.
+    /// </summary>
+    public static Task<TResult[]> ForEachAsync<TSource, TResult>(IEnumerable<TSource> source, ParallelOptions parallelOptions, Func<TSource, CancellationToken, ValueTask<TResult>> body)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(parallelOptions);
+        ArgumentNullException.ThrowIfNull(body);
+
+        List<TResult> results = [];
+        if (source.TryGetNonEnumeratedCount(out var count))
+            results.Capacity = count;
+
+        IEnumerable<(TSource, int)> withIndexes = source.Select((x, i) => (x, i));
+
+        return Parallel.ForEachAsync(withIndexes, parallelOptions, async (entry, ct) =>
+        {
+            var (item, index) = entry;
+            var result = await body(item, ct).ConfigureAwait(false);
+            lock (results)
+            {
+#if NET8_0_OR_GREATER
+                if (index >= results.Count)
+                    CollectionsMarshal.SetCount(results, index + 1);
+                results[index] = result;
+#else
+                results.Add(result);
+#endif
+
+            }
+        }).ContinueWith(t =>
+        {
+            TaskCompletionSource<TResult[]> tcs = new();
+            switch (t.Status)
+            {
+                case TaskStatus.RanToCompletion:
+                    lock (results)
+                    {
+                        tcs.SetResult(results.ToArray());
+                    }
+                    break;
+                case TaskStatus.Faulted:
+                    tcs.SetException(t.Exception!.InnerExceptions);
+                    break;
+                case TaskStatus.Canceled:
+                    tcs.SetCanceled(new TaskCanceledException(t).CancellationToken);
+                    break;
+                default:
+                    throw new UnreachableException();
+            }
+            Debug.Assert(tcs.Task.IsCompleted);
+            return tcs.Task;
+        }, default, TaskContinuationOptions.DenyChildAttach |
+                        TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default).Unwrap();
     }
 }

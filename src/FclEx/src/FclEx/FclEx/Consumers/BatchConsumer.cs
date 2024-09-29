@@ -1,7 +1,4 @@
-﻿using MoreLinq;
-using FclEx;
-
-namespace FclEx.Consumers;
+﻿namespace FclEx.Consumers;
 
 public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
     IAsyncConsumer<BatchConsumer<T>, IReadOnlyList<T>>,

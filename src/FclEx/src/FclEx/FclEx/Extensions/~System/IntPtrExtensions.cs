@@ -2,9 +2,14 @@
 
 public static class IntPtrExtensions
 {
-    public static DisposableValue<IntPtr> AsDisposable(this IntPtr ptr)
+    public static DisposableValue<IntPtr> ToDisposable(this IntPtr ptr)
     {
-        return ptr.AsDisposable(Marshal.FreeHGlobal);
+        return ptr.ToDisposable(Marshal.FreeHGlobal);
+    }
+
+    public static T? ToStructure<T>(this IntPtr ptr)
+    {
+        return Marshal.PtrToStructure<T>(ptr);
     }
 
     public static Delegate ToDelegate(this IntPtr address, Type returnType, IEnumerable<Type> parameters)

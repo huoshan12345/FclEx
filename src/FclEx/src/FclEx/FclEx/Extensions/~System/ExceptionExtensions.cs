@@ -1,6 +1,4 @@
-﻿using MoreLinq;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static partial class ExceptionExtensions
 {
@@ -35,7 +33,10 @@ public static partial class ExceptionExtensions
             var e = q.Dequeue();
             if (e is AggregateException aEx)
             {
-                aEx.InnerExceptions.ForEach(EnqueueIfUnHandled);
+                foreach (var inner in aEx.InnerExceptions)
+                {
+                    EnqueueIfUnHandled(inner);
+                }
             }
             else if (e.InnerException is not null)
             {

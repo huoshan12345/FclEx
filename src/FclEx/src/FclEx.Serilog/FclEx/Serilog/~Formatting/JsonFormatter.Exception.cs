@@ -73,7 +73,7 @@ partial class JsonFormatter
 
         IEnumerable<string> ToJsonObject(IEnumerable<string> values)
         {
-            using var sb = ObjectPoolHelper.StringBuilderPool.GetAsDisposable();
+            using var sb = ObjectPoolHelper.StringBuilderPool.GetPooled();
             var sw = new StringWriter(sb.Value);
 
             foreach (var value in values)
@@ -97,7 +97,7 @@ partial class JsonFormatter
         var indexOp = ExceptionOptions.WriteIndexOptions;
         var writeIndexes = IfWriteIndexes();
 
-        foreach (var (info, _, isFirst, _) in infos.IndexExt())
+        foreach (var (_, info, isFirst, _) in infos.IndexExt())
         {
             if (isFirst == false)
                 output.Write(",");
