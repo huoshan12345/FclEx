@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-
-using FclEx;
-
-namespace RabbitMQ.Client;
+﻿namespace RabbitMQ.Client;
 
 public static class Extensions
 {
-    [return: NotNullIfNotNull("defaultValue")]
+    [return: NotNullIfNotNull(nameof(defaultValue))]
     public static T? Get<T>(this IBasicProperties prop, string key, T? defaultValue = default)
     {
         Check.NotNull(prop);
@@ -34,8 +28,9 @@ public static class Extensions
 
     public static IBasicProperties Set<T>(this IBasicProperties prop, string key, T value)
     {
-        if (prop == null) throw new ArgumentNullException(nameof(prop));
-        if (key == null) throw new ArgumentNullException(nameof(key));
+        Check.NotNull(prop);
+        Check.NotNull(key);
+
         prop.Headers ??= new Dictionary<string, object>();
         prop.Headers[key] = value;
         return prop;
@@ -43,14 +38,16 @@ public static class Extensions
 
     public static bool Has(this IBasicProperties prop, string key)
     {
-        if (prop == null) throw new ArgumentNullException(nameof(prop));
-        if (key == null) throw new ArgumentNullException(nameof(key));
+        Check.NotNull(prop);
+        Check.NotNull(key);
+
         return prop.Headers != null && prop.Headers.ContainsKey(key);
     }
 
     public static int IncreaseErrorTimes(this IBasicProperties prop)
     {
-        if (prop == null) throw new ArgumentNullException(nameof(prop));
+        Check.NotNull(prop);
+
         prop.Headers ??= new Dictionary<string, object>();
         var value = prop.Get(FclExAbpRabbitMqConstants.HeaderOfErrorTimes, 0);
         value++;
@@ -65,7 +62,7 @@ public static class Extensions
 
     public static int GetDelayMilli(this IBasicProperties prop)
     {
-        return prop?.Headers?.Get(FclExAbpRabbitMqConstants.HeaderOfDelayMilli)?.CastTo<int>() ?? 0;
+        return prop.Headers?.Get(FclExAbpRabbitMqConstants.HeaderOfDelayMilli)?.CastTo<int>() ?? 0;
     }
 
     public static TimeSpan GetDelay(this IBasicProperties prop)
@@ -75,9 +72,12 @@ public static class Extensions
 
     public static IBasicProperties SetDelayMilli(this IBasicProperties prop, long milliSeconds)
     {
-        if (prop == null) throw new ArgumentNullException(nameof(prop));
+        Check.NotNull(prop);
+
         if (milliSeconds <= 0)
+        {
             prop.Headers?.Remove(FclExAbpRabbitMqConstants.HeaderOfDelayMilli);
+        }
         else
         {
             prop.Headers ??= new Dictionary<string, object>();

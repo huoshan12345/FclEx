@@ -19,7 +19,7 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
 
     public LfuCache(int? capacity = null, IEqualityComparer<TKey>? comparer = null)
     {
-        if (capacity.HasValue && capacity <= 0) throw new ArgumentOutOfRangeException(nameof(capacity));
+        if (capacity is <= 0) throw new ArgumentOutOfRangeException(nameof(capacity));
         Capacity = capacity ?? ushort.MaxValue;
         _keyComparer = comparer ?? EqualityComparer<TKey>.Default;
         _lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
@@ -30,7 +30,7 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
 
     public bool TryGetValue(TKey key, [NotNullWhen(true), MaybeNullWhen(false)] out TValue value)
     {
-        if (key == null) throw new ArgumentNullException(nameof(key));
+        ArgumentNullException.ThrowIfNull(key);
 
         using var _ = _lock.LockRead();
         if (_dic.TryGetValue(key, out var node))
@@ -61,8 +61,8 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
 
     public TValue GetOrAdd(TKey key, Func<TKey, TValue> activator)
     {
-        if (key == null) throw new ArgumentNullException(nameof(key));
-        if (activator == null) throw new ArgumentNullException(nameof(activator));
+        ArgumentNullException.ThrowIfNull(key);
+        ArgumentNullException.ThrowIfNull(activator);
 
         using var _ = _lock.LockUpgradeableRead();
 
@@ -87,7 +87,7 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
 
     public TValue AddOrUpdate(TKey key, TValue value)
     {
-        if (key == null) throw new ArgumentNullException(nameof(key));
+        ArgumentNullException.ThrowIfNull(key);
 
         using var _ = _lock.LockUpgradeableRead();
 
@@ -116,7 +116,7 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
 
     public bool TryAdd(TKey key, TValue value)
     {
-        if (key == null) throw new ArgumentNullException(nameof(key));
+        ArgumentNullException.ThrowIfNull(key);
 
         using var _ = _lock.LockUpgradeableRead();
 
@@ -259,7 +259,7 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
 
     private bool TryRemove(TKey key, bool matchValue, TValue? oldValue)
     {
-        if (key == null) throw new ArgumentNullException(nameof(key));
+        ArgumentNullException.ThrowIfNull(key);
 
         using var _ = _lock.LockUpgradeableRead();
 

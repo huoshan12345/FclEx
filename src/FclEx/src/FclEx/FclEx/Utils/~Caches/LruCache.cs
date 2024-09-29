@@ -24,7 +24,7 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
 
     public TValue GetOrAdd(TKey key, Func<TKey, TValue> activator)
     {
-        if (key == null) throw new ArgumentNullException(nameof(key));
+        ArgumentNullException.ThrowIfNull(key);
         if (activator == null) throw new ArgumentNullException(nameof(activator));
 
         using var _ = _lock.LockUpgradeableRead();
@@ -51,7 +51,7 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
 
     public TValue AddOrUpdate(TKey key, TValue value)
     {
-        if (key == null) throw new ArgumentNullException(nameof(key));
+        ArgumentNullException.ThrowIfNull(key);
 
         using var _ = _lock.LockUpgradeableRead();
 
@@ -80,7 +80,7 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
 
     public bool TryAdd(TKey key, TValue value)
     {
-        if (key == null) throw new ArgumentNullException(nameof(key));
+        ArgumentNullException.ThrowIfNull(key);
 
         using var _ = _lock.LockUpgradeableRead();
 
@@ -118,7 +118,7 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
 
     public bool TryGetValue(TKey key, [NotNullWhen(true)] out TValue? value)
     {
-        if (key == null) throw new ArgumentNullException(nameof(key));
+        ArgumentNullException.ThrowIfNull(key);
 
         using var _ = _lock.LockRead();
         if (_dic.TryGetValue(key, out var node))
@@ -203,7 +203,7 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
 
     private bool TryRemove(TKey key, bool matchValue, TValue? oldValue)
     {
-        if (key == null) throw new ArgumentNullException(nameof(key));
+        ArgumentNullException.ThrowIfNull(key);
 
         using var _ = _lock.LockUpgradeableRead();
 

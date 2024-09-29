@@ -27,7 +27,7 @@ public class IndexExtTests
         var i = 0;
         var count = Numbers.Count();
 
-        foreach (var (item, index, isFirst, isLast) in enumerable.IndexExt())
+        foreach (var (index, item, isFirst, isLast) in enumerable.IndexExt())
         {
             Assert.Equal(i + 1, item);
             Assert.Equal(i, index);

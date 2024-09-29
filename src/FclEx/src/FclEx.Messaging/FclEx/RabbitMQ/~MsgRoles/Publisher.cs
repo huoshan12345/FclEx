@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using RabbitMQ.Client;
+﻿using RabbitMQ.Client;
 
 namespace FclEx.RabbitMQ;
 
