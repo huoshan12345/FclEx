@@ -10,8 +10,8 @@ namespace FclEx.Benchmarks;
 
 public class HttpServiceRawTest
 {
-    public static IList<string> Urls => new[]
-    {
+    public static IList<string> Urls =>
+    [
         "https://www.baidu.com/",
         "https://www.sina.com.cn/",
         "https://www.sohu.com/",
@@ -20,23 +20,23 @@ public class HttpServiceRawTest
         "http://www.ifeng.com/",
         "https://www.taobao.com/",
         "https://www.zhihu.com/",
-    };
+    ];
 
-    public static IList<IHttpService> Services => new IHttpService[]
-    {
-        new HttpClientService()
-    };
+    public static IList<IHttpService> Services =>
+    [
+        new HttpClientService(),
+    ];
 
     public static async ValueTask RawTest(int rounds)
     {
-        var reqs = Urls.Select(m => HttpRequest.Get(m)
+        var requests = Urls.Select(m => HttpRequest.Get(m)
                 .ReadContent(false)
                 .ReadAsBytes())
             .ToArray();
 
         foreach (var service in Services)
         {
-            await RawTest(service, reqs, rounds).DonotCapture();
+            await RawTest(service, requests, rounds).DonotCapture();
         }
     }
 

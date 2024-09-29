@@ -1,0 +1,23 @@
+﻿namespace FclEx.Http.Core.HttpRequestTests;
+
+public class HttpContentTypeTests
+{
+    [Fact]
+    public async Task ReadAsStream_Test()
+    {
+        var response = await HttpRequest.Get("http://baidu.com")
+            .ReadAsStream()
+            .SendAsync()
+            .ThrowIfError();
+
+        Assert.Empty(response.ResponseBytes);
+        Assert.Empty(response.ResponseString);
+        Assert.IsType<HttpResponseStream>(response.ResponseStream);
+
+        await using var stream = response.ResponseStream;
+        var reader = new StreamReader(stream);
+        var text = await reader.ReadToEndAsync();
+
+        Assert.Contains("baidu.com", text);
+    }
+}

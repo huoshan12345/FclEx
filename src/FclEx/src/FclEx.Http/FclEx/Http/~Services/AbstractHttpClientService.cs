@@ -48,7 +48,8 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         {
             case HttpContentType.Stream:
             {
-                response.ResponseStream = await responseMessage.Content.ReadAsStreamAsync(token);
+                var stream = await responseMessage.Content.ReadAsStreamAsync(token);
+                response.ResponseStream = new HttpResponseStream(responseMessage, stream);
                 break;
             }
             case HttpContentType.Bytes:
@@ -254,7 +255,15 @@ public abstract class AbstractHttpClientService : AbstractHttpService
                 last.EnsureSuccess();
 
             if (httpRequest.ReadContent)
+            {
                 await ReadContentAsync(last, httpResponse, cts.Token).IgnoreSyncContext();
+
+                if (httpRequest.ReadContentType == HttpContentType.Stream)
+                {
+                    // the last will be disposed in HttpResponse.ResponseStream instead of here.
+                    responses.Remove(last);
+                }
+            }
         }
         finally
         {
