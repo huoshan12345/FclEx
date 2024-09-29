@@ -2,7 +2,7 @@
 
 partial class BytesExtensions
 {
-    public static byte[] ToBytesFromBase32(this string input)
+    public static byte[] Base32ToBytes(this string input)
     {
         if (string.IsNullOrEmpty(input))
         {

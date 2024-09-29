@@ -20,7 +20,7 @@ public class Base32Tests
     [MemberData(nameof(TestCases))]
     public void ToBytesFromBase32_Test(string plain, string base32)
     {
-        var p = base32.ToBytesFromBase32().GetString();
+        var p = base32.Base32ToBytes().GetString();
         Assert.Equal(p, plain);
     }
 }
