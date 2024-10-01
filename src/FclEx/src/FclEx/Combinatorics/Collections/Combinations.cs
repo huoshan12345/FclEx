@@ -16,14 +16,14 @@ namespace Combinatorics.Collections;
 /// two types of sets,  those with and without repetition in the output set when 
 /// presented with repetition in the input set.
 /// 
-/// When given a input collect {A B C} and lower index of 2, the following sets are generated:
+/// When given an input collect {A B C} and lower index of 2, the following sets are generated:
 /// MetaCollectionType.WithRepetition =>
 /// {A A}, {A B}, {A C}, {B B}, {B C}, {C C}
 /// MetaCollectionType.WithoutRepetition =>
 /// {A B}, {A C}, {B C}
 /// 
-/// Input sets with multiple equal values will generate redundant combinations in proprotion
-/// to the likelyhood of outcome.  For example, {A A B B} and a lower index of 3 will generate:
+/// Input sets with multiple equal values will generate redundant combinations in proportion
+/// to the likelihood of outcome.  For example, {A A B B} and a lower index of 3 will generate:
 /// {A A B} {A A B} {A B B} {A B B}
 /// </remarks>
 /// <typeparam name="T">The type of the values within the list.</typeparam>
@@ -32,7 +32,7 @@ public class Combinations<T> : IMetaCollection<T>
     #region Constructors
 
     /// <summary>
-    /// No default constructor, must provided a list of values and size.
+    /// No default constructor, must provide a list of values and size.
     /// </summary>
     protected Combinations() { }
 
@@ -284,7 +284,7 @@ public class Combinations<T> : IMetaCollection<T>
     /// <param name="type">The type of Combinations set to generate.</param>
     /// <remarks>
     /// Copies the array and parameters and then creates a map of booleans that will 
-    /// be used by a permutations object to refence the subset.  This map is slightly
+    /// be used by a permutations object to reference the subset.  This map is slightly
     /// different based on whether the type is with or without repetition.
     /// 
     /// When the type is WithoutRepetition, then a map of upper index elements is
@@ -328,7 +328,7 @@ public class Combinations<T> : IMetaCollection<T>
     #region Data
 
     /// <summary>
-    /// Copy of values object is intialized with, required for enumerator reset.
+    /// Copy of values object is initialized with, required for enumerator reset.
     /// </summary>
     private List<T> _myValues;
 

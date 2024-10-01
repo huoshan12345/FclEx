@@ -11,4 +11,5 @@ global using System.Text;
 global using FclEx.Extensions;
 global using FclEx.Utils;
 global using FclEx.Xunit;
+global using Xunit.Abstractions;
 global using Xunit.Sdk;

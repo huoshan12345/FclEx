@@ -17,7 +17,7 @@ namespace Combinatorics.Collections;
 /// MetaCollectionType.WithoutRepetition generates 6 sets: =>
 ///     {A B}, {A B}, {B A}, {B C}, {C A}, {C B}
 /// MetaCollectionType.WithRepetition generates 9 sets:
-///     {A A}, {A B}, {A B}, {B A}, {B B }, {B C}, {C A}, {C B}, {C C}
+///     {A A}, {A B}, {A B}, {B A}, {B B}, {B C}, {C A}, {C B}, {C C}
 /// 
 /// The equality of multiple inputs is not considered when generating variations.
 /// </remarks>
@@ -27,7 +27,7 @@ public class Variations<T> : IMetaCollection<T>
     #region Constructors
 
     /// <summary>
-    /// No default constructor, must provided a list of values and size.
+    /// No default constructor, must provide a list of values and size.
     /// </summary>
     protected Variations() { }
 

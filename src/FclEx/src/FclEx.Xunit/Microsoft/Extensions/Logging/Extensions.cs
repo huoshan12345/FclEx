@@ -1,6 +1,5 @@
 ﻿using FclEx;
 using Microsoft.Extensions.DependencyInjection;
-using Xunit.Abstractions;
 
 namespace Microsoft.Extensions.Logging;
 

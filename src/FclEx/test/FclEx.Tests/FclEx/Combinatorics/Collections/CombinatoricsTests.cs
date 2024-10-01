@@ -5,11 +5,11 @@ namespace FclEx.Combinatorics.Collections;
 /// <summary>
 /// Tests Cases &amp; Examples for Combinations, Permutations &amp; Variations with & without repetition in the output sets.
 /// </summary>
-public class CombinatoricTests
+public class CombinatoricsTests
 {
     private readonly ITestOutputHelper _output;
 
-    public CombinatoricTests(ITestOutputHelper output)
+    public CombinatoricsTests(ITestOutputHelper output)
     {
         _output = output;
     }

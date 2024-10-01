@@ -22,7 +22,7 @@ namespace Combinatorics.Collections;
 /// ordering of the lists based on the provided Comparer.  
 /// If no comparer is provided, then T must be IComparable on T.
 /// 
-/// When generating repetition sets, no comparisions are performed and therefore
+/// When generating repetition sets, no comparision is performed and therefore
 /// no comparer is required and T does not need to be IComparable.
 /// </remarks>
 /// <typeparam name="T">The type of the values within the list.</typeparam>
@@ -39,7 +39,7 @@ public class Permutations<T> : IMetaCollection<T>
     /// <summary>
     /// Create a permutation set from the provided list of values.  
     /// The values (T) must implement IComparable.  
-    /// If T does not implement IComparable use a constructor with an explict IComparer.
+    /// If T does not implement IComparable use a constructor with an explicit IComparer.
     /// The repetition type defaults to MetaCollectionType.WithholdRepetitionSets
     /// </summary>
     /// <param name="values">List of values to permute.</param>
@@ -51,7 +51,7 @@ public class Permutations<T> : IMetaCollection<T>
     /// <summary>
     /// Create a permutation set from the provided list of values.  
     /// If type is MetaCollectionType.WithholdRepetitionSets, then values (T) must implement IComparable.  
-    /// If T does not implement IComparable use a constructor with an explict IComparer.
+    /// If T does not implement IComparable use a constructor with an explicit IComparer.
     /// </summary>
     /// <param name="values">List of values to permute.</param>
     /// <param name="type">The type of permutation set to calculate.</param>
@@ -66,7 +66,7 @@ public class Permutations<T> : IMetaCollection<T>
     /// The repetition type defaults to MetaCollectionType.WithholdRepetitionSets
     /// </summary>
     /// <param name="values">List of values to permute.</param>
-    /// <param name="comparer">Comparer used for defining the lexigraphic order.</param>
+    /// <param name="comparer">Comparer used for defining the lexicographic order.</param>
     public Permutations(IEnumerable<T> values, IComparer<T> comparer)
     {
         Initialize(values, GenerateOption.WithoutRepetition, comparer);
@@ -352,26 +352,26 @@ public class Permutations<T> : IMetaCollection<T>
     #region Heavy Lifting Members
 
     /// <summary>
-    /// Common intializer used by the multiple flavors of constructors.
+    /// Common initializer used by the multiple flavors of constructors.
     /// </summary>
     /// <remarks>
-    /// Copies information provided and then creates a parellel int array of lexicographic
+    /// Copies information provided and then creates a parallel int array of lexicographic
     /// orders that will be used for the actual permutation algorithm.  
     /// The input array is first sorted as required for WithoutRepetition and always just for consistency.
-    /// This array is constructed one of two way depending on the type of the collection.
+    /// This array is constructed one of two ways depending on the type of the collection.
     ///
     /// When type is MetaCollectionType.WithRepetition, then all N! permutations are returned
     /// and the lexicographic orders are simply generated as 1, 2, ... N.  
     /// E.g.
     /// Input array:          {A A B C D E E}
-    /// Lexicograhpic Orders: {1 2 3 4 5 6 7}
+    /// Lexicographic Orders: {1 2 3 4 5 6 7}
     /// 
     /// When type is MetaCollectionType.WithoutRepetition, then fewer are generated, with each
     /// identical element in the input array not repeated.  The lexicographic sort algorithm
     /// handles this natively as long as the repetition is repeated.
     /// E.g.
     /// Input array:          {A A B C D E E}
-    /// Lexicograhpic Orders: {1 1 2 3 4 5 5}
+    /// Lexicographic Orders: {1 1 2 3 4 5 5}
     /// </remarks>
     private void Initialize(IEnumerable<T> values, GenerateOption type, IComparer<T> comparer)
     {

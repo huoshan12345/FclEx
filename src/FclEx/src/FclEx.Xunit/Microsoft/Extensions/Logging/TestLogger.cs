@@ -1,6 +1,4 @@
-﻿using Xunit.Abstractions;
-
-namespace Microsoft.Extensions.Logging;
+﻿namespace Microsoft.Extensions.Logging;
 
 public class TestLogger : ILogger
 {
