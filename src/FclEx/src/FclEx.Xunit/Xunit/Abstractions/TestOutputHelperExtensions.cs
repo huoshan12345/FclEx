@@ -1,47 +1,21 @@
-﻿using System.IO;
-using System.Threading.Tasks;
-
-namespace Xunit.Abstractions;
-
-public class TestOutputWriter : TextWriter
-{
-    public TestOutputWriter(ITestOutputHelper output)
-    {
-        Output = output;
-    }
-
-    public ITestOutputHelper Output { get; }
-
-    public override Encoding Encoding { get; } = Encoding.UTF8;
-
-    public override void Write(char value) => WriteLine(value);
-    public override void Write(string? value) => WriteLine(value);
-    public override void WriteLine() => WriteLine("");
-    public override void WriteLine(string? value) => Output.WriteLine(value ?? "");
-
-    public override Task WriteAsync(char value)
-    {
-        Write(value);
-        return Task.CompletedTask;
-    }
-
-    public override Task WriteAsync(string? value)
-    {
-        Write(value);
-        return Task.CompletedTask;
-    }
-
-    public override Task WriteLineAsync(string? value)
-    {
-        WriteLine(value);
-        return Task.CompletedTask;
-    }
-}
+﻿namespace Xunit.Abstractions;
 
 public static class TestOutputHelperExtensions
 {
     public static IDisposable SetConsole(this ITestOutputHelper output)
     {
         return new TestOutputWriter(output).SetConsole();
+    }
+
+    private static readonly MethodInfo _method = typeof(TestOutputHelper).GetRequiredMethod("QueueTestOutput");
+
+    public static void Write(this ITestOutputHelper output, string? message)
+    {
+        ArgumentNullException.ThrowIfNull(output);
+
+        if (output is not TestOutputHelper helper)
+            throw new NotSupportedException(nameof(output).GetType().FullName);
+
+        _method.Invoke(helper, [message]);
     }
 }
