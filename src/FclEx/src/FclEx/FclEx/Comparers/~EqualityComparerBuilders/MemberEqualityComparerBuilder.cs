@@ -10,7 +10,7 @@ public class MemberEqualityComparerBuilder
 
 public class MemberEqualityComparerBuilder<T> : IEqualityComparerBuilder<T>
 {
-    private readonly List<EqualityMember> _members = new();
+    private readonly List<EqualityMember> _members = [];
 
     public static MemberEqualityComparerBuilder<T> Create()
     {

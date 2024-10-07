@@ -17,7 +17,7 @@ public static class EqualityComparerBuilderExtensions
         return builder.Set(ReferenceEqualityComparer<T>.Instance);
     }
 
-    public static EqualityComparerBuilder<string> FileExtention<T>(this EqualityComparerBuilder<string> builder)
+    public static EqualityComparerBuilder<string> FileExtension<T>(this EqualityComparerBuilder<string> builder)
     {
         return builder.Set(FileExtensionEqualityComparer.Instance);
     }
