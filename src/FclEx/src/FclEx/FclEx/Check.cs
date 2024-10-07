@@ -1,6 +1,4 @@
-﻿using JetBrains.Annotations;
-
-namespace FclEx;
+﻿namespace FclEx;
 
 [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
 [DebuggerStepThrough]

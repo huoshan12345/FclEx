@@ -30,6 +30,7 @@ global using FclEx.Extensions;
 global using FclEx.Helpers;
 global using FclEx.Json;
 global using FclEx.Utils;
+global using JetBrains.Annotations;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.DependencyInjection.Extensions;
 global using Microsoft.Extensions.Logging;

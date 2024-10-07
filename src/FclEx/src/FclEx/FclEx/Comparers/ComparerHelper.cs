@@ -2,7 +2,7 @@
 
 public static class ComparerHelper
 {
-    public static bool TryCompare<T>([NotNullWhen(false)] T? x, [NotNullWhen(false)] T? y, bool isNullSmaller, [NotNullWhen(true)] out int? result)
+    public static bool TryCompare<T>([NotNullWhen(false), NoEnumeration] T? x, [NotNullWhen(false), NoEnumeration] T? y, bool isNullSmaller, [NotNullWhen(true)] out int? result)
     {
         result = null;
 
