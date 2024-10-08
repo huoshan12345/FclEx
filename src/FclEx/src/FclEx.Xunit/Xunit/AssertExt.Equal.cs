@@ -5,33 +5,29 @@ partial class AssertExt
     public static void EveryMemberEqual<T>(T expected, T actual, params string[] excludeMemberPaths)
     {
         var tree = BuildExcludeMemberTree(excludeMemberPaths);
-        var result = Equal(expected, actual, tree, false);
-        if (result.equal == false)
-            throw EqualException.ForMismatchedValues(result.expected, result.actual);
+        var result = Equal(expected, actual, tree, false, null, null);
+        result.ThrowIfNotEqual();
     }
 
     public static void NotEveryMemberEqual<T>(T expected, T actual, params string[] excludeMemberPaths)
     {
         var tree = BuildExcludeMemberTree(excludeMemberPaths);
-        var result = Equal(expected, actual, tree, false);
-        if (result.equal)
-            throw NotEqualException.ForEqualValues(result.expected.ToStringOrEmpty(), result.actual.ToStringOrEmpty());
+        var result = Equal(expected, actual, tree, false, null, null);
+        result.ThrowIfEqual();
     }
 
     public static void EverySameNameMemberEqual<T1, T2>(T1 expected, T2 actual, params string[] excludeMemberPaths)
     {
         var tree = BuildExcludeMemberTree(excludeMemberPaths);
-        var result = Equal(expected, actual, tree, true);
-        if (result.equal == false)
-            throw EqualException.ForMismatchedValues(result.expected, result.actual);
+        var result = Equal(expected, actual, tree, true, null, null);
+        result.ThrowIfNotEqual();
     }
 
     public static void NotEverySameNameMemberEqual<T1, T2>(T1 expected, T2 actual, params string[] excludeMemberPaths)
     {
         var tree = BuildExcludeMemberTree(excludeMemberPaths);
-        var result = Equal(expected, actual, tree, true);
-        if (result.equal)
-            throw NotEqualException.ForEqualValues(result.expected.ToStringOrEmpty(), result.actual.ToStringOrEmpty());
+        var result = Equal(expected, actual, tree, true, null, null);
+        result.ThrowIfEqual();
     }
 
     public static void Equal(DateTime? expected, DateTime? actual, TimeSpan precision)

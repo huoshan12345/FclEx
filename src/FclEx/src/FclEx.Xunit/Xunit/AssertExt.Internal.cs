@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Xml.Linq;
 using FclEx;
 
 namespace Xunit;
@@ -115,21 +116,43 @@ public static partial class AssertExt
         }
     }
 
-    internal static (bool equal, object? expected, object? actual) Equal(object? value1, object? value2,
-        TreeNode<ExcludeMember>? excludeMemberTree, bool onlyCheckSameNameMembers, HashSet<(object, object)>? visited = null)
+    internal readonly record struct EqualResult(bool Equal, object? Expected, object? Actual, string? Path)
+    {
+        private string CreateBanner()
+        {
+            return Path == null
+                ? "Values differ"
+                : "Values differ at $" + Path;
+        }
+
+        public void ThrowIfNotEqual()
+        {
+            if (Equal == false)
+                throw EqualException.ForMismatchedValues(Expected, Actual, CreateBanner());
+        }
+
+        public void ThrowIfEqual()
+        {
+            if (Equal)
+                throw NotEqualException.ForEqualValues(Expected.ToStringOrEmpty(), Actual.ToStringOrEmpty(), CreateBanner());
+        }
+    }
+
+    internal static EqualResult Equal(object? value1, object? value2,
+        TreeNode<ExcludeMember>? excludeMemberTree, bool onlyCheckSameNameMembers, HashSet<(object, object)>? visited, string? currentPath)
     {
         if (value1 == null && value2 == null)
-            return (true, null, null);
+            return new(true, null, null, currentPath);
 
         if (value1 == null || value2 == null)
-            return (false, value1, value2);
+            return new(false, value1, value2, currentPath);
 
         if (ReferenceEquals(value1, value2))
-            return (true, value1, value2);
+            return new(true, value1, value2, currentPath);
 
         var (type1, type2) = (value1.GetType(), value2.GetType());
 
-        visited ??= new HashSet<(object, object)>();
+        visited ??= [];
         if (IsVisitedType(type1) && IsVisitedType(type2))
             visited.Add((value1, value2));
 
@@ -137,40 +160,47 @@ public static partial class AssertExt
 
         var equalsMethod = GetEqualsMethod(typeOfEqual);
         if (equalsMethod != null)
-            return (equalsMethod(value1, value2), value1, value2);
+            return new(equalsMethod(value1, value2), value1, value2, currentPath);
 
         if (type1.IsEnumerable() && type2.IsEnumerable())
         {
+            // ReSharper disable once GenericEnumeratorNotDisposed
             using var e1 = ((IEnumerable)value1).GetEnumerator().ToDisposable();
+            // ReSharper disable once GenericEnumeratorNotDisposed
             using var e2 = ((IEnumerable)value2).GetEnumerator().ToDisposable();
+
+            var index = 0;
             while (true)
             {
                 var b1 = e1.Value.MoveNext();
                 var b2 = e2.Value.MoveNext();
-
+                
+                // ReSharper disable once ConvertIfStatementToSwitchStatement
                 if (!b1 && !b2)
                 {
-                    return (true, value1, value2);
+                    return new(true, value1, value2, currentPath);
                 }
-                if (b1 && b2)
+                else if (b1 && b2)
                 {
+                    index++;
+
                     var (v1, v2) = (e1.Value.Current, e2.Value.Current);
                     if (v1 == null && v2 == null)
                         continue;
 
                     if (v1 == null || v2 == null)
-                        return (false, value1, value2);
+                        return new(false, value1, value2, currentPath);
 
                     if (visited.Contains((v1, v2)))
                         continue;
 
-                    var result = Equal(v1, v2, excludeMemberTree, onlyCheckSameNameMembers, visited);
-                    if (!result.equal)
+                    var result = Equal(v1, v2, excludeMemberTree, onlyCheckSameNameMembers, visited, currentPath + $"[{index}]");
+                    if (!result.Equal)
                         return result;
                 }
                 else
                 {
-                    return (false, value1, value2);
+                    return new(false, value1, value2, currentPath);
                 }
             }
         }
@@ -182,12 +212,12 @@ public static partial class AssertExt
             var members2 = type2.GetDataMembers().Where(m => !excludeNames.Contains(m.Name)).ToList();
 
             if (!onlyCheckSameNameMembers && members1.Count != members2.Count)
-                return (false, value1, value2);
+                return new(false, value1, value2, currentPath);
 
             var members = from m1 in members1
-                join m2 in members2
-                    on m1.Name equals m2.Name
-                select (m1.Name, m1, m2);
+                          join m2 in members2
+                              on m1.Name equals m2.Name
+                          select (m1.Name, m1, m2);
 
             foreach (var (name, m1, m2) in members)
             {
@@ -201,17 +231,17 @@ public static partial class AssertExt
                 if (v1 != null && v2 != null && visited.Contains((v1, v2)))
                     continue;
 
-                var result = Equal(v1, v2, exclude, onlyCheckSameNameMembers, visited);
-                if (result.equal)
+                var result = Equal(v1, v2, exclude, onlyCheckSameNameMembers, visited, currentPath + "." + name);
+                if (result.Equal)
                     hasEqual = true;
                 else
                     return result;
             }
-            return (hasEqual, value1, value2);
+            return new(hasEqual, value1, value2, currentPath);
         }
         else
         {
-            var hasEqual = false;
+            var equal = false;
             var members = type1.GetDataMembers();
             foreach (var member in members)
             {
@@ -221,17 +251,17 @@ public static partial class AssertExt
 
                 var v1 = member.GetValue(value1);
                 var v2 = member.GetValue(value2);
-                    
+
                 if (v1 != null && v2 != null && visited.Contains((v1, v2)))
                     continue;
 
-                var result = Equal(v1, v2, exclude, onlyCheckSameNameMembers, visited);
-                if (result.equal)
-                    hasEqual = true;
+                var result = Equal(v1, v2, exclude, onlyCheckSameNameMembers, visited, currentPath + "." + member.Name);
+                if (result.Equal)
+                    equal = true;
                 else
                     return result;
             }
-            return (hasEqual, value1, value2);
+            return new(equal, value1, value2, currentPath);
         }
 
         static bool IsVisitedType(Type t)
