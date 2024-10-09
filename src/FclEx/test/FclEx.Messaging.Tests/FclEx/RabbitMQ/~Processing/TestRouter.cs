@@ -1,15 +1,15 @@
 ﻿using RabbitMQ.Client;
 
-namespace FclEx.RabbitMQ.Testers;
+namespace FclEx.RabbitMQ;
 
-public sealed class TestRouter : AsyncMsgRouter<string, string>
+public sealed class TestRouter : MessageRouter<string, string>
 {
     protected override bool AutomaticRecoveryEnabled { get; } = false;
 
     private readonly Func<string, string> _routingKeySelector;
 
     public TestRouter(RouterSettings settings, Func<string, string> routingKeySelector)
-        : base(StringToStringAsyncMsgConverter.Instance)
+        : base(StringToStringConverter.Instance)
     {
         _routingKeySelector = Check.NotNull(routingKeySelector);
         Init(settings);

@@ -1,6 +1,4 @@
-﻿using FclEx.RabbitMQ.Testers;
-
-namespace FclEx.RabbitMQ;
+﻿namespace FclEx.RabbitMQ;
 
 public class PublisherTests
 {

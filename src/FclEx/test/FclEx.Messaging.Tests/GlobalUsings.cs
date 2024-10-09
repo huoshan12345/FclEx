@@ -1,5 +1,6 @@
 // Global using directives
 
+global using System.Diagnostics.CodeAnalysis;
 global using FclEx.Extensions;
 global using FclEx.RabbitMQ;
 global using FclEx.Tests;

@@ -1,14 +1,11 @@
-﻿using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
+﻿namespace FclEx.RabbitMQ;
 
-namespace FclEx.RabbitMQ;
-
-public abstract class AsyncMsgRouter<TInput, TOutput> : AsyncConsumer<TInput, RouterSettings>
+public abstract class MessageRouter<TInput, TOutput> : MessageConsumer<TInput, RouterSettings>
 {
-    protected virtual IAsyncMsgConverter<TInput, TOutput> Converter { get; }
+    protected virtual IMessageConverter<TInput, TOutput> Converter { get; }
     protected static Type OutputType { get; } = typeof(TOutput);
 
-    protected AsyncMsgRouter(IAsyncMsgConverter<TInput, TOutput> converter,
+    protected MessageRouter(IMessageConverter<TInput, TOutput> converter,
         IMemoryBytesSerializer? serializer = null,
         ILoggerFactory? loggerFactory = null)
         : base(serializer, loggerFactory)
@@ -19,8 +16,8 @@ public abstract class AsyncMsgRouter<TInput, TOutput> : AsyncConsumer<TInput, Ro
     protected override IEnumerable<LoggerProperty> GetLogProperties()
     {
         var s = Settings!;
-        return new LoggerProperty[]
-        {
+        return
+        [
             ("RouterType", GetType().ShortName()),
             (nameof(Settings.Queue), s.Queue.Name),
             (nameof(Settings.Queue.BindKeys), s.Queue.BindKeys),
@@ -28,7 +25,7 @@ public abstract class AsyncMsgRouter<TInput, TOutput> : AsyncConsumer<TInput, Ro
             (nameof(Settings.TargetExchange), s.TargetExchange.Name),
             (nameof(InputType), InputType.ShortName()),
             (nameof(OutputType), OutputType.ShortName()),
-        };
+        ];
     }
 
     public override void Init(RouterSettings settings)
@@ -54,7 +51,7 @@ public abstract class AsyncMsgRouter<TInput, TOutput> : AsyncConsumer<TInput, Ro
     protected virtual Task<OperateResult> RouteAsync(BasicDeliverEventArgs args, TInput input, TOutput output)
     {
         var props = args.BasicProperties;
-        if (output != null)
+        if (output is not null)
         {
             var bytes = Serializer.Serialize(output);
             var key = GetRoutingKey(props, output);
@@ -85,13 +82,13 @@ public abstract class AsyncMsgRouter<TInput, TOutput> : AsyncConsumer<TInput, Ro
     protected abstract string GetRoutingKey(IBasicProperties props, TOutput output);
 }
 
-public abstract class AsyncMsgRouter<TInput, TOutput, TOutputs> : AsyncMsgRouter<TInput, TOutput>
+public abstract class MessageRouter<TInput, TOutput, TOutputs> : MessageRouter<TInput, TOutput>
     where TOutputs : ICollection<TOutput>
 {
-    protected new IAsyncMsgConverter<TInput, TOutputs> Converter { get; }
+    protected new IMessageConverter<TInput, TOutputs> Converter { get; }
 
-    protected AsyncMsgRouter(
-        IAsyncMsgConverter<TInput, TOutputs> converter,
+    protected MessageRouter(
+        IMessageConverter<TInput, TOutputs> converter,
         IMemoryBytesSerializer? serializer = null,
         ILoggerFactory? loggerFactory = null)
         : base(null!, serializer, loggerFactory)
@@ -104,7 +101,7 @@ public abstract class AsyncMsgRouter<TInput, TOutput, TOutputs> : AsyncMsgRouter
     {
         var props = args.BasicProperties;
         var outputs = await ConvertAsync(args, input).IgnoreSyncContext();
-        Logger.LogTrace($"Outputed {outputs.Count} items");
+        Logger.LogTrace($"Outputted {outputs.Count} items");
 
         var results = new List<OperateResult>();
         foreach (var output in outputs)

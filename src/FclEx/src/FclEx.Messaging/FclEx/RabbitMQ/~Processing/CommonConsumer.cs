@@ -1,12 +1,10 @@
-﻿using RabbitMQ.Client.Events;
+﻿namespace FclEx.RabbitMQ;
 
-namespace FclEx.RabbitMQ;
-
-public class CommonAsyncConsumer<TMessage> : AsyncConsumer<TMessage>
+public class CommonConsumer<TMessage> : MessageConsumer<TMessage>
 {
     protected readonly ConsumeHandler _handler;
 
-    public CommonAsyncConsumer(ConsumeHandler handler, IMemoryBytesSerializer? serializer = null,
+    public CommonConsumer(ConsumeHandler handler, IMemoryBytesSerializer? serializer = null,
         ILoggerFactory? logger = null)
         : base(serializer, logger)
     {

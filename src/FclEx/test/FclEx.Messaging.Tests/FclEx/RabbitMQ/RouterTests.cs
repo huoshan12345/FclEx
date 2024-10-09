@@ -1,8 +1,7 @@
-﻿using FclEx.RabbitMQ.Testers;
+﻿namespace FclEx.RabbitMQ;
 
-namespace FclEx.RabbitMQ;
-
-public class MsgRouterTests
+[SuppressMessage("ReSharper", "AccessToDisposedClosure")]
+public class RouterTests
 {
     private static string GetRoutingKey(string output)
     {

@@ -1,10 +1,10 @@
 ﻿namespace FclEx.RabbitMQ;
 
-public class CommonAsyncMsgConverter<TSource, TDestination> : IAsyncMsgConverter<TSource, TDestination>
+public class MessageConverter<TSource, TDestination> : IMessageConverter<TSource, TDestination>
 {
     protected readonly Func<TSource, Task<TDestination>> _handler;
 
-    public CommonAsyncMsgConverter(Func<TSource, Task<TDestination>> handler)
+    public MessageConverter(Func<TSource, Task<TDestination>> handler)
     {
         _handler = handler ?? throw new ArgumentNullException(nameof(handler));
     }

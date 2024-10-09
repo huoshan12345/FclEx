@@ -1,12 +1,10 @@
-﻿using RabbitMQ.Client;
+﻿namespace FclEx.RabbitMQ;
 
-namespace FclEx.RabbitMQ;
-
-public abstract class Publisher<TOutput> : MsgProcessor<PublisherSettings>
+public abstract class MessagePublisher<TOutput> : MessageProcessor<PublisherSettings>
 {
     protected static Type OutputType { get; } = typeof(TOutput);
 
-    protected Publisher(IMemoryBytesSerializer? serializer = null,
+    protected MessagePublisher(IMemoryBytesSerializer? serializer = null,
         ILoggerFactory? loggerFactory = null)
         : base(serializer, loggerFactory)
     {
@@ -14,12 +12,12 @@ public abstract class Publisher<TOutput> : MsgProcessor<PublisherSettings>
 
     protected override IEnumerable<LoggerProperty> GetLogProperties()
     {
-        return new LoggerProperty[]
-        {
+        return
+        [
             ("PublisherType", GetType().ShortName()),
             ("TargetExchange", Settings!.Exchange.Name),
             (nameof(OutputType), OutputType.ShortName()),
-        };
+        ];
     }
 
     public override void Init(PublisherSettings settings)

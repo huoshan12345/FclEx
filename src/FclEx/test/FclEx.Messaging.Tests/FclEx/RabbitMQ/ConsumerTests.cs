@@ -1,7 +1,6 @@
-﻿using FclEx.RabbitMQ.Testers;
+﻿namespace FclEx.RabbitMQ;
 
-namespace FclEx.RabbitMQ;
-
+[SuppressMessage("ReSharper", "AccessToDisposedClosure")]
 public class ConsumerTests
 {
     public static ExchangeSettings DefaultExchange { get; } = new()
@@ -75,7 +74,7 @@ public class ConsumerTests
 
         var (_, flag, _, t) = await Operate.ExecuteAsync(() => semaphore.WaitAsync(retryTimes + 1, delay + TimeSpan.FromSeconds(3)));
         Assert.True(flag);
-        Assert.True(delay < t, $"expected time: {delay}, actual time: {t}");
+        AssertExt.Equal(delay, t, TimeSpan.FromMilliseconds(100));
 
         Assert.True(list.Count == retryTimes + 1);
         foreach (var m in list)

@@ -1,5 +1,4 @@
 ﻿using System.Web;
-using RabbitMQ.Client;
 
 namespace FclEx.RabbitMQ;
 

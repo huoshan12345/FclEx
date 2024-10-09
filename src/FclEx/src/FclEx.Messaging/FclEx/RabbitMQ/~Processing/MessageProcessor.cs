@@ -1,9 +1,8 @@
 ﻿using System.Linq;
-using RabbitMQ.Client;
 
 namespace FclEx.RabbitMQ;
 
-public abstract class MsgProcessor<TSettings> : IDisposable
+public abstract class MessageProcessor<TSettings> : IDisposable
     where TSettings : RmqSettings
 {
     protected IMemoryBytesSerializer Serializer { get; }
@@ -17,7 +16,7 @@ public abstract class MsgProcessor<TSettings> : IDisposable
     protected ConnectionFactory? Factory { get; set; }
     protected bool IsDisposed { get; set; }
 
-    protected MsgProcessor(IMemoryBytesSerializer? serializer = null, ILoggerFactory? loggerFactory = null)
+    protected MessageProcessor(IMemoryBytesSerializer? serializer = null, ILoggerFactory? loggerFactory = null)
     {
         Serializer = serializer ?? JsonMemoryBytesSerializer.Instance;
         Logger = (loggerFactory ?? NullLoggerFactory.Instance).CreateLogger(GetType());

@@ -1,8 +1,8 @@
 ﻿using RabbitMQ.Client;
 
-namespace FclEx.RabbitMQ.Testers;
+namespace FclEx.RabbitMQ;
 
-public class TestPublisher<T> : Publisher<T>
+public class TestPublisher<T> : MessagePublisher<T>
 {
     protected override bool AutomaticRecoveryEnabled { get; } = false;
 

@@ -1,11 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Linq;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 
 namespace FclEx.RabbitMQ;
 
-public abstract class AsyncConsumer<TInput, TSettings> : MsgProcessor<TSettings>
+public abstract class MessageConsumer<TInput, TSettings> : MessageProcessor<TSettings>
     where TSettings : ConsumerSettings
 {
     public delegate Task<OperateResult> ConsumeHandler(BasicDeliverEventArgs props, TInput input);
@@ -18,7 +16,7 @@ public abstract class AsyncConsumer<TInput, TSettings> : MsgProcessor<TSettings>
     public virtual int MaxRetryTimes { get; } = 2;
     protected sealed override bool DispatchConsumersAsync { get; } = true;
 
-    protected AsyncConsumer(IMemoryBytesSerializer? serializer, ILoggerFactory? loggerFactory = null)
+    protected MessageConsumer(IMemoryBytesSerializer? serializer, ILoggerFactory? loggerFactory = null)
         : base(serializer, loggerFactory)
     {
     }
@@ -170,7 +168,7 @@ public abstract class AsyncConsumer<TInput, TSettings> : MsgProcessor<TSettings>
                    ("DelaySeconds", delay)
                ))
         {
-            Logger.LogWarning(exception, $"The item will be requeued to retry after {delay} seconds due to: {exception.Message}");
+            Logger.LogWarning(exception, $"The item will be re-queued to retry after {delay} seconds due to: {exception.Message}");
             PushBack(args);
             return Task.CompletedTask;
         }
@@ -183,9 +181,9 @@ public abstract class AsyncConsumer<TInput, TSettings> : MsgProcessor<TSettings>
     }
 }
 
-public abstract class AsyncConsumer<TMessage> : AsyncConsumer<TMessage, ConsumerSettings>
+public abstract class MessageConsumer<TMessage> : MessageConsumer<TMessage, ConsumerSettings>
 {
-    protected AsyncConsumer(IMemoryBytesSerializer? serializer, ILoggerFactory? loggerFactory = null)
+    protected MessageConsumer(IMemoryBytesSerializer? serializer, ILoggerFactory? loggerFactory = null)
         : base(serializer, loggerFactory)
     {
     }
