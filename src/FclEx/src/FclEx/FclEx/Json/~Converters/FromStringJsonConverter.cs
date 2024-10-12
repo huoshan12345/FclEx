@@ -1,10 +1,4 @@
-﻿#pragma warning disable CA2252
-namespace FclEx.Json;
-
-public interface IFromString<out T> where T : IFromString<T>
-{
-    static abstract T FromString(string str);
-}
+﻿namespace FclEx.Json;
 
 public class FromStringJsonConverter<T> : JsonConverter<T> where T : IFromString<T>
 {

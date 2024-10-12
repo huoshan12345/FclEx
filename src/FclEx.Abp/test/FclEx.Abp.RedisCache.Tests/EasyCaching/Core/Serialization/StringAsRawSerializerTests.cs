@@ -1,27 +1,8 @@
-﻿using System.Text;
-using EasyCaching.Serialization.Json;
-using EasyCaching.Serialization.MessagePack;
-
-namespace EasyCaching.Core.Serialization;
+﻿namespace EasyCaching.Core.Serialization;
 
 public class StringAsRawSerializerTests
 {
-    public class Tester
-    {
-        public string? Name { get; set; }
-        public int Age { get; set; }
-    }
-
-    //[Fact]
-    //public void Serialize_BinarySerializer_Test()
-    //{
-    //    var stringAsRawSerializer = new StringAsRawEasyCachingSerializer(
-    //        new DefaultBinaryFormatterSerializer(), Encoding.UTF8);
-
-    //    var obj = new Tester { Age = 10, Name = "xxxxxxxxx" };
-    //    Assert.Throws<SerializationException>(() => stringAsRawSerializer.SerializeObject(obj));
-    //}
-
+    public record Model(string? Name, int Age);
 
     [Fact]
     public void Serialize_JsonSerializer_Test()
@@ -33,13 +14,13 @@ public class StringAsRawSerializerTests
         Assert.IsType<DefaultJsonSerializer>(jsonSerializer);
         var stringAsRawSerializer = new StringAsRawEasyCachingSerializer(jsonSerializer, Encoding.UTF8);
 
-        var obj = new Tester { Age = 10, Name = "xxxxxxxxx" };
+        var obj = new Model("xxxxxxxxx", 10);
         var bytes = stringAsRawSerializer.SerializeObject(obj);
 
         var newObj = stringAsRawSerializer.DeserializeObject(bytes);
-        Assert.IsType<Tester>(newObj);
+        Assert.IsType<Model>(newObj);
 
-        var newTypedObj = (Tester)newObj;
+        var newTypedObj = (Model)newObj;
         Assert.Equal(obj.Name, newTypedObj.Name);
         Assert.Equal(obj.Age, newTypedObj.Age);
     }
@@ -55,13 +36,13 @@ public class StringAsRawSerializerTests
         Assert.IsType<DefaultMessagePackSerializer>(jsonSerializer);
         var stringAsRawSerializer = new StringAsRawEasyCachingSerializer(jsonSerializer, Encoding.UTF8);
 
-        var obj = new Tester { Age = 10, Name = "xxxxxxxxx" };
+        var obj = new Model("xxxxxxxxx", 10);
         var bytes = stringAsRawSerializer.SerializeObject(obj);
 
         var newObj = stringAsRawSerializer.DeserializeObject(bytes);
-        Assert.IsType<Tester>(newObj);
+        Assert.IsType<Model>(newObj);
 
-        var newTypedObj = (Tester)newObj;
+        var newTypedObj = (Model)newObj;
         Assert.Equal(obj.Name, newTypedObj.Name);
         Assert.Equal(obj.Age, newTypedObj.Age);
     }

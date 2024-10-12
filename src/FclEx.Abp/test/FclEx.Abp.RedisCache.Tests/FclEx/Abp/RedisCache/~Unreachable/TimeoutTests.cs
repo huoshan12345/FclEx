@@ -20,7 +20,7 @@ public class TimeoutTests : AbpRedisUnreachableTests
         Assert.IsType<DefaultCSRedisCachingProvider>(provider);
         var csRedisProvider = (DefaultCSRedisCachingProvider)provider;
         var actualOptions = FieldOfRedisOptions.GetRequiredValue<RedisOptions>(csRedisProvider);
-        Assert.Single(actualOptions!.DBConfig.ConnectionStrings);
+        Assert.Single(actualOptions.DBConfig.ConnectionStrings);
         var str = actualOptions.DBConfig.ConnectionStrings.First();
 
         if (RegOfConTimeout.TryMatch(str, 1, out var value))
@@ -42,6 +42,6 @@ public class TimeoutTests : AbpRedisUnreachableTests
         var timeout = con.ConnectTimeout;
         var (successful, _, _, elapsed) = await Operate.ExecuteAsync(() => provider.GetAsync<string>("test"), TimeSpan.FromMilliseconds(timeout)).Unwrap();
         Assert.False(successful);
-        Assert.True(elapsed.TotalMilliseconds < timeout + 1000, elapsed.TotalSeconds.ToString(CultureInfo.InvariantCulture));
+        Assert.True(elapsed.TotalMilliseconds < timeout + 500, elapsed.TotalSeconds.ToString(CultureInfo.InvariantCulture));
     }
 }

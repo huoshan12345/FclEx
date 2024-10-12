@@ -1,24 +1,19 @@
-﻿using EasyCaching.Core.Serialization;
-using EasyCaching.Serialization.Json;
-using EasyCaching.Serialization.MessagePack;
-using FclEx.Abp.Caching;
-
-namespace FclEx.Abp.RedisCache;
-
-using FclEx.Extensions;
+﻿namespace FclEx.Abp.RedisCache;
 
 public class RedisCacheTests
 {
+    public record Model(int Id, string? Name, int Age, int? CoinCount = null);
+
     private readonly ITestOutputHelper _output;
     public RedisCacheTests(ITestOutputHelper output)
     {
         _output = output;
     }
 
-    public static readonly IEnumerable<object[]> TwoDimensionalBools = new[] { true, false }.SelectMany((x, y) => new object[] { x, y });
+    public static readonly IEnumerable<object[]> TwoDimensionalBooleans = new[] { true, false }.SelectMany((x, y) => new object[] { x, y });
 
     [Theory]
-    [MemberData(nameof(TwoDimensionalBools))]
+    [MemberData(nameof(TwoDimensionalBooleans))]
     public void TestCache(bool useMessagePack, bool serializeStringAsRaw)
     {
         var tests = AbpRedisTests.Build(_output, useMessagePack, serializeStringAsRaw);
@@ -57,13 +52,13 @@ public class RedisCacheTests
         if (typeof(T) == typeof(string) && tests.AbpRedisOptions.SerializeStringAsRaw)
         {
             var client = tests.ServiceProvider.GetRequiredService<EasyCachingCSRedisClient>();
-            var valueOfRaw = client.Get<T>(key); 
+            var valueOfRaw = client.Get<T>(key);
             Assert.Equal(value, valueOfRaw);
         }
     }
 
     [Theory]
-    [MemberData(nameof(TwoDimensionalBools))]
+    [MemberData(nameof(TwoDimensionalBooleans))]
     public void StringAsRaw_Test(bool useMessagePack, bool serializeStringAsRaw)
     {
         var tests = AbpRedisTests.Build(_output, useMessagePack, serializeStringAsRaw);
@@ -81,20 +76,20 @@ public class RedisCacheTests
         else
             Assert.IsType<DefaultJsonSerializer>(serializer);
 
-        var datas = Enumerable.Range(1, 10)
-            .Select((m, i) => new CacheTester() { Id = m, Age = m, Name = m.ToString("D8") })
+        var array = Enumerable.Range(1, 10)
+            .Select((m, i) => new Model(m, m.ToString("D8"), m))
             .ToArray();
 
-        foreach (var data in datas)
+        foreach (var value in array)
         {
-            Test(tests, nameof(CacheTester) + abpCacheOptions.Separator + data.Name, data); // class
-            Test(tests, nameof(CacheTester.Name) + abpCacheOptions.Separator + data.Name, data.Name); // string
-            Test(tests, nameof(CacheTester.Age) + abpCacheOptions.Separator + data.Age, data.Age); // int
+            Test(tests, nameof(Model) + abpCacheOptions.Separator + value.Name, value); // class
+            Test(tests, nameof(Model.Name) + abpCacheOptions.Separator + value.Name, value.Name); // string
+            Test(tests, nameof(Model.Age) + abpCacheOptions.Separator + value.Age, value.Age); // int
         }
     }
 
     [Theory]
-    [MemberData(nameof(TwoDimensionalBools))]
+    [MemberData(nameof(TwoDimensionalBooleans))]
     public void GetAll_Test(bool useMessagePack, bool serializeStringAsRaw)
     {
         var tests = AbpRedisTests.Build(_output, useMessagePack, serializeStringAsRaw);
@@ -121,7 +116,7 @@ public class RedisCacheTests
     }
 
     [Theory]
-    [MemberData(nameof(TwoDimensionalBools))]
+    [MemberData(nameof(TwoDimensionalBooleans))]
     public async Task GetAllAsync_Test(bool useMessagePack, bool serializeStringAsRaw)
     {
         var tests = AbpRedisTests.Build(_output, useMessagePack, serializeStringAsRaw);

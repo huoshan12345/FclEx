@@ -51,17 +51,27 @@ foreach ($project in $projects) {
 }
 
 Write-Output "Packing finished."
-Read-Host
 
-$files = Get-ChildItem $pkgPath
 
-Write-Output "Uploading..."
-foreach ($file in $files) {
-  Write-Output "Uploading $($file.Basename)"
-  & dotnet nuget push $file -k $key --source $myget -t 50
-  if ($Lastexitcode -ne 0) {
-    throw "failed with exit code $LastExitCode"
+
+if ($isGithubAction) {
+  Write-Output "Uploading..."
+
+  $files = Get-ChildItem $pkgPath
+  foreach ($file in $files) {
+    Write-Output "Uploading $($file.Basename)"
+    & dotnet nuget push $file -k $key --source $myget -t 50
+    if ($Lastexitcode -ne 0) {
+      throw "failed with exit code $LastExitCode"
+    }
+  }
+
+  Write-Output "Uploading finished."
+}
+else {
+  foreach ($project in $projects) {
+    Write-Output "Removing $($project.Basename) from nuget cache"
+    $packageLocalDir = [io.path]::combine( $env:USERPROFILE, ".nuget", "packages", $project.Basename.ToLower(), $ver);
+    Remove-Item $packageLocalDir -Recurse -Force -ErrorAction SilentlyContinue
   }
 }
-
-Write-Output "Uploading finished."

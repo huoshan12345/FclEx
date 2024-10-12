@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static partial class TypeExtensions
 {

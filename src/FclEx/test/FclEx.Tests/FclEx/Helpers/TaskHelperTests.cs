@@ -1,6 +1,5 @@
-﻿using System.Diagnostics;
+﻿namespace FclEx.Helpers;
 
-namespace FclEx.Helpers;
 
 public class TaskHelperTests
 {
@@ -23,4 +22,38 @@ public class TaskHelperTests
         var time = watch.GetElapsedTime();
         Assert.True(time.TotalSeconds < 5, time.TotalSeconds.ToString());
     }
+
+    [Fact]
+    public async Task AwaitObject_Task_Tests()
+    {
+        var task = Task.CompletedTask;
+        var result = await TaskHelper.AwaitObject(task);
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task AwaitObject_TaskOfInternalClass_Tests()
+    {
+        var task = Task.FromResult(new InternalClass(1));
+        var result = await TaskHelper.AwaitObject(task);
+        Assert.True(result is InternalClass { Value: 1 });
+    }
+
+    [Fact]
+    public async Task AwaitObject_ValueTask_Tests()
+    {
+        var task = ValueTask.CompletedTask;
+        var result = await TaskHelper.AwaitObject(task);
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task AwaitObject_ValueTaskOfInternalClass_Tests()
+    {
+        var task = ValueTask.FromResult(new InternalClass(1));
+        var result = await TaskHelper.AwaitObject(task);
+        Assert.True(result is InternalClass { Value: 1 });
+    }
+
+    public record InternalClass(int Value);
 }

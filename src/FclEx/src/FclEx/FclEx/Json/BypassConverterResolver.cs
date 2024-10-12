@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json.Serialization;
-
-namespace FclEx.Json;
+﻿namespace FclEx.Json;
 
 public class BypassConverterResolver : DefaultContractResolver
 {

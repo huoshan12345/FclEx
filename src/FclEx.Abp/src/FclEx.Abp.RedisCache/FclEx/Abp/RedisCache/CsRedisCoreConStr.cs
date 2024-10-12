@@ -8,7 +8,7 @@ public class CsRedisCoreConStr
     public int SyncTimeout { get; set; } = 5000;
     public string Password { get; set; } = "";
     public int DefaultDatabase { get; set; } = 0;
-    public int Poolsize { get; set; } = 50;
+    public int PoolSize { get; set; } = 50;
     public int PreHeat { get; set; } = 0;
     public bool Ssl { get; set; } = false;
     public int WriteBuffer { get; set; } = 10240;
@@ -20,7 +20,7 @@ public class CsRedisCoreConStr
     {
         return $"{Host}:{Port},password={Password},defaultDatabase={DefaultDatabase}," +
                $"connectTimeout={ConnectTimeout},syncTimeout={SyncTimeout},testcluster=false" +
-               $"poolsize={Poolsize},ssl={Ssl.ToString().ToLower()},writeBuffer={WriteBuffer}," +
+               $"poolsize={PoolSize},ssl={Ssl.ToString().ToLower()},writeBuffer={WriteBuffer}," +
                $"prefix={Prefix},tryit={TryIt},name={Name},preheat={PreHeat.ToString().ToLower()}";
     }
 }

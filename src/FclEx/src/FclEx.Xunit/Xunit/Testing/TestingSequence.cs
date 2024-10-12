@@ -10,13 +10,13 @@ public enum Options
 
 public static class TestingSequence
 {
-    internal static TestingSequence<T> Of<T>(params T[] elements) =>
+    public static TestingSequence<T> Of<T>(params T[] elements) =>
         new(elements, Options.None, maxEnumerations: 1);
 
-    internal static TestingSequence<T> Of<T>(Options options, params T[] elements) =>
+    public static TestingSequence<T> Of<T>(Options options, params T[] elements) =>
         elements.AsTestingSequence(options, maxEnumerations: 1);
 
-    internal static TestingSequence<T> AsTestingSequence<T>(this IEnumerable<T> source,
+    public static TestingSequence<T> AsTestingSequence<T>(this IEnumerable<T> source,
                                                             Options options = Options.None,
                                                             int maxEnumerations = 1) =>
         source != null
