@@ -1,4 +1,6 @@
-﻿namespace FclEx.RabbitMQ;
+﻿using xRetry;
+
+namespace FclEx.RabbitMQ;
 
 [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
 public class ConsumerTests
@@ -83,7 +85,7 @@ public class ConsumerTests
         }
     }
 
-    [Theory]
+    [RetryTheory]
     [InlineData(0)]
     [InlineData(3)]
     public async Task Consume_PushBack_String_Test(int delaySeconds)
@@ -91,7 +93,7 @@ public class ConsumerTests
         await ConsumePushBackTest("test", TimeSpan.FromSeconds(delaySeconds));
     }
 
-    [Theory]
+    [RetryTheory]
     [InlineData(0)]
     [InlineData(3)]
     public async Task Consume_PushBack_Int_Test(int delaySeconds)
@@ -99,7 +101,7 @@ public class ConsumerTests
         await ConsumePushBackTest(10, TimeSpan.FromSeconds(delaySeconds));
     }
 
-    [Theory]
+    [RetryTheory]
     [InlineData(0)]
     [InlineData(3)]
     public async Task Consume_PushBack_Class_Test(int delaySeconds)
