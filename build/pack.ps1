@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $restore = if ($args[0] -eq 'no-restore') { $false } else { $true }
-$isGithub = [bool]$Env:GITHUB_ACTION
+$isGithubAction = [string]::IsNullOrEmpty($Env:GITHUB_ACTION) -eq $false
 Write-Output "isGithub = $isGithub, restore = $restore"
 
 $buildDir = [io.path]::combine($MyInvocation.MyCommand.Definition, "..")
@@ -31,7 +31,7 @@ $srcDirs = (
 $onlyWin = ("FclEx.Wmi")
 
 $projects = $srcDirs | ForEach-Object { Get-ChildItem -Path $_ -Include *.csproj -Recurse } `
-| Where-Object { $isGithub -eq $false -or ( ($IsWindows -and $onlyWin -contains $_.Basename) -or ($IsWindows -eq $false -and $onlyWin -notcontains $_.Basename) ) }
+| Where-Object { $isGithubAction -eq $false -or ( ($IsWindows -and $onlyWin -contains $_.Basename) -or ($IsWindows -eq $false -and $onlyWin -notcontains $_.Basename) ) }
 
 foreach ($project in $projects) { 
   Write-Output "Packing $($project.Basename)"
