@@ -11,7 +11,7 @@ public static partial class EnumerableExtensions
         {
             null => throw new ArgumentNullException(nameof(source)),
             ReadOnlyCollection<T> col => col,
-            _ => new ReadOnlyCollection<T>(source.ToList())
+            _ => new ReadOnlyCollection<T>(source.ToList()),
         };
     }
 
@@ -21,7 +21,17 @@ public static partial class EnumerableExtensions
         {
             null => throw new ArgumentNullException(nameof(source)),
             IList<T> col => col,
-            _ => source.ToList()
+            _ => source.ToList(),
+        };
+    }
+
+    public static ISet<T> AsISet<T>(this IEnumerable<T> source)
+    {
+        return source switch
+        {
+            null => throw new ArgumentNullException(nameof(source)),
+            ISet<T> col => col,
+            _ => source.ToHashSet(),
         };
     }
 
@@ -31,7 +41,7 @@ public static partial class EnumerableExtensions
         {
             null => throw new ArgumentNullException(nameof(source)),
             ICollection<T> col => col,
-            _ => source.ToList()
+            _ => source.ToList(),
         };
     }
 
@@ -41,7 +51,7 @@ public static partial class EnumerableExtensions
         {
             null => throw new ArgumentNullException(nameof(source)),
             IReadOnlyList<T> col => col,
-            _ => source.ToList()
+            _ => source.ToList(),
         };
     }
 
@@ -51,7 +61,7 @@ public static partial class EnumerableExtensions
         {
             null => throw new ArgumentNullException(nameof(source)),
             List<T> col => col,
-            _ => source.ToList()
+            _ => source.ToList(),
         };
     }
 
@@ -61,7 +71,7 @@ public static partial class EnumerableExtensions
         {
             null => throw new ArgumentNullException(nameof(source)),
             T[] col => col,
-            _ => source.ToArray()
+            _ => source.ToArray(),
         };
     }
 }

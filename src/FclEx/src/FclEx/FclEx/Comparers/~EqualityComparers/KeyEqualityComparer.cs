@@ -29,7 +29,7 @@ public class KeyEqualityComparer<T, TKey> : IEqualityComparer<T>
 
     public bool Equals(T? x, T? y)
     {
-        return EqualityComparerHelper.TryEquals(x, y, out var result) 
+        return ComparerHelper.TryEquals(x, y, out var result) 
             ? result.Value 
             : _keyComparer.Equals(_keySelector(x), _keySelector(y));
     }

@@ -4,7 +4,7 @@ public class FileExtensionEqualityComparer : IEqualityComparer<string>, IHasInst
 {
     public bool Equals(string? x, string? y)
     {
-        if (EqualityComparerHelper.TryEquals(x, y, out var result))
+        if (ComparerHelper.TryEquals(x, y, out var result))
             return result.Value;
 
         var x1 = x.SkipUntil(".", untilLast: true);

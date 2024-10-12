@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Json;
 
-public class WriteAsStringConverter : JsonConverterWithDefault<WriteAsStringConverter>
+public class WriteAsStringConverter : BypassSelfJsonConverter
 {
     public override bool CanConvert(Type objectType) => true;
     public override bool CanRead => false;
@@ -30,7 +30,8 @@ public class WriteAsStringConverter : JsonConverterWithDefault<WriteAsStringConv
             }
             else
             {
-                writer.WriteValue(JsonConvert.SerializeObject(value, DefaultSettings));
+                var str = JsonConvert.SerializeObject(value, BypassSettings);
+                writer.WriteValue(str);
             }
         }
     }

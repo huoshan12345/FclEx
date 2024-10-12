@@ -155,16 +155,6 @@ partial class StringExtensions
         return str.IsNotEmpty() ? str : defaultValue;
     }
 
-    public static readonly char[] NewLineChars = { '\r', '\n' };
-    public const StringSplitOptions SplitOptions = StringSplitOptions.RemoveEmptyEntries;
-
-    public static string[] SplitToLines(this string? str, StringSplitOptions options = SplitOptions)
-    {
-        return string.IsNullOrEmpty(str)
-            ? []
-            : str.Split(NewLineChars, options);
-    }
-
     public static string Replace(this string str, Regex regex, string replacement)
     {
         return regex.Replace(str, replacement);

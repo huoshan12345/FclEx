@@ -10,7 +10,7 @@ public class ComparerBuilder
 
 public class ComparerBuilder<T> : IComparerBuilder<T>
 {
-    private IComparer<T>? _comparer = null;
+    private IComparer<T>? _comparer;
 
     public IComparer<T> Build()
     {
@@ -20,6 +20,12 @@ public class ComparerBuilder<T> : IComparerBuilder<T>
     public ComparerBuilder<T> Set(IComparer<T> comparer)
     {
         _comparer = comparer;
+        return this;
+    }
+
+    public ComparerBuilder<T> Set(Func<IComparer<T>?, IComparer<T>> comparer)
+    {
+        _comparer = comparer(_comparer);
         return this;
     }
 }

@@ -22,7 +22,7 @@ public class UntypedEqualityComparer<T> : IEqualityComparer
 
     public new bool Equals(object? x, object? y)
     {
-        return EqualityComparerHelper.TryEquals(x, y, out var result)
+        return ComparerHelper.TryEquals(x, y, out var result)
             ? result.Value
             : _comparer.Equals((T)x, (T)y);
     }

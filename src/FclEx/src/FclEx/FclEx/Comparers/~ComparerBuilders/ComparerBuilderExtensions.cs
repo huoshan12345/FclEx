@@ -16,4 +16,9 @@ public static class ComparerBuilderExtensions
     {
         return MemberComparerBuilder.Create<T>(isNullSmaller);
     }
+
+    public static ComparerBuilder<T> Reverse<T>(this ComparerBuilder<T> builder)
+    {
+        return builder.Set(m => new ReverseComparer<T>(m));
+    }
 }
