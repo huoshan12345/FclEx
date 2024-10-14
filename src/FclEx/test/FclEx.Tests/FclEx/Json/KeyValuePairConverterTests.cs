@@ -1,4 +1,7 @@
-﻿namespace FclEx.Json;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
+
+namespace FclEx.Json;
 
 public class KeyValuePairConverterTests
 {
@@ -29,27 +32,37 @@ public class KeyValuePairConverterTests
         Source.ToDictionary(m => m.ToString(), m => Source),
         Source.ToDictionary(m => m.ToString(), m => Source.ToDictionary(s => s)),
         Source.ToDictionary(m => (m + 'A' - 1).CastTo<char>(), m => m),
-        Source.ToDictionary(m => (m + 'A' - 1).CastTo<char>(), m => (m + 'a' - 1).CastTo<char>())
+        Source.ToDictionary(m => (m + 'A' - 1).CastTo<char>(), m => (m + 'a' - 1).CastTo<char>()),
     ];
 
-    public static Func<Type, Type>[] KvToColConvertors { get; } =
+    public static (string Name, Func<Type, Type> Converter)[] KvToColConverters { get; } =
     [
-        t => t.MakeArrayType(),
-        t => typeof(IEnumerable<>).MakeGenericType(t),
-        t => typeof(ICollection<>).MakeGenericType(t),
-        t => typeof(IList<>).MakeGenericType(t),
-        t => typeof(List<>).MakeGenericType(t),
-        t => typeof(IReadOnlyCollection<>).MakeGenericType(t),
-        t => typeof(ReadOnlyCollection<>).MakeGenericType(t),
-        t => typeof(IReadOnlyList<>).MakeGenericType(t),
-        t => typeof(MyList<>).MakeGenericType(t),
-        t => typeof(MyListWithCtor<>).MakeGenericType(t)
+        (nameof(Array), t => t.MakeArrayType()),
+        (nameof(IEnumerable<int>), t => typeof(IEnumerable<>).MakeGenericType(t)),
+        (nameof(ICollection<int>), t => typeof(ICollection<>).MakeGenericType(t)),
+        (nameof(IList<int>), t => typeof(IList<>).MakeGenericType(t)),
+        (nameof(List<int>), t => typeof(List<>).MakeGenericType(t)),
+        (nameof(IReadOnlyCollection<int>), t => typeof(IReadOnlyCollection<>).MakeGenericType(t)),
+        (nameof(ReadOnlyCollection<int>), t => typeof(ReadOnlyCollection<>).MakeGenericType(t)),
+        (nameof(IReadOnlyList<int>), t => typeof(IReadOnlyList<>).MakeGenericType(t)),
+        (nameof(MyList<int>), t => typeof(MyList<>).MakeGenericType(t)),
+        (nameof(MyListWithCtor<int>), t => typeof(MyListWithCtor<>).MakeGenericType(t)),
     ];
+
+    public record TestCase(string Name, IDictionary Dictionary, Func<Type, Type> Converter);
+
+    public class TestCaseBuilder : MemberDataSerializer<TestCase>
+    {
+        // ReSharper disable once UnusedMember.Global
+        public TestCaseBuilder() { }
+        public TestCaseBuilder(TestCase value) : base(value) { }
+        public override string? ToString() => Value?.Name;
+    }
 
 
     public static IEnumerable<object[]> Cases { get; } = Dictionaries
-        .SelectMany(m => KvToColConvertors.Select(c => (m, c)))
-        .Select(m => new object[] { m.m, m.c }).ToArray();
+        .CrossJoin(KvToColConverters)
+        .Select(m => new object[] { new TestCaseBuilder(new(m.Item2.Name, m.Item1, m.Item2.Converter)) }).ToArray();
 
     private static void ReadTestGeneric<T, TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> raw)
         where T : IEnumerable<KeyValuePair<TKey, TValue>>
@@ -72,13 +85,15 @@ public class KeyValuePairConverterTests
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void ReadTest(IDictionary dic, Func<Type, Type> toColType)
+    public void ReadTest(TestCaseBuilder builder)
     {
+        var (_, dic, converter) = builder.Value!;
+
         var dicType = dic.GetType();
         var keyType = dicType.GenericTypeArguments[0];
         var valueType = dicType.GenericTypeArguments[1];
         var kvType = _kvRawType.MakeGenericType(keyType, valueType);
-        var colType = toColType(kvType);
+        var colType = converter(kvType);
         _method.MakeGenericMethod(colType, keyType, valueType)
             .Invoke(null, [dic]);
     }

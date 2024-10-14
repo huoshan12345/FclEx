@@ -10,7 +10,7 @@ public class TaskHelperTests
         var watch = ValueStopwatch.StartNew();
         await TaskHelper.Delay(10, cts.Token);
         var time = watch.GetElapsedTime();
-        Assert.True(time.TotalSeconds < 5, time.TotalSeconds.ToString());
+        Assert.True(time.TotalSeconds < 5, time.ToString());
     }
 
     [Fact]
@@ -20,7 +20,7 @@ public class TaskHelperTests
         var watch = ValueStopwatch.StartNew();
         await TaskHelper.DelayMilli(10 * 1000, cts.Token);
         var time = watch.GetElapsedTime();
-        Assert.True(time.TotalSeconds < 5, time.TotalSeconds.ToString());
+        Assert.True(time.TotalSeconds < 5, time.ToString());
     }
 
     [Fact]

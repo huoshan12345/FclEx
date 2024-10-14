@@ -1,4 +1,6 @@
-﻿namespace FclEx.Extensions;
+﻿using System.Linq;
+
+namespace FclEx.Extensions;
 
 public readonly record struct IndexedItem<T>(int Index, T Item, bool IsFirst, bool IsLast);
 
@@ -132,7 +134,12 @@ public static partial class EnumerableExtensions
 
     public static IEnumerable<(T1, T2)> CrossJoin<T1, T2>(this IEnumerable<T1> left, IEnumerable<T2> right)
     {
-        return left.SelectMany(m => right, (t1, t2) => (t1, t2));
+        return left.SelectMany(m => right, static (t1, t2) => (t1, t2));
+    }
+
+    public static IEnumerable<(T1, T2)> CrossJoin<T1, T2>(this IEnumerable<T1> left, Func<T1, IEnumerable<T2>> right)
+    {
+        return left.SelectMany(m => right(m), static (t1, t2) => (t1, t2));
     }
 
     public static IEnumerable<T3> Select<T1, T2, T3>(this IEnumerable<(T1, T2)> source, Func<T1, T2, int, T3> selector)

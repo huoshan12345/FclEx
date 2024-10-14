@@ -2,10 +2,7 @@
 
 public class BatchRetryConsumerTests
 {
-    private class Tester
-    {
-        public int Number { get; set; }
-    }
+    private record Model(int Number);
 
     private readonly ITestOutputHelper _output;
 
@@ -18,8 +15,8 @@ public class BatchRetryConsumerTests
     public async Task Test()
     {
         const int retryTimes = 3;
-        var numbers = Enumerable.Range(1, 10).Select(m => new Tester { Number = m }).ToArray();
-        var consumer = new BatchRetryConsumer<Tester>(5, TimeSpan.FromSeconds(1), retryTimes);
+        var numbers = Enumerable.Range(1, 10).Select(m => new Model(m)).ToArray();
+        var consumer = new BatchRetryConsumer<Model>(5, TimeSpan.FromSeconds(1), retryTimes);
         consumer.ConsumingHandler += (sender, list) =>
         {
             _output.WriteLine(nameof(consumer.ConsumingHandler));
@@ -53,11 +50,8 @@ public class BatchRetryConsumerTests
     [Fact]
     public async Task Dispose_AfterStart_Test()
     {
-        var consumer = new BatchRetryConsumer<Tester>(5, TimeSpan.FromSeconds(1), 1);
-        consumer.ConsumingHandler += (sender, list) => TaskHelper.DelayMilli(100);
+        var consumer = new BatchRetryConsumer<Model>(5, TimeSpan.FromSeconds(1), 1);
         var task = consumer.Start();
-        await TaskHelper.Delay(1);
-
         consumer.Dispose();
         await TaskHelper.Delay(1);
         Assert.True(task.IsCompleted);
@@ -66,12 +60,10 @@ public class BatchRetryConsumerTests
     [Fact]
     public async Task Dispose_DuringConsuming_Test()
     {
-        var consumer = new BatchRetryConsumer<Tester>(5, TimeSpan.FromSeconds(1), 1);
-        consumer.ConsumingHandler += (sender, list) => TaskHelper.Delay(3);
+        var consumer = new BatchRetryConsumer<Model>(5, TimeSpan.FromSeconds(1), 1);
+        consumer.ConsumingHandler += (sender, list) => TaskHelper.Delay(1);
         var task = consumer.Start();
-        consumer.Add(new Tester());
-        await TaskHelper.Delay(1);
-
+        consumer.Add(new Model(0));
         consumer.Dispose();
         await TaskHelper.Delay(1);
         Assert.False(task.IsCompleted);

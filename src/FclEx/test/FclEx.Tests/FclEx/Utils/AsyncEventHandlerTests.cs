@@ -15,8 +15,9 @@ public class AsyncEventHandlerTests
         {
             OnNotify += async (sender, tester) =>
             {
-                await TaskHelper.Delay(5);
-                helper.WriteLine("default");
+                var span = TimeSpan.FromMilliseconds(600);
+                await Task.Delay(span);
+                helper.WriteLine(span.ToString());
             };
         }
 
@@ -34,19 +35,19 @@ public class AsyncEventHandlerTests
         var tester = new Tester(_helper);
         tester.OnNotify += async (sender, e) =>
         {
-            await TaskHelper.Delay(1);
-            _helper.WriteLine("1 seconds");
+            var span = TimeSpan.FromMilliseconds(100);
+            await Task.Delay(span);
+            _helper.WriteLine(span.ToString());
         };
 
         tester.OnNotify += async (sender, e) =>
         {
-            await TaskHelper.Delay(2);
-            _helper.WriteLine("2 seconds");
+            var span = TimeSpan.FromMilliseconds(300);
+            await Task.Delay(span);
+            _helper.WriteLine(span.ToString());
         };
 
         await tester.Notify();
         _helper.WriteLine("Notify");
-
-        await TaskHelper.Delay(10);
     }
 }

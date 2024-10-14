@@ -162,6 +162,8 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>,
         if (_isDisposed)
             return;
 
+        GC.SuppressFinalize(this);
+
         _cts.Cancel();
         HandleCancellation();
 
