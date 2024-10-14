@@ -11,7 +11,8 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.1" />
-    <PackageReference Include="Volo.Abp.AutoMapper" Version="[8.1.5]" /> <!--Abp does not support net7.0 or lower since 8.2.0.-->
+    <!--Abp does not support net7.0 or lower since 8.2.0. And there may be something wrong with 8.1.5-->
+    <PackageReference Include="Volo.Abp.AutoMapper" Version="[8.1.4]" /> 
   </ItemGroup>
 
   <ItemGroup>

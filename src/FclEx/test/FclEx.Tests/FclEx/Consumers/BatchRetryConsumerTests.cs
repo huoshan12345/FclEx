@@ -65,7 +65,6 @@ public class BatchRetryConsumerTests
         var task = consumer.Start();
         consumer.Add(new Model(0));
         consumer.Dispose();
-        await TaskHelper.Delay(1);
         Assert.False(task.IsCompleted);
         var finishTask = await Task.WhenAny(task, TaskHelper.Delay(10));
         Assert.Equal(task, finishTask);

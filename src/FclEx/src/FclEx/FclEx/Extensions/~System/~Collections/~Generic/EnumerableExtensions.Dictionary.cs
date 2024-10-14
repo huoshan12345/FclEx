@@ -4,9 +4,8 @@ namespace FclEx.Extensions;
 
 partial class EnumerableExtensions
 {
-    public static MultiValueDictionary<TKey, TValue> ToMultiValueDictionary<T, TKey, TValue, TValues>(this IEnumerable<T> enumerable,
+    public static MultiValueDictionary<TKey, TValue> ToMultiValueDictionary<T, TKey, TValue>(this IEnumerable<T> enumerable,
         Func<T, TKey> keySelector, Func<T, IEnumerable<TValue>> valueSelector, IEqualityComparer<TKey>? comparer = null)
-    where TValues : IEnumerable<TValue>
     {
         var e = enumerable.Select(m => KeyValuePair.Create(keySelector(m), valueSelector(m)));
         return new MultiValueDictionary<TKey, TValue>(e, comparer);
@@ -44,7 +43,7 @@ partial class EnumerableExtensions
         return dic;
     }
 
-    public static MultiValueDictionary<TKey, TValue> ToMultiValueDictionary<T, TKey, TValue>(this IEnumerable<T> enumerable, 
+    public static MultiValueDictionary<TKey, TValue> ToMultiValueDictionary<T, TKey, TValue>(this IEnumerable<T> enumerable,
         Func<T, TKey> keySelector, Func<T, TValue> valueSelector, IEqualityComparer<TKey>? comparer = null)
     {
         var dic = new MultiValueDictionary<TKey, TValue>(comparer);
@@ -57,7 +56,7 @@ partial class EnumerableExtensions
         return dic;
     }
 
-    public static MultiValueDictionary<TKey, TValue> ToMultiValueDictionary<T, TKey, TValue, TValueCollection>(this IEnumerable<T> enumerable, 
+    public static MultiValueDictionary<TKey, TValue> ToMultiValueDictionary<T, TKey, TValue, TValueCollection>(this IEnumerable<T> enumerable,
         Func<T, TKey> keySelector, Func<T, TValue> valueSelector, Func<TValueCollection> factory, IEqualityComparer<TKey>? comparer = null)
         where TValueCollection : ICollection<TValue>
     {
