@@ -4,17 +4,17 @@ public class TestLogger : ILogger
 {
     private readonly ITestOutputHelper _output;
     private readonly string _name;
-    private readonly bool _needToCheckDisposed;
+    private readonly bool _checkDisposed;
     private readonly object _lock = new();
     private bool _isDisposed;
 
     private static readonly FieldInfo _field = typeof(TestOutputHelper).GetField("buffer", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
-    public TestLogger(ITestOutputHelper output, string name, bool needToCheckDisposed)
+    public TestLogger(ITestOutputHelper output, string name, bool checkDisposed)
     {
         _output = output;
         _name = name;
-        _needToCheckDisposed = needToCheckDisposed;
+        _checkDisposed = checkDisposed;
     }
 
     private static bool CheckDisposed(ITestOutputHelper output)
@@ -31,17 +31,22 @@ public class TestLogger : ILogger
 
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string>? formatter)
     {
-        if (!IsEnabled(logLevel) || formatter == null || _isDisposed) return;
+        if (!IsEnabled(logLevel) || formatter == null || _isDisposed)
+            return;
 
         var message = formatter(state, exception);
-        if (string.IsNullOrEmpty(message) && exception == null) return;
+        if (string.IsNullOrEmpty(message) && exception == null)
+            return;
 
-        if (_needToCheckDisposed)
+        if (_checkDisposed)
         {
-            if (_isDisposed) return;
+            if (_isDisposed)
+                return;
+
             lock (_lock)
             {
-                if (_isDisposed) return;
+                if (_isDisposed)
+                    return;
 
                 if (CheckDisposed(_output))
                 {

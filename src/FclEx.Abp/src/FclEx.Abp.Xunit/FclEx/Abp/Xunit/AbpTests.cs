@@ -10,7 +10,7 @@ public abstract class AbpTests<TModule> : AbstractAbpTests<TModule>
     protected AbpTests(ITestOutputHelper output, Action<AbpTestsOptions>? action = null)
         : base(output, action)
     {
-        ServiceProvider = InitApp();
+        ServiceProvider = InitializeApp();
     }
 
     public IServiceProvider ServiceProvider { get; }

@@ -22,7 +22,7 @@ public abstract class AbstractAbpTests<TModule> where TModule : IAbpModule
         _optionsBuilder = optionsBuilder;
     }
 
-    protected IServiceProvider InitApp()
+    protected IServiceProvider InitializeApp()
     {
         var watch = ValueStopwatch.StartNew();
         var config = BuildConfig();
@@ -32,8 +32,8 @@ public abstract class AbstractAbpTests<TModule> where TModule : IAbpModule
             .AddAbp<TModule>(Options)
             .AddLogging(builder =>
             {
-                builder.SetMinimumLevel(LogLevel.Trace);
-                builder.AddXunitTest(_output, false);
+                builder.SetMinimumLevel(LogLevel);
+                builder.AddXunitTest(_output, true);
                 builder.AddDebug();
                 builder.AddFilter("Volo.Abp.Modularity.ModuleManager", LogLevel.Warning);
                 builder.AddFilter("Volo.Abp.AbpApplicationBase", LogLevel.Warning);
@@ -42,7 +42,7 @@ public abstract class AbstractAbpTests<TModule> where TModule : IAbpModule
         var provider = services.UseAbp();
 
         var logger = provider.CreateLogger("FclEx.Abp.Xunit");
-        logger.LogTrace($"It takes {watch.GetElapsedTime().TotalSeconds:f3} seconds to initialize abp framework");
+        logger.LogDebug("It takes {ElapsedSeconds} seconds to initialize abp framework", watch.GetElapsedTime().TotalSeconds);
 
         return provider;
 
@@ -55,6 +55,8 @@ public abstract class AbstractAbpTests<TModule> where TModule : IAbpModule
             }
         }
     }
+
+    protected virtual LogLevel LogLevel => LogLevel.Trace;
 
     protected virtual IConfigurationRoot BuildConfig()
     {

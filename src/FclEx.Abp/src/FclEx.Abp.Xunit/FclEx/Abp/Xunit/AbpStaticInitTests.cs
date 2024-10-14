@@ -26,7 +26,7 @@ public abstract class AbpStaticInitTests<TModule> : AbstractAbpTests<TModule>
             {
                 if (!IsReady)
                 {
-                    ServiceProvider = InitApp();
+                    ServiceProvider = InitializeApp();
                     IsReady = true;
                     return;
                 }

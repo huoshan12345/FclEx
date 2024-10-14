@@ -1,25 +1,22 @@
-﻿using FclEx;
-using Microsoft.Extensions.DependencyInjection;
-
-namespace Microsoft.Extensions.Logging;
+﻿namespace Microsoft.Extensions.Logging;
 
 public static class Extensions
 {
-    public static ILoggerFactory AddXunitTest(this ILoggerFactory factory, ITestOutputHelper output, bool needToCheckDisposed)
+    public static ILoggerFactory AddXunitTest(this ILoggerFactory factory, ITestOutputHelper output, bool checkDisposed)
     {
-        factory.AddProvider(new TestLoggerProvider(output, needToCheckDisposed));
+        factory.AddProvider(new TestLoggerProvider(output, checkDisposed));
         return factory;
     }
 
-    public static IServiceCollection AddXunitTest(this IServiceCollection services, ITestOutputHelper output, bool needToCheckDisposed)
+    public static IServiceCollection AddXunitTest(this IServiceCollection services, ITestOutputHelper output, bool checkDisposed)
     {
-        services.Replace<ILoggerProvider, TestLoggerProvider>(new TestLoggerProvider(output, needToCheckDisposed));
+        services.Replace<ILoggerProvider, TestLoggerProvider>(new TestLoggerProvider(output, checkDisposed));
         return services;
     }
 
-    public static ILoggingBuilder AddXunitTest(this ILoggingBuilder builder, ITestOutputHelper output, bool needToCheckDisposed)
+    public static ILoggingBuilder AddXunitTest(this ILoggingBuilder builder, ITestOutputHelper output, bool checkDisposed)
     {
-        builder.Services.AddXunitTest(output, needToCheckDisposed);
+        builder.Services.AddXunitTest(output, checkDisposed);
         return builder;
     }
 }

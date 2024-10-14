@@ -18,4 +18,9 @@ public static class TestOutputHelperExtensions
 
         _method.Invoke(helper, [message]);
     }
+
+    public static void WriteLine(this ITestOutputHelper output)
+    {
+        output.WriteLine("");
+    }
 }

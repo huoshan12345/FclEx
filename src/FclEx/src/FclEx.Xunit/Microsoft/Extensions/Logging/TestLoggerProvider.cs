@@ -3,20 +3,21 @@
 public class TestLoggerProvider : ILoggerProvider
 {
     private readonly ITestOutputHelper _output;
-    private readonly bool _needToCheckDisposed;
+    private readonly bool _checkDisposed;
 
-    public TestLoggerProvider(ITestOutputHelper output, bool needToCheckDisposed)
+    public TestLoggerProvider(ITestOutputHelper output, bool checkDisposed)
     {
         _output = output;
-        _needToCheckDisposed = needToCheckDisposed;
+        _checkDisposed = checkDisposed;
     }
 
     public void Dispose()
     {
+        GC.SuppressFinalize(this);
     }
 
     public ILogger CreateLogger(string categoryName)
     {
-        return new TestLogger(_output, categoryName, _needToCheckDisposed);
+        return new TestLogger(_output, categoryName, _checkDisposed);
     }
 }

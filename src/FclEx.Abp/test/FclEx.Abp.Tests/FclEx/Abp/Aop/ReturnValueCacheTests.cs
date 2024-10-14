@@ -2,8 +2,8 @@
 
 public class ReturnValueCacheTests : AbpAopTests<AbpTestModule>
 {
-    public const int CacheMaxMilliseconds = 100;
-    public const int SleepMilliseconds = 200;
+    public static readonly TimeSpan CacheMaxTime = TimeSpan.FromMilliseconds(100);
+    public static readonly TimeSpan SleepTime = TimeSpan.FromMilliseconds(200);
 
     public static IEnumerable<object[]> Numbers { get; } = new[] { -1, 0, 1, 10 }
         .Select(m => new object[] { m }).ToArray();
@@ -42,13 +42,13 @@ public class ReturnValueCacheTests : AbpAopTests<AbpTestModule>
 
         public Model GetStatic(int id)
         {
-            Thread.Sleep(SleepMilliseconds);
+            Thread.Sleep(SleepTime);
             return new Model(id.ToString());
         }
 
         public Model Get(int id)
         {
-            Thread.Sleep(SleepMilliseconds);
+            Thread.Sleep(SleepTime);
             return new Model($"{_id}_{id}");
         }
     }
@@ -67,21 +67,23 @@ public class ReturnValueCacheTests : AbpAopTests<AbpTestModule>
     {
         var service = ServiceProvider.GetRequiredService<IService>();
         var itemFromStatic = service.GetStatic(no);
-        var itemFromInstace = service.Get(no);
+        var itemFromInstance = service.Get(no);
 
         for (var i = 0; i < 3; i++)
         {
-            var (_, tempItem, _, t) = Operate.Execute(() => service.Get(no));
+            var (_, tempItem, ex, t) = Operate.Execute(() => service.Get(no));
+            Assert.Null(ex);
             Assert.NotNull(tempItem);
-            Assert.Equal(itemFromInstace.Id, tempItem.Id);
-            Assert.True(t.TotalMilliseconds < CacheMaxMilliseconds);
+            Assert.Equal(itemFromInstance.Id, tempItem.Id);
+            Assert.True(t < CacheMaxTime, t.ToString());
         }
         for (var i = 0; i < 3; i++)
         {
-            var (_, tempItem, _, t) = Operate.Execute(() => service.GetStatic(no));
+            var (_, tempItem, ex, t) = Operate.Execute(() => service.GetStatic(no));
+            Assert.Null(ex);
             Assert.NotNull(tempItem);
             Assert.Equal(itemFromStatic.Id, tempItem.Id);
-            Assert.True(t.TotalMilliseconds < CacheMaxMilliseconds);
+            Assert.True(t < CacheMaxTime, t.ToString());
         }
     }
 
@@ -94,17 +96,17 @@ public class ReturnValueCacheTests : AbpAopTests<AbpTestModule>
         for (var i = 0; i < 3; i++)
         {
             var tempService = ServiceProvider.GetRequiredService<IService>();
-            var (_, tempitemFromStatic, _, timeFromStatic) = Operate.Execute(() => tempService.GetStatic(no));
-            var (_, tempItemFromInstace, _, timeFromInstace) = Operate.Execute(() => tempService.Get(no));
+            var (_, fromStatic, _, timeFromStatic) = Operate.Execute(() => tempService.GetStatic(no));
+            var (_, fromInstance, _, timeFromInstance) = Operate.Execute(() => tempService.Get(no));
 
-            Assert.NotNull(tempitemFromStatic);
-            Assert.Equal(itemFromStatic.Id, tempitemFromStatic.Id);
+            Assert.NotNull(fromStatic);
+            Assert.Equal(itemFromStatic.Id, fromStatic.Id);
 
-            Assert.NotNull(tempItemFromInstace);
-            Assert.Equal($"{tempService.Id}_{no}", tempItemFromInstace.Id);
+            Assert.NotNull(fromInstance);
+            Assert.Equal($"{tempService.Id}_{no}", fromInstance.Id);
 
-            Assert.True(timeFromStatic.TotalMilliseconds < CacheMaxMilliseconds, timeFromStatic.TotalMilliseconds.ToString());
-            Assert.True(timeFromInstace.TotalMilliseconds > SleepMilliseconds, timeFromInstace.TotalMilliseconds.ToString());
+            Assert.True(timeFromStatic < CacheMaxTime, timeFromStatic.ToString());
+            Assert.True(timeFromInstance > SleepTime, timeFromInstance.ToString());
         }
     }
 }
