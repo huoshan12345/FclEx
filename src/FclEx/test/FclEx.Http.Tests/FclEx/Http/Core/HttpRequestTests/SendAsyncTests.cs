@@ -56,9 +56,29 @@ public class SendAsyncTests : IAssemblyFixture<GlobalFixture>
         _output = output;
     }
 
+    public static bool InterfaceHasIpv6Enabled(NetworkInterface @interface)
+    {
+        try
+        {
+            if (@interface.Supports(NetworkInterfaceComponent.IPv6) == false)
+                return false;
+
+            var addresses = @interface.GetIPProperties()
+                .UnicastAddresses
+                .Select(m => m.Address)
+                .ToArray();
+         
+            return addresses.Any(m => m.IsIPv6() && m.IsPrivate() == false);
+        }
+        catch (NetworkInformationException)
+        {
+            return false;
+        }
+    }
+
     private static readonly bool _supportsIPv6 = NetworkInterface.GetAllNetworkInterfaces()
-        .First()
-        .Supports(NetworkInterfaceComponent.IPv6);
+        .Take(1)
+        .Any(InterfaceHasIpv6Enabled);
 
     [LocalOnlyTheory]
     [InlineData(true)]

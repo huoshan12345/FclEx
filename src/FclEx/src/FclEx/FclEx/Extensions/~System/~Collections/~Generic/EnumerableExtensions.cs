@@ -147,7 +147,7 @@ public static partial class EnumerableExtensions
         return source.Select((m, i) => selector(m.Item1, m.Item2, i));
     }
 
-    public static IEnumerable<(int, T)> Index<T>(this IEnumerable<T> enumerable)
+    public static IEnumerable<(int Index, T Item)> Index<T>(this IEnumerable<T> enumerable)
     {
         var i = 0;
         foreach (var item in enumerable)

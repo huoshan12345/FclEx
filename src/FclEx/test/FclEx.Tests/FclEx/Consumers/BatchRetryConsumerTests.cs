@@ -57,7 +57,7 @@ public class BatchRetryConsumerTests
         Assert.True(task.IsCompleted);
     }
 
-    [Fact]
+    [RetryFact]
     public async Task Dispose_DuringConsuming_Test()
     {
         var consumer = new BatchRetryConsumer<Model>(5, TimeSpan.FromSeconds(1), 1);

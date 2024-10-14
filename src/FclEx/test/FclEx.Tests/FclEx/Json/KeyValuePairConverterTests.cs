@@ -60,9 +60,9 @@ public class KeyValuePairConverterTests
     }
 
 
-    public static IEnumerable<object[]> Cases { get; } = Dictionaries
+    public static IEnumerable<object[]> Cases { get; } = Dictionaries.Index()
         .CrossJoin(KvToColConverters)
-        .Select(m => new object[] { new TestCaseBuilder(new(m.Item2.Name, m.Item1, m.Item2.Converter)) }).ToArray();
+        .Select(m => new object[] { new TestCaseBuilder(new(m.Item2.Name + "_" + m.Item1.Index, m.Item1.Item, m.Item2.Converter)) }).ToArray();
 
     private static void ReadTestGeneric<T, TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> raw)
         where T : IEnumerable<KeyValuePair<TKey, TValue>>
