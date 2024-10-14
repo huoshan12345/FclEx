@@ -49,7 +49,7 @@ public class KeyValuePairConverterTests
         (nameof(MyListWithCtor<int>), t => typeof(MyListWithCtor<>).MakeGenericType(t)),
     ];
 
-    public record TestCase(string Name, IDictionary Dictionary, Func<Type, Type> Converter);
+    public record TestCase(string Name, IDictionary Dictionary, [property: JsonIgnore] Func<Type, Type> Converter);
 
     public class TestCaseBuilder : MemberDataSerializer<TestCase>
     {

@@ -1,4 +1,6 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+# ubuntu is required to test with docker services.
+# windows is required to publish FclEx.Wmi.
 name: Build
 on:
   push:
