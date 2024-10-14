@@ -63,7 +63,7 @@ public static class HttpResponseExtensions
             fileName = (realUrl.Host + realUrl.LocalPath).Replace(_regexOfNonWord, "_").TrimEnd("_");
         }
 
-        var mimeType = response.Headers.GetFirstOr(HttpKnownHeaderNames.ContentType) ?? "";
+        var mimeType = response.Headers.GetLast(HttpKnownHeaderNames.ContentType) ?? "";
         if (mimeType.IsNotEmpty())
         {
             if (mimeType.Contains(';'))

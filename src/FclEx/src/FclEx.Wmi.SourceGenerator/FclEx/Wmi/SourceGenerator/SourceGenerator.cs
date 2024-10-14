@@ -9,6 +9,7 @@ using FclEx.Wmi.SourceGenerator.Extensions;
 using FclEx.Wmi.SourceGenerator.Models;
 using FclEx.Wmi.SourceGenerator.Sources;
 using Microsoft.CodeAnalysis;
+#pragma warning disable RS1041
 
 namespace FclEx.Wmi.SourceGenerator;
 

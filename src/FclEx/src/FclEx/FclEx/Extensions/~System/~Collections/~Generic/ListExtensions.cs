@@ -41,20 +41,6 @@ public static class ListExtensions
         }
     }
 
-    [return: NotNullIfNotNull(nameof(defaultValue))]
-    public static T? TryGet<T>(this List<T>? list, int index, T? defaultValue = default)
-    {
-        return ((IList<T>?)list).TryGet(index, defaultValue);
-    }
-
-    [return: NotNullIfNotNull(nameof(defaultValue))]
-    public static T? TryGet<T>(this IList<T>? list, int index, T? defaultValue = default)
-    {
-        return list != null && 0 <= index && index < list.Count
-            ? list[index]
-            : defaultValue;
-    }
-
     public static T GetRandomly<T>(this IList<T> list, Random? random = null)
     {
         Check.NotEmpty(list);

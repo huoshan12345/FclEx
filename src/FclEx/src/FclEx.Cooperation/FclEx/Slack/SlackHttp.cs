@@ -15,15 +15,15 @@ public class SlackHttp : IHttp
         _serializer = JsonSerializer.Create(jsonSettings);
     }
 
-    public async Task<T?> Execute<T>(HttpRequestMessage request, CancellationToken? cancellationToken = null)
+    public async Task<T?> Execute<T>(HttpRequestMessage request, CancellationToken cancellationToken = default)
     {
-        var response = await _httpClientResolver().SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken ?? CancellationToken.None);
+        var response = await _httpClientResolver().SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();
 
         if (response.Content.Headers.ContentType?.MediaType != "application/json")
             return default;
 
-        await using var stream = await response.Content.ReadAsStreamAsync();
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
         using var reader = new StreamReader(stream);
         await using var jsonTextReader = new JsonTextReader(reader);
         return _serializer.Deserialize<T>(jsonTextReader);

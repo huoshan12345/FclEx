@@ -28,21 +28,18 @@ public static class DictionaryExtensions
         return dic.TryGetValue(key, out var value) && value is not null ? value : fac(key);
     }
 
+    [return: NotNullIfNotNull(nameof(defaultValue))]
     public static TProp? Get<TKey, TValue, TProp>(this IDictionary<TKey, TValue> dic, TKey key, Func<TValue, TProp> selector, TProp? defaultValue = default)
         where TProp : struct
     {
         return dic.TryGetValue(key, out var value) && value is not null ? selector(value) : defaultValue;
     }
 
+    [return: NotNullIfNotNull(nameof(defaultValue))]
     public static TProp? Get<TKey, TValue, TProp>(this IDictionary<TKey, TValue> dic, TKey key, Func<TValue, TProp?> selector, TProp? defaultValue = default)
         where TProp : class
     {
         return dic.TryGetValue(key, out var value) && value is not null ? selector(value) : defaultValue;
-    }
-
-    public static TValue[] GetOrEmptyArr<TKey, TValue>(this IDictionary<TKey, TValue[]> dic, TKey key)
-    {
-        return dic.Get(key) ?? Array.Empty<TValue>();
     }
 
     public static bool TryAdd<TKey, TValue>(this Dictionary<TKey, TValue> dic, TKey? key, TValue value) where TKey : notnull
@@ -83,18 +80,6 @@ public static class DictionaryExtensions
                 dic.Add(key, item);
             }
         }
-    }
-
-    public static bool GetAndDo<TKey, TValue>(this IDictionary<TKey, TValue?> dic, TKey key, Action<TValue?> action)
-    {
-        if (key is null) return false;
-        var item = dic.Get(key);
-        if (item is not null)
-        {
-            action(item);
-            return true;
-        }
-        else return false;
     }
 
     public static void Add<TKey, TValue, TCol>(this IDictionary<TKey, TCol> dic, TKey key, TValue value)

@@ -5,7 +5,7 @@ namespace FclEx.Slack;
 
 public static class ReactionsApiExtensions
 {
-    public static async Task TryRemoveFromMessage(this IReactionsApi api, string name, string channelId, string ts, CancellationToken? cancellationToken = null)
+    public static async Task TryRemoveFromMessage(this IReactionsApi api, string name, string channelId, string ts, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -14,7 +14,7 @@ public static class ReactionsApiExtensions
         catch (SlackException ex) when (ex.ErrorCode == "no_reaction") { }
     }
 
-    public static async Task TryAddToMessage(this IReactionsApi api, string name, string channelId, string ts, CancellationToken? cancellationToken = null)
+    public static async Task TryAddToMessage(this IReactionsApi api, string name, string channelId, string ts, CancellationToken cancellationToken = default)
     {
         try
         {

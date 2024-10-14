@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Extensions.EnumerableExtensions;
 
-public class ToOrderedDicTests
+public class ToOrderedDictionaryTests
 {
     private static void CheckIsOrdered<TKey, TValue>(ICollection<KeyValuePair<TKey, TValue>> col)
     {
@@ -19,7 +19,7 @@ public class ToOrderedDicTests
     public void ToOrderedDic_Test()
     {
         var dic = Enumerable.Range(1, 10).Select(m => KvPair.Create(m, m));
-        var ordered = dic.ToOrderedDic();
+        var ordered = dic.ToOrderedDictionary();
         CheckIsOrdered(ordered);
 
         var random = new Random(12345);
@@ -34,7 +34,7 @@ public class ToOrderedDicTests
     public void ToOrderedDic_Selector_Test()
     {
         var dic = Enumerable.Range(1, 10);
-        var ordered = dic.ToOrderedDic(x => x, x => x);
+        var ordered = dic.ToOrderedDictionary(x => x, x => x);
         CheckIsOrdered(ordered);
 
         var random = new Random(12345);
@@ -49,6 +49,6 @@ public class ToOrderedDicTests
     public void ToOrderedDic_Selector_Throw_Test()
     {
         var dic = Enumerable.Range(1, 10).Select(m => KvPair.Create(m % 5, m));
-        Assert.Throws<ArgumentException>(() => dic.ToOrderedDic());
+        Assert.Throws<ArgumentException>(() => dic.ToOrderedDictionary());
     }
 }

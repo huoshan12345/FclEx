@@ -4,38 +4,55 @@ namespace FclEx.Extensions;
 
 public static class DirectoryInfoExtensions
 {
-    public static DirectoryInfo TryCreate(this DirectoryInfo di)
+    public static DirectoryInfo TryCreate(this DirectoryInfo dir)
     {
-        if (di.Exists == false)
+        if (dir.Exists == false)
         {
-            di.Create();
-            di.Refresh();
+            dir.Create();
+            dir.Refresh();
         }
-        return di;
+        return dir;
     }
 
-    public static void MoveToRecycleBin(this FileInfo fi)
+    public static DirectoryInfo TryDelete(this DirectoryInfo dir, bool recursive = false)
     {
-        if (fi.Exists)
-            FileSystem.DeleteFile(fi.FullName, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin, UICancelOption.DoNothing);
+        if (dir.Exists == false)
+        {
+            dir.Delete(recursive);
+            dir.Refresh();
+        }
+        return dir;
     }
 
-    public static void MoveToRecycleBin(this DirectoryInfo di)
+    public static void MoveToRecycleBin(this FileInfo file)
     {
-        if (di.Exists)
-            FileSystem.DeleteDirectory(di.FullName, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin, UICancelOption.DoNothing);
+        if (file.Exists)
+            FileSystem.DeleteFile(file.FullName, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin, UICancelOption.DoNothing);
     }
 
-    public static DirectoryInfo CreateNew(this DirectoryInfo di)
+    public static void MoveToRecycleBin(this DirectoryInfo dir)
     {
-        di.MoveToRecycleBin();
-        di.Create();
-        return di;
+        if (dir.Exists)
+            FileSystem.DeleteDirectory(dir.FullName, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin, UICancelOption.DoNothing);
     }
 
+    public static DirectoryInfo CreateNew(this DirectoryInfo dir)
+    {
+        dir.MoveToRecycleBin();
+        dir.Create();
+        return dir;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static DirectoryInfo Sub(this DirectoryInfo dir, string name)
     {
         return new(Path.Combine(dir.FullName, name));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static FileInfo File(this DirectoryInfo dir, string name)
+    {
+        return new FileInfo(Path.Combine(dir.FullName, name));
     }
 
     private static readonly ConcurrentDictionary<string, string> _pathWithSepCache = new();

@@ -6,10 +6,11 @@
 
   <ItemGroup>
     <PackageReference Include="System.Collections.Immutable" Version="8.0.0" />
-    <!--referencing to the following package to resovle conflicts-->
+    <!--referencing to the following packages to resovle conflicts-->
     <PackageReference Include="System.Management" Version="8.0.0" />
-    <PackageReference Include="System.Reflection.Metadata" Version="8.0.0" />
+    <PackageReference Include="System.Reflection.Metadata" Version="8.0.1" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
+    <!--referencing to the above packages to resovle conflicts-->
   </ItemGroup>
 
   <ItemGroup>

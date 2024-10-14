@@ -26,9 +26,9 @@ partial class InterfaceBaseInvocationExtension
 
     private static (MethodInfo invoke, object invoker, object?[] args) GetInterfaceFunc<TInterface>(this TInterface instance, LambdaExpression selector)
     {
-        if (instance == null)
+        if (instance is null)
             throw new ArgumentNullException(nameof(instance));
-        if (selector == null)
+        if (selector is null)
             throw new ArgumentNullException(nameof(selector));
 
         var (method, args) = GetMethodAndArguments(selector);

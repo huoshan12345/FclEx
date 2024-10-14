@@ -2,7 +2,7 @@ $ErrorActionPreference = "Stop"
 
 $restore = if ($args[0] -eq 'no-restore') { $false } else { $true }
 $isGithubAction = [string]::IsNullOrEmpty($Env:GITHUB_ACTION) -eq $false
-Write-Output "isGithub = $isGithub, restore = $restore"
+Write-Output "isGithubAction = $isGithubAction, restore = $restore"
 
 $buildDir = [io.path]::combine($MyInvocation.MyCommand.Definition, "..")
 $rootDir = [io.path]::combine($buildDir, "..")

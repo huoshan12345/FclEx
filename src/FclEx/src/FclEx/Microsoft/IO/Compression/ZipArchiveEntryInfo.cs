@@ -1,11 +1,10 @@
 ﻿using System.IO.Compression;
-using FclEx;
 
 namespace Microsoft.IO.Compression;
 
-public readonly struct ZipArchiveEntryInfo
+public class ZipArchiveEntryInfo
 {
-    public readonly ZipArchiveEntry? Entry;
+    public readonly ZipArchiveEntry Entry;
     public readonly string[] Segments;
     public readonly bool IsDirectory;
     public readonly bool IsFile;
@@ -14,11 +13,11 @@ public readonly struct ZipArchiveEntryInfo
 
     public ZipArchiveEntryInfo(ZipArchiveEntry entry)
     {
-        Entry = entry;
+        Entry = Check.NotNull(entry);
         Segments = entry.FullName.Split("/", StringSplitOptions.RemoveEmptyEntries);
         IsDirectory = entry.IsDirectory();
         IsFile = !IsDirectory;
         Name = Segments[^1];
-        Parent = Segments.TryGet(Segments.Length - 2, ".");
+        Parent = Segments.Get(Segments.Length - 2, ".");
     }
 }

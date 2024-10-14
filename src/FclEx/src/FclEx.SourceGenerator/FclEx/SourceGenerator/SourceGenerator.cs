@@ -6,11 +6,26 @@ using Microsoft.CodeAnalysis;
 namespace FclEx.SourceGenerator;
 
 [Generator]
-public class SourceGenerator : ISourceGenerator
+public class SourceGenerator : ISourceGenerator, IIncrementalGenerator
 {
     public void Execute(GeneratorExecutionContext context)
     {
-        try
+    }
+
+    public void Initialize(GeneratorInitializationContext context)
+    {
+//#if DEBUG
+//            if (!Debugger.IsAttached)
+//            {
+//                Debugger.Launch();
+//            }
+//            Debug.WriteLine("Initialize code generator");
+//#endif
+    }
+
+    public void Initialize(IncrementalGeneratorInitializationContext context)
+    {
+        context.RegisterPostInitializationOutput(i =>
         {
             var codes = new[]
             {
@@ -21,24 +36,8 @@ public class SourceGenerator : ISourceGenerator
 
             foreach (var (file, code) in codes)
             {
-                context.AddSource(file, code);
+                i.AddSource(file, code);
             }
-        }
-        catch (Exception ex)
-        {
-            //This is temporary till https://github.com/dotnet/roslyn/issues/46084 is fixed
-            context.ReportDiagnostic(ex);
-        }
-    }
-
-    public void Initialize(GeneratorInitializationContext context)
-    {
-//#if DEBUG
-//            if (!Debugger.IsAttached)
-//            {
-//                Debugger.Launch();
-//            }
-//            Debug.WriteLine("Initalize code generator");
-//#endif
+        });
     }
 }
