@@ -10,8 +10,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\FclEx\Microsoft\Collections\Extensions\MultiValueDictionary.cs" />
-    <Compile Include="..\FclEx\Microsoft\Strings.cs" />
+    <Compile Include="..\FclEx.Core\Microsoft\Collections\Extensions\MultiValueDictionary.cs" />
+    <Compile Include="..\FclEx.Core\Microsoft\Strings.cs" />
     <Compile Include="..\FclEx.SourceGenerator\FclEx\SourceGenerator\SourceBuilder.cs" />
   </ItemGroup>
 
