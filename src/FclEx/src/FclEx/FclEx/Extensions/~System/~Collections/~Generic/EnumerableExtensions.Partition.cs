@@ -9,9 +9,10 @@ partial class EnumerableExtensions
 
         foreach (var item in enumerable)
         {
-            var list = predicate(item)
-                ? trueList
-                : falseList;
+            // NOTE: use ref to initialize trueList or falseList.
+            ref var list = ref predicate(item)
+                ? ref trueList
+                : ref falseList;
 
             list ??= [];
             list.Add(item);
