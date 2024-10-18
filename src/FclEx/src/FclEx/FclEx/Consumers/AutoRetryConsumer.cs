@@ -2,24 +2,24 @@
 
 public sealed class AutoRetryConsumer<T> : AbstractConsumer<AutoRetryConsumer<T>, T>,
     IAsyncConsumer<AutoRetryConsumer<T>, T>,
-    IDiscardListener<AutoRetryConsumer<T>, ProcItem<T>>,
-    IExceptionListener<AutoRetryConsumer<T>, ProcItem<T>>
+    IDiscardListener<AutoRetryConsumer<T>, ProcessingItem<T>>,
+    IExceptionListener<AutoRetryConsumer<T>, ProcessingItem<T>>
 {
     private readonly int _maxRetryTimes;
-    private readonly Func<int, int> _retryDelay;
+    private readonly Func<int, TimeSpan> _retryDelay;
 
     public event AsyncEventHandler<AutoRetryConsumer<T>, T> ConsumingHandler = (sender, e) => Task.CompletedTask;
-    public event EventHandler<AutoRetryConsumer<T>, ProcItem<T>> DiscardHandler = (sender, e) => { };
-    public event EventHandler<AutoRetryConsumer<T>, ProcItem<T>> ExceptionHandler = (sender, e) => { };
+    public event EventHandler<AutoRetryConsumer<T>, ProcessingItem<T>> DiscardHandler = (sender, e) => { };
+    public event EventHandler<AutoRetryConsumer<T>, ProcessingItem<T>> ExceptionHandler = (sender, e) => { };
 
-    public AutoRetryConsumer(int maxRetryTimes = 3, Func<int, int>? retryDelay = null)
+    public AutoRetryConsumer(int maxRetryTimes = 3, Func<int, TimeSpan>? retryDelay = null)
     {
         Check.NotLessThan(maxRetryTimes, 0);
         _maxRetryTimes = maxRetryTimes;
-        _retryDelay = retryDelay ?? (x => x);
+        _retryDelay = retryDelay ?? (x => TimeSpan.Zero);
     }
 
-    private bool TryGetItem(out ProcItem<T> item)
+    private bool TryGetItem(out ProcessingItem<T> item)
     {
         try
         {
@@ -39,13 +39,13 @@ public sealed class AutoRetryConsumer<T> : AbstractConsumer<AutoRetryConsumer<T>
         try
         {
             var delay = _retryDelay(item.ErrorTimes);
-            await TaskHelper.Delay(delay);
+            await Task.Delay(delay);
             await ConsumingHandler.InvokeAsync(this, item.Item).IgnoreSyncContext();
-            Counter.IncreConsume();
+            Counter.IncrementConsume();
         }
         catch (Exception ex)
         {
-            Counter.IncreException();
+            Counter.IncrementException();
             try
             {
                 item = item.AddError(ex);
@@ -53,7 +53,7 @@ public sealed class AutoRetryConsumer<T> : AbstractConsumer<AutoRetryConsumer<T>
             }
             catch (Exception e)
             {
-                Counter.IncreException();
+                Counter.IncrementException();
                 Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(ExceptionHandler)}: " + e.Message);
             }
 
@@ -66,12 +66,12 @@ public sealed class AutoRetryConsumer<T> : AbstractConsumer<AutoRetryConsumer<T>
                 else
                 {
                     DiscardHandler.Invoke(this, item);
-                    Counter.IncreDiscard();
+                    Counter.IncrementDiscard();
                 }
             }
             catch (Exception e)
             {
-                Counter.IncreException();
+                Counter.IncrementException();
                 Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(DiscardHandler)}: " + e.Message);
             }
         }

@@ -1,15 +1,12 @@
-﻿using Nito.AsyncEx;
+﻿namespace FclEx.Consumers;
 
-namespace FclEx.Consumers;
-
-public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>,
-    ICancellationListener<TSelf, IReadOnlyList<T>>
+public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>, ICancellationListener<TSelf, IReadOnlyList<T>>
     where TSelf : AbstractConsumer<TSelf, T>
 {
     private ILogger _logger = NullLogger.Instance;
     protected string TypeName { get; }
     protected readonly AsyncLock _locker = new();
-    protected readonly BlockingCollection<ProcItem<T>> _items = new();
+    protected readonly BlockingCollection<ProcessingItem<T>> _items = new();
     protected volatile bool _isRunning;
     protected volatile bool _isAddingCompleted;
     protected volatile bool _isDisposed;
@@ -26,7 +23,7 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>,
             _logger = value;
         }
     }
-    public Counter Counter { get; } = new();
+    public ConsumerCounter Counter { get; } = new();
     public int Count => _locker.Do(() => _isDisposed ? 0 : _items.Count);
     public bool IsComplete => _locker.Do(() => IsCompleteNoLock);
     public event EventHandler<TSelf, IReadOnlyList<T>> CancellationHandler = (sender, list) => { };
@@ -49,7 +46,7 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>,
         }
         catch (Exception ex)
         {
-            Counter.IncreException();
+            Counter.IncrementException();
             Logger.LogError(ex, $"[{TypeName}]Error encountered when invoking {nameof(_items.TryTake)}: " + ex.Message);
         }
 
@@ -62,7 +59,7 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>,
         }
         catch (Exception ex)
         {
-            Counter.IncreException();
+            Counter.IncrementException();
             Logger.LogError(ex, $"[{TypeName}]Error encountered when invoking {nameof(HandleCancellation)}: " + ex.Message);
         }
     }
@@ -78,7 +75,7 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>,
         }
         catch (Exception e)
         {
-            Counter.IncreException();
+            Counter.IncrementException();
             Logger.LogCritical(e, $"[{TypeName}]Error encountered when invoking {nameof(Process)}: " + e.Message);
         }
         finally
@@ -134,10 +131,10 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>,
         AddWithoutCheckingCompleteAdding(item);
     }
 
-    internal virtual void AddWithoutCheckingCompleteAdding(T item)
+    public virtual void AddWithoutCheckingCompleteAdding(T item)
     {
         EnsureNonDisposed();
-        _items.Add(new ProcItem<T>(item));
+        _items.Add(new ProcessingItem<T>(item));
     }
 
     public virtual void CompleteAdding()

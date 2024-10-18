@@ -1,6 +1,4 @@
-﻿using Nito.AsyncEx;
-
-namespace FclEx.Utils;
+﻿namespace FclEx.Utils;
 
 public class Initializer
 {

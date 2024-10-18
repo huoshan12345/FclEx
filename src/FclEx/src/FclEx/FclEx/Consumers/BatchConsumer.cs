@@ -2,8 +2,8 @@
 
 public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
     IAsyncConsumer<BatchConsumer<T>, IReadOnlyList<T>>,
-    IDiscardListener<BatchConsumer<T>, IReadOnlyList<ProcItem<T>>>,
-    IExceptionListener<BatchConsumer<T>, IReadOnlyList<ProcItem<T>>>
+    IDiscardListener<BatchConsumer<T>, IReadOnlyList<ProcessingItem<T>>>,
+    IExceptionListener<BatchConsumer<T>, IReadOnlyList<ProcessingItem<T>>>
 {
     private readonly int _batchSize;
     private readonly int _maxRetryTimes;
@@ -11,8 +11,8 @@ public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
     private bool HasTimeout => _batchTimeout > TimeSpan.Zero;
 
     public event AsyncEventHandler<BatchConsumer<T>, IReadOnlyList<T>> ConsumingHandler = (sender, list) => Task.CompletedTask;
-    public event EventHandler<BatchConsumer<T>, IReadOnlyList<ProcItem<T>>> DiscardHandler = (sender, list) => { };
-    public event EventHandler<BatchConsumer<T>, IReadOnlyList<ProcItem<T>>> ExceptionHandler = (sender, list) => { };
+    public event EventHandler<BatchConsumer<T>, IReadOnlyList<ProcessingItem<T>>> DiscardHandler = (sender, list) => { };
+    public event EventHandler<BatchConsumer<T>, IReadOnlyList<ProcessingItem<T>>> ExceptionHandler = (sender, list) => { };
 
     public BatchConsumer(int batchSize, TimeSpan batchTimeout, int maxRetryTimes = 3)
     {
@@ -22,10 +22,10 @@ public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
     }
 
     // ReSharper disable once InconsistentNaming
-    private List<ProcItem<T>> GetItems()
+    private List<ProcessingItem<T>> GetItems()
     {
         var watch = ValueStopwatch.StartNew();
-        var list = new List<ProcItem<T>>(_batchSize);
+        var list = new List<ProcessingItem<T>>(_batchSize);
         while (!_isDisposed && list.Count < _batchSize)
         {
             try
@@ -47,13 +47,13 @@ public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
         return list;
     }
 
-    private List<ProcItem<T>>? HandleException(List<ProcItem<T>> items, Exception ex)
+    private List<ProcessingItem<T>>? HandleException(List<ProcessingItem<T>> items, Exception ex)
     {
         if (items.IsNullOrEmpty())
             return items;
 
-        List<ProcItem<T>>? nextItems = null;
-        Counter.IncreException();
+        List<ProcessingItem<T>>? nextItems = null;
+        Counter.IncrementException();
 
         try
         {
@@ -67,7 +67,7 @@ public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
                 }
                 else
                 {
-                    nextItems ??= new List<ProcItem<T>>();
+                    nextItems ??= [];
                     nextItems.Add(item);
                 }
             }
@@ -75,13 +75,13 @@ public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
         }
         catch (Exception e)
         {
-            Counter.IncreException();
+            Counter.IncrementException();
             Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(HandleException)}: " + e.Message);
         }
         return nextItems;
     }
 
-    private void HandleDiscard(List<ProcItem<T>>? items)
+    private void HandleDiscard(List<ProcessingItem<T>>? items)
     {
         if (items == null || items.Count == 0)
             return;
@@ -89,24 +89,25 @@ public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
         try
         {
             DiscardHandler.Invoke(this, items);
-            Counter.IncreDiscard(items.Count);
+            Counter.IncrementDiscard(items.Count);
         }
         catch (Exception e)
         {
-            Counter.IncreException();
+            Counter.IncrementException();
             Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(HandleDiscard)}: " + e.Message);
         }
     }
 
     protected override async Task ProcessAction()
     {
-        List<ProcItem<T>>? items = null;
+        List<ProcessingItem<T>>? items = null;
         try
         {
             items = GetItems();
         }
         catch (Exception e)
         {
+            Counter.IncrementException();
             Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(GetItems)}: " + e.Message);
         }
 
@@ -117,7 +118,7 @@ public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
         {
             var list = items.Select(m => m.Item).ToList();
             await ConsumingHandler.InvokeAsync(this, list).IgnoreSyncContext();
-            Counter.IncreConsume(list.Count);
+            Counter.IncrementConsume(list.Count);
             return;
         }
         catch (Exception ex)

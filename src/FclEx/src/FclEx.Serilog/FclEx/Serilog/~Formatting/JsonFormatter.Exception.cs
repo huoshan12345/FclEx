@@ -73,7 +73,7 @@ partial class JsonFormatter
 
         IEnumerable<string> ToJsonObject(IEnumerable<string> values)
         {
-            using var sb = ObjectPoolHelper.StringBuilderPool.GetPooled();
+            using var sb = StringBuilderHelper.GetPooled();
             var sw = new StringWriter(sb.Value);
 
             foreach (var value in values)

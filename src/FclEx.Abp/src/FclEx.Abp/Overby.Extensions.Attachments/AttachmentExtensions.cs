@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using FclEx.Utils;
 #nullable disable
 
 namespace Overby.Extensions.Attachments;

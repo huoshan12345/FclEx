@@ -1,15 +1,26 @@
 ﻿namespace FclEx.Json;
 
-public class IgnoreJsonConverter : JsonConverter<object>
+public class IgnoreJsonConverter : JsonConverterFactory
 {
     public override bool CanConvert(Type typeToConvert) => true;
 
-    public override object? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options)
+    {
+        var type = typeof(IgnoreJsonConverterImpl<>).MakeGenericType(typeToConvert);
+        return type.CreateObject<JsonConverter>();
+    }
+}
+
+public class IgnoreJsonConverterImpl<T> : JsonConverter<T>
+{
+    public override bool CanConvert(Type typeToConvert) => true;
+
+    public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         return default;
     }
 
-    public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
     {
         if (writer.CurrentDepth == 0)
             return;

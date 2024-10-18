@@ -13,7 +13,7 @@ public static class TableDataExtensions
             table.AddRow(row);
         }
 
-        var text = SlackStringBuilder.Build(m => m.RenderCodeBlock(x => table.Render(x.StringBuilder)));
+        var text = SlackStringBuilder.Build(m => m.RenderCodeBlock(x => table.Render(x.Builder)));
         var message = new Message()
             .AddMarkdown(title)
             .AddMarkdown(text);

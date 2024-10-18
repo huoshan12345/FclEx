@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Consumers;
 
-public class Counter
+public class ConsumerCounter
 {
     private int _onConsume;
     private int _onException;
@@ -10,15 +10,15 @@ public class Counter
     public int Exception => _onException;
     public int Discard => _onDiscard;
 
-    internal void IncreConsume(int value = 1)
+    internal void IncrementConsume(int value = 1)
     {
         Interlocked.Add(ref _onConsume, value);
     }
-    internal void IncreException(int value = 1)
+    internal void IncrementException(int value = 1)
     {
         Interlocked.Add(ref _onException, value);
     }
-    internal void IncreDiscard(int value = 1)
+    internal void IncrementDiscard(int value = 1)
     {
         Interlocked.Add(ref _onDiscard, value);
     }
