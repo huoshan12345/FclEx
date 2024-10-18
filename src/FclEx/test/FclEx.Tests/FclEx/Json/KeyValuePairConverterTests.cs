@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using FclEx.NewtonsoftJson;
+﻿using FclEx.NewtonsoftJson;
 
 namespace FclEx.Json;
 
@@ -59,7 +57,6 @@ public class KeyValuePairConverterTests
         public TestCaseBuilder(TestCase value) : base(value) { }
         public override string? ToString() => Value?.Name;
     }
-
 
     public static IEnumerable<object[]> Cases { get; } = Dictionaries.Index()
         .CrossJoin(KvToColConverters)

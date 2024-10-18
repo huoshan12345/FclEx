@@ -1,4 +1,7 @@
-﻿namespace Xunit;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
+
+namespace Xunit;
 
 /// <summary>
 /// If some of your theory data can't be "serialized" by xUnit.net, 
@@ -19,14 +22,34 @@ public class MemberDataSerializer<T> : IXunitSerializable
         Value = value;
     }
 
-    public void Deserialize(IXunitSerializationInfo info)
+    private static Action<JsonTypeInfo> RemoveDelegate()
     {
-        Value = info.GetValue<string>("_value").FromJson<T>();
+        return m =>
+        {
+            if (m.Kind == JsonTypeInfoKind.Object)
+            {
+                m.Properties.RemoveAll(m => m.PropertyType.IsAssignableTo(typeof(Delegate)));
+            }
+        };
     }
 
-    public void Serialize(IXunitSerializationInfo info)
+    private static readonly JsonSerializerOptions _options = new()
     {
-        var json = Value.ToJson();
+        TypeInfoResolver = new DefaultJsonTypeInfoResolver
+        {
+            Modifiers = { RemoveDelegate() },
+        },
+    };
+
+    public virtual void Deserialize(IXunitSerializationInfo info)
+    {
+        Value = info.GetValue<string>("_value").FromJson<T>(_options);
+    }
+
+
+    public virtual void Serialize(IXunitSerializationInfo info)
+    {
+        var json = Value.ToJson(_options);
         info.AddValue("_value", json);
     }
 }
