@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public readonly record struct IndexedItem<T>(int Index, T Item, bool IsFirst, bool IsLast);
 
@@ -8,10 +6,10 @@ public readonly record struct IndexedItem<T>(int Index, T Item, bool IsFirst, bo
 public static partial class EnumerableExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this IEnumerable<T>? source) => source is null || source.Any() == false;
+    public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this IEnumerable<T>? source) => source is null || source.AnyExt() == false;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsEmpty<T>(this IEnumerable<T> source) => source.Any() == false;
+    public static bool IsEmpty<T>(this IEnumerable<T> source) => source.AnyExt() == false;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsNotEmpty<T>([NotNullWhen(true)] this IEnumerable<T>? enumerable) => enumerable.IsNullOrEmpty() == false;
@@ -190,11 +188,9 @@ public static partial class EnumerableExtensions
     {
         Check.NotNull(enumerable);
 
-        if (enumerable is IReadOnlyCollection<T> collection)
-        {
-            return collection.Count > 0;
-        }
-        return enumerable.Any();
+        return enumerable is IReadOnlyCollection<T> collection
+            ? collection.Count > 0
+            : enumerable.Any();
     }
 
     public static IEnumerable<T> Concat<T>(this IEnumerable<IEnumerable<T>> arrays)
@@ -298,7 +294,7 @@ public static partial class EnumerableExtensions
                      select part;
         return splits;
     }
-    
+
     public static IEnumerable<T> InterleaveWith<T>(this IEnumerable<T> first, IEnumerable<T> second, int firstGrouping, int secondGrouping)
     {
         using var firstIterator = first.GetEnumerator();

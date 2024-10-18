@@ -2,24 +2,6 @@
 
 public static class ElementExtensions
 {
-    public static (Uri Uri, NameValueCollection Query, string text) GetUri(this IElement e, Uri? baseUri = null, Action<NameValueCollection>? query = null)
-    {
-        var url = e.GetAttribute("href");
-        if (url.IsNullOrEmpty())
-            throw new InvalidOperationException("The is no href attribute in the element");
-
-
-        var text = e.TextContent;
-        var uri = new Uri(url, UriKind.RelativeOrAbsolute);
-        if (!uri.IsAbsoluteUri && baseUri == null)
-            throw new InvalidOperationException("Base uri cannot be null when href is a relative url");
-
-        var uriCreator = new UriCreator(uri.IsAbsoluteUri ? uri : new Uri(baseUri!, uri));
-        query?.Invoke(uriCreator.QueryValues);
-        var u = uriCreator.GetUri();
-        return (u, uriCreator.QueryValues, text);
-    }
-
     public static HtmlAnchor GetAnchor(this IElement? e, string? selector = null)
     {
         var a = selector == null ? e : e?.QuerySelector(selector);

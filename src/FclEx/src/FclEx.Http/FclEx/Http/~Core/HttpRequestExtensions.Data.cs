@@ -7,7 +7,7 @@ public static partial class HttpRequestExtensions
     public static HttpRequest AddFormValue(this HttpRequest req, string key, string? value)
     {
         Check.NotNull(key);
-        req.FormValues.Add(key.Trim(), value.ToStringOrEmpty().Trim());
+        req.Form.Add(key.Trim(), value.ToStringOrEmpty().Trim());
         return req;
     }
 

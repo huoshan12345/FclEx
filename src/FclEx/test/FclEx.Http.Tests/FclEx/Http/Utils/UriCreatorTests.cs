@@ -23,7 +23,7 @@ public class UriCreatorTests
         foreach (var key in map.AllKeys)
         {
             var values = map.GetValues(key);
-            var actual = uriCreator.QueryValues.GetValues(key);
+            var actual = uriCreator.Query.GetValues(key);
             Assert.NotNull(actual);
             foreach (var value in values!)
             {
@@ -39,7 +39,7 @@ public class UriCreatorTests
         var uri = new Uri(new Uri("http://localhost"), str);
         var uriCreator = new UriCreator(str);
 
-        Assert.Equal(str, uriCreator.GetUri().ToString());
+        Assert.Equal(str, uriCreator.Build().ToString());
         Assert.Equal(uri.AbsolutePath.TrimStart('/'), uriCreator.Path);
         TestExtra(uri, uriCreator);
     }
@@ -51,7 +51,7 @@ public class UriCreatorTests
         var uri = new Uri(str);
         var uriCreator = new UriCreator(str);
             
-        Assert.Equal(str, uriCreator.GetUri().ToString());
+        Assert.Equal(str, uriCreator.Build().ToString());
         Assert.Equal(uri.AbsolutePath, uriCreator.Path);
         TestExtra(uri, uriCreator);
     }
