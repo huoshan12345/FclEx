@@ -11,7 +11,7 @@ public class InvokeGenericInterfaceMethodTests
         string Method<TParameter>(T x, TParameter y);
     }
 
-    private interface IHasOverridedGenericMethod<in T> : IHasEmptyGenericMethod<T>
+    private interface IHasOverrideGenericMethod<in T> : IHasEmptyGenericMethod<T>
     {
         string IHasEmptyGenericMethod<T>.Method(int x, string y) => $"{nameof(Method)}({x}, {y})";
         string IHasEmptyGenericMethod<T>.Method(T x, string y) => $"{nameof(Method)}({typeof(T).Name} {x}, {y})";
@@ -20,7 +20,7 @@ public class InvokeGenericInterfaceMethodTests
         string IHasEmptyGenericMethod<T>.Method<TParameter>(T x, TParameter y) => $"{nameof(Method)}<{typeof(TParameter).Name}>({typeof(T).Name} {x}, {typeof(TParameter).Name} {y})";
     }
 
-    private class HasOverridedGenericMethod<T> : IHasOverridedGenericMethod<T>
+    private class HasOverrideGenericMethod<T> : IHasOverrideGenericMethod<T>
     {
         string IHasEmptyGenericMethod<T>.Method(int x, string y) => throw new InvalidOperationException();
         string IHasEmptyGenericMethod<T>.Method(T x, string y) => throw new InvalidOperationException();
@@ -32,40 +32,40 @@ public class InvokeGenericInterfaceMethodTests
     [Fact]
     public void Method_Invoke()
     {
-        var obj = new HasOverridedGenericMethod<double>();
-        var result = obj.BaseByDynamicMethod<IHasOverridedGenericMethod<double>, string>(m => m.Method(1, "a"));
+        var obj = new HasOverrideGenericMethod<double>();
+        var result = obj.BaseByDynamicMethod<IHasOverrideGenericMethod<double>, string>(m => m.Method(1, "a"));
         Assert.Equal("Method(1, a)", result);
     }
 
     [Fact]
     public void Method_WithGenericParameter_Invoke()
     {
-        var obj = new HasOverridedGenericMethod<string>();
-        var result = obj.BaseByDynamicMethod<IHasOverridedGenericMethod<string>, string>(m => m.Method("a", "a"));
+        var obj = new HasOverrideGenericMethod<string>();
+        var result = obj.BaseByDynamicMethod<IHasOverrideGenericMethod<string>, string>(m => m.Method("a", "a"));
         Assert.Equal("Method(String a, a)", result);
     }
 
     [Fact]
     public void GenericMethod_Invoke()
     {
-        var obj = new HasOverridedGenericMethod<double>();
-        var result = obj.BaseByDynamicMethod<IHasOverridedGenericMethod<double>, string>(m => m.Method<long>(1, "a"));
+        var obj = new HasOverrideGenericMethod<double>();
+        var result = obj.BaseByDynamicMethod<IHasOverrideGenericMethod<double>, string>(m => m.Method<long>(1, "a"));
         Assert.Equal("Method<Int64>(1, a)", result);
     }
 
     [Fact]
     public void GenericMethod_WithOneGenericParameter_Invoke()
     {
-        var obj = new HasOverridedGenericMethod<double>();
-        var result = obj.BaseByDynamicMethod<IHasOverridedGenericMethod<double>, string>(m => m.Method<long>(1, 1));
+        var obj = new HasOverrideGenericMethod<double>();
+        var result = obj.BaseByDynamicMethod<IHasOverrideGenericMethod<double>, string>(m => m.Method<long>(1, 1));
         Assert.Equal("Method<Int64>(1, Int64 1)", result);
     }
 
     [Fact]
     public void GenericMethod_WithTwoGenericParameter_Invoke()
     {
-        var obj = new HasOverridedGenericMethod<double>();
-        var result = obj.BaseByDynamicMethod<IHasOverridedGenericMethod<double>, string>(m => m.Method<long>(1.0, 1));
+        var obj = new HasOverrideGenericMethod<double>();
+        var result = obj.BaseByDynamicMethod<IHasOverrideGenericMethod<double>, string>(m => m.Method<long>(1.0, 1));
         Assert.Equal("Method<Int64>(Double 1, Int64 1)", result);
     }
 }

@@ -1,6 +1,4 @@
-﻿using FclEx.TypeCasters;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static class ObjectExtensions
 {
@@ -8,14 +6,7 @@ public static class ObjectExtensions
     [return: NotNullIfNotNull(nameof(obj))]
     public static T? CastTo<T>(this object? obj)
     {
-        return DynamicTypeCaster.Instance.CastTo<object?, T>(obj);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [return: NotNullIfNotNull(nameof(obj))]
-    public static TTarget? CastTo<T, TTarget>(this T? obj)
-    {
-        return ExpressionTypeCaster.Instance.CastTo<T, TTarget>(obj);
+        return obj is null ? default : (T)(dynamic)obj;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -40,6 +31,6 @@ public static class ObjectExtensions
     [return: NotNullIfNotNull(nameof(obj))]
     public static T? CloneByJson<T>(this T? obj, JsonSerializerOptions? options = null)
     {
-        return obj is null ? obj : obj.ToJson(options).ToJsonNode(options).Deserialize<T>(options);
+        return obj is null ? obj : obj.ToJson(options).FromJson<T>(options);
     }
 }

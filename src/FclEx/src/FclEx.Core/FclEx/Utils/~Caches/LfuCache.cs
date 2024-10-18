@@ -205,7 +205,7 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
     public ICollection<TKey> Keys => Read(() => _list.Select(m => m.Key).AsReadOnly());
 
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
-        => LockEnumerator.Create(_list.Select(m => KvPair.Create(m.Key, m.Value)).GetEnumerator(), _lock);
+        => LockEnumerator.Create(_list.Select(m => KeyValuePair.Create(m.Key, m.Value)).GetEnumerator(), _lock);
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
@@ -231,11 +231,10 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
                 break;
             cur = cur.Previous;
         }
+        // ReSharper disable once InvertIf
         if (cur != node)
         {
-            var tmp = cur.Value;
-            cur.Value = node.Value;
-            node.Value = tmp;
+            (cur.Value, node.Value) = (node.Value, cur.Value);
             _dic[cur.Value.Key] = cur;
             _dic[node.Value.Key] = node;
             node = cur;
@@ -268,7 +267,7 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
         {
             Debug.Assert(_keyComparer.Equals(key, node!.Value.Key));
 
-            if (matchValue && !_valueComparer.Equals(oldValue, node.Value.Value))
+            if (matchValue && !_valueComparer.Equals(oldValue!, node.Value.Value))
                 return false;
 
             using (_lock.LockWrite())
@@ -295,7 +294,7 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
         public static KvCount Create(TKey key, TValue value) => new(key, value);
         public KvCount Incre() => new(Key, Value, Count + 1);
         public KvCount SetValue(TValue value) => new(Key, value, Count);
-        public static implicit operator KeyValuePair<TKey, TValue>(KvCount kv) => KvPair.Create(kv.Key, kv.Value!);
+        public static implicit operator KeyValuePair<TKey, TValue>(KvCount kv) => KeyValuePair.Create(kv.Key, kv.Value!);
     }
 
     private T Read<T>(Func<T> func)

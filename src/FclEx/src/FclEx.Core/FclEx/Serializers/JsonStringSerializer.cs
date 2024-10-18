@@ -9,6 +9,6 @@ public class JsonStringSerializer : IStringSerializer
     {
         if (!str.IsPossibleJson())
             throw new InvalidOperationException("Not a valid json string: " + str.Truncate(100));
-        return str.ToJToken().ToObject(type);
+        return str.FromJson(type);
     }
 }

@@ -32,7 +32,7 @@ public static class IntPtrExtensions
 
             if (TypeHelper.FuncTypes.Contains(def) && def.Assembly == AssemblyHelper.AssemblyOfFunc)
             {
-                return (T)address.ToDelegate(args[^1], args[..^1]);
+                return (T)address.ToDelegate(args.Last(), args.Take(args.Length - 1));
             }
 
             throw new ArgumentException("The specified Type must not be a generic type.", nameof(T));

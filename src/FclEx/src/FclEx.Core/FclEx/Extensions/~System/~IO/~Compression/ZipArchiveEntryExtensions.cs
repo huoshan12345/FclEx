@@ -38,13 +38,13 @@ public static class ZipArchiveEntryExtensions
 
     public static string Name(this ZipArchiveEntryInfo info)
     {
-        return info.Segments[^1];
+        return info.Segments.Last();
     }
 
     public static bool IsDirectory(this ZipArchiveEntry entry)
     {
         var last = entry.FullName.LastOrDefault();
-        return (last == '/' || last == '\\') && entry.Name == "";
+        return last is '/' or '\\' && entry.Name == "";
     }
 
     public static bool IsFile(this ZipArchiveEntry entry)

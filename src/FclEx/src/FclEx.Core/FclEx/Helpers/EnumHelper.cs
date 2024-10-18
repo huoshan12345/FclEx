@@ -6,18 +6,22 @@ public static class EnumHelper
 {
     private static readonly ConcurrentDictionary<Type, EnumInfo[]> _infos = new();
 
-    public static EnumInfo[] GetInfos<TEnum>() where TEnum : struct, Enum
+    public static EnumInfo[] GetInfos<T>() where T : struct, Enum
     {
-        return _infos.GetOrAdd(typeof(TEnum), m => Enum.GetValues<TEnum>().Select(m => m.Info()).ToArray());
+        return _infos.GetOrAdd(typeof(T), m => GetValues<T>().Select(m => m.Info()).ToArray());
     }
 
-    public static bool TryParse<TEnum>([NotNullWhen(true)] string? value, bool ignoreCase, bool fromNumeric, out TEnum result) 
-        where TEnum : struct, Enum
+    public static T[] GetValues<T>() where T : struct, Enum
+    {
+        return (T[])Enum.GetValues(typeof(T));
+    }
+
+    public static bool TryParse<TEnum>([NotNullWhen(true)] string? value, bool ignoreCase, bool fromNumeric, out TEnum result) where TEnum : struct, Enum
     {
         if (fromNumeric && long.TryParse(value, out var number))
         {
             var e = number.CastTo<TEnum>();
-            if (Enum.IsDefined(e))
+            if (Enum.IsDefined(typeof(TEnum), e))
             {
                 result = e;
                 return true;

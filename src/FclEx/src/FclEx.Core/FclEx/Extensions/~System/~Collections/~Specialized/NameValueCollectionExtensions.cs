@@ -6,7 +6,7 @@ public static class NameValueCollectionExtensions
     {
         var q = from k in col.AllKeys.NotNull()
                 from v in col.GetValues(k).EmptyIfNull()
-                select KvPair.Create(k, v);
+                select KeyValuePair.Create(k, v);
         return q;
     }
 

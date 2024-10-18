@@ -11,6 +11,6 @@ public class ReverseComparer<T> : IComparer<T>
 
     public int Compare(T? x, T? y)
     {
-        return _comparer.Compare(y, x);
+        return _comparer.Compare(y!, x!);
     }
 }

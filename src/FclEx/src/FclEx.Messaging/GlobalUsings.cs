@@ -6,6 +6,7 @@ global using System.Diagnostics.CodeAnalysis;
 global using System.Text;
 global using System.Threading.Tasks;
 global using Confluent.Kafka;
+global using FclEx;
 global using FclEx.Extensions;
 global using FclEx.Helpers;
 global using FclEx.Logging;

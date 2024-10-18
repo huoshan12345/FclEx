@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Comparers;
 
-public class FileExtensionEqualityComparer : IEqualityComparer<string>, IHasInstance<FileExtensionEqualityComparer>
+public class FileExtensionEqualityComparer : IEqualityComparer<string>
 {
     public bool Equals(string? x, string? y)
     {

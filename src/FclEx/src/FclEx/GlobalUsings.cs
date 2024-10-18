@@ -25,6 +25,7 @@ global using System.Text.RegularExpressions;
 global using System.Threading;
 global using System.Threading.Tasks;
 global using System.Web;
+global using FclEx;
 global using FclEx.Attributes;
 global using FclEx.Extensions;
 global using FclEx.Helpers;

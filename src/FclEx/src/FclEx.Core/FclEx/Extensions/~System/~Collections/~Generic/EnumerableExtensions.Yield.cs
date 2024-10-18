@@ -2,10 +2,6 @@
 
 partial class EnumerableExtensions
 {
-    /// <summary>
-    /// Wraps this object instance into an IEnumerable
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IEnumerable<T> Yield<T>(this T item)
     {
         yield return item;

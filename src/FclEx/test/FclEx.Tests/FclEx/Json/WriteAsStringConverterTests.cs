@@ -35,7 +35,7 @@ public class WriteAsStringConverterTests
             }
         };
 
-        var json = obj.ToJson(useCamelCase: true);
+        var json = obj.ToNewtonsoftJson(useCamelCase: true);
 
         var tokenOfMatchId = json.ToJToken()["matchId"];
         Assert.NotNull(tokenOfMatchId);

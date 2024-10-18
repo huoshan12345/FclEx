@@ -29,7 +29,7 @@ partial class EnumerableExtensions
 
             var nextValue = e.Current;
             var nextKey = keySelector(nextValue);
-            var compare = comparer.Compare(key, nextKey);
+            var compare = comparer.Compare(key!, nextKey!);
 
             if (compare == 0)
             {

@@ -1,4 +1,4 @@
-﻿namespace FclEx;
+﻿namespace FclEx.Utils;
 
 public static class Fields
 {

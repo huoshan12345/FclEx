@@ -24,7 +24,7 @@ public static class Extensions
 
     public static ILogger With(this ILogger logger, IEnumerable<(string, object?)> properties)
     {
-        return logger.With(properties.Select(m => KvPair.Create(m.Item1, m.Item2)));
+        return logger.With(properties.Select(m => KeyValuePair.Create(m.Item1, m.Item2)));
     }
 
     public static ILogger With(this ILogger logger, params (string, object?)[] properties)
@@ -34,7 +34,7 @@ public static class Extensions
 
     public static ILogger With(this ILogger logger, string key, object? value)
     {
-        return logger.With(KvPair.Create(key, value));
+        return logger.With(KeyValuePair.Create(key, value));
     }
 
     public static ILogger With(this ILogger logger, (string key, object? value) prop)
@@ -52,7 +52,7 @@ public static class Extensions
 
     public static IDisposable PushProperty<T>(this ILogger logger, IEnumerable<KeyValuePair<string, T?>> properties)
     {
-        return logger.PushProperty(properties.EmptyIfNull().Select(m => KvPair.Create(m.Key, (object?)m.Value)));
+        return logger.PushProperty(properties.EmptyIfNull().Select(m => KeyValuePair.Create(m.Key, (object?)m.Value)));
     }
 
     public static IDisposable PushProperty(this ILogger logger, params KeyValuePair<string, object?>[] properties)
@@ -77,7 +77,7 @@ public static class Extensions
 
     public static IDisposable PushProperty(this ILogger logger, string key, object? value)
     {
-        return logger.PushProperty(KvPair.Create(key, value));
+        return logger.PushProperty(KeyValuePair.Create(key, value));
     }
 
     public static IDisposable PushProperty(this ILogger logger, (string key, object? value) prop)
@@ -92,6 +92,6 @@ public static class Extensions
 
     public static IDisposable PushProperty(this ILogger logger, IEnumerable<LoggerProperty> props)
     {
-        return logger.PushProperty(props.Select(m => KvPair.Create(m.Key, m.Value)));
+        return logger.PushProperty(props.Select(m => KeyValuePair.Create(m.Key, m.Value)));
     }
 }

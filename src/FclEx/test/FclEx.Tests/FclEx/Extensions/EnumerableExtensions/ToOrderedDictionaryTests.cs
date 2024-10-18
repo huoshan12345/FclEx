@@ -18,7 +18,7 @@ public class ToOrderedDictionaryTests
     [Fact]
     public void ToOrderedDic_Test()
     {
-        var dic = Enumerable.Range(1, 10).Select(m => KvPair.Create(m, m));
+        var dic = Enumerable.Range(1, 10).Select(m => KeyValuePair.Create(m, m));
         var ordered = dic.ToOrderedDictionary();
         CheckIsOrdered(ordered);
 
@@ -48,7 +48,7 @@ public class ToOrderedDictionaryTests
     [Fact]
     public void ToOrderedDic_Selector_Throw_Test()
     {
-        var dic = Enumerable.Range(1, 10).Select(m => KvPair.Create(m % 5, m));
+        var dic = Enumerable.Range(1, 10).Select(m => KeyValuePair.Create(m % 5, m));
         Assert.Throws<ArgumentException>(() => dic.ToOrderedDictionary());
     }
 }

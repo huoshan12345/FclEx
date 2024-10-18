@@ -1,5 +1,3 @@
 <Project>
   <Import Project="..\..\FclEx\test\Directory.Build.props" />
-  <ItemGroup>
-    <Compile Include="$(ProjectDir)..\..\..\FclEx\src\FclEx\FclExUsing.cs" />
-  </ItemGroup></Project>
+</Project>

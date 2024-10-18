@@ -36,7 +36,7 @@ public class ClientCreator<TClient> where TClient : IUserClient
     public virtual async Task SaveCookies<T>(T client) where T : IUserClient
     {
         var cookies = client.HttpService.GetAllSimpleCookies();
-        var str = cookies.ToJson(Formatting.Indented);
+        var str = cookies.ToNewtonsoftJson(Formatting.Indented);
         var (path, exist) = GetCookiesFilePath(client.GetType(), client.Account);
         await File.WriteAllTextAsync(path, str, Encoding.UTF8);
     }

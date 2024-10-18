@@ -153,7 +153,7 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
     public CacheStats Stats { get; }
 
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
-        => LockEnumerator.Create(_list.Select(m => KvPair.Create(m.Key, m.Value)).GetEnumerator(), _lock);
+        => LockEnumerator.Create(_list.Select(m => KeyValuePair.Create(m.Key, m.Value)).GetEnumerator(), _lock);
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
@@ -236,6 +236,6 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
         public TValue Value { get; }
         public static KeyValue Create(TKey key, TValue value) => new(key, value);
         public KeyValue SetValue(TValue value) => new(Key, value);
-        public static implicit operator KeyValuePair<TKey, TValue>(KeyValue kv) => KvPair.Create(kv.Key, kv.Value!);
+        public static implicit operator KeyValuePair<TKey, TValue>(KeyValue kv) => KeyValuePair.Create(kv.Key, kv.Value!);
     }
 }

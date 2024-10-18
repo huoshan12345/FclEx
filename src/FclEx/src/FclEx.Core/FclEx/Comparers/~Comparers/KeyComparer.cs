@@ -27,6 +27,6 @@ public class KeyComparer<T, TKey> : IComparer<T>
 
     public int Compare(T? x, T? y)
     {
-        return _comparer.Compare(x, y);
+        return _comparer.Compare(x!, y!);
     }
 }

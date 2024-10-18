@@ -12,14 +12,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FclEx.Core\FclEx.Core.csproj" />
-    <ProjectReference Include="..\FclEx.SourceGenerator\FclEx.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-  </ItemGroup>
-
-  <Import Project="..\EmitGeneratedFiles.props" Condition="'$(Configuration)' == 'Debug' AND $(GITHUB_ACTION) == ''" />
-
-  <ItemGroup Label="FilesToCopy">
-    <Content Include="FclExUsing.cs" Pack="true" BuildAction="None" PackagePath="content/" />
-    <Content Include="FclEx.targets" Pack="true" BuildAction="None" PackagePath="buildTransitive/" />
   </ItemGroup>
 
 </Project>

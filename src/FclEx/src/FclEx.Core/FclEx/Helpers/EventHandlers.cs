@@ -1,6 +1,4 @@
-﻿using FclEx;
-
-namespace FclEx.Helpers;
+﻿namespace FclEx.Helpers;
 
 public delegate Task AsyncEventHandler<in TSender, in TEventArgs>(TSender sender, TEventArgs e);
 

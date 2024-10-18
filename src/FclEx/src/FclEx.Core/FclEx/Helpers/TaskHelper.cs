@@ -83,6 +83,39 @@ public static class TaskHelper
         catch (TaskCanceledException) { }
     }
 
+#if NETSTANDARD2_0
+    // https://stackoverflow.com/a/22078975/4255140
+    public static async Task<TResult> WaitAsync<TResult>(this Task<TResult> task, TimeSpan timeout)
+    {
+        using var cts = new CancellationTokenSource();
+        var completedTask = await Task.WhenAny(task, Task.Delay(timeout, cts.Token));
+        if (completedTask == task)
+        {
+            cts.Cancel();
+            return await task;  // Very important in order to propagate exceptions
+        }
+        else
+        {
+            throw new TimeoutException("The operation has timed out.");
+        }
+    }
+
+    public static async Task WaitAsync(this Task task, TimeSpan timeout)
+    {
+        using var cts = new CancellationTokenSource();
+        var completedTask = await Task.WhenAny(task, Task.Delay(timeout, cts.Token));
+        if (completedTask == task)
+        {
+            cts.Cancel();
+            await task;  // Very important in order to propagate exceptions
+        }
+        else
+        {
+            throw new TimeoutException("The operation has timed out.");
+        }
+    }
+#endif
+
     public static Task<TResult> Run<TResult>(Func<Task<TResult>> task, TimeSpan? timeout = null)
     {
         return timeout is { } time

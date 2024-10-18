@@ -15,6 +15,9 @@ partial class StringExtensions
     public static T? FromJson<T>(this string json, JsonSerializerOptions? options = null) => JsonSerializer.Deserialize<T>(json, options);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static object? FromJson(this string json, Type type, JsonSerializerOptions? options = null) => JsonSerializer.Deserialize(json, type, options);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string Format(this string str, params object[] args) => string.Format(str, args);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -45,7 +48,8 @@ partial class StringExtensions
         if (str.IsNullOrEmpty() || maxLength >= str.Length)
             return str ?? string.Empty;
 
-        return str[..maxLength] + "...";
+        // ReSharper disable once ReplaceSubstringWithRangeIndexer
+        return str.Substring(maxLength) + "...";
     }
 
     private static readonly Regex RegexOfXmlProlog = new(@"^<\?xml.+\?>", RegexOptions.Compiled);
@@ -90,21 +94,7 @@ partial class StringExtensions
 
         return true;
     }
-
-    public static (string Left, string Right) Cleave(this string? str, string separator, bool fromRight = false)
-    {
-        if (str.IsNullOrEmpty())
-            return ("", "");
-
-        var index = fromRight
-            ? str.LastIndexOf(separator, StringComparison.Ordinal)
-            : str.IndexOf(separator, StringComparison.Ordinal);
-
-        return index < 0
-            ? (str, "")
-            : (str[..index], str[(index + separator.Length)..]);
-    }
-
+    
     public static byte[] HexToBytes(this string hex)
     {
         if (hex == null) throw new ArgumentNullException(nameof(hex));
@@ -165,4 +155,25 @@ partial class StringExtensions
             yield return en.GetTextElement();
         }
     }
+
+    public static StringComparer ToComparer(this StringComparison comparison)
+    {
+        return comparison switch
+        {
+            StringComparison.CurrentCulture => StringComparer.CurrentCulture,
+            StringComparison.CurrentCultureIgnoreCase => StringComparer.CurrentCultureIgnoreCase,
+            StringComparison.InvariantCulture => StringComparer.InvariantCulture,
+            StringComparison.InvariantCultureIgnoreCase => StringComparer.InvariantCultureIgnoreCase,
+            StringComparison.Ordinal => StringComparer.Ordinal,
+            StringComparison.OrdinalIgnoreCase => StringComparer.OrdinalIgnoreCase,
+            _ => throw new ArgumentOutOfRangeException(nameof(comparison), comparison, null)
+        };
+    }
+
+#if NETSTANDARD2_0
+    public static int GetHashCode(this string str, StringComparison comparison)
+    {
+        return comparison.ToComparer().GetHashCode(str);
+    }
+#endif
 }

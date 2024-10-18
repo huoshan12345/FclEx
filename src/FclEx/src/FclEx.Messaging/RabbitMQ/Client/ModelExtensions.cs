@@ -1,6 +1,4 @@
-﻿using FclEx;
-
-namespace RabbitMQ.Client;
+﻿namespace RabbitMQ.Client;
 
 public static class ModelExtensions
 {

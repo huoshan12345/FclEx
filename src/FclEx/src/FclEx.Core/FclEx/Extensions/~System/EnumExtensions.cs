@@ -97,13 +97,13 @@ public static class EnumExtensions
 
     public static bool IsValid<T>(this T value) where T : struct, Enum
     {
-        var validValues = Enum.GetValues<T>();
+        var validValues = (T[])Enum.GetValues(typeof(T));
         return validValues.Contains(value);
     }
 
     public static bool IsEachValid<T>(this IEnumerable<T> values) where T : struct, Enum
     {
-        var validValues = Enum.GetValues<T>();
+        var validValues = (T[])Enum.GetValues(typeof(T));
         return values.All(m => validValues.Contains(m));
     }
 

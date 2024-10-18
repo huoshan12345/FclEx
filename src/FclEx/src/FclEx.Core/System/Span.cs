@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace System;
+﻿namespace System;
 
 /// <summary>
 /// Provides extension methods for type <see cref="Span{T}"/> and <see cref="ReadOnlySpan{T}"/>.
@@ -24,7 +20,7 @@ public static class Span
 
     /// <summary>Creates a new span over a portion of a regular managed object.</summary>
     /// <param name="reference">A reference to data.</param>
-    /// <param name="length">The number of <paramref name="T" /> elements that <paramref name="reference" /> contains.</param>
+    /// <param name="length">The number of <typeparamref name="T" /> elements that <paramref name="reference" /> contains.</param>
     /// <typeparam name="T">The type of the data items.</typeparam>
     /// <returns>A span.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

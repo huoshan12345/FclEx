@@ -2,11 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 // ReSharper disable All
-
 #if NET6_0_OR_GREATER
 namespace System.Text
 {
-    internal ref partial struct ValueStringBuilder
+    public ref partial struct ValueStringBuilder
     {
         internal void AppendSpanFormattable<T>(T value, string? format = null, IFormatProvider? provider = null) where T : ISpanFormattable
         {

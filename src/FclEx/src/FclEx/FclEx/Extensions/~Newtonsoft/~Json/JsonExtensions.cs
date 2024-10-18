@@ -8,20 +8,20 @@ namespace FclEx.Extensions;
 
 public static class JsonExtensions
 {
-    public static string ToJson(this object? obj, JsonOptions options)
+    public static string ToNewtonsoftJson(this object? obj, JsonOptions options)
     {
         var settings = JsonHelper.GetSettings(options);
         return JsonConvert.SerializeObject(obj, settings);
     }
 
-    public static string ToJson(this object? obj,
+    public static string ToNewtonsoftJson(this object? obj,
         Formatting formatting = Formatting.None,
         bool ignoreNull = false,
         DateTimeZoneHandling dateTimeZoneHandling = DateTimeZoneHandling.Utc,
         bool useCamelCase = false,
         string? dateTimeFormat = null)
     {
-        return obj.ToJson(new JsonOptions(formatting, ignoreNull, dateTimeZoneHandling, useCamelCase, dateTimeFormat));
+        return obj.ToNewtonsoftJson(new JsonOptions(formatting, ignoreNull, dateTimeZoneHandling, useCamelCase, dateTimeFormat));
     }
 
     public static string ToJsonCamel(this object? obj,
@@ -30,7 +30,7 @@ public static class JsonExtensions
         DateTimeZoneHandling dateTimeZoneHandling = DateTimeZoneHandling.Utc,
         string? dateTimeFormat = null)
     {
-        return obj.ToJson(new JsonOptions(formatting, ignoreNull, dateTimeZoneHandling, true, dateTimeFormat));
+        return obj.ToNewtonsoftJson(new JsonOptions(formatting, ignoreNull, dateTimeZoneHandling, true, dateTimeFormat));
     }
 
     public static JToken ToJToken(this string str)
@@ -167,12 +167,12 @@ public static class JsonExtensions
         return false;
     }
 
-    public static string ToJson(this XNode xml, Formatting formatting = Formatting.None, bool omitRootObject = false)
+    public static string ToNewtonsoftJson(this XNode xml, Formatting formatting = Formatting.None, bool omitRootObject = false)
     {
         return JsonConvert.SerializeXNode(xml, formatting, omitRootObject);
     }
 
-    public static string ToJson(this XmlNode xml, Formatting formatting = Formatting.None, bool omitRootObject = false)
+    public static string ToNewtonsoftJson(this XmlNode xml, Formatting formatting = Formatting.None, bool omitRootObject = false)
     {
         return JsonConvert.SerializeXmlNode(xml, formatting, omitRootObject);
     }

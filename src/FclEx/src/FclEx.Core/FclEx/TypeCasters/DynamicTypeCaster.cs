@@ -6,7 +6,7 @@ public class DynamicTypeCaster : AbstractTypeCaster<DynamicTypeCaster>
     [return: NotNullIfNotNull("obj"), MaybeNull]
     public sealed override TOutput CastTo<TInput, TOutput>([AllowNull] TInput obj)
     {
-        return obj == null
+        return obj is null
             ? default
             : (TOutput)((dynamic)obj);
     }

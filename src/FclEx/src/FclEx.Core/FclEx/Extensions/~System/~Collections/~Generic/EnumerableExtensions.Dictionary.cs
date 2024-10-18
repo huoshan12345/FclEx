@@ -83,7 +83,7 @@ partial class EnumerableExtensions
     public static OrderedDictionary<TKey, TValue> ToOrderedDictionary<T, TKey, TValue>(this IEnumerable<T> enumerable,
         Func<T, TKey> keySelector, Func<T, TValue> valueSelector)
     {
-        return new OrderedDictionary<TKey, TValue>(enumerable.Select(m => KvPair.Create(keySelector(m), valueSelector(m))));
+        return new OrderedDictionary<TKey, TValue>(enumerable.Select(m => KeyValuePair.Create(keySelector(m), valueSelector(m))));
     }
 
     public static OrderedDictionary<TKey, TValue> ToOrderedDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> enumerable)

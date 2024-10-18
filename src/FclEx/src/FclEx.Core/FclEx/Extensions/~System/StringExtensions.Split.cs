@@ -1,7 +1,14 @@
-﻿namespace FclEx.Extensions;
+﻿using static FclEx.Extensions.SeparatorLocationOption;
+
+namespace FclEx.Extensions;
 
 public enum SeparatorLocationOption
 {
+    /// <summary>
+    /// Excludes the separator from both parts.
+    /// Both the left and right parts will contain only the string content without the separator.
+    /// </summary>
+    None = 0,
     /// <summary>
     /// Includes the separator in the left part of the split.
     /// The right part will contain only the remaining portion of the string.
@@ -12,11 +19,6 @@ public enum SeparatorLocationOption
     /// The left part will contain only the portion before the separator.
     /// </summary>
     Right,
-    /// <summary>
-    /// Excludes the separator from both parts.
-    /// Both the left and right parts will contain only the string content without the separator.
-    /// </summary>
-    None,
     /// <summary>
     /// Includes the separator in both parts.
     /// Both the left and right parts will contain the separator in their respective portions.
@@ -48,8 +50,7 @@ partial class StringExtensions
     /// after the separator, with the separator included according to the specified option.
     /// If <paramref name="fromRight"/> is true, the search will start from the end of the string.
     /// </returns>
-    public static (string Left, string Right) Partition(this string source, string separator,
-        SeparatorLocationOption option = SeparatorLocationOption.None, bool fromRight = false)
+    public static (string Left, string Right) Partition(this string source, string separator, SeparatorLocationOption option = None, bool fromRight = false)
     {
         if (source.IsNullOrEmpty())
             return ("", "");
@@ -68,10 +69,10 @@ partial class StringExtensions
 
         return option switch
         {
-            SeparatorLocationOption.None => (source[..index], source[sepEndIndex..]),
-            SeparatorLocationOption.Left => (source[..sepEndIndex], source[sepEndIndex..]),
-            SeparatorLocationOption.Right => (source[..index], source[index..]),
-            SeparatorLocationOption.Both => (source[..index], source[sepEndIndex..]),
+            None => (source[..index], source[sepEndIndex..]),
+            Left => (source[..sepEndIndex], source[sepEndIndex..]),
+            Right => (source[..index], source[index..]),
+            Both => (source[..index], source[sepEndIndex..]),
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
         };
     }
