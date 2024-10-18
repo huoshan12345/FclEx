@@ -1,4 +1,4 @@
-﻿namespace FclEx.Json;
+﻿namespace FclEx.NewtonsoftJson;
 
 public class WriteAsStringConverter : BypassSelfJsonConverter
 {

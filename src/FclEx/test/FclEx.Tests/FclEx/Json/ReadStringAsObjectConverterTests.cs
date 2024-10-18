@@ -1,4 +1,6 @@
-﻿namespace FclEx.Json;
+﻿using FclEx.NewtonsoftJson;
+
+namespace FclEx.Json;
 
 public class ReadStringAsObjectConverterTests
 {

@@ -15,7 +15,7 @@ public class IgnoreJsonConverterTests
     public void WriteJson_Test()
     {
         var obj = new Tester { Retcode = 20000000, Msg = "succ" };
-        var json = obj.ToJsonCamel();
+        var json = obj.ToNewtonsoftJsonCamelCase();
         Assert.Equal("{\"retcode\":20000000,\"msg\":\"succ\",\"data\":null}", json);
     }
 

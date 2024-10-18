@@ -1,4 +1,4 @@
-﻿namespace FclEx.Json;
+﻿namespace FclEx.NewtonsoftJson;
 
 public record struct JsonOptions(
     Formatting Formatting = Formatting.None,

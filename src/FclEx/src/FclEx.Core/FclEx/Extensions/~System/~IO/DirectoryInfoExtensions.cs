@@ -14,7 +14,7 @@ public static class DirectoryInfoExtensions
 
     public static DirectoryInfo TryDelete(this DirectoryInfo dir, bool recursive = false)
     {
-        if (dir.Exists == false)
+        if (dir.Exists)
         {
             dir.Delete(recursive);
             dir.Refresh();
@@ -24,8 +24,9 @@ public static class DirectoryInfoExtensions
 
     public static DirectoryInfo CreateNew(this DirectoryInfo dir)
     {
-        dir.Delete(true);
+        dir.TryDelete(true);
         dir.Create();
+        dir.Refresh();
         return dir;
     }
 

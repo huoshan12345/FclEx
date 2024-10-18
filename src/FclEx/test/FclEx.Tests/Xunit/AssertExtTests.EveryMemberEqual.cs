@@ -4,7 +4,7 @@ namespace Xunit;
 
 public partial class AssertExtTests
 {
-    public class Tester
+    public class TestModel
     {
         public bool Bool { get; set; }
         public int Int { get; set; }
@@ -12,23 +12,23 @@ public partial class AssertExtTests
         public float Float { get; set; }
         public double? Double { get; set; }
         public decimal Decimal { get; set; }
-        public string? String;
-        public Tester? Child { get; set; }
-        public List<Tester?>? List { get; set; }
+        public string? String { get; set; }
+        public TestModel? Child { get; set; }
+        public List<TestModel?>? List { get; set; }
     }
 
-    public class Tester2
+    public class TestModel2
     {
-        public Tester2? Child { get; set; }
+        public TestModel2? Child { get; set; }
     }
 
-    private static Tester? CreateTester(bool nested, int level = 0)
+    private static TestModel? CreateTestModel(bool nested, int level = 0)
     {
         if (level >= 3)
             return null;
 
         var random = new Random();
-        var src = new Tester
+        var src = new TestModel
         {
             Bool = random.NextBoolean(),
             Int = random.Next(),
@@ -38,12 +38,12 @@ public partial class AssertExtTests
             Decimal = random.NextDouble().CastTo<decimal>(),
             String = random.NextString(10),
             Child = null,
-            List = null
+            List = null,
         };
         if (nested)
         {
-            src.Child = CreateTester(true, level + 1);
-            src.List = Enumerable.Range(1, 10).Select(m => CreateTester(true, level + 1)).ToList();
+            src.Child = CreateTestModel(true, level + 1);
+            src.List = Enumerable.Range(1, 10).Select(m => CreateTestModel(true, level + 1)).ToList();
         }
         return src;
     }
@@ -51,7 +51,7 @@ public partial class AssertExtTests
     [Fact]
     public void EveryMemberEqual_Success()
     {
-        var src = CreateTester(false);
+        var src = CreateTestModel(false);
         var dest = src.CloneByJson();
         AssertExt.EveryMemberEqual(src, dest);
     }
@@ -77,8 +77,8 @@ public partial class AssertExtTests
     [Fact]
     public void EveryMemberEqual_CircularReference_Success()
     {
-        var src = new Tester2();
-        var dest = new Tester2();
+        var src = new TestModel2();
+        var dest = new TestModel2();
 
         src.Child = src;
         dest.Child = dest;
@@ -92,7 +92,7 @@ public partial class AssertExtTests
     [Fact]
     public void EveryMemberEqual_ExcludeMembers_Success()
     {
-        var src = CreateTester(false);
+        var src = CreateTestModel(false);
         var dest = src.CloneByJson();
         Assert.NotNull(dest);
         dest.Int++;
@@ -104,7 +104,7 @@ public partial class AssertExtTests
     [Fact]
     public void EveryMemberEqual_Nested_Success()
     {
-        var src = CreateTester(true);
+        var src = CreateTestModel(true);
         var dest = src.CloneByJson();
         AssertExt.EveryMemberEqual(src, dest);
     }
@@ -112,7 +112,7 @@ public partial class AssertExtTests
     [Fact]
     public void EveryMemberEqual_Nested_ExcludeMembers_Success()
     {
-        var src = CreateTester(true);
+        var src = CreateTestModel(true);
         {
             var dest = src.CloneByJson();
             Assert.NotNull(dest);

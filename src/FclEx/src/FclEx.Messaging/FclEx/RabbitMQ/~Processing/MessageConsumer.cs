@@ -20,7 +20,7 @@ public abstract class MessageConsumer<TInput, TSettings> : MessageProcessor<TSet
         : base(serializer, loggerFactory)
     {
     }
-        
+
     [MemberNotNull(nameof(Channel))]
     public override void Init(TSettings settings)
     {
@@ -79,8 +79,8 @@ public abstract class MessageConsumer<TInput, TSettings> : MessageProcessor<TSet
         var props = args.BasicProperties;
         var watch = ValueStopwatch.StartNew();
         var disposable = Logger.PushProperty(
-            props.GetNamedValue(m => m.MessageId)!,
-            args.GetNamedValue(m => m.RoutingKey)!
+            (nameof(props.MessageId), props.MessageId),
+            (nameof(args.RoutingKey), args.RoutingKey)
         );
 
         TInput? obj = default;

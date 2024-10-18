@@ -1,4 +1,5 @@
 ﻿using FclEx.Json;
+using FclEx.NewtonsoftJson;
 
 namespace FclEx.Extensions.JsonExtensions;
 
@@ -8,7 +9,7 @@ public class ToJsonTests
     public void ToJsonCamel_Test()
     {
         var obj = new Tester();
-        var json = obj.ToJsonCamel();
+        var json = obj.ToNewtonsoftJsonCamelCase();
         Assert.Equal("{\"name\":\"Name\",\"Count\":1}", json);
     }
 
@@ -18,7 +19,7 @@ public class ToJsonTests
         foreach (var kind in Enum.GetValues<DateTimeKind>())
         {
             var obj = new DateTimeTester() { DateTime = new DateTime(2019, 1, 2, 3, 4, 5, kind) };
-            var json = obj.ToJsonCamel();
+            var json = obj.ToNewtonsoftJsonCamelCase();
             var obj2 = json.ToJToken().ToObject<DateTimeTester>()!;
             Assert.Equal(obj.Name, obj2.Name);
             Assert.Equal(obj.DateTime.ToUtc(), obj2.DateTime.ToUtc());

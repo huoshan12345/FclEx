@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Xml;
 using System.Xml.Linq;
+using FclEx.NewtonsoftJson;
 using Newtonsoft.Json.Converters;
 using Formatting = Newtonsoft.Json.Formatting;
 
@@ -24,7 +25,7 @@ public static class JsonExtensions
         return obj.ToNewtonsoftJson(new JsonOptions(formatting, ignoreNull, dateTimeZoneHandling, useCamelCase, dateTimeFormat));
     }
 
-    public static string ToJsonCamel(this object? obj,
+    public static string ToNewtonsoftJsonCamelCase(this object? obj,
         Formatting formatting = Formatting.None,
         bool ignoreNull = false,
         DateTimeZoneHandling dateTimeZoneHandling = DateTimeZoneHandling.Utc,

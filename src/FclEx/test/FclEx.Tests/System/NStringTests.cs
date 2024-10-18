@@ -1,4 +1,6 @@
-﻿namespace System;
+﻿using System.Text.Json;
+
+namespace System;
 
 public class NStringTests
 {
@@ -37,7 +39,7 @@ public class NStringTests
     public void FromJson_Test(string? str)
     {
         var json = str.ToJson();
-        var token = json.ToJToken();
-        Assert.Equal(token.ToObject<string>() ?? "", token.ToObject<NString>());
+        var token = json.ToJsonNode();
+        Assert.Equal(token.Deserialize<string>() ?? "", token.Deserialize<NString>());
     }
 }

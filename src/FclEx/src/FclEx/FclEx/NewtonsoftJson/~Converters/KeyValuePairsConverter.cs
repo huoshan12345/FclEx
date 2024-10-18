@@ -1,6 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 
-namespace FclEx.Json;
+namespace FclEx.NewtonsoftJson;
 
 public class KeyValuePairsConverter : JsonConverter
 {

@@ -125,4 +125,10 @@ public static class ExpressionHelper
             _ => throw new ArgumentException($"MemberInfo '{member.Name}' refers to neither a field nor a property.")
         };
     }
+    
+    public static (string Name, TMember value) GetNamedValue<T, TMember>(T obj, Expression<Func<T, TMember>> selector)
+    {
+        var member = GetDataMemberInfo(selector);
+        return (member.Name, member.GetValue(obj).CastTo<TMember>())!;
+    }
 }

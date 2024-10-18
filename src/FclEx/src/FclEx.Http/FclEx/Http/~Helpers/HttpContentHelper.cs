@@ -1,12 +1,12 @@
-﻿using FclEx.Json;
+﻿using System.Text.Json;
 
 namespace FclEx.Http;
 
 public static class HttpContentHelper
 {
-    public static StringContent ToJsonContent(object obj, JsonOptions options = default)
+    public static StringContent ToJsonContent(object obj, JsonSerializerOptions? options = null)
     {
-        var json = obj.ToNewtonsoftJson(options);
+        var json = obj.ToJson(options);
         return new StringContent(json, Encoding.UTF8, HttpMediaTypes.Json);
     }
 

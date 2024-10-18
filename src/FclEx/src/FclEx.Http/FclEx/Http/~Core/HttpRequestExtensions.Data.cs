@@ -1,4 +1,4 @@
-﻿using FclEx.Json;
+﻿using System.Text.Json;
 
 namespace FclEx.Http;
 
@@ -119,7 +119,7 @@ public static partial class HttpRequestExtensions
         return req.AddDataIf(value.IsNotEmpty(), key, value!);
     }
 
-    public static HttpRequest JsonContent(this HttpRequest req, object data, JsonOptions options = default)
+    public static HttpRequest JsonContent(this HttpRequest req, object data, JsonSerializerOptions? options = null)
     {
         req.Content = HttpContentHelper.ToJsonContent(data, options);
         return req;

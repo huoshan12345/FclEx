@@ -33,8 +33,8 @@ public abstract class MessagePublisher<TOutput> : MessageProcessor<PublisherSett
         props.SetDelay(msg.Delay);
 
         var disposable = Logger.PushProperty(
-            props.GetNamedValue(m => m.MessageId)!,
-            msg.GetNamedValue(m => m.RoutingKey)!
+            (nameof(props.MessageId), props.MessageId),
+            (nameof(msg.RoutingKey), msg.RoutingKey)
         );
         try
         {
