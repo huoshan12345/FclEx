@@ -1,4 +1,6 @@
-﻿namespace FclEx.Http;
+﻿using FclEx.Json;
+
+namespace FclEx.Http;
 
 public static class HttpContentHelper
 {

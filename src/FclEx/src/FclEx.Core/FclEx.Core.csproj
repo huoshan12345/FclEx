@@ -4,4 +4,20 @@
     <TargetFrameworks>netstandard2.0;net6.0;net7.0;net8.0</TargetFrameworks>
   </PropertyGroup>
 
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
+    <PackageReference Include="System.IO.Compression" Version="4.3.0" />
+    <PackageReference Include="IndexRange" Version="1.0.3" />
+    <PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
+  </ItemGroup>
+
+  <Import Project="..\EmitGeneratedFiles.props" Condition="'$(Configuration)' == 'Debug' AND $(GITHUB_ACTION) == ''" />
+
+  <ItemGroup Label="FilesToCopy">
+    <Content Include="FclExUsing.cs" Pack="true" BuildAction="None" PackagePath="content/" />
+    <Content Include="FclEx.Core.targets" Pack="true" BuildAction="None" PackagePath="buildTransitive/" />
+  </ItemGroup>
+
 </Project>

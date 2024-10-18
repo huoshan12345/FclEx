@@ -1,5 +1,4 @@
 ﻿using System.IO.Compression;
-using Microsoft.IO.Compression;
 
 namespace FclEx.Extensions;
 

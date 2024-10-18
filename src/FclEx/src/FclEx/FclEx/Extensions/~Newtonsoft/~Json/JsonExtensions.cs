@@ -110,39 +110,6 @@ public static class JsonExtensions
         return token is JValue jValue && string.Equals(jValue.Value as string, value, comparison);
     }
 
-    public static bool IsPossibleJson([NotNullWhen(true)] this string? data)
-    {
-        /*
-         * In JSON, values must be one of the following data types:
-            a string
-            a number
-            an object (JSON object)
-            an array
-            a boolean
-            null
-         */
-
-        if (data.IsNotEmpty())
-        {
-            if (data.Length == 1 && data[0].IsDigit()) return true; // a single digit
-            else if (data.Length >= 2)
-            {
-                if (data == "null") return true; // null
-                if (data == "true" || data == "false") return true; // a boolean
-
-                var (first, last) = (data.First(), data.Last());
-                if (first == '{' && last == '}') return true; // an object
-                if (first == '[' && last == ']') return true; // an array
-                if (first == '"' && last == '"') return true; // a string
-
-                if (first.IsDigit() && last.IsDigit()) return true; // a positive number
-                if (data.Length >= 3 && first == '-' && data[1].IsDigit() && last.IsDigit()) return true; // a negative number
-            }
-
-        }
-        return false;
-    }
-
     public static bool IsPossibleJObject([NotNullWhen(true)] this string? data)
     {
         return data.IsNotEmpty() && data.Length >= 2
@@ -198,5 +165,15 @@ public static class JsonExtensions
             }
         }
         return false;
+    }
+
+    public static string ToJson(this XNode xml, Formatting formatting = Formatting.None, bool omitRootObject = false)
+    {
+        return JsonConvert.SerializeXNode(xml, formatting, omitRootObject);
+    }
+
+    public static string ToJson(this XmlNode xml, Formatting formatting = Formatting.None, bool omitRootObject = false)
+    {
+        return JsonConvert.SerializeXmlNode(xml, formatting, omitRootObject);
     }
 }

@@ -3,8 +3,9 @@
 public interface IAbstractAction<T> : IAction<T>
 {
     ILogger Logger { get; }
-
     Task<OperateResult<T>> ExecuteAsyncBody(CancellationToken token = default);
+
+    string GetName() => GetType().ShortName();
     Task<OperateResult<T>> HandleCancellationAsync(Exception ex) => Operate.CreateCancel<T>(ex);
     Task<OperateResult<T>> HandleErrorAsync(Exception ex) => Operate.CreateError<T>(ex);
 

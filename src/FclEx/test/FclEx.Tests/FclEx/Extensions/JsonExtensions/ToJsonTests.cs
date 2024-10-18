@@ -1,4 +1,6 @@
-﻿namespace FclEx.Extensions.JsonExtensions;
+﻿using FclEx.Json;
+
+namespace FclEx.Extensions.JsonExtensions;
 
 public class ToJsonTests
 {
