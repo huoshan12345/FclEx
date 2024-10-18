@@ -4,6 +4,7 @@ public static class CookieContainerExtensions
 {
     private static readonly FieldInfo FieldOfDomainTable = typeof(CookieContainer).GetField("m_domainTable", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
+    [SuppressMessage("ReSharper", "LoopCanBeConvertedToQuery")]
     public static List<Cookie> GetAllCookies(this CookieContainer cookieJar)
     {
         var list = new List<Cookie>(cookieJar.Count);
@@ -33,7 +34,10 @@ public static class CookieContainerExtensions
             {
                 foreach (CookieCollection cookieCollection in cookieList.Values)
                 {
-                    list.AddRange(cookieCollection);
+                    foreach (Cookie cookie in cookieCollection)
+                    {
+                        list.Add(cookie);
+                    }
                 }
             }
         }

@@ -5,7 +5,7 @@ public static partial class StringExtensions
     [return: NotNullIfNotNull(nameof(source))]
     public static string? TrimStart(this string? source, string? trimString)
     {
-        if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(trimString))
+        if (source.IsNullOrEmpty() || trimString.IsNullOrEmpty())
             return source;
 
         var result = source;
@@ -19,7 +19,7 @@ public static partial class StringExtensions
     [return: NotNullIfNotNull(nameof(source))]
     public static string? TrimEnd(this string? source, string? trimString)
     {
-        if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(trimString))
+        if (source.IsNullOrEmpty() || trimString.IsNullOrEmpty())
             return source;
 
         var result = source;

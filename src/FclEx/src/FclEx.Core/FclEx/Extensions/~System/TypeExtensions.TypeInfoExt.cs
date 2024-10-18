@@ -1,10 +1,12 @@
-﻿using System.Linq;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 partial class TypeExtensions
 {
     private static readonly ConcurrentDictionary<Type, TypeInfoExt> TypeInfoDic = new();
+
+#if NETSTANDARD2_0
+    private static readonly Lazy<FieldInfo?> _isByRefLike = new(() => typeof(Type).GetField("IsByRefLike", MemberBindingFlags));
+#endif
 
     public static TypeInfoExt GetTypeInfoExt(this Type type)
     {
@@ -47,13 +49,22 @@ partial class TypeExtensions
                 || nullableUnderlyingType != null
                 || type.ContainsGenericParameters
                 || type.Name == "ArgIterator"
-                || type == typeof(void)
-                || type.IsByRefLike)
+#if NETSTANDARD2_0
+                || IsByRefLike(type)
+#else
+                || type.IsByRefLike
+#endif
+                || type == typeof(void))
                 return null;
 
             return Activator.CreateInstance(type);
         }
-
+#if NETSTANDARD2_0
+        static bool IsByRefLike(Type type)
+        {
+            return _isByRefLike.Value is { } field && field.GetValue<bool>(type);
+        }
+#endif
         static Type? GetEnumerableUnderlyingTypeInternal(Type type)
         {
             // Type is Array

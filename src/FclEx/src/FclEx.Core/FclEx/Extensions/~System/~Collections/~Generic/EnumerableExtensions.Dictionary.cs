@@ -14,7 +14,7 @@ partial class EnumerableExtensions
     public static MultiValueDictionary<TKey, TValue> ToMultiValueDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> enumerable, IEqualityComparer<TKey>? comparer = null)
     {
         var e = enumerable.GroupBy(m => m.Key)
-            .Select(m => KvPair.Create(m.Key, m.Select(x => x.Value)));
+            .Select(m => KeyValuePair.Create(m.Key, m.Select(x => x.Value)));
         return new MultiValueDictionary<TKey, TValue>(e, comparer);
     }
 

@@ -23,13 +23,6 @@ public static class RandomExtensions
         return new string(stringChars);
     }
 
-    public static short NextShort(this Random random, short max = short.MaxValue)
-    {
-        Check.NotNull(random);
-        Check.NotNegative(max);
-        return (short)(random.NextDouble() * max);
-    }
-
     public static bool NextBoolean(this Random random, double trueProbability) => random.NextDouble() >= 1.0D - trueProbability;
     public static bool NextBoolean(this Random random) => random.Next(1, 2) == 1;
     public static sbyte NextSByte(this Random random) => (sbyte)random.Next(sbyte.MinValue, sbyte.MaxValue);
@@ -47,36 +40,7 @@ public static class RandomExtensions
         return new DateTime(ticks);
     }
 
-    public static object? Next(this Random random, Type type)
-    {
-        if (type == typeof(Guid))
-            return Guid.NewGuid();
-
-        return Type.GetTypeCode(type) switch
-        {
-            TypeCode.Boolean => random.NextBoolean(),
-            TypeCode.Char => random.NextChar(),
-            TypeCode.SByte => random.NextSByte(),
-            TypeCode.Byte => random.NextByte(),
-            TypeCode.Int16 => random.NextInt16(),
-            TypeCode.UInt16 => random.NextUInt16(),
-            TypeCode.Int32 => random.Next(),
-            TypeCode.UInt32 => random.NextUInt32(),
-            TypeCode.Int64 => random.NextInt64(),
-            TypeCode.UInt64 => random.NextUInt64(),
-            TypeCode.Single => random.NextSingle(),
-            TypeCode.Double => random.NextDouble(),
-            TypeCode.Decimal => random.NextDecimal(),
-            TypeCode.DateTime => random.NextDateTime(maxValue: new DateTime(2100, 1, 1, 0, 0, 0, DateTimeKind.Utc)),
-            TypeCode.String => random.NextString(10),
-            TypeCode.Empty => null,
-            TypeCode.Object => new object(),
-            TypeCode.DBNull => DBNull.Value,
-            _ => throw new ArgumentOutOfRangeException(nameof(type), type.Name, null)
-        };
-    }
-
-
+#if NET6_0_OR_GREATER
     /// <summary>
     /// Generates a random value of blittable type.
     /// </summary>
@@ -90,9 +54,28 @@ public static class RandomExtensions
         random.NextBytes(Span.AsBytes(ref result));
         return result;
     }
+#else
+    /// <summary>
+    /// Generates a random value of blittable type.
+    /// </summary>
+    /// <param name="random">The source of random numbers.</param>
+    /// <typeparam name="T">The blittable type.</typeparam>
+    /// <returns>The randomly generated value.</returns>
+    [SkipLocalsInit]
+    public static unsafe T Next<T>(this Random random) where T : unmanaged
+    {
+        Unsafe.SkipInit(out T result);
+        var bytes = new byte[sizeof(T)];
+        Unsafe.As<byte, T>(ref bytes[0]) = result;
+        random.NextBytes(bytes);
+        return result;
+    }
 
     public static long NextInt64(this Random random, long min, long max)
     {
-        return random.
+        var rand = random.Next<long>();
+        return min + rand % (max + 1 - min);
     }
+
+#endif
 }

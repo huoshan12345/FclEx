@@ -30,7 +30,7 @@ partial class StringExtensions
 
     public static string[] SplitToLines(this string? str, StringSplitOptions options = StringSplitOptions.RemoveEmptyEntries)
     {
-        return string.IsNullOrEmpty(str)
+        return str.IsNullOrEmpty()
             ? []
             : str.Split(NewLineChars, options);
     }

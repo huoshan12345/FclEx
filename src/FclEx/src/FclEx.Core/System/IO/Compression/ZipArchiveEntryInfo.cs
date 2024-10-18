@@ -12,7 +12,7 @@ public class ZipArchiveEntryInfo
     public ZipArchiveEntryInfo(ZipArchiveEntry entry)
     {
         Entry = Check.NotNull(entry);
-        Segments = entry.FullName.Split("/", StringSplitOptions.RemoveEmptyEntries);
+        Segments = entry.FullName.Split(['/'], StringSplitOptions.RemoveEmptyEntries);
         IsDirectory = entry.IsDirectory();
         IsFile = !IsDirectory;
         Name = Segments[^1];

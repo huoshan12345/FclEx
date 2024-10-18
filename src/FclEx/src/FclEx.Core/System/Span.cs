@@ -28,7 +28,7 @@ public static class Span
     /// <typeparam name="T">The type of the data items.</typeparam>
     /// <returns>A span.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe Span<T> Create<T>(ref T reference, int length)
+    public static unsafe Span<T> Create<T>(ref T reference, int length = 1)
     {
         return new Span<T>(Unsafe.AsPointer(ref reference), length);
     }

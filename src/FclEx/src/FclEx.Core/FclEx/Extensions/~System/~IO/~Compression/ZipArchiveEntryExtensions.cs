@@ -10,9 +10,16 @@ public static class ZipArchiveEntryExtensions
             throw new ArgumentNullException(nameof(destinationFileName));
 
         var mode = overwrite ? FileMode.Create : FileMode.CreateNew;
-        await using (var destination = new FileStream(destinationFileName, mode, FileAccess.Write, FileShare.None, 4096, false).ToAsyncDisposable())
+
+#if NET6_0_OR_GREATER
+        await
+#endif
+        using (var destination = new FileStream(destinationFileName, mode, FileAccess.Write, FileShare.None, 4096, false))
         {
-            await using var stream = source.Open();
+#if NET6_0_OR_GREATER
+            await
+#endif
+            using var stream = source.Open();
             await stream.CopyToAsync(destination).IgnoreSyncContext();
         }
         File.SetLastWriteTime(destinationFileName, source.LastWriteTime.DateTime);
