@@ -1,9 +1,4 @@
-﻿using System.Diagnostics;
-using FclEx.Utils;
-using Microsoft.Extensions.Logging.Abstractions;
-using Nito.AsyncEx;
-
-namespace FclEx.Web;
+﻿namespace FclEx.Web;
 
 public abstract class UserClient : IUserClient, IDisposable
 {
@@ -59,7 +54,7 @@ public abstract class UserClient : IUserClient, IDisposable
         }
     }
     public virtual ILogger Logger => _logger.Value;
-    public virtual event Action<AccountStatus> OnAccountStatusChanged = status => { };
+    public event Action<AccountStatus> OnAccountStatusChanged = status => { };
     public virtual ISession Session { get; } = new Session();
     public virtual bool IsOnline => Session.State == SessionState.Online;
 
@@ -94,27 +89,27 @@ public abstract class UserClient : IUserClient, IDisposable
         };
     }
 
-    protected Task<OperateResult> DoLoginInternal(CancellationToken token)
+    protected Task<OperateResult> LoginActionWrapperAsync(CancellationToken token)
     {
         Logger.LogDebug("Start to login...");
-        return LoginInternal(token)
+        return LoginActionAsync(token)
             .Ok(o => Logger.LogDebug("Login successfully"))
             .Error(ex => Logger.LogWarning(ex, "Failed to login: " + ex.Message));
     }
 
-    protected abstract Task<OperateResult> LoginInternal(CancellationToken token);
+    protected abstract Task<OperateResult> LoginActionAsync(CancellationToken token);
 
-    protected virtual Task<OperateResult> FakeLoginInternal(CancellationToken token)
+    protected virtual Task<OperateResult> FakeLoginActionAsync(CancellationToken token)
     {
         return Operate.Success.ToTask();
     }
 
-    protected virtual void DisposeInternal()
+    protected virtual void DisposeAction()
     {
         _httpService?.Dispose();
     }
 
-    protected async Task<OperateResult> DoLoginAction(Func<CancellationToken, Task<OperateResult>> loginAction, CancellationToken token)
+    protected async Task<OperateResult> DoLoginAsync(Func<CancellationToken, Task<OperateResult>> loginAction, CancellationToken token)
     {
         if (IsOnline)
         {
@@ -159,17 +154,17 @@ public abstract class UserClient : IUserClient, IDisposable
         }
     }
 
-    public Task<OperateResult> Login(CancellationToken token = default)
+    public Task<OperateResult> LoginAsync(CancellationToken token = default)
     {
-        return DoLoginAction(DoLoginInternal, token);
+        return DoLoginAsync(LoginActionWrapperAsync, token);
     }
 
-    public async Task WaitForLogin(CancellationToken token = default)
+    public async Task WaitLoginAsync(CancellationToken token = default)
     {
         using (await LoginLocker.LockAsync(token)) { }
     }
 
-    public Task<OperateResult> Logout(CancellationToken token = default)
+    public Task<OperateResult> LogoutAsync(CancellationToken token = default)
     {
         HttpService.ClearAllCookies();
         Session.Offline();
@@ -178,19 +173,19 @@ public abstract class UserClient : IUserClient, IDisposable
         return Operate.Success.ToTask();
     }
 
-    public Task<OperateResult> FakeLogin(bool loginIfFail = true, CancellationToken token = default)
+    public Task<OperateResult> FakeLoginAsync(bool loginIfFail = true, CancellationToken token = default)
     {
-        return DoLoginAction(async t =>
+        return DoLoginAsync(async t =>
         {
             Logger.LogTrace("Start to fake login...");
-            var result = await FakeLoginInternal(t)
+            var result = await FakeLoginActionAsync(t)
                 .Ok(o => Logger.LogTrace("Fake login successfully"))
                 .Error(ex => Logger.LogWarning(ex, "Failed to fake login : " + ex.Message))
                 .IgnoreSyncContext();
 
             if (result.Error && loginIfFail)
             {
-                result = await DoLoginInternal(t).IgnoreSyncContext();
+                result = await LoginActionWrapperAsync(t).IgnoreSyncContext();
             }
             return result;
         }, token);
@@ -201,7 +196,8 @@ public abstract class UserClient : IUserClient, IDisposable
         if (_isDisposed)
             return;
 
+        GC.SuppressFinalize(this);
+        DisposeAction();
         _isDisposed = true;
-        DisposeInternal();
     }
 }

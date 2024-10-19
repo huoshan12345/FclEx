@@ -28,7 +28,7 @@ public sealed class BatchRetryConsumer<T> : IConsumer<T>,
         TypeName = GetType().ShortName();
 
         _retryConsumer = new AutoRetryConsumer<List<T>>(maxRetryTimes);
-        _retryConsumer.ConsumingHandler += (sender, list) => Retry(list);
+        _retryConsumer.ConsumingHandler += (sender, list) => RetryAsync(list);
         _retryConsumer.ExceptionHandler += (sender, list) => HandleException(list);
         _retryConsumer.DiscardHandler += (sender, list) => HandleDiscard(list);
         _retryConsumer.CancellationHandler += (sender, list) => CancellationHandler.Invoke(this, list.SelectMany(m => m).ToList());
@@ -60,12 +60,12 @@ public sealed class BatchRetryConsumer<T> : IConsumer<T>,
 
     public ConsumerCounter Counter { get; } = new();
 
-    public Task Start(bool clear = false)
+    public Task StartAsync(bool clear = false)
     {
         return Task.WhenAll(
-            _retryConsumer.Start(clear),
-            _batchConsumer.Start(clear)
-                .ContinueWith(t => _retryConsumer.CompleteAdding()));
+            _retryConsumer.StartAsync(clear),
+            _batchConsumer.StartAsync(clear)
+                .ContinueWith(t => _retryConsumer.CompleteAdding(), TaskScheduler.Current));
     }
 
     public void Add(T item)
@@ -126,7 +126,7 @@ public sealed class BatchRetryConsumer<T> : IConsumer<T>,
         }
     }
 
-    private async Task Retry(IReadOnlyList<T>? items)
+    private async Task RetryAsync(IReadOnlyList<T>? items)
     {
         if (items == null || items.Count == 0) return;
         try

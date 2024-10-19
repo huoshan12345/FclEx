@@ -1,7 +1,6 @@
 ﻿// For background refer to this article by Dave Transom
 // http://www.singular.co.nz/2008/07/finding-preferred-accept-encoding-header-in-csharp/
 
-using System.Diagnostics;
 using System.Globalization;
 
 namespace FclEx.Http;

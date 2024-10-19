@@ -15,7 +15,7 @@ public interface IHttpAction<T> : IAbstractAction<T>
         return GetResultAsync(res);
     }
 
-    async Task<OperateResult<T>> IAbstractAction<T>.ExecuteAsyncBody(CancellationToken token)
+    async Task<OperateResult<T>> IAbstractAction<T>.ExecuteActionAsync(CancellationToken token)
     {
         HttpRequest? req = null;
         try

@@ -4,7 +4,7 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
-    <NoWarn>xUnit2013</NoWarn>
+    <NoWarn>xUnit2013;CS1591;CS2002;VSTHRD200;VSTHRD003;</NoWarn>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>

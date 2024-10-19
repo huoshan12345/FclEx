@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 public readonly record struct HttpClientContext(HttpClient Client, IAsyncPolicy<HttpResponseMessage> Policy);
 

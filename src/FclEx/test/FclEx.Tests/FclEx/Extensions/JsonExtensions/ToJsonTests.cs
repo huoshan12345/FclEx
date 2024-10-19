@@ -31,24 +31,24 @@ public class ToJsonTests
     public void GetSettings_SameOptions_SameResult()
     {
         var options = new JsonOptions();
-        var settings = JsonHelper.GetSettings(options);
-        var settings2 = JsonHelper.GetSettings(options);
+        var settings = JsonHelper.GetOptions(options);
+        var settings2 = JsonHelper.GetOptions(options);
         Assert.Same(settings, settings2);
     }
 
     [Fact]
     public void GetSettings_EquatableOptions_SameResult()
     {
-        var settings = JsonHelper.GetSettings(new JsonOptions(Formatting.Indented));
-        var settings2 = JsonHelper.GetSettings(new JsonOptions(Formatting.Indented));
+        var settings = NewtonsoftJsonHelper.GetOptions(new NewtonsoftJsonOptions(Formatting.Indented));
+        var settings2 = NewtonsoftJsonHelper.GetOptions(new NewtonsoftJsonOptions(Formatting.Indented));
         Assert.Same(settings, settings2);
     }
 
     [Fact]
     public void GetSettings_NonEquatableOptions_DifferentResult()
     {
-        var settings = JsonHelper.GetSettings(new JsonOptions(Formatting.Indented));
-        var settings2 = JsonHelper.GetSettings(new JsonOptions(Formatting.None));
+        var settings = NewtonsoftJsonHelper.GetOptions(new NewtonsoftJsonOptions(Formatting.Indented));
+        var settings2 = NewtonsoftJsonHelper.GetOptions(new NewtonsoftJsonOptions(Formatting.None));
         Assert.NotSame(settings, settings2);
     }
 }

@@ -36,7 +36,7 @@ public class BatchRetryConsumerTests
             Assert.Equal(retryTimes, args.ErrorTimes);
         };
         consumer.AddRange(numbers);
-        var task = consumer.Start();
+        var task = consumer.StartAsync();
         consumer.CompleteAdding();
         await task;
 
@@ -51,7 +51,7 @@ public class BatchRetryConsumerTests
     public async Task Dispose_AfterStart_Test()
     {
         var consumer = new BatchRetryConsumer<Model>(5, TimeSpan.FromSeconds(1), 1);
-        var task = consumer.Start();
+        var task = consumer.StartAsync();
         consumer.Dispose();
         await TaskHelper.Delay(1);
         Assert.True(task.IsCompleted);
@@ -62,7 +62,7 @@ public class BatchRetryConsumerTests
     {
         var consumer = new BatchRetryConsumer<Model>(5, TimeSpan.FromSeconds(1), 1);
         consumer.ConsumingHandler += (sender, list) => TaskHelper.Delay(1);
-        var task = consumer.Start();
+        var task = consumer.StartAsync();
         consumer.Add(new Model(0));
         consumer.Dispose();
         Assert.False(task.IsCompleted);
@@ -77,7 +77,7 @@ public class BatchRetryConsumerTests
         consumer.ConsumingHandler += (sender, list) => Task.CompletedTask;
         consumer.AddRange(Enumerable.Range(1, 10));
         consumer.CompleteAdding();
-        var r = await Operate.ExecuteAsync(() => consumer.Start(), TimeSpan.FromSeconds(5));
+        var r = await Operate.ExecuteAsync(() => consumer.StartAsync(), TimeSpan.FromSeconds(5));
         Assert.True(r.Success);
         Assert.True(consumer.IsComplete);
         Assert.Equal(10, consumer.Counter.Consume);
@@ -88,7 +88,7 @@ public class BatchRetryConsumerTests
     {
         var consumer = new BatchRetryConsumer<int>(5, TimeSpan.FromSeconds(1), 1);
         consumer.ConsumingHandler += (sender, list) => Task.CompletedTask;
-        var task = Operate.ExecuteAsync(() => consumer.Start(), TimeSpan.FromSeconds(5));
+        var task = Operate.ExecuteAsync(() => consumer.StartAsync(), TimeSpan.FromSeconds(5));
         consumer.AddRange(Enumerable.Range(1, 10));
         consumer.CompleteAdding();
         var r = await task;

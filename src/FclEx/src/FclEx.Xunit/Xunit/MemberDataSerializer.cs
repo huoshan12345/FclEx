@@ -1,5 +1,5 @@
 ﻿using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
+using FclEx.Json;
 
 namespace Xunit;
 
@@ -22,22 +22,11 @@ public class MemberDataSerializer<T> : IXunitSerializable
         Value = value;
     }
 
-    private static Action<JsonTypeInfo> RemoveDelegate()
-    {
-        return m =>
-        {
-            if (m.Kind == JsonTypeInfoKind.Object)
-            {
-                m.Properties.RemoveAll(m => m.PropertyType.IsAssignableTo(typeof(Delegate)));
-            }
-        };
-    }
-
     private static readonly JsonSerializerOptions _options = new()
     {
-        TypeInfoResolver = new DefaultJsonTypeInfoResolver
+        Converters =
         {
-            Modifiers = { RemoveDelegate() },
+            new IgnoreTypesJsonConverter(typeof(Delegate)),
         },
     };
 
@@ -45,7 +34,6 @@ public class MemberDataSerializer<T> : IXunitSerializable
     {
         Value = info.GetValue<string>("_value").FromJson<T>(_options);
     }
-
 
     public virtual void Serialize(IXunitSerializationInfo info)
     {

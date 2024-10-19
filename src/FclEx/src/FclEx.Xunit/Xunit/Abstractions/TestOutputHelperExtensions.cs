@@ -11,7 +11,7 @@ public static class TestOutputHelperExtensions
 
     public static void Write(this ITestOutputHelper output, string? message)
     {
-        ArgumentNullException.ThrowIfNull(output);
+        Check.NotNull(output);
 
         if (output is not TestOutputHelper helper)
             throw new NotSupportedException(nameof(output).GetType().FullName);

@@ -1,4 +1,6 @@
-﻿namespace FclEx.Extensions;
+﻿using FclEx.Json;
+
+namespace FclEx.Extensions;
 
 public static class JsonExtensions
 {
@@ -6,6 +8,18 @@ public static class JsonExtensions
     public static string ToJson(this object? obj, JsonSerializerOptions? options = null)
     {
         return JsonSerializer.Serialize(obj, options);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string ToJson(this object? obj, JsonOptions options)
+    {
+        return obj.ToJson(JsonHelper.GetOptions(options));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string ToJsonCamelCase(this object? obj)
+    {
+        return obj.ToJson(new JsonOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

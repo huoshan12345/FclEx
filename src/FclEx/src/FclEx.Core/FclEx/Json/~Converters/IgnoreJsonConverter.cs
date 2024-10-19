@@ -4,7 +4,7 @@ public class IgnoreJsonConverter : JsonConverterFactory
 {
     public override bool CanConvert(Type typeToConvert) => true;
 
-    public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options)
+    public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {
         var type = typeof(IgnoreJsonConverterImpl<>).MakeGenericType(typeToConvert);
         return type.CreateObject<JsonConverter>();

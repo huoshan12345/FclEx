@@ -5,73 +5,53 @@ namespace FclEx.Extensions;
 [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 public static partial class EnumerableExtensions
 {
-    public static ReadOnlyCollection<T> AsReadOnly<T>(this IEnumerable<T> source)
+    public static TCollection AsCollection<T, TCollection>(this IEnumerable<T> source, Func<IEnumerable<T>, TCollection> factory)
     {
         return source switch
         {
             null => throw new ArgumentNullException(nameof(source)),
-            ReadOnlyCollection<T> col => col,
-            _ => new ReadOnlyCollection<T>(source.ToList()),
+            TCollection col => col,
+            _ => factory(source),
         };
+    }
+
+    public static ReadOnlyCollection<T> AsReadOnlyCollection<T>(this IEnumerable<T> source)
+    {
+        return source.AsCollection(m => new ReadOnlyCollection<T>(m.ToArray()));
     }
 
     public static IList<T> AsIList<T>(this IEnumerable<T> source)
     {
-        return source switch
-        {
-            null => throw new ArgumentNullException(nameof(source)),
-            IList<T> col => col,
-            _ => source.ToList(),
-        };
+        return source.AsCollection<T, IList<T>>(m => m.ToList());
     }
 
     public static ISet<T> AsISet<T>(this IEnumerable<T> source)
     {
-        return source switch
-        {
-            null => throw new ArgumentNullException(nameof(source)),
-            ISet<T> col => col,
-            _ => source.ToHashSet(),
-        };
+        return source.AsCollection<T, ISet<T>>(m => m.ToHashSet());
     }
 
     public static ICollection<T> AsICollection<T>(this IEnumerable<T> source)
     {
-        return source switch
-        {
-            null => throw new ArgumentNullException(nameof(source)),
-            ICollection<T> col => col,
-            _ => source.ToList(),
-        };
+        return source.AsCollection<T, ICollection<T>>(m => m.ToList());
     }
 
     public static IReadOnlyList<T> AsIReadOnlyList<T>(this IEnumerable<T> source)
     {
-        return source switch
-        {
-            null => throw new ArgumentNullException(nameof(source)),
-            IReadOnlyList<T> col => col,
-            _ => source.ToList(),
-        };
+        return source.AsCollection<T, IReadOnlyList<T>>(m => m.ToList());
+    }
+
+    public static IReadOnlyCollection<T> AsIReadOnlyCollection<T>(this IEnumerable<T> source)
+    {
+        return source.AsCollection<T, IReadOnlyCollection<T>>(m => m.ToList());
     }
 
     public static List<T> AsList<T>(this IEnumerable<T> source)
     {
-        return source switch
-        {
-            null => throw new ArgumentNullException(nameof(source)),
-            List<T> col => col,
-            _ => source.ToList(),
-        };
+        return source.AsCollection<T, List<T>>(m => m.ToList());
     }
 
     public static T[] AsArray<T>(this IEnumerable<T> source)
     {
-        return source switch
-        {
-            null => throw new ArgumentNullException(nameof(source)),
-            T[] col => col,
-            _ => source.ToArray(),
-        };
+        return source.AsCollection<T, T[]>(m => m.ToArray());
     }
 }

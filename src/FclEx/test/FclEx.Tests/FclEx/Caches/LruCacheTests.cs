@@ -121,7 +121,7 @@ public class LruCacheTests
             for (var i = 0; i < threads; i++)
             {
                 var ii = i;
-                Task.Run(() =>
+                _ = Task.Run(() =>
                 {
                     for (var j = 0; j < addsPerThread; j++)
                     {
@@ -190,7 +190,7 @@ public class LruCacheTests
             for (var i = 0; i < threads; i++)
             {
                 var ii = i;
-                Task.Run(() =>
+                _ = Task.Run(() =>
                 {
                     for (var j = 1; j <= updatesPerThread; j++)
                     {

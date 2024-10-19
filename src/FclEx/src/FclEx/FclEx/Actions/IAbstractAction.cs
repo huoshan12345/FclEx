@@ -3,7 +3,7 @@
 public interface IAbstractAction<T> : IAction<T>
 {
     ILogger Logger { get; }
-    Task<OperateResult<T>> ExecuteAsyncBody(CancellationToken token = default);
+    Task<OperateResult<T>> ExecuteActionAsync(CancellationToken token = default);
 
     string GetName() => GetType().ShortName();
     Task<OperateResult<T>> HandleCancellationAsync(Exception ex) => Operate.CreateCancel<T>(ex);
@@ -16,7 +16,7 @@ public interface IAbstractAction<T> : IAction<T>
         if (Logger.IsEnabled(LogLevel.Trace))
             Logger.LogTrace($"[{GetName()}]Begin");
 
-        var future = CommonAction.Create(ExecuteAsyncBody, true)
+        var future = CommonAction.Create(ExecuteActionAsync, true)
             .NextResult<T, T>(r => r.Success
                 ? new SuccessAction<T>(r.Value, r.Elapsed)
                 : r.IsCanceled()

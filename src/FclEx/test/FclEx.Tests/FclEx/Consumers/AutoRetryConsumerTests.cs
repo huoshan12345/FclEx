@@ -31,7 +31,7 @@ public class AutoRetryConsumerTests
             Assert.NotNull(args.Exception);
         };
 
-        var task = consumer.Start();
+        var task = consumer.StartAsync();
         // ReSharper disable once AccessToDisposedClosure
         var items = Enumerable.Range(1, 3)
             .Do(m => consumer.Add(m))

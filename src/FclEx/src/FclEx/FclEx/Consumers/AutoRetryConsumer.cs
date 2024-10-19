@@ -31,7 +31,7 @@ public sealed class AutoRetryConsumer<T> : AbstractConsumer<AutoRetryConsumer<T>
         return false;
     }
 
-    protected override async Task ProcessAction()
+    protected override async Task ProcessActionAsync()
     {
         if (!TryGetItem(out var item))
             return;

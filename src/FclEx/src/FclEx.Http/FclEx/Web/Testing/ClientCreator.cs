@@ -56,13 +56,13 @@ public class ClientCreator<TClient> where TClient : IUserClient
         {
             if (options.FakeLogin)
             {
-                await client.FakeLogin(false);
+                await client.FakeLoginAsync(false);
             }
         }
 
         if (!client.IsOnline && options.Login)
         {
-            await client.Login()
+            await client.LoginAsync()
                 .Ok(_ => SaveCookies(client));
         }
 

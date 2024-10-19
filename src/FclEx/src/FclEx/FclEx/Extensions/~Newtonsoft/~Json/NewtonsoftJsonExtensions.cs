@@ -9,9 +9,9 @@ namespace FclEx.Extensions;
 
 public static class JsonExtensions
 {
-    public static string ToNewtonsoftJson(this object? obj, JsonOptions options)
+    public static string ToNewtonsoftJson(this object? obj, NewtonsoftJsonOptions options)
     {
-        var settings = JsonHelper.GetSettings(options);
+        var settings = NewtonsoftJsonHelper.GetOptions(options);
         return JsonConvert.SerializeObject(obj, settings);
     }
 
@@ -22,7 +22,7 @@ public static class JsonExtensions
         bool useCamelCase = false,
         string? dateTimeFormat = null)
     {
-        return obj.ToNewtonsoftJson(new JsonOptions(formatting, ignoreNull, dateTimeZoneHandling, useCamelCase, dateTimeFormat));
+        return obj.ToNewtonsoftJson(new NewtonsoftJsonOptions(formatting, ignoreNull, dateTimeZoneHandling, useCamelCase, dateTimeFormat));
     }
 
     public static string ToNewtonsoftJsonCamelCase(this object? obj,
@@ -31,7 +31,7 @@ public static class JsonExtensions
         DateTimeZoneHandling dateTimeZoneHandling = DateTimeZoneHandling.Utc,
         string? dateTimeFormat = null)
     {
-        return obj.ToNewtonsoftJson(new JsonOptions(formatting, ignoreNull, dateTimeZoneHandling, true, dateTimeFormat));
+        return obj.ToNewtonsoftJson(new NewtonsoftJsonOptions(formatting, ignoreNull, dateTimeZoneHandling, true, dateTimeFormat));
     }
 
     public static JToken ToJToken(this string str)

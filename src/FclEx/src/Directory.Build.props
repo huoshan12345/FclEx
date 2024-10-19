@@ -2,7 +2,7 @@
   <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
-    <NoWarn>CS1591;CS2002;</NoWarn>
+    <NoWarn>CS1591;CS2002;VSTHRD200;VSTHRD003;</NoWarn>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <LangVersion>latest</LangVersion>
     <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>

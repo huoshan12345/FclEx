@@ -148,8 +148,8 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
 
     public int Count => Read(() => _list.Count);
     public int Capacity { get; }
-    public ICollection<TKey> Keys => Read(() => _list.Select(m => m.Key).AsReadOnly());
-    public ICollection<TValue> Values => Read(() => _list.Select(m => m.Value).AsReadOnly())!;
+    public ICollection<TKey> Keys => Read(() => _list.Select(m => m.Key).AsReadOnlyCollection());
+    public ICollection<TValue> Values => Read(() => _list.Select(m => m.Value).AsReadOnlyCollection())!;
     public CacheStats Stats { get; }
 
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()

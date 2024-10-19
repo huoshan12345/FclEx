@@ -36,7 +36,7 @@ public class BatchConsumerTests
             Assert.NotNull(m.Exception);
             Assert.IsAssignableFrom<Exception>(m.Exception);
         });
-        var task = consumer.Start();
+        var task = consumer.StartAsync();
         var items = Enumerable.Range(1, 3).ToArray();
         await items.ToSeriallyExecutedTask(async m =>
         {

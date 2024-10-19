@@ -18,6 +18,6 @@ public abstract class UserClientHttpAction<TClient, T> : UserClientAction<TClien
     public virtual HttpRequest BuildRequest() => this.Base<IHttpAction<T>, HttpRequest>(m => m.BuildRequest());
     public virtual void ModifyRequest(HttpRequest req) { }
     public virtual Task<OperateResult<T>> GetResultAsync(HttpResponse response) => GetResult(response);
-    public override Task<OperateResult<T>> ExecuteAsyncBody(CancellationToken token = default)
-        => this.Base<IHttpAction<T>, Task<OperateResult<T>>>(m => m.ExecuteAsyncBody(token));
+    public override Task<OperateResult<T>> ExecuteActionAsync(CancellationToken token = default)
+        => this.Base<IHttpAction<T>, Task<OperateResult<T>>>(m => m.ExecuteActionAsync(token));
 }

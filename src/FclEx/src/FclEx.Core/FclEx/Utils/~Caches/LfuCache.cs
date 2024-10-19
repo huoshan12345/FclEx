@@ -202,7 +202,7 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
 
     public CacheStats Stats { get; }
 
-    public ICollection<TKey> Keys => Read(() => _list.Select(m => m.Key).AsReadOnly());
+    public ICollection<TKey> Keys => Read(() => _list.Select(m => m.Key).AsReadOnlyCollection());
 
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         => LockEnumerator.Create(_list.Select(m => KeyValuePair.Create(m.Key, m.Value)).GetEnumerator(), _lock);

@@ -98,7 +98,7 @@ public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
         }
     }
 
-    protected override async Task ProcessAction()
+    protected override async Task ProcessActionAsync()
     {
         List<ProcessingItem<T>>? items = null;
         try

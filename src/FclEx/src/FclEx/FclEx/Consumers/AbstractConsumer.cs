@@ -1,4 +1,6 @@
-﻿namespace FclEx.Consumers;
+﻿using Microsoft.VisualStudio.Threading;
+
+namespace FclEx.Consumers;
 
 public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>, ICancellationListener<TSelf, IReadOnlyList<T>>
     where TSelf : AbstractConsumer<TSelf, T>
@@ -64,19 +66,19 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>, ICancellationLi
         }
     }
 
-    protected abstract Task ProcessAction();
+    protected abstract Task ProcessActionAsync();
 
-    protected virtual async Task Process()
+    protected virtual async Task ProcessAsync()
     {
         try
         {
             while (!IsCompleteNoLock && !_cts.IsCancellationRequested)
-                await ProcessAction().IgnoreSyncContext();
+                await ProcessActionAsync().IgnoreSyncContext();
         }
         catch (Exception e)
         {
             Counter.IncrementException();
-            Logger.LogCritical(e, $"[{TypeName}]Error encountered when invoking {nameof(Process)}: " + e.Message);
+            Logger.LogCritical(e, $"[{TypeName}]Error encountered when invoking {nameof(ProcessAsync)}: " + e.Message);
         }
         finally
         {
@@ -108,9 +110,9 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>, ICancellationLi
             throw new InvalidOperationException("The consumer has been marked as complete with regards to additions.");
     }
 
-    public virtual Task Start(bool clear = false)
+    public virtual async Task StartAsync(bool clear = false)
     {
-        using (_locker.Lock())
+        using (await _locker.LockAsync())
         {
             EnsureNonDisposed();
             EnsureNotRunning();
@@ -121,7 +123,7 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>, ICancellationLi
             if (_cts.IsCancellationRequested)
                 _cts = new CancellationTokenSource();
             _isRunning = true;
-            return Task.Run(Process);
+            await Task.Run(ProcessAsync);
         }
     }
 
