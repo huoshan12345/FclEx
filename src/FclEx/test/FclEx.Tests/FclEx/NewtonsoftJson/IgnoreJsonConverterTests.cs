@@ -1,6 +1,4 @@
-﻿using FclEx.NewtonsoftJson;
-
-namespace FclEx.Json;
+﻿namespace FclEx.NewtonsoftJson;
 
 public class IgnoreJsonConverterTests
 {
@@ -8,7 +6,7 @@ public class IgnoreJsonConverterTests
     public void ReadJson_Test()
     {
         var json = "{\"retcode\":20000000,\"msg\":\"succ\",\"data\":null}";
-        var obj = json.FromJson<TestModel>()!;
+        var obj = json.ToJToken().ToObject<TestModel>()!;
         Assert.Equal(20000000, obj.RetCode);
         Assert.Equal("succ", obj.Msg);
     }
@@ -27,7 +25,7 @@ public class IgnoreJsonConverterTests
         public long RetCode { get; set; }
         [JsonProperty("msg")]
         public string? Msg { get; set; }
-        [JsonProperty("data")]
+        [JsonProperty("data"), JsonConverter(typeof(IgnoreJsonConverter))]
         public Unit Data { get; set; }
     }
 }

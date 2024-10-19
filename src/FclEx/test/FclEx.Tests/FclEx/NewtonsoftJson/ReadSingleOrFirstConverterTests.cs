@@ -1,8 +1,6 @@
-﻿using FclEx.NewtonsoftJson;
+﻿namespace FclEx.NewtonsoftJson;
 
-namespace FclEx.Json;
-
-public class ReadSingleOrLastConverterTests
+public class ReadSingleOrFirstConverterTests
 {
     private class TesterOfSingle
     {
@@ -16,7 +14,7 @@ public class ReadSingleOrLastConverterTests
 
     private class Tester
     {
-        [JsonConverter(typeof(ReadSingleOrLastConverter))]
+        [JsonConverter(typeof(ReadSingleOrFirstConverter))]
         public string? Id { get; set; }
     }
 
@@ -39,16 +37,16 @@ public class ReadSingleOrLastConverterTests
     }
 
     [Fact]
-    public void ReadLast_Test()
+    public void ReadFirst_Test()
     {
         var obj = new TesterOfArray { Id = Enumerable.Range(1, 10).Select(m => m.ToString()).ToArray() };
         var json = obj.ToJson();
         var actual = json.ToJToken().ToObject<Tester>()!;
-        Assert.Equal(obj.Id.Last(), actual.Id);
+        Assert.Equal(obj.Id.First(), actual.Id);
     }
 
     [Fact]
-    public void ReadLast_Null_Test()
+    public void ReadFirst_Null_Test()
     {
         var obj = new TesterOfArray { Id = null };
         var json = obj.ToJson();
@@ -57,9 +55,9 @@ public class ReadSingleOrLastConverterTests
     }
 
     [Fact]
-    public void ReadLast_Value_Null_Test()
+    public void ReadFirst_Value_Null_Test()
     {
-        var obj = new TesterOfArray { Id = new[] { "1", "2", null } };
+        var obj = new TesterOfArray { Id = new[] { null, "2", "3" } };
         var json = obj.ToJson();
         var actual = json.ToJToken().ToObject<Tester>()!;
         Assert.Null(actual.Id);
