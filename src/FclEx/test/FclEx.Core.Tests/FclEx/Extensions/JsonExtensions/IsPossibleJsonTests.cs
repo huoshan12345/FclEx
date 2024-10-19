@@ -4,7 +4,7 @@ public class IsPossibleJsonTests
 {
     private static void Test<T>(T input)
     {
-        var json = JsonConvert.SerializeObject(input, Formatting.None);
+        var json = input.ToJson(new JsonOptions { Indented = true });
         Assert.True(json.IsPossibleJson());
     }
 
@@ -65,7 +65,7 @@ public class IsPossibleJsonTests
     [Fact]
     public void Array_Test()
     {
-        Test(new [] { 1, 2, 4 });
+        Test(new[] { 1, 2, 4 });
     }
 
     [Fact]

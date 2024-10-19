@@ -1,13 +1,24 @@
-﻿using FclEx.Json;
-
-namespace FclEx.Extensions.JsonExtensions;
+﻿namespace FclEx.Extensions.JsonExtensions;
 
 public class ToJsonTests
 {
+    internal class TestModel
+    {
+        public string Name { get; set; } = "Name";
+        [JsonPropertyName(nameof(Count))]
+        public int Count { get; set; } = 1;
+    }
+
+    internal class DateTimeTestModel
+    {
+        public string? Name { get; set; }
+        public DateTime DateTime { get; set; }
+    }
+
     [Fact]
     public void ToJsonCamel_Test()
     {
-        var obj = new Tester();
+        var obj = new TestModel();
         var json = obj.ToJsonCamelCase();
         Assert.Equal("{\"name\":\"Name\",\"Count\":1}", json);
     }
@@ -17,9 +28,9 @@ public class ToJsonTests
     {
         foreach (var kind in Enum.GetValues<DateTimeKind>())
         {
-            var obj = new DateTimeTester() { DateTime = new DateTime(2019, 1, 2, 3, 4, 5, kind) };
+            var obj = new DateTimeTestModel { DateTime = new DateTime(2019, 1, 2, 3, 4, 5, kind) };
             var json = obj.ToJsonCamelCase();
-            var obj2 = json.FromJson<DateTimeTester>()!;
+            var obj2 = json.FromJson<DateTimeTestModel>(new JsonOptions { PropertyNameCaseInsensitive = true })!;
             Assert.Equal(obj.Name, obj2.Name);
             Assert.Equal(obj.DateTime.ToUtc(), obj2.DateTime.ToUtc());
         }

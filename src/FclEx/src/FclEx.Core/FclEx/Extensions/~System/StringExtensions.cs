@@ -1,4 +1,6 @@
-﻿namespace FclEx.Extensions;
+﻿using FclEx.Json;
+
+namespace FclEx.Extensions;
 
 partial class StringExtensions
 {
@@ -13,6 +15,9 @@ partial class StringExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T? FromJson<T>(this string json, JsonSerializerOptions? options = null) => JsonSerializer.Deserialize<T>(json, options);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T? FromJson<T>(this string json, JsonOptions options) => JsonSerializer.Deserialize<T>(json, JsonHelper.GetOptions(options));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static object? FromJson(this string json, Type type, JsonSerializerOptions? options = null) => JsonSerializer.Deserialize(json, type, options);
@@ -94,7 +99,7 @@ partial class StringExtensions
 
         return true;
     }
-    
+
     public static byte[] HexToBytes(this string hex)
     {
         if (hex == null) throw new ArgumentNullException(nameof(hex));
