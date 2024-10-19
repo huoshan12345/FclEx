@@ -112,6 +112,7 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>, ICancellationLi
 
     public virtual async Task StartAsync(bool clear = false)
     {
+        Task task;
         using (await _locker.LockAsync())
         {
             EnsureNonDisposed();
@@ -123,8 +124,9 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>, ICancellationLi
             if (_cts.IsCancellationRequested)
                 _cts = new CancellationTokenSource();
             _isRunning = true;
-            await Task.Run(ProcessAsync);
+            task = Task.Run(ProcessAsync);
         }
+        await task; // NOTE: DO NOT await this task in above lock scope
     }
 
     public virtual void Add(T item)

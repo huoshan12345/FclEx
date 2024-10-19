@@ -7,7 +7,7 @@ using Formatting = Newtonsoft.Json.Formatting;
 
 namespace FclEx.Extensions;
 
-public static class JsonExtensions
+public static class NewtonsoftJsonExtensions
 {
     public static string ToNewtonsoftJson(this object? obj, NewtonsoftJsonOptions options)
     {
