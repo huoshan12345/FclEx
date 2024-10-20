@@ -13,10 +13,4 @@
     <ProjectReference Include="..\FclEx.Core\FclEx.Core.csproj" />
   </ItemGroup>
 
-  <Target Name="DisableStaticAnalysis" BeforeTargets="CoreCompile" Condition="$(RunStaticAnalysis) == '' OR $(RunStaticAnalysis) == 'false'">
-    <ItemGroup>
-      <Analyzer Remove="@(Analyzer)" Condition="$([System.String]::new(%(Filename)).StartsWith('Microsoft.VisualStudio.Threading.Analyzers'))"				/>
-    </ItemGroup>
-  </Target>
-
 </Project>

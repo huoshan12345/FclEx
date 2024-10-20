@@ -1,6 +1,6 @@
 namespace FclEx.Kafka;
 
-public class JsonDeserializer<T> : IDeserializer<T>
+public class NewtonsoftJsonDeserializer<T> : IDeserializer<T>
 {
     public T Deserialize(ReadOnlySpan<byte> data, bool isNull, SerializationContext context)
     {
@@ -8,6 +8,6 @@ public class JsonDeserializer<T> : IDeserializer<T>
             return default!;
 
         var str = Encoding.UTF8.GetString(data);
-        return str.FromJson<T>()!;
+        return JsonConvert.DeserializeObject<T>(str)!;
     }
 }

@@ -35,8 +35,7 @@ partial class DbConnectionExtensions
         }
     }
 
-    public static async Task DoTransactionAsync(this IList<DbConnection> cons, Func<IList<DbTransaction>, Task> action,
-        IsolationLevel level = IsolationLevel.ReadUncommitted)
+    public static async Task DoTransactionAsync(this IReadOnlyList<DbConnection> cons, Func<IReadOnlyList<DbTransaction>, Task> action, IsolationLevel level = IsolationLevel.ReadUncommitted)
     {
         var trans = await cons.Select(m => m.BeginTransactionAsync(level)).WhenAll();
         try
@@ -63,4 +62,44 @@ partial class DbConnectionExtensions
 
         return con.OpenAsync(token);
     }
+
+
+#if NETSTANDARD2_0
+    internal static Task<DbTransactionWrapper> BeginTransactionAsync(this DbConnection con, IsolationLevel isolationLevel)
+    {
+        var tran = con.BeginTransaction(isolationLevel);
+        return new DbTransactionWrapper(tran).ToTask();
+    }
+
+    internal class DbTransactionWrapper : DbTransaction, IAsyncDisposable
+    {
+        private readonly DbTransaction _transaction;
+
+        public DbTransactionWrapper(DbTransaction connection)
+        {
+            _transaction = connection is DbTransactionWrapper wrapper
+                ? wrapper._transaction
+                : connection;
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            _transaction.Dispose();
+            return new(Task.CompletedTask);
+        }
+
+        public override void Commit()
+        {
+            _transaction.Commit();
+        }
+
+        public override void Rollback()
+        {
+            _transaction.Rollback();
+        }
+
+        protected override DbConnection DbConnection => _transaction.Connection;
+        public override IsolationLevel IsolationLevel => _transaction.IsolationLevel;
+    }
+#endif
 }

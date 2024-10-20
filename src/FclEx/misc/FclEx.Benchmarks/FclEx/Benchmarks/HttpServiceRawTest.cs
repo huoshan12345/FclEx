@@ -36,7 +36,7 @@ public class HttpServiceRawTest
 
         foreach (var service in Services)
         {
-            await RawTest(service, requests, rounds).DonotCapture();
+            await RawTest(service, requests, rounds).IgnoreSyncContext();
         }
     }
 

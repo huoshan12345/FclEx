@@ -14,12 +14,12 @@ public static class ValueTaskExtensions
 
     public static ValueTask<T> ToValueTask<T>(this T obj) => new(obj);
 
-    public static ConfiguredValueTaskAwaitable<T> DonotCapture<T>(this ValueTask<T> task)
+    public static ConfiguredValueTaskAwaitable<T> IgnoreSyncContext<T>(this ValueTask<T> task)
     {
         return task.ConfigureAwait(false);
     }
 
-    public static ConfiguredValueTaskAwaitable DonotCapture(this ValueTask task)
+    public static ConfiguredValueTaskAwaitable IgnoreSyncContext(this ValueTask task)
     {
         return task.ConfigureAwait(false);
     }

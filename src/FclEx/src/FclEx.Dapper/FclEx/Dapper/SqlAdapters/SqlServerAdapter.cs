@@ -16,7 +16,7 @@ public class SqlServerAdapter : AbstractSqlAdapter<SqlServerAdapter>
 
     public override async ValueTask<IAsyncDisposable> EnableIdentityInsertAsync<T>(string? schema, IDbCommand cmd)
     {
-        ArgumentNullException.ThrowIfNull(cmd.Connection);
+        Check.NotNull(cmd.Connection);
         var tableName = DapperHelper.GetTableNameWithSchema(this, schema, typeof(T));
         await cmd.Connection.ExecuteAsync($"SET IDENTITY_INSERT {tableName} ON");
         return AsyncDisposable.Create(() => cmd.Connection.ExecuteAsync($"SET IDENTITY_INSERT {tableName} OFF"));
