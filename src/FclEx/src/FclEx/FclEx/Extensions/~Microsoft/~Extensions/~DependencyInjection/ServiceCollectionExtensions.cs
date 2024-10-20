@@ -31,20 +31,50 @@ public static class ServiceCollectionExtensions
         return col;
     }
 
-    public static IServiceCollection WrapFor<T>(this IServiceCollection col, Func<T, T> func, ServiceLifetime lifetime = ServiceLifetime.Singleton) where T : notnull
+    public static IServiceCollection Replace<TService>(this IServiceCollection services, TService implementationInstance)
+        where TService : class
     {
-        var descriptor = col.FirstOrDefault(m => m.ServiceType == typeof(T));
+        services.RemoveAll(m => m.ServiceType == typeof(TService));
+        services.AddSingleton<TService>(implementationInstance);
+        return services;
+    }
+
+    public static IServiceCollection Remove(this IServiceCollection services, Func<ServiceDescriptor, bool> condition)
+    {
+        var toRemove = services.Where(condition).ToArray();
+        toRemove.ForEach(m => services.Remove(m));
+        return services;
+    }
+
+    private static readonly Lazy<MethodInfo> Builder = new(GetBuilder);
+
+    private static MethodInfo GetBuilder()
+    {
+        const string assembly = "Microsoft.Extensions.DependencyInjection";
+        const string typeName = assembly + ".ServiceCollectionContainerBuilderExtensions";
+        var type = TypeHelper.GetRequiredType(typeName, assembly);
+        var method = type.GetRequiredMethod("BuildServiceProvider", 0, typeof(IServiceCollection));
+        return method;
+    }
+
+    public static IServiceCollection WrapFor<T>(this IServiceCollection services, Func<T, T> func,
+        ServiceLifetime lifetime = ServiceLifetime.Singleton, Func<IServiceCollection, IServiceProvider>? builder = null) where T : notnull
+    {
+        var descriptor = services.FirstOrDefault(m => m.ServiceType == typeof(T));
         if (descriptor == null)
             throw new InvalidOperationException("There is no registered service of type: " + typeof(T).LongName());
 
-        Func<IServiceProvider, object>? factory = null;
-        var provider = col.BuildServiceProvider();
+        var provider = builder is null
+            ? Builder.Value.Invoke<IServiceProvider>(null, [services])!
+            : builder(services);
+
+        Func<IServiceProvider, object>? factory;
         switch (descriptor.Lifetime)
         {
             case ServiceLifetime.Singleton:
             {
                 var instance = provider.GetRequiredService<T>();
-                factory = _ => func(instance)!;
+                factory = _ => func(instance);
                 break;
             }
             case ServiceLifetime.Scoped:
@@ -53,7 +83,7 @@ public static class ServiceCollectionExtensions
                 {
                     using var scope = provider.CreateScope();
                     var instance = scope.ServiceProvider.GetRequiredService<T>();
-                    return func(instance)!;
+                    return func(instance);
                 };
                 break;
             }
@@ -67,165 +97,9 @@ public static class ServiceCollectionExtensions
                 break;
             }
             default:
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException(nameof(descriptor.Lifetime), descriptor.Lifetime, null);
         }
-        col.Add(new ServiceDescriptor(typeof(T), factory, lifetime));
-        return col;
-    }
-
-    public static IServiceCollection AddIfNotExist(this IServiceCollection services, ServiceDescriptor descriptor)
-    {
-        if (!services.Contains(descriptor, ServiceDescriptorEqualityComparer.Instance))
-            services.Add(descriptor);
+        services.Add(new ServiceDescriptor(typeof(T), factory, lifetime));
         return services;
-    }
-
-    public static IServiceCollection Replace<TService, TImplementation>(this IServiceCollection services, TImplementation implementationInstance)
-        where TService : class
-        where TImplementation : class, TService
-    {
-        var impl = typeof(TImplementation);
-        services.RemoveAll(m => m.ServiceType == typeof(TService) && (m.ImplementationType == impl || m.ImplementationInstance?.GetType() == impl));
-        services.AddSingleton<TService>(implementationInstance);
-        return services;
-    }
-
-    public static IServiceCollection Replace<TService>(this IServiceCollection services, TService implementationInstance)
-        where TService : class
-    {
-        services.RemoveAll(m => m.ServiceType == typeof(TService));
-        services.AddSingleton<TService>(implementationInstance);
-        return services;
-    }
-
-    public static IServiceCollection Add<TService, TImplementation>(this IServiceCollection services, ServiceLifetime lifetime, params object[] args)
-        where TService : class
-        where TImplementation : class, TService
-    {
-        Check.NotNull(services);
-        Check.NotNull(args);
-        Check.HasNoNulls(args);
-
-        if (args.IsEmpty())
-        {
-            services.Add(ServiceDescriptor.Describe(typeof(TService), typeof(TImplementation), lifetime));
-        }
-        else
-        {
-            var t = typeof(TImplementation);
-            var ctors = t.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
-            if (ctors.IsEmpty())
-                throw new InvalidOperationException("Cannot find any public constructors for type " + t.LongName());
-
-            services.Add(ServiceDescriptor.Describe(typeof(TService), s => Create(s, t, ctors, args), lifetime));
-        }
-        return services;
-
-        static MatchResult GetMatchResult(ParameterInfo[] paras, IReadOnlyList<Type> argTypes)
-        {
-            var matchItems = new List<MatchItem>(paras.Length);
-            for (int i = 0, j = 0; i < paras.Length && j < argTypes.Count; i++)
-            {
-                var para = paras[i];
-                if (para.ParameterType.IsAssignableFrom(argTypes[j]))
-                {
-                    matchItems.Add(new MatchItem(i, j));
-                    ++j;
-                }
-                else
-                {
-                    matchItems.Add(new MatchItem(i, -1));
-                }
-            }
-
-            return new MatchResult(matchItems);
-        }
-
-        static bool TryCreate(IServiceProvider provider, ConstructorInfo ctor, ParameterInfo[] paras, object[] args, MatchResult match, out object? obj)
-        {
-            var actualArgs = new object[match.MatchItems.Count];
-            foreach (var (paraIndex, argIndex, matched) in match.MatchItems)
-            {
-                if (matched)
-                {
-                    actualArgs[paraIndex] = args[argIndex];
-                }
-                else
-                {
-                    var paraType = paras[paraIndex].ParameterType;
-                    var p = provider.GetService(paraType);
-                    if (p == null)
-                    {
-                        obj = null;
-                        return false;
-                    }
-                    else
-                    {
-                        actualArgs[paraIndex] = p;
-                    }
-                }
-            }
-            obj = ctor.Invoke(actualArgs);
-            return true;
-        }
-
-        static object Create(IServiceProvider provider, Type implementType, ConstructorInfo[] ctors, object[] args)
-        {
-            var argTypes = args.Select(m => m.GetType()).ToList();
-            foreach (var (ctor, paras, match) in ctors.Select(m => (Ctor: m, Paras: m.GetParameters()))
-                         .Select(m => (m.Ctor, m.Paras, Match: GetMatchResult(m.Paras, argTypes)))
-                         .OrderByDescending(m => m.Match.MatchCount))
-            {
-                if (TryCreate(provider, ctor, paras, args, match, out var obj))
-                    return obj!;
-            }
-            throw new InvalidOperationException("Cannot find any public constructors that can match all arguments for type " + implementType.LongName());
-        }
-    }
-
-    public static IServiceCollection AddSingleton<TService, TImplementation>(this IServiceCollection services, params object[] args)
-        where TService : class
-        where TImplementation : class, TService
-    {
-        return services.Add<TService, TImplementation>(ServiceLifetime.Singleton, args);
-    }
-
-    public static IServiceCollection Remove(this IServiceCollection services, Func<ServiceDescriptor, bool> condition)
-    {
-        var toRemove = services.Where(condition).ToArray();
-        toRemove.ForEach(m => services.Remove(m));
-        return services;
-    }
-
-    private readonly struct MatchResult
-    {
-        public MatchResult(List<MatchItem> matchItems)
-        {
-            MatchItems = matchItems;
-            MatchCount = matchItems.Count(m => m.IsMatched);
-        }
-
-        public int MatchCount { get; }
-        public List<MatchItem> MatchItems { get; }
-    }
-
-    private readonly struct MatchItem
-    {
-        public MatchItem(int paraIndex, int argIndex)
-        {
-            ParaIndex = paraIndex;
-            ArgIndex = argIndex;
-        }
-
-        public int ParaIndex { get; }
-        public int ArgIndex { get; }
-        public bool IsMatched => ArgIndex >= 0;
-
-        public void Deconstruct(out int paraIndex, out int argIndex, out bool isMatched)
-        {
-            paraIndex = ParaIndex;
-            argIndex = ArgIndex;
-            isMatched = IsMatched;
-        }
     }
 }

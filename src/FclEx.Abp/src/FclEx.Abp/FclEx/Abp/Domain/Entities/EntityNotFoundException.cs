@@ -13,13 +13,7 @@ public class EntityNotFoundException : AbpException
     public EntityNotFoundException()
     {
     }
-
-
-    public EntityNotFoundException(SerializationInfo serializationInfo, StreamingContext context)
-        : base(serializationInfo, context)
-    {
-    }
-
+    
     public EntityNotFoundException(Type entityType, object id, Exception? innerException = null)
         : base($"There is no such an entity. Entity type: {entityType.FullName}, id: {id}", innerException!)
     {

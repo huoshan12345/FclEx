@@ -3,7 +3,7 @@
 public static class QueryableExtensions
 {
     internal static readonly Expression EfFunctions = Expression.Constant(EF.Functions);
-    internal static MethodInfo ContainsOfString { get; } = typeof(string).GetRequiredMethod(nameof(string.Contains), 0, typeof(string));
+    internal static MethodInfo StringContains { get; } = typeof(string).GetRequiredMethod(nameof(string.Contains), 0, typeof(string));
 
     internal static MethodInfo EfLike { get; } = typeof(DbFunctionsExtensions)
         .GetRequiredMethod(nameof(DbFunctionsExtensions.Like), 0, typeof(DbFunctions), typeof(string), typeof(string), typeof(string));

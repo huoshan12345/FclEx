@@ -53,15 +53,4 @@ public class ServiceCollectionExtensionsTests
 
         Assert.Equal(2, provider.GetServices<IHostedService>().Count());
     }
-
-    [Fact]
-    public void AddIfNotExist_Test()
-    {
-        var provider = new ServiceCollection()
-            .AddIfNotExist(ServiceDescriptor.Singleton<IHostedService, TestHostService>())
-            .AddIfNotExist(ServiceDescriptor.Singleton<IHostedService, TestHostService>())
-            .BuildServiceProvider();
-
-        Assert.Single(provider.GetServices<IHostedService>());
-    }
 }

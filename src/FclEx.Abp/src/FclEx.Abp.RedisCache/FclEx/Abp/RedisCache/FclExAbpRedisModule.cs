@@ -1,9 +1,4 @@
-﻿using System.Text;
-
-using EasyCaching.Core.Configurations;
-using EasyCaching.Core.Serialization;
-using EasyCaching.CSRedis;
-using EasyCaching.Serialization.MessagePack;
+﻿using EasyCaching.Core.Serialization;
 using FclEx.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

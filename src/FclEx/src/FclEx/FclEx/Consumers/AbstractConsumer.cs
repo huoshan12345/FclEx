@@ -1,6 +1,4 @@
-﻿using Microsoft.VisualStudio.Threading;
-
-namespace FclEx.Consumers;
+﻿namespace FclEx.Consumers;
 
 public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>, ICancellationListener<TSelf, IReadOnlyList<T>>
     where TSelf : AbstractConsumer<TSelf, T>

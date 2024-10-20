@@ -41,7 +41,7 @@ public class GenericInterfaceConventionalRegistrar : DefaultConventionalRegistra
             }
             else
             {
-                services.AddIfNotExist(serviceDescriptor);
+                services.TryAdd(serviceDescriptor);
             }
         }
     }
