@@ -53,7 +53,7 @@ public class BatchRetryConsumerTests
         var consumer = new BatchRetryConsumer<Model>(5, TimeSpan.FromSeconds(1), 1);
         var task = consumer.StartAsync();
         consumer.Dispose();
-        await TaskHelper.Delay(1);
+        await Task.Delay(TimeSpan.FromSeconds(1));
         Assert.True(task.IsCompleted);
     }
 
@@ -61,12 +61,12 @@ public class BatchRetryConsumerTests
     public async Task Dispose_DuringConsuming_Test()
     {
         var consumer = new BatchRetryConsumer<Model>(5, TimeSpan.FromSeconds(1), 1);
-        consumer.ConsumingHandler += (sender, list) => TaskHelper.Delay(1);
+        consumer.ConsumingHandler += (sender, list) => Task.Delay(TimeSpan.FromSeconds(1));
         var task = consumer.StartAsync();
         consumer.Add(new Model(0));
         consumer.Dispose();
         Assert.False(task.IsCompleted);
-        var finishTask = await Task.WhenAny(task, TaskHelper.Delay(10));
+        var finishTask = await Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(10)));
         Assert.Equal(task, finishTask);
     }
 

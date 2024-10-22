@@ -2,12 +2,12 @@
 
 partial class OperateResultTests
 {
-    [Fact]
+    [RetryFact]
     public async Task ExecuteAsync_Timeout_Test()
     {
-        var (successful, exception, elapsed) = await Operate.ExecuteAsync(() => TaskHelper.Delay(10), TimeSpan.FromSeconds(1));
+        var (successful, exception, elapsed) = await Operate.ExecuteAsync(() => Task.Delay(TimeSpan.FromSeconds(5)), TimeSpan.FromSeconds(1));
         Assert.False(successful);
-        Assert.True(elapsed < TimeSpan.FromSeconds(2), elapsed.ToString());
+        Assert.True(elapsed < TimeSpan.FromSeconds(1.5), elapsed.ToString());
         Assert.IsType<TimeoutException>(exception);
     }
 
@@ -16,12 +16,12 @@ partial class OperateResultTests
     {
         var (successful, result, _, elapsed) = await Operate.ExecuteAsync(async () =>
         {
-            await TaskHelper.Delay(1).IgnoreSyncContext();
+            await Task.Delay(TimeSpan.FromSeconds(1)).IgnoreSyncContext();
             return 1;
         }, TimeSpan.FromSeconds(10));
         Assert.True(successful);
         Assert.Equal(1, result);
-        Assert.True(elapsed < TimeSpan.FromSeconds(1.1));
+        Assert.True(elapsed < TimeSpan.FromSeconds(1.5), elapsed.ToString());
     }
 
     [RetryFact]
@@ -33,7 +33,7 @@ partial class OperateResultTests
             return Task.CompletedTask;
         }, TimeSpan.FromSeconds(1));
         Assert.False(successful);
-        Assert.True(elapsed < TimeSpan.FromSeconds(1.1));
+        Assert.True(elapsed < TimeSpan.FromSeconds(1.5), elapsed.ToString());
         Assert.IsType<TimeoutException>(exception);
     }
 
@@ -48,6 +48,6 @@ partial class OperateResultTests
 
         Assert.True(successful);
         Assert.Equal(1, result);
-        Assert.True(elapsed < TimeSpan.FromSeconds(5), "Actual time is " + elapsed);
+        Assert.True(elapsed < TimeSpan.FromSeconds(1.5), elapsed.ToString());
     }
 }

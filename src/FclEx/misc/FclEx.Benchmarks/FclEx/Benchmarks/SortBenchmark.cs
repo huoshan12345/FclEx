@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
 using FclEx.Comparers;
+// ReSharper disable CollectionNeverQueried.Local
 
 namespace FclEx.Benchmarks;
 
 [MemoryDiagnoser]
-public class SortTest
+public class SortBenchmark
 {
     private readonly Person[] _array;
 
@@ -28,14 +29,14 @@ public class SortTest
             .OrderBy(m => m.Height, true)
             .CreateComparison();
 
-    public SortTest()
+    public SortBenchmark()
     {
         var random = new Random(12345);
         _array = Enumerable.Range(1, 10000).Select(m => new Person()
         {
             Age = random.Next(1, 100),
             Height = random.Next(100, 200),
-            Name = CreateRondomString(10, random)
+            Name = CreateRandomString(10, random)
         }).ToArray();
     }
 
@@ -46,7 +47,7 @@ public class SortTest
         public int Height { get; set; }
     }
 
-    private static string CreateRondomString(int length, Random random)
+    private static string CreateRandomString(int length, Random random)
     {
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         var stringChars = new char[length];

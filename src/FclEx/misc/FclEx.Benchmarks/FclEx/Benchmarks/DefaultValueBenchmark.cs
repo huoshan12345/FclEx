@@ -7,7 +7,7 @@ using FclEx.Extensions;
 namespace FclEx.Benchmarks;
 
 [MemoryDiagnoser]
-public class GetDefaultTest
+public class DefaultValueBenchmark
 {
     public static IEnumerable<object[]> Cases => new[]
     {

@@ -7,7 +7,7 @@ public class HttpRequestExtensionsTests
         await HttpRequest.Get("https://www.baidu.com")
             .SendAsync()
             .ThrowIfError();
-        await TaskHelper.Delay(3);
+        await Task.Delay(TimeSpan.FromSeconds(3));
     }
 
     private static async Task SuccessRequestWrap()
@@ -15,7 +15,7 @@ public class HttpRequestExtensionsTests
         await HttpRequest.Get("https://www.baidu.com")
             .SendAsync()
             .ThrowIfError();
-        await TaskHelper.Delay(3);
+        await Task.Delay(TimeSpan.FromSeconds(3));
     }
 
     private static async Task TimeoutRequestWrap()
