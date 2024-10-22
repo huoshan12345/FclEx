@@ -13,10 +13,11 @@ public static class WslHelperExtensions
     /// <param name="wsl"></param>
     /// <param name="path"></param>
     /// <param name="options"></param>
+    /// <param name="outputEncoding"></param>
     /// <returns></returns>
-    public static Task<string> WslPath(this WslHelper wsl, string path, string? options = null)
+    public static Task<string> WslPath(this WslHelper wsl, string path, string? options = null, Encoding? outputEncoding = null)
     {
-        return wsl.ExecuteCommandAsync($"wslpath '{path}' {options}");
+        return wsl.ExecuteCommandAsync(new WslCommand { CommandText = $"wslpath '{path}' {options}", OutputEncoding = outputEncoding });
     }
 }
 

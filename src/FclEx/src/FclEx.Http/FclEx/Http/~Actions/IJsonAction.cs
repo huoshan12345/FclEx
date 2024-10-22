@@ -1,4 +1,6 @@
-﻿namespace FclEx.Http;
+﻿using System.Text.Json;
+
+namespace FclEx.Http;
 
 public interface IJsonAction<T> : IHttpResponseHandler<T>
 {
@@ -39,7 +41,7 @@ public interface IJsonAction<T> : IHttpResponseHandler<T>
     OperateResult<T> GetResult(JsonActionContext context)
     {
         return context.ResultToken is { } token
-            ? token.ToObject<T>()!
+            ? token.Deserialize<T>()!
             : nameof(context.ResultToken) + " is null";
     }
 }
@@ -49,23 +51,31 @@ public interface IJsonAction : IJsonAction<Unit>
     OperateResult<Unit> IJsonAction<Unit>.GetResult(JsonActionContext context) => Operate.Success;
 }
 
-public readonly struct JsonActionContext
+public readonly struct JsonActionContext : IDisposable
 {
+    private readonly JsonDocument _jsonDocument;
+
     public JsonActionContext(HttpResponse response, string json, string? path)
     {
         Response = response;
         Json = json;
         Path = path;
-        Token = JToken.Parse(json);
+        _jsonDocument = JsonDocument.Parse(json);
+        Token = _jsonDocument.RootElement;
         ResultTokens = path == null
             ? Token.Yield()
-            : Token.SelectTokens(path)!;
+            : Token.SelectElements(path, false).NotNull();
     }
 
     public HttpResponse Response { get; }
     public string? Path { get; }
     public string Json { get; }
-    public JToken Token { get; }
-    public IEnumerable<JToken> ResultTokens { get; }
-    public JToken? ResultToken => ResultTokens.FirstOrDefault();
+    public JsonElement Token { get; }
+    public IEnumerable<JsonElement> ResultTokens { get; }
+    public JsonElement? ResultToken => ResultTokens.FirstOrDefault();
+
+    public void Dispose()
+    {
+        _jsonDocument.Dispose();
+    }
 }

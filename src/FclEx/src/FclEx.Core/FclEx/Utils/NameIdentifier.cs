@@ -1,4 +1,5 @@
-﻿#pragma warning disable CA2252
+﻿#if NET6_0_OR_GREATER
+#pragma warning disable CA2252
 namespace FclEx.Utils;
 
 public interface INameIdentifier<out T> where T : INameIdentifier<T>
@@ -22,4 +23,4 @@ public abstract record NameIdentifier<T>(string Name) where T : NameIdentifier<T
     public override string ToString() => Name;
     public override int GetHashCode() => Name.GetHashCode();
 }
-
+#endif

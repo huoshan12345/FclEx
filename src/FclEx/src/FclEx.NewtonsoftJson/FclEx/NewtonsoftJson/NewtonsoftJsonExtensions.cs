@@ -5,7 +5,7 @@ using FclEx.NewtonsoftJson;
 using Newtonsoft.Json.Converters;
 using Formatting = Newtonsoft.Json.Formatting;
 
-namespace FclEx.Extensions;
+namespace FclEx.NewtonsoftJson;
 
 public static class NewtonsoftJsonExtensions
 {
@@ -114,13 +114,13 @@ public static class NewtonsoftJsonExtensions
     public static bool IsPossibleJObject([NotNullWhen(true)] this string? data)
     {
         return data.IsNotEmpty() && data.Length >= 2
-                              && (data.First() == '{' && data.Last() == '}');
+                              && data.First() == '{' && data.Last() == '}';
     }
 
     public static bool IsPossibleJArray([NotNullWhen(true)] this string? data)
     {
         return data.IsNotEmpty() && data.Length >= 2
-                              && (data.First() == '[' && data.Last() == ']');
+                              && data.First() == '[' && data.Last() == ']';
     }
 
     public static bool TryToJToken(this string str, [NotNullWhen(true)] out JToken? token)

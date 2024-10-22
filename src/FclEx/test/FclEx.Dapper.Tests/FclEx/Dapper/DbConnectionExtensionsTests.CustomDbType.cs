@@ -87,7 +87,7 @@ partial class DbConnectionExtensionsTests
         Assert.NotNull(e);
         AssertExt.NotEmpty(e.Blob);
 
-        var actualPayload = e.Blob.GetString().ToJToken().ToObject<EntityWithGuidKey>()!;
+        var actualPayload = e.Blob.GetString().FromJson<EntityWithGuidKey>()!;
         Assert.Equal(payload.Id, actualPayload.Id);
         Assert.Equal(payload.Value, actualPayload.Value);
     }
@@ -119,7 +119,7 @@ partial class DbConnectionExtensionsTests
         Assert.NotNull(e);
         AssertExt.NotEmpty(e.Blob);
 
-        var actualPayload = e.Blob.GetString().ToJToken().ToObject<EntityWithGuidKey>()!;
+        var actualPayload = e.Blob.GetString().FromJson<EntityWithGuidKey>()!;
         Assert.Equal(payload.Id, actualPayload.Id);
         Assert.Equal(payload.Value, actualPayload.Value);
     }

@@ -1,4 +1,6 @@
-﻿namespace FclEx.Http.Core.HttpRequestTests;
+﻿using System.Text.Json;
+
+namespace FclEx.Http.Core.HttpRequestTests;
 
 public class PropertyTests
 {
@@ -68,7 +70,7 @@ public class PropertyTests
             CreatedAt = DateTimeOffset.UtcNow,
             Name = random.NextString(10),
             Avatar = $"https://cloudflare-ipfs.com/ipfs/{random.NextString(10)}/avatar/{random.Next(10, 99)}.jpg",
-            Id = 1,
+            Id = 1.ToString(),
         };
         var res = await HttpRequest.Put("https://65c333b1f7e6ea59682c21a5.mockapi.io/api/compress/" + model.Id)
             .Compression(compression)
@@ -101,9 +103,11 @@ public class PropertyTests
         Assert.True(res.StatusCode.IsSuccess(), res.ResponseString);
         Assert.False(res.HasError, res.Exception?.Message);
 
-        var token = res.ResponseString.ToJToken();
+        var token = res.ResponseString.ToJsonNode();
 
-        var headers = token["headers"]?.ToObject<Dictionary<string, string>>();
+        Assert.NotNull(token);
+
+        var headers = token["headers"]?.Deserialize<Dictionary<string, string>>();
         Assert.NotNull(headers);
 
         var encoding = headers.Get(HttpKnownHeaderNames.ContentEncoding);
@@ -127,7 +131,7 @@ public class PropertyTests
 
         var body = token["body"];
         Assert.NotNull(body);
-        var actual = body.ToObject<Dictionary<string, string>>();
+        var actual = body.Deserialize<Dictionary<string, string>>();
         Assert.Equal(expected, actual);
     }
 }

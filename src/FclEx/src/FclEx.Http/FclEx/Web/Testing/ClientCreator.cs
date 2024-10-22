@@ -1,4 +1,6 @@
-﻿namespace FclEx.Web.Testing;
+﻿using FclEx.Json;
+
+namespace FclEx.Web.Testing;
 
 public class ClientCreator<TClient> where TClient : IUserClient
 {
@@ -24,7 +26,7 @@ public class ClientCreator<TClient> where TClient : IUserClient
         if (exist)
         {
             var str = await File.ReadAllTextAsync(path);
-            var cookies = str.ToJToken().ToObject<List<SimpleCookie>>()!;
+            var cookies = str.FromJson<List<SimpleCookie>>()!;
             return cookies;
         }
         else
@@ -36,7 +38,7 @@ public class ClientCreator<TClient> where TClient : IUserClient
     public virtual async Task SaveCookies<T>(T client) where T : IUserClient
     {
         var cookies = client.HttpService.GetAllSimpleCookies();
-        var str = cookies.ToNewtonsoftJson(Formatting.Indented);
+        var str = cookies.ToJson(new JsonOptions(true));
         var (path, exist) = GetCookiesFilePath(client.GetType(), client.Account);
         await File.WriteAllTextAsync(path, str, Encoding.UTF8);
     }

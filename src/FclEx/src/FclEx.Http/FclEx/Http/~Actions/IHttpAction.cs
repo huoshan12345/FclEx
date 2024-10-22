@@ -10,9 +10,9 @@ public interface IHttpAction<T> : IAbstractAction<T>
 
     Task<OperateResult<T>> HandleResponseAsync(HttpResponse res)
     {
-        if (IsFailed(res))
-            return HandleFailed(res);
-        return GetResultAsync(res);
+        return IsFailed(res) 
+            ? HandleFailed(res)
+            : GetResultAsync(res);
     }
 
     async Task<OperateResult<T>> IAbstractAction<T>.ExecuteActionAsync(CancellationToken token)
@@ -24,24 +24,27 @@ public interface IHttpAction<T> : IAbstractAction<T>
             var res = await HttpService.SendAsync(req, token).IgnoreSyncContext();
             if (res.HasError)
             {
-                Dump(Logger, req, HttpService);
+#if DEBUG
+                Dump(req, HttpService);
+#endif
                 return (res.Exception!, res.Elapsed);
             }
             return await HandleResponseAsync(res).IgnoreSyncContext();
         }
         catch (Exception ex)
         {
-            Dump(Logger, req, HttpService);
+#if DEBUG
+            Dump(req, HttpService);
+#endif
             return ex;
         }
     }
 
-    private static void Dump(ILogger logger, HttpRequest? req, IHttpService service)
+    protected static void Dump(HttpRequest? req, IHttpService service)
     {
-        if (!logger.IsEnabled(LogLevel.Trace) || req == null)
+        if (req == null)
             return;
 
-        // 此处用于生成请求信息，然后用fiddler等工具测试
         var msg = new StringBuilder(1024);
         msg.AppendLine("Http Dump: ");
         var url = req.GetUri();
@@ -49,7 +52,7 @@ public interface IHttpAction<T> : IAbstractAction<T>
         msg.AppendLine("url: " + url);
         msg.AppendLine("header: ");
         msg.Append(header);
-        logger.LogTrace(msg.ToString());
+        Debug.WriteLine(msg.ToString());
     }
 
     HttpRequest BuildRequest()
@@ -62,19 +65,6 @@ public interface IHttpAction<T> : IAbstractAction<T>
     }
 
     void ModifyRequest(HttpRequest req) { }
-
-    static Uri GetUri(Type apiType, Type actionType)
-    {
-        var urlName = actionType.Name.TrimEnd("Action");
-        var value = apiType.GetDataMember(urlName)?.GetValue(null);
-        var uri = value switch
-        {
-            Uri u => u,
-            string str => new Uri(str, UriKind.RelativeOrAbsolute),
-            _ => throw new Exception("Failed to get url for action: " + actionType.Name)
-        };
-        return uri;
-    }
 
     bool IsFailed(HttpResponse res) => !res.StatusCode.IsSuccess();
 

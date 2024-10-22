@@ -23,6 +23,9 @@ public static partial class EnumerableExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> enumerable) => enumerable.Where(m => m is not null)!;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> enumerable) where T : struct => enumerable.Where(m => m is not null).Select(m => m.Get());
+
     public static IEnumerable<T> Not<T>(this IEnumerable<T> enumerable, Func<T, bool> predicate) => enumerable.Where(m => predicate(m) == false);
 
     public static IEnumerable<T> WhereIf<T>(this IEnumerable<T> enumerable, Func<T, bool> predicate, bool condition)

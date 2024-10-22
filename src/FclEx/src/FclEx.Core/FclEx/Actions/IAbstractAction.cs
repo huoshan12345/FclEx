@@ -1,8 +1,8 @@
-﻿namespace FclEx.Actions;
+﻿#if NET6_0_OR_GREATER
+namespace FclEx.Actions;
 
 public interface IAbstractAction<T> : IAction<T>
 {
-    ILogger Logger { get; }
     Task<OperateResult<T>> ExecuteActionAsync(CancellationToken token = default);
 
     string GetName() => GetType().ShortName();
@@ -12,9 +12,7 @@ public interface IAbstractAction<T> : IAction<T>
     async Task<OperateResult<T>> IAction<T>.ExecuteAsync(CancellationToken token)
     {
         var time = ValueStopwatch.StartNew();
-
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace($"[{GetName()}]Begin");
+        Debug.WriteLine($"[{GetName()}]Begin");
 
         var future = CommonAction.Create(ExecuteActionAsync, true)
             .NextResult<T, T>(r => r.Success
@@ -26,9 +24,8 @@ public interface IAbstractAction<T> : IAction<T>
         var result = await future.ExecuteAsync(token).IgnoreSyncContext();
         result = result.Elapsed(time.GetElapsedTime());
 
-        if (Logger.IsEnabled(LogLevel.Trace))
-            Logger.LogTrace($"[{GetName()}]End, after {result.Elapsed.TotalMilliseconds:f3} ms]");
-
+        Debug.WriteLine($"[{GetName()}]End, after {result.Elapsed.TotalMilliseconds:f3} ms]");
         return result;
     }
 }
+#endif

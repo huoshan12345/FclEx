@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace FclEx.Extensions.ByteExtensions;
+﻿namespace FclEx.Extensions.ByteExtensions;
 
 public class GetStringExtensions
 {

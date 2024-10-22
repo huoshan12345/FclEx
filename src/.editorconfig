@@ -32,3 +32,6 @@ dotnet_diagnostic.CA1822.severity = none
 
 # CS8763: A method marked [DoesNotReturn] should not return.
 dotnet_diagnostic.CS8763.severity = none
+
+# CA1806: Do not ignore method results
+dotnet_diagnostic.CA1806.severity = none

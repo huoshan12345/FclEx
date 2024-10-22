@@ -1,6 +1,4 @@
-﻿using FclEx.Json;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 partial class StringExtensions
 {
@@ -12,15 +10,6 @@ partial class StringExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? str) => string.IsNullOrWhiteSpace(str);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T? FromJson<T>(this string json, JsonSerializerOptions? options = null) => JsonSerializer.Deserialize<T>(json, options);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T? FromJson<T>(this string json, JsonOptions options) => JsonSerializer.Deserialize<T>(json, JsonHelper.GetOptions(options));
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static object? FromJson(this string json, Type type, JsonSerializerOptions? options = null) => JsonSerializer.Deserialize(json, type, options);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string Format(this string str, params object[] args) => string.Format(str, args);

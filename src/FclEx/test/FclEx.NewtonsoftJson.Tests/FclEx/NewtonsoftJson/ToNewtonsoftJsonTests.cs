@@ -1,7 +1,4 @@
-﻿using FclEx.Json;
-using FclEx.NewtonsoftJson;
-
-namespace FclEx.Extensions.NewtonsoftJsonExtensions;
+﻿namespace FclEx.NewtonsoftJson;
 
 public class ToNewtonsoftJsonTests
 {
@@ -43,9 +40,9 @@ public class ToNewtonsoftJsonTests
     [Fact]
     public void GetSettings_SameOptions_SameResult()
     {
-        var options = new JsonOptions();
-        var settings = JsonHelper.GetOptions(options);
-        var settings2 = JsonHelper.GetOptions(options);
+        var options = new NewtonsoftJsonOptions();
+        var settings = NewtonsoftJsonHelper.GetOptions(options);
+        var settings2 = NewtonsoftJsonHelper.GetOptions(options);
         Assert.Same(settings, settings2);
     }
 

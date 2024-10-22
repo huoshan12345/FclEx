@@ -79,7 +79,7 @@ public static class HttpClientExtensions
         Action<HttpRequestMessage>? configure = null, OnHttpFailedCode? onFailedCode = null)
     {
         var content = await httpClient.SendAsync(method, uri, configure, onFailedCode);
-        var result = JsonConvert.DeserializeObject<T>(content);
+        var result = content.FromJson<T>();
         return result;
     }
 

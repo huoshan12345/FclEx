@@ -5,6 +5,15 @@ namespace FclEx.Extensions;
 public static class JsonExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T? FromJson<T>(this string json, JsonSerializerOptions? options = null) => JsonSerializer.Deserialize<T>(json, options);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T? FromJson<T>(this string json, JsonOptions options) => JsonSerializer.Deserialize<T>(json, JsonHelper.GetOptions(options));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static object? FromJson(this string json, Type type, JsonSerializerOptions? options = null) => JsonSerializer.Deserialize(json, type, options);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string ToJson(this object? obj, JsonSerializerOptions? options = null)
     {
         return JsonSerializer.Serialize(obj, options);
@@ -23,9 +32,9 @@ public static class JsonExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static JsonNode? ToJsonNode(this string? str, JsonSerializerOptions? options = null)
+    public static JsonNode? ToJsonNode<T>(this T? value, JsonSerializerOptions? options = null)
     {
-        return JsonSerializer.SerializeToNode(str, options);
+        return JsonSerializer.SerializeToNode(value, options);
     }
 
     public static bool IsPossibleJson([NotNullWhen(true)] this string? str)
@@ -70,4 +79,13 @@ public static class JsonExtensions
         return false;
     }
 
+    public static JsonNode? ReadNode(this Utf8JsonReader reader, JsonNodeOptions? options = null)
+    {
+        return JsonNode.Parse(ref reader, options);
+    }
+
+    public static JsonNode? ReadNode(this Utf8JsonReader reader, JsonSerializerOptions options)
+    {
+        return JsonNode.Parse(ref reader, new() { PropertyNameCaseInsensitive = options.PropertyNameCaseInsensitive });
+    }
 }

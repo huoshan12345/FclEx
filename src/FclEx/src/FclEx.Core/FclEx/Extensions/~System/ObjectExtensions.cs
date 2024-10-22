@@ -27,4 +27,10 @@ public static class ObjectExtensions
     {
         return obj is null ? obj : obj.ToJson(options).FromJson<T>(options);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsDefault<T>(this T source) where T : struct
+    {
+        return EqualityComparer<T>.Default.Equals(source, default);
+    }
 }

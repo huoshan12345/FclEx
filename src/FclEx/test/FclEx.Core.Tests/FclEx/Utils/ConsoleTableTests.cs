@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace FclEx.Utils;
 
 public class ConsoleTableTests

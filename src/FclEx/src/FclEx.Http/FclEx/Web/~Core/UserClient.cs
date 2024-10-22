@@ -85,7 +85,7 @@ public abstract class UserClient : IUserClient, IDisposable
         {
             (nameof(Account), () => Account),
             (nameof(IsOnline), () => IsOnline),
-            (nameof(SessionState), () => Session.State)
+            (nameof(SessionState), () => Session.State),
         };
     }
 

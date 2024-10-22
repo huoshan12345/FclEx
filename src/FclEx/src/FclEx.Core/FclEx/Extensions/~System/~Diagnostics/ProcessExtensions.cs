@@ -19,7 +19,6 @@ public static class ProcessExtensions
 #else
         await process.WaitForExitAsync();
 #endif
-
         var output = queue.Where(m => m is not null).JoinWith(Environment.NewLine);
 
         if (process.ExitCode != 0)

@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.RequestDecompression;
+﻿using System.Text.Json;
+using System.Text.Json.Nodes;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.RequestDecompression;
 using Microsoft.Extensions.Logging;
 
 namespace FclEx.Http.Tests;
@@ -29,8 +32,7 @@ public class GlobalFixture : FclEx.Tests.GlobalFixture
 
     public static IReadOnlyList<SimpleCookie> SimpleCookies { get; }
         = File.ReadAllText(Path.Combine("TestData", "SimpleCookies.json"))
-            .ToJToken()
-            .ToObject<List<SimpleCookie>>()!;
+            .FromJson<List<SimpleCookie>>()!;
 
     private static async Task RunApiServer()
     {
@@ -82,11 +84,11 @@ public class GlobalFixture : FclEx.Tests.GlobalFixture
             var request = context.Request;
             var body = await request.GetRawBodyAsync();
             var headers = request.Headers.ToDictionary(m => m.Key, m => m.Value.ToString());
-            var obj = new JObject
+            var obj = new JsonObject
             {
-                { "body", body.ToJToken() },
+                { "body", body.ToJsonNode() },
                 { "encoding", request.Headers.ContentEncoding.ToString() },
-                { "headers", JToken.FromObject(headers) },
+                { "headers", headers.ToJsonNode() },
             };
             await context.Response.WriteAsync(obj.ToString());
         });

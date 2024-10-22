@@ -1,4 +1,5 @@
-﻿using MimeTypes;
+﻿using System.Text.Json;
+using MimeTypes;
 
 namespace FclEx.Http;
 
@@ -33,7 +34,7 @@ public static class HttpResponseExtensions
         return task.Continue(m => m.ReadJsonAs<T>(path));
     }
 
-    public static OperateResult<T> ReadJsonAs<T>(this HttpResponse response, string? path = null)
+    public static OperateResult<T> ReadJsonAs<T>(this HttpResponse response, string? path = null, JsonSerializerOptions? options = null)
     {
         if (response.Exception is { } ex)
             return (ex, response.Elapsed);
@@ -42,13 +43,14 @@ public static class HttpResponseExtensions
         if (!str.IsPossibleJson())
             return Operate.CreateError<T>("Can not parse json from empty string");
 
-        var token = str.ToJToken();
+        using var doc = JsonSerializer.SerializeToDocument(str, options);
+        var element = doc.RootElement;
         if (path.IsNotEmpty())
-            token = token.SelectToken(path);
+            element = element.SelectElement(path).Get();
 
-        return token == null
+        return element.IsDefault()
             ? Operate.CreateError<T>("The path does not exist in json: " + path)
-            : token.ToObject<T>()!;
+            : element.Deserialize<T>()!;
     }
 
     private static readonly Regex _regexOfNonWord = new(@"\W", RegexOptions.Compiled);

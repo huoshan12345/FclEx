@@ -1,4 +1,4 @@
-namespace FclEx.Extensions;
+namespace FclEx.NewtonsoftJson;
 
 public static class JTokenExtensions
 {
@@ -12,7 +12,7 @@ public static class JTokenExtensions
     {
         var t = token[key];
         return t == null
-            ? defaultValue 
+            ? defaultValue
             : t.Value<T>() ?? defaultValue;
     }
 }

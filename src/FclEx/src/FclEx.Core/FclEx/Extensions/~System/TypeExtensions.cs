@@ -175,16 +175,18 @@ public static partial class TypeExtensions
             .FirstOrDefault() ?? throw new InvalidOperationException($"Cannot find method '{name}<`{genericArgumentCount}>({paramTypes.Select(m => m.Name).JoinWith(", ")})' in type '{type.FullName}'");
     }
 
-#if NETSTANDARD2_0
-    public static ConstructorInfo? GetConstructor(this Type type, BindingFlags bindingAttr, Type[] types)
-    {
-        return type.GetConstructor(bindingAttr, null, types, null);
-    }
-#endif
-
     public static ConstructorInfo GetRequiredConstructor(this Type type, params Type[] types)
     {
         return type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, types)
                ?? throw new InvalidOperationException($"Cannot find constructor({types.Select(m => m.Name).JoinWith(", ")}) in type '{type.FullName}'");
     }
+
+#if NETSTANDARD2_0
+    public static ConstructorInfo? GetConstructor(this Type type, BindingFlags bindingAttr, Type[] types)
+    {
+        return type.GetConstructor(bindingAttr, null, types, null);
+    }
+
+    public static bool IsAssignableTo(this Type type, [NotNullWhen(true)] Type? targetType) => targetType?.IsAssignableFrom(type) ?? false;
+#endif
 }

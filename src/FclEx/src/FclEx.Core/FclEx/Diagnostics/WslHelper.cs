@@ -22,7 +22,9 @@ public class WslHelper
                 RedirectStandardOutput = true,
                 CreateNoWindow = true,
                 UseShellExecute = false,
-                WorkingDirectory = command.WorkingDirectory,
+                WorkingDirectory = command.WorkingDirectory ?? "/",
+                StandardOutputEncoding = command.OutputEncoding,
+                StandardErrorEncoding = command.OutputEncoding,
             },
             EnableRaisingEvents = true,
         };
