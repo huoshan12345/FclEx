@@ -21,6 +21,7 @@ public sealed class BatchRetryConsumer<T> : IConsumer<T>,
     public event EventHandler<BatchRetryConsumer<T>, ProcessingItem<T>> DiscardHandler = (sender, list) => { };
     public event EventHandler<BatchRetryConsumer<T>, ProcessingItem<T>> ExceptionHandler = (sender, list) => { };
     public event EventHandler<BatchRetryConsumer<T>, IReadOnlyList<T>> CancellationHandler = (sender, list) => { };
+    public event EventHandler<BatchRetryConsumer<T>, Exception, string> ExceptionLogger = (sender, exception, message) => { };
 
     public BatchRetryConsumer(int batchSize, TimeSpan batchTimeout, int maxRetryTimes = 3, int retryPartCount = 4)
     {
@@ -32,6 +33,7 @@ public sealed class BatchRetryConsumer<T> : IConsumer<T>,
         _retryConsumer.ExceptionHandler += (sender, list) => HandleException(list);
         _retryConsumer.DiscardHandler += (sender, list) => HandleDiscard(list);
         _retryConsumer.CancellationHandler += (sender, list) => CancellationHandler.Invoke(this, list.SelectMany(m => m).ToList());
+        _retryConsumer.ExceptionLogger += (_, ex, m) => LogException(ex, m);
 
         _batchConsumer = new BatchConsumer<T>(batchSize, batchTimeout, 0);
         _batchConsumer.ConsumingHandler += async (sender, list) =>
@@ -41,21 +43,7 @@ public sealed class BatchRetryConsumer<T> : IConsumer<T>,
         };
         _batchConsumer.DiscardHandler += (sender, list) => _retryConsumer.Add(list.Select(m => m.Item).ToList());
         _batchConsumer.CancellationHandler += (sender, list) => CancellationHandler.Invoke(this, list);
-    }
-
-    [AllowNull]
-    public ILogger Logger
-    {
-        get => _logger;
-        set
-        {
-            if (value != null && value != _logger)
-            {
-                _logger = value;
-                _retryConsumer.Logger = value;
-                _batchConsumer.Logger = value;
-            }
-        }
+        _batchConsumer.ExceptionLogger += (_, ex, m) => LogException(ex, m);
     }
 
     public ConsumerCounter Counter { get; } = new();
@@ -104,8 +92,14 @@ public sealed class BatchRetryConsumer<T> : IConsumer<T>,
         catch (Exception e)
         {
             Counter.IncrementException();
-            Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(HandleDiscard)}: " + e.Message);
+            LogException(e, $"Error encountered when invoking {nameof(HandleDiscard)}");
         }
+    }
+
+    private void LogException(Exception ex, string message)
+    {
+        Counter.IncrementException();
+        ExceptionLogger.Invoke(this, ex, message);
     }
 
     private void HandleException(ProcessingItem<List<T>> list)
@@ -122,7 +116,7 @@ public sealed class BatchRetryConsumer<T> : IConsumer<T>,
         catch (Exception e)
         {
             Counter.IncrementException();
-            Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(HandleException)}: " + e.Message);
+            LogException(e, $"Error encountered when invoking {nameof(HandleException)}");
         }
     }
 

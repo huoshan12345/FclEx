@@ -4,7 +4,6 @@ public interface IConsumer<in T> : IDisposable
 {
     bool IsComplete { get; }
     int Count { get; }
-    ILogger Logger { get; set; }
     ConsumerCounter Counter { get; }
     Task StartAsync(bool clear = false);
     void Add(T item);

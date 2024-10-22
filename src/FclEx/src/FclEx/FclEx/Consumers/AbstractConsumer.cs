@@ -13,24 +13,21 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>, ICancellationLi
     protected bool IsCompleteNoLock => (_isDisposed || _items.Count == 0) && _isAddingCompleted;
     protected CancellationTokenSource _cts = new();
 
-    [AllowNull]
-    public ILogger Logger
-    {
-        get => _logger;
-        set
-        {
-            value ??= NullLogger.Instance;
-            _logger = value;
-        }
-    }
     public ConsumerCounter Counter { get; } = new();
     public int Count => _locker.Do(() => _isDisposed ? 0 : _items.Count);
     public bool IsComplete => _locker.Do(() => IsCompleteNoLock);
     public event EventHandler<TSelf, IReadOnlyList<T>> CancellationHandler = (sender, list) => { };
+    public event EventHandler<TSelf, Exception, string> ExceptionLogger = (sender, exception, message) => { };
 
     protected AbstractConsumer()
     {
         TypeName = GetType().ShortName();
+    }
+
+    protected void LogException(Exception ex, string message)
+    {
+        Counter.IncrementException();
+        ExceptionLogger.Invoke((TSelf)this, ex, message);
     }
 
     protected virtual void HandleCancellation()
@@ -47,7 +44,7 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>, ICancellationLi
         catch (Exception ex)
         {
             Counter.IncrementException();
-            Logger.LogError(ex, $"[{TypeName}]Error encountered when invoking {nameof(_items.TryTake)}: " + ex.Message);
+            LogException(ex, $"Error encountered when invoking {nameof(_items.TryTake)}");
         }
 
         if (list.IsEmpty())
@@ -60,7 +57,7 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>, ICancellationLi
         catch (Exception ex)
         {
             Counter.IncrementException();
-            Logger.LogError(ex, $"[{TypeName}]Error encountered when invoking {nameof(HandleCancellation)}: " + ex.Message);
+            LogException(ex, $"Error encountered when invoking {nameof(HandleCancellation)}");
         }
     }
 
@@ -73,10 +70,10 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>, ICancellationLi
             while (!IsCompleteNoLock && !_cts.IsCancellationRequested)
                 await ProcessActionAsync().IgnoreSyncContext();
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
             Counter.IncrementException();
-            Logger.LogCritical(e, $"[{TypeName}]Error encountered when invoking {nameof(ProcessAsync)}: " + e.Message);
+            LogException(ex, $"Error encountered when invoking {nameof(ProcessAsync)}");
         }
         finally
         {

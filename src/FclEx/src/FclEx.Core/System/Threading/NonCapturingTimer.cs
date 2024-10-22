@@ -2,7 +2,7 @@ namespace System.Threading;
 
 // A convenience API for interacting with System.Threading.Timer in a way
 // that doesn't capture the ExecutionContext. We should be using this (or equivalent)
-// everywhere we use timers to avoid rooting any values stored in asynclocals.
+// everywhere we use timers to avoid rooting any values stored in AsyncLocals.
 public static class NonCapturingTimer
 {
     public static Timer<T> Create<T>(TimerCallback<T> callback, T state, TimeSpan dueTime, TimeSpan period)
@@ -31,7 +31,7 @@ public static class NonCapturingTimer
         }
     }
 
-    public static StatelessTimer Create(StatelessTimerCallback callback, TimeSpan dueTime, TimeSpan period)
+    public static StatelessTimer Create(Action callback, TimeSpan dueTime, TimeSpan period)
     {
         if (callback == null)
         {

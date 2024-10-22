@@ -1,6 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using FclEx.SourceGenerator.Sources;
+﻿using FclEx.SourceGenerator.Sources;
 using Microsoft.CodeAnalysis;
 
 namespace FclEx.SourceGenerator;
@@ -33,6 +31,8 @@ public class SourceGenerator : ISourceGenerator, IIncrementalGenerator
                 TypeExtensionsSource.Generate(),
                 ValueTupleExtensionsSource.Generate(),
                 TupleExtensionsSource.Generate(),
+                EventHandlersSource.Generate(),
+                AsyncEventHandlerExtensionsSource.Generate(),
             };
 
             foreach (var (file, code) in codes)

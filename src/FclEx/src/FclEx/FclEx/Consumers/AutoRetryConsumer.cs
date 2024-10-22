@@ -54,7 +54,7 @@ public sealed class AutoRetryConsumer<T> : AbstractConsumer<AutoRetryConsumer<T>
             catch (Exception e)
             {
                 Counter.IncrementException();
-                Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(ExceptionHandler)}: " + e.Message);
+                LogException(e, $"Error encountered when invoking {nameof(ExceptionHandler)}");
             }
 
             try
@@ -72,7 +72,7 @@ public sealed class AutoRetryConsumer<T> : AbstractConsumer<AutoRetryConsumer<T>
             catch (Exception e)
             {
                 Counter.IncrementException();
-                Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(DiscardHandler)}: " + e.Message);
+                LogException(e, $"Error encountered when invoking {nameof(DiscardHandler)}");
             }
         }
     }

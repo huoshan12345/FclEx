@@ -2,7 +2,7 @@
 
 public class HttpServiceExtensionsTests
 {
-    [Theory]
+    [RetryTheory]
     [InlineData("https://www.baidu.com/", "www_baidu_com.html")]
     [InlineData("https://www.cnblogs.com/kevinchoi/p/11716636.html#_label_h2_2", "11716636.html")]
     public async Task DownloadAsync_Test(string uri, string fileName)

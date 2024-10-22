@@ -2,36 +2,26 @@
 
 public static class StringBuilderExtensions
 {
-    public static StringBuilder AppendLineIf(this StringBuilder sb, string value, bool condition)
+#if NETSTANDARD2_0
+    public static StringBuilder AppendJoin<T>(this StringBuilder builder, string? separator, IEnumerable<T> values)
     {
-        if (condition)
-            sb.AppendLine(value);
-        return sb;
-    }
+        Check.NotNull(builder);
+        Check.NotNull(values);
 
-    public static StringBuilder AppendIf(this StringBuilder sb, string value, bool condition)
-    {
-        if (condition)
-            sb.Append(value);
-        return sb;
-    }
+        using var e = values.GetEnumerator();
 
-    public static StringBuilder AppendIfNotEmpty(this StringBuilder sb, string value)
-    {
-        return AppendIf(sb, value, !value.IsNullOrEmpty());
-    }
+        if (!e.MoveNext())
+            return builder;
 
-    public static StringBuilder AppendIf(this StringBuilder sb, Func<string> value, bool condition)
-    {
-        if (condition)
-            sb.Append(value());
-        return sb;
-    }
+        builder.Append(e.Current?.ToString());
 
-    public static StringBuilder AppendLineIf(this StringBuilder sb, Func<string> value, bool condition)
-    {
-        if (condition)
-            sb.AppendLine(value());
-        return sb;
+        while (e.MoveNext())
+        {
+            builder.Append(separator);
+            builder.Append(e.Current?.ToString());
+        }
+
+        return builder;
     }
+#endif
 }

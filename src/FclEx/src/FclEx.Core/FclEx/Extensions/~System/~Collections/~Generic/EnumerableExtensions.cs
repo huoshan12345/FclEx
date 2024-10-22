@@ -18,7 +18,10 @@ public static partial class EnumerableExtensions
     public static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T>? source) => source ?? [];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string JoinWith<T>(this IEnumerable<T> enumerable, string? separator) => string.Join(separator, enumerable);
+    public static string JoinWith<T>(this IEnumerable<T> enumerable, string? separator)
+    {
+        return StringBuilderHelper.Build(m => m.AppendJoin(separator, enumerable));
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> enumerable) => enumerable.Where(m => m is not null)!;

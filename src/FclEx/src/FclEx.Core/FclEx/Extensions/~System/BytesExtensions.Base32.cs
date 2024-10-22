@@ -48,10 +48,10 @@ partial class BytesExtensions
 
     public static string ToBase32(this byte[] input)
     {
-        if (input == null || input.Length == 0)
-        {
-            throw new ArgumentNullException(nameof(input));
-        }
+        Check.NotNull(input);
+
+        if (input.Length == 0)
+            return string.Empty;
 
         var charCount = (int)Math.Ceiling(input.Length / 5d) * 8;
         var returnArray = new char[charCount];
@@ -76,6 +76,7 @@ partial class BytesExtensions
         }
 
         //if we didn't end with a full char
+        // ReSharper disable once InvertIf
         if (arrayIndex != charCount)
         {
             returnArray[arrayIndex++] = ValueToChar(nextChar);
@@ -89,37 +90,22 @@ partial class BytesExtensions
     {
         var value = (int)c;
 
-        //65-90 == uppercase letters
-        if (value < 91 && value > 64)
+        return value switch
         {
-            return value - 65;
-        }
-        //50-55 == numbers 2-7
-        if (value < 56 && value > 49)
-        {
-            return value - 24;
-        }
-        //97-122 == lowercase letters
-        if (value < 123 && value > 96)
-        {
-            return value - 97;
-        }
-
-        throw new ArgumentException("Character is not a Base32 character.", nameof(c));
+            < 91 and > 64 => value - 65, //65-90 == uppercase letters
+            < 56 and > 49 => value - 24, //50-55 == numbers 2-7
+            < 123 and > 96 => value - 97, //97-122 == lowercase letters
+            _ => throw new ArgumentException("Character is not a Base32 character.", nameof(c))
+        };
     }
 
     private static char ValueToChar(byte b)
     {
-        if (b < 26)
+        return b switch
         {
-            return (char)(b + 65);
-        }
-
-        if (b < 32)
-        {
-            return (char)(b + 24);
-        }
-
-        throw new ArgumentException("Byte is not a value Base32 value.", nameof(b));
+            < 26 => (char)(b + 65),
+            < 32 => (char)(b + 24),
+            _ => throw new ArgumentException("Byte is not a value Base32 value.", nameof(b))
+        };
     }
 }

@@ -76,7 +76,7 @@ public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
         catch (Exception e)
         {
             Counter.IncrementException();
-            Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(HandleException)}: " + e.Message);
+            LogException(e, $"Error encountered when invoking {nameof(HandleException)}");
         }
         return nextItems;
     }
@@ -91,10 +91,9 @@ public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
             DiscardHandler.Invoke(this, items);
             Counter.IncrementDiscard(items.Count);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Counter.IncrementException();
-            Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(HandleDiscard)}: " + e.Message);
+            LogException(ex, $"Error encountered when invoking {nameof(HandleDiscard)}");
         }
     }
 
@@ -107,8 +106,7 @@ public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
         }
         catch (Exception e)
         {
-            Counter.IncrementException();
-            Logger.LogError(e, $"[{TypeName}]Error encountered when invoking {nameof(GetItems)}: " + e.Message);
+            LogException(e, $"Error encountered when invoking {nameof(GetItems)}");
         }
 
         if (items == null || items.Count == 0)
