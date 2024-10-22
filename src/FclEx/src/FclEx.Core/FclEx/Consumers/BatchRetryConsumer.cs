@@ -8,7 +8,6 @@ public sealed class BatchRetryConsumer<T> : IConsumer<T>,
     IExceptionListener<BatchRetryConsumer<T>, ProcessingItem<T>>
 {
     private string TypeName { get; }
-    private ILogger _logger = NullLogger.Instance;
     private readonly int _retryPartCount;
     private readonly AutoRetryConsumer<List<T>> _retryConsumer;
     private readonly BatchConsumer<T> _batchConsumer;

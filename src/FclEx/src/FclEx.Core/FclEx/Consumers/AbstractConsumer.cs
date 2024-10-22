@@ -3,7 +3,6 @@
 public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>, ICancellationListener<TSelf, IReadOnlyList<T>>
     where TSelf : AbstractConsumer<TSelf, T>
 {
-    private ILogger _logger = NullLogger.Instance;
     protected string TypeName { get; }
     protected readonly AsyncLock _locker = new();
     protected readonly BlockingCollection<ProcessingItem<T>> _items = new();
