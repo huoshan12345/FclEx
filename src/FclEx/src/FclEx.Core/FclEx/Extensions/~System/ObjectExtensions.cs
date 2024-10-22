@@ -29,8 +29,8 @@ public static class ObjectExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsDefault<T>(this T source) where T : struct
+    public static bool IsDefault<T>(this T source)
     {
-        return EqualityComparer<T>.Default.Equals(source, default);
+        return EqualityComparer<T>.Default.Equals(source, default!);
     }
 }

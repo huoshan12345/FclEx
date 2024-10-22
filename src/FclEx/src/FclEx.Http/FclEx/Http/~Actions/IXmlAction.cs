@@ -44,7 +44,7 @@ public interface IXmlAction<T> : IHttpResponseHandler<T>
 
 public interface IXmlAction : IXmlAction<Unit>
 {
-    OperateResult<Unit> IXmlAction<Unit>.GetResult(XmlActionContext context) => Operate.Success;
+    OperateResult IXmlAction<Unit>.GetResult(XmlActionContext context) => Operate.Success;
 }
 
 public readonly struct XmlActionContext

@@ -46,7 +46,7 @@ public interface IHtmlAction<T> : IHttpResponseHandler<T>
 
 public interface IHtmlAction : IHtmlAction<Unit>
 {
-    OperateResult<Unit> IHtmlAction<Unit>.GetResult(HtmlActionContext context) => Operate.Success;
+    OperateResult IHtmlAction<Unit>.GetResult(HtmlActionContext context) => Operate.Success;
 }
 
 public readonly struct HtmlActionContext

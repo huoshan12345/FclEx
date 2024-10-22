@@ -43,14 +43,20 @@ public static class HttpResponseExtensions
         if (!str.IsPossibleJson())
             return Operate.CreateError<T>("Can not parse json from empty string");
 
-        using var doc = JsonSerializer.SerializeToDocument(str, options);
-        var element = doc.RootElement;
-        if (path.IsNotEmpty())
-            element = element.SelectElement(path).Get();
+        var doc = JsonDocument.Parse(str, new()
+        {
+            AllowTrailingCommas = options?.AllowTrailingCommas ?? false,
+            CommentHandling = options?.ReadCommentHandling ?? JsonCommentHandling.Disallow,
+            MaxDepth = options?.MaxDepth ?? 0,
+        });
 
-        return element.IsDefault()
-            ? Operate.CreateError<T>("The path does not exist in json: " + path)
-            : element.Deserialize<T>()!;
+        var element = path.IsNullOrEmpty()
+            ? doc.RootElement
+            : doc.SelectElement(path);
+
+        return element.HasValue
+            ? element.Value.Deserialize<T>(options)!
+            : Operate.CreateError<T>("The path does not exist in json: " + path);
     }
 
     private static readonly Regex _regexOfNonWord = new(@"\W", RegexOptions.Compiled);
