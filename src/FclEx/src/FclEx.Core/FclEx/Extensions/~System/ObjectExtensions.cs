@@ -33,4 +33,9 @@ public static class ObjectExtensions
     {
         return EqualityComparer<T>.Default.Equals(source, default!);
     }
+
+    public static IEnumerable<T> Yield<T>(this T item)
+    {
+        yield return item;
+    }
 }

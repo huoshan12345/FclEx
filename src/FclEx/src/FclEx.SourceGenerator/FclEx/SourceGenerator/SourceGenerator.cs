@@ -14,13 +14,13 @@ public class SourceGenerator : ISourceGenerator, IIncrementalGenerator
 
     public void Initialize(GeneratorInitializationContext context)
     {
-//#if DEBUG
-//            if (!Debugger.IsAttached)
-//            {
-//                Debugger.Launch();
-//            }
-//            Debug.WriteLine("Initialize code generator");
-//#endif
+        //#if DEBUG
+        //            if (!Debugger.IsAttached)
+        //            {
+        //                Debugger.Launch();
+        //            }
+        //            Debug.WriteLine("Initialize code generator");
+        //#endif
     }
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
@@ -32,6 +32,7 @@ public class SourceGenerator : ISourceGenerator, IIncrementalGenerator
                 MethodHelperSource.Generate(),
                 TypeExtensionsSource.Generate(),
                 ValueTupleExtensionsSource.Generate(),
+                TupleExtensionsSource.Generate(),
             };
 
             foreach (var (file, code) in codes)

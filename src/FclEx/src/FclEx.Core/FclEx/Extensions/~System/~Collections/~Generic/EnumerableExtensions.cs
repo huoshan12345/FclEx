@@ -82,7 +82,7 @@ public static partial class EnumerableExtensions
 
     public static IEnumerable<KeyValuePair<T1, T2>> AsKeyValue<T1, T2>(this IEnumerable<ValueTuple<T1, T2>> enumerable)
     {
-        return enumerable.Select(m => m.AsKeyValue());
+        return enumerable.Select(m => m.ToKeyValuePair());
     }
 
     public static IEnumerable<ValueTuple<T1, T2>> AsTuple<T1, T2>(this IEnumerable<KeyValuePair<T1, T2>> enumerable)

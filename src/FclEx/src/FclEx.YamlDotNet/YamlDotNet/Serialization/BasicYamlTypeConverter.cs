@@ -1,6 +1,4 @@
-﻿using YamlDotNet.Core;
-
-namespace YamlDotNet.Serialization;
+﻿namespace YamlDotNet.Serialization;
 
 public abstract class BasicYamlTypeConverter<T> : IYamlTypeConverter
 {

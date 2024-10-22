@@ -68,7 +68,7 @@ internal sealed class SourceBuilder : IDisposable
         _indentedWriter.WriteLine("/// <summary>");
         foreach (var line in lines)
         {
-            var tagText = SecurityElement.Escape(line).Trim();
+            var tagText = SecurityElement.Escape(line)!.Trim();
             _indentedWriter.Write("/// ");
             _indentedWriter.Write(tagText);
             _indentedWriter.WriteLine(" <br/>");

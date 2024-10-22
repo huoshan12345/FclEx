@@ -32,6 +32,12 @@ public static class JsonExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static JsonNode? ToJsonNode(this string str, JsonSerializerOptions? options = null)
+    {
+        return JsonSerializer.Deserialize<JsonNode>(str, options);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static JsonNode? ToJsonNode<T>(this T? value, JsonSerializerOptions? options = null)
     {
         return JsonSerializer.SerializeToNode(value, options);

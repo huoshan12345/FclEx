@@ -1,6 +1,4 @@
-using YamlDotNet.RepresentationModel;
-
-namespace FclEx.Extensions;
+namespace FclEx.YamlDotNet;
 
 public static class YamlNodeExtensions
 {
