@@ -15,7 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FclEx.Wmi.SourceGenerator\FclEx.Wmi.SourceGenerator.csproj" PrivateAssets="all" />
-    <ProjectReference Include="..\FclEx\FclEx.csproj" />
+    <ProjectReference Include="..\FclEx.Core\FclEx.Core.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

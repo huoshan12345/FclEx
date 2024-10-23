@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace FclEx.Tests;
+﻿namespace FclEx.Tests;
 
 public static class Startup
 {

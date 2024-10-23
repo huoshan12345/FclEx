@@ -8,7 +8,9 @@ public partial class HttpRequest
     public bool EnsureSuccessStatusCode { get; set; }
     public HttpMethod Method { get; set; }
     public HttpContent? Content { get; set; }
+#if NET6_0_OR_GREATER
     public HttpVersionPolicy VersionPolicy { get; set; } = HttpVersionPolicy.RequestVersionOrLower;
+#endif
     public Version Version { get; set; } = HttpVersion.Version11;
     public int BufferSize { get; set; } = 256 * 1024;
     public TimeSpan? TotalTimeout { get; set; } = TimeSpan.FromMinutes(2);

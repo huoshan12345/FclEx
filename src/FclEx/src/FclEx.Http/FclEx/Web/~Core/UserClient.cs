@@ -81,12 +81,12 @@ public abstract class UserClient : IUserClient, IDisposable
 
     protected virtual IEnumerable<LazyLoggerProperty> GetLogLazyProperties()
     {
-        return new LazyLoggerProperty[]
-        {
+        return
+        [
             (nameof(Account), () => Account),
             (nameof(IsOnline), () => IsOnline),
             (nameof(SessionState), () => Session.State),
-        };
+        ];
     }
 
     protected Task<OperateResult> LoginActionWrapperAsync(CancellationToken token)

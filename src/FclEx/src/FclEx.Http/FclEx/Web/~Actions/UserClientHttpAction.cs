@@ -1,4 +1,5 @@
-﻿namespace FclEx.Web;
+﻿#if NET6_0_OR_GREATER
+namespace FclEx.Web;
 
 public abstract class UserClientHttpAction<TClient, T> : UserClientAction<TClient, T>, IHttpAction<T>
     where TClient : IUserClient
@@ -21,3 +22,4 @@ public abstract class UserClientHttpAction<TClient, T> : UserClientAction<TClien
     public override Task<OperateResult<T>> ExecuteActionAsync(CancellationToken token = default)
         => this.Base<IHttpAction<T>, Task<OperateResult<T>>>(m => m.ExecuteActionAsync(token));
 }
+#endif

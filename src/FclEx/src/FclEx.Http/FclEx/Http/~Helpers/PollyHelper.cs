@@ -8,9 +8,20 @@ public static class PollyHelper
     {
         sleepDurationProvider ??= DefaultSleepDurationProvider;
         return Policy<HttpResponseMessage>
-            .HandleResult(m => m.StatusCode.IsServerError() || m.StatusCode == HttpStatusCode.TooManyRequests || m.StatusCode == HttpStatusCode.RequestTimeout)
+            .HandleResult(Filter)
             .Or<TimeoutRejectedException>() // thrown by Polly's TimeoutPolicy if the inner call times out
             .WaitAndRetryAsync(retryCount, sleepDurationProvider);
+
+        static bool Filter(HttpResponseMessage m)
+        {
+            return m.StatusCode.IsServerError()
+#if NETSTANDARD2_0
+                   || m.StatusCode.ToInt() == 429
+#else
+                   || m.StatusCode == HttpStatusCode.TooManyRequests
+#endif
+                   || m.StatusCode == HttpStatusCode.RequestTimeout;
+        }
     }
 
     public static IAsyncPolicy<HttpResponseMessage> GetTimeoutPolicy(TimeSpan? timeout = null)

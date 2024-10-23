@@ -72,12 +72,12 @@ partial class HttpRequestExtensions
         return req.AddHeader(HttpKnownHeaderNames.AcceptEncoding, "gzip, deflate, br");
     }
 
-    public static HttpRequest UseGZip(this HttpRequest req, bool gzip = true, CompressionLevel level = CompressionLevel.SmallestSize)
+    public static HttpRequest UseGZip(this HttpRequest req, bool gzip = true, CompressionLevel level = CompressionLevel.Optimal)
     {
         return req.Compression(gzip ? CompressionMethod.GZip : CompressionMethod.None, level);
     }
 
-    public static HttpRequest Compression(this HttpRequest req, CompressionMethod method, CompressionLevel level = CompressionLevel.SmallestSize)
+    public static HttpRequest Compression(this HttpRequest req, CompressionMethod method, CompressionLevel level = CompressionLevel.Optimal)
     {
         req.CompressionMethod = method;
         req.CompressionLevel = level;
@@ -121,6 +121,11 @@ partial class HttpRequestExtensions
     public static string GetRequestHeader(this HttpRequest req, IEnumerable<Cookie> cookies)
     {
         return req.GetRequestHeader(cookies.Select(m => m.ToString()).JoinWith("; "));
+    }
+
+    public static string GetRequestHeader(this HttpRequest req, CookieCollection cookies)
+    {
+        return req.GetRequestHeader(cookies.Enumerate());
     }
 
     public static string GetRequestHeader(this HttpRequest req, CookieContainer cc)

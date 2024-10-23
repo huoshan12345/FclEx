@@ -1,4 +1,7 @@
 ﻿using static FclEx.Http.IPVersionPolicy;
+#if NETSTANDARD2_0
+using SocketsHttpHandler = System.Net.Http.StandardSocketsHttpHandler;
+#endif
 
 namespace FclEx.Http;
 
@@ -20,10 +23,12 @@ public static class HttpClientHelper
             MaxConnectionsPerServer = int.MaxValue,
             UseCookies = false,
             AllowAutoRedirect = true,
-            AutomaticDecompression = DecompressionMethods.All,
+            AutomaticDecompression = options.AutomaticDecompression,
             UseProxy = options.Proxy is not null,
             Proxy = options.Proxy,
-            EnableMultipleHttp2Connections = options.EnableMultipleHttp2Connections,
+#if NET6_0_OR_GREATER
+            EnableMultipleHttp2Connections = options.EnableMultipleHttp2Connections,            
+#endif
             SslOptions = new()
             {
                 RemoteCertificateValidationCallback = (sender, certificate, chain, errors) => true,
@@ -47,7 +52,11 @@ public static class HttpClientHelper
                 // note: this method throws a SocketException when there is no IP address for the host
                 var ips = IPAddress.TryParse(host, out var ip)
                     ? [ip]
+#if NETSTANDARD2_0
+                    : (await Dns.GetHostEntryAsync(host)).AddressList;
+#else
                     : (await Dns.GetHostEntryAsync(host, family, token)).AddressList;
+#endif
 
                 if (ips.IsEmpty())
                 {
@@ -67,7 +76,11 @@ public static class HttpClientHelper
                 {
                     try
                     {
+#if NETSTANDARD2_0
+                        socket.Connect(address, context.DnsEndPoint.Port);
+#else
                         await socket.ConnectAsync(address, context.DnsEndPoint.Port, token);
+#endif
                         return new NetworkStream(socket, ownsSocket: true);
                     }
                     catch (Exception ex)

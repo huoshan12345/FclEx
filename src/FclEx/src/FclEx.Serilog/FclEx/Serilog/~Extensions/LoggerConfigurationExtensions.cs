@@ -35,18 +35,15 @@ public static class LoggerConfigurationExtensions
         int batchSizeLimit = NewRelicSink.DefaultBatchSizeLimit,
         TimeSpan? period = null)
     {
-        ArgumentNullException.ThrowIfNull(loggerSinkConfiguration);
-
-        if (loggerSinkConfiguration == null)
-            throw new ArgumentNullException(nameof(loggerSinkConfiguration));
+        Check.NotNull(loggerSinkConfiguration);
 
         licenseKey ??= Environment.GetEnvironmentVariable("NEW_RELIC_LICENSE_KEY");
         period ??= NewRelicSink.DefaultPeriod;
 
-        if (string.IsNullOrWhiteSpace(endpointUrl))
+        if (endpointUrl.IsNullOrEmpty())
             throw new ArgumentException("NewRelic Logs API endpoint URL must be supplied", nameof(endpointUrl));
 
-        if (string.IsNullOrWhiteSpace(licenseKey))
+        if (licenseKey.IsNullOrEmpty())
             throw new ArgumentException("LicenseKey must be supplied", nameof(licenseKey));
 
         var sink = new NewRelicSink(licenseKey, endpointUrl, formatter);

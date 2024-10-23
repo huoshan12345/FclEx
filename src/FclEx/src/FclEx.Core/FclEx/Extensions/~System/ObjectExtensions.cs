@@ -38,4 +38,17 @@ public static class ObjectExtensions
     {
         yield return item;
     }
+
+    public static T Clamp<T>(this T value, T min, T max) where T : IComparable<T>
+    {
+        var cmpMin = value.CompareTo(min);
+        if (cmpMin <= 0) // value <= min
+            return min;
+
+        var cmpMax = value.CompareTo(max);
+        if (cmpMax >= 0) // value >= max
+            return max;
+
+        return value;
+    }
 }

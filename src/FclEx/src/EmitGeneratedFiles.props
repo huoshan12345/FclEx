@@ -4,9 +4,12 @@
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     <CompilerGeneratedFilesOutputPath>$(SourceDir.TrimEnd('\'))</CompilerGeneratedFilesOutputPath>
   </PropertyGroup>
-
-  <Target Name="CleanSourceGeneratedFiles" BeforeTargets="BeforeBuild" DependsOnTargets="$(BeforeBuildDependsOn)">
-    <RemoveDir Directories="$(SourceDir)" Condition="Exists($(SourceDir))" ContinueOnError="true" />
+  <Target Name="CleanSourceGeneratedFiles" BeforeTargets="DispatchToInnerBuilds">
+    <!--only exeuted once before every build-->
+    <ItemGroup>
+      <FilesToDelete Include="$(SourceDir)**\*"/>
+    </ItemGroup>
+    <Delete Files="@(FilesToDelete)" ContinueOnError="true" />
   </Target>
 
   <ItemGroup>

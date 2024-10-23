@@ -29,82 +29,80 @@ partial class EncodingHelper
     private const byte BigEndianUnicodePreambleByte1 = 0xFF;
     private const int BigEndianUnicodePreambleFirst2Bytes = 0xFEFF;
 
-    public static int GetPreambleLength(ArraySegment<byte> buffer, Encoding encoding)
+    public static int GetPreambleLength(Span<byte> data, Encoding encoding)
     {
         Check.NotNull(encoding);
 
-        var data = buffer.Array ?? throw new ArgumentNullException(nameof(buffer.Array));
-        var offset = buffer.Offset;
-        var dataLength = buffer.Count;
+        var length = data.Length;
 
         switch (encoding.CodePage)
         {
             case UTF8CodePage:
-                return (dataLength >= UTF8PreambleLength
-                        && data[offset + 0] == UTF8PreambleByte0
-                        && data[offset + 1] == UTF8PreambleByte1
-                        && data[offset + 2] == UTF8PreambleByte2) ? UTF8PreambleLength : 0;
+                return (length >= UTF8PreambleLength
+                        && data[0] == UTF8PreambleByte0
+                        && data[1] == UTF8PreambleByte1
+                        && data[2] == UTF8PreambleByte2) ? UTF8PreambleLength : 0;
             case UTF32CodePage:
-                return (dataLength >= UTF32PreambleLength
-                        && data[offset + 0] == UTF32PreambleByte0
-                        && data[offset + 1] == UTF32PreambleByte1
-                        && data[offset + 2] == UTF32PreambleByte2
-                        && data[offset + 3] == UTF32PreambleByte3) ? UTF32PreambleLength : 0;
+                return (length >= UTF32PreambleLength
+                        && data[0] == UTF32PreambleByte0
+                        && data[1] == UTF32PreambleByte1
+                        && data[2] == UTF32PreambleByte2
+                        && data[3] == UTF32PreambleByte3) ? UTF32PreambleLength : 0;
             case UnicodeCodePage:
-                return (dataLength >= UnicodePreambleLength
-                        && data[offset + 0] == UnicodePreambleByte0
-                        && data[offset + 1] == UnicodePreambleByte1) ? UnicodePreambleLength : 0;
+                return (length >= UnicodePreambleLength
+                        && data[0] == UnicodePreambleByte0
+                        && data[1] == UnicodePreambleByte1) ? UnicodePreambleLength : 0;
 
             case BigEndianUnicodeCodePage:
-                return (dataLength >= BigEndianUnicodePreambleLength
-                        && data[offset + 0] == BigEndianUnicodePreambleByte0
-                        && data[offset + 1] == BigEndianUnicodePreambleByte1) ? BigEndianUnicodePreambleLength : 0;
+                return (length >= BigEndianUnicodePreambleLength
+                        && data[0] == BigEndianUnicodePreambleByte0
+                        && data[1] == BigEndianUnicodePreambleByte1) ? BigEndianUnicodePreambleLength : 0;
 
             default:
                 var preamble = encoding.GetPreamble();
-                return BufferHasPrefix(buffer, preamble) ? preamble.Length : 0;
+                return BufferHasPrefix(data, preamble) ? preamble.Length : 0;
         }
     }
 
-    private static bool BufferHasPrefix(ArraySegment<byte> buffer, byte[]? prefix)
+    private static bool BufferHasPrefix(Span<byte> data, byte[]? prefix)
     {
-        var byteArray = buffer.Array;
-        if (prefix == null || byteArray == null || prefix.Length > buffer.Count || prefix.Length == 0)
+        if (prefix == null || prefix.Length > data.Length || prefix.Length == 0)
             return false;
 
-        for (int i = 0, j = buffer.Offset; i < prefix.Length; i++, j++)
+        for (int i = 0, j = 0; i < prefix.Length; i++, j++)
         {
-            if (prefix[i] != byteArray[j])
+            if (prefix[i] != data[j])
                 return false;
         }
 
         return true;
     }
 
-    public static bool TryDetectEncoding(ArraySegment<byte> buffer, out Encoding? encoding, out int preambleLength)
+    public static bool TryDetectEncoding(Span<byte> data, out Encoding? encoding, out int preambleLength)
     {
-        var data = buffer.Array ?? throw new ArgumentNullException(nameof(buffer.Array));
-        var offset = buffer.Offset;
-        var dataLength = buffer.Count;
+        var dataLength = data.Length;
 
         if (dataLength >= 2)
         {
-            var first2Bytes = data[offset + 0] << 8 | data[offset + 1];
+            var first2Bytes = data[0] << 8 | data[1];
 
             switch (first2Bytes)
             {
                 case UTF8PreambleFirst2Bytes:
-                    if (dataLength >= UTF8PreambleLength && data[offset + 2] == UTF8PreambleByte2)
+                {
+                    if (dataLength >= UTF8PreambleLength && data[2] == UTF8PreambleByte2)
                     {
                         encoding = Encoding.UTF8;
                         preambleLength = UTF8PreambleLength;
                         return true;
                     }
                     break;
-
+                }
                 case UTF32OrUnicodePreambleFirst2Bytes:
+                {
                     // UTF32 not supported on Phone
-                    if (dataLength >= UTF32PreambleLength && data[offset + 2] == UTF32PreambleByte2 && data[offset + 3] == UTF32PreambleByte3)
+                    if (dataLength >= UTF32PreambleLength && data[2] == UTF32PreambleByte2 &&
+                        data[3] == UTF32PreambleByte3)
                     {
                         encoding = Encoding.UTF32;
                         preambleLength = UTF32PreambleLength;
@@ -115,11 +113,13 @@ partial class EncodingHelper
                         preambleLength = UnicodePreambleLength;
                     }
                     return true;
-
+                }
                 case BigEndianUnicodePreambleFirst2Bytes:
+                {
                     encoding = Encoding.BigEndianUnicode;
                     preambleLength = BigEndianUnicodePreambleLength;
                     return true;
+                }
             }
         }
 

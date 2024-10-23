@@ -5,7 +5,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\FclEx\test\FclEx.Tests\FclEx.Tests.csproj" />
+    <ProjectReference Include="..\..\..\FclEx\test\FclEx.Core.Tests\FclEx.Core.Tests.csproj" />
     <ProjectReference Include="..\..\src\FclEx.Abp.Xunit\FclEx.Abp.Xunit.csproj" />
   </ItemGroup>
 

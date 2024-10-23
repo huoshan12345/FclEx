@@ -1,5 +1,4 @@
-﻿using FclEx.Actions;
-
+﻿#if NET6_0_OR_GREATER
 namespace FclEx.Http;
 
 public interface IHttpAction<T> : IAbstractAction<T>
@@ -80,3 +79,4 @@ public interface IHttpAction<T> : IAbstractAction<T>
 
     OperateResult<T> GetResult(HttpResponse response);
 }
+#endif

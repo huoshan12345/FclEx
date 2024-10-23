@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Logging.Abstractions;
-
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 public abstract class AbstractHttpService : IHttpService
 {
@@ -46,7 +44,11 @@ public abstract class AbstractHttpService : IHttpService
     public IReadOnlyCollection<Cookie> GetCookies(Uri uri)
     {
         return UseCookie
+#if NETSTANDARD2_0
+            ? _cookieContainer.GetCookies(uri).Enumerate().AsIReadOnlyCollection()
+#else
             ? _cookieContainer.GetCookies(uri)
+#endif
             : Array.Empty<Cookie>();
     }
 

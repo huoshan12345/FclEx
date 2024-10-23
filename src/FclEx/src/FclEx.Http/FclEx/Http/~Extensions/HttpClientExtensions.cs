@@ -1,4 +1,8 @@
-﻿namespace FclEx.Http;
+﻿#if NETSTANDARD2_0
+using SocketsHttpHandler = System.Net.Http.StandardSocketsHttpHandler;
+#endif
+
+namespace FclEx.Http;
 
 public delegate void OnHttpFailedCode(HttpResponseMessage response, string content);
 
@@ -43,7 +47,11 @@ public static class HttpClientExtensions
     public static readonly OnHttpFailedCode ThrowOnFailedCode = (response, content) =>
     {
         var error = content.Truncate(100);
+#if NETSTANDARD2_0
+        throw new HttpRequestException(error);
+#else
         throw new HttpRequestException(error, null, response.StatusCode);
+#endif
     };
 
     public static readonly OnHttpFailedCode IgnoreOnFailedCode = (response, content) => { };

@@ -3,7 +3,7 @@
     ANSIBLE_HASH_BEHAVIOUR: merge
   vars:
     test_config_paths:
-      - ../../src/FclEx/test/FclEx.Tests
+      - ../../src/FclEx/test/FclEx.Core.Tests
     extra:
       Phase: "{{ phase }}"
     env: "{{ Settings.Common | combine(Settings.Envs[phase], recursive=true) | combine(extra, recursive=True) }}"

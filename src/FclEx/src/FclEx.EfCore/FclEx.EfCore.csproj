@@ -1,5 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+  </PropertyGroup>
+
   <ItemGroup Condition="'$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net7.0'">
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="[7.0.20, 8.0.0)" />
   </ItemGroup>
@@ -13,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FclEx\FclEx.csproj" />
+    <ProjectReference Include="..\FclEx.Core\FclEx.Core.csproj" />
   </ItemGroup>
 
 </Project>

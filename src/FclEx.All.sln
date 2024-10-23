@@ -15,7 +15,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Abp.RedisCache.Tests"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Abp.Xunit", "FclEx.Abp\src\FclEx.Abp.Xunit\FclEx.Abp.Xunit.csproj", "{E9832632-4A39-4BF3-B4A8-E91850E9C47B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx", "FclEx\src\FclEx\FclEx.csproj", "{708AA9AB-57D5-493A-93FB-5D5B9756E48B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Logging", "FclEx\src\FclEx.Logging\FclEx.Logging.csproj", "{708AA9AB-57D5-493A-93FB-5D5B9756E48B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Http", "FclEx\src\FclEx.Http\FclEx.Http.csproj", "{CE84EF4E-3D7D-42CD-A749-CD39C43CE43D}"
 EndProject
@@ -52,7 +52,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Http.Tests", "FclEx\t
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Serilog.Tests", "FclEx\test\FclEx.Serilog.Tests\FclEx.Serilog.Tests.csproj", "{BA64DE03-F745-4CB5-A85B-AE6A2D7111BD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Tests", "FclEx\test\FclEx.Tests\FclEx.Tests.csproj", "{AFD8FA34-3BC3-42DD-8BB4-E518337CE762}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Logging.Tests", "FclEx\test\FclEx.Logging.Tests\FclEx.Logging.Tests.csproj", "{AFD8FA34-3BC3-42DD-8BB4-E518337CE762}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Wmi.Tests", "FclEx\test\FclEx.Wmi.Tests\FclEx.Wmi.Tests.csproj", "{D2452FA7-5EC7-4444-AA95-21DDD94E525B}"
 EndProject

@@ -18,7 +18,7 @@ public class SocketsHttpHandlerOptionsEqualityComparer : IEqualityComparer<Socke
                && x.EnableMultipleHttp2Connections == y.EnableMultipleHttp2Connections
                && x.PooledConnectionLifetime.Equals(y.PooledConnectionLifetime)
                && x.PooledConnectionIdleTimeout.Equals(y.PooledConnectionIdleTimeout)
-               && ProxyEqualityComparer.Equals(x.Proxy, y.Proxy);
+               && ProxyEqualityComparer.Equals(x.Proxy!, y.Proxy!);
     }
 
     public int GetHashCode(SocketsHttpHandlerOptions obj)

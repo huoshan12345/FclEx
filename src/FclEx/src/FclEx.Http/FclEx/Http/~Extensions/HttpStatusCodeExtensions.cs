@@ -27,6 +27,11 @@ public static class HttpStatusCodeExtensions
         if (code.IsSuccess())
             return;
 
-        throw new HttpRequestException($"Returned {code.ToPairString()} via {method} {uri}", null, code);
+        var error = $"Returned {code.ToPairString()} via {method} {uri}";
+#if NETSTANDARD2_0
+        throw new HttpRequestException(error);
+#else
+        throw new HttpRequestException(error, null, code);
+#endif
     }
 }

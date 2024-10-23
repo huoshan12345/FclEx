@@ -9,8 +9,10 @@ public static class ServiceCollectionExtensions
             {
                 httpClient.Timeout = options.TotalTimeout;
                 httpClient.BaseAddress = options.BaseAddress;
+#if NET6_0_OR_GREATER
                 httpClient.DefaultRequestVersion = options.HttpVersion;
-                httpClient.DefaultVersionPolicy = options.HttpVersionPolicy;
+                httpClient.DefaultVersionPolicy = options.HttpVersionPolicy;                
+#endif
             })
             .ConfigurePrimaryHttpMessageHandler(() => HttpClientHelper.CreateSocketsHttpHandler(options))
             .AddRetryPolicy(options.ExecutionTimeout, options.RetryCount, options.AutoUpdateTotalTimeout, options.SleepDurationProvider);

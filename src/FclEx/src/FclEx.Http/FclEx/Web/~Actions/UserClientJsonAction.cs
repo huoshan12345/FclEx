@@ -1,4 +1,5 @@
-﻿namespace FclEx.Web;
+﻿#if NET6_0_OR_GREATER
+namespace FclEx.Web;
 
 public abstract class UserClientJsonAction<TClient, T> : UserClientHttpAction<TClient, T>, IJsonAction<T>
     where TClient : IUserClient
@@ -21,3 +22,4 @@ public abstract class UserClientJsonAction<TClient, T> : UserClientHttpAction<TC
     public virtual OperateResult<T> GetResult(JsonActionContext context)
         => this.Base<IJsonAction<T>, OperateResult<T>>(m => m.GetResult(context));
 }
+#endif

@@ -22,8 +22,8 @@ public static class ConversationsApiExtensions
     {
         Check.NotEmpty(name);
 
-        var dic = await api.LookupByNames(new[] { name }, conversationTypes);
-        return dic.GetValueOrDefault(name);
+        var dic = await api.LookupByNames([name], conversationTypes);
+        return dic.Get(name);
     }
 
     public static async Task<Dictionary<string, Conversation>> LookupByNames(this IConversationsApi api, IReadOnlyCollection<string> names, IReadOnlyCollection<ConversationType> conversationTypes)

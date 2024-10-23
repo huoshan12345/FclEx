@@ -1,5 +1,4 @@
-﻿using FclEx.Json;
-
+﻿#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 namespace FclEx.Web.Testing;
 
 public class ClientCreator<TClient> where TClient : IUserClient
@@ -25,7 +24,11 @@ public class ClientCreator<TClient> where TClient : IUserClient
         var (path, exist) = GetCookiesFilePath(clientType, account);
         if (exist)
         {
+#if NETSTANDARD2_0
+            var str = File.ReadAllText(path);
+#else            
             var str = await File.ReadAllTextAsync(path);
+#endif
             var cookies = str.FromJson<List<SimpleCookie>>()!;
             return cookies;
         }
@@ -40,7 +43,11 @@ public class ClientCreator<TClient> where TClient : IUserClient
         var cookies = client.HttpService.GetAllSimpleCookies();
         var str = cookies.ToJson(new JsonOptions(true));
         var (path, exist) = GetCookiesFilePath(client.GetType(), client.Account);
+#if NETSTANDARD2_0
+        File.WriteAllText(path, str, Encoding.UTF8);
+#else
         await File.WriteAllTextAsync(path, str, Encoding.UTF8);
+#endif
     }
 
     public virtual Task<TClient> CreateClient(UserAccount account, bool login, bool fakeLogin = true, bool useCache = true, bool readCookie = true, string? proxy = null)
