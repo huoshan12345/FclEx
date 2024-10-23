@@ -16,15 +16,13 @@ public class ServiceDescriptorEqualityComparer : IEqualityComparer<ServiceDescri
 
     public int GetHashCode(ServiceDescriptor obj)
     {
-        unchecked
-        {
-            var hashCode = (int)obj.Lifetime;
-            hashCode = (hashCode * 397) ^ obj.ServiceType.GetHashCodeSafely();
-            hashCode = (hashCode * 397) ^ obj.ImplementationType.GetHashCodeSafely();
-            hashCode = (hashCode * 397) ^ obj.ImplementationInstance.GetHashCodeSafely();
-            hashCode = (hashCode * 397) ^ obj.ImplementationFactory.GetHashCodeSafely();
-            return hashCode;
-        }
+        return HashCode.Combine(
+              obj.Lifetime,
+              obj.ServiceType,
+              obj.ImplementationType,
+              obj.ImplementationInstance,
+              obj.ImplementationFactory);
+
     }
 
     public static ServiceDescriptorEqualityComparer Instance { get; } = new();

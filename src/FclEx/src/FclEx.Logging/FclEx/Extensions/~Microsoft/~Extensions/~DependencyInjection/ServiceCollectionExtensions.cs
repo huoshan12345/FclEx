@@ -46,17 +46,6 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    private static readonly Lazy<MethodInfo> Builder = new(GetBuilder);
-
-    private static MethodInfo GetBuilder()
-    {
-        const string assembly = "Microsoft.Extensions.DependencyInjection";
-        const string typeName = assembly + ".ServiceCollectionContainerBuilderExtensions";
-        var type = TypeHelper.GetRequiredType(typeName, assembly);
-        var method = type.GetRequiredMethod("BuildServiceProvider", 0, typeof(IServiceCollection));
-        return method;
-    }
-
     public static IServiceCollection WrapFor<T>(this IServiceCollection services, Func<T, T> func,
         ServiceLifetime lifetime = ServiceLifetime.Singleton, Func<IServiceCollection, IServiceProvider>? builder = null) where T : notnull
     {
@@ -65,7 +54,7 @@ public static class ServiceCollectionExtensions
             throw new InvalidOperationException("There is no registered service of type: " + typeof(T).LongName());
 
         var provider = builder is null
-            ? Builder.Value.Invoke<IServiceProvider>(null, [services])!
+            ? services.BuildServiceProvider()
             : builder(services);
 
         Func<IServiceProvider, object>? factory;

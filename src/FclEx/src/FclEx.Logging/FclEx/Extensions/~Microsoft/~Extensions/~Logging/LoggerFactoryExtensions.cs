@@ -2,20 +2,16 @@
 
 public static class LoggerFactoryExtensions
 {
-    private const string LoggingAssemblyName = "Microsoft.Extensions.Logging";
-    private static readonly Type? LoggerFactory = TypeHelper.GetType("Microsoft.Extensions.Logging.LoggerFactory", LoggingAssemblyName);
-    private static readonly FieldInfo? FilterOptions = LoggerFactory?.GetRequiredField("_filterOptions");
-    private static readonly Type? LoggerFilterOptions = TypeHelper.GetType("Microsoft.Extensions.Logging.LoggerFilterOptions", LoggingAssemblyName);
-    private static readonly PropertyInfo? MinLevel = LoggerFilterOptions?.GetRequiredProperty("MinLevel");
+    private static readonly FieldInfo FilterOptions = typeof(LoggerFactory).GetRequiredField("_filterOptions");
 
     public static void SetMinimumLevel(this ILoggerFactory factory, LogLevel minLevel)
     {
         Check.NotNull(factory);
 
-        if (factory.GetType().IsAssignableTo(LoggerFactory))
+        if (factory is LoggerFactory loggerFactory)
         {
-            var options = FilterOptions?.GetRequiredValue(factory);
-            MinLevel?.SetValue(options, minLevel);
+            var options = FilterOptions.GetRequiredValue<LoggerFilterOptions>(factory);
+            options.MinLevel = minLevel;
         }
         else
         {
