@@ -65,23 +65,24 @@ partial class TypeExtensions
             return _isByRefLike.Value is { } field && field.GetValue<bool>(type);
         }
 #endif
+        [SuppressMessage("ReSharper", "ConvertIfStatementToReturnStatement")]
         static Type? GetEnumerableUnderlyingTypeInternal(Type type)
         {
-            // Type is Array
-            // short-circuit if you expect lots of arrays 
+            // type is Array
             if (type.IsArray)
                 return type.GetElementType();
 
-            // type is IEnumerable<T>;
+            // type is IEnumerable<T>
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-            {
-                return type.GenericTypeArguments.FirstOrDefault() ?? type.GetTypeInfo().GenericTypeParameters.FirstOrDefault();
-            }
+                return type.GenericTypeArguments[0];
 
-            // type implements/extends IEnumerable<T>;
-            var enumType = type.GetGenericInterface(typeof(IEnumerable<>));
-            if (enumType != null)
-                return enumType.GenericTypeArguments![0];
+            // type implements IEnumerable<T>
+            if (type.GetGenericInterface(typeof(IEnumerable<>)) is { } iEnumerableType)
+                return iEnumerableType.GenericTypeArguments[0];
+
+            // type implements IEnumerable
+            if (type.IsAssignableTo(typeof(IEnumerable)))
+                return typeof(object);
 
             return null;
         }
@@ -91,7 +92,7 @@ partial class TypeExtensions
             if (!type.IsGenericType) return type.Name.ToStringOrEmpty();
             var name = type.Name.ToStringOrEmpty();
             var index = name.IndexOf('`');
-            return index == -1 ? name : name.Substring(0, index);
+            return index == -1 ? name : name[..index];
         }
 
         static string ShortNameInternal(Type type, string simpleName)
@@ -167,7 +168,7 @@ partial class TypeExtensions
         return type.GetTypeInfoExt().IsNullable;
     }
 
-    public static Type UnwarpNullable(this Type type)
+    public static Type UnwrapNullable(this Type type)
     {
         return type.GetTypeInfoExt().NullableUnderlyingType ?? type;
     }
@@ -238,43 +239,18 @@ partial class TypeExtensions
     }
 }
 
-public class TypeInfoExt
+public record TypeInfoExt(
+    Type Type,
+    Type? NullableUnderlyingType,
+    Type? EnumerableUnderlyingType,
+    object? DefaultValue,
+    string SimpleName,
+    string ShortName,
+    string LongName,
+    bool IsInteger,
+    bool IsFloat)
 {
-    public readonly Type Type;
-    public readonly Type? NullableUnderlyingType;
-    public readonly Type? EnumerableUnderlyingType;
-    public readonly object? DefaultValue;
-    public readonly bool IsNullable;
-    public readonly bool IsEnumerable;
-    public readonly string SimpleName;
-    public readonly string ShortName;
-    public readonly string LongName;
-    public readonly bool IsInteger;
-    public readonly bool IsNumeric;
-    public readonly bool IsFloat;
-
-    public TypeInfoExt(Type type,
-        Type? nullableUnderlyingType,
-        Type? enumerableUnderlyingType,
-        object? defaultValue,
-        string simpleName,
-        string shortName,
-        string longName,
-        bool isInteger,
-        bool isFloat)
-    {
-        Type = type;
-        NullableUnderlyingType = nullableUnderlyingType;
-        DefaultValue = defaultValue;
-        SimpleName = simpleName;
-        ShortName = shortName;
-        LongName = longName;
-        IsInteger = isInteger;
-        IsFloat = isFloat;
-        EnumerableUnderlyingType = enumerableUnderlyingType;
-
-        IsNullable = nullableUnderlyingType != null;
-        IsEnumerable = enumerableUnderlyingType != null || typeof(IEnumerable).IsAssignableFrom(type);
-        IsNumeric = IsInteger || IsFloat;
-    }
+    public bool IsNullable { get; } = NullableUnderlyingType != null;
+    public bool IsEnumerable { get; } = EnumerableUnderlyingType != null;
+    public bool IsNumeric { get; } = IsInteger || IsFloat;
 }

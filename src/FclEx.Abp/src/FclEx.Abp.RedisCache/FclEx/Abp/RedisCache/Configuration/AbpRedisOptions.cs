@@ -7,9 +7,9 @@ public class AbpRedisOptions : IAbpRedisReadOnlyOptions
 {
     public bool UseMessagePack { get; set; } = true;
     public bool SerializeStringAsRaw { get; set; } = true;
-    public List<CsRedisCoreConStr> ConStrs { get; } = new();
+    public List<CsRedisCoreConStr> ConStrs { get; } = [];
 
-    private readonly List<IRedisColConfigurator> _configurators = new();
+    private readonly List<IRedisColConfigurator> _configurators = [];
     public IReadOnlyList<IRedisColConfigurator> Configurators => _configurators;
 
     public AbpRedisOptions Configure(string name, Action<RedisColOptions> action)

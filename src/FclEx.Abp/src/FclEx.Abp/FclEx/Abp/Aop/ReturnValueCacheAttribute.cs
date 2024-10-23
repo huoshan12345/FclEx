@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Reflection;
+using System.Security.Cryptography;
 using AspectCore.DynamicProxy;
 using EasyCaching.Core.Serialization;
 using EasyCaching.Serialization.Json;
 using FclEx.Abp.Caching;
+using FclEx.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Overby.Extensions.Attachments;
 
 namespace FclEx.Abp.Aop;
-
 
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
 public class ReturnValueCacheAttribute : AbstractInterceptorAttribute
@@ -34,6 +34,35 @@ public class ReturnValueCacheAttribute : AbstractInterceptorAttribute
         get => _expire ?? default;
     }
 
+    // null instance means a static key
+    private string GetKey(MethodInfo method, object? instance, object?[] parameters, char? separator)
+    {
+        return StringBuilderHelper.Build(m =>
+        {
+            m.Append(method.GetSignature());
+            if (method.IsStatic == false && _isStatic != true)
+            {
+                m.Append(separator);
+                m.Append(instance.GetHashCodeSafely());
+            }
+            var hash = Hash(parameters);
+            m.Append(separator);
+            m.Append(hash);
+        });
+
+        static string Hash(object?[] parameters)
+        {
+            using var hash = IncrementalHash.CreateHash(HashAlgorithmName.MD5);
+            foreach (var parameter in parameters)
+            {
+                var id = parameter.GetHashCodeSafely();
+                var span = Span.AsBytes(ref id);
+                hash.AppendData(span);
+            }
+            return hash.GetCurrentHash().ToHex();
+        }
+    }
+
     public override async Task Invoke(AspectContext context, AspectDelegate next)
     {
         var method = context.ServiceMethod;
@@ -49,17 +78,8 @@ public class ReturnValueCacheAttribute : AbstractInterceptorAttribute
         }
 
         var (cacheManager, serializer, logger) = GetContext(provider);
-        var separator = cacheManager.CacheOptions.Separator;
         var cache = cacheManager.GetCache<byte[]>(CacheName);
-
-        var key = method.GetSignature().ToLower();
-        var parasKey = context.Parameters.ToJson().ToUtf8Bytes().ToMd5String();
-        key = key + separator + parasKey;
-        if (!method.IsStatic && _isStatic != true)
-        {
-            var instance = context.Proxy;
-            key = key + separator + instance.GetReferenceId();
-        }
+        var key = GetKey(method, context.Proxy, context.Parameters, cacheManager.CacheOptions.Separator);
 
         if (!cache.TryGet(key, out var str))
         {

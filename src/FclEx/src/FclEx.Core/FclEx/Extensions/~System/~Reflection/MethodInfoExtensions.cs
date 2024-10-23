@@ -15,7 +15,7 @@ public static class MethodInfoExtensions
     {
         var paras = method.GetParameters();
         var name = method.GetFullName();
-        var paraNames = paras.Select(m => m.ParameterType.ShortName()).JoinWith(",");
+        var paraNames = paras.Select(m => m.ParameterType.LongName()).JoinWith(",");
         return name + $"({paraNames})";
     }
 

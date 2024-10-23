@@ -3,5 +3,7 @@
 public readonly record struct JsonOptions(
     bool Indented = false,
     bool IgnoreNull = false,
+    bool RelaxedEscaping = false,
+    bool PropertyNameCaseInsensitive = false,
     JsonNamingPolicy? PropertyNamingPolicy = null,
-    bool PropertyNameCaseInsensitive = false);
+    JsonNumberHandling NumberHandling = JsonNumberHandling.Strict);

@@ -13,4 +13,10 @@ public static class ArraySegmentExtensions
     {
         return new MemoryStream(source.Array!, source.Offset, source.Count);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ReadOnlySpan<T> AsReadOnlySpan<T>(this ArraySegment<T> source)
+    {
+        return source.AsSpan();
+    }
 }

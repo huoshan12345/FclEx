@@ -85,13 +85,39 @@ public static class JsonExtensions
         return false;
     }
 
-    public static JsonNode? ReadNode(this Utf8JsonReader reader, JsonNodeOptions? options = null)
+    public static JsonNode? ReadNode(ref this Utf8JsonReader reader, JsonNodeOptions? options = null)
     {
         return JsonNode.Parse(ref reader, options);
     }
 
-    public static JsonNode? ReadNode(this Utf8JsonReader reader, JsonSerializerOptions options)
+    public static JsonNode? ReadNode(ref this Utf8JsonReader reader, JsonSerializerOptions options)
     {
         return JsonNode.Parse(ref reader, new() { PropertyNameCaseInsensitive = options.PropertyNameCaseInsensitive });
+    }
+
+    public static JsonElement ReadElement(ref this Utf8JsonReader reader)
+    {
+        return JsonElement.ParseValue(ref reader);
+    }
+
+    public static JsonNode? ToJsonNode(this JsonElement element, JsonNodeOptions? options = null)
+    {
+        return element.ValueKind switch
+        {
+            JsonValueKind.Array => JsonArray.Create(element, options),
+            JsonValueKind.Object => JsonObject.Create(element, options),
+            _ => JsonValue.Create(element, options),
+        };
+    }
+
+    public static string ToJsonString(this JsonNode node, JsonOptions options)
+    {
+        return node.ToJsonString(JsonHelper.GetOptions(options));
+    }
+
+    public static void Deconstruct(this JsonProperty property, out string name, out JsonElement value)
+    {
+        name = property.Name;
+        value = property.Value;
     }
 }

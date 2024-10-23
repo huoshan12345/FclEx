@@ -25,6 +25,6 @@ public class IgnoreJsonConverterImpl<T> : JsonConverter<T>
         if (writer.CurrentDepth == 0)
             return;
 
-        writer.WriteStringValue(default(string));
+        writer.WriteNullValue();
     }
 }

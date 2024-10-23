@@ -3,20 +3,12 @@
 public static partial class BytesExtensions
 {
     public static MemoryStream ToStream(this byte[] bytes) => new(bytes);
-
+    
     public static string GetString(this byte[] bytes, Encoding? encoding = null)
-    {
-        return bytes.Length == 0
-            ? string.Empty
-            : (encoding ?? Encoding.UTF8).GetString(bytes);
-    }
+        => bytes.AsReadOnlySpan().GetString(encoding);
 
     public static string GetString(this ArraySegment<byte> bytes, Encoding? encoding = null)
-    {
-        return bytes.Count == 0
-            ? string.Empty
-            : (encoding ?? Encoding.UTF8).GetString(bytes.Array!, bytes.Offset, bytes.Count);
-    }
+        => bytes.AsReadOnlySpan().GetString(encoding);
 
     public static string ToBase64(this byte[] bytes) => Convert.ToBase64String(bytes);
 

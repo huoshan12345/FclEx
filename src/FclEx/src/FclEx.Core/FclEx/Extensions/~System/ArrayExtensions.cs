@@ -55,4 +55,10 @@ public static class ArrayExtensions
     {
         Array.ForEach(array, action);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ReadOnlySpan<T> AsReadOnlySpan<T>(this T[] array)
+    {
+        return array.AsSpan();
+    }
 }

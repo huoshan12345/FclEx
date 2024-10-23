@@ -3,7 +3,7 @@
 public class IgnoreJsonConverterTests
 {
     [Fact]
-    public void ReadJson_Test()
+    public void Read_Test()
     {
         var json = "{\"retcode\":20000000,\"msg\":\"succ\",\"data\":null}";
         var obj = json.ToJToken().ToObject<TestModel>()!;
@@ -12,9 +12,9 @@ public class IgnoreJsonConverterTests
     }
 
     [Fact]
-    public void WriteJson_Test()
+    public void Write_Test()
     {
-        var obj = new TestModel { RetCode = 20000000, Msg = "succ" };
+        var obj = new TestModel { RetCode = 20000000, Msg = "succ", Data = "xxxxxxxx" };
         var json = obj.ToNewtonsoftJson(new NewtonsoftJsonOptions { CamelCase = true });
         Assert.Equal("{\"retcode\":20000000,\"msg\":\"succ\",\"data\":null}", json);
     }
@@ -26,6 +26,6 @@ public class IgnoreJsonConverterTests
         [JsonProperty("msg")]
         public string? Msg { get; set; }
         [JsonProperty("data"), JsonConverter(typeof(IgnoreJsonConverter))]
-        public Unit Data { get; set; }
+        public string? Data { get; set; }
     }
 }

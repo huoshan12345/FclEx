@@ -19,7 +19,7 @@ public class WriteAsStringConverter : BypassSelfJsonConverter
         }
         else
         {
-            var type = value.GetType().UnwarpNullable();
+            var type = value.GetType().UnwrapNullable();
             if (type == typeof(string))
             {
                 writer.WriteValue((string)value);

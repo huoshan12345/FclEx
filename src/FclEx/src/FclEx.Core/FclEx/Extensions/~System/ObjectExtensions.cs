@@ -39,6 +39,9 @@ public static class ObjectExtensions
         yield return item;
     }
 
+    /// <summary>
+    /// Returns <paramref name="value" /> clamped to the inclusive range of <paramref name="min" /> and <paramref name="max" />.
+    /// </summary>
     public static T Clamp<T>(this T value, T min, T max) where T : IComparable<T>
     {
         var cmpMin = value.CompareTo(min);
@@ -50,5 +53,14 @@ public static class ObjectExtensions
             return max;
 
         return value;
+    }
+
+    private static long _nextId;
+    private static readonly ConditionalWeakTable<object, object> _objectIds = new();
+    public static long GetObjectId<T>(this T? obj) where T : class
+    {
+        return obj is null
+            ? 0
+            : (long)_objectIds.GetValue(obj, _ => Interlocked.Increment(ref _nextId));
     }
 }

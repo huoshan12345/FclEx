@@ -23,7 +23,7 @@
     <ToolFramework>net6.0-windows</ToolFramework>
     <ToolProjectDir>$(MSBuildProjectDirectory)\..\$(ToolName)\</ToolProjectDir>
     <ToolPath>$(ToolProjectDir)bin\$(Configuration)\$(ToolFramework)\$(ToolName).dll</ToolPath>
-    <SourceDir>$(MSBuildProjectDirectory)\obj\generated\</SourceDir>
+    <SourceDir>$(MSBuildProjectDirectory)\obj\Generated\</SourceDir>
   </PropertyGroup>
 
   <!--Option to run target once per project in multi-targeting build-->
@@ -55,7 +55,7 @@
     <Error Condition="'$(_RunExitCode)' != '0'" Text="Build $(ToolName) failed" />
   </Target>
 
-  <Target Name="GenerateCode" BeforeTargets="DispatchToInnerBuilds;BeforeCompile">
+  <Target Name="GenerateCode" BeforeTargets="DispatchToInnerBuilds">
     <!--TargetFramework=once is critical here, as it allow will not execute task from same project with same properties twice. -->
     <MSBuild Projects="$(MSBuildProjectFile)" Targets="GenerateCodeBody" Properties="TargetFramework=once" />
   </Target>

@@ -6,12 +6,21 @@ public static class JsonHelper
 
     public static JsonSerializerOptions GetOptions(JsonOptions options)
     {
-        return _serializerOptions.GetOrAdd(options, k => new JsonSerializerOptions
+        return _serializerOptions.GetOrAdd(options, Create);
+
+        static JsonSerializerOptions Create(JsonOptions k)
         {
-            PropertyNameCaseInsensitive = k.PropertyNameCaseInsensitive,
-            DefaultIgnoreCondition = k.IgnoreNull ? JsonIgnoreCondition.WhenWritingNull : JsonIgnoreCondition.Never,
-            WriteIndented = k.Indented,
-            PropertyNamingPolicy = k.PropertyNamingPolicy,
-        });
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = k.PropertyNameCaseInsensitive,
+                DefaultIgnoreCondition = k.IgnoreNull ? JsonIgnoreCondition.WhenWritingNull : JsonIgnoreCondition.Never,
+                WriteIndented = k.Indented,
+                PropertyNamingPolicy = k.PropertyNamingPolicy,
+                Encoder = k.RelaxedEscaping ? RelaxedEncoder.Instance : null,
+                NumberHandling = k.NumberHandling,
+            };
+            options.MakeReadOnly(true);
+            return options;
+        }
     }
 }

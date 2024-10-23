@@ -10,6 +10,10 @@
     <PackageReference Include="System.IO.Compression" Version="4.3.0" />
     <PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--use lastest version for all target frameworks-->
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
 
