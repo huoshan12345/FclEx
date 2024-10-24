@@ -9,7 +9,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
     protected static readonly string[] NotAddHeaderNames =
     [
         HttpKnownHeaderNames.ContentType,
-        HttpKnownHeaderNames.Cookie
+        HttpKnownHeaderNames.Cookie,
         // HttpKnownHeaderNames.UserAgent
     ];
 

@@ -14,9 +14,9 @@ public class BatchRetryConsumerTests
     [Fact]
     public async Task Test()
     {
-        const int retryTimes = 3;
+        const int retryTimes = 2;
         var numbers = Enumerable.Range(1, 10).Select(m => new Model(m)).ToArray();
-        var consumer = new BatchRetryConsumer<Model>(5, TimeSpan.FromSeconds(1), retryTimes);
+        var consumer = new BatchRetryConsumer<Model>(5, TimeSpan.FromMilliseconds(100), retryTimes);
         consumer.ConsumingHandler += (sender, list) =>
         {
             _output.WriteLine(nameof(consumer.ConsumingHandler));
@@ -50,18 +50,18 @@ public class BatchRetryConsumerTests
     [Fact]
     public async Task Dispose_AfterStart_Test()
     {
-        var consumer = new BatchRetryConsumer<Model>(5, TimeSpan.FromSeconds(1), 1);
+        var consumer = new BatchRetryConsumer<Model>(5, TimeSpan.FromMilliseconds(100), 1);
         var task = consumer.StartAsync();
         consumer.Dispose();
-        await Task.Delay(TimeSpan.FromSeconds(1));
+        await Task.Delay(TimeSpan.FromMilliseconds(100));
         Assert.True(task.IsCompleted);
     }
 
     [RetryFact]
     public async Task Dispose_DuringConsuming_Test()
     {
-        var consumer = new BatchRetryConsumer<Model>(5, TimeSpan.FromSeconds(1), 1);
-        consumer.ConsumingHandler += (sender, list) => Task.Delay(TimeSpan.FromSeconds(1));
+        var consumer = new BatchRetryConsumer<Model>(5, TimeSpan.FromMilliseconds(100), 1);
+        consumer.ConsumingHandler += (sender, list) => Task.Delay(TimeSpan.FromMilliseconds(100));
         var task = consumer.StartAsync();
         consumer.Add(new Model(0));
         consumer.Dispose();
@@ -73,7 +73,7 @@ public class BatchRetryConsumerTests
     [Fact]
     public async Task CompleteAdding_BeforeStart_Test()
     {
-        var consumer = new BatchRetryConsumer<int>(5, TimeSpan.FromSeconds(1), 1);
+        var consumer = new BatchRetryConsumer<int>(5, TimeSpan.FromMilliseconds(100), 1);
         consumer.ConsumingHandler += (sender, list) => Task.CompletedTask;
         consumer.AddRange(Enumerable.Range(1, 10));
         consumer.CompleteAdding();
@@ -86,7 +86,7 @@ public class BatchRetryConsumerTests
     [Fact]
     public async Task CompleteAdding_AfterStart_Test()
     {
-        var consumer = new BatchRetryConsumer<int>(5, TimeSpan.FromSeconds(1), 1);
+        var consumer = new BatchRetryConsumer<int>(5, TimeSpan.FromMilliseconds(100), 1);
         consumer.ConsumingHandler += (sender, list) => Task.CompletedTask;
         var task = Operate.ExecuteAsync(() => consumer.StartAsync(), TimeSpan.FromSeconds(5));
         consumer.AddRange(Enumerable.Range(1, 10));

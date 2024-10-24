@@ -3,10 +3,10 @@
 public class PollyHelperTests
 {
     [RetryTheory]
-    [InlineData(1, 1)]
-    [InlineData(2, 1)]
-    [InlineData(2, 2)]
-    public async Task GetConnectTimeoutPolicy_Test(int retryCount, int timeoutSeconds)
+    [InlineData(1, 0.1)]
+    [InlineData(2, 0.1)]
+    [InlineData(2, 0.2)]
+    public async Task GetConnectTimeoutPolicy_Test(int retryCount, double timeoutSeconds)
     {
         var timeout = TimeSpan.FromSeconds(timeoutSeconds);
         var services = new ServiceCollection();
@@ -26,6 +26,6 @@ public class PollyHelperTests
         Assert.Contains(ex.EnumerateInner(), m => m.Message.Contains("configured ConnectTimeout"));
 
         var executeTime = timeout.Multiply(retryCount + 1);
-        AssertExt.Equal(executeTime, time, TimeSpan.FromSeconds(0.9));
+        AssertExt.Equal(executeTime, time, TimeSpan.FromSeconds(0.2));
     }
 }

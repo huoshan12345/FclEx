@@ -15,7 +15,7 @@ public class WhenAnySuccessTests
         var numbers = new[] { 0, 0 };
         var tasks = numbers.Select((m, i) => Task.Run(async () =>
         {
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            await Task.Delay(TimeSpan.FromMilliseconds(100));
             _output.WriteLine("task " + i);
             return Interlocked.Increment(ref numbers[i]);
         }));
@@ -28,7 +28,7 @@ public class WhenAnySuccessTests
     {
         var tasks = Enumerable.Range(1, 3).Select((m, i) => Task.Run<int>(async () =>
         {
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            await Task.Delay(TimeSpan.FromMilliseconds(100));
             _output.WriteLine("task " + i);
             throw new Exception();
         }));

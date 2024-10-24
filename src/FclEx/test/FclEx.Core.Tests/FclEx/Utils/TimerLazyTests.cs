@@ -3,9 +3,9 @@
 public class TimerLazyTests
 {
     [Fact]
-    public void Recreate_Test()
+    public async Task Recreate_Test()
     {
-        var span = TimeSpan.FromMilliseconds(900);
+        var span = TimeSpan.FromMilliseconds(100);
 
         var lazy = new TimerLazy<ReLazyTests.DisposableTester>(() => new ReLazyTests.DisposableTester(), span);
         Assert.False(lazy.IsValueCreated);
@@ -13,7 +13,7 @@ public class TimerLazyTests
         Assert.NotNull(value);
         Assert.True(lazy.IsValueCreated);
 
-        ThreadHelper.Sleep((int)Math.Ceiling(span.TotalSeconds) + 1);
+        await Task.Delay(span + TimeSpan.FromMilliseconds(100));
         Assert.False(lazy.IsValueCreated);
         Assert.False(value.IsDisposed);
 

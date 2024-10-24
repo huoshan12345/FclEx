@@ -3,9 +3,9 @@
 public class TimeoutTests
 {
     [RetryTheory]
-    [InlineData(1)]
-    [InlineData(3)]
-    public async Task ConnectTimeout_Test(int timeoutSeconds)
+    [InlineData(0.1)]
+    [InlineData(0.3)]
+    public async Task ConnectTimeout_Test(double timeoutSeconds)
     {
         var http = HttpClientService.Create(m => m.RetryCount = 0);
         var timeout = TimeSpan.FromSeconds(timeoutSeconds);

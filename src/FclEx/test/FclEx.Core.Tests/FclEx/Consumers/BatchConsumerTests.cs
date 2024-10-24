@@ -12,8 +12,7 @@ public class BatchConsumerTests
     [Fact]
     public async Task Test()
     {
-        const int maxRetry = 3;
-        using var consumer = new BatchConsumer<int>(5, TimeSpan.FromSeconds(1), maxRetry);
+        using var consumer = new BatchConsumer<int>(5, TimeSpan.FromMilliseconds(100), 2);
         consumer.ConsumingHandler += (_, _) =>
         {
             _output.WriteLine("OnConsume");
@@ -38,11 +37,13 @@ public class BatchConsumerTests
         });
         var task = consumer.StartAsync();
         var items = Enumerable.Range(1, 3).ToArray();
-        await items.ToSeriallyExecutedTask(async m =>
+
+        foreach (var item in items)
         {
-            consumer.Add(m);
-            await TaskHelper.DelayMilli(100);
-        });
+            consumer.Add(item);
+            await Task.Delay(TimeSpan.FromMilliseconds(50));
+        }
+
         consumer.CompleteAdding();
         await task;
         Assert.Equal(0, consumer.Count);

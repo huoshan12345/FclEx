@@ -1,4 +1,6 @@
-﻿namespace FclEx.Consumers;
+﻿using FclEx.Extensions;
+
+namespace FclEx.Consumers;
 
 public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
     IAsyncConsumer<BatchConsumer<T>, IReadOnlyList<T>>,
@@ -8,7 +10,6 @@ public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
     private readonly int _batchSize;
     private readonly int _maxRetryTimes;
     private readonly TimeSpan _batchTimeout;
-    private bool HasTimeout => _batchTimeout > TimeSpan.Zero;
 
     public event AsyncEventHandler<BatchConsumer<T>, IReadOnlyList<T>> ConsumingHandler = (sender, list) => Task.CompletedTask;
     public event EventHandler<BatchConsumer<T>, IReadOnlyList<ProcessingItem<T>>> DiscardHandler = (sender, list) => { };
@@ -26,23 +27,26 @@ public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
     {
         var watch = ValueStopwatch.StartNew();
         var list = new List<ProcessingItem<T>>(_batchSize);
+        var timeout = _batchTimeout.Clamp(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
+        var milliseconds = timeout.TotalMilliseconds.CastTo<int>();
+
         while (!_isDisposed && list.Count < _batchSize)
         {
             try
             {
-                if (_items.TryTake(out var item, 1 * 1000, _cts.Token))
+                if (_items.TryTake(out var item, milliseconds, _cts.Token))
                     list.Add(item);
             }
             catch (OperationCanceledException)
             {
                 break;
             }
-            if (HasTimeout)
-            {
-                var elapsedTime = watch.GetElapsedTime();
-                if (elapsedTime >= _batchTimeout)
-                    break;
-            }
+
+            if (_batchTimeout <= TimeSpan.Zero)
+                continue; // do not check timeout.
+
+            if (_batchTimeout < watch.GetElapsedTime())
+                break;
         }
         return list;
     }
