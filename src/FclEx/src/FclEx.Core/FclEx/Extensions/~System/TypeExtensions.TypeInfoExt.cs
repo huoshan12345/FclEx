@@ -74,7 +74,7 @@ partial class TypeExtensions
 
             // type is IEnumerable<T>
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-                return type.GenericTypeArguments[0];
+                return type.GenericTypeArguments.FirstOrDefault() ?? type.GetTypeInfo().GenericTypeParameters.FirstOrDefault();
 
             // type implements IEnumerable<T>
             if (type.GetGenericInterface(typeof(IEnumerable<>)) is { } iEnumerableType)
