@@ -39,7 +39,7 @@ public static class YamlMappingNodeExtensions
         return node;
     }
 
-    public static IEnumerable<(TKey, TValue)> Children<TKey, TValue>(this YamlMappingNode node)
+    public static IEnumerable<(TKey Key, TValue Value)> Children<TKey, TValue>(this YamlMappingNode node)
         where TKey : YamlNode
         where TValue : YamlNode
     {
@@ -49,9 +49,25 @@ public static class YamlMappingNodeExtensions
         }
     }
 
+    public static IEnumerable<(YamlScalarNode Key, TValue Value)> Children<TValue>(this YamlMappingNode node) where TValue : YamlNode
+    {
+        return node.Children<YamlScalarNode, TValue>();
+    }
+
+    public static IEnumerable<(YamlScalarNode Key, YamlNode Value)> Children(this YamlMappingNode node)
+    {
+        return node.Children<YamlNode>();
+    }
+
+
     public static IEnumerable<T> Children<T>(this YamlMappingNode node, Func<KeyValuePair<YamlNode, YamlNode>, bool> filter) where T : YamlNode
     {
         return node.Children.Where(filter).Select(m => m.Value.CastTo<T>());
+    }
+
+    public static IEnumerable<T> Children<T>(this YamlMappingNode node, Func<YamlNode, YamlNode, bool> filter) where T : YamlNode
+    {
+        return node.Children<T>(m => filter(m.Key, m.Value));
     }
 
     public static IEnumerable<T> Children<T>(this YamlMappingNode node, Func<YamlNode, bool> keyFilter) where T : YamlNode
