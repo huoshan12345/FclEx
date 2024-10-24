@@ -2,26 +2,15 @@
 
 public class AsyncEventHandlerTests
 {
-    private readonly ITestOutputHelper _helper;
-
-    public AsyncEventHandlerTests(ITestOutputHelper helper)
+    private class TestModel
     {
-        _helper = helper;
-    }
+        public SafeCounter Counter { get; } = new();
 
-    private class Tester
-    {
-        public Tester(ITestOutputHelper helper)
+        public event AsyncEventHandler<TestModel, TestModel> OnNotify = async (sender, tester) =>
         {
-            OnNotify += async (sender, tester) =>
-            {
-                var span = TimeSpan.FromMilliseconds(600);
-                await Task.Delay(span);
-                helper.WriteLine(span.ToString());
-            };
-        }
-
-        public event AsyncEventHandler<Tester, Tester> OnNotify = (sender, args) => Task.CompletedTask;
+            await Task.Yield();
+            sender.Counter.Increment();
+        };
 
         public Task Notify()
         {
@@ -32,22 +21,21 @@ public class AsyncEventHandlerTests
     [Fact]
     public async Task Test()
     {
-        var tester = new Tester(_helper);
+        var tester = new TestModel();
         tester.OnNotify += async (sender, e) =>
         {
-            var span = TimeSpan.FromMilliseconds(100);
-            await Task.Delay(span);
-            _helper.WriteLine(span.ToString());
+            await Task.Yield();
+            sender.Counter.Increment();
         };
 
         tester.OnNotify += async (sender, e) =>
         {
-            var span = TimeSpan.FromMilliseconds(300);
-            await Task.Delay(span);
-            _helper.WriteLine(span.ToString());
+            await Task.Yield();
+            sender.Counter.Increment();
         };
 
         await tester.Notify();
-        _helper.WriteLine("Notify");
+
+        Assert.Equal(3, tester.Counter.Value);
     }
 }

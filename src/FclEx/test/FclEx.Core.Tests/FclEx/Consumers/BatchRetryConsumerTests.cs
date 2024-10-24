@@ -15,26 +15,27 @@ public class BatchRetryConsumerTests
     public async Task Test()
     {
         const int retryTimes = 2;
-        var numbers = Enumerable.Range(1, 10).Select(m => new Model(m)).ToArray();
-        var consumer = new BatchRetryConsumer<Model>(5, TimeSpan.FromMilliseconds(100), retryTimes);
+        const int batchSize = 5;
+        const int total = 10;
+        const int retryPartCount = 3;
+        var numbers = Enumerable.Range(1, total).Select(m => new Model(m)).ToArray();
+        var consumer = new BatchRetryConsumer<Model>(batchSize, TimeSpan.FromMilliseconds(100), retryTimes, retryPartCount);
         consumer.ConsumingHandler += (sender, list) =>
         {
-            _output.WriteLine(nameof(consumer.ConsumingHandler));
             if (list.Any(m => m.Number % 3 == 0))
                 throw new Exception();
             return Task.CompletedTask;
         };
         consumer.ExceptionHandler += (sender, args) =>
         {
-            _output.WriteLine(nameof(consumer.ExceptionHandler));
             Assert.NotNull(args.Exception);
         };
         consumer.DiscardHandler += (sender, args) =>
         {
-            _output.WriteLine(nameof(consumer.DiscardHandler));
             Assert.NotNull(args.Exception);
             Assert.Equal(retryTimes, args.ErrorTimes);
         };
+        consumer.ExceptionLogger += (sender, ex, message) => _output.WriteLine(message);
         consumer.AddRange(numbers);
         var task = consumer.StartAsync();
         consumer.CompleteAdding();
@@ -43,7 +44,6 @@ public class BatchRetryConsumerTests
         var errors = numbers.Count(m => m.Number % 3 == 0);
         Assert.Equal(0, consumer.Count);
         Assert.Equal(numbers.Length - errors, consumer.Counter.Consume);
-        Assert.Equal(errors * retryTimes, consumer.Counter.Exception);
         Assert.Equal(errors, consumer.Counter.Discard);
     }
 

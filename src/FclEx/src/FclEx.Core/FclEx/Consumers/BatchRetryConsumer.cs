@@ -7,11 +7,11 @@ public sealed class BatchRetryConsumer<T> : IConsumer<T>,
     IDiscardListener<BatchRetryConsumer<T>, ProcessingItem<T>>,
     IExceptionListener<BatchRetryConsumer<T>, ProcessingItem<T>>
 {
-    private string TypeName { get; }
     private readonly int _retryPartCount;
-    private readonly AutoRetryConsumer<List<T>> _retryConsumer;
+    private readonly AutoRetryConsumer<ArraySegment<T>> _retryConsumer;
     private readonly BatchConsumer<T> _batchConsumer;
     private readonly AsyncLock _locker = new();
+    private string TypeName { get; }
 
     public bool IsComplete => _retryConsumer.IsComplete;
     public int Count => _locker.Do(() => _retryConsumer.Count + _batchConsumer.Count);
@@ -24,10 +24,11 @@ public sealed class BatchRetryConsumer<T> : IConsumer<T>,
 
     public BatchRetryConsumer(int batchSize, TimeSpan batchTimeout, int maxRetryTimes = 3, int retryPartCount = 4)
     {
-        _retryPartCount = Check.NotLessThan(retryPartCount, 2);
         TypeName = GetType().ShortName();
 
-        _retryConsumer = new AutoRetryConsumer<List<T>>(maxRetryTimes);
+        _retryPartCount = Check.NotLessThan(retryPartCount, 2);
+
+        _retryConsumer = new AutoRetryConsumer<ArraySegment<T>>(maxRetryTimes, null, batchTimeout);
         _retryConsumer.ConsumingHandler += (sender, list) => RetryAsync(list);
         _retryConsumer.ExceptionHandler += (sender, list) => HandleException(list);
         _retryConsumer.DiscardHandler += (sender, list) => HandleDiscard(list);
@@ -40,7 +41,7 @@ public sealed class BatchRetryConsumer<T> : IConsumer<T>,
             await ConsumingHandler.InvokeAsync(this, list).IgnoreSyncContext();
             Counter.IncrementConsume(list.Count);
         };
-        _batchConsumer.DiscardHandler += (sender, list) => _retryConsumer.Add(list.Select(m => m.Item).ToList());
+        _batchConsumer.DiscardHandler += (sender, list) => _retryConsumer.Add(list.Select(m => m.Item).ToArray().ToSegment());
         _batchConsumer.CancellationHandler += (sender, list) => CancellationHandler.Invoke(this, list);
         _batchConsumer.ExceptionLogger += (_, ex, m) => LogException(ex, m);
     }
@@ -77,12 +78,12 @@ public sealed class BatchRetryConsumer<T> : IConsumer<T>,
         _batchConsumer.Stop();
     }
 
-    private void HandleDiscard(ProcessingItem<List<T>> list)
+    private void HandleDiscard(ProcessingItem<ArraySegment<T>> item)
     {
-        if (list.Item.IsNullOrEmpty())
+        if (item.Item.IsNullOrEmpty())
             return;
 
-        var procItem = list.ToType(list.Item.First());
+        var procItem = item.ToType(item.Item.First());
         try
         {
             DiscardHandler.Invoke(this, procItem);
@@ -90,7 +91,6 @@ public sealed class BatchRetryConsumer<T> : IConsumer<T>,
         }
         catch (Exception e)
         {
-            Counter.IncrementException();
             LogException(e, $"Error encountered when invoking {nameof(HandleDiscard)}");
         }
     }
@@ -98,30 +98,30 @@ public sealed class BatchRetryConsumer<T> : IConsumer<T>,
     private void LogException(Exception ex, string message)
     {
         Counter.IncrementException();
-        ExceptionLogger.Invoke(this, ex, message);
+        ExceptionLogger.Invoke(this, ex, $"[{TypeName}]" + message);
     }
 
-    private void HandleException(ProcessingItem<List<T>> list)
+    private void HandleException(ProcessingItem<ArraySegment<T>> item)
     {
-        if (list.Item.IsNullOrEmpty())
+        if (item.Item.IsNullOrEmpty())
             return;
 
-        var procItem = list.ToType(list.Item.First());
+        var procItem = item.ToType(item.Item.First());
         try
         {
             ExceptionHandler.Invoke(this, procItem);
-            Counter.IncrementException();
         }
         catch (Exception e)
         {
-            Counter.IncrementException();
-            LogException(e, $"Error encountered when invoking {nameof(HandleException)}");
+            LogException(e, $"Error encountered when invoking {nameof(ExceptionHandler)}");
         }
     }
 
-    private async Task RetryAsync(IReadOnlyList<T>? items)
+    private async Task RetryAsync(ArraySegment<T> items)
     {
-        if (items == null || items.Count == 0) return;
+        if (items.IsNullOrEmpty())
+            return;
+
         try
         {
             await ConsumingHandler.InvokeAsync(this, items).IgnoreSyncContext();
@@ -132,8 +132,8 @@ public sealed class BatchRetryConsumer<T> : IConsumer<T>,
         {
             if (items.Count > 1)
             {
-                items.Chunk((int)Math.Ceiling(items.Count / (double)_retryPartCount))
-                    .ForEach(m => _retryConsumer.AddWithoutCheckingCompleteAdding(m.ToList()));
+                var size = (int)Math.Ceiling(items.Count / (double)_retryPartCount);
+                items.Segments(size).ForEach(m => _retryConsumer.AddWithoutCheckingCompleteAdding(m));
                 return;
             }
             else

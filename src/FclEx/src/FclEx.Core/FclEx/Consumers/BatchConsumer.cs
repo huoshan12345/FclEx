@@ -1,6 +1,4 @@
-﻿using FclEx.Extensions;
-
-namespace FclEx.Consumers;
+﻿namespace FclEx.Consumers;
 
 public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
     IAsyncConsumer<BatchConsumer<T>, IReadOnlyList<T>>,
@@ -10,6 +8,7 @@ public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
     private readonly int _batchSize;
     private readonly int _maxRetryTimes;
     private readonly TimeSpan _batchTimeout;
+    private readonly TimeSpan _takeTimeout;
 
     public event AsyncEventHandler<BatchConsumer<T>, IReadOnlyList<T>> ConsumingHandler = (sender, list) => Task.CompletedTask;
     public event EventHandler<BatchConsumer<T>, IReadOnlyList<ProcessingItem<T>>> DiscardHandler = (sender, list) => { };
@@ -20,6 +19,7 @@ public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
         _batchSize = Check.GreaterThan(batchSize, 0);
         _batchTimeout = Check.NotLessThan(batchTimeout, TimeSpan.Zero);
         _maxRetryTimes = Check.NotLessThan(maxRetryTimes, 0);
+        _takeTimeout = _batchTimeout.Clamp(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
     }
 
     // ReSharper disable once InconsistentNaming
@@ -27,8 +27,7 @@ public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
     {
         var watch = ValueStopwatch.StartNew();
         var list = new List<ProcessingItem<T>>(_batchSize);
-        var timeout = _batchTimeout.Clamp(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
-        var milliseconds = timeout.TotalMilliseconds.CastTo<int>();
+        var milliseconds = _takeTimeout.TotalMilliseconds.CastTo<int>();
 
         while (!_isDisposed && list.Count < _batchSize)
         {
@@ -57,7 +56,6 @@ public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
             return items;
 
         List<ProcessingItem<T>>? nextItems = null;
-        Counter.IncrementException();
 
         try
         {
@@ -79,15 +77,14 @@ public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
         }
         catch (Exception e)
         {
-            Counter.IncrementException();
-            LogException(e, $"Error encountered when invoking {nameof(HandleException)}");
+            LogException(e, $"Error encountered when invoking {nameof(ExceptionHandler)}");
         }
         return nextItems;
     }
 
     private void HandleDiscard(List<ProcessingItem<T>>? items)
     {
-        if (items == null || items.Count == 0)
+        if (items.IsNullOrEmpty())
             return;
 
         try
@@ -113,7 +110,7 @@ public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
             LogException(e, $"Error encountered when invoking {nameof(GetItems)}");
         }
 
-        if (items == null || items.Count == 0)
+        if (items.IsNullOrEmpty())
             return;
 
         try
@@ -125,6 +122,7 @@ public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
         }
         catch (Exception ex)
         {
+            LogException(ex, $"Error encountered when invoking {nameof(ConsumingHandler)}");
             items = HandleException(items, ex);
         }
         HandleDiscard(items);

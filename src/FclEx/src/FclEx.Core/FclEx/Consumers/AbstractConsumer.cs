@@ -26,7 +26,7 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>, ICancellationLi
     protected void LogException(Exception ex, string message)
     {
         Counter.IncrementException();
-        ExceptionLogger.Invoke((TSelf)this, ex, message);
+        ExceptionLogger.Invoke((TSelf)this, ex, $"[{TypeName}]" + message);
     }
 
     protected virtual void HandleCancellation()
@@ -42,7 +42,6 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>, ICancellationLi
         }
         catch (Exception ex)
         {
-            Counter.IncrementException();
             LogException(ex, $"Error encountered when invoking {nameof(_items.TryTake)}");
         }
 
@@ -55,8 +54,7 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>, ICancellationLi
         }
         catch (Exception ex)
         {
-            Counter.IncrementException();
-            LogException(ex, $"Error encountered when invoking {nameof(HandleCancellation)}");
+            LogException(ex, $"Error encountered when invoking {nameof(CancellationHandler)}");
         }
     }
 
@@ -71,8 +69,7 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>, ICancellationLi
         }
         catch (Exception ex)
         {
-            Counter.IncrementException();
-            LogException(ex, $"Error encountered when invoking {nameof(ProcessAsync)}");
+            LogException(ex, $"Error encountered when invoking {nameof(ProcessActionAsync)}");
         }
         finally
         {

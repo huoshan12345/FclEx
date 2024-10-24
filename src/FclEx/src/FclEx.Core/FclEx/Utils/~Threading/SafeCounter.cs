@@ -40,4 +40,9 @@ public class SafeCounter
     /// <returns>The original value</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Set(int value) => Interlocked.Exchange(ref _value, value);
+
+    public override string ToString()
+    {
+        return _value.ToString();
+    }
 }

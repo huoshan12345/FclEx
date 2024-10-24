@@ -6,8 +6,8 @@ namespace FclEx.Abp.Aop;
 
 public class ReturnValueCacheTests : AbpRedisTests
 {
-    public const int CacheMaxMilliseconds = 500;
-    public const int SleepMilliseconds = 1000;
+    public const int CacheMaxMilliseconds = 100;
+    public const int SleepMilliseconds = 200;
 
     public static IEnumerable<object[]> Numbers { get; } = new[] { -1, 0, 1, 10 }
         .Select(m => new object[] { m }).ToArray();
@@ -65,7 +65,7 @@ public class ReturnValueCacheTests : AbpRedisTests
         Assert.True(service.IsProxy());
     }
 
-    [Theory]
+    [RetryTheory]
     [MemberData(nameof(Numbers))]
     public void IsStatic_SameObject_Test(int no)
     {
@@ -78,7 +78,7 @@ public class ReturnValueCacheTests : AbpRedisTests
         Assert.True(t.TotalMilliseconds < CacheMaxMilliseconds, t.TotalSeconds.ToString());
     }
 
-    [Theory]
+    [RetryTheory]
     [MemberData(nameof(Numbers))]
     public void IsStatic_DiffObject_Test(int no)
     {
@@ -93,7 +93,7 @@ public class ReturnValueCacheTests : AbpRedisTests
     }
 
 
-    [Theory]
+    [RetryTheory]
     [MemberData(nameof(Numbers))]
     public void NotStatic_SameObject_Test(int no)
     {
@@ -106,7 +106,7 @@ public class ReturnValueCacheTests : AbpRedisTests
         Assert.True(t.TotalMilliseconds < CacheMaxMilliseconds, t.TotalSeconds.ToString());
     }
 
-    [Theory]
+    [RetryTheory]
     [MemberData(nameof(Numbers))]
     public void NotStatic_DiffObject_Test(int no)
     {

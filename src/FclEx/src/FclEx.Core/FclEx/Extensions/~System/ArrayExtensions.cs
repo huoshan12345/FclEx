@@ -40,15 +40,7 @@ public static class ArrayExtensions
 
     public static IEnumerable<ArraySegment<T>> Segments<T>(this T[] array, int maxSize)
     {
-        Check.NotNull(array);
-        Check.GreaterThan(maxSize, 0);
-
-        var count = (array.Length - 1) / maxSize + 1;
-        for (var i = 0; i < count; i++)
-        {
-            var length = i + 1 == count ? array.Length - i * maxSize : maxSize;
-            yield return array.ToSegment(i * maxSize, length);
-        }
+        return array.ToSegment().Segments(maxSize);
     }
 
     public static void ForEach<T>(this T[] array, Action<T> action)

@@ -48,7 +48,7 @@ public class ChatApiTest : IAssemblyFixture<GlobalFixture>
         DeleteMessage(res);
     }
 
-    [Fact]
+    [LocalOnlyFact]
     public async Task PostChunked_Test()
     {
         var columns = new[] { "No.", "ClientName" };
@@ -60,7 +60,7 @@ public class ChatApiTest : IAssemblyFixture<GlobalFixture>
         Assert.Equal(2, list.Count);
     }
 
-    [Fact]
+    [LocalOnlyFact]
     public async Task PostChunked_Empty_Test()
     {
         var columns = new[] { "No.", "ClientName" };

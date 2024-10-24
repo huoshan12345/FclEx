@@ -131,11 +131,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Core", "FclEx\src\Fcl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.Core.Tests", "FclEx\test\FclEx.Core.Tests\FclEx.Core.Tests.csproj", "{663B9A5E-9578-42D8-BD46-9BE4CC1C21ED}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FclEx.NewtonsoftJson", "FclEx\src\FclEx.NewtonsoftJson\FclEx.NewtonsoftJson.csproj", "{903953E9-E466-4961-836B-35B868CDF459}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.NewtonsoftJson", "FclEx\src\FclEx.NewtonsoftJson\FclEx.NewtonsoftJson.csproj", "{903953E9-E466-4961-836B-35B868CDF459}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FclEx.NewtonsoftJson.Tests", "FclEx\test\FclEx.NewtonsoftJson.Tests\FclEx.NewtonsoftJson.Tests.csproj", "{97393E01-DC83-4F9C-B9DB-2E1F21A10F19}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.NewtonsoftJson.Tests", "FclEx\test\FclEx.NewtonsoftJson.Tests\FclEx.NewtonsoftJson.Tests.csproj", "{97393E01-DC83-4F9C-B9DB-2E1F21A10F19}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FclEx.YamlDotNet", "FclEx\src\FclEx.YamlDotNet\FclEx.YamlDotNet.csproj", "{1DE5FA15-E829-4FFC-AFDD-F8F6D980CE7A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FclEx.YamlDotNet", "FclEx\src\FclEx.YamlDotNet\FclEx.YamlDotNet.csproj", "{1DE5FA15-E829-4FFC-AFDD-F8F6D980CE7A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
