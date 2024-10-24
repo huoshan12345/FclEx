@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace FclEx.Abp.RedisCache.Collections;
+﻿namespace FclEx.Abp.RedisCache.Collections;
 
 internal class RedisList<T> : RedisCol<T>, IRedisList<T>
 {

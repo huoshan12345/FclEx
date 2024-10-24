@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Linq;
+using FclEx.Serialization;
 
 namespace FclEx.RabbitMQ;
 

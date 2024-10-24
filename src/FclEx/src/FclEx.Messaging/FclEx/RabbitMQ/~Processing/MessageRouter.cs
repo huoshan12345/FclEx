@@ -1,4 +1,6 @@
-﻿namespace FclEx.RabbitMQ;
+﻿using FclEx.Serialization;
+
+namespace FclEx.RabbitMQ;
 
 public abstract class MessageRouter<TInput, TOutput> : MessageConsumer<TInput, RouterSettings>
 {

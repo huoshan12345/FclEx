@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-
-namespace System;
+﻿namespace System;
 
 public class NStringTests
 {

@@ -1,4 +1,4 @@
-﻿namespace FclEx.Serializers;
+﻿namespace FclEx.Serialization;
 
 public class JsonMemoryBytesSerializer : IMemoryBytesSerializer
 {

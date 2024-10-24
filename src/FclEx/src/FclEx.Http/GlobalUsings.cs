@@ -31,7 +31,7 @@ global using FclEx.Actions;
 global using FclEx.Extensions;
 global using FclEx.Helpers;
 global using FclEx.Http;
-global using FclEx.Json;
+global using System.Text.Json.Serialization.Converters;
 global using FclEx.Utils;
 global using FclEx.Web;
 global using Microsoft.Collections.Extensions;

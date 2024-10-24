@@ -1,22 +1,29 @@
-﻿using FclEx.Json;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static class JsonExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T? FromJson<T>(this string json, JsonSerializerOptions? options = null) => JsonSerializer.Deserialize<T>(json, options);
+    public static T? FromJson<T>(this string json, JsonSerializerOptions? options = null)
+    {
+        return JsonSerializer.Deserialize<T>(json, options ?? JsonHelper.GetOptions());
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T? FromJson<T>(this string json, JsonOptions options) => JsonSerializer.Deserialize<T>(json, JsonHelper.GetOptions(options));
+    public static T? FromJson<T>(this string json, JsonOptions options)
+    {
+        return JsonSerializer.Deserialize<T>(json, JsonHelper.GetOptions(options));
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static object? FromJson(this string json, Type type, JsonSerializerOptions? options = null) => JsonSerializer.Deserialize(json, type, options);
+    public static object? FromJson(this string json, Type type, JsonSerializerOptions? options = null)
+    {
+        return JsonSerializer.Deserialize(json, type, options ?? JsonHelper.GetOptions());
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string ToJson(this object? obj, JsonSerializerOptions? options = null)
     {
-        return JsonSerializer.Serialize(obj, options);
+        return JsonSerializer.Serialize(obj, options ?? JsonHelper.GetOptions());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -34,13 +41,13 @@ public static class JsonExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static JsonNode? ToJsonNode(this string str, JsonSerializerOptions? options = null)
     {
-        return JsonSerializer.Deserialize<JsonNode>(str, options);
+        return JsonSerializer.Deserialize<JsonNode>(str, options ?? JsonHelper.GetOptions());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static JsonNode? ToJsonNode<T>(this T? value, JsonSerializerOptions? options = null)
     {
-        return JsonSerializer.SerializeToNode(value, options);
+        return JsonSerializer.SerializeToNode(value, options ?? JsonHelper.GetOptions());
     }
 
     public static bool IsPossibleJson([NotNullWhen(true)] this string? str)
@@ -113,6 +120,22 @@ public static class JsonExtensions
     public static string ToJsonString(this JsonNode node, JsonOptions options)
     {
         return node.ToJsonString(JsonHelper.GetOptions(options));
+    }
+
+    public static JsonSerializerOptions AddConverters(this JsonSerializerOptions options, IEnumerable<JsonConverter> converters)
+    {
+        var readOnly = options.IsReadOnly;
+        if (readOnly)
+        {
+            options = new(options);
+        }
+
+        options.Converters.AddRangeSafely(converters);
+        if (readOnly)
+        {
+            options.MakeReadOnly(false);
+        }
+        return options;
     }
 
     public static void Deconstruct(this JsonProperty property, out string name, out JsonElement value)

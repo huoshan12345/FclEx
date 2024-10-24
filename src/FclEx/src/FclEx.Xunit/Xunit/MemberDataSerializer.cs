@@ -1,5 +1,5 @@
 ﻿using System.Text.Json;
-using FclEx.Json;
+using System.Text.Json.Serialization.Converters;
 
 namespace Xunit;
 

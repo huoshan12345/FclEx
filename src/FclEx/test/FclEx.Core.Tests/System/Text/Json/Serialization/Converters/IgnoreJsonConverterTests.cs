@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-
-namespace FclEx.Json;
+﻿namespace System.Text.Json.Serialization.Converters;
 
 public class IgnoreJsonConverterTests
 {
