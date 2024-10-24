@@ -1,4 +1,5 @@
-﻿using System.Transactions;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Transactions;
 
 namespace FclEx.Dapper;
 
@@ -35,7 +36,7 @@ public static class DapperHelper
     }
 
     // Register CustomPropertyTypeMap for Type with ColumnAttribute
-    // And make column name case insensitive.
+    // And make column name case-insensitive.
     public static void RegisterColumnMapping(params Type[] types)
     {
         if (types.IsNullOrEmpty())

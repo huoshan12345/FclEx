@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace FclEx.Abp.RedisCache;
+﻿namespace FclEx.Abp.RedisCache;
 
 public static class RedisColExtensions
 {

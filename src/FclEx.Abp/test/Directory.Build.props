@@ -1,5 +1,6 @@
 <Project>
   <Import Project="..\..\FclEx\test\Directory.Build.props" />
-  <ItemGroup>
-    <Compile Include="$(ProjectDir)..\..\..\FclEx\src\FclEx\FclExUsing.cs" />
-  </ItemGroup></Project>
+  <PropertyGroup>
+    <TargetFrameworks>net8.0</TargetFrameworks>
+  </PropertyGroup>
+</Project>

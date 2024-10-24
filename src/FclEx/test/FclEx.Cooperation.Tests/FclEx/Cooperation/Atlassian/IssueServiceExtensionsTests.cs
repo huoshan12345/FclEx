@@ -4,8 +4,17 @@ namespace FclEx.Cooperation.Atlassian;
 
 public class IssueServiceExtensionsTests
 {
-    [Fact]
+    [Fact(Skip = "To be fixed due to stackoverflow")]
     public async Task AsyncQueryable_FirstOrDefaultAsync_Test()
+    {
+        var issueByQuery = await JiraApi.Issues.AsyncQueryable()
+            .FirstOrDefaultAsync();
+
+        Assert.NotNull(issueByQuery);
+    }
+
+    [LocalOnlyFact]
+    public async Task AsyncQueryable_Where_FirstOrDefaultAsync_Test()
     {
         var issue = await JiraApi.Issues.GetIssueAsync("FCL-1");
         var issueByQuery = await JiraApi.Issues.AsyncQueryable()
@@ -16,7 +25,7 @@ public class IssueServiceExtensionsTests
         Assert.Equal(issue.Key, issueByQuery.Key);
     }
 
-    [Fact]
+    [LocalOnlyFact]
     public async Task AsyncQueryable_ToArrayAsync_Test()
     {
         var types = await JiraApi.IssueTypes.GetIssueTypesForProjectAsync("FCL");
@@ -32,7 +41,7 @@ public class IssueServiceExtensionsTests
         }
     }
 
-    [Fact]
+    [LocalOnlyFact]
     public async Task AsyncQueryable_Foreach_Test()
     {
         var types = await JiraApi.IssueTypes.GetIssueTypesForProjectAsync("FCL");

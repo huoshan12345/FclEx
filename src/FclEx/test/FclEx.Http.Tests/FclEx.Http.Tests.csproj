@@ -4,7 +4,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\FclEx.AspNetCore\FclEx.AspNetCore.csproj" />
     <ProjectReference Include="..\..\src\FclEx.Http\FclEx.Http.csproj" />
-    <ProjectReference Include="..\FclEx.Tests\FclEx.Tests.csproj" />
+    <ProjectReference Include="..\FclEx.Core.Tests\FclEx.Core.Tests.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -14,6 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!--to support C# feature like required keyword in lower dotnet versions-->
+    <PackageReference Include="PolySharp" Version="1.14.1" PrivateAssets="all" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
   </ItemGroup>
 

@@ -1,10 +1,11 @@
-﻿using FclEx.Actions;
-
+﻿#if NET6_0_OR_GREATER
 namespace FclEx.Http;
 
 public interface IUserClientAction<out TClient, T> : IAbstractAction<T> where TClient : IUserClient
 {
-    public TClient Client { get; }
-    public ISession Session => Client.Session;
-    public IUserAccount Account => Client.Account;
+    TClient Client { get; }
+    ISession Session => Client.Session;
+    IUserAccount Account => Client.Account;
+
 }
+#endif

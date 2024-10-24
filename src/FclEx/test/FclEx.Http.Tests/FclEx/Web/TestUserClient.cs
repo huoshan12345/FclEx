@@ -8,7 +8,7 @@ public class TestUserClient : UserClient
     {
     }
 
-    protected override Task<OperateResult> LoginInternal(CancellationToken token)
+    protected override Task<OperateResult> LoginActionAsync(CancellationToken token)
     {
         return Operate.Success.ToTask();
     }

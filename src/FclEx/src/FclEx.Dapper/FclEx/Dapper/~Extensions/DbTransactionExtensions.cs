@@ -2,6 +2,20 @@
 
 public static class DbTransactionExtensions
 {
+#if NETSTANDARD2_0
+    public static Task CommitAsync(this DbTransaction tran)
+    {
+        tran.Commit();
+        return Task.CompletedTask;
+    }
+
+    public static Task RollbackAsync(this DbTransaction tran)
+    {
+        tran.Rollback();
+        return Task.CompletedTask;
+    }
+#endif
+
     public static async Task TryRollbackAsync(this DbTransaction tran)
     {
         if (tran.Connection is not { State: ConnectionState.Open })

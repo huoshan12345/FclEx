@@ -21,7 +21,10 @@ public class BufferedContent : HttpContent
 
     protected override async Task SerializeToStreamAsync(Stream stream, TransportContext? context)
     {
-        await using var contentStream = await Content.ReadAsStreamAsync(Token);
+#if NET6_0_OR_GREATER
+        await
+#endif
+        using var contentStream = await Content.ReadAsStreamAsync(Token);
         await contentStream.CopyToAsync(stream, BufferSize, Timeout, Token);
     }
 

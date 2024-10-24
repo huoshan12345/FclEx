@@ -41,9 +41,9 @@ public class SourceGenerator : ISourceGenerator
     }
 
     private static readonly string[] Namespaces =
-    {
+    [
         @"Root\CIMV2",
-    };
+    ];
 
     private static IEnumerable<string> LoadNamespaces(GeneratorExecutionContext context)
     {
@@ -168,7 +168,7 @@ public class SourceGenerator : ISourceGenerator
         //            {
         //                Debugger.Launch();
         //            }
-        //            Debug.WriteLine("Initalize code generator");
+        //            Debug.WriteLine("Initialize code generator");
         //#endif
     }
 }

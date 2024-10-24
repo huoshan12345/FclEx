@@ -1,4 +1,5 @@
-﻿namespace FclEx.Http;
+﻿#if NET6_0_OR_GREATER
+namespace FclEx.Http;
 
 public interface IJsonAction<T> : IHttpResponseHandler<T>
 {
@@ -12,10 +13,9 @@ public interface IJsonAction<T> : IHttpResponseHandler<T>
 
         var context = new JsonActionContext(res, str!, JsonResultPath);
 
-        if (IsFailed(context))
-            return HandleFailed(context);
-
-        return GetResult(context);
+        return IsFailed(context) 
+            ? HandleFailed(context) 
+            : GetResult(context);
     }
 
     OperateResult<string> GetJson(HttpResponse response)
@@ -39,33 +39,13 @@ public interface IJsonAction<T> : IHttpResponseHandler<T>
     OperateResult<T> GetResult(JsonActionContext context)
     {
         return context.ResultToken is { } token
-            ? token.ToObject<T>()!
+            ? token.Deserialize<T>()!
             : nameof(context.ResultToken) + " is null";
     }
 }
 
 public interface IJsonAction : IJsonAction<Unit>
 {
-    OperateResult<Unit> IJsonAction<Unit>.GetResult(JsonActionContext context) => Operate.Success;
+    OperateResult IJsonAction<Unit>.GetResult(JsonActionContext context) => Operate.Success;
 }
-
-public readonly struct JsonActionContext
-{
-    public JsonActionContext(HttpResponse response, string json, string? path)
-    {
-        Response = response;
-        Json = json;
-        Path = path;
-        Token = JToken.Parse(json);
-        ResultTokens = path == null
-            ? Token.Yield()
-            : Token.SelectTokens(path)!;
-    }
-
-    public HttpResponse Response { get; }
-    public string? Path { get; }
-    public string Json { get; }
-    public JToken Token { get; }
-    public IEnumerable<JToken> ResultTokens { get; }
-    public JToken? ResultToken => ResultTokens.FirstOrDefault();
-}
+#endif

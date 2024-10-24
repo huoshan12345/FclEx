@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\FclEx.Messaging\FclEx.Messaging.csproj" />
-    <ProjectReference Include="..\FclEx.Tests\FclEx.Tests.csproj" />
+    <ProjectReference Include="..\FclEx.Core.Tests\FclEx.Core.Tests.csproj" />
   </ItemGroup>
 
 </Project>

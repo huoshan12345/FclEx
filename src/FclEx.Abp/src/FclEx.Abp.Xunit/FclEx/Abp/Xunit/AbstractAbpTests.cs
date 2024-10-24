@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using FclEx.Xunit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

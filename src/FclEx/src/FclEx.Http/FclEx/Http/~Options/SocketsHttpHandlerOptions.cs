@@ -5,7 +5,7 @@ public record SocketsHttpHandlerOptions
     public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
     public IPVersionPolicy IPVersionPolicy { get; set; } = IPVersionPolicy.PreferIPv4;
     public bool AllowAutoRedirect { get; set; } = true;
-    public DecompressionMethods AutomaticDecompression { get; set; } = DecompressionMethods.All;
+    public DecompressionMethods AutomaticDecompression { get; set; } = DecompressionMethods.GZip;
     public IWebProxy? Proxy { get; set; }
 
     /// <summary>

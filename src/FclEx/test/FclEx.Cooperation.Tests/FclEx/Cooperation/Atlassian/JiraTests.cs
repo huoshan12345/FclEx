@@ -2,28 +2,28 @@ namespace FclEx.Cooperation.Atlassian;
 
 public class JiraTests
 {
-    [Fact]
+    [LocalOnlyFact]
     public async Task GetProjectAsync_Test()
     {
         var project = await JiraApi.Projects.GetProjectAsync("FCL");
         Assert.NotNull(project);
     }
 
-    [Fact]
+    [LocalOnlyFact]
     public async Task GetProjectsAsync_Test()
     {
         var projects = await JiraApi.Projects.GetProjectsAsync().Continue(m => m.AsIReadOnlyList());
         Assert.NotEmpty(projects);
     }
 
-    [Fact]
+    [LocalOnlyFact]
     public async Task GetIssueTypesForProjectAsync_Test()
     {
         var types = await JiraApi.IssueTypes.GetIssueTypesForProjectAsync("FCL");
         Assert.NotEmpty(types);
     }
 
-    [Fact]
+    [LocalOnlyFact]
     public async Task GetIssueAsync_Test()
     {
         var issue = await JiraApi.Issues.GetIssueAsync("FCL-1");
@@ -31,7 +31,7 @@ public class JiraTests
         AssertExt.NotEmpty(issue.Description);
     }
 
-    [Fact]
+    [LocalOnlyFact]
     public async Task UpdateIssueAsync_Test()
     {
         var issue = await JiraApi.Issues.GetIssueAsync("FCL-1");
@@ -39,7 +39,7 @@ public class JiraTests
         await issue.SaveChangesAsync();
     }
 
-    [Fact]
+    [LocalOnlyFact]
     public async Task Queryable_ToArray_Test()
     {
         var types = await JiraApi.IssueTypes.GetIssueTypesForProjectAsync("FCL");

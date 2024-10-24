@@ -1,4 +1,5 @@
-﻿namespace FclEx.Http;
+﻿#if NET6_0_OR_GREATER
+namespace FclEx.Http;
 
 public class BrotliContent : CompressedContent
 {
@@ -15,3 +16,4 @@ public class BrotliContent : CompressedContent
         return new BrotliStream(stream, CompressionLevel, true);
     }
 }
+#endif

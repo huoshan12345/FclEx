@@ -1,5 +1,4 @@
-﻿using AngleSharp.Dom;
-
+﻿#if NET6_0_OR_GREATER
 namespace FclEx.Http;
 
 public interface IHtmlAction<T> : IHttpResponseHandler<T>
@@ -14,10 +13,9 @@ public interface IHtmlAction<T> : IHttpResponseHandler<T>
 
         var context = new HtmlActionContext(res, str!, HtmlResultPath);
 
-        if (IsFailed(context))
-            return HandleFailed(context);
-
-        return GetResult(context);
+        return IsFailed(context)
+            ? HandleFailed(context)
+            : GetResult(context);
     }
 
     OperateResult<string> GetHtml(HttpResponse res)
@@ -46,26 +44,6 @@ public interface IHtmlAction<T> : IHttpResponseHandler<T>
 
 public interface IHtmlAction : IHtmlAction<Unit>
 {
-    OperateResult<Unit> IHtmlAction<Unit>.GetResult(HtmlActionContext context) => Operate.Success;
+    OperateResult IHtmlAction<Unit>.GetResult(HtmlActionContext context) => Operate.Success;
 }
-
-public readonly struct HtmlActionContext
-{
-    public HtmlActionContext(HttpResponse response, string html, string? path)
-    {
-        Response = response;
-        Html = html;
-        Path = path;
-        Element = HtmlHelper.Parse(html).DocumentElement;
-        ResultElements = path == null
-            ? Element.Yield().ToCollection()
-            : Element.QuerySelectorAll(path)!;
-    }
-
-    public HttpResponse Response { get; }
-    public string? Path { get; }
-    public string Html { get; }
-    public IElement Element { get; }
-    public IHtmlCollection<IElement> ResultElements { get; }
-    public IElement? ResultElement => ResultElements.FirstOrDefault();
-}
+#endif

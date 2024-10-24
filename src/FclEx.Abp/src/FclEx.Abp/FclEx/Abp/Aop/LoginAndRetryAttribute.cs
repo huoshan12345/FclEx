@@ -24,7 +24,7 @@ public class LoginAndRetryAttribute : AbstractInterceptorAttribute
 
             if (NeedRetry(result))
             {
-                await client.FakeLogin(true);
+                await client.FakeLoginAsync(true);
                 await context.Invoke(next);
             }
         }

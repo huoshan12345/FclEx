@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 public readonly record struct HttpClientContext(HttpClient Client, IAsyncPolicy<HttpResponseMessage> Policy);
 
@@ -11,7 +9,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
     protected static readonly string[] NotAddHeaderNames =
     [
         HttpKnownHeaderNames.ContentType,
-        HttpKnownHeaderNames.Cookie
+        HttpKnownHeaderNames.Cookie,
         // HttpKnownHeaderNames.UserAgent
     ];
 
@@ -93,10 +91,8 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         }
     }
 
-    protected static (string, Encoding) ReadBufferAsString(ArraySegment<byte> buffer, HttpContentHeaders headers, string? charSet, bool detectCharSet, string? defaultCharSet)
+    protected static (string, Encoding) ReadBufferAsString(Span<byte> buffer, HttpContentHeaders headers, string? charSet, bool detectCharSet, string? defaultCharSet)
     {
-        Debug.Assert(buffer.Array != null);
-
         charSet = (charSet, headers.ContentType?.CharSet).FirstNotEmpty();
         // We don't validate the Content-Encoding header: If the content was encoded, it's the caller's
         // responsibility to make sure to only call ReadAsString() on already decoded content. E.g. if the
@@ -139,17 +135,17 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         encoding ??= GetEncodingFromCharSet(defaultCharSet) ?? DefaultEncoding;
 
         // Drop the BOM when decoding the data.
-        var str = encoding.GetString(buffer.Array, buffer.Offset + bomLength, buffer.Count - bomLength);
+        var str = encoding.GetString(buffer[bomLength..]);
         return (str, encoding);
     }
 
-    private static Encoding? DetectCharSet(ArraySegment<byte> buffer)
+    private static Encoding? DetectCharSet(Span<byte> data)
     {
-        var data = buffer.Array ?? throw new ArgumentNullException(nameof(buffer.Array));
         if (data.Length == 0)
             return null;
 
-        var prefix = Encoding.Default.GetString(data, 0, Math.Min(1024, data.Length));
+        var len = Math.Min(1024, data.Length);
+        var prefix = Encoding.Default.GetString(data[..len]);
         var charSet = HtmlHelper.GetMetaCharSet(prefix);
         return charSet == null ? null : Encoding.GetEncoding(charSet);
     }
@@ -160,7 +156,9 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         var requestMessage = new HttpRequestMessage(request.Method, uri)
         {
             Version = request.Version,
-            VersionPolicy = request.VersionPolicy,
+#if NET6_0_OR_GREATER
+           VersionPolicy = request.VersionPolicy, 
+#endif
         };
 
         if (request.Method.IsGet() == false)
@@ -169,9 +167,9 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             {
                 requestMessage.Content = content;
             }
-            else if (request.FormValues.IsValid())
+            else if (request.Form.IsNotEmpty())
             {
-                requestMessage.Content = new FormUrlEncodedContent(request.FormValues.Enumerate());
+                requestMessage.Content = new FormUrlEncodedContent(request.Form);
             }
 
             if (requestMessage.Content is { } requestContent)

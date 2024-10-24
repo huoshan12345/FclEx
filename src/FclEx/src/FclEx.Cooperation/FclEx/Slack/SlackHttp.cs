@@ -22,10 +22,15 @@ public class SlackHttp : IHttp
 
         if (response.Content.Headers.ContentType?.MediaType != "application/json")
             return default;
-
-        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+#if NET6_0_OR_GREATER
+        await
+#endif
+        using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
         using var reader = new StreamReader(stream);
-        await using var jsonTextReader = new JsonTextReader(reader);
+#if NET6_0_OR_GREATER
+        await
+#endif
+        using var jsonTextReader = new JsonTextReader(reader);
         return _serializer.Deserialize<T>(jsonTextReader);
     }
 }

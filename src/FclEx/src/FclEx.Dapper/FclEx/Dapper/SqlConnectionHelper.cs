@@ -6,7 +6,7 @@ public static class SqlConnectionHelper
     {
         Check.NotEmpty(dataSource);
 
-        var (host, portStr) = dataSource.Cleave(",");
+        var (host, portStr) = dataSource.Partition(",");
         var port = int.TryParse(portStr, out var p) ? p : 1433;
         return (host, port);
     }

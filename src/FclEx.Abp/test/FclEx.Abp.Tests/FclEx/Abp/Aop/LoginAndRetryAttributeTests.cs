@@ -32,7 +32,7 @@ public class LoginAndRetryAttributeTests : AbpAopTests<AbpTestModule>
         var account = new UserAccount("user", "password");
         var factory = ServiceProvider.GetRequiredService<IUserClientFactory<LoginAndRetryClient>>();
         var client = factory.Create(account);
-        var result = await client.Login();
+        var result = await client.LoginAsync();
         Assert.True(result.Success);
     }
 
@@ -41,17 +41,7 @@ public class LoginAndRetryAttributeTests : AbpAopTests<AbpTestModule>
     {
         var client = CreateClient();
         Assert.False(client.IsOnline);
-        var r = await client.ReturnActionEvent();
-        Assert.True(r.Success);
-        Assert.True(client.IsOnline);
-    }
-
-    [Fact]
-    public async Task ReturnOperateResult_Test()
-    {
-        var client = CreateClient();
-        Assert.False(client.IsOnline);
-        var r = await client.ReturnOperateResult();
+        var r = await client.DoAsync();
         Assert.True(r.Success);
         Assert.True(client.IsOnline);
     }
@@ -63,7 +53,7 @@ public class LoginAndRetryAttributeTests : AbpAopTests<AbpTestModule>
         }
 
         [LoginAndRetry]
-        public virtual Task<OperateResult> ReturnActionEvent()
+        public virtual Task<OperateResult> DoAsync()
         {
             return (IsOnline
                     ? Operate.Success
@@ -71,16 +61,7 @@ public class LoginAndRetryAttributeTests : AbpAopTests<AbpTestModule>
                 .ToTask();
         }
 
-        [LoginAndRetry]
-        public virtual Task<OperateResult> ReturnOperateResult()
-        {
-            return (IsOnline
-                    ? Operate.Success
-                    : Operate.CreateError(""))
-                .ToTask();
-        }
-
-        protected override Task<OperateResult> LoginInternal(CancellationToken token)
+        protected override Task<OperateResult> LoginActionAsync(CancellationToken token)
         {
             return Operate.Success.ToTask();
         }

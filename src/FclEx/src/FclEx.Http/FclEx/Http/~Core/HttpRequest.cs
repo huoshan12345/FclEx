@@ -8,7 +8,9 @@ public partial class HttpRequest
     public bool EnsureSuccessStatusCode { get; set; }
     public HttpMethod Method { get; set; }
     public HttpContent? Content { get; set; }
+#if NET6_0_OR_GREATER
     public HttpVersionPolicy VersionPolicy { get; set; } = HttpVersionPolicy.RequestVersionOrLower;
+#endif
     public Version Version { get; set; } = HttpVersion.Version11;
     public int BufferSize { get; set; } = 256 * 1024;
     public TimeSpan? TotalTimeout { get; set; } = TimeSpan.FromMinutes(2);
@@ -30,9 +32,8 @@ public partial class HttpRequest
     public bool ReadContent { get; set; } = true;
 
     public Dictionary<string, string?> Headers { get; } = new(StringComparer.OrdinalIgnoreCase);
-    public NameValueCollection QueryValues => _uriCreator.QueryValues;
-    public NameValueCollection FormValues { get; } = HttpUtility.ParseQueryString(""); // don't use new NameValueCollection() here.
-
+    public UriParameterCollection Query => _uriCreator.Query;
+    public UriParameterCollection Form { get; } = new(); // don't use new NameValueCollection() here.
 
     public string? Referrer
     {
@@ -99,11 +100,11 @@ public partial class HttpRequest
         Headers[HttpKnownHeaderNames.UserAgent] = HttpConstants.DefaultUserAgent;
     }
 
-    public Uri GetUri() => _uriCreator.GetUri();
+    public Uri GetUri() => _uriCreator.Build();
 
     public HttpRequest AddQueryValue(string key, string? value)
     {
-        _uriCreator.AddQueryValue(key, value);
+        _uriCreator.AddQueryParameter(key, value);
         return this;
     }
 }

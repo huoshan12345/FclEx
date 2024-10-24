@@ -6,7 +6,7 @@ public class WebProxyHelper
     {
         if (address is { UserInfo: { Length: > 0 } userInfo } && credentials == null)
         {
-            var (user, pass) = userInfo.Cleave(":");
+            var (user, pass) = userInfo.Partition(":");
             credentials = new NetworkCredential(user.UriUnescape(), pass.UriUnescape());
             var builder = new UriBuilder(address.Scheme, address.Host, address.Port, address.AbsolutePath, address.Query) { Fragment = address.Fragment };
             address = builder.Uri;

@@ -5,8 +5,12 @@
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <PackageReference Include="PolySharp" Version="1.14.1" PrivateAssets="all" />
+  </ItemGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\FclEx\FclEx.csproj" />
+    <ProjectReference Include="..\FclEx.Logging\FclEx.Logging.csproj" />
   </ItemGroup>
 
 </Project>

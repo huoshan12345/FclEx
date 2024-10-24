@@ -50,7 +50,7 @@ public static class LogEventExtensions
 
     public static string ToString(this LogEvent logEvent, ITextFormatter formatter)
     {
-        using var disposable = ObjectPoolHelper.StringBuilderPool.GetPooled();
+        using var disposable = StringBuilderHelper.GetPooled();
         var sw = new StringWriter(disposable.Value);
         formatter.Format(logEvent, sw);
         var str = sw.ToString();

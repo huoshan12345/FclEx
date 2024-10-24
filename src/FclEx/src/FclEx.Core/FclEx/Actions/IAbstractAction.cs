@@ -1,0 +1,31 @@
+﻿#if NET6_0_OR_GREATER
+namespace FclEx.Actions;
+
+public interface IAbstractAction<T> : IAction<T>
+{
+    Task<OperateResult<T>> ExecuteActionAsync(CancellationToken token = default);
+
+    string GetName() => GetType().ShortName();
+    Task<OperateResult<T>> HandleCancellationAsync(Exception ex) => Operate.CreateCancel<T>(ex);
+    Task<OperateResult<T>> HandleErrorAsync(Exception ex) => Operate.CreateError<T>(ex);
+
+    async Task<OperateResult<T>> IAction<T>.ExecuteAsync(CancellationToken token)
+    {
+        var time = ValueStopwatch.StartNew();
+        Debug.WriteLine($"[{GetName()}]Begin");
+
+        var future = CommonAction.Create(ExecuteActionAsync, true)
+            .NextResult<T, T>(r => r.Success
+                ? new SuccessAction<T>(r.Value, r.Elapsed)
+                : r.IsCanceled()
+                    ? CommonAction.Create(t => HandleCancellationAsync(r.Exception), true)
+                    : CommonAction.Create(t => HandleErrorAsync(r.Exception), true));
+
+        var result = await future.ExecuteAsync(token).IgnoreSyncContext();
+        result = result.Elapsed(time.GetElapsedTime());
+
+        Debug.WriteLine($"[{GetName()}]End, after {result.Elapsed.TotalMilliseconds:f3} ms]");
+        return result;
+    }
+}
+#endif

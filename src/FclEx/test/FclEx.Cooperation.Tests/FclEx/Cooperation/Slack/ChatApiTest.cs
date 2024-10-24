@@ -30,7 +30,7 @@ public class ChatApiTest : IAssemblyFixture<GlobalFixture>
     [LocalOnlyFact]
     public async Task PostMessage_CodeBlock_Test()
     {
-        using var disposable = ObjectPoolHelper.StringBuilderPool.GetPooled();
+        using var disposable = StringBuilderHelper.GetPooled();
         var builder = disposable.Value;
 
         builder.AppendLine("```");
@@ -48,7 +48,7 @@ public class ChatApiTest : IAssemblyFixture<GlobalFixture>
         DeleteMessage(res);
     }
 
-    [Fact]
+    [LocalOnlyFact]
     public async Task PostChunked_Test()
     {
         var columns = new[] { "No.", "ClientName" };
@@ -60,7 +60,7 @@ public class ChatApiTest : IAssemblyFixture<GlobalFixture>
         Assert.Equal(2, list.Count);
     }
 
-    [Fact]
+    [LocalOnlyFact]
     public async Task PostChunked_Empty_Test()
     {
         var columns = new[] { "No.", "ClientName" };

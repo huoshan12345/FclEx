@@ -1,4 +1,6 @@
-﻿namespace FclEx.RabbitMQ;
+﻿using FclEx.Serialization;
+
+namespace FclEx.RabbitMQ;
 
 public abstract class MessageRouter<TInput, TOutput> : MessageConsumer<TInput, RouterSettings>
 {
@@ -76,7 +78,7 @@ public abstract class MessageRouter<TInput, TOutput> : MessageConsumer<TInput, R
 
     protected virtual Task<TOutput> ConvertAsync(BasicDeliverEventArgs args, TInput input)
     {
-        return Converter.Convert(input);
+        return Converter.ConvertAsync(input);
     }
 
     protected abstract string GetRoutingKey(IBasicProperties props, TOutput output);
@@ -115,6 +117,6 @@ public abstract class MessageRouter<TInput, TOutput, TOutputs> : MessageRouter<T
 
     protected new virtual Task<TOutputs> ConvertAsync(BasicDeliverEventArgs args, TInput input)
     {
-        return Converter.Convert(input);
+        return Converter.ConvertAsync(input);
     }
 }

@@ -10,5 +10,5 @@ public class KafkaConsumerOptions<T>
     public string? Topic { get; set; }
     public ILogger? Logger { get; set; }
     public CancellationToken CancellationToken { get; set; }
-    public IDeserializer<T>? Deserializer { get; set; } = new JsonDeserializer<T>();
+    public IDeserializer<T>? Deserializer { get; set; } = new NewtonsoftJsonDeserializer<T>();
 }

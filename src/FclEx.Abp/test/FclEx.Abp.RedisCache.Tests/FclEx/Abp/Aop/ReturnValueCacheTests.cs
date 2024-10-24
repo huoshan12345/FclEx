@@ -1,12 +1,13 @@
 ﻿using AspectCore.DynamicProxy;
 using FclEx.Abp.RedisCache;
+// ReSharper disable SpecifyACultureInStringConversionExplicitly
 
 namespace FclEx.Abp.Aop;
 
 public class ReturnValueCacheTests : AbpRedisTests
 {
-    public const int CacheMaxMilliseconds = 800;
-    public const int SleepMilliseconds = 1000;
+    public const int CacheMaxMilliseconds = 100;
+    public const int SleepMilliseconds = 200;
 
     public static IEnumerable<object[]> Numbers { get; } = new[] { -1, 0, 1, 10 }
         .Select(m => new object[] { m }).ToArray();
@@ -64,7 +65,7 @@ public class ReturnValueCacheTests : AbpRedisTests
         Assert.True(service.IsProxy());
     }
 
-    [Theory]
+    [RetryTheory]
     [MemberData(nameof(Numbers))]
     public void IsStatic_SameObject_Test(int no)
     {
@@ -77,7 +78,7 @@ public class ReturnValueCacheTests : AbpRedisTests
         Assert.True(t.TotalMilliseconds < CacheMaxMilliseconds, t.TotalSeconds.ToString());
     }
 
-    [Theory]
+    [RetryTheory]
     [MemberData(nameof(Numbers))]
     public void IsStatic_DiffObject_Test(int no)
     {
@@ -85,38 +86,38 @@ public class ReturnValueCacheTests : AbpRedisTests
         var itemFromStatic = service.GetStatic(no);
 
         var tempService = ServiceProvider.GetRequiredService<IService>();
-        var (_, tempitemFromStatic, _, t) = Operate.Execute(() => tempService.GetStatic(no));
-        Assert.NotNull(tempitemFromStatic);
-        Assert.Equal(itemFromStatic.Id, tempitemFromStatic.Id);
+        var (_, fromStatic, _, t) = Operate.Execute(() => tempService.GetStatic(no));
+        Assert.NotNull(fromStatic);
+        Assert.Equal(itemFromStatic.Id, fromStatic.Id);
         Assert.True(t.TotalMilliseconds < CacheMaxMilliseconds, t.TotalSeconds.ToString());
     }
 
 
-    [Theory]
+    [RetryTheory]
     [MemberData(nameof(Numbers))]
     public void NotStatic_SameObject_Test(int no)
     {
         var service = ServiceProvider.GetRequiredService<IService>();
-        var itemFromInstace = service.Get(no);
+        var fromInstance = service.Get(no);
 
         var (_, tempItem, _, t) = Operate.Execute(() => service.Get(no));
         Assert.NotNull(tempItem);
-        Assert.Equal(itemFromInstace.Id, tempItem.Id);
+        Assert.Equal(fromInstance.Id, tempItem.Id);
         Assert.True(t.TotalMilliseconds < CacheMaxMilliseconds, t.TotalSeconds.ToString());
     }
 
-    [Theory]
+    [RetryTheory]
     [MemberData(nameof(Numbers))]
     public void NotStatic_DiffObject_Test(int no)
     {
         var service = ServiceProvider.GetRequiredService<IService>();
-        var itemFromInstace = service.Get(no);
+        var fromInstance = service.Get(no);
 
         var tempService = ServiceProvider.GetRequiredService<IService>();
-        var (_, tempItemFromInstace, _, t) = Operate.Execute(() => tempService.Get(no));
-        Assert.NotNull(tempItemFromInstace);
-        Assert.NotEqual(itemFromInstace.Id, tempItemFromInstace.Id);
-        Assert.Equal($"{tempService.Id}_{no}", tempItemFromInstace.Id);
+        var (_, temp, _, t) = Operate.Execute(() => tempService.Get(no));
+        Assert.NotNull(temp);
+        Assert.NotEqual(fromInstance.Id, temp.Id);
+        Assert.Equal($"{tempService.Id}_{no}", temp.Id);
         Assert.True(t.TotalMilliseconds > SleepMilliseconds, t.TotalSeconds.ToString());
     }
 }

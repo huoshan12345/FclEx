@@ -5,7 +5,7 @@ public static partial class HttpRequestExtensions
     public static HttpRequest AddFormValue(this HttpRequest req, string key, string? value)
     {
         Check.NotNull(key);
-        req.FormValues.Add(key.Trim(), value.ToStringOrEmpty().Trim());
+        req.Form.Add(key.Trim(), value.ToStringOrEmpty().Trim());
         return req;
     }
 
@@ -117,7 +117,7 @@ public static partial class HttpRequestExtensions
         return req.AddDataIf(value.IsNotEmpty(), key, value!);
     }
 
-    public static HttpRequest JsonContent(this HttpRequest req, object data, JsonOptions options = default)
+    public static HttpRequest JsonContent(this HttpRequest req, object data, JsonSerializerOptions? options = null)
     {
         req.Content = HttpContentHelper.ToJsonContent(data, options);
         return req;

@@ -8,6 +8,6 @@ public class JsonDeserializer<T> : IDeserializer<T>
             return default!;
 
         var str = Encoding.UTF8.GetString(data);
-        return JsonConvert.DeserializeObject<T>(str)!;
+        return str.FromJson<T>()!;
     }
 }

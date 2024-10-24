@@ -74,7 +74,7 @@ public class ConsumerTests
 
         publisher.Publish(valueToPublish, key);
 
-        var (_, flag, _, t) = await Operate.ExecuteAsync(() => semaphore.WaitAsync(retryTimes + 1, delay + TimeSpan.FromSeconds(3)));
+        var (_, flag, _, t) = await Operate.ExecuteAsync(() => semaphore.WaitAsync(retryTimes + 1, delay + TimeSpan.FromSeconds(1)));
         Assert.True(flag);
         AssertExt.Equal(delay, t, TimeSpan.FromMilliseconds(100));
 
@@ -87,31 +87,31 @@ public class ConsumerTests
 
     [RetryTheory]
     [InlineData(0)]
-    [InlineData(3)]
-    public async Task Consume_PushBack_String_Test(int delaySeconds)
+    [InlineData(0.3)]
+    public async Task Consume_PushBack_String_Test(double delaySeconds)
     {
         await ConsumePushBackTest("test", TimeSpan.FromSeconds(delaySeconds));
     }
 
     [RetryTheory]
     [InlineData(0)]
-    [InlineData(3)]
-    public async Task Consume_PushBack_Int_Test(int delaySeconds)
+    [InlineData(0.3)]
+    public async Task Consume_PushBack_Int_Test(double delaySeconds)
     {
         await ConsumePushBackTest(10, TimeSpan.FromSeconds(delaySeconds));
     }
 
     [RetryTheory]
     [InlineData(0)]
-    [InlineData(3)]
-    public async Task Consume_PushBack_Class_Test(int delaySeconds)
+    [InlineData(0.3)]
+    public async Task Consume_PushBack_Class_Test(double delaySeconds)
     {
         await ConsumePushBackTest(new Person
         {
             Id = 10,
             Name = "Jim",
             Age = 30,
-            CoinCount = 5
+            CoinCount = 5,
         }, TimeSpan.FromSeconds(delaySeconds));
     }
 

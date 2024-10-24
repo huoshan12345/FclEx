@@ -158,10 +158,10 @@ public partial class HttpClientServiceTests
     }
 
     [LocalOnlyTheory]
-    [InlineData(1, 1)]
-    [InlineData(2, 1)]
-    [InlineData(2, 2)]
-    public async Task CreateHttpClientContext_Policy_Test(int retryCount, int timeoutSeconds)
+    [InlineData(1, 0.1)]
+    [InlineData(2, 0.1)]
+    [InlineData(2, 0.2)]
+    public async Task CreateHttpClientContext_Policy_Test(int retryCount, double timeoutSeconds)
     {
         var expectedTime = TimeSpan.FromSeconds(timeoutSeconds).Multiply(retryCount + 1);
         var timeout = TimeSpan.FromSeconds(timeoutSeconds);
@@ -179,6 +179,6 @@ public partial class HttpClientServiceTests
         _output.WriteLine(response.Exception.ToString());
 
         Assert.IsType<TaskCanceledException>(response.Exception);
-        AssertExt.Equal(expectedTime, response.Elapsed, TimeSpan.FromSeconds(0.9));
+        AssertExt.Equal(expectedTime, response.Elapsed, TimeSpan.FromSeconds(0.2));
     }
 }

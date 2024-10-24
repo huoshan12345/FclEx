@@ -29,7 +29,7 @@ public class GlobalFixture : FclEx.Tests.GlobalFixture
 
     public override async Task DisposeAsync()
     {
-        await DeleteMessages();
+        await DeleteMessagesAsync();
     }
 
     public static void DeleteMessage(SlackMessage message) => Messages.Add(message);
@@ -37,7 +37,7 @@ public class GlobalFixture : FclEx.Tests.GlobalFixture
     public static void DeleteMessage(PostMessageResponse response)
         => DeleteMessage(new SlackMessage(response.Channel, response.Ts, response.Message.Text));
 
-    private static async Task DeleteMessages()
+    private static async Task DeleteMessagesAsync()
     {
         foreach (var message in Messages)
         {

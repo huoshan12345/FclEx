@@ -1,7 +1,0 @@
-﻿<Project>
-  <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)..\content\FclExUsing.cs">
-      <Link>FclExUsing.cs</Link>
-    </Compile>
-  </ItemGroup>
-</Project>

@@ -5,9 +5,10 @@ public record HttpClientOptions : SocketsHttpHandlerOptions
     public static readonly SleepDurationProvider DefaultSleepDurationProvider = retryAttempt => TimeSpan.FromSeconds(1 + retryAttempt);
 
     public Uri? BaseAddress { get; set; }
+#if NET6_0_OR_GREATER
     public HttpVersionPolicy HttpVersionPolicy { get; set; } = HttpVersionPolicy.RequestVersionOrLower;
     public Version HttpVersion { get; set; } = System.Net.HttpVersion.Version11;
-
+#endif
     public TimeSpan ExecutionTimeout { get; set; } = TimeSpan.FromMinutes(1);
     public int RetryCount { get; set; } = 2;
 

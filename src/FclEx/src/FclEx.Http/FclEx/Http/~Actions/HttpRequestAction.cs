@@ -1,6 +1,4 @@
-﻿using FclEx.Actions;
-
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 public readonly struct HttpRequestAction : IAction<HttpResponse>
 {

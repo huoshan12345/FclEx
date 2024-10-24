@@ -15,7 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FclEx.Wmi.SourceGenerator\FclEx.Wmi.SourceGenerator.csproj" PrivateAssets="all" />
-    <ProjectReference Include="..\FclEx\FclEx.csproj" />
+    <ProjectReference Include="..\FclEx.Core\FclEx.Core.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -23,7 +23,7 @@
     <ToolFramework>net6.0-windows</ToolFramework>
     <ToolProjectDir>$(MSBuildProjectDirectory)\..\$(ToolName)\</ToolProjectDir>
     <ToolPath>$(ToolProjectDir)bin\$(Configuration)\$(ToolFramework)\$(ToolName).dll</ToolPath>
-    <SourceDir>$(MSBuildProjectDirectory)\obj\generated\</SourceDir>
+    <SourceDir>$(MSBuildProjectDirectory)\obj\Generated\</SourceDir>
   </PropertyGroup>
 
   <!--Option to run target once per project in multi-targeting build-->

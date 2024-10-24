@@ -50,7 +50,7 @@ public class OpenGenericConventionalRegistrar : DefaultConventionalRegistrar
             }
             else if (dependencyAttribute?.TryRegister == true)
             {
-                services.TryAdd(serviceDescriptor);
+                ServiceCollectionDescriptorExtensions.TryAdd(services, serviceDescriptor);
             }
             else
             {

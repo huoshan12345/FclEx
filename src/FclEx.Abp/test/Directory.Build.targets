@@ -1,6 +1,3 @@
 <Project>
-  <PropertyGroup>
-    <!--Empty RootNamespace does not work in Directory.Build.props, so put it in this file as a workaround-->
-    <RootNamespace></RootNamespace>
-  </PropertyGroup>
+  <Import Project="..\..\FclEx\test\Directory.Build.targets" />
 </Project>

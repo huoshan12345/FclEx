@@ -2,36 +2,35 @@
 
 public class HttpRequestExtensionsTests
 {
-    private static async ValueTask SuccessRequest()
-    {
-        await HttpRequest.Get("https://www.baidu.com")
-            .SendAsync()
-            .ThrowIfError();
-        await TaskHelper.Delay(3);
-    }
-
     private static async Task SuccessRequestWrap()
     {
         await HttpRequest.Get("https://www.baidu.com")
             .SendAsync()
             .ThrowIfError();
-        await TaskHelper.Delay(3);
     }
 
     private static async Task TimeoutRequestWrap()
     {
+        var http = HttpClientService.Create(m => m.RetryCount = 0);
         await HttpRequest.Get("https://www.google.com")
-            .TotalTimeout(TimeSpan.FromSeconds(5))
-            .SendAsync()
+            .TotalTimeout(TimeSpan.FromSeconds(1))
+            .SendAsync(http)
             .ThrowIfError();
     }
 
     [Fact]
     public async Task ThrowIfError_ValueTask_Test()
     {
+        var http = HttpClientService.Create(m =>
+        {
+            m.ConnectTimeout = TimeSpan.FromMilliseconds(200);
+            m.RetryCount = 1;
+            m.SleepDurationProvider = m => TimeSpan.FromMilliseconds(100 * m);
+        });
         await Assert.ThrowsAnyAsync<Exception>(async () =>
             await HttpRequest.Get("http://localhost:9999")
-                .SendAsync()
+                .TotalTimeout(TimeSpan.FromMilliseconds(200))
+                .SendAsync(http)
                 .ThrowIfError());
     }
 

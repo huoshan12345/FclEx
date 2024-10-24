@@ -97,7 +97,7 @@ public partial class JsonFormatter : ITextFormatter
 
     protected virtual void WriteJsonData(string? key, string value, TextWriter output, bool writePrefixComma)
     {
-        if (string.IsNullOrEmpty(key))
+        if (key.IsNullOrEmpty())
             return;
 
         if (writePrefixComma)
@@ -110,7 +110,7 @@ public partial class JsonFormatter : ITextFormatter
 
     protected virtual void WriteFormattedJsonData(string? key, LogEventPropertyValue value, TextWriter output)
     {
-        if (string.IsNullOrEmpty(key))
+        if (key.IsNullOrEmpty())
             return;
 
         output.Write(',');

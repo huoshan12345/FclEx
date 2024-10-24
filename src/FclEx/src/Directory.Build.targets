@@ -5,13 +5,14 @@
   </PropertyGroup>  
 
   <ItemGroup>
-    <_ExcludeFclExUsing Include="FclEx" />
+    <_ExcludeFclExUsing Include="FclEx.Core" />
     <_ExcludeFclExUsing Include="FclEx.SourceGenerator" />
     <_ExcludeFclExUsing Include="FclEx.Wmi.SourceGenerator" />
   </ItemGroup>
 
   <ItemGroup Condition="!@(_ExcludeFclExUsing->AnyHaveMetadataValue('Identity', '$(ProjectName)'))">
-    <Compile Include="$(ProjectDir)..\..\..\FclEx\src\FclEx\FclExUsing.cs" />
+    <!--NOTE: this path works for projects in FclEx.Abp as well-->
+    <Compile Include="$(ProjectDir)..\..\..\FclEx\src\FclEx.Core\FclExUsing.cs" />
   </ItemGroup>
   
 </Project>

@@ -28,7 +28,7 @@ public class NewRelicClient
     /// <exception cref="NrqlException"></exception>
     public async Task<NrqlResult<T>> NrqlQueryAsync<T>(int accountId, string nrql, int timeout = 30)
     {
-        timeout = Math.Clamp(timeout, 5, 120);
+        timeout = timeout.Clamp(5, 120);
 
         const string query = """
                              query ($accountId: Int!, $nrql: Nrql, $timeout: Seconds) {

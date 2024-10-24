@@ -9,7 +9,7 @@ public class MessageConverter<TSource, TDestination> : IMessageConverter<TSource
         _handler = handler ?? throw new ArgumentNullException(nameof(handler));
     }
 
-    public Task<TDestination> Convert(TSource source)
+    public Task<TDestination> ConvertAsync(TSource source)
     {
         return _handler(source);
     }

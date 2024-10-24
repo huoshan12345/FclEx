@@ -179,9 +179,11 @@ partial class HttpRequestExtensions
         return req;
     }
 
+#if NET6_0_OR_GREATER
     public static HttpRequest VersionPolicy(this HttpRequest req, HttpVersionPolicy policy)
     {
         req.VersionPolicy = policy;
         return req;
     }
+#endif
 }

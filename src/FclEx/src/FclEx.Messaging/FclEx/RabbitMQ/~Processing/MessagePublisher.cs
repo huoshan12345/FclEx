@@ -1,4 +1,6 @@
-﻿namespace FclEx.RabbitMQ;
+﻿using FclEx.Serialization;
+
+namespace FclEx.RabbitMQ;
 
 public abstract class MessagePublisher<TOutput> : MessageProcessor<PublisherSettings>
 {
@@ -33,8 +35,8 @@ public abstract class MessagePublisher<TOutput> : MessageProcessor<PublisherSett
         props.SetDelay(msg.Delay);
 
         var disposable = Logger.PushProperty(
-            props.GetNamedValue(m => m.MessageId)!,
-            msg.GetNamedValue(m => m.RoutingKey)!
+            (nameof(props.MessageId), props.MessageId),
+            (nameof(msg.RoutingKey), msg.RoutingKey)
         );
         try
         {

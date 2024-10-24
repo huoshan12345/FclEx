@@ -1,5 +1,4 @@
 ﻿#nullable disable
-using System.Diagnostics;
 using System.Globalization;
 
 namespace FclEx.Http;

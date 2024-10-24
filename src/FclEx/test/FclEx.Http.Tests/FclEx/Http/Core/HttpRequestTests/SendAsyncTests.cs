@@ -1,4 +1,5 @@
 ﻿using System.Net.NetworkInformation;
+using System.Text.Json;
 using System.Web;
 using FclEx.Http.Tests;
 
@@ -151,9 +152,9 @@ public class SendAsyncTests : IAssemblyFixture<GlobalFixture>
             .ThrowIfError()
             .IgnoreSyncContext();
         Assert.False(res.HasError);
-        var body = res.ResponseString.ToJToken();
+        var body = res.ResponseString.ToJsonNode();
         Assert.NotNull(body);
-        var actual = body.ToObject<List<int>>();
+        var actual = body.Deserialize<List<int>>();
         Assert.True(list.SequenceEqual(actual!));
     }
 }
