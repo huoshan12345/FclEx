@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Extensions;
 
-public static class ObjectExtensions
+public static partial class ObjectExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [return: NotNullIfNotNull(nameof(obj))]

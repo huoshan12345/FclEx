@@ -1,22 +1,14 @@
 ﻿namespace FclEx.SourceGenerator;
 
-[Generator]
-public class SourceGenerator : ISourceGenerator, IIncrementalGenerator
+[Generator(LanguageNames.CSharp)]
+public class SourceGenerator : IIncrementalGenerator
 {
-    public void Execute(GeneratorExecutionContext context)
-    {
-    }
-
-    public void Initialize(GeneratorInitializationContext context)
-    {
-    }
-
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         //if (Debugger.IsAttached == false)
         //    Debugger.Launch();
 
-        context.RegisterPostInitializationOutput(i =>
+        context.RegisterImplementationSourceOutput(context.AnalyzerConfigOptionsProvider, (ctx, provider) =>
         {
             var codes = new[]
             {
@@ -26,12 +18,15 @@ public class SourceGenerator : ISourceGenerator, IIncrementalGenerator
                 TupleExtensionsSource.Generate(),
                 EventHandlersSource.Generate(),
                 AsyncEventHandlerExtensionsSource.Generate(),
-                UnicodeScalarHelperSource.Generate(),
+                UnicodeScalarHelperSource.Generate(ctx, provider),
             };
 
-            foreach (var (file, code) in codes)
+            if (codes.Any(m => m.Success == false))
+                return;
+
+            foreach (var (_, file, code) in codes)
             {
-                i.AddSource(file, code);
+                ctx.AddSource(file, code);
             }
         });
     }

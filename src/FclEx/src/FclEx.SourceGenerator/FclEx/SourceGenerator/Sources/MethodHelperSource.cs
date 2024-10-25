@@ -9,7 +9,7 @@ internal static class MethodHelperSource
         "System.Reflection",
     };
 
-    internal static (string FileName, string Code) Generate()
+    internal static SourceInfo Generate()
     {
         const string @namespace = "FclEx.Helpers";
         const string className = "MethodHelper";

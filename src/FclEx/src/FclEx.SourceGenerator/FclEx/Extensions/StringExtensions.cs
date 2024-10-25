@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace FclEx;
+namespace FclEx.Extensions;
 
 public static class StringExtensions
 {

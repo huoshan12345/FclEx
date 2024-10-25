@@ -1,21 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using AngleSharp.Dom;
 using AngleSharp.Html.Parser;
+using Microsoft.CodeAnalysis.Diagnostics;
+#pragma warning disable RS1035
 
 namespace FclEx.SourceGenerator.Sources;
 
 public class UnicodeScalarHelperSource
 {
-    internal static (string FileName, string Code) Generate()
+    internal static SourceInfo Generate(SourceProductionContext context, AnalyzerConfigOptionsProvider options)
     {
         const string @namespace = "FclEx.Helpers";
         const string className = "UnicodeScalarHelper";
         const string methodName = "public static partial bool IsEmoji(int unicodeScalar)";
+
+        SynchronizationContext.SetSynchronizationContext(null);
+        var codes = GetAllEmojiCodes(context, options).GetAwaiter().GetResult();
+
+        if (codes is null)
+            return SourceInfo.Failed;
 
         using var builder = new SourceBuilder()
             .WriteGeneratedHeader()
@@ -34,9 +43,6 @@ public class UnicodeScalarHelperSource
 
         builder.WriteLine("switch (unicodeScalar)");
         builder.WriteOpeningBracket();
-
-        SynchronizationContext.SetSynchronizationContext(null);
-        var codes = GetAllEmojiCodes().GetAwaiter().GetResult();
 
         foreach (var code in codes)
         {
@@ -67,12 +73,82 @@ public class UnicodeScalarHelperSource
         return ($"{className}.g.cs", str);
     }
 
+    private static async Task<SortedSet<int>?> GetAllEmojiCodes(SourceProductionContext context, AnalyzerConfigOptionsProvider options)
+    {
+        await Task.Yield();
+
+        const string key = "build_property.projectdir";
+        var path = options.GetGlobalOption(key);
+        if (path is null)
+        {
+            Report("Cannot find global option by key '{0}'", key);
+            return null;
+        }
+
+        var index = path.IndexOf("src", StringComparison.Ordinal);
+        if (index < 0)
+        {
+            Report("Cannot locate src directory from current path: {0}", path);
+            return null;
+        }
+
+        var assembly = typeof(UnicodeScalarHelperSource).Assembly.GetName().Name;
+        var projectDir = Path.Combine(path[..index], "src", "FclEx", "src", assembly);
+        if (Directory.Exists(projectDir) == false)
+        {
+            Report("Source generator project directory does not exist: {0}", projectDir);
+            return null;
+        }
+
+        var resourcesDir = Path.Combine(projectDir, "Resources");
+        var file = new FileInfo(Path.Combine(resourcesDir, "emoji-codes.txt"));
+        if (file.Exists && file.LastWriteTimeUtc.AddDays(7) > DateTime.UtcNow)
+        {
+            var content = File.ReadAllText(file.FullName);
+            var lines = content.Split('\r', '\n')
+                .Select(m => m.Trim())
+                .Where(m => m.Length > 0)
+                .Select(m => int.Parse(m));
+
+            var set = new SortedSet<int>(lines);
+            if (set.Count > 0)
+                return set;
+        }
+
+        var codes = await FetchAllEmojiCodes();
+
+        if (Directory.Exists(resourcesDir) == false)
+            Directory.CreateDirectory(resourcesDir);
+
+        using var writer = new StreamWriter(file.FullName, false);
+        foreach (var code in codes)
+        {
+            writer.WriteLine(code);
+        }
+
+        return codes;
+
+        void Report(string messageFormat, params object?[]? args)
+        {
+            var descriptor = new DiagnosticDescriptor(
+                id: "FclEx",
+                title: nameof(GetAllEmojiCodes),
+                messageFormat: messageFormat,
+                category: nameof(UnicodeScalarHelperSource),
+                defaultSeverity: DiagnosticSeverity.Error,
+                isEnabledByDefault: true);
+            context.ReportDiagnostic(Diagnostic.Create(descriptor, null, messageArgs: args));
+        }
+    }
+
     /// <summary>
     /// Gets all emoji unicode values based on unicode.org website.
     /// </summary>
     /// <returns>All emoji unicode values.</returns>
-    private static async Task<SortedSet<int>> GetAllEmojiCodes()
+    private static async Task<SortedSet<int>> FetchAllEmojiCodes()
     {
+        await Task.Yield();
+
         using var httpClient = new HttpClient();
 
         // the official website: https://unicode.org/emoji/charts/full-emoji-list.html

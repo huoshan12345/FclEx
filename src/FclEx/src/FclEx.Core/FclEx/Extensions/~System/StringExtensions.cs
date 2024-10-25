@@ -42,8 +42,7 @@ partial class StringExtensions
         if (str.IsNullOrEmpty() || maxLength >= str.Length)
             return str ?? string.Empty;
 
-        // ReSharper disable once ReplaceSubstringWithRangeIndexer
-        return str.Substring(maxLength) + "...";
+        return str[..maxLength] + "...";
     }
 
     private static readonly Regex RegexOfXmlProlog = new(@"^<\?xml.+\?>", RegexOptions.Compiled);

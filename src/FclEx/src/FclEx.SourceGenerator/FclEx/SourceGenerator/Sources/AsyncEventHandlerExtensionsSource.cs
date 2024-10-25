@@ -8,7 +8,7 @@ internal class AsyncEventHandlerExtensionsSource
         "FclEx",
     };
 
-    internal static (string FileName, string Code) Generate()
+    internal static SourceInfo Generate()
     {
         const string @namespace = "FclEx.Extensions";
         const string className = "AsyncEventHandlerExtensions";

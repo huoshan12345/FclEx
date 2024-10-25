@@ -4,7 +4,7 @@ internal class EventHandlersSource
 {
     private const int Max = 8;
 
-    internal static (string FileName, string Code) Generate()
+    internal static SourceInfo Generate()
     {
         const string @namespace = "FclEx";
 
