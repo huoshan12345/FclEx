@@ -14,7 +14,7 @@ public static class JsonHelper
         {
             var options = new JsonSerializerOptions
             {
-                PropertyNameCaseInsensitive = k.PropertyNameCaseSensitive,
+                PropertyNameCaseInsensitive = k.PropertyNameCaseSensitive == false,
                 DefaultIgnoreCondition = k.IgnoreNull
                     ? JsonIgnoreCondition.WhenWritingNull
                     : JsonIgnoreCondition.Never,
