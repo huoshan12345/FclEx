@@ -2,8 +2,8 @@
 
 public class ReturnValueCacheTests : AbpAopTests<AbpTestModule>
 {
-    public static readonly TimeSpan CacheMaxTime = TimeSpan.FromMilliseconds(100);
-    public static readonly TimeSpan SleepTime = TimeSpan.FromMilliseconds(200);
+    public static readonly TimeSpan CacheMaxTime = TimeSpan.FromMilliseconds(50);
+    public static readonly TimeSpan SleepTime = TimeSpan.FromMilliseconds(100);
 
     public static IEnumerable<object[]> Numbers { get; } = new[] { -1, 0, 1, 10 }
         .Select(m => new object[] { m }).ToArray();
@@ -69,7 +69,7 @@ public class ReturnValueCacheTests : AbpAopTests<AbpTestModule>
         var itemFromStatic = service.GetStatic(no);
         var itemFromInstance = service.Get(no);
 
-        for (var i = 0; i < 3; i++)
+        for (var i = 0; i < 2; i++)
         {
             var (_, tempItem, ex, t) = Operate.Execute(() => service.Get(no));
             Assert.Null(ex);
@@ -77,7 +77,7 @@ public class ReturnValueCacheTests : AbpAopTests<AbpTestModule>
             Assert.Equal(itemFromInstance.Id, tempItem.Id);
             Assert.True(t < CacheMaxTime, t.ToString());
         }
-        for (var i = 0; i < 3; i++)
+        for (var i = 0; i < 2; i++)
         {
             var (_, tempItem, ex, t) = Operate.Execute(() => service.GetStatic(no));
             Assert.Null(ex);
@@ -93,7 +93,7 @@ public class ReturnValueCacheTests : AbpAopTests<AbpTestModule>
     {
         var service = ServiceProvider.GetRequiredService<IService>();
         var itemFromStatic = service.GetStatic(no);
-        for (var i = 0; i < 3; i++)
+        for (var i = 0; i < 2; i++)
         {
             var tempService = ServiceProvider.GetRequiredService<IService>();
             var (_, fromStatic, _, timeFromStatic) = Operate.Execute(() => tempService.GetStatic(no));

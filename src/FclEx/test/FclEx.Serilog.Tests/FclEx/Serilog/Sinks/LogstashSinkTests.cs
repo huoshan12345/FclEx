@@ -32,6 +32,6 @@ public class LogstashSinkTests
         }
 
         await Log.CloseAndFlushAsync();
-        await Task.Delay(TimeSpan.FromSeconds(10));
+        await Task.Delay(TimeSpan.FromSeconds(1));
     }
 }

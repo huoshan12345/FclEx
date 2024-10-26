@@ -14,8 +14,8 @@ public class ExtensionsTests
             .ConfigureServices((context, services) => services.AddApplication<AbpTestModule>());
 
         using var host = builder.Build();
-        host.Services.UseAbp();
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+        await host.Services.UseAbpAsync();
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(0.2));
         await host.RunAsync(cts.Token);
     }
 }

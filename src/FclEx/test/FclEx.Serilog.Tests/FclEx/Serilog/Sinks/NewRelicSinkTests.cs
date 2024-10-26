@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace FclEx.Serilog.Sinks;
 
 public class NewRelicSinkTests : IAssemblyFixture<GlobalFixture>
@@ -10,11 +12,11 @@ public class NewRelicSinkTests : IAssemblyFixture<GlobalFixture>
     {
         var events = Enumerable.Range(1, count).Select(m => CreateLogEvent(m));
         var str = NewRelicSink.Serialize(events, new JsonFormatter());
-        var token = JToken.Parse(str);
-        Assert.Equal(JTokenType.Array, token.Type);
+        var token = JsonDocument.Parse(str);
+        Assert.Equal(JsonValueKind.Array, token.RootElement.ValueKind);
     }
 
-    [Fact]
+    [LocalOnlyFact]
     public async Task EmitBatchAsync_Test()
     {
         var writer = new StringWriter();

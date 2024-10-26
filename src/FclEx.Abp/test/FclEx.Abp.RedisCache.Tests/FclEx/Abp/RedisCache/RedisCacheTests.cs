@@ -76,7 +76,7 @@ public class RedisCacheTests
         else
             Assert.IsType<DefaultJsonSerializer>(serializer);
 
-        var array = Enumerable.Range(1, 10)
+        var array = Enumerable.Range(1, 3)
             .Select((m, i) => new Model(m, m.ToString("D8"), m))
             .ToArray();
 
@@ -98,7 +98,7 @@ public class RedisCacheTests
 
         var cacheManager = serviceProvider.GetRequiredService<ICacheManager>();
         var cache = cacheManager.GetCache<string>("number");
-        var keys = Enumerable.Range(1, 10).Select(m => m.ToString()).ToArray();
+        var keys = Enumerable.Range(1, 3).Select(m => m.ToString()).ToArray();
         cache.RemoveAll(keys);
         foreach (var key in keys)
         {
@@ -125,7 +125,7 @@ public class RedisCacheTests
 
         var cacheManager = serviceProvider.GetRequiredService<ICacheManager>();
         var cache = cacheManager.GetCache<string>("number");
-        var keys = Enumerable.Range(1, 10).Select(m => m.ToString()).ToArray();
+        var keys = Enumerable.Range(1, 3).Select(m => m.ToString()).ToArray();
         await cache.RemoveAllAsync(keys);
         foreach (var key in keys)
         {

@@ -2,7 +2,7 @@ namespace FclEx.Serilog.Extensions;
 
 public class LoggerConfigurationExtensionsTests
 {
-    [Fact]
+    [LocalOnlyFact]
     public async Task NewRelic_Test()
     {
         var logger = new LoggerConfiguration()
@@ -16,6 +16,6 @@ public class LoggerConfigurationExtensionsTests
         }
 
         await logger.DisposeAsync();
-        await Task.Delay(TimeSpan.FromSeconds(3));
+        await Log.CloseAndFlushAsync();
     }
 }

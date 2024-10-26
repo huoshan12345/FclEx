@@ -31,13 +31,13 @@ public class ContinueTests
     {
         {
             var number = 0;
-            await Task.Run(() => Task.Delay(TimeSpan.FromMilliseconds(100)))
+            await Task.Run(() => Task.Yield())
                 .Continue(() => number++);
 
             Assert.Equal(1, number);
         }
         {
-            var task = Task.Run(() => Task.Delay(TimeSpan.FromMilliseconds(100)))
+            var task = Task.Run(() => Task.Yield())
                 .Continue(() => Throw());
 
             await Assert.ThrowsAsync<NotSupportedException>(() => task);
@@ -49,7 +49,7 @@ public class ContinueTests
     {
         var task = Task.Run(async () =>
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(100));
+            await Task.Yield();
             throw new InvalidOperationException();
         }).Continue(() => Throw());
 
@@ -72,7 +72,7 @@ public class ContinueTests
     {
         {
             var number = 0;
-            await Task.Run(() => Task.Delay(TimeSpan.FromMilliseconds(100)))
+            await Task.Run(() => Task.Yield())
                 .Continue(() =>
                 {
                     number++;
@@ -82,7 +82,7 @@ public class ContinueTests
             Assert.Equal(1, number);
         }
         {
-            var task = Task.Run(() => Task.Delay(TimeSpan.FromMilliseconds(100)))
+            var task = Task.Run(() => Task.Yield())
                 .Continue(() => ThrowTask());
 
             await Assert.ThrowsAsync<NotSupportedException>(() => task);
@@ -94,7 +94,7 @@ public class ContinueTests
     {
         var task = Task.Run(async () =>
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(100));
+            await Task.Yield();
             throw new InvalidOperationException();
         }).Continue(() => ThrowTask());
 
@@ -116,13 +116,13 @@ public class ContinueTests
     public async Task Task_Continue_Func_Task_TNext()
     {
         {
-            var number = await Task.Run(() => Task.Delay(TimeSpan.FromMilliseconds(100)))
+            var number = await Task.Run(() => Task.Yield())
                 .Continue(() => 1.ToTask());
 
             Assert.Equal(1, number);
         }
         {
-            var task = Task.Run(() => Task.Delay(TimeSpan.FromMilliseconds(100)))
+            var task = Task.Run(() => Task.Yield())
                 .Continue(() => ThrowTask<int>());
 
             Assert.IsAssignableFrom<Task<int>>(task);
@@ -136,7 +136,7 @@ public class ContinueTests
     {
         var task = Task.Run(async () =>
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(100));
+            await Task.Yield();
             throw new InvalidOperationException();
         }).Continue(() => ThrowTask<int>());
 
