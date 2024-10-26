@@ -15,5 +15,5 @@ public class MockApiModel
     public required string Avatar { get; set; }
 
     [JsonPropertyName("id")]
-    public required string Id { get; set; }
+    public required long Id { get; set; }
 }

@@ -30,7 +30,7 @@ public class ToJsonTests
         {
             var obj = new DateTimeTestModel { DateTime = new DateTime(2019, 1, 2, 3, 4, 5, kind) };
             var json = obj.ToJsonCamelCase();
-            var obj2 = json.FromJson<DateTimeTestModel>(new JsonOptions { PropertyNameCaseSensitive = true })!;
+            var obj2 = json.FromJson<DateTimeTestModel>()!;
             Assert.Equal(obj.Name, obj2.Name);
             Assert.Equal(obj.DateTime.ToUtc(), obj2.DateTime.ToUtc());
         }
