@@ -1,6 +1,7 @@
 // Global using directives
 
 global using System.Collections;
+global using System.Collections.Concurrent;
 global using System.Diagnostics;
 global using System.Diagnostics.CodeAnalysis;
 global using System.Linq.Expressions;
@@ -11,6 +12,7 @@ global using System.Text;
 global using System.Text.Json;
 global using System.Text.Json.Serialization;
 global using System.Text.Json.Serialization.Converters;
+global using System.Xml.Linq;
 global using FclEx.Extensions;
 global using FclEx.Helpers;
 global using FclEx.Json;

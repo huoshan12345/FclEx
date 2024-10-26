@@ -1,10 +1,19 @@
-﻿using FclEx.Enums;
-
-namespace FclEx.Extensions.ObjectExtensions;
+﻿namespace FclEx.Extensions.ObjectExtensions;
 
 [SuppressMessage("ReSharper", "MergeConditionalExpression")]
 public class CastToTests
 {
+    public enum ShortEnum : short
+    {
+        No = 0,
+        Yes = 1,
+    }
+    public enum IntEnum : int
+    {
+        No = 0,
+        Yes = 1,
+    }
+
     [Theory]
     [InlineData(5)]
     [InlineData(null)]
