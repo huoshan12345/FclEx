@@ -12,7 +12,7 @@ public static class Extensions
 
     public static IServiceCollection AddXunitTest(this IServiceCollection services, ITestOutputHelper output, bool checkDisposed)
     {
-        services.AddSingleton(new TestLoggerProvider(output, checkDisposed));
+        services.AddSingleton<ILoggerProvider>(new TestLoggerProvider(output, checkDisposed));
         return services;
     }
 

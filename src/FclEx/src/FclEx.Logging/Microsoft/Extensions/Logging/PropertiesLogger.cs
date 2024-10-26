@@ -10,8 +10,8 @@ public class PropertiesLogger : ILogger
         IEnumerable<LoggerProperty>? properties = null,
         IEnumerable<LazyLoggerProperty>? lazyProperties = null)
     {
-        properties ??= Enumerable.Empty<LoggerProperty>();
-        lazyProperties ??= Enumerable.Empty<LazyLoggerProperty>();
+        properties ??= [];
+        lazyProperties ??= [];
         if (logger is PropertiesLogger inner)
         {
             _logger = inner._logger;

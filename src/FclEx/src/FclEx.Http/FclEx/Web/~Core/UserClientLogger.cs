@@ -7,7 +7,9 @@ public class UserClientLogger : ILogger
 
     public UserClientLogger(ILogger logger, UserClient client)
     {
-        _logger = logger;
+        _logger = logger is UserClientLogger clientLogger
+            ? clientLogger._logger
+            : logger;
         _client = client;
     }
 
