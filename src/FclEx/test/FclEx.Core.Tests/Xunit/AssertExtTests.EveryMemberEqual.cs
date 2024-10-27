@@ -2,7 +2,7 @@
 
 namespace Xunit;
 
-public partial class AssertExtTests
+partial class AssertExtTests
 {
     public class TestModel
     {

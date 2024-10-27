@@ -3,11 +3,6 @@ namespace FclEx.Helpers;
 
 public static class UnsafeHelper
 {
-    public static DisposableValue<IntPtr> AllocHGlobal(int cb)
-    {
-        return Marshal.AllocHGlobal(cb).ToDisposable();
-    }
-
     public static unsafe int SizeOf<T>() => sizeof(T);
 
     public static unsafe int SizeOf2<T>()

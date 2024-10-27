@@ -68,28 +68,28 @@ public static partial class BytesExtensions
     public static byte[] ToBytes(this List<bool> bits) => ToBytes(bits, bits.Count);
 
     public static short ToInt16(this byte[] bytes, int startIndex = 0) => BitConverter.ToInt16(bytes, startIndex);
-    public static short ReadInt16(this byte[] bytes, ref int startIndex) => ToStruct<short>(bytes, ref startIndex);
+    public static short ReadInt16(this byte[] bytes, ref int startIndex) => ToStructure<short>(bytes, ref startIndex);
 
     public static ushort ToUInt16(this byte[] bytes, int startIndex = 0) => BitConverter.ToUInt16(bytes, startIndex);
-    public static ushort ReadUInt16(this byte[] bytes, ref int startIndex) => ToStruct<ushort>(bytes, ref startIndex);
+    public static ushort ReadUInt16(this byte[] bytes, ref int startIndex) => ToStructure<ushort>(bytes, ref startIndex);
 
     public static int ToInt32(this byte[] bytes, int startIndex = 0) => BitConverter.ToInt32(bytes, startIndex);
-    public static int ReadInt32(this byte[] bytes, ref int startIndex) => ToStruct<int>(bytes, ref startIndex);
+    public static int ReadInt32(this byte[] bytes, ref int startIndex) => ToStructure<int>(bytes, ref startIndex);
 
     public static uint ToUInt32(this byte[] bytes, int startIndex = 0) => BitConverter.ToUInt32(bytes, startIndex);
-    public static uint ReadUInt32(this byte[] bytes, ref int startIndex) => ToStruct<uint>(bytes, ref startIndex);
+    public static uint ReadUInt32(this byte[] bytes, ref int startIndex) => ToStructure<uint>(bytes, ref startIndex);
 
     public static long ToInt64(this byte[] bytes, int startIndex = 0) => BitConverter.ToInt64(bytes, startIndex);
-    public static long ReadInt64(this byte[] bytes, ref int startIndex) => ToStruct<long>(bytes, ref startIndex);
+    public static long ReadInt64(this byte[] bytes, ref int startIndex) => ToStructure<long>(bytes, ref startIndex);
 
     public static ulong ToUInt64(this byte[] bytes, int startIndex = 0) => BitConverter.ToUInt64(bytes, startIndex);
-    public static ulong ReadUInt64(this byte[] bytes, ref int startIndex) => ToStruct<ulong>(bytes, ref startIndex);
+    public static ulong ReadUInt64(this byte[] bytes, ref int startIndex) => ToStructure<ulong>(bytes, ref startIndex);
 
     public static float ToFloat(this byte[] bytes, int startIndex = 0) => BitConverter.ToSingle(bytes, startIndex);
-    public static float ReadFloat(this byte[] bytes, ref int startIndex) => ToStruct<float>(bytes, ref startIndex);
+    public static float ReadFloat(this byte[] bytes, ref int startIndex) => ToStructure<float>(bytes, ref startIndex);
 
     public static double ToDouble(this byte[] bytes, int startIndex = 0) => BitConverter.ToDouble(bytes, startIndex);
-    public static double ReadDouble(this byte[] bytes, ref int startIndex) => ToStruct<double>(bytes, ref startIndex);
+    public static double ReadDouble(this byte[] bytes, ref int startIndex) => ToStructure<double>(bytes, ref startIndex);
 
     public static int IndexOf(this byte[] buffer, int startIndex, params byte[] subBytes)
     {
@@ -138,7 +138,7 @@ public static partial class BytesExtensions
         return next;
     }
 
-    public static T ToStruct<T>(this byte[] bytes, ref int startIndex) where T : struct
+    public static T ToStructure<T>(this byte[] bytes, ref int startIndex) where T : struct
     {
         Check.NotNull(bytes);
         Check.NotLessThan(startIndex, 0);
@@ -146,7 +146,7 @@ public static partial class BytesExtensions
         var length = Marshal.SizeOf<T>();
         Check.NotLessThan(bytes.Length, length + startIndex);
 
-        using var disposable = UnsafeHelper.AllocHGlobal(length);
+        using var disposable = MarshalHelper.AllocHGlobal(length);
         var ptr = disposable.Value;
         Marshal.Copy(bytes, startIndex, ptr, length);
         var obj = Marshal.PtrToStructure<T>(ptr);
@@ -154,13 +154,13 @@ public static partial class BytesExtensions
         return obj;
     }
 
-    public static T ToStruct<T>(this byte[] bytes) where T : struct
+    public static T ToStructure<T>(this byte[] bytes) where T : struct
     {
         var i = 0;
-        return ToStruct<T>(bytes, ref i);
+        return ToStructure<T>(bytes, ref i);
     }
 
-    public static T[] ToStructs<T>(this byte[] bytes, ref int startIndex, int count) where T : struct
+    public static T[] ToStructures<T>(this byte[] bytes, ref int startIndex, int count) where T : struct
     {
         Check.NotNull(bytes);
         Check.NotLessThan(startIndex, 0);
@@ -171,7 +171,7 @@ public static partial class BytesExtensions
         Check.NotLessThan(bytes.Length, totalBytes + startIndex);
 
         var result = new T[count];
-        using var disposable = UnsafeHelper.AllocHGlobal(length);
+        using var disposable = MarshalHelper.AllocHGlobal(length);
         var ptr = disposable.Value;
         for (var i = 0; i < count; i++)
         {
@@ -184,23 +184,21 @@ public static partial class BytesExtensions
         return result;
     }
 
-    public static T[] ToStructs<T>(this byte[] bytes)
-        where T : struct
+    public static T[] ToStructures<T>(this byte[] bytes) where T : struct
     {
         var length = Marshal.SizeOf<T>();
         var i = 0;
-        return ToStructs<T>(bytes, ref i, bytes.Length / length);
+        return ToStructures<T>(bytes, ref i, bytes.Length / length);
     }
 
     public static byte[] ToBytes<T>(this T obj) where T : struct
     {
         var length = Marshal.SizeOf<T>();
         var bufByte = new byte[length];
-        using var disposable = UnsafeHelper.AllocHGlobal(length);
+        using var disposable = MarshalHelper.AllocHGlobal(length);
         var ptr = disposable.Value;
         Marshal.StructureToPtr(obj, ptr, true);
         Marshal.Copy(ptr, bufByte, 0, length);
-        Marshal.FreeHGlobal(ptr);
         return bufByte;
     }
 
@@ -212,7 +210,7 @@ public static partial class BytesExtensions
         var length = Marshal.SizeOf<T>();
         var totalBytes = length * list.Count;
         var bufByte = new byte[totalBytes];
-        using var disposable = UnsafeHelper.AllocHGlobal(length);
+        using var disposable = MarshalHelper.AllocHGlobal(length);
         var ptr = disposable.Value;
         for (var i = 0; i < list.Count; i++)
         {

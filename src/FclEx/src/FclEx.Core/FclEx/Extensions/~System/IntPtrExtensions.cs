@@ -7,7 +7,7 @@ public static class IntPtrExtensions
         return ptr.ToDisposable(Marshal.FreeHGlobal);
     }
 
-    public static T? ToStructure<T>(this IntPtr ptr)
+    public static T ToStructure<T>(this IntPtr ptr) where T : struct
     {
         return Marshal.PtrToStructure<T>(ptr);
     }

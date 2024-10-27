@@ -35,3 +35,6 @@ dotnet_diagnostic.CS8763.severity = none
 
 # CA1806: Do not ignore method results
 dotnet_diagnostic.CA1806.severity = none
+
+# IDE0040: Add accessibility modifiers
+dotnet_diagnostic.IDE0040.severity = none

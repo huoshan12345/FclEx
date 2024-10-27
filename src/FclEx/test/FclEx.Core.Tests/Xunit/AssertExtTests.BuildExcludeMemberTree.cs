@@ -1,6 +1,6 @@
 ﻿namespace Xunit;
 
-public partial class AssertExtTests
+partial class AssertExtTests
 {
     [Fact]
     public void BuildExcludeMemberTree_Test()

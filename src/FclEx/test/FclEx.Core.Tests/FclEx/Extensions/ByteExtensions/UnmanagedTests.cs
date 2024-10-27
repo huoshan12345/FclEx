@@ -35,19 +35,17 @@ public class UnmanagedTests
         },
     }.Select(m => new[] { m }).ToArray();
 
-    private static void Single<T>(T item)
-        where T : struct
+    private static void Single<T>(T item) where T : struct
     {
         var bytes = item.ToBytes();
-        var actual = bytes.ToStruct<T>();
+        var actual = bytes.ToStructure<T>();
         Assert.Equal(actual, item);
     }
 
-    private static void Array<T>(T[] item)
-        where T : struct
+    private static void Array<T>(T[] item) where T : struct
     {
         var bytes = item.ToBytes();
-        var actual = bytes.ToStructs<T>();
+        var actual = bytes.ToStructures<T>();
         Assert.True(actual.SequenceEqual(item));
     }
 
