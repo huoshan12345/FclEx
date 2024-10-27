@@ -12,7 +12,7 @@ public static class SlackStringBuilderExtensions
         return builder.Append(value).Append('\n');
     }
 
-    public static SlackStringBuilder RenderDateTime(this SlackStringBuilder builder, DateTimeOffset dateTime)
+    public static SlackStringBuilder Append(this SlackStringBuilder builder, DateTimeOffset dateTime)
     {
         // <!date^timestamp^token_string^optional_link|fallback_text>
         // e.g. <!date^1392734382^Posted {date_num} {time_secs}|Posted 2014-02-18 6:39:42 AM PST>
@@ -30,11 +30,11 @@ public static class SlackStringBuilderExtensions
     /// <param name="builder"></param>
     /// <param name="action"></param>
     /// <returns></returns>
-    public static SlackStringBuilder RenderInlineCode(this SlackStringBuilder builder, Action<SlackStringBuilder> action)
-        => builder.RenderBlock("`", action);
+    public static SlackStringBuilder AppendInlineCode(this SlackStringBuilder builder, Action<SlackStringBuilder> action)
+        => builder.Append(m => m.AppendQuoted("`", m => action(builder)));
 
-    public static SlackStringBuilder RenderInlineCode(this SlackStringBuilder builder, string text)
-        => builder.RenderInlineCode(m => m.Append(text));
+    public static SlackStringBuilder AppendInlineCode(this SlackStringBuilder builder, string text)
+        => builder.AppendInlineCode(m => m.Append(text));
 
     /// <summary>
     /// *bold* will produce bold text
@@ -42,11 +42,11 @@ public static class SlackStringBuilderExtensions
     /// <param name="builder"></param>
     /// <param name="action"></param>
     /// <returns></returns>
-    public static SlackStringBuilder RenderBold(this SlackStringBuilder builder, Action<SlackStringBuilder> action)
-        => builder.RenderBlock("*", action);
+    public static SlackStringBuilder AppendBold(this SlackStringBuilder builder, Action<SlackStringBuilder> action)
+        => builder.Append(m => m.AppendQuoted("*", m => action(builder)));
 
-    public static SlackStringBuilder RenderBold(this SlackStringBuilder builder, string text) 
-        => builder.RenderBold(m => m.Append(text));
+    public static SlackStringBuilder AppendBold(this SlackStringBuilder builder, string text)
+        => builder.AppendBold(m => m.Append(text));
 
     /// <summary>
     /// ~strike~ will produce strike-through text
@@ -54,8 +54,8 @@ public static class SlackStringBuilderExtensions
     /// <param name="builder"></param>
     /// <param name="action"></param>
     /// <returns></returns>
-    public static SlackStringBuilder RenderStrike(this SlackStringBuilder builder, Action<SlackStringBuilder> action)
-        => builder.RenderBlock("~", action);
+    public static SlackStringBuilder AppendStrike(this SlackStringBuilder builder, Action<SlackStringBuilder> action)
+        => builder.Append(m => m.AppendQuoted("~", m => action(builder)));
 
     /// <summary>
     /// _italic_ will produce italicized text
@@ -63,8 +63,8 @@ public static class SlackStringBuilderExtensions
     /// <param name="builder"></param>
     /// <param name="action"></param>
     /// <returns></returns>
-    public static SlackStringBuilder RenderItalic(this SlackStringBuilder builder, Action<SlackStringBuilder> action)
-        => builder.RenderBlock("_", action);
+    public static SlackStringBuilder AppendItalic(this SlackStringBuilder builder, Action<SlackStringBuilder> action)
+        => builder.Append(m => m.AppendQuoted("_", m => action(builder)));
 
     /// <summary>
     /// Multi-line code blocks by placing 3 back-ticks before and after the block:
@@ -72,11 +72,11 @@ public static class SlackStringBuilderExtensions
     /// <param name="builder"></param>
     /// <param name="action"></param>
     /// <returns></returns>
-    public static SlackStringBuilder RenderCodeBlock(this SlackStringBuilder builder, Action<SlackStringBuilder> action)
-        => builder.RenderBlock("```", action);
+    public static SlackStringBuilder AppendCodeBlock(this SlackStringBuilder builder, Action<SlackStringBuilder> action)
+            => builder.Append(m => m.AppendQuoted("```", m => action(builder)));
 
-    public static SlackStringBuilder RenderCodeBlock(this SlackStringBuilder builder, string text)
-        => builder.RenderCodeBlock(m => m.Append(text));
+    public static SlackStringBuilder AppendCodeBlock(this SlackStringBuilder builder, string text)
+        => builder.AppendCodeBlock(m => m.Append(text));
 
     /// <summary>
     /// Emoji can be included in their full-color, fully-illustrated form directly in text. <br/>
@@ -86,10 +86,10 @@ public static class SlackStringBuilderExtensions
     /// <param name="builder"></param>
     /// <param name="name"></param>
     /// <returns></returns>
-    public static SlackStringBuilder RenderEmoji(this SlackStringBuilder builder, string name)
-        => builder.RenderBlock(":", m => m.Append(name));
+    public static SlackStringBuilder AppendEmoji(this SlackStringBuilder builder, string name)
+        => builder.Append(m => m.AppendQuoted(":", m => m.Append(name)));
 
-    public static SlackStringBuilder RenderLink(this SlackStringBuilder builder, string link, string? text = null)
+    public static SlackStringBuilder AppendLink(this SlackStringBuilder builder, string link, string? text = null)
     {
         builder.Append('<');
         builder.Append(link);
@@ -102,7 +102,7 @@ public static class SlackStringBuilderExtensions
         return builder;
     }
 
-    public static SlackStringBuilder RenderLink(this SlackStringBuilder builder, Action<SlackStringBuilder> link, Action<SlackStringBuilder>? text = null)
+    public static SlackStringBuilder AppendLink(this SlackStringBuilder builder, Action<SlackStringBuilder> link, Action<SlackStringBuilder>? text = null)
     {
         builder.Append('<');
         link(builder);
@@ -115,7 +115,7 @@ public static class SlackStringBuilderExtensions
         return builder;
     }
 
-    public static SlackStringBuilder RenderUser(this SlackStringBuilder builder, string userId)
+    public static SlackStringBuilder AppendUser(this SlackStringBuilder builder, string userId)
     {
         builder.Append("<@");
         builder.Append(userId);
@@ -123,7 +123,7 @@ public static class SlackStringBuilderExtensions
         return builder;
     }
 
-    public static SlackStringBuilder RenderUserGroup(this SlackStringBuilder builder, string groupId)
+    public static SlackStringBuilder AppendUserGroup(this SlackStringBuilder builder, string groupId)
     {
         builder.Append("<!subteam^");
         builder.Append(groupId);
@@ -131,7 +131,7 @@ public static class SlackStringBuilderExtensions
         return builder;
     }
 
-    public static SlackStringBuilder RenderBlockQuote(this SlackStringBuilder builder, string text)
+    public static SlackStringBuilder AppendBlockQuoted(this SlackStringBuilder builder, string text)
     {
         foreach (var line in text.SplitToLines())
         {
@@ -141,7 +141,7 @@ public static class SlackStringBuilderExtensions
         return builder;
     }
 
-    public static SlackStringBuilder RenderListItem(this SlackStringBuilder builder, Action<SlackStringBuilder> action)
+    public static SlackStringBuilder AppendListItem(this SlackStringBuilder builder, Action<SlackStringBuilder> action)
     {
         builder.Append("• ");
         action(builder);

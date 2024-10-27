@@ -2,9 +2,9 @@ namespace FclEx.Atlassian;
 
 public static class JiraStringBuilderExtensions
 {
-    public static JiraStringBuilder RenderCodeBlock(this JiraStringBuilder builder, Action<JiraStringBuilder> action)
-        => builder.RenderBlock("{noformat}", action, "{noformat}");
+    public static JiraStringBuilder AppendCodeBlock(this JiraStringBuilder builder, Action<JiraStringBuilder> action)
+        => builder.Append(m => m.AppendQuoted("{noformat}", m => action(builder), "{noformat}"));
 
-    public static JiraStringBuilder RenderCodeBlock(this JiraStringBuilder builder, string text)
-        => builder.RenderCodeBlock(m => m.Append(text));
+    public static JiraStringBuilder AppendCodeBlock(this JiraStringBuilder builder, string text)
+        => builder.AppendCodeBlock(m => m.Append(text));
 }

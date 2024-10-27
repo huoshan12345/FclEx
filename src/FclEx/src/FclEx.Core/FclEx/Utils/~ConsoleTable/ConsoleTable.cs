@@ -1,15 +1,14 @@
 ﻿namespace FclEx.Utils;
 
-public class ConsoleTable
+public class ConsoleTable : IRenderable
 {
     public object?[] Columns { get; }
-    public List<object?[]> Rows { get; }
+    public List<object?[]> Rows { get; } = [];
     public ConsoleTableOptions Options { get; }
 
     public ConsoleTable(ConsoleTableOptions options)
     {
         Options = options;
-        Rows = new List<object?[]>();
         Columns = options.Columns.EmptyIfNull().AsArray();
     }
 

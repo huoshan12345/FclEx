@@ -12,7 +12,7 @@ public class ChatApiTest : IAssemblyFixture<GlobalFixture>
     [LocalOnlyFact]
     public async Task PostMessage_Test()
     {
-        var text = SlackStringBuilder.Build(m => m.RenderCodeBlock(x =>
+        var text = SlackStringBuilder.Build(m => m.AppendCodeBlock(x =>
         {
             for (var i = 0; i < MaxWidthOfCodeBlock; i++)
             {

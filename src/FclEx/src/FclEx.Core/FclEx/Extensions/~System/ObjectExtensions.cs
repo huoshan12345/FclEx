@@ -64,8 +64,15 @@ public static partial class ObjectExtensions
             : (long)_objectIds.GetValue(obj, _ => Interlocked.Increment(ref _nextId));
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static DisposableValue<GCHandle> ToGCHandle(this object? obj, GCHandleType type)
     {
         return GCHandle.Alloc(obj, type).ToDisposable(m => m.Free());
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T? ToNullable<T>(this T value) where T : struct
+    {
+        return value;
     }
 }
