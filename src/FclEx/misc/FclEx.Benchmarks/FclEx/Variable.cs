@@ -1,5 +1,4 @@
-﻿using FclEx.Benchmarks;
-#pragma warning disable CS0414
+﻿#pragma warning disable CS0414
 
 namespace FclEx;
 

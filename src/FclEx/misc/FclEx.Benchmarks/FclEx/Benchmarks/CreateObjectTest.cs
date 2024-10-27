@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using BenchmarkDotNet.Attributes;
+﻿using System.Collections.Generic;
 using FclEx.Extensions;
 
 namespace FclEx.Benchmarks;

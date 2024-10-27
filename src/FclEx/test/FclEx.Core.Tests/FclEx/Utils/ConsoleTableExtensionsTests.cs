@@ -27,7 +27,7 @@ public class ConsoleTableExtensionsTests
             table.AddRow(row);
         }
 
-        var str = table.Render();
+        var str = table.ToString();
         _output.WriteLine(str);
     }
 }

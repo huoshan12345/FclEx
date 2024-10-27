@@ -7,7 +7,7 @@
 /// </summary>
 public sealed class ReferenceEqualityComparer<T> : IEqualityComparer<T>
 {
-    public static ReferenceEqualityComparer<T> Instance { get; } = new();
+    public static readonly ReferenceEqualityComparer<T> Instance = new();
 
     public bool Equals(T? x, T? y)
     {

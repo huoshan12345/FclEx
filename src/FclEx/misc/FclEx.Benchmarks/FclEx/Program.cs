@@ -1,12 +1,12 @@
-﻿using BenchmarkDotNet.Running;
-using FclEx.Benchmarks;
-
-namespace FclEx;
+﻿namespace FclEx;
 
 internal class Program
 {
     internal static void Main(string[] args)
     {
-        BenchmarkRunner.Run<InterfaceBaseInvocationBenchmark>();
+        var config = DefaultConfig.Instance.WithArtifactsPath(Path.Combine(AppContext.BaseDirectory, "BenchmarkDotNet.Artifacts"));
+        config.StopOnFirstError(true);
+
+        BenchmarkSwitcher.FromTypes([typeof(SizeOfBenchmark<>)]).Run([.. args, "-f", "*"], config);
     }
 }

@@ -86,4 +86,9 @@ public class ConsoleTable
             return row.Append(column).Max(m => m?.ToString()?.Length) ?? 0;
         }
     }
+
+    public override string ToString()
+    {
+        return StringBuilderHelper.Build(Render);
+    }
 }

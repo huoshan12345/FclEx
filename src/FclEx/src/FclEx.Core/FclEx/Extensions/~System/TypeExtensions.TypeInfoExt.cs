@@ -45,7 +45,7 @@ partial class TypeExtensions
                 Cannot create boxed ByRef-like values.
             */
 
-            if (!type.IsValueType
+            if (type.IsValueType == false
                 || nullableUnderlyingType != null
                 || type.ContainsGenericParameters
                 || type.Name == "ArgIterator"

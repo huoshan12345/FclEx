@@ -63,4 +63,9 @@ public static partial class ObjectExtensions
             ? 0
             : (long)_objectIds.GetValue(obj, _ => Interlocked.Increment(ref _nextId));
     }
+
+    public static DisposableValue<GCHandle> ToGCHandle(this object? obj, GCHandleType type)
+    {
+        return GCHandle.Alloc(obj, type).ToDisposable(m => m.Free());
+    }
 }

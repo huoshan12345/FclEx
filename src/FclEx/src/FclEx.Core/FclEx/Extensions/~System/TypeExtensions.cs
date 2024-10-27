@@ -6,7 +6,7 @@ public static partial class TypeExtensions
     {
         Check.NotNull(type);
 
-        // We want an Func<object> which returns the default.
+        // We want a Func<object> which returns the default.
         // Create that expression here.
         var e = Expression.Lambda<Func<object?>>(
             // Have to convert to object.
@@ -123,7 +123,7 @@ public static partial class TypeExtensions
         const BindingFlags flags = BindingFlags.Static
                                    | BindingFlags.Public | BindingFlags.NonPublic
                                    | BindingFlags.GetField | BindingFlags.GetProperty;
-        return type.InvokeMember(name, flags, null, null, null).CastTo<T>();
+        return type.InvokeMember(name, flags, null, null, null).CastTo<T?>();
     }
 
     public static T? GetDataMemberValue<T>(this Type type, string name, object? obj)
@@ -145,7 +145,6 @@ public static partial class TypeExtensions
     {
         return type.GetField(name, MemberBindingFlags) ?? throw new InvalidOperationException($"Cannot find field '{name}' in type '{type.FullName}'");
     }
-
 
     public static FieldInfo GetBackingField(this Type type, string name)
     {
@@ -189,4 +188,10 @@ public static partial class TypeExtensions
 
     public static bool IsAssignableTo(this Type type, [NotNullWhen(true)] Type? targetType) => targetType?.IsAssignableFrom(type) ?? false;
 #endif
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TypeCode GetTypeCode(this Type type)
+    {
+        return Type.GetTypeCode(type);
+    }
 }

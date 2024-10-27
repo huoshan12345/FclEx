@@ -3,7 +3,7 @@
 public static partial class BytesExtensions
 {
     public static MemoryStream ToStream(this byte[] bytes) => new(bytes);
-    
+
     public static string GetString(this byte[] bytes, Encoding? encoding = null)
         => bytes.AsReadOnlySpan().GetString(encoding);
 
@@ -68,28 +68,28 @@ public static partial class BytesExtensions
     public static byte[] ToBytes(this List<bool> bits) => ToBytes(bits, bits.Count);
 
     public static short ToInt16(this byte[] bytes, int startIndex = 0) => BitConverter.ToInt16(bytes, startIndex);
-    public static short ReadInt16(this byte[] bytes, ref int startIndex) => ToUnmanagedStruct<short>(bytes, ref startIndex);
+    public static short ReadInt16(this byte[] bytes, ref int startIndex) => ToStruct<short>(bytes, ref startIndex);
 
     public static ushort ToUInt16(this byte[] bytes, int startIndex = 0) => BitConverter.ToUInt16(bytes, startIndex);
-    public static ushort ReadUInt16(this byte[] bytes, ref int startIndex) => ToUnmanagedStruct<ushort>(bytes, ref startIndex);
+    public static ushort ReadUInt16(this byte[] bytes, ref int startIndex) => ToStruct<ushort>(bytes, ref startIndex);
 
     public static int ToInt32(this byte[] bytes, int startIndex = 0) => BitConverter.ToInt32(bytes, startIndex);
-    public static int ReadInt32(this byte[] bytes, ref int startIndex) => ToUnmanagedStruct<int>(bytes, ref startIndex);
+    public static int ReadInt32(this byte[] bytes, ref int startIndex) => ToStruct<int>(bytes, ref startIndex);
 
     public static uint ToUInt32(this byte[] bytes, int startIndex = 0) => BitConverter.ToUInt32(bytes, startIndex);
-    public static uint ReadUInt32(this byte[] bytes, ref int startIndex) => ToUnmanagedStruct<uint>(bytes, ref startIndex);
+    public static uint ReadUInt32(this byte[] bytes, ref int startIndex) => ToStruct<uint>(bytes, ref startIndex);
 
     public static long ToInt64(this byte[] bytes, int startIndex = 0) => BitConverter.ToInt64(bytes, startIndex);
-    public static long ReadInt64(this byte[] bytes, ref int startIndex) => ToUnmanagedStruct<long>(bytes, ref startIndex);
+    public static long ReadInt64(this byte[] bytes, ref int startIndex) => ToStruct<long>(bytes, ref startIndex);
 
     public static ulong ToUInt64(this byte[] bytes, int startIndex = 0) => BitConverter.ToUInt64(bytes, startIndex);
-    public static ulong ReadUInt64(this byte[] bytes, ref int startIndex) => ToUnmanagedStruct<ulong>(bytes, ref startIndex);
+    public static ulong ReadUInt64(this byte[] bytes, ref int startIndex) => ToStruct<ulong>(bytes, ref startIndex);
 
     public static float ToFloat(this byte[] bytes, int startIndex = 0) => BitConverter.ToSingle(bytes, startIndex);
-    public static float ReadFloat(this byte[] bytes, ref int startIndex) => ToUnmanagedStruct<float>(bytes, ref startIndex);
+    public static float ReadFloat(this byte[] bytes, ref int startIndex) => ToStruct<float>(bytes, ref startIndex);
 
     public static double ToDouble(this byte[] bytes, int startIndex = 0) => BitConverter.ToDouble(bytes, startIndex);
-    public static double ReadDouble(this byte[] bytes, ref int startIndex) => ToUnmanagedStruct<double>(bytes, ref startIndex);
+    public static double ReadDouble(this byte[] bytes, ref int startIndex) => ToStruct<double>(bytes, ref startIndex);
 
     public static int IndexOf(this byte[] buffer, int startIndex, params byte[] subBytes)
     {
@@ -138,7 +138,7 @@ public static partial class BytesExtensions
         return next;
     }
 
-    public static T ToUnmanagedStruct<T>(this byte[] bytes, ref int startIndex) where T : struct
+    public static T ToStruct<T>(this byte[] bytes, ref int startIndex) where T : struct
     {
         Check.NotNull(bytes);
         Check.NotLessThan(startIndex, 0);
@@ -146,23 +146,21 @@ public static partial class BytesExtensions
         var length = Marshal.SizeOf<T>();
         Check.NotLessThan(bytes.Length, length + startIndex);
 
-        using var ptr = MarshalHelper.AllocHGlobal(length);
-        var p = ptr.Value;
-        Marshal.Copy(bytes, startIndex, p, length);
-        var obj = Marshal.PtrToStructure<T>(p);
+        using var disposable = UnsafeHelper.AllocHGlobal(length);
+        var ptr = disposable.Value;
+        Marshal.Copy(bytes, startIndex, ptr, length);
+        var obj = Marshal.PtrToStructure<T>(ptr);
         startIndex += length;
         return obj;
     }
 
-    public static T ToUnmanagedStruct<T>(this byte[] bytes)
-        where T : struct
+    public static T ToStruct<T>(this byte[] bytes) where T : struct
     {
         var i = 0;
-        return ToUnmanagedStruct<T>(bytes, ref i);
+        return ToStruct<T>(bytes, ref i);
     }
 
-    public static T[] ToUnmanagedStructs<T>(this byte[] bytes, ref int startIndex, int count)
-        where T : struct
+    public static T[] ToStructs<T>(this byte[] bytes, ref int startIndex, int count) where T : struct
     {
         Check.NotNull(bytes);
         Check.NotLessThan(startIndex, 0);
@@ -173,12 +171,12 @@ public static partial class BytesExtensions
         Check.NotLessThan(bytes.Length, totalBytes + startIndex);
 
         var result = new T[count];
-        using var ptr = MarshalHelper.AllocHGlobal(length);
-        var p = ptr.Value;
+        using var disposable = UnsafeHelper.AllocHGlobal(length);
+        var ptr = disposable.Value;
         for (var i = 0; i < count; i++)
         {
-            Marshal.Copy(bytes, startIndex, p, length);
-            var obj = Marshal.PtrToStructure<T>(p);
+            Marshal.Copy(bytes, startIndex, ptr, length);
+            var obj = Marshal.PtrToStructure<T>(ptr);
             startIndex += length;
             result[i] = obj;
         }
@@ -186,26 +184,27 @@ public static partial class BytesExtensions
         return result;
     }
 
-    public static T[] ToUnmanagedStructs<T>(this byte[] bytes)
+    public static T[] ToStructs<T>(this byte[] bytes)
         where T : struct
     {
         var length = Marshal.SizeOf<T>();
         var i = 0;
-        return ToUnmanagedStructs<T>(bytes, ref i, bytes.Length / length);
+        return ToStructs<T>(bytes, ref i, bytes.Length / length);
     }
 
-    public static byte[] ToUnmanagedBytes<T>(this T obj) where T : struct
+    public static byte[] ToBytes<T>(this T obj) where T : struct
     {
         var length = Marshal.SizeOf<T>();
         var bufByte = new byte[length];
-        var ptr = Marshal.AllocHGlobal(length);
+        using var disposable = UnsafeHelper.AllocHGlobal(length);
+        var ptr = disposable.Value;
         Marshal.StructureToPtr(obj, ptr, true);
         Marshal.Copy(ptr, bufByte, 0, length);
         Marshal.FreeHGlobal(ptr);
         return bufByte;
     }
 
-    public static byte[] ToUnmanagedBytes<T>(this IList<T> list) where T : struct
+    public static byte[] ToBytes<T>(this IReadOnlyList<T> list) where T : struct
     {
         Check.NotNull(list);
         Check.NotEmpty(list);
@@ -213,12 +212,12 @@ public static partial class BytesExtensions
         var length = Marshal.SizeOf<T>();
         var totalBytes = length * list.Count;
         var bufByte = new byte[totalBytes];
-        using var ptr = MarshalHelper.AllocHGlobal(length);
-        var p = ptr.Value;
+        using var disposable = UnsafeHelper.AllocHGlobal(length);
+        var ptr = disposable.Value;
         for (var i = 0; i < list.Count; i++)
         {
-            Marshal.StructureToPtr(list[i], p, true);
-            Marshal.Copy(p, bufByte, i * length, length);
+            Marshal.StructureToPtr(list[i], ptr, true);
+            Marshal.Copy(ptr, bufByte, i * length, length);
         }
 
         return bufByte;

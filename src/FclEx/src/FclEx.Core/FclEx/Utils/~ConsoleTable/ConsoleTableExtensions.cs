@@ -23,9 +23,4 @@ public static class ConsoleTableExtensions
         table.Rows.Add(values);
         return table;
     }
-
-    public static string Render(this ConsoleTable table)
-    {
-        return StringBuilderHelper.Build(table.Render);
-    }
 }

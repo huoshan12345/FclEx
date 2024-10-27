@@ -38,16 +38,16 @@ public class UnmanagedTests
     private static void Single<T>(T item)
         where T : struct
     {
-        var bytes = item.ToUnmanagedBytes();
-        var actual = bytes.ToUnmanagedStruct<T>();
+        var bytes = item.ToBytes();
+        var actual = bytes.ToStruct<T>();
         Assert.Equal(actual, item);
     }
 
     private static void Array<T>(T[] item)
         where T : struct
     {
-        var bytes = item.ToUnmanagedBytes();
-        var actual = bytes.ToUnmanagedStructs<T>();
+        var bytes = item.ToBytes();
+        var actual = bytes.ToStructs<T>();
         Assert.True(actual.SequenceEqual(item));
     }
 
