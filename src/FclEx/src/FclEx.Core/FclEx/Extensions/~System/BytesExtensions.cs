@@ -67,35 +67,35 @@ public static partial class BytesExtensions
 
     public static byte[] ToBytes(this List<bool> bits) => ToBytes(bits, bits.Count);
 
-    public static short ToInt16(this byte[] bytes, int startIndex = 0) => BitConverter.ToInt16(bytes, startIndex);
-    public static short ReadInt16(this byte[] bytes, ref int startIndex) => ToStructure<short>(bytes, ref startIndex);
+    public static short ToInt16(this byte[] bytes, int offset = 0) => BitConverter.ToInt16(bytes, offset);
+    public static short ReadInt16(this byte[] bytes, ref int offset) => ToStructure<short>(bytes, ref offset);
 
-    public static ushort ToUInt16(this byte[] bytes, int startIndex = 0) => BitConverter.ToUInt16(bytes, startIndex);
-    public static ushort ReadUInt16(this byte[] bytes, ref int startIndex) => ToStructure<ushort>(bytes, ref startIndex);
+    public static ushort ToUInt16(this byte[] bytes, int offset = 0) => BitConverter.ToUInt16(bytes, offset);
+    public static ushort ReadUInt16(this byte[] bytes, ref int offset) => ToStructure<ushort>(bytes, ref offset);
 
-    public static int ToInt32(this byte[] bytes, int startIndex = 0) => BitConverter.ToInt32(bytes, startIndex);
-    public static int ReadInt32(this byte[] bytes, ref int startIndex) => ToStructure<int>(bytes, ref startIndex);
+    public static int ToInt32(this byte[] bytes, int offset = 0) => BitConverter.ToInt32(bytes, offset);
+    public static int ReadInt32(this byte[] bytes, ref int offset) => ToStructure<int>(bytes, ref offset);
 
-    public static uint ToUInt32(this byte[] bytes, int startIndex = 0) => BitConverter.ToUInt32(bytes, startIndex);
-    public static uint ReadUInt32(this byte[] bytes, ref int startIndex) => ToStructure<uint>(bytes, ref startIndex);
+    public static uint ToUInt32(this byte[] bytes, int offset = 0) => BitConverter.ToUInt32(bytes, offset);
+    public static uint ReadUInt32(this byte[] bytes, ref int offset) => ToStructure<uint>(bytes, ref offset);
 
-    public static long ToInt64(this byte[] bytes, int startIndex = 0) => BitConverter.ToInt64(bytes, startIndex);
-    public static long ReadInt64(this byte[] bytes, ref int startIndex) => ToStructure<long>(bytes, ref startIndex);
+    public static long ToInt64(this byte[] bytes, int offset = 0) => BitConverter.ToInt64(bytes, offset);
+    public static long ReadInt64(this byte[] bytes, ref int offset) => ToStructure<long>(bytes, ref offset);
 
-    public static ulong ToUInt64(this byte[] bytes, int startIndex = 0) => BitConverter.ToUInt64(bytes, startIndex);
-    public static ulong ReadUInt64(this byte[] bytes, ref int startIndex) => ToStructure<ulong>(bytes, ref startIndex);
+    public static ulong ToUInt64(this byte[] bytes, int offset = 0) => BitConverter.ToUInt64(bytes, offset);
+    public static ulong ReadUInt64(this byte[] bytes, ref int offset) => ToStructure<ulong>(bytes, ref offset);
 
-    public static float ToFloat(this byte[] bytes, int startIndex = 0) => BitConverter.ToSingle(bytes, startIndex);
-    public static float ReadFloat(this byte[] bytes, ref int startIndex) => ToStructure<float>(bytes, ref startIndex);
+    public static float ToFloat(this byte[] bytes, int offset = 0) => BitConverter.ToSingle(bytes, offset);
+    public static float ReadFloat(this byte[] bytes, ref int offset) => ToStructure<float>(bytes, ref offset);
 
-    public static double ToDouble(this byte[] bytes, int startIndex = 0) => BitConverter.ToDouble(bytes, startIndex);
-    public static double ReadDouble(this byte[] bytes, ref int startIndex) => ToStructure<double>(bytes, ref startIndex);
+    public static double ToDouble(this byte[] bytes, int offset = 0) => BitConverter.ToDouble(bytes, offset);
+    public static double ReadDouble(this byte[] bytes, ref int offset) => ToStructure<double>(bytes, ref offset);
 
-    public static int IndexOf(this byte[] buffer, int startIndex, params byte[] subBytes)
+    public static int IndexOf(this byte[] buffer, int offset, params byte[] subBytes)
     {
         if (subBytes.Length > buffer.Length) return -1;
 
-        var i = startIndex; // 主串的位置
+        var i = offset; // 主串的位置
         var j = 0; // 模式串的位置
         var next = GetNextArray(subBytes);
         while (i < buffer.Length && j < subBytes.Length)
@@ -138,19 +138,19 @@ public static partial class BytesExtensions
         return next;
     }
 
-    public static T ToStructure<T>(this byte[] bytes, ref int startIndex) where T : struct
+    public static T ToStructure<T>(this byte[] bytes, ref int offset) where T : struct
     {
         Check.NotNull(bytes);
-        Check.NotLessThan(startIndex, 0);
+        Check.NotLessThan(offset, 0);
 
         var length = Marshal.SizeOf<T>();
-        Check.NotLessThan(bytes.Length, length + startIndex);
+        Check.NotLessThan(bytes.Length, length + offset);
 
         using var disposable = MarshalHelper.AllocHGlobal(length);
         var ptr = disposable.Value;
-        Marshal.Copy(bytes, startIndex, ptr, length);
+        Marshal.Copy(bytes, offset, ptr, length);
         var obj = Marshal.PtrToStructure<T>(ptr);
-        startIndex += length;
+        offset += length;
         return obj;
     }
 
@@ -160,24 +160,24 @@ public static partial class BytesExtensions
         return ToStructure<T>(bytes, ref i);
     }
 
-    public static T[] ToStructures<T>(this byte[] bytes, ref int startIndex, int count) where T : struct
+    public static T[] ToStructures<T>(this byte[] bytes, ref int offset, int count) where T : struct
     {
         Check.NotNull(bytes);
-        Check.NotLessThan(startIndex, 0);
+        Check.NotLessThan(offset, 0);
         Check.NotLessThan(count, 1);
 
         var length = Marshal.SizeOf<T>();
         var totalBytes = length * count;
-        Check.NotLessThan(bytes.Length, totalBytes + startIndex);
+        Check.NotLessThan(bytes.Length, totalBytes + offset);
 
         var result = new T[count];
         using var disposable = MarshalHelper.AllocHGlobal(length);
         var ptr = disposable.Value;
         for (var i = 0; i < count; i++)
         {
-            Marshal.Copy(bytes, startIndex, ptr, length);
+            Marshal.Copy(bytes, offset, ptr, length);
             var obj = Marshal.PtrToStructure<T>(ptr);
-            startIndex += length;
+            offset += length;
             result[i] = obj;
         }
 
