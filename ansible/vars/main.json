@@ -17,7 +17,12 @@
     },
     "Envs": {
       "Local": {},
-      "Github": {}
+      "Github": {
+        "Rmq": {
+          "UserName": "guest",
+          "Password": "guest"
+        }
+      }
     }
   }
 }

@@ -16,3 +16,11 @@ public interface IRenderable
     /// rendered output will be appended.</param>
     void Render(StringBuilder builder);
 }
+
+public static class RenderableExtensions
+{
+    public static string RenderToString(this IRenderable renderable)
+    {
+        return StringBuilderHelper.Build(renderable.Render);
+    }
+}

@@ -197,7 +197,7 @@ public static partial class AssertExt
                 }
                 else
                 {
-                    var count = (i + 1).ToString();
+                    var count = i.ToString();
                     var (l, r) = (count, $"> {count}");
                     if (b1)
                         (l, r) = (r, l);
