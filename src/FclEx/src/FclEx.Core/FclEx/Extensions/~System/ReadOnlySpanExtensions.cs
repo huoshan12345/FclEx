@@ -52,4 +52,65 @@ public static class ReadOnlySpanExtensions
         }
         return result;
     }
+
+    public static byte[] ToBytes(this ReadOnlySpan<bool> bits)
+    {
+        var count = bits.Length;
+        var numBytes = count / 8;
+        if (count % 8 != 0)
+            numBytes++;
+
+        var bytes = new byte[numBytes];
+        int byteIndex = 0, bitIndex = 0;
+
+        foreach (var bit in bits)
+        {
+            if (bit) bytes[byteIndex] |= (byte)(1 << bitIndex);
+            ++bitIndex;
+
+            if (bitIndex == 8)
+            {
+                bitIndex = 0;
+                ++byteIndex;
+            }
+
+        }
+        return bytes;
+    }
+
+    /// <summary>
+    /// Casts a ReadOnlySpan of one primitive type <typeparamref name="TFrom"/> to another primitive type <typeparamref name="TTo"/>.
+    /// These types may not contain pointers or references. This is checked at runtime in order to preserve type safety.
+    /// </summary>
+    /// <remarks>
+    /// Supported only for platforms that support misaligned memory access or when the memory block is aligned by other means.
+    /// </remarks>
+    /// <param name="span">The source slice, of type <typeparamref name="TFrom"/>.</param>
+    /// <exception cref="System.ArgumentException">
+    /// Thrown when <typeparamref name="TFrom"/> or <typeparamref name="TTo"/> contains pointers.
+    /// </exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ReadOnlySpan<TTo> Cast<TFrom, TTo>(this ReadOnlySpan<TFrom> span)
+        where TFrom : struct
+        where TTo : struct
+    {
+        return MemoryMarshal.Cast<TFrom, TTo>(span);
+    }
+
+    /// <summary>
+    /// Casts a ReadOnlySpan of one primitive type <typeparamref name="T"/> to ReadOnlySpan of bytes.
+    /// That type may not contain pointers or references. This is checked at runtime in order to preserve type safety.
+    /// </summary>
+    /// <param name="span">The source slice, of type <typeparamref name="T"/>.</param>
+    /// <exception cref="System.ArgumentException">
+    /// Thrown when <typeparamref name="T"/> contains pointers.
+    /// </exception>
+    /// <exception cref="System.OverflowException">
+    /// Thrown if the Length property of the new Span would exceed int.MaxValue.
+    /// </exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ReadOnlySpan<byte> AsBytes<T>(this ReadOnlySpan<T> span) where T : struct
+    {
+        return MemoryMarshal.AsBytes(span);
+    }
 }

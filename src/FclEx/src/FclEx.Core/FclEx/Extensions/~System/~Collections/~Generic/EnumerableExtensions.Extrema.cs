@@ -3,7 +3,7 @@
 [SuppressMessage("ReSharper", "ConvertIfStatementToSwitchStatement")]
 partial class EnumerableExtensions
 {
-    public static (IReadOnlyList<TSource> Items, int TotalCount) ExtremaBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey?> keySelector, bool maxima, IComparer<TKey>? comparer = null)
+    public static (IReadOnlyList<T> Items, int TotalCount) ExtremaBy<T, TKey>(this IEnumerable<T> source, Func<T, TKey?> keySelector, bool maxima, IComparer<TKey>? comparer = null)
     {
         Check.NotNull(source);
         Check.NotNull(keySelector);
@@ -12,12 +12,12 @@ partial class EnumerableExtensions
         using var e = source.GetEnumerator();
 
         if (e.MoveNext() == false)
-            return (Array.Empty<TSource>(), 0);
+            return ([], 0);
 
         var total = 1;
         var value = e.Current;
         var key = keySelector(value);
-        var items = new List<TSource> { value };
+        var items = new List<T> { value };
 
         Predicate<int> predicate = maxima
             ? m => m > 0
@@ -45,12 +45,12 @@ partial class EnumerableExtensions
         return (items, total);
     }
 
-    public static (IReadOnlyList<TSource> Items, int TotalCount) MinimaBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey?> keySelector, IComparer<TKey>? comparer = null)
+    public static (IReadOnlyList<T> Items, int TotalCount) MinimaBy<T, TKey>(this IEnumerable<T> source, Func<T, TKey?> keySelector, IComparer<TKey>? comparer = null)
     {
         return source.ExtremaBy(keySelector, false, comparer);
     }
 
-    public static (IReadOnlyList<TSource> Items, int TotalCount) MaximaBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey?> keySelector, IComparer<TKey>? comparer = null)
+    public static (IReadOnlyList<T> Items, int TotalCount) MaximaBy<T, TKey>(this IEnumerable<T> source, Func<T, TKey?> keySelector, IComparer<TKey>? comparer = null)
     {
         return source.ExtremaBy(keySelector, true, comparer);
     }

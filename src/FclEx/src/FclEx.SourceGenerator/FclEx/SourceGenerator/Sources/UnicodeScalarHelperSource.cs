@@ -12,8 +12,10 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace FclEx.SourceGenerator.Sources;
 
-public class UnicodeScalarHelperSource
+internal static class UnicodeScalarHelperSource
 {
+    private static readonly bool IsGithubAction = Environment.GetEnvironmentVariable("GITHUB_ACTION") is { Length: > 0 };
+
     internal static SourceInfo Generate(SourceProductionContext context, AnalyzerConfigOptionsProvider options)
     {
         const string @namespace = "FclEx.Helpers";
@@ -102,17 +104,22 @@ public class UnicodeScalarHelperSource
 
         var resourcesDir = Path.Combine(projectDir, "Resources");
         var file = new FileInfo(Path.Combine(resourcesDir, "emoji-codes.txt"));
-        if (file.Exists && file.LastWriteTimeUtc.AddDays(7) > DateTime.UtcNow)
+        if (file.Exists)
         {
-            var content = File.ReadAllText(file.FullName);
-            var lines = content.Split('\r', '\n')
-                .Select(m => m.Trim())
-                .Where(m => m.Length > 0)
-                .Select(m => int.Parse(m));
+            // file is updated within 7 days
+            // Or it is running under GitHub action
+            if (file.LastWriteTimeUtc > DateTime.UtcNow.AddDays(-7) || IsGithubAction)
+            {
+                var content = File.ReadAllText(file.FullName);
+                var lines = content.Split('\r', '\n')
+                    .Select(m => m.Trim())
+                    .Where(m => m.Length > 0)
+                    .Select(int.Parse);
 
-            var set = new SortedSet<int>(lines);
-            if (set.Count > 0)
-                return set;
+                var set = new SortedSet<int>(lines);
+                if (set.Count > 0)
+                    return set;
+            }
         }
 
         var codes = await FetchAllEmojiCodes();

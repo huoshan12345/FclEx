@@ -1,6 +1,6 @@
 ﻿namespace FclEx.SourceGenerator.Sources;
 
-internal class EventHandlersSource
+internal static class EventHandlersSource
 {
     private const int Max = 8;
 

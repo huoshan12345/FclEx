@@ -1,6 +1,6 @@
 ﻿namespace FclEx.SourceGenerator.Sources;
 
-internal class AsyncEventHandlerExtensionsSource
+internal static class AsyncEventHandlerExtensionsSource
 {
     private const int Max = 8;
     private static readonly string[] _usings =

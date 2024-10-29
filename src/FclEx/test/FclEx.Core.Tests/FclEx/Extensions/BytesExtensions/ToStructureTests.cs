@@ -1,13 +1,15 @@
-﻿namespace FclEx.Extensions.ByteExtensions;
+﻿using FclEx.TestModels;
 
-public class UnmanagedTests
+namespace FclEx.Extensions.BytesExtensions;
+
+public class ToStructureTests
 {
-    private static readonly MethodInfo _methodOfSingle = typeof(UnmanagedTests).GetRequiredMethod(nameof(Single));
-    private static readonly MethodInfo _methodOfArray = typeof(UnmanagedTests).GetRequiredMethod(nameof(Array));
+    private static readonly MethodInfo _methodOfSingle = typeof(ToStructureTests).GetRequiredMethod(nameof(ToStructure));
+    private static readonly MethodInfo _methodOfArray = typeof(ToStructureTests).GetRequiredMethod(nameof(ToStructures));
 
-    public static int[] IntArr { get; } = Enumerable.Range(1, 10).ToArray();
+    public static int[] IntArr { get; } = Enumerable.Range(1, 5).ToArray();
 
-    public static IEnumerable<object[]> ArrayCase { get; } = new object[]
+    public static IEnumerable<object[]> ArrayCases { get; } = new object[]
     {
         IntArr.Select(m => m.CastTo<byte>()).ToArray(),
         IntArr.Select(m => m.CastTo<short>()).ToArray(),
@@ -18,10 +20,10 @@ public class UnmanagedTests
             Number = m,
             Char = m.ToString()[0],
             Arr = Enumerable.Repeat(m, 4).Select(x => x.CastTo<byte>()).ToArray(),
-        }).ToArray()
+        }).ToArray(),
     }.Select(m => new[] { m }).ToArray();
 
-    public static IEnumerable<object[]> SingleCase { get; } = new object[]
+    public static IEnumerable<object[]> ItemCases { get; } = new object[]
     {
         byte.MaxValue,
         short.MaxValue,
@@ -31,18 +33,18 @@ public class UnmanagedTests
         {
             Number = 99,
             Char = 'A',
-            Arr = Enumerable.Range(1, 4).Select(m => m.CastTo<byte>()).ToArray(),
+            Arr = [0x1, 0x2, 0x3, 0x4],
         },
     }.Select(m => new[] { m }).ToArray();
 
-    private static void Single<T>(T item) where T : struct
+    private static void ToStructure<T>(T item) where T : struct
     {
         var bytes = item.ToBytes();
         var actual = bytes.ToStructure<T>();
         Assert.Equal(actual, item);
     }
 
-    private static void Array<T>(T[] item) where T : struct
+    private static void ToStructures<T>(T[] item) where T : struct
     {
         var bytes = item.ToBytes();
         var actual = bytes.ToStructures<T>();
@@ -50,18 +52,18 @@ public class UnmanagedTests
     }
 
     [Theory]
-    [MemberData(nameof(SingleCase))]
-    public void SingleTest(object item)
+    [MemberData(nameof(ItemCases))]
+    public void ToStructure_Test(object item)
     {
         _methodOfSingle.MakeGenericMethod(item.GetType())
-            .Invoke(null, new object[] { item });
+            .Invoke(null, [item]);
     }
 
     [Theory]
-    [MemberData(nameof(ArrayCase))]
-    public void ArrayTest(Array arr)
+    [MemberData(nameof(ArrayCases))]
+    public void ToStructures_Test(Array arr)
     {
         _methodOfArray.MakeGenericMethod(arr.GetValue(0)!.GetType())
-            .Invoke(null, new object[] { arr });
+            .Invoke(null, [arr]);
     }
 }

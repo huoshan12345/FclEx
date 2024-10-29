@@ -10,6 +10,8 @@ public class UnsafeHelperTests(ITestOutputHelper output)
         public DateTime DateTime { get; set; }
     }
 
+    public record TestRecord(int Int, long Long);
+
     public static readonly Type[] BuiltInValueTypes =
     [
         typeof(bool),
@@ -104,6 +106,7 @@ public class UnsafeHelperTests(ITestOutputHelper output)
 
         var types = BuiltInValueTypes.Concat([
             typeof(TestStruct),
+            typeof(TestRecord),
             typeof(string),
             typeof(object)]);
 

@@ -1,4 +1,5 @@
-﻿namespace FclEx.Helpers;
+﻿// ReSharper disable ClassNeverInstantiated.Local
+namespace FclEx.Helpers;
 
 // code from https://stackoverflow.com/a/53029501/4255140
 public static class AddressHelper

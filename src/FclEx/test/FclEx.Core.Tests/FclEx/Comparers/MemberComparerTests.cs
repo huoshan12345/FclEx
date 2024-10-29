@@ -1,4 +1,6 @@
-﻿namespace FclEx.Comparers;
+﻿using FclEx.TestModels;
+
+namespace FclEx.Comparers;
 
 public class MemberComparerTests
 {

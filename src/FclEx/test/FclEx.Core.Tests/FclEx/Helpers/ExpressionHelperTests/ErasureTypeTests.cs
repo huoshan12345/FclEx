@@ -1,4 +1,6 @@
-﻿namespace FclEx.Helpers.ExpressionHelperTests;
+﻿using FclEx.TestModels;
+
+namespace FclEx.Helpers.ExpressionHelperTests;
 
 public class ErasureTypeTests
 {

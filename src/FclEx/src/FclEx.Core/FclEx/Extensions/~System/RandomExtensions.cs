@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static class RandomExtensions
 {
@@ -48,7 +46,7 @@ public static class RandomExtensions
     /// <typeparam name="T">The blittable type.</typeparam>
     /// <returns>The randomly generated value.</returns>
     [SkipLocalsInit]
-    public static T Next<T>(this Random random) where T : unmanaged
+    public static T Next<T>(this Random random) where T : struct
     {
         Unsafe.SkipInit(out T result);
         random.NextBytes(Span.AsBytes(ref result));
@@ -62,7 +60,7 @@ public static class RandomExtensions
     /// <typeparam name="T">The blittable type.</typeparam>
     /// <returns>The randomly generated value.</returns>
     [SkipLocalsInit]
-    public static unsafe T Next<T>(this Random random) where T : unmanaged
+    public static unsafe T Next<T>(this Random random) where T : struct
     {
         Unsafe.SkipInit(out T result);
         var bytes = new byte[sizeof(T)];
@@ -76,6 +74,5 @@ public static class RandomExtensions
         var rand = random.Next<long>();
         return min + rand % (max + 1 - min);
     }
-
 #endif
 }

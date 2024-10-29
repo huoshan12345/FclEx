@@ -3,15 +3,15 @@
 public static class ArrayExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int IndexOf<T>(this T[]? items, T item)
+    public static int IndexOf<T>(this T[] items, T item)
     {
-        return items != null ? Array.IndexOf(items, item) : -1;
+        return Array.IndexOf(items, item);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int LastIndexOf<T>(this T[]? items, T item)
+    public static int LastIndexOf<T>(this T[] items, T item)
     {
-        return items != null ? Array.LastIndexOf(items, item) : -1;
+        return Array.LastIndexOf(items, item);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -21,15 +21,9 @@ public static class ArrayExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ArraySegment<T> ToSegmentOrEmpty<T>(this T[]? arr)
+    public static ArraySegment<T> ToSegment<T>(this T[]? arr)
     {
-        return new(arr ?? Array.Empty<T>());
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ArraySegment<T> ToSegment<T>(this T[] arr)
-    {
-        return new(arr);
+        return new(arr ?? []);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -38,6 +32,7 @@ public static class ArrayExtensions
         return new(arr, offset, count);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IEnumerable<ArraySegment<T>> Segments<T>(this T[] array, int maxSize)
     {
         return array.ToSegment().Segments(maxSize);
@@ -53,4 +48,13 @@ public static class ArrayExtensions
     {
         return array.AsSpan();
     }
+
+#if NET6_0_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool SequenceEqual<T>(this T[] bytes, ReadOnlySpan<T> other)
+    {
+        return bytes.AsReadOnlySpan().SequenceEqual(other);
+    }
+#endif
+
 }

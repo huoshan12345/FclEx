@@ -1,4 +1,4 @@
-﻿namespace FclEx.Tests;
+﻿namespace FclEx.TestModels;
 
 public record Person
 {

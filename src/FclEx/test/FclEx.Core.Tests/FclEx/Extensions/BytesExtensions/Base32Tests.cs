@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions.ByteExtensions;
+﻿namespace FclEx.Extensions.BytesExtensions;
 
 public class Base32Tests
 {

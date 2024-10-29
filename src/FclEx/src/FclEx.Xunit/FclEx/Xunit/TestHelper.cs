@@ -1,4 +1,7 @@
-﻿using static FclEx.Xunit.EnvVarCheckOption;
+﻿using System.Xml.Linq;
+using System;
+using Xunit;
+using static FclEx.Xunit.EnvVarCheckOption;
 
 namespace FclEx.Xunit;
 
@@ -43,11 +46,30 @@ public static class BuildTypeOptionExtensions
 
 public static class TestHelper
 {
-    public const string EnvKeyOfGithubAction = "GITHUB_ACTION";
-    public static readonly bool IsGithubAction = Environment.GetEnvironmentVariable(EnvKeyOfGithubAction).IsNullOrEmpty() == false;
+    /// <summary>
+    /// The environment variable key for retrieving the current GitHub Action name or step ID.
+    /// </summary>
+    /// <remarks>
+    /// This constant represents the key "GITHUB_ACTION", which can be used with the 
+    /// <see cref="Environment.GetEnvironmentVariable(string)"/> method to obtain
+    /// the name of the action currently running, or the id of a step.<br/>
+    /// For example, for an action, __repo-owner_name-of-action-repo.
+    /// </remarks>
+    public const string GithubActionEnvKey = "GITHUB_ACTION";
 
+    /// <summary>
+    /// Indicates whether the current environment is running within a GitHub Action context.
+    /// </summary>
+    /// <remarks>
+    /// This static readonly field evaluates to <c>true</c> if the environment variable associated
+    /// with <see cref="GithubActionEnvKey"/> ("GITHUB_ACTION") is set and contains a non-empty value.<br/>
+    /// This allows for conditionally executing logic based 
+    /// on whether the code is being run as part of a GitHub Action workflow.
+    /// </remarks>
+    public static readonly bool IsGithubAction = Environment.GetEnvironmentVariable(GithubActionEnvKey).IsNullOrEmpty() == false;
     public static readonly Assembly[] Assemblies = AppDomain.CurrentDomain.GetAssemblies();
     public static readonly string AssemblyFullName = typeof(TestHelper).Assembly.GetName().FullName;
+
     public static readonly Assembly[] ReferencingAssemblies = Assemblies
         .Where(m => m.GetReferencedAssemblies().Any(x => x.FullName == AssemblyFullName))
         .ToArray();
@@ -63,7 +85,6 @@ public static class TestHelper
         {
             return reason;
         }
-
         if (info.AllowedOSPlatforms is { } os && os.Any(m => RuntimeInformation.IsOSPlatform(m.ToOSPlatform()) == false))
         {
             return $"The current operating system is not any of {os.JoinWith(", ")}";

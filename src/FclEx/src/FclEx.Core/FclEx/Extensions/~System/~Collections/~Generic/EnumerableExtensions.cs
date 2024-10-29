@@ -2,7 +2,6 @@
 
 public readonly record struct IndexedItem<T>(int Index, T Item, bool IsFirst, bool IsLast);
 
-[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 public static partial class EnumerableExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -46,43 +45,22 @@ public static partial class EnumerableExtensions
         return count is { } c ? enumerable.Take(c) : enumerable;
     }
 
-    public static IEnumerable<TResult> SelectMany<TSource, TResult>(this IEnumerable<TSource> source,
-        Func<TSource, TSource, TResult> resultSelector)
+    public static IEnumerable<TResult> SelectMany<T, TResult>(this IEnumerable<T> source, Func<T, T, TResult> resultSelector)
     {
         return source.SelectMany(m => source, resultSelector);
     }
 
-    public static IEnumerable<T> Except<T>(this IEnumerable<T> source, T item, IEqualityComparer<T>? comparer = null)
+    public static IEnumerable<T> Except<T>(this IEnumerable<T> enumerable, T item, IEqualityComparer<T>? comparer = null)
     {
         comparer ??= EqualityComparer<T>.Default;
-        return source.Where(m => !comparer.Equals(m, item));
+        return enumerable.Where(m => !comparer.Equals(m, item));
     }
 
     public static SortedSet<T> ToSortedSet<T>(this IEnumerable<T> enumerable, IComparer<T>? comparer = null)
     {
         return new SortedSet<T>(enumerable, comparer ?? Comparer<T>.Default);
     }
-
-    [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
-    public static TProp[] ToArrayByIndex<T, TProp>(this IEnumerable<T> enumerable, Func<T, int> indexSelector, Func<T, TProp> valueSelector)
-    {
-        Check.NotNull(enumerable);
-        Check.NotNull(indexSelector);
-        Check.NotNull(valueSelector);
-
-        if (!enumerable.Any())
-            return Array.Empty<TProp>();
-
-        var max = enumerable.Max(indexSelector);
-        var list = new TProp[max + 1];
-        foreach (var item in enumerable)
-        {
-            var index = indexSelector(item);
-            list[index] = valueSelector(item);
-        }
-        return list;
-    }
-
+    
     public static IEnumerable<KeyValuePair<T1, T2>> AsKeyValue<T1, T2>(this IEnumerable<ValueTuple<T1, T2>> enumerable)
     {
         return enumerable.Select(m => m.ToKeyValuePair());
@@ -93,33 +71,13 @@ public static partial class EnumerableExtensions
         return enumerable.Select(m => m.AsTuple());
     }
 
-    public static TResult? MaxOr<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, TResult> selector, TResult? defaultValue = default)
-    {
-        return source.Any() ? source.Max(selector) : defaultValue;
-    }
-
-    public static TSource? MaxOr<TSource>(this IEnumerable<TSource> source, TSource? defaultValue = default)
-    {
-        return source.Any() ? source.Max() : defaultValue;
-    }
-
-    public static TResult? MinOr<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, TResult> selector, TResult? defaultValue = default)
-    {
-        return source.Any() ? source.Min(selector) : defaultValue;
-    }
-
-    public static TSource? MinOr<TSource>(this IEnumerable<TSource> source, TSource? defaultValue = default)
-    {
-        return source.Any() ? source.Min() : defaultValue;
-    }
-
-    public static TimeSpan Average<TSource>(this IEnumerable<TSource> source, Func<TSource, TimeSpan> selector)
+    public static TimeSpan Average<T>(this IEnumerable<T> source, Func<T, TimeSpan> selector)
     {
         var ticks = (long)source.Select(m => selector(m).Ticks).Average();
         return TimeSpan.FromTicks(ticks);
     }
 
-    public static TimeSpan Sum<TSource>(this IEnumerable<TSource> source, Func<TSource, TimeSpan> selector)
+    public static TimeSpan Sum<T>(this IEnumerable<T> source, Func<T, TimeSpan> selector)
     {
         var ticks = source.Select(m => selector(m).Ticks).Sum();
         return TimeSpan.FromTicks(ticks);
@@ -143,7 +101,7 @@ public static partial class EnumerableExtensions
 
     public static IEnumerable<(T1, T2)> CrossJoin<T1, T2>(this IEnumerable<T1> left, Func<T1, IEnumerable<T2>> right)
     {
-        return left.SelectMany(m => right(m), static (t1, t2) => (t1, t2));
+        return left.SelectMany(right, static (t1, t2) => (t1, t2));
     }
 
     public static IEnumerable<T3> Select<T1, T2, T3>(this IEnumerable<(T1, T2)> source, Func<T1, T2, int, T3> selector)
@@ -214,14 +172,14 @@ public static partial class EnumerableExtensions
         return left.SelectMany(_ => right, (x, y) => (x, y));
     }
 
-    public static IOrderedEnumerable<TSource> OrderBy<TSource, TKey>(this IEnumerable<TSource> enumerable, Func<TSource, TKey> keySelector, bool desc)
+    public static IOrderedEnumerable<T> OrderBy<T, TKey>(this IEnumerable<T> enumerable, Func<T, TKey> keySelector, bool desc)
     {
         return desc
             ? enumerable.OrderByDescending(keySelector)
             : enumerable.OrderBy(keySelector);
     }
 
-    public static async IAsyncEnumerable<TResult> SelectAsync<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, Task<TResult>> selector)
+    public static async IAsyncEnumerable<TResult> SelectAsync<T, TResult>(this IEnumerable<T> source, Func<T, Task<TResult>> selector)
     {
         foreach (var item in source)
         {
@@ -301,6 +259,22 @@ public static partial class EnumerableExtensions
         return splits;
     }
 
+    /// <summary>
+    /// Interleaves two sequences by yielding elements from each sequence in specified group sizes.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the sequences.</typeparam>
+    /// <param name="first">The first sequence to interleave.</param>
+    /// <param name="second">The second sequence to interleave.</param>
+    /// <param name="firstGrouping">The number of consecutive elements to take from the first sequence before taking from the second.</param>
+    /// <param name="secondGrouping">The number of consecutive elements to take from the second sequence before returning to the first.</param>
+    /// <returns>An <see cref="IEnumerable{T}"/> that contains elements from both sequences interleaved 
+    /// according to the specified grouping sizes. If one sequence is exhausted, the remaining elements 
+    /// from the other sequence are yielded in order.</returns>
+    /// <remarks>
+    /// This method continues to yield elements from the first sequence until it is exhausted, interspersing 
+    /// elements from the second sequence as specified by the group sizes. If there are remaining elements 
+    /// in the second sequence after the first is exhausted, those elements will be yielded as well.
+    /// </remarks>
     public static IEnumerable<T> InterleaveWith<T>(this IEnumerable<T> first, IEnumerable<T> second, int firstGrouping, int secondGrouping)
     {
         using var firstIterator = first.GetEnumerator();
@@ -337,6 +311,35 @@ public static partial class EnumerableExtensions
         while (secondIterator.MoveNext())
         {
             yield return secondIterator.Current;
+        }
+    }
+
+    /// <summary>
+    /// Extends an <see cref="IEnumerable{T}"/> to include the current item and its predecessor.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the collection.</typeparam>
+    /// <param name="enumerable">The input collection to process.</param>
+    /// <returns>An <see cref="IEnumerable{T}"/> where each element is a tuple containing 
+    /// the current item and the item that preceded it. <br/>
+    /// The first element will have a <see langword="default"/> predecessor.
+    /// </returns>
+    /// <remarks>
+    /// This method is particularly useful for scenarios where you need to track changes or comparisons 
+    /// between consecutive elements in a sequence.
+    /// </remarks>
+    public static IEnumerable<(T Item, T? Previous)> WithPrevious<T>(this IEnumerable<T> enumerable)
+    {
+        Check.NotNull(enumerable);
+        return WithPreviousImpl(enumerable);
+
+        static IEnumerable<(T Item, T? Previous)> WithPreviousImpl(IEnumerable<T> enumerable)
+        {
+            var previous = default(T);
+            foreach (var item in enumerable)
+            {
+                yield return (item, previous);
+                previous = item;
+            }
         }
     }
 
