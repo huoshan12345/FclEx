@@ -1,4 +1,5 @@
-﻿using xRetry;
+﻿using FclEx.TestModels;
+using xRetry;
 
 namespace FclEx.RabbitMQ;
 

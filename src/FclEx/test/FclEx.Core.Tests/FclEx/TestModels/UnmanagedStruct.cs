@@ -1,8 +1,4 @@
-﻿using System.Numerics;
-using System.Runtime.InteropServices;
-using FclEx.Comparers;
-
-namespace FclEx.TestModels;
+﻿namespace FclEx.TestModels;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct UnmanagedStruct : IEquatable<UnmanagedStruct>
@@ -44,6 +40,6 @@ public struct UnmanagedStruct : IEquatable<UnmanagedStruct>
 
     public override string ToString()
     {
-        return $"{nameof(UnmanagedStruct)}({Number}, {Char}, [{Arr.JoinWith(", ")}])";
+        return $"{nameof(UnmanagedStruct)}({Number}, {(ushort)Char}, [{Arr?.JoinWith(", ")}])";
     }
 }

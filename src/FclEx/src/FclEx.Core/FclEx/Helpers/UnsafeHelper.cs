@@ -3,9 +3,7 @@ namespace FclEx.Helpers;
 
 public static class UnsafeHelper
 {
-    public static unsafe int SizeOf<T>() => sizeof(T);
-
-    public static unsafe int SizeOf2<T>()
+    public static unsafe int SizeOf<T>()
     {
         fixed (T* ptr = new T[2])
         {

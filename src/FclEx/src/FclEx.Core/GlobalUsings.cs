@@ -18,6 +18,7 @@ global using System.Net.Http;
 global using System.Net.Sockets;
 global using System.Numerics;
 global using System.Reflection;
+global using System.Reflection.Emit;
 global using System.Runtime.CompilerServices;
 global using System.Runtime.ExceptionServices;
 global using System.Runtime.InteropServices;

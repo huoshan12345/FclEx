@@ -1,6 +1,4 @@
-﻿using System.Reflection.Emit;
-
-namespace FclEx.Helpers;
+﻿namespace FclEx.Helpers;
 
 public static class DelegateHelper
 {

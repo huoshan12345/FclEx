@@ -4,28 +4,39 @@ public unsafe class BytewiseEqualityComparer<T> : IEqualityComparer<T> where T :
 {
     public static readonly BytewiseEqualityComparer<T> Instance = new();
 
-    private static readonly int MarshalSize = Marshal.SizeOf<T>();
-    private static readonly int Size = sizeof(T);
-    private static readonly int Offset = Size - MarshalSize;
-
     public bool Equals(T x, T y)
     {
-        var p1 = ((byte*)&x) + Offset;
-        var p2 = ((byte*)&y) + Offset;
-        var span1 = new Span<byte>(p1, MarshalSize);
-        var span2 = new Span<byte>(p2, MarshalSize);
+        var span1 = AsSpan(x);
+        var span2 = AsSpan(y);
         return span1.SequenceEqual(span2);
     }
 
     public int GetHashCode(T obj)
     {
-        var p = ((byte*)&obj) + Offset;
-        var span = new Span<byte>(p, MarshalSize);
+        var span = AsSpan(obj);
         var hashCode = 0;
         foreach (var m in span)
         {
             hashCode = (hashCode << 3) | (hashCode >> (29)) ^ m;
         }
         return hashCode;
+    }
+
+    private static Span<byte> AsSpan(T obj)
+    {
+        var size = SizeCalculator.SizeOf<T>();
+        var pointer = Unsafe.AsPointer(ref obj);
+        var pointer2 = &obj;
+
+        // 对于引用类型，pointer指向的是目标对象的地址(即二级指针)，
+        // 所以还需要将其转换成IntPtr*指针，并最终将指针的内容（也就是目标对象的地址）解析出来。
+        // 由于变量指向的地址并非目标实例映射内存字节的首地址，仅仅是存储方法表地址的地方，
+        // 所以还需要向前移动一个身位（IntPtr.Size）才是实例所在内存片段的首地址。
+        var head = typeof(T).IsValueType
+            ? new IntPtr(pointer)
+            : *(IntPtr*)pointer - IntPtr.Size;
+
+        var span = new Span<byte>(head.ToPointer(), size);
+        return span;
     }
 }

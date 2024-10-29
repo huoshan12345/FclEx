@@ -45,6 +45,15 @@ public static class RandomExtensions
     /// <param name="random">The source of random numbers.</param>
     /// <typeparam name="T">The blittable type.</typeparam>
     /// <returns>The randomly generated value.</returns>
+    //public static T Next<T>(this Random random) where T : struct
+    //{
+    //    var size = Marshal.SizeOf<T>();
+    //    var bytes = new byte[size];
+    //    random.NextBytes(bytes);
+    //    var result = bytes.ToStructure<T>();
+    //    return result;
+    //}
+
     [SkipLocalsInit]
     public static T Next<T>(this Random random) where T : struct
     {
@@ -52,7 +61,10 @@ public static class RandomExtensions
         random.NextBytes(Span.AsBytes(ref result));
         return result;
     }
-#else
+#endif
+
+#if NETSTANDARD2_0
+
     /// <summary>
     /// Generates a random value of blittable type.
     /// </summary>

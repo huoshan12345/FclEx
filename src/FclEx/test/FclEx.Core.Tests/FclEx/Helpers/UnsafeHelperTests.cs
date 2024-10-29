@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-
-namespace FclEx.Helpers;
+﻿namespace FclEx.Helpers;
 
 public class UnsafeHelperTests(ITestOutputHelper output)
 {
@@ -43,7 +41,7 @@ public class UnsafeHelperTests(ITestOutputHelper output)
 
     private static readonly MethodInfo _sizeOfTTest = typeof(UnsafeHelperTests).GetRequiredMethod(nameof(SizeOf_T_Test));
     private static readonly MethodInfo _sizeOf = typeof(UnsafeHelper).GetRequiredMethod(nameof(UnsafeHelper.SizeOf));
-    private static readonly MethodInfo _sizeOf2 = typeof(UnsafeHelper).GetRequiredMethod(nameof(UnsafeHelper.SizeOf2));
+    private static readonly MethodInfo _unsafeSizeOf = typeof(Unsafe).GetRequiredMethod(nameof(Unsafe.SizeOf));
 
     [Theory]
     [MemberData(nameof(BuiltInValueTypeCases))]
@@ -90,9 +88,9 @@ public class UnsafeHelperTests(ITestOutputHelper output)
         return _sizeOf.MakeGenericMethod(type).Invoke<int>(null, null);
     }
 
-    private static int SizeOf2(Type type)
+    private static int UnsafeSizeOf(Type type)
     {
-        return _sizeOf2.MakeGenericMethod(type).Invoke<int>(null, null);
+        return _unsafeSizeOf.MakeGenericMethod(type).Invoke<int>(null, null);
     }
 
     [Fact]
@@ -100,7 +98,7 @@ public class UnsafeHelperTests(ITestOutputHelper output)
     {
         var table = new ConsoleTable(new()
         {
-            Columns = ["Type", $"{nameof(Marshal)}", $"{nameof(UnsafeHelper.SizeOf)}", $"{nameof(UnsafeHelper.SizeOf2)}"],
+            Columns = ["Type", $"{nameof(Marshal)}", $"{nameof(Unsafe)}", $"{nameof(UnsafeHelper)}"],
             RenderColumns = true,
         });
 
@@ -112,11 +110,11 @@ public class UnsafeHelperTests(ITestOutputHelper output)
 
         foreach (var type in types)
         {
-            var size = SizeOf(type);
             var (success, marshalSize, _, _) = Operate.Execute(() => Marshal.SizeOf(type));
             var marshalSizeStr = success ? marshalSize.ToString() : "-";
-            var size2 = SizeOf2(type);
-            table.Rows.Add([type.SimpleName(), marshalSizeStr, size, size2]);
+            var unsafeSize = UnsafeSizeOf(type);
+            var size = SizeOf(type);
+            table.Rows.Add([type.SimpleName(), marshalSizeStr, unsafeSize, size]);
         }
 
         output.WriteLine(table.ToString());

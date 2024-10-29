@@ -14,6 +14,6 @@ public static class StringBuilderHelper
 
     public static DisposableValue<StringBuilder> GetPooled(int capacity = 16) // == StringBuilder.DefaultCapacity
     {
-        return Acquire(capacity).ToDisposable(m => Release(m));
+        return Acquire(capacity).ToDisposable(Release);
     }
 }
