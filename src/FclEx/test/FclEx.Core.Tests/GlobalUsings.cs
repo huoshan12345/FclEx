@@ -15,6 +15,7 @@ global using System.Text.Json;
 global using System.Text.Json.Serialization;
 global using System.Text.Json.Serialization.Converters;
 global using System.Xml.Linq;
+global using FclEx.Collections;
 global using FclEx.Comparers;
 global using FclEx.Extensions;
 global using FclEx.Helpers;

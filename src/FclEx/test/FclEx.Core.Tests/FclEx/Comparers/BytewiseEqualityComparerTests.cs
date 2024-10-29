@@ -4,35 +4,15 @@ namespace FclEx.Comparers;
 
 public class BytewiseEqualityComparerTests(ITestOutputHelper output)
 {
-    public static readonly Type[] Types =
-    [
-        typeof(bool),
-        typeof(char),
-        typeof(sbyte),
-        typeof(byte),
-        typeof(short),
-        typeof(ushort),
-        typeof(int),
-        typeof(uint),
-        typeof(long),
-        typeof(ulong),
-        typeof(float),
-        typeof(double),
-        typeof(decimal),
-        typeof(DateTime),
-        typeof(TimeSpan),
-        typeof(Guid),
-        typeof(DateTimeOffset),
-        typeof(DateOnly),
-        typeof(TimeOnly),
-        typeof(IntPtr),
-        typeof(UIntPtr),
-        typeof(ValueTuple<int>),
-        typeof(ValueTuple<int, long, DateTimeOffset, DateTime>),
-        typeof(UnmanagedStruct),
-    ];
+    public static readonly IEnumerable<Type> ValueTypes = Types.CommonValueTypes.Concat([
+        typeof(string),
+        typeof(TestStruct),
+        typeof(TestRecord),
+        typeof(TestRecordStruct),
+        typeof(BlittableClass),
+        typeof(BlittableStruct)]);
 
-    public static readonly IEnumerable<object[]> TypeCases = Types.Select(m => new object[] { m });
+    public static readonly IEnumerable<object[]> TypeCases = ValueTypes.Select(m => new object[] { m });
 
     private static readonly MethodInfo _equals = typeof(BytewiseEqualityComparerTests).GetRequiredMethod(nameof(Equals));
 
@@ -43,17 +23,12 @@ public class BytewiseEqualityComparerTests(ITestOutputHelper output)
         _equals.MakeGenericMethod(type).Invoke(this, null);
     }
 
-    private void Equals<T>() where T : struct
+    private void Equals<T>()
     {
         //var random = new Random(0);
         //var x = random.Next<T>();
         var x = default(T);
-        Assert.Equal(x, x, BytewiseEqualityComparer<T>.Instance);
-        output.WriteLine(x.ToString());
+        Assert.Equal(x, x, BytewiseEqualityComparer<T?>.Instance);
+        output.WriteLine(x);
     }
-}
-
-public struct Node
-{
-    public Node[] Nodes { get; set; }
 }

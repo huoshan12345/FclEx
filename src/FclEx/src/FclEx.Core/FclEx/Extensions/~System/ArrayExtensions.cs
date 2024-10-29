@@ -33,7 +33,7 @@ public static class ArrayExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static IEnumerable<ArraySegment<T>> Segments<T>(this T[] array, int maxSize)
+    public static IEnumerable<ArraySegment<T>> Segments<T>(this T[]? array, int maxSize)
     {
         return array.ToSegment().Segments(maxSize);
     }

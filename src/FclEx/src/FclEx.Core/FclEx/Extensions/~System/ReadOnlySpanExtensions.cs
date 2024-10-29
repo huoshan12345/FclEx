@@ -113,4 +113,64 @@ public static class ReadOnlySpanExtensions
     {
         return MemoryMarshal.AsBytes(span);
     }
+
+    public static TCollection ToCollection<T, TCollection>(this ReadOnlySpan<T> span, Func<TCollection> factory) where TCollection : ICollection<T>
+    {
+        var col = factory();
+        foreach (var item in span)
+        {
+            col.Add(item);
+        }
+        return col;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TCollection ToCollection<T, TCollection>(this ReadOnlySpan<T> span) where TCollection : ICollection<T>, new()
+    {
+        return span.ToCollection(() => new TCollection());
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static HashSet<T> ToHashSet<T>(this ReadOnlySpan<T> span)
+    {
+        return span.ToCollection<T, HashSet<T>>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static List<T> ToList<T>(this ReadOnlySpan<T> span)
+    {
+        return span.ToCollection<T, List<T>>();
+    }
+
+    public static int ComputeHashCode<T>(this ReadOnlySpan<T> span)
+    {
+        var code = 0;
+        foreach (var value in span)
+        {
+            code = HashCode.Combine(value, code);
+        }
+        return code;
+    }
+
+    public static int ComputeHashCode(this ReadOnlySpan<byte> span)
+    {
+        const int sizeOfInt = sizeof(int);
+        var count = span.Length / sizeOfInt;
+        var remaining = span.Length % sizeOfInt;
+
+        var code = 0;
+        for (var i = 0; i < count; i++)
+        {
+            var intSpan = span.Slice(i * sizeOfInt, sizeOfInt);
+            var intVal = intSpan.ToInt32();
+            code = HashCode.Combine(intVal, code);
+        }
+
+        for (var i = 1; i <= remaining; i++)
+        {
+            code = HashCode.Combine(span[^i], code);
+        }
+
+        return code;
+    }
 }

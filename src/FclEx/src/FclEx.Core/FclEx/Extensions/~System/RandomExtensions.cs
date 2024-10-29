@@ -38,24 +38,27 @@ public static class RandomExtensions
         return new DateTime(ticks);
     }
 
-#if NET6_0_OR_GREATER
     /// <summary>
     /// Generates a random value of blittable type.
     /// </summary>
     /// <param name="random">The source of random numbers.</param>
     /// <typeparam name="T">The blittable type.</typeparam>
     /// <returns>The randomly generated value.</returns>
-    //public static T Next<T>(this Random random) where T : struct
-    //{
-    //    var size = Marshal.SizeOf<T>();
-    //    var bytes = new byte[size];
-    //    random.NextBytes(bytes);
-    //    var result = bytes.ToStructure<T>();
-    //    return result;
-    //}
+    public static T NextBlittable<T>(this Random random)
+    {
+        var size = Marshal.SizeOf<T>();
+        var bytes = new byte[size];
+        random.NextBytes(bytes);
+        var result = bytes.ToBlittable<T>();
+        return result;
+    }
+
+#if NET6_0_OR_GREATER
+
+
 
     [SkipLocalsInit]
-    public static T Next<T>(this Random random) where T : struct
+    public static T NextUnmanaged<T>(this Random random) where T : unmanaged
     {
         Unsafe.SkipInit(out T result);
         random.NextBytes(Span.AsBytes(ref result));
@@ -72,7 +75,7 @@ public static class RandomExtensions
     /// <typeparam name="T">The blittable type.</typeparam>
     /// <returns>The randomly generated value.</returns>
     [SkipLocalsInit]
-    public static unsafe T Next<T>(this Random random) where T : struct
+    public static unsafe T NextUnmanaged<T>(this Random random) where T : unmanaged
     {
         Unsafe.SkipInit(out T result);
         var bytes = new byte[sizeof(T)];
@@ -83,7 +86,7 @@ public static class RandomExtensions
 
     public static long NextInt64(this Random random, long min, long max)
     {
-        var rand = random.Next<long>();
+        var rand = random.NextUnmanaged<long>();
         return min + rand % (max + 1 - min);
     }
 #endif

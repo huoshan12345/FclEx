@@ -31,7 +31,7 @@ public static partial class BytesExtensions
         return builder.ToString();
     }
 
-    public static T ToStructure<T>(this byte[] bytes, ref int offset) where T : struct
+    public static T ToBlittable<T>(this byte[] bytes, ref int offset)
     {
         Check.NotNull(bytes);
         Check.NotLessThan(offset, 0);
@@ -44,25 +44,24 @@ public static partial class BytesExtensions
         Marshal.Copy(bytes, offset, ptr, length);
         var obj = Marshal.PtrToStructure<T>(ptr);
         offset += length;
-        return obj;
+        return obj!;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T ToStructure<T>(this byte[] bytes) where T : struct
+    public static T ToBlittable<T>(this byte[] bytes)
     {
         var i = 0;
-        return ToStructure<T>(bytes, ref i);
+        return ToBlittable<T>(bytes, ref i);
     }
 
-    public static T[] ToStructures<T>(this byte[] bytes, int count, ref int offset) where T : struct
+    public static T[] ToBlittableArray<T>(this byte[] bytes, int count, ref int offset)
     {
         Check.NotNull(bytes);
         Check.NotLessThan(offset, 0);
         Check.NotLessThan(count, 1);
 
         var length = Marshal.SizeOf<T>();
-        var totalBytes = length * count;
-        Check.NotLessThan(bytes.Length, totalBytes + offset);
+        Check.NotLessThan(bytes.Length, length * count + offset);
 
         var result = new T[count];
         using var disposable = MarshalHelper.AllocHGlobal(length);
@@ -72,22 +71,23 @@ public static partial class BytesExtensions
             Marshal.Copy(bytes, offset, ptr, length);
             var obj = Marshal.PtrToStructure<T>(ptr);
             offset += length;
-            result[i] = obj;
+            result[i] = obj!;
         }
-
         return result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T[] ToStructures<T>(this byte[] bytes) where T : struct
+    public static T[] ToBlittableArray<T>(this byte[] bytes)
     {
         var length = Marshal.SizeOf<T>();
         var i = 0;
-        return ToStructures<T>(bytes, bytes.Length / length, ref i);
+        return ToBlittableArray<T>(bytes, bytes.Length / length, ref i);
     }
 
-    public static byte[] ToBytes<T>(this T obj) where T : struct
+    public static byte[] BlittableToBytes<T>(this T obj)
     {
+        Check.NotNull(obj);
+
         var length = Marshal.SizeOf<T>();
         var bufByte = new byte[length];
         using var disposable = MarshalHelper.AllocHGlobal(length);
@@ -97,10 +97,12 @@ public static partial class BytesExtensions
         return bufByte;
     }
 
-    public static byte[] ToBytes<T>(this IReadOnlyList<T> list) where T : struct
+    public static byte[] BlittableArrayToBytes<T>(this IReadOnlyList<T> list)
     {
         Check.NotNull(list);
-        Check.NotEmpty(list);
+
+        if (list.IsEmpty())
+            return [];
 
         var length = Marshal.SizeOf<T>();
         var totalBytes = length * list.Count;
@@ -109,7 +111,10 @@ public static partial class BytesExtensions
         var ptr = disposable.Value;
         for (var i = 0; i < list.Count; i++)
         {
-            Marshal.StructureToPtr(list[i], ptr, true);
+            var item = list[i];
+            Check.NotNull(item, nameof(list) + $"[{i}]");
+
+            Marshal.StructureToPtr(item, ptr, true);
             Marshal.Copy(ptr, bufByte, i * length, length);
         }
 
@@ -177,5 +182,11 @@ public static partial class BytesExtensions
                 k = next[k];
         }
         return next;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int ComputeHashCode(this byte[] bytes)
+    {
+        return bytes.AsReadOnlySpan().ComputeHashCode();
     }
 }

@@ -3,12 +3,13 @@ namespace FclEx.Helpers;
 
 public static class UnsafeHelper
 {
+
     public static unsafe int SizeOf<T>()
     {
         fixed (T* ptr = new T[2])
         {
-            var ptrToT0 = (IntPtr)(&ptr[0]);
-            var ptrToT1 = (IntPtr)(&ptr[1]);
+            var ptrToT0 = (byte*)(&ptr[0]);
+            var ptrToT1 = (byte*)(&ptr[1]);
             return (int)(((byte*)ptrToT1) - ((byte*)ptrToT0));
         }
     }

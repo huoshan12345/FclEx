@@ -9,7 +9,7 @@
     <ItemGroup>
       <FilesToDelete Include="$(SourceDir)**\*"/>
     </ItemGroup>
-    <Delete Files="@(FilesToDelete)" ContinueOnError="true" />
+    <!--<Delete Files="@(FilesToDelete)" ContinueOnError="true" />-->
   </Target>
 
   <ItemGroup>

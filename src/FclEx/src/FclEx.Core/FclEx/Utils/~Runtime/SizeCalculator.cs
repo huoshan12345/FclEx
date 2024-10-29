@@ -52,10 +52,15 @@ public static class SizeCalculator
 
     private static object GetUninitializedObject(Type type)
     {
+        // for string type, GetUninitializedObject will throw an ArgumentException:
+        // Uninitialized Strings cannot be created.
+        // so we need to do special handling for it.
+        return type == typeof(string)
+            ? string.Empty
 #if NETSTANDARD2_0
-        return FormatterServices.GetUninitializedObject(type);
+            : FormatterServices.GetUninitializedObject(type);
 #else
-        return RuntimeHelpers.GetUninitializedObject(type);
+            : RuntimeHelpers.GetUninitializedObject(type);
 #endif
     }
 
@@ -87,6 +92,7 @@ public static class SizeCalculator
                 ? 0
                 : 3 * IntPtr.Size;
 
+        // TODO: GetUninitializedObject does work for abstract types and delegate types.
         var instance = GetUninitializedObject(type);
         var addresses = GenerateFieldAddressAccessor(fields).Invoke(instance);
         var (instanceAddress, fieldAddresses) = (addresses[0], addresses.Skip(1));

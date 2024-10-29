@@ -1,22 +1,19 @@
 ﻿namespace FclEx.Collections;
 
 [CollectionBuilder(typeof(ReadOnlyListBuilder), nameof(ReadOnlyListBuilder.Create))]
-public class ReadOnlyList<T> : IReadOnlyList<T>
+public class ReadOnlyList<T>(IReadOnlyList<T>? list = null) : IReadOnlyList<T>, IReadOnlyContainer<T>
 {
-    private readonly IReadOnlyList<T> _list;
-
-    public ReadOnlyList(IReadOnlyList<T>? list = null)
-    {
-        _list = list ?? [];
-    }
+    private readonly IReadOnlyList<T> _list = list ?? [];
 
     public IEnumerator<T> GetEnumerator() => _list.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    public bool Contains(T item) => _list.Contains(item);
     public int Count => _list.Count;
     public T this[int index] => _list[index];
 
     public static implicit operator ReadOnlyList<T>(List<T> list) => new(list);
     public static implicit operator ReadOnlyList<T>(T[] array) => new(array);
+
 
     public override string ToString()
     {

@@ -92,7 +92,6 @@ internal static class BytesExtensionsSource
         const string className = "BytesExtensions";
 
         using var builder = new SourceBuilder()
-            .WriteIf("NET6_0_OR_GREATER")
             .WriteGeneratedHeader()
             .WriteLine()
             .WriteUsings(_usings)
@@ -109,9 +108,14 @@ internal static class BytesExtensionsSource
         foreach (var type in _numberTypes)
         {
             var methodName = $"public static {type} To{type}";
-            builder.WriteLine($"{methodName}(this ReadOnlySpan<byte> bytes)");
+            builder.WriteLine($"{methodName}(this ReadOnlySpan<byte> span)");
             builder.WriteOpeningBracket();
-            builder.WriteLine($"return BitConverter.To{type}(bytes);");
+
+            builder.WriteIf("NET6_0_OR_GREATER");
+            builder.WriteLine($"return BitConverter.To{type}(span);");
+            builder.WriteElse();
+            builder.WriteLine($"return Unsafe.ReadUnaligned<{type}>(ref MemoryMarshal.GetReference(span));");
+            builder.WriteEndIf();
             builder.WriteClosingBracket();
             builder.WriteLine();
         }
@@ -121,8 +125,6 @@ internal static class BytesExtensionsSource
 
         // End namespace declaration
         builder.WriteClosingBracket();
-
-        builder.WriteEndIf();
 
         var str = builder.ToString();
         return ($"{className}.ReadOnlySpan.g.cs", str);

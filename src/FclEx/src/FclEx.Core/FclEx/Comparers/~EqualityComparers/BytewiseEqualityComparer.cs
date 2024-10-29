@@ -1,18 +1,24 @@
 ﻿namespace FclEx.Comparers;
 
-public unsafe class BytewiseEqualityComparer<T> : IEqualityComparer<T> where T : struct
+public unsafe class BytewiseEqualityComparer<T> : IEqualityComparer<T>
 {
     public static readonly BytewiseEqualityComparer<T> Instance = new();
 
-    public bool Equals(T x, T y)
+    public bool Equals(T? x, T? y)
     {
+        if (ComparerHelper.TryEquals(x, y, out var result))
+            return result.Value;
+
         var span1 = AsSpan(x);
         var span2 = AsSpan(y);
         return span1.SequenceEqual(span2);
     }
 
-    public int GetHashCode(T obj)
+    public int GetHashCode(T? obj)
     {
+        if (obj is null)
+            return 0;
+
         var span = AsSpan(obj);
         var hashCode = 0;
         foreach (var m in span)
