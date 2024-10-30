@@ -112,13 +112,12 @@ public static class RandomExtensions
     /// <returns>The randomly generated value.</returns>
     public static T NextBlittable<T>(this Random random)
     {
-        if (typeof(T).IsBlittable())
-            throw new ArgumentException($"The type '{typeof(T).LongName()}' is not blittable.");
+        typeof(T).EnsureMarshalable();
 
         var size = Marshal.SizeOf<T>();
         var bytes = new byte[size];
         random.NextBytes(bytes);
-        var result = bytes.ToBlittable<T>();
+        var result = bytes.MarshalTo<T>();
         return result;
     }
 
@@ -162,6 +161,9 @@ public static class RandomExtensions
 
     private static object Next(this Random random, Type type)
     {
+        if (Nullable.GetUnderlyingType(type) is { } nullable)
+            type = nullable;
+
         var code = type.GetTypeCode();
         return code switch
         {
@@ -209,8 +211,7 @@ public static class RandomExtensions
             return random.NextTimeOnly();
 #endif
 
-        var ctors = type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic);
-
+        var ctors = type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
         if (ctors.Length == 0)
             throw new ArgumentException($"The type '{type.LongName()}' does not have any constructors.");
 

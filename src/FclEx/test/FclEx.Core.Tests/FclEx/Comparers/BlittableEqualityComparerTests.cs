@@ -24,7 +24,7 @@ public class BlittableEqualityComparerTests(ITestOutputHelper output)
     {
         var random = new Random(0);
         var x = random.Next<T>();
-        Assert.Equal<T>(x, x, BlittableEqualityComparer<T>.Instance);
+        Assert.Equal<T>(x, x, MarshalToBytesEqualityComparer<T>.Instance);
         output.WriteLine(x);
     }
 

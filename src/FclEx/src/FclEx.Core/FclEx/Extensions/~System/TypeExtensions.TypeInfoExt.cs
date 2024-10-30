@@ -1,4 +1,6 @@
-﻿namespace FclEx.Extensions;
+﻿using Exception = System.Exception;
+
+namespace FclEx.Extensions;
 
 partial class TypeExtensions
 {
@@ -23,7 +25,6 @@ partial class TypeExtensions
             var longName = LongNameInternal(type, shortName);
             var isInteger = IsIntegerInternal(type, nullableUnderlyingType);
             var isFloat = IsFloatInternal(type, nullableUnderlyingType);
-            var isBlittable = type.IsBlittable(false);
 
             return new TypeInfoExt(
                 Type: type,
@@ -34,8 +35,7 @@ partial class TypeExtensions
                 ShortName: shortName,
                 LongName: longName,
                 IsInteger: isInteger,
-                IsFloat: isFloat,
-                IsBlittable: isBlittable);
+                IsFloat: isFloat);
         }
 
         static object? GetDefaultValueInternal(Type type, Type? nullableUnderlyingType)
@@ -248,36 +248,6 @@ partial class TypeExtensions
     {
         return type.GetTypeInfoExt().IsEnumerable;
     }
-
-    public static bool IsBlittable(this Type type)
-    {
-        return type.GetTypeInfoExt().IsBlittable;
-    }
-
-    public static bool IsBlittable(this Type type, bool throwOnError)
-    {
-        if (type.IsArray)
-        {
-            var elementType = type.GetElementType()!;
-            // ReSharper disable once TailRecursiveCall
-            return elementType.IsBlittable(throwOnError);
-        }
-
-        try
-        {
-            // exception will be raised if type is not blittable.
-            var instance = ObjectHelper.GetUninitializedObject(type);
-            GCHandle.Alloc(instance, GCHandleType.Pinned).Free();
-            return true;
-        }
-        catch
-        {
-            if (throwOnError)
-                throw;
-
-            return false;
-        }
-    }
 }
 
 public record TypeInfoExt(
@@ -289,8 +259,7 @@ public record TypeInfoExt(
     string ShortName,
     string LongName,
     bool IsInteger,
-    bool IsFloat,
-    bool IsBlittable)
+    bool IsFloat)
 {
     public bool IsNullable { get; } = NullableUnderlyingType != null;
     public bool IsEnumerable { get; } = EnumerableUnderlyingType != null;

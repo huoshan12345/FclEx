@@ -2,10 +2,10 @@
 
 namespace FclEx.Extensions.BytesExtensions;
 
-public class ToBlittableTests
+public class MarshalToTests
 {
-    private static readonly MethodInfo _methodOfSingle = typeof(ToBlittableTests).GetRequiredMethod(nameof(ToBlittable));
-    private static readonly MethodInfo _methodOfArray = typeof(ToBlittableTests).GetRequiredMethod(nameof(ToBlittableArray));
+    private static readonly MethodInfo _marshalTo = typeof(MarshalToTests).GetRequiredMethod(nameof(MarshalTo));
+    private static readonly MethodInfo _marshalToArray = typeof(MarshalToTests).GetRequiredMethod(nameof(MarshalToArray));
 
     public static int[] IntArr { get; } = Enumerable.Range(1, 5).ToArray();
 
@@ -49,33 +49,33 @@ public class ToBlittableTests
         },
     }.Select(m => new[] { m }).ToArray();
 
-    private static void ToBlittable<T>(T item)
+    private static void MarshalTo<T>(T item)
     {
-        var bytes = item.BlittableToBytes();
-        var actual = bytes.ToBlittable<T>();
-        Assert.Equal(actual, item, BlittableEqualityComparer<T>.Instance);
+        var bytes = item.MarshalToBytes();
+        var actual = bytes.MarshalTo<T>();
+        Assert.Equal(actual, item, MarshalToBytesEqualityComparer<T>.Instance);
     }
 
-    private static void ToBlittableArray<T>(T[] item)
+    private static void MarshalToArray<T>(T[] item)
     {
-        var bytes = item.BlittableArrayToBytes();
-        var actual = bytes.ToBlittableArray<T>();
-        Assert.True(actual.SequenceEqual(item, BlittableEqualityComparer<T>.Instance));
+        var bytes = item.MarshalArrayToBytes();
+        var actual = bytes.MarshalToArray<T>();
+        Assert.True(actual.SequenceEqual(item, MarshalToBytesEqualityComparer<T>.Instance));
     }
 
     [Theory]
     [MemberData(nameof(ItemCases))]
-    public void ToBlittable_Test(object item)
+    public void MarshalTo_Test(object item)
     {
-        _methodOfSingle.MakeGenericMethod(item.GetType())
+        _marshalTo.MakeGenericMethod(item.GetType())
             .Invoke(null, [item]);
     }
 
     [Theory]
     [MemberData(nameof(ArrayCases))]
-    public void ToBlittableArray_Test(Array arr)
+    public void MarshalToArray_Test(Array arr)
     {
-        _methodOfArray.MakeGenericMethod(arr.GetValue(0)!.GetType())
+        _marshalToArray.MakeGenericMethod(arr.GetValue(0)!.GetType())
             .Invoke(null, [arr]);
     }
 }

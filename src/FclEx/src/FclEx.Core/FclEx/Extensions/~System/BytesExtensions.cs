@@ -31,7 +31,7 @@ public static partial class BytesExtensions
         return builder.ToString();
     }
 
-    public static T ToBlittable<T>(this byte[] bytes, ref int offset)
+    public static T MarshalTo<T>(this byte[] bytes, ref int offset)
     {
         Check.NotNull(bytes);
         Check.NotLessThan(offset, 0);
@@ -48,13 +48,13 @@ public static partial class BytesExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T ToBlittable<T>(this byte[] bytes)
+    public static T MarshalTo<T>(this byte[] bytes)
     {
         var i = 0;
-        return ToBlittable<T>(bytes, ref i);
+        return MarshalTo<T>(bytes, ref i);
     }
 
-    public static T[] ToBlittableArray<T>(this byte[] bytes, int count, ref int offset)
+    public static T[] MarshalToArray<T>(this byte[] bytes, int count, ref int offset)
     {
         Check.NotNull(bytes);
         Check.NotLessThan(offset, 0);
@@ -77,14 +77,14 @@ public static partial class BytesExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T[] ToBlittableArray<T>(this byte[] bytes)
+    public static T[] MarshalToArray<T>(this byte[] bytes)
     {
         var length = Marshal.SizeOf<T>();
         var i = 0;
-        return ToBlittableArray<T>(bytes, bytes.Length / length, ref i);
+        return MarshalToArray<T>(bytes, bytes.Length / length, ref i);
     }
 
-    public static byte[] BlittableToBytes<T>(this T obj)
+    public static byte[] MarshalToBytes<T>(this T obj)
     {
         Check.NotNull(obj);
 
@@ -97,7 +97,7 @@ public static partial class BytesExtensions
         return bufByte;
     }
 
-    public static byte[] BlittableArrayToBytes<T>(this IReadOnlyList<T> list)
+    public static byte[] MarshalArrayToBytes<T>(this IReadOnlyList<T> list)
     {
         Check.NotNull(list);
 
