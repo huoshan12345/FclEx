@@ -1,4 +1,4 @@
-﻿using static FclEx.Helpers.BindingFlagsHelper;
+﻿using static FclEx.BindingAttributes;
 
 namespace FclEx.Extensions;
 
@@ -6,7 +6,7 @@ public static partial class TypeExtensions
 {
     public static object CreateObject(this Type type, params object?[] args)
     {
-        Check.NotNull(type);
+        FclEx.Check.NotNull(type);
 
         if (args.IsNullOrEmpty())
             return Activator.CreateInstance(type)!;
@@ -33,7 +33,7 @@ public static partial class TypeExtensions
 
     public static MethodInfo GetMethod(this Type type, string methodName, int pParametersCount = 0, int pGenericArgumentsCount = 0)
     {
-        Check.NotNull(type);
+        FclEx.Check.NotNull(type);
 
         return type.GetMethods()
             .Where(m => m.Name == methodName)
@@ -137,6 +137,12 @@ public static partial class TypeExtensions
     public static PropertyInfo GetRequiredProperty(this Type type, string name)
     {
         return type.GetProperty(name, AllDeclared) ?? throw new InvalidOperationException($"Cannot find property '{name}' in type '{type.FullName}'");
+    }
+
+    public static bool TryGetProperty(this Type type, string name, [NotNullWhen(true)] out PropertyInfo? property)
+    {
+        property = type.GetProperty(name, AllDeclared);
+        return property != null;
     }
 
     public static MethodInfo GetRequiredMethod(this Type type, string name)

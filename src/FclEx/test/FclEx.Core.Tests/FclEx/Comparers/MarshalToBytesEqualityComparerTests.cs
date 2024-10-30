@@ -3,7 +3,7 @@ using Xunit.Sdk;
 
 namespace FclEx.Comparers;
 
-public class BlittableEqualityComparerTests(ITestOutputHelper output)
+public class MarshalToBytesEqualityComparerTests(ITestOutputHelper output)
 {
     public static readonly IEnumerable<Type> ValueTypes = Types.BlittableTypes.Concat([
         typeof(MarshalableClass),
@@ -11,7 +11,7 @@ public class BlittableEqualityComparerTests(ITestOutputHelper output)
 
     public static readonly IEnumerable<object[]> TypeCases = ValueTypes.Select(m => new object[] { m });
 
-    private static readonly MethodInfo _equals = typeof(BlittableEqualityComparerTests).GetRequiredMethod(nameof(Equals));
+    private static readonly MethodInfo _equals = typeof(MarshalToBytesEqualityComparerTests).GetRequiredMethod(nameof(Equals));
 
     [Theory]
     [MemberData(nameof(TypeCases))]
@@ -35,11 +35,13 @@ public class BlittableEqualityComparerTests(ITestOutputHelper output)
     [InlineData(typeof(TestRecord))]
     [InlineData(typeof(TestStruct))]
     [InlineData(typeof(TestRecordStruct))]
-    public void Equals_NonBlittable_Test(Type type)
+    public void Equals_AutoLayout_Test(Type type)
     {
         var ex = Assert.Throws<TargetInvocationException>(() => _equals.MakeGenericMethod(type).Invoke(this, null));
-        var inner = Assert.IsType<ArgumentException>(ex.InnerException);
-        Assert.Contains("cannot be marshaled as an unmanaged structure", inner.Message);
+        var inner = Assert.IsType<EqualException>(ex.InnerException);
+        var innermost = Assert.IsType<ArgumentException>(inner.InnerException);
+        output.WriteLine(innermost.Message);
+        Assert.Contains("is not marshalable because it is auto layout.", innermost.Message);
     }
 
     [Theory]
@@ -48,7 +50,9 @@ public class BlittableEqualityComparerTests(ITestOutputHelper output)
     public void Equals_Generic_Test(Type type)
     {
         var ex = Assert.Throws<TargetInvocationException>(() => _equals.MakeGenericMethod(type).Invoke(this, null));
-        var innermost = Assert.IsType<ArgumentException>(ex.InnerException);
-        Assert.Contains("The specified Type must not be a generic", innermost.Message);
+        var inner = Assert.IsType<EqualException>(ex.InnerException);
+        var innermost = Assert.IsType<ArgumentException>(inner.InnerException);
+        output.WriteLine(innermost.Message);
+        Assert.Contains("is not marshalable because it is generic", innermost.Message);
     }
 }

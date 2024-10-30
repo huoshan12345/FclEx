@@ -7,12 +7,12 @@ partial class TypeExtensions
     private static readonly ConcurrentDictionary<Type, TypeInfoExt> TypeInfoDic = new();
 
 #if NETSTANDARD2_0
-    private static readonly Lazy<PropertyInfo?> _isByRefLike = new(() => typeof(Type).GetProperty("IsByRefLike", BindingFlagsHelper.AllDeclared));
+    private static readonly Lazy<PropertyInfo?> _isByRefLike = new(() => typeof(Type).GetProperty("IsByRefLike", BindingAttributes.AllDeclared));
 #endif
 
     public static TypeInfoExt GetTypeInfoExt(this Type type)
     {
-        Check.NotNull(type);
+        FclEx.Check.NotNull(type);
         return TypeInfoDic.GetOrAdd(type, GetTypeInfoExtInternal);
 
         static TypeInfoExt GetTypeInfoExtInternal(Type type)

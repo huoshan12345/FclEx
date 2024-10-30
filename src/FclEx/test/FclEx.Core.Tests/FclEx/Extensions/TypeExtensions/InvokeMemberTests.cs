@@ -1,4 +1,10 @@
-﻿namespace FclEx.Extensions.TypeExtensions;
+﻿// ReSharper disable MemberCanBeProtected.Global
+// ReSharper disable NotAccessedField.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable UnusedMember.Global
+// ReSharper disable UnusedMember.Local
+#pragma warning disable CA2211
+namespace FclEx.Extensions.TypeExtensions;
 
 public class InvokeMemberTests
 {

@@ -1,4 +1,4 @@
-﻿namespace FclEx.TestModels;
+﻿namespace FclEx;
 
 public static class Types
 {
@@ -48,16 +48,9 @@ public static class Types
         typeof(decimal),
         typeof(TimeSpan),
         typeof(Guid),
+#if NET6_0_OR_GREATER
         typeof(DateOnly),
         typeof(TimeOnly),
-    ];
-
-    public static readonly ReadOnlySet<Type> CommonValueTypes =
-    [
-        ..BlittableTypes,
-        typeof(DateTime), // non-blittable
-        typeof(DateTimeOffset), // non-blittable
-        typeof(ValueTuple<int>), // non-blittable
-        typeof(ValueTuple<int, long, DateTimeOffset, DateTime>), // non-blittable
+#endif
     ];
 }

@@ -4,7 +4,11 @@ namespace FclEx.Comparers;
 
 public class BytewiseEqualityComparerTests(ITestOutputHelper output)
 {
-    public static readonly IEnumerable<Type> ValueTypes = Types.CommonValueTypes.Concat([
+    public static readonly IEnumerable<Type> ValueTypes = Types.BlittableTypes.Concat([
+        typeof(ValueTuple<int>), // blittable but not marshalable
+        typeof(DateTime), // non-blittable
+        typeof(DateTimeOffset), // non-blittable
+        typeof(ValueTuple<int, long, DateTimeOffset, DateTime>), // non-blittable
         typeof(string),
         typeof(TestStruct),
         typeof(TestRecord),
@@ -25,10 +29,9 @@ public class BytewiseEqualityComparerTests(ITestOutputHelper output)
 
     private void Equals<T>()
     {
-        //var random = new Random(0);
-        //var x = random.Next<T>();
-        var x = default(T);
-        Assert.Equal<T>(x, x, BytewiseEqualityComparer<T>.Instance);
+        var random = new Random(0);
+        var x = random.Next<T>();
+        Assert.Equal(x, x, BytewiseEqualityComparer<T>.Instance);
         output.WriteLine(x);
     }
 }

@@ -1,4 +1,7 @@
-﻿namespace FclEx.Extensions;
+﻿using System;
+using System.Runtime.InteropServices;
+
+namespace FclEx.Extensions;
 
 public static class RandomExtensions
 {
@@ -156,13 +159,45 @@ public static class RandomExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T Next<T>(this Random random)
     {
-        return (T)random.Next(typeof(T));
+        return (T)random.Next(typeof(T), null, null);
     }
 
-    private static object Next(this Random random, Type type)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static object Next(this Random random, Type type)
+    {
+        return random.Next(type, null, null);
+    }
+
+    private static object Next(this Random random, Type type, ICustomAttributeProvider? provider, Dictionary<Type, int>? depth)
     {
         if (Nullable.GetUnderlyingType(type) is { } nullable)
             type = nullable;
+
+        if (type.GetElementType() is { } elementType)
+        {
+            int? length = null;
+            if (type.TryGetProperty("IsFixedSize", out var property))
+            {
+                // TODO
+            }
+            else if (provider != null && provider.TryGetAttribute<MarshalAsAttribute>(false, out var attribute))
+            {
+                if (attribute.Value is UnmanagedType.ByValArray)
+                {
+                    length = attribute.SizeConst;
+                }
+            }
+
+            length ??= random.Next(1, 5);
+
+            var array = Array.CreateInstance(elementType, length.Value);
+            for (var i = 0; i < length; i++)
+            {
+                var element = random.Next(elementType, provider, depth);
+                array.SetValue(element, i);
+            }
+            return array;
+        }
 
         var code = type.GetTypeCode();
         return code switch
@@ -184,12 +219,12 @@ public static class RandomExtensions
             TypeCode.UInt16 => random.NextUInt16(),
             TypeCode.UInt32 => random.NextUInt32(),
             TypeCode.UInt64 => random.NextUInt64(),
-            TypeCode.Object => random.NextObject(type),
+            TypeCode.Object => random.NextObject(type, depth),
             _ => throw new ArgumentOutOfRangeException(nameof(code), code, null)
         };
     }
 
-    public static object NextObject(this Random random, Type type)
+    private static object NextObject(this Random random, Type type, Dictionary<Type, int>? depth)
     {
         if (type == typeof(Guid))
             return Guid.NewGuid();
@@ -211,36 +246,62 @@ public static class RandomExtensions
             return random.NextTimeOnly();
 #endif
 
+        depth ??= [];
+        depth[type] = depth.Get(type) + 1; // only care about the depth of compound type types
+        var instance = random.CreateInstance(type, depth);
+        var fields = type.GetAllInstanceFields();
+        foreach (var field in fields)
+        {
+            // to avoid too much circular references.
+            if (depth.Get(field.FieldType) >= 10)
+                continue;
+
+            var value = random.Next(field.FieldType, field, depth);
+            field.SetValue(instance, value);
+        }
+        return instance;
+    }
+
+    private static object CreateInstance(this Random random, Type type, Dictionary<Type, int>? depth)
+    {
+        if (type.IsValueType)
+            return Activator.CreateInstance(type)!;
+
         var ctors = type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
         if (ctors.Length == 0)
             throw new ArgumentException($"The type '{type.LongName()}' does not have any constructors.");
 
         var defaultCtor = ctors.FirstOrDefault(m => m.GetParameters().Length == 0);
 
-        object instance;
         if (defaultCtor is not null)
+            return defaultCtor.Invoke([]);
+
+        var exceptions = new List<Exception>();
+        foreach (var ctor in ctors)
         {
-            instance = defaultCtor.Invoke([]);
-        }
-        else
-        {
-            var ctor = ctors.First();
             var paras = ctor.GetParameters();
             var args = new List<object>();
-            foreach (var para in paras)
+
+            try
             {
-                var arg = random.Next(para.ParameterType);
-                args.Add(arg);
+                foreach (var para in paras)
+                {
+                    var arg = random.Next(para.ParameterType, para, depth);
+                    args.Add(arg);
+                }
+
+                return ctor.Invoke(args.AsSpan().ToArray());
             }
-            instance = ctor.Invoke(args.AsSpan().ToArray());
+            catch (Exception ex)
+            {
+                exceptions.Add(ex);
+            }
         }
 
-        var fields = type.GetAllInstanceFields();
-        foreach (var field in fields)
-        {
-            var value = random.Next(field.FieldType);
-            field.SetValue(instance, value);
-        }
-        return instance;
+        var e = exceptions.Count == 1
+            ? exceptions[0]
+            : new AggregateException(exceptions);
+
+        throw e;
     }
 }

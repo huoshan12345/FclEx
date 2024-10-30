@@ -4,7 +4,17 @@ namespace FclEx.Helpers;
 
 public class UnsafeHelperTests(ITestOutputHelper output)
 {
-    public static readonly IEnumerable<object[]> BuiltInValueTypeCases = Types.CommonValueTypes.Select(m => new object[] { m });
+    public static readonly ReadOnlySet<Type> CommonValueTypes =
+    [
+        ..Types.BlittableTypes,
+        typeof(ValueTuple<int>), // blittable but not marshalable
+        typeof(DateTime), // non-blittable
+        typeof(DateTimeOffset), // non-blittable
+        typeof(ValueTuple<int, long, DateTimeOffset, DateTime>), // non-blittable
+    ];
+
+    public static readonly IEnumerable<object[]> BuiltInValueTypeCases = CommonValueTypes
+        .Select(m => new object[] { m });
 
     private static readonly MethodInfo _sizeOfTTest = typeof(UnsafeHelperTests).GetRequiredMethod(nameof(SizeOf_T_Test));
     private static readonly MethodInfo _sizeOf = typeof(UnsafeHelper).GetRequiredMethod(nameof(UnsafeHelper.SizeOf));
@@ -69,7 +79,7 @@ public class UnsafeHelperTests(ITestOutputHelper output)
             RenderColumns = true,
         });
 
-        var types = Types.CommonValueTypes.Concat([
+        var types = CommonValueTypes.Concat([
             typeof(TestStruct),
             typeof(TestRecord),
             typeof(string),

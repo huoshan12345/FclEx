@@ -17,7 +17,7 @@ partial class TypeExtensions
         }
         else
         {
-            throw new ArgumentException($"The type {type.LongName()} is not {predicateName} due to: " + ex.Message, nameof(type), ex);
+            throw new ArgumentException($"The type {type.LongName()} is not {predicateName} due to: " + ex?.Message, nameof(type), ex);
         }
     }
 
@@ -47,24 +47,24 @@ partial class TypeExtensions
     /// </summary>
     public static bool IsBlittable(this Type type, [NotNullWhen(false)] out Exception? ex)
     {
-        (var flag, ex) = type.GetFlag(nameof(IsBlittable), IsBlittableImpl);
+        (var flag, ex) = type.Check(nameof(IsBlittable), CheckBlittable);
         return flag;
     }
 
     public static bool IsMarshalable(this Type type, [NotNullWhen(false)] out Exception? ex)
     {
-        (var flag, ex) = type.GetFlag(nameof(IsMarshalable), IsMarshalableImpl);
+        (var flag, ex) = type.Check(nameof(IsMarshalable), m => CheckMarshalable(m, null, null));
         return flag;
     }
 
-    private static (bool, Exception?) GetFlag(this Type type, string name, Func<Type, bool> function)
+    private static (bool, Exception?) Check(this Type type, string name, Action<Type> action)
     {
         return _flagCache.GetOrAdd((type, name), m =>
         {
             try
             {
-                var flag = function(type);
-                return (flag, null);
+                action(type);
+                return (true, null);
             }
             catch (Exception ex)
             {
@@ -73,11 +73,31 @@ partial class TypeExtensions
         });
     }
 
-    private static bool IsBlittableImpl(this Type type)
+    private static void CheckBlittable(this Type type)
     {
+        // we use Pinned-GCHandle to check if blittable, but there are some corner cases requiring special handling.
+        // * Char and Boolean are not pinnable, but array of these types are pinnable.
+        //   So we need to check if element type is pinnable as well.
+        // * All generic types are not blittable, but ValueTuple<T> is pinnable. 
+        // * Nullable of blittable types are pinnable, but they are not blittable.
+
+        if (type == typeof(string)
+            || type == typeof(object)
+            || type.IsAssignableTo(typeof(Delegate)))
+            Throw(null);
+
+        // Exclude all generic types as well as nullable types. 
+        if (type.IsGenericType)
+            Throw("generic");
+
+        if (type.IsAbstract)
+            Throw("abstract");
+
         object instance;
-        if (type.GetElementType() is { } elementType)
+        if (type.GetElementType() is { IsArray: false } elementType && type.GetArrayRank() == 1)
         {
+            CheckBlittable(elementType); // check if element type is pinnable as well.
+
             var array = Array.CreateInstance(elementType, 1);
             var entry = ObjectHelper.GetUninitializedObject(elementType);
             array.SetValue(entry, 0);
@@ -88,44 +108,70 @@ partial class TypeExtensions
             instance = ObjectHelper.GetUninitializedObject(type);
         }
 
+        // NOTE: 
         GCHandle.Alloc(instance, GCHandleType.Pinned).Free();
-        return true;
+        return;
+
+        [DoesNotReturn]
+        void Throw(string? reason)
+        {
+            var reasonSuffix = reason is null
+                ? string.Empty
+                : $" because it is {reason}";
+            var error = $"The type '{type.LongName()}' is not blittable{reasonSuffix}.";
+            throw new ArgumentException(error, nameof(type));
+        }
     }
 
-    private static bool IsMarshalableImpl(this Type type)
+    private static void CheckMarshalable(Type type, FieldInfo? field, HashSet<Type>? visited)
     {
-        if (type.IsBlittable(out _))
-            return true;
-
         type = type.UnwrapNullable();
 
         if (type.IsGenericType)
-        {
-            throw new ArgumentException($"The type {type.LongName()} is not marshalable because it is generic.", nameof(type));
-        }
+            Throw("generic");
 
         if (type.IsAbstract)
-        {
-            throw new ArgumentException($"The type {type.LongName()} is not marshalable because it is abstract.", nameof(type));
-        }
+            Throw("abstract");
 
-        // You cannot use the GetCustomAttributes method to determine whether the StructLayoutAttribute has been applied to a type.
+        if (type.IsEnum
+            || type == typeof(char)
+            || type == typeof(bool)
+            || Types.BlittableTypes.Contains(type))
+            return;
+
+        if (field is not null && field.IsDefined(typeof(MarshalAsAttribute), false))
+            return;
+
         if (type.IsAutoLayout)
+            Throw("auto layout");
+
+        if (type == typeof(string)
+            || type == typeof(object)
+            || type.IsAssignableTo(typeof(Delegate)))
+            Throw(null);
+
+        _ = Marshal.SizeOf(type);
+
+        visited ??= [];
+
+        if (visited.Add(type) == false)
+            Throw("circular referenced");
+
+        foreach (var m in type.GetAllInstanceFields())
         {
-            throw new ArgumentException($"The type {type.LongName()} is not marshalable because it is auto-layout.", nameof(type));
+            CheckMarshalable(m.FieldType, m, visited);
         }
 
-        if (type.IsLayoutSequential || type.IsExplicitLayout)
+        return;
+
+        [DoesNotReturn]
+        void Throw(string? reason)
         {
-            return true;
+            var reasonSuffix = reason is null
+                ? string.Empty
+                : $" because it is {reason}";
+            var error = $"The type '{type.LongName()}' is not marshalable{reasonSuffix}.";
+            throw new ArgumentException(error, nameof(type));
         }
-
-        if (type.GetCustomAttribute<MarshalAsAttribute>() is not null)
-        {
-            return true;
-        }
-
-
-        return false;
     }
 }
