@@ -6,8 +6,8 @@ namespace FclEx.Comparers;
 public class BlittableEqualityComparerTests(ITestOutputHelper output)
 {
     public static readonly IEnumerable<Type> ValueTypes = Types.BlittableTypes.Concat([
-        typeof(BlittableClass),
-        typeof(BlittableStruct)]);
+        typeof(MarshalableClass),
+        typeof(MarshalableStruct)]);
 
     public static readonly IEnumerable<object[]> TypeCases = ValueTypes.Select(m => new object[] { m });
 

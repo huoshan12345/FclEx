@@ -15,17 +15,17 @@ public class MarshalToTests
         IntArr.Select(m => m.CastTo<short>()).ToArray(),
         IntArr,
         IntArr.Select(m => m.CastTo<long>()).ToArray(),
-        IntArr.Select(m => new BlittableStruct
+        IntArr.Select(m => new MarshalableStruct
         {
-            Number = m,
+            Int = m,
             Char = m.ToString()[0],
-            Arr = Enumerable.Repeat(m, 4).Select(x => x.CastTo<byte>()).ToArray(),
+            Array = Enumerable.Repeat(m, 4).Select(x => x.CastTo<byte>()).ToArray(),
         }).ToArray(),
-        IntArr.Select(m => new BlittableClass
+        IntArr.Select(m => new MarshalableClass
         {
-            Number = m,
+            Int = m,
             Char = m.ToString()[0],
-            Arr = Enumerable.Repeat(m, 4).Select(x => x.CastTo<byte>()).ToArray(),
+            Array = Enumerable.Repeat(m, 4).Select(x => x.CastTo<byte>()).ToArray(),
         }).ToArray(),
     }.Select(m => new[] { m }).ToArray();
 
@@ -35,17 +35,17 @@ public class MarshalToTests
         short.MaxValue,
         int.MaxValue,
         long.MaxValue,
-        new BlittableStruct
+        new MarshalableStruct
         {
-            Number = 99,
+            Int = 99,
             Char = 'A',
-            Arr = [0x1, 0x2, 0x3, 0x4],
+            Array = [0x1, 0x2, 0x3, 0x4],
         },
-        new BlittableClass
+        new MarshalableClass
         {
-            Number = 99,
+            Int = 99,
             Char = 'A',
-            Arr = [0x1, 0x2, 0x3, 0x4],
+            Array = [0x1, 0x2, 0x3, 0x4],
         },
     }.Select(m => new[] { m }).ToArray();
 

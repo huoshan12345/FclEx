@@ -8,4 +8,9 @@ public static class StringExtensions
     {
         return SymbolDisplay.FormatLiteral(value, false);
     }
+
+    public static string ToLiteral(this char value)
+    {
+        return value.ToString().ToLiteral();
+    }
 }

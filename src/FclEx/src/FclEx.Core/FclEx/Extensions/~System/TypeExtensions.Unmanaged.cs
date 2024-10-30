@@ -2,18 +2,33 @@
 
 partial class TypeExtensions
 {
+    private delegate bool TypePredicate(Type type, [NotNullWhen(false)] out Exception? ex);
+
     private static readonly ConcurrentDictionary<(Type, string), (bool, Exception?)> _flagCache = new();
+
+    private static void Ensure(this Type type, TypePredicate predicate, string predicateName)
+    {
+        if (predicate(type, out var ex))
+            return;
+
+        if (ex is ArgumentException { ParamName: nameof(type) })
+        {
+            ex.ReThrow();
+        }
+        else
+        {
+            throw new ArgumentException($"The type {type.LongName()} is not {predicateName} due to: " + ex.Message, nameof(type), ex);
+        }
+    }
 
     public static void EnsureBlittable(this Type type)
     {
-        if (type.IsBlittable(out var ex) == false)
-            ex.ReThrow();
+        type.Ensure(IsBlittable, "blittable");
     }
 
     public static void EnsureMarshalable(this Type type)
     {
-        if (type.IsMarshalable(out var ex) == false)
-            ex.ReThrow();
+        type.Ensure(IsMarshalable, "marshalable");
     }
 
     /// <summary>
@@ -58,14 +73,26 @@ partial class TypeExtensions
         });
     }
 
-    internal static bool IsBlittableImpl(this Type type)
+    private static bool IsBlittableImpl(this Type type)
     {
-        var instance = ObjectHelper.GetUninitializedObject(type);
+        object instance;
+        if (type.GetElementType() is { } elementType)
+        {
+            var array = Array.CreateInstance(elementType, 1);
+            var entry = ObjectHelper.GetUninitializedObject(elementType);
+            array.SetValue(entry, 0);
+            instance = array;
+        }
+        else
+        {
+            instance = ObjectHelper.GetUninitializedObject(type);
+        }
+
         GCHandle.Alloc(instance, GCHandleType.Pinned).Free();
         return true;
     }
 
-    internal static bool IsMarshalableImpl(this Type type)
+    private static bool IsMarshalableImpl(this Type type)
     {
         if (type.IsBlittable(out _))
             return true;

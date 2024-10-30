@@ -9,8 +9,8 @@ public class BytewiseEqualityComparerTests(ITestOutputHelper output)
         typeof(TestStruct),
         typeof(TestRecord),
         typeof(TestRecordStruct),
-        typeof(BlittableClass),
-        typeof(BlittableStruct)]);
+        typeof(MarshalableClass),
+        typeof(MarshalableStruct)]);
 
     public static readonly IEnumerable<object[]> TypeCases = ValueTypes.Select(m => new object[] { m });
 
