@@ -1,25 +1,9 @@
-﻿namespace FclEx.Extensions;
+﻿using static FclEx.Helpers.BindingFlagsHelper;
+
+namespace FclEx.Extensions;
 
 public static partial class TypeExtensions
 {
-    public static object? DefaultValueByExp(this Type type)
-    {
-        Check.NotNull(type);
-
-        // We want a Func<object> which returns the default.
-        // Create that expression here.
-        var e = Expression.Lambda<Func<object?>>(
-            // Have to convert to object.
-            Expression.Convert(
-                // The default value, always get what the *code* tells us.
-                Expression.Default(type), typeof(object)
-            )
-        );
-
-        // Compile and return the value.
-        return e.Compile()();
-    }
-
     public static object CreateObject(this Type type, params object?[] args)
     {
         Check.NotNull(type);
@@ -139,32 +123,30 @@ public static partial class TypeExtensions
         return type.IsDefined<DynamicAttribute>(true);
     }
 
-    public const BindingFlags MemberBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
-
     public static FieldInfo GetRequiredField(this Type type, string name)
     {
-        return type.GetField(name, MemberBindingFlags) ?? throw new InvalidOperationException($"Cannot find field '{name}' in type '{type.FullName}'");
+        return type.GetField(name, AllDeclared) ?? throw new InvalidOperationException($"Cannot find field '{name}' in type '{type.FullName}'");
     }
 
     public static FieldInfo GetBackingField(this Type type, string name)
     {
-        return type.GetField($"<{name}>k__BackingField", MemberBindingFlags)
+        return type.GetField($"<{name}>k__BackingField", AllDeclared)
                ?? throw new InvalidOperationException($"Cannot find backing field for property '{name}' in type '{type.FullName}'"); ;
     }
 
     public static PropertyInfo GetRequiredProperty(this Type type, string name)
     {
-        return type.GetProperty(name, MemberBindingFlags) ?? throw new InvalidOperationException($"Cannot find property '{name}' in type '{type.FullName}'");
+        return type.GetProperty(name, AllDeclared) ?? throw new InvalidOperationException($"Cannot find property '{name}' in type '{type.FullName}'");
     }
 
     public static MethodInfo GetRequiredMethod(this Type type, string name)
     {
-        return type.GetMethod(name, MemberBindingFlags) ?? throw new InvalidOperationException($"Cannot find method '{name}' in type '{type.FullName}'");
+        return type.GetMethod(name, AllDeclared) ?? throw new InvalidOperationException($"Cannot find method '{name}' in type '{type.FullName}'");
     }
 
     public static MethodInfo GetRequiredMethod(this Type type, string name, int genericArgumentCount, params Type[] paramTypes)
     {
-        return type.GetMethods(MemberBindingFlags)
+        return type.GetMethods(AllDeclared)
             .Where(m => m.Name == name)
             .Select(m => (Method: m, Params: m.GetParameters(), Args: m.GetGenericArguments()))
             .Where(x => x.Args.Length == genericArgumentCount
@@ -178,6 +160,11 @@ public static partial class TypeExtensions
     {
         return type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, types)
                ?? throw new InvalidOperationException($"Cannot find constructor({types.Select(m => m.Name).JoinWith(", ")}) in type '{type.FullName}'");
+    }
+
+    public static FieldInfo[] GetAllInstanceFields(this Type type)
+    {
+        return type.GetFields(AllInstance);
     }
 
 #if NETSTANDARD2_0

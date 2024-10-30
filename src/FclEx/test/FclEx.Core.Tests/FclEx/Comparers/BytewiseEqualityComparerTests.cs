@@ -28,7 +28,7 @@ public class BytewiseEqualityComparerTests(ITestOutputHelper output)
         //var random = new Random(0);
         //var x = random.Next<T>();
         var x = default(T);
-        Assert.Equal(x, x, BytewiseEqualityComparer<T?>.Instance);
+        Assert.Equal<T>(x, x, BytewiseEqualityComparer<T>.Instance);
         output.WriteLine(x);
     }
 }

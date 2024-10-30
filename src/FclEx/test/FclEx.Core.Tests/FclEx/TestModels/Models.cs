@@ -11,7 +11,6 @@ public record Person
     public object? Obj { get; set; }
 }
 
-
 public class TestClass
 {
     public int Int { get; set; }

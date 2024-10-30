@@ -53,37 +53,31 @@ public static class RandomExtensions
         return result;
     }
 
-#if NET6_0_OR_GREATER
-
-
-
-    [SkipLocalsInit]
-    public static T NextUnmanaged<T>(this Random random) where T : unmanaged
-    {
-        Unsafe.SkipInit(out T result);
-        random.NextBytes(Span.AsBytes(ref result));
-        return result;
-    }
-#endif
-
-#if NETSTANDARD2_0
-
     /// <summary>
-    /// Generates a random value of blittable type.
+    /// Generates a random value of unmanaged type.
     /// </summary>
     /// <param name="random">The source of random numbers.</param>
     /// <typeparam name="T">The blittable type.</typeparam>
     /// <returns>The randomly generated value.</returns>
     [SkipLocalsInit]
-    public static unsafe T NextUnmanaged<T>(this Random random) where T : unmanaged
+    public static
+#if NETSTANDARD2_0
+        unsafe 
+#endif
+        T NextUnmanaged<T>(this Random random) where T : unmanaged
     {
         Unsafe.SkipInit(out T result);
+#if NETSTANDARD2_0
         var bytes = new byte[sizeof(T)];
         Unsafe.As<byte, T>(ref bytes[0]) = result;
         random.NextBytes(bytes);
+#else
+        random.NextBytes(Span.AsBytes(ref result));
+#endif
         return result;
     }
 
+#if NETSTANDARD2_0
     public static long NextInt64(this Random random, long min, long max)
     {
         var rand = random.NextUnmanaged<long>();

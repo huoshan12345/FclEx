@@ -39,17 +39,25 @@ public static class Types
         typeof(char),
     ];
 
-    public static readonly ReadOnlySet<Type> CommonValueTypes =
+    /// <summary>
+    /// 14 primitive types.
+    /// </summary>
+    public static readonly ReadOnlySet<Type> BlittableTypes =
     [
         ..PrimitiveTypes,
         typeof(decimal),
-        typeof(DateTime), // non-blittable
         typeof(TimeSpan),
         typeof(Guid),
-        typeof(DateTimeOffset), // non-blittable
         typeof(DateOnly),
         typeof(TimeOnly),
-        typeof(ValueTuple<int>),
+    ];
+
+    public static readonly ReadOnlySet<Type> CommonValueTypes =
+    [
+        ..BlittableTypes,
+        typeof(DateTime), // non-blittable
+        typeof(DateTimeOffset), // non-blittable
+        typeof(ValueTuple<int>), // non-blittable
         typeof(ValueTuple<int, long, DateTimeOffset, DateTime>), // non-blittable
     ];
 }

@@ -57,11 +57,7 @@ public static class SizeCalculator
         // so we need to do special handling for it.
         return type == typeof(string)
             ? string.Empty
-#if NETSTANDARD2_0
-            : FormatterServices.GetUninitializedObject(type);
-#else
-            : RuntimeHelpers.GetUninitializedObject(type);
-#endif
+            : ObjectHelper.GetUninitializedObject(type);
     }
 
     private static int CalculateValueTypeInstance(Type type)

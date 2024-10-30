@@ -1,8 +1,8 @@
 ﻿namespace FclEx.Extensions.TypeExtensions;
 
-public class InvokeMemerTests
+public class InvokeMemberTests
 {
-    public abstract class Tester<T>
+    public abstract class TestModel<T>
     {
         public T? Property { get; set; }
         protected T? PropertyProtected { get; set; }
@@ -35,12 +35,12 @@ public class InvokeMemerTests
         private static T MethodProtectedStatic(T arg) => arg;
     }
 
-    public class IntTester : Tester<int>
+    public class IntTestModel : TestModel<int>
     {
         public override int GenerateValue(Random random) => random.Next(10000);
     }
 
-    public class StringTester : Tester<string>
+    public class StringTestModel : TestModel<string>
     {
         public override string GenerateValue(Random random) => random.NextString(5);
     }
@@ -48,16 +48,16 @@ public class InvokeMemerTests
     [Fact]
     public void GetMemberValue_Int_Test()
     {
-        GetMemberValue_Test<IntTester, int>();
+        GetMemberValue_Test<IntTestModel, int>();
     }
 
     [Fact]
     public void GetMemberValue_String_Test()
     {
-        GetMemberValue_Test<StringTester, string>();
+        GetMemberValue_Test<StringTestModel, string>();
     }
 
-    private static void GetMemberValue_Test<T, TMember>() where T : Tester<TMember>, new()
+    private static void GetMemberValue_Test<T, TMember>() where T : TestModel<TMember>, new()
     {
         var obj = new T();
         var type = typeof(T);

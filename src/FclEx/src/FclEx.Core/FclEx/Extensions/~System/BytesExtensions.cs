@@ -92,7 +92,7 @@ public static partial class BytesExtensions
         var bufByte = new byte[length];
         using var disposable = MarshalHelper.AllocHGlobal(length);
         var ptr = disposable.Value;
-        Marshal.StructureToPtr(obj, ptr, true);
+        Marshal.StructureToPtr(obj, ptr, false);
         Marshal.Copy(ptr, bufByte, 0, length);
         return bufByte;
     }
@@ -114,7 +114,7 @@ public static partial class BytesExtensions
             var item = list[i];
             Check.NotNull(item, nameof(list) + $"[{i}]");
 
-            Marshal.StructureToPtr(item, ptr, true);
+            Marshal.StructureToPtr(item, ptr, false);
             Marshal.Copy(ptr, bufByte, i * length, length);
         }
 

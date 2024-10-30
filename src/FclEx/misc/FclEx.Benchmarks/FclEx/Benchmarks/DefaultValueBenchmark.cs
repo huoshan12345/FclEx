@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using FclEx.Extensions;
 
 namespace FclEx.Benchmarks;
@@ -24,8 +25,18 @@ public class DefaultValueBenchmark
 
     [Benchmark]
     [ArgumentsSource(nameof(Cases))]
-    public void DefaultValueByExp(Type type)
+    public void DefaultValue_Expression(Type type)
     {
-        type.DefaultValueByExp();
+        Impl(type);
+        return;
+
+        static object? Impl(Type type)
+        {
+            var @default = Expression.Default(type);
+            var convert = Expression.Convert(@default, typeof(object));
+            var lambda = Expression.Lambda<Func<object?>>(convert);
+            return lambda.Compile()();
+        }
     }
+
 }
