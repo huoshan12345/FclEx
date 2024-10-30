@@ -23,7 +23,7 @@ public class BlittableEqualityComparerTests(ITestOutputHelper output)
     private void Equals<T>()
     {
         var random = new Random(0);
-        var x = random.NextBlittable<T>();
+        var x = random.Next<T>();
         Assert.Equal<T>(x, x, BlittableEqualityComparer<T>.Instance);
         output.WriteLine(x);
     }

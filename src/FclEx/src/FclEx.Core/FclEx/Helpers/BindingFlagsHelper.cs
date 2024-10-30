@@ -8,7 +8,8 @@ public static class BindingFlagsHelper
                                             | BindingFlags.Static
                                             | BindingFlags.DeclaredOnly;
 
-    public const BindingFlags AllInstance = BindingFlags.Public
+    public const BindingFlags AllDeclaredInstance = BindingFlags.Public
                                             | BindingFlags.NonPublic
-                                            | BindingFlags.Instance;
+                                            | BindingFlags.Instance
+                                            | BindingFlags.DeclaredOnly;
 }

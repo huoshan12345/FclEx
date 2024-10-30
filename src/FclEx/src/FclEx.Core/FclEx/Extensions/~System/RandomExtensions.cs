@@ -21,15 +21,63 @@ public static class RandomExtensions
         return new string(stringChars);
     }
 
-    public static bool NextBoolean(this Random random, double trueProbability) => random.NextDouble() >= 1.0D - trueProbability;
-    public static bool NextBoolean(this Random random) => random.Next(1, 2) == 1;
-    public static sbyte NextSByte(this Random random) => (sbyte)random.Next(sbyte.MinValue, sbyte.MaxValue);
-    public static byte NextByte(this Random random) => (byte)random.Next(byte.MinValue, byte.MaxValue);
-    public static short NextInt16(this Random random) => (short)random.Next(short.MinValue, short.MaxValue);
-    public static ushort NextUInt16(this Random random) => (ushort)random.Next(ushort.MinValue, ushort.MaxValue);
-    public static uint NextUInt32(this Random random) => (uint)random.NextInt64(uint.MinValue, uint.MaxValue);
-    public static ulong NextUInt64(this Random random) => (ulong)random.NextInt64(long.MinValue, long.MaxValue);
-    public static decimal NextDecimal(this Random random) => (decimal)random.NextDouble();
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool NextBoolean(this Random random, double trueProbability = 0.5)
+        => random.NextDouble() >= 1.0D - trueProbability;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static sbyte NextSByte(this Random random, sbyte min = sbyte.MinValue, sbyte max = sbyte.MaxValue)
+        => (sbyte)random.Next(min, max);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static byte NextByte(this Random random, byte min = byte.MinValue, byte max = byte.MaxValue)
+        => (byte)random.Next(min, max);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static short NextInt16(this Random random, short min = short.MinValue, short max = short.MaxValue)
+        => (short)random.Next(min, max);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ushort NextUInt16(this Random random, ushort min = ushort.MinValue, ushort max = ushort.MaxValue)
+        => (ushort)random.Next(min, max);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint NextUInt32(this Random random, uint min = uint.MinValue, uint max = uint.MaxValue)
+        => (uint)random.NextUInt64(min, max);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static long NextInt64(this Random random) => random.NextInt64(long.MinValue, long.MaxValue);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ulong NextUInt64(this Random random, ulong min = ulong.MinValue, ulong max = ulong.MaxValue)
+    {
+        var r = random.NextDouble();
+        return (ulong)(max * r + min * (1 - r));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static double NextDouble(this Random random, double min, double max)
+    {
+        var r = random.NextDouble();
+        return max * r + min * (1 - r);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float NextSingle(this Random random, float min = float.MinValue, float max = float.MaxValue)
+    {
+        var r = (float)random.NextDouble();
+        return max * r + min * (1 - r);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static decimal NextDecimal(this Random random, decimal min = decimal.MinValue, decimal max = decimal.MaxValue)
+    {
+        // min + (max - min) * r => max * r + min * (1 - r)
+        // because max - min may be larger than Type.MaxValue.
+        var r = (decimal)random.NextDouble();
+        return max * r + min * (1 - r);
+    }
+
     public static DateTime NextDateTime(this Random random, DateTime? minValue = null, DateTime? maxValue = null)
     {
         var min = minValue ?? DateTimeExtensions.UnixEpoch;
@@ -37,6 +85,24 @@ public static class RandomExtensions
         var ticks = random.NextInt64(min.Ticks, max.Ticks);
         return new DateTime(ticks);
     }
+
+#if NET6_0_OR_GREATER
+    public static DateOnly NextDateOnly(this Random random, DateOnly? minValue = null, DateOnly? maxValue = null)
+    {
+        var min = minValue ?? DateOnly.MinValue;
+        var max = maxValue ?? DateOnly.MaxValue;
+        var number = random.Next(min.DayNumber, max.DayNumber);
+        return DateOnly.FromDayNumber(number);
+    }
+
+    public static TimeOnly NextTimeOnly(this Random random, TimeOnly? minValue = null, TimeOnly? maxValue = null)
+    {
+        var min = minValue ?? TimeOnly.MinValue;
+        var max = maxValue ?? TimeOnly.MaxValue;
+        var ticks = random.NextInt64(min.Ticks, max.Ticks);
+        return new TimeOnly(ticks);
+    }
+#endif
 
     /// <summary>
     /// Generates a random value of blittable type.
@@ -46,6 +112,9 @@ public static class RandomExtensions
     /// <returns>The randomly generated value.</returns>
     public static T NextBlittable<T>(this Random random)
     {
+        if (typeof(T).IsBlittable())
+            throw new ArgumentException($"The type '{typeof(T).LongName()}' is not blittable.");
+
         var size = Marshal.SizeOf<T>();
         var bytes = new byte[size];
         random.NextBytes(bytes);
@@ -62,7 +131,7 @@ public static class RandomExtensions
     [SkipLocalsInit]
     public static
 #if NETSTANDARD2_0
-        unsafe 
+        unsafe
 #endif
         T NextUnmanaged<T>(this Random random) where T : unmanaged
     {
@@ -84,4 +153,93 @@ public static class RandomExtensions
         return min + rand % (max + 1 - min);
     }
 #endif
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T Next<T>(this Random random)
+    {
+        return (T)random.Next(typeof(T));
+    }
+
+    private static object Next(this Random random, Type type)
+    {
+        var code = type.GetTypeCode();
+        return code switch
+        {
+            TypeCode.Boolean => random.NextBoolean(),
+            TypeCode.Byte => random.NextByte(),
+            TypeCode.Char => random.NextChar(),
+            TypeCode.DateTime => random.NextDateTime(),
+            TypeCode.DBNull => DBNull.Value,
+            TypeCode.Decimal => random.NextDecimal(),
+            TypeCode.Double => random.NextDouble(),
+            TypeCode.Empty => throw new ArgumentNullException(nameof(type)),
+            TypeCode.Int16 => random.NextInt16(),
+            TypeCode.Int32 => random.Next(),
+            TypeCode.Int64 => random.NextInt64(long.MinValue, long.MaxValue),
+            TypeCode.SByte => random.NextSByte(),
+            TypeCode.Single => random.NextSingle(),
+            TypeCode.String => random.NextString(random.Next(5, 20)),
+            TypeCode.UInt16 => random.NextUInt16(),
+            TypeCode.UInt32 => random.NextUInt32(),
+            TypeCode.UInt64 => random.NextUInt64(),
+            TypeCode.Object => random.NextObject(type),
+            _ => throw new ArgumentOutOfRangeException(nameof(code), code, null)
+        };
+    }
+
+    public static object NextObject(this Random random, Type type)
+    {
+        if (type == typeof(Guid))
+            return Guid.NewGuid();
+
+        if (type == typeof(IntPtr))
+            return new IntPtr(random.NextInt64());
+
+        if (type == typeof(UIntPtr))
+            return new UIntPtr(random.NextUInt64());
+
+        if (type == typeof(TimeSpan))
+            return TimeSpan.FromTicks(random.NextInt64());
+
+#if NET6_0_OR_GREATER
+        if (type == typeof(DateOnly))
+            return random.NextDateOnly();
+
+        if (type == typeof(TimeOnly))
+            return random.NextTimeOnly();
+#endif
+
+        var ctors = type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic);
+
+        if (ctors.Length == 0)
+            throw new ArgumentException($"The type '{type.LongName()}' does not have any constructors.");
+
+        var defaultCtor = ctors.FirstOrDefault(m => m.GetParameters().Length == 0);
+
+        object instance;
+        if (defaultCtor is not null)
+        {
+            instance = defaultCtor.Invoke([]);
+        }
+        else
+        {
+            var ctor = ctors.First();
+            var paras = ctor.GetParameters();
+            var args = new List<object>();
+            foreach (var para in paras)
+            {
+                var arg = random.Next(para.ParameterType);
+                args.Add(arg);
+            }
+            instance = ctor.Invoke(args.AsSpan().ToArray());
+        }
+
+        var fields = type.GetAllInstanceFields();
+        foreach (var field in fields)
+        {
+            var value = random.Next(field.FieldType);
+            field.SetValue(instance, value);
+        }
+        return instance;
+    }
 }

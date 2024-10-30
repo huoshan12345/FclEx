@@ -2,7 +2,7 @@
 
 public class InvokeMemberTests
 {
-    public abstract class TestModel<T>
+    public abstract class Tester<T>
     {
         public T? Property { get; set; }
         protected T? PropertyProtected { get; set; }
@@ -35,12 +35,12 @@ public class InvokeMemberTests
         private static T MethodProtectedStatic(T arg) => arg;
     }
 
-    public class IntTestModel : TestModel<int>
+    public class IntTester : Tester<int>
     {
         public override int GenerateValue(Random random) => random.Next(10000);
     }
 
-    public class StringTestModel : TestModel<string>
+    public class StringTester : Tester<string>
     {
         public override string GenerateValue(Random random) => random.NextString(5);
     }
@@ -48,16 +48,16 @@ public class InvokeMemberTests
     [Fact]
     public void GetMemberValue_Int_Test()
     {
-        GetMemberValue_Test<IntTestModel, int>();
+        GetMemberValue_Test<IntTester, int>();
     }
 
     [Fact]
     public void GetMemberValue_String_Test()
     {
-        GetMemberValue_Test<StringTestModel, string>();
+        GetMemberValue_Test<StringTester, string>();
     }
 
-    private static void GetMemberValue_Test<T, TMember>() where T : TestModel<TMember>, new()
+    private static void GetMemberValue_Test<T, TMember>() where T : Tester<TMember>, new()
     {
         var obj = new T();
         var type = typeof(T);

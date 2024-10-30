@@ -18,7 +18,7 @@
 /// <typeparam name="T"></typeparam>
 public class BlittableEqualityComparer<T> : IEqualityComparer<T>
 {
-    private static readonly bool IsBlittableType = IsBlittable(typeof(T));
+    private static readonly bool IsBlittableType = typeof(T).IsBlittable(true);
 
     public static readonly BlittableEqualityComparer<T> Instance = new();
 
@@ -39,19 +39,5 @@ public class BlittableEqualityComparer<T> : IEqualityComparer<T>
 
         var bytes = obj.BlittableToBytes();
         return bytes.ComputeHashCode();
-    }
-
-    private static bool IsBlittable(Type type)
-    {
-        if (type.IsArray)
-        {
-            var elementType = type.GetElementType()!;
-            return elementType.IsValueType && IsBlittable(elementType);
-        }
-
-        // exception will be raised if type is not blittable.
-        var instance = ObjectHelper.GetUninitializedObject(type);
-        GCHandle.Alloc(instance, GCHandleType.Pinned).Free();
-        return true;
     }
 }

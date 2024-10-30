@@ -39,12 +39,12 @@ public static class Types
         typeof(char),
     ];
 
-    /// <summary>
-    /// 14 primitive types.
-    /// </summary>
     public static readonly ReadOnlySet<Type> BlittableTypes =
     [
-        ..PrimitiveTypes,
+        // NOTE: bool is not blittable, 因为布尔值True在不同的平台可能会表示成1或者-1
+        // NOTE: char is not blittable, 因为字符涉及不同的编码（Unicode和ANSI
+        ..IntegerTypes,
+        ..FloatingTypes,
         typeof(decimal),
         typeof(TimeSpan),
         typeof(Guid),

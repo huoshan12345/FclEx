@@ -23,8 +23,19 @@ partial class TypeExtensions
             var longName = LongNameInternal(type, shortName);
             var isInteger = IsIntegerInternal(type, nullableUnderlyingType);
             var isFloat = IsFloatInternal(type, nullableUnderlyingType);
+            var isBlittable = type.IsBlittable(false);
 
-            return new TypeInfoExt(type, nullableUnderlyingType, enumerableUnderlyingType, defaultValue, simpleName, shortName, longName, isInteger, isFloat);
+            return new TypeInfoExt(
+                Type: type,
+                NullableUnderlyingType: nullableUnderlyingType,
+                EnumerableUnderlyingType: enumerableUnderlyingType,
+                DefaultValue: defaultValue,
+                SimpleName: simpleName,
+                ShortName: shortName,
+                LongName: longName,
+                IsInteger: isInteger,
+                IsFloat: isFloat,
+                IsBlittable: isBlittable);
         }
 
         static object? GetDefaultValueInternal(Type type, Type? nullableUnderlyingType)
@@ -237,6 +248,36 @@ partial class TypeExtensions
     {
         return type.GetTypeInfoExt().IsEnumerable;
     }
+
+    public static bool IsBlittable(this Type type)
+    {
+        return type.GetTypeInfoExt().IsBlittable;
+    }
+
+    public static bool IsBlittable(this Type type, bool throwOnError)
+    {
+        if (type.IsArray)
+        {
+            var elementType = type.GetElementType()!;
+            // ReSharper disable once TailRecursiveCall
+            return elementType.IsBlittable(throwOnError);
+        }
+
+        try
+        {
+            // exception will be raised if type is not blittable.
+            var instance = ObjectHelper.GetUninitializedObject(type);
+            GCHandle.Alloc(instance, GCHandleType.Pinned).Free();
+            return true;
+        }
+        catch
+        {
+            if (throwOnError)
+                throw;
+
+            return false;
+        }
+    }
 }
 
 public record TypeInfoExt(
@@ -248,7 +289,8 @@ public record TypeInfoExt(
     string ShortName,
     string LongName,
     bool IsInteger,
-    bool IsFloat)
+    bool IsFloat,
+    bool IsBlittable)
 {
     public bool IsNullable { get; } = NullableUnderlyingType != null;
     public bool IsEnumerable { get; } = EnumerableUnderlyingType != null;

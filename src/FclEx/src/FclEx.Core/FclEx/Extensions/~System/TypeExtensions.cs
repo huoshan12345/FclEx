@@ -164,7 +164,15 @@ public static partial class TypeExtensions
 
     public static FieldInfo[] GetAllInstanceFields(this Type type)
     {
-        return type.GetFields(AllInstance);
+        var list = new List<FieldInfo>();
+        var p = type;
+        while (p is not null)
+        {
+            var fields = p.GetFields(AllDeclaredInstance);
+            list.AddRange(fields);
+            p = p.BaseType;
+        }
+        return list.AsSpan().ToArray();
     }
 
 #if NETSTANDARD2_0
