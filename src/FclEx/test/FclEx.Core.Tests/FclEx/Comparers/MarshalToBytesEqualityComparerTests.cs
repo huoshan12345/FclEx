@@ -6,6 +6,13 @@ namespace FclEx.Comparers;
 public class MarshalToBytesEqualityComparerTests(ITestOutputHelper output)
 {
     public static readonly IEnumerable<Type> ValueTypes = Types.BlittableTypes.Concat([
+        typeof(decimal),
+        typeof(TimeSpan),
+        typeof(Guid),
+#if NET6_0_OR_GREATER
+        typeof(DateOnly),
+        typeof(TimeOnly),
+#endif
         typeof(MarshalableClass),
         typeof(MarshalableStruct)]);
 
