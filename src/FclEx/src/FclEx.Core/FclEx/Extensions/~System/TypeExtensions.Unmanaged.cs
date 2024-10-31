@@ -63,7 +63,7 @@ partial class TypeExtensions
 
     public static bool IsMarshalable(this Type type, [NotNullWhen(false)] out Exception? ex)
     {
-        (var flag, ex) = type.Check(nameof(IsMarshalable), m => CheckMarshalable(m, null, null));
+        (var flag, ex) = type.Check(nameof(IsMarshalable), m => CheckMarshalable(m, null, null, null));
         return flag;
     }
 

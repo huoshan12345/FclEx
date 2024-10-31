@@ -9,8 +9,11 @@ public unsafe class BytewiseEqualityComparer<T> : IEqualityComparer<T>
         if (ComparerHelper.TryEquals(x, y, out var result, false))
             return result.Value;
 
-        var span1 = AsSpan(x);
-        var span2 = AsSpan(y);
+        var p1 = &x;
+        var p2 = &y;
+        
+        var span1 = AsSpan(p1);
+        var span2 = AsSpan(p2);
 #if DEBUG
         var array1 = span1.ToArray();
         var array2 = span2.ToArray();
@@ -23,7 +26,8 @@ public unsafe class BytewiseEqualityComparer<T> : IEqualityComparer<T>
         if (obj is null)
             return 0;
 
-        var span = AsSpan(obj);
+        var p = &obj;
+        var span = AsSpan(p);
         var hashCode = 0;
         foreach (var m in span)
         {
@@ -32,11 +36,9 @@ public unsafe class BytewiseEqualityComparer<T> : IEqualityComparer<T>
         return hashCode;
     }
 
-    private static Span<byte> AsSpan(T obj)
+    private static Span<byte> AsSpan(T?* pointer)
     {
         var size = SizeCalculator.SizeOf<T>();
-        var pointer = Unsafe.AsPointer(ref obj);
-        var pointer2 = &obj;
 
         // 对于引用类型，pointer指向的是目标对象的地址(即二级指针)，
         // 所以还需要将其转换成IntPtr*指针，并最终将指针的内容（也就是目标对象的地址）解析出来。
