@@ -79,14 +79,9 @@ public static class SizeCalculator
 
     private static int CalculateReferenceTypeInstance(Type type)
     {
-        var fields = GetBaseTypesAndThis(type)
-            .SelectMany(m => m.GetFields(DeclaredInstance))
-            .ToArray();
-
+        var fields = type.GetAllInstanceFields();
         if (fields.Length == 0)
-            return type.IsValueType
-                ? 0
-                : 3 * IntPtr.Size;
+            return 3 * IntPtr.Size;
 
         // TODO: GetUninitializedObject does work for abstract types and delegate types.
         var instance = GetUninitializedObject(type);
@@ -116,6 +111,18 @@ public static class SizeCalculator
 
     private static readonly ConcurrentDictionary<Type, int> _sizes = new();
 
+    /// <summary>
+    /// Retrieves the size of the specified type <paramref name="type"/>.
+    /// </summary>
+    /// <returns>
+    /// The size in bytes of the specified type.<br/>
+    /// * For value types, the size is the sum of the sizes of all its members.<br/>
+    /// * For reference types, the size is the sum of the sizes of all its members plus the size of two pointers:<br/>
+    /// one pointing to the object header and the other pointing to the method table.<br/>
+    /// * The size of a member refers to the total size if the member is a value type,
+    /// or the size of a pointer if the member is a reference type.<br/>
+    /// * The size will be aligned to the size of a pointer, as the CLR performs memory alignment.
+    /// </returns>
     public static int SizeOf(Type type)
     {
         return _sizes.GetOrAdd(type, SizeOfImpl);
@@ -128,6 +135,19 @@ public static class SizeCalculator
         }
     }
 
+    /// <summary>
+    /// Retrieves the size of the specified type <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">The type for which to determine the size.</typeparam>
+    /// <returns>
+    /// The size in bytes of the specified type.<br/>
+    /// * For value types, the size is the sum of the sizes of all its members.<br/>
+    /// * For reference types, the size is the sum of the sizes of all its members plus the size of two pointers:<br/>
+    /// one pointing to the object header and the other pointing to the method table.<br/>
+    /// * The size of a member refers to the total size if the member is a value type,
+    /// or the size of a pointer if the member is a reference type.<br/>
+    /// * The size will be aligned to the size of a pointer, as the CLR performs memory alignment.
+    /// </returns>
     public static int SizeOf<T>()
     {
         return SizeOf(typeof(T));

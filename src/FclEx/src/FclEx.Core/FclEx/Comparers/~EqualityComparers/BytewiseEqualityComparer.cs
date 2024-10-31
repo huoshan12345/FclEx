@@ -11,7 +11,10 @@ public unsafe class BytewiseEqualityComparer<T> : IEqualityComparer<T>
 
         var p1 = &x;
         var p2 = &y;
-        
+
+        if (p1 == p2)
+            return true;
+
         var span1 = AsSpan(p1);
         var span2 = AsSpan(p2);
 #if DEBUG
@@ -42,13 +45,17 @@ public unsafe class BytewiseEqualityComparer<T> : IEqualityComparer<T>
 
         // 对于引用类型，pointer指向的是目标对象的地址(即二级指针)，
         // 所以还需要将其转换成IntPtr*指针，并最终将指针的内容（也就是目标对象的地址）解析出来。
-        // 由于变量指向的地址并非目标实例映射内存字节的首地址，仅仅是存储方法表地址的地方，
-        // 所以还需要向前移动一个身位（IntPtr.Size）才是实例所在内存片段的首地址。即 Object Header 的地址。
-        var head = typeof(T).IsValueType
-            ? new IntPtr(pointer)
-            : *(IntPtr*)pointer - IntPtr.Size;
+        // 该地址指向对象的 Method Table。
+        // 该地址向前移动一个身位（IntPtr.Size）是实例所在内存片段的首地址，也就是 Object Header 的地址。
+        // 该地址向后移动一个身位（IntPtr.Size）是实例的第一个成员变量的地址。
 
-        var span = new Span<byte>(head.ToPointer(), size);
+        var (dataSize, dataAddress) = typeof(T).IsValueType switch
+        {
+            true => (size, new IntPtr(pointer)),
+            false => (size - 2 * IntPtr.Size, *(IntPtr*)pointer + IntPtr.Size), 
+        };
+
+        var span = new Span<byte>(dataAddress.ToPointer(), dataSize);
         return span;
     }
 }

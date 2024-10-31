@@ -226,6 +226,9 @@ public static class RandomExtensions
 
     private static object NextObject(this Random random, Type type, Dictionary<Type, int>? depth)
     {
+        if (type == typeof(object))
+            return new object();
+
         if (type == typeof(Guid))
             return Guid.NewGuid();
 
