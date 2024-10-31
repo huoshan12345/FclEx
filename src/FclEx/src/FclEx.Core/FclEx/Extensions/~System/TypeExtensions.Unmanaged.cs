@@ -22,9 +22,9 @@ partial class TypeExtensions
         }
     }
 
-    private static (bool, Exception?) Check(this Type type, string name, Action<Type> action)
+    private static (bool, Exception?) Check(this Type type, string checkName, Action<Type> action)
     {
-        return _flagCache.GetOrAdd((type, name), m =>
+        return _flagCache.GetOrAdd((type, checkName), m =>
         {
             try
             {
@@ -80,25 +80,23 @@ partial class TypeExtensions
             || type == typeof(string)
             || type == typeof(object)
             || type.IsAssignableTo(typeof(Delegate)))
-            Throw(type, null, path);
+            ThrowBlittable(type, null, path);
 
         // Exclude all generic types as well as nullable types. 
         if (type.IsGenericType)
-            Throw(type, "generic", path);
+            ThrowBlittable(type, "generic", path);
 
         if (type.IsAbstract)
-            Throw(type, "abstract", path);
+            ThrowBlittable(type, "abstract", path);
 
         visited ??= [];
 
         if (visited.Add(type) == false)
-            Throw(type, "circular referenced", path);
+            ThrowBlittable(type, "circular referenced", path);
 
         foreach (var m in type.GetAllInstanceFields())
         {
-            var name = m.TryGetCorrespondingProperty(out var property)
-                ? property.Name
-                : m.Name;
+            var name = m.GetAutoPropertyNameOrFieldName();
             var fieldPath = (path ?? "$") + "." + name;
             CheckBlittable(m.FieldType, visited, fieldPath);
         }
@@ -113,10 +111,10 @@ partial class TypeExtensions
             if (type.GetElementType() is { } elementType)
             {
                 if (type.GetArrayRank() > 1)
-                    Throw(type, "multi-dimensional array", path);
+                    ThrowBlittable(type, "multi-dimensional array", path);
 
                 if (elementType.IsArray)
-                    Throw(type, "nested array", path);
+                    ThrowBlittable(type, "nested array", path);
 
                 CheckBlittable(elementType, visited, path); // check if element type is pinnable as well.
 
@@ -127,7 +125,8 @@ partial class TypeExtensions
             }
             else if (type.IsAutoLayout) // don't do this check for array type.
             {
-                Throw(type, "laid out automatically", path);
+                ThrowBlittable(type, "laid out automatically", path);
+                return;
             }
             else
             {
@@ -136,38 +135,17 @@ partial class TypeExtensions
 
             GCHandle.Alloc(instance, GCHandleType.Pinned).Free();
         }
-
-        [DoesNotReturn]
-        static void Throw(Type type, string? reason, string? path)
-        {
-            var error = StringBuilderHelper.Build(m =>
-            {
-                m.Append($"The type '{type.LongName()}'");
-                if (path.IsNotEmpty())
-                {
-                    m.Append(" at ");
-                    m.Append(path);
-                }
-                m.Append(" is not blittable");
-                if (reason.IsNotEmpty())
-                {
-                    m.Append($" because it is {reason}");
-                }
-                m.Append('.');
-            });
-            throw new ArgumentException(error, nameof(type));
-        }
     }
 
-    private static void CheckMarshalable(Type type, FieldInfo? field, HashSet<Type>? visited)
+    private static void CheckMarshalable(Type type, FieldInfo? field, HashSet<Type>? visited, string? path)
     {
         type = type.UnwrapNullable();
 
         if (type.IsGenericType)
-            Throw("generic");
+            ThrowMarshalable(type, "generic", path);
 
         if (type.IsAbstract)
-            Throw("abstract");
+            ThrowMarshalable(type, "abstract", path);
 
         if (type.IsEnum || Types.PrimitiveTypes.Contains(type))
             return;
@@ -176,35 +154,62 @@ partial class TypeExtensions
             return;
 
         if (type.IsAutoLayout)
-            Throw("auto layout");
+            ThrowMarshalable(type, "auto layout", path);
 
         if (type == typeof(string)
             || type == typeof(object)
             || type.IsAssignableTo(typeof(Delegate)))
-            Throw(null);
-
-        _ = Marshal.SizeOf(type);
+            ThrowMarshalable(type, null, path);
 
         visited ??= [];
 
         if (visited.Add(type) == false)
-            Throw("circular referenced");
+            ThrowMarshalable(type, "circular referenced", path);
 
         foreach (var m in type.GetAllInstanceFields())
         {
-            CheckMarshalable(m.FieldType, m, visited);
+            var name = m.GetAutoPropertyNameOrFieldName();
+            var fieldPath = (path ?? "$") + "." + name;
+            CheckMarshalable(m.FieldType, m, visited, fieldPath);
         }
 
-        return;
+        _ = Marshal.SizeOf(type);
+    }
 
-        [DoesNotReturn]
-        void Throw(string? reason)
+    [DoesNotReturn]
+    private static void ThrowBlittable(Type type, string? reason, string? path)
+        => Throw(type, "blittable", reason, path);
+
+    [DoesNotReturn]
+    private static void ThrowMarshalable(Type type, string? reason, string? path)
+        => Throw(type, "marshalable", reason, path);
+
+    [DoesNotReturn]
+    private static void Throw(Type type, string checkName, string? reason, string? path)
+    {
+        var error = StringBuilderHelper.Build(m =>
         {
-            var reasonSuffix = reason is null
-                ? string.Empty
-                : $" because it is {reason}";
-            var error = $"The type '{type.LongName()}' is not marshalable{reasonSuffix}.";
-            throw new ArgumentException(error, nameof(type));
-        }
+            m.Append($"The type '{type.LongName()}'");
+            if (path.IsNotEmpty())
+            {
+                m.Append(" at ");
+                m.Append(path);
+            }
+            m.Append(" is not ");
+            m.Append(checkName);
+            if (reason.IsNotEmpty())
+            {
+                m.Append($" because it is {reason}");
+            }
+            m.Append('.');
+        });
+        throw new ArgumentException(error, nameof(type));
+    }
+
+    private static string GetAutoPropertyNameOrFieldName(this FieldInfo field)
+    {
+        return field.TryGetAutoProperty(out var property)
+            ? property.Name
+            : field.Name;
     }
 }

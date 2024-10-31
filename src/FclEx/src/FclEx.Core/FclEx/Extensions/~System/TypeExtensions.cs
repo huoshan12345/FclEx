@@ -128,10 +128,10 @@ public static partial class TypeExtensions
         return type.GetField(name, AllDeclared) ?? throw new InvalidOperationException($"Cannot find field '{name}' in type '{type.FullName}'");
     }
 
-    public static FieldInfo GetBackingField(this Type type, string name)
+    public static FieldInfo GetAutoPropertyBackingField(this Type type, string propertyName)
     {
-        return type.GetField($"<{name}>k__BackingField", AllDeclared)
-               ?? throw new InvalidOperationException($"Cannot find backing field for property '{name}' in type '{type.FullName}'"); ;
+        return type.GetField($"<{propertyName}>k__BackingField", AllDeclared)
+               ?? throw new InvalidOperationException($"Cannot find backing field for property '{propertyName}' in type '{type.FullName}'"); ;
     }
 
     public static PropertyInfo GetRequiredProperty(this Type type, string name)

@@ -18,7 +18,7 @@ public static class FieldInfoExtensions
     }
 
     private static readonly Regex _backingFieldName = new(@"^<(\w+)>k__BackingField$", RegexOptions.Compiled);
-    public static bool TryGetCorrespondingProperty(this FieldInfo field, [NotNullWhen(true)] out PropertyInfo? property)
+    public static bool TryGetAutoProperty(this FieldInfo field, [NotNullWhen(true)] out PropertyInfo? property)
     {
         property = null;
 
