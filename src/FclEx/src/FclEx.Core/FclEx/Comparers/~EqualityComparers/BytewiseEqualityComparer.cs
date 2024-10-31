@@ -48,7 +48,6 @@ public unsafe class BytewiseEqualityComparer<T> : IEqualityComparer<T>
         // 该地址指向对象的 Method Table。
         // 该地址向前移动一个身位（IntPtr.Size）是实例所在内存片段的首地址，也就是 Object Header 的地址。
         // 该地址向后移动一个身位（IntPtr.Size）是实例的第一个成员变量的地址。
-
         var (dataSize, dataAddress) = typeof(T).IsValueType switch
         {
             true => (size, new IntPtr(pointer)),

@@ -7,19 +7,10 @@ public static class DelegateHelper
     private const MethodAttributes InvokeAttributes = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual;
     private static readonly Type[] _delegateCtorSignature = { typeof(object), typeof(IntPtr) };
 
-    public static readonly Type TypeOfAssemblyGen = typeof(Expression).Assembly.GetType("System.Linq.Expressions.Compiler.AssemblyGen")!;
-    public static readonly MethodInfo MethodOfDefineDelegateType = TypeOfAssemblyGen.GetMethod("DefineDelegateType", BindingFlags.NonPublic | BindingFlags.Static)!;
-    public static readonly Func<string, TypeBuilder> DefineDelegateType = CreateDelegate<Func<string, TypeBuilder>>(MethodOfDefineDelegateType);
-
-    public static T CreateDelegate<T>(MethodInfo method) where T : Delegate
-    {
-        return (T)Delegate.CreateDelegate(typeof(T), method);
-    }
-
-    public static T CreateDelegate<T>(object @this, MethodInfo method) where T : Delegate
-    {
-        return (T)Delegate.CreateDelegate(typeof(T), @this, method);
-    }
+    public static readonly Type TypeOfAssemblyGen = typeof(Expression).Assembly.GetRequiredType("System.Linq.Expressions.Compiler.AssemblyGen");
+    public static readonly Func<string, TypeBuilder> DefineDelegateType = TypeOfAssemblyGen
+        .GetRequiredMethod("DefineDelegateType")
+        .CreateDelegate<Func<string, TypeBuilder>>();
 
     public static Type MakeNewCustomDelegate(Type returnType, IEnumerable<Type> parameterTypes)
     {

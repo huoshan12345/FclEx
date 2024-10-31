@@ -2,6 +2,23 @@
 
 public static class SizeCalculator
 {
+    //internal static Func<object, long> GenerateInstanceAddressAccessor()
+    //{
+    //    var method = new DynamicMethod(
+    //        name: "GetInstanceAddress",
+    //        returnType: typeof(long),
+    //        parameterTypes: [typeof(object)],
+    //        m: typeof(SizeCalculator).Module,
+    //        skipVisibility: true);
+    //    var ilGen = method.GetILGenerator();
+
+    //    ilGen.Emit(OpCodes.Ldarg_0);
+    //    ilGen.Emit(OpCodes.Conv_I8);
+    //    ilGen.Emit(OpCodes.Ret);
+
+    //    return method.CreateDelegate<Func<object, long>>();
+    //}
+
     /// <summary>
     /// 获取实例的自身以及各字段的地址
     /// </summary>
@@ -79,14 +96,21 @@ public static class SizeCalculator
 
     private static int CalculateReferenceTypeInstance(Type type)
     {
-        var fields = type.GetAllInstanceFields();
+        // var fields = type.GetAllInstanceFields();
+        var fields = GetBaseTypesAndThis(type)
+            .SelectMany(m => m.GetFields(DeclaredInstance))
+            .ToArray();
+
+        // 如果指定的类型没有定义任何字段，CalculateReferenceTypeInstance 返回引用类型实例的最小字节数：3倍地址指针字节数。
+        // 对于x86架构，一个应用类型对象至少占用12字节，包括 Object Header（4 bytes）、方法表指针（4 bytes）和最少4字节的字段内容（即使没有类型没有定义任何字段，这个4个字节也是必需的）。
+        // 对于x64架构，这个最小字节数会变成24，因为方法表指针和最小字段内容变成了8个字节，虽然 Object Header 的有效内容只占用4个字节，但是前面会添加4个字节的Padding。
         if (fields.Length == 0)
             return 3 * IntPtr.Size;
 
         // TODO: GetUninitializedObject does work for abstract types and delegate types.
         var instance = GetUninitializedObject(type);
         var addresses = GenerateFieldAddressAccessor(fields).Invoke(instance);
-        var (instanceAddress, fieldAddresses) = (addresses[0], addresses.Skip(1));
+        var (instanceAddress, fieldAddresses) = (addresses[0] - IntPtr.Size, addresses.Skip(1));
         var (lastAddress, lastField) = fieldAddresses.Zip(fields).OrderByDescending(m => m.First).First();
         var lastFieldOffset = (int)(lastAddress - instanceAddress);
         var lastFieldSize = lastField.FieldType.IsValueType
@@ -94,10 +118,9 @@ public static class SizeCalculator
             : IntPtr.Size;
 
         var size = lastFieldOffset + lastFieldSize;
-
         // Round up to IntPtr.Size
         var round = IntPtr.Size - 1;
-        return ((size + round) & (~round)) + IntPtr.Size;
+        return ((size + round) & (~round));
 
         static IEnumerable<Type> GetBaseTypesAndThis(Type? type)
         {
