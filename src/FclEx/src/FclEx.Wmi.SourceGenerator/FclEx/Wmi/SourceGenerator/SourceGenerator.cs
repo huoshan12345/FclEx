@@ -197,7 +197,7 @@ public class SourceGenerator : ISourceGenerator
 
         var list = new List<SourceInfo>();
         DateTime? min = default;
-        foreach (var file in resourcesDir.EnumerateFiles(".cs"))
+        foreach (var file in resourcesDir.EnumerateFiles("*.cs"))
         {
             var text = File.ReadAllText(file.FullName);
             list.Add((file.Name, text));
