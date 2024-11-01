@@ -221,9 +221,11 @@ public class SourceGenerator : ISourceGenerator
             }
         }
 
-        var sources = fileSources.Count > 0 && (IsWin == false || oldest > DateTime.UtcNow.AddMonths(-1))
-            ? fileSources
-            : Generate();
+        var needToGenerate = fileSources.Count == 0 || IsWin && IsGithubAction == false && oldest < DateTime.UtcNow.AddMonths(-1);
+
+        var sources = needToGenerate
+            ? Generate()
+            : fileSources;
 
         foreach (var (_, name, code) in sources)
         {
