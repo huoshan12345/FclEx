@@ -226,6 +226,7 @@ public static class RandomExtensions
 
     private static object NextObject(this Random random, Type type, Dictionary<Type, int>? depth)
     {
+        var is64Bit = Environment.Is64BitProcess;
         if (type == typeof(object))
             return new object();
 
@@ -233,10 +234,14 @@ public static class RandomExtensions
             return Guid.NewGuid();
 
         if (type == typeof(IntPtr))
-            return new IntPtr(random.NextInt64());
+            return is64Bit
+                ? new IntPtr(random.NextInt64())
+                : new IntPtr(random.Next());
 
         if (type == typeof(UIntPtr))
-            return new UIntPtr(random.NextUInt64());
+            return is64Bit
+                ? new UIntPtr(random.NextUInt64())
+                : new UIntPtr(random.NextUInt32());
 
         if (type == typeof(TimeSpan))
             return TimeSpan.FromTicks(random.NextInt64());
