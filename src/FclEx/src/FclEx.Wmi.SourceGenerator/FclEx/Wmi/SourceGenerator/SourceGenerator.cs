@@ -217,7 +217,7 @@ public class SourceGenerator : ISourceGenerator
         {
             if (fileSources.Count == 0)
             {
-                throw new InvalidOperationException("There is no cached source file.");
+                throw new InvalidOperationException($"There is no cached source file at {resourcesDir.FullName}");
             }
         }
 
