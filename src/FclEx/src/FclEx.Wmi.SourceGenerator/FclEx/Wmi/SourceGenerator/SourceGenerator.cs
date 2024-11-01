@@ -221,7 +221,7 @@ public class SourceGenerator : ISourceGenerator
             }
         }
 
-        var sources = fileSources.Count > 0 && oldest > DateTime.UtcNow.AddMonths(1)
+        var sources = fileSources.Count > 0 && (IsWin == false || oldest > DateTime.UtcNow.AddMonths(-1))
             ? fileSources
             : Generate();
 
