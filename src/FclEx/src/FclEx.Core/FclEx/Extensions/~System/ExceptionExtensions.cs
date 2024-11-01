@@ -28,7 +28,7 @@ public static partial class ExceptionExtensions
         var q = new Queue<Exception>();
         q.Enqueue(ex);
         var handled = new HashSet<Exception>();
-        while (q.Any())
+        while (q.Count != 0)
         {
             var e = q.Dequeue();
             if (e is AggregateException aEx)
@@ -55,6 +55,7 @@ public static partial class ExceptionExtensions
             }
         }
         handled.Clear();
+        return;
 
         void EnqueueIfUnHandled(Exception exception)
         {

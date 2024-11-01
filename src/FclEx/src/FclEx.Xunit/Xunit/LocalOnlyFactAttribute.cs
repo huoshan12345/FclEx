@@ -7,7 +7,7 @@ public class LocalOnlyFactAttribute : FactAttribute
     private string? _skip;
     public override string? Skip
     {
-        get => TestHelper.GetSkipReason(new(_skip, BuildTypeOption.Debug, AllowedOSPlatforms, TestHelper.EnvKeyOfGithubAction, null, EnvVarCheckOption.NotExist));
+        get => TestHelper.GetSkipReason(new(_skip, BuildTypeOption.Debug, AllowedOSPlatforms, TestHelper.GithubActionEnvKey, null, EnvVarCheckOption.NotExist));
         set => _skip = value;
     }
 }

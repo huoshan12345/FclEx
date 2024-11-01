@@ -1,16 +1,18 @@
-﻿namespace FclEx.Extensions;
+﻿using Exception = System.Exception;
+
+namespace FclEx.Extensions;
 
 partial class TypeExtensions
 {
     private static readonly ConcurrentDictionary<Type, TypeInfoExt> TypeInfoDic = new();
 
 #if NETSTANDARD2_0
-    private static readonly Lazy<FieldInfo?> _isByRefLike = new(() => typeof(Type).GetField("IsByRefLike", MemberBindingFlags));
+    private static readonly Lazy<PropertyInfo?> _isByRefLike = new(() => typeof(Type).GetProperty("IsByRefLike", BindingAttributes.AllDeclared));
 #endif
 
     public static TypeInfoExt GetTypeInfoExt(this Type type)
     {
-        Check.NotNull(type);
+        FclEx.Check.NotNull(type);
         return TypeInfoDic.GetOrAdd(type, GetTypeInfoExtInternal);
 
         static TypeInfoExt GetTypeInfoExtInternal(Type type)
@@ -24,7 +26,16 @@ partial class TypeExtensions
             var isInteger = IsIntegerInternal(type, nullableUnderlyingType);
             var isFloat = IsFloatInternal(type, nullableUnderlyingType);
 
-            return new TypeInfoExt(type, nullableUnderlyingType, enumerableUnderlyingType, defaultValue, simpleName, shortName, longName, isInteger, isFloat);
+            return new TypeInfoExt(
+                Type: type,
+                NullableUnderlyingType: nullableUnderlyingType,
+                EnumerableUnderlyingType: enumerableUnderlyingType,
+                DefaultValue: defaultValue,
+                SimpleName: simpleName,
+                ShortName: shortName,
+                LongName: longName,
+                IsInteger: isInteger,
+                IsFloat: isFloat);
         }
 
         static object? GetDefaultValueInternal(Type type, Type? nullableUnderlyingType)

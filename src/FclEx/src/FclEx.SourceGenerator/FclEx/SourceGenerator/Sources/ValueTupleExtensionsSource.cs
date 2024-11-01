@@ -1,13 +1,13 @@
 ﻿namespace FclEx.SourceGenerator.Sources;
 
-internal class ValueTupleExtensionsSource
+internal static class ValueTupleExtensionsSource
 {
     private const int Max = 8;
     private static readonly string[] _usings =
-    {
+    [
         "System",
         "System.Reflection",
-    };
+    ];
 
     internal static SourceInfo Generate()
     {

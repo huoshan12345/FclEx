@@ -13,7 +13,7 @@ public static class GeneratorExecutionContextExtensions
         messagePrefix ??= "An exception was thrown by the " + AssemblyName;
         context.ReportDiagnostic(Diagnostic.Create(
             new DiagnosticDescriptor(
-                id: "SI0000",
+                id: "FclEx",
                 title: messagePrefix,
                 messageFormat: messagePrefix + ": '{0}'",
                 category: AssemblyName,

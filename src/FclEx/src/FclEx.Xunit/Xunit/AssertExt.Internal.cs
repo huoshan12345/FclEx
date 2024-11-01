@@ -273,15 +273,5 @@ public static partial class AssertExt
         }
     }
 
-    internal readonly struct ExcludeMember
-    {
-        public ExcludeMember(string name, bool isExcluded)
-        {
-            Name = name;
-            IsExcluded = isExcluded;
-        }
-
-        public string Name { get; }
-        public bool IsExcluded { get; }
-    }
+    internal readonly record struct ExcludeMember(string Name, bool IsExcluded);
 }

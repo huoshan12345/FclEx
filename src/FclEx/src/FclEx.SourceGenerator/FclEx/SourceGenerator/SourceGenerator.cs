@@ -10,16 +10,18 @@ public class SourceGenerator : IIncrementalGenerator
 
         context.RegisterImplementationSourceOutput(context.AnalyzerConfigOptionsProvider, (ctx, provider) =>
         {
-            var codes = new[]
-            {
-                MethodHelperSource.Generate(),
+            SourceInfo[] codes =
+            [
+                MethodSource.Generate(),
                 TypeExtensionsSource.Generate(),
                 ValueTupleExtensionsSource.Generate(),
                 TupleExtensionsSource.Generate(),
                 EventHandlersSource.Generate(),
                 AsyncEventHandlerExtensionsSource.Generate(),
                 UnicodeScalarHelperSource.Generate(ctx, provider),
-            };
+                ..BytesExtensionsSource.Generate(),
+                NumberExtensionsSource.Generate(),
+            ];
 
             if (codes.Any(m => m.Success == false))
                 return;

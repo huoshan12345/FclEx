@@ -1,4 +1,7 @@
-﻿namespace FclEx.Tests;
+﻿// ReSharper disable MemberCanBeProtected.Global
+// ReSharper disable PropertyCanBeMadeInitOnly.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+namespace FclEx.Tests;
 
 public class GlobalFixture : IAsyncLifetime
 {

@@ -32,6 +32,9 @@ public static class ArraySegmentExtensions
         Check.NotNull(segment.Array);
         Check.GreaterThan(maxSize, 0);
 
+        if (segment.Count == 0)
+            yield break;
+
         var count = (segment.Count - 1) / maxSize + 1;
         for (var i = 0; i < count; i++)
         {

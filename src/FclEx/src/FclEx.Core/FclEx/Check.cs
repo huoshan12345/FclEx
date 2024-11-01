@@ -141,7 +141,7 @@ public static partial class Check
     {
         NotNull(value, parameterName);
 
-        if (value.Any(e => e == null))
+        if (value.Any(e => e is null))
         {
             throw new ArgumentException(parameterName ?? nameof(value));
         }

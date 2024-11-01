@@ -88,30 +88,51 @@ partial class StringExtensions
         return true;
     }
 
+    /// <summary>
+    /// Converts a hexadecimal string representation into a byte array.
+    /// </summary>
+    /// <param name="hex">The hexadecimal string to convert. This string must have an even number of characters.</param>
+    /// <returns>A byte array representing the binary data encoded in the hexadecimal string.</returns>
+    /// <exception cref="ArgumentException">
+    /// Thrown when the input string has an odd number of characters, as this is not a valid hexadecimal representation.
+    /// </exception>
+    /// <remarks>
+    /// This method first checks if the input string is <c>null</c> and validates the length. 
+    /// If the string is valid, it processes each pair of characters, converting them into their 
+    /// corresponding byte values. The method supports both uppercase and lowercase hexadecimal characters.
+    /// An empty input string returns an empty byte array.
+    /// </remarks>
     public static byte[] HexToBytes(this string hex)
     {
-        if (hex == null) throw new ArgumentNullException(nameof(hex));
-        if (hex.Length == 0) return Array.Empty<byte>();
-        if (hex.Length % 2 == 1) throw new Exception("The binary key cannot have an odd number of digits");
+        Check.NotNull(hex);
 
-        var len = hex.Length >> 1;
+        if (hex.Length % 2 == 1)
+            throw new ArgumentException("The binary key cannot have an odd number of digits.");
+
+        if (hex.Length == 0)
+            return [];
+
+        var len = hex.Length / 2;
         var arr = new byte[len];
-
         for (var i = 0; i < len; ++i)
         {
-            arr[i] = (byte)((GetHexVal(hex[i << 1]) << 4) + (GetHexVal(hex[(i << 1) + 1])));
+            // Nibble is half a byte (0-15, or one hex digit).
+            // Low nibble are the bits 0-3; high nibble are bits 4-7.
+            var highNibble = GetHexValue(hex[i * 2]);
+            var lowNibble = GetHexValue(hex[i * 2 + 1]);
+            arr[i] = (byte)((highNibble << 4) + lowNibble);
         }
         return arr;
 
-        static int GetHexVal(char hex)
+        static int GetHexValue(char hex)
         {
-            var val = (int)hex;
-            //For uppercase A-F letters:
-            //return val - (val < 58 ? 48 : 55);
-            //For lowercase a-f letters:
-            //return val - (val < 58 ? 48 : 87);
-            //Or the two combined, but a bit slower:
-            return val - (val < 58 ? 48 : (val < 97 ? 55 : 87));
+            return hex switch
+            {
+                >= 'A' and <= 'F' => hex - 'A' + 10,
+                >= 'a' and <= 'a' => hex - 'a' + 10,
+                >= '0' and <= '9' => hex - '0',
+                _ => throw new ArgumentException($"'{hex}' is not a valid hexadecimal character.", nameof(hex)),
+            };
         }
     }
 
@@ -148,25 +169,4 @@ partial class StringExtensions
             yield return en.GetTextElement();
         }
     }
-
-    public static StringComparer ToComparer(this StringComparison comparison)
-    {
-        return comparison switch
-        {
-            StringComparison.CurrentCulture => StringComparer.CurrentCulture,
-            StringComparison.CurrentCultureIgnoreCase => StringComparer.CurrentCultureIgnoreCase,
-            StringComparison.InvariantCulture => StringComparer.InvariantCulture,
-            StringComparison.InvariantCultureIgnoreCase => StringComparer.InvariantCultureIgnoreCase,
-            StringComparison.Ordinal => StringComparer.Ordinal,
-            StringComparison.OrdinalIgnoreCase => StringComparer.OrdinalIgnoreCase,
-            _ => throw new ArgumentOutOfRangeException(nameof(comparison), comparison, null)
-        };
-    }
-
-#if NETSTANDARD2_0
-    public static int GetHashCode(this string str, StringComparison comparison)
-    {
-        return comparison.ToComparer().GetHashCode(str);
-    }
-#endif
 }

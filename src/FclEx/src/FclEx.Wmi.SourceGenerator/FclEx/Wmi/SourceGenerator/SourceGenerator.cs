@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Management;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using FclEx.CodeAnalysis;
 using FclEx.Wmi.SourceGenerator.Extensions;
 using FclEx.Wmi.SourceGenerator.Models;
 using FclEx.Wmi.SourceGenerator.Sources;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Diagnostics;
 #pragma warning disable RS1041
 
 namespace FclEx.Wmi.SourceGenerator;
@@ -16,9 +20,12 @@ namespace FclEx.Wmi.SourceGenerator;
 [Generator]
 public class SourceGenerator : ISourceGenerator
 {
-    public static void Generate(string folder)
+    private static readonly bool IsGithubAction = Environment.GetEnvironmentVariable("GITHUB_ACTION") is { Length: > 0 };
+    private static readonly bool IsWin = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+
+    public static void GenerateToFiles(string? folder)
     {
-        var di = new DirectoryInfo(folder);
+        var di = new DirectoryInfo(folder ?? Path.Combine(".", "Generated"));
         if (di.Exists)
         {
             di.Delete(true);
@@ -38,6 +45,12 @@ public class SourceGenerator : ISourceGenerator
             //This is temporary till https://github.com/dotnet/roslyn/issues/46084 is fixed
             context.ReportDiagnostic(ex);
         }
+    }
+
+    public void Initialize(GeneratorInitializationContext context)
+    {
+        //if (Debugger.IsAttached == false)
+        //    Debugger.Launch();
     }
 
     private static readonly string[] Namespaces =
@@ -123,32 +136,21 @@ public class SourceGenerator : ISourceGenerator
         return qualifiers;
     }
 
-    //By not inlining we make sure we can catch assembly loading errors when jitting this method
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void ExecuteInternal(OutputOptions options, GeneratorExecutionContext context)
+    private static IEnumerable<SourceInfo> Generate()
     {
         foreach (var ns in Namespaces)
         {
-            foreach (var group in LoadClasses(ns)
-                         .Where(m => !m.Qualifiers.Others.ContainsKey("abstract"))
-                         .GroupBy(m => GetFirstChar(m.Name)))
-            {
-                var (name, code) = ClassItemSource.Generate(ns, group, group.Key.ToString());
+            var query = LoadClasses(ns)
+                .Where(m => !m.Qualifiers.Others.ContainsKey("abstract"))
+                .GroupBy(m => GetFirstChar(m.Name));
 
-                switch (options.OutputType)
-                {
-                    case OutputType.File:
-                        var fi = new FileInfo(Path.Combine(options.Folder ?? ".", ns, name));
-                        fi.Directory!.Create();
-                        File.WriteAllText(fi.FullName, code);
-                        break;
-                    case OutputType.Context:
-                    default:
-                        context.AddSource(name, code);
-                        break;
-                }
+            foreach (var group in query)
+            {
+                var info = ClassItemSource.Generate(ns, group, group.Key.ToString());
+                yield return info;
             }
         }
+        yield break;
 
         static char GetFirstChar(string name)
         {
@@ -161,14 +163,85 @@ public class SourceGenerator : ISourceGenerator
         }
     }
 
-    public void Initialize(GeneratorInitializationContext context)
+    private static DirectoryInfo GetResourcesDir(GeneratorExecutionContext context)
     {
-        //#if DEBUG
-        //            if (!Debugger.IsAttached)
-        //            {
-        //                Debugger.Launch();
-        //            }
-        //            Debug.WriteLine("Initialize code generator");
-        //#endif
+        var options = context.AnalyzerConfigOptions;
+        const string key = "build_property.projectdir";
+        // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+        var path = options?.GetGlobalOption(key) ?? AppContext.BaseDirectory;
+        var index = path.IndexOf("src", StringComparison.Ordinal);
+        if (index < 0)
+        {
+            throw new InvalidOperationException($"Cannot locate src directory from current path: {path}");
+        }
+
+        var assembly = typeof(SourceGenerator).Assembly.GetName().Name!;
+        var projectDir = Path.Combine(path[..index], "src", "FclEx", "src", assembly);
+        if (Directory.Exists(projectDir) == false)
+        {
+            throw new InvalidOperationException($"Source generator project directory does not exist: {projectDir}");
+        }
+
+        var resourcesDir = new DirectoryInfo(Path.Combine(projectDir, "Resources"));
+        if (resourcesDir.Exists == false)
+        {
+            resourcesDir.Create();
+            resourcesDir.Refresh();
+        }
+        return resourcesDir;
+    }
+
+    private static (List<SourceInfo> Sources, DateTime? Oldest, DirectoryInfo ResourcesDir) ReadFiles(GeneratorExecutionContext context)
+    {
+        var resourcesDir = GetResourcesDir(context);
+
+        var list = new List<SourceInfo>();
+        DateTime? min = default;
+        foreach (var file in resourcesDir.EnumerateFiles("*.cs"))
+        {
+            var text = File.ReadAllText(file.FullName);
+            list.Add((file.Name, text));
+            if (min is null || min.Value > file.LastWriteTimeUtc)
+                min = file.LastWriteTimeUtc;
+        }
+        return (list, min, resourcesDir);
+    }
+
+    //By not inlining we make sure we can catch assembly loading errors when jitting this method
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void ExecuteInternal(OutputOptions options, GeneratorExecutionContext context)
+    {
+        var (fileSources, oldest, resourcesDir) = ReadFiles(context);
+
+        if (IsGithubAction || IsWin == false)
+        {
+            if (fileSources.Count == 0)
+            {
+                throw new InvalidOperationException($"There is no cached source file at {resourcesDir.FullName}");
+            }
+        }
+
+        var sources = fileSources.Count > 0 && (IsWin == false || oldest > DateTime.UtcNow.AddMonths(-1))
+            ? fileSources
+            : Generate();
+
+        foreach (var (_, name, code) in sources)
+        {
+            switch (options.OutputType)
+            {
+                case OutputType.File:
+                    var fi = new FileInfo(Path.Combine(options.Folder ?? ".", name));
+                    fi.Directory!.Create();
+                    File.WriteAllText(fi.FullName, code);
+                    break;
+                case OutputType.Context:
+                default:
+                    context.AddSource(name, code);
+                    break;
+            }
+
+            var path = Path.Combine(resourcesDir.FullName, name);
+            File.WriteAllText(path, code);
+        }
     }
 }

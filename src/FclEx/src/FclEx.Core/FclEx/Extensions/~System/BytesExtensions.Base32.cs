@@ -46,20 +46,23 @@ partial class BytesExtensions
         return returnArray;
     }
 
-    public static string ToBase32(this byte[] input)
+    public static string ToBase32(this byte[] bytes)
     {
-        Check.NotNull(input);
+        return bytes.AsReadOnlySpan().ToBase32();
+    }
 
-        if (input.Length == 0)
+    public static string ToBase32(this ReadOnlySpan<byte> bytes)
+    {
+        if (bytes.Length == 0)
             return string.Empty;
 
-        var charCount = (int)Math.Ceiling(input.Length / 5d) * 8;
+        var charCount = (int)Math.Ceiling(bytes.Length / 5d) * 8;
         var returnArray = new char[charCount];
 
         byte nextChar = 0, bitsRemaining = 5;
         var arrayIndex = 0;
 
-        foreach (var b in input)
+        foreach (var b in bytes)
         {
             nextChar = (byte)(nextChar | (b >> (8 - bitsRemaining)));
             returnArray[arrayIndex++] = ValueToChar(nextChar);
@@ -92,9 +95,9 @@ partial class BytesExtensions
 
         return value switch
         {
-            < 91 and > 64 => value - 65, //65-90 == uppercase letters
-            < 56 and > 49 => value - 24, //50-55 == numbers 2-7
-            < 123 and > 96 => value - 97, //97-122 == lowercase letters
+            < 91 and > 64 => value - 65, // 65-90 == uppercase letters
+            < 56 and > 49 => value - 24, // 50-55 == numbers 2-7
+            < 123 and > 96 => value - 97, // 97-122 == lowercase letters
             _ => throw new ArgumentException("Character is not a Base32 character.", nameof(c))
         };
     }

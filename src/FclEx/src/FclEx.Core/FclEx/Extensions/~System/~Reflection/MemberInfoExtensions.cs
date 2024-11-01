@@ -21,4 +21,5 @@ public static class MemberInfoExtensions
     {
         return memberInfo.IsDefined<CompilerGeneratedAttribute>(inherit);
     }
+
 }

@@ -17,7 +17,7 @@ public static class ReadOnlySpanExtensions
     public static string ToBase64(this ReadOnlySpan<byte> span) => Convert.ToBase64String(span);
 #endif
 
-    public static unsafe T ToStructure<T>(this ReadOnlySpan<byte> span) where T : struct
+    public static unsafe T MarshalTo<T>(this ReadOnlySpan<byte> span)
     {
         var size = Marshal.SizeOf<T>();
         Check.NotLessThan(span.Length, size);
@@ -27,11 +27,11 @@ public static class ReadOnlySpanExtensions
 
         var buffer = new Span<byte>(ptr.ToPointer(), size);
         span.CopyTo(buffer);
-        var obj = ptr.ToStructure<T>();
-        return obj;
+        var obj = ptr.MarshalTo<T>();
+        return obj!;
     }
 
-    public static unsafe T[] ToStructures<T>(this ReadOnlySpan<byte> span) where T : struct
+    public static unsafe T[] MarshalToArray<T>(this ReadOnlySpan<byte> span)
     {
         var size = Marshal.SizeOf<T>();
         Check.NotLessThan(span.Length, size);
@@ -47,9 +47,130 @@ public static class ReadOnlySpanExtensions
         {
             var buffer = new Span<byte>(ptr.ToPointer(), size);
             span.Slice(i * size, size).CopyTo(buffer);
-            var obj = ptr.ToStructure<T>();
-            result[i] = obj;
+            var obj = ptr.MarshalTo<T>();
+            result[i] = obj!;
         }
         return result;
+    }
+
+    public static byte[] ToBytes(this ReadOnlySpan<bool> bits)
+    {
+        var count = bits.Length;
+        var numBytes = count / 8;
+        if (count % 8 != 0)
+            numBytes++;
+
+        var bytes = new byte[numBytes];
+        int byteIndex = 0, bitIndex = 0;
+
+        foreach (var bit in bits)
+        {
+            if (bit) bytes[byteIndex] |= (byte)(1 << bitIndex);
+            ++bitIndex;
+
+            if (bitIndex == 8)
+            {
+                bitIndex = 0;
+                ++byteIndex;
+            }
+
+        }
+        return bytes;
+    }
+
+    /// <summary>
+    /// Casts a ReadOnlySpan of one primitive type <typeparamref name="TFrom"/> to another primitive type <typeparamref name="TTo"/>.
+    /// These types may not contain pointers or references. This is checked at runtime in order to preserve type safety.
+    /// </summary>
+    /// <remarks>
+    /// Supported only for platforms that support misaligned memory access or when the memory block is aligned by other means.
+    /// </remarks>
+    /// <param name="span">The source slice, of type <typeparamref name="TFrom"/>.</param>
+    /// <exception cref="System.ArgumentException">
+    /// Thrown when <typeparamref name="TFrom"/> or <typeparamref name="TTo"/> contains pointers.
+    /// </exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ReadOnlySpan<TTo> Cast<TFrom, TTo>(this ReadOnlySpan<TFrom> span)
+        where TFrom : struct
+        where TTo : struct
+    {
+        return MemoryMarshal.Cast<TFrom, TTo>(span);
+    }
+
+    /// <summary>
+    /// Casts a ReadOnlySpan of one primitive type <typeparamref name="T"/> to ReadOnlySpan of bytes.
+    /// That type may not contain pointers or references. This is checked at runtime in order to preserve type safety.
+    /// </summary>
+    /// <param name="span">The source slice, of type <typeparamref name="T"/>.</param>
+    /// <exception cref="System.ArgumentException">
+    /// Thrown when <typeparamref name="T"/> contains pointers.
+    /// </exception>
+    /// <exception cref="System.OverflowException">
+    /// Thrown if the Length property of the new Span would exceed int.MaxValue.
+    /// </exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ReadOnlySpan<byte> AsBytes<T>(this ReadOnlySpan<T> span) where T : struct
+    {
+        return MemoryMarshal.AsBytes(span);
+    }
+
+    public static TCollection ToCollection<T, TCollection>(this ReadOnlySpan<T> span, Func<TCollection> factory) where TCollection : ICollection<T>
+    {
+        var col = factory();
+        foreach (var item in span)
+        {
+            col.Add(item);
+        }
+        return col;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TCollection ToCollection<T, TCollection>(this ReadOnlySpan<T> span) where TCollection : ICollection<T>, new()
+    {
+        return span.ToCollection(() => new TCollection());
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static HashSet<T> ToHashSet<T>(this ReadOnlySpan<T> span)
+    {
+        return span.ToCollection<T, HashSet<T>>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static List<T> ToList<T>(this ReadOnlySpan<T> span)
+    {
+        return span.ToCollection<T, List<T>>();
+    }
+
+    public static int ComputeHashCode<T>(this ReadOnlySpan<T> span)
+    {
+        var code = 0;
+        foreach (var value in span)
+        {
+            code = HashCode.Combine(value, code);
+        }
+        return code;
+    }
+
+    public static int ComputeHashCode(this ReadOnlySpan<byte> span)
+    {
+        const int sizeOfInt = sizeof(int);
+        var count = span.Length / sizeOfInt;
+        var remaining = span.Length % sizeOfInt;
+
+        var code = 0;
+        for (var i = 0; i < count; i++)
+        {
+            var intSpan = span.Slice(i * sizeOfInt, sizeOfInt);
+            var intVal = intSpan.ToInt32();
+            code = HashCode.Combine(intVal, code);
+        }
+
+        for (var i = 1; i <= remaining; i++)
+        {
+            code = HashCode.Combine(span[^i], code);
+        }
+
+        return code;
     }
 }

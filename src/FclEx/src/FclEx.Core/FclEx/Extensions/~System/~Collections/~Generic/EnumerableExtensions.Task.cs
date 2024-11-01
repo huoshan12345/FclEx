@@ -47,6 +47,7 @@ partial class EnumerableExtensions
     {
         Check.NotNull(enumerable);
         Check.NotNull(taskSelector);
+
         var span = TimeSpan.Zero;
         var list = new List<T>();
         IList<Exception>? exceptions = null;
@@ -90,8 +91,7 @@ partial class EnumerableExtensions
         }
     }
 
-    public static async Task<List<TResult>> ToParallellyExecutedTask<T, TResult>(this IEnumerable<T> enumerable,
-        Func<T, Task<TResult>> taskSelector, int batchSize, CancellationToken token = default)
+    public static async Task<List<TResult>> ToParallellyExecutedTask<T, TResult>(this IEnumerable<T> enumerable, Func<T, Task<TResult>> taskSelector, int batchSize, CancellationToken token = default)
     {
         // ReSharper disable once PossibleMultipleEnumeration
         Check.NotNull(enumerable);
@@ -111,15 +111,12 @@ partial class EnumerableExtensions
         return list;
     }
 
-    public static async Task ToParallellyExecutedTask<T>(this IEnumerable<T> enumerable,
-        Func<T, Task> taskSelector, int batchSize, CancellationToken token = default)
+    public static async Task ToParallellyExecutedTask<T>(this IEnumerable<T> enumerable, Func<T, Task> taskSelector, int batchSize, CancellationToken token = default)
     {
-        // ReSharper disable once PossibleMultipleEnumeration
         Check.NotNull(enumerable);
         Check.NotNull(taskSelector);
         Check.NotLessThan(batchSize, 1);
 
-        // ReSharper disable once PossibleMultipleEnumeration
         foreach (var batch in enumerable.Chunk(batchSize))
         {
             if (token.IsCancellationRequested)

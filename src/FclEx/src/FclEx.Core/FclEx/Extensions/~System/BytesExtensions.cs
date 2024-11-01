@@ -1,15 +1,23 @@
 ﻿namespace FclEx.Extensions;
 
+/// <summary>
+/// Provides extension methods for working with byte arrays, <see cref="Span{T}"/>, 
+/// and <see cref="ReadOnlySpan{T}"/> to enhance functionality and ease of use.
+/// </summary>
 public static partial class BytesExtensions
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static MemoryStream ToStream(this byte[] bytes) => new(bytes);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string GetString(this byte[] bytes, Encoding? encoding = null)
         => bytes.AsReadOnlySpan().GetString(encoding);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string GetString(this ArraySegment<byte> bytes, Encoding? encoding = null)
         => bytes.AsReadOnlySpan().GetString(encoding);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string ToBase64(this byte[] bytes) => Convert.ToBase64String(bytes);
 
     public static string ToHex(this byte[] bytes, bool upperCase = false)
@@ -17,90 +25,128 @@ public static partial class BytesExtensions
         using var builder = new ValueStringBuilder();
         var format = upperCase ? "X2" : "x2";
         foreach (var @byte in bytes)
+        {
             builder.Append(@byte.ToString(format));
+        }
         return builder.ToString();
     }
 
-    public static byte[] ToBytes(this bool num) => BitConverter.GetBytes(num);
-
-    public static byte[] ToBytes(this char num) => BitConverter.GetBytes(num);
-
-    public static byte[] ToBytes(this short num) => BitConverter.GetBytes(num);
-
-    public static byte[] ToBytes(this int num) => BitConverter.GetBytes(num);
-
-    public static byte[] ToBytes(this long num) => BitConverter.GetBytes(num);
-
-    public static byte[] ToBytes(this ushort num) => BitConverter.GetBytes(num);
-
-    public static byte[] ToBytes(this uint num) => BitConverter.GetBytes(num);
-
-    public static byte[] ToBytes(this ulong num) => BitConverter.GetBytes(num);
-
-    public static byte[] ToBytes(this float num) => BitConverter.GetBytes(num);
-
-    public static byte[] ToBytes(this double num) => BitConverter.GetBytes(num);
-
-    private static byte[] ToBytes(IEnumerable<bool> bits, int count)
+    public static T MarshalTo<T>(this byte[] bytes, ref int offset)
     {
-        var numBytes = count / 8;
-        if (count % 8 != 0) numBytes++;
+        Check.NotNull(bytes);
+        Check.NotLessThan(offset, 0);
 
-        var bytes = new byte[numBytes];
-        int byteIndex = 0, bitIndex = 0;
+        var length = Marshal.SizeOf<T>();
+        Check.NotLessThan(bytes.Length, length + offset);
 
-        foreach (var bit in bits)
-        {
-            if (bit) bytes[byteIndex] |= (byte)(1 << bitIndex);
-            ++bitIndex;
-            if (bitIndex == 8)
-            {
-                bitIndex = 0;
-                ++byteIndex;
-            }
-
-        }
-        return bytes;
+        using var disposable = MarshalHelper.AllocHGlobal(length);
+        var ptr = disposable.Value;
+        Marshal.Copy(bytes, offset, ptr, length);
+        var obj = Marshal.PtrToStructure<T>(ptr);
+        offset += length;
+        return obj!;
     }
 
-    public static byte[] ToBytes(this bool[] bits) => ToBytes(bits, bits.Length);
-
-    public static byte[] ToBytes(this List<bool> bits) => ToBytes(bits, bits.Count);
-
-    public static short ToInt16(this byte[] bytes, int offset = 0) => BitConverter.ToInt16(bytes, offset);
-    public static short ReadInt16(this byte[] bytes, ref int offset) => ToStructure<short>(bytes, ref offset);
-
-    public static ushort ToUInt16(this byte[] bytes, int offset = 0) => BitConverter.ToUInt16(bytes, offset);
-    public static ushort ReadUInt16(this byte[] bytes, ref int offset) => ToStructure<ushort>(bytes, ref offset);
-
-    public static int ToInt32(this byte[] bytes, int offset = 0) => BitConverter.ToInt32(bytes, offset);
-    public static int ReadInt32(this byte[] bytes, ref int offset) => ToStructure<int>(bytes, ref offset);
-
-    public static uint ToUInt32(this byte[] bytes, int offset = 0) => BitConverter.ToUInt32(bytes, offset);
-    public static uint ReadUInt32(this byte[] bytes, ref int offset) => ToStructure<uint>(bytes, ref offset);
-
-    public static long ToInt64(this byte[] bytes, int offset = 0) => BitConverter.ToInt64(bytes, offset);
-    public static long ReadInt64(this byte[] bytes, ref int offset) => ToStructure<long>(bytes, ref offset);
-
-    public static ulong ToUInt64(this byte[] bytes, int offset = 0) => BitConverter.ToUInt64(bytes, offset);
-    public static ulong ReadUInt64(this byte[] bytes, ref int offset) => ToStructure<ulong>(bytes, ref offset);
-
-    public static float ToFloat(this byte[] bytes, int offset = 0) => BitConverter.ToSingle(bytes, offset);
-    public static float ReadFloat(this byte[] bytes, ref int offset) => ToStructure<float>(bytes, ref offset);
-
-    public static double ToDouble(this byte[] bytes, int offset = 0) => BitConverter.ToDouble(bytes, offset);
-    public static double ReadDouble(this byte[] bytes, ref int offset) => ToStructure<double>(bytes, ref offset);
-
-    public static int IndexOf(this byte[] buffer, int offset, params byte[] subBytes)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T MarshalTo<T>(this byte[] bytes)
     {
-        if (subBytes.Length > buffer.Length) return -1;
+        var i = 0;
+        return MarshalTo<T>(bytes, ref i);
+    }
 
-        var i = offset; // 主串的位置
+    public static T[] MarshalToArray<T>(this byte[] bytes, int count, ref int offset)
+    {
+        Check.NotNull(bytes);
+        Check.NotLessThan(offset, 0);
+        Check.NotLessThan(count, 1);
+
+        var length = Marshal.SizeOf<T>();
+        Check.NotLessThan(bytes.Length, length * count + offset);
+
+        var result = new T[count];
+        using var disposable = MarshalHelper.AllocHGlobal(length);
+        var ptr = disposable.Value;
+        for (var i = 0; i < count; i++)
+        {
+            Marshal.Copy(bytes, offset, ptr, length);
+            var obj = Marshal.PtrToStructure<T>(ptr);
+            offset += length;
+            result[i] = obj!;
+        }
+        return result;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T[] MarshalToArray<T>(this byte[] bytes)
+    {
+        var length = Marshal.SizeOf<T>();
+        var i = 0;
+        return MarshalToArray<T>(bytes, bytes.Length / length, ref i);
+    }
+
+    public static byte[] MarshalToBytes<T>(this T obj)
+    {
+        Check.NotNull(obj);
+
+        var length = Marshal.SizeOf<T>();
+        var bufByte = new byte[length];
+        using var disposable = MarshalHelper.AllocHGlobal(length);
+        var ptr = disposable.Value;
+        Marshal.StructureToPtr(obj, ptr, false);
+        Marshal.Copy(ptr, bufByte, 0, length);
+        return bufByte;
+    }
+
+    public static byte[] MarshalArrayToBytes<T>(this IReadOnlyList<T> list)
+    {
+        Check.NotNull(list);
+
+        if (list.IsEmpty())
+            return [];
+
+        var length = Marshal.SizeOf<T>();
+        var totalBytes = length * list.Count;
+        var bufByte = new byte[totalBytes];
+        using var disposable = MarshalHelper.AllocHGlobal(length);
+        var ptr = disposable.Value;
+        for (var i = 0; i < list.Count; i++)
+        {
+            var item = list[i];
+            Check.NotNull(item, nameof(list) + $"[{i}]");
+
+            Marshal.StructureToPtr(item, ptr, false);
+            Marshal.Copy(ptr, bufByte, i * length, length);
+        }
+
+        return bufByte;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void WriteTo(this byte[] bytes, Stream stream) => stream.Write(bytes, 0, bytes.Length);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Task WriteToAsync(this byte[] bytes, Stream stream) => stream.WriteAsync(bytes, 0, bytes.Length);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int IndexOf(this byte[] bytes, byte[] subBytes)
+    {
+        return bytes.AsReadOnlySpan().IndexOf(subBytes);
+    }
+
+    public static int IndexOf(this ReadOnlySpan<byte> bytes, ReadOnlySpan<byte> subBytes)
+    {
+        if (subBytes.Length == 0)
+            return -1;
+
+        if (subBytes.Length > bytes.Length)
+            return -1;
+
+        var i = 0; // 主串的位置
         var j = 0; // 模式串的位置
         var next = GetNextArray(subBytes);
-        while (i < buffer.Length && j < subBytes.Length)
+        while (i < bytes.Length && j < subBytes.Length)
         {
-            if (j == -1 || buffer[i] == subBytes[j])
+            if (j == -1 || bytes[i] == subBytes[j])
             {
                 i++; // 当j为-1时，要移动的是i，当然j也要归0
                 j++;
@@ -116,7 +162,7 @@ public static partial class BytesExtensions
         return j == subBytes.Length ? i - j : -1;
     }
 
-    private static int[] GetNextArray(byte[] subBytes)
+    private static int[] GetNextArray(ReadOnlySpan<byte> subBytes)
     {
         var next = new int[subBytes.Length];
         next[0] = -1;
@@ -138,90 +184,9 @@ public static partial class BytesExtensions
         return next;
     }
 
-    public static T ToStructure<T>(this byte[] bytes, ref int offset) where T : struct
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int ComputeHashCode(this byte[] bytes)
     {
-        Check.NotNull(bytes);
-        Check.NotLessThan(offset, 0);
-
-        var length = Marshal.SizeOf<T>();
-        Check.NotLessThan(bytes.Length, length + offset);
-
-        using var disposable = MarshalHelper.AllocHGlobal(length);
-        var ptr = disposable.Value;
-        Marshal.Copy(bytes, offset, ptr, length);
-        var obj = Marshal.PtrToStructure<T>(ptr);
-        offset += length;
-        return obj;
+        return bytes.AsReadOnlySpan().ComputeHashCode();
     }
-
-    public static T ToStructure<T>(this byte[] bytes) where T : struct
-    {
-        var i = 0;
-        return ToStructure<T>(bytes, ref i);
-    }
-
-    public static T[] ToStructures<T>(this byte[] bytes, ref int offset, int count) where T : struct
-    {
-        Check.NotNull(bytes);
-        Check.NotLessThan(offset, 0);
-        Check.NotLessThan(count, 1);
-
-        var length = Marshal.SizeOf<T>();
-        var totalBytes = length * count;
-        Check.NotLessThan(bytes.Length, totalBytes + offset);
-
-        var result = new T[count];
-        using var disposable = MarshalHelper.AllocHGlobal(length);
-        var ptr = disposable.Value;
-        for (var i = 0; i < count; i++)
-        {
-            Marshal.Copy(bytes, offset, ptr, length);
-            var obj = Marshal.PtrToStructure<T>(ptr);
-            offset += length;
-            result[i] = obj;
-        }
-
-        return result;
-    }
-
-    public static T[] ToStructures<T>(this byte[] bytes) where T : struct
-    {
-        var length = Marshal.SizeOf<T>();
-        var i = 0;
-        return ToStructures<T>(bytes, ref i, bytes.Length / length);
-    }
-
-    public static byte[] ToBytes<T>(this T obj) where T : struct
-    {
-        var length = Marshal.SizeOf<T>();
-        var bufByte = new byte[length];
-        using var disposable = MarshalHelper.AllocHGlobal(length);
-        var ptr = disposable.Value;
-        Marshal.StructureToPtr(obj, ptr, true);
-        Marshal.Copy(ptr, bufByte, 0, length);
-        return bufByte;
-    }
-
-    public static byte[] ToBytes<T>(this IReadOnlyList<T> list) where T : struct
-    {
-        Check.NotNull(list);
-        Check.NotEmpty(list);
-
-        var length = Marshal.SizeOf<T>();
-        var totalBytes = length * list.Count;
-        var bufByte = new byte[totalBytes];
-        using var disposable = MarshalHelper.AllocHGlobal(length);
-        var ptr = disposable.Value;
-        for (var i = 0; i < list.Count; i++)
-        {
-            Marshal.StructureToPtr(list[i], ptr, true);
-            Marshal.Copy(ptr, bufByte, i * length, length);
-        }
-
-        return bufByte;
-    }
-
-    public static void WriteTo(this byte[] bytes, Stream stream) => stream.Write(bytes, 0, bytes.Length);
-
-    public static Task WriteToAsync(this byte[] bytes, Stream stream) => stream.WriteAsync(bytes, 0, bytes.Length);
 }

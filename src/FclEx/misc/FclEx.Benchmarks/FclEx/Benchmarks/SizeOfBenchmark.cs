@@ -1,4 +1,6 @@
-﻿namespace FclEx.Benchmarks;
+﻿using System.Runtime.CompilerServices;
+
+namespace FclEx.Benchmarks;
 
 [GenericTypeArguments(typeof(int))]
 [GenericTypeArguments(typeof(string))]
@@ -9,14 +11,14 @@
 public class SizeOfBenchmark<T>
 {
     [Benchmark(Baseline = true)]
-    public void SizeOf()
+    public void Unsafe_SizeOf()
     {
-        var size = UnsafeHelper.SizeOf<T>();
+        var size = Unsafe.SizeOf<T>();
     }
 
     [Benchmark]
-    public void SizeOf2()
+    public void UnsafeHelper_SizeOf()
     {
-        var size = UnsafeHelper.SizeOf2<T>();
+        var size = UnsafeHelper.SizeOf<T>();
     }
 }

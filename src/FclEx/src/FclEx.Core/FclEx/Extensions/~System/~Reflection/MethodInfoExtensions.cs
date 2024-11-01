@@ -21,8 +21,8 @@ public static class MethodInfoExtensions
 
     public static string GetFullName(this MethodInfo method)
     {
-        return method.DeclaringType == null 
-            ? method.Name 
+        return method.DeclaringType == null
+            ? method.Name
             : $"{method.DeclaringType.Namespace}.{method.DeclaringType.ShortName()}.{method.Name}";
     }
 
@@ -40,4 +40,18 @@ public static class MethodInfoExtensions
     {
         return method.Invoke<T>(null, parameters);
     }
+
+#if NETSTANDARD2_0
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T CreateDelegate<T>(this MethodInfo method) where T : Delegate
+    {
+        return (T)method.CreateDelegate(typeof(T));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T CreateDelegate<T>(this MethodInfo method, object? target) where T : Delegate
+    {
+        return (T)method.CreateDelegate(typeof(T), target);
+    }
+#endif
 }

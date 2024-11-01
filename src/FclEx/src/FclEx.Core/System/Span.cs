@@ -13,7 +13,7 @@ public static class Span
     /// <typeparam name="T">The type of the pointer.</typeparam>
     /// <returns>The span of contiguous memory.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe Span<byte> AsBytes<T>(ref T value) where T : unmanaged
+    public static unsafe Span<byte> AsBytes<T>(ref T value)
     {
         return Create(ref Unsafe.As<T, byte>(ref value), sizeof(T));
     }

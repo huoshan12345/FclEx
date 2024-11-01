@@ -13,12 +13,19 @@
     <Compile Include="..\FclEx.Core\Microsoft\Collections\Extensions\MultiValueDictionary.cs" />
     <Compile Include="..\FclEx.Core\Microsoft\Strings.cs" />
     <Compile Include="..\FclEx.Core\FclEx\Utils\SourceBuilder.cs" />
+    <Compile Include="..\FclEx.SourceGenerator\FclEx\CodeAnalysis\SourceInfo.cs" />
+    <Compile Include="..\FclEx.SourceGenerator\FclEx\CodeAnalysis\AnalyzerConfigOptionsProviderExtensions.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Management" Version="8.0.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Resources\**" />
+    <None Include="Resources\**" />
   </ItemGroup>
 
 </Project>

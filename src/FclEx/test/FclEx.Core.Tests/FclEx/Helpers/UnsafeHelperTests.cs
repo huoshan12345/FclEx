@@ -1,47 +1,26 @@
-﻿using System.Runtime.InteropServices;
+﻿using FclEx.TestModels;
 
 namespace FclEx.Helpers;
 
 public class UnsafeHelperTests(ITestOutputHelper output)
 {
-    public struct TestStruct
-    {
-        public int Int { get; set; }
-        public DateTime DateTime { get; set; }
-    }
-
-    public static readonly Type[] BuiltInValueTypes =
+    public static readonly ReadOnlySet<Type> CommonValueTypes =
     [
-        typeof(bool),
-        typeof(char),
-        typeof(sbyte),
-        typeof(byte),
-        typeof(short),
-        typeof(ushort),
-        typeof(int),
-        typeof(uint),
-        typeof(long),
-        typeof(ulong),
-        typeof(float),
-        typeof(double),
-        typeof(decimal),
-        typeof(DateTime),
-        typeof(TimeSpan),
-        typeof(Guid),
-        typeof(DateTimeOffset),
-        typeof(DateOnly),
-        typeof(TimeOnly),
-        typeof(IntPtr),
-        typeof(UIntPtr),
-        typeof(ValueTuple<int>),
-        typeof(ValueTuple<int, long, DateTimeOffset, DateTime>),
+        ..Types.BlittableTypes,
+        typeof(DateTime), // non-blittable
+        typeof(DateTimeOffset), // non-blittable
+        typeof(DateOnly), // blittable
+        typeof(TimeOnly), // blittable
+        typeof(ValueTuple<int>), // non-blittable
+        typeof(ValueTuple<DateTimeOffset, int, DateTime>), // non-blittable
     ];
 
-    public static readonly IEnumerable<object[]> BuiltInValueTypeCases = BuiltInValueTypes.Select(m => new object[] { m });
+    public static readonly IEnumerable<object[]> BuiltInValueTypeCases = CommonValueTypes
+        .Select(m => new object[] { m });
 
-    private static readonly MethodInfo _sizeOfTTest = typeof(UnsafeHelperTests).GetRequiredMethod(nameof(SizeOf_T_Test));
-    private static readonly MethodInfo _sizeOf = typeof(UnsafeHelper).GetRequiredMethod(nameof(UnsafeHelper.SizeOf));
-    private static readonly MethodInfo _sizeOf2 = typeof(UnsafeHelper).GetRequiredMethod(nameof(UnsafeHelper.SizeOf2));
+    private static readonly MethodInfo _sizeOfTTest = typeof(UnsafeHelperTests).GetRequiredMethod(nameof(SizeOf_T_Test), 1);
+    private static readonly MethodInfo _sizeOf = typeof(UnsafeHelper).GetRequiredMethod(nameof(UnsafeHelper.SizeOf), 1);
+    private static readonly MethodInfo _unsafeSizeOf = typeof(Unsafe).GetRequiredMethod(nameof(Unsafe.SizeOf), 1);
 
     [Theory]
     [MemberData(nameof(BuiltInValueTypeCases))]
@@ -54,7 +33,7 @@ public class UnsafeHelperTests(ITestOutputHelper output)
     [Fact]
     public void SizeOf_Struct_Test()
     {
-        Assert.Equal(16, UnsafeHelper.SizeOf<TestStruct>());
+        Assert.Equal(Unsafe.SizeOf<TestStruct>(), UnsafeHelper.SizeOf<TestStruct>());
     }
 
     [Theory]
@@ -88,9 +67,9 @@ public class UnsafeHelperTests(ITestOutputHelper output)
         return _sizeOf.MakeGenericMethod(type).Invoke<int>(null, null);
     }
 
-    private static int SizeOf2(Type type)
+    private static int UnsafeSizeOf(Type type)
     {
-        return _sizeOf2.MakeGenericMethod(type).Invoke<int>(null, null);
+        return _unsafeSizeOf.MakeGenericMethod(type).Invoke<int>(null, null);
     }
 
     [Fact]
@@ -98,24 +77,42 @@ public class UnsafeHelperTests(ITestOutputHelper output)
     {
         var table = new ConsoleTable(new()
         {
-            Columns = ["Type", $"{nameof(Marshal)}", $"{nameof(UnsafeHelper.SizeOf)}", $"{nameof(UnsafeHelper.SizeOf2)}"],
+            Columns = ["Type", nameof(Marshal), nameof(Unsafe), nameof(SizeCalculator), nameof(UnsafeHelper)],
             RenderColumns = true,
         });
 
-        var types = BuiltInValueTypes.Concat([
+        var types = CommonValueTypes.Concat([
+            typeof(TestClass),
             typeof(TestStruct),
+            typeof(TestRecord),
+            typeof(TestRecordStruct),
+            typeof(EmptyClass),
+            typeof(EmptyStruct),
+            typeof(EmptyRecord),
+            typeof(EmptyRecordStruct),
+            typeof(object),
             typeof(string),
-            typeof(object)]);
+            typeof(TextWriter), // abstract class
+            typeof(Delegate),
+            typeof(Action<int>),
+            typeof(Func<int, long>)]);
 
         foreach (var type in types)
         {
+            var marshalSize = GetSize(type, Marshal.SizeOf);
+            var unsafeSize = UnsafeSizeOf(type);
+            var calculatorSize = GetSize(type, SizeCalculator.SizeOf);
             var size = SizeOf(type);
-            var (success, marshalSize, _, _) = Operate.Execute(() => Marshal.SizeOf(type));
-            var marshalSizeStr = success ? marshalSize.ToString() : "-";
-            var size2 = SizeOf2(type);
-            table.Rows.Add([type.SimpleName(), marshalSizeStr, size, size2]);
+            table.Rows.Add([type.ShortName(), marshalSize, unsafeSize, calculatorSize, size]);
         }
 
         output.WriteLine(table.ToString());
+        return;
+
+        static string GetSize(Type type, Func<Type, int> getter)
+        {
+            var (success, size, _, _) = Operate.Execute(() => getter(type));
+            return success ? size.ToString() : "-";
+        }
     }
 }
