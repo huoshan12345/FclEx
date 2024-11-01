@@ -22,19 +22,17 @@ public unsafe class ObjectAccessorTests(ITestOutputHelper output)
         Assert.Equal(expected.ToHexString(), actual.ToHexString());
     }
 
-    [Fact]
-    public void GetAllFieldAddresses_Class_Test()
+    private void GetAllFieldAddresses_Test<T>(ref T obj, IntPtr[] addresses) where T : notnull
     {
-        var obj = new TestClass();
-        var fields = obj.GetType().GetAllInstanceFields();
-        var addresses = ObjectAccessor.GetAllFieldAddresses(ref obj);
-        Assert.Equal(fields.Length, addresses.Length);
-
-        var current = new IntPtr(&obj);
+        var type = obj.GetType(); // do not use typeof(T) here.
+        var fields = type.GetAllInstanceFields();
+        var pointer = Unsafe.AsPointer(ref obj);
+        var current = new IntPtr(pointer);
+        var offset = type.IsValueType ? 0 : IntPtr.Size;
         foreach (var ((field, address), (prevField, _)) in fields.Zip(addresses).OrderBy(m => m.Second).WithPrevious())
         {
             var size = prevField is null
-                ? IntPtr.Size
+                ? offset
                 : UnsafeHelper.SizeOf(prevField.FieldType);
             current += size.RoundUp(IntPtr.Size);
             output.WriteLine("Field: " + field.GetAutoPropertyNameOrFieldName());
@@ -43,23 +41,35 @@ public unsafe class ObjectAccessorTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public void GetAllFieldAddresses_Class_Test()
+    {
+        var obj = new TestClass();
+        var addresses = ObjectAccessor.GetAllFieldAddresses(ref obj);
+        GetAllFieldAddresses_Test(ref obj, addresses);
+    }
+
+    [Fact]
     public void GetAllFieldAddresses_Struct_Test()
     {
         var obj = new TestStruct();
-        var fields = obj.GetType().GetAllInstanceFields();
         var addresses = ObjectAccessor.GetAllFieldAddresses(ref obj);
-        Assert.Equal(fields.Length, addresses.Length);
+        GetAllFieldAddresses_Test(ref obj, addresses);
+    }
 
-        var current = new IntPtr(&obj);
-        foreach (var ((field, address), (prevField, _)) in fields.Zip(addresses).OrderBy(m => m.Second).WithPrevious())
-        {
-            var size = prevField is null
-                ? 0
-                : UnsafeHelper.SizeOf(prevField.FieldType);
-            current += size.RoundUp(IntPtr.Size);
-            output.WriteLine("Field: " + field.GetAutoPropertyNameOrFieldName());
-            Assert.Equal(current.ToHexString(), address.ToHexString());
-        }
+    [Fact]
+    public void GetAllFieldAddresses_Type_Class_Test()
+    {
+        object obj = new TestClass();
+        var addresses = ObjectAccessor.GetAllFieldAddresses(ref obj, obj.GetType());
+        GetAllFieldAddresses_Test(ref obj, addresses);
+    }
+
+    [Fact]
+    public void GetAllFieldAddresses_Type_Struct_Test()
+    {
+        object obj = new TestStruct();
+        var addresses = ObjectAccessor.GetAllFieldAddresses(ref obj, obj.GetType());
+        GetAllFieldAddresses_Test(ref obj, addresses);
     }
 
 }

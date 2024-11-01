@@ -1,55 +1,9 @@
-﻿namespace FclEx.Utils;
+﻿using FclEx.Accessors;
+
+namespace FclEx.Utils;
 
 public static class SizeCalculator
 {
-    /// <summary>
-    /// 获取实例的自身以及各字段的地址
-    /// </summary>
-    /// <param name="fields"></param>
-    /// <returns></returns>
-    private static Func<object?, long[]> GenerateFieldAddressAccessor(FieldInfo[] fields)
-    {
-        // Ldflda表示Load Field Address，它可以帮助我们得到实例某个字段的地址
-        var method = new DynamicMethod(
-            name: "GetFieldAddresses",
-            returnType: typeof(long[]),
-            parameterTypes: [typeof(object)],
-            m: typeof(SizeCalculator).Module,
-            skipVisibility: true);
-        var ilGen = method.GetILGenerator();
-
-        // var addresses = new long[fields.Length + 1];
-        ilGen.DeclareLocal(typeof(long[]));
-        ilGen.Emit(OpCodes.Ldc_I4, fields.Length + 1);
-        ilGen.Emit(OpCodes.Newarr, typeof(long));
-        ilGen.Emit(OpCodes.Stloc_0);
-
-        // addresses[0] = address of instance;
-        ilGen.Emit(OpCodes.Ldloc_0);
-        ilGen.Emit(OpCodes.Ldc_I4, 0);
-        ilGen.Emit(OpCodes.Ldarg_0);
-        ilGen.Emit(OpCodes.Conv_I8);
-        ilGen.Emit(OpCodes.Stelem_I8);
-
-        // addresses[index] = address of field[index + 1];
-        for (var index = 0; index < fields.Length; index++)
-        {
-            ilGen.Emit(OpCodes.Ldloc_0);
-            ilGen.Emit(OpCodes.Ldc_I4, index + 1);
-            ilGen.Emit(OpCodes.Ldarg_0);
-            ilGen.Emit(OpCodes.Ldflda, fields[index]);
-            ilGen.Emit(OpCodes.Conv_I8);
-            ilGen.Emit(OpCodes.Stelem_I8);
-        }
-
-        ilGen.Emit(OpCodes.Ldloc_0);
-        ilGen.Emit(OpCodes.Ret);
-
-        return (Func<object?, long[]>)method.CreateDelegate(typeof(Func<object, long[]>));
-    }
-
-    private const BindingFlags DeclaredInstance = BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-
     private static object GetUninitializedObject(Type type)
     {
         // for string type, GetUninitializedObject will throw an ArgumentException:
@@ -63,7 +17,7 @@ public static class SizeCalculator
     private static int CalculateValueTypeInstance(Type type)
     {
         var instance = GetUninitializedObject(type);
-        var fields = type.GetFields(DeclaredInstance).ToArray();
+        var fields = type.GetAllInstanceFields();
 
         if (fields.Length == 0)
             return 0;
@@ -72,17 +26,15 @@ public static class SizeCalculator
         // 假设我们需要结算类型为T的结构体的字节数，那么我们创建一个ValueTuple<T,T>元组，它的第二个字段Item2的偏移量就是结构体T的字节数
         // 注：值类型的实例地址和第一个字段的地址相同。所以addresses[1]等于addresses[0]
         var tupleType = typeof(ValueTuple<,>).MakeGenericType(type, type);
-        var tuple = tupleType.GetConstructors()[0].Invoke([instance, instance]);
-        var addresses = GenerateFieldAddressAccessor(tupleType.GetFields()).Invoke(tuple).OrderBy(it => it).ToArray();
-        return (int)(addresses[2] - addresses[1]);
+        var tuple = tupleType.GetRequiredConstructor(type, type).Invoke([instance, instance]);
+        var addresses = ObjectAccessor.GetAllFieldAddresses(ref tuple, tupleType);
+        Debug.Assert(addresses.Length == 2);
+        return (int)addresses[1].AbsDiff(addresses[0]);
     }
 
     private static int CalculateReferenceTypeInstance(Type type)
     {
-        // var fields = type.GetAllInstanceFields();
-        var fields = GetBaseTypesAndThis(type)
-            .SelectMany(m => m.GetFields(DeclaredInstance))
-            .ToArray();
+        var fields = type.GetAllInstanceFields();
 
         // 如果指定的类型没有定义任何字段，CalculateReferenceTypeInstance 返回引用类型实例的最小字节数：3倍地址指针字节数。
         // 对于x86架构，一个应用类型对象至少占用12字节，包括 Object Header（4 bytes）、方法表指针（4 bytes）和最少4字节的字段内容（即使没有类型没有定义任何字段，这个4个字节也是必需的）。
@@ -92,13 +44,11 @@ public static class SizeCalculator
 
         // TODO: GetUninitializedObject does work for abstract types and delegate types.
         var instance = GetUninitializedObject(type);
-        var addresses = GenerateFieldAddressAccessor(fields).Invoke(instance);
-        var (instanceAddress, fieldAddresses) = (addresses[0], addresses.Skip(1));
+        var addresses = ObjectAccessor.GetAllFieldAddresses(ref instance, type);
+        Debug.Assert(addresses.Length == fields.Length);
 
-        var ordered = fieldAddresses.Zip(fields).OrderBy(m => m.First).ToArray();
-        var (firstAddress, firstField) = ordered.First();
-        var (lastAddress, lastField) = ordered.Last();
-        var lastFieldOffset = (int)(lastAddress - firstAddress);
+        var ((firstAddress, _), (lastAddress, lastField)) = addresses.Zip(fields).MinMaxBy(m => m.First.ToInt64());
+        var lastFieldOffset = (int)lastAddress.AbsDiff(firstAddress);
         var lastFieldSize = lastField.FieldType.IsValueType
             ? CalculateValueTypeInstance(lastField.FieldType)
             : IntPtr.Size;

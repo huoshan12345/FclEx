@@ -13,6 +13,18 @@ public static class IntPtrExtensions
         return "0x" + value.ToString("X" + IntPtr.Size * 2);
     }
 
+    /// <summary>
+    /// Calculates the absolute difference in bytes between two <see cref="IntPtr"/> values.
+    /// </summary>
+    /// <param name="ptr">The first pointer.</param>
+    /// <param name="other">The second pointer to compare with.</param>
+    /// <returns>The absolute difference in bytes between <paramref name="ptr"/> and <paramref name="other"/>.</returns>
+    public static long AbsDiff(this IntPtr ptr, IntPtr other)
+    {
+        var diff = ptr.ToInt64() - other.ToInt64();
+        return diff >= 0 ? diff : -diff;
+    }
+
     public static T? MarshalTo<T>(this IntPtr ptr)
     {
         return Marshal.PtrToStructure<T>(ptr);
