@@ -7,7 +7,13 @@ public static class IntPtrExtensions
         return ptr.ToDisposable(Marshal.FreeHGlobal);
     }
 
-    public static T ToStructure<T>(this IntPtr ptr) where T : struct
+    public static string ToHexString(this IntPtr ptr)
+    {
+        var value = ptr.ToInt64();
+        return "0x" + value.ToString("X" + IntPtr.Size * 2);
+    }
+
+    public static T? MarshalTo<T>(this IntPtr ptr)
     {
         return Marshal.PtrToStructure<T>(ptr);
     }

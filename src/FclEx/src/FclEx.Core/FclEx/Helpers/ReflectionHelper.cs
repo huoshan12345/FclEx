@@ -30,7 +30,7 @@ public static class ReflectionHelper
             }
 
             return members.GroupBy(m => m.Info.Name)
-                .ToDictionary(m => m.Key, m => m.MinimaBy(x => x.Order).Items.First().Info);
+                .ToDictionary(m => m.Key, m => m.MinimaBy(x => x.Order).Items[0].Info);
         }
 
         static IEnumerable<DataMemberInfo> GetDeclaredDataMembers(Type type)

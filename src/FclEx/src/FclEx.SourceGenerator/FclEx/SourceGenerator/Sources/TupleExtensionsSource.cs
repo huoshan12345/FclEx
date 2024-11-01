@@ -4,10 +4,10 @@ internal static class TupleExtensionsSource
 {
     private const int Max = 7;
     private static readonly string[] _usings =
-    {
+    [
         "System",
         "System.Reflection",
-    };
+    ];
 
     internal static SourceInfo Generate()
     {

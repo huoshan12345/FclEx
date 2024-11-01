@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Security;
 using System.Text;
+using FclEx.Extensions;
 
 namespace FclEx.Utils;
 
@@ -206,5 +207,15 @@ public static class SourceBuilderExtensions
     public static SourceBuilder WriteDefine(this SourceBuilder builder, string symbol)
     {
         return builder.WriteLineNoTabs($"#define {symbol}");
+    }
+
+    public static SourceBuilder WriteAsLines(this SourceBuilder builder, string text)
+    {
+        var lines = text.Split(["\r\n"], StringSplitOptions.None);
+        foreach (var line in lines)
+        {
+            builder.WriteLine(line);
+        }
+        return builder;
     }
 }

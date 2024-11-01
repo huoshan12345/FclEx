@@ -2,23 +2,6 @@
 
 public static class SizeCalculator
 {
-    //internal static Func<object, long> GenerateInstanceAddressAccessor()
-    //{
-    //    var method = new DynamicMethod(
-    //        name: "GetInstanceAddress",
-    //        returnType: typeof(long),
-    //        parameterTypes: [typeof(object)],
-    //        m: typeof(SizeCalculator).Module,
-    //        skipVisibility: true);
-    //    var ilGen = method.GetILGenerator();
-
-    //    ilGen.Emit(OpCodes.Ldarg_0);
-    //    ilGen.Emit(OpCodes.Conv_I8);
-    //    ilGen.Emit(OpCodes.Ret);
-
-    //    return method.CreateDelegate<Func<object, long>>();
-    //}
-
     /// <summary>
     /// 获取实例的自身以及各字段的地址
     /// </summary>
@@ -91,7 +74,7 @@ public static class SizeCalculator
         var tupleType = typeof(ValueTuple<,>).MakeGenericType(type, type);
         var tuple = tupleType.GetConstructors()[0].Invoke([instance, instance]);
         var addresses = GenerateFieldAddressAccessor(tupleType.GetFields()).Invoke(tuple).OrderBy(it => it).ToArray();
-        return (int)(addresses[2] - addresses[0]);
+        return (int)(addresses[2] - addresses[1]);
     }
 
     private static int CalculateReferenceTypeInstance(Type type)
@@ -110,14 +93,17 @@ public static class SizeCalculator
         // TODO: GetUninitializedObject does work for abstract types and delegate types.
         var instance = GetUninitializedObject(type);
         var addresses = GenerateFieldAddressAccessor(fields).Invoke(instance);
-        var (instanceAddress, fieldAddresses) = (addresses[0] - IntPtr.Size, addresses.Skip(1));
-        var (lastAddress, lastField) = fieldAddresses.Zip(fields).OrderByDescending(m => m.First).First();
-        var lastFieldOffset = (int)(lastAddress - instanceAddress);
+        var (instanceAddress, fieldAddresses) = (addresses[0], addresses.Skip(1));
+
+        var ordered = fieldAddresses.Zip(fields).OrderBy(m => m.First).ToArray();
+        var (firstAddress, firstField) = ordered.First();
+        var (lastAddress, lastField) = ordered.Last();
+        var lastFieldOffset = (int)(lastAddress - firstAddress);
         var lastFieldSize = lastField.FieldType.IsValueType
             ? CalculateValueTypeInstance(lastField.FieldType)
             : IntPtr.Size;
 
-        var size = lastFieldOffset + lastFieldSize;
+        var size = lastFieldOffset + lastFieldSize + IntPtr.Size * 2; // plus sizes of two pointers for ObjectHeader and MethodTableAddress
         // Round up to IntPtr.Size
         var round = IntPtr.Size - 1;
         return ((size + round) & (~round));

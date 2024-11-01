@@ -1,4 +1,6 @@
-﻿using FclEx.TestModels;
+﻿using System;
+using FclEx.TestModels;
+using Newtonsoft.Json.Linq;
 
 namespace FclEx.Extensions.TypeExtensions;
 
@@ -132,24 +134,22 @@ public class IsBlittableTests(ITestOutputHelper output)
     {
         GCHandle.Alloc(value, GCHandleType.Pinned).Free();
     }
-
-    private static readonly IntCondition GreaterThan6 = new(ComparisonResult.GreaterThan, 6);
     public static readonly IEnumerable<object?[]> AccordingToClrVersion = new (object?, IntCondition)[]
     {
-       ('a', GreaterThan6),
-       (true, GreaterThan6),
-       (new int?[] { null }, GreaterThan6),
-       (new int?[] { 1, null }, GreaterThan6),
-       (new int?[] { 1, 2 }, GreaterThan6),
-       (new Tuple<int, int>(1, 1), GreaterThan6),
-       (new ValueTuple<int, int>(1, 1), GreaterThan6),
+       ('a', NET60_OR_GREATER),
+       (true, NET60_OR_GREATER),
+       (new int?[] { null }, NET60_OR_GREATER),
+       (new int?[] { 1, null }, NET60_OR_GREATER),
+       (new int?[] { 1, 2 }, NET60_OR_GREATER),
+       (new Tuple<int, int>(1, 1), NET60_OR_GREATER),
+       (new ValueTuple<int, int>(1, 1), NET60_OR_GREATER),
     }.Select(m => new object?[] { m.Item1, m.Item2 });
 
     [Theory]
     [MemberData(nameof(AccordingToClrVersion))]
-    public void GCHandle_Pinned_AccordingToClrVersion_Test(object? value, IntCondition versionCondition)
+    public void GCHandle_Pinned_AccordingToClrVersion_Test(object? value, IntCondition condition)
     {
-        if (versionCondition.Compare(Environment.Version.Major))
+        if (condition.IsMatch())
         {
             Check();
         }
@@ -180,54 +180,3 @@ public class IsBlittableTests(ITestOutputHelper output)
         Assert.Throws<ArgumentException>(() => GCHandle.Alloc(value, GCHandleType.Pinned).Free());
     }
 }
-
-public enum ComparisonResult
-{
-    Equal,
-    NotEqual,
-    GreaterThan,
-    GreaterThanOrEqual,
-    LessThan,
-    LessThanOrEqual,
-}
-
-public record ComparableCondition<T>(ComparisonResult Comparison, T Value) where T : IComparable<T>
-{
-    /// <summary>
-    /// Compare <paramref name="left"/> and <see cref="Value"/> then check if the result matches <see cref="Comparison"/>.
-    /// </summary>
-    /// <returns></returns>
-    /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public bool Compare(T left)
-    {
-        var result = left.CompareTo(Value);
-        return Comparison switch
-        {
-            ComparisonResult.Equal => result == 0,
-            ComparisonResult.NotEqual => result != 0,
-            ComparisonResult.GreaterThan => result > 0,
-            ComparisonResult.GreaterThanOrEqual => result >= 0,
-            ComparisonResult.LessThan => result < 0,
-            ComparisonResult.LessThanOrEqual => result <= 0,
-            _ => throw new ArgumentOutOfRangeException(nameof(Comparison), Comparison, null),
-        };
-    }
-
-    public override string ToString()
-    {
-        var op = Comparison switch
-        {
-            ComparisonResult.Equal => "=",
-            ComparisonResult.NotEqual => "!=",
-            ComparisonResult.GreaterThan => ">",
-            ComparisonResult.GreaterThanOrEqual => ">=",
-            ComparisonResult.LessThan => "<",
-            ComparisonResult.LessThanOrEqual => "<=",
-            _ => throw new ArgumentOutOfRangeException(nameof(Comparison), Comparison, null),
-        };
-        return $"{op} {Value}";
-    }
-}
-
-public record IntCondition(ComparisonResult Comparison, int Value)
-    : ComparableCondition<int>(Comparison, Value);

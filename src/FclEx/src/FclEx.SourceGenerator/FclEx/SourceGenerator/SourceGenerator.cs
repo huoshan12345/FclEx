@@ -20,6 +20,7 @@ public class SourceGenerator : IIncrementalGenerator
                 AsyncEventHandlerExtensionsSource.Generate(),
                 UnicodeScalarHelperSource.Generate(ctx, provider),
                 ..BytesExtensionsSource.Generate(),
+                NumberExtensionsSource.Generate(),
             ];
 
             if (codes.Any(m => m.Success == false))

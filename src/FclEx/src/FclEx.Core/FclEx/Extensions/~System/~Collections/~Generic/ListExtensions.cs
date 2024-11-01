@@ -1,4 +1,6 @@
-﻿namespace FclEx.Extensions;
+﻿using FclEx.Accessors;
+
+namespace FclEx.Extensions;
 
 public static class ListExtensions
 {
@@ -60,32 +62,9 @@ public static class ListExtensions
     public static Span<T> AsSpan<T>(this List<T>? list)
     {
 #if NETSTANDARD2_0
-        return list is null ? default : ArrayAccessor<T>.Getter(list);
+        return list is null ? default : ArrayAccessor<T>.ItemsAccessor(list);
 #else
         return CollectionsMarshal.AsSpan(list);
 #endif
     }
-#if NETSTANDARD2_0
-    internal static class ArrayAccessor<T>
-    {
-        public static readonly Func<List<T>, T[]> Getter = Build();
-
-        public static Func<List<T>, T[]> Build()
-        {
-            var method = new DynamicMethod(
-                name: "get",
-                attributes: MethodAttributes.Static | MethodAttributes.Public,
-                callingConvention: CallingConventions.Standard,
-                returnType: typeof(T[]),
-                parameterTypes: [typeof(List<T>)], owner: typeof(ArrayAccessor<T>),
-                skipVisibility: true);
-
-            var il = method.GetILGenerator();
-            il.Emit(OpCodes.Ldarg_0); // Load List<T> argument
-            il.Emit(OpCodes.Ldfld, typeof(List<T>).GetRequiredField("_items")); // Replace argument by field
-            il.Emit(OpCodes.Ret); // Return field
-            return (Func<List<T>, T[]>)method.CreateDelegate(typeof(Func<List<T>, T[]>));
-        }
-    }
-#endif
 }

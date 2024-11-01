@@ -1,10 +1,25 @@
-﻿// ReSharper disable ArrangeRedundantParentheses
-namespace FclEx.Helpers;
+﻿namespace FclEx.Helpers;
 
-public static class UnsafeHelper
+public static unsafe class UnsafeHelper
 {
+    public static int SizeOf<T>()
+    {
+        return Unsafe.SizeOf<T>();
+    }
 
-    public static unsafe int SizeOf<T>()
+    private static readonly MethodInfo _sizeof = typeof(Unsafe).GetRequiredMethod(nameof(Unsafe.SizeOf), 1);
+    private static readonly ConcurrentDictionary<Type, int> _cache = new();
+
+    public static int SizeOf(Type type)
+    {
+        return _cache.GetOrAdd(type, m =>
+        {
+            var method = _sizeof.MakeGenericMethod(m);
+            return method.Invoke<int>(null, null);
+        });
+    }
+
+    public static int SizeOf2<T>()
     {
         fixed (T* ptr = new T[2])
         {
@@ -16,7 +31,7 @@ public static class UnsafeHelper
 
     // code from https://benbowen.blog/post/fun_with_makeref/
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void WriteTo<T>(IntPtr dest, T value, int sizeOfT) where T : struct
+    public static void WriteTo<T>(IntPtr dest, T value, int sizeOfT) where T : struct
     {
         var bytePtr = (byte*)dest;
 
@@ -38,7 +53,7 @@ public static class UnsafeHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe T ReadFrom<T>(IntPtr source, int sizeOfT) where T : struct
+    public static T ReadFrom<T>(IntPtr source, int sizeOfT) where T : struct
     {
         var bytePtr = (byte*)source;
 
@@ -55,7 +70,7 @@ public static class UnsafeHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe TOut Reinterpret<TIn, TOut>(TIn curValue, int sizeBytes)
+    public static TOut Reinterpret<TIn, TOut>(TIn curValue, int sizeBytes)
         where TIn : struct
         where TOut : struct
     {
@@ -73,5 +88,13 @@ public static class UnsafeHelper
         }
 
         return result;
+    }
+
+    public static IntPtr GetActualAddress<T>(ref T obj)
+    {
+        var pointer = Unsafe.AsPointer<T>(ref obj);
+        return typeof(T).IsValueType
+            ? new IntPtr(pointer)
+            : *(IntPtr*)pointer; // the address of method table.
     }
 }

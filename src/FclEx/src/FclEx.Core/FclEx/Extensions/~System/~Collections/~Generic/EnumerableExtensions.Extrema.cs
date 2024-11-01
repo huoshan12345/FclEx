@@ -1,9 +1,11 @@
-﻿namespace FclEx.Extensions;
+﻿using Microsoft.Collections.Extensions;
+
+namespace FclEx.Extensions;
 
 [SuppressMessage("ReSharper", "ConvertIfStatementToSwitchStatement")]
 partial class EnumerableExtensions
 {
-    public static (IReadOnlyList<T> Items, int TotalCount) ExtremaBy<T, TKey>(this IEnumerable<T> source, Func<T, TKey?> keySelector, bool maxima, IComparer<TKey>? comparer = null)
+    public static (IReadOnlyList<T> Items, int TotalCount) ExtremaBy<T, TKey>(this IEnumerable<T> source, Func<T, TKey> keySelector, bool maxima, IComparer<TKey>? comparer = null)
     {
         Check.NotNull(source);
         Check.NotNull(keySelector);
@@ -45,13 +47,59 @@ partial class EnumerableExtensions
         return (items, total);
     }
 
-    public static (IReadOnlyList<T> Items, int TotalCount) MinimaBy<T, TKey>(this IEnumerable<T> source, Func<T, TKey?> keySelector, IComparer<TKey>? comparer = null)
+    public static (IReadOnlyList<T> Items, int TotalCount) MinimaBy<T, TKey>(this IEnumerable<T> source, Func<T, TKey> keySelector, IComparer<TKey>? comparer = null)
     {
         return source.ExtremaBy(keySelector, false, comparer);
     }
 
-    public static (IReadOnlyList<T> Items, int TotalCount) MaximaBy<T, TKey>(this IEnumerable<T> source, Func<T, TKey?> keySelector, IComparer<TKey>? comparer = null)
+    public static (IReadOnlyList<T> Items, int TotalCount) MaximaBy<T, TKey>(this IEnumerable<T> source, Func<T, TKey> keySelector, IComparer<TKey>? comparer = null)
     {
         return source.ExtremaBy(keySelector, true, comparer);
+    }
+
+    public static (T? Min, T? Max) MinMaxBy<T, TKey>(this IEnumerable<T> source, Func<T, TKey> keySelector, IComparer<TKey>? comparer = null)
+    {
+        Check.NotNull(source);
+        Check.NotNull(keySelector);
+        comparer ??= Comparer<TKey>.Default;
+
+        using var e = source.GetEnumerator();
+
+        if (e.MoveNext() == false)
+        {
+            if (default(T) is null)
+            {
+                return (default, default);
+            }
+            else
+            {
+                throw new InvalidOperationException("Sequence contains no elements");
+            }
+        }
+
+        var value = e.Current;
+        var minKey = keySelector(value);
+        var maxKey = minKey;
+        var min = value;
+        var max = value;
+
+        while (e.MoveNext())
+        {
+            var nextValue = e.Current;
+            var nextKey = keySelector(nextValue);
+            if (comparer.Compare(minKey, nextKey) > 0)
+            {
+                minKey = nextKey;
+                min = nextValue;
+            }
+
+            if (comparer.Compare(maxKey, nextKey) < 0)
+            {
+                maxKey = nextKey;
+                max = nextValue;
+            }
+        }
+
+        return (min, max);
     }
 }

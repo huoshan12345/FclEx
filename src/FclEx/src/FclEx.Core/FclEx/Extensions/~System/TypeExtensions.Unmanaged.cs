@@ -206,7 +206,7 @@ partial class TypeExtensions
         throw new ArgumentException(error, nameof(type));
     }
 
-    private static string GetAutoPropertyNameOrFieldName(this FieldInfo field)
+    public static string GetAutoPropertyNameOrFieldName(this FieldInfo field)
     {
         return field.TryGetAutoProperty(out var property)
             ? property.Name

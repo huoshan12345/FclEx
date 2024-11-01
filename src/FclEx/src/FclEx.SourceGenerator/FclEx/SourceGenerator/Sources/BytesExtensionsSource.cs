@@ -10,7 +10,7 @@ internal static class BytesExtensionsSource
         "System",
     ];
 
-    private static readonly string[] _numberTypes =
+    private static readonly string[] _types =
     [
         nameof(Boolean),
         nameof(Char),
@@ -49,7 +49,7 @@ internal static class BytesExtensionsSource
         builder.WriteLine($"partial class {className}")
             .WriteOpeningBracket();
 
-        foreach (var type in _numberTypes)
+        foreach (var type in _types)
         {
             const string methodName = "public static byte[] ToBytes";
             builder.WriteLine($"{methodName}(this {type} value)");
@@ -59,7 +59,7 @@ internal static class BytesExtensionsSource
             builder.WriteLine();
         }
 
-        foreach (var type in _numberTypes)
+        foreach (var type in _types)
         {
             var methodName = $"public static {type} To{type}";
             builder.WriteLine($"{methodName}(this byte[] bytes, int offset = 0)");
@@ -105,7 +105,7 @@ internal static class BytesExtensionsSource
         builder.WriteLine($"partial class {className}")
             .WriteOpeningBracket();
 
-        foreach (var type in _numberTypes)
+        foreach (var type in _types)
         {
             var methodName = $"public static {type} To{type}";
             builder.WriteLine($"{methodName}(this ReadOnlySpan<byte> span)");

@@ -56,6 +56,7 @@ public unsafe class SizeCalculatorTests
     class MyClass
     {
         public int a;
+        public double b;
     }
 
     struct NestedStruct
@@ -137,9 +138,9 @@ public unsafe class SizeCalculatorTests
     }
 
     [Fact]
-    public void SizeOf_ReferenceType()
+    public void SizeOf_Class()
     {
-        var expectedSize = sizeof(int) + IntPtr.Size * 2;
+        var expectedSize = sizeof(int) + sizeof(double) + IntPtr.Size * 2;
         var actualSize = SizeOf<MyClass>();
         Assert.Equal(RoundUpSize(expectedSize), actualSize);
     }
@@ -163,9 +164,9 @@ public unsafe class SizeCalculatorTests
     [Fact]
     public void SizeOf_NestedStruct()
     {
-        var expectedSize = sizeof(int) + SizeOf<NestedStruct>();
+        var expectedSize = sizeof(OuterStruct);
         var actualSize = SizeOf<OuterStruct>();
-        Assert.Equal(RoundUpSize(expectedSize), actualSize);
+        Assert.Equal(expectedSize, actualSize);
     }
 
     [Fact]
@@ -186,22 +187,29 @@ public unsafe class SizeCalculatorTests
     [Fact]
     public void SizeOf_AlignedStruct()
     {
-        var size = sizeof(int) + sizeof(double) + sizeof(int) + sizeof(char);
         {
+            var expectedSize = sizeof(AlignedStruct);
             var actualSize = SizeOf<AlignedStruct>();
-            Assert.Equal(RoundUpSize(size), actualSize);
+            Assert.Equal(expectedSize, actualSize);
         }
         {
+            var expectedSize = sizeof(AlignedStruct2);
             var actualSize = SizeOf<AlignedStruct2>();
-            Assert.Equal(RoundUpSize(size), actualSize);
+            Assert.Equal(expectedSize, actualSize);
         }
         {
+            var size = sizeof(AlignedStructPack4);
+            var expectedSize = NET60_OR_GREATER.IsMatch()
+                ? size
+                : RoundUpSize(size);
+
             var actualSize = SizeOf<AlignedStructPack4>();
-            Assert.Equal(RoundUp(size, 4), actualSize);
+            Assert.Equal(expectedSize, actualSize);
         }
         {
+            var expectedSize = sizeof(AlignedStructPack8);
             var actualSize = SizeOf<AlignedStructPack8>();
-            Assert.Equal(RoundUpSize(size), actualSize);
+            Assert.Equal(expectedSize, actualSize);
         }
     }
 

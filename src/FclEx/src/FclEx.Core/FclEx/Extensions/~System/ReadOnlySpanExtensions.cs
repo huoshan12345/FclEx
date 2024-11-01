@@ -17,7 +17,7 @@ public static class ReadOnlySpanExtensions
     public static string ToBase64(this ReadOnlySpan<byte> span) => Convert.ToBase64String(span);
 #endif
 
-    public static unsafe T ToStructure<T>(this ReadOnlySpan<byte> span) where T : struct
+    public static unsafe T MarshalTo<T>(this ReadOnlySpan<byte> span)
     {
         var size = Marshal.SizeOf<T>();
         Check.NotLessThan(span.Length, size);
@@ -27,11 +27,11 @@ public static class ReadOnlySpanExtensions
 
         var buffer = new Span<byte>(ptr.ToPointer(), size);
         span.CopyTo(buffer);
-        var obj = ptr.ToStructure<T>();
-        return obj;
+        var obj = ptr.MarshalTo<T>();
+        return obj!;
     }
 
-    public static unsafe T[] ToStructures<T>(this ReadOnlySpan<byte> span) where T : struct
+    public static unsafe T[] MarshalToArray<T>(this ReadOnlySpan<byte> span)
     {
         var size = Marshal.SizeOf<T>();
         Check.NotLessThan(span.Length, size);
@@ -47,8 +47,8 @@ public static class ReadOnlySpanExtensions
         {
             var buffer = new Span<byte>(ptr.ToPointer(), size);
             span.Slice(i * size, size).CopyTo(buffer);
-            var obj = ptr.ToStructure<T>();
-            result[i] = obj;
+            var obj = ptr.MarshalTo<T>();
+            result[i] = obj!;
         }
         return result;
     }
