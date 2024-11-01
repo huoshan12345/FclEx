@@ -13,6 +13,8 @@
     <Compile Include="..\FclEx.Core\Microsoft\Collections\Extensions\MultiValueDictionary.cs" />
     <Compile Include="..\FclEx.Core\Microsoft\Strings.cs" />
     <Compile Include="..\FclEx.Core\FclEx\Utils\SourceBuilder.cs" />
+    <Compile Include="..\FclEx.SourceGenerator\FclEx\CodeAnalysis\SourceInfo.cs" />
+    <Compile Include="..\FclEx.SourceGenerator\FclEx\CodeAnalysis\AnalyzerConfigOptionsProviderExtensions.cs" />
   </ItemGroup>
 
   <ItemGroup>
