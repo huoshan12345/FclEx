@@ -39,18 +39,45 @@ internal class NumberExtensionsSource
         foreach (var type in _types)
         {
             var template = $$"""
-                            public static {{type}} RoundUp(this {{type}} number, {{type}} @base)
-                            {
-                                Check.NotLessThan<{{type}}>(number, 0);
-                                Check.GreaterThan<{{type}}>(@base, 0);
-                            
-                                var remaining = ({{type}})(number % @base);
-                                var value = remaining == 0
-                                    ? number
-                                    : number + (@base - remaining);
-                                return ({{type}})value;
-                            }
-                            """;
+                             /// <summary>
+                             /// Rounds up the specified <paramref name="number"/> to the nearest multiple of <paramref name="factor"/>.
+                             /// </summary>
+                             /// <param name="number">The number to be rounded up.</param>
+                             /// <param name="factor">The factor to which <paramref name="number"/> is rounded up.</param>
+                             /// <returns>The smallest multiple of <paramref name="factor"/> that is greater than or equal to <paramref name="number"/>.</returns>
+                             /// <exception cref="ArgumentException">Thrown if <paramref name="number"/> or <paramref name="factor"/> is less than zero.</exception>
+                             public static {{type}} RoundUpTo(this {{type}} number, {{type}} factor)
+                             {
+                                 Check.NotLessThan<{{type}}>(number, 0);
+                                 Check.GreaterThan<{{type}}>(factor, 0);
+                             
+                                 var remaining = ({{type}})(number % factor);
+                                 var value = remaining == 0
+                                     ? number
+                                     : number + (factor - remaining);
+                                 return ({{type}})value;
+                             }
+                             """;
+            builder.WriteAsLines(template);
+            builder.WriteLine();
+        }
+
+        foreach (var type in _types)
+        {
+            var template = $$"""
+                             /// <summary>
+                             /// Calculates the absolute difference between two numbers.
+                             /// </summary>
+                             /// <param name="value">The first number.</param>
+                             /// <param name="other">The second number to compare with.</param>
+                             /// <returns>The absolute difference between <paramref name="value"/> and <paramref name="other"/>.</returns>
+                             public static {{type}} AbsDiff(this {{type}} value, {{type}} other)
+                             {
+                                 return value > other
+                                     ? ({{type}})(value - other)
+                                     : ({{type}})(other - value);
+                             }
+                             """;
             builder.WriteAsLines(template);
             builder.WriteLine();
         }

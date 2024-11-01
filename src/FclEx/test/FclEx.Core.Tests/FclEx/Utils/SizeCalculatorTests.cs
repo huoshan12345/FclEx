@@ -248,17 +248,6 @@ public unsafe class SizeCalculatorTests
 
     internal static int RoundUpSize(int size)
     {
-        return RoundUp(size, IntPtr.Size);
-    }
-
-    internal static int RoundUp(int size, int @base)
-    {
-        Check.NotLessThan(size, 0);
-        Check.GreaterThan(@base, 0);
-
-        var remaining = size % @base;
-        return remaining == 0
-            ? size
-            : size + (@base - remaining);
+        return size.RoundUpTo(IntPtr.Size);
     }
 }

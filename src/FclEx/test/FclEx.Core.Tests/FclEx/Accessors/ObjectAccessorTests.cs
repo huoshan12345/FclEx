@@ -34,7 +34,7 @@ public unsafe class ObjectAccessorTests(ITestOutputHelper output)
             var size = prevField is null
                 ? offset
                 : UnsafeHelper.SizeOf(prevField.FieldType);
-            current += size.RoundUp(IntPtr.Size);
+            current += size.RoundUpTo(IntPtr.Size);
             output.WriteLine("Field: " + field.GetAutoPropertyNameOrFieldName());
             Assert.Equal(current.ToHexString(), address.ToHexString());
         }
