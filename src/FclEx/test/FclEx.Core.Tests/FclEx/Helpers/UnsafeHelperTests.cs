@@ -7,10 +7,12 @@ public class UnsafeHelperTests(ITestOutputHelper output)
     public static readonly ReadOnlySet<Type> CommonValueTypes =
     [
         ..Types.BlittableTypes,
-        typeof(ValueTuple<int>), // blittable but not marshalable
         typeof(DateTime), // non-blittable
         typeof(DateTimeOffset), // non-blittable
-        typeof(ValueTuple<int, long, DateTimeOffset, DateTime>), // non-blittable
+        typeof(DateOnly), // blittable
+        typeof(TimeOnly), // blittable
+        typeof(ValueTuple<int>), // non-blittable
+        typeof(ValueTuple<DateTimeOffset, int, DateTime>), // non-blittable
     ];
 
     public static readonly IEnumerable<object[]> BuiltInValueTypeCases = CommonValueTypes
@@ -80,13 +82,20 @@ public class UnsafeHelperTests(ITestOutputHelper output)
         });
 
         var types = CommonValueTypes.Concat([
+            typeof(TestClass),
             typeof(TestStruct),
             typeof(TestRecord),
+            typeof(TestRecordStruct),
+            typeof(EmptyClass),
+            typeof(EmptyStruct),
+            typeof(EmptyRecord),
+            typeof(EmptyRecordStruct),
+            typeof(object),
             typeof(string),
+            typeof(TextWriter), // abstract class
             typeof(Delegate),
             typeof(Action<int>),
-            typeof(Func<int>),
-            typeof(object)]);
+            typeof(Func<int, long>)]);
 
         foreach (var type in types)
         {
@@ -94,7 +103,7 @@ public class UnsafeHelperTests(ITestOutputHelper output)
             var unsafeSize = UnsafeSizeOf(type);
             var calculatorSize = GetSize(type, SizeCalculator.SizeOf);
             var size = SizeOf(type);
-            table.Rows.Add([type.SimpleName(), marshalSize, unsafeSize, calculatorSize, size]);
+            table.Rows.Add([type.ShortName(), marshalSize, unsafeSize, calculatorSize, size]);
         }
 
         output.WriteLine(table.ToString());

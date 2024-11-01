@@ -6,7 +6,7 @@ namespace FclEx.Comparers;
 public class BytewiseEqualityComparerTests(ITestOutputHelper output)
 {
     public static readonly IEnumerable<Type> TestTypes = Types.BlittableTypes.Concat([
-        typeof(ValueTuple<int>), // blittable but not marshalable
+        typeof(ValueTuple<int>), // non-blittable
         typeof(DateTime), // non-blittable
         typeof(DateTimeOffset), // non-blittable
         typeof(ValueTuple<int, long, DateTimeOffset, DateTime>), // non-blittable

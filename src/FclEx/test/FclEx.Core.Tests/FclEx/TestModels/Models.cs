@@ -28,3 +28,11 @@ public struct TestStruct
 public record TestRecord(int Int, DateTime DateTime, string String);
 
 public readonly record struct TestRecordStruct(int Int, DateTime DateTime, string String);
+
+public class EmptyClass;
+
+public struct EmptyStruct;
+
+public record EmptyRecord;
+
+public readonly record struct EmptyRecordStruct;

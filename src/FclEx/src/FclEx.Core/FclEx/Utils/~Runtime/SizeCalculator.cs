@@ -16,20 +16,11 @@ public static class SizeCalculator
 
     private static int CalculateValueTypeInstance(Type type)
     {
-        var instance = GetUninitializedObject(type);
         var fields = type.GetAllInstanceFields();
-
         if (fields.Length == 0)
             return 0;
 
-        // 由于结构体在内存中字节就是所有字段的内容，所有我们采用一种讨巧的计算方法。
-        // 假设我们需要结算类型为T的结构体的字节数，那么我们创建一个ValueTuple<T,T>元组，它的第二个字段Item2的偏移量就是结构体T的字节数
-        // 注：值类型的实例地址和第一个字段的地址相同。所以addresses[1]等于addresses[0]
-        var tupleType = typeof(ValueTuple<,>).MakeGenericType(type, type);
-        var tuple = tupleType.GetRequiredConstructor(type, type).Invoke([instance, instance]);
-        var addresses = ObjectAccessor.GetAllFieldAddresses(ref tuple, tupleType);
-        Debug.Assert(addresses.Length == 2);
-        return (int)addresses[1].AbsDiff(addresses[0]);
+        return UnsafeHelper.SizeOf(type);
     }
 
     private static int CalculateReferenceTypeInstance(Type type)

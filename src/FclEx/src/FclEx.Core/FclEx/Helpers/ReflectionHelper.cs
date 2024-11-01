@@ -3,7 +3,6 @@
 public static class ReflectionHelper
 {
     private static readonly ConcurrentDictionary<Type, Dictionary<string, DataMemberInfo>> TypeDataMemberDic = new();
-    private const BindingFlags Flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
     internal static Dictionary<string, DataMemberInfo> GetDataMembers(Type type)
     {
@@ -11,34 +10,39 @@ public static class ReflectionHelper
 
         static Dictionary<string, DataMemberInfo> GetDataMembersInternal(Type type)
         {
-            var members = new List<(DataMemberInfo Info, int Order)>();
-            var t = type;
-            for (var i = 0; t != null; i++)
+            var list = new List<(DataMemberInfo Info, int Order)>();
+            var cur = type;
+            for (var i = 0; cur != null; i++)
             {
-                var ms = GetDeclaredDataMembers(t).Select(m => (m, i));
-                members.AddRange(ms);
-                t = t.BaseType;
+                var members = GetDeclaredDataMembers(cur);
+                // ReSharper disable once LoopCanBeConvertedToQuery
+                foreach (var member in members)
+                {
+                    list.Add((member, i));
+                }
+                cur = cur.BaseType;
             }
 
+            // ReSharper disable once InvertIf
             if (type.IsInterface)
             {
                 var ms = type.GetInterfaces()
                     .Select(GetDeclaredDataMembers)
                     .SelectMany(m => m)
                     .Select(m => (m, 1));
-                members.AddRange(ms);
+                list.AddRange(ms);
             }
 
-            return members.GroupBy(m => m.Info.Name)
+            return list.GroupBy(m => m.Info.Name)
                 .ToDictionary(m => m.Key, m => m.MinimaBy(x => x.Order).Items[0].Info);
         }
 
         static IEnumerable<DataMemberInfo> GetDeclaredDataMembers(Type type)
         {
-            return type.GetMembers(Flags)
+            return type.GetMembers(BindingAttributes.AllDeclared)
                 .Where(m => m is PropertyInfo or FieldInfo)
                 .Select(m => m.ToDataMemberInfo())
-                .Where(m => !m.IsCompilerGenerated);
+                .Where(m => m.IsCompilerGenerated == false);
         }
     }
 }

@@ -2,14 +2,19 @@
 
 public static unsafe class UnsafeHelper
 {
-    public static int SizeOf<T>()
-    {
-        return Unsafe.SizeOf<T>();
-    }
-
-    private static readonly MethodInfo _sizeof = typeof(Unsafe).GetRequiredMethod(nameof(Unsafe.SizeOf), 1);
+    private static readonly MethodInfo _sizeof = typeof(UnsafeHelper).GetRequiredMethod(nameof(SizeOfImpl), 1);
     private static readonly ConcurrentDictionary<Type, int> _cache = new();
 
+    /// <summary>
+    /// Calculates the size, in bytes, of a specified type.
+    /// </summary>
+    /// <returns>The size of type in bytes.</returns>
+    /// <remarks>
+    /// This method works by creating a fixed buffer with two instances of type. 
+    /// It then computes the memory distance between the addresses of these two elements to determine 
+    /// the size of a single instance of type. This approach is particularly useful 
+    /// for unmanaged or blittable types where the size is not easily obtainable otherwise.
+    /// </remarks>
     public static int SizeOf(Type type)
     {
         return _cache.GetOrAdd(type, m =>
@@ -19,13 +24,29 @@ public static unsafe class UnsafeHelper
         });
     }
 
-    public static int SizeOf2<T>()
+    /// <summary>
+    /// Calculates the size, in bytes, of a specified type <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">The type for which to determine the size in bytes.</typeparam>
+    /// <returns>The size of type <typeparamref name="T"/> in bytes.</returns>
+    /// <remarks>
+    /// This method works by creating a fixed buffer with two instances of type <typeparamref name="T"/>. 
+    /// It then computes the memory distance between the addresses of these two elements to determine 
+    /// the size of a single instance of <typeparamref name="T"/>. This approach is particularly useful 
+    /// for unmanaged or blittable types where the size is not easily obtainable otherwise.
+    /// </remarks>
+    public static int SizeOf<T>()
+    {
+        return SizeOf(typeof(T));
+    }
+
+    private static int SizeOfImpl<T>()
     {
         fixed (T* ptr = new T[2])
         {
-            var ptrToT0 = (byte*)(&ptr[0]);
-            var ptrToT1 = (byte*)(&ptr[1]);
-            return (int)(((byte*)ptrToT1) - ((byte*)ptrToT0));
+            var ptrToT0 = new IntPtr(&ptr[0]);
+            var ptrToT1 = new IntPtr(&ptr[1]);
+            return (int)(ptrToT1.AbsDiff(ptrToT0));
         }
     }
 

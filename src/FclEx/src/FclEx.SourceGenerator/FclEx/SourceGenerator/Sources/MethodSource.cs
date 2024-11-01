@@ -1,6 +1,6 @@
 ﻿namespace FclEx.SourceGenerator.Sources;
 
-internal static class MethodHelperSource
+internal static class MethodSource
 {
     private const int Max = 8;
     private static readonly string[] _usings =
@@ -12,8 +12,8 @@ internal static class MethodHelperSource
     internal static SourceInfo Generate()
     {
         const string @namespace = "FclEx.Helpers";
-        const string className = "MethodHelper";
-        const string methodName = "public static MethodInfo GetMethod";
+        const string className = "Method";
+        const string methodName = "public static MethodInfo Of";
 
         using var builder = new SourceBuilder()
             .WriteGeneratedHeader()

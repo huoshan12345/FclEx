@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Helpers;
 
-public class MethodHelperTests
+public class MethodTests
 {
     internal static class Tester
     {
@@ -16,7 +16,7 @@ public class MethodHelperTests
     [Fact]
     public void GetMethod_Action_Test()
     {
-        var actual = MethodHelper.GetMethod(Tester.Action);
+        var actual = Method.Of(Tester.Action);
         var expected = GetMethod(nameof(Tester.Action), 0);
         Assert.Equal(expected, actual);
     }
@@ -32,7 +32,7 @@ public class MethodHelperTests
     [Fact]
     public void GetMethod_Action_T_Test()
     {
-        var actual = MethodHelper.GetMethod<int>(Tester.Action);
+        var actual = Method.Of<int>(Tester.Action);
         var expected = GetMethod(nameof(Tester.Action), 1);
         Assert.Equal(expected, actual);
     }
@@ -40,7 +40,7 @@ public class MethodHelperTests
     [Fact]
     public void GetMethod_Action_T2_Test()
     {
-        var actual = MethodHelper.GetMethod<int, int>(Tester.Action);
+        var actual = Method.Of<int, int>(Tester.Action);
         var expected = GetMethod(nameof(Tester.Action), 2);
         Assert.Equal(expected, actual);
     }
@@ -48,7 +48,7 @@ public class MethodHelperTests
     [Fact]
     public void GetMethod_Func_Test()
     {
-        var actual = MethodHelper.GetMethod(Tester.Func);
+        var actual = Method.Of(Tester.Func);
         var expected = GetMethod(nameof(Tester.Func), 0);
         Assert.Equal(expected, actual);
     }
@@ -57,7 +57,7 @@ public class MethodHelperTests
     [Fact]
     public void GetMethod_Func_T_Test()
     {
-        var actual = MethodHelper.GetMethod<int, int>(Tester.Func);
+        var actual = Method.Of<int, int>(Tester.Func);
         var expected = GetMethod(nameof(Tester.Func), 1);
         Assert.Equal(expected, actual);
     }
@@ -65,7 +65,7 @@ public class MethodHelperTests
     [Fact]
     public void GetMethod_Func_T2_Test()
     {
-        var actual = MethodHelper.GetMethod<int, int, int>(Tester.Func);
+        var actual = Method.Of<int, int, int>(Tester.Func);
         var expected = GetMethod(nameof(Tester.Func), 2);
         Assert.Equal(expected, actual);
     }

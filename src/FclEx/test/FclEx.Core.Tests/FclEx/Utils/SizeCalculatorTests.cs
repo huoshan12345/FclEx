@@ -2,11 +2,11 @@
 // ReSharper disable ArrangeTypeMemberModifiers
 // ReSharper disable ClassNeverInstantiated.Local
 // ReSharper disable ConvertToConstant.Local
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
 
 using static FclEx.Utils.SizeCalculator;
 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
 namespace FclEx.Utils;
 
 public unsafe class SizeCalculatorTests
@@ -199,12 +199,8 @@ public unsafe class SizeCalculatorTests
         }
         {
             var size = sizeof(AlignedStructPack4);
-            var expectedSize = NET60_OR_GREATER.IsMatch()
-                ? size
-                : RoundUpSize(size);
-
             var actualSize = SizeOf<AlignedStructPack4>();
-            Assert.Equal(expectedSize, actualSize);
+            Assert.Equal(size, actualSize);
         }
         {
             var expectedSize = sizeof(AlignedStructPack8);
@@ -244,6 +240,16 @@ public unsafe class SizeCalculatorTests
         var expectedSize = IntPtr.Size * 2 + IntPtr.Size + sizeof(double);
         var actualSize = SizeOf<ClassContainsArray>();
         Assert.Equal(RoundUpSize(expectedSize), actualSize);
+    }
+
+    [Theory]
+    [InlineData(typeof(ValueTuple<int>))]
+    [InlineData(typeof(ValueTuple<int, long>))]
+    public void SizeOf_ValueTuple_Test(Type type)
+    {
+        var expectedSize = UnsafeHelper.SizeOf(type);
+        var actualSize = SizeOf(type);
+        Assert.Equal(expectedSize, actualSize);
     }
 
     internal static int RoundUpSize(int size)

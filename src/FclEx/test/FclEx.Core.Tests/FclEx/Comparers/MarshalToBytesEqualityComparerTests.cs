@@ -9,10 +9,8 @@ public class MarshalToBytesEqualityComparerTests(ITestOutputHelper output)
         typeof(decimal),
         typeof(TimeSpan),
         typeof(Guid),
-#if NET6_0_OR_GREATER
         typeof(DateOnly),
         typeof(TimeOnly),
-#endif
         typeof(MarshalableClass),
         typeof(MarshalableStruct)]);
 

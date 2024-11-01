@@ -12,7 +12,7 @@ public class SourceGenerator : IIncrementalGenerator
         {
             SourceInfo[] codes =
             [
-                MethodHelperSource.Generate(),
+                MethodSource.Generate(),
                 TypeExtensionsSource.Generate(),
                 ValueTupleExtensionsSource.Generate(),
                 TupleExtensionsSource.Generate(),
