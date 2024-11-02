@@ -96,7 +96,7 @@ partial class TypeExtensions
 
         foreach (var m in type.GetAllInstanceFields())
         {
-            var name = m.GetAutoPropertyNameOrFieldName();
+            var name = m.GetAutoPropertyOrFieldName();
             var fieldPath = (path ?? "$") + "." + name;
             CheckBlittable(m.FieldType, visited, fieldPath);
         }
@@ -168,7 +168,7 @@ partial class TypeExtensions
 
         foreach (var m in type.GetAllInstanceFields())
         {
-            var name = m.GetAutoPropertyNameOrFieldName();
+            var name = m.GetAutoPropertyOrFieldName();
             var fieldPath = (path ?? "$") + "." + name;
             CheckMarshalable(m.FieldType, m, visited, fieldPath);
         }
@@ -206,7 +206,16 @@ partial class TypeExtensions
         throw new ArgumentException(error, nameof(type));
     }
 
-    public static string GetAutoPropertyNameOrFieldName(this FieldInfo field)
+    /// <summary>
+    /// Gets the name of the property if the specified field is an auto-implemented property backing field;
+    /// otherwise, returns the field name.
+    /// </summary>
+    /// <param name="field">The <see cref="FieldInfo"/> instance representing the field.</param>
+    /// <returns>
+    /// The name of the associated property if <paramref name="field"/> is recognized as a backing field for
+    /// an auto-implemented property; otherwise, the field's own name.
+    /// </returns>
+    public static string GetAutoPropertyOrFieldName(this FieldInfo field)
     {
         return field.TryGetAutoProperty(out var property)
             ? property.Name

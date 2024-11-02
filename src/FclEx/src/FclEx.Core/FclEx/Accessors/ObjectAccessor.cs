@@ -25,7 +25,7 @@ public static class ObjectAccessor
     }
 
     private static readonly ConcurrentDictionary<Type, GetAllFieldAddresses> _cache = new();
-    
+
     private static GetAllFieldAddresses BuildAllFieldAddressesAccessor(Type type)
     {
         var method = new DynamicMethod(
@@ -79,6 +79,11 @@ public static class ObjectAccessor<T>
             ilGen.Emit(OpCodes.Ldloc_0);
             ilGen.Emit(OpCodes.Ldc_I4, index);
             ilGen.Emit(OpCodes.Ldarg_0);
+
+            // for reference types, we need to dereference the ref and get the actual object reference.
+            if (type.IsValueType == false)
+                ilGen.Emit(OpCodes.Ldind_Ref);
+
             ilGen.Emit(OpCodes.Ldflda, fields[index]);
             ilGen.Emit(OpCodes.Conv_I);
             ilGen.Emit(OpCodes.Stelem_I);

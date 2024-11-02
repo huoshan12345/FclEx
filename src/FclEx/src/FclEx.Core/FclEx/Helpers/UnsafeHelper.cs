@@ -5,6 +5,8 @@ public static unsafe class UnsafeHelper
     private static readonly MethodInfo _sizeof = typeof(UnsafeHelper).GetRequiredMethod(nameof(SizeOfImpl), 1);
     private static readonly ConcurrentDictionary<Type, int> _cache = new();
 
+    private static readonly ConcurrentDictionary<(Type, string), MethodInfo> _methods = new();
+
     /// <summary>
     /// Calculates the size, in bytes, of a specified type.
     /// </summary>
@@ -111,11 +113,53 @@ public static unsafe class UnsafeHelper
         return result;
     }
 
-    public static IntPtr GetActualAddress<T>(ref T obj)
+    /// <summary>
+    /// Gets the address of the first field in the specified object.
+    /// </summary>
+    /// <typeparam name="T">The type of the object.</typeparam>
+    /// <param name="obj">The object whose field address is to be retrieved.</param>
+    /// <returns>
+    /// A pointer to the address of the first field of the object. If <typeparamref name="T"/> is a reference type,
+    /// the function adjusts the pointer to return the address of the first field within the object, rather than the reference itself.
+    /// Note that the first field may not be the first declared field, due to potential field rearrangement by the CLR.
+    /// </returns>
+    public static IntPtr GetFirstFieldAddress<T>(ref T obj)
     {
-        var pointer = Unsafe.AsPointer<T>(ref obj);
+        Check.NotNull(obj);
+
+        var pointer = Unsafe.AsPointer(ref obj);
         return typeof(T).IsValueType
             ? new IntPtr(pointer)
-            : *(IntPtr*)pointer; // the address of method table.
+            : *(IntPtr*)pointer + IntPtr.Size;
+    }
+
+    /// <summary>
+    /// Dereferences a pointer and returns the value at the specified memory address.
+    /// </summary>
+    /// <typeparam name="T">The type of the value being dereferenced.</typeparam>
+    /// <param name="ptr">A pointer to the memory address containing the value.</param>
+    /// <returns>
+    /// The value located at the memory address pointed to by <paramref name="ptr"/>.
+    /// </returns>
+    /// <remarks>
+    /// This function interprets the memory address as a pointer to a value of type <typeparamref name="T"/>.
+    /// Use with caution, as dereferencing an invalid or misaligned pointer can lead to runtime errors or undefined behavior.
+    /// </remarks>
+    public static T? GetValue<T>(IntPtr ptr)
+    {
+        var pointer = ptr.ToPointer();
+        return *(T*)pointer;
+        //return Unsafe.Read<T>(pointer);
+        //return Unsafe.AsRef<T>(pointer);
+    }
+    
+    public static object? GetValue(IntPtr ptr, Type type)
+    {
+        var method = _methods.GetOrAdd((type, nameof(GetValue)), m =>
+        {
+            var methodDef = typeof(UnsafeHelper).GetRequiredMethod(m.Item2, 1, typeof(IntPtr));
+            return methodDef.MakeGenericMethod(type);
+        });
+        return method.Invoke(null, [ptr]);
     }
 }

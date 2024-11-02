@@ -17,10 +17,9 @@ public static class SizeCalculator
     private static int CalculateValueTypeInstance(Type type)
     {
         var fields = type.GetAllInstanceFields();
-        if (fields.Length == 0)
-            return 0;
-
-        return UnsafeHelper.SizeOf(type);
+        return fields.Length == 0
+            ? 0
+            : UnsafeHelper.SizeOf(type);
     }
 
     private static int CalculateReferenceTypeInstance(Type type)
@@ -44,10 +43,9 @@ public static class SizeCalculator
             ? CalculateValueTypeInstance(lastField.FieldType)
             : IntPtr.Size;
 
-        var size = lastFieldOffset + lastFieldSize + IntPtr.Size * 2; // plus sizes of two pointers for ObjectHeader and MethodTableAddress
-        // Round up to IntPtr.Size
-        var round = IntPtr.Size - 1;
-        return ((size + round) & (~round));
+        // plus sizes of two pointers for ObjectHeader and MethodTableAddress
+        var size = lastFieldOffset + lastFieldSize + IntPtr.Size * 2;
+        return size.RoundUpTo(IntPtr.Size);
 
         static IEnumerable<Type> GetBaseTypesAndThis(Type? type)
         {
