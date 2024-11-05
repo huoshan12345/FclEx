@@ -60,6 +60,7 @@ partial class TypeExtensions
                 || nullableUnderlyingType != null
                 || type.ContainsGenericParameters
                 || type.Name == "ArgIterator"
+                // Byref-like structures are declared using ref struct keyword in C#. 
 #if NETSTANDARD2_0
                 || IsByRefLike(type)
 #else

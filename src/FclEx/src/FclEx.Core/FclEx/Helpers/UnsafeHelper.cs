@@ -114,26 +114,6 @@ public static unsafe class UnsafeHelper
     }
 
     /// <summary>
-    /// Gets the address of the first field in the specified object.
-    /// </summary>
-    /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="obj">The object whose field address is to be retrieved.</param>
-    /// <returns>
-    /// A pointer to the address of the first field of the object. If <typeparamref name="T"/> is a reference type,
-    /// the function adjusts the pointer to return the address of the first field within the object, rather than the reference itself.
-    /// Note that the first field may not be the first declared field, due to potential field rearrangement by the CLR.
-    /// </returns>
-    public static IntPtr GetFirstFieldAddress<T>(ref T obj)
-    {
-        Check.NotNull(obj);
-
-        var pointer = Unsafe.AsPointer(ref obj);
-        return typeof(T).IsValueType
-            ? new IntPtr(pointer)
-            : *(IntPtr*)pointer + IntPtr.Size;
-    }
-
-    /// <summary>
     /// Dereferences a pointer and returns the value at the specified memory address.
     /// </summary>
     /// <typeparam name="T">The type of the value being dereferenced.</typeparam>
@@ -149,8 +129,6 @@ public static unsafe class UnsafeHelper
     {
         var pointer = ptr.ToPointer();
         return *(T*)pointer;
-        //return Unsafe.Read<T>(pointer);
-        //return Unsafe.AsRef<T>(pointer);
     }
     
     public static object? GetValue(IntPtr ptr, Type type)

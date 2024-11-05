@@ -98,4 +98,11 @@ public class GetAllInstanceFieldsTests
         var fields = type.GetAllInstanceFields();
         Assert.Equal(expectedCount, fields.Length);
     }
+
+    [Fact]
+    public void GetAllInstanceFields_Interface_Test()
+    {
+        var fields = typeof(IReadOnlyList<int>).GetAllInstanceFields();
+        Assert.Equal(0, fields.Length);
+    }
 }

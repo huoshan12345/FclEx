@@ -9,9 +9,13 @@ public static class SizeCalculator
         // for string type, GetUninitializedObject will throw an ArgumentException:
         // Uninitialized Strings cannot be created.
         // so we need to do special handling for it.
-        return type == typeof(string)
-            ? string.Empty
-            : ObjectHelper.GetUninitializedObject(type);
+        if (type == typeof(string))
+            return string.Empty;
+
+        if (type.IsAssignableTo(typeof(Delegate)))
+            return new Action(Console.WriteLine);
+
+        return ObjectHelper.GetUninitializedObject(type);
     }
 
     private static int CalculateValueTypeInstance(Type type)
@@ -32,12 +36,11 @@ public static class SizeCalculator
         if (fields.Length == 0)
             return 3 * IntPtr.Size;
 
-        // TODO: GetUninitializedObject does work for abstract types and delegate types.
         var instance = GetUninitializedObject(type);
         var addresses = ObjectAccessor.GetAllFieldAddresses(ref instance, type);
         Debug.Assert(addresses.Length == fields.Length);
 
-        var ((firstAddress, _), (lastAddress, lastField)) = addresses.Zip(fields).MinMaxBy(m => m.First.ToInt64());
+        var ((firstAddress, _), (lastAddress, lastField)) = addresses.Zip(fields).MinMaxBy(m => m.First);
         var lastFieldOffset = (int)lastAddress.AbsDiff(firstAddress);
         var lastFieldSize = lastField.FieldType.IsValueType
             ? CalculateValueTypeInstance(lastField.FieldType)
@@ -46,15 +49,6 @@ public static class SizeCalculator
         // plus sizes of two pointers for ObjectHeader and MethodTableAddress
         var size = lastFieldOffset + lastFieldSize + IntPtr.Size * 2;
         return size.RoundUpTo(IntPtr.Size);
-
-        static IEnumerable<Type> GetBaseTypesAndThis(Type? type)
-        {
-            while (type is not null)
-            {
-                yield return type;
-                type = type.BaseType;
-            }
-        }
     }
 
     private static readonly ConcurrentDictionary<Type, int> _sizes = new();

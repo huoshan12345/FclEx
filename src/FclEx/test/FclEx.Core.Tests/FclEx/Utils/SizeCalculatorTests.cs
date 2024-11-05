@@ -252,6 +252,49 @@ public unsafe class SizeCalculatorTests
         Assert.Equal(expectedSize, actualSize);
     }
 
+    [Theory]
+    [InlineData(typeof(Action))]
+    [InlineData(typeof(Func<int>))]
+    public void SizeOf_DelegateType_Test(Type type)
+    {
+        /*
+         * object? _target;
+         * object? _methodBase;
+         * IntPtr _methodPtr;
+         * IntPtr _methodPtrAux;
+         * object? _invocationList;
+         * nint _invocationCount;
+         */
+        var expectedSize = sizeof(object) * 3 + sizeof(IntPtr) * 3 + IntPtr.Size * 2;
+        var actualSize = SizeOf(type);
+        Assert.Equal(expectedSize, actualSize);
+    }
+
+    [Theory]
+    [InlineData(typeof(TextWriter))]
+    public void SizeOf_AbstractType_Test(Type type)
+    {
+        var ex = Assert.Throws<MemberAccessException>(() => SizeOf(type));
+        Assert.Contains("Cannot create an abstract class.", ex.Message);
+    }
+
+    [Theory]
+    [InlineData(typeof(List<>))]
+    public void SizeOf_OpenGenericType_Test(Type type)
+    {
+        var ex = Assert.Throws<MemberAccessException>(() => SizeOf(type));
+        Assert.Contains("Cannot create a type for which Type.ContainsGenericParameters is true.", ex.Message);
+    }
+
+    [Theory]
+    [InlineData(typeof(IEnumerable))]
+    [InlineData(typeof(IEnumerable<>))]
+    public void SizeOf_Interface_Test(Type type)
+    {
+        var actualSize = SizeOf(type);
+        Assert.Equal(IntPtr.Size * 3, actualSize);
+    }
+
     internal static int RoundUpSize(int size)
     {
         return size.RoundUpTo(IntPtr.Size);
