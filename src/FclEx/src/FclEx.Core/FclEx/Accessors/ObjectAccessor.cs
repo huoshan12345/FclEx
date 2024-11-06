@@ -130,7 +130,6 @@ public static class ObjectAccessor<T>
     /// <summary>
     /// Builds a delegate that retrieves the memory addresses of all instance fields of type <typeparamref name="T"/>.
     /// </summary>
-    /// <typeparam name="T">The type whose instance fields' addresses are to be accessed.</typeparam>
     /// <returns>
     /// A delegate of type <see cref="GetAllFieldAddresses{T}"/> that, when invoked, returns an array of <see cref="IntPtr"/> 
     /// representing the addresses of all instance fields in the given instance of type <typeparamref name="T"/>.
