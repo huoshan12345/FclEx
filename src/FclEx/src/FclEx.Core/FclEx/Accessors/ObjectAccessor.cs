@@ -26,6 +26,17 @@ public static class ObjectAccessor
             : *(IntPtr*)pointer + IntPtr.Size;
     }
 
+    /// <summary>
+    /// Gets the memory address of a given reference to an instance as an <see cref="IntPtr"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of the instance whose address is being retrieved.</typeparam>
+    /// <param name="instance">A reference to the instance whose memory address is to be obtained.</param>
+    /// <returns>An <see cref="IntPtr"/> representing the memory address of the instance.</returns>
+    /// <remarks>
+    /// This method uses unsafe code and the <see cref="System.Runtime.CompilerServices.Unsafe"/> class to 
+    /// convert the reference to a raw pointer. Note that even null references have an address, so no null-check 
+    /// is performed on the input.
+    /// </remarks>
     public static unsafe IntPtr GetAddress<T>(ref T instance)
     {
         // null variables also have addresses, so we don't do null-check here.
@@ -33,12 +44,39 @@ public static class ObjectAccessor
         return new IntPtr(pointer);
     }
 
+    /// <summary>
+    /// Gets the memory addresses of all instance fields of the given instance of type <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of the instance whose field addresses are to be retrieved.</typeparam>
+    /// <param name="instance">A reference to the instance whose field addresses are to be obtained.</param>
+    /// <returns>
+    /// An array of <see cref="IntPtr"/> representing the memory addresses of all instance fields of the specified instance.
+    /// </returns>
+    /// <remarks>
+    /// This method validates the instance and utilizes the <see cref="ObjectAccessor{T}"/> to access the addresses of 
+    /// the instance fields. It is useful for scenarios involving low-level memory inspection or manipulation.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">Thrown when the instance is null.</exception>
     public static IntPtr[] GetAllFieldAddresses<T>(ref T instance)
     {
         Check.NotNull(instance);
         return ObjectAccessor<T>.GetAllFieldAddresses(ref instance);
     }
 
+    /// <summary>
+    /// Gets the memory addresses of all instance fields of a given object instance and type.
+    /// </summary>
+    /// <param name="instance">A reference to the object instance whose field addresses are to be obtained.</param>
+    /// <param name="type">The type of the instance whose field addresses are to be retrieved.</param>
+    /// <returns>
+    /// An array of <see cref="IntPtr"/> representing the memory addresses of all instance fields of the specified object.
+    /// </returns>
+    /// <remarks>
+    /// This method dynamically caches and retrieves a delegate for accessing field addresses based on the provided type.
+    /// The delegate is built using <see cref="BuildAllFieldAddressesAccessor"/> and invoked with the instance to return 
+    /// the field addresses. This method supports polymorphic scenarios where the exact type is determined at runtime.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">Thrown when the instance is null.</exception>
     public static IntPtr[] GetAllFieldAddresses(ref object instance, Type type)
     {
         Check.NotNull(instance);
@@ -89,6 +127,23 @@ public static class ObjectAccessor<T>
 {
     public static readonly GetAllFieldAddresses<T> GetAllFieldAddresses = BuildAllFieldAddressesAccessor();
 
+    /// <summary>
+    /// Builds a delegate that retrieves the memory addresses of all instance fields of type <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">The type whose instance fields' addresses are to be accessed.</typeparam>
+    /// <returns>
+    /// A delegate of type <see cref="GetAllFieldAddresses{T}"/> that, when invoked, returns an array of <see cref="IntPtr"/> 
+    /// representing the addresses of all instance fields in the given instance of type <typeparamref name="T"/>.
+    /// </returns>
+    /// <remarks>
+    /// This method uses a <see cref="DynamicMethod"/> to dynamically generate IL code for accessing 
+    /// the field addresses of an instance. The method utilizes the `Ldflda` (Load Field Address) opcode to load the address 
+    /// of each field and stores these addresses in an array. Special handling is included for reference types to ensure 
+    /// the dereferencing of the `ref` parameter to get the actual object reference before field addresses are obtained.
+    ///
+    /// The resulting method, when executed, returns an array of pointers, each corresponding to the address of an instance field. 
+    /// This function can be used for advanced scenarios that require direct memory manipulation or introspection.
+    /// </remarks>
     private static GetAllFieldAddresses<T> BuildAllFieldAddressesAccessor()
     {
         var type = typeof(T);
