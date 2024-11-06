@@ -25,6 +25,19 @@ public static class IntPtrExtensions
         return diff >= 0 ? diff : -diff;
     }
 
+    /// <summary>
+    /// Calculates the difference between two memory addresses represented by <see cref="IntPtr"/> values.
+    /// </summary>
+    /// <param name="ptr">The starting <see cref="IntPtr"/> address.</param>
+    /// <param name="other">The <see cref="IntPtr"/> address to subtract from <paramref name="ptr"/>.</param>
+    /// <returns>
+    /// The difference, in bytes, between <paramref name="ptr"/> and <paramref name="other"/> as a <see cref="long"/>.
+    /// </returns>
+    public static long Subtract(this IntPtr ptr, IntPtr other)
+    {
+        return ptr.ToInt64() - other.ToInt64();
+    }
+
     public static T? MarshalTo<T>(this IntPtr ptr)
     {
         return Marshal.PtrToStructure<T>(ptr);

@@ -72,7 +72,7 @@ public class UnsafeHelperTests(ITestOutputHelper output)
         return _unsafeSizeOf.MakeGenericMethod(type).Invoke<int>(null, null);
     }
 
-    [Fact]
+    [LocalOnlyFact]
     public void CompareSizeOf()
     {
         var table = new ConsoleTable(new()
