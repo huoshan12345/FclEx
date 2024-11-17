@@ -9,42 +9,42 @@ public class PublisherTests
         IsDelayed = true,
     };
 
-    private static TestPublisher CreatePublisher()
+    private static Task<TestPublisher> CreatePublisher()
     {
         var connection = RmqConnection;
-        return new TestPublisher(new PublisherSettings(connection, DefaultExchange));
+        return TestPublisher.CreateAsync(new PublisherSettings(connection, DefaultExchange));
     }
 
     [Fact]
-    public void Publish_Test()
+    public async Task Publish_Test()
     {
-        using var publisher = CreatePublisher();
-        publisher.Publish("test", "test");
+        await using var publisher = await CreatePublisher();
+        await publisher.PublishAsync("test", "test");
     }
 
     [Fact]
-    public void Publish_Serially_Test()
+    public async Task Publish_Serially_Test()
     {
-        using var publisher = CreatePublisher();
+        await using var publisher = await CreatePublisher();
         for (var i = 0; i < 10; i++)
         {
-            publisher.Publish("test", "test");
+            await publisher.PublishAsync("test", "test");
         }
     }
 
     [Fact]
-    public void Publish_List_Test()
+    public async Task Publish_List_Test()
     {
-        using var publisher = CreatePublisher();
-        publisher.Publish(Enumerable.Range(1, 10).Select(m => "test"), "test");
+        await using var publisher = await CreatePublisher();
+        await publisher.PublishAsync<string>(Enumerable.Range(1, 10).Select(m => "test"), "test");
     }
 
     [Fact]
-    public void Publish_Multi_Test()
+    public async Task Publish_Multi_Test()
     {
-        using var publisher1 = CreatePublisher();
-        using var publisher2 = CreatePublisher();
-        publisher1.Publish("test", "test");
-        publisher2.Publish("test", "test");
+        await using var publisher1 = await CreatePublisher();
+        await using var publisher2 = await CreatePublisher();
+        await publisher1.PublishAsync("test", "test");
+        await publisher2.PublishAsync("test", "test");
     }
 }

@@ -17,10 +17,7 @@ public unsafe class BytewiseEqualityComparer<T> : IEqualityComparer<T>
 
         var span1 = AsSpan(p1);
         var span2 = AsSpan(p2);
-#if DEBUG
-        var array1 = span1.ToArray();
-        var array2 = span2.ToArray();
-#endif
+
         return span1.SequenceEqual(span2);
     }
 

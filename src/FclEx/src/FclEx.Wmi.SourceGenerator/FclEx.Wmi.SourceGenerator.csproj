@@ -3,7 +3,7 @@
   <PropertyGroup>
     <!--To fix the error 'The library 'hostpolicy.dll' required to execute the application was not found'-->
     <OutputType>exe</OutputType>
-    <TargetFrameworks>net6.0-windows</TargetFrameworks>
+    <TargetFrameworks>net9.0-windows</TargetFrameworks>
     <IsPackable>false</IsPackable>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <NoWarn>RS1035;CS1591</NoWarn>
@@ -18,14 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Management" Version="8.0.0" />
+    <PackageReference Include="System.Management" Version="9.0.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" PrivateAssets="all" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="Resources\**" />
-    <None Include="Resources\**" />
   </ItemGroup>
 
 </Project>

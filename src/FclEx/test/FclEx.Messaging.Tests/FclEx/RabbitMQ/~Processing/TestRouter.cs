@@ -4,27 +4,36 @@ namespace FclEx.RabbitMQ;
 
 public sealed class TestRouter : MessageRouter<string, string>
 {
-    protected override bool AutomaticRecoveryEnabled { get; } = false;
+    protected override bool AutomaticRecoveryEnabled => false;
 
-    private readonly Func<string, string> _routingKeySelector;
+    private readonly Func<string, string> _keyFunc;
 
-    public TestRouter(RouterSettings settings, Func<string, string> routingKeySelector)
-        : base(StringToStringConverter.Instance)
+    private TestRouter(Func<string, string> keyFunc)
+        : base(null, null, StringToStringConverter.Instance)
     {
-        _routingKeySelector = Check.NotNull(routingKeySelector);
-        Init(settings);
+        _keyFunc = Check.NotNull(keyFunc);
     }
 
-    protected override string GetRoutingKey(IBasicProperties props, string output)
+    protected override string GetRoutingKey(IReadOnlyBasicProperties props, string output)
     {
-        return _routingKeySelector(output);
+        return _keyFunc(output);
     }
 
-    protected override void DisposeInternal()
+    protected override async ValueTask DisposeActionAsync()
     {
-        Channel.QueueDelete(Settings!.Queue.Name);
-        Channel.ExchangeDelete(Settings.Exchange.Name);
-        Channel.ExchangeDelete(Settings.TargetExchange.Name);
-        base.DisposeInternal();
+        if (Channel is null || Settings is null)
+            return;
+
+        await Channel.QueueDeleteAsync(Settings!.Queue.Name);
+        await Channel.ExchangeDeleteAsync(Settings.Exchange.Name);
+        await Channel.ExchangeDeleteAsync(Settings.TargetExchange.Name);
+        await base.DisposeActionAsync();
+    }
+
+    public static async Task<TestRouter> CreateAsync(RouterSettings settings, Func<string, string> keyFunc)
+    {
+        var publisher = new TestRouter(keyFunc);
+        await publisher.InitializeAsync(settings);
+        return publisher;
     }
 }

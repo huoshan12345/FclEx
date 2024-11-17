@@ -5,59 +5,69 @@ namespace FclEx.RabbitMQ;
 
 public class TestConsumer<T> : CommonConsumer<T>
 {
-    public override int MaxRetryTimes { get; }
-    protected override bool AutomaticRecoveryEnabled { get; } = false;
+    protected override int MaxRetryTimes { get; }
+    protected override bool AutomaticRecoveryEnabled => false;
     protected readonly Func<int, TimeSpan>? _delay;
 
-    public TestConsumer(ConsumerSettings settings, ConsumeHandler handler, int maxRetryTimes = 3, Func<int, TimeSpan>? delay = null) : base(handler)
+    protected TestConsumer(ConsumeHandler handler, int maxRetryTimes = 3, Func<int, TimeSpan>? delay = null) : base(handler)
     {
         _delay = delay;
         MaxRetryTimes = maxRetryTimes;
-        Init(settings);
     }
 
-    public TestConsumer(ConsumerSettings settings, Func<T, OperateResult> action, int maxRetryTimes = 3, Func<int, TimeSpan>? delay = null)
-        : this(settings, (_, m) => Operate.Execute(() => action(m)), maxRetryTimes, delay)
+    protected TestConsumer(Func<T, OperateResult> action, int maxRetryTimes = 3, Func<int, TimeSpan>? delay = null)
+        : this((_, m) => Operate.Execute(() => action(m)), maxRetryTimes, delay)
     {
     }
 
-    public TestConsumer(ConsumerSettings settings, Action<T> action, int maxRetryTimes = 3, Func<int, TimeSpan>? delay = null)
-        : this(settings, m => Operate.Execute(() => action(m)), maxRetryTimes, delay)
+    protected TestConsumer(Action<T> action, int maxRetryTimes = 3, Func<int, TimeSpan>? delay = null)
+        : this(m => Operate.Execute(() => action(m)), maxRetryTimes, delay)
     {
     }
 
-    protected override void DisposeInternal()
+    protected override async ValueTask DisposeActionAsync()
     {
-        Channel.QueueDelete(Settings!.Queue.Name);
-        Channel.ExchangeDelete(Settings.Exchange.Name);
-        base.DisposeInternal();
+        if (Settings is null || Channel is null)
+            return;
+
+        await Channel.QueueDeleteAsync(Settings.Queue.Name);
+        await Channel.ExchangeDeleteAsync(Settings.Exchange.Name);
+        await base.DisposeActionAsync();
     }
 
     protected override Task OnConsumeErrorAsync(BasicDeliverEventArgs args, T input, Exception exception)
     {
+        var properties = args.BasicProperties.AsBasicProperties();
         if (_delay != null)
         {
-            var errorTimes = args.BasicProperties.GetErrorTimes();
-            args.BasicProperties.SetDelay(_delay(errorTimes));
+            var errorTimes = properties.GetErrorTimes();
+            properties.SetDelay(_delay(errorTimes));
         }
         return base.OnConsumeErrorAsync(args, input, exception);
+    }
+
+    public static async Task<TestConsumer<T>> CreateAsync(ConsumerSettings settings, Action<T> action, int maxRetryTimes = 3, Func<int, TimeSpan>? delay = null)
+    {
+        var publisher = new TestConsumer<T>(action, maxRetryTimes, delay);
+        await publisher.InitializeAsync(settings);
+        return publisher;
     }
 }
 
 public sealed class TestConsumer : TestConsumer<string>
 {
-    public TestConsumer(ConsumerSettings settings, ConsumeHandler handler, int maxRetryTimes = 3)
-        : base(settings, handler, maxRetryTimes)
+    private TestConsumer(ConsumeHandler handler, int maxRetryTimes = 3, Func<int, TimeSpan>? delay = null)
+        : base(handler, maxRetryTimes, delay)
     {
     }
 
-    public TestConsumer(ConsumerSettings settings, Action<string> action, int maxRetryTimes = 3)
-        : base(settings, action, maxRetryTimes)
+    private TestConsumer(Func<string, OperateResult> action, int maxRetryTimes = 3, Func<int, TimeSpan>? delay = null)
+        : base(action, maxRetryTimes, delay)
     {
     }
 
-    public TestConsumer(ConsumerSettings settings, Func<string, OperateResult> action, int maxRetryTimes = 3)
-        : base(settings, action, maxRetryTimes)
+    private TestConsumer(Action<string> action, int maxRetryTimes = 3, Func<int, TimeSpan>? delay = null)
+        : base(action, maxRetryTimes, delay)
     {
     }
 }

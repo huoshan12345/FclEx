@@ -2,26 +2,26 @@
 
 namespace FclEx.RabbitMQ;
 
-public class TestPublisher<T> : MessagePublisher<T>
+public class TestPublisher : MessagePublisher
 {
-    protected override bool AutomaticRecoveryEnabled { get; } = false;
+    private TestPublisher() : base(null, null) { }
 
-    public TestPublisher(PublisherSettings settings)
+    protected override bool AutomaticRecoveryEnabled => false;
+
+    protected override async ValueTask DisposeActionAsync()
     {
-        Init(settings);
+        if (Connection is null || Settings is null)
+            return;
+
+        await using var channel = await Connection.CreateAutoCloseableChannelAsync();
+        await channel.Value.ExchangeDeleteAsync(Settings.Exchange.Name);
+        await base.DisposeActionAsync();
     }
 
-    protected override void DisposeInternal()
+    public static async Task<TestPublisher> CreateAsync(PublisherSettings settings)
     {
-        using var channel = Connection!.CreateChannel();
-        channel.Model.ExchangeDelete(Settings!.Exchange.Name);
-        base.DisposeInternal();
-    }
-}
-
-public sealed class TestPublisher : TestPublisher<string>
-{
-    public TestPublisher(PublisherSettings settings) : base(settings)
-    {
+        var publisher = new TestPublisher();
+        await publisher.InitializeAsync(settings);
+        return publisher;
     }
 }

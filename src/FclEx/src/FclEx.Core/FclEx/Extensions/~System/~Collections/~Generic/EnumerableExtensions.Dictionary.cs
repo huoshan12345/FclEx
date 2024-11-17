@@ -80,13 +80,12 @@ partial class EnumerableExtensions
         return dic.Count(key) == 0;
     }
 
-    public static OrderedDictionary<TKey, TValue> ToOrderedDictionary<T, TKey, TValue>(this IEnumerable<T> enumerable,
-        Func<T, TKey> keySelector, Func<T, TValue> valueSelector)
+    public static OrderedDictionary<TKey, TValue> ToOrderedDictionary<T, TKey, TValue>(this IEnumerable<T> enumerable, Func<T, TKey> keySelector, Func<T, TValue> valueSelector) where TKey : notnull
     {
         return new OrderedDictionary<TKey, TValue>(enumerable.Select(m => KeyValuePair.Create(keySelector(m), valueSelector(m))));
     }
 
-    public static OrderedDictionary<TKey, TValue> ToOrderedDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> enumerable)
+    public static OrderedDictionary<TKey, TValue> ToOrderedDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> enumerable) where TKey : notnull
     {
         return new OrderedDictionary<TKey, TValue>(enumerable);
     }

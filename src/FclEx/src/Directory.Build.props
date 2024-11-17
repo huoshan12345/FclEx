@@ -2,10 +2,9 @@
   <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
-    <NoWarn>CS1591;CS2002;CS8500;</NoWarn>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <LangVersion>latest</LangVersion>
-    <TargetFrameworks>netstandard2.0;net6.0;net7.0;net8.0</TargetFrameworks>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <TargetFrameworks>netstandard2.0;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
     <PackageProjectUrl>https://github.com/huoshan12345/FclEx</PackageProjectUrl>
     <PackageTags>extensions;helpers</PackageTags>
     <Authors>huoshan12345</Authors>
@@ -14,6 +13,8 @@
     <RepositoryType>git</RepositoryType>
     <Copyright>huoshan12345</Copyright>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!--NOTE: GetTargetFrameworkVersion('netstandard2.0') is 0.0-->
+    <TargetFrameworkVersion>v$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
   </PropertyGroup>
 
   <ItemGroup>

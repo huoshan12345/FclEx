@@ -1,19 +1,36 @@
 ﻿namespace FclEx.Utils;
 
-public readonly record struct DisposableValue<T>(T Value, Action<T>? DisposeAction = null) : IDisposable
+public class DisposableValue<T>(T value, Action<T>? disposeAction = null) : IDisposable
 {
+    private volatile bool _disposed;
+
+    public T Value
+    {
+        get
+        {
+            if (_disposed)
+                throw new ObjectDisposedException(nameof(Value));
+            return value;
+        }
+    }
+
     public static implicit operator T(DisposableValue<T> disposable) => disposable.Value;
 
     public void Dispose()
     {
-        if (DisposeAction != null)
+        if (_disposed)
+            return;
+
+        if (disposeAction != null)
         {
-            DisposeAction.Invoke(Value);
+            disposeAction.Invoke(value);
         }
-        else if (Value is IDisposable disposable)
+        else if (value is IDisposable disposable)
         {
             disposable.Dispose();
         }
+
+        _disposed = true;
     }
 }
 

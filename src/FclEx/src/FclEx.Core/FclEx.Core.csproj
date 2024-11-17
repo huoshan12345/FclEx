@@ -4,29 +4,28 @@
     <PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
     <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
     <PackageReference Include="System.IO.Compression" Version="4.3.0" />
-    <PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
+    <PackageReference Include="Microsoft.Bcl.HashCode" Version="6.0.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <!--use lastest version for all target frameworks-->
-    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+  <ItemGroup Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(TargetFrameworkVersion)','9.0'))">
+    <PackageReference Include="System.Text.Json" Version="9.0.0" />
+  </ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::VersionLessThan('$(TargetFrameworkVersion)','9.0'))">
+    <!--System.Text.Json 9.0 has some dependencies that don't support net6.0 or net7.0, so we use 8.x for the frameworks.-->
+    <PackageReference Include="System.Text.Json" Version="[8.0.5, 9.0.0)" />
   </ItemGroup>
 
-  <!--NOTE: GetTargetFrameworkVersion('netstandard2.0') is 0.0-->
-  <ItemGroup Condition=" $([MSBuild]::VersionLessThan('$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))','8.0')) ">
+  <ItemGroup Condition="$([MSBuild]::VersionLessThan('$(TargetFrameworkVersion)','8.0'))">
     <!--net6.0 and net7.0 require this package to support CollectionBuilder-->
     <PackageReference Include="PolySharp" Version="1.14.1" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FclEx.SourceGenerator\FclEx.SourceGenerator.csproj"
-                      OutputItemType="Analyzer"
-                      ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\FclEx.SourceGenerator\FclEx.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
-  <Import Project="..\EmitGeneratedFiles.props"
-          Condition=" '$(Configuration)' == 'Debug' AND $(GITHUB_ACTION) == '' AND '$(OS)' == 'Windows_NT' " />
+  <Import Project="..\EmitGeneratedFiles.props" Condition=" '$(Configuration)' == 'Debug' AND $(GITHUB_ACTION) == '' AND '$(OS)' == 'Windows_NT' " />
 
   <ItemGroup Label="FilesToCopy">
     <Content Include="FclExUsing.cs" Pack="true" BuildAction="None" PackagePath="content/" />

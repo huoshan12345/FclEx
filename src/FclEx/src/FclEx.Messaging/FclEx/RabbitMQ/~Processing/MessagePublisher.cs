@@ -1,51 +1,45 @@
-﻿using FclEx.Serialization;
+﻿namespace FclEx.RabbitMQ;
 
-namespace FclEx.RabbitMQ;
-
-public abstract class MessagePublisher<TOutput> : MessageProcessor<PublisherSettings>
+[SuppressMessage("ReSharper", "ConvertToPrimaryConstructor")]
+public class MessagePublisher : MessageProcessor<PublisherSettings>, IMessagePublisher
 {
-    protected static Type OutputType { get; } = typeof(TOutput);
-
-    protected MessagePublisher(IMemoryBytesSerializer? serializer = null,
-        ILoggerFactory? loggerFactory = null)
-        : base(serializer, loggerFactory)
+    protected MessagePublisher(ILoggerFactory? loggerFactory, IMemoryBytesSerializer? serializer)
+        : base(loggerFactory, serializer)
     {
     }
-
+    
     protected override IEnumerable<LoggerProperty> GetLogProperties()
     {
         return
         [
             ("PublisherType", GetType().ShortName()),
-            ("TargetExchange", Settings!.Exchange.Name),
-            (nameof(OutputType), OutputType.ShortName()),
+            ("TargetExchange", Settings?.Exchange.Name),
         ];
     }
 
-    public override void Init(PublisherSettings settings)
+    public override async Task InitializeAsync(PublisherSettings settings)
     {
-        base.Init(settings);
+        await base.InitializeAsync(settings);
         Logger.LogInformation("Started an instance");
     }
 
-    protected void Publish(IModel channel, OutputMessage<TOutput> msg)
+    protected async Task PublishAsync<T>(IChannel channel, RoutingMessage<T> message)
     {
-        var props = channel.CreateBasicProperties();
-        props.MessageId = msg.Id.ToStringOrEmpty();
-        props.SetDelay(msg.Delay);
+        Check.NotNull(Settings);
+
+        var properties = new BasicProperties
+        {
+            MessageId = message.Id.ToStringOrEmpty(),
+        };
+        properties.SetDelay(message.Delay);
 
         var disposable = Logger.PushProperty(
-            (nameof(props.MessageId), props.MessageId),
-            (nameof(msg.RoutingKey), msg.RoutingKey)
+            (nameof(properties.MessageId), properties.MessageId),
+            (nameof(message.RoutingKey), message.RoutingKey)
         );
         try
         {
-            var body = Serializer.Serialize(msg.Body);
-            channel.BasicPublish(
-                exchange: Settings!.Exchange.Name,
-                routingKey: msg.RoutingKey,
-                basicProperties: props,
-                body: body);
+            await BasicPublishAsync(channel, ExchangeName, message.Body, message.RoutingKey, properties);
             Logger.LogTrace("Publish successfully");
         }
         catch (Exception ex)
@@ -59,18 +53,14 @@ public abstract class MessagePublisher<TOutput> : MessageProcessor<PublisherSett
         }
     }
 
-    public void Publish(OutputMessage<TOutput> msg)
+    public async Task PublishAsync<T>(IEnumerable<RoutingMessage<T>> msgs)
     {
-        using var channel = Connection!.CreateChannel();
-        Publish(channel.Model, msg);
-    }
+        Check.NotNull(Connection);
 
-    public void Publish(IEnumerable<OutputMessage<TOutput>> msgs)
-    {
-        using var channel = Connection!.CreateChannel();
+        await using var channel = await Connection.CreateAutoCloseableChannelAsync();
         foreach (var msg in msgs)
         {
-            Publish(channel.Model, msg);
+            await PublishAsync(channel.Value, msg);
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace FclEx.Extensions;
+﻿using System;
+
+namespace FclEx.Extensions;
 
 public static class ArrayExtensions
 {

@@ -35,7 +35,6 @@ public abstract class AbstractAbpTests<TModule> where TModule : IAbpModule
             {
                 builder.SetMinimumLevel(LogLevel);
                 builder.AddXunitTest(_output, true);
-                builder.AddDebug();
                 builder.AddFilter("Volo.Abp.Modularity.ModuleManager", LogLevel.Warning);
                 builder.AddFilter("Volo.Abp.AbpApplicationBase", LogLevel.Warning);
             });

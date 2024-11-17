@@ -1,20 +1,17 @@
-﻿using FclEx.Serialization;
+﻿namespace FclEx.RabbitMQ;
 
-namespace FclEx.RabbitMQ;
-
-public class CommonConsumer<TMessage> : MessageConsumer<TMessage>
+[SuppressMessage("ReSharper", "ConvertToPrimaryConstructor")]
+public class CommonConsumer<T> : MessageConsumer<T>
 {
-    protected readonly ConsumeHandler _handler;
+    protected ConsumeHandler Handler { get; }
 
-    public CommonConsumer(ConsumeHandler handler, IMemoryBytesSerializer? serializer = null,
-        ILoggerFactory? logger = null)
-        : base(serializer, logger)
+    public CommonConsumer(ConsumeHandler handler, ILoggerFactory? loggerFactory = null, IMemoryBytesSerializer? serializer = null) : base(loggerFactory, serializer)
     {
-        _handler = handler ?? throw new ArgumentNullException(nameof(handler));
+        Handler = Check.NotNull(handler);
     }
 
-    protected override Task<OperateResult> ConsumeInternalAsync(BasicDeliverEventArgs args, TMessage message)
+    protected override Task<OperateResult> ConsumeActionAsync(BasicDeliverEventArgs args, T message)
     {
-        return _handler(args, message);
+        return Handler(args, message);
     }
 }

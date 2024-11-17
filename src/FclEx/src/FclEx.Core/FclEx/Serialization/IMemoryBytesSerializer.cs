@@ -1,8 +1,6 @@
 ﻿namespace FclEx.Serialization;
 
-public interface IMemoryBytesSerializer : ITypeSerializer<ReadOnlyMemory<byte>>
-{
-}
+public interface IMemoryBytesSerializer : ITypeSerializer<ReadOnlyMemory<byte>>;
 
 public static class MemoryBytesSerializerExtensions
 {

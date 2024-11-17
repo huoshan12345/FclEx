@@ -4,12 +4,7 @@ public class KeyValuePairConverterTests
 {
     private class MyList<T> : List<T>;
 
-    private class MyListWithCtor<T> : List<T>
-    {
-        public MyListWithCtor(IEnumerable<T> collection) : base(collection)
-        {
-        }
-    }
+    private class MyListWithCtor<T>(IEnumerable<T> Collection) : List<T>(Collection);
 
 
     private static readonly MethodInfo _method = typeof(KeyValuePairConverterTests).GetRequiredMethod(nameof(ReadTestGeneric));
@@ -58,7 +53,7 @@ public class KeyValuePairConverterTests
 
     public static IEnumerable<object[]> Cases { get; } = Dictionaries.Index()
         .CrossJoin(KvToColConverters)
-        .Select(m => new object[] { new TestCaseBuilder(new(m.Item2.Name + "_" + m.Item1.Index, m.Item1.Item, m.Item2.Converter)) }).ToArray();
+        .Select(static m => new object[] { new TestCaseBuilder(new(m.Item2.Name + "_" + m.Item1.Index, m.Item1.Item, m.Item2.Converter)) }).ToArray();
 
     private static void ReadTestGeneric<T, TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> raw)
         where T : IEnumerable<KeyValuePair<TKey, TValue>>

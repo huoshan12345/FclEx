@@ -2,92 +2,97 @@
 
 public static class Extensions
 {
-    [return: NotNullIfNotNull(nameof(defaultValue))]
-    public static T? Get<T>(this IBasicProperties prop, string key, T? defaultValue = default)
+    public static BasicProperties AsBasicProperties(this IReadOnlyBasicProperties properties)
     {
-        Check.NotNull(prop);
+        return properties as BasicProperties ?? new BasicProperties(properties);
+    }
 
-        var obj = prop.Headers?.Get(key);
+    [return: NotNullIfNotNull(nameof(defaultValue))]
+    public static T? Get<T>(this IBasicProperties properties, string key, T? defaultValue = default)
+    {
+        Check.NotNull(properties);
+
+        var obj = properties.Headers?.Get(key);
         return obj.CastTo<T>() ?? defaultValue;
     }
 
-    public static T GetOrSet<T>(this IBasicProperties prop, string key, Func<string, T> func)
+    public static T GetOrSet<T>(this IBasicProperties properties, string key, Func<string, T> func)
     {
-        Check.NotNull(prop);
+        Check.NotNull(properties);
         Check.NotNull(key);
         Check.NotNull(func);
 
-        prop.Headers ??= new Dictionary<string, object>();
-        if (!prop.Headers.TryGetValue(key, out var result))
+        properties.Headers ??= new Dictionary<string, object?>();
+        if (properties.Headers.TryGetValue(key, out var result) == false)
         {
             result = func(key);
-            prop.Headers[key] = result;
+            properties.Headers[key] = result;
         }
         return result!.CastTo<T>();
     }
 
-    public static IBasicProperties Set<T>(this IBasicProperties prop, string key, T value)
+    public static IBasicProperties Set<T>(this IBasicProperties properties, string key, T value)
     {
-        Check.NotNull(prop);
+        Check.NotNull(properties);
         Check.NotNull(key);
 
-        prop.Headers ??= new Dictionary<string, object>();
-        prop.Headers[key] = value;
-        return prop;
+        properties.Headers ??= new Dictionary<string, object?>();
+        properties.Headers[key] = value;
+        return properties;
     }
 
-    public static bool Has(this IBasicProperties prop, string key)
+    public static bool Has(this IBasicProperties properties, string key)
     {
-        Check.NotNull(prop);
+        Check.NotNull(properties);
         Check.NotNull(key);
 
-        return prop.Headers != null && prop.Headers.ContainsKey(key);
+        return properties.Headers != null && properties.Headers.ContainsKey(key);
     }
 
-    public static int IncreaseErrorTimes(this IBasicProperties prop)
+    public static int IncreaseErrorTimes(this IBasicProperties properties)
     {
-        Check.NotNull(prop);
+        Check.NotNull(properties);
 
-        prop.Headers ??= new Dictionary<string, object>();
-        var value = prop.Get(FclExAbpRabbitMqConstants.HeaderOfErrorTimes, 0);
+        properties.Headers ??= new Dictionary<string, object?>();
+        var value = properties.Get(RabbitMQHeaderNames.ErrorTimes, 0);
         value++;
-        prop.Headers[FclExAbpRabbitMqConstants.HeaderOfErrorTimes] = value;
+        properties.Headers[RabbitMQHeaderNames.ErrorTimes] = value;
         return value;
     }
 
-    public static int GetErrorTimes(this IBasicProperties prop)
+    public static int GetErrorTimes(this IBasicProperties properties)
     {
-        return Get<int>(prop, FclExAbpRabbitMqConstants.HeaderOfErrorTimes);
+        return Get<int>(properties, RabbitMQHeaderNames.DelayMilli);
     }
 
-    public static int GetDelayMilli(this IBasicProperties prop)
+    public static int GetDelayMilli(this IBasicProperties properties)
     {
-        return prop.Headers?.Get(FclExAbpRabbitMqConstants.HeaderOfDelayMilli)?.CastTo<int>() ?? 0;
+        return properties.Headers?.Get(RabbitMQHeaderNames.DelayMilli)?.CastTo<int>() ?? 0;
     }
 
-    public static TimeSpan GetDelay(this IBasicProperties prop)
+    public static TimeSpan GetDelay(this IBasicProperties properties)
     {
-        return TimeSpan.FromMilliseconds(prop.GetDelayMilli());
+        return TimeSpan.FromMilliseconds(properties.GetDelayMilli());
     }
 
-    public static IBasicProperties SetDelayMilli(this IBasicProperties prop, long milliSeconds)
+    public static IBasicProperties SetDelayMilli(this IBasicProperties properties, long milliSeconds)
     {
-        Check.NotNull(prop);
+        Check.NotNull(properties);
 
         if (milliSeconds <= 0)
         {
-            prop.Headers?.Remove(FclExAbpRabbitMqConstants.HeaderOfDelayMilli);
+            properties.Headers?.Remove(RabbitMQHeaderNames.DelayMilli);
         }
         else
         {
-            prop.Headers ??= new Dictionary<string, object>();
-            prop.Headers[FclExAbpRabbitMqConstants.HeaderOfDelayMilli] = milliSeconds;
+            properties.Headers ??= new Dictionary<string, object?>();
+            properties.Headers[RabbitMQHeaderNames.DelayMilli] = milliSeconds;
         }
-        return prop;
+        return properties;
     }
 
-    public static IBasicProperties SetDelay(this IBasicProperties prop, TimeSpan timeSpan)
+    public static IBasicProperties SetDelay(this IBasicProperties properties, TimeSpan timeSpan)
     {
-        return prop.SetDelayMilli((long)timeSpan.TotalMilliseconds);
+        return properties.SetDelayMilli((long)timeSpan.TotalMilliseconds);
     }
 }
