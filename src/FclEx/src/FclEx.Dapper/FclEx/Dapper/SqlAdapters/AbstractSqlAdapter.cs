@@ -77,9 +77,9 @@ public abstract class AbstractSqlAdapter<TSelf> : ISqlAdapter where TSelf : Abst
         var ifThen = Expression.IfThen(nullCheck, assignExp);
         expList.Add(ifThen);
         expList.Add(result);
-        var final = Expression.Block(new[] { result }, expList);
+        var final = Expression.Block([result], expList);
 #if DEBUG
-        final.Enumerate().ForEach(e => Console.WriteLine(e.ToString()));
+        // final.Enumerate().ForEach(e => Console.WriteLine(e.ToString()));
 #endif
         return Expression.Lambda<DbParameterCreator>(final, paraOfName, paraOfValue, paraOfType).Compile();
     }

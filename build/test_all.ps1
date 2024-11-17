@@ -1,9 +1,8 @@
 $ErrorActionPreference = "Stop"
 
 $mode = if ($args[0] -eq 'Release') { "Release" } else { "Debug" }
-$restore = if ($args[1] -eq 'no-restore') { $false } else { $true }
-$isGithub = [bool]$Env:GITHUB_ACTION
-Write-Output "mode = $mode, isGithub = $isGithub, restore = $restore"
+$isGithub = [string]::IsNullOrEmpty($Env:GITHUB_ACTION) -eq $false
+Write-Output "mode = $mode, isGithub = $isGithub"
 
 $rootDir = [io.path]::combine($MyInvocation.MyCommand.Definition, "..", "..")
 $slnDir = [io.path]::combine($rootDir, "src")
@@ -22,11 +21,7 @@ $projects = $testDirs | ForEach-Object { Get-ChildItem -Path $_ -Include *.cspro
 $result = [ordered]@{}
 foreach ($project in $projects) {
   Write-Output "Testing $($project.Basename)"
-  $command = 'dotnet test $project.FullName --nologo -c $mode -v n --property:WarningLevel=0 /clp:ErrorsOnly'
-  if ($restore -eq $false) {
-    $command = $command + " --no-restore"
-  }
-  
+  $command = 'dotnet test $project.FullName --nologo -c $mode -v n --property:WarningLevel=0 /clp:ErrorsOnly -p:TestTfmsInParallel=false'
   Invoke-Expression $command
   $success = $Lastexitcode -eq 0
   $result.Add($project.Name, $success)
