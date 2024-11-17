@@ -20,7 +20,6 @@ public abstract class MessageProcessor<TSettings> : IDisposable
     protected MessageProcessor(IMemoryBytesSerializer? serializer = null, ILoggerFactory? loggerFactory = null)
     {
         Serializer = serializer ?? JsonMemoryBytesSerializer.Instance;
-        Logger = (loggerFactory ?? NullLoggerFactory.Instance).CreateLogger(GetType());
     }
 
     // ReSharper disable once InconsistentNaming
