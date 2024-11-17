@@ -48,7 +48,7 @@ public class RouterTests
         {
             Name = "test.router.input",
             Type = "topic",
-            IsDelayed = true
+            IsDelayed = true,
         };
         var connection = RmqConnection;
         await using var publisher = await TestPublisher.CreateAsync(new PublisherSettings(connection, inputExchange));
@@ -61,7 +61,7 @@ public class RouterTests
         {
             Name = sameAsInputExchange ? inputExchange.Name : inputExchange.Name + ".output",
             Type = "topic",
-            IsDelayed = true
+            IsDelayed = true,
         });
 
         using var semaphore = new SemaphoreSlim(0);
@@ -95,12 +95,12 @@ public class RouterTests
         var msgs = Enumerable.Range(1, 10).Select(m => m.ToString())
             .SelectMany(m => new[] { m, "str_" + m }).ToList();
 
-        await publisher.PublishAsync(msgs, "input");
+        await publisher.PublishAsync<string>(msgs, "input");
 
         var evenMsgs = msgs.Where(m => GetRoutingKey(m).EndsWith("even")).ToSortedSet();
         var strings = msgs.Where(m => !int.TryParse(m, out _)).ToSortedSet();
 
-        var flag = await semaphore.WaitAsync(evenMsgs.Count + strings.Count, TimeSpan.FromSeconds(5));
+        var flag = await semaphore.WaitAsync(evenMsgs.Count + strings.Count, TimeSpan.FromSeconds(2));
         Assert.True(flag);
 
         Assert.Equal(evenMsgs, evenList);

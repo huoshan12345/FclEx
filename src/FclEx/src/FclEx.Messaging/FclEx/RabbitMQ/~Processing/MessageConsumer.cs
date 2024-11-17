@@ -81,7 +81,7 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
     {
         Check.NotNull(Channel);
 
-        var properties = args.BasicProperties.AsBasicProperties();
+        var properties = args.BasicProperties;
         var watch = ValueStopwatch.StartNew();
         var disposable = Logger.PushProperty(
             (nameof(properties.MessageId), properties.MessageId),
@@ -131,7 +131,7 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
 
     protected virtual async Task OnConsumeErrorAsync(BasicDeliverEventArgs args, T input, Exception exception)
     {
-        var properties = args.BasicProperties.AsBasicProperties();
+        var properties = args.BasicProperties;
         var errorTimes = properties.GetErrorTimes();
 
         try
@@ -167,7 +167,7 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
 
     protected virtual async Task OnConsumeRetryAsync(BasicDeliverEventArgs args, T input, Exception exception)
     {
-        var properties = args.BasicProperties.AsBasicProperties();
+        var properties = args.BasicProperties;
         var delay = (int)properties.GetDelay().TotalSeconds;
         using (Logger.PushProperty(
                    ("ErrorTimes", properties.GetErrorTimes()),

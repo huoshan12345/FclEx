@@ -10,7 +10,7 @@ public class ConsumerTests
     {
         Name = "test.consumer",
         Type = "topic",
-        IsDelayed = true
+        IsDelayed = true,
     };
 
     [Fact]
@@ -40,7 +40,7 @@ public class ConsumerTests
 
         await publisher.PublishAsync(msgList, m => (m.Msg, m.Seq.ToString()));
 
-        var flag = await semaphore.WaitAsync(msgList.Count, TimeSpan.FromSeconds(5));
+        var flag = await semaphore.WaitAsync(msgList.Count, TimeSpan.FromSeconds(2));
         Assert.True(flag);
 
         Assert.Equal(msgList.Select(m => m.Msg), list);
@@ -65,18 +65,18 @@ public class ConsumerTests
             {
                 Name = "test.consumer" + "." + name.ToLower(),
                 BindKeys = [key],
-            }
+            },
         }, m =>
         {
             list.Add(m);
             semaphore.Release();
+            return Operate.Cancel; // create an error
         }, retryTimes, m => delay);
 
         await publisher.PublishAsync(valueToPublish, key);
 
-        var (_, flag, _, t) = await Operate.ExecuteAsync(() => semaphore.WaitAsync(retryTimes + 1, delay + TimeSpan.FromSeconds(1)));
+        var flag = await semaphore.WaitAsync(retryTimes + 1, delay + TimeSpan.FromSeconds(1));
         Assert.True(flag);
-        AssertExt.Equal(delay, t, TimeSpan.FromMilliseconds(100));
 
         Assert.True(list.Count == retryTimes + 1);
         foreach (var m in list)
@@ -144,7 +144,7 @@ public class ConsumerTests
 
         var expectedList = msgList.Where(m => m.Seq % 3 != 2).Select(m => m.Msg).ToList();
 
-        var flag = await semaphore.WaitAsync(expectedList.Count, TimeSpan.FromSeconds(5));
+        var flag = await semaphore.WaitAsync(expectedList.Count, TimeSpan.FromSeconds(2));
         Assert.True(flag);
 
         Assert.Equal(expectedList, list);

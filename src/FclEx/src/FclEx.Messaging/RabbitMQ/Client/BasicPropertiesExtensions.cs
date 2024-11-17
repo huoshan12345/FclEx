@@ -1,4 +1,6 @@
-﻿namespace RabbitMQ.Client;
+﻿using System.Reflection;
+
+namespace RabbitMQ.Client;
 
 public static class Extensions
 {
@@ -8,7 +10,7 @@ public static class Extensions
     }
 
     [return: NotNullIfNotNull(nameof(defaultValue))]
-    public static T? Get<T>(this IBasicProperties properties, string key, T? defaultValue = default)
+    public static T? Get<T>(this IReadOnlyBasicProperties properties, string key, T? defaultValue = default)
     {
         Check.NotNull(properties);
 
@@ -16,32 +18,34 @@ public static class Extensions
         return obj.CastTo<T>() ?? defaultValue;
     }
 
-    public static T GetOrSet<T>(this IBasicProperties properties, string key, Func<string, T> func)
+    public static IReadOnlyBasicProperties Set<T>(this IReadOnlyBasicProperties properties, string key, T value)
+    {
+        Check.NotNull(properties);
+        Check.NotNull(key);
+
+        var headers = properties.GetOrCreateHeaders();
+        headers[key] = value;
+        return properties;
+    }
+
+    public static T Upsert<T>(this IReadOnlyBasicProperties properties, string key, Func<T, T> func, T defaultValue)
     {
         Check.NotNull(properties);
         Check.NotNull(key);
         Check.NotNull(func);
 
-        properties.Headers ??= new Dictionary<string, object?>();
-        if (properties.Headers.TryGetValue(key, out var result) == false)
+        var headers = properties.GetOrCreateHeaders();
+        var result = defaultValue;
+        if (headers.TryGetValue(key, out var obj) && obj is not null)
         {
-            result = func(key);
-            properties.Headers[key] = result;
+            var value = obj.CastTo<T>();
+            result = func(value);
         }
-        return result!.CastTo<T>();
+        headers[key] = result;
+        return result;
     }
 
-    public static IBasicProperties Set<T>(this IBasicProperties properties, string key, T value)
-    {
-        Check.NotNull(properties);
-        Check.NotNull(key);
-
-        properties.Headers ??= new Dictionary<string, object?>();
-        properties.Headers[key] = value;
-        return properties;
-    }
-
-    public static bool Has(this IBasicProperties properties, string key)
+    public static bool Has(this IReadOnlyBasicProperties properties, string key)
     {
         Check.NotNull(properties);
         Check.NotNull(key);
@@ -49,33 +53,27 @@ public static class Extensions
         return properties.Headers != null && properties.Headers.ContainsKey(key);
     }
 
-    public static int IncreaseErrorTimes(this IBasicProperties properties)
+    public static int IncreaseErrorTimes(this IReadOnlyBasicProperties properties)
     {
-        Check.NotNull(properties);
-
-        properties.Headers ??= new Dictionary<string, object?>();
-        var value = properties.Get(RabbitMQHeaderNames.ErrorTimes, 0);
-        value++;
-        properties.Headers[RabbitMQHeaderNames.ErrorTimes] = value;
-        return value;
+        return properties.Upsert(RabbitMQHeaderNames.ErrorTimes, m => m + 1, 1);
     }
 
-    public static int GetErrorTimes(this IBasicProperties properties)
+    public static int GetErrorTimes(this IReadOnlyBasicProperties properties)
     {
-        return Get<int>(properties, RabbitMQHeaderNames.DelayMilli);
+        return Get<int>(properties, RabbitMQHeaderNames.ErrorTimes);
     }
 
-    public static int GetDelayMilli(this IBasicProperties properties)
+    public static int GetDelayMilli(this IReadOnlyBasicProperties properties)
     {
         return properties.Headers?.Get(RabbitMQHeaderNames.DelayMilli)?.CastTo<int>() ?? 0;
     }
 
-    public static TimeSpan GetDelay(this IBasicProperties properties)
+    public static TimeSpan GetDelay(this IReadOnlyBasicProperties properties)
     {
         return TimeSpan.FromMilliseconds(properties.GetDelayMilli());
     }
 
-    public static IBasicProperties SetDelayMilli(this IBasicProperties properties, long milliSeconds)
+    public static IReadOnlyBasicProperties SetDelayMilli(this IReadOnlyBasicProperties properties, long milliSeconds)
     {
         Check.NotNull(properties);
 
@@ -85,14 +83,40 @@ public static class Extensions
         }
         else
         {
-            properties.Headers ??= new Dictionary<string, object?>();
-            properties.Headers[RabbitMQHeaderNames.DelayMilli] = milliSeconds;
+            var headers = properties.GetOrCreateHeaders();
+            headers[RabbitMQHeaderNames.DelayMilli] = milliSeconds;
         }
         return properties;
     }
 
-    public static IBasicProperties SetDelay(this IBasicProperties properties, TimeSpan timeSpan)
+    public static IReadOnlyBasicProperties SetDelay(this IReadOnlyBasicProperties properties, TimeSpan timeSpan)
     {
         return properties.SetDelayMilli((long)timeSpan.TotalMilliseconds);
+    }
+
+    private static readonly FieldInfo _headers = typeof(ReadOnlyBasicProperties).GetRequiredField("_headers");
+
+    public static IDictionary<string, object?> GetOrCreateHeaders(this IReadOnlyBasicProperties properties)
+    {
+        Check.NotNull(properties);
+
+        if (properties is IBasicProperties basic)
+        {
+            basic.Headers ??= new Dictionary<string, object?>();
+            return basic.Headers;
+        }
+
+        if (properties is ReadOnlyBasicProperties readOnly)
+        {
+            var headers = _headers.GetValue<Dictionary<string, object?>>(readOnly);
+            if (headers is null)
+            {
+                headers = new Dictionary<string, object?>();
+                _headers.SetValue(readOnly, headers);
+            }
+            return headers;
+        }
+
+        throw new NotSupportedException("Not supported properties type: " + properties.GetType());
     }
 }
