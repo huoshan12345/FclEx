@@ -35,7 +35,7 @@ public readonly record struct ConnectionStrings(DbProviderType DbProviderType, s
             {
                 UserID = user.Username,
                 Password = user.Password,
-                Database = user.DefaultSchema
+                Database = user.DefaultSchema,
             }.ConnectionString;
         }
     }
