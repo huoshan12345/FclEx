@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Abp.RedisCache.Collections;
 
-public enum RedisColType
+public enum RedisCollectionType
 {
     List = 0,
     Set = 1,
@@ -12,9 +12,7 @@ public interface IRedisCol
 {
     string Name { get; }
     string Key { get; }
-    RedisColType ColType { get; }
+    RedisCollectionType CollectionType { get; }
 }
 
-public interface IRedisCol<T> : IRedisCol
-{
-}
+public interface IRedisCollection<T> : IRedisCol;

@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Abp.RedisCache;
 
-public interface IRedisColManager
+public interface IRedisCollectionManager
 {
     IAbpCacheReadOnlyOptions CacheOptions { get; }
     IAbpRedisReadOnlyOptions RedisOptions { get; }

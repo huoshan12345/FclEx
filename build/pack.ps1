@@ -1,5 +1,6 @@
 $ErrorActionPreference = "Stop"
 
+$disableOSCheck = $args[0] -eq 'true'
 $isGithub = [string]::IsNullOrEmpty($Env:GITHUB_ACTION) -eq $false
 Write-Output "isGithub = $isGithub"
 
@@ -30,7 +31,7 @@ $srcDirs = (
 $onlyWin = ("FclEx.Wmi")
 
 $projects = $srcDirs | ForEach-Object { Get-ChildItem -Path $_ -Include *.csproj -Recurse } `
-| Where-Object { $isGithub -eq $false -or ( ($IsWindows -and $onlyWin -contains $_.Basename) -or ($IsWindows -eq $false -and $onlyWin -notcontains $_.Basename) ) }
+| Where-Object { $isGithub -eq $false -or $disableOSCheck -or ( ($IsWindows -and $onlyWin -contains $_.Basename) -or ($IsWindows -eq $false -and $onlyWin -notcontains $_.Basename) ) }
 
 foreach ($project in $projects) { 
   Write-Output "Packing $($project.Basename)"

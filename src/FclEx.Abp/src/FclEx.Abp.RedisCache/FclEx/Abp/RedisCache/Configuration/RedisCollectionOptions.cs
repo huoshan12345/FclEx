@@ -2,9 +2,9 @@
 
 namespace FclEx.Abp.RedisCache.Configuration;
 
-public class RedisColOptions
+public class RedisCollectionOptions
 {
-    internal RedisColOptions(string name)
+    internal RedisCollectionOptions(string name)
     {
         Name = name;
     }

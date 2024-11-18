@@ -6,7 +6,7 @@ public interface IRedisSet : IRedisCol
     Task<long> SCardAsync();
 }
 
-public interface IRedisSet<T> : IRedisSet, IRedisCol<T>
+public interface IRedisSet<T> : IRedisSet, IRedisCollection<T>
 {
     long SAdd(IList<T> cacheValues);
     bool SIsMember(T cacheValue);

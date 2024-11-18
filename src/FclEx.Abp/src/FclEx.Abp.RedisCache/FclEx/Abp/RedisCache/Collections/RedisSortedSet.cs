@@ -1,13 +1,13 @@
 ﻿namespace FclEx.Abp.RedisCache.Collections;
 
-internal class RedisSortedSet<T> : RedisCol<T>, IRedisSortedSet<T> where T : notnull
+internal class RedisSortedSet<T> : RedisCollection<T>, IRedisSortedSet<T> where T : notnull
 {
     public RedisSortedSet(string name, IRedisCachingProvider provider, AbpCacheOptions options)
         : base(name, provider, options)
     {
     }
 
-    public override RedisColType ColType { get; } = RedisColType.SortedSet;
+    public override RedisCollectionType CollectionType { get; } = RedisCollectionType.SortedSet;
 
     public long ZCard() => _provider.ZCard(Key);
     public long ZCount(double min, double max) => _provider.ZCount(Key, min, max);

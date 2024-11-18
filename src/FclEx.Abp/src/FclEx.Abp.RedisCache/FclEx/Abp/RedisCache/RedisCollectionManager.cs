@@ -4,7 +4,7 @@ namespace FclEx.Abp.RedisCache;
 
 using FclEx.Extensions;
 
-public class RedisColManager : IRedisColManager, IDisposable
+public class RedisCollectionManager : IRedisCollectionManager, IDisposable
 {
     protected readonly ConcurrentDictionary<string, IRedisCol> _caches;
     protected readonly IRedisCachingProvider _provider;
@@ -12,7 +12,7 @@ public class RedisColManager : IRedisColManager, IDisposable
     protected readonly AbpRedisOptions _abpRedisOptions;
     protected readonly AbpCacheOptions _abpCacheOptions;
 
-    public RedisColManager(
+    public RedisCollectionManager(
         IRedisCachingProvider provider,
         IStringSerializer stringSerializer,
         IOptions<AbpRedisOptions> abpRedisOptions,
@@ -30,12 +30,12 @@ public class RedisColManager : IRedisColManager, IDisposable
         _caches.Clear();
     }
 
-    protected TCol GetCol<T, TCol>(string name, RedisColType redisColType) where T : notnull
+    protected TCol GetCol<T, TCol>(string name, RedisCollectionType RedisCollectionType) where T : notnull
 
-        where TCol : IRedisCol<T>
+        where TCol : IRedisCollection<T>
     {
         Check.NotNull(name);
-        var obj = _caches.GetOrAdd(name, k => CreateAndInitCol<T, TCol>(k, redisColType));
+        var obj = _caches.GetOrAdd(name, k => CreateAndInitCol<T, TCol>(k, RedisCollectionType));
         var type = obj.GetType();
         var colType = typeof(TCol);
 
@@ -50,36 +50,36 @@ public class RedisColManager : IRedisColManager, IDisposable
         return (TCol)obj;
     }
 
-    protected IRedisCol<T> CreateCol<T>(string name, RedisColType type) where T : notnull
+    protected IRedisCollection<T> CreateCol<T>(string name, RedisCollectionType type) where T : notnull
     {
-        switch (type)
+        return type switch
         {
-            case RedisColType.List: return new RedisList<T>(name, _provider, _abpCacheOptions);
-            case RedisColType.Set: return new RedisSet<T>(name, _provider, _abpCacheOptions);
-            case RedisColType.SortedSet: return new RedisSortedSet<T>(name, _provider, _abpCacheOptions);
-            case RedisColType.Hash: return new RedisHash<T>(name, _provider, _abpCacheOptions, _stringSerializer);
-            default: throw new ArgumentOutOfRangeException(nameof(type), type, null);
-        }
+            RedisCollectionType.List => new RedisList<T>(name, _provider, _abpCacheOptions),
+            RedisCollectionType.Set => new RedisSet<T>(name, _provider, _abpCacheOptions),
+            RedisCollectionType.SortedSet => new RedisSortedSet<T>(name, _provider, _abpCacheOptions),
+            RedisCollectionType.Hash => new RedisHash<T>(name, _provider, _abpCacheOptions, _stringSerializer),
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
     }
 
-    protected TCol CreateAndInitCol<T, TCol>(string name, RedisColType type) where T : notnull
+    protected TCol CreateAndInitCol<T, TCol>(string name, RedisCollectionType type) where T : notnull
 
-        where TCol : IRedisCol<T>
+        where TCol : IRedisCollection<T>
     {
         var cache = CreateCol<T>(name, type);
         return (TCol)InitCol(cache);
     }
 
-    protected IRedisCol<T> InitCol<T>(IRedisCol<T> col)
+    protected IRedisCollection<T> InitCol<T>(IRedisCollection<T> Collection)
     {
-        var redisCol = (RedisCol<T>)col;
-        var configurators = _abpRedisOptions.Configurators.Where(c => c.CacheName.IsNullOrEmpty()
-                                                                      || c.CacheName == col.Name).ToArray();
+        var redisCol = (RedisCollection<T>)Collection;
+        var configurators = _abpRedisOptions.ColConfigurators.Where(c => c.Name.IsNullOrEmpty()
+                                                                      || c.Name == Collection.Name).ToArray();
         foreach (var configurator in configurators)
         {
-            configurator.InitAction?.Invoke(redisCol.Options);
+            configurator.Action?.Invoke(redisCol.Options);
         }
-        return col;
+        return Collection;
     }
 
     public IAbpCacheReadOnlyOptions CacheOptions => _abpCacheOptions;
@@ -92,21 +92,21 @@ public class RedisColManager : IRedisColManager, IDisposable
 
     public IRedisList<T> GetList<T>(string name) where T : notnull
     {
-        return GetCol<T, IRedisList<T>>(name, RedisColType.List);
+        return GetCol<T, IRedisList<T>>(name, RedisCollectionType.List);
     }
 
     public IRedisSet<T> GetSet<T>(string name) where T : notnull
     {
-        return GetCol<T, IRedisSet<T>>(name, RedisColType.Set);
+        return GetCol<T, IRedisSet<T>>(name, RedisCollectionType.Set);
     }
 
     public IRedisSortedSet<T> GetSortedSet<T>(string name) where T : notnull
     {
-        return GetCol<T, IRedisSortedSet<T>>(name, RedisColType.SortedSet);
+        return GetCol<T, IRedisSortedSet<T>>(name, RedisCollectionType.SortedSet);
     }
 
     public IRedisHash<T> GetHash<T>(string name) where T : notnull
     {
-        return GetCol<T, IRedisHash<T>>(name, RedisColType.Hash);
+        return GetCol<T, IRedisHash<T>>(name, RedisCollectionType.Hash);
     }
 }

@@ -3,7 +3,7 @@ using FclEx.Extensions;
 
 namespace FclEx.Abp.RedisCache.Collections;
 
-internal class RedisHash<T> : RedisCol<T>, IRedisHash<T>
+internal class RedisHash<T> : RedisCollection<T>, IRedisHash<T>
 {
     private readonly IStringSerializer _stringSerializer;
 
@@ -16,7 +16,7 @@ internal class RedisHash<T> : RedisCol<T>, IRedisHash<T>
         _stringSerializer = stringSerializer;
     }
 
-    public override RedisColType ColType { get; } = RedisColType.Hash;
+    public override RedisCollectionType CollectionType { get; } = RedisCollectionType.Hash;
     public bool HSet(string field, T cacheValue)
     {
         var str = _stringSerializer.Serialize(cacheValue);

@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Abp.RedisCache.Collections;
 
-internal class RedisSet<T> : RedisCol<T>, IRedisSet<T>
+internal class RedisSet<T> : RedisCollection<T>, IRedisSet<T>
 {
     public RedisSet(string name, IRedisCachingProvider provider, AbpCacheOptions options)
         : base(name, provider, options)
@@ -21,5 +21,5 @@ internal class RedisSet<T> : RedisCol<T>, IRedisSet<T>
     public Task<T> SPopAsync() => _provider.SPopAsync<T>(Key);
     public Task<List<T>> SRandMemberAsync(int count = 1) => _provider.SRandMemberAsync<T>(Key, count);
     public Task<long> SRemAsync(IList<T>? cacheValues = null) => _provider.SRemAsync<T>(Key, cacheValues);
-    public override RedisColType ColType { get; } = RedisColType.Set;
+    public override RedisCollectionType CollectionType { get; } = RedisCollectionType.Set;
 }

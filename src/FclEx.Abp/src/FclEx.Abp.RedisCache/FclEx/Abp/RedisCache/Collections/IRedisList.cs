@@ -7,7 +7,7 @@ public interface IRedisList : IRedisCol
     Task<bool> LTrimAsync(long start, long stop);
 }
 
-public interface IRedisList<T> : IRedisList, IRedisCol<T>
+public interface IRedisList<T> : IRedisList, IRedisCollection<T>
 {
     T LIndex(long index);
     T LPop();

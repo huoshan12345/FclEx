@@ -5,9 +5,17 @@ using MySql.Data.MySqlClient;
 
 namespace FclEx.EfCore;
 
+file static class Extensions
+{
+    public static string WithNetVer(this string str)
+    {
+        return str + "_net" + NetVersion;
+    }
+}
+
 public readonly record struct DatabaseUser(string Username, string Password, string DefaultSchema)
 {
-    public static readonly DatabaseUser Default = new("user_with_schema", "123456", "user_schema");
+    public static readonly DatabaseUser Default = new("user_with_schema".WithNetVer(), "123456", "user_schema".WithNetVer());
 }
 
 public readonly record struct ConnectionStrings(DbProviderType DbProviderType, string Primary, string User)
@@ -68,8 +76,15 @@ public readonly record struct ConnectionStrings(DbProviderType DbProviderType, s
 
 public class GlobalFixture : IAsyncLifetime
 {
-    public static readonly string DatabaseName = typeof(GlobalDbContext).Assembly.GetName().Name!.Replace(".", "-").ToLower();
-    public static readonly string?[] Schemas = [null, "schema_test_1", "schema_test_2", DatabaseUser.Default.DefaultSchema];
+    public static readonly int NetVersion = Environment.Version.Major;
+    public static readonly string DatabaseName = typeof(GlobalDbContext).Assembly.GetName().Name!.Replace(".", "_").ToLower().WithNetVer();
+    public static readonly string?[] Schemas =
+    [
+        null,
+        "schema_test_1".WithNetVer(),
+        "schema_test_2".WithNetVer(),
+        DatabaseUser.Default.DefaultSchema,
+    ];
 
     public static readonly DbProviderType[] DatabaseTypes = TestHelper.IsGithubAction
         ? [DbProviderType.Npgsql, DbProviderType.Sqlite]

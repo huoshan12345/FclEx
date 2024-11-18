@@ -1,13 +1,13 @@
 ﻿namespace FclEx.Abp.RedisCache.Collections;
 
-internal class RedisList<T> : RedisCol<T>, IRedisList<T>
+internal class RedisList<T> : RedisCollection<T>, IRedisList<T>
 {
     public RedisList(string name, IRedisCachingProvider provider, AbpCacheOptions options)
         : base(name, provider, options)
     {
     }
 
-    public override RedisColType ColType { get; } = RedisColType.List;
+    public override RedisCollectionType CollectionType { get; } = RedisCollectionType.List;
     public long LLen() => _provider.LLen(Key);
     public Task<long> LLenAsync() => _provider.LLenAsync(Key);
     public Task<bool> LTrimAsync(long start, long stop) => _provider.LTrimAsync(Key, start, stop);

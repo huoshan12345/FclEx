@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Abp.RedisCache;
 
-public static class RedisColExtensions
+public static class RedisCollectionExtensions
 {
     public static long LPush<T>(this IRedisList<T> col, T cacheValue) => col.LPush(new[] { cacheValue });
     public static long RPush<T>(this IRedisList<T> col, T cacheValue) => col.RPush(new[] { cacheValue });

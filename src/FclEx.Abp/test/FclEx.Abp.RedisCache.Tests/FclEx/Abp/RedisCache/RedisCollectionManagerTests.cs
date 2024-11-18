@@ -2,9 +2,9 @@
 
 namespace FclEx.Abp.RedisCache;
 
-public class RedisColManagerTests : AbpRedisTests
+public class RedisCollectionManagerTests : AbpRedisTests
 {
-    public RedisColManagerTests(ITestOutputHelper output) : base(output)
+    public RedisCollectionManagerTests(ITestOutputHelper output) : base(output)
     {
     }
 
@@ -12,7 +12,7 @@ public class RedisColManagerTests : AbpRedisTests
     public void GetList_Test()
     {
         var key = nameof(GetList_Test).ToLower();
-        var manager = ServiceProvider.GetRequiredService<IRedisColManager>();
+        var manager = ServiceProvider.GetRequiredService<IRedisCollectionManager>();
         var provider = ServiceProvider.GetRequiredService<IRedisCachingProvider>();
         var col = manager.GetList<string>(key);
 
@@ -20,7 +20,7 @@ public class RedisColManagerTests : AbpRedisTests
         if (provider.KeyExists(keyExt))
             provider.KeyDel(keyExt);
 
-        Assert.Equal(RedisColType.List, col.ColType);
+        Assert.Equal(RedisCollectionType.List, col.CollectionType);
         Assert.Equal(keyExt, col.Key);
 
         col.LPush(key);
@@ -33,7 +33,7 @@ public class RedisColManagerTests : AbpRedisTests
     public void GetHash_Test()
     {
         var key = nameof(GetHash_Test).ToLower();
-        var manager = ServiceProvider.GetRequiredService<IRedisColManager>();
+        var manager = ServiceProvider.GetRequiredService<IRedisCollectionManager>();
         var provider = ServiceProvider.GetRequiredService<IRedisCachingProvider>();
         var col = manager.GetHash<string>(key);
 
@@ -41,7 +41,7 @@ public class RedisColManagerTests : AbpRedisTests
         if (provider.KeyExists(keyExt))
             provider.KeyDel(keyExt);
 
-        Assert.Equal(RedisColType.Hash, col.ColType);
+        Assert.Equal(RedisCollectionType.Hash, col.CollectionType);
         Assert.Equal(keyExt, col.Key);
 
         col.HSet(key, key);
@@ -55,7 +55,7 @@ public class RedisColManagerTests : AbpRedisTests
     public void GetSet_Test()
     {
         var key = nameof(GetSet_Test).ToLower();
-        var manager = ServiceProvider.GetRequiredService<IRedisColManager>();
+        var manager = ServiceProvider.GetRequiredService<IRedisCollectionManager>();
         var provider = ServiceProvider.GetRequiredService<IRedisCachingProvider>();
         var col = manager.GetSet<string>(key);
 
@@ -63,7 +63,7 @@ public class RedisColManagerTests : AbpRedisTests
         if (provider.KeyExists(keyExt))
             provider.KeyDel(keyExt);
 
-        Assert.Equal(RedisColType.Set, col.ColType);
+        Assert.Equal(RedisCollectionType.Set, col.CollectionType);
         Assert.Equal(keyExt, col.Key);
 
         col.SAdd(key);
@@ -77,7 +77,7 @@ public class RedisColManagerTests : AbpRedisTests
     public void GetSortedSet_Test()
     {
         var key = nameof(GetSortedSet_Test).ToLower();
-        var manager = ServiceProvider.GetRequiredService<IRedisColManager>();
+        var manager = ServiceProvider.GetRequiredService<IRedisCollectionManager>();
         var provider = ServiceProvider.GetRequiredService<IRedisCachingProvider>();
         var col = manager.GetSortedSet<string>(key);
 
@@ -85,7 +85,7 @@ public class RedisColManagerTests : AbpRedisTests
         if (provider.KeyExists(keyExt))
             provider.KeyDel(keyExt);
 
-        Assert.Equal(RedisColType.SortedSet, col.ColType);
+        Assert.Equal(RedisCollectionType.SortedSet, col.CollectionType);
         Assert.Equal(keyExt, col.Key);
 
         col.ZAdd(key, 1);

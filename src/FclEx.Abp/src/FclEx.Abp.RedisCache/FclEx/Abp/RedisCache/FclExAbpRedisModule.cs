@@ -22,7 +22,7 @@ public class FclExAbpRedisModule : AbpModule
 
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
-        context.Services.AddSingleton<IRedisColManager, RedisColManager>();
+        context.Services.AddSingleton<IRedisCollectionManager, RedisCollectionManager>();
     }
 
     public override void PostConfigureServices(ServiceConfigurationContext context)

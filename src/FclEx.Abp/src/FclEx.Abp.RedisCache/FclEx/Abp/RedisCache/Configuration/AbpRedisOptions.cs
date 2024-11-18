@@ -9,18 +9,18 @@ public class AbpRedisOptions : IAbpRedisReadOnlyOptions
     public bool SerializeStringAsRaw { get; set; } = true;
     public List<CsRedisCoreConStr> ConStrs { get; } = [];
 
-    private readonly List<IRedisColConfigurator> _configurators = [];
-    public IReadOnlyList<IRedisColConfigurator> Configurators => _configurators;
+    private readonly List<IRedisCollectionConfigurator> _colConfigurators = [];
+    public IReadOnlyList<IRedisCollectionConfigurator> ColConfigurators => _colConfigurators;
 
-    public AbpRedisOptions Configure(string name, Action<RedisColOptions> action)
+    public AbpRedisOptions ConfigureCollection(string name, Action<RedisCollectionOptions> action)
     {
-        _configurators.Add(new RedisColConfigurator(name, action));
+        _colConfigurators.Add(new RedisCollectionConfigurator(name, action));
         return this;
     }
 
-    public AbpRedisOptions ConfigureAll(Action<RedisColOptions> action)
+    public AbpRedisOptions ConfigureAllCollections(Action<RedisCollectionOptions> action)
     {
-        _configurators.Add(new RedisColConfigurator(action));
+        _colConfigurators.Add(new RedisCollectionConfigurator(action));
         return this;
     }
 
@@ -28,11 +28,11 @@ public class AbpRedisOptions : IAbpRedisReadOnlyOptions
         out bool useMessagePack,
         out bool serializeStringAsRaw,
         out List<CsRedisCoreConStr> conStrs,
-        out IReadOnlyList<IRedisColConfigurator> configurators)
+        out IReadOnlyList<IRedisCollectionConfigurator> configurators)
     {
         useMessagePack = UseMessagePack;
         serializeStringAsRaw = SerializeStringAsRaw;
         conStrs = ConStrs;
-        configurators = Configurators;
+        configurators = ColConfigurators;
     }
 }
