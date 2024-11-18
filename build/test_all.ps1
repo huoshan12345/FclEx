@@ -1,7 +1,6 @@
 $ErrorActionPreference = "Stop"
 
 $mode = if ($args[0] -eq 'Release') { "Release" } else { "Debug" }
-$disableOSCheck = $args[1] -eq 'true'
 $isGithub = [string]::IsNullOrEmpty($Env:GITHUB_ACTION) -eq $false
 Write-Output "mode = $mode, isGithub = $isGithub"
 
@@ -13,11 +12,7 @@ $testDirs = (
   [io.path]::combine($slnDir, "FclEx.Abp", "test")
 )
 
-$onlyWin = ("FclEx.Wmi.Tests")
-
-$projects = $testDirs | ForEach-Object { Get-ChildItem -Path $_ -Include *.csproj -Recurse } `
-| Where-Object { $isGithub -eq $false -or $disableOSCheck -or ( ($IsWindows -and $onlyWin -contains $_.Basename) -or ($IsWindows -eq $false -and $onlyWin -notcontains $_.Basename) ) }
-
+$projects = $testDirs | ForEach-Object { Get-ChildItem -Path $_ -Include *.csproj -Recurse }
 
 $result = [ordered]@{}
 foreach ($project in $projects) {

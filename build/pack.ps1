@@ -28,10 +28,7 @@ $srcDirs = (
   [io.path]::combine($slnDir, "FclEx.Abp", "src")
 )
 
-$onlyWin = ("FclEx.Wmi")
-
-$projects = $srcDirs | ForEach-Object { Get-ChildItem -Path $_ -Include *.csproj -Recurse } `
-| Where-Object { $isGithub -eq $false -or $disableOSCheck -or ( ($IsWindows -and $onlyWin -contains $_.Basename) -or ($IsWindows -eq $false -and $onlyWin -notcontains $_.Basename) ) }
+$projects = $srcDirs | ForEach-Object { Get-ChildItem -Path $_ -Include *.csproj -Recurse }
 
 foreach ($project in $projects) { 
   Write-Output "Packing $($project.Basename)"
