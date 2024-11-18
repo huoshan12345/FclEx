@@ -1,7 +1,0 @@
-- name: Ensures config dir exists
-  file: path={{ config_path }} state=directory
-
-- name: render native instance config
-  copy:
-    content: "{{ env | to_nice_json(indent = 2) }}"
-    dest: "{{ config_path }}/appsettings.json"

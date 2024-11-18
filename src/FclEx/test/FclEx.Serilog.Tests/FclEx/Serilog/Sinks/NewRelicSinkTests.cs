@@ -10,7 +10,7 @@ public class NewRelicSinkTests : IAssemblyFixture<GlobalFixture>
     [InlineData(5)]
     public void Serialize_Test(int count)
     {
-        var events = Enumerable.Range(1, count).Select(m => CreateLogEvent(m));
+        var events = Enumerable.Range(1, count).Select(CreateLogEvent);
         var str = NewRelicSink.Serialize(events, new JsonFormatter());
         var token = JsonDocument.Parse(str);
         Assert.Equal(JsonValueKind.Array, token.RootElement.ValueKind);
@@ -22,8 +22,8 @@ public class NewRelicSinkTests : IAssemblyFixture<GlobalFixture>
         var writer = new StringWriter();
         using var x = writer.SetSelfLog();
 
-        var sink = new NewRelicSink(GlobalFixture.AppSettings.NewRelic.LicenseKey);
-        var events = Enumerable.Range(1, 5).Select(m => CreateLogEvent(m)).ToArray();
+        var sink = new NewRelicSink(licenseKey: "");
+        var events = Enumerable.Range(1, 5).Select(CreateLogEvent).ToArray();
         await sink.EmitBatchAsync(events);
 
         var str = writer.ToString();
