@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Management;
-using FclEx.Extensions;
+using System.Reflection;
 
 namespace FclEx.Wmi;
 
@@ -26,7 +26,7 @@ public static class ManagementObjectExtensions
 
         public static Func<ManagementBaseObject, T> BuildReflectionConverter()
         {
-            var fields = typeof(T).GetDataMembers().Where(m => m.HasPublicGetter && m.HasPublicSetter);
+            var fields = typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(m => m is { CanRead: true, CanWrite: true });
 
             return m =>
             {

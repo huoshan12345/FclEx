@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <_ExcludeFclExUsing Include="FclEx.Core" />
+    <_ExcludeFclExUsing Include="FclEx.Wmi" />
     <_ExcludeFclExUsing Include="FclEx.SourceGenerator" />
     <_ExcludeFclExUsing Include="FclEx.Wmi.SourceGenerator" />
   </ItemGroup>

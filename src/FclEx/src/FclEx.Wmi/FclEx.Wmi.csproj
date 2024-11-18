@@ -11,11 +11,7 @@
     <!--System.Management 9.0 has some dependencies that don't support net6.0 or net7.0, so we use 8.x for the frameworks.-->
     <PackageReference Include="System.Management" Version="[8.0.0, 9.0.0)" />
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\FclEx.Core\FclEx.Core.csproj" />
-  </ItemGroup>
-
+  
   <PropertyGroup>
     <ToolName>FclEx.Wmi.SourceGenerator</ToolName>
     <ToolFramework>net9.0-windows</ToolFramework>
