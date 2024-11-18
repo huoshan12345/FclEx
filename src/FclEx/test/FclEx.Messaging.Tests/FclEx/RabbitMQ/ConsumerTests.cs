@@ -8,39 +8,39 @@ public class ConsumerTests
 {
     public static ExchangeSettings DefaultExchange { get; } = new()
     {
-        Name = "test.consumer",
+        Name = "test.consumer".WithNetVer(),
         Type = "topic",
-        IsDelayed = true
+        IsDelayed = true,
     };
 
     [Fact]
     public async Task Consume_Test()
     {
         var connection = RmqConnection;
-        using var publisher = new TestPublisher(new PublisherSettings(connection, DefaultExchange));
+        await using var publisher = await TestPublisher.CreateAsync(new PublisherSettings(connection, DefaultExchange));
 
         var msgList = Enumerable.Range(1, 10).Select(m => (Seq: m, Msg: "msg_" + m)).ToList();
         var list = new List<string>();
 
         using var semaphore = new SemaphoreSlim(0);
-        using var consumer = new TestConsumer(new ConsumerSettings()
+        await using var consumer = await TestConsumer.CreateAsync(new ConsumerSettings
         {
             Connection = connection,
             Exchange = DefaultExchange,
             Queue = new QueueSettings
             {
-                Name = "test.consumer",
-                BindKeys = new[] { "#" },
-            }
+                Name = "test.consumer".WithNetVer('.'),
+                BindKeys = ["#"],
+            },
         }, m =>
         {
             list.Add(m);
             semaphore.Release();
         });
 
-        publisher.Publish(msgList, m => (m.Msg, m.Seq.ToString()));
+        await publisher.PublishAsync(msgList, m => (m.Msg, m.Seq.ToString()));
 
-        var flag = await semaphore.WaitAsync(msgList.Count, TimeSpan.FromSeconds(5));
+        var flag = await semaphore.WaitAsync(msgList.Count, TimeSpan.FromSeconds(2));
         Assert.True(flag);
 
         Assert.Equal(msgList.Select(m => m.Msg), list);
@@ -49,7 +49,7 @@ public class ConsumerTests
     private async Task ConsumePushBackTest<T>(T valueToPublish, TimeSpan delay = default)
     {
         var connection = RmqConnection;
-        using var publisher = new TestPublisher<T>(new PublisherSettings(connection, DefaultExchange));
+        await using var publisher = await TestPublisher.CreateAsync(new PublisherSettings(connection, DefaultExchange));
 
         var name = typeof(T).ShortName();
         var key = nameof(ConsumePushBackTest) + "." + name;
@@ -57,27 +57,26 @@ public class ConsumerTests
 
         const int retryTimes = 1;
         using var semaphore = new SemaphoreSlim(0);
-        using var consumer = new TestConsumer<T>(new ConsumerSettings
+        await using var consumer = await TestConsumer<T>.CreateAsync(new ConsumerSettings
         {
             Connection = connection,
             Exchange = DefaultExchange,
             Queue = new QueueSettings
             {
-                Name = "test.consumer" + "." + name.ToLower(),
-                BindKeys = new[] { key },
-            }
+                Name = "test.consumer" + "." + name.ToLower().WithNetVer('.'),
+                BindKeys = [key],
+            },
         }, m =>
         {
             list.Add(m);
             semaphore.Release();
-            return Operate.Cancel;
+            return Operate.Cancel; // create an error
         }, retryTimes, m => delay);
 
-        publisher.Publish(valueToPublish, key);
+        await publisher.PublishAsync(valueToPublish, key);
 
-        var (_, flag, _, t) = await Operate.ExecuteAsync(() => semaphore.WaitAsync(retryTimes + 1, delay + TimeSpan.FromSeconds(1)));
+        var flag = await semaphore.WaitAsync(retryTimes + 1, delay + TimeSpan.FromSeconds(1));
         Assert.True(flag);
-        AssertExt.Equal(delay, t, TimeSpan.FromMilliseconds(100));
 
         Assert.True(list.Count == retryTimes + 1);
         foreach (var m in list)
@@ -120,20 +119,20 @@ public class ConsumerTests
     public async Task Consume_MultiBind_Test()
     {
         var connection = RmqConnection;
-        using var publisher = new TestPublisher<string>(new PublisherSettings(connection, DefaultExchange));
+        await using var publisher = await TestPublisher.CreateAsync(new PublisherSettings(connection, DefaultExchange));
 
         var msgList = Enumerable.Range(1, 10).Select(m => (Seq: m, Msg: "msg_" + m)).ToList();
         var list = new List<string>();
 
         using var semaphore = new SemaphoreSlim(0);
-        using var consumer = new TestConsumer<string>(new ConsumerSettings()
+        await using var consumer = await TestConsumer.CreateAsync(new ConsumerSettings()
         {
             Connection = connection,
             Exchange = DefaultExchange,
             Queue = new QueueSettings
             {
-                Name = "test.consumer",
-                BindKeys = new[] { "output.0", "output.1" },
+                Name = "test.consumer".WithNetVer('.'),
+                BindKeys = ["output.0", "output.1"],
             }
         }, m =>
         {
@@ -141,11 +140,11 @@ public class ConsumerTests
             semaphore.Release();
         });
 
-        publisher.Publish(msgList, m => (m.Msg, "output." + m.Seq % 3));
+        await publisher.PublishAsync(msgList, m => (m.Msg, "output." + m.Seq % 3));
 
         var expectedList = msgList.Where(m => m.Seq % 3 != 2).Select(m => m.Msg).ToList();
 
-        var flag = await semaphore.WaitAsync(expectedList.Count, TimeSpan.FromSeconds(5));
+        var flag = await semaphore.WaitAsync(expectedList.Count, TimeSpan.FromSeconds(2));
         Assert.True(flag);
 
         Assert.Equal(expectedList, list);

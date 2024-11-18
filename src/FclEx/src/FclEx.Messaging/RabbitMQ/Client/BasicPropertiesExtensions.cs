@@ -1,93 +1,122 @@
-﻿namespace RabbitMQ.Client;
+﻿using System.Reflection;
+
+namespace RabbitMQ.Client;
 
 public static class Extensions
 {
-    [return: NotNullIfNotNull(nameof(defaultValue))]
-    public static T? Get<T>(this IBasicProperties prop, string key, T? defaultValue = default)
+    public static BasicProperties AsBasicProperties(this IReadOnlyBasicProperties properties)
     {
-        Check.NotNull(prop);
+        return properties as BasicProperties ?? new BasicProperties(properties);
+    }
 
-        var obj = prop.Headers?.Get(key);
+    [return: NotNullIfNotNull(nameof(defaultValue))]
+    public static T? Get<T>(this IReadOnlyBasicProperties properties, string key, T? defaultValue = default)
+    {
+        Check.NotNull(properties);
+
+        var obj = properties.Headers?.Get(key);
         return obj.CastTo<T>() ?? defaultValue;
     }
 
-    public static T GetOrSet<T>(this IBasicProperties prop, string key, Func<string, T> func)
+    public static IReadOnlyBasicProperties Set<T>(this IReadOnlyBasicProperties properties, string key, T value)
     {
-        Check.NotNull(prop);
+        Check.NotNull(properties);
+        Check.NotNull(key);
+
+        var headers = properties.GetOrCreateHeaders();
+        headers[key] = value;
+        return properties;
+    }
+
+    public static T Upsert<T>(this IReadOnlyBasicProperties properties, string key, Func<T, T> func, T defaultValue)
+    {
+        Check.NotNull(properties);
         Check.NotNull(key);
         Check.NotNull(func);
 
-        prop.Headers ??= new Dictionary<string, object>();
-        if (!prop.Headers.TryGetValue(key, out var result))
+        var headers = properties.GetOrCreateHeaders();
+        var result = defaultValue;
+        if (headers.TryGetValue(key, out var obj) && obj is not null)
         {
-            result = func(key);
-            prop.Headers[key] = result;
+            var value = obj.CastTo<T>();
+            result = func(value);
         }
-        return result!.CastTo<T>();
+        headers[key] = result;
+        return result;
     }
 
-    public static IBasicProperties Set<T>(this IBasicProperties prop, string key, T value)
+    public static bool Has(this IReadOnlyBasicProperties properties, string key)
     {
-        Check.NotNull(prop);
+        Check.NotNull(properties);
         Check.NotNull(key);
 
-        prop.Headers ??= new Dictionary<string, object>();
-        prop.Headers[key] = value;
-        return prop;
+        return properties.Headers != null && properties.Headers.ContainsKey(key);
     }
 
-    public static bool Has(this IBasicProperties prop, string key)
+    public static int IncreaseErrorTimes(this IReadOnlyBasicProperties properties)
     {
-        Check.NotNull(prop);
-        Check.NotNull(key);
-
-        return prop.Headers != null && prop.Headers.ContainsKey(key);
+        return properties.Upsert(RabbitMQHeaderNames.ErrorTimes, m => m + 1, 1);
     }
 
-    public static int IncreaseErrorTimes(this IBasicProperties prop)
+    public static int GetErrorTimes(this IReadOnlyBasicProperties properties)
     {
-        Check.NotNull(prop);
-
-        prop.Headers ??= new Dictionary<string, object>();
-        var value = prop.Get(FclExAbpRabbitMqConstants.HeaderOfErrorTimes, 0);
-        value++;
-        prop.Headers[FclExAbpRabbitMqConstants.HeaderOfErrorTimes] = value;
-        return value;
+        return Get<int>(properties, RabbitMQHeaderNames.ErrorTimes);
     }
 
-    public static int GetErrorTimes(this IBasicProperties prop)
+    public static int GetDelayMilli(this IReadOnlyBasicProperties properties)
     {
-        return Get<int>(prop, FclExAbpRabbitMqConstants.HeaderOfErrorTimes);
+        return properties.Headers?.Get(RabbitMQHeaderNames.DelayMilli)?.CastTo<int>() ?? 0;
     }
 
-    public static int GetDelayMilli(this IBasicProperties prop)
+    public static TimeSpan GetDelay(this IReadOnlyBasicProperties properties)
     {
-        return prop.Headers?.Get(FclExAbpRabbitMqConstants.HeaderOfDelayMilli)?.CastTo<int>() ?? 0;
+        return TimeSpan.FromMilliseconds(properties.GetDelayMilli());
     }
 
-    public static TimeSpan GetDelay(this IBasicProperties prop)
+    public static IReadOnlyBasicProperties SetDelayMilli(this IReadOnlyBasicProperties properties, long milliSeconds)
     {
-        return TimeSpan.FromMilliseconds(prop.GetDelayMilli());
-    }
-
-    public static IBasicProperties SetDelayMilli(this IBasicProperties prop, long milliSeconds)
-    {
-        Check.NotNull(prop);
+        Check.NotNull(properties);
 
         if (milliSeconds <= 0)
         {
-            prop.Headers?.Remove(FclExAbpRabbitMqConstants.HeaderOfDelayMilli);
+            properties.Headers?.Remove(RabbitMQHeaderNames.DelayMilli);
         }
         else
         {
-            prop.Headers ??= new Dictionary<string, object>();
-            prop.Headers[FclExAbpRabbitMqConstants.HeaderOfDelayMilli] = milliSeconds;
+            var headers = properties.GetOrCreateHeaders();
+            headers[RabbitMQHeaderNames.DelayMilli] = milliSeconds;
         }
-        return prop;
+        return properties;
     }
 
-    public static IBasicProperties SetDelay(this IBasicProperties prop, TimeSpan timeSpan)
+    public static IReadOnlyBasicProperties SetDelay(this IReadOnlyBasicProperties properties, TimeSpan timeSpan)
     {
-        return prop.SetDelayMilli((long)timeSpan.TotalMilliseconds);
+        return properties.SetDelayMilli((long)timeSpan.TotalMilliseconds);
+    }
+
+    private static readonly FieldInfo _headers = typeof(ReadOnlyBasicProperties).GetRequiredField("_headers");
+
+    public static IDictionary<string, object?> GetOrCreateHeaders(this IReadOnlyBasicProperties properties)
+    {
+        Check.NotNull(properties);
+
+        if (properties is IBasicProperties basic)
+        {
+            basic.Headers ??= new Dictionary<string, object?>();
+            return basic.Headers;
+        }
+
+        if (properties is ReadOnlyBasicProperties readOnly)
+        {
+            var headers = _headers.GetValue<Dictionary<string, object?>>(readOnly);
+            if (headers is null)
+            {
+                headers = new Dictionary<string, object?>();
+                _headers.SetValue(readOnly, headers);
+            }
+            return headers;
+        }
+
+        throw new NotSupportedException("Not supported properties type: " + properties.GetType());
     }
 }

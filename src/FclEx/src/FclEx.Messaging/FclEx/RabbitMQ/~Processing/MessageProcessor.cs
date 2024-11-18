@@ -1,73 +1,93 @@
-﻿using System.Linq;
-using FclEx.Serialization;
+﻿namespace FclEx.RabbitMQ;
 
-namespace FclEx.RabbitMQ;
-
-public abstract class MessageProcessor<TSettings> : IDisposable
-    where TSettings : RmqSettings
+public abstract class MessageProcessor<TSettings> : IMessageProcessor<TSettings> where TSettings : ProcessorSettings
 {
-    protected IMemoryBytesSerializer Serializer { get; }
-    protected ILogger Logger { get; set; }
+    private bool _isDisposed;
+
+    protected MessageProcessor(ILoggerFactory? loggerFactory, IMemoryBytesSerializer? serializer)
+    {
+        _logger = new(() => CreateLogger(loggerFactory));
+        Serializer = serializer ?? JsonMemoryBytesSerializer.Instance;
+    }
+
     [MemberNotNull(nameof(ExchangeName))]
     protected TSettings? Settings { get; set; }
-    protected IConnection? Connection { get; set; }
-    protected virtual bool DispatchConsumersAsync { get; } = false;
-    protected virtual bool AutomaticRecoveryEnabled { get; } = true;
-    protected string? ExchangeName => Settings?.Exchange.Name;
+
+    private readonly Lazy<ILogger> _logger;
+    protected ILogger Logger => _logger.Value;
+    protected IMemoryBytesSerializer Serializer { get; }
     protected ConnectionFactory? Factory { get; set; }
-    protected bool IsDisposed { get; set; }
+    protected IConnection? Connection { get; set; }
+    protected virtual bool AutomaticRecoveryEnabled => true;
+    protected string? ExchangeName => Settings?.Exchange.Name;
 
-    protected MessageProcessor(IMemoryBytesSerializer? serializer = null, ILoggerFactory? loggerFactory = null)
+    protected virtual IEnumerable<LoggerProperty> GetLogProperties() => [];
+
+    private ILogger CreateLogger(ILoggerFactory? loggerFactory)
     {
-        Serializer = serializer ?? JsonMemoryBytesSerializer.Instance;
-        Logger = (loggerFactory ?? NullLoggerFactory.Instance).CreateLogger(GetType());
+        var logger = (loggerFactory ?? NullLoggerFactory.Instance).CreateLogger(GetType());
+        if (logger.IsNullOrNullLogger() == false)
+            logger = new PropertiesLogger(Logger, GetLogProperties());
+        return logger;
     }
 
-    // ReSharper disable once InconsistentNaming
-    protected virtual IEnumerable<LoggerProperty> GetLogProperties()
-    {
-        return Enumerable.Empty<LoggerProperty>();
-    }
-
-    [MemberNotNull(nameof(Connection), nameof(Settings))]
-    public virtual void Init(TSettings settings)
+    public virtual async Task InitializeAsync(TSettings settings)
     {
         Settings = Check.NotNull(settings);
-        if (!Logger.IsNullOrNullLogger())
-        {
-            Logger = new PropertiesLogger(Logger, GetLogProperties());
-        }
 
         var conStr = Settings.Connection.ToString();
         Factory = new ConnectionFactory
         {
             Uri = new Uri(conStr),
-            DispatchConsumersAsync = DispatchConsumersAsync,
-            AutomaticRecoveryEnabled = AutomaticRecoveryEnabled
+            AutomaticRecoveryEnabled = AutomaticRecoveryEnabled,
         };
-        Connection = Factory.CreateConnection();
+        Connection = await Factory.CreateConnectionAsync();
 
-        using var channel = Connection.CreateChannel();
-        channel.Model.ExchangeDeclareWithAlternate(exchange: ExchangeName,
+        await using var disposable = await Connection.CreateAutoCloseableChannelAsync();
+        await disposable.Value.ExchangeDeclareAsync(
+            exchange: ExchangeName,
             type: Settings.Exchange.Type,
             durable: true,
             autoDelete: false,
-            arguments: null!,
+            arguments: null,
             isDelayed: Settings.Exchange.IsDelayed);
     }
 
-    protected virtual void DisposeInternal()
+    protected ValueTask BasicPublishAsync(IChannel channel, string exchange, ReadOnlyMemory<byte> body, string routingKey, IReadOnlyBasicProperties properties)
     {
-        Connection?.Close();
-        Connection?.Dispose();
+        Check.NotNull(Settings);
+
+        return channel.BasicPublishAsync(
+            exchange: exchange,
+            routingKey: routingKey,
+            mandatory: false,
+            basicProperties: properties.AsBasicProperties(),
+            body: body);
     }
 
-    public void Dispose()
+    protected ValueTask BasicPublishAsync<T>(IChannel channel, string exchange, T message, string routingKey, IReadOnlyBasicProperties properties)
     {
-        if (IsDisposed)
+        Check.NotNull(Settings);
+        var body = Serializer.Serialize(message);
+        return BasicPublishAsync(channel, exchange, body, routingKey: routingKey, properties);
+    }
+
+    protected virtual async ValueTask DisposeActionAsync()
+    {
+        if (Connection is null)
             return;
 
-        IsDisposed = true;
-        DisposeInternal();
+        await Connection.CloseAsync();
+        await Connection.DisposeAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_isDisposed)
+            return;
+
+        GC.SuppressFinalize(this);
+        await DisposeActionAsync();
+        _isDisposed = true;
     }
 }

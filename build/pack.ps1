@@ -1,8 +1,8 @@
 $ErrorActionPreference = "Stop"
 
-$restore = if ($args[0] -eq 'no-restore') { $false } else { $true }
-$isGithubAction = [string]::IsNullOrEmpty($Env:GITHUB_ACTION) -eq $false
-Write-Output "isGithubAction = $isGithubAction, restore = $restore"
+$disableOSCheck = $args[0] -eq 'true'
+$isGithub = [string]::IsNullOrEmpty($Env:GITHUB_ACTION) -eq $false
+Write-Output "isGithub = $isGithub"
 
 $buildDir = [io.path]::combine($MyInvocation.MyCommand.Definition, "..")
 $rootDir = [io.path]::combine($buildDir, "..")
@@ -28,10 +28,7 @@ $srcDirs = (
   [io.path]::combine($slnDir, "FclEx.Abp", "src")
 )
 
-$onlyWin = ("FclEx.Wmi")
-
-$projects = $srcDirs | ForEach-Object { Get-ChildItem -Path $_ -Include *.csproj -Recurse } `
-| Where-Object { $isGithubAction -eq $false -or ( ($IsWindows -and $onlyWin -contains $_.Basename) -or ($IsWindows -eq $false -and $onlyWin -notcontains $_.Basename) ) }
+$projects = $srcDirs | ForEach-Object { Get-ChildItem -Path $_ -Include *.csproj -Recurse }
 
 foreach ($project in $projects) { 
   Write-Output "Packing $($project.Basename)"
@@ -40,9 +37,6 @@ foreach ($project in $projects) {
   dotnet clean --nologo -v q
 
   $command = 'dotnet pack --nologo -v q -c Release --include-symbols --output $buildDir -p:PackageVersion=$ver'
-  if ($restore -eq $false) {
-    $command = $command + " --no-restore"
-  }
   Invoke-Expression $command
   
   if ($Lastexitcode -ne 0)	{
@@ -52,9 +46,7 @@ foreach ($project in $projects) {
 
 Write-Output "Packing finished."
 
-
-
-if ($isGithubAction) {
+if ($isGithub) {
   Write-Output "Uploading..."
 
   $files = Get-ChildItem $pkgPath

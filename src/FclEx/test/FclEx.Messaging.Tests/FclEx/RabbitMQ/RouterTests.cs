@@ -46,61 +46,61 @@ public class RouterTests
     {
         var inputExchange = new ExchangeSettings
         {
-            Name = "test.router.input",
+            Name = "test.router.input".WithNetVer('.'),
             Type = "topic",
-            IsDelayed = true
+            IsDelayed = true,
         };
         var connection = RmqConnection;
-        using var publisher = new TestPublisher(new PublisherSettings(connection, inputExchange));
+        await using var publisher = await TestPublisher.CreateAsync(new PublisherSettings(connection, inputExchange));
 
         var routerSettings = new RouterSettings(connection, inputExchange, new QueueSettings
         {
-            Name = "test.router",
-            BindKeys = new[] { "input.#" },
+            Name = "test.router".WithNetVer('.'),
+            BindKeys = ["input.#"],
         }, new ExchangeSettings
         {
             Name = sameAsInputExchange ? inputExchange.Name : inputExchange.Name + ".output",
             Type = "topic",
-            IsDelayed = true
+            IsDelayed = true,
         });
 
         using var semaphore = new SemaphoreSlim(0);
-        using var router = new TestRouter(routerSettings, GetRoutingKey);
+        await using var router = await TestRouter.CreateAsync(routerSettings, GetRoutingKey);
 
         var evenList = new SortedSet<string>();
-        using var evenConsumer = new TestConsumer(new ConsumerSettings(connection,
-            routerSettings.TargetExchange, new QueueSettings
-            {
-                Name = "test.router.even",
-                BindKeys = new[] { "output.*.even" },
-            }), m =>
-        {
-            evenList.Add(m);
-            semaphore.Release();
-        });
+        await using var evenConsumer = await TestConsumer.CreateAsync(new ConsumerSettings(connection,
+          routerSettings.TargetExchange, new QueueSettings
+          {
+              Name = "test.router.even".WithNetVer('.'),
+              BindKeys = ["output.*.even"],
+          }), m =>
+          {
+              evenList.Add(m);
+              semaphore.Release();
+          });
 
         var stringList = new SortedSet<string>();
 
-        using var stringConsumer = new TestConsumer(new ConsumerSettings(connection,
-            routerSettings.TargetExchange, new QueueSettings
-            {
-                Name = "test.router.string",
-                BindKeys = new[] { "output.string.*" },
-            }), m =>
-        {
-            stringList.Add(m);
-            semaphore.Release();
-        });
+        await using var stringConsumer = await TestConsumer.CreateAsync(new ConsumerSettings(connection,
+         routerSettings.TargetExchange, new QueueSettings
+         {
+             Name = "test.router.string".WithNetVer('.'),
+             BindKeys = ["output.string.*"],
+         }), m =>
+         {
+             stringList.Add(m);
+             semaphore.Release();
+         });
 
         var msgs = Enumerable.Range(1, 10).Select(m => m.ToString())
             .SelectMany(m => new[] { m, "str_" + m }).ToList();
 
-        publisher.Publish(msgs, "input");
+        await publisher.PublishAsync<string>(msgs, "input");
 
         var evenMsgs = msgs.Where(m => GetRoutingKey(m).EndsWith("even")).ToSortedSet();
         var strings = msgs.Where(m => !int.TryParse(m, out _)).ToSortedSet();
 
-        var flag = await semaphore.WaitAsync(evenMsgs.Count + strings.Count, TimeSpan.FromSeconds(5));
+        var flag = await semaphore.WaitAsync(evenMsgs.Count + strings.Count, TimeSpan.FromSeconds(2));
         Assert.True(flag);
 
         Assert.Equal(evenMsgs, evenList);

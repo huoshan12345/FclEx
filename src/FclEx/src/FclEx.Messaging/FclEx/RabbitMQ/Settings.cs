@@ -1,18 +1,18 @@
-﻿using System.Web;
+﻿// ReSharper disable MemberCanBeProtected.Global
 
 namespace FclEx.RabbitMQ;
 
 public class ExchangeSettings
 {
     public string Name { get; set; } = string.Empty;
-    public string Type { get; set; } = FclExAbpRabbitMqConstants.DefaultExchangeType;
+    public string Type { get; set; } = RabbitMQConstants.DefaultExchangeType;
     public bool IsDelayed { get; set; } = true;
 }
 
 public class QueueSettings
 {
     public string Name { get; set; } = string.Empty;
-    public string[] BindKeys { get; set; } = Array.Empty<string>();
+    public string[] BindKeys { get; set; } = [];
     public ushort PrefetchCount { get; set; } = 1;
 }
 
@@ -29,27 +29,27 @@ public class ConnectionSettings
     }
 }
 
-public class RmqSettings
+public class ProcessorSettings
 {
-    public ConnectionSettings Connection { get; set; }
-    public ExchangeSettings Exchange { get; set; }
+    public ConnectionSettings Connection { get; init; }
+    public ExchangeSettings Exchange { get; init; }
 
-    public RmqSettings()
+    public ProcessorSettings()
     {
         Connection = new ConnectionSettings();
         Exchange = new ExchangeSettings();
     }
 
-    public RmqSettings(ConnectionSettings connection, ExchangeSettings exchange)
+    public ProcessorSettings(ConnectionSettings connection, ExchangeSettings exchange)
     {
         Connection = connection;
         Exchange = exchange;
     }
 }
 
-public class PublisherSettings : RmqSettings
+public class PublisherSettings : ProcessorSettings
 {
-    public PublisherSettings() : base()
+    public PublisherSettings()
     {
     }
 
@@ -61,7 +61,7 @@ public class PublisherSettings : RmqSettings
 
 public class ConsumerSettings : PublisherSettings
 {
-    public QueueSettings Queue { get; set; }
+    public QueueSettings Queue { get; init; }
 
     public ConsumerSettings(ConnectionSettings connection, ExchangeSettings exchange, QueueSettings queue)
         : base(connection, exchange)
@@ -69,7 +69,7 @@ public class ConsumerSettings : PublisherSettings
         Queue = queue;
     }
 
-    public ConsumerSettings() : base()
+    public ConsumerSettings()
     {
         Queue = new QueueSettings();
     }
@@ -77,7 +77,7 @@ public class ConsumerSettings : PublisherSettings
 
 public class RouterSettings : ConsumerSettings
 {
-    public ExchangeSettings TargetExchange { get; set; }
+    public ExchangeSettings TargetExchange { get; init; }
 
     public RouterSettings(ConnectionSettings connection, ExchangeSettings exchange, QueueSettings queue, ExchangeSettings targetExchange)
         : base(connection, exchange, queue)
@@ -85,7 +85,7 @@ public class RouterSettings : ConsumerSettings
         TargetExchange = targetExchange;
     }
 
-    public RouterSettings() : base()
+    public RouterSettings()
     {
         TargetExchange = new ExchangeSettings();
     }

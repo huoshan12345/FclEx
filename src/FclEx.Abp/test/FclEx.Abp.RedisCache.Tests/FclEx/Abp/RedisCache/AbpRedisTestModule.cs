@@ -11,6 +11,10 @@ public class AbpRedisTestModule : AbpModule
     {
         var config = context.Services.GetConfiguration();
         context.Services.Configure<AbpRedisOptions>(config.GetRequiredSection(RedisConStrName));
-        context.Services.Configure<AbpRedisOptions>(m => m.ConfigureAll(x => x.UseGlobalPrefix = true));
+        context.Services.Configure<AbpRedisOptions>(m =>
+        {
+            m.ConStrs.ForEach(x => x.DefaultDatabase = Environment.Version.Major);
+            m.ConfigureAllCollections(x => x.UseGlobalPrefix = true);
+        });
     }
 }

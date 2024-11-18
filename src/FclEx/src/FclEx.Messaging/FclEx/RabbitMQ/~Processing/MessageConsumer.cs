@@ -1,90 +1,94 @@
-﻿using System.Diagnostics;
-using System.Linq;
-using FclEx.Serialization;
+﻿namespace FclEx.RabbitMQ;
 
-namespace FclEx.RabbitMQ;
-
-public abstract class MessageConsumer<TInput, TSettings> : MessageProcessor<TSettings>
+[SuppressMessage("ReSharper", "ConvertToPrimaryConstructor")]
+public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings>, IMessageConsumer<T, TSettings>
     where TSettings : ConsumerSettings
 {
-    public delegate Task<OperateResult> ConsumeHandler(BasicDeliverEventArgs props, TInput input);
-    public delegate Task<OperateResult> ConsumeErrorHandler(BasicDeliverEventArgs props, TInput input, Exception exception);
+    public delegate Task<OperateResult> ConsumeHandler(BasicDeliverEventArgs props, T input);
+    public delegate Task<OperateResult> ConsumeErrorHandler(BasicDeliverEventArgs props, T input, Exception exception);
 
-    protected static Type InputType { get; } = typeof(TInput);
-    protected IModel? Channel { get; set; }
-    protected AsyncEventingBasicConsumer? RmqConsumer { get; set; }
-    protected virtual TimeSpan ProcessInterval { get; } = TimeSpan.Zero;
-    public virtual int MaxRetryTimes { get; } = 2;
-    protected sealed override bool DispatchConsumersAsync { get; } = true;
-
-    protected MessageConsumer(IMemoryBytesSerializer? serializer, ILoggerFactory? loggerFactory = null)
-        : base(serializer, loggerFactory)
+    protected MessageConsumer(ILoggerFactory? loggerFactory, IMemoryBytesSerializer? serializer) : base(loggerFactory, serializer)
     {
     }
 
-    [MemberNotNull(nameof(Channel))]
-    public override void Init(TSettings settings)
+    protected static Type MessageType { get; } = typeof(T);
+
+    protected IChannel? Channel { get; set; }
+    protected AsyncEventingBasicConsumer? Consumer { get; set; }
+    protected virtual TimeSpan ProcessInterval => TimeSpan.Zero;
+    protected virtual int MaxRetryTimes => 2;
+
+    public override async Task InitializeAsync(TSettings settings)
     {
-        base.Init(settings);
-        Channel = Connection!.CreateModel();
-        var queue = Channel.QueueDeclare(queue: settings.Queue.Name,
+        await base.InitializeAsync(settings);
+
+        Check.NotNull(Settings);
+        Check.NotNull(Connection);
+
+        Channel = await Connection.CreateChannelAsync();
+        var queue = await Channel.QueueDeclareAsync(queue: settings.Queue.Name,
             durable: true,
             exclusive: false,
             autoDelete: false,
             arguments: null);
-        foreach (var key in settings.Queue.BindKeys.Append(queue.QueueName)) // bind queue.QueueName for PushBack
+
+        foreach (var key in Settings.Queue.BindKeys.Append(queue.QueueName)) // bind queue.QueueName for PushBack
         {
-            Channel.QueueBind(queue: queue.QueueName,
-                exchange: settings.Exchange.Name,
+            await Channel.QueueBindAsync(
+                queue: queue.QueueName,
+                exchange: Settings.Exchange.Name,
                 routingKey: key);
         }
-        Channel.BasicQos(prefetchSize: 0,
-            prefetchCount: Settings!.Queue.PrefetchCount,
+
+        await Channel.BasicQosAsync(
+            prefetchSize: 0,
+            prefetchCount: Settings.Queue.PrefetchCount,
             global: false);
 
-        RmqConsumer = new AsyncEventingBasicConsumer(Channel);
-        RmqConsumer.Received += (sender, args) => ConsumeAsync(args);
-        Channel.BasicConsume(queue: Settings!.Queue.Name,
+        Consumer = new AsyncEventingBasicConsumer(Channel);
+        Consumer.ReceivedAsync += (sender, args) => ConsumeAsync(args);
+        await Channel.BasicConsumeAsync(
+            queue: Settings.Queue.Name,
             autoAck: false,
-            consumer: RmqConsumer);
+            consumer: Consumer);
 
         Logger.LogInformation("Started an instance");
     }
 
     protected override IEnumerable<LoggerProperty> GetLogProperties()
     {
-        return new LoggerProperty[]
-        {
+        return
+        [
             ("ConsumerType", GetType().ShortName()),
             (nameof(Settings.Queue), Settings!.Queue.Name),
             (nameof(Settings.Queue.BindKeys), Settings!.Queue.BindKeys),
             (nameof(Settings.Exchange), Settings!.Exchange.Name),
-            (nameof(InputType), InputType.ShortName())
-        };
+            (nameof(MessageType), MessageType.ShortName()),
+        ];
     }
 
-    protected void PushBack(BasicDeliverEventArgs args)
+    protected async Task PushBackAsync(BasicDeliverEventArgs args)
     {
-        // we cannot publish to the default exchange whose name is empty cause it is not a delay exchange.
-        Channel.BasicPublish(
-            exchange: Settings!.Exchange.Name,
-            routingKey: Settings!.Queue.Name,
-            basicProperties: args.BasicProperties,
-            body: args.Body);
+        Check.NotNull(Settings);
+        Check.NotNull(Channel);
 
+        // we cannot publish to the default exchange whose name is empty because it is not a delay exchange.
+        await BasicPublishAsync(Channel, ExchangeName, args.Body, args.RoutingKey, args.BasicProperties);
         Logger.LogTrace("Push back successfully");
     }
 
     protected virtual async Task ConsumeAsync(BasicDeliverEventArgs args)
     {
-        var props = args.BasicProperties;
+        Check.NotNull(Channel);
+
+        var properties = args.BasicProperties;
         var watch = ValueStopwatch.StartNew();
         var disposable = Logger.PushProperty(
-            (nameof(props.MessageId), props.MessageId),
+            (nameof(properties.MessageId), properties.MessageId),
             (nameof(args.RoutingKey), args.RoutingKey)
         );
 
-        TInput? obj = default;
+        T? obj = default;
         try
         {
             obj = await DeserializeAsync(args).IgnoreSyncContext();
@@ -92,14 +96,14 @@ public abstract class MessageConsumer<TInput, TSettings> : MessageProcessor<TSet
         catch (Exception ex)
         {
             await OnDeserializeDiscardAsync(args, ex).IgnoreSyncContext();
-            Channel!.BasicAck(deliveryTag: args.DeliveryTag, multiple: false);
+            await Channel.BasicAckAsync(deliveryTag: args.DeliveryTag, multiple: false);
             return;
         }
 
         Exception? exception = default;
         try
         {
-            var result = await ConsumeInternalAsync(args, obj)
+            var result = await ConsumeActionAsync(args, obj)
                 .Ok(t => Logger.LogTrace("Consume successfully"))
                 .Error(e => exception = e)
                 .IgnoreSyncContext();
@@ -118,17 +122,17 @@ public abstract class MessageConsumer<TInput, TSettings> : MessageProcessor<TSet
             disposable.Dispose();
 
             await TaskHelper.Delay(ProcessInterval).IgnoreSyncContext();
-            Channel!.BasicAck(deliveryTag: args.DeliveryTag, multiple: false);
+            await Channel.BasicAckAsync(deliveryTag: args.DeliveryTag, multiple: false);
         }
 
-        props.IncreaseErrorTimes();
+        properties.IncreaseErrorTimes();
         await OnConsumeErrorAsync(args, obj, exception!).IgnoreSyncContext();
     }
 
-    protected virtual async Task OnConsumeErrorAsync(BasicDeliverEventArgs args, TInput input, Exception exception)
+    protected virtual async Task OnConsumeErrorAsync(BasicDeliverEventArgs args, T input, Exception exception)
     {
-        var props = args.BasicProperties;
-        var errorTimes = props.GetErrorTimes();
+        var properties = args.BasicProperties;
+        var errorTimes = properties.GetErrorTimes();
 
         try
         {
@@ -147,9 +151,9 @@ public abstract class MessageConsumer<TInput, TSettings> : MessageProcessor<TSet
         }
     }
 
-    protected virtual Task<TInput> DeserializeAsync(BasicDeliverEventArgs args)
+    protected virtual Task<T> DeserializeAsync(BasicDeliverEventArgs args)
     {
-        var obj = Serializer.Deserialize<TInput>(args.Body);
+        var obj = Serializer.Deserialize<T>(args.Body);
         return obj.ToTask()!;
     }
 
@@ -159,33 +163,33 @@ public abstract class MessageConsumer<TInput, TSettings> : MessageProcessor<TSet
         return Task.CompletedTask;
     }
 
-    protected abstract Task<OperateResult> ConsumeInternalAsync(BasicDeliverEventArgs args, TInput message);
+    protected abstract Task<OperateResult> ConsumeActionAsync(BasicDeliverEventArgs args, T message);
 
-    protected virtual Task OnConsumeRetryAsync(BasicDeliverEventArgs args, TInput input, Exception exception)
+    protected virtual async Task OnConsumeRetryAsync(BasicDeliverEventArgs args, T input, Exception exception)
     {
-        var delay = (int)args.BasicProperties.GetDelay().TotalSeconds;
+        var properties = args.BasicProperties;
+        var delay = (int)properties.GetDelay().TotalSeconds;
         using (Logger.PushProperty(
-                   ("ErrorTimes", args.BasicProperties.GetErrorTimes()),
+                   ("ErrorTimes", properties.GetErrorTimes()),
                    ("DelaySeconds", delay)
                ))
         {
             Logger.LogWarning(exception, $"The item will be re-queued to retry after {delay} seconds due to: {exception.Message}");
-            PushBack(args);
-            return Task.CompletedTask;
+            await PushBackAsync(args);
         }
     }
 
-    protected virtual Task OnConsumeDiscardAsync(BasicDeliverEventArgs args, TInput input, Exception exception)
+    protected virtual Task OnConsumeDiscardAsync(BasicDeliverEventArgs args, T input, Exception exception)
     {
         Logger.LogError(exception, "The item will be discarded due to: " + exception.Message);
         return Task.CompletedTask;
     }
 }
 
-public abstract class MessageConsumer<TMessage> : MessageConsumer<TMessage, ConsumerSettings>
+[SuppressMessage("ReSharper", "ConvertToPrimaryConstructor")]
+public abstract class MessageConsumer<T> : MessageConsumer<T, ConsumerSettings>, IMessageConsumer<T>
 {
-    protected MessageConsumer(IMemoryBytesSerializer? serializer, ILoggerFactory? loggerFactory = null)
-        : base(serializer, loggerFactory)
+    protected MessageConsumer(ILoggerFactory? loggerFactory, IMemoryBytesSerializer? serializer) : base(loggerFactory, serializer)
     {
     }
 }

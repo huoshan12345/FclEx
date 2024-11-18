@@ -3,11 +3,12 @@
     <IsPackable>false</IsPackable>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
-    <NoWarn>xUnit2013;xUnit1000;CS1591;CS2002;CS8500</NoWarn>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);xUnit2013;NU1901;NU1902;NU1903;NU1904</NoWarn>
+    <TargetFrameworks>net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!--NOTE: GetTargetFrameworkVersion('netstandard2.0') is 0.0-->
+    <TargetFrameworkVersion>v$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
   </PropertyGroup>
 
   <PropertyGroup>

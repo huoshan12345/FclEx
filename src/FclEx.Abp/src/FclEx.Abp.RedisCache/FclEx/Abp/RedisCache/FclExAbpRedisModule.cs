@@ -22,7 +22,7 @@ public class FclExAbpRedisModule : AbpModule
 
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
-        context.Services.AddSingleton<IRedisColManager, RedisColManager>();
+        context.Services.AddSingleton<IRedisCollectionManager, RedisCollectionManager>();
     }
 
     public override void PostConfigureServices(ServiceConfigurationContext context)
@@ -51,9 +51,9 @@ public class FclExAbpRedisModule : AbpModule
         var logger = provider.CreateLogger(GetType());
 
         var conStrs = _effectiveRedisOptions?.ConStrs;
-        if (conStrs?.Any() == true)
+        if (conStrs?.Count > 0)
         {
-            logger.LogInformation("Redis endpoints: " + conStrs.Select(m => $"{m.Host}:{m.Port}").JoinWith(","));
+            logger.LogInformation("Redis endpoints: " + conStrs.Select(m => $"{m.Host}:{m.Port}").JoinWith(", "));
         }
         else
         {

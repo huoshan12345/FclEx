@@ -109,14 +109,22 @@ public static partial class EnumerableExtensions
         return source.Select((m, i) => selector(m.Item1, m.Item2, i));
     }
 
+#if !NET9_0_OR_GREATER
     public static IEnumerable<(int Index, T Item)> Index<T>(this IEnumerable<T> enumerable)
     {
-        var i = 0;
-        foreach (var item in enumerable)
+        Check.NotNull(enumerable);
+        return IndexIterator(enumerable);
+
+        static IEnumerable<(int Index, T Item)> IndexIterator(IEnumerable<T> enumerable)
         {
-            yield return (i++, item);
+            var i = 0;
+            foreach (var item in enumerable)
+            {
+                yield return (i++, item);
+            }
         }
     }
+#endif
 
     public static IEnumerable<IndexedItem<T>> IndexExt<T>(this IEnumerable<T> enumerable)
     {
@@ -124,9 +132,9 @@ public static partial class EnumerableExtensions
 
         // we separate the null check from the method body with yield, otherwise the null check will not be executed until start enumerating.
         // see details in https://stackoverflow.com/questions/42149895/method-having-yield-return-is-not-throwing-exception
-        return WithIndexBody(enumerable);
+        return IndexExtIterator(enumerable);
 
-        static IEnumerable<IndexedItem<T>> WithIndexBody(IEnumerable<T> enumerable)
+        static IEnumerable<IndexedItem<T>> IndexExtIterator(IEnumerable<T> enumerable)
         {
             using var enumerator = enumerable.GetEnumerator();
 

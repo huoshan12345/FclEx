@@ -1,10 +1,10 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+#if !NET9_0_OR_GREATER
 #nullable disable
 #pragma warning disable CS1584
 #pragma warning disable CS1658
-
 namespace Microsoft.Collections.Extensions;
 
 internal enum InsertionBehavior
@@ -935,3 +935,4 @@ public partial class OrderedDictionary<TKey, TValue> : IDictionary<TKey, TValue>
         }
     }
 }
+#endif

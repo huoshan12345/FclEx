@@ -1,19 +1,19 @@
-﻿using FclEx.Serialization;
+﻿namespace FclEx.RabbitMQ;
 
-namespace FclEx.RabbitMQ;
-
-public abstract class MessageRouter<TInput, TOutput> : MessageConsumer<TInput, RouterSettings>
+[SuppressMessage("ReSharper", "ConvertToPrimaryConstructor")]
+public abstract class MessageRouter<TInput, TOutput> : MessageConsumer<TInput, RouterSettings>, IMessageRouter<TInput, TOutput>
 {
-    protected virtual IMessageConverter<TInput, TOutput> Converter { get; }
-    protected static Type OutputType { get; } = typeof(TOutput);
-
-    protected MessageRouter(IMessageConverter<TInput, TOutput> converter,
-        IMemoryBytesSerializer? serializer = null,
-        ILoggerFactory? loggerFactory = null)
-        : base(serializer, loggerFactory)
+    protected MessageRouter(
+        ILoggerFactory? loggerFactory,
+        IMemoryBytesSerializer? serializer,
+        IMessageConverter<TInput, TOutput> converter)
+        : base(loggerFactory, serializer)
     {
         Converter = converter;
     }
+
+    protected IMessageConverter<TInput, TOutput> Converter { get; }
+    protected static Type RouteMessageType { get; } = typeof(TOutput);
 
     protected override IEnumerable<LoggerProperty> GetLogProperties()
     {
@@ -25,23 +25,25 @@ public abstract class MessageRouter<TInput, TOutput> : MessageConsumer<TInput, R
             (nameof(Settings.Queue.BindKeys), s.Queue.BindKeys),
             (nameof(Settings.Exchange), s.Exchange.Name),
             (nameof(Settings.TargetExchange), s.TargetExchange.Name),
-            (nameof(InputType), InputType.ShortName()),
-            (nameof(OutputType), OutputType.ShortName()),
+            (nameof(MessageType), MessageType.ShortName()),
+            (nameof(RouteMessageType), RouteMessageType.ShortName()),
         ];
     }
 
-    public override void Init(RouterSettings settings)
+    public override async Task InitializeAsync(RouterSettings settings)
     {
-        base.Init(settings);
+        await base.InitializeAsync(settings);
 
-        var s = Settings!;
-        Channel!.ExchangeDeclareWithAlternate(
-            exchange: s.TargetExchange.Name,
-            type: Settings!.TargetExchange.Type,
-            durable: true,
-            autoDelete: false,
-            arguments: null!,
-            isDelayed: s.TargetExchange.IsDelayed);
+        Check.NotNull(Settings);
+        Check.NotNull(Channel);
+
+        await Channel.ExchangeDeclareAsync(
+             exchange: Settings.TargetExchange.Name,
+             type: Settings.TargetExchange.Type,
+             durable: true,
+             autoDelete: false,
+             arguments: null,
+             isDelayed: Settings.TargetExchange.IsDelayed);
     }
 
     protected virtual async Task<OperateResult> RouteAsync(BasicDeliverEventArgs args, TInput input)
@@ -50,28 +52,25 @@ public abstract class MessageRouter<TInput, TOutput> : MessageConsumer<TInput, R
         return await RouteAsync(args, input, output).IgnoreSyncContext();
     }
 
-    protected virtual Task<OperateResult> RouteAsync(BasicDeliverEventArgs args, TInput input, TOutput output)
+    protected virtual async Task<OperateResult> RouteAsync(BasicDeliverEventArgs args, TInput input, TOutput output)
     {
-        var props = args.BasicProperties;
+        Check.NotNull(Channel);
+        Check.NotNull(Settings);
+
+        var properties = args.BasicProperties;
         if (output is not null)
         {
-            var bytes = Serializer.Serialize(output);
-            var key = GetRoutingKey(props, output);
-
-            Channel.BasicPublish(
-                exchange: Settings!.TargetExchange.Name,
-                routingKey: key,
-                basicProperties: props,
-                body: bytes);
+            var key = GetRoutingKey(properties, output);
+            await BasicPublishAsync(Channel, Settings.TargetExchange.Name, output, key, properties);
         }
         else
         {
             Logger.LogDebug("Null output has been discarded");
         }
-        return Operate.Success.ToTask();
+        return Operate.Success;
     }
 
-    protected override Task<OperateResult> ConsumeInternalAsync(BasicDeliverEventArgs args, TInput message)
+    protected override Task<OperateResult> ConsumeActionAsync(BasicDeliverEventArgs args, TInput message)
     {
         return RouteAsync(args, message);
     }
@@ -81,42 +80,5 @@ public abstract class MessageRouter<TInput, TOutput> : MessageConsumer<TInput, R
         return Converter.ConvertAsync(input);
     }
 
-    protected abstract string GetRoutingKey(IBasicProperties props, TOutput output);
-}
-
-public abstract class MessageRouter<TInput, TOutput, TOutputs> : MessageRouter<TInput, TOutput>
-    where TOutputs : ICollection<TOutput>
-{
-    protected new IMessageConverter<TInput, TOutputs> Converter { get; }
-
-    protected MessageRouter(
-        IMessageConverter<TInput, TOutputs> converter,
-        IMemoryBytesSerializer? serializer = null,
-        ILoggerFactory? loggerFactory = null)
-        : base(null!, serializer, loggerFactory)
-    {
-        Converter = converter;
-    }
-
-
-    protected override async Task<OperateResult> RouteAsync(BasicDeliverEventArgs args, TInput input)
-    {
-        var props = args.BasicProperties;
-        var outputs = await ConvertAsync(args, input).IgnoreSyncContext();
-        Logger.LogTrace($"Outputted {outputs.Count} items");
-
-        var results = new List<OperateResult>();
-        foreach (var output in outputs)
-        {
-            await RouteAsync(args, input, output)
-                .Do(r => true, r => results.Add(r))
-                .IgnoreSyncContext();
-        }
-        return results.Merge();
-    }
-
-    protected new virtual Task<TOutputs> ConvertAsync(BasicDeliverEventArgs args, TInput input)
-    {
-        return Converter.ConvertAsync(input);
-    }
+    protected abstract string GetRoutingKey(IReadOnlyBasicProperties properties, TOutput output);
 }

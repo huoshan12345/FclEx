@@ -7,7 +7,7 @@ public class LoggerConfigurationExtensionsTests
     {
         var logger = new LoggerConfiguration()
             .Enrich.FromLogContext()
-            .WriteTo.NewRelic(GlobalFixture.AppSettings.NewRelic.LicenseKey)
+            .WriteTo.NewRelic(licenseKey: "")
             .CreateLogger();
 
         for (var i = 0; i < 10; i++)

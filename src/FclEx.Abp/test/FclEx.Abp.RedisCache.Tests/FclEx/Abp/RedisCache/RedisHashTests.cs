@@ -10,7 +10,7 @@ public class RedisHashTests : AbpRedisTests
     public void HSet_HGet_String_Test()
     {
         var key = nameof(HSet_HGet_String_Test).ToLower();
-        var manager = ServiceProvider.GetRequiredService<IRedisColManager>();
+        var manager = ServiceProvider.GetRequiredService<IRedisCollectionManager>();
         var col = manager.GetHash<string>(key);
 
         col.HSet("1", "11");
@@ -23,7 +23,7 @@ public class RedisHashTests : AbpRedisTests
     public void Provider_HmSet_HmGet_String_Test()
     {
         var key = nameof(Provider_HmSet_HmGet_String_Test).ToLower();
-        var manager = ServiceProvider.GetRequiredService<IRedisColManager>();
+        var manager = ServiceProvider.GetRequiredService<IRedisCollectionManager>();
         var col = manager.GetHash<string>(key);
         var keyExt = col.Key;
         var provider = ServiceProvider.GetRequiredService<IRedisCachingProvider>();
@@ -40,7 +40,7 @@ public class RedisHashTests : AbpRedisTests
     public void HmSet_HmGet_String_Test()
     {
         var key = nameof(HmSet_HmGet_String_Test).ToLower();
-        var manager = ServiceProvider.GetRequiredService<IRedisColManager>();
+        var manager = ServiceProvider.GetRequiredService<IRedisCollectionManager>();
         var col = manager.GetHash<string>(key);
 
         var dic = Enumerable.Range(1, 10)
@@ -57,7 +57,7 @@ public class RedisHashTests : AbpRedisTests
     public async Task HmSetAsync_HmGetAsync_String_Test()
     {
         var key = nameof(HmSetAsync_HmGetAsync_String_Test).ToLower();
-        var manager = ServiceProvider.GetRequiredService<IRedisColManager>();
+        var manager = ServiceProvider.GetRequiredService<IRedisCollectionManager>();
         var col = manager.GetHash<string>(key);
 
         var dic = Enumerable.Range(1, 10)

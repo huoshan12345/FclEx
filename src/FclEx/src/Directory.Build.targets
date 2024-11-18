@@ -7,7 +7,6 @@
   <ItemGroup>
     <_ExcludeFclExUsing Include="FclEx.Core" />
     <_ExcludeFclExUsing Include="FclEx.SourceGenerator" />
-    <_ExcludeFclExUsing Include="FclEx.Wmi.SourceGenerator" />
   </ItemGroup>
 
   <ItemGroup Condition="!@(_ExcludeFclExUsing->AnyHaveMetadataValue('Identity', '$(ProjectName)'))">

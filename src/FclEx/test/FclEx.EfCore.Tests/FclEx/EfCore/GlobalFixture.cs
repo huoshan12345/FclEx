@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using FclEx.Tests;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using MySql.Data.MySqlClient;
@@ -7,7 +8,7 @@ namespace FclEx.EfCore;
 
 public readonly record struct DatabaseUser(string Username, string Password, string DefaultSchema)
 {
-    public static readonly DatabaseUser Default = new("user_with_schema", "123456", "user_schema");
+    public static readonly DatabaseUser Default = new("user_with_schema".WithNetVer(), "123456", "user_schema".WithNetVer());
 }
 
 public readonly record struct ConnectionStrings(DbProviderType DbProviderType, string Primary, string User)
@@ -35,7 +36,7 @@ public readonly record struct ConnectionStrings(DbProviderType DbProviderType, s
             {
                 UserID = user.Username,
                 Password = user.Password,
-                Database = user.DefaultSchema
+                Database = user.DefaultSchema,
             }.ConnectionString;
         }
     }
@@ -68,8 +69,14 @@ public readonly record struct ConnectionStrings(DbProviderType DbProviderType, s
 
 public class GlobalFixture : IAsyncLifetime
 {
-    public static readonly string DatabaseName = typeof(GlobalDbContext).Assembly.GetName().Name!.Replace(".", "-").ToLower();
-    public static readonly string?[] Schemas = [null, "schema_test_1", "schema_test_2", DatabaseUser.Default.DefaultSchema];
+    public static readonly string DatabaseName = typeof(GlobalDbContext).Assembly.GetName().Name!.Replace(".", "_").ToLower().WithNetVer();
+    public static readonly string?[] Schemas =
+    [
+        null,
+        "schema_test_1".WithNetVer(),
+        "schema_test_2".WithNetVer(),
+        DatabaseUser.Default.DefaultSchema,
+    ];
 
     public static readonly DbProviderType[] DatabaseTypes = TestHelper.IsGithubAction
         ? [DbProviderType.Npgsql, DbProviderType.Sqlite]
