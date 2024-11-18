@@ -1,19 +1,27 @@
-﻿// ReSharper disable MemberCanBeProtected.Global
-// ReSharper disable PropertyCanBeMadeInitOnly.Global
-// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+﻿using FclEx.Xunit;
+
 namespace FclEx.Tests;
 
 public class GlobalFixture : IAsyncLifetime
 {
     public static IConfigurationRoot BuildConfig()
     {
-        var machineName = Environment.MachineName.ToLower();
-        return new ConfigurationBuilder()
+        var builder = new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", false, false)
-            .AddJsonFile($"appsettings.{machineName}.json", true, false)
-            .AddEnvironmentVariables("FclEx_")
-            .Build();
+            .AddEnvironmentVariables("FclEx_");
+
+        if (TestHelper.IsGithubAction)
+        {
+            builder.AddJsonFile("appsettings.github.json", true, false);
+        }
+        else
+        {
+            var machineName = Environment.MachineName.ToLower();
+            builder.AddJsonFile($"appsettings.{machineName}.json", true, false);
+        }
+
+        return builder.Build();
     }
 
     public static IConfigurationRoot Config { get; } = BuildConfig();
