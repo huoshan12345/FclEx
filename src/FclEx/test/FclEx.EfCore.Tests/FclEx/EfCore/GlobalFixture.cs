@@ -1,17 +1,10 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using FclEx.Tests;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using MySql.Data.MySqlClient;
 
 namespace FclEx.EfCore;
-
-file static class Extensions
-{
-    public static string WithNetVer(this string str)
-    {
-        return str + "_net" + NetVersion;
-    }
-}
 
 public readonly record struct DatabaseUser(string Username, string Password, string DefaultSchema)
 {
@@ -76,7 +69,6 @@ public readonly record struct ConnectionStrings(DbProviderType DbProviderType, s
 
 public class GlobalFixture : IAsyncLifetime
 {
-    public static readonly int NetVersion = Environment.Version.Major;
     public static readonly string DatabaseName = typeof(GlobalDbContext).Assembly.GetName().Name!.Replace(".", "_").ToLower().WithNetVer();
     public static readonly string?[] Schemas =
     [

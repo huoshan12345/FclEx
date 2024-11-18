@@ -13,4 +13,9 @@ public static class StringExtensions
     {
         return value.ToString().ToLiteral();
     }
+
+    public static string WithNetVer(this string str, char separator = '_')
+    {
+        return str + separator + "net" + Environment.Version.Major;
+    }
 }
