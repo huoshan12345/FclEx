@@ -9,6 +9,13 @@ on:
     branches:
       - master
 
+permissions:
+  pull-requests: write
+  contents: write
+  statuses: write
+  checks: write
+  actions: write
+
 env:
   DOTNET_NOLOGO: 1
   MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
@@ -73,14 +80,15 @@ jobs:
           ./build/test_all.ps1 Release
 
       - name: Test Report
-        uses: dorny/test-reporter@v1
-        if: github.actor != 'dependabot-bot' && (success() || failure()) # run this step even if previous step failed
+        uses: dorny/test-reporter@main
+        if: (success() || failure()) # run this step even if previous step failed
         with:
           name: Test Report              # Name of the check run which will be created 
           path: src/TestResults/**/*.trx # Path to test results
           reporter: dotnet-trx            # Format of test results
           list-suites: failed
           list-tests: failed
+          use-actions-summary: ${{ github.event_name == 'pull_request' }}
 
       - name: NuGet Publish
         if: github.ref == 'refs/heads/master'
