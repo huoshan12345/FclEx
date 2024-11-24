@@ -1,10 +1,10 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using FclEx.Dapper;
+using FclEx.Data;
 using Npgsql;
 
-namespace FclEx.Abp.Benchmarks.Data;
+namespace FclEx.Benchmarks;
 
 [MinIterationCount(15)]
 [MinInvokeCount(4)]

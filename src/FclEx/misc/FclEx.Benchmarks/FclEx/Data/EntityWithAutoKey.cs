@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace FclEx.Abp.Benchmarks.Data;
+namespace FclEx.Data;
 
 public class EntityWithAutoKey
 {

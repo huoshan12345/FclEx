@@ -1,10 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <PackageReference Include="Serilog.Sinks.XUnit" Version="3.0.5" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\..\FclEx\src\FclEx.Xunit\FclEx.Xunit.csproj" />
     <ProjectReference Include="..\FclEx.Abp\FclEx.Abp.csproj" />
   </ItemGroup>

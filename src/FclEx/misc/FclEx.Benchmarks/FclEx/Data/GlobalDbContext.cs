@@ -1,4 +1,7 @@
-﻿namespace FclEx.Abp.Benchmarks.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
+
+namespace FclEx.Data;
 
 // EfCore is used for helping us to do tests
 public class GlobalDbContext : DbContext

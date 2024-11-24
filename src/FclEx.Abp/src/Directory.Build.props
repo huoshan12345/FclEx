@@ -2,6 +2,6 @@
   <Import Project="..\..\FclEx\src\Directory.Build.props" />
   <PropertyGroup>
     <Description>Extensions for abp vnext(https://github.com/abpframework/abp)</Description>
-    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>net9.0</TargetFrameworks>
   </PropertyGroup>
 </Project>
