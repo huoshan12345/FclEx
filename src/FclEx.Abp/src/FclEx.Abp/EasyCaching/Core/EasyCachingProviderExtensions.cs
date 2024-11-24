@@ -10,15 +10,16 @@ public static class EasyCachingProviderExtensions
     {
         item = default;
         var (success, value, _, _) = Operate.Execute(() => provider.Get<T>(key));
-        if (!success) return false;
+        if (success == false)
+            return false;
+
         item = value!.Value;
         return value.HasValue;
     }
 
-    public static T GetOrAdd<T>(this IEasyCachingProvider provider, string key,
-        Func<string, T> func, TimeSpan expiration)
+    public static T GetOrAdd<T>(this IEasyCachingProvider provider, string key, Func<string, T> func, TimeSpan expiration)
     {
-        if (!provider.TryGet<T>(key, out var obj))
+        if (provider.TryGet<T>(key, out var obj) == false)
         {
             obj = func(key);
             provider.Set<T>(key, obj, expiration);
