@@ -32,18 +32,6 @@ internal static class TupleExtensionsSource
         for (var i = 2; i <= Max; i++)
         {
             var types = Enumerable.Range(1, i).Select(m => $"T{m}").JoinWith(", ");
-            var methodName = $"public static ({types}) ToValueTuple<{types}>";
-            builder.WriteLine($"{methodName}(this Tuple<{types}> tuple)");
-            builder.WriteOpeningBracket();
-            var result = Enumerable.Range(1, i).Select(m => $"tuple.Item{m}").JoinWith(", ");
-            builder.WriteLine($"return ({result});");
-            builder.WriteClosingBracket();
-            builder.WriteLine();
-        }
-
-        for (var i = 2; i <= Max; i++)
-        {
-            var types = Enumerable.Range(1, i).Select(m => $"T{m}").JoinWith(", ");
             var methodName = $"public static IEnumerable<({types})> ToValueTuple<{types}>";
             builder.WriteLine($"{methodName}(this IEnumerable<Tuple<{types}>> enumerable)");
             builder.WriteOpeningBracket();
