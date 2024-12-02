@@ -38,8 +38,4 @@
     <Content Include="FclEx.Core.targets" Pack="true" BuildAction="None" PackagePath="buildTransitive/" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Microsoft\Collections\Extensions\" />
-  </ItemGroup>
-
 </Project>

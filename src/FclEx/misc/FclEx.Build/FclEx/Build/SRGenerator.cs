@@ -19,7 +19,7 @@ public class SRGenerator
         var targetDir = new DirectoryInfo(Path.Combine(src, target));
         Assert.True(targetDir.Exists, targetDir.FullName);
 
-        var dic = new Dictionary<string, string>();
+        var dic = new SortedDictionary<string, string>();
         foreach (var source in sources)
         {
             var sourceFile = new FileInfo(source);
