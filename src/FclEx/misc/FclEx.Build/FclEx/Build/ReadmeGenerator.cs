@@ -5,6 +5,7 @@ using System.Xml.Linq;
 using FclEx.Helpers;
 using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
+// ReSharper disable MemberCanBePrivate.Local
 
 namespace FclEx.Build;
 
@@ -69,7 +70,6 @@ public class ReadmeGenerator
             m.AppendHeading("Latest Builds", 2);
             m.AppendLine();
             m.AppendLine();
-
 
             var rows = new List<List<Action<StringBuilder>>>();
             foreach (var (name, frameworks) in list)

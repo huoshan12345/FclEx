@@ -21,6 +21,12 @@
     <PackageReference Include="PolySharp" Version="1.15.0" PrivateAssets="all" />
   </ItemGroup>
 
+  <!--<ItemGroup>
+    <Compile Remove="System\Collections\Generic\OrderedDictionary.cs" />
+    <Compile Remove="System\Collections\HashHelpers.cs" />
+    <Compile Remove="System\Collections\ThrowHelper.cs" />
+  </ItemGroup>-->
+
   <ItemGroup>
     <ProjectReference Include="..\FclEx.SourceGenerator\FclEx.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
@@ -30,6 +36,10 @@
   <ItemGroup Label="FilesToCopy">
     <Content Include="FclExUsing.cs" Pack="true" BuildAction="None" PackagePath="content/" />
     <Content Include="FclEx.Core.targets" Pack="true" BuildAction="None" PackagePath="buildTransitive/" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Microsoft\Collections\Extensions\" />
   </ItemGroup>
 
 </Project>
