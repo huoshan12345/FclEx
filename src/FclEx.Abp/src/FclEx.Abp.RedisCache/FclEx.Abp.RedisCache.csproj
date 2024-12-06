@@ -3,7 +3,7 @@
   <ItemGroup>
     <PackageReference Include="EasyCaching.CSRedis" Version="1.9.2" />
     <PackageReference Include="EasyCaching.Serialization.MessagePack" Version="1.9.2" />
-    <PackageReference Include="MessagePack" Version="2.5.192" />
+    <PackageReference Include="MessagePack" Version="3.0.300" />
   </ItemGroup>
 
   <ItemGroup>
