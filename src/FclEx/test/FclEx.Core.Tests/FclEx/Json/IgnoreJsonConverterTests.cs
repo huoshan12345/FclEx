@@ -1,4 +1,4 @@
-﻿namespace System.Text.Json.Serialization.Converters;
+﻿namespace FclEx.Json;
 
 public class IgnoreJsonConverterTests
 {
@@ -25,7 +25,7 @@ public class IgnoreJsonConverterTests
         public long RetCode { get; set; }
         [JsonPropertyName("msg")]
         public string? Msg { get; set; }
-        [JsonPropertyName("data")]
-        public Unit Data { get; set; }
+        [JsonConverter(typeof(IgnoreJsonConverter))]
+        public object? Data { get; set; }
     }
 }

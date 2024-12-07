@@ -13,7 +13,7 @@ public class LruCacheTests
 
         for (var i = 0; i < numbers.Length * capacity; i++)
         {
-            var num = numbers.GetRandomly(random);
+            var num = random.NextElement(numbers);
             var exist = dic.TryGetValue(num, out var existTime) && existTime.HasValue;
             dic[num] = DateTime.UtcNow;
 

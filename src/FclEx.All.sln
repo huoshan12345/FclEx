@@ -61,7 +61,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{4FBBC7F5-D6FB-43DC-B674-03C7346A268B}"
 	ProjectSection(SolutionItems) = preProject
 		..\build\incre_ver.ps1 = ..\build\incre_ver.ps1
-		..\Makefile = ..\Makefile
 		..\build\pack.ps1 = ..\build\pack.ps1
 		..\build\pkg.version = ..\build\pkg.version
 		..\build\test_all.ps1 = ..\build\test_all.ps1

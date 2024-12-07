@@ -1,10 +1,10 @@
-﻿using System.Text.Json.Serialization.Converters;
-
-namespace System.Text.Json;
+﻿namespace FclEx.Json;
 
 public static class JsonHelper
 {
     private static readonly ConcurrentDictionary<JsonOptions, JsonSerializerOptions> _serializerOptions = new();
+
+    private static readonly DefaultJsonTypeInfoResolver Resolver = new() { Modifiers = { EmptyValueModifier } };
 
     public static JsonSerializerOptions GetOptions(JsonOptions options = default)
     {
@@ -24,6 +24,7 @@ public static class JsonHelper
                 NumberHandling = k.DisallowNumberFromString
                     ? JsonNumberHandling.Strict
                     : JsonNumberHandling.AllowReadingFromString,
+                TypeInfoResolver = Resolver,
             };
 
             if (k.DisallowBoolFromString == false)
@@ -31,6 +32,18 @@ public static class JsonHelper
 
             options.MakeReadOnly(true);
             return options;
+        }
+    }
+
+    public static void EmptyValueModifier(JsonTypeInfo typeInfo)
+    {
+        foreach (var property in typeInfo.Properties)
+        {
+            var type = property.PropertyType;
+            if (type.IsEnumerable() && property.AttributeProvider?.IsDefined<JsonIgnoreEmptyAttribute>(true) != null)
+            {
+                property.ShouldSerialize = (_, val) => ((IEnumerable?)val).IsNullOrEmpty() == false;
+            }
         }
     }
 }

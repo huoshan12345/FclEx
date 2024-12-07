@@ -1,4 +1,6 @@
-﻿namespace FclEx.Extensions;
+﻿using FclEx.Json;
+
+namespace FclEx.Extensions;
 
 public static partial class ObjectExtensions
 {

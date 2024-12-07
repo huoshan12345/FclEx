@@ -1,4 +1,4 @@
-﻿namespace System.Text.Json;
+﻿namespace FclEx.Json;
 
 public readonly record struct JsonOptions(
     bool Indented = false,
