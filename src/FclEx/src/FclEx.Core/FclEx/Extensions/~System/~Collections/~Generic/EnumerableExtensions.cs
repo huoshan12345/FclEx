@@ -45,6 +45,7 @@ public static partial class EnumerableExtensions
         return count is { } c ? enumerable.Take(c) : enumerable;
     }
 
+    [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
     public static IEnumerable<TResult> SelectMany<T, TResult>(this IEnumerable<T> source, Func<T, T, TResult> resultSelector)
     {
         return source.SelectMany(m => source, resultSelector);
