@@ -17,7 +17,7 @@ $projects = $testDirs | ForEach-Object { Get-ChildItem -Path $_ -Include *.cspro
 $result = [ordered]@{}
 foreach ($project in $projects) {
   Write-Output "Testing $($project.Basename)"
-  $command = 'dotnet test $project.FullName --nologo -c $mode -v n --property:WarningLevel=0 /clp:ErrorsOnly'
+  $command = 'dotnet test $project.FullName --nologo -c $mode -v q --property:WarningLevel=0 /clp:ErrorsOnly'
   Invoke-Expression $command
   $success = $Lastexitcode -eq 0
   $result.Add($project.Name, $success)

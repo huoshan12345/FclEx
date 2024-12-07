@@ -115,7 +115,7 @@ public static class RandomExtensions
     /// <returns>The randomly generated value.</returns>
     public static T NextMarshalable<T>(this Random random)
     {
-        typeof(T).EnsureBlittable();
+        typeof(T).EnsureMarshalable();
         var size = Marshal.SizeOf<T>();
         var bytes = new byte[size];
         random.NextBytes(bytes);
