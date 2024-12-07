@@ -1,4 +1,6 @@
-﻿namespace FclEx.Extensions;
+﻿using FclEx.Json;
+
+namespace FclEx.Extensions;
 
 public static partial class StringExtensions
 {
@@ -53,7 +55,7 @@ public static partial class StringExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T? FromJson<T>(this string json, JsonOptions options)
     {
-        return JsonSerializer.Deserialize<T>(json, JsonHelper.GetOptions(options));
+        return json.FromJson<T>(JsonHelper.GetOptions(options));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -63,8 +65,32 @@ public static partial class StringExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static object? FromJson(this string json, Type type, JsonOptions options)
+    {
+        return json.FromJson(type, JsonHelper.GetOptions(options));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static JsonNode? ToJsonNode(this string str, JsonSerializerOptions? options = null)
     {
         return JsonSerializer.Deserialize<JsonNode>(str, options ?? JsonHelper.GetOptions());
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static JsonNode? ToJsonNode(this string str, JsonOptions options)
+    {
+        return str.ToJsonNode(JsonHelper.GetOptions(options));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static JsonElement ToJsonElement(this string str, JsonSerializerOptions? options = null)
+    {
+        return JsonSerializer.Deserialize<JsonElement>(str, options ?? JsonHelper.GetOptions());
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static JsonElement ToJsonElement(this string str, JsonOptions options)
+    {
+        return str.ToJsonElement(JsonHelper.GetOptions(options));
     }
 }

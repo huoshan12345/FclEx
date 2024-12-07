@@ -16,3 +16,4 @@ global using FclEx.Helpers;
 global using FclEx.Utils;
 global using YamlDotNet.Core;
 global using YamlDotNet.RepresentationModel;
+global using YamlDotNet.Serialization;

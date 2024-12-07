@@ -15,7 +15,7 @@ public class LfuCacheTests
 
         for (var i = 0; i < numbers.Length * capacity; i++)
         {
-            var num = numbers.GetRandomly(random);
+            var num = random.NextElement(numbers);
             dic[num] = dic[num].Get(-1) + 1;
             var keys = cache.Keys;
             var removeFlag = cache.IsFull() && !keys.Contains(num);

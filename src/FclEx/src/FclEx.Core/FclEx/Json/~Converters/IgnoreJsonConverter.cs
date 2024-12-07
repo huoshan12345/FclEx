@@ -1,4 +1,4 @@
-﻿namespace System.Text.Json.Serialization.Converters;
+﻿namespace FclEx.Json;
 
 public class IgnoreJsonConverter : JsonConverterFactory
 {

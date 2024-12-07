@@ -113,10 +113,9 @@ public static class RandomExtensions
     /// <param name="random">The source of random numbers.</param>
     /// <typeparam name="T">The blittable type.</typeparam>
     /// <returns>The randomly generated value.</returns>
-    public static T NextBlittable<T>(this Random random)
+    public static T NextMarshalable<T>(this Random random)
     {
-        typeof(T).EnsureMarshalable();
-
+        typeof(T).EnsureBlittable();
         var size = Marshal.SizeOf<T>();
         var bytes = new byte[size];
         random.NextBytes(bytes);
@@ -159,12 +158,14 @@ public static class RandomExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T Next<T>(this Random random)
     {
+        Check.NotNull(random);
         return (T)random.Next(typeof(T), null, null);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static object Next(this Random random, Type type)
     {
+        Check.NotNull(random);
         return random.Next(type, null, null);
     }
 
@@ -312,4 +313,25 @@ public static class RandomExtensions
 
         throw e;
     }
+
+    public static T NextElement<T>(this Random random, IReadOnlyList<T> list)
+    {
+        Check.NotNull(random);
+        Check.NotEmpty(list);
+        var i = random.Next(0, list.Count - 1);
+        return list[i];
+    }
+
+    public static void Shuffle<T>(this Random random, IList<T> list)
+    {
+        Check.NotNull(random);
+        Check.NotNull(list);
+
+        for (var i = list.Count - 1; i > 0; --i)
+        {
+            var index = random.Next(i + 1);
+            (list[i], list[index]) = (list[index], list[i]);
+        }
+    }
+
 }

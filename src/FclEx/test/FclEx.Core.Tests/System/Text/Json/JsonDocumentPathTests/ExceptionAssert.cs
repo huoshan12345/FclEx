@@ -2,7 +2,7 @@
 
 public static class ExceptionAssert
 {
-    public static TException? Throws<TException>(Action action, params string[] possibleMessages) where TException : Exception
+    public static TException? Throws<TException>(Action action, params string[]? possibleMessages) where TException : Exception
     {
         try
         {

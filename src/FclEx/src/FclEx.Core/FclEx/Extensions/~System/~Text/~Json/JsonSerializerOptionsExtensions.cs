@@ -1,10 +1,14 @@
-﻿namespace FclEx.Extensions;
+﻿using FclEx.Json;
+
+namespace FclEx.Extensions;
 
 public static class JsonSerializerOptionsExtensions
 {
     private static readonly Type _resolver = typeof(DefaultJsonTypeInfoResolver);
     private static readonly MethodInfo _getBuiltInConverter = _resolver.GetRequiredMethod("GetBuiltInConverter");
     private static readonly MethodInfo _createTypeInfoCore = _resolver.GetRequiredMethod("CreateTypeInfoCore");
+
+    // this method will create actual converter for JsonConverterFactory.
     private static readonly MethodInfo _expandConverterFactory = typeof(JsonSerializerOptions).GetRequiredMethod("ExpandConverterFactory");
 
     /// <summary>
@@ -57,5 +61,17 @@ public static class JsonSerializerOptionsExtensions
             options.MakeReadOnly(false);
         }
         return options;
+    }
+
+    public static JsonSerializerOptions AddModifierForEmptyValue(this JsonSerializerOptions options)
+    {
+        var actualOptions = options.IsReadOnly ? new(options) : options;
+        var resolver = options.TypeInfoResolver ?? new DefaultJsonTypeInfoResolver();
+        actualOptions.TypeInfoResolver = resolver.WithAddedModifier(JsonHelper.EmptyValueModifier);
+
+        if (options.IsReadOnly)
+            actualOptions.MakeReadOnly(false);
+
+        return actualOptions;
     }
 }

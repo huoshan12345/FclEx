@@ -1,4 +1,4 @@
-﻿namespace System.Text.Json.Serialization.Converters;
+﻿namespace FclEx.Json;
 
 /// <summary>
 /// A custom JSON converter that reads a single non-array JSON element as an array containing that element.
@@ -7,30 +7,33 @@
 /// This converter is useful for scenarios where the expected input may be either a single item 
 /// or an array of items, allowing for more flexible deserialization. 
 /// Note that this converter does not alter the writing behavior; it will not write 
-/// a single element as a non-array element.
+/// a single element as an array element.
 /// </remarks>
 public class ReadAsArrayJsonConverter : JsonConverter<object>
 {
+    public static readonly ReadAsArrayJsonConverter Instance = new();
+
     public override bool CanConvert(Type typeToConvert) => true;
 
     public override object? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        var elementType = typeToConvert.EnumerableType();
-        if (elementType is null)
-            throw new InvalidOperationException($"The type to convert '{typeToConvert.ShortName()}' is not a array-like type");
-
         var token = reader.ReadElement();
+        var typeInfo = options.GetBuiltInJsonTypeInfo(typeToConvert);
+
+        if (typeToConvert == typeof(string) || typeToConvert.IsEnumerable() == false)
+            return token.Deserialize(typeInfo); // typeToConvert is not a collection type, just deserialize it with built-in typeInfo.
+
         if (token.ValueKind == JsonValueKind.Null)
             return default;
 
         if (token.ValueKind == JsonValueKind.Array)
         {
-            return token.Deserialize(typeToConvert);
+            return token.Deserialize(typeInfo);
         }
         else
         {
             var arrayToken = new JsonArray(token.ToJsonNode());
-            return arrayToken.Deserialize(typeToConvert);
+            return arrayToken.Deserialize(typeInfo);
         }
     }
 
@@ -42,6 +45,7 @@ public class ReadAsArrayJsonConverter : JsonConverter<object>
             return;
         }
 
-        JsonSerializer.Serialize(writer, value, value.GetType(), options);
+        var typeInfo = options.GetBuiltInJsonTypeInfo(value.GetType());
+        JsonSerializer.Serialize(writer, value, typeInfo);
     }
 }

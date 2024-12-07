@@ -1,7 +1,8 @@
-﻿namespace System.Text.Json.Serialization.Converters;
+﻿namespace FclEx.Json;
 
 public class ReadAsArrayJsonConverterTests
 {
+    [JsonConverter(typeof(ReadAsArrayJsonConverter))]
     public class TestModel
     {
         [JsonConverter(typeof(ReadAsArrayJsonConverter))]
@@ -11,7 +12,27 @@ public class ReadAsArrayJsonConverterTests
     }
 
     [Fact]
-    public void Read_FromArray_Test()
+    public void Read_Model_FromSingleValue_Test()
+    {
+        const string json = """
+                            {
+                            	"Array": ["1", "2"],
+                            	"List": ["1", "2"]
+                            }
+                            """;
+
+        var array = json.FromJson<TestModel[]>(JsonHelper.GetOptions().AddConverters([new ReadAsArrayJsonConverter()]))!;
+
+        Assert.NotNull(array);
+        Assert.Single(array);
+
+        var obj = array[0];
+        Assert.Equal(new[] { "1", "2" }, obj.Array);
+        Assert.Equal(new[] { "1", "2" }, obj.List);
+    }
+
+    [Fact]
+    public void Read_Member_FromArray_Test()
     {
         const string json = """
                             {
@@ -27,7 +48,7 @@ public class ReadAsArrayJsonConverterTests
     }
 
     [Fact]
-    public void Read_FromSingleValue_Test()
+    public void Read_Member_FromSingleValue_Test()
     {
         const string json = """
                             {
