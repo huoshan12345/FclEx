@@ -2,7 +2,8 @@
 
   <PropertyGroup>
     <!-- it is not convinient to test MySql.EntityFrameworkCore with net6.0 -->
-    <TargetFrameworks>net7.0;net8.0;net9.0</TargetFrameworks>
+    <!--enable net9.0 until MySql.EntityFrameworkCore and Pomelo.EntityFrameworkCore.MySql 9.0 is published-->
+    <TargetFrameworks>net7.0;net8.0</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
