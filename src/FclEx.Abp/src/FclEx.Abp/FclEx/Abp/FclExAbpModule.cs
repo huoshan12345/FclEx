@@ -1,9 +1,4 @@
-﻿using FclEx.Abp.Caching;
-using FclEx.Abp.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection;
-using Volo.Abp.AutoMapper;
-using Volo.Abp.Modularity;
-using Volo.Abp.ObjectMapping;
+﻿using EasyCaching.Serialization.SystemTextJson.Configurations;
 
 namespace FclEx.Abp;
 
@@ -19,7 +14,7 @@ public class FclExAbpModule : AbpModule
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         context.Services.AddMaps(GetType().Assembly)
-            .AddEasyCaching(o => o.UseInMemory().WithJson())
+            .AddEasyCaching(o => o.UseInMemory().WithSystemTextJson())
             .AddSingleton<ICacheManager, CacheManager>()
             .AddSingleton<IStringSerializer>(StringAsRawSerializer.Instance);
     }

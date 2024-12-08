@@ -4,10 +4,8 @@ using System.Reflection;
 using System.Security.Cryptography;
 using AspectCore.DynamicProxy;
 using EasyCaching.Core.Serialization;
-using EasyCaching.Serialization.Json;
-using FclEx.Abp.Caching;
+using EasyCaching.Serialization.SystemTextJson;
 using FclEx.Helpers;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace FclEx.Abp.Aop;

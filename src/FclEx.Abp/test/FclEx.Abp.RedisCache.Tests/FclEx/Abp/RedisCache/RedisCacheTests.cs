@@ -1,4 +1,6 @@
-﻿namespace FclEx.Abp.RedisCache;
+﻿using EasyCaching.Serialization.SystemTextJson;
+
+namespace FclEx.Abp.RedisCache;
 
 public class RedisCacheTests
 {

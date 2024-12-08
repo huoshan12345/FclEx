@@ -5,7 +5,6 @@ using System.Reflection;
 using AspectCore.Extensions.LightInject;
 using FclEx;
 using FclEx.Helpers;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace LightInject;
 

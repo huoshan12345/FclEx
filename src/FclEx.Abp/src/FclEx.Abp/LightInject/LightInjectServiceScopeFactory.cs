@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-
-namespace LightInject;
+﻿namespace LightInject;
 
 internal class LightInjectServiceScopeFactory : IServiceScopeFactory
 {

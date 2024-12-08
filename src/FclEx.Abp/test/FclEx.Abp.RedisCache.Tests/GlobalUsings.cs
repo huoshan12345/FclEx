@@ -7,7 +7,6 @@ global using System.Text.RegularExpressions;
 global using EasyCaching.Core;
 global using EasyCaching.Core.Serialization;
 global using EasyCaching.CSRedis;
-global using EasyCaching.Serialization.Json;
 global using EasyCaching.Serialization.MessagePack;
 global using FclEx.Abp.Caching;
 global using FclEx.Abp.RedisCache.Configuration;
