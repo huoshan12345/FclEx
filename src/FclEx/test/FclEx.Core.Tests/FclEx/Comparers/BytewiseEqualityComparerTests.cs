@@ -11,9 +11,9 @@ public class BytewiseEqualityComparerTests(ITestOutputHelper output)
         typeof(DateTimeOffset), // non-blittable
         typeof(ValueTuple<int, long, DateTimeOffset, DateTime>), // non-blittable
         typeof(string),
-        typeof(TestStruct),
-        typeof(TestRecord),
-        typeof(TestRecordStruct),
+        typeof(CommonStruct),
+        typeof(CommonRecord),
+        typeof(CommonRecordStruct),
         typeof(MarshalableClass),
         typeof(MarshalableStruct)]);
 
@@ -40,7 +40,7 @@ public class BytewiseEqualityComparerTests(ITestOutputHelper output)
     public void Record_Equals()
     {
         var random = new Random(0);
-        var x = random.Next<TestRecord>();
+        var x = random.Next<CommonRecord>();
         var y = x with { }; // clone
         AssertBytewiseEqual(x, y);
         output.WriteLine(x);
@@ -50,7 +50,7 @@ public class BytewiseEqualityComparerTests(ITestOutputHelper output)
     public void Record_Lock_Equals()
     {
         var random = new Random(0);
-        var x = random.Next<TestRecord>();
+        var x = random.Next<CommonRecord>();
         var y = x with { }; // clone
         lock (x)
         {

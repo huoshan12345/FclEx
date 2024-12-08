@@ -11,23 +11,23 @@ public record Person
     public object? Obj { get; set; }
 }
 
-public class TestClass
+public class CommonClass
 {
     public int Int { get; set; }
     public DateTime DateTime { get; set; }
     public string? String { get; set; }
 }
 
-public struct TestStruct
+public struct CommonStruct
 {
     public int Int { get; set; }
     public DateTime DateTime { get; set; }
     public string? String { get; set; }
 }
 
-public record TestRecord(int Int, DateTime DateTime, string String);
+public record CommonRecord(int Int, DateTime DateTime, string String);
 
-public readonly record struct TestRecordStruct(int Int, DateTime DateTime, string String);
+public readonly record struct CommonRecordStruct(int Int, DateTime DateTime, string String);
 
 public class EmptyClass;
 

@@ -14,7 +14,6 @@ public class ReadOnlyList<T>(IReadOnlyList<T>? list = null) : IReadOnlyList<T>, 
     public static implicit operator ReadOnlyList<T>(List<T> list) => new(list);
     public static implicit operator ReadOnlyList<T>(T[] array) => new(array);
 
-
     public override string ToString()
     {
         using var builder = new ValueStringBuilder();

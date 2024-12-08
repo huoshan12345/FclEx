@@ -2,7 +2,7 @@
 
 public static partial class ExceptionExtensions
 {
-    [DoesNotReturn]
+    [StackTraceHidden, DoesNotReturn]
     public static void ReThrow(this Exception ex) => ExceptionDispatchInfo.Capture(ex).Throw();
 
     public static Exception GetInnermost(this Exception ex)

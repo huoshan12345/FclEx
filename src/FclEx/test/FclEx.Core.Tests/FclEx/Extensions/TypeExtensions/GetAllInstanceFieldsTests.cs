@@ -76,14 +76,14 @@ public class GetAllInstanceFieldsTests
     [InlineData(typeof(string), 2)]
     [InlineData(typeof(Tuple<string, string>), 2)]
     [InlineData(typeof(Person), 6)]
-    [InlineData(typeof(TestClass), 3)]
+    [InlineData(typeof(CommonClass), 3)]
     [InlineData(typeof(BaseClass), 6)]
     [InlineData(typeof(InheritedClass), 12)]
-    [InlineData(typeof(TestRecord), 3)]
+    [InlineData(typeof(CommonRecord), 3)]
     public void GetAllInstanceFields_Class_Test(Type type, int expectedCount)
     {
         var fields = type.GetAllInstanceFields();
-        Assert.Equal(expectedCount, fields.Length);
+        Assert.Equal(expectedCount, fields.Count);
     }
 
     [Theory]
@@ -91,18 +91,18 @@ public class GetAllInstanceFieldsTests
     [InlineData(typeof(DateTime), 1)]
     [InlineData(typeof(ValueTuple<string, string>), 2)]
     [InlineData(typeof(Struct), 6)]
-    [InlineData(typeof(TestStruct), 3)]
-    [InlineData(typeof(TestRecordStruct), 3)]
+    [InlineData(typeof(CommonStruct), 3)]
+    [InlineData(typeof(CommonRecordStruct), 3)]
     public void GetAllInstanceFields_Struct_Test(Type type, int expectedCount)
     {
         var fields = type.GetAllInstanceFields();
-        Assert.Equal(expectedCount, fields.Length);
+        Assert.Equal(expectedCount, fields.Count);
     }
 
     [Fact]
     public void GetAllInstanceFields_Interface_Test()
     {
         var fields = typeof(IReadOnlyList<int>).GetAllInstanceFields();
-        Assert.Equal(0, fields.Length);
+        Assert.Equal(0, fields.Count);
     }
 }

@@ -37,9 +37,9 @@ public class MarshalToBytesEqualityComparerTests(ITestOutputHelper output)
     [InlineData(typeof(string))]
     [InlineData(typeof(DateTime))]
     [InlineData(typeof(DateTimeOffset))]
-    [InlineData(typeof(TestRecord))]
-    [InlineData(typeof(TestStruct))]
-    [InlineData(typeof(TestRecordStruct))]
+    [InlineData(typeof(CommonRecord))]
+    [InlineData(typeof(CommonStruct))]
+    [InlineData(typeof(CommonRecordStruct))]
     public void Equals_AutoLayout_Test(Type type)
     {
         var ex = Assert.Throws<TargetInvocationException>(() => _equals.MakeGenericMethod(type).Invoke(this, null));

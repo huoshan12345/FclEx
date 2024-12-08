@@ -33,7 +33,7 @@ public class UnsafeHelperTests(ITestOutputHelper output)
     [Fact]
     public void SizeOf_Struct_Test()
     {
-        Assert.Equal(Unsafe.SizeOf<TestStruct>(), UnsafeHelper.SizeOf<TestStruct>());
+        Assert.Equal(Unsafe.SizeOf<CommonStruct>(), UnsafeHelper.SizeOf<CommonStruct>());
     }
 
     [Theory]
@@ -82,10 +82,10 @@ public class UnsafeHelperTests(ITestOutputHelper output)
         });
 
         var types = CommonValueTypes.Concat([
-            typeof(TestClass),
-            typeof(TestStruct),
-            typeof(TestRecord),
-            typeof(TestRecordStruct),
+            typeof(CommonClass),
+            typeof(CommonStruct),
+            typeof(CommonRecord),
+            typeof(CommonRecordStruct),
             typeof(EmptyClass),
             typeof(EmptyStruct),
             typeof(EmptyRecord),

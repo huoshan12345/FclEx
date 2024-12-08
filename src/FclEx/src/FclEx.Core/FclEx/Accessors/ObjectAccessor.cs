@@ -171,12 +171,12 @@ public static class ObjectAccessor<T>
 
         il.MarkLabel(start);
         // var addresses = new long[fields.Length];
-        il.Emit(OpCodes.Ldc_I4, fields.Length);
+        il.Emit(OpCodes.Ldc_I4, fields.Count);
         il.Emit(OpCodes.Newarr, typeof(IntPtr));
         il.Emit(OpCodes.Stloc_0);
 
         // addresses[index] = address of field[index];
-        for (var index = 0; index < fields.Length; index++)
+        for (var index = 0; index < fields.Count; index++)
         {
             il.Emit(OpCodes.Ldloc_0);
             il.Emit(OpCodes.Ldc_I4, index);

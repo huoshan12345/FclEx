@@ -1,6 +1,4 @@
-﻿using System;
-using FclEx.TestModels;
-using Newtonsoft.Json.Linq;
+﻿using FclEx.TestModels;
 
 namespace FclEx.Extensions.TypeExtensions;
 
@@ -66,7 +64,7 @@ public class IsBlittableTests(ITestOutputHelper output)
     }
 
     [Theory]
-    [InlineData(typeof(TestStruct))]
+    [InlineData(typeof(CommonStruct))]
     [InlineData(typeof(MarshalableStruct))]
     [InlineData(typeof(MarshalableClass))]
     public void NonAutoLayout_ContainsNonBlittable_Test(Type type)
@@ -79,7 +77,7 @@ public class IsBlittableTests(ITestOutputHelper output)
     }
 
     [Theory]
-    [InlineData(typeof(TestClass))]
+    [InlineData(typeof(CommonClass))]
     [InlineData(typeof(DateTime))]
     [InlineData(typeof(DateTimeOffset))]
     public void AutoLayout_Test(Type type)

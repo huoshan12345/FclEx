@@ -168,17 +168,39 @@ public static partial class TypeExtensions
                ?? throw new InvalidOperationException($"Cannot find constructor({types.Select(m => m.Name).JoinWith(", ")}) in type '{type.FullName}'");
     }
 
-    public static FieldInfo[] GetAllInstanceFields(this Type type)
+
+    private static readonly ConcurrentDictionary<Type, IReadOnlyList<FieldInfo>> _cache = new();
+
+    /// <summary>
+    /// Retrieves all instance fields of a specified type, including fields declared in its base types.
+    /// </summary>
+    /// <param name="type">The <see cref="Type"/> for which to retrieve all instance fields.</param>
+    /// <returns>
+    /// An <see cref="IReadOnlyList{FieldInfo}"/> containing all instance fields of the type and its base types.
+    /// </returns>
+    /// <remarks>
+    /// - This method caches the results for each type to optimize repeated calls.
+    /// - It traverses the inheritance hierarchy, starting from the given type and including all base types, 
+    ///   to gather all instance fields.
+    /// - Fields are retrieved using the <see cref="BindingFlags.DeclaredOnly"/> flag to ensure 
+    ///   only fields declared in each specific type are included during traversal.
+    /// </remarks>
+    public static IReadOnlyList<FieldInfo> GetAllInstanceFields(this Type type)
     {
-        var list = new List<FieldInfo>();
-        var p = type;
-        while (p is not null)
+        return _cache.GetOrAdd(type, Impl);
+
+        static IReadOnlyList<FieldInfo> Impl(Type type)
         {
-            var fields = p.GetFields(AllDeclaredInstance);
-            list.AddRange(fields);
-            p = p.BaseType;
+            var list = new List<FieldInfo>();
+            var p = type;
+            while (p is not null)
+            {
+                var fields = p.GetFields(AllDeclaredInstance);
+                list.AddRange(fields);
+                p = p.BaseType;
+            }
+            return list.ToReadOnlyList();
         }
-        return list.AsSpan().ToArray();
     }
 
 #if NETSTANDARD2_0

@@ -21,7 +21,7 @@ public static class SizeCalculator
     private static int CalculateValueTypeInstance(Type type)
     {
         var fields = type.GetAllInstanceFields();
-        return fields.Length == 0
+        return fields.Count == 0
             ? 0
             : UnsafeHelper.SizeOf(type);
     }
@@ -33,12 +33,12 @@ public static class SizeCalculator
         // 如果指定的类型没有定义任何字段，CalculateReferenceTypeInstance 返回引用类型实例的最小字节数：3倍地址指针字节数。
         // 对于x86架构，一个应用类型对象至少占用12字节，包括 Object Header（4 bytes）、方法表指针（4 bytes）和最少4字节的字段内容（即使没有类型没有定义任何字段，这个4个字节也是必需的）。
         // 对于x64架构，这个最小字节数会变成24，因为方法表指针和最小字段内容变成了8个字节，虽然 Object Header 的有效内容只占用4个字节，但是前面会添加4个字节的Padding。
-        if (fields.Length == 0)
+        if (fields.Count == 0)
             return 3 * IntPtr.Size;
 
         var instance = GetUninitializedObject(type);
         var addresses = ObjectAccessor.GetAllFieldAddresses(ref instance, type);
-        Debug.Assert(addresses.Length == fields.Length);
+        Debug.Assert(addresses.Length == fields.Count);
 
         var ((firstAddress, _), (lastAddress, lastField)) = addresses.Zip(fields).MinMaxBy(m => m.First);
         var lastFieldOffset = (int)lastAddress.AbsDiff(firstAddress);
