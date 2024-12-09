@@ -5,7 +5,7 @@ on:
   push:
     branches:
       - master
-  pull_request_target:
+  pull_request_target: # use pull_request_target instead of pull_request to let dependabot have permission to access action secrets.
     branches:
       - master
 
@@ -19,7 +19,8 @@ permissions:
 env:
   DOTNET_NOLOGO: 1
   MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
-  SOLUTION: src/FclEx.All.sln
+  DEFAULT_REF: refs/heads/master
+  IS_IS_PUSH_DEFAULT: ${{ github.event_name == 'push' && github.ref == env.DEFAULT_REF }}
 
 jobs:    
   build:
@@ -62,8 +63,16 @@ jobs:
           --health-retries 5
 
     steps:
+      - name: Print variables
+        shell: pwsh
+        run: |
+          echo ${{ github.event.pull_request.merge_commit_sha }}
+
       - name: Checkout
         uses: actions/checkout@v4
+        # for pull_request_target the ref needs to specify. see https://github.com/actions/checkout/discussions/404
+        with:
+          ref: "${{ github.event.pull_request.merge_commit_sha }}"
 
       - name: Setup dotnet
         uses: actions/setup-dotnet@v4
@@ -88,10 +97,10 @@ jobs:
           reporter: dotnet-trx            # Format of test results
           list-suites: failed
           list-tests: failed
-          use-actions-summary: ${{ github.event_name == 'pull_request' }}
+          use-actions-summary: ${{ github.event_name == 'pull_request_target' }}
 
       - name: NuGet Publish
-        if: github.ref == 'refs/heads/master'
+        if: ${{ env.IS_PUSH_DEFAULT == 'true' }}
         shell: pwsh
         run: |
           ./build/pack.ps1
@@ -104,7 +113,7 @@ jobs:
           echo $ver
           
       - name: Create Tag
-        if: github.ref == 'refs/heads/master'
+        if: ${{ env.IS_PUSH_DEFAULT == 'true' }}
         uses: richardsimko/update-tag@v1
         with:
           tag_name: ${{ env.VERSION }}
@@ -112,7 +121,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Release
-        if: github.ref == 'refs/heads/master'
+        if: ${{ env.IS_PUSH_DEFAULT == 'true' }}
         uses: ncipollo/release-action@v1
         with:
           name: ${{ env.VERSION }}

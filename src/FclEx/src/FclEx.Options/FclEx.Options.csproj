@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(TargetFrameworkVersion)','9.0')) ">
+    <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.0" />
+  </ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::VersionLessThan('$(TargetFrameworkVersion)','9.0')) ">
+    <PackageReference Include="Microsoft.Extensions.Options" Version="[8.0.2, 9.0.0)" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FclEx.DependencyInjection\FclEx.DependencyInjection.csproj" />
+  </ItemGroup>
+
+</Project>

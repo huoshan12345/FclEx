@@ -2,7 +2,6 @@
 using FclEx.Abp.Caching.Configuration;
 using FclEx.Utils;
 using Microsoft.Extensions.Logging;
-using Volo.Abp.Modularity;
 
 namespace FclEx.Abp.Caching;
 

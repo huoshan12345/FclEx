@@ -1,6 +1,5 @@
 ﻿using System;
 using Volo.Abp.Modularity;
-using Xunit.Abstractions;
 
 namespace FclEx.Abp.Xunit;
 

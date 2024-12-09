@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FclEx.Core\FclEx.Core.csproj" />
+    <ProjectReference Include="..\FclEx.Options\FclEx.Options.csproj" />
   </ItemGroup>
 
 </Project>

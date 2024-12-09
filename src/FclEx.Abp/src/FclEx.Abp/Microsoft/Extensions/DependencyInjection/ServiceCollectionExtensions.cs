@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
-using FclEx.Abp.Caching;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Volo.Abp;
-using Volo.Abp.AutoMapper;
-using Volo.Abp.Modularity;
 using Check = FclEx.Check;
 
 namespace Microsoft.Extensions.DependencyInjection;
@@ -77,15 +74,6 @@ public static class ServiceCollectionExtensions
         var serviceProvider = services.BuildServiceProviderFromFactory();
         await serviceProvider.UseAbpAsync();
         return serviceProvider;
-    }
-
-    public static IServiceCollection Configure<TOptions, TService>(this IServiceCollection services, Action<TOptions, TService> configureOptions)
-        where TOptions : class
-        where TService : class
-    {
-        services.AddOptions<TOptions>()
-            .Configure(configureOptions);
-        return services;
     }
 
     public static IServiceCollection AddSingletonHostedService<THostedService>(this IServiceCollection services) where THostedService : class, IHostedService

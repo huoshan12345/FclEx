@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using AspectCore.Extensions.LightInject;
 using LightInject;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.Extensions.Hosting;
 

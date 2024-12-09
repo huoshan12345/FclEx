@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 using LightInject;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Volo.Abp;
 

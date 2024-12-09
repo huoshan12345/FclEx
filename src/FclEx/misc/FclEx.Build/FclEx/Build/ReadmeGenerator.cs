@@ -118,7 +118,6 @@ file static class Extensions
         public static implicit operator MarkdownColumn(string text) => new(text);
     }
 
-
     private static readonly Regex _regFramework = new Regex(@"^([^\.]+)(\d+(?:\.\d+)?)(-\w+)?$");
     public static void AppendFrameworkBadges(this StringBuilder builder, IEnumerable<string> frameworks, string color)
     {
@@ -190,8 +189,7 @@ file static class Extensions
                 .Replace("-", "--"); // escape dash "-" as "--" according to shields.io.
         }
     }
-
-
+    
     public static StringBuilder AppendMyGetBadge(this StringBuilder builder, string package)
     {
         return builder.AppendBadge("",
