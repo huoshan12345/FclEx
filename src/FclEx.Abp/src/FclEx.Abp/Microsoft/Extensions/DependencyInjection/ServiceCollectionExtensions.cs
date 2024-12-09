@@ -76,15 +76,6 @@ public static class ServiceCollectionExtensions
         return serviceProvider;
     }
 
-    public static IServiceCollection Configure<TOptions, TService>(this IServiceCollection services, Action<TOptions, TService> configureOptions)
-        where TOptions : class
-        where TService : class
-    {
-        services.AddOptions<TOptions>()
-            .Configure(configureOptions);
-        return services;
-    }
-
     public static IServiceCollection AddSingletonHostedService<THostedService>(this IServiceCollection services) where THostedService : class, IHostedService
     {
         services.AddSingleton<THostedService>();

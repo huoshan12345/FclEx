@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Reflection;
 using System.Security.Cryptography;
 using AspectCore.DynamicProxy;
-using EasyCaching.Core.Serialization;
 using EasyCaching.Serialization.SystemTextJson;
 using FclEx.Helpers;
 using Microsoft.Extensions.Logging;

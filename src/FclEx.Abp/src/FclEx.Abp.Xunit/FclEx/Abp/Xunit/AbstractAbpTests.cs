@@ -1,16 +1,10 @@
 ﻿using System;
-using System.Diagnostics;
-using FclEx.Xunit;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Volo.Abp;
 using Volo.Abp.Modularity;
-using Xunit.Abstractions;
-using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace FclEx.Abp.Xunit;
 
+[SuppressMessage("ReSharper", "ConvertToPrimaryConstructor")]
 public abstract class AbstractAbpTests<TModule> where TModule : IAbpModule
 {
     protected readonly ITestOutputHelper _output;
@@ -39,7 +33,9 @@ public abstract class AbstractAbpTests<TModule> where TModule : IAbpModule
                 builder.AddFilter("Volo.Abp.AbpApplicationBase", LogLevel.Warning);
             });
 
-        var provider = services.UseAbp();
+        var provider = _options.UseAbpAsync
+            ? SynchronizationContextScope.Run(services.UseAbpAsync)
+            : services.UseAbp();
 
         var logger = provider.CreateLogger("FclEx.Abp.Xunit");
         logger.LogDebug("It takes {ElapsedSeconds} seconds to initialize abp framework", watch.GetElapsedTime().TotalSeconds);
