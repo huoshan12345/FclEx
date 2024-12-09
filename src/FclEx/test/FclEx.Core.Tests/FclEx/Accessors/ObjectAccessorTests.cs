@@ -88,6 +88,7 @@ public class ObjectAccessorTests(ITestOutputHelper output)
             Double = random.NextDouble(),
             Int = random.Next(),
         };
+
         var addresses = ObjectAccessor.GetAllFieldAddresses(ref obj);
         GetAllFieldAddresses_Test(ref obj, addresses);
     }
@@ -117,6 +118,7 @@ public class ObjectAccessorTests(ITestOutputHelper output)
             Int = random.Next(),
         };
 
+        using var _ = obj.ToGCHandle(GCHandleType.Pinned);
         var addresses = ObjectAccessor.GetAllFieldAddresses(ref obj, obj.GetType());
         GetAllFieldAddresses_Test(ref obj, addresses);
     }

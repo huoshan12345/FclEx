@@ -19,7 +19,8 @@ permissions:
 env:
   DOTNET_NOLOGO: 1
   MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
-  SOLUTION: src/FclEx.All.sln
+  DEFAULT_BRANCH: refs/heads/master
+  PUSH_DEFAULT: ${{ github.event_name == 'push' && github.ref == env.DEFAULT_BRANCH }}
 
 jobs:    
   build:
@@ -91,7 +92,7 @@ jobs:
           use-actions-summary: ${{ github.event_name == 'pull_request_target' }}
 
       - name: NuGet Publish
-        if: ${{ github.ref == 'refs/heads/master' }}
+        if: ${{ env.PUSH_DEFAULT == 'true' }}
         shell: pwsh
         run: |
           ./build/pack.ps1
@@ -104,7 +105,7 @@ jobs:
           echo $ver
           
       - name: Create Tag
-        if: ${{ github.ref == 'refs/heads/master' }}
+        if: ${{ env.PUSH_DEFAULT == 'true' }}
         uses: richardsimko/update-tag@v1
         with:
           tag_name: ${{ env.VERSION }}
@@ -112,7 +113,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Release
-        if: ${{ github.ref == 'refs/heads/master' }}
+        if: ${{ env.PUSH_DEFAULT == 'true' }}
         uses: ncipollo/release-action@v1
         with:
           name: ${{ env.VERSION }}
