@@ -19,8 +19,8 @@ permissions:
 env:
   DOTNET_NOLOGO: 1
   MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
-  DEFAULT_BRANCH: refs/heads/master
-  PUSH_DEFAULT: ${{ github.event_name == 'push' && github.ref == env.DEFAULT_BRANCH }}
+  DEFAULT_REF: refs/heads/master
+  IS_IS_PUSH_DEFAULT: ${{ github.event_name == 'push' && github.ref == env.DEFAULT_REF }}
 
 jobs:    
   build:
@@ -65,6 +65,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        # for pull_request_target the ref needs to specify. see https://github.com/actions/checkout/discussions/404
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
 
       - name: Setup dotnet
         uses: actions/setup-dotnet@v4
@@ -92,7 +95,7 @@ jobs:
           use-actions-summary: ${{ github.event_name == 'pull_request_target' }}
 
       - name: NuGet Publish
-        if: ${{ env.PUSH_DEFAULT == 'true' }}
+        if: ${{ env.IS_PUSH_DEFAULT == 'true' }}
         shell: pwsh
         run: |
           ./build/pack.ps1
@@ -105,7 +108,7 @@ jobs:
           echo $ver
           
       - name: Create Tag
-        if: ${{ env.PUSH_DEFAULT == 'true' }}
+        if: ${{ env.IS_PUSH_DEFAULT == 'true' }}
         uses: richardsimko/update-tag@v1
         with:
           tag_name: ${{ env.VERSION }}
@@ -113,7 +116,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Release
-        if: ${{ env.PUSH_DEFAULT == 'true' }}
+        if: ${{ env.IS_PUSH_DEFAULT == 'true' }}
         uses: ncipollo/release-action@v1
         with:
           name: ${{ env.VERSION }}
