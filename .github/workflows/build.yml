@@ -5,7 +5,7 @@ on:
   push:
     branches:
       - master
-  pull_request_target:
+  pull_request_target: # use pull_request_target instead of pull_request to let dependabot have permission to access action secrets.
     branches:
       - master
 
@@ -88,10 +88,10 @@ jobs:
           reporter: dotnet-trx            # Format of test results
           list-suites: failed
           list-tests: failed
-          use-actions-summary: ${{ github.event_name == 'pull_request' }}
+          use-actions-summary: ${{ github.event_name == 'pull_request_target' }}
 
       - name: NuGet Publish
-        if: github.ref == 'refs/heads/master'
+        if: ${{ github.ref == 'refs/heads/master' }}
         shell: pwsh
         run: |
           ./build/pack.ps1
@@ -104,7 +104,7 @@ jobs:
           echo $ver
           
       - name: Create Tag
-        if: github.ref == 'refs/heads/master'
+        if: ${{ github.ref == 'refs/heads/master' }}
         uses: richardsimko/update-tag@v1
         with:
           tag_name: ${{ env.VERSION }}
@@ -112,7 +112,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Release
-        if: github.ref == 'refs/heads/master'
+        if: ${{ github.ref == 'refs/heads/master' }}
         uses: ncipollo/release-action@v1
         with:
           name: ${{ env.VERSION }}
