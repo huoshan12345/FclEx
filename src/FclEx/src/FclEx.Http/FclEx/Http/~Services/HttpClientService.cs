@@ -1,4 +1,6 @@
-﻿namespace FclEx.Http;
+﻿using FclEx.DependencyInjection;
+
+namespace FclEx.Http;
 
 public class HttpClientService : AbstractHttpClientService
 {

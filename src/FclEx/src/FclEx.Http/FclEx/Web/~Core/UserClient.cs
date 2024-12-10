@@ -1,4 +1,6 @@
-﻿namespace FclEx.Web;
+﻿using FclEx.Logging;
+
+namespace FclEx.Web;
 
 public abstract class UserClient : IUserClient, IDisposable
 {

@@ -1,6 +1,4 @@
-﻿using Serilog.Configuration;
-
-namespace FclEx.Serilog;
+﻿namespace FclEx.Serilog;
 
 public static class LoggerConfigurationExtensions
 {

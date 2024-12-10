@@ -1,6 +1,6 @@
-﻿using System;
+﻿using AspectCore.Extensions.DependencyInjection;
+using Volo.Abp;
 using Volo.Abp.Modularity;
-using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace FclEx.Abp.Xunit;
 
@@ -10,13 +10,12 @@ public abstract class AbpAopTests<TModule> : AbpTests<TModule>
 {
     protected override LogLevel LogLevel => LogLevel.Debug;
 
-    protected AbpAopTests(ITestOutputHelper output, Action<IServiceCollection>? action = null)
-        : base(output, o =>
-        {
-            o.UseLightInject = true;
-            o.UseAop = true;
-            action?.Invoke(o.Services);
-        })
+    protected AbpAopTests(ITestOutputHelper output) : base(output)
     {
+    }
+
+    protected override void Configure(AbpApplicationCreationOptions options, IConfigurationRoot configuration)
+    {
+        options.Services.AddAop();
     }
 }

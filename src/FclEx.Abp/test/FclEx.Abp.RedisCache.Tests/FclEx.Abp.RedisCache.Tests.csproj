@@ -4,7 +4,6 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
   </ItemGroup>
 
-
   <ItemGroup>
     <ProjectReference Include="..\..\src\FclEx.Abp.RedisCache\FclEx.Abp.RedisCache.csproj" />
     <ProjectReference Include="..\FclEx.Abp.Tests\FclEx.Abp.Tests.csproj" />

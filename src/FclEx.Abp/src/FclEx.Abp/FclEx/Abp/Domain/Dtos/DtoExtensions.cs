@@ -1,6 +1,4 @@
-﻿using Volo.Abp.ObjectMapping;
-
-namespace FclEx.Abp.Domain.Dtos;
+﻿namespace FclEx.Abp.Domain.Dtos;
 
 public static class DtoExtensions
 {

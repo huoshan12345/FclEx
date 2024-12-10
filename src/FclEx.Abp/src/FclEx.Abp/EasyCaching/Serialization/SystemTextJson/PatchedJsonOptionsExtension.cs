@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using EasyCaching.Core.Configurations;
 using FclEx.Json;
+using FclEx.Options;
 using Microsoft.Extensions.Options;
 
 namespace EasyCaching.Serialization.SystemTextJson;

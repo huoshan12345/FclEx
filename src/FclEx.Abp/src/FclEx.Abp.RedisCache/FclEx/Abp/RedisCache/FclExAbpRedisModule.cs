@@ -1,7 +1,5 @@
 ﻿using EasyCaching.Core.Serialization;
 using FclEx.Extensions;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Volo.Abp;
 using Volo.Abp.Modularity;
 

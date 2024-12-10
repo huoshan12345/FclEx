@@ -11,7 +11,7 @@ public class PollyHelperTests
         var timeout = TimeSpan.FromSeconds(timeoutSeconds);
         var services = new ServiceCollection();
 
-        services.AddHttpClient(Options.DefaultName)
+        services.AddHttpClient(string.Empty)
             .ConfigurePrimaryHttpMessageHandler(() => HttpClientHelper.CreateSocketsHttpHandler(new() { ConnectTimeout = timeout }))
             .AddPolicyHandler(PollyHelper.GetConnectTimeoutPolicy(retryCount, m => TimeSpan.Zero));
 

@@ -2,12 +2,8 @@
 
 namespace FclEx.Abp.RedisCache;
 
-public class RedisCollectionManagerTests : AbpRedisTests
+public class RedisCollectionManagerTests(ITestOutputHelper output) : AbpRedisTests(output)
 {
-    public RedisCollectionManagerTests(ITestOutputHelper output) : base(output)
-    {
-    }
-
     [Fact]
     public void GetList_Test()
     {

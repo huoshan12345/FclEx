@@ -1,15 +1,10 @@
 ﻿namespace FclEx.Abp.RedisCache;
 
-public class TimeoutTests : AbpRedisUnreachableTests
+public class TimeoutTests(ITestOutputHelper output) : AbpRedisUnreachableTests(output)
 {
     public static FieldInfo FieldOfRedisOptions { get; } = typeof(DefaultCSRedisCachingProvider).GetRequiredField("_options");
 
     public static readonly Regex RegOfConTimeout = new(@"connectTimeout=(\d)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-    public TimeoutTests(ITestOutputHelper output, Action<AbpTestsOptions>? action = null)
-        : base(output, action)
-    {
-    }
 
     [Fact]
     public void SetTimeout_Test()

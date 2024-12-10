@@ -2,7 +2,6 @@
 using System.Text;
 using EasyCaching.Core.Serialization;
 using EasyCaching.CSRedis;
-using Microsoft.Extensions.Logging;
 
 namespace FclEx.Abp.RedisCache;
 

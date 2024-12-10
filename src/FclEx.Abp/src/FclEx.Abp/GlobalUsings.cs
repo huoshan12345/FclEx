@@ -13,3 +13,4 @@ global using FclEx.Serialization;
 global using Microsoft.Extensions.DependencyInjection;
 global using Volo.Abp.AutoMapper;
 global using Volo.Abp.Modularity;
+global using Volo.Abp.ObjectMapping;

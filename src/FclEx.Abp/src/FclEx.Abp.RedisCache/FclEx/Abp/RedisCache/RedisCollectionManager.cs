@@ -30,12 +30,12 @@ public class RedisCollectionManager : IRedisCollectionManager, IDisposable
         _caches.Clear();
     }
 
-    protected TCol GetCol<T, TCol>(string name, RedisCollectionType RedisCollectionType) where T : notnull
+    protected TCol GetCol<T, TCol>(string name, RedisCollectionType redisCollectionType) where T : notnull
 
         where TCol : IRedisCollection<T>
     {
         Check.NotNull(name);
-        var obj = _caches.GetOrAdd(name, k => CreateAndInitCol<T, TCol>(k, RedisCollectionType));
+        var obj = _caches.GetOrAdd(name, k => CreateAndInitCol<T, TCol>(k, redisCollectionType));
         var type = obj.GetType();
         var colType = typeof(TCol);
 
@@ -70,16 +70,16 @@ public class RedisCollectionManager : IRedisCollectionManager, IDisposable
         return (TCol)InitCol(cache);
     }
 
-    protected IRedisCollection<T> InitCol<T>(IRedisCollection<T> Collection)
+    protected IRedisCollection<T> InitCol<T>(IRedisCollection<T> collection)
     {
-        var redisCol = (RedisCollection<T>)Collection;
+        var redisCol = (RedisCollection<T>)collection;
         var configurators = _abpRedisOptions.ColConfigurators.Where(c => c.Name.IsNullOrEmpty()
-                                                                      || c.Name == Collection.Name).ToArray();
+                                                                      || c.Name == collection.Name).ToArray();
         foreach (var configurator in configurators)
         {
             configurator.Action?.Invoke(redisCol.Options);
         }
-        return Collection;
+        return collection;
     }
 
     public IAbpCacheReadOnlyOptions CacheOptions => _abpCacheOptions;

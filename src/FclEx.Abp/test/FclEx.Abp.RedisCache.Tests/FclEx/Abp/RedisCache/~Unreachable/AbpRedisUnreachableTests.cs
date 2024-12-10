@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Abp.RedisCache;
 
-public class AbpRedisUnreachableTests : AbpTests<AbpRedisTestModule>
+public class AbpRedisUnreachableTests(ITestOutputHelper output) : AbpTests<AbpRedisTestModule>(output)
 {
     protected override IConfigurationRoot BuildConfig()
     {
@@ -8,10 +8,5 @@ public class AbpRedisUnreachableTests : AbpTests<AbpRedisTestModule>
             .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.Unreachable.json", false, false)
             .Build();
-    }
-
-    public AbpRedisUnreachableTests(ITestOutputHelper output, Action<AbpTestsOptions>? action = null)
-        : base(output, action)
-    {
     }
 }

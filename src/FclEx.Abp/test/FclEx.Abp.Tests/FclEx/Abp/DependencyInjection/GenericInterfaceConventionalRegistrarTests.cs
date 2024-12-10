@@ -2,13 +2,8 @@
 
 namespace FclEx.Abp.DependencyInjection;
 
-public class GenericInterfaceConventionalRegistrarTests : AbpTests<AbpTestModule>
+public class GenericInterfaceConventionalRegistrarTests(ITestOutputHelper output) : AbpTests<AbpTestModule>(output)
 {
-    public GenericInterfaceConventionalRegistrarTests(ITestOutputHelper output, Action<AbpTestsOptions>? action = null)
-        : base(output, action)
-    {
-    }
-
     public interface IGenericSingleton<out T> : ISingletonDependency { }
     public class GenericSingleton : IGenericSingleton<string> { }
 

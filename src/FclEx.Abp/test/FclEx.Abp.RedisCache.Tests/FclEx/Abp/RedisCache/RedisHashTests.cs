@@ -1,11 +1,7 @@
 ﻿namespace FclEx.Abp.RedisCache;
 
-public class RedisHashTests : AbpRedisTests
+public class RedisHashTests(ITestOutputHelper output) : AbpRedisTests(output)
 {
-    public RedisHashTests(ITestOutputHelper output) : base(output)
-    {
-    }
-
     [Fact]
     public void HSet_HGet_String_Test()
     {
