@@ -21,9 +21,20 @@ env:
   MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
   IS_PUSH_DEFAULT: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
 
-jobs:    
+jobs:
+  get-pr:
+    outputs:
+      merge_commit_sha: ${{steps.prs.outputs.merge_commit_sha}}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: suzuki-shunsuke/get-pr-action@v0.1.0
+        id: pr
+
   build:
     runs-on: ubuntu-latest
+
+    needs:
+      - get-pr
 
     services:
       redis:
@@ -48,7 +59,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-          
+
       postgres:
         image: postgres:13
         env:
@@ -65,19 +76,19 @@ jobs:
       - name: Print variables
         shell: pwsh
         run: |
-          echo "merge_commit_sha: ${{ github.event.pull_request.merge_commit_sha }}"
+          echo "merge_commit_sha: ${{ needs.get-pr.outputs.merge_commit_sha }}"
           echo "IS_PUSH_DEFAULT: ${{ env.IS_PUSH_DEFAULT }}"
 
       - name: Checkout
         uses: actions/checkout@v4
         # for pull_request_target the ref needs to specify. see https://github.com/actions/checkout/discussions/404
         with:
-          ref: "${{ github.event.pull_request.merge_commit_sha }}"
+          ref: ${{ needs.get-pr.outputs.merge_commit_sha }}
 
       - name: Setup dotnet
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: | 
+          dotnet-version: |
             6.0.x
             7.0.x
             8.0.x
@@ -92,9 +103,9 @@ jobs:
         uses: dorny/test-reporter@main
         if: (success() || failure()) # run this step even if previous step failed
         with:
-          name: Test Report              # Name of the check run which will be created 
+          name: Test Report # Name of the check run which will be created
           path: src/TestResults/**/*.trx # Path to test results
-          reporter: dotnet-trx            # Format of test results
+          reporter: dotnet-trx # Format of test results
           list-suites: failed
           list-tests: failed
           use-actions-summary: ${{ github.event_name == 'pull_request_target' }}
@@ -111,7 +122,7 @@ jobs:
           $ver = Get-Content -Path ./build/pkg.version
           echo "VERSION=$ver" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
           echo $ver
-          
+
       - name: Create Tag
         if: ${{ env.IS_PUSH_DEFAULT == 'true' }}
         uses: richardsimko/update-tag@v1
