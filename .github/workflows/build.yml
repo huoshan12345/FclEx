@@ -22,19 +22,8 @@ env:
   IS_PUSH_DEFAULT: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
 
 jobs:
-  get-pr:
-    outputs:
-      merge_commit_sha: ${{steps.prs.outputs.merge_commit_sha}}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: suzuki-shunsuke/get-pr-action@v0.1.0
-        id: pr
-
   build:
     runs-on: ubuntu-latest
-
-    needs:
-      - get-pr
 
     services:
       redis:
@@ -73,17 +62,22 @@ jobs:
           --health-retries 5
 
     steps:
+      - name: Get PR
+        if: ${{ github.event_name == 'pull_request_target' }}
+        uses: suzuki-shunsuke/get-pr-action@v0.1.0
+        id: pr
+
       - name: Print variables
         shell: pwsh
         run: |
-          echo "merge_commit_sha: ${{ needs.get-pr.outputs.merge_commit_sha }}"
+          echo "merge_commit_sha: ${{ steps.pr.outputs.merge_commit_sha }}"
           echo "IS_PUSH_DEFAULT: ${{ env.IS_PUSH_DEFAULT }}"
 
       - name: Checkout
         uses: actions/checkout@v4
         # for pull_request_target the ref needs to specify. see https://github.com/actions/checkout/discussions/404
         with:
-          ref: ${{ needs.get-pr.outputs.merge_commit_sha }}
+          ref: ${{ steps.pr.outputs.merge_commit_sha }}
 
       - name: Setup dotnet
         uses: actions/setup-dotnet@v4
