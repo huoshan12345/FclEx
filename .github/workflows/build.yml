@@ -19,8 +19,7 @@ permissions:
 env:
   DOTNET_NOLOGO: 1
   MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
-  DEFAULT_REF: refs/heads/master
-  IS_IS_PUSH_DEFAULT: ${{ github.event_name == 'push' && github.ref == env.DEFAULT_REF }}
+  IS_PUSH_DEFAULT: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
 
 jobs:    
   build:
