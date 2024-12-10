@@ -1,12 +1,7 @@
 ﻿namespace FclEx.Abp.Caching;
 
-public class CacheManagerExtensionsTests : AbpTests<AbpTestModule>
+public class CacheManagerExtensionsTests(ITestOutputHelper output) : AbpTests<AbpTestModule>(output)
 {
-    public CacheManagerExtensionsTests(ITestOutputHelper output, Action<AbpTestsOptions>? action = null)
-        : base(output, action)
-    {
-    }
-
     [Fact]
     public async Task GetObjectAsync_Raw_Test()
     {

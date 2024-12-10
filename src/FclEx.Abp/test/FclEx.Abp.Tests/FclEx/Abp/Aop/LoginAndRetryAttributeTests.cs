@@ -1,10 +1,11 @@
 ﻿namespace FclEx.Abp.Aop;
 
-public class LoginAndRetryAttributeTests : AbpAopTests<AbpTestModule>
+public class LoginAndRetryAttributeTests(ITestOutputHelper output) : AbpAopTests<AbpTestModule>(output)
 {
-    public LoginAndRetryAttributeTests(ITestOutputHelper output)
-        : base(output, s => s.AddUserClient<LoginAndRetryClient>())
+    protected override void Configure(AbpApplicationCreationOptions options, IConfigurationRoot configuration)
     {
+        base.Configure(options, configuration);
+        options.Services.AddUserClient<LoginAndRetryClient>();
     }
 
     private LoginAndRetryClient CreateClient()

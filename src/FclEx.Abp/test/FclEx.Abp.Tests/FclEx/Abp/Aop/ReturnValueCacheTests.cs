@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Abp.Aop;
 
-public class ReturnValueCacheTests : AbpAopTests<AbpTestModule>
+public class ReturnValueCacheTests(ITestOutputHelper output) : AbpAopTests<AbpTestModule>(output)
 {
     public static readonly TimeSpan CacheMaxTime = TimeSpan.FromMilliseconds(50);
     public static readonly TimeSpan SleepTime = TimeSpan.FromMilliseconds(100);
@@ -8,9 +8,10 @@ public class ReturnValueCacheTests : AbpAopTests<AbpTestModule>
     public static IEnumerable<object[]> Numbers { get; } = new[] { -1, 0, 1, 10 }
         .Select(m => new object[] { m }).ToArray();
 
-    public ReturnValueCacheTests(ITestOutputHelper output)
-        : base(output, o => o.AddTransient<IService, Service>())
+    protected override void Configure(AbpApplicationCreationOptions options, IConfigurationRoot configuration)
     {
+        base.Configure(options, configuration);
+        options.Services.AddTransient<IService, Service>();
     }
 
     public class Model

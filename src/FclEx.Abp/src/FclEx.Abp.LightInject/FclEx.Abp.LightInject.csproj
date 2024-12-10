@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="LightInject" Version="7.0.1" />
+    <PackageReference Include="AspectCore.Extensions.LightInject" Version="2.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FclEx.Abp\FclEx.Abp.csproj" />
+  </ItemGroup>
+
+</Project>

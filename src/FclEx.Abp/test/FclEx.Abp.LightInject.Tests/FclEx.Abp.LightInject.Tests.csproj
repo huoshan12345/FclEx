@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\FclEx.Abp.LightInject\FclEx.Abp.LightInject.csproj" />
+    <ProjectReference Include="..\FclEx.Abp.Tests\FclEx.Abp.Tests.csproj" />
+  </ItemGroup>
+
+</Project>

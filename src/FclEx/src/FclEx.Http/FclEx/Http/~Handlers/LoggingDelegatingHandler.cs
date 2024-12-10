@@ -1,4 +1,6 @@
-﻿namespace FclEx.Http;
+﻿using FclEx.Logging;
+
+namespace FclEx.Http;
 
 public class LoggingDelegatingHandler : DelegatingHandler
 {

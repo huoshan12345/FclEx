@@ -1,4 +1,5 @@
 ﻿using FclEx.Abp.Caching.Configuration;
+using Volo.Abp;
 
 namespace FclEx.Abp.RedisCache;
 
@@ -10,16 +11,24 @@ public class AbpRedisTests : AbpAopTests<AbpRedisTestModule>
     private readonly Lazy<AbpCacheOptions> _abpCacheOptions;
     public AbpCacheOptions AbpCacheOptions => _abpCacheOptions.Value;
 
+    private readonly Action<IServiceCollection>? _action;
+
+    protected AbpRedisTests(ITestOutputHelper output, Action<IServiceCollection>? action = null) : base(output)
+    {
+        _action = action;
+        _abpRedisOptions = new Lazy<AbpRedisOptions>(() => ServiceProvider.GetOptions<AbpRedisOptions>(), true);
+        _abpCacheOptions = new Lazy<AbpCacheOptions>(() => ServiceProvider.GetOptions<AbpCacheOptions>(), true);
+    }
+
     protected override IConfigurationRoot BuildConfig()
     {
         return GlobalConstants.Config;
     }
 
-    public AbpRedisTests(ITestOutputHelper output, Action<IServiceCollection>? action = null)
-        : base(output, action)
+    protected override void Configure(AbpApplicationCreationOptions options, IConfigurationRoot configuration)
     {
-        _abpRedisOptions = new Lazy<AbpRedisOptions>(() => ServiceProvider.GetOptions<AbpRedisOptions>(), true);
-        _abpCacheOptions = new Lazy<AbpCacheOptions>(() => ServiceProvider.GetOptions<AbpCacheOptions>(), true);
+        base.Configure(options, configuration);
+        _action?.Invoke(options.Services);
     }
 
     public static AbpRedisTests Build(ITestOutputHelper output, bool useMessagePack, bool serializeStringAsRaw)

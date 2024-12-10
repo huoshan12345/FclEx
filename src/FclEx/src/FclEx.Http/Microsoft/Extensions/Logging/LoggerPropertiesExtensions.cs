@@ -1,3 +1,5 @@
+using FclEx.Logging;
+
 namespace Microsoft.Extensions.Logging;
 
 public static class LoggerPropertiesExtensions

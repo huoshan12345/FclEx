@@ -1,3 +1,5 @@
+using FclEx.Logging;
+
 namespace Microsoft.AspNetCore.Builder;
 
 public static class ApplicationBuilderExtensions

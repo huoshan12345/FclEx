@@ -1,6 +1,8 @@
 ﻿using System;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Reflection;
+using AspectCore.Extensions.DependencyInjection;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -51,7 +53,7 @@ public static class ServiceCollectionExtensions
     {
         return services.Configure<AbpAutoMapperOptions>(options => options.AddMaps(assembly, validate));
     }
-        
+
     public static T GetOptions<T>(this IServiceCollection services) where T : class, new()
         => services.BuildServiceProvider().GetRequiredService<IOptions<T>>().Value;
 
@@ -86,6 +88,13 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddAbpDistributedCache(this IServiceCollection services)
     {
         services.AddSingleton<IDistributedCache, AbpDistributedCache>();
+        return services;
+    }
+
+    public static IServiceCollection AddAop(this IServiceCollection services)
+    {
+        services.ConfigureDynamicProxy();
+        services.Replace<IServiceProviderFactory<IServiceCollection>>(new DynamicProxyServiceProviderFactory());
         return services;
     }
 }

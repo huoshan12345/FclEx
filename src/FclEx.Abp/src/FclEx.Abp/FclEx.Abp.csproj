@@ -3,9 +3,7 @@
   <ItemGroup>
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.0" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
-    <PackageReference Include="AspectCore.Extensions.LightInject" Version="2.4.0" />
-    <!--<PackageReference Include="AspectCore.Core" Version="2.2.0" />-->
-    <PackageReference Include="LightInject" Version="7.0.1" />
+    <PackageReference Include="AspectCore.Extensions.DependencyInjection" Version="2.4.0" />
     <PackageReference Include="EasyCaching.InMemory" Version="1.9.2" />
     <PackageReference Include="EasyCaching.Serialization.SystemTextJson" Version="1.9.2" />
     <PackageReference Include="Volo.Abp.AutoMapper" Version="9.0.1" />
