@@ -65,7 +65,8 @@ jobs:
       - name: Print variables
         shell: pwsh
         run: |
-          echo ${{ github.event.pull_request.merge_commit_sha }}
+          echo "merge_commit_sha: ${{ github.event.pull_request.merge_commit_sha }}"
+          echo "IS_PUSH_DEFAULT: ${{ env.IS_PUSH_DEFAULT }}"
 
       - name: Checkout
         uses: actions/checkout@v4
