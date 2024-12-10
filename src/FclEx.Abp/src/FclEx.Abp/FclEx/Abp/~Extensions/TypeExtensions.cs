@@ -1,14 +1,11 @@
-﻿using System.Collections.Generic;
-using System;
-using System.Linq;
-using Volo.Abp.Reflection;
+﻿using System;
 
 namespace FclEx.Abp;
 
 public static class TypeExtensions
 {
-    public static IReadOnlyList<Type> GetEntityTypes(this ITypeFinder typeFinder)
+    public static bool IsEntity(this Type type)
     {
-        return typeFinder.Types.Where(m => m.IsEntity()).ToList();
+        return type is { IsGenericType: false, IsAbstract: false } && type.IsAssignableTo(typeof(IEntity));
     }
 }

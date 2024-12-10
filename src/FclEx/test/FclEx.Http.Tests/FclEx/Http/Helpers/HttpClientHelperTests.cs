@@ -16,7 +16,7 @@ public class HttpClientHelperTests
         const int retryCount = 2;
         var services = new ServiceCollection();
 
-        services.AddHttpClient(Options.DefaultName)
+        services.AddHttpClient(string.Empty)
             .ConfigurePrimaryHttpMessageHandler(() => HttpClientHelper.CreateSocketsHttpHandler(new() { ConnectTimeout = TimeSpan.FromHours(1) })) // NOTE: to test HttpClient.Timeout, we need to make it less than SocketsHttpHandler.ConnectTimeout
             .AddRetryPolicy(timeout, 2, true, m => TimeSpan.Zero);
 

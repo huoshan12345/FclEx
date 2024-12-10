@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using AspectCore.Extensions.DependencyInjection;
+using FclEx.DependencyInjection;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
