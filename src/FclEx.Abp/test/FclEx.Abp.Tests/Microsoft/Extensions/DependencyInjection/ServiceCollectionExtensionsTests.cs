@@ -1,4 +1,6 @@
-﻿namespace Microsoft.Extensions.DependencyInjection;
+﻿using FclEx.Abp;
+
+namespace Microsoft.Extensions.DependencyInjection;
 
 public class ServiceCollectionExtensionsTests
 {

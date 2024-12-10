@@ -1,4 +1,6 @@
-﻿public static class GlobalConstants
+﻿using FclEx.Abp;
+
+public static class GlobalConstants
 {
     public static IConfigurationRoot BuildConfig()
     {
