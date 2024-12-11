@@ -1,8 +1,9 @@
+param ([bool]$norestore)
+
 $ErrorActionPreference = "Stop"
 
-$disableOSCheck = $args[0] -eq 'true'
 $isGithub = [string]::IsNullOrEmpty($Env:GITHUB_ACTION) -eq $false
-Write-Output "isGithub = $isGithub"
+Write-Output "IsGithub = $isGithub, NoRestore = $norestore"
 
 $buildDir = [io.path]::combine($MyInvocation.MyCommand.Definition, "..")
 $rootDir = [io.path]::combine($buildDir, "..")
@@ -32,11 +33,19 @@ $projects = $srcDirs | ForEach-Object { Get-ChildItem -Path $_ -Include *.csproj
 
 foreach ($project in $projects) { 
   Write-Output "Packing $($project.Basename)"
-  Set-Location -Path $($project.DirectoryName)
 
-  dotnet clean --nologo -v q
+  $command = @'
+dotnet pack $project `
+--nologo -v q -c Release `
+--include-symbols -p:SymbolPackageFormat=snupkg `
+--output $buildDir -p:PackageVersion=$ver
+'@
 
-  $command = 'dotnet pack --nologo -v q -c Release --include-symbols -p:SymbolPackageFormat=snupkg --output $buildDir -p:PackageVersion=$ver'
+  if ($norestore -eq $true) {
+    $command = $command + " --no-restore"
+  }
+
+  Write-Output $command
   Invoke-Expression $command
   
   if ($Lastexitcode -ne 0)	{
