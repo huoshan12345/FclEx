@@ -17,7 +17,7 @@ public static partial class AssertExt
             if (type.IsPrimitive || type == typeof(string))
                 return Equals;
 
-            if (type.IsInheritedFromGenericType(typeof(IEquatable<>)))
+            if (type.Implements(typeof(IEquatable<>)))
             {
                 var method = type.GetMethod(nameof(IEquatable<object>.Equals), [type]);
                 if (method != null)

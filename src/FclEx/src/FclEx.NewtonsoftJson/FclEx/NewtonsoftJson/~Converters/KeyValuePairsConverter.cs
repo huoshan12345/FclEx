@@ -36,7 +36,7 @@ public class KeyValuePairsConverter : JsonConverter
             var ctor = objectType.GetConstructor([typeof(IEnumerable<>).MakeGenericType(eleType)]);
             if (ctor != null) return ctor.Invoke([list]);
 
-            if (colType.IsInheritedFromGenericType(typeof(ICollection<>)))
+            if (colType.Implements(typeof(ICollection<>)))
             {
                 var obj = objectType.CreateObject();
                 var addMethod = objectType.GetMethod(nameof(ICollection<object>.Add)) ?? throw new MissingMethodException("Cannot find a method named Add");

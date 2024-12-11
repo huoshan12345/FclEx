@@ -177,7 +177,7 @@ public static class RandomExtensions
         if (type.GetElementType() is { } elementType)
         {
             int? length = null;
-            if (type.TryGetProperty("IsFixedSize", out var property))
+            if (type.GetProperty("IsFixedSize", false) is { } property)
             {
                 // TODO
             }

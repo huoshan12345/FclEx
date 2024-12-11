@@ -1,11 +1,13 @@
-﻿#pragma warning disable CS0414
+﻿using static FclEx.BindingAttributes;
+
+#pragma warning disable CS0414
 #pragma warning disable IDE0051
 namespace System.Reflection;
 
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 [SuppressMessage("ReSharper", "UnusedMember.Global")]
 [SuppressMessage("ReSharper", "UnusedMember.Local")]
-public class DataMemberInfoTests
+public class DataMemberInfoTests(ITestOutputHelper output)
 {
     public class Model
     {
@@ -22,17 +24,7 @@ public class DataMemberInfoTests
         public int PublicPropertyWithPrivateGetter { private get; set; } = 0;
         public int PublicPropertyWithoutSetter { get; } = 0;
     }
-
-    private const BindingFlags Flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
-
-    private readonly ITestOutputHelper _output;
-
-    public DataMemberInfoTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
-
-
+    
     [Fact]
     public void HashSet_Contains_Test()
     {
@@ -40,7 +32,7 @@ public class DataMemberInfoTests
         Assert.Equal(11, members.Count);
 
         var set = members.ToHashSet();
-        foreach (var member in typeof(Model).GetDataMembers())
+        foreach (var member in typeof(Model).EnumerateDataMember())
         {
             Assert.Contains(member, set);
         }
@@ -50,10 +42,10 @@ public class DataMemberInfoTests
     public void Equals_Test()
     {
         var count = 0;
-        foreach (var member in typeof(Model).EnumeratePropertyOrField(Flags))
+        foreach (var member in typeof(Model).EnumerateDataMember())
         {
             Assert.Equal(member.ToDataMemberInfo(), member.ToDataMemberInfo());
-            _output.WriteLine(member.Name);
+            output.WriteLine(member.Name);
 
             count++;
         }
@@ -162,4 +154,13 @@ public class DataMemberInfoTests
         Assert.False(field.IsCompilerGenerated);
     }
 
+}
+
+file static class Extensions
+{
+    public static IEnumerable<MemberInfo> EnumerateDataMember(this Type type)
+    {
+        return type.GetFields(AllDeclared).Cast<MemberInfo>()
+            .Concat(type.GetProperties(AllDeclared));
+    }
 }

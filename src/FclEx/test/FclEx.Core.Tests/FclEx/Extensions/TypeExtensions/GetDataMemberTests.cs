@@ -6,9 +6,9 @@
 #pragma warning disable CA2211
 namespace FclEx.Extensions.TypeExtensions;
 
-public class InvokeMemberTests
+public class GetDataMemberTests
 {
-    public abstract class Tester<T>
+    public abstract class TestModel<T>
     {
         public T? Property { get; set; }
         protected T? PropertyProtected { get; set; }
@@ -41,29 +41,29 @@ public class InvokeMemberTests
         private static T MethodProtectedStatic(T arg) => arg;
     }
 
-    public class IntTester : Tester<int>
+    public class IntTestModel : TestModel<int>
     {
         public override int GenerateValue(Random random) => random.Next(10000);
     }
 
-    public class StringTester : Tester<string>
+    public class StringTestModel : TestModel<string>
     {
         public override string GenerateValue(Random random) => random.NextString(5);
     }
 
     [Fact]
-    public void GetMemberValue_Int_Test()
+    public void GetRequiredDataMember_Int_Test()
     {
-        GetMemberValue_Test<IntTester, int>();
+        GetRequiredDataMember_Test<IntTestModel, int>();
     }
 
     [Fact]
-    public void GetMemberValue_String_Test()
+    public void GetRequiredDataMember_String_Test()
     {
-        GetMemberValue_Test<StringTester, string>();
+        GetRequiredDataMember_Test<StringTestModel, string>();
     }
 
-    private static void GetMemberValue_Test<T, TMember>() where T : Tester<TMember>, new()
+    private static void GetRequiredDataMember_Test<T, TMember>() where T : TestModel<TMember>, new()
     {
         var obj = new T();
         var type = typeof(T);
@@ -82,13 +82,13 @@ public class InvokeMemberTests
             {
                 if (member.IsStatic)
                 {
-                    var actual = type.GetDataMemberValue<TMember>(member.Name);
+                    var actual = type.GetRequiredDataMember(member.Name).GetValue<TMember>(null);
                     var expected = member.GetValue(null).CastTo<TMember>();
                     Assert.Equal(expected, actual);
                 }
                 else
                 {
-                    var actual = type.GetDataMemberValue<TMember>(member.Name, obj);
+                    var actual = type.GetRequiredDataMember(member.Name).GetValue<TMember>(obj);
                     var expected = member.GetValue(obj).CastTo<TMember>();
                     Assert.Equal(expected, actual);
                 }

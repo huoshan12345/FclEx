@@ -1,6 +1,4 @@
-﻿using static FclEx.BindingAttributes;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static partial class TypeExtensions
 {
@@ -31,91 +29,65 @@ public static partial class TypeExtensions
         return type.CreateObject(args).CastTo<T>();
     }
 
-    public static MethodInfo GetMethod(this Type type, string methodName, int pParametersCount = 0, int pGenericArgumentsCount = 0)
-    {
-        FclEx.Check.NotNull(type);
-
-        return type.GetMethods()
-            .Where(m => m.Name == methodName)
-            .Select(m => new
-            {
-                Method = m,
-                Params = m.GetParameters(),
-                Args = m.GetGenericArguments()
-            })
-            .Where(x => x.Params.Length == pParametersCount
-                        && x.Args.Length == pGenericArgumentsCount
-            ).Select(x => x.Method)
-            .First();
-    }
-
-    public static bool SequenceAssignableFrom(this IEnumerable<Type> first, IEnumerable<Type> second)
-    {
-        var comparer = EqualityComparer<Type>.Default;
-        using var e1 = first.GetEnumerator();
-        using var e2 = second.GetEnumerator();
-        while (e1.MoveNext())
-        {
-            if (!e2.MoveNext()) return false;
-            else if (!(comparer.Equals(e1.Current, e2.Current) || e1.Current.IsAssignableFrom(e2.Current)))
-                return false;
-        }
-        if (e2.MoveNext())
-            return false;
-
-        return true;
-    }
-
-    public static bool IsInheritedFromGenericType(this Type type, Type genericType)
-    {
-        return GetGenericInterface(type, genericType) != null;
-    }
-
-    public static Type? GetGenericInterface(this Type type, Type genericType)
+    /// <summary>
+    /// Finds the specified interface implemented by the given type.
+    /// </summary>
+    /// <param name="type">The <see cref="Type"/> to inspect.</param>
+    /// <param name="interfaceType">The interface type to find.</param>
+    /// <returns>
+    /// The implemented interface <see cref="Type"/> if found; otherwise, <see langword="null"/>.
+    /// </returns>
+    /// <remarks>
+    /// This method checks both direct interface implementations and generic interface definitions.
+    /// </remarks>
+    public static Type? GetImplementedInterface(this Type type, Type interfaceType)
     {
         return type.GetInterfaces().FirstOrDefault(x =>
-            x.IsGenericType &&
-            x.GetGenericTypeDefinition() == genericType);
+            x == interfaceType
+            || x.IsGenericType && x.GetGenericTypeDefinition() == interfaceType);
     }
 
-    public static bool IsSubclassOfRawGeneric(this Type? toCheck, Type generic)
+    /// <summary>
+    /// Determines whether the specified type implements a given interface.
+    /// </summary>
+    /// <param name="type">The <see cref="Type"/> to inspect.</param>
+    /// <param name="interfaceType">The interface type to check.</param>
+    /// <returns>
+    /// <see langword="true"/> if the type implements the specified interface; otherwise, <see langword="false"/>.
+    /// </returns>
+    /// <remarks>
+    /// This method internally uses <see cref="GetImplementedInterface"/> to perform the check.
+    /// </remarks>
+    public static bool Implements(this Type type, Type interfaceType)
     {
-        while (toCheck != null && toCheck != typeof(object))
+        return GetImplementedInterface(type, interfaceType) != null;
+    }
+
+    /// <summary>
+    /// Determines whether the specified type inherits from a given base type.
+    /// </summary>
+    /// <param name="type">The <see cref="Type"/> to inspect. Can be <see langword="null"/>.</param>
+    /// <param name="baseType">The base type to check against.</param>
+    /// <returns>
+    /// <see langword="true"/> if the type inherits from the specified base type; otherwise, <see langword="false"/>.
+    /// </returns>
+    /// <remarks>
+    /// This method supports both direct inheritance and generic type definitions.
+    /// </remarks>
+    public static bool Inherits(this Type? type, Type baseType)
+    {
+        var t = type;
+        while (t != null)
         {
-            var cur = toCheck.IsGenericType ? toCheck.GetGenericTypeDefinition() : toCheck;
-            if (generic == cur)
-            {
+            if (t == baseType)
                 return true;
-            }
-            toCheck = toCheck.BaseType;
+
+            if (t.IsGenericType && t.GetGenericTypeDefinition() == baseType)
+                return true;
+
+            t = t.BaseType;
         }
         return false;
-    }
-
-    public static IEnumerable<MemberInfo> EnumeratePropertyOrField(this Type type, BindingFlags bindingFlags)
-    {
-        return type.GetFields(bindingFlags).Cast<MemberInfo>()
-            .Concat(type.GetProperties(bindingFlags));
-    }
-
-    public static IReadOnlyCollection<DataMemberInfo> GetDataMembers(this Type type) => ReflectionHelper.GetDataMembers(type).Values;
-
-    public static DataMemberInfo? GetDataMember(this Type type, string name) => ReflectionHelper.GetDataMembers(type).Get(name);
-
-    public static T? GetDataMemberValue<T>(this Type type, string name)
-    {
-        const BindingFlags flags = BindingFlags.Static
-                                   | BindingFlags.Public | BindingFlags.NonPublic
-                                   | BindingFlags.GetField | BindingFlags.GetProperty;
-        return type.InvokeMember(name, flags, null, null, null).CastTo<T?>();
-    }
-
-    public static T? GetDataMemberValue<T>(this Type type, string name, object? obj)
-    {
-        const BindingFlags flags = BindingFlags.Instance
-                                   | BindingFlags.Public | BindingFlags.NonPublic
-                                   | BindingFlags.GetField | BindingFlags.GetProperty;
-        return type.InvokeMember(name, flags, null, obj, null).CastTo<T>();
     }
 
     public static bool IsDynamic(this Type type)
@@ -123,84 +95,9 @@ public static partial class TypeExtensions
         return type.IsDefined<DynamicAttribute>(true);
     }
 
-    public static FieldInfo GetRequiredField(this Type type, string name)
+    public static bool IsCompilerGenerated(this Type type)
     {
-        return type.GetField(name, AllDeclared) ?? throw new InvalidOperationException($"Cannot find field '{name}' in type '{type.FullName}'");
-    }
-
-    public static FieldInfo GetAutoPropertyBackingField(this Type type, string propertyName)
-    {
-        return type.GetField($"<{propertyName}>k__BackingField", AllDeclared)
-               ?? throw new InvalidOperationException($"Cannot find backing field for property '{propertyName}' in type '{type.FullName}'"); ;
-    }
-
-    public static PropertyInfo GetRequiredProperty(this Type type, string name)
-    {
-        return type.GetProperty(name, AllDeclared) ?? throw new InvalidOperationException($"Cannot find property '{name}' in type '{type.FullName}'");
-    }
-
-    public static bool TryGetProperty(this Type type, string name, [NotNullWhen(true)] out PropertyInfo? property)
-    {
-        property = type.GetProperty(name, AllDeclared);
-        return property != null;
-    }
-
-    public static MethodInfo GetRequiredMethod(this Type type, string name)
-    {
-        return type.GetMethod(name, AllDeclared) ?? throw new InvalidOperationException($"Cannot find method '{name}' in type '{type.FullName}'");
-    }
-
-    public static MethodInfo GetRequiredMethod(this Type type, string name, int genericArgumentCount, params Type[] paramTypes)
-    {
-        return type.GetMethods(AllDeclared)
-            .Where(m => m.Name == name)
-            .Select(m => (Method: m, Params: m.GetParameters(), Args: m.GetGenericArguments()))
-            .Where(x => x.Args.Length == genericArgumentCount
-                        && x.Params.Length == paramTypes.Length
-                        && x.Params.Select(m => m.ParameterType).SequenceEqual(paramTypes))
-            .Select(x => x.Method)
-            .FirstOrDefault() ?? throw new InvalidOperationException($"Cannot find method '{name}<`{genericArgumentCount}>({paramTypes.Select(m => m.Name).JoinWith(", ")})' in type '{type.FullName}'");
-    }
-
-    public static ConstructorInfo GetRequiredConstructor(this Type type, params Type[] types)
-    {
-        return type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, types)
-               ?? throw new InvalidOperationException($"Cannot find constructor({types.Select(m => m.Name).JoinWith(", ")}) in type '{type.FullName}'");
-    }
-
-
-    private static readonly ConcurrentDictionary<Type, IReadOnlyList<FieldInfo>> _cache = new();
-
-    /// <summary>
-    /// Retrieves all instance fields of a specified type, including fields declared in its base types.
-    /// </summary>
-    /// <param name="type">The <see cref="Type"/> for which to retrieve all instance fields.</param>
-    /// <returns>
-    /// An <see cref="IReadOnlyList{FieldInfo}"/> containing all instance fields of the type and its base types.
-    /// </returns>
-    /// <remarks>
-    /// - This method caches the results for each type to optimize repeated calls.
-    /// - It traverses the inheritance hierarchy, starting from the given type and including all base types, 
-    ///   to gather all instance fields.
-    /// - Fields are retrieved using the <see cref="BindingFlags.DeclaredOnly"/> flag to ensure 
-    ///   only fields declared in each specific type are included during traversal.
-    /// </remarks>
-    public static IReadOnlyList<FieldInfo> GetAllInstanceFields(this Type type)
-    {
-        return _cache.GetOrAdd(type, Impl);
-
-        static IReadOnlyList<FieldInfo> Impl(Type type)
-        {
-            var list = new List<FieldInfo>();
-            var p = type;
-            while (p is not null)
-            {
-                var fields = p.GetFields(AllDeclaredInstance);
-                list.AddRange(fields);
-                p = p.BaseType;
-            }
-            return list.ToReadOnlyList();
-        }
+        return type.IsDefined<CompilerGeneratedAttribute>(true);
     }
 
 #if NETSTANDARD2_0
