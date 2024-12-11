@@ -38,7 +38,7 @@ public static partial class HttpRequestExtensions
         return request;
     }
 
-    public static HttpRequest AddQueryValue<T>(this HttpRequest request, T builder) where T : IUriParamsBuilder
+    public static HttpRequest AddQueryParam<T>(this HttpRequest request, T builder) where T : IUriParamsBuilder
     {
         return request.AddQueryParam(builder.Build());
     }
@@ -46,7 +46,7 @@ public static partial class HttpRequestExtensions
     public static HttpRequest AddFormParam(this HttpRequest req, string key, string? value)
     {
         Check.NotNull(key);
-        req.Form.Add(key.Trim(), value.ToStringOrEmpty().Trim());
+        req.Form.Add(key, value);
         return req;
     }
 
@@ -69,7 +69,7 @@ public static partial class HttpRequestExtensions
         var pair = queryPair.Split(separator);
         return req.AddFormParam(pair[0], pair.Length > 1 ? pair[1] : "");
     }
-    
+
     public static HttpRequest AddFormParam(this HttpRequest request, IEnumerable<UriParam> enumerable)
     {
         foreach (var (key, value) in enumerable)

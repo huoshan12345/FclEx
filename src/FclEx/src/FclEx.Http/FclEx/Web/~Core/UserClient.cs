@@ -182,7 +182,7 @@ public abstract class UserClient : IUserClient, IDisposable
             Logger.LogTrace("Start to fake login...");
             var result = await FakeLoginActionAsync(t)
                 .Ok(o => Logger.LogTrace("Fake login successfully"))
-                .Error(ex => Logger.LogWarning(ex, "Failed to fake login : " + ex.Message))
+                .Error(ex => Logger.LogWarning(ex, "Failed to fake login: " + ex.Message))
                 .IgnoreSyncContext();
 
             if (result.Error && loginIfFail)
