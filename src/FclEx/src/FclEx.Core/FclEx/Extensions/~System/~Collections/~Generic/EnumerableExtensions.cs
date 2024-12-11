@@ -382,6 +382,11 @@ public static partial class EnumerableExtensions
         return new HashSet<TSource>(source, comparer);
     }
 #endif
-
-
+    
+    public static IEnumerable<T> SelectIf<T>(this IEnumerable<T> enumerable, bool condition, Func<T, T> selector)
+    {
+        return condition
+            ? enumerable.Select(selector)
+            : enumerable;
+    }
 }

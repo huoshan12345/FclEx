@@ -1,5 +1,11 @@
 ﻿namespace FclEx.Utils;
 
+/// <summary>
+/// Represents a single URI parameter as a key-value pair.
+/// This is an immutable data structure.
+/// </summary>
+/// <param name="Key">The key of the URI parameter.</param>
+/// <param name="Value">The value of the URI parameter.</param>
 public readonly record struct UriParam(string Key, string Value) : IRenderable
 {
     public void Render(StringBuilder builder)
@@ -13,6 +19,11 @@ public readonly record struct UriParam(string Key, string Value) : IRenderable
         {
             builder.Append(HttpUtility.UrlEncode(Value));
         }
+    }
+
+    public override string ToString()
+    {
+        return this.RenderToString();
     }
 
     public KeyValuePair<string, string> ToKeyValuePair() => KeyValuePair.Create(Key, Value);

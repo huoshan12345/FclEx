@@ -140,7 +140,7 @@ public class UriCreator
             if (Query.IsNotEmpty())
             {
                 m.Append('?');
-                m.Append(Query.ToString());
+                Query.Render(m);
             }
             if (Fragment is { Length: > 0 } fragment)
             {
@@ -202,6 +202,12 @@ public static class UriCreatorExtensions
     public static UriCreator Fragment(this UriCreator creator, string fragment)
     {
         creator.Fragment = fragment;
+        return creator;
+    }
+
+    public static UriCreator AddQueryParam(this UriCreator creator, string key, string? value)
+    {
+        creator.Query.Add(key, value);
         return creator;
     }
 }

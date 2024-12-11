@@ -42,7 +42,7 @@ partial class InterfaceBaseInvocationExtension
         var dynamicMethod = new DynamicMethod(
             name: "__IL_" + method.GetFullName(),
             returnType: method.ReturnType,
-            parameterTypes: new[] { interfaceType, typeof(object[]) },
+            parameterTypes: [interfaceType, typeof(object[])],
             owner: typeof(object),
             skipVisibility: true);
 

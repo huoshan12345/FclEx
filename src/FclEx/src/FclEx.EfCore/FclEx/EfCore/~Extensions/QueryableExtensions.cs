@@ -1,31 +1,34 @@
-﻿namespace FclEx.EfCore;
+﻿using FclEx.Utils;
+
+namespace FclEx.EfCore;
 
 public static class QueryableExtensions
 {
-    internal static readonly Expression EfFunctions = Expression.Constant(EF.Functions);
-    internal static MethodInfo StringContains { get; } = typeof(string).GetRequiredMethod(nameof(string.Contains), 0, typeof(string));
-
-    internal static MethodInfo EfLike { get; } = typeof(DbFunctionsExtensions)
-        .GetRequiredMethod(nameof(DbFunctionsExtensions.Like), 0, typeof(DbFunctions), typeof(string), typeof(string), typeof(string));
-
-    private static readonly ConcurrentDictionary<string, string> _contains = new();
-    private static string GetContainsPattern(string value)
+    private static async Task<(T[] items, int TotalCount)> ToArrayAndCountAsync<T>(this IQueryable<T> queryable, int pageSize, int pageIndex)
     {
-        return _contains.GetOrAdd(value, m => $"%{m.Replace("%", @"\%")}%");
+        var count = await queryable.CountAsync();
+        if (count == 0)
+            return ([], 0);
+
+        var items = await queryable
+            .Skip(pageIndex * pageSize)
+            .Take(pageSize)
+            .ToArrayAsync();
+
+        return (items, count);
     }
 
-    internal static Expression<Func<T, bool>> BuildLike<T>(Expression<Func<T, string?>> selector, string pattern, bool suppressValueConverter)
+    public static async Task<PagedListModel<T>> ToPagedListAsync<T>(this IQueryable<T> queryable, int pageSize, int pageIndex)
     {
-        var member = selector.Body;
-        if (suppressValueConverter)
-        {
-            var convertToObject = Expression.Convert(selector.Body, typeof(object));
-            member = Expression.Convert(convertToObject, typeof(string));
-        }
-        var expPattern = Expression.Constant(pattern, typeof(string));
-        var call = Expression.Call(null, EfLike, EfFunctions, member, expPattern, Expression.Constant("\\"));
-        var where = Expression.Lambda<Func<T, bool>>(call, selector.Parameters);
-        return where;
+        var (items, count) = await queryable.ToArrayAndCountAsync(pageSize, pageIndex);
+        return new(new PagedList<T>(items, pageIndex, pageSize, count));
+    }
+
+    public static async Task<PagedListModel<TModel>> ToPagedListAsync<T, TModel>(this IQueryable<T> queryable, int pageSize, int pageIndex, Func<T, TModel> selector)
+    {
+        var (items, count) = await queryable.ToArrayAndCountAsync(pageSize, pageIndex);
+        var arr = items.Select(selector).ToArray();
+        return new(new PagedList<TModel>(arr, pageIndex, pageSize, count));
     }
 
     public static IQueryable<T> ContainsAny<T>(this IQueryable<T> queryable, Expression<Func<T, string?>> selector, IEnumerable<string> keywords, bool suppressValueConverter = false)
@@ -34,8 +37,8 @@ public static class QueryableExtensions
         // ReSharper disable once LoopCanBeConvertedToQuery
         foreach (var keyword in keywords)
         {
-            var pattern = GetContainsPattern(keyword);
-            var expression = BuildLike(selector, pattern, suppressValueConverter);
+            var pattern = QueryableHelper.GetContainsPattern(keyword);
+            var expression = QueryableHelper.BuildLike(selector, pattern, suppressValueConverter);
             where = where.Or(expression);
         }
         return where == null ? queryable : queryable.Where(where);

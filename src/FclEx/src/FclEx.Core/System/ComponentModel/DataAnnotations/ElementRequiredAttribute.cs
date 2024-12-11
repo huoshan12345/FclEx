@@ -1,10 +1,9 @@
-﻿using System.Collections;
-
-namespace System.ComponentModel.DataAnnotations;
+﻿namespace System.ComponentModel.DataAnnotations;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
 public class ElementRequiredAttribute : ValidationAttribute
 {
+    // ReSharper disable once ConvertToPrimaryConstructor
     public ElementRequiredAttribute() : base(() => "The every element of {0} cannot be null or empty string.")
     {
 
@@ -28,12 +27,14 @@ public class ElementRequiredAttribute : ValidationAttribute
 
         foreach (var item in col)
         {
+            // ReSharper disable once ConvertIfStatementToSwitchStatement
             if (item is null)
                 return error;
 
+            // ReSharper disable once InvertIf
             if (item is string str)
             {
-                if (!AllowEmptyStrings && string.IsNullOrWhiteSpace(str))
+                if (AllowEmptyStrings == false && string.IsNullOrWhiteSpace(str))
                     return error;
             }
         }

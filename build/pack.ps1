@@ -36,7 +36,7 @@ foreach ($project in $projects) {
 
   dotnet clean --nologo -v q
 
-  $command = 'dotnet pack --nologo -v q -c Release --include-symbols --output $buildDir -p:PackageVersion=$ver'
+  $command = 'dotnet pack --nologo -v q -c Release --include-symbols -p:SymbolPackageFormat=snupkg --output $buildDir -p:PackageVersion=$ver'
   Invoke-Expression $command
   
   if ($Lastexitcode -ne 0)	{
@@ -52,6 +52,8 @@ if ($isGithub) {
   $files = Get-ChildItem $pkgPath
   foreach ($file in $files) {
     Write-Output "Uploading $($file.Basename)"
+
+    # Push the .nupkg to NuGet.org (we will detect the .snupkg and push it for you)
     & dotnet nuget push $file -k $key --source $myget -t 50
     if ($Lastexitcode -ne 0) {
       throw "failed with exit code $LastExitCode"
