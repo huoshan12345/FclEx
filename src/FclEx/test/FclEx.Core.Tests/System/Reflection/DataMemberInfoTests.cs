@@ -1,4 +1,4 @@
-﻿using static FclEx.BindingAttributes;
+﻿// ReSharper disable UnusedAutoPropertyAccessor.Local
 
 #pragma warning disable CS0414
 #pragma warning disable IDE0051
@@ -24,7 +24,7 @@ public class DataMemberInfoTests(ITestOutputHelper output)
         public int PublicPropertyWithPrivateGetter { private get; set; } = 0;
         public int PublicPropertyWithoutSetter { get; } = 0;
     }
-    
+
     [Fact]
     public void HashSet_Contains_Test()
     {
@@ -32,7 +32,7 @@ public class DataMemberInfoTests(ITestOutputHelper output)
         Assert.Equal(11, members.Count);
 
         var set = members.ToHashSet();
-        foreach (var member in typeof(Model).EnumerateDataMember())
+        foreach (var member in typeof(Model).GetDataMembers())
         {
             Assert.Contains(member, set);
         }
@@ -160,7 +160,13 @@ file static class Extensions
 {
     public static IEnumerable<MemberInfo> EnumerateDataMember(this Type type)
     {
-        return type.GetFields(AllDeclared).Cast<MemberInfo>()
-            .Concat(type.GetProperties(AllDeclared));
+        const BindingFlags flags = BindingFlags.Public
+                                         | BindingFlags.NonPublic
+                                         | BindingFlags.Instance
+                                         | BindingFlags.Static;
+
+        return type.GetFields(flags)
+            .Cast<MemberInfo>()
+            .Concat(type.GetProperties(flags));
     }
 }
