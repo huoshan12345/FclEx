@@ -157,7 +157,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         {
             Version = request.Version,
 #if NET6_0_OR_GREATER
-           VersionPolicy = request.VersionPolicy, 
+            VersionPolicy = request.VersionPolicy,
 #endif
         };
 
@@ -237,7 +237,9 @@ public abstract class AbstractHttpClientService : AbstractHttpService
                 var response = await SendAsync(context, req, cts.Token).IgnoreSyncContext();
                 responses.Add(response);
                 httpResponse.RedirectUris.Add(response.RequestMessage?.RequestUri!);
-                ReadCookies(response, httpResponse);
+
+                if (httpRequest.ReadCookies)
+                    ReadCookies(response, httpResponse);
 
                 if (!response.TryGetRedirection(out var uri))
                     break;

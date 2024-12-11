@@ -3,16 +3,11 @@
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 namespace FclEx.Web.Testing;
 
-public class ClientCreator<TClient> where TClient : IUserClient
+public class ClientCreator<TClient>(IServiceProvider provider) where TClient : IUserClient
 {
-    protected readonly IServiceProvider _provider;
+    protected readonly IServiceProvider _provider = provider;
 
     protected readonly ConcurrentDictionary<UserAccount, TClient> _dic = new(UserAccountEqualityComparer.Instance);
-
-    public ClientCreator(IServiceProvider provider)
-    {
-        _provider = provider;
-    }
 
     public virtual (string Path, bool Exist) GetCookiesFilePath(Type clientType, IUserAccount account)
     {

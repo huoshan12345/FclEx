@@ -54,7 +54,9 @@ public abstract class AbstractHttpService : IHttpService
 
     public void AddCookie(Cookie cookie, Uri? uri = null)
     {
-        if (!UseCookie) return;
+        if (UseCookie == false)
+            return;
+
         if (uri == null)
             _cookieContainer.Add(cookie);
         else

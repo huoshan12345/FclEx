@@ -1,14 +1,7 @@
 ﻿namespace FclEx.Http.Services;
 
-public partial class HttpClientServiceTests
+public partial class HttpClientServiceTests(ITestOutputHelper output)
 {
-    private readonly ITestOutputHelper _output;
-
-    public HttpClientServiceTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
-
     [Theory]
     [InlineData(null)]
     [InlineData("")]
@@ -176,7 +169,7 @@ public partial class HttpClientServiceTests
             .SendAsync(http);
 
         Assert.True(response.HasError);
-        _output.WriteLine(response.Exception.ToString());
+        output.WriteLine(response.Exception.ToString());
 
         Assert.IsType<TaskCanceledException>(response.Exception);
         AssertExt.Equal(expectedTime, response.Elapsed, TimeSpan.FromSeconds(0.2));

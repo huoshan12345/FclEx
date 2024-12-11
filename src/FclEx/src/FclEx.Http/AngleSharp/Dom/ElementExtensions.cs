@@ -2,22 +2,25 @@
 
 public static class ElementExtensions
 {
-    public static HtmlAnchor GetAnchor(this IElement? e, string? selector = null)
+    public static HtmlAnchor? GetAnchor(this IElement? element, string? selector = null)
     {
-        var a = selector == null ? e : e?.QuerySelector(selector);
+        var a = selector == null
+            ? element
+            : element?.QuerySelector(selector);
+
         return a is IHtmlAnchorElement link
             ? new HtmlAnchor(link)
-            : HtmlAnchor.Empty;
+            : null;
     }
 
-    public static string? Href(this IElement? e) => e?.GetAttribute("href");
-    public static string? Type(this IElement? e) => e?.GetAttribute("type");
-    public static string? Value(this IElement? e) => e?.GetAttribute("value");
-    public static string? Title(this IElement? e) => e?.GetAttribute("title");
+    public static string? Href(this IElement? element) => element?.GetAttribute("href");
+    public static string? Type(this IElement? element) => element?.GetAttribute("type");
+    public static string? Value(this IElement? element) => element?.GetAttribute("value");
+    public static string? Title(this IElement? element) => element?.GetAttribute("title");
 
-    public static SubmitInfo? GetFormSubmitInfo(this IElement? e, string formSelector, Uri? htmlUrl)
+    public static SubmitInfo? GetFormSubmitInfo(this IElement? element, string formSelector, Uri? htmlUrl)
     {
-        if (e?.QuerySelector(formSelector) is not { } form)
+        if (element?.QuerySelector(formSelector) is not { } form)
             return null;
 
         if (form.GetAttribute("action") is not { } action)
@@ -28,7 +31,7 @@ public static class ElementExtensions
 
         if (!info.SubmitUrl.IsAbsoluteUri)
         {
-            var baseUri = htmlUrl ?? (e.BaseUrl is { } u ? (Uri)u : null);
+            var baseUri = htmlUrl ?? (element.BaseUrl is { } u ? (Uri)u : null);
             if (baseUri != null)
             {
                 info.SubmitUrl = new Uri(baseUri, info.SubmitUrl);
@@ -46,14 +49,15 @@ public static class ElementExtensions
         return info;
     }
 
-    public static IElement? RemoveJsCss(this IElement? e)
+    [return: NotNullIfNotNull(nameof(element))]
+    public static IElement? RemoveJsCss(this IElement? element)
     {
-        if (e == null)
+        if (element == null)
             return null;
 
-        foreach (var node in e.QuerySelectorAll("script, style"))
+        foreach (var node in element.QuerySelectorAll("script, style"))
             node.Remove();
 
-        return e;
+        return element;
     }
 }

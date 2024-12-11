@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\STCharacters.txt" />
+    <EmbeddedResource Include="Resources\TSCharacters.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FclEx.Core\FclEx.Core.csproj" />
+  </ItemGroup>
+
+</Project>

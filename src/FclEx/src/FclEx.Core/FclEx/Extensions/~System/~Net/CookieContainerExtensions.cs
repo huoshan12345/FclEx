@@ -2,16 +2,14 @@
 
 public static class CookieContainerExtensions
 {
-    private static readonly FieldInfo FieldOfDomainTable = typeof(CookieContainer).GetField("m_domainTable", BindingFlags.NonPublic | BindingFlags.Instance)!;
+    private static readonly FieldInfo _domainTable = typeof(CookieContainer).GetRequiredField("m_domainTable");
 
     [SuppressMessage("ReSharper", "LoopCanBeConvertedToQuery")]
-    public static List<Cookie> GetAllCookies(this CookieContainer cookieJar)
+    public static List<Cookie> GetAllCookies(this CookieContainer container)
     {
-        var list = new List<Cookie>(cookieJar.Count);
+        var list = new List<Cookie>(container.Count);
+        var table = _domainTable.GetRequiredValue<Hashtable>(container);
 
-        var table = (Hashtable)FieldOfDomainTable.GetValue(cookieJar)!;
-
-        var cookieLists = new List<SortedList>();
         lock (table.SyncRoot)
         {
             foreach (var pathList in table.Values)
@@ -22,26 +20,20 @@ public static class CookieContainerExtensions
                     BindingFlags.Instance,
                     null,
                     pathList,
-                    new object[] { })!;
+                    [])!;
 
-                cookieLists.Add(cookieList);
-            }
-        }
-
-        foreach (var cookieList in cookieLists)
-        {
-            lock (cookieList.SyncRoot)
-            {
-                foreach (CookieCollection cookieCollection in cookieList.Values)
+                lock (cookieList.SyncRoot)
                 {
-                    foreach (Cookie cookie in cookieCollection)
+                    foreach (CookieCollection cookieCollection in cookieList.Values)
                     {
-                        list.Add(cookie);
+                        foreach (Cookie cookie in cookieCollection)
+                        {
+                            list.Add(cookie);
+                        }
                     }
                 }
             }
         }
-
         return list;
     }
 }

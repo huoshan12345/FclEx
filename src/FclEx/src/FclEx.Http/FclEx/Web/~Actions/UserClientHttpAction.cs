@@ -1,18 +1,13 @@
 ﻿#if NET6_0_OR_GREATER
 namespace FclEx.Web;
 
-public abstract class UserClientHttpAction<TClient, T> : UserClientAction<TClient, T>, IHttpAction<T>
+public abstract class UserClientHttpAction<TClient, T>(TClient client) : UserClientAction<TClient, T>(client), IHttpAction<T>
     where TClient : IUserClient
 {
-    protected UserClientHttpAction(TClient client) : base(client)
-    {
-        HttpService = client.HttpService;
-    }
-
-    public IHttpService HttpService { get; }
     public abstract Uri Uri { get; }
     public abstract HttpMethod Method { get; }
 
+    public virtual IHttpService HttpService { get; } = client.HttpService;
     public virtual bool IsFailed(HttpResponse res) => this.Base<IHttpAction<T>, bool>(m => m.IsFailed(res));
     public virtual OperateResult<T> HandleFailed(HttpResponse res) => this.Base<IHttpAction<T>, OperateResult<T>>(m => m.HandleFailed(res));
     public abstract OperateResult<T> GetResult(HttpResponse response);

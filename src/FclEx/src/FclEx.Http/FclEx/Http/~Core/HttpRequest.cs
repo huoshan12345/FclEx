@@ -30,6 +30,7 @@ public partial class HttpRequest
     public CompressionLevel CompressionLevel { get; set; } = CompressionLevel.Optimal;
     public HttpContentType ReadContentType { get; set; } = HttpContentType.String;
     public bool ReadContent { get; set; } = true;
+    public bool ReadCookies { get; set; } = true;
 
     public Dictionary<string, string?> Headers { get; } = new(StringComparer.OrdinalIgnoreCase);
     public UriParams Query => _uriCreator.Query;
