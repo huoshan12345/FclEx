@@ -88,6 +88,18 @@ public static class StringBuilderExtensions
         return builder.Append('\r');
     }
 
+    /// <summary>
+    /// Appends a value enclosed in parentheses to the <see cref="StringBuilder"/>.
+    /// </summary>
+    /// <param name="builder">The <see cref="StringBuilder"/> to append to.</param>
+    /// <param name="valueAction">
+    /// An action that writes the content to be enclosed in parentheses into the <see cref="StringBuilder"/>.
+    /// </param>
+    /// <returns>The modified <see cref="StringBuilder"/> instance.</returns>
+    public static StringBuilder AppendParenthesized(this StringBuilder builder, Action<StringBuilder> valueAction)
+    {
+        return builder.AppendQuoted("(", valueAction, ")");
+    }
 
 #if NETSTANDARD2_0
     public static StringBuilder AppendJoin<T>(this StringBuilder builder, string? separator, IEnumerable<T> values)

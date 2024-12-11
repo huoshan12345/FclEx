@@ -1,6 +1,6 @@
 using FclEx.Kafka;
 
-namespace FclEx.Logging;
+namespace FclEx.Messaging;
 
 public static class LoggerExtensions
 {

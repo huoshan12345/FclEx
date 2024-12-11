@@ -32,8 +32,8 @@ public partial class HttpRequest
     public bool ReadContent { get; set; } = true;
 
     public Dictionary<string, string?> Headers { get; } = new(StringComparer.OrdinalIgnoreCase);
-    public UriParameterCollection Query => _uriCreator.Query;
-    public UriParameterCollection Form { get; } = new(); // don't use new NameValueCollection() here.
+    public UriParams Query => _uriCreator.Query;
+    public UriParams Form { get; } = new(); // don't use new NameValueCollection() here.
 
     public string? Referrer
     {
@@ -101,10 +101,4 @@ public partial class HttpRequest
     }
 
     public Uri GetUri() => _uriCreator.Build();
-
-    public HttpRequest AddQueryValue(string key, string? value)
-    {
-        _uriCreator.AddQueryParameter(key, value);
-        return this;
-    }
 }

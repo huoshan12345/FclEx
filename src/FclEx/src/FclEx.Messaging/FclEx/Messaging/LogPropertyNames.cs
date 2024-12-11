@@ -1,4 +1,4 @@
-namespace FclEx.Logging;
+namespace FclEx.Messaging;
 
 public static class LogPropertyNames
 {

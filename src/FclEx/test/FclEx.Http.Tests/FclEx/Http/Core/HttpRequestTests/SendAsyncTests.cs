@@ -129,7 +129,7 @@ public class SendAsyncTests : IAssemblyFixture<GlobalFixture>
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 3).ToDictionary(m => m.ToString(), m => random.NextString(5));
         var res = await HttpRequest.Post("api/post")
-            .AddData(expected!)
+            .AddFormParam(expected!)
             .ReadHeadersTimeout(TimeSpan.FromSeconds(5))
             .SendAsync(TestHttp)
             .ThrowIfError()

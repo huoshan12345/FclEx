@@ -114,7 +114,7 @@ public class UriCreator
         get => _builder.Path;
         set => _builder.Path = value;
     }
-    public UriParameterCollection Query { get; }
+    public UriParams Query { get; }
     public string Fragment
     {
         get => _builder.Fragment;
@@ -165,12 +165,6 @@ public class UriCreator
             _ => (uri.Substring(0, idx1), uri.Substring(idx1 + 1, idx2 - idx1 - 1), uri.Substring(idx2 + 1)),
         };
     }
-
-    public UriCreator AddQueryParameter(string key, string? value)
-    {
-        Query.Add(key, value);
-        return this;
-    }
 }
 
 public static class UriCreatorExtensions
@@ -208,15 +202,6 @@ public static class UriCreatorExtensions
     public static UriCreator Fragment(this UriCreator creator, string fragment)
     {
         creator.Fragment = fragment;
-        return creator;
-    }
-
-    public static UriCreator AddQueryParameter(this UriCreator creator, IEnumerable<KeyValuePair<string, string>> parameters)
-    {
-        foreach (var (key, value) in parameters)
-        {
-            creator.AddQueryParameter(key, value);
-        }
         return creator;
     }
 }

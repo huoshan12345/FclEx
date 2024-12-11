@@ -20,7 +20,7 @@ public class UriCreatorTests
     {
         Assert.Equal(uri.Fragment, uriCreator.Fragment);
         var map = HttpUtility.ParseQueryString(uri.Query);
-        foreach (var key in map.AllKeys)
+        foreach (var key in map.AllKeys.NotNull())
         {
             var values = map.GetValues(key);
             var actual = uriCreator.Query.GetValues(key);
@@ -50,7 +50,7 @@ public class UriCreatorTests
     {
         var uri = new Uri(str);
         var uriCreator = new UriCreator(str);
-            
+
         Assert.Equal(str, uriCreator.Build().ToString());
         Assert.Equal(uri.AbsolutePath, uriCreator.Path);
         TestExtra(uri, uriCreator);
