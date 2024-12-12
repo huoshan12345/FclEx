@@ -19,7 +19,7 @@ public class LogstashSink : IBatchedLogEventSink
     public LogstashSink(LogstashSinkOptions options)
     {
         var uri = new Uri(options.Uri);
-        var type = uri.Scheme.ToEnum(LogstashInputType.Tcp);
+        var type = EnumHelper.Parse(uri.Scheme, LogstashInputType.Tcp);
         _input = LogstashInputFactory.Create(type, uri);
         _formatter = options.Formatter ?? new JsonFormatter();
     }

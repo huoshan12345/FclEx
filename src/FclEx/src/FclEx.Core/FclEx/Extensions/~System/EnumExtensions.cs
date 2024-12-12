@@ -4,18 +4,23 @@ public static class EnumExtensions
 {
     private static readonly ConcurrentDictionary<Enum, EnumInfo> _infos = new();
 
-    public static EnumInfo Info(this Enum e)
+    public static EnumInfo Info(this Enum enumValue)
     {
-        return _infos.GetOrAdd(e, k =>
+        return _infos.GetOrAdd(enumValue, k =>
         {
-            var str = k.ToString();
-            return new(str, str.ToLower(), str.ToUpper(), k.CastTo<long>());
+            var name = k.ToString();
+            return new(
+                name,
+                name.ToLower(),
+                name.ToUpper(),
+                k.CastTo<long>(),
+                k.GetAttribute<EnumMemberAttribute>()?.Value);
         });
     }
 
-    public static string ToLowerString(this Enum e)
+    public static string ToLower(this Enum enumValue)
     {
-        return e.Info().Lower;
+        return enumValue.Info().Lower;
     }
 
     public static TInteger ToInteger<TEnum, TInteger>(this TEnum enumValue)
@@ -79,54 +84,21 @@ public static class EnumExtensions
             _ => throw new InvalidCastException($"Cannot cast {typeof(TEnum).Name} to long")
         };
     }
-
-    public static T ToEnum<T>(this string? value, T defaultValue) where T : struct, Enum
-    {
-        return value.ToEnum(s => defaultValue);
-    }
-
-    public static T ToEnum<T>(this string? value, Func<string?, T> defaultValueFunc) where T : struct, Enum
-    {
-        return Enum.TryParse<T>(value, true, out var result) ? result : defaultValueFunc(value);
-    }
-
-    public static T ToEnum<T>(this string? value) where T : struct, Enum
-    {
-        return value.ToEnum<T>(s => throw new FormatException($"Cannot parse to type of {typeof(T).ShortName()} from this value: " + s));
-    }
-
+    
     public static bool IsValid<T>(this T value) where T : struct, Enum
     {
         var validValues = (T[])Enum.GetValues(typeof(T));
         return validValues.Contains(value);
     }
 
-    public static bool IsEachValid<T>(this IEnumerable<T> values) where T : struct, Enum
+    public static T? GetAttribute<T>(this Enum enumValue) where T : Attribute
     {
-        var validValues = (T[])Enum.GetValues(typeof(T));
-        return values.All(m => validValues.Contains(m));
-    }
-
-    public static TEnum IfInvalid<TEnum>(this TEnum e, TEnum defaultValue = default) where TEnum : struct, Enum
-    {
-        return e.IsValid() ? e : defaultValue;
-    }
-
-    private static readonly ConcurrentDictionary<Enum, string> EnumValueDic = new();
-
-    public static TAttr? GetAttribute<TAttr>(this Enum e) where TAttr : Attribute
-    {
-        var type = e.GetType();
-        var field = type.GetField(e.ToString())!;
-        var attr = field.GetCustomAttribute<TAttr>(false);
+        var type = enumValue.GetType();
+        var field = type.GetField(enumValue.ToString())!;
+        var attr = field.GetCustomAttribute<T>(false);
         return attr;
     }
 
-    public static string GetValue(this Enum e)
-    {
-        return EnumValueDic.GetOrAdd(e, m => m.GetAttribute<EnumValueAttribute>()?.Value ?? e.ToString());
-    }
-    
     /// <summary>
     /// A generic and more efficient implement of <see cref="Enum.HasFlag" />.
     /// </summary>

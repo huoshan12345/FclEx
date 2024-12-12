@@ -22,6 +22,6 @@ public class IsValidTests
     public void IsEachValid_Test()
     {
         var values = Enumerable.Range(-5, 10).Cast<Tester>().ToArray();
-        Assert.Equal(values.All(m => m == Tester.No || m == Tester.Yes), values.IsEachValid());
+        Assert.Equal(values.All(m => m is Tester.No or Tester.Yes), values.All(m => m.IsValid()));
     }
 }

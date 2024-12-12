@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Xml;
 using System.Xml.Linq;
+using FclEx.Helpers;
 using FclEx.NewtonsoftJson;
 using Newtonsoft.Json.Converters;
 using Formatting = Newtonsoft.Json.Formatting;
@@ -59,14 +60,14 @@ public static class NewtonsoftJsonExtensions
         return token.ToObject<long>();
     }
 
-    public static T ToEnum<T>(this JToken token, T defaultVaule = default) where T : struct, Enum
+    public static T ToEnum<T>(this JToken token, T defaultValue = default) where T : struct, Enum
     {
         return token.Type switch
         {
-            JTokenType.Null => defaultVaule,
+            JTokenType.Null => defaultValue,
             JTokenType.Integer => token.ToObject<long>().CastTo<T>(),
-            JTokenType.String => token.ToString().ToEnum(defaultVaule),
-            _ => defaultVaule
+            JTokenType.String => EnumHelper.Parse(token.ToString(), defaultValue),
+            _ => defaultValue,
         };
     }
 

@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Helpers;
 
-public record EnumInfo(string Name, string Lower, string Upper, long Value);
+public record EnumInfo(string Name, string Lower, string Upper, long Value, string? EnumMemberValue);
 
 public static class EnumHelper
 {
@@ -8,7 +8,7 @@ public static class EnumHelper
 
     public static EnumInfo[] GetInfos<T>() where T : struct, Enum
     {
-        return _infos.GetOrAdd(typeof(T), m => GetValues<T>().Select(m => m.Info()).ToArray());
+        return _infos.GetOrAdd(typeof(T), m => GetValues<T>().Select(x => x.Info()).ToArray());
     }
 
     public static T[] GetValues<T>() where T : struct, Enum
@@ -46,5 +46,20 @@ public static class EnumHelper
             result = info.Value.CastTo<TEnum>();
             return true;
         }
+    }
+
+    public static T Parse<T>(string? value, T defaultValue) where T : struct, Enum
+    {
+        return Parse(value, s => defaultValue);
+    }
+
+    public static T Parse<T>(string? value, Func<string?, T> defaultValueFunc) where T : struct, Enum
+    {
+        return Enum.TryParse<T>(value, true, out var result) ? result : defaultValueFunc(value);
+    }
+
+    public static T Parse<T>(string? value) where T : struct, Enum
+    {
+        return Parse<T>(value, s => throw new FormatException($"Cannot parse to type of {typeof(T).ShortName()} from this value: " + s));
     }
 }
