@@ -17,6 +17,7 @@ permissions:
   actions: write
 
 env:
+  SOLUTION: src/FclEx.All.sln
   DOTNET_NOLOGO: 1
   MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
   IS_PUSH_DEFAULT: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
@@ -88,10 +89,11 @@ jobs:
             8.0.x
             9.0.x
 
+      - name: NuGet Restore
+        run: dotnet restore ${{ env.SOLUTION }}
+
       - name: Test Release
-        shell: pwsh
-        run: |
-          ./build/test_all.ps1 Release
+        run: dotnet test -c Release --no-restore ${{ env.SOLUTION }} -v q --property:WarningLevel=0 /clp:ErrorsOnly
 
       - name: Test Report
         uses: dorny/test-reporter@main
@@ -108,7 +110,7 @@ jobs:
         if: ${{ env.IS_PUSH_DEFAULT == 'true' }}
         shell: pwsh
         run: |
-          ./build/pack.ps1
+          ./build/pack.ps1 -norestore $true
 
       - name: Set variables
         shell: pwsh

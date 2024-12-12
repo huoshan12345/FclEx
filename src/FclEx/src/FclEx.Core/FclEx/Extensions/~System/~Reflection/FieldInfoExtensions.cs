@@ -26,7 +26,10 @@ public static class FieldInfoExtensions
         if (type is null)
             return false;
 
-        return _backingFieldName.TryMatch(field.Name, 1, out var propertyName)
-               && type.TryGetProperty(propertyName, out property);
+        if (_backingFieldName.TryMatch(field.Name, 1, out var propertyName) == false)
+            return false;
+
+        property = type.GetProperty(propertyName, false);
+        return property is not null;
     }
 }

@@ -27,7 +27,7 @@ public static class ModelBuilderExtensions
                 .IsUnique(index.IsUnique);
         }
 
-        var entityType = type.ClrType.GetGenericInterface(typeof(IEntity<>));
+        var entityType = type.ClrType.GetImplementedInterface(typeof(IEntity<>));
         if (entityType != null)
         {
             e.HasKey(EntityMemberNames.Id);

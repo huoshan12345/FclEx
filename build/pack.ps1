@@ -1,18 +1,19 @@
+param ([bool]$norestore)
+
 $ErrorActionPreference = "Stop"
 
-$disableOSCheck = $args[0] -eq 'true'
 $isGithub = [string]::IsNullOrEmpty($Env:GITHUB_ACTION) -eq $false
-Write-Output "isGithub = $isGithub"
+Write-Output "IsGithub = $isGithub, NoRestore = $norestore"
 
 $buildDir = [io.path]::combine($MyInvocation.MyCommand.Definition, "..")
 $rootDir = [io.path]::combine($buildDir, "..")
-$slnDir = [io.path]::combine($rootDir, "src")
+$sln = [io.path]::combine($rootDir, "src", "FclEx.All.sln")
 
 $pkgPath = ([io.path]::combine($buildDir, "*.nupkg"))
 Remove-Item $pkgPath
 
-$ver_path = ([io.path]::combine($buildDir, "pkg.version"))
-$ver = Get-Content -Path $ver_path
+$verPath = ([io.path]::combine($buildDir, "pkg.version"))
+$ver = Get-Content -Path $verPath
 $key = $Env:MYGET_APIKEY
 $myget = "https://www.myget.org/F/huoshan12345/api/v2/package"
 
@@ -23,25 +24,21 @@ if ([string]::IsNullOrEmpty($ver)) {
   throw "the version is empty"
 }
 
-$srcDirs = (
-  [io.path]::combine($slnDir, "FclEx", "src"),
-  [io.path]::combine($slnDir, "FclEx.Abp", "src")
-)
+$command = @'
+dotnet pack $sln `
+--nologo -v q -c Release `
+--include-symbols -p:SymbolPackageFormat=snupkg `
+--output $buildDir -p:PackageVersion=$ver
+'@
 
-$projects = $srcDirs | ForEach-Object { Get-ChildItem -Path $_ -Include *.csproj -Recurse }
+if ($norestore -eq $true) {
+  $command = $command + " --no-restore"
+}
 
-foreach ($project in $projects) { 
-  Write-Output "Packing $($project.Basename)"
-  Set-Location -Path $($project.DirectoryName)
+Invoke-Expression $command
 
-  dotnet clean --nologo -v q
-
-  $command = 'dotnet pack --nologo -v q -c Release --include-symbols -p:SymbolPackageFormat=snupkg --output $buildDir -p:PackageVersion=$ver'
-  Invoke-Expression $command
-  
-  if ($Lastexitcode -ne 0)	{
-    throw "failed with exit code $LastExitCode"
-  }
+if ($Lastexitcode -ne 0)	{
+  throw "failed with exit code $LastExitCode"
 }
 
 Write-Output "Packing finished."

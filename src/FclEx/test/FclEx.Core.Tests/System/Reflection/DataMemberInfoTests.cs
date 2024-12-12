@@ -1,11 +1,13 @@
-﻿#pragma warning disable CS0414
+﻿// ReSharper disable UnusedAutoPropertyAccessor.Local
+
+#pragma warning disable CS0414
 #pragma warning disable IDE0051
 namespace System.Reflection;
 
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 [SuppressMessage("ReSharper", "UnusedMember.Global")]
 [SuppressMessage("ReSharper", "UnusedMember.Local")]
-public class DataMemberInfoTests
+public class DataMemberInfoTests(ITestOutputHelper output)
 {
     public class Model
     {
@@ -22,16 +24,6 @@ public class DataMemberInfoTests
         public int PublicPropertyWithPrivateGetter { private get; set; } = 0;
         public int PublicPropertyWithoutSetter { get; } = 0;
     }
-
-    private const BindingFlags Flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
-
-    private readonly ITestOutputHelper _output;
-
-    public DataMemberInfoTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
-
 
     [Fact]
     public void HashSet_Contains_Test()
@@ -50,10 +42,10 @@ public class DataMemberInfoTests
     public void Equals_Test()
     {
         var count = 0;
-        foreach (var member in typeof(Model).EnumeratePropertyOrField(Flags))
+        foreach (var member in typeof(Model).EnumerateDataMember())
         {
             Assert.Equal(member.ToDataMemberInfo(), member.ToDataMemberInfo());
-            _output.WriteLine(member.Name);
+            output.WriteLine(member.Name);
 
             count++;
         }
@@ -162,4 +154,19 @@ public class DataMemberInfoTests
         Assert.False(field.IsCompilerGenerated);
     }
 
+}
+
+file static class Extensions
+{
+    public static IEnumerable<MemberInfo> EnumerateDataMember(this Type type)
+    {
+        const BindingFlags flags = BindingFlags.Public
+                                         | BindingFlags.NonPublic
+                                         | BindingFlags.Instance
+                                         | BindingFlags.Static;
+
+        return type.GetFields(flags)
+            .Cast<MemberInfo>()
+            .Concat(type.GetProperties(flags));
+    }
 }

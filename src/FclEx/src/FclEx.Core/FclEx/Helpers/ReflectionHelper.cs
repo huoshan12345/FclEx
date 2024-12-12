@@ -33,6 +33,7 @@ public static class ReflectionHelper
                 list.AddRange(ms);
             }
 
+            // use the most concrete member for the same name.
             return list.GroupBy(m => m.Info.Name)
                 .ToDictionary(m => m.Key, m => m.MinimaBy(x => x.Order).Items[0].Info);
         }

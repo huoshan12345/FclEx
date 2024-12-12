@@ -1,6 +1,4 @@
-﻿using Exception = System.Exception;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 partial class TypeExtensions
 {
@@ -89,7 +87,7 @@ partial class TypeExtensions
                 return type.GenericTypeArguments.FirstOrDefault() ?? type.GetTypeInfo().GenericTypeParameters.FirstOrDefault();
 
             // type implements IEnumerable<T>
-            if (type.GetGenericInterface(typeof(IEnumerable<>)) is { } iEnumerableType)
+            if (type.GetImplementedInterface(typeof(IEnumerable<>)) is { } iEnumerableType)
                 return iEnumerableType.GenericTypeArguments[0];
 
             // type implements IEnumerable
