@@ -1,12 +1,9 @@
-﻿using System.Text;
-using FclEx.Helpers;
-
-namespace FclEx.EfCore.Extensions;
+﻿namespace FclEx.EfCore.Extensions;
 
 public class QueryableExtensionsTests : DbContextTests
 {
     public static readonly IEnumerable<object?[]> ContainsAnyTestCases = DbTestCases
-        .SelectMany(new[] { true, false })
+        .SelectMany([true, false])
         .Select(x => x.Left.Append(x.Right).ToArray());
 
     [Theory]

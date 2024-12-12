@@ -8,7 +8,7 @@ namespace FclEx.EfCore;
 
 public readonly record struct DatabaseUser(string Username, string Password, string DefaultSchema)
 {
-    public static readonly DatabaseUser Default = new("user_with_schema".WithNetVer(), "123456", "user_schema".WithNetVer());
+    public static readonly DatabaseUser Default = new("user".WithAssemblyInfo(), "123456", "schema".WithAssemblyInfo());
 }
 
 public readonly record struct ConnectionStrings(DbProviderType DbProviderType, string Primary, string User)
@@ -69,12 +69,12 @@ public readonly record struct ConnectionStrings(DbProviderType DbProviderType, s
 
 public class GlobalFixture : IAsyncLifetime
 {
-    public static readonly string DatabaseName = typeof(GlobalDbContext).Assembly.GetName().Name!.Replace(".", "_").ToLower().WithNetVer();
+    public static readonly string DatabaseName = "db".WithAssemblyInfo();
     public static readonly string?[] Schemas =
     [
         null,
-        "schema_test_1".WithNetVer(),
-        "schema_test_2".WithNetVer(),
+        "schema_1".WithAssemblyInfo(),
+        "schema_2".WithAssemblyInfo(),
         DatabaseUser.Default.DefaultSchema,
     ];
 
@@ -86,6 +86,8 @@ public class GlobalFixture : IAsyncLifetime
     // We use this method to initialize database only once before all tests.
     public virtual async Task InitializeAsync()
     {
+        Console.WriteLine("Current assembly info: " + "".WithAssemblyInfo());
+
         foreach (var databaseType in DatabaseTypes)
         {
             var isRecreated = false; // NOTE: we delete database only once for every database instance.

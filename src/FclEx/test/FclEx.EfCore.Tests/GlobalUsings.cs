@@ -2,8 +2,11 @@
 
 global using System.ComponentModel.DataAnnotations;
 global using System.ComponentModel.DataAnnotations.Schema;
+global using System.Diagnostics.CodeAnalysis;
+global using System.Reflection;
 global using Dapper;
 global using FclEx.Extensions;
+global using FclEx.Helpers;
 global using FclEx.Xunit;
 global using Microsoft.EntityFrameworkCore;
 global using Npgsql;

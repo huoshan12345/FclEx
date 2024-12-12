@@ -4,7 +4,7 @@ public class PublisherTests
 {
     public static ExchangeSettings DefaultExchange { get; } = new()
     {
-        Name = "test.publisher".WithNetVer('.'),
+        Name = "test.publisher".WithAssemblyInfo('.'),
         Type = "topic",
         IsDelayed = true,
     };

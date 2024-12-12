@@ -46,7 +46,7 @@ public class RouterTests
     {
         var inputExchange = new ExchangeSettings
         {
-            Name = "test.router.input".WithNetVer('.'),
+            Name = "test.router.input".WithAssemblyInfo('.'),
             Type = "topic",
             IsDelayed = true,
         };
@@ -55,7 +55,7 @@ public class RouterTests
 
         var routerSettings = new RouterSettings(connection, inputExchange, new QueueSettings
         {
-            Name = "test.router".WithNetVer('.'),
+            Name = "test.router".WithAssemblyInfo('.'),
             BindKeys = ["input.#"],
         }, new ExchangeSettings
         {
@@ -71,7 +71,7 @@ public class RouterTests
         await using var evenConsumer = await TestConsumer.CreateAsync(new ConsumerSettings(connection,
           routerSettings.TargetExchange, new QueueSettings
           {
-              Name = "test.router.even".WithNetVer('.'),
+              Name = "test.router.even".WithAssemblyInfo('.'),
               BindKeys = ["output.*.even"],
           }), m =>
           {
@@ -84,7 +84,7 @@ public class RouterTests
         await using var stringConsumer = await TestConsumer.CreateAsync(new ConsumerSettings(connection,
          routerSettings.TargetExchange, new QueueSettings
          {
-             Name = "test.router.string".WithNetVer('.'),
+             Name = "test.router.string".WithAssemblyInfo('.'),
              BindKeys = ["output.string.*"],
          }), m =>
          {

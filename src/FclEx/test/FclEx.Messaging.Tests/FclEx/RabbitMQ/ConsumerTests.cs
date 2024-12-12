@@ -8,7 +8,7 @@ public class ConsumerTests
 {
     public static ExchangeSettings DefaultExchange { get; } = new()
     {
-        Name = "test.consumer".WithNetVer(),
+        Name = "test.consumer".WithAssemblyInfo(),
         Type = "topic",
         IsDelayed = true,
     };
@@ -29,7 +29,7 @@ public class ConsumerTests
             Exchange = DefaultExchange,
             Queue = new QueueSettings
             {
-                Name = "test.consumer".WithNetVer('.'),
+                Name = "test.consumer".WithAssemblyInfo('.'),
                 BindKeys = ["#"],
             },
         }, m =>
@@ -63,7 +63,7 @@ public class ConsumerTests
             Exchange = DefaultExchange,
             Queue = new QueueSettings
             {
-                Name = "test.consumer" + "." + name.ToLower().WithNetVer('.'),
+                Name = "test.consumer" + "." + name.ToLower().WithAssemblyInfo('.'),
                 BindKeys = [key],
             },
         }, m =>
@@ -131,7 +131,7 @@ public class ConsumerTests
             Exchange = DefaultExchange,
             Queue = new QueueSettings
             {
-                Name = "test.consumer".WithNetVer('.'),
+                Name = "test.consumer".WithAssemblyInfo('.'),
                 BindKeys = ["output.0", "output.1"],
             }
         }, m =>
