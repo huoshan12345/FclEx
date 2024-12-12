@@ -4,7 +4,7 @@ public static class JsonHelper
 {
     private static readonly ConcurrentDictionary<JsonOptions, JsonSerializerOptions> _serializerOptions = new();
 
-    private static readonly DefaultJsonTypeInfoResolver Resolver = new() { Modifiers = { EmptyValueModifier } };
+    private static readonly DefaultJsonTypeInfoResolver Resolver = new() { Modifiers = { IncludeStaticMembers, IgnoreEmptyValue } };
 
     public static JsonSerializerOptions GetOptions(JsonOptions options = default)
     {
@@ -35,7 +35,27 @@ public static class JsonHelper
         }
     }
 
-    public static void EmptyValueModifier(JsonTypeInfo typeInfo)
+    /// <summary>
+    /// Configures a <see cref="JsonTypeInfo"/> to ignore properties with empty values during JSON serialization.
+    /// </summary>
+    /// <param name="typeInfo">
+    /// The <see cref="JsonTypeInfo"/> object representing metadata about the type being serialized.
+    /// </param>
+    /// <remarks>
+    /// This method iterates through the properties of the given <paramref name="typeInfo"/> and modifies their
+    /// <c>ShouldSerialize</c> delegate to exclude properties with empty enumerable values from serialization.
+    /// 
+    /// A property is ignored if:
+    /// 1. Its type implements <see cref="IEnumerable"/>.
+    /// 2. It is annotated with the <see cref="JsonIgnoreEmptyAttribute"/>.
+    /// 
+    /// This is determined using the <see cref="IAttributeProvider"/> of each property.
+    /// 
+    /// Example:
+    /// If a property is an empty list or collection, it will not be included in the JSON output if the
+    /// <see cref="JsonIgnoreEmptyAttribute"/> is applied to it.
+    /// </remarks>
+    public static void IgnoreEmptyValue(JsonTypeInfo typeInfo)
     {
         foreach (var property in typeInfo.Properties)
         {
@@ -44,6 +64,48 @@ public static class JsonHelper
             {
                 property.ShouldSerialize = (_, val) => ((IEnumerable?)val).IsNullOrEmpty() == false;
             }
+        }
+    }
+
+    /// <summary>
+    /// Adds static members of a type as properties to the <see cref="JsonTypeInfo"/> for serialization.
+    /// </summary>
+    /// <param name="typeInfo">
+    /// The <see cref="JsonTypeInfo"/> object representing metadata about the type being serialized.
+    /// </param>
+    /// <remarks>
+    /// This method is a workaround for <see cref="System.Text.Json"/>'s limitation where static members are not 
+    /// included in serialization by default. It adds static members as properties to the serialization process if:
+    /// 1. The member is static.
+    /// 2. The member is annotated with the <see cref="JsonIncludeAttribute"/>.
+    /// 
+    /// The method retrieves the name of each static member, either from the <see cref="JsonPropertyNameAttribute"/> 
+    /// or by applying the <see cref="PropertyNamingPolicy"/>. It then creates a <see cref="JsonPropertyInfo"/> 
+    /// for each member, setting up a getter to return the value of the static member and an optional custom converter 
+    /// if specified by the <see cref="JsonConverterAttribute"/>. 
+    /// 
+    /// The static member is added to the <paramref name="typeInfo"/>'s property list, making it available for serialization.
+    /// </remarks>
+    public static void IncludeStaticMembers(JsonTypeInfo typeInfo)
+    {
+        if (typeInfo.Kind != JsonTypeInfoKind.Object)
+            return;
+
+        var members = typeInfo.Type.GetDataMembers();
+        foreach (var member in members.Where(m => m.IsStatic).Where(m => m.IsDefined<JsonIncludeAttribute>(false)))
+        {
+            var name = member.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name
+                       ?? typeInfo.Options.PropertyNamingPolicy?.ConvertName(member.Name)
+                       ?? member.Name;
+
+            var value = member.GetValue(null);
+            var propertyInfo = typeInfo.CreateJsonPropertyInfo(value?.GetType() ?? member.DataMemberType, name);
+            propertyInfo.Get = (o) => value;
+            propertyInfo.CustomConverter = member.GetCustomAttribute<JsonConverterAttribute>()?.ConverterType is { } converterType
+                ? (JsonConverter?)Activator.CreateInstance(converterType)
+                : null;
+
+            typeInfo.Properties.Add(propertyInfo);
         }
     }
 }

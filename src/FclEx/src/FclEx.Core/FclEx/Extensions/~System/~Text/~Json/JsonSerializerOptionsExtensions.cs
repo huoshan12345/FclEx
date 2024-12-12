@@ -1,4 +1,5 @@
-﻿using FclEx.Json;
+﻿using System.Text.Json.Serialization.Metadata;
+using FclEx.Json;
 
 namespace FclEx.Extensions;
 
@@ -63,15 +64,25 @@ public static class JsonSerializerOptionsExtensions
         return options;
     }
 
-    public static JsonSerializerOptions AddModifierForEmptyValue(this JsonSerializerOptions options)
+    private static JsonSerializerOptions AddModifier(this JsonSerializerOptions options, Action<JsonTypeInfo> modifier)
     {
         var actualOptions = options.IsReadOnly ? new(options) : options;
         var resolver = options.TypeInfoResolver ?? new DefaultJsonTypeInfoResolver();
-        actualOptions.TypeInfoResolver = resolver.WithAddedModifier(JsonHelper.EmptyValueModifier);
+        actualOptions.TypeInfoResolver = resolver.WithAddedModifier(modifier);
 
         if (options.IsReadOnly)
             actualOptions.MakeReadOnly(false);
 
         return actualOptions;
+    }
+
+    public static JsonSerializerOptions AddModifierForEmptyValue(this JsonSerializerOptions options)
+    {
+        return options.AddModifier(JsonHelper.IgnoreEmptyValue);
+    }
+
+    public static JsonSerializerOptions AddModifierForStaticMembers(this JsonSerializerOptions options)
+    {
+        return options.AddModifier(JsonHelper.IncludeStaticMembers);
     }
 }
