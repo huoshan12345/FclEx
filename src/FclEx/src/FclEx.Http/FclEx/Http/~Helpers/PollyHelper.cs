@@ -42,7 +42,7 @@ public static class PollyHelper
     {
         sleepDurationProvider ??= DefaultSleepDurationProvider;
         return Policy<HttpResponseMessage>
-            .Handle<Exception>(m => m.EnumerateInner().Any(m => m is IOException))
+            .Handle<Exception>(m => m.EnumerateInner().Any(x => x is IOException))
             .WaitAndRetryAsync(retryCount, sleepDurationProvider);
     }
 }
