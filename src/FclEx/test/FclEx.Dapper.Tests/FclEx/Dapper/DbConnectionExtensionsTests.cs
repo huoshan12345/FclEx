@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Dapper;
 
-public partial class DbConnectionExtensionsTests : DapperTests
+public partial class DbConnectionExtensionsTests(ITestOutputHelper output, DapperFixture fixture) : DapperTests(fixture)
 {
     public static readonly int[] Counts = [0, 1, 5];
     public static readonly IEnumerable<object[]> BulkInsertTestCases =
@@ -9,19 +9,18 @@ public partial class DbConnectionExtensionsTests : DapperTests
         from z in Counts
         select new object[] { x, y, z };
 
-
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task InsertAsync_EntityWithAutoKey_Test(DbProviderType dbProviderType, string schema)
     {
-        await using var db = GlobalDbContext.Create(dbProviderType, schema);
+        await using var db = Fixture.CreateDbContext(dbProviderType, schema);
 
         var entity = new EntityWithAutoKey
         {
             Value = 100,
             Name = Guid.NewGuid().ToString(),
         };
-        var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity, schema);
+        var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity, db.Schema);
         var e = await db.EntityWithAutoKeys.Where(m => m.Name == entity.Name).FirstOrDefaultAsync();
         Assert.NotNull(e);
         Assert.Equal(entity.Value, e.Value);
@@ -32,7 +31,7 @@ public partial class DbConnectionExtensionsTests : DapperTests
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task InsertAsync_EntityWithAutoKey_IncludeAutoKey_Test(DbProviderType dbProviderType, string schema)
     {
-        await using var db = GlobalDbContext.Create(dbProviderType, schema);
+        await using var db = Fixture.CreateDbContext(dbProviderType, schema);
         var maxId = await db.EntityWithAutoKeys.MaxAsync(m => (int?)m.Id);
 
         var entity = new EntityWithAutoKey
@@ -41,7 +40,7 @@ public partial class DbConnectionExtensionsTests : DapperTests
             Value = 100,
             Name = Guid.NewGuid().ToString(),
         };
-        await db.Database.GetDbConnection().InsertAsync(entity, schema, includeAutoKey: true);
+        await db.Database.GetDbConnection().InsertAsync(entity, db.Schema, includeAutoKey: true);
 
         var e = await db.EntityWithAutoKeys
             .AsNoTracking()
@@ -59,7 +58,7 @@ public partial class DbConnectionExtensionsTests : DapperTests
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task InsertAsync_EntityWithGuidKey_Test(DbProviderType dbProviderType, string schema)
     {
-        await using var db = GlobalDbContext.Create(dbProviderType, schema);
+        await using var db = Fixture.CreateDbContext(dbProviderType, schema);
 
         var entity = new EntityWithGuidKey
         {
@@ -67,7 +66,7 @@ public partial class DbConnectionExtensionsTests : DapperTests
             Value = 100,
             Order = null,
         };
-        var value = await db.Database.GetDbConnection().InsertAsync(entity, schema);
+        var value = await db.Database.GetDbConnection().InsertAsync(entity, db.Schema);
         Assert.Null(value);
         var e = await db.EntityWithGuidKeys.Where(m => m.Id == entity.Id).FirstAsync();
         Assert.Equal(entity.Value, e.Value);
@@ -77,14 +76,14 @@ public partial class DbConnectionExtensionsTests : DapperTests
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task InsertAsync_EntityWithoutKey_Test(DbProviderType dbProviderType, string schema)
     {
-        await using var db = GlobalDbContext.Create(dbProviderType, schema);
+        await using var db = Fixture.CreateDbContext(dbProviderType, schema);
 
         var entity = new EntityWithoutKey
         {
             Name = Guid.NewGuid().ToString(),
             Value = 1
         };
-        await db.Database.GetDbConnection().InsertAsync(entity, schema);
+        await db.Database.GetDbConnection().InsertAsync(entity, db.Schema);
         var e = await db.EntityWithoutKeys.Where(m => m.Name == entity.Name).FirstAsync();
         Assert.Equal(entity.Value, e.Value);
     }
@@ -93,7 +92,7 @@ public partial class DbConnectionExtensionsTests : DapperTests
     [MemberData(nameof(BulkInsertTestCases))]
     public async Task BulkInsertAsync_EntityWithAutoKey_Test(DbProviderType dbProviderType, string schema, int count)
     {
-        await using var db = GlobalDbContext.Create(dbProviderType, schema);
+        await using var db = Fixture.CreateDbContext(dbProviderType, schema);
 
         var entities = Enumerable.Range(1, count).Select(m => new EntityWithAutoKey
         {
@@ -101,7 +100,7 @@ public partial class DbConnectionExtensionsTests : DapperTests
             Name = Guid.NewGuid().ToString(),
         }).ToArray();
 
-        var rows = await db.Database.GetDbConnection().BulkInsertAsync(entities, schema);
+        var rows = await db.Database.GetDbConnection().BulkInsertAsync(entities, db.Schema);
         Assert.Equal(count, rows);
 
         foreach (var entity in entities)
@@ -115,7 +114,7 @@ public partial class DbConnectionExtensionsTests : DapperTests
     [MemberData(nameof(BulkInsertTestCases))]
     public async Task BulkInsertAsync_EntityWithAutoKey_IncludeAutoKey_Test(DbProviderType dbProviderType, string schema, int count)
     {
-        await using var db = GlobalDbContext.Create(dbProviderType, schema);
+        await using var db = Fixture.CreateDbContext(dbProviderType, schema);
 
         var maxId = await db.EntityWithAutoKeys.MaxAsync(m => (int?)m.Id);
 
@@ -126,7 +125,7 @@ public partial class DbConnectionExtensionsTests : DapperTests
             Name = Guid.NewGuid().ToString(),
         }).ToArray();
 
-        var rows = await db.Database.GetDbConnection().BulkInsertAsync(entities, schema, true);
+        var rows = await db.Database.GetDbConnection().BulkInsertAsync(entities, db.Schema, true);
         Assert.Equal(count, rows);
 
         foreach (var entity in entities)
@@ -144,7 +143,7 @@ public partial class DbConnectionExtensionsTests : DapperTests
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task GetAsync_EntityWithGuidKey_Test(DbProviderType dbProviderType, string schema)
     {
-        await using var db = GlobalDbContext.Create(dbProviderType, schema);
+        await using var db = Fixture.CreateDbContext(dbProviderType, schema);
 
         var entity = new EntityWithGuidKey
         {
@@ -154,7 +153,7 @@ public partial class DbConnectionExtensionsTests : DapperTests
         await db.EntityWithGuidKeys.AddAsync(entity);
         await db.SaveChangesAsync();
 
-        var e = await db.Database.GetDbConnection().GetAsync<EntityWithGuidKey>(entity.Id, schema);
+        var e = await db.Database.GetDbConnection().GetAsync<EntityWithGuidKey>(entity.Id, db.Schema);
         Assert.NotNull(e);
         Assert.Equal(entity.Value, e.Value);
     }
@@ -163,10 +162,10 @@ public partial class DbConnectionExtensionsTests : DapperTests
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task GetAsync_EntityWithoutKey_RaiseException(DbProviderType dbProviderType, string schema)
     {
-        await using var db = GlobalDbContext.Create(dbProviderType, schema);
+        await using var db = Fixture.CreateDbContext(dbProviderType, schema);
 
         var con = db.Database.GetDbConnection();
-        var ex = await Assert.ThrowsAsync<DataException>(() => con.GetAsync<EntityWithoutKey>(schema, "test"));
+        var ex = await Assert.ThrowsAsync<DataException>(() => con.GetAsync<EntityWithoutKey>(db.Schema, "test"));
         Assert.Contains("Only supports an entity with a [Key] property", ex.Message);
     }
 
@@ -174,7 +173,7 @@ public partial class DbConnectionExtensionsTests : DapperTests
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task DeleteAsync_EntityWithGuidKey_Test(DbProviderType dbProviderType, string schema)
     {
-        await using var db = GlobalDbContext.Create(dbProviderType, schema);
+        await using var db = Fixture.CreateDbContext(dbProviderType, schema);
 
         var entities = Enumerable.Range(1, 3).Select(m => new EntityWithGuidKey
         {
@@ -184,7 +183,7 @@ public partial class DbConnectionExtensionsTests : DapperTests
         await db.EntityWithGuidKeys.AddRangeAsync(entities);
         await db.SaveChangesAsync();
 
-        var count = await db.Database.GetDbConnection().DeleteAsync<EntityWithGuidKey>(entities.First().Id, schema);
+        var count = await db.Database.GetDbConnection().DeleteAsync<EntityWithGuidKey>(entities.First().Id, db.Schema);
         Assert.Equal(1, count);
 
         foreach (var e in entities.Skip(1))
@@ -197,10 +196,10 @@ public partial class DbConnectionExtensionsTests : DapperTests
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task DeleteAsync_EntityWithoutKey_RaiseException(DbProviderType dbProviderType, string schema)
     {
-        await using var db = GlobalDbContext.Create(dbProviderType, schema);
+        await using var db = Fixture.CreateDbContext(dbProviderType, schema);
 
         var con = db.Database.GetDbConnection();
-        var ex = await Assert.ThrowsAsync<DataException>(() => con.DeleteAsync<EntityWithoutKey>(schema, "test"));
+        var ex = await Assert.ThrowsAsync<DataException>(() => con.DeleteAsync<EntityWithoutKey>(db.Schema, "test"));
         Assert.Contains("Only supports an entity with a [Key] property", ex.Message);
     }
 
@@ -208,7 +207,7 @@ public partial class DbConnectionExtensionsTests : DapperTests
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task DoTransactionAsync_Test(DbProviderType dbProviderType, string schema)
     {
-        await using var db = GlobalDbContext.Create(dbProviderType, schema);
+        await using var db = Fixture.CreateDbContext(dbProviderType, schema);
 
         var con = db.Database.GetDbConnection();
 
@@ -225,8 +224,8 @@ public partial class DbConnectionExtensionsTests : DapperTests
 
         var (id, id2) = await con.DoTransactionAsync(async tran =>
         {
-            var id = (long?)await tran.InsertAsync(entity, schema);
-            var id2 = (long?)await tran.InsertAsync(entity2, schema);
+            var id = (long?)await tran.InsertAsync(entity, db.Schema);
+            var id2 = (long?)await tran.InsertAsync(entity2, db.Schema);
             return (id, id2);
         });
 
@@ -241,7 +240,7 @@ public partial class DbConnectionExtensionsTests : DapperTests
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task DoTransactionAsync_Rollback_Test(DbProviderType dbProviderType, string schema)
     {
-        await using var db = GlobalDbContext.Create(dbProviderType, schema);
+        await using var db = Fixture.CreateDbContext(dbProviderType, schema);
         await db.EntityWithGuidKeys.ExecuteDeleteAsync();
 
         var con = db.Database.GetDbConnection();
@@ -252,7 +251,7 @@ public partial class DbConnectionExtensionsTests : DapperTests
             {
                 Id = Guid.NewGuid(),
                 Value = 100,
-            }, schema);
+            }, db.Schema);
             throw new InvalidOperationException();
         }));
 

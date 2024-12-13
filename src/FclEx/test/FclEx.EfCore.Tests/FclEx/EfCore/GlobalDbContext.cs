@@ -18,28 +18,15 @@ public enum DbProviderType
 }
 
 // EfCore is used for helping us to do tests
-public class GlobalDbContext : SchemaDbContext
+public class GlobalDbContext(
+    DbProviderType dbProviderType,
+    string connectionString,
+    string? schema = null)
+    : SchemaDbContext(schema)
 {
-    public DbProviderType DbProviderType { get; }
-    public string ConnectionString { get; }
-    private readonly Action<DbContextOptionsBuilder>? _optionsAction;
 
-    public GlobalDbContext(DbProviderType dbProviderType, string connectionString, Action<DbContextOptionsBuilder>? optionsAction = null, string? schema = null)
-        : base(schema)
-    {
-        DbProviderType = dbProviderType;
-        ConnectionString = connectionString;
-        _optionsAction = optionsAction;
-    }
-
-
-    public GlobalDbContext(DbProviderType dbProviderType, bool isUser, Action<DbContextOptionsBuilder>? optionsAction = null, string? schema = null)
-        : base(schema)
-    {
-        DbProviderType = dbProviderType;
-        ConnectionString = ConnectionStrings.Get(dbProviderType, isUser);
-        _optionsAction = optionsAction;
-    }
+    public DbProviderType DbProviderType { get; } = dbProviderType;
+    public string ConnectionString { get; } = connectionString;
 
     public DbSet<EntityWithAutoKey> EntityWithAutoKeys { get; set; } = default!;
     public DbSet<EntityWithGuidKey> EntityWithGuidKeys { get; set; } = default!;
@@ -69,8 +56,6 @@ public class GlobalDbContext : SchemaDbContext
             default:
                 throw new ArgumentOutOfRangeException(nameof(DbProviderType), DbProviderType, null);
         }
-
-        _optionsAction?.Invoke(builder);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -116,11 +101,6 @@ public class GlobalDbContext : SchemaDbContext
         var ver = ServerVersion.AutoDetect(connectionString);
         builder.UseMySql(sb.ConnectionString, ver, o => o.SchemaBehavior(MySqlSchemaBehavior.Translate, (_, table) => table));
         builder.ReplaceService<ISqlGenerationHelper, CustomMySqlSqlGenerationHelper>();
-    }
-
-    public static GlobalDbContext Create(DbProviderType dbProviderType, string? schema = null, bool isUser = false)
-    {
-        return new(dbProviderType, isUser, null, schema);
     }
 }
 

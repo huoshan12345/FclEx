@@ -1,15 +1,20 @@
 ﻿namespace FclEx.RabbitMQ;
 
-public class PublisherTests
+public class PublisherTests : RabbitMQTests
 {
-    public static ExchangeSettings DefaultExchange { get; } = new()
-    {
-        Name = "test.publisher".WithAssemblyInfo('.'),
-        Type = "topic",
-        IsDelayed = true,
-    };
+    public readonly ExchangeSettings DefaultExchange;
 
-    private static Task<TestPublisher> CreatePublisher()
+    public PublisherTests(RabbitMQFixture fixture) : base(fixture)
+    {
+        DefaultExchange = new()
+        {
+            Name = Fixture.WithAssemblyInfo("test.publisher"),
+            Type = "topic",
+            IsDelayed = true,
+        }; ;
+    }
+
+    private Task<TestPublisher> CreatePublisher()
     {
         var connection = RmqConnection;
         return TestPublisher.CreateAsync(new PublisherSettings(connection, DefaultExchange));

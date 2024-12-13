@@ -1,6 +1,6 @@
 ﻿namespace FclEx.EfCore.Extensions;
 
-public class QueryableExtensionsTests : EfCoreTests
+public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {
     public static readonly IEnumerable<object?[]> ContainsAnyTestCases = DbTestCases
         .SelectMany([true, false])
@@ -10,7 +10,7 @@ public class QueryableExtensionsTests : EfCoreTests
     [MemberData(nameof(ContainsAnyTestCases))]
     public async Task ContainsAny_Test(DbProviderType dbProviderType, bool containsPercentSign)
     {
-        await using var context = GlobalDbContext.Create(dbProviderType);
+        await using var context = Fixture.CreateDbContext(dbProviderType);
         await context.EntityWithAutoKeys.ExecuteDeleteAsync();
 
         var list = Enumerable.Range(1, 9)

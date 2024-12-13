@@ -4,7 +4,7 @@ using MySql.Data.MySqlClient;
 
 namespace FclEx.EfCore;
 
-public class SchemaDbContextTests : EfCoreTests
+public class SchemaDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {
     private static async Task TestData(GlobalDbContext context, string? schema)
     {
@@ -26,26 +26,27 @@ public class SchemaDbContextTests : EfCoreTests
         Assert.Equal(entity.Value, entityFromDb.Value);
     }
 
-    private static async Task<string?> GetUserDefaultSchema(DbProviderType dbProviderType)
+    private async Task<string?> GetUserDefaultSchema(DbProviderType dbProviderType)
     {
+        var cs = Fixture.ConnectionStrings;
         switch (dbProviderType)
         {
             case DbProviderType.Npgsql:
             {
-                var conStr = ConnectionStrings.Get(DbProviderType.Npgsql, true);
+                var conStr = cs.Get(DbProviderType.Npgsql, true);
                 await using var con = new NpgsqlConnection(conStr);
                 return await con.ExecuteScalarAsync<string>("SHOW SEARCH_PATH;");
             }
             case DbProviderType.SqlServer:
             {
-                var conStr = ConnectionStrings.Get(DbProviderType.SqlServer, true);
+                var conStr = cs.Get(DbProviderType.SqlServer, true);
                 await using var con = new SqlConnection(conStr);
                 return await con.ExecuteScalarAsync<string>("SELECT SCHEMA_NAME();");
             }
             case DbProviderType.MySql:
             case DbProviderType.MySqlConnector:
             {
-                return new MySqlConnectionStringBuilder(ConnectionStrings.MySql.User).Database;
+                return new MySqlConnectionStringBuilder(cs.Get(DbProviderType.MySql, true)).Database;
             }
             case DbProviderType.Sqlite:
             default:
@@ -65,19 +66,19 @@ public class SchemaDbContextTests : EfCoreTests
         else
         {
             Assert.NotNull(defaultSchema);
-            Assert.Equal(DatabaseUser.Default.DefaultSchema, defaultSchema);
+            Assert.Equal(Fixture.DefaultUser.DefaultSchema, defaultSchema);
         }
 
-        await using var context = GlobalDbContext.Create(dbProviderType, null, true);
+        await using var context = Fixture.CreateDbContext(dbProviderType, null, true);
         await TestData(context, defaultSchema);
     }
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task DbContext_WithSchema_Test(DbProviderType dbProviderType, string schema)
+    public async Task DbContext_WithSchema_Test(DbProviderType dbProviderType, string? schema)
     {
         // the default schema for user will be used.
-        await using var context = GlobalDbContext.Create(dbProviderType, schema);
-        await TestData(context, schema);
+        await using var context = Fixture.CreateDbContext(dbProviderType, schema);
+        await TestData(context, Fixture.WithAssemblyInfoIfNotNull(schema));
     }
 }

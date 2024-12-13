@@ -4,14 +4,19 @@ using xRetry;
 namespace FclEx.RabbitMQ;
 
 [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
-public class ConsumerTests
+public class ConsumerTests : RabbitMQTests
 {
-    public static ExchangeSettings DefaultExchange { get; } = new()
+    public readonly ExchangeSettings DefaultExchange;
+
+    public ConsumerTests(RabbitMQFixture fixture) : base(fixture)
     {
-        Name = "test.consumer".WithAssemblyInfo(),
-        Type = "topic",
-        IsDelayed = true,
-    };
+        DefaultExchange = new()
+        {
+            Name = Fixture.WithAssemblyInfo("test.consumer"),
+            Type = "topic",
+            IsDelayed = true,
+        }; ;
+    }
 
     [Fact]
     public async Task Consume_Test()
@@ -29,7 +34,7 @@ public class ConsumerTests
             Exchange = DefaultExchange,
             Queue = new QueueSettings
             {
-                Name = "test.consumer".WithAssemblyInfo('.'),
+                Name = Fixture.WithAssemblyInfo("test.consumer", '.'),
                 BindKeys = ["#"],
             },
         }, m =>
@@ -63,7 +68,7 @@ public class ConsumerTests
             Exchange = DefaultExchange,
             Queue = new QueueSettings
             {
-                Name = "test.consumer" + "." + name.ToLower().WithAssemblyInfo('.'),
+                Name = Fixture.WithAssemblyInfo("test.consumer" + "." + name.ToLower(), '.'),
                 BindKeys = [key],
             },
         }, m =>
@@ -131,7 +136,7 @@ public class ConsumerTests
             Exchange = DefaultExchange,
             Queue = new QueueSettings
             {
-                Name = "test.consumer".WithAssemblyInfo('.'),
+                Name = Fixture.WithAssemblyInfo("test.consumer", '.'),
                 BindKeys = ["output.0", "output.1"],
             }
         }, m =>
