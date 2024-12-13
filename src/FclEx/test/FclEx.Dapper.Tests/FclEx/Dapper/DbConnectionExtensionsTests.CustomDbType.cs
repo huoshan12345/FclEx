@@ -1,19 +1,12 @@
 ﻿namespace FclEx.Dapper;
 
-partial class DbConnectionExtensionsTests
+partial class DbConnectionExtensionsTests(ITestOutputHelper output)
 {
-    private readonly ITestOutputHelper _output;
-
-    public DbConnectionExtensionsTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
-
     [Theory]
     [MemberData(nameof(SchemaCases))]
     public async Task InsertAsync_EntityWithPostgresqlJsonb_Test(string schema)
     {
-        using var x = _output.SetConsole();
+        using var x = output.SetConsole();
 
         await using var db = GlobalDbContext.Create(DbProviderType.Npgsql, schema);
 
@@ -41,7 +34,7 @@ partial class DbConnectionExtensionsTests
     [MemberData(nameof(SchemaCases))]
     public async Task InsertAsync_EntityWithSqlServerXml_Test(string schema)
     {
-        using var x = _output.SetConsole();
+        using var x = output.SetConsole();
 
         await using var db = GlobalDbContext.Create(DbProviderType.SqlServer, schema);
 
@@ -68,7 +61,7 @@ partial class DbConnectionExtensionsTests
     [Fact]
     public async Task InsertAsync_EntityWithSqliteBlob_Test()
     {
-        using var x = _output.SetConsole();
+        using var x = output.SetConsole();
 
         await using var db = GlobalDbContext.Create(DbProviderType.Sqlite);
 
@@ -100,7 +93,7 @@ partial class DbConnectionExtensionsTests
     [MemberData(nameof(MySqlSchemaCases))]
     public async Task InsertAsync_EntityWithMySqlBlob_Test(DbProviderType type, string schema)
     {
-        using var x = _output.SetConsole();
+        using var x = output.SetConsole();
 
         await using var db = GlobalDbContext.Create(type, schema);
 

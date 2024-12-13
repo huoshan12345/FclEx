@@ -1,6 +1,4 @@
-﻿using FclEx.Tests;
-
-namespace FclEx.EfCore;
+﻿namespace FclEx.EfCore;
 
 public class SshDbContextTests
 {

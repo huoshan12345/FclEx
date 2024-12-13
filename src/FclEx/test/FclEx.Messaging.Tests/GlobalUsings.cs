@@ -8,4 +8,4 @@ global using FclEx.Utils;
 global using Xunit;
 global using Xunit.Abstractions;
 global using Microsoft.Extensions.Configuration;
-global using static FclEx.Messaging.Tests.GlobalFixture;
+global using static FclEx.Messaging.Tests.MessagingFixture;

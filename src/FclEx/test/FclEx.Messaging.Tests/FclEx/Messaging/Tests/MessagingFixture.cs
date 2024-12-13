@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Messaging.Tests;
 
-public class GlobalFixture : FclEx.Tests.GlobalFixture
+public class MessagingFixture : GlobalFixture
 {
     public static ConnectionSettings RmqConnection { get; } = Config.GetSection("Rmq").Get<ConnectionSettings>()!;
 }

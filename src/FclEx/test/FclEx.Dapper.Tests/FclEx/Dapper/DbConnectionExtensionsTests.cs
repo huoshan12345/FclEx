@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Dapper;
 
-public partial class DbConnectionExtensionsTests : DbContextTests
+public partial class DbConnectionExtensionsTests : DapperTests
 {
     public static readonly int[] Counts = [0, 1, 5];
     public static readonly IEnumerable<object[]> BulkInsertTestCases =

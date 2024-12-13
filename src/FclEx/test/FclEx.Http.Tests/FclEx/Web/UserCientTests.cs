@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-
-namespace FclEx.Web;
+﻿namespace FclEx.Web;
 
 public class UserCientTests : WebTests
 {
