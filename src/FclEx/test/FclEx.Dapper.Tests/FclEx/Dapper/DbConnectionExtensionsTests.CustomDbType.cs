@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Dapper;
 
-partial class DbConnectionExtensionsTests(ITestOutputHelper output)
+partial class DbConnectionExtensionsTests
 {
     [Theory]
     [MemberData(nameof(SchemaCases))]
@@ -8,7 +8,7 @@ partial class DbConnectionExtensionsTests(ITestOutputHelper output)
     {
         using var x = output.SetConsole();
 
-        await using var db = GlobalDbContext.Create(DbProviderType.Npgsql, schema);
+        await using var db = Fixture.CreateDbContext(DbProviderType.Npgsql, schema);
 
         var payload = new EntityWithGuidKey
         {
@@ -20,7 +20,7 @@ partial class DbConnectionExtensionsTests(ITestOutputHelper output)
             Json = JsonConvert.SerializeObject(payload)
         };
 
-        var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity, schema);
+        var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity, db.Schema);
         var e = await db.Set<EntityWithPostgresqlJsonb>().Where(m => m.Id == id).FirstOrDefaultAsync();
         Assert.NotNull(e);
         AssertExt.NotEmpty(e.Json);
@@ -36,7 +36,7 @@ partial class DbConnectionExtensionsTests(ITestOutputHelper output)
     {
         using var x = output.SetConsole();
 
-        await using var db = GlobalDbContext.Create(DbProviderType.SqlServer, schema);
+        await using var db = Fixture.CreateDbContext(DbProviderType.SqlServer, schema);
 
         var payload = new EntityWithGuidKey
         {
@@ -48,7 +48,7 @@ partial class DbConnectionExtensionsTests(ITestOutputHelper output)
             Xml = payload.ToXml()
         };
 
-        var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity, schema);
+        var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity, db.Schema);
         var e = await db.Set<EntityWithSqlServerXml>().Where(m => m.Id == id).FirstOrDefaultAsync();
         Assert.NotNull(e);
         AssertExt.NotEmpty(e.Xml);
@@ -63,7 +63,7 @@ partial class DbConnectionExtensionsTests(ITestOutputHelper output)
     {
         using var x = output.SetConsole();
 
-        await using var db = GlobalDbContext.Create(DbProviderType.Sqlite);
+        await using var db = Fixture.CreateDbContext(DbProviderType.Sqlite);
 
         var payload = new EntityWithGuidKey
         {
@@ -95,7 +95,7 @@ partial class DbConnectionExtensionsTests(ITestOutputHelper output)
     {
         using var x = output.SetConsole();
 
-        await using var db = GlobalDbContext.Create(type, schema);
+        await using var db = Fixture.CreateDbContext(type, schema);
 
         var payload = new EntityWithGuidKey
         {
@@ -107,7 +107,7 @@ partial class DbConnectionExtensionsTests(ITestOutputHelper output)
             Blob = payload.ToJson().ToBytes(),
         };
 
-        var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity, schema);
+        var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity, db.Schema);
         var e = await db.Set<EntityWithMySqlBlob>().Where(m => m.Id == id).FirstOrDefaultAsync();
         Assert.NotNull(e);
         AssertExt.NotEmpty(e.Blob);

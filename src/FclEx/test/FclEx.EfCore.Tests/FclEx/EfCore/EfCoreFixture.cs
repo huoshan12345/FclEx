@@ -1,7 +1,4 @@
-﻿using System.Net;
-using System.Runtime.CompilerServices;
-using System.Text;
-using FclEx.Tests;
+﻿using FclEx.Tests;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -9,31 +6,43 @@ namespace FclEx.EfCore;
 
 public class EfCoreFixture : GlobalFixture
 {
-    public static readonly string DatabaseName = "db".WithAssemblyInfo();
+    public readonly DatabaseUser DefaultUser;
+    public readonly ConnectionStrings ConnectionStrings;
+
+    public EfCoreFixture()
+    {
+        DefaultUser = new(WithAssemblyInfo("user"), "123456", WithAssemblyInfo("schema"));
+        ConnectionStrings = new(WithAssemblyInfo("db"), DefaultUser);
+    }
+
     public static readonly string?[] Schemas =
     [
         null,
-        "schema_1".WithAssemblyInfo(),
-        "schema_2".WithAssemblyInfo(),
-        DatabaseUser.Default.DefaultSchema,
+        "schema",
+        "schema_1",
+        "schema_2",
     ];
 
     public static readonly DbProviderType[] DatabaseTypes = TestHelper.IsGithubAction
         ? [DbProviderType.Npgsql, DbProviderType.Sqlite]
         : [DbProviderType.Npgsql, DbProviderType.Sqlite, DbProviderType.MySqlConnector, DbProviderType.SqlServer];
 
+    public GlobalDbContext CreateDbContext(DbProviderType dbProviderType, string? schema = null, bool isUser = false)
+    {
+        var con = ConnectionStrings.Get(dbProviderType, isUser);
+        return new(dbProviderType, con, WithAssemblyInfoIfNotNull(schema));
+    }
+
     // InitializeAsync is called immediately after the class has been created, before it is used.
     // We use this method to initialize database only once before all tests.
     public override async Task InitializeAsync()
     {
-        Console.WriteLine("Current assembly info: " + "".WithAssemblyInfo());
-
         foreach (var databaseType in DatabaseTypes)
         {
             var isRecreated = false; // NOTE: we delete database only once for every database instance.
             foreach (var (_, schema, isFirst, _) in Schemas.IndexExt())
             {
-                await using var context = GlobalDbContext.Create(databaseType, schema);
+                await using var context = CreateDbContext(databaseType, schema);
 
                 if (isRecreated == false || databaseType == DbProviderType.MySqlConnector)
                 {
@@ -42,7 +51,7 @@ public class EfCoreFixture : GlobalFixture
 
                     if (isRecreated == false)
                     {
-                        await CreateUser(context, DatabaseUser.Default);
+                        await CreateUser(context, DefaultUser);
                     }
                 }
                 isRecreated = true;
@@ -106,9 +115,4 @@ public class EfCoreFixture : GlobalFixture
         }
     }
 
-    [ModuleInitializer]
-    internal static void Initialize()
-    {
-        CurrentAssembly = typeof(EfCoreFixture).Assembly;
-    }
 }

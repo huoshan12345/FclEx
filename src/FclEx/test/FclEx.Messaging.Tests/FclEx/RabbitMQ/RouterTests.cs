@@ -1,7 +1,7 @@
 ﻿namespace FclEx.RabbitMQ;
 
 [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
-public class RouterTests
+public class RouterTests(RabbitMQFixture fixture) : RabbitMQTests(fixture)
 {
     private static string GetRoutingKey(string output)
     {
@@ -46,7 +46,7 @@ public class RouterTests
     {
         var inputExchange = new ExchangeSettings
         {
-            Name = "test.router.input".WithAssemblyInfo('.'),
+            Name = Fixture.WithAssemblyInfo("test.router.input", '.'),
             Type = "topic",
             IsDelayed = true,
         };
@@ -55,7 +55,7 @@ public class RouterTests
 
         var routerSettings = new RouterSettings(connection, inputExchange, new QueueSettings
         {
-            Name = "test.router".WithAssemblyInfo('.'),
+            Name = Fixture.WithAssemblyInfo("test.router", '.'),
             BindKeys = ["input.#"],
         }, new ExchangeSettings
         {
@@ -71,7 +71,7 @@ public class RouterTests
         await using var evenConsumer = await TestConsumer.CreateAsync(new ConsumerSettings(connection,
           routerSettings.TargetExchange, new QueueSettings
           {
-              Name = "test.router.even".WithAssemblyInfo('.'),
+              Name = Fixture.WithAssemblyInfo("test.router.even", '.'),
               BindKeys = ["output.*.even"],
           }), m =>
           {
@@ -84,7 +84,7 @@ public class RouterTests
         await using var stringConsumer = await TestConsumer.CreateAsync(new ConsumerSettings(connection,
          routerSettings.TargetExchange, new QueueSettings
          {
-             Name = "test.router.string".WithAssemblyInfo('.'),
+             Name = Fixture.WithAssemblyInfo("test.router.string", '.'),
              BindKeys = ["output.string.*"],
          }), m =>
          {
