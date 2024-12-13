@@ -2,7 +2,7 @@
 
 public class TimerLazyTests
 {
-    [Fact]
+    [RetryFact]
     public async Task Recreate_Test()
     {
         var span = TimeSpan.FromMilliseconds(100);

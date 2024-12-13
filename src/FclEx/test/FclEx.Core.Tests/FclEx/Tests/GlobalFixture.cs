@@ -39,8 +39,7 @@ public class GlobalFixture : IAsyncLifetime
     [ModuleInitializer]
     internal static void Initialize()
     {
-        ThreadPool.SetMaxThreads(200, 200);
-        ThreadPool.SetMinThreads(100, 100);
+        ThreadPool.SetMinThreads(10, 10);
 #pragma warning disable SYSLIB0014
         ServicePointManager.DefaultConnectionLimit = short.MaxValue;
 #pragma warning restore SYSLIB0014
