@@ -9,4 +9,4 @@ global using Newtonsoft.Json;
 global using Xunit;
 global using Xunit.Abstractions;
 global using Xunit.Extensions.AssemblyFixture;
-global using static FclEx.EfCore.GlobalFixture;
+global using static FclEx.EfCore.EfCoreFixture;

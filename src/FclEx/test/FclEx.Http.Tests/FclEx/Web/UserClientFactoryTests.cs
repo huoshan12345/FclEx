@@ -1,6 +1,5 @@
 ﻿using FclEx.Logging;
 using FclEx.Xunit;
-using Microsoft.Extensions.Logging;
 
 namespace FclEx.Web;
 

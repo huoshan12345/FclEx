@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Abp.EfCore;
 
-public class GlobalFixture : IAsyncLifetime
+public class AbpEfCoreFixture : IAsyncLifetime
 {
     public async Task InitializeAsync()
     {

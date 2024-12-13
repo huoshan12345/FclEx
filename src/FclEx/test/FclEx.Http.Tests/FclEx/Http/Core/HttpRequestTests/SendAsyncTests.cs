@@ -38,7 +38,7 @@ internal sealed class HttpEventListener : EventListener
     }
 }
 
-public class SendAsyncTests : IAssemblyFixture<GlobalFixture>
+public class SendAsyncTests : IAssemblyFixture<HttpFixture>
 {
     public static string[] Urls =>
     [

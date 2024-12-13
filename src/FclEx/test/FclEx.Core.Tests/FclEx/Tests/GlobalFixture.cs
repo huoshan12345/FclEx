@@ -28,4 +28,17 @@ public class GlobalFixture : IAsyncLifetime
 
     public virtual Task InitializeAsync() => Task.CompletedTask;
     public virtual Task DisposeAsync() => Task.CompletedTask;
+
+    public static Assembly? CurrentAssembly { get; protected set; }
+
+    [ModuleInitializer]
+    internal static void Initialize()
+    {
+        ThreadPool.SetMaxThreads(200, 200);
+        ThreadPool.SetMinThreads(100, 100);
+#pragma warning disable SYSLIB0014
+        ServicePointManager.DefaultConnectionLimit = short.MaxValue;
+#pragma warning restore SYSLIB0014
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+    }
 }

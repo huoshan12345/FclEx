@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace FclEx.Serilog.Sinks;
 
-public class NewRelicSinkTests : IAssemblyFixture<GlobalFixture>
+public class NewRelicSinkTests
 {
     [Theory]
     [InlineData(0)]

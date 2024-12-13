@@ -114,7 +114,7 @@ public class GlobalDbContext : SchemaDbContext
             sb.Database = schema;
         }
         var ver = ServerVersion.AutoDetect(connectionString);
-        builder.UseMySql(sb.ConnectionString, ver, o => o.SchemaBehavior(MySqlSchemaBehavior.Translate, (schema, table) => table));
+        builder.UseMySql(sb.ConnectionString, ver, o => o.SchemaBehavior(MySqlSchemaBehavior.Translate, (_, table) => table));
         builder.ReplaceService<ISqlGenerationHelper, CustomMySqlSqlGenerationHelper>();
     }
 
@@ -124,12 +124,10 @@ public class GlobalDbContext : SchemaDbContext
     }
 }
 
-public class CustomMySqlSqlGenerationHelper : MySqlSqlGenerationHelper
+public class CustomMySqlSqlGenerationHelper(
+    RelationalSqlGenerationHelperDependencies dependencies,
+    IMySqlOptions options)
+    : MySqlSqlGenerationHelper(dependencies, options)
 {
-    public CustomMySqlSqlGenerationHelper(RelationalSqlGenerationHelperDependencies dependencies, IMySqlOptions options)
-        : base(dependencies, options)
-    {
-    }
-
     public override string GetSchemaName(string name, string schema) => schema;
 }

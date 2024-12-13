@@ -4,7 +4,7 @@ using MySql.Data.MySqlClient;
 
 namespace FclEx.EfCore;
 
-public class SchemaDbContextTests : DbContextTests
+public class SchemaDbContextTests : EfCoreTests
 {
     private static async Task TestData(GlobalDbContext context, string? schema)
     {

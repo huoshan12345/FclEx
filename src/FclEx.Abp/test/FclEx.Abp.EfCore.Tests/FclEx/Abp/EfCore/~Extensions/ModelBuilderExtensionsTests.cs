@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Abp.EfCore;
 
-public class ModelBuilderExtensionsTests : IAssemblyFixture<GlobalFixture>
+public class ModelBuilderExtensionsTests : IAssemblyFixture<AbpEfCoreFixture>
 {
     [Fact]
     public async Task TableName_Postfix_Test()

@@ -1,6 +1,6 @@
 ﻿namespace FclEx.EfCore.Extensions;
 
-public class QueryableExtensionsTests : DbContextTests
+public class QueryableExtensionsTests : EfCoreTests
 {
     public static readonly IEnumerable<object?[]> ContainsAnyTestCases = DbTestCases
         .SelectMany([true, false])

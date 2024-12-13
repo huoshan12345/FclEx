@@ -18,6 +18,7 @@ global using FclEx.Extensions;
 global using FclEx.Helpers;
 global using FclEx.Tests;
 global using FclEx.Utils;
+global using Microsoft.CodeAnalysis.CSharp;
 global using Microsoft.Extensions.Configuration;
 global using xRetry;
 global using Xunit;

@@ -1,12 +1,6 @@
-﻿using System.Text.Json;
-using System.Text.Json.Nodes;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.RequestDecompression;
-using Microsoft.Extensions.Logging;
+﻿namespace FclEx.Http.Tests;
 
-namespace FclEx.Http.Tests;
-
-public class GlobalFixture : FclEx.Tests.GlobalFixture
+public class HttpFixture : IAsyncLifetime
 {
     public static readonly Uri TestUri = ((Func<Uri>)(() =>
     {
@@ -96,12 +90,12 @@ public class GlobalFixture : FclEx.Tests.GlobalFixture
         await app.StartAsync();
     }
 
-    public override async Task InitializeAsync()
+    public async Task InitializeAsync()
     {
         await RunApiServer();
     }
 
-    public override Task DisposeAsync()
+    public Task DisposeAsync()
     {
         return Task.CompletedTask;
     }
