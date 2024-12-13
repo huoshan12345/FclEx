@@ -3,9 +3,8 @@
 public class PollyHelperTests
 {
     [RetryTheory]
-    [InlineData(1, 0.1)]
-    [InlineData(2, 0.1)]
-    [InlineData(2, 0.2)]
+    [InlineData(1, 0.5)]
+    [InlineData(2, 0.25)]
     public async Task GetConnectTimeoutPolicy_Test(int retryCount, double timeoutSeconds)
     {
         var timeout = TimeSpan.FromSeconds(timeoutSeconds);

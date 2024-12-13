@@ -33,7 +33,7 @@ public static class PollyHelper
     {
         sleepDurationProvider ??= DefaultSleepDurationProvider;
         return Policy<HttpResponseMessage>
-            .Handle<Exception>(m => m.EnumerateInner().Any(m => m.Message.Contains("within the configured ConnectTimeout")))
+            .Handle<Exception>(m => m.EnumerateInner().Any(x => x.Message.Contains("within the configured ConnectTimeout")))
             .WaitAndRetryAsync(retryCount, sleepDurationProvider);
     }
 
