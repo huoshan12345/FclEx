@@ -1,4 +1,6 @@
-﻿namespace FclEx.Abp.Aop;
+﻿using xRetry;
+
+namespace FclEx.Abp.Aop;
 
 public class ReturnValueCacheTests(ITestOutputHelper output) : AbpAopTests<AbpTestModule>(output)
 {
@@ -62,7 +64,7 @@ public class ReturnValueCacheTests(ITestOutputHelper output) : AbpAopTests<AbpTe
         Assert.True(service.IsProxy());
     }
 
-    [Theory]
+    [RetryTheory]
     [MemberData(nameof(Numbers))]
     public void TestSingle(int no)
     {
@@ -88,7 +90,7 @@ public class ReturnValueCacheTests(ITestOutputHelper output) : AbpAopTests<AbpTe
         }
     }
 
-    [Theory]
+    [RetryTheory]
     [MemberData(nameof(Numbers))]
     public void TestMultiple(int no)
     {

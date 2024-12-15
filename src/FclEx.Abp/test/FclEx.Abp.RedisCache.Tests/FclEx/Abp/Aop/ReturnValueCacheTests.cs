@@ -4,7 +4,8 @@ using FclEx.Abp.RedisCache;
 
 namespace FclEx.Abp.Aop;
 
-public class ReturnValueCacheTests : AbpRedisTests
+public class ReturnValueCacheTests(ITestOutputHelper output)
+    : AbpRedisTests(output, o => o.AddTransient<IService, Service>())
 {
     public const int CacheMaxMilliseconds = 100;
     public const int SleepMilliseconds = 200;
@@ -12,10 +13,9 @@ public class ReturnValueCacheTests : AbpRedisTests
     public static IEnumerable<object[]> Numbers { get; } = new[] { -1, 0, 1, 10 }
         .Select(m => new object[] { m }).ToArray();
 
-    public class Model
+    public class Model(string id)
     {
-        public string Id { get; }
-        public Model(string id) { Id = id; }
+        public string Id { get; } = id;
     }
 
     public interface IService
@@ -50,11 +50,6 @@ public class ReturnValueCacheTests : AbpRedisTests
             Thread.Sleep(SleepMilliseconds);
             return new Model($"{_id}_{id}");
         }
-    }
-
-    public ReturnValueCacheTests(ITestOutputHelper output)
-        : base(output, o => o.AddTransient<IService, Service>())
-    {
     }
 
     [Fact]
