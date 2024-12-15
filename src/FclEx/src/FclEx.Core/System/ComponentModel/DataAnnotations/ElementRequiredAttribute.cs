@@ -1,43 +1,45 @@
 ﻿namespace System.ComponentModel.DataAnnotations;
 
-[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
 public class ElementRequiredAttribute : ValidationAttribute
 {
-    // ReSharper disable once ConvertToPrimaryConstructor
-    public ElementRequiredAttribute() : base(() => "The every element of {0} cannot be null or empty string.")
+    public int MinLength { get; set; }
+    public bool AllowNullElement { get; set; }
+
+    private const string MinLengthError = "The field {0} must be a string or array type with a minimum length of '{1}'.";
+    private const string InvalidValueType = "The field {0} of type {1} must be a IEnumerable type.";
+    private const string NullElementError = "The field {0} has a null element at {1}.";
+
+    protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
     {
+        var success = ValidationResult.Success;
 
-    }
-
-    /// <summary>
-    /// Gets or sets a value that indicates whether an empty string is allowed.
-    /// </summary>
-    public bool AllowEmptyStrings { get; set; }
-
-    protected override ValidationResult IsValid(object? value, ValidationContext validationContext)
-    {
-        var error = new ValidationResult(ErrorMessage);
-        var success = ValidationResult.Success!;
-
+        // Automatically pass if value is null. RequiredAttribute should be used to assert a value is not null.
         if (value == null)
             return success;
 
-        if (value is not ICollection col)
-            return success;
+        var name = validationContext.DisplayName;
 
-        foreach (var item in col)
+        if (value is string str && str.Length < MinLength)
+            return new ValidationResult(string.Format(MinLengthError, name, MinLength));
+
+        if (value is not IEnumerable enumerable)
+            return new ValidationResult(string.Format(InvalidValueType, name, value.GetType()));
+
+        var count = 0;
+        foreach (var item in enumerable)
         {
-            // ReSharper disable once ConvertIfStatementToSwitchStatement
-            if (item is null)
-                return error;
+            count++;
 
-            // ReSharper disable once InvertIf
-            if (item is string str)
-            {
-                if (AllowEmptyStrings == false && string.IsNullOrWhiteSpace(str))
-                    return error;
-            }
+            if (AllowNullElement == false && item is null)
+                return new ValidationResult(string.Format(NullElementError, name, count - 1));
+
+            if (AllowNullElement && count >= MinLength)
+                break;
         }
-        return success;
+
+        return count >= MinLength
+            ? success
+            : new ValidationResult(string.Format(MinLengthError, name, MinLength));
     }
 }
