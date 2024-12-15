@@ -60,7 +60,7 @@ public static class JsonHelper
         foreach (var property in typeInfo.Properties)
         {
             var type = property.PropertyType;
-            if (type.IsEnumerable() && property.AttributeProvider?.IsDefined<JsonIgnoreEmptyAttribute>(true) != null)
+            if (type.IsEnumerable() && property.AttributeProvider?.IsDefined<JsonIgnoreEmptyAttribute>(true) == true)
             {
                 property.ShouldSerialize = (_, val) => ((IEnumerable?)val).IsNullOrEmpty() == false;
             }

@@ -7,12 +7,15 @@ public class JsonIgnoreEmptyAttributeTests
     private class SampleModel
     {
         [JsonIgnoreEmpty]
-        public string EmptyString { get; set; } = string.Empty;
+        public string IgnoredEmptyString { get; set; } = string.Empty;
         [JsonIgnoreEmpty]
-        public List<int> EmptyCollection { get; set; } = [];
+        public List<int> IgnoredEmptyCollection { get; set; } = [];
         public string NonEmptyString { get; set; } = "Hello";
         public List<int> NonEmptyCollection { get; set; } = [1, 2, 3];
         public int Number { get; set; } = 42;
+
+        public string EmittedEmptyString { get; set; } = string.Empty;
+        public List<int> EmittedEmptyCollection { get; set; } = [];
     }
 
     private static void Serialize_WithEmptyValues_ShouldIgnoreEmptyStringAndCollection(JsonSerializerOptions option)
@@ -21,11 +24,13 @@ public class JsonIgnoreEmptyAttributeTests
         var json = JsonSerializer.Serialize(model, option);
         var element = json.ToJsonElement();
 
-        Assert.False(element.TryGetProperty(nameof(SampleModel.EmptyString), out _));
-        Assert.False(element.TryGetProperty(nameof(SampleModel.EmptyCollection), out _));
+        Assert.False(element.TryGetProperty(nameof(SampleModel.IgnoredEmptyString), out _));
+        Assert.False(element.TryGetProperty(nameof(SampleModel.IgnoredEmptyCollection), out _));
         Assert.True(element.TryGetProperty(nameof(SampleModel.NonEmptyString), out _));
         Assert.True(element.TryGetProperty(nameof(SampleModel.NonEmptyCollection), out _));
         Assert.True(element.TryGetProperty(nameof(SampleModel.Number), out _));
+        Assert.True(element.TryGetProperty(nameof(SampleModel.EmittedEmptyString), out _));
+        Assert.True(element.TryGetProperty(nameof(SampleModel.EmittedEmptyCollection), out _));
     }
 
     [Fact]
@@ -45,31 +50,34 @@ public class JsonIgnoreEmptyAttributeTests
     {
         var model = new SampleModel
         {
-            EmptyString = "Not empty",
-            EmptyCollection = [10, 20],
+            IgnoredEmptyString = "Not empty",
+            IgnoredEmptyCollection = [10, 20],
         };
         var json = JsonSerializer.Serialize(model, _options);
         var element = json.ToJsonElement();
 
-        Assert.True(element.TryGetProperty(nameof(SampleModel.EmptyString), out _));
-        Assert.True(element.TryGetProperty(nameof(SampleModel.EmptyCollection), out _));
+        Assert.True(element.TryGetProperty(nameof(SampleModel.IgnoredEmptyString), out _));
+        Assert.True(element.TryGetProperty(nameof(SampleModel.IgnoredEmptyCollection), out _));
         Assert.True(element.TryGetProperty(nameof(SampleModel.NonEmptyString), out _));
         Assert.True(element.TryGetProperty(nameof(SampleModel.NonEmptyCollection), out _));
         Assert.True(element.TryGetProperty(nameof(SampleModel.Number), out _));
+        Assert.True(element.TryGetProperty(nameof(SampleModel.EmittedEmptyString), out _));
+        Assert.True(element.TryGetProperty(nameof(SampleModel.EmittedEmptyCollection), out _));
     }
 
     [Fact]
     public void Serialize_WithCustomOptions_ShouldNotApplyAttributeByDefault()
     {
-        var customOptions = new JsonSerializerOptions(); // Without calling AddModifierForEmptyValue
         var model = new SampleModel();
-        var json = JsonSerializer.Serialize(model, customOptions);
+        var json = JsonSerializer.Serialize(model, new JsonSerializerOptions());
         var element = json.ToJsonElement();
 
-        Assert.True(element.TryGetProperty(nameof(SampleModel.EmptyString), out _));
-        Assert.True(element.TryGetProperty(nameof(SampleModel.EmptyCollection), out _));
+        Assert.True(element.TryGetProperty(nameof(SampleModel.IgnoredEmptyString), out _));
+        Assert.True(element.TryGetProperty(nameof(SampleModel.IgnoredEmptyCollection), out _));
         Assert.True(element.TryGetProperty(nameof(SampleModel.NonEmptyString), out _));
         Assert.True(element.TryGetProperty(nameof(SampleModel.NonEmptyCollection), out _));
         Assert.True(element.TryGetProperty(nameof(SampleModel.Number), out _));
+        Assert.True(element.TryGetProperty(nameof(SampleModel.EmittedEmptyString), out _));
+        Assert.True(element.TryGetProperty(nameof(SampleModel.EmittedEmptyCollection), out _));
     }
 }

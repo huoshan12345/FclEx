@@ -2,6 +2,11 @@
 
 public class ElementRequiredAttributeTests
 {
+    public class TestEnumerable(IEnumerable enumerable) : IEnumerable
+    {
+        public IEnumerator GetEnumerator() => enumerable.GetEnumerator();
+    }
+
     private static ValidationContext CreateValidationContext(string displayName)
     {
         return new ValidationContext(new object(), null, null)
@@ -101,5 +106,26 @@ public class ElementRequiredAttributeTests
         var value = "12345";
         var result = attribute.GetValidationResult(value, CreateValidationContext("TestField"));
         Assert.Null(result);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Validate_EnumerableWithoutCount_ReturnsSuccess(bool allowNullElement)
+    {
+        var attribute = new ElementRequiredAttribute { MinLength = 2, AllowNullElement = allowNullElement };
+        var value = new TestEnumerable(new[] { "item1", "item2", "item3" });
+        var result = attribute.GetValidationResult(value, CreateValidationContext("TestField"));
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void Validate_EnumerableWithoutCount_WithNullElement_AllowNullElementFalse_ReturnsError()
+    {
+        var attribute = new ElementRequiredAttribute { MinLength = 2, AllowNullElement = false };
+        var value = new TestEnumerable(new object?[] { "item1", null, "item3" });
+        var result = attribute.GetValidationResult(value, CreateValidationContext("TestField"));
+        Assert.NotNull(result);
+        Assert.Equal("The field TestField has a null element at 1.", result.ErrorMessage);
     }
 }
