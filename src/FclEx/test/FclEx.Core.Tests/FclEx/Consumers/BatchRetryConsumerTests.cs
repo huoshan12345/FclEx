@@ -1,15 +1,8 @@
 ﻿namespace FclEx.Consumers;
 
-public class BatchRetryConsumerTests
+public class BatchRetryConsumerTests(ITestOutputHelper output)
 {
     private record Model(int Number);
-
-    private readonly ITestOutputHelper _output;
-
-    public BatchRetryConsumerTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
 
     [Fact]
     public async Task Test()
@@ -35,7 +28,7 @@ public class BatchRetryConsumerTests
             Assert.NotNull(args.Exception);
             Assert.Equal(retryTimes, args.ErrorTimes);
         };
-        consumer.ExceptionLogger += (sender, ex, message) => _output.WriteLine(message);
+        consumer.ExceptionLogger += (sender, ex, message) => output.WriteLine(message);
         consumer.AddRange(numbers);
         var task = consumer.StartAsync();
         consumer.CompleteAdding();
@@ -47,7 +40,7 @@ public class BatchRetryConsumerTests
         Assert.Equal(errors, consumer.Counter.Discard);
     }
 
-    [Fact]
+    [RetryFact]
     public async Task Dispose_AfterStart_Test()
     {
         var consumer = new BatchRetryConsumer<Model>(5, TimeSpan.FromMilliseconds(100), 1);
@@ -70,7 +63,7 @@ public class BatchRetryConsumerTests
         Assert.Equal(task, finishTask);
     }
 
-    [Fact]
+    [RetryFact]
     public async Task CompleteAdding_BeforeStart_Test()
     {
         var consumer = new BatchRetryConsumer<int>(5, TimeSpan.FromMilliseconds(100), 1);
@@ -83,7 +76,7 @@ public class BatchRetryConsumerTests
         Assert.Equal(10, consumer.Counter.Consume);
     }
 
-    [Fact]
+    [RetryFact]
     public async Task CompleteAdding_AfterStart_Test()
     {
         var consumer = new BatchRetryConsumer<int>(5, TimeSpan.FromMilliseconds(100), 1);
