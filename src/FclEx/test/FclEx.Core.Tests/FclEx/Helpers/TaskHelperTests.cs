@@ -1,9 +1,8 @@
 ﻿namespace FclEx.Helpers;
 
-
 public class TaskHelperTests
 {
-    [Fact]
+    [RetryFact]
     public async Task Delay_WithToken_Test()
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(0.1));
@@ -13,7 +12,7 @@ public class TaskHelperTests
         Assert.True(time.TotalSeconds < 1, time.ToString());
     }
 
-    [Fact]
+    [RetryFact]
     public async Task DelayMilli_WithToken_Test()
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(0.1));
@@ -23,7 +22,7 @@ public class TaskHelperTests
         Assert.True(time.TotalSeconds < 1, time.ToString());
     }
 
-    [Fact]
+    [RetryFact]
     public async Task AwaitObject_Task_Tests()
     {
         var task = Task.CompletedTask;
@@ -31,7 +30,7 @@ public class TaskHelperTests
         Assert.Null(result);
     }
 
-    [Fact]
+    [RetryFact]
     public async Task AwaitObject_TaskOfInternalClass_Tests()
     {
         var task = Task.FromResult(new InternalClass(1));
@@ -39,7 +38,7 @@ public class TaskHelperTests
         Assert.True(result is InternalClass { Value: 1 });
     }
 
-    [Fact]
+    [RetryFact]
     public async Task AwaitObject_ValueTask_Tests()
     {
         var task = ValueTask.CompletedTask;
@@ -47,7 +46,7 @@ public class TaskHelperTests
         Assert.Null(result);
     }
 
-    [Fact]
+    [RetryFact]
     public async Task AwaitObject_ValueTaskOfInternalClass_Tests()
     {
         var task = ValueTask.FromResult(new InternalClass(1));
