@@ -1,7 +1,4 @@
-﻿using System.Text.Json;
-using FclEx.Json;
-
-namespace Xunit;
+﻿namespace Xunit;
 
 /// <summary>
 /// If some of your theory data can't be "serialized" by xUnit.net, 
@@ -22,22 +19,13 @@ public class MemberDataSerializer<T> : IXunitSerializable
         Value = value;
     }
 
-    private static readonly JsonSerializerOptions _options = new()
-    {
-        Converters =
-        {
-            new IgnoreTypesJsonConverter(typeof(Delegate)),
-        },
-    };
-
     public virtual void Deserialize(IXunitSerializationInfo info)
     {
-        Value = info.GetValue<string>("_value").FromJson<T>(_options);
+        Value = info.GetValue<T>("_value");
     }
 
     public virtual void Serialize(IXunitSerializationInfo info)
     {
-        var json = Value.ToJson(_options);
-        info.AddValue("_value", json);
+        info.AddValue("_value", Value);
     }
 }

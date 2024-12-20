@@ -4,8 +4,7 @@ public class KeyValuePairConverterTests
 {
     private class MyList<T> : List<T>;
 
-    private class MyListWithCtor<T>(IEnumerable<T> Collection) : List<T>(Collection);
-
+    private class MyListWithCtor<T>(IEnumerable<T> collection) : List<T>(collection);
 
     private static readonly MethodInfo _method = typeof(KeyValuePairConverterTests).GetRequiredMethod(nameof(ReadTestGeneric));
 
