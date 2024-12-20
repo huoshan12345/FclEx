@@ -1,21 +1,14 @@
 ﻿namespace FclEx.Serilog.Sinks;
 
-public class LogstashSinkTests
+public class LogstashSinkTests(ITestOutputHelper output)
 {
-    private readonly ITestOutputHelper _output;
-
-    public LogstashSinkTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
-
     [LocalOnlyFact]
     public async Task Tcp_Test()
     {
         Log.Logger = new LoggerConfiguration()
             .Enrich.FromLogContext()
             .MinimumLevel.Verbose()
-            .WriteTo.TestOutput(_output)
+            .WriteTo.TestOutput(output)
             .CreateLogger();
 
         var logger = new LoggerConfiguration()

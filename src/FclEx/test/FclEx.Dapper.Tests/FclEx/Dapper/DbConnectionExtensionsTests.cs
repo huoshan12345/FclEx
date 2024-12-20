@@ -165,7 +165,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
         await using var db = Fixture.CreateDbContext(dbProviderType, schema);
 
         var con = db.Database.GetDbConnection();
-        var ex = await Assert.ThrowsAsync<DataException>(() => con.GetAsync<EntityWithoutKey>(db.Schema, "test"));
+        var ex = await Assert.ThrowsAsync<DataException>(() => con.GetAsync<EntityWithoutKey>(0, "test"));
         Assert.Contains("Only supports an entity with a [Key] property", ex.Message);
     }
 
@@ -199,7 +199,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
         await using var db = Fixture.CreateDbContext(dbProviderType, schema);
 
         var con = db.Database.GetDbConnection();
-        var ex = await Assert.ThrowsAsync<DataException>(() => con.DeleteAsync<EntityWithoutKey>(db.Schema, "test"));
+        var ex = await Assert.ThrowsAsync<DataException>(() => con.DeleteAsync<EntityWithoutKey>(0, "test"));
         Assert.Contains("Only supports an entity with a [Key] property", ex.Message);
     }
 
