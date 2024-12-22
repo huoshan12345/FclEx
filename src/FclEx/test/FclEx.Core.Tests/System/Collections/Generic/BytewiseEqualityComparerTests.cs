@@ -1,0 +1,96 @@
+﻿using FclEx.TestModels;
+
+// ReSharper disable ConvertToConstant.Local
+
+namespace System.Collections.Generic;
+
+public class BytewiseEqualityComparerTests(ITestOutputHelper output)
+{
+    public static readonly IEnumerable<Type> TestTypes = Types.BlittableTypes.Concat([
+        typeof(ValueTuple<int>), // non-blittable
+        typeof(DateTime), // non-blittable
+        typeof(DateTimeOffset), // non-blittable
+        typeof(ValueTuple<int, long, DateTimeOffset, DateTime>), // non-blittable
+        typeof(string),
+        typeof(CommonStruct),
+        typeof(CommonRecord),
+        typeof(CommonRecordStruct),
+        typeof(MarshalableClass),
+        typeof(MarshalableStruct)]);
+
+    public static readonly IEnumerable<object[]> TypeCases = TestTypes.Select(m => new object[] { m });
+
+    private static readonly MethodInfo _equals = typeof(BytewiseEqualityComparerTests).GetRequiredMethod(nameof(SameValue_Equals));
+
+    [Theory]
+    [MemberData(nameof(TypeCases))]
+    public void Equals_Test(Type type)
+    {
+        _equals.MakeGenericMethod(type).Invoke(this, null);
+    }
+
+    private void SameValue_Equals<T>()
+    {
+        var random = new Random(0);
+        var x = random.Next<T>();
+        AssertBytewiseEqual(x, x);
+        output.WriteLine(x);
+    }
+
+    [Fact]
+    public void Record_Equals()
+    {
+        var random = new Random(0);
+        var x = random.Next<CommonRecord>();
+        var y = x with { }; // clone
+        AssertBytewiseEqual(x, y);
+        output.WriteLine(x);
+    }
+
+    [Fact]
+    public void Record_Lock_Equals()
+    {
+        var random = new Random(0);
+        var x = random.Next<CommonRecord>();
+        var y = x with { }; // clone
+        lock (x)
+        {
+            // lock status stores in object header.
+            // so the object headers of x and y are different.
+            AssertBytewiseEqual(x, y);
+        }
+        output.WriteLine(x);
+    }
+
+    [Fact]
+    public void Object_Equals()
+    {
+        var x = new object();
+        var y = new object();
+        AssertBytewiseEqual(x, y);
+        output.WriteLine(x);
+    }
+
+    [Fact]
+    public void StringLiteral_Equals()
+    {
+        var x = nameof(StringLiteral_Equals);
+        var y = nameof(StringLiteral_Equals);
+        AssertBytewiseEqual(x, y);
+        output.WriteLine(x);
+    }
+
+    [Fact]
+    public void StringObject_Equals()
+    {
+        var x = new string(nameof(StringObject_Equals));
+        var y = new string(nameof(StringObject_Equals));
+        AssertBytewiseEqual(x, y);
+        output.WriteLine(x);
+    }
+
+    private static void AssertBytewiseEqual<T>(T expected, T actual)
+    {
+        Assert.Equal(expected, actual, BytewiseEqualityComparer<T>.Instance);
+    }
+}

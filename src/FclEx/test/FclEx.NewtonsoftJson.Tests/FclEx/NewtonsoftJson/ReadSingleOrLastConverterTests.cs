@@ -57,7 +57,7 @@ public class ReadSingleOrLastConverterTests
     [Fact]
     public void ReadLast_Value_Null_Test()
     {
-        var obj = new TesterOfArray { Id = new[] { "1", "2", null } };
+        var obj = new TesterOfArray { Id = ["1", "2", null] };
         var json = obj.ToJson();
         var actual = json.ToJToken().ToObject<Tester>()!;
         Assert.Null(actual.Id);

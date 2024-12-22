@@ -1,6 +1,4 @@
-﻿using FclEx.Diagnostics;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static class ProcessExtensions
 {

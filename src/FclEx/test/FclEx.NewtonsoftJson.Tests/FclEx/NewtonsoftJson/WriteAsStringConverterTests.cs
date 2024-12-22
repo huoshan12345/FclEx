@@ -1,5 +1,4 @@
-﻿using FclEx.Comparers;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 
 namespace FclEx.NewtonsoftJson;
 
@@ -25,14 +24,14 @@ public class WriteAsStringConverterTests
         var obj = new Tester
         {
             MatchId = 11,
-            Grades = new[]
-            {
+            Grades =
+            [
                 new GradeItem
                 {
                     Grade = "1",
                     LessonId = "123"
                 },
-            }
+            ]
         };
 
         var json = obj.ToNewtonsoftJson(useCamelCase: true);

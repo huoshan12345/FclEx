@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using FclEx.Comparers;
 
 namespace FclEx.Http;
 

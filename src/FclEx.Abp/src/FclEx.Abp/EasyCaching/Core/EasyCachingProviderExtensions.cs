@@ -1,5 +1,4 @@
 ﻿using System;
-using FclEx.Utils;
 
 namespace EasyCaching.Core;
 

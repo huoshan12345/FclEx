@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using FclEx.Extensions;
-
-namespace FclEx.Benchmarks;
+﻿namespace FclEx.Benchmarks;
 
 [MemoryDiagnoser]
 public class CreateObjectTest

@@ -16,7 +16,7 @@ public readonly struct CompositeDisposable<T> : IDisposable where T : IDisposabl
     }
 }
 
-public static class Extensions
+public static class CompositeDisposableExtensions
 {
     public static CompositeDisposable<T> Composite<T>(this IEnumerable<T> enumerable) where T : IDisposable
     {

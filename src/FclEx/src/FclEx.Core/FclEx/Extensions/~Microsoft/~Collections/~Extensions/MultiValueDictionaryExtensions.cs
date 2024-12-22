@@ -1,6 +1,4 @@
-﻿using Microsoft.Collections.Extensions;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static class MultiValueDictionaryExtensions
 {
