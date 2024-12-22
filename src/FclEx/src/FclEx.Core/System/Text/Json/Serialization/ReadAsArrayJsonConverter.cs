@@ -1,4 +1,4 @@
-﻿namespace FclEx.Json;
+﻿namespace System.Text.Json.Serialization;
 
 /// <summary>
 /// A custom JSON converter that reads a single non-array JSON element as an array containing that element.

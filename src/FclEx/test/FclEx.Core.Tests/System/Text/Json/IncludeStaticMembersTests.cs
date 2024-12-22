@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
 
-namespace FclEx.Json;
+namespace System.Text.Json;
 
 public class IncludeStaticMembersTests
 {

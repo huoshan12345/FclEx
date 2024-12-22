@@ -1,13 +1,10 @@
-﻿using FclEx.Json;
+﻿namespace FclEx;
 
-namespace FclEx
+[JsonConverter(typeof(IgnoreJsonConverter))]
+public readonly record struct Unit
 {
-    [JsonConverter(typeof(IgnoreJsonConverter))]
-    public readonly record struct Unit
-    {
-        public static readonly Unit Default = default;
+    public static readonly Unit Default = default;
 
-        public override int GetHashCode() => 0;
-        public override string ToString() => "()";
-    }
+    public override int GetHashCode() => 0;
+    public override string ToString() => "()";
 }
