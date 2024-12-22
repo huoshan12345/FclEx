@@ -12,7 +12,7 @@
   <ItemGroup Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(TargetFrameworkVersion)','9.0'))">
     <PackageReference Include="System.Text.Json" Version="9.0.0" />
   </ItemGroup>
-  <ItemGroup Condition="$([MSBuild]::VersionLessThan('$(TargetFrameworkVersion)','9.0'))">
+  <ItemGroup Condition="$([MSBuild]::VersionLessThan('$(TargetFrameworkVersion)','8.0'))">
     <!--System.Text.Json 9.0 has some dependencies that don't support net6.0 or net7.0, so we use 8.x for the frameworks.-->
     <PackageReference Include="System.Text.Json" Version="[8.0.5, 9.0.0)" />
   </ItemGroup>
@@ -21,12 +21,6 @@
     <!--net6.0 and net7.0 require this package to support CollectionBuilder-->
     <PackageReference Include="PolySharp" Version="1.15.0" PrivateAssets="all" />
   </ItemGroup>
-
-  <!--<ItemGroup>
-    <Compile Remove="System\Collections\Generic\OrderedDictionary.cs" />
-    <Compile Remove="System\Collections\HashHelpers.cs" />
-    <Compile Remove="System\Collections\ThrowHelper.cs" />
-  </ItemGroup>-->
 
   <ItemGroup>
     <ProjectReference Include="..\FclEx.SourceGenerator\FclEx.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
