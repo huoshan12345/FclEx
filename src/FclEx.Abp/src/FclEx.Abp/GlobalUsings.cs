@@ -9,7 +9,7 @@ global using FclEx.Abp.Caching;
 global using FclEx.Abp.DependencyInjection;
 global using FclEx.Abp.Domain.Entities.Interfaces;
 global using FclEx.Extensions;
-global using FclEx.Serialization;
+global using FclEx.Utils;
 global using Microsoft.Extensions.DependencyInjection;
 global using Volo.Abp.AutoMapper;
 global using Volo.Abp.Modularity;

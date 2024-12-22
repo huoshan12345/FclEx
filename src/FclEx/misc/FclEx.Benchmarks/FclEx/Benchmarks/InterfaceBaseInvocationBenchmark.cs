@@ -1,5 +1,4 @@
-﻿using FclEx.Extensions;
-using InterfaceBaseInvoke;
+﻿using InterfaceBaseInvoke;
 
 namespace FclEx.Benchmarks;
 

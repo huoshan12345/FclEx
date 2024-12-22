@@ -1,9 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using FclEx.Comparers;
-// ReSharper disable CollectionNeverQueried.Local
-
-namespace FclEx.Benchmarks;
+﻿namespace FclEx.Benchmarks;
 
 [MemoryDiagnoser]
 public class SortBenchmark
@@ -20,7 +15,7 @@ public class SortBenchmark
         return cmpOfHeight;
     };
 
-    private static readonly Comparison<Person> _comparisonOfProp = 
+    private static readonly Comparison<Person> _comparisonOfProp =
         MemberComparerBuilder<Person>
             .Create(m => m.Age)
             .OrderBy(m => m.Name)
@@ -34,7 +29,7 @@ public class SortBenchmark
         {
             Age = random.Next(1, 100),
             Height = random.Next(100, 200),
-            Name = CreateRandomString(10, random)
+            Name = random.NextString(10),
         }).ToArray();
     }
 
@@ -43,17 +38,6 @@ public class SortBenchmark
         public int Age { get; set; }
         public string? Name { get; set; }
         public int Height { get; set; }
-    }
-
-    private static string CreateRandomString(int length, Random random)
-    {
-        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        var stringChars = new char[length];
-        for (int i = 0; i < stringChars.Length; i++)
-        {
-            stringChars[i] = chars[random.Next(chars.Length)];
-        }
-        return new string(stringChars);
     }
 
     [BenchmarkCategory(nameof(Comparison_Default)), Benchmark]

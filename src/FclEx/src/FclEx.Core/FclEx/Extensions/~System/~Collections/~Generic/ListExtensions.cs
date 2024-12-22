@@ -1,6 +1,4 @@
-﻿using FclEx.Accessors;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static class ListExtensions
 {

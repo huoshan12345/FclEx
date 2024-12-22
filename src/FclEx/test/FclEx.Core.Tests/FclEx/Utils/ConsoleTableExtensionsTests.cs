@@ -1,14 +1,7 @@
 namespace FclEx.Utils;
 
-public class ConsoleTableExtensionsTests
+public class ConsoleTableExtensionsTests(ITestOutputHelper output)
 {
-    private readonly ITestOutputHelper _output;
-
-    public ConsoleTableExtensionsTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
-
     [Fact]
     public void Render_Test()
     {
@@ -28,6 +21,6 @@ public class ConsoleTableExtensionsTests
         }
 
         var str = table.ToString();
-        _output.WriteLine(str);
+        output.WriteLine(str);
     }
 }

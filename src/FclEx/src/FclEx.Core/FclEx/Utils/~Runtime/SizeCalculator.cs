@@ -1,6 +1,4 @@
-﻿using FclEx.Accessors;
-
-namespace FclEx.Utils;
+﻿namespace FclEx.Utils;
 
 public static class SizeCalculator
 {

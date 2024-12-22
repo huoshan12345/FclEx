@@ -57,7 +57,7 @@ public class ReadSingleOrFirstConverterTests
     [Fact]
     public void ReadFirst_Value_Null_Test()
     {
-        var obj = new TesterOfArray { Id = new[] { null, "2", "3" } };
+        var obj = new TesterOfArray { Id = [null, "2", "3"] };
         var json = obj.ToJson();
         var actual = json.ToJToken().ToObject<Tester>()!;
         Assert.Null(actual.Id);

@@ -8,6 +8,7 @@ public class CompositeDisposableTests
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             Count = -1;
         }
     }

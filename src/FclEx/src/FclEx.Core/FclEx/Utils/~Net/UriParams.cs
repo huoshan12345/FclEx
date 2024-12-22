@@ -1,6 +1,4 @@
-﻿using Microsoft.Collections.Extensions;
-
-namespace FclEx.Utils;
+﻿namespace FclEx.Utils;
 
 /// <summary>
 /// Represents a collection of URI parameters as key-value pairs, 
