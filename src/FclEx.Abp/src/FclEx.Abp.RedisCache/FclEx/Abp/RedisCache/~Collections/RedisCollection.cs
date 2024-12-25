@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FclEx.Abp.RedisCache.Collections;
+namespace FclEx.Abp.RedisCache;
 
 internal abstract class RedisCollection<T> : IRedisCollection<T>
 {

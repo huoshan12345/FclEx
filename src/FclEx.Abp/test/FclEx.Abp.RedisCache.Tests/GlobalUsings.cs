@@ -7,7 +7,6 @@ global using EasyCaching.Core.Serialization;
 global using EasyCaching.Redis;
 global using EasyCaching.Serialization.SystemTextJson;
 global using FclEx.Abp.Caching;
-global using FclEx.Abp.RedisCache.Configuration;
 global using FclEx.Abp.Xunit;
 global using FclEx.Extensions;
 global using FclEx.Utils;

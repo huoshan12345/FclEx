@@ -1,5 +1,4 @@
-﻿using FclEx.Abp.RedisCache.Collections;
-using StackExchange.Redis;
+﻿using StackExchange.Redis;
 
 namespace FclEx.Abp.RedisCache;
 

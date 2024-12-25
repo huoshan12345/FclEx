@@ -1,7 +1,7 @@
 ﻿using System;
 using EasyCaching.Redis;
 
-namespace FclEx.Abp.RedisCache.Configuration;
+namespace FclEx.Abp.RedisCache;
 
 public class AbpRedisOptions
 {

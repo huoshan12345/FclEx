@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FclEx.Abp.RedisCache.Configuration;
+namespace FclEx.Abp.RedisCache;
 
 public class RedisCollectionOptions
 {

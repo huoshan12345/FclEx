@@ -1,6 +1,6 @@
 ﻿using EasyCaching.Core.Configurations;
 
-namespace FclEx.Abp.RedisCache.Configuration;
+namespace FclEx.Abp.RedisCache;
 
 public interface IReadOnlyAbpRedisOptions
 {
