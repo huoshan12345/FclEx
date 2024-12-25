@@ -25,7 +25,7 @@ public class FclExAbpRedisModule : AbpModule
 
     public override void PostConfigureServices(ServiceConfigurationContext context)
     {
-        var (useMessagePack, serializeStringAsRaw, conStrs, _) = (_effectiveRedisOptions = context.Services.GetOptions<AbpRedisOptions>());
+        _options = context.Services.GetOptions<AbpRedisOptions>();
         var serializerName = useMessagePack ? DefaultMsgPackName : DefaultJsonName;
 
         context.Services.AddEasyCaching(o =>
