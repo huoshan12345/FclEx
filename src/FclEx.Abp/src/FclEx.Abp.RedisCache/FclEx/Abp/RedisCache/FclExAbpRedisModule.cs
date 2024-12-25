@@ -1,4 +1,4 @@
-﻿using EasyCaching.Core.Serialization;
+﻿using EasyCaching.Redis;
 using FclEx.Extensions;
 using Volo.Abp;
 using Volo.Abp.Modularity;
@@ -8,39 +8,25 @@ namespace FclEx.Abp.RedisCache;
 [DependsOn(typeof(FclExAbpModule))]
 public class FclExAbpRedisModule : AbpModule
 {
-    public const string DefaultJsonName = "json";
-    public const string DefaultMsgPackName = "msgpack";
-    public const string DefaultStringAsRawName = StringAsRawEasyCachingSerializer.DefaultName;
-
-    private AbpRedisOptions? _effectiveRedisOptions;
+    private AbpRedisOptions? _options;
 
     public override void PreConfigureServices(ServiceConfigurationContext context)
-    {
-    }
-
-    public override void ConfigureServices(ServiceConfigurationContext context)
     {
         context.Services.AddSingleton<IRedisCollectionManager, RedisCollectionManager>();
     }
 
     public override void PostConfigureServices(ServiceConfigurationContext context)
     {
-        var (useMessagePack, serializeStringAsRaw, conStrs, _) = (_effectiveRedisOptions = context.Services.GetOptions<AbpRedisOptions>());
-        var serializerName = useMessagePack ? DefaultMsgPackName : DefaultJsonName;
+        _options = context.Services.GetOptions<AbpRedisOptions>();
 
         context.Services.AddEasyCaching(o =>
         {
-            o.UseCSRedis(c =>
+            o.UsePatchedRedis(c =>
             {
-                c.SerializerName = serializeStringAsRaw ? DefaultStringAsRawName : serializerName;
-                c.DBConfig.ConnectionStrings = conStrs.Select(x => x.ToString()).ToList();
+                c.SerializerName = _options.SerializerName;
+                c.DBConfig = _options.RedisOptions;
             });
-            if (useMessagePack)
-                o.WithMessagePack(DefaultMsgPackName);
         });
-
-        if (serializeStringAsRaw)
-            context.Services.WrapFor<IEasyCachingSerializer>(m => new StringAsRawEasyCachingSerializer(m, name: DefaultStringAsRawName));
     }
 
     public override void OnPreApplicationInitialization(ApplicationInitializationContext context)
@@ -48,7 +34,7 @@ public class FclExAbpRedisModule : AbpModule
         var provider = context.ServiceProvider;
         var logger = provider.CreateLogger(GetType());
 
-        var conStrs = _effectiveRedisOptions?.ConStrs;
+        var conStrs = _options?.RedisOptions.Endpoints;
         if (conStrs?.Count > 0)
         {
             logger.LogInformation("Redis endpoints: " + conStrs.Select(m => $"{m.Host}:{m.Port}").JoinWith(", "));

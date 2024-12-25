@@ -2,39 +2,26 @@
 
 public class TimeoutTests(ITestOutputHelper output) : AbpRedisUnreachableTests(output)
 {
-    public static FieldInfo FieldOfRedisOptions { get; } = typeof(DefaultCSRedisCachingProvider).GetRequiredField("_options");
-
-    public static readonly Regex RegOfConTimeout = new(@"connectTimeout=(\d)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    public static FieldInfo FieldOfRedisOptions { get; } = typeof(DefaultRedisCachingProvider).GetRequiredField("_options");
 
     [Fact]
     public void SetTimeout_Test()
     {
-        var (_, _, conStrs, _) = ServiceProvider.GetOptions<AbpRedisOptions>();
-        var con = conStrs.Single();
+        var options = ServiceProvider.GetOptions<AbpRedisOptions>().RedisOptions;
         var provider = ServiceProvider.GetRequiredService<IEasyCachingProvider>();
-        Assert.IsType<DefaultCSRedisCachingProvider>(provider);
-        var csRedisProvider = (DefaultCSRedisCachingProvider)provider;
-        var actualOptions = FieldOfRedisOptions.GetRequiredValue<RedisOptions>(csRedisProvider);
-        Assert.Single(actualOptions.DBConfig.ConnectionStrings);
-        var str = actualOptions.DBConfig.ConnectionStrings.First();
-
-        if (RegOfConTimeout.TryMatch(str, 1, out var value))
-        {
-            Assert.Equal(con.ConnectTimeout / 1000, int.Parse(value));
-        }
-        else
-        {
-            Assert.True(false);
-        }
+        Assert.IsType<PatchedRedisCachingProvider>(provider);
+        var redisProvider = (PatchedRedisCachingProvider)provider;
+        var actualOptions = FieldOfRedisOptions.GetRequiredValue<RedisOptions>(redisProvider);
+        Assert.Single(actualOptions.DBConfig.Endpoints);
+        Assert.Equal(options.ConnectionTimeout, actualOptions.DBConfig.ConnectionTimeout);
     }
 
     [RetryFact]
     public async Task WaitTimeout_Test()
     {
-        var (_, _, conStrs, _) = ServiceProvider.GetOptions<AbpRedisOptions>();
-        var con = conStrs.Single();
+        var options = ServiceProvider.GetOptions<AbpRedisOptions>();
         var provider = ServiceProvider.GetRequiredService<IEasyCachingProvider>();
-        var timeout = con.ConnectTimeout;
+        var timeout = options.RedisOptions.ConnectionTimeout;
         var (successful, _, _, elapsed) = await Operate.ExecuteAsync(() => provider.GetAsync<string>("test"), TimeSpan.FromMilliseconds(timeout)).Unwrap();
         Assert.False(successful);
         Assert.True(elapsed.TotalMilliseconds < timeout + 500, elapsed.TotalSeconds.ToString(CultureInfo.InvariantCulture));

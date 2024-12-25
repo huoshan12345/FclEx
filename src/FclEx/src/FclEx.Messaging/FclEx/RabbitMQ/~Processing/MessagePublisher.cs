@@ -1,6 +1,5 @@
 ﻿namespace FclEx.RabbitMQ;
 
-[SuppressMessage("ReSharper", "ConvertToPrimaryConstructor")]
 public class MessagePublisher : MessageProcessor<PublisherSettings>, IMessagePublisher
 {
     protected MessagePublisher(ILoggerFactory? loggerFactory, IMemoryBytesSerializer? serializer)

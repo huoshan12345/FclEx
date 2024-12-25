@@ -1,4 +1,4 @@
-﻿namespace FclEx.Abp.RedisCache.Collections;
+﻿namespace FclEx.Abp.RedisCache;
 
 internal class RedisList<T> : RedisCollection<T>, IRedisList<T>
 {

@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
 
 namespace FclEx.Abp.Caching.Configuration;
 
-public interface IAbpCacheReadOnlyOptions
+public interface IReadOnlyCacheOptions
 {
     string GlobalPrefix { get; }
     char? Separator { get; }

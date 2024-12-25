@@ -1,4 +1,4 @@
-﻿using FclEx.Abp.RedisCache.Collections;
+﻿using StackExchange.Redis;
 
 namespace FclEx.Abp.RedisCache;
 
@@ -75,6 +75,8 @@ public class RedisCollectionManagerTests(ITestOutputHelper output) : AbpRedisTes
         var key = nameof(GetSortedSet_Test).ToLower();
         var manager = ServiceProvider.GetRequiredService<IRedisCollectionManager>();
         var provider = ServiceProvider.GetRequiredService<IRedisCachingProvider>();
+        var database = ServiceProvider.GetRequiredService<IEasyCachingProvider>().Database.CastTo<IDatabase>();
+
         var col = manager.GetSortedSet<string>(key);
 
         var keyExt = col.Key;
@@ -85,9 +87,13 @@ public class RedisCollectionManagerTests(ITestOutputHelper output) : AbpRedisTes
         Assert.Equal(keyExt, col.Key);
 
         col.ZAdd(key, 1);
+        Assert.Equal(1, database.SortedSetLength(keyExt));
+
+
+
         Assert.Equal(1, col.ZCount(0, 10));
 
         Assert.True(provider.KeyExists(keyExt));
-        Assert.Equal(1, provider.ZCount(col.Key, 0, 10));
+        Assert.Equal(1, provider.ZCount(keyExt, 0, 10));
     }
 }

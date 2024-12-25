@@ -1,9 +1,8 @@
 ﻿using System;
 using FclEx.Extensions;
 
-namespace FclEx.Abp.RedisCache.Collections;
+namespace FclEx.Abp.RedisCache;
 
-[SuppressMessage("ReSharper", "ConvertToPrimaryConstructor")]
 internal class RedisHash<T> : RedisCollection<T>, IRedisHash<T>
 {
     private readonly IStringSerializer _stringSerializer;

@@ -7,8 +7,6 @@ global using System.Linq;
 global using System.Threading.Tasks;
 global using EasyCaching.Core;
 global using FclEx.Abp.Caching.Configuration;
-global using FclEx.Abp.RedisCache.Collections;
-global using FclEx.Abp.RedisCache.Configuration;
 global using FclEx.DependencyInjection;
 global using FclEx.Utils;
 global using Microsoft.Extensions.DependencyInjection;

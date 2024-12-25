@@ -4,7 +4,6 @@ using Volo.Abp.Modularity;
 
 namespace FclEx.Abp.Xunit;
 
-[SuppressMessage("ReSharper", "ConvertToPrimaryConstructor")]
 public abstract class AbpAopTests<TModule> : AbpTests<TModule>
     where TModule : AbpModule
 {

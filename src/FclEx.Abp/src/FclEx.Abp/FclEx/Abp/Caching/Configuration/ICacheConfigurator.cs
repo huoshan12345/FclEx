@@ -16,5 +16,5 @@ public interface ICacheConfigurator
     /// <summary>
     /// Configuration action. Called just after the cache is created.
     /// </summary>
-    Action<CacheOptions> InitAction { get; }
+    Action<CacheOptions> Action { get; }
 }

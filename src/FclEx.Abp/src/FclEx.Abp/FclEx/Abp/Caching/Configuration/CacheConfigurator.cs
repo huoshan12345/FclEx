@@ -5,15 +5,15 @@ namespace FclEx.Abp.Caching.Configuration;
 internal class CacheConfigurator : ICacheConfigurator
 {
     public string CacheName { get; }
-    public Action<CacheOptions> InitAction { get; }
+    public Action<CacheOptions> Action { get; }
 
-    public CacheConfigurator(Action<CacheOptions> initAction) : this(string.Empty, initAction)
+    public CacheConfigurator(Action<CacheOptions> Action) : this(string.Empty, Action)
     {
     }
 
-    public CacheConfigurator(string cacheName, Action<CacheOptions> initAction)
+    public CacheConfigurator(string cacheName, Action<CacheOptions> action)
     {
         CacheName = cacheName;
-        InitAction = initAction;
+        Action = action;
     }
 }
