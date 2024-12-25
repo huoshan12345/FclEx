@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Abp.RedisCache.Collections;
 
-public interface IRedisList : IRedisCol
+public interface IRedisList : IRedisCollection
 {
     long LLen();
     Task<long> LLenAsync();

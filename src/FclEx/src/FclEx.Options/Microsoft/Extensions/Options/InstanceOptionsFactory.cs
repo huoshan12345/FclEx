@@ -1,6 +1,5 @@
 ﻿namespace Microsoft.Extensions.Options;
 
-[SuppressMessage("ReSharper", "ConvertToPrimaryConstructor")]
 public class InstanceOptionsFactory<TOptions> : OptionsFactory<TOptions> where TOptions : class
 {
     private readonly IServiceProvider _provider;

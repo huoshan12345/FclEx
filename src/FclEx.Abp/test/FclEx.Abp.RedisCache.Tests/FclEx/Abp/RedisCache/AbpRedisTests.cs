@@ -9,7 +9,7 @@ public class AbpRedisTests : AbpAopTests<AbpRedisTestModule>
     public AbpRedisOptions AbpRedisOptions => _abpRedisOptions.Value;
 
     private readonly Lazy<AbpCacheOptions> _abpCacheOptions;
-    public AbpCacheOptions AbpCacheOptions => _abpCacheOptions.Value;
+    public AbpCacheOptions ReadOnlyCacheOptions => _abpCacheOptions.Value;
 
     private readonly Action<IServiceCollection>? _action;
 
@@ -29,14 +29,5 @@ public class AbpRedisTests : AbpAopTests<AbpRedisTestModule>
     {
         base.Configure(options, configuration);
         _action?.Invoke(options.Services);
-    }
-
-    public static AbpRedisTests Build(ITestOutputHelper output, bool useMessagePack, bool serializeStringAsRaw)
-    {
-        return new AbpRedisTests(output, s => s.Configure<AbpRedisOptions>(o =>
-        {
-            o.UseMessagePack = useMessagePack;
-            o.SerializeStringAsRaw = serializeStringAsRaw;
-        }));
     }
 }

@@ -1,6 +1,5 @@
 ﻿namespace FclEx.RabbitMQ;
 
-[SuppressMessage("ReSharper", "ConvertToPrimaryConstructor")]
 public class CommonRouter<TInput, TOutput> : MessageRouter<TInput, TOutput>
 {
     protected Func<TInput, Task<TOutput>> Handler { get; }

@@ -6,7 +6,6 @@ using Microsoft.Extensions.Options;
 
 namespace EasyCaching.Serialization.SystemTextJson;
 
-[SuppressMessage("ReSharper", "ConvertToPrimaryConstructor")]
 internal sealed class PatchedJsonOptionsExtension : IEasyCachingOptionsExtension
 {
     private readonly string _name;

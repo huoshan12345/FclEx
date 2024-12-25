@@ -7,7 +7,7 @@ namespace FclEx.Abp.Caching;
 
 public interface ICacheManager : IDisposable
 {
-    IAbpCacheReadOnlyOptions CacheOptions { get; }
+    IReadOnlyCacheOptions CacheOptions { get; }
     IReadOnlyList<ICache> GetAllCaches();
     ICache<T> GetCache<T>(string name);
     ICache GetCache(string name);

@@ -2,7 +2,7 @@
 
 namespace FclEx.Abp.RedisCache.Configuration;
 
-internal record RedisCollectionConfigurator(string Name, Action<RedisCollectionOptions> Action) : IRedisCollectionConfigurator
+public record RedisCollectionConfigurator(string Name, Action<RedisCollectionOptions> Action)
 {
     public RedisCollectionConfigurator(Action<RedisCollectionOptions> initAction) : this("", initAction)
     {

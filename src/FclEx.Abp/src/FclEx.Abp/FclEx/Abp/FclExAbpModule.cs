@@ -1,4 +1,4 @@
-﻿using EasyCaching.Serialization.SystemTextJson.Configurations;
+﻿using EasyCaching.Serialization.SystemTextJson;
 
 namespace FclEx.Abp;
 
@@ -14,7 +14,7 @@ public class FclExAbpModule : AbpModule
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         context.Services.AddMaps(GetType().Assembly)
-            .AddEasyCaching(o => o.UseInMemory().WithSystemTextJson())
+            .AddEasyCaching(o => o.UseInMemory().WithPatchedSystemTextJson())
             .AddSingleton<ICacheManager, CacheManager>()
             .AddSingleton<IStringSerializer>(StringAsRawSerializer.Instance);
     }

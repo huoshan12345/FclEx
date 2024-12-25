@@ -1,6 +1,5 @@
 ﻿namespace FclEx.RabbitMQ;
 
-[SuppressMessage("ReSharper", "ConvertToPrimaryConstructor")]
 public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings>, IMessageConsumer<T, TSettings>
     where TSettings : ConsumerSettings
 {
@@ -186,7 +185,6 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
     }
 }
 
-[SuppressMessage("ReSharper", "ConvertToPrimaryConstructor")]
 public abstract class MessageConsumer<T> : MessageConsumer<T, ConsumerSettings>, IMessageConsumer<T>
 {
     protected MessageConsumer(ILoggerFactory? loggerFactory, IMemoryBytesSerializer? serializer) : base(loggerFactory, serializer)

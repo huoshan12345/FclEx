@@ -1,6 +1,5 @@
 ﻿namespace FclEx.RabbitMQ;
 
-[SuppressMessage("ReSharper", "ConvertToPrimaryConstructor")]
 public class CommonConsumer<T> : MessageConsumer<T>
 {
     protected ConsumeHandler Handler { get; }

@@ -5,7 +5,6 @@ using EasyCaching.Core.Internal;
 
 namespace EasyCaching.Serialization.SystemTextJson;
 
-[SuppressMessage("ReSharper", "ConvertToPrimaryConstructor")]
 public class PatchedJsonSerializer : IEasyCachingSerializer
 {
     private readonly JsonSerializerOptions _options;

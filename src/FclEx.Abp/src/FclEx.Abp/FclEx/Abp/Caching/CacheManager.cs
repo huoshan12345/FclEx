@@ -10,14 +10,13 @@ namespace FclEx.Abp.Caching;
 
 using FclEx.Extensions;
 
-public class CacheManager : ICacheManager
+public sealed class CacheManager : ICacheManager
 {
-    protected readonly AbpCacheOptions _options;
-    protected readonly IEasyCachingProvider _provider;
-    protected readonly ConcurrentDictionary<string, ICache> _caches = new();
+    private readonly AbpCacheOptions _options;
+    private readonly IEasyCachingProvider _provider;
+    private readonly ConcurrentDictionary<string, ICache> _caches = new();
 
-    public CacheManager(IEasyCachingProvider provider,
-        IOptions<AbpCacheOptions> options)
+    public CacheManager(IEasyCachingProvider provider, IOptions<AbpCacheOptions> options)
     {
         _provider = provider;
         _options = options.Value;
@@ -28,7 +27,7 @@ public class CacheManager : ICacheManager
         _caches.Clear();
     }
 
-    public IAbpCacheReadOnlyOptions CacheOptions => _options;
+    public IReadOnlyCacheOptions CacheOptions => _options;
 
     public IReadOnlyList<ICache> GetAllCaches()
     {
@@ -56,14 +55,14 @@ public class CacheManager : ICacheManager
 
     public ProviderInfo ProviderInfo => _provider.GetProviderInfo();
 
-    protected virtual ICache<T> CreateCache<T>(string name)
+    private Cache<T> CreateCache<T>(string name)
     {
         var cache = new Cache<T>(name, _provider, _options);
         var configurators = _options.Configurators.Where(c => c.CacheName.IsNullOrEmpty()
                                                               || c.CacheName == name).ToArray();
         foreach (var configurator in configurators)
         {
-            configurator.InitAction?.Invoke(cache.Options);
+            configurator.Action?.Invoke(cache.Options);
         }
         return cache;
     }

@@ -1,6 +1,5 @@
 ﻿namespace FclEx.RabbitMQ;
 
-[SuppressMessage("ReSharper", "ConvertToPrimaryConstructor")]
 public abstract class MultipleMessageRouter<TInput, TOutput> : MessageRouter<TInput, IReadOnlyCollection<TOutput>>
 {
     protected MultipleMessageRouter(

@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Abp.RedisCache.Collections;
 
-public interface IRedisSet : IRedisCol
+public interface IRedisSet : IRedisCollection
 {
     long SCard();
     Task<long> SCardAsync();

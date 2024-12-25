@@ -3,6 +3,8 @@ using Microsoft.Extensions.Configuration;
 
 namespace FclEx.Abp;
 
+using FclEx.Extensions;
+
 public static class ConfigurationExtensions
 {
     public static IConfigurationBuilder AddJsonFileIf(this IConfigurationBuilder builder, bool condition,
@@ -39,15 +41,16 @@ public static class ConfigurationExtensions
             .Build();
     }
 
-    // ReSharper disable once InconsistentNaming
-    public static T GetRequiredValue<T>(this IConfiguration config, string key)
+    public static T GetRequiredValue<T>(this IConfiguration config, string? key)
     {
-        var section = config.GetSection(key);
+        var section = key.IsNullOrEmpty() ? config : config.GetSection(key);
         if (section == null)
             throw new InvalidOperationException("Can not find section by key: " + key);
+
         var obj = section.Get<T>();
         if (obj == null)
             throw new InvalidOperationException($"Can not get a non-null instance of type {typeof(T).ShortName()} by key: " + key);
+
         return obj;
     }
 }

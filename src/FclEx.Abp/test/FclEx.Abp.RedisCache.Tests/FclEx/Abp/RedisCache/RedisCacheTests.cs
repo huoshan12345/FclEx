@@ -1,30 +1,31 @@
-﻿using EasyCaching.Serialization.SystemTextJson;
+﻿namespace FclEx.Abp.RedisCache;
 
-namespace FclEx.Abp.RedisCache;
-
-public class RedisCacheTests
+public class RedisCacheTests(ITestOutputHelper output) : AbpRedisTests(output)
 {
     public record Model(int Id, string? Name, int Age, int? CoinCount = null);
-
-    private readonly ITestOutputHelper _output;
-    public RedisCacheTests(ITestOutputHelper output)
+    
+    private void Test<T>(string key, T value)
     {
-        _output = output;
+        var provider = ServiceProvider.GetRequiredService<IEasyCachingProvider>();
+        key = key.ToLower();
+        provider.Remove(key);
+
+        var obj = provider.Get(key, () => value, TimeSpan.FromMinutes(1));
+        Assert.True(obj.HasValue);
+        Assert.Equal(value, obj.Value);
+
+        var objNew = provider.Get<T>(key);
+        Assert.True(objNew.HasValue);
+        Assert.Equal(value, objNew.Value);
     }
 
-    public static readonly IEnumerable<object[]> TwoDimensionalBooleans = new[] { true, false }.SelectMany((x, y) => new object[] { x, y });
-
-    [Theory]
-    [MemberData(nameof(TwoDimensionalBooleans))]
-    public void TestCache(bool useMessagePack, bool serializeStringAsRaw)
+    [Fact]
+    public void Basic_Test()
     {
-        var tests = AbpRedisTests.Build(_output, useMessagePack, serializeStringAsRaw);
-        var serviceProvider = tests.ServiceProvider;
-
         const string str = "test";
-        var provider = serviceProvider.GetRequiredService<IEasyCachingProvider>();
-        Assert.IsType<DefaultCSRedisCachingProvider>(provider);
-        var cacheManager = serviceProvider.GetRequiredService<ICacheManager>();
+        var provider = ServiceProvider.GetRequiredService<IEasyCachingProvider>();
+        Assert.IsType<PatchedRedisCachingProvider>(provider);
+        var cacheManager = ServiceProvider.GetRequiredService<ICacheManager>();
         var cache = cacheManager.GetCache<string>(str);
         var obj = cache.Get(str, k => str);
         Assert.True(obj.HasValue);
@@ -37,68 +38,32 @@ public class RedisCacheTests
         Assert.False(objRemoved.HasValue);
     }
 
-    private static void Test<T>(AbpRedisTests tests, string key, T value)
+    [Fact]
+    public void Serializer_Test()
     {
-        var provider = tests.ServiceProvider.GetRequiredService<IEasyCachingProvider>();
-        key = key.ToLower();
-        provider.Remove(key);
+        var provider = ServiceProvider.GetRequiredService<IEasyCachingProvider>();
+        Assert.IsType<PatchedRedisCachingProvider>(provider);
 
-        var obj = provider.Get(key, () => value, TimeSpan.FromMinutes(1));
-        Assert.True(obj.HasValue);
-        Assert.Equal(value, obj.Value);
-
-        var objNew = provider.Get<T>(key);
-        Assert.True(objNew.HasValue);
-        Assert.Equal(value, objNew.Value);
-
-        if (typeof(T) == typeof(string) && tests.AbpRedisOptions.SerializeStringAsRaw)
-        {
-            var client = tests.ServiceProvider.GetRequiredService<EasyCachingCSRedisClient>();
-            var valueOfRaw = client.Get<T>(key);
-            Assert.Equal(value, valueOfRaw);
-        }
-    }
-
-    [Theory]
-    [MemberData(nameof(TwoDimensionalBooleans))]
-    public void StringAsRaw_Test(bool useMessagePack, bool serializeStringAsRaw)
-    {
-        var tests = AbpRedisTests.Build(_output, useMessagePack, serializeStringAsRaw);
-        var serviceProvider = tests.ServiceProvider;
-        var abpCacheOptions = tests.AbpCacheOptions;
-
-        var provider = serviceProvider.GetRequiredService<IEasyCachingProvider>();
-        Assert.IsType<DefaultCSRedisCachingProvider>(provider);
-
-        var serializer = serviceProvider.GetRequiredService<IEasyCachingSerializer>();
-        if (serializeStringAsRaw)
-            Assert.IsType<StringAsRawEasyCachingSerializer>(serializer);
-        else if (useMessagePack)
-            Assert.IsType<DefaultMessagePackSerializer>(serializer);
-        else
-            Assert.IsType<DefaultJsonSerializer>(serializer);
+        var serializer = ServiceProvider.GetRequiredService<IEasyCachingSerializer>();
+        Assert.IsType<PatchedJsonSerializer>(serializer);
 
         var array = Enumerable.Range(1, 3)
             .Select((m, i) => new Model(m, m.ToString("D8"), m))
             .ToArray();
 
+        var sep = ReadOnlyCacheOptions.Separator;
         foreach (var value in array)
         {
-            Test(tests, nameof(Model) + abpCacheOptions.Separator + value.Name, value); // class
-            Test(tests, nameof(Model.Name) + abpCacheOptions.Separator + value.Name, value.Name); // string
-            Test(tests, nameof(Model.Age) + abpCacheOptions.Separator + value.Age, value.Age); // int
+            Test(nameof(Model) + sep + value.Name, value); // class
+            Test(nameof(Model.Name) + sep + value.Name, value.Name); // string
+            Test(nameof(Model.Age) + sep + value.Age, value.Age); // int
         }
     }
 
-    [Theory]
-    [MemberData(nameof(TwoDimensionalBooleans))]
-    public void GetAll_Test(bool useMessagePack, bool serializeStringAsRaw)
+    [Fact]
+    public void GetAll_Test()
     {
-        var tests = AbpRedisTests.Build(_output, useMessagePack, serializeStringAsRaw);
-        var serviceProvider = tests.ServiceProvider;
-        var abpCacheOptions = tests.AbpCacheOptions;
-
-        var cacheManager = serviceProvider.GetRequiredService<ICacheManager>();
+        var cacheManager = ServiceProvider.GetRequiredService<ICacheManager>();
         var cache = cacheManager.GetCache<string>("number");
         var keys = Enumerable.Range(1, 3).Select(m => m.ToString()).ToArray();
         cache.RemoveAll(keys);
@@ -117,15 +82,10 @@ public class RedisCacheTests
         }
     }
 
-    [Theory]
-    [MemberData(nameof(TwoDimensionalBooleans))]
-    public async Task GetAllAsync_Test(bool useMessagePack, bool serializeStringAsRaw)
+    [Fact]
+    public async Task GetAllAsync_Test()
     {
-        var tests = AbpRedisTests.Build(_output, useMessagePack, serializeStringAsRaw);
-        var serviceProvider = tests.ServiceProvider;
-        var abpCacheOptions = tests.AbpCacheOptions;
-
-        var cacheManager = serviceProvider.GetRequiredService<ICacheManager>();
+        var cacheManager = ServiceProvider.GetRequiredService<ICacheManager>();
         var cache = cacheManager.GetCache<string>("number");
         var keys = Enumerable.Range(1, 3).Select(m => m.ToString()).ToArray();
         await cache.RemoveAllAsync(keys);

@@ -8,11 +8,11 @@ public enum RedisCollectionType
     Hash = 3,
 }
 
-public interface IRedisCol
+public interface IRedisCollection
 {
     string Name { get; }
     string Key { get; }
     RedisCollectionType CollectionType { get; }
 }
 
-public interface IRedisCollection<T> : IRedisCol;
+public interface IRedisCollection<T> : IRedisCollection;

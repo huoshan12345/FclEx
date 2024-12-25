@@ -2,9 +2,8 @@
 
 public interface IRedisCollectionManager
 {
-    IAbpCacheReadOnlyOptions CacheOptions { get; }
-    IAbpRedisReadOnlyOptions RedisOptions { get; }
-    IReadOnlyList<IRedisCol> GetAllCaches();
+    IReadOnlyCacheOptions CacheOptions { get; }
+    IReadOnlyList<IRedisCollection> GetAllCaches();
     IRedisList<T> GetList<T>(string name) where T : notnull;
     IRedisSet<T> GetSet<T>(string name) where T : notnull;
     IRedisHash<T> GetHash<T>(string name) where T : notnull;
