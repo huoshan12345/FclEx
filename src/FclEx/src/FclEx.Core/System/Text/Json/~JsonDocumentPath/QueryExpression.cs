@@ -1,7 +1,4 @@
-﻿
-// ReSharper disable ReplaceSubstringWithRangeIndexer
-
-namespace System.Text.Json;
+﻿namespace System.Text.Json;
 
 internal enum QueryOperator
 {
