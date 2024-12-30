@@ -6,10 +6,10 @@ partial class EnumerableExtensions
         => col.Where(m => m.IsNotEmpty())!;
 
     public static bool ContainsAny(this IEnumerable<string> enumerable, IEnumerable<string> values, StringComparison comparison = StringComparison.Ordinal)
-        => enumerable.Any(m => m.ContainsAny(values, comparison));
+        => values.Any(m => enumerable.Any(x => x.Contains(m, comparison)));
 
     public static bool ContainsAll(this IEnumerable<string> enumerable, IEnumerable<string> values, StringComparison comparison = StringComparison.Ordinal)
-        => enumerable.All(m => m.ContainsAny(values, comparison));
+        => values.All(m => enumerable.Any(x => x.Contains(m, comparison)));
 
     public static bool ContainsAnyIgnoreCase(this IEnumerable<string> enumerable, IEnumerable<string> values)
         => enumerable.ContainsAny(values, StringComparison.OrdinalIgnoreCase);
