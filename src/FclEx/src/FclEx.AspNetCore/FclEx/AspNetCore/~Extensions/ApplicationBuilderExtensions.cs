@@ -15,7 +15,7 @@ public static class ApplicationBuilderExtensions
                 .CreateLogger(typeof(ApplicationBuilderExtensions));
 
             using var logs = new LoggerProperties(logger)
-                .Push(LogPropertyNames.StartTime, start)
+                .Push(LogPropertyNames.RequestStartTime, start)
                 .Push(LogPropertyNames.TraceId, context.TraceIdentifier)
                 .Push(request);
 
@@ -27,7 +27,7 @@ public static class ApplicationBuilderExtensions
             using var x = new LoggerProperties(logger)
                 .Push(nameof(HttpResponse.StatusCode), context.Response?.StatusCode)
                 .Push(LogPropertyNames.DurationMilliseconds, duration.TotalMilliseconds)
-                .Push(LogPropertyNames.EndTime, end);
+                .Push(LogPropertyNames.RequestEndTime, end);
 
             logger.LogInformation(duration.TotalSeconds > 1
                 ? $"Request finished in {duration.TotalSeconds:f3} seconds."

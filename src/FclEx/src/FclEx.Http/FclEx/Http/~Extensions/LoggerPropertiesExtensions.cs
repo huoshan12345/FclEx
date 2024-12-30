@@ -8,7 +8,7 @@ public static class LoggerPropertiesExtensions
     {
         var uri = request.RequestUri;
         properties
-            .Push(LogPropertyNames.Path, uri?.LocalPath)
+            .Push(LogPropertyNames.RequestPath, uri?.LocalPath)
             .Push(nameof(HttpContentHeaders.ContentType), request.Content?.Headers.ContentType)
             .Push(nameof(HttpContentHeaders.ContentLength), request.Content?.Headers.ContentLength)
             .Push(nameof(Uri.Host), uri?.Host)

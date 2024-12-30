@@ -10,7 +10,7 @@ public static class LoggerPropertiesExtensions
 
         properties
             .Push(nameof(ConnectionInfo.RemoteIpAddress), ip)
-            .Push(LogPropertyNames.Path, request.Path)
+            .Push(LogPropertyNames.RequestPath, request.Path)
             .Push(nameof(HttpRequest.ContentType), request.ContentType)
             .Push(nameof(HttpRequest.ContentLength), request.ContentLength)
             .Push(nameof(HttpRequest.Host), request.Host)

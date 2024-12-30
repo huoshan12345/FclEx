@@ -53,8 +53,8 @@ public class LoggingDelegatingHandler : DelegatingHandler
             using var x = new LoggerProperties(_logger)
                 .Push(nameof(HttpResponseMessage.StatusCode), statusCode)
                 .Push(LogPropertyNames.DurationMilliseconds, duration.TotalMilliseconds)
-                .Push(LogPropertyNames.EndTime, end)
-                .Push(LogPropertyNames.StartTime, start)
+                .Push(LogPropertyNames.RequestEndTime, end)
+                .Push(LogPropertyNames.RequestStartTime, start)
                 .Push(request);
 
             _logger.Log(level, e, duration.TotalSeconds > 1
