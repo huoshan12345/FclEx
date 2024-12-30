@@ -1,6 +1,4 @@
 ﻿using System;
-using FclEx.Abp.Caching.Configuration;
-using Microsoft.Extensions.Logging;
 
 namespace FclEx.Abp.Caching;
 

@@ -14,7 +14,7 @@ public class IndexAttribute : Attribute
         var arr = propertyNames.Distinct().ToArray();
 
         if (arr.Length == 0)
-            throw new ArgumentException("The array is empty", nameof(propertyNames));
+            throw new ArgumentException("The property names to be indexed is empty", nameof(propertyNames));
 
         PropertyNames = arr!;
         IsUnique = isUnique;

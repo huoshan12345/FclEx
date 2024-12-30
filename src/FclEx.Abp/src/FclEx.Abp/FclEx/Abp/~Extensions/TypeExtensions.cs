@@ -1,4 +1,5 @@
 ﻿using System;
+using FclEx.Abp.Entities;
 
 namespace FclEx.Abp;
 

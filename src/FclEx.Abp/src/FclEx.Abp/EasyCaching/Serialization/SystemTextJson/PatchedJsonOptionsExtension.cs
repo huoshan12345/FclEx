@@ -1,6 +1,5 @@
 ﻿using System;
 using EasyCaching.Core.Configurations;
-using FclEx.Json;
 using FclEx.Options;
 using Microsoft.Extensions.Options;
 

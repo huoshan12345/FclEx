@@ -1,4 +1,4 @@
-﻿namespace FclEx.Abp.Domain.Services;
+﻿namespace FclEx.Abp.Services;
 
 public abstract class AbstractKeyValueService : IKeyValueService
 {

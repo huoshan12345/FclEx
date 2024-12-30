@@ -1,4 +1,4 @@
-namespace FclEx.Abp.Domain.Entities.Interfaces;
+namespace FclEx.Abp.Entities;
 
 public interface IEntity
 {

@@ -7,6 +7,7 @@ public static class LogPropertyNames
     public const string ClientNameOrId = "ClientNameOrId";
     public const string CloudProvider = "CloudProvider";
     public const string CloudRegion = "CloudRegion";
+    public const string Duration = "Duration";
     public const string DurationMilliseconds = "DurationMilliseconds";
     public const string DurationSeconds = "DurationSeconds";
     public const string Environment = "Environment";

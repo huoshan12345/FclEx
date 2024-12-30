@@ -1,8 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-using AutoMapper;
-using FclEx.Abp.Domain.Entities;
+﻿using AutoMapper;
+using FclEx.Abp.Entities;
 
-namespace FclEx.Abp.Domain.Dtos;
+namespace FclEx.Abp.Dtos;
 
 public abstract class KeyValueDto<TPrimaryKey> : EntityDto<TPrimaryKey>
 {

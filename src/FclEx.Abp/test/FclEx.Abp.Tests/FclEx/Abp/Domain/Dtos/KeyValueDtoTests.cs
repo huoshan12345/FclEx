@@ -1,4 +1,5 @@
-﻿using FclEx.Abp.Domain.Entities;
+﻿using FclEx.Abp.Dtos;
+using FclEx.Abp.Entities;
 using Volo.Abp.ObjectMapping;
 
 namespace FclEx.Abp.Domain.Dtos;
