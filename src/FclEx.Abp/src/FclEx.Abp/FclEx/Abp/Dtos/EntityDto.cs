@@ -1,4 +1,4 @@
-namespace FclEx.Abp.Domain.Dtos;
+namespace FclEx.Abp.Dtos;
 
 public abstract class EntityDto<TPrimaryKey> : IEntityDto<TPrimaryKey>
 {

@@ -1,8 +1,7 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using FclEx.Abp.Orm;
 
-namespace FclEx.Abp.Domain.Entities;
+namespace FclEx.Abp.Entities;
 
 [Index(false, nameof(ObjectId))]
 [Index(false, nameof(Key))]

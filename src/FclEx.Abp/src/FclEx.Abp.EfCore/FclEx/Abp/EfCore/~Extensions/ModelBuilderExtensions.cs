@@ -1,4 +1,6 @@
-﻿namespace FclEx.Abp.EfCore;
+﻿using FclEx.Abp.Entities;
+
+namespace FclEx.Abp.EfCore;
 
 public static class ModelBuilderExtensions
 {
@@ -30,10 +32,10 @@ public static class ModelBuilderExtensions
         var entityType = type.ClrType.GetImplementedInterface(typeof(IEntity<>));
         if (entityType != null)
         {
-            e.HasKey(EntityMemberNames.Id);
+            e.HasKey(nameof(IEntity<int>.Id));
             if (entityType.GenericTypeArguments[0].IsInteger())
             {
-                e.Property(EntityMemberNames.Id).ValueGeneratedOnAdd()
+                e.Property(nameof(IEntity<int>.Id)).ValueGeneratedOnAdd()
                     .Metadata.SetBeforeSaveBehavior(PropertySaveBehavior.Ignore);
             }
         }

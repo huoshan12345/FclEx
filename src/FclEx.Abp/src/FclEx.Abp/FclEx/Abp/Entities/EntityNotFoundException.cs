@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Runtime.Serialization;
 using Volo.Abp;
 
-namespace FclEx.Abp.Domain.Entities;
+namespace FclEx.Abp.Entities;
 
 public class EntityNotFoundException : AbpException
 {
@@ -13,7 +12,7 @@ public class EntityNotFoundException : AbpException
     public EntityNotFoundException()
     {
     }
-    
+
     public EntityNotFoundException(Type entityType, object id, Exception? innerException = null)
         : base($"There is no such an entity. Entity type: {entityType.FullName}, id: {id}", innerException!)
     {
