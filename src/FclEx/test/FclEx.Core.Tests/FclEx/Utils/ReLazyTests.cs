@@ -2,9 +2,7 @@
 
 public class ReLazyTests
 {
-    public class Tester
-    {
-    }
+    public class Tester;
 
     public class DisposableTester : IDisposable
     {

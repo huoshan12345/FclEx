@@ -11,7 +11,7 @@ namespace FclEx.Utils;
 
 public unsafe class SizeCalculatorTests
 {
-    class EmptyClass { }
+    class EmptyClass;
 
     struct MyStruct
     {

@@ -25,6 +25,6 @@ public class GlobalDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        modelBuilder.SetFclExAbpAttributes();
+        modelBuilder.ApplyOrmAttributes();
     }
 }

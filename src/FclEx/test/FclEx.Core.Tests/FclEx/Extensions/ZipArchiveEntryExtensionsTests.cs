@@ -5,14 +5,14 @@ namespace FclEx.Extensions;
 public class ZipArchiveEntryExtensionsTests
 {
     public static readonly string[] ZipFiles =
-    {
+    [
         "files.zip",
         "dir-files.zip",
         "dir-files-nested.zip",
-    };
+    ];
 
     public static readonly IEnumerable<object[]> TestCasesOfExtractToDir = ZipFiles
-        .CrossJoin(new[] { false, true })
+        .CrossJoin([false, true])
         .Select(m => new object[] { m.Item1, m.Item2 });
 
     [Theory]

@@ -2,7 +2,7 @@
 
 namespace FclEx.Abp.Orm;
 
-[AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+[AttributeUsage(AttributeTargets.Property)]
 public class DefaultValueSqlAttribute : Attribute
 {
     public DefaultValueSqlAttribute(string defaultSql)

@@ -2,8 +2,8 @@
 
 namespace FclEx.Abp.Orm;
 
-[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+[AttributeUsage(AttributeTargets.Class)]
 public class AutoRenameAttribute : Attribute
 {
-    public bool RemoveEntityPostfix { get; set; } = true;
+    public bool RemoveEntitySuffix { get; set; } = true;
 }

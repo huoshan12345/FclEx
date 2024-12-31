@@ -1,6 +1,4 @@
-﻿using EasyCaching.Serialization.SystemTextJson;
-
-namespace FclEx.Abp;
+﻿namespace FclEx.Abp;
 
 public class FclExAbpModule : AbpModule
 {

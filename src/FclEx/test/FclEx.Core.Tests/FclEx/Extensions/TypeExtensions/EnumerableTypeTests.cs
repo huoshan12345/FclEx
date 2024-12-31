@@ -33,13 +33,7 @@ public class EnumerableTypeTests
         Assert.Equal(expected, t);
     }
 
-    private interface IEmptyEnumerable : IEnumerable<object>
-    {
+    private interface IEmptyEnumerable : IEnumerable<object>;
 
-    }
-
-    private interface IMyEnumerable<out T> : IEnumerable<T>
-    {
-
-    }
+    private interface IMyEnumerable<out T> : IEnumerable<T>;
 }

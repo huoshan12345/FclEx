@@ -1,5 +1,5 @@
 ﻿using System.Linq;
-using FclEx.Abp.Entities;
+using FclEx.Abp.Domain;
 
 namespace FclEx.Abp.EfCore;
 

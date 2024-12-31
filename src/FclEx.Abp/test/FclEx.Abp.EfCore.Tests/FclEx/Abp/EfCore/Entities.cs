@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using FclEx.Abp.Entities;
+using FclEx.Abp.Domain;
 
 namespace FclEx.Abp.EfCore;
 

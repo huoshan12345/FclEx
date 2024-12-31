@@ -3,6 +3,4 @@
 namespace FclEx.Abp;
 
 [DependsOn(typeof(FclExAbpModule))]
-public class AbpTestModule : AbpModule
-{
-}
+public class AbpTestModule : AbpModule;

@@ -17,9 +17,7 @@ public class InvokeMethodInInterfaceTests
         int I0.Count() => this.BaseByFunctionPointer<I1, int>(m => m.Count()) + 1;
     }
 
-    public class WithI2 : I2
-    {
-    }
+    public class WithI2 : I2;
 
     public class ImplI2CallI1 : I2
     {

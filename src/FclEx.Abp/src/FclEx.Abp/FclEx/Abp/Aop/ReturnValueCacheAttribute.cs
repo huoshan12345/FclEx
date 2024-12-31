@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Reflection;
 using System.Security.Cryptography;
 using AspectCore.DynamicProxy;
-using EasyCaching.Serialization.SystemTextJson;
 using FclEx.Helpers;
 using Microsoft.Extensions.Logging;
 
@@ -99,12 +98,12 @@ public class ReturnValueCacheAttribute : AbstractInterceptorAttribute
                 if (returnTypeOfGeneric == typeof(Task<>))
                 {
                     var m = _taskFromResult.MakeGenericMethod(objType);
-                    context.ReturnValue = m.Invoke(null, new[] { item });
+                    context.ReturnValue = m.Invoke(null, [item]);
                 }
                 else if (returnTypeOfGeneric == typeof(ValueTask<>))
                 {
                     var m = _toValueTask.MakeGenericMethod(objType);
-                    context.ReturnValue = m.Invoke(null, new[] { item });
+                    context.ReturnValue = m.Invoke(null, [item]);
                 }
                 else
                 {

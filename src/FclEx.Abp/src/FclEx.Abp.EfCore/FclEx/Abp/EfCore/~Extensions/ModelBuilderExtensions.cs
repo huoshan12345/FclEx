@@ -1,42 +1,58 @@
-﻿using FclEx.Abp.Entities;
+﻿using FclEx.Abp.Domain;
+using FclEx.Abp.Orm;
 
 namespace FclEx.Abp.EfCore;
 
 public static class ModelBuilderExtensions
 {
-    public static ModelBuilder SetFclExAbpAttributes(this ModelBuilder modelBuilder)
+    public static ModelBuilder ApplyOrmAttributes(this ModelBuilder modelBuilder)
     {
         foreach (var entity in modelBuilder.Model.GetEntityTypes())
         {
-            modelBuilder.SetFclExAbpAttributes(entity);
+            modelBuilder.ApplyOrmAttributes(entity);
         }
         return modelBuilder;
     }
 
-    public static ModelBuilder SetFclExAbpAttributes(this ModelBuilder modelBuilder, IMutableEntityType type)
+    public static ModelBuilder ApplyOrmAttributes(this ModelBuilder modelBuilder, IMutableEntityType type)
     {
-        var e = modelBuilder.Entity(type.Name);
-        var table = type.ClrType.GetCustomAttribute<TableAttribute>();
+        var clrType = type.ClrType;
+        var entity = modelBuilder.Entity(type.Name);
+        var table = clrType.GetCustomAttribute<TableAttribute>();
         if (table == null)
         {
-            e.ToTable(type.ClrType.Name.TrimEnd("Entity"));
+            var removeEntity = clrType.GetCustomAttribute<AutoRenameAttribute>()?.RemoveEntitySuffix ?? true;
+            var name = removeEntity
+                ? clrType.Name.TrimEnd("Entity")
+                : clrType.Name;
+            entity.ToTable(name);
         }
 
-        var indexes = type.ClrType.GetCustomAttributes<Orm.IndexAttribute>();
+        var indexes = clrType.GetCustomAttributes<Orm.IndexAttribute>();
         foreach (var index in indexes)
         {
-            e.HasIndex(index.PropertyNames)
+            entity.HasIndex(index.PropertyNames)
                 .IsUnique(index.IsUnique);
         }
 
-        var entityType = type.ClrType.GetImplementedInterface(typeof(IEntity<>));
+        var entityType = clrType.GetImplementedInterface(typeof(IEntity<>));
         if (entityType != null)
         {
-            e.HasKey(nameof(IEntity<int>.Id));
+            entity.HasKey(nameof(IEntity<int>.Id));
             if (entityType.GenericTypeArguments[0].IsInteger())
             {
-                e.Property(nameof(IEntity<int>.Id)).ValueGeneratedOnAdd()
+                entity.Property(nameof(IEntity<int>.Id)).ValueGeneratedOnAdd()
                     .Metadata.SetBeforeSaveBehavior(PropertySaveBehavior.Ignore);
+            }
+        }
+
+        foreach (var property in type.GetProperties())
+        {
+            var defaultValueSql = property.PropertyInfo?.GetCustomAttribute<DefaultValueSqlAttribute>();
+            if (defaultValueSql != null)
+            {
+                entity.Property(property.Name)
+                    .HasDefaultValueSql(defaultValueSql.DefaultSql);
             }
         }
 

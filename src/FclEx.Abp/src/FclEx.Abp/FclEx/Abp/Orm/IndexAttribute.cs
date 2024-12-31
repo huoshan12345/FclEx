@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace FclEx.Abp.Orm;
 
-[AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
 public class IndexAttribute : Attribute
 {
     public IndexAttribute(bool isUnique, params string?[] propertyNames)

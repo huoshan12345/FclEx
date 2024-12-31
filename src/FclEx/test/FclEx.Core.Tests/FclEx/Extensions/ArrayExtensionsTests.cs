@@ -61,6 +61,6 @@ public class ArrayExtensionsTests
         var x = new[] { 1, 2 };
         var y = new[] { 3, 4, 5 };
         var z = x.Concat(y);
-        Assert.Equal(new[] { 1, 2, 3, 4, 5 }, z);
+        Assert.Equal([1, 2, 3, 4, 5], z);
     }
 }

@@ -2,23 +2,23 @@
 
 public class IndexExtTests
 {
-    public static IEnumerable<int> Empty { get; } = Enumerable.Empty<int>();
+    public static IEnumerable<int> Empty { get; } = [];
 
     public static IEnumerable<int> Numbers { get; } = Enumerable.Range(1, 10);
 
-    public static IEnumerable<object[]> NonEmptyEnumerableCases { get; } = new[]
-    {
-        new object[] { Numbers },
-        new object[] { Numbers.ToList() },
-        new object[] { Numbers.ToArray() },
-    };
+    public static IEnumerable<object[]> NonEmptyEnumerableCases { get; } =
+    [
+        [Numbers],
+        [Numbers.ToList()],
+        [Numbers.ToArray()],
+    ];
 
-    public static IEnumerable<object[]> EmptyEnumerableCases { get; } = new[]
-    {
-        new object[] { Empty },
-        new object[] { Empty.ToList() },
-        new object[] { Empty.ToArray() },
-    };
+    public static IEnumerable<object[]> EmptyEnumerableCases { get; } =
+    [
+        [Empty],
+        [Empty.ToList()],
+        [Empty.ToArray()],
+    ];
 
     [Theory]
     [MemberData(nameof(NonEmptyEnumerableCases))]

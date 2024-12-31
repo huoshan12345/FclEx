@@ -25,7 +25,7 @@ public static class ServiceCollectionExtensions
     {
         Check.NotNull(services);
         Check.NotNull(type);
-        return (IServiceCollection)MethodOfAddHostedService.MakeGenericMethod(type).Invoke(null, new object[] { services })!;
+        return (IServiceCollection)MethodOfAddHostedService.MakeGenericMethod(type).Invoke(null, [services])!;
     }
 
     public static IServiceCollection AddHostedService(this IServiceCollection services, Assembly assembly, Func<Type, bool>? filter = null)
