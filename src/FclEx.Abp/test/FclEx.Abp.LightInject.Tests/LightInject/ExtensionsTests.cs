@@ -1,9 +1,4 @@
-﻿using AutoMapper;
-using FclEx.Abp;
-using Microsoft.Extensions.Options;
-using Volo.Abp.AutoMapper;
-
-namespace LightInject;
+﻿namespace LightInject;
 
 public class ExtensionsTests
 {
@@ -34,29 +29,6 @@ public class ExtensionsTests
 
         var provider = container.GetInstance<IServiceProvider>();
         return provider;
-    }
-
-    [AutoMap(typeof(SingletonObj), ReverseMap = true)]
-    public class SingletonModel
-    {
-        public int Age { get; set; }
-    }
-
-    [Fact]
-    public void AddMaps_Test()
-    {
-        var services = new ServiceCollection()
-            .Configure<AbpAutoMapperOptions>(m => m.AddMaps(typeof(FclExAbpModule).Assembly))
-            .Configure<AbpAutoMapperOptions>(m => m.AddMaps(typeof(ExtensionsTests).Assembly));
-        var provider = services.BuildServiceProvider();
-        var options = provider.GetRequiredService<IOptions<AbpAutoMapperOptions>>();
-        Assert.Equal(2, options.Value.Configurators.Count);
-
-        var container = LightInjectHelper.CreateContainer();
-        container.RegisterMsDiService(services);
-
-        var optionsOfActual = container.GetInstance<IOptions<AbpAutoMapperOptions>>();
-        Assert.Equal(2, optionsOfActual.Value.Configurators.Count);
     }
 
     [Fact]

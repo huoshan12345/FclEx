@@ -48,11 +48,6 @@ public static class ServiceCollectionExtensions
         return services.AddHostedService(assembly, m => !excludeTypes.Contains(m));
     }
 
-    public static IServiceCollection AddMaps(this IServiceCollection services, Assembly assembly, bool validate = false)
-    {
-        return services.Configure<AbpAutoMapperOptions>(options => options.AddMaps(assembly, validate));
-    }
-
     public static T GetOptions<T>(this IServiceCollection services) where T : class, new()
         => services.BuildServiceProvider().GetRequiredService<IOptions<T>>().Value;
 

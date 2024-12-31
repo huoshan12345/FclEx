@@ -48,7 +48,7 @@ public class OpenGenericConventionalRegistrar : DefaultConventionalRegistrar
             }
             else if (dependencyAttribute?.TryRegister == true)
             {
-                ServiceCollectionDescriptorExtensions.TryAdd(services, serviceDescriptor);
+                services.TryAdd(serviceDescriptor);
             }
             else
             {

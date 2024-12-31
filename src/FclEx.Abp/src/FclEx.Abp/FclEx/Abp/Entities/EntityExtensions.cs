@@ -30,9 +30,4 @@ public static class EntityExtensions
         }
         return entity;
     }
-
-    public static T Map<T>(this IEntity entity, IObjectMapper mapper)
-    {
-        return mapper.Map<T>(entity);
-    }
 }
