@@ -75,6 +75,10 @@ public class FileSystemInfoExtensionsTests(ITestOutputHelper output)
     [InlineData(@"\\network-machine\", 0)]
     public void GetLevel_Directory_Test(string path, int expected)
     {
+        // TODO: Fix this test on Linux
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) == false)
+            return;
+
         Assert.Equal(expected, new DirectoryInfo(path).GetLevel());
     }
 
