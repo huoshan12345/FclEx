@@ -1,6 +1,6 @@
 namespace FclEx.Serilog.Sinks;
 
-public class LogEventMutateSinkTests(ITestOutputHelper output)
+public class LogEventMutateSinkTests
 {
     private static readonly Mock<ILogEventSink> _sink = new();
     private static readonly LogEventMutateSink Adapter = new(_sink.Object, null);

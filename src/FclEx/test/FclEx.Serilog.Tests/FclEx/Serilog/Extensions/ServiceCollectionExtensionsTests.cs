@@ -17,8 +17,8 @@ public class ServiceCollectionExtensionsTests
             .AddSerilog((m, n) =>
             {
                 n.WriteTo(listener)
-                    .Enrich(new LogEnricher(nameof(AddSerilog_Test)));
-                n.FormatException = formatException;
+                    .Enrich(new LogEnricher(nameof(AddSerilog_Test)))
+                    .FormatException(formatException);
             })
             .BuildServiceProvider();
 

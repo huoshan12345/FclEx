@@ -13,7 +13,7 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddSerilog(this IServiceCollection services, Action<LoggerConfiguration, SerilogConfiguration> configure)
     {
-        var options = new SerilogConfiguration();
+        var options = new SerilogConfiguration().AddCommonExcluders();
         options.Configure((m, n) => configure(m, n));
         return services.AddSerilog(options);
     }

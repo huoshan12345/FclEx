@@ -7,30 +7,48 @@ public delegate void ConfigureAction(LoggerConfiguration configuration, SerilogC
 
 public class SerilogConfiguration
 {
-    public List<ILogEventExcluder> Excluders { get; } = [];
-    public List<ConfigureAction> ConfigureActions { get; } = [];
+    private readonly List<ILogEventExcluder> _excluders = [];
+    private readonly List<ConfigureAction> _actions = [];
+
     public LogEventLevel MinimumLevel { get; set; } = LogEventLevel.Information;
     public bool FormatException { get; set; } = true;
     public Action<ILoggingBuilder>? LoggingBuilderConfigure { get; set; }
 
     public SerilogConfiguration()
     {
-        ConfigureActions.Add((m, n) =>
+        _actions.Add((m, n) =>
         {
             m.MinimumLevel.Is(MinimumLevel)
                 .Destructure.UsingAttributes()
                 .Enrich.FromLogContext()
-                .Filter.ByExcluding(x => Excluders.Any(y => y.ShouldExclude(x)));
+                .Filter.ByExcluding(x => _excluders.Any(y => y.ShouldExclude(x)));
         });
+    }
+
+    public SerilogConfiguration Configure(ConfigureAction action)
+    {
+        _actions.Add(action);
+        return this;
+    }
+
+    public SerilogConfiguration Exclude(ILogEventExcluder excluder)
+    {
+        _excluders.Add(excluder);
+        return this;
     }
 
     public ILogger CreateSerilogLogger()
     {
         var configuration = new LoggerConfiguration();
-        foreach (var action in ConfigureActions)
+
+        // 不能用 foreach，因为在循环体内部可能会修改 _actions
+        // ReSharper disable once ForCanBeConvertedToForeach
+        for (var i = 0; i < _actions.Count; i++)
         {
+            var action = _actions[i];
             action.Invoke(configuration, this);
         }
+
         return configuration
             .WrapAllSinks(m => new LogEventMutateSink(m, FormatException ? x => x.FormatException() : null))
             .CreateLogger();
@@ -47,26 +65,17 @@ public static class SerilogConfigurationExtensions
              .Exclude(SourceExcluder.CommonItems);
     }
 
-    public static SerilogConfiguration Configure(this SerilogConfiguration configuration, ConfigureAction action)
-    {
-        configuration.ConfigureActions.Add(action);
-        return configuration;
-    }
-
     public static SerilogConfiguration Configure(this SerilogConfiguration configuration, Action<LoggerConfiguration> action)
     {
         return configuration.Configure((m, _) => action(m));
     }
 
-    public static SerilogConfiguration Exclude(this SerilogConfiguration configuration, ILogEventExcluder excluder)
-    {
-        configuration.Excluders.Add(excluder);
-        return configuration;
-    }
-
     public static SerilogConfiguration Exclude(this SerilogConfiguration configuration, IEnumerable<ILogEventExcluder> excluders)
     {
-        configuration.Excluders.AddRange(excluders);
+        foreach (var excluder in excluders)
+        {
+            configuration.Exclude(excluder);
+        }
         return configuration;
     }
 
