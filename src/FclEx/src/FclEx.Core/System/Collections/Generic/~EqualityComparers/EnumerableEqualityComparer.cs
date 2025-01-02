@@ -12,18 +12,12 @@ public static class EnumerableEqualityComparer
     }
 }
 
-public class EnumerableEqualityComparer<T> : IEqualityComparer<IEnumerable<T>>
+public class EnumerableEqualityComparer<T>(IEqualityComparer<T>? itemComparer = null) : IEqualityComparer<IEnumerable<T>>
 {
-    private readonly IEqualityComparer<T> _itemComparer;
-
-    public EnumerableEqualityComparer(IEqualityComparer<T>? itemComparer = null)
-    {
-        _itemComparer = itemComparer ?? EqualityComparer<T>.Default;
-    }
-
     public static readonly EnumerableEqualityComparer<T> Default = new();
 
-    [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
+    private readonly IEqualityComparer<T> _itemComparer = itemComparer ?? EqualityComparer<T>.Default;
+
     public bool Equals(IEnumerable<T>? x, IEnumerable<T>? y)
     {
         if (ComparerHelper.TryEquals(x, y, out var result))

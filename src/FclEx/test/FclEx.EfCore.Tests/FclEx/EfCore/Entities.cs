@@ -1,4 +1,6 @@
-﻿namespace FclEx.EfCore;
+﻿using FclEx.Domain;
+
+namespace FclEx.EfCore;
 
 public class EntityWithAutoKey
 {
@@ -57,4 +59,29 @@ public class EntityWithMySqlBlob
     public int Id { get; set; }
     [Column("blob_bytes", TypeName = "blob")]
     public byte[]? Blob { get; set; }
+}
+
+public class HasPostfixEntity
+{
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int Id { get; set; }
+}
+
+[Table("has_table_name")]
+public class HasTableAttributeEntity
+{
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int Id { get; set; }
+}
+
+[Index(nameof(Name), IsUnique = true)]
+[Index(nameof(Value))]
+public class EntityWithIdAndIndex : IEntity<int>
+{
+    public int Id { get; set; }
+    [Required]
+    public string Name { get; set; } = "";
+    public int Value { get; set; }
 }

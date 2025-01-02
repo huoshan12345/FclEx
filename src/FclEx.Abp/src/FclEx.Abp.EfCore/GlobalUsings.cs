@@ -1,7 +1,0 @@
-// Global using directives
-
-global using System.ComponentModel.DataAnnotations.Schema;
-global using System.Reflection;
-global using FclEx.Extensions;
-global using Microsoft.EntityFrameworkCore;
-global using Microsoft.EntityFrameworkCore.Metadata;

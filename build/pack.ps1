@@ -60,9 +60,11 @@ if ($isGithub) {
   Write-Output "Uploading finished."
 }
 else {
-  foreach ($project in $projects) {
-    Write-Output "Removing $($project.Basename) from nuget cache"
-    $packageLocalDir = [io.path]::combine( $env:USERPROFILE, ".nuget", "packages", $project.Basename.ToLower(), $ver);
+  $files = Get-ChildItem $pkgPath
+  foreach ($file in $files) {
+    $name = $file.Basename.Substring(0, $file.Basename.Length - $ver.Length - 1)
+    Write-Output "Removing $($name) from nuget cache"
+    $packageLocalDir = [io.path]::combine( $env:USERPROFILE, ".nuget", "packages", $name.ToLower(), $ver);
     Remove-Item $packageLocalDir -Recurse -Force -ErrorAction SilentlyContinue
   }
 }

@@ -13,7 +13,7 @@ public class SchemaDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
             Name = Guid.NewGuid().ToString(),
             Value = 1,
         };
-        context.EntityWithAutoKeys.Add(entity);
+        context.EntityWithAutoKey.Add(entity);
         await context.SaveChangesAsync();
 
         Assert.NotEqual(default, entity.Id);

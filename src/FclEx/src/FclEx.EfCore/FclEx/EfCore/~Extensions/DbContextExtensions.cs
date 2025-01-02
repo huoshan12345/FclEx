@@ -1,6 +1,6 @@
 ﻿namespace FclEx.EfCore;
 
-public static class DbContextExtensions
+public static partial class DbContextExtensions
 {
     public static async Task<T> GetOrAdd<T>(this DbContext context, Expression<Func<T, bool>> filter, T itemToAdd) where T : class
     {

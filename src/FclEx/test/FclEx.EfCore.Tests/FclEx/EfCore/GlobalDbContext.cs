@@ -28,9 +28,13 @@ public class GlobalDbContext(
     public DbProviderType DbProviderType { get; } = dbProviderType;
     public string ConnectionString { get; } = connectionString;
 
-    public DbSet<EntityWithAutoKey> EntityWithAutoKeys { get; set; } = default!;
-    public DbSet<EntityWithGuidKey> EntityWithGuidKeys { get; set; } = default!;
-    public DbSet<EntityWithoutKey> EntityWithoutKeys { get; set; } = default!;
+    public DbSet<EntityWithAutoKey> EntityWithAutoKey { get; set; } 
+    public DbSet<EntityWithGuidKey> EntityWithGuidKey { get; set; }
+    public DbSet<EntityWithoutKey> EntityWithoutKey { get; set; }
+
+    public DbSet<HasPostfixEntity> HasPostfix { get; set; }
+    public DbSet<HasTableAttributeEntity> HasTableAttribute { get; set; }
+    public DbSet<EntityWithIdAndIndex> EntityWithIdAndIndex { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder builder)
     {
@@ -83,12 +87,6 @@ public class GlobalDbContext(
         }
 
         modelBuilder.Entity<EntityWithoutKey>().HasNoKey();
-
-        foreach (var entity in modelBuilder.Model.GetEntityTypes())
-        {
-            modelBuilder.Entity(entity.Name)
-                .ToTable(entity.ClrType.Name);
-        }
     }
 
     private static void UseMySql(DbContextOptionsBuilder builder, string connectionString, string? schema)

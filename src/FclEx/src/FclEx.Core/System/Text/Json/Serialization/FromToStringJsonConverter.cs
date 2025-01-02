@@ -1,5 +1,5 @@
 ﻿#if NET6_0_OR_GREATER
-namespace FclEx.Json;
+namespace System.Text.Json.Serialization;
 
 public class FromToStringJsonConverter<T> : StringJsonConverter<T> where T : IFromString<T>
 {

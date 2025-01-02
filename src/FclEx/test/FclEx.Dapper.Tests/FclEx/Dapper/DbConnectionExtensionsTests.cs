@@ -21,7 +21,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
             Name = Guid.NewGuid().ToString(),
         };
         var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity, db.Schema);
-        var e = await db.EntityWithAutoKeys.Where(m => m.Name == entity.Name).FirstOrDefaultAsync();
+        var e = await db.EntityWithAutoKey.Where(m => m.Name == entity.Name).FirstOrDefaultAsync();
         Assert.NotNull(e);
         Assert.Equal(entity.Value, e.Value);
         Assert.Equal(id, e.Id);
@@ -32,7 +32,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
     public async Task InsertAsync_EntityWithAutoKey_IncludeAutoKey_Test(DbProviderType dbProviderType, string schema)
     {
         await using var db = Fixture.CreateDbContext(dbProviderType, schema);
-        var maxId = await db.EntityWithAutoKeys.MaxAsync(m => (int?)m.Id);
+        var maxId = await db.EntityWithAutoKey.MaxAsync(m => (int?)m.Id);
 
         var entity = new EntityWithAutoKey
         {
@@ -42,7 +42,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
         };
         await db.Database.GetDbConnection().InsertAsync(entity, db.Schema, includeAutoKey: true);
 
-        var e = await db.EntityWithAutoKeys
+        var e = await db.EntityWithAutoKey
             .AsNoTracking()
             .Where(m => m.Id == entity.Id)
             .FirstOrDefaultAsync();
@@ -51,7 +51,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
         Assert.Equal(entity.Value, e.Value);
         Assert.Equal(entity.Id, e.Id);
 
-        await db.EntityWithAutoKeys.Where(m => m.Id == entity.Id).ExecuteDeleteAsync();
+        await db.EntityWithAutoKey.Where(m => m.Id == entity.Id).ExecuteDeleteAsync();
     }
 
     [Theory]
@@ -68,7 +68,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
         };
         var value = await db.Database.GetDbConnection().InsertAsync(entity, db.Schema);
         Assert.Null(value);
-        var e = await db.EntityWithGuidKeys.Where(m => m.Id == entity.Id).FirstAsync();
+        var e = await db.EntityWithGuidKey.Where(m => m.Id == entity.Id).FirstAsync();
         Assert.Equal(entity.Value, e.Value);
     }
 
@@ -84,7 +84,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
             Value = 1
         };
         await db.Database.GetDbConnection().InsertAsync(entity, db.Schema);
-        var e = await db.EntityWithoutKeys.Where(m => m.Name == entity.Name).FirstAsync();
+        var e = await db.EntityWithoutKey.Where(m => m.Name == entity.Name).FirstAsync();
         Assert.Equal(entity.Value, e.Value);
     }
 
@@ -105,7 +105,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
 
         foreach (var entity in entities)
         {
-            var e = await db.EntityWithAutoKeys.Where(m => m.Name == entity.Name).FirstAsync();
+            var e = await db.EntityWithAutoKey.Where(m => m.Name == entity.Name).FirstAsync();
             Assert.Equal(e.Value, entity.Value);
         }
     }
@@ -116,7 +116,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
     {
         await using var db = Fixture.CreateDbContext(dbProviderType, schema);
 
-        var maxId = await db.EntityWithAutoKeys.MaxAsync(m => (int?)m.Id);
+        var maxId = await db.EntityWithAutoKey.MaxAsync(m => (int?)m.Id);
 
         var entities = Enumerable.Range(1, count).Select(m => new EntityWithAutoKey
         {
@@ -130,13 +130,13 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
 
         foreach (var entity in entities)
         {
-            var e = await db.EntityWithAutoKeys.Where(m => m.Name == entity.Name).FirstAsync();
+            var e = await db.EntityWithAutoKey.Where(m => m.Name == entity.Name).FirstAsync();
             Assert.Equal(e.Value, entity.Value);
             Assert.Equal(e.Id, entity.Id);
         }
 
         var ids = entities.Select(m => m.Id).ToArray();
-        await db.EntityWithAutoKeys.Where(m => ids.Contains(m.Id)).ExecuteDeleteAsync();
+        await db.EntityWithAutoKey.Where(m => ids.Contains(m.Id)).ExecuteDeleteAsync();
     }
 
     [Theory]
@@ -150,7 +150,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
             Id = Guid.NewGuid(),
             Value = 1
         };
-        await db.EntityWithGuidKeys.AddAsync(entity);
+        await db.EntityWithGuidKey.AddAsync(entity);
         await db.SaveChangesAsync();
 
         var e = await db.Database.GetDbConnection().GetAsync<EntityWithGuidKey>(entity.Id, db.Schema);
@@ -180,7 +180,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
             Id = Guid.NewGuid(),
             Value = m,
         }).ToArray();
-        await db.EntityWithGuidKeys.AddRangeAsync(entities);
+        await db.EntityWithGuidKey.AddRangeAsync(entities);
         await db.SaveChangesAsync();
 
         var count = await db.Database.GetDbConnection().DeleteAsync<EntityWithGuidKey>(entities.First().Id, db.Schema);
@@ -188,7 +188,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
 
         foreach (var e in entities.Skip(1))
         {
-            await db.EntityWithGuidKeys.AnyAsync(m => m.Id == e.Id);
+            await db.EntityWithGuidKey.AnyAsync(m => m.Id == e.Id);
         }
     }
 
@@ -229,10 +229,10 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
             return (id, id2);
         });
 
-        var e = await db.EntityWithAutoKeys.Where(m => m.Id == id).FirstOrDefaultAsync();
+        var e = await db.EntityWithAutoKey.Where(m => m.Id == id).FirstOrDefaultAsync();
         Assert.NotNull(e);
 
-        var e2 = await db.EntityWithAutoKeys.Where(m => m.Id == id2).FirstOrDefaultAsync();
+        var e2 = await db.EntityWithAutoKey.Where(m => m.Id == id2).FirstOrDefaultAsync();
         Assert.NotNull(e2);
     }
 
@@ -241,7 +241,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
     public async Task DoTransactionAsync_Rollback_Test(DbProviderType dbProviderType, string schema)
     {
         await using var db = Fixture.CreateDbContext(dbProviderType, schema);
-        await db.EntityWithGuidKeys.ExecuteDeleteAsync();
+        await db.EntityWithGuidKey.ExecuteDeleteAsync();
 
         var con = db.Database.GetDbConnection();
 
@@ -255,7 +255,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
             throw new InvalidOperationException();
         }));
 
-        var count = await db.EntityWithGuidKeys.CountAsync();
+        var count = await db.EntityWithGuidKey.CountAsync();
         Assert.Equal(0, count);
     }
 }

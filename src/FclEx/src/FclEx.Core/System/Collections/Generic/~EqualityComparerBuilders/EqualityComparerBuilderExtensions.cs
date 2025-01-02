@@ -22,8 +22,13 @@ public static class EqualityComparerBuilderExtensions
         return builder.Set(FileExtensionEqualityComparer.Instance);
     }
 
-    public static MemberEqualityComparerBuilder<T> Member<T>(this EqualityComparerBuilder<T> _)
+    public static MemberEqualityComparerBuilder<T> Member<T>(this IEqualityComparerBuilder<T> _)
     {
         return MemberEqualityComparerBuilder.Create<T>();
+    }
+
+    public static IEqualityComparer<IEnumerable<T>> ToEnumerable<T>(this IEqualityComparerBuilder<T> builder)
+    {
+        return EnumerableEqualityComparer.Create(builder.Build());
     }
 }

@@ -11,6 +11,7 @@ global using System.Threading;
 global using System.Threading.Tasks;
 global using FclEx.Extensions;
 global using FclEx.Helpers;
+global using FclEx.Utils;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.EntityFrameworkCore.Infrastructure;
 global using Renci.SshNet;

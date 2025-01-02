@@ -1,4 +1,4 @@
-﻿using FclEx.Utils;
+﻿using FclEx.Domain;
 
 namespace FclEx.EfCore;
 
@@ -42,5 +42,20 @@ public static class QueryableExtensions
             where = where.Or(expression);
         }
         return where == null ? queryable : queryable.Where(where);
+    }
+
+    public static IQueryable<T> NotDeleted<T>(this IQueryable<T> queryable) where T : ISoftDeletable
+    {
+        return queryable.Where(m => m.IsDeleted == false);
+    }
+
+    public static IQueryable<T> Enabled<T>(this IQueryable<T> queryable) where T : IDisableable
+    {
+        return queryable.Where(m => m.IsDisabled == false);
+    }
+
+    public static IQueryable<T> Valid<T>(this IQueryable<T> queryable) where T : ISoftDeletable, IDisableable
+    {
+        return queryable.NotDeleted().Enabled();
     }
 }

@@ -11,7 +11,7 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
     public async Task ContainsAny_Test(DbProviderType dbProviderType, bool containsPercentSign)
     {
         await using var context = Fixture.CreateDbContext(dbProviderType);
-        await context.EntityWithAutoKeys.ExecuteDeleteAsync();
+        await context.EntityWithAutoKey.ExecuteDeleteAsync();
 
         var list = Enumerable.Range(1, 9)
             .Select(CreateName)
@@ -20,12 +20,12 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
                 Name = m,
                 Value = 1,
             });
-        context.EntityWithAutoKeys.AddRange(list);
+        context.EntityWithAutoKey.AddRange(list);
         await context.SaveChangesAsync();
 
         var keywords = new[] { CreateKeyword(4), CreateKeyword(6) };
 
-        var result = await context.EntityWithAutoKeys
+        var result = await context.EntityWithAutoKey
             .ContainsAny(m => m.Name, keywords)
             .ToListAsync();
 

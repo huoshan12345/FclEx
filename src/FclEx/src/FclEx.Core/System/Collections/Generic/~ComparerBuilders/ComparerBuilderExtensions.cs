@@ -12,7 +12,7 @@ public static class ComparerBuilderExtensions
         return builder.Set(CommonComparer.Create(comparison));
     }
 
-    public static MemberComparerBuilder<T> Member<T>(this ComparerBuilder<T> _)
+    public static MemberComparerBuilder<T> Member<T>(this IComparerBuilder<T> _)
     {
         return MemberComparerBuilder.Create<T>();
     }
@@ -20,5 +20,10 @@ public static class ComparerBuilderExtensions
     public static ComparerBuilder<T> Reverse<T>(this ComparerBuilder<T> builder)
     {
         return builder.Set(m => new ReverseComparer<T>(m));
+    }
+
+    public static IComparer<IEnumerable<T>> ToEnumerable<T>(this IComparerBuilder<T> builder)
+    {
+        return EnumerableComparer.Create(builder.Build());
     }
 }
