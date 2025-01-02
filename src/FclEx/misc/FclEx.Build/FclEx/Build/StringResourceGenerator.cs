@@ -2,7 +2,7 @@
 
 namespace FclEx.Build;
 
-public class SRGenerator
+public class StringResourceGenerator
 {
     [LocalOnlyTheory]
     [InlineData(
