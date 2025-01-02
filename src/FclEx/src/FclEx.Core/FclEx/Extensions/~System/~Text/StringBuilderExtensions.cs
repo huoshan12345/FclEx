@@ -123,4 +123,11 @@ public static class StringBuilderExtensions
         return builder;
     }
 #endif
+
+    public static StringBuilder AppendIf(this StringBuilder builder, string? value, bool condition)
+    {
+        if (condition)
+            builder.Append(value);
+        return builder;
+    }
 }

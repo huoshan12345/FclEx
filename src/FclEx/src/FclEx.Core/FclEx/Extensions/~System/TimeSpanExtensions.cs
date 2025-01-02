@@ -17,4 +17,12 @@ public static class TimeSpanExtensions
     {
         return TimeSpan.FromTicks((long)(multiplicand.Ticks * multiplier));
     }
+
+    public static string ToSecondsString(this TimeSpan timeSpan)
+    {
+        var format = timeSpan.Days > 0
+            ? @"d\.hh\:mm\:ss"
+            : @"hh\:mm\:ss";
+        return timeSpan.ToString(format);
+    }
 }

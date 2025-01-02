@@ -18,6 +18,12 @@ public static class EnumExtensions
         });
     }
 
+    public static string MemberValue(this Enum e)
+    {
+        var info = e.Info();
+        return info.EnumMemberValue ?? info.Name;
+    }
+
     public static string ToLower(this Enum enumValue)
     {
         return enumValue.Info().Lower;

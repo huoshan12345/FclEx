@@ -57,4 +57,26 @@ public static class RegexExtensions
         value = null;
         return false;
     }
+    
+    public static string Replace<T>(this Capture capture, string input, Func<string, T?> evaluator)
+    {
+        var replacement = evaluator(capture.Value)?.ToString() ?? string.Empty;
+        if (replacement == capture.Value)
+            return input;
+
+        var str = input[..capture.Index] + replacement + input[(capture.Index + capture.Length)..];
+        return str;
+    }
+
+    public static string Replace<T>(this Regex regex, string input, int groupIndex, Func<string, T?> evaluator, Func<string, string> onMismatch)
+    {
+        return regex.TryMatch(input, out var match)
+            ? match.Groups[groupIndex].Replace(input, evaluator)
+            : onMismatch(input);
+    }
+
+    public static string Replace<T>(this Regex regex, string input, Func<Match, T?> evaluator)
+    {
+        return regex.Replace(input, m => evaluator(m)?.ToString() ?? string.Empty);
+    }
 }

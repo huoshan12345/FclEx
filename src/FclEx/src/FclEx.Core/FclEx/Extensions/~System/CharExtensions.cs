@@ -11,4 +11,7 @@ public static class CharExtensions
     public static bool IsDigit(this char ch) => char.IsDigit(ch);
     public static bool IsLetter(this char ch) => char.IsLetter(ch);
     public static bool IsLetterOrDigit(this char ch) => char.IsLetterOrDigit(ch);
+    public static bool IsWhiteSpace(this char ch) => char.IsWhiteSpace(ch);
+    public static bool IsEnglishUppercase(this char ch) => ch is >= 'A' and <= 'Z';
+    public static bool IsEnglishLowercase(this char ch) => ch is >= 'a' and <= 'z';
 }
