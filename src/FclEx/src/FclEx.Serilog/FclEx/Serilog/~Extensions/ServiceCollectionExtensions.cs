@@ -34,7 +34,7 @@ public static class ServiceCollectionExtensions
             options.LoggingBuilderConfigure?.Invoke(builder);
         });
 
-        var logger = options.CreateSerilogLogger();
+        var logger = options.CreateLogger();
         Log.Logger = logger;
 
         services.AddSingleton(logger);

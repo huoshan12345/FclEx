@@ -37,7 +37,7 @@ public class SerilogConfiguration
         return this;
     }
 
-    public ILogger CreateSerilogLogger()
+    public ILogger CreateLogger()
     {
         var configuration = new LoggerConfiguration();
 
