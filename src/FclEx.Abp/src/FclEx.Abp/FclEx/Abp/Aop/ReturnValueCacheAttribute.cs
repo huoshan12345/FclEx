@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Reflection;
 using System.Security.Cryptography;
 using AspectCore.DynamicProxy;
-using FclEx.Helpers;
-using Microsoft.Extensions.Logging;
 
 namespace FclEx.Abp.Aop;
 
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+[AttributeUsage(AttributeTargets.Method)]
 public class ReturnValueCacheAttribute : AbstractInterceptorAttribute
 {
     public const string CacheName = "ReturnValueCache";

@@ -60,7 +60,7 @@ partial class ExceptionExtensions
     internal static ExceptionInfo GetInfo(this Exception exception, ref int index, int parentIndex)
     {
         var lines = exception.StackTrace is not { } trace
-            ? Array.Empty<string>()
+            ? []
             : trace
                 .SplitToLines()
                 .Select(m => m.TrimStart("   at ").TrimStart()) // see https://source.dot.net/#System.Private.CoreLib/src/libraries/System.Private.CoreLib/src/System/Diagnostics/StackTrace.cs,226

@@ -1,18 +1,18 @@
 ﻿namespace FclEx.Serilog;
 
-public record MessageFilterItem(string? Source, string Message, LogEventLevel? MaxLevel) : ILogEventFilterItem
+public record MessageExcluder(string? Source, string Message, LogEventLevel? MaxLevel) : ILogEventExcluder
 {
-    public static implicit operator MessageFilterItem((string? Source, string Message, LogEventLevel? MaxLevel) tuple)
+    public static implicit operator MessageExcluder((string? Source, string Message, LogEventLevel? MaxLevel) tuple)
     {
         return new(tuple.Source, tuple.Message, tuple.MaxLevel);
     }
 
-    public static implicit operator MessageFilterItem((string? Source, string Message) tuple)
+    public static implicit operator MessageExcluder((string? Source, string Message) tuple)
     {
         return new(tuple.Source, tuple.Message, null);
     }
 
-    public bool Match(LogEvent e)
+    public bool ShouldExclude(LogEvent e)
     {
         return e.MatchMaxLeveOrNull(MaxLevel)
                && e.MatchSourceOrNull(Source)
@@ -20,10 +20,10 @@ public record MessageFilterItem(string? Source, string Message, LogEventLevel? M
                && e.MessageTemplate.Text.Contains(Message);
     }
 
-    public static readonly MessageFilterItem[] CommonItems =
+    public static readonly MessageExcluder[] CommonItems =
     [
         ("DotNetCore.CAP.Processor.TransportCheckProcessor", "Transport connection is unhealthy"),
         ("Microsoft.AspNetCore.DataProtection.Repositories.FileSystemXmlRepository", "Protected data will be unavailable when container is destroyed"),
-        ("Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager", "No XML encryptor configured")
+        ("Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager", "No XML encryptor configured"),
     ];
 }

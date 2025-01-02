@@ -1,6 +1,4 @@
 ﻿using AspectCore.Extensions.DependencyInjection;
-using Volo.Abp;
-using Volo.Abp.Modularity;
 
 namespace FclEx.Abp.Xunit;
 

@@ -1,3 +1,5 @@
+using static FclEx.Serilog.Fields;
+
 namespace FclEx.Serilog;
 
 public static class LogEventExtensions
@@ -33,9 +35,9 @@ public static class LogEventExtensions
         return Matching.FromSource(source)(logEvent);
     }
 
-    public static bool Match(this LogEvent e, IEnumerable<ILogEventFilterItem> items)
+    public static bool ShouldExclude(this LogEvent e, IEnumerable<ILogEventExcluder> items)
     {
-        return items.Any(x => x.Match(e));
+        return items.Any(x => x.ShouldExclude(e));
     }
 
     public static bool MatchSourceOrNull(this LogEvent e, string? source)
@@ -55,5 +57,30 @@ public static class LogEventExtensions
         formatter.Format(logEvent, sw);
         var str = sw.ToString();
         return str;
+    }
+
+    public static LogEvent FormatException(this LogEvent logEvent)
+    {
+        if (logEvent.Exception is null or FormattedException)
+            return logEvent;
+
+        var ex = new FormattedException(logEvent.Exception);
+        LogEvent_Exception.SetValue(logEvent, ex);
+        return logEvent;
+    }
+
+    public static LogEvent HandleLogException(this LogEvent logEvent)
+    {
+        var level = logEvent.Level;
+
+        if (logEvent.Exception is LogException logException)
+            level = logException.Level;
+
+        if (level != logEvent.Level)
+        {
+            LogEvent_Level.SetValue(logEvent, level);
+        }
+
+        return logEvent;
     }
 }

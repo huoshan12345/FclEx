@@ -1,7 +1,5 @@
 ﻿using EasyCaching.Redis;
 using FclEx.Extensions;
-using Volo.Abp;
-using Volo.Abp.Modularity;
 
 namespace FclEx.Abp.RedisCache;
 

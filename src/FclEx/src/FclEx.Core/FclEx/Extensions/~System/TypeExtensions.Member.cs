@@ -31,7 +31,7 @@ partial class TypeExtensions
         return type.GetField(name, searchBaseTypes) ?? throw new InvalidOperationException($"Cannot find field '{name}' in type '{type.FullName}'");
     }
 
-    public static FieldInfo GetAutoPropertyBackingField(this Type type, string propertyName, bool searchBaseTypes)
+    public static FieldInfo GetAutoPropertyBackingField(this Type type, string propertyName, bool searchBaseTypes = false)
     {
         return type.GetField($"<{propertyName}>k__BackingField", searchBaseTypes)
                ?? throw new InvalidOperationException($"Cannot find backing field for property '{propertyName}' in type '{type.FullName}'"); ;

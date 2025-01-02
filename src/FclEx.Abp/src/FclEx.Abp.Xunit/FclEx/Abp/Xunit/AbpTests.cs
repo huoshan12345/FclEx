@@ -1,8 +1,4 @@
-﻿using System;
-using Volo.Abp;
-using Volo.Abp.Modularity;
-
-namespace FclEx.Abp.Xunit;
+﻿namespace FclEx.Abp.Xunit;
 
 public abstract class AbpTests<TModule> where TModule : AbpModule
 {

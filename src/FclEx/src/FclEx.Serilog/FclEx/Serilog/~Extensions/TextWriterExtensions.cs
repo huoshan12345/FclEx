@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions;
+﻿namespace FclEx.Serilog;
 
 public static class TextWriterExtensions
 {

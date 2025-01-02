@@ -13,7 +13,7 @@ public static class HashExtensions
 
     public static byte[] Hash(this HashAlgorithm algorithm, byte[] input)
     {
-        if (input.IsNullOrEmpty()) return Array.Empty<byte>();
+        if (input.IsNullOrEmpty()) return [];
         return algorithm.ComputeHash(input);
     }
 
@@ -49,7 +49,7 @@ public static class HashExtensions
     public static byte[] Hash(this HashAlgorithm algorithm, ArraySegment<byte> input)
     {
         return input.Array.IsNullOrEmpty()
-            ? Array.Empty<byte>()
+            ? []
             : algorithm.ComputeHash(input.Array, input.Offset, input.Count);
     }
 

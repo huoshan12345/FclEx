@@ -1,6 +1,4 @@
-﻿using FclEx.Logging;
-
-namespace Microsoft.Extensions.Logging;
+﻿namespace FclEx.Logging;
 
 public static class Extensions
 {

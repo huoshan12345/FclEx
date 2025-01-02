@@ -1,9 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Microsoft.Extensions.Logging.Abstractions;
+﻿namespace Microsoft.Extensions.Logging;
 
-namespace Microsoft.Extensions.Logging;
-
-[SuppressMessage("ReSharper", "ConditionIsAlwaysTrueOrFalse")]
 public class ExtensionsTests
 {
     [Fact]

@@ -9,7 +9,7 @@ partial class QueryableExtensions
         var sort = LambdaHelper.GetPropertyLambdaExp<T>(propertyName);
         var call = Expression.Call(typeof(Queryable),
             (!anotherLevel ? "OrderBy" : "ThenBy") + (descending ? "Descending" : string.Empty),
-            new[] { typeof(T), property.Type },
+            [typeof(T), property.Type],
             source.Expression,
             Expression.Quote(sort));
         var query = (IOrderedQueryable<T>)source.Provider.CreateQuery<T>(call);

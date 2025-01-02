@@ -54,10 +54,12 @@ public class JsonFormatterTests
             AssertConsoleMessage(ex);
         }
 
+        return;
+
         async Task AssertLogMessage(Exception ex)
         {
             var logEvent = new LogEvent(DateTimeOffset.Now, LogEventLevel.Error, ex,
-                MessageTemplate.Empty, Enumerable.Empty<LogEventProperty>());
+                MessageTemplate.Empty, []);
 
             var formatter = new JsonFormatter(options);
             await using var sw = new StringWriter();

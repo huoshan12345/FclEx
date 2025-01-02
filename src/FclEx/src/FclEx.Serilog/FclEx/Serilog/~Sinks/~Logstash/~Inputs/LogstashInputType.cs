@@ -4,5 +4,5 @@ public enum LogstashInputType
 {
     Udp,
     Http,
-    Tcp
+    Tcp,
 }

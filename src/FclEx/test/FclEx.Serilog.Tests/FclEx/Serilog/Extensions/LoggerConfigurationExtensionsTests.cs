@@ -1,21 +1,23 @@
-namespace FclEx.Serilog.Extensions;
+﻿namespace FclEx.Serilog.Extensions;
 
+[Collection(nameof(Console))]
 public class LoggerConfigurationExtensionsTests
 {
-    [LocalOnlyFact]
-    public async Task NewRelic_Test()
+    [Fact]
+    public async Task WrapAllSinks_Test()
     {
-        var logger = new LoggerConfiguration()
-            .Enrich.FromLogContext()
-            .WriteTo.NewRelic(licenseKey: "")
+        using var listener = new LogEventListener();
+        await using var logger = new LoggerConfiguration()
+            .WriteTo.Sink(listener)
+            .WrapAllSinks(sink => new LogEventMutateSink(sink, null))
             .CreateLogger();
 
-        for (var i = 0; i < 10; i++)
-        {
-            logger.Information(i + "_" + Random.Shared.NextString(40));
-        }
+        logger.Information(new LogException("test", LogEventLevel.Warning), "");
 
-        await logger.DisposeAsync();
-        await Log.CloseAndFlushAsync();
+        var flag = await listener.WaitAsync(1, TimeSpan.FromSeconds(1));
+        Assert.True(flag);
+
+        var logEvent = listener.Events.First();
+        Assert.Equal(LogEventLevel.Warning, logEvent.Level);
     }
 }

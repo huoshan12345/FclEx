@@ -1,57 +1,46 @@
 ﻿using FclEx.DependencyInjection;
+using FclEx.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace FclEx.Serilog;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection RemoveLogging(this IServiceCollection services)
+    public static IServiceCollection AddSerilog(this IServiceCollection services, Action<LoggerConfiguration> configure)
     {
-        services.RemoveAll<ILoggerFactory>();
-        services.RemoveAll<ILoggerProvider>();
-        services.RemoveAll<global::Serilog.ILogger>();
-        services.RemoveAll<Microsoft.Extensions.Logging.ILogger>();
-        return services;
+        return services.AddSerilog((m, _) => configure(m));
     }
 
-    public static IServiceCollection AddSerilog<T>(this IServiceCollection services, Action<SerilogOptions>? configure = null) where T : LogProvider
+    public static IServiceCollection AddSerilog(this IServiceCollection services, Action<LoggerConfiguration, SerilogConfiguration> configure)
     {
-        var options = new SerilogOptions();
-        configure?.Invoke(options);
-        return services.AddSerilog<T>(options);
+        var options = new SerilogConfiguration();
+        options.Configure((m, n) => configure(m, n));
+        return services.AddSerilog(options);
     }
 
-    public static IServiceCollection AddSerilog(this IServiceCollection services, Action<SerilogOptions>? configure = null)
+    public static IServiceCollection AddSerilog(this IServiceCollection services, SerilogConfiguration? options = null)
     {
-        return services.AddSerilog<LogProvider>(configure);
-    }
-
-    public static IServiceCollection AddSerilog<T>(this IServiceCollection services, SerilogOptions? options) where T : LogProvider
-    {
-        options ??= new();
+        options ??= new SerilogConfiguration().AddCommonExcluders();
 
         var assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
         var name = assembly.GetName().Name ?? string.Empty;
 
         services.RemoveLogging();
-        // we filter logs by level with serilog instead of ms-log.
-        services.AddLogging(builder => builder.SetMinimumLevel(LogLevel.Trace));
-        services.AddSingleton(options);
-        services.AddSingleton<T>();
-        services.AddSingletonBy<global::Serilog.ILogger, T>(m =>
+        services.RemoveAll<global::Serilog.ILogger>();
+
+        services.AddLogging(builder =>
         {
-            var logger = m.CreateSerilogLogger().ForContext(name);
-            Log.Logger = logger;
-            return logger;
+            builder.SetMinimumLevel(LogLevel.Trace);
+            options.LoggingBuilderConfigure?.Invoke(builder);
         });
-        services.AddSingletonBy<ILoggerProvider, global::Serilog.ILogger>(m => new SerilogLoggerProvider(m));
+
+        var logger = options.CreateSerilogLogger();
+        Log.Logger = logger;
+
+        services.AddSingleton(logger);
+        services.AddSingleton<ILoggerProvider>(new SerilogLoggerProvider(logger));
         services.AddSingletonBy<Microsoft.Extensions.Logging.ILogger, ILoggerFactory>(m => m.CreateLogger(name));
 
         return services;
-    }
-
-    public static IServiceCollection AddSerilog(this IServiceCollection services, SerilogOptions? options)
-    {
-        return services.AddSerilog<LogProvider>(options);
     }
 }

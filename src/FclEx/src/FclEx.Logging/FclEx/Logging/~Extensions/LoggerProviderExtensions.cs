@@ -1,4 +1,4 @@
-﻿namespace Microsoft.Extensions.Logging;
+﻿namespace FclEx.Logging;
 
 public static class LoggerProviderExtensions
 {

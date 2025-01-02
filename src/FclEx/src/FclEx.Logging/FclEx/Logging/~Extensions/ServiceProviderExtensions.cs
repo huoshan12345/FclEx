@@ -1,6 +1,6 @@
 ﻿using FclEx.DependencyInjection;
 
-namespace Microsoft.Extensions.DependencyInjection;
+namespace FclEx.Logging;
 
 public static class ServiceProviderExtensions
 {

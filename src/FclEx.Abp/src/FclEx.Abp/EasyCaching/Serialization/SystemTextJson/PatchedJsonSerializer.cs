@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Text.Encodings.Web;
-using EasyCaching.Core.Internal;
 
 namespace EasyCaching.Serialization.SystemTextJson;
 
@@ -26,7 +25,7 @@ public class PatchedJsonSerializer : IEasyCachingSerializer
 
     public ArraySegment<byte> SerializeObject(object obj)
     {
-        var str = TypeHelper.BuildTypeName(obj.GetType());
+        var str = EasyCaching.Core.Internal.TypeHelper.BuildTypeName(obj.GetType());
         using var stream = new MemoryStream();
         using var writer = new Utf8JsonWriter(stream, _jsonWriterOption);
         writer.WriteStartArray();

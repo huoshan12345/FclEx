@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Logging.Extensions;
 
 public class LoggerFactoryExtensionsTests
 {

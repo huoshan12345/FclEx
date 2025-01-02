@@ -1,16 +1,9 @@
 namespace FclEx.Serilog.Sinks;
 
-public class LogEventSinkAdapterTests
+public class LogEventMutateSinkTests(ITestOutputHelper output)
 {
     private static readonly Mock<ILogEventSink> _sink = new();
-    private static readonly LogEventSinkAdapter Adapter = new(_sink.Object, null);
-
-    private readonly ITestOutputHelper _output;
-
-    public LogEventSinkAdapterTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
+    private static readonly LogEventMutateSink Adapter = new(_sink.Object, null);
 
     public static readonly IEnumerable<object[]> Levels = Enum.GetValues<LogEventLevel>()
         .Select(m => new object[] { m });
@@ -21,7 +14,7 @@ public class LogEventSinkAdapterTests
     {
         var ex = new LogException("", level);
         var logEvent = new LogEvent(DateTimeOffset.UtcNow, LogEventLevel.Error, ex,
-            new MessageTemplate(ex.Message, Enumerable.Empty<MessageTemplateToken>()), Enumerable.Empty<LogEventProperty>());
+            new MessageTemplate(ex.Message, []), []);
 
         Adapter.SetLevel(logEvent);
 
