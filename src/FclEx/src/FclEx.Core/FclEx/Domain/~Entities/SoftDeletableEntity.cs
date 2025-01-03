@@ -2,4 +2,8 @@
 
 public class SoftDeletableEntity<TPrimaryKey> : 
     CommonEntity<TPrimaryKey>, 
-    ISoftDeletableEntity<TPrimaryKey>;
+    ISoftDeletableEntity<TPrimaryKey>
+{
+    public DateTimeOffset DeletedAt { get; set; }
+    public bool IsDeleted { get; set; }
+}
