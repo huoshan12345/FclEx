@@ -40,6 +40,16 @@ static partial class StringExtensions
     public static bool EqualsIgnoreCase(this string source, string value)
         => source.Equals(value, StringComparison.OrdinalIgnoreCase);
 
+    public static bool EndsWithIgnoreCase(this string source, string value)
+    {
+        return source.EndsWith(value, StringComparison.OrdinalIgnoreCase);
+    }
+
+    public static bool StartsWithIgnoreCase(this string source, string value)
+    {
+        return source.StartsWith(value, StringComparison.OrdinalIgnoreCase);
+    }
+
 #if NETSTANDARD2_0
     public static bool Contains(this string source, string value, StringComparison comparison)
         => source.IndexOf(value, comparison) >= 0;
