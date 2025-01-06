@@ -3,14 +3,14 @@
 public class SetHostTests
 {
     public static string[] Hosts { get; } =
-    {
+    [
         "localhost",
         "www.baidu.com",
         "127.0.0.1",
-        "220.181.112.244"
-    };
+        "220.181.112.244",
+    ];
 
-    public static int[] Ports { get; } = { 80, 8080, 1234, };
+    public static int[] Ports { get; } = [80, 8080, 1234];
 
     public static IEnumerable<object[]> HostPortsPair { get; } = Hosts
         .SelectMany(m => Ports, (i, j) => (h: i, p: j)).SelectMany((i, j) => new object[]

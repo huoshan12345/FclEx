@@ -3,20 +3,20 @@
 public class CtorTests
 {
     public static string[] Urls { get; } =
-    {
+    [
         "https://www.cnblogs.com/armfly/p/9378170.html",
-        "/parent/change-old-passwd"
-    };
+        "/parent/change-old-passwd",
+    ];
 
     public static HttpMethod[] Methods { get; } =
-    {
+    [
         HttpMethod.Get,
         HttpMethod.Post,
         HttpMethod.Put,
         HttpMethod.Delete,
         HttpMethod.Head,
         HttpMethod.Options,
-    };
+    ];
 
     public static IEnumerable<object[]> CtorCases { get; } =
         Urls.SelectMany(m => Methods, (u, m) => new object[] { u, m });
