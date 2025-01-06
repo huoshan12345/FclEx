@@ -40,19 +40,14 @@ public class KeyValuePairConverterTests
         (nameof(MyListWithCtor<int>), t => typeof(MyListWithCtor<>).MakeGenericType(t)),
     ];
 
-    public record TestCase(string Name, IDictionary Dictionary, [property: JsonIgnore] Func<Type, Type> Converter);
-
-    public class TestCaseBuilder : MemberDataSerializer<TestCase>
+    public record TestCase(string Name, IDictionary Dictionary, [property: JsonIgnore] Func<Type, Type> Converter)
     {
-        // ReSharper disable once UnusedMember.Global
-        public TestCaseBuilder() { }
-        public TestCaseBuilder(TestCase value) : base(value) { }
-        public override string? ToString() => Value?.Name;
+        public override string ToString() => Name;
     }
 
     public static IEnumerable<object[]> Cases { get; } = Dictionaries.Index()
         .CrossJoin(KvToColConverters)
-        .Select(static m => new object[] { new TestCaseBuilder(new(m.Item2.Name + "_" + m.Item1.Index, m.Item1.Item, m.Item2.Converter)) }).ToArray();
+        .Select(static m => new object[] { new TestCase(m.Item2.Name + "_" + m.Item1.Index, m.Item1.Item, m.Item2.Converter) }).ToArray();
 
     private static void ReadTestGeneric<T, TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> raw)
         where T : IEnumerable<KeyValuePair<TKey, TValue>>
@@ -75,9 +70,9 @@ public class KeyValuePairConverterTests
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void ReadTest(TestCaseBuilder builder)
+    public void ReadTest(TestCase testCase)
     {
-        var (_, dic, converter) = builder.Value!;
+        var (_, dic, converter) = testCase;
 
         var dicType = dic.GetType();
         var keyType = dicType.GenericTypeArguments[0];
