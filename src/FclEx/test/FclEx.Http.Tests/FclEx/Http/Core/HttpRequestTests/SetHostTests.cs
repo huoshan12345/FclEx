@@ -17,10 +17,10 @@ public class SetHostTests
         {
             i.h,
             i.p,
-            i.p == 80 ? i.h : $"{i.h}:{i.p}",
+            $"{i.h}:{i.p}",
             j.h,
             j.p,
-            j.p == 80 ? j.h : $"{j.h}:{j.p}",
+            $"{j.h}:{j.p}",
         })
         .ToArray();
 
@@ -46,7 +46,8 @@ public class SetHostTests
     public void SetHostWithSchemeTest()
     {
         var req = HttpRequest.Get("/teacher/app/clean-redis-cache")
-            .Host("https://betassapinew.knowbox.cn:9002");
+            .Scheme("https")
+            .Host("betassapinew.knowbox.cn:9002");
 
         Assert.Equal("https", req.Scheme);
         Assert.Equal("betassapinew.knowbox.cn", req.Host);
