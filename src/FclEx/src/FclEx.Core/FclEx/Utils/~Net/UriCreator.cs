@@ -7,6 +7,10 @@
 /// </summary>
 public class UriCreator
 {
+    private static Regex Ipv4HostPort { get; } = new(@"^([0-9]{3}\.[0-9]{3}\.[0-9]{3}\.[0-9]{3})(?::(\d+))?$", RegexOptions.Compiled);
+    private static Regex Ipv6HostPort { get; } = new(@"^(\[[^\[^\]]+\])(?::(\d+))?$", RegexOptions.Compiled);
+    private static Regex HostPort { get; } = new(@"^([-\w\.]+):(\d+)$", RegexOptions.Compiled);
+
     public UriCreator(string? scheme, string? host, int port = -1, string? path = null)
         : this(new UriBuilder(scheme, host, port, path))
     {
@@ -67,33 +71,55 @@ public class UriCreator
                 return;
             }
 
-            if (CommonRegex.Scheme.TryMatch(value, out var m))
-            {
-                Scheme = m.Groups[1].Value;
-                value = value.TrimStart(m.Value);
-            }
-
-            var match = CommonRegex.HostPort.Match(value);
-            if (!match.Success)
-            {
-                match = CommonRegex.Ipv6HostPort.Match(value);
-            }
-            if (match.Success)
+            if (Ipv6HostPort.TryMatch(value, out var match) // [ipv6]:port or [ipv6]
+                || Ipv4HostPort.TryMatch(value, out match)) // ipv4:port or ipv4
             {
                 var h = match.Groups[1].Value;
-                var p = match.GetInt(2, 80);
-                if (h != Host || p != Port)
-                {
-                    _builder.Host = h;
-                    _builder.Port = p;
-                }
+                var p = match.GetInt(2, -1);
+
+                SetHost(h);
+                SetPort(p);
+                return;
             }
-            else
+
+            // IPAddress.TryParse("[::1]:5"); is valid, but the :5 is silently dropped!
+            // So put it between checking for IpHostPort and HostPort
+            if (IPAddress.TryParse(value, out var ip))
             {
-                _builder.Host = value;
+                SetHost(ip.ToString());
+                return;
             }
+
+            if (HostPort.TryMatch(value, out match)) // host:port
+            {
+                var h = match.Groups[1].Value;
+                var p = match.GetInt(2, -1);
+
+                SetHost(h);
+                SetPort(p);
+                return;
+            }
+
+            SetHost(value);
         }
     }
+
+    private void SetHost(string value)
+    {
+        if (value == Host)
+            return;
+
+        _builder.Host = value;
+    }
+
+    private void SetPort(int value)
+    {
+        if (value == Port)
+            return;
+
+        _builder.Port = value;
+    }
+
     public int Port
     {
         get => _builder.Port;
@@ -148,7 +174,11 @@ public class UriCreator
             }
         });
         return new Uri(str, UriKind.Relative);
+    }
 
+    public override string ToString()
+    {
+        return Build().ToString();
     }
 
     [SuppressMessage("ReSharper", "ReplaceSubstringWithRangeIndexer")]
@@ -164,50 +194,5 @@ public class UriCreator
             (_, _) when idx1 >= idx2 => throw new ArgumentException("In URIs with a query and a fragment, the fragment should follows the query"),
             _ => (uri.Substring(0, idx1), uri.Substring(idx1 + 1, idx2 - idx1 - 1), uri.Substring(idx2 + 1)),
         };
-    }
-}
-
-public static class UriCreatorExtensions
-{
-    public static UriCreator Scheme(this UriCreator creator, string scheme)
-    {
-        creator.Scheme = scheme;
-        return creator;
-    }
-
-    public static UriCreator Host(this UriCreator creator, string host)
-    {
-        creator.Host = host;
-        return creator;
-    }
-
-    public static UriCreator Port(this UriCreator creator, int port)
-    {
-        creator.Port = port;
-        return creator;
-    }
-
-    public static UriCreator UserName(this UriCreator creator, string userName)
-    {
-        creator.UserName = userName;
-        return creator;
-    }
-
-    public static UriCreator Path(this UriCreator creator, string path)
-    {
-        creator.Path = path;
-        return creator;
-    }
-
-    public static UriCreator Fragment(this UriCreator creator, string fragment)
-    {
-        creator.Fragment = fragment;
-        return creator;
-    }
-
-    public static UriCreator AddQueryParam(this UriCreator creator, string key, string? value)
-    {
-        creator.Query.Add(key, value);
-        return creator;
     }
 }

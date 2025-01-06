@@ -30,6 +30,12 @@ public sealed class UriParams : IReadOnlyCollection<UriParam>, IRenderable
         _entries = parameters.ToMultiValueDictionary(m => m.Key, m => m.Value);
     }
 
+    public UriParams(string key, object? value)
+    {
+        _entries = [];
+        Add(key, value?.ToString());
+    }
+
     public override string ToString()
     {
         return this.RenderToString();
@@ -74,10 +80,10 @@ public sealed class UriParams : IReadOnlyCollection<UriParam>, IRenderable
     /// <param name="value">The value to associate with the key. If null, an empty string is used.</param>
     /// <returns>The current <see cref="UriParams"/> instance, allowing for method chaining.</returns>
     /// <exception cref="ArgumentException">Thrown if <paramref name="key"/> is null or empty.</exception>
-    public UriParams Add(string key, string? value)
+    public UriParams Add(string key, object? value)
     {
         Check.NotEmpty(key);
-        _entries.Add(key, value ?? "");
+        _entries.Add(key, value.ToStringOrEmpty());
         return this;
     }
 
@@ -90,7 +96,7 @@ public sealed class UriParams : IReadOnlyCollection<UriParam>, IRenderable
     /// <param name="value">The value to associate with the key. If null, an empty string is used.</param>
     /// <returns>The current <see cref="UriParams"/> instance, allowing for method chaining.</returns>
     /// <exception cref="ArgumentException">Thrown if <paramref name="key"/> is null or empty.</exception>
-    public UriParams Set(string key, string? value)
+    public UriParams Set(string key, object? value)
     {
         Check.NotEmpty(key);
         _entries.Remove(key);
@@ -121,6 +127,12 @@ public sealed class UriParams : IReadOnlyCollection<UriParam>, IRenderable
     public string? Get(string key)
     {
         return GetValues(key).LastOrDefault();
+    }
+
+    public string? this[string key]
+    {
+        get => Get(key);
+        set => Set(key, value);
     }
 
     /// <summary>
@@ -186,6 +198,8 @@ public sealed class UriParams : IReadOnlyCollection<UriParam>, IRenderable
     public static UriParams Parse(string? query) => new(query);
 
     public static UriParams From(IEnumerable<KeyValuePair<string, string>> pairs) => new(pairs);
+
+    public static UriParams From(string key, object? value) => new(key, value);
 }
 
 public static class UriParameterCollectionExtensions

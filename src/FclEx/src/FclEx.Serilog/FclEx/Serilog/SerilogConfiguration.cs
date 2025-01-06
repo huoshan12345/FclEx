@@ -59,15 +59,21 @@ public static class SerilogConfigurationExtensions
 {
     public static SerilogConfiguration AddCommonExcluders(this SerilogConfiguration configuration)
     {
-        return configuration.Exclude(ExceptionExcluder.CommonItems)
-             .Exclude(MessageExcluder.CommonItems)
-             .Exclude(PropertyExcluder.CommonItems)
-             .Exclude(SourceExcluder.CommonItems);
+        return configuration
+            .Exclude(ExceptionExcluder.CommonItems)
+            .Exclude(MessageExcluder.CommonItems)
+            .Exclude(PropertyExcluder.CommonItems)
+            .Exclude(SourceExcluder.CommonItems);
     }
 
     public static SerilogConfiguration Configure(this SerilogConfiguration configuration, Action<LoggerConfiguration> action)
     {
         return configuration.Configure((m, _) => action(m));
+    }
+
+    public static SerilogConfiguration ConfigureLoggingBuilder(this SerilogConfiguration configuration, Action<ILoggingBuilder> action)
+    {
+        return configuration.Configure((m, n) => n.LoggingBuilderConfigure += action);
     }
 
     public static SerilogConfiguration Exclude(this SerilogConfiguration configuration, IEnumerable<ILogEventExcluder> excluders)

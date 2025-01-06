@@ -8,6 +8,8 @@
 /// <param name="Value">The value of the URI parameter.</param>
 public readonly record struct UriParam(string Key, string Value) : IRenderable
 {
+    public UriParam(string key, object? value) : this(key, value.ToStringOrEmpty()) { }
+
     public void Render(StringBuilder builder)
     {
         if (Key.IsNullOrEmpty())
