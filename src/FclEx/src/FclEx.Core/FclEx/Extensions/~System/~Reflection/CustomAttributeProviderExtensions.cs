@@ -8,18 +8,15 @@ public static class CustomAttributeProviderExtensions
         return attribute != null;
     }
 
+#if NETSTANDARD2_0
     public static T[] GetCustomAttributes<T>(this ICustomAttributeProvider provider, bool inherit) where T : Attribute
     {
         return (T[])provider.GetCustomAttributes(typeof(T), inherit);
     }
+#endif
 
     public static bool IsDefined<T>(this ICustomAttributeProvider provider, bool inherit) where T : Attribute
     {
         return provider.IsDefined(typeof(T), inherit);
-    }
-
-    public static void Write(this Utf8JsonWriter writer, object? value, JsonSerializerOptions options)
-    {
-        JsonSerializer.Serialize(writer, value, options);
     }
 }

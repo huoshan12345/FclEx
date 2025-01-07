@@ -7,3 +7,5 @@ public abstract class CommonEntity<TPrimaryKey> : ICommonEntity<TPrimaryKey>
     public DateTimeOffset UpdatedAt { get; set; }
     public bool IsDisabled { get; set; }
 }
+
+public abstract class CommonEntity : CommonEntity<long>;

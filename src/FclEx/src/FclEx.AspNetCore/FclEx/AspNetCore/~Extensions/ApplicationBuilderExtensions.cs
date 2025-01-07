@@ -5,34 +5,49 @@ namespace FclEx.AspNetCore;
 
 public static class ApplicationBuilderExtensions
 {
-    public static IApplicationBuilder UseHttpLog(this IApplicationBuilder app)
+    private const string Template = $$"""Request {{{nameof(HttpRequest.Protocol)}}} {{{nameof(HttpRequest.Method)}}} {{{nameof(HttpRequest.Path)}}} - {{{nameof(HttpResponse.StatusCode)}}} finished in {Time:f3}""";
+    private const string SecondsTemplate = Template + " seconds.";
+    private const string MillisecondsTemplate = Template + " ms.";
+
+    public static IApplicationBuilder UseHttpRequestLogging(this IApplicationBuilder app, bool withJwtInfo)
     {
         return app.Use(async (context, next) =>
         {
             var start = DateTime.UtcNow;
+
+            var logger = context.RequestServices.CreateLogger(typeof(ApplicationBuilderExtensions));
             var request = context.Request;
-            var logger = context.RequestServices.GetRequiredService<ILoggerFactory>()
-                .CreateLogger(typeof(ApplicationBuilderExtensions));
 
             using var logs = new LoggerProperties(logger)
-                .Push(LogPropertyNames.RequestStartTime, start)
-                .Push(LogPropertyNames.TraceId, context.TraceIdentifier)
+                .Push(LogPropertyNames.StartTime, start)
+                .Push(nameof(HttpContext.TraceIdentifier), context.TraceIdentifier)
                 .Push(request);
+
+            if (withJwtInfo)
+            {
+                var tokenInfo = request.GetJwtTokenInfo();
+                logs.Push(nameof(JwtTokenInfo), tokenInfo, true);
+            }
 
             await next().ConfigureAwait(false);
 
             var end = DateTime.UtcNow;
             var duration = end - start;
-            
+            var status = context.Response.StatusCode;
+
+            // We have to use another LoggerProperties here because the last one is before an async operation.
             using var x = new LoggerProperties(logger)
-                .Push(nameof(HttpResponse.StatusCode), context.Response?.StatusCode)
+                .Push(nameof(HttpResponse.StatusCode), status)
                 .Push(LogPropertyNames.DurationMilliseconds, duration.TotalMilliseconds)
-                .Push(LogPropertyNames.RequestEndTime, end);
+                .Push(LogPropertyNames.EndTime, end);
 
-            logger.LogInformation(duration.TotalSeconds > 1
-                ? $"Request finished in {duration.TotalSeconds:f3} seconds."
-                : $"Request finished in {duration.TotalMilliseconds:f3} ms.");
+            var (template, time) = duration.TotalSeconds > 1
+                ? (SecondsTemplate, duration.TotalSeconds)
+                : (MillisecondsTemplate, duration.TotalMilliseconds);
 
+#pragma warning disable CA2254
+            logger.LogInformation(template, request.Protocol, request.Method, request.Path, status, time);
+#pragma warning restore CA2254
         });
     }
 }
