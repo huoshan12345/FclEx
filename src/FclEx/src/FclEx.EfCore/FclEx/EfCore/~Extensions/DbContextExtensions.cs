@@ -2,7 +2,8 @@
 
 public static partial class DbContextExtensions
 {
-    public static Task<T?> GetAsync<T, TKey>(this DbSet<T> set, TKey id, bool noTracking = true, CancellationToken cancellationToken = default) where T : class, IEntity<TKey>
+    public static Task<T?> GetAsync<T, TKey>(this DbSet<T> set, TKey id, bool noTracking = true, CancellationToken cancellationToken = default)
+        where T : class, IHasId<TKey>
     {
         var query = noTracking
             ? set.AsNoTracking()
@@ -24,7 +25,8 @@ public static partial class DbContextExtensions
         return entity;
     }
 
-    public static async Task<T> SaveAsync<T, TKey>(this DbContext context, T entity, params string[] excludeOnUpdate) where T : class, IEntity<TKey>
+    public static async Task<T> SaveAsync<T, TKey>(this DbContext context, T entity, params string[] excludeOnUpdate) 
+        where T : class, IHasId<TKey>
     {
         var entry = context.Entry(entity);
 
@@ -53,7 +55,8 @@ public static partial class DbContextExtensions
         return entity;
     }
     
-    public static Task<T> SaveAsync<T>(this DbContext context, T entity, params string[] excludeOnUpdate) where T : class, IEntity<long>
+    public static Task<T> SaveAsync<T>(this DbContext context, T entity, params string[] excludeOnUpdate) 
+        where T : class, IHasId<long>
     {
         return context.SaveAsync<T, long>(entity, excludeOnUpdate);
     }
@@ -149,7 +152,8 @@ public static partial class DbContextExtensions
         }
     }
     
-    public static Task<int> SoftDeleteAsync<T, TKey>(this DbSet<T> set, TKey id, CancellationToken cancellationToken = default) where T : class, IEntity<TKey>
+    public static Task<int> SoftDeleteAsync<T, TKey>(this DbSet<T> set, TKey id, CancellationToken cancellationToken = default) 
+        where T : class, IHasId<TKey>
     {
         var filter = QueryableHelper.BuildIdFilter<T, TKey>(id);
         return set.Where(filter).ExecuteSoftDeleteAsync(cancellationToken);

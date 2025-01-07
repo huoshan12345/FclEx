@@ -9,7 +9,8 @@ public static class CustomAttributeProviderExtensions
     }
 
 #if NETSTANDARD2_0
-    public static T[] GetCustomAttributes<T>(this ICustomAttributeProvider provider, bool inherit) where T : Attribute
+    // this method's return type in dotnet version is IEnumerable<T> instead of T[], so we can't change it.
+    public static IEnumerable<T> GetCustomAttributes<T>(this ICustomAttributeProvider provider, bool inherit) where T : Attribute
     {
         return (T[])provider.GetCustomAttributes(typeof(T), inherit);
     }

@@ -4,7 +4,13 @@ namespace FclEx.EfCore;
 
 public static class ChangeTrackerExtensions
 {
-    public static void HandleSoftDelete(this ChangeTracker tracker)
+    /// <summary>
+    /// Applies state-specific rules to entities tracked by the <see cref="ChangeTracker"/>.
+    /// This includes setting timestamps for created or updated entities, handling soft deletion, 
+    /// and ensuring certain properties remain unchanged during state transitions.
+    /// </summary>
+    /// <param name="tracker">The <see cref="ChangeTracker"/> managing entity state transitions.</param>
+    public static void ApplyEntityStateRules(this ChangeTracker tracker)
     {
         var now = DateTimeOffset.UtcNow;
         foreach (var entry in tracker.Entries())
@@ -29,7 +35,7 @@ public static class ChangeTrackerExtensions
 
                     var exclude = new HashSet<string>();
 
-                    // 不允许更新为已删除，但是可以更新为未删除
+                    // ignore when updating IsDeleted to true, but allow updating to false
                     if (entity is ISoftDeletable { IsDeleted: true })
                         exclude.Add(nameof(ISoftDeletable.IsDeleted));
 

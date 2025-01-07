@@ -69,11 +69,11 @@ public static class QueryableHelper
         return lambda;
     }
 
-    public static Expression<Func<T, bool>> BuildIdFilter<T, TKey>(TKey id) where T : IEntity<TKey>
+    public static Expression<Func<T, bool>> BuildIdFilter<T, TKey>(TKey id) where T : IHasId<TKey>
     {
         // m => m.Id == id
         var objParam = Expression.Parameter(typeof(T));
-        var member = Expression.Property(objParam, nameof(IEntity<TKey>.Id));
+        var member = Expression.Property(objParam, nameof(IHasId<TKey>.Id));
         var value = Expression.Constant(id);
         var equal = Expression.Equal(member, value);
         var lambda = Expression.Lambda<Func<T, bool>>(equal, objParam);

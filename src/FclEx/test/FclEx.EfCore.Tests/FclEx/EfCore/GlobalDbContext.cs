@@ -36,6 +36,8 @@ public class GlobalDbContext(
     public DbSet<HasTableAttributeEntity> HasTableAttribute { get; set; }
     public DbSet<EntityWithIdAndIndex> EntityWithIdAndIndex { get; set; }
 
+    public DbSet<EntityWithStates> EntityWithStates { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder builder)
     {
         base.OnConfiguring(builder);

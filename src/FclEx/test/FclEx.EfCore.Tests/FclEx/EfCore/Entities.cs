@@ -1,6 +1,4 @@
-﻿using FclEx.Domain;
-
-namespace FclEx.EfCore;
+﻿namespace FclEx.EfCore;
 
 public class EntityWithAutoKey
 {
@@ -78,10 +76,19 @@ public class HasTableAttributeEntity
 
 [Index(nameof(Name), IsUnique = true)]
 [Index(nameof(Value))]
-public class EntityWithIdAndIndex : IEntity<int>
+public class EntityWithIdAndIndex : IHasId<int>
 {
     public int Id { get; set; }
     [Required]
     public string Name { get; set; } = "";
     public int Value { get; set; }
+}
+
+public class EntityWithStates : ISoftDeletable, IHasCreatedAt, IHasUpdatedAt, IHasDeletedAt
+{
+    public int Id { get; set; }
+    public bool IsDeleted { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+    public DateTimeOffset DeletedAt { get; set; }
 }
