@@ -12,16 +12,16 @@ public class RedisCollectionManagerTests(ITestOutputHelper output) : AbpRedisTes
         var provider = ServiceProvider.GetRequiredService<IRedisCachingProvider>();
         var col = manager.GetList<string>(key);
 
-        var keyExt = col.Key;
-        if (provider.KeyExists(keyExt))
-            provider.KeyDel(keyExt);
+        var colKey = col.Key;
+        if (provider.KeyExists(colKey))
+            provider.KeyDel(colKey);
 
         Assert.Equal(RedisCollectionType.List, col.CollectionType);
-        Assert.Equal(keyExt, col.Key);
+        Assert.Equal(colKey, col.Key);
 
         col.LPush(key);
         Assert.Equal(1, col.LLen());
-        Assert.True(provider.KeyExists(keyExt));
+        Assert.True(provider.KeyExists(colKey));
         Assert.Equal(1, provider.LLen(col.Key));
     }
 
@@ -33,17 +33,17 @@ public class RedisCollectionManagerTests(ITestOutputHelper output) : AbpRedisTes
         var provider = ServiceProvider.GetRequiredService<IRedisCachingProvider>();
         var col = manager.GetHash<string>(key);
 
-        var keyExt = col.Key;
-        if (provider.KeyExists(keyExt))
-            provider.KeyDel(keyExt);
+        var colKey = col.Key;
+        if (provider.KeyExists(colKey))
+            provider.KeyDel(colKey);
 
         Assert.Equal(RedisCollectionType.Hash, col.CollectionType);
-        Assert.Equal(keyExt, col.Key);
+        Assert.Equal(colKey, col.Key);
 
         col.HSet(key, key);
         Assert.Equal(1, col.HLen());
 
-        Assert.True(provider.KeyExists(keyExt));
+        Assert.True(provider.KeyExists(colKey));
         Assert.Equal(1, provider.HLen(col.Key));
     }
 
@@ -55,17 +55,17 @@ public class RedisCollectionManagerTests(ITestOutputHelper output) : AbpRedisTes
         var provider = ServiceProvider.GetRequiredService<IRedisCachingProvider>();
         var col = manager.GetSet<string>(key);
 
-        var keyExt = col.Key;
-        if (provider.KeyExists(keyExt))
-            provider.KeyDel(keyExt);
+        var colKey = col.Key;
+        if (provider.KeyExists(colKey))
+            provider.KeyDel(colKey);
 
         Assert.Equal(RedisCollectionType.Set, col.CollectionType);
-        Assert.Equal(keyExt, col.Key);
+        Assert.Equal(colKey, col.Key);
 
         col.SAdd(key);
         Assert.Equal(1, col.SCard());
 
-        Assert.True(provider.KeyExists(keyExt));
+        Assert.True(provider.KeyExists(colKey));
         Assert.Equal(1, provider.SCard(col.Key));
     }
 
@@ -79,21 +79,21 @@ public class RedisCollectionManagerTests(ITestOutputHelper output) : AbpRedisTes
 
         var col = manager.GetSortedSet<string>(key);
 
-        var keyExt = col.Key;
-        if (provider.KeyExists(keyExt))
-            provider.KeyDel(keyExt);
+        var colKey = col.Key;
+        if (provider.KeyExists(colKey))
+            provider.KeyDel(colKey);
 
         Assert.Equal(RedisCollectionType.SortedSet, col.CollectionType);
-        Assert.Equal(keyExt, col.Key);
+        Assert.Equal(colKey, col.Key);
 
         col.ZAdd(key, 1);
-        Assert.Equal(1, database.SortedSetLength(keyExt));
+        Assert.Equal(1, database.SortedSetLength(colKey));
 
 
 
         Assert.Equal(1, col.ZCount(0, 10));
 
-        Assert.True(provider.KeyExists(keyExt));
-        Assert.Equal(1, provider.ZCount(keyExt, 0, 10));
+        Assert.True(provider.KeyExists(colKey));
+        Assert.Equal(1, provider.ZCount(colKey, 0, 10));
     }
 }

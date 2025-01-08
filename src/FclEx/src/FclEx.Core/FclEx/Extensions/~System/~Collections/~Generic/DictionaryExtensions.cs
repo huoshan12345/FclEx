@@ -124,4 +124,18 @@ public static class DictionaryExtensions
             _ => new ReadOnlyDictionary<TKey, TValue>(dic!)
         };
     }
+
+#if NETSTANDARD2_0
+    public static bool Remove<TKey, TValue>(this Dictionary<TKey, TValue> dic, TKey key, [NotNullWhen(true)] out TValue value) where TKey : notnull
+    {
+        if (dic.TryGetValue(key, out value))
+        {
+            dic.Remove(key);
+#pragma warning disable CS8762 // Parameter must have a non-null value when exiting in some condition.
+            return true;
+#pragma warning restore CS8762 // Parameter must have a non-null value when exiting in some condition.
+        }
+        return false;
+    }
+#endif
 }
