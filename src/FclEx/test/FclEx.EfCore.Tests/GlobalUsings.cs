@@ -3,6 +3,7 @@
 global using System.ComponentModel.DataAnnotations;
 global using System.ComponentModel.DataAnnotations.Schema;
 global using System.Diagnostics.CodeAnalysis;
+global using System.Linq.Expressions;
 global using System.Reflection;
 global using Dapper;
 global using FclEx.Domain;
@@ -11,6 +12,8 @@ global using FclEx.Helpers;
 global using FclEx.Xunit;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.EntityFrameworkCore.ChangeTracking;
+global using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+global using Microsoft.EntityFrameworkCore.Metadata.Internal;
 global using Moq;
 global using Npgsql;
 global using Renci.SshNet;

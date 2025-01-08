@@ -13,6 +13,8 @@
 /// </summary>
 public class ConfigureSoftDeleteIndexesConvention : IModelFinalizingConvention
 {
+    public static readonly ConfigureSoftDeleteIndexesConvention Instance = new();
+
     public void ProcessModelFinalizing(IConventionModelBuilder modelBuilder, IConventionContext<IConventionModelBuilder> context)
     {
         foreach (var type in modelBuilder.Metadata.GetEntityTypes())

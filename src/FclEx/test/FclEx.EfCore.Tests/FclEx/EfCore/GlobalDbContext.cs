@@ -90,7 +90,7 @@ public class GlobalDbContext(
         }
 
         modelBuilder.Entity<EntityWithoutKey>().HasNoKey();
-
+        
         modelBuilder.Entity<EntityWithNavigation>()
             .HasOne(m => m.Navigation)
             .WithMany()
