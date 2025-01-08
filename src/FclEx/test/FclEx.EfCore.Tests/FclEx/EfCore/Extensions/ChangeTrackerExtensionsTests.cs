@@ -7,7 +7,7 @@ public class ChangeTrackerExtensionsTests(EfCoreFixture fixture) : EfCoreTests(f
     public async Task SetsTimestamps_ForAddedEntities(DbProviderType dbProviderType)
     {
         await using var context = Fixture.CreateDbContext(dbProviderType);
-        var entity = new EntityWithStates();
+        var entity = new EntityHasStates();
         context.Add(entity);
 
         context.ChangeTracker.ApplyEntityStateRules();
@@ -22,7 +22,7 @@ public class ChangeTrackerExtensionsTests(EfCoreFixture fixture) : EfCoreTests(f
     public async Task UpdatesTimestamp_ForModifiedEntities(DbProviderType dbProviderType)
     {
         await using var context = Fixture.CreateDbContext(dbProviderType);
-        var entity = new EntityWithStates { CreatedAt = DateTimeOffset.UtcNow.AddDays(-1) };
+        var entity = new EntityHasStates { CreatedAt = DateTimeOffset.UtcNow.AddDays(-1) };
         context.Add(entity);
         await context.SaveChangesAsync();
 
@@ -40,7 +40,7 @@ public class ChangeTrackerExtensionsTests(EfCoreFixture fixture) : EfCoreTests(f
     public async Task HandlesSoftDelete_ForDeletedEntities(DbProviderType dbProviderType)
     {
         await using var context = Fixture.CreateDbContext(dbProviderType);
-        var entity = new EntityWithStates { CreatedAt = DateTimeOffset.UtcNow };
+        var entity = new EntityHasStates { CreatedAt = DateTimeOffset.UtcNow };
         context.Add(entity);
         await context.SaveChangesAsync();
 
@@ -50,7 +50,7 @@ public class ChangeTrackerExtensionsTests(EfCoreFixture fixture) : EfCoreTests(f
 
         Assert.True(entity.IsDeleted);
         Assert.NotEqual(default, entity.DeletedAt);
-        Assert.Contains(context.ChangeTracker.Entries<EntityWithStates>(), e => e.State == EntityState.Modified);
+        Assert.Contains(context.ChangeTracker.Entries<EntityHasStates>(), e => e.State == EntityState.Modified);
     }
 
     [Theory]
@@ -58,7 +58,7 @@ public class ChangeTrackerExtensionsTests(EfCoreFixture fixture) : EfCoreTests(f
     public async Task DoesNotModifyUntrackedOrUnchangedEntities(DbProviderType dbProviderType)
     {
         await using var context = Fixture.CreateDbContext(dbProviderType);
-        var entity = new EntityWithStates { CreatedAt = DateTimeOffset.UtcNow };
+        var entity = new EntityHasStates { CreatedAt = DateTimeOffset.UtcNow };
         context.Add(entity);
         await context.SaveChangesAsync();
 

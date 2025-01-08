@@ -76,7 +76,7 @@ public class HasTableAttributeEntity
 
 [Index(nameof(Name), IsUnique = true)]
 [Index(nameof(Value))]
-public class EntityWithIdAndIndex : IHasId<int>
+public class EntityWithIndex : IHasId<int>
 {
     public int Id { get; set; }
     [Required]
@@ -84,11 +84,19 @@ public class EntityWithIdAndIndex : IHasId<int>
     public int Value { get; set; }
 }
 
-public class EntityWithStates : ISoftDeletable, IHasCreatedAt, IHasUpdatedAt, IHasDeletedAt
+public class EntityHasStates : SoftDeletableEntity<long>
 {
-    public int Id { get; set; }
-    public bool IsDeleted { get; set; }
-    public DateTimeOffset CreatedAt { get; set; }
-    public DateTimeOffset UpdatedAt { get; set; }
-    public DateTimeOffset DeletedAt { get; set; }
+    [Required]
+    public string Name { get; set; } = "";
+}
+
+public class EntityWithNavigation : IHasId<long>
+{
+    public long Id { get; set; }
+
+    [Required]
+    public string Name { get; set; } = "";
+
+    public long? NavigationId { get; set; }
+    public EntityHasStates? Navigation { get; set; }
 }

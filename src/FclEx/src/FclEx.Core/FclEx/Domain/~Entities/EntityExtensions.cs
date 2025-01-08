@@ -2,7 +2,7 @@
 
 public static class EntityExtensions
 {
-    public static TEntity SetCreatedAt<TEntity>(this TEntity entity, DateTimeOffset time) where TEntity : class, IEntity
+    public static T SetCreatedAt<T>(this T entity, DateTimeOffset time)
     {
         if (entity is IHasCreatedAt hasCreatedAt)
         {
@@ -11,7 +11,7 @@ public static class EntityExtensions
         return entity;
     }
 
-    public static TEntity SetUpdatedAt<TEntity>(this TEntity entity, DateTimeOffset time) where TEntity : class, IEntity
+    public static T SetUpdatedAt<T>(this T entity, DateTimeOffset time)
     {
         if (entity is IHasUpdatedAt hasModificationTime)
         {
@@ -20,7 +20,7 @@ public static class EntityExtensions
         return entity;
     }
 
-    public static TEntity SetDeletedAt<TEntity>(this TEntity entity, DateTimeOffset time) where TEntity : class, IEntity
+    public static T SetDeletedAt<T>(this T entity, DateTimeOffset time)
     {
         if (entity is IHasDeletedAt hasDeletedAt)
         {

@@ -6,7 +6,6 @@
 /// </summary>
 /// <typeparam name="TPrimaryKey">The type of the primary key for the entity.</typeparam>
 public interface ICommonEntity<TPrimaryKey> :
-    IEntity,
     IHasId<TPrimaryKey>,
     IHasCreatedAt,
     IHasUpdatedAt,

@@ -55,4 +55,58 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
             });
         }
     }
+
+    [Theory]
+    [MemberData(nameof(DbTestCases))]
+    public async Task GetAsync_ShouldReturnEntity_WhenEntityExists(DbProviderType dbProviderType)
+    {
+        var entity = await CreateEntityHasStatesAsync(dbProviderType);
+
+        // need to create a new context to ensure no tracked entities.
+        await using var context = Fixture.CreateDbContext(dbProviderType);
+        var result = await context.EntityHasStates.GetAsync(entity.Id);
+
+        Assert.NotNull(result);
+        Assert.Equal(entity.Id, result.Id);
+        Assert.Equal(entity.Name, result.Name);
+    }
+
+    [Theory]
+    [MemberData(nameof(DbTestCases))]
+    public async Task GetAsync_ShouldReturnNull_WhenEntityDoesNotExist(DbProviderType dbProviderType)
+    {
+        await using var context = Fixture.CreateDbContext(dbProviderType);
+
+        var result = await context.EntityHasStates.GetAsync(0);
+
+        Assert.Null(result);
+    }
+
+    [Theory]
+    [MemberData(nameof(DbTestCases))]
+    public async Task GetAsync_ShouldNotTrackEntity_WhenNoTrackingIsTrue(DbProviderType dbProviderType)
+    {
+        var entity = await CreateEntityHasStatesAsync(dbProviderType);
+
+        // need to create a new context to ensure no tracked entities.
+        await using var context = Fixture.CreateDbContext(dbProviderType);
+        var result = await context.EntityHasStates.GetAsync(entity.Id, noTracking: true);
+
+        Assert.NotNull(result);
+        Assert.Empty(context.ChangeTracker.Entries());
+    }
+
+    [Theory]
+    [MemberData(nameof(DbTestCases))]
+    public async Task GetAsync_ShouldTrackEntity_WhenNoTrackingIsFalse(DbProviderType dbProviderType)
+    {
+        var entity = await CreateEntityHasStatesAsync(dbProviderType);
+
+        // need to create a new context to ensure no tracked entities.
+        await using var context = Fixture.CreateDbContext(dbProviderType);
+        var result = await context.EntityHasStates.GetAsync(entity.Id, noTracking: false);
+
+        Assert.NotNull(result);
+        Assert.Single(context.ChangeTracker.Entries());
+    }
 }

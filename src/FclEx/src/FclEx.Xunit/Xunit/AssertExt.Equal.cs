@@ -97,4 +97,14 @@ partial class AssertExt
     {
         Assert.Equal(expected, actual.CastTo<TInt?>());
     }
+
+    public static void EqualWithinMs(DateTimeOffset expected, DateTimeOffset actual)
+    {
+        Assert.Equal(expected, actual, MillisecondsPrecisionComparer.Instance);
+    }
+
+    public static void NotEqualWithinMs(DateTimeOffset expected, DateTimeOffset actual)
+    {
+        Assert.NotEqual(expected, actual, MillisecondsPrecisionComparer.Instance);
+    }
 }

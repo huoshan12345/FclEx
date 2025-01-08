@@ -28,15 +28,16 @@ public class GlobalDbContext(
     public DbProviderType DbProviderType { get; } = dbProviderType;
     public string ConnectionString { get; } = connectionString;
 
-    public DbSet<EntityWithAutoKey> EntityWithAutoKey { get; set; } 
+    public DbSet<EntityWithAutoKey> EntityWithAutoKey { get; set; }
     public DbSet<EntityWithGuidKey> EntityWithGuidKey { get; set; }
     public DbSet<EntityWithoutKey> EntityWithoutKey { get; set; }
 
     public DbSet<HasPostfixEntity> HasPostfix { get; set; }
     public DbSet<HasTableAttributeEntity> HasTableAttribute { get; set; }
-    public DbSet<EntityWithIdAndIndex> EntityWithIdAndIndex { get; set; }
+    public DbSet<EntityWithIndex> EntityWithIdAndIndex { get; set; }
 
-    public DbSet<EntityWithStates> EntityWithStates { get; set; }
+    public DbSet<EntityHasStates> EntityHasStates { get; set; }
+    public DbSet<EntityWithNavigation> EntityWithNavigation { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder builder)
     {
@@ -89,6 +90,23 @@ public class GlobalDbContext(
         }
 
         modelBuilder.Entity<EntityWithoutKey>().HasNoKey();
+
+        modelBuilder.Entity<EntityWithNavigation>()
+            .HasOne(m => m.Navigation)
+            .WithMany()
+            .HasForeignKey(m => m.NavigationId);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        ChangeTracker.ApplyEntityStateRules();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        ChangeTracker.ApplyEntityStateRules();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
     }
 
     private static void UseMySql(DbContextOptionsBuilder builder, string connectionString, string? schema)

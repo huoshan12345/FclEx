@@ -2,6 +2,40 @@
 
 public static class QueryableExtensions
 {
+    /// <summary>
+    /// Retrieves an entity from the database by its primary key, optionally with no tracking.
+    /// </summary>
+    /// <typeparam name="T">The type of the entity.</typeparam>
+    /// <typeparam name="TKey">The type of the entity's primary key.</typeparam>
+    /// <param name="queryable">The <see cref="DbSet{T}"/> to query.</param>
+    /// <param name="id">The primary key value of the entity to retrieve.</param>
+    /// <param name="noTracking">
+    /// Whether the query should be executed with "no tracking" to optimize for read-only scenarios.
+    /// Defaults to <c>true</c>.
+    /// </param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>The entity if found; otherwise, <c>null</c>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="id"/> is null.</exception>
+    public static Task<T?> GetAsync<T, TKey>(this IQueryable<T> queryable, TKey id, bool noTracking = true, CancellationToken cancellationToken = default)
+        where T : class, IHasId<TKey>
+    {
+        if (id is null)
+            return Task.FromResult(default(T?));
+
+        var query = noTracking
+            ? queryable.AsNoTracking()
+            : queryable;
+
+        var filter = QueryableHelper.BuildIdFilter<T, TKey>(id);
+        return query.FirstOrDefaultAsync(filter, cancellationToken);
+    }
+
+    public static Task<T?> GetAsync<T>(this IQueryable<T> queryable, long id, bool noTracking = true, CancellationToken cancellationToken = default)
+        where T : class, IHasId<long>
+    {
+        return queryable.GetAsync<T, long>(id, noTracking, cancellationToken);
+    }
+
     private static async Task<(T[] items, int TotalCount)> ToArrayAndCountAsync<T>(this IQueryable<T> queryable, int pageSize, int pageIndex)
     {
         var count = await queryable.CountAsync();

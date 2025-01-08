@@ -2,17 +2,6 @@
 
 public static partial class DbContextExtensions
 {
-    public static Task<T?> GetAsync<T, TKey>(this DbSet<T> set, TKey id, bool noTracking = true, CancellationToken cancellationToken = default)
-        where T : class, IHasId<TKey>
-    {
-        var query = noTracking
-            ? set.AsNoTracking()
-            : set;
-
-        var filter = QueryableHelper.BuildIdFilter<T, TKey>(id);
-        return query.FirstOrDefaultAsync(filter, cancellationToken);
-    }
-
     public static async Task<T> GetOrAddAsync<T>(this DbContext context, Expression<Func<T, bool>> filter, Func<T> factory) where T : class
     {
         var entity = await context.Set<T>().FirstOrDefaultAsync(filter);
@@ -25,7 +14,7 @@ public static partial class DbContextExtensions
         return entity;
     }
 
-    public static async Task<T> SaveAsync<T, TKey>(this DbContext context, T entity, params string[] excludeOnUpdate) 
+    public static async Task<T> SaveAsync<T, TKey>(this DbContext context, T entity, params string[] excludeOnUpdate)
         where T : class, IHasId<TKey>
     {
         var entry = context.Entry(entity);
@@ -54,8 +43,8 @@ public static partial class DbContextExtensions
         await context.SaveChangesAsync();
         return entity;
     }
-    
-    public static Task<T> SaveAsync<T>(this DbContext context, T entity, params string[] excludeOnUpdate) 
+
+    public static Task<T> SaveAsync<T>(this DbContext context, T entity, params string[] excludeOnUpdate)
         where T : class, IHasId<long>
     {
         return context.SaveAsync<T, long>(entity, excludeOnUpdate);
@@ -151,8 +140,8 @@ public static partial class DbContextExtensions
             set.Remove(entity);
         }
     }
-    
-    public static Task<int> SoftDeleteAsync<T, TKey>(this DbSet<T> set, TKey id, CancellationToken cancellationToken = default) 
+
+    public static Task<int> SoftDeleteAsync<T, TKey>(this DbSet<T> set, TKey id, CancellationToken cancellationToken = default)
         where T : class, IHasId<TKey>
     {
         var filter = QueryableHelper.BuildIdFilter<T, TKey>(id);
