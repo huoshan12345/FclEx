@@ -21,6 +21,7 @@ public class JwtTokenInfo
         Scopes = token.Payload.Claims.FirstOrDefault(m => m.Type == JwtClaimTypes.Scope)?.Value.Split(' ') ?? [];
     }
 
+    [LogPropertyIgnore]
     public JwtSecurityToken Token { get; }
 
     /// <summary>

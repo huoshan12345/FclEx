@@ -19,7 +19,7 @@ public class SerilogConfiguration
         _actions.Add((m, n) =>
         {
             m.MinimumLevel.Is(MinimumLevel)
-                .Destructure.UsingAttributes()
+                .Destructure.UsingAttributes(x => x.RespectLogPropertyIgnoreAttribute = true)
                 .Enrich.FromLogContext()
                 .Filter.ByExcluding(x => _excluders.Any(y => y.ShouldExclude(x)));
         });
