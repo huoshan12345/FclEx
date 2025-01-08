@@ -1,6 +1,6 @@
 ﻿namespace FclEx.EfCore;
 
-public class EfCoreTests(EfCoreFixture fixture) : DatabaseTests, ICollectionFixture<EfCoreFixture>
+public abstract class EfCoreTests(EfCoreFixture fixture) : DatabaseTests, IAssemblyFixture<EfCoreFixture>
 {
     public EfCoreFixture Fixture { get; } = fixture;
 

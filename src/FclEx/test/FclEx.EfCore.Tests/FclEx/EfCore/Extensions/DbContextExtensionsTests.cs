@@ -4,6 +4,48 @@ public class DbContextExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
 {
     [Theory]
     [MemberData(nameof(DbTestCases))]
+    public async Task ReturnsExistingEntity_WhenEntityExists(DbProviderType dbProviderType)
+    {
+        var name = Guid.NewGuid().ToString();
+        {
+            await using var context = Fixture.CreateDbContext(dbProviderType);
+            var existingEntity = new EntityHasStates { Name = name };
+            context.Add(existingEntity);
+            await context.SaveChangesAsync();
+        }
+
+        {
+            await using var context = Fixture.CreateDbContext(dbProviderType);
+            var result = await context.GetOrAddAsync(m => m.Name == name, () => new EntityHasStates { Name = "New" });
+
+            Assert.NotNull(result);
+            Assert.Equal(name, result.Name);
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(DbTestCases))]
+    public async Task AddsAndReturnsNewEntity_WhenEntityDoesNotExist(DbProviderType dbProviderType)
+    {
+        var name = Guid.NewGuid().ToString();
+        {
+            await using var context = Fixture.CreateDbContext(dbProviderType);
+            await context.GetOrAddAsync(m => m.Name == name, () => new EntityHasStates { Name = name });
+
+        }
+
+        {
+            await using var context = Fixture.CreateDbContext(dbProviderType);
+            var result = await context.EntityHasStates.FirstOrDefaultAsync(m => m.Name == name);
+
+            Assert.NotNull(result);
+            Assert.Equal(name, result.Name);
+        }
+    }
+
+
+    [Theory]
+    [MemberData(nameof(DbTestCases))]
     public async Task SaveAsync_ShouldAddEntity_WhenIdIsDefault(DbProviderType dbProviderType)
     {
         var entity = new EntityHasStates();

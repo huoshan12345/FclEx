@@ -2,8 +2,24 @@
 
 public static partial class DbContextExtensions
 {
+    /// <summary>
+    /// Retrieves an entity matching the specified filter from the database.
+    /// If no matching entity is found, creates a new entity using the provided factory function, adds it to the database, and saves changes.
+    /// </summary>
+    /// <typeparam name="T">The type of the entity.</typeparam>
+    /// <param name="context">The <see cref="DbContext"/> instance used for database operations.</param>
+    /// <param name="filter">The filter expression to locate an existing entity.</param>
+    /// <param name="factory">The factory function to create a new entity if no match is found.</param>
+    /// <returns>The existing or newly added entity.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown if <paramref name="context"/>, <paramref name="filter"/>, or <paramref name="factory"/> is <c>null</c>.
+    /// </exception>
     public static async Task<T> GetOrAddAsync<T>(this DbContext context, Expression<Func<T, bool>> filter, Func<T> factory) where T : class
     {
+        Check.NotNull(context);
+        Check.NotNull(filter);
+        Check.NotNull(factory);
+
         var entity = await context.Set<T>().FirstOrDefaultAsync(filter);
         if (entity is null)
         {
@@ -14,6 +30,27 @@ public static partial class DbContextExtensions
         return entity;
     }
 
+    /// <summary>
+    /// Saves an entity to the database by determining whether it should be added or updated.
+    /// If the entity's ID is the default value (e.g., 0 for integers or Guid.Empty for GUIDs),
+    /// it is treated as a new entity and marked for insertion. Otherwise, it is treated as
+    /// an existing entity and marked for update.
+    /// </summary>
+    /// <typeparam name="T">The type of the entity.</typeparam>
+    /// <typeparam name="TKey">The type of the entity's ID.</typeparam>
+    /// <param name="context">The <see cref="DbContext"/> instance used for database operations.</param>
+    /// <param name="entity">The entity to be saved.</param>
+    /// <param name="excludeOnUpdate">
+    /// Names of properties or navigation properties that should not be modified during an update operation.
+    /// </param>
+    /// <returns>The saved entity after changes have been persisted to the database.</returns>
+    /// <remarks>
+    /// This method is designed for entities with auto-generated IDs. It checks the ID value
+    /// to determine whether the entity is new or existing. For new entities, the state is set
+    /// to <see cref="EntityState.Added"/>. For existing entities, the state is set to 
+    /// <see cref="EntityState.Modified"/>, and any properties or navigation properties specified 
+    /// in <paramref name="excludeOnUpdate"/> are excluded from modification.
+    /// </remarks>
     public static async Task<T> SaveAsync<T, TKey>(this DbContext context, T entity, params string[] excludeOnUpdate)
         where T : class, IHasId<TKey>
     {
