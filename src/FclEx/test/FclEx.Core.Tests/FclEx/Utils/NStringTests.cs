@@ -1,4 +1,4 @@
-﻿namespace System;
+﻿namespace FclEx.Utils;
 
 public class NStringTests
 {

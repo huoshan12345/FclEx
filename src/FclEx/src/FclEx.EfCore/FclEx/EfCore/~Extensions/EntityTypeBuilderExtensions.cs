@@ -1,6 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-namespace FclEx.EfCore;
+﻿namespace FclEx.EfCore;
 
 public static class EntityTypeBuilderExtensions
 {

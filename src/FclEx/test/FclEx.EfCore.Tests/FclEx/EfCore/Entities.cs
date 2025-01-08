@@ -1,6 +1,4 @@
-﻿using FclEx.Domain;
-
-namespace FclEx.EfCore;
+﻿namespace FclEx.EfCore;
 
 public class EntityWithAutoKey
 {
@@ -78,10 +76,27 @@ public class HasTableAttributeEntity
 
 [Index(nameof(Name), IsUnique = true)]
 [Index(nameof(Value))]
-public class EntityWithIdAndIndex : IEntity<int>
+public class EntityWithIndex : IHasId<int>
 {
     public int Id { get; set; }
     [Required]
     public string Name { get; set; } = "";
     public int Value { get; set; }
+}
+
+public class EntityHasStates : SoftDeletableEntity<long>
+{
+    [Required]
+    public string Name { get; set; } = "";
+}
+
+public class EntityWithNavigation : IHasId<long>
+{
+    public long Id { get; set; }
+
+    [Required]
+    public string Name { get; set; } = "";
+
+    public long? NavigationId { get; set; }
+    public EntityHasStates? Navigation { get; set; }
 }

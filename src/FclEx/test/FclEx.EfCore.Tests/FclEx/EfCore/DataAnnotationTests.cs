@@ -32,7 +32,7 @@ public class DataAnnotationTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     public async Task IEntity_Id_AutoIncrement_Test()
     {
         await using var context = Fixture.CreateDbContext(DbProviderType.Npgsql);
-        var e = new EntityWithIdAndIndex();
+        var e = new EntityWithIndex();
         await context.InsertAsync(e);
         Assert.NotEqual(0, e.Id);
     }
@@ -41,7 +41,7 @@ public class DataAnnotationTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     public async Task IEntity_Id_PrimaryKey_Test()
     {
         await using var context = Fixture.CreateDbContext(DbProviderType.Npgsql);
-        var entityType = context.Model.FindEntityType(typeof(EntityWithIdAndIndex));
+        var entityType = context.Model.FindEntityType(typeof(EntityWithIndex));
         Assert.NotNull(entityType);
         var (table, schema) = (entityType.GetTableName(), entityType.GetSchema() ?? "public");
 
@@ -60,14 +60,14 @@ public class DataAnnotationTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         var list = enumerable.AsIList();
 
         Assert.Single(list);
-        Assert.Equal(nameof(EntityWithIdAndIndex.Id), list[0]);
+        Assert.Equal(nameof(EntityWithIndex.Id), list[0]);
     }
 
     [Fact]
     public async Task IEntity_Indexes_Test()
     {
         await using var context = Fixture.CreateDbContext(DbProviderType.Npgsql);
-        var entityType = context.Model.FindEntityType(typeof(EntityWithIdAndIndex));
+        var entityType = context.Model.FindEntityType(typeof(EntityWithIndex));
         Assert.NotNull(entityType);
         var (table, schema) = (entityType.GetTableName(), entityType.GetSchema() ?? "public");
 
@@ -88,8 +88,8 @@ public class DataAnnotationTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         var list = enumerable.OrderBy(m => m.Item1).AsIList();
 
         Assert.Equal(3, list.Count);
-        Assert.Equal((nameof(EntityWithIdAndIndex.Id), true), list[0]);
-        Assert.Equal((nameof(EntityWithIdAndIndex.Name), true), list[1]);
-        Assert.Equal((nameof(EntityWithIdAndIndex.Value), false), list[2]);
+        Assert.Equal((nameof(EntityWithIndex.Id), true), list[0]);
+        Assert.Equal((nameof(EntityWithIndex.Name), true), list[1]);
+        Assert.Equal((nameof(EntityWithIndex.Value), false), list[2]);
     }
 }

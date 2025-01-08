@@ -37,9 +37,9 @@ public static class Extensions
         return logger.With(KeyValuePair.Create(key, value));
     }
 
-    public static ILogger With(this ILogger logger, (string key, object? value) prop)
+    public static ILogger With(this ILogger logger, (string key, object? value) property)
     {
-        return logger.With(prop.key, prop.value);
+        return logger.With(property.key, property.value);
     }
 
     [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
@@ -80,18 +80,18 @@ public static class Extensions
         return logger.PushProperty(KeyValuePair.Create(key, value));
     }
 
-    public static IDisposable PushProperty(this ILogger logger, (string key, object? value) prop)
+    public static IDisposable PushProperty(this ILogger logger, (string key, object? value) property)
     {
-        return logger.PushProperty(prop.key, prop.value);
+        return logger.PushProperty(property.key, property.value);
     }
 
-    public static IDisposable PushProperty(this ILogger logger, LoggerProperty prop)
+    public static IDisposable PushProperty(this ILogger logger, LoggerProperty property)
     {
-        return logger.PushProperty(prop.Key, prop.Value);
+        return logger.PushProperty(property.Key, property.Value);
     }
 
-    public static IDisposable PushProperty(this ILogger logger, IEnumerable<LoggerProperty> props)
+    public static IDisposable PushProperty(this ILogger logger, IEnumerable<LoggerProperty> properties)
     {
-        return logger.PushProperty(props.Select(m => KeyValuePair.Create(m.Key, m.Value)));
+        return logger.PushProperty(properties.Select(m => KeyValuePair.Create(m.Key, m.Value)));
     }
 }
