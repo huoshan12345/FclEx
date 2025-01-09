@@ -8,7 +8,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Destructurama.Attributed" Version="5.0.0" />
+    <PackageReference Include="Destructurama.Attributed" Version="5.1.0" />
     <PackageReference Include="PolySharp" Version="1.15.0" PrivateAssets="all" />
   </ItemGroup>
   

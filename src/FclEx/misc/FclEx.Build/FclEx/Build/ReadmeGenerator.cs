@@ -117,7 +117,9 @@ public class ReadmeGenerator
     public async Task Generate(RepoInfo repo)
     {
         var path = Path.Combine(repo.RootPath, repo.SolutionPath);
-        Assert.True(File.Exists(path), path);
+
+        if (File.Exists(path) == false)
+            return;
 
         var solution = SolutionFile.Parse(path);
         Assert.NotNull(solution);
