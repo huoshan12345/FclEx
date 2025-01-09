@@ -9,6 +9,9 @@ registries:
   nuget-public:
     type: nuget-feed
     url: https://api.nuget.org/v3/index.json
+  huoshan:
+    type: nuget-feed
+    url: https://www.myget.org/F/huoshan12345/api/v3/index.json
 
 updates:
   - package-ecosystem: "nuget" # See documentation for possible values
@@ -20,3 +23,4 @@ updates:
     open-pull-requests-limit: 50
     registries:
       - nuget-public
+      - huoshan
