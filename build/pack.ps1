@@ -9,8 +9,10 @@ $buildDir = [io.path]::combine($MyInvocation.MyCommand.Definition, "..")
 $rootDir = [io.path]::combine($buildDir, "..")
 $sln = [io.path]::combine($rootDir, "src", "FclEx.All.sln")
 
-$pkgPath = ([io.path]::combine($buildDir, "*.nupkg"))
+$pkgPath = [io.path]::combine($buildDir, "*.nupkg")
+$snupkgPath = [io.path]::combine($buildDir, "*.snupkg")
 Remove-Item $pkgPath
+Remove-Item $snupkgPath
 
 $verPath = ([io.path]::combine($buildDir, "pkg.version"))
 $ver = Get-Content -Path $verPath
@@ -37,7 +39,7 @@ if ($norestore -eq $true) {
 
 Invoke-Expression $command
 
-if ($Lastexitcode -ne 0)	{
+if ($Lastexitcode -ne 0) {
   throw "failed with exit code $LastExitCode"
 }
 
@@ -51,7 +53,7 @@ if ($isGithub) {
     Write-Output "Uploading $($file.Basename)"
 
     # Push the .nupkg to NuGet.org (we will detect the .snupkg and push it for you)
-    & dotnet nuget push $file -k $key --source $myget -t 50
+    & dotnet nuget push $file -k $key --source $myget -t 50 --skip-duplicate
     if ($Lastexitcode -ne 0) {
       throw "failed with exit code $LastExitCode"
     }
