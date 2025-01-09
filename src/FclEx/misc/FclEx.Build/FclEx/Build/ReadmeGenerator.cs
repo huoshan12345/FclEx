@@ -9,63 +9,157 @@ using Microsoft.Build.Evaluation;
 
 namespace FclEx.Build;
 
-public class ReadmeGenerator
+public record RepoInfo(string RootPath, string SolutionPath, string Name, string BasicText);
+
+public class PathComparer : IComparer<string>
 {
-    public const string LicenseBadgeUrl = "https://img.shields.io/github/license/mashape/apistatus.svg";
-    public const string BuildWorkflowUrl = "https://github.com/huoshan12345/FclEx/actions/workflows/build.yml";
-    public const string BuildWorkflowBadgeUrl = BuildWorkflowUrl + "/badge.svg";
+    public static PathComparer Instance { get; } = new();
 
-    [LocalOnlyFact]
-    public async Task Generate()
+    public int Compare(string? x, string? y)
     {
-        var src = AppContext.BaseDirectory.TakeUntil("src");
-        var dirs = new[]
+        if (ComparerHelper.TryCompare(x, y, out var result))
+            return result.Value;
+
+        var sections1 = GetNameSections(x);
+        var sections2 = GetNameSections(y);
+
+        using var e1 = sections1.AsEnumerable().GetEnumerator();
+        using var e2 = sections2.AsEnumerable().GetEnumerator();
+
+        while (true)
         {
-            Path.Combine(src, "FclEx", "src"),
-            Path.Combine(src, "FclEx.Abp", "src"),
-        };
-
-        var list = new List<(string Name, string[] TargetFrameworks)>();
-
-        foreach (var dir in dirs)
-        {
-            var dirInfo = new DirectoryInfo(dir);
-            Assert.True(dirInfo.Exists, dirInfo.FullName);
-
-            foreach (var sub in dirInfo.EnumerateDirectories().OrderBy(m => m.Name))
+            var l = e1.MoveNext();
+            var r = e2.MoveNext();
+            if (l && r)
             {
-                var projectFile = sub.EnumerateFiles("*.csproj").SingleOrDefault();
-                if (projectFile is null)
-                    continue;
-
-                var projectRootElement = ProjectRootElement.Open(projectFile.FullName);
-                var project = new Project(projectRootElement);
-
-                if (project.GetPropertyValue("IsPackable").ToBool() == false)
-                    continue;
-
-
-                var options = StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries;
-                var frameworks = project.GetPropertyValue("TargetFrameworks").Split(';', options);
-
-                var (name, _) = projectFile.GetFileNameAndExtension();
-                list.Add((name, frameworks));
+                var compare = CompareSections(e1.Current, e2.Current);
+                if (compare != 0)
+                    return compare;
+            }
+            else if (l)
+            {
+                return 1; // longer is larger
+            }
+            else if (r)
+            {
+                return -1;
+            }
+            else
+            {
+                return 0;
             }
         }
+    }
 
-        var readmePath = new FileInfo(Path.Combine(src, "..", "README.md"));
-        Assert.True(readmePath.Exists);
+    private static int CompareSections(string[] x, string[] y)
+    {
+        using var e1 = x.AsEnumerable().GetEnumerator();
+        using var e2 = y.AsEnumerable().GetEnumerator();
+
+        while (true)
+        {
+            var l = e1.MoveNext();
+            var r = e2.MoveNext();
+
+            if (l && r)
+            {
+                var result = string.Compare(e1.Current, e2.Current, StringComparison.OrdinalIgnoreCase);
+                if (result != 0)
+                    return result;
+            }
+            else if (l)
+            {
+                return 1; // longer is larger
+            }
+            else if (r)
+            {
+                return -1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+    }
+
+    private static readonly ConcurrentDictionary<string, string[][]> _cache = new();
+    private static string[][] GetNameSections(string path)
+    {
+        return _cache.GetOrAdd(path, m =>
+            m.Split(Path.DirectorySeparatorChar)
+                .Select(x => x.Split('.'))
+                .ToArray());
+    }
+}
+
+public class ReadmeGenerator
+{
+    public const string UserUrl = "https://github.com/huoshan12345";
+    public const string FclEx = "FclEx";
+    public const string Collaboration = "FclEx.Collaboration";
+
+    public const string LicenseBadgeUrl = "https://img.shields.io/github/license/mashape/apistatus.svg";
+    public const string BuildWorkflowPath = "actions/workflows/build.yml";
+    public const string BuildWorkflowBadgePath = BuildWorkflowPath + "/badge.svg";
+
+    private static readonly string RootPath = AppContext.BaseDirectory.TakeUntil("src", false);
+
+    public static readonly IEnumerable<object[]> SolutionPaths = new RepoInfo[]
+    {
+        new(RootPath, Path.Combine("src", "FclEx.All.sln"), FclEx,
+            "Some basic useful extensions and helpers for C# fundamental class libraries."),
+        new(Path.Combine(RootPath, "..", "FclEx.Collaboration"), "FclEx.Collaboration.sln", Collaboration,
+            "Some basic useful extensions and helpers for Atlassian, NewRelic and Slack."),
+    }.Select(m => new object[] { m });
+
+    [Theory]
+    [MemberData(nameof(SolutionPaths))]
+    public async Task Generate(RepoInfo repo)
+    {
+        var path = Path.Combine(repo.RootPath, repo.SolutionPath);
+        Assert.True(File.Exists(path), path);
+
+        var solution = SolutionFile.Parse(path);
+        Assert.NotNull(solution);
+
+        var list = new List<(string Name, string[] TargetFrameworks)>();
+        var ordered = solution.ProjectsByGuid
+            .OrderBy(m => m.Value.AbsolutePath, PathComparer.Instance);
+
+        foreach (var (key, value) in ordered)
+        {
+            if (value.ProjectType != SolutionProjectType.KnownToBeMSBuildFormat)
+                continue;
+
+            var projectRootElement = ProjectRootElement.Open(value.AbsolutePath);
+            var project = new Project(projectRootElement);
+
+            if (project.GetPropertyValue("IsPackable").ToBool() == false)
+                continue;
+
+            var options = StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries;
+            var frameworks = project.GetPropertyValue("TargetFrameworks").Split(';', options);
+
+            list.Add((value.ProjectName, frameworks));
+        }
+
+        var readmePath = new FileInfo(Path.Combine(repo.RootPath, "README.md"));
+        // Assert.True(readmePath.Exists);
+
+        var repoUri = new Uri(new Uri(UserUrl + "/"), repo.Name + "/");
+        var buildWorkflowBadgeUrl = new Uri(repoUri, BuildWorkflowBadgePath).ToString();
+        var buildWorkflowUrl = new Uri(repoUri, BuildWorkflowPath).ToString();
 
         var str = StringBuilderHelper.Build(m =>
         {
-            m.AppendHeading("FclEx", 1);
+            m.AppendHeading(repo.Name, 1);
             m.Append(' ');
             m.AppendBadge("LICENSE", LicenseBadgeUrl, "LICENSE.TXT");
             m.Append(' ');
-            m.AppendBadge("Build", BuildWorkflowBadgeUrl, BuildWorkflowUrl);
+            m.AppendBadge("Build", buildWorkflowBadgeUrl, buildWorkflowUrl);
             m.AppendLine();
             m.AppendLine();
-            m.Append("Some basic useful extensions and helpers for C# fundamental class libraries.");
+            m.Append(repo.BasicText);
             m.AppendLine();
             m.AppendHeading("Latest Builds", 2);
             m.AppendLine();
@@ -189,7 +283,7 @@ file static class Extensions
                 .Replace("-", "--"); // escape dash "-" as "--" according to shields.io.
         }
     }
-    
+
     public static StringBuilder AppendMyGetBadge(this StringBuilder builder, string package)
     {
         return builder.AppendBadge("",

@@ -1,161 +1,57 @@
-﻿#pragma warning disable CS4014
-
-namespace FclEx.Extensions.TaskExtensions;
+﻿namespace FclEx.Extensions.TaskExtensions;
 
 public class ContinueTests
 {
-    private readonly ITestOutputHelper _output;
-
-    public ContinueTests(ITestOutputHelper output)
+    [Fact]
+    public async Task Catch_ShouldReturnResult_WhenTaskSucceeds()
     {
-        _output = output;
-    }
-
-    private static void Throw()
-    {
-        throw new NotSupportedException();
-    }
-
-    private static Task ThrowTask()
-    {
-        throw new NotSupportedException();
-    }
-
-    private static Task<T> ThrowTask<T>()
-    {
-        throw new NotSupportedException();
+        var task = Task.FromResult(42);
+        var result = await task.Catch(ex => Task.FromResult(-1));
+        Assert.Equal(42, result);
     }
 
     [Fact]
-    public async Task Task_Continue_Action()
+    public async Task Catch_ShouldInvokeAction_WhenTaskFaults()
     {
-        {
-            var number = 0;
-            await Task.Run(() => Task.Yield())
-                .Continue(() => number++);
-
-            Assert.Equal(1, number);
-        }
-        {
-            var task = Task.Run(() => Task.Yield())
-                .Continue(() => Throw());
-
-            await Assert.ThrowsAsync<NotSupportedException>(() => task);
-        }
+        var task = Task.FromException<int>(new InvalidOperationException("Test exception"));
+        var result = await task.Catch(ex => Task.FromResult(99));
+        Assert.Equal(99, result);
     }
 
     [Fact]
-    public async Task Task_Continue_Action_Faulted()
+    public async Task Catch_ShouldInvokeAction_WhenTaskIsCanceled()
     {
-        var task = Task.Run(async () =>
-        {
-            await Task.Yield();
-            throw new InvalidOperationException();
-        }).Continue(() => Throw());
+        var cts = new CancellationTokenSource();
+        var task = Task.Run(() => {
+            cts.Cancel();
+            cts.Token.ThrowIfCancellationRequested();
+            return 0;
+        }, cts.Token);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => task);
+        var result = await task.Catch(ex => Task.FromResult(88));
+        Assert.Equal(88, result);
     }
 
     [Fact]
-    public async Task Task_Continue_Action_Canceled()
+    public async Task Catch_ShouldRethrowException_WhenActionThrows()
     {
-        var token = new CancellationToken(true);
-        var task = Task.FromCanceled(token);
-        var task2 = task.Continue(() => Throw());
+        var task = Task.FromException<int>(new InvalidOperationException("Test exception"));
 
-        var ex = await Assert.ThrowsAsync<TaskCanceledException>(() => task2);
-        Assert.Equal(task, ex.Task);
+        await Assert.ThrowsAsync<ApplicationException>(async () =>
+            await task.Catch<int>(ex => throw new ApplicationException("Action failed")));
     }
 
     [Fact]
-    public async Task Task_Continue_Func_Task()
+    public async Task Catch_ShouldHandleCancellationAndRecover_WhenActionResolves()
     {
-        {
-            var number = 0;
-            await Task.Run(() => Task.Yield())
-                .Continue(() =>
-                {
-                    number++;
-                    return Task.CompletedTask;
-                });
+        var cts = new CancellationTokenSource();
+        var task = Task.Run(() => {
+            cts.Cancel();
+            cts.Token.ThrowIfCancellationRequested();
+            return 0;
+        }, cts.Token);
 
-            Assert.Equal(1, number);
-        }
-        {
-            var task = Task.Run(() => Task.Yield())
-                .Continue(() => ThrowTask());
-
-            await Assert.ThrowsAsync<NotSupportedException>(() => task);
-        }
+        var result = await task.Catch(ex => Task.FromResult(77));
+        Assert.Equal(77, result);
     }
-
-    [Fact]
-    public async Task Task_Continue_Func_Task_Faulted()
-    {
-        var task = Task.Run(async () =>
-        {
-            await Task.Yield();
-            throw new InvalidOperationException();
-        }).Continue(() => ThrowTask());
-
-        await Assert.ThrowsAsync<InvalidOperationException>(() => task);
-    }
-
-    [Fact]
-    public async Task Task_Continue_Func_Task_Canceled()
-    {
-        var token = new CancellationToken(true);
-        var task = Task.FromCanceled(token);
-        var task2 = task.Continue(() => ThrowTask());
-
-        var ex = await Assert.ThrowsAsync<TaskCanceledException>(() => task2);
-        Assert.Equal(task, ex.Task);
-    }
-
-    [Fact]
-    public async Task Task_Continue_Func_Task_TNext()
-    {
-        {
-            var number = await Task.Run(() => Task.Yield())
-                .Continue(() => 1.ToTask());
-
-            Assert.Equal(1, number);
-        }
-        {
-            var task = Task.Run(() => Task.Yield())
-                .Continue(() => ThrowTask<int>());
-
-            Assert.IsAssignableFrom<Task<int>>(task);
-
-            await Assert.ThrowsAsync<NotSupportedException>(() => task);
-        }
-    }
-
-    [Fact]
-    public async Task Task_Continue_Func_Task_TNext_Faulted()
-    {
-        var task = Task.Run(async () =>
-        {
-            await Task.Yield();
-            throw new InvalidOperationException();
-        }).Continue(() => ThrowTask<int>());
-
-        Assert.IsAssignableFrom<Task<int>>(task);
-
-        await Assert.ThrowsAsync<InvalidOperationException>(() => task);
-    }
-
-    [Fact]
-    public async Task Task_Continue_Func_Task_TNext_Canceled()
-    {
-        var token = new CancellationToken(true);
-        var task0 = Task.FromCanceled(token);
-        var task = task0.Continue(() => ThrowTask<int>());
-
-        Assert.IsAssignableFrom<Task<int>>(task);
-
-        var ex = await Assert.ThrowsAsync<TaskCanceledException>(() => task);
-        Assert.Equal(task0, ex.Task);
-    }
-
 }

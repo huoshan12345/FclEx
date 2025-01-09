@@ -4,32 +4,32 @@ partial class OperateResultExtensions
 {
     public static Task<OperateResult<T>> OkResult<T>(this Task<OperateResult<T>> task, Action<OperateResult<T>> action)
     {
-        return task.Do(m => m.Success, action);
+        return task.When(m => m.Success, action);
     }
 
     public static Task<OperateResult<T>> OkResult<T>(this Task<OperateResult<T>> task, Func<OperateResult<T>, Task> action)
     {
-        return task.Do(m => m.Success, action);
+        return task.When(m => m.Success, action);
     }
 
     public static Task<OperateResult<T>> ErrorResult<T>(this Task<OperateResult<T>> task, Action<OperateResult<T>> action)
     {
-        return task.Do(r => r.Error, action);
+        return task.When(r => r.Error, action);
     }
 
     public static Task<OperateResult<T>> ErrorResult<T>(this Task<OperateResult<T>> task, Func<OperateResult<T>, Task> action)
     {
-        return task.Do(r => r.Error, action);
+        return task.When(r => r.Error, action);
     }
 
     public static Task<OperateResult<T>> CancelResult<T>(this Task<OperateResult<T>> task, Action<OperateResult<T>> action)
     {
-        return task.Do(r => r.IsCanceled(), action);
+        return task.When(r => r.IsCanceled(), action);
     }
 
     public static Task<OperateResult<T>> CancelResult<T>(this Task<OperateResult<T>> task, Func<OperateResult<T>, Task> action)
     {
-        return task.Do(r => r.IsCanceled(), action);
+        return task.When(r => r.IsCanceled(), action);
     }
 
     public static Task<OperateResult<T>> Ok<T>(this Task<OperateResult<T>> task, Action<T, TimeSpan> action)
@@ -154,6 +154,6 @@ partial class OperateResultExtensions
 
     public static Task<Transput<TInput, OperateResult<TOutput>>> ToTransput<TInput, TOutput>(this Task<OperateResult<TOutput>> task, TInput input)
     {
-        return task.Continue(m => Transput.Create(input, m));
+        return task.Then(m => Transput.Create(input, m));
     }
 }

@@ -20,17 +20,17 @@ public static class HttpResponseExtensions
 
     public static Task<HttpResponse> ThrowIfError(this Task<HttpResponse> task)
     {
-        return task.Continue(m => m.ThrowIfError());
+        return task.Then(m => m.ThrowIfError());
     }
 
     public static Task<T> ReadJsonAsRequired<T>(this Task<HttpResponse> task, string? path = null)
     {
-        return task.Continue(m => m.ReadJsonAs<T>(path)).GetRequiredValue();
+        return task.Then(m => m.ReadJsonAs<T>(path)).GetRequiredValue();
     }
 
     public static Task<OperateResult<T>> ReadJsonAs<T>(this Task<HttpResponse> task, string? path = null)
     {
-        return task.Continue(m => m.ReadJsonAs<T>(path));
+        return task.Then(m => m.ReadJsonAs<T>(path));
     }
 
     public static OperateResult<T> ReadJsonAs<T>(this HttpResponse response, string? path = null, JsonSerializerOptions? options = null)
@@ -102,17 +102,17 @@ public static class HttpResponseExtensions
 
     public static Task<HttpResponse> Error(this Task<HttpResponse> task, Action<Exception> action)
     {
-        return task.Do(m => m.HasError, m => action(m.Exception!));
+        return task.When(m => m.HasError, m => action(m.Exception!));
     }
 
     public static Task<HttpResponse> Ok(this Task<HttpResponse> task, Action<HttpResponse> action)
     {
-        return task.Do(m => !m.HasError, action);
+        return task.When(m => !m.HasError, action);
     }
 
     public static Task<HttpResponse> Ok(this Task<HttpResponse> task, Func<HttpResponse, Task> action)
     {
-        return task.Do(m => !m.HasError, action);
+        return task.When(m => !m.HasError, action);
     }
 
     public static HttpResponse AddCookies(this HttpResponse response, IEnumerable<string> cookies)
