@@ -2,13 +2,6 @@
 
 public static class ArgumentBuilderExtensions
 {
-    public static object CreateObject(this Type type, ArgumentBuilder args)
-    {
-        Check.NotNull(type);
-        Check.NotNull(args);
-        return args.CreateObject(type);
-    }
-
     public static T CreateObject<T>(this ArgumentBuilder args)
     {
         Check.NotNull(args);
