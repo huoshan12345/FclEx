@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace MimeTypes
+﻿namespace MimeTypes
 {
     /// <summary>
     /// Class MimeTypeMap.
@@ -12,9 +8,9 @@ namespace MimeTypes
         private const string Dot = ".";
         private const string QuestionMark = "?";
         private const string DefaultMimeType = "application/octet-stream";
-        private static readonly Lazy<IDictionary<string, string>> _mappings = new Lazy<IDictionary<string, string>>(BuildMappings);
+        private static readonly Lazy<IDictionary<string, string>> _mappings = new(BuildMappings);
 
-        private static IDictionary<string, string> BuildMappings()
+        private static Dictionary<string, string> BuildMappings()
         {
             var mappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) {
 
@@ -741,7 +737,7 @@ namespace MimeTypes
 
                 #endregion
 
-                };
+            };
 
             var cache = mappings.ToList(); // need ToList() to avoid modifying while still enumerating
 
