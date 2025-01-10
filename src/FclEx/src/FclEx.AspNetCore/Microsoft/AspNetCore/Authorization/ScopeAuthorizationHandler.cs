@@ -6,7 +6,7 @@
 /// <typeparam name="T">The type of the authorization requirement.</typeparam>
 /// <returns>
 /// A completed task that represents the asynchronous operation. 
-/// If the user satisfies the requirement, the method marks the requirement as succeeded in the <paramref name="context"/>.
+/// If the user satisfies the requirement, the method marks the requirement as succeeded in the context.
 /// Otherwise, the requirement is left unmarked.
 /// </returns>
 /// <remarks>

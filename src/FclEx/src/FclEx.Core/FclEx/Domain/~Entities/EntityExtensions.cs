@@ -2,30 +2,21 @@
 
 public static class EntityExtensions
 {
-    public static T SetCreatedAt<T>(this T entity, DateTimeOffset time)
+    public static T SetCreatedAt<T>(this T entity, DateTimeOffset time) where T : IHasCreatedAt
     {
-        if (entity is IHasCreatedAt hasCreatedAt)
-        {
-            hasCreatedAt.CreatedAt = time;
-        }
+        entity.CreatedAt = time;
         return entity;
     }
 
-    public static T SetUpdatedAt<T>(this T entity, DateTimeOffset time)
+    public static T SetUpdatedAt<T>(this T entity, DateTimeOffset time) where T : IHasUpdatedAt
     {
-        if (entity is IHasUpdatedAt hasModificationTime)
-        {
-            hasModificationTime.UpdatedAt = time;
-        }
+        entity.UpdatedAt = time;
         return entity;
     }
 
-    public static T SetDeletedAt<T>(this T entity, DateTimeOffset time)
+    public static T SetDeletedAt<T>(this T entity, DateTimeOffset time) where T : IHasDeletedAt
     {
-        if (entity is IHasDeletedAt hasDeletedAt)
-        {
-            hasDeletedAt.DeletedAt = time;
-        }
+        entity.DeletedAt = time;
         return entity;
     }
 }
