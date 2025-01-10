@@ -11,7 +11,7 @@ public readonly struct MapAction<T, TDest> : IAction<TDest>
         _map = map ?? throw new ArgumentNullException(nameof(_map));
     }
 
-    public async Task<OperateResult<TDest>> ExecuteAsync(CancellationToken token = default)
+    public async Task<OperationResult<TDest>> ExecuteAsync(CancellationToken token = default)
     {
         var result = await _action.ExecuteAsync(token).IgnoreSyncContext();
         return result.Map(_map);

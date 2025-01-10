@@ -1,8 +1,8 @@
-﻿using static FclEx.Utils.Operate;
+﻿using static FclEx.Utils.Operation;
 
 namespace FclEx.Utils;
 
-public readonly struct OperateResult<T> : IOperateResult
+public readonly struct OperationResult<T> : IOperationResult
 {
     public int Code { get; }
     public Exception? Exception { get; }
@@ -23,9 +23,9 @@ public readonly struct OperateResult<T> : IOperateResult
     /// <param name="code"></param>
     /// <param name="ex"></param>
     /// <param name="elapsed"></param>
-    public OperateResult(int code, Exception ex, TimeSpan elapsed)
+    public OperationResult(int code, Exception ex, TimeSpan elapsed)
     {
-        Code = Check.NotEqualTo(code, OperateResultCodes.Success);
+        Code = Check.NotEqualTo(code, OperationResultCodes.Success);
         Exception = ex ?? throw new ArgumentNullException(nameof(ex));
         Elapsed = elapsed;
         Value = default;
@@ -36,74 +36,74 @@ public readonly struct OperateResult<T> : IOperateResult
     /// </summary>
     /// <param name="result"></param>
     /// <param name="elapsed"></param>
-    public OperateResult(T result, TimeSpan elapsed)
+    public OperationResult(T result, TimeSpan elapsed)
     {
-        Code = OperateResultCodes.Success;
+        Code = OperationResultCodes.Success;
         Exception = null;
         Elapsed = elapsed;
         Value = result;
     }
 
-    public static implicit operator OperateResult<T>(Exception ex)
+    public static implicit operator OperationResult<T>(Exception ex)
     {
         return CreateError<T>(ex, TimeSpan.Zero);
     }
 
-    public static implicit operator OperateResult<T>(string? error)
+    public static implicit operator OperationResult<T>(string? error)
     {
         return CreateError<T>(error, TimeSpan.Zero);
     }
 
-    public static implicit operator OperateResult<T>((string?, TimeSpan) paras)
+    public static implicit operator OperationResult<T>((string?, TimeSpan) paras)
     {
         return CreateError<T>(paras.Item1, paras.Item2);
     }
 
-    public static implicit operator OperateResult<T>((TimeSpan, string?) paras)
+    public static implicit operator OperationResult<T>((TimeSpan, string?) paras)
     {
         return CreateError<T>(paras.Item2, paras.Item1);
     }
 
-    public static implicit operator OperateResult<T>((Exception, TimeSpan) paras)
+    public static implicit operator OperationResult<T>((Exception, TimeSpan) paras)
     {
         return CreateError<T>(paras.Item1, paras.Item2);
     }
 
-    public static implicit operator OperateResult<T>((TimeSpan, Exception) paras)
+    public static implicit operator OperationResult<T>((TimeSpan, Exception) paras)
     {
         return CreateError<T>(paras.Item2, paras.Item1);
     }
 
-    public static implicit operator OperateResult<T>(T item)
+    public static implicit operator OperationResult<T>(T item)
     {
         return CreateSuccess(item, TimeSpan.Zero);
     }
 
-    public static implicit operator OperateResult<T>((T, TimeSpan) paras)
+    public static implicit operator OperationResult<T>((T, TimeSpan) paras)
     {
         return CreateSuccess(paras.Item1, paras.Item2);
     }
 
-    public static implicit operator OperateResult(OperateResult<T> result)
+    public static implicit operator OperationResult(OperationResult<T> result)
     {
         return result.Success
             ? CreateSuccess(result.Elapsed)
             : CreateError(result.Code, result.Exception!, result.Elapsed);
     }
     
-    public static implicit operator Task<OperateResult<T>>(OperateResult<T> result)
+    public static implicit operator Task<OperationResult<T>>(OperationResult<T> result)
     {
         return result.ToTask();
     }
 
-    public OperateResult<TDest> ToExplicit<TDest>(Func<T, TDest> func)
+    public OperationResult<TDest> ToExplicit<TDest>(Func<T, TDest> func)
     {
         return Success
-            ? new OperateResult<TDest>(func(Value)!, Elapsed)
-            : new OperateResult<TDest>(Code, Exception!, Elapsed);
+            ? new OperationResult<TDest>(func(Value)!, Elapsed)
+            : new OperationResult<TDest>(Code, Exception!, Elapsed);
     }
 
-    public OperateResult<TDest> ToExplicit<TDest>()
+    public OperationResult<TDest> ToExplicit<TDest>()
     {
         return ToExplicit(m => m.CastTo<TDest>())!;
     }

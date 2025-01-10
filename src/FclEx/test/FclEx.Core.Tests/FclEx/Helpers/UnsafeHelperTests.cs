@@ -111,7 +111,7 @@ public class UnsafeHelperTests(ITestOutputHelper output)
 
         static string GetSize(Type type, Func<Type, int> getter)
         {
-            var (success, size, _, _) = Operate.Execute(() => getter(type));
+            var (success, size, _, _) = Operation.Execute(() => getter(type));
             return success ? size.ToString() : "-";
         }
     }

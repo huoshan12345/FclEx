@@ -13,11 +13,11 @@ public readonly struct HttpRequestAction : IAction<HttpResponse>
         _unwrapError = unwrapError;
     }
 
-    public async Task<OperateResult<HttpResponse>> ExecuteAsync(CancellationToken token = default)
+    public async Task<OperationResult<HttpResponse>> ExecuteAsync(CancellationToken token = default)
     {
         var res = await _httpService.SendAsync(_req, token).IgnoreSyncContext();
         return res.HasError && _unwrapError
-            ? Operate.CreateObjectError(res, res.Exception!, res.Elapsed).ToExplicit<HttpResponse>()
-            : Operate.CreateSuccess(res);
+            ? Operation.CreateObjectError(res, res.Exception!, res.Elapsed).ToExplicit<HttpResponse>()
+            : Operation.CreateSuccess(res);
     }
 }

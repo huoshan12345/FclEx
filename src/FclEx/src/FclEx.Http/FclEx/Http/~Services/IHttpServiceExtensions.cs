@@ -89,7 +89,7 @@ public static class IHttpServiceExtensions
     public static void AddCookies(this IHttpService http, CookieCollection cc, string? url = null)
         => AddCookies(http, cc.OfType<Cookie>(), url);
 
-    public static async Task<OperateResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, Uri uri, HttpMethod? method = null, TimeSpan? timeout = null)
+    public static async Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, Uri uri, HttpMethod? method = null, TimeSpan? timeout = null)
     {
         var request = new HttpRequest(uri, method ?? HttpMethod.Get)
             .ReadAsBytes()
@@ -98,11 +98,11 @@ public static class IHttpServiceExtensions
 
         var res = await request.SendAsync(http);
         return res.HasError
-            ? Operate.CreateObjectError(res, res.Exception!, res.Elapsed)
+            ? Operation.CreateObjectError(res, res.Exception!, res.Elapsed)
                 .ToExplicit<HttpFileDownloadInfo>()
             : res.GetDownloadInfo();
     }
 
-    public static Task<OperateResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, string url, HttpMethod? method = null, TimeSpan? timeout = null)
+    public static Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, string url, HttpMethod? method = null, TimeSpan? timeout = null)
         => http.DownloadAsync(new Uri(url), method, timeout);
 }

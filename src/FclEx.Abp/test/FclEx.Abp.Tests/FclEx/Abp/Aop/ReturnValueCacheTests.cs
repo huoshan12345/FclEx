@@ -74,7 +74,7 @@ public class ReturnValueCacheTests(ITestOutputHelper output) : AbpAopTests<AbpTe
 
         for (var i = 0; i < 2; i++)
         {
-            var (_, tempItem, ex, t) = Operate.Execute(() => service.Get(no));
+            var (_, tempItem, ex, t) = Operation.Execute(() => service.Get(no));
             Assert.Null(ex);
             Assert.NotNull(tempItem);
             Assert.Equal(itemFromInstance.Id, tempItem.Id);
@@ -82,7 +82,7 @@ public class ReturnValueCacheTests(ITestOutputHelper output) : AbpAopTests<AbpTe
         }
         for (var i = 0; i < 2; i++)
         {
-            var (_, tempItem, ex, t) = Operate.Execute(() => service.GetStatic(no));
+            var (_, tempItem, ex, t) = Operation.Execute(() => service.GetStatic(no));
             Assert.Null(ex);
             Assert.NotNull(tempItem);
             Assert.Equal(itemFromStatic.Id, tempItem.Id);
@@ -99,8 +99,8 @@ public class ReturnValueCacheTests(ITestOutputHelper output) : AbpAopTests<AbpTe
         for (var i = 0; i < 2; i++)
         {
             var tempService = ServiceProvider.GetRequiredService<IService>();
-            var (_, fromStatic, _, timeFromStatic) = Operate.Execute(() => tempService.GetStatic(no));
-            var (_, fromInstance, _, timeFromInstance) = Operate.Execute(() => tempService.Get(no));
+            var (_, fromStatic, _, timeFromStatic) = Operation.Execute(() => tempService.GetStatic(no));
+            var (_, fromInstance, _, timeFromInstance) = Operation.Execute(() => tempService.Get(no));
 
             Assert.NotNull(fromStatic);
             Assert.Equal(itemFromStatic.Id, fromStatic.Id);

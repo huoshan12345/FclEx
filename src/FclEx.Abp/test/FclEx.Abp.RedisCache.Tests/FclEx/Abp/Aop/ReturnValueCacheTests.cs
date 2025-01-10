@@ -67,7 +67,7 @@ public class ReturnValueCacheTests(ITestOutputHelper output)
         var service = ServiceProvider.GetRequiredService<IService>();
         var itemFromStatic = service.GetStatic(no);
 
-        var (_, tempItem, _, t) = Operate.Execute(() => service.GetStatic(no));
+        var (_, tempItem, _, t) = Operation.Execute(() => service.GetStatic(no));
         Assert.NotNull(tempItem);
         Assert.Equal(itemFromStatic.Id, tempItem.Id);
         Assert.True(t.TotalMilliseconds < CacheMaxMilliseconds, t.TotalSeconds.ToString());
@@ -81,7 +81,7 @@ public class ReturnValueCacheTests(ITestOutputHelper output)
         var itemFromStatic = service.GetStatic(no);
 
         var tempService = ServiceProvider.GetRequiredService<IService>();
-        var (_, fromStatic, _, t) = Operate.Execute(() => tempService.GetStatic(no));
+        var (_, fromStatic, _, t) = Operation.Execute(() => tempService.GetStatic(no));
         Assert.NotNull(fromStatic);
         Assert.Equal(itemFromStatic.Id, fromStatic.Id);
         Assert.True(t.TotalMilliseconds < CacheMaxMilliseconds, t.TotalSeconds.ToString());
@@ -95,7 +95,7 @@ public class ReturnValueCacheTests(ITestOutputHelper output)
         var service = ServiceProvider.GetRequiredService<IService>();
         var fromInstance = service.Get(no);
 
-        var (_, tempItem, _, t) = Operate.Execute(() => service.Get(no));
+        var (_, tempItem, _, t) = Operation.Execute(() => service.Get(no));
         Assert.NotNull(tempItem);
         Assert.Equal(fromInstance.Id, tempItem.Id);
         Assert.True(t.TotalMilliseconds < CacheMaxMilliseconds, t.TotalSeconds.ToString());
@@ -109,7 +109,7 @@ public class ReturnValueCacheTests(ITestOutputHelper output)
         var fromInstance = service.Get(no);
 
         var tempService = ServiceProvider.GetRequiredService<IService>();
-        var (_, temp, _, t) = Operate.Execute(() => tempService.Get(no));
+        var (_, temp, _, t) = Operation.Execute(() => tempService.Get(no));
         Assert.NotNull(temp);
         Assert.NotEqual(fromInstance.Id, temp.Id);
         Assert.Equal($"{tempService.Id}_{no}", temp.Id);

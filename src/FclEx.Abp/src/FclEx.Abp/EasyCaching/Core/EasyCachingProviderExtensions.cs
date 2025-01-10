@@ -7,7 +7,7 @@ public static class EasyCachingProviderExtensions
     public static bool TryGet<T>(this IEasyCachingProvider provider, string key, [NotNullWhen(true)] out T? item)
     {
         item = default;
-        var (success, value, _, _) = Operate.Execute(() => provider.Get<T>(key));
+        var (success, value, _, _) = Operation.Execute(() => provider.Get<T>(key));
         if (success == false)
             return false;
 

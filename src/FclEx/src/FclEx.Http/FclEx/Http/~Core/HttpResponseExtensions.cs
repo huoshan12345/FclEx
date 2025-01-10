@@ -28,19 +28,19 @@ public static class HttpResponseExtensions
         return task.Then(m => m.ReadJsonAs<T>(path)).GetRequiredValue();
     }
 
-    public static Task<OperateResult<T>> ReadJsonAs<T>(this Task<HttpResponse> task, string? path = null)
+    public static Task<OperationResult<T>> ReadJsonAs<T>(this Task<HttpResponse> task, string? path = null)
     {
         return task.Then(m => m.ReadJsonAs<T>(path));
     }
 
-    public static OperateResult<T> ReadJsonAs<T>(this HttpResponse response, string? path = null, JsonSerializerOptions? options = null)
+    public static OperationResult<T> ReadJsonAs<T>(this HttpResponse response, string? path = null, JsonSerializerOptions? options = null)
     {
         if (response.Exception is { } ex)
             return (ex, response.Elapsed);
 
         var str = response.ResponseString;
         if (!str.IsPossibleJson())
-            return Operate.CreateError<T>("Can not parse json from empty string");
+            return Operation.CreateError<T>("Can not parse json from empty string");
 
         var doc = JsonDocument.Parse(str, new()
         {
@@ -55,7 +55,7 @@ public static class HttpResponseExtensions
 
         return element.HasValue
             ? element.Value.Deserialize<T>(options)!
-            : Operate.CreateError<T>("The path does not exist in json: " + path);
+            : Operation.CreateError<T>("The path does not exist in json: " + path);
     }
 
     private static readonly Regex _regexOfNonWord = new(@"\W", RegexOptions.Compiled);

@@ -22,7 +22,7 @@ public class TimeoutTests(ITestOutputHelper output) : AbpRedisUnreachableTests(o
         var options = ServiceProvider.GetOptions<AbpRedisOptions>();
         var provider = ServiceProvider.GetRequiredService<IEasyCachingProvider>();
         var timeout = options.RedisOptions.ConnectionTimeout;
-        var (successful, _, _, elapsed) = await Operate.ExecuteAsync(() => provider.GetAsync<string>("test"), TimeSpan.FromMilliseconds(timeout)).Unwrap();
+        var (successful, _, _, elapsed) = await Operation.ExecuteAsync(() => provider.GetAsync<string>("test"), TimeSpan.FromMilliseconds(timeout)).Unwrap();
         Assert.False(successful);
         Assert.True(elapsed.TotalMilliseconds < timeout + 500, elapsed.TotalSeconds.ToString(CultureInfo.InvariantCulture));
     }

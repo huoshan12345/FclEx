@@ -1,9 +1,9 @@
 ﻿namespace FclEx.Utils;
 
-public interface IOperateResult
+public interface IOperationResult
 {
     /// <summary>
-    /// <see cref="OperateResultCodes"/>>
+    /// <see cref="OperationResultCodes"/>>
     /// </summary>
     public int Code { get; }
     public Exception? Exception { get; }

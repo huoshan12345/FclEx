@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Utils;
 
-public partial class OperateResultTests
+public partial class OperationResultTests
 {
     [Fact]
     public void ImplicitOperator_FromData()
@@ -10,7 +10,7 @@ public partial class OperateResultTests
         Assert.True(r.Success);
         Assert.Equal(expected, r.Value);
 
-        OperateResult<int> Test(int input)
+        OperationResult<int> Test(int input)
         {
             return input;
         }
@@ -23,7 +23,7 @@ public partial class OperateResultTests
         Assert.False(r.Success);
         Assert.IsType<SimpleException>(r.Exception);
 
-        OperateResult<int> Test()
+        OperationResult<int> Test()
         {
             return "";
         }
@@ -37,7 +37,7 @@ public partial class OperateResultTests
         Assert.False(r.Success);
         Assert.IsType(ex.GetType(), r.Exception);
 
-        OperateResult<int> Test(Exception e)
+        OperationResult<int> Test(Exception e)
         {
             return ex;
         }

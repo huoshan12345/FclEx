@@ -1,2 +1,2 @@
 ﻿global using FclEx;
-global using OperateResult = FclEx.Utils.OperateResult<FclEx.Unit>;
+global using OperationResult = FclEx.Utils.OperationResult<FclEx.Unit>;

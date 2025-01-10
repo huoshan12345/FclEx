@@ -3,15 +3,15 @@
 public readonly struct NextResultAction<T, TNext> : IAction<TNext>
 {
     private readonly IAction<T> _action;
-    private readonly Func<OperateResult<T>, IAction<TNext>?> _next;
+    private readonly Func<OperationResult<T>, IAction<TNext>?> _next;
 
-    public NextResultAction(IAction<T> action, Func<OperateResult<T>, IAction<TNext>?> next)
+    public NextResultAction(IAction<T> action, Func<OperationResult<T>, IAction<TNext>?> next)
     {
         _action = Check.NotNull(action);
         _next = Check.NotNull(next);
     }
 
-    public async Task<OperateResult<TNext>> ExecuteAsync(CancellationToken token = default)
+    public async Task<OperationResult<TNext>> ExecuteAsync(CancellationToken token = default)
     {
         var result = await _action.ExecuteAsync(token).IgnoreSyncContext();
 
@@ -27,17 +27,17 @@ public readonly struct NextResultAction<T, TNext> : IAction<TNext>
 public readonly struct NextResultAction<T> : IAction<T>
 {
     private readonly IAction<T> _action;
-    private readonly Func<OperateResult<T>, IAction<T>?> _next;
+    private readonly Func<OperationResult<T>, IAction<T>?> _next;
     private readonly bool _errorWhenNextNull;
 
-    public NextResultAction(IAction<T> action, Func<OperateResult<T>, IAction<T>?> next, bool errorWhenNextNull = true)
+    public NextResultAction(IAction<T> action, Func<OperationResult<T>, IAction<T>?> next, bool errorWhenNextNull = true)
     {
         _action = Check.NotNull(action);
         _next = Check.NotNull(next);
         _errorWhenNextNull = errorWhenNextNull;
     }
 
-    public async Task<OperateResult<T>> ExecuteAsync(CancellationToken token = default)
+    public async Task<OperationResult<T>> ExecuteAsync(CancellationToken token = default)
     {
         var result = await _action.ExecuteAsync(token).IgnoreSyncContext();
 

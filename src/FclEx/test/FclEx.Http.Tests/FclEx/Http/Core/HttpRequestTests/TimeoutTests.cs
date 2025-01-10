@@ -14,7 +14,7 @@ public class TimeoutTests
             .SendAsync(http)
             .ThrowIfError();
 
-        var (successful, _, exception, elapsed) = await Operate.ExecuteAsync(() => task);
+        var (successful, _, exception, elapsed) = await Operation.ExecuteAsync(() => task);
         Assert.False(successful);
         Assert.IsType<TaskCanceledException>(exception);
         AssertExt.Equal(timeout, elapsed, TimeSpan.FromSeconds(1));

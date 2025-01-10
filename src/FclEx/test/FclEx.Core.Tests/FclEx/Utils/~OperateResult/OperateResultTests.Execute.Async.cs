@@ -1,11 +1,11 @@
 ﻿namespace FclEx.Utils;
 
-partial class OperateResultTests
+partial class OperationResultTests
 {
     [RetryFact]
     public async Task ExecuteAsync_Timeout_Test()
     {
-        var (successful, exception, elapsed) = await Operate.ExecuteAsync(() => Task.Delay(TimeSpan.FromSeconds(5)), TimeSpan.FromSeconds(1));
+        var (successful, exception, elapsed) = await Operation.ExecuteAsync(() => Task.Delay(TimeSpan.FromSeconds(5)), TimeSpan.FromSeconds(1));
         Assert.False(successful);
         Assert.True(elapsed < TimeSpan.FromSeconds(1.5), elapsed.ToString());
         Assert.IsType<TimeoutException>(exception);
@@ -14,7 +14,7 @@ partial class OperateResultTests
     [RetryFact]
     public async Task ExecuteAsync_Timeout_Success_Test()
     {
-        var (successful, result, _, elapsed) = await Operate.ExecuteAsync(async () =>
+        var (successful, result, _, elapsed) = await Operation.ExecuteAsync(async () =>
         {
             await Task.Delay(TimeSpan.FromSeconds(1)).IgnoreSyncContext();
             return 1;
@@ -27,7 +27,7 @@ partial class OperateResultTests
     [RetryFact]
     public async Task ExecuteAsync_Timeout_SyncBody_Test()
     {
-        var (successful, exception, elapsed) = await Operate.ExecuteAsync(() =>
+        var (successful, exception, elapsed) = await Operation.ExecuteAsync(() =>
         {
             ThreadHelper.Sleep(10);
             return Task.CompletedTask;
@@ -40,7 +40,7 @@ partial class OperateResultTests
     [RetryFact]
     public async Task ExecuteAsync_Timeout_SyncBody_Success_Test()
     {
-        var (successful, result, _, elapsed) = await Operate.ExecuteAsync(() =>
+        var (successful, result, _, elapsed) = await Operation.ExecuteAsync(() =>
         {
             ThreadHelper.Sleep(1);
             return Task.FromResult(1);

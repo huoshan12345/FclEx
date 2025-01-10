@@ -16,7 +16,7 @@ public readonly struct UnionAction<T, TNext> : IAction<(T, TNext)>
         _prevWhenNextError = prevWhenNextError;
     }
 
-    public async Task<OperateResult<(T, TNext)>> ExecuteAsync(CancellationToken token = default)
+    public async Task<OperationResult<(T, TNext)>> ExecuteAsync(CancellationToken token = default)
     {
         var result = await _action.ExecuteAsync(token).IgnoreSyncContext();
         if (!result.Success)
@@ -27,7 +27,7 @@ public readonly struct UnionAction<T, TNext> : IAction<(T, TNext)>
         if (nextActor == null)
         {
             return _errorWhenNextNull
-                ? (OperateResult<(T, TNext)>)Constant.NullNextError
+                ? (OperationResult<(T, TNext)>)Constant.NullNextError
                 : ((item, default!), result.Elapsed);
         }
 

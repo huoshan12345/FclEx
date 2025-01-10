@@ -5,10 +5,10 @@ partial class ActionExtensions
     // don't add this method, otherwise there will be a conflict or unexpected method selecting.
     //public static IAction<TNext> Next<T, TNext>(this IAction<T> action, TNext result)
     //{
-    //    return action.Next<T, TNext>(Operate.CreateSuccess(result));
+    //    return action.Next<T, TNext>(Operation.CreateSuccess(result));
     //}
 
-    public static IAction<TNext> Next<T, TNext>(this IAction<T> action, OperateResult<TNext> result)
+    public static IAction<TNext> Next<T, TNext>(this IAction<T> action, OperationResult<TNext> result)
     {
         return action.Next<T, TNext>(_ => new ResultAction<TNext>(result));
     }
@@ -29,7 +29,7 @@ partial class ActionExtensions
         return action.Next(r => CommonAction.Create(t => next(r), executeSafely));
     }
 
-    public static IAction<TNext> Next<T, TNext>(this IAction<T> action, Func<T, Task<OperateResult<TNext>>> next, bool executeSafely = true)
+    public static IAction<TNext> Next<T, TNext>(this IAction<T> action, Func<T, Task<OperationResult<TNext>>> next, bool executeSafely = true)
     {
         return action.Next(r => CommonAction.Create(t => next(r), executeSafely));
     }
@@ -49,12 +49,12 @@ partial class ActionExtensions
         return action.Next(r => CommonAction.Create(t => next(r), executeSafely));
     }
 
-    public static IAction<Unit> Next<T>(this IAction<T> action, Func<T, OperateResult> next, bool executeSafely = true)
+    public static IAction<Unit> Next<T>(this IAction<T> action, Func<T, OperationResult> next, bool executeSafely = true)
     {
         return action.Next(r => CommonAction.Create(t => next(r), executeSafely));
     }
 
-    public static IAction<Unit> Next<T>(this IAction<T> action, Func<T, Task<OperateResult>> next, bool executeSafely = true)
+    public static IAction<Unit> Next<T>(this IAction<T> action, Func<T, Task<OperationResult>> next, bool executeSafely = true)
     {
         return action.Next(r => CommonAction.Create(t => next(r), executeSafely));
     }

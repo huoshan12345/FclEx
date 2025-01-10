@@ -3,10 +3,10 @@
 partial class ExtensionsTests
 {
     [Fact]
-    public async Task Next_OperateResult_T()
+    public async Task Next_OperationResult_T()
     {
         var (success, value, _, _) = await ResultAction.Create(1)
-            .Next(Operate.CreateSuccess(1))
+            .Next(Operation.CreateSuccess(1))
             .ExecuteAsync();
 
         Assert.True(success);
@@ -14,10 +14,10 @@ partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task Next_OperateResult()
+    public async Task Next_OperationResult()
     {
         var (success, _, _, _) = await ResultAction.Create(1)
-            .Next(Operate.Success)
+            .Next(Operation.Success)
             .ExecuteAsync();
 
         Assert.True(success);

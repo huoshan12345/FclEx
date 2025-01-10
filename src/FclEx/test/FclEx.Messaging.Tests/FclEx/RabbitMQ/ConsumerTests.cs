@@ -75,7 +75,7 @@ public class ConsumerTests : RabbitMQTests
         {
             list.Add(m);
             semaphore.Release();
-            return Operate.Cancel; // create an error
+            return Operation.Cancel; // create an error
         }, retryTimes, m => delay);
 
         await publisher.PublishAsync(valueToPublish, key);

@@ -1,8 +1,8 @@
 ﻿namespace FclEx.Utils;
 
-public static partial class Operate
+public static partial class Operation
 {
-    public static OperateResult Execute(Action action)
+    public static OperationResult Execute(Action action)
     {
         var watch = ValueStopwatch.StartNew();
         try
@@ -16,7 +16,7 @@ public static partial class Operate
         }
     }
 
-    public static OperateResult<T> Execute<T>(Func<T> action)
+    public static OperationResult<T> Execute<T>(Func<T> action)
     {
         var watch = ValueStopwatch.StartNew();
         try
@@ -30,7 +30,7 @@ public static partial class Operate
         }
     }
 
-    public static OperateResult Execute(Func<OperateResult> action) => Execute<OperateResult>(action).Unwrap();
+    public static OperationResult Execute(Func<OperationResult> action) => Execute<OperationResult>(action).Unwrap();
 
-    public static OperateResult<T> Execute<T>(Func<OperateResult<T>> action) => Execute<OperateResult<T>>(action).Unwrap();
+    public static OperationResult<T> Execute<T>(Func<OperationResult<T>> action) => Execute<OperationResult<T>>(action).Unwrap();
 }

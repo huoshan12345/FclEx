@@ -7,14 +7,14 @@ public interface IHttpAction<T> : IAbstractAction<T>
     Uri Uri { get; }
     HttpMethod Method { get; }
 
-    Task<OperateResult<T>> HandleResponseAsync(HttpResponse res)
+    Task<OperationResult<T>> HandleResponseAsync(HttpResponse res)
     {
         return IsFailed(res) 
             ? HandleFailed(res)
             : GetResultAsync(res);
     }
 
-    async Task<OperateResult<T>> IAbstractAction<T>.ExecuteActionAsync(CancellationToken token)
+    async Task<OperationResult<T>> IAbstractAction<T>.ExecuteActionAsync(CancellationToken token)
     {
         HttpRequest? req = null;
         try
@@ -67,7 +67,7 @@ public interface IHttpAction<T> : IAbstractAction<T>
 
     bool IsFailed(HttpResponse res) => !res.StatusCode.IsSuccess();
 
-    OperateResult<T> HandleFailed(HttpResponse res)
+    OperationResult<T> HandleFailed(HttpResponse res)
     {
         var code = res.StatusCode;
         var error = $"The res with status code {code.ToString()}/{code.ToInt()} is unsuccessful: "
@@ -75,8 +75,8 @@ public interface IHttpAction<T> : IAbstractAction<T>
         return error;
     }
 
-    Task<OperateResult<T>> GetResultAsync(HttpResponse response) => GetResult(response);
+    Task<OperationResult<T>> GetResultAsync(HttpResponse response) => GetResult(response);
 
-    OperateResult<T> GetResult(HttpResponse response);
+    OperationResult<T> GetResult(HttpResponse response);
 }
 #endif

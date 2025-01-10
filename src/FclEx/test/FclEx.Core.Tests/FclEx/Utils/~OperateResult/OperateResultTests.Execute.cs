@@ -1,11 +1,11 @@
 ﻿namespace FclEx.Utils;
 
-partial class OperateResultTests
+partial class OperationResultTests
 {
     [Fact]
     public void TestExecute()
     {
-        var r = Operate.Execute(() => new object());
+        var r = Operation.Execute(() => new object());
 
         Assert.True(r.Success);
         Assert.NotNull(r.Value);
@@ -15,7 +15,7 @@ partial class OperateResultTests
     [Fact]
     public void TestExecuteError()
     {
-        var r = Operate.Execute((Func<object>)(() => throw new SimpleException("")));
+        var r = Operation.Execute((Func<object>)(() => throw new SimpleException("")));
         Assert.True(!r.Success);
         Assert.Null(r.Value);
         Assert.NotEqual(default, r.Elapsed);

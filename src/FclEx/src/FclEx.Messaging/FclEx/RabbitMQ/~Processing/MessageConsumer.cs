@@ -3,8 +3,8 @@
 public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings>, IMessageConsumer<T, TSettings>
     where TSettings : ConsumerSettings
 {
-    public delegate Task<OperateResult> ConsumeHandler(BasicDeliverEventArgs props, T input);
-    public delegate Task<OperateResult> ConsumeErrorHandler(BasicDeliverEventArgs props, T input, Exception exception);
+    public delegate Task<OperationResult> ConsumeHandler(BasicDeliverEventArgs props, T input);
+    public delegate Task<OperationResult> ConsumeErrorHandler(BasicDeliverEventArgs props, T input, Exception exception);
 
     protected MessageConsumer(ILoggerFactory? loggerFactory, IMemoryBytesSerializer? serializer) : base(loggerFactory, serializer)
     {
@@ -162,7 +162,7 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
         return Task.CompletedTask;
     }
 
-    protected abstract Task<OperateResult> ConsumeActionAsync(BasicDeliverEventArgs args, T message);
+    protected abstract Task<OperationResult> ConsumeActionAsync(BasicDeliverEventArgs args, T message);
 
     protected virtual async Task OnConsumeRetryAsync(BasicDeliverEventArgs args, T input, Exception exception)
     {

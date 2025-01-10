@@ -42,7 +42,7 @@ partial class EnumerableExtensions
         return list;
     }
 
-    public static async Task<OperateResult<List<T>>> ToSeriallyExecutedTask<T>(this IEnumerable<T> enumerable, Func<T, Task<OperateResult<T>>> taskSelector,
+    public static async Task<OperationResult<List<T>>> ToSeriallyExecutedTask<T>(this IEnumerable<T> enumerable, Func<T, Task<OperationResult<T>>> taskSelector,
         int intervalSeconds = 0, CancellationToken token = default, bool terminateOnFirstError = false)
     {
         Check.NotNull(enumerable);

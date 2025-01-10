@@ -5,7 +5,7 @@ public interface IHtmlAction<T> : IHttpResponseHandler<T>
 {
     string? HtmlResultPath { get; }
 
-    OperateResult<T> IHttpResponseHandler<T>.GetResult(HttpResponse res)
+    OperationResult<T> IHttpResponseHandler<T>.GetResult(HttpResponse res)
     {
         var (successful, str, ex, _) = GetHtml(res);
         if (!successful)
@@ -18,20 +18,20 @@ public interface IHtmlAction<T> : IHttpResponseHandler<T>
             : GetResult(context);
     }
 
-    OperateResult<string> GetHtml(HttpResponse res)
+    OperationResult<string> GetHtml(HttpResponse res)
     {
         var str = res.ResponseString;
         return str switch
         {
-            _ when str.IsNullOrEmpty() => Operate.CreateError<string>("The res string is empty"),
-            _ when str.IsPossibleHtml() => Operate.CreateSuccess(res.ResponseString),
-            _ => Operate.CreateError<string>("The res string is not a valid html: " + str.Truncate(256))
+            _ when str.IsNullOrEmpty() => Operation.CreateError<string>("The res string is empty"),
+            _ when str.IsPossibleHtml() => Operation.CreateSuccess(res.ResponseString),
+            _ => Operation.CreateError<string>("The res string is not a valid html: " + str.Truncate(256))
         };
     }
 
     bool IsFailed(HtmlActionContext context) => context.ResultElements.Any();
 
-    OperateResult<T> HandleFailed(HtmlActionContext context)
+    OperationResult<T> HandleFailed(HtmlActionContext context)
     {
         const string msg = "The result object does not exist in html";
         var error = HtmlResultPath == null ? msg : msg + " at " + HtmlResultPath;
@@ -39,11 +39,11 @@ public interface IHtmlAction<T> : IHttpResponseHandler<T>
         return error;
     }
 
-    OperateResult<T> GetResult(HtmlActionContext context);
+    OperationResult<T> GetResult(HtmlActionContext context);
 }
 
 public interface IHtmlAction : IHtmlAction<Unit>
 {
-    OperateResult IHtmlAction<Unit>.GetResult(HtmlActionContext context) => Operate.Success;
+    OperationResult IHtmlAction<Unit>.GetResult(HtmlActionContext context) => Operation.Success;
 }
 #endif

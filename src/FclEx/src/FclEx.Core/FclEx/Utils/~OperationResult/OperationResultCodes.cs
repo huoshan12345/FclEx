@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Utils;
 
-public static class OperateResultCodes
+public static class OperationResultCodes
 {
     public const int Success = 0;
     public const int StringError = -1;

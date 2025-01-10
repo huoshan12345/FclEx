@@ -17,7 +17,7 @@ public abstract class MultipleMessageRouter<TInput, TOutput> : MessageRouter<TIn
 
     protected abstract string GetRoutingKey(IReadOnlyBasicProperties properties, TOutput output);
 
-    protected override async Task<OperateResult> RouteAsync(BasicDeliverEventArgs args, TInput input, IReadOnlyCollection<TOutput> output)
+    protected override async Task<OperationResult> RouteAsync(BasicDeliverEventArgs args, TInput input, IReadOnlyCollection<TOutput> output)
     {
         Check.NotNull(Channel);
         Check.NotNull(Settings);
@@ -29,6 +29,6 @@ public abstract class MultipleMessageRouter<TInput, TOutput> : MessageRouter<TIn
             var key = GetRoutingKey(properties, item);
             await BasicPublishAsync(Channel, Settings.TargetExchange.Name, item, key, properties);
         }
-        return Operate.Success;
+        return Operation.Success;
     }
 }

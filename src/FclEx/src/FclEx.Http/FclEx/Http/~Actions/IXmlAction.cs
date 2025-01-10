@@ -5,7 +5,7 @@ public interface IXmlAction<T> : IHttpResponseHandler<T>
 {
     string? XmlResultPath { get; }
 
-    OperateResult<T> IHttpResponseHandler<T>.GetResult(HttpResponse res)
+    OperationResult<T> IHttpResponseHandler<T>.GetResult(HttpResponse res)
     {
         var (successful, str, ex, _) = GetXml(res);
         if (!successful)
@@ -21,7 +21,7 @@ public interface IXmlAction<T> : IHttpResponseHandler<T>
 
     bool IsFailed(XmlActionContext context) => !context.ResultElements.Any();
 
-    OperateResult<T> HandleFailed(XmlActionContext context)
+    OperationResult<T> HandleFailed(XmlActionContext context)
     {
         const string msg = "The result object does not exist in xml";
         var error = XmlResultPath == null ? msg : msg + " at " + XmlResultPath;
@@ -29,19 +29,19 @@ public interface IXmlAction<T> : IHttpResponseHandler<T>
         return error;
     }
 
-    OperateResult<string> GetXml(HttpResponse response)
+    OperationResult<string> GetXml(HttpResponse response)
     {
         var str = response.ResponseString;
         return str.IsPossibleXml()
-            ? Operate.CreateSuccess(response.ResponseString)
-            : Operate.CreateError<string>("The res string is not a valid xml: " + str.Truncate(256));
+            ? Operation.CreateSuccess(response.ResponseString)
+            : Operation.CreateError<string>("The res string is not a valid xml: " + str.Truncate(256));
     }
 
-    OperateResult<T> GetResult(XmlActionContext context) => context.ResultElement!.ToObject<T>()!;
+    OperationResult<T> GetResult(XmlActionContext context) => context.ResultElement!.ToObject<T>()!;
 }
 
 public interface IXmlAction : IXmlAction<Unit>
 {
-    OperateResult IXmlAction<Unit>.GetResult(XmlActionContext context) => Operate.Success;
+    OperationResult IXmlAction<Unit>.GetResult(XmlActionContext context) => Operation.Success;
 }
 #endif

@@ -91,7 +91,7 @@ public abstract class UserClient : IUserClient, IDisposable
         ];
     }
 
-    protected Task<OperateResult> LoginActionWrapperAsync(CancellationToken token)
+    protected Task<OperationResult> LoginActionWrapperAsync(CancellationToken token)
     {
         Logger.LogDebug("Start to login...");
         return LoginActionAsync(token)
@@ -99,11 +99,11 @@ public abstract class UserClient : IUserClient, IDisposable
             .Error(ex => Logger.LogWarning(ex, "Failed to login: " + ex.Message));
     }
 
-    protected abstract Task<OperateResult> LoginActionAsync(CancellationToken token);
+    protected abstract Task<OperationResult> LoginActionAsync(CancellationToken token);
 
-    protected virtual Task<OperateResult> FakeLoginActionAsync(CancellationToken token)
+    protected virtual Task<OperationResult> FakeLoginActionAsync(CancellationToken token)
     {
-        return Operate.Success.ToTask();
+        return Operation.Success.ToTask();
     }
 
     protected virtual void DisposeAction()
@@ -111,12 +111,12 @@ public abstract class UserClient : IUserClient, IDisposable
         _httpService?.Dispose();
     }
 
-    protected async Task<OperateResult> DoLoginAsync(Func<CancellationToken, Task<OperateResult>> loginAction, CancellationToken token)
+    protected async Task<OperationResult> DoLoginAsync(Func<CancellationToken, Task<OperationResult>> loginAction, CancellationToken token)
     {
         if (IsOnline)
         {
             Logger.LogTrace("Already online");
-            return Operate.Success;
+            return Operation.Success;
         }
 
         using var _ = await LoginLocker.LockAsync(token);
@@ -124,11 +124,11 @@ public abstract class UserClient : IUserClient, IDisposable
         if (IsOnline)
         {
             Logger.LogTrace("Already online");
-            return Operate.Success;
+            return Operation.Success;
         }
 
         if (token.IsCancellationRequested)
-            return Operate.Cancel;
+            return Operation.Cancel;
 
         var time = ValueStopwatch.StartNew();
         try
@@ -156,7 +156,7 @@ public abstract class UserClient : IUserClient, IDisposable
         }
     }
 
-    public Task<OperateResult> LoginAsync(CancellationToken token = default)
+    public Task<OperationResult> LoginAsync(CancellationToken token = default)
     {
         return DoLoginAsync(LoginActionWrapperAsync, token);
     }
@@ -166,16 +166,16 @@ public abstract class UserClient : IUserClient, IDisposable
         using (await LoginLocker.LockAsync(token)) { }
     }
 
-    public Task<OperateResult> LogoutAsync(CancellationToken token = default)
+    public Task<OperationResult> LogoutAsync(CancellationToken token = default)
     {
         HttpService.ClearAllCookies();
         Session.Offline();
         Session.LoginCaptcha = null;
         Session.LoginCaptchaBytes = null;
-        return Operate.Success.ToTask();
+        return Operation.Success.ToTask();
     }
 
-    public Task<OperateResult> FakeLoginAsync(bool loginIfFail = true, CancellationToken token = default)
+    public Task<OperationResult> FakeLoginAsync(bool loginIfFail = true, CancellationToken token = default)
     {
         return DoLoginAsync(async t =>
         {

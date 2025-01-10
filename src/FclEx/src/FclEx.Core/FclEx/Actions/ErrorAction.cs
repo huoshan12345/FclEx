@@ -20,10 +20,10 @@ public readonly struct ErrorAction<T> : IAction<T>
         _error = null;
     }
 
-    public Task<OperateResult<T>> ExecuteAsync(CancellationToken token = default)
+    public Task<OperationResult<T>> ExecuteAsync(CancellationToken token = default)
     {
         return _ex is null 
-            ? Operate.CreateError<T>(_error, _timeSpan)
-            : Operate.CreateError<T>(_ex, _timeSpan);
+            ? Operation.CreateError<T>(_error, _timeSpan)
+            : Operation.CreateError<T>(_ex, _timeSpan);
     }
 }

@@ -15,13 +15,13 @@ public class TestConsumer<T> : CommonConsumer<T>
         MaxRetryTimes = maxRetryTimes;
     }
 
-    protected TestConsumer(Func<T, OperateResult> action, int maxRetryTimes = 3, Func<int, TimeSpan>? delay = null)
-        : this((_, m) => Operate.Execute(() => action(m)), maxRetryTimes, delay)
+    protected TestConsumer(Func<T, OperationResult> action, int maxRetryTimes = 3, Func<int, TimeSpan>? delay = null)
+        : this((_, m) => Operation.Execute(() => action(m)), maxRetryTimes, delay)
     {
     }
 
     protected TestConsumer(Action<T> action, int maxRetryTimes = 3, Func<int, TimeSpan>? delay = null)
-        : this(m => Operate.Execute(() => action(m)), maxRetryTimes, delay)
+        : this(m => Operation.Execute(() => action(m)), maxRetryTimes, delay)
     {
     }
 
@@ -46,7 +46,7 @@ public class TestConsumer<T> : CommonConsumer<T>
         return base.OnConsumeErrorAsync(args, input, exception);
     }
 
-    public static async Task<TestConsumer<T>> CreateAsync(ConsumerSettings settings, Func<T, OperateResult> action, int maxRetryTimes = 3, Func<int, TimeSpan>? delay = null)
+    public static async Task<TestConsumer<T>> CreateAsync(ConsumerSettings settings, Func<T, OperationResult> action, int maxRetryTimes = 3, Func<int, TimeSpan>? delay = null)
     {
         var publisher = new TestConsumer<T>(action, maxRetryTimes, delay);
         await publisher.InitializeAsync(settings);
@@ -67,7 +67,7 @@ public sealed class TestConsumer : TestConsumer<string>
     {
     }
 
-    public TestConsumer(Func<string, OperateResult> action, int maxRetryTimes = 3, Func<int, TimeSpan>? delay = null) : base(action, maxRetryTimes, delay)
+    public TestConsumer(Func<string, OperationResult> action, int maxRetryTimes = 3, Func<int, TimeSpan>? delay = null) : base(action, maxRetryTimes, delay)
     {
     }
 

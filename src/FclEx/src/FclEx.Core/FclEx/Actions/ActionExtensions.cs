@@ -7,12 +7,12 @@ public static partial class ActionExtensions
         return new MapAction<T, T2>(action, map);
     }
 
-    public static IAction<T2> Bind<T, T2>(this IAction<T> action, Func<T, OperateResult<T2>> map)
+    public static IAction<T2> Bind<T, T2>(this IAction<T> action, Func<T, OperationResult<T2>> map)
     {
         return new BindAction<T, T2>(action, map);
     }
 
-    public static Task<OperateResult> RunAsync<T>(this IAction<T> action, CancellationToken token = default)
+    public static Task<OperationResult> RunAsync<T>(this IAction<T> action, CancellationToken token = default)
     {
         return action.ExecuteAsync(token).Untype();
     }
@@ -37,7 +37,7 @@ public static partial class ActionExtensions
         return actions.Aggregate(seed, (sum, next) => sum.Next(next), m => m);
     }
 
-    public static Task<OperateResult<T>> ExecuteAsync<T>(this IAction<T> action, CancellationToken token = default)
+    public static Task<OperationResult<T>> ExecuteAsync<T>(this IAction<T> action, CancellationToken token = default)
     {
         return action.ExecuteAsync(token);
     }
@@ -73,7 +73,7 @@ public static partial class ActionExtensions
 
                 await TaskHelper.Delay(delay, t);
             }
-            return Operate.CreateCancel<T>();
+            return Operation.CreateCancel<T>();
         }, executeSafely);
     }
 

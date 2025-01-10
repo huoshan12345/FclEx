@@ -2,10 +2,10 @@
 
 partial class EnumerableExtensions
 {
-    public static OperateTransputs<T, TResult> ToOperateTransputs<T, TResult>(this IEnumerable<T> enumerable, Func<T, TResult> selector)
+    public static OperationTransputs<T, TResult> ToOperationTransputs<T, TResult>(this IEnumerable<T> enumerable, Func<T, TResult> selector)
     {
         var (success, failure) = enumerable
-            .Select(m => Transput.Create(m, Operate.Execute(() => selector(m))))
+            .Select(m => Transput.Create(m, Operation.Execute(() => selector(m))))
             .Partition(m => m.Output.Success);
 
         var successItems = success.Select(m => Transput.Create(m.Input, m.Output.Value!)).ToList();
@@ -13,10 +13,10 @@ partial class EnumerableExtensions
         return new(successItems, failureItems);
     }
 
-    public static async Task<OperateTransputs<T, TResult>> ToOperateTransputs<T, TResult>(this IEnumerable<T> enumerable, Func<T, Task<TResult>> selector)
+    public static async Task<OperationTransputs<T, TResult>> ToOperationTransputs<T, TResult>(this IEnumerable<T> enumerable, Func<T, Task<TResult>> selector)
     {
         var results = await enumerable
-            .Select(m => Operate.ExecuteAsync(() => selector(m)).ToTransput(m))
+            .Select(m => Operation.ExecuteAsync(() => selector(m)).ToTransput(m))
             .WhenAll();
 
         var (success, failure) = results.Partition(m => m.Output.Success);
@@ -25,14 +25,14 @@ partial class EnumerableExtensions
         return new(successItems, failureItems);
     }
 
-    public static Task<OperateTransputs<T, TResult>> ToOperateTransputs<T, TResult>(this IEnumerable<T> enumerable, 
+    public static Task<OperationTransputs<T, TResult>> ToOperationTransputs<T, TResult>(this IEnumerable<T> enumerable, 
         Func<T, Task<TResult>> taskSelector, int batchSize, CancellationToken token = default)
     {
-        return enumerable.ToOperateTransputs(async m => Operate.CreateSuccess(await taskSelector(m)), batchSize, token);
+        return enumerable.ToOperationTransputs(async m => Operation.CreateSuccess(await taskSelector(m)), batchSize, token);
     }
 
-    public static async Task<OperateTransputs<T, TResult>> ToOperateTransputs<T, TResult>(this IEnumerable<T> enumerable, 
-        Func<T, Task<OperateResult<TResult>>> taskSelector, int batchSize, CancellationToken token = default)
+    public static async Task<OperationTransputs<T, TResult>> ToOperationTransputs<T, TResult>(this IEnumerable<T> enumerable, 
+        Func<T, Task<OperationResult<TResult>>> taskSelector, int batchSize, CancellationToken token = default)
     {
         // ReSharper disable once PossibleMultipleEnumeration
         Check.NotNull(enumerable);
@@ -40,18 +40,18 @@ partial class EnumerableExtensions
         Check.NotLessThan(batchSize, 1);
 
         var success = new List<Transput<T, TResult>>();
-        var failure = new List<Transput<T, OperateResult<TResult>>>();
+        var failure = new List<Transput<T, OperationResult<TResult>>>();
 
         foreach (var batch in enumerable.Chunk(batchSize))
         {
             if (token.IsCancellationRequested)
             {
-                batch.Select(m => (m, Operate.CreateCancel<TResult>()))
+                batch.Select(m => (m, Operation.CreateCancel<TResult>()))
                     .ForEach(m => failure.Add(m));
             }
             else
             {
-                var rs = await batch.Select(async m => (m, await Operate.ExecuteAsync(() => taskSelector(m)))).WhenAll();
+                var rs = await batch.Select(async m => (m, await Operation.ExecuteAsync(() => taskSelector(m)))).WhenAll();
                 foreach (var (i, o) in rs)
                 {
                     if (o.Success)
@@ -64,31 +64,31 @@ partial class EnumerableExtensions
         return (success, failure);
     }
 
-    public static Task<OperateTransputs<T, TResult>> ToOperateTransputsSerially<T, TResult>(this IEnumerable<T> enumerable,
+    public static Task<OperationTransputs<T, TResult>> ToOperationTransputsSerially<T, TResult>(this IEnumerable<T> enumerable,
         Func<T, Task<TResult>> taskSelector, int intervalSeconds = 0, CancellationToken token = default)
     {
-        return enumerable.ToOperateTransputsSerially(async m => Operate.CreateSuccess(await taskSelector(m)), intervalSeconds, token);
+        return enumerable.ToOperationTransputsSerially(async m => Operation.CreateSuccess(await taskSelector(m)), intervalSeconds, token);
     }
 
-    public static async Task<OperateTransputs<T, TResult>> ToOperateTransputsSerially<T, TResult>(this IEnumerable<T> enumerable,
-        Func<T, Task<OperateResult<TResult>>> taskSelector, int intervalSeconds = 0, CancellationToken token = default)
+    public static async Task<OperationTransputs<T, TResult>> ToOperationTransputsSerially<T, TResult>(this IEnumerable<T> enumerable,
+        Func<T, Task<OperationResult<TResult>>> taskSelector, int intervalSeconds = 0, CancellationToken token = default)
     {
         // ReSharper disable once PossibleMultipleEnumeration
         Check.NotNull(enumerable);
         Check.NotNull(taskSelector);
 
         var success = new List<Transput<T, TResult>>();
-        var failure = new List<Transput<T, OperateResult<TResult>>>();
+        var failure = new List<Transput<T, OperationResult<TResult>>>();
 
         foreach (var item in enumerable)
         {
             if (token.IsCancellationRequested)
             {
-                failure.Add((item, Operate.CreateCancel<TResult>()));
+                failure.Add((item, Operation.CreateCancel<TResult>()));
             }
             else
             {
-                var r = await Operate.ExecuteAsync(() => taskSelector(item));
+                var r = await Operation.ExecuteAsync(() => taskSelector(item));
                 if (r.Success)
                     success.Add((item, r.Value!));
                 else

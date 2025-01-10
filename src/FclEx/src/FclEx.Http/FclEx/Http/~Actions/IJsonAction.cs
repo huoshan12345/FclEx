@@ -5,7 +5,7 @@ public interface IJsonAction<T> : IHttpResponseHandler<T>
 {
     string? JsonResultPath { get; }
 
-    OperateResult<T> IHttpResponseHandler<T>.GetResult(HttpResponse res)
+    OperationResult<T> IHttpResponseHandler<T>.GetResult(HttpResponse res)
     {
         var (successful, str, ex, _) = GetJson(res);
         if (!successful)
@@ -18,17 +18,17 @@ public interface IJsonAction<T> : IHttpResponseHandler<T>
             : GetResult(context);
     }
 
-    OperateResult<string> GetJson(HttpResponse response)
+    OperationResult<string> GetJson(HttpResponse response)
     {
         var str = response.ResponseString;
         return str.IsPossibleJson()
-            ? Operate.CreateSuccess(response.ResponseString)
-            : Operate.CreateError<string>("The res string is not a valid json: " + str.Truncate(256));
+            ? Operation.CreateSuccess(response.ResponseString)
+            : Operation.CreateError<string>("The res string is not a valid json: " + str.Truncate(256));
     }
 
     bool IsFailed(JsonActionContext context) => !context.ResultTokens.Any();
 
-    OperateResult<T> HandleFailed(JsonActionContext context)
+    OperationResult<T> HandleFailed(JsonActionContext context)
     {
         const string msg = "The result object does not exist in json";
         var error = JsonResultPath == null ? msg : msg + " at " + JsonResultPath;
@@ -36,7 +36,7 @@ public interface IJsonAction<T> : IHttpResponseHandler<T>
         return error;
     }
 
-    OperateResult<T> GetResult(JsonActionContext context)
+    OperationResult<T> GetResult(JsonActionContext context)
     {
         return context.ResultToken is { } token
             ? token.Deserialize<T>()!
@@ -46,6 +46,6 @@ public interface IJsonAction<T> : IHttpResponseHandler<T>
 
 public interface IJsonAction : IJsonAction<Unit>
 {
-    OperateResult IJsonAction<Unit>.GetResult(JsonActionContext context) => Operate.Success;
+    OperationResult IJsonAction<Unit>.GetResult(JsonActionContext context) => Operation.Success;
 }
 #endif

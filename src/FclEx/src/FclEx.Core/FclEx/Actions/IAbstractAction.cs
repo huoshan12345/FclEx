@@ -3,13 +3,13 @@ namespace FclEx.Actions;
 
 public interface IAbstractAction<T> : IAction<T>
 {
-    Task<OperateResult<T>> ExecuteActionAsync(CancellationToken token = default);
+    Task<OperationResult<T>> ExecuteActionAsync(CancellationToken token = default);
 
     string GetName() => GetType().ShortName();
-    Task<OperateResult<T>> HandleCancellationAsync(Exception ex) => Operate.CreateCancel<T>(ex);
-    Task<OperateResult<T>> HandleErrorAsync(Exception ex) => Operate.CreateError<T>(ex);
+    Task<OperationResult<T>> HandleCancellationAsync(Exception ex) => Operation.CreateCancel<T>(ex);
+    Task<OperationResult<T>> HandleErrorAsync(Exception ex) => Operation.CreateError<T>(ex);
 
-    async Task<OperateResult<T>> IAction<T>.ExecuteAsync(CancellationToken token)
+    async Task<OperationResult<T>> IAction<T>.ExecuteAsync(CancellationToken token)
     {
         var time = ValueStopwatch.StartNew();
         Debug.WriteLine($"[{GetName()}]Begin");

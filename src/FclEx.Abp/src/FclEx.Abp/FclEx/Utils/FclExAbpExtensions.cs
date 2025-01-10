@@ -4,7 +4,7 @@ namespace FclEx.Utils;
 
 public static class FclExAbpExtensions
 {
-    public static OperateResult<T> Unwrap<T>(this OperateResult<CacheValue<T>> result)
+    public static OperationResult<T> Unwrap<T>(this OperationResult<CacheValue<T>> result)
     {
         if (result.Success)
         {
@@ -24,7 +24,7 @@ public static class FclExAbpExtensions
         }
     }
 
-    public static async Task<OperateResult<T>> Unwrap<T>(this Task<OperateResult<CacheValue<T>>> result)
+    public static async Task<OperationResult<T>> Unwrap<T>(this Task<OperationResult<CacheValue<T>>> result)
     {
         return (await result.IgnoreSyncContext()).Unwrap();
     }

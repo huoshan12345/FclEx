@@ -7,7 +7,7 @@ partial class ActionExtensions
         return new UnionAction<T, TNext>(action, next);
     }
 
-    public static IAction<(T Cur, TNext Next)> Union<T, TNext>(this IAction<T> action, Func<T, OperateResult<TNext>> next)
+    public static IAction<(T Cur, TNext Next)> Union<T, TNext>(this IAction<T> action, Func<T, OperationResult<TNext>> next)
     {
         return new UnionAction<T, TNext>(action, m => CommonAction.Create(t => next(m), executeSafely: false));
     }

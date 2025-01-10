@@ -11,7 +11,7 @@ public readonly struct NextAction<T, TNext> : IAction<TNext>
         _next = Check.NotNull(next);
     }
 
-    public async Task<OperateResult<TNext>> ExecuteAsync(CancellationToken token = default)
+    public async Task<OperationResult<TNext>> ExecuteAsync(CancellationToken token = default)
     {
         var result = await _action.ExecuteAsync(token).IgnoreSyncContext();
         if (!result.Success)
@@ -45,7 +45,7 @@ public readonly struct NextAction<T, TNext> : IAction<TNext>
 //        _next = Check.NotNull(next);
 //    }
 
-//    public async Task<OperateResult<T>> ExecuteAsync(CancellationToken token = default)
+//    public async Task<OperationResult<T>> ExecuteAsync(CancellationToken token = default)
 //    {
 //        var result = await _action.ExecuteAsync(token).IgnoreSyncContext();
 //        if (!result.Success)

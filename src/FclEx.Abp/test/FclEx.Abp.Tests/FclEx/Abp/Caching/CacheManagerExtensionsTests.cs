@@ -38,13 +38,13 @@ public class CacheManagerExtensionsTests(ITestOutputHelper output) : AbpTests<Ab
     }
 
     [Fact]
-    public async Task GetObjectAsync_OperateResult_Test()
+    public async Task GetObjectAsync_OperationResult_Test()
     {
         var cacheManager = ServiceProvider.GetRequiredService<ICacheManager>();
         const string expectedValue = "value";
-        const string cacheName = nameof(GetObjectAsync_OperateResult_Test);
+        const string cacheName = nameof(GetObjectAsync_OperationResult_Test);
         const string cacheKey = "key";
-        var (successful, result, _, _) = await cacheManager.GetObjectAsync(() => Task.FromResult(Operate.CreateSuccess(expectedValue)),
+        var (successful, result, _, _) = await cacheManager.GetObjectAsync(() => Task.FromResult(Operation.CreateSuccess(expectedValue)),
             cacheKey, cacheName, TimeSpan.FromSeconds(10));
         Assert.True(successful);
         Assert.Equal(expectedValue, result);
@@ -57,12 +57,12 @@ public class CacheManagerExtensionsTests(ITestOutputHelper output) : AbpTests<Ab
     }
 
     [Fact]
-    public async Task GetObjectAsync_OperateResult_Fail()
+    public async Task GetObjectAsync_OperationResult_Fail()
     {
         var cacheManager = ServiceProvider.GetRequiredService<ICacheManager>();
-        const string cacheName = nameof(GetObjectAsync_OperateResult_Fail);
+        const string cacheName = nameof(GetObjectAsync_OperationResult_Fail);
         const string cacheKey = "key";
-        var (successful, _, ex, _) = await cacheManager.GetObjectAsync<string>(() => Operate.CreateError<string>(new InvalidOperationException()).ToTask(),
+        var (successful, _, ex, _) = await cacheManager.GetObjectAsync<string>(() => Operation.CreateError<string>(new InvalidOperationException()).ToTask(),
             cacheKey, cacheName, TimeSpan.FromSeconds(10));
 
         Assert.False(successful);
@@ -108,13 +108,13 @@ public class CacheManagerExtensionsTests(ITestOutputHelper output) : AbpTests<Ab
     }
 
     [Fact]
-    public async Task SetObjectAsync_OperateResult_Test()
+    public async Task SetObjectAsync_OperationResult_Test()
     {
         var cacheManager = ServiceProvider.GetRequiredService<ICacheManager>();
         const string expectedValue = "value";
         const string cacheName = nameof(SetObjectAsync_Raw_Test);
         const string cacheKey = "key";
-        var (successful, result, _, _) = await cacheManager.SetObjectAsync(() => Task.FromResult(Operate.CreateSuccess(expectedValue)),
+        var (successful, result, _, _) = await cacheManager.SetObjectAsync(() => Task.FromResult(Operation.CreateSuccess(expectedValue)),
             cacheKey, cacheName, TimeSpan.FromSeconds(10));
         Assert.True(successful);
         Assert.Equal(expectedValue, result);
@@ -127,12 +127,12 @@ public class CacheManagerExtensionsTests(ITestOutputHelper output) : AbpTests<Ab
     }
 
     [Fact]
-    public async Task SetObjectAsync_OperateResult_Fail()
+    public async Task SetObjectAsync_OperationResult_Fail()
     {
         var cacheManager = ServiceProvider.GetRequiredService<ICacheManager>();
-        const string cacheName = nameof(SetObjectAsync_OperateResult_Fail);
+        const string cacheName = nameof(SetObjectAsync_OperationResult_Fail);
         const string cacheKey = "key";
-        var (successful, _, ex, _) = await cacheManager.SetObjectAsync<string>(() => Operate.CreateError<string>(new InvalidOperationException()).ToTask(),
+        var (successful, _, ex, _) = await cacheManager.SetObjectAsync<string>(() => Operation.CreateError<string>(new InvalidOperationException()).ToTask(),
             cacheKey, cacheName, TimeSpan.FromSeconds(10));
 
         Assert.False(successful);

@@ -11,8 +11,8 @@ public readonly struct SuccessAction<T> : IAction<T>
         _timeSpan = timeSpan;
     }
 
-    public Task<OperateResult<T>> ExecuteAsync(CancellationToken token = default)
+    public Task<OperationResult<T>> ExecuteAsync(CancellationToken token = default)
     {
-        return Operate.CreateSuccess(_obj, _timeSpan);
+        return Operation.CreateSuccess(_obj, _timeSpan);
     }
 }

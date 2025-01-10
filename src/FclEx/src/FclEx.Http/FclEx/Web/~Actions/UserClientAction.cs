@@ -15,6 +15,6 @@ public abstract class UserClientAction<TClient, T> : IUserClientAction<TClient, 
     public IUserAccount Account => Client.Account;
     public TClient Client { get; }
     public ILogger Logger { get; }
-    public abstract Task<OperateResult<T>> ExecuteActionAsync(CancellationToken token = default);
+    public abstract Task<OperationResult<T>> ExecuteActionAsync(CancellationToken token = default);
 }
 #endif

@@ -9,7 +9,7 @@ public class CommonConsumer<T> : MessageConsumer<T>
         Handler = Check.NotNull(handler);
     }
 
-    protected override Task<OperateResult> ConsumeActionAsync(BasicDeliverEventArgs args, T message)
+    protected override Task<OperationResult> ConsumeActionAsync(BasicDeliverEventArgs args, T message)
     {
         return Handler(args, message);
     }

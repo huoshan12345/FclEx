@@ -45,13 +45,13 @@ public abstract class MessageRouter<TInput, TOutput> : MessageConsumer<TInput, R
              isDelayed: Settings.TargetExchange.IsDelayed);
     }
 
-    protected virtual async Task<OperateResult> RouteAsync(BasicDeliverEventArgs args, TInput input)
+    protected virtual async Task<OperationResult> RouteAsync(BasicDeliverEventArgs args, TInput input)
     {
         var output = await ConvertAsync(args, input).IgnoreSyncContext();
         return await RouteAsync(args, input, output).IgnoreSyncContext();
     }
 
-    protected virtual async Task<OperateResult> RouteAsync(BasicDeliverEventArgs args, TInput input, TOutput output)
+    protected virtual async Task<OperationResult> RouteAsync(BasicDeliverEventArgs args, TInput input, TOutput output)
     {
         Check.NotNull(Channel);
         Check.NotNull(Settings);
@@ -66,10 +66,10 @@ public abstract class MessageRouter<TInput, TOutput> : MessageConsumer<TInput, R
         {
             Logger.LogDebug("Null output has been discarded");
         }
-        return Operate.Success;
+        return Operation.Success;
     }
 
-    protected override Task<OperateResult> ConsumeActionAsync(BasicDeliverEventArgs args, TInput message)
+    protected override Task<OperationResult> ConsumeActionAsync(BasicDeliverEventArgs args, TInput message)
     {
         return RouteAsync(args, message);
     }

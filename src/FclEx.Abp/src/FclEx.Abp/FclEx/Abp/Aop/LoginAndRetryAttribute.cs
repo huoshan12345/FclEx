@@ -7,7 +7,7 @@ namespace FclEx.Abp.Aop;
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
 public class LoginAndRetryAttribute : AbstractInterceptorAttribute
 {
-    public virtual Func<object, bool> NeedRetry { get; } = o => o is IOperateResult { Error: true };
+    public virtual Func<object, bool> NeedRetry { get; } = o => o is IOperationResult { Error: true };
 
     public override async Task Invoke(AspectContext context, AspectDelegate next)
     {
