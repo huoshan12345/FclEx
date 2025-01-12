@@ -85,6 +85,7 @@ public static class TestHelper
         {
             return reason;
         }
+
         if (info.AllowedOSPlatforms is { } os && os.Any(m => RuntimeInformation.IsOSPlatform(m.ToOSPlatform()) == false))
         {
             return $"The current operating system is not any of {os.JoinWith(", ")}";
@@ -92,16 +93,13 @@ public static class TestHelper
 
         if (info.RequiredBuildType.ToBuildType() is { } buildType)
         {
-            if (ReferencingAssemblyBuildTypes is [var type])
+            var currentBuildType = ReferencingAssemblyBuildTypes.Contains(BuildType.Debug)
+                ? BuildType.Debug
+                : BuildType.Release;
+
+            if (currentBuildType != buildType)
             {
-                if (type != buildType)
-                {
-                    return $"The calling assembly is not in {buildType} mode";
-                }
-            }
-            else
-            {
-                return $"The count of referencing assembly build types is {ReferencingAssemblies.Length}, not 1.";
+                return $"The calling assembly is not in {buildType} mode";
             }
         }
 
