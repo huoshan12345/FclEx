@@ -36,6 +36,16 @@ partial class TaskExtensions
         });
     }
 
+    public static Task<TResult> Then<TResult>(this Task task, Func<TResult> action)
+    {
+        return task.Then(() => action().ToTask());
+    }
+
+    public static Task<TResult> Then<TResult>(this Task task, TResult result)
+    {
+        return task.Then(() => result.ToTask());
+    }
+
     public static Task<TResult> Then<T, TResult>(this Task<T> task, Func<T, Task<TResult>> action)
     {
         Check.NotNull(task);

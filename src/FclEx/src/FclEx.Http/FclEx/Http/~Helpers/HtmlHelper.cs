@@ -62,4 +62,15 @@ public static class HtmlHelper
             return null;
         }
     }
+    
+    public static string? GetTextContent(string str)
+    {
+        var html = DefaultHtmlParser.ParseDocument(str);
+        return html.Body?.TextContent;
+    }
+
+    public static string RemoveHtmlTags(string str)
+    {
+        return GetTextContent(str) ?? str;
+    }
 }

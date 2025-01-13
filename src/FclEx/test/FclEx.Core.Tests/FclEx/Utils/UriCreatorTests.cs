@@ -3,6 +3,15 @@
 public class UriCreatorTests
 {
     [Fact]
+    public void Constructor_WithoutSchemeHost_ShouldInitializeUriBuilderCorrectly()
+    {
+        var creator = new UriCreator();
+        Assert.Equal("", creator.Scheme);
+        Assert.Equal("", creator.Host);
+        Assert.Equal(-1, creator.Port);
+    }
+
+    [Fact]
     public void Constructor_WithSchemeHostAndPort_ShouldInitializeUriBuilderCorrectly()
     {
         var creator = new UriCreator("http", "example.com", 8080);

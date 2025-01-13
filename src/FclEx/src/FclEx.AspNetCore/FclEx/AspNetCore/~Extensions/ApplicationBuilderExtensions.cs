@@ -50,4 +50,9 @@ public static class ApplicationBuilderExtensions
 #pragma warning restore CA2254
         });
     }
+
+    public static IApplicationBuilder EnableBuffering(this IApplicationBuilder app, Func<HttpContext, bool> predicate)
+    {
+        return app.UseWhen(predicate, m => m.UseMiddleware<EnableBufferingMiddleware>());
+    }
 }

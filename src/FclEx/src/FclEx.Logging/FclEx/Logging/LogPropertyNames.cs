@@ -21,6 +21,7 @@ public static class LogPropertyNames
     public const string InvalidCount = "InvalidCount";
     public const string InvalidType = "InvalidType";
     public const string Namespace = "Namespace";
+    public const string Operation = "Operation";
     public const string OperationName = "OperationName";
     public const string Path = "Path";
     public const string ProcessId = "ProcessId";

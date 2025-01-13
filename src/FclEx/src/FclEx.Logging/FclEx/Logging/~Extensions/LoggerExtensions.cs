@@ -1,4 +1,6 @@
-﻿namespace FclEx.Logging;
+﻿using static FclEx.Logging.LogPropertyNames;
+
+namespace FclEx.Logging;
 
 public static class Extensions
 {
@@ -93,5 +95,26 @@ public static class Extensions
     public static IDisposable PushProperty(this ILogger logger, IEnumerable<LoggerProperty> properties)
     {
         return logger.PushProperty(properties.Select(m => KeyValuePair.Create(m.Key, m.Value)));
+    }
+
+    public static LoggerProperties Properties(this ILogger logger)
+    {
+        return new LoggerProperties(logger);
+    }
+
+    public static LoggerProperties Properties(this ILogger logger, string name, object? value, bool destructureObjects = false)
+    {
+        return logger.Properties().Push(name, value, destructureObjects);
+    }
+
+    public static void LogProcess(this ILogger logger, string operationName, TimeSpan duration, LogLevel logLevel = LogLevel.Information)
+    {
+        logger.Log(logLevel, $"Execute {{{LogPropertyNames.Operation}}} successfully in {{{DurationSeconds}}}.", operationName, duration.ToSecondsString());
+    }
+
+    public static void LogProcessError(this ILogger logger, Exception ex, string operationName, TimeSpan duration, LogLevel logLevel = LogLevel.Error)
+    {
+        using var x = logger.Properties(DurationSeconds, duration.ToSecondsString());
+        logger.LogError(ex, $"Failed to execute {{{LogPropertyNames.Operation}}} due to {{Error}}", operationName, ex.Message);
     }
 }

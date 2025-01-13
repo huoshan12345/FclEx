@@ -11,8 +11,8 @@ public class UriCreator
     private static Regex Ipv6HostPort { get; } = new(@"^(\[[^\[^\]]+\])(?::(\d+))?$", RegexOptions.Compiled);
     private static Regex HostPort { get; } = new(@"^([-\w\.]+):(\d+)$", RegexOptions.Compiled);
 
-    public UriCreator(string? scheme, string? host, int port = -1, string? path = null)
-        : this(new UriBuilder(scheme, host, port, path))
+    public UriCreator(string? scheme = null, string? host = null, int port = -1, string? path = null)
+        : this(new UriBuilder(scheme ?? "", host ?? "", port, path ?? ""))
     {
     }
 

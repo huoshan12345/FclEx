@@ -86,4 +86,22 @@ public static class HttpRequestExtensions
         items[nameof(JwtTokenInfo)] = info;
         return info;
     }
+
+    /// <summary>
+    /// Retrieves a parameter value by checking HTTP headers, query string, and cookies in that order.
+    /// Returns the first non-null value found or null if no value exists.
+    /// </summary>
+    /// <param name="request">The HTTP request to extract the parameter from</param>
+    /// <param name="headerKey">The key to look up in the request headers</param>
+    /// <param name="queryKey">Optional key to look up in query string. Defaults to headerKey if not specified</param>
+    /// <param name="cookieKey">Optional key to look up in cookies. Defaults to headerKey if not specified</param>
+    /// <returns>The parameter value found or null if not found in any location</returns>
+    public static string? GetParameterValue(this HttpRequest request, string headerKey, string? queryKey = null, string? cookieKey = null)
+    {
+        queryKey ??= headerKey;
+        cookieKey ??= headerKey;
+        return request.Headers[headerKey].LastOrDefault()
+               ?? request.Query[queryKey].LastOrDefault()
+               ?? request.Cookies[cookieKey];
+    }
 }
