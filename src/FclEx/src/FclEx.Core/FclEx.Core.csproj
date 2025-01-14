@@ -16,7 +16,7 @@
     <PackageReference Include="System.Text.Json" Version="[8.0.5, 9.0.0)" />
   </ItemGroup>
 
-  <ItemGroup Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion),'8.0'))">
+  <ItemGroup Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 8.0))">
     <!--net6.0 and net7.0 require this package to support CollectionBuilder-->
     <PackageReference Include="PolySharp" Version="1.15.0" PrivateAssets="all" />
   </ItemGroup>

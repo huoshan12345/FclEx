@@ -14,7 +14,8 @@
     <Copyright>huoshan12345</Copyright>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!--NOTE: GetTargetFrameworkVersion('netstandard2.0') is 0.0-->
-    <TargetFrameworkVersion>v$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
+    <TargetFrameworkVersion>$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
+    <IsNet9OrGreater>$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), 9.0))</IsNet9OrGreater>
   </PropertyGroup>
 
   <ItemGroup>
