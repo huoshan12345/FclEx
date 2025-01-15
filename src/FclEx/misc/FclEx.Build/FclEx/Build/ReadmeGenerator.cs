@@ -17,6 +17,7 @@ public class ReadmeGenerator
     public const string FclEx = "FclEx";
     public const string Collaboration = "FclEx.Collaboration";
     public const string Ini = "Ini.Net";
+    public const string Uci = "Uci.Net";
 
     public const string LicenseBadgeUrl = "https://img.shields.io/github/license/mashape/apistatus.svg";
     public const string BuildWorkflowPath = "actions/workflows/build.yml";
@@ -32,6 +33,8 @@ public class ReadmeGenerator
             "Some basic useful extensions and helpers for Atlassian, NewRelic and Slack."),
         new(Path.Combine(RootPath, "..", "Ini.Net"), "Ini.Net.sln", Ini,
             "A simple and efficient parser for INI format files implemented in C#."),
+        new(Path.Combine(RootPath, "..", "Uci.Net"), "Uci.Net.sln", Uci,
+            "A simple and efficient parser for UCI (Unified Configuration Interface) format files implemented in C#."),
     }.Select(m => new object[] { m });
 
     [Theory]
