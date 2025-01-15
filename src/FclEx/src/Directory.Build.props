@@ -15,7 +15,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!--NOTE: GetTargetFrameworkVersion('netstandard2.0') is 0.0-->
     <TargetFrameworkVersion>$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
-    <IsNet9OrGreater>$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), 9.0))</IsNet9OrGreater>
+    <AtLeastNet9>$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), 9.0))</AtLeastNet9>
   </PropertyGroup>
 
   <ItemGroup>
