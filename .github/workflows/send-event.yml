@@ -1,5 +1,8 @@
 name: send-event
 on:
+  push:
+    branches:
+      - master
   pull_request_target:
     types:
       - assigned
@@ -42,13 +45,14 @@ on:
 
 jobs:
   send_event:
-    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Send Event
         uses: fjogeleit/http-request-action@v1
-        with:          
-          escapeData: 'true'
-          url: https://8.140.21.208/spotter/api/GithubEvent/Add
-          method: "POST"
+        with:
+          escapeData: true
+          retry: 3
+          url: https://github.huoshan.space/api/github/event
+          method: POST
+          customHeaders: '{ "token": "${{ secrets.GITHUB_TOKEN }}", "repository": "${{ github.repository }}" }'
           data: '{ "github": ${{ toJSON(github) }} }'
