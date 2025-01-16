@@ -10,13 +10,11 @@ public static class PooledStringBuilderExtensions
 
     public static T Append<T>(this T builder, string? value) where T : PooledStringBuilder<T>, new()
     {
-        builder.Builder.Append(value);
         return builder.Append(m => m.Append(value));
     }
 
     public static T Append<T>(this T builder, char value) where T : PooledStringBuilder<T>, new()
     {
-        builder.Builder.Append(value);
         return builder.Append(m => m.Append(value));
     }
 
