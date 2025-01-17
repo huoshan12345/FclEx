@@ -1,5 +1,3 @@
-# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
-# ubuntu is required to test with docker services.
 name: Build
 on:
   push:
@@ -25,18 +23,13 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     services:
       redis:
         image: redis:7
         ports:
           - 6379:6379
         options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
+          --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
       rabbitmq:
         image: heidiks/rabbitmq-delayed-message-exchange:3.8.27-management
         env:
@@ -45,11 +38,7 @@ jobs:
         ports:
           - 5672:5672
         options: >-
-          --health-cmd "rabbitmqctl node_health_check"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
+          --health-cmd "rabbitmqctl node_health_check" --health-interval 10s --health-timeout 5s --health-retries 5
       postgres:
         image: postgres:13
         env:
@@ -57,11 +46,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - name: Get PR
         if: ${{ github.event_name == 'pull_request_target' }}
@@ -76,7 +61,6 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
-        # for pull_request_target the ref needs to specify. see https://github.com/actions/checkout/discussions/404
         with:
           ref: ${{ steps.pr.outputs.merge_commit_sha }}
 
@@ -97,11 +81,11 @@ jobs:
 
       - name: Test Report
         uses: dorny/test-reporter@main
-        if: (success() || failure()) # run this step even if previous step failed
+        if: (success() || failure())
         with:
-          name: Test Report # Name of the check run which will be created
-          path: src/TestResults/**/*.trx # Path to test results
-          reporter: dotnet-trx # Format of test results
+          name: Test Report
+          path: src/TestResults/**/*.trx
+          reporter: dotnet-trx
           list-suites: failed
           list-tests: failed
           use-actions-summary: ${{ github.event_name == 'pull_request_target' }}
@@ -125,7 +109,7 @@ jobs:
         with:
           tag_name: ${{ env.VERSION }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT }}
 
       - name: Create Release
         if: ${{ env.IS_PUSH_DEFAULT == 'true' }}
@@ -133,6 +117,7 @@ jobs:
         with:
           name: ${{ env.VERSION }}
           tag: ${{ env.VERSION }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT }}
           skipIfReleaseExists: true
           generateReleaseNotes: true
+...
