@@ -107,12 +107,12 @@ public static class Extensions
         return logger.Properties().Push(name, value, destructureObjects);
     }
 
-    public static void LogProcess(this ILogger logger, string operationName, TimeSpan duration, LogLevel logLevel = LogLevel.Information)
+    public static void LogOperation(this ILogger logger, string operationName, TimeSpan duration, LogLevel logLevel = LogLevel.Information)
     {
         logger.Log(logLevel, $"Execute {{{LogPropertyNames.Operation}}} successfully in {{{DurationSeconds}}}.", operationName, duration.ToSecondsString());
     }
 
-    public static void LogProcessError(this ILogger logger, Exception ex, string operationName, TimeSpan duration, LogLevel logLevel = LogLevel.Error)
+    public static void LogOperationError(this ILogger logger, Exception ex, string operationName, TimeSpan duration, LogLevel logLevel = LogLevel.Error)
     {
         using var x = logger.Properties(DurationSeconds, duration.ToSecondsString());
         logger.LogError(ex, $"Failed to execute {{{LogPropertyNames.Operation}}} due to {{Error}}", operationName, ex.Message);

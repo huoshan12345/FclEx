@@ -4,27 +4,27 @@ namespace FclEx.Extensions;
 
 partial class TaskExtensions
 {
-    private const TaskContinuationOptions ThenOptions = OnlyOnRanToCompletion | ExecuteSynchronously;
-
-    public static Task<TResult> Then<TResult>(this Task task, Func<Task<TResult>> action)
+    public static Task<T> Then<T>(this Task task, Func<Task<T>> action)
     {
         Check.NotNull(task);
         Check.NotNull(action);
-        return task.ContinueWith(t => action(), ThenOptions).Unwrap();
+
+        return task.ContinueWith(t => t switch
+        {
+            { IsFaulted: true, Exception: { } ex } => new TaskCompletionSource<T>().Exception(ex).Task,
+            { IsCanceled: true } => throw new TaskCanceledException(t),
+            _ => action(),
+        }, ExecuteSynchronously).Unwrap();
     }
 
     public static Task Then(this Task task, Func<Task> action)
     {
-        Check.NotNull(task);
-        Check.NotNull(action);
-        return task.ContinueWith(t => action(), ThenOptions).Unwrap();
+        return task.Then(() => action().ToTaskUnit());
     }
 
     public static Task When(this Task task, bool condition, Func<Task> action)
     {
-        Check.NotNull(task);
-        Check.NotNull(action);
-        return task.ContinueWith(t => condition ? action() : t, ThenOptions).Unwrap();
+        return task.Then(() => condition ? action() : task);
     }
 
     public static Task Then(this Task task, Action action)
@@ -36,12 +36,12 @@ partial class TaskExtensions
         });
     }
 
-    public static Task<TResult> Then<TResult>(this Task task, Func<TResult> action)
+    public static Task<T> Then<T>(this Task task, Func<T> action)
     {
         return task.Then(() => action().ToTask());
     }
 
-    public static Task<TResult> Then<TResult>(this Task task, TResult result)
+    public static Task<T> Then<T>(this Task task, T result)
     {
         return task.Then(() => result.ToTask());
     }
@@ -50,25 +50,33 @@ partial class TaskExtensions
     {
         Check.NotNull(task);
         Check.NotNull(action);
-        return task.ContinueWith(t => action(t.Result), ThenOptions).Unwrap();
+
+        return task.ContinueWith(t => t switch
+        {
+            { IsFaulted: true, Exception: { } ex } => new TaskCompletionSource<TResult>().Exception(ex).Task,
+            { IsCanceled: true } => throw new TaskCanceledException(t),
+            _ => action(t.Result),
+        }, ExecuteSynchronously).Unwrap();
     }
 
     public static Task<TResult> Then<T, TResult>(this Task<T> task, Func<T, TResult> action)
     {
         Check.NotNull(task);
         Check.NotNull(action);
-        return task.ContinueWith(t => action(t.Result).ToTask(), ThenOptions).Unwrap();
+
+        return task.Then(t => action(t).ToTask());
     }
 
     public static Task<T> Then<T>(this Task<T> task, Action<T> action)
     {
         Check.NotNull(task);
         Check.NotNull(action);
-        return task.ContinueWith(t =>
+
+        return task.Then(t =>
         {
-            action(t.Result);
-            return t;
-        }, ThenOptions).Unwrap();
+            action(t);
+            return task;
+        });
     }
 
     public static Task<T> When<T>(this Task<T> task, Func<T, bool> condition, Action<T> action)
@@ -86,7 +94,7 @@ partial class TaskExtensions
     {
         Check.NotNull(task);
         Check.NotNull(action);
-        return task.ContinueWith(t => action(t.Result).ContinueWith(_ => t.Result), ThenOptions).Unwrap();
+        return task.Then(t => action(t).Then(() => task));
     }
 
     public static Task<T> When<T>(this Task<T> task, Func<T, bool> condition, Func<T, Task> action)
@@ -114,7 +122,7 @@ partial class TaskExtensions
         return task.ContinueWith(t => t switch
         {
             { IsFaulted: true, Exception: { } ex } => action(ex.GetBaseException()),
-            { IsCanceled: true } => action(new TaskCanceledException(t)),
+            { IsCanceled: true } => action(new TaskCanceledException(t).SetStackTrace()),
             _ => Task.FromResult(t.Result),
         }, ExecuteSynchronously).Unwrap();
     }

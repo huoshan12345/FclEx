@@ -12,12 +12,12 @@ public static class OperationHelper
         try
         {
             var result = await task();
-            logger.LogProcess(title, watch.GetElapsedTime());
+            logger.LogOperation(title, watch.GetElapsedTime());
             return result;
         }
         catch (Exception ex)
         {
-            logger.LogProcessError(ex, title, watch.GetElapsedTime());
+            logger.LogOperationError(ex, title, watch.GetElapsedTime());
 
             if (throwOnError)
                 throw;

@@ -80,7 +80,7 @@ partial class OperationResultExtensions
                 ex.GetBaseException().ReThrow();
 
             if (task.IsCanceled)
-                throw new TaskCanceledException();
+                throw new TaskCanceledException(m);
 
             return m.Result.ThrowIfError();
         });

@@ -9,8 +9,8 @@ namespace FclEx.Build;
 public class DotSettings
 {
     [Fact]
-    public async Task Update_NamespaceProvider()
+    public Task Update_NamespaceProvider()
     {
-
+        return Task.CompletedTask;
     }
 }

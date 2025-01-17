@@ -23,5 +23,6 @@ public static partial class TaskExtensions
 
     private static readonly Task<Unit> TaskUnit = Task.FromResult(Unit.Default);
 
-    public static Task<Unit> ToTaskUnit(this Task task) => TaskUnit;
+    public static Task<Unit> ToTaskUnit(this Task task)
+        => task.ContinueWith(_ => TaskUnit, TaskContinuationOptions.ExecuteSynchronously).Unwrap();
 }
