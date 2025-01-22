@@ -69,8 +69,8 @@ public class DbContextExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
             var updatedEntity = await context.EntityHasStates.GetAsync(entity.Id);
             Assert.NotNull(updatedEntity);
             Assert.Equal(entity.Name, updatedEntity.Name);
-            AssertExt.EqualWithinMs(entity.CreatedAt, updatedEntity.CreatedAt);
-            AssertExt.EqualWithinMs(entity.UpdatedAt, updatedEntity.UpdatedAt);
+            AssertEx.EqualWithinMs(entity.CreatedAt, updatedEntity.CreatedAt);
+            AssertEx.EqualWithinMs(entity.UpdatedAt, updatedEntity.UpdatedAt);
         }
     }
 
@@ -88,7 +88,7 @@ public class DbContextExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
             await Task.Delay(TimeSpan.FromMilliseconds(100)); // Ensure that the updated time is different
             await context.SaveAsync(entity);
             Assert.Equal(createdAt, entity.CreatedAt);
-            AssertExt.NotEqualWithinMs(createdAt, entity.UpdatedAt);
+            AssertEx.NotEqualWithinMs(createdAt, entity.UpdatedAt);
         }
 
         {
@@ -96,8 +96,8 @@ public class DbContextExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
             var updatedEntity = await context.EntityHasStates.GetAsync(entity.Id);
             Assert.NotNull(updatedEntity);
             Assert.Equal(newName, updatedEntity.Name);
-            AssertExt.EqualWithinMs(createdAt, updatedEntity.CreatedAt);
-            AssertExt.EqualWithinMs(entity.UpdatedAt, updatedEntity.UpdatedAt);
+            AssertEx.EqualWithinMs(createdAt, updatedEntity.CreatedAt);
+            AssertEx.EqualWithinMs(entity.UpdatedAt, updatedEntity.UpdatedAt);
         }
     }
 

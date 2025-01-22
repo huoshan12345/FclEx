@@ -97,7 +97,7 @@ partial class JsonFormatter
         var indexOp = ExceptionOptions.WriteIndexOptions;
         var writeIndexes = IfWriteIndexes();
 
-        foreach (var (_, info, isFirst, _) in infos.IndexExt())
+        foreach (var (_, info, isFirst, _) in infos.IndexEx())
         {
             if (isFirst == false)
                 output.Write(",");

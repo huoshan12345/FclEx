@@ -18,7 +18,7 @@ public class ReadOnlyList<T>(IReadOnlyList<T>? list = null) : IReadOnlyList<T>, 
     {
         using var builder = new ValueStringBuilder();
         builder.Append('[');
-        foreach (var (_, item, _, isLast) in _list.IndexExt())
+        foreach (var (_, item, _, isLast) in _list.IndexEx())
         {
             if (item is null)
                 continue;

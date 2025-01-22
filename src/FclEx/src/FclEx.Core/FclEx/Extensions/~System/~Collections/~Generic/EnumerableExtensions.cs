@@ -5,10 +5,10 @@ public readonly record struct IndexedItem<T>(int Index, T Item, bool IsFirst, bo
 public static partial class EnumerableExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this IEnumerable<T>? source) => source is null || source.AnyExt() == false;
+    public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this IEnumerable<T>? source) => source is null || source.AnyEx() == false;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsEmpty<T>(this IEnumerable<T> source) => source.AnyExt() == false;
+    public static bool IsEmpty<T>(this IEnumerable<T> source) => source.AnyEx() == false;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsNotEmpty<T>([NotNullWhen(true)] this IEnumerable<T>? enumerable) => enumerable.IsNullOrEmpty() == false;
@@ -127,15 +127,15 @@ public static partial class EnumerableExtensions
     }
 #endif
 
-    public static IEnumerable<IndexedItem<T>> IndexExt<T>(this IEnumerable<T> enumerable)
+    public static IEnumerable<IndexedItem<T>> IndexEx<T>(this IEnumerable<T> enumerable)
     {
         Check.NotNull(enumerable);
 
         // we separate the null check from the method body with yield, otherwise the null check will not be executed until start enumerating.
         // see details in https://stackoverflow.com/questions/42149895/method-having-yield-return-is-not-throwing-exception
-        return IndexExtIterator(enumerable);
+        return IndexExIterator(enumerable);
 
-        static IEnumerable<IndexedItem<T>> IndexExtIterator(IEnumerable<T> enumerable)
+        static IEnumerable<IndexedItem<T>> IndexExIterator(IEnumerable<T> enumerable)
         {
             using var enumerator = enumerable.GetEnumerator();
 
@@ -157,7 +157,7 @@ public static partial class EnumerableExtensions
         }
     }
 
-    public static bool AnyExt<T>(this IEnumerable<T> enumerable)
+    public static bool AnyEx<T>(this IEnumerable<T> enumerable)
     {
         Check.NotNull(enumerable);
 

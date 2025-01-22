@@ -1,6 +1,6 @@
 ﻿namespace Xunit;
 
-public static partial class AssertExt
+public static partial class AssertEx
 {
     private static readonly HashSet<string> _emptySet = [];
 

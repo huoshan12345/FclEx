@@ -40,7 +40,7 @@ public class EfCoreFixture : GlobalFixture
         foreach (var databaseType in DatabaseTypes)
         {
             var isRecreated = false; // NOTE: we delete database only once for every database instance.
-            foreach (var (_, schema, isFirst, _) in Schemas.IndexExt())
+            foreach (var (_, schema, isFirst, _) in Schemas.IndexEx())
             {
                 await using var context = CreateDbContext(databaseType, schema);
 

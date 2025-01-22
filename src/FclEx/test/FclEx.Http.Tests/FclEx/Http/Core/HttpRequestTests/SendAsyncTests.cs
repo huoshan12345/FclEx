@@ -28,7 +28,7 @@ internal sealed class HttpEventListener : EventListener
         var time = eventData.TimeStamp.SpecifyKind(DateTimeKind.Local);
         var sb = new StringBuilder().Append($"[{time:HH:mm:ss.ffffff}][{eventData.EventName}] ");
 
-        foreach (var (_, (name, item), isFirst, _) in eventData.PayloadNames.EmptyIfNull().Zip(eventData.Payload.EmptyIfNull()).IndexExt())
+        foreach (var (_, (name, item), isFirst, _) in eventData.PayloadNames.EmptyIfNull().Zip(eventData.Payload.EmptyIfNull()).IndexEx())
         {
             if (isFirst == false)
                 sb.Append(", ");

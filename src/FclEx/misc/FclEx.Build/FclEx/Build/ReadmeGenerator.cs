@@ -159,7 +159,7 @@ file static class Extensions
     public static void AppendMarkdownTable(this StringBuilder builder, IEnumerable<MarkdownColumn> columns, IEnumerable<IEnumerable<Action<StringBuilder>>> rowActions)
     {
         var post = new List<Action<StringBuilder>>();
-        foreach (var (_, (text, alignment), _, isLast) in columns.IndexExt())
+        foreach (var (_, (text, alignment), _, isLast) in columns.IndexEx())
         {
             builder.Append('|');
             builder.Append(text);
@@ -178,7 +178,7 @@ file static class Extensions
 
         foreach (var row in rowActions)
         {
-            foreach (var (_, action, _, isLast) in row.IndexExt())
+            foreach (var (_, action, _, isLast) in row.IndexEx())
             {
                 builder.Append('|');
                 action(builder);

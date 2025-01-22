@@ -129,4 +129,67 @@ partial class TypeExtensions
     {
         return type.GetDataMember(name) ?? throw new InvalidOperationException($"Cannot find field or property '{name}' in type '{type.FullName}'");
     }
+
+    private const BindingFlags DefaultCtorFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+
+    /// <summary>
+    /// Retrieves the default (parameterless) constructor of the specified type, if available.
+    /// </summary>
+    /// <param name="type">The type to search for a default constructor.</param>
+    /// <returns>
+    /// The default constructor of the specified type, or <c>null</c> if no such constructor exists.
+    /// </returns>
+    public static ConstructorInfo? GetDefaultConstructor(this Type type)
+    {
+        var ctors = type.GetConstructors(DefaultCtorFlags);
+        if (ctors.Length == 0)
+            return null;
+
+        var defaultCtor = ctors.FirstOrDefault(m => m.GetParameters().Length == 0);
+
+        return defaultCtor;
+    }
+
+    /// <summary>
+    /// Retrieves the default (parameterless) constructor of the specified type.
+    /// Throws an exception if the type does not have a default constructor.
+    /// </summary>
+    /// <param name="type">The type to search for a default constructor.</param>
+    /// <returns>
+    /// The default constructor of the specified type.
+    /// </returns>
+    /// <exception cref="ArgumentException">
+    /// Thrown if the type does not have any constructors or does not have a default constructor.
+    /// </exception>
+    public static ConstructorInfo GetRequiredDefaultConstructor(this Type type)
+    {
+        var ctors = type.GetConstructors(DefaultCtorFlags);
+        if (ctors.Length == 0)
+            throw new ArgumentException($"The type '{type.LongName()}' does not have any constructors.");
+
+        var defaultCtor = ctors.FirstOrDefault(m => m.GetParameters().Length == 0);
+
+        if (defaultCtor is null)
+            throw new ArgumentException($"The type '{type.LongName()}' does not have a default constructor.");
+
+        return defaultCtor;
+    }
+
+    /// <summary>
+    /// Retrieves all constant fields (fields with the <c>const</c> keyword) of the specified type.
+    /// </summary>
+    /// <param name="type">The type to retrieve constant fields from.</param>
+    /// <returns>
+    /// An array of <see cref="FieldInfo"/> objects representing the constant fields of the type.
+    /// </returns>
+    public static FieldInfo[] GetConstants(this Type type)
+    {
+        var fieldInfos = type.GetDataMembers().Select(m => m.MemberInfo).OfType<FieldInfo>();
+
+        // IsLiteral determines if its value is written at compile time and not changeable
+        // IsInitOnly determines if the field can be set in the body of the constructor
+        // for C# a field which is readonly keyword would have both true 
+        // but a const field would have only IsLiteral equal to true
+        return fieldInfos.Where(fi => fi is { IsLiteral: true, IsInitOnly: false }).ToArray();
+    }
 }

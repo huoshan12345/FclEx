@@ -11,7 +11,7 @@ public class HttpServiceExtensionsTests
 
         var (successful, file, exception, _) = await http.DownloadAsync(uri);
 
-        AssertExt.True(successful, () => exception!.ToString());
+        AssertEx.True(successful, () => exception!.ToString());
         Assert.Equal(fileName, file.FileName);
         Assert.Equal(Path.GetExtension(fileName), file.FileExt);
         Assert.Equal(Path.GetFileNameWithoutExtension(fileName), file.FileNameWithoutExt);
@@ -27,7 +27,7 @@ public class HttpServiceExtensionsTests
 
         var (successful, _, ex, _) = await http.DownloadAsync(url).IgnoreSyncContext();
 
-        AssertExt.False(successful, () => ex!.ToString());
+        AssertEx.False(successful, () => ex!.ToString());
         Assert.True(ex.IsObjEx<HttpResponse>(m => m.StatusCode == HttpStatusCode.Forbidden));
     }
 }

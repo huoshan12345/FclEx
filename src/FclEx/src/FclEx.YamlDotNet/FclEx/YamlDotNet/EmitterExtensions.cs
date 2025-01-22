@@ -1,6 +1,4 @@
-﻿using YamlDotNet.Core.Events;
-
-namespace FclEx.YamlDotNet;
+﻿namespace FclEx.YamlDotNet;
 
 public static class EmitterExtensions
 {

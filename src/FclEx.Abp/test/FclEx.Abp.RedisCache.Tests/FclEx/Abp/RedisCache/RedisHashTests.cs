@@ -21,14 +21,14 @@ public class RedisHashTests(ITestOutputHelper output) : AbpRedisTests(output)
         var key = nameof(Provider_HmSet_HmGet_String_Test).ToLower();
         var manager = ServiceProvider.GetRequiredService<IRedisCollectionManager>();
         var col = manager.GetHash<string>(key);
-        var keyExt = col.Key;
+        var colKey = col.Key;
         var provider = ServiceProvider.GetRequiredService<IRedisCachingProvider>();
         var dic = Enumerable.Range(1, 10)
             .Select(m => m.ToString())
             .ToDictionary(m => m, m => m + m);
 
-        provider.HMSet(keyExt, dic, TimeSpan.FromMinutes(1));
-        var actual = provider.HMGet(keyExt, dic.Keys.ToList());
+        provider.HMSet(colKey, dic, TimeSpan.FromMinutes(1));
+        var actual = provider.HMGet(colKey, dic.Keys.ToList());
         Assert.Equal(dic, actual);
     }
 

@@ -27,7 +27,7 @@ public class IndexExtTests
         var i = 0;
         var count = Numbers.Count();
 
-        foreach (var (index, item, isFirst, isLast) in enumerable.IndexExt())
+        foreach (var (index, item, isFirst, isLast) in enumerable.IndexEx())
         {
             Assert.Equal(i + 1, item);
             Assert.Equal(i, index);
@@ -41,13 +41,13 @@ public class IndexExtTests
     [MemberData(nameof(EmptyEnumerableCases))]
     public void WithIndex_EmptyEnumerable(IEnumerable<int> enumerable)
     {
-        Assert.Empty(enumerable.IndexExt());
+        Assert.Empty(enumerable.IndexEx());
     }
 
     [Fact]
     public void WithIndex_NullEnumerable()
     {
         IEnumerable<int>? enumerable = null;
-        Assert.Throws<ArgumentNullException>(() => enumerable!.IndexExt());
+        Assert.Throws<ArgumentNullException>(() => enumerable!.IndexEx());
     }
 }

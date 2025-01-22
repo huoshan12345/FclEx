@@ -11,9 +11,16 @@ public static class YamlHelper
         return _serializers.GetOrAdd(options, m =>
         {
             var convention = m.NamingConventionType.ToNamingConvention();
-            return new SerializerBuilder()
-                .WithNamingConvention(convention)
-                .Build();
+            var builder = new SerializerBuilder()
+                .WithNamingConvention(convention);
+
+            if (options.WithTypeConverterAttribute)
+                builder.WithTypeConverterAttribute();
+
+            if (options.WithIndentedSequences)
+                builder.WithIndentedSequences();
+
+            return builder.Build();
         });
     }
 
@@ -28,6 +35,9 @@ public static class YamlHelper
 
             if (options.IgnoreUnmatchedProperties)
                 builder.IgnoreUnmatchedProperties();
+
+            if (options.WithTypeConverterAttribute)
+                builder.WithTypeConverterAttribute();
 
             return builder.Build();
         });

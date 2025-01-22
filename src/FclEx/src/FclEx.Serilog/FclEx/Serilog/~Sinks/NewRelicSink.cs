@@ -59,7 +59,7 @@ public class NewRelicSink : IBatchedLogEventSink
         using var disposable = StringBuilderHelper.GetCached();
         var textWriter = new StringWriter(disposable.Value);
         textWriter.Write("[");
-        foreach (var (_, item, _, isLast) in events.IndexExt())
+        foreach (var (_, item, _, isLast) in events.IndexEx())
         {
             textFormatter.Format(item, textWriter);
 

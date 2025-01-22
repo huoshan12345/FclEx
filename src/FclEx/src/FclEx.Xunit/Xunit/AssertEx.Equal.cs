@@ -1,6 +1,6 @@
 ﻿namespace Xunit;
 
-partial class AssertExt
+partial class AssertEx
 {
     public static void EveryMemberEqual<T>(T expected, T actual, params string[] excludeMemberPaths)
     {

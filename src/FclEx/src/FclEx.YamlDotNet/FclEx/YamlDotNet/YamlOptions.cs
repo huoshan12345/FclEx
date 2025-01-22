@@ -1,6 +1,7 @@
 ﻿namespace FclEx.YamlDotNet;
 
-public abstract class YamlOptions
+public abstract record YamlOptions
 {
     public NamingConventionType NamingConventionType { get; set; }
+    public bool WithTypeConverterAttribute { get; set; } = true;
 }

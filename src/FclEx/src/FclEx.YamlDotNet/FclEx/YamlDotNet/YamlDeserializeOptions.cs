@@ -1,6 +1,6 @@
 ﻿namespace FclEx.YamlDotNet;
 
-public class YamlDeserializeOptions : YamlOptions
+public record YamlDeserializeOptions : YamlOptions
 {
     public static readonly YamlDeserializeOptions Default = new();
 

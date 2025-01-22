@@ -2,7 +2,7 @@ using Xunit.Sdk;
 
 namespace Xunit;
 
-public partial class AssertExtTests
+public partial class AssertExTests
 {
     public enum Flags
     {
@@ -20,13 +20,13 @@ public partial class AssertExtTests
     [MemberData(nameof(EqualTestCases))]
     public void Equal_Enum_Int_Test(Flags? flags, int? number)
     {
-        AssertExt.Equal(flags, number);
+        AssertEx.Equal(flags, number);
     }
 
     [Fact]
     public void Equal_Enum_Int_Failed()
     {
-        Assert.Throws<EqualException>(() => AssertExt.Equal(Flags.False, 0));
-        Assert.Throws<EqualException>(() => AssertExt.Equal((Flags?)null, (int?)0));
+        Assert.Throws<EqualException>(() => AssertEx.Equal(Flags.False, 0));
+        Assert.Throws<EqualException>(() => AssertEx.Equal((Flags?)null, (int?)0));
     }
 }

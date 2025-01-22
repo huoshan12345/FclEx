@@ -126,7 +126,7 @@ public static partial class DbConnectionExtensions
             var def = GetEntityDefinition(entityType);
             var tableName = GetTableNameWithSchema(sqlAdapter, schema, def.EntityType);
             var sbColumnList = new StringBuilder(1024);
-            foreach (var (_, field, _, isLast) in def.InsertFields(includeAutoKey).IndexExt())
+            foreach (var (_, field, _, isLast) in def.InsertFields(includeAutoKey).IndexEx())
             {
                 sbColumnList.Append(sqlAdapter.GetQuotedColumnName(field.FieldName));
                 if (isLast == false)
@@ -152,7 +152,7 @@ public static partial class DbConnectionExtensions
             for (var i = 0; i < count; i++)
             {
                 sbParameterList.Append('(');
-                foreach (var (_, field, _, isLast) in def.InsertFields(includeAutoKey).IndexExt())
+                foreach (var (_, field, _, isLast) in def.InsertFields(includeAutoKey).IndexEx())
                 {
                     var paraName = GetParameterName(field.PropertyInfo.Name, i);
                     sbParameterList.Append(paraName);

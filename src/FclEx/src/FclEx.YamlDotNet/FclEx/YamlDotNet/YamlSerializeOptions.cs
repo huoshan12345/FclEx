@@ -1,6 +1,8 @@
 ﻿namespace FclEx.YamlDotNet;
 
-public class YamlSerializeOptions : YamlOptions
+public record YamlSerializeOptions : YamlOptions
 {
     public static readonly YamlSerializeOptions Default = new();
+
+    public bool WithIndentedSequences { get; set; } = true;
 }

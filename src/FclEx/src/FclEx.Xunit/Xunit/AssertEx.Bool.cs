@@ -1,7 +1,7 @@
 ﻿namespace Xunit;
 
 [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Global")]
-partial class AssertExt
+partial class AssertEx
 {
     public static void True(bool condition, Func<string>? userMessage = null)
     {

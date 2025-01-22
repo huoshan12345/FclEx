@@ -29,7 +29,7 @@ public class HttpClientHelperTests
         var time = watch.GetElapsedTime();
 
         var executeTime = timeout.Multiply(retryCount + 1);
-        AssertExt.Equal(executeTime, time, TimeSpan.FromSeconds(0.9));
+        AssertEx.Equal(executeTime, time, TimeSpan.FromSeconds(0.9));
     }
 
     [RetryFact]
@@ -45,6 +45,6 @@ public class HttpClientHelperTests
         Assert.Contains("configured HttpClient.Timeout", ex.Message);
         Assert.NotNull(ex.InnerException);
 
-        AssertExt.Equal(TimeSpan.FromSeconds(1), time, TimeSpan.FromSeconds(0.5));
+        AssertEx.Equal(TimeSpan.FromSeconds(1), time, TimeSpan.FromSeconds(0.5));
     }
 }

@@ -33,6 +33,6 @@ partial class HttpClientServiceTests
         var res = await HttpRequest.Get(url)
             .ReadHeadersTimeout(TimeSpan.FromSeconds(10))
             .SendAsync(http);
-        AssertExt.False(res.HasError, () => res.Exception!.ToString());
+        AssertEx.False(res.HasError, () => res.Exception!.ToString());
     }
 }

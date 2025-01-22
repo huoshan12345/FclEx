@@ -2,18 +2,18 @@
 
 partial class TypeExtensions
 {
-    private static readonly ConcurrentDictionary<Type, TypeInfoExt> TypeInfoDic = new();
+    private static readonly ConcurrentDictionary<Type, TypeInfoEx> TypeInfoDic = new();
 
 #if NETSTANDARD2_0
     private static readonly Lazy<PropertyInfo?> _isByRefLike = new(() => typeof(Type).GetProperty("IsByRefLike", BindingAttributes.AllDeclared));
 #endif
 
-    public static TypeInfoExt GetTypeInfoExt(this Type type)
+    public static TypeInfoEx GetTypeInfoEx(this Type type)
     {
         FclEx.Check.NotNull(type);
         return TypeInfoDic.GetOrAdd(type, GetTypeInfoExtInternal);
 
-        static TypeInfoExt GetTypeInfoExtInternal(Type type)
+        static TypeInfoEx GetTypeInfoExtInternal(Type type)
         {
             var nullableUnderlyingType = Nullable.GetUnderlyingType(type);
             var defaultValue = GetDefaultValueInternal(type, nullableUnderlyingType);
@@ -24,7 +24,7 @@ partial class TypeExtensions
             var isInteger = IsIntegerInternal(type, nullableUnderlyingType);
             var isFloat = IsFloatInternal(type, nullableUnderlyingType);
 
-            return new TypeInfoExt(
+            return new TypeInfoEx(
                 Type: type,
                 NullableUnderlyingType: nullableUnderlyingType,
                 EnumerableUnderlyingType: enumerableUnderlyingType,
@@ -175,27 +175,27 @@ partial class TypeExtensions
 
     public static bool IsNullable(this Type type)
     {
-        return type.GetTypeInfoExt().IsNullable;
+        return type.GetTypeInfoEx().IsNullable;
     }
 
     public static Type UnwrapNullable(this Type type)
     {
-        return type.GetTypeInfoExt().NullableUnderlyingType ?? type;
+        return type.GetTypeInfoEx().NullableUnderlyingType ?? type;
     }
 
     public static object? DefaultValue(this Type type)
     {
-        return type.GetTypeInfoExt().DefaultValue;
+        return type.GetTypeInfoEx().DefaultValue;
     }
 
     public static Type? NullableType(this Type type)
     {
-        return type.GetTypeInfoExt().NullableUnderlyingType;
+        return type.GetTypeInfoEx().NullableUnderlyingType;
     }
 
     public static Type? EnumerableType(this Type type)
     {
-        return type.GetTypeInfoExt().EnumerableUnderlyingType;
+        return type.GetTypeInfoEx().EnumerableUnderlyingType;
     }
 
     /// <summary>
@@ -205,7 +205,7 @@ partial class TypeExtensions
     /// <returns></returns>
     public static string SimpleName(this Type type)
     {
-        return type.GetTypeInfoExt().SimpleName;
+        return type.GetTypeInfoEx().SimpleName;
     }
 
     /// <summary>
@@ -215,7 +215,7 @@ partial class TypeExtensions
     /// <returns></returns>
     public static string ShortName(this Type type)
     {
-        return type.GetTypeInfoExt().ShortName;
+        return type.GetTypeInfoEx().ShortName;
     }
 
     /// <summary>
@@ -225,31 +225,31 @@ partial class TypeExtensions
     /// <returns></returns>
     public static string LongName(this Type type)
     {
-        return type.GetTypeInfoExt().LongName;
+        return type.GetTypeInfoEx().LongName;
     }
 
     public static bool IsInteger(this Type type)
     {
-        return type.GetTypeInfoExt().IsInteger;
+        return type.GetTypeInfoEx().IsInteger;
     }
 
     public static bool IsNumeric(this Type type)
     {
-        return type.GetTypeInfoExt().IsNumeric;
+        return type.GetTypeInfoEx().IsNumeric;
     }
 
     public static bool IsFloat(this Type type)
     {
-        return type.GetTypeInfoExt().IsFloat;
+        return type.GetTypeInfoEx().IsFloat;
     }
 
     public static bool IsEnumerable(this Type type)
     {
-        return type.GetTypeInfoExt().IsEnumerable;
+        return type.GetTypeInfoEx().IsEnumerable;
     }
 }
 
-public record TypeInfoExt(
+public record TypeInfoEx(
     Type Type,
     Type? NullableUnderlyingType,
     Type? EnumerableUnderlyingType,

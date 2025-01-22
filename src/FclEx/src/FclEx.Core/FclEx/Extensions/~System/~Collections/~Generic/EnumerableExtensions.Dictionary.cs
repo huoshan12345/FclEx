@@ -87,4 +87,24 @@ partial class EnumerableExtensions
     {
         return new OrderedDictionary<TKey, TValue>(enumerable);
     }
+
+    public static BiDictionary<TKey, TValue> ToBiDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> enumerable,
+        IEqualityComparer<TKey>? keyComparer = null, IEqualityComparer<TValue>? valueComparer = null)
+        where TKey : notnull where TValue : notnull
+    {
+        var dic = new BiDictionary<TKey, TValue>(keyComparer, valueComparer);
+        foreach (var (key, value) in enumerable)
+        {
+            dic[key] = value;
+        }
+        return dic;
+    }
+
+    public static BiDictionary<TKey, TValue> ToBiDictionary<T, TKey, TValue>(this IEnumerable<T> enumerable, Func<T, TKey> keySelector, Func<T, TValue> valueSelector,
+        IEqualityComparer<TKey>? keyComparer = null, IEqualityComparer<TValue>? valueComparer = null)
+        where TKey : notnull where TValue : notnull
+    {
+        var e = enumerable.Select(m => KeyValuePair.Create(keySelector(m), valueSelector(m)));
+        return e.ToBiDictionary(keyComparer, valueComparer);
+    }
 }

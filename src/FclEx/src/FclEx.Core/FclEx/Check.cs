@@ -130,7 +130,7 @@ public static partial class Check
     public static void NotEmpty<T>([NotNull] IEnumerable<T>? value, [CallerArgumentExpression(nameof(value))] string? parameterName = null)
     {
         NotNull(value, parameterName);
-        if (value.AnyExt() == false)
+        if (value.AnyEx() == false)
         {
             var name = parameterName ?? nameof(value);
             throw new ArgumentException($"The list argument {name} cannot be empty.");

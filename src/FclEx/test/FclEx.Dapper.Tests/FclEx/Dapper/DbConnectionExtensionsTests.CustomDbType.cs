@@ -23,7 +23,7 @@ partial class DbConnectionExtensionsTests
         var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity, db.Schema);
         var e = await db.Set<EntityWithPostgresqlJsonb>().Where(m => m.Id == id).FirstOrDefaultAsync();
         Assert.NotNull(e);
-        AssertExt.NotEmpty(e.Json);
+        AssertEx.NotEmpty(e.Json);
 
         var actualPayload = JsonConvert.DeserializeObject<EntityWithGuidKey>(e.Json)!;
         Assert.Equal(payload.Id, actualPayload.Id);
@@ -51,7 +51,7 @@ partial class DbConnectionExtensionsTests
         var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity, db.Schema);
         var e = await db.Set<EntityWithSqlServerXml>().Where(m => m.Id == id).FirstOrDefaultAsync();
         Assert.NotNull(e);
-        AssertExt.NotEmpty(e.Xml);
+        AssertEx.NotEmpty(e.Xml);
 
         var actualPayload = XElement.Parse(e.Xml).ToObject<EntityWithGuidKey>();
         Assert.Equal(payload.Id, actualPayload.Id);
@@ -78,7 +78,7 @@ partial class DbConnectionExtensionsTests
         var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity);
         var e = await db.Set<EntityWithSqliteBlob>().Where(m => m.Id == id).FirstOrDefaultAsync();
         Assert.NotNull(e);
-        AssertExt.NotEmpty(e.Blob);
+        AssertEx.NotEmpty(e.Blob);
 
         var actualPayload = e.Blob.GetString().FromJson<EntityWithGuidKey>()!;
         Assert.Equal(payload.Id, actualPayload.Id);
@@ -110,7 +110,7 @@ partial class DbConnectionExtensionsTests
         var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity, db.Schema);
         var e = await db.Set<EntityWithMySqlBlob>().Where(m => m.Id == id).FirstOrDefaultAsync();
         Assert.NotNull(e);
-        AssertExt.NotEmpty(e.Blob);
+        AssertEx.NotEmpty(e.Blob);
 
         var actualPayload = e.Blob.GetString().FromJson<EntityWithGuidKey>()!;
         Assert.Equal(payload.Id, actualPayload.Id);

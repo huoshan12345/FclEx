@@ -2,7 +2,7 @@
 
 namespace Xunit;
 
-partial class AssertExtTests
+partial class AssertExTests
 {
     public class TestModel
     {
@@ -53,25 +53,25 @@ partial class AssertExtTests
     {
         var src = CreateTestModel(false);
         var dest = src.CloneByJson();
-        AssertExt.EveryMemberEqual(src, dest);
+        AssertEx.EveryMemberEqual(src, dest);
     }
 
     [Fact]
     public void EveryMemberEqual_EmptyObject_Fail()
     {
-        Assert.Throws<EqualException>(() => AssertExt.EveryMemberEqual(new object(), new object()));
+        Assert.Throws<EqualException>(() => AssertEx.EveryMemberEqual(new object(), new object()));
     }
 
     [Fact]
     public void EveryMemberEqual_EmptyList_Fail()
     {
-        AssertExt.EveryMemberEqual(new List<int>(), new List<int>());
+        AssertEx.EveryMemberEqual(new List<int>(), new List<int>());
     }
 
     [Fact]
     public void EveryMemberEqual_EmptyObject_Success()
     {
-        Assert.Throws<EqualException>(() => AssertExt.EveryMemberEqual(new object(), new object()));
+        Assert.Throws<EqualException>(() => AssertEx.EveryMemberEqual(new object(), new object()));
     }
 
     [Fact]
@@ -83,10 +83,10 @@ partial class AssertExtTests
         src.Child = src;
         dest.Child = dest;
 
-        Assert.Throws<EqualException>(() => AssertExt.EveryMemberEqual(src, dest));
+        Assert.Throws<EqualException>(() => AssertEx.EveryMemberEqual(src, dest));
 
         dest.Child = src;
-        AssertExt.EveryMemberEqual(src, dest);
+        AssertEx.EveryMemberEqual(src, dest);
     }
 
     [Fact]
@@ -97,8 +97,8 @@ partial class AssertExtTests
         Assert.NotNull(dest);
         dest.Int++;
 
-        Assert.Throws<EqualException>(() => AssertExt.EveryMemberEqual(src, dest));
-        AssertExt.EveryMemberEqual(src, dest, nameof(dest.Int));
+        Assert.Throws<EqualException>(() => AssertEx.EveryMemberEqual(src, dest));
+        AssertEx.EveryMemberEqual(src, dest, nameof(dest.Int));
     }
 
     [Fact]
@@ -106,7 +106,7 @@ partial class AssertExtTests
     {
         var src = CreateTestModel(true);
         var dest = src.CloneByJson();
-        AssertExt.EveryMemberEqual(src, dest);
+        AssertEx.EveryMemberEqual(src, dest);
     }
 
     [Fact]
@@ -117,8 +117,8 @@ partial class AssertExtTests
             var dest = src.CloneByJson();
             Assert.NotNull(dest);
             dest.Int++;
-            Assert.Throws<EqualException>(() => AssertExt.EveryMemberEqual(src, dest));
-            AssertExt.EveryMemberEqual(src, dest, nameof(dest.Int));
+            Assert.Throws<EqualException>(() => AssertEx.EveryMemberEqual(src, dest));
+            AssertEx.EveryMemberEqual(src, dest, nameof(dest.Int));
         }
 
         {
@@ -129,10 +129,10 @@ partial class AssertExtTests
             Assert.NotNull(dest.Child);
             dest.Child.Int++;
 
-            Assert.Throws<EqualException>(() => AssertExt.EveryMemberEqual(src, dest));
-            Assert.Throws<EqualException>(() => AssertExt.EveryMemberEqual(src, dest, "Int"));
-            Assert.Throws<EqualException>(() => AssertExt.EveryMemberEqual(src, dest, "Child.Int"));
-            AssertExt.EveryMemberEqual(src, dest, "Int", "Child.Int");
+            Assert.Throws<EqualException>(() => AssertEx.EveryMemberEqual(src, dest));
+            Assert.Throws<EqualException>(() => AssertEx.EveryMemberEqual(src, dest, "Int"));
+            Assert.Throws<EqualException>(() => AssertEx.EveryMemberEqual(src, dest, "Child.Int"));
+            AssertEx.EveryMemberEqual(src, dest, "Int", "Child.Int");
         }
     }
 }

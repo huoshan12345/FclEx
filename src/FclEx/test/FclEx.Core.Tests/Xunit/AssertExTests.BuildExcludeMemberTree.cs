@@ -1,6 +1,6 @@
 ﻿namespace Xunit;
 
-partial class AssertExtTests
+partial class AssertExTests
 {
     [Fact]
     public void BuildExcludeMemberTree_Test()
@@ -36,7 +36,7 @@ partial class AssertExtTests
             ("d", true),
         };
 
-        var tree = AssertExt.BuildExcludeMemberTree(paths);
+        var tree = AssertEx.BuildExcludeMemberTree(paths);
         var actual = tree.TraversalByLevel().Select(m => (m.Name, m.IsExcluded)).ToArray();
 
         Assert.Equal(expected.Length, actual.Length);
