@@ -7,13 +7,10 @@
     <PackageReference Include="System.IO.Compression" Version="4.3.0" />
     <PackageReference Include="Microsoft.Bcl.HashCode" Version="6.0.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="System.Text.Json" Version="9.0.1" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' or '$(TargetFramework)' == 'net7.0' ">
-    <!--System.Text.Json 9.0 has some dependencies that don't support net6.0 or net7.0, so we use 8.x for the frameworks.-->
-    <!--There is no DefaultJsonTypeInfoResolver in net6.0, so we need to use newer version for it as well.-->
-    <PackageReference Include="System.Text.Json" Version="[8.0.5, 9.0.0)" />
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="9.0.1" />
   </ItemGroup>
 
   <ItemGroup Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 8.0))">

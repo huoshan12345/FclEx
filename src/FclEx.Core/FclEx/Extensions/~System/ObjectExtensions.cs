@@ -55,21 +55,6 @@ public static partial class ObjectExtensions
         return value;
     }
 
-    private static long _nextId;
-    private static readonly ConditionalWeakTable<object, object> _objectIds = new();
-    public static long GetObjectId<T>(this T? obj) where T : class
-    {
-        return obj is null
-            ? 0
-            : (long)_objectIds.GetValue(obj, _ => Interlocked.Increment(ref _nextId));
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static DisposableValue<GCHandle> ToGCHandle(this object? obj, GCHandleType type)
-    {
-        return GCHandle.Alloc(obj, type).ToDisposable(m => m.Free());
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T? ToNullable<T>(this T value) where T : struct
     {

@@ -7,9 +7,8 @@
     <TargetFrameworks>net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <!--NOTE: GetTargetFrameworkVersion('netstandard2.0') is 0.0-->
-    <TargetFrameworkVersion>v$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
-    <AtLeastNet9>$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), 9.0))</AtLeastNet9>
+    <TargetFrameworkVersion>$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
+    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
   </PropertyGroup>
 
   <PropertyGroup>

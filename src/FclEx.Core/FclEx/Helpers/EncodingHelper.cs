@@ -29,10 +29,17 @@ public static partial class EncodingHelper
         var length = stream.Read(bom, 0, 3);
         if (length > 2)
         {
-            if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76) return Encoding.UTF7;
-            if (bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF) return Encoding.UTF8;
-            if (bom[0] == 0xFE && bom[1] == 0xFF && bom[2] == 0x00) return Encoding.BigEndianUnicode;// 也就是大端的UTF-16
-            if (bom[0] == 0xFF && bom[1] == 0xFE && bom[2] == 0x41) return Encoding.Unicode;// 也就是小端的UTF-16
+            if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76)
+                return Encoding.UTF7;
+
+            if (bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF)
+                return Encoding.UTF8;
+
+            if (bom[0] == 0xFE && bom[1] == 0xFF && bom[2] == 0x00)
+                return Encoding.BigEndianUnicode;
+
+            if (bom[0] == 0xFF && bom[1] == 0xFE && bom[2] == 0x41)
+                return Encoding.Unicode;
         }
         stream.Seek(0, SeekOrigin.Begin);
         return IsUtf8(stream)

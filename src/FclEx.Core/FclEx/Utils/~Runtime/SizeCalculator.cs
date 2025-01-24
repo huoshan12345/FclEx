@@ -28,9 +28,11 @@ public static class SizeCalculator
     {
         var fields = type.GetAllInstanceFields();
 
-        // 如果指定的类型没有定义任何字段，CalculateReferenceTypeInstance 返回引用类型实例的最小字节数：3倍地址指针字节数。
-        // 对于x86架构，一个应用类型对象至少占用12字节，包括 Object Header（4 bytes）、方法表指针（4 bytes）和最少4字节的字段内容（即使没有类型没有定义任何字段，这个4个字节也是必需的）。
-        // 对于x64架构，这个最小字节数会变成24，因为方法表指针和最小字段内容变成了8个字节，虽然 Object Header 的有效内容只占用4个字节，但是前面会添加4个字节的Padding。
+        // If the specified type does not define any fields, CalculateReferenceTypeInstance returns the minimum byte size for a reference type instance: 3 times the size of an address pointer.
+        // On the x86 architecture, a reference type object occupies at least 12 bytes, including the Object Header (4 bytes), the method table pointer (4 bytes),
+        //     and at least 4 bytes for field content (even if the type does not define any fields, these 4 bytes are still required).
+        // On the x64 architecture, this minimum byte size increases to 24, as the method table pointer and minimum field content each take 8 bytes.
+        //     Although the Object Header effectively only occupies 4 bytes, 4 bytes of padding are added before it.
         if (fields.Count == 0)
             return 3 * IntPtr.Size;
 

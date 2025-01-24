@@ -40,11 +40,11 @@ public unsafe class BytewiseEqualityComparer<T> : IEqualityComparer<T>
     {
         var size = SizeCalculator.SizeOf<T>();
 
-        // 对于引用类型，pointer指向的是目标对象的地址(即二级指针)，
-        // 所以还需要将其转换成IntPtr*指针，并最终将指针的内容（也就是目标对象的地址）解析出来。
-        // 该地址指向对象的 Method Table。
-        // 该地址向前移动一个身位（IntPtr.Size）是实例所在内存片段的首地址，也就是 Object Header 的地址。
-        // 该地址向后移动一个身位（IntPtr.Size）是实例的第一个成员变量的地址。
+        // For reference types, the pointer points to the address of the target object (i.e., a double pointer).
+        // Therefore, it needs to be converted into an IntPtr* pointer, and the contents of the pointer (i.e., the address of the target object) must be resolved.
+        // This address points to the Method Table of the object.
+        // Moving this address forward by one unit (IntPtr.Size) gives the starting address of the memory segment where the instance resides, which is the address of the Object Header.
+        // Moving this address backward by one unit (IntPtr.Size) gives the address of the first member variable of the instance.
         var (dataSize, dataAddress) = typeof(T).IsValueType switch
         {
             true => (size, new IntPtr(pointer)),

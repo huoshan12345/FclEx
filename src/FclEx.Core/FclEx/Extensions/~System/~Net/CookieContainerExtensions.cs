@@ -2,12 +2,13 @@
 
 public static class CookieContainerExtensions
 {
+#if NETSTANDARD2_0
     private static readonly FieldInfo _domainTable = typeof(CookieContainer).GetRequiredField("m_domainTable");
 
     [SuppressMessage("ReSharper", "LoopCanBeConvertedToQuery")]
-    public static List<Cookie> GetAllCookies(this CookieContainer container)
+    public static CookieCollection GetAllCookies(this CookieContainer container)
     {
-        var list = new List<Cookie>(container.Count);
+        var result = new CookieCollection();
         var table = _domainTable.GetRequiredValue<Hashtable>(container);
 
         lock (table.SyncRoot)
@@ -26,14 +27,12 @@ public static class CookieContainerExtensions
                 {
                     foreach (CookieCollection cookieCollection in cookieList.Values)
                     {
-                        foreach (Cookie cookie in cookieCollection)
-                        {
-                            list.Add(cookie);
-                        }
+                        result.Add(cookieCollection);
                     }
                 }
             }
         }
-        return list;
+        return result;
     }
+#endif
 }

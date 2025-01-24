@@ -2,26 +2,28 @@
 
 public static class ProcessExtensions
 {
-    public static async Task<string> GetOutput(this Process process)
-    {
-        var queue = new ConcurrentQueue<string?>();
-        process.OutputDataReceived += (sender, e) => queue.Enqueue(e.Data);
-        process.ErrorDataReceived += (sender, e) => queue.Enqueue(e.Data);
-        process.Start();
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
-
 #if NETSTANDARD2_0
-        await Task.Yield();
-        process.WaitForExit();
-#else
-        await process.WaitForExitAsync();
-#endif
-        var output = queue.Where(m => m is not null).JoinWith(Environment.NewLine);
+    /// <summary>
+    /// Waits asynchronously for the process to exit.
+    /// </summary>
+    /// <param name="process">The process to wait for cancellation.</param>
+    /// <param name="cancellationToken">A cancellation token. If invoked, the task will return immediately as canceled.</param>
+    /// <returns>A Task representing waiting for the process to end.</returns>
+    public static Task WaitForExitAsync(this Process process, CancellationToken cancellationToken = default)
+    {
+        if (process.HasExited)
+            return Task.CompletedTask;
 
-        if (process.ExitCode != 0)
-            throw new ProcessException(process.ExitCode, output);
+        var tcs = new TaskCompletionSource<object?>();
+        process.EnableRaisingEvents = true;
+        process.Exited += (sender, args) => tcs.TrySetResult(null);
 
-        return output;
+        if (cancellationToken != default)
+            cancellationToken.Register(() => tcs.TrySetCanceled());
+
+        return process.HasExited
+            ? Task.CompletedTask
+            : tcs.Task;
     }
+#endif
 }

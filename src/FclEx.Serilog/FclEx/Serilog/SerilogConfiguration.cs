@@ -41,7 +41,6 @@ public class SerilogConfiguration
     {
         var configuration = new LoggerConfiguration();
 
-        // 不能用 foreach，因为在循环体内部可能会修改 _actions
         // ReSharper disable once ForCanBeConvertedToForeach
         for (var i = 0; i < _actions.Count; i++)
         {
