@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace FclEx.Utils;
+﻿namespace FclEx.Utils;
 
 [DebuggerDisplay("Count = {" + nameof(Count) + "}")]
 public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : notnull

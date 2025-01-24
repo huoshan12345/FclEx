@@ -148,7 +148,7 @@ public static class ObjectAccessor<T>
         var type = typeof(T);
         var fields = type.GetAllInstanceFields();
 
-        // Ldflda表示Load Field Address，它可以帮助我们得到实例某个字段的地址
+        // Ldflda means "Load Field Address", which is used to load the address of a field.
         var method = new DynamicMethod(
             name: nameof(GetAllFieldAddresses),
             returnType: typeof(IntPtr[]),

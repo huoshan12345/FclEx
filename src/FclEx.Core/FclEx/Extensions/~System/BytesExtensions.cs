@@ -141,47 +141,46 @@ public static partial class BytesExtensions
         if (subBytes.Length > bytes.Length)
             return -1;
 
-        var i = 0; // 主串的位置
-        var j = 0; // 模式串的位置
+        // KMP Algorithm
+        var i = 0;
+        var j = 0;
         var next = GetNextArray(subBytes);
         while (i < bytes.Length && j < subBytes.Length)
         {
             if (j == -1 || bytes[i] == subBytes[j])
             {
-                i++; // 当j为-1时，要移动的是i，当然j也要归0
+                i++;
                 j++;
             }
             else
             {
-                // i不需要回溯了
-                // i = i - j + 1;
-                j = next[j]; // j回到指定位置
+                j = next[j];
 
             }
         }
         return j == subBytes.Length ? i - j : -1;
-    }
 
-    private static int[] GetNextArray(ReadOnlySpan<byte> subBytes)
-    {
-        var next = new int[subBytes.Length];
-        next[0] = -1;
-        var j = 0;
-        var k = -1;
-
-        while (j < subBytes.Length - 1)
+        static int[] GetNextArray(ReadOnlySpan<byte> subBytes)
         {
-            if (k == -1 || subBytes[j] == subBytes[k])
+            var next = new int[subBytes.Length];
+            next[0] = -1;
+            var j = 0;
+            var k = -1;
+
+            while (j < subBytes.Length - 1)
             {
-                if (subBytes[++j] == subBytes[++k])
-                    next[j] = next[k]; // 当两个字符相等时要跳过
+                if (k == -1 || subBytes[j] == subBytes[k])
+                {
+                    if (subBytes[++j] == subBytes[++k])
+                        next[j] = next[k];
+                    else
+                        next[j] = k;
+                }
                 else
-                    next[j] = k;
+                    k = next[k];
             }
-            else
-                k = next[k];
+            return next;
         }
-        return next;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

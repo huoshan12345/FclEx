@@ -1,4 +1,6 @@
-﻿namespace FclEx.Http;
+﻿using System;
+
+namespace FclEx.Http;
 
 public abstract class AbstractHttpService : IHttpService
 {
@@ -66,7 +68,11 @@ public abstract class AbstractHttpService : IHttpService
     public IReadOnlyCollection<Cookie> GetAllCookies()
     {
         return UseCookie
+#if NETSTANDARD2_0
+            ? _cookieContainer.GetAllCookies().Enumerate().AsIReadOnlyCollection()
+#else
             ? _cookieContainer.GetAllCookies()
+#endif
             : Array.Empty<Cookie>();
     }
 
