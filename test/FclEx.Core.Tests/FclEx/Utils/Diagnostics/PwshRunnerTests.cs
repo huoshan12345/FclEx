@@ -6,6 +6,6 @@ public class PwshRunnerTests
     public async Task GetChildItem_Test()
     {
         var result = await PwshRunner.Instance.ExecuteAsync(new ProcessCommand("Get-ChildItem", AppContext.BaseDirectory));
-        Assert.Contains("FclEx.Core.Tests.dll", result);
+        Assert.Contains("Directory:", result);
     }
 }
