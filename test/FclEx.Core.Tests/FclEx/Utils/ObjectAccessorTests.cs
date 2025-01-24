@@ -74,7 +74,7 @@ public class ObjectAccessorTests(ITestOutputHelper output)
             Int = random.Next(),
         };
 
-        using var _ = obj.ToGCHandle(GCHandleType.Pinned);
+        using var _ = ObjectHelper.ToGCHandle(obj, GCHandleType.Pinned);
         var addresses = ObjectAccessor.GetAllFieldAddresses(ref obj);
         GetAllFieldAddresses_Test(ref obj, addresses);
     }
@@ -103,7 +103,7 @@ public class ObjectAccessorTests(ITestOutputHelper output)
             Int = random.Next(),
         };
 
-        using var _ = obj.ToGCHandle(GCHandleType.Pinned);
+        using var _ = ObjectHelper.ToGCHandle(obj, GCHandleType.Pinned);
         var addresses = ObjectAccessor.GetAllFieldAddresses(ref obj, obj.GetType());
         GetAllFieldAddresses_Test(ref obj, addresses);
     }
@@ -118,7 +118,7 @@ public class ObjectAccessorTests(ITestOutputHelper output)
             Int = random.Next(),
         };
 
-        using var _ = obj.ToGCHandle(GCHandleType.Pinned);
+        using var _ = ObjectHelper.ToGCHandle(obj, GCHandleType.Pinned);
         var addresses = ObjectAccessor.GetAllFieldAddresses(ref obj, obj.GetType());
         GetAllFieldAddresses_Test(ref obj, addresses);
     }

@@ -21,7 +21,7 @@ public static class ChineseConverter
             .ToDictionary(m => m[0], m => m[1].Split(' ')[0]);
     }
 
-    public static string Convert(string text, ChineseConversionDirection direction, bool useWinApi = false)
+    public static string Convert(string text, ChineseConversionDirection direction, bool preferWinApi = false)
     {
         if (text == null)
             throw new ArgumentNullException(nameof(text));
@@ -32,19 +32,19 @@ public static class ChineseConverter
         if (text == string.Empty)
             return text;
 
-        return useWinApi && RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+        return preferWinApi && RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? ConvertByWinApi(text, direction)
             : ConvertUsingDictionary(text, direction);
     }
 
-    public static string ToTraditional(string source, bool useWinApi = false)
+    public static string ToTraditional(string source, bool preferWinApi = false)
     {
-        return Convert(source, ChineseConversionDirection.ToTraditional, useWinApi);
+        return Convert(source, ChineseConversionDirection.ToTraditional, preferWinApi);
     }
 
-    public static string ToSimplified(string source, bool useWinApi = false)
+    public static string ToSimplified(string source, bool preferWinApi = false)
     {
-        return Convert(source, ChineseConversionDirection.ToSimplified, useWinApi);
+        return Convert(source, ChineseConversionDirection.ToSimplified, preferWinApi);
     }
 
     internal static string ConvertByWinApi(string text, ChineseConversionDirection direction)
