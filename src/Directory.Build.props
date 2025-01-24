@@ -1,21 +1,21 @@
 <Project>
   <PropertyGroup>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TargetFrameworks>netstandard2.0;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
-    <TargetFrameworks>netstandard2.0;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
-    <PackageProjectUrl>https://github.com/huoshan12345/FclEx</PackageProjectUrl>
-    <PackageTags>extensions;helpers</PackageTags>
-    <Authors>huoshan12345</Authors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Description>Some basic useful extensions and helpers for C# fundamental class libraries</Description>
+    <PackageTags>extensions;helpers</PackageTags>
+    <PackageProjectUrl>https://github.com/huoshan12345/FclEx</PackageProjectUrl>
     <RepositoryUrl>https://github.com/huoshan12345/FclEx</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <Authors>huoshan12345</Authors>
     <Copyright>huoshan12345</Copyright>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!--NOTE: GetTargetFrameworkVersion('netstandard2.0') is 0.0-->
     <TargetFrameworkVersion>$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
-    <AtLeastNet9>$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), 9.0))</AtLeastNet9>
+    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
   </PropertyGroup>
 
   <ItemGroup>
