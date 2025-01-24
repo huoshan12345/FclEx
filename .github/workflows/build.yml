@@ -1,0 +1,117 @@
+name: Build
+on:
+  push:
+    branches:
+      - master
+  pull_request_target: # use pull_request_target instead of pull_request to let dependabot have permission to access action secrets.
+    branches:
+      - master
+
+permissions:
+  pull-requests: write
+  contents: write
+  statuses: write
+  checks: write
+  actions: write
+
+env:
+  SOLUTION: FclEx.sln
+  DOTNET_NOLOGO: 1
+  MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
+  IS_PUSH_DEFAULT: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      rabbitmq:
+        image: heidiks/rabbitmq-delayed-message-exchange:3.8.27-management
+        env:
+          RABBITMQ_DEFAULT_USER: rmq
+          RABBITMQ_DEFAULT_PASS: 111111
+        ports:
+          - 5672:5672
+        options: >-
+          --health-cmd "rabbitmqctl node_health_check" --health-interval 10s --health-timeout 5s --health-retries 5
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: 111111
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - name: Get PR
+        if: ${{ github.event_name == 'pull_request_target' }}
+        uses: suzuki-shunsuke/get-pr-action@v0.1.0
+        id: pr
+
+      - name: Print variables
+        shell: pwsh
+        run: |
+          echo "merge_commit_sha: ${{ steps.pr.outputs.merge_commit_sha }}"
+          echo "IS_PUSH_DEFAULT: ${{ env.IS_PUSH_DEFAULT }}"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr.outputs.merge_commit_sha }}
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            6.0.x
+            7.0.x
+            8.0.x
+            9.0.x
+
+      - name: NuGet Restore
+        run: dotnet restore ${{ env.SOLUTION }}
+
+      - name: Test Release
+        run: dotnet test -c Release --no-restore ${{ env.SOLUTION }} -v q --property:WarningLevel=0 /clp:ErrorsOnly
+
+      - name: Test Report
+        uses: dorny/test-reporter@main
+        if: (success() || failure())
+        with:
+          name: Test Report
+          path: TestResults/**/*.trx
+          reporter: dotnet-trx
+          list-suites: failed
+          list-tests: failed
+          use-actions-summary: ${{ github.event_name == 'pull_request_target' }}
+
+      - name: NuGet Publish
+        if: ${{ env.IS_PUSH_DEFAULT == 'true' }}
+        shell: pwsh
+        run: |
+          ./build/pack.ps1 -norestore $true
+
+      - name: Set variables
+        shell: pwsh
+        run: |
+          $ver = Get-Content -Path ./build/pkg.version
+          echo "VERSION=$ver" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
+          echo $ver
+
+      - name: Create Tag
+        if: ${{ env.IS_PUSH_DEFAULT == 'true' }}
+        uses: richardsimko/update-tag@v1
+        with:
+          tag_name: ${{ env.VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+
+      - name: Create Release
+        if: ${{ env.IS_PUSH_DEFAULT == 'true' }}
+        uses: ncipollo/release-action@v1
+        with:
+          name: ${{ env.VERSION }}
+          tag: ${{ env.VERSION }}
+          token: ${{ secrets.PAT }}
+          skipIfReleaseExists: true
+          generateReleaseNotes: true
+...
