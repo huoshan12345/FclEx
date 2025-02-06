@@ -7,8 +7,8 @@ public readonly struct MapAction<T, TDest> : IAction<TDest>
 
     public MapAction(IAction<T> action, Func<T, TDest> map)
     {
-        _action = action ?? throw new ArgumentNullException(nameof(action));
-        _map = map ?? throw new ArgumentNullException(nameof(_map));
+        _action = Check.NotNull(action);
+        _map = Check.NotNull(map);
     }
 
     public async Task<OperationResult<TDest>> ExecuteAsync(CancellationToken token = default)

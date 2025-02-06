@@ -57,8 +57,8 @@ public abstract class UserClient : IUserClient, IDisposable
     }
     public virtual ILogger Logger => _logger.Value;
     public event Action<AccountStatus> OnAccountStatusChanged = status => { };
-    public virtual ISession Session { get; } = new Session();
-    public virtual bool IsOnline => Session.State == SessionState.Online;
+    public virtual IClientSession Session { get; } = new ClientSession();
+    public virtual bool IsOnline => Session.SessionState == ClientSessionState.Online;
 
     protected UserClient(IUserAccount? account = null, ILoggerFactory? loggerFactory = null)
     {
@@ -87,7 +87,7 @@ public abstract class UserClient : IUserClient, IDisposable
         [
             (nameof(Account), () => Account),
             (nameof(IsOnline), () => IsOnline),
-            (nameof(SessionState), () => Session.State),
+            (nameof(ClientSessionState), () => Session.SessionState),
         ];
     }
 
@@ -133,16 +133,16 @@ public abstract class UserClient : IUserClient, IDisposable
         var time = ValueStopwatch.StartNew();
         try
         {
-            Session.Logining();
-            var res = await loginAction(token)
+            Session.LoggingIn();
+            var response = await loginAction(token)
                 .Ok(_ => Session.Online())
                 .Error(_ =>
                 {
-                    if (Session.IsLogining())
+                    if (Session.IsLoggingIn())
                         Session.Offline();
                 })
                 .IgnoreSyncContext();
-            return res.Elapsed(time.GetElapsedTime());
+            return response.Elapsed(time.GetElapsedTime());
         }
         catch (Exception ex)
         {
@@ -170,8 +170,6 @@ public abstract class UserClient : IUserClient, IDisposable
     {
         HttpService.ClearAllCookies();
         Session.Offline();
-        Session.LoginCaptcha = null;
-        Session.LoginCaptchaBytes = null;
         return Operation.Success.ToTask();
     }
 

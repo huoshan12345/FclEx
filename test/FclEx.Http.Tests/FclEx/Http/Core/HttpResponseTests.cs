@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Http.Core;
 
-public class HttpResponseExtensionsTests
+public class HttpResponseTests
 {
     [Fact]
     public async Task Task_HttpResponse_ThrowIfError_Test()

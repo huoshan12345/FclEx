@@ -26,18 +26,18 @@ partial class OperationResultExtensions
             : Operation.CreateError<T>(ex!, elapsed);
     }
 
-    public static OperationResult<TDest> Map<T, TDest>(this OperationResult<T> result, Func<T, TDest> func)
+    public static OperationResult<TResult> Map<T, TResult>(this OperationResult<T> result, Func<T, TResult> func)
     {
         return result.Success
-            ? Operation.CreateSuccess(func(result.Value!))
-            : result.ToExplicit<TDest>();
+            ? new OperationResult<TResult>(func(result.Value)!, result.Elapsed)
+            : new OperationResult<TResult>(result.Code, result.Exception, result.Elapsed);
     }
 
-    public static OperationResult<TDest> Bind<T, TDest>(this OperationResult<T> result, Func<T, OperationResult<TDest>> func)
+    public static OperationResult<TResult> Bind<T, TResult>(this OperationResult<T> result, Func<T, OperationResult<TResult>> func)
     {
         return result.Success
-            ? func(result.Value!)
-            : result.ToExplicit<TDest>();
+            ? func(result.Value)
+            : new OperationResult<TResult>(result.Code, result.Exception, result.Elapsed);
     }
 
     public static OperationResult<T> On<T>(this OperationResult<T> result, Func<OperationResult<T>, bool> condition, Action<OperationResult<T>> action)

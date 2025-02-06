@@ -20,7 +20,7 @@ public readonly struct UnionAction<T, TNext> : IAction<(T, TNext)>
     {
         var result = await _action.ExecuteAsync(token).IgnoreSyncContext();
         if (!result.Success)
-            return result.ToExplicit<(T, TNext)>();
+            return result.CastTo<(T, TNext)>();
 
         var item = result.Value!;
         var nextActor = _next(item);
@@ -35,7 +35,7 @@ public readonly struct UnionAction<T, TNext> : IAction<(T, TNext)>
         if (!nextResult.Success)
             return _prevWhenNextError
                 ? ((item, default!), result.Elapsed)
-                : nextResult.ToExplicit<(T, TNext)>();
+                : nextResult.CastTo<(T, TNext)>();
 
         return ((item, nextResult.Value!), result.Elapsed + nextResult.Elapsed);
     }

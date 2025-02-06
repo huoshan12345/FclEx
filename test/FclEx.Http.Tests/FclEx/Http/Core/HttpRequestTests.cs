@@ -1,6 +1,6 @@
-﻿namespace FclEx.Http;
+﻿namespace FclEx.Http.Core;
 
-public class HttpRequestExtensionsTests
+public class HttpRequestTests
 {
     private static async Task SuccessRequestWrap()
     {
@@ -25,7 +25,7 @@ public class HttpRequestExtensionsTests
         {
             m.ConnectTimeout = TimeSpan.FromMilliseconds(200);
             m.RetryCount = 1;
-            m.SleepDurationProvider = m => TimeSpan.FromMilliseconds(100 * m);
+            m.SleepDurationProvider = x => TimeSpan.FromMilliseconds(100 * x);
         });
         await Assert.ThrowsAnyAsync<Exception>(async () =>
             await HttpRequest.Get("http://localhost:9999")
@@ -38,7 +38,7 @@ public class HttpRequestExtensionsTests
     public async Task ThrowIfError_ValueTask_Execute_Test()
     {
         var flag = false;
-        var r = await Operation.ExecuteAsync(() => TimeoutRequestWrap())
+        var r = await Operation.ExecuteAsync(TimeoutRequestWrap)
             .Error(e =>
             {
                 flag = true;
@@ -51,7 +51,7 @@ public class HttpRequestExtensionsTests
     public async Task Execute_Test()
     {
         var flag = false;
-        var r = await Operation.ExecuteAsync(() => SuccessRequestWrap())
+        var r = await Operation.ExecuteAsync(SuccessRequestWrap)
             .Error(e =>
             {
                 flag = true;

@@ -7,47 +7,47 @@ public interface IHttpAction<T> : IAbstractAction<T>
     Uri Uri { get; }
     HttpMethod Method { get; }
 
-    Task<OperationResult<T>> HandleResponseAsync(HttpResponse res)
+    Task<OperationResult<T>> HandleResponseAsync(HttpResponse response)
     {
-        return IsFailed(res) 
-            ? HandleFailed(res)
-            : GetResultAsync(res);
+        return IsFailed(response) 
+            ? HandleFailed(response)
+            : GetResultAsync(response);
     }
 
     async Task<OperationResult<T>> IAbstractAction<T>.ExecuteActionAsync(CancellationToken token)
     {
-        HttpRequest? req = null;
+        HttpRequest? request = null;
         try
         {
-            req = BuildRequest();
-            var res = await HttpService.SendAsync(req, token).IgnoreSyncContext();
-            if (res.HasError)
+            request = BuildRequest();
+            var response = await HttpService.SendAsync(request, token).IgnoreSyncContext();
+            if (response.HasError)
             {
 #if DEBUG
-                Dump(req, HttpService);
+                Dump(request, HttpService);
 #endif
-                return (res.Exception!, res.Elapsed);
+                return (response.Exception!, response.Elapsed);
             }
-            return await HandleResponseAsync(res).IgnoreSyncContext();
+            return await HandleResponseAsync(response).IgnoreSyncContext();
         }
         catch (Exception ex)
         {
 #if DEBUG
-            Dump(req, HttpService);
+            Dump(request, HttpService);
 #endif
             return ex;
         }
     }
 
-    protected static void Dump(HttpRequest? req, IHttpService service)
+    protected static void Dump(HttpRequest? request, IHttpService service)
     {
-        if (req == null)
+        if (request == null)
             return;
 
         var msg = new StringBuilder(1024);
         msg.AppendLine("Http Dump: ");
-        var url = req.GetUri();
-        var header = req.GetRequestHeader(service);
+        var url = request.GetUri();
+        var header = request.GetRequestHeader(service);
         msg.AppendLine("url: " + url);
         msg.AppendLine("header: ");
         msg.Append(header);
@@ -56,22 +56,22 @@ public interface IHttpAction<T> : IAbstractAction<T>
 
     HttpRequest BuildRequest()
     {
-        var req = HttpRequest.Create(Uri, Method)
+        var request = HttpRequest.Create(Uri, Method)
             .EnsureSuccessStatusCode(false)
             .AcceptCompress();
-        ModifyRequest(req);
-        return req;
+        ModifyRequest(request);
+        return request;
     }
 
-    void ModifyRequest(HttpRequest req) { }
+    void ModifyRequest(HttpRequest request) { }
 
-    bool IsFailed(HttpResponse res) => !res.StatusCode.IsSuccess();
+    bool IsFailed(HttpResponse response) => !response.StatusCode.IsSuccess();
 
-    OperationResult<T> HandleFailed(HttpResponse res)
+    OperationResult<T> HandleFailed(HttpResponse response)
     {
-        var code = res.StatusCode;
-        var error = $"The res with status code {code.ToString()}/{code.ToInt()} is unsuccessful: "
-                    + res.ResponseString.Truncate(256);
+        var code = response.StatusCode;
+        var error = $"The response with status code {code.ToString()}/{code.ToInt()} is unsuccessful: "
+                    + response.ResponseString.Truncate(256);
         return error;
     }
 

@@ -65,7 +65,7 @@ partial class EnumerableExtensions
                 {
                     if (terminateOnFirstError)
                     {
-                        return r.ToExplicit<List<T>>();
+                        return r.CastTo<List<T>>();
                     }
                     else
                     {

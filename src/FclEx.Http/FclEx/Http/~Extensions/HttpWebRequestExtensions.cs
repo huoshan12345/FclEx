@@ -2,18 +2,18 @@
 
 public static class HttpWebRequestExtensions
 {
-    public static async Task<HttpWebResponse> GetHttpResponseAsync(this HttpWebRequest req)
+    public static async Task<HttpWebResponse> GetHttpResponseAsync(this HttpWebRequest request)
     {
         // use GetHttpResponse instead of GetHttpResponseAsync to make timeout valid.
         // see details at https://msdn.microsoft.com/en-us/library/system.net.httpwebrequest.timeout(v=vs.110).aspx
-        return await Task.Run(req.GetHttpResponse).IgnoreSyncContext();
+        return await Task.Run(request.GetHttpResponse).IgnoreSyncContext();
     }
 
-    public static HttpWebResponse GetHttpResponse(this HttpWebRequest req)
+    public static HttpWebResponse GetHttpResponse(this HttpWebRequest request)
     {
         try
         {
-            return (HttpWebResponse)req.GetResponse();
+            return (HttpWebResponse)request.GetResponse();
         }
         catch (WebException ex)
         {

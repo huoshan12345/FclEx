@@ -5,27 +5,27 @@ public interface IHtmlAction<T> : IHttpResponseHandler<T>
 {
     string? HtmlResultPath { get; }
 
-    OperationResult<T> IHttpResponseHandler<T>.GetResult(HttpResponse res)
+    OperationResult<T> IHttpResponseHandler<T>.GetResult(HttpResponse response)
     {
-        var (successful, str, ex, _) = GetHtml(res);
+        var (successful, str, ex, _) = GetHtml(response);
         if (!successful)
             return ex!;
 
-        var context = new HtmlActionContext(res, str!, HtmlResultPath);
+        var context = new HtmlActionContext(response, str!, HtmlResultPath);
 
         return IsFailed(context)
             ? HandleFailed(context)
             : GetResult(context);
     }
 
-    OperationResult<string> GetHtml(HttpResponse res)
+    OperationResult<string> GetHtml(HttpResponse response)
     {
-        var str = res.ResponseString;
+        var str = response.ResponseString;
         return str switch
         {
-            _ when str.IsNullOrEmpty() => Operation.CreateError<string>("The res string is empty"),
-            _ when str.IsPossibleHtml() => Operation.CreateSuccess(res.ResponseString),
-            _ => Operation.CreateError<string>("The res string is not a valid html: " + str.Truncate(256))
+            _ when str.IsNullOrEmpty() => Operation.CreateError<string>("The response string is empty"),
+            _ when str.IsPossibleHtml() => Operation.CreateSuccess(response.ResponseString),
+            _ => Operation.CreateError<string>("The response string is not a valid html: " + str.Truncate(256))
         };
     }
 

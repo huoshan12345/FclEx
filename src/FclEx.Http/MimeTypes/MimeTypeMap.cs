@@ -8,14 +8,12 @@
         private const string Dot = ".";
         private const string QuestionMark = "?";
         private const string DefaultMimeType = "application/octet-stream";
-        private static readonly Lazy<IDictionary<string, string>> _mappings = new(BuildMappings);
+        private static readonly Lazy<Dictionary<string, string>> _mappings = new(BuildMappings);
 
         private static Dictionary<string, string> BuildMappings()
         {
-            var mappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) {
-
-                #region Big freaking list of mime types
-            
+            var mappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
                 // maps both ways,
                 // extension -> mime type
                 //   and
@@ -669,6 +667,8 @@
                 {".xspf", "application/xspf+xml"},
                 {".xtp", "application/octet-stream"},
                 {".xwd", "image/x-xwindowdump"},
+                {".yml", "application/yaml"},
+                {".yaml", "application/yaml"},
                 {".z", "application/x-compress"},
                 {".zip", "application/zip"},
 
@@ -712,6 +712,7 @@
                 {"image/heic", ".heic"},
                 {"image/heif", ".heif"},
                 {"image/jpeg", ".jpg"},
+                {"image/jpg", ".jpg"},
                 {"image/pict", ".pic"},
                 {"image/png", ".png"}, // Defined in [RFC-2045], [RFC-2048]
                 {"image/x-png", ".png"}, // See https://www.w3.org/TR/PNG/#A-Media-type :"It is recommended that implementations also recognize the media type "image/x-png"."
@@ -734,9 +735,6 @@
                 {"video/x-la-asf", ".lsf"},
                 {"video/x-ms-asf", ".asf"},
                 {"x-world/x-vrml", ".xof"},
-
-                #endregion
-
             };
 
             var cache = mappings.ToList(); // need ToList() to avoid modifying while still enumerating
@@ -772,7 +770,6 @@
                 str = str.Remove(indexQuestionMark);
             }
 
-
             if (!str.StartsWith(Dot))
             {
                 var index = str.LastIndexOf(Dot, StringComparison.Ordinal);
@@ -799,7 +796,7 @@
         }
 
         /// <summary>
-        /// Gets the extension from the provided MINE type.
+        /// Gets the extension from the provided MIME type.
         /// </summary>
         /// <param name="mimeType">Type of the MIME.</param>
         /// <param name="throwErrorIfNotFound">if set to <c>true</c>, throws error if extension's not found.</param>

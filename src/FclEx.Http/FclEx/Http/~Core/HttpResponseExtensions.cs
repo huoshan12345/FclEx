@@ -94,11 +94,11 @@ public static class HttpResponseExtensions
         {
             null => string.Empty,
             "image/jpg" => "image/jpeg",
-            _ => mimeType.TrimStart(".")
+            _ => mimeType.TrimStart("."),
         };
     }
 
-    public static Uri LastUri(this HttpResponse res) => res.RedirectUris.Last();
+    public static Uri LastUri(this HttpResponse response) => response.RedirectUris.Last();
 
     public static Task<HttpResponse> Error(this Task<HttpResponse> task, Action<Exception> action)
     {

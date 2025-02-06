@@ -15,7 +15,7 @@ public readonly struct NextAction<T, TNext> : IAction<TNext>
     {
         var result = await _action.ExecuteAsync(token).IgnoreSyncContext();
         if (!result.Success)
-            return result.ToExplicit<TNext>();
+            return result.CastTo<TNext>();
 
         var nextActor = _next(result.Value);
         if (nextActor == null)

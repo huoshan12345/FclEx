@@ -21,18 +21,10 @@ partial class HttpClientServiceTests
     [MemberData(nameof(Cases))]
     public async Task SendAsync_WithProxy_Success(IWebProxy proxy, string url)
     {
-        //var client = new HttpClient(new SocketsHttpHandler
-        //{
-        //    Proxy = proxy,
-        //    UseProxy = true,
-        //});
-        //var response = await client.GetAsync(url);
-        //Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
         var http = HttpClientService.Create(proxy);
-        var res = await HttpRequest.Get(url)
+        var response = await HttpRequest.Get(url)
             .ReadHeadersTimeout(TimeSpan.FromSeconds(10))
             .SendAsync(http);
-        AssertEx.False(res.HasError, () => res.Exception!.ToString());
+        AssertEx.False(response.HasError, () => response.Exception!.ToString());
     }
 }

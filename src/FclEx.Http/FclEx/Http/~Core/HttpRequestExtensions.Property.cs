@@ -2,188 +2,188 @@
 
 partial class HttpRequestExtensions
 {
-    public static HttpRequest ReadContent(this HttpRequest req, bool read)
+    public static HttpRequest ReadContent(this HttpRequest request, bool read)
     {
-        req.ReadContent = read;
-        return req;
+        request.ReadContent = read;
+        return request;
     }
 
-    public static HttpRequest EnsureSuccessStatusCode(this HttpRequest req, bool value)
+    public static HttpRequest EnsureSuccessStatusCode(this HttpRequest request, bool value)
     {
-        req.EnsureSuccessStatusCode = value;
-        return req;
+        request.EnsureSuccessStatusCode = value;
+        return request;
     }
 
-    public static HttpRequest Host(this HttpRequest req, string host)
+    public static HttpRequest Host(this HttpRequest request, string host)
     {
-        req.Host = host;
-        return req;
+        request.Host = host;
+        return request;
     }
 
-    public static HttpRequest Port(this HttpRequest req, int port)
+    public static HttpRequest Port(this HttpRequest request, int port)
     {
-        req.Port = port;
-        return req;
+        request.Port = port;
+        return request;
     }
 
-    public static HttpRequest Fragment(this HttpRequest req, string fragment)
+    public static HttpRequest Fragment(this HttpRequest request, string fragment)
     {
-        req.Fragment = fragment;
-        return req;
+        request.Fragment = fragment;
+        return request;
     }
 
-    public static HttpRequest UserName(this HttpRequest req, string userName)
+    public static HttpRequest UserName(this HttpRequest request, string userName)
     {
-        req.UserName = userName;
-        return req;
+        request.UserName = userName;
+        return request;
     }
 
-    public static HttpRequest Password(this HttpRequest req, string password)
+    public static HttpRequest Password(this HttpRequest request, string password)
     {
-        req.Password = password;
-        return req;
+        request.Password = password;
+        return request;
     }
 
-    public static HttpRequest Path(this HttpRequest req, string path)
+    public static HttpRequest Path(this HttpRequest request, string path)
     {
-        req.Path = path;
-        return req;
+        request.Path = path;
+        return request;
     }
 
-    public static HttpRequest Scheme(this HttpRequest req, string scheme)
+    public static HttpRequest Scheme(this HttpRequest request, string scheme)
     {
-        req.Scheme = scheme;
-        return req;
+        request.Scheme = scheme;
+        return request;
     }
 
-    public static HttpRequest Method(this HttpRequest req, HttpMethod method)
+    public static HttpRequest Method(this HttpRequest request, HttpMethod method)
     {
-        req.Method = method;
-        return req;
+        request.Method = method;
+        return request;
     }
 
-    public static HttpRequest Method(this HttpRequest req, string method)
+    public static HttpRequest Method(this HttpRequest request, string method)
     {
-        return req.Method(new HttpMethod(method));
+        return request.Method(new HttpMethod(method));
     }
 
-    public static HttpRequest Auth(this HttpRequest req, string? auth)
+    public static HttpRequest Auth(this HttpRequest request, string? auth)
     {
-        return req.AddHeader(HttpKnownHeaderNames.Authorization, auth);
+        return request.AddHeader(HttpKnownHeaderNames.Authorization, auth);
     }
 
-    public static HttpRequest BasicAuth(this HttpRequest req, string? userName, string? password)
+    public static HttpRequest BasicAuth(this HttpRequest request, string? userName, string? password)
     {
         var userInfo = userName + ":" + password;
-        return req.AddHeader(HttpKnownHeaderNames.Authorization, "Basic " + userInfo.ToBytes().ToBase64());
+        return request.AddHeader(HttpKnownHeaderNames.Authorization, "Basic " + userInfo.ToBytes().ToBase64());
     }
 
-    public static HttpRequest BearerAuth(this HttpRequest req, string token)
+    public static HttpRequest BearerAuth(this HttpRequest request, string token)
     {
-        return req.AddHeader(HttpKnownHeaderNames.Authorization, "Bearer " + token);
+        return request.AddHeader(HttpKnownHeaderNames.Authorization, "Bearer " + token);
     }
 
-    public static HttpRequest CharSet(this HttpRequest req, string? chartSet)
+    public static HttpRequest CharSet(this HttpRequest request, string? chartSet)
     {
-        req.CharSet = chartSet;
-        return req;
+        request.CharSet = chartSet;
+        return request;
     }
 
-    public static HttpRequest TryCharSet(this HttpRequest req, string? chartSet)
+    public static HttpRequest TryCharSet(this HttpRequest request, string? chartSet)
     {
-        req.CharSet = chartSet;
-        return req;
+        request.CharSet = chartSet;
+        return request;
     }
 
-    public static HttpRequest DetectCharSet(this HttpRequest req, bool flag = true)
+    public static HttpRequest DetectCharSet(this HttpRequest request, bool flag = true)
     {
-        req.DetectCharSet = flag;
-        return req;
+        request.DetectCharSet = flag;
+        return request;
     }
 
-    public static HttpRequest FallbackCharSet(this HttpRequest req, string? chartSet)
+    public static HttpRequest FallbackCharSet(this HttpRequest request, string? chartSet)
     {
-        req.FallbackCharSet = chartSet;
-        return req;
+        request.FallbackCharSet = chartSet;
+        return request;
     }
 
-    public static HttpRequest TryFallbackCharSet(this HttpRequest req, string? chartSet)
+    public static HttpRequest TryFallbackCharSet(this HttpRequest request, string? chartSet)
     {
-        req.FallbackCharSet ??= chartSet;
-        return req;
+        request.FallbackCharSet ??= chartSet;
+        return request;
     }
 
-    public static HttpRequest ReadHeadersTimeout(this HttpRequest req, TimeSpan? timeout)
+    public static HttpRequest ReadHeadersTimeout(this HttpRequest request, TimeSpan? timeout)
     {
-        req.ReadHeadersTimeout = timeout;
-        return req;
+        request.ReadHeadersTimeout = timeout;
+        return request;
     }
 
-    public static HttpRequest TryReadHeadersTimeout(this HttpRequest req, TimeSpan? timeout)
+    public static HttpRequest TryReadHeadersTimeout(this HttpRequest request, TimeSpan? timeout)
     {
-        req.ReadHeadersTimeout ??= timeout;
-        return req;
+        request.ReadHeadersTimeout ??= timeout;
+        return request;
     }
     
-    public static HttpRequest ReadBufferTimeout(this HttpRequest req, TimeSpan? timeout)
+    public static HttpRequest ReadBufferTimeout(this HttpRequest request, TimeSpan? timeout)
     {
-        req.ReadBufferTimeout = timeout;
-        return req;
+        request.ReadBufferTimeout = timeout;
+        return request;
     }
 
-    public static HttpRequest TryReadBufferTimeout(this HttpRequest req, TimeSpan? timeout)
+    public static HttpRequest TryReadBufferTimeout(this HttpRequest request, TimeSpan? timeout)
     {
-        req.ReadBufferTimeout ??= timeout;
-        return req;
+        request.ReadBufferTimeout ??= timeout;
+        return request;
     }
 
-    public static HttpRequest TotalTimeout(this HttpRequest req, TimeSpan? timeout)
+    public static HttpRequest TotalTimeout(this HttpRequest request, TimeSpan? timeout)
     {
-        req.TotalTimeout = timeout;
-        return req;
+        request.TotalTimeout = timeout;
+        return request;
     }
 
-    public static HttpRequest TryTotalTimeout(this HttpRequest req, TimeSpan? timeout)
+    public static HttpRequest TryTotalTimeout(this HttpRequest request, TimeSpan? timeout)
     {
-        req.TotalTimeout ??= timeout;
-        return req;
+        request.TotalTimeout ??= timeout;
+        return request;
     }
 
-    public static HttpRequest Origin(this HttpRequest req, string? url)
+    public static HttpRequest Origin(this HttpRequest request, string? url)
     {
-        req.Origin = url;
-        return req;
+        request.Origin = url;
+        return request;
     }
 
-    public static HttpRequest TryOrigin(this HttpRequest req, string? url)
+    public static HttpRequest TryOrigin(this HttpRequest request, string? url)
     {
-        req.Origin ??= url;
-        return req;
+        request.Origin ??= url;
+        return request;
     }
 
-    public static HttpRequest ReadAs(this HttpRequest req, HttpContentType type)
+    public static HttpRequest ReadAs(this HttpRequest request, HttpContentType type)
     {
-        req.ReadContentType = type;
-        return req;
+        request.ReadContentType = type;
+        return request;
     }
 
-    public static HttpRequest ReadAsString(this HttpRequest req) => req.ReadAs(HttpContentType.String);
+    public static HttpRequest ReadAsString(this HttpRequest request) => request.ReadAs(HttpContentType.String);
 
-    public static HttpRequest ReadAsBytes(this HttpRequest req) => req.ReadAs(HttpContentType.Bytes);
+    public static HttpRequest ReadAsBytes(this HttpRequest request) => request.ReadAs(HttpContentType.Bytes);
 
-    public static HttpRequest ReadAsStream(this HttpRequest req) => req.ReadAs(HttpContentType.Stream);
+    public static HttpRequest ReadAsStream(this HttpRequest request) => request.ReadAs(HttpContentType.Stream);
     
-    public static HttpRequest Version(this HttpRequest req, Version version)
+    public static HttpRequest Version(this HttpRequest request, Version version)
     {
-        req.Version = version;
-        return req;
+        request.Version = version;
+        return request;
     }
 
 #if NET6_0_OR_GREATER
-    public static HttpRequest VersionPolicy(this HttpRequest req, HttpVersionPolicy policy)
+    public static HttpRequest VersionPolicy(this HttpRequest request, HttpVersionPolicy policy)
     {
-        req.VersionPolicy = policy;
-        return req;
+        request.VersionPolicy = policy;
+        return request;
     }
 #endif
 }

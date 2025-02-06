@@ -5,13 +5,13 @@ public interface IJsonAction<T> : IHttpResponseHandler<T>
 {
     string? JsonResultPath { get; }
 
-    OperationResult<T> IHttpResponseHandler<T>.GetResult(HttpResponse res)
+    OperationResult<T> IHttpResponseHandler<T>.GetResult(HttpResponse response)
     {
-        var (successful, str, ex, _) = GetJson(res);
+        var (successful, str, ex, _) = GetJson(response);
         if (!successful)
             return ex!;
 
-        var context = new JsonActionContext(res, str!, JsonResultPath);
+        var context = new JsonActionContext(response, str!, JsonResultPath);
 
         return IsFailed(context) 
             ? HandleFailed(context) 
@@ -23,7 +23,7 @@ public interface IJsonAction<T> : IHttpResponseHandler<T>
         var str = response.ResponseString;
         return str.IsPossibleJson()
             ? Operation.CreateSuccess(response.ResponseString)
-            : Operation.CreateError<string>("The res string is not a valid json: " + str.Truncate(256));
+            : Operation.CreateError<string>("The response string is not a valid json: " + str.Truncate(256));
     }
 
     bool IsFailed(JsonActionContext context) => !context.ResultTokens.Any();
