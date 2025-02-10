@@ -18,9 +18,9 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
         using var service = HttpClientService.Create(false);
         for (var i = 0; i < 5; i++)
         {
-            var res = await HttpRequest.Get("https://www.baidu.com")
+            var response = await HttpRequest.Get("https://www.baidu.com")
                 .SendAsync(service);
-            AssertEx.False(res.HasError, () => res.Exception!.ToString());
+            AssertEx.False(response.HasError, () => response.Exception!.ToString());
         }
     }
 

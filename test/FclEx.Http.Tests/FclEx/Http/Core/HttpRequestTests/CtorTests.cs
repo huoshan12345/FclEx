@@ -25,16 +25,16 @@ public class CtorTests
     [MemberData(nameof(CtorCases))]
     public void TestCtor(string url, HttpMethod method)
     {
-        var req = HttpRequest.Create(url, method);
-        req.Host("localhost");
-        var realUrl = req.GetUri();
+        var request = HttpRequest.Create(url, method);
+        request.Host("localhost");
+        var realUrl = request.GetUri();
     }
 
     [Fact]
     public void Ctor_WithUserInfo()
     {
-        var req = HttpRequest.Get("http://lijing:lijing@captcha.mooncatling.fun/api/captcha/save");
-        Assert.True(req.Headers.TryGetValue("Authorization", out var auth));
+        var request = HttpRequest.Get("http://lijing:lijing@captcha.mooncatling.fun/api/captcha/save");
+        Assert.True(request.Headers.TryGetValue("Authorization", out var auth));
         Assert.Equal("Basic bGlqaW5nOmxpamluZw==", auth);
     }
 }

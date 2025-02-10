@@ -105,22 +105,22 @@ public class SendAsyncTests : IAssemblyFixture<HttpFixture>
         const string ipv4Url = "https://ip4only.me/api/";
         const string ipv6Url = "https://ip6only.me/api/";
         var url = ipv6 ? ipv6Url : ipv4Url;
-        var res = await HttpRequest.Get(url)
+        var response = await HttpRequest.Get(url)
             .ReadHeadersTimeout(TimeSpan.FromSeconds(10))
             .SendAsync(http)
             .IgnoreSyncContext();
-        res.ThrowIfError();
+        response.ThrowIfError();
     }
 
     [Theory]
     [MemberData(nameof(Cases))]
     public async Task Get_Test(string url)
     {
-        var res = await HttpRequest.Get(url)
+        var response = await HttpRequest.Get(url)
             .ReadHeadersTimeout(TimeSpan.FromSeconds(5))
             .SendAsync()
             .IgnoreSyncContext();
-        res.ThrowIfError();
+        response.ThrowIfError();
     }
 
     [Fact]
@@ -128,15 +128,15 @@ public class SendAsyncTests : IAssemblyFixture<HttpFixture>
     {
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 3).ToDictionary(m => m.ToString(), m => random.NextString(5));
-        var res = await HttpRequest.Post("api/post")
+        var response = await HttpRequest.Post("api/post")
             .AddFormParam(expected!)
             .ReadHeadersTimeout(TimeSpan.FromSeconds(5))
             .SendAsync(TestHttp)
             .ThrowIfError()
             .IgnoreSyncContext();
 
-        Assert.False(res.HasError);
-        var body = res.ResponseString;
+        Assert.False(response.HasError);
+        var body = response.ResponseString;
         Assert.NotNull(body);
         var actual = HttpUtility.ParseQueryString(body).ToDictionary();
         Assert.Equal(expected, actual);
@@ -146,13 +146,13 @@ public class SendAsyncTests : IAssemblyFixture<HttpFixture>
     public async Task Json_Test()
     {
         var list = Enumerable.Range(1, 10).ToList();
-        var res = await HttpRequest.Post("api/post")
+        var response = await HttpRequest.Post("api/post")
             .JsonContent(list)
             .SendAsync(TestHttp)
             .ThrowIfError()
             .IgnoreSyncContext();
-        Assert.False(res.HasError);
-        var body = res.ResponseString.ToJsonNode();
+        Assert.False(response.HasError);
+        var body = response.ResponseString.ToJsonNode();
         Assert.NotNull(body);
         var actual = body.Deserialize<List<int>>();
         Assert.True(list.SequenceEqual(actual!));

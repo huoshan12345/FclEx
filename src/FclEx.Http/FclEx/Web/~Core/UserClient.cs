@@ -134,7 +134,7 @@ public abstract class UserClient : IUserClient, IDisposable
         try
         {
             Session.LoggingIn();
-            var res = await loginAction(token)
+            var response = await loginAction(token)
                 .Ok(_ => Session.Online())
                 .Error(_ =>
                 {
@@ -142,7 +142,7 @@ public abstract class UserClient : IUserClient, IDisposable
                         Session.Offline();
                 })
                 .IgnoreSyncContext();
-            return res.Elapsed(time.GetElapsedTime());
+            return response.Elapsed(time.GetElapsedTime());
         }
         catch (Exception ex)
         {

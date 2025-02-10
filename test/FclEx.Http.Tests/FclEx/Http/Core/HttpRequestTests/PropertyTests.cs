@@ -16,11 +16,11 @@ public class PropertyTests
         if (value)
             request.CharSet(CharSetTestCase.CharSet);
 
-        var res = await request.SendAsync(http)
+        var response = await request.SendAsync(http)
             .ThrowIfError()
             .IgnoreSyncContext();
 
-        Assert.Equal(value, res.ResponseString.Contains(CharSetTestCase.Keyword));
+        Assert.Equal(value, response.ResponseString.Contains(CharSetTestCase.Keyword));
     }
 
     [Theory]
@@ -33,10 +33,10 @@ public class PropertyTests
         if (value)
             request.CharSet(CharSetTestCase.CharSet);
 
-        var res = await request.SendAsync(http)
+        var response = await request.SendAsync(http)
             .ThrowIfError()
             .IgnoreSyncContext();
-        Assert.Equal(value, res.ResponseString.Contains(CharSetTestCase.Keyword));
+        Assert.Equal(value, response.ResponseString.Contains(CharSetTestCase.Keyword));
     }
 
     [Theory]
@@ -45,13 +45,13 @@ public class PropertyTests
     public async Task DetectCharSet_Test(bool value)
     {
         using var http = new HttpClientService();
-        var req = HttpRequest.Get(CharSetTestCase.Url);
-        req.DetectCharSet(value);
+        var request = HttpRequest.Get(CharSetTestCase.Url);
+        request.DetectCharSet(value);
 
-        var res = await req.SendAsync(http)
+        var response = await request.SendAsync(http)
             .ThrowIfError()
             .IgnoreSyncContext();
-        Assert.Equal(value, res.ResponseString.Contains(CharSetTestCase.Keyword));
+        Assert.Equal(value, response.ResponseString.Contains(CharSetTestCase.Keyword));
     }
 
     public static readonly IEnumerable<object[]> CompressionMethods = Enum.GetValues<CompressionMethod>().Select(m => new object[] { m });
@@ -72,16 +72,16 @@ public class PropertyTests
             Avatar = $"https://cloudflare-ipfs.com/ipfs/{random.NextString(10)}/avatar/{random.Next(10, 99)}.jpg",
             Id = 1,
         };
-        var res = await HttpRequest.Put("https://65c333b1f7e6ea59682c21a5.mockapi.io/api/compress/" + model.Id)
+        var response = await HttpRequest.Put("https://65c333b1f7e6ea59682c21a5.mockapi.io/api/compress/" + model.Id)
             .Compression(compression)
             .JsonContent(model)
             .SendAsync(TestHttp)
             .IgnoreSyncContext();
 
-        Assert.True(res.StatusCode.IsSuccess(), res.ResponseString);
-        Assert.False(res.HasError, res.Exception?.Message);
+        Assert.True(response.StatusCode.IsSuccess(), response.ResponseString);
+        Assert.False(response.HasError, response.Exception?.Message);
 
-        var returned = res.ResponseString.FromJson<MockApiModel>();
+        var returned = response.ResponseString.FromJson<MockApiModel>();
         AssertEx.EveryMemberEqual(model, returned);
     }
 
@@ -94,16 +94,16 @@ public class PropertyTests
 
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 100).ToDictionary(m => m.ToString(), m => random.NextString(5));
-        var res = await HttpRequest.Post("api/compress")
+        var response = await HttpRequest.Post("api/compress")
             .JsonContent(expected)
             .Compression(compression)
             .SendAsync(TestHttp)
             .IgnoreSyncContext();
 
-        Assert.True(res.StatusCode.IsSuccess(), res.ResponseString);
-        Assert.False(res.HasError, res.Exception?.Message);
+        Assert.True(response.StatusCode.IsSuccess(), response.ResponseString);
+        Assert.False(response.HasError, response.Exception?.Message);
 
-        var token = res.ResponseString.ToJsonNode();
+        var token = response.ResponseString.ToJsonNode();
 
         Assert.NotNull(token);
 

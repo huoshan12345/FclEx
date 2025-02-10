@@ -5,13 +5,13 @@ public interface IXmlAction<T> : IHttpResponseHandler<T>
 {
     string? XmlResultPath { get; }
 
-    OperationResult<T> IHttpResponseHandler<T>.GetResult(HttpResponse res)
+    OperationResult<T> IHttpResponseHandler<T>.GetResult(HttpResponse response)
     {
-        var (successful, str, ex, _) = GetXml(res);
+        var (successful, str, ex, _) = GetXml(response);
         if (!successful)
             return ex!;
 
-        var context = new XmlActionContext(res, str!, XmlResultPath);
+        var context = new XmlActionContext(response, str!, XmlResultPath);
 
         if (IsFailed(context))
             return HandleFailed(context);
@@ -34,7 +34,7 @@ public interface IXmlAction<T> : IHttpResponseHandler<T>
         var str = response.ResponseString;
         return str.IsPossibleXml()
             ? Operation.CreateSuccess(response.ResponseString)
-            : Operation.CreateError<string>("The res string is not a valid xml: " + str.Truncate(256));
+            : Operation.CreateError<string>("The response string is not a valid xml: " + str.Truncate(256));
     }
 
     OperationResult<T> GetResult(XmlActionContext context) => context.ResultElement!.ToObject<T>()!;

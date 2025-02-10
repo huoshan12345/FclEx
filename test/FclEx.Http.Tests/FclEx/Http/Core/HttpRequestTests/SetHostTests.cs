@@ -29,28 +29,28 @@ public class SetHostTests
     [MemberData(nameof(HostPortsPair))]
     public void TestSetHost(string host, int port, string hp, string newHost, int newPort, string newHp)
     {
-        var req = HttpRequest.Get("http://" + host);
-        Assert.Equal(host, req.Host);
-        Assert.Equal(80, req.Port);
+        var request = HttpRequest.Get("http://" + host);
+        Assert.Equal(host, request.Host);
+        Assert.Equal(80, request.Port);
 
-        req.Host(hp);
-        Assert.Equal(host, req.Host);
-        Assert.Equal(port, req.Port);
+        request.Host(hp);
+        Assert.Equal(host, request.Host);
+        Assert.Equal(port, request.Port);
 
-        req.Host(newHp);
-        Assert.Equal(newHost, req.Host);
-        Assert.Equal(newPort, req.Port);
+        request.Host(newHp);
+        Assert.Equal(newHost, request.Host);
+        Assert.Equal(newPort, request.Port);
     }
 
     [Fact]
     public void SetHostWithSchemeTest()
     {
-        var req = HttpRequest.Get("/teacher/app/clean-redis-cache")
+        var request = HttpRequest.Get("/teacher/app/clean-redis-cache")
             .Scheme("https")
             .Host("betassapinew.knowbox.cn:9002");
 
-        Assert.Equal("https", req.Scheme);
-        Assert.Equal("betassapinew.knowbox.cn", req.Host);
-        Assert.Equal(9002, req.Port);
+        Assert.Equal("https", request.Scheme);
+        Assert.Equal("betassapinew.knowbox.cn", request.Host);
+        Assert.Equal(9002, request.Port);
     }
 }

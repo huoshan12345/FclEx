@@ -211,7 +211,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
     protected virtual async Task<HttpResponseMessage> SendAsync(HttpClientContext context, HttpRequest request, CancellationToken token)
     {
         var (client, policy) = context;
-        var res = await policy.ExecuteAsync(async () =>
+        var response = await policy.ExecuteAsync(async () =>
         {
             // Create request in every retry to avoid the following error:
             // The request message was already sent. Cannot send the same request message multiple times.
@@ -219,7 +219,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             using var cts = token.WithTimeout(request.ReadHeadersTimeout);
             return await client.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cts.Token);
         });
-        return res;
+        return response;
     }
 
     protected internal abstract HttpClientContext CreateHttpClientContext();
@@ -231,10 +231,10 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         try
         {
             var context = CreateHttpClientContext();
-            var req = httpRequest;
+            var currentRequest = httpRequest;
             while (true)
             {
-                var response = await SendAsync(context, req, cts.Token).IgnoreSyncContext();
+                var response = await SendAsync(context, currentRequest, cts.Token).IgnoreSyncContext();
                 responses.Add(response);
                 httpResponse.RedirectUris.Add(response.RequestMessage?.RequestUri!);
 
@@ -244,7 +244,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
                 if (!response.TryGetRedirection(out var uri))
                     break;
 
-                req = HttpRequest.Get(uri);
+                currentRequest = HttpRequest.Get(uri);
             }
 
             var last = responses.Last(); // responses should not be empty

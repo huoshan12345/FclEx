@@ -96,11 +96,11 @@ public static class IHttpServiceExtensions
             .ReadBufferTimeout(timeout)
             .AcceptCompress();
 
-        var res = await request.SendAsync(http);
-        return res.HasError
-            ? Operation.CreateObjectError(res, res.Exception!, res.Elapsed)
+        var response = await request.SendAsync(http);
+        return response.HasError
+            ? Operation.CreateObjectError(response, response.Exception!, response.Elapsed)
                 .ToExplicit<HttpFileDownloadInfo>()
-            : res.GetDownloadInfo();
+            : response.GetDownloadInfo();
     }
 
     public static Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, string url, HttpMethod? method = null, TimeSpan? timeout = null)

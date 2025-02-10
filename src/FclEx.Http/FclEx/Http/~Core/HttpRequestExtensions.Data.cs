@@ -2,31 +2,31 @@
 
 public static partial class HttpRequestExtensions
 {
-    public static HttpRequest AddQueryParam(this HttpRequest req, string key, string? value)
+    public static HttpRequest AddQueryParam(this HttpRequest request, string key, string? value)
     {
         Check.NotNull(key);
-        req.Query.Add(key, value);
-        return req;
+        request.Query.Add(key, value);
+        return request;
     }
 
-    public static HttpRequest AddQueryParam<T>(this HttpRequest req, string key, T? value) => req.AddQueryParam(key, value.ToStringOrEmpty());
+    public static HttpRequest AddQueryParam<T>(this HttpRequest request, string key, T? value) => request.AddQueryParam(key, value.ToStringOrEmpty());
 
-    public static HttpRequest AddQueryParam(this HttpRequest req, KeyValuePair<string, string?> pair) => req.AddQueryParam(pair.Key, pair.Value);
+    public static HttpRequest AddQueryParam(this HttpRequest request, KeyValuePair<string, string?> pair) => request.AddQueryParam(pair.Key, pair.Value);
 
-    public static HttpRequest AddQueryParam(this HttpRequest req, Tuple<string, string?> pair) => req.AddQueryParam(pair.Item1, pair.Item2);
+    public static HttpRequest AddQueryParam(this HttpRequest request, Tuple<string, string?> pair) => request.AddQueryParam(pair.Item1, pair.Item2);
 
-    public static HttpRequest AddQueryParam(this HttpRequest req, (string, string?) pair) => req.AddQueryParam(pair.Item1, pair.Item2);
+    public static HttpRequest AddQueryParam(this HttpRequest request, (string, string?) pair) => request.AddQueryParam(pair.Item1, pair.Item2);
 
-    public static HttpRequest AddQueryParam(this HttpRequest req, IEnumerable<KeyValuePair<string, string?>> paras)
+    public static HttpRequest AddQueryParam(this HttpRequest request, IEnumerable<KeyValuePair<string, string?>> paras)
     {
-        paras.ForEach(m => req.AddQueryParam(m));
-        return req;
+        paras.ForEach(m => request.AddQueryParam(m));
+        return request;
     }
 
-    public static HttpRequest AddQueryPair(this HttpRequest req, string queryPair, char separator = ':')
+    public static HttpRequest AddQueryPair(this HttpRequest request, string queryPair, char separator = ':')
     {
         var pair = queryPair.Split(separator);
-        return req.AddQueryParam(pair[0], pair.Length > 1 ? pair[1] : "");
+        return request.AddQueryParam(pair[0], pair.Length > 1 ? pair[1] : "");
     }
 
     public static HttpRequest AddQueryParam(this HttpRequest request, IEnumerable<UriParam> enumerable)
@@ -43,31 +43,31 @@ public static partial class HttpRequestExtensions
         return request.AddQueryParam(builder.Build());
     }
 
-    public static HttpRequest AddFormParam(this HttpRequest req, string key, string? value)
+    public static HttpRequest AddFormParam(this HttpRequest request, string key, string? value)
     {
         Check.NotNull(key);
-        req.Form.Add(key, value);
-        return req;
+        request.Form.Add(key, value);
+        return request;
     }
 
-    public static HttpRequest AddFormParam<T>(this HttpRequest req, string key, T? value) => req.AddFormParam(key, value.ToStringOrEmpty());
+    public static HttpRequest AddFormParam<T>(this HttpRequest request, string key, T? value) => request.AddFormParam(key, value.ToStringOrEmpty());
 
-    public static HttpRequest AddFormParam(this HttpRequest req, KeyValuePair<string, string?> pair) => req.AddFormParam(pair.Key, pair.Value);
+    public static HttpRequest AddFormParam(this HttpRequest request, KeyValuePair<string, string?> pair) => request.AddFormParam(pair.Key, pair.Value);
 
-    public static HttpRequest AddFormParam(this HttpRequest req, Tuple<string, string?> pair) => req.AddFormParam(pair.Item1, pair.Item2);
+    public static HttpRequest AddFormParam(this HttpRequest request, Tuple<string, string?> pair) => request.AddFormParam(pair.Item1, pair.Item2);
 
-    public static HttpRequest AddFormParam(this HttpRequest req, (string, string?) pair) => req.AddFormParam(pair.Item1, pair.Item2);
+    public static HttpRequest AddFormParam(this HttpRequest request, (string, string?) pair) => request.AddFormParam(pair.Item1, pair.Item2);
 
-    public static HttpRequest AddFormParam(this HttpRequest req, IEnumerable<KeyValuePair<string, string?>> paras)
+    public static HttpRequest AddFormParam(this HttpRequest request, IEnumerable<KeyValuePair<string, string?>> paras)
     {
-        paras?.ForEach(m => req.AddFormParam(m));
-        return req;
+        paras?.ForEach(m => request.AddFormParam(m));
+        return request;
     }
 
-    public static HttpRequest AddFormPair(this HttpRequest req, string queryPair, char separator = ':')
+    public static HttpRequest AddFormPair(this HttpRequest request, string queryPair, char separator = ':')
     {
         var pair = queryPair.Split(separator);
-        return req.AddFormParam(pair[0], pair.Length > 1 ? pair[1] : "");
+        return request.AddFormParam(pair[0], pair.Length > 1 ? pair[1] : "");
     }
 
     public static HttpRequest AddFormParam(this HttpRequest request, IEnumerable<UriParam> enumerable)
@@ -84,42 +84,42 @@ public static partial class HttpRequestExtensions
         return request.AddFormParam(builder.Build());
     }
 
-    public static HttpRequest Content(this HttpRequest req, HttpContent content)
+    public static HttpRequest Content(this HttpRequest request, HttpContent content)
     {
-        req.Content = content;
-        return req;
+        request.Content = content;
+        return request;
     }
 
-    public static HttpRequest Content(this HttpRequest req, string data, Encoding? encoding = null)
+    public static HttpRequest Content(this HttpRequest request, string data, Encoding? encoding = null)
     {
-        return req.Content(new StringContent(data, encoding ?? Encoding.UTF8));
+        return request.Content(new StringContent(data, encoding ?? Encoding.UTF8));
     }
 
-    public static HttpRequest Content(this HttpRequest req, byte[] data, int offset, int count)
+    public static HttpRequest Content(this HttpRequest request, byte[] data, int offset, int count)
     {
-        req.Content = new ByteArrayContent(data, offset, count);
-        return req;
+        request.Content = new ByteArrayContent(data, offset, count);
+        return request;
     }
 
-    public static HttpRequest Content(this HttpRequest req, byte[] data)
+    public static HttpRequest Content(this HttpRequest request, byte[] data)
     {
-        return req.Content(data, 0, data.Length);
+        return request.Content(data, 0, data.Length);
     }
 
-    public static HttpRequest Content(this HttpRequest req, ArraySegment<byte> data)
+    public static HttpRequest Content(this HttpRequest request, ArraySegment<byte> data)
     {
-        return req.Content(data.Array ?? Array.Empty<byte>(), data.Offset, data.Count);
+        return request.Content(data.Array ?? [], data.Offset, data.Count);
     }
 
-    public static HttpRequest JsonContent(this HttpRequest req, object data, JsonSerializerOptions? options = null)
+    public static HttpRequest JsonContent(this HttpRequest request, object data, JsonSerializerOptions? options = null)
     {
-        req.Content = HttpContentHelper.ToJsonContent(data, options);
-        return req;
+        request.Content = HttpContentHelper.ToJsonContent(data, options);
+        return request;
     }
 
-    public static HttpRequest FormContent(this HttpRequest req, IEnumerable<KeyValuePair<string, string>> nameValueCollection)
+    public static HttpRequest FormContent(this HttpRequest request, IEnumerable<KeyValuePair<string, string>> nameValueCollection)
     {
-        req.Content = new FormUrlEncodedContent(nameValueCollection);
-        return req;
+        request.Content = new FormUrlEncodedContent(nameValueCollection);
+        return request;
     }
 }
