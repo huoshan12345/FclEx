@@ -1,4 +1,4 @@
-﻿// ReSharper disable RedundantUsingDirective
+﻿ // ReSharper disable RedundantUsingDirective
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
@@ -9,7 +9,13 @@ using System.Text;
 
 namespace FclEx.Utils;
 
-public sealed class SourceBuilder : IDisposable
+// This class is included in FclEx.SourceGenerator as an internal class to fix conflicts when using dependabot.
+#if FCLEX_INTERNAL
+internal
+#else
+public
+#endif
+    sealed class SourceBuilder : IDisposable
 {
     private readonly StringBuilder _builder = new();
     private readonly StringWriter _stringWriter;
@@ -99,7 +105,12 @@ public sealed class SourceBuilder : IDisposable
     public override string ToString() => _stringWriter.ToString();
 }
 
-public static class SourceBuilderExtensions
+#if FCLEX_INTERNAL
+internal
+#else
+public
+#endif
+    static class SourceBuilderExtensions
 {
     public static SourceBuilder WriteOpeningBracket(this SourceBuilder builder)
     {

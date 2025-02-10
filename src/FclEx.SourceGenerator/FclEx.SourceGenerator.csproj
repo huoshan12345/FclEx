@@ -6,6 +6,7 @@
     <LangVersion>latest</LangVersion>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
+    <DefineConstants>$(DefineConstants);FCLEX_INTERNAL</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
