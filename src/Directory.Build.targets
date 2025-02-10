@@ -2,16 +2,5 @@
   <PropertyGroup>
     <!--Empty RootNamespace does not work in Directory.Build.props, so put it in this file as a workaround-->
     <RootNamespace></RootNamespace>
-  </PropertyGroup>  
-
-  <ItemGroup>
-    <_ExcludeFclExUsing Include="FclEx.Core" />
-    <_ExcludeFclExUsing Include="FclEx.SourceGenerator" />
-  </ItemGroup>
-
-  <ItemGroup Condition="!@(_ExcludeFclExUsing->AnyHaveMetadataValue('Identity', '$(ProjectName)'))">
-    <!--NOTE: this path works for projects in FclEx.Abp as well-->
-    <Compile Include="$(ProjectDir)..\..\..\FclEx\src\FclEx.Core\FclExUsing.cs" />
-  </ItemGroup>
-  
+  </PropertyGroup>
 </Project>
