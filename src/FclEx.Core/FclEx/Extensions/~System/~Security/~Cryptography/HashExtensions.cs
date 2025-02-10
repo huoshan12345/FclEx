@@ -6,15 +6,11 @@ public static class HashExtensions
 {
     private static readonly Regex _regMd5 = new(@"^([a-fA-F0-9]{32})$", RegexOptions.Compiled);
 
-    public static string ToMd5String(this byte[] input, bool upperCase = false)
-    {
-        return input.Md5().ToHex(upperCase);
-    }
-
     public static byte[] Hash(this HashAlgorithm algorithm, byte[] input)
     {
-        if (input.IsNullOrEmpty()) return [];
-        return algorithm.ComputeHash(input);
+        return input.IsNullOrEmpty()
+            ? []
+            : algorithm.ComputeHash(input);
     }
 
     public static byte[] Md5(this byte[] input)
@@ -57,10 +53,5 @@ public static class HashExtensions
     {
         using var md5 = MD5.Create();
         return md5.Hash(input);
-    }
-
-    public static string ToMd5String(this ArraySegment<byte> input, bool upperCase = false)
-    {
-        return input.Md5().ToHex(upperCase);
     }
 }
