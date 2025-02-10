@@ -6,7 +6,7 @@ public interface IUserClient
     ILogger Logger { get; }
     bool IsOnline { get; }
     IUserAccount Account { get; set; }
-    ISession Session { get; }
+    IClientSession Session { get; }
     AccountStatus AccountStatus { get; set; }
     event Action<AccountStatus> OnAccountStatusChanged;
     [AllowNull] IHttpService HttpService { get; set; }
