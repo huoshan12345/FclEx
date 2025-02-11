@@ -1,4 +1,4 @@
-﻿namespace FclEx.Http.Core.HttpRequestTests;
+﻿namespace FclEx.Http.Core.HttpRequestExtensions;
 
 public class HttpContentTypeTests
 {

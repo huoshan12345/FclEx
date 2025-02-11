@@ -1,9 +1,8 @@
 ﻿using System.Net.NetworkInformation;
-using System.Text.Json;
 using System.Web;
 using FclEx.Http.Tests;
 
-namespace FclEx.Http.Core.HttpRequestTests;
+namespace FclEx.Http.Core.HttpRequestExtensions;
 
 internal sealed class HttpEventListener : EventListener
 {

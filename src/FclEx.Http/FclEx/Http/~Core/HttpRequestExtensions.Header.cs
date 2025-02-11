@@ -54,12 +54,12 @@ partial class HttpRequestExtensions
 
     public static HttpRequest AcceptUtf8(this HttpRequest request)
     {
-        return request.AddHeader("Accept-Charset", "utf-8");
+        return request.AddHeader(HttpKnownHeaderNames.AcceptCharset, "utf-8");
     }
 
     public static HttpRequest AcceptCn(this HttpRequest request)
     {
-        return request.AddHeader("Accept-Language", "zh-CN,zh;q=0.8");
+        return request.AddHeader(HttpKnownHeaderNames.AcceptLanguage, "zh-CN,zh;q=0.8");
     }
 
     public static HttpRequest Ajax(this HttpRequest request)
@@ -69,7 +69,7 @@ partial class HttpRequestExtensions
 
     public static HttpRequest AcceptCompress(this HttpRequest request)
     {
-        return request.AddHeader(HttpKnownHeaderNames.AcceptEncoding, "gzip, deflate, br");
+        return request.AddHeader(HttpKnownHeaderNames.AcceptEncoding, "gzip");
     }
 
     public static HttpRequest UseGZip(this HttpRequest request, bool gzip = true, CompressionLevel level = CompressionLevel.Optimal)

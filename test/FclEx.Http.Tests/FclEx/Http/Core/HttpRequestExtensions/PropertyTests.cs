@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-
-namespace FclEx.Http.Core.HttpRequestTests;
+﻿namespace FclEx.Http.Core.HttpRequestExtensions;
 
 public class PropertyTests
 {
@@ -111,7 +109,7 @@ public class PropertyTests
         Assert.NotNull(headers);
 
         var encoding = headers.Get(HttpKnownHeaderNames.ContentEncoding);
-        var length = headers.Get(HttpKnownHeaderNames.ContentLength, m => int.Parse(m));
+        var length = headers.Get(HttpKnownHeaderNames.ContentLength, int.Parse);
 
         var (expectedEncoding, expectedLength) = compression switch
         {
