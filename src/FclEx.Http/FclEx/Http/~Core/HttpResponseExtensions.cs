@@ -94,7 +94,7 @@ public static class HttpResponseExtensions
         {
             null => string.Empty,
             "image/jpg" => "image/jpeg",
-            _ => mimeType.TrimStart(".")
+            _ => mimeType.TrimStart("."),
         };
     }
 
