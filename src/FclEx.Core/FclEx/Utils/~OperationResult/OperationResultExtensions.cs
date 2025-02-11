@@ -57,5 +57,4 @@ public static partial class OperationResultExtensions
     {
         return result.Code == OperationResultCodes.Canceled;
     }
-
 }

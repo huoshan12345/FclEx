@@ -90,22 +90,18 @@ public readonly struct OperationResult<T> : IOperationResult
             ? CreateSuccess(result.Elapsed)
             : CreateError(result.Code, result.Exception!, result.Elapsed);
     }
-    
+
     public static implicit operator Task<OperationResult<T>>(OperationResult<T> result)
     {
         return result.ToTask();
     }
 
-    public OperationResult<TDest> ToExplicit<TDest>(Func<T, TDest> func)
+    // define here instead of an extension method to make it prioritized over the method object.CastTo.
+    public OperationResult<TDest> CastTo<TDest>()
     {
         return Success
-            ? new OperationResult<TDest>(func(Value)!, Elapsed)
-            : new OperationResult<TDest>(Code, Exception!, Elapsed);
-    }
-
-    public OperationResult<TDest> ToExplicit<TDest>()
-    {
-        return ToExplicit(m => m.CastTo<TDest>())!;
+            ? new OperationResult<TDest>(Value.CastTo<TDest>(), Elapsed)
+            : new OperationResult<TDest>(Code, Exception, Elapsed);
     }
 
     public void Deconstruct(out bool success, out T? value, out Exception? ex, out TimeSpan elapsed)

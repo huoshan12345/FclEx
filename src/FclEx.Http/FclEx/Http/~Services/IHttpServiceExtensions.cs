@@ -99,7 +99,7 @@ public static class IHttpServiceExtensions
         var response = await request.SendAsync(http);
         return response.HasError
             ? Operation.CreateObjectError(response, response.Exception!, response.Elapsed)
-                .ToExplicit<HttpFileDownloadInfo>()
+                .CastTo<HttpFileDownloadInfo>()
             : response.GetDownloadInfo();
     }
 

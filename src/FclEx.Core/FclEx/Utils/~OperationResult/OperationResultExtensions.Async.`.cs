@@ -106,7 +106,7 @@ partial class OperationResultExtensions
 
             return m.Result.Success
                 ? await next(m.Result.Value)
-                : m.Result.ToExplicit<TNext>();
+                : m.Result.CastTo<TNext>();
         }).Unwrap();
     }
 
