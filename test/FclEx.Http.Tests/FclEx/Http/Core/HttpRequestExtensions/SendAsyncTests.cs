@@ -134,7 +134,7 @@ public class SendAsyncTests : IAssemblyFixture<HttpFixture>
             .ThrowIfError()
             .IgnoreSyncContext();
 
-        Assert.False(response.HasError);
+        Assert.False(response.Error);
         var body = response.ResponseString;
         Assert.NotNull(body);
         var actual = HttpUtility.ParseQueryString(body).ToDictionary();
@@ -150,7 +150,7 @@ public class SendAsyncTests : IAssemblyFixture<HttpFixture>
             .SendAsync(TestHttp)
             .ThrowIfError()
             .IgnoreSyncContext();
-        Assert.False(response.HasError);
+        Assert.False(response.Error);
         var body = response.ResponseString.ToJsonNode();
         Assert.NotNull(body);
         var actual = body.Deserialize<List<int>>();
