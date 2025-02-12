@@ -8,6 +8,6 @@ public class TestUserClient : UserClient
 
     protected override Task<OperationResult> LoginActionAsync(CancellationToken token)
     {
-        return Operation.Success.ToTask();
+        return Operation.Success().ToTask();
     }
 }

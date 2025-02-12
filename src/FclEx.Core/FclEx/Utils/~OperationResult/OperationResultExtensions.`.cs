@@ -23,7 +23,7 @@ partial class OperationResultExtensions
         var (successful, innerResult, ex, elapsed) = result;
         return successful
             ? innerResult
-            : Operation.CreateError<T>(ex!, elapsed);
+            : Operation.Error<T>(ex!, elapsed);
     }
 
     public static OperationResult<TResult> Map<T, TResult>(this OperationResult<T> result, Func<T, TResult> func)

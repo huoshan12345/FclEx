@@ -103,7 +103,7 @@ public abstract class UserClient : IUserClient, IDisposable
 
     protected virtual Task<OperationResult> FakeLoginActionAsync(CancellationToken token)
     {
-        return Operation.Success.ToTask();
+        return Operation.Success().ToTask();
     }
 
     protected virtual void DisposeAction()
@@ -116,7 +116,7 @@ public abstract class UserClient : IUserClient, IDisposable
         if (IsOnline)
         {
             Logger.LogTrace("Already online");
-            return Operation.Success;
+            return Operation.Success();
         }
 
         using var _ = await LoginLocker.LockAsync(token);
@@ -124,11 +124,11 @@ public abstract class UserClient : IUserClient, IDisposable
         if (IsOnline)
         {
             Logger.LogTrace("Already online");
-            return Operation.Success;
+            return Operation.Success();
         }
 
         if (token.IsCancellationRequested)
-            return Operation.Cancel;
+            return Operation.Cancel();
 
         var time = ValueStopwatch.StartNew();
         try
@@ -170,7 +170,7 @@ public abstract class UserClient : IUserClient, IDisposable
     {
         HttpService.ClearAllCookies();
         Session.Offline();
-        return Operation.Success.ToTask();
+        return Operation.Success().ToTask();
     }
 
     public Task<OperationResult> FakeLoginAsync(bool loginIfFail = true, CancellationToken token = default)

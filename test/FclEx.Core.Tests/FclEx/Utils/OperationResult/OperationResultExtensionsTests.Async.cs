@@ -7,7 +7,7 @@ public partial class OperationResultExtensionsTests
     {
         var elapsed = TimeSpan.FromHours(1);
         TimeSpan timeSpan = default;
-        var result = await Operation.CreateSuccess(elapsed)
+        var result = await Operation.Success(elapsed)
             .ToTask()
             .Ok((_, t) => timeSpan = t);
 

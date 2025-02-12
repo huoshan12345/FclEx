@@ -17,7 +17,7 @@ partial class ExtensionsTests
     public async Task Next_OperationResult()
     {
         var (success, _, _, _) = await ResultAction.Create(1)
-            .Next(Operation.Success)
+            .Next(Operation.Success())
             .ExecuteAsync();
 
         Assert.True(success);

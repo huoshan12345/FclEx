@@ -156,7 +156,7 @@ namespace System.Text
                     char secondChar = source[1];
                     if (TryCreate(firstChar, secondChar, out result))
                     {
-                        // Success! Formed a supplementary scalar value.
+                        // Successful! Formed a supplementary scalar value.
                         charsConsumed = 2;
                         return OperationStatus.Done;
                     }

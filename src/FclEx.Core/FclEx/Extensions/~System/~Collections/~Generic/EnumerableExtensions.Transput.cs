@@ -46,7 +46,7 @@ partial class EnumerableExtensions
         {
             if (token.IsCancellationRequested)
             {
-                batch.Select(m => (m, Operation.CreateCancel<TResult>()))
+                batch.Select(m => (m, Operation.Cancel<TResult>()))
                     .ForEach(m => failure.Add(m));
             }
             else
@@ -84,7 +84,7 @@ partial class EnumerableExtensions
         {
             if (token.IsCancellationRequested)
             {
-                failure.Add((item, Operation.CreateCancel<TResult>()));
+                failure.Add((item, Operation.Cancel<TResult>()));
             }
             else
             {

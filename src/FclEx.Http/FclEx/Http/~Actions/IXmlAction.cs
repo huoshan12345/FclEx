@@ -34,7 +34,7 @@ public interface IXmlAction<T> : IHttpResponseHandler<T>
         var str = response.ResponseString;
         return str.IsPossibleXml()
             ? Operation.CreateSuccess(response.ResponseString)
-            : Operation.CreateError<string>("The response string is not a valid xml: " + str.Truncate(256));
+            : Operation.Error<string>("The response string is not a valid xml: " + str.Truncate(256));
     }
 
     OperationResult<T> GetResult(XmlActionContext context) => context.ResultElement!.ToObject<T>()!;
@@ -42,6 +42,6 @@ public interface IXmlAction<T> : IHttpResponseHandler<T>
 
 public interface IXmlAction : IXmlAction<Unit>
 {
-    OperationResult IXmlAction<Unit>.GetResult(XmlActionContext context) => Operation.Success;
+    OperationResult IXmlAction<Unit>.GetResult(XmlActionContext context) => Operation.Success();
 }
 #endif

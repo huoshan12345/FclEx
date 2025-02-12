@@ -99,10 +99,10 @@ partial class OperationResultExtensions
             var elapsed = watch.GetElapsedTime();
 
             if (task.Exception is { } ex)
-                return Operation.CreateError<TNext>(ex.GetBaseException(), elapsed);
+                return Operation.Error<TNext>(ex.GetBaseException(), elapsed);
 
             if (task.IsCanceled)
-                return Operation.CreateCancel<TNext>(elapsed);
+                return Operation.Cancel<TNext>(elapsed);
 
             return m.Result.Success
                 ? await next(m.Result.Value)
@@ -128,10 +128,10 @@ partial class OperationResultExtensions
             var elapsed = watch.GetElapsedTime();
 
             if (task.Exception is { } ex)
-                return Operation.CreateError<TNext>(ex.GetBaseException(), elapsed);
+                return Operation.Error<TNext>(ex.GetBaseException(), elapsed);
 
             if (task.IsCanceled)
-                return Operation.CreateCancel<TNext>(elapsed);
+                return Operation.Cancel<TNext>(elapsed);
 
             return await next(m.Result);
         }).Unwrap();

@@ -16,7 +16,7 @@ partial class OperationResultExtensionsTests
     public async Task Task_OperationResult_T_Next_Func_T_Task_OperationResult_TNext_Canceled()
     {
         {
-            var result = await Operation.Cancel.ToTask()
+            var result = await Operation.Cancel().ToTask()
                 .Next(m => Operation.CreateSuccess(m + "y").ToTask());
 
             Assert.False(result.Success);
@@ -63,7 +63,7 @@ partial class OperationResultExtensionsTests
             Assert.Equal("x", ex.Message);
         }
         {
-            var task = Operation.ExecuteAsync(() => Operation.CreateError("x"))
+            var task = Operation.ExecuteAsync(() => Operation.Error("x"))
                 .ThrowIfError();
 
             var ex = await Assert.ThrowsAsync<SimpleException>(() => task);

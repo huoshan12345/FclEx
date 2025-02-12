@@ -18,7 +18,7 @@ public partial class ExtensionsTests
     public async Task Union_Error_Begin_Test()
     {
         var flag = false;
-        var (successful, _, ex, _) = await CommonAction.Create(t => Operation.CreateError<int>("error"))
+        var (successful, _, ex, _) = await CommonAction.Create(t => Operation.Error<int>("error"))
             .Union(r => CommonAction.Create(t =>
             {
                 flag = true;
@@ -40,7 +40,7 @@ public partial class ExtensionsTests
             .Union(r =>
             {
                 Assert.Equal(1, r);
-                return CommonAction.Create(t => Operation.CreateError<int>("error"));
+                return CommonAction.Create(t => Operation.Error<int>("error"));
             })
             .Union((a, b) =>
             {
@@ -63,7 +63,7 @@ public partial class ExtensionsTests
             {
                 Assert.Equal(1, a);
                 Assert.Equal(2, b);
-                return CommonAction.Create(t => Operation.CreateError<int>("error"));
+                return CommonAction.Create(t => Operation.Error<int>("error"));
             })
             .ExecuteAsync();
 
@@ -74,8 +74,8 @@ public partial class ExtensionsTests
     [Fact]
     public async Task Union_Errors_Test()
     {
-        var (successful, _, ex, _) = await CommonAction.Create(t => Operation.CreateError<int>("error1"))
-            .Union(r => CommonAction.Create(t => Operation.CreateError<int>("error2")))
+        var (successful, _, ex, _) = await CommonAction.Create(t => Operation.Error<int>("error1"))
+            .Union(r => CommonAction.Create(t => Operation.Error<int>("error2")))
             .ExecuteAsync();
 
         Assert.False(successful);

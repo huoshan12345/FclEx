@@ -23,9 +23,9 @@ public interface IHtmlAction<T> : IHttpResponseHandler<T>
         var str = response.ResponseString;
         return str switch
         {
-            _ when str.IsNullOrEmpty() => Operation.CreateError<string>("The response string is empty"),
+            _ when str.IsNullOrEmpty() => Operation.Error<string>("The response string is empty"),
             _ when str.IsPossibleHtml() => Operation.CreateSuccess(response.ResponseString),
-            _ => Operation.CreateError<string>("The response string is not a valid html: " + str.Truncate(256))
+            _ => Operation.Error<string>("The response string is not a valid html: " + str.Truncate(256))
         };
     }
 
@@ -44,6 +44,6 @@ public interface IHtmlAction<T> : IHttpResponseHandler<T>
 
 public interface IHtmlAction : IHtmlAction<Unit>
 {
-    OperationResult IHtmlAction<Unit>.GetResult(HtmlActionContext context) => Operation.Success;
+    OperationResult IHtmlAction<Unit>.GetResult(HtmlActionContext context) => Operation.Success();
 }
 #endif

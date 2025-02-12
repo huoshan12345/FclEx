@@ -23,7 +23,7 @@ public interface IJsonAction<T> : IHttpResponseHandler<T>
         var str = response.ResponseString;
         return str.IsPossibleJson()
             ? Operation.CreateSuccess(response.ResponseString)
-            : Operation.CreateError<string>("The response string is not a valid json: " + str.Truncate(256));
+            : Operation.Error<string>("The response string is not a valid json: " + str.Truncate(256));
     }
 
     bool IsFailed(JsonActionContext context) => !context.ResultTokens.Any();
@@ -46,6 +46,6 @@ public interface IJsonAction<T> : IHttpResponseHandler<T>
 
 public interface IJsonAction : IJsonAction<Unit>
 {
-    OperationResult IJsonAction<Unit>.GetResult(JsonActionContext context) => Operation.Success;
+    OperationResult IJsonAction<Unit>.GetResult(JsonActionContext context) => Operation.Success();
 }
 #endif

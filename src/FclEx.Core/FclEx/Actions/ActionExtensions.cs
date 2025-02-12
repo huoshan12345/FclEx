@@ -73,7 +73,7 @@ public static partial class ActionExtensions
 
                 await TaskHelper.Delay(delay, t);
             }
-            return Operation.CreateCancel<T>();
+            return Operation.Cancel<T>();
         }, executeSafely);
     }
 

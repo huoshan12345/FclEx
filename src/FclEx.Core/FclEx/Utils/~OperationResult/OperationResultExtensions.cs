@@ -27,9 +27,9 @@ public static partial class OperationResultExtensions
         var exceptions = enumerable.EmptyIfNull().Select(m => m.Exception).NotNull().ToList();
         return exceptions.Count switch
         {
-            0 => CreateSuccess(time),
-            1 => CreateError(exceptions[0], time),
-            _ => CreateError(new AggregateException(exceptions), time)
+            0 => Success(time),
+            1 => Operation.Error(exceptions[0], time),
+            _ => Operation.Error(new AggregateException(exceptions), time)
         };
     }
 

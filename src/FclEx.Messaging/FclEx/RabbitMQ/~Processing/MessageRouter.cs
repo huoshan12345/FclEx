@@ -66,7 +66,7 @@ public abstract class MessageRouter<TInput, TOutput> : MessageConsumer<TInput, R
         {
             Logger.LogDebug("Null output has been discarded");
         }
-        return Operation.Success;
+        return Operation.Success();
     }
 
     protected override Task<OperationResult> ConsumeActionAsync(BasicDeliverEventArgs args, TInput message)

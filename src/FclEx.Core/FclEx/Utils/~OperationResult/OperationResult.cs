@@ -46,32 +46,32 @@ public readonly struct OperationResult<T> : IOperationResult
 
     public static implicit operator OperationResult<T>(Exception ex)
     {
-        return CreateError<T>(ex, TimeSpan.Zero);
+        return Error<T>(ex, TimeSpan.Zero);
     }
 
     public static implicit operator OperationResult<T>(string? error)
     {
-        return CreateError<T>(error, TimeSpan.Zero);
+        return Error<T>(error, TimeSpan.Zero);
     }
 
     public static implicit operator OperationResult<T>((string?, TimeSpan) paras)
     {
-        return CreateError<T>(paras.Item1, paras.Item2);
+        return Error<T>(paras.Item1, paras.Item2);
     }
 
     public static implicit operator OperationResult<T>((TimeSpan, string?) paras)
     {
-        return CreateError<T>(paras.Item2, paras.Item1);
+        return Error<T>(paras.Item2, paras.Item1);
     }
 
     public static implicit operator OperationResult<T>((Exception, TimeSpan) paras)
     {
-        return CreateError<T>(paras.Item1, paras.Item2);
+        return Error<T>(paras.Item1, paras.Item2);
     }
 
     public static implicit operator OperationResult<T>((TimeSpan, Exception) paras)
     {
-        return CreateError<T>(paras.Item2, paras.Item1);
+        return Error<T>(paras.Item2, paras.Item1);
     }
 
     public static implicit operator OperationResult<T>(T item)
@@ -87,8 +87,8 @@ public readonly struct OperationResult<T> : IOperationResult
     public static implicit operator OperationResult(OperationResult<T> result)
     {
         return result.Success
-            ? CreateSuccess(result.Elapsed)
-            : CreateError(result.Code, result.Exception!, result.Elapsed);
+            ? Success(result.Elapsed)
+            : Error(result.Code, result.Exception!, result.Elapsed);
     }
 
     public static implicit operator Task<OperationResult<T>>(OperationResult<T> result)
