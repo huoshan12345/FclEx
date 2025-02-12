@@ -33,7 +33,7 @@ public interface IXmlAction<T> : IHttpResponseHandler<T>
     {
         var str = response.ResponseString;
         return str.IsPossibleXml()
-            ? Operation.CreateSuccess(response.ResponseString)
+            ? Operation.Success(response.ResponseString)
             : Operation.Error<string>("The response string is not a valid xml: " + str.Truncate(256));
     }
 

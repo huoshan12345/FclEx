@@ -76,12 +76,12 @@ public readonly struct OperationResult<T> : IOperationResult
 
     public static implicit operator OperationResult<T>(T item)
     {
-        return CreateSuccess(item, TimeSpan.Zero);
+        return Success(item, TimeSpan.Zero);
     }
 
     public static implicit operator OperationResult<T>((T, TimeSpan) paras)
     {
-        return CreateSuccess(paras.Item1, paras.Item2);
+        return Success(paras.Item1, paras.Item2);
     }
 
     public static implicit operator OperationResult(OperationResult<T> result)

@@ -2,7 +2,7 @@
 
 public partial class Operation
 {
-    private static bool IsCancelException(Exception ex)
+    private static bool IsCanceled(Exception ex)
     {
         var t = ex.GetType();
         var isCancel = t == typeof(TaskCanceledException) || t == typeof(OperationCanceledException);
@@ -23,8 +23,8 @@ public partial class Operation
 
     public static OperationResult Error(Exception ex, TimeSpan elapsed = default)
     {
-        return new(IsCancelException(ex) ? OperationResultCodes.Canceled : OperationResultCodes.Exception, ex, elapsed);
+        return new(IsCanceled(ex) ? OperationResultCodes.Canceled : OperationResultCodes.Exception, ex, elapsed);
     }
 
-    public static OperationResult CreateNotImplemented() => Error(OperationResultCodes.NotImplemented, "the operation was not implemented", default);
+    public static OperationResult NotImplemented() => Error(OperationResultCodes.NotImplemented, "the operation was not implemented", default);
 }

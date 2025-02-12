@@ -24,7 +24,7 @@ public interface IHtmlAction<T> : IHttpResponseHandler<T>
         return str switch
         {
             _ when str.IsNullOrEmpty() => Operation.Error<string>("The response string is empty"),
-            _ when str.IsPossibleHtml() => Operation.CreateSuccess(response.ResponseString),
+            _ when str.IsPossibleHtml() => Operation.Success(response.ResponseString),
             _ => Operation.Error<string>("The response string is not a valid html: " + str.Truncate(256))
         };
     }

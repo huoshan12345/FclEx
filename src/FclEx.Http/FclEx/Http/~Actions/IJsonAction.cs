@@ -22,7 +22,7 @@ public interface IJsonAction<T> : IHttpResponseHandler<T>
     {
         var str = response.ResponseString;
         return str.IsPossibleJson()
-            ? Operation.CreateSuccess(response.ResponseString)
+            ? Operation.Success(response.ResponseString)
             : Operation.Error<string>("The response string is not a valid json: " + str.Truncate(256));
     }
 

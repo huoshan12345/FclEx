@@ -98,7 +98,7 @@ public static class IHttpServiceExtensions
 
         var response = await request.SendAsync(http);
         return response.Error
-            ? Operation.CreateObjectError(response, response.Exception!, response.Elapsed)
+            ? Operation.ObjectError(response, response.Exception!, response.Elapsed)
                 .CastTo<HttpFileDownloadInfo>()
             : response.GetDownloadInfo();
     }

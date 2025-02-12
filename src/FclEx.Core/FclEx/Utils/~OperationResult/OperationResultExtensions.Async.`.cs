@@ -117,7 +117,7 @@ partial class OperationResultExtensions
 
     public static Task<OperationResult<TNext>> Next<T, TNext>(this Task<OperationResult<T>> task, Func<T, TNext> next)
     {
-        return task.Next(m => Operation.CreateSuccess(next(m)));
+        return task.Next(m => Operation.Success(next(m)));
     }
 
     public static Task<OperationResult<TNext>> NextResult<T, TNext>(this Task<OperationResult<T>> task, Func<OperationResult<T>, Task<OperationResult<TNext>>> next)
@@ -144,7 +144,7 @@ partial class OperationResultExtensions
 
     public static Task<OperationResult<TNext>> NextResult<T, TNext>(this Task<OperationResult<T>> task, Func<OperationResult<T>, TNext> next)
     {
-        return task.NextResult(m => Operation.CreateSuccess(next(m)));
+        return task.NextResult(m => Operation.Success(next(m)));
     }
 
     public static Task<T> GetRequiredValue<T>(this Task<OperationResult<T>> task)

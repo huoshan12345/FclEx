@@ -13,6 +13,6 @@ public readonly struct SuccessAction<T> : IAction<T>
 
     public Task<OperationResult<T>> ExecuteAsync(CancellationToken token = default)
     {
-        return Operation.CreateSuccess(_obj, _timeSpan);
+        return Operation.Success(_obj, _timeSpan);
     }
 }
