@@ -2,12 +2,12 @@
 
 partial class OperationResultExtensions
 {
-    public static Task<OperationResult<T>> OkResult<T>(this Task<OperationResult<T>> task, Action<OperationResult<T>> action)
+    public static Task<OperationResult<T>> SuccessResult<T>(this Task<OperationResult<T>> task, Action<OperationResult<T>> action)
     {
         return task.When(m => m.Success, action);
     }
 
-    public static Task<OperationResult<T>> OkResult<T>(this Task<OperationResult<T>> task, Func<OperationResult<T>, Task> action)
+    public static Task<OperationResult<T>> SuccessResult<T>(this Task<OperationResult<T>> task, Func<OperationResult<T>, Task> action)
     {
         return task.When(m => m.Success, action);
     }
@@ -32,24 +32,24 @@ partial class OperationResultExtensions
         return task.When(r => r.IsCanceled(), action);
     }
 
-    public static Task<OperationResult<T>> Ok<T>(this Task<OperationResult<T>> task, Action<T, TimeSpan> action)
+    public static Task<OperationResult<T>> Success<T>(this Task<OperationResult<T>> task, Action<T, TimeSpan> action)
     {
-        return task.OkResult(t => action(t.Value!, t.Elapsed));
+        return task.SuccessResult(t => action(t.Value!, t.Elapsed));
     }
 
-    public static Task<OperationResult<T>> Ok<T>(this Task<OperationResult<T>> task, Action<T> action)
+    public static Task<OperationResult<T>> Success<T>(this Task<OperationResult<T>> task, Action<T> action)
     {
-        return task.Ok((r, t) => action(r));
+        return task.Success((r, t) => action(r));
     }
 
-    public static Task<OperationResult<T>> Ok<T>(this Task<OperationResult<T>> task, Func<T, TimeSpan, Task> action)
+    public static Task<OperationResult<T>> Success<T>(this Task<OperationResult<T>> task, Func<T, TimeSpan, Task> action)
     {
-        return task.OkResult(t => action(t.Value!, t.Elapsed));
+        return task.SuccessResult(t => action(t.Value!, t.Elapsed));
     }
 
-    public static Task<OperationResult<T>> Ok<T>(this Task<OperationResult<T>> task, Func<T, Task> action)
+    public static Task<OperationResult<T>> Success<T>(this Task<OperationResult<T>> task, Func<T, Task> action)
     {
-        return task.Ok((r, t) => action(r));
+        return task.Success((r, t) => action(r));
     }
 
     public static Task<OperationResult<T>> Error<T>(this Task<OperationResult<T>> task, Action<Exception, TimeSpan> action)
@@ -99,10 +99,10 @@ partial class OperationResultExtensions
             var elapsed = watch.GetElapsedTime();
 
             if (task.Exception is { } ex)
-                return Operation.CreateError<TNext>(ex.GetBaseException(), elapsed);
+                return Operation.Error<TNext>(ex.GetBaseException(), elapsed);
 
             if (task.IsCanceled)
-                return Operation.CreateCancel<TNext>(elapsed);
+                return Operation.Cancel<TNext>(elapsed);
 
             return m.Result.Success
                 ? await next(m.Result.Value)
@@ -117,7 +117,7 @@ partial class OperationResultExtensions
 
     public static Task<OperationResult<TNext>> Next<T, TNext>(this Task<OperationResult<T>> task, Func<T, TNext> next)
     {
-        return task.Next(m => Operation.CreateSuccess(next(m)));
+        return task.Next(m => Operation.Success(next(m)));
     }
 
     public static Task<OperationResult<TNext>> NextResult<T, TNext>(this Task<OperationResult<T>> task, Func<OperationResult<T>, Task<OperationResult<TNext>>> next)
@@ -128,10 +128,10 @@ partial class OperationResultExtensions
             var elapsed = watch.GetElapsedTime();
 
             if (task.Exception is { } ex)
-                return Operation.CreateError<TNext>(ex.GetBaseException(), elapsed);
+                return Operation.Error<TNext>(ex.GetBaseException(), elapsed);
 
             if (task.IsCanceled)
-                return Operation.CreateCancel<TNext>(elapsed);
+                return Operation.Cancel<TNext>(elapsed);
 
             return await next(m.Result);
         }).Unwrap();
@@ -144,7 +144,7 @@ partial class OperationResultExtensions
 
     public static Task<OperationResult<TNext>> NextResult<T, TNext>(this Task<OperationResult<T>> task, Func<OperationResult<T>, TNext> next)
     {
-        return task.NextResult(m => Operation.CreateSuccess(next(m)));
+        return task.NextResult(m => Operation.Success(next(m)));
     }
 
     public static Task<T> GetRequiredValue<T>(this Task<OperationResult<T>> task)

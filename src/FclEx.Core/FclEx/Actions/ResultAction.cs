@@ -4,7 +4,7 @@ public static class ResultAction
 {
     public static ResultAction<T> Create<T>(OperationResult<T> result) => new(result);
     public static ResultAction<T> Create<T>(T value, TimeSpan elapsed = default) 
-        => new(Operation.CreateSuccess(value, elapsed));
+        => new(Operation.Success(value, elapsed));
 }
 
 public readonly struct ResultAction<T> : IAction<T>

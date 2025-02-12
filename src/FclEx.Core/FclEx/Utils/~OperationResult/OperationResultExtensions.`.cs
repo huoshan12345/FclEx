@@ -23,7 +23,7 @@ partial class OperationResultExtensions
         var (successful, innerResult, ex, elapsed) = result;
         return successful
             ? innerResult
-            : Operation.CreateError<T>(ex!, elapsed);
+            : Operation.Error<T>(ex!, elapsed);
     }
 
     public static OperationResult<TResult> Map<T, TResult>(this OperationResult<T> result, Func<T, TResult> func)
@@ -47,7 +47,7 @@ partial class OperationResultExtensions
         return result;
     }
 
-    public static OperationResult<T> OkResult<T>(this OperationResult<T> result, Action<OperationResult<T>> action)
+    public static OperationResult<T> SuccessResult<T>(this OperationResult<T> result, Action<OperationResult<T>> action)
     {
         return result.On(m => m.Success, action);
     }
@@ -57,14 +57,14 @@ partial class OperationResultExtensions
         return result.On(m => m.Error, action);
     }
 
-    public static OperationResult<T> Ok<T>(this OperationResult<T> result, Action<T, TimeSpan> action)
+    public static OperationResult<T> Success<T>(this OperationResult<T> result, Action<T, TimeSpan> action)
     {
-        return result.OkResult(r => action(r.Value!, r.Elapsed));
+        return result.SuccessResult(r => action(r.Value!, r.Elapsed));
     }
 
-    public static OperationResult<T> Ok<T>(this OperationResult<T> result, Action<T> action)
+    public static OperationResult<T> Success<T>(this OperationResult<T> result, Action<T> action)
     {
-        return result.OkResult(r => action(r.Value!));
+        return result.SuccessResult(r => action(r.Value!));
     }
 
     public static OperationResult<T> Error<T>(this OperationResult<T> result, Action<Exception, TimeSpan> action)

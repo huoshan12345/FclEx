@@ -23,7 +23,7 @@ public readonly struct ErrorAction<T> : IAction<T>
     public Task<OperationResult<T>> ExecuteAsync(CancellationToken token = default)
     {
         return _ex is null 
-            ? Operation.CreateError<T>(_error, _timeSpan)
-            : Operation.CreateError<T>(_ex, _timeSpan);
+            ? Operation.Error<T>(_error, _timeSpan)
+            : Operation.Error<T>(_ex, _timeSpan);
     }
 }

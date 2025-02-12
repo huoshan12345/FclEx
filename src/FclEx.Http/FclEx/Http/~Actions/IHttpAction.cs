@@ -21,7 +21,7 @@ public interface IHttpAction<T> : IAbstractAction<T>
         {
             request = BuildRequest();
             var response = await HttpService.SendAsync(request, token).IgnoreSyncContext();
-            if (response.HasError)
+            if (response.Error)
             {
 #if DEBUG
                 Dump(request, HttpService);

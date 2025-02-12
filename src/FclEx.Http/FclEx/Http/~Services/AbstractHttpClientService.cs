@@ -34,7 +34,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         }
     }
 
-    protected static async Task ReadContentAsync(HttpResponseMessage responseMessage, HttpResponse response, CancellationToken token)
+    protected virtual async Task ReadContentAsync(HttpResponseMessage responseMessage, HttpResponse response, CancellationToken token)
     {
         var request = response.Request;
         foreach (var (key, value) in responseMessage.Content.Headers)
@@ -58,7 +58,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             case HttpContentType.String:
             {
                 var bytes = await responseMessage.Content.ReadAsByteArrayAsync(request.BufferSize, request.ReadBufferTimeout, token);
-                (response.ResponseString, response.Encoding) = ReadBufferAsString(bytes, responseMessage.Content.Headers, request.CharSet, request.DetectCharSet, request.FallbackCharSet);
+                (response.ResponseString, response.Encoding) = ReadBufferAsString(bytes, responseMessage.Content.Headers, request.CharSet, request.DetectCharSet, request.FallbackCharSet, request.IgnoreInvalidCharSet);
                 break;
             }
             default:
@@ -66,32 +66,34 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         }
     }
 
-    protected static Encoding? GetEncodingFromCharSet(string? charset)
+    protected Encoding? GetEncodingFromCharSet(string? charSet, bool ignoreInvalidCharSet)
     {
-        if (charset.IsNullOrEmpty())
+        if (charSet.IsNullOrEmpty())
             return null;
 
         try
         {
-            // Remove at most a single set of quotes.
-            if (charset!.Length > 2 &&
-                charset[0] == '\"' &&
-                charset[^1] == '\"')
-            {
-                return Encoding.GetEncoding(charset.Substring(1, charset.Length - 2));
-            }
-            else
-            {
-                return Encoding.GetEncoding(charset);
-            }
+            return GetEncoding(charSet.Trim('\'').Trim('"'));
         }
-        catch (ArgumentException ex)
+        catch (Exception ex)
         {
-            throw new InvalidOperationException($"The character set '{charset}' provided in ContentType is invalid due to {ex.Message}", ex);
+            if (ignoreInvalidCharSet == false)
+                throw new InvalidOperationException($"The character set '{charSet}' is invalid due to {ex.Message}", ex);
+
+            return null;
         }
     }
 
-    protected static (string, Encoding) ReadBufferAsString(Span<byte> buffer, HttpContentHeaders headers, string? charSet, bool detectCharSet, string? defaultCharSet)
+    protected virtual Encoding GetEncoding(string charSet)
+    {
+        return charSet switch
+        {
+            "utf8" => Encoding.UTF8,
+            _ => Encoding.GetEncoding(charSet),
+        };
+    }
+
+    protected virtual (string, Encoding) ReadBufferAsString(Span<byte> buffer, HttpContentHeaders headers, string? charSet, bool detectCharSet, string? defaultCharSet, bool ignoreInvalidCharSet)
     {
         charSet = (charSet, headers.ContentType?.CharSet).FirstNotEmpty();
         // We don't validate the Content-Encoding header: If the content was encoded, it's the caller's
@@ -106,9 +108,13 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         // the content to a string.
         if (charSet.IsNotEmpty())
         {
-            encoding = GetEncodingFromCharSet(charSet);
-            // Byte-order-mark (BOM) characters may be present even if a charset was specified.
-            bomLength = EncodingHelper.GetPreambleLength(buffer, encoding!);
+            encoding = GetEncodingFromCharSet(charSet, ignoreInvalidCharSet);
+
+            if (encoding is not null)
+            {
+                // Byte-order-mark (BOM) characters may be present even if a charset was specified.
+                bomLength = EncodingHelper.GetPreambleLength(buffer, encoding);
+            }
         }
 
         // If no content encoding is listed in the ContentType HTTP header, or no Content-Type header present,
@@ -132,7 +138,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             }
         }
 
-        encoding ??= GetEncodingFromCharSet(defaultCharSet) ?? DefaultEncoding;
+        encoding ??= GetEncodingFromCharSet(defaultCharSet, ignoreInvalidCharSet) ?? DefaultEncoding;
 
         // Drop the BOM when decoding the data.
         var str = encoding.GetString(buffer[bomLength..]);

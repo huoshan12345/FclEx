@@ -48,7 +48,7 @@ public readonly struct NextAction<T, TNext> : IAction<TNext>
 //    public async Task<OperationResult<T>> ExecuteAsync(CancellationToken token = default)
 //    {
 //        var result = await _action.ExecuteAsync(token).IgnoreSyncContext();
-//        if (!result.Success)
+//        if (!result.Successful)
 //            return result;
 
 //        var nextActor = _next(result.Value!);
@@ -60,7 +60,7 @@ public readonly struct NextAction<T, TNext> : IAction<TNext>
 //        }
 
 //        var nextResult = await nextActor.ExecuteAsync(token).IgnoreSyncContext();
-//        if (!nextResult.Success)
+//        if (!nextResult.Successful)
 //            return _prevWhenNextError
 //                ? result
 //                : nextResult;

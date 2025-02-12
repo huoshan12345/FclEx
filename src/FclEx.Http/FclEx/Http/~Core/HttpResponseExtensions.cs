@@ -13,7 +13,7 @@ public static class HttpResponseExtensions
 
     public static HttpResponse ThrowIfError(this HttpResponse response)
     {
-        if (response.HasError)
+        if (response.Error)
             response.Exception.ReThrow();
         return response;
     }
@@ -40,7 +40,7 @@ public static class HttpResponseExtensions
 
         var str = response.ResponseString;
         if (!str.IsPossibleJson())
-            return Operation.CreateError<T>("Can not parse json from empty string");
+            return Operation.Error<T>("Can not parse json from empty string");
 
         var doc = JsonDocument.Parse(str, new()
         {
@@ -55,7 +55,7 @@ public static class HttpResponseExtensions
 
         return element.HasValue
             ? element.Value.Deserialize<T>(options)!
-            : Operation.CreateError<T>("The path does not exist in json: " + path);
+            : Operation.Error<T>("The path does not exist in json: " + path);
     }
 
     private static readonly Regex _regexOfNonWord = new(@"\W", RegexOptions.Compiled);
@@ -102,17 +102,17 @@ public static class HttpResponseExtensions
 
     public static Task<HttpResponse> Error(this Task<HttpResponse> task, Action<Exception> action)
     {
-        return task.When(m => m.HasError, m => action(m.Exception!));
+        return task.When(m => m.Error, m => action(m.Exception!));
     }
 
     public static Task<HttpResponse> Ok(this Task<HttpResponse> task, Action<HttpResponse> action)
     {
-        return task.When(m => !m.HasError, action);
+        return task.When(m => !m.Error, action);
     }
 
     public static Task<HttpResponse> Ok(this Task<HttpResponse> task, Func<HttpResponse, Task> action)
     {
-        return task.When(m => !m.HasError, action);
+        return task.When(m => !m.Error, action);
     }
 
     public static HttpResponse AddCookies(this HttpResponse response, IEnumerable<string> cookies)

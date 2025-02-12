@@ -6,8 +6,8 @@ public interface IAbstractAction<T> : IAction<T>
     Task<OperationResult<T>> ExecuteActionAsync(CancellationToken token = default);
 
     string GetName() => GetType().ShortName();
-    Task<OperationResult<T>> HandleCancellationAsync(Exception ex) => Operation.CreateCancel<T>(ex);
-    Task<OperationResult<T>> HandleErrorAsync(Exception ex) => Operation.CreateError<T>(ex);
+    Task<OperationResult<T>> HandleCancellationAsync(Exception ex) => Operation.Cancel<T>(ex);
+    Task<OperationResult<T>> HandleErrorAsync(Exception ex) => Operation.Error<T>(ex);
 
     async Task<OperationResult<T>> IAction<T>.ExecuteAsync(CancellationToken token)
     {

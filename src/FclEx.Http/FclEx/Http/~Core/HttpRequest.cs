@@ -26,6 +26,7 @@ public partial class HttpRequest
     public string? CharSet { get; set; }
     public bool DetectCharSet { get; set; }
     public string? FallbackCharSet { get; set; }
+    public bool IgnoreInvalidCharSet { get; set; } = true;
     public CompressionMethod CompressionMethod { get; set; } = CompressionMethod.None;
     public CompressionLevel CompressionLevel { get; set; } = CompressionLevel.NoCompression;
     public HttpContentType ReadContentType { get; set; } = HttpContentType.String;

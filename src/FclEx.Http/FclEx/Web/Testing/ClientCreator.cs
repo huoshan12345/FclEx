@@ -67,7 +67,7 @@ public class ClientCreator<TClient>(IServiceProvider provider) where TClient : I
         if (!client.IsOnline && options.Login)
         {
             await client.LoginAsync()
-                .Ok(_ => SaveCookies(client));
+                .Success(_ => SaveCookies(client));
         }
 
         return client;

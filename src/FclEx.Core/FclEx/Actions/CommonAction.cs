@@ -4,12 +4,12 @@ public class CommonAction
 {
     public static CommonAction<T> Create<T>(Func<CancellationToken, T> func, bool executeSafely = true)
     {
-        return new(t => Operation.CreateSuccess(func(t)), executeSafely);
+        return new(t => Operation.Success(func(t)), executeSafely);
     }
 
     public static CommonAction<T> Create<T>(Func<CancellationToken, Task<T>> func, bool executeSafely = true)
     {
-        return new(async t => Operation.CreateSuccess(await func(t).IgnoreSyncContext()), executeSafely);
+        return new(async t => Operation.Success(await func(t).IgnoreSyncContext()), executeSafely);
     }
 
     public static CommonAction<T> Create<T>(Func<CancellationToken, OperationResult<T>> func, bool executeSafely = true)
@@ -27,7 +27,7 @@ public class CommonAction
         return new(t =>
         {
             func(t);
-            return Operation.CreateSuccess(default(Unit)).ToTask();
+            return Operation.Success(default(Unit)).ToTask();
         }, executeSafely);
     }
 
@@ -36,7 +36,7 @@ public class CommonAction
         return new(async t =>
         {
             await func(t).IgnoreSyncContext();
-            return Operation.CreateSuccess(default(Unit));
+            return Operation.Success(default(Unit));
         }, executeSafely);
     }
 

@@ -77,7 +77,7 @@ public class PropertyTests
             .IgnoreSyncContext();
 
         Assert.True(response.StatusCode.IsSuccess(), response.ResponseString);
-        Assert.False(response.HasError, response.Exception?.Message);
+        Assert.False(response.Error, response.Exception?.Message);
 
         var returned = response.ResponseString.FromJson<MockApiModel>();
         AssertEx.EveryMemberEqual(model, returned);
@@ -99,7 +99,7 @@ public class PropertyTests
             .IgnoreSyncContext();
 
         Assert.True(response.StatusCode.IsSuccess(), response.ResponseString);
-        Assert.False(response.HasError, response.Exception?.Message);
+        Assert.False(response.Error, response.Exception?.Message);
 
         var token = response.ResponseString.ToJsonNode();
 

@@ -14,7 +14,7 @@ partial class Operation
         try
         {
             await TaskHelper.Run(action, timeout).IgnoreSyncContext();
-            return CreateSuccess(watch.GetElapsedTime());
+            return Success(watch.GetElapsedTime());
         }
         catch (Exception ex)
         {
@@ -72,7 +72,7 @@ partial class Operation
         try
         {
             await TaskHelper.Run(action, timeout);
-            return CreateSuccess(watch.GetElapsedTime());
+            return Success(watch.GetElapsedTime());
         }
         catch (Exception ex)
         {

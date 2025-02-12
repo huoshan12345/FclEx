@@ -29,6 +29,6 @@ public abstract class MultipleMessageRouter<TInput, TOutput> : MessageRouter<TIn
             var key = GetRoutingKey(properties, item);
             await BasicPublishAsync(Channel, Settings.TargetExchange.Name, item, key, properties);
         }
-        return Operation.Success;
+        return Operation.Success();
     }
 }

@@ -7,8 +7,11 @@ public class HttpResponse
         Request = request ?? throw new ArgumentNullException(nameof(request));
     }
 
+    [MemberNotNullWhen(false, nameof(Exception))]
+    public bool Success => Exception is null;
+
     [MemberNotNullWhen(true, nameof(Exception))]
-    public bool HasError => Exception != null;
+    public bool Error => Exception != null;
     public Exception? Exception { get; internal set; }
 
     public HttpRequest Request { get; }

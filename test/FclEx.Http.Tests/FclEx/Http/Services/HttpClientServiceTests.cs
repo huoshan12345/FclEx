@@ -20,7 +20,7 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
         {
             var response = await HttpRequest.Get("https://www.baidu.com")
                 .SendAsync(service);
-            AssertEx.False(response.HasError, () => response.Exception!.ToString());
+            AssertEx.False(response.Error, () => response.Exception!.ToString());
         }
     }
 
@@ -168,7 +168,7 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
             .ReadHeadersTimeout(timeout)
             .SendAsync(http);
 
-        Assert.True(response.HasError);
+        Assert.True(response.Error);
         output.WriteLine(response.Exception.ToString());
 
         Assert.IsType<TaskCanceledException>(response.Exception);

@@ -6,7 +6,7 @@ partial class OperationResultExtensionsTests
     public async Task Task_OperationResult_T_Next_Func_T_Task_OperationResult_TNext()
     {
         var result = await Operation.ExecuteAsync(() => "x")
-            .Next(m => Operation.CreateSuccess(m + "y").ToTask());
+            .Next(m => Operation.Success(m + "y").ToTask());
 
         Assert.True(result.Success);
         Assert.Equal("xy", result.Value);
@@ -16,8 +16,8 @@ partial class OperationResultExtensionsTests
     public async Task Task_OperationResult_T_Next_Func_T_Task_OperationResult_TNext_Canceled()
     {
         {
-            var result = await Operation.Cancel.ToTask()
-                .Next(m => Operation.CreateSuccess(m + "y").ToTask());
+            var result = await Operation.Cancel().ToTask()
+                .Next(m => Operation.Success(m + "y").ToTask());
 
             Assert.False(result.Success);
             Assert.True(result.IsCanceled());
@@ -25,7 +25,7 @@ partial class OperationResultExtensionsTests
         {
             var token = new CancellationToken(true);
             var result = await Task.FromCanceled<OperationResult<string>>(token)
-                .Next(m => Operation.CreateSuccess(m + "y").ToTask());
+                .Next(m => Operation.Success(m + "y").ToTask());
 
             Assert.False(result.Success);
             Assert.True(result.IsCanceled());
@@ -36,7 +36,7 @@ partial class OperationResultExtensionsTests
     public async Task Task_OperationResult_T_Next_Func_T_OperationResult_TNext()
     {
         var result = await Operation.ExecuteAsync(() => "x")
-            .Next(m => Operation.CreateSuccess(m + "y"));
+            .Next(m => Operation.Success(m + "y"));
 
         Assert.True(result.Success);
         Assert.Equal("xy", result.Value);
@@ -63,7 +63,7 @@ partial class OperationResultExtensionsTests
             Assert.Equal("x", ex.Message);
         }
         {
-            var task = Operation.ExecuteAsync(() => Operation.CreateError("x"))
+            var task = Operation.ExecuteAsync(() => Operation.Error("x"))
                 .ThrowIfError();
 
             var ex = await Assert.ThrowsAsync<SimpleException>(() => task);

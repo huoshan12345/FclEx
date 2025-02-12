@@ -8,7 +8,7 @@ public static partial class Operation
         try
         {
             action();
-            return CreateSuccess(watch.GetElapsedTime());
+            return Success(watch.GetElapsedTime());
         }
         catch (Exception ex)
         {

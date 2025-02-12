@@ -20,5 +20,5 @@ public readonly record struct ProcessingItem<T>(T Item, int ErrorTimes = 0, Exce
         return new ProcessingItem<T1>(item) { ErrorTimes = ErrorTimes, Exception = Exception };
     }
 
-    public bool HasError => ErrorTimes > 0;
+    public bool Error => ErrorTimes > 0;
 }

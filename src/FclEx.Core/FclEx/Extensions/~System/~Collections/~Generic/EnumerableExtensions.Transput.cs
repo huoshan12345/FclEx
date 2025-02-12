@@ -28,7 +28,7 @@ partial class EnumerableExtensions
     public static Task<OperationTransputs<T, TResult>> ToOperationTransputs<T, TResult>(this IEnumerable<T> enumerable, 
         Func<T, Task<TResult>> taskSelector, int batchSize, CancellationToken token = default)
     {
-        return enumerable.ToOperationTransputs(async m => Operation.CreateSuccess(await taskSelector(m)), batchSize, token);
+        return enumerable.ToOperationTransputs(async m => Operation.Success(await taskSelector(m)), batchSize, token);
     }
 
     public static async Task<OperationTransputs<T, TResult>> ToOperationTransputs<T, TResult>(this IEnumerable<T> enumerable, 
@@ -46,7 +46,7 @@ partial class EnumerableExtensions
         {
             if (token.IsCancellationRequested)
             {
-                batch.Select(m => (m, Operation.CreateCancel<TResult>()))
+                batch.Select(m => (m, Operation.Cancel<TResult>()))
                     .ForEach(m => failure.Add(m));
             }
             else
@@ -67,7 +67,7 @@ partial class EnumerableExtensions
     public static Task<OperationTransputs<T, TResult>> ToOperationTransputsSerially<T, TResult>(this IEnumerable<T> enumerable,
         Func<T, Task<TResult>> taskSelector, int intervalSeconds = 0, CancellationToken token = default)
     {
-        return enumerable.ToOperationTransputsSerially(async m => Operation.CreateSuccess(await taskSelector(m)), intervalSeconds, token);
+        return enumerable.ToOperationTransputsSerially(async m => Operation.Success(await taskSelector(m)), intervalSeconds, token);
     }
 
     public static async Task<OperationTransputs<T, TResult>> ToOperationTransputsSerially<T, TResult>(this IEnumerable<T> enumerable,
@@ -84,7 +84,7 @@ partial class EnumerableExtensions
         {
             if (token.IsCancellationRequested)
             {
-                failure.Add((item, Operation.CreateCancel<TResult>()));
+                failure.Add((item, Operation.Cancel<TResult>()));
             }
             else
             {
