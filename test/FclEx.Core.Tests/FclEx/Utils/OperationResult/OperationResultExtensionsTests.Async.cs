@@ -9,7 +9,7 @@ public partial class OperationResultExtensionsTests
         TimeSpan timeSpan = default;
         var result = await Operation.Success(elapsed)
             .ToTask()
-            .Ok((_, t) => timeSpan = t);
+            .Success((_, t) => timeSpan = t);
 
         Assert.True(result.Success);
         Assert.Equal(elapsed, timeSpan);

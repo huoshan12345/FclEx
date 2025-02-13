@@ -28,6 +28,6 @@ public class HttpServiceExtensionsTests
         var (successful, _, ex, _) = await http.DownloadAsync(url).IgnoreSyncContext();
 
         AssertEx.False(successful, () => ex!.ToString());
-        Assert.True(ex.IsObjEx<HttpResponse>(m => m.StatusCode == HttpStatusCode.Forbidden));
+        Assert.True(ex.IsObjectException<HttpResponse>(m => m.StatusCode == HttpStatusCode.Forbidden));
     }
 }

@@ -95,7 +95,7 @@ public abstract class UserClient : IUserClient, IDisposable
     {
         Logger.LogDebug("Start to login...");
         return LoginActionAsync(token)
-            .Ok(o => Logger.LogDebug("Login successfully"))
+            .Success(o => Logger.LogDebug("Login successfully"))
             .Error(ex => Logger.LogWarning(ex, "Failed to login: " + ex.Message));
     }
 
@@ -135,7 +135,7 @@ public abstract class UserClient : IUserClient, IDisposable
         {
             Session.LoggingIn();
             var response = await loginAction(token)
-                .Ok(_ => Session.Online())
+                .Success(_ => Session.Online())
                 .Error(_ =>
                 {
                     if (Session.IsLoggingIn())
@@ -179,7 +179,7 @@ public abstract class UserClient : IUserClient, IDisposable
         {
             Logger.LogTrace("Start to fake login...");
             var result = await FakeLoginActionAsync(t)
-                .Ok(o => Logger.LogTrace("Fake login successfully"))
+                .Success(o => Logger.LogTrace("Fake login successfully"))
                 .Error(ex => Logger.LogWarning(ex, "Failed to fake login: " + ex.Message))
                 .IgnoreSyncContext();
 

@@ -103,7 +103,7 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
         try
         {
             var result = await ConsumeActionAsync(args, obj)
-                .Ok(t => Logger.LogTrace("Consume successfully"))
+                .Success(t => Logger.LogTrace("Consume successfully"))
                 .Error(e => exception = e)
                 .IgnoreSyncContext();
 

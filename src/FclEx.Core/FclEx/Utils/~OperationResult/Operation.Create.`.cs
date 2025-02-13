@@ -16,7 +16,7 @@ public partial class Operation
 
     public static OperationResult<T> Error<T>(Exception ex, TimeSpan elapsed = default)
     {
-        return new OperationResult<T>(IsCanceled(ex) ? OperationResultCodes.Canceled : OperationResultCodes.Exception, ex, elapsed);
+        return new OperationResult<T>(ex.IsCanceled() ? OperationResultCodes.Canceled : OperationResultCodes.Exception, ex, elapsed);
     }
 
     public static OperationResult<T> ObjectError<T>(T obj, string error, TimeSpan elapsed = default) where T : notnull
@@ -26,13 +26,13 @@ public partial class Operation
 
     public static OperationResult<T> ObjectError<T>(T obj, Exception ex, TimeSpan elapsed = default) where T : notnull
     {
-        var code = IsCanceled(ex) ? OperationResultCodes.Canceled : OperationResultCodes.Exception;
+        var code = ex.IsCanceled() ? OperationResultCodes.Canceled : OperationResultCodes.Exception;
         return new(code, ObjectException.Create(obj, ex.Message, ex), elapsed);
     }
 
     public static OperationResult<TResult> ObjectError<T, TResult>(T obj, Exception ex, TimeSpan elapsed = default) where T : notnull
     {
-        var code = IsCanceled(ex)
+        var code = ex.IsCanceled()
             ? OperationResultCodes.Canceled
             : OperationResultCodes.Exception;
         var objEx = ObjectException.Create(obj, ex.Message, ex);
