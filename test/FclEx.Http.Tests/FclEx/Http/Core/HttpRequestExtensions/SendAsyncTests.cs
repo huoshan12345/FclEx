@@ -67,7 +67,7 @@ public class SendAsyncTests : IAssemblyFixture<HttpFixture>
                 .UnicastAddresses
                 .Select(m => m.Address)
                 .ToArray();
-         
+
             return addresses.Any(m => m.IsIPv6() && m.IsPrivate() == false);
         }
         catch (NetworkInformationException)
@@ -155,5 +155,43 @@ public class SendAsyncTests : IAssemblyFixture<HttpFixture>
         Assert.NotNull(body);
         var actual = body.Deserialize<List<int>>();
         Assert.True(list.SequenceEqual(actual!));
+    }
+
+    [Theory]
+    [InlineData("utf8")]
+    [InlineData("utf-8")]
+    [InlineData("UTF-8")]
+    [InlineData("\"gbk\"")]
+    [InlineData("'gbk'")]
+    [InlineData("gbk")]
+    [InlineData("gb2312")]
+    [InlineData("gb18030")]
+    [InlineData("big5")]
+    [InlineData("ISO-8859-1")]
+    public async Task CharSet_Test(string charSet)
+    {
+        var response = await HttpRequest.Post("api/charset")
+            .AddQueryParam("charset", charSet)
+            .SendAsync(TestHttp)
+            .ThrowIfError()
+            .IgnoreSyncContext();
+
+        Assert.False(response.Error);
+        var contentType = response.Headers.Get(HttpKnownHeaderNames.ContentType).FirstOrDefault();
+        Assert.NotNull(contentType);
+        Assert.Contains(charSet, contentType);
+
+        var expectedEncoding = GetEncoding(charSet);
+        Assert.Equal(expectedEncoding, response.Encoding);
+
+        static Encoding GetEncoding(string charSet)
+        {
+            charSet = charSet.Trim('\'').Trim('"');
+            return charSet switch
+            {
+                "utf8" => Encoding.UTF8,
+                _ => Encoding.GetEncoding(charSet),
+            };
+        }
     }
 }

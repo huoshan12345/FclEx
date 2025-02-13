@@ -1,6 +1,8 @@
-﻿namespace FclEx.Http.Tests;
+﻿using FclEx.Tests;
 
-public class HttpFixture : IAsyncLifetime
+namespace FclEx.Http.Tests;
+
+public class HttpFixture : GlobalFixture
 {
     public static readonly Uri TestUri = ((Func<Uri>)(() =>
     {
@@ -87,16 +89,16 @@ public class HttpFixture : IAsyncLifetime
             await context.Response.WriteAsync(obj.ToString());
         });
 
+        app.MapPost("/api/charset", (HttpContext context, string charSet) =>
+        {
+            context.Response.ContentType = $"text/plain;charset={charSet}";
+        });
+
         await app.StartAsync();
     }
 
-    public async Task InitializeAsync()
+    public override async Task InitializeAsync()
     {
         await RunApiServer();
-    }
-
-    public Task DisposeAsync()
-    {
-        return Task.CompletedTask;
     }
 }

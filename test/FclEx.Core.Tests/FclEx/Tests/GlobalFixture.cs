@@ -37,7 +37,7 @@ public class GlobalFixture : IAsyncLifetime
     public Assembly CurrentAssembly { get; }
 
     [ModuleInitializer]
-    internal static void Initialize()
+    public static void Initialize()
     {
         ThreadPool.SetMinThreads(100, 100);
 #pragma warning disable SYSLIB0014

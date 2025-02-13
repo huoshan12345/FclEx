@@ -1,6 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <Compile Remove="FclEx\Http\Extensions\**" />
+    <EmbeddedResource Remove="FclEx\Http\Extensions\**" />
+    <None Remove="FclEx\Http\Extensions\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!--to support C# feature like required keyword in lower dotnet versions-->
     <PackageReference Include="PolySharp" Version="1.15.0" PrivateAssets="all" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
@@ -16,10 +22,6 @@
     <None Update="TestData\SimpleCookies.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="FclEx\Http\Extensions\" />
   </ItemGroup>
 
 </Project>
