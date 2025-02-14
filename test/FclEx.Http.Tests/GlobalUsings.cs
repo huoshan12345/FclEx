@@ -12,6 +12,7 @@ global using FclEx.AspNetCore;
 global using FclEx.Extensions;
 global using FclEx.Helpers;
 global using FclEx.Http;
+global using FclEx.Http.Tests;
 global using FclEx.Http.Tests.Models;
 global using FclEx.Utils;
 global using Microsoft.AspNetCore.Builder;

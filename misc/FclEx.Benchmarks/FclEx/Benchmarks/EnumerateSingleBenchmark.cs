@@ -64,13 +64,13 @@ public class EnumerateSingleBenchmark
     [Benchmark]
     public double Array()
     {
-        return Sum(new[] { Number });
+        return Sum([Number]);
     }
 
     [Benchmark]
     public double Yield()
     {
-        return Sum(Number.Yield());
+        return Sum([Number]);
     }
 
     [Benchmark]

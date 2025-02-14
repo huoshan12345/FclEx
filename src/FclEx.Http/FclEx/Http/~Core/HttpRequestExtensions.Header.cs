@@ -5,26 +5,33 @@ partial class HttpRequestExtensions
     public static HttpRequest AddHeader(this HttpRequest request, string key, string? value)
     {
         Check.NotNull(key);
-        request.Headers[key.Trim()] = value.ToStringOrEmpty().Trim();
+        request.Headers.Add(key, value);
+        return request;
+    }
+
+    public static HttpRequest SetHeader(this HttpRequest request, string key, string? value)
+    {
+        Check.NotNull(key);
+        request.Headers.Set(key, value);
         return request;
     }
 
     public static HttpRequest TryAddHeader(this HttpRequest request, string key, string? value)
     {
-        var k = key.Trim();
-        if (!request.Headers.ContainsKey(k))
-            request.Headers[k] = value.ToStringOrEmpty().Trim();
+        if (request.Headers.ContainsKey(key) == false)
+        {
+            request.AddHeader(key, value);
+        }
         return request;
     }
 
-    public static HttpRequest AddHeaderIfValid(this HttpRequest request, string key, string? value)
+    public static HttpRequest TrySetHeader(this HttpRequest request, string key, string? value)
     {
-        return request.AddHeaderIf(value.IsNotEmpty(), key, value);
-    }
-
-    public static HttpRequest AddHeaderIf(this HttpRequest request, bool condition, string key, string? value)
-    {
-        return condition ? request.AddHeader(key, value) : request;
+        if (request.Headers.ContainsKey(key) == false)
+        {
+            request.SetHeader(key, value);
+        }
+        return request;
     }
 
     public static HttpRequest AddHeader(this HttpRequest request, IEnumerable<KeyValuePair<string, string?>> paras)

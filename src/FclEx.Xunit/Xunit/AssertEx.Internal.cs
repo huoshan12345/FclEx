@@ -1,5 +1,28 @@
 ﻿namespace Xunit;
 
+public record EqualResult(bool Equal, object? Expected, object? Actual, string? Path, string? Banner = null)
+{
+    private string CreateBanner()
+    {
+        var banner = Banner ?? "Values differ";
+        return Path == null
+            ? banner
+            : banner + " at $" + Path;
+    }
+
+    public void ThrowIfNotEqual()
+    {
+        if (Equal == false)
+            throw EqualException.ForMismatchedValues(Expected, Actual, CreateBanner());
+    }
+
+    public void ThrowIfEqual()
+    {
+        if (Equal)
+            throw NotEqualException.ForEqualValues(Expected?.ToString() ?? "", Actual?.ToString() ?? "", CreateBanner());
+    }
+}
+
 public static partial class AssertEx
 {
     private static readonly HashSet<string> _emptySet = [];
@@ -109,29 +132,6 @@ public static partial class AssertEx
         static bool IsEnumAndInteger(Type t1, Type t2)
         {
             return t1.IsEnum && t2.IsInteger() || t2.IsEnum && t1.IsInteger();
-        }
-    }
-
-    internal readonly record struct EqualResult(bool Equal, object? Expected, object? Actual, string? Path, string? Banner = null)
-    {
-        private string CreateBanner()
-        {
-            var banner = Banner ?? "Values differ";
-            return Path == null
-                ? banner
-                : banner + " at $" + Path;
-        }
-
-        public void ThrowIfNotEqual()
-        {
-            if (Equal == false)
-                throw EqualException.ForMismatchedValues(Expected, Actual, CreateBanner());
-        }
-
-        public void ThrowIfEqual()
-        {
-            if (Equal)
-                throw NotEqualException.ForEqualValues(Expected.ToStringOrEmpty(), Actual.ToStringOrEmpty(), CreateBanner());
         }
     }
 

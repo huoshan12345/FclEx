@@ -11,7 +11,7 @@ public readonly struct XmlActionContext
         Path = path;
         Element = XElement.Parse(xml);
         ResultElements = path == null
-            ? Element.Yield()
+            ? [Element]
             : Element.XPathSelectElements(path)!;
     }
 

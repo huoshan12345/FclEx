@@ -15,6 +15,7 @@ public sealed class UriParams : IReadOnlyCollection<UriParam>, IRenderable
     // there is mirror bug in HttpQSCollection https://github.com/dotnet/runtime/issues/71871
     // so we use MultiValueDictionary as the entries. 
     private readonly MultiValueDictionary<string, string> _entries;
+    private int? _count; // null count means that is not calculated yet.
 
     public UriParams(string? query = null)
     {
@@ -72,6 +73,7 @@ public sealed class UriParams : IReadOnlyCollection<UriParam>, IRenderable
     public UriParams Add(string? key, object? value)
     {
         _entries.Add(key ?? "", value?.ToString() ?? "");
+        _count = null;
         return this;
     }
 
@@ -88,6 +90,7 @@ public sealed class UriParams : IReadOnlyCollection<UriParam>, IRenderable
     {
         key ??= "";
         _entries.Remove(key);
+        _count = null;
         return Add(key, value);
     }
 
@@ -100,6 +103,7 @@ public sealed class UriParams : IReadOnlyCollection<UriParam>, IRenderable
     public UriParams Remove(string? key)
     {
         _entries.Remove(key ?? "");
+        _count = null;
         return this;
     }
 
@@ -177,7 +181,9 @@ public sealed class UriParams : IReadOnlyCollection<UriParam>, IRenderable
         return _entries.TryGetValue(key ?? "", out values);
     }
 
-    public int Count => _entries.Count;
+    public int Count => _count ??= _entries.Sum(m => m.Value.Count);
+
+    public IReadOnlyCollection<string> Keys => _entries.Keys;
 
     public static UriParams Parse(string? query) => new(query);
 

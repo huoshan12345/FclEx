@@ -19,11 +19,11 @@ public class XElementEqualityComparer : IEqualityComparer<XElement>
 
     public int GetHashCode(XElement obj)
     {
-        var hashCode = 2001076147;
-        hashCode = hashCode * -1521134295 + obj.Name.GetHashCodeSafely();
-        hashCode = hashCode * -1521134295 + obj.Value.GetHashCodeSafely();
-        hashCode = hashCode * -1521134295 + obj.NodeType.GetHashCodeSafely();
-        return hashCode;
+        var hash = new HashCode();
+        hash.Add(obj.Name);
+        hash.Add(obj.Value);
+        hash.Add(obj.NodeType);
+        return hash.ToHashCode();
     }
 
     public static XElementEqualityComparer Instance { get; } = new();

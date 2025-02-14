@@ -99,8 +99,11 @@ partial class TypeExtensions
 
         static string SimpleNameInternal(Type type)
         {
-            if (!type.IsGenericType) return type.Name.ToStringOrEmpty();
-            var name = type.Name.ToStringOrEmpty();
+            var name = type.Name;
+
+            if (type.IsGenericType == false)
+                return name;
+
             var index = name.IndexOf('`');
             return index == -1 ? name : name[..index];
         }

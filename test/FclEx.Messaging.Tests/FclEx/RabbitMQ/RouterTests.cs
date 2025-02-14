@@ -33,7 +33,7 @@ public class RouterTests(RabbitMQFixture fixture) : RabbitMQTests(fixture)
             }
             else
             {
-                var hash = str.GetHashCodeSafely();
+                var hash = str.GetHashCode();
                 return prefix + GetNumType(hash);
             }
         }

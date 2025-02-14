@@ -1,6 +1,5 @@
 ﻿using System.Net.NetworkInformation;
 using System.Web;
-using FclEx.Http.Tests;
 
 namespace FclEx.Http.Core.HttpRequestExtensions;
 

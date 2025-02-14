@@ -63,7 +63,7 @@ public interface IUriParamsBuilder
                 continue;
             }
 
-            list.Add(new(name, value.ToStringOrEmpty()));
+            list.Add(new(name, value?.ToString()));
         }
 
         return list;
