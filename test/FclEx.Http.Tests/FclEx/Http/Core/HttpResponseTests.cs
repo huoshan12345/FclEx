@@ -9,7 +9,7 @@ public class HttpResponseTests : HttpServerTests
         var task = Task.Run(async () =>
         {
             await Task.Yield();
-            return HttpResponse.CreateError(HttpRequest.Get("http://localhost"), new SimpleException(error));
+            return HttpResponse.FromError(HttpRequest.Get("http://localhost"), new SimpleException(error));
         }).ThrowIfError();
 
         var ex = await Assert.ThrowsAsync<SimpleException>(() => task);

@@ -90,10 +90,21 @@ public static partial class ExceptionExtensions
         }
     }
 
-
     public static bool IsCanceled(this Exception ex)
     {
         return ex is OperationCanceledException;
+    }
+
+    /// <summary>
+    /// Checks if the exception is essentially just a message; that is, it has no inner exception and no stack trace.
+    /// This typically indicates that the exception object has been created but not actually thrown.
+    /// In such cases, the primary useful information is the exception's message.
+    /// </summary>
+    /// <param name="ex">The exception to check.</param>
+    /// <returns>True if the exception is just a message (no inner exception or stack trace), false otherwise.</returns>
+    public static bool IsJustMessage(this Exception ex)
+    {
+        return ex.InnerException == null && ex.StackTrace.IsNullOrEmpty();
     }
 
     public static bool IsObjectException<T>([NotNullWhen(true)] this Exception? ex, Func<T, bool> condition) where T : notnull

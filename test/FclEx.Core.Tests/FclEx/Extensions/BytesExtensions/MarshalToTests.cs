@@ -51,7 +51,7 @@ public class MarshalToTests
 
     private static void MarshalTo<T>(T item)
     {
-        var bytes = item.MarshalToBytes();
+        var bytes = ObjectHelper.MarshalToBytes(item);
         var actual = bytes.MarshalTo<T>();
         Assert.Equal(actual, item, MarshalToBytesEqualityComparer<T>.Instance);
     }

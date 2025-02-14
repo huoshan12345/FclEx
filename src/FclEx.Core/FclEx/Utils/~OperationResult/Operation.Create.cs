@@ -2,22 +2,15 @@
 
 public partial class Operation
 {
-    public static OperationResult Cancel(Exception ex, TimeSpan elapsed = default) => new(OperationResultCodes.Canceled, ex, elapsed);
+    public static OperationResult NotImplemented() => NotImplemented<Unit>();
 
-    public static OperationResult Cancel(TimeSpan elapsed = default) => Error(OperationResultCodes.Canceled, "the operation was canceled", elapsed);
+    public static OperationResult Cancel(Exception ex, TimeSpan elapsed = default) => Cancel<Unit>(ex, elapsed);
 
-    public static OperationResult Success(TimeSpan elapsed = default) => new(default, elapsed);
+    public static OperationResult Cancel(TimeSpan elapsed = default) => Error(new OperationCanceledException(), elapsed);
 
-    public static OperationResult Error(int code, Exception ex, TimeSpan elapsed = default) => new(code, ex, elapsed);
+    public static OperationResult Success(TimeSpan elapsed = default) => Success<Unit>(default, elapsed);
 
-    public static OperationResult Error(int code, string? error, TimeSpan elapsed = default) => Error(code, new SimpleException(error), elapsed);
+    public static OperationResult Error(Exception ex, TimeSpan elapsed = default) => Error<Unit>(ex, elapsed);
 
-    public static OperationResult Error(string? error, TimeSpan elapsed = default) => Error(OperationResultCodes.StringError, error, elapsed);
-
-    public static OperationResult Error(Exception ex, TimeSpan elapsed = default)
-    {
-        return new(ex.IsCanceled() ? OperationResultCodes.Canceled : OperationResultCodes.Exception, ex, elapsed);
-    }
-
-    public static OperationResult NotImplemented() => Error(OperationResultCodes.NotImplemented, "the operation was not implemented", default);
+    public static OperationResult Error(string? error, TimeSpan elapsed = default) => Error(new SimpleException(error), elapsed);
 }

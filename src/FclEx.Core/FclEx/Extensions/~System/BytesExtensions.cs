@@ -84,19 +84,6 @@ public static partial class BytesExtensions
         return MarshalToArray<T>(bytes, bytes.Length / length, ref i);
     }
 
-    public static byte[] MarshalToBytes<T>(this T obj)
-    {
-        Check.NotNull(obj);
-
-        var length = Marshal.SizeOf<T>();
-        var bufByte = new byte[length];
-        using var disposable = MarshalHelper.AllocHGlobal(length);
-        var ptr = disposable.Value;
-        Marshal.StructureToPtr(obj, ptr, false);
-        Marshal.Copy(ptr, bufByte, 0, length);
-        return bufByte;
-    }
-
     public static byte[] MarshalArrayToBytes<T>(this IReadOnlyList<T> list)
     {
         Check.NotNull(list);

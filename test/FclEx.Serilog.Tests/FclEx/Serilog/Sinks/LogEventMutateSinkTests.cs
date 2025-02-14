@@ -16,7 +16,7 @@ public class LogEventMutateSinkTests
         var logEvent = new LogEvent(DateTimeOffset.UtcNow, LogEventLevel.Error, ex,
             new MessageTemplate(ex.Message, []), []);
 
-        Adapter.SetLevel(logEvent);
+        Adapter.Mutate(logEvent);
 
         Assert.Equal(level, logEvent.Level);
     }

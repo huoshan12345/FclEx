@@ -4,6 +4,24 @@ namespace FclEx.Serilog;
 
 public static class LogEventExtensions
 {
+    public static LogEvent SetException(this LogEvent logEvent, Exception? ex)
+    {
+        LogEvent_Exception.SetValue(logEvent, ex);
+        return logEvent;
+    }
+
+    public static LogEvent SetLevel(this LogEvent logEvent, LogEventLevel level)
+    {
+        LogEvent_Level.SetValue(logEvent, level);
+        return logEvent;
+    }
+
+    public static LogEvent SetMessageTemplate(this LogEvent logEvent, MessageTemplate template)
+    {
+        LogEvent_MessageTemplate.SetValue(logEvent, template);
+        return logEvent;
+    }
+
     public static bool MatchScalar(this LogEvent logEvent, string propertyName, object scalarValue)
     {
         return logEvent.Properties.TryGetValue(propertyName, out var value)
@@ -65,20 +83,49 @@ public static class LogEventExtensions
             return logEvent;
 
         var ex = new FormattedException(logEvent.Exception);
-        LogEvent_Exception.SetValue(logEvent, ex);
+        logEvent.SetException(ex);
+        return logEvent;
+    }
+
+    public static LogEvent UnwrapException(this LogEvent logEvent)
+    {
+        if (logEvent.Exception is not { } ex)
+            return logEvent;
+
+        if (ex.StackTrace.IsNotEmpty())
+            return logEvent;
+
+        // If the stack trace is empty, we need to unwrap the exception.
+
+        if (logEvent.MessageTemplate.Text.IsNullOrEmpty() && ex.Message is { Length: > 0 } message)
+            logEvent.SetMessageTemplate(new MessageTemplate(message, []));
+
+        var inner = ex.InnerException;
+        logEvent.SetException(inner);
+
         return logEvent;
     }
 
     public static LogEvent HandleLogException(this LogEvent logEvent)
     {
-        var level = logEvent.Level;
+        if (logEvent.Exception is not LogException logException)
+            return logEvent;
 
-        if (logEvent.Exception is LogException logException)
-            level = logException.Level;
-
-        if (level != logEvent.Level)
+        if (logException.Level != logEvent.Level)
         {
-            LogEvent_Level.SetValue(logEvent, level);
+            logEvent.SetLevel(logException.Level);
+        }
+
+        logEvent.UnwrapException();
+
+        return logEvent;
+    }
+
+    public static LogEvent HandleSimpleException(this LogEvent logEvent)
+    {
+        if (logEvent.Exception is SimpleException)
+        {
+            logEvent.UnwrapException();
         }
 
         return logEvent;

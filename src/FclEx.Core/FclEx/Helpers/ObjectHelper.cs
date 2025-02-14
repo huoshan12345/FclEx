@@ -32,4 +32,17 @@ public static class ObjectHelper
     {
         return obj is null ? obj : obj.ToJson(options).FromJson<T>(options);
     }
+
+    public static byte[] MarshalToBytes<T>(T obj)
+    {
+        Check.NotNull(obj);
+
+        var length = Marshal.SizeOf<T>();
+        var bufByte = new byte[length];
+        using var disposable = MarshalHelper.AllocHGlobal(length);
+        var ptr = disposable.Value;
+        Marshal.StructureToPtr(obj, ptr, false);
+        Marshal.Copy(ptr, bufByte, 0, length);
+        return bufByte;
+    }
 }

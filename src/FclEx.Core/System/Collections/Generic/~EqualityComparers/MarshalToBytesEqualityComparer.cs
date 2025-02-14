@@ -11,8 +11,8 @@ public class MarshalToBytesEqualityComparer<T> : IEqualityComparer<T>
         if (ComparerHelper.TryEquals(x, y, out var result))
             return result.Value;
 
-        var bytes1 = x.MarshalToBytes();
-        var bytes2 = y.MarshalToBytes();
+        var bytes1 = ObjectHelper.MarshalToBytes(x);
+        var bytes2 = ObjectHelper.MarshalToBytes(y);
         return bytes1.SequenceEqual(bytes2);
     }
 
@@ -23,7 +23,7 @@ public class MarshalToBytesEqualityComparer<T> : IEqualityComparer<T>
         if (obj is null)
             return 0;
 
-        var bytes = obj.MarshalToBytes();
+        var bytes = ObjectHelper.MarshalToBytes(obj);
         return bytes.ComputeHashCode();
     }
 }

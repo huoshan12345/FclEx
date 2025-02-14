@@ -1,6 +1,4 @@
-﻿using static FclEx.Utils.Operation;
-
-namespace FclEx.Utils;
+﻿namespace FclEx.Utils;
 
 public static partial class OperationResultExtensions
 {
@@ -43,18 +41,29 @@ public static partial class OperationResultExtensions
         return result.Error && result.Exception.IsObjectException(condition);
     }
 
+    /// <summary>
+    /// Checks if the operation result indicates an error and that the error is represented as a simple string message.
+    /// </summary>
+    /// <param name="result">The operation result to check.</param>
+    /// <returns>True if the result is an error and the error is a simple string message, false otherwise.</returns>
     public static bool IsStringError(this IOperationResult result)
     {
-        return result.Code == OperationResultCodes.StringError;
+        return result.Error && result.Exception.IsJustMessage();
     }
 
-    public static bool IsExceptionError(this IOperationResult result)
+    /// <summary>
+    /// Checks if the operation result indicates an error and that the error is *not* represented as a simple string message.
+    /// This implies the error is a more complex type (e.g., an exception object with details).
+    /// </summary>
+    /// <param name="result">The operation result to check.</param>
+    /// <returns>True if the result is an error and the error is *not* a simple string message, false otherwise.</returns>
+    public static bool IsNonStringError(this IOperationResult result)
     {
-        return result.Code == OperationResultCodes.Exception;
+        return result.Error && result.Exception.IsJustMessage() == false;
     }
 
     public static bool IsCanceled(this IOperationResult result)
     {
-        return result.Code == OperationResultCodes.Canceled;
+        return result.Error && result.Exception.IsCanceled();
     }
 }
