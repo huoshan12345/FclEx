@@ -3,7 +3,7 @@ using System.Web;
 
 namespace FclEx.Http.Core.HttpRequestExtensions;
 
-public class SendAsyncTests(ITestOutputHelper output) : IClassFixture<HttpFixture>
+public class SendAsyncTests(ITestOutputHelper output) : HttpServerTests
 {
     public static string[] Urls =>
     [

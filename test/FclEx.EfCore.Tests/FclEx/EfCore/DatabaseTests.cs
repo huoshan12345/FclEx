@@ -1,6 +1,9 @@
 ﻿namespace FclEx.EfCore;
 
-[Collection(nameof(DatabaseTests))]
+[CollectionDefinition(nameof(EfCoreTestsCollection))]
+public class EfCoreTestsCollection : ICollectionFixture<EfCoreFixture>;
+
+[Collection(nameof(EfCoreTestsCollection))]
 public class DatabaseTests
 {
     public static readonly IEnumerable<object?[]> DbTestCases = DatabaseTypes

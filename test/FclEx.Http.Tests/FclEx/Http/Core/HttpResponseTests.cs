@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Http.Core;
 
-public class HttpResponseTests : IClassFixture<HttpFixture>
+public class HttpResponseTests : HttpServerTests
 {
     [Fact]
     public async Task Task_HttpResponse_ThrowIfError_Test()

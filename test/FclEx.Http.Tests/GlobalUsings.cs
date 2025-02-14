@@ -28,4 +28,4 @@ global using Polly.Timeout;
 global using xRetry;
 global using Xunit;
 global using Xunit.Abstractions;
-global using static FclEx.Http.Tests.HttpFixture;
+global using static FclEx.Http.Tests.HttpServerFixture;

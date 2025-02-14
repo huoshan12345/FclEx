@@ -2,7 +2,7 @@
 
 namespace FclEx.Http.Tests;
 
-public class HttpFixture : GlobalFixture
+public class HttpServerFixture : GlobalFixture
 {
     public static readonly Uri TestUri = ((Func<Uri>)(() =>
     {

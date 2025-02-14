@@ -25,7 +25,7 @@ public class HttpClientHelperTests
         var httpClient = provider.GetRequiredService<IHttpClientFactory>().CreateClient();
 
         var watch = ValueStopwatch.StartNew();
-        await Assert.ThrowsAnyAsync<TimeoutRejectedException>(() => httpClient.GetAsync("https://www.google.com:444/", HttpCompletionOption.ResponseHeadersRead));
+        await Assert.ThrowsAnyAsync<TimeoutRejectedException>(() => httpClient.GetAsync("https://baidu.com:444/", HttpCompletionOption.ResponseHeadersRead));
         var time = watch.GetElapsedTime();
 
         var executeTime = timeout.Multiply(retryCount + 1);
@@ -39,7 +39,7 @@ public class HttpClientHelperTests
         using var httpClient = new HttpClient(handler, true) { Timeout = TimeSpan.FromSeconds(1) };
 
         var watch = ValueStopwatch.StartNew();
-        var ex = await Assert.ThrowsAnyAsync<TaskCanceledException>(() => httpClient.GetAsync("https://www.google.com:444/", HttpCompletionOption.ResponseHeadersRead));
+        var ex = await Assert.ThrowsAnyAsync<TaskCanceledException>(() => httpClient.GetAsync("https://baidu.com:444/", HttpCompletionOption.ResponseHeadersRead));
         var time = watch.GetElapsedTime();
 
         Assert.Contains("configured HttpClient.Timeout", ex.Message);

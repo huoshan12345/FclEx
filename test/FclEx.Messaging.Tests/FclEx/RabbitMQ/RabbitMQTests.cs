@@ -1,6 +1,10 @@
 ﻿namespace FclEx.RabbitMQ;
 
-public class RabbitMQTests(RabbitMQFixture fixture) : IClassFixture<RabbitMQFixture>
+[CollectionDefinition(nameof(RabbitMQTestsCollection))]
+public class RabbitMQTestsCollection : ICollectionFixture<RabbitMQFixture>;
+
+[Collection(nameof(RabbitMQFixture))]
+public class RabbitMQTests(RabbitMQFixture fixture)
 {
     public RabbitMQFixture Fixture { get; } = fixture;
 }
