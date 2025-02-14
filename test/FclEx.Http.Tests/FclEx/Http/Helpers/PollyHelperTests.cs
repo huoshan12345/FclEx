@@ -25,7 +25,7 @@ public class PollyHelperTests
         var httpClient = provider.GetRequiredService<IHttpClientFactory>().CreateClient();
 
         var watch = ValueStopwatch.StartNew();
-        var ex = await Assert.ThrowsAnyAsync<TaskCanceledException>(() => httpClient.GetAsync("https://www.google.com:444/", HttpCompletionOption.ResponseHeadersRead));
+        var ex = await Assert.ThrowsAnyAsync<TaskCanceledException>(() => httpClient.GetAsync("https://baidu.com:444/", HttpCompletionOption.ResponseHeadersRead));
         var time = watch.GetElapsedTime();
 
         Assert.Contains(ex.EnumerateInner(), m => m.Message.Contains("configured ConnectTimeout"));

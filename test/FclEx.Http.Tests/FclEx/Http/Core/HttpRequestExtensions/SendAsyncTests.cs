@@ -1,60 +1,19 @@
 ﻿using System.Net.NetworkInformation;
 using System.Web;
-using FclEx.Http.Tests;
 
 namespace FclEx.Http.Core.HttpRequestExtensions;
 
-internal sealed class HttpEventListener : EventListener
-{
-    private readonly ITestOutputHelper _output;
-
-    public HttpEventListener(ITestOutputHelper output)
-    {
-        _output = output;
-    }
-
-    protected override void OnEventSourceCreated(EventSource eventSource)
-    {
-        // Allow internal HTTP logging
-        if (eventSource.Name is "Private.InternalDiagnostics.System.Net.Http" or "System.Net.Http")
-        {
-            EnableEvents(eventSource, EventLevel.LogAlways);
-        }
-    }
-
-    protected override void OnEventWritten(EventWrittenEventArgs eventData)
-    {
-        var time = eventData.TimeStamp.SpecifyKind(DateTimeKind.Local);
-        var sb = new StringBuilder().Append($"[{time:HH:mm:ss.ffffff}][{eventData.EventName}] ");
-
-        foreach (var (_, (name, item), isFirst, _) in eventData.PayloadNames.EmptyIfNull().Zip(eventData.Payload.EmptyIfNull()).IndexEx())
-        {
-            if (isFirst == false)
-                sb.Append(", ");
-            sb.Append(name).Append(": ").Append(item);
-        }
-        _output.WriteLine(sb.ToString());
-    }
-}
-
-public class SendAsyncTests : IAssemblyFixture<HttpFixture>
+public class SendAsyncTests(ITestOutputHelper output) : HttpServerTests
 {
     public static string[] Urls =>
     [
         "https://www.baidu.com/",
         "https://www.qq.com/",
-        "https://www.google.com.hk/"
+        "https://www.google.com/",
     ];
 
     public static IEnumerable<object[]> Cases => Urls
         .Select(m => new object[] { m });
-
-    private readonly ITestOutputHelper _output;
-
-    public SendAsyncTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
 
     public static bool InterfaceHasIpv6Enabled(NetworkInterface @interface)
     {
@@ -88,10 +47,10 @@ public class SendAsyncTests : IAssemblyFixture<HttpFixture>
         if (ipv6 && _supportsIPv6 == false)
             return;
 
-        using var x = _output.SetConsole();
+        using var x = output.SetConsole();
 
         // Keep the listener around while you want the logging to continue, dispose it after.
-        using var listener = new HttpEventListener(_output);
+        using var listener = new HttpEventListener(output);
 
         using var http = HttpClientService.Create(m =>
         {
@@ -137,7 +96,9 @@ public class SendAsyncTests : IAssemblyFixture<HttpFixture>
         Assert.False(response.Error);
         var body = response.ResponseString;
         Assert.NotNull(body);
-        var actual = HttpUtility.ParseQueryString(body).ToDictionary();
+        var actual = HttpUtility.ParseQueryString(body)
+            .Enumerate()
+            .ToDictionary(m => m.Key, m => m.Value);
         Assert.Equal(expected, actual);
     }
 

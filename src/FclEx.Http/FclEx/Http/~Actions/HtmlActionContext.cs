@@ -9,7 +9,7 @@ public readonly struct HtmlActionContext
         Path = path;
         Element = HtmlHelper.Parse(html).DocumentElement;
         ResultElements = path == null
-            ? Element.Yield().ToCollection()
+            ? Enumerable.Repeat(Element, 1).ToCollection()
             : Element.QuerySelectorAll(path)!;
     }
 

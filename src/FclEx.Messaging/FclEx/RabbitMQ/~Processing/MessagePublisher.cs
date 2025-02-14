@@ -28,7 +28,7 @@ public class MessagePublisher : MessageProcessor<PublisherSettings>, IMessagePub
 
         var properties = new BasicProperties
         {
-            MessageId = message.Id.ToStringOrEmpty(),
+            MessageId = message.Id,
         };
         properties.SetDelay(message.Delay);
 

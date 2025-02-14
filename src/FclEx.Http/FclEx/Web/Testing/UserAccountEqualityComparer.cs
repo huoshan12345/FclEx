@@ -16,10 +16,9 @@ public class UserAccountEqualityComparer : IEqualityComparer<UserAccount>
 
     public int GetHashCode(UserAccount obj)
     {
-        unchecked
-        {
-            return (obj.UserName.GetHashCodeSafely() * 397) 
-                   ^ obj.Password.GetHashCodeSafely();
-        }
+        var hash = new HashCode();
+        hash.Add(obj.UserName);
+        hash.Add(obj.Password);
+        return hash.ToHashCode();
     }
 }

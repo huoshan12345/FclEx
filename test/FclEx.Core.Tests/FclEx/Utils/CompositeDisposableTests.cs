@@ -18,7 +18,7 @@ public class CompositeDisposableTests
     {
         var test = new Tester();
 
-        test.Yield().Select(m =>
+        new[] { test }.Select(m =>
         {
             m.Count = 1;
             return m;
@@ -31,7 +31,7 @@ public class CompositeDisposableTests
     public void Dispose_Test()
     {
         var test = new Tester();
-        using (test.Yield().Composite()) { }
+        using (new[] { test }.Composite()) { }
         Assert.Equal(-1, test.Count);
     }
 }

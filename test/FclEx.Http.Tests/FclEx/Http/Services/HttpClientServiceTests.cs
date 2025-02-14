@@ -164,7 +164,7 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
             m.SleepDurationProvider = m => TimeSpan.Zero;
             m.RetryCount = retryCount;
         });
-        var response = await HttpRequest.Get("https://www.google.com:444/")
+        var response = await HttpRequest.Get("https://baidu.com:444/")
             .ReadHeadersTimeout(timeout)
             .SendAsync(http);
 

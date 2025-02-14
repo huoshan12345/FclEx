@@ -2,36 +2,41 @@
 
 public static partial class HttpRequestExtensions
 {
-    public static HttpRequest AddQueryParam(this HttpRequest request, string key, string? value)
+    public static HttpRequest AddQueryParam(this HttpRequest request, string? key, string? value)
     {
-        Check.NotNull(key);
         request.Query.Add(key, value);
         return request;
     }
 
-    public static HttpRequest AddQueryParam<T>(this HttpRequest request, string key, T? value) => request.AddQueryParam(key, value.ToStringOrEmpty());
-
-    public static HttpRequest AddQueryParam(this HttpRequest request, KeyValuePair<string, string?> pair) => request.AddQueryParam(pair.Key, pair.Value);
-
-    public static HttpRequest AddQueryParam(this HttpRequest request, Tuple<string, string?> pair) => request.AddQueryParam(pair.Item1, pair.Item2);
-
-    public static HttpRequest AddQueryParam(this HttpRequest request, (string, string?) pair) => request.AddQueryParam(pair.Item1, pair.Item2);
-
-    public static HttpRequest AddQueryParam(this HttpRequest request, IEnumerable<KeyValuePair<string, string?>> paras)
+    public static HttpRequest AddQueryValue(this HttpRequest request, string? value)
     {
-        paras.ForEach(m => request.AddQueryParam(m));
+        return request.AddQueryParam(null, value);
+    }
+
+    public static HttpRequest AddQueryParam<T>(this HttpRequest request, string? key, T? value) => request.AddQueryParam(key, value?.ToString());
+
+    public static HttpRequest AddQueryParam(this HttpRequest request, KeyValuePair<string?, string?> pair) => request.AddQueryParam(pair.Key, pair.Value);
+
+    public static HttpRequest AddQueryParam(this HttpRequest request, Tuple<string?, string?> pair) => request.AddQueryParam(pair.Item1, pair.Item2);
+
+    public static HttpRequest AddQueryParam(this HttpRequest request, (string?, string?) pair) => request.AddQueryParam(pair.Item1, pair.Item2);
+
+    public static HttpRequest AddQueryParam(this HttpRequest request, IEnumerable<KeyValuePair<string?, string?>> enumerable)
+    {
+        enumerable.EmptyIfNull().ForEach(m => request.AddQueryParam(m));
         return request;
     }
 
     public static HttpRequest AddQueryPair(this HttpRequest request, string queryPair, char separator = ':')
     {
+        Check.NotNull(queryPair);
         var pair = queryPair.Split(separator);
         return request.AddQueryParam(pair[0], pair.Length > 1 ? pair[1] : "");
     }
 
     public static HttpRequest AddQueryParam(this HttpRequest request, IEnumerable<UriParam> enumerable)
     {
-        foreach (var (key, value) in enumerable)
+        foreach (var (key, value) in enumerable.EmptyIfNull())
         {
             request.AddQueryParam(key, value);
         }
@@ -43,36 +48,37 @@ public static partial class HttpRequestExtensions
         return request.AddQueryParam(builder.Build());
     }
 
-    public static HttpRequest AddFormParam(this HttpRequest request, string key, string? value)
+
+    public static HttpRequest AddFormParam(this HttpRequest request, string? key, string? value)
     {
-        Check.NotNull(key);
         request.Form.Add(key, value);
         return request;
     }
 
-    public static HttpRequest AddFormParam<T>(this HttpRequest request, string key, T? value) => request.AddFormParam(key, value.ToStringOrEmpty());
+    public static HttpRequest AddFormParam<T>(this HttpRequest request, string? key, T? value) => request.AddFormParam(key, value?.ToString());
 
-    public static HttpRequest AddFormParam(this HttpRequest request, KeyValuePair<string, string?> pair) => request.AddFormParam(pair.Key, pair.Value);
+    public static HttpRequest AddFormParam(this HttpRequest request, KeyValuePair<string?, string?> pair) => request.AddFormParam(pair.Key, pair.Value);
 
-    public static HttpRequest AddFormParam(this HttpRequest request, Tuple<string, string?> pair) => request.AddFormParam(pair.Item1, pair.Item2);
+    public static HttpRequest AddFormParam(this HttpRequest request, Tuple<string?, string?> pair) => request.AddFormParam(pair.Item1, pair.Item2);
 
-    public static HttpRequest AddFormParam(this HttpRequest request, (string, string?) pair) => request.AddFormParam(pair.Item1, pair.Item2);
+    public static HttpRequest AddFormParam(this HttpRequest request, (string?, string?) pair) => request.AddFormParam(pair.Item1, pair.Item2);
 
-    public static HttpRequest AddFormParam(this HttpRequest request, IEnumerable<KeyValuePair<string, string?>> paras)
+    public static HttpRequest AddFormParam(this HttpRequest request, IEnumerable<KeyValuePair<string?, string?>> enumerable)
     {
-        paras?.ForEach(m => request.AddFormParam(m));
+        enumerable.EmptyIfNull().ForEach(m => request.AddFormParam(m));
         return request;
     }
 
     public static HttpRequest AddFormPair(this HttpRequest request, string queryPair, char separator = ':')
     {
+        Check.NotNull(queryPair);
         var pair = queryPair.Split(separator);
         return request.AddFormParam(pair[0], pair.Length > 1 ? pair[1] : "");
     }
 
     public static HttpRequest AddFormParam(this HttpRequest request, IEnumerable<UriParam> enumerable)
     {
-        foreach (var (key, value) in enumerable)
+        foreach (var (key, value) in enumerable.EmptyIfNull())
         {
             request.AddFormParam(key, value);
         }
@@ -83,6 +89,7 @@ public static partial class HttpRequestExtensions
     {
         return request.AddFormParam(builder.Build());
     }
+
 
     public static HttpRequest Content(this HttpRequest request, HttpContent content)
     {

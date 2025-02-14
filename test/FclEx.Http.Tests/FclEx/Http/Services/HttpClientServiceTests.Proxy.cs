@@ -5,7 +5,7 @@ partial class HttpClientServiceTests
 {
     public static IWebProxy[] ProxyList { get; } =
     [
-        DefaultProxy
+        DefaultProxy,
     ];
 
     public static string[] Urls { get; } =

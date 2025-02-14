@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       rabbitmq:
-        image: heidiks/rabbitmq-delayed-message-exchange:3.8.27-management
+        image: heidiks/rabbitmq-delayed-message-exchange:4.0.2-management
         env:
           RABBITMQ_DEFAULT_USER: rmq
           RABBITMQ_DEFAULT_PASS: 111111

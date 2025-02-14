@@ -61,8 +61,7 @@ public class EnumerableEqualityComparer<T>(IEqualityComparer<T>? itemComparer = 
         var hash = new HashCode();
         foreach (var m in obj)
         {
-            var code = m.GetHashCodeSafely();
-            hash.Add(code);
+            hash.Add(m);
         }
         return hash.ToHashCode();
     }

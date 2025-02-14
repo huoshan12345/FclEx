@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Http.Actions;
 
-public class HttpRequestActionTests
+public class HttpRequestActionTests : HttpServerTests
 {
     [Fact]
     public async Task MultipleActions_Tests()

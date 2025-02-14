@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Http.Core.HttpRequestExtensions;
 
-public class PropertyTests
+public class PropertyTests : HttpServerTests
 {
     public static readonly (string Url, string CharSet, string Keyword) CharSetTestCase = ("https://passport.weibo.com/visitor/visitor", "gb2312", "是否采集设备指纹");
 

@@ -200,7 +200,10 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         }
 
         var cookies = request.Headers.Get(HttpKnownHeaderNames.Cookie);
-        requestMessage.AddCookie(cookies);
+        foreach (var cookie in cookies)
+        {
+            requestMessage.AddCookie(cookie);
+        }
 
         var cookieUri = uri.IsAbsoluteUri == false && baseAddress is not null
             ? baseAddress

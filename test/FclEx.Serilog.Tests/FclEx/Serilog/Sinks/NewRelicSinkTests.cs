@@ -32,7 +32,7 @@ public class NewRelicSinkTests
 
     private static LogEvent CreateLogEvent(int number)
     {
-        var template = new MessageTemplate(new TextToken("message_" + number).Yield());
+        var template = new MessageTemplate([new TextToken("message_" + number)]);
         var props = Enumerable.Range(1, 3).Select(m => new LogEventProperty("prop" + m, new ScalarValue("value" + m)));
         return new LogEvent(Random.Shared.NextDateTime(), LogEventLevel.Information, null, template, props);
     }

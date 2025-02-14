@@ -7,10 +7,10 @@ public static class UriParamsCollectionExtensions
         return collection.Select(m => m.ToKeyValuePair());
     }
 
-    public static UriParams Add(this UriParams collection, IEnumerable<KeyValuePair<string, string>> parameters)
+    public static UriParams Add(this UriParams collection, IEnumerable<KeyValuePair<string, string>> enumerable)
     {
-        Check.NotNull(parameters);
-        foreach (var (key, value) in parameters)
+        Check.NotNull(enumerable);
+        foreach (var (key, value) in enumerable)
         {
             collection.Add(key, value);
         }

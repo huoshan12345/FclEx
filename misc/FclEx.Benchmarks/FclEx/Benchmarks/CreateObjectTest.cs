@@ -14,8 +14,8 @@ public class CreateObjectTest
     [Benchmark]
     public void Ctor()
     {
-        var ctor = _type.MakeGenericType<int>().GetConstructor(new[] { typeof(int) })!;
-        ctor.Invoke(new object[] { 4 });
+        var ctor = _type.MakeGenericType<int>().GetConstructor([typeof(int)])!;
+        ctor.Invoke([4]);
     }
 
     [Benchmark]

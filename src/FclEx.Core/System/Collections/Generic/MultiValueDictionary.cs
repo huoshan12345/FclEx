@@ -812,7 +812,9 @@ public class MultiValueDictionary<TKey, TValue> :
     /// in this <see cref="MultiValueDictionary{TKey,TValue}"/> that has one or more associated 
     /// <typeparamref name="TValue"/>.
     /// </value>
-    public IEnumerable<TKey> Keys => _dictionary.Keys;
+    IEnumerable<TKey> IReadOnlyDictionary<TKey, IReadOnlyCollection<TValue>>.Keys => _dictionary.Keys;
+
+    public IReadOnlyCollection<TKey> Keys => _dictionary.Keys;
 
     /// <summary>
     /// Attempts to get the <typeparamref name="TValue"/> associated with the given
@@ -1057,7 +1059,7 @@ public class MultiValueDictionary<TKey, TValue> :
         ======================================================================*/
 
         void ICollection<TValue>.Add(TValue item) => throw new NotSupportedException(Strings.ReadOnly_Modification);
-            
+
 
         void ICollection<TValue>.Clear() => throw new NotSupportedException(Strings.ReadOnly_Modification);
 

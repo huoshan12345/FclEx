@@ -1,12 +1,12 @@
 ﻿namespace FclEx.EfCore;
 
-public class SshDbContextTests(EfCoreFixture fixture) : IAssemblyFixture<EfCoreFixture>
+public class SshDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {
     public const string SshKeyPath = @"d:\Users\lijing\Documents\keys\local\id_rsa";
 
     private SshDbContext<GlobalDbContext> CreateNpgsqlContext(ConnectionInfo? ssh)
     {
-        var connectionString = fixture.ConnectionStrings.Get(DbProviderType.Npgsql, false);
+        var connectionString = Fixture.ConnectionStrings.Get(DbProviderType.Npgsql, false);
         return SshDbContext.CreateSshDbContext(connectionString, m => new GlobalDbContext(DbProviderType.Npgsql, connectionString), ssh, m =>
         {
             var builder = new NpgsqlConnectionStringBuilder(m);

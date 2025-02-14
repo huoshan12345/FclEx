@@ -35,6 +35,6 @@ public class CtorTests
     {
         var request = HttpRequest.Get("http://lijing:lijing@captcha.mooncatling.fun/api/captcha/save");
         Assert.True(request.Headers.TryGetValue("Authorization", out var auth));
-        Assert.Equal("Basic bGlqaW5nOmxpamluZw==", auth);
+        Assert.Equal("Basic bGlqaW5nOmxpamluZw==", auth.Single());
     }
 }

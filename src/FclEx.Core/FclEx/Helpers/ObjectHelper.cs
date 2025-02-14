@@ -25,4 +25,11 @@ public static class ObjectHelper
     {
         return GCHandle.Alloc(obj, type).ToDisposable(m => m.Free());
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [return: NotNullIfNotNull(nameof(obj))]
+    public static T? CloneByJson<T>(T? obj, JsonSerializerOptions? options = null)
+    {
+        return obj is null ? obj : obj.ToJson(options).FromJson<T>(options);
+    }
 }

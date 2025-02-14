@@ -1,4 +1,6 @@
-﻿using static FclEx.Utils.UriParamOmitOption;
+﻿#if NET6_0_OR_GREATER
+using static FclEx.Utils.UriParamOmitOption;
+#endif
 
 namespace FclEx.Utils;
 
@@ -61,7 +63,7 @@ public interface IUriParamsBuilder
                 continue;
             }
 
-            list.Add(new(name, value.ToStringOrEmpty()));
+            list.Add(new(name, value?.ToString()));
         }
 
         return list;

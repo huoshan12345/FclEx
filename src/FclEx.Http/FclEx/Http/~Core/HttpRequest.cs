@@ -33,26 +33,27 @@ public partial class HttpRequest
     public bool ReadContent { get; set; } = true;
     public bool ReadCookies { get; set; } = true;
 
-    public Dictionary<string, string?> Headers { get; } = new(StringComparer.OrdinalIgnoreCase);
+    // HTTP header names are case-insensitive
+    public MultiValueDictionary<string, string?> Headers { get; } = new(StringComparer.OrdinalIgnoreCase);
     public UriParams Query => _uriCreator.Query;
     public UriParams Form { get; } = new(); // don't use new NameValueCollection() here.
 
     public string? Referrer
     {
-        get => Headers.Get(HttpKnownHeaderNames.Referrer);
-        set => Headers[HttpKnownHeaderNames.Referrer] = value;
+        get => Headers.GetLast(HttpKnownHeaderNames.Referrer);
+        set => Headers.Set(HttpKnownHeaderNames.Referrer, value);
     }
 
     public string? Origin
     {
-        get => Headers.Get(HttpKnownHeaderNames.Origin);
-        set => Headers[HttpKnownHeaderNames.Origin] = value;
+        get => Headers.GetLast(HttpKnownHeaderNames.Origin);
+        set => Headers.Set(HttpKnownHeaderNames.Origin, value);
     }
 
     public string? UserAgent
     {
-        get => Headers.Get(HttpKnownHeaderNames.UserAgent);
-        set => Headers[HttpKnownHeaderNames.UserAgent] = value;
+        get => Headers.GetLast(HttpKnownHeaderNames.UserAgent);
+        set => Headers.Set(HttpKnownHeaderNames.UserAgent, value);
     }
 
     public string Fragment
@@ -99,7 +100,7 @@ public partial class HttpRequest
             this.BasicAuth(UserName, Password);
         }
         Method = method;
-        Headers[HttpKnownHeaderNames.UserAgent] = HttpConstants.DefaultUserAgent;
+        Headers.Set(HttpKnownHeaderNames.UserAgent, HttpConstants.DefaultUserAgent);
     }
 
     public Uri GetUri() => _uriCreator.Build();

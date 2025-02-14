@@ -14,4 +14,3 @@ global using Serilog.Events;
 global using Serilog.Parsing;
 global using Xunit;
 global using Xunit.Abstractions;
-global using Xunit.Extensions.AssemblyFixture;

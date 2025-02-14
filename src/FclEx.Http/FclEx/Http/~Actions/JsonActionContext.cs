@@ -12,7 +12,7 @@ public readonly struct JsonActionContext : IDisposable
         _jsonDocument = JsonDocument.Parse(json);
         Token = _jsonDocument.RootElement;
         ResultTokens = path == null
-            ? Token.Yield()
+            ? [Token]
             : Token.SelectElements(path, false).NotNull();
     }
 

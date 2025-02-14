@@ -26,6 +26,12 @@ public static class MultiValueDictionaryExtensions
         return dic.Get(key, Array.Empty<TValue>());
     }
 
+    public static void Set<TKey, TValue>(this MultiValueDictionary<TKey, TValue> dic, TKey key, TValue value)
+    {
+        dic.Remove(key);
+        dic.Add(key, value);
+    }
+
     [return: NotNullIfNotNull(nameof(defaultValue))]
     public static TProp? Get<TKey, TValue, TProp>(this MultiValueDictionary<TKey, TValue> dic, TKey key, Func<IReadOnlyCollection<TValue>, TProp> selector, TProp? defaultValue = default)
     {
