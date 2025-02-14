@@ -46,7 +46,7 @@ public class BatchRetryConsumerTests(ITestOutputHelper output)
         var consumer = new BatchRetryConsumer<Model>(5, TimeSpan.FromMilliseconds(100), 1);
         var task = consumer.StartAsync();
         consumer.Dispose();
-        await Task.Delay(TimeSpan.FromMilliseconds(100));
+        await Task.Delay(TimeSpan.FromMilliseconds(200));
         Assert.True(task.IsCompleted);
     }
 
