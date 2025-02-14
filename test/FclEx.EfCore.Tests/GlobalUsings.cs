@@ -18,5 +18,4 @@ global using Moq;
 global using Npgsql;
 global using Renci.SshNet;
 global using Xunit;
-global using Xunit.Extensions.AssemblyFixture;
 global using static FclEx.EfCore.EfCoreFixture;

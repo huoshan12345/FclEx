@@ -69,7 +69,7 @@ public static partial class EnumerableExtensions
 
     public static IEnumerable<ValueTuple<T1, T2>> AsTuple<T1, T2>(this IEnumerable<KeyValuePair<T1, T2>> enumerable)
     {
-        return enumerable.Select(m => m.AsTuple());
+        return enumerable.Select(m => m.ToValueTuple());
     }
 
     public static TimeSpan Average<T>(this IEnumerable<T> source, Func<T, TimeSpan> selector)

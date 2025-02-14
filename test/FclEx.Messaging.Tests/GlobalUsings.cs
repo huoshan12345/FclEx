@@ -8,5 +8,4 @@ global using FclEx.Utils;
 global using Xunit;
 global using Xunit.Abstractions;
 global using Microsoft.Extensions.Configuration;
-global using Xunit.Extensions.AssemblyFixture;
 global using static FclEx.RabbitMQ.RabbitMQFixture;

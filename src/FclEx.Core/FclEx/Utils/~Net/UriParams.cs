@@ -12,6 +12,8 @@
 /// </remarks>
 public sealed class UriParams : IReadOnlyCollection<UriParam>, IRenderable
 {
+    // there is mirror bug in HttpQSCollection https://github.com/dotnet/runtime/issues/71871
+    // so we use MultiValueDictionary as the entries. 
     private readonly MultiValueDictionary<string, string> _entries;
 
     public UriParams(string? query = null)
@@ -25,15 +27,15 @@ public sealed class UriParams : IReadOnlyCollection<UriParam>, IRenderable
         _entries = parameters.ToMultiValueDictionary(m => m.Key, m => m.Value);
     }
 
-    public UriParams(IEnumerable<KeyValuePair<string, string>> parameters)
+    public UriParams(IEnumerable<KeyValuePair<string?, string?>> parameters)
     {
-        _entries = parameters.ToMultiValueDictionary(m => m.Key, m => m.Value);
+        _entries = parameters.ToMultiValueDictionary(m => m.Key ?? "", m => m.Value ?? "");
     }
 
-    public UriParams(string key, object? value)
+    public UriParams(string? key, string? value)
     {
         _entries = [];
-        Add(key, value?.ToString());
+        Add(key ?? "", value ?? "");
     }
 
     public override string ToString()
@@ -43,26 +45,13 @@ public sealed class UriParams : IReadOnlyCollection<UriParam>, IRenderable
 
     public void Render(StringBuilder builder)
     {
-        foreach (var (key, values) in _entries)
+        foreach (var (_, item, _, isLast) in this.IndexEx())
         {
-            // don't support empty key
-            if (key.IsNullOrEmpty())
-                continue;
+            item.Render(builder);
 
-            foreach (var value in values)
-            {
-                builder.Append(HttpUtility.UrlEncode(key));
-                builder.Append('=');
-                if (value.IsNotEmpty())
-                {
-                    builder.Append(HttpUtility.UrlEncode(value));
-                }
+            if (isLast == false)
                 builder.Append('&');
-            }
         }
-
-        if (builder.Length > 0)
-            builder.Length--; // remove the trailing extra &
     }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
@@ -80,10 +69,9 @@ public sealed class UriParams : IReadOnlyCollection<UriParam>, IRenderable
     /// <param name="value">The value to associate with the key. If null, an empty string is used.</param>
     /// <returns>The current <see cref="UriParams"/> instance, allowing for method chaining.</returns>
     /// <exception cref="ArgumentException">Thrown if <paramref name="key"/> is null or empty.</exception>
-    public UriParams Add(string key, object? value)
+    public UriParams Add(string? key, object? value)
     {
-        Check.NotEmpty(key);
-        _entries.Add(key, value.ToStringOrEmpty());
+        _entries.Add(key ?? "", value?.ToString() ?? "");
         return this;
     }
 
@@ -96,9 +84,9 @@ public sealed class UriParams : IReadOnlyCollection<UriParam>, IRenderable
     /// <param name="value">The value to associate with the key. If null, an empty string is used.</param>
     /// <returns>The current <see cref="UriParams"/> instance, allowing for method chaining.</returns>
     /// <exception cref="ArgumentException">Thrown if <paramref name="key"/> is null or empty.</exception>
-    public UriParams Set(string key, object? value)
+    public UriParams Set(string? key, object? value)
     {
-        Check.NotEmpty(key);
+        key ??= "";
         _entries.Remove(key);
         return Add(key, value);
     }
@@ -109,10 +97,9 @@ public sealed class UriParams : IReadOnlyCollection<UriParam>, IRenderable
     /// <param name="key">The key to remove. Must not be null or empty.</param>
     /// <returns>The current <see cref="UriParams"/> instance, allowing for method chaining.</returns>
     /// <exception cref="ArgumentException">Thrown if <paramref name="key"/> is null or empty.</exception>
-    public UriParams Remove(string key)
+    public UriParams Remove(string? key)
     {
-        Check.NotEmpty(key);
-        _entries.Remove(key);
+        _entries.Remove(key ?? "");
         return this;
     }
 
@@ -124,12 +111,12 @@ public sealed class UriParams : IReadOnlyCollection<UriParam>, IRenderable
     /// The latest value associated with the key, or <c>null</c> if the key does not exist.
     /// </returns>
     /// <exception cref="ArgumentException">Thrown if <paramref name="key"/> is null or empty.</exception>
-    public string? Get(string key)
+    public string? Get(string? key)
     {
         return GetValues(key).LastOrDefault();
     }
 
-    public string? this[string key]
+    public string? this[string? key]
     {
         get => Get(key);
         set => Set(key, value);
@@ -144,10 +131,9 @@ public sealed class UriParams : IReadOnlyCollection<UriParam>, IRenderable
     /// If the key does not exist, returns an empty collection.
     /// </returns>
     /// <exception cref="ArgumentException">Thrown if <paramref name="key"/> is null or empty.</exception>
-    public IReadOnlyCollection<string> GetValues(string key)
+    public IReadOnlyCollection<string> GetValues(string? key)
     {
-        Check.NotEmpty(key);
-        return _entries.Get(key);
+        return _entries.Get(key ?? "");
     }
 
     /// <summary>
@@ -162,11 +148,9 @@ public sealed class UriParams : IReadOnlyCollection<UriParam>, IRenderable
     /// <c>true</c> if the key exists and has at least one associated value; otherwise, <c>false</c>.
     /// </returns>
     /// <exception cref="ArgumentException">Thrown if <paramref name="key"/> is null or empty.</exception>
-    public bool TryGet(string key, [NotNullWhen(true)] out string? value)
+    public bool TryGet(string? key, [NotNullWhen(true)] out string? value)
     {
-        Check.NotEmpty(key);
-
-        if (TryGetValues(key, out var values))
+        if (TryGetValues(key ?? "", out var values))
         {
             value = values.Last();
             return true;
@@ -188,16 +172,16 @@ public sealed class UriParams : IReadOnlyCollection<UriParam>, IRenderable
     /// <c>true</c> if the key exists and has at least one associated value; otherwise, <c>false</c>.
     /// </returns>
     /// <exception cref="ArgumentException">Thrown if <paramref name="key"/> is null or empty.</exception>
-    public bool TryGetValues(string key, [NotNullWhen(true)] out IReadOnlyCollection<string>? values)
+    public bool TryGetValues(string? key, [NotNullWhen(true)] out IReadOnlyCollection<string>? values)
     {
-        return _entries.TryGetValue(key, out values);
+        return _entries.TryGetValue(key ?? "", out values);
     }
 
     public int Count => _entries.Count;
 
     public static UriParams Parse(string? query) => new(query);
 
-    public static UriParams From(IEnumerable<KeyValuePair<string, string>> pairs) => new(pairs);
-
-    public static UriParams From(string key, object? value) => new(key, value);
+    public static UriParams From(IEnumerable<KeyValuePair<string?, string?>> pairs) => new(pairs);
+    public static UriParams From(string? key, string? value) => new(key, value);
+    public static UriParams From(string? key, object? value) => new(key, value?.ToString());
 }

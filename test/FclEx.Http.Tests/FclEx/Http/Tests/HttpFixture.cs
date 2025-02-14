@@ -19,7 +19,7 @@ public class HttpFixture : GlobalFixture
     {
         return Environment.MachineName switch
         {
-            "PC" => "socks5://192.168.1.12:10808",
+            "PC" => "socks5://192.168.1.12:7891",
             _ => "",
         };
     }

@@ -1,4 +1,6 @@
-﻿using static FclEx.Utils.UriParamOmitOption;
+﻿#if NET6_0_OR_GREATER
+using static FclEx.Utils.UriParamOmitOption;
+#endif
 
 namespace FclEx.Utils;
 

@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Dapper;
 
-public class DapperTests(DapperFixture fixture) : DatabaseTests, IAssemblyFixture<DapperFixture>
+public class DapperTests(DapperFixture fixture) : DatabaseTests, IClassFixture<DapperFixture>
 {
     public DapperFixture Fixture { get; } = fixture;
 }
