@@ -29,7 +29,7 @@ public interface IHtmlAction<T> : IHttpResponseHandler<T>
         };
     }
 
-    bool IsFailed(HtmlActionContext context) => context.ResultElements.Any();
+    bool IsFailed(HtmlActionContext context) => context.ResultElements.IsNullOrEmpty();
 
     OperationResult<T> HandleFailed(HtmlActionContext context)
     {

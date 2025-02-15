@@ -19,7 +19,7 @@ public interface IXmlAction<T> : IHttpResponseHandler<T>
         return GetResult(context);
     }
 
-    bool IsFailed(XmlActionContext context) => !context.ResultElements.Any();
+    bool IsFailed(XmlActionContext context) => context.ResultElements.IsNullOrEmpty();
 
     OperationResult<T> HandleFailed(XmlActionContext context)
     {
