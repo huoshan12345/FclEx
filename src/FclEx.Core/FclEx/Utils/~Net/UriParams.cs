@@ -183,6 +183,12 @@ public sealed class UriParams : IReadOnlyCollection<UriParam>, IRenderable
 
     public int Count => _count ??= _entries.Sum(m => m.Value.Count);
 
+    public void Clear()
+    {
+        _entries.Clear();
+        _count = 0;
+    }
+
     public IReadOnlyCollection<string> Keys => _entries.Keys;
 
     public static UriParams Parse(string? query) => new(query);
