@@ -26,5 +26,5 @@ public class HttpResponse
     public HttpStatusCode StatusCode { get; internal set; }
     public List<Uri> RedirectUris { get; } = [];
 
-    public static HttpResponse CreateError(HttpRequest request, Exception ex) => new(request) { Exception = ex };
+    public static HttpResponse FromError(HttpRequest request, Exception ex) => new(request) { Exception = ex };
 }

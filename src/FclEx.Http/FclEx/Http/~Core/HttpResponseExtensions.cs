@@ -25,7 +25,7 @@ public static class HttpResponseExtensions
 
     public static Task<T> ReadJsonAsRequired<T>(this Task<HttpResponse> task, string? path = null)
     {
-        return task.Then(m => m.ReadJsonAs<T>(path)).GetRequiredValue();
+        return task.Then(m => m.ReadJsonAs<T>(path)).Unwrap();
     }
 
     public static Task<OperationResult<T>> ReadJsonAs<T>(this Task<HttpResponse> task, string? path = null)

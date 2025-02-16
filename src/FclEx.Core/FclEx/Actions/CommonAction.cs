@@ -49,6 +49,21 @@ public class CommonAction
     {
         return new(async t => await func(t).IgnoreSyncContext(), executeSafely);
     }
+
+    public static SuccessAction<T> Success<T>(T obj, TimeSpan timeSpan = default)
+    {
+        return SuccessAction.Create(obj, timeSpan);
+    }
+
+    public static ErrorAction<T> Error<T>(string error, TimeSpan timeSpan = default)
+    {
+        return ErrorAction.Create<T>(error, timeSpan);
+    }
+
+    public static ErrorAction<T> Error<T>(Exception ex, TimeSpan timeSpan = default)
+    {
+        return ErrorAction.Create<T>(ex, timeSpan);
+    }
 }
 
 public readonly struct CommonAction<T> : IAction<T>

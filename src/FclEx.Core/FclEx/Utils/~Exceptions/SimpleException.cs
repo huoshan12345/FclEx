@@ -4,7 +4,7 @@
 public class SimpleException : Exception
 {
     private readonly bool _noStackTrace;
-    private readonly string? _fullStackTrace;
+    private readonly string? _stackTrace;
 
     [StackTraceHidden]
     public SimpleException(string? msg, bool noStackTrace = true) : this(msg, null, noStackTrace)
@@ -17,8 +17,8 @@ public class SimpleException : Exception
         _noStackTrace = noStackTrace;
 
         if (noStackTrace == false)
-            _fullStackTrace = new StackTrace(true).ToString();
+            _stackTrace = new StackTrace(true).ToString();
     }
 
-    public override string? StackTrace => _noStackTrace ? null : base.StackTrace ?? _fullStackTrace;
+    public override string? StackTrace => _noStackTrace ? null : base.StackTrace ?? _stackTrace;
 }

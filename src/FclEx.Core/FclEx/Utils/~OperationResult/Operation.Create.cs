@@ -2,6 +2,8 @@
 
 public partial class Operation
 {
+    public static OperationResult NotImplemented() => Error(OperationResultCodes.NotImplemented, "the operation was not implemented", default);
+
     public static OperationResult Cancel(Exception ex, TimeSpan elapsed = default) => new(OperationResultCodes.Canceled, ex, elapsed);
 
     public static OperationResult Cancel(TimeSpan elapsed = default) => Error(OperationResultCodes.Canceled, "the operation was canceled", elapsed);
@@ -18,6 +20,4 @@ public partial class Operation
     {
         return new(ex.IsCanceled() ? OperationResultCodes.Canceled : OperationResultCodes.Exception, ex, elapsed);
     }
-
-    public static OperationResult NotImplemented() => Error(OperationResultCodes.NotImplemented, "the operation was not implemented", default);
 }

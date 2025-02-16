@@ -14,7 +14,7 @@ public static partial class ActionExtensions
 
     public static Task<OperationResult> RunAsync<T>(this IAction<T> action, CancellationToken token = default)
     {
-        return action.ExecuteAsync(token).Untype();
+        return action.ExecuteAsync(token).AsEmpty();
     }
 
     public static IAction<T> RepeatOnce<T>(this IAction<T> actor, Func<T, bool> condition)

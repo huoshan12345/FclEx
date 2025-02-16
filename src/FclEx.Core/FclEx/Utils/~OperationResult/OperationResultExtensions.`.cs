@@ -2,7 +2,7 @@
 
 partial class OperationResultExtensions
 {
-    public static OperationResult Untype<T>(this OperationResult<T> result) => result;
+    public static OperationResult AsEmpty<T>(this OperationResult<T> result) => result;
 
     public static OperationResult<T> Elapsed<T>(this OperationResult<T> result, TimeSpan span)
     {
@@ -77,7 +77,7 @@ partial class OperationResultExtensions
         return result.ErrorResult(r => action(r.Exception!));
     }
 
-    public static T GetRequiredValue<T>(this OperationResult<T> result)
+    public static T Unwrap<T>(this OperationResult<T> result)
     {
         if (result.Success == false)
             result.Exception.ReThrow();

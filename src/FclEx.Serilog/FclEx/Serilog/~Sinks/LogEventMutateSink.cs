@@ -13,13 +13,14 @@ public class LogEventMutateSink : ILogEventSink
 
     public virtual void Emit(LogEvent logEvent)
     {
-        SetLevel(logEvent);
-        _mutator?.Invoke(logEvent);
+        Mutate(logEvent);
         _sink.Emit(logEvent);
     }
 
-    protected internal virtual void SetLevel(LogEvent logEvent)
+    protected internal virtual void Mutate(LogEvent logEvent)
     {
         logEvent.HandleLogException();
+        logEvent.HandleSimpleException();
+        _mutator?.Invoke(logEvent);
     }
 }

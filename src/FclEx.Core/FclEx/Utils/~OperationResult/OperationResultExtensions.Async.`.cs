@@ -86,9 +86,9 @@ partial class OperationResultExtensions
         });
     }
 
-    public static Task<OperationResult> Untype<T>(this Task<OperationResult<T>> task)
+    public static Task<OperationResult> AsEmpty<T>(this Task<OperationResult<T>> task)
     {
-        return task.ContinueWith(t => t.Result.Untype());
+        return task.ContinueWith(t => t.Result.AsEmpty());
     }
 
     public static Task<OperationResult<TNext>> Next<T, TNext>(this Task<OperationResult<T>> task, Func<T, Task<OperationResult<TNext>>> next)
@@ -147,9 +147,9 @@ partial class OperationResultExtensions
         return task.NextResult(m => Operation.Success(next(m)));
     }
 
-    public static Task<T> GetRequiredValue<T>(this Task<OperationResult<T>> task)
+    public static Task<T> Unwrap<T>(this Task<OperationResult<T>> task)
     {
-        return task.ContinueWith(m => m.Result.GetRequiredValue());
+        return task.ContinueWith(m => m.Result.Unwrap());
     }
 
     public static Task<Transput<TInput, OperationResult<TOutput>>> ToTransput<TInput, TOutput>(this Task<OperationResult<TOutput>> task, TInput input)
