@@ -1,6 +1,5 @@
 ﻿namespace FclEx.Utils;
 
-[Serializable]
 public class SimpleException : Exception
 {
     private readonly bool _noStackTrace;

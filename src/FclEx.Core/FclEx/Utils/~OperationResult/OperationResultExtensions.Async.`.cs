@@ -86,9 +86,9 @@ partial class OperationResultExtensions
         });
     }
 
-    public static Task<OperationResult> AsEmpty<T>(this Task<OperationResult<T>> task)
+    public static Task<OperationResult> WithoutValue<T>(this Task<OperationResult<T>> task)
     {
-        return task.ContinueWith(t => t.Result.AsEmpty());
+        return task.ContinueWith(t => t.Result.WithoutValue());
     }
 
     public static Task<OperationResult<TNext>> Next<T, TNext>(this Task<OperationResult<T>> task, Func<T, Task<OperationResult<TNext>>> next)
@@ -150,6 +150,11 @@ partial class OperationResultExtensions
     public static Task<T> Unwrap<T>(this Task<OperationResult<T>> task)
     {
         return task.ContinueWith(m => m.Result.Unwrap());
+    }
+
+    public static Task<T> Unwrap<T>(this Task<OperationResult<T>> task, T defaultValue)
+    {
+        return task.ContinueWith(m => m.Result.Unwrap(defaultValue));
     }
 
     public static Task<Transput<TInput, OperationResult<TOutput>>> ToTransput<TInput, TOutput>(this Task<OperationResult<TOutput>> task, TInput input)

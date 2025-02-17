@@ -8,9 +8,6 @@
 public readonly struct OperationResult<T> : IOperationResult<T>
 {
     /// <inheritdoc />
-    public int Code { get; }
-
-    /// <inheritdoc />
     public Exception? Exception { get; }
 
     /// <inheritdoc />
@@ -32,12 +29,10 @@ public readonly struct OperationResult<T> : IOperationResult<T>
     /// <summary>
     /// Initializes a new instance of the <see cref="OperationResult{T}"/> struct for a failed operation.
     /// </summary>
-    /// <param name="code">The error code.</param>
     /// <param name="ex">The exception that occurred.</param>
     /// <param name="elapsed">The time elapsed during the operation.</param>
-    public OperationResult(int code, Exception ex, TimeSpan elapsed)
+    public OperationResult(Exception ex, TimeSpan elapsed)
     {
-        Code = Check.NotEqualTo(code, OperationResultCodes.Success);
         Exception = ex ?? throw new ArgumentNullException(nameof(ex));
         Elapsed = elapsed;
         Value = default;
@@ -50,7 +45,6 @@ public readonly struct OperationResult<T> : IOperationResult<T>
     /// <param name="elapsed">The time elapsed during the operation.</param>
     public OperationResult(T result, TimeSpan elapsed)
     {
-        Code = OperationResultCodes.Success;
         Exception = null;
         Elapsed = elapsed;
         Value = result;
@@ -58,16 +52,12 @@ public readonly struct OperationResult<T> : IOperationResult<T>
 
     public static OperationResult<T> FromSuccess(T item, TimeSpan elapsed = default) => new(item!, elapsed);
 
-    public static OperationResult<T> FromError(int code, string? error, TimeSpan elapsed = default) => new(code, new SimpleException(error), elapsed);
-
-    public static OperationResult<T> FromError(string? error, TimeSpan elapsed = default) => FromError(OperationResultCodes.StringError, error, elapsed);
+    public static OperationResult<T> FromError(string? error, TimeSpan elapsed = default) => new(new SimpleException(error), elapsed);
 
     public static OperationResult<T> FromError(Exception ex, TimeSpan elapsed = default)
     {
-        return new OperationResult<T>(ex.IsCanceled() ? OperationResultCodes.Canceled : OperationResultCodes.Exception, ex, elapsed);
+        return new OperationResult<T>(ex, elapsed);
     }
-
-    public static OperationResult<T> FromError(int code, Exception ex, TimeSpan elapsed = default) => new(code, ex, elapsed);
 
     public static implicit operator OperationResult<T>(Exception ex)
     {
@@ -113,7 +103,7 @@ public readonly struct OperationResult<T> : IOperationResult<T>
     {
         return result.Success
             ? OperationResult.FromSuccess(Unit.Default, result.Elapsed)
-            : OperationResult.FromError(result.Code, result.Exception, result.Elapsed);
+            : OperationResult.FromError(result.Exception, result.Elapsed);
     }
 
     public static implicit operator Task<OperationResult<T>>(OperationResult<T> result)
@@ -130,7 +120,7 @@ public readonly struct OperationResult<T> : IOperationResult<T>
     {
         return Success
             ? new OperationResult<TDest>(Value.CastTo<TDest>(), Elapsed)
-            : new OperationResult<TDest>(Code, Exception, Elapsed);
+            : new OperationResult<TDest>(Exception, Elapsed);
     }
 
     /// <summary>

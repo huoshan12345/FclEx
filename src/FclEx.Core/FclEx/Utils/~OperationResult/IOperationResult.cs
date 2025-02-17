@@ -7,11 +7,6 @@
 public interface IOperationResult
 {
     /// <summary>
-    /// Gets the code associated with the operation result. Typically used for error codes.
-    /// </summary>
-    public int Code { get; }
-
-    /// <summary>
     /// Gets the exception that occurred during the operation, if any.
     /// </summary>
     public Exception? Exception { get; }
