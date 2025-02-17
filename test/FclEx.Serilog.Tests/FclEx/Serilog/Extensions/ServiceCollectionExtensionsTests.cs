@@ -34,13 +34,16 @@ public class ServiceCollectionExtensionsTests
         var serilogLogger = provider.GetService<global::Serilog.ILogger>();
         Assert.NotNull(serilogLogger);
 
-        serilogLogger.Information(new LogException("test", LogEventLevel.Warning), "");
+        
+        serilogLogger.Information(new LogException("exception", LogEventLevel.Warning).SetStackTrace(), "message");
 
         var flag = await listener.WaitAsync(1, TimeSpan.FromSeconds(1));
         Assert.True(flag);
 
         var logEvent = listener.Events.First();
         Assert.Equal(LogEventLevel.Warning, logEvent.Level);
+        Assert.Equal("exception", logEvent.Exception?.Message);
+        Assert.Equal("message", logEvent.MessageTemplate.Text);
 
         if (formatException)
         {
