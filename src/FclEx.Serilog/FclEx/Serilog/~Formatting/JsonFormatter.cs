@@ -30,7 +30,7 @@ public partial class JsonFormatter : ITextFormatter
     protected virtual void WriteBasicData(LogEvent logEvent, TextWriter output)
     {
         var time = logEvent.Timestamp.UtcDateTime.ToString("O");
-        var message = logEvent.MessageTemplate.Render(logEvent.Properties);
+        var message = logEvent.RenderMessage("l");
 
         WriteJsonData(Options.UtcTimeName, time, output, false);
         WriteJsonData(Options.LogLevelName, logEvent.Level.ToString(), output, true);

@@ -1,4 +1,6 @@
-﻿using static FclEx.Serilog.ExceptionPrintOption;
+﻿using Microsoft.Extensions.Configuration;
+using System.Net.NetworkInformation;
+using static FclEx.Serilog.ExceptionPrintOption;
 using static FclEx.Serilog.ExceptionWriteIndexOptions;
 
 namespace FclEx.Serilog.Formatting;
@@ -22,7 +24,8 @@ public class JsonFormatterTests
 
     [Theory]
     [MemberData(nameof(TestCases))]
-    public async Task Format_Test(int? maxLen, bool skipParas, ExceptionPrintOption printOptions, ExceptionWriteIndexOptions indexOptions)
+    public async Task Format_Test(int? maxLen, bool skipParas, ExceptionPrintOption printOptions,
+        ExceptionWriteIndexOptions indexOptions)
     {
         var options = new JsonFormatterOptions
         {
@@ -111,5 +114,33 @@ public class JsonFormatterTests
                 }
             }
         }
+    }
+
+    [Fact]
+    public void FormatProperty_Test()
+    {
+        var logEvent = CreateLogEvent(LogEventLevel.Information, null, "Message from {Name}", "Tom");
+
+        var options = new JsonFormatterOptions();
+        var formatter = new JsonFormatter(options);
+        using var sw = new StringWriter();
+        formatter.Format(logEvent, sw);
+
+        var jsonElement = sw.ToString().ToJsonElement();
+        Assert.Equal(LogEventLevel.Information.ToString(), jsonElement.GetProperty(options.LogLevelName).GetString());
+        Assert.Equal("Message from Tom", jsonElement.GetProperty(options.MessageName).GetString());
+        Assert.Equal(logEvent.Timestamp.UtcDateTime.ToString("O"), jsonElement.GetProperty(options.UtcTimeName).GetString());
+    }
+
+    private static readonly Logger DefaultLoggerImpl = new LoggerConfiguration().CreateLogger();
+
+    [MessageTemplateFormatMethod("messageTemplate")]
+    public static LogEvent CreateLogEvent(LogEventLevel level, Exception? ex, string messageTemplate, params object?[] propertyValues)
+    {
+        Assert.True(DefaultLoggerImpl.BindMessageTemplate(messageTemplate, propertyValues, out var template, out var properties));
+        properties = properties.Append(new(Constants.SourceContext, new ScalarValue(nameof(JsonFormatterTests))));
+        var date = DateTime.UtcNow.Date;
+        var time = Random.Shared.NextDateTime(date, date.AddDays(1));
+        return new LogEvent(time, level, ex, template, properties);
     }
 }
