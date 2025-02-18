@@ -1,35 +1,21 @@
 ﻿namespace FclEx.Actions;
 
-public static class ErrorAction
-{
-    public static ErrorAction<T> Create<T>(string error, TimeSpan timeSpan = default) => new(error, timeSpan);
-    public static ErrorAction<T> Create<T>(Exception ex, TimeSpan timeSpan = default) => new(ex, timeSpan);
-}
-
 public readonly struct ErrorAction<T> : IAction<T>
 {
-    private readonly string? _error;
-    private readonly Exception? _ex;
-    private readonly TimeSpan _timeSpan;
+    private readonly OperationResult<T> _result;
 
     public ErrorAction(string error, TimeSpan timeSpan = default)
     {
-        _error = error;
-        _timeSpan = timeSpan;
-        _ex = null;
+        _result = Operation.Error<T>(error, timeSpan);
     }
 
     public ErrorAction(Exception ex, TimeSpan timeSpan = default)
     {
-        _ex = ex ?? throw new ArgumentNullException(nameof(ex));
-        _timeSpan = timeSpan;
-        _error = null;
+        _result = Operation.Error<T>(ex, timeSpan);
     }
 
     public Task<OperationResult<T>> ExecuteAsync(CancellationToken token = default)
     {
-        return _ex is null
-            ? Operation.Error<T>(_error, _timeSpan)
-            : Operation.Error<T>(_ex, _timeSpan);
+        return _result;
     }
 }

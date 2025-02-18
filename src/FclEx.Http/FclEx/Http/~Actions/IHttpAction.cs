@@ -1,4 +1,5 @@
 ﻿#if NET6_0_OR_GREATER
+
 namespace FclEx.Http;
 
 public interface IHttpAction<T> : IAbstractAction<T>
@@ -9,49 +10,39 @@ public interface IHttpAction<T> : IAbstractAction<T>
 
     Task<OperationResult<T>> HandleResponseAsync(HttpResponse response)
     {
-        return IsFailed(response) 
+        return IsFailed(response)
             ? HandleFailed(response)
             : GetResultAsync(response);
     }
 
     async Task<OperationResult<T>> IAbstractAction<T>.ExecuteActionAsync(CancellationToken token)
     {
+        var logger = HttpService.Logger;
         HttpRequest? request = null;
         try
         {
             request = BuildRequest();
-            var response = await HttpService.SendAsync(request, token).IgnoreSyncContext();
-            if (response.Error)
+            var response = await HttpService.SendAsync(request, token);
+            if (response.Error == false)
+                return await HandleResponseAsync(response);
+
+            if (logger.IsEnabled(LogLevel.Trace))
             {
-#if DEBUG
-                Dump(request, HttpService);
-#endif
-                return (response.Exception!, response.Elapsed);
+                var dump = request.Dump(HttpService);
+                logger.LogTrace(dump);
             }
-            return await HandleResponseAsync(response).IgnoreSyncContext();
+
+            return (response.Exception, response.Elapsed);
         }
         catch (Exception ex)
         {
-#if DEBUG
-            Dump(request, HttpService);
-#endif
+            if (logger.IsEnabled(LogLevel.Trace) && request is not null)
+            {
+                var dump = request.Dump(HttpService);
+                logger.LogTrace(ex, dump);
+            }
             return ex;
         }
-    }
-
-    protected static void Dump(HttpRequest? request, IHttpService service)
-    {
-        if (request == null)
-            return;
-
-        var msg = new StringBuilder(1024);
-        msg.AppendLine("Http Dump: ");
-        var url = request.GetUri();
-        var header = request.GetRequestHeader(service);
-        msg.AppendLine("url: " + url);
-        msg.AppendLine("header: ");
-        msg.Append(header);
-        Debug.WriteLine(msg.ToString());
     }
 
     HttpRequest BuildRequest()

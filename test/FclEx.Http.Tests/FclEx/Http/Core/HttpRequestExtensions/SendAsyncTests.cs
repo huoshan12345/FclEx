@@ -65,8 +65,8 @@ public class SendAsyncTests(ITestOutputHelper output) : HttpServerTests
         var url = ipv6 ? ipv6Url : ipv4Url;
         var response = await HttpRequest.Get(url)
             .ReadHeadersTimeout(TimeSpan.FromSeconds(10))
-            .SendAsync(http)
-            .IgnoreSyncContext();
+            .SendAsync(http);
+
         response.ThrowIfError();
     }
 
@@ -76,8 +76,8 @@ public class SendAsyncTests(ITestOutputHelper output) : HttpServerTests
     {
         var response = await HttpRequest.Get(url)
             .ReadHeadersTimeout(TimeSpan.FromSeconds(5))
-            .SendAsync()
-            .IgnoreSyncContext();
+            .SendAsync();
+
         response.ThrowIfError();
     }
 
@@ -87,11 +87,10 @@ public class SendAsyncTests(ITestOutputHelper output) : HttpServerTests
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 3).ToDictionary(m => m.ToString(), m => random.NextString(5));
         var response = await HttpRequest.Post("api/post")
-            .AddFormParam(expected!)
+            .AddFormParam(expected)
             .ReadHeadersTimeout(TimeSpan.FromSeconds(5))
             .SendAsync(TestHttp)
-            .ThrowIfError()
-            .IgnoreSyncContext();
+            .ThrowIfError();
 
         Assert.False(response.Error);
         var body = response.ResponseString;
@@ -109,8 +108,8 @@ public class SendAsyncTests(ITestOutputHelper output) : HttpServerTests
         var response = await HttpRequest.Post("api/post")
             .JsonContent(list)
             .SendAsync(TestHttp)
-            .ThrowIfError()
-            .IgnoreSyncContext();
+            .ThrowIfError();
+
         Assert.False(response.Error);
         var body = response.ResponseString.ToJsonNode();
         Assert.NotNull(body);
@@ -134,11 +133,10 @@ public class SendAsyncTests(ITestOutputHelper output) : HttpServerTests
         var response = await HttpRequest.Post("api/charset")
             .AddQueryParam("charset", charSet)
             .SendAsync(TestHttp)
-            .ThrowIfError()
-            .IgnoreSyncContext();
+            .ThrowIfError();
 
         Assert.False(response.Error);
-        var contentType = response.Headers.Get(HttpKnownHeaderNames.ContentType).FirstOrDefault();
+        var contentType = response.Headers.Get(HttpHeaderNames.ContentType).FirstOrDefault();
         Assert.NotNull(contentType);
         Assert.Contains(charSet, contentType);
 
@@ -154,5 +152,19 @@ public class SendAsyncTests(ITestOutputHelper output) : HttpServerTests
                 _ => Encoding.GetEncoding(charSet),
             };
         }
+    }
+
+    [Fact]
+    public async Task Redirection_Test()
+    {
+        const string url = "https://www.baidu.com/";
+        var response = await HttpRequest.Get("api/redirect")
+            .AddQueryParam("u", url)
+            .EnsureSuccessStatusCode()
+            .SendAsync(TestHttp)
+            .ThrowIfError();
+
+        Assert.Equal(2, response.RedirectUris.Count);
+        Assert.Equal(url, response.LastUri().ToString());
     }
 }

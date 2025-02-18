@@ -116,7 +116,7 @@ public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
         try
         {
             var list = items.Select(m => m.Item).ToList();
-            await ConsumingHandler.InvokeAsync(this, list).IgnoreSyncContext();
+            await ConsumingHandler.InvokeAsync(this, list);
             Counter.IncrementConsume(list.Count);
             return;
         }

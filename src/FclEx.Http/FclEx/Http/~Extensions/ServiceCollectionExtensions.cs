@@ -4,7 +4,7 @@ public static class ServiceCollectionExtensions
 {
     public static IHttpClientBuilder AddHttpClientWithPolly(this IServiceCollection services, string name, HttpClientOptions? options = null)
     {
-        options ??= HttpClientOptions.Default;
+        options ??= new();
         return services.AddHttpClient(name, httpClient =>
             {
                 httpClient.Timeout = options.TotalTimeout;

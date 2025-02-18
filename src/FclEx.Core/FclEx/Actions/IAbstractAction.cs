@@ -14,14 +14,14 @@ public interface IAbstractAction<T> : IAction<T>
         var time = ValueStopwatch.StartNew();
         Debug.WriteLine($"[{GetName()}]Begin");
 
-        var future = CommonAction.Create(ExecuteActionAsync, true)
+        var future = Operation.Action(ExecuteActionAsync)
             .NextResult<T, T>(r => r.Success
                 ? new SuccessAction<T>(r.Value, r.Elapsed)
                 : r.IsCanceled()
-                    ? CommonAction.Create(t => HandleCancellationAsync(r.Exception), true)
-                    : CommonAction.Create(t => HandleErrorAsync(r.Exception), true));
+                    ? Operation.Action(t => HandleCancellationAsync(r.Exception))
+                    : Operation.Action(t => HandleErrorAsync(r.Exception)));
 
-        var result = await future.ExecuteAsync(token).IgnoreSyncContext();
+        var result = await future.ExecuteAsync(token);
         result = result.Elapsed(time.GetElapsedTime());
 
         Debug.WriteLine($"[{GetName()}]End, after {result.Elapsed.TotalMilliseconds:f3} ms]");

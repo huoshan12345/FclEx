@@ -70,7 +70,7 @@ public static class HttpResponseExtensions
             fileName = (realUrl.Host + realUrl.LocalPath).Replace(_regexOfNonWord, "_").TrimEnd("_");
         }
 
-        var mimeType = response.Headers.GetLast(HttpKnownHeaderNames.ContentType) ?? "";
+        var mimeType = response.Headers.GetLast(HttpHeaderNames.ContentType) ?? "";
         if (mimeType.IsNotEmpty())
         {
             if (mimeType.Contains(';'))
@@ -117,7 +117,7 @@ public static class HttpResponseExtensions
 
     public static HttpResponse AddCookies(this HttpResponse response, IEnumerable<string> cookies)
     {
-        response.Headers.AddRange(HttpKnownHeaderNames.SetCookie, cookies);
+        response.Headers.AddRange(HttpHeaderNames.SetCookie, cookies);
         return response;
     }
 }

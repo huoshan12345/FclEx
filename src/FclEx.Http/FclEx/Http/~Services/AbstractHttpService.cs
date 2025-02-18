@@ -1,12 +1,11 @@
-﻿using System;
-
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 public abstract class AbstractHttpService : IHttpService
 {
     protected readonly CookieContainer _cookieContainer = new();
     private ILogger _logger = NullLogger.Instance;
 
+    // ReSharper disable once MemberCanBeProtected.Global
     public bool UseCookie { get; set; } = true;
 
     public virtual void Dispose()
@@ -23,7 +22,7 @@ public abstract class AbstractHttpService : IHttpService
         var response = new HttpResponse(request) { StartTime = DateTimeOffset.UtcNow };
         try
         {
-            await ExecuteAsyncInternal(request, response, token).IgnoreSyncContext();
+            await ExecuteAsyncInternal(request, response, token);
         }
         catch (Exception e)
         {
@@ -92,28 +91,23 @@ public abstract class AbstractHttpService : IHttpService
 
         try
         {
-            var parser = new CookieParser(cookieStr);
-            while (true)
+            var cookies = CookieHelper.Parse(cookieStr);
+            foreach (var (success, cookie, ex, _) in cookies)
             {
-                var c = parser.Get();
-                if (c == null) break;
-                if (c.Name.IsNullOrEmpty())
+                if (success)
                 {
-                    Logger.LogWarning("A cookie has been rejected: " + c);
-                    continue;
-                }
-
-                try
-                {
-                    var cookie = c.ToCookie();
-                    if (cookie.Domain.IsNullOrEmpty())
+                    if (cookie!.Domain.IsNullOrEmpty())
+                    {
                         _cookieContainer.Add(responseUri, cookie);
+                    }
                     else
+                    {
                         _cookieContainer.Add(cookie);
+                    }
                 }
-                catch (Exception ex)
+                else
                 {
-                    Logger.LogWarning(ex, "A cookie has been discarded: " + c);
+                    Logger.LogWarning(ex, ex!.Message);
                 }
             }
         }

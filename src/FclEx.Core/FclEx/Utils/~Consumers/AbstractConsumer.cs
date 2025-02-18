@@ -65,7 +65,7 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>, ICancellationLi
         try
         {
             while (!IsCompleteNoLock && !_cts.IsCancellationRequested)
-                await ProcessActionAsync().IgnoreSyncContext();
+                await ProcessActionAsync();
         }
         catch (Exception ex)
         {

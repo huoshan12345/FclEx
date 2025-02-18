@@ -1,31 +1,41 @@
 ﻿namespace FclEx.Serilog;
 
-[SuppressMessage("ReSharper", "AutoPropertyCanBeMadeGetOnly.Global")]
+/// <summary>
+/// Configures the formatting options for exceptions when logging or rendering them.
+/// This class provides settings for controlling the message length, stack trace behavior, type name formatting, and more.
+/// </summary>
 public class ExceptionFormatOptions
 {
+    /// <summary>
+    /// The maximum length of the exception message.
+    /// Defaults to 100 if not set.
+    /// </summary>
     public int? MaxMessageLength { get; set; } = 100;
 
     /// <summary>
-    /// Indicates whether parameters will be skipped when a stack trace is printed.
+    /// Determines whether parameters are omitted in the stack trace output.
     /// </summary>
-    public bool SkipParasInStackTrace { get; set; } = true;
+    public bool OmitParametersInStackTrace { get; set; } = true;
 
     /// <summary>
-    /// Indicates whether exception message will be skipped when it already exists in rendered <see cref="MessageTemplate"/>
+    /// Specifies whether the exception message should be omitted if it already exists in the rendered <see cref="MessageTemplate"/>.
     /// </summary>
-    public bool SkipMessageIfExists { get; set; } = true;
+    public bool OmitMessageIfExists { get; set; } = true;
 
     /// <summary>
-    /// Indicates how to print the name of an exception type. <br/>
-    /// <see langword="true" /> to use <see cref="TypeExtensions.SimpleName"/>, <br/>
-    /// <see langword="false" /> to use <see cref="Type.FullName"/>.
+    /// Specifies whether to use the simple name or the full name for the exception type.
+    /// <br/> <see langword="true" /> uses <see cref="TypeExtensions.SimpleName"/>,
+    /// <br/> <see langword="false" /> uses <see cref="Type.FullName"/>.
     /// </summary>
-    public bool UseSimpleNameForType { get; set; } = true;
+    public bool UseSimpleTypeName { get; set; } = true;
 
+    /// <summary>
+    /// The default instance of <see cref="ExceptionFormatOptions"/>.
+    /// </summary>
     public static readonly ExceptionFormatOptions Default = new();
 
     /// <summary>
-    /// Indicates whether the indexes of an exception will be written.
+    /// Specifies whether the indexes of an exception should be included.
     /// </summary>
-    public ExceptionWriteIndexOptions WriteIndexOptions { get; set; } = ExceptionWriteIndexOptions.Default;
+    public ExceptionIndexOptions IndexOptions { get; set; } = ExceptionIndexOptions.Default;
 }

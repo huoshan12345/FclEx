@@ -6,7 +6,7 @@ public static class HttpRequestMessageExtensions
     {
         if (cookie.IsNotEmpty())
         {
-            request.Headers.Add(HttpKnownHeaderNames.Cookie, cookie);
+            request.Headers.Add(HttpHeaderNames.Cookie, cookie);
         }
 
         return request;

@@ -14,7 +14,7 @@ public static class HttpClientHelper
 
     public static SocketsHttpHandler CreateSocketsHttpHandler(SocketsHttpHandlerOptions? options = null)
     {
-        options ??= SocketsHttpHandlerOptions.Default;
+        options ??= new();
         return new SocketsHttpHandler
         {
             ConnectTimeout = options.ConnectTimeout,
@@ -22,12 +22,12 @@ public static class HttpClientHelper
             PooledConnectionIdleTimeout = options.PooledConnectionIdleTimeout,
             MaxConnectionsPerServer = int.MaxValue,
             UseCookies = false,
-            AllowAutoRedirect = true,
+            AllowAutoRedirect = options.AllowAutoRedirect,
             AutomaticDecompression = options.AutomaticDecompression,
             UseProxy = options.Proxy is not null,
             Proxy = options.Proxy,
 #if NET6_0_OR_GREATER
-            EnableMultipleHttp2Connections = options.EnableMultipleHttp2Connections,            
+            EnableMultipleHttp2Connections = options.EnableMultipleHttp2Connections,
 #endif
             SslOptions = new()
             {

@@ -57,6 +57,6 @@ public static class AsyncLockExtensions
         if (!condition())
             return;
 
-        await action().IgnoreSyncContext();
+        await action();
     }
 }

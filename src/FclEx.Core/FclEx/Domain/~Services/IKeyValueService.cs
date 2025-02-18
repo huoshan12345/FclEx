@@ -12,7 +12,7 @@ public static class KeyValueServiceExtensions
 {
     public static async Task<T?> GetAsync<T>(this IKeyValueService service, string objectId, string key, T? defaultValue = default)
     {
-        var v = await service.GetAsync(objectId, key).IgnoreSyncContext();
+        var v = await service.GetAsync(objectId, key);
         return v == null
             ? defaultValue
             : service.StringSerializer.Deserialize<T>(v);
@@ -21,7 +21,7 @@ public static class KeyValueServiceExtensions
     public static async Task<T> SaveAsync<T>(this IKeyValueService service, string objectId, string key, T value)
     {
         var obj = value == null ? null : service.StringSerializer.Serialize(value);
-        await service.SaveAsync(objectId, key, obj).IgnoreSyncContext();
+        await service.SaveAsync(objectId, key, obj);
         return value;
     }
 

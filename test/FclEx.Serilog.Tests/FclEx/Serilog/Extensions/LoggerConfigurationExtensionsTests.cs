@@ -1,4 +1,6 @@
-﻿namespace FclEx.Serilog.Extensions;
+﻿using Microsoft.Extensions.Logging;
+
+namespace FclEx.Serilog.Extensions;
 
 [Collection(nameof(Console))]
 public class LoggerConfigurationExtensionsTests
@@ -12,7 +14,7 @@ public class LoggerConfigurationExtensionsTests
             .WrapAllSinks(sink => new LogEventMutateSink(sink, null))
             .CreateLogger();
 
-        logger.Information(new LogException("test", LogEventLevel.Warning), "");
+        logger.Information(new LogException("test", LogLevel.Warning), "");
 
         var flag = await listener.WaitAsync(1, TimeSpan.FromSeconds(1));
         Assert.True(flag);

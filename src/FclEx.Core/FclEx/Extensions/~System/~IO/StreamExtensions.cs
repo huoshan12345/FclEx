@@ -34,8 +34,8 @@ public static class StreamExtensions
         do
         {
             using var cts = token.WithTimeout(readBufferTimeout);
-            bytesCopied = await source.ReadAsync(buffer, 0, buffer.Length, cts.Token).IgnoreSyncContext();
-            await dest.WriteAsync(buffer, 0, bytesCopied, cts.Token).IgnoreSyncContext();
+            bytesCopied = await source.ReadAsync(buffer, 0, buffer.Length, cts.Token);
+            await dest.WriteAsync(buffer, 0, bytesCopied, cts.Token);
         } while (bytesCopied > 0);
 
     }

@@ -2,14 +2,14 @@
 
 partial class ActionExtensions
 {
-    public static IAction<TNext> NextResult<T, TNext>(this IAction<T> action, Func<OperationResult<T>, TNext> next, bool executeSafely = true)
+    public static IAction<TNext> NextResult<T, TNext>(this IAction<T> action, Func<OperationResult<T>, TNext> next)
     {
-        return action.NextResult<T, TNext>(r => CommonAction.Create(t => next(r), executeSafely));
+        return action.NextResult<T, TNext>(r => Operation.Action(t => next(r)));
     }
 
-    public static IAction<TNext> NextResult<T, TNext>(this IAction<T> action, Func<OperationResult<T>, OperationResult<TNext>> next, bool executeSafely = true)
+    public static IAction<TNext> NextResult<T, TNext>(this IAction<T> action, Func<OperationResult<T>, OperationResult<TNext>> next)
     {
-        return action.NextResult<T, TNext>(r => CommonAction.Create(t => next(r), executeSafely));
+        return action.NextResult<T, TNext>(r => Operation.Action(t => next(r)));
     }
         
     public static IAction<TNext> NextResult<T, TNext>(this IAction<T> action, Func<OperationResult<T>, IAction<TNext>> next)
@@ -18,35 +18,35 @@ partial class ActionExtensions
         return new NextResultAction<T, TNext>(action, next);
     }
         
-    public static IAction<TNext> NextResult<T, TNext>(this IAction<T> action, Func<OperationResult<T>, Task<TNext>> next, bool executeSafely = true)
+    public static IAction<TNext> NextResult<T, TNext>(this IAction<T> action, Func<OperationResult<T>, Task<TNext>> next)
     {
-        return action.NextResult<T, TNext>(r => CommonAction.Create(t => next(r), executeSafely));
+        return action.NextResult<T, TNext>(r => Operation.Action(t => next(r)));
     }
 
-    public static IAction<TNext> NextResult<T, TNext>(this IAction<T> action, Func<OperationResult<T>, Task<OperationResult<TNext>>> next, bool executeSafely = true)
+    public static IAction<TNext> NextResult<T, TNext>(this IAction<T> action, Func<OperationResult<T>, Task<OperationResult<TNext>>> next)
     {
-        return action.NextResult<T, TNext>(r => CommonAction.Create(t => next(r), executeSafely));
+        return action.NextResult<T, TNext>(r => Operation.Action(t => next(r)));
     }
         
 
-    public static IAction<Unit> NextResult<T>(this IAction<T> action, Func<OperationResult<T>, Task> next, bool executeSafely = true)
+    public static IAction<Unit> NextResult<T>(this IAction<T> action, Func<OperationResult<T>, Task> next)
     {
-        return action.NextResult<T, Unit>(r => CommonAction.Create(t => next(r), executeSafely));
+        return action.NextResult<T, Unit>(r => Operation.Action(t => next(r)));
     }
 
-    public static IAction<Unit> NextResult<T>(this IAction<T> action, Func<OperationResult<T>, Task<OperationResult>> next, bool executeSafely = true)
+    public static IAction<Unit> NextResult<T>(this IAction<T> action, Func<OperationResult<T>, Task<OperationResult>> next)
     {
-        return action.NextResult<T, Unit>(r => CommonAction.Create(t => next(r), executeSafely));
+        return action.NextResult<T, Unit>(r => Operation.Action(t => next(r)));
     }
 
-    public static IAction<Unit> NextResult<T>(this IAction<T> action, Func<OperationResult<T>, OperationResult> next, bool executeSafely = true)
+    public static IAction<Unit> NextResult<T>(this IAction<T> action, Func<OperationResult<T>, OperationResult> next)
     {
-        return action.NextResult<T, Unit>(r => CommonAction.Create(t => next(r), executeSafely));
+        return action.NextResult<T, Unit>(r => Operation.Action(t => next(r)));
     }
 
-    public static IAction<Unit> NextResult<T>(this IAction<T> action, Action<OperationResult<T>> next, bool executeSafely = true)
+    public static IAction<Unit> NextResult<T>(this IAction<T> action, Action<OperationResult<T>> next)
     {
-        return action.NextResult<T, Unit>(r => CommonAction.Create(t => next(r), executeSafely));
+        return action.NextResult<T, Unit>(r => Operation.Action(t => next(r)));
     }
 
     public static IAction<T> NextResultIf<T>(this IAction<T> action, Func<OperationResult<T>, bool> condition,

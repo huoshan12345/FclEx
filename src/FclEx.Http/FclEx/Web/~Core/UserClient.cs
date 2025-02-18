@@ -33,7 +33,7 @@ public abstract class UserClient : IUserClient, IDisposable
     [AllowNull]
     public virtual IUserAccount Account
     {
-        get => _account ??= new UserAccount();
+        get => _account ??= UserAccount.Empty;
         set
         {
             if (value == null)
@@ -57,8 +57,8 @@ public abstract class UserClient : IUserClient, IDisposable
     }
     public virtual ILogger Logger => _logger.Value;
     public event Action<AccountStatus> OnAccountStatusChanged = status => { };
-    public virtual IClientSession Session { get; } = new ClientSession();
-    public virtual bool IsOnline => Session.SessionState == ClientSessionState.Online;
+    public virtual IUserClientSession Session { get; } = new UserClientSession();
+    public virtual bool IsOnline => Session.SessionState == UserClientSessionState.Online;
 
     protected UserClient(IUserAccount? account = null, ILoggerFactory? loggerFactory = null)
     {
@@ -75,10 +75,10 @@ public abstract class UserClient : IUserClient, IDisposable
 
     protected virtual IEnumerable<LoggerProperty> GetLogProperties()
     {
-        return new LoggerProperty[]
-        {
+        return
+        [
             ("ClientType", GetType().ShortName()),
-        };
+        ];
     }
 
     protected virtual IEnumerable<LazyLoggerProperty> GetLogLazyProperties()
@@ -87,7 +87,7 @@ public abstract class UserClient : IUserClient, IDisposable
         [
             (nameof(Account), () => Account),
             (nameof(IsOnline), () => IsOnline),
-            (nameof(ClientSessionState), () => Session.SessionState),
+            (nameof(UserClientSessionState), () => Session.SessionState),
         ];
     }
 
@@ -134,14 +134,15 @@ public abstract class UserClient : IUserClient, IDisposable
         try
         {
             Session.LoggingIn();
+
             var response = await loginAction(token)
                 .Success(_ => Session.Online())
                 .Error(_ =>
                 {
                     if (Session.IsLoggingIn())
                         Session.Offline();
-                })
-                .IgnoreSyncContext();
+                });
+
             return response.Elapsed(time.GetElapsedTime());
         }
         catch (Exception ex)
@@ -180,12 +181,11 @@ public abstract class UserClient : IUserClient, IDisposable
             Logger.LogTrace("Start to fake login...");
             var result = await FakeLoginActionAsync(t)
                 .Success(o => Logger.LogTrace("Fake login successfully"))
-                .Error(ex => Logger.LogWarning(ex, "Failed to fake login: " + ex.Message))
-                .IgnoreSyncContext();
+                .Error(ex => Logger.LogWarning(ex, "Failed to fake login: " + ex.Message));
 
             if (result.Error && loginIfFail)
             {
-                result = await LoginActionWrapperAsync(t).IgnoreSyncContext();
+                result = await LoginActionWrapperAsync(t);
             }
             return result;
         }, token);

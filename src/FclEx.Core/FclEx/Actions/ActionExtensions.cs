@@ -57,14 +57,14 @@ public static partial class ActionExtensions
         return action.Map(m => default(Unit));
     }
 
-    public static IAction<T> RepeatUntil<T>(this IAction<T> actor, Func<T, bool>? until, TimeSpan delay = default, TimeSpan? timeout = null, bool executeSafely = true)
+    public static IAction<T> RepeatUntil<T>(this IAction<T> actor, Func<T, bool>? until, TimeSpan delay = default, TimeSpan? timeout = null)
     {
-        return CommonAction.Create<T>(async t =>
+        return Operation.Action<T>(async t =>
         {
             using var cts = t.WithTimeout(timeout > TimeSpan.Zero ? timeout : null);
             while (!cts.IsCancellationRequested)
             {
-                var r = await actor.ExecuteAsync(t).IgnoreSyncContext();
+                var r = await actor.ExecuteAsync(t);
                 if (!r.Success)
                     return r;
 
@@ -74,7 +74,7 @@ public static partial class ActionExtensions
                 await TaskHelper.Delay(delay, t);
             }
             return Operation.Cancel<T>();
-        }, executeSafely);
+        });
     }
 
     public static IAction<T> RepeatUntil<T>(this IAction<T> actor, Func<T, bool>? until, int delayInSeconds = default, int? timeoutInSeconds = null)
@@ -104,9 +104,9 @@ public static partial class ActionExtensions
         return action.Error<T, TNext>(_ => error ?? string.Empty);
     }
 
-    public static IAction<T> Error<T>(this IAction<T> action, Action<Exception> onError, bool executeSafely = true)
+    public static IAction<T> Error<T>(this IAction<T> action, Action<Exception> onError)
     {
         Check.NotNull(onError);
-        return action.NextResultIf(r => r.Error, r => CommonAction.Create(t => onError(r.Exception!), executeSafely).Next(r));
+        return action.NextResultIf(r => r.Error, r => Operation.Action(t => onError(r.Exception!)).Next(r));
     }
 }

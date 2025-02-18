@@ -90,11 +90,11 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
         T? obj = default;
         try
         {
-            obj = await DeserializeAsync(args).IgnoreSyncContext();
+            obj = await DeserializeAsync(args);
         }
         catch (Exception ex)
         {
-            await OnDeserializeDiscardAsync(args, ex).IgnoreSyncContext();
+            await OnDeserializeDiscardAsync(args, ex);
             await Channel.BasicAckAsync(deliveryTag: args.DeliveryTag, multiple: false);
             return;
         }
@@ -104,8 +104,7 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
         {
             var result = await ConsumeActionAsync(args, obj)
                 .Success(t => Logger.LogTrace("Consume successfully"))
-                .Error(e => exception = e)
-                .IgnoreSyncContext();
+                .Error(e => exception = e);
 
             if (result.Success)
                 return;
@@ -120,12 +119,12 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
             Logger.LogTrace($"Consume finished, it takes {watch.GetElapsedTime().TotalSeconds:f3} seconds");
             disposable.Dispose();
 
-            await TaskHelper.Delay(ProcessInterval).IgnoreSyncContext();
+            await TaskHelper.Delay(ProcessInterval);
             await Channel.BasicAckAsync(deliveryTag: args.DeliveryTag, multiple: false);
         }
 
         properties.IncreaseErrorTimes();
-        await OnConsumeErrorAsync(args, obj, exception!).IgnoreSyncContext();
+        await OnConsumeErrorAsync(args, obj, exception!);
     }
 
     protected virtual async Task OnConsumeErrorAsync(BasicDeliverEventArgs args, T input, Exception exception)
@@ -137,11 +136,11 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
         {
             if (errorTimes <= MaxRetryTimes)
             {
-                await OnConsumeRetryAsync(args, input, exception).IgnoreSyncContext();
+                await OnConsumeRetryAsync(args, input, exception);
             }
             else
             {
-                await OnConsumeDiscardAsync(args, input, exception).IgnoreSyncContext();
+                await OnConsumeDiscardAsync(args, input, exception);
             }
         }
         catch (Exception ex)

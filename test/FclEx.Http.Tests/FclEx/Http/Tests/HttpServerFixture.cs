@@ -1,4 +1,5 @@
-﻿using FclEx.Tests;
+﻿using System;
+using FclEx.Tests;
 
 namespace FclEx.Http.Tests;
 
@@ -19,7 +20,7 @@ public class HttpServerFixture : GlobalFixture
     {
         return Environment.MachineName switch
         {
-            "PC" => "socks5://192.168.1.12:7891",
+            "PC" => "",
             _ => "",
         };
     }
@@ -93,6 +94,8 @@ public class HttpServerFixture : GlobalFixture
         {
             context.Response.ContentType = $"text/plain;charset={charSet}";
         });
+
+        app.MapGet("/api/redirect", (string u) => Results.Redirect(u));
 
         await app.StartAsync();
     }

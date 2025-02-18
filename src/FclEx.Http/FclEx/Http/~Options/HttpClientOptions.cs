@@ -1,8 +1,8 @@
 ﻿namespace FclEx.Http;
 
-public record HttpClientOptions : SocketsHttpHandlerOptions
+public class HttpClientOptions : SocketsHttpHandlerOptions
 {
-    public static readonly SleepDurationProvider DefaultSleepDurationProvider = retryAttempt => TimeSpan.FromSeconds(1 + retryAttempt);
+    public static readonly SleepDurationProvider DefaultSleepDurationProvider = retryAttempt => TimeSpan.Zero;
 
     public Uri? BaseAddress { get; set; }
 #if NET6_0_OR_GREATER
@@ -22,6 +22,4 @@ public record HttpClientOptions : SocketsHttpHandlerOptions
     /// Will be used as <see cref="HttpClient.Timeout"/>
     /// </summary>
     public TimeSpan TotalTimeout { get; set; } = TimeSpan.FromMinutes(2);
-
-    public new static readonly HttpClientOptions Default = new();
 }

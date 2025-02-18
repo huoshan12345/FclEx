@@ -16,7 +16,7 @@ partial class OperationResultTests
     {
         var (successful, result, _, elapsed) = await Operation.ExecuteAsync(async () =>
         {
-            await Task.Delay(TimeSpan.FromSeconds(1)).IgnoreSyncContext();
+            await Task.Delay(TimeSpan.FromSeconds(1));
             return 1;
         }, TimeSpan.FromSeconds(10));
         Assert.True(successful);
