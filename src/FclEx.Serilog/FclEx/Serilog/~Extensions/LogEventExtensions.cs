@@ -4,6 +4,19 @@ namespace FclEx.Serilog;
 
 public static class LogEventExtensions
 {
+    public static void RenderMessage(this LogEvent logEvent, TextWriter output, string? format = null, IFormatProvider? formatProvider = null)
+    {
+        Methods.MessageTemplateRenderer_Render.Invoke(null, [logEvent.MessageTemplate, logEvent.Properties, output, format, formatProvider]);
+    }
+
+    public static string RenderMessage(this LogEvent logEvent, string? format = null, IFormatProvider? formatProvider = null)
+    {
+        using var disposable = StringBuilderHelper.GetCached();
+        var sw = new StringWriter(disposable.Value);
+        RenderMessage(logEvent, sw, format, formatProvider);
+        return sw.ToString();
+    }
+
     public static LogEvent SetException(this LogEvent logEvent, Exception? ex)
     {
         LogEvent_Exception.SetValue(logEvent, ex);
@@ -85,6 +98,17 @@ public static class LogEventExtensions
         var ex = new FormattedException(logEvent.Exception);
         logEvent.SetException(ex);
         return logEvent;
+    }
+
+    public static Exception? GetOriginalException(this LogEvent logEvent)
+    {
+        if (logEvent.Exception is not { } ex)
+            return null;
+
+        if (ex is FormattedException formattedException)
+            return formattedException.Exception;
+
+        return ex;
     }
 
     public static LogEvent UnwrapException(this LogEvent logEvent)

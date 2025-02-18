@@ -27,7 +27,7 @@ public readonly struct UnionAction<T, TNext> : IAction<(T, TNext)>
         if (nextActor == null)
         {
             return _errorWhenNextNull
-                ? (OperationResult<(T, TNext)>)Constant.NullNextError
+                ? (OperationResult<(T, TNext)>)Constants.NullNextError
                 : ((item, default!), result.Elapsed);
         }
 

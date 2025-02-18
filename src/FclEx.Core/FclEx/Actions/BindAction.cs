@@ -13,7 +13,7 @@ public readonly struct BindAction<T, TDest> : IAction<TDest>
 
     public async Task<OperationResult<TDest>> ExecuteAsync(CancellationToken token = default)
     {
-        var result = await _action.ExecuteAsync(token).IgnoreSyncContext();
+        var result = await _action.ExecuteAsync(token);
         return result.Bind(_map);
     }
 }

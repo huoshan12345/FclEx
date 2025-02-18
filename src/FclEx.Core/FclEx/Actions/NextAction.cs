@@ -13,15 +13,15 @@ public readonly struct NextAction<T, TNext> : IAction<TNext>
 
     public async Task<OperationResult<TNext>> ExecuteAsync(CancellationToken token = default)
     {
-        var result = await _action.ExecuteAsync(token).IgnoreSyncContext();
+        var result = await _action.ExecuteAsync(token);
         if (!result.Success)
             return result.CastTo<TNext>();
 
         var nextActor = _next(result.Value);
         if (nextActor == null)
-            return Constant.NullNextError;
+            return Constants.NullNextError;
 
-        var nextResult = await nextActor.ExecuteAsync(token).IgnoreSyncContext();
+        var nextResult = await nextActor.ExecuteAsync(token);
         if (!nextResult.Success)
             return nextResult;
 

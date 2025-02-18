@@ -1,5 +1,4 @@
-﻿using static FclEx.Serilog.ExceptionPrintOption;
-using static FclEx.Serilog.ExceptionWriteIndexOptions;
+﻿using static FclEx.Serilog.ExceptionWriteIndexOptions;
 
 namespace FclEx.Serilog;
 
@@ -27,7 +26,7 @@ partial class JsonFormatter
 
         var name = ExceptionOptions.UseSimpleNameForType
             ? type.SimpleName()
-            : type.FullName;
+            : type.FullName ?? type.Name;
 
         output.Write(name); // we assume "name" doesn't need to escape. 
 
@@ -55,45 +54,13 @@ partial class JsonFormatter
         }
     }
 
-    protected virtual void PrintException(Exception ex)
-    {
-        var op = Options.ExceptionPrintOption;
-        if (op == ExceptionPrintOption.None)
-            return;
-
-        var str = ex.ToString();
-        var lines = op == SingleMessage
-            ? [str]
-            : str.SplitToLines();
-
-        foreach (var line in ToJsonObject(lines))
-        {
-            Console.WriteLine(line);
-        }
-
-        IEnumerable<string> ToJsonObject(IEnumerable<string> values)
-        {
-            using var sb = StringBuilderHelper.GetCached();
-            var sw = new StringWriter(sb.Value);
-
-            foreach (var value in values)
-            {
-                sb.Value.Clear();
-                sw.Write("{");
-                WriteJsonData(Options.ExceptionName, value, sw, false);
-                sw.Write("}");
-                yield return sw.ToString();
-            }
-        }
-    }
-
     protected virtual void WriteFormattedException(string logEventMessage, Exception ex, TextWriter output)
     {
         output.Write(',');
         JsonValueFormatter.WriteQuotedJsonString(Options.ExceptionName, output);
         output.Write(":[");
 
-        var (infos, multiBranched) = ex.GetInfos();
+        var (infos, multiBranched) = ex.BuildTree();
         var indexOp = ExceptionOptions.WriteIndexOptions;
         var writeIndexes = IfWriteIndexes();
 

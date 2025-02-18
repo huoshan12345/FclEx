@@ -1,10 +1,14 @@
 ﻿namespace System.Text.Json;
 
-public readonly record struct JsonOptions(
+public record JsonOptions(
     bool Indented = false,
-    bool IgnoreNull = false,
+    bool IgnoreWritingNull = false,
+    bool IgnoreReadingNull = true,
     bool StrictEscaping = false,
     bool PropertyNameCaseSensitive = false,
-    bool DisallowBoolFromString = false,
-    bool DisallowNumberFromString = false,
-    JsonNamingPolicy? PropertyNamingPolicy = null);
+    bool AllowBoolFromString = true,
+    bool AllowNumberFromString = true,
+    JsonNamingPolicy? PropertyNamingPolicy = null)
+{
+    public static readonly JsonOptions Default = new();
+}
