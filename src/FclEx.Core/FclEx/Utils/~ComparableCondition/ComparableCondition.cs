@@ -55,4 +55,9 @@ public static class ComparableCondition
             _ => throw new ArgumentOutOfRangeException(nameof(@operator), @operator, null),
         };
     }
+
+    public static bool IsMatch<T>(this T left, RightComparableCondition<T> condition) where T : IComparable<T>
+    {
+        return condition.IsMatch(left);
+    }
 }
