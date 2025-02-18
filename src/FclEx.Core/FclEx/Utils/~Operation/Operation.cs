@@ -34,3 +34,4 @@ public static partial class Operation
 
     public static OperationResult<T> Execute<T>(Func<OperationResult<T>> action) => Execute<OperationResult<T>>(action).Unwrap();
 }
+

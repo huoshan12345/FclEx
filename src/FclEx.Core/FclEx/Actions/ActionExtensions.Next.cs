@@ -24,14 +24,14 @@ partial class ActionExtensions
         return new NextAction<T, TNext>(action, next);
     }
 
-    public static IAction<TNext> Next<T, TNext>(this IAction<T> action, Func<T, Task<TNext>> next, bool executeSafely = true)
+    public static IAction<TNext> Next<T, TNext>(this IAction<T> action, Func<T, Task<TNext>> next)
     {
-        return action.Next(r => CommonAction.Create(t => next(r), executeSafely));
+        return action.Next(r => Operation.Action(t => next(r)));
     }
 
-    public static IAction<TNext> Next<T, TNext>(this IAction<T> action, Func<T, Task<OperationResult<TNext>>> next, bool executeSafely = true)
+    public static IAction<TNext> Next<T, TNext>(this IAction<T> action, Func<T, Task<OperationResult<TNext>>> next)
     {
-        return action.Next(r => CommonAction.Create(t => next(r), executeSafely));
+        return action.Next(r => Operation.Action(t => next(r)));
     }
 
     public static IAction<TNext> Next<T1, T2, TNext>(this IAction<(T1, T2)> action, Func<T1, T2, IAction<TNext>> next)
@@ -39,24 +39,24 @@ partial class ActionExtensions
         return action.Next(m => next(m.Item1, m.Item2));
     }
 
-    public static IAction<Unit> Next<T>(this IAction<T> action, Action<T> next, bool executeSafely = true)
+    public static IAction<Unit> Next<T>(this IAction<T> action, Action<T> next)
     {
-        return action.Next(r => CommonAction.Create(t => next(r), executeSafely));
+        return action.Next(r => Operation.Action(t => next(r)));
     }
 
-    public static IAction<Unit> Next<T>(this IAction<T> action, Func<T, Task> next, bool executeSafely = true)
+    public static IAction<Unit> Next<T>(this IAction<T> action, Func<T, Task> next)
     {
-        return action.Next(r => CommonAction.Create(t => next(r), executeSafely));
+        return action.Next(r => Operation.Action(t => next(r)));
     }
 
-    public static IAction<Unit> Next<T>(this IAction<T> action, Func<T, OperationResult> next, bool executeSafely = true)
+    public static IAction<Unit> Next<T>(this IAction<T> action, Func<T, OperationResult> next)
     {
-        return action.Next(r => CommonAction.Create(t => next(r), executeSafely));
+        return action.Next(r => Operation.Action(t => next(r)));
     }
 
-    public static IAction<Unit> Next<T>(this IAction<T> action, Func<T, Task<OperationResult>> next, bool executeSafely = true)
+    public static IAction<Unit> Next<T>(this IAction<T> action, Func<T, Task<OperationResult>> next)
     {
-        return action.Next(r => CommonAction.Create(t => next(r), executeSafely));
+        return action.Next(r => Operation.Action(t => next(r)));
     }
 
 
