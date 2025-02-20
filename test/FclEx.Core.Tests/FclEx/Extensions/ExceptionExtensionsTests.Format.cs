@@ -14,7 +14,7 @@ partial class ExceptionExtensionsTests
         _output.WriteLine(ex.ToString());
         _output.WriteLine(Environment.NewLine);
 
-        var (infos, _) = ex.GetInfos();
+        var (infos, _) = ex.BuildTree();
 
         foreach (var info in infos)
         {
@@ -27,7 +27,7 @@ partial class ExceptionExtensionsTests
     }
 
     [Fact]
-    public async Task GetInfos_Complex_Test()
+    public async Task BuildTree_Complex_Test()
     {
         try
         {
@@ -44,13 +44,13 @@ partial class ExceptionExtensionsTests
     {
         var text = File.ReadAllText(Path.Combine("TestData", "StackTrace.txt"));
         var ex = new Exception().SetStackTrace(text);
-        
+
         var index = 0;
-        var info = ex.GetInfo(ref index, -1);
+        var info = ex.GetInfo(ref index, -1, null);
 
         foreach (var line in info.StackTraceLines)
         {
-            Assert.True(ExceptionExtensions.IgnorableStackTracePrefixes.All(m => line.StartsWith(m) == false));
+            Assert.True(ExceptionExtensions.ExcludeStackTracePrefixes.All(m => line.StartsWith(m) == false));
             _output.WriteLine(line);
         }
     }

@@ -27,7 +27,7 @@ partial class JsonFormatter
 
         var name = ExceptionOptions.UseSimpleNameForType
             ? type.SimpleName()
-            : type.FullName;
+            : type.FullName ?? type.Name;
 
         output.Write(name); // we assume "name" doesn't need to escape. 
 
@@ -93,7 +93,7 @@ partial class JsonFormatter
         JsonValueFormatter.WriteQuotedJsonString(Options.ExceptionName, output);
         output.Write(":[");
 
-        var (infos, multiBranched) = ex.GetInfos();
+        var (infos, multiBranched) = ex.BuildTree();
         var indexOp = ExceptionOptions.WriteIndexOptions;
         var writeIndexes = IfWriteIndexes();
 
