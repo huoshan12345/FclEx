@@ -4,10 +4,28 @@ public static class JsonHelper
 {
     private static readonly ConcurrentDictionary<JsonOptions, JsonSerializerOptions> _serializerOptions = new();
 
-    private static readonly DefaultJsonTypeInfoResolver Resolver = new() { Modifiers = { IncludeStaticMembers, IgnoreEmptyValue } };
-
-    public static JsonSerializerOptions GetOptions(JsonOptions options = default)
+    private static readonly DefaultJsonTypeInfoResolver Resolver = new()
     {
+        Modifiers =
+        {
+            IncludeStaticMembers,
+            IgnoreEmptyValue,
+        },
+    };
+
+    private static readonly DefaultJsonTypeInfoResolver IgnoreReadingNullResolver = new()
+    {
+        Modifiers =
+        {
+            IncludeStaticMembers,
+            IgnoreEmptyValue,
+            IgnoreReadingNull,
+        },
+    };
+
+    public static JsonSerializerOptions GetOptions(JsonOptions? options = default)
+    {
+        options ??= JsonOptions.Default;
         return _serializerOptions.GetOrAdd(options, Create);
 
         static JsonSerializerOptions Create(JsonOptions k)
@@ -15,19 +33,21 @@ public static class JsonHelper
             var options = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = k.PropertyNameCaseSensitive == false,
-                DefaultIgnoreCondition = k.IgnoreNull
+                DefaultIgnoreCondition = k.IgnoreWritingNull
                     ? JsonIgnoreCondition.WhenWritingNull
                     : JsonIgnoreCondition.Never,
                 WriteIndented = k.Indented,
                 PropertyNamingPolicy = k.PropertyNamingPolicy,
                 Encoder = k.StrictEscaping ? null : RelaxedEncoder.Instance,
-                NumberHandling = k.DisallowNumberFromString
-                    ? JsonNumberHandling.Strict
-                    : JsonNumberHandling.AllowReadingFromString,
-                TypeInfoResolver = Resolver,
+                NumberHandling = k.AllowNumberFromString
+                    ? JsonNumberHandling.AllowReadingFromString
+                    : JsonNumberHandling.Strict,
+                TypeInfoResolver = k.IgnoreReadingNull
+                    ? IgnoreReadingNullResolver
+                    : Resolver,
             };
 
-            if (k.DisallowBoolFromString == false)
+            if (k.AllowBoolFromString)
                 options.Converters.Add(BooleanJsonConverter.Instance);
 
             options.MakeReadOnly(true);
@@ -106,6 +126,24 @@ public static class JsonHelper
                 : null;
 
             typeInfo.Properties.Add(propertyInfo);
+        }
+    }
+
+    public static void IgnoreReadingNull(JsonTypeInfo typeInfo)
+    {
+        foreach (var propertyInfo in typeInfo.Properties)
+        {
+            var setter = propertyInfo.Set;
+            if (setter is null)
+                continue;
+
+            propertyInfo.Set = (obj, value) =>
+            {
+                if (value != null)
+                {
+                    setter(obj, value);
+                }
+            };
         }
     }
 }

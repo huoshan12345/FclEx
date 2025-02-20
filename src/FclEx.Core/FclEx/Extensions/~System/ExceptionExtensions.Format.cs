@@ -20,6 +20,26 @@ public readonly record struct ExceptionTree(IReadOnlyList<ExceptionInfo> Nodes, 
 
 partial class ExceptionExtensions
 {
+    public static IReadOnlyCollection<string> ExcludeStackTracePrefixes { get; } =
+    [
+        "--- End of ", // --- End of inner exception stack trace --- or --- End of stack trace from previous location ---
+        "System.Threading.ExecutionContext.",
+        "System.Runtime.CompilerServices.AsyncTaskMethodBuilder",
+        "System.Threading.Tasks.Task.",
+        "System.Threading.Tasks.Task`1.",
+        "System.Threading.Tasks.TaskCompletionSourceWithCancellation",
+        "System.Threading.Tasks.AwaitTaskContinuation.",
+        "Polly.Retry.AsyncRetryEngine.ImplementationAsync",
+        "Polly.AsyncPolicy.<>c__DisplayClass",
+        "Polly.AsyncPolicy`1.ExecuteAsync",
+        "Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync",
+        "System.Runtime.CompilerServices.AsyncMethodBuilderCore",
+        "System.Threading.ThreadPoolWorkQueue.Dispatch",
+        "System.Threading.PortableThreadPool.WorkerThread.WorkerThreadStart",
+    ];
+
+    public static Func<string, bool> DefaultStackTraceLineFilter { get; } = m => ExcludeStackTracePrefixes.Any(m.StartsWith);
+
     /// <summary>
     /// Builds an exception tree from the given exception, including information about the exception 
     /// and any inner exceptions in a hierarchical structure. The method recursively traverses the 
@@ -97,26 +117,6 @@ partial class ExceptionExtensions
         var info = new ExceptionInfo(exception.GetType(), exception.Message, lines, index++, parentIndex);
         return info;
     }
-
-    public static Func<string, bool> DefaultStackTraceLineFilter { get; } = m => ExcludeStackTracePrefixes.Any(m.StartsWith);
-
-    public static IReadOnlyCollection<string> ExcludeStackTracePrefixes { get; } =
-    [
-        "--- End of ", // --- End of inner exception stack trace --- or --- End of stack trace from previous location ---
-        "System.Threading.ExecutionContext.",
-        "System.Runtime.CompilerServices.AsyncTaskMethodBuilder",
-        "System.Threading.Tasks.Task.",
-        "System.Threading.Tasks.Task`1.",
-        "System.Threading.Tasks.TaskCompletionSourceWithCancellation",
-        "System.Threading.Tasks.AwaitTaskContinuation.",
-        "Polly.Retry.AsyncRetryEngine.ImplementationAsync",
-        "Polly.AsyncPolicy.<>c__DisplayClass",
-        "Polly.AsyncPolicy`1.ExecuteAsync",
-        "Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync",
-        "System.Runtime.CompilerServices.AsyncMethodBuilderCore",
-        "System.Threading.ThreadPoolWorkQueue.Dispatch",
-        "System.Threading.PortableThreadPool.WorkerThread.WorkerThreadStart",
-    ];
 
     /// <summary>
     /// 
