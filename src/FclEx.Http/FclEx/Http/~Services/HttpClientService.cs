@@ -1,6 +1,4 @@
-﻿using FclEx.DependencyInjection;
-
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 public class HttpClientService : AbstractHttpClientService
 {
@@ -59,8 +57,8 @@ public class HttpClientService : AbstractHttpClientService
                 .AddSingleton<IAsyncPolicy<HttpResponseMessage>>(policy)
                 .AddHttpClientWithPolly(string.Empty, options)
                 .Services
-                .Remove(m => m.ServiceType == typeof(IHttpMessageHandlerBuilderFilter)
-                             && m.ImplementationType?.FullName == "Microsoft.Extensions.Http.LoggingHttpMessageHandlerBuilderFilter")
+                .Remove(x => x.ServiceType == typeof(IHttpMessageHandlerBuilderFilter)
+                             && x.ImplementationType?.FullName == "Microsoft.Extensions.Http.LoggingHttpMessageHandlerBuilderFilter")
                 .BuildServiceProvider();
         });
 

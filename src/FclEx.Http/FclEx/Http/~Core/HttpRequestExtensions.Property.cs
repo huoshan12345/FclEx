@@ -69,18 +69,18 @@ partial class HttpRequestExtensions
 
     public static HttpRequest Auth(this HttpRequest request, string? auth)
     {
-        return request.AddHeader(HttpKnownHeaderNames.Authorization, auth);
+        return request.SetHeader(HttpHeaderNames.Authorization, auth);
     }
 
     public static HttpRequest BasicAuth(this HttpRequest request, string? userName, string? password)
     {
         var userInfo = userName + ":" + password;
-        return request.AddHeader(HttpKnownHeaderNames.Authorization, "Basic " + userInfo.ToBytes().ToBase64());
+        return request.SetHeader(HttpHeaderNames.Authorization, "Basic " + userInfo.ToBytes().ToBase64());
     }
 
     public static HttpRequest BearerAuth(this HttpRequest request, string token)
     {
-        return request.AddHeader(HttpKnownHeaderNames.Authorization, "Bearer " + token);
+        return request.SetHeader(HttpHeaderNames.Authorization, "Bearer " + token);
     }
 
     public static HttpRequest CharSet(this HttpRequest request, string? chartSet)

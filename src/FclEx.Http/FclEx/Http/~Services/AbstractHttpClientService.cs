@@ -8,9 +8,9 @@ public abstract class AbstractHttpClientService : AbstractHttpService
 
     protected static readonly string[] NotAddHeaderNames =
     [
-        HttpKnownHeaderNames.ContentType,
-        HttpKnownHeaderNames.Cookie,
-        // HttpKnownHeaderNames.UserAgent
+        HttpHeaderNames.ContentType,
+        HttpHeaderNames.Cookie,
+        // HttpHeaderNames.UserAgent
     ];
 
     protected void ReadCookies(HttpResponseMessage responseMessage, HttpResponse response)
@@ -28,7 +28,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
 
     protected static void ReadHeader(HttpResponseMessage responseMessage, HttpResponse response)
     {
-        foreach (var (key, values) in responseMessage.Headers.Where(m => m.Key != HttpKnownHeaderNames.SetCookie))
+        foreach (var (key, values) in responseMessage.Headers.Where(m => m.Key != HttpHeaderNames.SetCookie))
         {
             response.Headers.AddRange(key, values);
         }
@@ -199,7 +199,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             requestMessage.Headers.Add(key, value);
         }
 
-        var cookies = request.Headers.Get(HttpKnownHeaderNames.Cookie);
+        var cookies = request.Headers.Get(HttpHeaderNames.Cookie);
         foreach (var cookie in cookies)
         {
             requestMessage.AddCookie(cookie);
@@ -243,17 +243,17 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             var currentRequest = httpRequest;
             while (true)
             {
-                var response = await SendAsync(context, currentRequest, cts.Token).IgnoreSyncContext();
+                var response = await SendAsync(context, currentRequest, cts.Token);
                 responses.Add(response);
                 httpResponse.RedirectUris.Add(response.RequestMessage?.RequestUri!);
 
                 if (httpRequest.ReadCookies)
                     ReadCookies(response, httpResponse);
 
-                if (!response.TryGetRedirection(out var uri))
+                if (response.TryGetRedirection(out var uri) == false)
                     break;
 
-                currentRequest = HttpRequest.Get(uri);
+                currentRequest = HttpRequest.Get(uri).AddHeader(currentRequest.Headers);
             }
 
             var last = responses.Last(); // responses should not be empty
@@ -265,7 +265,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
 
             if (httpRequest.ReadContent)
             {
-                await ReadContentAsync(last, httpResponse, cts.Token).IgnoreSyncContext();
+                await ReadContentAsync(last, httpResponse, cts.Token);
 
                 if (httpRequest.ReadContentType == HttpContentType.Stream)
                 {

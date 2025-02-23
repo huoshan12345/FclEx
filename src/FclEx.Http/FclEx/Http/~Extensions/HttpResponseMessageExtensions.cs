@@ -33,6 +33,6 @@ public static class HttpResponseMessageExtensions
 
     public static bool TryGetCookies(this HttpResponseMessage response, [NotNullWhen(true)] out IEnumerable<string>? cookies)
     {
-        return response.Headers.TryGetValues(HttpKnownHeaderNames.SetCookie, out cookies);
+        return response.Headers.TryGetValues(HttpHeaderNames.SetCookie, out cookies);
     }
 }

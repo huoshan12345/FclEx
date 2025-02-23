@@ -2,6 +2,7 @@
 
 global using System.Diagnostics.CodeAnalysis;
 global using FclEx.Extensions;
+global using FclEx.Logging;
 global using FclEx.Serilog.Formatting;
 global using FclEx.Serilog.Sinks;
 global using FclEx.Tests;

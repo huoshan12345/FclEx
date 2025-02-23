@@ -11,7 +11,7 @@ public abstract class UserClientAction<TClient, T> : IUserClientAction<TClient, 
             : NullLogger.Instance;
     }
 
-    public virtual IClientSession Session => Client.Session;
+    public virtual IUserClientSession Session => Client.Session;
     public IUserAccount Account => Client.Account;
     public TClient Client { get; }
     public ILogger Logger { get; }

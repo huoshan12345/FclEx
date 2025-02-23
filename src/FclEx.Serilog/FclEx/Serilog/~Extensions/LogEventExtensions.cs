@@ -1,3 +1,4 @@
+using FclEx.Logging;
 using static FclEx.Serilog.Fields;
 
 namespace FclEx.Serilog;
@@ -135,9 +136,10 @@ public static class LogEventExtensions
         if (logEvent.Exception is not LogException logException)
             return logEvent;
 
-        if (logException.Level != logEvent.Level)
+        var level = logException.Level.ToSerilogLevel();
+        if (level != logEvent.Level)
         {
-            logEvent.SetLevel(logException.Level);
+            logEvent.SetLevel(level);
         }
 
         logEvent.UnwrapException();

@@ -2,28 +2,28 @@
 
 public static class SessionExtensions
 {
-    public static bool IsCaptchaRequired(this IClientSession session)
+    public static bool IsCaptchaRequired(this IUserClientSession session)
     {
-        return session.SessionState == ClientSessionState.CaptchaRequired;
+        return session.SessionState == UserClientSessionState.CaptchaRequired;
     }
 
-    public static bool IsLoggingIn(this IClientSession session)
+    public static bool IsLoggingIn(this IUserClientSession session)
     {
-        return session.SessionState == ClientSessionState.LoggingIn;
+        return session.SessionState == UserClientSessionState.LoggingIn;
     }
 
-    public static void Offline(this IClientSession session)
+    public static void Offline(this IUserClientSession session)
     {
-        session.SessionState = ClientSessionState.Offline;
+        session.SessionState = UserClientSessionState.Offline;
     }
 
-    public static void Online(this IClientSession session)
+    public static void Online(this IUserClientSession session)
     {
-        session.SessionState = ClientSessionState.Online;
+        session.SessionState = UserClientSessionState.Online;
     }
 
-    public static void LoggingIn(this IClientSession session)
+    public static void LoggingIn(this IUserClientSession session)
     {
-        session.SessionState = ClientSessionState.LoggingIn;
+        session.SessionState = UserClientSessionState.LoggingIn;
     }
 }

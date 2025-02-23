@@ -39,7 +39,7 @@ public interface IJsonAction<T> : IHttpResponseHandler<T>
     OperationResult<T> GetResult(JsonActionContext context)
     {
         return context.ResultToken is { } token
-            ? token.Deserialize<T>()!
+            ? token.ToObject<T>()!
             : nameof(context.ResultToken) + " is null";
     }
 }

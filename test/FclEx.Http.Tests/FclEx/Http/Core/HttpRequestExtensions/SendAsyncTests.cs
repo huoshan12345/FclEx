@@ -87,7 +87,7 @@ public class SendAsyncTests(ITestOutputHelper output) : HttpServerTests
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 3).ToDictionary(m => m.ToString(), m => random.NextString(5));
         var response = await HttpRequest.Post("api/post")
-            .AddFormParam(expected!)
+            .AddFormParam(expected)
             .ReadHeadersTimeout(TimeSpan.FromSeconds(5))
             .SendAsync(TestHttp)
             .ThrowIfError()
@@ -138,7 +138,7 @@ public class SendAsyncTests(ITestOutputHelper output) : HttpServerTests
             .IgnoreSyncContext();
 
         Assert.False(response.Error);
-        var contentType = response.Headers.Get(HttpKnownHeaderNames.ContentType).FirstOrDefault();
+        var contentType = response.Headers.Get(HttpHeaderNames.ContentType).FirstOrDefault();
         Assert.NotNull(contentType);
         Assert.Contains(charSet, contentType);
 
@@ -154,5 +154,15 @@ public class SendAsyncTests(ITestOutputHelper output) : HttpServerTests
                 _ => Encoding.GetEncoding(charSet),
             };
         }
+    }
+
+    [Fact]
+    public async Task Get_Timeout_Test()
+    {
+        var response = await HttpRequest.Get("https://s1.byte77.com/api/v1/client/subscribe?token=e3102b1cf481a4f7c7474734d6e15d9e")
+            .ReadHeadersTimeout(TimeSpan.FromSeconds(5))
+            .SendAsync();
+
+        response.ThrowIfError();
     }
 }

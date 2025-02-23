@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Web;
 
-public enum ClientSessionState
+public enum UserClientSessionState
 {
     Offline,
     LoggingIn,

@@ -9,7 +9,7 @@ public abstract class CompressedContent : BufferedContent
         : base(content, timeout, bufferSize, token)
     {
         CompressionLevel = compressionLevel;
-        Headers.Add(HttpKnownHeaderNames.ContentEncoding, Encoding);
+        Headers.Add(HttpHeaderNames.ContentEncoding, Encoding);
     }
 
     protected abstract Stream CreateCompressedStream(Stream stream);

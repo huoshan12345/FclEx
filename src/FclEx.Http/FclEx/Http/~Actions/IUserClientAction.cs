@@ -4,7 +4,7 @@ namespace FclEx.Http;
 public interface IUserClientAction<out TClient, T> : IAbstractAction<T> where TClient : IUserClient
 {
     TClient Client { get; }
-    IClientSession Session => Client.Session;
+    IUserClientSession Session => Client.Session;
     IUserAccount Account => Client.Account;
 
 }

@@ -12,7 +12,7 @@ public class LogEventMutateSinkTests
     [MemberData(nameof(Levels))]
     public void SetLevel_LogException_Test(LogEventLevel level)
     {
-        var ex = new LogException("", level);
+        var ex = new LogException("", level.ToExtensionsLevel());
         var logEvent = new LogEvent(DateTimeOffset.UtcNow, LogEventLevel.Error, ex,
             new MessageTemplate(ex.Message, []), []);
 

@@ -20,4 +20,11 @@ public class SimpleException : Exception
     }
 
     public override string? StackTrace => _noStackTrace ? null : base.StackTrace ?? _stackTrace;
+
+    public override string ToString()
+    {
+        return this.IsJustMessage()
+            ? Message
+            : base.ToString();
+    }
 }
