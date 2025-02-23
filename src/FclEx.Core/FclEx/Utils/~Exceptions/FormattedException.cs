@@ -15,7 +15,7 @@ public class FormattedException : Exception
     /// </summary>
     /// <param name="exception">The exception to wrap.</param>
     /// <exception cref="ArgumentNullException">Thrown when the <paramref name="exception"/> is null.</exception>
-    public FormattedException(Exception exception)
+    public FormattedException(Exception exception) : base(exception.Message)
     {
         Exception = exception ?? throw new ArgumentNullException(nameof(exception));
     }
