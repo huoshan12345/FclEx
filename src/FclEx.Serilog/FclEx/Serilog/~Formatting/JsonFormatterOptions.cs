@@ -17,11 +17,5 @@ public class JsonFormatterOptions
     public bool EnableExceptionFormat { get; set; } = true;
     public ExceptionFormatOptions ExceptionFormatOptions { get; set; } = ExceptionFormatOptions.Default;
 
-    /// <summary>
-    /// Indicates how to print exception information to <see cref="Console"/>. <br/>
-    /// It is useful if the Vector Agent is used to forward log messages from <see cref="Console"/>.
-    /// </summary>
-    public ExceptionPrintOption ExceptionPrintOption { get; set; } = ExceptionPrintOption.None;
-
     public static readonly JsonFormatterOptions Default = new();
 }

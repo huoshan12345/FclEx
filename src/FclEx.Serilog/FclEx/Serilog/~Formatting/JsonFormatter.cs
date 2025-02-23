@@ -36,7 +36,7 @@ public partial class JsonFormatter : ITextFormatter
         WriteJsonData(Options.LogLevelName, logEvent.Level.ToString(), output, true);
         WriteJsonData(Options.MessageName, message, output, true);
 
-        if (logEvent.Exception is not { } ex)
+        if (logEvent.GetOriginalException() is not { } ex)
             return;
 
         WriteException(message, ex, output);
@@ -54,8 +54,6 @@ public partial class JsonFormatter : ITextFormatter
             {
                 WriteJsonData(Options.ExceptionName, ex.ToString(), output, true);
             }
-
-            PrintException(ex);
         }
         catch (Exception e)
         {

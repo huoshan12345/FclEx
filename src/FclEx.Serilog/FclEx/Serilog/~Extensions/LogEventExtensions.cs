@@ -100,6 +100,17 @@ public static class LogEventExtensions
         return logEvent;
     }
 
+    public static Exception? GetOriginalException(this LogEvent logEvent)
+    {
+        if (logEvent.Exception is not { } ex)
+            return null;
+
+        if (ex is FormattedException formattedException)
+            return formattedException.Exception;
+
+        return ex;
+    }
+
     public static LogEvent UnwrapException(this LogEvent logEvent)
     {
         if (logEvent.Exception is not { } ex)

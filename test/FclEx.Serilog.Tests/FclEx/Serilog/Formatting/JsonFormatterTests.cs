@@ -1,7 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using System.Net.NetworkInformation;
-using static FclEx.Serilog.ExceptionPrintOption;
-using static FclEx.Serilog.ExceptionWriteIndexOptions;
+﻿using static FclEx.Serilog.ExceptionWriteIndexOptions;
 
 namespace FclEx.Serilog.Formatting;
 
@@ -18,18 +15,15 @@ public class JsonFormatterTests
     public static readonly IEnumerable<object[]> TestCases =
         from len in new int?[] { null, 5 }
         from skipParas in new[] { true, false }
-        from op in new[] { SingleMessage, MessagesForEachLine }
-        from indexOp in new[] { ExceptionWriteIndexOptions.None, Default }
-        select new object[] { len, skipParas, op, indexOp };
+        from indexOp in new[] { None, Default }
+        select new object[] { len, skipParas, indexOp };
 
     [Theory]
     [MemberData(nameof(TestCases))]
-    public async Task Format_Test(int? maxLen, bool skipParas, ExceptionPrintOption printOptions,
-        ExceptionWriteIndexOptions indexOptions)
+    public async Task Format_Test(int? maxLen, bool skipParas, ExceptionWriteIndexOptions indexOptions)
     {
         var options = new JsonFormatterOptions
         {
-            ExceptionPrintOption = printOptions,
             ExceptionFormatOptions = new()
             {
                 MaxMessageLength = maxLen,
@@ -54,7 +48,9 @@ public class JsonFormatterTests
             _output.WriteLine("\n\n\n");
 #endif
             await AssertLogMessage(ex);
-            AssertConsoleMessage(ex);
+
+            var str = writer.ToString();
+            Assert.Empty(str);
         }
 
         return;
@@ -83,35 +79,6 @@ public class JsonFormatterTests
 #if DEBUG
                 _output.WriteLine(line);
 #endif
-            }
-        }
-
-        void AssertConsoleMessage(Exception ex)
-        {
-            var original = ex.ToString();
-
-            var str = writer.ToString();
-            Assert.NotEmpty(str);
-
-            var lines = str.SplitToLines();
-            if (printOptions == SingleMessage)
-            {
-                Assert.Single(lines);
-
-                var actual = JToken.Parse(lines[0])[exName]?.Value<string>();
-                Assert.Equal(original, actual);
-            }
-            else if (printOptions == MessagesForEachLine)
-            {
-                var originalLines = original.SplitToLines();
-
-                Assert.Equal(originalLines.Length, lines.Length);
-
-                foreach (var (line, originalLine) in lines.Zip(originalLines))
-                {
-                    var actual = JToken.Parse(line)[exName]?.Value<string>();
-                    Assert.Equal(originalLine, actual);
-                }
             }
         }
     }

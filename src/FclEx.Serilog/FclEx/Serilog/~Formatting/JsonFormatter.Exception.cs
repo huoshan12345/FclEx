@@ -1,5 +1,4 @@
-﻿using static FclEx.Serilog.ExceptionPrintOption;
-using static FclEx.Serilog.ExceptionWriteIndexOptions;
+﻿using static FclEx.Serilog.ExceptionWriteIndexOptions;
 
 namespace FclEx.Serilog;
 
@@ -52,38 +51,6 @@ partial class JsonFormatter
 
             output.Write(",");
             JsonValueFormatter.WriteQuotedJsonString(l, output);
-        }
-    }
-
-    protected virtual void PrintException(Exception ex)
-    {
-        var op = Options.ExceptionPrintOption;
-        if (op == ExceptionPrintOption.None)
-            return;
-
-        var str = ex.ToString();
-        var lines = op == SingleMessage
-            ? [str]
-            : str.SplitToLines();
-
-        foreach (var line in ToJsonObject(lines))
-        {
-            Console.WriteLine(line);
-        }
-
-        IEnumerable<string> ToJsonObject(IEnumerable<string> values)
-        {
-            using var sb = StringBuilderHelper.GetCached();
-            var sw = new StringWriter(sb.Value);
-
-            foreach (var value in values)
-            {
-                sb.Value.Clear();
-                sw.Write("{");
-                WriteJsonData(Options.ExceptionName, value, sw, false);
-                sw.Write("}");
-                yield return sw.ToString();
-            }
         }
     }
 
