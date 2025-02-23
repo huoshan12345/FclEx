@@ -12,9 +12,10 @@ public class HttpServiceExtensionsTests
         var (successful, file, exception, _) = await http.DownloadAsync(uri);
 
         AssertEx.True(successful, () => exception!.ToString());
+        Assert.NotNull(file);
         Assert.Equal(fileName, file.FileName);
-        Assert.Equal(Path.GetExtension(fileName), file.FileExt);
-        Assert.Equal(Path.GetFileNameWithoutExtension(fileName), file.FileNameWithoutExt);
+        Assert.Equal(Path.GetExtension(fileName), file.FileExtension);
+        Assert.Equal(Path.GetFileNameWithoutExtension(fileName), file.FileNameWithoutExtension);
     }
 
     [Fact(Skip = "no proxy")]
