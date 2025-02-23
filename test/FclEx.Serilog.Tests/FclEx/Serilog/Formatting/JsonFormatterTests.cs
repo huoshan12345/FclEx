@@ -1,4 +1,4 @@
-﻿using static FclEx.Serilog.ExceptionWriteIndexOptions;
+﻿using static FclEx.Serilog.ExceptionIndexOptions;
 
 namespace FclEx.Serilog.Formatting;
 
@@ -14,21 +14,21 @@ public class JsonFormatterTests
 
     public static readonly IEnumerable<object[]> TestCases =
         from len in new int?[] { null, 5 }
-        from skipParas in new[] { true, false }
+        from omitParams in new[] { true, false }
         from indexOp in new[] { None, Default }
-        select new object[] { len, skipParas, indexOp };
+        select new object[] { len, omitParams, indexOp };
 
     [Theory]
     [MemberData(nameof(TestCases))]
-    public async Task Format_Test(int? maxLen, bool skipParas, ExceptionWriteIndexOptions indexOptions)
+    public async Task Format_Test(int? maxLen, bool omitParams, ExceptionIndexOptions indexOptions)
     {
         var options = new JsonFormatterOptions
         {
             ExceptionFormatOptions = new()
             {
                 MaxMessageLength = maxLen,
-                SkipParasInStackTrace = skipParas,
-                WriteIndexOptions = indexOptions
+                OmitParametersInStackTrace = omitParams,
+                IndexOptions = indexOptions,
             }
         };
 

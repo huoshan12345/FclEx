@@ -1,10 +1,10 @@
-﻿using static FclEx.Serilog.ExceptionWriteIndexOptions;
+﻿using static FclEx.Serilog.ExceptionIndexOptions;
 
 namespace FclEx.Serilog;
 
 partial class JsonFormatter
 {
-    protected static readonly Regex RegexOfParas = new(@"\([^(]*\)(?=\s|$)", RegexOptions.Compiled);
+    protected static readonly Regex ParametersPattern = new(@"\([^(]*\)(?=\s|$|\+)", RegexOptions.Compiled);
 
     protected virtual void WriteExceptionInfo(string logEventMessage, ExceptionInfo info, TextWriter output, bool writeIndexes)
     {
@@ -24,14 +24,14 @@ partial class JsonFormatter
             output.Write("]");
         }
 
-        var name = ExceptionOptions.UseSimpleNameForType
+        var name = ExceptionOptions.UseSimpleTypeName
             ? type.SimpleName()
             : type.FullName ?? type.Name;
 
         output.Write(name); // we assume "name" doesn't need to escape. 
 
-        if (ExceptionOptions.SkipMessageIfExists == false
-            || ExceptionOptions.SkipMessageIfExists && logEventMessage.Contains(message) == false)
+        if (ExceptionOptions.OmitMessageIfExists == false
+            || ExceptionOptions.OmitMessageIfExists && logEventMessage.Contains(message) == false)
         {
             var msg = ExceptionOptions.MaxMessageLength is { } maxMsg
                 ? message.Truncate(maxMsg)
@@ -45,8 +45,8 @@ partial class JsonFormatter
 
         foreach (var line in lines)
         {
-            var l = ExceptionOptions.SkipParasInStackTrace
-                ? RegexOfParas.Replace(line, "", 1)
+            var l = ExceptionOptions.OmitParametersInStackTrace
+                ? ParametersPattern.Replace(line, "", 1)
                 : line;
 
             output.Write(",");
@@ -61,7 +61,7 @@ partial class JsonFormatter
         output.Write(":[");
 
         var (infos, multiBranched) = ex.BuildTree();
-        var indexOp = ExceptionOptions.WriteIndexOptions;
+        var indexOp = ExceptionOptions.IndexOptions;
         var writeIndexes = IfWriteIndexes();
 
         foreach (var (_, info, isFirst, _) in infos.IndexEx())
@@ -75,14 +75,14 @@ partial class JsonFormatter
 
         bool IfWriteIndexes()
         {
-            if (indexOp.IsSet(Write) == false)
+            if (indexOp.IsSet(Include) == false)
                 return false;
 
-            if (indexOp.IsSet(WriteOnlyForMultiple) && infos.Count <= 1)
+            if (indexOp.IsSet(IncludeForMultiple) && infos.Count <= 1)
                 return false;
 
             // ReSharper disable once ConvertIfStatementToReturnStatement
-            if (indexOp.IsSet(WriteOnlyForMultiBranched) && multiBranched == false)
+            if (indexOp.IsSet(IncludeForMultiBranched) && multiBranched == false)
                 return false;
 
             return true;
