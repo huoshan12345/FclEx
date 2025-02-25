@@ -10,7 +10,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
     [
         HttpHeaderNames.ContentType,
         HttpHeaderNames.Cookie,
-        // HttpHeaderNames.UserAgent
+        HttpHeaderNames.ContentLength,
     ];
 
     protected void ReadCookies(HttpResponseMessage responseMessage, HttpResponse response)
