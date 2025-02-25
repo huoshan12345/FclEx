@@ -13,7 +13,7 @@ partial class Operation
         var watch = ValueStopwatch.StartNew();
         try
         {
-            await TaskHelper.Run(action, timeout).IgnoreSyncContext();
+            await TaskHelper.Run(action, timeout);
             return Success(watch.GetElapsedTime());
         }
         catch (Exception ex)
@@ -23,7 +23,7 @@ partial class Operation
     }
 
     public static async Task<OperationResult> ExecuteAsync(Func<Task<OperationResult>> action, TimeSpan? timeout = null)
-        => (await ExecuteAsync<OperationResult>(action, timeout).IgnoreSyncContext()).Unwrap();
+        => (await ExecuteAsync<OperationResult>(action, timeout)).Unwrap();
 
 
     public static Task<OperationResult<T>> ExecuteAsync<T>(Func<T> action, TimeSpan? timeout = null)
@@ -33,7 +33,7 @@ partial class Operation
         => ExecuteAsync(() => Task.Run(action), timeout);
 
     public static async Task<OperationResult<T>> ExecuteAsync<T>(Func<Task<OperationResult<T>>> action, TimeSpan? timeout = null)
-       => (await ExecuteAsync<OperationResult<T>>(action, timeout).IgnoreSyncContext()).Unwrap();
+       => (await ExecuteAsync<OperationResult<T>>(action, timeout)).Unwrap();
 
     public static async Task<OperationResult<T>> ExecuteAsync<T>(Func<Task<T>> action, TimeSpan? timeout = null)
     {

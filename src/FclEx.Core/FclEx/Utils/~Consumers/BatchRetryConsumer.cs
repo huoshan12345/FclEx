@@ -38,7 +38,7 @@ public sealed class BatchRetryConsumer<T> : IConsumer<T>,
         _batchConsumer = new BatchConsumer<T>(batchSize, batchTimeout, 0);
         _batchConsumer.ConsumingHandler += async (sender, list) =>
         {
-            await ConsumingHandler.InvokeAsync(this, list).IgnoreSyncContext();
+            await ConsumingHandler.InvokeAsync(this, list);
             Counter.IncrementConsume(list.Count);
         };
         _batchConsumer.DiscardHandler += (sender, list) => _retryConsumer.Add(list.Select(m => m.Item).ToArray().ToSegment());
@@ -124,7 +124,7 @@ public sealed class BatchRetryConsumer<T> : IConsumer<T>,
 
         try
         {
-            await ConsumingHandler.InvokeAsync(this, items).IgnoreSyncContext();
+            await ConsumingHandler.InvokeAsync(this, items);
             Counter.IncrementConsume(items.Count);
             return;
         }

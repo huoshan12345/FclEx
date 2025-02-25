@@ -50,7 +50,7 @@ public sealed class AutoRetryConsumer<T> : AbstractConsumer<AutoRetryConsumer<T>
                     await Task.Delay(delay);
             }
 
-            await ConsumingHandler.InvokeAsync(this, item.Item).IgnoreSyncContext();
+            await ConsumingHandler.InvokeAsync(this, item.Item);
             Counter.IncrementConsume();
         }
         catch (Exception ex)

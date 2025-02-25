@@ -64,7 +64,7 @@ public static partial class ActionExtensions
             using var cts = t.WithTimeout(timeout > TimeSpan.Zero ? timeout : null);
             while (!cts.IsCancellationRequested)
             {
-                var r = await actor.ExecuteAsync(t).IgnoreSyncContext();
+                var r = await actor.ExecuteAsync(t);
                 if (!r.Success)
                     return r;
 

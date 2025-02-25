@@ -12,8 +12,7 @@ public class HttpRequestActionTests : HttpServerTests
             .ReadJson<List<int>>()
             .NextRequest(m => HttpRequest.Post(path).JsonContent(m.Select(x => x.ToString()).ToDictionary(x => x, x => x + x)), TestHttp)
             .ReadJson<Dictionary<string, string>>()
-            .ExecuteAsync()
-            .IgnoreSyncContext();
+            .ExecuteAsync();
 
         Assert.True(successful, ex?.Message);
 

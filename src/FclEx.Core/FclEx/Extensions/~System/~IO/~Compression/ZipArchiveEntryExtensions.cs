@@ -20,7 +20,7 @@ public static class ZipArchiveEntryExtensions
             await
 #endif
             using var stream = source.Open();
-            await stream.CopyToAsync(destination).IgnoreSyncContext();
+            await stream.CopyToAsync(destination);
         }
         File.SetLastWriteTime(destinationFileName, source.LastWriteTime.DateTime);
     }

@@ -64,7 +64,7 @@ public static class ActionHelper
         {
             try
             {
-                await action().IgnoreSyncContext();
+                await action();
                 return;
             }
             catch (Exception ex)
@@ -93,7 +93,7 @@ public static class ActionHelper
         {
             try
             {
-                return await action().IgnoreSyncContext();
+                return await action();
             }
             catch (Exception ex)
             {

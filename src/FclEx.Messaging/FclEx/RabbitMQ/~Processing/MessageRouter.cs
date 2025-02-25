@@ -47,8 +47,8 @@ public abstract class MessageRouter<TInput, TOutput> : MessageConsumer<TInput, R
 
     protected virtual async Task<OperationResult> RouteAsync(BasicDeliverEventArgs args, TInput input)
     {
-        var output = await ConvertAsync(args, input).IgnoreSyncContext();
-        return await RouteAsync(args, input, output).IgnoreSyncContext();
+        var output = await ConvertAsync(args, input);
+        return await RouteAsync(args, input, output);
     }
 
     protected virtual async Task<OperationResult> RouteAsync(BasicDeliverEventArgs args, TInput input, TOutput output)

@@ -1,4 +1,5 @@
-﻿using FclEx.Tests;
+﻿using System;
+using FclEx.Tests;
 
 namespace FclEx.Http.Tests;
 
@@ -93,6 +94,8 @@ public class HttpServerFixture : GlobalFixture
         {
             context.Response.ContentType = $"text/plain;charset={charSet}";
         });
+
+        app.MapGet("/api/redirect", (string u) => Results.Redirect(u));
 
         await app.StartAsync();
     }

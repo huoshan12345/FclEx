@@ -22,7 +22,7 @@ public abstract class AbstractHttpService : IHttpService
         var response = new HttpResponse(request) { StartTime = DateTimeOffset.UtcNow };
         try
         {
-            await ExecuteAsyncInternal(request, response, token).IgnoreSyncContext();
+            await ExecuteAsyncInternal(request, response, token);
         }
         catch (Exception e)
         {

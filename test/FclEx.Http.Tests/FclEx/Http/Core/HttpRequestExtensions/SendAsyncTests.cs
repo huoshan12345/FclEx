@@ -65,8 +65,8 @@ public class SendAsyncTests(ITestOutputHelper output) : HttpServerTests
         var url = ipv6 ? ipv6Url : ipv4Url;
         var response = await HttpRequest.Get(url)
             .ReadHeadersTimeout(TimeSpan.FromSeconds(10))
-            .SendAsync(http)
-            .IgnoreSyncContext();
+            .SendAsync(http);
+
         response.ThrowIfError();
     }
 
@@ -76,8 +76,8 @@ public class SendAsyncTests(ITestOutputHelper output) : HttpServerTests
     {
         var response = await HttpRequest.Get(url)
             .ReadHeadersTimeout(TimeSpan.FromSeconds(5))
-            .SendAsync()
-            .IgnoreSyncContext();
+            .SendAsync();
+
         response.ThrowIfError();
     }
 
@@ -90,8 +90,7 @@ public class SendAsyncTests(ITestOutputHelper output) : HttpServerTests
             .AddFormParam(expected)
             .ReadHeadersTimeout(TimeSpan.FromSeconds(5))
             .SendAsync(TestHttp)
-            .ThrowIfError()
-            .IgnoreSyncContext();
+            .ThrowIfError();
 
         Assert.False(response.Error);
         var body = response.ResponseString;
@@ -109,8 +108,8 @@ public class SendAsyncTests(ITestOutputHelper output) : HttpServerTests
         var response = await HttpRequest.Post("api/post")
             .JsonContent(list)
             .SendAsync(TestHttp)
-            .ThrowIfError()
-            .IgnoreSyncContext();
+            .ThrowIfError();
+
         Assert.False(response.Error);
         var body = response.ResponseString.ToJsonNode();
         Assert.NotNull(body);
@@ -134,8 +133,7 @@ public class SendAsyncTests(ITestOutputHelper output) : HttpServerTests
         var response = await HttpRequest.Post("api/charset")
             .AddQueryParam("charset", charSet)
             .SendAsync(TestHttp)
-            .ThrowIfError()
-            .IgnoreSyncContext();
+            .ThrowIfError();
 
         Assert.False(response.Error);
         var contentType = response.Headers.Get(HttpHeaderNames.ContentType).FirstOrDefault();
@@ -157,12 +155,16 @@ public class SendAsyncTests(ITestOutputHelper output) : HttpServerTests
     }
 
     [Fact]
-    public async Task Get_Timeout_Test()
+    public async Task Redirection_Test()
     {
-        var response = await HttpRequest.Get("https://s1.byte77.com/api/v1/client/subscribe?token=e3102b1cf481a4f7c7474734d6e15d9e")
-            .ReadHeadersTimeout(TimeSpan.FromSeconds(5))
-            .SendAsync();
+        const string url = "https://www.baidu.com/";
+        var response = await HttpRequest.Get("api/redirect")
+            .AddQueryParam("u", url)
+            .EnsureSuccessStatusCode()
+            .SendAsync(TestHttp)
+            .ThrowIfError();
 
-        response.ThrowIfError();
+        Assert.Equal(2, response.RedirectUris.Count);
+        Assert.Equal(url, response.LastUri().ToString());
     }
 }

@@ -78,7 +78,7 @@ public static class TaskHelper
             return;
         try
         {
-            await Task.Delay(span, token).IgnoreSyncContext();
+            await Task.Delay(span, token);
         }
         catch (TaskCanceledException) { }
     }

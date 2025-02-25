@@ -8,7 +8,7 @@ partial class HttpRequestExtensions
         return request;
     }
 
-    public static HttpRequest EnsureSuccessStatusCode(this HttpRequest request, bool value)
+    public static HttpRequest EnsureSuccessStatusCode(this HttpRequest request, bool value = true)
     {
         request.EnsureSuccessStatusCode = value;
         return request;
@@ -124,7 +124,7 @@ partial class HttpRequestExtensions
         request.ReadHeadersTimeout ??= timeout;
         return request;
     }
-    
+
     public static HttpRequest ReadBufferTimeout(this HttpRequest request, TimeSpan? timeout)
     {
         request.ReadBufferTimeout = timeout;
@@ -172,7 +172,7 @@ partial class HttpRequestExtensions
     public static HttpRequest ReadAsBytes(this HttpRequest request) => request.ReadAs(HttpContentType.Bytes);
 
     public static HttpRequest ReadAsStream(this HttpRequest request) => request.ReadAs(HttpContentType.Stream);
-    
+
     public static HttpRequest Version(this HttpRequest request, Version version)
     {
         request.Version = version;

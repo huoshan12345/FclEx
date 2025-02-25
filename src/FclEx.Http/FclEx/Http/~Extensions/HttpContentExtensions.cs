@@ -17,7 +17,7 @@ public static class HttpContentExtensions
 #if NET6_0_OR_GREATER
         await
 #endif
-        using (var stream = await content.ReadAsStreamAsync(token).IgnoreSyncContext())
+        using (var stream = await content.ReadAsStreamAsync(token))
         {
             await stream.CopyToAsync(ms, bufferSize, readBufferTimeout, token);
         }

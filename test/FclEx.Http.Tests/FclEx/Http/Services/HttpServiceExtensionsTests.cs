@@ -26,7 +26,7 @@ public class HttpServiceExtensionsTests
         const string url = "https://scontent-lga3-1.cdninstagram.com/v/t51.2885-15/e35/84633088_233319031038964_4686527252914001142_n.jpg" +
                            "?_nc_ht=scontent-lga3-1.cdninstagram.com&_nc_cat=104&_nc_ohc=rtLj-eg1T_sAX8YuTB5&oh=ee63e1a1e272f0826565ba4dc8f31174&oe=5E4D0FBF";
 
-        var (successful, _, ex, _) = await http.DownloadAsync(url).IgnoreSyncContext();
+        var (successful, _, ex, _) = await http.DownloadAsync(url);
 
         AssertEx.False(successful, () => ex!.ToString());
         Assert.True(ex.IsObjectException<HttpResponse>(m => m.StatusCode == HttpStatusCode.Forbidden));

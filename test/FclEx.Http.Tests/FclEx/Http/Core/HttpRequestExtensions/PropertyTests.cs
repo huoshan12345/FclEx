@@ -15,8 +15,7 @@ public class PropertyTests : HttpServerTests
             request.CharSet(CharSetTestCase.CharSet);
 
         var response = await request.SendAsync(http)
-            .ThrowIfError()
-            .IgnoreSyncContext();
+            .ThrowIfError();
 
         Assert.Equal(value, response.ResponseString.Contains(CharSetTestCase.Keyword));
     }
@@ -32,8 +31,8 @@ public class PropertyTests : HttpServerTests
             request.CharSet(CharSetTestCase.CharSet);
 
         var response = await request.SendAsync(http)
-            .ThrowIfError()
-            .IgnoreSyncContext();
+            .ThrowIfError();
+
         Assert.Equal(value, response.ResponseString.Contains(CharSetTestCase.Keyword));
     }
 
@@ -47,8 +46,8 @@ public class PropertyTests : HttpServerTests
         request.DetectCharSet(value);
 
         var response = await request.SendAsync(http)
-            .ThrowIfError()
-            .IgnoreSyncContext();
+            .ThrowIfError();
+
         Assert.Equal(value, response.ResponseString.Contains(CharSetTestCase.Keyword));
     }
 
@@ -73,8 +72,7 @@ public class PropertyTests : HttpServerTests
         var response = await HttpRequest.Put("https://65c333b1f7e6ea59682c21a5.mockapi.io/api/compress/" + model.Id)
             .Compression(compression)
             .JsonContent(model)
-            .SendAsync(TestHttp)
-            .IgnoreSyncContext();
+            .SendAsync(TestHttp);
 
         Assert.True(response.StatusCode.IsSuccess(), response.ResponseString);
         Assert.False(response.Error, response.Exception?.Message);
@@ -95,8 +93,7 @@ public class PropertyTests : HttpServerTests
         var response = await HttpRequest.Post("api/compress")
             .JsonContent(expected)
             .Compression(compression)
-            .SendAsync(TestHttp)
-            .IgnoreSyncContext();
+            .SendAsync(TestHttp);
 
         Assert.True(response.StatusCode.IsSuccess(), response.ResponseString);
         Assert.False(response.Error, response.Exception?.Message);
