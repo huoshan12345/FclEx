@@ -10,32 +10,36 @@ public class NameIdentifierTests
     [Fact]
     public void Create_ReturnsNewInstance()
     {
-        var identifier = MyNameIdentifier.Create("TestName");
-        Assert.Equal("TestName", identifier.Name);
+        const string name = nameof(Create_ReturnsNewInstance);
+        var identifier = MyNameIdentifier.Create(name);
+        Assert.Equal(name, identifier.Name);
     }
 
     [Fact]
     public void GetOrCreate_ReturnsCachedInstance()
     {
-        var identifier1 = MyNameIdentifier.GetOrCreate("TestName");
-        var identifier2 = MyNameIdentifier.GetOrCreate("TestName");
+        const string name = nameof(Create_ReturnsNewInstance);
+        var identifier1 = MyNameIdentifier.GetOrCreate(name);
+        var identifier2 = MyNameIdentifier.GetOrCreate(name);
         Assert.Same(identifier1, identifier2); // Should be the same instance from the cache
     }
 
     [Fact]
     public void GetOrCreate_CreatesNewInstance_WhenCacheDisabled()
     {
-        var identifier1 = MyNameIdentifier.GetOrCreate("TestName", useCache: false);
-        var identifier2 = MyNameIdentifier.GetOrCreate("TestName", useCache: false);
+        const string name = nameof(GetOrCreate_CreatesNewInstance_WhenCacheDisabled);
+        var identifier1 = MyNameIdentifier.GetOrCreate(name, useCache: false);
+        var identifier2 = MyNameIdentifier.GetOrCreate(name, useCache: false);
         Assert.NotSame(identifier1, identifier2); // Should be different instances
     }
 
     [Fact]
     public void ClearCache_RemovesCachedInstances()
     {
-        var identifier1 = MyNameIdentifier.GetOrCreate("TestName");
+        const string name = nameof(ClearCache_RemovesCachedInstances);
+        var identifier1 = MyNameIdentifier.GetOrCreate(name);
         MyNameIdentifier.ClearCache();
-        var identifier2 = MyNameIdentifier.GetOrCreate("TestName");
+        var identifier2 = MyNameIdentifier.GetOrCreate(name);
         Assert.NotSame(identifier1, identifier2); // Should be a new instance after clearing the cache
     }
 
@@ -43,23 +47,26 @@ public class NameIdentifierTests
     [Fact]
     public void ToString_ReturnsName()
     {
-        var identifier = MyNameIdentifier.Create("TestName");
-        Assert.Equal("TestName", identifier.ToString());
+        const string name = nameof(ToString_ReturnsName);
+        var identifier = MyNameIdentifier.Create(name);
+        Assert.Equal(name, identifier.ToString());
     }
 
     [Fact]
     public void GetHashCode_ReturnsHashCodeOfName()
     {
-        var identifier = MyNameIdentifier.Create("TestName");
-        Assert.Equal("TestName".GetHashCode(), identifier.GetHashCode());
+        const string name = nameof(GetHashCode_ReturnsHashCodeOfName);
+        var identifier = MyNameIdentifier.Create(name);
+        Assert.Equal(name.GetHashCode(), identifier.GetHashCode());
     }
 
     [Fact]
     public void CompareTo_ReturnsCorrectComparison()
     {
-        var identifier1 = MyNameIdentifier.Create("Alpha");
-        var identifier2 = MyNameIdentifier.Create("Beta");
-        var identifier3 = MyNameIdentifier.Create("Alpha");
+        const string name = nameof(CompareTo_ReturnsCorrectComparison);
+        var identifier1 = MyNameIdentifier.Create(name + 1);
+        var identifier2 = MyNameIdentifier.Create(name + 2);
+        var identifier3 = MyNameIdentifier.Create(name + 1);
 
         Assert.Equal(-1, identifier1.CompareTo(identifier2));
         Assert.Equal(1, identifier2.CompareTo(identifier1));
@@ -70,7 +77,7 @@ public class NameIdentifierTests
     [Fact]
     public void CompareTo_HandlesSameInstance()
     {
-        var identifier = MyNameIdentifier.Create("Test");
+        var identifier = MyNameIdentifier.Create(nameof(CompareTo_HandlesSameInstance));
         Assert.Equal(0, identifier.CompareTo(identifier)); // Comparing to itself
     }
 
@@ -78,24 +85,27 @@ public class NameIdentifierTests
     [Fact]
     public void ImplementsINameIdentifier()
     {
+        const string name = nameof(ImplementsINameIdentifier);
         // This test mostly ensures the code compiles correctly, but it's good to have.
-        INameIdentifier<MyNameIdentifier> identifier = MyNameIdentifier.Create("Test");
-        Assert.Equal("Test", identifier.Name);
+        INameIdentifier<MyNameIdentifier> identifier = MyNameIdentifier.Create(name);
+        Assert.Equal(name, identifier.Name);
     }
 
     [Fact]
     public void Equals_ReturnsTrueForSameName()
     {
-        var id1 = MyNameIdentifier.Create("Test");
-        var id2 = MyNameIdentifier.Create("Test");
+        const string name = nameof(Equals_ReturnsTrueForSameName);
+        var id1 = MyNameIdentifier.Create(name);
+        var id2 = MyNameIdentifier.Create(name);
         Assert.True(id1.Equals(id2));
     }
 
     [Fact]
     public void Equals_ReturnsFalseForDifferentNames()
     {
-        var id1 = MyNameIdentifier.Create("Test1");
-        var id2 = MyNameIdentifier.Create("Test2");
+        const string name = nameof(Equals_ReturnsFalseForDifferentNames);
+        var id1 = MyNameIdentifier.Create(name + 1);
+        var id2 = MyNameIdentifier.Create(name + 2);
         Assert.False(id1.Equals(id2));
     }
 }
