@@ -14,7 +14,7 @@ public static class HttpClientHelper
 
     public static SocketsHttpHandler CreateSocketsHttpHandler(SocketsHttpHandlerOptions? options = null)
     {
-        options ??= SocketsHttpHandlerOptions.Default;
+        options ??= new();
         return new SocketsHttpHandler
         {
             ConnectTimeout = options.ConnectTimeout,
