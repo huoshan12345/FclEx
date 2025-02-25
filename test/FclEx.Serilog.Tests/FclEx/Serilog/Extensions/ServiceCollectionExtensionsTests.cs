@@ -35,7 +35,7 @@ public class ServiceCollectionExtensionsTests
         Assert.NotNull(serilogLogger);
 
         
-        serilogLogger.Information(new LogException("exception", LogEventLevel.Warning).SetStackTrace(), "message");
+        serilogLogger.Information(new LogException("exception", LogLevel.Warning).SetStackTrace(), "message");
 
         var flag = await listener.WaitAsync(1, TimeSpan.FromSeconds(1));
         Assert.True(flag);

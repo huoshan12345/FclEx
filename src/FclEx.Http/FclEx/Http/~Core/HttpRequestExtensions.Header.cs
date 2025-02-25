@@ -36,20 +36,39 @@ partial class HttpRequestExtensions
 
     public static HttpRequest AddHeader(this HttpRequest request, IEnumerable<KeyValuePair<string, string?>> paras)
     {
-        paras.EmptyIfNull().ForEach(m => request.AddHeader(m));
+        foreach (var (key, value) in paras.EmptyIfNull())
+        {
+            return request.AddHeader(key, value);
+        }
         return request;
     }
 
-    public static HttpRequest AddHeader(this HttpRequest request, KeyValuePair<string, string?> pair) => request.AddHeader(pair.Key, pair.Value);
+    public static HttpRequest AddHeader<T>(this HttpRequest request, IEnumerable<KeyValuePair<string, T>> paras) where T : IEnumerable<string?>
+    {
+        foreach (var (key, values) in paras.EmptyIfNull())
+        {
+            foreach (var value in values)
+            {
+                return request.AddHeader(key, value);
+            }
+        }
+
+        return request;
+    }
+
+    public static HttpRequest AddHeader(this HttpRequest request, KeyValuePair<string, string?> pair)
+    {
+        return request.AddHeader(pair.Key, pair.Value);
+    }
 
     public static HttpRequest AddCookies(this HttpRequest request, string? value)
     {
-        return request.AddHeader(HttpKnownHeaderNames.Cookie, value);
+        return request.AddHeader(HttpHeaderNames.Cookie, value);
     }
 
     public static HttpRequest AddCookies(this HttpRequest request, IEnumerable<Cookie> cookies)
     {
-        return request.AddHeader(HttpKnownHeaderNames.Cookie, cookies.JoinWith("; "));
+        return request.AddHeader(HttpHeaderNames.Cookie, cookies.JoinWith("; "));
     }
 
     public static HttpRequest AddHeaderPair(this HttpRequest request, string queryPair, char separator = ':')
@@ -61,12 +80,12 @@ partial class HttpRequestExtensions
 
     public static HttpRequest AcceptUtf8(this HttpRequest request)
     {
-        return request.AddHeader(HttpKnownHeaderNames.AcceptCharset, "utf-8");
+        return request.AddHeader(HttpHeaderNames.AcceptCharset, "utf-8");
     }
 
     public static HttpRequest AcceptCn(this HttpRequest request)
     {
-        return request.AddHeader(HttpKnownHeaderNames.AcceptLanguage, "zh-CN,zh;q=0.8");
+        return request.AddHeader(HttpHeaderNames.AcceptLanguage, "zh-CN,zh;q=0.8");
     }
 
     public static HttpRequest Ajax(this HttpRequest request)
@@ -76,7 +95,7 @@ partial class HttpRequestExtensions
 
     public static HttpRequest AcceptCompress(this HttpRequest request)
     {
-        return request.AddHeader(HttpKnownHeaderNames.AcceptEncoding, "gzip");
+        return request.AddHeader(HttpHeaderNames.AcceptEncoding, "gzip");
     }
 
     public static HttpRequest UseGZip(this HttpRequest request, bool gzip = true, CompressionLevel level = CompressionLevel.Optimal)
@@ -113,35 +132,5 @@ partial class HttpRequestExtensions
     {
         request.UserAgent ??= userAgent;
         return request;
-    }
-
-    public static string GetRequestHeader(this HttpRequest request, string? cookieHeader = null)
-    {
-        var sb = new StringBuilder();
-        foreach (var (key, value) in request.Headers)
-            sb.AppendLine($"{key}: {value}");
-        if (!request.Headers.ContainsKey(HttpKnownHeaderNames.Cookie) && !cookieHeader.IsNullOrEmpty())
-            sb.Append(HttpKnownHeaderNames.Cookie + ": " + cookieHeader);
-        return sb.ToString();
-    }
-
-    public static string GetRequestHeader(this HttpRequest request, IEnumerable<Cookie> cookies)
-    {
-        return request.GetRequestHeader(cookies.Select(m => m.ToString()).JoinWith("; "));
-    }
-
-    public static string GetRequestHeader(this HttpRequest request, CookieCollection cookies)
-    {
-        return request.GetRequestHeader(cookies.Enumerate());
-    }
-
-    public static string GetRequestHeader(this HttpRequest request, CookieContainer cc)
-    {
-        return request.GetRequestHeader(cc.GetCookies(request.GetUri()));
-    }
-
-    public static string GetRequestHeader(this HttpRequest request, IHttpService service)
-    {
-        return request.GetRequestHeader(service.GetCookies(request.GetUri()));
     }
 }

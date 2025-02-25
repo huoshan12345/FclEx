@@ -2,7 +2,7 @@
 
 public record HttpClientOptions : SocketsHttpHandlerOptions
 {
-    public static readonly SleepDurationProvider DefaultSleepDurationProvider = retryAttempt => TimeSpan.FromSeconds(1 + retryAttempt);
+    public static readonly SleepDurationProvider DefaultSleepDurationProvider = retryAttempt => TimeSpan.Zero;
 
     public Uri? BaseAddress { get; set; }
 #if NET6_0_OR_GREATER

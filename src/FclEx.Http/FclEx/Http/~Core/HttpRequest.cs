@@ -40,20 +40,20 @@ public partial class HttpRequest
 
     public string? Referrer
     {
-        get => Headers.GetLast(HttpKnownHeaderNames.Referrer);
-        set => Headers.Set(HttpKnownHeaderNames.Referrer, value);
+        get => Headers.GetLast(HttpHeaderNames.Referrer);
+        set => Headers.Set(HttpHeaderNames.Referrer, value);
     }
 
     public string? Origin
     {
-        get => Headers.GetLast(HttpKnownHeaderNames.Origin);
-        set => Headers.Set(HttpKnownHeaderNames.Origin, value);
+        get => Headers.GetLast(HttpHeaderNames.Origin);
+        set => Headers.Set(HttpHeaderNames.Origin, value);
     }
 
     public string? UserAgent
     {
-        get => Headers.GetLast(HttpKnownHeaderNames.UserAgent);
-        set => Headers.Set(HttpKnownHeaderNames.UserAgent, value);
+        get => Headers.GetLast(HttpHeaderNames.UserAgent);
+        set => Headers.Set(HttpHeaderNames.UserAgent, value);
     }
 
     public string Fragment
@@ -100,7 +100,7 @@ public partial class HttpRequest
             this.BasicAuth(UserName, Password);
         }
         Method = method;
-        Headers.Set(HttpKnownHeaderNames.UserAgent, HttpConstants.DefaultUserAgent);
+        Headers.Set(HttpHeaderNames.UserAgent, HttpConstants.DefaultUserAgent);
     }
 
     public Uri GetUri() => _uriCreator.Build();

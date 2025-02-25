@@ -130,4 +130,9 @@ public static class StringBuilderExtensions
             builder.Append(value);
         return builder;
     }
+
+    public static StringBuilder AppendLine(this StringBuilder builder, object? value)
+    {
+        return builder.AppendLine(value?.ToString());
+    }
 }

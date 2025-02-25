@@ -108,8 +108,8 @@ public class PropertyTests : HttpServerTests
         var headers = token["headers"]?.Deserialize<Dictionary<string, string>>();
         Assert.NotNull(headers);
 
-        var encoding = headers.Get(HttpKnownHeaderNames.ContentEncoding);
-        var length = headers.Get(HttpKnownHeaderNames.ContentLength, int.Parse);
+        var encoding = headers.Get(HttpHeaderNames.ContentEncoding);
+        var length = headers.Get(HttpHeaderNames.ContentLength, int.Parse);
 
         var (expectedEncoding, expectedLength) = compression switch
         {

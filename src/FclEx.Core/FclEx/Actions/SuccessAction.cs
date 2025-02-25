@@ -1,10 +1,5 @@
 ﻿namespace FclEx.Actions;
 
-public static class SuccessAction
-{
-    public static SuccessAction<T> Create<T>(T obj, TimeSpan timeSpan = default) => new(obj, timeSpan);
-}
-
 public readonly struct SuccessAction<T> : IAction<T>
 {
     private readonly T _obj;
