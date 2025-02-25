@@ -44,6 +44,12 @@ public partial class HttpRequest
         set => Headers.Set(HttpHeaderNames.Referrer, value);
     }
 
+    public string? Authorization
+    {
+        get => Headers.GetLast(HttpHeaderNames.Authorization);
+        set => Headers.Set(HttpHeaderNames.Authorization, value);
+    }
+
     public string? Origin
     {
         get => Headers.GetLast(HttpHeaderNames.Origin);
@@ -95,12 +101,13 @@ public partial class HttpRequest
     public HttpRequest(Uri uri, HttpMethod method)
     {
         _uriCreator = new UriCreator(uri);
+
+        Method = method;
+
         if (UserName.IsNotEmpty() && Password.IsNotEmpty())
         {
             this.BasicAuth(UserName, Password);
         }
-        Method = method;
-        Headers.Set(HttpHeaderNames.UserAgent, HttpConstants.DefaultUserAgent);
     }
 
     public Uri GetUri() => _uriCreator.Build();

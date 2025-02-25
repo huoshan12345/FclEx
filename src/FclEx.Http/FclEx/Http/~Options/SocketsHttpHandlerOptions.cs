@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Http;
 
-public record SocketsHttpHandlerOptions
+public class SocketsHttpHandlerOptions
 {
     public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
     public IPVersionPolicy IPVersionPolicy { get; set; } = IPVersionPolicy.PreferIPv4;
@@ -24,6 +24,4 @@ public record SocketsHttpHandlerOptions
     /// Gets or sets how long a connection can be idle in the pool to be considered reusable.
     /// </summary>
     public TimeSpan PooledConnectionIdleTimeout { get; set; } = TimeSpan.FromMinutes(2);
-
-    public static readonly SocketsHttpHandlerOptions Default = new();
 }

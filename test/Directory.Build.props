@@ -23,4 +23,11 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <AssemblyAttribute Include="Xunit.TestFramework" Condition="$(ProjectName) != 'FclEx.Core.Tests'">
+      <_Parameter1>Meziantou.Xunit.ParallelTestFramework</_Parameter1>
+      <_Parameter2>Meziantou.Xunit.ParallelTestFramework</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
 </Project>

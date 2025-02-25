@@ -6,7 +6,7 @@ public static class HttpWebRequestExtensions
     {
         // use GetHttpResponse instead of GetHttpResponseAsync to make timeout valid.
         // see details at https://msdn.microsoft.com/en-us/library/system.net.httpwebrequest.timeout(v=vs.110).aspx
-        return await Task.Run(request.GetHttpResponse).IgnoreSyncContext();
+        return await Task.Run(request.GetHttpResponse);
     }
 
     public static HttpWebResponse GetHttpResponse(this HttpWebRequest request)

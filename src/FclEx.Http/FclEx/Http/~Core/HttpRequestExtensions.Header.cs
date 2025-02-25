@@ -1,4 +1,6 @@
-﻿namespace FclEx.Http;
+﻿using System.Collections;
+
+namespace FclEx.Http;
 
 partial class HttpRequestExtensions
 {
@@ -34,22 +36,61 @@ partial class HttpRequestExtensions
         return request;
     }
 
-    public static HttpRequest AddHeader(this HttpRequest request, IEnumerable<KeyValuePair<string, string?>> paras)
+    /// <summary>
+    /// Adds headers to an HTTP request from a collection of key-value pairs.
+    /// </summary>
+    /// <typeparam name="T">The type of the header values. Can be a simple type or an IEnumerable.</typeparam>
+    /// <param name="request">The HTTP request to add headers to.</param>
+    /// <param name="pairs">Collection of key-value pairs representing header names and values.</param>
+    /// <returns>The same HTTP request instance to enable method chaining.</returns>
+    /// <remarks>
+    /// This method handles two scenarios:
+    /// 1. When T is an <see cref="IEnumerable"/> (e.g., <see cref="MultiValueDictionary{TKey, TValue}"/>), 
+    ///    it adds each value within the enumerable as a separate header with the same key.<br/>
+    /// 2. When T is a simple type (e.g., string), it adds each key-value pair as a single header.
+    /// </remarks>
+    public static HttpRequest AddHeader<T>(this HttpRequest request, IEnumerable<KeyValuePair<string, T>> pairs)
     {
-        foreach (var (key, value) in paras.EmptyIfNull())
+        var type = typeof(T);
+        if (type.IsEnumerable() && type != typeof(string) && type.HasImplicitConversion(typeof(string)) == false)
         {
-            return request.AddHeader(key, value);
+            foreach (var (key, values) in pairs.EmptyIfNull())
+            {
+                foreach (var value in (IEnumerable)values!)
+                {
+                    request.AddHeader(key, value?.ToString());
+                }
+            }
         }
+        else
+        {
+            foreach (var (key, value) in pairs.EmptyIfNull())
+            {
+                request.AddHeader(key, value?.ToString());
+            }
+        }
+
         return request;
     }
 
-    public static HttpRequest AddHeader<T>(this HttpRequest request, IEnumerable<KeyValuePair<string, T>> paras) where T : IEnumerable<string?>
+    public static HttpRequest SetHeader<T>(this HttpRequest request, IEnumerable<KeyValuePair<string, T>> pairs)
     {
-        foreach (var (key, values) in paras.EmptyIfNull())
+        var type = typeof(T);
+        if (type.IsEnumerable() && type != typeof(string) && type.HasImplicitConversion(typeof(string)) == false)
         {
-            foreach (var value in values)
+            foreach (var (key, values) in pairs.EmptyIfNull())
             {
-                return request.AddHeader(key, value);
+                foreach (var value in (IEnumerable)values!)
+                {
+                    request.SetHeader(key, value?.ToString());
+                }
+            }
+        }
+        else
+        {
+            foreach (var (key, value) in pairs.EmptyIfNull())
+            {
+                request.SetHeader(key, value?.ToString());
             }
         }
 
@@ -61,9 +102,19 @@ partial class HttpRequestExtensions
         return request.AddHeader(pair.Key, pair.Value);
     }
 
+    public static HttpRequest SetHeader(this HttpRequest request, KeyValuePair<string, string?> pair)
+    {
+        return request.SetHeader(pair.Key, pair.Value);
+    }
+
     public static HttpRequest AddCookies(this HttpRequest request, string? value)
     {
         return request.AddHeader(HttpHeaderNames.Cookie, value);
+    }
+
+    public static HttpRequest SetCookies(this HttpRequest request, string? value)
+    {
+        return request.SetHeader(HttpHeaderNames.Cookie, value);
     }
 
     public static HttpRequest AddCookies(this HttpRequest request, IEnumerable<Cookie> cookies)
@@ -71,31 +122,37 @@ partial class HttpRequestExtensions
         return request.AddHeader(HttpHeaderNames.Cookie, cookies.JoinWith("; "));
     }
 
-    public static HttpRequest AddHeaderPair(this HttpRequest request, string queryPair, char separator = ':')
+    public static HttpRequest SetCookies(this HttpRequest request, IEnumerable<Cookie> cookies)
     {
-        var pair = queryPair.Split(separator);
-        request.AddHeader(pair[0], pair.Length > 1 ? pair[1] : "");
+        return request.SetHeader(HttpHeaderNames.Cookie, cookies.JoinWith("; "));
+    }
+
+    public static HttpRequest AddHeaderPair(this HttpRequest request, string pair, char separator = ':')
+    {
+        Check.NotEmpty(pair);
+        var parts = pair.Split(separator);
+        request.AddHeader(parts[0], pair.Length > 1 ? parts[1] : "");
         return request;
     }
 
     public static HttpRequest AcceptUtf8(this HttpRequest request)
     {
-        return request.AddHeader(HttpHeaderNames.AcceptCharset, "utf-8");
+        return request.SetHeader(HttpHeaderNames.AcceptCharset, "utf-8");
     }
 
     public static HttpRequest AcceptCn(this HttpRequest request)
     {
-        return request.AddHeader(HttpHeaderNames.AcceptLanguage, "zh-CN,zh;q=0.8");
+        return request.SetHeader(HttpHeaderNames.AcceptLanguage, "zh-CN,zh;q=0.8");
     }
 
     public static HttpRequest Ajax(this HttpRequest request)
     {
-        return request.AddHeader("X-Requested-With", "XMLHttpRequest");
+        return request.SetHeader(HttpHeaderNames.XRequestedWith, "XMLHttpRequest");
     }
 
     public static HttpRequest AcceptCompress(this HttpRequest request)
     {
-        return request.AddHeader(HttpHeaderNames.AcceptEncoding, "gzip");
+        return request.SetHeader(HttpHeaderNames.AcceptEncoding, "gzip");
     }
 
     public static HttpRequest UseGZip(this HttpRequest request, bool gzip = true, CompressionLevel level = CompressionLevel.Optimal)

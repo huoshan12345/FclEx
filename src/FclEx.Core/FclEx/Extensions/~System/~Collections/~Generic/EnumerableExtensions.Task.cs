@@ -55,7 +55,7 @@ partial class EnumerableExtensions
         {
             if (!token.IsCancellationRequested)
             {
-                var r = await taskSelector(obj).IgnoreSyncContext();
+                var r = await taskSelector(obj);
                 span += r.Elapsed;
                 if (r.Success)
                 {

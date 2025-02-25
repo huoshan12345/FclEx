@@ -16,7 +16,8 @@ public class HttpClientService : AbstractHttpClientService
 
     public HttpClientService(HttpClientOptions? options = null)
     {
-        _options = options ?? HttpClientOptions.Default;
+        _options = options ?? new();
+        _options.AllowAutoRedirect = false;
     }
 
     public override IWebProxy? Proxy
@@ -27,7 +28,7 @@ public class HttpClientService : AbstractHttpClientService
             if (IWebProxyEqualityComparer.Instance.Equals(_options.Proxy, value))
                 return;
 
-            _options = _options with { Proxy = value };
+            _options.Proxy = value;
         }
     }
 
@@ -90,7 +91,7 @@ public class HttpClientService : AbstractHttpClientService
 
     public static HttpClientService Create(bool useCookie, ILoggerFactory? loggerFactory = null)
     {
-        return Create(HttpClientOptions.Default, useCookie, loggerFactory);
+        return Create(new HttpClientOptions(), useCookie, loggerFactory);
     }
 
     public static HttpClientService Create(Action<HttpClientOptions> configureOptions, bool useCookie = true, ILoggerFactory? loggerFactory = null)

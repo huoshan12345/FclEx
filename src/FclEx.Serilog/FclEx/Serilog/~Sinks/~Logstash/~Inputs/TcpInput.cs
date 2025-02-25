@@ -15,7 +15,7 @@ internal class TcpInput : ILogstashInput
     public async Task SendAsync(IEnumerable<string> list)
     {
         using var client = new TcpClient();
-        await client.ConnectAsync(_uri.Host, _uri.Port).IgnoreSyncContext();
+        await client.ConnectAsync(_uri.Host, _uri.Port);
 #if NET6_0_OR_GREATER
         await
 #endif
@@ -26,6 +26,6 @@ internal class TcpInput : ILogstashInput
             await writer.WriteAsync(NewLine);
         }
         //writer.Write(_newLine);
-        await writer.FlushAsync().IgnoreSyncContext();
+        await writer.FlushAsync();
     }
 }

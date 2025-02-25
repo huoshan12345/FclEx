@@ -1,12 +1,11 @@
-﻿using System;
-
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 public abstract class AbstractHttpService : IHttpService
 {
     protected readonly CookieContainer _cookieContainer = new();
     private ILogger _logger = NullLogger.Instance;
 
+    // ReSharper disable once MemberCanBeProtected.Global
     public bool UseCookie { get; set; } = true;
 
     public virtual void Dispose()
@@ -23,7 +22,7 @@ public abstract class AbstractHttpService : IHttpService
         var response = new HttpResponse(request) { StartTime = DateTimeOffset.UtcNow };
         try
         {
-            await ExecuteAsyncInternal(request, response, token).IgnoreSyncContext();
+            await ExecuteAsyncInternal(request, response, token);
         }
         catch (Exception e)
         {

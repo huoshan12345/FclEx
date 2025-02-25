@@ -15,7 +15,7 @@ public readonly struct HttpRequestAction : IAction<HttpResponse>
 
     public async Task<OperationResult<HttpResponse>> ExecuteAsync(CancellationToken token = default)
     {
-        var response = await _httpService.SendAsync(_request, token).IgnoreSyncContext();
+        var response = await _httpService.SendAsync(_request, token);
         return response.Error && _unwrapError
             ? Operation.ObjectError(response, response.Exception!, response.Elapsed).CastTo<HttpResponse>()
             : Operation.Success(response);

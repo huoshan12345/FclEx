@@ -12,7 +12,7 @@ public class AsyncLock : IDisposable
 
     public async Task<IDisposable> LockAsync(CancellationToken token = default)
     {
-        await _semaphore.WaitAsync(token).IgnoreSyncContext();
+        await _semaphore.WaitAsync(token);
         return Disposable.Create(() => _semaphore.Release());
     }
 

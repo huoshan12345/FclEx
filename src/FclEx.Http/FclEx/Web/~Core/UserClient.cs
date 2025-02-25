@@ -134,14 +134,15 @@ public abstract class UserClient : IUserClient, IDisposable
         try
         {
             Session.LoggingIn();
+
             var response = await loginAction(token)
                 .Success(_ => Session.Online())
                 .Error(_ =>
                 {
                     if (Session.IsLoggingIn())
                         Session.Offline();
-                })
-                .IgnoreSyncContext();
+                });
+
             return response.Elapsed(time.GetElapsedTime());
         }
         catch (Exception ex)
@@ -180,12 +181,11 @@ public abstract class UserClient : IUserClient, IDisposable
             Logger.LogTrace("Start to fake login...");
             var result = await FakeLoginActionAsync(t)
                 .Success(o => Logger.LogTrace("Fake login successfully"))
-                .Error(ex => Logger.LogWarning(ex, "Failed to fake login: " + ex.Message))
-                .IgnoreSyncContext();
+                .Error(ex => Logger.LogWarning(ex, "Failed to fake login: " + ex.Message));
 
             if (result.Error && loginIfFail)
             {
-                result = await LoginActionWrapperAsync(t).IgnoreSyncContext();
+                result = await LoginActionWrapperAsync(t);
             }
             return result;
         }, token);

@@ -21,7 +21,7 @@ public interface IAbstractAction<T> : IAction<T>
                     ? Operation.Action(t => HandleCancellationAsync(r.Exception))
                     : Operation.Action(t => HandleErrorAsync(r.Exception)));
 
-        var result = await future.ExecuteAsync(token).IgnoreSyncContext();
+        var result = await future.ExecuteAsync(token);
         result = result.Elapsed(time.GetElapsedTime());
 
         Debug.WriteLine($"[{GetName()}]End, after {result.Elapsed.TotalMilliseconds:f3} ms]");

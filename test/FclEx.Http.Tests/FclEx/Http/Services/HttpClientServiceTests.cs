@@ -78,15 +78,15 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
     [Fact]
     public void GetFactory_Default_Test()
     {
-        var fac1 = GetFactory(HttpClientOptions.Default);
-        var fac2 = GetFactory(HttpClientOptions.Default);
+        var fac1 = GetFactory(new());
+        var fac2 = GetFactory(new());
         Assert.Equal(fac1, fac2, ReferenceEqualityComparer.Instance);
     }
 
     [Fact]
     public void LoggingHttpMessageHandlerBuilderFilter_Remove_Test()
     {
-        var provider = HttpClientService.GetProvider(HttpClientOptions.Default);
+        var provider = HttpClientService.GetProvider(new());
         var filter = provider.GetService<IHttpMessageHandlerBuilderFilter>();
         Assert.True(filter is null || filter.GetType().FullName != "Microsoft.Extensions.Http.LoggingHttpMessageHandlerBuilderFilter");
     }
