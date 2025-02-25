@@ -30,7 +30,10 @@ partial class HttpRequestExtensions
 
     public static HttpRequest AddFormParam(this HttpRequest request, IEnumerable<KeyValuePair<string?, string?>> enumerable)
     {
-        enumerable.EmptyIfNull().ForEach(m => request.AddFormParam(m));
+        foreach (var (key, value) in enumerable.EmptyIfNull())
+        {
+            request.AddFormParam(key, value);
+        }
         return request;
     }
 

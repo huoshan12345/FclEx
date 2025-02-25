@@ -35,7 +35,10 @@ partial class HttpRequestExtensions
 
     public static HttpRequest AddQueryParam(this HttpRequest request, IEnumerable<KeyValuePair<string?, string?>> enumerable)
     {
-        enumerable.EmptyIfNull().ForEach(m => request.AddQueryParam(m));
+        foreach (var (key, value) in enumerable.EmptyIfNull())
+        {
+            request.AddQueryParam(key, value);
+        }
         return request;
     }
 

@@ -2,22 +2,24 @@
 
 [DebuggerDisplay("{" + nameof(Value) + "}")]
 [JsonConverter(typeof(NStringJsonConverter))]
-public readonly struct NString : IEquatable<NString>
+public readonly struct NString(string? value) : IEquatable<NString>, IReadOnlyList<char>
 {
-    private readonly string? _value;
-    public string Value => _value ?? string.Empty;
+    public string Value => value ?? string.Empty; // use compute property to avoid null when create default struct
+    public int Count => Value.Length;
 
-    public NString(string? inner)
-    {
-        _value = inner;
-    }
+    public char this[int index] => Value[index];
+    public override string ToString() => Value;
+    public bool Equals(NString other) => Value == other.Value;
+    public override int GetHashCode() => Value.GetHashCode();
+    public IEnumerator<char> GetEnumerator() => Value.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     public static implicit operator string(NString nstr) => nstr.Value;
     public static implicit operator NString(string? str) => new(str);
 
-    public override string ToString() => Value;
-    public bool Equals(NString other) => Value == other.Value;
-    public override int GetHashCode() => Value.GetHashCode();
+    public static bool operator ==(NString left, string right) => left == (NString)right;
+    public static bool operator !=(NString left, string right) => !(left == right);
+
     public static bool operator ==(NString left, NString right) => left.Equals(right);
     public static bool operator !=(NString left, NString right) => !(left == right);
 
@@ -27,7 +29,7 @@ public readonly struct NString : IEquatable<NString>
         {
             NString other => Value == other.Value,
             string other => Value == other,
-            _ => false
+            _ => false,
         };
     }
 }

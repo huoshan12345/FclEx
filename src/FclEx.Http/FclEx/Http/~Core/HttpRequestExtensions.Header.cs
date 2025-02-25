@@ -38,7 +38,16 @@ partial class HttpRequestExtensions
     {
         foreach (var (key, value) in paras.EmptyIfNull())
         {
-            return request.AddHeader(key, value);
+            request.AddHeader(key, value);
+        }
+        return request;
+    }
+
+    public static HttpRequest SetHeader(this HttpRequest request, IEnumerable<KeyValuePair<string, string?>> paras)
+    {
+        foreach (var (key, value) in paras.EmptyIfNull())
+        {
+            request.SetHeader(key, value);
         }
         return request;
     }
@@ -49,7 +58,20 @@ partial class HttpRequestExtensions
         {
             foreach (var value in values)
             {
-                return request.AddHeader(key, value);
+                request.AddHeader(key, value);
+            }
+        }
+
+        return request;
+    }
+
+    public static HttpRequest SetHeader<T>(this HttpRequest request, IEnumerable<KeyValuePair<string, T>> paras) where T : IEnumerable<string?>
+    {
+        foreach (var (key, values) in paras.EmptyIfNull())
+        {
+            foreach (var value in values)
+            {
+                request.SetHeader(key, value);
             }
         }
 
@@ -61,9 +83,19 @@ partial class HttpRequestExtensions
         return request.AddHeader(pair.Key, pair.Value);
     }
 
+    public static HttpRequest SetHeader(this HttpRequest request, KeyValuePair<string, string?> pair)
+    {
+        return request.SetHeader(pair.Key, pair.Value);
+    }
+
     public static HttpRequest AddCookies(this HttpRequest request, string? value)
     {
         return request.AddHeader(HttpHeaderNames.Cookie, value);
+    }
+
+    public static HttpRequest SetCookies(this HttpRequest request, string? value)
+    {
+        return request.SetHeader(HttpHeaderNames.Cookie, value);
     }
 
     public static HttpRequest AddCookies(this HttpRequest request, IEnumerable<Cookie> cookies)
@@ -71,31 +103,37 @@ partial class HttpRequestExtensions
         return request.AddHeader(HttpHeaderNames.Cookie, cookies.JoinWith("; "));
     }
 
-    public static HttpRequest AddHeaderPair(this HttpRequest request, string queryPair, char separator = ':')
+    public static HttpRequest SetCookies(this HttpRequest request, IEnumerable<Cookie> cookies)
     {
-        var pair = queryPair.Split(separator);
-        request.AddHeader(pair[0], pair.Length > 1 ? pair[1] : "");
+        return request.SetHeader(HttpHeaderNames.Cookie, cookies.JoinWith("; "));
+    }
+
+    public static HttpRequest AddHeaderPair(this HttpRequest request, string pair, char separator = ':')
+    {
+        Check.NotEmpty(pair);
+        var parts = pair.Split(separator);
+        request.AddHeader(parts[0], pair.Length > 1 ? parts[1] : "");
         return request;
     }
 
     public static HttpRequest AcceptUtf8(this HttpRequest request)
     {
-        return request.AddHeader(HttpHeaderNames.AcceptCharset, "utf-8");
+        return request.SetHeader(HttpHeaderNames.AcceptCharset, "utf-8");
     }
 
     public static HttpRequest AcceptCn(this HttpRequest request)
     {
-        return request.AddHeader(HttpHeaderNames.AcceptLanguage, "zh-CN,zh;q=0.8");
+        return request.SetHeader(HttpHeaderNames.AcceptLanguage, "zh-CN,zh;q=0.8");
     }
 
     public static HttpRequest Ajax(this HttpRequest request)
     {
-        return request.AddHeader("X-Requested-With", "XMLHttpRequest");
+        return request.SetHeader(HttpHeaderNames.XRequestedWith, "XMLHttpRequest");
     }
 
     public static HttpRequest AcceptCompress(this HttpRequest request)
     {
-        return request.AddHeader(HttpHeaderNames.AcceptEncoding, "gzip");
+        return request.SetHeader(HttpHeaderNames.AcceptEncoding, "gzip");
     }
 
     public static HttpRequest UseGZip(this HttpRequest request, bool gzip = true, CompressionLevel level = CompressionLevel.Optimal)
