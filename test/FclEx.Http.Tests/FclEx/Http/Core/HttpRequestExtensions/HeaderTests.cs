@@ -49,10 +49,7 @@ public class HeaderTests
 
         var headers = new Dictionary<string, string>();
         var request = HttpRequest.Get("http://localhost");
-
-
         var result = request.AddHeader(headers);
-
 
         Assert.Same(request, result);
         Assert.Empty(request.Headers);
@@ -61,10 +58,9 @@ public class HeaderTests
     [Fact]
     public void AddHeader_WithNullDictionary_ReturnsRequestUnchanged()
     {
-
-        Dictionary<string, string>? headers = null;
+        Dictionary<string, string> headers = null!;
         var request = HttpRequest.Get("http://localhost");
-        var result = request.AddHeader(headers!);
+        var result = request.AddHeader(headers);
         Assert.Same(request, result);
         Assert.Empty(request.Headers);
     }
@@ -79,12 +75,8 @@ public class HeaderTests
             { "Authorization", null },
             { "Accept", "application/json" }
         };
-
         var request = HttpRequest.Get("http://localhost");
-
-
         var result = request.AddHeader(headers);
-
 
         Assert.Same(request, result);
         Assert.Equal(3, request.Headers.Count);
@@ -102,7 +94,6 @@ public class HeaderTests
             { "Accept", ["application/json", "text/plain"] },
             { "X-Custom", ["value1", "value2", "value3"] }
         };
-
         var request = HttpRequest.Get("http://localhost");
         var result = request.AddHeader(multiValueHeaders);
 
@@ -137,10 +128,7 @@ public class HeaderTests
         {
             { "Accept", ["application/json", null, "text/plain"] }
         };
-
         var request = HttpRequest.Get("http://localhost");
-
-
         var result = request.AddHeader(multiValueHeaders);
 
 
@@ -164,10 +152,7 @@ public class HeaderTests
 
         var multiValueHeaders = new Dictionary<string, List<string>>();
         var request = HttpRequest.Get("http://localhost");
-
-
         var result = request.AddHeader(multiValueHeaders);
-
 
         Assert.Same(request, result);
         Assert.Empty(request.Headers);
@@ -182,9 +167,7 @@ public class HeaderTests
             { "X-Custom1", new CustomType { Value = 123 } },
             { "X-Custom2", new CustomType { Value = 456 } }
         };
-
         var request = HttpRequest.Get("http://localhost");
-
         var result = request.AddHeader(headers);
 
         Assert.Same(request, result);
