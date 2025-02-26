@@ -7,7 +7,6 @@ public interface IMemoryCache<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TVa
     bool TryAdd(TKey key, TValue value);
     TValue this[TKey key] { get; set; }
     int Capacity { get; }
-    CacheStats Stats { get; }
     bool Remove(TKey key);
     bool TryGetValue(TKey key, [NotNullWhen(true)] out TValue? value);
     ICollection<TKey> Keys { get; }

@@ -702,7 +702,7 @@ public class MultiValueDictionary<TKey, TValue> :
         if (key == null)
             throw new ArgumentNullException(nameof(key));
 
-        if (_dictionary.TryGetValue(key, out InnerCollectionView _) && _dictionary.Remove(key))
+        if (_dictionary.Remove(key))
         {
             _version++;
             return true;
@@ -736,6 +736,22 @@ public class MultiValueDictionary<TKey, TValue> :
             _version++;
             return true;
         }
+        return false;
+    }
+
+    public bool Remove(TKey key, [MaybeNullWhen(false)] out IReadOnlyCollection<TValue> values)
+    {
+        if (key == null)
+            throw new ArgumentNullException(nameof(key));
+
+        if (_dictionary.Remove(key, out var view))
+        {
+            values = view;
+            _version++;
+            return true;
+        }
+
+        values = null;
         return false;
     }
 

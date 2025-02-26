@@ -4,7 +4,10 @@ public class HttpClientService : AbstractHttpClientService
 {
     protected HttpClientOptions _options;
 
-    public static HttpClientService Default { get; } = new() { UseCookie = false };
+    public static readonly HttpClientOptions DefaultOptions = new();
+
+    private static readonly Lazy<HttpClientService> _default = new(() => new(DefaultOptions) { UseCookie = false });
+    public static HttpClientService Default => _default.Value;
 
     protected internal override HttpClientContext CreateHttpClientContext()
     {
@@ -16,8 +19,8 @@ public class HttpClientService : AbstractHttpClientService
 
     public HttpClientService(HttpClientOptions? options = null)
     {
-        _options = options ?? new();
-        _options.AllowAutoRedirect = false;
+        options ??= new();
+        _options = options with { AllowAutoRedirect = false };
     }
 
     public override IWebProxy? Proxy
@@ -37,17 +40,19 @@ public class HttpClientService : AbstractHttpClientService
         GC.SuppressFinalize(this);
     }
 
-    protected static readonly ConcurrentDictionary<HttpClientOptions, IServiceProvider> Providers = new(HttpClientOptionsEqualityComparer.Instance);
+    public static int MaxCacheCount { get; } = ushort.MaxValue;
+
+    protected static readonly Lazy<LfuCache<HttpClientOptions, IServiceProvider>> Providers = new(() => new(Math.Max(1, MaxCacheCount), HttpClientOptionsEqualityComparer.Instance));
 
     protected static readonly string[] CanceledErrors =
     [
         new TaskCanceledException(Task.CompletedTask).Message,
-        new OperationCanceledException(CancellationToken.None).Message
+        new OperationCanceledException(CancellationToken.None).Message,
     ];
 
     protected internal static IServiceProvider GetProvider(HttpClientOptions options)
     {
-        return Providers.GetOrAdd(options, m =>
+        return Providers.Value.GetOrAdd(options, m =>
         {
             // this policy is created to retry Task.WithTimeout()
             var policy = Policy<HttpResponseMessage>

@@ -28,8 +28,8 @@ public static class TaskHelper
 {
     public static Task<TResult[]> Repeat<TResult>(Func<TResult> action, int times)
     {
-        if (action == null) throw new ArgumentNullException(nameof(action));
-        if (times < 1) throw new ArgumentOutOfRangeException(nameof(times));
+        Check.NotNull(action);
+        Check.NotLessThan(times, 0);
 
         var tasks = Enumerable.Repeat(Task.Run(action), times);
         return Task.WhenAll(tasks);
@@ -37,8 +37,8 @@ public static class TaskHelper
 
     public static Task Repeat(Action action, int times)
     {
-        if (action == null) throw new ArgumentNullException(nameof(action));
-        if (times < 1) throw new ArgumentOutOfRangeException(nameof(times));
+        Check.NotNull(action);
+        Check.NotLessThan(times, 0);
 
         var tasks = Enumerable.Repeat(Task.Run(action), times);
         return Task.WhenAll(tasks);
@@ -46,8 +46,8 @@ public static class TaskHelper
 
     public static Task<TResult[]> Repeat<TResult>(Func<Task<TResult>> action, int times)
     {
-        if (action == null) throw new ArgumentNullException(nameof(action));
-        if (times < 1) throw new ArgumentOutOfRangeException(nameof(times));
+        Check.NotNull(action);
+        Check.NotLessThan(times, 0);
 
         var tasks = Enumerable.Repeat(action, times).Select(m => m());
         return Task.WhenAll(tasks);
@@ -55,8 +55,8 @@ public static class TaskHelper
 
     public static Task Repeat(Func<Task> action, int times)
     {
-        if (action == null) throw new ArgumentNullException(nameof(action));
-        if (times < 1) throw new ArgumentOutOfRangeException(nameof(times));
+        Check.NotNull(action);
+        Check.NotLessThan(times, 0);
 
         var tasks = Enumerable.Repeat(action, times).Select(m => m());
         return Task.WhenAll(tasks);

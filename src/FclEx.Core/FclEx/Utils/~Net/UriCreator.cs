@@ -19,7 +19,7 @@ public class UriCreator
     public UriCreator(UriBuilder builder)
     {
         _builder = builder;
-        Query = new(_builder.Query);
+        Query = UriParams.Parse(builder.Query);
         _builder.Query = string.Empty;
     }
 
@@ -48,7 +48,7 @@ public class UriCreator
             };
         }
 
-        Query = new(_builder.Query);
+        Query = UriParams.Parse(_builder.Query);
         _builder.Query = string.Empty;
     }
 

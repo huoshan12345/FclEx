@@ -18,10 +18,8 @@ partial class InterfaceBaseInvocationExtension
 
     private static (Delegate, object?[]) GetDynamicMethod<TInterface, TReturn>(TInterface instance, LambdaExpression selector)
     {
-        if (instance is null)
-            throw new ArgumentNullException(nameof(instance));
-        if (selector is null)
-            throw new ArgumentNullException(nameof(selector));
+        Check.NotNull(instance);
+        Check.NotNull(selector);
 
         var (method, args) = GetMethodAndArguments(selector);
         var evaluatedArguments = args.GetArgumentValues().ToArray();

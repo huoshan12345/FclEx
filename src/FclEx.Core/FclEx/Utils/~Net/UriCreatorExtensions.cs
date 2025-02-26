@@ -44,12 +44,6 @@ public static class UriCreatorExtensions
         return creator;
     }
 
-    public static UriCreator AddQueryParam(this UriCreator creator, IEnumerable<UriParam> enumerable)
-    {
-        creator.Query.Add(enumerable);
-        return creator;
-    }
-
     public static UriCreator AddQueryParam(this UriCreator creator, IEnumerable<KeyValuePair<string, string>> enumerable)
     {
         creator.Query.Add(enumerable);
