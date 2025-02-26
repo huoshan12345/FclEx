@@ -5,7 +5,8 @@
 public readonly struct NString(string? value) : IEquatable<NString>, IReadOnlyList<char>
 {
     public string Value => value ?? string.Empty; // use compute property to avoid null when create default struct
-    public int Count => Value.Length;
+    int IReadOnlyCollection<char>.Count => Value.Length; // hide Count and use Length instead.
+    public int Length => Value.Length;
 
     public char this[int index] => Value[index];
     public override string ToString() => Value;

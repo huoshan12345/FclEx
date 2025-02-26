@@ -6,11 +6,11 @@ namespace FclEx.Http;
 internal class CookieParser
 {
     private static readonly string[] _dateTimeFormats =
-    {
+    [
         "ddd, d MMM yyyy HH:mm:ss Z",
         "ddd, d-MMM-yyyy HH:mm:ss Z",
         "ddd, d-MMM-yy HH:mm:ss Z",
-    };
+    ];
     // fields
 
     readonly CookieTokenizer m_tokenizer;
@@ -53,7 +53,7 @@ internal class CookieParser
 
         CookieInternal cookie = null;
 
-        // only first ocurence of an attribute value must be counted
+        // only first occurrence of an attribute value must be counted
         bool commentSet = false;
         bool commentUriSet = false;
         bool domainSet = false;
@@ -128,8 +128,7 @@ internal class CookieParser
                                     const DateTimeStyles style = DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal;
                                     var unQuotedValue = CheckQuoted(m_tokenizer.Value);
 
-                                    if (DateTime.TryParse(unQuotedValue,
-                                            CultureInfo.InvariantCulture, style, out var expires))
+                                    if (DateTime.TryParse(unQuotedValue, CultureInfo.InvariantCulture, style, out var expires))
                                     {
                                         cookie.Expires = expires;
                                     }
@@ -263,7 +262,7 @@ internal class CookieParser
         CookieInternal cookie = m_savedCookie;
         m_savedCookie = null;
 
-        // only first ocurence of an attribute value must be counted
+        // only first occurrence of an attribute value must be counted
         bool domainSet = false;
         bool pathSet = false;
         bool portSet = false; //special case as it may have no value in header
