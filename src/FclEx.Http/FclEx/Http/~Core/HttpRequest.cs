@@ -33,32 +33,31 @@ public partial class HttpRequest
     public bool ReadContent { get; set; } = true;
     public bool ReadCookies { get; set; } = true;
 
-    // HTTP header names are case-insensitive
-    public MultiValueDictionary<string, string?> Headers { get; } = new(StringComparer.OrdinalIgnoreCase);
+    public HttpHeaders Headers { get; } = new();
     public UriParams Query => _uriCreator.Query;
     public UriParams Form { get; } = new(); // don't use new NameValueCollection() here.
 
     public string? Referrer
     {
-        get => Headers.GetLast(HttpHeaderNames.Referrer);
+        get => Headers.Get(HttpHeaderNames.Referrer);
         set => Headers.Set(HttpHeaderNames.Referrer, value);
     }
 
     public string? Authorization
     {
-        get => Headers.GetLast(HttpHeaderNames.Authorization);
+        get => Headers.Get(HttpHeaderNames.Authorization);
         set => Headers.Set(HttpHeaderNames.Authorization, value);
     }
 
     public string? Origin
     {
-        get => Headers.GetLast(HttpHeaderNames.Origin);
+        get => Headers.Get(HttpHeaderNames.Origin);
         set => Headers.Set(HttpHeaderNames.Origin, value);
     }
 
     public string? UserAgent
     {
-        get => Headers.GetLast(HttpHeaderNames.UserAgent);
+        get => Headers.Get(HttpHeaderNames.UserAgent);
         set => Headers.Set(HttpHeaderNames.UserAgent, value);
     }
 
@@ -101,13 +100,7 @@ public partial class HttpRequest
     public HttpRequest(Uri uri, HttpMethod method)
     {
         _uriCreator = new UriCreator(uri);
-
         Method = method;
-
-        if (UserName.IsNotEmpty() && Password.IsNotEmpty())
-        {
-            this.BasicAuth(UserName, Password);
-        }
     }
 
     public Uri GetUri() => _uriCreator.Build();

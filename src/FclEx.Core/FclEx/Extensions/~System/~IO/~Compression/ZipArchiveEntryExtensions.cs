@@ -2,19 +2,17 @@
 
 public static class ZipArchiveEntryExtensions
 {
-    public static async Task ExtractToFileAsync(this ZipArchiveEntry source, string destinationFileName, bool overwrite)
+    public static async Task ExtractToFileAsync(this ZipArchiveEntry source, string destPath, bool overwrite)
     {
-        if (source == null)
-            throw new ArgumentNullException(nameof(source));
-        if (destinationFileName == null)
-            throw new ArgumentNullException(nameof(destinationFileName));
+        Check.NotNull(source);
+        Check.NotEmpty(destPath);
 
         var mode = overwrite ? FileMode.Create : FileMode.CreateNew;
 
 #if NET6_0_OR_GREATER
         await
 #endif
-        using (var destination = new FileStream(destinationFileName, mode, FileAccess.Write, FileShare.None, 4096, false))
+        using (var destination = new FileStream(destPath, mode, FileAccess.Write, FileShare.None, 4096, false))
         {
 #if NET6_0_OR_GREATER
             await
@@ -22,7 +20,7 @@ public static class ZipArchiveEntryExtensions
             using var stream = source.Open();
             await stream.CopyToAsync(destination);
         }
-        File.SetLastWriteTime(destinationFileName, source.LastWriteTime.DateTime);
+        File.SetLastWriteTime(destPath, source.LastWriteTime.DateTime);
     }
 
     public static Task ExtractToDirAsync(this ZipArchiveEntry entry, string dir, bool ignoreEntryDir, bool overwrite)

@@ -3,7 +3,7 @@
 [DebuggerDisplay("Count = {" + nameof(Count) + "}")]
 public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : notnull
 {
-    private readonly LinkedList<KeyValue> _list;
+    private readonly LinkedList<KeyValue> _list = [];
     private readonly IDictionary<TKey, LinkedListNode<KeyValue>> _dic;
     private readonly ReaderWriterLockSlim _lock;
     private static readonly IEqualityComparer<TValue?> _valueComparer = EqualityComparer<TValue?>.Default;
@@ -11,31 +11,30 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
 
     public LruCache(int? capacity = null, IEqualityComparer<TKey>? comparer = null)
     {
-        if (capacity is <= 0) throw new ArgumentOutOfRangeException(nameof(capacity));
+        if (capacity is <= 0) 
+            throw new ArgumentOutOfRangeException(nameof(capacity));
+
         Capacity = capacity ?? ushort.MaxValue;
         _keyComparer = comparer ?? EqualityComparer<TKey>.Default;
         _lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
         _dic = new Dictionary<TKey, LinkedListNode<KeyValue>>(_keyComparer);
-        _list = new LinkedList<KeyValue>();
-        Stats = new CacheStats();
+    }
+
+    public LruCache(IEqualityComparer<TKey>? comparer) : this(ushort.MaxValue, comparer)
+    {
     }
 
     public TValue GetOrAdd(TKey key, Func<TKey, TValue> activator)
     {
         Check.NotNull(key);
-        if (activator == null) throw new ArgumentNullException(nameof(activator));
+        Check.NotNull(activator);
 
         using var _ = _lock.LockUpgradeableRead();
 
         var exist = _dic.TryGetValue(key, out var node);
         if (exist)
         {
-            Debug.Assert(key.Equals(node!.Value.Key));
-            Stats.OnHit();
-        }
-        else
-        {
-            Stats.OnMiss();
+            Debug.Assert(_keyComparer.Equals(key, node!.Value.Key));
         }
 
         using (_lock.LockWrite())
@@ -56,12 +55,7 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
         var exist = _dic.TryGetValue(key, out var node);
         if (exist)
         {
-            Debug.Assert(key.Equals(node!.Value.Key));
-            Stats.OnHit();
-        }
-        else
-        {
-            Stats.OnMiss();
+            Debug.Assert(_keyComparer.Equals(key, node!.Value.Key));
         }
 
         if (!(exist && _valueComparer.Equals(node!.Value.Value!, value!)))
@@ -85,13 +79,10 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
         var exist = _dic.TryGetValue(key, out var node);
         if (exist)
         {
-            Debug.Assert(key.Equals(node!.Value.Key));
-            Stats.OnHit();
+            Debug.Assert(_keyComparer.Equals(key, node!.Value.Key));
         }
         else
         {
-            Stats.OnMiss();
-
             using (_lock.LockWrite())
             {
                 node = AddInternal(key, value);
@@ -119,10 +110,10 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
         Check.NotNull(key);
 
         using var _ = _lock.LockRead();
+
         if (_dic.TryGetValue(key, out var node))
         {
             UpdateInternal(node);
-            Stats.OnHit();
             value = node.Value.Value!;
             return true;
         }
@@ -132,7 +123,7 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
             return false;
         }
     }
-        
+
     public TValue this[TKey key]
     {
         get
@@ -147,8 +138,7 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
     public int Count => Read(() => _list.Count);
     public int Capacity { get; }
     public ICollection<TKey> Keys => Read(() => _list.Select(m => m.Key).AsReadOnlyCollection());
-    public ICollection<TValue> Values => Read(() => _list.Select(m => m.Value).AsReadOnlyCollection())!;
-    public CacheStats Stats { get; }
+    public ICollection<TValue> Values => Read(() => _list.Select(m => m.Value).AsReadOnlyCollection());
 
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         => LockEnumerator.Create(_list.Select(m => KeyValuePair.Create(m.Key, m.Value)).GetEnumerator(), _lock);
@@ -181,7 +171,7 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
 
     private LinkedListNode<KeyValue> UpdateInternal(LinkedListNode<KeyValue> node, TValue value)
     {
-        node.Value = node.Value.SetValue(value);
+        node.Value = node.Value with { Value = value };
         return UpdateInternal(node);
     }
 
@@ -193,7 +183,7 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
             _dic.Remove(toRemove!.Value.Key);
             _list.Remove(toRemove);
         }
-        var node = LinkedListNodeHelper.Create(KeyValue.Create(key, value));
+        var node = LinkedListNodeHelper.Create(new KeyValue(key, value));
         _list.AddFirst(node);
         _dic[key] = node;
         return node;
@@ -209,7 +199,7 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
         if (success)
         {
             Debug.Assert(_keyComparer.Equals(key, node!.Value.Key));
-                
+
             if (matchValue && !_valueComparer.Equals(oldValue, node.Value.Value))
                 return false;
 
@@ -222,18 +212,9 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
         return success;
     }
 
-    [DebuggerDisplay("({Key}, {Value})")]
-    internal readonly struct KeyValue
+    internal readonly record struct KeyValue(TKey Key, TValue Value)
     {
-        private KeyValue(TKey key, TValue value)
-        {
-            Key = key;
-            Value = value;
-        }
-        public TKey Key { get; }
-        public TValue Value { get; }
-        public static KeyValue Create(TKey key, TValue value) => new(key, value);
-        public KeyValue SetValue(TValue value) => new(Key, value);
-        public static implicit operator KeyValuePair<TKey, TValue>(KeyValue kv) => KeyValuePair.Create(kv.Key, kv.Value!);
+        public static implicit operator KeyValuePair<TKey, TValue>(KeyValue kv)
+            => KeyValuePair.Create(kv.Key, kv.Value!);
     }
 }

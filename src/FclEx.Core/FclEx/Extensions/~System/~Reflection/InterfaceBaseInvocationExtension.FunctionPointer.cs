@@ -26,15 +26,13 @@ partial class InterfaceBaseInvocationExtension
 
     private static (MethodInfo invoke, object invoker, object?[] args) GetInterfaceFunc<TInterface>(this TInterface instance, LambdaExpression selector)
     {
-        if (instance is null)
-            throw new ArgumentNullException(nameof(instance));
-        if (selector is null)
-            throw new ArgumentNullException(nameof(selector));
+        Check.NotNull(instance);
+        Check.NotNull(selector);
 
         var (method, args) = GetMethodAndArguments(selector);
         var evaluatedArguments = args.GetArgumentValues().ToArray();
         var interfaceType = typeof(TInterface);
-        var (pointer, invoke) = MethodMap.GetOrAdd(new(instance.GetType(), interfaceType, method), m => GetInterfaceMethodDelegate(m));
+        var (pointer, invoke) = MethodMap.GetOrAdd(new(instance.GetType(), interfaceType, method), GetInterfaceMethodDelegate);
         var invoker = Activator.CreateInstance(invoke.DeclaringType!, instance, pointer);
         return (invoke, invoker!, evaluatedArguments);
     }
