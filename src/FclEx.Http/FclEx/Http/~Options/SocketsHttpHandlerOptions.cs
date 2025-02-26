@@ -5,7 +5,12 @@ public class SocketsHttpHandlerOptions
     public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
     public IPVersionPolicy IPVersionPolicy { get; set; } = IPVersionPolicy.PreferIPv4;
     public bool AllowAutoRedirect { get; set; } = true;
-    public DecompressionMethods AutomaticDecompression { get; set; } = DecompressionMethods.GZip;
+    public DecompressionMethods AutomaticDecompression { get; set; } =
+#if NETSTANDARD2_0
+        DecompressionMethods.GZip;
+#else
+        DecompressionMethods.All;
+#endif
     public IWebProxy? Proxy { get; set; }
 
     /// <summary>
