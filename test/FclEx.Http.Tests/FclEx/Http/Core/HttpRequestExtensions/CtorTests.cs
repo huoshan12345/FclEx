@@ -33,13 +33,13 @@ public class CtorTests
     [Fact]
     public void Ctor_WithUserInfo()
     {
-        var request = HttpRequest.Get("http://lijing:lijing@captcha.mooncatling.fun/api/captcha/save");
-        Assert.Equal("lijing", request.UserName);
-        Assert.Equal("lijing", request.Password);
+        var request = HttpRequest.Get("http://tom:tom123@localhost/api/save");
+        Assert.Equal("tom", request.UserName);
+        Assert.Equal("tom123", request.Password);
 
         request.BasicAuth(request.UserName, request.Password);
 
         Assert.True(request.Headers.TryGet(HttpHeaderNames.Authorization, out var auth));
-        Assert.Equal("Basic bGlqaW5nOmxpamluZw==", auth);
+        Assert.Equal("Basic dG9tOnRvbTEyMw==", auth);
     }
 }

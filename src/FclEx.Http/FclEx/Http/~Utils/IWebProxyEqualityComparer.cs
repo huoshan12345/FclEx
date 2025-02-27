@@ -1,5 +1,6 @@
 ﻿namespace FclEx.Http;
 
+// ReSharper disable once InconsistentNaming
 public class IWebProxyEqualityComparer : IEqualityComparer<IWebProxy>
 {
     public bool Equals(IWebProxy? x, IWebProxy? y)
