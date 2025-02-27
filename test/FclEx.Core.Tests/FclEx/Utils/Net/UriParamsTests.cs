@@ -3,61 +3,51 @@
 public class UriParamsTests
 {
     [Fact]
-    public void Constructor_EmptyQuery()
+    public void Constructor()
     {
         var uriParams = new UriParams();
         Assert.Empty(uriParams);
     }
 
     [Fact]
-    public void Constructor_NullQuery()
+    public void Parse_NullQuery()
     {
-        var uriParams = new UriParams((string?)null);
+        var uriParams = UriParams.Parse(null);
         Assert.Empty(uriParams);
     }
 
     [Fact]
-    public void Constructor_WithQueryString()
+    public void Parse_WithQueryString()
     {
-        var uriParams = new UriParams("key1=value1&key2=value2");
+        var uriParams = UriParams.Parse("key1=value1&key2=value2");
         Assert.Equal(2, uriParams.Count);
         Assert.Equal("value1", uriParams["key1"]);
         Assert.Equal("value2", uriParams["key2"]);
     }
 
     [Fact]
-    public void Constructor_WithDuplicateKeys()
+    public void Parse_WithDuplicateKeys()
     {
-        var uriParams = new UriParams("key1=value1&key1=value2");
+        var uriParams = UriParams.Parse("key1=value1&key1=value2");
         Assert.Equal(2, uriParams.Count);
         Assert.Equal("value2", uriParams["key1"]); //Last one wins in indexer
         Assert.Equal(["value1", "value2"], uriParams.GetValues("key1"));
     }
 
     [Fact]
-    public void Constructor_WithUriParamsEnumerable()
-    {
-        var uriParamsList = new List<UriParam> { new("key1", "value1"), new("key2", "value2") };
-        var uriParams = new UriParams(uriParamsList);
-        Assert.Equal(2, uriParams.Count);
-        Assert.Equal("value1", uriParams["key1"]);
-        Assert.Equal("value2", uriParams["key2"]);
-    }
-
-    [Fact]
     public void Constructor_WithKeyValuePairsEnumerable()
     {
-        var kvpList = new List<KeyValuePair<string?, string?>> { new("key1", "value1"), new("key2", "value2") };
-        var uriParams = new UriParams(kvpList);
+        var uriParamsList = new List<KeyValuePair<string, string>> { new("key1", "value1"), new("key2", "value2") };
+        var uriParams = UriParams.From(uriParamsList);
         Assert.Equal(2, uriParams.Count);
         Assert.Equal("value1", uriParams["key1"]);
         Assert.Equal("value2", uriParams["key2"]);
     }
 
     [Fact]
-    public void Constructor_WithSingleKeyValuePair()
+    public void From_WithSingleKeyValuePair()
     {
-        var uriParams = new UriParams("key1", "value1");
+        var uriParams = UriParams.From("key1", "value1");
         Assert.Equal(1, uriParams.Count);
         Assert.Equal("value1", uriParams["key1"]);
     }
@@ -65,7 +55,7 @@ public class UriParamsTests
     [Fact]
     public void ToString_RendersCorrectly()
     {
-        var uriParams = new UriParams("key1=value1&key2=value2");
+        var uriParams = UriParams.Parse("key1=value1&key2=value2");
         Assert.Equal("key1=value1&key2=value2", uriParams.ToString());
     }
 
@@ -73,7 +63,7 @@ public class UriParamsTests
     public void Render_AppendsToStringBuilder()
     {
         var sb = new StringBuilder();
-        var uriParams = new UriParams("key1=value1&key2=value2");
+        var uriParams = UriParams.Parse("key1=value1&key2=value2");
         uriParams.Render(sb);
         Assert.Equal("key1=value1&key2=value2", sb.ToString());
     }
@@ -97,7 +87,7 @@ public class UriParamsTests
     [Fact]
     public void Add_AddsDuplicateKey()
     {
-        var uriParams = new UriParams("key1=value1") { { "key1", "value2" } };
+        var uriParams = UriParams.Parse("key1=value1").Add("key1", "value2");
         Assert.Equal(2, uriParams.Count);
         Assert.Equal(["value1", "value2"], uriParams.GetValues("key1"));
     }
@@ -114,7 +104,7 @@ public class UriParamsTests
     [Fact]
     public void Set_ReplacesExistingValue()
     {
-        var uriParams = new UriParams("key1=oldValue");
+        var uriParams = UriParams.Parse("key1=oldValue");
         uriParams.Set("key1", "newValue");
         Assert.Equal(1, uriParams.Count);
         Assert.Equal("newValue", uriParams["key1"]);
@@ -123,7 +113,7 @@ public class UriParamsTests
     [Fact]
     public void Remove_RemovesParameter()
     {
-        var uriParams = new UriParams("key1=value1&key2=value2");
+        var uriParams = UriParams.Parse("key1=value1&key2=value2");
         uriParams.Remove("key1");
         Assert.Equal(1, uriParams.Count);
         Assert.Null(uriParams["key1"]);
@@ -133,7 +123,7 @@ public class UriParamsTests
     [Fact]
     public void Get_RetrievesLatestValue()
     {
-        var uriParams = new UriParams("key1=value1&key1=value2");
+        var uriParams = UriParams.Parse("key1=value1&key1=value2");
         Assert.Equal("value2", uriParams.Get("key1"));
     }
 
@@ -147,6 +137,7 @@ public class UriParamsTests
     [Fact]
     public void Indexer_SetsAndGetsValue()
     {
+        // ReSharper disable once UseObjectOrCollectionInitializer
         var uriParams = new UriParams();
         uriParams["key1"] = "value1";
         Assert.Equal("value1", uriParams["key1"]);
@@ -157,8 +148,9 @@ public class UriParamsTests
     [Fact]
     public void GetValues_RetrievesAllValues()
     {
-        var uriParams = new UriParams("key1=value1&key1=value2");
+        var uriParams = UriParams.Parse("key1=value1&key1=value2");
         var values = uriParams.GetValues("key1");
+        Assert.NotNull(values);
         Assert.Equal(2, values.Count);
         Assert.Contains("value1", values);
         Assert.Contains("value2", values);
@@ -169,13 +161,13 @@ public class UriParamsTests
     {
         var uriParams = new UriParams();
         var values = uriParams.GetValues("key1");
-        Assert.Empty(values);
+        Assert.Null(values);
     }
 
     [Fact]
     public void TryGet_RetrievesValue()
     {
-        var uriParams = new UriParams("key1=value1");
+        var uriParams = UriParams.Parse("key1=value1");
         Assert.True(uriParams.TryGet("key1", out var value));
         Assert.Equal("value1", value);
     }
@@ -191,7 +183,7 @@ public class UriParamsTests
     [Fact]
     public void TryGetValues_RetrievesValues()
     {
-        var uriParams = new UriParams("key1=value1&key1=value2");
+        var uriParams = UriParams.Parse("key1=value1&key1=value2");
         Assert.True(uriParams.TryGetValues("key1", out var values));
         Assert.Equal(2, values.Count);
         Assert.Contains("value1", values);
@@ -209,7 +201,7 @@ public class UriParamsTests
     [Fact]
     public void Count_ReturnsCorrectCount()
     {
-        var uriParams = new UriParams("key1=value1&key2=value2&key1=value3");
+        var uriParams = UriParams.Parse("key1=value1&key2=value2&key1=value3");
         Assert.Equal(3, uriParams.Count);
     }
 
@@ -225,7 +217,7 @@ public class UriParamsTests
     [Fact]
     public void From_CreatesUriParamsFromKeyValuePairs()
     {
-        var kvpList = new List<KeyValuePair<string?, string?>> { new("key1", "value1"), new("key2", "value2") };
+        var kvpList = new List<KeyValuePair<string, string>> { new("key1", "value1"), new("key2", "value2") };
         var uriParams = UriParams.From(kvpList);
         Assert.Equal(2, uriParams.Count);
         Assert.Equal("value1", uriParams["key1"]);
@@ -252,12 +244,12 @@ public class UriParamsTests
     [Fact]
     public void GetEnumerator_EnumeratesCorrectly()
     {
-        var uriParams = new UriParams("key1=value1&key2=value2&key1=value3");
+        var uriParams = UriParams.Parse("key1=value1&key2=value2&key1=value3");
         var enumeratedParams = uriParams.ToList();
         Assert.Equal(3, enumeratedParams.Count);
-        Assert.Contains(new UriParam("key1", "value1"), enumeratedParams);
-        Assert.Contains(new UriParam("key2", "value2"), enumeratedParams);
-        Assert.Contains(new UriParam("key1", "value3"), enumeratedParams);
+        Assert.Contains(KeyValuePair.Create("key1", "value1"), enumeratedParams);
+        Assert.Contains(KeyValuePair.Create("key2", "value2"), enumeratedParams);
+        Assert.Contains(KeyValuePair.Create("key1", "value3"), enumeratedParams);
     }
 
     [Fact]
@@ -351,6 +343,7 @@ public class UriParamsTests
             { null, "value2" },
         };
         var values = uriParams.GetValues(null);
+        Assert.NotNull(values);
         Assert.Equal(2, values.Count);
         Assert.Contains("value1", values);
         Assert.Contains("value2", values);
