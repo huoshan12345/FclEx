@@ -1,12 +1,12 @@
 ﻿#if NET6_0_OR_GREATER
-using static FclEx.Utils.UriParamOmitOption;
+using static FclEx.Utils.NameValueOmitOption;
 #endif
 
 namespace FclEx.Utils;
 
-public interface IUriParamsBuilder
+public interface INameValuesBuilder
 {
-    UriParamsBuilderOptions Options { get; }
+    NameValuesBuilderOptions Options { get; }
 
     List<KeyValuePair<string, string>> Build()
 #if NET6_0_OR_GREATER
@@ -18,7 +18,7 @@ public interface IUriParamsBuilder
 
         foreach (var member in members)
         {
-            if (member.TryGetAttribute<UriParamAttribute>(false, out var queryAttr) == false)
+            if (member.TryGetAttribute<NameValueAttribute>(false, out var queryAttr) == false)
                 continue;
 
             var omit = queryAttr.OmitOption;

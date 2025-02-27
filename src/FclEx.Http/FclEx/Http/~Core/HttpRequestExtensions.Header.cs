@@ -1,19 +1,15 @@
-﻿using System.Collections;
-
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 partial class HttpRequestExtensions
 {
     public static HttpRequest AddHeader(this HttpRequest request, string key, string? value)
     {
-        Check.NotNull(key);
         request.Headers.Add(key, value);
         return request;
     }
 
     public static HttpRequest SetHeader(this HttpRequest request, string key, string? value)
     {
-        Check.NotNull(key);
         request.Headers.Set(key, value);
         return request;
     }
@@ -36,48 +32,30 @@ partial class HttpRequestExtensions
         return request;
     }
 
-    public static HttpRequest AddHeader(this HttpRequest request, IEnumerable<KeyValuePair<string, string?>> pairs)
+    public static HttpRequest AddHeader(this HttpRequest request, IEnumerable<KeyValuePair<string, string>> pairs)
     {
-        foreach (var (key, value) in pairs.EmptyIfNull())
-        {
-            request.AddHeader(key, value);
-        }
+        request.Headers.Add(pairs);
+        return request;
+    }
 
+    public static HttpRequest SetHeader(this HttpRequest request, IEnumerable<KeyValuePair<string, string>> pairs)
+    {
+        request.Headers.Set(pairs);
+        return request;
+    }
+
+    public static HttpRequest AddHeader<T>(this HttpRequest request, IEnumerable<KeyValuePair<string, T>> pairs)
+        where T : IEnumerable<string>
+    {
+        request.Headers.Add(pairs);
         return request;
     }
 
     public static HttpRequest SetHeader<T>(this HttpRequest request, IEnumerable<KeyValuePair<string, T>> pairs)
+        where T : IEnumerable<string>
     {
-        var type = typeof(T);
-        if (type.IsEnumerable() && type != typeof(string) && type.HasImplicitConversion(typeof(string)) == false)
-        {
-            foreach (var (key, values) in pairs.EmptyIfNull())
-            {
-                foreach (var value in (IEnumerable)values!)
-                {
-                    request.SetHeader(key, value?.ToString());
-                }
-            }
-        }
-        else
-        {
-            foreach (var (key, value) in pairs.EmptyIfNull())
-            {
-                request.SetHeader(key, value?.ToString());
-            }
-        }
-
+        request.Headers.Set(pairs);
         return request;
-    }
-
-    public static HttpRequest AddHeader(this HttpRequest request, KeyValuePair<string, string?> pair)
-    {
-        return request.AddHeader(pair.Key, pair.Value);
-    }
-
-    public static HttpRequest SetHeader(this HttpRequest request, KeyValuePair<string, string?> pair)
-    {
-        return request.SetHeader(pair.Key, pair.Value);
     }
 
     public static HttpRequest AddCookies(this HttpRequest request, string? value)

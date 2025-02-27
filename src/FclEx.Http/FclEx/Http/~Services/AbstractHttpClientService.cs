@@ -209,8 +209,8 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             userAgent.ParseAdd(HttpConstants.DefaultUserAgent);
         }
 
-        var cookies = request.Headers.Get(HttpHeaderNames.Cookie);
-        foreach (var cookie in cookies)
+        var cookies = request.Headers.GetValues(HttpHeaderNames.Cookie);
+        foreach (var cookie in cookies.EmptyIfNull())
         {
             requestMessage.AddCookie(cookie);
         }

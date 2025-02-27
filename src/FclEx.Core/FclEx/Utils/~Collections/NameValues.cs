@@ -162,6 +162,17 @@ public class NameValues<TSelf> : IReadOnlyCollection<KeyValuePair<string, string
     }
 
     /// <summary>
+    /// Checks if the dictionary contains an entry with the specified key.
+    /// If the provided key is null, it is treated as an empty string.
+    /// </summary>
+    /// <param name="key">The key to check for in the dictionary.</param>
+    /// <returns>True if the dictionary contains the key; otherwise, false.</returns>
+    public bool ContainsKey(string? key)
+    {
+        return _entries.ContainsKey(key ?? "");
+    }
+
+    /// <summary>
     /// Attempts to get all values associated with the specified key
     /// </summary>
     /// <param name="key">The key to look up</param>
