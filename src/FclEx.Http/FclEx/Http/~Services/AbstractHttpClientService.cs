@@ -175,7 +175,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             }
             else if (request.Form.IsNotEmpty())
             {
-                requestMessage.Content = new FormUrlEncodedContent(request.Form.AsKeyValuePairs());
+                requestMessage.Content = new FormUrlEncodedContent(request.Form);
             }
 
             if (requestMessage.Content is { } requestContent)

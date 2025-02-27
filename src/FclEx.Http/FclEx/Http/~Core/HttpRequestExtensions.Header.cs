@@ -36,38 +36,11 @@ partial class HttpRequestExtensions
         return request;
     }
 
-    /// <summary>
-    /// Adds headers to an HTTP request from a collection of key-value pairs.
-    /// </summary>
-    /// <typeparam name="T">The type of the header values. Can be a simple type or an IEnumerable.</typeparam>
-    /// <param name="request">The HTTP request to add headers to.</param>
-    /// <param name="pairs">Collection of key-value pairs representing header names and values.</param>
-    /// <returns>The same HTTP request instance to enable method chaining.</returns>
-    /// <remarks>
-    /// This method handles two scenarios:
-    /// 1. When T is an <see cref="IEnumerable"/> (e.g., <see cref="MultiValueDictionary{TKey, TValue}"/>), 
-    ///    it adds each value within the enumerable as a separate header with the same key.<br/>
-    /// 2. When T is a simple type (e.g., string), it adds each key-value pair as a single header.
-    /// </remarks>
-    public static HttpRequest AddHeader<T>(this HttpRequest request, IEnumerable<KeyValuePair<string, T>> pairs)
+    public static HttpRequest AddHeader(this HttpRequest request, IEnumerable<KeyValuePair<string, string?>> pairs)
     {
-        var type = typeof(T);
-        if (type.IsEnumerable() && type != typeof(string) && type.HasImplicitConversion(typeof(string)) == false)
+        foreach (var (key, value) in pairs.EmptyIfNull())
         {
-            foreach (var (key, values) in pairs.EmptyIfNull())
-            {
-                foreach (var value in (IEnumerable)values!)
-                {
-                    request.AddHeader(key, value?.ToString());
-                }
-            }
-        }
-        else
-        {
-            foreach (var (key, value) in pairs.EmptyIfNull())
-            {
-                request.AddHeader(key, value?.ToString());
-            }
+            request.AddHeader(key, value);
         }
 
         return request;
