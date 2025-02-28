@@ -4,10 +4,8 @@ partial class BytesExtensions
 {
     public static byte[] Base32ToBytes(this string input)
     {
-        if (string.IsNullOrEmpty(input))
-        {
-            throw new ArgumentNullException(nameof(input));
-        }
+        if (input.IsNullOrEmpty())
+            return [];
 
         input = input.TrimEnd('='); //remove padding characters
         var byteCount = input.Length * 5 / 8; //this must be TRUNCATED

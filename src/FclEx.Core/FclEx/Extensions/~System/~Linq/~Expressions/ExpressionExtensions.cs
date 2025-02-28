@@ -6,8 +6,12 @@ public static class ExpressionExtensions
     {
         if (left == null && right == null)
             throw new ArgumentNullException($"{nameof(left)}, {nameof(right)} cannot be null at the same time");
-        if (left == null) return right!;
-        if (right == null) return left;
+
+        if (left == null)
+            return right!;
+
+        if (right == null)
+            return left;
 
         var parameter = left.Parameters[0];
         var r = ExpressionReplacer.Replace(right.Body, right.Parameters[0], parameter);
@@ -20,8 +24,12 @@ public static class ExpressionExtensions
     {
         if (left == null && right == null)
             throw new ArgumentNullException($"{nameof(left)}, {nameof(right)} cannot be null at the same time");
-        if (left == null) return right!;
-        if (right == null) return left;
+
+        if (left == null)
+            return right!;
+
+        if (right == null) 
+            return left;
 
         var parameter = left.Parameters[0];
         var r = ExpressionReplacer.Replace(right.Body, right.Parameters[0], parameter);

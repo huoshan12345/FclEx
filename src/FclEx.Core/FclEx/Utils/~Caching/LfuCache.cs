@@ -9,7 +9,7 @@
 [DebuggerDisplay("Count = {" + nameof(Count) + "}")]
 public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : notnull
 {
-    private readonly LinkedList<KvCount> _list;
+    private readonly LinkedList<KvCount> _list = [];
     private readonly IDictionary<TKey, LinkedListNode<KvCount>> _dic;
     private readonly ReaderWriterLockSlim _lock;
     private static readonly IEqualityComparer<TValue> _valueComparer = EqualityComparer<TValue>.Default;
@@ -17,13 +17,17 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
 
     public LfuCache(int? capacity = null, IEqualityComparer<TKey>? comparer = null)
     {
-        if (capacity is <= 0) throw new ArgumentOutOfRangeException(nameof(capacity));
+        if (capacity is <= 0)
+            throw new ArgumentOutOfRangeException(nameof(capacity));
+
         Capacity = capacity ?? ushort.MaxValue;
         _keyComparer = comparer ?? EqualityComparer<TKey>.Default;
         _lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
         _dic = new Dictionary<TKey, LinkedListNode<KvCount>>(comparer);
-        _list = new LinkedList<KvCount>();
-        Stats = new CacheStats();
+    }
+
+    public LfuCache(IEqualityComparer<TKey>? comparer) : this(ushort.MaxValue, comparer)
+    {
     }
 
     public bool TryGetValue(TKey key, [NotNullWhen(true), MaybeNullWhen(false)] out TValue value)
@@ -34,18 +38,16 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
         if (_dic.TryGetValue(key, out var node))
         {
             node = UpdateInternal(node);
-            Stats.OnHit();
             value = node.Value.Value!;
             return true;
         }
         else
         {
-            Stats.OnMiss();
             value = default;
             return false;
         }
     }
-        
+
     public TValue this[TKey key]
     {
         get
@@ -67,13 +69,9 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
         var exist = _dic.TryGetValue(key, out var node);
         if (exist)
         {
-            Debug.Assert(key.Equals(node!.Value.Key));
-            Stats.OnHit();
+            Debug.Assert(_keyComparer.Equals(key, node!.Value.Key));
         }
-        else
-        {
-            Stats.OnMiss();
-        }
+
         using (_lock.LockWrite())
         {
             node = exist
@@ -92,12 +90,7 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
         var exist = _dic.TryGetValue(key, out var node);
         if (exist)
         {
-            Debug.Assert(key.Equals(node!.Value.Key));
-            Stats.OnHit();
-        }
-        else
-        {
-            Stats.OnMiss();
+            Debug.Assert(_keyComparer.Equals(key, node!.Value.Key));
         }
 
         if (!(exist && _valueComparer.Equals(node!.Value.Value!, value!)))
@@ -121,13 +114,10 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
         var exist = _dic.TryGetValue(key, out var node);
         if (exist)
         {
-            Debug.Assert(key.Equals(node!.Value.Key));
-            Stats.OnHit();
+            Debug.Assert(_keyComparer.Equals(key, node!.Value.Key));
         }
         else
         {
-            Stats.OnMiss();
-
             using (_lock.LockWrite())
             {
                 node = AddInternal(key, value);
@@ -198,8 +188,6 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
         return TryRemove(key, false, default);
     }
 
-    public CacheStats Stats { get; }
-
     public ICollection<TKey> Keys => Read(() => _list.Select(m => m.Key).AsReadOnlyCollection());
 
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
@@ -220,7 +208,7 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
 
     private LinkedListNode<KvCount> UpdateInternal(LinkedListNode<KvCount> node)
     {
-        var count = (node.Value = node.Value.Incre()).Count;
+        var count = (node.Value = node.Value.Increment()).Count;
         var cur = node;
         while (cur.Previous != null)
         {
@@ -248,7 +236,7 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
             _dic.Remove(toRemove!.Value.Key);
             _list.Remove(toRemove);
         }
-        var node = LinkedListNodeHelper.Create(KvCount.Create(key, value));
+        var node = LinkedListNodeHelper.Create(new KvCount(key, value));
         _list.AddLast(node);
         _dic[key] = node;
         return node;
@@ -277,21 +265,10 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
         return success;
     }
 
-    [DebuggerDisplay("({Key}, {Value}), {Count}")]
-    internal readonly struct KvCount
+    internal readonly record struct KvCount(TKey Key, TValue Value, int Count = 0)
     {
-        private KvCount(TKey key, TValue value, int count = 0)
-        {
-            Key = key;
-            Value = value;
-            Count = count;
-        }
-        public TKey Key { get; }
-        public TValue Value { get; }
-        public int Count { get; }
-        public static KvCount Create(TKey key, TValue value) => new(key, value);
-        public KvCount Incre() => new(Key, Value, Count + 1);
-        public KvCount SetValue(TValue value) => new(Key, value, Count);
+        public KvCount Increment() => this with { Count = Count + 1 };
+        public KvCount SetValue(TValue value) => this with { Value = value };
         public static implicit operator KeyValuePair<TKey, TValue>(KvCount kv) => KeyValuePair.Create(kv.Key, kv.Value!);
     }
 
