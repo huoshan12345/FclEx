@@ -152,8 +152,7 @@ public abstract class UserClient : IUserClient, IDisposable
         }
         finally
         {
-            if (Logger.IsEnabled(LogLevel.Trace))
-                Logger.LogTrace($"It takes {time.GetElapsedTime().TotalSeconds:f3} seconds to login");
+            Logger.LogTrace("It takes {ElapsedSeconds:f3} seconds to login", time.GetElapsedTime().TotalSeconds);
         }
     }
 
@@ -178,9 +177,9 @@ public abstract class UserClient : IUserClient, IDisposable
     {
         return DoLoginAsync(async t =>
         {
-            Logger.LogTrace("Start to fake login...");
+            Logger.LogDebug("Start to fake login...");
             var result = await FakeLoginActionAsync(t)
-                .Success(o => Logger.LogTrace("Fake login successfully"))
+                .Success(o => Logger.LogDebug("Fake login successfully"))
                 .Error(ex => Logger.LogWarning(ex, "Failed to fake login: " + ex.Message));
 
             if (result.Error && loginIfFail)

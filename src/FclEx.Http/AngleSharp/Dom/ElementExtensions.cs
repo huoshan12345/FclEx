@@ -18,7 +18,7 @@ public static class ElementExtensions
     public static string? Value(this IElement? element) => element?.GetAttribute("value");
     public static string? Title(this IElement? element) => element?.GetAttribute("title");
 
-    public static SubmitInfo? GetFormSubmitInfo(this IElement? element, string formSelector, Uri? htmlUrl)
+    public static FormData? GetFormData(this IElement? element, string formSelector, Uri? uri)
     {
         if (element?.QuerySelector(formSelector) is not { } form)
             return null;
@@ -27,11 +27,11 @@ public static class ElementExtensions
             return null;
 
 
-        var info = new SubmitInfo(new Uri(action, UriKind.RelativeOrAbsolute));
+        var info = new FormData(new Uri(action, UriKind.RelativeOrAbsolute));
 
         if (!info.SubmitUrl.IsAbsoluteUri)
         {
-            var baseUri = htmlUrl ?? (element.BaseUrl is { } u ? (Uri)u : null);
+            var baseUri = uri ?? (element.BaseUrl is { } u ? (Uri)u : null);
             if (baseUri != null)
             {
                 info.SubmitUrl = new Uri(baseUri, info.SubmitUrl);
@@ -43,7 +43,8 @@ public static class ElementExtensions
             var name = input.GetAttribute("name");
             if (name.IsNullOrEmpty())
                 continue;
-            info.Paras[name] = input.GetAttribute("value");
+
+            info.Params[name] = input.GetAttribute("value");
         }
 
         return info;

@@ -22,14 +22,11 @@ public static partial class HttpRequestExtensions
         var uri = request.GetUri();
         builder.AppendLine(uri.ToString());
 
-        foreach (var (key, values) in request.Headers)
+        foreach (var (key, value) in request.Headers)
         {
-            foreach (var value in values)
-            {
-                builder.Append(key);
-                builder.Append(": ");
-                builder.AppendLine(value);
-            }
+            builder.Append(key);
+            builder.Append(": ");
+            builder.AppendLine(value);
         }
 
         var cookieStr = cookies.Select(m => m.ToString()).JoinWith("; ");
