@@ -114,4 +114,17 @@ public static partial class TypeExtensions
     {
         return Type.GetTypeCode(type);
     }
+
+    public static bool HasImplicitConversion(this Type baseType, Type targetType, Type? definedOn = null)
+    {
+        definedOn ??= baseType;
+        return definedOn.GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .Where(mi => mi.Name == "op_Implicit" && mi.ReturnType == targetType)
+            .Any(mi =>
+            {
+                var pi = mi.GetParameters().FirstOrDefault();
+                return pi != null && pi.ParameterType == baseType;
+            });
+
+    }
 }

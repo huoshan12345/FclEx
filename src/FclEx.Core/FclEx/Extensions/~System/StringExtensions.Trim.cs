@@ -32,8 +32,8 @@ public static partial class StringExtensions
 
     public static string SkipUntil(this string source, string separator, bool skipSeparator = true, StringComparison comparison = StringComparison.Ordinal, bool untilLast = false)
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
-        if (separator == null) throw new ArgumentNullException(nameof(separator));
+        Check.NotNull(source);
+        Check.NotNull(separator);
 
         var location = untilLast
             ? source.LastIndexOf(separator, comparison)
@@ -46,6 +46,11 @@ public static partial class StringExtensions
             location += separator.Length;
 
         return source[location..];
+    }
+
+    public static string SkipBefore(this string source, string separator, StringComparison comparison = StringComparison.Ordinal, bool untilLast = false)
+    {
+        return source.SkipUntil(separator, false, comparison, untilLast);
     }
 
     public static string TakeUntil(this string source, string separator, bool includeSeparator = true, StringComparison comparison = StringComparison.Ordinal, bool untilLast = false)
@@ -64,5 +69,10 @@ public static partial class StringExtensions
             location += separator.Length;
 
         return source[..location];
+    }
+
+    public static string TakeBefore(this string source, string separator, StringComparison comparison = StringComparison.Ordinal, bool untilLast = false)
+    {
+        return source.TakeUntil(separator, false, comparison, untilLast);
     }
 }

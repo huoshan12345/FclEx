@@ -4,14 +4,12 @@ partial class HttpRequestExtensions
 {
     public static HttpRequest AddHeader(this HttpRequest request, string key, string? value)
     {
-        Check.NotNull(key);
         request.Headers.Add(key, value);
         return request;
     }
 
     public static HttpRequest SetHeader(this HttpRequest request, string key, string? value)
     {
-        Check.NotNull(key);
         request.Headers.Set(key, value);
         return request;
     }
@@ -34,58 +32,30 @@ partial class HttpRequestExtensions
         return request;
     }
 
-    public static HttpRequest AddHeader(this HttpRequest request, IEnumerable<KeyValuePair<string, string?>> paras)
+    public static HttpRequest AddHeader(this HttpRequest request, IEnumerable<KeyValuePair<string, string>> pairs)
     {
-        foreach (var (key, value) in paras.EmptyIfNull())
-        {
-            request.AddHeader(key, value);
-        }
+        request.Headers.Add(pairs);
         return request;
     }
 
-    public static HttpRequest SetHeader(this HttpRequest request, IEnumerable<KeyValuePair<string, string?>> paras)
+    public static HttpRequest SetHeader(this HttpRequest request, IEnumerable<KeyValuePair<string, string>> pairs)
     {
-        foreach (var (key, value) in paras.EmptyIfNull())
-        {
-            request.SetHeader(key, value);
-        }
+        request.Headers.Set(pairs);
         return request;
     }
 
-    public static HttpRequest AddHeader<T>(this HttpRequest request, IEnumerable<KeyValuePair<string, T>> paras) where T : IEnumerable<string?>
+    public static HttpRequest AddHeader<T>(this HttpRequest request, IEnumerable<KeyValuePair<string, T>> pairs)
+        where T : IEnumerable<string>
     {
-        foreach (var (key, values) in paras.EmptyIfNull())
-        {
-            foreach (var value in values)
-            {
-                request.AddHeader(key, value);
-            }
-        }
-
+        request.Headers.Add(pairs);
         return request;
     }
 
-    public static HttpRequest SetHeader<T>(this HttpRequest request, IEnumerable<KeyValuePair<string, T>> paras) where T : IEnumerable<string?>
+    public static HttpRequest SetHeader<T>(this HttpRequest request, IEnumerable<KeyValuePair<string, T>> pairs)
+        where T : IEnumerable<string>
     {
-        foreach (var (key, values) in paras.EmptyIfNull())
-        {
-            foreach (var value in values)
-            {
-                request.SetHeader(key, value);
-            }
-        }
-
+        request.Headers.Set(pairs);
         return request;
-    }
-
-    public static HttpRequest AddHeader(this HttpRequest request, KeyValuePair<string, string?> pair)
-    {
-        return request.AddHeader(pair.Key, pair.Value);
-    }
-
-    public static HttpRequest SetHeader(this HttpRequest request, KeyValuePair<string, string?> pair)
-    {
-        return request.SetHeader(pair.Key, pair.Value);
     }
 
     public static HttpRequest AddCookies(this HttpRequest request, string? value)

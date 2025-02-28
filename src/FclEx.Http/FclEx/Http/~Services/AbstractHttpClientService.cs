@@ -175,7 +175,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             }
             else if (request.Form.IsNotEmpty())
             {
-                requestMessage.Content = new FormUrlEncodedContent(request.Form.AsKeyValuePairs());
+                requestMessage.Content = new FormUrlEncodedContent(request.Form);
             }
 
             if (requestMessage.Content is { } requestContent)
@@ -194,13 +194,23 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             }
         }
 
+        if (request.Authorization is null && request.UserName.IsNotEmpty())
+        {
+            request.BasicAuth(request.UserName, request.Password);
+        }
+
         foreach (var (key, value) in request.Headers.Where(h => NotAddHeaderNames.Contains(h.Key) == false))
         {
             requestMessage.Headers.Add(key, value);
         }
 
-        var cookies = request.Headers.Get(HttpHeaderNames.Cookie);
-        foreach (var cookie in cookies)
+        if (requestMessage.Headers.UserAgent is { Count: 0 } userAgent)
+        {
+            userAgent.ParseAdd(HttpConstants.DefaultUserAgent);
+        }
+
+        var cookies = request.Headers.GetValues(HttpHeaderNames.Cookie);
+        foreach (var cookie in cookies.EmptyIfNull())
         {
             requestMessage.AddCookie(cookie);
         }
@@ -214,6 +224,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             var cookiesInCc = cc.GetCookieHeader(cookieUri);
             requestMessage.AddCookie(cookiesInCc);
         }
+
         return requestMessage;
     }
 

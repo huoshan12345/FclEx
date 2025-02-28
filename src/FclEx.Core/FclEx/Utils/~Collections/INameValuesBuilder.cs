@@ -1,24 +1,24 @@
 ﻿#if NET6_0_OR_GREATER
-using static FclEx.Utils.UriParamOmitOption;
+using static FclEx.Utils.NameValueOmitOption;
 #endif
 
 namespace FclEx.Utils;
 
-public interface IUriParamsBuilder
+public interface INameValuesBuilder
 {
-    UriParamsBuilderOptions Options { get; }
+    NameValuesBuilderOptions Options { get; }
 
-    IReadOnlyCollection<UriParam> Build()
+    List<KeyValuePair<string, string>> Build()
 #if NET6_0_OR_GREATER
     {
-        var list = new List<UriParam>();
+        var list = new List<KeyValuePair<string, string>>();
 
         var members = GetType().GetDataMembers()
             .Where(m => m is { IsStatic: false, HasPublicGetter: true });
 
         foreach (var member in members)
         {
-            if (member.TryGetAttribute<UriParamAttribute>(false, out var queryAttr) == false)
+            if (member.TryGetAttribute<NameValueAttribute>(false, out var queryAttr) == false)
                 continue;
 
             var omit = queryAttr.OmitOption;
@@ -63,7 +63,7 @@ public interface IUriParamsBuilder
                 continue;
             }
 
-            list.Add(new(name, value?.ToString()));
+            list.Add(new(name, value?.ToString() ?? ""));
         }
 
         return list;

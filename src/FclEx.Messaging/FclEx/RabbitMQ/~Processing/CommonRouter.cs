@@ -11,8 +11,8 @@ public class CommonRouter<TInput, TOutput> : MessageRouter<TInput, TOutput>
         IMemoryBytesSerializer? serializer = null)
         : base(logger, serializer, new MessageConverter<TInput, TOutput>(handler))
     {
-        KeyFunc = keyFunc ?? throw new ArgumentNullException(nameof(keyFunc));
-        Handler = handler ?? throw new ArgumentNullException(nameof(handler));
+        KeyFunc = Check.NotNull(keyFunc);
+        Handler = Check.NotNull(handler);
     }
 
     protected override string GetRoutingKey(IReadOnlyBasicProperties properties, TOutput output)

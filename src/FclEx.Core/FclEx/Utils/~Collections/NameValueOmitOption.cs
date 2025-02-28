@@ -4,7 +4,7 @@
 /// Specifies conditions for omitting an uri parameter during serialization or processing.
 /// </summary>
 [Flags]
-public enum UriParamOmitOption
+public enum NameValueOmitOption
 {
     /// <summary>
     /// The omission behavior is not explicitly set and should be determined by external logic.
