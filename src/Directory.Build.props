@@ -16,7 +16,14 @@
     <!--NOTE: GetTargetFrameworkVersion('netstandard2.0') is 0.0-->
     <TargetFrameworkVersion>$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
     <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE.TXT</PackageLicenseFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\README.md" Pack="true" PackagePath="\" Visible="false"/>
+    <None Include="$(MSBuildThisFileDirectory)..\LICENSE.TXT" Pack="true" PackagePath="\" Visible="false"/>
+  </ItemGroup>
 
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">

@@ -18,6 +18,7 @@ env:
   SOLUTION: FclEx.sln
   DOTNET_NOLOGO: 1
   MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
+  NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
   IS_PUSH_DEFAULT: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
 
 jobs:
