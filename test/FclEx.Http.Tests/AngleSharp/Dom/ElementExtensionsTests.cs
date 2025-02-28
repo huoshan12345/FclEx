@@ -38,7 +38,7 @@ public class ElementExtensionsTests
         var formData = document.Body.GetFormData("form", new Uri("http://www.example.com"));
 
         Assert.NotNull(formData);
-        Assert.Equal("http://www.example.com/submit.php", formData.SubmitUrl.AbsoluteUri);
+        Assert.Equal("http://www.example.com/submit.php", formData.SubmitUri.AbsoluteUri);
         Assert.Equal(3, formData.Params.Count);
         Assert.Equal("12345", formData.Params["user_id"]);
         Assert.Equal("abcde12345", formData.Params["token"]);

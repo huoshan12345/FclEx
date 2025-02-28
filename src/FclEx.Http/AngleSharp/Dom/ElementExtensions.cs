@@ -29,12 +29,12 @@ public static class ElementExtensions
 
         var info = new FormData(new Uri(action, UriKind.RelativeOrAbsolute));
 
-        if (!info.SubmitUrl.IsAbsoluteUri)
+        if (!info.SubmitUri.IsAbsoluteUri)
         {
             var baseUri = uri ?? (element.BaseUrl is { } u ? (Uri)u : null);
             if (baseUri != null)
             {
-                info.SubmitUrl = new Uri(baseUri, info.SubmitUrl);
+                info.SubmitUri = new Uri(baseUri, info.SubmitUri);
             }
         }
 
