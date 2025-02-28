@@ -116,7 +116,7 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
         }
         finally
         {
-            Logger.LogTrace($"Consume finished, it takes {watch.GetElapsedTime().TotalSeconds:f3} seconds");
+            Logger.LogTrace("Consume finished, it takes {ElapsedSeconds:f3} seconds", watch.GetElapsedTime().TotalSeconds);
             disposable.Dispose();
 
             await TaskHelper.Delay(ProcessInterval);

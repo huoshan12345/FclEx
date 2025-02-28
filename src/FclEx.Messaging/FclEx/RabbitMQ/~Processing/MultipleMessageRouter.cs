@@ -5,8 +5,8 @@ public abstract class MultipleMessageRouter<TInput, TOutput> : MessageRouter<TIn
     protected MultipleMessageRouter(
         ILoggerFactory? loggerFactory,
         IMemoryBytesSerializer? serializer,
-        IMessageConverter<TInput, IReadOnlyCollection<TOutput>> Converter)
-        : base(loggerFactory, serializer, Converter)
+        IMessageConverter<TInput, IReadOnlyCollection<TOutput>> converter)
+        : base(loggerFactory, serializer, converter)
     {
     }
 
@@ -22,7 +22,7 @@ public abstract class MultipleMessageRouter<TInput, TOutput> : MessageRouter<TIn
         Check.NotNull(Channel);
         Check.NotNull(Settings);
 
-        Logger.LogTrace($"Outputted {output.Count} items");
+        Logger.LogTrace("Outputted {OutputCount} items", output.Count);
         var properties = args.BasicProperties;
         foreach (var item in output)
         {
