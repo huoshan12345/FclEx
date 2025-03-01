@@ -17,5 +17,9 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)..\FclEx.Core\FclExUsing.cs" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="FclEx\Http\~Cookies\" />
+  </ItemGroup>
   
 </Project>
