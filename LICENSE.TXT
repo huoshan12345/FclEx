@@ -1,6 +1,6 @@
 The MIT License
 
-Copyright (c) 2015 huoshan12345 <89009143@qq.com>
+Copyright (c) 2025 huoshan12345 <huoshan12345@hotmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
