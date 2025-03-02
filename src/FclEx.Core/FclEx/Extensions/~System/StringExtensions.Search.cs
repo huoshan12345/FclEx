@@ -52,6 +52,18 @@ static partial class StringExtensions
 
 #if NETSTANDARD2_0
     public static bool Contains(this string source, string value, StringComparison comparison)
-        => source.IndexOf(value, comparison) >= 0;
+    {
+        return source.IndexOf(value, comparison) >= 0;
+    }
+
+    public static bool StartsWith(this string source, char value)
+    {
+        return source.Length > 0 && source[0] == value;
+    }
+
+    public static bool EndsWith(this string source, char value)
+    {
+        return source.Length > 0 && source[^1] == value;
+    }
 #endif
 }

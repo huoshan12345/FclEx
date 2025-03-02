@@ -15,4 +15,12 @@ public static class HttpConstants
     public static byte[] NewLineBytes { get; } = NewLine.ToUtf8Bytes();
     public static string EncapsulationBoundary { get; } = "--";
     public static byte[] EncapsulationBoundaryBytes { get; } = EncapsulationBoundary.ToUtf8Bytes();
+
+
+    internal static readonly string[] CookieDateTimeFormats =
+    [
+        "ddd, d MMM yyyy HH:mm:ss Z",
+        "ddd, d-MMM-yyyy HH:mm:ss Z",
+        "ddd, d-MMM-yy HH:mm:ss Z",
+    ];
 }
