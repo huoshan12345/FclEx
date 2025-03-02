@@ -2,7 +2,7 @@
 
 public class HttpContentTypeTests
 {
-    [Fact]
+    [RetryFact]
     public async Task ReadAsStream_Test()
     {
         var response = await HttpRequest.Get("http://baidu.com")

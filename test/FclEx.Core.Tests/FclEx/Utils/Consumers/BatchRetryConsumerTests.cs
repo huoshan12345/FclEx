@@ -1,4 +1,6 @@
-﻿namespace FclEx.Utils;
+﻿using Meziantou.Xunit;
+
+namespace FclEx.Utils.Consumers;
 
 public class BatchRetryConsumerTests(ITestOutputHelper output)
 {
@@ -40,6 +42,7 @@ public class BatchRetryConsumerTests(ITestOutputHelper output)
         Assert.Equal(errors, consumer.Counter.Discard);
     }
 
+    [DisableParallelization]
     [RetryFact]
     public async Task Dispose_AfterStart_Test()
     {

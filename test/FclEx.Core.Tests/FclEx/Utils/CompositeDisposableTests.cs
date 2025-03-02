@@ -22,7 +22,7 @@ public class CompositeDisposableTests
         {
             m.Count = 1;
             return m;
-        }).Composite();
+        }).Merge();
 
         Assert.Equal(1, test.Count);
     }
@@ -31,7 +31,7 @@ public class CompositeDisposableTests
     public void Dispose_Test()
     {
         var test = new Tester();
-        using (new[] { test }.Composite()) { }
+        using (new[] { test }.Merge()) { }
         Assert.Equal(-1, test.Count);
     }
 }

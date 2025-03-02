@@ -15,6 +15,7 @@ namespace FclEx.SourceGenerator.Sources;
 internal static class UnicodeScalarHelperSource
 {
     private static readonly bool IsGithubAction = Environment.GetEnvironmentVariable("GITHUB_ACTION") is { Length: > 0 };
+    private static readonly bool IsDependabot = Environment.GetEnvironmentVariable("GITHUB_DEPENDABOT_JOB_TOKEN") is { Length: > 0 };
 
     internal static SourceInfo Generate(SourceProductionContext context, AnalyzerConfigOptionsProvider options)
     {
@@ -108,7 +109,7 @@ internal static class UnicodeScalarHelperSource
         {
             // file is updated within 7 days
             // Or it is running under GitHub action
-            if (file.LastWriteTimeUtc > DateTime.UtcNow.AddDays(-7) || IsGithubAction)
+            if (file.LastWriteTimeUtc > DateTime.UtcNow.AddDays(-7) || IsGithubAction || IsDependabot)
             {
                 var content = File.ReadAllText(file.FullName);
                 var lines = content.Split('\r', '\n')
@@ -180,7 +181,7 @@ internal static class UnicodeScalarHelperSource
             // For example U+1F636 U+200D U+1F32B U+FE0F
             // U+200D -  Zero Width Joiner
             // U+FEOF - Variation Selector-16
-            foreach (var unicodeEmojiSplit in unicodeRepresentation.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var unicodeEmojiSplit in unicodeRepresentation.Split([' '], StringSplitOptions.RemoveEmptyEntries))
             {
                 emojiSet.Add(int.Parse(unicodeEmojiSplit, NumberStyles.HexNumber));
             }

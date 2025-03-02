@@ -1,4 +1,4 @@
-﻿namespace FclEx.Utils;
+﻿namespace FclEx.Utils.Consumers;
 
 public class AutoRetryConsumerTests
 {

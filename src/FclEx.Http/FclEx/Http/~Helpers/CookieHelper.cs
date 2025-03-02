@@ -9,19 +9,18 @@ public static class CookieHelper
 
         while (true)
         {
-            var c = parser.Get();
-            if (c == null)
+            var cookie = parser.Get();
+            if (cookie == null)
                 break;
 
-            if (c.Name.IsNullOrEmpty())
+            if (cookie.Name.IsNullOrEmpty())
             {
-                list.Add("A cookie has been ignored due to empty name: " + c);
+                list.Add("A cookie has been ignored due to empty name: " + cookie);
                 continue;
             }
 
             try
             {
-                var cookie = c.ToCookie();
                 list.Add(cookie);
             }
             catch (Exception ex)
