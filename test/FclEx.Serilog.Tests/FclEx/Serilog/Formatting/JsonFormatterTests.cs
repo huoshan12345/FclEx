@@ -1,4 +1,5 @@
-﻿using static FclEx.Serilog.ExceptionIndexOptions;
+﻿using System.Text.Json.Nodes;
+using static FclEx.Serilog.ExceptionIndexOptions;
 
 namespace FclEx.Serilog.Formatting;
 
@@ -66,8 +67,9 @@ public class JsonFormatterTests
             formatter.Format(logEvent, sw);
 
             var str = sw.ToString();
-            var token = JToken.Parse(str);
-            var xt = token[options.ExceptionName] as JArray;
+            var token = str.ToJsonNode();
+            Assert.NotNull(token);
+            var xt = token[options.ExceptionName] as JsonArray;
             Assert.NotNull(xt);
 
             var lines = xt.ToObject<string[]>()!;
@@ -86,7 +88,7 @@ public class JsonFormatterTests
     [Fact]
     public void FormatProperty_Test()
     {
-        var logEvent = CreateLogEvent(LogEventLevel.Information, null, "Message from {Name}", "Tom");
+        var logEvent = SerilogHelper.CreateLogEvent(LogEventLevel.Information, null, "Message from {Name}", "Tom");
 
         var options = new JsonFormatterOptions();
         var formatter = new JsonFormatter(options);
@@ -97,17 +99,5 @@ public class JsonFormatterTests
         Assert.Equal(LogEventLevel.Information.ToString(), jsonElement.GetProperty(options.LogLevelName).GetString());
         Assert.Equal("Message from Tom", jsonElement.GetProperty(options.MessageName).GetString());
         Assert.Equal(logEvent.Timestamp.UtcDateTime.ToString("O"), jsonElement.GetProperty(options.UtcTimeName).GetString());
-    }
-
-    private static readonly Logger DefaultLoggerImpl = new LoggerConfiguration().CreateLogger();
-
-    [MessageTemplateFormatMethod("messageTemplate")]
-    public static LogEvent CreateLogEvent(LogEventLevel level, Exception? ex, string messageTemplate, params object?[] propertyValues)
-    {
-        Assert.True(DefaultLoggerImpl.BindMessageTemplate(messageTemplate, propertyValues, out var template, out var properties));
-        properties = properties.Append(new(Constants.SourceContext, new ScalarValue(nameof(JsonFormatterTests))));
-        var date = DateTime.UtcNow.Date;
-        var time = Random.Shared.NextDateTime(date, date.AddDays(1));
-        return new LogEvent(time, level, ex, template, properties);
     }
 }

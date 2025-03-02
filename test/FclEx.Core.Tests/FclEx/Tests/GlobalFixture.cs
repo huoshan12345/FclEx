@@ -36,7 +36,9 @@ public class GlobalFixture : IAsyncLifetime
 
     public Assembly CurrentAssembly { get; }
 
+#pragma warning disable CA2255
     [ModuleInitializer]
+#pragma warning restore CA2255
     public static void Initialize()
     {
         ThreadPool.SetMinThreads(100, 100);

@@ -37,4 +37,10 @@ public static class CollectionExtensions
     {
         return col?.Count ?? 0;
     }
+
+    public static TCollection Push<T, TCollection>(this TCollection col, T item) where TCollection : ICollection<T>
+    {
+        col.Add(item);
+        return col;
+    }
 }

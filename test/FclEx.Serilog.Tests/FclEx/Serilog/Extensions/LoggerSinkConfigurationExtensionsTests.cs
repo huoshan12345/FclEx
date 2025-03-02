@@ -2,7 +2,7 @@ namespace FclEx.Serilog.Extensions;
 
 public class LoggerSinkConfigurationExtensionsTests
 {
-    [LocalOnlyFact]
+    [LocalOnlyFact(Skip = "No license key")]
     public async Task NewRelic_Test()
     {
         var logger = new LoggerConfiguration()

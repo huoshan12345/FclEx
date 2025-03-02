@@ -38,7 +38,7 @@ public static class ServiceCollectionExtensions
         Log.Logger = logger;
 
         services.AddSingleton(logger);
-        services.AddSingleton<ILoggerProvider>(new SerilogLoggerProvider(logger));
+        services.AddSingleton<ILoggerProvider>(new SerilogLoggerProviderWithoutExternalScope(logger));
         services.AddSingletonBy<Microsoft.Extensions.Logging.ILogger, ILoggerFactory>(m => m.CreateLogger(name));
 
         return services;

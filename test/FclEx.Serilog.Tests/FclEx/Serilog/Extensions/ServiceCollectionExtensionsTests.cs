@@ -1,5 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Xml.Linq;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Serilog.Extensions.Logging;
 
 namespace FclEx.Serilog.Extensions;
 
@@ -9,14 +11,13 @@ public class ServiceCollectionExtensionsTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task AddSerilog_Test(bool formatException)
+    public void AddSerilog_Test(bool formatException)
     {
-        using var listener = new LogEventListener();
-
+        var sink = new CollectingSink();
         var provider = new ServiceCollection()
             .AddSerilog((m, n) =>
             {
-                n.WriteTo(listener)
+                n.WriteTo(sink)
                     .Enrich(new LogEnricher(nameof(AddSerilog_Test)))
                     .FormatException(formatException);
             })
@@ -34,13 +35,9 @@ public class ServiceCollectionExtensionsTests
         var serilogLogger = provider.GetService<global::Serilog.ILogger>();
         Assert.NotNull(serilogLogger);
 
-        
         serilogLogger.Information(new LogException("exception", LogLevel.Warning).SetStackTrace(), "message");
 
-        var flag = await listener.WaitAsync(1, TimeSpan.FromSeconds(1));
-        Assert.True(flag);
-
-        var logEvent = listener.Events.First();
+        var logEvent = Assert.Single(sink.Events);
         Assert.Equal(LogEventLevel.Warning, logEvent.Level);
         Assert.Equal("exception", logEvent.Exception?.Message);
         Assert.Equal("message", logEvent.MessageTemplate.Text);
@@ -53,5 +50,27 @@ public class ServiceCollectionExtensionsTests
         {
             Assert.IsType<LogException>(logEvent.Exception);
         }
+    }
+
+    [Fact]
+    public void LoggingScopeShouldNotReplacePropertyInLogEvent()
+    {
+        var sink = new CollectingSink();
+        var services = new ServiceCollection();
+        services.AddSerilog(m => m.WriteTo.Sink(sink));
+
+        using var serviceProvider = services.BuildServiceProvider();
+        var logger = serviceProvider.GetRequiredService<ILogger<ServiceCollectionExtensionsTests>>();
+
+        using (logger.BeginScope(new Dictionary<string, object?> { { "Value", 1 } }))
+        using (logger.BeginScope(new Dictionary<string, object?> { { "Value", 2 } }))
+        {
+            logger.LogInformation("Value: {Value}", 3);
+        }
+
+        var logEvent = sink.Events.First();
+        var value = (logEvent.Properties["Value"] as ScalarValue)?.Value;
+
+        Assert.Equal(3, value);
     }
 }

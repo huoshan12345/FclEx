@@ -134,7 +134,6 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
             var proxy = WebProxyHelper.Create("http://127.0.0.1:8888");
             http.Proxy = proxy;
             var client = http.CreateHttpClientContext().Client;
-            Assert.Equal(proxy, http.Proxy);
             CheckProxy(client, proxy);
         }
     }

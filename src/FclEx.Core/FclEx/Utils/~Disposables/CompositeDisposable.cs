@@ -1,24 +1,50 @@
 ﻿namespace FclEx.Utils;
 
+/// <summary>
+/// Represents a collection of disposable objects that can be disposed as a single unit.
+/// </summary>
+/// <typeparam name="T">The type of disposable objects in the collection.</typeparam>
+/// <remarks>
+/// CompositeDisposable provides a way to group multiple <see cref="IDisposable"/> objects
+/// and dispose them all with a single call. This is useful for managing
+/// related resources that need to be released together.
+/// </remarks>
 public readonly struct CompositeDisposable<T> : IDisposable where T : IDisposable
 {
     private readonly ICollection<T> _disposables;
 
-    public CompositeDisposable(IEnumerable<T> enumerable)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CompositeDisposable{T}"/> struct
+    /// with the specified collection of disposable objects.
+    /// </summary>
+    /// <param name="enumerable">The collection of disposable objects to include in this composite.</param>
+    /// <remarks>
+    /// The enumerable is materialized immediately to an array to ensure the objects
+    /// are captured at construction time and not affected by subsequent changes to the source.
+    /// </remarks>
+    public CompositeDisposable(IEnumerable<T>? enumerable)
     {
-        _disposables = enumerable.EmptyIfNull().AsICollection(); // cannot use IEnumerable<T> here.
+        _disposables = enumerable?.Where(x => x != null).ToArray() ?? [];
     }
 
     public void Dispose()
     {
-        foreach (var e in _disposables.EmptyIfNull())
-            e?.Dispose();
+        foreach (var e in _disposables)
+        {
+            e.Dispose();
+        }
     }
 }
 
 public static class CompositeDisposableExtensions
 {
-    public static CompositeDisposable<T> Composite<T>(this IEnumerable<T> enumerable) where T : IDisposable
+    /// <summary>
+    /// Merges multiple <see cref="IDisposable"/> objects into a single CompositeDisposable.
+    /// </summary>
+    /// <typeparam name="T">The type of disposable objects.</typeparam>
+    /// <param name="enumerable">The collection of disposable objects to merge.</param>
+    /// <returns>A CompositeDisposable that, when disposed, will dispose all the contained objects.</returns>
+    public static CompositeDisposable<T> Merge<T>(this IEnumerable<T> enumerable) where T : IDisposable
     {
         return new CompositeDisposable<T>(enumerable);
     }
