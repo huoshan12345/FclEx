@@ -43,13 +43,6 @@ public sealed class AutoRetryConsumer<T> : AbstractConsumer<AutoRetryConsumer<T>
 
         try
         {
-            if (item.ErrorTimes > 0)
-            {
-                var delay = _retryDelay(item.ErrorTimes);
-                if (delay > TimeSpan.Zero)
-                    await Task.Delay(delay);
-            }
-
             await ConsumingHandler.InvokeAsync(this, item.Item);
             Counter.IncrementConsume();
         }
@@ -61,6 +54,9 @@ public sealed class AutoRetryConsumer<T> : AbstractConsumer<AutoRetryConsumer<T>
             {
                 item = item.AddError(ex);
                 ExceptionHandler.Invoke(this, item);
+
+                var delay = _retryDelay(item.ErrorTimes);
+                await TaskHelper.Delay(delay, _cts.Token);
             }
             catch (Exception e)
             {
