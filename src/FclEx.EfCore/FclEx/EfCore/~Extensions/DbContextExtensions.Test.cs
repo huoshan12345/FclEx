@@ -17,7 +17,7 @@ partial class DbContextExtensions
     {
         var disposable = types.Select(m => MethodOfTestEntity.MakeGenericMethod(m).Invoke(null, [context]))
             .Cast<IDisposable>()
-            .Composite();
+            .Merge();
 
         using (disposable)
         {
