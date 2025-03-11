@@ -112,15 +112,20 @@ public readonly struct OperationResult<T> : IOperationResult<T>
     }
 
     /// <summary>
-    /// Casts the value of a successful <see cref="OperationResult{T}"/> to a new type.
+    /// Casts the value of the current <see cref="OperationResult{T}"/> to a new type, producing an <see cref="OperationResult{TTarget}"/>.
     /// </summary>
-    /// <typeparam name="TDest">The destination type.</typeparam>
-    /// <returns>An <see cref="OperationResult{TDest}"/> with the cast value or the original error.</returns>
-    public OperationResult<TDest> CastTo<TDest>()
+    /// <typeparam name="TTarget">The target type to cast the value to.</typeparam>
+    /// <returns>
+    /// A new <see cref="OperationResult{TTarget}"/>:
+    /// - If the current operation was successful, the value is cast to <typeparamref name="TTarget"/> and retained.
+    /// - If the current operation was an error, the exception is propagated.
+    /// The elapsed time is always preserved.
+    /// </returns>
+    public OperationResult<TTarget> CastTo<TTarget>()
     {
         return Success
-            ? new OperationResult<TDest>(Value.CastTo<TDest>(), Elapsed)
-            : new OperationResult<TDest>(Exception, Elapsed);
+            ? (Value.CastTo<TTarget>(), Elapsed)
+            : (Exception, Elapsed);
     }
 
     /// <summary>
