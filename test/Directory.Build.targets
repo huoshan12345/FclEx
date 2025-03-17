@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="$(ProjectDir)..\..\..\FclEx\src\FclEx.Core\FclExUsing.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\src\FclEx.Core\FclExUsing.cs" />
   </ItemGroup>
 
 </Project>
