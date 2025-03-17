@@ -14,7 +14,7 @@
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" PrivateAssets="all" />
     <!--NOTE: cannot use the latest version of Microsoft.CodeAnalysis.CSharp because it will cause the warning CS9057-->
     <!--the warning will cause the source generator not to generate the source code-->
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="[4.12.0]" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="[4.13.0]" PrivateAssets="all" />
     <PackageReference Include="PolySharp" Version="1.15.0" PrivateAssets="all" />
   </ItemGroup>
 
