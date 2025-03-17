@@ -83,7 +83,6 @@ jobs:
           reporter: dotnet-trx
           list-suites: failed
           list-tests: failed
-          use-actions-summary: ${{ github.event_name != 'pull_request_target' }}
 
       - name: NuGet Publish
         if: ${{ env.IS_PUSH_DEFAULT == 'true' }}

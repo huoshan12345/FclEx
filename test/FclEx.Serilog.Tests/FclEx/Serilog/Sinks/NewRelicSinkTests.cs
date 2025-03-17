@@ -16,7 +16,7 @@ public class NewRelicSinkTests
         Assert.Equal(JsonValueKind.Array, token.RootElement.ValueKind);
     }
 
-    [LocalOnlyFact]
+    [LocalOnlyFact(Skip = "No license key")]
     public async Task EmitBatchAsync_Test()
     {
         var writer = new StringWriter();

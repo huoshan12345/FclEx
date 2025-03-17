@@ -47,3 +47,6 @@ dotnet_diagnostic.IDE0051.severity = none
 
 # xUnit1033: Test classes decorated with 'Xunit.IClassFixture<TFixture>' or 'Xunit.ICollectionFixture<TFixture>' should add a constructor argument of type TFixture
 dotnet_diagnostic.xUnit1033.severity = none
+
+# xUnit1004: Test methods should not be skipped
+dotnet_diagnostic.xUnit1004.severity = none
