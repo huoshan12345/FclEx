@@ -1,4 +1,5 @@
 using FclEx.Logging;
+using Serilog.Parsing;
 using static FclEx.Serilog.Fields;
 
 namespace FclEx.Serilog;
@@ -121,12 +122,20 @@ public static class LogEventExtensions
             return logEvent;
 
         // If the stack trace is empty, we need to unwrap the exception.
-
+        // NOTE: TextToken is required for the message template to be rendered.
         if (logEvent.MessageTemplate.Text.IsNullOrEmpty() && ex.Message is { Length: > 0 } message)
-            logEvent.SetMessageTemplate(new MessageTemplate(message, []));
+            logEvent.SetMessageTemplate(new MessageTemplate(message, [new TextToken(message)]));
 
+        // if the message contains the exception message, we need to unwrap the exception.
         var inner = ex.InnerException;
-        logEvent.SetException(inner);
+        var template = logEvent.MessageTemplate;
+        var error = ex.Message;
+        if (template.Text.Contains(error)
+            || inner?.Message.Contains(error) == true
+            || template.Render(logEvent.Properties).Contains(error))
+        {
+            logEvent.SetException(inner);
+        }
 
         return logEvent;
     }
