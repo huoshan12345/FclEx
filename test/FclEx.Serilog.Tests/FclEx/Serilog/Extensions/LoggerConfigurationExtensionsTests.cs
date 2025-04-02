@@ -8,18 +8,15 @@ public class LoggerConfigurationExtensionsTests
     [Fact]
     public async Task WrapAllSinks_Test()
     {
-        using var listener = new LogEventListener();
+        var sink = new CollectingSink();
         await using var logger = new LoggerConfiguration()
-            .WriteTo.Sink(listener)
-            .WrapAllSinks(sink => new LogEventMutateSink(sink, null))
+            .WriteTo.Sink(sink)
+            .WrapAllSinks(m => new LogEventMutateSink(m, null))
             .CreateLogger();
 
         logger.Information(new LogException("test", LogLevel.Warning), "");
 
-        var flag = await listener.WaitAsync(1, TimeSpan.FromSeconds(1));
-        Assert.True(flag);
-
-        var logEvent = listener.Events.First();
+        var logEvent = Assert.Single(sink.Events);
         Assert.Equal(LogEventLevel.Warning, logEvent.Level);
     }
 }
