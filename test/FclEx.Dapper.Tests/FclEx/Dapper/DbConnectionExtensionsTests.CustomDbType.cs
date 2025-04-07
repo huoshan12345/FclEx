@@ -13,11 +13,11 @@ partial class DbConnectionExtensionsTests
         var payload = new EntityWithGuidKey
         {
             Id = Guid.NewGuid(),
-            Value = 1
+            Value = 1,
         };
         var entity = new EntityWithPostgresqlJsonb
         {
-            Json = JsonConvert.SerializeObject(payload)
+            Json = payload.ToJson(),
         };
 
         var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity, db.Schema);
@@ -25,7 +25,7 @@ partial class DbConnectionExtensionsTests
         Assert.NotNull(e);
         AssertEx.NotEmpty(e.Json);
 
-        var actualPayload = JsonConvert.DeserializeObject<EntityWithGuidKey>(e.Json)!;
+        var actualPayload = e.Json.FromJson<EntityWithGuidKey>()!;
         Assert.Equal(payload.Id, actualPayload.Id);
         Assert.Equal(payload.Value, actualPayload.Value);
     }
@@ -41,11 +41,11 @@ partial class DbConnectionExtensionsTests
         var payload = new EntityWithGuidKey
         {
             Id = Guid.NewGuid(),
-            Value = 1
+            Value = 1,
         };
         var entity = new EntityWithSqlServerXml
         {
-            Xml = payload.ToXml()
+            Xml = payload.ToXml(),
         };
 
         var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity, db.Schema);
@@ -68,7 +68,7 @@ partial class DbConnectionExtensionsTests
         var payload = new EntityWithGuidKey
         {
             Id = Guid.NewGuid(),
-            Value = 1
+            Value = 1,
         };
         var entity = new EntityWithSqliteBlob
         {
@@ -85,7 +85,7 @@ partial class DbConnectionExtensionsTests
         Assert.Equal(payload.Value, actualPayload.Value);
     }
 
-    public static readonly IEnumerable<object?[]> MySqlSchemaCases = new[] { DbProviderType.MySqlConnector, DbProviderType.MySql, }
+    public static readonly IEnumerable<object?[]> MySqlSchemaCases = new[] { DbProviderType.MySqlConnector, DbProviderType.MySql }
         .SelectMany(Schemas)
         .Select(m => new object?[] { m.Left, m.Right });
 
@@ -100,7 +100,7 @@ partial class DbConnectionExtensionsTests
         var payload = new EntityWithGuidKey
         {
             Id = Guid.NewGuid(),
-            Value = 1
+            Value = 1,
         };
         var entity = new EntityWithMySqlBlob
         {

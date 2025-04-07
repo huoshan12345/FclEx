@@ -25,6 +25,7 @@ partial class ExceptionExtensions
         "--- End of ", // --- End of inner exception stack trace --- or --- End of stack trace from previous location ---
         "System.Threading.ExecutionContext.",
         "System.Runtime.CompilerServices.AsyncTaskMethodBuilder",
+        "System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder",
         "System.Threading.Tasks.Task.",
         "System.Threading.Tasks.Task`1.",
         "System.Threading.Tasks.TaskCompletionSourceWithCancellation",
@@ -36,6 +37,7 @@ partial class ExceptionExtensions
         "System.Runtime.CompilerServices.AsyncMethodBuilderCore",
         "System.Threading.ThreadPoolWorkQueue.Dispatch",
         "System.Threading.PortableThreadPool.WorkerThread.WorkerThreadStart",
+        "System.Threading.Tasks.ContinuationResultTaskFromResultTask",
     ];
 
     public static Func<string, bool> DefaultStackTraceLineFilter { get; } = m => ExcludeStackTracePrefixes.Any(m.StartsWith);

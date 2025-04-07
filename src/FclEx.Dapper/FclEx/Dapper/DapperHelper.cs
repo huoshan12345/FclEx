@@ -32,7 +32,7 @@ public static class DapperHelper
 
     public static EntityDefinition GetEntityDefinition(Type type)
     {
-        return EntityDefinitions.GetOrAdd(type, t => EntityDefinition.GetDefinition(t));
+        return EntityDefinitions.GetOrAdd(type, EntityDefinition.GetDefinition);
     }
 
     // Register CustomPropertyTypeMap for Type with ColumnAttribute
@@ -61,8 +61,14 @@ public static class DapperHelper
             if (locker.Initialized)
                 return;
 
-            var types = assembly.ExportedTypes.ToList();
+            if (assembly.GetName().Name?.StartsWith("Microsoft.TestPlatform.") == true)
+            { 
+                // Skip test platform assemblies to avoid the error "Could not load type 'System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute' from assembly 'Microsoft.TestPlatform.CoreUtilities".
+                locker.Initialized = true;
+                return;
+            }
 
+            var types = assembly.ExportedTypes.ToList();
             var typesWithColumn = types.Where(m => m.GetCustomAttribute<TableAttribute>() != null
                                                    || m.GetProperties().Any(x => x.GetCustomAttribute<ColumnAttribute>() != null)).ToArray();
             RegisterColumnMapping(typesWithColumn);

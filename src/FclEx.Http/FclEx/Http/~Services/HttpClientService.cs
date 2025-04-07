@@ -20,6 +20,8 @@ public class HttpClientService : AbstractHttpClientService
     public HttpClientService(HttpClientOptions? options = null)
     {
         options ??= new();
+
+        // NOTE: use with keyword to create new instance instead of changing property directly cause it used as key in cache.
         _options = options with { AllowAutoRedirect = false };
     }
 
@@ -31,7 +33,8 @@ public class HttpClientService : AbstractHttpClientService
             if (IWebProxyEqualityComparer.Instance.Equals(_options.Proxy, value))
                 return;
 
-            _options.Proxy = value;
+            // NOTE: use with keyword to create new instance instead of changing property directly cause it used as key in cache.
+            _options = _options with { Proxy = value };
         }
     }
 

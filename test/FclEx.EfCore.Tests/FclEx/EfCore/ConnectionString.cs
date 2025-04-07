@@ -5,10 +5,10 @@ namespace FclEx.EfCore;
 
 public class ConnectionStrings(string database, DatabaseUser user)
 {
-    public readonly ConnectionString Postgresql = new(DbProviderType.Npgsql, $"Server=localhost;Database={database};Port=5432;User Id=postgres;Password=111111", user);
+    public readonly ConnectionString Postgresql = new(DbProviderType.Npgsql, $"Server=127.0.0.1;Database={database};Port=5432;User Id=postgres;Password=111111", user);
     // NOTE: do not include 'Integrated Security=sspi;' into the sql server connection string otherwise the default schema won't work.
     public readonly ConnectionString SqlServer = new(DbProviderType.SqlServer, $@"Data Source=(localdb)\MSSQLLocalDB;Database={database};User Id=sa;Password=a.o7a@bj;Encrypt=false", user);
-    public readonly ConnectionString MySql = new(DbProviderType.MySql, $"Server=localhost;Database={database};Port=3306;User Id=root;Password=111111;SslMode=Required", user);
+    public readonly ConnectionString MySql = new(DbProviderType.MySql, $"Server=127.0.0.1;Database={database};Port=3306;User Id=root;Password=111111;SslMode=Required", user);
     public readonly ConnectionString Sqlite = new(DbProviderType.Sqlite, $"Data Source=./{database}.sqlite;", user);
 
     public ConnectionString Get(DbProviderType dbProviderType)
