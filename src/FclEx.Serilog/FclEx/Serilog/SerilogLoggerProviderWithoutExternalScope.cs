@@ -2,6 +2,11 @@
 
 namespace FclEx.Serilog;
 
+/// <summary>
+/// A wrapper around SerilogLoggerProvider that intentionally excludes the ISupportExternalScope interface.<br/>
+/// This is a workaround to avoid Property in LogEvent to be overriden by scope.<br/>
+/// See details on <see href="https://github.com/serilog/serilog-extensions-logging/pull/272" />
+/// </summary>
 public class SerilogLoggerProviderWithoutExternalScope : ILoggerProvider, ILogEventEnricher
 {
     private readonly SerilogLoggerProvider _innerProvider;
