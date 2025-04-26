@@ -36,6 +36,7 @@ partial class ExceptionExtensions
         "System.Runtime.CompilerServices.AsyncMethodBuilderCore",
         "System.Threading.ThreadPoolWorkQueue.Dispatch",
         "System.Threading.PortableThreadPool.WorkerThread.WorkerThreadStart",
+        "System.Threading.Tasks.ContinuationResultTaskFromResultTask",
     ];
 
     public static Func<string, bool> DefaultStackTraceLineFilter { get; } = m => ExcludeStackTracePrefixes.Any(m.StartsWith);
