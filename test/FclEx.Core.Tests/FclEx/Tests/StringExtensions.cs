@@ -1,4 +1,6 @@
-﻿namespace FclEx.Tests;
+﻿using Microsoft.CodeAnalysis.CSharp;
+
+namespace FclEx.Tests;
 
 public static class StringExtensions
 {
