@@ -32,7 +32,7 @@ public static class DapperHelper
 
     public static EntityDefinition GetEntityDefinition(Type type)
     {
-        return EntityDefinitions.GetOrAdd(type, t => EntityDefinition.GetDefinition(t));
+        return EntityDefinitions.GetOrAdd(type, EntityDefinition.GetDefinition);
     }
 
     // Register CustomPropertyTypeMap for Type with ColumnAttribute
