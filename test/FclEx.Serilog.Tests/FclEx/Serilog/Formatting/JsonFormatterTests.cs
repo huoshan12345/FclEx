@@ -1,4 +1,5 @@
-﻿using static FclEx.Serilog.ExceptionIndexOptions;
+﻿using System.Text.Json.Nodes;
+using static FclEx.Serilog.ExceptionIndexOptions;
 
 namespace FclEx.Serilog.Formatting;
 
@@ -66,8 +67,9 @@ public class JsonFormatterTests
             formatter.Format(logEvent, sw);
 
             var str = sw.ToString();
-            var token = JToken.Parse(str);
-            var xt = token[options.ExceptionName] as JArray;
+            var token = str.ToJsonNode();
+            Assert.NotNull(token);
+            var xt = token[options.ExceptionName] as JsonArray;
             Assert.NotNull(xt);
 
             var lines = xt.ToObject<string[]>()!;
