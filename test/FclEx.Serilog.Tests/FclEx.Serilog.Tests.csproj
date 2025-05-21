@@ -3,7 +3,7 @@
   <ItemGroup>
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageReference Include="Serilog.Sinks.XUnit" Version="3.0.19" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.0" />
   </ItemGroup>
 
   <ItemGroup>
