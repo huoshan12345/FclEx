@@ -3,12 +3,12 @@
   <PropertyGroup>
     <!--it is not convinient to test MySql.EntityFrameworkCore with net6.0-->
     <!--enable net9.0 until MySql.EntityFrameworkCore and Pomelo.EntityFrameworkCore.MySql 9.0 is published-->
-    <TargetFrameworks>net7.0;net8.0</TargetFrameworks>
+    <TargetFrameworks>net8.0</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
     <!--NOTE: do not use 17.14+ due to the error "Could not load type 'System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute' from assembly 'Microsoft.TestPlatform.CoreUtilities"-->
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="[17.13.0]" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
