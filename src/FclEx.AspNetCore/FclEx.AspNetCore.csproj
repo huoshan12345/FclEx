@@ -10,7 +10,7 @@
   
   <ItemGroup>
     <PackageReference Include="IdentityModel" Version="7.0.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.10.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.12.0" />
   </ItemGroup>
 
   <ItemGroup>

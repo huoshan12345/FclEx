@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <!--NOTE: do not use 17.14+ due to the error "Could not load type 'System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute' from assembly 'Microsoft.TestPlatform.CoreUtilities"-->
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
