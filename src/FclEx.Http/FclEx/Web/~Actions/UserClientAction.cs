@@ -12,7 +12,7 @@ public abstract class UserClientAction<TClient, T> : IUserClientAction<TClient, 
     }
 
     public virtual IUserClientSession Session => Client.Session;
-    public IUserAccount Account => Client.Account;
+    public virtual IUserAccount Account => Client.Account;
     public TClient Client { get; }
     public ILogger Logger { get; }
     public abstract Task<OperationResult<T>> ExecuteActionAsync(CancellationToken token = default);
