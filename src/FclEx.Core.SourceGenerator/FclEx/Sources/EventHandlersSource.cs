@@ -1,4 +1,4 @@
-﻿namespace FclEx.SourceGenerator.Sources;
+﻿namespace FclEx.Sources;
 
 internal static class EventHandlersSource
 {

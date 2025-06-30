@@ -72,7 +72,7 @@ public static class FileSystemInfoExtensions
     /// <summary>
     /// The first dir name from the path. <br/>
     /// Example: <br/>
-    /// C:\foo\bar\ -> foo
+    /// C:\foo\bar\ -> foo <br/>
     /// C:\foo\bar\text.txt -> foo
     /// </summary>
     public static string GetFirstDir(this FileSystemInfo info)

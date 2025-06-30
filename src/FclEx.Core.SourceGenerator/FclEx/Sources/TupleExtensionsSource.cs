@@ -1,22 +1,23 @@
-﻿namespace FclEx.SourceGenerator.Sources;
+﻿namespace FclEx.Sources;
 
-internal static class AsyncEventHandlerExtensionsSource
+internal static class TupleExtensionsSource
 {
-    private const int Max = 8;
+    private const int Max = 7;
     private static readonly string[] _usings =
-    {
-        "FclEx",
-    };
+    [
+        "System",
+        "System.Reflection",
+    ];
 
     internal static SourceInfo Generate()
     {
         const string @namespace = "FclEx.Extensions";
-        const string className = "AsyncEventHandlerExtensions";
-        const string methodName = "public static Task InvokeAsync";
+        const string className = "TupleExtensions";
 
         using var builder = new SourceBuilder()
             .WriteGeneratedHeader()
             .WriteLine()
+            .WriteLine("#nullable enable")
             .WriteUsings(_usings)
             .WriteLine();
 
@@ -28,15 +29,13 @@ internal static class AsyncEventHandlerExtensionsSource
         builder.WriteLine($"partial class {className}")
             .WriteOpeningBracket();
 
-        for (var i = 1; i <= Max; i++)
+        for (var i = 2; i <= Max; i++)
         {
-            var types = Enumerable.Range(1, i).Select(m => $"T{m}").Prepend("TSender").JoinWith(", ");
-            var @params = Enumerable.Range(1, i).Select(m => $"T{m} arg{m}").Prepend("TSender sender").JoinWith(", ");
-            var args = Enumerable.Range(1, i).Select(m => $"arg{m}").Prepend("sender").JoinWith(", ");
-            var handlerType = $"AsyncEventHandler<{types}>";
-            builder.WriteLine($"{methodName}<{types}>(this {handlerType} handler, {@params})");
+            var types = Enumerable.Range(1, i).Select(m => $"T{m}").JoinWith(", ");
+            var methodName = $"public static IEnumerable<({types})> ToValueTuple<{types}>";
+            builder.WriteLine($"{methodName}(this IEnumerable<Tuple<{types}>> enumerable)");
             builder.WriteOpeningBracket();
-            builder.WriteLine($"return handler.GetInvocationList<{handlerType}>().Select(m => m({args})).WhenAll();");
+            builder.WriteLine("return enumerable.Select(m => m.ToValueTuple());");
             builder.WriteClosingBracket();
             builder.WriteLine();
         }

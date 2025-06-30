@@ -15,7 +15,7 @@ permissions:
   actions: write
 
 env:
-  SOLUTION: FclEx.sln
+  SOLUTION: FclEx.slnx
   DOTNET_NOLOGO: 1
   MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
   NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
@@ -62,9 +62,7 @@ jobs:
       - name: Setup dotnet
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: |
-            6.0.x
-            7.0.x
+          dotnet-version: | 
             8.0.x
             9.0.x
 

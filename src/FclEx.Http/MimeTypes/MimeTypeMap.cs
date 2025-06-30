@@ -494,6 +494,7 @@
                 {".sldx", "application/vnd.openxmlformats-officedocument.presentationml.slide"},
                 {".slk", "application/vnd.ms-excel"},
                 {".sln", "text/plain"},
+                {".slnx", "text/plain"},
                 {".slupkg-ms", "application/x-ms-license"},
                 {".smd", "audio/x-smd"},
                 {".smi", "application/octet-stream"},

@@ -53,4 +53,20 @@ public static class DirectoryInfoExtensions
     {
         return dir.EnumerateFileSystemInfos().Any() == false;
     }
+
+    public static DirectoryInfo Rename(this DirectoryInfo dir, string name)
+    {
+        Check.NotNull(dir);
+        Check.NotEmpty(name);
+
+        if (dir.Name == name)
+            return dir;
+
+        var parent = dir.Parent;
+        Check.NotNull(parent);
+
+        var newName = Path.Combine(parent.FullName, name);
+        dir.MoveTo(newName);
+        return new DirectoryInfo(newName);
+    }
 }

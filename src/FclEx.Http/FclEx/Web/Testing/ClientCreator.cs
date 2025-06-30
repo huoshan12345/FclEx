@@ -1,23 +1,25 @@
 ﻿#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 namespace FclEx.Web.Testing;
 
-public class ClientCreator<TClient>(IServiceProvider provider) where TClient : IUserClient
+public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
+    where TClient : IUserClient<TAccount>
+    where TAccount : IUserAccount
 {
     protected readonly IServiceProvider _provider = provider;
 
-    protected readonly ConcurrentDictionary<UserAccount, TClient> _dic = new(UserAccountEqualityComparer.Instance);
+    protected readonly ConcurrentDictionary<TAccount, TClient> _dic = new();
 
-    public virtual (string Path, bool Exist) GetCookiesFilePath(Type clientType, IUserAccount account)
+    public virtual string GetCookiesFilePath(IUserAccount account)
     {
-        var fileName = $"Cookies_{clientType.ShortName()}_{account.UserName}.json";
+        var fileName = $"Cookies_{typeof(TClient).ShortName()}_{account.UserName}.json";
         var path = Path.Combine(Directory.GetCurrentDirectory(), fileName);
-        return (path, File.Exists(path));
+        return path;
     }
 
-    public virtual async Task<IList<SimpleCookie>> ReadCookies(Type clientType, UserAccount account)
+    public virtual async Task<IList<SimpleCookie>> ReadCookies(IUserAccount account)
     {
-        var (path, exist) = GetCookiesFilePath(clientType, account);
-        if (exist)
+        var path = GetCookiesFilePath(account);
+        if (File.Exists(path))
         {
 #if NETSTANDARD2_0
             var str = File.ReadAllText(path);
@@ -33,11 +35,11 @@ public class ClientCreator<TClient>(IServiceProvider provider) where TClient : I
         }
     }
 
-    public virtual async Task SaveCookies<T>(T client) where T : IUserClient
+    public virtual async Task SaveCookies(TClient client)
     {
         var cookies = client.HttpService.GetAllSimpleCookies();
         var str = cookies.ToJson(new JsonOptions(true));
-        var (path, exist) = GetCookiesFilePath(client.GetType(), client.Account);
+        var path = GetCookiesFilePath(client.Account);
 #if NETSTANDARD2_0
         File.WriteAllText(path, str, Encoding.UTF8);
 #else
@@ -45,10 +47,10 @@ public class ClientCreator<TClient>(IServiceProvider provider) where TClient : I
 #endif
     }
 
-    public virtual Task<TClient> CreateClient(UserAccount account, bool login, bool fakeLogin = true, bool useCache = true, bool readCookie = true, string? proxy = null)
+    public virtual Task<TClient> CreateClient(TAccount account, bool login, bool fakeLogin = true, bool useCache = true, bool readCookie = true, string? proxy = null)
         => CreateClient(account, new LoginOptions(login, fakeLogin, useCache, readCookie, WebProxyHelper.Create(proxy)));
 
-    public virtual async Task<TClient> CreateClient(UserAccount account, LoginOptions options)
+    public virtual async Task<TClient> CreateClient(TAccount account, LoginOptions options)
     {
         if (!options.UseCache || !_dic.TryGetValue(account, out var client))
         {
@@ -73,16 +75,27 @@ public class ClientCreator<TClient>(IServiceProvider provider) where TClient : I
         return client;
     }
 
-    public virtual async Task<TClient> CreateClient(UserAccount account, IWebProxy? proxy, bool readCookie)
+    public virtual async Task<TClient> CreateClient(TAccount account, IWebProxy? proxy, bool readCookie)
     {
-        var factory = _provider.GetRequiredService<IUserClientFactory<TClient>>();
+        var factory = _provider.GetRequiredService<IUserClientFactory<TClient, TAccount>>();
         var client = factory.Create(account, HttpClientService.Create(proxy));
         if (readCookie)
         {
-            var cookies = await ReadCookies(typeof(TClient), account);
+            var cookies = await ReadCookies(account);
             client.HttpService.AddCookies(cookies, (string?)null);
         }
 
         return client;
+    }
+}
+
+public class ClientCreator<TClient>(IServiceProvider provider) : ClientCreator<TClient, IUserAccount>(provider)
+    where TClient : IUserClient
+{
+    protected static readonly Random Random = new();
+
+    public virtual Task<TClient> CreateRandomClient(int userNameLength, int passwordLength)
+    {
+        return CreateClient(new UserAccount(Random.NextString(userNameLength), Random.NextString(passwordLength)), false, false, false, false);
     }
 }

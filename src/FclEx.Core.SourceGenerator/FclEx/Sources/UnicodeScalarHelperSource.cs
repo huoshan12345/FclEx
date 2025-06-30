@@ -10,7 +10,7 @@ using AngleSharp.Html.Parser;
 using Microsoft.CodeAnalysis.Diagnostics;
 #pragma warning disable RS1035
 
-namespace FclEx.SourceGenerator.Sources;
+namespace FclEx.Sources;
 
 internal static class UnicodeScalarHelperSource
 {

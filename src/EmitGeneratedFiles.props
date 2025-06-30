@@ -4,6 +4,7 @@
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     <CompilerGeneratedFilesOutputPath>$(SourceDir.TrimEnd('\'))</CompilerGeneratedFilesOutputPath>
   </PropertyGroup>
+
   <Target Name="CleanSourceGeneratedFiles" BeforeTargets="DispatchToInnerBuilds">
     <!--only exeuted once before every build-->
     <ItemGroup>

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace FclEx.SourceGenerator.Sources;
+namespace FclEx.Sources;
 
 internal class NumberExtensionsSource
 {
@@ -58,7 +58,7 @@ internal class NumberExtensionsSource
                                  return ({{type}})value;
                              }
                              """;
-            builder.WriteAsLines(template);
+            builder.WriteLines(template);
             builder.WriteLine();
         }
 
@@ -78,7 +78,7 @@ internal class NumberExtensionsSource
                                      : ({{type}})(other - value);
                              }
                              """;
-            builder.WriteAsLines(template);
+            builder.WriteLines(template);
             builder.WriteLine();
         }
 

@@ -30,13 +30,14 @@ public static class StreamExtensions
         using var disposable = ArrayPool<byte>.Shared.GetPooled(bufferSize);
         var buffer = disposable.Value;
 
-        int bytesCopied;
-        do
+        while (true)
         {
             using var cts = token.WithTimeout(readBufferTimeout);
-            bytesCopied = await source.ReadAsync(buffer, 0, buffer.Length, cts.Token);
-            await dest.WriteAsync(buffer, 0, bytesCopied, cts.Token);
-        } while (bytesCopied > 0);
+            var bytesCopied = await source.ReadAsync(buffer, 0, buffer.Length, cts.Token);
+            if (bytesCopied <= 0)
+                break;
 
+            await dest.WriteAsync(buffer, 0, bytesCopied, cts.Token);
+        }
     }
 }

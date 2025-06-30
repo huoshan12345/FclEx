@@ -1,7 +1,12 @@
 ﻿namespace FclEx.Web;
 
-public interface IUserClientFactory<out TClient> where TClient : IUserClient
+public interface IUserClientFactory<out TClient, in TAccount>
+    where TClient : IUserClient<TAccount>
+    where TAccount : IUserAccount
 {
     IServiceProvider ServiceProvider { get; }
-    TClient Create(IUserAccount account, IHttpService? httpService = null);
+    TClient Create(TAccount account, IHttpService? httpService = null);
 }
+
+public interface IUserClientFactory<out TClient> : IUserClientFactory<TClient, IUserAccount>
+    where TClient : IUserClient;
