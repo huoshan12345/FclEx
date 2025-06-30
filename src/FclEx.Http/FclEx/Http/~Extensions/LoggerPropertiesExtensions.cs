@@ -1,5 +1,3 @@
-using FclEx.Logging;
-
 namespace FclEx.Http;
 
 public static class LoggerPropertiesExtensions

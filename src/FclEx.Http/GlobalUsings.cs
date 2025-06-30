@@ -33,6 +33,7 @@ global using FclEx.DependencyInjection;
 global using FclEx.Extensions;
 global using FclEx.Helpers;
 global using FclEx.Http;
+global using FclEx.Logging;
 global using FclEx.Utils;
 global using FclEx.Web;
 global using Microsoft.Extensions.DependencyInjection;

@@ -1,6 +1,8 @@
 ﻿namespace FclEx.Web;
 
-public class UserClientFactory<TClient> : IUserClientFactory<TClient> where TClient : IUserClient
+public class UserClientFactory<TClient, TAccount> : IUserClientFactory<TClient, TAccount>
+    where TClient : IUserClient<TAccount>
+    where TAccount : IUserAccount
 {
     public UserClientFactory(IServiceProvider serviceProvider)
     {
@@ -9,11 +11,16 @@ public class UserClientFactory<TClient> : IUserClientFactory<TClient> where TCli
 
     public IServiceProvider ServiceProvider { get; }
 
-    public virtual TClient Create(IUserAccount account, IHttpService? httpService = null)
+    public virtual TClient Create(TAccount account, IHttpService? httpService = null)
     {
         var client = ServiceProvider.GetRequiredService<TClient>();
         client.Account = account;
-        client.HttpService = httpService;
+        if (httpService is not null)
+            client.HttpService = httpService;
         return client;
     }
 }
+
+public class UserClientFactory<TClient>(IServiceProvider serviceProvider)
+    : UserClientFactory<TClient, IUserAccount>(serviceProvider), IUserClientFactory<TClient>
+    where TClient : IUserClient;
