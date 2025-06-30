@@ -1,14 +1,12 @@
-﻿using FclEx.Logging;
+﻿namespace FclEx.Web;
 
-namespace FclEx.Web;
-
-public abstract class UserClient : IUserClient, IDisposable
+public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable where TAccount : IUserAccount
 {
     private static int _id;
 
     private readonly Lazy<ILogger> _logger;
     private AccountStatus _accountStatus;
-    private IUserAccount? _account;
+    private TAccount _account;
     private IHttpService? _httpService;
 
     protected AsyncLock LoginLocker { get; } = new();
@@ -16,30 +14,22 @@ public abstract class UserClient : IUserClient, IDisposable
 
     public virtual int Id { get; } = Interlocked.Increment(ref _id);
 
-    [AllowNull]
     public virtual IHttpService HttpService
     {
         get => _httpService ??= new HttpClientService { Logger = Logger };
         set
         {
-            if (value == null)
-                return;
-
             _httpService = value;
             _httpService.Logger = Logger;
         }
     }
 
-    [AllowNull]
-    public virtual IUserAccount Account
+    public virtual TAccount Account
     {
-        get => _account ??= UserAccount.Empty;
+        get => _account;
         set
         {
-            if (value == null)
-                return;
-
-            _account = value;
+            _account = Check.NotNull(value);
             AccountStatus = AccountStatus.Normal;
         }
     }
@@ -60,9 +50,9 @@ public abstract class UserClient : IUserClient, IDisposable
     public virtual IUserClientSession Session { get; } = new UserClientSession();
     public virtual bool IsOnline => Session.SessionState == UserClientSessionState.Online;
 
-    protected UserClient(IUserAccount? account = null, ILoggerFactory? loggerFactory = null)
+    protected UserClient(TAccount account, ILoggerFactory? loggerFactory = null)
     {
-        _account = account;
+        _account = Check.NotNull(account);
         _logger = new(() => CreateLogger(loggerFactory), true);
     }
 
@@ -70,7 +60,7 @@ public abstract class UserClient : IUserClient, IDisposable
     {
         var logger = factory.Touch().CreateLogger(GetType());
         var logger2 = new PropertiesLogger(logger, GetLogProperties(), GetLogLazyProperties());
-        return new UserClientLogger(logger2, this);
+        return new UserClientLogger<TAccount>(logger2, this);
     }
 
     protected virtual IEnumerable<LoggerProperty> GetLogProperties()
@@ -200,3 +190,6 @@ public abstract class UserClient : IUserClient, IDisposable
         _isDisposed = true;
     }
 }
+
+public abstract class UserClient(IUserAccount? account = null, ILoggerFactory? loggerFactory = null)
+    : UserClient<IUserAccount>(account ?? UserAccount.Empty, loggerFactory), IUserClient;

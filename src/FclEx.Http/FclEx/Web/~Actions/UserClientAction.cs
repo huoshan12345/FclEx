@@ -1,7 +1,9 @@
 ﻿#if NET6_0_OR_GREATER
 namespace FclEx.Web;
 
-public abstract class UserClientAction<TClient, T> : IUserClientAction<TClient, T> where TClient : IUserClient
+public abstract class UserClientAction<TClient, TAccount, T> : IUserClientAction<TClient, TAccount, T>
+    where TClient : IUserClient<TAccount>
+    where TAccount : IUserAccount
 {
     protected UserClientAction(TClient client)
     {
