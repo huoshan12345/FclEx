@@ -22,5 +22,5 @@ public class UserClientFactory<TClient, TAccount> : IUserClientFactory<TClient, 
 }
 
 public class UserClientFactory<TClient>(IServiceProvider serviceProvider)
-    : UserClientFactory<TClient, IUserAccount>(serviceProvider)
+    : UserClientFactory<TClient, IUserAccount>(serviceProvider), IUserClientFactory<TClient>
     where TClient : IUserClient;

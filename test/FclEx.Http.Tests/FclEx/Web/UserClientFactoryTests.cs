@@ -27,7 +27,7 @@ public class UserClientFactoryTests : WebTests
         Assert.IsType<UserClientLogger>(client.Logger);
 
         var innerLogger = typeof(UserClientLogger)
-            .GetRequiredField("_logger")
+            .GetRequiredField("_logger", true)
             .GetRequiredValue<ILogger>(client.Logger);
         Assert.IsType<PropertiesLogger>(innerLogger);
 

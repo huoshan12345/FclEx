@@ -1,4 +1,6 @@
-﻿namespace FclEx.Web;
+﻿using System.Security.Principal;
+
+namespace FclEx.Web;
 
 public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable where TAccount : IUserAccount
 {
@@ -192,4 +194,12 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
 }
 
 public abstract class UserClient(IUserAccount? account = null, ILoggerFactory? loggerFactory = null)
-    : UserClient<IUserAccount>(account ?? UserAccount.Empty, loggerFactory), IUserClient;
+    : UserClient<IUserAccount>(account ?? UserAccount.Empty, loggerFactory), IUserClient
+{
+    protected override ILogger CreateLogger(ILoggerFactory? factory)
+    {
+        var logger = factory.Touch().CreateLogger(GetType());
+        var logger2 = new PropertiesLogger(logger, GetLogProperties(), GetLogLazyProperties());
+        return new UserClientLogger(logger2, this); // Use non-generic logger for IUserClient
+    }
+}
