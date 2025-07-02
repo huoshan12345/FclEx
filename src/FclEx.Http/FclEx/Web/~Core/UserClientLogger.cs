@@ -1,13 +1,13 @@
 ﻿namespace FclEx.Web;
 
-public class UserClientLogger : ILogger
+public class UserClientLogger<TAccount> : ILogger where TAccount : IUserAccount
 {
     private readonly ILogger _logger;
-    private readonly UserClient _client;
+    private readonly UserClient<TAccount> _client;
 
-    public UserClientLogger(ILogger logger, UserClient client)
+    public UserClientLogger(ILogger logger, UserClient<TAccount> client)
     {
-        _logger = logger is UserClientLogger clientLogger
+        _logger = logger is UserClientLogger<TAccount> clientLogger
             ? clientLogger._logger
             : logger;
         _client = client;
@@ -54,3 +54,6 @@ public class UserClientLogger : ILogger
     public IDisposable BeginScope<TState>(TState state) where TState : notnull
         => _logger.BeginScope(state) ?? Disposable.Empty;
 }
+
+public class UserClientLogger(ILogger logger, UserClient<IUserAccount> client)
+    : UserClientLogger<IUserAccount>(logger, client);
