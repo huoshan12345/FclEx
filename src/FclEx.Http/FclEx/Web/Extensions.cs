@@ -6,7 +6,7 @@ public static class Extensions
     {
         collection.TryAddTransient<TClient>();
         collection.TryAddSingleton<TAccount>(emptyAccount);
-        collection.TryAddSingleton(typeof(IUserClientFactory<,>), typeof(UserClientFactory<TClient, TAccount>));
+        collection.TryAddSingleton(typeof(IUserClientFactory<,>), typeof(UserClientFactory<,>));
         return collection;
     }
 
@@ -15,7 +15,7 @@ public static class Extensions
         collection.TryAddTransient<TClient>();
         collection.TryAddSingleton<IUserAccount>(UserAccount.Empty);
         collection.TryAddSingleton<UserAccount>(UserAccount.Empty);
-        collection.TryAddSingleton(typeof(IUserClientFactory<,>), typeof(UserClientFactory<TClient, IUserAccount>));
+        collection.TryAddSingleton(typeof(IUserClientFactory<,>), typeof(UserClientFactory<,>));
         collection.TryAddSingleton(typeof(IUserClientFactory<>), typeof(UserClientFactory<>));
         return collection;
     }
