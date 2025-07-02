@@ -19,4 +19,12 @@ public abstract class UserClientAction<TClient, TAccount, T> : IUserClientAction
     public ILogger Logger { get; }
     public abstract Task<OperationResult<T>> ExecuteActionAsync(CancellationToken token = default);
 }
+
+public abstract class UserClientAction<TClient, T> : UserClientAction<TClient, IUserAccount, T>, IUserClientAction<TClient, T>
+    where TClient : IUserClient
+{
+    protected UserClientAction(TClient client) : base(client)
+    {
+    }
+}
 #endif
