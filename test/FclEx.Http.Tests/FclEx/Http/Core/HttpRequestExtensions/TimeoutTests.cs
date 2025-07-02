@@ -2,7 +2,7 @@
 
 public class TimeoutTests
 {
-    [RetryTheory]
+    [RetryTheory(Skip = "test url is not avaible")]
     [InlineData(0.1)]
     [InlineData(0.3)]
     public async Task ConnectTimeout_Test(double timeoutSeconds)
