@@ -98,4 +98,44 @@ partial class OperationResultExtensions
 
         return result.Value;
     }
+
+    public static OperationResult<(T, TResult)> MapWith<T, TResult>(this OperationResult<T> result, Func<T, TResult> func)
+    {
+        return result.Map(m => (m, func(m)));
+    }
+
+    public static OperationResult<(T, TResult)> BindWith<T, TResult>(this OperationResult<T> result, Func<T, TResult> func)
+    {
+        return result.Bind(m => Operation.Success((m, func(m))));
+    }
+
+    public static T FromObjectError<T>(this IOperationResult result) where T : notnull
+    {
+        if (result.IsObjectError<T>(static (_, _) => true, out var value))
+            return value;
+
+        throw new InvalidOperationException($"The result is not an object error of type '{typeof(T).LongName()}'");
+    }
+
+    public static T FromObjectError<T>(this IOperationResult<T> result) where T : notnull
+    {
+        return result.CastTo<IOperationResult>().FromObjectError<T>();
+    }
+
+    public static bool TryGetValue<T>(this OperationResult<T> result, [NotNullWhen(true)] out T? value)
+    {
+        if (result.Success)
+        {
+            value = result.Value;
+            return true;
+        }
+
+        value = default;
+        return false;
+    }
+
+    public static bool IsSuccess<T>(this OperationResult<T> result, Func<T, bool> condition)
+    {
+        return result.Success && condition(result.Value);
+    }
 }

@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-
-namespace FclEx.Xunit;
+﻿namespace FclEx.Xunit;
 
 public class TestLogger : ILogger
 {

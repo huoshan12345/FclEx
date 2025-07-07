@@ -1,6 +1,5 @@
 ﻿using System.Xml.Linq;
 using System;
-using Xunit;
 using static FclEx.Xunit.EnvVarCheckOption;
 
 namespace FclEx.Xunit;

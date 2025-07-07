@@ -1,11 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <!-- it is not convinient to test MySql.EntityFrameworkCore with net6.0 -->
-    <!--enable net9.0 until MySql.EntityFrameworkCore and Pomelo.EntityFrameworkCore.MySql 9.0 is published-->
-    <TargetFrameworks>net8.0</TargetFrameworks>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
   </ItemGroup>

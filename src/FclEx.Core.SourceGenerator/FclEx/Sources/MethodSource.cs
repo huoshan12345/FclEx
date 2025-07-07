@@ -1,6 +1,6 @@
-﻿namespace FclEx.SourceGenerator.Sources;
+﻿namespace FclEx.Sources;
 
-internal static class TypeExtensionsSource
+internal static class MethodSource
 {
     private const int Max = 8;
     private static readonly string[] _usings =
@@ -11,9 +11,9 @@ internal static class TypeExtensionsSource
 
     internal static SourceInfo Generate()
     {
-        const string @namespace = "FclEx.Extensions";
-        const string className = "TypeExtensions";
-        const string methodName = "public static Type MakeGenericType";
+        const string @namespace = "FclEx.Helpers";
+        const string className = "Method";
+        const string methodName = "public static MethodInfo Of";
 
         using var builder = new SourceBuilder()
             .WriteGeneratedHeader()
@@ -31,13 +31,9 @@ internal static class TypeExtensionsSource
 
         for (var i = 1; i <= Max; i++)
         {
-            var types = Enumerable.Range(1, i).Select(m => "T" + m).ToArray();
-            var typeParams = types.JoinWith(", ");
-            builder.WriteLine($"{methodName}<{typeParams}>(this Type type)");
-            builder.WriteOpeningBracket();
-            var typeArgs = types.Select(m => $"typeof({m})").JoinWith(", ");
-            builder.WriteLine($"return type.MakeGenericType({typeArgs});");
-            builder.WriteClosingBracket();
+            var types = Enumerable.Range(1, i).Select(m => "T" + m).JoinWith(", ");
+            builder.WriteLine($"{methodName}<{types}>(Action<{types}> action) => action.Method;");
+            builder.WriteLine($"{methodName}<{types}, TResult>(Func<{types}, TResult> func) => func.Method;");
             builder.WriteLine();
         }
 
@@ -50,4 +46,5 @@ internal static class TypeExtensionsSource
         var str = builder.ToString();
         return ($"{className}.g.cs", str);
     }
+
 }

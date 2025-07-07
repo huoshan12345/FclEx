@@ -1,0 +1,55 @@
+<Solution>
+  <Folder Name="/.github/">
+    <File Path=".github/dependabot.yml" />
+    <File Path=".github/workflows/build.yml" />
+    <File Path=".github/workflows/send-event.yml" />
+  </Folder>
+  <Folder Name="/build/">
+    <File Path="build/clean.ps1" />
+    <File Path="build/incre_ver.ps1" />
+    <File Path="build/pack.ps1" />
+    <File Path="build/pkg.version" />
+  </Folder>
+  <Folder Name="/config/">
+    <File Path=".editorconfig" />
+    <File Path="NuGet.Config" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/misc/">
+    <Project Path="misc/FclEx.Benchmarks/FclEx.Benchmarks.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <File Path="src/Directory.Build.props" />
+    <File Path="src/Directory.Build.targets" />
+    <File Path="src/EmitGeneratedFiles.props" />
+    <Project Path="src/FclEx.AspNetCore/FclEx.AspNetCore.csproj" />
+    <Project Path="src/FclEx.Core.SourceGenerator/FclEx.Core.SourceGenerator.csproj" />
+    <Project Path="src/FclEx.Core/FclEx.Core.csproj" />
+    <Project Path="src/FclEx.Dapper/FclEx.Dapper.csproj" />
+    <Project Path="src/FclEx.DependencyInjection/FclEx.DependencyInjection.csproj" />
+    <Project Path="src/FclEx.EfCore/FclEx.EfCore.csproj" />
+    <Project Path="src/FclEx.Http/FclEx.Http.csproj" />
+    <Project Path="src/FclEx.Logging/FclEx.Logging.csproj" />
+    <Project Path="src/FclEx.Messaging/FclEx.Messaging.csproj" />
+    <Project Path="src/FclEx.NewtonsoftJson/FclEx.NewtonsoftJson.csproj" />
+    <Project Path="src/FclEx.Options/FclEx.Options.csproj" />
+    <Project Path="src/FclEx.Serilog/FclEx.Serilog.csproj" />
+    <Project Path="src/FclEx.Xunit.SourceGenerator/FclEx.Xunit.SourceGenerator.csproj" />
+    <Project Path="src/FclEx.Xunit/FclEx.Xunit.csproj" />
+    <Project Path="src/FclEx.YamlDotNet/FclEx.YamlDotNet.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <File Path="test/Directory.Build.props" />
+    <File Path="test/Directory.Build.targets" />
+    <Project Path="test/FclEx.AspNetCore.Tests/FclEx.AspNetCore.Tests.csproj" />
+    <Project Path="test/FclEx.Core.Tests/FclEx.Core.Tests.csproj" />
+    <Project Path="test/FclEx.Dapper.Tests/FclEx.Dapper.Tests.csproj" />
+    <Project Path="test/FclEx.EfCore.Tests/FclEx.EfCore.Tests.csproj" />
+    <Project Path="test/FclEx.Http.Tests/FclEx.Http.Tests.csproj" />
+    <Project Path="test/FclEx.Logging.Tests/FclEx.Logging.Tests.csproj" />
+    <Project Path="test/FclEx.Messaging.Tests/FclEx.Messaging.Tests.csproj" />
+    <Project Path="test/FclEx.NewtonsoftJson.Tests/FclEx.NewtonsoftJson.Tests.csproj" />
+    <Project Path="test/FclEx.Serilog.Tests/FclEx.Serilog.Tests.csproj" />
+    <Project Path="test/FclEx.YamlDotNet.Tests/FclEx.YamlDotNet.Tests.csproj" />
+  </Folder>
+</Solution>

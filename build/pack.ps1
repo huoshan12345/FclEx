@@ -7,7 +7,7 @@ Write-Output "IsGithub = $isGithub, NoRestore = $norestore"
 
 $buildDir = [io.path]::combine($MyInvocation.MyCommand.Definition, "..")
 $rootDir = [io.path]::combine($buildDir, "..")
-$sln = [io.path]::combine($rootDir, "FclEx.sln")
+$sln = [io.path]::combine($rootDir, "FclEx.slnx")
 
 $pkgPath = [io.path]::combine($buildDir, "*.nupkg")
 $snupkgPath = [io.path]::combine($buildDir, "*.snupkg")

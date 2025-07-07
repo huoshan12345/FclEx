@@ -109,4 +109,60 @@ public static partial class ActionExtensions
         Check.NotNull(onError);
         return action.NextResultIf(r => r.Error, r => Operation.Action(t => onError(r.Exception!)).Next(r));
     }
+
+    public static Task<OperationResult<T>> ExecuteAsync<T>(this IAction<T> action, int retryCount, CancellationToken token)
+    {
+        return action.ExecuteAsync(retryCount, null, null, token);
+    }
+
+    public static Task<OperationResult<T>> ExecuteAsync<T>(this IAction<T> action, int retryCount, Func<OperationResult<T>, bool?>? retryCondition, CancellationToken token)
+    {
+        return action.ExecuteAsync(retryCount, retryCondition, null, token);
+    }
+
+    public static async Task<OperationResult<T>> ExecuteAsync<T>(this IAction<T> action,
+        int retryCount,
+        Func<OperationResult<T>, bool?>? retryCondition = null,
+        Func<int, TimeSpan>? sleepDurationProvider = null,
+        CancellationToken token = default)
+    {
+        var executeCount = Math.Max(1, retryCount + 1);
+
+        var result = Operation.Error<T>("not started");
+        var watch = ValueStopwatch.StartNew();
+        for (var i = 1; i <= executeCount; i++)
+        {
+            result = await action.ExecuteAsync(token)
+                .NextResult(m => m.Elapsed(watch.GetElapsedTime()));
+
+            if (result.Success)
+                return result;
+
+            if (retryCondition is not null)
+            {
+                var condition = retryCondition(result);
+                if (condition != true)
+                    return result;
+            }
+
+            if (sleepDurationProvider is null)
+                continue;
+
+            var sleepDuration = sleepDurationProvider.Invoke(i);
+            if (sleepDuration > TimeSpan.Zero)
+                await Task.Delay(sleepDuration, token);
+        }
+
+        return result;
+    }
+
+    public static IAction<T> SetError<T>(this IAction<T> action, Func<Exception, Exception> func)
+    {
+        return action.NextResultIf(m => m.Error, m => Operation.ErrorAction<T>(func(m.Exception!), m.Elapsed));
+    }
+
+    public static IAction<T> SetError<T>(this IAction<T> action, Func<string, string> func)
+    {
+        return action.SetError(e => e.SetMessage(func(e.Message)));
+    }
 }
