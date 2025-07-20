@@ -9,17 +9,17 @@ public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
 
     protected readonly ConcurrentDictionary<TAccount, TClient> _dic = new();
 
-    public virtual (string Path, bool Exist) GetCookiesFilePath(Type clientType, IUserAccount account)
+    public virtual string GetCookiesFilePath(IUserAccount account)
     {
-        var fileName = $"Cookies_{clientType.ShortName()}_{account.UserName}.json";
+        var fileName = $"Cookies_{typeof(TClient).ShortName()}_{account.UserName}.json";
         var path = Path.Combine(Directory.GetCurrentDirectory(), fileName);
-        return (path, File.Exists(path));
+        return path;
     }
 
-    public virtual async Task<IList<SimpleCookie>> ReadCookies(Type clientType, IUserAccount account)
+    public virtual async Task<IList<SimpleCookie>> ReadCookies(IUserAccount account)
     {
-        var (path, exist) = GetCookiesFilePath(clientType, account);
-        if (exist)
+        var path = GetCookiesFilePath(account);
+        if (File.Exists(path))
         {
 #if NETSTANDARD2_0
             var str = File.ReadAllText(path);
@@ -39,7 +39,7 @@ public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
     {
         var cookies = client.HttpService.GetAllSimpleCookies();
         var str = cookies.ToJson(new JsonOptions(true));
-        var (path, exist) = GetCookiesFilePath(client.GetType(), client.Account);
+        var path = GetCookiesFilePath(client.Account);
 #if NETSTANDARD2_0
         File.WriteAllText(path, str, Encoding.UTF8);
 #else
@@ -81,7 +81,7 @@ public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
         var client = factory.Create(account, HttpClientService.Create(proxy));
         if (readCookie)
         {
-            var cookies = await ReadCookies(typeof(TClient), account);
+            var cookies = await ReadCookies(account);
             client.HttpService.AddCookies(cookies, (string?)null);
         }
 
@@ -90,4 +90,12 @@ public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
 }
 
 public class ClientCreator<TClient>(IServiceProvider provider) : ClientCreator<TClient, IUserAccount>(provider)
-    where TClient : IUserClient;
+    where TClient : IUserClient
+{
+    protected static readonly Random Random = new();
+
+    public virtual Task<TClient> CreateRandomClient(int userNameLength, int passwordLength)
+    {
+        return CreateClient(new UserAccount(Random.NextString(userNameLength), Random.NextString(passwordLength)), false, false, false, false);
+    }
+}
