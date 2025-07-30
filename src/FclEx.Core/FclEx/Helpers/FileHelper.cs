@@ -20,17 +20,12 @@ public static class FileHelper
 
     public static bool AreSame(FileInfo f1, FileInfo f2)
     {
-        if (f1.LastWriteTimeUtc != f2.LastWriteTimeUtc)
-            return false;
-
         var length = f1.Length;
         if (length != f2.Length)
             return false;
 
         using var stream1 = File.OpenRead(f1.FullName);
         using var stream2 = File.OpenRead(f2.FullName);
-
-
 
 #if NETSTANDARD2_0
         var buf1 = new byte[4096];
