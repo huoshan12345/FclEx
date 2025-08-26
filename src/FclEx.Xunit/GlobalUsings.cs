@@ -13,5 +13,7 @@ global using FclEx.Extensions;
 global using FclEx.Utils;
 global using FclEx.Xunit;
 global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Logging;
+global using Xunit;
 global using Xunit.Abstractions;
 global using Xunit.Sdk;

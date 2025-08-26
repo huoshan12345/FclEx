@@ -135,4 +135,20 @@ public static class StringBuilderExtensions
     {
         return builder.AppendLine(value?.ToString());
     }
+    
+    /// <summary>
+    /// Appends the specified text to the StringBuilder if the total length does not exceed the specified limit.
+    /// </summary>
+    /// <param name="builder">The StringBuilder to which the text will be appended.</param>
+    /// <param name="text">The text to append to the StringBuilder.</param>
+    /// <param name="limit">The maximum allowed length after appending the text.</param>
+    /// <returns>True if the text was appended successfully; otherwise, false if the length exceeds the limit.</returns>
+    public static bool AppendLimited(this StringBuilder builder, string text, int limit)
+    {
+        if (builder.Length + text.Length > limit)
+            return false;
+
+        builder.Append(text);
+        return true;
+    }
 }

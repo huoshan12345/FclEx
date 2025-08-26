@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-
-namespace FclEx.Xunit;
+﻿namespace FclEx.Xunit;
 
 public static class Extensions
 {
@@ -20,5 +18,10 @@ public static class Extensions
     {
         builder.Services.AddXunitTest(output, checkDisposed);
         return builder;
+    }
+
+    public static TheoryData<T> ToTheoryData<T>(this IEnumerable<T> enumerable)
+    {
+        return new TheoryData<T>(enumerable);
     }
 }

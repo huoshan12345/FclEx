@@ -120,4 +120,21 @@ public static class HttpResponseExtensions
         response.Headers.AddRange(HttpHeaderNames.SetCookie, cookies);
         return response;
     }
+
+    public static bool TryGetMediaType(this HttpResponse response, [NotNullWhen(true)] out MediaTypeHeaderValue? mediaType)
+    {
+        if (response.Headers.TryGetValue(HttpHeaderNames.ContentType, out var contentTypes))
+        {
+            foreach (var m in contentTypes.Reverse().NotNull())
+            {
+                if (MediaTypeHeaderValue.TryParse(m, out mediaType))
+                {
+                    return true;
+                }
+            }
+        }
+
+        mediaType = null;
+        return false;
+    }
 }
