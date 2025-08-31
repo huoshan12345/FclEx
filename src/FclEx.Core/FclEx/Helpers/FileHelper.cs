@@ -20,6 +20,11 @@ public static class FileHelper
 
     public static bool AreSame(FileInfo f1, FileInfo f2)
     {
+        Check.NotNull(f1);
+        Check.NotNull(f2);
+        Check.EqualTo(f1.Exists, true);
+        Check.EqualTo(f2.Exists, true);
+
         var length = f1.Length;
         if (length != f2.Length)
             return false;

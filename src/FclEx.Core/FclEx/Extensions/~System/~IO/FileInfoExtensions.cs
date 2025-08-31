@@ -27,11 +27,12 @@ public static class FileInfoExtensions
     {
         Check.NotNull(file);
         Check.NotNull(dest);
+        Check.EqualTo(file.Exists, true);
 
         if (file.FullName == dest.FullName)
             return;
 
-        if (FileHelper.AreSame(file, dest))
+        if (dest.Exists && FileHelper.AreSame(file, dest))
             return;
 
         using var _ = Disposable.Create(dest.Refresh);
@@ -39,7 +40,7 @@ public static class FileInfoExtensions
 #if NET6_0_OR_GREATER
         await
 #endif
-        using Stream source = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        using Stream source = new FileStream(file.FullName, FileMode.Open, FileAccess.Read);
 #if NET6_0_OR_GREATER
         await
 #endif
