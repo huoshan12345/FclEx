@@ -25,7 +25,7 @@ public class SshDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [LocalOnlyFact]
     public async Task Connect_WitSsh_Test()
     {
-        var info = new PrivateKeyConnectionInfo("127.0.0.1", 22, "lijing", new PrivateKeyFile(SshKeyPath));
+        var info = new PrivateKeyConnectionInfo("127.0.0.1", 22, "root", new PrivateKeyFile(SshKeyPath));
         var ctx = CreateNpgsqlContext(info);
         await ctx.Context.Database.OpenConnectionAsync();
         await ctx.Context.Database.CloseConnectionAsync();
