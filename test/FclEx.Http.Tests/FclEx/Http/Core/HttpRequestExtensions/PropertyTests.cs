@@ -2,7 +2,8 @@
 
 public class PropertyTests : HttpServerTests
 {
-    public static readonly (string Url, string CharSet, string Keyword) CharSetTestCase = ("https://passport.weibo.com/visitor/visitor", "gb2312", "是否采集设备指纹");
+    public static readonly (string Url, string CharSet, string Keyword) CharSetTestCase 
+        = ("https://passport.weibo.com/visitor/visitor", "gb2312", "是否采集设备指纹");
 
     [Theory]
     [InlineData(true)]
@@ -51,16 +52,17 @@ public class PropertyTests : HttpServerTests
         Assert.Equal(value, response.ResponseString.Contains(CharSetTestCase.Keyword));
     }
 
-    public static readonly IEnumerable<object[]> CompressionMethods = Enum.GetValues<CompressionMethod>().Select(m => new object[] { m });
-
+    public static readonly IEnumerable<object[]> CompressionMethods
+        = EnumHelper.GetValues<CompressionMethod>().Select(m => new object[] { m });
 
     [Theory]
     [MemberData(nameof(CompressionMethods))]
     public async Task Compress_Test(CompressionMethod compression)
     {
-        if (compression == CompressionMethod.Brotli) // not supported
-            return;
-
+#if NET5_0_OR_GREATER
+        if (compression == CompressionMethod.Brotli) // the website does not support
+            return;       
+#endif
         var random = new Random();
         var model = new MockApiModel
         {
@@ -113,7 +115,9 @@ public class PropertyTests : HttpServerTests
             CompressionMethod.None => (null, 1293),
             CompressionMethod.GZip => ("gzip", 666),
             CompressionMethod.Deflate => ("deflate", 891),
+#if NET5_0_OR_GREATER
             CompressionMethod.Brotli => ("br", 891),
+#endif
             _ => throw new ArgumentOutOfRangeException(nameof(compression), compression, null)
         };
 

@@ -1,6 +1,4 @@
-﻿using Xunit.Sdk;
-
-namespace Xunit;
+﻿namespace Xunit;
 
 partial class AssertExTests
 {

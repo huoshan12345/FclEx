@@ -27,7 +27,7 @@ public class MemberComparerBuilder<T> : IComparerBuilder<T>
     {
         IComparer comparer = memberComparer == null
             ? Comparer<TMember>.Default
-            : UntypedComparer.Create(memberComparer);
+            : NonGenericComparerAdapter.Create(memberComparer);
 
         var prop = new OrderMember(m => selector(m), desc, comparer);
         _members.Add(prop);

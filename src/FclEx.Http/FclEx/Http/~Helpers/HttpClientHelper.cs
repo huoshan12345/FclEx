@@ -1,7 +1,5 @@
 ﻿using static FclEx.Http.IPVersionPolicy;
-#if NETSTANDARD2_0
-using SocketsHttpHandler = System.Net.Http.StandardSocketsHttpHandler;
-#endif
+
 
 namespace FclEx.Http;
 

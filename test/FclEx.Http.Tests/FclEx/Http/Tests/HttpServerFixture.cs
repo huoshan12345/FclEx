@@ -1,5 +1,4 @@
-﻿using System;
-using FclEx.Tests;
+﻿using FclEx.Tests;
 
 namespace FclEx.Http.Tests;
 
@@ -31,6 +30,9 @@ public class HttpServerFixture : GlobalFixture
         = File.ReadAllText(Path.Combine("TestData", "SimpleCookies.json"))
             .FromJson<List<SimpleCookie>>()!;
 
+    public static bool IsApiServerRunning { get; private set; } = false;
+
+#if NET5_0_OR_GREATER
     private static async Task RunApiServer()
     {
         var builder = WebApplication.CreateBuilder();
@@ -98,10 +100,14 @@ public class HttpServerFixture : GlobalFixture
         app.MapGet("/api/redirect", (string u) => Results.Redirect(u));
 
         await app.StartAsync();
+        IsApiServerRunning = true;
     }
+#endif
 
     public override async Task InitializeAsync()
     {
+#if NET5_0_OR_GREATER
         await RunApiServer();
+#endif
     }
 }

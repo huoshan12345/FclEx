@@ -1,6 +1,6 @@
 ﻿namespace System.Collections.Generic;
 
-public class UntypedComparer
+public class NonGenericComparerAdapter
 {
     public static UntypedComparer<T> Create<T>(IComparer<T> comparer) => new(comparer);
 }

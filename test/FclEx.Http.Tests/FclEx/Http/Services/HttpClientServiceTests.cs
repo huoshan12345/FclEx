@@ -108,8 +108,6 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
         Assert.Equal<IWebProxy>(proxy, webProxy, IWebProxyEqualityComparer.Instance);
     }
 
-
-
     [Fact]
     public void GetFactory_Proxy_Test()
     {
