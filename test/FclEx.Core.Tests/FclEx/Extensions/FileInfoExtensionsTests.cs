@@ -33,7 +33,7 @@ public class FileInfoExtensionsTests
     }
 
     [Fact]
-    public async Task CopyToAsync_WhenFilesAreSame_NoCopyPerformed()
+    public async Task CopyToAsync_WhenFilesAreFilesEqual_NoCopyPerformed()
     {
         var srcPath = Path.GetTempFileName();
         await File.WriteAllTextAsync(srcPath, "Test Content");

@@ -4,11 +4,11 @@ public static class FileInfoExtensions
 {
     public static FileInfo Rename(this FileInfo file, string name)
     {
-        if (file.Name == name)
-            return file;
-
         Check.NotNull(file);
         Check.NotEmpty(name);
+
+        if (file.Name == name)
+            return file;
 
         var dir = file.DirectoryName;
         Check.NotNull(dir);
@@ -32,7 +32,7 @@ public static class FileInfoExtensions
         if (file.FullName == dest.FullName)
             return;
 
-        if (dest.Exists && FileHelper.AreSame(file, dest))
+        if (dest.Exists && FileHelper.AreFilesEqual(file, dest))
             return;
 
         using var _ = Disposable.Create(dest.Refresh);
@@ -56,5 +56,4 @@ public static class FileInfoExtensions
         var dest = new FileInfo(Path.Combine(dir.FullName, file.Name));
         return file.CopyToAsync(dest, bufferSize);
     }
-
 }

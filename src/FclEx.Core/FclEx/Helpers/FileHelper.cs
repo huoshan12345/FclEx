@@ -4,7 +4,14 @@ public static class FileHelper
 {
     private static readonly Regex FileNumberSuffix = new(@"(?<=_)\d*$", RegexOptions.Compiled);
 
-    public static string GetNewFileName(string fileName)
+    /// <summary>
+    /// Generates a new file name by incrementing the numeric suffix.
+    /// If the file name already ends with "_&lt;number&gt;", that number is incremented.
+    /// Otherwise, "_1" is appended before the extension.
+    /// </summary>
+    /// <param name="fileName">The original file name (with or without extension).</param>
+    /// <returns>A new file name with an incremented or added numeric suffix.</returns>
+    public static string GetNextFileName(string fileName)
     {
         var dotIndex = fileName.LastIndexOf('.');
 
@@ -18,7 +25,16 @@ public static class FileHelper
         return newName + ext;
     }
 
-    public static bool AreSame(FileInfo f1, FileInfo f2)
+    /// <summary>
+    /// Determines whether two files are identical by comparing their lengths
+    /// and then reading and comparing their content in chunks.
+    /// </summary>
+    /// <param name="f1">The first file to compare.</param>
+    /// <param name="f2">The second file to compare.</param>
+    /// <returns><c>true</c> if both files exist, have the same length, and identical content; otherwise <c>false</c>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if either file is null.</exception>
+    /// <exception cref="ArgumentException">Thrown if either file does not exist.</exception>
+    public static bool AreFilesEqual(FileInfo f1, FileInfo f2)
     {
         Check.NotNull(f1);
         Check.NotNull(f2);

@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Security;
 using System.Text;
+using System.Reflection;
 
 namespace FclEx.Utils;
 
@@ -25,6 +26,14 @@ public
     {
         _stringWriter = new StringWriter(_builder);
         _writer = new IndentedTextWriter(_stringWriter, new string(' ', 4));
+
+#if !NET9_0_OR_GREATER
+        // Fixes a bug in IndentedTextWriter where it doesn't indent the first line for dotnet 8.0 or lower
+        // because _tabsPending is not true by default.
+        typeof(IndentedTextWriter)
+            .GetField("_tabsPending", BindingFlags.Instance | BindingFlags.NonPublic)?
+            .SetValue(_writer, true);
+#endif
     }
 
     public void Dispose()
@@ -46,14 +55,14 @@ public
 
     public bool EndsWith(string value)
     {
-        if (_builder.Length < value.Length)
+        var startIndex = _builder.Length - value.Length;
+        if (startIndex < 0)
             return false;
 
-        var sbLength = _builder.Length;
-        var textLength = value.Length;
-        for (var i = 1; i <= textLength; i++)
+        // ReSharper disable once LoopCanBeConvertedToQuery
+        for (var i = 0; i < value.Length; i++)
         {
-            if (value[textLength - i] != _builder[sbLength - i])
+            if (value[i] != _builder[startIndex + i])
                 return false;
         }
         return true;
@@ -190,7 +199,7 @@ public
     {
         return builder.WriteLine($"namespace {@namespace}");
     }
-    
+
     /// <summary>
     /// Writes multiple lines of text as indented lines.
     /// </summary>

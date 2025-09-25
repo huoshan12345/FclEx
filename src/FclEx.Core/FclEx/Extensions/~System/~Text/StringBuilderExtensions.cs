@@ -135,7 +135,7 @@ public static class StringBuilderExtensions
     {
         return builder.AppendLine(value?.ToString());
     }
-    
+
     /// <summary>
     /// Appends the specified text to the StringBuilder if the total length does not exceed the specified limit.
     /// </summary>
@@ -150,5 +150,67 @@ public static class StringBuilderExtensions
 
         builder.Append(text);
         return true;
+    }
+
+    /// <summary>
+    /// Determines whether a substring of the <see cref="StringBuilder"/> content 
+    /// starting at the specified index is equal to the given span of characters.
+    /// </summary>
+    /// <param name="builder">The <see cref="StringBuilder"/> instance to compare.</param>
+    /// <param name="span">The character span to compare with the substring.</param>
+    /// <param name="startIndex">The zero-based starting index in the <see cref="StringBuilder"/>.</param>
+    /// <returns>
+    /// <c>true</c> if the substring of the <see cref="StringBuilder"/> matches the given span;
+    /// otherwise, <c>false</c>.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when <paramref name="startIndex"/> is less than zero.
+    /// </exception>
+    public static bool Equals(this StringBuilder builder, ReadOnlySpan<char> span, int startIndex)
+    {
+        Check.NotNull(builder);
+        Check.NotLessThan(startIndex, 0);
+
+        if (builder.Length < span.Length + startIndex)
+            return false;
+
+        for (var i = 0; i < span.Length; i++)
+        {
+            if (span[i] != builder[startIndex + i])
+                return false;
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// Determines whether the beginning of the <see cref="StringBuilder"/> 
+    /// matches the specified span of characters.
+    /// </summary>
+    /// <param name="builder">The <see cref="StringBuilder"/> instance to check.</param>
+    /// <param name="span">The character span to compare to the start of the <see cref="StringBuilder"/>.</param>
+    /// <returns>
+    /// <c>true</c> if the <see cref="StringBuilder"/> starts with the specified span;
+    /// otherwise, <c>false</c>.
+    /// </returns>
+    public static bool StartsWith(this StringBuilder builder, ReadOnlySpan<char> span)
+    {
+        return builder.Equals(span, 0);
+    }
+
+    /// <summary>
+    /// Determines whether the end of the <see cref="StringBuilder"/> 
+    /// matches the specified span of characters.
+    /// </summary>
+    /// <param name="builder">The <see cref="StringBuilder"/> instance to check.</param>
+    /// <param name="span">The character span to compare to the end of the <see cref="StringBuilder"/>.</param>
+    /// <returns>
+    /// <c>true</c> if the <see cref="StringBuilder"/> ends with the specified span;
+    /// otherwise, <c>false</c>.
+    /// </returns>
+    public static bool EndsWith(this StringBuilder builder, ReadOnlySpan<char> span)
+    {
+        var startIndex = builder.Length - span.Length;
+        return startIndex >= 0 && builder.Equals(span, startIndex);
     }
 }
