@@ -1,4 +1,6 @@
-﻿namespace FclEx.SourceGenerator;
+﻿using FclEx.Xunit.Sources;
+
+namespace FclEx.Xunit;
 
 [Generator(LanguageNames.CSharp)]
 public class SourceGenerator : IIncrementalGenerator
@@ -12,15 +14,7 @@ public class SourceGenerator : IIncrementalGenerator
         {
             SourceInfo[] codes =
             [
-                MethodSource.Generate(),
-                TypeExtensionsSource.Generate(),
-                ValueTupleExtensionsSource.Generate(),
-                TupleExtensionsSource.Generate(),
-                EventHandlersSource.Generate(),
-                AsyncEventHandlerExtensionsSource.Generate(),
-                UnicodeScalarHelperSource.Generate(ctx, provider),
-                ..BytesExtensionsSource.Generate(),
-                NumberExtensionsSource.Generate(),
+                ExtensionsSource.Generate(),
             ];
 
             if (codes.Any(m => m.Success == false))

@@ -15,7 +15,7 @@ permissions:
   actions: write
 
 env:
-  SOLUTION: FclEx.sln
+  SOLUTION: FclEx.slnx
   DOTNET_NOLOGO: 1
   MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
   NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}

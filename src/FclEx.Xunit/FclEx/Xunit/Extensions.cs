@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Xunit;
 
-public static class Extensions
+public static partial class Extensions
 {
     public static ILoggerFactory AddXunitTest(this ILoggerFactory factory, ITestOutputHelper output, bool checkDisposed)
     {

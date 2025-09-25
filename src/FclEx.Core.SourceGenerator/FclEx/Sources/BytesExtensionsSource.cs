@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace FclEx.SourceGenerator.Sources;
+namespace FclEx.Sources;
 
 internal static class BytesExtensionsSource
 {

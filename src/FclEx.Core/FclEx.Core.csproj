@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FclEx.SourceGenerator\FclEx.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\FclEx.Core.SourceGenerator\FclEx.Core.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <Import Project="..\EmitGeneratedFiles.props" Condition=" '$(Configuration)' == 'Debug' AND $(GITHUB_ACTION) == '' AND '$(OS)' == 'Windows_NT' " />
