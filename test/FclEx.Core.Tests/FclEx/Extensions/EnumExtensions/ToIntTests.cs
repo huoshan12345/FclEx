@@ -32,7 +32,7 @@ public class ToIntTests
 
     private static void ToIntTest<T>() where T : struct, Enum, IConvertible
     {
-        var values = Enum.GetValues<T>();
+        var values = EnumHelper.GetValues<T>();
         foreach (var value in values)
         {
             var expected = value.ToInt32(null);
@@ -42,7 +42,7 @@ public class ToIntTests
 
     private static void ToLongTest<T>() where T : struct, Enum, IConvertible
     {
-        var values = Enum.GetValues<T>();
+        var values = EnumHelper.GetValues<T>();
         foreach (var value in values)
         {
             var expected = value.ToInt64(null);

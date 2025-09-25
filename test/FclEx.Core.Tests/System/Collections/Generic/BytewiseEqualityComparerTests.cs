@@ -83,8 +83,8 @@ public class BytewiseEqualityComparerTests(ITestOutputHelper output)
     [Fact]
     public void StringObject_Equals()
     {
-        var x = new string(nameof(StringObject_Equals));
-        var y = new string(nameof(StringObject_Equals));
+        var x = new string(nameof(StringObject_Equals).ToArray());
+        var y = new string(nameof(StringObject_Equals).ToArray());
         AssertBytewiseEqual(x, y);
         output.WriteLine(x);
     }

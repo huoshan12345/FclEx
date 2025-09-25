@@ -9,8 +9,10 @@ public class UnsafeHelperTests(ITestOutputHelper output)
         ..Types.BlittableTypes,
         typeof(DateTime), // non-blittable
         typeof(DateTimeOffset), // non-blittable
+#if NET5_0_OR_GREATER
         typeof(DateOnly), // blittable
         typeof(TimeOnly), // blittable
+#endif
         typeof(ValueTuple<int>), // non-blittable
         typeof(ValueTuple<DateTimeOffset, int, DateTime>), // non-blittable
     ];

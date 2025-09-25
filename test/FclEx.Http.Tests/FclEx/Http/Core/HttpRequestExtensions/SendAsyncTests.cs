@@ -1,9 +1,6 @@
-﻿using System.Net.NetworkInformation;
-using System.Web;
+﻿namespace FclEx.Http.Core.HttpRequestExtensions;
 
-namespace FclEx.Http.Core.HttpRequestExtensions;
-
-public class SendAsyncTests(ITestOutputHelper output) : HttpServerTests
+public class SendAsyncTests : HttpServerTests
 {
     public static string[] Urls =>
     [
@@ -46,11 +43,6 @@ public class SendAsyncTests(ITestOutputHelper output) : HttpServerTests
     {
         if (ipv6 && _supportsIPv6 == false)
             return;
-
-        using var x = output.SetConsole();
-
-        // Keep the listener around while you want the logging to continue, dispose it after.
-        using var listener = new HttpEventListener(output);
 
         using var http = HttpClientService.Create(m =>
         {

@@ -1,13 +1,17 @@
 ﻿namespace FclEx.Utils;
 
-public record ProcessCommand(
-    string CommandText,
-    string? WorkingDirectory = null,
-    bool StripCarriageReturn = true,
-    Encoding? OutputEncoding = null,
-    Encoding? ErrorEncoding = null,
-    bool IgnoreNonZeroExitCode = false,
-    CancellationToken CancellationToken = default)
+public class ProcessCommand(Process process, string commandText, bool stripCarriageReturn = true)
 {
-    public static implicit operator ProcessCommand(string commandText) => new(commandText);
+    public Process Process { get; } = process;
+
+    public string CommandText { get; } = stripCarriageReturn
+        ? commandText.Replace("\r", "")
+        : commandText;
+
+    public async Task<string> ExecuteAsync(CancellationToken cancellationToken = default)
+    {
+        await Process.StandardInput.WriteLineAsync(CommandText);
+        await Process.StandardInput.FlushAsync(cancellationToken);
+        return await Process.StandardOutput.ReadToEndAsync(cancellationToken);
+    }
 }

@@ -1,4 +1,4 @@
-﻿namespace FclEx.Xunit.Sources;
+﻿namespace FclEx.Sources.Xunit;
 
 internal class ExtensionsSource
 {
@@ -18,7 +18,7 @@ internal class ExtensionsSource
             .WriteOpeningBracket();
 
         // Class declaration
-        builder.WriteLine($"partial class {className}")
+        builder.WriteLine($"public partial class {className}")
             .WriteOpeningBracket();
 
         /*

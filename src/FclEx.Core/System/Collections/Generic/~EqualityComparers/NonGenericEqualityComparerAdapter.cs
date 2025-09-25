@@ -1,15 +1,15 @@
 ﻿namespace System.Collections.Generic;
 
-public class UntypedEqualityComparer
+public class NonGenericEqualityComparerAdapter
 {
-    public static UntypedEqualityComparer<T> Create<T>(IEqualityComparer<T> comparer) => new(comparer);
+    public static NonGenericEqualityComparerAdapter<T> Create<T>(IEqualityComparer<T> comparer) => new(comparer);
 }
 
-public class UntypedEqualityComparer<T> : IEqualityComparer
+public class NonGenericEqualityComparerAdapter<T> : IEqualityComparer, IEqualityComparer<object>
 {
     private readonly IEqualityComparer<T> _comparer;
 
-    public UntypedEqualityComparer(IEqualityComparer<T> comparer)
+    public NonGenericEqualityComparerAdapter(IEqualityComparer<T> comparer)
     {
         _comparer = comparer;
     }
@@ -26,3 +26,4 @@ public class UntypedEqualityComparer<T> : IEqualityComparer
         return _comparer.GetHashCode(obj.CastTo<T>());
     }
 }
+

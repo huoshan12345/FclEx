@@ -5,7 +5,7 @@ public class LogEventMutateSinkTests
     private static readonly Mock<ILogEventSink> _sink = new();
     private static readonly LogEventMutateSink Adapter = new(_sink.Object, null);
 
-    public static readonly IEnumerable<object[]> Levels = Enum.GetValues<LogEventLevel>()
+    public static readonly IEnumerable<object[]> Levels = EnumHelper.GetValues<LogEventLevel>()
         .Select(m => new object[] { m });
 
     [Theory]

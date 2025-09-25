@@ -17,8 +17,13 @@ Remove-Item $snupkgPath
 $verPath = ([io.path]::combine($buildDir, "pkg.version"))
 $ver = Get-Content -Path $verPath
 $key = $Env:NUGET_APIKEY
-$myget = "https://www.myget.org/F/huoshan12345/api/v2/package"
-$nuget = "https://api.nuget.org/v3/index.json"
+$source = "https://api.nuget.org/v3/index.json"
+
+$useMyget = $false
+if ($useMyget) {
+  $key = $Env:MYGET_APIKEY
+  $source = "https://www.myget.org/F/huoshan12345/api/v2/package"
+}
 
 if ([string]::IsNullOrEmpty($key)) {
   throw "the api key is empty"
@@ -54,7 +59,7 @@ if ($isGithub) {
     Write-Output "Uploading $($file.Basename)"
 
     # Push the .nupkg to NuGet.org (we will detect the .snupkg and push it for you)
-    & dotnet nuget push $file -k $key --source $nuget -t 50 --skip-duplicate
+    & dotnet nuget push $file -k $key --source $source -t 50 --skip-duplicate
     if ($Lastexitcode -ne 0) {
       throw "failed with exit code $LastExitCode"
     }

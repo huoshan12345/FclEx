@@ -2,7 +2,7 @@
 
 namespace FclEx.DependencyInjection;
 
-public static class ServiceCollectionExtensions
+public static partial class ServiceCollectionExtensions
 {
     public static IServiceCollection Add<T, TImpl>(this IServiceCollection services, ServiceLifetime lifetime)
         where T : class where TImpl : class, T
@@ -20,17 +20,49 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddSingletonBy<T, TDependency>(this IServiceCollection col, Func<TDependency, T> func) where TDependency : notnull
+    public static IServiceCollection AddSingletonBy<T, TDependency>(this IServiceCollection services, Func<TDependency, T> func) 
+        where TDependency : notnull
         where T : class
     {
-        return col.AddSingleton(s => func(s.GetRequiredService<TDependency>()));
+        return services.AddSingleton(s => func(s.GetRequiredService<TDependency>()));
     }
 
-    public static IServiceCollection TryAddSingletonBy<T, TDependency>(this IServiceCollection col, Func<TDependency, T> func) where TDependency : notnull
+    public static IServiceCollection TryAddSingletonBy<T, TDependency>(this IServiceCollection services, Func<TDependency, T> func) 
+        where TDependency : notnull
         where T : class
     {
-        col.TryAddSingleton(s => func(s.GetRequiredService<TDependency>()));
-        return col;
+        services.TryAddSingleton(s => func(s.GetRequiredService<TDependency>()));
+        return services;
+    }
+
+    public static IServiceCollection AddScopedBy<T, TDependency>(this IServiceCollection services, Func<TDependency, T> func)
+        where TDependency : notnull
+        where T : class
+    {
+        return services.AddScoped(s => func(s.GetRequiredService<TDependency>()));
+    }
+
+    public static IServiceCollection TryAddScopedBy<T, TDependency>(this IServiceCollection services, Func<TDependency, T> func)
+        where TDependency : notnull
+        where T : class
+    {
+        services.TryAddScoped(s => func(s.GetRequiredService<TDependency>()));
+        return services;
+    }
+
+    public static IServiceCollection AddTransientBy<T, TDependency>(this IServiceCollection services, Func<TDependency, T> func)
+        where TDependency : notnull
+        where T : class
+    {
+        return services.AddTransient(s => func(s.GetRequiredService<TDependency>()));
+    }
+
+    public static IServiceCollection TryAddTransientBy<T, TDependency>(this IServiceCollection services, Func<TDependency, T> func)
+        where TDependency : notnull
+        where T : class
+    {
+        services.TryAddTransient(s => func(s.GetRequiredService<TDependency>()));
+        return services;
     }
 
     public static IServiceCollection Replace<TService>(this IServiceCollection services, TService implementationInstance)

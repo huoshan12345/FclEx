@@ -24,4 +24,9 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 8.0))">
+    <Compile Remove="FclEx\Extensions\InterfaceBaseInvocationExtension\*.cs" />
+    <Compile Remove="FclEx\Utils\NameIdentifierTests.cs" />
+  </ItemGroup>
+
 </Project>

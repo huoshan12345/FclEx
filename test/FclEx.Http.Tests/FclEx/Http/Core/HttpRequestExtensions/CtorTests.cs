@@ -1,4 +1,8 @@
-﻿namespace FclEx.Http.Core.HttpRequestExtensions;
+﻿#if !NET5_0_OR_GREATER
+using System.Net.Http;
+#endif
+
+namespace FclEx.Http.Core.HttpRequestExtensions;
 
 public class CtorTests
 {
@@ -25,7 +29,7 @@ public class CtorTests
     [MemberData(nameof(CtorCases))]
     public void TestCtor(string url, HttpMethod method)
     {
-        var request = HttpRequest.Create(url, method);
+        var request = new HttpRequest(new Uri(url), method);
         request.Host("localhost");
         var realUrl = request.GetUri();
     }
@@ -33,7 +37,7 @@ public class CtorTests
     [Fact]
     public void Ctor_WithUserInfo()
     {
-        var request = HttpRequest.Get("http://tom:tom123@localhost/api/save");
+        var request = new HttpRequest(new Uri("http://tom:tom123@localhost/api/save"), HttpMethod.Get);
         Assert.Equal("tom", request.UserName);
         Assert.Equal("tom123", request.Password);
 

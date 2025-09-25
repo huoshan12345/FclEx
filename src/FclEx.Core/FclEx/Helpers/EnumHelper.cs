@@ -13,7 +13,11 @@ public static class EnumHelper
 
     public static T[] GetValues<T>() where T : struct, Enum
     {
+#if NET5_0_OR_GREATER
+        return Enum.GetValues<T>();
+#else
         return (T[])Enum.GetValues(typeof(T));
+#endif
     }
 
     public static bool TryParse<TEnum>([NotNullWhen(true)] string? value, bool ignoreCase, bool fromNumeric, out TEnum result) where TEnum : struct, Enum
