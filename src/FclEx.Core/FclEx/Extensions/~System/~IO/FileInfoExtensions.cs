@@ -4,11 +4,29 @@ namespace FclEx.Extensions;
 
 public static class FileInfoExtensions
 {
-    public static (string Name, string Ext) GetFileNameAndExtension(this FileInfo file)
+    private const FileConflictOptions ResolutionStrategies = Cancel | ThrowOnConflict | Overwrite | AutoRename;
+
+    /// <summary>
+    /// Gets the base name and extension of the specified file.
+    /// </summary>
+    /// <param name="file">The file to extract the name and extension from.</param>
+    /// <returns>
+    /// A tuple where <c>Name</c> is the file name without extension,
+    /// and <c>Ext</c> is the extension (including the leading dot).
+    /// </returns>
+    public static (string Name, string Ext) GetNameAndExtension(this FileInfo file)
     {
-        return PathHelper.GetFileNameAndExtension(file.Name);
+        return PathHelper.GetNameAndExtension(file.Name);
     }
 
+    /// <summary>
+    /// Asynchronously copies the file to the specified destination.
+    /// Skips the operation if the source and destination are the same file
+    /// or if the destination already exists with identical content.
+    /// </summary>
+    /// <param name="file">The source file.</param>
+    /// <param name="dest">The destination file.</param>
+    /// <param name="bufferSize">The buffer size in bytes to use during the copy. Default is 4 KB.</param>
     public static async Task CopyToAsync(this FileInfo file, FileInfo dest, int bufferSize = 4 * 1024)
     {
         Check.NotNull(file);
@@ -34,6 +52,12 @@ public static class FileInfoExtensions
         await source.CopyToAsync(destination);
     }
 
+    /// <summary>
+    /// Asynchronously copies the file into the specified directory.
+    /// </summary>
+    /// <param name="file">The source file.</param>
+    /// <param name="dir">The destination directory.</param>
+    /// <param name="bufferSize">The buffer size in bytes to use during the copy. Default is 4 KB.</param>
     public static Task CopyToAsync(this FileInfo file, DirectoryInfo dir, int bufferSize = 4 * 1024)
     {
         Check.NotNull(file);
@@ -43,6 +67,13 @@ public static class FileInfoExtensions
         return file.CopyToAsync(dest, bufferSize);
     }
 
+    /// <summary>
+    /// Asynchronously copies the file to the specified destination with conflict resolution options.
+    /// </summary>
+    /// <param name="file">The source file.</param>
+    /// <param name="dest">The destination file.</param>
+    /// <param name="options">Specifies how to handle conflicts when the destination already exists.</param>
+    /// <param name="bufferSize">The buffer size in bytes to use during the copy. Default is 4 KB.</param>
     public static async Task CopyToAsync(this FileInfo file, FileInfo dest, FileConflictOptions options, int bufferSize = 4096)
     {
         Check.NotNull(file);
@@ -63,30 +94,42 @@ public static class FileInfoExtensions
             return;
         }
 
-        var option = options & ~DeleteOnSame; // remove flag
+        if (options.HasFlag(IgnoreConflictIfDuplicate))
+        {
+            if (dest.Exists && FileHelper.AreFilesEqual(file, dest))
+            {
+                return;
+            }
+        }
 
-        // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
-        switch (option)
+        // switch on the pure resolution strategy
+        // ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
+        switch (options & ResolutionStrategies)
         {
             case Cancel: return;
-            case Throw: throw new InvalidOperationException("File already exists: " + dest.FullName);
+            case ThrowOnConflict: throw new InvalidOperationException("File already exists: " + dest.FullName);
             case Overwrite:
             {
                 await CopyToAsync(file, dest, bufferSize);
                 return;
             }
-            case FileConflictOptions.Rename:
+            case AutoRename:
             {
                 var newName = FileHelper.GetNextFileName(dest.Name);
                 var newDest = new FileInfo(Path.Combine(dest.DirectoryName!, newName));
                 await file.CopyToAsync(newDest, options, bufferSize);
                 return;
             }
-            default:
-                throw new ArgumentOutOfRangeException(nameof(option), option, null);
         }
     }
 
+    /// <summary>
+    /// Asynchronously copies the file into the specified directory with conflict resolution options.
+    /// </summary>
+    /// <param name="file">The source file.</param>
+    /// <param name="dir">The destination directory.</param>
+    /// <param name="options">Specifies how to handle conflicts when the file already exists in the directory.</param>
+    /// <param name="bufferSize">The buffer size in bytes to use during the copy. Default is 4 KB.</param>
     public static Task CopyToAsync(this FileInfo file, DirectoryInfo dir, FileConflictOptions options, int bufferSize = 4096)
     {
         Check.NotNull(file);
@@ -104,6 +147,13 @@ public static class FileInfoExtensions
         types: [typeof(string), typeof(bool)], 
         modifiers: null);
 
+    /// <summary>
+    /// Moves the file to a new location, optionally overwriting the target file.
+    /// This overload exists for .NET Standard 2.0 compatibility.
+    /// </summary>
+    /// <param name="file">The source file.</param>
+    /// <param name="destFileName">The full path of the destination file.</param>
+    /// <param name="overwrite">Whether to overwrite the file if it already exists.</param>
     public static void MoveTo(this FileInfo file, string destFileName, bool overwrite)
     {
         if (_methodMoveTo is {} method)
@@ -124,6 +174,12 @@ public static class FileInfoExtensions
     }
 #endif
 
+    /// <summary>
+    /// Moves the file to the specified destination with conflict resolution options.
+    /// </summary>
+    /// <param name="file">The source file.</param>
+    /// <param name="dest">The destination file.</param>
+    /// <param name="options">Specifies how to handle conflicts. Default is <see cref="FileConflictOptions.Default"/>.</param>
     public static void MoveTo(this FileInfo file, FileInfo dest, FileConflictOptions options = Default)
     {
         Check.NotNull(file);
@@ -145,7 +201,7 @@ public static class FileInfoExtensions
             return;
         }
 
-        if (options.HasFlag(DeleteOnSame))
+        if (options.HasFlag(IgnoreConflictIfDuplicate))
         {
             if (dest.Exists && FileHelper.AreFilesEqual(file, dest))
             {
@@ -154,30 +210,33 @@ public static class FileInfoExtensions
             }
         }
 
-        var option = options & ~DeleteOnSame; // remove flag
-
-        // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
-        switch (option)
+        // switch on the pure resolution strategy
+        // ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
+        switch (options & ResolutionStrategies)
         {
             case Cancel: return;
-            case Throw: throw new InvalidOperationException("File already exists: " + dest.FullName);
+            case ThrowOnConflict: throw new InvalidOperationException("File already exists: " + dest.FullName);
             case Overwrite:
             {
                 file.MoveTo(dest.FullName, true);
                 return;
             }
-            case FileConflictOptions.Rename:
+            case AutoRename:
             {
                 var newName = FileHelper.GetNextFileName(dest.Name);
                 var newDest = new FileInfo(Path.Combine(dest.DirectoryName!, newName));
                 file.MoveTo(newDest, options);
                 return;
             }
-            default:
-                throw new ArgumentOutOfRangeException(nameof(option), option, null);
         }
     }
 
+    /// <summary>
+    /// Moves the file into the specified directory with conflict resolution options.
+    /// </summary>
+    /// <param name="file">The source file.</param>
+    /// <param name="dir">The destination directory.</param>
+    /// <param name="options">Specifies how to handle conflicts. Default is <see cref="FileConflictOptions.Default"/>.</param>
     public static void MoveTo(this FileInfo file, DirectoryInfo dir, FileConflictOptions options = Default)
     {
         Check.NotNull(file);
@@ -187,6 +246,14 @@ public static class FileInfoExtensions
         file.MoveTo(dest, options);
     }
 
+    /// <summary>
+    /// Moves the file to a new directory and/or renames it.
+    /// </summary>
+    /// <param name="file">The source file.</param>
+    /// <param name="dir">The destination directory, or <c>null</c> to use the file’s current directory.</param>
+    /// <param name="name">The new file name.</param>
+    /// <param name="appendExt">Whether to append the original extension to the new name.</param>
+    /// <param name="options">Specifies how to handle conflicts. Default is <see cref="FileConflictOptions.Default"/>.</param>
     public static void MoveTo(this FileInfo file, DirectoryInfo? dir, string name, bool appendExt = false, FileConflictOptions options = Default)
     {
         Check.NotNull(file);
@@ -205,6 +272,13 @@ public static class FileInfoExtensions
         file.MoveTo(dest, options);
     }
 
+    /// <summary>
+    /// Renames the file within its current directory.
+    /// </summary>
+    /// <param name="file">The source file.</param>
+    /// <param name="name">The new file name.</param>
+    /// <param name="appendExt">Whether to append the original extension to the new name.</param>
+    /// <param name="options">Specifies how to handle conflicts. Default is <see cref="FileConflictOptions.Default"/>.</param>
     public static void Rename(this FileInfo file, string name, bool appendExt = false, FileConflictOptions options = Default)
     {
         file.MoveTo(null, name, appendExt, options);
