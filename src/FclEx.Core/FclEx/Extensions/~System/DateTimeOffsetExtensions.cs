@@ -18,4 +18,9 @@ public static class DateTimeOffsetExtensions
     {
         return time.ToOffset(CnTimeZone.BaseUtcOffset);
     }
+
+    public static TimeSpan Duration(this DateTimeOffset time, DateTimeOffset other)
+    {
+        return (time - other).Duration();
+    }
 }
