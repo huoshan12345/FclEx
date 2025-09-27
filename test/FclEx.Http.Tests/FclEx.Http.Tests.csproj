@@ -11,6 +11,14 @@
     <ProjectReference Include="..\FclEx.Core.Tests\FclEx.Core.Tests.csproj" />
   </ItemGroup>
 
+  <ItemGroup Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 5.0))">
+    <Reference Include="System.Web" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), 8.0))">
+    <ProjectReference Include="..\..\src\FclEx.AspNetCore\FclEx.AspNetCore.csproj" />
+  </ItemGroup>
+
   <ItemGroup>
     <None Update="TestData\SimpleCookies.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

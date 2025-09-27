@@ -1,9 +1,11 @@
-﻿namespace FclEx.Logging.Extensions;
+﻿using FclEx.Helpers;
+
+namespace FclEx.Logging.Extensions;
 
 public class LoggerFactoryExtensionsTests
 {
     public static IEnumerable<object[]> LogLevelCases { get; } =
-        Enum.GetValues<LogLevel>().Select(m => new object[] { m });
+        EnumHelper.GetValues<LogLevel>().Select(m => new object[] { m });
 
     [LocalOnlyTheory]
     [MemberData(nameof(LogLevelCases))]

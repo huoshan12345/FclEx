@@ -23,8 +23,11 @@ public class LogstashSinkTests(ITestOutputHelper output)
             // logger.Information("test message: " + i + "\n");
             logger.Error(new SimpleException("Error"), "test message: " + i);
         }
-
-        await Log.CloseAndFlushAsync();
+#if NET5_0_OR_GREATER
+        await Log.CloseAndFlushAsync();   
+#else
+        Log.CloseAndFlush();
+#endif
         await Task.Delay(TimeSpan.FromSeconds(1));
     }
 }

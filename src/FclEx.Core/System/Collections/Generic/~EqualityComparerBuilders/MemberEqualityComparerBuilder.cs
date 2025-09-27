@@ -21,7 +21,7 @@ public class MemberEqualityComparerBuilder<T> : IEqualityComparerBuilder<T>
     {
         IEqualityComparer comparer = memberComparer == null
             ? EqualityComparer<TMember>.Default
-            : UntypedEqualityComparer.Create(memberComparer);
+            : NonGenericEqualityComparerAdapter.Create(memberComparer);
 
         var prop = new EqualityMember(m => selector(m), comparer);
         _members.Add(prop);

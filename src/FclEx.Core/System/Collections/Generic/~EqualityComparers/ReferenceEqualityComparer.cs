@@ -5,7 +5,7 @@
 /// ignoring any <see cref="IEquatable{T}"/> or <see cref="object.Equals(object)"/>  overrides. <br/>
 /// see details via https://stackoverflow.com/questions/1890058/iequalitycomparert-that-uses-referenceequals
 /// </summary>
-public sealed class ReferenceEqualityComparer<T> : IEqualityComparer<T>
+public class ReferenceEqualityComparer<T> : IEqualityComparer<T>
 {
     public static readonly ReferenceEqualityComparer<T> Instance = new();
 
@@ -28,3 +28,7 @@ public sealed class ReferenceEqualityComparer<T> : IEqualityComparer<T>
         return RuntimeHelpers.GetHashCode(obj);
     }
 }
+
+#if !NET5_0_OR_GREATER
+public class ReferenceEqualityComparer : ReferenceEqualityComparer<object>;
+#endif

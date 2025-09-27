@@ -1,8 +1,4 @@
-﻿#if NETSTANDARD2_0
-using SocketsHttpHandler = System.Net.Http.StandardSocketsHttpHandler;
-#endif
-
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 public delegate void OnHttpFailedCode(HttpResponseMessage response, string content);
 
