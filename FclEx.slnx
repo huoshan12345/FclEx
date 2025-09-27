@@ -49,6 +49,7 @@
     <Project Path="test/FclEx.Messaging.Tests/FclEx.Messaging.Tests.csproj" />
     <Project Path="test/FclEx.NewtonsoftJson.Tests/FclEx.NewtonsoftJson.Tests.csproj" />
     <Project Path="test/FclEx.Serilog.Tests/FclEx.Serilog.Tests.csproj" />
+    <Project Path="test/FclEx.Xunit.Tests/FclEx.Xunit.Tests.csproj" Id="4bbcec3b-77e7-4b78-9783-9ef7241f3192" />
     <Project Path="test/FclEx.YamlDotNet.Tests/FclEx.YamlDotNet.Tests.csproj" />
   </Folder>
 </Solution>

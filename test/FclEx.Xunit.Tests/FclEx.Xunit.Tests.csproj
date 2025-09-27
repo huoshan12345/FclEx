@@ -1,15 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\FclEx.AspNetCore\FclEx.AspNetCore.csproj" />
+    <ProjectReference Include="..\..\src\FclEx.Xunit\FclEx.Xunit.csproj" />
     <ProjectReference Include="..\FclEx.Core.Tests\FclEx.Core.Tests.csproj" />
   </ItemGroup>
 

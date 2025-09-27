@@ -1,4 +1,6 @@
-﻿namespace FclEx.Http.Core.HttpRequestExtensions;
+﻿using System.Net.Http;
+
+namespace FclEx.Http.Core.HttpRequestExtensions;
 
 public class CtorTests
 {

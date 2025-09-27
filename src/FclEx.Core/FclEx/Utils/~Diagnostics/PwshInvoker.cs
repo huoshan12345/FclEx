@@ -1,12 +1,12 @@
 ﻿namespace FclEx.Utils;
 
-public class PwshRunner : PowerShellRunner
+public class PwshInvoker : PowerShellInvoker
 {    /// <summary>
     /// create custom pwsh process
     /// </summary>
     /// <param name="fileName"></param>
     /// <param name="argumentsConverter"></param>
-    public PwshRunner(string fileName, Func<string, string> argumentsConverter)
+    public PwshInvoker(string fileName, Func<string, string> argumentsConverter)
         : base(fileName, argumentsConverter)
     {
     }
@@ -14,9 +14,9 @@ public class PwshRunner : PowerShellRunner
     /// <summary>
     /// create default pwsh process.
     /// </summary>
-    public PwshRunner() : this("pwsh", text => $"-command \"{text}\"")
+    public PwshInvoker() : this("pwsh", text => $"-command \"{text}\"")
     {
     }
 
-    public new static readonly PwshRunner Instance = new("pwsh", text => $"-command \"{text}\"");
+    public new static readonly PwshInvoker Instance = new("pwsh", text => $"-command \"{text}\"");
 }
