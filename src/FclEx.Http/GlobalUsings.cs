@@ -46,6 +46,6 @@ global using Polly.Extensions.Http;
 global using Polly.Timeout;
 global using HttpClientResolver = System.Func<System.Net.Http.HttpClient>;
 global using SleepDurationProvider = System.Func<int, System.TimeSpan>;
-#if !NET5_0_OR_GREATER
+#if NETSTANDARD2_0
 global using SocketsHttpHandler = System.Net.Http.StandardSocketsHttpHandler;
 #endif

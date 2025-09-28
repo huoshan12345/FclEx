@@ -9,10 +9,7 @@ public class LoggerConfigurationExtensionsTests
     public async Task WrapAllSinks_Test()
     {
         var sink = new CollectingSink();
-#if NET5_0_OR_GREATER
-        await
-#endif
-        using var logger = new LoggerConfiguration()
+        await using var logger = new LoggerConfiguration()
             .WriteTo.Sink(sink)
             .WrapAllSinks(m => new LogEventMutateSink(m, null))
             .CreateLogger();

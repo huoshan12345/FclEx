@@ -41,7 +41,7 @@ public class TaskHelperTests
     [RetryFact]
     public async Task AwaitObject_ValueTask_Tests()
     {
-        var task = Task.CompletedTask.ToValueTask();
+        var task = ValueTask.CompletedTask;
         var result = await TaskHelper.AwaitObject(task);
         Assert.Null(result);
     }
@@ -49,7 +49,7 @@ public class TaskHelperTests
     [RetryFact]
     public async Task AwaitObject_ValueTaskOfInternalClass_Tests()
     {
-        var task = Task.FromResult(new InternalClass(1)).ToValueTask();
+        var task = ValueTask.FromResult(new InternalClass(1));
         var result = await TaskHelper.AwaitObject(task);
         Assert.True(result is InternalClass { Value: 1 });
     }

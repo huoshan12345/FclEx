@@ -2,7 +2,7 @@
 
 public static class StreamReaderExtensions
 {
-#if NETSTANDARD2_0
+#if !NET7_0_OR_GREATER
     private static readonly MethodInfo? _methodReadToEndAsync 
         = typeof(StreamWriter).GetMethod(nameof(StreamReader.ReadToEndAsync), 0, [typeof(CancellationToken)]);
 
