@@ -33,12 +33,7 @@ public class JsonFormatterTests
             }
         };
 
-        var exName = options.ExceptionName;
-
-#if NET5_0_OR_GREATER
-        await
-#endif
-        using var writer = new StringWriter();
+        await using var writer = new StringWriter();
         using var x = writer.SetConsole();
 
         try
@@ -65,10 +60,7 @@ public class JsonFormatterTests
                 MessageTemplate.Empty, []);
 
             var formatter = new JsonFormatter(options);
-#if NET5_0_OR_GREATER
-            await
-#endif
-            using var sw = new StringWriter();
+            await using var sw = new StringWriter();
 
             formatter.Format(logEvent, sw);
 

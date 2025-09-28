@@ -10,12 +10,8 @@ public class AsBytesTests
         var bits = value.GetBits();
         var bytes = bits.AsReadOnlySpan().AsBytes();
         var expectedBytes = bits.AsReadOnlySpan().ToBytes();
-
-#if NET5_0_OR_GREATER
         Assert.Equal(expectedBytes, bytes);
-#else
-        Assert.Equal(expectedBytes.ToArray(), bytes.ToArray());
-#endif
+
         var actual = new decimal(bytes.ToIntArray());
         Assert.Equal(value, actual);
     }
@@ -45,11 +41,7 @@ file static class Extensions
         for (var i = 0; i < length; i++)
         {
             var valueSpan = span[(i * size)..];
-#if NET5_0_OR_GREATER
             array[i] = BitConverter.ToInt32(valueSpan);
-#else
-            array[i] = BitConverter.ToInt32(valueSpan.ToArray(), 0);
-#endif
         }
         return array;
     }
