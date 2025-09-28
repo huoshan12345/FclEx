@@ -3,12 +3,12 @@
     <IsPackable>false</IsPackable>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <NoWarn>$(NoWarn);xUnit2013;xUnit1041;NU1901;NU1902;NU1903;NU1904</NoWarn>
-    <!--use net472 to test netstandard2.0 compatibility-->
-    <TargetFrameworks>net472;net8.0;net9.0</TargetFrameworks>
+    <NoWarn>$(NoWarn);xUnit2013;xUnit1041;NU1901;NU1902;NU1903;NU1904;NU1701</NoWarn>
+    <TargetFrameworks>net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <TargetFrameworkVersion>$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
+    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
     <SuppressTfmSupportBuildErrors>true</SuppressTfmSupportBuildErrors>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>

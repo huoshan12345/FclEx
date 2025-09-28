@@ -3,7 +3,7 @@
 // ReSharper disable once UnusedMember.Global
 public static class StreamWriterExtensions
 {
-#if NETSTANDARD2_0
+#if !NET8_0_OR_GREATER
     private static readonly MethodInfo? _methodFlushAsync = typeof(StreamWriter).GetMethod(nameof(StreamWriter.FlushAsync), 0, [typeof(CancellationToken)]);
 
     /// <summary>
