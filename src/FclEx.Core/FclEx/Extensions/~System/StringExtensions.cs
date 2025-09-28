@@ -169,4 +169,22 @@ partial class StringExtensions
             yield return en.GetTextElement();
         }
     }
+
+    /// <summary>
+    /// Converts all line endings in the string to LF ("\n").
+    /// Treats "\r", "\r\n", and "\n" as newlines.
+    /// </summary>
+    public static string LineEndingToLf(this string text)
+    {
+        return RegexReplacer.LineEndingToLf.Replace(text);
+    }
+
+    /// <summary>
+    /// Converts all line endings in the string to CRLF ("\r\n").
+    /// Treats "\r", "\r\n", and "\n" as newlines.
+    /// </summary>
+    public static string LineEndingToCrLf(this string text)
+    {
+        return RegexReplacer.LineEndingToCrLf.Replace(text);
+    }
 }

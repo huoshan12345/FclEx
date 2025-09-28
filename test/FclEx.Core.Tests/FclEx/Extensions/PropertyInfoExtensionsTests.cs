@@ -10,10 +10,12 @@ public class PropertyInfoExtensionsTests
         public static string StaticProperty { get; set; } = "StaticValue";
 
         public string GetterOnly { get; } = "ReadOnly";
-        // extern is used to only declare the setter without getter.
-#pragma warning disable CS0626
-        public extern string SetterOnly { set; }
-#pragma warning restore CS0626
+
+        private string? _setterOnly;
+        public string SetterOnly
+        {
+            set => _setterOnly = value;
+        }
     }
 
     [Fact]

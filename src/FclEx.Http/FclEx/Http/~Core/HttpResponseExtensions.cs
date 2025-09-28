@@ -61,13 +61,15 @@ public static class HttpResponseExtensions
     private static readonly Regex _regexOfNonWord = new(@"\W", RegexOptions.Compiled);
     public static HttpFileDownloadInfo GetDownloadInfo(this HttpResponse response)
     {
-        var realUrl = response.RedirectUris.Last();
-        var fileNameWithExt = Path.GetFileName(realUrl.LocalPath);
-        var ext = Path.GetExtension(fileNameWithExt);
-        var fileName = fileNameWithExt.TrimEnd(ext);
-        if (fileName.IsNullOrEmpty())
+        var uri = response.RedirectUris.Last();
+        var fileName = uri.Segments
+            .Select(m => m.Trim('/'))
+            .LastOrDefault(m => m.IsNotEmpty());
+        var ext = Path.GetExtension(fileName);
+        var fileBaseName = fileName.TrimEnd(ext);
+        if (fileBaseName.IsNullOrEmpty())
         {
-            fileName = (realUrl.Host + realUrl.LocalPath).Replace(_regexOfNonWord, "_").TrimEnd("_");
+            fileBaseName = uri.Host.Replace(_regexOfNonWord, "_").TrimEnd("_");
         }
 
         var mimeType = response.Headers.GetLast(HttpHeaderNames.ContentType) ?? "";
@@ -83,7 +85,7 @@ public static class HttpResponseExtensions
         }
 
         ext ??= string.Empty;
-        var info = new HttpFileDownloadInfo(realUrl, fileName, ext, response.ResponseBytes, mimeType);
+        var info = new HttpFileDownloadInfo(uri, fileBaseName, ext, response.ResponseBytes, mimeType);
         return info;
     }
 
