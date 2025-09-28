@@ -34,6 +34,6 @@ public class NewRelicSinkTests
     {
         var template = new MessageTemplate([new TextToken("message_" + number)]);
         var props = Enumerable.Range(1, 3).Select(m => new LogEventProperty("prop" + m, new ScalarValue("value" + m)));
-        return new LogEvent(RandomHelper.Shared.NextDateTime(), LogEventLevel.Information, null, template, props);
+        return new LogEvent(Random.Shared.NextDateTime(), LogEventLevel.Information, null, template, props);
     }
 }
