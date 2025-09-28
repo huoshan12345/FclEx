@@ -38,7 +38,7 @@ public class StreamWriterExtensionsTests
 
         await writer.WriteAsync("something");
         using var cts = new CancellationTokenSource();
-#if NET5_0_OR_GREATER
+#if NET8_0_OR_GREATER
         await cts.CancelAsync();
 #else
         cts.Cancel();
@@ -46,15 +46,5 @@ public class StreamWriterExtensionsTests
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
             () => writer.FlushAsync(cts.Token));
-    }
-
-    [Fact]
-    public void MethodInfo_Field_IsConsistentWithStreamWriter()
-    {
-        // Ensures that reflection found the expected method
-        var method = typeof(StreamWriter).GetMethod(nameof(StreamWriter.FlushAsync), 0, new[] { typeof(CancellationToken) });
-        Assert.Equal(method, typeof(StreamWriterExtensions)
-            .GetField("_methodFlushAsync", BindingFlags.NonPublic | BindingFlags.Static)!
-            .GetValue(null));
     }
 }

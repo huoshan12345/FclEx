@@ -14,7 +14,7 @@ public class GlobalFixture : IAsyncLifetime
         var builder = new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", false, false)
-            .AddEnvironmentVariables("FclEx_");
+            .AddEnvironmentVariables("FclEx__");
 
         if (TestHelper.IsGithubAction)
         {

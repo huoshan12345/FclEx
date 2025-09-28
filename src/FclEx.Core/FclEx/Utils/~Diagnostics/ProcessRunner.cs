@@ -6,14 +6,12 @@ public class ProcessRunnerOptions
     public string WorkingDirectory { get; set; } = "";
 }
 
-public class ProcessRunner
+public class ProcessRunner : IDisposable
 {
-    private readonly ProcessRunnerOptions _options;
     public Process Process { get; }
 
     public ProcessRunner(ProcessRunnerOptions options)
     {
-        _options = options;
         Process = new Process
         {
             StartInfo = new ProcessStartInfo
@@ -32,5 +30,9 @@ public class ProcessRunner
         Process.Start();
     }
 
-
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        Process.Dispose();
+    }
 }
