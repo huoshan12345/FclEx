@@ -3,7 +3,7 @@ namespace FclEx.Serilog.Extensions;
 public class LoggerSinkConfigurationExtensionsTests
 {
     [LocalOnlyFact(Skip = "No license key")]
-    public void NewRelic_Test()
+    public async Task NewRelic_Test()
     {
         var logger = new LoggerConfiguration()
             .Enrich.FromLogContext()
@@ -12,7 +12,10 @@ public class LoggerSinkConfigurationExtensionsTests
 
         for (var i = 0; i < 10; i++)
         {
-            logger.Information(i + "_" + nameof(NewRelic_Test));
+            logger.Information(i + "_" + Random.Shared.NextString(40));
         }
+
+        await logger.DisposeAsync();
+        await Log.CloseAndFlushAsync();
     }
 }
