@@ -13,10 +13,8 @@ public class HttpContentTypeTests
         Assert.Empty(response.ResponseBytes);
         Assert.Empty(response.ResponseString);
         Assert.IsType<HttpResponseStream>(response.ResponseStream);
-#if NET5_0_OR_GREATER
-        await
-#endif
-        using var stream = response.ResponseStream;
+
+        await using var stream = response.ResponseStream;
         var reader = new StreamReader(stream);
         var text = await reader.ReadToEndAsync();
 

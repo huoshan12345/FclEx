@@ -1,8 +1,4 @@
-﻿#if !NET5_0_OR_GREATER
-using System.Net.Http;
-#endif
-
-namespace FclEx.Http.Core.HttpRequestExtensions;
+﻿namespace FclEx.Http.Core.HttpRequestExtensions;
 
 public class CtorTests
 {
