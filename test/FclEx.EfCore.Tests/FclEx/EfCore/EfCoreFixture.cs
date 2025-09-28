@@ -1,6 +1,7 @@
 ﻿using FclEx.Tests;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Configuration;
 
 namespace FclEx.EfCore;
 
@@ -22,6 +23,8 @@ public class EfCoreFixture : GlobalFixture
         "schema_1",
         "schema_2",
     ];
+
+    public static DatabaseConfig Postgres { get; } = Config.GetSection("Postgres").Get<DatabaseConfig>()!;
 
     public static readonly DbProviderType[] DatabaseTypes = TestHelper.IsGithubAction
         ? [DbProviderType.Npgsql, DbProviderType.Sqlite]
