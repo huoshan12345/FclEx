@@ -40,10 +40,12 @@ public class StreamReaderExtensionsTests
         using var cts = new CancellationTokenSource();
         cts.Cancel();
 
-        await Assert.ThrowsAsync<TaskCanceledException>(async () =>
-        {
-            await reader.ReadToEndAsync(cts.Token);
-        });
+#if NET7_0_OR_GREATER
+        await Assert.ThrowsAsync<TaskCanceledException>(async ()
+            => await reader.ReadToEndAsync(cts.Token));
+#else
+        await reader.ReadToEndAsync(cts.Token);
+#endif
     }
 
     [Fact]
@@ -55,9 +57,12 @@ public class StreamReaderExtensionsTests
         using var cts = new CancellationTokenSource();
         cts.Cancel();
 
-        await Assert.ThrowsAsync<TaskCanceledException>(async () =>
-        {
-            await reader.ReadLineAsync(cts.Token);
-        });
+#if NET7_0_OR_GREATER
+        await Assert.ThrowsAsync<TaskCanceledException>(async ()
+            => await reader.ReadLineAsync(cts.Token));
+#else
+        await reader.ReadLineAsync(cts.Token);
+#endif
+
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace FclEx.Extensions;
+﻿using System.Reflection.PortableExecutable;
+
+namespace FclEx.Extensions;
 
 [SuppressMessage("ReSharper", "UseAwaitUsing")]
 public class StreamWriterExtensionsTests
@@ -44,7 +46,13 @@ public class StreamWriterExtensionsTests
         cts.Cancel();
 #endif
 
+#if NET8_0_OR_GREATER
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
             () => writer.FlushAsync(cts.Token));
+#else
+        await writer.FlushAsync(cts.Token);
+#endif
+
+
     }
 }

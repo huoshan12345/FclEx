@@ -57,4 +57,9 @@ public static class ArrayExtensions
     }
 #endif
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T? FindLast<T>(this T[] array, Predicate<T> predicate)
+    {
+        return Array.FindLast(array, predicate);
+    }
 }

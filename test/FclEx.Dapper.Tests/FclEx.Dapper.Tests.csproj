@@ -3,11 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
-  </ItemGroup>
-
+  
   <ItemGroup>
     <ProjectReference Include="..\FclEx.EfCore.Tests\FclEx.EfCore.Tests.csproj" />
   </ItemGroup>
