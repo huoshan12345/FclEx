@@ -20,28 +20,15 @@ env:
   MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
   NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
   IS_PUSH_DEFAULT: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+  
+  FclEx__Postgres__PASSWORD:  ${{ secrets.TEST_POSTGRES_PASSWORD }}
+  FclEx__Rmq__PASSWORD:  ${{ secrets.TEST_RABBITMQ_PASSWORD }}
+  FclEx__Mysql_PASSWORD:  ${{ secrets.TEST_MYSQL_PASSWORD }}
+  FclEx__Redis_PASSWORD:  ${{ secrets.TEST_REDIS_PASSWORD }}
 
 jobs:
   build:
     runs-on: windows-latest
-    services:
-      rabbitmq:
-        image: heidiks/rabbitmq-delayed-message-exchange:4.0.2-management
-        env:
-          RABBITMQ_DEFAULT_USER: rmq
-          RABBITMQ_DEFAULT_PASS: 111111
-        ports:
-          - 5672:5672
-        options: >-
-          --health-cmd "rabbitmqctl node_health_check" --health-interval 10s --health-timeout 5s --health-retries 5
-      postgres:
-        image: postgres:13
-        env:
-          POSTGRES_PASSWORD: 111111
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - name: Get PR
         if: ${{ github.event_name == 'pull_request_target' }}
