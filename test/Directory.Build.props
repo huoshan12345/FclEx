@@ -3,7 +3,7 @@
     <IsPackable>false</IsPackable>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <NoWarn>$(NoWarn);xUnit2013;xUnit1041;NU1901;NU1902;NU1903;NU1904;NU1701</NoWarn>
+    <NoWarn>$(NoWarn);xUnit2013;xUnit1041;NU1901;NU1902;NU1903;NU1904</NoWarn>
     <TargetFrameworks>net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -30,6 +30,15 @@
       <_Parameter1>Meziantou.Xunit.ParallelTestFramework</_Parameter1>
       <_Parameter2>Meziantou.Xunit.ParallelTestFramework</_Parameter2>
     </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 8.0))">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="[17.13.0]" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="[3.0.2]" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), 8.0))">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>
