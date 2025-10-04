@@ -23,6 +23,17 @@ public class RegexReplacerTests
         Assert.Equal(expected, result);
     }
 
+
+    [Fact]
+    public void Replace_CRLF_TO_LF_Multiple_ShouldReplaceCarriageReturnLineFeed()
+    {
+        var replacer = RegexReplacer.CRLF_TO_LF;
+        var input = "Line 1\r\n\r\n\r\nLine 2\r\n\r\nLine 3";
+        var expected = "Line 1\n\n\nLine 2\n\nLine 3";
+        var result = replacer.Replace(input);
+        Assert.Equal(expected, result);
+    }
+
     [Fact]
     public void Replace_CustomPattern_ShouldReplaceUsingCustomPattern()
     {
