@@ -11,7 +11,7 @@
 public record RegexReplacer(Regex Regex, MatchEvaluator Evaluator)
 {
     public static readonly RegexReplacer LF_TO_CRLF = new("(?<!\r)\n", "\r\n");
-    public static readonly RegexReplacer CRLF_TO_LF = new("[\r\n]+", "\n");
+    public static readonly RegexReplacer CRLF_TO_LF = new("\r\n", "\n");
 
     public RegexReplacer(string pattern, string replacement, RegexOptions options = RegexOptions.Compiled)
         : this(new Regex(pattern, options), m => replacement) { }
