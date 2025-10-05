@@ -24,4 +24,11 @@ public class XunitSerializable<T> : IXunitSerializable
     {
         info.AddValue("_value", Value);
     }
+
+    public override string? ToString() => Value?.ToString();
+}
+
+public static class XunitSerializable
+{
+    public static XunitSerializable<T> Create<T>(T value) => new(value);
 }
