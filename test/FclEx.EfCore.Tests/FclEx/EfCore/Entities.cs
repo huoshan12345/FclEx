@@ -1,4 +1,6 @@
-﻿namespace FclEx.EfCore;
+﻿using System.Diagnostics;
+
+namespace FclEx.EfCore;
 
 public class EntityWithAutoKey
 {
@@ -84,10 +86,16 @@ public class EntityWithIndex : IHasId<int>
     public int Value { get; set; }
 }
 
+[DebuggerDisplay("{Id}, {Name}")]
 public class EntityHasStates : SoftDeletableEntity<long>
 {
     [Required]
     public string Name { get; set; } = "";
+
+    public override string ToString()
+    {
+        return $"EntityHasStates(Id = {Id}, Name = {Name})";
+    }
 }
 
 public class EntityWithNavigation : IHasId<long>

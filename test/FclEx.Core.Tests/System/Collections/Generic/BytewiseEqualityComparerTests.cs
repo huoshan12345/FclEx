@@ -34,7 +34,6 @@ public class BytewiseEqualityComparerTests(ITestOutputHelper output)
         var random = new Random(0);
         var x = random.Next<T>();
         AssertBytewiseEqual(x, x);
-        output.WriteLine(x);
     }
 
     [Fact]
@@ -44,7 +43,6 @@ public class BytewiseEqualityComparerTests(ITestOutputHelper output)
         var x = random.Next<CommonRecord>();
         var y = x with { }; // clone
         AssertBytewiseEqual(x, y);
-        output.WriteLine(x);
     }
 
     [Fact]
@@ -59,7 +57,6 @@ public class BytewiseEqualityComparerTests(ITestOutputHelper output)
             // so the object headers of x and y are different.
             AssertBytewiseEqual(x, y);
         }
-        output.WriteLine(x);
     }
 
     [Fact]
@@ -68,7 +65,6 @@ public class BytewiseEqualityComparerTests(ITestOutputHelper output)
         var x = new object();
         var y = new object();
         AssertBytewiseEqual(x, y);
-        output.WriteLine(x);
     }
 
     [Fact]
@@ -77,7 +73,6 @@ public class BytewiseEqualityComparerTests(ITestOutputHelper output)
         var x = nameof(StringLiteral_Equals);
         var y = nameof(StringLiteral_Equals);
         AssertBytewiseEqual(x, y);
-        output.WriteLine(x);
     }
 
     [Fact]
@@ -86,7 +81,6 @@ public class BytewiseEqualityComparerTests(ITestOutputHelper output)
         var x = new string(nameof(StringObject_Equals).ToArray());
         var y = new string(nameof(StringObject_Equals).ToArray());
         AssertBytewiseEqual(x, y);
-        output.WriteLine(x);
     }
 
     private static void AssertBytewiseEqual<T>(T expected, T actual)

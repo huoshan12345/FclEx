@@ -4,14 +4,8 @@ public static class ExpressionExtensions
 {
     public static Expression<Func<T, bool>> Or<T>(this Expression<Func<T, bool>>? left, Expression<Func<T, bool>>? right)
     {
-        if (left == null && right == null)
-            throw new ArgumentNullException($"{nameof(left)}, {nameof(right)} cannot be null at the same time");
-
-        if (left == null)
-            return right!;
-
-        if (right == null)
-            return left;
+        if (Check.TryGetSingleNonNull(left, right, out var result))
+            return result;
 
         var parameter = left.Parameters[0];
         var r = ExpressionReplacer.Replace(right.Body, right.Parameters[0], parameter);
@@ -22,14 +16,8 @@ public static class ExpressionExtensions
 
     public static Expression<Func<T, bool>> And<T>(this Expression<Func<T, bool>>? left, Expression<Func<T, bool>>? right)
     {
-        if (left == null && right == null)
-            throw new ArgumentNullException($"{nameof(left)}, {nameof(right)} cannot be null at the same time");
-
-        if (left == null)
-            return right!;
-
-        if (right == null) 
-            return left;
+        if (Check.TryGetSingleNonNull(left, right, out var result))
+            return result;
 
         var parameter = left.Parameters[0];
         var r = ExpressionReplacer.Replace(right.Body, right.Parameters[0], parameter);
@@ -38,12 +26,14 @@ public static class ExpressionExtensions
         return lambda;
     }
 
-    public static Expression<TDelegate> Lambda<TDelegate>(this Expression e, params ParameterExpression[] parameters) where TDelegate : Delegate
-        => Expression.Lambda<TDelegate>(e, parameters);
+    public static LambdaExpression Lambda(this Expression expression, params ParameterExpression[] parameters)
+        => Expression.Lambda(expression, parameters);
 
-    public static Expression Convert(this Expression e, Type type) => Expression.Convert(e, type);
+    public static Expression<TDelegate> Lambda<TDelegate>(this Expression expression, params ParameterExpression[] parameters)
+        where TDelegate : Delegate
+        => Expression.Lambda<TDelegate>(expression, parameters);
 
-    public static LambdaExpression Lambda(this Expression e, params ParameterExpression[] parameters) => Expression.Lambda(e, parameters);
+    public static Expression Convert(this Expression expression, Type type) => Expression.Convert(expression, type);
 
     public static IEnumerable<Expression> Enumerate(this BlockExpression block)
     {
@@ -70,5 +60,21 @@ public static class ExpressionExtensions
             ConstantExpression constant => constant.Value,
             _ => e.Convert(typeof(object)).Lambda<Func<object>>().Compile().Invoke()
         });
+    }
+
+    /// <summary>
+    /// Converts a strongly typed selector expression (<typeparamref name="TMember"/>) 
+    /// into an expression returning <see cref="object"/>.<br/>
+    /// This is useful when you need a generic property accessor without knowing the member type at compile time.
+    /// </summary>
+    /// <typeparam name="T">The source type.</typeparam>
+    /// <typeparam name="TMember">The member type of the selector.</typeparam>
+    /// <param name="selector">An expression selecting a member of <typeparamref name="T"/>.</param>
+    /// <returns>
+    /// An equivalent expression returning <see cref="object"/> instead of <typeparamref name="TMember"/>.
+    /// </returns>
+    public static Expression<Func<T, object?>> ToObjectSelector<T, TMember>(this Expression<Func<T, TMember>> selector)
+    {
+        return ExpressionHelper.ToObjectSelector(selector);
     }
 }
