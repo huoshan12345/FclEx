@@ -8,5 +8,5 @@
 /// This attribute is enabled by default for <see cref="JsonSerializerOptions"/> instances created by <see cref="JsonHelper"/>.<br/>
 /// To enable this behavior for custom <see cref="JsonSerializerOptions"/>, use the extension method <see cref="JsonSerializerOptionsExtensions.AddModifierForEmptyValue"/>.
 /// </remarks>
-[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Class)]
 public class JsonIgnoreEmptyAttribute : Attribute;

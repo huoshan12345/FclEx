@@ -12,7 +12,7 @@ public class BooleanJsonConverter : JsonConverter<bool>
             JsonTokenType.Null => false,
             JsonTokenType.True => true,
             JsonTokenType.False => false,
-            JsonTokenType.String => reader.GetString() switch
+            JsonTokenType.String => reader.GetString()?.ToLower() switch
             {
                 "true" => true,
                 "false" => false,
