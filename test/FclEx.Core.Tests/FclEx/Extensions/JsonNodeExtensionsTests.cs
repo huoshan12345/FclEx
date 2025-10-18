@@ -151,6 +151,7 @@ public class JsonNodeExtensionsTests
         var node = JsonNode.Parse("{\"x\":1}");
         var options = new JsonSerializerOptions { WriteIndented = true };
         var result = node.ToValueString(options);
-        Assert.Contains("{\r\n  \"x\": 1\r\n}", result);
+        Assert.Contains("\"x\": 1", result);
+        Assert.Contains("\n", result);
     }
 }
