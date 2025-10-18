@@ -1,6 +1,6 @@
 ﻿namespace FclEx.EfCore.Extensions;
 
-public class DbContextExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixture)
+public partial class DbContextExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {
     [Theory]
     [MemberData(nameof(DbTestCases))]

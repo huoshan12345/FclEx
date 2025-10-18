@@ -63,24 +63,24 @@ public static class JsonHelper
     /// </param>
     /// <remarks>
     /// This method iterates through the properties of the given <paramref name="typeInfo"/> and modifies their
-    /// <c>ShouldSerialize</c> delegate to exclude properties with empty enumerable values from serialization.
-    /// 
-    /// A property is ignored if:
-    /// 1. Its type implements <see cref="IEnumerable"/>.
-    /// 2. It is annotated with the <see cref="JsonIgnoreEmptyAttribute"/>.
-    /// 
-    /// This is determined using the <see cref="IAttributeProvider"/> of each property.
-    /// 
+    /// <c>ShouldSerialize</c> delegate to exclude properties with empty enumerable values from serialization.<br/>
+    /// <br/>
+    /// A property is ignored if:<br/>
+    /// 1. Its type implements <see cref="IEnumerable"/>.<br/>
+    /// 2. It is annotated with the <see cref="JsonIgnoreEmptyAttribute"/>.<br/>
+    /// <br/>
     /// Example:
     /// If a property is an empty list or collection, it will not be included in the JSON output if the
     /// <see cref="JsonIgnoreEmptyAttribute"/> is applied to it.
     /// </remarks>
     public static void IgnoreEmptyValue(JsonTypeInfo typeInfo)
     {
+        var ignore = typeInfo.Type.IsDefined<JsonIgnoreEmptyAttribute>(true);
         foreach (var property in typeInfo.Properties)
         {
             var type = property.PropertyType;
-            if (type.IsEnumerable() && property.AttributeProvider?.IsDefined<JsonIgnoreEmptyAttribute>(true) == true)
+            // string or collection
+            if (type.IsEnumerable() && (ignore || property.IsDefined<JsonIgnoreEmptyAttribute>(true)))
             {
                 property.ShouldSerialize = (_, val) => ((IEnumerable?)val).IsNullOrEmpty() == false;
             }
@@ -100,7 +100,7 @@ public static class JsonHelper
     /// 2. The member is annotated with the <see cref="JsonIncludeAttribute"/>.
     /// 
     /// The method retrieves the name of each static member, either from the <see cref="JsonPropertyNameAttribute"/> 
-    /// or by applying the <see cref="PropertyNamingPolicy"/>. It then creates a <see cref="JsonPropertyInfo"/> 
+    /// or by applying the <see cref="JsonSerializerOptions.PropertyNamingPolicy"/>. It then creates a <see cref="JsonPropertyInfo"/> 
     /// for each member, setting up a getter to return the value of the static member and an optional custom converter 
     /// if specified by the <see cref="JsonConverterAttribute"/>. 
     /// 

@@ -101,6 +101,21 @@ public static class StringBuilderExtensions
         return builder.AppendQuoted("(", valueAction, ")");
     }
 
+    /// <summary>
+    /// Appends the given value to the StringBuilder, enclosed in square brackets [value].
+    /// </summary>
+    /// <param name="builder">The StringBuilder to append to.</param>
+    /// <param name="value">The string value to enclose in brackets and append.</param>
+    /// <param name="escapeCharacter">
+    /// Optional. The character used to escape any single quotes or escape characters found in <paramref name="value"/>. 
+    /// Default is '\\'.
+    /// </param>
+    /// <returns>The same StringBuilder instance for chaining.</returns>
+    public static StringBuilder AppendSquareBracketed(this StringBuilder builder, string value, char escapeCharacter = '\\')
+    {
+        return builder.AppendQuoted('[', value, ']', escapeCharacter);
+    }
+
 #if NETSTANDARD2_0
     public static StringBuilder AppendJoin<T>(this StringBuilder builder, string? separator, IEnumerable<T> values)
     {

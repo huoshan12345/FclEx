@@ -25,4 +25,27 @@ public static class JsonNodeExtensions
         node[key] = newNode;
         return newNode;
     }
+
+
+    /// <summary>
+    /// Converts a <see cref="JsonNode"/> to its string representation.
+    /// </summary>
+    /// <param name="node">The JSON node to convert.</param>
+    /// <param name="options">Optional serializer options. If not provided, default options from <see cref="JsonHelper.GetOptions"/> are used.</param>
+    /// <returns>
+    /// A string representation of the node:<br/>
+    /// If <paramref name="node"/> is <c>null</c>, returns <c>null</c>.<br/>
+    /// If <paramref name="node"/> is a <see cref="JsonValue"/> containing a string, returns that string directly.<br/>
+    /// Otherwise, serializes the node to a JSON string using the provided or default options.
+    /// </returns>
+    public static string? ToValueString(this JsonNode? node, JsonSerializerOptions? options = null)
+    {
+        options ??= JsonHelper.GetOptions();
+        return node switch
+        {
+            null => null,
+            JsonValue value when value.TryGetValue<string>(out var str) => str,
+            _ => node.ToJsonString(options),
+        };
+    }
 }
