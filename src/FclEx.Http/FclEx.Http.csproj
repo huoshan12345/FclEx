@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="9.0.10" />
     <PackageReference Include="AngleSharp" Version="1.3.0" />
     <!--fix package version conflict brought by AngleSharp-->
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.9" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.10" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
