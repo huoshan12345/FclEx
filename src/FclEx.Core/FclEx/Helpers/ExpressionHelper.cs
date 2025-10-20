@@ -2,28 +2,28 @@
 
 public static class ExpressionHelper
 {
-    public static PropertyInfo GetProperty<TSource, TMember>(Expression<Func<TSource, TMember>> selector)
+    public static PropertyInfo GetProperty<T, TMember>(Expression<Func<T, TMember>> selector)
     {
         var member = GetMember(selector);
         if (member is PropertyInfo info) return info;
         throw new ArgumentException($"Expression '{selector}' does not refer to a property.");
     }
 
-    public static FieldInfo GetField<TSource, TMember>(Expression<Func<TSource, TMember>> selector)
+    public static FieldInfo GetField<T, TMember>(Expression<Func<T, TMember>> selector)
     {
         var member = GetMember(selector);
         if (member is FieldInfo info) return info;
         throw new ArgumentException($"Expression '{selector}' does not refer to a field.");
     }
 
-    public static MethodInfo GetMethod<TSource>(Expression<Action<TSource>> selector)
+    public static MethodInfo GetMethod<T>(Expression<Action<T>> selector)
     {
         var member = GetMember(selector);
         if (member is MethodInfo info) return info;
         throw new ArgumentException($"Expression '{selector}' does not refer to a method.");
     }
 
-    public static MethodInfo GetMethod<TSource, TMember>(Expression<Func<TSource, TMember>> selector)
+    public static MethodInfo GetMethod<T, TMember>(Expression<Func<T, TMember>> selector)
     {
         var member = GetMember(selector);
         if (member is MethodInfo info) return info;
@@ -62,7 +62,7 @@ public static class ExpressionHelper
         return member;
     }
 
-    public static MemberInfo GetMember<T>(Expression<Func<T, object>> selector)
+    public static MemberInfo GetMember<T>(Expression<Func<T, object?>> selector)
     {
         return GetMember(selector, typeof(T));
     }
@@ -101,17 +101,28 @@ public static class ExpressionHelper
         return o => member.GetValue(o).CastTo<TMember>();
     }
 
-    public static Expression<Func<T, object>> ErasureType<T, TProp>(Expression<Func<T, TProp>> selector)
+    /// <summary>
+    /// Converts a strongly typed selector expression (<typeparamref name="TMember"/>) 
+    /// into an expression returning <see cref="object"/>.<br/>
+    /// This is useful when you need a generic property accessor without knowing the member type at compile time.
+    /// </summary>
+    /// <typeparam name="T">The source type.</typeparam>
+    /// <typeparam name="TMember">The member type of the selector.</typeparam>
+    /// <param name="selector">An expression selecting a member of <typeparamref name="T"/>.</param>
+    /// <returns>
+    /// An equivalent expression returning <see cref="object"/> instead of <typeparamref name="TMember"/>.
+    /// </returns>
+    public static Expression<Func<T, object?>> ToObjectSelector<T, TMember>(Expression<Func<T, TMember>> selector)
     {
-        var type = typeof(TProp);
+        var type = typeof(TMember);
         if (type != typeof(object))
         {
             var e = Expression.Convert(selector.Body, typeof(object));
-            return Expression.Lambda<Func<T, object>>(e, selector.Parameters);
+            return Expression.Lambda<Func<T, object?>>(e, selector.Parameters);
         }
         else
         {
-            return Expression.Lambda<Func<T, object>>(selector.Body, selector.Parameters);
+            return Expression.Lambda<Func<T, object?>>(selector.Body, selector.Parameters);
         }
     }
 
@@ -125,10 +136,52 @@ public static class ExpressionHelper
             _ => throw new ArgumentException($"MemberInfo '{member.Name}' refers to neither a field nor a property.")
         };
     }
-    
+
     public static (string Name, TMember value) GetNamedValue<T, TMember>(T obj, Expression<Func<T, TMember>> selector)
     {
         var member = GetDataMemberInfo(selector);
         return (member.Name, member.GetValue(obj).CastTo<TMember>())!;
+    }
+    
+    /// <summary>
+    /// Creates a strongly-typed <see cref="Expression{TDelegate}"/> that selects
+    /// a property or field of the specified type <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of the object that contains the target property or field.
+    /// </typeparam>
+    /// <typeparam name="TMember">
+    /// The type of the property or field being selected.
+    /// </typeparam>
+    /// <param name="propertyOrFieldName">
+    /// The name of the property or field to access. Case-sensitive.
+    /// </param>
+    /// <returns>
+    /// A lambda expression of the form <c>x => x.PropertyOrField</c>.
+    /// </returns>
+    public static Expression<Func<T, TMember>> CreateSelector<T, TMember>(string propertyOrFieldName)
+    {
+        var type = typeof(T);
+        var parameter = Expression.Parameter(type);
+        var access = Expression.PropertyOrField(parameter, propertyOrFieldName);
+        return Expression.Lambda<Func<T, TMember>>(access, parameter);
+    }
+
+    /// <summary>
+    /// Creates a lambda expression that selects the specified property or field from
+    /// an instance of <typeparamref name="T"/>, converting the result to <see cref="object"/>.
+    /// </summary>
+    /// <typeparam name="T">The type that contains the member to access.</typeparam>
+    /// <param name="propertyOrFieldName">The name of the property or field to select.</param>
+    /// <returns>
+    /// A lambda expression of the form <c>x => (object)x.Member</c>.
+    /// </returns>
+    public static Expression<Func<T, object?>> CreateSelector<T>(string propertyOrFieldName)
+    {
+        var type = typeof(T);
+        var parameter = Expression.Parameter(type);
+        var access = Expression.PropertyOrField(parameter, propertyOrFieldName);
+        var convert = Expression.Convert(access, typeof(object));
+        return Expression.Lambda<Func<T, object?>>(convert, parameter);
     }
 }

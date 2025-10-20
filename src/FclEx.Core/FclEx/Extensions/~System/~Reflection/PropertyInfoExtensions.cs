@@ -64,11 +64,16 @@ public static class PropertyInfoExtensions
     /// <summary>
     /// Determines whether the property has a static accessor (getter or setter).
     /// </summary>
-    /// <param name="source">The property metadata.</param>
+    /// <param name="property">The property metadata.</param>
     /// <param name="nonPublic">Whether to include non-public accessors in the check.</param>
     /// <returns><c>true</c> if the property is static; otherwise, <c>false</c>.</returns>
-    public static bool IsStatic(this PropertyInfo source, bool nonPublic = false)
+    public static bool IsStatic(this PropertyInfo property, bool nonPublic = false)
     {
-        return source.GetAccessors(nonPublic).Any(x => x.IsStatic);
+        return property.GetAccessors(nonPublic).Any(x => x.IsStatic);
+    }
+
+    public static Expression ToExpression(this PropertyInfo property, Expression parameter)
+    {
+        return Expression.Property(parameter, property);
     }
 }

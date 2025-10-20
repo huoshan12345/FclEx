@@ -32,6 +32,7 @@ public static class JsonHelper
         {
             var options = new JsonSerializerOptions
             {
+                AllowOutOfOrderMetadataProperties = k.AllowOutOfOrderMetadataProperties,
                 PropertyNameCaseInsensitive = k.PropertyNameCaseSensitive == false,
                 DefaultIgnoreCondition = k.IgnoreWritingNull
                     ? JsonIgnoreCondition.WhenWritingNull

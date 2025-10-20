@@ -1,8 +1,7 @@
 ﻿namespace FclEx;
 
-[SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
 [DebuggerStepThrough]
-public static partial class Check
+public static class Check
 {
     public static T NotNull<T>([NotNull, NoEnumeration] T? value, [CallerArgumentExpression(nameof(value))] string? parameterName = null)
     {
@@ -144,6 +143,52 @@ public static partial class Check
         if (value.Any(e => e is null))
         {
             throw new ArgumentException(parameterName ?? nameof(value));
+        }
+    }
+
+    /// <summary>
+    /// Attempts to retrieve the single non-null value from the two given arguments.
+    /// </summary>
+    /// <typeparam name="T">The type of the input values.</typeparam>
+    /// <param name="left">The first value to check.</param>
+    /// <param name="right">The second value to check.</param>
+    /// <param name="result">
+    /// When this method returns <see langword="true"/>, contains the single non-null value
+    /// from <paramref name="left"/> or <paramref name="right"/>. Otherwise, contains <see langword="default"/>.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if exactly one of <paramref name="left"/> or <paramref name="right"/> is non-null; 
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
+    /// <exception cref="ArgumentNullException" />
+    /// <remarks>
+    /// This method enforces that at least one value must be provided.<br/>
+    /// If both values are non-null, the method fails without throwing and sets <paramref name="result"/> to <see langword="default"/>.<br/>
+    /// If both values are <see langword="null"/>, an <see cref="ArgumentNullException" /> will be thrown.
+    /// </remarks>
+    public static bool TryGetSingleNonNull<T>(
+        [NotNullWhen(false)] T? left,
+        [NotNullWhen(false)] T? right,
+        [NotNullWhen(true)] out T? result)
+    {
+        switch (left, right)
+        {
+            case (null, null): throw new ArgumentNullException($"{nameof(left)} and {nameof(right)} cannot both be null.");
+            case (null, not null):
+            {
+                result = right;
+                return true;
+            }
+            case (not null, null):
+            {
+                result = left;
+                return true;
+            }
+            default:
+            {
+                result = default!;
+                return false;
+            }
         }
     }
 }

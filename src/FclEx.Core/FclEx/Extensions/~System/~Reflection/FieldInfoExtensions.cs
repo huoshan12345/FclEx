@@ -32,4 +32,9 @@ public static class FieldInfoExtensions
         property = type.GetProperty(propertyName, false);
         return property is not null;
     }
+
+    public static Expression ToExpression(this FieldInfo field, Expression parameter)
+    {
+        return Expression.Field(parameter, field);
+    }
 }
