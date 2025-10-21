@@ -2,26 +2,42 @@
 
 public class HttpClientService : AbstractHttpClientService
 {
-    protected HttpClientOptions _options;
-
-    public static readonly HttpClientOptions DefaultOptions = new();
-
-    private static readonly Lazy<HttpClientService> _default = new(() => new(DefaultOptions) { UseCookie = false });
+    private static readonly Lazy<HttpClientService> _default = new(() => new(new HttpClientOptions()) { UseCookie = false });
     public static HttpClientService Default => _default.Value;
+
+    protected HttpClientOptions _options;
+    protected readonly Func<HttpClient>? _httpClientProvider;
+    protected readonly bool _disposeHttpClient;
 
     protected internal override HttpClientContext CreateHttpClientContext()
     {
+        var dispose = false;
         var provider = GetProvider(_options);
-        var client = provider.GetRequiredService<IHttpClientFactory>().CreateClient();
         var policy = provider.GetRequiredService<IAsyncPolicy<HttpResponseMessage>>();
-        return new(client, policy);
+        HttpClient client;
+        if (_httpClientProvider is null)
+        {
+            client = provider.GetRequiredService<IHttpClientFactory>().CreateClient();
+        }
+        else
+        {
+            client = _httpClientProvider();
+            dispose = _disposeHttpClient;
+        }
+        return new(client, policy, dispose);
     }
 
-    public HttpClientService(HttpClientOptions? options = null)
+    public HttpClientService(
+        HttpClientOptions? options = null,
+        Func<HttpClient>? httpClientProvider = null,
+        bool disposeHttpClient = true)
     {
+        _httpClientProvider = httpClientProvider;
+        _disposeHttpClient = disposeHttpClient;
         options ??= new();
 
-        // NOTE: use with keyword to create new instance instead of changing property directly cause it used as key in cache.
+        // NOTE: always use with keyword to create new instance cause it used as key in cache.
+        // do not try to change property directly or reuse options.
         _options = options with { AllowAutoRedirect = false };
     }
 
@@ -122,5 +138,19 @@ public class HttpClientService : AbstractHttpClientService
     public static HttpClientService Create(string? proxy, bool useCookie = true, ILoggerFactory? loggerFactory = null)
     {
         return Create(m => m.Proxy = WebProxyHelper.Create(proxy), useCookie, loggerFactory);
+    }
+
+    public static HttpClientService Create(
+        Func<HttpClient> httpClientProvider,
+        bool disposeHttpClient = true,
+        HttpClientOptions? options = null,
+        bool useCookie = true,
+        ILoggerFactory? loggerFactory = null)
+    {
+        return new HttpClientService(options, httpClientProvider, disposeHttpClient)
+        {
+            UseCookie = useCookie,
+            Logger = loggerFactory?.CreateLogger<HttpClientService>()
+        };
     }
 }

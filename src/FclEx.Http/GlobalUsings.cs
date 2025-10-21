@@ -42,9 +42,7 @@ global using Microsoft.Extensions.Http;
 global using Microsoft.Extensions.Logging;
 global using Microsoft.Extensions.Logging.Abstractions;
 global using Polly;
-global using Polly.Extensions.Http;
 global using Polly.Timeout;
-global using HttpClientResolver = System.Func<System.Net.Http.HttpClient>;
 global using SleepDurationProvider = System.Func<int, System.TimeSpan>;
 #if NETSTANDARD2_0
 global using SocketsHttpHandler = System.Net.Http.StandardSocketsHttpHandler;
