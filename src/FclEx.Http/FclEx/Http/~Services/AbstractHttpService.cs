@@ -107,13 +107,13 @@ public abstract class AbstractHttpService : IHttpService
                 }
                 else
                 {
-                    Logger.LogWarning(ex, ex!.Message);
+                    Logger.LogWarning(ex, "{Error}", ex?.Message);
                 }
             }
         }
         catch (Exception ex)
         {
-            Logger.LogWarning("An error occurred while parsing cookie. " + ex.Message);
+            Logger.LogWarning("Failed to parse cookie due to {Error}", ex.Message);
         }
     }
 
@@ -130,7 +130,7 @@ public abstract class AbstractHttpService : IHttpService
             }
             catch (Exception ex)
             {
-                Logger.LogWarning($"A cookie has been discarded. [{cookieStr}][{ex.Message}]");
+                Logger.LogWarning("A cookie has been discarded due to {Error}: {Cookie}", ex.Message, cookieStr);
             }
         }
     }

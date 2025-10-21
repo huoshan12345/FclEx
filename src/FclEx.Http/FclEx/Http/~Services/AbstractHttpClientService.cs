@@ -1,6 +1,17 @@
 ﻿namespace FclEx.Http;
 
-public readonly record struct HttpClientContext(HttpClient Client, IAsyncPolicy<HttpResponseMessage> Policy);
+public readonly record struct HttpClientContext(
+    HttpClient Client,
+    IAsyncPolicy<HttpResponseMessage> Policy,
+    bool DisposeHttpClient) : IDisposable
+{
+    public void Dispose()
+    {
+        if (DisposeHttpClient)
+            Client.Dispose();
+    }
+}
+
 
 public abstract class AbstractHttpClientService : AbstractHttpService
 {
@@ -230,7 +241,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
 
     protected virtual async Task<HttpResponseMessage> SendAsync(HttpClientContext context, HttpRequest request, CancellationToken token)
     {
-        var (client, policy) = context;
+        var (client, policy, _) = context;
         var response = await policy.ExecuteAsync(async () =>
         {
             // Create request in every retry to avoid the following error:
@@ -248,15 +259,15 @@ public abstract class AbstractHttpClientService : AbstractHttpService
     protected override async Task ExecuteAsyncInternal(HttpRequest httpRequest, HttpResponse httpResponse, CancellationToken token)
     {
         var cts = token.WithTimeout(httpRequest.TotalTimeout);
+        var context = CreateHttpClientContext();
         var responses = new List<HttpResponseMessage>();
         try
         {
-            var context = CreateHttpClientContext();
             var currentRequest = httpRequest;
             while (true)
             {
                 if (Logger.IsEnabled(LogLevel.Trace))
-                    Logger.LogTrace(currentRequest.Dump(this));
+                    Logger.LogTrace("{Dump}", currentRequest.Dump(this));
 
                 var response = await SendAsync(context, currentRequest, cts.Token);
                 responses.Add(response);
@@ -294,6 +305,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             cts.Dispose();
             responses.ForEach(m => m.Dispose());
             responses.Clear();
+            context.Dispose();
         }
     }
 
