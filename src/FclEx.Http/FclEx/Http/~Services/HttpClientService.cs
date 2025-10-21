@@ -36,7 +36,8 @@ public class HttpClientService : AbstractHttpClientService
         _disposeHttpClient = disposeHttpClient;
         options ??= new();
 
-        // NOTE: use with keyword to create new instance instead of changing property directly cause it used as key in cache.
+        // NOTE: always use with keyword to create new instance cause it used as key in cache.
+        // do not try to change property directly or reuse options.
         _options = options with { AllowAutoRedirect = false };
     }
 
@@ -112,15 +113,6 @@ public class HttpClientService : AbstractHttpClientService
         };
     }
 
-    public static HttpClientService Create(Func<HttpClient> httpClientProvider, bool useCookie = true, ILoggerFactory? loggerFactory = null)
-    {
-        return new HttpClientService(null, httpClientProvider)
-        {
-            UseCookie = useCookie,
-            Logger = loggerFactory?.CreateLogger<HttpClientService>()
-        };
-    }
-
     public static HttpClientService Create(bool useCookie, ILoggerFactory? loggerFactory = null)
     {
         return Create(new HttpClientOptions(), useCookie, loggerFactory);
@@ -146,5 +138,19 @@ public class HttpClientService : AbstractHttpClientService
     public static HttpClientService Create(string? proxy, bool useCookie = true, ILoggerFactory? loggerFactory = null)
     {
         return Create(m => m.Proxy = WebProxyHelper.Create(proxy), useCookie, loggerFactory);
+    }
+
+    public static HttpClientService Create(
+        Func<HttpClient> httpClientProvider,
+        bool disposeHttpClient = true,
+        HttpClientOptions? options = null,
+        bool useCookie = true,
+        ILoggerFactory? loggerFactory = null)
+    {
+        return new HttpClientService(options, httpClientProvider, disposeHttpClient)
+        {
+            UseCookie = useCookie,
+            Logger = loggerFactory?.CreateLogger<HttpClientService>()
+        };
     }
 }

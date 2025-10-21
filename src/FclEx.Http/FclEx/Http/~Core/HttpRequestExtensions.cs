@@ -2,14 +2,30 @@
 
 public static partial class HttpRequestExtensions
 {
-    public static Task<HttpResponse> SendAsync(this HttpRequest request, IHttpService? service = null)
+    public static Task<HttpResponse> SendAsync(
+        this HttpRequest request,
+        IHttpService? service = null,
+        CancellationToken token = default)
     {
-        return (service ?? HttpClientService.Default).SendAsync(request);
+        return (service ?? HttpClientService.Default).SendAsync(request, token);
     }
 
-    public static Task<HttpResponse> SendAsync(this HttpRequest request, IHttpService service, IAsyncPolicy policy)
+    public static Task<HttpResponse> SendAsync(
+        this HttpRequest request,
+        Func<HttpClient> httpClientProvider,
+        bool disposeHttpClient = true,
+        CancellationToken token = default)
     {
-        return policy.ExecuteAsync(() => request.SendAsync(service));
+        return HttpClientService.Create(httpClientProvider, disposeHttpClient).SendAsync(request, token);
+    }
+
+    public static Task<HttpResponse> SendAsync(
+        this HttpRequest request,
+        IHttpService service,
+        IAsyncPolicy policy,
+        CancellationToken token = default)
+    {
+        return policy.ExecuteAsync(() => request.SendAsync(service, token));
     }
 
     public static string Dump(this HttpRequest request, IEnumerable<Cookie> cookies)
