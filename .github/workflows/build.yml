@@ -2,10 +2,10 @@ name: Build
 on:
   push:
     branches:
-      - master
+      - main
   pull_request_target: # use pull_request_target instead of pull_request to let dependabot have permission to access action secrets.
     branches:
-      - master
+      - main
 
 permissions:
   pull-requests: write
@@ -19,8 +19,7 @@ env:
   DOTNET_NOLOGO: 1
   MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
   NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
-  IS_PUSH_DEFAULT: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-  
+  IS_PUSH_DEFAULT: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
   #FclEx__Postgres__PASSWORD:  ${{ secrets.TEST_POSTGRES_PASSWORD }}
   #FclEx__Rmq__PASSWORD:  ${{ secrets.TEST_RABBITMQ_PASSWORD }}
   #FclEx__Mysql_PASSWORD:  ${{ secrets.TEST_MYSQL_PASSWORD }}
@@ -72,12 +71,13 @@ jobs:
             7.0.x
             8.0.x
             9.0.x
+            10.0.x
 
       - name: NuGet Restore
         run: dotnet restore ${{ env.SOLUTION }}
 
       - name: Test Release
-        run: dotnet test -c Release --no-restore ${{ env.SOLUTION }} -v q --property:WarningLevel=0 /clp:ErrorsOnly
+        run: dotnet test -c Release --no-restore ${{ env.SOLUTION }} -v q -p:WarningLevel=0 /clp:ErrorsOnly -p:TestTfmsInParallel=true
 
       - name: Test Report
         uses: dorny/test-reporter@main

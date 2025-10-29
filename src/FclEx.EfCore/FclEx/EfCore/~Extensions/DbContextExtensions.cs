@@ -71,9 +71,7 @@ public static partial class DbContextExtensions
         await context.SaveChangesAsync();
         return entity;
     }
-
-
-
+    
     /// <summary>
     /// Prevents the specified properties or navigation members from being marked as modified
     /// during an update operation.

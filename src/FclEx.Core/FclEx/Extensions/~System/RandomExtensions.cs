@@ -89,6 +89,11 @@ public static class RandomExtensions
         return new DateTime(ticks);
     }
 
+    public static DateTimeOffset NextDateTimeOffset(this Random random, DateTimeOffset? minValue = null, DateTimeOffset? maxValue = null)
+    {
+        return random.NextDateTime(minValue?.UtcDateTime, maxValue?.UtcDateTime);
+    }
+
 #if NET6_0_OR_GREATER
     public static DateOnly NextDateOnly(this Random random, DateOnly? minValue = null, DateOnly? maxValue = null)
     {
@@ -246,6 +251,12 @@ public static class RandomExtensions
 
         if (type == typeof(TimeSpan))
             return TimeSpan.FromTicks(random.NextInt64());
+
+        if (type == typeof(DateTime))
+            return random.NextDateTime();
+
+        if (type == typeof(DateTimeOffset))
+            return random.NextDateTimeOffset(); // for .net10+, there will be error if DateTimeOffset created from fields.
 
 #if NET6_0_OR_GREATER
         if (type == typeof(DateOnly))
