@@ -128,12 +128,20 @@ public static class QueryableExtensions
 
     internal static LambdaExpression BuildUpdateBody(Type entityType, IReadOnlyDictionary<string, object?> fieldValues)
     {
+#if NET10_0_OR_GREATER
+        var setParam = Expression.Parameter(typeof(UpdateSettersBuilder<>).MakeGenericType(entityType), "s");
+#else
         var setParam = Expression.Parameter(typeof(SetPropertyCalls<>).MakeGenericType(entityType), "s");
+#endif
+
         var objParam = Expression.Parameter(entityType, "e");
 
         Expression setBody = setParam;
-
-        const string methodName = nameof(SetPropertyCalls<object>.SetProperty);
+#if NET10_0_OR_GREATER
+        const string methodName = nameof(UpdateSettersBuilder<>.SetProperty);
+#else
+        const string methodName = nameof(SetPropertyCalls<>.SetProperty);
+#endif
         foreach (var pair in fieldValues)
         {
             var propExpression = Expression.PropertyOrField(objParam, pair.Key);
