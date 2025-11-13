@@ -77,7 +77,7 @@ jobs:
         run: dotnet restore ${{ env.SOLUTION }}
 
       - name: Test Release
-        run: dotnet test -c Release --no-restore ${{ env.SOLUTION }} -v q --property:WarningLevel=0 /clp:ErrorsOnly
+        run: dotnet test -c Release --no-restore ${{ env.SOLUTION }} -v q -p:WarningLevel=0 /clp:ErrorsOnly -p:TestTfmsInParallel=true
 
       - name: Test Report
         uses: dorny/test-reporter@main

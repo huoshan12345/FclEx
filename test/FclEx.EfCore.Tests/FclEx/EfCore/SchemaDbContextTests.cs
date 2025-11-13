@@ -1,6 +1,5 @@
 ﻿using FclEx.Dapper;
 using Microsoft.Data.SqlClient;
-using MySql.Data.MySqlClient;
 
 namespace FclEx.EfCore;
 
@@ -31,22 +30,24 @@ public class SchemaDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         var cs = Fixture.ConnectionStrings;
         switch (dbProviderType)
         {
+#if !DISABLE_SOME_DATABASES
             case DbProviderType.Npgsql:
             {
                 var conStr = cs.Get(DbProviderType.Npgsql, true);
                 await using var con = new NpgsqlConnection(conStr);
                 return await con.ExecuteScalarAsync<string>("SHOW SEARCH_PATH;");
             }
+            case DbProviderType.MySql:
+            case DbProviderType.MySqlConnector:
+            {
+                return new MySqlConnectionStringBuilder(cs.Get(DbProviderType.MySql, true)).Database;
+            }
+#endif
             case DbProviderType.SqlServer:
             {
                 var conStr = cs.Get(DbProviderType.SqlServer, true);
                 await using var con = new SqlConnection(conStr);
                 return await con.ExecuteScalarAsync<string>("SELECT SCHEMA_NAME();");
-            }
-            case DbProviderType.MySql:
-            case DbProviderType.MySqlConnector:
-            {
-                return new MySqlConnectionStringBuilder(cs.Get(DbProviderType.MySql, true)).Database;
             }
             case DbProviderType.Sqlite:
             default:

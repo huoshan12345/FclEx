@@ -14,6 +14,10 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <DefineConstants Condition="'$(TargetFramework)' == 'net10.0'">$(DefineConstants);DISABLE_SOME_DATABASES</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <_RootDir>$(MSBuildThisFileDirectory)../</_RootDir>
     <VSTestLogger>trx%3bLogFileName=$(MSBuildProjectName).trx</VSTestLogger>
     <VSTestResultsDirectory>$(_RootDir)TestResults/$(Configuration)/$(TargetFramework)</VSTestResultsDirectory>

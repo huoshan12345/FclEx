@@ -119,22 +119,72 @@ public static class QueryableExtensions
         .GetRequiredMethod(nameof(RelationalQueryableExtensions.ExecuteUpdateAsync));
 #endif
 
+    /// <summary>
+    /// Executes a bulk update operation on the given queryable source by applying
+    /// the specified property values to all matching entities.
+    ///
+    /// This method dynamically builds an update expression that calls
+    /// <c>SetProperty</c> for each entry in <paramref name="fieldValues"/> and then
+    /// delegates to Entity Framework Core's <c>ExecuteUpdateAsync</c>.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The entity type of the query.
+    /// </typeparam>
+    /// <param name="query">
+    /// The <see cref="IQueryable{T}"/> representing the set of entities to update.
+    /// </param>
+    /// <param name="fieldValues">
+    /// A dictionary mapping property names to their new values. Each entry
+    /// generates a corresponding <c>SetProperty</c> call in the update expression.
+    /// Property names must match actual properties or fields on <typeparamref name="T"/>.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> that can be used to cancel the operation.
+    /// </param>
+    /// <returns>
+    /// A task that resolves to the number of state entries written to the database.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown if <paramref name="query"/> or <paramref name="fieldValues"/> is null.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown if a property name in <paramref name="fieldValues"/> does not exist on
+    /// <typeparamref name="T"/>.
+    /// </exception>
+    /// <remarks>
+    /// This is a helper method that constructs the required update lambda for
+    /// Entity Framework Core's batch update API at runtime. It supports simple
+    /// member assignments and performs runtime conversion of supplied values to
+    /// the appropriate property types.
+    /// </remarks>
     public static Task<int> ExecuteUpdateAsync<T>(this IQueryable<T> query, IReadOnlyDictionary<string, object?> fieldValues, CancellationToken cancellationToken = default)
     {
+        if (fieldValues.Count == 0)
+            return Task.FromResult(0);
+
         var updateBody = BuildUpdateBody(typeof(T), fieldValues);
+        object param = updateBody;
+
+#if NET10_0_OR_GREATER
+        var block = Expression.Block(
+            updateBody.Body,
+            Expression.Empty() // Explicitly return void (or do nothing)
+        );
+        var lambda = Expression.Lambda(block, updateBody.Parameters);
+        param = lambda.Compile();
+#endif
         return (Task<int>)UpdateAsyncMethodInfo.MakeGenericMethod(query.ElementType)
-            .Invoke(null, [query, updateBody, cancellationToken])!;
+            .Invoke(null, [query, param, cancellationToken])!;
     }
 
     internal static LambdaExpression BuildUpdateBody(Type entityType, IReadOnlyDictionary<string, object?> fieldValues)
     {
 #if NET10_0_OR_GREATER
-        var setParam = Expression.Parameter(typeof(UpdateSettersBuilder<>).MakeGenericType(entityType), "s");
+        var setParam = Expression.Parameter(typeof(UpdateSettersBuilder<>).MakeGenericType(entityType));
 #else
-        var setParam = Expression.Parameter(typeof(SetPropertyCalls<>).MakeGenericType(entityType), "s");
+        var setParam = Expression.Parameter(typeof(SetPropertyCalls<>).MakeGenericType(entityType));
 #endif
-
-        var objParam = Expression.Parameter(entityType, "e");
+        var objParam = Expression.Parameter(entityType);
 
         Expression setBody = setParam;
 #if NET10_0_OR_GREATER
@@ -142,20 +192,18 @@ public static class QueryableExtensions
 #else
         const string methodName = nameof(SetPropertyCalls<>.SetProperty);
 #endif
-        foreach (var pair in fieldValues)
+        foreach (var (key, value) in fieldValues)
         {
-            var propExpression = Expression.PropertyOrField(objParam, pair.Key);
-            var valueExpression = ValueForType(propExpression.Type, pair.Value);
+            var propExpression = Expression.PropertyOrField(objParam, key);
+            var valueExpression = ValueForType(propExpression.Type, value);
 
             // s.SetProperty(e => e.SomeField, value)
             var lambda = Expression.Lambda(propExpression, objParam);
             setBody = Expression.Call(setBody, methodName, [propExpression.Type], lambda, valueExpression);
-
         }
 
         // s => s.SetProperty(e => e.SomeField, value)
         var updateBody = Expression.Lambda(setBody, setParam);
-
         return updateBody;
     }
 
