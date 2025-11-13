@@ -4,7 +4,7 @@
 
 namespace System.Collections.Generic;
 
-public class BytewiseEqualityComparerTests(ITestOutputHelper output)
+public class BytewiseEqualityComparerTests
 {
     public static readonly IEnumerable<Type> TestTypes = Types.BlittableTypes.Concat([
         typeof(ValueTuple<int>), // non-blittable
