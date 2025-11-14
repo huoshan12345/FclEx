@@ -200,9 +200,10 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
         var cts = new CancellationTokenSource();
         await cts.CancelAsync();
 
-        await Assert.ThrowsAsync<TaskCanceledException>(() =>
+        // OperationCanceledException or TaskCanceledException
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
             context.EntityHasStates.ExecuteUpdateAsync(
-                new Dictionary<string, object?> { ["Age"] = 40 },
+                new Dictionary<string, object?> { [nameof(EntityHasStates.Name)] = "test" },
                 cts.Token
             )
         );

@@ -19,10 +19,14 @@ public class ModelBuilderExtensionsTests
         var modelBuilder = new ModelBuilder(new ConventionSet());
         var entityType = modelBuilder.Model.AddEntityType(typeof(TestEntity));
         Expression<Func<TestEntity, bool>> filter = e => !e.IsDeleted;
-
         var result = modelBuilder.HasQueryFilter(entityType, filter);
+        Assert.Equal(modelBuilder, result);
 
+#if NET10_0_OR_GREATER
+        var appliedFilter = entityType.GetDeclaredQueryFilters().FirstOrDefault()?.Expression;
+#else
         var appliedFilter = entityType.GetQueryFilter();
+#endif
         Assert.NotNull(appliedFilter);
 
         var queryFilter = appliedFilter.ToString();
@@ -35,10 +39,15 @@ public class ModelBuilderExtensionsTests
         var modelBuilder = new ModelBuilder(new ConventionSet());
         var entityType = modelBuilder.Model.AddEntityType(typeof(AnotherEntity));
         Expression<Func<TestEntity, bool>> filter = e => !e.IsDeleted;
-
         var result = modelBuilder.HasQueryFilter(entityType, filter);
+        Assert.Equal(modelBuilder, result);
 
-        Assert.Null(entityType.GetQueryFilter());
+#if NET10_0_OR_GREATER
+        var appliedFilter = entityType.GetDeclaredQueryFilters().FirstOrDefault()?.Expression;
+#else
+        var appliedFilter = entityType.GetQueryFilter();
+#endif
+        Assert.Null(appliedFilter);
     }
 
     [Fact]
@@ -46,10 +55,15 @@ public class ModelBuilderExtensionsTests
     {
         var modelBuilder = new ModelBuilder(new ConventionSet());
         var entityType = modelBuilder.Model.AddEntityType(typeof(TestEntity));
-
         var result = modelBuilder.HasQueryFilter<TestEntity>(entityType, null);
+        Assert.Equal(modelBuilder, result);
 
-        Assert.Null(entityType.GetQueryFilter());
+#if NET10_0_OR_GREATER
+        var appliedFilter = entityType.GetDeclaredQueryFilters().FirstOrDefault()?.Expression;
+#else
+        var appliedFilter = entityType.GetQueryFilter();
+#endif
+        Assert.Null(appliedFilter);
     }
 
     [Fact]
@@ -58,9 +72,7 @@ public class ModelBuilderExtensionsTests
         var modelBuilder = new ModelBuilder(new ConventionSet());
         var entityType = modelBuilder.Model.AddEntityType(typeof(TestEntity));
         Expression<Func<TestEntity, bool>> filter = e => !e.IsDeleted;
-
         var result = modelBuilder.HasQueryFilter(entityType, filter);
-
         Assert.Equal(modelBuilder, result);
     }
 }

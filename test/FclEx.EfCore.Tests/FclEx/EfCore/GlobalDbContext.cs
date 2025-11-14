@@ -1,10 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Storage;
-using MySql.Data.MySqlClient;
-using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
-using Pomelo.EntityFrameworkCore.MySql.Infrastructure.Internal;
-using Pomelo.EntityFrameworkCore.MySql.Storage.Internal;
-
-#pragma warning disable EF1001
+﻿#pragma warning disable EF1001
 
 namespace FclEx.EfCore;
 
@@ -45,11 +39,15 @@ public class GlobalDbContext(
 
         switch (DbProviderType)
         {
-            case DbProviderType.Npgsql:
-                builder.UseNpgsql(ConnectionString);
-                break;
             case DbProviderType.SqlServer:
                 builder.UseSqlServer(ConnectionString);
+                break;
+            case DbProviderType.Sqlite:
+                builder.UseSqlite(ConnectionString);
+                break;
+#if !DISABLE_SOME_DATABASES
+            case DbProviderType.Npgsql:
+                builder.UseNpgsql(ConnectionString);
                 break;
             case DbProviderType.MySql:
                 builder.UseMySQL(ConnectionString);
@@ -57,9 +55,7 @@ public class GlobalDbContext(
             case DbProviderType.MySqlConnector:
                 UseMySql(builder, ConnectionString, Schema);
                 break;
-            case DbProviderType.Sqlite:
-                builder.UseSqlite(ConnectionString);
-                break;
+#endif
             default:
                 throw new ArgumentOutOfRangeException(nameof(DbProviderType), DbProviderType, null);
         }
@@ -90,7 +86,7 @@ public class GlobalDbContext(
         }
 
         modelBuilder.Entity<EntityWithoutKey>().HasNoKey();
-        
+
         modelBuilder.Entity<EntityWithNavigation>()
             .HasOne(m => m.Navigation)
             .WithMany()
@@ -109,6 +105,7 @@ public class GlobalDbContext(
         return base.SaveChanges(acceptAllChangesOnSuccess);
     }
 
+#if !DISABLE_SOME_DATABASES
     private static void UseMySql(DbContextOptionsBuilder builder, string connectionString, string? schema)
     {
         var sb = new MySqlConnectionStringBuilder(connectionString);
@@ -120,12 +117,13 @@ public class GlobalDbContext(
         builder.UseMySql(sb.ConnectionString, ver, o => o.SchemaBehavior(MySqlSchemaBehavior.Translate, (_, table) => table));
         builder.ReplaceService<ISqlGenerationHelper, CustomMySqlSqlGenerationHelper>();
     }
-}
 
-public class CustomMySqlSqlGenerationHelper(
-    RelationalSqlGenerationHelperDependencies dependencies,
-    IMySqlOptions options)
-    : MySqlSqlGenerationHelper(dependencies, options)
-{
-    public override string GetSchemaName(string name, string schema) => schema;
+    public class CustomMySqlSqlGenerationHelper(
+        RelationalSqlGenerationHelperDependencies dependencies,
+        IMySqlOptions options)
+        : MySqlSqlGenerationHelper(dependencies, options)
+    {
+        public override string GetSchemaName(string name, string schema) => schema;
+    }
+#endif
 }

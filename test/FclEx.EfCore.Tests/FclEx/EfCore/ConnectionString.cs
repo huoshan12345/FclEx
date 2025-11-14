@@ -1,7 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
-using MySql.Data.MySqlClient;
-
-namespace FclEx.EfCore;
+﻿namespace FclEx.EfCore;
 
 public class ConnectionStrings(string database, DatabaseUser user)
 {
@@ -43,14 +40,17 @@ public readonly record struct ConnectionString(DbProviderType DbProviderType, st
     {
         return dbProviderType switch
         {
-            DbProviderType.Npgsql => new NpgsqlConnectionStringBuilder(primary) { Username = user.Username, Password = user.Password }.ConnectionString,
             DbProviderType.SqlServer => new SqlConnectionStringBuilder(primary) { UserID = user.Username, Password = user.Password }.ConnectionString,
             DbProviderType.Sqlite => primary,
+#if !DISABLE_SOME_DATABASES
+            DbProviderType.Npgsql => new NpgsqlConnectionStringBuilder(primary) { Username = user.Username, Password = user.Password }.ConnectionString,
             DbProviderType.MySql => CreateUserConnectionStringForMysql(),
             DbProviderType.MySqlConnector => CreateUserConnectionStringForMysql(),
+#endif
             _ => throw new ArgumentOutOfRangeException(nameof(dbProviderType), dbProviderType, null)
         };
 
+#if !DISABLE_SOME_DATABASES
         string CreateUserConnectionStringForMysql()
         {
             return new MySqlConnectionStringBuilder(primary)
@@ -60,5 +60,6 @@ public readonly record struct ConnectionString(DbProviderType DbProviderType, st
                 Database = user.DefaultSchema,
             }.ConnectionString;
         }
+#endif
     }
 }

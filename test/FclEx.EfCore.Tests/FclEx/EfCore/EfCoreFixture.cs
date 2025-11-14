@@ -1,6 +1,5 @@
 ﻿using FclEx.Tests;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 
 namespace FclEx.EfCore;
