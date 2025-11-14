@@ -109,4 +109,102 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
         Assert.NotNull(result);
         Assert.Single(context.ChangeTracker.Entries());
     }
+
+    [Theory]
+    [MemberData(nameof(DbTestCases))]
+    public async Task ExecuteUpdateAsync_Updates_Single_Property(DbProviderType dbProviderType)
+    {
+        var entity = await CreateEntityHasStatesAsync(dbProviderType);
+
+        // need to create a new context to ensure no tracked entities.
+        await using var context = Fixture.CreateDbContext(dbProviderType);
+
+        var updated = await context.EntityHasStates
+            .Where(p => p.Id == entity.Id)
+            .ExecuteUpdateAsync(new Dictionary<string, object?>
+            {
+                [nameof(entity.Name)] = "Updated Name",
+            });
+
+        Assert.Equal(1, updated);
+
+        var result = await context.EntityHasStates.FindAsync(entity.Id);
+        Assert.NotNull(result);
+        Assert.Equal("Updated Name", result.Name);
+    }
+
+    [Theory]
+    [MemberData(nameof(DbTestCases))]
+    public async Task ExecuteUpdateAsync_Updates_Multiple_Properties(DbProviderType dbProviderType)
+    {
+        var entity = await CreateEntityHasStatesAsync(dbProviderType);
+
+        // need to create a new context to ensure no tracked entities.
+        await using var context = Fixture.CreateDbContext(dbProviderType);
+
+        var updated = await context.EntityHasStates
+            .Where(p => p.Id == entity.Id)
+            .ExecuteUpdateAsync(new Dictionary<string, object?>
+            {
+                [nameof(entity.Name)] = "Updated Name",
+                [nameof(entity.IsDeleted)] = true,
+            });
+
+        Assert.Equal(1, updated);
+
+        var result = await context.EntityHasStates.FindAsync(entity.Id);
+        Assert.NotNull(result);
+        Assert.Equal("Updated Name", result.Name);
+        Assert.True(result.IsDeleted);
+    }
+
+    [Theory]
+    [MemberData(nameof(DbTestCases))]
+    public async Task ExecuteUpdateAsync_Throws_When_Property_Not_Found(DbProviderType dbProviderType)
+    {
+        await using var context = Fixture.CreateDbContext(dbProviderType);
+
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            context.EntityHasStates.ExecuteUpdateAsync(new Dictionary<string, object?>
+            {
+                ["NotARealProperty"] = 123
+            })
+        );
+    }
+
+    [Theory]
+    [MemberData(nameof(DbTestCases))]
+    public async Task ExecuteUpdateAsync_No_Updates_When_FieldValues_Empty(DbProviderType dbProviderType)
+    {
+        var entity = await CreateEntityHasStatesAsync(dbProviderType);
+
+        // need to create a new context to ensure no tracked entities.
+        await using var context = Fixture.CreateDbContext(dbProviderType);
+
+        var updated = await context.EntityHasStates
+            .Where(p => p.Id == entity.Id)
+            .ExecuteUpdateAsync(new Dictionary<string, object?>());
+
+        Assert.Equal(0, updated);
+
+        var result = await context.EntityHasStates.FindAsync(entity.Id);
+        Assert.NotNull(result);
+        Assert.Equal(entity.Name, result.Name);
+    }
+
+    [Theory]
+    [MemberData(nameof(DbTestCases))]
+    public async Task ExecuteUpdateAsync_Cancels_When_Token_Requested(DbProviderType dbProviderType)
+    {
+        await using var context = Fixture.CreateDbContext(dbProviderType);
+        var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        await Assert.ThrowsAsync<TaskCanceledException>(() =>
+            context.EntityHasStates.ExecuteUpdateAsync(
+                new Dictionary<string, object?> { ["Age"] = 40 },
+                cts.Token
+            )
+        );
+    }
 }

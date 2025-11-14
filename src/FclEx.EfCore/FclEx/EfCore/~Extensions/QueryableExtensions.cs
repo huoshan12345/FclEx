@@ -119,6 +119,44 @@ public static class QueryableExtensions
         .GetRequiredMethod(nameof(RelationalQueryableExtensions.ExecuteUpdateAsync));
 #endif
 
+    /// <summary>
+    /// Executes a bulk update operation on the given queryable source by applying
+    /// the specified property values to all matching entities.
+    ///
+    /// This method dynamically builds an update expression that calls
+    /// <c>SetProperty</c> for each entry in <paramref name="fieldValues"/> and then
+    /// delegates to Entity Framework Core's <c>ExecuteUpdateAsync</c>.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The entity type of the query.
+    /// </typeparam>
+    /// <param name="query">
+    /// The <see cref="IQueryable{T}"/> representing the set of entities to update.
+    /// </param>
+    /// <param name="fieldValues">
+    /// A dictionary mapping property names to their new values. Each entry
+    /// generates a corresponding <c>SetProperty</c> call in the update expression.
+    /// Property names must match actual properties or fields on <typeparamref name="T"/>.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> that can be used to cancel the operation.
+    /// </param>
+    /// <returns>
+    /// A task that resolves to the number of state entries written to the database.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown if <paramref name="query"/> or <paramref name="fieldValues"/> is null.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown if a property name in <paramref name="fieldValues"/> does not exist on
+    /// <typeparamref name="T"/>.
+    /// </exception>
+    /// <remarks>
+    /// This is a helper method that constructs the required update lambda for
+    /// Entity Framework Core's batch update API at runtime. It supports simple
+    /// member assignments and performs runtime conversion of supplied values to
+    /// the appropriate property types.
+    /// </remarks>
     public static Task<int> ExecuteUpdateAsync<T>(this IQueryable<T> query, IReadOnlyDictionary<string, object?> fieldValues, CancellationToken cancellationToken = default)
     {
         var updateBody = BuildUpdateBody(typeof(T), fieldValues);
