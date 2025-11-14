@@ -163,8 +163,18 @@ public static class QueryableExtensions
             return Task.FromResult(0);
 
         var updateBody = BuildUpdateBody(typeof(T), fieldValues);
+        object param = updateBody;
+
+#if NET10_0_OR_GREATER
+        var block = Expression.Block(
+            updateBody.Body,
+            Expression.Empty() // Explicitly return void (or do nothing)
+        );
+        var lambda = Expression.Lambda(block, updateBody.Parameters);
+        param = lambda.Compile();
+#endif
         return (Task<int>)UpdateAsyncMethodInfo.MakeGenericMethod(query.ElementType)
-            .Invoke(null, [query, updateBody, cancellationToken])!;
+            .Invoke(null, [query, param, cancellationToken])!;
     }
 
     internal static LambdaExpression BuildUpdateBody(Type entityType, IReadOnlyDictionary<string, object?> fieldValues)
@@ -182,10 +192,10 @@ public static class QueryableExtensions
 #else
         const string methodName = nameof(SetPropertyCalls<>.SetProperty);
 #endif
-        foreach (var pair in fieldValues)
+        foreach (var (key, value) in fieldValues)
         {
-            var propExpression = Expression.PropertyOrField(objParam, pair.Key);
-            var valueExpression = ValueForType(propExpression.Type, pair.Value);
+            var propExpression = Expression.PropertyOrField(objParam, key);
+            var valueExpression = ValueForType(propExpression.Type, value);
 
             // s.SetProperty(e => e.SomeField, value)
             var lambda = Expression.Lambda(propExpression, objParam);
@@ -194,7 +204,6 @@ public static class QueryableExtensions
 
         // s => s.SetProperty(e => e.SomeField, value)
         var updateBody = Expression.Lambda(setBody, setParam);
-
         return updateBody;
     }
 
