@@ -26,11 +26,17 @@ public class EfCoreFixture : GlobalFixture
     public static DatabaseConfig Postgres { get; } = Config.GetSection("Postgres").Get<DatabaseConfig>()!;
 
     public static readonly DbProviderType[] DatabaseTypes = TestHelper.IsGithubAction
-        ? [DbProviderType.Npgsql, DbProviderType.Sqlite]
-        : [DbProviderType.Npgsql, DbProviderType.Sqlite,
+        ? [
 #if !DISABLE_SOME_DATABASES
-            DbProviderType.MySqlConnector, DbProviderType.SqlServer
+            DbProviderType.Npgsql,
 #endif
+            DbProviderType.Sqlite,
+        ]
+        : [
+#if !DISABLE_SOME_DATABASES
+            DbProviderType.Npgsql, DbProviderType.MySqlConnector,
+#endif
+            DbProviderType.Sqlite, DbProviderType.SqlServer,
         ];
 
     public GlobalDbContext CreateDbContext(DbProviderType dbProviderType, string? schema = null, bool isUser = false)
