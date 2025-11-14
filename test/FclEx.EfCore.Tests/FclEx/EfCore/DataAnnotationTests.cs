@@ -2,6 +2,7 @@
 
 public class DataAnnotationTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {
+#if !DISABLE_SOME_DATABASES
     [Fact]
     public async Task TableName_Postfix_Test()
     {
@@ -92,4 +93,5 @@ public class DataAnnotationTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         Assert.Equal((nameof(EntityWithIndex.Name), true), list[1]);
         Assert.Equal((nameof(EntityWithIndex.Value), false), list[2]);
     }
+#endif
 }

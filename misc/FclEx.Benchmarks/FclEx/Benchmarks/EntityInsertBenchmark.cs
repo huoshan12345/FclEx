@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using FclEx.Dapper;
 using FclEx.Data;
-using Npgsql;
+using Microsoft.Data.Sqlite;
 
 namespace FclEx.Benchmarks;
 
@@ -36,7 +36,7 @@ public class EntityInsertBenchmark
     [Benchmark]
     public async Task Dapper_Insert()
     {
-        await using var con = new NpgsqlConnection(GlobalDbContext.LocalPostgresqlConnectionString);
+        await using var con = new SqliteConnection(GlobalDbContext.ConnectionString);
         var count = await con.BulkInsertAsync(Entities);
         Check.EqualTo(count, Entities.Length);
     }

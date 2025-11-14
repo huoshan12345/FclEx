@@ -8,9 +8,17 @@ global using FclEx.Domain;
 global using FclEx.Extensions;
 global using FclEx.Helpers;
 global using FclEx.Xunit;
+global using Microsoft.Data.SqlClient;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.EntityFrameworkCore.Metadata.Conventions;
-global using Npgsql;
+global using Microsoft.EntityFrameworkCore.Storage;
 global using Renci.SshNet;
 global using Xunit;
 global using static FclEx.EfCore.EfCoreFixture;
+#if !DISABLE_SOME_DATABASES
+global using MySql.Data.MySqlClient;
+global using Npgsql;
+global using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
+global using Pomelo.EntityFrameworkCore.MySql.Infrastructure.Internal;
+global using Pomelo.EntityFrameworkCore.MySql.Storage.Internal;
+#endif

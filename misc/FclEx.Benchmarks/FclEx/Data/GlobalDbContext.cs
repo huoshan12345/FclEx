@@ -6,14 +6,14 @@ namespace FclEx.Data;
 // EfCore is used for helping us to do tests
 public class GlobalDbContext : DbContext
 {
-    public const string LocalPostgresqlConnectionString = "Server=localhost;Database=fclex-test-efcore;Port=5432;User Id=postgres;Password=111111";
+    public const string ConnectionString = "Data Source=./FclEx.Benchmarks.sqlite;";
 
     public DbSet<EntityWithAutoKey> EntityWithAutoKeys { get; set; } = default!;
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         base.OnConfiguring(optionsBuilder);
-        optionsBuilder.UseNpgsql(LocalPostgresqlConnectionString);
+        optionsBuilder.UseSqlite(ConnectionString);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
