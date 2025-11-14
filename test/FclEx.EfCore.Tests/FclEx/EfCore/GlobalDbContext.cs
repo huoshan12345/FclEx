@@ -4,11 +4,13 @@ namespace FclEx.EfCore;
 
 public enum DbProviderType
 {
-    Npgsql,
     SqlServer,
     Sqlite,
+#if !DISABLE_SOME_DATABASES
+    Npgsql,
     MySql,
     MySqlConnector,
+#endif
 }
 
 // EfCore is used for helping us to do tests
@@ -65,9 +67,10 @@ public class GlobalDbContext(
     {
         base.OnModelCreating(modelBuilder);
 
-        if (DbProviderType == DbProviderType.Npgsql)
+
+        if (DbProviderType == DbProviderType.Sqlite)
         {
-            var e = modelBuilder.Entity<EntityWithPostgresqlJsonb>();
+            var e = modelBuilder.Entity<EntityWithSqliteBlob>();
         }
 
         if (DbProviderType == DbProviderType.SqlServer)
@@ -75,16 +78,17 @@ public class GlobalDbContext(
             var e = modelBuilder.Entity<EntityWithSqlServerXml>();
         }
 
-        if (DbProviderType == DbProviderType.Sqlite)
+#if !DISABLE_SOME_DATABASES
+        if (DbProviderType == DbProviderType.Npgsql)
         {
-            var e = modelBuilder.Entity<EntityWithSqliteBlob>();
+            var e = modelBuilder.Entity<EntityWithPostgresqlJsonb>();
         }
 
         if (DbProviderType is DbProviderType.MySqlConnector or DbProviderType.MySql)
         {
             var e = modelBuilder.Entity<EntityWithMySqlBlob>();
         }
-
+#endif
         modelBuilder.Entity<EntityWithoutKey>().HasNoKey();
 
         modelBuilder.Entity<EntityWithNavigation>()

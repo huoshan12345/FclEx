@@ -56,7 +56,11 @@ public class EfCoreFixture : GlobalFixture
             {
                 await using var context = CreateDbContext(databaseType, schema);
 
-                if (isRecreated == false || databaseType == DbProviderType.MySqlConnector)
+                if (isRecreated == false
+#if !DISABLE_SOME_DATABASES
+                    || databaseType == DbProviderType.MySqlConnector    
+#endif
+                    )
                 {
                     await context.Database.EnsureDeletedAsync();
                     await context.Database.EnsureCreatedAsync();
@@ -68,7 +72,11 @@ public class EfCoreFixture : GlobalFixture
                 }
                 isRecreated = true;
 
-                if (isFirst || databaseType is DbProviderType.Sqlite or DbProviderType.MySqlConnector)
+                if (isFirst || databaseType is DbProviderType.Sqlite
+#if !DISABLE_SOME_DATABASES
+                        or DbProviderType.MySqlConnector
+#endif
+                        )
                     continue;
 
                 // NOTE: when database is created, the tables with the first schema are created as well, so we skip the first schema here.
@@ -83,11 +91,6 @@ public class EfCoreFixture : GlobalFixture
         var (user, password, schema) = databaseUser;
         string[] sqls = context.DbProviderType switch
         {
-            DbProviderType.Npgsql => [
-                $"DROP ROLE IF EXISTS {user}",
-                $"CREATE USER {user} WITH LOGIN SUPERUSER PASSWORD '{password}'",
-                $"ALTER USER {user} SET SEARCH_PATH TO {schema}"
-            ],
             DbProviderType.SqlServer => [
                 $"""
                  IF EXISTS (SELECT * FROM master.sys.database_principals WHERE name = '{user}') 
@@ -103,27 +106,32 @@ public class EfCoreFixture : GlobalFixture
                  """,
                 $"CREATE LOGIN [{user}] WITH PASSWORD = N'{password}'",
                 $"CREATE USER [{user}] FOR LOGIN [{user}] WITH DEFAULT_SCHEMA = {schema}",
-                $"exec sp_addrolemember 'db_owner', {user}"
+                $"exec sp_addrolemember 'db_owner', {user}",
                 // The value of DEFAULT_SCHEMA is ignored if the user is a member of the sysadmin fixed server role.
                 // All members of the sysadmin fixed server role have a default schema of dbo.
                 // so we cannot assign sysadmin to the user we are going to test its default schema
                 // $"ALTER SERVER ROLE [sysadmin] ADD MEMBER [{user}]",
             ],
             DbProviderType.Sqlite => [],
+#if !DISABLE_SOME_DATABASES
+            DbProviderType.Npgsql => [
+                $"DROP ROLE IF EXISTS {user}",
+                $"CREATE USER {user} WITH LOGIN SUPERUSER PASSWORD '{password}'",
+                $"ALTER USER {user} SET SEARCH_PATH TO {schema}"
+            ],
             DbProviderType.MySqlConnector => [
                 $"DROP USER IF EXISTS {user}",
                 $"CREATE USER '{user}'@'%' IDENTIFIED BY '{password}'",
                 $"GRANT ALL PRIVILEGES ON *.* TO '{user}'@'%' WITH GRANT OPTION",
             ],
             DbProviderType.MySql => [],
+#endif
             _ => throw new ArgumentOutOfRangeException(nameof(context.DbProviderType), context.DbProviderType, null),
         };
 
         foreach (var sql in sqls)
         {
-#pragma warning disable EF1002 // Risk of vulnerability to SQL injection.
             await context.Database.ExecuteSqlRawAsync(sql);
-#pragma warning restore EF1002 // Risk of vulnerability to SQL injection.
         }
     }
 
