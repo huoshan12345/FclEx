@@ -32,7 +32,7 @@ public static partial class EnumerableExtensions
     /// This method uses <see cref="MethodImplOptions.AggressiveInlining"/> for potential performance optimization.
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> enumerable) 
+    public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> enumerable)
         => enumerable.Where(m => m is not null)!;
 
     /// <summary>
@@ -55,14 +55,20 @@ public static partial class EnumerableExtensions
     /// <param name="enumerable">The collection of elements to filter.</param>
     /// <param name="predicate">The predicate function that defines the condition to exclude.</param>
     /// <returns>An IEnumerable containing elements that do not satisfy the predicate.</returns>
-    public static IEnumerable<T> Not<T>(this IEnumerable<T> enumerable, Func<T, bool> predicate) 
+    public static IEnumerable<T> Not<T>(this IEnumerable<T> enumerable, Func<T, bool> predicate)
         => enumerable.Where(m => predicate(m) == false);
 
-    public static IEnumerable<T> WhereIf<T>(this IEnumerable<T> enumerable, Func<T, bool> predicate, bool condition) 
+    public static IEnumerable<T> WhereIf<T>(this IEnumerable<T> enumerable, Func<T, bool> predicate, bool condition)
         => condition ? enumerable.Where(predicate) : enumerable;
 
-    public static IEnumerable<T> WhereIf<T>(this IEnumerable<T> enumerable, Func<T, int, bool> predicate, bool condition) 
+    public static IEnumerable<T> WhereIf<T>(this IEnumerable<T> enumerable, bool condition, Func<T, bool> predicate)
+        => enumerable.WhereIf(predicate, condition);
+
+    public static IEnumerable<T> WhereIf<T>(this IEnumerable<T> enumerable, Func<T, int, bool> predicate, bool condition)
         => condition ? enumerable.Where(predicate) : enumerable;
+
+    public static IEnumerable<T> WhereIf<T>(this IEnumerable<T> enumerable, bool condition, Func<T, int, bool> predicate)
+        => enumerable.WhereIf(predicate, condition);
 
     public static IEnumerable<T> TryTake<T>(this IEnumerable<T> enumerable, int? count)
     {
@@ -85,7 +91,7 @@ public static partial class EnumerableExtensions
     {
         return new SortedSet<T>(enumerable, comparer ?? Comparer<T>.Default);
     }
-    
+
     public static IEnumerable<KeyValuePair<T1, T2>> AsKeyValue<T1, T2>(this IEnumerable<ValueTuple<T1, T2>> enumerable)
     {
         return enumerable.Select(m => m.ToKeyValuePair());
@@ -406,11 +412,24 @@ public static partial class EnumerableExtensions
         return new HashSet<TSource>(source, comparer);
     }
 #endif
-    
-    public static IEnumerable<T> SelectIf<T>(this IEnumerable<T> enumerable, bool condition, Func<T, T> selector)
+
+    public static IEnumerable<T> SelectIf<T>(this IEnumerable<T> enumerable, Func<T, T> selector, bool condition)
     {
         return condition
             ? enumerable.Select(selector)
             : enumerable;
     }
+
+    public static IEnumerable<T> SelectIf<T>(this IEnumerable<T> enumerable, bool condition, Func<T, T> selector)
+        => enumerable.SelectIf(selector, condition);
+
+    public static IEnumerable<T> SelectIf<T>(this IEnumerable<T> enumerable, Func<T, int, T> selector, bool condition)
+    {
+        return condition
+            ? enumerable.Select(selector)
+            : enumerable;
+    }
+
+    public static IEnumerable<T> SelectIf<T>(this IEnumerable<T> enumerable, bool condition, Func<T, int, T> selector)
+        => enumerable.SelectIf(selector, condition);
 }
