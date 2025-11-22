@@ -5,10 +5,10 @@ public static class HttpContentHelper
     public static StringContent ToJsonContent(object obj, JsonSerializerOptions? options = null)
     {
         var json = obj.ToJson(options);
-        return new StringContent(json, Encoding.UTF8, MimeTypes.Json);
+        return new StringContent(json, Encoding.UTF8, HttpContentTypes.Json);
     }
 
-    public static GZipContent ToGZipContent(string content, string contentType = MimeTypes.Text)
+    public static GZipContent ToGZipContent(string content, string contentType = HttpContentTypes.Text)
     {
         return new StringContent(content, Encoding.UTF8, contentType).ToGZip();
     }

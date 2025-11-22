@@ -20,7 +20,7 @@ public class XunitJsonSerializable<T> : IXunitSerializable
     {
     }
 
-    public XunitJsonSerializable(T value) => Value = value;
+    public XunitJsonSerializable(T? value) => Value = value;
 
     public virtual void Deserialize(IXunitSerializationInfo info)
     {

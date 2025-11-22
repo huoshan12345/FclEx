@@ -1,4 +1,6 @@
-﻿namespace FclEx.Extensions;
+﻿using System.Linq;
+
+namespace FclEx.Extensions;
 
 public readonly record struct IndexedItem<T>(int Index, T Item, bool IsFirst, bool IsLast);
 
@@ -299,79 +301,102 @@ public static partial class EnumerableExtensions
     }
 
     /// <summary>
-    /// Interleaves two sequences by yielding elements from each sequence in specified group sizes.
+    /// Interleaves elements from two sequences by alternately yielding groups of
+    /// elements from each sequence.
     /// </summary>
     /// <typeparam name="T">The type of elements in the sequences.</typeparam>
-    /// <param name="first">The first sequence to interleave.</param>
-    /// <param name="second">The second sequence to interleave.</param>
-    /// <param name="firstGrouping">The number of consecutive elements to take from the first sequence before taking from the second.</param>
-    /// <param name="secondGrouping">The number of consecutive elements to take from the second sequence before returning to the first.</param>
-    /// <returns>An <see cref="IEnumerable{T}"/> that contains elements from both sequences interleaved 
-    /// according to the specified grouping sizes. If one sequence is exhausted, the remaining elements 
-    /// from the other sequence are yielded in order.</returns>
+    /// <param name="first">The first source sequence.</param>
+    /// <param name="second">The second source sequence.</param>
+    /// <param name="firstGrouping">
+    /// The number of consecutive elements to take from <paramref name="first"/> at a time.
+    /// </param>
+    /// <param name="secondGrouping">
+    /// The number of consecutive elements to take from <paramref name="second"/> at a time.
+    /// </param>
+    /// <returns>
+    /// A sequence that yields <paramref name="firstGrouping"/> elements from
+    /// <paramref name="first"/>, followed by <paramref name="secondGrouping"/> elements
+    /// from <paramref name="second"/>, repeating until both sequences are exhausted.
+    /// </returns>
     /// <remarks>
-    /// This method continues to yield elements from the first sequence until it is exhausted, interspersing 
-    /// elements from the second sequence as specified by the group sizes. If there are remaining elements 
-    /// in the second sequence after the first is exhausted, those elements will be yielded as well.
+    /// Enumeration is lazy. If one sequence runs out of elements, the remaining
+    /// elements from the other sequence are yielded.
     /// </remarks>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown if <paramref name="first"/> or <paramref name="second"/> is <c>null</c>.
+    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown if <paramref name="firstGrouping"/> or <paramref name="secondGrouping"/> is less than or equal to zero.
+    /// </exception>
     public static IEnumerable<T> InterleaveWith<T>(this IEnumerable<T> first, IEnumerable<T> second, int firstGrouping, int secondGrouping)
     {
-        using var firstIterator = first.GetEnumerator();
-        using var secondIterator = second.GetEnumerator();
-        var exhaustedFirst = false;
-        // Keep going while we've got elements in the first sequence.
-        while (!exhaustedFirst)
+        Check.NotNull(first);
+        Check.NotNull(second);
+        Check.Positive(firstGrouping);
+        Check.Positive(secondGrouping);
+        return InterleaveWithIterator(first, second, firstGrouping, secondGrouping);
+
+        static IEnumerable<T> InterleaveWithIterator(IEnumerable<T> first, IEnumerable<T> second, int firstGrouping, int secondGrouping)
         {
-            for (var i = 0; i < firstGrouping; i++)
+            using var firstIterator = first.GetEnumerator();
+            using var secondIterator = second.GetEnumerator();
+            var exhaustedFirst = false;
+            // Keep going while we've got elements in the first sequence.
+            while (!exhaustedFirst)
             {
-                if (!firstIterator.MoveNext())
+                for (var i = 0; i < firstGrouping; i++)
                 {
-                    exhaustedFirst = true;
-                    break;
+                    if (!firstIterator.MoveNext())
+                    {
+                        exhaustedFirst = true;
+                        break;
+                    }
+                    yield return firstIterator.Current;
                 }
-                yield return firstIterator.Current;
+                // This may not yield any results - the first sequence
+                // could go on for much longer than the second. It does no
+                // harm though; we can keep calling MoveNext() as often
+                // as we want.
+                for (var i = 0; i < secondGrouping; i++)
+                {
+                    // This is a bit ugly, but it works...
+                    if (!secondIterator.MoveNext())
+                    {
+                        break;
+                    }
+                    yield return secondIterator.Current;
+                }
             }
-            // This may not yield any results - the first sequence
-            // could go on for much longer than the second. It does no
-            // harm though; we can keep calling MoveNext() as often
-            // as we want.
-            for (var i = 0; i < secondGrouping; i++)
+            // We may have elements in the second sequence left over.
+            // Yield them all now.
+            while (secondIterator.MoveNext())
             {
-                // This is a bit ugly, but it works...
-                if (!secondIterator.MoveNext())
-                {
-                    break;
-                }
                 yield return secondIterator.Current;
             }
-        }
-        // We may have elements in the second sequence left over.
-        // Yield them all now.
-        while (secondIterator.MoveNext())
-        {
-            yield return secondIterator.Current;
         }
     }
 
     /// <summary>
-    /// Extends an <see cref="IEnumerable{T}"/> to include the current item and its predecessor.
+    /// Enumerates the sequence while providing each element together with its immediate predecessor.
     /// </summary>
-    /// <typeparam name="T">The type of elements in the collection.</typeparam>
-    /// <param name="enumerable">The input collection to process.</param>
-    /// <returns>An <see cref="IEnumerable{T}"/> where each element is a tuple containing 
-    /// the current item and the item that preceded it. <br/>
-    /// The first element will have a <see langword="default"/> predecessor.
+    /// <typeparam name="T">The type of elements in the sequence.</typeparam>
+    /// <param name="enumerable">The source sequence.</param>
+    /// <returns>
+    /// A sequence of tuples where:
+    /// <list type="bullet">
+    /// <item><description><c>Item</c> is the current element.</description></item>
+    /// <item><description><c>Previous</c> is the previous element, or <see langword="default"/> for the first element.</description></item>
+    /// </list>
     /// </returns>
     /// <remarks>
-    /// This method is particularly useful for scenarios where you need to track changes or comparisons 
-    /// between consecutive elements in a sequence.
+    /// The source sequence is enumerated only once and evaluated lazily.
     /// </remarks>
     public static IEnumerable<(T Item, T? Previous)> WithPrevious<T>(this IEnumerable<T> enumerable)
     {
         Check.NotNull(enumerable);
-        return WithPreviousImpl(enumerable);
+        return WithPreviousIterator(enumerable);
 
-        static IEnumerable<(T Item, T? Previous)> WithPreviousImpl(IEnumerable<T> enumerable)
+        static IEnumerable<(T Item, T? Previous)> WithPreviousIterator(IEnumerable<T> enumerable)
         {
             var previous = default(T);
             foreach (var item in enumerable)
@@ -379,6 +404,90 @@ public static partial class EnumerableExtensions
                 yield return (item, previous);
                 previous = item;
             }
+        }
+    }
+
+    /// <summary>
+    /// Enumerates the sequence while providing each element together with its immediate successor.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the sequence.</typeparam>
+    /// <param name="enumerable">The source sequence.</param>
+    /// <returns>
+    /// A sequence of tuples where:
+    /// <list type="bullet">
+    /// <item><description><c>Item</c> is the current element.</description></item>
+    /// <item><description><c>Next</c> is the next element, or <see langword="default"/> for the last element.</description></item>
+    /// </list>
+    /// </returns>
+    /// <remarks>
+    /// The source sequence is enumerated only once and evaluated lazily.
+    /// </remarks>
+    public static IEnumerable<(T Item, T? Next)> WithNext<T>(this IEnumerable<T> enumerable)
+    {
+        Check.NotNull(enumerable);
+        return WithNextIterator(enumerable);
+
+        static IEnumerable<(T Item, T? Next)> WithNextIterator(IEnumerable<T> enumerable)
+        {
+            using var enumerator = enumerable.GetEnumerator();
+            if (!enumerator.MoveNext())
+            {
+                yield break;
+            }
+
+            var current = enumerator.Current;
+            while (enumerator.MoveNext())
+            {
+                var next = enumerator.Current;
+                yield return (current, next);
+                current = next;
+            }
+
+            yield return (current, default);
+        }
+    }
+
+    /// <summary>
+    /// Enumerates the sequence while providing each element together with its
+    /// immediate predecessor and successor.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the sequence.</typeparam>
+    /// <param name="enumerable">The source sequence.</param>
+    /// <returns>
+    /// A sequence of tuples where:
+    /// <list type="bullet">
+    /// <item><description><c>Item</c> is the current element.</description></item>
+    /// <item><description><c>Previous</c> is the previous element, or <see langword="default"/> for the first element.</description></item>
+    /// <item><description><c>Next</c> is the next element, or <see langword="default"/> for the last element.</description></item>
+    /// </list>
+    /// </returns>
+    /// <remarks>
+    /// The source sequence is enumerated only once and evaluated lazily.
+    /// </remarks>
+    public static IEnumerable<(T Item, T? Previous, T? Next)> WithNeighbors<T>(this IEnumerable<T> enumerable)
+    {
+        Check.NotNull(enumerable);
+        return WithNeighborsIterator(enumerable);
+
+        static IEnumerable<(T Item, T? Previous, T? Next)> WithNeighborsIterator(IEnumerable<T> enumerable)
+        {
+            using var enumerator = enumerable.GetEnumerator();
+            if (!enumerator.MoveNext())
+            {
+                yield break;
+            }
+
+            var previous = default(T);
+            var current = enumerator.Current;
+            while (enumerator.MoveNext())
+            {
+                var next = enumerator.Current;
+                yield return (current, previous, next);
+                previous = current;
+                current = next;
+            }
+
+            yield return (current, previous, default);
         }
     }
 

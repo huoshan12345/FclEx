@@ -1,4 +1,5 @@
-﻿namespace System.Collections.Generic;
+﻿#pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
+namespace System.Collections.Generic;
 
 public unsafe class BytewiseEqualityComparer<T> : IEqualityComparer<T>
 {
@@ -48,10 +49,20 @@ public unsafe class BytewiseEqualityComparer<T> : IEqualityComparer<T>
         var (dataSize, dataAddress) = typeof(T).IsValueType switch
         {
             true => (size, new IntPtr(pointer)),
-            false => (size - 2 * IntPtr.Size, *(IntPtr*)pointer + IntPtr.Size), 
+            false => (size - 2 * IntPtr.Size, *(IntPtr*)pointer + IntPtr.Size),
         };
 
         var span = new Span<byte>(dataAddress.ToPointer(), dataSize);
         return span;
+    }
+
+    internal static byte[] GetBytes(T? obj)
+    {
+        if (obj is null)
+            return [];
+
+        var p = &obj;
+        var span = AsSpan(p);
+        return span.ToArray();
     }
 }

@@ -14,9 +14,20 @@ public static partial class QueryableExtensions
         return condition ? source.Where(predicate) : source;
     }
 
+    public static IQueryable<T> WhereIf<T>(this IQueryable<T> queryable, bool condition, Expression<Func<T, int, bool>> predicate)
+    {
+        return queryable.WhereIf(predicate, condition);
+    }
+
+    public static IQueryable<T> WhereIf<T>(this IQueryable<T> queryable, bool condition, Expression<Func<T, bool>> predicate)
+    {
+        return queryable.WhereIf(predicate, condition);
+    }
+
     public static IQueryable<JoinResult<TOuter, TInner>> Join<TOuter, TInner, TKey>(this IQueryable<TOuter> outer, IEnumerable<TInner> inner,
         Expression<Func<TOuter, TKey>> outerKeySelector, Expression<Func<TInner, TKey>> innerKeySelector)
     {
         return outer.Join(inner, outerKeySelector, innerKeySelector, (m, n) => new JoinResult<TOuter, TInner>(m, n));
     }
+
 }

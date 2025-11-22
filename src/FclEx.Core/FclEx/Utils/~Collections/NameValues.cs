@@ -68,7 +68,7 @@ public class NameValues<TSelf> : IReadOnlyCollection<KeyValuePair<string, string
     /// <param name="key">The key (null values become empty strings)</param>
     /// <param name="value">The value (null values become empty strings)</param>
     /// <returns>The instance for method chaining</returns>
-    public TSelf Add(string? key, string? value)
+    public virtual TSelf Add(string? key, string? value)
     {
         _entries.Add(key ?? "", value ?? "");
         _count++;
@@ -82,7 +82,7 @@ public class NameValues<TSelf> : IReadOnlyCollection<KeyValuePair<string, string
     /// <param name="key">The key (null values become empty strings)</param>
     /// <param name="value">The value (null values become empty strings)</param>
     /// <returns>The instance for method chaining</returns>
-    public TSelf Set(string? key, string? value)
+    public virtual TSelf Set(string? key, string? value)
     {
         Remove(key);
         return Add(key, value);
@@ -93,7 +93,7 @@ public class NameValues<TSelf> : IReadOnlyCollection<KeyValuePair<string, string
     /// </summary>
     /// <param name="key">The key to remove (null values become empty strings)</param>
     /// <returns>The instance for method chaining</returns>
-    public TSelf Remove(string? key)
+    public virtual TSelf Remove(string? key)
     {
         if (_entries.Remove(key ?? "", out var values))
         {

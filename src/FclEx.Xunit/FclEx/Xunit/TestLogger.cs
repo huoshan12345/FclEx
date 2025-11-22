@@ -5,10 +5,16 @@ public class TestLogger : ILogger
     private readonly ITestOutputHelper _output;
     private readonly string _name;
     private readonly bool _checkDisposed;
-    private readonly object _lock = new();
     private bool _isDisposed;
+    private readonly
+#if NET9_0_OR_GREATER
+        Lock
+#else
+        object
+#endif
+        _lock = new();
 
-    private static readonly FieldInfo _field = typeof(TestOutputHelper).GetField("buffer", BindingFlags.NonPublic | BindingFlags.Instance)!;
+    private static readonly FieldInfo? _field = typeof(TestOutputHelper).GetField("buffer", BindingFlags.NonPublic | BindingFlags.Instance);
 
     public TestLogger(ITestOutputHelper output, string name, bool checkDisposed)
     {
@@ -19,7 +25,7 @@ public class TestLogger : ILogger
 
     private static bool CheckDisposed(ITestOutputHelper output)
     {
-        if (output is TestOutputHelper helper)
+        if (output is TestOutputHelper helper && _field is not null)
         {
             return _field.GetValue(helper) == null;
         }
@@ -56,8 +62,17 @@ public class TestLogger : ILogger
             }
         }
 
-        var msg = exception is null ? message : message + Environment.NewLine + exception;
-        _output.WriteLine($"[{_name}][{logLevel}]" + msg);
+        if (exception is not null)
+        {
+            var ex = exception.ToString();
+            if (message.Contains(ex) == false)
+            {
+                // Append exception details if not already included in the message
+                message = message + Environment.NewLine + ex;
+            }
+        }
+
+        _output.WriteLine($"[{_name}][{logLevel}]" + message);
     }
 
     public bool IsEnabled(LogLevel logLevel) => true;

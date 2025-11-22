@@ -14,10 +14,13 @@ global using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 global using Microsoft.EntityFrameworkCore.Storage;
 global using Renci.SshNet;
 global using Xunit;
+global using Xunit.Abstractions;
 global using static FclEx.EfCore.EfCoreFixture;
-#if !DISABLE_SOME_DATABASES
-global using MySql.Data.MySqlClient;
+#if !DISABLE_NPGSQL
 global using Npgsql;
+#endif
+#if !DISABLE_MYSQL
+global using MySql.Data.MySqlClient;
 global using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 global using Pomelo.EntityFrameworkCore.MySql.Infrastructure.Internal;
 global using Pomelo.EntityFrameworkCore.MySql.Storage.Internal;

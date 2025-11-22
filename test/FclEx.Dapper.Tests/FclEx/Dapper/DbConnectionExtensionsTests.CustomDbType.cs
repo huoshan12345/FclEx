@@ -2,7 +2,7 @@
 
 partial class DbConnectionExtensionsTests
 {
-#if !DISABLE_SOME_DATABASES
+#if !DISABLE_NPGSQL
     [Theory]
     [MemberData(nameof(SchemaCases))]
     public async Task InsertAsync_EntityWithPostgresqlJsonb_Test(string schema)
@@ -31,6 +31,7 @@ partial class DbConnectionExtensionsTests
         Assert.Equal(payload.Value, actualPayload.Value);
     }
 #endif
+
     [LocalOnlyTheory]
     [MemberData(nameof(SchemaCases))]
     public async Task InsertAsync_EntityWithSqlServerXml_Test(string schema)
@@ -86,7 +87,7 @@ partial class DbConnectionExtensionsTests
         Assert.Equal(payload.Value, actualPayload.Value);
     }
 
-#if !DISABLE_SOME_DATABASES
+#if !DISABLE_MYSQL
     public static readonly IEnumerable<object?[]> MySqlSchemaCases = new[] { DbProviderType.MySqlConnector, DbProviderType.MySql }
         .SelectMany(Schemas)
         .Select(m => new object?[] { m.Left, m.Right });

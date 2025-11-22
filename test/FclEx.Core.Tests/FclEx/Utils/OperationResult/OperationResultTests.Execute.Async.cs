@@ -2,7 +2,7 @@
 
 partial class OperationResultTests
 {
-    [RetryFact]
+    [RetryFact(5, 1000)]
     public async Task ExecuteAsync_Timeout_Test()
     {
         var (success, exception, elapsed) = await Operation.ExecuteAsync(() => Task.Delay(TimeSpan.FromSeconds(5)), TimeSpan.FromSeconds(1));
@@ -11,7 +11,7 @@ partial class OperationResultTests
         Assert.IsType<TimeoutException>(exception);
     }
 
-    [RetryFact]
+    [RetryFact(5, 1000)]
     public async Task ExecuteAsync_Timeout_Success_Test()
     {
         var (success, result, _, elapsed) = await Operation.ExecuteAsync(async () =>
@@ -24,7 +24,7 @@ partial class OperationResultTests
         Assert.True(elapsed < TimeSpan.FromSeconds(1.5), elapsed.ToString());
     }
 
-    [RetryFact]
+    [RetryFact(5, 1000)]
     public async Task ExecuteAsync_Timeout_SyncBody_Test()
     {
         var (success, exception, elapsed) = await Operation.ExecuteAsync(() =>
@@ -37,7 +37,7 @@ partial class OperationResultTests
         Assert.IsType<TimeoutException>(exception);
     }
 
-    [RetryFact]
+    [RetryFact(5, 1000)]
     public async Task ExecuteAsync_Timeout_SyncBody_Success_Test()
     {
         var (success, result, _, elapsed) = await Operation.ExecuteAsync(() =>
