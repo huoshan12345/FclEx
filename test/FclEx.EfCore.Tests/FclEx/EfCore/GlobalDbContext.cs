@@ -6,7 +6,7 @@ public enum DbProviderType
 {
     SqlServer,
     Sqlite,
-#if !DISABLE_SOME_DATABASES
+#if !DISABLE_NPGSQL
     Npgsql,
     MySql,
     MySqlConnector,
@@ -47,10 +47,12 @@ public class GlobalDbContext(
             case DbProviderType.Sqlite:
                 builder.UseSqlite(ConnectionString);
                 break;
-#if !DISABLE_SOME_DATABASES
+#if !DISABLE_NPGSQL
             case DbProviderType.Npgsql:
                 builder.UseNpgsql(ConnectionString);
                 break;
+#endif
+#if !DISABLE_MYSQL
             case DbProviderType.MySql:
                 builder.UseMySQL(ConnectionString);
                 break;
@@ -78,12 +80,13 @@ public class GlobalDbContext(
             var e = modelBuilder.Entity<EntityWithSqlServerXml>();
         }
 
-#if !DISABLE_SOME_DATABASES
+#if !DISABLE_NPGSQL
         if (DbProviderType == DbProviderType.Npgsql)
         {
             var e = modelBuilder.Entity<EntityWithPostgresqlJsonb>();
         }
-
+#endif
+#if !DISABLE_MYSQL
         if (DbProviderType is DbProviderType.MySqlConnector or DbProviderType.MySql)
         {
             var e = modelBuilder.Entity<EntityWithMySqlBlob>();
@@ -109,7 +112,7 @@ public class GlobalDbContext(
         return base.SaveChanges(acceptAllChangesOnSuccess);
     }
 
-#if !DISABLE_SOME_DATABASES
+#if !DISABLE_MYSQL
     private static void UseMySql(DbContextOptionsBuilder builder, string connectionString, string? schema)
     {
         var sb = new MySqlConnectionStringBuilder(connectionString);

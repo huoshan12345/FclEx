@@ -30,13 +30,15 @@ public class SchemaDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         var cs = Fixture.ConnectionStrings;
         switch (dbProviderType)
         {
-#if !DISABLE_SOME_DATABASES
+#if !DISABLE_NPGSQL
             case DbProviderType.Npgsql:
             {
                 var conStr = cs.Get(DbProviderType.Npgsql, true);
                 await using var con = new NpgsqlConnection(conStr);
                 return await con.ExecuteScalarAsync<string>("SHOW SEARCH_PATH;");
             }
+#endif
+#if !DISABLE_MYSQL
             case DbProviderType.MySql:
             case DbProviderType.MySqlConnector:
             {

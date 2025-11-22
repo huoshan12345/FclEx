@@ -13,6 +13,27 @@ public class HttpHeaders() : NameValues<HttpHeaders>(StringComparer.OrdinalIgnor
         }
     }
 
+    public override HttpHeaders Add(string? key, string? value)
+    {
+        // http headers do not allow empty key
+        if (key.IsNullOrEmpty())
+            return this;
+
+        return base.Add(key, value);
+    }
+
+    public override HttpHeaders Set(string? key, string? value)
+    {
+        // http headers do not allow empty key
+        if (key.IsNullOrEmpty())
+            return this;
+
+        // use null to remove header
+        return value == null
+            ? Remove(key)
+            : base.Set(key, value);
+    }
+
     public static HttpHeaders Parse(string? query)
     {
         var dic = HttpUtility.ParseQueryString(query ?? "");

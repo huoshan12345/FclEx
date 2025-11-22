@@ -29,13 +29,24 @@ public partial class HttpRequest
     public bool IgnoreInvalidCharSet { get; set; } = true;
     public CompressionMethod CompressionMethod { get; set; } = CompressionMethod.None;
     public CompressionLevel CompressionLevel { get; set; } = CompressionLevel.NoCompression;
-    public HttpContentType ReadContentType { get; set; } = HttpContentType.String;
+    public HttpContentType ResponseContentType { get; set; } = HttpContentType.String;
     public bool ReadContent { get; set; } = true;
     public bool ReadCookies { get; set; } = true;
 
-    public HttpHeaders Headers { get; } = new();
+    /// <summary>
+    /// Indicates whether a default User-Agent header should be applied
+    /// when none is explicitly provided. <see cref="HttpConstants.DefaultUserAgent"/>
+    /// </summary>
+    public bool UseDefaultUserAgent { get; set; } = true;
+
+    /// <summary>
+    /// Indicates whether headers should be added without validating their format or allowed characters.
+    /// </summary>
+    public bool AddHeaderWithoutValidation { get; set; } = false;
+
+    public HttpHeaders Headers { get; } = [];
     public UriParams Query => _uriCreator.Query;
-    public UriParams Form { get; } = new(); // don't use new NameValueCollection() here.
+    public UriParams Form { get; } = []; // don't use new NameValueCollection() here.
 
     public string? Referrer
     {

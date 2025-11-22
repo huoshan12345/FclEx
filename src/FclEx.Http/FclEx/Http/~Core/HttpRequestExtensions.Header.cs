@@ -14,6 +14,12 @@ partial class HttpRequestExtensions
         return request;
     }
 
+    public static HttpRequest RemoveHeader(this HttpRequest request, string key)
+    {
+        request.Headers.Remove(key);
+        return request;
+    }
+
     public static HttpRequest TryAddHeader(this HttpRequest request, string key, string? value)
     {
         if (request.Headers.ContainsKey(key) == false)

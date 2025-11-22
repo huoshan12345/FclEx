@@ -12,7 +12,6 @@ public readonly record struct HttpClientContext(
     }
 }
 
-
 public abstract class AbstractHttpClientService : AbstractHttpService
 {
     protected static readonly Encoding DefaultEncoding = Encoding.UTF8;
@@ -53,7 +52,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             response.Headers.AddRange(key, value);
         }
 
-        switch (request.ReadContentType)
+        switch (request.ResponseContentType)
         {
             case HttpContentType.Stream:
             {
@@ -73,7 +72,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
                 break;
             }
             default:
-                throw new ArgumentOutOfRangeException(nameof(request.ReadContentType), request.ReadContentType, null);
+                throw new ArgumentOutOfRangeException(nameof(request.ResponseContentType), request.ResponseContentType, null);
         }
     }
 
@@ -210,12 +209,19 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             request.BasicAuth(request.UserName, request.Password);
         }
 
-        foreach (var (key, value) in request.Headers.Where(h => NotAddHeaderNames.Contains(h.Key) == false))
+        foreach (var (key, value) in request.Headers.Where(h => h.Key.Length > 0 && NotAddHeaderNames.Contains(h.Key) == false))
         {
-            requestMessage.Headers.Add(key, value);
+            if (request.AddHeaderWithoutValidation)
+            {
+                requestMessage.Headers.TryAddWithoutValidation(key, value);
+            }
+            else
+            {
+                requestMessage.Headers.Add(key, value);
+            }
         }
 
-        if (requestMessage.Headers.UserAgent is { Count: 0 } userAgent)
+        if (request.UseDefaultUserAgent && requestMessage.Headers.UserAgent is { Count: 0 } userAgent)
         {
             userAgent.ParseAdd(HttpConstants.DefaultUserAgent);
         }
@@ -293,7 +299,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             {
                 await ReadContentAsync(last, httpResponse, cts.Token);
 
-                if (httpRequest.ReadContentType == HttpContentType.Stream)
+                if (httpRequest.ResponseContentType == HttpContentType.Stream)
                 {
                     // the last will be disposed in HttpResponse.ResponseStream instead of here.
                     responses.Remove(last);

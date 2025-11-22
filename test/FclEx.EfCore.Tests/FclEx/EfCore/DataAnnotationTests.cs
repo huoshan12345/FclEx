@@ -2,7 +2,7 @@
 
 public class DataAnnotationTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {
-#if !DISABLE_SOME_DATABASES
+#if !DISABLE_NPGSQL
     [Fact]
     public async Task TableName_Postfix_Test()
     {

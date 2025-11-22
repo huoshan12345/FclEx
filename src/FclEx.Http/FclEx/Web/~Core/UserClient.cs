@@ -1,6 +1,4 @@
-﻿using System.Security.Principal;
-
-namespace FclEx.Web;
+﻿namespace FclEx.Web;
 
 public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable where TAccount : IUserAccount
 {
@@ -88,7 +86,7 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
         Logger.LogDebug("Start to login...");
         return LoginActionAsync(token)
             .Success(o => Logger.LogDebug("Login successfully"))
-            .Error(ex => Logger.LogWarning(ex, "Failed to login: " + ex.Message));
+            .Error(ex => Logger.LogWarning(ex, "Failed to login: {Error}", ex.Message));
     }
 
     protected abstract Task<OperationResult> LoginActionAsync(CancellationToken token);
@@ -139,12 +137,12 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "An error occured when logging in: " + ex.Message);
+            Logger.LogError(ex, "Failed to execute login action: {Error}", ex.Message);
             return (ex, time.GetElapsedTime());
         }
         finally
         {
-            Logger.LogTrace("It takes {ElapsedSeconds:f3} seconds to login", time.GetElapsedTime().TotalSeconds);
+            Logger.LogTrace("It takes {ElapsedSeconds:f3} seconds to execute login action", time.GetElapsedTime().TotalSeconds);
         }
     }
 
@@ -172,7 +170,7 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
             Logger.LogDebug("Start to fake login...");
             var result = await FakeLoginActionAsync(t)
                 .Success(o => Logger.LogDebug("Fake login successfully"))
-                .Error(ex => Logger.LogWarning(ex, "Failed to fake login: " + ex.Message));
+                .Error(ex => Logger.LogWarning(ex, "Failed to fake login: {Error}", ex.Message));
 
             if (result.Error && loginIfFail)
             {
