@@ -27,14 +27,17 @@ public class EfCoreFixture : GlobalFixture
 
     public static readonly DbProviderType[] DatabaseTypes = TestHelper.IsGithubAction
         ? [
-#if !DISABLE_SOME_DATABASES
+#if !DISABLE_NPGSQL
             DbProviderType.Npgsql,
 #endif
             DbProviderType.Sqlite,
         ]
         : [
-#if !DISABLE_SOME_DATABASES
-            DbProviderType.Npgsql, DbProviderType.MySqlConnector,
+#if !DISABLE_NPGSQL
+            DbProviderType.Npgsql, 
+#endif
+#if !DISABLE_MYSQL
+            DbProviderType.MySqlConnector,
 #endif
             DbProviderType.Sqlite, DbProviderType.SqlServer,
         ];
@@ -57,8 +60,8 @@ public class EfCoreFixture : GlobalFixture
                 await using var context = CreateDbContext(databaseType, schema);
 
                 if (isRecreated == false
-#if !DISABLE_SOME_DATABASES
-                    || databaseType == DbProviderType.MySqlConnector    
+#if !DISABLE_NPGSQL
+                    || databaseType == DbProviderType.MySqlConnector
 #endif
                     )
                 {
@@ -73,7 +76,7 @@ public class EfCoreFixture : GlobalFixture
                 isRecreated = true;
 
                 if (isFirst || databaseType is DbProviderType.Sqlite
-#if !DISABLE_SOME_DATABASES
+#if !DISABLE_NPGSQL
                         or DbProviderType.MySqlConnector
 #endif
                         )
@@ -113,12 +116,14 @@ public class EfCoreFixture : GlobalFixture
                 // $"ALTER SERVER ROLE [sysadmin] ADD MEMBER [{user}]",
             ],
             DbProviderType.Sqlite => [],
-#if !DISABLE_SOME_DATABASES
+#if !DISABLE_NPGSQL
             DbProviderType.Npgsql => [
                 $"DROP ROLE IF EXISTS {user}",
                 $"CREATE USER {user} WITH LOGIN SUPERUSER PASSWORD '{password}'",
                 $"ALTER USER {user} SET SEARCH_PATH TO {schema}"
             ],
+#endif
+#if !DISABLE_MYSQL
             DbProviderType.MySqlConnector => [
                 $"DROP USER IF EXISTS {user}",
                 $"CREATE USER '{user}'@'%' IDENTIFIED BY '{password}'",

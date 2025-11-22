@@ -14,7 +14,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <DefineConstants Condition="'$(TargetFramework)' == 'net10.0'">$(DefineConstants);DISABLE_SOME_DATABASES</DefineConstants>
+    <!--<DefineConstants Condition="'$(TargetFramework)' == 'net10.0'">$(DefineConstants);DISABLE_NPGSQL</DefineConstants>-->
+    <DefineConstants Condition="'$(TargetFramework)' == 'net10.0'">$(DefineConstants);DISABLE_MYSQL</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup>
