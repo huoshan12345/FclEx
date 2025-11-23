@@ -2,9 +2,27 @@
 
 partial class HttpRequestExtensions
 {
-    public static HttpRequest ReadContent(this HttpRequest request, bool read)
+    public static HttpRequest ReadContent(this HttpRequest request, bool value)
     {
-        request.ReadContent = read;
+        request.ReadContent = value;
+        return request;
+    }
+
+    public static HttpRequest ReadCookies(this HttpRequest request, bool value)
+    {
+        request.ReadCookies = value;
+        return request;
+    }
+
+    public static HttpRequest UseDefaultUserAgent(this HttpRequest request, bool value)
+    {
+        request.UseDefaultUserAgent = value;
+        return request;
+    }
+
+    public static HttpRequest AddHeaderWithoutValidation(this HttpRequest request, bool value)
+    {
+        request.AddHeaderWithoutValidation = value;
         return request;
     }
 
@@ -161,9 +179,9 @@ partial class HttpRequestExtensions
         return request;
     }
 
-    public static HttpRequest ReadAs(this HttpRequest request, HttpContentType type)
+    public static HttpRequest ReadAs(this HttpRequest request, HttpContentType value)
     {
-        request.ReadContentType = type;
+        request.ResponseContentType = value;
         return request;
     }
 
