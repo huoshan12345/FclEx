@@ -16,8 +16,6 @@ public abstract class AbstractHttpClientService : AbstractHttpService
 {
     protected static readonly Encoding DefaultEncoding = Encoding.UTF8;
 
-    protected static readonly ProductInfoHeaderValue DefaultUserAgent = ProductInfoHeaderValue.Parse(HttpConstants.DefaultUserAgent);
-
     protected static readonly string[] NotAddHeaderNames =
     [
         HttpHeaderNames.ContentType,
@@ -225,7 +223,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
 
         if (request.UseDefaultUserAgent && requestMessage.Headers.UserAgent is { Count: 0 } userAgent)
         {
-            userAgent.Add(DefaultUserAgent);
+            userAgent.ParseAdd(HttpConstants.DefaultUserAgent);
         }
 
         var cookies = request.Headers.GetValues(HttpHeaderNames.Cookie);
