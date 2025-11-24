@@ -85,6 +85,13 @@ public class BytewiseEqualityComparerTests
 
     private static void AssertBytewiseEqual<T>(T expected, T actual)
     {
-        Assert.Equal(expected, actual, BytewiseEqualityComparer<T>.Instance);
+        if (BytewiseEqualityComparer<T>.Instance.Equals(expected, actual))
+            return;
+
+        var method = BytewiseEqualityComparer<T>.GetBytes;
+        var expectedBytes = method(expected);
+        var actualBytes = method(actual);
+        Assert.Equal(expectedBytes, actualBytes);
+        Assert.Fail("BytewiseEqualityComparer reported inequality, but the byte sequences are identical.");
     }
 }
