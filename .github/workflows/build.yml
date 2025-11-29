@@ -20,10 +20,6 @@ env:
   MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
   NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
   IS_PUSH_DEFAULT: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-  #FclEx__Postgres__PASSWORD:  ${{ secrets.TEST_POSTGRES_PASSWORD }}
-  #FclEx__Rmq__PASSWORD:  ${{ secrets.TEST_RABBITMQ_PASSWORD }}
-  #FclEx__Mysql_PASSWORD:  ${{ secrets.TEST_MYSQL_PASSWORD }}
-  #FclEx__Redis_PASSWORD:  ${{ secrets.TEST_REDIS_PASSWORD }}
 
 jobs:
   build:
@@ -107,7 +103,7 @@ jobs:
         uses: huoshan12345/update-tag@v1
         with:
           tag_name: ${{ env.VERSION }}
-          update_if_exists: false
+          update_if_exists: true
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
 
