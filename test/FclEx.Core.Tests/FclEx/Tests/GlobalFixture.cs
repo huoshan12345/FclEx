@@ -41,7 +41,8 @@ public class GlobalFixture : IAsyncLifetime
 #pragma warning restore CA2255
     public static void Initialize()
     {
-        ThreadPool.SetMinThreads(100, 100);
+        var count = Environment.ProcessorCount;
+        ThreadPool.SetMinThreads(count * 4, count * 2);
 #pragma warning disable SYSLIB0014
         ServicePointManager.DefaultConnectionLimit = short.MaxValue;
 #pragma warning restore SYSLIB0014

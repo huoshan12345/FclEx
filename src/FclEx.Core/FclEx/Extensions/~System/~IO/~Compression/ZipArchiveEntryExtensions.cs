@@ -2,7 +2,7 @@
 
 public static class ZipArchiveEntryExtensions
 {
-    public static async Task ExtractToFileAsync(this ZipArchiveEntry source, string destPath, bool overwrite)
+    public static async Task ExtractToFileAsync(this ZipArchiveEntry source, string destPath, bool overwrite, int bufferSize = 4 * 1024, CancellationToken token = default)
     {
         Check.NotNull(source);
         Check.NotEmpty(destPath);
@@ -12,18 +12,18 @@ public static class ZipArchiveEntryExtensions
 #if NET6_0_OR_GREATER
         await
 #endif
-        using (var destination = new FileStream(destPath, mode, FileAccess.Write, FileShare.None, 4096, false))
+        using (var destination = new FileStream(destPath, mode, FileAccess.Write, FileShare.None, bufferSize, false))
         {
 #if NET6_0_OR_GREATER
             await
 #endif
             using var stream = source.Open();
-            await stream.CopyToAsync(destination);
+            await stream.CopyToAsync(destination, bufferSize, token);
         }
         File.SetLastWriteTime(destPath, source.LastWriteTime.DateTime);
     }
 
-    public static Task ExtractToDirAsync(this ZipArchiveEntry entry, string dir, bool ignoreEntryDir, bool overwrite)
+    public static Task ExtractToDirAsync(this ZipArchiveEntry entry, string dir, bool ignoreEntryDir, bool overwrite, int bufferSize = 4 * 1024, CancellationToken token = default)
     {
         var path = ignoreEntryDir
             ? Path.Combine(dir, entry.Name)
@@ -31,7 +31,7 @@ public static class ZipArchiveEntryExtensions
 
         var fi = new FileInfo(path);
         fi.Directory?.TryCreate();
-        return entry.ExtractToFileAsync(fi.FullName, overwrite);
+        return entry.ExtractToFileAsync(fi.FullName, overwrite, bufferSize, token);
     }
 
     public static string Name(this ZipArchiveEntryInfo info)
