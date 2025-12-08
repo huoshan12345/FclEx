@@ -14,6 +14,7 @@ global using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 global using Microsoft.EntityFrameworkCore.Storage;
 global using Renci.SshNet;
 global using Xunit;
+global using Xunit.Abstractions;
 global using static FclEx.EfCore.EfCoreFixture;
 #if !DISABLE_NPGSQL
 global using Npgsql;
