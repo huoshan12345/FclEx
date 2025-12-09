@@ -32,6 +32,7 @@ public class SourceGenerator : IIncrementalGenerator
                 "FclEx.Xunit" =>
                 [
                     ExtensionsSource.Generate(),
+                    XunitSerializableSource.Generate(),
                 ],
                 "FclEx.DependencyInjection" =>
                 [
