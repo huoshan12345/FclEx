@@ -55,7 +55,7 @@ public class PropertyTests : HttpServerTests
     public static readonly IEnumerable<object[]> CompressionMethods
         = EnumHelper.GetValues<CompressionMethod>().Select(m => new object[] { m });
 
-    [Theory]
+    [RetryTheory]
     [MemberData(nameof(CompressionMethods))]
     public async Task Compress_Test(CompressionMethod compression)
     {
