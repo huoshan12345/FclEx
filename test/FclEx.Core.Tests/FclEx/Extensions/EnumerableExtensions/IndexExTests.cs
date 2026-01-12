@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Extensions.EnumerableExtensions;
 
-public class IndexExtTests
+public class IndexExTests
 {
     public static IEnumerable<int> Empty { get; } = [];
 
@@ -22,7 +22,7 @@ public class IndexExtTests
 
     [Theory]
     [MemberData(nameof(NonEmptyEnumerableCases))]
-    public void WithIndex_NonEmptyEnumerable(IEnumerable<int> enumerable)
+    public void IndexEx_NonEmptyEnumerable(IEnumerable<int> enumerable)
     {
         var i = 0;
         var count = Numbers.Count();
@@ -39,13 +39,13 @@ public class IndexExtTests
 
     [Theory]
     [MemberData(nameof(EmptyEnumerableCases))]
-    public void WithIndex_EmptyEnumerable(IEnumerable<int> enumerable)
+    public void IndexEx_EmptyEnumerable(IEnumerable<int> enumerable)
     {
         Assert.Empty(enumerable.IndexEx());
     }
 
     [Fact]
-    public void WithIndex_NullEnumerable()
+    public void IndexEx_NullEnumerable()
     {
         IEnumerable<int>? enumerable = null;
         Assert.Throws<ArgumentNullException>(() => enumerable!.IndexEx());

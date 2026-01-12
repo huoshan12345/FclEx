@@ -34,6 +34,7 @@
     <Project Path="src/FclEx.NewtonsoftJson/FclEx.NewtonsoftJson.csproj" />
     <Project Path="src/FclEx.Options/FclEx.Options.csproj" />
     <Project Path="src/FclEx.Serilog/FclEx.Serilog.csproj" />
+    <Project Path="src/FclEx.Xunit.v3/FclEx.Xunit.v3.csproj" />
     <Project Path="src/FclEx.Xunit/FclEx.Xunit.csproj" />
     <Project Path="src/FclEx.YamlDotNet/FclEx.YamlDotNet.csproj" />
   </Folder>
