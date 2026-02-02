@@ -1,4 +1,6 @@
-﻿namespace FclEx.Xunit;
+﻿using Xunit.v3;
+
+namespace FclEx.Xunit;
 
 public class TestLogger : ILogger
 {
@@ -14,7 +16,7 @@ public class TestLogger : ILogger
 #endif
         _lock = new();
 
-    private static readonly FieldInfo? _field = typeof(TestOutputHelper).GetField("buffer", BindingFlags.NonPublic | BindingFlags.Instance);
+    private static readonly FieldInfo? _field = typeof(TestOutputHelper).GetField("state", BindingFlags.NonPublic | BindingFlags.Instance);
 
     public TestLogger(ITestOutputHelper output, string name, bool checkDisposed)
     {
