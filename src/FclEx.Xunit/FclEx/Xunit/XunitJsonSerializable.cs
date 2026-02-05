@@ -42,3 +42,8 @@ public class XunitJsonSerializable<T> : IXunitSerializable
         _options = serializerOptions;
     }
 }
+
+public static class XunitJsonSerializable
+{
+    public static XunitJsonSerializable<T> Create<T>(T? value) => new(value);
+}

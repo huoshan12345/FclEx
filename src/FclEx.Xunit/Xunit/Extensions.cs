@@ -1,10 +1,22 @@
-﻿namespace Xunit;
+﻿#pragma warning disable IDE0306 // Simplify collection initialization
+
+namespace Xunit;
 
 public static class Extensions
 {
     public static TheoryData<T> ToTheoryData<T>(this IEnumerable<T> enumerable)
     {
-        return [.. enumerable];
+        return new(enumerable);
+    }
+
+    public static SerializableTheoryData<T> ToSerializableTheoryData<T>(this IEnumerable<T> enumerable)
+    {
+        return new(enumerable);
+    }
+
+    public static JsonSerializableTheoryData<T> ToJsonSerializableTheoryData<T>(this IEnumerable<T> enumerable)
+    {
+        return new(enumerable);
     }
 
     /// <summary>

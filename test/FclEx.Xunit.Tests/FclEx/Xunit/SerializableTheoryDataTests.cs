@@ -10,15 +10,16 @@ public class SerializableTheoryDataTests
 {
     public record Person(string Name, int Age)
     {
-        public override string ToString()
-        {
-            return Name;
-        }
+        public override string ToString() => Name;
     }
 
     // because TheoryData<T> in v3 does not have method Add(T item), so here we have to specify the type Person
     // ReSharper disable once ArrangeObjectCreationWhenTypeEvident
-    public static readonly TheoryData<Person> TestCases = [new Person("Tom", 10), new Person("Jim", 20), new Person("Tim", 30)];
+
+    public static readonly Person[] People = [new("Tom", 10), new("Jim", 20), new("Tim", 30)];
+    public static readonly TheoryData<Person> TestCases = People.ToTheoryData();
+    public static readonly SerializableTheoryData<Person> SerializableTestCases = People.ToSerializableTheoryData();
+    public static readonly JsonSerializableTheoryData<Person> JsonSerializableTestCases = People.ToJsonSerializableTheoryData();
 
     [LocalOnlyTheory]
     [MemberData(nameof(TestCases))]
@@ -27,11 +28,18 @@ public class SerializableTheoryDataTests
         await Task.Delay(TimeSpan.FromMilliseconds(1000));
     }
 
-    public static readonly SerializableTheoryData<Person> SerializableTestCases = [new("Tom", 10), new("Jim", 20), new("Tim", 30)];
-
     [LocalOnlyTheory]
     [MemberData(nameof(SerializableTestCases))]
-    public async Task Serializable_Test(XunitSerializable<Person> person) // cases will be executed parallelly using ParallelTestFramework
+    public async Task Serializable_Test(XunitSerializable<Person> person)
+    {
+        // NOTE: cases will be executed parallelly using ParallelTestFramework in xunit.v2, but sequentially in xunit.v3
+        // IXunitSerializable in xunit.v3 requires every member should be serializable
+        await Task.Delay(TimeSpan.FromMilliseconds(1000));
+    }
+
+    [LocalOnlyTheory]
+    [MemberData(nameof(JsonSerializableTestCases))]
+    public async Task JsonSerializable_Test(XunitJsonSerializable<Person> person) // cases will be executed parallelly using ParallelTestFramework
     {
         await Task.Delay(TimeSpan.FromMilliseconds(1000));
     }
