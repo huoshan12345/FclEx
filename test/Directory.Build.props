@@ -31,7 +31,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AssemblyAttribute Include="Xunit.TestFramework" Condition="$(ProjectName) != 'FclEx.Core.Tests'">
+    <__DisableParallel Include="FclEx.Core.Tests" />
+    <__DisableParallel Include="FclEx.Xunit.Tests" />
+    <__DisableParallel Include="FclEx.Xunit.v3.Tests" />
+    <AssemblyAttribute Include="Xunit.TestFramework" 
+                       Condition="$([System.String]::Copy(@(__DisableParallel)).Contains($(MSBuildProjectName))) != 'False' ">
       <_Parameter1>Meziantou.Xunit.ParallelTestFramework</_Parameter1>
       <_Parameter2>Meziantou.Xunit.ParallelTestFramework</_Parameter2>
     </AssemblyAttribute>

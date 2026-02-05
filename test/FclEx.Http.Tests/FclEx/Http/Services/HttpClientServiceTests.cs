@@ -169,6 +169,6 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
         output.WriteLine(response.Exception.ToString());
 
         Assert.IsType<TaskCanceledException>(response.Exception);
-        AssertEx.Equal(expectedTime, response.Elapsed, TimeSpan.FromSeconds(0.2));
+        Assert.Equal(expectedTime, response.Elapsed, TimeSpan.FromSeconds(0.2));
     }
 }

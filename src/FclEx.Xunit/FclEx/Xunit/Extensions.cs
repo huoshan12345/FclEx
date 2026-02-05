@@ -1,5 +1,6 @@
 ﻿namespace FclEx.Xunit;
 
+// ReSharper disable once PartialTypeWithSinglePart
 public static partial class Extensions
 {
     public static ILoggerFactory AddXunitTest(this ILoggerFactory factory, ITestOutputHelper output, bool checkDisposed)
@@ -18,10 +19,5 @@ public static partial class Extensions
     {
         builder.Services.AddXunitTest(output, checkDisposed);
         return builder;
-    }
-
-    public static TheoryData<T> ToTheoryData<T>(this IEnumerable<T> enumerable)
-    {
-        return new TheoryData<T>(enumerable);
     }
 }

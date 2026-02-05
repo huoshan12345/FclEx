@@ -25,4 +25,20 @@ public static class TimeSpanExtensions
             : @"hh\:mm\:ss";
         return timeSpan.ToString(format);
     }
+
+    /// <summary>
+    /// Truncates the <see cref="TimeSpan"/> to millisecond precision by removing any sub-millisecond components.
+    /// </summary>
+    /// <param name="time">The <see cref="TimeSpan"/> to truncate.</param>
+    /// <returns>
+    /// A new <see cref="TimeSpan"/> whose value is truncated to milliseconds.
+    /// </returns>
+    /// <remarks>
+    /// This is useful when working with systems or databases that do not support
+    /// microsecond or tick-level precision and may otherwise round or reject values.
+    /// </remarks>
+    public static TimeSpan TruncateToMilliseconds(this TimeSpan time)
+    {
+        return new TimeSpan(time.Days, time.Hours, time.Minutes, time.Seconds, time.Milliseconds);
+    }
 }

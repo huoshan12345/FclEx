@@ -24,7 +24,9 @@ public class XunitJsonSerializable<T> : IXunitSerializable
 
     public virtual void Deserialize(IXunitSerializationInfo info)
     {
-        Value = info.GetValue<string>("_json").FromJson<T>(_options);
+        Value = info.GetValue<string>("_json") is { } json
+            ? json.FromJson<T>(_options)
+            : default;
     }
 
     public virtual void Serialize(IXunitSerializationInfo info)
@@ -39,4 +41,9 @@ public class XunitJsonSerializable<T> : IXunitSerializable
         serializerOptions.Converters.Add(new IgnoreTypesJsonConverter(typeof(Delegate)));
         _options = serializerOptions;
     }
+}
+
+public static class XunitJsonSerializable
+{
+    public static XunitJsonSerializable<T> Create<T>(T? value) => new(value);
 }

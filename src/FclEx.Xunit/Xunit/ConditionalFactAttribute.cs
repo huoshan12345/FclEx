@@ -9,10 +9,15 @@ public class ConditionalFactAttribute : FactAttribute
     public string? EnvVarValue { get; set; }
     public EnvVarCheckOption EnvVarCheckOption { get; set; }
 
-    private string? _skip;
-    public override string? Skip
+#if FCLEX_XUNIT_V3
+    public ConditionalFactAttribute(
+         [CallerFilePath] string? sourceFilePath = null,
+         [CallerLineNumber] int sourceLineNumber = -1)
+         : base(sourceFilePath, sourceLineNumber)
+#else
+    public ConditionalFactAttribute()
+#endif
     {
-        get => TestHelper.GetSkipReason(new(_skip, BuildType, AllowedOSPlatforms, EnvVarKey, EnvVarValue, EnvVarCheckOption));
-        set => _skip = value;
+        Skip = TestHelper.GetSkipReason(new(null, BuildType, AllowedOSPlatforms, EnvVarKey, EnvVarValue, EnvVarCheckOption));
     }
 }

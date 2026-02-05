@@ -1,15 +1,15 @@
 ﻿namespace FclEx.Xunit;
 
-public class SerializableTheoryData<T> : TheoryData<XunitSerializable<T>>
+public class JsonSerializableTheoryData<T> : TheoryData<XunitJsonSerializable<T>>
 {
-    public SerializableTheoryData(params IEnumerable<T> values)
+    public JsonSerializableTheoryData(params IEnumerable<T> values)
     {
         AddRange([.. values]);
     }
 
     public void Add(T p)
     {
-        AddRange(XunitSerializable.Create(p));
+        AddRange(XunitJsonSerializable.Create(p));
     }
 
     public void AddRange(params T[] values)
