@@ -16,7 +16,8 @@ public class SerializableTheoryDataTests
         }
     }
 
-    public static TheoryData<Person> TestCases = [new("Tom", 10), new("Jim", 20), new("Tim", 30)];
+    // because TheoryData<T> in v3 does not have method Add(T item), so here we have to specify the type Person
+    public static readonly TheoryData<Person> TestCases = [new Person("Tom", 10), new Person("Jim", 20), new Person("Tim", 30)];
 
     [LocalOnlyTheory]
     [MemberData(nameof(TestCases))]

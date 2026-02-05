@@ -13,14 +13,13 @@
 /// </remarks>
 public class PrecisionDateTimeOffsetComparer : IEqualityComparer<DateTimeOffset>
 {
+    /// <summary>
+    /// It is a specialized implementation of <see cref="PrecisionDateTimeOffsetComparer"/> with a precision of 1 millisecond.
+    /// </summary>
+    public static readonly PrecisionDateTimeOffsetComparer Millisecond = new(TimeSpan.FromMilliseconds(1));
+
     private readonly TimeSpan _precision;
 
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DateTimeOffsetPrecisionEqualityComparer"/> class
-    /// with the specified precision.
-    /// </summary>
-    /// <param name="precision">The precision to use when comparing two <see cref="DateTimeOffset"/> values.</param>
     public PrecisionDateTimeOffsetComparer(TimeSpan precision)
     {
         _precision = precision;
@@ -37,26 +36,8 @@ public class PrecisionDateTimeOffsetComparer : IEqualityComparer<DateTimeOffset>
 
     public int GetHashCode(DateTimeOffset obj)
     {
-        if (_precision != TimeSpan.Zero)
-            throw new NotSupportedException($"This comparer with non-zero precision '{_precision}' does not support GetHashCode.");
-
-        return obj.GetHashCode();
-    }
-}
-
-/// <summary>
-/// Provides an equality comparer for <see cref="DateTimeOffset"/> objects with millisecond-level precision.
-/// </summary>
-/// <remarks>
-/// This comparer considers two <see cref="DateTimeOffset"/> values equal if the absolute difference 
-/// between them is less than or equal to one millisecond. 
-/// It is a specialized implementation of <see cref="PrecisionDateTimeOffsetComparer"/> with a precision of 1 millisecond.
-/// </remarks>
-public class MillisecondsPrecisionComparer : PrecisionDateTimeOffsetComparer
-{
-    public static readonly MillisecondsPrecisionComparer Instance = new();
-
-    public MillisecondsPrecisionComparer() : base(TimeSpan.FromMilliseconds(1))
-    {
+        return _precision == TimeSpan.Zero
+            ? obj.GetHashCode()
+            : throw new NotSupportedException($"This comparer with non-zero precision '{_precision}' does not support GetHashCode.");
     }
 }

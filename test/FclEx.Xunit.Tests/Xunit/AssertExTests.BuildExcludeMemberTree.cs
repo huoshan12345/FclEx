@@ -3,7 +3,7 @@
 partial class AssertExTests
 {
     [Fact]
-    public void BuildExcludeMemberTree_Test()
+    public void BuildExcludedMemberTree_Test()
     {
         var paths = new[]
         {
@@ -36,7 +36,7 @@ partial class AssertExTests
             ("d", true),
         };
 
-        var tree = AssertEx.BuildExcludeMemberTree(paths);
+        var tree = AssertEx.BuildExcludedMemberTree(paths);
         var actual = tree.TraversalByLevel().Select(m => (m.Name, m.IsExcluded)).ToArray();
 
         Assert.Equal(expected.Length, actual.Length);

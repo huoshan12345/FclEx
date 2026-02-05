@@ -36,7 +36,7 @@ public static class DateTimeExtensions
 
     public static string ToCommon(this DateTime @this) => @this.ToString(CommonTimeFormat);
 
-    public static DateTime AddWeek(this DateTime dateTime) => AddWeeks(dateTime, 1);
+    public static DateTime AddWeek(this DateTime dateTime) => dateTime.AddWeeks(1);
 
     public static DateTime AddWeeks(this DateTime dateTime, int numberOfWeeks)
     {
@@ -46,12 +46,12 @@ public static class DateTimeExtensions
     public static DateTime StartOfWeek(this DateTime dt, int hour = 0, int minute = 0, int second = 0, DayOfWeek startOfWeek = DayOfWeek.Monday)
     {
         var diff = (7 + (dt.DayOfWeek - startOfWeek)) % 7;
-        return Today(dt, hour, minute, second).AddDays(-1 * diff);
+        return dt.Today(hour, minute, second).AddDays(-1 * diff);
     }
 
     public static DateTime EndOfWeek(this DateTime dt, int hour = 0, int minute = 0, int second = 0, DayOfWeek startOfWeek = DayOfWeek.Monday)
     {
-        return StartOfWeek(dt, hour, minute, second, startOfWeek).AddDays(6);
+        return dt.StartOfWeek(hour, minute, second, startOfWeek).AddDays(6);
     }
 
     public static DateTime Today(this DateTime dt, int hour = 0, int minute = 0, int second = 0)
@@ -61,12 +61,12 @@ public static class DateTimeExtensions
 
     public static DateTime Tomorrow(this DateTime dt, int hour = 0, int minute = 0, int second = 0)
     {
-        return Today(dt, hour, minute, second).AddDays(1);
+        return dt.Today(hour, minute, second).AddDays(1);
     }
 
     public static DateTime Yesterday(this DateTime dt, int hour = 0, int minute = 0, int second = 0)
     {
-        return Today(dt, hour, minute, second).AddDays(-1);
+        return dt.Today(hour, minute, second).AddDays(-1);
     }
 
     public static DateTime ThisYear(this DateTime dt, int month, int day, int hour = 0, int minute = 0, int second = 0)
@@ -132,7 +132,7 @@ public static class DateTimeExtensions
     {
         return DateTime.SpecifyKind(time, kind);
     }
-    
+
     public static DateTime ToCnTime(this DateTime time)
     {
         return time.ToUtc().AddHours(8);
@@ -141,5 +141,22 @@ public static class DateTimeExtensions
     public static string ToCnTimeStr(this DateTime time)
     {
         return time.ToCnTime().ToCommon();
+    }
+
+    /// <summary>
+    /// Truncates the <see cref="DateTime"/> to millisecond precision by removing any sub-millisecond components.
+    /// </summary>
+    /// <param name="time">The <see cref="DateTime"/> value to truncate.</param>
+    /// <returns>
+    /// A new <see cref="DateTime"/> truncated to milliseconds, preserving the original <see cref="DateTimeKind"/>.
+    /// </returns>
+    /// <remarks>
+    /// This is useful when interacting with systems or databases that do not support
+    /// microsecond or tick-level precision and may otherwise round or reject values.
+    /// Truncation is performed by discarding sub-millisecond precision; no rounding occurs.
+    /// </remarks>
+    public static DateTime TruncateToMilliseconds(this DateTime time)
+    {
+        return new DateTime(time.Year, time.Month, time.Day, time.Hour, time.Minute, time.Second, time.Millisecond, time.Kind);
     }
 }

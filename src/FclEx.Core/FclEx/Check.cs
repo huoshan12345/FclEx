@@ -186,7 +186,7 @@ public static class Check
             }
             default:
             {
-                result = default!;
+                result = default;
                 return false;
             }
         }

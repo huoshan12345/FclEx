@@ -1,4 +1,7 @@
-﻿namespace Xunit;
+﻿// CS8620 here is caused by known bug: https://github.com/dotnet/roslyn/issues/80024#issuecomment-3594618986
+#pragma warning disable CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
+
+namespace Xunit;
 
 partial class AssertExTests
 {
@@ -51,25 +54,25 @@ partial class AssertExTests
     {
         var src = CreateTestModel(false);
         var dest = ObjectHelper.CloneByJson(src);
-        AssertEx.EveryMemberEqual(src, dest);
+        Assert.MembersEqual(src, dest);
     }
 
     [Fact]
     public void EveryMemberEqual_EmptyObject_Fail()
     {
-        Assert.Throws<EqualException>(() => AssertEx.EveryMemberEqual(new object(), new object()));
+        Assert.Throws<EqualException>(() => Assert.MembersEqual(new object(), new object()));
     }
 
     [Fact]
     public void EveryMemberEqual_EmptyList_Fail()
     {
-        AssertEx.EveryMemberEqual(new List<int>(), new List<int>());
+        Assert.MembersEqual(new List<int>(), []);
     }
 
     [Fact]
     public void EveryMemberEqual_EmptyObject_Success()
     {
-        Assert.Throws<EqualException>(() => AssertEx.EveryMemberEqual(new object(), new object()));
+        Assert.Throws<EqualException>(() => Assert.MembersEqual(new object(), new object()));
     }
 
     [Fact]
@@ -81,22 +84,22 @@ partial class AssertExTests
         src.Child = src;
         dest.Child = dest;
 
-        Assert.Throws<EqualException>(() => AssertEx.EveryMemberEqual(src, dest));
+        Assert.Throws<EqualException>(() => Assert.MembersEqual(src, dest));
 
         dest.Child = src;
-        AssertEx.EveryMemberEqual(src, dest);
+        Assert.MembersEqual(src, dest);
     }
 
     [Fact]
     public void EveryMemberEqual_ExcludeMembers_Success()
     {
         var src = CreateTestModel(false);
-        var dest = ObjectHelper.CloneByJson(src);   
+        var dest = ObjectHelper.CloneByJson(src);
         Assert.NotNull(dest);
         dest.Int++;
 
-        Assert.Throws<EqualException>(() => AssertEx.EveryMemberEqual(src, dest));
-        AssertEx.EveryMemberEqual(src, dest, nameof(dest.Int));
+        Assert.Throws<EqualException>(() => Assert.MembersEqual(src, dest));
+        Assert.MembersEqual(src, dest, nameof(dest.Int));
     }
 
     [Fact]
@@ -104,7 +107,7 @@ partial class AssertExTests
     {
         var src = CreateTestModel(true);
         var dest = ObjectHelper.CloneByJson(src);
-        AssertEx.EveryMemberEqual(src, dest);
+        Assert.MembersEqual(src, dest);
     }
 
     [Fact]
@@ -115,8 +118,8 @@ partial class AssertExTests
             var dest = ObjectHelper.CloneByJson(src);
             Assert.NotNull(dest);
             dest.Int++;
-            Assert.Throws<EqualException>(() => AssertEx.EveryMemberEqual(src, dest));
-            AssertEx.EveryMemberEqual(src, dest, nameof(dest.Int));
+            Assert.Throws<EqualException>(() => Assert.MembersEqual(src, dest));
+            Assert.MembersEqual(src, dest, nameof(dest.Int));
         }
 
         {
@@ -127,10 +130,10 @@ partial class AssertExTests
             Assert.NotNull(dest.Child);
             dest.Child.Int++;
 
-            Assert.Throws<EqualException>(() => AssertEx.EveryMemberEqual(src, dest));
-            Assert.Throws<EqualException>(() => AssertEx.EveryMemberEqual(src, dest, "Int"));
-            Assert.Throws<EqualException>(() => AssertEx.EveryMemberEqual(src, dest, "Child.Int"));
-            AssertEx.EveryMemberEqual(src, dest, "Int", "Child.Int");
+            Assert.Throws<EqualException>(() => Assert.MembersEqual(src, dest));
+            Assert.Throws<EqualException>(() => Assert.MembersEqual(src, dest, "Int"));
+            Assert.Throws<EqualException>(() => Assert.MembersEqual(src, dest, "Child.Int"));
+            Assert.MembersEqual(src, dest, "Int", "Child.Int");
         }
     }
 }
