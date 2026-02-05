@@ -31,6 +31,6 @@ public class PollyHelperTests
         Assert.Contains(ex.EnumerateInner(), m => m.Message.Contains("configured ConnectTimeout"));
 
         var executeTime = timeout.Multiply(retryCount + 1);
-        AssertEx.Equal(executeTime, time, TimeSpan.FromSeconds(0.4));
+        Assert.Equal(executeTime, time, TimeSpan.FromSeconds(0.4));
     }
 }

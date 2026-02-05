@@ -17,6 +17,6 @@ public class TimeoutTests
         var (successful, _, exception, elapsed) = await Operation.ExecuteAsync(() => task);
         Assert.False(successful);
         Assert.IsType<TaskCanceledException>(exception);
-        AssertEx.Equal(timeout, elapsed, TimeSpan.FromSeconds(1));
+        Assert.Equal(timeout, elapsed, TimeSpan.FromSeconds(1));
     }
 }
