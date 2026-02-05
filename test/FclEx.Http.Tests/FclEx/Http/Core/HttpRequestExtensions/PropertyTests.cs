@@ -79,7 +79,7 @@ public class PropertyTests : HttpServerTests
         Assert.False(response.Error, response.Exception?.Message);
 
         var returned = response.ResponseString.FromJson<MockApiModel>();
-        AssertEx.EveryMemberEqual(model, returned);
+        Assert.MembersEqual(model, returned);
     }
 
     [Theory]

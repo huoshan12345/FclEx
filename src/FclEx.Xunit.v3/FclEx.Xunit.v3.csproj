@@ -3,6 +3,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <IsTestProject>false</IsTestProject>
+    <DefineConstants>$(DefineConstants);FCLEX_XUNIT_V3</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,5 +25,10 @@
   </ItemGroup>
 
   <Import Project="..\EmitGeneratedFiles.props" Condition=" '$(Configuration)' == 'Debug' AND $(GITHUB_ACTION) == '' AND '$(OS)' == 'Windows_NT' " />
+
+  <ItemGroup>
+    <Compile Include="..\FclEx.Xunit\**\*.cs"
+             Exclude="..\FclEx.Xunit\obj\**\*;..\FclEx.Xunit\bin\**\*" />
+  </ItemGroup>
 
 </Project>
