@@ -1,5 +1,7 @@
 ﻿namespace Xunit;
 
+using FclEx.Extensions;
+
 public record EqualResult(bool Equal, object? Expected, object? Actual, string? Path, string? Banner = null)
 {
     private string CreateBanner()
@@ -13,13 +15,13 @@ public record EqualResult(bool Equal, object? Expected, object? Actual, string? 
     public void ThrowIfNotEqual()
     {
         if (Equal == false)
-            throw EqualException.ForMismatchedValues(Expected, Actual, CreateBanner());
+            throw EqualException.ForNotEqualValues(Expected, Actual, CreateBanner());
     }
 
     public void ThrowIfEqual()
     {
         if (Equal)
-            throw NotEqualException.ForEqualValues(Expected?.ToString() ?? "", Actual?.ToString() ?? "", CreateBanner());
+            throw NotEqualException.ForEqualValues(Expected, Actual, CreateBanner());
     }
 }
 
@@ -42,7 +44,7 @@ public static partial class AssertEx
 
             if (type.Implements(typeof(IEquatable<>)))
             {
-                var method = type.GetMethod(nameof(IEquatable<object>.Equals), [type]);
+                var method = type.GetMethod(nameof(IEquatable<>.Equals), [type]);
                 if (method != null)
                 {
                     return (x, y) => (bool)method.Invoke(x, [y])!;
@@ -52,14 +54,14 @@ public static partial class AssertEx
         }
     }
 
-    internal static TreeNode<ExcludeMember>? BuildExcludeMemberTree(string[] excludeMemberPaths)
+    internal static TreeNode<ExcludeMember>? BuildExcludedMemberTree(string[] excludedMemberPaths)
     {
-        if (excludeMemberPaths.IsNullOrEmpty())
+        if (excludedMemberPaths.IsNullOrEmpty())
             return null;
 
         var root = new TreeNode<ExcludeMember>(new ExcludeMember("$", false));
 
-        var paths = excludeMemberPaths
+        var paths = excludedMemberPaths
             .Distinct()
             .OrderBy(m => m)
             .Select(m => m.Split('.'));
@@ -135,7 +137,8 @@ public static partial class AssertEx
         }
     }
 
-    internal static EqualResult Equal(object? value1, object? value2, TreeNode<ExcludeMember>? excludeMemberTree, bool onlyCheckSameNameMembers, HashSet<(object, object)>? visited, string? currentPath)
+    internal static EqualResult Equal(object? value1, object? value2, TreeNode<ExcludeMember>? excludedMemberTree, bool onlyCompareSharedMembers,
+        HashSet<(object, object)>? visited, string? currentPath)
     {
         if (value1 == null && value2 == null)
             return new(true, null, null, currentPath);
@@ -191,7 +194,7 @@ public static partial class AssertEx
                     if (visited.Contains((v1, v2)))
                         continue;
 
-                    var result = Equal(v1, v2, excludeMemberTree, onlyCheckSameNameMembers, visited, path);
+                    var result = Equal(v1, v2, excludedMemberTree, onlyCompareSharedMembers, visited, path);
                     if (!result.Equal)
                         return result;
                 }
@@ -210,11 +213,11 @@ public static partial class AssertEx
         if (type1 != type2)
         {
             var equal = false;
-            var excludeNames = excludeMemberTree?.Children.Where(m => m.Value.IsExcluded).Select(m => m.Value.Name).ToHashSet() ?? _emptySet;
+            var excludeNames = excludedMemberTree?.Children.Where(m => m.Value.IsExcluded).Select(m => m.Value.Name).ToHashSet() ?? _emptySet;
             var members1 = type1.GetDataMembers().Where(m => !excludeNames.Contains(m.Name)).ToList();
             var members2 = type2.GetDataMembers().Where(m => !excludeNames.Contains(m.Name)).ToList();
 
-            if (!onlyCheckSameNameMembers && members1.Count != members2.Count)
+            if (!onlyCompareSharedMembers && members1.Count != members2.Count)
                 return new(false, value1, value2, currentPath);
 
             var members = from m1 in members1
@@ -224,7 +227,7 @@ public static partial class AssertEx
 
             foreach (var (name, m1, m2) in members)
             {
-                var exclude = excludeMemberTree?.Children.FirstOrDefault(m => m.Value.Name == name);
+                var exclude = excludedMemberTree?.Children.FirstOrDefault(m => m.Value.Name == name);
                 if (exclude?.Value.IsExcluded == true)
                     continue;
 
@@ -234,7 +237,7 @@ public static partial class AssertEx
                 if (v1 != null && v2 != null && visited.Contains((v1, v2)))
                     continue;
 
-                var result = Equal(v1, v2, exclude, onlyCheckSameNameMembers, visited, currentPath + "." + name);
+                var result = Equal(v1, v2, exclude, onlyCompareSharedMembers, visited, currentPath + "." + name);
                 if (result.Equal)
                     equal = true;
                 else
@@ -248,7 +251,7 @@ public static partial class AssertEx
             var members = type1.GetDataMembers();
             foreach (var member in members)
             {
-                var exclude = excludeMemberTree?.Children.FirstOrDefault(m => m.Value.Name == member.Name);
+                var exclude = excludedMemberTree?.Children.FirstOrDefault(m => m.Value.Name == member.Name);
                 if (exclude?.Value.IsExcluded == true)
                     continue;
 
@@ -258,7 +261,7 @@ public static partial class AssertEx
                 if (v1 != null && v2 != null && visited.Contains((v1, v2)))
                     continue;
 
-                var result = Equal(v1, v2, exclude, onlyCheckSameNameMembers, visited, currentPath + "." + member.Name);
+                var result = Equal(v1, v2, exclude, onlyCompareSharedMembers, visited, currentPath + "." + member.Name);
                 if (result.Equal)
                     equal = true;
                 else

@@ -16,13 +16,15 @@ public class SerializableTheoryDataTests
         }
     }
 
-    public static TheoryData<Person> TestCases = [new("Tom", 10), new("Jim", 20), new("Tim", 30)];
+    // because TheoryData<T> in v3 does not have method Add(T item), so here we have to specify the type Person
+    // ReSharper disable once ArrangeObjectCreationWhenTypeEvident
+    public static readonly TheoryData<Person> TestCases = [new Person("Tom", 10), new Person("Jim", 20), new Person("Tim", 30)];
 
     [LocalOnlyTheory]
     [MemberData(nameof(TestCases))]
     public async Task NonSerializable_Test(Person person) // cases won't be executed parallelly using ParallelTestFramework
     {
-        await Task.Delay(TimeSpan.FromSeconds(3));
+        await Task.Delay(TimeSpan.FromMilliseconds(1000));
     }
 
     public static readonly SerializableTheoryData<Person> SerializableTestCases = [new("Tom", 10), new("Jim", 20), new("Tim", 30)];
@@ -31,6 +33,6 @@ public class SerializableTheoryDataTests
     [MemberData(nameof(SerializableTestCases))]
     public async Task Serializable_Test(XunitSerializable<Person> person) // cases will be executed parallelly using ParallelTestFramework
     {
-        await Task.Delay(TimeSpan.FromSeconds(3));
+        await Task.Delay(TimeSpan.FromMilliseconds(1000));
     }
 }

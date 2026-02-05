@@ -29,7 +29,7 @@ public class SourceGenerator : IIncrementalGenerator
                     ..BytesExtensionsSource.Generate(),
                     NumberExtensionsSource.Generate(),
                 ],
-                "FclEx.Xunit" =>
+                "FclEx.Xunit" or "FclEx.Xunit.v3" =>
                 [
                     ExtensionsSource.Generate(),
                     XunitSerializableSource.Generate(),

@@ -13,7 +13,7 @@ public class XunitSerializable<T> : IXunitSerializable
 
     public XunitSerializable() { }
 
-    public XunitSerializable(T value) => Value = value;
+    public XunitSerializable(T? value) => Value = value;
 
     public virtual void Deserialize(IXunitSerializationInfo info)
     {
@@ -28,7 +28,8 @@ public class XunitSerializable<T> : IXunitSerializable
     public override string? ToString() => Value?.ToString();
 }
 
-public static class XunitSerializable
+// ReSharper disable once PartialTypeWithSinglePart
+public static partial class XunitSerializable
 {
-    public static XunitSerializable<T> Create<T>(T value) => new(value);
+    public static XunitSerializable<T> Create<T>(T? value) => new(value);
 }

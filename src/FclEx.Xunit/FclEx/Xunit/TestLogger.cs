@@ -5,10 +5,16 @@ public class TestLogger : ILogger
     private readonly ITestOutputHelper _output;
     private readonly string _name;
     private readonly bool _checkDisposed;
-    private readonly object _lock = new();
     private bool _isDisposed;
+    private readonly
+#if NET9_0_OR_GREATER
+        System.Threading.Lock
+#else
+        object
+#endif
+        _lock = new();
 
-    private static readonly FieldInfo? _field = typeof(TestOutputHelper).GetField("buffer", BindingFlags.NonPublic | BindingFlags.Instance);
+    private static readonly FieldInfo? _field = typeof(TestOutputHelper).GetField("state", BindingFlags.NonPublic | BindingFlags.Instance);
 
     public TestLogger(ITestOutputHelper output, string name, bool checkDisposed)
     {

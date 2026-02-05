@@ -1,7 +1,4 @@
-﻿using System.IO;
-using System.Threading.Tasks;
-
-namespace Xunit.Abstractions;
+﻿namespace Xunit;
 
 public class TestOutputWriter : TextWriter
 {

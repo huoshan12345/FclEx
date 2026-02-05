@@ -20,11 +20,13 @@ public class XunitJsonSerializable<T> : IXunitSerializable
     {
     }
 
-    public XunitJsonSerializable(T value) => Value = value;
+    public XunitJsonSerializable(T? value) => Value = value;
 
     public virtual void Deserialize(IXunitSerializationInfo info)
     {
-        Value = info.GetValue<string>("_json").FromJson<T>(_options);
+        Value = info.GetValue<string>("_json") is { } json
+            ? json.FromJson<T>(_options)
+            : default;
     }
 
     public virtual void Serialize(IXunitSerializationInfo info)

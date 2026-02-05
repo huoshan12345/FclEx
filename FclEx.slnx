@@ -34,6 +34,7 @@
     <Project Path="src/FclEx.NewtonsoftJson/FclEx.NewtonsoftJson.csproj" />
     <Project Path="src/FclEx.Options/FclEx.Options.csproj" />
     <Project Path="src/FclEx.Serilog/FclEx.Serilog.csproj" />
+    <Project Path="src/FclEx.Xunit.v3/FclEx.Xunit.v3.csproj" />
     <Project Path="src/FclEx.Xunit/FclEx.Xunit.csproj" />
     <Project Path="src/FclEx.YamlDotNet/FclEx.YamlDotNet.csproj" />
   </Folder>
@@ -50,6 +51,7 @@
     <Project Path="test/FclEx.NewtonsoftJson.Tests/FclEx.NewtonsoftJson.Tests.csproj" />
     <Project Path="test/FclEx.Serilog.Tests/FclEx.Serilog.Tests.csproj" />
     <Project Path="test/FclEx.Xunit.Tests/FclEx.Xunit.Tests.csproj" Id="4bbcec3b-77e7-4b78-9783-9ef7241f3192" />
+    <Project Path="test/FclEx.Xunit.v3.Tests/FclEx.Xunit.v3.Tests.csproj" />
     <Project Path="test/FclEx.YamlDotNet.Tests/FclEx.YamlDotNet.Tests.csproj" />
   </Folder>
 </Solution>

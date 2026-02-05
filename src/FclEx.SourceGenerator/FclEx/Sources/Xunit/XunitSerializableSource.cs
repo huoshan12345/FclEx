@@ -117,6 +117,39 @@ internal class XunitSerializableSource
             builder.WriteLine();
         }
 
+        /*           
+           public static partial class XunitSerializable
+           {
+               public static XunitSerializable<T1, T2> Create<T1, T2>(T1 value1, T2 value2)
+               {
+                   return new(value1, value2);
+               }
+           }
+         */
+
+
+        // Class declaration
+        builder.WriteLine("public static partial class XunitSerializable")
+            .WriteOpeningBracket();
+
+        for (var i = 2; i <= Max; i++)
+        {
+            var types = Enumerable.Range(1, i).Select(m => $"T{m}").JoinWith(", ");
+            var parameters = Enumerable.Range(1, i).Select(m => $"T{m}? value{m}").JoinWith(", ");
+            var values = Enumerable.Range(1, i).Select(m => $"value{m}").JoinWith(", ");
+
+            // Create method
+            builder.WriteLine($"public static XunitSerializable<{types}> Create<{types}>({parameters})");
+            builder.WriteOpeningBracket();
+            builder.WriteLine($"return new({values});");
+            builder.WriteClosingBracket();
+            builder.WriteLine();
+        }
+
+        // End class declaration
+        builder.WriteClosingBracket();
+        builder.WriteLine();
+
         // End namespace declaration
         builder.WriteClosingBracket();
 

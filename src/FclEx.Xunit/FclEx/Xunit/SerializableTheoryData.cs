@@ -9,11 +9,14 @@ public class SerializableTheoryData<T> : TheoryData<XunitSerializable<T>>
 
     public void Add(T p)
     {
-        AddRow(XunitSerializable.Create(p));
+        AddRange(XunitSerializable.Create(p));
     }
 
     public void AddRange(params T[] values)
     {
-        AddRows(values.Select(x => new object[] { XunitSerializable.Create(x) }));
+        foreach (var value in values)
+        {
+            Add(value);
+        }
     }
 }

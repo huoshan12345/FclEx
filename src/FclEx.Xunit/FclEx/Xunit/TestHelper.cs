@@ -1,6 +1,4 @@
-﻿using System.Xml.Linq;
-using System;
-using static FclEx.Xunit.EnvVarCheckOption;
+﻿using static FclEx.Xunit.EnvVarCheckOption;
 
 namespace FclEx.Xunit;
 
