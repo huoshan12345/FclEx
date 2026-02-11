@@ -112,4 +112,30 @@ public class GetFieldTests
         Assert.Equal(fieldName, field.Name);
         Assert.Equal(typeof(string), field.FieldType);
     }
+
+    public struct TestStruct
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+
+        public unsafe void SetNameByReflection(string name)
+        {
+            var field = typeof(TestStruct).GetAutoPropertyBackingField(nameof(Name));
+
+            fixed (void* p = &this)
+            {
+                ref var r = ref Unsafe.AsRef<TestStruct>(p);
+                var t = __makeref(r);
+                field.SetValueDirect(t, name);
+            }
+        }
+    }
+
+    [Fact]
+    public void SetField_ByReflection_Test()
+    {
+        var obj = new TestStruct();
+        obj.SetNameByReflection("test");
+        Assert.Equal("test", obj.Name);
+    }
 }

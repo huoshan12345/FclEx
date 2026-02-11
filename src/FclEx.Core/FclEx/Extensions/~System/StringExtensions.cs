@@ -209,4 +209,12 @@ partial class StringExtensions
             ? str[1..^1]
             : str;
     }
+
+    extension(string)
+    {
+        public static string operator *(string str, int count)
+        {
+            return string.Concat(Enumerable.Repeat(str, count));
+        }
+    }
 }

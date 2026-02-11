@@ -42,9 +42,6 @@ dotnet_diagnostic.CS8500.severity = none
 # IDE0022: Use block body for method
 dotnet_diagnostic.IDE0022.severity = none
 
-# IDE0051: Remove unused private members
-dotnet_diagnostic.IDE0051.severity = none
-
 # xUnit1033: Test classes decorated with 'Xunit.IClassFixture<TFixture>' or 'Xunit.ICollectionFixture<TFixture>' should add a constructor argument of type TFixture
 dotnet_diagnostic.xUnit1033.severity = none
 

@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public readonly record struct IndexedItem<T>(int Index, T Item, bool IsFirst, bool IsLast);
 
@@ -541,4 +539,22 @@ public static partial class EnumerableExtensions
 
     public static IEnumerable<T> SelectIf<T>(this IEnumerable<T> enumerable, bool condition, Func<T, int, T> selector)
         => enumerable.SelectIf(selector, condition);
+
+    extension<T>(IEnumerable<T>)
+    {
+        public static IEnumerable<T> operator +(IEnumerable<T> enumerable, IEnumerable<T> other)
+        {
+            return enumerable.Concat(other);
+        }
+
+        public static IEnumerable<T> operator +(IEnumerable<T> enumerable, T item)
+        {
+            return enumerable.Append(item);
+        }
+
+        public static IEnumerable<T> operator +(T item, IEnumerable<T> enumerable)
+        {
+            return enumerable.Prepend(item);
+        }
+    }
 }

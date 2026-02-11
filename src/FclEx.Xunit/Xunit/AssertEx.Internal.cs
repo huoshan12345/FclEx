@@ -214,15 +214,14 @@ public static partial class AssertEx
         {
             var equal = false;
             var excludeNames = excludedMemberTree?.Children.Where(m => m.Value.IsExcluded).Select(m => m.Value.Name).ToHashSet() ?? _emptySet;
-            var members1 = type1.GetDataMembers().Where(m => !excludeNames.Contains(m.Name)).ToList();
-            var members2 = type2.GetDataMembers().Where(m => !excludeNames.Contains(m.Name)).ToList();
+            var members1 = GetMembers(type1);
+            var members2 = GetMembers(type2);
 
-            if (!onlyCompareSharedMembers && members1.Count != members2.Count)
+            if (!onlyCompareSharedMembers && members1.Length != members2.Length)
                 return new(false, value1, value2, currentPath);
 
             var members = from m1 in members1
-                          join m2 in members2
-                              on m1.Name equals m2.Name
+                          join m2 in members2 on m1.Name equals m2.Name
                           select (m1.Name, m1, m2);
 
             foreach (var (name, m1, m2) in members)
@@ -244,12 +243,16 @@ public static partial class AssertEx
                     return result;
             }
             return new(equal, value1, value2, currentPath);
+
+            DataMemberInfo[] GetMembers(Type type)
+            {
+                return type.GetDataMembers().Where(m => !m.IsCompilerGenerated && !excludeNames.Contains(m.Name)).ToArray();
+            }
         }
         else
         {
             var equal = false;
-            var members = type1.GetDataMembers();
-            foreach (var member in members)
+            foreach (var member in type1.GetDataMembers().Where(m => !m.IsCompilerGenerated))
             {
                 var exclude = excludedMemberTree?.Children.FirstOrDefault(m => m.Value.Name == member.Name);
                 if (exclude?.Value.IsExcluded == true)

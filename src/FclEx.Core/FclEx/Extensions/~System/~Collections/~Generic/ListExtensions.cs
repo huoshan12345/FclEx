@@ -2,7 +2,7 @@
 
 public static class ListExtensions
 {
-    public static void RemoveAll<T>(this IList<T> list, Func<T, bool> filter)
+    public static void Remove<T>(this IList<T> list, Func<T, bool> filter)
     {
         Check.NotNull(list);
         Check.NotNull(filter);
@@ -34,7 +34,7 @@ public static class ListExtensions
             list[index] = value;
         return list;
     }
-    
+
     public static Span<T> AsSpan<T>(this List<T>? list)
     {
 #if NETSTANDARD2_0
@@ -42,6 +42,11 @@ public static class ListExtensions
 #else
         return CollectionsMarshal.AsSpan(list);
 #endif
+    }
+
+    public static T[] AsArray<T>(this List<T>? list)
+    {
+        return list.AsSpan().ToArray();
     }
 
     public static void AddSorted<T>(this List<T> list, T value, IComparer<T>? comparer = null)
