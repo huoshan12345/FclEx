@@ -60,7 +60,7 @@ public static partial class TypeExtensions
     /// </remarks>
     public static bool Implements(this Type type, Type interfaceType)
     {
-        return GetImplementedInterface(type, interfaceType) != null;
+        return type.GetImplementedInterface(interfaceType) != null;
     }
 
     /// <summary>

@@ -43,11 +43,11 @@ public class GetDataMembersTests
     {
         {
             var members = typeof(I2).GetDataMembers();
-            Assert.Equal(2, members.Count);
+            Assert.Equal(3, members.Count);
         }
         {
             var members = typeof(I3).GetDataMembers();
-            Assert.Equal(2, members.Count);
+            Assert.Equal(3, members.Count);
         }
     }
 }

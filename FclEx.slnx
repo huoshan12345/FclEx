@@ -23,7 +23,6 @@
     <File Path="src/Directory.Build.targets" />
     <File Path="src/EmitGeneratedFiles.props" />
     <Project Path="src/FclEx.AspNetCore/FclEx.AspNetCore.csproj" />
-    <Project Path="src/FclEx.SourceGenerator/FclEx.SourceGenerator.csproj" />
     <Project Path="src/FclEx.Core/FclEx.Core.csproj" />
     <Project Path="src/FclEx.Dapper/FclEx.Dapper.csproj" />
     <Project Path="src/FclEx.DependencyInjection/FclEx.DependencyInjection.csproj" />
@@ -34,6 +33,9 @@
     <Project Path="src/FclEx.NewtonsoftJson/FclEx.NewtonsoftJson.csproj" />
     <Project Path="src/FclEx.Options/FclEx.Options.csproj" />
     <Project Path="src/FclEx.Serilog/FclEx.Serilog.csproj" />
+    <Project Path="src/FclEx.SourceGenerator/FclEx.SourceGenerator.csproj" />
+    <Project Path="src/FclEx.Xunit.SourceGenerator/FclEx.Xunit.SourceGenerator.csproj" />
+    <Project Path="src/FclEx.Xunit.v3.SourceGenerator/FclEx.Xunit.v3.SourceGenerator.csproj" />
     <Project Path="src/FclEx.Xunit.v3/FclEx.Xunit.v3.csproj" />
     <Project Path="src/FclEx.Xunit/FclEx.Xunit.csproj" />
     <Project Path="src/FclEx.YamlDotNet/FclEx.YamlDotNet.csproj" />
@@ -50,7 +52,7 @@
     <Project Path="test/FclEx.Messaging.Tests/FclEx.Messaging.Tests.csproj" />
     <Project Path="test/FclEx.NewtonsoftJson.Tests/FclEx.NewtonsoftJson.Tests.csproj" />
     <Project Path="test/FclEx.Serilog.Tests/FclEx.Serilog.Tests.csproj" />
-    <Project Path="test/FclEx.Xunit.Tests/FclEx.Xunit.Tests.csproj" Id="4bbcec3b-77e7-4b78-9783-9ef7241f3192" />
+    <Project Path="test/FclEx.Xunit.Tests/FclEx.Xunit.Tests.csproj" />
     <Project Path="test/FclEx.Xunit.v3.Tests/FclEx.Xunit.v3.Tests.csproj" />
     <Project Path="test/FclEx.YamlDotNet.Tests/FclEx.YamlDotNet.Tests.csproj" />
   </Folder>

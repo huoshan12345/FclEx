@@ -29,7 +29,7 @@ public class DataMemberInfoTests(ITestOutputHelper output)
     public void HashSet_Contains_Test()
     {
         var members = typeof(Model).GetDataMembers();
-        Assert.Equal(11, members.Count);
+        Assert.Equal(18, members.Count);
 
         var set = members.ToHashSet();
         foreach (var member in typeof(Model).GetDataMembers())

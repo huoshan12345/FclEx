@@ -2,8 +2,6 @@
 #pragma warning disable IDE0060 // Remove unused parameter
 #pragma warning disable xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
 
-using Xunit;
-
 namespace FclEx.Xunit;
 
 public class SerializableTheoryDataTests

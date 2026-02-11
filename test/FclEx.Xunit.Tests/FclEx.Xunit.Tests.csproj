@@ -6,6 +6,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\FclEx.Xunit\FclEx.Xunit.csproj" />
+    <ProjectReference Include="..\..\src\FclEx.Xunit.SourceGenerator\FclEx.Xunit.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
+
+  <Import Project="..\..\src\EmitGeneratedFiles.props" Condition=" '$(Configuration)' == 'Debug' AND $(GITHUB_ACTION) == '' AND '$(OS)' == 'Windows_NT' " />
 
 </Project>

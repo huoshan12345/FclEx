@@ -195,9 +195,13 @@ public
     /// <summary>
     /// Writes a namespace declaration.
     /// </summary>
-    public static SourceBuilder WriteNamespace(this SourceBuilder builder, string @namespace)
+    public static SourceBuilder WriteNamespace(this SourceBuilder builder, string @namespace, bool fileScoped = false)
     {
-        return builder.WriteLine($"namespace {@namespace}");
+        builder.Write($"namespace {@namespace}");
+        if (fileScoped)
+            builder.Write(";");
+        builder.WriteLine();
+        return builder;
     }
 
     /// <summary>
