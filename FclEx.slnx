@@ -23,7 +23,6 @@
     <File Path="src/Directory.Build.targets" />
     <File Path="src/EmitGeneratedFiles.props" />
     <Project Path="src/FclEx.AspNetCore/FclEx.AspNetCore.csproj" />
-    <Project Path="src/FclEx.SourceGenerator/FclEx.SourceGenerator.csproj" />
     <Project Path="src/FclEx.Core/FclEx.Core.csproj" />
     <Project Path="src/FclEx.Dapper/FclEx.Dapper.csproj" />
     <Project Path="src/FclEx.DependencyInjection/FclEx.DependencyInjection.csproj" />
@@ -34,6 +33,8 @@
     <Project Path="src/FclEx.NewtonsoftJson/FclEx.NewtonsoftJson.csproj" />
     <Project Path="src/FclEx.Options/FclEx.Options.csproj" />
     <Project Path="src/FclEx.Serilog/FclEx.Serilog.csproj" />
+    <Project Path="src/FclEx.SourceGenerator/FclEx.SourceGenerator.csproj" />
+    <Project Path="src/FclEx.Xunit.v3.SourceGenerator/FclEx.Xunit.v3.SourceGenerator.csproj" Id="1af60ebf-bb5e-4f6b-b71a-4c5079037ff4" />
     <Project Path="src/FclEx.Xunit.v3/FclEx.Xunit.v3.csproj" />
     <Project Path="src/FclEx.Xunit/FclEx.Xunit.csproj" />
     <Project Path="src/FclEx.YamlDotNet/FclEx.YamlDotNet.csproj" />

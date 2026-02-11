@@ -1,4 +1,6 @@
-﻿namespace FclEx;
+﻿#pragma warning disable IDE0028 // Simplify collection initialization
+
+namespace FclEx;
 
 [SuppressMessage("ReSharper", "CollectionNeverUpdated.Local")]
 public class CheckTests
