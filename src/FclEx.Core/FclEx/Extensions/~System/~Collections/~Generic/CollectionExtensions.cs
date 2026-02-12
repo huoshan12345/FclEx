@@ -1,5 +1,6 @@
 ﻿namespace FclEx.Extensions;
 
+[SuppressMessage("ReSharper", "MoveToExtensionBlock")]
 public static class CollectionExtensions
 {
     public static bool AddIfNotNull<T>(this ICollection<T> collection, [NotNullWhen(true)] T? item)
@@ -42,5 +43,34 @@ public static class CollectionExtensions
     {
         col.Add(item);
         return col;
+    }
+
+    extension<T>(ICollection<T> collection)
+    {
+        public void operator +=(T item)
+        {
+            collection.Add(item);
+        }
+
+        public void operator +=(IEnumerable<T> items)
+        {
+            foreach (var item in items)
+            {
+                collection.Add(item);
+            }
+        }
+
+        public void operator -=(T item)
+        {
+            collection.Remove(item);
+        }
+
+        public void operator -=(IEnumerable<T> items)
+        {
+            foreach (var item in items)
+            {
+                collection.Remove(item);
+            }
+        }
     }
 }

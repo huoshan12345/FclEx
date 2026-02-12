@@ -1,0 +1,47 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <!-- Prevents the DLL from going into the lib folder -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <LangVersion>latest</LangVersion>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="4.14.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" PrivateAssets="all" />
+    <PackageReference Include="PolySharp" Version="1.15.0" PrivateAssets="all" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <!--when using GetFullPath, combine with MSBuildProjectDirectory to ensure correct resolution-->
+    <__ProjectsFolder>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\..\'))</__ProjectsFolder>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <__SharedCodeFiles Include="FclEx.Core\FclEx\Utils\SourceBuilder.cs" />
+    <__SharedCodeFiles Include="FclEx.SourceGenerator\FclEx\CodeAnalysis\SourceInfo.cs" />
+    <__SharedCodeFiles Include="FclEx.SourceGenerator\FclEx\CodeAnalysis\AnalyzerConfigOptionsProviderExtensions.cs" />
+    <__SharedCodeFiles Include="FclEx.SourceGenerator\FclEx\Extensions\StringExtensions.cs" />
+
+    <Compile Include="@(__SharedCodeFiles->'$(__ProjectsFolder)\%(Identity)')">
+
+      <!-- Compute the path of the file relative to $(__ProjectsFolder). 
+      Example result: FclEx.Core\FclEx\Utils\SourceBuilder.cs -->
+      <__RelativePath>$([MSBuild]::MakeRelative('$(__ProjectsFolder)', '%(FullPath)'))</__RelativePath>
+      <__SlashIndex>$([System.String]::new('%(__RelativePath)').IndexOf('\'))</__SlashIndex>
+      <__SlashIndex>$([MSBuild]::Add(%(__SlashIndex), 1))</__SlashIndex>
+
+      <!-- Remove the first directory segment by taking a substring starting from the adjusted index.
+      Result: FclEx\Utils\SourceBuilder.cs -->
+      <__RelativePath>$([System.String]::new('%(__RelativePath)').Substring(%(__SlashIndex)))</__RelativePath>
+      <Link>%(__RelativePath)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <!--<Target Name="DumpCompileLinks" BeforeTargets="CoreCompile">
+    <Message Importance="High" Text="__RelativePath: %(Compile.__RelativePath)" />
+  </Target>-->
+
+</Project>
