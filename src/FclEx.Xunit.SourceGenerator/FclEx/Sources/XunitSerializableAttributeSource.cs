@@ -84,7 +84,7 @@ public void Serialize(IXunitSerializationInfo info)
     foreach (var field in _fields)
     {
         var value = field.GetValue(this);
-        info.AddValue(field.Name, value, field.FieldType);
+        info.AddValue(field.Name, value, value?.GetType());
     }
 }
 

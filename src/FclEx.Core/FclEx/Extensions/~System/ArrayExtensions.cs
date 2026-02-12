@@ -62,4 +62,15 @@ public static class ArrayExtensions
     {
         return Array.FindLast(array, predicate);
     }
+
+    extension<T>(T[])
+    {
+        public static T[] operator +(T[] array, T[] other)
+        {
+            var result = new T[array.Length + other.Length];
+            array.CopyTo(result, 0);
+            other.CopyTo(result, array.Length);
+            return result;
+        }
+    }
 }

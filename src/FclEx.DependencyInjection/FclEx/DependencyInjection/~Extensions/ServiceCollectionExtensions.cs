@@ -68,7 +68,7 @@ public static partial class ServiceCollectionExtensions
     public static IServiceCollection Replace<TService>(this IServiceCollection services, TService implementationInstance)
         where TService : class
     {
-        services.RemoveAll(m => m.ServiceType == typeof(TService));
+        ListExtensions.Remove(services, m => m.ServiceType == typeof(TService));
         services.AddSingleton<TService>(implementationInstance);
         return services;
     }
