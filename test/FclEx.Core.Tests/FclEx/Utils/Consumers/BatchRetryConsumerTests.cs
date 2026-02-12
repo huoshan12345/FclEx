@@ -1,4 +1,4 @@
-﻿using Meziantou.Xunit;
+﻿using Meziantou.Xunit.v3;
 
 namespace FclEx.Utils.Consumers;
 

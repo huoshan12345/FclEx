@@ -1,15 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\FclEx.Xunit\FclEx.Xunit.csproj" />
+    <ProjectReference Include="..\..\src\FclEx.Xunit.v3\FclEx.Xunit.v3.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Meziantou.Xunit.ParallelTestFramework" Version="2.3.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
+    <!--xunit.v3 is required to discover tests when a test project is running using dotnet command.-->
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="xRetry.v3" Version="1.0.0-rc3" />
+    <PackageReference Include="Meziantou.Xunit.v3.ParallelTestFramework" Version="1.0.6" />
     <PackageReference Include="morelinq" Version="4.4.0" />
     <PackageReference Include="Moq" Version="4.20.72" />
-    <PackageReference Include="xRetry" Version="1.9.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.2" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.2" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.2" />
