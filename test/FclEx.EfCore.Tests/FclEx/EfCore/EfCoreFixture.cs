@@ -37,9 +37,11 @@ public class EfCoreFixture : GlobalFixture
             DbProviderType.Npgsql, 
 #endif
 #if !DISABLE_MYSQL
+            DbProviderType.MySql,
             DbProviderType.MySqlConnector,
 #endif
-            DbProviderType.Sqlite, DbProviderType.SqlServer,
+            DbProviderType.Sqlite,
+            DbProviderType.SqlServer,
         ];
 
     public GlobalDbContext CreateDbContext(DbProviderType dbProviderType, string? schema = null, bool isUser = false)
@@ -50,18 +52,21 @@ public class EfCoreFixture : GlobalFixture
 
     // InitializeAsync is called immediately after the class has been created, before it is used.
     // We use this method to initialize database only once before all tests.
-    public override async Task InitializeAsync()
+    public override async ValueTask InitializeAsync()
     {
         foreach (var databaseType in DatabaseTypes)
         {
+            if (databaseType is DbProviderType.MySql && DatabaseTypes.Contains(DbProviderType.MySqlConnector))
+                continue;
+
             var isRecreated = false; // NOTE: we delete database only once for every database instance.
             foreach (var (_, schema, isFirst, _) in Schemas.IndexEx())
             {
                 await using var context = CreateDbContext(databaseType, schema);
 
                 if (isRecreated == false
-#if !DISABLE_NPGSQL
-                    || databaseType == DbProviderType.MySqlConnector
+#if !DISABLE_MYSQL
+                    || databaseType is DbProviderType.MySqlConnector
 #endif
                     )
                 {
@@ -76,7 +81,7 @@ public class EfCoreFixture : GlobalFixture
                 isRecreated = true;
 
                 if (isFirst || databaseType is DbProviderType.Sqlite
-#if !DISABLE_NPGSQL
+#if !DISABLE_MYSQL
                         or DbProviderType.MySqlConnector
 #endif
                         )

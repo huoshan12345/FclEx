@@ -1,6 +1,8 @@
-﻿namespace FclEx.Serilog.Sinks;
+﻿using Serilog.Sinks.XUnit3;
 
-public class LogstashSinkTests(ITestOutputHelper output)
+namespace FclEx.Serilog.Sinks;
+
+public class LogstashSinkTests
 {
     [LocalOnlyFact]
     public async Task Tcp_Test()
@@ -8,7 +10,7 @@ public class LogstashSinkTests(ITestOutputHelper output)
         Log.Logger = new LoggerConfiguration()
             .Enrich.FromLogContext()
             .MinimumLevel.Verbose()
-            .WriteTo.TestOutput(output)
+            .WriteTo.XUnit3TestOutput()
             .CreateLogger();
 
         var logger = new LoggerConfiguration()

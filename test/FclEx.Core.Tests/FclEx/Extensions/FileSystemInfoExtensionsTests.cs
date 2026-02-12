@@ -60,7 +60,7 @@ public class FileSystemInfoExtensionsTests(ITestOutputHelper output)
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) == false)
             return;
 
-        output.WriteLine(Path.GetPathRoot(path));
+        output.WriteLine(Path.GetPathRoot(path) ?? "");
         Assert.Equal(result, new FileInfo(path).GetFullPathWithoutRoot());
     }
 
@@ -126,7 +126,7 @@ public class FileSystemInfoExtensionsTests(ITestOutputHelper output)
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) == false)
             return;
 
-        output.WriteLine(Path.GetPathRoot(path));
+        output.WriteLine(Path.GetPathRoot(path) ?? "");
         Assert.Equal(expected, new FileInfo(path).GetFirstDir());
     }
 }
