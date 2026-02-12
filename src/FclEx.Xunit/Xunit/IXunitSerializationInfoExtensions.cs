@@ -6,7 +6,7 @@ public static class IXunitSerializationInfoExtensions
         .Select(m => m.IsGenericType ? m.GetGenericTypeDefinition() : m)
         .ToArray();
 
-    private static readonly MethodInfo _asArray = typeof(ListExtensions).GetRequiredMethod(nameof(ListExtensions.AsArray));
+    private static readonly MethodInfo _items = typeof(ListExtensions).GetRequiredMethod(nameof(ListExtensions.Items));
     private static readonly MethodInfo _toList = typeof(Enumerable).GetRequiredMethod(nameof(Enumerable.ToList));
 
     extension(IXunitSerializationInfo info)
@@ -36,7 +36,7 @@ public static class IXunitSerializationInfoExtensions
             {
                 var listType = typeof(List<>).MakeGenericType(elementType);
                 var list = Activator.CreateInstance(listType, enumerable);
-                var array = _asArray.MakeGenericMethod(elementType).Invoke(null, [list]);
+                var array = _items.MakeGenericMethod(elementType).Invoke(null, [list]);
                 info.AddValue(name, array, array?.GetType());
                 return;
             }
@@ -44,7 +44,7 @@ public static class IXunitSerializationInfoExtensions
             // convert list value to array
             if (genericDefOrSelf == typeof(List<>) && elementType is not null)
             {
-                var array = _asArray.MakeGenericMethod(elementType).Invoke(null, [value]);
+                var array = _items.MakeGenericMethod(elementType).Invoke(null, [value]);
                 info.AddValue(name, array, array?.GetType());
                 return;
             }

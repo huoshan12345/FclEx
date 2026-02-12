@@ -39,7 +39,7 @@ public static class ListExtensions
     public static Span<T> AsSpan<T>(this List<T>? list)
     {
 #if NETSTANDARD2_0
-        return list is null ? default : ArrayAccessor<T>.ItemsAccessor(list);
+        return list is null ? default : ListAccessor<T>.Items(list);
 #else
         return CollectionsMarshal.AsSpan(list);
 #endif
@@ -51,14 +51,41 @@ public static class ListExtensions
         list.Insert((x >= 0) ? x : ~x, value);
     }
 
+    public static T[] Items<T>(this List<T> list)
+    {
+        return ListAccessor<T>.Items(list);
+    }
+
+    public static void SetCount<T>(this List<T> list, int count)
+    {
+        Check.NotNegative(count);
+
+        ref var version = ref ListAccessor<T>.Version(list);
+        ++version;
+
+        ref var size = ref ListAccessor<T>.Size(list);
+        if (count > list.Capacity)
+        {
+            ListAccessor<T>.Grow(list, count);
+        }
+        else if (count < size)
+        {
+            var items = ListAccessor<T>.Items(list);
+            Array.Clear(items, count, size - count);
+        }
+        size = count;
+    }
+
     extension<T>(List<T>)
     {
         public static List<T> operator +(List<T> list, List<T> other)
         {
-            var result = new List<T>(list.Count + other.Count);
-            var array = result.AsArray();
-            list.AsArray().CopyTo(array);
-            other.AsArray().CopyTo(array, list.Count);
+            var count = list.Count + other.Count;
+            var result = new List<T>(count);
+            var array = result.Items();
+            list.Items().CopyTo(array);
+            other.Items().CopyTo(array, list.Count);
+            result.SetCount(count);
             return result;
         }
 
@@ -74,11 +101,6 @@ public static class ListExtensions
         public void operator +=(IEnumerable<T> other)
         {
             list.AddRange(other);
-        }
-
-        public T[] AsArray()
-        {
-            return ArrayAccessor<T>.ItemsAccessor(list);
         }
     }
 }

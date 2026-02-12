@@ -134,6 +134,7 @@ public partial class XunitSerializableAttributeTests
         Assert.Equal(original.Name, info.GetValue<string>(GetAutoFieldName(nameof(original.Name))));
         Assert.Equal(original.Addresses, info.GetValue<string[]>(GetAutoFieldName(nameof(original.Addresses))));
         Assert.Equal(original.Numbers, info.GetValue<IEnumerable<int>>(GetAutoFieldName(nameof(original.Numbers))));
+        Assert.Equal(original.Hobbies, info.GetValue<string[]>(GetAutoFieldName(nameof(original.Hobbies)))); // actual type is string[]
 
         var deserialized = new T();
         ((IXunitSerializable)deserialized).Deserialize(info);
@@ -147,6 +148,7 @@ public partial class XunitSerializableAttributeTests
         Assert.Equal(expected.Name, actual.Name);
         Assert.Equal(expected.Addresses, actual.Addresses);
         Assert.Equal(expected.Numbers, actual.Numbers);
+        Assert.Equal(expected.Hobbies, actual.Hobbies);
 
         action?.Invoke(expected, actual);
     }
