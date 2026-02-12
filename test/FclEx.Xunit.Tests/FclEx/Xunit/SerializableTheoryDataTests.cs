@@ -26,6 +26,7 @@ public class SerializableTheoryDataTests
         await Task.Delay(TimeSpan.FromMilliseconds(1000));
     }
 
+#if !FCLEX_XUNIT_V3
     [LocalOnlyTheory]
     [MemberData(nameof(SerializableTestCases))]
     public async Task Serializable_Test(XunitSerializable<Person> person)
@@ -34,6 +35,7 @@ public class SerializableTheoryDataTests
         // IXunitSerializable in xunit.v3 requires every member should be serializable
         await Task.Delay(TimeSpan.FromMilliseconds(1000));
     }
+#endif
 
     [LocalOnlyTheory]
     [MemberData(nameof(JsonSerializableTestCases))]

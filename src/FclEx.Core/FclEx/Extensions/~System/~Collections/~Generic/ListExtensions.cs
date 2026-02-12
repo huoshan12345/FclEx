@@ -1,5 +1,6 @@
 ﻿namespace FclEx.Extensions;
 
+[SuppressMessage("ReSharper", "MoveToExtensionBlock")]
 public static class ListExtensions
 {
     public static void Remove<T>(this IList<T> list, Func<T, bool> filter)
@@ -44,14 +45,40 @@ public static class ListExtensions
 #endif
     }
 
-    public static T[] AsArray<T>(this List<T>? list)
-    {
-        return list.AsSpan().ToArray();
-    }
-
     public static void AddSorted<T>(this List<T> list, T value, IComparer<T>? comparer = null)
     {
         var x = list.BinarySearch(value, comparer);
         list.Insert((x >= 0) ? x : ~x, value);
+    }
+
+    extension<T>(List<T>)
+    {
+        public static List<T> operator +(List<T> list, List<T> other)
+        {
+            var result = new List<T>(list.Count + other.Count);
+            var array = result.AsArray();
+            list.AsArray().CopyTo(array);
+            other.AsArray().CopyTo(array, list.Count);
+            return result;
+        }
+
+        public static List<T> operator +(List<T> list, T item)
+        {
+            list.Add(item);
+            return list;
+        }
+    }
+
+    extension<T>(List<T> list)
+    {
+        public void operator +=(IEnumerable<T> other)
+        {
+            list.AddRange(other);
+        }
+
+        public T[] AsArray()
+        {
+            return ArrayAccessor<T>.ItemsAccessor(list);
+        }
     }
 }
