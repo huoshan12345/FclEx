@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <DefineConstants>$(DefineConstants);FCLEX_XUNIT_V3</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,11 +12,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\FclEx.Xunit.v3\FclEx.Xunit.v3.csproj" />
+    <ProjectReference Include="..\..\src\FclEx.Xunit.v3.SourceGenerator\FclEx.Xunit.v3.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\FclEx.Xunit.Tests\**\*.cs"
-             Exclude="..\FclEx.Xunit.Tests\obj\**\*;..\FclEx.Xunit.Tests\bin\**\*" />
+    <Compile Include="..\FclEx.Xunit.Tests\**\*.cs" Exclude="..\FclEx.Xunit.Tests\obj\**\*;..\FclEx.Xunit.Tests\bin\**\*" />
   </ItemGroup>
+
+  <Import Project="..\..\src\EmitGeneratedFiles.props" Condition=" '$(Configuration)' == 'Debug' AND $(GITHUB_ACTION) == '' AND '$(OS)' == 'Windows_NT' " />
 
 </Project>

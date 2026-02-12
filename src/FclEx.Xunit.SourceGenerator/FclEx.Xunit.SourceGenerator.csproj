@@ -6,7 +6,6 @@
     <LangVersion>latest</LangVersion>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <IsPackable>false</IsPackable>
-    <DefineConstants>$(DefineConstants);FCLEX_XUNIT_V3</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -39,10 +38,6 @@
       <__RelativePath>$([System.String]::new('%(__RelativePath)').Substring(%(__SlashIndex)))</__RelativePath>
       <Link>%(__RelativePath)</Link>
     </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\FclEx.Xunit.SourceGenerator\**\*.cs" Exclude="..\FclEx.Xunit.SourceGenerator\obj\**\*;..\FclEx.Xunit.SourceGenerator\bin\**\*" />
   </ItemGroup>
 
   <!--<Target Name="DumpCompileLinks" BeforeTargets="CoreCompile">

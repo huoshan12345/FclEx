@@ -34,6 +34,7 @@
     <Project Path="src/FclEx.Options/FclEx.Options.csproj" />
     <Project Path="src/FclEx.Serilog/FclEx.Serilog.csproj" />
     <Project Path="src/FclEx.SourceGenerator/FclEx.SourceGenerator.csproj" />
+    <Project Path="src/FclEx.Xunit.SourceGenerator/FclEx.Xunit.SourceGenerator.csproj" />
     <Project Path="src/FclEx.Xunit.v3.SourceGenerator/FclEx.Xunit.v3.SourceGenerator.csproj" Id="1af60ebf-bb5e-4f6b-b71a-4c5079037ff4" />
     <Project Path="src/FclEx.Xunit.v3/FclEx.Xunit.v3.csproj" />
     <Project Path="src/FclEx.Xunit/FclEx.Xunit.csproj" />
