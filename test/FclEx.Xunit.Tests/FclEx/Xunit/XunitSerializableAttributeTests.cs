@@ -134,7 +134,9 @@ public partial class XunitSerializableAttributeTests
         Assert.Equal(original.Name, info.GetValue<string>(GetAutoFieldName(nameof(original.Name))));
         Assert.Equal(original.Addresses, info.GetValue<string[]>(GetAutoFieldName(nameof(original.Addresses))));
         Assert.Equal(original.Numbers, info.GetValue<IEnumerable<int>>(GetAutoFieldName(nameof(original.Numbers))));
-        Assert.Equal(original.Hobbies, info.GetValue<string[]>(GetAutoFieldName(nameof(original.Hobbies)))); // actual type is string[]
+
+        // it is stored as string[] for xunit.v2, but it is stored as List<string> for xunit.v3, so we use IEnumerable<string> to cover both cases
+        Assert.Equal(original.Hobbies, info.GetValue<IEnumerable<string>>(GetAutoFieldName(nameof(original.Hobbies))));
 
         var deserialized = new T();
         ((IXunitSerializable)deserialized).Deserialize(info);
