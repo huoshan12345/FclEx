@@ -73,7 +73,7 @@ public static class QueryableHelper
     {
         // m => m.Id == id
         var objParam = Expression.Parameter(typeof(T));
-        var member = Expression.Property(objParam, nameof(IHasId<TKey>.Id));
+        var member = Expression.Property(objParam, nameof(IHasId<>.Id));
         var value = Expression.Constant(id);
         var equal = Expression.Equal(member, value);
         var lambda = Expression.Lambda<Func<T, bool>>(equal, objParam);

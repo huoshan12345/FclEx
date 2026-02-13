@@ -1,8 +1,9 @@
 ﻿namespace FclEx.Extensions;
 
+[SuppressMessage("ReSharper", "MoveToExtensionBlock")]
 public static class ListExtensions
 {
-    public static void RemoveAll<T>(this IList<T> list, Func<T, bool> filter)
+    public static void Remove<T>(this IList<T> list, Func<T, bool> filter)
     {
         Check.NotNull(list);
         Check.NotNull(filter);
@@ -34,11 +35,11 @@ public static class ListExtensions
             list[index] = value;
         return list;
     }
-    
+
     public static Span<T> AsSpan<T>(this List<T>? list)
     {
 #if NETSTANDARD2_0
-        return list is null ? default : ArrayAccessor<T>.ItemsAccessor(list);
+        return list is null ? default : ListAccessor<T>.Items(list);
 #else
         return CollectionsMarshal.AsSpan(list);
 #endif
@@ -48,5 +49,58 @@ public static class ListExtensions
     {
         var x = list.BinarySearch(value, comparer);
         list.Insert((x >= 0) ? x : ~x, value);
+    }
+
+    public static T[] Items<T>(this List<T> list)
+    {
+        return ListAccessor<T>.Items(list);
+    }
+
+    public static void SetCount<T>(this List<T> list, int count)
+    {
+        Check.NotNegative(count);
+
+        ref var version = ref ListAccessor<T>.Version(list);
+        ++version;
+
+        ref var size = ref ListAccessor<T>.Size(list);
+        if (count > list.Capacity)
+        {
+            ListAccessor<T>.Grow(list, count);
+        }
+        else if (count < size)
+        {
+            var items = ListAccessor<T>.Items(list);
+            Array.Clear(items, count, size - count);
+        }
+        size = count;
+    }
+
+    extension<T>(List<T>)
+    {
+        public static List<T> operator +(List<T> list, List<T> other)
+        {
+            var count = list.Count + other.Count;
+            var result = new List<T>(count);
+            var array = result.Items();
+            list.Items().CopyTo(array);
+            other.Items().CopyTo(array, list.Count);
+            result.SetCount(count);
+            return result;
+        }
+
+        public static List<T> operator +(List<T> list, T item)
+        {
+            list.Add(item);
+            return list;
+        }
+    }
+
+    extension<T>(List<T> list)
+    {
+        public void operator +=(IEnumerable<T> other)
+        {
+            list.AddRange(other);
+        }
     }
 }

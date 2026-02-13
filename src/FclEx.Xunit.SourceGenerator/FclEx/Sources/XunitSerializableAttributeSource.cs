@@ -26,6 +26,7 @@ internal static class XunitSerializableAttributeSource
         var typeDefs = new List<string>();
         if (typeSymbol.IsRecord)
             typeDefs.Add("record");
+
         typeDefs.Add(typeSymbol.IsValueType ? "struct" : "class");
         return typeDefs.JoinWith(" ");
     }
@@ -71,20 +72,13 @@ internal static class XunitSerializableAttributeSource
         builder.WriteLine($"private static readonly IReadOnlyList<FieldInfo> _fields = FclEx.Extensions.TypeExtensions.GetAllInstanceFields(typeof({typeName}));");
         builder.WriteLine();
 
-        const string getValue =
-#if FCLEX_XUNIT_V3
-            "info.GetValue(field.Name)";
-#else
-            "info.GetValue(field.Name, field.FieldType)";
-#endif
-
-        const string methods = $$"""
+        const string methods = """
 public void Serialize(IXunitSerializationInfo info)
 {
     foreach (var field in _fields)
     {
         var value = field.GetValue(this);
-        info.AddValue(field.Name, value, field.FieldType);
+        global::Xunit.IXunitSerializationInfoExtensions.AddValueEx(info, field.Name, value, field.FieldType);
     }
 }
 
@@ -92,7 +86,7 @@ public void Deserialize(IXunitSerializationInfo info)
 {
     foreach (var field in _fields)
     {
-        var value = {{getValue}};
+        var value = global::Xunit.IXunitSerializationInfoExtensions.GetValueEx(info, field.Name, field.FieldType);
         field.SetValue(this, value);
     }
 }

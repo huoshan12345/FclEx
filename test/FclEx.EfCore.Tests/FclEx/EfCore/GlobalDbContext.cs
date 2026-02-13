@@ -54,7 +54,7 @@ public class GlobalDbContext(
 #endif
 #if !DISABLE_MYSQL
             case DbProviderType.MySql:
-                builder.UseMySQL(ConnectionString);
+                UseMySQL(builder, ConnectionString, Schema);
                 break;
             case DbProviderType.MySqlConnector:
                 UseMySql(builder, ConnectionString, Schema);
@@ -131,6 +131,16 @@ public class GlobalDbContext(
         : MySqlSqlGenerationHelper(dependencies, options)
     {
         public override string GetSchemaName(string name, string schema) => schema;
+    }
+
+    private static void UseMySQL(DbContextOptionsBuilder builder, string connectionString, string? schema)
+    {
+        var sb = new MySqlConnectionStringBuilder(connectionString);
+        if (schema.IsNotEmpty())
+        {
+            sb.Database = schema;
+        }
+        builder.UseMySQL(sb.ConnectionString);
     }
 #endif
 }

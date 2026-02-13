@@ -55,8 +55,7 @@ public readonly record struct ConnectionString(DbProviderType DbProviderType, st
             DbProviderType.Npgsql => new NpgsqlConnectionStringBuilder(primary) { Username = user.Username, Password = user.Password }.ConnectionString,
 #endif
 #if !DISABLE_MYSQL
-            DbProviderType.MySql => CreateUserConnectionStringForMysql(),
-            DbProviderType.MySqlConnector => CreateUserConnectionStringForMysql(),
+            DbProviderType.MySql or DbProviderType.MySqlConnector => CreateUserConnectionStringForMysql(),
 #endif
             _ => throw new ArgumentOutOfRangeException(nameof(dbProviderType), dbProviderType, null)
         };
