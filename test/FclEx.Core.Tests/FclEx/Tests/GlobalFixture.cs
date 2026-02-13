@@ -31,8 +31,8 @@ public class GlobalFixture : IAsyncLifetime
 
     public static IConfigurationRoot Config { get; } = BuildConfig();
 
-    public virtual Task InitializeAsync() => Task.CompletedTask;
-    public virtual Task DisposeAsync() => Task.CompletedTask;
+    public virtual ValueTask InitializeAsync() => ValueTask.CompletedTask;
+    public virtual ValueTask DisposeAsync() => ValueTask.CompletedTask;
 
     public Assembly CurrentAssembly { get; }
 

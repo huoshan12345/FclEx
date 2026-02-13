@@ -100,7 +100,7 @@ public class HttpServerFixture : GlobalFixture
     }
 
 
-    public override async Task InitializeAsync()
+    public override async ValueTask InitializeAsync()
     {
         await RunApiServer();
     }
