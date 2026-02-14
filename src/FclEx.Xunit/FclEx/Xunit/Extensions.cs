@@ -3,21 +3,60 @@
 // ReSharper disable once PartialTypeWithSinglePart
 public static partial class Extensions
 {
-    public static ILoggerFactory AddXunitTest(this ILoggerFactory factory, ITestOutputHelper output, bool checkDisposed)
+    public static ILoggerFactory AddXunit(this ILoggerFactory factory, Func<ITestOutputHelper> outputResolver, bool consoleFallback = true)
     {
-        factory.AddProvider(new TestLoggerProvider(output, checkDisposed));
+        factory.AddProvider(new XunitLoggerProvider(outputResolver, consoleFallback));
         return factory;
     }
 
-    public static IServiceCollection AddXunitTest(this IServiceCollection services, ITestOutputHelper output, bool checkDisposed)
+    public static ILoggerFactory AddXunit(this ILoggerFactory factory, ITestOutputHelper output, bool consoleFallback = true)
     {
-        services.AddSingleton<ILoggerProvider>(new TestLoggerProvider(output, checkDisposed));
+        return factory.AddXunit(() => output, consoleFallback);
+    }
+
+    public static IServiceCollection AddXunitLogging(this IServiceCollection services, Func<ITestOutputHelper> outputResolver, bool consoleFallback = true)
+    {
+        services.AddSingleton<ILoggerProvider>(new XunitLoggerProvider(outputResolver, consoleFallback));
         return services;
     }
 
-    public static ILoggingBuilder AddXunitTest(this ILoggingBuilder builder, ITestOutputHelper output, bool checkDisposed)
+    public static IServiceCollection AddXunitLogging(this IServiceCollection services, ITestOutputHelper output, bool consoleFallback = true)
     {
-        builder.Services.AddXunitTest(output, checkDisposed);
+        return services.AddXunitLogging(() => output, consoleFallback);
+    }
+
+    public static ILoggingBuilder AddXunit(this ILoggingBuilder builder, Func<ITestOutputHelper> outputResolver, bool consoleFallback = true)
+    {
+        builder.Services.AddXunitLogging(outputResolver, consoleFallback);
         return builder;
     }
+
+    public static ILoggingBuilder AddXunit(this ILoggingBuilder builder, ITestOutputHelper output, bool consoleFallback = true)
+    {
+        return builder.AddXunit(() => output, consoleFallback);
+    }
+
+#if FCLEX_XUNIT_V3
+    private static ITestOutputHelper? GetOutput()
+    {
+        return TestContext.Current.TestOutputHelper; ;
+    }
+
+    public static ILoggerFactory AddXunit(this ILoggerFactory factory, bool consoleFallback = true)
+    {
+        factory.AddProvider(new XunitLoggerProvider(GetOutput, consoleFallback));
+        return factory;
+    }
+
+    public static IServiceCollection AddXunitLogging(this IServiceCollection services, bool consoleFallback = true)
+    {
+        return services.AddSingleton<ILoggerProvider>(new XunitLoggerProvider(GetOutput, consoleFallback));
+    }
+
+    public static ILoggingBuilder AddXunit(this ILoggingBuilder builder, bool consoleFallback = true)
+    {
+        builder.Services.AddXunitLogging(consoleFallback);
+        return builder;
+    }
+#endif
 }

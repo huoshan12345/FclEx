@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization.Metadata;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static class JsonSerializerOptionsExtensions
 {

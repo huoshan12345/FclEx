@@ -15,5 +15,45 @@ partial class AssertEx
             if (condition)
                 Assert.False(condition, userMessage?.Invoke());
         }
+
+        public static void Equal<T>(T? expected, T? actual, Func<string>? userMessage)
+        {
+            try
+            {
+                Assert.Equal(expected, actual);
+            }
+            catch (EqualException)
+            {
+                throw EqualException.ForMismatchedValues(
+                    expected: expected.ToAssertionString(),
+                    actual: actual.ToAssertionString(),
+                    banner: userMessage?.Invoke());
+            }
+        }
+
+        public static void Default<T>(T? actual, Func<string>? userMessage = null)
+        {
+            Assert.Equal(default, actual, userMessage);
+        }
+
+        public static void NotEqual<T>(T? expected, T? actual, Func<string>? userMessage = null)
+        {
+            try
+            {
+                Assert.NotEqual(default, actual);
+            }
+            catch (NotEqualException)
+            {
+                throw NotEqualException.ForEqualValues(
+                    expected: expected.ToAssertionString(),
+                    actual: actual.ToAssertionString(),
+                    banner: userMessage?.Invoke());
+            }
+        }
+
+        public static void NotDefault<T>(T? actual, Func<string>? userMessage = null)
+        {
+            Assert.NotEqual(default, actual, userMessage);
+        }
     }
 }

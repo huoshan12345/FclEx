@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Http;
 
-public static class HttpContentTypes
+public static class MediaTypes
 {
     public const string Text = "text/plain";
     public const string Html = "text/html";

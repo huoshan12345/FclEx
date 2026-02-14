@@ -11,7 +11,7 @@ public abstract class WebTests
         _outputHelper = outputHelper;
         ServiceProvider = new ServiceCollection()
             .AddUserClient<TestUserClient>()
-            .AddLogging(m => m.AddXunitTest(outputHelper, false).SetMinimumLevel(LogLevel.Trace))
+            .AddLogging(m => m.AddXunit(outputHelper, false).SetMinimumLevel(LogLevel.Trace))
             .BuildServiceProvider();
     }
 

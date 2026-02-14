@@ -1,13 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <ItemGroup>
-    <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
-    <PackageReference Include="Destructurama.Attributed" Version="5.2.0" />
-    <PackageReference Include="PolySharp" Version="1.15.0" PrivateAssets="all" />
+    <PackageReference Include="Serilog.Extensions.Logging" />
+    <PackageReference Include="Destructurama.Attributed" />
+    <PackageReference Include="PolySharp" PrivateAssets="all" />
   </ItemGroup>
-  
   <ItemGroup>
     <ProjectReference Include="..\FclEx.Http\FclEx.Http.csproj" />
   </ItemGroup>
-
 </Project>
