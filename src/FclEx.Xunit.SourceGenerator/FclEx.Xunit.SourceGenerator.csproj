@@ -21,7 +21,7 @@
     <__SharedCodeFiles Include="FclEx.SourceGenerator\FclEx\CodeAnalysis\SourceInfo.cs" />
     <__SharedCodeFiles Include="FclEx.SourceGenerator\FclEx\CodeAnalysis\AnalyzerConfigOptionsProviderExtensions.cs" />
     <__SharedCodeFiles Include="FclEx.SourceGenerator\FclEx\Extensions\StringExtensions.cs" />
-    <Compile Include="@(__SharedCodeFiles-&gt;'$(__ProjectsFolder)\%(Identity)')">
+    <Compile Include="@(__SharedCodeFiles->'$(__ProjectsFolder)\%(Identity)')">
       <!-- Compute the path of the file relative to $(__ProjectsFolder). 
       Example result: FclEx.Core\FclEx\Utils\SourceBuilder.cs -->
       <__RelativePath>$([MSBuild]::MakeRelative('$(__ProjectsFolder)', '%(FullPath)'))</__RelativePath>
