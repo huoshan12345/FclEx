@@ -1,29 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <IsTestProject>false</IsTestProject>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit" />
   </ItemGroup>
-
   <ItemGroup Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 8.0))">
     <!--net6.0 and net7.0 require this package to support CollectionBuilder-->
-    <PackageReference Include="PolySharp" Version="1.15.0" PrivateAssets="all" />
+    <PackageReference Include="PolySharp" PrivateAssets="all" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\FclEx.Logging\FclEx.Logging.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\FclEx.SourceGenerator\FclEx.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\FclEx.Xunit.SourceGenerator\FclEx.Xunit.SourceGenerator.csproj" ReferenceOutputAssembly="false" />
     <None Include="..\FclEx.Xunit.SourceGenerator\bin\$(Configuration)\netstandard2.0\FclEx.Xunit.SourceGenerator.dll" PackagePath="analyzers\dotnet\cs" Pack="true" Visible="false" />
   </ItemGroup>
-
   <Import Project="..\EmitGeneratedFiles.props" Condition=" '$(Configuration)' == 'Debug' AND $(GITHUB_ACTION) == '' AND '$(OS)' == 'Windows_NT' " />
-
 </Project>
