@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <IsPackable>false</IsPackable>
@@ -8,22 +7,18 @@
     <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
     <DefineConstants>$(DefineConstants);FCLEX_INTERNAL</DefineConstants>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="AngleSharp" Version="1.4.0" PrivateAssets="all" GeneratePathProperty="true" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="4.14.0" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" PrivateAssets="all" />
-    <PackageReference Include="PolySharp" Version="1.15.0" PrivateAssets="all" />
+    <PackageReference Include="AngleSharp" PrivateAssets="all" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
+    <PackageReference Include="PolySharp" PrivateAssets="all" />
   </ItemGroup>
-
   <Target Name="GetDependencyTargetPaths">
     <ItemGroup>
       <TargetPathWithTargetPlatformMoniker Include="$(PkgAngleSharp)\lib\netstandard2.0\AngleSharp.dll" IncludeRuntimeDependency="false" />
     </ItemGroup>
   </Target>
-
   <ItemGroup>
     <Compile Include="..\FclEx.Core\FclEx\Utils\SourceBuilder.cs" />
   </ItemGroup>
-
 </Project>

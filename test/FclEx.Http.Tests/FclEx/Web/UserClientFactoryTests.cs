@@ -48,7 +48,7 @@ public class UserClientFactoryTests : WebTests
             .GetRequiredProperty("ProviderType")
             .GetRequiredValue<Type>(loggerInfo);
 
-        Assert.Equal(typeof(TestLoggerProvider), providerType);
+        Assert.Equal(typeof(XunitLoggerProvider), providerType);
 
     }
 
