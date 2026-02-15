@@ -14,6 +14,7 @@ internal static class XunitSerializableAttributeSource
     [
         "System",
         "System.Reflection",
+        "System.Runtime.CompilerServices",
 #if FCLEX_XUNIT_V3
         "Xunit.Sdk",
 #else
@@ -43,6 +44,7 @@ internal static class XunitSerializableAttributeSource
         using var builder = new SourceBuilder()
             .WriteGeneratedHeader()
             .WriteEnableNullable()
+            .WriteWarningDisable("CS8500")
             .WriteLine()
             .WriteUsings(_usings)
             .WriteLine();
@@ -72,7 +74,7 @@ internal static class XunitSerializableAttributeSource
         builder.WriteLine($"private static readonly IReadOnlyList<FieldInfo> _fields = FclEx.Extensions.TypeExtensions.GetAllInstanceFields(typeof({typeName}));");
         builder.WriteLine();
 
-        const string methods = """
+        const string methodSerialize = """
 public void Serialize(IXunitSerializationInfo info)
 {
     foreach (var field in _fields)
@@ -81,7 +83,9 @@ public void Serialize(IXunitSerializationInfo info)
         global::Xunit.IXunitSerializationInfoExtensions.AddValueEx(info, field.Name, value, field.FieldType);
     }
 }
+""";
 
+        const string methodDeserializeForClass = """
 public void Deserialize(IXunitSerializationInfo info)
 {
     foreach (var field in _fields)
@@ -92,7 +96,28 @@ public void Deserialize(IXunitSerializationInfo info)
 }
 """;
 
-        builder.WriteLines(methods);
+        var methodDeserializeForStruct = $$"""
+public unsafe void Deserialize(IXunitSerializationInfo info)
+{
+    fixed (void* p = &this)
+    {
+        ref var r = ref Unsafe.AsRef<{{typeName}}>(p);
+        var t = __makeref(r);
+        
+        foreach (var field in _fields)
+        {
+            var value = global::Xunit.IXunitSerializationInfoExtensions.GetValueEx(info, field.Name, field.FieldType);
+            field.SetValueDirect(t, value!);
+        }
+    }
+}
+""";
+
+        builder.WriteLines(methodSerialize);
+        builder.WriteLine();
+        builder.WriteLines(typeSymbol.IsValueType
+            ? methodDeserializeForStruct
+            : methodDeserializeForClass);
 
         if (typeSymbol.InstanceConstructors.Any(c => c.Parameters.Length == 0) == false)
         {

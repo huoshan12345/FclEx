@@ -141,12 +141,12 @@ public
     /// Writes an XML documentation summary block with the given lines.
     /// Each line is HTML-escaped and terminated with a line break tag ("&lt;br/&gt;").
     /// </summary>
-    public static SourceBuilder WriteSummary(this SourceBuilder builder, IEnumerable<string> lines)
+    public static SourceBuilder WriteSummary(this SourceBuilder builder, params IEnumerable<string> lines)
     {
         builder.WriteLine("/// <summary>");
         foreach (var line in lines)
         {
-            var tagText = SecurityElement.Escape(line).Trim();
+            var tagText = SecurityElement.Escape(line)?.Trim();
             builder.Write("/// ");
             builder.Write(tagText);
             builder.WriteLine("<br/>");
@@ -190,6 +190,14 @@ public
     public static SourceBuilder WriteEnableNullable(this SourceBuilder builder)
     {
         return builder.WriteLine("#nullable enable");
+    }
+
+    /// <summary>
+    /// Writes the <c>#pragma warning disable</c> directive.
+    /// </summary>
+    public static SourceBuilder WriteWarningDisable(this SourceBuilder builder, string value)
+    {
+        return builder.WriteLine($"#pragma warning disable {value}");
     }
 
     /// <summary>

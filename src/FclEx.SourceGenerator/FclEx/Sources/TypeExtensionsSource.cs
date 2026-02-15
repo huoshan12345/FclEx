@@ -4,10 +4,10 @@ internal static class TypeExtensionsSource
 {
     private const int Max = 8;
     private static readonly string[] _usings =
-    {
+    [
         "System",
-        "System.Reflection",
-    };
+        "System.Reflection"
+    ];
 
     internal static SourceInfo Generate()
     {
@@ -26,7 +26,7 @@ internal static class TypeExtensionsSource
             .WriteOpeningBracket();
 
         // Class declaration
-        builder.WriteLine($"partial class {className}")
+        builder.WriteLine($"public partial class {className}")
             .WriteOpeningBracket();
 
         for (var i = 1; i <= Max; i++)
