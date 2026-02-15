@@ -13,43 +13,20 @@ public static class IXunitSerializationInfoExtensions
     {
         public void AddValueEx(string name, object? value, Type type)
         {
-#if !FCLEX_XUNIT_V3
-            info.AddValue(name, value, type);
-#else
             if (value == null)
                 return;
 
+#if !FCLEX_XUNIT_V3
+            info.AddValue(name, value, type);
+#else
             if (SerializationHelper.Instance.IsSerializable(value, type))
             {
                 info.AddValue(name, value, type);
                 return;
             }
 
-            var genericDefOrSelf = type.IsGenericType
-                ? type.GetGenericTypeDefinition()
-                : type;
-
-            var elementType = type.EnumerableType();
-
-            // convert enumerable value to array
-            if (_arrayInterfaceTypes.Contains(genericDefOrSelf) && value is IEnumerable enumerable && elementType is not null)
-            {
-                var listType = typeof(List<>).MakeGenericType(elementType);
-                var list = Activator.CreateInstance(listType, enumerable);
-                var array = _items.MakeGenericMethod(elementType).Invoke(null, [list]);
-                info.AddValue(name, array, array?.GetType());
-                return;
-            }
-
-            // convert list value to array
-            if (genericDefOrSelf == typeof(List<>) && elementType is not null)
-            {
-                var array = _items.MakeGenericMethod(elementType).Invoke(null, [value]);
-                info.AddValue(name, array, array?.GetType());
-                return;
-            }
-
-            info.AddValue(name, value, type);
+            var json = value.ToJson();
+            info.AddValue($"{name}__json", json, typeof(string));
 #endif
         }
 
@@ -58,24 +35,18 @@ public static class IXunitSerializationInfoExtensions
 #if !FCLEX_XUNIT_V3
             return info.GetValue(name, type);
 #else
+            var value = info.GetValue(name);
 
-            var genericDefOrSelf = type.IsGenericType
-                ? type.GetGenericTypeDefinition()
-                : type;
-
-            var elementType = type.EnumerableType();
-
-            if (genericDefOrSelf == typeof(List<>) && elementType is not null)
+            // ReSharper disable once InvertIf
+            if (value is null)
             {
-                var value = info.GetValue(name);
-                if (value is null)
-                    return null;
-
-                var list = _toList.MakeGenericMethod(elementType).Invoke(null, [value]);
-                return list;
+                if (info.GetValue($"{name}__json") is string json)
+                {
+                    return json.FromJson(type);
+                }
             }
 
-            return info.GetValue(name);
+            return value;
 #endif
         }
     }

@@ -13,21 +13,10 @@ public static partial class Extensions
     {
         return factory.AddXunit(() => output, consoleFallback);
     }
-
-    public static IServiceCollection AddXunitLogging(this IServiceCollection services, Func<ITestOutputHelper> outputResolver, bool consoleFallback = true)
-    {
-        services.AddSingleton<ILoggerProvider>(new XunitLoggerProvider(outputResolver, consoleFallback));
-        return services;
-    }
-
-    public static IServiceCollection AddXunitLogging(this IServiceCollection services, ITestOutputHelper output, bool consoleFallback = true)
-    {
-        return services.AddXunitLogging(() => output, consoleFallback);
-    }
-
+    
     public static ILoggingBuilder AddXunit(this ILoggingBuilder builder, Func<ITestOutputHelper> outputResolver, bool consoleFallback = true)
     {
-        builder.Services.AddXunitLogging(outputResolver, consoleFallback);
+        builder.Services.AddSingleton<ILoggerProvider>(new XunitLoggerProvider(outputResolver, consoleFallback));
         return builder;
     }
 

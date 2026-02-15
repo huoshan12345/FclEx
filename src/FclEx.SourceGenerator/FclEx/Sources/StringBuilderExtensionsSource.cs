@@ -45,16 +45,16 @@ internal class StringBuilderExtensionsSource
             var closing = EscapeChar(closingQuote);
 
             builder.WriteSummary(commentForValue);
-            builder.WriteLine($"public static StringBuilder {name}(this StringBuilder builder, object? value)");
+            builder.WriteLine($"public static StringBuilder {name}(this StringBuilder builder, string? value)");
             builder.WriteOpeningBracket();
             builder.WriteLine($"return builder.AppendWrapped('{opening}', value, '{closing}');");
             builder.WriteClosingBracket();
             builder.WriteLine();
 
             builder.WriteSummary(commentForAction);
-            builder.WriteLine($"public static StringBuilder {name}(this StringBuilder builder, Action<StringBuilder> content)");
+            builder.WriteLine($"public static StringBuilder {name}(this StringBuilder builder, Action<StringBuilder> appendContent)");
             builder.WriteOpeningBracket();
-            builder.WriteLine($"return builder.AppendWrapped('{opening}', content, '{closing}');");
+            builder.WriteLine($"return builder.AppendWrapped('{opening}', appendContent, '{closing}');");
             builder.WriteClosingBracket();
             builder.WriteLine();
         }

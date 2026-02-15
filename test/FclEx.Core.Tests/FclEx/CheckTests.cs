@@ -11,7 +11,7 @@ public class CheckTests
         {
             var col = new List<int>();
             var ex = Assert.Throws<ArgumentException>(() => Check.NotEmpty(col));
-            Assert.Contains("The list argument col cannot be empty.", ex.Message);
+            Assert.Contains($"The list argument '{nameof(col)}' cannot be empty.", ex.Message);
         }
         {
             var col = new List<int> { 1 };
@@ -25,7 +25,7 @@ public class CheckTests
         {
             var col = Array.Empty<int>();
             var ex = Assert.Throws<ArgumentException>(() => Check.NotEmpty(col));
-            Assert.Contains("The list argument col cannot be empty.", ex.Message);
+            Assert.Contains($"The list argument '{nameof(col)}' cannot be empty.", ex.Message);
         }
         {
             var col = new int[] { 1 };
@@ -39,7 +39,7 @@ public class CheckTests
         {
             IList<int> col = new List<int>();
             var ex = Assert.Throws<ArgumentException>(() => Check.NotEmpty(col));
-            Assert.Contains("The list argument col cannot be empty.", ex.Message);
+            Assert.Contains($"The list argument '{nameof(col)}' cannot be empty.", ex.Message);
         }
         {
             IList<int> col = new List<int> { 1 };
@@ -53,7 +53,7 @@ public class CheckTests
         {
             IReadOnlyList<int> col = new List<int>();
             var ex = Assert.Throws<ArgumentException>(() => Check.NotEmpty(col));
-            Assert.Contains("The list argument col cannot be empty.", ex.Message);
+            Assert.Contains($"The list argument '{nameof(col)}' cannot be empty.", ex.Message);
         }
         {
             IReadOnlyList<int> col = new List<int> { 1 };
@@ -67,7 +67,7 @@ public class CheckTests
         {
             ICollection<int> col = new List<int>();
             var ex = Assert.Throws<ArgumentException>(() => Check.NotEmpty(col));
-            Assert.Contains("The list argument col cannot be empty.", ex.Message);
+            Assert.Contains($"The list argument '{nameof(col)}' cannot be empty.", ex.Message);
         }
         {
             ICollection<int> col = new List<int> { 1 };
@@ -81,7 +81,7 @@ public class CheckTests
         {
             IReadOnlyCollection<int> col = new List<int>();
             var ex = Assert.Throws<ArgumentException>(() => Check.NotEmpty(col));
-            Assert.Contains("The list argument col cannot be empty.", ex.Message);
+            Assert.Contains($"The list argument '{nameof(col)}' cannot be empty.", ex.Message);
         }
         {
             IReadOnlyCollection<int> col = new List<int> { 1 };
@@ -95,7 +95,7 @@ public class CheckTests
         {
             var col = new HashSet<int>();
             var ex = Assert.Throws<ArgumentException>(() => Check.NotEmpty(col));
-            Assert.Contains("The list argument col cannot be empty.", ex.Message);
+            Assert.Contains($"The list argument '{nameof(col)}' cannot be empty.", ex.Message);
         }
         {
             var col = new HashSet<int> { 1 };
@@ -109,7 +109,7 @@ public class CheckTests
         {
             ISet<int> col = new HashSet<int>();
             var ex = Assert.Throws<ArgumentException>(() => Check.NotEmpty(col));
-            Assert.Contains("The list argument col cannot be empty.", ex.Message);
+            Assert.Contains($"The list argument '{nameof(col)}' cannot be empty.", ex.Message);
         }
         {
             ISet<int> col = new HashSet<int> { 1 };
@@ -123,7 +123,7 @@ public class CheckTests
         {
             IReadOnlySet<int> col = new HashSet<int>();
             var ex = Assert.Throws<ArgumentException>(() => Check.NotEmpty(col));
-            Assert.Contains("The list argument col cannot be empty.", ex.Message);
+            Assert.Contains($"The list argument '{nameof(col)}' cannot be empty.", ex.Message);
         }
         {
             IReadOnlySet<int> col = new HashSet<int> { 1 };

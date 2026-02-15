@@ -23,7 +23,7 @@ public static class Check
 
         if (value.Trim().Length == 0)
         {
-            throw new ArgumentException($"The string argument {name} cannot be empty.");
+            throw new ArgumentException($"The string argument '{name}' cannot be empty.");
         }
 
         return value;
@@ -36,7 +36,7 @@ public static class Check
         if (value.Any(string.IsNullOrEmpty))
         {
             var name = parameterName ?? nameof(value);
-            throw new ArgumentException($"The collection argument {name} must not contain any empty elements.");
+            throw new ArgumentException($"The collection argument '{name}' must not contain any empty elements.");
         }
     }
 
@@ -122,7 +122,7 @@ public static class Check
         if (value.Count == 0)
         {
             var name = parameterName ?? nameof(value);
-            throw new ArgumentException($"The list argument {name} cannot be empty.");
+            throw new ArgumentException($"The list argument '{name}' cannot be empty.");
         }
     }
 
@@ -132,7 +132,7 @@ public static class Check
         if (value.AnyEx() == false)
         {
             var name = parameterName ?? nameof(value);
-            throw new ArgumentException($"The list argument {name} cannot be empty.");
+            throw new ArgumentException($"The list argument '{name}' cannot be empty.");
         }
     }
 
