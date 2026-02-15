@@ -26,9 +26,6 @@
 /// </list> 
 /// The annotated type must be declared as <see langword="partial"/>.<br/>
 /// If the annotated type is nested, all containing types must also be declared as <see langword="partial"/>.<br/>
-/// <br/>
-/// Struct types are not supported because <see cref="IXunitSerializable"/>
-/// requires mutating an existing instance during deserialization.
 /// </remarks>
-[AttributeUsage(AttributeTargets.Class)] // Not supported for structs since IXunitSerializable.Deserialize relies on mutation semantics.
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
 public sealed class XunitSerializableAttribute : Attribute;

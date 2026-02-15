@@ -193,6 +193,14 @@ public
     }
 
     /// <summary>
+    /// Writes the <c>#pragma warning disable</c> directive.
+    /// </summary>
+    public static SourceBuilder WriteWarningDisable(this SourceBuilder builder, string value)
+    {
+        return builder.WriteLine($"#pragma warning disable {value}");
+    }
+
+    /// <summary>
     /// Writes a namespace declaration.
     /// </summary>
     public static SourceBuilder WriteNamespace(this SourceBuilder builder, string @namespace, bool fileScoped = false)
