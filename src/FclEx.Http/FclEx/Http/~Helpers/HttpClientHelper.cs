@@ -1,6 +1,5 @@
 ﻿using static FclEx.Http.IPVersionPolicy;
 
-
 namespace FclEx.Http;
 
 public static class HttpClientHelper
@@ -38,8 +37,7 @@ public static class HttpClientHelper
                 {
                     OnlyIPv4 => AddressFamily.InterNetwork,
                     OnlyIPv6 => AddressFamily.InterNetworkV6,
-                    PreferIPv4 => AddressFamily.Unspecified,
-                    PreferIPv6 => AddressFamily.Unspecified,
+                    PreferIPv4 or PreferIPv6 => AddressFamily.Unspecified,
                     _ => throw new ArgumentOutOfRangeException(nameof(options.IPVersionPolicy), options.IPVersionPolicy, null)
                 };
 
