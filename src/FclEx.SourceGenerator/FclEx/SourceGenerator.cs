@@ -19,6 +19,7 @@ public class SourceGenerator : IIncrementalGenerator
             {
                 "FclEx.Core" =>
                 [
+                    ..BytesExtensionsSource.Generate(),
                     MethodSource.Generate(),
                     TypeExtensionsSource.Generate(),
                     ValueTupleExtensionsSource.Generate(),
@@ -26,13 +27,17 @@ public class SourceGenerator : IIncrementalGenerator
                     EventHandlersSource.Generate(),
                     AsyncEventHandlerExtensionsSource.Generate(),
                     UnicodeScalarHelperSource.Generate(ctx, value.Right),
-                    ..BytesExtensionsSource.Generate(),
                     NumberExtensionsSource.Generate(),
+                    StringBuilderExtensionsSource.Generate(),
                 ],
-                "FclEx.Xunit" or "FclEx.Xunit.v3" =>
+                "FclEx.Xunit" =>
                 [
                     ExtensionsSource.Generate(),
-                    XunitSerializableSource.Generate(),
+                ],
+                "FclEx.Xunit.v3" =>
+                [
+                    ExtensionsSource.Generate(),
+                    TheoryDataRowExtensionsSource.Generate(),
                 ],
                 "FclEx.DependencyInjection" =>
                 [

@@ -26,7 +26,7 @@ internal static class TupleExtensionsSource
             .WriteOpeningBracket();
 
         // Class declaration
-        builder.WriteLine($"partial class {className}")
+        builder.WriteLine($"public partial class {className}")
             .WriteOpeningBracket();
 
         for (var i = 2; i <= Max; i++)
