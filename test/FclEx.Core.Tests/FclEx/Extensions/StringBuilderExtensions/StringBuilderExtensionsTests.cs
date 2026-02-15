@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions.StringBuilderExtensions;
 
 public class StringBuilderExtensionsTests
 {

@@ -6,6 +6,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\FclEx.AspNetCore\FclEx.AspNetCore.csproj" />
     <ProjectReference Include="..\FclEx.Http\FclEx.Http.csproj" />
   </ItemGroup>
 </Project>
