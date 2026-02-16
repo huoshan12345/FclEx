@@ -2,11 +2,6 @@
 
 public static class HttpContentHelper
 {
-    public static StringContent ToStringContent(string content)
-    {
-        return new StringContent(content, Encoding.UTF8, MediaTypes.Json);
-    }
-
     public static StringContent ToJsonContent(object obj, JsonSerializerOptions? options = null)
     {
         var json = obj.ToJson(options);
