@@ -4,17 +4,22 @@ namespace Microsoft.AspNetCore.Mvc.Testing;
 
 public class TestWebApplicationFactory<TStartup> : WebApplicationFactory<TStartup> where TStartup : class
 {
+    protected static readonly string ApplicationName = typeof(TStartup).Assembly.GetName().Name!;
+
     protected virtual string EnvironmentName => "Testing";
 
     protected override IHostBuilder CreateHostBuilder()
     {
         return Host.CreateDefaultBuilder()
+            .UseApplicationName(ApplicationName)
             .UseEnvironment(EnvironmentName)
             .UseContentRoot(AppContext.BaseDirectory)
-            .ConfigureWebHost(m => m.UseStartup(Create).SetWebApplicationFactoryContentRoot<TStartup>());
+            .ConfigureWebHost(m => m.UseStartup(CreateStartup)
+                .UseApplicationName(ApplicationName) // Set the application name, otherwise all web apis will return 404
+                .UseTestContentRoot<TStartup>(AppContext.BaseDirectory));
     }
 
-    private static TStartup Create(WebHostBuilderContext context)
+    protected virtual TStartup CreateStartup(WebHostBuilderContext context)
     {
         var env = context.HostingEnvironment;
         return new ServiceCollection()
