@@ -120,6 +120,20 @@ public partial class XunitSerializableAttributeTests
         Derived Sub)
         : Base(Name), ITestType;
 
+    [XunitSerializable]
+    public partial class GenericClass<T>(
+        int id,
+        string name,
+        string[] addresses,
+        IEnumerable<int> numbers,
+        List<string> hobbies,
+        HttpMethod httpMethod,
+        T value)
+        : ClassWithCtor(id, name, addresses, numbers, hobbies, httpMethod)
+    {
+        public T Value { get; } = value;
+    }
+
 
 #if !FCLEX_XUNIT_V3
     private static readonly Type _serializationHelper = typeof(SerializationHelper).Assembly.GetRequiredType("Xunit.Serialization.XunitSerializationInfo");
@@ -223,6 +237,17 @@ public partial class XunitSerializableAttributeTests
         Test<Nested>((a, b, c, d, e, f) => new(a, b, c, d, e, f, new(a + 1, b + b, c + c, d + d, e + e, f)), (expected, actual) =>
         {
             Test(expected.Sub, actual.Sub);
+        });
+    }
+
+    [Fact]
+    public void Should_RoundTrip_GenericClass()
+    {
+        const string value = "generic value";
+        Test<GenericClass<string>>((a, b, c, d, e, f) => new(a, b, c, d, e, f, value), (expected, actual) =>
+        {
+            Assert.Equal(value, expected.Value);
+            Assert.Equal(value, actual.Value);
         });
     }
 }

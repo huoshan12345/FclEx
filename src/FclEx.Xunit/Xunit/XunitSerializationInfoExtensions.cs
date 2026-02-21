@@ -1,6 +1,9 @@
-﻿namespace Xunit;
+﻿// ReSharper disable UnusedMember.Global
+#pragma warning disable IDE0051
 
-public static class IXunitSerializationInfoExtensions
+namespace Xunit;
+
+public static class XunitSerializationInfoExtensions
 {
     private static readonly Type[] _arrayInterfaceTypes = typeof(int[]).GetInterfaces()
         .Select(m => m.IsGenericType ? m.GetGenericTypeDefinition() : m)

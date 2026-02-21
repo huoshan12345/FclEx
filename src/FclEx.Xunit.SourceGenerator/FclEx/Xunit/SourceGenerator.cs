@@ -19,7 +19,7 @@ public class SourceGenerator : IIncrementalGenerator
         //    Debugger.Launch();
 
         var serializableType = context.SyntaxProvider.ForAttributeWithMetadataName(
-                "FclEx.Xunit.XunitSerializableAttribute",
+                XunitSerializableAttributeSource.AttributeName,
                 static (node, _) => node is TypeDeclarationSyntax,
                 static (ctx, _) => (INamedTypeSymbol)ctx.TargetSymbol
             );
