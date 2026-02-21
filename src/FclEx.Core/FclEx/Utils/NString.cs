@@ -2,20 +2,18 @@
 
 [DebuggerDisplay("{" + nameof(Value) + "}")]
 [JsonConverter(typeof(NStringJsonConverter))]
-public readonly struct NString(string? value) : IEquatable<NString>, IReadOnlyList<char>
+public readonly struct NString(string? value) : IEquatable<NString>
 {
     public string Value => value ?? string.Empty; // use compute property to avoid null when create default struct
-    int IReadOnlyCollection<char>.Count => Value.Length; // hide Count and use Length instead.
     public int Length => Value.Length;
 
     public char this[int index] => Value[index];
     public override string ToString() => Value;
     public bool Equals(NString other) => Value == other.Value;
     public override int GetHashCode() => Value.GetHashCode();
-    public IEnumerator<char> GetEnumerator() => Value.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    public CharEnumerator GetEnumerator() => Value.GetEnumerator();
 
-    public static implicit operator string(NString nstr) => nstr.Value;
+    public static implicit operator string(NString str) => str.Value;
     public static implicit operator NString(string? str) => new(str);
 
     public static bool operator ==(NString left, string right) => left == (NString)right;
@@ -37,7 +35,7 @@ public readonly struct NString(string? value) : IEquatable<NString>, IReadOnlyLi
 
 public static class NStringExtensions
 {
-    public static bool IsNotEmpty(this NString nstr) => nstr.Value.IsNotEmpty();
+    public static bool IsNotEmpty(this NString str) => str.Value.IsNotEmpty();
 }
 
 public class NStringJsonConverter : JsonConverter<NString>

@@ -73,4 +73,11 @@ public static class ArrayExtensions
             return result;
         }
     }
+
+    extension(Array)
+    {
+#if !NET5_0_OR_GREATER
+        public static int MaxLength => 2147483591;
+#endif
+    }
 }

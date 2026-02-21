@@ -7,6 +7,7 @@ global using FclEx.Logging;
 global using FclEx.Serilog.Formatting;
 global using FclEx.Tests;
 global using FclEx.Utils;
+global using FclEx.Xunit;
 global using Moq;
 global using Serilog;
 global using Serilog.Core;

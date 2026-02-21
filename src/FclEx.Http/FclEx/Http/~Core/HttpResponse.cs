@@ -8,16 +8,16 @@ public class HttpResponse
     }
 
     [MemberNotNullWhen(false, nameof(Exception))]
-    public bool Success => Exception is null;
+    public bool IsSuccess => Exception is null;
 
     [MemberNotNullWhen(true, nameof(Exception))]
-    public bool Error => Exception != null;
+    public bool IsError => Exception != null;
     public Exception? Exception { get; internal set; }
 
     public HttpRequest Request { get; }
     public string ResponseString { get; internal set; } = string.Empty;
     public byte[] ResponseBytes { get; internal set; } = [];
-    public Stream ResponseStream { get; internal set; } = new MemoryStream();
+    public Stream ResponseStream { get; internal set; } = Stream.Null;
     public Encoding? Encoding { get; internal set; }
     public TimeSpan Elapsed { get; internal set; }
     public DateTimeOffset StartTime { get; internal set; }

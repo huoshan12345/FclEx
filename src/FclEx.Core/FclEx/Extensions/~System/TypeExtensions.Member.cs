@@ -1,4 +1,4 @@
-﻿using static FclEx.BindingAttributes;
+﻿using static System.Reflection.BindingAttributes;
 
 namespace FclEx.Extensions;
 
@@ -10,10 +10,8 @@ partial class TypeExtensions
         while (t is not null)
         {
             var member = selector(t);
-            if (member is not null)
-                return member;
 
-            if (searchBaseTypes == false)
+            if (member is not null || searchBaseTypes == false)
                 return member;
 
             t = t.BaseType;
@@ -23,7 +21,7 @@ partial class TypeExtensions
 
     public static FieldInfo? GetField(this Type type, string name, bool searchBaseTypes)
     {
-        return type.GetMember<FieldInfo>(m => m.GetField(name, AllDeclared), searchBaseTypes);
+        return type.GetMember(m => m.GetField(name, Declared), searchBaseTypes);
     }
 
     public static FieldInfo GetRequiredField(this Type type, string name, bool searchBaseTypes = false)
@@ -39,7 +37,7 @@ partial class TypeExtensions
 
     public static PropertyInfo? GetProperty(this Type type, string name, bool searchBaseTypes)
     {
-        return type.GetMember(m => m.GetProperty(name, AllDeclared), searchBaseTypes);
+        return type.GetMember(m => m.GetProperty(name, Declared), searchBaseTypes);
     }
 
     public static PropertyInfo GetRequiredProperty(this Type type, string name, bool searchBaseTypes = false)
@@ -49,7 +47,7 @@ partial class TypeExtensions
 
     public static MethodInfo? GetMethod(this Type type, string name, bool searchBaseTypes)
     {
-        return type.GetMember(m => m.GetMethod(name, AllDeclared), searchBaseTypes);
+        return type.GetMember(m => m.GetMethod(name, Declared), searchBaseTypes);
     }
 
     public static MethodInfo GetRequiredMethod(this Type type, string name, bool searchBaseTypes = false)
@@ -61,7 +59,7 @@ partial class TypeExtensions
     {
         return type.GetMember(t =>
         {
-            return t.GetMethods(AllDeclared)
+            return t.GetMethods(Declared)
                 .Where(m => m.Name == name)
                 .Select(m => (Method: m, Params: m.GetParameters(), Args: m.GetGenericArguments()))
                 .Where(x => x.Args.Length == genericArgumentCount
@@ -109,19 +107,123 @@ partial class TypeExtensions
 
         static IReadOnlyList<FieldInfo> Impl(Type type)
         {
-            var list = new List<FieldInfo>();
-            var p = type;
-            while (p is not null)
-            {
-                var fields = p.GetFields(AllDeclaredInstance);
-                list.AddRange(fields);
-                p = p.BaseType;
-            }
-            return list.ToReadOnlyList();
+            return type.GetDataMembers()
+                .Where(m => m is { IsField: true, IsStatic: false })
+                .Select(m => m.MemberInfo)
+                .OfType<FieldInfo>()
+                .ToReadOnlyList();
         }
     }
 
     public static IReadOnlyList<DataMemberInfo> GetDataMembers(this Type type) => ReflectionHelper.GetDataMembers(type);
+
+    public static IEnumerable<DataMemberInfo> GetDataMembers(this Type type, DataMemberFlags flags)
+    {
+        // Must choose Declared or Inherited
+        if ((flags & (DataMemberFlags.Declared | DataMemberFlags.Inherited)) == 0)
+            yield break;
+
+        // Must choose Instance or Static
+        if ((flags & (DataMemberFlags.Instance | DataMemberFlags.Static)) == 0)
+            yield break;
+
+        // Must choose Public or NonPublic
+        if ((flags & (DataMemberFlags.Public | DataMemberFlags.NonPublic)) == 0)
+            yield break;
+
+        // Must choose Field or Property
+        if ((flags & (DataMemberFlags.Field | DataMemberFlags.Property)) == 0)
+            yield break;
+
+        // Must choose CanRead or CanWrite
+        if ((flags & (DataMemberFlags.CanRead | DataMemberFlags.CanWrite)) == 0)
+            yield break;
+
+        var allowUnsafeWrite = (flags & DataMemberFlags.UnsafeWrite) != 0;
+
+        foreach (var member in type.GetDataMembers())
+        {
+            // Declared / Inherited filter
+            if (member.DeclaringType == type)
+            {
+                if ((flags & DataMemberFlags.Declared) == 0)
+                    continue;
+            }
+            else
+            {
+                if ((flags & DataMemberFlags.Inherited) == 0)
+                    continue;
+            }
+
+            // Instance / Static filter
+            if (member.IsStatic)
+            {
+                if ((flags & DataMemberFlags.Static) == 0)
+                    continue;
+            }
+            else
+            {
+                if ((flags & DataMemberFlags.Instance) == 0)
+                    continue;
+            }
+
+            // Public / NonPublic filter
+            if (member.HasPublicGetter || member.HasPublicSetter)
+            {
+                if ((flags & DataMemberFlags.Public) == 0)
+                    continue;
+            }
+            else
+            {
+                if ((flags & DataMemberFlags.NonPublic) == 0)
+                    continue;
+            }
+
+            // Field / Property filter
+            if (member.IsField)
+            {
+                if ((flags & DataMemberFlags.Field) == 0)
+                    continue;
+
+                if (member.IsAutoPropertyBackingField &&
+                    (flags & DataMemberFlags.AutoPropertyBackingField) == 0)
+                {
+                    continue;
+                }
+            }
+            else
+            {
+                if ((flags & DataMemberFlags.Property) == 0)
+                    continue;
+            }
+
+            // Read filter
+            if ((flags & DataMemberFlags.CanRead) != 0
+                && !member.CanRead)
+            {
+                continue;
+            }
+
+            // Write filter
+            if ((flags & DataMemberFlags.CanWrite) != 0)
+            {
+                if (member is { CanWrite: true, IsInitOnly: false })
+                {
+                    // writable safely OK
+                }
+                else if (allowUnsafeWrite && member.IsInitOnly)
+                {
+                    // readonly field / init property
+                }
+                else
+                {
+                    continue;
+                }
+            }
+
+            yield return member;
+        }
+    }
 
     public static DataMemberInfo? GetDataMember(this Type type, string name) => ReflectionHelper.GetDataMembers(type).FirstOrDefault(m => m.Name == name);
 

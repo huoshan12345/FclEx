@@ -85,15 +85,15 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
     {
         Logger.LogDebug("Start to login...");
         return LoginActionAsync(token)
-            .Success(o => Logger.LogDebug("Login successfully"))
-            .Error(ex => Logger.LogWarning(ex, "Failed to login: {Error}", ex.Message));
+            .OnValue(o => Logger.LogDebug("Login successfully"))
+            .OnException(ex => Logger.LogWarning(ex, "Failed to login: {Error}", ex.Message));
     }
 
     protected abstract Task<OperationResult> LoginActionAsync(CancellationToken token);
 
     protected virtual Task<OperationResult> FakeLoginActionAsync(CancellationToken token)
     {
-        return Operation.Success().ToTask();
+        return Operation.Success();
     }
 
     protected virtual void DisposeAction()
@@ -126,8 +126,8 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
             Session.LoggingIn();
 
             var response = await loginAction(token)
-                .Success(_ => Session.Online())
-                .Error(_ =>
+                .OnValue(_ => Session.Online())
+                .OnException(_ =>
                 {
                     if (Session.IsLoggingIn())
                         Session.Offline();
@@ -160,7 +160,7 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
     {
         HttpService.ClearAllCookies();
         Session.Offline();
-        return Operation.Success().ToTask();
+        return Operation.Success();
     }
 
     public Task<OperationResult> FakeLoginAsync(bool loginIfFail = true, CancellationToken token = default)
@@ -169,10 +169,10 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
         {
             Logger.LogDebug("Start to fake login...");
             var result = await FakeLoginActionAsync(t)
-                .Success(o => Logger.LogDebug("Fake login successfully"))
-                .Error(ex => Logger.LogWarning(ex, "Failed to fake login: {Error}", ex.Message));
+                .OnValue(o => Logger.LogDebug("Fake login successfully"))
+                .OnException(ex => Logger.LogWarning(ex, "Failed to fake login: {Error}", ex.Message));
 
-            if (result.Error && loginIfFail)
+            if (result.IsError && loginIfFail)
             {
                 result = await LoginActionWrapperAsync(t);
             }

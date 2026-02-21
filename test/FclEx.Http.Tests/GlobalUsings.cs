@@ -17,6 +17,7 @@ global using FclEx.Http;
 global using FclEx.Http.Tests;
 global using FclEx.Http.Tests.Models;
 global using FclEx.Utils;
+global using FclEx.Xunit;
 global using Microsoft.AspNetCore.Builder;
 global using Microsoft.AspNetCore.Diagnostics;
 global using Microsoft.AspNetCore.Hosting;

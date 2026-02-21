@@ -23,37 +23,48 @@ public static class JsonHelper
         },
     };
 
-    public static JsonSerializerOptions GetOptions(JsonOptions? options = default)
+    public static JsonSerializerOptions CreateOptions(JsonOptions? jsonOptions = default)
     {
-        options ??= JsonOptions.Default;
-        return _serializerOptions.GetOrAdd(options, Create);
-
-        static JsonSerializerOptions Create(JsonOptions k)
+        jsonOptions ??= JsonOptions.Default;
+        var options = new JsonSerializerOptions
         {
-            var options = new JsonSerializerOptions
-            {
-                AllowOutOfOrderMetadataProperties = k.AllowOutOfOrderMetadataProperties,
-                PropertyNameCaseInsensitive = k.PropertyNameCaseSensitive == false,
-                DefaultIgnoreCondition = k.IgnoreWritingNull
-                    ? JsonIgnoreCondition.WhenWritingNull
-                    : JsonIgnoreCondition.Never,
-                WriteIndented = k.Indented,
-                PropertyNamingPolicy = k.PropertyNamingPolicy,
-                Encoder = k.StrictEscaping ? null : RelaxedEncoder.Instance,
-                NumberHandling = k.AllowNumberFromString
-                    ? JsonNumberHandling.AllowReadingFromString
-                    : JsonNumberHandling.Strict,
-                TypeInfoResolver = k.IgnoreReadingNull
-                    ? IgnoreReadingNullResolver
-                    : Resolver,
-            };
+            AllowOutOfOrderMetadataProperties = jsonOptions.AllowOutOfOrderMetadataProperties,
+            PropertyNameCaseInsensitive = jsonOptions.PropertyNameCaseSensitive == false,
+            DefaultIgnoreCondition = jsonOptions.IgnoreWritingNull
+                   ? JsonIgnoreCondition.WhenWritingNull
+                   : JsonIgnoreCondition.Never,
+            WriteIndented = jsonOptions.Indented,
+            PropertyNamingPolicy = jsonOptions.PropertyNamingPolicy,
+            Encoder = jsonOptions.StrictEscaping ? null : RelaxedEncoder.Instance,
+            NumberHandling = jsonOptions.AllowNumberFromString
+                   ? JsonNumberHandling.AllowReadingFromString
+                   : JsonNumberHandling.Strict,
+            TypeInfoResolver = jsonOptions.IgnoreReadingNull
+                   ? IgnoreReadingNullResolver
+                   : Resolver,
+        };
 
-            if (k.AllowBoolFromString)
-                options.Converters.Add(BooleanJsonConverter.Instance);
+        if (jsonOptions.AllowBoolFromString)
+            options.Converters.Add(BooleanJsonConverter.Instance);
 
+        if (jsonOptions.AddTypeConverter)
+            options.Converters.Add(TypeJsonConverter.Instance);
+
+        if (jsonOptions.AddObjectConverter)
+            options.Converters.Add(ObjectConverterFactory.Instance);
+
+        return options;
+    }
+
+    public static JsonSerializerOptions GetOptions(JsonOptions? jsonOptions = default)
+    {
+        jsonOptions ??= JsonOptions.Default;
+        return _serializerOptions.GetOrAdd(jsonOptions, m =>
+        {
+            var options = CreateOptions(m);
             options.MakeReadOnly(true);
             return options;
-        }
+        });
     }
 
     /// <summary>

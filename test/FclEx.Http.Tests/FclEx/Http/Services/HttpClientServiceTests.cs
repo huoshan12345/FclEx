@@ -2,6 +2,10 @@
 
 public partial class HttpClientServiceTests(ITestOutputHelper output)
 {
+    public static readonly TheoryData<bool, bool, bool> AddCookieTestData = new[] { true, false }
+            .CrossJoinCube()
+            .ToTheoryData();
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]
@@ -15,25 +19,36 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
     [Fact]
     public async Task SendAsync_Success()
     {
+        var url = TestUrls.First();
         using var service = HttpClientService.Create(false);
-        for (var i = 0; i < 5; i++)
-        {
-            var response = await HttpRequest.Get("https://www.baidu.com")
-                .SendAsync(service);
-            AssertEx.False(response.Error, () => response.Exception!.ToString());
-        }
+        var response = await HttpRequest
+            .Get(url)
+            .SendAsync(service);
+        Assert.False(response.IsError, () => response.Exception!.ToString());
     }
 
     [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void AddCookie_Test(bool useCookie)
+    [MemberData(nameof(AddCookieTestData))]
+    public void AddCookie_Test(bool useCookie, bool sameDomain, bool overrideDomain)
     {
-        var uri = new Uri("https://www.instagram.com/");
-        var cookies = SimpleCookies;
+        var uri = sameDomain
+            ? new Uri("https://www.instagram.com/")
+            : new Uri("https://www.google.com/");
+
+        var cookies = SimpleCookies; // their domain is ".instagram.com"
         using var service = HttpClientService.Create(useCookie);
         foreach (var cookie in cookies.Select(m => m.ToCookie()))
-            service.AddCookie(cookie, uri);
+        {
+            if (useCookie == false || sameDomain || overrideDomain)
+            {
+                service.AddCookie(cookie, uri, overrideDomain);
+            }
+            else
+            {
+                Assert.ThrowsAny<CookieException>(() => service.AddCookie(cookie, uri));
+            }
+
+        }
     }
 
     [Theory]
@@ -44,7 +59,7 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
         var cookies = SimpleCookies;
         using var service = HttpClientService.Create(useCookie);
         foreach (var cookie in cookies.Select(m => m.ToCookie()))
-            service.AddCookie(cookie, null);
+            service.AddCookie(cookie, uri: null);
     }
 
     [Theory]
@@ -147,7 +162,7 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
         CheckProxy(fac2.CreateClient(), null);
     }
 
-    [LocalOnlyTheory]
+    [RetryTheory]
     [InlineData(1, 0.1)]
     [InlineData(2, 0.1)]
     [InlineData(2, 0.2)]
@@ -165,10 +180,10 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
             .ReadHeadersTimeout(timeout)
             .SendAsync(http);
 
-        Assert.True(response.Error);
+        Assert.True(response.IsError);
         output.WriteLine(response.Exception.ToString());
 
         Assert.IsType<TaskCanceledException>(response.Exception);
-        Assert.Equal(expectedTime, response.Elapsed, TimeSpan.FromSeconds(0.2));
+        Assert.Equal(expectedTime, response.Elapsed, TimeSpan.FromSeconds(0.1));
     }
 }

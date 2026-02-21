@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using FclEx.Dapper;
+﻿using FclEx.Dapper;
 using FclEx.Data;
 using Microsoft.Data.Sqlite;
 

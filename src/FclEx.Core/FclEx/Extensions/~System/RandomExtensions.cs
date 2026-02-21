@@ -345,4 +345,10 @@ public static class RandomExtensions
         }
     }
 
+#if NETSTANDARD2_0
+    extension(Random)
+    {
+        public static Random Shared => ThreadSafeRandom.Instance;
+    }
+#endif
 }

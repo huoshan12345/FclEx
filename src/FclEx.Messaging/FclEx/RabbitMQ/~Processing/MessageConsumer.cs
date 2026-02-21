@@ -103,10 +103,10 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
         try
         {
             var result = await ConsumeActionAsync(args, obj)
-                .Success(t => Logger.LogTrace("Consume successfully"))
-                .Error(e => exception = e);
+                .OnValue(t => Logger.LogTrace("Consume successfully"))
+                .OnException(e => exception = e);
 
-            if (result.Success)
+            if (result.IsSuccess)
                 return;
         }
         catch (Exception ex)
@@ -152,7 +152,7 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
     protected virtual Task<T> DeserializeAsync(BasicDeliverEventArgs args)
     {
         var obj = Serializer.Deserialize<T>(args.Body);
-        return obj.ToTask()!;
+        return Task.FromResult(obj!);
     }
 
     protected virtual Task OnDeserializeDiscardAsync(BasicDeliverEventArgs args, Exception ex)

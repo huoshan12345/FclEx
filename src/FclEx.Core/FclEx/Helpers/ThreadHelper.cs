@@ -7,7 +7,7 @@ public static class ThreadHelper
         Sleep(TimeSpan.FromMilliseconds(milliSeconds));
     }
 
-    public static void Sleep(int seconds)
+    public static void Sleep(double seconds)
     {
         Sleep(TimeSpan.FromSeconds(seconds));
     }

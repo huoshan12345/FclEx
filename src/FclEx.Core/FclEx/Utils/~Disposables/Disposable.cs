@@ -17,4 +17,9 @@ public class Disposable : IDisposable
 
     public static IDisposable Empty => Create(() => { });
     public static IDisposable Create(Action action) => new Disposable(action);
+
+    public static DisposableValue<T> FromValue<T>(T value, Action<T>? disposeAction = null)
+    {
+        return new(value, disposeAction);
+    }
 }

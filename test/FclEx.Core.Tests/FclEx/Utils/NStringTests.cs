@@ -40,4 +40,14 @@ public class NStringTests
         var token = json.ToJsonNode();
         Assert.Equal(token.Deserialize<string>() ?? "", token.Deserialize<NString>());
     }
+
+    [Fact]
+    public void PatternMatching_Test()
+    {
+        var str = Random.Shared.NextString(10);
+        NString nstr = str;
+
+        Assert.True(nstr is { Length: > 5 } && nstr.Value == str, () => str);
+        Assert.False(nstr is { Length: > 15 }, () => str);
+    }
 }

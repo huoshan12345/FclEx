@@ -43,13 +43,13 @@ public class BatchRetryConsumerTests(ITestOutputHelper output)
     }
 
     [DisableParallelization]
-    [RetryFact(maxRetries: 5, delayBetweenRetriesMs: 1000)]
+    [RetryFact(3, 100)]
     public async Task Dispose_AfterStart_Test()
     {
         var consumer = new BatchRetryConsumer<Model>(5, TimeSpan.FromMilliseconds(100), 1);
         var task = consumer.StartAsync();
         consumer.Dispose();
-        await Task.Delay(TimeSpan.FromMilliseconds(500));
+        await Task.Delay(TimeSpan.FromMilliseconds(200));
         Assert.True(task.IsCompleted);
     }
 
@@ -74,7 +74,7 @@ public class BatchRetryConsumerTests(ITestOutputHelper output)
         consumer.AddRange(Enumerable.Range(1, 10));
         consumer.CompleteAdding();
         var r = await Operation.ExecuteAsync(() => consumer.StartAsync(), TimeSpan.FromSeconds(5));
-        Assert.True(r.Success);
+        Assert.True(r.IsSuccess);
         Assert.True(consumer.IsComplete);
         Assert.Equal(10, consumer.Counter.Consume);
     }
@@ -88,7 +88,7 @@ public class BatchRetryConsumerTests(ITestOutputHelper output)
         consumer.AddRange(Enumerable.Range(1, 10));
         consumer.CompleteAdding();
         var r = await task;
-        Assert.True(r.Success);
+        Assert.True(r.IsSuccess);
         Assert.True(consumer.IsComplete);
         Assert.Equal(10, consumer.Counter.Consume);
     }

@@ -8,9 +8,9 @@ namespace System.Collections.Generic;
 /// <summary>Provides a double-ended queue data structure.</summary>
 /// <typeparam name="T">Type of the data stored in the dequeue.</typeparam>
 [DebuggerDisplay("Count = {_size}")]
-public sealed class Deque<T>
+public sealed class Deque<T> : IReadOnlyCollection<T>
 {
-    private T[] _array = Array.Empty<T>();
+    private T[] _array = [];
     private int _head; // First valid element in the queue
     private int _tail; // First open slot in the dequeue, unless the dequeue is full
     private int _size; // Number of elements.
@@ -104,6 +104,11 @@ public sealed class Deque<T>
             yield return _array[pos];
             pos = (pos + 1) % _array.Length;
         }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
     }
 
     private void Grow()

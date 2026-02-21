@@ -50,18 +50,27 @@ public abstract class AbstractHttpService : IHttpService
 #else
             ? _cookieContainer.GetCookies(uri)
 #endif
-            : Array.Empty<Cookie>();
+            : [];
     }
 
-    public void AddCookie(Cookie cookie, Uri? uri = null)
+    public void AddCookie(Cookie cookie, Uri? uri = null, bool overrideDomain = false)
     {
         if (UseCookie == false)
             return;
 
         if (uri == null)
+        {
             _cookieContainer.Add(cookie);
-        else
-            _cookieContainer.Add(uri, cookie);
+            return;
+        }
+
+        if (overrideDomain)
+        {
+            cookie = cookie.Clone();
+            cookie.Domain = uri.Host;
+        }
+
+        _cookieContainer.Add(uri, cookie);
     }
 
     public IReadOnlyCollection<Cookie> GetAllCookies()

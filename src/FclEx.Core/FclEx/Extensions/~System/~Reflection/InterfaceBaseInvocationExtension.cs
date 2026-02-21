@@ -34,6 +34,7 @@ public static partial class InterfaceBaseInvocationExtension
     {
         var isSameType = method.DeclaringType == interfaceMethod.DeclaringType;
 
+        // ReSharper disable once ConvertIfStatementToSwitchStatement
         if (isSameType && method.Name != interfaceMethod.Name)
             return false;
 
@@ -71,7 +72,7 @@ public static partial class InterfaceBaseInvocationExtension
         LambdaExpression lambda => GetMethodAndArguments(lambda.Body),
         UnaryExpression unary => GetMethodAndArguments(unary.Operand),
         MethodCallExpression methodCall => (methodCall.Method!, methodCall.Arguments),
-        MemberExpression { Member: PropertyInfo prop } => (prop.GetRequiredGetMethod(), Array.Empty<Expression>()),
+        MemberExpression { Member: PropertyInfo prop } => (prop.GetRequiredGetMethod(), []),
         _ => throw new InvalidOperationException("The expression refers to neither a method nor a readable property.")
     };
     

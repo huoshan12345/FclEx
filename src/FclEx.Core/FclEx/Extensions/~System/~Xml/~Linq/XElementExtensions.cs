@@ -1,3 +1,4 @@
+using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 
@@ -75,26 +76,14 @@ public static class XElementExtensions
         return root;
     }
 
-    private static readonly ConcurrentDictionary<Type, XmlSerializer> XmlSerializers = new();
-
-    public static T ToObject<T>(this XElement element)
-    {
-        var serializer = XmlSerializers.GetOrAdd(typeof(T), t => new XmlSerializer(t));
-        using var reader = element.CreateReader();
-        return (T)serializer.Deserialize(reader)!;
-    }
-
-    public static string ToXml<T>(this T obj)
-    {
-        var serializer = XmlSerializers.GetOrAdd(typeof(T), t => new XmlSerializer(t));
-        using var writer = new StringWriter();
-        serializer.Serialize(writer, obj);
-        return writer.ToString();
-    }
-
     public static XElement RemoveComment(this XElement xml)
     {
         xml.DescendantNodes().OfType<XComment>().Remove();
         return xml;
+    }
+
+    public static T ToObject<T>(this XElement element)
+    {
+        return XmlHelper.Deserialize<T>(element);
     }
 }

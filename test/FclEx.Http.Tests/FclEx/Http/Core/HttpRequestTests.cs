@@ -4,7 +4,8 @@ public class HttpRequestTests
 {
     private static async Task SuccessRequestWrap()
     {
-        await HttpRequest.Get("https://www.baidu.com")
+        var url = TestUrls.First();
+        await HttpRequest.Get(url)
             .SendAsync()
             .ThrowIfError();
     }
@@ -13,7 +14,7 @@ public class HttpRequestTests
     {
         var http = HttpClientService.Create(m => m.RetryCount = 0);
         await HttpRequest.Get("https://www.google.com")
-            .TotalTimeout(TimeSpan.FromSeconds(1))
+            .TotalTimeout(TimeSpan.FromSeconds(0.1))
             .SendAsync(http)
             .ThrowIfError();
     }
@@ -39,12 +40,12 @@ public class HttpRequestTests
     {
         var flag = false;
         var r = await Operation.ExecuteAsync(TimeoutRequestWrap)
-            .Error(e =>
+            .OnException(e =>
             {
                 flag = true;
                 Assert.IsType<TaskCanceledException>(e);
             });
-        Assert.False(!flag ^ r.Success);
+        Assert.False(!flag ^ r.IsSuccess);
     }
 
     [Fact]
@@ -52,11 +53,11 @@ public class HttpRequestTests
     {
         var flag = false;
         var r = await Operation.ExecuteAsync(SuccessRequestWrap)
-            .Error(e =>
+            .OnException(e =>
             {
                 flag = true;
                 Assert.IsType<OperationCanceledException>(e);
             });
-        Assert.False(!flag ^ r.Success);
+        Assert.False(!flag ^ r.IsSuccess);
     }
 }

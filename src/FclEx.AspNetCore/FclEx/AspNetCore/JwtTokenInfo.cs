@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace FclEx.AspNetCore;
+﻿namespace FclEx.AspNetCore;
 
 public class JwtTokenInfo
 {

@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" />
     <PackageReference Include="Serilog.Extensions.Logging" />
     <PackageReference Include="Destructurama.Attributed" />
     <PackageReference Include="PolySharp" PrivateAssets="all" />

@@ -34,7 +34,7 @@ partial class StringExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string UriUnescape(this string value) => Uri.UnescapeDataString(value);
 
-    public static string Truncate(this string? str, int maxLength)
+    public static string Truncate(this string? str, int maxLength, bool appendTrailingDots = true)
     {
         if (maxLength <= 0)
             return string.Empty;
@@ -42,12 +42,15 @@ partial class StringExtensions
         if (str.IsNullOrEmpty() || maxLength >= str.Length)
             return str ?? string.Empty;
 
-        return str[..maxLength] + "...";
+        var sub = str[..maxLength];
+        return appendTrailingDots
+            ? sub + "..."
+            : sub;
     }
 
-    private static readonly Regex RegexOfXmlProlog = new(@"^<\?xml.+\?>", RegexOptions.Compiled);
-    private static readonly Regex RegexOfXmlStart = new(@"^<\S+>", RegexOptions.Compiled);
-    private static readonly Regex RegexOfXmlEnd = new(@"</\S+>$", RegexOptions.Compiled);
+    private static readonly Regex _regXmlProlog = new(@"^<\?xml.+\?>", RegexOptions.Compiled);
+    private static readonly Regex _regXmlStart = new(@"^<\S+>", RegexOptions.Compiled);
+    private static readonly Regex _regXmlEnd = new(@"</\S+>$", RegexOptions.Compiled);
 
     public static bool IsPossibleXml([NotNullWhen(true)] this string? data)
     {
@@ -71,10 +74,10 @@ partial class StringExtensions
         if (!data.IsNotEmpty())
             return false;
 
-        if (!RegexOfXmlProlog.IsMatch(data) && !RegexOfXmlStart.IsMatch(data))
+        if (!_regXmlProlog.IsMatch(data) && !_regXmlStart.IsMatch(data))
             return false;
 
-        if (!RegexOfXmlEnd.IsMatch(data))
+        if (!_regXmlEnd.IsMatch(data))
             return false;
 
         return true;

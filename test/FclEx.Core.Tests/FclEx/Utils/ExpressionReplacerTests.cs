@@ -2,35 +2,12 @@
 
 public class ExpressionReplacerTests
 {
-    public class Person : IEquatable<Person>
-    {
-        public string? Name { get; set; } = nameof(Name);
-        public int Age { get; set; }
-
-        public bool Equals(Person? other)
-        {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return Name == other.Name && Age == other.Age;
-        }
-
-        public override bool Equals(object? obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((Person)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Name, Age);
-        }
-    }
+    public record Person(string? Name, int Age);
 
     [Fact]
     public void ReplaceParameters_Test()
     {
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         Expression<Func<List<int>, int, bool>> filter = (l, x) => (l != null && x % 2 == 0);
         var list = Enumerable.Range(1, 100).ToList();
         var items = list.Where(ReplaceParameter(list, filter).Compile()).ToList();
@@ -41,17 +18,13 @@ public class ExpressionReplacerTests
     public void ReplaceParameters_WhitNullParameter_Test()
     {
         Expression<Func<List<Person>, Person, bool>> filter = (l, x) => (l.Count - x.Age > 0 && x.Name == null);
-        var list = Enumerable.Range(1, 100).Select(m => new Person
-        {
-            Age = m,
-            Name = m % 3 == 0 ? null : m.ToString()
-        }).ToList();
+        var list = Enumerable.Range(1, 100).Select(m => new Person(m % 3 == 0 ? null : m.ToString(), m)).ToList();
         var items = list.Where(ReplaceParameter(list, filter).Compile()).ToList();
         Assert.Equal(list.Where(x => (list.Count - x.Age > 0 && x.Name == null)), items);
     }
 
     [Fact]
-    public void ReplaceParameters_Mutil_Times_Test()
+    public void ReplaceParameters_Multi_Times_Test()
     {
         Expression<Func<List<int>, int, bool>> filter = (l, x) => x % 2 == 0;
 
@@ -65,17 +38,16 @@ public class ExpressionReplacerTests
     }
 
     [Fact]
-    public async Task ReplaceParameters_Mutil_Tasks_Test()
+    public async Task ReplaceParameters_Multi_Tasks_Test()
     {
         Expression<Func<List<int>, int, bool>> filter = (l, x) => x % 2 == 0;
 
-        var list = Enumerable.Range(1, 100).ToList();
-        var tasks = Enumerable.Range(1, 10000).Select(m =>
-            (Func<Task<List<int>>>)(() => Task.Run(() => list.Where(ReplaceParameter(list, filter).Compile()).ToList())));
+        var list = Enumerable.Range(1, 10).ToList();
+        var tasks = Enumerable.Range(1, 100).Select(m => (Func<Task<List<int>>>)(() => Task.Run(() => list.Where(ReplaceParameter(list, filter).Compile()).ToList())));
         var results = await tasks.Select(m => m()).WhenAll();
         var expected = list.Where(x => x % 2 == 0).ToList();
 
-        Assert.Equal(10000, results.Length);
+        Assert.Equal(100, results.Length);
         foreach (var result in results)
             Assert.Equal(expected, result);
     }

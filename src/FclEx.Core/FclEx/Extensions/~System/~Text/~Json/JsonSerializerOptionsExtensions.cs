@@ -82,4 +82,13 @@ public static class JsonSerializerOptionsExtensions
     {
         return options.AddModifier(JsonHelper.IncludeStaticMembers);
     }
+
+    private static readonly JsonSerializerOptions _default = JsonHelper.GetOptions();
+    private static readonly JsonSerializerOptions _web = JsonHelper.GetOptions(JsonOptions.Web);
+
+    extension(JsonSerializerOptions)
+    {
+        public static JsonSerializerOptions DefaultEx => _default;
+        public static JsonSerializerOptions WebEx => _web;
+    }
 }

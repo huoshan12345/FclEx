@@ -3,7 +3,7 @@
 public class HttpServiceExtensionsTests
 {
     [Theory]
-    [InlineData("https://www.baidu.com/", "www_baidu_com.html")]
+    [InlineData("https://www.google.com/", "www_google_com.html")]
     [InlineData("https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/proposals/csharp-9.0/covariant-returns", "covariant-returns.html")]
     [InlineData("https://devblogs.microsoft.com/dotnet/csharp-exploring-extension-members/#comments", "csharp-exploring-extension-members.html")]
     public async Task DownloadAsync_Test(string uri, string fileName)
@@ -12,7 +12,7 @@ public class HttpServiceExtensionsTests
 
         var (successful, file, exception, _) = await http.DownloadAsync(uri);
 
-        AssertEx.True(successful, () => exception!.ToString());
+        Assert.True(successful, () => exception!.ToString());
         Assert.NotNull(file);
         Assert.Equal(fileName, file.FileName);
         Assert.Equal(Path.GetExtension(fileName), file.FileExtension);
@@ -29,7 +29,7 @@ public class HttpServiceExtensionsTests
 
         var (successful, _, ex, _) = await http.DownloadAsync(url);
 
-        AssertEx.False(successful, () => ex!.ToString());
+        Assert.False(successful, () => ex!.ToString());
         Assert.True(ex.IsObjectException<HttpResponse>(m => m.StatusCode == HttpStatusCode.Forbidden));
     }
 }

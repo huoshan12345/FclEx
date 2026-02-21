@@ -39,11 +39,3 @@ public class AsyncDisposableValue<T>(T value, Func<T, ValueTask>? disposeAction 
         _disposed = true;
     }
 }
-
-public static class AsyncDisposableValueExtensions
-{
-    public static AsyncDisposableValue<T> ToAsyncDisposable<T>(this T value, Func<T, ValueTask>? disposeAction = null)
-    {
-        return new AsyncDisposableValue<T>(value, disposeAction);
-    }
-}

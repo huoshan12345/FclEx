@@ -2,7 +2,7 @@
 
 public static class MemberInfoExtensions
 {
-    public static bool IsDefined<T>(this MemberInfo memberInfo, bool inherit)
+    public static bool IsDefined<T>(this MemberInfo memberInfo, bool inherit = false)
     {
         return memberInfo.IsDefined(typeof(T), inherit);
     }
@@ -17,7 +17,7 @@ public static class MemberInfoExtensions
         };
     }
 
-    public static bool IsCompilerGenerated(this MemberInfo memberInfo, bool inherit)
+    public static bool IsCompilerGenerated(this MemberInfo memberInfo, bool inherit = false)
     {
         return memberInfo.IsDefined<CompilerGeneratedAttribute>(inherit);
     }

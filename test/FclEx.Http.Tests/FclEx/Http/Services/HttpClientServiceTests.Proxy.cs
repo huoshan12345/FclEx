@@ -8,14 +8,7 @@ partial class HttpClientServiceTests
         DefaultProxy,
     ];
 
-    public static string[] Urls { get; } =
-    [
-        "https://www.google.com/",
-        "https://www.instagram.com/",
-        "https://www.baidu.com/"
-    ];
-
-    public static IEnumerable<object[]> Cases { get; } = ProxyList.SelectMany(m => Urls, (x, y) => new object[] { x, y });
+    public static IEnumerable<object[]> Cases { get; } = ProxyList.SelectMany(m => TestUrls, (x, y) => new object[] { x, y });
 
     [RetryTheory]
     [MemberData(nameof(Cases))]
@@ -25,6 +18,6 @@ partial class HttpClientServiceTests
         var response = await HttpRequest.Get(url)
             .ReadHeadersTimeout(TimeSpan.FromSeconds(10))
             .SendAsync(http);
-        AssertEx.False(response.Error, () => response.Exception!.ToString());
+        Assert.False(response.IsError, () => response.Exception!.ToString());
     }
 }

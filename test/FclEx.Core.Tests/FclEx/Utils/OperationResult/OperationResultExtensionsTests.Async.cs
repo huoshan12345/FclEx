@@ -7,11 +7,10 @@ public partial class OperationResultExtensionsTests
     {
         var elapsed = TimeSpan.FromHours(1);
         TimeSpan timeSpan = default;
-        var result = await Operation.Success(elapsed)
-            .ToTask()
-            .Success((_, t) => timeSpan = t);
+        var result = await Task.FromResult(Operation.Success(elapsed))
+            .OnValue((_, t) => timeSpan = t);
 
-        Assert.True(result.Success);
+        Assert.True(result.IsSuccess);
         Assert.Equal(elapsed, timeSpan);
     }
 }

@@ -9,8 +9,9 @@
     <ProjectReference Include="..\FclEx.Core.Tests\FclEx.Core.Tests.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="TestData\SimpleCookies.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    <EmbeddedResource Include="Resources\**\*.*" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\" />
   </ItemGroup>
 </Project>

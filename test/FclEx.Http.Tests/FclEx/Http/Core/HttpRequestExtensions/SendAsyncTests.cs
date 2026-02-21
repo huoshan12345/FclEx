@@ -2,14 +2,7 @@
 
 public class SendAsyncTests : HttpServerTests
 {
-    public static string[] Urls =>
-    [
-        "https://www.baidu.com/",
-        "https://www.qq.com/",
-        "https://www.google.com/",
-    ];
-
-    public static IEnumerable<object[]> Cases => Urls
+    public static IEnumerable<object[]> Cases => TestUrls
         .Select(m => new object[] { m });
 
     public static bool InterfaceHasIpv6Enabled(NetworkInterface @interface)
@@ -39,7 +32,7 @@ public class SendAsyncTests : HttpServerTests
     [LocalOnlyTheory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task Get_IPVersion_Test(bool ipv6)
+    public async Task Get_IpVersion_Test(bool ipv6)
     {
         if (ipv6 && _supportsIPv6 == false)
             return;
@@ -84,7 +77,7 @@ public class SendAsyncTests : HttpServerTests
             .SendAsync(TestHttp)
             .ThrowIfError();
 
-        Assert.False(response.Error);
+        Assert.False(response.IsError);
         var body = response.ResponseString;
         Assert.NotNull(body);
         var actual = HttpUtility.ParseQueryString(body)
@@ -102,7 +95,7 @@ public class SendAsyncTests : HttpServerTests
             .SendAsync(TestHttp)
             .ThrowIfError();
 
-        Assert.False(response.Error);
+        Assert.False(response.IsError);
         var body = response.ResponseString.ToJsonNode();
         Assert.NotNull(body);
         var actual = body.Deserialize<List<int>>();
@@ -127,7 +120,7 @@ public class SendAsyncTests : HttpServerTests
             .SendAsync(TestHttp)
             .ThrowIfError();
 
-        Assert.False(response.Error);
+        Assert.False(response.IsError);
         var contentType = response.Headers.Get(HttpHeaderNames.ContentType).FirstOrDefault();
         Assert.NotNull(contentType);
         Assert.Contains(charSet, contentType);
@@ -149,7 +142,7 @@ public class SendAsyncTests : HttpServerTests
     [Fact]
     public async Task Redirection_Test()
     {
-        const string url = "https://www.baidu.com/";
+        var url = TestUrls.First();
         var response = await HttpRequest.Get("api/redirect")
             .AddQueryParam("u", url)
             .EnsureSuccessStatusCode()

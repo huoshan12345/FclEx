@@ -6,18 +6,13 @@ public abstract class UserClientJsonAction<TClient, T> : UserClientHttpAction<TC
 {
     public virtual string? JsonResultPath { get; } = null;
 
-    protected UserClientJsonAction(TClient client) : base(client)
-    {
-    }
+    protected UserClientJsonAction(TClient client) : base(client) { }
 
     public override OperationResult<T> GetResult(HttpResponse response)
         => this.Base<IJsonAction<T>, OperationResult<T>>(m => m.GetResult(response));
 
-    public virtual bool IsFailed(JsonActionContext context)
-        => this.Base<IJsonAction<T>, bool>(m => m.IsFailed(context));
-
-    public virtual OperationResult<T> HandleFailed(JsonActionContext context)
-        => this.Base<IJsonAction<T>, OperationResult<T>>(m => m.HandleFailed(context));
+    public virtual OperationResult<JsonActionContext> CreateContext(HttpResponse response, string json)
+        => this.Base<IJsonAction<T>, OperationResult<JsonActionContext>>(m => m.CreateContext(response, json));
 
     public virtual OperationResult<T> GetResult(JsonActionContext context)
         => this.Base<IJsonAction<T>, OperationResult<T>>(m => m.GetResult(context));

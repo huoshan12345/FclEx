@@ -68,7 +68,8 @@ partial class DbConnectionExtensions
     internal static Task<DbTransactionWrapper> BeginTransactionAsync(this DbConnection con, IsolationLevel isolationLevel)
     {
         var tran = con.BeginTransaction(isolationLevel);
-        return new DbTransactionWrapper(tran).ToTask();
+        var wrapper = new DbTransactionWrapper(tran);
+        return Task.FromResult(wrapper);
     }
 
     internal class DbTransactionWrapper : DbTransaction, IAsyncDisposable

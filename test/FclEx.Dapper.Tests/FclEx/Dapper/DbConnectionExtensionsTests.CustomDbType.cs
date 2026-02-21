@@ -1,4 +1,6 @@
-﻿namespace FclEx.Dapper;
+﻿using System.Xml;
+
+namespace FclEx.Dapper;
 
 partial class DbConnectionExtensionsTests
 {
@@ -24,7 +26,7 @@ partial class DbConnectionExtensionsTests
         var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity, db.Schema);
         var e = await db.Set<EntityWithPostgresqlJsonb>().Where(m => m.Id == id).FirstOrDefaultAsync();
         Assert.NotNull(e);
-        AssertEx.NotEmpty(e.Json);
+        Assert.NotNullNorEmpty(e.Json);
 
         var actualPayload = e.Json.FromJson<EntityWithGuidKey>()!;
         Assert.Equal(payload.Id, actualPayload.Id);
@@ -47,13 +49,13 @@ partial class DbConnectionExtensionsTests
         };
         var entity = new EntityWithSqlServerXml
         {
-            Xml = payload.ToXml(),
+            Xml = XmlHelper.Serialize(payload),
         };
 
         var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity, db.Schema);
         var e = await db.Set<EntityWithSqlServerXml>().Where(m => m.Id == id).FirstOrDefaultAsync();
         Assert.NotNull(e);
-        AssertEx.NotEmpty(e.Xml);
+        Assert.NotNullNorEmpty(e.Xml);
 
         var actualPayload = XElement.Parse(e.Xml).ToObject<EntityWithGuidKey>();
         Assert.Equal(payload.Id, actualPayload.Id);
@@ -80,7 +82,7 @@ partial class DbConnectionExtensionsTests
         var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity);
         var e = await db.Set<EntityWithSqliteBlob>().Where(m => m.Id == id).FirstOrDefaultAsync();
         Assert.NotNull(e);
-        AssertEx.NotEmpty(e.Blob);
+        Assert.NotNullNorEmpty(e.Blob);
 
         var actualPayload = e.Blob.GetString().FromJson<EntityWithGuidKey>()!;
         Assert.Equal(payload.Id, actualPayload.Id);
@@ -113,7 +115,7 @@ partial class DbConnectionExtensionsTests
         var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity, db.Schema);
         var e = await db.Set<EntityWithMySqlBlob>().Where(m => m.Id == id).FirstOrDefaultAsync();
         Assert.NotNull(e);
-        AssertEx.NotEmpty(e.Blob);
+        Assert.NotNullNorEmpty(e.Blob);
 
         var actualPayload = e.Blob.GetString().FromJson<EntityWithGuidKey>()!;
         Assert.Equal(payload.Id, actualPayload.Id);

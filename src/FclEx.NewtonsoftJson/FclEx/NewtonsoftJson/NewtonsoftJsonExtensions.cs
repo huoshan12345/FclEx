@@ -130,7 +130,7 @@ public static class NewtonsoftJsonExtensions
         if (str.IsPossibleJson())
         {
             var r = Operation.Execute(() => JToken.Parse(str));
-            if (r.Success)
+            if (r.IsSuccess)
             {
                 token = r.Value!;
                 return true;
@@ -145,7 +145,7 @@ public static class NewtonsoftJsonExtensions
         if (str.IsPossibleJObject())
         {
             var r = Operation.Execute(() => JObject.Parse(str));
-            if (r.Success)
+            if (r.IsSuccess)
             {
                 token = r.Value!;
                 return true;
@@ -160,7 +160,7 @@ public static class NewtonsoftJsonExtensions
         if (str.IsPossibleJArray())
         {
             var r = Operation.Execute(() => JArray.Parse(str));
-            if (r.Success)
+            if (r.IsSuccess)
             {
                 token = r.Value!;
                 return true;

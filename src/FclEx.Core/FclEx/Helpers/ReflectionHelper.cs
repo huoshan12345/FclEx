@@ -2,44 +2,66 @@
 
 public static class ReflectionHelper
 {
+    private const BindingFlags VisibleToDerived = BindingFlags.Public
+                                            | BindingFlags.NonPublic
+                                            | BindingFlags.Instance
+                                            | BindingFlags.Static
+                                            | BindingFlags.FlattenHierarchy;
+
+    private const BindingFlags DeclaredNonPublic = BindingFlags.NonPublic
+                                            | BindingFlags.Instance
+                                            | BindingFlags.Static
+                                            | BindingFlags.DeclaredOnly;
+
     private static readonly ConcurrentDictionary<Type, IReadOnlyList<DataMemberInfo>> TypeDataMemberDic = [];
 
-    internal static IReadOnlyList<DataMemberInfo> GetDataMembers(Type type)
+    public static IReadOnlyList<DataMemberInfo> GetDataMembers(Type type)
     {
         return TypeDataMemberDic.GetOrAdd(type, GetDataMembersInternal);
 
         static IReadOnlyList<DataMemberInfo> GetDataMembersInternal(Type type)
         {
-            var list = new List<DataMemberInfo>();
-            var cur = type;
-            while (cur != null)
-            {
-                var members = GetDeclaredDataMembers(cur);
-                // ReSharper disable once LoopCanBeConvertedToQuery
-                foreach (var member in members)
-                {
-                    list.Add(member);
-                }
-                cur = cur.BaseType;
-            }
-
-            // ReSharper disable once InvertIf
             if (type.IsInterface)
             {
-                var ms = type.GetInterfaces()
+                var members = type.GetInterfaces()
+                    .Prepend(type)
                     .Select(GetDeclaredDataMembers)
                     .SelectMany(m => m);
-                list.AddRange(ms);
+                return members.ToReadOnlyList();
             }
 
-            // use the most concrete member for the same name.
+            var list = new List<DataMemberInfo>(GetVisibleDataMembers(type));
+
+            var baseType = type.BaseType;
+            while (baseType is not null)
+            {
+                var members = GetNotVisibleToDerivedDataMembers(baseType);
+                list.AddRange(members);
+                baseType = baseType.BaseType;
+            }
+
             return list.ToReadOnlyList();
         }
 
         static IEnumerable<DataMemberInfo> GetDeclaredDataMembers(Type type)
         {
-            return type.GetMembers(BindingAttributes.AllDeclared)
+            return type.GetMembers(BindingAttributes.Declared)
                 .Where(m => m is PropertyInfo or FieldInfo)
+                .Select(m => m.ToDataMemberInfo());
+        }
+
+        static IEnumerable<DataMemberInfo> GetVisibleDataMembers(Type type)
+        {
+            return type.GetMembers(VisibleToDerived)
+                .Where(m => m is PropertyInfo or FieldInfo)
+                .Select(m => m.ToDataMemberInfo());
+        }
+
+        static IEnumerable<DataMemberInfo> GetNotVisibleToDerivedDataMembers(Type type)
+        {
+            return type.GetMembers(DeclaredNonPublic)
+                .Where(m => m is PropertyInfo property && property.IsNotVisibleToDerived()
+                            || m is FieldInfo field && field.IsNotVisibleToDerived())
                 .Select(m => m.ToDataMemberInfo());
         }
     }

@@ -20,13 +20,13 @@ public interface IOperationResult
     /// Gets a value indicating whether the operation was successful.
     /// </summary>
     [MemberNotNullWhen(false, nameof(Exception))]
-    public bool Success { get; }
+    public bool IsSuccess { get; }
 
     /// <summary>
     /// Gets a value indicating whether the operation resulted in an error.
     /// </summary>
     [MemberNotNullWhen(true, nameof(Exception))]
-    public bool Error { get; }
+    public bool IsError { get; }
 }
 
 /// <summary>
