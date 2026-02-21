@@ -10,6 +10,8 @@ namespace FclEx.Sources;
 
 internal static class XunitSerializableAttributeSource
 {
+    public const string AttributeName = "FclEx.Xunit.XunitSerializableAttribute";
+
     private static readonly string[] _usings =
     [
         "System",
@@ -38,15 +40,36 @@ internal static class XunitSerializableAttributeSource
             ? null
             : typeSymbol.ContainingNamespace.ToDisplayString();
 
-        var typeName = typeSymbol.Name;
         var typeDef = GetTypeDef(typeSymbol);
+        var typeName = typeSymbol.Name;
+        var usings = _usings;
+
+        if (typeSymbol.IsGenericType)
+        {
+            var extraUsings = new HashSet<string>(_usings);
+            var args = new List<string>();
+
+            foreach (var typeParameter in typeSymbol.TypeParameters)
+            {
+                args.Add(typeParameter.Name);
+
+                if (typeParameter.ContainingNamespace.Name is { Length: > 0 } namespaceName)
+                {
+                    extraUsings.Add(namespaceName);
+                }
+            }
+
+            typeName += $"<{args.JoinWith(", ")}>";
+
+            usings = extraUsings.ToArray();
+        }
 
         using var builder = new SourceBuilder()
             .WriteGeneratedHeader()
             .WriteEnableNullable()
             .WriteWarningDisable("CS8500")
             .WriteLine()
-            .WriteUsings(_usings)
+            .WriteUsings(usings)
             .WriteLine();
 
         if (ns is not null)
@@ -74,30 +97,36 @@ internal static class XunitSerializableAttributeSource
         builder.WriteLine($"private static readonly IReadOnlyList<FieldInfo> _fields = FclEx.Extensions.TypeExtensions.GetAllInstanceFields(typeof({typeName}));");
         builder.WriteLine();
 
-        const string methodSerialize = """
-public void Serialize(IXunitSerializationInfo info)
+        var declaration = typeSymbol.IsValueType
+            ? "public"
+            : IfBaseTypeImplementsIXunitSerializable(typeSymbol)
+                ? "public override"
+                : "public virtual";
+
+        var methodSerialize = $$"""
+{{declaration}} void Serialize(IXunitSerializationInfo info)
 {
     foreach (var field in _fields)
     {
         var value = field.GetValue(this);
-        global::Xunit.IXunitSerializationInfoExtensions.AddValueEx(info, field.Name, value, field.FieldType);
+        global::Xunit.XunitSerializationInfoExtensions.AddValueEx(info, field.Name, value, field.FieldType);
     }
 }
 """;
 
-        const string methodDeserializeForClass = """
-public void Deserialize(IXunitSerializationInfo info)
+        var methodDeserializeForClass = $$"""
+{{declaration}} void Deserialize(IXunitSerializationInfo info)
 {
     foreach (var field in _fields)
     {
-        var value = global::Xunit.IXunitSerializationInfoExtensions.GetValueEx(info, field.Name, field.FieldType);
+        var value = global::Xunit.XunitSerializationInfoExtensions.GetValueEx(info, field.Name, field.FieldType);
         field.SetValue(this, value);
     }
 }
 """;
 
         var methodDeserializeForStruct = $$"""
-public unsafe void Deserialize(IXunitSerializationInfo info)
+{{declaration}} unsafe void Deserialize(IXunitSerializationInfo info)
 {
     fixed (void* p = &this)
     {
@@ -106,7 +135,7 @@ public unsafe void Deserialize(IXunitSerializationInfo info)
         
         foreach (var field in _fields)
         {
-            var value = global::Xunit.IXunitSerializationInfoExtensions.GetValueEx(info, field.Name, field.FieldType);
+            var value = global::Xunit.XunitSerializationInfoExtensions.GetValueEx(info, field.Name, field.FieldType);
             field.SetValueDirect(t, value!);
         }
     }
@@ -145,6 +174,32 @@ public unsafe void Deserialize(IXunitSerializationInfo info)
         }
 
         var str = builder.ToString();
-        return ($"{typeName}.g.cs", str);
+        var fileName = typeSymbol.IsGenericType
+            ? $"{typeSymbol.Name}.{typeSymbol.TypeParameters.Length}"
+            : typeSymbol.Name;
+        return ($"{fileName}.g.cs", str);
+    }
+
+    private const string IXunitSerializableInterfaceName =
+#if FCLEX_XUNIT_V3
+   "Xunit.Sdk.IXunitSerializable";
+#else
+    "Xunit.Abstractions.IXunitSerializable";
+#endif
+
+    private static bool IfBaseTypeImplementsIXunitSerializable(INamedTypeSymbol typeSymbol)
+    {
+        var baseType = typeSymbol.BaseType;
+        while (baseType != null)
+        {
+            if (baseType.AllInterfaces.Any(i => i.ToDisplayString() == IXunitSerializableInterfaceName))
+                return true;
+
+            if (baseType.GetAttributes().Any(m => m.AttributeClass?.ToDisplayString() == AttributeName))
+                return true;
+
+            baseType = baseType.BaseType;
+        }
+        return false;
     }
 }

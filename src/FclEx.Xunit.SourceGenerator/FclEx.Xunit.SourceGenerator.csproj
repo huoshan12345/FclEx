@@ -19,7 +19,6 @@
   <ItemGroup>
     <__SharedCodeFiles Include="FclEx.Core\FclEx\Utils\SourceBuilder.cs" />
     <__SharedCodeFiles Include="FclEx.SourceGenerator\FclEx\CodeAnalysis\SourceInfo.cs" />
-    <__SharedCodeFiles Include="FclEx.SourceGenerator\FclEx\CodeAnalysis\AnalyzerConfigOptionsProviderExtensions.cs" />
     <__SharedCodeFiles Include="FclEx.SourceGenerator\FclEx\Extensions\StringExtensions.cs" />
     <Compile Include="@(__SharedCodeFiles->'$(__ProjectsFolder)\%(Identity)')">
       <!-- Compute the path of the file relative to $(__ProjectsFolder). 
