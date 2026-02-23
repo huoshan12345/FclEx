@@ -22,34 +22,43 @@ public static class MemberEqualityComparerBuilderExtensions
         return builder;
     }
 
-    public static MemberEqualityComparerBuilder<T> Add<T>(this MemberEqualityComparerBuilder<T> builder, params IEnumerable<string> names)
+    private static MemberEqualityComparerBuilder<T> Add<T>(this MemberEqualityComparerBuilder<T> builder, IEnumerable<DataMemberInfo> members)
     {
-        var paramExp = Expression.Parameter(typeof(T));
-        foreach (var name in names)
+        var addMethod = typeof(MemberEqualityComparerBuilder<T>)
+            .GetMethods()
+            .Single(x =>
+                x is { Name: nameof(MemberEqualityComparerBuilder<T>.Add), IsGenericMethodDefinition: true }
+                && x.GetParameters().Length == 2);
+
+        var param = Expression.Parameter(typeof(T));
+
+        foreach (var member in members)
         {
-            var member = typeof(T).GetRequiredDataMember(name);
-            var memberExp = member.ToExpression(paramExp);
-            var convert = Expression.Convert(memberExp, typeof(object));
-            var func = convert.Lambda<Func<T, object?>>(paramExp).Compile();
-            builder.Add(func);
+            var memberType = member.DataMemberType;
+            var access = member.ToExpression(param);
+            var funcType = typeof(Func<,>).MakeGenericType(typeof(T), memberType);
+            var lambda = Expression.Lambda(funcType, access, param).Compile();
+            var genericAdd = addMethod.MakeGenericMethod(memberType);
+            genericAdd.Invoke(builder, [lambda, null]);
         }
+
         return builder;
     }
 
-    public static MemberEqualityComparerBuilder<T> AddAllPublicDataMembers<T>(this MemberEqualityComparerBuilder<T> builder, params Expression<Func<T, object?>>[] excludeMemberSelectors)
+    public static MemberEqualityComparerBuilder<T> Add<T>(this MemberEqualityComparerBuilder<T> builder, params IEnumerable<string> names)
     {
-        return builder.AddAllDataMembers(false, excludeMemberSelectors);
+        var type = typeof(T);
+        return builder.Add(names.Select(type.GetRequiredDataMember));
+    }
+
+    public static MemberEqualityComparerBuilder<T> AddAllPublicDataMembers<T>(this MemberEqualityComparerBuilder<T> builder, params IEnumerable<string> excludeMemberNames)
+    {
+        return builder.AddAllDataMembers(false, excludeMemberNames);
     }
 
     public static MemberEqualityComparerBuilder<T> AddAllDataMembers<T>(this MemberEqualityComparerBuilder<T> builder,
-        bool includeNonPublic = false, params Expression<Func<T, object?>>[] excludeMemberSelectors)
+        bool includeNonPublic = false, params IEnumerable<string> excludeMemberNames)
     {
-        var exclude = excludeMemberSelectors
-            .Select(m => ExpressionHelper.GetDataMemberInfo(m))
-            .ToHashSet();
-
-        var paramExp = Expression.Parameter(typeof(T));
-
         const DataMemberFlags publicFlags = Declared | Inherited | CanRead | Property | Field | Instance | Public;
         const DataMemberFlags allFlags = publicFlags | NonPublic;
 
@@ -57,16 +66,10 @@ public static class MemberEqualityComparerBuilderExtensions
             ? allFlags
             : publicFlags;
 
-        foreach (var member in typeof(T).GetDataMembers(flags))
-        {
-            if (exclude.Contains(member))
-                continue;
+        var set = excludeMemberNames.AsISet();
+        var members = typeof(T).GetDataMembers(flags)
+            .Where(m => set.Contains(m.Name) == false);
 
-            var memberExp = member.ToExpression(paramExp);
-            var convert = Expression.Convert(memberExp, typeof(object));
-            var func = convert.Lambda<Func<T, object?>>(paramExp).Compile();
-            builder.Add(func);
-        }
-        return builder;
+        return builder.Add(members);
     }
 }

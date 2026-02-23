@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace System.Collections.Generic;
+﻿namespace System.Collections.Generic;
 
 partial class MemberEqualityComparerBuilderTests
 {
@@ -15,7 +9,7 @@ partial class MemberEqualityComparerBuilderTests
     {
         var comparer = MemberEqualityComparerBuilder<TestModel>
             .Create()
-            .AddAllDataMembers(false, m => m.Id)
+            .AddAllDataMembers(false, nameof(TestModel.Id))
             .Build();
 
         var random = new Random(0);
@@ -68,5 +62,148 @@ partial class MemberEqualityComparerBuilderTests
                 Assert.DoesNotContain(z, set);
             }
         }
+    }
+
+    [Fact]
+    public void Add_ByName_IntMember_ShouldBeEqual()
+    {
+        var cmp = MemberEqualityComparerBuilder<Person>
+            .Create()
+            .Add(nameof(Person.Id))
+            .Build();
+
+        var a = new Person { Id = 1 };
+        var b = new Person { Id = 1 };
+
+        Assert.True(cmp.Equals(a, b));
+    }
+
+    [Fact]
+    public void Add_ByName_IntMember_ShouldNotBeEqual()
+    {
+        var cmp = MemberEqualityComparerBuilder<Person>
+            .Create()
+            .Add(nameof(Person.Id))
+            .Build();
+
+        var a = new Person { Id = 1 };
+        var b = new Person { Id = 2 };
+
+        Assert.False(cmp.Equals(a, b));
+    }
+
+    [Fact]
+    public void Add_ByName_StringMember_ShouldBeEqual()
+    {
+        var cmp = MemberEqualityComparerBuilder<Person>
+            .Create()
+            .Add(nameof(Person.Name))
+            .Build();
+
+        var a = new Person { Name = "Alice" };
+        var b = new Person { Name = "Alice" };
+
+        Assert.True(cmp.Equals(a, b));
+    }
+
+    [Fact]
+    public void Add_ByName_NullMember_ShouldBeEqual()
+    {
+        var cmp = MemberEqualityComparerBuilder<Person>
+            .Create()
+            .Add(nameof(Person.Name))
+            .Build();
+
+        var a = new Person { Name = null };
+        var b = new Person { Name = null };
+
+        Assert.True(cmp.Equals(a, b));
+    }
+
+    [Fact]
+    public void Add_ByMultipleNames_ShouldCompareAll()
+    {
+        var cmp = MemberEqualityComparerBuilder<Person>
+            .Create()
+            .Add(nameof(Person.Id), nameof(Person.Age))
+            .Build();
+
+        var a = new Person { Id = 1, Age = 10 };
+        var b = new Person { Id = 1, Age = 20 };
+
+        Assert.False(cmp.Equals(a, b));
+    }
+
+    [Fact]
+    public void Add_ByName_ShouldWorkInDictionary()
+    {
+        var cmp = MemberEqualityComparerBuilder<Person>
+            .Create()
+            .Add(nameof(Person.Id))
+            .Build();
+
+        var dict = new Dictionary<Person, string>(cmp)
+        {
+            [new Person { Id = 1 }] = "ok"
+        };
+
+        Assert.True(dict.ContainsKey(new Person { Id = 1 }));
+    }
+
+    [Fact]
+    public void Add_ByName_ShouldWorkInHashSet()
+    {
+        var cmp = MemberEqualityComparerBuilder<Person>
+            .Create()
+            .Add(nameof(Person.Id))
+            .Build();
+
+        var set = new HashSet<Person>(cmp)
+        {
+            new Person { Id = 1 }
+        };
+
+        Assert.Contains(new Person { Id = 1 }, set);
+    }
+
+    [Fact]
+    public void Add_ByName_StructMembers_ShouldBeEqual()
+    {
+        var cmp = MemberEqualityComparerBuilder<OrderKey>
+            .Create()
+            .Add(nameof(OrderKey.StoreId), nameof(OrderKey.OrderId))
+            .Build();
+
+        var a = new OrderKey { StoreId = 1, OrderId = 99 };
+        var b = new OrderKey { StoreId = 1, OrderId = 99 };
+
+        Assert.True(cmp.Equals(a, b));
+        Assert.Equal(
+            cmp.GetHashCode(a),
+            cmp.GetHashCode(b));
+    }
+
+    [Fact]
+    public void Add_ByName_Null_ShouldEqualNull()
+    {
+        var cmp = MemberEqualityComparerBuilder<Person>
+            .Create()
+            .Add(nameof(Person.Id))
+            .Build();
+
+        Assert.True(cmp.Equals(null, null));
+    }
+
+    [Fact]
+    public void Add_ByName_Instance_ShouldNotEqualNull()
+    {
+        var cmp = MemberEqualityComparerBuilder<Person>
+            .Create()
+            .Add(nameof(Person.Id))
+            .Build();
+
+        var a = new Person { Id = 1 };
+
+        Assert.False(cmp.Equals(a, null));
     }
 }
