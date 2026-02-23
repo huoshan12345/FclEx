@@ -124,8 +124,8 @@ public static class ReflectionHelper
         if (il == null)
             return null;
 
-        var typeArgs = method.DeclaringType is {IsGenericType: true} type
-            ? type.GenericTypeArguments
+        var typeArgs = method.DeclaringType is { IsGenericType: true } type
+            ? type.GetGenericArguments()
             : null;
 
         var methodArgs = method.IsGenericMethod
@@ -145,16 +145,23 @@ public static class ReflectionHelper
                 (il[i + 3] << 16) |
                 (il[i + 4] << 24);
 
-            var f = method.Module.ResolveField(
+            try
+            {
+                var f = method.Module.ResolveField(
                 metadataToken: token,
                 genericTypeArguments: typeArgs,
                 genericMethodArguments: methodArgs);
 
-            // must be exactly one access
-            if (field != null)
-                return null;
+                // must be exactly one access
+                if (field != null)
+                    return null;
 
-            field = f;
+                field = f;
+            }
+            catch (Exception e)
+            {
+                throw new InvalidOperationException($"Failed to resolve field token 0x{token:X8} in method {method.DeclaringType?.ShortName()}.{method.Name} from module {method.Module.Name}", e);
+            }
         }
 
         return field;
