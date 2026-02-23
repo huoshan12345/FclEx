@@ -2,73 +2,73 @@
 
 partial class Operation
 {
-    public static OperationAction<T> Action<T>(Func<CancellationToken, T> func)
+    public static IAction<T> Action<T>(Func<CancellationToken, Task<OperationResult<T>>> func)
     {
-        return new(t => ExecuteAsync(() => func(t)));
+        return new OperationAction<T>(t => ExecuteAsync(() => func(t)));
     }
 
-    public static OperationAction<T> Action<T>(Func<CancellationToken, Task<T>> func)
+    public static IAction<T> Action<T>(Func<CancellationToken, T> func)
     {
-        return new(t => ExecuteAsync(() => func(t)));
+        return new OperationAction<T>(t => ExecuteAsync(() => func(t)));
     }
 
-    public static OperationAction<T> Action<T>(Func<CancellationToken, OperationResult<T>> func)
+    public static IAction<T> Action<T>(Func<CancellationToken, Task<T>> func)
     {
-        return new(t => ExecuteAsync(() => func(t)));
+        return new OperationAction<T>(t => ExecuteAsync(() => func(t)));
     }
 
-    public static OperationAction<T> Action<T>(Func<CancellationToken, Task<OperationResult<T>>> func)
+    public static IAction<T> Action<T>(Func<CancellationToken, OperationResult<T>> func)
     {
-        return new(t => ExecuteAsync(() => func(t)));
+        return new OperationAction<T>(t => ExecuteAsync(() => func(t)));
     }
 
-    public static OperationAction Action(Action<CancellationToken> func)
+    public static IAction<Unit> Action(Action<CancellationToken> func)
     {
-        return new(t => ExecuteAsync(() => func(t)));
+        return new OperationAction(t => ExecuteAsync(() => func(t)));
     }
 
-    public static OperationAction Action(Func<CancellationToken, Task> func)
+    public static IAction<Unit> Action(Func<CancellationToken, Task> func)
     {
-        return new(t => ExecuteAsync(() => func(t)));
+        return new OperationAction(t => ExecuteAsync(() => func(t)));
     }
 
-    public static OperationAction Action(Func<CancellationToken, OperationResult> func)
+    public static IAction<Unit> Action(Func<CancellationToken, OperationResult> func)
     {
-        return new(t => ExecuteAsync(() => func(t)));
+        return new OperationAction(t => ExecuteAsync(() => func(t)));
     }
 
-    public static OperationAction Action(Func<CancellationToken, Task<OperationResult>> func)
+    public static IAction<Unit> Action(Func<CancellationToken, Task<OperationResult>> func)
     {
-        return new(t => ExecuteAsync(() => func(t)));
+        return new OperationAction(t => ExecuteAsync(() => func(t)));
     }
 
-    public static SuccessAction<T> SuccessAction<T>(T obj, TimeSpan timeSpan = default)
+    public static IAction<T> SuccessAction<T>(T obj, TimeSpan timeSpan = default)
     {
-        return new(obj, timeSpan);
+        return new SuccessAction<T>(obj, timeSpan);
     }
 
-    public static SuccessAction SuccessAction(TimeSpan timeSpan = default)
+    public static IAction<Unit> SuccessAction(TimeSpan timeSpan = default)
     {
-        return new(Unit.Default, timeSpan);
+        return new SuccessAction<Unit>(Unit.Default, timeSpan);
     }
 
-    public static ErrorAction<T> ErrorAction<T>(string error, TimeSpan timeSpan = default)
+    public static IAction<T> ErrorAction<T>(string error, TimeSpan timeSpan = default)
     {
-        return new(error, timeSpan);
+        return new ErrorAction<T>(error, timeSpan);
     }
 
-    public static ErrorAction<T> ErrorAction<T>(Exception ex, TimeSpan timeSpan = default)
+    public static IAction<T> ErrorAction<T>(Exception ex, TimeSpan timeSpan = default)
     {
-        return new(ex, timeSpan);
-    }
-    
-    public static ErrorAction ErrorAction(string error, TimeSpan timeSpan = default)
-    {
-        return new(error, timeSpan);
+        return new ErrorAction<T>(ex, timeSpan);
     }
 
-    public static ErrorAction ErrorAction(Exception ex, TimeSpan timeSpan = default)
+    public static IAction<Unit> ErrorAction(string error, TimeSpan timeSpan = default)
     {
-        return new(ex, timeSpan);
+        return new ErrorAction<Unit>(error, timeSpan);
+    }
+
+    public static IAction<Unit> ErrorAction(Exception ex, TimeSpan timeSpan = default)
+    {
+        return new ErrorAction<Unit>(ex, timeSpan);
     }
 }

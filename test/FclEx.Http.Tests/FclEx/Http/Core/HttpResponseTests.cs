@@ -27,7 +27,7 @@ public class HttpResponseTests : HttpServerTests
             .SendAsync(TestHttp)
             .ReadJsonAs<Dictionary<string, string>>();
 
-        Assert.True(actual.Success, actual.Exception?.ToString());
+        Assert.True(actual.IsSuccess, actual.Exception?.ToString());
         Assert.Equal(expected, actual.Value);
     }
 

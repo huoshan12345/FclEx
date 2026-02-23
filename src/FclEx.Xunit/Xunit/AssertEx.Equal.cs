@@ -34,7 +34,7 @@ partial class AssertEx
             result.ThrowIfNotEqual();
         }
 
-        public static void MembersEqual<T>(T expected, T actual, params string[] excludedMemberPaths) 
+        public static void MembersEqual<T>(T expected, T actual, params string[] excludedMemberPaths)
             => Assert.MembersEqual(expected, actual, false, excludedMemberPaths);
 
         public static void MembersNotEqual<T>(T expected, T actual, bool onlyCompareSharedMembers = false, params string[] excludedMemberPaths)
@@ -44,7 +44,7 @@ partial class AssertEx
             result.ThrowIfEqual();
         }
 
-        public static void MembersNotEqual<T>(T expected, T actual, params string[] excludedMemberPaths) 
+        public static void MembersNotEqual<T>(T expected, T actual, params string[] excludedMemberPaths)
             => Assert.MembersNotEqual(expected, actual, false, excludedMemberPaths);
 
         public static void Equal<TEnum, TInt>(TEnum expected, TInt actual)
@@ -80,13 +80,29 @@ partial class AssertEx
             Assert.Contains(new(key, value), collection);
         }
 
-        public static void NotEmpty([NotNull] string? value)
+        public static void NullOrEmpty(string? value)
+        {
+            if (value is null)
+                Assert.Null(value);
+            else
+                Assert.Empty(value);
+        }
+
+        public static void NotNullNorEmpty([NotNull] string? value)
         {
             Assert.NotNull(value);
             Assert.NotEmpty(value);
         }
 
-        public static void NotEmpty([NotNull] IEnumerable? value)
+        public static void NullOrEmpty(IEnumerable? value)
+        {
+            if (value is null)
+                Assert.Null(value);
+            else
+                Assert.Empty(value);
+        }
+
+        public static void NotNullNorEmpty([NotNull] IEnumerable? value)
         {
             Assert.NotNull(value);
             Assert.NotEmpty(value);

@@ -7,7 +7,7 @@ public partial class OperationResultTests
     {
         const int expected = 1;
         var r = Test(expected);
-        Assert.True(r.Success);
+        Assert.True(r.IsSuccess);
         Assert.Equal(expected, r.Value);
 
         OperationResult<int> Test(int input)
@@ -20,7 +20,7 @@ public partial class OperationResultTests
     public void ImplicitOperator_FromString()
     {
         var r = Test();
-        Assert.False(r.Success);
+        Assert.False(r.IsSuccess);
         Assert.IsType<SimpleException>(r.Exception);
 
         OperationResult<int> Test()
@@ -34,7 +34,7 @@ public partial class OperationResultTests
     {
         var ex = new ArgumentException();
         var r = Test(ex);
-        Assert.False(r.Success);
+        Assert.False(r.IsSuccess);
         Assert.IsType(ex.GetType(), r.Exception);
 
         OperationResult<int> Test(Exception e)

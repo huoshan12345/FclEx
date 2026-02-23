@@ -57,7 +57,7 @@ partial class EnumerableExtensions
             {
                 var r = await taskSelector(obj);
                 span += r.Elapsed;
-                if (r.Success)
+                if (r.IsSuccess)
                 {
                     list.Add(r.Value!);
                 }
@@ -65,7 +65,7 @@ partial class EnumerableExtensions
                 {
                     if (terminateOnFirstError)
                     {
-                        return r.CastTo<List<T>>();
+                        return r.Cast<List<T>>();
                     }
                     else
                     {

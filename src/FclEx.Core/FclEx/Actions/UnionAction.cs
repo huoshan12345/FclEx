@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Actions;
 
-public readonly struct UnionAction<T, TNext> : IAction<(T, TNext)>
+public class UnionAction<T, TNext> : IAction<(T, TNext)>
 {
     private readonly IAction<T> _action;
     private readonly Func<T, IAction<TNext>?> _next;
@@ -19,8 +19,8 @@ public readonly struct UnionAction<T, TNext> : IAction<(T, TNext)>
     public async Task<OperationResult<(T, TNext)>> ExecuteAsync(CancellationToken token = default)
     {
         var result = await _action.ExecuteAsync(token);
-        if (!result.Success)
-            return result.CastTo<(T, TNext)>();
+        if (!result.IsSuccess)
+            return result.Cast<(T, TNext)>();
 
         var item = result.Value!;
         var nextActor = _next(item);
@@ -32,10 +32,10 @@ public readonly struct UnionAction<T, TNext> : IAction<(T, TNext)>
         }
 
         var nextResult = await nextActor.ExecuteAsync(token);
-        if (!nextResult.Success)
+        if (!nextResult.IsSuccess)
             return _prevWhenNextError
                 ? ((item, default!), result.Elapsed)
-                : nextResult.CastTo<(T, TNext)>();
+                : nextResult.Cast<(T, TNext)>();
 
         return ((item, nextResult.Value!), result.Elapsed + nextResult.Elapsed);
     }

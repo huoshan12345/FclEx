@@ -4,13 +4,13 @@ partial class AssertEx
 {
     extension(Assert)
     {
-        public static void True([DoesNotReturnIf(false)] bool condition, Func<string>? userMessage = null)
+        public static void True([DoesNotReturnIf(false)] bool condition, Func<string>? userMessage)
         {
-            if (!condition)
+            if (condition == false)
                 Assert.True(condition, userMessage?.Invoke());
         }
 
-        public static void False([DoesNotReturnIf(true)] bool condition, Func<string>? userMessage = null)
+        public static void False([DoesNotReturnIf(true)] bool condition, Func<string>? userMessage)
         {
             if (condition)
                 Assert.False(condition, userMessage?.Invoke());
@@ -31,12 +31,7 @@ partial class AssertEx
             }
         }
 
-        public static void Default<T>(T? actual, Func<string>? userMessage = null)
-        {
-            Assert.Equal(default, actual, userMessage);
-        }
-
-        public static void NotEqual<T>(T? expected, T? actual, Func<string>? userMessage = null)
+        public static void NotEqual<T>(T? expected, T? actual, Func<string>? userMessage)
         {
             try
             {
@@ -49,6 +44,11 @@ partial class AssertEx
                     actual: actual.ToAssertionString(),
                     banner: userMessage?.Invoke());
             }
+        }
+
+        public static void Default<T>(T? actual, Func<string>? userMessage = null)
+        {
+            Assert.Equal(default, actual, userMessage);
         }
 
         public static void NotDefault<T>(T? actual, Func<string>? userMessage = null)

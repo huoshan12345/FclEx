@@ -2,70 +2,166 @@
 
 public static partial class ActionExtensions
 {
-    public static IAction<T2> Map<T, T2>(this IAction<T> action, Func<T, T2> map)
+    public static IAction<Unit> ToUnit<T>(this IAction<T> action)
     {
-        return new MapAction<T, T2>(action, map);
+        return action.MapValue(m => default(Unit));
     }
 
-    public static IAction<T2> Bind<T, T2>(this IAction<T> action, Func<T, OperationResult<T2>> map)
+    public static IAction<T2> MapValue<T, T2>(this IAction<T> action, Func<T, T2> map)
     {
-        return new BindAction<T, T2>(action, map);
+        return new MapValueAction<T, T2>(action, map);
     }
 
-    public static Task<OperationResult> RunAsync<T>(this IAction<T> action, CancellationToken token = default)
+    public static IAction<T2> MapToResult<T, T2>(this IAction<T> action, Func<T, OperationResult<T2>> map)
     {
-        return action.ExecuteAsync(token).WithoutValue();
+        return new MapToResultAction<T, T2>(action, map);
     }
 
-    public static IAction<T> RepeatOnce<T>(this IAction<T> actor, Func<T, bool> condition)
+    public static IAction<T> MapError<T>(this IAction<T> action, Func<Exception, Exception> func)
     {
-        return actor.Next(t => condition(t) ? actor : new SuccessAction<T>(t));
+        return action.ThenResultIf(m => m.IsError, m => new ErrorAction<T>(func(m.Exception!)));
     }
 
-    public static IAction<T> ErrorIf<T>(this IAction<T> action, Func<T, bool> condition, Func<T, string> errorFunc)
+    public static IAction<T> MapErrorMessage<T>(this IAction<T> action, Func<string, string> func)
+    {
+        return action.MapError(e => e.SetMessage(func(e.Message)));
+    }
+
+    public static IAction<T> Fail<T>(this IAction<T> action, Func<T, Exception> errorFunc)
+    {
+        Check.NotNull(errorFunc);
+        return action.Then(t => ErrorAction.Create<T>(errorFunc(t)));
+    }
+
+    public static IAction<T> Fail<T>(this IAction<T> action, Func<T, string> errorFunc)
+    {
+        Check.NotNull(errorFunc);
+        return action.Then(t => new ErrorAction<T>(errorFunc(t)));
+    }
+
+    public static IAction<T> FailIf<T>(this IAction<T> action, Func<T, bool> condition, Func<T, Exception> errorFunc)
     {
         Check.NotNull(condition);
         Check.NotNull(errorFunc);
-        return action.Next(t => condition(t)
-            ? (IAction<T>)new ErrorAction<T>(errorFunc(t))
-            : new SuccessAction<T>(t));
+
+        return action.Then<T, T>(t => condition(t)
+            ? ErrorAction.Create<T>(errorFunc(t))
+            : SuccessAction.Create(t));
     }
 
-    public static IAction<T> OneByOne<T>(this IEnumerable<IAction<T>> actions)
-    {
-        IAction<T> seed = new SuccessAction<T>(default!);
-        return actions.Aggregate(seed, (sum, next) => sum.Next(next), m => m);
-    }
-
-    public static Task<OperationResult<T>> ExecuteAsync<T>(this IAction<T> action, CancellationToken token = default)
-    {
-        return action.ExecuteAsync(token);
-    }
-
-    public static IAction<T> InsertIf<T, TNext>(this IAction<T> action, Func<T, bool> condition, Func<T, IAction<TNext>> next)
+    public static IAction<T> FailIf<T>(this IAction<T> action, Func<T, bool> condition, Func<T, string> errorFunc)
     {
         Check.NotNull(condition);
-        Check.NotNull(next);
+        Check.NotNull(errorFunc);
 
-        return action.Next(t => condition(t)
-            ? next(t).Map(m => t)
-            : new SuccessAction<T>(t));
+        return action.Then<T, T>(t => condition(t)
+            ? ErrorAction.Create<T>(errorFunc(t))
+            : SuccessAction.Create(t));
     }
 
-    public static IAction<Unit> Untype<T>(this IAction<T> action)
+    public static IAction<T> OnResult<T>(this IAction<T> action, Func<OperationResult<T>, Task> resultAction)
     {
-        return action.Map(m => default(Unit));
+        Check.NotNull(resultAction);
+        return action.ThenResult(r => resultAction(r).Then(() => r));
     }
 
-    public static IAction<T> RepeatUntil<T>(this IAction<T> actor, Func<T, bool>? until, TimeSpan delay = default, TimeSpan? timeout = null)
+    public static IAction<T> OnResult<T>(this IAction<T> action, Action<OperationResult<T>> resultAction)
+    {
+        Check.NotNull(resultAction);
+        return action.OnResult(r =>
+        {
+            resultAction(r);
+            return Task.CompletedTask;
+        });
+    }
+
+    public static IAction<T> WhenResult<T>(this IAction<T> action, Func<OperationResult<T>, bool> condition, Func<OperationResult<T>, Task> resultAction)
+    {
+        Check.NotNull(condition);
+        Check.NotNull(resultAction);
+
+        return action.OnResult(r => condition(r) ? resultAction(r) : r);
+    }
+
+    public static IAction<T> WhenResult<T>(this IAction<T> action, Func<OperationResult<T>, bool> condition, Action<OperationResult<T>> resultAction)
+    {
+        Check.NotNull(resultAction);
+
+        return action.WhenResult(condition, r =>
+        {
+            resultAction(r);
+            return Task.CompletedTask;
+        });
+    }
+
+    public static IAction<T> When<T>(this IAction<T> action, Func<T, bool> condition, Func<T, Task> resultAction)
+    {
+        Check.NotNull(condition);
+        Check.NotNull(resultAction);
+
+        return action.WhenResult(r => r.IsSuccess && condition(r.Value), r => resultAction(r.Value!));
+    }
+
+    public static IAction<T> When<T>(this IAction<T> action, Func<T, bool> condition, Action<T> resultAction)
+    {
+        Check.NotNull(resultAction);
+        return action.When(condition, t =>
+        {
+            resultAction(t);
+            return Task.CompletedTask;
+        });
+    }
+
+    public static IAction<T> OnFailed<T>(this IAction<T> action, Func<OperationResult<T>, Task> errorAction)
+    {
+        Check.NotNull(errorAction);
+        return action.WhenResult(r => r.IsError, r => errorAction(r));
+    }
+
+    public static IAction<T> OnFailed<T>(this IAction<T> action, Action<OperationResult<T>> errorAction)
+    {
+        Check.NotNull(errorAction);
+        return action.WhenResult(r => r.IsError, r => errorAction(r));
+    }
+
+    public static IAction<T> OnValue<T>(this IAction<T> action, Action<T> valueAction)
+    {
+        Check.NotNull(valueAction);
+        return action.WhenResult(r => r.IsSuccess, r => valueAction(r.Value!));
+    }
+
+    public static IAction<T> OnValue<T>(this IAction<T> action, Func<T, Task> valueAction)
+    {
+        Check.NotNull(valueAction);
+        return action.WhenResult(r => r.IsSuccess, r => valueAction(r.Value!));
+    }
+
+    public static IAction<T> OnException<T>(this IAction<T> action, Func<Exception, Task> errorAction)
+    {
+        Check.NotNull(errorAction);
+        return action.WhenResult(r => r.IsError, r => errorAction(r.Exception!));
+    }
+
+    public static IAction<T> OnException<T>(this IAction<T> action, Action<Exception> errorAction)
+    {
+        Check.NotNull(errorAction);
+        return action.WhenResult(r => r.IsError, r => errorAction(r.Exception!));
+    }
+
+    public static IAction<T> RepeatOnce<T>(this IAction<T> action, Func<T, bool> condition)
+    {
+        return action.Then(t => condition(t) ? action : SuccessAction.Create(t));
+    }
+
+    public static IAction<T> RepeatUntil<T>(this IAction<T> action, Func<T, bool>? until, TimeSpan delay = default, TimeSpan? timeout = null)
     {
         return Operation.Action<T>(async t =>
         {
             using var cts = t.WithTimeout(timeout > TimeSpan.Zero ? timeout : null);
             while (!cts.IsCancellationRequested)
             {
-                var r = await actor.ExecuteAsync(t);
-                if (!r.Success)
+                var r = await action.ExecuteAsync(t);
+                if (!r.IsSuccess)
                     return r;
 
                 if (until != null && until(r.Value!))
@@ -77,37 +173,26 @@ public static partial class ActionExtensions
         });
     }
 
-    public static IAction<T> RepeatUntil<T>(this IAction<T> actor, Func<T, bool>? until, int delayInSeconds = default, int? timeoutInSeconds = null)
+    public static IAction<T> RepeatUntil<T>(this IAction<T> action, Func<T, bool>? until, int delayInSeconds = default, int? timeoutInSeconds = null)
     {
-        return actor.RepeatUntil(until, TimeSpan.FromSeconds(delayInSeconds), timeoutInSeconds.HasValue ? TimeSpan.FromSeconds(timeoutInSeconds.Value) : null);
+        return action.RepeatUntil(until, TimeSpan.FromSeconds(delayInSeconds), timeoutInSeconds.HasValue ? TimeSpan.FromSeconds(timeoutInSeconds.Value) : null);
     }
 
-    public static IAction<T> Error<T>(this IAction<T> action, Func<T, string> errorFunc)
+    public static IAction<T> ExecuteAsync<T>(this IEnumerable<IAction<T>> actions)
     {
-        Check.NotNull(errorFunc);
-        return action.Next(t => new ErrorAction<T>(errorFunc(t)));
+        IAction<T> seed = new SuccessAction<T>(default!);
+        return actions.Aggregate(seed, (sum, next) => sum.Then(next), m => m);
     }
 
-    public static IAction<TNext> Error<T, TNext>(this IAction<T> action, Func<T, string> errorFunc)
+    public static Task<OperationResult> RunAsync<T>(this IAction<T> action, CancellationToken token = default)
     {
-        Check.NotNull(errorFunc);
-        return action.Next(t => new ErrorAction<T>(errorFunc(t))).Map(m => default(TNext))!;
+        return action.ExecuteAsync(token).WithoutValue();
     }
 
-    public static IAction<T> Error<T>(this IAction<T> action, string? error)
+    // NOTE: help value type cast to interface.
+    public static Task<OperationResult<T>> ExecuteAsync<T>(this IAction<T> action, CancellationToken token = default)
     {
-        return action.Error(_ => error ?? string.Empty);
-    }
-
-    public static IAction<TNext> Error<T, TNext>(this IAction<T> action, string? error)
-    {
-        return action.Error<T, TNext>(_ => error ?? string.Empty);
-    }
-
-    public static IAction<T> Error<T>(this IAction<T> action, Action<Exception> onError)
-    {
-        Check.NotNull(onError);
-        return action.NextResultIf(r => r.Error, r => Operation.Action(t => onError(r.Exception!)).Next(r));
+        return action.ExecuteAsync(token);
     }
 
     public static Task<OperationResult<T>> ExecuteAsync<T>(this IAction<T> action, int retryCount, CancellationToken token)
@@ -133,9 +218,9 @@ public static partial class ActionExtensions
         for (var i = 1; i <= executeCount; i++)
         {
             result = await action.ExecuteAsync(token)
-                .NextResult(m => m.Elapsed(watch.GetElapsedTime()));
+                .ThenResult(m => m.Elapsed(watch.GetElapsedTime()));
 
-            if (result.Success)
+            if (result.IsSuccess)
                 return result;
 
             if (retryCondition is not null)
@@ -156,13 +241,4 @@ public static partial class ActionExtensions
         return result;
     }
 
-    public static IAction<T> SetError<T>(this IAction<T> action, Func<Exception, Exception> func)
-    {
-        return action.NextResultIf(m => m.Error, m => Operation.ErrorAction<T>(func(m.Exception!), m.Elapsed));
-    }
-
-    public static IAction<T> SetError<T>(this IAction<T> action, Func<string, string> func)
-    {
-        return action.SetError(e => e.SetMessage(func(e.Message)));
-    }
 }

@@ -17,7 +17,7 @@ public static class StringBuilderHelper
     /// wrapped in a <see cref="DisposableValue{T}"/> for automatic release back to the cache upon disposal.
     /// </summary>
     /// <param name="capacity">
-    /// The minimum capacity of the <see cref="StringBuilder"/> to acquire. Defaults to 16, which equals <see cref="StringBuilder.DefaultCapacity"/>.
+    /// The minimum capacity of the <see cref="StringBuilder"/> to acquire. Defaults to 16.
     /// </param>
     /// <returns>
     /// A <see cref="DisposableValue{T}"/> containing a <see cref="StringBuilder"/>. Disposing the value releases the instance back to the cache.

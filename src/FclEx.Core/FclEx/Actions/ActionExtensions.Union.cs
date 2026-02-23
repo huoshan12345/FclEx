@@ -14,6 +14,6 @@ partial class ActionExtensions
 
     public static IAction<(T1, T2, TNext)> Union<T1, T2, TNext>(this IAction<(T1, T2)> action, Func<T1, T2, IAction<TNext>> next)
     {
-        return new UnionAction<(T1, T2), TNext>(action, m => next(m.Item1, m.Item2)).Map(m => (m.Item1.Item1, m.Item1.Item2, m.Item2));
+        return new UnionAction<(T1, T2), TNext>(action, m => next(m.Item1, m.Item2)).MapValue(m => (m.Item1.Item1, m.Item1.Item2, m.Item2));
     }
 }
