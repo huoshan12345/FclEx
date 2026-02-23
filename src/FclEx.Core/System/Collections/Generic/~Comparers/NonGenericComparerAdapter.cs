@@ -16,6 +16,8 @@ public class UntypedComparer<T> : IComparer
 
     public int Compare(object? x, object? y)
     {
-        return _comparer.Compare(x.CastTo<T>()!, y.CastTo<T>()!);
+        return ComparerHelper.TryCompare(x, y, out var result)
+            ? result.Value
+            : _comparer.Compare(x.CastTo<T>(), y.CastTo<T>());
     }
 }

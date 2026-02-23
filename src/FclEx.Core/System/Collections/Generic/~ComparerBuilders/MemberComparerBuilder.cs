@@ -10,7 +10,7 @@ public class MemberComparerBuilder
 
 public class MemberComparerBuilder<T> : IComparerBuilder<T>
 {
-    private readonly List<OrderMember> _members = [];
+    private readonly List<IOrderMember> _members = [];
 
     public static MemberComparerBuilder<T> Create()
     {
@@ -25,22 +25,8 @@ public class MemberComparerBuilder<T> : IComparerBuilder<T>
 
     public MemberComparerBuilder<T> OrderBy<TMember>(Func<T, TMember?> selector, bool desc = false, IComparer<TMember>? memberComparer = null)
     {
-        IComparer comparer = memberComparer == null
-            ? Comparer<TMember>.Default
-            : NonGenericComparerAdapter.Create(memberComparer);
-
-        var member = new OrderMember(m => selector(m), desc, comparer);
-        _members.Add(member);
+        _members.Add(new OrderMember<TMember>(selector, desc, memberComparer ?? Comparer<TMember>.Default));
         return this;
-    }
-
-    private static int Compare(T x, T y, OrderMember member)
-    {
-        var left = member.Selector(x);
-        var right = member.Selector(y);
-        return member.Desc
-            ? member.Comparer.Compare(right, left)
-            : member.Comparer.Compare(left, right);
     }
 
     public Comparison<T?> CreateComparison()
@@ -50,11 +36,10 @@ public class MemberComparerBuilder<T> : IComparerBuilder<T>
             if (ComparerHelper.TryCompare(x, y, out var result))
                 return result.Value;
 
-            // ReSharper disable once LoopCanBeConvertedToQuery
             // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-            foreach (var member in _members)
+            foreach (var m in _members)
             {
-                var cmp = Compare(x, y, member);
+                var cmp = m.Compare(x, y);
                 if (cmp != 0)
                     return cmp;
             }
@@ -63,6 +48,38 @@ public class MemberComparerBuilder<T> : IComparerBuilder<T>
     }
 
     public IComparer<T> Build() => CommonComparer.Create(CreateComparison());
+    
+    private interface IOrderMember
+    {
+        int Compare(T x, T y);
+    }
 
-    private readonly record struct OrderMember(Func<T, object?> Selector, bool Desc, IComparer Comparer);
+    private sealed class OrderMember<TMember> : IOrderMember
+    {
+        private readonly Func<T, TMember?> _selector;
+        private readonly IComparer<TMember> _comparer;
+        private readonly bool _desc;
+
+        public OrderMember(Func<T, TMember?> selector, bool desc, IComparer<TMember> comparer)
+        {
+            _selector = selector;
+            _desc = desc;
+            _comparer = comparer;
+        }
+
+        public int Compare(T x, T y)
+        {
+            var l = _selector(x);
+            var r = _selector(y);
+
+            if (ComparerHelper.TryCompare(l, r, out var result))
+                return _desc
+                    ? -result.Value
+                    : result.Value;
+
+            return _desc
+                ? _comparer.Compare(r, l)
+                : _comparer.Compare(l, r);
+        }
+    }
 }

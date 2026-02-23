@@ -144,7 +144,7 @@ public partial class MemberEqualityComparerBuilderTests
             new Person { Id = 1 }
         };
 
-        Assert.True(set.Contains(new Person { Id = 1 }));
+        Assert.Contains(new Person { Id = 1 }, set);
     }
 
     [Fact]
