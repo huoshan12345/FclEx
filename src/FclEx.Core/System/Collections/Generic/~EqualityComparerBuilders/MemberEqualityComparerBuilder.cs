@@ -10,7 +10,7 @@ public class MemberEqualityComparerBuilder
 
 public class MemberEqualityComparerBuilder<T> : IEqualityComparerBuilder<T>
 {
-    private readonly List<EqualityMember> _members = [];
+    private readonly List<IEqualityMember> _members = [];
 
     public static MemberEqualityComparerBuilder<T> Create()
     {
@@ -19,20 +19,8 @@ public class MemberEqualityComparerBuilder<T> : IEqualityComparerBuilder<T>
 
     public MemberEqualityComparerBuilder<T> Add<TMember>(Func<T, TMember?> selector, IEqualityComparer<TMember>? memberComparer = null)
     {
-        IEqualityComparer comparer = memberComparer == null
-            ? EqualityComparer<TMember>.Default
-            : NonGenericEqualityComparerAdapter.Create(memberComparer);
-
-        var prop = new EqualityMember(m => selector(m), comparer);
-        _members.Add(prop);
+        _members.Add(new EqualityMember<TMember>(selector, memberComparer ?? EqualityComparer<TMember>.Default));
         return this;
-    }
-
-    private static bool Equals(T x, T y, EqualityMember member)
-    {
-        var left = member.Selector(x);
-        var right = member.Selector(y);
-        return member.EqualityComparer.Equals(left, right);
     }
 
     public Func<T?, T?, bool> CreateCompareFunc()
@@ -45,7 +33,7 @@ public class MemberEqualityComparerBuilder<T> : IEqualityComparerBuilder<T>
             // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
             foreach (var member in _members)
             {
-                var equal = Equals(x, y, member);
+                var equal = member.Equals(x, y);
                 if (equal == false)
                     return false;
             }
@@ -73,56 +61,38 @@ public class MemberEqualityComparerBuilder<T> : IEqualityComparerBuilder<T>
         return new CommonEqualityComparer<T>(CreateCompareFunc(), CreateHashFunc());
     }
 
-    private readonly record struct EqualityMember(Func<T, object?> Selector, IEqualityComparer EqualityComparer)
+    private interface IEqualityMember
     {
+        bool Equals(T x, T y);
+        int GetHashCode(T obj);
+    }
+
+    private sealed class EqualityMember<TMember> : IEqualityMember
+    {
+        private readonly Func<T, TMember?> _selector;
+        private readonly IEqualityComparer<TMember> _comparer;
+
+        public EqualityMember(Func<T, TMember?> selector, IEqualityComparer<TMember> comparer)
+        {
+            _selector = selector;
+            _comparer = comparer;
+        }
+
+        public bool Equals(T x, T y)
+        {
+            var vx = _selector(x);
+            var vy = _selector(y);
+            return ComparerHelper.TryEquals(vx, vy, out var result)
+                ? result.Value
+                : _comparer.Equals(vx, vy);
+        }
+
         public int GetHashCode(T obj)
         {
-            var value = Selector(obj);
+            var value = _selector(obj);
             return value is null
                 ? 0
-                : EqualityComparer.GetHashCode(value);
+                : _comparer.GetHashCode(value);
         }
-    }
-}
-
-public static class MemberEqualityComparerBuilderExtensions
-{
-    private static bool CanRead(this DataMemberInfo member, bool includeNonPublic)
-    {
-        return member.CanRead && (includeNonPublic || member.HasPublicGetter);
-    }
-
-    private static MemberExpression ToExpression(this DataMemberInfo member, Expression expression)
-    {
-        return member.MemberInfo is PropertyInfo property
-            ? Expression.Property(expression, property)
-            : Expression.Field(expression, member.MemberInfo.CastTo<FieldInfo>());
-    }
-
-    public static MemberEqualityComparerBuilder<T> AddAllPublicDataMembers<T>(this MemberEqualityComparerBuilder<T> builder, params Expression<Func<T, object?>>[] excludeMemberSelectors)
-    {
-        return builder.AddAllDataMembers(false, excludeMemberSelectors);
-    }
-
-    public static MemberEqualityComparerBuilder<T> AddAllDataMembers<T>(this MemberEqualityComparerBuilder<T> builder,
-        bool includeNonPublic = false, params Expression<Func<T, object?>>[] excludeMemberSelectors)
-    {
-        var exclude = excludeMemberSelectors
-            .Select(m => ExpressionHelper.GetDataMemberInfo(m))
-            .ToHashSet();
-
-        var paramExp = Expression.Parameter(typeof(T));
-
-        foreach (var member in typeof(T).GetDataMembers().Where(m => m.CanRead(includeNonPublic)))
-        {
-            if (exclude.Contains(member))
-                continue;
-
-            var memberExp = member.ToExpression(paramExp);
-            var convert = Expression.Convert(memberExp, typeof(object));
-            var func = convert.Lambda<Func<T, object?>>(paramExp).Compile();
-            builder.Add(func);
-        }
-        return builder;
     }
 }

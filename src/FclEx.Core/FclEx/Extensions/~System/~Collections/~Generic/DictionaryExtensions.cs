@@ -121,7 +121,7 @@ public static class DictionaryExtensions
         {
             null => throw new ArgumentNullException(nameof(dic)),
             IReadOnlyDictionary<TKey, TValue> col => col,
-            _ => new ReadOnlyDictionary<TKey, TValue>(dic!)
+            _ => new ReadOnlyDictionary<TKey, TValue>(dic)
         };
     }
 

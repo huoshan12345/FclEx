@@ -6,7 +6,7 @@ public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>
     public DataMemberInfo(FieldInfo field)
     {
         MemberInfo = Check.NotNull(field);
-        IsCompilerGenerated = MemberInfo.IsDefined(typeof(CompilerGeneratedAttribute), false);
+        IsCompilerGenerated = MemberInfo.IsCompilerGenerated(false);
         CanRead = true;
         CanWrite = true;
         Getter = field.GetValue;
@@ -17,12 +17,14 @@ public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>
         DataMemberType = field.FieldType;
         HasPublicSetter = field.IsPublic;
         HasPublicGetter = field.IsPublic;
+        IsInitOnly = field.IsInitOnly;
+        IsAutoPropertyBackingField = field.IsAutoPropertyBackingField();
     }
 
     public DataMemberInfo(PropertyInfo property)
     {
         MemberInfo = Check.NotNull(property);
-        IsCompilerGenerated = MemberInfo.IsDefined(typeof(CompilerGeneratedAttribute), false);
+        IsCompilerGenerated = MemberInfo.IsCompilerGenerated(false);
         CanRead = property.CanRead;
         CanWrite = property.CanWrite;
         Getter = property.GetValue;
@@ -34,6 +36,8 @@ public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>
         HasPublicSetter = property.GetSetMethod(true)?.IsPublic == true;
         HasPublicGetter = property.GetGetMethod(true)?.IsPublic == true;
         DataMemberType = property.PropertyType;
+        IsInitOnly = property.IsInitOnly();
+        IsAutoPropertyBackingField = false;
     }
 
     public override object[] GetCustomAttributes(bool inherit)
@@ -57,7 +61,9 @@ public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>
     public bool IsStatic { get; }
     public bool IsField { get; }
     public bool IsProperty { get; }
+    public bool IsInitOnly { get; }
     public bool IsCompilerGenerated { get; }
+    public bool IsAutoPropertyBackingField { get; }
     public bool HasPublicSetter { get; }
     public bool HasPublicGetter { get; }
     public Func<object?, object?> Getter { get; }
@@ -68,21 +74,38 @@ public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>
 
     public bool Equals(DataMemberInfo? other)
     {
-        if (ReferenceEquals(null, other)) return false;
-        if (ReferenceEquals(this, other)) return true;
+        if (other is null)
+            return false;
+
+        // ReSharper disable once ConvertIfStatementToReturnStatement
+        if (ReferenceEquals(this, other))
+            return true;
+
         return MemberInfo.Equals(other.MemberInfo);
     }
 
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj)) return false;
-        if (ReferenceEquals(this, obj)) return true;
-        if (obj.GetType() != GetType()) return false;
+        if (obj is null)
+            return false;
+
+        if (ReferenceEquals(this, obj))
+            return true;
+
+        // ReSharper disable once ConvertIfStatementToReturnStatement
+        if (obj.GetType() != GetType())
+            return false;
+
         return Equals((DataMemberInfo)obj);
     }
 
     public override int GetHashCode()
     {
         return MemberInfo.GetHashCode();
+    }
+
+    public override  string ToString()
+    {
+        return $"{DataMemberType.Name} {Name}";
     }
 }

@@ -65,3 +65,9 @@ dotnet_diagnostic.CA1835.severity = none
 
 # IDE0028: Simplify collection initialization
 dotnet_diagnostic.IDE0028.severity = silent
+
+# IDE0200: Convert lambda expression to method group
+dotnet_diagnostic.IDE0200.severity = silent
+
+# IDE0048: Add parentheses for clarity
+dotnet_diagnostic.IDE0048.severity = none

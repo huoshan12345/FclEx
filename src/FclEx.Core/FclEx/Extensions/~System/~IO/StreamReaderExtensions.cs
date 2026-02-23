@@ -7,7 +7,7 @@ public static class StreamReaderExtensions
         = typeof(StreamWriter).GetMethod(nameof(StreamReader.ReadToEndAsync), 0, [typeof(CancellationToken)]);
 
     /// <summary>
-    /// Provides a cross-platform extension method for <see cref="StreamReader.ReadToEndAsync(CancellationToken)"/>. <br/>
+    /// Provides a cross-platform extension method for <see cref="StreamReader.ReadToEndAsync()"/> with <see cref="CancellationToken"/>. <br/>
     /// On .NET Standard 2.0, this overload is not defined, so reflection is used to call it if available. <br/>
     /// Falls back to <see cref="StreamReader.ReadToEndAsync()"/> when the cancellation-aware overload cannot be resolved.
     /// </summary>
@@ -30,7 +30,7 @@ public static class StreamReaderExtensions
         = typeof(StreamWriter).GetMethod(nameof(StreamReader.ReadLineAsync), 0, [typeof(CancellationToken)]);
 
     /// <summary>
-    /// Provides a cross-platform extension method for <see cref="StreamReader.ReadLineAsync(CancellationToken)"/>. <br/>
+    /// Provides a cross-platform extension method for <see cref="StreamReader.ReadToEndAsync()"/> with <see cref="CancellationToken"/>. <br/>
     /// On .NET Standard 2.0, this overload is not defined, so reflection is used to call it if available. <br/>
     /// Falls back to <see cref="StreamReader.ReadLineAsync()"/> when the cancellation-aware overload cannot be resolved.
     /// </summary>
