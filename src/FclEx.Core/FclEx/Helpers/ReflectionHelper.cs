@@ -124,7 +124,14 @@ public static class ReflectionHelper
         if (il == null)
             return null;
 
-        var module = method.Module;
+        var typeArgs = method.DeclaringType?.IsGenericType == true
+            ? method.DeclaringType.GetGenericArguments()
+            : null;
+
+        var methodArgs = method.IsGenericMethod
+            ? method.GetGenericArguments()
+            : null;
+
         FieldInfo? field = null;
 
         for (var i = 0; i < il.Length - 4; i++)
@@ -138,7 +145,10 @@ public static class ReflectionHelper
                 (il[i + 3] << 16) |
                 (il[i + 4] << 24);
 
-            var f = module.ResolveField(token);
+            var f = method.Module.ResolveField(
+                metadataToken: token,
+                genericTypeArguments: typeArgs,
+                genericMethodArguments: methodArgs);
 
             // must be exactly one access
             if (field != null)
