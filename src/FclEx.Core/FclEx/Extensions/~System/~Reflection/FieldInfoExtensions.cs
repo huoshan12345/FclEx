@@ -104,4 +104,12 @@ public static class FieldInfoExtensions
         var backingFields = ReflectionHelper.GetAutoPropertyBackingFields(type);
         return backingFields.Contains(field);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsNotVisibleToDerived(this FieldInfo field)
+    {
+        // visible: public, protected(Family), protected internal(FamORAssem)
+        // not visible: private, internal(Assembly), private protected(FamANDAssem)
+        return (field.Attributes & FieldAttributes.FieldAccessMask) <= FieldAttributes.Assembly;
+    }
 }

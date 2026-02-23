@@ -89,4 +89,16 @@ public static class PropertyInfoExtensions
         var mods = setter.ReturnParameter.GetRequiredCustomModifiers();
         return mods.Any(t => ReferenceEquals(t, _isExternalInit));
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsNotVisibleToDerived(this PropertyInfo property)
+    {
+        var m = property.GetMethod ?? property.SetMethod;
+        if (m is null)
+            return true;
+
+        // visible: public, protected(Family), protected internal(FamORAssem)
+        // not visible: private, internal(Assembly), private protected(FamANDAssem)
+        return (m.Attributes & MethodAttributes.MemberAccessMask) <= MethodAttributes.Assembly;
+    }
 }

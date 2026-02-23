@@ -4,42 +4,46 @@ public static class ReflectionHelper
 {
     private static readonly ConcurrentDictionary<Type, IReadOnlyList<DataMemberInfo>> TypeDataMemberDic = [];
 
-    internal static IReadOnlyList<DataMemberInfo> GetDataMembers(Type type)
+    public static IReadOnlyList<DataMemberInfo> GetDataMembers(Type type)
     {
         return TypeDataMemberDic.GetOrAdd(type, GetDataMembersInternal);
 
         static IReadOnlyList<DataMemberInfo> GetDataMembersInternal(Type type)
         {
-            var list = new List<DataMemberInfo>();
-            var cur = type;
-            while (cur != null)
+            var types = GetVisibleDataMembers(type);
+
+            var list = new List<DataMemberInfo>(types);
+
+            var baseType = type.BaseType;
+            while (baseType is not null)
             {
-                var members = GetDeclaredDataMembers(cur);
-                // ReSharper disable once LoopCanBeConvertedToQuery
-                foreach (var member in members)
-                {
-                    list.Add(member);
-                }
-                cur = cur.BaseType;
+                var members = GetNotVisibleToDerivedDataMembers(baseType);
+                list.AddRange(members);
+                baseType = baseType.BaseType;
             }
 
-            // ReSharper disable once InvertIf
-            if (type.IsInterface)
-            {
-                var ms = type.GetInterfaces()
-                    .Select(GetDeclaredDataMembers)
-                    .SelectMany(m => m);
-                list.AddRange(ms);
-            }
-
-            // use the most concrete member for the same name.
             return list.ToReadOnlyList();
         }
 
-        static IEnumerable<DataMemberInfo> GetDeclaredDataMembers(Type type)
+        static IEnumerable<DataMemberInfo> GetVisibleDataMembers(Type type)
         {
-            return type.GetMembers(BindingAttributes.AllDeclared)
+            return type.GetMembers(BindingFlags.Public
+                                            | BindingFlags.NonPublic
+                                            | BindingFlags.Instance
+                                            | BindingFlags.Static
+                                            | BindingFlags.FlattenHierarchy)
                 .Where(m => m is PropertyInfo or FieldInfo)
+                .Select(m => m.ToDataMemberInfo());
+        }
+
+        static IEnumerable<DataMemberInfo> GetNotVisibleToDerivedDataMembers(Type type)
+        {
+            return type.GetMembers(BindingFlags.NonPublic
+                                   | BindingFlags.DeclaredOnly
+                                   | BindingFlags.Static
+                                   | BindingFlags.Instance)
+                .Where(m => m is PropertyInfo property && property.IsNotVisibleToDerived()
+                            || m is FieldInfo field && field.IsNotVisibleToDerived())
                 .Select(m => m.ToDataMemberInfo());
         }
     }
@@ -134,6 +138,8 @@ public static class ReflectionHelper
 
         FieldInfo? field = null;
 
+        var module = method.ReflectedType?.Module ?? method.Module;
+
         for (var i = 0; i < il.Length - 4; i++)
         {
             if (il[i] != opcode)
@@ -147,7 +153,7 @@ public static class ReflectionHelper
 
             try
             {
-                var f = method.Module.ResolveField(
+                var f = module.ResolveField(
                 metadataToken: token,
                 genericTypeArguments: typeArgs,
                 genericMethodArguments: methodArgs);
@@ -160,7 +166,7 @@ public static class ReflectionHelper
             }
             catch (Exception e)
             {
-                throw new InvalidOperationException($"Failed to resolve field token 0x{token:X8} in method {method.DeclaringType?.ShortName()}.{method.Name} from module {method.Module.Name}", e);
+                throw new InvalidOperationException($"Failed to resolve field token 0x{token:X8} in method {method.DeclaringType?.ShortName()}.{method.Name} from module {module.Name}", e);
             }
         }
 
