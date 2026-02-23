@@ -38,71 +38,59 @@ public static class FieldInfoExtensions
         return Expression.Field(parameter, field);
     }
 
+    private static readonly Regex AutoFieldRegex = new("^<(.+)>k__BackingField$", RegexOptions.Compiled);
+
     /// <summary>
     /// Determines whether the specified <see cref="FieldInfo"/> represents
     /// the compiler-generated storage field of a C# auto-property.
-    /// 
-    /// <para>
-    /// Detection is performed using accessor IL analysis rather than
-    /// field name matching (e.g. "&lt;X&gt;k__BackingField").
-    /// </para>
-    /// 
-    /// <para>
-    /// A field is considered an auto-property backing field iff:
-    /// </para>
-    /// <list type="bullet">
-    /// <item><description>The associated property getter and setter exist</description></item>
-    /// <item><description>Both accessors are compiler-generated</description></item>
-    /// <item><description>Getter performs exactly one <c>ldfld</c></description></item>
-    /// <item><description>Setter performs exactly one <c>stfld</c></description></item>
-    /// <item><description>Both operate on the same field</description></item>
-    /// </list>
-    /// 
-    /// <para>
-    /// This avoids relying on compiler-specific naming conventions
-    /// and remains stable under obfuscation and AOT scenarios.
-    /// </para>
     /// </summary>
     public static bool IsAutoPropertyBackingField(this FieldInfo field)
     {
         if (field.DeclaringType is not { } type)
             return false;
 
-        // NOTE:
-        // We intentionally DO NOT detect auto-property backing fields by name
-        // (e.g. "<PropertyName>k__BackingField").
-        //
-        // Although this is the naming convention currently emitted by Roslyn,
-        // field names are NOT part of the CLI specification and therefore:
-        // 
-        // 1. Not guaranteed by ECMA-335
-        // 2. Compiler-dependent (other C# compilers may differ)
-        // 3. Not stable under obfuscation / AOT / trimming
-        // 4. Potentially localized or rewritten by post-processors
-        //
-        // In contrast, the IL pattern for auto-property accessors IS stable:
-        //
-        // Getter:
-        //     ldarg.0
-        //     ldfld <field>
-        //     ret
-        //
-        // Setter / init:
-        //     ldarg.0
-        //     ldarg.1
-        //     stfld <field>
-        //     ret
-        //
-        // Where both accessors operate on the SAME compiler-generated field.
-        //
-        // This access pattern is guaranteed by the language lowering rules,
-        // making it a reliable metadata-level indicator that the field is
-        // the storage of an auto-property.
-        //
-        // Therefore, detection is performed by analyzing accessor IL rather
-        // than relying on implementation-specific naming conventions.
-        var backingFields = ReflectionHelper.GetAutoPropertyBackingFields(type);
-        return backingFields.Contains(field);
+        if (field.IsCompilerGenerated() == false)
+            return false;
+
+        if (AutoFieldRegex.TryMatch(field.Name, 1, out var name) == false)
+            return false;
+
+        var property = type.GetProperty(name, BindingAttributes.AllDeclared);
+        if (property is null)
+            return false;
+
+        return AccessorUsesField(property.GetMethod, field)
+               || AccessorUsesField(property.SetMethod, field);
+    }
+
+    private static bool AccessorUsesField(MethodInfo? method, FieldInfo field)
+    {
+        if(method is null)
+            return false;
+
+        if(method.IsCompilerGenerated() == false)
+            return false;
+
+        var body = method.GetMethodBody();
+        var il = body?.GetILAsByteArray();
+        if (il == null)
+            return false;
+
+        var fieldToken = field.MetadataToken;
+
+        for (var i = 0; i < il.Length - 4; i++)
+        {
+            var op = il[i];
+
+            if (op != 0x7B /* ldfld */ && op != 0x7D /* stfld */) 
+                continue;
+
+            var token = BitConverter.ToInt32(il, i + 1);
+            if (token == fieldToken)
+                return true;
+        }
+
+        return false;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

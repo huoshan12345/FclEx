@@ -110,7 +110,7 @@ partial class TypeExtensions
         static IReadOnlyList<FieldInfo> Impl(Type type)
         {
             return type.GetDataMembers()
-                .Where(m => m.IsField)
+                .Where(m => m is { IsField: true, IsStatic: false })
                 .Select(m => m.MemberInfo)
                 .OfType<FieldInfo>()
                 .ToReadOnlyList();

@@ -97,7 +97,7 @@ public static partial class TypeExtensions
 
     public static bool IsCompilerGenerated(this Type type)
     {
-        return type.IsDefined<CompilerGeneratedAttribute>(true);
+        return type.IsDefined<CompilerGeneratedAttribute>(false);
     }
 
 #if NETSTANDARD2_0
