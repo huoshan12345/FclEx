@@ -10,7 +10,7 @@ public class MemberComparerBuilder
 
 public class MemberComparerBuilder<T> : IComparerBuilder<T>
 {
-    private readonly IList<OrderMember> _members = new List<OrderMember>();
+    private readonly List<OrderMember> _members = [];
 
     public static MemberComparerBuilder<T> Create()
     {
@@ -29,8 +29,8 @@ public class MemberComparerBuilder<T> : IComparerBuilder<T>
             ? Comparer<TMember>.Default
             : NonGenericComparerAdapter.Create(memberComparer);
 
-        var prop = new OrderMember(m => selector(m), desc, comparer);
-        _members.Add(prop);
+        var member = new OrderMember(m => selector(m), desc, comparer);
+        _members.Add(member);
         return this;
     }
 
@@ -51,6 +51,7 @@ public class MemberComparerBuilder<T> : IComparerBuilder<T>
                 return result.Value;
 
             // ReSharper disable once LoopCanBeConvertedToQuery
+            // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
             foreach (var member in _members)
             {
                 var cmp = Compare(x, y, member);

@@ -123,6 +123,114 @@ partial class TypeExtensions
 
     public static IReadOnlyList<DataMemberInfo> GetDataMembers(this Type type) => ReflectionHelper.GetDataMembers(type);
 
+    public static IEnumerable<DataMemberInfo> GetDataMembers(this Type type, DataMemberFlags flags)
+    {
+        // Must choose Declared or Inherited
+        if ((flags & (DataMemberFlags.Declared | DataMemberFlags.Inherited)) == 0)
+            yield break;
+
+        // Must choose Instance or Static
+        if ((flags & (DataMemberFlags.Instance | DataMemberFlags.Static)) == 0)
+            yield break;
+
+        // Must choose Public or NonPublic
+        if ((flags & (DataMemberFlags.Public | DataMemberFlags.NonPublic)) == 0)
+            yield break;
+
+        // Must choose Field or Property
+        if ((flags & (DataMemberFlags.Field | DataMemberFlags.Property)) == 0)
+            yield break;
+
+        // Must choose CanRead or CanWrite
+        if ((flags & (DataMemberFlags.CanRead | DataMemberFlags.CanWrite)) == 0)
+            yield break;
+
+        var allowUnsafeWrite = (flags & DataMemberFlags.UnsafeWrite) != 0;
+
+        foreach (var member in type.GetDataMembers())
+        {
+            // Declared / Inherited filter
+            if (member.DeclaringType == type)
+            {
+                if ((flags & DataMemberFlags.Declared) == 0)
+                    continue;
+            }
+            else
+            {
+                if ((flags & DataMemberFlags.Inherited) == 0)
+                    continue;
+            }
+
+            // Instance / Static filter
+            if (member.IsStatic)
+            {
+                if ((flags & DataMemberFlags.Static) == 0)
+                    continue;
+            }
+            else
+            {
+                if ((flags & DataMemberFlags.Instance) == 0)
+                    continue;
+            }
+
+            // Public / NonPublic filter
+            if (member.HasPublicGetter || member.HasPublicSetter)
+            {
+                if ((flags & DataMemberFlags.Public) == 0)
+                    continue;
+            }
+            else
+            {
+                if ((flags & DataMemberFlags.NonPublic) == 0)
+                    continue;
+            }
+
+            // Field / Property filter
+            if (member.IsField)
+            {
+                if ((flags & DataMemberFlags.Field) == 0)
+                    continue;
+
+                if (member.IsAutoPropertyBackingField &&
+                    (flags & DataMemberFlags.AutoPropertyBackingField) == 0)
+                {
+                    continue;
+                }
+            }
+            else
+            {
+                if ((flags & DataMemberFlags.Property) == 0)
+                    continue;
+            }
+
+            // Read filter
+            if ((flags & DataMemberFlags.CanRead) != 0
+                && !member.CanRead)
+            {
+                continue;
+            }
+
+            // Write filter
+            if ((flags & DataMemberFlags.CanWrite) != 0)
+            {
+                if (member.CanWrite)
+                {
+                    // OK
+                }
+                else if (allowUnsafeWrite && member.IsInitOnly)
+                {
+                    // readonly field / init property
+                }
+                else
+                {
+                    continue;
+                }
+            }
+
+            yield return member;
+        }
+    }
+
     public static DataMemberInfo? GetDataMember(this Type type, string name) => ReflectionHelper.GetDataMembers(type).FirstOrDefault(m => m.Name == name);
 
     public static DataMemberInfo GetRequiredDataMember(this Type type, string name)

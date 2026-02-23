@@ -228,6 +228,7 @@ public static partial class DbContextExtensions
                     changes.Updated.Add(new(updatedEntity, entity));
                 }
 
+                // // Remove matched entity from deletion candidates since it is present in the incoming DTOs.
                 existingDic.Remove(key);
             }
             else

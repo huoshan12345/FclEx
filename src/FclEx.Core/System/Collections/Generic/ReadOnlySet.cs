@@ -1,5 +1,7 @@
 ﻿namespace System.Collections.Generic;
 
+// NOTE: The ReadOnlySet from .Net 9.0 does not support collection initializer,
+// so we implement our own version here and do not put it in the same namespace.
 [CollectionBuilder(typeof(ReadOnlySetBuilder), nameof(ReadOnlySetBuilder.Create))]
 public class ReadOnlySet<T>(ISet<T>? set = null) : IReadOnlyContainer<T>
 {

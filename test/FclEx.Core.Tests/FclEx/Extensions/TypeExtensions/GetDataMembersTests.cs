@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Extensions.TypeExtensions;
 
-public class GetDataMembersTests
+public partial class GetDataMembersTests
 {
     public interface I0
     {
