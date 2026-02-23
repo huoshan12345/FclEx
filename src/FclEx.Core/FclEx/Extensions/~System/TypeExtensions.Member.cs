@@ -213,9 +213,9 @@ partial class TypeExtensions
             // Write filter
             if ((flags & DataMemberFlags.CanWrite) != 0)
             {
-                if (member.CanWrite)
+                if (member is { CanWrite: true, IsInitOnly: false })
                 {
-                    // OK
+                    // writable safely OK
                 }
                 else if (allowUnsafeWrite && member.IsInitOnly)
                 {

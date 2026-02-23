@@ -22,7 +22,7 @@ public static class MemberEqualityComparerBuilderExtensions
         return builder;
     }
 
-    private static MemberEqualityComparerBuilder<T> Add<T>(this MemberEqualityComparerBuilder<T> builder, IEnumerable<DataMemberInfo> members)
+    public static MemberEqualityComparerBuilder<T> Add<T>(this MemberEqualityComparerBuilder<T> builder, params IEnumerable<DataMemberInfo> members)
     {
         var addMethod = typeof(MemberEqualityComparerBuilder<T>)
             .GetMethods()
@@ -45,12 +45,22 @@ public static class MemberEqualityComparerBuilderExtensions
         return builder;
     }
 
+    public static MemberEqualityComparerBuilder<T> Add<T>(this MemberEqualityComparerBuilder<T> builder, params IEnumerable<FieldInfo> members)
+    {
+        return builder.Add(members.Select(m => m.ToDataMemberInfo()));
+    }
+
+    public static MemberEqualityComparerBuilder<T> Add<T>(this MemberEqualityComparerBuilder<T> builder, params IEnumerable<PropertyInfo> members)
+    {
+        return builder.Add(members.Select(m => m.ToDataMemberInfo()));
+    }
+
     public static MemberEqualityComparerBuilder<T> Add<T>(this MemberEqualityComparerBuilder<T> builder, params IEnumerable<string> names)
     {
         var type = typeof(T);
         return builder.Add(names.Select(type.GetRequiredDataMember));
     }
-
+    
     public static MemberEqualityComparerBuilder<T> AddAllPublicDataMembers<T>(this MemberEqualityComparerBuilder<T> builder, params IEnumerable<string> excludeMemberNames)
     {
         return builder.AddAllDataMembers(false, excludeMemberNames);

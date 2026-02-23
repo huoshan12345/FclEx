@@ -124,8 +124,8 @@ public static class ReflectionHelper
         if (il == null)
             return null;
 
-        var typeArgs = method.DeclaringType?.IsGenericType == true
-            ? method.DeclaringType.GetGenericArguments()
+        var typeArgs = method.DeclaringType is {IsGenericType: true} type
+            ? type.GenericTypeArguments
             : null;
 
         var methodArgs = method.IsGenericMethod

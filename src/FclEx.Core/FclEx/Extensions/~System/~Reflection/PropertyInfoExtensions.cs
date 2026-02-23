@@ -77,12 +77,16 @@ public static class PropertyInfoExtensions
         return Expression.Property(parameter, property);
     }
 
-    public static bool IsInitOnly(this PropertyInfo propertyInfo)
+    private static readonly Type _isExternalInit = typeof(IsExternalInit);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsInitOnly(this PropertyInfo property)
     {
-        if (propertyInfo.SetMethod is not { } setter)
+        var setter = property.SetMethod;
+        if (setter is null)
             return false;
 
-        var isExternalInitType = typeof(IsExternalInit);
-        return setter.ReturnParameter.GetRequiredCustomModifiers().Contains(isExternalInitType);
+        var mods = setter.ReturnParameter.GetRequiredCustomModifiers();
+        return mods.Any(t => ReferenceEquals(t, _isExternalInit));
     }
 }

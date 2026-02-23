@@ -38,6 +38,19 @@ public partial class GetDataMembersTests
         private int _manual;
     }
 
+    public class InitOnlyTestClass
+    {
+        public int NormalProp { get; set; }
+
+        public int InitProp { get; init; }
+
+        public int ReadOnlyProp => 42;
+
+        public readonly int ReadonlyField = 10;
+
+        public int NormalField;
+    }
+
     [Fact]
     public void DeclaredOnly_Should_Exclude_BaseMembers()
     {
@@ -184,5 +197,99 @@ public partial class GetDataMembersTests
             );
 
         Assert.DoesNotContain(members, m => m.Name.Contains("k__BackingField"));
+    }
+
+    [Fact]
+    public void Property_CanWrite_Should_Exclude_Init_Without_UnsafeWrite()
+    {
+        var members = typeof(InitOnlyTestClass)
+            .GetDataMembers(
+                DataMemberFlags.Property |
+                DataMemberFlags.Public |
+                DataMemberFlags.Instance |
+                DataMemberFlags.CanWrite |
+                DataMemberFlags.Declared)
+            .ToList();
+
+        Assert.Contains(members, m => m.Name == nameof(InitOnlyTestClass.NormalProp));
+        Assert.DoesNotContain(members, m => m.Name == nameof(InitOnlyTestClass.InitProp));
+    }
+
+    [Fact]
+    public void Property_CanWrite_Should_Include_Init_With_UnsafeWrite()
+    {
+        var members = typeof(InitOnlyTestClass)
+            .GetDataMembers(
+                DataMemberFlags.Property |
+                DataMemberFlags.Public |
+                DataMemberFlags.Instance |
+                DataMemberFlags.CanWrite |
+                DataMemberFlags.Declared |
+                DataMemberFlags.UnsafeWrite)
+            .ToList();
+
+        Assert.Contains(members, m => m.Name == nameof(InitOnlyTestClass.NormalProp));
+        Assert.Contains(members, m => m.Name == nameof(InitOnlyTestClass.InitProp));
+    }
+
+    [Fact]
+    public void Field_Should_Exclude_Readonly_Without_UnsafeWrite()
+    {
+        var members = typeof(InitOnlyTestClass)
+            .GetDataMembers(
+                DataMemberFlags.Field |
+                DataMemberFlags.Public |
+                DataMemberFlags.Instance |
+                DataMemberFlags.CanWrite |
+                DataMemberFlags.Declared)
+            .ToList();
+
+        Assert.Contains(members, m => m.Name == nameof(InitOnlyTestClass.NormalField));
+        Assert.DoesNotContain(members, m => m.Name == nameof(InitOnlyTestClass.ReadonlyField));
+    }
+
+    [Fact]
+    public void Field_Should_Include_Readonly_With_UnsafeWrite()
+    {
+        var members = typeof(InitOnlyTestClass)
+            .GetDataMembers(
+                DataMemberFlags.Field |
+                DataMemberFlags.Public |
+                DataMemberFlags.Instance |
+                DataMemberFlags.CanWrite |
+                DataMemberFlags.Declared |
+                DataMemberFlags.UnsafeWrite)
+            .ToList();
+
+        Assert.Contains(members, m => m.Name == nameof(InitOnlyTestClass.NormalField));
+        Assert.Contains(members, m => m.Name == nameof(InitOnlyTestClass.ReadonlyField));
+    }
+
+    [Fact]
+    public void Property_CanRead_Should_Always_Include_Init()
+    {
+        var members = typeof(InitOnlyTestClass)
+            .GetDataMembers(
+                DataMemberFlags.Property |
+                DataMemberFlags.Public |
+                DataMemberFlags.Instance |
+                DataMemberFlags.CanRead |
+                DataMemberFlags.Declared)
+            .ToList();
+
+        Assert.Contains(members, m => m.Name == nameof(InitOnlyTestClass.InitProp));
+    }
+
+    [Fact]
+    public void IsInitOnly_Should_Work()
+    {
+        var normal = typeof(InitOnlyTestClass)
+            .GetProperty(nameof(InitOnlyTestClass.NormalProp))!;
+
+        var init = typeof(InitOnlyTestClass)
+            .GetProperty(nameof(InitOnlyTestClass.InitProp))!;
+
+        Assert.False(normal.IsInitOnly());
+        Assert.True(init.IsInitOnly());
     }
 }
