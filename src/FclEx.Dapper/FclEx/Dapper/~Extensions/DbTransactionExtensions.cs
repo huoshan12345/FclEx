@@ -28,7 +28,7 @@ public static class DbTransactionExtensions
     {
         // Ensure that every transaction will be roll-backed.
         var results = await trans.Select(m => Operation.ExecuteAsync(m.TryRollbackAsync)).WhenAll();
-        var errors = results.Where(m => m.Error).ToArray();
+        var errors = results.Where(m => m.IsError).ToArray();
         if (errors.Any())
         {
             throw new AggregateException(errors.Select(m => m.Exception!).Append(commitException));

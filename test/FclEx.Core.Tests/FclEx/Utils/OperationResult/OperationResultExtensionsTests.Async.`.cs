@@ -6,9 +6,9 @@ partial class OperationResultExtensionsTests
     public async Task Task_OperationResult_T_Next_Func_T_Task_OperationResult_TNext()
     {
         var result = await Operation.ExecuteAsync(() => "x")
-            .Next(m => Operation.Success(m + "y").ToTask());
+            .Then(m => Operation.Success(m + "y").ToTask());
 
-        Assert.True(result.Success);
+        Assert.True(result.IsSuccess);
         Assert.Equal("xy", result.Value);
     }
 
@@ -17,17 +17,17 @@ partial class OperationResultExtensionsTests
     {
         {
             var result = await Operation.Cancel().ToTask()
-                .Next(m => Operation.Success(m + "y").ToTask());
+                .Then(m => Operation.Success(m + "y").ToTask());
 
-            Assert.False(result.Success);
+            Assert.False(result.IsSuccess);
             Assert.True(result.IsCanceled());
         }
         {
             var token = new CancellationToken(true);
             var result = await Task.FromCanceled<OperationResult<string>>(token)
-                .Next(m => Operation.Success(m + "y").ToTask());
+                .Then(m => Operation.Success(m + "y").ToTask());
 
-            Assert.False(result.Success);
+            Assert.False(result.IsSuccess);
             Assert.True(result.IsCanceled());
         }
     }
@@ -36,9 +36,9 @@ partial class OperationResultExtensionsTests
     public async Task Task_OperationResult_T_Next_Func_T_OperationResult_TNext()
     {
         var result = await Operation.ExecuteAsync(() => "x")
-            .Next(m => Operation.Success(m + "y"));
+            .Then(m => Operation.Success(m + "y"));
 
-        Assert.True(result.Success);
+        Assert.True(result.IsSuccess);
         Assert.Equal("xy", result.Value);
     }
 
@@ -46,9 +46,9 @@ partial class OperationResultExtensionsTests
     public async Task Task_OperationResult_T_Task_T_Next_Func_T_TNext()
     {
         var result = await Operation.ExecuteAsync(() => "x")
-            .Next(m => m + "y");
+            .ThenResult(m => m + "y");
 
-        Assert.True(result.Success);
+        Assert.True(result.IsSuccess);
         Assert.Equal("xy", result.Value);
     }
 

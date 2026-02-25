@@ -39,12 +39,12 @@ public class HttpRequestTests
     {
         var flag = false;
         var r = await Operation.ExecuteAsync(TimeoutRequestWrap)
-            .Error(e =>
+            .OnException(e =>
             {
                 flag = true;
                 Assert.IsType<TaskCanceledException>(e);
             });
-        Assert.False(!flag ^ r.Success);
+        Assert.False(!flag ^ r.IsSuccess);
     }
 
     [Fact]
@@ -52,11 +52,11 @@ public class HttpRequestTests
     {
         var flag = false;
         var r = await Operation.ExecuteAsync(SuccessRequestWrap)
-            .Error(e =>
+            .OnException(e =>
             {
                 flag = true;
                 Assert.IsType<OperationCanceledException>(e);
             });
-        Assert.False(!flag ^ r.Success);
+        Assert.False(!flag ^ r.IsSuccess);
     }
 }

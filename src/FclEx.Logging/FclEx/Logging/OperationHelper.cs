@@ -1,6 +1,4 @@
-﻿using FclEx.Logging;
-
-namespace FclEx.Helpers;
+﻿namespace FclEx.Logging;
 
 public static class OperationHelper
 {
@@ -28,12 +26,12 @@ public static class OperationHelper
 
     public static Task RunAsyncSafely(string title, Func<Task> task, ILogger logger)
     {
-        return RunAsync(title, () => task().Then(Unit.Default), logger, false);
+        return RunAsync(title, () => task().Then(() => Unit.Default), logger, false);
     }
 
     public static Task RunAsync(string title, Func<Task> task, ILogger logger)
     {
-        return RunAsync(title, () => task().Then(Unit.Default), logger, true);
+        return RunAsync(title, () => task().Then(() => Unit.Default), logger, true);
     }
 
     public static Task<T?> RunAsyncSafely<T>(string title, Func<Task<T>> task, ILogger logger)

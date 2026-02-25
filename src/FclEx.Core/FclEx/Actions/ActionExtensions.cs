@@ -65,7 +65,7 @@ public static partial class ActionExtensions
             while (!cts.IsCancellationRequested)
             {
                 var r = await actor.ExecuteAsync(t);
-                if (!r.Success)
+                if (!r.IsSuccess)
                     return r;
 
                 if (until != null && until(r.Value!))
@@ -107,7 +107,7 @@ public static partial class ActionExtensions
     public static IAction<T> Error<T>(this IAction<T> action, Action<Exception> onError)
     {
         Check.NotNull(onError);
-        return action.NextResultIf(r => r.Error, r => Operation.Action(t => onError(r.Exception!)).Next(r));
+        return action.NextResultIf(r => r.IsError, r => Operation.Action(t => onError(r.Exception!)).Next(r));
     }
 
     public static Task<OperationResult<T>> ExecuteAsync<T>(this IAction<T> action, int retryCount, CancellationToken token)
@@ -133,9 +133,9 @@ public static partial class ActionExtensions
         for (var i = 1; i <= executeCount; i++)
         {
             result = await action.ExecuteAsync(token)
-                .NextResult(m => m.Elapsed(watch.GetElapsedTime()));
+                .ThenResult(m => m.Elapsed(watch.GetElapsedTime()));
 
-            if (result.Success)
+            if (result.IsSuccess)
                 return result;
 
             if (retryCondition is not null)
@@ -158,7 +158,7 @@ public static partial class ActionExtensions
 
     public static IAction<T> SetError<T>(this IAction<T> action, Func<Exception, Exception> func)
     {
-        return action.NextResultIf(m => m.Error, m => Operation.ErrorAction<T>(func(m.Exception!), m.Elapsed));
+        return action.NextResultIf(m => m.IsError, m => Operation.ErrorAction<T>(func(m.Exception!), m.Elapsed));
     }
 
     public static IAction<T> SetError<T>(this IAction<T> action, Func<string, string> func)

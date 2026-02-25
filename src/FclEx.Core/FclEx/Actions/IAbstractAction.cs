@@ -15,7 +15,7 @@ public interface IAbstractAction<T> : IAction<T>
         Debug.WriteLine($"[{GetName()}]Begin");
 
         var future = Operation.Action(ExecuteActionAsync)
-            .NextResult<T, T>(r => r.Success
+            .NextResult<T, T>(r => r.IsSuccess
                 ? new SuccessAction<T>(r.Value, r.Elapsed)
                 : r.IsCanceled()
                     ? Operation.Action(t => HandleCancellationAsync(r.Exception))

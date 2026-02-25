@@ -19,12 +19,12 @@ public readonly struct OperationResult<T> : IOperationResult<T>
     /// <inheritdoc />
     [MemberNotNullWhen(true, nameof(Value))]
     [MemberNotNullWhen(false, nameof(Exception))]
-    public bool Success => Exception is null;
+    public bool IsSuccess => Exception is null;
 
     /// <inheritdoc />
     [MemberNotNullWhen(false, nameof(Value))]
     [MemberNotNullWhen(true, nameof(Exception))]
-    public bool Error => Exception is not null;
+    public bool IsError => Exception is not null;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="OperationResult{T}"/> struct for a failed operation.
@@ -101,7 +101,7 @@ public readonly struct OperationResult<T> : IOperationResult<T>
 
     public static implicit operator OperationResult(OperationResult<T> result)
     {
-        return result.Success
+        return result.IsSuccess
             ? OperationResult.FromSuccess(Unit.Default, result.Elapsed)
             : OperationResult.FromError(result.Exception, result.Elapsed);
     }
@@ -117,13 +117,15 @@ public readonly struct OperationResult<T> : IOperationResult<T>
     /// <typeparam name="TTarget">The target type to cast the value to.</typeparam>
     /// <returns>
     /// A new <see cref="OperationResult{TTarget}"/>:
-    /// - If the current operation was successful, the value is cast to <typeparamref name="TTarget"/> and retained.
-    /// - If the current operation was an error, the exception is propagated.
+    /// <list type="bullet">
+    /// <item>If the current operation was successful, the value is cast to <typeparamref name="TTarget"/> and retained.</item>
+    /// <item>If the current operation was an error, the exception is propagated.</item>
+    /// </list>
     /// The elapsed time is always preserved.
     /// </returns>
-    public OperationResult<TTarget> CastTo<TTarget>()
+    public OperationResult<TTarget> Cast<TTarget>()
     {
-        return Success
+        return IsSuccess
             ? (Value.CastTo<TTarget>(), Elapsed)
             : (Exception, Elapsed);
     }
@@ -137,7 +139,7 @@ public readonly struct OperationResult<T> : IOperationResult<T>
     /// <param name="elapsed">The elapsed time.</param>
     public void Deconstruct(out bool success, out T? value, out Exception? ex, out TimeSpan elapsed)
     {
-        success = Success;
+        success = IsSuccess;
         ex = Exception;
         elapsed = Elapsed;
         value = Value;

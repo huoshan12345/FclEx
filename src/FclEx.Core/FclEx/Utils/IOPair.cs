@@ -1,8 +1,8 @@
 ﻿namespace FclEx.Utils;
 
-public static class Transput
+public static class IOPair
 {
-    public static Transput<TInput, TOutput> Create<TInput, TOutput>(TInput input, TOutput output)
+    public static IOPair<TInput, TOutput> Create<TInput, TOutput>(TInput input, TOutput output)
         => new(input, output);
 }
 
@@ -13,9 +13,9 @@ public static class Transput
 /// <typeparam name="TOutput"></typeparam>
 /// <param name="Input"></param>
 /// <param name="Output"></param>
-public readonly record struct Transput<TInput, TOutput>(TInput Input, TOutput Output)
+public readonly record struct IOPair<TInput, TOutput>(TInput Input, TOutput Output)
 {
-    public static implicit operator Transput<TInput, TOutput>((TInput Input, TOutput Output) tuple)
+    public static implicit operator IOPair<TInput, TOutput>((TInput Input, TOutput Output) tuple)
     {
         return new(tuple.Input, tuple.Output);
     }
