@@ -84,7 +84,7 @@ partial class TaskExtensions
         return task.ContinueWith(t => t switch
         {
             { IsFaulted: true, Exception: { } ex } => action(ex.GetBaseException()),
-            { IsCanceled: true } => Task.FromCanceled(new CancellationToken(true)),
+            { IsCanceled: true } => action(new TaskCanceledException(t).SetStackTrace()),
             _ => Task.CompletedTask,
         }, ExecuteSynchronously).Unwrap();
     }
@@ -106,7 +106,7 @@ partial class TaskExtensions
         return task.ContinueWith(t => t switch
         {
             { IsFaulted: true, Exception: { } ex } => action(ex.GetBaseException()),
-            { IsCanceled: true } => Task.FromCanceled<T>(new CancellationToken(true)),
+            { IsCanceled: true } => action(new TaskCanceledException(t).SetStackTrace()),
             _ => Task.FromResult(t.Result),
         }, ExecuteSynchronously).Unwrap();
     }
