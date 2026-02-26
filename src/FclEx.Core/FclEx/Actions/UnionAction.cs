@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Actions;
 
-public readonly struct UnionAction<T, TNext> : IAction<(T, TNext)>
+public class UnionAction<T, TNext> : IAction<(T, TNext)>
 {
     private readonly IAction<T> _action;
     private readonly Func<T, IAction<TNext>?> _next;

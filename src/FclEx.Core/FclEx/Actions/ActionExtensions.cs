@@ -59,22 +59,93 @@ public static partial class ActionExtensions
             : SuccessAction.Create(t));
     }
 
+    public static IAction<T> OnResult<T>(this IAction<T> action, Func<OperationResult<T>, Task> resultAction)
+    {
+        Check.NotNull(resultAction);
+        return action.ThenResult(r => resultAction(r).Then(() => r));
+    }
+
+    public static IAction<T> OnResult<T>(this IAction<T> action, Action<OperationResult<T>> resultAction)
+    {
+        Check.NotNull(resultAction);
+        return action.OnResult(r =>
+        {
+            resultAction(r);
+            return Task.CompletedTask;
+        });
+    }
+
+    public static IAction<T> WhenResult<T>(this IAction<T> action, Func<OperationResult<T>, bool> condition, Func<OperationResult<T>, Task> resultAction)
+    {
+        Check.NotNull(condition);
+        Check.NotNull(resultAction);
+
+        return action.OnResult(r => condition(r) ? resultAction(r) : r);
+    }
+
+    public static IAction<T> WhenResult<T>(this IAction<T> action, Func<OperationResult<T>, bool> condition, Action<OperationResult<T>> resultAction)
+    {
+        Check.NotNull(resultAction);
+
+        return action.WhenResult(condition, r =>
+        {
+            resultAction(r);
+            return Task.CompletedTask;
+        });
+    }
+
+    public static IAction<T> When<T>(this IAction<T> action, Func<T, bool> condition, Func<T, Task> resultAction)
+    {
+        Check.NotNull(condition);
+        Check.NotNull(resultAction);
+
+        return action.WhenResult(r => r.IsSuccess && condition(r.Value), r => resultAction(r.Value!));
+    }
+
+    public static IAction<T> When<T>(this IAction<T> action, Func<T, bool> condition, Action<T> resultAction)
+    {
+        Check.NotNull(resultAction);
+        return action.When(condition, t =>
+        {
+            resultAction(t);
+            return Task.CompletedTask;
+        });
+    }
+
+    public static IAction<T> OnFailed<T>(this IAction<T> action, Func<OperationResult<T>, Task> errorAction)
+    {
+        Check.NotNull(errorAction);
+        return action.WhenResult(r => r.IsError, r => errorAction(r));
+    }
+
     public static IAction<T> OnFailed<T>(this IAction<T> action, Action<OperationResult<T>> errorAction)
     {
         Check.NotNull(errorAction);
-        return action.ThenResult(r => r.OnFailed(e => errorAction(e)));
+        return action.WhenResult(r => r.IsError, r => errorAction(r));
+    }
+
+    public static IAction<T> OnValue<T>(this IAction<T> action, Action<T> valueAction)
+    {
+        Check.NotNull(valueAction);
+        return action.WhenResult(r => r.IsSuccess, r => valueAction(r.Value!));
+    }
+
+    public static IAction<T> OnValue<T>(this IAction<T> action, Func<T, Task> valueAction)
+    {
+        Check.NotNull(valueAction);
+        return action.WhenResult(r => r.IsSuccess, r => valueAction(r.Value!));
     }
 
     public static IAction<T> OnException<T>(this IAction<T> action, Func<Exception, Task> errorAction)
     {
         Check.NotNull(errorAction);
-        return action.ThenResult(r => r.OnException(e => errorAction(e)));
+        return action.WhenResult(r => r.IsError, r => errorAction(r.Exception!));
     }
 
     public static IAction<T> OnException<T>(this IAction<T> action, Action<Exception> errorAction)
     {
         Check.NotNull(errorAction);
-        return action.ThenResult(r => r.OnException(e => errorAction(e)));
+        return action.WhenResult(r => r.IsError, r => errorAction(r.Exception!));
     }
 
     public static IAction<T> RepeatOnce<T>(this IAction<T> action, Func<T, bool> condition)

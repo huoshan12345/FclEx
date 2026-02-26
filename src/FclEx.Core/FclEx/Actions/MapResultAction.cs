@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Actions;
 
-public readonly struct MapToResultAction<T, TDest> : IAction<TDest>
+public class MapToResultAction<T, TDest> : IAction<TDest>
 {
     private readonly IAction<T> _action;
     private readonly Func<T, OperationResult<TDest>> _map;

@@ -2,6 +2,56 @@
 
 partial class OperationResultExtensions
 {
+    public static Task<OperationResult<T>> When<T>(this Task<OperationResult<T>> result, Func<T, bool> condition, Func<T, Task> action)
+    {
+        Check.NotNull(condition);
+        Check.NotNull(action);
+
+        return result.WhenResult(r => r.IsSuccess && condition(r.Value), r => action(r.Value!));
+    }
+
+    public static Task<OperationResult<T>> When<T>(this Task<OperationResult<T>> result, Func<T, bool> condition, Action<T> action)
+    {
+        Check.NotNull(action);
+
+        return result.When(condition, v =>
+        {
+            action(v);
+            return Task.CompletedTask;
+        });
+    }
+
+    public static Task<OperationResult<T>> WhenResult<T>(this Task<OperationResult<T>> result, Func<OperationResult<T>, bool> condition, Func<OperationResult<T>, Task> action)
+    {
+        Check.NotNull(condition);
+        Check.NotNull(action);
+
+        return result.Then(r => condition(r)
+            ? r
+            : action(r).Then(() => r));
+    }
+
+    public static Task<OperationResult<T>> WhenResult<T>(this Task<OperationResult<T>> result, Func<OperationResult<T>, bool> condition, Action<OperationResult<T>> action)
+    {
+        Check.NotNull(action);
+
+        return result.WhenResult(condition, r =>
+        {
+            action(r);
+            return Task.CompletedTask;
+        });
+    }
+
+    public static Task<OperationResult<T>> OnResult<T>(this Task<OperationResult<T>> task, Action<OperationResult<T>> action)
+    {
+        return task.Then(action);
+    }
+
+    public static Task<OperationResult<T>> OnResult<T>(this Task<OperationResult<T>> task, Func<OperationResult<T>, Task> action)
+    {
+        return task.Then(action);
+    }
+
     public static Task<OperationResult<T>> OnSucceeded<T>(this Task<OperationResult<T>> task, Action<OperationResult<T>> action)
     {
         return task.ThenIf(action, m => m.IsSuccess);

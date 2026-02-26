@@ -2,13 +2,13 @@
 
 public static class SuccessAction
 {
-    public static SuccessAction<T> Create<T>(T obj, TimeSpan timeSpan = default)
+    public static IAction<T> Create<T>(T obj, TimeSpan timeSpan = default)
     {
-        return new(obj, timeSpan);
+        return new SuccessAction<T>(obj, timeSpan);
     }
 }
 
-public readonly struct SuccessAction<T>(T obj, TimeSpan timeSpan = default) : IAction<T>
+public class SuccessAction<T>(T obj, TimeSpan timeSpan = default) : IAction<T>
 {
     public Task<OperationResult<T>> ExecuteAsync(CancellationToken token = default)
     {

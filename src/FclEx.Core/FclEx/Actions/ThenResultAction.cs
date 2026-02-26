@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Actions;
 
-public readonly struct ThenResultAction<T, TNext> : IAction<TNext>
+public class ThenResultAction<T, TNext> : IAction<TNext>
 {
     private readonly IAction<T> _action;
     private readonly Func<OperationResult<T>, IAction<TNext>?> _next;

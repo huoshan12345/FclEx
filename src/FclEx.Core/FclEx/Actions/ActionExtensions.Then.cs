@@ -33,16 +33,6 @@ partial class ActionExtensions
         return action.Then(r => Operation.Action(t => next(r)));
     }
 
-    public static IAction<Unit> Then<T>(this IAction<T> action, Action<T> next)
-    {
-        return action.Then(r => Operation.Action(t => next(r)));
-    }
-
-    public static IAction<Unit> Then<T>(this IAction<T> action, Func<T, Task> next)
-    {
-        return action.Then(r => Operation.Action(t => next(r)));
-    }
-
     public static IAction<T> ThenIf<T>(this IAction<T> action, Func<T, bool> condition, Func<T, IAction<T>> next)
     {
         return action.ThenIf(condition, next, m => SuccessAction.Create(m));

@@ -201,7 +201,7 @@ partial class TaskExtensions
     {
         return task.Then(t => condition ? action(t) : Task.CompletedTask);
     }
-
+    
 
     public static Task When(this Task task, bool condition, Func<Task> action)
     {

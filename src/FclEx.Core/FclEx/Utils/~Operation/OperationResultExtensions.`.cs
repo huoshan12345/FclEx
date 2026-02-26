@@ -2,7 +2,14 @@
 
 partial class OperationResultExtensions
 {
-    public static OperationResult<T> When<T>(this OperationResult<T> result, Func<OperationResult<T>, bool> condition, Action<OperationResult<T>> action)
+    public static OperationResult<T> When<T>(this OperationResult<T> result, Func<T, bool> condition, Action<OperationResult<T>> action)
+    {
+        if (result.IsSuccess && condition(result.Value))
+            action(result);
+        return result;
+    }
+
+    public static OperationResult<T> WhenResult<T>(this OperationResult<T> result, Func<OperationResult<T>, bool> condition, Action<OperationResult<T>> action)
     {
         if (condition(result))
             action(result);
@@ -11,22 +18,22 @@ partial class OperationResultExtensions
 
     public static OperationResult<T> OnSucceeded<T>(this OperationResult<T> result, Action<OperationResult<T>> action)
     {
-        return result.When(m => m.IsSuccess, action);
+        return result.WhenResult(m => m.IsSuccess, action);
     }
 
     public static OperationResult<T> OnFailed<T>(this OperationResult<T> result, Action<OperationResult<T>> action)
     {
-        return result.When(m => m.IsError, action);
+        return result.WhenResult(m => m.IsError, action);
     }
 
     public static OperationResult<T> OnFaulted<T>(this OperationResult<T> result, Action<OperationResult<T>> action)
     {
-        return result.When(m => m.IsFaulted(), action);
+        return result.WhenResult(m => m.IsFaulted(), action);
     }
 
     public static OperationResult<T> OnCanceled<T>(this OperationResult<T> result, Action<OperationResult<T>> action)
     {
-        return result.When(m => m.IsCanceled(), action);
+        return result.WhenResult(m => m.IsCanceled(), action);
     }
 
     public static OperationResult<T> OnValue<T>(this OperationResult<T> result, Action<T> action)

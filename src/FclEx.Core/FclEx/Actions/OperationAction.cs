@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Actions;
 
-public readonly struct OperationAction<T> : IAction<T>
+public class OperationAction<T> : IAction<T>
 {
     private readonly Func<CancellationToken, Task<OperationResult<T>>> _func;
 
