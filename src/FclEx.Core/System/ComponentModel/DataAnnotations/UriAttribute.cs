@@ -14,6 +14,10 @@ public class UriAttribute : ValidationAttribute
         if (stringValue.IsNullOrWhiteSpace())
             return AllowEmptyStrings;
 
+        // Require an explicit scheme (e.g. "http://") to avoid platform-specific parsing
+        // where Unix may treat "/path" as an absolute file:// URI.
+        if (stringValue.Contains(Uri.SchemeDelimiter) == false)
+            return false;
 
         if (Uri.TryCreate(stringValue, UriKind.Absolute, out var uri) == false)
             return false;
