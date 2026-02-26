@@ -60,14 +60,27 @@ public static class MemberEqualityComparerBuilderExtensions
         var type = typeof(T);
         return builder.Add(names.Select(type.GetRequiredDataMember));
     }
-    
-    public static MemberEqualityComparerBuilder<T> AddAllPublicDataMembers<T>(this MemberEqualityComparerBuilder<T> builder, params IEnumerable<string> excludeMemberNames)
+
+    public static MemberEqualityComparerBuilder<T> AddAllPublicDataMembers<T>(this MemberEqualityComparerBuilder<T> builder,
+        params IEnumerable<MemberInfo> excludeMembers)
+    {
+        return builder.AddAllDataMembers(false, excludeMembers);
+    }
+
+    public static MemberEqualityComparerBuilder<T> AddAllPublicDataMembers<T>(this MemberEqualityComparerBuilder<T> builder,
+        params IEnumerable<string> excludeMemberNames)
     {
         return builder.AddAllDataMembers(false, excludeMemberNames);
     }
 
+    public static MemberEqualityComparerBuilder<T> AddAllPublicDataMembers<T>(this MemberEqualityComparerBuilder<T> builder,
+        params Expression<Func<T, object?>>[] members)
+    {
+        return builder.AddAllDataMembers(false, members);
+    }
+
     public static MemberEqualityComparerBuilder<T> AddAllDataMembers<T>(this MemberEqualityComparerBuilder<T> builder,
-        bool includeNonPublic = false, params IEnumerable<string> excludeMemberNames)
+        bool includeNonPublic = false, params IEnumerable<MemberInfo> excludeMembers)
     {
         const DataMemberFlags publicFlags = Declared | Inherited | CanRead | Property | Field | Instance | Public;
         const DataMemberFlags allFlags = publicFlags | NonPublic;
@@ -76,10 +89,24 @@ public static class MemberEqualityComparerBuilderExtensions
             ? allFlags
             : publicFlags;
 
-        var set = excludeMemberNames.AsISet();
+        var set = excludeMembers.AsISet();
         var members = typeof(T).GetDataMembers(flags)
-            .Where(m => set.Contains(m.Name) == false);
+            .Where(m => set.Contains(m.MemberInfo) == false);
 
         return builder.Add(members);
+    }
+
+    public static MemberEqualityComparerBuilder<T> AddAllDataMembers<T>(this MemberEqualityComparerBuilder<T> builder,
+        bool includeNonPublic = false, params IEnumerable<string> excludeMemberNames)
+    {
+        var type = typeof(T);
+        return builder.AddAllDataMembers(includeNonPublic, excludeMemberNames.Select(type.GetRequiredDataMember));
+    }
+
+    public static MemberEqualityComparerBuilder<T> AddAllDataMembers<T>(this MemberEqualityComparerBuilder<T> builder,
+        bool includeNonPublic = false, params Expression<Func<T, object?>>[] members)
+    {
+        var memberInfos = members.SelectMany(ExpressionHelper.GetDataMembers);
+        return builder.AddAllDataMembers(includeNonPublic, memberInfos);
     }
 }
