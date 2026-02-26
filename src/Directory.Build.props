@@ -4,7 +4,7 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <NoWarn>$(NoWarn);CS1591;CS8500</NoWarn>
+    <NoWarn>$(NoWarn);CS1591;CS8500;NU1900</NoWarn>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Description>Some basic useful extensions and helpers for C# fundamental class libraries</Description>
     <PackageTags>extensions;helpers</PackageTags>

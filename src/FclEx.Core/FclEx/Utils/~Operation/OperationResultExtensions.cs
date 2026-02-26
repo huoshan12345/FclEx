@@ -4,14 +4,14 @@ public static partial class OperationResultExtensions
 {
     public static void Deconstruct(this OperationResult result, out bool success, out Exception? ex, out TimeSpan elapsed)
     {
-        success = result.Success;
+        success = result.IsSuccess;
         elapsed = result.Elapsed;
         ex = result.Exception;
     }
 
     public static void Deconstruct(this OperationResult result, out bool success, out Exception? ex)
     {
-        success = result.Success;
+        success = result.IsSuccess;
         ex = result.Exception;
     }
 
@@ -87,7 +87,18 @@ public static partial class OperationResultExtensions
     /// </returns>
     public static bool IsCanceled(this IOperationResult result)
     {
-        return result.Error && result.Exception.IsCanceled();
+        return result.IsError && result.Exception.IsCanceled();
+    }
+
+    /// <summary>
+    /// Determines whether the operation result represents a faulted state, which occurs when an error is present and
+    /// the operation has not been canceled.
+    /// </summary>
+    /// <param name="result">The operation result to check.</param>
+    /// <returns>true if the operation result is faulted; otherwise, false.</returns>
+    public static bool IsFaulted(this IOperationResult result)
+    {
+        return result.IsError && !result.IsCanceled();
     }
 
     /// <summary>
@@ -97,7 +108,7 @@ public static partial class OperationResultExtensions
     /// <returns>True if the result is an error and the error is a simple string message, false otherwise.</returns>
     public static bool IsStringError(this IOperationResult result)
     {
-        return result.Error && result.Exception.IsJustMessage();
+        return result.IsError && result.Exception.IsJustMessage();
     }
 
     /// <summary>
@@ -108,6 +119,6 @@ public static partial class OperationResultExtensions
     /// <returns>True if the result is an error and the error is *not* a simple string message, false otherwise.</returns>
     public static bool IsNonStringError(this IOperationResult result)
     {
-        return result.Error && result.Exception.IsJustMessage() == false;
+        return result.IsError && result.Exception.IsJustMessage() == false;
     }
 }

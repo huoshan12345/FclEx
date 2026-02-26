@@ -7,7 +7,7 @@ partial class OperationResultTests
     {
         var r = Operation.Execute(() => new object());
 
-        Assert.True(r.Success);
+        Assert.True(r.IsSuccess);
         Assert.NotNull(r.Value);
         Assert.NotEqual(default, r.Elapsed);
     }
@@ -16,7 +16,7 @@ partial class OperationResultTests
     public void TestExecuteError()
     {
         var r = Operation.Execute((Func<object>)(() => throw new SimpleException("")));
-        Assert.True(!r.Success);
+        Assert.True(!r.IsSuccess);
         Assert.Null(r.Value);
         Assert.NotEqual(default, r.Elapsed);
         Assert.NotNull(r.Exception);

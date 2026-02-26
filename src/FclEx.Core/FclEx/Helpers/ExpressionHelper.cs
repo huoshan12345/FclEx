@@ -32,8 +32,7 @@ public static class ExpressionHelper
 
     public static MemberInfo GetMember(Expression expression)
     {
-        if (expression == null)
-            throw new ArgumentNullException(nameof(expression));
+        Check.NotNull(expression);
 
         return expression switch
         {
@@ -142,7 +141,7 @@ public static class ExpressionHelper
         var member = GetDataMemberInfo(selector);
         return (member.Name, member.GetValue(obj).CastTo<TMember>())!;
     }
-    
+
     /// <summary>
     /// Creates a strongly-typed <see cref="Expression{TDelegate}"/> that selects
     /// a property or field of the specified type <typeparamref name="T"/>.
@@ -183,5 +182,34 @@ public static class ExpressionHelper
         var access = Expression.PropertyOrField(parameter, propertyOrFieldName);
         var convert = Expression.Convert(access, typeof(object));
         return Expression.Lambda<Func<T, object?>>(convert, parameter);
+    }
+
+    public static IEnumerable<MemberInfo> GetDataMembers<T>(Expression<Func<T, object?>> selector)
+    {
+        var body = selector.Body;
+
+        if (body is UnaryExpression { NodeType: ExpressionType.Convert } unary)
+        {
+            body = unary.Operand;
+        }
+
+        return body switch
+        {
+            MemberExpression member => [GetDataMember(member)],
+            NewExpression newExpr => newExpr.Arguments
+                .Select(arg => arg is not MemberExpression m
+                    ? throw new ArgumentException("Only simple member access is allowed: " + arg)
+                    : GetDataMember(m))
+                .ToArray(),
+            _ => throw new ArgumentException("Selector must be a member access or new expression.")
+        };
+    }
+
+    private static MemberInfo GetDataMember(MemberExpression member)
+    {
+        var m = member.Member;
+        return m is not PropertyInfo && m is not FieldInfo
+            ? throw new ArgumentException("Only property or field is allowed: " + m.MemberType)
+            : m;
     }
 }

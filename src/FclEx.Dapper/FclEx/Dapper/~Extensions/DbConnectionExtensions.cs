@@ -175,7 +175,7 @@ public static partial class DbConnectionExtensions
 
     internal static SqlInfo GetInsertSql<T>(ISqlAdapter sqlAdapter, string? schema, T entity, bool returnId, bool includeAutoKey)
     {
-        var (sql, paras) = GetBulkInsertSql(sqlAdapter, schema, new[] { entity }, includeAutoKey);
+        var (sql, paras) = GetBulkInsertSql(sqlAdapter, schema, [entity], includeAutoKey);
 
         // when auto key is inserted, id cannot be returned.
         // ReSharper disable once InvertIf

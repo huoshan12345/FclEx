@@ -19,7 +19,7 @@ public class SimpleExceptionTests
         }
         else
         {
-            AssertEx.NotEmpty(ex.StackTrace);
+            Assert.NotNullNorEmpty(ex.StackTrace);
         }
 
         _output.WriteLine(ex.ToString());

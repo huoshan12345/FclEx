@@ -88,7 +88,7 @@ public static class ElementExtensions
     public static OperationResult<(IElement Element, string Text)> QueryOwnText(this IElement? root, string?[] selectors, bool trim = true, bool ensureValueIsNotEmpty = true)
     {
         var result = root.QueryData(selectors, m => m.OwnText());
-        if (result.Error)
+        if (result.IsError)
             return result.Exception;
 
         var (element, value) = result.Value;
@@ -110,7 +110,7 @@ public static class ElementExtensions
     public static OperationResult<(IElement Element, string Attribute)> QueryAttribute(this IElement? root, string?[] selectors, string attribute, bool ensureValueIsNotEmpty = true)
     {
         var result = root.QueryData(selectors, m => m.GetAttribute(attribute));
-        if (result.Error)
+        if (result.IsError)
             return result.Exception;
 
         var (element, value) = result.Value;
@@ -131,7 +131,7 @@ public static class ElementExtensions
     public static OperationResult<(IElement Element, UriCreator Href)> QueryHref(this IElement? root, string?[] selectors, Uri? baseUri = null)
     {
         var element = root.QueryAttribute(selectors, "href");
-        if (element.Error)
+        if (element.IsError)
             return element.Exception;
 
         var (e, href) = element.Value;
@@ -149,7 +149,7 @@ public static class ElementExtensions
 
     public static OperationResult<string> QueryId(this IElement? root, string prefix)
     {
-        return root.QueryAttribute($"*[id^='{prefix}']", "id").Map(m => m.Attribute.SkipUntil(prefix));
+        return root.QueryAttribute($"*[id^='{prefix}']", "id").MapValue(m => m.Attribute.SkipUntil(prefix));
     }
 
     public static string OwnText(this IElement element)

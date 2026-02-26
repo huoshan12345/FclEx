@@ -12,7 +12,7 @@ public class HttpServiceExtensionsTests
 
         var (successful, file, exception, _) = await http.DownloadAsync(uri);
 
-        AssertEx.True(successful, () => exception!.ToString());
+        Assert.True(successful, () => exception!.ToString());
         Assert.NotNull(file);
         Assert.Equal(fileName, file.FileName);
         Assert.Equal(Path.GetExtension(fileName), file.FileExtension);
@@ -29,7 +29,7 @@ public class HttpServiceExtensionsTests
 
         var (successful, _, ex, _) = await http.DownloadAsync(url);
 
-        AssertEx.False(successful, () => ex!.ToString());
+        Assert.False(successful, () => ex!.ToString());
         Assert.True(ex.IsObjectException<HttpResponse>(m => m.StatusCode == HttpStatusCode.Forbidden));
     }
 }

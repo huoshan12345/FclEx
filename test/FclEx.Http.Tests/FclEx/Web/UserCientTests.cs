@@ -22,6 +22,6 @@ public class UserCientTests : WebTests
         var client = new TestUserClient(ServiceProvider.GetRequiredService<ILoggerFactory>());
         client.Account = new UserAccount("user", "password");
         var result = await client.LoginAsync();
-        Assert.True(result.Success);
+        Assert.True(result.IsSuccess);
     }
 }
