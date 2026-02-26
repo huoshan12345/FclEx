@@ -1,5 +1,17 @@
 ﻿namespace FclEx.Actions;
 
+public static class ErrorAction
+{
+    public static ErrorAction<T> Create<T>(string error, TimeSpan timeSpan = default)
+    {
+        return new(error, timeSpan);
+    }
+    public static ErrorAction<T> Create<T>(Exception ex, TimeSpan timeSpan = default)
+    {
+        return new ErrorAction<T>(ex, timeSpan);
+    }
+}
+
 public readonly struct ErrorAction<T> : IAction<T>
 {
     private readonly OperationResult<T> _result;

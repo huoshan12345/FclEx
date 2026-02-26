@@ -1,18 +1,17 @@
 ﻿namespace FclEx.Actions;
 
-public readonly struct SuccessAction<T> : IAction<T>
+public static class SuccessAction
 {
-    private readonly T _obj;
-    private readonly TimeSpan _timeSpan;
-
-    public SuccessAction(T obj, TimeSpan timeSpan = default)
+    public static SuccessAction<T> Create<T>(T obj, TimeSpan timeSpan = default)
     {
-        _obj = obj;
-        _timeSpan = timeSpan;
+        return new(obj, timeSpan);
     }
+}
 
+public readonly struct SuccessAction<T>(T obj, TimeSpan timeSpan = default) : IAction<T>
+{
     public Task<OperationResult<T>> ExecuteAsync(CancellationToken token = default)
     {
-        return Operation.Success(_obj, _timeSpan);
+        return Operation.Success(obj, timeSpan);
     }
 }
