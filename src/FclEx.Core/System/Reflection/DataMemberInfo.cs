@@ -50,7 +50,7 @@ public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>
         => MemberInfo.IsDefined(attributeType, inherit);
 
     public override Type? DeclaringType => MemberInfo.DeclaringType;
-    public override MemberTypes MemberType => MemberInfo.MemberType;
+    public override MemberTypes MemberType => MemberTypes.Custom;
     public override string Name => MemberInfo.Name;
     public override Type? ReflectedType => MemberInfo.ReflectedType;
     public override int MetadataToken => MemberInfo.MetadataToken;

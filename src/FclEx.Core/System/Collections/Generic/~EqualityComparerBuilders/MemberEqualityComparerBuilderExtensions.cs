@@ -31,7 +31,8 @@ public static class MemberEqualityComparerBuilderExtensions
             {
                 PropertyInfo property => (Expression.Property(param, property), property.PropertyType),
                 FieldInfo field => (Expression.Field(param, field), field.FieldType),
-                _ => throw new ArgumentException($"Member '{member.Name}' is not a field or property.", nameof(members))
+                DataMemberInfo dataMember => (dataMember.ToExpression(param), dataMember.DataMemberType),
+                _ => throw new ArgumentException($"{member.GetType().ShortName()} '{member.Name}' is not a field or property.", nameof(members))
             };
             var funcType = typeof(Func<,>).MakeGenericType(typeof(T), memberType);
             var lambda = Expression.Lambda(funcType, access, param).Compile();
