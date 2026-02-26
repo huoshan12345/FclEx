@@ -50,9 +50,11 @@ public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>
         => MemberInfo.IsDefined(attributeType, inherit);
 
     public override Type? DeclaringType => MemberInfo.DeclaringType;
-    public override MemberTypes MemberType => MemberTypes.Custom;
+    public override MemberTypes MemberType => MemberInfo.MemberType;
     public override string Name => MemberInfo.Name;
     public override Type? ReflectedType => MemberInfo.ReflectedType;
+    public override int MetadataToken => MemberInfo.MetadataToken;
+    public override Module Module => MemberInfo.Module;
 
     public MemberInfo MemberInfo { get; }
     public Type DataMemberType { get; }
@@ -104,7 +106,7 @@ public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>
         return MemberInfo.GetHashCode();
     }
 
-    public override  string ToString()
+    public override string ToString()
     {
         return $"{DataMemberType.Name} {Name}";
     }
