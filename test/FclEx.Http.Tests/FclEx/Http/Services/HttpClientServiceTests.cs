@@ -20,7 +20,7 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
         {
             var response = await HttpRequest.Get("https://www.baidu.com")
                 .SendAsync(service);
-            AssertEx.False(response.Error, () => response.Exception!.ToString());
+            Assert.False(response.Error, () => response.Exception!.ToString());
         }
     }
 
