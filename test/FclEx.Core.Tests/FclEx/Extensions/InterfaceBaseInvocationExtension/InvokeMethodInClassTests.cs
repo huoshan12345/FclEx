@@ -57,4 +57,20 @@ public class InvokeMethodInClassTests
         c.BaseByDynamicMethod<I1>(m => m.Call());
         c.BaseByDynamicMethod<I2>(m => m.Call());
     }
+
+    [Fact]
+    public void MethodInLambda_FunctionPointer_ShouldThrow()
+    {
+        var c = new InheritI2();
+        Assert.ThrowsAny<InvalidOperationException>(() =>
+            c.BaseByFunctionPointer<I1, int>(m => Operation.Execute(() => m.Compute(0)).Unwrap()));
+    }
+
+    [Fact]
+    public void MethodInLambda_DynamicMethod_ShouldThrow()
+    {
+        var c = new InheritI2();
+        Assert.ThrowsAny<InvalidOperationException>(() =>
+            c.BaseByDynamicMethod<I1, int>(m => Operation.Execute(() => m.Compute(0)).Unwrap()));
+    }
 }

@@ -8,10 +8,10 @@ public class HttpResponse
     }
 
     [MemberNotNullWhen(false, nameof(Exception))]
-    public bool Success => Exception is null;
+    public bool IsSuccess => Exception is null;
 
     [MemberNotNullWhen(true, nameof(Exception))]
-    public bool Error => Exception != null;
+    public bool IsError => Exception != null;
     public Exception? Exception { get; internal set; }
 
     public HttpRequest Request { get; }

@@ -14,7 +14,7 @@ public class TreeNode<T>
 
     [AllowNull]
     public T Value { get; }
-    public List<TreeNode<T>> Children { get; } = new();
+    public List<TreeNode<T>> Children { get; } = [];
     public TreeNode<T>? Parent { get; private set; }
 
     public TreeNode<T> AddChild(T value)

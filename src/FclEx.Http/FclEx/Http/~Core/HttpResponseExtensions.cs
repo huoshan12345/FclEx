@@ -13,7 +13,7 @@ public static class HttpResponseExtensions
 
     public static HttpResponse ThrowIfError(this HttpResponse response)
     {
-        if (response.Error)
+        if (response.IsError)
             response.Exception.ReThrow();
         return response;
     }
@@ -104,17 +104,17 @@ public static class HttpResponseExtensions
 
     public static Task<HttpResponse> Error(this Task<HttpResponse> task, Action<Exception> action)
     {
-        return task.When(m => m.Error, m => action(m.Exception!));
+        return task.When(m => m.IsError, m => action(m.Exception!));
     }
 
     public static Task<HttpResponse> Ok(this Task<HttpResponse> task, Action<HttpResponse> action)
     {
-        return task.When(m => !m.Error, action);
+        return task.When(m => !m.IsError, action);
     }
 
     public static Task<HttpResponse> Ok(this Task<HttpResponse> task, Func<HttpResponse, Task> action)
     {
-        return task.When(m => !m.Error, action);
+        return task.When(m => !m.IsError, action);
     }
 
     public static HttpResponse AddCookies(this HttpResponse response, IEnumerable<string> cookies)

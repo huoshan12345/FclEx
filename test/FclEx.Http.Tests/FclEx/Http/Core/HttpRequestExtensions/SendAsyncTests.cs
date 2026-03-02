@@ -84,7 +84,7 @@ public class SendAsyncTests : HttpServerTests
             .SendAsync(TestHttp)
             .ThrowIfError();
 
-        Assert.False(response.Error);
+        Assert.False(response.IsError);
         var body = response.ResponseString;
         Assert.NotNull(body);
         var actual = HttpUtility.ParseQueryString(body)
@@ -102,7 +102,7 @@ public class SendAsyncTests : HttpServerTests
             .SendAsync(TestHttp)
             .ThrowIfError();
 
-        Assert.False(response.Error);
+        Assert.False(response.IsError);
         var body = response.ResponseString.ToJsonNode();
         Assert.NotNull(body);
         var actual = body.Deserialize<List<int>>();
@@ -127,7 +127,7 @@ public class SendAsyncTests : HttpServerTests
             .SendAsync(TestHttp)
             .ThrowIfError();
 
-        Assert.False(response.Error);
+        Assert.False(response.IsError);
         var contentType = response.Headers.Get(HttpHeaderNames.ContentType).FirstOrDefault();
         Assert.NotNull(contentType);
         Assert.Contains(charSet, contentType);
