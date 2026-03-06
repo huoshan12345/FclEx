@@ -2,7 +2,7 @@
 
 namespace FclEx.Extensions;
 
-public static class DictionaryExtensions
+public static partial class DictionaryExtensions
 {
     public static bool TryGetAndDo<TKey, TValue>([NotNullWhen(true)] this IDictionary<TKey, TValue>? dic, [NotNullWhen(true), MaybeNull] TKey key, Action<TValue> action)
     {
