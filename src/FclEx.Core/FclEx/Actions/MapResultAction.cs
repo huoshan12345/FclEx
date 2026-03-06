@@ -14,6 +14,6 @@ public class MapToResultAction<T, TDest> : IAction<TDest>
     public async Task<OperationResult<TDest>> ExecuteAsync(CancellationToken token = default)
     {
         var result = await _action.ExecuteAsync(token);
-        return result.ThenSucceeded(_map);
+        return result.Then(_map);
     }
 }

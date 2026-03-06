@@ -76,7 +76,7 @@ public class PropertyTests : HttpServerTests
             .SendAsync(TestHttp);
 
         Assert.True(response.StatusCode.IsSuccess(), response.ResponseString);
-        Assert.False(response.Error, response.Exception?.Message);
+        Assert.False(response.IsError, response.Exception?.Message);
 
         var returned = response.ResponseString.FromJson<MockApiModel>();
         Assert.MembersEqual(model, returned);
@@ -97,7 +97,7 @@ public class PropertyTests : HttpServerTests
             .SendAsync(TestHttp);
 
         Assert.True(response.StatusCode.IsSuccess(), response.ResponseString);
-        Assert.False(response.Error, response.Exception?.Message);
+        Assert.False(response.IsError, response.Exception?.Message);
 
         var token = response.ResponseString.ToJsonNode();
 

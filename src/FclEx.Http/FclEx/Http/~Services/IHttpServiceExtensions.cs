@@ -97,7 +97,7 @@ public static class IHttpServiceExtensions
             .AcceptCompress();
 
         var response = await request.SendAsync(http);
-        return response.Error
+        return response.IsError
             ? Operation.ObjectError(response, response.Exception!, response.Elapsed)
                 .Cast<HttpFileDownloadInfo>()
             : response.GetDownloadInfo();

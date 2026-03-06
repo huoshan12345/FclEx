@@ -3,21 +3,21 @@
 partial class OperationResultExtensionsTests
 {
     [Fact]
-    public async Task ThenSucceeded_Func_T_Task_OperationResult_TNext()
+    public async Task Then_Func_T_Task_OperationResult_TNext()
     {
         var result = await Operation.ExecuteAsync(() => "x")
-            .ThenSucceeded(m => Operation.Success(m + "y").ToTask());
+            .Then(m => Operation.Success(m + "y").ToTask());
 
         Assert.True(result.IsSuccess);
         Assert.Equal("xy", result.Value);
     }
 
     [Fact]
-    public async Task ThenSucceeded_Func_T_Task_OperationResult_TNext_Canceled()
+    public async Task Then_Func_T_Task_OperationResult_TNext_Canceled()
     {
         {
             var result = await Operation.Cancel().ToTask()
-                .ThenSucceeded(m => Operation.Success(m + "y").ToTask());
+                .Then(m => Operation.Success(m + "y").ToTask());
 
             Assert.False(result.IsSuccess);
             Assert.True(result.IsCanceled());
@@ -25,7 +25,7 @@ partial class OperationResultExtensionsTests
         {
             var token = new CancellationToken(true);
             var result = await Task.FromCanceled<OperationResult<string>>(token)
-                .ThenSucceeded(m => Operation.Success(m + "y").ToTask());
+                .Then(m => Operation.Success(m + "y").ToTask());
 
             Assert.False(result.IsSuccess);
             Assert.True(result.IsCanceled());
@@ -33,20 +33,20 @@ partial class OperationResultExtensionsTests
     }
 
     [Fact]
-    public async Task ThenSucceeded_T_Next_Func_T_OperationResult_TNext()
+    public async Task Then_T_Next_Func_T_OperationResult_TNext()
     {
         var result = await Operation.ExecuteAsync(() => "x")
-            .ThenSucceeded(m => Operation.Success(m + "y"));
+            .Then(m => Operation.Success(m + "y"));
 
         Assert.True(result.IsSuccess);
         Assert.Equal("xy", result.Value);
     }
 
     [Fact]
-    public async Task ThenSucceeded_T_Task_T_Next_Func_T_TNext()
+    public async Task Then_T_Task_T_Next_Func_T_TNext()
     {
         var result = await Operation.ExecuteAsync(() => "x")
-            .ThenSucceeded(m => m + "y");
+            .Then(m => m + "y");
 
         Assert.True(result.IsSuccess);
         Assert.Equal("xy", result.Value);

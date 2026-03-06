@@ -1,4 +1,6 @@
-﻿namespace FclEx.Utils;
+﻿using TaskExtensions = FclEx.Extensions.TaskExtensions;
+
+namespace FclEx.Utils;
 
 partial class OperationResultExtensions
 {
@@ -151,7 +153,7 @@ partial class OperationResultExtensions
         return task.ContinueWith(t => t.Result.WithoutValue());
     }
 
-    public static Task<OperationResult<TNext>> ThenSucceeded<T, TNext>(this Task<OperationResult<T>> task, Func<T, Task<OperationResult<TNext>>> next)
+    public static Task<OperationResult<TNext>> Then<T, TNext>(this Task<OperationResult<T>> task, Func<T, Task<OperationResult<TNext>>> next)
     {
         var watch = ValueStopwatch.StartNew();
         return task.ContinueWith(async m =>
@@ -170,14 +172,27 @@ partial class OperationResultExtensions
         }).Unwrap();
     }
 
-    public static Task<OperationResult<TNext>> ThenSucceeded<T, TNext>(this Task<OperationResult<T>> task, Func<T, OperationResult<TNext>> next)
+    public static Task<OperationResult<TNext>> Then<T, TNext>(this Task<OperationResult<T>> task, Func<T, OperationResult<TNext>> next)
     {
-        return task.ThenSucceeded(m => next(m).ToTask());
+        return task.Then(m => next(m).ToTask());
     }
 
-    public static Task<OperationResult<TNext>> ThenSucceeded<T, TNext>(this Task<OperationResult<T>> task, Func<T, TNext> next)
+    public static Task<OperationResult<TNext>> Then<T, TNext>(this Task<OperationResult<T>> task, Func<T, TNext> next)
     {
-        return task.ThenSucceeded(m => Operation.Success(next(m)));
+        return task.Then(m => Operation.Success(next(m)));
+    }
+
+    /// <summary>
+    /// Alias for Then with <see cref="Func&lt;T, TNext&gt;"/> to avoid ambiguous.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="TNext"></typeparam>
+    /// <param name="task"></param>
+    /// <param name="next"></param>
+    /// <returns></returns>
+    public static Task<OperationResult<TNext>> MapValue<T, TNext>(this Task<OperationResult<T>> task, Func<T, TNext> next)
+    {
+        return task.Then(next);
     }
 
     public static Task<OperationResult<TNext>> ThenResult<T, TNext>(this Task<OperationResult<T>> task, Func<OperationResult<T>, Task<OperationResult<TNext>>> next)
@@ -219,6 +234,6 @@ partial class OperationResultExtensions
 
     public static Task<IOPair<TInput, OperationResult<TOutput>>> ToIOPair<TInput, TOutput>(this Task<OperationResult<TOutput>> task, TInput input)
     {
-        return task.Then(m => IOPair.Create(input, m));
+        return TaskExtensions.Then(task, m => IOPair.Create(input, m));
     }
 }

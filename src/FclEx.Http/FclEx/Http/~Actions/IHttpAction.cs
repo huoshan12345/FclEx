@@ -23,7 +23,7 @@ public interface IHttpAction<T> : IAbstractAction<T>
         {
             request = BuildRequest();
             var response = await HttpService.SendAsync(request, token);
-            if (response.Error == false)
+            if (response.IsError == false)
                 return await HandleResponseAsync(response);
 
             if (logger.IsEnabled(LogLevel.Trace))

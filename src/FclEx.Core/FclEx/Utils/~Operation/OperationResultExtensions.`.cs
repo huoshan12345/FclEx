@@ -86,7 +86,7 @@ partial class OperationResultExtensions
             : (result.Exception, result.Elapsed);
     }
 
-    public static OperationResult<TResult> ThenSucceeded<T, TResult>(this OperationResult<T> result, Func<T, OperationResult<TResult>> func)
+    public static OperationResult<TResult> Then<T, TResult>(this OperationResult<T> result, Func<T, OperationResult<TResult>> func)
     {
         return result.IsSuccess
             ? func(result.Value)
