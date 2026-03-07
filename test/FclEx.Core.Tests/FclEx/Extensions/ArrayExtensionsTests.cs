@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Extensions;
 
-public class ArrayExtensionsTests
+public partial class ArrayExtensionsTests
 {
     [Fact]
     public void Segments_Test()
