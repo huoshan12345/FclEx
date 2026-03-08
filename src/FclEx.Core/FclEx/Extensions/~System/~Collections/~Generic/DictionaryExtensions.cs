@@ -87,7 +87,7 @@ public static partial class DictionaryExtensions
     {
         if (!dic.TryGetValue(key, out var col))
         {
-            col = new TCol();
+            col = [];
             dic[key] = col;
         }
         col.Add(value);

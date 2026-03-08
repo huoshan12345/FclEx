@@ -10,7 +10,7 @@ namespace System.Collections.Generic;
 [DebuggerDisplay("Count = {_size}")]
 public sealed class Deque<T>
 {
-    private T[] _array = Array.Empty<T>();
+    private T[] _array = [];
     private int _head; // First valid element in the queue
     private int _tail; // First open slot in the dequeue, unless the dequeue is full
     private int _size; // Number of elements.

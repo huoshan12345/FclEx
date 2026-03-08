@@ -12,6 +12,7 @@ public static class ObjectHelper
     }
 
     private static long _nextId;
+    // ReSharper disable once UseCollectionExpression
     private static readonly ConditionalWeakTable<object, object> _objectIds = new();
     public static long GetObjectId<T>(T? obj) where T : class
     {
