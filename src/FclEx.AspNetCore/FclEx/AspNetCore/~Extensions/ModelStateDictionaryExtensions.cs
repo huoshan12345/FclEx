@@ -1,21 +1,22 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
-
-namespace FclEx.AspNetCore;
+﻿namespace FclEx.AspNetCore;
 
 public static class ModelStateDictionaryExtensions
 {
-    public static string GetFirstError(this ModelStateDictionary modelState, string defaultError = "Unknown parameter validation error occurred")
+    public static MultiValueDictionary<string, string> GetErrors(this ModelStateDictionary modelState)
     {
         if (modelState.IsValid)
-            return "";
+            return [];
 
-        var error = modelState
-            .Select(x => x.Value?.Errors ?? [])
-            .Where(y => y.Count > 0)
-            .SelectMany(m => m)
-            .FirstOrDefault();
+        var dic = new MultiValueDictionary<string, string>();
 
-        var result = (error?.ErrorMessage, error?.Exception?.Message, defaultError).FirstNotEmpty();
-        return result;
+        foreach (var (key, entry) in modelState)
+        {
+            foreach (var error in entry.Errors)
+            {
+                dic.Add(key, error.ErrorMessage);
+            }
+        }
+
+        return dic;
     }
 }

@@ -24,7 +24,7 @@ public static class ObjectHelper
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static DisposableValue<GCHandle> ToGCHandle(object? obj, GCHandleType type)
     {
-        return GCHandle.Alloc(obj, type).ToDisposable(m => m.Free());
+        return Disposable.FromValue(GCHandle.Alloc(obj, type), m => m.Free());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -45,5 +45,17 @@ public static class ObjectHelper
         Marshal.StructureToPtr(obj, ptr, false);
         Marshal.Copy(ptr, bufByte, 0, length);
         return bufByte;
+    }
+
+    public static T? GetFieldValue<T>(object obj, string fieldName)
+    {
+        var field = obj.GetType().GetRequiredField(fieldName, true);
+        return field.GetValue<T>(obj);
+    }
+
+    public static T GetRequiredFieldValue<T>(object obj, string fieldName)
+    {
+        var field = obj.GetType().GetRequiredField(fieldName, true);
+        return field.GetRequiredValue<T>(obj);
     }
 }

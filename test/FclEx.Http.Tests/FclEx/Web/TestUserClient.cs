@@ -4,6 +4,6 @@ public class TestUserClient(ILoggerFactory loggerFactory) : UserClient(loggerFac
 {
     protected override Task<OperationResult> LoginActionAsync(CancellationToken token)
     {
-        return Operation.Success().ToTask();
+        return Operation.Success();
     }
 }

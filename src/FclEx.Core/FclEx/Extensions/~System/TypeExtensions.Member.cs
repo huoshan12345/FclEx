@@ -1,4 +1,4 @@
-﻿using static FclEx.BindingAttributes;
+﻿using static System.Reflection.BindingAttributes;
 
 namespace FclEx.Extensions;
 
@@ -10,10 +10,8 @@ partial class TypeExtensions
         while (t is not null)
         {
             var member = selector(t);
-            if (member is not null)
-                return member;
 
-            if (searchBaseTypes == false)
+            if (member is not null || searchBaseTypes == false)
                 return member;
 
             t = t.BaseType;
@@ -23,7 +21,7 @@ partial class TypeExtensions
 
     public static FieldInfo? GetField(this Type type, string name, bool searchBaseTypes)
     {
-        return type.GetMember<FieldInfo>(m => m.GetField(name, AllDeclared), searchBaseTypes);
+        return type.GetMember(m => m.GetField(name, Declared), searchBaseTypes);
     }
 
     public static FieldInfo GetRequiredField(this Type type, string name, bool searchBaseTypes = false)
@@ -39,7 +37,7 @@ partial class TypeExtensions
 
     public static PropertyInfo? GetProperty(this Type type, string name, bool searchBaseTypes)
     {
-        return type.GetMember(m => m.GetProperty(name, AllDeclared), searchBaseTypes);
+        return type.GetMember(m => m.GetProperty(name, Declared), searchBaseTypes);
     }
 
     public static PropertyInfo GetRequiredProperty(this Type type, string name, bool searchBaseTypes = false)
@@ -49,7 +47,7 @@ partial class TypeExtensions
 
     public static MethodInfo? GetMethod(this Type type, string name, bool searchBaseTypes)
     {
-        return type.GetMember(m => m.GetMethod(name, AllDeclared), searchBaseTypes);
+        return type.GetMember(m => m.GetMethod(name, Declared), searchBaseTypes);
     }
 
     public static MethodInfo GetRequiredMethod(this Type type, string name, bool searchBaseTypes = false)
@@ -61,7 +59,7 @@ partial class TypeExtensions
     {
         return type.GetMember(t =>
         {
-            return t.GetMethods(AllDeclared)
+            return t.GetMethods(Declared)
                 .Where(m => m.Name == name)
                 .Select(m => (Method: m, Params: m.GetParameters(), Args: m.GetGenericArguments()))
                 .Where(x => x.Args.Length == genericArgumentCount

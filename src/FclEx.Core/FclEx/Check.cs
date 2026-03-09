@@ -1,8 +1,11 @@
 ﻿namespace FclEx;
 
 [DebuggerStepThrough]
+[SuppressMessage("ReSharper", "InvertIf")]
+[SuppressMessage("ReSharper", "ConvertIfStatementToReturnStatement")]
 public static class Check
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T NotNull<T>([NotNull, NoEnumeration] T? value, [CallerArgumentExpression(nameof(value))] string? parameterName = null)
     {
         if (value is null)
@@ -13,6 +16,7 @@ public static class Check
         return value;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string NotEmpty([NotNull] string? value, [CallerArgumentExpression(nameof(value))] string? parameterName = null)
     {
         var name = parameterName ?? nameof(value);
@@ -21,7 +25,7 @@ public static class Check
             throw new ArgumentNullException(name);
         }
 
-        if (value.Trim().Length == 0)
+        if (string.IsNullOrEmpty(value))
         {
             throw new ArgumentException($"The string argument '{name}' cannot be empty.");
         }
@@ -29,6 +33,7 @@ public static class Check
         return value;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void HasNoEmptyElements([NotNull] IEnumerable<string?>? value, [CallerArgumentExpression(nameof(value))] string? parameterName = null)
     {
         NotNull(value, parameterName);
@@ -40,6 +45,7 @@ public static class Check
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T LessThan<T>(T value, T max, [CallerArgumentExpression(nameof(value))] string? parameterName = null) where T : IComparable<T>
     {
         if (Comparer<T>.Default.Compare(value, max) >= 0)
@@ -51,6 +57,18 @@ public static class Check
         return value;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T Between<T>(T value, T min, T max, [CallerArgumentExpression(nameof(value))] string? parameterName = null) where T : IComparable<T>
+    {
+        if (Comparer<T>.Default.Compare(value, min) < 0 || Comparer<T>.Default.Compare(value, max) > 0)
+        {
+            var name = parameterName ?? nameof(value);
+            throw new ArgumentOutOfRangeException(name, value, $"The value must be between {min} and {max}.");
+        }
+        return value;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T NotLessThan<T>(T value, T min, [CallerArgumentExpression(nameof(value))] string? parameterName = null) where T : IComparable<T>
     {
         if (Comparer<T>.Default.Compare(value, min) < 0)
@@ -62,6 +80,7 @@ public static class Check
         return value;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T GreaterThan<T>(T value, T min, [CallerArgumentExpression(nameof(value))] string? parameterName = null) where T : IComparable<T>
     {
         if (Comparer<T>.Default.Compare(value, min) <= 0)
@@ -73,6 +92,7 @@ public static class Check
         return value;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T NotGreaterThan<T>(T value, T max, [CallerArgumentExpression(nameof(value))] string? parameterName = null) where T : IComparable<T>
     {
         if (Comparer<T>.Default.Compare(value, max) > 0)
@@ -84,6 +104,7 @@ public static class Check
         return value;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T EqualTo<T>(T value, T expected, [CallerArgumentExpression(nameof(value))] string? parameterName = null)
     {
         if (Equals(value, expected) == false)
@@ -95,6 +116,7 @@ public static class Check
         return value;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T NotEqualTo<T>(T value, T expected, [CallerArgumentExpression(nameof(value))] string? parameterName = null)
     {
         if (Equals(value, expected))
@@ -106,16 +128,19 @@ public static class Check
         return value;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T NotNegative<T>(T value, [CallerArgumentExpression(nameof(value))] string? parameterName = null) where T : IComparable<T>
     {
         return NotLessThan(value, default!, parameterName);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T Positive<T>(T value, [CallerArgumentExpression(nameof(value))] string? parameterName = null) where T : IComparable<T>
     {
         return GreaterThan(value, default!, parameterName);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void NotEmpty<T>([NotNull] IReadOnlyCollection<T>? value, [CallerArgumentExpression(nameof(value))] string? parameterName = null)
     {
         NotNull(value, parameterName);
@@ -126,6 +151,7 @@ public static class Check
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void NotEmpty<T>([NotNull] IEnumerable<T>? value, [CallerArgumentExpression(nameof(value))] string? parameterName = null)
     {
         NotNull(value, parameterName);
@@ -136,6 +162,7 @@ public static class Check
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void HasNoNulls<T>([NotNull] IEnumerable<T>? value, [CallerArgumentExpression(nameof(value))] string? parameterName = null)
     {
         NotNull(value, parameterName);
@@ -166,6 +193,7 @@ public static class Check
     /// If both values are non-null, the method fails without throwing and sets <paramref name="result"/> to <see langword="default"/>.<br/>
     /// If both values are <see langword="null"/>, an <see cref="ArgumentNullException" /> will be thrown.
     /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryGetSingleNonNull<T>(
         [NotNullWhen(false)] T? left,
         [NotNullWhen(false)] T? right,
@@ -190,5 +218,24 @@ public static class Check
                 return false;
             }
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void CanCopyTo<T>([NotNull] T[]? array, int arrayIndex, int count)
+    {
+        NotNull(array);
+
+        if ((uint)arrayIndex > (uint)array.Length)
+            throw new ArgumentOutOfRangeException(nameof(arrayIndex));
+
+        if (array.Length - arrayIndex < count)
+            throw new ArgumentException(nameof(array));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void VersionEqual(int version, int currentVersion)
+    {
+        if (version != currentVersion)
+            throw new InvalidOperationException();
     }
 }

@@ -48,6 +48,11 @@ partial class ActionExtensions
         return action.Then(t => condition(t) ? @true(t) : @false(t));
     }
 
+    public static IAction<Unit> ThenIf<T>(this IAction<T> action, Func<T, bool> condition, Func<T, IAction<Unit>> next)
+    {
+        return action.ThenIf(condition, next, _ => SuccessAction.Create(Unit.Default));
+    }
+
     public static IAction<T> ThenTry<T>(this IAction<T> action, Func<T, IAction<T>?> func)
     {
         return action.Then(m => func(m) ?? SuccessAction.Create(m));

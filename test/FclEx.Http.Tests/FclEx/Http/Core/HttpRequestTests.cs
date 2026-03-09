@@ -4,7 +4,8 @@ public class HttpRequestTests
 {
     private static async Task SuccessRequestWrap()
     {
-        await HttpRequest.Get("https://www.baidu.com")
+        var url = TestUrls.First();
+        await HttpRequest.Get(url)
             .SendAsync()
             .ThrowIfError();
     }
@@ -13,7 +14,7 @@ public class HttpRequestTests
     {
         var http = HttpClientService.Create(m => m.RetryCount = 0);
         await HttpRequest.Get("https://www.google.com")
-            .TotalTimeout(TimeSpan.FromSeconds(1))
+            .TotalTimeout(TimeSpan.FromSeconds(0.1))
             .SendAsync(http)
             .ThrowIfError();
     }

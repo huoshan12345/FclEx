@@ -26,7 +26,6 @@ public static class JsonNodeExtensions
         return newNode;
     }
 
-
     /// <summary>
     /// Converts a <see cref="JsonNode"/> to its string representation.
     /// </summary>
@@ -47,5 +46,14 @@ public static class JsonNodeExtensions
             JsonValue value when value.TryGetValue<string>(out var str) => str,
             _ => node.ToJsonString(options),
         };
+    }
+
+    extension(JsonNode)
+    {
+        public static JsonNode? From<T>(T obj, JsonSerializerOptions? options = null)
+        {
+            options ??= JsonHelper.GetOptions();
+            return JsonSerializer.SerializeToNode(obj, options);
+        }
     }
 }

@@ -17,12 +17,9 @@ public static partial class TaskExtensions
         return task.ConfigureAwait(false);
     }
 
-    public static Task<T> ToTask<T>(this T obj) => Task.FromResult(obj);
-
     public static ValueTask<T> ToValueTask<T>(this Task<T> task) => new(task);
 
     private static readonly Task<Unit> TaskUnit = Task.FromResult(Unit.Default);
 
-    public static Task<Unit> ToTaskUnit(this Task task)
-        => task.ContinueWith(_ => TaskUnit, TaskContinuationOptions.ExecuteSynchronously).Unwrap();
+    public static Task<Unit> ToTaskUnit(this Task task) => task.Then(() => TaskUnit);
 }

@@ -6,4 +6,13 @@ public static class JsonElementExtensions
     {
         return element.TryGetProperty(name, out _);
     }
+
+    extension(JsonElement)
+    {
+        public static JsonElement From<T>(T obj, JsonSerializerOptions? options = null)
+        {
+            options ??= JsonHelper.GetOptions();
+            return JsonSerializer.SerializeToElement(obj, options);
+        }
+    }
 }

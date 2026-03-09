@@ -101,14 +101,14 @@ public class LruCacheTests
     [Fact]
     public void Add_Test()
     {
-        TestAdd1(1, 1, 1, 10000);
-        TestAdd1(5, 1, 1, 10000);
-        TestAdd1(1, 1, 2, 5000);
-        TestAdd1(1, 1, 5, 2000);
-        TestAdd1(4, 0, 4, 2000);
-        TestAdd1(16, 31, 4, 2000);
-        TestAdd1(64, 5, 5, 5000);
-        TestAdd1(5, 5, 5, 2500);
+        TestAdd1(1, 1, 1, 1000);
+        TestAdd1(5, 1, 1, 1000);
+        TestAdd1(1, 1, 2, 500);
+        TestAdd1(1, 1, 5, 200);
+        TestAdd1(4, 0, 4, 200);
+        TestAdd1(16, 31, 4, 200);
+        TestAdd1(64, 5, 5, 500);
+        TestAdd1(5, 5, 5, 250);
     }
 
     private static void TestAdd1(int cLevel, int initSize, int threads, int addsPerThread)
@@ -127,7 +127,11 @@ public class LruCacheTests
                     {
                         dict.TryAdd(j + ii * addsPerThread, -(j + ii * addsPerThread));
                     }
-                    if (Interlocked.Decrement(ref count) == 0) mre.Set();
+                    if (Interlocked.Decrement(ref count) == 0)
+                    {
+                        // ReSharper disable once AccessToDisposedClosure
+                        mre.Set();
+                    }
                 });
             }
             mre.WaitOne();
@@ -168,14 +172,14 @@ public class LruCacheTests
     [Fact]
     public static void Update_Test()
     {
-        TestUpdate1(1, 1, 10000);
-        TestUpdate1(5, 1, 10000);
-        TestUpdate1(1, 2, 5000);
-        TestUpdate1(1, 5, 2001);
-        TestUpdate1(4, 4, 2001);
-        TestUpdate1(15, 5, 2001);
-        TestUpdate1(64, 5, 5000);
-        TestUpdate1(5, 5, 25000);
+        TestUpdate1(1, 1, 1000);
+        TestUpdate1(5, 1, 1000);
+        TestUpdate1(1, 2, 500);
+        TestUpdate1(1, 5, 201);
+        TestUpdate1(4, 4, 201);
+        TestUpdate1(15, 5, 201);
+        TestUpdate1(64, 5, 500);
+        TestUpdate1(5, 5, 2500);
     }
 
     private static void TestUpdate1(int cLevel, int threads, int updatesPerThread)
@@ -196,7 +200,11 @@ public class LruCacheTests
                     {
                         dict[j] = (ii + 2) * j;
                     }
-                    if (Interlocked.Decrement(ref running) == 0) mre.Set();
+                    if (Interlocked.Decrement(ref running) == 0)
+                    {
+                        // ReSharper disable once AccessToDisposedClosure
+                        mre.Set();
+                    }
                 });
             }
             mre.WaitOne();

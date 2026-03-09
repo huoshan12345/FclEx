@@ -108,7 +108,7 @@ public readonly struct OperationResult<T> : IOperationResult<T>
 
     public static implicit operator Task<OperationResult<T>>(OperationResult<T> result)
     {
-        return result.ToTask();
+        return Task.FromResult(result);
     }
 
     /// <summary>

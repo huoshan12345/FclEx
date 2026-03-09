@@ -29,6 +29,50 @@ public static class ListExtensions
         (list[left], list[right]) = (list[right], list[left]);
     }
 
+    /// <summary>
+    /// Performs a stable sort using the specified comparer.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="List{T}.Sort(IComparer{T})"/> is not guaranteed to be stable, so this method
+    /// preserves the relative order of elements that compare equal.
+    /// </remarks>
+    public static void StableSort<T>(this IList<T> list, int index, int count, IComparer<T> comparer)
+    {
+        Check.NotNull(list);
+
+        if (list.Count == 0)
+            return;
+
+        Check.Between(index, 0, list.Count - 1);
+        Check.Between(count, 0, list.Count - index);
+
+        if (count == 0)
+            return;
+
+        var indexes = new int[count];
+
+        for (var i = 0; i < count; i++)
+            indexes[i] = i;
+
+        Array.Sort(indexes, (a, b) =>
+        {
+            var c = comparer.Compare(list[a], list[b]);
+            return c != 0 ? c : a.CompareTo(b);
+        });
+
+        var temp = list.ToArray();
+
+        for (var i = 0; i < count; i++)
+        {
+            list[i] = temp[indexes[i]];
+        }
+    }
+
+    public static void StableSort<T>(this IList<T> list, IComparer<T> comparer)
+    {
+        list.StableSort(0, list.Count, comparer);
+    }
+
     public static IList<T>? TrySet<T>(this IList<T>? list, int index, T value)
     {
         if (list != null && 0 <= index && index < list.Count)

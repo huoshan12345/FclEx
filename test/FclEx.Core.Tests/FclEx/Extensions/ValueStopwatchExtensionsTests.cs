@@ -23,8 +23,8 @@ public class ValueStopwatchExtensionsTests(ITestOutputHelper output)
     public async Task ElapsedSeconds_Test()
     {
         var watch = ValueStopwatch.StartNew();
-        await Task.Delay(TimeSpan.FromMilliseconds(1100));
-        output.WriteLine(watch.GetElapsedTime());
-        output.WriteLine(watch.ElapsedSeconds());
+        await Task.Delay(TimeSpan.FromMilliseconds(110));
+        var time = watch.GetElapsedTime();
+        Assert.True(time.TotalSeconds > 0.1);
     }
 }

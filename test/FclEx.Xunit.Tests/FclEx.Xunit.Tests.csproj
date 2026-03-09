@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Meziantou.Xunit.ParallelTestFramework" />
   </ItemGroup>
   <ItemGroup>

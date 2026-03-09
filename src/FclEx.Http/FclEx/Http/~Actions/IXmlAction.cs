@@ -7,26 +7,9 @@ public interface IXmlAction<T> : IHttpResponseHandler<T>
 
     OperationResult<T> IHttpResponseHandler<T>.GetResult(HttpResponse response)
     {
-        var (successful, str, ex, _) = GetXml(response);
-        if (!successful)
-            return ex!;
-
-        var context = new XmlActionContext(response, str!, XmlResultPath);
-
-        if (IsFailed(context))
-            return HandleFailed(context);
-
-        return GetResult(context);
-    }
-
-    bool IsFailed(XmlActionContext context) => context.ResultElements.IsNullOrEmpty();
-
-    OperationResult<T> HandleFailed(XmlActionContext context)
-    {
-        const string msg = "The result object does not exist in xml";
-        var error = XmlResultPath == null ? msg : msg + " at " + XmlResultPath;
-        error = error + ": " + context.Xml.Truncate(256);
-        return error;
+        return GetXml(response)
+            .Then(m => CreateContext(response, m))
+            .Then(GetResult);
     }
 
     OperationResult<string> GetXml(HttpResponse response)
@@ -37,7 +20,24 @@ public interface IXmlAction<T> : IHttpResponseHandler<T>
             : Operation.Error<string>("The response string is not a valid xml: " + str.Truncate(256));
     }
 
-    OperationResult<T> GetResult(XmlActionContext context) => context.ResultElement!.ToObject<T>()!;
+    OperationResult<XmlActionContext> CreateContext(HttpResponse response, string json)
+    {
+        var context = new XmlActionContext(response, json, XmlResultPath);
+        if (context.ResultElements.IsNotEmpty())
+            return context;
+
+        const string msg = "The result object does not exist in xml";
+        var error = XmlResultPath == null ? msg : msg + " at " + XmlResultPath;
+        error = error + ": " + context.Xml.Truncate(256);
+        return error;
+    }
+
+    OperationResult<T> GetResult(XmlActionContext context)
+    {
+        return context.ResultElement is { } element
+            ? element.ToObject<T>()!
+            : nameof(context.ResultElement) + " is null";
+    }
 }
 
 public interface IXmlAction : IXmlAction<Unit>

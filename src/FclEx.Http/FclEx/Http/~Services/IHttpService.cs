@@ -4,7 +4,7 @@ public interface IHttpService : IDisposable
 {
     Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken token = default);
 
-    void AddCookie(Cookie cookie, Uri? uri = null);
+    void AddCookie(Cookie cookie, Uri? uri = null, bool overrideDomain = false);
 
     Cookie? GetCookie(Uri uri, string name);
 

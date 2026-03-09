@@ -6,6 +6,8 @@ public static class FileInfoExtensions
 {
     private const FileConflictOptions ResolutionStrategies = Cancel | ThrowOnConflict | Overwrite | AutoRename;
 
+    internal const int DefaultBufferSize = 256 * 1024;
+
     /// <summary>
     /// Gets the base name and extension of the specified file.
     /// </summary>
@@ -286,5 +288,13 @@ public static class FileInfoExtensions
     public static void Rename(this FileInfo file, string name, bool appendExt = false, FileConflictOptions options = Default)
     {
         file.MoveTo(null, name, appendExt, options);
+    }
+
+    public static Task WriteAllTextAsync(this FileInfo file, string content, Encoding? encoding = null, CancellationToken token = default)
+    {
+        Check.NotNull(file);
+        Check.NotNull(content);
+
+        return File.WriteAllTextAsync(file.FullName, content, encoding ?? Encoding.UTF8, token);
     }
 }

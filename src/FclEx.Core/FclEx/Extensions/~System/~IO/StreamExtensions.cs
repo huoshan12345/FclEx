@@ -2,17 +2,35 @@
 
 public static class StreamExtensions
 {
-    public static string ToString(this Stream stream, Encoding? encoding = null)
+    private const int DefaultBufferSize = 256 * 1024;  // Byte buffer size
+
+    public static byte[] ReadAllBytes(this Stream stream, int bufferSize = DefaultBufferSize)
     {
-        using var sr = new StreamReader(stream, encoding ?? Encoding.UTF8);
-        return sr.ReadToEnd();
+        using var memoryStream = new MemoryStream();
+        stream.CopyTo(memoryStream, bufferSize);
+        return memoryStream.ToArray();
     }
 
-    public static byte[] ToBytes(this Stream stream)
+    public static async Task<byte[]> ReadAllBytesAsync(this Stream stream,
+        int bufferSize = DefaultBufferSize,
+        TimeSpan? readBufferTimeout = null,
+        CancellationToken token = default)
     {
-        var bytes = new byte[stream.Length - stream.Position];
-        _ = stream.Read(bytes, (int)stream.Position, bytes.Length);
-        return bytes;
+        using var memoryStream = new MemoryStream();
+        await stream.CopyToAsync(memoryStream, bufferSize, readBufferTimeout, token);
+        return memoryStream.ToArray();
+    }
+
+    public static async Task<string> ReadAllTextAsync(this Stream stream,
+        Encoding? encoding = null,
+        bool detectEncodingFromByteOrderMarks = true,
+        int bufferSize = DefaultBufferSize,
+        bool leaveOpen = false,
+        CancellationToken token = default)
+    {
+        using var reader = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks, bufferSize, leaveOpen);
+        var text = await reader.ReadToEndAsync(token);
+        return text;
     }
 
     public static Stream SeekToBegin(this Stream stream)
@@ -25,7 +43,10 @@ public static class StreamExtensions
 
     public static Task WriteAsync(this Stream stream, byte[] bytes) => stream.WriteAsync(bytes, 0, bytes.Length);
 
-    public static async Task CopyToAsync(this Stream source, Stream dest, int bufferSize = 256 * 1024, TimeSpan? readBufferTimeout = null, CancellationToken token = default)
+    public static async Task CopyToAsync(this Stream source,
+        Stream dest, int bufferSize = DefaultBufferSize,
+        TimeSpan? readBufferTimeout = null,
+        CancellationToken token = default)
     {
         using var disposable = ArrayPool<byte>.Shared.GetPooled(bufferSize);
         var buffer = disposable.Value;

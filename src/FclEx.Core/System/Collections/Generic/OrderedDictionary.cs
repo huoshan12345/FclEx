@@ -1,5 +1,7 @@
-#if !NET9_0_OR_GREATER
+#pragma warning disable IDE0005
 // ReSharper disable All
+
+#if !NET9_0_OR_GREATER
 #pragma warning disable CS8602
 #pragma warning disable CS8604
 #pragma warning disable CS8767

@@ -5,8 +5,9 @@
   <ItemGroup>
     <!--xunit.v3 is required to discover tests when a test project is running using dotnet command.-->
     <PackageReference Include="xunit.v3" />
-    <PackageReference Include="xRetry.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Meziantou.Xunit.v3.ParallelTestFramework" />
+    <PackageReference Include="xRetry.v3" />
     <PackageReference Include="morelinq" />
     <PackageReference Include="Moq" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
@@ -14,11 +15,15 @@
     <PackageReference Include="Microsoft.Extensions.Logging" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
-    <PackageReference Include="xunit.runner.visualstudio" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="xunit.runner.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>

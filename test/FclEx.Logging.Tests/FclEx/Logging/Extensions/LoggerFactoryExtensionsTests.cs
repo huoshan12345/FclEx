@@ -7,7 +7,7 @@ public class LoggerFactoryExtensionsTests
     public static IEnumerable<object[]> LogLevelCases { get; } =
         EnumHelper.GetValues<LogLevel>().Select(m => new object[] { m });
 
-    [LocalOnlyTheory]
+    [Theory]
     [MemberData(nameof(LogLevelCases))]
     public void SetMinimumLevel_Test(LogLevel logLevel)
     {

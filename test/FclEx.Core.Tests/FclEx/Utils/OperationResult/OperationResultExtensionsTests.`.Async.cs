@@ -6,7 +6,7 @@ partial class OperationResultExtensionsTests
     public async Task Then_Func_T_Task_OperationResult_TNext()
     {
         var result = await Operation.ExecuteAsync(() => "x")
-            .Then(m => Operation.Success(m + "y").ToTask());
+            .Then(m => Task.FromResult(Operation.Success(m + "y")));
 
         Assert.True(result.IsSuccess);
         Assert.Equal("xy", result.Value);
@@ -16,8 +16,8 @@ partial class OperationResultExtensionsTests
     public async Task Then_Func_T_Task_OperationResult_TNext_Canceled()
     {
         {
-            var result = await Operation.Cancel().ToTask()
-                .Then(m => Operation.Success(m + "y").ToTask());
+            var result = await Task.FromResult(Operation.Cancel())
+                .Then(m => Operation.Success(m + "y"));
 
             Assert.False(result.IsSuccess);
             Assert.True(result.IsCanceled());
@@ -25,7 +25,7 @@ partial class OperationResultExtensionsTests
         {
             var token = new CancellationToken(true);
             var result = await Task.FromCanceled<OperationResult<string>>(token)
-                .Then(m => Operation.Success(m + "y").ToTask());
+                .Then(m => Task.FromResult(Operation.Success(m + "y")));
 
             Assert.False(result.IsSuccess);
             Assert.True(result.IsCanceled());

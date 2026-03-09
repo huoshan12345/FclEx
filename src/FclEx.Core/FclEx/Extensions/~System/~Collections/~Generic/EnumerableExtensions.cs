@@ -125,6 +125,33 @@ public static partial class EnumerableExtensions
         return num;
     }
 
+    public static IEnumerable<(T, T)> CrossJoin<T>(this IEnumerable<T> enumerable)
+    {
+        var items = enumerable.AsIReadOnlyCollection();
+        foreach (var a in items)
+        {
+            foreach (var b in items)
+            {
+                yield return (a, b);
+            }
+        }
+    }
+
+    public static IEnumerable<(T, T, T)> CrossJoinCube<T>(this IEnumerable<T> enumerable)
+    {
+        var items = enumerable.AsIReadOnlyCollection();
+        foreach (var a in items)
+        {
+            foreach (var b in items)
+            {
+                foreach (var c in items)
+                {
+                    yield return (a, b, c);
+                }
+            }
+        }
+    }
+
     public static IEnumerable<(T1, T2)> CrossJoin<T1, T2>(this IEnumerable<T1> left, IEnumerable<T2> right)
     {
         return left.SelectMany(m => right, static (t1, t2) => (t1, t2));

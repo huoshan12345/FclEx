@@ -68,7 +68,13 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             case HttpContentType.String:
             {
                 var bytes = await responseMessage.Content.ReadAsByteArrayAsync(request.BufferSize, request.ReadBufferTimeout, token);
-                (response.ResponseString, response.Encoding) = ReadBufferAsString(bytes, responseMessage.Content.Headers, request.CharSet, request.DetectCharSet, request.FallbackCharSet, request.IgnoreInvalidCharSet);
+                (response.ResponseString, response.Encoding) = ReadBufferAsString(
+                    buffer: bytes,
+                    headers: responseMessage.Content.Headers,
+                    charSet: request.CharSet,
+                    detectCharSet: request.DetectCharSet,
+                    defaultCharSet: request.FallbackCharSet,
+                    ignoreInvalidCharSet: request.IgnoreInvalidCharSet);
                 break;
             }
             default:
@@ -103,7 +109,8 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         };
     }
 
-    protected virtual (string, Encoding) ReadBufferAsString(Span<byte> buffer, HttpContentHeaders headers, string? charSet, bool detectCharSet, string? defaultCharSet, bool ignoreInvalidCharSet)
+    protected virtual (string, Encoding) ReadBufferAsString(Span<byte> buffer, HttpContentHeaders headers,
+        string? charSet, bool detectCharSet, string? defaultCharSet, bool ignoreInvalidCharSet)
     {
         charSet = (charSet, headers.ContentType?.CharSet).FirstNotEmpty();
         // We don't validate the Content-Encoding header: If the content was encoded, it's the caller's
