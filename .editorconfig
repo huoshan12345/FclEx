@@ -71,3 +71,6 @@ dotnet_diagnostic.IDE0200.severity = silent
 
 # IDE0048: Add parentheses for clarity
 dotnet_diagnostic.IDE0048.severity = none
+
+# CA1861: Avoid constant arrays as arguments
+dotnet_diagnostic.CA1861.severity = none
