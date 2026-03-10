@@ -1,23 +1,29 @@
 ﻿namespace System.Collections.Generic;
 
-public sealed class Heap<T> : IReadOnlyCollection<T>
+public class Heap<T> : IReadOnlyCollection<T>
 {
     private const int Arity = 4;
 
     private T[] _data;
     private int _count;
-    private readonly IComparer<T> _cmp;
+    private readonly IComparer<T> _comparer;
 
     public Heap(int capacity = 4, IComparer<T>? comparer = null)
     {
-        if (capacity < 4) capacity = 4;
+        if (capacity < 4) 
+            capacity = 4;
+
         _data = new T[capacity];
-        _cmp = comparer ?? Comparer<T>.Default;
+        _comparer = comparer ?? Comparer<T>.Default;
+    }
+
+    public Heap(IComparer<T> comparer) : this(4, comparer)
+    {
     }
 
     public Heap(IEnumerable<T> items, IComparer<T>? comparer = null)
     {
-        _cmp = comparer ?? Comparer<T>.Default;
+        _comparer = comparer ?? Comparer<T>.Default;
         _data = items.ToArray();
         _count = _data.Length;
 
@@ -30,10 +36,9 @@ public sealed class Heap<T> : IReadOnlyCollection<T>
     // ReSharper disable once ConvertToAutoPropertyWithPrivateSetter
     public int Count => _count;
 
-    public IEnumerator<T> GetEnumerator()
+    IEnumerator<T> IEnumerable<T>.GetEnumerator()
     {
-        for (var i = 0; i < _count; i++)
-            yield return _data[i];
+        return GetEnumerator();
     }
 
     IEnumerator IEnumerable.GetEnumerator()
@@ -41,25 +46,40 @@ public sealed class Heap<T> : IReadOnlyCollection<T>
         return GetEnumerator();
     }
 
+    public ArrayEnumerator<T> GetEnumerator()
+    {
+        return new ArrayEnumerator<T>(_data, 0, _count);
+    }
+
     public int Capacity => _data.Length;
 
-    public void Clear() => _count = 0;
+    public void Clear()
+    {
+#if NET5_0_OR_GREATER
+        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+            Array.Clear(_data, 0, _count);
+#else
+        Array.Clear(_data, 0, _count);
+#endif
+        _count = 0;
+    }
 
     public void EnsureCapacity(int capacity)
     {
+        if (capacity < 0)
+            throw new ArgumentOutOfRangeException(nameof(capacity));
+
         if (_data.Length < capacity)
             Array.Resize(ref _data, capacity);
     }
 
     public void Push(T item)
     {
-        var data = _data;
-        int count = _count;
+        var count = _count;
 
-        if (count == data.Length)
+        if (count == _data.Length)
         {
             Grow();
-            data = _data;
         }
 
         _count = count + 1;
@@ -71,11 +91,17 @@ public sealed class Heap<T> : IReadOnlyCollection<T>
         if (_count == 0)
             throw new InvalidOperationException();
 
-        var data = _data;
-        int last = --_count;
+        var last = --_count;
 
-        T root = data[0];
-        T x = data[last];
+        var root = _data[0];
+        var x = _data[last];
+
+#if NET5_0_OR_GREATER
+        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+            _data[last] = default!;
+#else
+        _data[last] = default!;
+#endif
 
         if (last > 0)
             SiftDown(0, x);
@@ -124,18 +150,60 @@ public sealed class Heap<T> : IReadOnlyCollection<T>
         }
 
         var data = _data;
-        T root = data[0];
+        var root = data[0];
 
         SiftDown(0, item);
 
         return root;
     }
 
+    public bool TryReplaceTop(T item, out T? old)
+    {
+        if (_count == 0)
+        {
+            old = default;
+            Push(item);
+            return false;
+        }
+
+        old = _data[0];
+        SiftDown(0, item);
+        return true;
+    }
+
+    public T PushPop(T item)
+    {
+        if (_count == 0 || _comparer.Compare(item, _data[0]) <= 0)
+            return item;
+
+        var root = _data[0];
+        SiftDown(0, item);
+        return root;
+    }
+
+    public void TrimExcess(int? capacity = null)
+    {
+        var count = _count;
+
+        var newCapacity = capacity ?? count;
+
+        if (newCapacity < count)
+            newCapacity = count;
+
+        if (newCapacity < 4)
+            newCapacity = 4;
+
+        if (newCapacity >= _data.Length)
+            return;
+
+        Array.Resize(ref _data, newCapacity);
+    }
+
     private void Heapify()
     {
-        int start = Parent(_count - 1);
+        var start = Parent(_count - 1);
 
-        for (int i = start; i >= 0; i--)
+        for (var i = start; i >= 0; i--)
         {
             SiftDown(i, _data[i]);
         }
@@ -143,8 +211,12 @@ public sealed class Heap<T> : IReadOnlyCollection<T>
 
     private void Grow()
     {
-        int newSize = _data.Length * 2;
-        if (newSize < 4) newSize = 4;
+        var newSize = _data.Length * 2;
+        if (newSize < 4)
+            newSize = 4;
+
+        if ((uint)newSize > Array.MaxLength)
+            newSize = Array.MaxLength;
 
         Array.Resize(ref _data, newSize);
     }
@@ -155,57 +227,55 @@ public sealed class Heap<T> : IReadOnlyCollection<T>
 
     private void SiftUp(int i, T item)
     {
-        var data = _data;
-        var cmp = _cmp;
-
         while (i > 0)
         {
-            int parent = (i - 1) / Arity;
-            T p = data[parent];
+            var parent = Parent(i);
+            var p = _data[parent];
 
-            if (cmp.Compare(item, p) >= 0)
+            if (_comparer.Compare(item, p) >= 0)
                 break;
 
-            data[i] = p;
+            _data[i] = p;
             i = parent;
         }
 
-        data[i] = item;
+        _data[i] = item;
     }
 
     private void SiftDown(int i, T item)
     {
-        var data = _data;
-        var cmp = _cmp;
-        int count = _count;
-
         while (true)
         {
-            int first = i * Arity + 1;
-            if (first >= count)
+            var first = FirstChild(i);
+            if (first >= _count)
                 break;
 
-            int best = first;
-            int last = first + Arity;
+            var best = first;
+            var bestValue = _data[first];
+            var last = first + Arity;
 
-            if (last > count)
-                last = count;
+            if (last > _count)
+                last = _count;
 
-            for (int j = first + 1; j < last; j++)
+            for (var j = first + 1; j < last; j++)
             {
-                if (cmp.Compare(data[j], data[best]) < 0)
+                var v = _data[j];
+                if (_comparer.Compare(_data[j], bestValue) < 0)
+                {
                     best = j;
+                    bestValue = v;
+                }
             }
 
-            T child = data[best];
+            var child = _data[best];
 
-            if (cmp.Compare(child, item) >= 0)
+            if (_comparer.Compare(child, item) >= 0)
                 break;
 
-            data[i] = child;
+            _data[i] = child;
             i = best;
         }
 
-        data[i] = item;
+        _data[i] = item;
     }
 }

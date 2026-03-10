@@ -31,10 +31,26 @@
 /// </para>
 /// </remarks>
 [DebuggerDisplay("Count = {Count}")]
-public class OrderedList<T>(int capacity = 4, IComparer<T>? comparer = null) : IList<T>, IReadOnlyList<T>
+public class OrderedList<T> : IList<T>, IReadOnlyList<T>
 {
-    private readonly List<T> _list = new(capacity);
-    private readonly IComparer<T> _comparer = comparer ?? Comparer<T>.Default;
+    private readonly List<T> _list;
+    private readonly IComparer<T> _comparer;
+
+    public OrderedList(int capacity = 4, IComparer<T>? comparer = null)
+    {
+        _list = new List<T>(capacity);
+        _comparer = comparer ?? Comparer<T>.Default;
+    }
+
+    public OrderedList(IComparer<T> comparer) : this(4, comparer)
+    {
+    }
+
+    public OrderedList(IEnumerable<T> items, IComparer<T>? comparer = null) : this(4, comparer)
+    {
+        _comparer = comparer ?? Comparer<T>.Default;
+        AddRange(items);
+    }
 
     public int Count => _list.Count;
 
