@@ -446,6 +446,105 @@ public class HeapTests
 
         Assert.Equal(0, heap.Count);
     }
+
+    [Fact]
+    public void ChildRangeBoundary()
+    {
+        var heap = new Heap<int>();
+
+        for (var i = 50; i >= 0; i--)
+            heap.Push(i);
+
+        var prev = heap.Pop();
+
+        while (heap.TryPop(out var v))
+        {
+            Assert.True(prev <= v);
+            prev = v;
+        }
+    }
+
+    [Fact]
+    public void ExactArityBoundary()
+    {
+        var heap = new Heap<int>();
+
+        for (var i = 0; i < 5; i++)
+            heap.Push(i);
+
+        Assert.Equal(0, heap.Pop());
+        Assert.Equal(1, heap.Pop());
+        Assert.Equal(2, heap.Pop());
+        Assert.Equal(3, heap.Pop());
+        Assert.Equal(4, heap.Pop());
+    }
+
+    [Fact]
+    public void ArityPlusOneBoundary()
+    {
+        var heap = new Heap<int>();
+
+        for (var i = 5; i >= 0; i--)
+            heap.Push(i);
+
+        for (var i = 0; i <= 5; i++)
+            Assert.Equal(i, heap.Pop());
+    }
+
+    [Fact]
+    public void HeapifyChildBoundary()
+    {
+        var data = new[] { 9, 8, 7, 6, 5, 4, 3 };
+
+        var heap = new Heap<int>(data);
+
+        var prev = heap.Pop();
+
+        while (heap.TryPop(out var v))
+        {
+            Assert.True(prev <= v);
+            prev = v;
+        }
+    }
+
+    [Fact]
+    public void ReplaceTopStress()
+    {
+        var heap = new Heap<int>();
+
+        for (var i = 0; i < 1000; i++)
+            heap.Push(i);
+
+        for (var i = 0; i < 1000; i++)
+        {
+            heap.ReplaceTop(10000 - i);
+        }
+
+        var prev = heap.Pop();
+
+        while (heap.TryPop(out var v))
+        {
+            Assert.True(prev <= v);
+            prev = v;
+        }
+    }
+
+    [Fact]
+    public void DeepTree()
+    {
+        var heap = new Heap<int>();
+
+        for (var i = 20000; i >= 0; i--)
+            heap.Push(i);
+
+        var prev = heap.Pop();
+
+        while (heap.TryPop(out var v))
+        {
+            Assert.True(prev <= v);
+            prev = v;
+        }
+    }
 }
 
 file static class HeapTestExtensions

@@ -9,6 +9,6 @@ internal class Program
 
         // BenchmarkSwitcher.FromTypes([typeof(SizeOfBenchmark<>)]).Run([.. args, "-f", "*"], config);
         // new IntToByteArrayBenchmark().ExplicitLayoutStruct();
-        BenchmarkRunner.Run<IntToByteArrayBenchmark>(config);
+        BenchmarkRunner.Run<HeapBenchmarks>(config);
     }
 }
