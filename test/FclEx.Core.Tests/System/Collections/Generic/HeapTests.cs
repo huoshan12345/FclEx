@@ -436,7 +436,7 @@ public class HeapTests
             }
 
             Assert.Equal(list.Count, heap.Count);
-            Assert.AssertHeapProperty(heap);
+            Assert.AssertHeapInvariant(heap);
         }
 
         list.Sort();
@@ -450,30 +450,47 @@ public class HeapTests
 
 file static class HeapTestExtensions
 {
-    [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_data")]
-    private static extern ref T[] Data<T>(this Heap<T> heap);
-
     private const int Arity = 4;
 
     extension(Assert)
     {
-        public static void AssertHeapProperty(Heap<int> heap)
+        public static void AssertHeapInvariant(Heap<int> heap)
         {
             var data = typeof(Heap<int>)
                 .GetRequiredField("_data")
                 .GetRequiredValue<int[]>(heap);
 
+
             var count = heap.Count;
+
+            // 1. Verify the heap property: parent <= child
             for (var i = 0; i < count; i++)
             {
                 for (var k = 1; k <= Arity; k++)
                 {
                     var child = i * Arity + k;
+
                     if (child >= count)
                         break;
-                    Assert.True(data![i] <= data[child]);
+
+                    Assert.True(
+                        data[i] <= data[child],
+                        $"Heap property violated: parent {data[i]} > child {data[child]}"
+                    );
                 }
             }
+
+            // 2. Verify that the root contains the minimum element
+            var min = data[0];
+
+            for (var i = 1; i < count; i++)
+            {
+                if (data[i] < min)
+                    Assert.Fail($"Root is not the minimum element: {data[i]} < {min}");
+            }
+
+            // 3. Verify that count does not exceed the array length
+            Assert.True(count <= data.Length);
         }
     }
 }
