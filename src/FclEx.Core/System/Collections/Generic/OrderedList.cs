@@ -30,12 +30,11 @@
 /// <see cref="Between(T, T)"/>.
 /// </para>
 /// </remarks>
-public class OrderedList<T>(IComparer<T>? comparer) : IList<T>, IReadOnlyList<T>
+[DebuggerDisplay("Count = {Count}")]
+public class OrderedList<T>(int capacity = 4, IComparer<T>? comparer = null) : IList<T>, IReadOnlyList<T>
 {
-    private readonly List<T> _list = [];
+    private readonly List<T> _list = new(capacity);
     private readonly IComparer<T> _comparer = comparer ?? Comparer<T>.Default;
-
-    public OrderedList() : this(null) { }
 
     public int Count => _list.Count;
 
@@ -350,6 +349,18 @@ public class OrderedList<T>(IComparer<T>? comparer) : IList<T>, IReadOnlyList<T>
             _list.RemoveRange(start, count);
 
         return count;
+    }
+
+    public void EnsureCapacity(int capacity)
+    {
+        if (_list.Capacity >= capacity)
+            return;
+
+#if NET5_0_OR_GREATER
+        _list.EnsureCapacity(capacity);
+#else
+        _list.Capacity = capacity;
+#endif
     }
 
     /// <summary>
