@@ -34,7 +34,7 @@ partial class StringExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string UriUnescape(this string value) => Uri.UnescapeDataString(value);
 
-    public static string Truncate(this string? str, int maxLength)
+    public static string Truncate(this string? str, int maxLength, bool appendTrailingDots = true)
     {
         if (maxLength <= 0)
             return string.Empty;
@@ -42,7 +42,10 @@ partial class StringExtensions
         if (str.IsNullOrEmpty() || maxLength >= str.Length)
             return str ?? string.Empty;
 
-        return str[..maxLength] + "...";
+        var sub = str[..maxLength];
+        return appendTrailingDots
+            ? sub + "..."
+            : sub;
     }
 
     private static readonly Regex RegexOfXmlProlog = new(@"^<\?xml.+\?>", RegexOptions.Compiled);
