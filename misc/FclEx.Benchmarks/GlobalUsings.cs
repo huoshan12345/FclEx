@@ -4,6 +4,7 @@ global using System;
 global using System.Collections.Generic;
 global using System.IO;
 global using System.Linq;
+global using System.Threading.Tasks;
 global using BenchmarkDotNet.Attributes;
 global using BenchmarkDotNet.Configs;
 global using BenchmarkDotNet.Running;

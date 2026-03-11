@@ -367,16 +367,16 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
         return count;
     }
 
-    public void EnsureCapacity(int capacity)
+    public int EnsureCapacity(int capacity)
     {
-        if (_list.Capacity >= capacity)
-            return;
+        Check.NotNegative(capacity);
 
-#if NET5_0_OR_GREATER
-        _list.EnsureCapacity(capacity);
-#else
-        _list.Capacity = capacity;
-#endif
+        if (_list.Capacity < capacity)
+        {
+            _list.Capacity = capacity;
+        }
+
+        return _list.Capacity;
     }
 
     /// <summary>

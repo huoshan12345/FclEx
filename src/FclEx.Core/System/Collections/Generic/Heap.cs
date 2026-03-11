@@ -1,5 +1,26 @@
 ﻿namespace System.Collections.Generic;
 
+/// <summary>
+/// Represents a min-heap based priority queue implemented as a 4-ary heap.
+/// </summary>
+/// <typeparam name="T">The type of elements stored in the heap.</typeparam>
+/// <remarks>
+/// Elements are ordered according to the specified <see cref="IComparer{T}"/>.<br/>
+/// The smallest element can be inspected with <see cref="Peek"/> or removed with <see cref="Pop"/>.<br/>
+/// <br/>
+/// This implementation uses a 4-ary heap to reduce heap height and improve cache locality.<br/>
+/// <br/>
+/// Enumeration iterates over the internal storage and does not return elements
+/// in sorted or priority order.<br/>
+/// <br/>
+/// Typical time complexities:
+/// <list type="bullet">
+/// <item><description><see cref="Push"/>: O(log n)</description></item>
+/// <item><description><see cref="Pop"/>: O(log n)</description></item>
+/// <item><description><see cref="Peek"/>: O(1)</description></item>
+/// <item><description>Heap construction from a collection: O(n)</description></item>
+/// </list>
+/// </remarks>
 public class Heap<T> : IReadOnlyCollection<T>
 {
     private const int Arity = 4;
@@ -46,33 +67,44 @@ public class Heap<T> : IReadOnlyCollection<T>
         return GetEnumerator();
     }
 
+    /// <remarks>
+    /// Enumeration does not return elements in sorted order.
+    /// </remarks>
     public ArrayEnumerator<T> GetEnumerator()
     {
         return new ArrayEnumerator<T>(_data, 0, _count);
     }
 
+    /// <summary>
+    /// Gets the total number of elements the internal storage can hold without resizing.
+    /// </summary>
     public int Capacity => _data.Length;
 
+    /// <summary>
+    /// Removes all elements from the heap.
+    /// </summary>
     public void Clear()
     {
-#if NET5_0_OR_GREATER
-        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+        if (RuntimeHelpersEx.IsReferenceOrContainsReferences<T>())
             Array.Clear(_data, 0, _count);
-#else
-        Array.Clear(_data, 0, _count);
-#endif
+
         _count = 0;
     }
 
+    /// <summary>
+    /// Ensures the heap can hold at least the specified number of elements without resizing.
+    /// </summary>
     public void EnsureCapacity(int capacity)
     {
-        if (capacity < 0)
-            throw new ArgumentOutOfRangeException(nameof(capacity));
+        Check.NotNegative(capacity);
 
         if (_data.Length < capacity)
             Array.Resize(ref _data, capacity);
     }
 
+    /// <summary>
+    /// Inserts an element into the heap.
+    /// </summary>
     public void Push(T item)
     {
         var count = _count;
@@ -86,6 +118,10 @@ public class Heap<T> : IReadOnlyCollection<T>
         SiftUp(count, item);
     }
 
+    /// <summary>
+    /// Removes and returns the smallest element in the heap.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The heap is empty.</exception>
     public T Pop()
     {
         if (_count == 0)
@@ -96,12 +132,8 @@ public class Heap<T> : IReadOnlyCollection<T>
         var root = _data[0];
         var x = _data[last];
 
-#if NET5_0_OR_GREATER
-        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+        if (RuntimeHelpersEx.IsReferenceOrContainsReferences<T>())
             _data[last] = default!;
-#else
-        _data[last] = default!;
-#endif
 
         if (last > 0)
             SiftDown(0, x);
@@ -109,6 +141,10 @@ public class Heap<T> : IReadOnlyCollection<T>
         return root;
     }
 
+    /// <summary>
+    /// Attempts to remove and return the smallest element in the heap.
+    /// </summary>
+    /// <returns><see langword="true"/> if an element was removed; otherwise <see langword="false"/>.</returns>
     public bool TryPop(out T value)
     {
         if (_count == 0)
@@ -121,6 +157,10 @@ public class Heap<T> : IReadOnlyCollection<T>
         return true;
     }
 
+    /// <summary>
+    /// Returns the smallest element in the heap without removing it.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The heap is empty.</exception>
     public T Peek()
     {
         if (_count == 0)
@@ -129,6 +169,10 @@ public class Heap<T> : IReadOnlyCollection<T>
         return _data[0];
     }
 
+    /// <summary>
+    /// Attempts to return the smallest element in the heap without removing it.
+    /// </summary>
+    /// <returns><see langword="true"/> if the heap is not empty; otherwise <see langword="false"/>.</returns>
     public bool TryPeek(out T value)
     {
         if (_count == 0)
@@ -141,6 +185,12 @@ public class Heap<T> : IReadOnlyCollection<T>
         return true;
     }
 
+    /// <summary>
+    /// Replaces the smallest element with the specified item and returns the previous smallest element.
+    /// </summary>
+    /// <remarks>
+    /// If the heap is empty, the item is inserted and returned.
+    /// </remarks>
     public T ReplaceTop(T item)
     {
         if (_count == 0)
@@ -157,6 +207,10 @@ public class Heap<T> : IReadOnlyCollection<T>
         return root;
     }
 
+    /// <summary>
+    /// Attempts to replace the smallest element with the specified item.
+    /// </summary>
+    /// <returns><see langword="true"/> if the heap was not empty; otherwise <see langword="false"/>.</returns>
     public bool TryReplaceTop(T item, out T? old)
     {
         if (_count == 0)
@@ -171,6 +225,10 @@ public class Heap<T> : IReadOnlyCollection<T>
         return true;
     }
 
+    /// <summary>
+    /// Inserts an element and removes the smallest element in a single operation.
+    /// </summary>
+    /// <returns>The element that was removed.</returns>
     public T PushPop(T item)
     {
         if (_count == 0 || _comparer.Compare(item, _data[0]) <= 0)
@@ -181,6 +239,9 @@ public class Heap<T> : IReadOnlyCollection<T>
         return root;
     }
 
+    /// <summary>
+    /// Sets the capacity to the actual number of elements, or to the specified capacity if provided.
+    /// </summary>
     public void TrimExcess(int? capacity = null)
     {
         var count = _count;

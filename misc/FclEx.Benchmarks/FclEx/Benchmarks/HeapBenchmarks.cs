@@ -46,6 +46,11 @@ public class HeapBenchmarks
         for (var i = 0; i < _data.Length; i++)
             pq.Enqueue(_data[i], _data[i]);
 
+        foreach (var m in pq.UnorderedItems)
+        {
+            
+        }
+
         return pq;
     }
 
