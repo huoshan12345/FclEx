@@ -503,6 +503,113 @@ public class OrderedIndexTests
         }
     }
 
+    [Fact]
+    public void Enumerator_ShouldIterateInOrder()
+    {
+        var idx = new OrderedIndex<int, int>();
+
+        for (var i = 0; i < 10; i++)
+            idx.Add(i, i);
+
+        var result = new List<int>();
+
+        foreach (var (_, v) in idx)
+            result.Add(v);
+
+        Assert.Equal(Enumerable.Range(0, 10), result);
+    }
+
+    [Fact]
+    public void Enumerator_Empty()
+    {
+        var idx = new OrderedIndex<int, int>();
+        var count = 0;
+
+        // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
+        foreach (var _ in idx)
+            count++;
+
+        Assert.Equal(0, count);
+    }
+
+    [Fact]
+    public void Enumerator_AfterRemove()
+    {
+        var idx = new OrderedIndex<int, int>();
+
+        for (var i = 0; i < 10; i++)
+            idx.Add(i, i);
+
+        idx.Remove(5);
+        idx.Remove(7);
+
+        var result = new List<int>();
+
+        foreach (var (_, v) in idx)
+            result.Add(v);
+
+        Assert.Equal(new[] { 0, 1, 2, 3, 4, 6, 8, 9 }, result);
+    }
+
+    [Fact]
+    public void Enumerator_ShouldMatchModel()
+    {
+        var idx = new OrderedIndex<int, int>();
+        var model = new List<(int score, int value)>();
+
+        var rand = new Random(123);
+
+        for (var i = 0; i < 1000; i++)
+        {
+            var score = rand.Next(10000);
+            var value = i;
+
+            idx.Add(score, value);
+            model.Add((score, value));
+        }
+
+        model.Sort((a, b) => a.score.CompareTo(b.score));
+
+        var enumerated = idx.Select(x => x.Score).ToList();
+        var expected = model.Select(x => x.score).ToList();
+
+        Assert.Equal(expected, enumerated);
+    }
+
+    [Fact]
+    public void Enumerator_RandomStress()
+    {
+        var idx = new OrderedIndex<int, int>();
+
+        var rand = new Random(42);
+
+        for (int i = 0; i < 10000; i++)
+            idx.Add(rand.Next(), i);
+
+        var prev = int.MinValue;
+
+        foreach (var (score, _) in idx)
+        {
+            Assert.True(score >= prev);
+            prev = score;
+        }
+    }
+
+    [Fact]
+    public void Enumerator_OrderIsStable()
+    {
+        var idx = new OrderedIndex<int, int>
+        {
+            { 10, 1 },
+            { 5, 2 },
+            { 20, 3 }
+        };
+
+        var scores = idx.Select(x => x.Score).ToArray();
+
+        Assert.Equal(new[] { 5, 10, 20 }, scores);
+    }
+
     private sealed record ModelItem(int Score, int Value, long Seq);
 
     [Fact]
@@ -514,19 +621,19 @@ public class OrderedIndexTests
 
         var rnd = new Random(1);
 
-        int nextValue = 0;
+        var nextValue = 0;
         long seq = 0;
 
-        for (int step = 0; step < 10000; step++)
+        for (var step = 0; step < 10000; step++)
         {
-            int op = rnd.Next(4);
+            var op = rnd.Next(4);
 
             switch (op)
             {
                 case 0: // Add
                 {
-                    int score = rnd.Next(1000);
-                    int value = nextValue++;
+                    var score = rnd.Next(1000);
+                    var value = nextValue++;
 
                     idx.Add(score, value);
 
@@ -540,7 +647,7 @@ public class OrderedIndexTests
                     if (model.Count == 0)
                         break;
 
-                    int i = rnd.Next(model.Count);
+                    var i = rnd.Next(model.Count);
 
                     var item = model[i];
 
@@ -556,11 +663,11 @@ public class OrderedIndexTests
                     if (model.Count == 0)
                         break;
 
-                    int i = rnd.Next(model.Count);
+                    var i = rnd.Next(model.Count);
 
                     var item = model[i];
 
-                    int newScore = rnd.Next(1000);
+                    var newScore = rnd.Next(1000);
 
                     idx.UpdateScore(item.Value, newScore);
 
@@ -575,12 +682,12 @@ public class OrderedIndexTests
                     if (model.Count == 0)
                         break;
 
-                    int start = rnd.Next(model.Count);
-                    int count = rnd.Next(5);
+                    var start = rnd.Next(model.Count);
+                    var count = rnd.Next(5);
 
                     idx.RemoveByRank(start, count);
 
-                    int removeCount = Math.Min(count, model.Count - start);
+                    var removeCount = Math.Min(count, model.Count - start);
 
                     model.RemoveRange(start, removeCount);
 
@@ -598,7 +705,7 @@ public class OrderedIndexTests
     {
         model.Sort((a, b) =>
         {
-            int c = a.Score.CompareTo(b.Score);
+            var c = a.Score.CompareTo(b.Score);
             if (c != 0)
                 return c;
 
@@ -612,12 +719,12 @@ public class OrderedIndexTests
 
         Assert.Equal(model.Count, arr.Length);
 
-        for (int i = 0; i < arr.Length; i++)
+        for (var i = 0; i < arr.Length; i++)
         {
             Assert.Equal(model[i].Score, arr[i].Score);
             Assert.Equal(model[i].Value, arr[i].Value);
 
-            int rank = idx.Rank(arr[i].Value);
+            var rank = idx.Rank(arr[i].Value);
 
             if (rank != i)
             {
@@ -627,7 +734,7 @@ public class OrderedIndexTests
             }
         }
 
-        for (int i = 0; i < arr.Length; i++)
+        for (var i = 0; i < arr.Length; i++)
         {
             idx.TryGetByRank(i, out var item);
 
