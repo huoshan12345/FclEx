@@ -17,9 +17,7 @@ public class OrderedIndex<TScore, TValue> :
     public OrderedIndex(IComparer<TScore>? comparer = null, int capacity = 0)
     {
         _scoreComparer = comparer ?? Comparer<TScore>.Default;
-
         _map = new Dictionary<TValue, Node>(capacity);
-
         _head = new Node(MaxLevel, default!, default!, 0);
     }
 
@@ -81,7 +79,10 @@ public class OrderedIndex<TScore, TValue> :
     private int Compare(Node node, TScore score, long seq)
     {
         var c = _scoreComparer.Compare(node.Score, score);
-        if (c != 0) return c;
+
+        // ReSharper disable once ConvertIfStatementToReturnStatement
+        if (c != 0) 
+            return c;
 
         return node.Sequence.CompareTo(seq);
     }
@@ -92,7 +93,6 @@ public class OrderedIndex<TScore, TValue> :
             return false;
 
         var seq = ++_sequence;
-
         var x = _head;
 
         for (var i = _level - 1; i >= 0; i--)
@@ -140,7 +140,6 @@ public class OrderedIndex<TScore, TValue> :
         }
 
         node.Backward = _update[0] == _head ? null : _update[0];
-
         node.Levels[0].Forward?.Backward = node;
 
         _map[value] = node;
@@ -285,8 +284,8 @@ public class OrderedIndex<TScore, TValue> :
         }
 
         x = x.Levels[0].Forward!;
-
         item = (x.Score, x.Value);
+
         return true;
     }
 
