@@ -12,7 +12,7 @@ internal class Program
 
         // BenchmarkSwitcher.FromTypes([typeof(SizeOfBenchmark<>)]).Run([.. args, "-f", "*"], config);
         // new IntToByteArrayBenchmark().ExplicitLayoutStruct();
-        BenchmarkRunner.Run<HeapBenchmarks>(config);
+        BenchmarkRunner.Run<OrderedIndexBenchmark>(config);
     }
 
     private static void TestRandom()
