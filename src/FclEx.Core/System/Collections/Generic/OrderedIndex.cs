@@ -262,11 +262,11 @@ public class OrderedIndex<TScore, TValue> :
         return true;
     }
 
-    public IEnumerable<(TScore Score, TValue Value)> RangeByRank(int start, int count)
+    public RankRangeEnumerable RangeByRank(int start, int count)
     {
         if (start < 0) start = 0;
         if (start >= _count || count <= 0)
-            yield break;
+            return [];
 
         var end = Math.Min(start + count, _count);
 
@@ -283,16 +283,11 @@ public class OrderedIndex<TScore, TValue> :
             }
         }
 
-        x = x.Forward[0];
-
-        for (var i = start; i < end && x != null; i++)
-        {
-            yield return (x.Score, x.Value);
-            x = x.Forward[0];
-        }
+        var e = new RankRangeEnumerator(x, end - start);
+        return new(e);
     }
 
-    public IEnumerable<(TScore Score, TValue Value)> RangeByScore(TScore min, TScore max)
+    public ScoreRangeEnumerable RangeByScore(TScore min, TScore max)
     {
         var x = _head;
 
@@ -305,14 +300,8 @@ public class OrderedIndex<TScore, TValue> :
             }
         }
 
-        x = x.Forward[0];
-
-        while (x != null &&
-               _scoreComparer.Compare(x.Score, max) <= 0)
-        {
-            yield return (x.Score, x.Value);
-            x = x.Forward[0];
-        }
+        var e = new ScoreRangeEnumerator(x, max, _scoreComparer);
+        return new(e);
     }
 
     public int RemoveByRank(int start, int count)
@@ -435,7 +424,7 @@ public class OrderedIndex<TScore, TValue> :
 
     public Enumerator GetEnumerator()
     {
-        return new Enumerator(_head);
+        return new Enumerator(_head, null);
     }
 
     internal sealed class Node(int level, TScore score, TValue value, long sequence)
@@ -450,22 +439,26 @@ public class OrderedIndex<TScore, TValue> :
 
     public struct Enumerator : IEnumerator<(TScore Score, TValue Value)>
     {
-        private readonly Node _head;
+        private readonly Node? _start;
+        private readonly Node? _end;
         private Node? _node;
 
-        internal Enumerator(Node head)
+        internal Enumerator(Node? start, Node? end)
         {
-            _head = head;
-            _node = head;
+            _start = start;
+            _end = end;
+            _node = start;
         }
 
         public bool MoveNext()
         {
-            if (_node == null)
+            _node = _node?.Forward[0];
+
+            // ReSharper disable once ConvertIfStatementToReturnStatement
+            if (_node == null || _node == _end)
                 return false;
 
-            _node = _node.Forward[0];
-            return _node != null;
+            return true;
         }
 
         public readonly (TScore Score, TValue Value) Current
@@ -475,9 +468,107 @@ public class OrderedIndex<TScore, TValue> :
 
         public void Reset()
         {
-            _node = _head;
+            _node = _start;
         }
 
         public readonly void Dispose() { }
+    }
+
+    public struct RankRangeEnumerator : IEnumerator<(TScore Score, TValue Value)>
+    {
+        private readonly Node? _start;
+        private readonly int _count;
+        private Node? _node;
+        private int _remaining;
+
+        internal RankRangeEnumerator(Node? start, int count)
+        {
+            _start = start;
+            _count = count;
+            _node = _start;
+            _remaining = _count;
+        }
+
+        public bool MoveNext()
+        {
+            if (_remaining == 0 || _node == null)
+                return false;
+
+            _node = _node.Forward[0];
+            _remaining--;
+
+            return true;
+        }
+
+        public readonly (TScore Score, TValue Value) Current
+            => (_node!.Score, _node.Value);
+
+        readonly object IEnumerator.Current => Current;
+
+        public void Reset()
+        {
+            _node = _start;
+            _remaining = _count;
+        }
+
+        public readonly void Dispose() { }
+    }
+
+    public readonly struct RankRangeEnumerable(RankRangeEnumerator enumerator)
+        : IEnumerable<(TScore Score, TValue Value)>
+    {
+        IEnumerator<(TScore Score, TValue Value)> IEnumerable<(TScore Score, TValue Value)>.GetEnumerator() => GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        public RankRangeEnumerator GetEnumerator() => enumerator;
+    }
+
+    public struct ScoreRangeEnumerator : IEnumerator<(TScore Score, TValue Value)>
+    {
+        private readonly Node? _start;
+        private Node? _node;
+        private readonly TScore _max;
+        private readonly IComparer<TScore> _comparer;
+
+        internal ScoreRangeEnumerator(Node? start, TScore max, IComparer<TScore> comparer)
+        {
+            _start = start;
+            _max = max;
+            _comparer = comparer;
+            _node = _start;
+        }
+
+        public bool MoveNext()
+        {
+            _node = _node?.Forward[0];
+
+            if (_node == null)
+                return false;
+
+
+            if (_comparer.Compare(_node.Score, _max) > 0)
+                return false;
+
+            return true;
+        }
+
+        public readonly (TScore Score, TValue Value) Current
+           => (_node!.Score, _node.Value);
+
+        readonly object IEnumerator.Current => Current;
+
+        public void Reset()
+        {
+            _node = _start;
+        }
+
+        public readonly void Dispose() { }
+    }
+
+    public readonly struct ScoreRangeEnumerable(ScoreRangeEnumerator enumerator)
+        : IEnumerable<(TScore Score, TValue Value)>
+    {
+        IEnumerator<(TScore Score, TValue Value)> IEnumerable<(TScore Score, TValue Value)>.GetEnumerator() => GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        public ScoreRangeEnumerator GetEnumerator() => enumerator;
     }
 }
