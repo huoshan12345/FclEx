@@ -5,11 +5,11 @@ public class OrderedIndex<TScore, TValue> :
     where TValue : notnull
 {
     private const int MaxLevel = 32;
-    private readonly Node _head;
-    private readonly Dictionary<TValue, Node> _map;
-    private readonly IComparer<TScore> _scoreComparer;
+    private readonly Node _head = new(MaxLevel, default!, default!, 0);
     private readonly Node[] _update = new Node[MaxLevel];
     private readonly int[] _rank = new int[MaxLevel];
+    private readonly Dictionary<TValue, Node> _map;
+    private readonly IComparer<TScore> _scoreComparer;
     private int _level = 1;
     private int _count;
     private long _sequence;
@@ -18,7 +18,6 @@ public class OrderedIndex<TScore, TValue> :
     {
         _scoreComparer = comparer ?? Comparer<TScore>.Default;
         _map = new Dictionary<TValue, Node>(capacity);
-        _head = new Node(MaxLevel, default!, default!, 0);
     }
 
     // ReSharper disable once ConvertToAutoPropertyWithPrivateSetter
