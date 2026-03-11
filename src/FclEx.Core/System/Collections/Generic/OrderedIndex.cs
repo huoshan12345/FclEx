@@ -437,6 +437,14 @@ public class OrderedIndex<TScore, TValue> :
         public Node? Backward;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static (TScore Score, TValue Value) GetScoreValue(Node? node)
+    {
+        return node is null 
+            ? throw new InvalidOperationException()
+            : (node.Score, node.Value);
+    }
+
     public struct Enumerator : IEnumerator<(TScore Score, TValue Value)>
     {
         private readonly Node? _start;
@@ -453,16 +461,11 @@ public class OrderedIndex<TScore, TValue> :
         public bool MoveNext()
         {
             _node = _node?.Forward[0];
-
-            // ReSharper disable once ConvertIfStatementToReturnStatement
-            if (_node == null || _node == _end)
-                return false;
-
-            return true;
+            return _node != null && _node != _end;
         }
 
         public readonly (TScore Score, TValue Value) Current
-            => (_node!.Score, _node.Value);
+            => GetScoreValue(_node);
 
         readonly object IEnumerator.Current => Current;
 
@@ -501,7 +504,7 @@ public class OrderedIndex<TScore, TValue> :
         }
 
         public readonly (TScore Score, TValue Value) Current
-            => (_node!.Score, _node.Value);
+            => GetScoreValue(_node);
 
         readonly object IEnumerator.Current => Current;
 
@@ -544,15 +547,11 @@ public class OrderedIndex<TScore, TValue> :
             if (_node == null)
                 return false;
 
-
-            if (_comparer.Compare(_node.Score, _max) > 0)
-                return false;
-
-            return true;
+            return _comparer.Compare(_node.Score, _max) <= 0;
         }
 
         public readonly (TScore Score, TValue Value) Current
-           => (_node!.Score, _node.Value);
+            => GetScoreValue(_node);
 
         readonly object IEnumerator.Current => Current;
 
