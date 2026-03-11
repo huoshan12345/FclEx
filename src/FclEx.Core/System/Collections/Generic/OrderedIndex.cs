@@ -42,8 +42,7 @@ public class OrderedIndex<TScore, TValue> :
 
     public void Clear()
     {
-        _head.Forward.Clear();
-        _head.Span.Clear();
+        _head.Levels.Clear();
         _map.Clear();
 
         _level = 1;
@@ -52,11 +51,24 @@ public class OrderedIndex<TScore, TValue> :
 
     private static int RandomLevel()
     {
-        var r = (uint)Random.Shared.Next();
+        // Randomly generate a node level using geometric distribution.
+        // 
+        // Each additional level is added with probability p = 1/2.
+        // This produces an exponential distribution:
+        //
+        // level 1: 50%
+        // level 2: 25%
+        // level 3: 12.5%
+        // ...
+        //
+        // The result is a pyramid structure where higher levels
+        // contain exponentially fewer nodes, enabling O(log n)
+        // search complexity.
 
+        var r = (uint)Random.Shared.Next();
         var level = 1;
 
-        while ((r & 1) == 1 && level < MaxLevel)
+        while ((r & 3) == 3 && level < MaxLevel)
         {
             level++;
             r >>= 1;
@@ -65,16 +77,7 @@ public class OrderedIndex<TScore, TValue> :
         return level;
     }
 
-    private int CompareNode(Node a, Node b)
-    {
-        var c = _scoreComparer.Compare(a.Score, b.Score);
-        // ReSharper disable once ConvertIfStatementToReturnStatement
-        if (c != 0)
-            return c;
-
-        return a.Sequence.CompareTo(b.Sequence);
-    }
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int Compare(Node node, TScore score, long seq)
     {
         var c = _scoreComparer.Compare(node.Score, score);
@@ -96,11 +99,11 @@ public class OrderedIndex<TScore, TValue> :
         {
             _rank[i] = i == _level - 1 ? 0 : _rank[i + 1];
 
-            while (x.Forward[i] != null &&
-                   Compare(x.Forward[i]!, score, seq) < 0)
+            while (x.Levels[i].Forward is { } forward &&
+                   Compare(forward, score, seq) < 0)
             {
-                _rank[i] += x.Span[i];
-                x = x.Forward[i]!;
+                _rank[i] += x.Levels[i].Span;
+                x = forward;
             }
 
             _update[i] = x;
@@ -114,7 +117,7 @@ public class OrderedIndex<TScore, TValue> :
             {
                 _rank[i] = 0;
                 _update[i] = _head;
-                _head.Span[i] = _count;
+                _head.Levels[i].Span = _count;
             }
 
             _level = lvl;
@@ -124,22 +127,21 @@ public class OrderedIndex<TScore, TValue> :
 
         for (var i = 0; i < lvl; i++)
         {
-            node.Forward[i] = _update[i].Forward[i];
-            _update[i].Forward[i] = node;
+            node.Levels[i].Forward = _update[i].Levels[i].Forward;
+            _update[i].Levels[i].Forward = node;
 
-            node.Span[i] = _update[i].Span[i] - (_rank[0] - _rank[i]);
-            _update[i].Span[i] = (_rank[0] - _rank[i]) + 1;
+            node.Levels[i].Span = _update[i].Levels[i].Span - (_rank[0] - _rank[i]);
+            _update[i].Levels[i].Span = (_rank[0] - _rank[i]) + 1;
         }
 
         for (var i = lvl; i < _level; i++)
         {
-            _update[i].Span[i]++;
+            _update[i].Levels[i].Span++;
         }
 
         node.Backward = _update[0] == _head ? null : _update[0];
 
-        if (node.Forward[0] != null)
-            node.Forward[0]!.Backward = node;
+        node.Levels[0].Forward?.Backward = node;
 
         _map[value] = node;
         _count++;
@@ -150,11 +152,14 @@ public class OrderedIndex<TScore, TValue> :
     private void RemoveNode(Node node)
     {
         var x = _head;
+        var score = node.Score;
+        var seq = node.Sequence;
 
         for (var i = _level - 1; i >= 0; i--)
         {
-            while (x.Forward[i] is { } forward
-                   && CompareNode(forward, node) < 0)
+            while (x.Levels[i].Forward is { } forward
+                   && forward != node
+                   && Compare(forward, score, seq) < 0)
             {
                 x = forward;
             }
@@ -164,20 +169,20 @@ public class OrderedIndex<TScore, TValue> :
 
         for (var i = 0; i < _level; i++)
         {
-            if (_update[i].Forward[i] == node)
+            if (_update[i].Levels[i].Forward == node)
             {
-                _update[i].Span[i] += node.Span[i] - 1;
-                _update[i].Forward[i] = node.Forward[i];
+                _update[i].Levels[i].Span += node.Levels[i].Span - 1;
+                _update[i].Levels[i].Forward = node.Levels[i].Forward;
             }
             else
             {
-                _update[i].Span[i]--;
+                _update[i].Levels[i].Span--;
             }
         }
 
-        node.Forward[0]?.Backward = node.Backward;
+        node.Levels[0].Forward?.Backward = node.Backward;
 
-        while (_level > 1 && _head.Forward[_level - 1] == null)
+        while (_level > 1 && _head.Levels[_level - 1].Forward == null)
             _level--;
     }
 
@@ -209,23 +214,28 @@ public class OrderedIndex<TScore, TValue> :
         if (!_map.TryGetValue(value, out var node))
             return -1;
 
+        if (TryFast(node, out var result))
+            return result;
+
         var rank = 0;
         var x = _head;
+        var score = node.Score;
+        var seq = node.Sequence;
 
         for (var i = _level - 1; i >= 0; i--)
         {
-            while (x.Forward[i] is { } forward)
+            while (x.Levels[i].Forward is { } forward)
             {
-                var cmp = CompareNode(forward, node);
+                if (forward == node)
+                {
+                    rank += x.Levels[i].Span;
+                    return rank - 1;
+                }
 
-                if (cmp > 0)
+                if (Compare(forward, score, seq) > 0)
                     break;
 
-                rank += x.Span[i];
-
-                if (forward == node)
-                    return rank - 1;
-
+                rank += x.Levels[i].Span;
                 x = forward;
             }
 
@@ -234,6 +244,24 @@ public class OrderedIndex<TScore, TValue> :
         }
 
         return -1;
+
+        static bool TryFast(Node node, out int rank)
+        {
+            rank = 0;
+            var x = node;
+
+            while (rank < 8)
+            {
+                if (x.Backward == null)
+                    return true;
+
+                x = x.Backward;
+                rank++;
+            }
+
+            rank = 0;
+            return false;
+        }
     }
 
     public bool TryGetByRank(int rank, out (TScore Score, TValue Value) item)
@@ -248,15 +276,15 @@ public class OrderedIndex<TScore, TValue> :
 
         for (var i = _level - 1; i >= 0; i--)
         {
-            while (x.Forward[i] is { } forward &&
-                   traversed + x.Span[i] <= rank)
+            while (x.Levels[i].Forward is { } forward &&
+                   traversed + x.Levels[i].Span <= rank)
             {
-                traversed += x.Span[i];
+                traversed += x.Levels[i].Span;
                 x = forward;
             }
         }
 
-        x = x.Forward[0]!;
+        x = x.Levels[0].Forward!;
 
         item = (x.Score, x.Value);
         return true;
@@ -275,10 +303,10 @@ public class OrderedIndex<TScore, TValue> :
 
         for (var i = _level - 1; i >= 0; i--)
         {
-            while (x.Forward[i] is { } forward &&
-                   traversed + x.Span[i] <= start)
+            while (x.Levels[i].Forward is { } forward &&
+                   traversed + x.Levels[i].Span <= start)
             {
-                traversed += x.Span[i];
+                traversed += x.Levels[i].Span;
                 x = forward;
             }
         }
@@ -293,7 +321,7 @@ public class OrderedIndex<TScore, TValue> :
 
         for (var i = _level - 1; i >= 0; i--)
         {
-            while (x.Forward[i] is { } forward &&
+            while (x.Levels[i].Forward is { } forward &&
                    _scoreComparer.Compare(forward.Score, min) < 0)
             {
                 x = forward;
@@ -314,37 +342,37 @@ public class OrderedIndex<TScore, TValue> :
 
         for (var i = _level - 1; i >= 0; i--)
         {
-            while (x.Forward[i] != null &&
-                   traversed + x.Span[i] <= start)
+            while (x.Levels[i].Forward != null &&
+                   traversed + x.Levels[i].Span <= start)
             {
-                traversed += x.Span[i];
-                x = x.Forward[i]!;
+                traversed += x.Levels[i].Span;
+                x = x.Levels[i].Forward!;
             }
 
             _update[i] = x;
         }
 
         var removed = 0;
-        x = _update[0].Forward[0];
+        x = _update[0].Levels[0].Forward;
 
         while (x != null && removed < count)
         {
-            var next = x.Forward[0];
+            var next = x.Levels[0].Forward;
 
             for (var i = 0; i < _level; i++)
             {
-                if (_update[i].Forward[i] == x)
+                if (_update[i].Levels[i].Forward == x)
                 {
-                    _update[i].Span[i] += x.Span[i] - 1;
-                    _update[i].Forward[i] = x.Forward[i];
+                    _update[i].Levels[i].Span += x.Levels[i].Span - 1;
+                    _update[i].Levels[i].Forward = x.Levels[i].Forward;
                 }
                 else
                 {
-                    _update[i].Span[i]--;
+                    _update[i].Levels[i].Span--;
                 }
             }
 
-            x.Forward[0]?.Backward = x.Backward;
+            x.Levels[0].Forward?.Backward = x.Backward;
 
             _map.Remove(x.Value);
 
@@ -354,7 +382,7 @@ public class OrderedIndex<TScore, TValue> :
             x = next;
         }
 
-        while (_level > 1 && _head.Forward[_level - 1] == null)
+        while (_level > 1 && _head.Levels[_level - 1].Forward == null)
             _level--;
 
         return removed;
@@ -366,37 +394,37 @@ public class OrderedIndex<TScore, TValue> :
 
         for (var i = _level - 1; i >= 0; i--)
         {
-            while (x.Forward[i] != null &&
-                   _scoreComparer.Compare(x.Forward[i]!.Score, min) < 0)
+            while (x.Levels[i].Forward != null &&
+                   _scoreComparer.Compare(x.Levels[i].Forward!.Score, min) < 0)
             {
-                x = x.Forward[i]!;
+                x = x.Levels[i].Forward!;
             }
 
             _update[i] = x;
         }
 
         var removed = 0;
-        x = _update[0].Forward[0];
+        x = _update[0].Levels[0].Forward;
 
         while (x != null &&
                _scoreComparer.Compare(x.Score, max) <= 0)
         {
-            var next = x.Forward[0];
+            var next = x.Levels[0].Forward;
 
             for (var i = 0; i < _level; i++)
             {
-                if (_update[i].Forward[i] == x)
+                if (_update[i].Levels[i].Forward == x)
                 {
-                    _update[i].Span[i] += x.Span[i] - 1;
-                    _update[i].Forward[i] = x.Forward[i];
+                    _update[i].Levels[i].Span += x.Levels[i].Span - 1;
+                    _update[i].Levels[i].Forward = x.Levels[i].Forward;
                 }
                 else
                 {
-                    _update[i].Span[i]--;
+                    _update[i].Levels[i].Span--;
                 }
             }
 
-            x.Forward[0]?.Backward = x.Backward;
+            x.Levels[0].Forward?.Backward = x.Backward;
 
             _map.Remove(x.Value);
 
@@ -406,7 +434,7 @@ public class OrderedIndex<TScore, TValue> :
             x = next;
         }
 
-        while (_level > 1 && _head.Forward[_level - 1] == null)
+        while (_level > 1 && _head.Levels[_level - 1].Forward == null)
             _level--;
 
         return removed;
@@ -424,23 +452,28 @@ public class OrderedIndex<TScore, TValue> :
 
     public Enumerator GetEnumerator()
     {
-        return new Enumerator(_head, null);
+        return new Enumerator(_head);
+    }
+
+    internal struct Level
+    {
+        public Node? Forward;
+        public int Span;
     }
 
     internal sealed class Node(int level, TScore score, TValue value, long sequence)
     {
-        public readonly Node?[] Forward = new Node[level];
-        public readonly int[] Span = new int[level];
         public readonly TScore Score = score;
         public readonly TValue Value = value;
         public readonly long Sequence = sequence;
         public Node? Backward;
+        public readonly Level[] Levels = new Level[level];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static (TScore Score, TValue Value) GetScoreValue(Node? node)
     {
-        return node is null 
+        return node is null
             ? throw new InvalidOperationException()
             : (node.Score, node.Value);
     }
@@ -448,20 +481,18 @@ public class OrderedIndex<TScore, TValue> :
     public struct Enumerator : IEnumerator<(TScore Score, TValue Value)>
     {
         private readonly Node? _start;
-        private readonly Node? _end;
         private Node? _node;
 
-        internal Enumerator(Node? start, Node? end)
+        internal Enumerator(Node? start)
         {
             _start = start;
-            _end = end;
             _node = start;
         }
 
         public bool MoveNext()
         {
-            _node = _node?.Forward[0];
-            return _node != null && _node != _end;
+            _node = _node?.Levels[0].Forward;
+            return _node != null;
         }
 
         public readonly (TScore Score, TValue Value) Current
@@ -497,7 +528,7 @@ public class OrderedIndex<TScore, TValue> :
             if (_remaining == 0 || _node == null)
                 return false;
 
-            _node = _node.Forward[0];
+            _node = _node.Levels[0].Forward;
             _remaining--;
 
             return true;
@@ -542,7 +573,7 @@ public class OrderedIndex<TScore, TValue> :
 
         public bool MoveNext()
         {
-            _node = _node?.Forward[0];
+            _node = _node?.Levels[0].Forward;
 
             if (_node == null)
                 return false;

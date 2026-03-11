@@ -401,6 +401,21 @@ public class OrderedIndexTests
     }
 
     [Fact]
+    public void Rank_FastPath()
+    {
+        var idx = new OrderedIndex<int, int>
+        {
+            { 10, 1 },
+            { 20, 2 },
+            { 30, 3 }
+        };
+
+        Assert.Equal(0, idx.Rank(1));
+        Assert.Equal(1, idx.Rank(2));
+        Assert.Equal(2, idx.Rank(3));
+    }
+
+    [Fact]
     public void TryGetByRank_ShouldMatchEnumeration()
     {
         var idx = new OrderedIndex<int, int>();
@@ -583,7 +598,7 @@ public class OrderedIndexTests
 
         var rand = new Random(42);
 
-        for (int i = 0; i < 10000; i++)
+        for (var i = 0; i < 10000; i++)
             idx.Add(rand.Next(), i);
 
         var prev = int.MinValue;
@@ -634,49 +649,37 @@ public class OrderedIndexTests
                 {
                     var score = rnd.Next(1000);
                     var value = nextValue++;
-
                     idx.Add(score, value);
-
                     model.Add(new ModelItem(score, value, seq++));
 
                     break;
                 }
-
                 case 1: // Remove
                 {
                     if (model.Count == 0)
                         break;
 
                     var i = rnd.Next(model.Count);
-
                     var item = model[i];
-
                     idx.Remove(item.Value);
-
                     model.RemoveAt(i);
 
                     break;
                 }
-
                 case 2: // UpdateScore
                 {
                     if (model.Count == 0)
                         break;
 
                     var i = rnd.Next(model.Count);
-
                     var item = model[i];
-
                     var newScore = rnd.Next(1000);
-
                     idx.UpdateScore(item.Value, newScore);
-
                     model.RemoveAt(i);
                     model.Add(new ModelItem(newScore, item.Value, seq++));
 
                     break;
                 }
-
                 case 3: // RemoveByRank
                 {
                     if (model.Count == 0)
@@ -684,11 +687,8 @@ public class OrderedIndexTests
 
                     var start = rnd.Next(model.Count);
                     var count = rnd.Next(5);
-
                     idx.RemoveByRank(start, count);
-
                     var removeCount = Math.Min(count, model.Count - start);
-
                     model.RemoveRange(start, removeCount);
 
                     break;
