@@ -1,5 +1,17 @@
 ﻿namespace System.Collections.Generic;
 
+/// <summary>
+/// Represents an ordered index of values associated with scores.
+/// Elements are kept sorted by score and support efficient rank and range queries.
+/// </summary>
+/// <remarks>
+/// <list type="bullet">
+/// <item><description>Each value is unique within the index.</description></item>
+/// <item><description>Elements are ordered by score.</description></item>
+/// <item><description>Ordering is stable: elements with the same score keep their insertion order.</description></item>
+/// <item><description>Enumeration returns elements in score order.</description></item>
+/// </list>
+/// </remarks>
 public class OrderedIndex<TScore, TValue> :
     IReadOnlyCollection<(TScore Score, TValue Value)>
     where TValue : notnull
@@ -23,8 +35,14 @@ public class OrderedIndex<TScore, TValue> :
     // ReSharper disable once ConvertToAutoPropertyWithPrivateSetter
     public int Count => _count;
 
+    /// <summary>
+    /// Determines whether the specified value exists in the index.
+    /// </summary>
     public bool Contains(TValue value) => _map.TryGetValue(value, out _);
 
+    /// <summary>
+    /// Attempts to get the score associated with the specified value.
+    /// </summary>
     public bool TryGetScore(TValue value, out TScore score)
     {
         if (_map.TryGetValue(value, out var node))
@@ -37,6 +55,9 @@ public class OrderedIndex<TScore, TValue> :
         return false;
     }
 
+    /// <summary>
+    /// Removes all elements from the index.
+    /// </summary>
     public void Clear()
     {
         _head.Levels.Clear();
@@ -86,6 +107,12 @@ public class OrderedIndex<TScore, TValue> :
         return node.Sequence.CompareTo(seq);
     }
 
+    /// <summary>
+    /// Adds a value with the specified score.
+    /// </summary>
+    /// <returns>
+    /// True if the value was added; false if the value already exists.
+    /// </returns>
     public bool Add(TScore score, TValue value)
     {
         if (_map.ContainsKey(value))
@@ -184,6 +211,12 @@ public class OrderedIndex<TScore, TValue> :
             _level--;
     }
 
+    /// <summary>
+    /// Removes the specified value from the index.
+    /// </summary>
+    /// <returns>
+    /// True if the value was removed; otherwise false.
+    /// </returns>
     public bool Remove(TValue value)
     {
         if (!_map.TryGetValue(value, out var node))
@@ -197,6 +230,12 @@ public class OrderedIndex<TScore, TValue> :
         return true;
     }
 
+    /// <summary>
+    /// Updates the score of the specified value.
+    /// </summary>
+    /// <returns>
+    /// True if the score was updated; false if the value does not exist.
+    /// </returns>
     public bool UpdateScore(TValue value, TScore newScore)
     {
         if (!Remove(value))
@@ -207,6 +246,12 @@ public class OrderedIndex<TScore, TValue> :
         return true;
     }
 
+    /// <summary>
+    /// Gets the zero-based rank of the specified value.
+    /// </summary>
+    /// <returns>
+    /// The zero-based rank of the value; or -1 if the value does not exist.
+    /// </returns>
     public int Rank(TValue value)
     {
         if (!_map.TryGetValue(value, out var node))
@@ -262,6 +307,9 @@ public class OrderedIndex<TScore, TValue> :
         }
     }
 
+    /// <summary>
+    /// Attempts to get the element at the specified rank.
+    /// </summary>
     public bool TryGetByRank(int rank, out (TScore Score, TValue Value) item)
     {
         item = default;
@@ -288,6 +336,9 @@ public class OrderedIndex<TScore, TValue> :
         return true;
     }
 
+    /// <summary>
+    /// Returns a sequence of elements starting at the specified rank.
+    /// </summary>
     public RankRangeEnumerable RangeByRank(int start, int count)
     {
         if (start < 0) start = 0;
@@ -313,6 +364,9 @@ public class OrderedIndex<TScore, TValue> :
         return new(e);
     }
 
+    /// <summary>
+    /// Returns elements whose scores are within the inclusive range [min, max].
+    /// </summary>
     public ScoreRangeEnumerable RangeByScore(TScore min, TScore max)
     {
         var x = _head;
@@ -330,6 +384,10 @@ public class OrderedIndex<TScore, TValue> :
         return new(e);
     }
 
+    /// <summary>
+    /// Removes a range of elements by rank.
+    /// </summary>
+    /// <returns>The number of removed elements.</returns>
     public int RemoveByRank(int start, int count)
     {
         if (count <= 0 || start < 0 || start >= _count)
@@ -386,6 +444,12 @@ public class OrderedIndex<TScore, TValue> :
         return removed;
     }
 
+    /// <summary>
+    /// Removes elements whose scores are within the inclusive range [min, max].
+    /// </summary>
+    /// <returns>
+    /// The number of removed elements.
+    /// </returns>
     public int RemoveByScore(TScore min, TScore max)
     {
         var x = _head;
@@ -448,6 +512,9 @@ public class OrderedIndex<TScore, TValue> :
         return GetEnumerator();
     }
 
+    /// <summary>
+    /// Returns an enumerator that iterates through the elements in score order.
+    /// </summary>
     public Enumerator GetEnumerator()
     {
         return new Enumerator(_head);
@@ -476,6 +543,9 @@ public class OrderedIndex<TScore, TValue> :
             : (node.Score, node.Value);
     }
 
+    /// <summary>
+    /// Enumerates the elements of the <see cref="OrderedIndex{TScore, TValue}"/> in score order.
+    /// </summary>
     public struct Enumerator : IEnumerator<(TScore Score, TValue Value)>
     {
         private readonly Node? _start;
@@ -506,6 +576,9 @@ public class OrderedIndex<TScore, TValue> :
         public readonly void Dispose() { }
     }
 
+    /// <summary>
+    /// Enumerates elements within a specified rank range.
+    /// </summary>
     public struct RankRangeEnumerator : IEnumerator<(TScore Score, TValue Value)>
     {
         private readonly Node? _start;
@@ -546,6 +619,9 @@ public class OrderedIndex<TScore, TValue> :
         public readonly void Dispose() { }
     }
 
+    /// <summary>
+    /// Represents a sequence of elements returned by a rank range query.
+    /// </summary>
     public readonly struct RankRangeEnumerable(RankRangeEnumerator enumerator)
         : IEnumerable<(TScore Score, TValue Value)>
     {
@@ -554,6 +630,9 @@ public class OrderedIndex<TScore, TValue> :
         public RankRangeEnumerator GetEnumerator() => enumerator;
     }
 
+    /// <summary>
+    /// Enumerates elements whose scores fall within a specified range.
+    /// </summary>
     public struct ScoreRangeEnumerator : IEnumerator<(TScore Score, TValue Value)>
     {
         private readonly Node? _start;
@@ -592,6 +671,9 @@ public class OrderedIndex<TScore, TValue> :
         public readonly void Dispose() { }
     }
 
+    /// <summary>
+    /// Represents a sequence of elements returned by a score range query.
+    /// </summary>
     public readonly struct ScoreRangeEnumerable(ScoreRangeEnumerator enumerator)
         : IEnumerable<(TScore Score, TValue Value)>
     {

@@ -2,151 +2,233 @@
 
 namespace FclEx.Benchmarks;
 
+[WarmupCount(3)]
+[IterationCount(10)]
 [MemoryDiagnoser]
 public class OrderedIndexBenchmark
 {
-    [Params(1000, 10000, 100000)]
+    [Params(100, 10000)]
     public int N;
 
-    private OrderedIndex<int, int> _idx = null!;
-    private List<(int score, int value)> _list = null!;
-    private Random _rand = null!;
+    private OrderedIndex<int, int> _ordered;
+    private SortedSet<(int score, int id)> _set;
+    private Dictionary<int, int> _map;
+    private Random _rng;
+    private int[] _ids;
 
     [GlobalSetup]
     public void Setup()
     {
-        _rand = new Random(42);
+        _rng = new Random(42);
 
-        _idx = new OrderedIndex<int, int>();
-        _list = new List<(int, int)>(N);
+        _ordered = [];
+        _set = [];
+        _map = [];
+
+        _ids = new int[N];
 
         for (var i = 0; i < N; i++)
         {
-            _idx.Add(i, i);
-            _list.Add((i, i));
+            _ids[i] = i;
+
+            var score = _rng.Next(1_000_000);
+
+            _ordered.Add(i, score);
+
+            _set.Add((score, i));
+            _map[i] = score;
         }
     }
 
-    // -------------------------
-    // Rank
-    // -------------------------
-
     [Benchmark]
-    public int Rank_OrderedIndex()
+    public void UpdateScore_OrderedIndex()
     {
-        var v = _rand.Next(N);
-        return _idx.Rank(v);
+        var id = _ids[_rng.Next(N)];
+        var newScore = _rng.Next(1_000_000);
+
+        _ordered.UpdateScore(id, newScore);
     }
 
     [Benchmark]
-    public int Rank_ListBinarySearch()
+    public void UpdateScore_SortedSet()
     {
-        var v = _rand.Next(N);
+        var id = _ids[_rng.Next(N)];
+        var newScore = _rng.Next(1_000_000);
 
-        return _list.BinarySearch(
-            (v, v),
-            Comparer<(int score, int value)>.Create((a, b) => a.score.CompareTo(b.score)));
-    }
+        var oldScore = _map[id];
 
-    // -------------------------
-    // Insert random
-    // -------------------------
+        _set.Remove((oldScore, id));
+        _set.Add((newScore, id));
 
-    [Benchmark]
-    public void Insert_OrderedIndex()
-    {
-        var v = _rand.Next();
-
-        _idx.Add(v, v);
-        _idx.Remove(v);
+        _map[id] = newScore;
     }
 
     [Benchmark]
-    public void Insert_List()
+    public int GetRank_OrderedIndex()
     {
-        var v = _rand.Next();
-
-        var pos = _list.BinarySearch(
-            (v, v),
-            Comparer<(int, int)>.Create((a, b) => a.Item1.CompareTo(b.Item1)));
-
-        if (pos < 0) pos = ~pos;
-
-        _list.Insert(pos, (v, v));
-        _list.RemoveAt(pos);
-    }
-
-    // -------------------------
-    // Remove random
-    // -------------------------
-
-    [Benchmark]
-    public void Remove_OrderedIndex()
-    {
-        var v = _rand.Next(N);
-
-        _idx.Remove(v);
-        _idx.Add(v, v);
+        var id = _ids[_rng.Next(N)];
+        return _ordered.Rank(id);
     }
 
     [Benchmark]
-    public void Remove_List()
+    public int GetRank_SortedSet()
     {
-        var v = _rand.Next(N);
+        var id = _ids[_rng.Next(N)];
+        var score = _map[id];
 
-        var pos = _list.BinarySearch(
-            (v, v),
-            Comparer<(int, int)>.Create((a, b) => a.Item1.CompareTo(b.Item1)));
+        var rank = 0;
 
-        if (pos >= 0)
+        foreach (var v in _set)
         {
-            _list.RemoveAt(pos);
-            _list.Insert(pos, (v, v));
+            if (v == (score, id))
+                return rank;
+
+            rank++;
         }
-    }
 
-    // -------------------------
-    // Leaderboard workload
-    // -------------------------
-
-    [Benchmark]
-    public void Leaderboard_OrderedIndex()
-    {
-        var user = _rand.Next(N);
-
-        _idx.Remove(user);
-
-        var score = _rand.Next();
-
-        _idx.Add(score, user);
-
-        _idx.Rank(user);
+        return -1;
     }
 
     [Benchmark]
-    public void Leaderboard_List()
+    public int Top10_OrderedIndex()
     {
-        var user = _rand.Next(N);
+        var sum = 0;
+        var count = 0;
 
-        var pos = _list.BinarySearch(
-            (user, user),
-            Comparer<(int, int)>.Create((a, b) => a.Item1.CompareTo(b.Item1)));
+        foreach (var e in _ordered)
+        {
+            sum += e.Score;
 
-        if (pos >= 0)
-            _list.RemoveAt(pos);
+            if (++count == 10)
+                break;
+        }
 
-        var score = _rand.Next();
+        return sum;
+    }
 
-        var insert = _list.BinarySearch(
-            (score, user),
-            Comparer<(int, int)>.Create((a, b) => a.Item1.CompareTo(b.Item1)));
+    [Benchmark]
+    public int Top10_SortedSet()
+    {
+        var sum = 0;
+        var count = 0;
 
-        if (insert < 0) insert = ~insert;
+        foreach (var e in _set)
+        {
+            sum += e.score;
 
-        _list.Insert(insert, (score, user));
+            if (++count == 10)
+                break;
+        }
 
-        _ = _list.BinarySearch(
-            (score, user),
-            Comparer<(int, int)>.Create((a, b) => a.Item1.CompareTo(b.Item1)));
+        return sum;
+    }
+
+    [Benchmark]
+    public int LeaderboardWorkload_OrderedIndex()
+    {
+        var result = 0;
+
+        for (var i = 0; i < 100; i++)
+        {
+            var r = _rng.Next(100);
+
+            switch (r)
+            {
+                case < 50:
+                {
+                    var id = _ids[_rng.Next(N)];
+                    var newScore = _rng.Next(1_000_000);
+
+                    _ordered.UpdateScore(id, newScore);
+                    break;
+                }
+                case < 80:
+                {
+                    var id = _ids[_rng.Next(N)];
+                    result += _ordered.Rank(id);
+                    break;
+                }
+                default:
+                {
+                    var count = 0;
+
+                    foreach (var e in _ordered)
+                    {
+                        result += e.Score;
+
+                        if (++count == 10)
+                            break;
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public int LeaderboardWorkload_SortedSet()
+    {
+        var result = 0;
+
+        for (var i = 0; i < 100; i++)
+        {
+            var r = _rng.Next(100);
+
+            switch (r)
+            {
+                case < 50:
+                {
+                    var id = _ids[_rng.Next(N)];
+                    var newScore = _rng.Next(1_000_000);
+
+                    var oldScore = _map[id];
+
+                    _set.Remove((oldScore, id));
+                    _set.Add((newScore, id));
+
+                    _map[id] = newScore;
+                    break;
+                }
+                case < 80:
+                {
+                    var id = _ids[_rng.Next(N)];
+                    var score = _map[id];
+
+                    var rank = 0;
+
+                    foreach (var v in _set)
+                    {
+                        if (v == (score, id))
+                        {
+                            result += rank;
+                            break;
+                        }
+
+                        rank++;
+                    }
+
+                    break;
+                }
+                default:
+                {
+                    var count = 0;
+
+                    foreach (var v in _set)
+                    {
+                        result += v.score;
+
+                        if (++count == 10)
+                            break;
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        return result;
     }
 }
