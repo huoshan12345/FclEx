@@ -15,13 +15,13 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
     private int _count;
     private int _version;
     private readonly IComparer<TKey> _comparer;
-    private readonly EqualityComparer<TValue> _valueComparer;
+    private readonly EqualityComparer<TValue?> _valueComparer;
 
     public BPlusTreeDictionary(int minDegree = DefaultMinDegree, IComparer<TKey>? comparer = null)
     {
         MinDegree = Check.NotLessThan(minDegree, 2);
         _comparer = comparer ?? Comparer<TKey>.Default;
-        _valueComparer = EqualityComparer<TValue>.Default;
+        _valueComparer = EqualityComparer<TValue?>.Default;
     }
 
     private static void Clear(BPlusTreeNode? root)
@@ -55,36 +55,42 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         _version++;
     }
 
-    private Tuple<BPlusTreeNode, int> SearchItem(TKey key, bool checkValue = false, TValue value = default)
+    private (BPlusTreeNode?, int) SearchItem(TKey key, bool checkValue = false, TValue? value = default)
     {
         if (key == null) throw new ArgumentNullException(nameof(key));
         var node = _root;
         while (node != null)
         {
-            var result = node.FindLastOfLessOrEqual(key);
-            if (result.Item1)
+            var (found, index) = node.FindLastOfLessOrEqual(key);
+            if (found)
             {
-                var leaf = node.IsLeafNode ? Tuple.Create(node, result.Item2)
-                    : Tuple.Create(node.Children[result.Item2].GetMinLeafNode(), 0);
-                return (checkValue && !_valueComparer.Equals(leaf.Item1.Values[leaf.Item2], value)) ? null : leaf;
+                var leaf = node.IsLeafNode
+                    ? (node, index)
+                    : (node.Children[index].GetMinLeafNode(), 0);
+
+                return checkValue && !_valueComparer.Equals(leaf.Item1.Values[leaf.Item2], value)
+                    ? default
+                    : leaf;
             }
-            if (result.Item2 < 0 || node.IsLeafNode) return null;
-            else node = node.Children[result.Item2];
+
+            if (index < 0 || node.IsLeafNode)
+                return default;
+
+            node = node.Children[index];
         }
-        return null;
+        return default;
     }
 
-    private Tuple<BPlusTreeNode, int> FindLeafNodeToInsert(TKey key)
+    private (BPlusTreeNode Node, int Index) FindLeafNodeToInsert(TKey key)
     {
-        if (key == null) throw new ArgumentNullException(nameof(key));
         var node = _root;
         while (true)
         {
-            var result = node.FindLastOfLessOrEqual(key);
-            if (result.Item1) throw new ArgumentException($"An item with the same key has already been added. Key: {key}");
-            if (result.Item2 < 0) return Tuple.Create(node.GetMinLeafNode(), 0);
-            if (node.IsLeafNode) return Tuple.Create(node, result.Item2 + 1);
-            else node = node.Children[result.Item2];
+            var (found, index) = node.FindLastOfLessOrEqual(key);
+            if (found) throw new ArgumentException($"An item with the same key has already been added. Key: {key}");
+            if (index < 0) return (node.GetMinLeafNode(), 0);
+            if (node.IsLeafNode) return (node, index + 1);
+            else node = node.Children[index];
         }
     }
 
@@ -96,7 +102,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
 
     public void Add(KeyValuePair<TKey, TValue> item) => Add(item.Key, item.Value);
 
-    public bool Contains(KeyValuePair<TKey, TValue> item) => SearchItem(item.Key, true, item.Value) != null;
+    public bool Contains(KeyValuePair<TKey, TValue> item) => SearchItem(item.Key, true, item.Value) != default;
 
     public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
     {
@@ -113,7 +119,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
     public bool Remove(KeyValuePair<TKey, TValue> item)
     {
         var result = SearchItem(item.Key, true, item.Value);
-        if (result == null) return false;
+        if (result == default) return false;
         RemoveItem(result.Item1, result.Item2);
         return true;
     }
@@ -271,12 +277,12 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         }
     }
 
-    public bool ContainsKey(TKey key) => SearchItem(key) != null;
+    public bool ContainsKey(TKey key) => SearchItem(key) != default;
 
     public bool Remove(TKey key)
     {
         var result = SearchItem(key);
-        if (result == null) return false;
+        if (result == default) return false;
         RemoveItem(result.Item1, result.Item2);
         return true;
     }
@@ -284,7 +290,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
     public bool TryGetValue(TKey key, out TValue value)
     {
         var result = SearchItem(key);
-        if (result == null)
+        if (result == default)
         {
             value = default;
             return false;
@@ -298,14 +304,14 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         get
         {
             var result = SearchItem(key);
-            if (result == null) throw new KeyNotFoundException();
+            if (result == default) throw new KeyNotFoundException();
             return result.Item1.Values[result.Item2];
         }
 
         set
         {
             var result = SearchItem(key);
-            if (result == null) Add(key, value);
+            if (result == default) Add(key, value);
             else result.Item1.Values[result.Item2] = value;
             _version++;
         }
@@ -475,7 +481,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
             Values.Clear();
         }
 
-        public Tuple<bool, int> FindLastOfLessOrEqual(TKey key)
+        public (bool Found, int Index) FindLastOfLessOrEqual(TKey key)
         {
             var low = -1;
             var high = KeyCount - 1;
@@ -484,10 +490,10 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
                 var mid = (low + high + 1) >> 1;
                 var cmp = Tree._comparer.Compare(Keys[mid], key);
                 if (cmp < 0) low = mid;
-                else if (cmp == 0) return Tuple.Create(true, mid);
+                else if (cmp == 0) return (true, mid);
                 else high = mid - 1;
             }
-            return Tuple.Create(low >= 0 && Tree._comparer.Compare(Keys[low], key) == 0, low);
+            return (low >= 0 && Tree._comparer.Compare(Keys[low], key) == 0, low);
         }
 
         public BPlusTreeNode GetMinLeafNode()
