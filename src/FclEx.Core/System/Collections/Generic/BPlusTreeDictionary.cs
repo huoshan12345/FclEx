@@ -55,22 +55,24 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         _version++;
     }
 
-    private (BPlusTreeNode?, int) SearchItem(TKey key, bool checkValue = false, TValue? value = default)
+    private (BPlusTreeNode? Node, int Index) Find(TKey key, bool checkValue = false, TValue? value = default)
     {
-        if (key == null) throw new ArgumentNullException(nameof(key));
+        if (key == null)
+            throw new ArgumentNullException(nameof(key));
+
         var node = _root;
         while (node != null)
         {
             var (found, index) = node.FindLastOfLessOrEqual(key);
             if (found)
             {
-                var leaf = node.IsLeafNode
+                var (leafNode, valueIndex) = node.IsLeafNode
                     ? (node, index)
-                    : (node.Children[index].GetMinLeafNode(), 0);
+                    : (node.Children[index].GetMinLeafNode(), 0); // if the key is found in an internal node, the corresponding value must be in the leftmost leaf node of its right child.
 
-                return checkValue && !_valueComparer.Equals(leaf.Item1.Values[leaf.Item2], value)
+                return checkValue && !_valueComparer.Equals(leafNode.Values[valueIndex], value)
                     ? default
-                    : leaf;
+                    : (leafNode, valueIndex);
             }
 
             if (index < 0 || node.IsLeafNode)
@@ -86,11 +88,19 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         var node = _root;
         while (true)
         {
-            var (found, index) = node.FindLastOfLessOrEqual(key);
-            if (found) throw new ArgumentException($"An item with the same key has already been added. Key: {key}");
-            if (index < 0) return (node.GetMinLeafNode(), 0);
-            if (node.IsLeafNode) return (node, index + 1);
-            else node = node.Children[index];
+            Debug.Assert(node is not null);
+
+            var (found, index) = node!.FindLastOfLessOrEqual(key);
+            if (found)
+                throw new ArgumentException($"An item with the same key has already been added. Key: {key}");
+
+            if (index < 0)
+                return (node.GetMinLeafNode(), 0);
+
+            if (node.IsLeafNode)
+                return (node, index + 1);
+
+            node = node.Children[index];
         }
     }
 
@@ -102,7 +112,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
 
     public void Add(KeyValuePair<TKey, TValue> item) => Add(item.Key, item.Value);
 
-    public bool Contains(KeyValuePair<TKey, TValue> item) => SearchItem(item.Key, true, item.Value) != default;
+    public bool Contains(KeyValuePair<TKey, TValue> item) => Find(item.Key, true, item.Value) != default;
 
     public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
     {
@@ -118,36 +128,44 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
 
     public bool Remove(KeyValuePair<TKey, TValue> item)
     {
-        var result = SearchItem(item.Key, true, item.Value);
-        if (result == default) return false;
-        RemoveItem(result.Item1, result.Item2);
+        var (node, index) = Find(item.Key, true, item.Value);
+        if (node is null)
+            return false;
+
+        RemoveItem(node, index);
         return true;
     }
 
     private void RemoveItem(BPlusTreeNode node, int index)
     {
         Debug.Assert(node.IsLeafNode);
+
         node.RemoveKeyValue(index);
         // update the index of a node in its parent.
-        if (index == 0 && node != _root) UpdateIndex(node);
-        if (node != _root && node.KeyCount < MinKeyNum) RebalanceForDeletion(node);
+        if (index == 0 && node != _root) 
+            UpdateIndex(node);
+
+        if (node != _root && node.KeyCount < MinKeyNum) 
+            RebalanceForDeletion(node);
+
         --_count;
         ++_version;
     }
 
     private void RebalanceForDeletion(BPlusTreeNode node)
     {
-        Debug.Assert(node != null);
         Debug.Assert(node != _root && node.KeyCount < MinKeyNum, $"{nameof(node)} does not need to rebalance");
+
         var parent = node.Parent;
         Debug.Assert(parent != null);
+
         var childIndex = node.ChildIndex;
-        Debug.Assert(childIndex >= 0 && parent.Children[childIndex] == node, "pointers between child and parent are not correct");
+        Debug.Assert(childIndex >= 0 && parent!.Children[childIndex] == node, "pointers between child and parent are not correct");
 
         var leftSiblingIndex = childIndex - 1;
         var rightSiblingIndex = childIndex + 1;
         // case 1: the deficient node's right sibling exists and has more than the minimum number of elements, then rotate left
-        if (rightSiblingIndex < parent.KeyCount && parent.Children[rightSiblingIndex].KeyCount > MinKeyNum)
+        if (rightSiblingIndex < parent!.KeyCount && parent.Children[rightSiblingIndex].KeyCount > MinKeyNum)
         {
             var sibling = parent.Children[rightSiblingIndex];
             var borrowKey = sibling.Keys[0];
@@ -188,30 +206,41 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         }
         // case 3: if both immediate siblings have only the minimum number of elements, then merge with a sibling sandwiching their separator taken off from their parent
         // case 3-a: the deficient node's right sibling exists
-        else if (rightSiblingIndex < parent.KeyCount) MergeNodes(node);
+        else if (rightSiblingIndex < parent.KeyCount)
+        {
+            MergeNodes(node);
+        }
         // case 3-b: the deficient node's left sibling exists
-        else if (leftSiblingIndex >= 0) MergeNodes(parent.Children[leftSiblingIndex]);
+        else if (leftSiblingIndex >= 0)
+        {
+            MergeNodes(parent.Children[leftSiblingIndex]);
+        }
         else
         {
-            Debug.Assert(false, "cannot reach here!");
+            Debug.Assert(false, "should not reach here!");
         }
     }
 
     private void MergeNodes(BPlusTreeNode node)
     {
-        Debug.Assert(node != null);
         var parent = node.Parent;
+        Debug.Assert(parent is not null);
+
         var right = node.MergeWithRight();
         var rightIndex = right.ChildIndex;
         right.Invalidate();
-        parent.RemoveKeyChild(rightIndex);
-        if (ReferenceEquals(parent, _root) && parent.KeyCount < 2)
+        parent!.RemoveKeyChild(rightIndex);
+
+        if (parent == _root && parent.KeyCount < 2)
         {
             _root = node;
             node.Parent = null;
             --_level;
         }
-        else if (parent != _root && parent.KeyCount < MinKeyNum) RebalanceForDeletion(parent);
+        else if (parent != _root && parent.KeyCount < MinKeyNum)
+        {
+            RebalanceForDeletion(parent);
+        }
     }
 
     // ReSharper disable once ConvertToAutoPropertyWithPrivateSetter
@@ -231,14 +260,14 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
             _root = new BPlusTreeNode(this, true);
             _firstLeafNode = _root;
         }
-        var leaf = FindLeafNodeToInsert(key);
-        var leafNode = leaf.Item1;
-        var index = leaf.Item2;
-        leafNode.InsertKeyValue(key, value, index);
-        if (leafNode.IsKeyFull) SplitNode(leafNode);
+        var (node, index) = FindLeafNodeToInsert(key);
+        node.InsertKeyValue(key, value, index);
+        if (node.IsKeyFull) SplitNode(node);
 
         // update the index of a node in its parent.
-        if (index == 0 && leafNode != _root) UpdateIndex(leafNode);
+        if (index == 0 && node != _root) 
+            UpdateIndex(node);
+
         _count++;
         _version++;
     }
@@ -246,6 +275,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
     private void UpdateIndex(BPlusTreeNode node)
     {
         Debug.Assert(node.IsLeafNode);
+
         var p = node;
         while (p != _root)
         {
@@ -277,11 +307,11 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         }
     }
 
-    public bool ContainsKey(TKey key) => SearchItem(key) != default;
+    public bool ContainsKey(TKey key) => Find(key) != default;
 
     public bool Remove(TKey key)
     {
-        var result = SearchItem(key);
+        var result = Find(key);
         if (result == default) return false;
         RemoveItem(result.Item1, result.Item2);
         return true;
@@ -289,7 +319,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
 
     public bool TryGetValue(TKey key, out TValue value)
     {
-        var result = SearchItem(key);
+        var result = Find(key);
         if (result == default)
         {
             value = default;
@@ -303,14 +333,18 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
     {
         get
         {
-            var result = SearchItem(key);
-            if (result == default) throw new KeyNotFoundException();
-            return result.Item1.Values[result.Item2];
+            var (node, index) = Find(key);
+
+            // ReSharper disable once ConvertIfStatementToReturnStatement
+            if (node is null)
+                throw new KeyNotFoundException(key.ToString());
+
+            return node.Values[index];
         }
 
         set
         {
-            var result = SearchItem(key);
+            var result = Find(key);
             if (result == default) Add(key, value);
             else result.Item1.Values[result.Item2] = value;
             _version++;
