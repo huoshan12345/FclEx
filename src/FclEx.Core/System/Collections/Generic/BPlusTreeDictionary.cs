@@ -1,14 +1,14 @@
 ﻿namespace System.Collections.Generic;
 
 [DebuggerDisplay("Count = {Count}")]
+[SuppressMessage("ReSharper", "ConvertToAutoPropertyWithPrivateSetter")]
+[SuppressMessage("ReSharper", "ConvertToAutoPropertyWhenPossible")]
 public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where TKey : notnull
 {
     private const int DefaultMinDegree = 16;
-    public int MinDegree { get; }
-    private int MaxDegree => 2 * MinDegree;
-    private int MinKeyCount => MinDegree;
-    private int MaxKeyCount => MaxDegree;
 
+    private readonly int _minKeyCount;
+    private readonly int _maxKeyCount;
     private BPlusTreeNode? _root;
     private BPlusTreeNode? _firstLeaf;
     private int _level;
@@ -19,10 +19,22 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
 
     public BPlusTreeDictionary(int minDegree = DefaultMinDegree, IComparer<TKey>? comparer = null)
     {
-        MinDegree = Check.NotLessThan(minDegree, 2);
+        _minKeyCount = Check.NotLessThan(minDegree, 2);
+        _maxKeyCount = 2 * _minKeyCount;
         _comparer = comparer ?? Comparer<TKey>.Default;
         _valueComparer = EqualityComparer<TValue?>.Default;
     }
+
+    public int Level => _level;
+    public int MinDegree => _minKeyCount;
+    public int Count => _count;
+    public bool IsReadOnly => false;
+    public ICollection<TKey> Keys => field ??= new KeyCollection(this);
+    public ICollection<TValue> Values => field ??= new ValueCollection(this);
+
+    public Enumerator GetEnumerator() => new(this);
+    IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     public void Clear()
     {
@@ -112,10 +124,6 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         return false;
     }
 
-    public Enumerator GetEnumerator() => new(this);
-    IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator() => GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
     public void Add(KeyValuePair<TKey, TValue> item) => Add(item.Key, item.Value);
 
     public bool Contains(KeyValuePair<TKey, TValue> item) => Find(item.Key, true, item.Value) != default;
@@ -151,7 +159,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         if (index == 0 && node != _root)
             UpdateKeys(node);
 
-        if (node != _root && node.KeyCount < MinKeyCount)
+        if (node != _root && node.KeyCount < _minKeyCount)
             RebalanceForDeletion(node);
 
         --_count;
@@ -160,7 +168,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
 
     private void RebalanceForDeletion(BPlusTreeNode node)
     {
-        Debug.Assert(node != _root && node.KeyCount < MinKeyCount, $"{nameof(node)} does not need to rebalance");
+        Debug.Assert(node != _root && node.KeyCount < _minKeyCount, $"{nameof(node)} does not need to rebalance");
 
         var parent = node.Parent;
         Debug.Assert(parent != null);
@@ -171,7 +179,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         var leftSiblingIndex = childIndex - 1;
         var rightSiblingIndex = childIndex + 1;
         // case 1: the deficient node's right sibling exists and has more than the minimum number of elements, then rotate left
-        if (rightSiblingIndex < parent!.KeyCount && parent.Children[rightSiblingIndex].KeyCount > MinKeyCount)
+        if (rightSiblingIndex < parent!.KeyCount && parent.Children[rightSiblingIndex].KeyCount > _minKeyCount)
         {
             var sibling = parent.Children[rightSiblingIndex];
             var borrowKey = sibling.Keys[0];
@@ -191,7 +199,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
             parent.Keys[rightSiblingIndex] = sibling.Keys[0];
         }
         // case 2: the deficient node's left sibling exists and has more than the minimum number of elements, then rotate right
-        else if (leftSiblingIndex >= 0 && parent.Children[leftSiblingIndex].KeyCount > MinKeyCount)
+        else if (leftSiblingIndex >= 0 && parent.Children[leftSiblingIndex].KeyCount > _minKeyCount)
         {
             var sibling = parent.Children[leftSiblingIndex];
             var borrowKey = sibling.Keys[sibling.KeyCount - 1];
@@ -243,20 +251,11 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
             node.Parent = null;
             --_level;
         }
-        else if (parent != _root && parent.KeyCount < MinKeyCount)
+        else if (parent != _root && parent.KeyCount < _minKeyCount)
         {
             RebalanceForDeletion(parent);
         }
     }
-
-    // ReSharper disable once ConvertToAutoPropertyWithPrivateSetter
-    public int Count => _count;
-
-    public bool IsReadOnly => false;
-
-    public ICollection<TKey> Keys => field ??= new KeyCollection(this);
-
-    public ICollection<TValue> Values => field ??= new ValueCollection(this);
 
     public void Add(TKey key, TValue value)
     {
@@ -390,12 +389,12 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         public readonly TValue[] Values;
         public readonly BPlusTreeNode[] Children;
 
-        public bool IsKeyFull => KeyCount >= Tree.MaxKeyCount;
+        public bool IsKeyFull => KeyCount >= Tree._maxKeyCount;
         public bool IsLeafNode => Values.IsNotEmpty();
 
         public BPlusTreeNode(BPlusTreeDictionary<TKey, TValue> tree, bool isLeaf)
         {
-            var max = tree.MaxKeyCount;
+            var max = tree._maxKeyCount;
             Tree = tree;
             Keys = new TKey[max];
             Children = isLeaf ? [] : new BPlusTreeNode[max];
@@ -406,7 +405,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         {
             Debug.Assert(index >= 0 && index <= KeyCount);
             Debug.Assert(IsLeafNode);
-            Debug.Assert(KeyCount + 1 <= Tree.MaxKeyCount);
+            Debug.Assert(KeyCount + 1 <= Tree._maxKeyCount);
 
             var diff = KeyCount - index;
             if (diff > 0)
@@ -472,7 +471,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
             Debug.Assert(node != null);
             Debug.Assert(index >= 0 && index <= KeyCount);
             Debug.Assert(!IsLeafNode);
-            Debug.Assert(KeyCount + 1 <= Tree.MaxKeyCount);
+            Debug.Assert(KeyCount + 1 <= Tree._maxKeyCount);
 
             var diff = KeyCount - index;
             if (diff > 0)
@@ -559,30 +558,30 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
             Debug.Assert(IsKeyFull);
 
             var newNode = new BPlusTreeNode(Tree, IsLeafNode);
-            Array.Copy(Keys, Tree.MinKeyCount, newNode.Keys, 0, Tree.MinKeyCount);
-            Array.Clear(Keys, Tree.MinKeyCount, Tree.MinKeyCount);
+            Array.Copy(Keys, Tree._minKeyCount, newNode.Keys, 0, Tree._minKeyCount);
+            Array.Clear(Keys, Tree._minKeyCount, Tree._minKeyCount);
 
             if (IsLeafNode)
             {
-                Array.Copy(Values, Tree.MinKeyCount, newNode.Values, 0, Tree.MinKeyCount);
-                Array.Clear(Values, Tree.MinKeyCount, Tree.MinKeyCount);
+                Array.Copy(Values, Tree._minKeyCount, newNode.Values, 0, Tree._minKeyCount);
+                Array.Clear(Values, Tree._minKeyCount, Tree._minKeyCount);
 
                 newNode.Next = Next;
                 Next = newNode;
             }
             else
             {
-                Array.Copy(Children, Tree.MinKeyCount, newNode.Children, 0, Tree.MinKeyCount);
-                for (var i = 0; i < Tree.MinKeyCount; i++)
+                Array.Copy(Children, Tree._minKeyCount, newNode.Children, 0, Tree._minKeyCount);
+                for (var i = 0; i < Tree._minKeyCount; i++)
                 {
                     newNode.Children[i].Parent = newNode;
                     newNode.Children[i].ChildIndex = i;
                 }
-                Array.Clear(Children, Tree.MinKeyCount, Tree.MinKeyCount);
+                Array.Clear(Children, Tree._minKeyCount, Tree._minKeyCount);
             }
 
-            newNode.KeyCount = Tree.MinKeyCount;
-            KeyCount -= Tree.MinKeyCount;
+            newNode.KeyCount = Tree._minKeyCount;
+            KeyCount -= Tree._minKeyCount;
             return newNode;
         }
     }
