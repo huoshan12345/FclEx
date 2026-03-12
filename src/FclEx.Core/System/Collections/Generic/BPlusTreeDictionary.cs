@@ -589,14 +589,17 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
 
     public struct Enumerator : IEnumerator<KeyValuePair<TKey, TValue>>
     {
-        private readonly BPlusTreeNode? _firstLeaf;
+        private readonly BPlusTreeDictionary<TKey, TValue> _tree;
+        private readonly int _version;
         private BPlusTreeNode? _node;
         private int _index;
 
         internal Enumerator(BPlusTreeDictionary<TKey, TValue> tree)
         {
-            _firstLeaf = tree._firstLeaf;
-            _node = tree._firstLeaf;
+            _tree = tree;
+            _version = tree._version;
+
+            _node = _tree._firstLeaf;
             _index = -1;
         }
 
@@ -604,6 +607,9 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
 
         public bool MoveNext()
         {
+            if (_version != _tree._version)
+                throw new InvalidOperationException();
+
             if (_node is null)
             {
                 return false;
@@ -627,7 +633,10 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
 
         public void Reset()
         {
-            _node = _firstLeaf;
+            if (_version != _tree._version)
+                throw new InvalidOperationException();
+
+            _node = _tree._firstLeaf;
             _index = -1;
         }
 
