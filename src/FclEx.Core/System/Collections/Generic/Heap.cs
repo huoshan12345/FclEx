@@ -61,7 +61,7 @@ public class Heap<T> : IReadOnlyCollection<T>
     /// <remarks>
     /// Enumeration does not return elements in sorted order.
     /// </remarks>
-    public ListEnumerator<T[], T> GetEnumerator() => new(_data);
+    public ListEnumerator<T[], T> GetEnumerator() => new(_data, 0, _count);
     IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 

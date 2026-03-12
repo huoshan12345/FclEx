@@ -1,7 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
-
-namespace System.Collections.Generic;
+﻿namespace System.Collections.Generic;
 
 partial class BPlusTreeDictionaryTests
 {
@@ -35,17 +32,15 @@ partial class BPlusTreeDictionaryTests
                     break;
             }
 
-            if (i % 500 == 0)
-            {
-                Assert.Equal(tree, dict);
+            if (i % 500 != 0) 
+                continue;
 
-                BPlusTreeValidator.Validate(tree);
-                BPlusTreeValidator.ValidateLeafChain(tree);
-            }
+            Assert.Equal(tree, dict);
+            BPlusTreeValidator.Validate(tree);
+            BPlusTreeValidator.ValidateLeafChain(tree);
         }
     }
 }
-
 
 public static class BPlusTreeValidator
 {
@@ -144,8 +139,6 @@ public static class BPlusTreeValidator
 
 file static class Extensions
 {
-    private static readonly FieldInfo _rootField = typeof(BPlusTreeDictionary<,>).GetRequiredField("_root");
-
     public static BPlusTreeDictionary<TKey, TValue>.BPlusTreeNode? Root<TKey, TValue>(this BPlusTreeDictionary<TKey, TValue> tree)
         where TKey : notnull
     {

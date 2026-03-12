@@ -90,7 +90,7 @@ public class HeapTests
     [Fact]
     public void Heapify_FromEnumerable_ShouldWork()
     {
-        var heap = new Heap<int>(new[] { 5, 1, 4, 2, 3 });
+        var heap = new Heap<int>([5, 1, 4, 2, 3]);
 
         var result = new List<int>();
 
