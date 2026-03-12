@@ -43,7 +43,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         _root = null;
         _count = 0;
         _level = 0;
-        _version++;
+        ++_version;
 
         static void Clear(BPlusTreeNode? root)
         {
@@ -275,8 +275,8 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         if (index == 0 && node != _root)
             UpdateKeys(node);
 
-        _count++;
-        _version++;
+        ++_count;
+        ++_version;
     }
 
     private void UpdateKeys(BPlusTreeNode node)
@@ -368,13 +368,13 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
             if (node is null)
             {
                 Add(key, value);
+                ++_version;
             }
             else
             {
                 node.Values[index] = value;
+                // update value does not increase version.
             }
-
-            _version++;
         }
     }
 
