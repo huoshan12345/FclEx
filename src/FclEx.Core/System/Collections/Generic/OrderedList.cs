@@ -123,15 +123,9 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
         _list.CopyTo(array, arrayIndex);
     }
 
-    public IEnumerator<T> GetEnumerator()
-    {
-        return _list.GetEnumerator();
-    }
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    public ListEnumerator<List<T>, T> GetEnumerator() => new(_list);
+    IEnumerator<T> IEnumerable<T>.GetEnumerator() => _list.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     /// <summary>
     /// This operation is not supported because the list must remain sorted.

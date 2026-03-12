@@ -1,6 +1,7 @@
 ﻿namespace FclEx;
 
 [DebuggerStepThrough]
+[SuppressMessage("ReSharper", "InvertIf")]
 public static class Check
 {
     public static T NotNull<T>([NotNull, NoEnumeration] T? value, [CallerArgumentExpression(nameof(value))] string? parameterName = null)
@@ -48,6 +49,16 @@ public static class Check
             throw new ArgumentOutOfRangeException(name, value, "The value must be less than " + max);
         }
 
+        return value;
+    }
+
+    public static T Between<T>(T value, T min, T max, [CallerArgumentExpression(nameof(value))] string? parameterName = null) where T : IComparable<T>
+    {
+        if (Comparer<T>.Default.Compare(value, min) < 0 || Comparer<T>.Default.Compare(value, max) > 0)
+        {
+            var name = parameterName ?? nameof(value);
+            throw new ArgumentOutOfRangeException(name, value, $"The value must be between {min} and {max}.");
+        }
         return value;
     }
 

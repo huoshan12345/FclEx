@@ -1,24 +1,26 @@
 ﻿namespace System.Collections.Generic;
 
-public struct ArrayEnumerator<T> : IEnumerator<T>
+public struct ListEnumerator<TList, T> : IEnumerator<T> where TList : IReadOnlyList<T>
 {
-    private readonly T[] _array;
+    private readonly TList _list;
     private readonly int _start;
     private readonly int _length;
     private int _i;
 
-    public ArrayEnumerator(T[] array, int start, int length)
-    {
-        if (array == null)
-            throw new ArgumentNullException(nameof(array));
+    public ListEnumerator(TList list) : this(list, 0, list.Count) { }
 
-        if ((uint)start > (uint)array.Length)
+    public ListEnumerator(TList list, int start, int length)
+    {
+        if (list == null)
+            throw new ArgumentNullException(nameof(list));
+
+        if ((uint)start > (uint)list.Count)
             throw new ArgumentOutOfRangeException(nameof(start));
 
-        if ((uint)length > (uint)(array.Length - start))
+        if ((uint)length > (uint)(list.Count - start))
             throw new ArgumentOutOfRangeException(nameof(length));
 
-        _array = array;
+        _list = list;
         _start = start;
         _length = length;
         _i = -1;
@@ -32,7 +34,7 @@ public struct ArrayEnumerator<T> : IEnumerator<T>
             if ((uint)_i >= (uint)_length)
                 throw new InvalidOperationException();
 
-            return _array[_start + _i];
+            return _list[_start + _i];
         }
     }
 

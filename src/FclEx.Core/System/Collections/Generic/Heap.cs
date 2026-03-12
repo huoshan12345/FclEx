@@ -21,6 +21,7 @@
 /// <item><description>Heap construction from a collection: O(n)</description></item>
 /// </list>
 /// </remarks>
+[DebuggerDisplay("Count = {Count}")]
 public class Heap<T> : IReadOnlyCollection<T>
 {
     private const int Arity = 4;
@@ -31,7 +32,7 @@ public class Heap<T> : IReadOnlyCollection<T>
 
     public Heap(int capacity = 4, IComparer<T>? comparer = null)
     {
-        if (capacity < 4) 
+        if (capacity < 4)
             capacity = 4;
 
         _data = new T[capacity];
@@ -57,23 +58,12 @@ public class Heap<T> : IReadOnlyCollection<T>
     // ReSharper disable once ConvertToAutoPropertyWithPrivateSetter
     public int Count => _count;
 
-    IEnumerator<T> IEnumerable<T>.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
-
     /// <remarks>
     /// Enumeration does not return elements in sorted order.
     /// </remarks>
-    public ArrayEnumerator<T> GetEnumerator()
-    {
-        return new ArrayEnumerator<T>(_data, 0, _count);
-    }
+    public ListEnumerator<T[], T> GetEnumerator() => new(_data);
+    IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     /// <summary>
     /// Gets the total number of elements the internal storage can hold without resizing.
