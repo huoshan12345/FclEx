@@ -1,4 +1,6 @@
-﻿namespace Common;
+﻿// ReSharper disable ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
+namespace Testing;
 
 /// <summary>
 /// Provides a base set of non-generic operations that are used by all other testing interfaces.

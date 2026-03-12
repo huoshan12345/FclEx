@@ -1,11 +1,14 @@
-﻿namespace Common;
+﻿#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
+#pragma warning disable CS8604 // Possible null reference argument.
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+namespace Testing;
 
 internal static class CollectionAsserts
 {
     public static void Equal(ICollection expected, ICollection actual)
     {
         Assert.Equal(expected == null, actual == null);
-        if (expected == null || actual == null)
+        if (expected == null)
         {
             return;
         }
@@ -31,7 +34,7 @@ internal static class CollectionAsserts
     public static void Equal<T>(ICollection<T> expected, ICollection<T> actual)
     {
         Assert.Equal(expected == null, actual == null);
-        if (expected == null || actual == null)
+        if (expected == null)
         {
             return;
         }

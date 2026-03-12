@@ -1,7 +1,13 @@
-﻿namespace Common;
+﻿// ReSharper disable CanSimplifyDictionaryLookupWithTryAdd
+// ReSharper disable GenericEnumeratorNotDisposed
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
+#pragma warning disable CS8607 // A possible null value may not be used for a type marked with [NotNull] or [DisallowNull]
+#pragma warning disable CS8604 // Possible null reference argument.
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+namespace Testing;
 
 // ReSharper disable once InconsistentNaming
-public abstract class IDictionaryGenericTests<TKey, TValue> : ICollectionGenericTests<KeyValuePair<TKey, TValue>> where TKey : notnull
+public abstract class IDictionaryGenericTests<TKey, TValue> : ICollectionGenericTests<KeyValuePair<TKey, TValue>>
 {
     #region IDictionary<TKey, TValue> Helper Methods
 
@@ -148,17 +154,20 @@ public abstract class IDictionaryGenericTests<TKey, TValue> : ICollectionGeneric
     {
         get
         {
-            yield return enumerable => {
+            yield return enumerable =>
+            {
                 var casted = (IDictionary<TKey, TValue>)enumerable;
                 casted.Add(CreateTKey(12), CreateTValue(5123));
                 return true;
             };
-            yield return enumerable => {
+            yield return enumerable =>
+            {
                 var casted = (IDictionary<TKey, TValue>)enumerable;
                 casted[CreateTKey(541)] = CreateTValue(12);
                 return true;
             };
-            yield return enumerable => {
+            yield return enumerable =>
+            {
                 var casted = (IDictionary<TKey, TValue>)enumerable;
                 if (casted.Any())
                 {
@@ -169,7 +178,8 @@ public abstract class IDictionaryGenericTests<TKey, TValue> : ICollectionGeneric
                 }
                 return false;
             };
-            yield return enumerable => {
+            yield return enumerable =>
+            {
                 var casted = (IDictionary<TKey, TValue>)enumerable;
                 if (casted.Any())
                 {
@@ -334,7 +344,7 @@ public abstract class IDictionaryGenericTests<TKey, TValue> : ICollectionGeneric
         else
         {
             var cur = keysEnum.Current;
-        }    
+        }
     }
 
     [Theory]

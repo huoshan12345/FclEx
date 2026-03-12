@@ -1,4 +1,12 @@
-﻿namespace Common;
+﻿// ReSharper disable PossibleMultipleEnumeration
+// ReSharper disable InvertIf
+// ReSharper disable UnusedVariable
+// ReSharper disable ConvertIfStatementToSwitchStatement
+// ReSharper disable GenericEnumeratorNotDisposed
+#pragma warning disable IDE0051
+#pragma warning disable IDE0063
+#pragma warning disable CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
+namespace Testing;
 
 /// <summary>
 /// Contains tests that ensure the correctness of any class that implements the generic

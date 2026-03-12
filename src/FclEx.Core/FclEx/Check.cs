@@ -202,4 +202,21 @@ public static class Check
             }
         }
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void CanCopyTo<T>([NotNull] T[]? array, int arrayIndex, int count)
+    {
+        NotNull(array);
+        Between(arrayIndex, 0, array.Length);
+
+        if (array.Length - arrayIndex < count)
+            throw new ArgumentException($"The destination array has insufficient space to copy the elements. Required space: {count}, available space: {array.Length - arrayIndex}.");
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void VersionEqual(int version, int currentVersion)
+    {
+        if (version != currentVersion)
+            throw new InvalidOperationException();
+    }
 }

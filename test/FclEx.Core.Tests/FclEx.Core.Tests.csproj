@@ -22,6 +22,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Common\" />
+    <Folder Include="Testing\" />
   </ItemGroup>
 </Project>

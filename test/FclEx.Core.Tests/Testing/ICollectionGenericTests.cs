@@ -1,4 +1,10 @@
-﻿namespace Common;
+﻿// ReSharper disable RedundantAssignment
+// ReSharper disable InvertIf
+// ReSharper disable UseArrayEmptyMethod
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+#pragma warning disable CS8604 // Possible null reference argument.
+namespace Testing;
 
 /// <summary>
 /// Contains tests that ensure the correctness of any class that implements the generic

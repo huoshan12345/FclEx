@@ -25,6 +25,17 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         _valueComparer = EqualityComparer<TValue?>.Default;
     }
 
+    public BPlusTreeDictionary(IEnumerable<KeyValuePair<TKey, TValue>> enumerable, IComparer<TKey>? comparer = null)
+        : this(DefaultMinDegree, comparer)
+    {
+        Check.NotNull(enumerable);
+
+        foreach (var item in enumerable)
+        {
+            Add(item);
+        }
+    }
+
     public int Level => _level;
     public int MinDegree => _minKeyCount;
     public int Count => _count;
@@ -130,8 +141,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
 
     public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
     {
-        Check.NotNull(array);
-        Check.Between(arrayIndex, 0, array.Length - _count);
+        Check.CanCopyTo(array, arrayIndex, _count);
 
         foreach (var item in this)
         {
@@ -588,17 +598,17 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
 
     public struct Enumerator : IEnumerator<KeyValuePair<TKey, TValue>>
     {
-        private readonly BPlusTreeDictionary<TKey, TValue> _tree;
+        private readonly BPlusTreeDictionary<TKey, TValue> _dictionary;
         private readonly int _version;
         private BPlusTreeNode? _node;
         private int _index;
 
-        internal Enumerator(BPlusTreeDictionary<TKey, TValue> tree)
+        internal Enumerator(BPlusTreeDictionary<TKey, TValue> dictionary)
         {
-            _tree = tree;
-            _version = tree._version;
+            _dictionary = dictionary;
+            _version = dictionary._version;
 
-            _node = _tree._firstLeaf;
+            _node = _dictionary._firstLeaf;
             _index = -1;
         }
 
@@ -606,45 +616,37 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
 
         public bool MoveNext()
         {
-            if (_version != _tree._version)
+            if (_version != _dictionary._version)
                 throw new InvalidOperationException();
 
             if (_node is null)
-            {
                 return false;
-            }
 
-            var nextIndex = _index + 1;
-            if (nextIndex < _node.KeyCount)
-            {
-                _index = nextIndex;
+            if (++_index < _node.KeyCount)
                 return true;
-            }
 
-            var nextNode = _node.Next;
-            if (nextNode is null)
+            _node = _node.Next;
+            if (_node is null)
                 return false;
 
-            _node = nextNode;
             _index = 0;
             return true;
         }
 
         public void Reset()
         {
-            if (_version != _tree._version)
-                throw new InvalidOperationException();
+            Check.VersionEqual(_version, _dictionary._version);
 
-            _node = _tree._firstLeaf;
+            _node = _dictionary._firstLeaf;
             _index = -1;
         }
 
-        public KeyValuePair<TKey, TValue> Current
+        public readonly KeyValuePair<TKey, TValue> Current
         {
             get
             {
                 // ReSharper disable once ConvertIfStatementToReturnStatement
-                if (_node is null)
+                if (_node is null || _index < 0 || _index >= _node.KeyCount)
                     throw new InvalidOperationException();
 
                 var key = _node.Keys[_index];
@@ -653,14 +655,14 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
             }
         }
 
-        object IEnumerator.Current => Current;
+        readonly object IEnumerator.Current => Current;
     }
 
     public sealed class KeyCollection(BPlusTreeDictionary<TKey, TValue> dictionary)
         : ReadOnlyItemCollection<TKey, KeyCollection.KeyEnumerator>
     {
         public override int Count => dictionary.Count;
-        public override KeyEnumerator GetEnumerator() => new(dictionary.GetEnumerator());
+        public override KeyEnumerator GetEnumerator() => new(dictionary);
         public override bool Contains(TKey item) => dictionary.ContainsKey(item);
 
         public override void CopyTo(TKey[] array, int index)
@@ -671,13 +673,27 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
 
         public struct KeyEnumerator : IEnumerator<TKey>
         {
+            private readonly BPlusTreeDictionary<TKey, TValue> _dictionary;
+            private readonly int _version;
             private Enumerator _e;
-            internal KeyEnumerator(Enumerator e) => _e = e;
-            public TKey Current => _e.Current.Key;
-            object IEnumerator.Current => Current;
+
+            internal KeyEnumerator(BPlusTreeDictionary<TKey, TValue> dictionary)
+            {
+                _dictionary = dictionary;
+                _version = dictionary._version;
+                _e = dictionary.GetEnumerator();
+            }
+
+            public readonly TKey Current => _e.Current.Key;
+            readonly object IEnumerator.Current => Current;
             public bool MoveNext() => _e.MoveNext();
-            public void Reset() => throw new NotSupportedException();
             public readonly void Dispose() => _e.Dispose();
+
+            public void Reset()
+            {
+                Check.VersionEqual(_version, _dictionary._version);
+                _e = _dictionary.GetEnumerator();
+            }
         }
     }
 
@@ -685,7 +701,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         : ReadOnlyItemCollection<TValue, ValueCollection.ValueEnumerator>
     {
         public override int Count => dictionary.Count;
-        public override ValueEnumerator GetEnumerator() => new(dictionary.GetEnumerator());
+        public override ValueEnumerator GetEnumerator() => new(dictionary);
         public override bool Contains(TValue item) => dictionary.ContainsValue(item);
 
         public override void CopyTo(TValue[] array, int index)
@@ -696,13 +712,27 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
 
         public struct ValueEnumerator : IEnumerator<TValue>
         {
+            private readonly BPlusTreeDictionary<TKey, TValue> _dictionary;
+            private readonly int _version;
             private Enumerator _e;
-            internal ValueEnumerator(Enumerator e) => _e = e;
-            public TValue Current => _e.Current.Value;
-            object? IEnumerator.Current => Current;
+
+            internal ValueEnumerator(BPlusTreeDictionary<TKey, TValue> dictionary)
+            {
+                _dictionary = dictionary;
+                _version = dictionary._version;
+                _e = dictionary.GetEnumerator();
+            }
+
+            public readonly TValue Current => _e.Current.Value;
+            readonly object? IEnumerator.Current => Current;
             public bool MoveNext() => _e.MoveNext();
-            public void Reset() => throw new NotSupportedException();
             public readonly void Dispose() => _e.Dispose();
+
+            public void Reset()
+            {
+                Check.VersionEqual(_version, _dictionary._version);
+                _e = _dictionary.GetEnumerator();
+            }
         }
     }
 }
