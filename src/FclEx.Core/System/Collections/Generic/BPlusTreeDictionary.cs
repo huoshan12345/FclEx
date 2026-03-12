@@ -526,7 +526,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
             Debug.Assert(_keys != null);
 
             var newNode = new BPlusTreeNode(_tree, IsLeafNode);
-            Array.Copy(_keys, _tree.MinKeyNum, newNode._keys, 0, _tree.MinKeyNum);
+            Array.Copy(Keys, Tree.MinKeyNum, newNode.Keys, 0, Tree.MaxKeyNum);
             Array.Clear(_keys, _tree.MinKeyNum, _tree.MinKeyNum);
             // Array.Resize(ref _keys, _tree.MinKeyNum);
 
