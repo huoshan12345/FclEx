@@ -164,9 +164,9 @@ public static partial class AssertEx
         if (type1.IsEnumerable() && type2.IsEnumerable())
         {
             // ReSharper disable once GenericEnumeratorNotDisposed
-            using var disposable1 = ((IEnumerable)value1).GetEnumerator().ToDisposable();
+            using var disposable1 = Disposable.FromValue(((IEnumerable)value1).GetEnumerator());
             // ReSharper disable once GenericEnumeratorNotDisposed
-            using var disposable2 = ((IEnumerable)value2).GetEnumerator().ToDisposable();
+            using var disposable2 = Disposable.FromValue(((IEnumerable)value2).GetEnumerator());
 
             var e1 = disposable1.Value;
             var e2 = disposable2.Value;

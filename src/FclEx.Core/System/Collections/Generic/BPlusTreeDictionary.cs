@@ -338,8 +338,8 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         public TKey[] Keys => _keys;
         public TValue[] Values => _values;
         public BPlusTreeNode[] Children => _children;
-        public BPlusTreeNode Parent { get; set; } = null;
-        public BPlusTreeNode Next { get; private set; } = null;
+        public BPlusTreeNode? Parent { get; set; }
+        public BPlusTreeNode? Next { get; private set; }
         public int ChildIndex { get; private set; } = -1;
 
         public BPlusTreeNode(BPlusTreeDictionary<TKey, TValue> tree, bool isLeaf)

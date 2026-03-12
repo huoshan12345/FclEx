@@ -174,7 +174,7 @@ partial class OperationResultExtensions
 
     public static Task<OperationResult<TNext>> Then<T, TNext>(this Task<OperationResult<T>> task, Func<T, OperationResult<TNext>> next)
     {
-        return task.Then(m => next(m).ToTask());
+        return task.Then(m => Task.FromResult(next(m)));
     }
 
     public static Task<OperationResult<TNext>> Then<T, TNext>(this Task<OperationResult<T>> task, Func<T, TNext> next)
@@ -183,7 +183,7 @@ partial class OperationResultExtensions
     }
 
     /// <summary>
-    /// Alias for Then with <see cref="Func&lt;T, TNext&gt;"/> to avoid ambiguous.
+    /// Alias for Then with <see cref="Func{T, TNext}"/> to avoid ambiguous.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="TNext"></typeparam>
@@ -214,7 +214,7 @@ partial class OperationResultExtensions
 
     public static Task<OperationResult<TNext>> ThenResult<T, TNext>(this Task<OperationResult<T>> task, Func<OperationResult<T>, OperationResult<TNext>> next)
     {
-        return task.ThenResult(m => next(m).ToTask());
+        return task.ThenResult(m => Task.FromResult(next(m)));
     }
 
     public static Task<OperationResult<TNext>> ThenResult<T, TNext>(this Task<OperationResult<T>> task, Func<OperationResult<T>, TNext> next)

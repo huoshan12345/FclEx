@@ -24,7 +24,7 @@ public static class ObjectHelper
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static DisposableValue<GCHandle> ToGCHandle(object? obj, GCHandleType type)
     {
-        return GCHandle.Alloc(obj, type).ToDisposable(m => m.Free());
+        return Disposable.FromValue(GCHandle.Alloc(obj, type), m => m.Free());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

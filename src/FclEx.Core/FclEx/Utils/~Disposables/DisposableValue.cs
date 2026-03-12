@@ -33,11 +33,3 @@ public class DisposableValue<T>(T value, Action<T>? disposeAction = null) : IDis
         _disposed = true;
     }
 }
-
-public static class DisposableValueExtensions
-{
-    public static DisposableValue<T> ToDisposable<T>(this T value, Action<T>? disposeAction = null)
-    {
-        return new(value, disposeAction);
-    }
-}

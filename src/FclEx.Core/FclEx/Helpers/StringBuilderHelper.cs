@@ -24,6 +24,6 @@ public static class StringBuilderHelper
     /// </returns>
     public static DisposableValue<StringBuilder> GetCached(int capacity = 16) // == StringBuilder.DefaultCapacity
     {
-        return Acquire(capacity).ToDisposable(Release);
+        return Disposable.FromValue(Acquire(capacity), Release);
     }
 }

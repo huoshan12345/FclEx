@@ -93,7 +93,7 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
 
     protected virtual Task<OperationResult> FakeLoginActionAsync(CancellationToken token)
     {
-        return Operation.Success().ToTask();
+        return Operation.Success();
     }
 
     protected virtual void DisposeAction()
@@ -160,7 +160,7 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
     {
         HttpService.ClearAllCookies();
         Session.Offline();
-        return Operation.Success().ToTask();
+        return Operation.Success();
     }
 
     public Task<OperationResult> FakeLoginAsync(bool loginIfFail = true, CancellationToken token = default)

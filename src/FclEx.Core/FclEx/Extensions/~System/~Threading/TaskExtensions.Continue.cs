@@ -17,7 +17,7 @@ partial class TaskExtensions
             return Task.CompletedTask;
         });
     }
-
+    
     public static Task<T> Then<T>(this Task task, Func<Task<T>> action)
     {
         Check.NotNull(task);
@@ -33,7 +33,7 @@ partial class TaskExtensions
 
     public static Task<T> Then<T>(this Task task, Func<T> action)
     {
-        return task.Then(() => action().ToTask());
+        return task.Then(() => Task.FromResult(action()));
     }
 
     public static Task<TResult> Then<T, TResult>(this Task<T> task, Func<T, Task<TResult>> action)
@@ -54,7 +54,7 @@ partial class TaskExtensions
         Check.NotNull(task);
         Check.NotNull(action);
 
-        return task.Then(t => action(t).ToTask());
+        return task.Then(t => Task.FromResult(action(t)));
     }
 
     public static Task<T> Then<T>(this Task<T> task, Action<T> action)
@@ -201,7 +201,7 @@ partial class TaskExtensions
     {
         return task.Then(t => condition ? action(t) : Task.CompletedTask);
     }
-    
+
 
     public static Task When(this Task task, bool condition, Func<Task> action)
     {
