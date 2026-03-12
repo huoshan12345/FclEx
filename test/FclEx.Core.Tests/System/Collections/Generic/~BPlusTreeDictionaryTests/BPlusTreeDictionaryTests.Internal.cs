@@ -70,7 +70,7 @@ public static class BPlusTreeValidator
         int t)
         where TKey : IComparable<TKey>
     {
-        var keyCount = node.KeyNum;
+        var keyCount = node.KeyCount;
 
         if (!isRoot)
         {
@@ -94,12 +94,8 @@ public static class BPlusTreeValidator
 
             return;
         }
-
-        // children count
-        if (node.Children.Length < keyCount || node.Children.Length > keyCount * 2)
-            throw new Exception("Child count mismatch");
-
-        foreach (var child in node.Children.Take(node.KeyNum))
+        
+        foreach (var child in node.Children.Take(node.KeyCount))
         {
             ValidateNode(
                 child,
@@ -124,7 +120,7 @@ public static class BPlusTreeValidator
 
         while (node != null)
         {
-            for (var i = 0; i < node.KeyNum; i++)
+            for (var i = 0; i < node.KeyCount; i++)
                 list.Add(node.Keys[i]);
 
             node = node.Next;
