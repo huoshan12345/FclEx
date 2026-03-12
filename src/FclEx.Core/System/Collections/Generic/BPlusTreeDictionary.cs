@@ -24,27 +24,6 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         _valueComparer = EqualityComparer<TValue?>.Default;
     }
 
-    private static void Clear(BPlusTreeNode? root)
-    {
-        if (root == null)
-            return;
-
-        var queue = new Queue<BPlusTreeNode>();
-        queue.Enqueue(root);
-        while (queue.Count != 0)
-        {
-            var item = queue.Dequeue();
-            if (item.Children != null && item.Children.Length != 0)
-            {
-                foreach (var t in item.Children)
-                {
-                    if (t != null) queue.Enqueue(t);
-                }
-            }
-            item.Invalidate();
-        }
-    }
-
     public void Clear()
     {
         Clear(_root);
@@ -53,6 +32,25 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         _count = 0;
         _level = 0;
         _version++;
+
+        static void Clear(BPlusTreeNode? root)
+        {
+            if (root == null)
+                return;
+
+            var queue = new Queue<BPlusTreeNode>();
+            queue.Enqueue(root);
+
+            while (queue.Count != 0)
+            {
+                var item = queue.Dequeue();
+                foreach (var t in item.Children.Take(item.KeyCount))
+                {
+                    queue.Enqueue(t);
+                }
+                item.Invalidate();
+            }
+        }
     }
 
     private (BPlusTreeNode? Node, int Index) Find(TKey key, bool checkValue = false, TValue? value = default)
@@ -124,9 +122,8 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
 
     public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
     {
-        if (array == null) throw new ArgumentNullException(nameof(array));
-        if ((uint)arrayIndex > (uint)array.Length) throw new ArgumentOutOfRangeException(nameof(arrayIndex));
-        if (array.Length < _count + arrayIndex) throw new ArgumentException(nameof(array));
+        Check.NotNull(array);
+        Check.Between(arrayIndex, 0, array.Length - _count);
 
         foreach (var item in this)
         {
