@@ -1,6 +1,4 @@
-﻿// ReSharper disable RedundantAssignment
-// ReSharper disable InvertIf
-// ReSharper disable UseArrayEmptyMethod
+﻿// ReSharper disable All
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
 #pragma warning disable CS8604 // Possible null reference argument.

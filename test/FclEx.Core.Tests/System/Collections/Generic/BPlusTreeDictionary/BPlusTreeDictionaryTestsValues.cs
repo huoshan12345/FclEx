@@ -5,7 +5,7 @@ public class BPlusTreeDictionaryTestsValues : ICollectionGenericTests<string>
     protected override bool DefaultValueAllowed => true;
     protected override bool DuplicateValuesAllowed => true;
     protected override bool IsReadOnly => true;
-    protected override bool EnumeratorCurrentUndefinedOperationThrows => true;
+    protected override bool EnumeratorCurrentUndefinedOperationThrows => false;
     protected override IEnumerable<ModifyEnumerable> ModifyEnumerables => new List<ModifyEnumerable>();
 
     protected override ICollection<string> GenericICollectionFactory() => new BPlusTreeDictionary<string, string>().Values;

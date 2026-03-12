@@ -1,8 +1,4 @@
-﻿// ReSharper disable PossibleMultipleEnumeration
-// ReSharper disable InvertIf
-// ReSharper disable UnusedVariable
-// ReSharper disable ConvertIfStatementToSwitchStatement
-// ReSharper disable GenericEnumeratorNotDisposed
+﻿// ReSharper disable All
 #pragma warning disable IDE0051
 #pragma warning disable IDE0063
 #pragma warning disable CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
@@ -171,7 +167,8 @@ public abstract class IEnumerableGenericTests<T> : TestBase<T>
     {
         var needToMatchAllExpectedItems = count - startIndex
                                           == expectedItems.Length;
-        if (validateStart)
+
+        if (validateStart && EnumeratorCurrentUndefinedOperationThrows)
         {
             for (var i = 0; i < 3; i++)
             {

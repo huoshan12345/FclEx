@@ -22,20 +22,21 @@
 /// </list>
 /// </remarks>
 [DebuggerDisplay("Count = {Count}")]
-public class Heap<T> : IReadOnlyCollection<T>
+public class Heap<T> : ICollection<T>
 {
     private const int Arity = 4;
 
-    private T[] _data;
+    private T[] _items;
     private int _count;
     private readonly IComparer<T> _comparer;
+    private int _version;
 
     public Heap(int capacity = 4, IComparer<T>? comparer = null)
     {
         if (capacity < 4)
             capacity = 4;
 
-        _data = new T[capacity];
+        _items = new T[capacity];
         _comparer = comparer ?? Comparer<T>.Default;
     }
 
@@ -46,11 +47,11 @@ public class Heap<T> : IReadOnlyCollection<T>
     public Heap(IEnumerable<T> items, IComparer<T>? comparer = null)
     {
         _comparer = comparer ?? Comparer<T>.Default;
-        _data = items.ToArray();
-        _count = _data.Length;
+        _items = items.ToArray();
+        _count = _items.Length;
 
-        if (_data.Length < 4)
-            Array.Resize(ref _data, 4);
+        if (_items.Length < 4)
+            Array.Resize(ref _items, 4);
 
         Heapify();
     }
@@ -61,14 +62,11 @@ public class Heap<T> : IReadOnlyCollection<T>
     /// <remarks>
     /// Enumeration does not return elements in sorted order.
     /// </remarks>
-    public ListEnumerator<T[], T> GetEnumerator() => new(_data, 0, _count);
+    public Enumerator GetEnumerator() => new(this);
     IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-    /// <summary>
-    /// Gets the total number of elements the internal storage can hold without resizing.
-    /// </summary>
-    public int Capacity => _data.Length;
+    public bool IsReadOnly => false;
 
     /// <summary>
     /// Removes all elements from the heap.
@@ -76,10 +74,34 @@ public class Heap<T> : IReadOnlyCollection<T>
     public void Clear()
     {
         if (RuntimeHelpersEx.IsReferenceOrContainsReferences<T>())
-            Array.Clear(_data, 0, _count);
+            Array.Clear(_items, 0, _count);
 
         _count = 0;
+        ++_version;
     }
+
+    void ICollection<T>.Add(T item) => Push(item);
+
+    bool ICollection<T>.Contains(T item)
+    {
+        return Array.IndexOf(_items, item, 0, _count) >= 0;
+    }
+
+    public void CopyTo(T[] array, int arrayIndex)
+    {
+        // Delegate rest of error checking to Array.Copy.
+        Array.Copy(_items, 0, array, arrayIndex, _count);
+    }
+
+    bool ICollection<T>.Remove(T item)
+    {
+        throw new NotSupportedException("Removing specific items is not supported by Heap<T>.");
+    }
+
+    /// <summary>
+    /// Gets the total number of elements the internal storage can hold without resizing.
+    /// </summary>
+    public int Capacity => _items.Length;
 
     /// <summary>
     /// Ensures the heap can hold at least the specified number of elements without resizing.
@@ -88,8 +110,8 @@ public class Heap<T> : IReadOnlyCollection<T>
     {
         Check.NotNegative(capacity);
 
-        if (_data.Length < capacity)
-            Array.Resize(ref _data, capacity);
+        if (_items.Length < capacity)
+            Array.Resize(ref _items, capacity);
     }
 
     /// <summary>
@@ -97,15 +119,11 @@ public class Heap<T> : IReadOnlyCollection<T>
     /// </summary>
     public void Push(T item)
     {
-        var count = _count;
-
-        if (count == _data.Length)
-        {
+        if (_count == _items.Length)
             Grow();
-        }
 
-        _count = count + 1;
-        SiftUp(count, item);
+        var index = _count++;
+        SiftUp(index, item);
     }
 
     /// <summary>
@@ -119,14 +137,20 @@ public class Heap<T> : IReadOnlyCollection<T>
 
         var last = --_count;
 
-        var root = _data[0];
-        var x = _data[last];
+        var root = _items[0];
+        var x = _items[last];
 
         if (RuntimeHelpersEx.IsReferenceOrContainsReferences<T>())
-            _data[last] = default!;
+            _items[last] = default!;
 
         if (last > 0)
-            SiftDown(0, x);
+        {
+            SiftDown(0, x); // ShiftDown also increments version
+        }
+        else
+        {
+            ++_version;
+        }
 
         return root;
     }
@@ -153,10 +177,11 @@ public class Heap<T> : IReadOnlyCollection<T>
     /// <exception cref="InvalidOperationException">The heap is empty.</exception>
     public T Peek()
     {
+        // ReSharper disable once ConvertIfStatementToReturnStatement
         if (_count == 0)
             throw new InvalidOperationException();
 
-        return _data[0];
+        return _items[0];
     }
 
     /// <summary>
@@ -171,7 +196,7 @@ public class Heap<T> : IReadOnlyCollection<T>
             return false;
         }
 
-        value = _data[0];
+        value = _items[0];
         return true;
     }
 
@@ -189,11 +214,9 @@ public class Heap<T> : IReadOnlyCollection<T>
             return item;
         }
 
-        var data = _data;
+        var data = _items;
         var root = data[0];
-
         SiftDown(0, item);
-
         return root;
     }
 
@@ -210,8 +233,9 @@ public class Heap<T> : IReadOnlyCollection<T>
             return false;
         }
 
-        old = _data[0];
+        old = _items[0];
         SiftDown(0, item);
+
         return true;
     }
 
@@ -221,10 +245,10 @@ public class Heap<T> : IReadOnlyCollection<T>
     /// <returns>The element that was removed.</returns>
     public T PushPop(T item)
     {
-        if (_count == 0 || _comparer.Compare(item, _data[0]) <= 0)
+        if (_count == 0 || _comparer.Compare(item, _items[0]) <= 0)
             return item;
 
-        var root = _data[0];
+        var root = _items[0];
         SiftDown(0, item);
         return root;
     }
@@ -244,10 +268,10 @@ public class Heap<T> : IReadOnlyCollection<T>
         if (newCapacity < 4)
             newCapacity = 4;
 
-        if (newCapacity >= _data.Length)
+        if (newCapacity >= _items.Length)
             return;
 
-        Array.Resize(ref _data, newCapacity);
+        Array.Resize(ref _items, newCapacity);
     }
 
     private void Heapify()
@@ -256,20 +280,20 @@ public class Heap<T> : IReadOnlyCollection<T>
 
         for (var i = start; i >= 0; i--)
         {
-            SiftDown(i, _data[i]);
+            SiftDown(i, _items[i]);
         }
     }
 
     private void Grow()
     {
-        var newSize = _data.Length * 2;
+        var newSize = _items.Length * 2;
         if (newSize < 4)
             newSize = 4;
 
         if ((uint)newSize > Array.MaxLength)
             newSize = Array.MaxLength;
 
-        Array.Resize(ref _data, newSize);
+        Array.Resize(ref _items, newSize);
     }
 
     private static int Parent(int i) => (i - 1) / Arity;
@@ -281,16 +305,18 @@ public class Heap<T> : IReadOnlyCollection<T>
         while (i > 0)
         {
             var parent = Parent(i);
-            var p = _data[parent];
+            var p = _items[parent];
 
             if (_comparer.Compare(item, p) >= 0)
                 break;
 
-            _data[i] = p;
+            _items[i] = p;
             i = parent;
         }
 
-        _data[i] = item;
+        _items[i] = item;
+
+        ++_version;
     }
 
     private void SiftDown(int i, T item)
@@ -302,7 +328,7 @@ public class Heap<T> : IReadOnlyCollection<T>
                 break;
 
             var best = first;
-            var bestValue = _data[first];
+            var bestValue = _items[first];
             var last = first + Arity;
 
             if (last > _count)
@@ -310,23 +336,65 @@ public class Heap<T> : IReadOnlyCollection<T>
 
             for (var j = first + 1; j < last; j++)
             {
-                var v = _data[j];
-                if (_comparer.Compare(_data[j], bestValue) < 0)
+                var v = _items[j];
+                if (_comparer.Compare(_items[j], bestValue) < 0)
                 {
                     best = j;
                     bestValue = v;
                 }
             }
 
-            var child = _data[best];
+            var child = _items[best];
 
             if (_comparer.Compare(child, item) >= 0)
                 break;
 
-            _data[i] = child;
+            _items[i] = child;
             i = best;
         }
 
-        _data[i] = item;
+        _items[i] = item;
+
+        ++_version;
+    }
+
+    public struct Enumerator : IEnumerator<T>
+    {
+        private readonly Heap<T> _heap;
+        private readonly int _version;
+        private int _index = -1;
+        private T? _current;
+
+        internal Enumerator(Heap<T> heap)
+        {
+            _heap = heap;
+            _version = heap._version;
+        }
+
+        public readonly T Current => _current!;
+        readonly object IEnumerator.Current => Current!;
+
+        public bool MoveNext()
+        {
+            Check.VersionEqual(_heap._version, _version);
+            // ReSharper disable once ConvertIfStatementToReturnStatement
+            if (++_index >= _heap._count)
+            {
+                _current = default;
+                return false;
+            }
+
+            _current = _heap._items[_index];
+            return true;
+        }
+
+        public void Reset()
+        {
+            Check.VersionEqual(_heap._version, _version);
+            _index = -1;
+            _current = default;
+        }
+
+        public readonly void Dispose() { }
     }
 }

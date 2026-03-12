@@ -601,6 +601,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         private readonly BPlusTreeDictionary<TKey, TValue> _dictionary;
         private readonly int _version;
         private BPlusTreeNode? _node;
+        private KeyValuePair<TKey, TValue> _current;
         private int _index;
 
         internal Enumerator(BPlusTreeDictionary<TKey, TValue> dictionary)
@@ -612,26 +613,35 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
             _index = -1;
         }
 
-        public readonly void Dispose() { }
-
         public bool MoveNext()
         {
-            if (_version != _dictionary._version)
-                throw new InvalidOperationException();
+            Check.VersionEqual(_version, _dictionary._version);
 
             if (_node is null)
+            {
+                _current = default;
                 return false;
+            }
 
             if (++_index < _node.KeyCount)
-                return true;
+                goto set_current;
 
             _node = _node.Next;
             if (_node is null)
+            {
+                _current = default;
                 return false;
+            }
 
-            _index = 0;
+            _index = 0; // move to the next node and reset index to 0
+
+        set_current:
+            _current = KeyValuePair.Create(_node.Keys[_index], _node.Values[_index]);
             return true;
         }
+
+        public readonly KeyValuePair<TKey, TValue> Current => _current;
+        readonly object IEnumerator.Current => Current;
 
         public void Reset()
         {
@@ -641,21 +651,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
             _index = -1;
         }
 
-        public readonly KeyValuePair<TKey, TValue> Current
-        {
-            get
-            {
-                // ReSharper disable once ConvertIfStatementToReturnStatement
-                if (_node is null || _index < 0 || _index >= _node.KeyCount)
-                    throw new InvalidOperationException();
-
-                var key = _node.Keys[_index];
-                var value = _node.Values[_index];
-                return KeyValuePair.Create(key, value);
-            }
-        }
-
-        readonly object IEnumerator.Current => Current;
+        public readonly void Dispose() { }
     }
 
     public sealed class KeyCollection(BPlusTreeDictionary<TKey, TValue> dictionary)
@@ -665,10 +661,12 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         public override KeyEnumerator GetEnumerator() => new(dictionary);
         public override bool Contains(TKey item) => dictionary.ContainsKey(item);
 
-        public override void CopyTo(TKey[] array, int index)
+        public override void CopyTo(TKey[] array, int arrayIndex)
         {
+            Check.CanCopyTo(array, arrayIndex, dictionary.Count);
+
             foreach (var (key, _) in dictionary)
-                array[index++] = key;
+                array[arrayIndex++] = key;
         }
 
         public struct KeyEnumerator : IEnumerator<TKey>
@@ -704,10 +702,12 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         public override ValueEnumerator GetEnumerator() => new(dictionary);
         public override bool Contains(TValue item) => dictionary.ContainsValue(item);
 
-        public override void CopyTo(TValue[] array, int index)
+        public override void CopyTo(TValue[] array, int arrayIndex)
         {
+            Check.CanCopyTo(array, arrayIndex, dictionary.Count);
+
             foreach (var (_, value) in dictionary)
-                array[index++] = value;
+                array[arrayIndex++] = value;
         }
 
         public struct ValueEnumerator : IEnumerator<TValue>

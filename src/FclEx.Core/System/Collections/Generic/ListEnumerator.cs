@@ -11,14 +11,9 @@ public struct ListEnumerator<TList, T> : IEnumerator<T> where TList : IReadOnlyL
 
     public ListEnumerator(TList list, int start, int length)
     {
-        if (list == null)
-            throw new ArgumentNullException(nameof(list));
-
-        if ((uint)start > (uint)list.Count)
-            throw new ArgumentOutOfRangeException(nameof(start));
-
-        if ((uint)length > (uint)(list.Count - start))
-            throw new ArgumentOutOfRangeException(nameof(length));
+        Check.NotNull(list);
+        Check.Between(start, 0, list.Count - 1);
+        Check.Between(length, 0, list.Count - start);
 
         _list = list;
         _start = start;
@@ -30,10 +25,7 @@ public struct ListEnumerator<TList, T> : IEnumerator<T> where TList : IReadOnlyL
     {
         get
         {
-            // ReSharper disable once ConvertIfStatementToReturnStatement
-            if ((uint)_i >= (uint)_length)
-                throw new InvalidOperationException();
-
+            Check.Between(_i, 0, _length - _start - 1);
             return _list[_start + _i];
         }
     }

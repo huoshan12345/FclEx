@@ -1,5 +1,4 @@
-﻿// ReSharper disable CanSimplifyDictionaryLookupWithTryAdd
-// ReSharper disable GenericEnumeratorNotDisposed
+﻿// ReSharper disable All
 #pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
 #pragma warning disable CS8607 // A possible null value may not be used for a type marked with [NotNull] or [DisallowNull]
 #pragma warning disable CS8604 // Possible null reference argument.
