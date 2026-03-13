@@ -590,7 +590,7 @@ public class OrderedIndex<TScore, TValue> :
         RemoveNode(node);
 
         _map.Remove(item.Value);
-        ++_count;
+        --_count;
         ++_version;
 
         return true;
