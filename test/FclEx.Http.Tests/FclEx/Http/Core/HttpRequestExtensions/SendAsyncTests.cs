@@ -142,7 +142,7 @@ public class SendAsyncTests : HttpServerTests
     [Fact]
     public async Task Redirection_Test()
     {
-        const string url = "https://www.baidu.com/";
+        var url = TestUrls.First();
         var response = await HttpRequest.Get("api/redirect")
             .AddQueryParam("u", url)
             .EnsureSuccessStatusCode()

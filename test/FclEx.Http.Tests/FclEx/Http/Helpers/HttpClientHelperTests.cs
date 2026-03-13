@@ -12,12 +12,13 @@ public class HttpClientHelperTests
     [RetryFact]
     public async Task GetRetryPolicy_Timeout_Test()
     {
-        var timeout = TimeSpan.FromSeconds(1);
+        var timeout = TimeSpan.FromSeconds(0.2);
         const int retryCount = 2;
         var services = new ServiceCollection();
 
         services.AddHttpClient(string.Empty)
-            .ConfigurePrimaryHttpMessageHandler(() => HttpClientHelper.CreateSocketsHttpHandler(new() { ConnectTimeout = TimeSpan.FromHours(1) })) // NOTE: to test HttpClient.Timeout, we need to make it less than SocketsHttpHandler.ConnectTimeout
+            // NOTE: to test HttpClient.Timeout, we need to make it less than SocketsHttpHandler.ConnectTimeout
+            .ConfigurePrimaryHttpMessageHandler(() => HttpClientHelper.CreateSocketsHttpHandler(new() { ConnectTimeout = TimeSpan.FromHours(1) }))
             .AddRetryPolicy(timeout, 2, true, m => TimeSpan.Zero);
 
         var provider = services.BuildServiceProvider();
@@ -25,26 +26,27 @@ public class HttpClientHelperTests
         var httpClient = provider.GetRequiredService<IHttpClientFactory>().CreateClient();
 
         var watch = ValueStopwatch.StartNew();
-        await Assert.ThrowsAnyAsync<TimeoutRejectedException>(() => httpClient.GetAsync("https://baidu.com:444/", HttpCompletionOption.ResponseHeadersRead));
+        await Assert.ThrowsAnyAsync<TimeoutRejectedException>(() => httpClient.GetAsync("https://google.com:444/", HttpCompletionOption.ResponseHeadersRead));
         var time = watch.GetElapsedTime();
 
         var executeTime = timeout.Multiply(retryCount + 1);
-        Assert.Equal(executeTime, time, TimeSpan.FromSeconds(0.9));
+        Assert.Equal(executeTime, time, TimeSpan.FromSeconds(0.1));
     }
 
     [RetryFact]
     public async Task HttpClient_Timeout_Test()
     {
+        var timeout = TimeSpan.FromSeconds(0.2);
         var handler = HttpClientHelper.CreateSocketsHttpHandler(new() { ConnectTimeout = TimeSpan.FromHours(1) });
-        using var httpClient = new HttpClient(handler, true) { Timeout = TimeSpan.FromSeconds(1) };
+        using var httpClient = new HttpClient(handler, true) { Timeout = timeout };
 
         var watch = ValueStopwatch.StartNew();
-        var ex = await Assert.ThrowsAnyAsync<TaskCanceledException>(() => httpClient.GetAsync("https://baidu.com:444/", HttpCompletionOption.ResponseHeadersRead));
+        var ex = await Assert.ThrowsAnyAsync<TaskCanceledException>(() => httpClient.GetAsync("https://google.com:444/", HttpCompletionOption.ResponseHeadersRead));
         var time = watch.GetElapsedTime();
 
         Assert.Contains("configured HttpClient.Timeout", ex.Message);
         Assert.NotNull(ex.InnerException);
 
-        Assert.Equal(TimeSpan.FromSeconds(1), time, TimeSpan.FromSeconds(0.5));
+        Assert.Equal(timeout, time, TimeSpan.FromSeconds(0.1));
     }
 }

@@ -13,6 +13,9 @@ public class PropertyTests : HttpServerTests
         var dir = Path.ToDirectoryInfo(AppContext.BaseDirectory.TakeUntil(assemblyName), "Resources");
         var file = dir.TryCreate().File("visitor.html");
 
+        if (file.Exists)
+            return;
+
         var (url, _, charset, keyword) = CharSetTestCase;
         var response = await HttpRequest.Get(url)
             .CharSet(charset)

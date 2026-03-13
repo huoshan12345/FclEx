@@ -1,6 +1,4 @@
-﻿using FclEx.Xunit;
-
-namespace FclEx.Http.Helpers;
+﻿namespace FclEx.Http.Helpers;
 
 public class PollyHelperTests
 {

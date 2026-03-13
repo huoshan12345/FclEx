@@ -5,7 +5,7 @@ public class HttpContentTypeTests
     [RetryFact]
     public async Task ReadAsStream_Test()
     {
-        var response = await HttpRequest.Get("http://baidu.com")
+        var response = await HttpRequest.Get("https://google.com")
             .ReadAsStream()
             .SendAsync()
             .ThrowIfError();
@@ -18,6 +18,6 @@ public class HttpContentTypeTests
         var reader = new StreamReader(stream);
         var text = await reader.ReadToEndAsync();
 
-        Assert.Contains("baidu.com", text);
+        Assert.Contains("google.com", text);
     }
 }
