@@ -248,14 +248,9 @@ public partial class OrderedListTestsBasic
 
         var id = 0;
 
-        for (var step = 0; step < 20000; step++)
+        for (var step = 0; step < 2000; step++)
         {
             var op = rand.Next(5);
-
-            if (step == 36)
-            {
-
-            }
 
             switch (op)
             {

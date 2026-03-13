@@ -2,23 +2,42 @@
 
 public class PropertyTests : HttpServerTests
 {
-    public static readonly (string Url, string CharSet, string Keyword) CharSetTestCase 
-        = ("https://passport.weibo.com/visitor/visitor", "gb2312", "是否采集设备指纹");
+    public static readonly (string Url, string TestUrl, string CharSet, string Keyword) CharSetTestCase
+        = ("https://passport.weibo.com/visitor/visitor", "/api/charset-detect/gb2312", "gb2312", "是否采集设备指纹");
+
+    [LocalOnlyFact]
+    public async Task SaveCharSetTestResponseBytes()
+    {
+        var assemblyName = typeof(PropertyTests).Assembly.GetName().Name;
+        Assert.NotNull(assemblyName);
+        var dir = Path.ToDirectoryInfo(AppContext.BaseDirectory.TakeUntil(assemblyName), "Resources");
+        var file = dir.TryCreate().File("visitor.html");
+
+        var (url, _, charset, keyword) = CharSetTestCase;
+        var response = await HttpRequest.Get(url)
+            .CharSet(charset)
+            .SendAsync();
+
+        Assert.Contains(keyword, response.ResponseString);
+        await file.WriteAllTextAsync(response.ResponseString);
+    }
 
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public async Task CharSet_Test(bool value)
     {
-        using var http = new HttpClientService();
-        var request = HttpRequest.Get(CharSetTestCase.Url);
-        if (value)
-            request.CharSet(CharSetTestCase.CharSet);
+        var (_, testUrl, charset, keyword) = CharSetTestCase;
 
-        var response = await request.SendAsync(http)
+        var request = HttpRequest.Get(testUrl);
+        if (value)
+            request.CharSet(charset);
+
+        var response = await request
+            .SendAsync(TestHttp)
             .ThrowIfError();
 
-        Assert.Equal(value, response.ResponseString.Contains(CharSetTestCase.Keyword));
+        Assert.Equal(value, response.ResponseString.Contains(keyword));
     }
 
     [Theory]
@@ -26,15 +45,17 @@ public class PropertyTests : HttpServerTests
     [InlineData(false)]
     public async Task FallbackCharSet_Test(bool value)
     {
-        using var http = new HttpClientService();
-        var request = HttpRequest.Get(CharSetTestCase.Url);
-        if (value)
-            request.CharSet(CharSetTestCase.CharSet);
+        var (_, testUrl, charset, keyword) = CharSetTestCase;
 
-        var response = await request.SendAsync(http)
+        var request = HttpRequest.Get(testUrl);
+        if (value)
+            request.FallbackCharSet(charset);
+
+        var response = await request
+            .SendAsync(TestHttp)
             .ThrowIfError();
 
-        Assert.Equal(value, response.ResponseString.Contains(CharSetTestCase.Keyword));
+        Assert.Equal(value, response.ResponseString.Contains(keyword));
     }
 
     [Theory]
@@ -42,14 +63,15 @@ public class PropertyTests : HttpServerTests
     [InlineData(false)]
     public async Task DetectCharSet_Test(bool value)
     {
-        using var http = new HttpClientService();
-        var request = HttpRequest.Get(CharSetTestCase.Url);
-        request.DetectCharSet(value);
+        var (_, testUrl, _, keyword) = CharSetTestCase;
 
-        var response = await request.SendAsync(http)
+        var response = await HttpRequest
+            .Get(testUrl)
+            .DetectCharSet(value)
+            .SendAsync(TestHttp)
             .ThrowIfError();
 
-        Assert.Equal(value, response.ResponseString.Contains(CharSetTestCase.Keyword));
+        Assert.Equal(value, response.ResponseString.Contains(keyword));
     }
 
     public static readonly IEnumerable<object[]> CompressionMethods

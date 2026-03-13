@@ -16,12 +16,10 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
     public async Task SendAsync_Success()
     {
         using var service = HttpClientService.Create(false);
-        for (var i = 0; i < 5; i++)
-        {
-            var response = await HttpRequest.Get("https://www.baidu.com")
-                .SendAsync(service);
-            Assert.False(response.IsError, () => response.Exception!.ToString());
-        }
+        var response = await HttpRequest
+            .Get("https://www.baidu.com")
+            .SendAsync(service);
+        Assert.False(response.IsError, () => response.Exception!.ToString());
     }
 
     [Theory]

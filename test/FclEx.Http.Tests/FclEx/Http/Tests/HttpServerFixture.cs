@@ -24,11 +24,22 @@ public class HttpServerFixture : GlobalFixture
         };
     }
 
+    public static string[] TestUrls { get; } =
+    [
+        "http://www.gstatic.com/generate_204",
+        "https://www.google.com/generate_204",
+        "http://cp.cloudflare.com/generate_204",
+    ];
+
     public static IWebProxy DefaultProxy { get; } = WebProxyHelper.Create(GetDefaultProxyUrl());
 
-    public static IReadOnlyList<SimpleCookie> SimpleCookies { get; }
+    public static readonly IReadOnlyList<SimpleCookie> SimpleCookies
         = File.ReadAllText(Path.Combine("TestData", "SimpleCookies.json"))
             .FromJson<List<SimpleCookie>>()!;
+
+    public static readonly Lazy<string> VisitorHtml = new(() =>
+        ResourceHelper.Embedded.ReadString(typeof(HttpServerFixture).Assembly, "visitor.html"));
+    public static readonly Encoding Gb2312 = Encoding.GetEncoding("gb2312");
 
     private static async Task RunApiServer()
     {
@@ -95,6 +106,12 @@ public class HttpServerFixture : GlobalFixture
         });
 
         app.MapGet("/api/redirect", (string u) => Results.Redirect(u));
+
+        app.MapGet("/api/charset-detect/gb2312", async context =>
+        {
+            context.Response.ContentType = MediaTypes.Html; // do not set charset, to test auto-detect encoding
+            await context.Response.WriteAsync(VisitorHtml.Value, Gb2312);
+        });
 
         await app.StartAsync();
     }

@@ -43,13 +43,13 @@ public class BatchRetryConsumerTests(ITestOutputHelper output)
     }
 
     [DisableParallelization]
-    [RetryFact(maxRetries: 5, delayBetweenRetriesMs: 1000)]
+    [RetryFact(3, 100)]
     public async Task Dispose_AfterStart_Test()
     {
         var consumer = new BatchRetryConsumer<Model>(5, TimeSpan.FromMilliseconds(100), 1);
         var task = consumer.StartAsync();
         consumer.Dispose();
-        await Task.Delay(TimeSpan.FromMilliseconds(500));
+        await Task.Delay(TimeSpan.FromMilliseconds(200));
         Assert.True(task.IsCompleted);
     }
 

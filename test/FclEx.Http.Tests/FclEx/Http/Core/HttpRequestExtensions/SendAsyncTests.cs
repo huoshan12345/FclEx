@@ -2,14 +2,7 @@
 
 public class SendAsyncTests : HttpServerTests
 {
-    public static string[] Urls =>
-    [
-        "https://www.baidu.com/",
-        "https://www.qq.com/",
-        "https://www.google.com/",
-    ];
-
-    public static IEnumerable<object[]> Cases => Urls
+    public static IEnumerable<object[]> Cases => TestUrls
         .Select(m => new object[] { m });
 
     public static bool InterfaceHasIpv6Enabled(NetworkInterface @interface)
@@ -39,7 +32,7 @@ public class SendAsyncTests : HttpServerTests
     [LocalOnlyTheory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task Get_IPVersion_Test(bool ipv6)
+    public async Task Get_IpVersion_Test(bool ipv6)
     {
         if (ipv6 && _supportsIPv6 == false)
             return;

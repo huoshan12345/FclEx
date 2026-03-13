@@ -25,7 +25,7 @@ public class CtorTests
     [MemberData(nameof(CtorCases))]
     public void TestCtor(string url, HttpMethod method)
     {
-        var request = new HttpRequest(new Uri(url), method);
+        var request = new HttpRequest(new Uri(url, UriKind.RelativeOrAbsolute), method);
         request.Host("localhost");
         var realUrl = request.GetUri();
     }

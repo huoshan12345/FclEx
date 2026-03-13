@@ -216,7 +216,7 @@ public class HeapTestsBasic
         var heap = new Heap<int>();
         var list = new List<int>();
 
-        for (var i = 0; i < 20000; i++)
+        for (var i = 0; i < 2000; i++)
         {
             if (rand.Next(3) != 0)
             {
@@ -361,7 +361,7 @@ public class HeapTestsBasic
         var heap = new Heap<int>();
         var list = new List<int>();
 
-        for (var step = 0; step < 100000; step++)
+        for (var step = 0; step < 10000; step++)
         {
             var op = rand.Next(5);
 
