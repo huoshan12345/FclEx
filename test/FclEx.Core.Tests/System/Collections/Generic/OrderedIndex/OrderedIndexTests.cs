@@ -44,7 +44,11 @@ public abstract class OrderedIndexTests<TScore, TValue> : IGenericSharedApiTests
     protected override void Clear(IEnumerable<(TScore, TValue)> enumerable)
         => ((OrderedIndex<TScore, TValue>)enumerable).Clear();
     protected override bool Contains(IEnumerable<(TScore, TValue)> enumerable, (TScore, TValue) value)
-        => ((OrderedIndex<TScore, TValue>)enumerable).Contains(value);
+    {
+        var orderedIndex = (ICollection<(TScore, TValue)>)enumerable;
+        return value.Item2 is { } v && orderedIndex.Contains(value); // check null value before calling Contains to avoid ArgumentNullException since TValue is not nullable
+    }
+
     protected override void CopyTo(IEnumerable<(TScore, TValue)> enumerable, (TScore, TValue)[] array, int index)
         => ((OrderedIndex<TScore, TValue>)enumerable).CopyTo(array, index);
     protected override bool Remove(IEnumerable<(TScore, TValue)> enumerable)
