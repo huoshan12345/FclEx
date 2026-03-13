@@ -268,6 +268,24 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
         Array.Copy(_items, 0, array, arrayIndex, _count);
     }
 
+    // Sets the capacity of this list to the size of the list. This method can
+    // be used to minimize a list's memory overhead once it is known that no
+    // new elements will be added to the list. To completely clear a list and
+    // release all memory referenced by the list, execute the following
+    // statements:
+    //
+    // list.Clear();
+    // list.TrimExcess();
+    //
+    public void TrimExcess()
+    {
+        var threshold = (int)(((double)_items.Length) * 0.9);
+        if (_count < threshold)
+        {
+            Capacity = _count;
+        }
+    }
+
     // Gets and sets the capacity of this list.  The capacity is the size of
     // the internal array used to hold items.  When set, the internal
     // array of the list is reallocated to the given capacity.
@@ -372,7 +390,7 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
         if (temp.Count == 0)
             return;
 
-        StableSort(temp, _comparer);
+        temp.StableSort(_comparer);
 
         if (_count == 0)
         {
@@ -591,32 +609,6 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
         return count;
     }
 
-    /// <summary>
-    /// Performs a stable sort using the specified comparer.
-    /// </summary>
-    /// <remarks>
-    /// <see cref="List{T}.Sort(IComparer{T})"/> is not guaranteed to be stable, so this method
-    /// preserves the relative order of elements that compare equal.
-    /// </remarks>
-    internal static void StableSort(List<T> list, IComparer<T> comparer)
-    {
-        var count = list.Count;
-        var index = new int[count];
-
-        for (var i = 0; i < count; i++)
-            index[i] = i;
-
-        Array.Sort(index, (a, b) =>
-        {
-            var c = comparer.Compare(list[a], list[b]);
-            return c != 0 ? c : a.CompareTo(b);
-        });
-
-        var temp = list.ToArray();
-
-        for (var i = 0; i < count; i++)
-            list[i] = temp[index[i]];
-    }
 
     public struct Enumerator : IEnumerator<T>
     {

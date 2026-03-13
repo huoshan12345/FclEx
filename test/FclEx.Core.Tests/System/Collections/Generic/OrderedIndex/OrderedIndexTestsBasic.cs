@@ -1,6 +1,6 @@
-﻿namespace System.Collections.Generic;
+﻿namespace System.Collections.Generic.OrderedIndex;
 
-public class OrderedIndexTests
+public class OrderedIndexTestsBasic
 {
     [Fact]
     public void Add_ShouldIncreaseCount()

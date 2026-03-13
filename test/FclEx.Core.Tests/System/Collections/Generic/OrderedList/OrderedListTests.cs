@@ -10,7 +10,7 @@ public abstract partial class OrderedListTests<T> : IListGenericTests<T>
     {
         var comparer = ObjectHelper.GetRequiredFieldValue<IComparer<T>>(list, "_comparer");
         var expected = list.ToList();
-        OrderedList<T>.StableSort(expected, comparer);
+        expected.StableSort(comparer);
         return expected;
     }
 

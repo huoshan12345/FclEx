@@ -1,5 +1,5 @@
 ﻿#pragma warning disable CA1859 // Use concrete types when possible for improved performance
-namespace System.Collections.Generic;
+namespace System.Collections.Generic.BPlusTreeDictionary;
 
 public abstract class BPlusTreeDictionaryTests<TKey, TValue> : IDictionaryGenericTests<TKey, TValue> where TKey : notnull
 {
