@@ -1,4 +1,5 @@
-﻿// ReSharper disable ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+﻿// ReSharper disable All
+#pragma warning disable IDE0300
 #pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
 namespace Testing;
 

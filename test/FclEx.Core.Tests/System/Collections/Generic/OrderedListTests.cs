@@ -105,31 +105,6 @@ public partial class OrderedListTests
     }
 
     // ----------------------------
-    // Remove / Contains
-    // ----------------------------
-
-    [Fact]
-    public void RemoveOne_RemovesItem()
-    {
-        var list = new OrderedList<int>();
-
-        list.AddRange([1, 2, 3]);
-
-        Assert.True(list.RemoveOne(2));
-        Assert.DoesNotContain(2, list);
-
-        Assert.Equal(new[] { 1, 3 }, list.ToArray());
-    }
-
-    [Fact]
-    public void RemoveOne_ReturnsFalse_WhenItemMissing()
-    {
-        var list = new OrderedList<int> { 1 };
-
-        Assert.False(list.RemoveOne(5));
-    }
-
-    // ----------------------------
     // IndexOf
     // ----------------------------
 
@@ -301,7 +276,7 @@ public partial class OrderedListTests
                     var index = rand.Next(mirror.Count);
                     var item = mirror[index];
 
-                    list.RemoveOne(item);
+                    list.Remove(item);
                     mirror.Remove(item);
                     break;
                 }

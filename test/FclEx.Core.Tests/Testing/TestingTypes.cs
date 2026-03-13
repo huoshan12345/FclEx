@@ -1,4 +1,5 @@
-﻿// ReSharper disable ArrangeAccessorOwnerBody
+﻿// ReSharper disable All
+#pragma warning disable IDE0251 // Make member 'readonly'
 namespace Testing;
 
 public struct SimpleInt : IStructuralComparable, IStructuralEquatable, IComparable, IComparable<SimpleInt>

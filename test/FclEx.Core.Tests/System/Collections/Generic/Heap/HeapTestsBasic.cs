@@ -1,6 +1,6 @@
-﻿namespace System.Collections.Generic;
+﻿namespace System.Collections.Generic.Heap;
 
-public class HeapTests
+public class HeapTestsBasic
 {
     [Fact]
     public void Push_Pop_ShouldReturnSorted()
