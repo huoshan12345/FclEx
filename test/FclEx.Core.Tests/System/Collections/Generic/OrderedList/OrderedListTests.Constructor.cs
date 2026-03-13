@@ -41,7 +41,7 @@ public abstract partial class OrderedListTests<T>
     {
         var enumerable = CreateEnumerable(enumerableType, null!, enumerableLength, 0, numberOfDuplicateElements);
         var list = new OrderedList<T>(enumerable);
-        var expected = enumerable.ToList();
+        var expected = ToExpectedList(list);
 
         Assert.Equal(enumerableLength, list.Count);
 
@@ -52,6 +52,6 @@ public abstract partial class OrderedListTests<T>
     [Fact]
     public void Construct_NullIEnumerable_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => { new OrderedList<T>(null!); });
+        Assert.Throws<ArgumentNullException>(() => { new OrderedList<T>((IEnumerable<T>)null!); });
     }
 }

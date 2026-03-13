@@ -551,15 +551,13 @@ file static class HeapTestExtensions
 {
     private const int Arity = 4;
 
+    private static readonly FieldInfo _fieldItems = typeof(Heap<>).GetRequiredField("_items");
+
     extension(Assert)
     {
         public static void AssertHeapInvariant(Heap<int> heap)
         {
-            var data = typeof(Heap<int>)
-                .GetRequiredField("_data")
-                .GetRequiredValue<int[]>(heap);
-
-
+            var items = ObjectHelper.GetRequiredFieldValue<int[]>(heap, "_items");
             var count = heap.Count;
 
             // 1. Verify the heap property: parent <= child
@@ -573,23 +571,23 @@ file static class HeapTestExtensions
                         break;
 
                     Assert.True(
-                        data[i] <= data[child],
-                        $"Heap property violated: parent {data[i]} > child {data[child]}"
+                        items[i] <= items[child],
+                        $"Heap property violated: parent {items[i]} > child {items[child]}"
                     );
                 }
             }
 
             // 2. Verify that the root contains the minimum element
-            var min = data[0];
+            var min = items[0];
 
             for (var i = 1; i < count; i++)
             {
-                if (data[i] < min)
-                    Assert.Fail($"Root is not the minimum element: {data[i]} < {min}");
+                if (items[i] < min)
+                    Assert.Fail($"Root is not the minimum element: {items[i]} < {min}");
             }
 
             // 3. Verify that count does not exceed the array length
-            Assert.True(count <= data.Length);
+            Assert.True(count <= items.Length);
         }
     }
 }

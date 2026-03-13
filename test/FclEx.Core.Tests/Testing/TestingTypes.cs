@@ -2,6 +2,7 @@
 #pragma warning disable IDE0251 // Make member 'readonly'
 namespace Testing;
 
+[DebuggerDisplay("{_val}")]
 public struct SimpleInt : IStructuralComparable, IStructuralEquatable, IComparable, IComparable<SimpleInt>
 {
     private int _val;

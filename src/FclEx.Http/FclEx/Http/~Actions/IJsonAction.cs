@@ -7,15 +7,9 @@ public interface IJsonAction<T> : IHttpResponseHandler<T>
 
     OperationResult<T> IHttpResponseHandler<T>.GetResult(HttpResponse response)
     {
-        var (successful, str, ex, _) = GetJson(response);
-        if (!successful)
-            return ex!;
-
-        var context = new JsonActionContext(response, str!, JsonResultPath);
-
-        return IsFailed(context)
-            ? HandleFailed(context)
-            : GetResult(context);
+        return GetJson(response)
+            .Then(m => CreateContext(response, m))
+            .Then(GetResult);
     }
 
     OperationResult<string> GetJson(HttpResponse response)
@@ -26,10 +20,12 @@ public interface IJsonAction<T> : IHttpResponseHandler<T>
             : Operation.Error<string>("The response string is not a valid json: " + str.Truncate(256));
     }
 
-    bool IsFailed(JsonActionContext context) => context.ResultTokens.IsNullOrEmpty();
-
-    OperationResult<T> HandleFailed(JsonActionContext context)
+    OperationResult<JsonActionContext> CreateContext(HttpResponse response, string json)
     {
+        var context = new JsonActionContext(response, json, JsonResultPath);
+        if (context.ResultTokens.IsNotEmpty())
+            return context;
+
         const string msg = "The result object does not exist in json";
         var error = JsonResultPath == null ? msg : msg + " at " + JsonResultPath;
         error = error + ": " + context.Json.Truncate(256);

@@ -2,7 +2,17 @@
 
 public abstract partial class OrderedListTests<T> : IListGenericTests<T>
 {
-    protected override bool EnumeratorCurrentUndefinedOperationThrows => true;
+    protected override bool EnumeratorCurrentUndefinedOperationThrows => false;
+    protected override bool SupportInsert => false;
+    protected override bool SupportItemSet => false;
+
+    protected override List<T> ToExpectedList(IList<T> list)
+    {
+        var comparer = ObjectHelper.GetRequiredFieldValue<IComparer<T>>(list, "_comparer");
+        var expected = list.ToList();
+        OrderedList<T>.StableSort(expected, comparer);
+        return expected;
+    }
 
     #region IList<T> Helper Methods
 

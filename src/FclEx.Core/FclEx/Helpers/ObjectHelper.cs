@@ -46,4 +46,16 @@ public static class ObjectHelper
         Marshal.Copy(ptr, bufByte, 0, length);
         return bufByte;
     }
+
+    public static T? GetFieldValue<T>(object obj, string fieldName)
+    {
+        var field = obj.GetType().GetRequiredField(fieldName, true);
+        return field.GetValue<T>(obj);
+    }
+
+    public static T GetRequiredFieldValue<T>(object obj, string fieldName)
+    {
+        var field = obj.GetType().GetRequiredField(fieldName, true);
+        return field.GetRequiredValue<T>(obj);
+    }
 }

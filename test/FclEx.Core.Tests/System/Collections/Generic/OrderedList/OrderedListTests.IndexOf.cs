@@ -3,11 +3,13 @@
 #pragma warning disable IDE0060 // Remove unused parameter
 namespace System.Collections.Generic.OrderedList;
 
-public abstract partial class OrderedListTests<T> : IListGenericTests<T>
+public abstract partial class OrderedListTests<T>
 {
     #region Helpers
 
     public delegate int IndexOfDelegate(OrderedList<T> list, T value);
+    public delegate int ExpectedIndexOfDelegate(List<T> list, T value);
+
     public enum IndexOfMethod
     {
         IndexOfT,
@@ -19,6 +21,20 @@ public abstract partial class OrderedListTests<T> : IListGenericTests<T>
     };
 
     private static IndexOfDelegate IndexOfDelegateFromType(IndexOfMethod methodType)
+    {
+        return methodType switch
+        {
+            IndexOfMethod.IndexOfT => (list, value) => list.IndexOf(value),
+            IndexOfMethod.IndexOfTInt => (list, value) => list.IndexOf(value, 0),
+            IndexOfMethod.IndexOfTIntInt => (list, value) => list.IndexOf(value, 0, list.Count),
+            IndexOfMethod.LastIndexOfT => (list, value) => list.LastIndexOf(value),
+            IndexOfMethod.LastIndexOfTInt => (list, value) => list.LastIndexOf(value, list.Count - 1),
+            IndexOfMethod.LastIndexOfTIntInt => (list, value) => list.LastIndexOf(value, list.Count - 1, list.Count),
+            _ => throw new Exception("Invalid IndexOfMethod")
+        };
+    }
+
+    private static ExpectedIndexOfDelegate ExpectedIndexOfDelegateFromType(IndexOfMethod methodType)
     {
         return methodType switch
         {
@@ -79,7 +95,7 @@ public abstract partial class OrderedListTests<T> : IListGenericTests<T>
     public void IndexOf_NonExistingValues(IndexOfMethod indexOfMethod, int count, bool frontToBackOrder)
     {
         var list = GenericListFactory(count);
-        var nonexistentValues = CreateEnumerable(TestBase.EnumerableType.List, list, count, 0, 0);
+        var nonexistentValues = CreateEnumerable(EnumerableType.List, list, count, 0, 0);
         var indexOf = IndexOfDelegateFromType(indexOfMethod);
 
         Assert.All(nonexistentValues, nonexistentValue =>
@@ -98,65 +114,82 @@ public abstract partial class OrderedListTests<T> : IListGenericTests<T>
         while (list.Remove(defaultValue))
             count--;
         list.Add(defaultValue);
-        Assert.Equal(count, indexOf(list, defaultValue));
+
+        var expectedList = ToExpectedList(list);
+        var expectedIndexOf = ExpectedIndexOfDelegateFromType(indexOfMethod);
+        Assert.Equal(expectedIndexOf(expectedList, defaultValue), indexOf(list, defaultValue));
     }
 
     [Theory]
     [MemberData(nameof(IndexOfTestData))]
     public void IndexOf_OrderIsCorrect(IndexOfMethod indexOfMethod, int count, bool frontToBackOrder)
     {
+        if (count == 0)
+            return;
+
         var list = GenericListFactory(count);
         var withoutDuplicates = list.ToList();
         list.AddRange(list);
         var indexOf = IndexOfDelegateFromType(indexOfMethod);
+        var dupTimes = list.Count / withoutDuplicates.Count;
 
         Assert.All(Enumerable.Range(0, count), i =>
         {
             if (frontToBackOrder)
-                Assert.Equal(i, indexOf(list, withoutDuplicates[i]));
+                Assert.Equal(dupTimes * i, indexOf(list, withoutDuplicates[i]));
             else
-                Assert.Equal(count + i, indexOf(list, withoutDuplicates[i]));
+                Assert.Equal(dupTimes * (i + 1) - 1, indexOf(list, withoutDuplicates[i]));
         });
     }
 
     [Theory]
     [MemberData(nameof(ValidCollectionSizes))]
-    public void IndexOf_Int_OrderIsCorrectWithManyDuplicates(int count)
+    public void IndexOf_OrderIsCorrectWithManyDuplicates(int count)
     {
+        if (count == 0)
+            return;
+
         var list = GenericListFactory(count);
         var withoutDuplicates = list.ToList();
-        list.AddRange(list);
-        list.AddRange(list);
-        list.AddRange(list);
+        list.AddRange(list); // 2 duplicates
+        list.AddRange(list); // 4 duplicates
+        list.AddRange(list); // 8 duplicates
+        var dupTimes = list.Count / withoutDuplicates.Count;
 
         Assert.All(Enumerable.Range(0, count), i =>
         {
             Assert.All(Enumerable.Range(0, 4), j =>
             {
-                var expectedIndex = j * count + i;
-                Assert.Equal(expectedIndex, list.IndexOf(withoutDuplicates[i], count * j));
-                Assert.Equal(expectedIndex, list.IndexOf(withoutDuplicates[i], count * j, count));
+                var expectedIndex = dupTimes * i;
+                Assert.Equal(expectedIndex, list.IndexOf(withoutDuplicates[i]));
+                Assert.Equal(expectedIndex + j, list.IndexOf(withoutDuplicates[i], expectedIndex + j));
+                Assert.Equal(expectedIndex + j, list.IndexOf(withoutDuplicates[i], expectedIndex + j, 1));
             });
         });
     }
 
     [Theory]
     [MemberData(nameof(ValidCollectionSizes))]
-    public void LastIndexOf_Int_OrderIsCorrectWithManyDuplicates(int count)
+    public void LastIndexOf_OrderIsCorrectWithManyDuplicates(int count)
     {
+        if (count == 0)
+            return;
+
         var list = GenericListFactory(count);
         var withoutDuplicates = list.ToList();
-        list.AddRange(list);
-        list.AddRange(list);
-        list.AddRange(list);
+        list.AddRange(list); // 2 duplicates
+        list.AddRange(list); // 4 duplicates
+        list.AddRange(list); // 8 duplicates
+        var dupTimes = list.Count / withoutDuplicates.Count;
 
         Assert.All(Enumerable.Range(0, count), i =>
         {
             Assert.All(Enumerable.Range(0, 4), j =>
             {
-                var expectedIndex = j * count + i;
-                Assert.Equal(expectedIndex, list.LastIndexOf(withoutDuplicates[i], count * (j + 1) - 1));
-                Assert.Equal(expectedIndex, list.LastIndexOf(withoutDuplicates[i], count * (j + 1) - 1, count));
+                var expectedIndex = dupTimes * (i + 1) - 1;
+                Assert.Equal(expectedIndex, list.LastIndexOf(withoutDuplicates[i]));
+                Assert.Equal(expectedIndex - j, list.LastIndexOf(withoutDuplicates[i], expectedIndex - j));
+                Assert.Equal(expectedIndex - j, list.LastIndexOf(withoutDuplicates[i], expectedIndex - j, 1));
             });
         });
     }

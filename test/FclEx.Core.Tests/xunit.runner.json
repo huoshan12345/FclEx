@@ -1,0 +1,7 @@
+{
+  "parallelizeAssembly": true,
+  "parallelizeTestCollections": true,
+  "maxParallelThreads": 0,
+  "shadowCopy": false,
+  "diagnosticMessages": false
+}

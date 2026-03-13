@@ -9,20 +9,14 @@ public abstract partial class OrderedListTests<T>
     public void AddRange(EnumerableType enumerableType, int listLength, int enumerableLength, int numberOfMatchingElements, int numberOfDuplicateElements)
     {
         var list = GenericListFactory(listLength);
-        var listBeforeAdd = list.ToList();
         var enumerable = CreateEnumerable(enumerableType, list, enumerableLength, numberOfMatchingElements, numberOfDuplicateElements);
         list.AddRange(enumerable);
+        var expectedList = ToExpectedList(list);
 
         // Check that the first section of the List is unchanged
-        Assert.All(Enumerable.Range(0, listLength), index =>
+        Assert.All(Enumerable.Range(0, expectedList.Count), index =>
         {
-            Assert.Equal(listBeforeAdd[index], list[index]);
-        });
-
-        // Check that the added elements are correct
-        Assert.All(Enumerable.Range(0, enumerableLength), index =>
-        {
-            Assert.Equal(enumerable.ElementAt(index), list[index + listLength]);
+            Assert.Equal(expectedList[index], list[index]);
         });
     }
 
@@ -31,7 +25,7 @@ public abstract partial class OrderedListTests<T>
     public void AddRange_NullEnumerable_ThrowsArgumentNullException(int count)
     {
         var list = GenericListFactory(count);
-        var listBeforeAdd = list.ToList();
+        var listBeforeAdd = ToExpectedList(list);
         Assert.Throws<ArgumentNullException>(() => list.AddRange(null!));
         Assert.Equal(listBeforeAdd, list);
     }
