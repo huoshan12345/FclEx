@@ -19,7 +19,7 @@
 /// <para>
 /// Ordering is determined by the comparer, while equality-based operations
 /// such as <see cref="Remove(T)"/> and <see cref="IndexOf(T)"/> rely on
-/// <see cref="EqualityComparer{T}.Default"/> to determine exact element matches.<br/>
+/// <see cref="IComparer{T}"/> used by the collection to determine exact element matches.<br/>
 /// This means that multiple distinct elements may compare equal for ordering
 /// but still be treated as different values for removal or lookup.
 /// </para>
@@ -439,6 +439,9 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
     /// <summary>
     /// Returns the index of the first element that is greater than the specified item.
     /// </summary>
+    /// <param name="item">The value to search for.</param>
+    /// <param name="lower">Optional inclusive lower bound of the search range.</param>
+    /// <param name="upper">Optional exclusive upper bound of the search range.</param>
     public int UpperBound(T item, int? lower = null, int? upper = null)
     {
         // Cannot rely on List<T>.BinarySearch because it may return any matching
@@ -466,8 +469,11 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
     }
 
     /// <summary>
-    /// Returns the index of the first element that is greater than or equal to the specified item.
+    /// Returns the index of the first element that compares greater than or equal to the specified item.
     /// </summary>
+    /// <param name="item">The value to search for.</param>
+    /// <param name="lower">Optional inclusive lower bound of the search range.</param>
+    /// <param name="upper">Optional exclusive upper bound of the search range.</param>
     public int LowerBound(T item, int? lower = null, int? upper = null)
     {
         // Cannot rely on List<T>.BinarySearch because it may return any matching
@@ -512,10 +518,10 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
     }
 
     /// <summary>
-    /// Removes the first element that is equal to the specified item.
+    /// Removes the first element whose sort key compares equal to the specified item.
     /// </summary>
     /// <remarks>
-    /// Equality is determined by <see cref="EqualityComparer{T}.Default"/>.
+    /// Equality is determined by the <see cref="IComparer{T}"/> used by the collection.<br/>
     /// </remarks>
     public bool RemoveOne(T item)
     {
@@ -532,7 +538,7 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
     /// Removes all elements that are equal to the specified item.
     /// </summary>
     /// <remarks>
-    /// Equality is determined by <see cref="EqualityComparer{T}.Default"/>.
+    /// Equality is determined by the <see cref="IComparer{T}"/> used by the collection.<br/>
     /// </remarks>
     public int RemoveAll(T item)
     {
@@ -572,7 +578,7 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
     /// Returns the number of elements that are equal to the specified item.
     /// </summary>
     /// <remarks>
-    /// Equality is determined by <see cref="EqualityComparer{T}.Default"/>.
+    /// Equality is determined by the <see cref="IComparer{T}"/> used by the collection.<br/>
     /// </remarks>
     public int CountOf(T item)
     {
