@@ -40,13 +40,17 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
     private readonly IComparer<T> _comparer;
     private int _version;
 
-    public OrderedList(int capacity = 4, IComparer<T>? comparer = null)
+    public OrderedList(int capacity = DefaultCapacity, IComparer<T>? comparer = null)
     {
-        _items = new T[capacity];
+        Check.NotNegative(capacity);
+
+        _items = capacity == 0
+            ? []
+            : new T[capacity];
         _comparer = comparer ?? Comparer<T>.Default;
     }
 
-    public OrderedList(IComparer<T> comparer) : this(4, comparer)
+    public OrderedList(IComparer<T> comparer) : this(DefaultCapacity, comparer)
     {
     }
 
@@ -69,7 +73,11 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
     /// </remarks>
     public T this[int index]
     {
-        get => _items[index];
+        get
+        {
+            Check.Between(index, 0, _count - 1);
+            return _items[index];
+        }
         set => throw new NotSupportedException("Cannot set item in OrderedList.");
     }
 
@@ -112,7 +120,7 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
         int index;
 
         if (_count == 0
-            || _comparer.Compare(_items[^1], item) <= 0)
+            || _comparer.Compare(_items[_count - 1], item) <= 0)
         {
             index = _count;
         }
