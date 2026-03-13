@@ -1,11 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <PackageReference Include="Meziantou.Xunit.ParallelTestFramework" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
-    <PackageReference Include="Meziantou.Xunit.v3.ParallelTestFramework" />
+    <PackageReference Include="Meziantou.Xunit.ParallelTestFramework" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\FclEx.Xunit\FclEx.Xunit.csproj" />
