@@ -8,6 +8,7 @@ public abstract class OrderedIndexTests<TScore, TValue> : IGenericSharedApiTests
     protected override bool EnumeratorCurrentUndefinedOperationThrows => false;
     protected override bool DefaultValueAllowed => false;
     protected override bool DuplicateValuesAllowed => false;
+    protected override bool DefaultValueWhenNotAllowed_Throws => false;
 
     #region OrderedIndex<TScore, TValue> Helper Methods
 
