@@ -1,6 +1,6 @@
 ﻿namespace System.Collections.Generic.OrderedList;
 
-public abstract partial class OrderedListTests<T> : IListGenericTests<T>
+public abstract partial class OrderedListTests<T>
 {
     [Theory]
     [MemberData(nameof(ValidCollectionSizes))]

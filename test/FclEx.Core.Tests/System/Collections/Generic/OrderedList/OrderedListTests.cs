@@ -1,6 +1,4 @@
-﻿#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-namespace System.Collections.Generic.OrderedList;
+﻿namespace System.Collections.Generic.OrderedList;
 
 public abstract partial class OrderedListTests<T> : IListGenericTests<T>
 {
@@ -24,12 +22,12 @@ public abstract partial class OrderedListTests<T> : IListGenericTests<T>
 
     protected virtual OrderedList<T> GenericListFactory()
     {
-        return new OrderedList<T>();
+        return [];
     }
 
     protected virtual OrderedList<T> GenericListFactory(int count)
     {
-        var toCreateFrom = CreateEnumerable(EnumerableType.List, null, count, 0, 0);
+        var toCreateFrom = CreateEnumerable(EnumerableType.List, null!, count, 0, 0);
         return new OrderedList<T>(toCreateFrom);
     }
 
@@ -41,7 +39,10 @@ public abstract partial class OrderedListTests<T> : IListGenericTests<T>
         //do not have to verify consistency with any other method.
         for (var i = 0; i < list.Count; ++i)
         {
-            Assert.True(list[i] == null ? expectedItems[i] == null : list[i].Equals(expectedItems[i]));
+            if (list[i] is null)
+                Assert.Null(expectedItems[i]);
+            else
+                Assert.Equal(list[i], expectedItems[i]);
         }
     }
 

@@ -1,6 +1,6 @@
 ﻿namespace System.Collections.Generic.OrderedList;
 
-public class SeqListTestsString : OrderedListTests<string>
+public class OrderedListTestsString : OrderedListTests<string>
 {
     protected override string CreateT(int seed)
     {
@@ -12,11 +12,20 @@ public class SeqListTestsString : OrderedListTests<string>
     }
 }
 
-public class SeqListTestsInt : OrderedListTests<int>
+public class OrderedListTestsInt : OrderedListTests<int>
 {
     protected override int CreateT(int seed)
     {
         var rand = new Random(seed);
         return rand.Next();
+    }
+}
+
+public class OrderedListTestsSimpleInt : OrderedListTests<SimpleInt>
+{
+    protected override SimpleInt CreateT(int seed)
+    {
+        var rand = new Random(seed);
+        return new(rand.Next());
     }
 }

@@ -1,11 +1,11 @@
-﻿// ReSharper disable all
-#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-#pragma warning disable CS8604 // Possible null reference argument.
+﻿// ReSharper disable CollectionNeverUpdated.Local
+// ReSharper disable PossibleMultipleEnumeration
+// ReSharper disable ObjectCreationAsStatement
 #pragma warning disable xUnit1026 // Theory methods should use all of their parameters
 #pragma warning disable IDE0060 // Remove unused parameter
 namespace System.Collections.Generic.OrderedList;
 
-public abstract partial class OrderedListTests<T> : IListGenericTests<T>
+public abstract partial class OrderedListTests<T>
 {
     [Fact]
     public void Constructor_Default()
@@ -39,19 +39,19 @@ public abstract partial class OrderedListTests<T> : IListGenericTests<T>
     [MemberData(nameof(EnumerableTestData))]
     public void Constructor_IEnumerable(EnumerableType enumerableType, int listLength, int enumerableLength, int numberOfMatchingElements, int numberOfDuplicateElements)
     {
-        var enumerable = CreateEnumerable(enumerableType, null, enumerableLength, 0, numberOfDuplicateElements);
+        var enumerable = CreateEnumerable(enumerableType, null!, enumerableLength, 0, numberOfDuplicateElements);
         var list = new OrderedList<T>(enumerable);
         var expected = enumerable.ToList();
 
-        Assert.Equal(enumerableLength, list.Count); //"Number of items in list do not match the number of items given."
+        Assert.Equal(enumerableLength, list.Count);
 
         for (var i = 0; i < enumerableLength; i++)
-            Assert.Equal(expected[i], list[i]); //"Expected object in item array to be the same as in the list"
+            Assert.Equal(expected[i], list[i]);
     }
 
     [Fact]
-    public void Constructo_NullIEnumerable_ThrowsArgumentNullException()
+    public void Construct_NullIEnumerable_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => { new OrderedList<T>(null); }); //"Expected ArgumentnUllException for null items"
+        Assert.Throws<ArgumentNullException>(() => { new OrderedList<T>(null!); });
     }
 }

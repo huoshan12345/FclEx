@@ -1,6 +1,6 @@
 ﻿namespace System.Collections.Generic.OrderedList;
 
-public class SeqListMisc
+public class OrderedListTestsMisc
 {
     internal class Driver<T>
     {

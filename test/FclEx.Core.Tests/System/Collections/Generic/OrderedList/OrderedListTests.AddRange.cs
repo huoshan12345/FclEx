@@ -1,8 +1,7 @@
 ﻿// ReSharper disable PossibleMultipleEnumeration
-#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
 namespace System.Collections.Generic.OrderedList;
 
-public abstract partial class OrderedListTests<T> : IListGenericTests<T>
+public abstract partial class OrderedListTests<T>
 {
     // Has tests that pass a variably sized TestCollection and MyEnumerable to the AddRange function
     [Theory]
@@ -33,7 +32,7 @@ public abstract partial class OrderedListTests<T> : IListGenericTests<T>
     {
         var list = GenericListFactory(count);
         var listBeforeAdd = list.ToList();
-        Assert.Throws<ArgumentNullException>(() => list.AddRange(null));
+        Assert.Throws<ArgumentNullException>(() => list.AddRange(null!));
         Assert.Equal(listBeforeAdd, list);
     }
 }
