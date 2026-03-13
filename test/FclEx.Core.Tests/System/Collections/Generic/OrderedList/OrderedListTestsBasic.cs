@@ -2,7 +2,7 @@
 
 namespace System.Collections.Generic;
 
-public partial class OrderedListTests
+public partial class OrderedListTestsBasic
 {
     // ----------------------------
     // Test Data
@@ -252,6 +252,11 @@ public partial class OrderedListTests
         {
             var op = rand.Next(5);
 
+            if (step == 36)
+            {
+
+            }
+
             switch (op)
             {
                 case 0: // Add
@@ -276,8 +281,10 @@ public partial class OrderedListTests
                     var index = rand.Next(mirror.Count);
                     var item = mirror[index];
 
-                    list.Remove(item);
-                    mirror.Remove(item);
+                    list.RemoveOne(item);
+
+                    var removeItem = mirror.First(m => m.Key == item.Key);
+                    mirror.Remove(removeItem);
                     break;
                 }
                 case 3: // RemoveAll

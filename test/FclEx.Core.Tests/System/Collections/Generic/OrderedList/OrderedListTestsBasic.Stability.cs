@@ -1,6 +1,6 @@
 ﻿namespace System.Collections.Generic;
 
-partial class OrderedListTests
+partial class OrderedListTestsBasic
 {
     [DebuggerDisplay("Key = {Key}, Id = {Id}")]
     private class Item

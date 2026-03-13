@@ -111,7 +111,7 @@ public abstract partial class OrderedListTests<T>
         var defaultValue = default(T);
         var list = GenericListFactory(count);
         var indexOf = IndexOfDelegateFromType(indexOfMethod);
-        while (list.Remove(defaultValue))
+        while (((ICollection<T>)list).Remove(defaultValue))
             count--;
         list.Add(defaultValue);
 

@@ -135,7 +135,7 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
         ++_version;
     }
 
-    public bool Remove(T item)
+    bool ICollection<T>.Remove(T item)
     {
         var index = IndexOf(item);
         if (index < 0)
@@ -385,7 +385,7 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
 
         // Fast path for appending to the end if the new items are all greater than or equal to the last item.
         if (_count > 0 &&
-            _comparer.Compare(_items[^1], temp[0]) <= 0)
+            _comparer.Compare(_items[_count - 1], temp[0]) <= 0)
         {
             AddRange(temp);
             return;
@@ -481,13 +481,33 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
     /// </summary>
     public IEnumerable<T> Between(T min, T max)
     {
-        var start = IndexOf(min);
-        var end = LastIndexOf(max);
+        var start = LowerBound(min);
 
-        for (var i = start; i < end; i++)
+        for (var i = start; i < _count; i++)
         {
-            yield return _items[i];
+            var item = _items[i];
+            if (_comparer.Compare(item, max) > 0)
+                yield break;
+
+            yield return item;
         }
+    }
+
+    /// <summary>
+    /// Removes the first element that is equal to the specified item.
+    /// </summary>
+    /// <remarks>
+    /// Equality is determined by <see cref="EqualityComparer{T}.Default"/>.
+    /// </remarks>
+    public bool RemoveOne(T item)
+    {
+        var index = IndexOf(item);
+
+        if (index < 0)
+            return false;
+
+        RemoveAt(index);
+        return true;
     }
 
     /// <summary>
@@ -499,15 +519,18 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
     public int RemoveAll(T item)
     {
         var start = IndexOf(item);
-        var end = LastIndexOf(item);
-        var count = end - start;
+        if (start < 0)
+            return 0;
 
-        RemoveRange(start, end, count);
+        var end = LastIndexOf(item);
+        var count = end - start + 1;
+
+        RemoveRange(start, count);
 
         return count;
     }
 
-    private void RemoveRange(int index, int end, int count)
+    private void RemoveRange(int index, int count)
     {
         if (count <= 0)
             return;
@@ -516,7 +539,7 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
 
         if (index < _count)
         {
-            Array.Copy(_items, end, _items, index, _count - index);
+            Array.Copy(_items, index + count, _items, index, _count - index);
         }
 
         ++_version;
@@ -535,7 +558,11 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
     /// </remarks>
     public int CountOf(T item)
     {
-        return LastIndexOf(item) - IndexOf(item);
+        var end = LastIndexOf(item);
+        if (end < 0)
+            return 0;
+
+        return end - IndexOf(item) + 1;
     }
 
     /// <summary>
@@ -555,11 +582,11 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
     /// </summary>
     public int RemoveRange(T min, T max)
     {
-        var start = IndexOf(min);
-        var end = LastIndexOf(max);
+        var start = LowerBound(min);
+        var end = UpperBound(max);
         var count = end - start;
 
-        RemoveRange(start, end, count);
+        RemoveRange(start, count);
 
         return count;
     }

@@ -31,7 +31,7 @@ public class OrderedListTestsMisc
             var list = new OrderedList<T>(items);
             foreach (var m in items)
             {
-                list.Remove(m);
+                ((ICollection<T>)list).Remove(m);
                 Assert.DoesNotContain(m, list); //"Should not contain item"
             }
         }
@@ -42,7 +42,7 @@ public class OrderedListTestsMisc
             foreach (var m in items)
             {
                 list.Add(m);
-                list.Remove(m);
+                ((ICollection<T>)list).Remove(m);
                 list.Add(m);
                 Assert.Contains(m, list); //"Should contain item."
             }
@@ -60,7 +60,7 @@ public class OrderedListTestsMisc
             for (var i = 0; i < times + 1; i++)
             {
                 Assert.Contains(items[items.Length / 2], list); //"Should contain item."
-                list.Remove(items[items.Length / 2]);
+                ((ICollection<T>)list).Remove(items[items.Length / 2]);
             }
             Assert.DoesNotContain(items[items.Length / 2], list); //"Should not contain item"
         }
