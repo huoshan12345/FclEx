@@ -1,15 +1,17 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace FclEx.Serilog.Extensions.LoggerConfigurationExtensions;
 
 public class ApplyMicrosoftLoggingFilterTests
 {
-    private static (Logger logger, CollectingSink sink) CreateLogger(IConfiguration config) 
+    private static (Logger logger, CollectingSink sink) CreateLogger(IConfiguration config)
     {
         var sink = new CollectingSink();
 
         var logger = new LoggerConfiguration()
-            .ApplyMicrosoftLoggingFilter(config)
+            .ApplyMicrosoftLoggingFilter(config.GetSection("Logging"))
+            .MinimumLevel.Verbose()
             .WriteTo.Sink(sink)
             .CreateLogger();
 
@@ -110,5 +112,90 @@ public class ApplyMicrosoftLoggingFilterTests
         });
 
         Assert.Null(ex);
+    }
+
+    [Fact]
+    public void InvalidLogLevel_Throw()
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Logging:LogLevel:Default"] = "InvalidLevel"
+            })
+            .Build();
+
+        var ex = Assert.Throws<InvalidOperationException>(() => CreateLogger(config));
+        Assert.Contains("Configuration value 'InvalidLevel' is not supported.", ex.Message);
+    }
+
+    [Fact]
+    public void LogWithoutSourceContext_UsesDefaultLevel()
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Logging:LogLevel:Default"] = "Warning"
+            })
+            .Build();
+
+        var (logger, sink) = CreateLogger(config);
+
+        logger.Information("info");
+        logger.Warning("warn");
+
+        Assert.Single(sink.Events);
+        Assert.Equal(LogEventLevel.Warning, sink.Events.First().Level);
+    }
+
+    [Fact]
+    public void MicrosoftNamespaceOverride_Works()
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Logging:LogLevel:Default"] = "Information",
+                ["Logging:LogLevel:Microsoft"] = "Warning"
+            })
+            .Build();
+
+        var (logger, sink) = CreateLogger(config);
+
+        var log = logger.ForContext("SourceContext", "Microsoft.AspNetCore.Hosting");
+
+        log.Information("info");
+        log.Warning("warn");
+
+        Assert.Single(sink.Events);
+        Assert.Equal(LogEventLevel.Warning, sink.Events.First().Level);
+    }
+
+    public static readonly TheoryData<LogLevel, LogEventLevel, bool> LogLevelMatrix = Enum.GetValues<LogLevel>()
+        .CrossJoin(m => Enum.GetValues<LogEventLevel>())
+        .Select(m => (m.Item1, m.Item2, m.Item1.ToSerilogLevel() <= m.Item2))
+        .ToTheoryData();
+
+    [Theory]
+    [MemberData(nameof(LogLevelMatrix))]
+    public void DefaultLevel_FilterWorks(LogLevel configuredLevel, LogEventLevel eventLevel, bool shouldLog)
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Logging:LogLevel:Default"] = configuredLevel.ToString()
+            })
+            .Build();
+
+        var (logger, sink) = CreateLogger(config);
+
+        logger.Write(eventLevel, "test");
+
+        if (shouldLog)
+        {
+            Assert.Single(sink.Events);
+        }
+        else
+        {
+            Assert.Empty(sink.Events);
+        }
     }
 }

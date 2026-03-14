@@ -1,3 +1,4 @@
+using System.Text;
 using FclEx.Logging;
 using Serilog.Parsing;
 using static FclEx.Serilog.Fields;
@@ -164,5 +165,21 @@ public static class LogEventExtensions
         }
 
         return logEvent;
+    }
+
+    public static T? GetPropertyValue<T>(this LogEvent logEvent, string propertyName)
+    {
+        if (logEvent.Properties.TryGetValue(propertyName, out var value) == false)
+            return default;
+
+        if (value is ScalarValue scalarValue)
+            return scalarValue.Value is T t ? t : default;
+
+        return default;
+    }
+
+    public static string? GetSourceContext(this LogEvent logEvent)
+    {
+        return logEvent.GetPropertyValue<string>(Constants.SourceContext);
     }
 }

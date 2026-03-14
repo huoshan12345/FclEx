@@ -20,7 +20,7 @@ public static class LoggerConfigurationExtensions
         return configuration;
     }
 
-    private static readonly ConcurrentDictionary<string, LogEventLevel> _levelCache = [];
+    private static readonly ConcurrentDictionary<(LoggerConfiguration, LoggerFilterOptions, string), LogEventLevel> _levelCache = [];
 
     public static LoggerConfiguration ApplyMicrosoftLoggingFilter(this LoggerConfiguration config, IConfiguration configuration)
     {
@@ -28,11 +28,8 @@ public static class LoggerConfigurationExtensions
 
         config.Filter.ByIncludingOnly(e =>
         {
-            if (!e.Properties.TryGetValue(Constants.SourceContext, out var ctx))
-                return true;
-
-            var category = (string?)((ScalarValue)ctx).Value ?? "";
-            var minLevel = _levelCache.GetOrAdd(category, m => GetLogLevel(options, m));
+            var category = e.GetSourceContext() ?? "";
+            var minLevel = _levelCache.GetOrAdd((config, options, category), m => GetLogLevel(m.Item2, m.Item3));
             return e.Level >= minLevel;
         });
 
