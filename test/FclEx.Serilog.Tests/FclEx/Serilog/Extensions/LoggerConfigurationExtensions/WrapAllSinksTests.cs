@@ -2,7 +2,6 @@
 
 namespace FclEx.Serilog.Extensions.LoggerConfigurationExtensions;
 
-[Collection(nameof(Console))]
 public class WrapAllSinksTests
 {
     [Fact]
