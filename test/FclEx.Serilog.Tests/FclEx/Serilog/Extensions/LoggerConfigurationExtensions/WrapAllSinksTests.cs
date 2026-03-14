@@ -1,9 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace FclEx.Serilog.Extensions;
+namespace FclEx.Serilog.Extensions.LoggerConfigurationExtensions;
 
-[Collection(nameof(Console))]
-public class LoggerConfigurationExtensionsTests
+public class WrapAllSinksTests
 {
     [Fact]
     public async Task WrapAllSinks_Test()
@@ -19,4 +18,5 @@ public class LoggerConfigurationExtensionsTests
         var logEvent = Assert.Single(sink.Events);
         Assert.Equal(LogEventLevel.Warning, logEvent.Level);
     }
+
 }
