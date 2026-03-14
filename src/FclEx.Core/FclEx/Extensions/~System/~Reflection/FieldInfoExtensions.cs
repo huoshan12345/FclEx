@@ -55,7 +55,7 @@ public static class FieldInfoExtensions
         if (AutoFieldRegex.TryMatch(field.Name, 1, out var name) == false)
             return false;
 
-        var property = type.GetProperty(name, BindingAttributes.AllDeclared);
+        var property = type.GetProperty(name, BindingAttributes.Declared);
         if (property is null)
             return false;
 

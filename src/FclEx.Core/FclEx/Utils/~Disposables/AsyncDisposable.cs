@@ -25,4 +25,9 @@ public class AsyncDisposable : IAsyncDisposable
         action();
         return Task.CompletedTask;
     });
+
+    public static AsyncDisposableValue<T> FromValue<T>(T value, Func<T, ValueTask>? disposeAction = null)
+    {
+        return new(value, disposeAction);
+    }
 }

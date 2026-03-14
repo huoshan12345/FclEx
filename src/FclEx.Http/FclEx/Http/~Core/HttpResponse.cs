@@ -17,7 +17,7 @@ public class HttpResponse
     public HttpRequest Request { get; }
     public string ResponseString { get; internal set; } = string.Empty;
     public byte[] ResponseBytes { get; internal set; } = [];
-    public Stream ResponseStream { get; internal set; } = new MemoryStream();
+    public Stream ResponseStream { get; internal set; } = Stream.Null;
     public Encoding? Encoding { get; internal set; }
     public TimeSpan Elapsed { get; internal set; }
     public DateTimeOffset StartTime { get; internal set; }

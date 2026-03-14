@@ -152,7 +152,7 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
     protected virtual Task<T> DeserializeAsync(BasicDeliverEventArgs args)
     {
         var obj = Serializer.Deserialize<T>(args.Body);
-        return obj.ToTask()!;
+        return Task.FromResult(obj!);
     }
 
     protected virtual Task OnDeserializeDiscardAsync(BasicDeliverEventArgs args, Exception ex)

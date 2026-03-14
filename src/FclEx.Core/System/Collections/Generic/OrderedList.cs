@@ -18,26 +18,50 @@
 ///
 /// <para>
 /// Ordering is determined by the comparer, while equality-based operations
-/// such as <see cref="RemoveOne(T)"/> and <see cref="IndexOf(T)"/> rely on
-/// <see cref="EqualityComparer{T}.Default"/> to determine exact element matches.<br/>
+/// such as <see cref="Remove(T)"/> and <see cref="IndexOf(T)"/> rely on
+/// <see cref="IComparer{T}"/> used by the collection to determine exact element matches.<br/>
 /// This means that multiple distinct elements may compare equal for ordering
 /// but still be treated as different values for removal or lookup.
 /// </para>
 ///
 /// <para>
 /// The collection provides efficient range operations through
-/// <see cref="LowerBound(T)"/>, <see cref="UpperBound(T)"/>, and
+/// <see cref="LowerBound(T, int?, int?)"/>, <see cref="UpperBound(T, int?, int?)"/>, and
 /// <see cref="Between(T, T)"/>.
 /// </para>
 /// </remarks>
-public class OrderedList<T>(IComparer<T>? comparer) : IList<T>, IReadOnlyList<T>
+[DebuggerDisplay("Count = {Count}")]
+public class OrderedList<T> : IList<T>, IReadOnlyList<T>
 {
-    private readonly List<T> _list = [];
-    private readonly IComparer<T> _comparer = comparer ?? Comparer<T>.Default;
+    private const int DefaultCapacity = 4;
 
-    public OrderedList() : this(null) { }
+    private T[] _items;
+    private int _count;
+    private readonly IComparer<T> _comparer;
+    private int _version;
 
-    public int Count => _list.Count;
+    public OrderedList(int capacity = DefaultCapacity, IComparer<T>? comparer = null)
+    {
+        Check.NotNegative(capacity);
+
+        _items = capacity == 0
+            ? []
+            : new T[capacity];
+        _comparer = comparer ?? Comparer<T>.Default;
+    }
+
+    public OrderedList(IComparer<T> comparer) : this(DefaultCapacity, comparer)
+    {
+    }
+
+    public OrderedList(IEnumerable<T> items, IComparer<T>? comparer = null) : this(4, comparer)
+    {
+        _comparer = comparer ?? Comparer<T>.Default;
+        AddRange(items);
+    }
+
+    // ReSharper disable once ConvertToAutoPropertyWithPrivateSetter
+    public int Count => _count;
 
     public bool IsReadOnly => false;
 
@@ -49,37 +73,104 @@ public class OrderedList<T>(IComparer<T>? comparer) : IList<T>, IReadOnlyList<T>
     /// </remarks>
     public T this[int index]
     {
-        get => _list[index];
+        get
+        {
+            Check.Between(index, 0, _count - 1);
+            return _items[index];
+        }
         set => throw new NotSupportedException("Cannot set item in OrderedList.");
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private int GetNewCapacity(int capacity)
+    {
+        Debug.Assert(_items.Length < capacity);
+
+        var newCapacity = _items.Length == 0
+            ? DefaultCapacity
+            : 2 * _items.Length;
+
+        // Allow the list to grow to maximum possible capacity (~2G elements) before encountering overflow.
+        // Note that this check works even when _items.Length overflowed thanks to the (uint) cast
+        if ((uint)newCapacity > Array.MaxLength)
+            newCapacity = Array.MaxLength;
+
+        // If the computed capacity is still less than specified, set to the original argument.
+        // Capacities exceeding Array.MaxLength will be surfaced as OutOfMemoryException by Array.Resize.
+        if (newCapacity < capacity)
+            newCapacity = capacity;
+
+        return newCapacity;
+    }
+
+    /// <summary>
+    /// Increase the capacity of this list to at least the specified <paramref name="capacity"/>.
+    /// </summary>
+    /// <param name="capacity">The minimum capacity to ensure.</param>
+    internal void Grow(int capacity)
+    {
+        Capacity = GetNewCapacity(capacity);
     }
 
     public void Add(T item)
     {
-        // Fast path for appending to the end if the new item is greater than or equal to the last item.
-        if (_list.Count == 0
-            || _comparer.Compare(_list[^1], item) <= 0)
+        if (_count == _items.Length)
+            Grow(_count + 1);
+
+        int index;
+
+        if (_count == 0
+            || _comparer.Compare(_items[_count - 1], item) <= 0)
         {
-            _list.Add(item);
-            return;
+            index = _count;
+        }
+        else
+        {
+            index = UpperBound(item);
+            Array.Copy(_items, index, _items, index + 1, _count - index);
         }
 
-        var index = UpperBound(item);
-        _list.Insert(index, item);
+        _items[index] = item;
+        ++_count;
+        ++_version;
     }
 
     bool ICollection<T>.Remove(T item)
     {
-        return RemoveOne(item);
+        var index = IndexOf(item);
+        if (index < 0)
+            return false;
+
+        RemoveAt(index);
+
+        return true;
     }
 
     public void RemoveAt(int index)
     {
-        _list.RemoveAt(index);
+        Check.Between(index, 0, _count - 1);
+
+        --_count;
+
+        if (index < _count)
+        {
+            Array.Copy(_items, index + 1, _items, index, _count - index);
+        }
+        if (RuntimeHelpersEx.IsReferenceOrContainsReferences<T>())
+        {
+            _items[_count] = default!;
+        }
+
+        ++_version;
     }
 
     public void Clear()
     {
-        _list.Clear();
+        if (RuntimeHelpersEx.IsReferenceOrContainsReferences<T>())
+            Array.Clear(_items, 0, _count);
+
+        _count = 0;
+        ++_version;
     }
 
     public bool Contains(T item)
@@ -87,36 +178,158 @@ public class OrderedList<T>(IComparer<T>? comparer) : IList<T>, IReadOnlyList<T>
         return IndexOf(item) >= 0;
     }
 
+    private (int Lower, bool Equal) FindLowerBound(T item, int? lower = null, int? upper = null)
+    {
+        var index = LowerBound(item, lower, upper);
+        var equal = index < _count
+                    && _comparer.Compare(_items[index], item) == 0;
+
+        return (index, equal);
+    }
+
+    private (int Upper, bool EqualToPrev) FindUpperBound(T item, int? lower = null, int? upper = null)
+    {
+        var index = UpperBound(item, lower, upper);
+        var equal = index > 0
+                    && _comparer.Compare(_items[index - 1], item) == 0;
+
+        return (index, equal);
+    }
+
     public int IndexOf(T item)
     {
-        var start = LowerBound(item);
-        var end = UpperBound(item);
+        return IndexOf(item, 0, _count);
+    }
 
-        for (var i = start; i < end; i++)
+    public int IndexOf(T item, int index)
+    {
+        return IndexOf(item, index, _count - index);
+    }
+
+    public int IndexOf(T item, int index, int count)
+    {
+        // allow index = _item.Count and count = 0
+        Check.Between(index, 0, _count);
+        Check.Between(count, 0, _count - index);
+
+        if (_count == 0 || count == 0)
+            return -1;
+
+        var upper = index + count;
+        var (lower, equal) = FindLowerBound(item, index, upper);
+
+        return equal
+            ? lower
+            : -1;
+    }
+
+    public int LastIndexOf(T item)
+    {
+        if (_count == 0)
+            return -1;
+
+        return LastIndexOf(item, _count - 1, _count);
+    }
+
+    public int LastIndexOf(T item, int index)
+    {
+        Check.LessThan(index, _count);
+        return LastIndexOf(item, index, index + 1);
+    }
+
+    public int LastIndexOf(T item, int index, int count)
+    {
+        if (_count != 0)
         {
-            // The comparer may only compare keys (for ordering), so we use EqualityComparer<T>.Default
-            // to check actual equality when multiple items compare equal.
-            if (EqualityComparer<T>.Default.Equals(_list[i], item))
-                return i;
+            Check.NotNegative(index);
+            Check.NotNegative(count);
         }
 
-        return -1;
+        if (_count == 0)
+            return -1;
+
+        Check.LessThan(index, _count);
+        Check.NotGreaterThan(count, index + 1);
+
+        if (count == 0)
+            return -1;
+
+        var lower = index - count + 1;
+        var (upper, equalToPrev) = FindUpperBound(item, lower, index + 1);
+
+        return equalToPrev
+            ? upper - 1
+            : -1;
     }
 
     public void CopyTo(T[] array, int arrayIndex)
     {
-        _list.CopyTo(array, arrayIndex);
+        // Delegate rest of error checking to Array.Copy.
+        Array.Copy(_items, 0, array, arrayIndex, _count);
     }
 
-    public IEnumerator<T> GetEnumerator()
+    // Sets the capacity of this list to the size of the list. This method can
+    // be used to minimize a list's memory overhead once it is known that no
+    // new elements will be added to the list. To completely clear a list and
+    // release all memory referenced by the list, execute the following
+    // statements:
+    //
+    // list.Clear();
+    // list.TrimExcess();
+    //
+    public void TrimExcess()
     {
-        return _list.GetEnumerator();
+        var threshold = (int)(((double)_items.Length) * 0.9);
+        if (_count < threshold)
+        {
+            Capacity = _count;
+        }
     }
 
-    IEnumerator IEnumerable.GetEnumerator()
+    // Gets and sets the capacity of this list.  The capacity is the size of
+    // the internal array used to hold items.  When set, the internal
+    // array of the list is reallocated to the given capacity.
+    //
+    public int Capacity
     {
-        return GetEnumerator();
+        get => _items.Length;
+        set
+        {
+            Check.NotLessThan(value, _count);
+
+            if (value == _items.Length)
+                return;
+
+            if (value > 0)
+            {
+                var newItems = new T[value];
+                if (_count > 0)
+                {
+                    Array.Copy(_items, newItems, _count);
+                }
+                _items = newItems;
+            }
+            else
+            {
+                _items = [];
+            }
+        }
     }
+
+    /// <summary>
+    /// Ensures the heap can hold at least the specified number of elements without resizing.
+    /// </summary>
+    public void EnsureCapacity(int capacity)
+    {
+        Check.NotNegative(capacity);
+
+        if (_items.Length < capacity)
+            Array.Resize(ref _items, capacity);
+    }
+
+    public Enumerator GetEnumerator() => new(this);
+    IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     /// <summary>
     /// This operation is not supported because the list must remain sorted.
@@ -126,21 +339,18 @@ public class OrderedList<T>(IComparer<T>? comparer) : IList<T>, IReadOnlyList<T>
         throw new NotSupportedException("Cannot insert at arbitrary position in OrderedList.");
     }
 
-    /// <summary>
-    /// Removes the first element that is equal to the specified item.
-    /// </summary>
-    /// <remarks>
-    /// Equality is determined by <see cref="EqualityComparer{T}.Default"/>.
-    /// </remarks>
-    public bool RemoveOne(T item)
+    private void AddRange(List<T> items)
     {
-        var index = IndexOf(item);
+        var count = items.Count;
+        var requiredCapacity = _count + count;
+        if (_items.Length < requiredCapacity)
+        {
+            Grow(checked(_count + count));
+        }
 
-        if (index < 0)
-            return false;
-
-        _list.RemoveAt(index);
-        return true;
+        items.CopyTo(_items, _count);
+        _count += count;
+        _version++;
     }
 
     /// <summary>
@@ -175,68 +385,77 @@ public class OrderedList<T>(IComparer<T>? comparer) : IList<T>, IReadOnlyList<T>
         */
 
         Check.NotNull(items);
-        Check.NotNull(items);
 
-        if (_list.Count == 0)
+        var temp = new List<T>(items);
+        if (temp.Count == 0)
+            return;
+
+        temp.StableSort(_comparer);
+
+        if (_count == 0)
         {
-            _list.AddRange(items);
-            StableSort(_list, _comparer);
+            AddRange(temp);
             return;
         }
 
         // Materialize and sort the new items.
-        var temp = new List<T>(items);
-        StableSort(temp, _comparer);
+
 
         // Fast path for appending to the end if the new items are all greater than or equal to the last item.
-        if (_list.Count > 0 &&
-            _comparer.Compare(_list[^1], temp[0]) <= 0)
+        if (_count > 0 &&
+            _comparer.Compare(_items[_count - 1], temp[0]) <= 0)
         {
-            _list.AddRange(temp);
+            AddRange(temp);
             return;
         }
 
         // merge
-        var merged = new List<T>(_list.Count + temp.Count);
+        var merged = new T[_count + temp.Count];
 
-        int i = 0, j = 0;
+        int i = 0, j = 0, count = 0;
 
-        while (i < _list.Count && j < temp.Count)
+        while (i < _count && j < temp.Count)
         {
-            // ReSharper disable once ConvertIfStatementToConditionalTernaryExpression
-            if (_comparer.Compare(_list[i], temp[j]) <= 0)
-                merged.Add(_list[i++]);
-            else
-                merged.Add(temp[j++]);
+            merged[count++] = _comparer.Compare(_items[i], temp[j]) <= 0
+                ? _items[i++]
+                : temp[j++];
         }
 
-        while (i < _list.Count)
-            merged.Add(_list[i++]);
+        while (i < _count)
+        {
+            merged[count++] = _items[i++];
+        }
 
         while (j < temp.Count)
-            merged.Add(temp[j++]);
+        {
+            merged[count++] = temp[j++];
+        }
 
-        _list.Clear();
-        _list.AddRange(merged);
+        _items = merged;
+        _count = count;
+        ++_version;
     }
 
     /// <summary>
     /// Returns the index of the first element that is greater than the specified item.
     /// </summary>
-    public int UpperBound(T item)
+    /// <param name="item">The value to search for.</param>
+    /// <param name="lower">Optional inclusive lower bound of the search range.</param>
+    /// <param name="upper">Optional exclusive upper bound of the search range.</param>
+    public int UpperBound(T item, int? lower = null, int? upper = null)
     {
         // Cannot rely on List<T>.BinarySearch because it may return any matching
         // index when duplicates exist. LowerBound must return the first element
         // >= item, so we perform the binary search manually.
 
-        var low = 0;
-        var high = _list.Count;
+        var low = lower ?? 0;
+        var high = upper ?? _count;
 
         while (low < high)
         {
             var mid = low + ((high - low) >> 1);
 
-            if (_comparer.Compare(_list[mid], item) <= 0)
+            if (_comparer.Compare(_items[mid], item) <= 0)
             {
                 low = mid + 1;
             }
@@ -250,22 +469,25 @@ public class OrderedList<T>(IComparer<T>? comparer) : IList<T>, IReadOnlyList<T>
     }
 
     /// <summary>
-    /// Returns the index of the first element that is greater than or equal to the specified item.
+    /// Returns the index of the first element that compares greater than or equal to the specified item.
     /// </summary>
-    public int LowerBound(T item)
+    /// <param name="item">The value to search for.</param>
+    /// <param name="lower">Optional inclusive lower bound of the search range.</param>
+    /// <param name="upper">Optional exclusive upper bound of the search range.</param>
+    public int LowerBound(T item, int? lower = null, int? upper = null)
     {
         // Cannot rely on List<T>.BinarySearch because it may return any matching
         // index when duplicates exist. LowerBound must return the first element
         // >= item, so we perform the binary search manually.
 
-        var low = 0;
-        var high = _list.Count;
+        var low = lower ?? 0;
+        var high = upper ?? _count;
 
         while (low < high)
         {
             var mid = low + ((high - low) >> 1);
 
-            if (_comparer.Compare(_list[mid], item) < 0)
+            if (_comparer.Compare(_items[mid], item) < 0)
             {
                 low = mid + 1;
             }
@@ -285,43 +507,86 @@ public class OrderedList<T>(IComparer<T>? comparer) : IList<T>, IReadOnlyList<T>
     {
         var start = LowerBound(min);
 
-        for (var i = start; i < _list.Count; i++)
+        for (var i = start; i < _count; i++)
         {
-            if (_comparer.Compare(_list[i], max) > 0)
+            var item = _items[i];
+            if (_comparer.Compare(item, max) > 0)
                 yield break;
 
-            yield return _list[i];
+            yield return item;
         }
+    }
+
+    /// <summary>
+    /// Removes the first element whose sort key compares equal to the specified item.
+    /// </summary>
+    /// <remarks>
+    /// Equality is determined by the <see cref="IComparer{T}"/> used by the collection.<br/>
+    /// </remarks>
+    public bool RemoveOne(T item)
+    {
+        var index = IndexOf(item);
+
+        if (index < 0)
+            return false;
+
+        RemoveAt(index);
+        return true;
     }
 
     /// <summary>
     /// Removes all elements that are equal to the specified item.
     /// </summary>
     /// <remarks>
-    /// Equality is determined by <see cref="EqualityComparer{T}.Default"/>.
+    /// Equality is determined by the <see cref="IComparer{T}"/> used by the collection.<br/>
     /// </remarks>
     public int RemoveAll(T item)
     {
-        var start = LowerBound(item);
-        var end = UpperBound(item);
+        var start = IndexOf(item);
+        if (start < 0)
+            return 0;
 
-        var count = end - start;
+        var end = LastIndexOf(item);
+        var count = end - start + 1;
 
-        if (count > 0)
-            _list.RemoveRange(start, count);
+        RemoveRange(start, count);
 
         return count;
+    }
+
+    private void RemoveRange(int index, int count)
+    {
+        if (count <= 0)
+            return;
+
+        _count -= count;
+
+        if (index < _count)
+        {
+            Array.Copy(_items, index + count, _items, index, _count - index);
+        }
+
+        ++_version;
+
+        if (RuntimeHelpersEx.IsReferenceOrContainsReferences<T>())
+        {
+            Array.Clear(_items, _count, count);
+        }
     }
 
     /// <summary>
     /// Returns the number of elements that are equal to the specified item.
     /// </summary>
     /// <remarks>
-    /// Equality is determined by <see cref="EqualityComparer{T}.Default"/>.
+    /// Equality is determined by the <see cref="IComparer{T}"/> used by the collection.<br/>
     /// </remarks>
     public int CountOf(T item)
     {
-        return UpperBound(item) - LowerBound(item);
+        var end = LastIndexOf(item);
+        if (end < 0)
+            return 0;
+
+        return end - IndexOf(item) + 1;
     }
 
     /// <summary>
@@ -329,11 +594,11 @@ public class OrderedList<T>(IComparer<T>? comparer) : IList<T>, IReadOnlyList<T>
     /// </summary>
     public IEnumerable<T> EqualRange(T item)
     {
-        var start = LowerBound(item);
-        var end = UpperBound(item);
+        var start = IndexOf(item);
+        var end = LastIndexOf(item);
 
         for (var i = start; i < end; i++)
-            yield return _list[i];
+            yield return _items[i];
     }
 
     /// <summary>
@@ -343,40 +608,51 @@ public class OrderedList<T>(IComparer<T>? comparer) : IList<T>, IReadOnlyList<T>
     {
         var start = LowerBound(min);
         var end = UpperBound(max);
-
         var count = end - start;
 
-        if (count > 0)
-            _list.RemoveRange(start, count);
+        RemoveRange(start, count);
 
         return count;
     }
 
-    /// <summary>
-    /// Performs a stable sort using the specified comparer.
-    /// </summary>
-    /// <remarks>
-    /// <see cref="List{T}.Sort(IComparer{T})"/> is not guaranteed to be stable, so this method
-    /// preserves the relative order of elements that compare equal.
-    /// </remarks>
-    private static void StableSort(List<T> list, IComparer<T> comparer)
+
+    public struct Enumerator : IEnumerator<T>
     {
-        var n = list.Count;
+        private readonly OrderedList<T> _list;
+        private readonly int _version;
+        private int _index = -1;
+        private T? _current;
 
-        var index = new int[n];
-
-        for (var i = 0; i < n; i++)
-            index[i] = i;
-
-        Array.Sort(index, (a, b) =>
+        internal Enumerator(OrderedList<T> list)
         {
-            var c = comparer.Compare(list[a], list[b]);
-            return c != 0 ? c : a.CompareTo(b);
-        });
+            _list = list;
+            _version = list._version;
+        }
 
-        var temp = list.ToArray();
+        public readonly T Current => _current!;
+        readonly object IEnumerator.Current => Current!;
 
-        for (var i = 0; i < n; i++)
-            list[i] = temp[index[i]];
+        public bool MoveNext()
+        {
+            Check.VersionEqual(_list._version, _version);
+            // ReSharper disable once ConvertIfStatementToReturnStatement
+            if (++_index >= _list._count)
+            {
+                _current = default;
+                return false;
+            }
+
+            _current = _list._items[_index];
+            return true;
+        }
+
+        public void Reset()
+        {
+            Check.VersionEqual(_list._version, _version);
+            _index = -1;
+            _current = default;
+        }
+
+        public readonly void Dispose() { }
     }
 }

@@ -23,7 +23,7 @@ public static class MultiValueDictionaryExtensions
 
     public static IReadOnlyCollection<TValue> Get<TKey, TValue>(this MultiValueDictionary<TKey, TValue> dic, TKey key)
     {
-        return dic.Get(key, Array.Empty<TValue>());
+        return dic.Get(key, []);
     }
 
     public static void Set<TKey, TValue>(this MultiValueDictionary<TKey, TValue> dic, TKey key, TValue value)

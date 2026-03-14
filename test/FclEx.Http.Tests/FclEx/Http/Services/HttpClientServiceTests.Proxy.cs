@@ -8,14 +8,7 @@ partial class HttpClientServiceTests
         DefaultProxy,
     ];
 
-    public static string[] Urls { get; } =
-    [
-        "https://www.google.com/",
-        "https://www.instagram.com/",
-        "https://www.baidu.com/"
-    ];
-
-    public static IEnumerable<object[]> Cases { get; } = ProxyList.SelectMany(m => Urls, (x, y) => new object[] { x, y });
+    public static IEnumerable<object[]> Cases { get; } = ProxyList.SelectMany(m => TestUrls, (x, y) => new object[] { x, y });
 
     [RetryTheory]
     [MemberData(nameof(Cases))]

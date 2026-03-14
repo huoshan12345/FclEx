@@ -2,21 +2,21 @@
 
 partial class OperationResultTests
 {
-    [RetryFact(5, 1000)]
+    [RetryFact(3, 100)]
     public async Task ExecuteAsync_Timeout_Test()
     {
-        var (success, exception, elapsed) = await Operation.ExecuteAsync(() => Task.Delay(TimeSpan.FromSeconds(5)), TimeSpan.FromSeconds(1));
+        var (success, exception, elapsed) = await Operation.ExecuteAsync(() => Task.Delay(TimeSpan.FromSeconds(5)), TimeSpan.FromSeconds(0.1));
         Assert.False(success);
         Assert.True(elapsed < TimeSpan.FromSeconds(1.5), elapsed.ToString());
         Assert.IsType<TimeoutException>(exception);
     }
 
-    [RetryFact(5, 1000)]
+    [RetryFact(3, 100)]
     public async Task ExecuteAsync_Timeout_Success_Test()
     {
         var (success, result, _, elapsed) = await Operation.ExecuteAsync(async () =>
         {
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            await Task.Delay(TimeSpan.FromSeconds(0.1));
             return 1;
         }, TimeSpan.FromSeconds(10));
         Assert.True(success);
@@ -24,27 +24,27 @@ partial class OperationResultTests
         Assert.True(elapsed < TimeSpan.FromSeconds(1.5), elapsed.ToString());
     }
 
-    [RetryFact(5, 1000)]
+    [RetryFact(3, 100)]
     public async Task ExecuteAsync_Timeout_SyncBody_Test()
     {
         var (success, exception, elapsed) = await Operation.ExecuteAsync(() =>
         {
             ThreadHelper.Sleep(10);
             return Task.CompletedTask;
-        }, TimeSpan.FromSeconds(1));
+        }, TimeSpan.FromSeconds(0.1));
         Assert.False(success);
         Assert.True(elapsed < TimeSpan.FromSeconds(1.5), elapsed.ToString());
         Assert.IsType<TimeoutException>(exception);
     }
 
-    [RetryFact(5, 1000)]
+    [RetryFact(3, 100)]
     public async Task ExecuteAsync_Timeout_SyncBody_Success_Test()
     {
         var (success, result, _, elapsed) = await Operation.ExecuteAsync(() =>
         {
-            ThreadHelper.Sleep(1);
+            ThreadHelper.Sleep(0.1);
             return Task.FromResult(1);
-        }, TimeSpan.FromSeconds(10));
+        }, TimeSpan.FromSeconds(1));
 
         Assert.True(success);
         Assert.Equal(1, result);

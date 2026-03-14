@@ -45,7 +45,7 @@ public static class ReflectionHelper
 
         static IEnumerable<DataMemberInfo> GetDeclaredDataMembers(Type type)
         {
-            return type.GetMembers(BindingAttributes.AllDeclared)
+            return type.GetMembers(BindingAttributes.Declared)
                 .Where(m => m is PropertyInfo or FieldInfo)
                 .Select(m => m.ToDataMemberInfo());
         }

@@ -23,3 +23,4 @@ global using xRetry.v3;
 global using Xunit;
 global using Xunit.Sdk;
 global using static FclEx.Tests.Conditions;
+global using Testing;

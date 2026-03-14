@@ -1,13 +1,11 @@
-﻿using FclEx.Xunit;
-
-namespace FclEx.Http.Helpers;
+﻿namespace FclEx.Http.Helpers;
 
 public class PollyHelperTests
 {
     [RetryTheory]
-    [InlineData(1, 0.5)]
-    [InlineData(2, 0.5)]
-    [InlineData(3, 0.5)]
+    [InlineData(1, 0.1)]
+    [InlineData(2, 0.1)]
+    [InlineData(3, 0.1)]
     public async Task GetConnectTimeoutPolicy_Test(int retryCount, double timeoutSeconds)
     {
         if (TestHelper.IsGithubAction && retryCount > 1)

@@ -4,7 +4,7 @@ public static class IntPtrExtensions
 {
     public static DisposableValue<IntPtr> ToDisposable(this IntPtr ptr)
     {
-        return ptr.ToDisposable(Marshal.FreeHGlobal);
+        return Disposable.FromValue(ptr, Marshal.FreeHGlobal);
     }
 
     public static string ToHexString(this IntPtr ptr)

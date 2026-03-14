@@ -12,8 +12,6 @@ public static class ValueTaskExtensions
         return tasks.Select(t => t.AsTask()).WhenAll();
     }
 
-    public static ValueTask<T> ToValueTask<T>(this T obj) => new(obj);
-
     public static ConfiguredValueTaskAwaitable<T> IgnoreSyncContext<T>(this ValueTask<T> task)
     {
         return task.ConfigureAwait(false);

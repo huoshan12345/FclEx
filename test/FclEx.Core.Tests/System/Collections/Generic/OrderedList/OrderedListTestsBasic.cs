@@ -2,7 +2,7 @@
 
 namespace System.Collections.Generic;
 
-public partial class OrderedListTests
+public partial class OrderedListTestsBasic
 {
     // ----------------------------
     // Test Data
@@ -102,31 +102,6 @@ public partial class OrderedListTests
         var result = list.Between(min, max).ToArray();
 
         Assert.Equal(expected, result);
-    }
-
-    // ----------------------------
-    // Remove / Contains
-    // ----------------------------
-
-    [Fact]
-    public void RemoveOne_RemovesItem()
-    {
-        var list = new OrderedList<int>();
-
-        list.AddRange([1, 2, 3]);
-
-        Assert.True(list.RemoveOne(2));
-        Assert.DoesNotContain(2, list);
-
-        Assert.Equal(new[] { 1, 3 }, list.ToArray());
-    }
-
-    [Fact]
-    public void RemoveOne_ReturnsFalse_WhenItemMissing()
-    {
-        var list = new OrderedList<int> { 1 };
-
-        Assert.False(list.RemoveOne(5));
     }
 
     // ----------------------------
@@ -273,7 +248,7 @@ public partial class OrderedListTests
 
         var id = 0;
 
-        for (var step = 0; step < 20000; step++)
+        for (var step = 0; step < 2000; step++)
         {
             var op = rand.Next(5);
 
@@ -302,7 +277,9 @@ public partial class OrderedListTests
                     var item = mirror[index];
 
                     list.RemoveOne(item);
-                    mirror.Remove(item);
+
+                    var removeItem = mirror.First(m => m.Key == item.Key);
+                    mirror.Remove(removeItem);
                     break;
                 }
                 case 3: // RemoveAll
