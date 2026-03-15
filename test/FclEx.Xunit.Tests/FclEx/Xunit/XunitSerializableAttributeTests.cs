@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using static FclEx.Helpers.ReflectionHelper;
 
 namespace FclEx.Xunit;
 
@@ -151,8 +152,6 @@ public partial class XunitSerializableAttributeTests
 #endif
     }
 
-    private static string GetAutoFieldName(string propertyName) => $"<{propertyName}>k__BackingField";
-
     private static void Test<T>(Func<int, string, string[], IEnumerable<int>, List<string>, HttpMethod, T> creator, Action<T, T>? action = null) where T : ITestType, IXunitSerializable, new()
     {
         var original = creator(15, "Tom", ["addr1", "addr2"], [5, 10], ["Arts", "Music"], HttpMethod.Options);
@@ -161,9 +160,9 @@ public partial class XunitSerializableAttributeTests
         var info = CreateSerializationInfo();
         serializable.Serialize(info);
 
-        Assert.Equal(original.Id, info.GetValue<int>(GetAutoFieldName(nameof(original.Id))));
-        Assert.Equal(original.Name, info.GetValue<string>(GetAutoFieldName(nameof(original.Name))));
-        Assert.Equal(original.Addresses, info.GetValue<string[]>(GetAutoFieldName(nameof(original.Addresses))));
+        Assert.Equal(original.Id, info.GetValue<int>(GetAutoBackingFieldName(nameof(original.Id))));
+        Assert.Equal(original.Name, info.GetValue<string>(GetAutoBackingFieldName(nameof(original.Name))));
+        Assert.Equal(original.Addresses, info.GetValue<string[]>(GetAutoBackingFieldName(nameof(original.Addresses))));
 
         var deserialized = new T();
         deserialized.Deserialize(info);

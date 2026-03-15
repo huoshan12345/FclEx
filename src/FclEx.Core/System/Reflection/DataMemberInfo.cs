@@ -18,7 +18,6 @@ public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>
         HasPublicSetter = field.IsPublic;
         HasPublicGetter = field.IsPublic;
         IsInitOnly = field.IsInitOnly;
-        IsAutoPropertyBackingField = field.IsAutoPropertyBackingField();
     }
 
     public DataMemberInfo(PropertyInfo property)
@@ -37,7 +36,6 @@ public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>
         HasPublicGetter = property.GetGetMethod(true)?.IsPublic == true;
         DataMemberType = property.PropertyType;
         IsInitOnly = property.IsInitOnly();
-        IsAutoPropertyBackingField = false;
     }
 
     public override object[] GetCustomAttributes(bool inherit)
@@ -65,7 +63,6 @@ public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>
     public bool IsProperty { get; }
     public bool IsInitOnly { get; }
     public bool IsCompilerGenerated { get; }
-    public bool IsAutoPropertyBackingField { get; }
     public bool HasPublicSetter { get; }
     public bool HasPublicGetter { get; }
     public Func<object?, object?> Getter { get; }

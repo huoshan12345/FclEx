@@ -36,6 +36,11 @@ public static class XunitSerializationInfoExtensions
             if (member.IsDefined<JsonIgnoreAttribute>())
                 return;
 
+            if (member.MemberInfo is FieldInfo field && field.TryGetAutoProperty(out var property))
+            {
+
+            }
+
             var options = JsonHelper.GetOptions();
             if (member.TryGetAttribute<JsonConverterAttribute>(false, out var converterAttribute))
             {

@@ -1,4 +1,6 @@
-﻿namespace FclEx.Extensions;
+﻿using static FclEx.Helpers.ReflectionHelper;
+
+namespace FclEx.Extensions;
 
 public static class PropertyInfoExtensions
 {
@@ -83,10 +85,10 @@ public static class PropertyInfoExtensions
     public static bool IsInitOnly(this PropertyInfo property)
     {
         var setter = property.SetMethod;
-        if (setter is null)
+        if (setter?.ReturnParameter is not { } returnParam)
             return false;
 
-        var mods = setter.ReturnParameter.GetRequiredCustomModifiers();
+        var mods = returnParam.GetRequiredCustomModifiers();
         return mods.Any(t => ReferenceEquals(t, _isExternalInit));
     }
 
@@ -100,5 +102,32 @@ public static class PropertyInfoExtensions
         // visible: public, protected(Family), protected internal(FamORAssem)
         // not visible: private, internal(Assembly), private protected(FamANDAssem)
         return (m.Attributes & MethodAttributes.MemberAccessMask) <= MethodAttributes.Assembly;
+    }
+
+    public static bool TryGetAutoBackingField(this PropertyInfo property, [NotNullWhen(true)] out FieldInfo? field)
+    {
+        field = null;
+
+        if (property.GetMethod?.IsCompilerGenerated() != true
+            || property.SetMethod?.IsCompilerGenerated() != true)
+            return false;
+
+        if (property.DeclaringType is not { } type)
+            return false;
+
+        var fieldName = GetAutoBackingFieldName(property.Name);
+        var f = type.GetField(fieldName, BindingAttributes.Declared);
+        if (f is null)
+            return false;
+
+        var flag = AccessorUsesField(property.GetMethod, f)
+           || AccessorUsesField(property.SetMethod, f);
+
+        if (flag)
+        {
+            field = f;
+        }
+
+        return flag;
     }
 }

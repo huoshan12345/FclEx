@@ -65,4 +65,39 @@ public static class ReflectionHelper
                 .Select(m => m.ToDataMemberInfo());
         }
     }
+
+    public static string GetAutoBackingFieldName(string propertyName)
+    {
+        return $"<{propertyName}>k__BackingField";
+    }
+
+    public static bool AccessorUsesField(MethodInfo? method, FieldInfo field)
+    {
+        if (method is null)
+            return false;
+
+        if (method.IsCompilerGenerated() == false)
+            return false;
+
+        var body = method.GetMethodBody();
+        var il = body?.GetILAsByteArray();
+        if (il == null)
+            return false;
+
+        var fieldToken = field.MetadataToken;
+
+        for (var i = 0; i < il.Length - 4; i++)
+        {
+            var op = il[i];
+
+            if (op != 0x7B /* ldfld */ && op != 0x7D /* stfld */)
+                continue;
+
+            var token = BitConverter.ToInt32(il, i + 1);
+            if (token == fieldToken)
+                return true;
+        }
+
+        return false;
+    }
 }
