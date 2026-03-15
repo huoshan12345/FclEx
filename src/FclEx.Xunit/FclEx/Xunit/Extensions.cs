@@ -28,7 +28,7 @@ public static partial class Extensions
 #if FCLEX_XUNIT_V3
     private static ITestOutputHelper? GetOutput()
     {
-        return TestContext.Current.TestOutputHelper; ;
+        return TestContext.Current.TestOutputHelper;
     }
 
     public static ILoggerFactory AddXunit(this ILoggerFactory factory, bool consoleFallback = true)

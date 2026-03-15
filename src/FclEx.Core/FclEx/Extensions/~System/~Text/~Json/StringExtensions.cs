@@ -44,49 +44,49 @@ public static partial class StringExtensions
         return false;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static T? FromJson<T>(this string json, JsonSerializerOptions? options = null)
     {
         return JsonSerializer.Deserialize<T>(json, options ?? JsonHelper.GetOptions());
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static T? FromJson<T>(this string json, JsonOptions options)
     {
         return json.FromJson<T>(JsonHelper.GetOptions(options));
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static object? FromJson(this string json, Type type, JsonSerializerOptions? options = null)
     {
         return JsonSerializer.Deserialize(json, type, options ?? JsonHelper.GetOptions());
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static object? FromJson(this string json, Type type, JsonOptions options)
     {
         return json.FromJson(type, JsonHelper.GetOptions(options));
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static JsonNode? ToJsonNode(this string str, JsonSerializerOptions? options = null)
     {
         return JsonSerializer.Deserialize<JsonNode>(str, options ?? JsonHelper.GetOptions());
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static JsonNode? ToJsonNode(this string str, JsonOptions options)
     {
         return str.ToJsonNode(JsonHelper.GetOptions(options));
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static JsonElement ToJsonElement(this string str, JsonSerializerOptions? options = null)
     {
         return JsonSerializer.Deserialize<JsonElement>(str, options ?? JsonHelper.GetOptions());
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static JsonElement ToJsonElement(this string str, JsonOptions options)
     {
         return str.ToJsonElement(JsonHelper.GetOptions(options));

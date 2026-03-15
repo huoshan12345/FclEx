@@ -2,13 +2,17 @@
 #pragma warning disable IDE0060 // Remove unused parameter
 namespace System.Collections.Generic.OrderedIndex;
 
-public abstract class OrderedIndexTests<TScore, TValue> : IGenericSharedApiTests<(TScore, TValue)>
+public abstract class OrderedIndexTests<TScore, TValue> : IGenericSharedAPI_Tests<(TScore, TValue)>
     where TValue : notnull
 {
-    protected override bool EnumeratorCurrentUndefinedOperationThrows => false;
+    //protected override bool EnumeratorCurrentUndefinedOperationThrows => false;
     protected override bool DefaultValueAllowed => false;
     protected override bool DuplicateValuesAllowed => false;
     protected override bool DefaultValueWhenNotAllowed_Throws => false;
+    protected override bool Enumerator_Empty_UsesSingletonInstance => true;
+    protected override bool Enumerator_Empty_Current_UndefinedOperation_Throws => true;
+    protected override bool Enumerator_Empty_ModifiedDuringEnumeration_ThrowsInvalidOperationException => false;
+    protected override Type IGenericSharedAPI_CopyTo_IndexLargerThanArrayCount_ThrowType { get; } = typeof(ArgumentOutOfRangeException);
 
     #region OrderedIndex<TScore, TValue> Helper Methods
 
@@ -51,6 +55,7 @@ public abstract class OrderedIndexTests<TScore, TValue> : IGenericSharedApiTests
 
     protected override void CopyTo(IEnumerable<(TScore, TValue)> enumerable, (TScore, TValue)[] array, int index)
         => ((OrderedIndex<TScore, TValue>)enumerable).CopyTo(array, index);
+
     protected override bool Remove(IEnumerable<(TScore, TValue)> enumerable)
     {
         var col = ((ICollection<(TScore, TValue)>)enumerable);

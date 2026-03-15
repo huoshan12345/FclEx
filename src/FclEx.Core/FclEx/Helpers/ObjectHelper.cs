@@ -11,6 +11,11 @@ public static class ObjectHelper
 #endif
     }
 
+    public static T GetUninitializedObject<T>()
+    {
+        return (T)GetUninitializedObject(typeof(T));
+    }
+
     private static long _nextId;
     // ReSharper disable once UseCollectionExpression
     private static readonly ConditionalWeakTable<object, object> _objectIds = new();

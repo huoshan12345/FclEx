@@ -93,6 +93,13 @@ partial class OperationResultExtensions
             : (result.Exception, result.Elapsed);
     }
 
+    public static Task<OperationResult<TResult>> Then<T, TResult>(this OperationResult<T> result, Func<T, Task<OperationResult<TResult>>> func)
+    {
+        return result.IsSuccess
+            ? func(result.Value)
+            : Operation.Error<TResult>(result.Exception, result.Elapsed);
+    }
+
     public static OperationResult<TResult> ThenResult<T, TResult>(this OperationResult<T> result, Func<OperationResult<T>, OperationResult<TResult>> func)
     {
         return func(result);
@@ -144,5 +151,25 @@ partial class OperationResultExtensions
     public static bool IsSuccess<T>(this OperationResult<T> result, Func<T, bool> condition)
     {
         return result.IsSuccess && condition(result.Value);
+    }
+
+    public static OperationResult<TNext> ThenIf<T, TNext>(this OperationResult<T> result, Func<T, bool> condition,
+        Func<T, OperationResult<TNext>> @true, Func<T, OperationResult<TNext>> @false)
+    {
+        Check.NotNull(condition);
+        Check.NotNull(@true);
+        Check.NotNull(@false);
+
+        return result.Then(t => condition(t) ? @true(t) : @false(t));
+    }
+
+    public static OperationResult<T> ThenIf<T>(this OperationResult<T> result, Func<T, bool> condition, Func<T, OperationResult<T>> next)
+    {
+        return result.ThenIf(condition, next, m => Operation.Success(m));
+    }
+
+    public static OperationResult ThenIf<T>(this OperationResult<T> result, Func<T, bool> condition, Func<T, OperationResult> next)
+    {
+        return result.ThenIf(condition, next, _ => Operation.Success(Unit.Default));
     }
 }

@@ -29,6 +29,7 @@ public class SourceGenerator : IIncrementalGenerator
                     UnicodeScalarHelperSource.Generate(ctx, value.Right),
                     NumberExtensionsSource.Generate(),
                     StringBuilderExtensionsSource.Generate(),
+                    HashExtensionsSource.Generate(),
                 ],
                 "FclEx.Xunit" =>
                 [

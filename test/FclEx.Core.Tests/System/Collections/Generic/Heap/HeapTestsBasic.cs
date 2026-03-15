@@ -43,7 +43,7 @@ public class HeapTestsBasic
         heap.Push(2);
         heap.Push(3);
 
-        var old = heap.ReplaceTop(10);
+        var old = heap.PopPush(10);
 
         Assert.Equal(1, old);
         Assert.Equal(2, heap.Pop());
@@ -263,14 +263,14 @@ public class HeapTestsBasic
     }
 
     [Fact]
-    public void ReplaceTop_ShouldMaintainHeap()
+    public void PopPush_ShouldMaintainHeap()
     {
         var heap = new Heap<int>();
 
         for (var i = 0; i < 1000; i++)
             heap.Push(i);
 
-        heap.ReplaceTop(5000);
+        heap.PopPush(5000);
 
         var prev = heap.Pop();
 
@@ -403,28 +403,39 @@ public class HeapTestsBasic
                     Assert.Equal(expected, actual);
                     break;
                 }
-                case 3: // ReplaceTop
+                case 3: // PopPush
                 {
+                    if (list.Count == 0)
+                        break;
+
                     var v = rand.Next(100000);
 
-                    if (list.Count == 0)
-                    {
-                        heap.ReplaceTop(v);
-                        list.Add(v);
-                        break;
-                    }
-
                     list.Sort();
-
                     var expected = list[0];
                     list[0] = v;
 
-                    var actual = heap.ReplaceTop(v);
+                    var actual = heap.PopPush(v);
 
                     Assert.Equal(expected, actual);
                     break;
                 }
-                case 4: // clear
+                case 4: // PushPop
+                {
+                    if (list.Count == 0)
+                        break;
+
+                    var v = rand.Next(100000);
+                    list.Add(v);
+                    list.Sort();
+                    var expected = list[0];
+                    list.RemoveAt(0);
+
+                    var actual = heap.PushPop(v);
+
+                    Assert.Equal(expected, actual);
+                    break;
+                }
+                case 5: // clear
                 {
                     if (rand.Next(100) == 0)
                     {
@@ -517,7 +528,7 @@ public class HeapTestsBasic
 
         for (var i = 0; i < 1000; i++)
         {
-            heap.ReplaceTop(10000 - i);
+            heap.PopPush(10000 - i);
         }
 
         var prev = heap.Pop();
@@ -550,8 +561,6 @@ public class HeapTestsBasic
 file static class HeapTestExtensions
 {
     private const int Arity = 4;
-
-    private static readonly FieldInfo _fieldItems = typeof(Heap<>).GetRequiredField("_items");
 
     extension(Assert)
     {

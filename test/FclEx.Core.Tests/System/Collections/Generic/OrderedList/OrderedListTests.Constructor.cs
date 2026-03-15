@@ -1,8 +1,4 @@
-﻿// ReSharper disable CollectionNeverUpdated.Local
 // ReSharper disable PossibleMultipleEnumeration
-// ReSharper disable ObjectCreationAsStatement
-#pragma warning disable xUnit1026 // Theory methods should use all of their parameters
-#pragma warning disable IDE0060 // Remove unused parameter
 namespace System.Collections.Generic.OrderedList;
 
 public abstract partial class OrderedListTests<T>
@@ -10,8 +6,10 @@ public abstract partial class OrderedListTests<T>
     [Fact]
     public void Constructor_Default()
     {
-        var list = new OrderedList<T>();
-        Assert.Empty(list); //"Do not expect anything to be in the list."
+        List<T> list = [];
+        Assert.Equal(0, list.Capacity); //"Expected capacity of list to be the same as given."
+        Assert.Equal(0, list.Count); //"Do not expect anything to be in the list."
+        Assert.False(((IList<T>)list).IsReadOnly); //"List should not be readonly"
     }
 
     [Theory]
@@ -23,8 +21,10 @@ public abstract partial class OrderedListTests<T>
     [InlineData(100)]
     public void Constructor_Capacity(int capacity)
     {
-        var list = new OrderedList<T>(capacity);
-        Assert.Empty(list); //"Do not expect anything to be in the list."
+        var list = new List<T>(capacity);
+        Assert.Equal(capacity, list.Capacity); //"Expected capacity of list to be the same as given."
+        Assert.Equal(0, list.Count); //"Do not expect anything to be in the list."
+        Assert.False(((IList<T>)list).IsReadOnly); //"List should not be readonly"
     }
 
     [Theory]
@@ -32,26 +32,30 @@ public abstract partial class OrderedListTests<T>
     [InlineData(int.MinValue)]
     public void Constructor_NegativeCapacity_ThrowsArgumentOutOfRangeException(int capacity)
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new OrderedList<T>(capacity));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new List<T>(capacity));
     }
 
     [Theory]
     [MemberData(nameof(EnumerableTestData))]
     public void Constructor_IEnumerable(EnumerableType enumerableType, int listLength, int enumerableLength, int numberOfMatchingElements, int numberOfDuplicateElements)
     {
-        var enumerable = CreateEnumerable(enumerableType, null!, enumerableLength, 0, numberOfDuplicateElements);
-        var list = new OrderedList<T>(enumerable);
-        var expected = ToExpectedList(list);
+        _ = listLength;
+        _ = numberOfMatchingElements;
+        var enumerable = CreateEnumerable(enumerableType, null, enumerableLength, 0, numberOfDuplicateElements);
+        var list = new List<T>(enumerable);
+        var expected = enumerable.ToList();
 
-        Assert.Equal(enumerableLength, list.Count);
+        Assert.Equal(enumerableLength, list.Count); //"Number of items in list do not match the number of items given."
 
         for (var i = 0; i < enumerableLength; i++)
-            Assert.Equal(expected[i], list[i]);
+            Assert.Equal(expected[i], list[i]); //"Expected object in item array to be the same as in the list"
+
+        Assert.False(((IList<T>)list).IsReadOnly); //"List should not be readonly"
     }
 
     [Fact]
-    public void Construct_NullIEnumerable_ThrowsArgumentNullException()
+    public void Constructor_NullIEnumerable_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => { new OrderedList<T>((IEnumerable<T>)null!); });
+        Assert.Throws<ArgumentNullException>(() => { var list = new List<T>(null!); });
     }
 }

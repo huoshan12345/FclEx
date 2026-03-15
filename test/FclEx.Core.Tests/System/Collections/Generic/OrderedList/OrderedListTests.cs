@@ -1,20 +1,26 @@
-﻿namespace System.Collections.Generic.OrderedList;
+namespace System.Collections.Generic.OrderedList;
 
-public abstract partial class OrderedListTests<T> : IListGenericTests<T>
+public abstract partial class OrderedListTests<T> : IList_Generic_Tests<T>
 {
-    protected override bool EnumeratorCurrentUndefinedOperationThrows => false;
-    protected override bool SupportInsert => false;
-    protected override bool SupportItemSet => false;
+    #region IList<T> Helper Methods
+
+    protected override bool SupportsInsert => false;
+    protected override bool SupportsRemoveAt => false;
+    protected override bool SupportsItemSet => false;
+
+    protected override bool Enumerator_Empty_UsesSingletonInstance => true;
+    protected override bool Enumerator_Empty_Current_UndefinedOperation_Throws => true;
+    protected override bool Enumerator_Empty_ModifiedDuringEnumeration_ThrowsInvalidOperationException => false;
+    protected override ModifyOperation ModifyEnumeratorThrows => ModifyOperation.Add | ModifyOperation.Remove | ModifyOperation.Clear;
+    protected override ModifyOperation ModifyEnumeratorAllowed => ModifyOperation.Overwrite;
 
     protected override List<T> ToExpectedList(IList<T> list)
     {
-        var comparer = ObjectHelper.GetRequiredFieldValue<IComparer<T>>(list, "_comparer");
+        var comparer = ((OrderedList<T>)list).Comparer;
         var expected = list.ToList();
         expected.StableSort(comparer);
         return expected;
     }
-
-    #region IList<T> Helper Methods
 
     protected override IList<T> GenericIListFactory()
     {
@@ -37,11 +43,11 @@ public abstract partial class OrderedListTests<T> : IListGenericTests<T>
 
     protected virtual OrderedList<T> GenericListFactory(int count)
     {
-        var toCreateFrom = CreateEnumerable(EnumerableType.List, null!, count, 0, 0);
+        var toCreateFrom = CreateEnumerable(EnumerableType.List, null, count, 0, 0);
         return new OrderedList<T>(toCreateFrom);
     }
 
-    protected void VerifyList(OrderedList<T> list, OrderedList<T> expectedItems)
+    protected void VerifyList(IList<T> list, IList<T> expectedItems)
     {
         Assert.Equal(expectedItems.Count, list.Count);
 
@@ -49,12 +55,20 @@ public abstract partial class OrderedListTests<T> : IListGenericTests<T>
         //do not have to verify consistency with any other method.
         for (var i = 0; i < list.Count; ++i)
         {
-            if (list[i] is null)
-                Assert.Null(expectedItems[i]);
-            else
-                Assert.Equal(list[i], expectedItems[i]);
+            Assert.True(list[i] is { } item
+                ? item.Equals(expectedItems[i])
+                : expectedItems[i] == null);
         }
     }
 
     #endregion
+
+    [Theory]
+    [MemberData(nameof(ValidCollectionSizes))]
+    public void CopyTo_ArgumentValidity(int count)
+    {
+        var list = GenericListFactory(count);
+        AssertExtensions.Throws<ArgumentOutOfRangeException>("count", () => list.CopyTo(0, [], 0, count + 1));
+        AssertExtensions.Throws<ArgumentOutOfRangeException>("count", () => list.CopyTo(count, [], 0, 1));
+    }
 }

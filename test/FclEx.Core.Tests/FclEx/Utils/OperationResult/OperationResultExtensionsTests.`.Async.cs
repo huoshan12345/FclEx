@@ -1,4 +1,6 @@
-﻿namespace FclEx.Utils.OperationResult;
+﻿using FclEx.Actions;
+
+namespace FclEx.Utils.OperationResult;
 
 partial class OperationResultExtensionsTests
 {
@@ -81,5 +83,17 @@ partial class OperationResultExtensionsTests
                 throw new SimpleException("x");
             }
         }
+    }
+
+    [Fact]
+    public async Task Then_Unit_T_Task_Unit_Next_Func_Unit_TNext()
+    {
+        var result = await Operation.Action(t => Operation.ExecuteAsync(() => "x"))
+            .Then(m => Operation.ExecuteAsync(() => Unit.Default).Then(_ => m))
+            .Then(m => Operation.SuccessAction(m + "y"))
+            .ExecuteAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("xy", result.Value);
     }
 }

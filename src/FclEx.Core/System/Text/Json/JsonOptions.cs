@@ -11,7 +11,8 @@ public record JsonOptions(
     bool AllowOutOfOrderMetadataProperties = true,
     JsonNamingPolicy? PropertyNamingPolicy = null,
     bool AddTypeConverter = true,
-    bool AddObjectConverter = true)
+    bool AddObjectConverter = true,
+    bool AddFileSystemInfoConverter = true)
 {
     public static readonly JsonOptions Default = new();
     public static readonly JsonOptions Web = new(PropertyNamingPolicy: JsonNamingPolicy.CamelCase);

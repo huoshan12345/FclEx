@@ -1,4 +1,6 @@
-﻿namespace System.Collections.Generic;
+﻿// ReSharper disable ConvertToAutoPropertyWithPrivateSetter
+// ReSharper disable ConvertToAutoPropertyWhenPossible
+namespace System.Collections.Generic;
 
 /// <summary>
 /// Represents a list that maintains its elements in sorted order.
@@ -31,26 +33,22 @@
 /// </para>
 /// </remarks>
 [DebuggerDisplay("Count = {Count}")]
-public class OrderedList<T> : IList<T>, IReadOnlyList<T>
+public class OrderedList<T> : ArrayBasedCollection<OrderedList<T>, T>, IList<T>, IReadOnlyList<T>
 {
-    private const int DefaultCapacity = 4;
-
-    private T[] _items;
-    private int _count;
     private readonly IComparer<T> _comparer;
-    private int _version;
 
-    public OrderedList(int capacity = DefaultCapacity, IComparer<T>? comparer = null)
+    public OrderedList(int capacity = 0, IComparer<T>? comparer = null)
     {
         Check.NotNegative(capacity);
 
-        _items = capacity == 0
-            ? []
-            : new T[capacity];
+        // _items is initialized to an empty array in the base class, so only allocate a new array if capacity > 0
+        if (capacity != 0)
+            _items = new T[capacity];
+
         _comparer = comparer ?? Comparer<T>.Default;
     }
 
-    public OrderedList(IComparer<T> comparer) : this(DefaultCapacity, comparer)
+    public OrderedList(IComparer<T> comparer) : this(0, comparer)
     {
     }
 
@@ -60,9 +58,7 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
         AddRange(items);
     }
 
-    // ReSharper disable once ConvertToAutoPropertyWithPrivateSetter
-    public int Count => _count;
-
+    public IComparer<T> Comparer => _comparer;
     public bool IsReadOnly => false;
 
     /// <summary>
@@ -79,37 +75,6 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
             return _items[index];
         }
         set => throw new NotSupportedException("Cannot set item in OrderedList.");
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int GetNewCapacity(int capacity)
-    {
-        Debug.Assert(_items.Length < capacity);
-
-        var newCapacity = _items.Length == 0
-            ? DefaultCapacity
-            : 2 * _items.Length;
-
-        // Allow the list to grow to maximum possible capacity (~2G elements) before encountering overflow.
-        // Note that this check works even when _items.Length overflowed thanks to the (uint) cast
-        if ((uint)newCapacity > Array.MaxLength)
-            newCapacity = Array.MaxLength;
-
-        // If the computed capacity is still less than specified, set to the original argument.
-        // Capacities exceeding Array.MaxLength will be surfaced as OutOfMemoryException by Array.Resize.
-        if (newCapacity < capacity)
-            newCapacity = capacity;
-
-        return newCapacity;
-    }
-
-    /// <summary>
-    /// Increase the capacity of this list to at least the specified <paramref name="capacity"/>.
-    /// </summary>
-    /// <param name="capacity">The minimum capacity to ensure.</param>
-    internal void Grow(int capacity)
-    {
-        Capacity = GetNewCapacity(capacity);
     }
 
     public void Add(T item)
@@ -156,20 +121,11 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
         {
             Array.Copy(_items, index + 1, _items, index, _count - index);
         }
-        if (RuntimeHelpersEx.IsReferenceOrContainsReferences<T>())
+        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
         {
             _items[_count] = default!;
         }
 
-        ++_version;
-    }
-
-    public void Clear()
-    {
-        if (RuntimeHelpersEx.IsReferenceOrContainsReferences<T>())
-            Array.Clear(_items, 0, _count);
-
-        _count = 0;
         ++_version;
     }
 
@@ -262,75 +218,6 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
             : -1;
     }
 
-    public void CopyTo(T[] array, int arrayIndex)
-    {
-        // Delegate rest of error checking to Array.Copy.
-        Array.Copy(_items, 0, array, arrayIndex, _count);
-    }
-
-    // Sets the capacity of this list to the size of the list. This method can
-    // be used to minimize a list's memory overhead once it is known that no
-    // new elements will be added to the list. To completely clear a list and
-    // release all memory referenced by the list, execute the following
-    // statements:
-    //
-    // list.Clear();
-    // list.TrimExcess();
-    //
-    public void TrimExcess()
-    {
-        var threshold = (int)(((double)_items.Length) * 0.9);
-        if (_count < threshold)
-        {
-            Capacity = _count;
-        }
-    }
-
-    // Gets and sets the capacity of this list.  The capacity is the size of
-    // the internal array used to hold items.  When set, the internal
-    // array of the list is reallocated to the given capacity.
-    //
-    public int Capacity
-    {
-        get => _items.Length;
-        set
-        {
-            Check.NotLessThan(value, _count);
-
-            if (value == _items.Length)
-                return;
-
-            if (value > 0)
-            {
-                var newItems = new T[value];
-                if (_count > 0)
-                {
-                    Array.Copy(_items, newItems, _count);
-                }
-                _items = newItems;
-            }
-            else
-            {
-                _items = [];
-            }
-        }
-    }
-
-    /// <summary>
-    /// Ensures the heap can hold at least the specified number of elements without resizing.
-    /// </summary>
-    public void EnsureCapacity(int capacity)
-    {
-        Check.NotNegative(capacity);
-
-        if (_items.Length < capacity)
-            Array.Resize(ref _items, capacity);
-    }
-
-    public Enumerator GetEnumerator() => new(this);
-    IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
     /// <summary>
     /// This operation is not supported because the list must remain sorted.
     /// </summary>
@@ -339,9 +226,9 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
         throw new NotSupportedException("Cannot insert at arbitrary position in OrderedList.");
     }
 
-    private void AddRange(List<T> items)
+    private void AppendSorted(T[] items)
     {
-        var count = items.Count;
+        var count = items.Length;
         var requiredCapacity = _count + count;
         if (_items.Length < requiredCapacity)
         {
@@ -386,35 +273,39 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
 
         Check.NotNull(items);
 
-        var temp = new List<T>(items);
-        if (temp.Count == 0)
+        if (items.TryGetNonEnumeratedCount(out var c) && c == 0)
             return;
 
-        temp.StableSort(_comparer);
-
-        if (_count == 0)
-        {
-            AddRange(temp);
-            return;
-        }
+        // always create a new array to avoid mutating the input collection if it's already an array or list
+        var temp = items.ToArray();
 
         // Materialize and sort the new items.
+        temp.StableSort(_comparer);
 
+        // ReSharper disable once ConvertIfStatementToSwitchStatement
+        if (_count == 0)
+        {
+            // If the list is currently empty, we can skip the merge step and just take the new items as-is.
+            _items = temp;
+            _count = temp.Length;
+            ++_version;
+            return;
+        }
 
         // Fast path for appending to the end if the new items are all greater than or equal to the last item.
         if (_count > 0 &&
             _comparer.Compare(_items[_count - 1], temp[0]) <= 0)
         {
-            AddRange(temp);
+            AppendSorted(temp);
             return;
         }
 
         // merge
-        var merged = new T[_count + temp.Count];
+        var merged = new T[_count + temp.Length];
 
         int i = 0, j = 0, count = 0;
 
-        while (i < _count && j < temp.Count)
+        while (i < _count && j < temp.Length)
         {
             merged[count++] = _comparer.Compare(_items[i], temp[j]) <= 0
                 ? _items[i++]
@@ -426,7 +317,7 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
             merged[count++] = _items[i++];
         }
 
-        while (j < temp.Count)
+        while (j < temp.Length)
         {
             merged[count++] = temp[j++];
         }
@@ -554,6 +445,47 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
         return count;
     }
 
+    /// <summary>
+    /// This method removes all items which matches the predicate.<br/>
+    /// The complexity is O(n).
+    /// </summary>
+    public int RemoveAll(Predicate<T> match)
+    {
+        Check.NotNull(match);
+
+        var freeIndex = 0;   // the first free slot in items array
+
+        // Find the first item which needs to be removed.
+        while (freeIndex < _count && !match(_items[freeIndex]))
+            freeIndex++;
+
+        if (freeIndex >= _count)
+            return 0;
+
+        var current = freeIndex + 1;
+        while (current < _count)
+        {
+            // Find the first item which needs to be kept.
+            while (current < _count && match(_items[current])) current++;
+
+            if (current < _count)
+            {
+                // copy item to the free slot.
+                _items[freeIndex++] = _items[current++];
+            }
+        }
+
+        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+        {
+            Array.Clear(_items, freeIndex, _count - freeIndex); // Clear the elements so that the gc can reclaim the references.
+        }
+
+        var result = _count - freeIndex;
+        _count = freeIndex;
+        _version++;
+        return result;
+    }
+
     private void RemoveRange(int index, int count)
     {
         if (count <= 0)
@@ -568,7 +500,7 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
 
         ++_version;
 
-        if (RuntimeHelpersEx.IsReferenceOrContainsReferences<T>())
+        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
         {
             Array.Clear(_items, _count, count);
         }
@@ -613,46 +545,5 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
         RemoveRange(start, count);
 
         return count;
-    }
-
-
-    public struct Enumerator : IEnumerator<T>
-    {
-        private readonly OrderedList<T> _list;
-        private readonly int _version;
-        private int _index = -1;
-        private T? _current;
-
-        internal Enumerator(OrderedList<T> list)
-        {
-            _list = list;
-            _version = list._version;
-        }
-
-        public readonly T Current => _current!;
-        readonly object IEnumerator.Current => Current!;
-
-        public bool MoveNext()
-        {
-            Check.VersionEqual(_list._version, _version);
-            // ReSharper disable once ConvertIfStatementToReturnStatement
-            if (++_index >= _list._count)
-            {
-                _current = default;
-                return false;
-            }
-
-            _current = _list._items[_index];
-            return true;
-        }
-
-        public void Reset()
-        {
-            Check.VersionEqual(_list._version, _version);
-            _index = -1;
-            _current = default;
-        }
-
-        public readonly void Dispose() { }
     }
 }

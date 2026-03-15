@@ -76,5 +76,4 @@ partial class StringExtensions
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
         };
     }
-
 }

@@ -184,6 +184,27 @@ public static partial class EnumerableExtensions
     }
 #endif
 
+#if !NET6_0_OR_GREATER
+    public static bool TryGetNonEnumeratedCount<T>([NoEnumeration] this IEnumerable<T> source, out int count)
+    {
+        switch (source)
+        {
+            case ICollection<T> genericCollection:
+                count = genericCollection.Count;
+                return true;
+            case IReadOnlyCollection<T> readOnlyCollection:
+                count = readOnlyCollection.Count;
+                return true;
+            case ICollection collection:
+                count = collection.Count;
+                return true;
+            default:
+                count = default;
+                return false;
+        }
+    }
+#endif
+
     public static IEnumerable<IndexedItem<T>> IndexEx<T>(this IEnumerable<T> enumerable)
     {
         Check.NotNull(enumerable);

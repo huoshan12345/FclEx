@@ -27,5 +27,7 @@ public static class SR
     public const string ArgumentOutOfRange_Generic_MustBeLessOrEqual = "{0} ('{1}') must be less than or equal to '{2}'.";
     public const string ArgumentOutOfRange_Generic_MustBeNonNegative = "{0} ('{1}') must be a non-negative value.";
     public const string InvalidOperation_ConcurrentOperationsNotSupported = "Operations that change non-concurrent collections must have exclusive access. A concurrent update was performed on this collection and corrupted its state. The collection's state is no longer correct.";
+    public const string InvalidOperation_EnumEnded = "Enumeration already finished.";
     public const string InvalidOperation_EnumFailedVersion = "Collection was modified after the enumerator was instantiated.";
+    public const string InvalidOperation_EnumNotStarted = "Enumeration has not started. Call MoveNext.";
 }

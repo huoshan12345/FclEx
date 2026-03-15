@@ -15,7 +15,7 @@ public class ConsumerTests : RabbitMQTests
             Name = Fixture.WithAssemblyInfo("test.consumer"),
             Type = "topic",
             IsDelayed = true,
-        }; ;
+        };
     }
 
     [Fact]

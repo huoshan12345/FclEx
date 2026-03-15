@@ -43,6 +43,7 @@
     <Project Path="src/FclEx.YamlDotNet/FclEx.YamlDotNet.csproj" />
   </Folder>
   <Folder Name="/test/">
+    <File Path="test/.editorconfig" />
     <File Path="test/Directory.Build.props" />
     <File Path="test/Directory.Build.targets" />
     <File Path="test/Directory.Packages.props" />
