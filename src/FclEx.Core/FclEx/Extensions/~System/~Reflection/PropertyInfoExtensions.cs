@@ -108,8 +108,14 @@ public static class PropertyInfoExtensions
     {
         field = null;
 
-        if (property.GetMethod?.IsCompilerGenerated() != true
-            || property.SetMethod?.IsCompilerGenerated() != true)
+        var getter = property.GetMethod;
+        var setter = property.SetMethod;
+
+        if (getter is null && setter is null)
+            return false;
+
+        if (getter?.IsCompilerGenerated() == false
+            || setter?.IsCompilerGenerated() == false)
             return false;
 
         if (property.DeclaringType is not { } type)
@@ -120,14 +126,13 @@ public static class PropertyInfoExtensions
         if (f is null)
             return false;
 
-        var flag = AccessorUsesField(property.GetMethod, f)
-           || AccessorUsesField(property.SetMethod, f);
+        if (getter is not null && AccessorUsesField(getter, f) == false)
+            return false;
 
-        if (flag)
-        {
-            field = f;
-        }
+        if (setter is not null && AccessorUsesField(setter, f) == false)
+            return false;
 
-        return flag;
+        field = f;
+        return true;
     }
 }

@@ -49,15 +49,21 @@ public static class FieldInfoExtensions
         if (p is null)
             return false;
 
-        var flag = AccessorUsesField(p.GetMethod, field)
-                   || AccessorUsesField(p.SetMethod, field);
+        var getter = p.GetMethod;
+        var setter = p.SetMethod;
 
-        if (flag)
-        {
-            property = p;
-        }
+        if (getter?.IsCompilerGenerated() == false
+            || setter?.IsCompilerGenerated() == false)
+            return false;
 
-        return flag;
+        if (getter is not null && AccessorUsesField(getter, field) == false)
+            return false;
+
+        if (setter is not null && AccessorUsesField(setter, field) == false)
+            return false;
+
+        property = p;
+        return true;
     }
 
     [MethodImpl(AggressiveInlining)]

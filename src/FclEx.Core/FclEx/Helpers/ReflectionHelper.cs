@@ -90,7 +90,10 @@ public static class ReflectionHelper
         {
             var op = il[i];
 
-            if (op != 0x7B /* ldfld */ && op != 0x7D /* stfld */)
+            if (op != 0x7B /* ldfld */
+                && op != 0x7D /* stfld */
+                && op != 0x7E /* ldsfld */
+                && op != 0x80 /* stsfld */)
                 continue;
 
             var token = BitConverter.ToInt32(il, i + 1);

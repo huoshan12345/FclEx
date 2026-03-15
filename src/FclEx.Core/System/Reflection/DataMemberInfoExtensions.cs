@@ -23,4 +23,27 @@ public static class DataMemberInfoExtensions
             ? Expression.Property(parameter, info.MemberInfo.CastTo<PropertyInfo>())
             : Expression.Field(parameter, info.MemberInfo.CastTo<FieldInfo>());
     }
+
+    public static (FieldInfo?, PropertyInfo?) GetFieldPropertyPair(this DataMemberInfo member)
+    {
+        switch (member.MemberInfo)
+        {
+            case FieldInfo field:
+            {
+                var autoProperty = field.TryGetAutoProperty(out var auto)
+                    ? auto
+                    : null;
+                return (field, autoProperty);
+            }
+            case PropertyInfo property:
+            {
+                var autoField = property.TryGetAutoBackingField(out var auto)
+                    ? auto
+                    : null;
+                return (autoField, property);
+            }
+            default:
+                throw new InvalidOperationException($"Unsupported member type: {member.MemberInfo.MemberType}");
+        }
+    }
 }

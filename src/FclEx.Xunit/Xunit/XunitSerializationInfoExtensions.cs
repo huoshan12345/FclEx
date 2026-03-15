@@ -1,9 +1,6 @@
 ﻿// ReSharper disable UnusedMember.Global
 #pragma warning disable IDE0051
 
-using System.Text.Json;
-using System.Text.Json.Serialization;
-
 namespace Xunit;
 
 public static class XunitSerializationInfoExtensions
@@ -33,32 +30,44 @@ public static class XunitSerializationInfoExtensions
                 return;
             }
 
-            if (member.IsDefined<JsonIgnoreAttribute>())
+            var (filed, property) = member.GetFieldPropertyPair();
+            var members = new List<MemberInfo>();
+            members.AddIfNotNull(filed);
+            members.AddIfNotNull(property);
+
+            if (members.Any(m => m.IsDefined<JsonIgnoreAttribute>()))
                 return;
 
-            if (member.MemberInfo is FieldInfo field && field.TryGetAutoProperty(out var property))
-            {
-
-            }
-
-            var options = JsonHelper.GetOptions();
-            if (member.TryGetAttribute<JsonConverterAttribute>(false, out var converterAttribute))
-            {
-                var converter = converterAttribute.ConverterType is { } converterType
-                    ? (JsonConverter?)Activator.CreateInstance(converterType)
-                    : converterAttribute.CreateConverter(type);
-
-                if (converter is not null)
-                {
-                    options = JsonHelper.CreateOptions();
-                    options.Converters.Add(converter);
-                    options.MakeReadOnly(true);
-                }
-            }
-
+            var options = GetOptions(type, members);
             var json = value.ToJson(options);
             info.AddValue($"{name}__json", json, typeof(string));
             info.AddValue($"{name}__type", type.AssemblyQualifiedName);
+
+
+            static JsonSerializerOptions GetOptions(Type memberType, List<MemberInfo> members)
+            {
+                var converterAttribute = members
+                    .Select(m => m.GetCustomAttribute<JsonConverterAttribute>(false))
+                    .FirstOrDefault(a => a is not null);
+
+                var options = JsonHelper.GetOptions();
+
+                if (converterAttribute is null)
+                    return options;
+
+                var converter = converterAttribute.ConverterType is { } converterType
+                    ? (JsonConverter?)Activator.CreateInstance(converterType)
+                    : converterAttribute.CreateConverter(memberType);
+
+                if (converter is null)
+                    return options;
+
+                options = JsonHelper.CreateOptions();
+                options.Converters.Add(converter);
+                options.MakeReadOnly(true);
+
+                return options;
+            }
 #endif
         }
 

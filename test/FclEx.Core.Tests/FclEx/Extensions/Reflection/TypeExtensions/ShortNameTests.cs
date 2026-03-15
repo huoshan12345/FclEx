@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions.TypeExtensions;
+﻿namespace FclEx.Extensions.Reflection.TypeExtensions;
 
 public class ShortNameTests
 {
