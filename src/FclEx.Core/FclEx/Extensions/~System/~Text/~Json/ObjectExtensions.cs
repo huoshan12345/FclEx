@@ -13,10 +13,4 @@ public static partial class ObjectExtensions
     {
         return obj.ToJson(JsonHelper.GetOptions(options));
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static JsonNode? ToJsonNode<T>(this T? value, JsonSerializerOptions? options = null)
-    {
-        return JsonSerializer.SerializeToNode(value, options ?? JsonHelper.GetOptions());
-    }
 }
