@@ -79,22 +79,31 @@ public static class ReflectionHelper
         if (method.IsCompilerGenerated() == false)
             return false;
 
+        if (method.DeclaringType != field.DeclaringType)
+            return false;
+
         var body = method.GetMethodBody();
         var il = body?.GetILAsByteArray();
         if (il == null)
             return false;
 
         var fieldToken = field.MetadataToken;
+        var isStatic = field.IsStatic;
 
         for (var i = 0; i < il.Length - 4; i++)
         {
             var op = il[i];
 
-            if (op != 0x7B /* ldfld */
-                && op != 0x7D /* stfld */
-                && op != 0x7E /* ldsfld */
-                && op != 0x80 /* stsfld */)
-                continue;
+            if (isStatic)
+            {
+                if (op != 0x7E /* ldsfld */ && op != 0x80 /* stsfld */)
+                    continue;
+            }
+            else
+            {
+                if (op != 0x7B /* ldfld */ && op != 0x7D /* stfld */)
+                    continue;
+            }
 
             var token = BitConverter.ToInt32(il, i + 1);
             if (token == fieldToken)
