@@ -50,7 +50,7 @@ public class GetConstructorTests
     {
         var exception = Assert.Throws<ArgumentException>(() => typeof(NoDefaultCtorClass).GetRequiredDefaultConstructor());
 
-        Assert.Equal("The type 'FclEx.Extensions.TypeExtensions.GetConstructorTests.NoDefaultCtorClass' does not have a default constructor.", exception.Message);
+        Assert.Contains($"The type '{typeof(GetConstructorTests).FullName}.{nameof(NoDefaultCtorClass)}' does not have a default constructor.", exception.Message);
     }
 
     [Fact]
