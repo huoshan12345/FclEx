@@ -30,7 +30,12 @@ public static class ComparerHelper
         {
             result = true;
         }
+        // ReSharper disable once DuplicatedChainedIfBodies
         else if (x is null || y is null)
+        {
+            result = false;
+        }
+        else if (x.GetType() != y.GetType())
         {
             result = false;
         }

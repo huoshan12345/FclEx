@@ -1,18 +1,136 @@
-﻿namespace System.Collections.Generic.OrderedList;
+namespace System.Collections.Generic.OrderedList;
 
 public class OrderedListTestsMisc
 {
     internal class Driver<T>
     {
+        #region GetRange
+
+        public void BasicGetRange(T[] items, int index, int count)
+        {
+            var list = new OrderedList<T>(items);
+            var range = list.AsSpan().Slice(index, count);
+
+            //ensure range is good
+            for (var i = 0; i < count; i++)
+            {
+                Assert.Equal(range[i], items[i + index]);
+            }
+
+            //ensure no side effects
+            for (var i = 0; i < items.Length; i++)
+            {
+                Assert.Equal(list[i], items[i]);
+            }
+        }
+
+        public void BasicSliceSyntax(T[] items, int index, int count)
+        {
+            var list = new OrderedList<T>(items);
+            var range = list.AsSpan()[index..(index + count)];
+
+            //ensure range is good
+            for (var i = 0; i < count; i++)
+            {
+                Assert.Equal(range[i], items[i + index]);
+            }
+
+            //ensure no side effects
+            for (var i = 0; i < items.Length; i++)
+            {
+                Assert.Equal(list[i], items[i]);
+            }
+        }
+
+        public void EnsureRangeIsReference(T[] items, T item, int index, int count)
+        {
+            var list = new OrderedList<T>(items);
+            var range = list.AsSpan()[index..(index + count)];
+            var tempItem = list[index];
+            range[0] = item;
+            Assert.Equal(list[index], tempItem);
+        }
+
+        public void EnsureThrowsAfterModification(T[] items, T item, int index, int count)
+        {
+            var list = new OrderedList<T>(items);
+            var range = list.AsSpan()[index..(index + count)];
+            var tempItem = list[index];
+            list[index] = item;
+
+            Assert.Equal(range[0], tempItem);
+        }
+
+        public void GetRangeValidations(T[] items)
+        {
+            //
+            //Always send items.Length is even
+            //
+            var list = new OrderedList<T>(items);
+            var bad = new[]
+            {
+                (items.Length, 1),
+                (items.Length + 1, 0),
+                (items.Length + 1, 1),
+                (items.Length, 2),
+                (items.Length / 2, items.Length / 2 + 1),
+                (items.Length - 1, 2),
+                (items.Length - 2, 3),
+                (1, items.Length),
+                (0, items.Length + 1),
+                (1, items.Length + 1),
+                (2, items.Length),
+                (items.Length / 2 + 1, items.Length / 2),
+                (2, items.Length - 1),
+                (3,items.Length - 2),
+            };
+
+            for (var i = 0; i < bad.Length; i++)
+            {
+                var i1 = i;
+                var bad1 = bad;
+                AssertExtensions.Throws<ArgumentException>(null, () =>
+                {
+                    var (index, count) = bad1[i1];
+                    list.AsSpan().Slice(index, count);
+                });
+            }
+
+            bad =
+            [
+                (-1, -1),
+                (-1, 0),
+                (-1, 1),
+                (-1, 2),
+                (0, -1),
+                (1, -1),
+                (2,-1),
+            ];
+
+            for (var i = 0; i < bad.Length; i++)
+            {
+                var i1 = i;
+                var bad1 = bad;
+
+                Assert.Throws<ArgumentOutOfRangeException>(() =>
+                {
+                    var (index, count) = bad1[i1];
+                    list.AsSpan().Slice(index, count);
+                });
+            }
+        }
+
+        #endregion
+
         #region Contains
 
         public void BasicContains(T[] items)
         {
             var list = new OrderedList<T>(items);
 
-            foreach (var m in items)
+            foreach (var item in items)
             {
-                Assert.Contains(m, list);
+                Assert.Contains(item, list);
             }
         }
 
@@ -20,31 +138,31 @@ public class OrderedListTestsMisc
         {
             var list = new OrderedList<T>(itemsX);
 
-            foreach (var m in itemsY)
+            foreach (var item in itemsY)
             {
-                Assert.DoesNotContain(m, list); //"Should not contain item"
+                Assert.DoesNotContain(item, list);
             }
         }
 
         public void RemovedValues(T[] items)
         {
             var list = new OrderedList<T>(items);
-            foreach (var m in items)
+            foreach (var item in items)
             {
-                ((ICollection<T>)list).Remove(m);
-                Assert.DoesNotContain(m, list); //"Should not contain item"
+                ((ICollection<T>)list).Remove(item);
+                Assert.DoesNotContain(item, list);
             }
         }
 
         public void AddRemoveValues(T[] items)
         {
             var list = new OrderedList<T>(items);
-            foreach (var m in items)
+            foreach (var item in items)
             {
-                list.Add(m);
-                ((ICollection<T>)list).Remove(m);
-                list.Add(m);
-                Assert.Contains(m, list); //"Should contain item."
+                list.Add(item);
+                ((ICollection<T>)list).Remove(item);
+                list.Add(item);
+                Assert.Contains(item, list);
             }
         }
 
@@ -59,10 +177,10 @@ public class OrderedListTestsMisc
 
             for (var i = 0; i < times + 1; i++)
             {
-                Assert.Contains(items[items.Length / 2], list); //"Should contain item."
+                Assert.Contains(items[items.Length / 2], list);
                 ((ICollection<T>)list).Remove(items[items.Length / 2]);
             }
-            Assert.DoesNotContain(items[items.Length / 2], list); //"Should not contain item"
+            Assert.DoesNotContain(items[items.Length / 2], list);
         }
 
         public void ContainsNullWhenReference(T[] items, T? value)
@@ -73,7 +191,7 @@ public class OrderedListTestsMisc
             }
 
             var list = new OrderedList<T>(items) { value! };
-            Assert.Contains(value, list); //"Should contain item."
+            Assert.Contains(value, list);
         }
 
         #endregion
@@ -82,20 +200,20 @@ public class OrderedListTestsMisc
 
         public void ClearEmptyList()
         {
-            var list = new OrderedList<T>();
-            Assert.Empty(list); //"Should be equal to 0"
+            OrderedList<T> list = [];
+            Assert.Equal(0, list.Count);
             list.Clear();
-            Assert.Empty(list); //"Should be equal to 0."
+            Assert.Equal(0, list.Count);
         }
 
         public void ClearMultipleTimesEmptyList(int times)
         {
-            var list = new OrderedList<T>();
-            Assert.Empty(list); //"Should be equal to 0."
+            OrderedList<T> list = [];
+            Assert.Equal(0, list.Count);
             for (var i = 0; i < times; i++)
             {
                 list.Clear();
-                Assert.Empty(list); //"Should be equal to 0."
+                Assert.Equal(0, list.Count);
             }
         }
 
@@ -103,7 +221,7 @@ public class OrderedListTestsMisc
         {
             var list = new OrderedList<T>(items);
             list.Clear();
-            Assert.Empty(list); //"Should be equal to 0."
+            Assert.Equal(0, list.Count);
         }
 
         public void ClearMultipleTimesNonEmptyList(T[] items, int times)
@@ -112,7 +230,7 @@ public class OrderedListTestsMisc
             for (var i = 0; i < times; i++)
             {
                 list.Clear();
-                Assert.Empty(list); //"Should be equal to 0."
+                Assert.Equal(0, list.Count);
             }
         }
 
@@ -123,12 +241,11 @@ public class OrderedListTestsMisc
         public void BasicToArray(T[] items)
         {
             var list = new OrderedList<T>(items);
-
             var arr = list.ToArray();
 
             for (var i = 0; i < items.Length; i++)
             {
-                Assert.Equal(arr[i], items[i]); //"Should be equal."
+                Assert.Equal(arr[i], items[i]);
             }
         }
 
@@ -137,13 +254,37 @@ public class OrderedListTestsMisc
             var list = new OrderedList<T>(items);
             var arr = list.ToArray();
             list[0] = item;
+
             if (arr[0] == null)
-                Assert.NotNull(list[0]); //"Should NOT be null"
+            {
+                Assert.NotNull(list[0]);
+            }
             else
-                Assert.NotEqual(arr[0], list[0]); //"Should NOT be equal."
+            {
+                Assert.NotEqual(arr[0], list[0]);
+            }
         }
 
         #endregion
+    }
+
+    [Fact]
+    public static void SlicingWorks()
+    {
+        var driver = new Driver<int>();
+        var intArr1 = new int[100];
+        for (var i = 0; i < 100; i++)
+            intArr1[i] = i;
+
+        driver.BasicSliceSyntax(intArr1, 50, 50);
+        driver.BasicSliceSyntax(intArr1, 0, 50);
+        driver.BasicSliceSyntax(intArr1, 50, 25);
+        driver.BasicSliceSyntax(intArr1, 0, 25);
+        driver.BasicSliceSyntax(intArr1, 75, 25);
+        driver.BasicSliceSyntax(intArr1, 0, 100);
+        driver.BasicSliceSyntax(intArr1, 0, 99);
+        driver.BasicSliceSyntax(intArr1, 1, 1);
+        driver.BasicSliceSyntax(intArr1, 99, 1);
     }
 
     [Fact]
@@ -170,16 +311,17 @@ public class OrderedListTestsMisc
         intDriver.MultipleValues(intArr1, 5);
         intDriver.MultipleValues(intArr1, 17);
 
+
         var stringDriver = new Driver<string>();
         var stringArr1 = new string[10];
         for (var i = 0; i < 10; i++)
         {
-            stringArr1[i] = "SomeTestString" + i.ToString();
+            stringArr1[i] = "SomeTestString" + i;
         }
         var stringArr2 = new string[10];
         for (var i = 0; i < 10; i++)
         {
-            stringArr2[i] = "SomeTestString" + (i + 10).ToString();
+            stringArr2[i] = "SomeTestString" + (i + 10);
         }
 
         stringDriver.BasicContains(stringArr1);
@@ -215,7 +357,7 @@ public class OrderedListTestsMisc
         var stringArr = new string[10];
         for (var i = 0; i < 10; i++)
         {
-            stringArr[i] = "SomeTestString" + i.ToString();
+            stringArr[i] = "SomeTestString" + i;
         }
 
         stringDriver.ClearEmptyList();

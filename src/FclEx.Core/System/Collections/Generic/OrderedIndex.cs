@@ -1,4 +1,5 @@
-﻿namespace System.Collections.Generic;
+﻿// ReSharper disable ConvertToAutoPropertyWithPrivateSetter
+namespace System.Collections.Generic;
 
 /// <summary>
 /// Represents an ordered index of values associated with scores.
@@ -12,8 +13,7 @@
 /// <item><description>Enumeration returns elements in score order.</description></item>
 /// </list>
 /// </remarks>
-public class OrderedIndex<TScore, TValue> :
-    ICollection<(TScore Score, TValue Value)>
+public class OrderedIndex<TScore, TValue> : ICollection<(TScore Score, TValue Value)>
     where TValue : notnull
 {
     private const int MaxLevel = 32;
@@ -33,7 +33,6 @@ public class OrderedIndex<TScore, TValue> :
         _map = new Dictionary<TValue, Node>(capacity);
     }
 
-    // ReSharper disable once ConvertToAutoPropertyWithPrivateSetter
     public int Count => _count;
 
     public bool IsReadOnly => false;
@@ -99,7 +98,7 @@ public class OrderedIndex<TScore, TValue> :
         return level;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     private int Compare(Node node, TScore score, long seq)
     {
         var c = _scoreComparer.Compare(node.Score, score);
@@ -348,7 +347,9 @@ public class OrderedIndex<TScore, TValue> :
     /// </summary>
     public RankRangeEnumerable RangeByRank(int start, int count)
     {
-        if (start < 0) start = 0;
+        if (start < 0)
+            start = 0;
+
         if (start >= _count || count <= 0)
             return [];
 
@@ -521,21 +522,18 @@ public class OrderedIndex<TScore, TValue> :
 
     IEnumerator<(TScore Score, TValue Value)> IEnumerable<(TScore Score, TValue Value)>.GetEnumerator()
     {
-        return GetEnumerator();
+        // use singleton empty enumerator to avoid unnecessary allocation when the dictionary is empty.
+        return Count == 0
+            ? GenericEmptyEnumerator<(TScore Score, TValue Value)>.Instance
+            : GetEnumerator();
     }
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<(TScore Score, TValue Value)>)this).GetEnumerator();
 
     /// <summary>
     /// Returns an enumerator that iterates through the elements in score order.
     /// </summary>
-    public Enumerator GetEnumerator()
-    {
-        return new Enumerator(this);
-    }
+    public Enumerator GetEnumerator() => new(this);
 
     internal struct Level
     {
@@ -552,7 +550,7 @@ public class OrderedIndex<TScore, TValue> :
         public readonly Level[] Levels = new Level[level];
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     private static (TScore Score, TValue Value) GetScoreValue(Node? node)
     {
         return node is null

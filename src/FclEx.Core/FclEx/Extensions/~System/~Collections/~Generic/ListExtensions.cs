@@ -20,12 +20,6 @@ public static class ListExtensions
 
     public static void Swap<T>(this IList<T> list, int left, int right)
     {
-        Check.NotNull(list);
-        Check.NotNegative(left);
-        Check.NotNegative(right);
-        Check.LessThan(left, list.Count);
-        Check.LessThan(right, list.Count);
-
         (list[left], list[right]) = (list[right], list[left]);
     }
 
@@ -36,7 +30,7 @@ public static class ListExtensions
     /// <see cref="List{T}.Sort(IComparer{T})"/> is not guaranteed to be stable, so this method
     /// preserves the relative order of elements that compare equal.
     /// </remarks>
-    public static void StableSort<T>(this IList<T> list, int index, int count, IComparer<T> comparer)
+    public static void StableSort<T>(this IList<T> list, int index, int count, IComparer<T>? comparer = null)
     {
         Check.NotNull(list);
 
@@ -48,6 +42,8 @@ public static class ListExtensions
 
         if (count == 0)
             return;
+
+        comparer ??= Comparer<T>.Default;
 
         var indexes = new int[count];
 
@@ -68,7 +64,7 @@ public static class ListExtensions
         }
     }
 
-    public static void StableSort<T>(this IList<T> list, IComparer<T> comparer)
+    public static void StableSort<T>(this IList<T> list, IComparer<T>? comparer = null)
     {
         list.StableSort(0, list.Count, comparer);
     }

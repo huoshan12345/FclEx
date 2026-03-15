@@ -5,7 +5,6 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
     private static int _id;
 
     private readonly Lazy<ILogger> _logger;
-    private AccountStatus _accountStatus;
     private TAccount _account;
     private IHttpService? _httpService;
 
@@ -33,18 +32,20 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
             AccountStatus = AccountStatus.Normal;
         }
     }
+
     public virtual AccountStatus AccountStatus
     {
-        get => _accountStatus;
+        get;
         set
         {
-            if (_accountStatus == value)
+            if (field == value)
                 return;
 
-            _accountStatus = value;
-            OnAccountStatusChanged.Invoke(_accountStatus);
+            field = value;
+            OnAccountStatusChanged.Invoke(field);
         }
     }
+
     public virtual ILogger Logger => _logger.Value;
     public event Action<AccountStatus> OnAccountStatusChanged = status => { };
     public virtual IUserClientSession Session { get; } = new UserClientSession();
@@ -58,7 +59,7 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
 
     protected virtual ILogger CreateLogger(ILoggerFactory? factory)
     {
-        var logger = factory.Touch().CreateLogger(GetType());
+        var logger = factory.CreateLoggerOrDefault(GetType());
         var logger2 = new PropertiesLogger(logger, GetLogProperties(), GetLogLazyProperties());
         return new UserClientLogger<TAccount>(logger2, this);
     }
@@ -196,7 +197,7 @@ public abstract class UserClient(IUserAccount? account = null, ILoggerFactory? l
 {
     protected override ILogger CreateLogger(ILoggerFactory? factory)
     {
-        var logger = factory.Touch().CreateLogger(GetType());
+        var logger = factory.CreateLoggerOrDefault(GetType());
         var logger2 = new PropertiesLogger(logger, GetLogProperties(), GetLogLazyProperties());
         return new UserClientLogger(logger2, this); // Use non-generic logger for IUserClient
     }

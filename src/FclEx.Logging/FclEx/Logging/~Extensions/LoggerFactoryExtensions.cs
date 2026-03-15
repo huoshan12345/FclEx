@@ -10,7 +10,7 @@ public static class LoggerFactoryExtensions
 
         if (factory is LoggerFactory loggerFactory)
         {
-            var options = FilterOptions.GetRequiredValue<LoggerFilterOptions>(factory);
+            var options = FilterOptions.GetRequiredValue<LoggerFilterOptions>(loggerFactory);
             options.MinLevel = minLevel;
         }
         else
@@ -19,8 +19,18 @@ public static class LoggerFactoryExtensions
         }
     }
 
-    public static ILoggerFactory Touch(this ILoggerFactory? factory)
+    public static ILoggerFactory DefaultIfNull(this ILoggerFactory? factory)
     {
         return factory ?? NullLoggerFactory.Instance;
+    }
+
+    public static ILogger CreateLoggerOrDefault(this ILoggerFactory? loggerFactory, Type type)
+    {
+        return loggerFactory.DefaultIfNull().CreateLogger(type);
+    }
+
+    public static ILogger<T> CreateLoggerOrDefault<T>(this ILoggerFactory? loggerFactory)
+    {
+        return loggerFactory.DefaultIfNull().CreateLogger<T>();
     }
 }

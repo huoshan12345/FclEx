@@ -7,15 +7,9 @@ public interface IHtmlAction<T> : IHttpResponseHandler<T>
 
     OperationResult<T> IHttpResponseHandler<T>.GetResult(HttpResponse response)
     {
-        var (successful, str, ex, _) = GetHtml(response);
-        if (!successful)
-            return ex!;
-
-        var context = new HtmlActionContext(response, str!, HtmlResultPath);
-
-        return IsFailed(context)
-            ? HandleFailed(context)
-            : GetResult(context);
+        return GetHtml(response)
+            .Then(m => CreateContext(response, m))
+            .Then(GetResult);
     }
 
     OperationResult<string> GetHtml(HttpResponse response)
@@ -29,10 +23,12 @@ public interface IHtmlAction<T> : IHttpResponseHandler<T>
         };
     }
 
-    bool IsFailed(HtmlActionContext context) => context.ResultElements.IsNullOrEmpty();
-
-    OperationResult<T> HandleFailed(HtmlActionContext context)
+    OperationResult<HtmlActionContext> CreateContext(HttpResponse response, string json)
     {
+        var context = new HtmlActionContext(response, json, HtmlResultPath);
+        if (context.ResultElements.IsNotEmpty())
+            return context;
+
         const string msg = "The result object does not exist in html";
         var error = HtmlResultPath == null ? msg : msg + " at " + HtmlResultPath;
         error = error + ": " + context.Html.Truncate(256);

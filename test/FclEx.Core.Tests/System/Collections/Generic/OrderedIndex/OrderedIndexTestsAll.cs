@@ -1,6 +1,6 @@
 ﻿namespace System.Collections.Generic.OrderedIndex;
 
-public class OrderedIndexTestsStringString : OrderedIndexTests<string, string>
+public class OrderedIndexTests_String_String : OrderedIndexTests<string, string>
 {
     protected override (string, string) CreateT(int seed)
     {
@@ -10,7 +10,7 @@ public class OrderedIndexTestsStringString : OrderedIndexTests<string, string>
     }
 }
 
-public class OrderedIndexTestsIntInt : OrderedIndexTests<int, int>
+public class OrderedIndexTests_Int_Int : OrderedIndexTests<int, int>
 {
     protected override (int, int) CreateT(int seed)
     {
@@ -20,7 +20,7 @@ public class OrderedIndexTestsIntInt : OrderedIndexTests<int, int>
     }
 }
 
-public class OrderedIndexTestsSimpleIntInt : OrderedIndexTests<SimpleInt, int>
+public class OrderedIndexTests_SimpleInt_Int : OrderedIndexTests<SimpleInt, int>
 {
     protected override (SimpleInt, int) CreateT(int seed)
     {

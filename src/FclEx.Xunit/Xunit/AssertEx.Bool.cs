@@ -4,19 +4,19 @@ partial class AssertEx
 {
     extension(Assert)
     {
-        public static void True([DoesNotReturnIf(false)] bool condition, Func<string>? userMessage)
+        public static void True([DoesNotReturnIf(false)] bool condition, Func<string?>? userMessage)
         {
             if (condition == false)
                 Assert.True(condition, userMessage?.Invoke());
         }
 
-        public static void False([DoesNotReturnIf(true)] bool condition, Func<string>? userMessage)
+        public static void False([DoesNotReturnIf(true)] bool condition, Func<string?>? userMessage)
         {
             if (condition)
                 Assert.False(condition, userMessage?.Invoke());
         }
 
-        public static void Equal<T>(T? expected, T? actual, Func<string>? userMessage)
+        public static void Equal<T>(T? expected, T? actual, Func<string?>? userMessage)
         {
             try
             {
@@ -31,11 +31,11 @@ partial class AssertEx
             }
         }
 
-        public static void NotEqual<T>(T? expected, T? actual, Func<string>? userMessage)
+        public static void NotEqual<T>(T? expected, T? actual, Func<string?>? userMessage)
         {
             try
             {
-                Assert.NotEqual(default, actual);
+                Assert.NotEqual(expected, actual);
             }
             catch (NotEqualException)
             {
@@ -46,12 +46,12 @@ partial class AssertEx
             }
         }
 
-        public static void Default<T>(T? actual, Func<string>? userMessage = null)
+        public static void Default<T>(T? actual, Func<string?>? userMessage = null)
         {
             Assert.Equal(default, actual, userMessage);
         }
 
-        public static void NotDefault<T>(T? actual, Func<string>? userMessage = null)
+        public static void NotDefault<T>(T? actual, Func<string?>? userMessage = null)
         {
             Assert.NotEqual(default, actual, userMessage);
         }

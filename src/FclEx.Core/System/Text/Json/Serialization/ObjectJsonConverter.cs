@@ -1,8 +1,32 @@
 ﻿namespace System.Text.Json.Serialization;
 
-public class ObjectJsonConverter : JsonConverter<object>
+public sealed class ObjectJsonConverter : JsonConverterFactory
 {
     public static readonly ObjectJsonConverter Instance = new();
+
+    public override bool CanConvert(Type typeToConvert)
+    {
+        if (typeToConvert == typeof(object))
+            return true;
+
+        if (typeToConvert == typeof(Dictionary<string, object>))
+            return true;
+
+        if (typeToConvert == typeof(List<object>))
+            return true;
+
+        return false;
+    }
+
+    public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
+    {
+        return ObjectJsonConverterImpl.Instance;
+    }
+}
+
+public class ObjectJsonConverterImpl : JsonConverter<object>
+{
+    public static readonly ObjectJsonConverterImpl Instance = new();
 
     private const int MaxDepth = 64;
 

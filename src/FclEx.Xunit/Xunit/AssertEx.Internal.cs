@@ -42,6 +42,14 @@ public static partial class AssertEx
             if (type.IsPrimitive || type == typeof(string))
                 return Equals;
 
+            if (type is { Namespace: "System", IsGenericType: true, FullName: { } fullName }
+                && (fullName.StartsWith("System.ValueTuple`") || fullName.StartsWith("System.Tuple`")))
+            {
+                // ValueTuple and Tuple have structural equality,
+                // but we will compare their members one by one, so we don't need to call Equals on them.
+                return null;
+            }
+
             if (type.Implements(typeof(IEquatable<>)))
             {
                 var method = type.GetMethod(nameof(IEquatable<>.Equals), [type]);
@@ -246,13 +254,16 @@ public static partial class AssertEx
 
             DataMemberInfo[] GetMembers(Type type)
             {
-                return type.GetDataMembers().Where(m => !m.IsCompilerGenerated && !excludeNames.Contains(m.Name)).ToArray();
+                return type.GetDataMembers()
+                    .Where(m => FilterMember(m)
+                                && !excludeNames.Contains(m.Name))
+                    .ToArray();
             }
         }
         else
         {
             var equal = false;
-            foreach (var member in type1.GetDataMembers().Where(m => !m.IsCompilerGenerated))
+            foreach (var member in type1.GetDataMembers().Where(FilterMember))
             {
                 var exclude = excludedMemberTree?.Children.FirstOrDefault(m => m.Value.Name == member.Name);
                 if (exclude?.Value.IsExcluded == true)
@@ -271,6 +282,11 @@ public static partial class AssertEx
                     return result;
             }
             return new(equal, value1, value2, currentPath);
+        }
+
+        static bool FilterMember(DataMemberInfo m)
+        {
+            return m is { IsStatic: false, CanRead: true, IsCompilerGenerated: false, IsIndexer: false };
         }
 
         static bool IsVisitableType(Type t)

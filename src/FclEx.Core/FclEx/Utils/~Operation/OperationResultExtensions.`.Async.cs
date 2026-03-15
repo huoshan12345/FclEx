@@ -236,4 +236,24 @@ partial class OperationResultExtensions
     {
         return TaskExtensions.Then(task, m => IOPair.Create(input, m));
     }
+
+    public static Task<OperationResult<TNext>> ThenIf<T, TNext>(this Task<OperationResult<T>> task, Func<T, bool> condition,
+        Func<T, Task<OperationResult<TNext>>> @true, Func<T, Task<OperationResult<TNext>>> @false)
+    {
+        Check.NotNull(condition);
+        Check.NotNull(@true);
+        Check.NotNull(@false);
+
+        return task.Then(t => condition(t) ? @true(t) : @false(t));
+    }
+
+    public static Task<OperationResult<T>> ThenIf<T>(this Task<OperationResult<T>> task, Func<T, bool> condition, Func<T, Task<OperationResult<T>>> next)
+    {
+        return task.ThenIf(condition, next, m => Operation.Success(m));
+    }
+
+    public static Task<OperationResult> ThenIf<T>(this Task<OperationResult<T>> task, Func<T, bool> condition, Func<T, Task<OperationResult>> next)
+    {
+        return task.ThenIf(condition, next, _ => Operation.Success(Unit.Default));
+    }
 }

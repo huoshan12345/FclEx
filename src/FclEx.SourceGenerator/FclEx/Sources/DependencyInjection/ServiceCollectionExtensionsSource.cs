@@ -16,8 +16,7 @@ internal class ServiceCollectionExtensionsSource
             .WriteLine();
 
         // Namespace declaration
-        builder.WriteNamespace(@namespace)
-            .WriteOpeningBracket();
+        builder.WriteNamespace(@namespace, true);
 
         // Class declaration
         builder.WriteLine($"public partial class {className}")
@@ -48,7 +47,8 @@ internal class ServiceCollectionExtensionsSource
 
             foreach (var methodName in methodNames)
             {
-                builder.WriteLine($"public static IServiceCollection {methodName}<T, {types}>(this IServiceCollection services, Func<{types}, T> func)");
+                // NOTE: there is a "By" suffix.
+                builder.WriteLine($"public static IServiceCollection {methodName}By<T, {types}>(this IServiceCollection services, Func<{types}, T> func)");
 
                 builder.Indent();
                 builder.WriteLine("where T : class");
@@ -83,9 +83,6 @@ internal class ServiceCollectionExtensionsSource
         }
 
         // End class declaration
-        builder.WriteClosingBracket();
-
-        // End namespace declaration
         builder.WriteClosingBracket();
 
         var str = builder.ToString();

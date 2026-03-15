@@ -162,13 +162,11 @@ partial class OrderedListTestsBasic
 
         var arr = list.ToArray();
 
-        // 1. 排序正确
         for (var i = 1; i < arr.Length; i++)
         {
             Assert.True(arr[i - 1].Key <= arr[i].Key);
         }
 
-        // 2. 稳定性
         var groups = arr.GroupBy(x => x.Key);
 
         foreach (var g in groups)
@@ -179,7 +177,6 @@ partial class OrderedListTestsBasic
             Assert.Equal(sorted, ids);
         }
 
-        // 3. LowerBound / UpperBound
         for (var key = 0; key < 20; key++)
         {
             var lb = list.LowerBound(new Item(key, 0));

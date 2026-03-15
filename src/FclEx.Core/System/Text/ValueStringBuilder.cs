@@ -1,9 +1,22 @@
+// ReSharper disable all
+#pragma warning disable IDE0002 // Simplify member access.
+#pragma warning disable IDE0005 // Using directive is unnecessary.
+#pragma warning disable IDE0251 // Make member 'readonly'
+#pragma warning disable IDE0057 // Use range operator
+
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-// ReSharper disable All
+using System.Buffers;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+
+#nullable enable
+
 namespace System.Text
 {
+    [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public ref partial struct ValueStringBuilder
     {
         private char[]? _arrayToReturnToPool;
@@ -48,6 +61,16 @@ namespace System.Text
         }
 
         /// <summary>
+        /// Ensures that the builder is terminated with a NUL character.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void NullTerminate()
+        {
+            EnsureCapacity(_pos + 1);
+            _chars[_pos] = '\0';
+        }
+
+        /// <summary>
         /// Get a pinnable reference to the builder.
         /// Does not ensure there is a null char after <see cref="Length"/>
         /// This overload is pattern matched in the C# 7.3+ compiler so you can omit
@@ -55,20 +78,6 @@ namespace System.Text
         /// </summary>
         public ref char GetPinnableReference()
         {
-            return ref MemoryMarshal.GetReference(_chars);
-        }
-
-        /// <summary>
-        /// Get a pinnable reference to the builder.
-        /// </summary>
-        /// <param name="terminate">Ensures that the builder has a null char after <see cref="Length"/></param>
-        public ref char GetPinnableReference(bool terminate)
-        {
-            if (terminate)
-            {
-                EnsureCapacity(Length + 1);
-                _chars[Length] = '\0';
-            }
             return ref MemoryMarshal.GetReference(_chars);
         }
 
@@ -81,6 +90,10 @@ namespace System.Text
             }
         }
 
+        // ToString() clears the builder, so we need a side-effect free debugger display.
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private string DebuggerDisplay => AsSpan().ToString();
+
         public override string ToString()
         {
             string s = _chars.Slice(0, _pos).ToString();
@@ -91,39 +104,9 @@ namespace System.Text
         /// <summary>Returns the underlying storage of the builder.</summary>
         public Span<char> RawChars => _chars;
 
-        /// <summary>
-        /// Returns a span around the contents of the builder.
-        /// </summary>
-        /// <param name="terminate">Ensures that the builder has a null char after <see cref="Length"/></param>
-        public ReadOnlySpan<char> AsSpan(bool terminate)
-        {
-            if (terminate)
-            {
-                EnsureCapacity(Length + 1);
-                _chars[Length] = '\0';
-            }
-            return _chars.Slice(0, _pos);
-        }
-
         public ReadOnlySpan<char> AsSpan() => _chars.Slice(0, _pos);
         public ReadOnlySpan<char> AsSpan(int start) => _chars.Slice(start, _pos - start);
         public ReadOnlySpan<char> AsSpan(int start, int length) => _chars.Slice(start, length);
-
-        public bool TryCopyTo(Span<char> destination, out int charsWritten)
-        {
-            if (_chars.Slice(0, _pos).TryCopyTo(destination))
-            {
-                charsWritten = _pos;
-                Dispose();
-                return true;
-            }
-            else
-            {
-                charsWritten = 0;
-                Dispose();
-                return false;
-            }
-        }
 
         public void Insert(int index, char value, int count)
         {
@@ -227,22 +210,6 @@ namespace System.Text
                 dst[i] = c;
             }
             _pos += count;
-        }
-
-        public unsafe void Append(char* value, int length)
-        {
-            int pos = _pos;
-            if (pos > _chars.Length - length)
-            {
-                Grow(length);
-            }
-
-            Span<char> dst = _chars.Slice(_pos, length);
-            for (int i = 0; i < dst.Length; i++)
-            {
-                dst[i] = *value++;
-            }
-            _pos += length;
         }
 
         public void Append(scoped ReadOnlySpan<char> value)

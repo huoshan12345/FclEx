@@ -1,129 +1,369 @@
-﻿#pragma warning disable xUnit1026 // Theory methods should use all of their parameters
-#pragma warning disable IDE0060 // Remove unused parameter
+#pragma warning disable xUnit1044 // Avoid using TheoryData type arguments that are not serializable
 namespace System.Collections.Generic.Heap;
 
-public abstract class HeapTests<T> : IGenericSharedApiTests<T>
+public partial class HeapTests : TestBase
 {
-    protected override bool EnumeratorCurrentUndefinedOperationThrows => false;
-
-    #region Heap<T> Helper Methods
-
-    #region IGenericSharedAPI<T> Helper Methods
-
-    protected Heap<T> HeapFactory() => [];
-
-    protected Heap<T> HeapFactory(int count)
+    protected Heap<int> CreateSmallHeap(out HashSet<int> items)
     {
-        var heap = new Heap<T>();
-        var seed = count * 34;
-        for (var i = 0; i < count; i++)
-            heap.Push(CreateT(seed++));
+        items = new HashSet<int>
+        {
+            1,
+            2,
+            3,
+        };
+        var heap = new Heap<int>(items);
         return heap;
     }
 
-    #endregion
-
-    protected override IEnumerable<T> GenericIEnumerableFactory()
+    protected Heap<int> CreateHeap(int initialCapacity, int count)
     {
-        return HeapFactory();
-    }
-
-    protected override IEnumerable<T> GenericIEnumerableFactory(int count)
-    {
-        return HeapFactory(count);
-    }
-
-    protected override int Count(IEnumerable<T> enumerable) { return ((Heap<T>)enumerable).Count; }
-    protected override void Add(IEnumerable<T> enumerable, T value) { ((Heap<T>)enumerable).Push(value); }
-    protected override void Clear(IEnumerable<T> enumerable) { ((Heap<T>)enumerable).Clear(); }
-    protected override bool Contains(IEnumerable<T> enumerable, T value) { return ((Heap<T>)enumerable).Contains(value); }
-    protected override void CopyTo(IEnumerable<T> enumerable, T[] array, int index) { ((Heap<T>)enumerable).CopyTo(array, index); }
-    protected override bool Remove(IEnumerable<T> enumerable) { ((Heap<T>)enumerable).Pop(); return true; }
-
-    #endregion
-
-    #region Constructor
-
-    #endregion
-
-    #region Constructor_IEnumerable
-
-    [Theory]
-    [MemberData(nameof(EnumerableTestData))]
-    public void Generic_Constructor_IEnumerable(EnumerableType enumerableType, int setLength, int enumerableLength, int numberOfMatchingElements, int numberOfDuplicateElements)
-    {
-        var arr = CreateEnumerable(enumerableType, null!, enumerableLength, 0, numberOfDuplicateElements).ToArray();
-        var heap = new Heap<T>(arr, Comparer<T>.Default);
-        Assert.Equal(arr.Length, heap.Count);
-        Array.Sort(arr, Comparer<T>.Default);
-        foreach (var item in arr)
+        var pq = new Heap<int>(initialCapacity);
+        for (var i = 0; i < count; i++)
         {
-            Assert.Equal(item, heap.Pop());
+            pq.Push(i);
         }
+
+        return pq;
     }
 
     [Fact]
-    public void Generic_Constructor_IEnumerable_Null_ThrowsArgumentNullException()
+    public void Heap_PushPop_Empty()
     {
-        Assert.Throws<ArgumentNullException>("source", () => new Heap<T>((IEnumerable<T>)null!));
-    }
+        var heap = new Heap<string>();
 
-    #endregion
-
-    #region Pop
-
-    [Theory]
-    [MemberData(nameof(ValidCollectionSizes))]
-    public void Heap_Generic_Pop_AllElements(int count)
-    {
-        var heap = HeapFactory(count);
-        var elements = heap.ToList();
-        elements.Sort();
-        foreach (var element in elements)
-            Assert.Equal(element, heap.Pop());
+        Assert.Equal("hello", heap.PushPop("hello"));
+        Assert.Equal(0, heap.Count);
     }
 
     [Fact]
-    public void Heap_Generic_Pop_OnEmptyHeap_ThrowsInvalidOperationException()
+    public void Heap_PushPop_SmallerThanMin()
     {
-        Assert.Throws<InvalidOperationException>(() => new Heap<T>().Pop());
+        var heap = CreateSmallHeap(out var items);
+
+        var actualElement = heap.PushPop(0);
+
+        Assert.Equal(0, actualElement);
+        Assert.True(items.SetEquals(heap));
     }
 
-    #endregion
-
-    #region ToArray
-
-    [Theory]
-    [MemberData(nameof(ValidCollectionSizes))]
-    public void Heap_Generic_ToArray(int count)
+    [Fact]
+    public void Heap_PushPop_LargerThanMin()
     {
-        var heap = HeapFactory(count);
-        Assert.True(ArrayExtensions.SequenceEqual(heap.ToArray(), heap.ToArray<T>()));
+        var heap = CreateSmallHeap(out _);
+
+        var actualElement = heap.PushPop(4);
+
+        Assert.Equal(1, actualElement);
+        Assert.Equal(2, heap.Pop());
+        Assert.Equal(3, heap.Pop());
+        Assert.Equal(4, heap.Pop());
     }
 
-    #endregion
-
-    #region Peek
-
-    [Theory]
-    [MemberData(nameof(ValidCollectionSizes))]
-    public void Heap_Generic_Peek_AllElements(int count)
+    [Fact]
+    public void Heap_PushPop_EqualToMin()
     {
-        var heap = HeapFactory(count);
-        var elements = heap.ToList();
-        elements.Sort();
-        foreach (var element in elements)
+        var heap = CreateSmallHeap(out var items);
+
+        var actualElement = heap.PushPop(1);
+
+        Assert.Equal(1, actualElement);
+        Assert.True(items.SetEquals(heap));
+    }
+
+    [Fact]
+    public void Heap_EmptyCollection_PopPush_ShouldThrowInvalidOperationException()
+    {
+        var heap = new Heap<int>();
+
+        Assert.Equal(0, heap.Count);
+        Assert.Throws<InvalidOperationException>(() => heap.PopPush(1));
+        Assert.Equal(0, heap.Count);
+    }
+
+    [Fact]
+    public void Heap_PopPush_SmallerThanMin()
+    {
+        var heap = CreateSmallHeap(out _);
+
+        var actualElement = heap.PopPush(0);
+
+        Assert.Equal(1, actualElement);
+        Assert.Equal(0, heap.Pop());
+        Assert.Equal(2, heap.Pop());
+        Assert.Equal(3, heap.Pop());
+    }
+
+    [Fact]
+    public void Heap_PopPush_LargerThanMin()
+    {
+        var heap = CreateSmallHeap(out _);
+
+        var actualElement = heap.PopPush(4);
+
+        Assert.Equal(1, actualElement);
+        Assert.Equal(2, heap.Pop());
+        Assert.Equal(3, heap.Pop());
+        Assert.Equal(4, heap.Pop());
+    }
+
+    [Fact]
+    public void Heap_PopPush_EqualToMin()
+    {
+        var heap = CreateSmallHeap(out _);
+
+        var actualElement = heap.PopPush(1);
+
+        Assert.Equal(1, actualElement);
+        Assert.Equal(1, heap.Pop());
+        Assert.Equal(2, heap.Pop());
+        Assert.Equal(3, heap.Pop());
+    }
+
+    [Fact]
+    public void Heap_Constructor_IEnumerable_Null()
+    {
+        var items = new[] { null, "1" };
+        var heap = new Heap<string?>(items);
+        Assert.Null(heap.Pop());
+        Assert.Equal("1", heap.Pop());
+    }
+
+    [Fact]
+    public void Heap_Push_Null()
+    {
+        var heap = new Heap<string?>();
+
+        heap.Push(null);
+        heap.Push("0");
+        heap.Push("2");
+
+        Assert.Null(heap.Pop());
+        Assert.Equal("0", heap.Pop());
+        Assert.Equal("2", heap.Pop());
+    }
+
+    [Fact]
+    public void Heap_PushRange_Null()
+    {
+        var heap = new Heap<string?>();
+
+        heap.PushRange([null, null, null]);
+        heap.PushRange(["not null"]);
+        heap.PushRange([null, null, null]);
+
+        for (var i = 0; i < 6; ++i)
         {
-            Assert.Equal(element, heap.Peek());
+            Assert.Null(heap.Pop());
+        }
+
+        Assert.Equal("not null", heap.Pop());
+    }
+
+    [Fact]
+    public void Heap_Constructor_Int_Negative_ThrowsArgumentOutOfRangeException()
+    {
+        AssertExtensions.Throws<ArgumentOutOfRangeException>("capacity", () => new Heap<int>(-1));
+        AssertExtensions.Throws<ArgumentOutOfRangeException>("capacity", () => new Heap<int>(int.MinValue));
+    }
+
+    [Fact]
+    public void Heap_Constructor_Enumerable_Null_ThrowsArgumentNullException()
+    {
+        AssertExtensions.Throws<ArgumentNullException>("items", () => new Heap<int>(items: null!));
+        AssertExtensions.Throws<ArgumentNullException>("items", () => new Heap<int>(items: null!, comparer: Comparer<int>.Default));
+    }
+
+    [Fact]
+    public void Heap_PushRange_Null_ThrowsArgumentNullException()
+    {
+        var heap = new Heap<int>();
+        AssertExtensions.Throws<ArgumentNullException>("items", () => heap.PushRange(null!));
+    }
+
+    [Fact]
+    public void Heap_EmptyCollection_Pop_ShouldThrowException()
+    {
+        var heap = new Heap<int>();
+
+        Assert.Equal(0, heap.Count);
+        Assert.False(heap.TryPop(out _));
+        Assert.Throws<InvalidOperationException>(() => heap.Pop());
+    }
+
+    [Fact]
+    public void Heap_EmptyCollection_Peek_ShouldReturnFalse()
+    {
+        var heap = new Heap<int>();
+
+        Assert.False(heap.TryPeek(out _));
+        Assert.Throws<InvalidOperationException>(() => heap.Peek());
+    }
+
+    #region EnsureCapacity, TrimExcess
+
+    [Fact]
+    public void Heap_EnsureCapacity_Negative_ShouldThrowException()
+    {
+        var heap = new Heap<int>();
+        AssertExtensions.Throws<ArgumentOutOfRangeException>("capacity", () => heap.EnsureCapacity(-1));
+        AssertExtensions.Throws<ArgumentOutOfRangeException>("capacity", () => heap.EnsureCapacity(int.MinValue));
+    }
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(0, 5)]
+    [InlineData(1, 1)]
+    [InlineData(3, 100)]
+    public void Heap_TrimExcess_ShouldNotChangeCount(int initialCapacity, int count)
+    {
+        var heap = CreateHeap(initialCapacity, count);
+
+        Assert.Equal(count, heap.Count);
+        heap.TrimExcess();
+        Assert.Equal(count, heap.Count);
+    }
+
+    [Theory]
+    [MemberData(nameof(ValidPositiveCollectionSizes))]
+    public void Heap_TrimExcess_Repeatedly_ShouldNotChangeCount(int count)
+    {
+        var heap = CreateHeap(initialCapacity: count, count);
+
+        Assert.Equal(count, heap.Count);
+        heap.TrimExcess();
+        heap.TrimExcess();
+        heap.TrimExcess();
+        Assert.Equal(count, heap.Count);
+    }
+
+    [Theory]
+    [MemberData(nameof(ValidPositiveCollectionSizes))]
+    public void Heap_EnsureCapacityAndTrimExcess(int count)
+    {
+        var items = Enumerable.Range(1, count).ToArray();
+        var heap = new Heap<int>();
+        var expectedCount = 0;
+        var random = new Random(Seed: 34);
+
+        foreach (var element in items)
+        {
+            TrimAndEnsureCapacity();
+            heap.Push(element);
+            expectedCount++;
+            Assert.Equal(expectedCount, heap.Count);
+        }
+
+        while (expectedCount > 0)
+        {
             heap.Pop();
+            TrimAndEnsureCapacity();
+            expectedCount--;
+            Assert.Equal(expectedCount, heap.Count);
+        }
+
+        TrimAndEnsureCapacity();
+        Assert.Equal(0, heap.Count);
+
+        int GetNextEnsureCapacity()
+        {
+            return random.Next(0, count * 2);
+        }
+
+        void TrimAndEnsureCapacity()
+        {
+            heap.TrimExcess();
+
+            var capacityAfterEnsureCapacity = heap.EnsureCapacity(GetNextEnsureCapacity());
+            Assert.Equal(capacityAfterEnsureCapacity, GetUnderlyingBufferCapacity(heap));
+
+            var capacityAfterTrimExcess = heap.Count < (int)(capacityAfterEnsureCapacity * 0.9) ? heap.Count : capacityAfterEnsureCapacity;
+            heap.TrimExcess();
+            Assert.Equal(capacityAfterTrimExcess, GetUnderlyingBufferCapacity(heap));
         }
     }
 
-    [Fact]
-    public void Heap_Generic_Peek_OnEmptyHeap_ThrowsInvalidOperationException()
+    private static int GetUnderlyingBufferCapacity<T>(Heap<T> heap)
     {
-        Assert.Throws<InvalidOperationException>(() => new Heap<T>().Peek());
+        var field = typeof(Heap<T>).GetField("_items", BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.NotNull(field);
+        var array = (T[]?)field.GetValue(heap);
+        Assert.NotNull(array);
+        return array.Length;
     }
+
+    #endregion
+
+    #region Enumeration
+
+    [Theory]
+    [MemberData(nameof(NonModifyingOperations))]
+    public void Heap_Enumeration_ValidOnNonModifyingOperation(Action<Heap<int>> nonModifyingOperation, int count)
+    {
+        var heap = CreateHeap(initialCapacity: count, count: count);
+        using var enumerator = heap.GetEnumerator();
+        nonModifyingOperation(heap);
+        enumerator.MoveNext();
+    }
+
+    [Theory]
+    [MemberData(nameof(ModifyingOperations))]
+    public void Heap_Enumeration_InvalidationOnModifyingOperation(Action<Heap<int>> modifyingOperation, int count)
+    {
+        {
+            var heap = CreateHeap(initialCapacity: count, count: count);
+            using var enumerator = heap.GetEnumerator();
+            modifyingOperation(heap);
+
+            Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext());
+            Assert.Default(enumerator.Current);
+        }
+        {
+            var heap = CreateHeap(initialCapacity: count, count: count);
+            using var enumerator = ((IEnumerable<int>)heap).GetEnumerator();
+            modifyingOperation(heap);
+
+            if (count == 0)
+            {
+                // GenericEmptyEnumerator does not throw on MoveNext() even if the collection was modified
+                Assert.False(enumerator.MoveNext());
+
+                // GenericEmptyEnumerator throws on Current
+                Assert.Throws<InvalidOperationException>(() => enumerator.Current);
+
+            }
+            else
+            {
+                Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext());
+                Assert.Default(enumerator.Current);
+            }
+        }
+    }
+
+    public static readonly TheoryData<Action<Heap<int>>, int> ModifyingOperations = new()
+    {
+        (m => m.Push(42), 0),
+        (m => m.Pop(), 5),
+        (m => m.TryPop(out _), 5),
+        (m => m.PushPop(5), 6),
+        (m => m.PushRange([1]), 0),
+        (m => m.PushRange([1]), 10),
+        (m => m.PushRange([1, 2]), 0),
+        (m => m.PushRange([1, 2]), 10),
+        (m => m.Clear(), 5),
+        (m => m.Clear(), 0),
+    };
+
+    public static readonly TheoryData<Action<Heap<int>>, int> NonModifyingOperations = new()
+    {
+        (m => m.Peek(), 1),
+        (m => m.TryPeek(out _), 1),
+        (m => m.TryPop(out _), 0),
+        (m => m.PushPop(-1), 5), // the min element before the operation is 0, so PushPop(-1) will return -1 and leave the heap unchanged
+        (m => m.PushPop(0), 5),
+        (m => m.PushRange([]), 5),
+        (m => m.PushRange([]), 5),
+        (m => m.EnsureCapacity(5), 5),
+    };
 
     #endregion
 }

@@ -155,7 +155,7 @@ public class HeapBenchmarks
             var v = _data[i];
 
             if (v > heap.Peek())
-                heap.ReplaceTop(v);
+                heap.PopPush(v);
         }
 
         var sum = 0;

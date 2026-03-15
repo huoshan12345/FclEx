@@ -1,9 +1,10 @@
-﻿namespace System.Collections.Generic;
+﻿// ReSharper disable ConvertToAutoPropertyWhenPossible
+// ReSharper disable ConvertToAutoPropertyWithPrivateSetter
+namespace System.Collections.Generic;
 
 [DebuggerDisplay("Count = {Count}")]
-[SuppressMessage("ReSharper", "ConvertToAutoPropertyWithPrivateSetter")]
-[SuppressMessage("ReSharper", "ConvertToAutoPropertyWhenPossible")]
-public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where TKey : notnull
+public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>
+    where TKey : notnull
 {
     private const int DefaultMinDegree = 16;
 
@@ -29,23 +30,37 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         : this(DefaultMinDegree, comparer)
     {
         Check.NotNull(enumerable);
+        AddRange(enumerable);
+    }
 
+    private void AddRange(IEnumerable<KeyValuePair<TKey, TValue>> enumerable)
+    {
+        // TODO: optimize this for some special cases
         foreach (var item in enumerable)
         {
-            Add(item);
+            Add(item.Key, item.Value);
         }
     }
 
+    public IComparer<TKey> Comparer => _comparer;
     public int Level => _level;
     public int MinDegree => _minKeyCount;
     public int Count => _count;
     public bool IsReadOnly => false;
     public ICollection<TKey> Keys => field ??= new KeyCollection(this);
     public ICollection<TValue> Values => field ??= new ValueCollection(this);
+    IEnumerable<TKey> IReadOnlyDictionary<TKey, TValue>.Keys => Keys;
+    IEnumerable<TValue> IReadOnlyDictionary<TKey, TValue>.Values => Values;
 
     public Enumerator GetEnumerator() => new(this);
-    IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator() => GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<KeyValuePair<TKey, TValue>>)this).GetEnumerator();
+    IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator()
+    {
+        return _count == 0
+            // use singleton empty enumerator to avoid unnecessary allocation when the dictionary is empty.
+            ? GenericEmptyEnumerator<KeyValuePair<TKey, TValue>>.Instance
+            : GetEnumerator();
+    }
 
     public void Clear()
     {
@@ -135,9 +150,13 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         return false;
     }
 
-    public void Add(KeyValuePair<TKey, TValue> item) => Add(item.Key, item.Value);
+    void ICollection<KeyValuePair<TKey, TValue>>.Add(KeyValuePair<TKey, TValue> item) => Add(item.Key, item.Value);
 
-    public bool Contains(KeyValuePair<TKey, TValue> item) => Find(item.Key, true, item.Value) != default;
+    bool ICollection<KeyValuePair<TKey, TValue>>.Contains(KeyValuePair<TKey, TValue> item)
+    {
+        Check.NotNull(item.Key, nameof(item)); // check here to set correct parameter name in exception
+        return Find(item.Key, true, item.Value) != default;
+    }
 
     public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
     {
@@ -149,7 +168,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         }
     }
 
-    public bool Remove(KeyValuePair<TKey, TValue> item)
+    bool ICollection<KeyValuePair<TKey, TValue>>.Remove(KeyValuePair<TKey, TValue> item)
     {
         var (node, index) = Find(item.Key, true, item.Value);
         if (node is null)
@@ -654,18 +673,25 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         public readonly void Dispose() { }
     }
 
-    public sealed class KeyCollection(BPlusTreeDictionary<TKey, TValue> dictionary)
-        : ReadOnlyItemCollection<TKey, KeyCollection.KeyEnumerator>
+    [DebuggerDisplay("Count = {Count}")]
+    public sealed class KeyCollection : ReadOnlyItemCollection<TKey, KeyCollection.KeyEnumerator>
     {
-        public override int Count => dictionary.Count;
-        public override KeyEnumerator GetEnumerator() => new(dictionary);
-        public override bool Contains(TKey item) => dictionary.ContainsKey(item);
+        private readonly BPlusTreeDictionary<TKey, TValue> _dictionary;
+
+        public KeyCollection(BPlusTreeDictionary<TKey, TValue> dictionary)
+        {
+            _dictionary = Check.NotNull(dictionary);
+        }
+
+        public override int Count => _dictionary.Count;
+        public override KeyEnumerator GetEnumerator() => new(_dictionary);
+        public override bool Contains(TKey item) => _dictionary.ContainsKey(item);
 
         public override void CopyTo(TKey[] array, int arrayIndex)
         {
-            Check.CanCopyTo(array, arrayIndex, dictionary.Count);
+            Check.CanCopyTo(array, arrayIndex, _dictionary.Count);
 
-            foreach (var (key, _) in dictionary)
+            foreach (var (key, _) in _dictionary)
                 array[arrayIndex++] = key;
         }
 
@@ -695,18 +721,25 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         }
     }
 
-    public sealed class ValueCollection(BPlusTreeDictionary<TKey, TValue> dictionary)
-        : ReadOnlyItemCollection<TValue, ValueCollection.ValueEnumerator>
+    [DebuggerDisplay("Count = {Count}")]
+    public sealed class ValueCollection : ReadOnlyItemCollection<TValue, ValueCollection.ValueEnumerator>
     {
-        public override int Count => dictionary.Count;
-        public override ValueEnumerator GetEnumerator() => new(dictionary);
-        public override bool Contains(TValue item) => dictionary.ContainsValue(item);
+        private readonly BPlusTreeDictionary<TKey, TValue> _dictionary;
+
+        public ValueCollection(BPlusTreeDictionary<TKey, TValue> dictionary)
+        {
+            _dictionary = Check.NotNull(dictionary);
+        }
+
+        public override int Count => _dictionary.Count;
+        public override ValueEnumerator GetEnumerator() => new(_dictionary);
+        public override bool Contains(TValue item) => _dictionary.ContainsValue(item);
 
         public override void CopyTo(TValue[] array, int arrayIndex)
         {
-            Check.CanCopyTo(array, arrayIndex, dictionary.Count);
+            Check.CanCopyTo(array, arrayIndex, _dictionary.Count);
 
-            foreach (var (_, value) in dictionary)
+            foreach (var (_, value) in _dictionary)
                 array[arrayIndex++] = value;
         }
 

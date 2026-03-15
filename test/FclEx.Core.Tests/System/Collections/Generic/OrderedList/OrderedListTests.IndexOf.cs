@@ -1,6 +1,3 @@
-﻿#pragma warning disable CS8604 // Possible null reference argument.
-#pragma warning disable xUnit1026 // Theory methods should use all of their parameters
-#pragma warning disable IDE0060 // Remove unused parameter
 namespace System.Collections.Generic.OrderedList;
 
 public abstract partial class OrderedListTests<T>
@@ -12,25 +9,25 @@ public abstract partial class OrderedListTests<T>
 
     public enum IndexOfMethod
     {
-        IndexOfT,
-        IndexOfTInt,
-        IndexOfTIntInt,
-        LastIndexOfT,
-        LastIndexOfTInt,
-        LastIndexOfTIntInt,
+        IndexOf_T,
+        IndexOf_T_Int,
+        IndexOf_T_Int_Int,
+        LastIndexOf_T,
+        LastIndexOf_T_Int,
+        LastIndexOf_T_Int_Int,
     };
 
     private static IndexOfDelegate IndexOfDelegateFromType(IndexOfMethod methodType)
     {
         return methodType switch
         {
-            IndexOfMethod.IndexOfT => (list, value) => list.IndexOf(value),
-            IndexOfMethod.IndexOfTInt => (list, value) => list.IndexOf(value, 0),
-            IndexOfMethod.IndexOfTIntInt => (list, value) => list.IndexOf(value, 0, list.Count),
-            IndexOfMethod.LastIndexOfT => (list, value) => list.LastIndexOf(value),
-            IndexOfMethod.LastIndexOfTInt => (list, value) => list.LastIndexOf(value, list.Count - 1),
-            IndexOfMethod.LastIndexOfTIntInt => (list, value) => list.LastIndexOf(value, list.Count - 1, list.Count),
-            _ => throw new Exception("Invalid IndexOfMethod")
+            IndexOfMethod.IndexOf_T => (list, value) => list.IndexOf(value),
+            IndexOfMethod.IndexOf_T_Int => (list, value) => list.IndexOf(value, 0),
+            IndexOfMethod.IndexOf_T_Int_Int => (list, value) => list.IndexOf(value, 0, list.Count),
+            IndexOfMethod.LastIndexOf_T => (list, value) => list.LastIndexOf(value),
+            IndexOfMethod.LastIndexOf_T_Int => (list, value) => list.LastIndexOf(value, list.Count - 1),
+            IndexOfMethod.LastIndexOf_T_Int_Int => (list, value) => list.LastIndexOf(value, list.Count - 1, list.Count),
+            _ => throw new Exception("Invalid IndexOfMethod"),
         };
     }
 
@@ -38,13 +35,13 @@ public abstract partial class OrderedListTests<T>
     {
         return methodType switch
         {
-            IndexOfMethod.IndexOfT => (list, value) => list.IndexOf(value),
-            IndexOfMethod.IndexOfTInt => (list, value) => list.IndexOf(value, 0),
-            IndexOfMethod.IndexOfTIntInt => (list, value) => list.IndexOf(value, 0, list.Count),
-            IndexOfMethod.LastIndexOfT => (list, value) => list.LastIndexOf(value),
-            IndexOfMethod.LastIndexOfTInt => (list, value) => list.LastIndexOf(value, list.Count - 1),
-            IndexOfMethod.LastIndexOfTIntInt => (list, value) => list.LastIndexOf(value, list.Count - 1, list.Count),
-            _ => throw new Exception("Invalid IndexOfMethod")
+            IndexOfMethod.IndexOf_T => (list, value) => list.IndexOf(value),
+            IndexOfMethod.IndexOf_T_Int => (list, value) => list.IndexOf(value, 0),
+            IndexOfMethod.IndexOf_T_Int_Int => (list, value) => list.IndexOf(value, 0, list.Count),
+            IndexOfMethod.LastIndexOf_T => (list, value) => list.LastIndexOf(value),
+            IndexOfMethod.LastIndexOf_T_Int => (list, value) => list.LastIndexOf(value, list.Count - 1),
+            IndexOfMethod.LastIndexOf_T_Int_Int => (list, value) => list.LastIndexOf(value, list.Count - 1, list.Count),
+            _ => throw new Exception("Invalid IndexOfMethod"),
         };
     }
 
@@ -56,19 +53,19 @@ public abstract partial class OrderedListTests<T>
     /// </summary>
     public static IEnumerable<object[]> IndexOfTestData()
     {
-        foreach (var sizes in ValidCollectionSizes())
+        foreach (object[] sizes in ValidCollectionSizes())
         {
             var count = (int)sizes[0];
-            yield return [IndexOfMethod.IndexOfT, count, true];
-            yield return [IndexOfMethod.LastIndexOfT, count, false];
+            yield return [IndexOfMethod.IndexOf_T, count, true];
+            yield return [IndexOfMethod.LastIndexOf_T, count, false];
 
             if (count <= 0)
                 continue; // 0 is an invalid index for IndexOf when the count is 0.
 
-            yield return [IndexOfMethod.IndexOfTInt, count, true];
-            yield return [IndexOfMethod.LastIndexOfTInt, count, false];
-            yield return [IndexOfMethod.IndexOfTIntInt, count, true];
-            yield return [IndexOfMethod.LastIndexOfTIntInt, count, false];
+            yield return [IndexOfMethod.IndexOf_T_Int, count, true];
+            yield return [IndexOfMethod.LastIndexOf_T_Int, count, false];
+            yield return [IndexOfMethod.IndexOf_T_Int_Int, count, true];
+            yield return [IndexOfMethod.LastIndexOf_T_Int_Int, count, false];
         }
     }
 
@@ -80,6 +77,7 @@ public abstract partial class OrderedListTests<T>
     [MemberData(nameof(IndexOfTestData))]
     public void IndexOf_NoDuplicates(IndexOfMethod indexOfMethod, int count, bool frontToBackOrder)
     {
+        _ = frontToBackOrder;
         var list = GenericListFactory(count);
         var expectedList = list.ToList();
         var indexOf = IndexOfDelegateFromType(indexOfMethod);
@@ -94,8 +92,9 @@ public abstract partial class OrderedListTests<T>
     [MemberData(nameof(IndexOfTestData))]
     public void IndexOf_NonExistingValues(IndexOfMethod indexOfMethod, int count, bool frontToBackOrder)
     {
+        _ = frontToBackOrder;
         var list = GenericListFactory(count);
-        var nonexistentValues = CreateEnumerable(EnumerableType.List, list, count, 0, 0);
+        var nonexistentValues = CreateEnumerable(EnumerableType.List, list, count: count, numberOfMatchingElements: 0, numberOfDuplicateElements: 0);
         var indexOf = IndexOfDelegateFromType(indexOfMethod);
 
         Assert.All(nonexistentValues, nonexistentValue =>
@@ -108,7 +107,8 @@ public abstract partial class OrderedListTests<T>
     [MemberData(nameof(IndexOfTestData))]
     public void IndexOf_DefaultValue(IndexOfMethod indexOfMethod, int count, bool frontToBackOrder)
     {
-        var defaultValue = default(T);
+        _ = frontToBackOrder;
+        var defaultValue = default(T)!;
         var list = GenericListFactory(count);
         var indexOf = IndexOfDelegateFromType(indexOfMethod);
         while (((ICollection<T>)list).Remove(defaultValue))
@@ -121,39 +121,22 @@ public abstract partial class OrderedListTests<T>
     }
 
     [Theory]
-    [MemberData(nameof(IndexOfTestData))]
-    public void IndexOf_OrderIsCorrect(IndexOfMethod indexOfMethod, int count, bool frontToBackOrder)
-    {
-        if (count == 0)
-            return;
-
-        var list = GenericListFactory(count);
-        var withoutDuplicates = list.ToList();
-        list.AddRange(list);
-        var indexOf = IndexOfDelegateFromType(indexOfMethod);
-        var dupTimes = list.Count / withoutDuplicates.Count;
-
-        Assert.All(Enumerable.Range(0, count), i =>
-        {
-            if (frontToBackOrder)
-                Assert.Equal(dupTimes * i, indexOf(list, withoutDuplicates[i]));
-            else
-                Assert.Equal(dupTimes * (i + 1) - 1, indexOf(list, withoutDuplicates[i]));
-        });
-    }
-
-    [Theory]
     [MemberData(nameof(ValidCollectionSizes))]
     public void IndexOf_OrderIsCorrectWithManyDuplicates(int count)
     {
-        if (count == 0)
-            return;
-
         var list = GenericListFactory(count);
         var withoutDuplicates = list.ToList();
         list.AddRange(list); // 2 duplicates
         list.AddRange(list); // 4 duplicates
         list.AddRange(list); // 8 duplicates
+
+        if (count == 0)
+        {
+            Assert.Equal(0, list.Count);
+            Assert.Empty(list);
+            return;
+        }
+
         var dupTimes = list.Count / withoutDuplicates.Count;
 
         Assert.All(Enumerable.Range(0, count), i =>
@@ -172,14 +155,19 @@ public abstract partial class OrderedListTests<T>
     [MemberData(nameof(ValidCollectionSizes))]
     public void LastIndexOf_OrderIsCorrectWithManyDuplicates(int count)
     {
-        if (count == 0)
-            return;
-
         var list = GenericListFactory(count);
         var withoutDuplicates = list.ToList();
         list.AddRange(list); // 2 duplicates
         list.AddRange(list); // 4 duplicates
         list.AddRange(list); // 8 duplicates
+
+        if (count == 0)
+        {
+            Assert.Equal(0, list.Count);
+            Assert.Empty(list);
+            return;
+        }
+
         var dupTimes = list.Count / withoutDuplicates.Count;
 
         Assert.All(Enumerable.Range(0, count), i =>
@@ -188,6 +176,34 @@ public abstract partial class OrderedListTests<T>
             {
                 var expectedIndex = dupTimes * (i + 1) - 1;
                 Assert.Equal(expectedIndex, list.LastIndexOf(withoutDuplicates[i]));
+            });
+        });
+    }
+
+    [Theory]
+    [MemberData(nameof(ValidCollectionSizes))]
+    public void LastIndexOf_Int_OrderIsCorrectWithManyDuplicates(int count)
+    {
+        var list = GenericListFactory(count);
+        var withoutDuplicates = list.ToList();
+        list.AddRange(list); // 2 duplicates
+        list.AddRange(list); // 4 duplicates
+        list.AddRange(list); // 8 duplicates
+
+        if (count == 0)
+        {
+            Assert.Equal(0, list.Count);
+            Assert.Empty(list);
+            return;
+        }
+
+        var dupTimes = list.Count / withoutDuplicates.Count;
+
+        Assert.All(Enumerable.Range(0, count), i =>
+        {
+            Assert.All(Enumerable.Range(0, 4), j =>
+            {
+                var expectedIndex = dupTimes * (i + 1) - 1;
                 Assert.Equal(expectedIndex - j, list.LastIndexOf(withoutDuplicates[i], expectedIndex - j));
                 Assert.Equal(expectedIndex - j, list.LastIndexOf(withoutDuplicates[i], expectedIndex - j, 1));
             });
@@ -200,10 +216,10 @@ public abstract partial class OrderedListTests<T>
     {
         var list = GenericListFactory(count);
         var element = CreateT(234);
-        Assert.Throws<ArgumentOutOfRangeException>(() => list.IndexOf(element, count + 1)); //"Expect ArgumentOutOfRangeException for index greater than length of list.."
-        Assert.Throws<ArgumentOutOfRangeException>(() => list.IndexOf(element, count + 10)); //"Expect ArgumentOutOfRangeException for index greater than length of list.."
-        Assert.Throws<ArgumentOutOfRangeException>(() => list.IndexOf(element, -1)); //"Expect ArgumentOutOfRangeException for negative index."
-        Assert.Throws<ArgumentOutOfRangeException>(() => list.IndexOf(element, int.MinValue)); //"Expect ArgumentOutOfRangeException for negative index."
+        Assert.Throws<ArgumentOutOfRangeException>(() => list.IndexOf(element, count + 1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => list.IndexOf(element, count + 10));
+        Assert.Throws<ArgumentOutOfRangeException>(() => list.IndexOf(element, -1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => list.IndexOf(element, int.MinValue));
     }
 
     [Theory]
@@ -212,13 +228,13 @@ public abstract partial class OrderedListTests<T>
     {
         var list = GenericListFactory(count);
         var element = CreateT(234);
-        Assert.Throws<ArgumentOutOfRangeException>(() => list.IndexOf(element, count, 1)); //"ArgumentOutOfRangeException expected on index larger than array."
-        Assert.Throws<ArgumentOutOfRangeException>(() => list.IndexOf(element, count + 1, 1)); //"ArgumentOutOfRangeException expected  on index larger than array."
-        Assert.Throws<ArgumentOutOfRangeException>(() => list.IndexOf(element, 0, count + 1)); //"ArgumentOutOfRangeException expected  on count larger than array."
-        Assert.Throws<ArgumentOutOfRangeException>(() => list.IndexOf(element, count / 2, count / 2 + 2)); //"ArgumentOutOfRangeException expected.."
-        Assert.Throws<ArgumentOutOfRangeException>(() => list.IndexOf(element, 0, count + 1)); //"ArgumentOutOfRangeException expected  on count larger than array."
-        Assert.Throws<ArgumentOutOfRangeException>(() => list.IndexOf(element, 0, -1)); //"ArgumentOutOfRangeException expected on negative count."
-        Assert.Throws<ArgumentOutOfRangeException>(() => list.IndexOf(element, -1, 1)); //"ArgumentOutOfRangeException expected on negative index."
+        Assert.Throws<ArgumentOutOfRangeException>(() => list.IndexOf(element, count, 1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => list.IndexOf(element, count + 1, 1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => list.IndexOf(element, 0, count + 1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => list.IndexOf(element, count / 2, count / 2 + 2));
+        Assert.Throws<ArgumentOutOfRangeException>(() => list.IndexOf(element, 0, count + 1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => list.IndexOf(element, 0, -1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => list.IndexOf(element, -1, 1));
     }
 
     [Theory]
@@ -227,7 +243,7 @@ public abstract partial class OrderedListTests<T>
     {
         var list = GenericListFactory(count);
         var element = CreateT(234);
-        Assert.Throws<ArgumentOutOfRangeException>(() => list.LastIndexOf(element, count)); //"ArgumentOutOfRangeException expected."
+        Assert.Throws<ArgumentOutOfRangeException>(() => list.LastIndexOf(element, count));
         if (count == 0)  // IndexOf with a 0 count List is special cased to return -1.
             Assert.Equal(-1, list.LastIndexOf(element, -1));
         else
@@ -243,13 +259,14 @@ public abstract partial class OrderedListTests<T>
 
         if (count > 0)
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => list.LastIndexOf(element, 0, count + 1)); //"Expected ArgumentOutOfRangeException."
-            Assert.Throws<ArgumentOutOfRangeException>(() => list.LastIndexOf(element, count / 2, count / 2 + 2)); //"Expected ArgumentOutOfRangeException."
-            Assert.Throws<ArgumentOutOfRangeException>(() => list.LastIndexOf(element, 0, count + 1)); //"Expected ArgumentOutOfRangeException."
-            Assert.Throws<ArgumentOutOfRangeException>(() => list.LastIndexOf(element, 0, -1)); //"Expected ArgumentOutOfRangeException."
-            Assert.Throws<ArgumentOutOfRangeException>(() => list.LastIndexOf(element, -1, count)); //"Expected ArgumentOutOfRangeException."
-            Assert.Throws<ArgumentOutOfRangeException>(() => list.LastIndexOf(element, -1, 1)); //"Expected ArgumentOutOfRangeException."                Assert.Throws<ArgumentOutOfRangeException>(() => list.LastIndexOf(element, count, 0)); //"Expected ArgumentOutOfRangeException."
-            Assert.Throws<ArgumentOutOfRangeException>(() => list.LastIndexOf(element, count, 1)); //"Expected ArgumentOutOfRangeException."
+            Assert.Throws<ArgumentOutOfRangeException>(() => list.LastIndexOf(element, 0, count + 1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => list.LastIndexOf(element, count / 2, count / 2 + 2));
+            Assert.Throws<ArgumentOutOfRangeException>(() => list.LastIndexOf(element, 0, count + 1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => list.LastIndexOf(element, 0, -1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => list.LastIndexOf(element, -1, count));
+            Assert.Throws<ArgumentOutOfRangeException>(() => list.LastIndexOf(element, -1, 1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => list.LastIndexOf(element, count, 0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => list.LastIndexOf(element, count, 1));
         }
         else // IndexOf with a 0 count List is special cased to return -1.
         {

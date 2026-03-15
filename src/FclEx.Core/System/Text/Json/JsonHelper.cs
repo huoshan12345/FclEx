@@ -39,9 +39,7 @@ public static class JsonHelper
             NumberHandling = jsonOptions.AllowNumberFromString
                    ? JsonNumberHandling.AllowReadingFromString
                    : JsonNumberHandling.Strict,
-            TypeInfoResolver = jsonOptions.IgnoreReadingNull
-                   ? IgnoreReadingNullResolver
-                   : Resolver,
+            TypeInfoResolver = CreateResolver(jsonOptions),
         };
 
         if (jsonOptions.AllowBoolFromString)
@@ -50,10 +48,28 @@ public static class JsonHelper
         if (jsonOptions.AddTypeConverter)
             options.Converters.Add(TypeJsonConverter.Instance);
 
+        if (jsonOptions.AddFileSystemInfoConverter)
+            options.Converters.Add(FileSystemInfoJsonConverter.Instance);
+
+        // put it at last to ensure it has the lowest priority
         if (jsonOptions.AddObjectConverter)
-            options.Converters.Add(ObjectConverterFactory.Instance);
+            options.Converters.Add(ObjectJsonConverter.Instance);
 
         return options;
+    }
+
+    private static readonly IJsonTypeInfoResolver JsonTypeInfoResolver_Empty = typeof(JsonTypeInfoResolver)
+        .GetRequiredProperty("Empty")
+        .GetRequiredValue<IJsonTypeInfoResolver>(null);
+
+    private static IJsonTypeInfoResolver CreateResolver(JsonOptions jsonOptions)
+    {
+        if (JsonSerializer.IsReflectionEnabledByDefault == false)
+            return JsonTypeInfoResolver_Empty;
+
+        return jsonOptions.IgnoreReadingNull
+            ? IgnoreReadingNullResolver
+            : Resolver;
     }
 
     public static JsonSerializerOptions GetOptions(JsonOptions? jsonOptions = default)
