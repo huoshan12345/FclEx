@@ -8,19 +8,21 @@ namespace Xunit;
 
 public static class XunitSerializationInfoExtensions
 {
-    private static readonly Type[] _arrayInterfaceTypes = typeof(int[]).GetInterfaces()
-        .Select(m => m.IsGenericType ? m.GetGenericTypeDefinition() : m)
-        .ToArray();
-
-    private static readonly MethodInfo _items = typeof(ListExtensions).GetRequiredMethod(nameof(ListExtensions.Items));
-    private static readonly MethodInfo _toList = typeof(Enumerable).GetRequiredMethod(nameof(Enumerable.ToList));
-
     extension(IXunitSerializationInfo info)
     {
-        public void AddValueEx(string name, object? value, Type type)
+        public void AddValue(FieldInfo member, object? value)
+        {
+            var dataMember = new DataMemberInfo(member);
+            info.AddValue(dataMember, value);
+        }
+
+        public void AddValue(DataMemberInfo member, object? value)
         {
             if (value == null)
                 return;
+
+            var name = member.Name;
+            var type = member.DataMemberType;
 
 #if !FCLEX_XUNIT_V3
             info.AddValue(name, value, type);
@@ -31,14 +33,41 @@ public static class XunitSerializationInfoExtensions
                 return;
             }
 
-            var json = value.ToJson();
+            if (member.IsDefined<JsonIgnoreAttribute>())
+                return;
+
+            var options = JsonHelper.GetOptions();
+            if (member.TryGetAttribute<JsonConverterAttribute>(false, out var converterAttribute))
+            {
+                var converter = converterAttribute.ConverterType is { } converterType
+                    ? (JsonConverter?)Activator.CreateInstance(converterType)
+                    : converterAttribute.CreateConverter(type);
+
+                if (converter is not null)
+                {
+                    options = JsonHelper.CreateOptions();
+                    options.Converters.Add(converter);
+                    options.MakeReadOnly(true);
+                }
+            }
+
+            var json = value.ToJson(options);
             info.AddValue($"{name}__json", json, typeof(string));
             info.AddValue($"{name}__type", type.AssemblyQualifiedName);
 #endif
         }
 
-        public object? GetValueEx(string name, Type type)
+        public object? GetValue(FieldInfo member)
         {
+            var dataMember = new DataMemberInfo(member);
+            return info.GetValue(dataMember);
+        }
+
+        public object? GetValue(DataMemberInfo member)
+        {
+            var name = member.Name;
+            var type = member.DataMemberType;
+
 #if !FCLEX_XUNIT_V3
             return info.GetValue(name, type);
 #else
@@ -49,9 +78,7 @@ public static class XunitSerializationInfoExtensions
             {
                 if (info.GetValue($"{name}__json") is string json)
                 {
-                    var options = JsonHelper.CreateOptions();
-                    options.Converters.Add(new ObjectConverter());
-                    value = json.FromJson(type, options);
+                    value = json.FromJson(type);
                 }
             }
 

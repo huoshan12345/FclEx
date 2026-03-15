@@ -53,7 +53,7 @@ public class KeyValuePairConverterTests
         where T : IEnumerable<KeyValuePair<TKey, TValue>>
         where TKey : notnull
     {
-        var json = raw.ToJson();
+        var json = raw.ToJson<object>(); // use object converter to serialize IEnumerable<KeyValuePair<TKey, TValue>> to a dictionary
         var pairs = JsonConvert.DeserializeObject<T>(json, new KeyValuePairsConverter())!;
 
         var dic = raw.ToDictionary(m => m.Key, m => m.Value);
