@@ -12,7 +12,7 @@ global using System.Text;
 global using System.Threading.Tasks;
 global using FclEx.AspNetCore;
 global using FclEx.Extensions;
-global using IdentityModel;
+global using Duende.IdentityModel;
 global using Microsoft.AspNetCore;
 global using Microsoft.AspNetCore.Authorization;
 global using Microsoft.AspNetCore.Http;

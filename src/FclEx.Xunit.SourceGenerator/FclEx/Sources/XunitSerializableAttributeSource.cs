@@ -109,7 +109,7 @@ internal static class XunitSerializableAttributeSource
     foreach (var field in _fields)
     {
         var value = field.GetValue(this);
-        global::Xunit.XunitSerializationInfoExtensions.AddValueEx(info, field.Name, value, field.FieldType);
+        global::Xunit.XunitSerializationInfoExtensions.AddValue(info, field, value);
     }
 }
 """;
@@ -119,7 +119,7 @@ internal static class XunitSerializableAttributeSource
 {
     foreach (var field in _fields)
     {
-        var value = global::Xunit.XunitSerializationInfoExtensions.GetValueEx(info, field.Name, field.FieldType);
+        var value = global::Xunit.XunitSerializationInfoExtensions.GetValue(info, field);
         field.SetValue(this, value);
     }
 }
@@ -135,7 +135,7 @@ internal static class XunitSerializableAttributeSource
         
         foreach (var field in _fields)
         {
-            var value = global::Xunit.XunitSerializationInfoExtensions.GetValueEx(info, field.Name, field.FieldType);
+            var value = global::Xunit.XunitSerializationInfoExtensions.GetValue(info, field);
             field.SetValueDirect(t, value!);
         }
     }
