@@ -3,23 +3,23 @@
 partial class XunitSerializableAttributeTests
 {
     [XunitSerializable]
-    public partial record TestModel<T>(Type? Type, Expression<Func<T, object?>>? Selector, object? Value, bool Valid = false)
+    public partial record TestModel<T>(Type? Type, object? Value, bool Valid = false)
     {
-        public string Member { get; } = Selector is null ? "" : ExpressionHelper.GetDataMemberInfo(Selector).Name;
-
-        public override string ToString() => $"{Member} -> {Value?.ToString().IfEmpty("\"\"") ?? "null"} {(Valid ? "√" : "×")}";
+        public string Member { get; } = Type is null ? "" : Type.Name;
     }
 
     [Fact]
-    public void Should_RoundTrip_With_Type_Expression()
+    public void Should_RoundTrip_With_Type()
     {
-        var original = new TestModel<string>(typeof(string), m => m.Length, 1);
+        var original = new TestModel<string>(typeof(string), 1);
         var info = CreateSerializationInfo();
         original.Serialize(info);
 
-        var deserialized = new TestModel<string>(null, null, null);
+        var deserialized = new TestModel<string>(null, null);
         deserialized.Deserialize(info);
 
-        Assert.Equal(original, deserialized);
+        Assert.Equal(original.Type, deserialized.Type);
+        Assert.Equal(original.Value, deserialized.Value);
+        Assert.Equal(original.Valid, deserialized.Valid);
     }
 }

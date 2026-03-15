@@ -1,6 +1,9 @@
 ﻿// ReSharper disable UnusedMember.Global
 #pragma warning disable IDE0051
 
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 namespace Xunit;
 
 public static class XunitSerializationInfoExtensions
@@ -30,6 +33,7 @@ public static class XunitSerializationInfoExtensions
 
             var json = value.ToJson();
             info.AddValue($"{name}__json", json, typeof(string));
+            info.AddValue($"{name}__type", type.AssemblyQualifiedName);
 #endif
         }
 
@@ -45,12 +49,52 @@ public static class XunitSerializationInfoExtensions
             {
                 if (info.GetValue($"{name}__json") is string json)
                 {
-                    return json.FromJson(type);
+                    var options = JsonHelper.CreateOptions();
+                    options.Converters.Add(new ObjectConverter());
+                    value = json.FromJson(type, options);
                 }
             }
 
             return value;
 #endif
         }
+    }
+}
+
+
+public class ObjectConverter : JsonConverter<object>
+{
+    public override object? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        switch (reader.TokenType)
+        {
+            case JsonTokenType.Number:
+                if (reader.TryGetInt64(out var l))
+                    return l;
+                return reader.GetDouble();
+
+            case JsonTokenType.String:
+                return reader.GetString();
+
+            case JsonTokenType.True:
+                return true;
+
+            case JsonTokenType.False:
+                return false;
+
+            case JsonTokenType.Null:
+                return null;
+
+            default:
+            {
+                using var doc = JsonDocument.ParseValue(ref reader);
+                return doc.RootElement.Clone();
+            }
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
+    {
+        JsonSerializer.Serialize(writer, value, value.GetType(), options);
     }
 }

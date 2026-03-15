@@ -9,7 +9,9 @@ public record JsonOptions(
     bool AllowBoolFromString = true,
     bool AllowNumberFromString = true,
     bool AllowOutOfOrderMetadataProperties = true,
-    JsonNamingPolicy? PropertyNamingPolicy = null)
+    JsonNamingPolicy? PropertyNamingPolicy = null,
+    bool AddTypeConverter = true,
+    bool AddObjectConverter = true)
 {
     public static readonly JsonOptions Default = new();
     public static readonly JsonOptions Web = new(PropertyNamingPolicy: JsonNamingPolicy.CamelCase);
