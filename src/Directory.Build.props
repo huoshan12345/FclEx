@@ -32,11 +32,16 @@
     </AssemblyAttribute>
   </ItemGroup>
 
-  <!-- Remove Newtonsoft.Json.dll as a compiler reference, while keeping Newtonsoft.Json.dll in the build output -->
+  <PropertyGroup>
+    <BlockedCompilePackages Condition="$(MSBuildProjectName) != 'FclEx.NewtonsoftJson'">Newtonsoft.Json</BlockedCompilePackages>
+    <BlockedCompilePackages>$(BlockedCompilePackages);IdentityModel</BlockedCompilePackages>
+    <BlockedCompilePackages>;$(BlockedCompilePackages);</BlockedCompilePackages>
+  </PropertyGroup>
+
   <Target Name="RemoveCompileTimeReferences" AfterTargets="ResolvePackageAssets" BeforeTargets="ResolveLockFileReferences">
     <ItemGroup>
-      <ResolvedCompileFileDefinitions Remove="@(ResolvedCompileFileDefinitions)" 
-                                      Condition="'%(NuGetPackageId)' == 'Newtonsoft.Json' AND $(ProjectName) != 'FclEx.NewtonsoftJson'" />
+      <ResolvedCompileFileDefinitions Remove="@(ResolvedCompileFileDefinitions)"
+                                      Condition="$([System.String]::Copy('$(BlockedCompilePackages)').Contains(';%(NuGetPackageId);'))" />
     </ItemGroup>
   </Target>
 
