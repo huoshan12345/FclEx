@@ -1,4 +1,6 @@
-﻿namespace FclEx.Xunit;
+﻿using System.Linq.Expressions;
+
+namespace FclEx.Xunit;
 
 public partial class XunitSerializableAttributeTests
 {

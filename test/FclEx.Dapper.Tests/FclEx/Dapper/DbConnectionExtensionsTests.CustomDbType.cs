@@ -1,4 +1,6 @@
-﻿namespace FclEx.Dapper;
+﻿using System.Xml;
+
+namespace FclEx.Dapper;
 
 partial class DbConnectionExtensionsTests
 {
@@ -47,7 +49,7 @@ partial class DbConnectionExtensionsTests
         };
         var entity = new EntityWithSqlServerXml
         {
-            Xml = payload.ToXml(),
+            Xml = XmlHelper.Serialize(payload),
         };
 
         var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity, db.Schema);

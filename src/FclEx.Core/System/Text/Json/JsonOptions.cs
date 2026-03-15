@@ -12,4 +12,5 @@ public record JsonOptions(
     JsonNamingPolicy? PropertyNamingPolicy = null)
 {
     public static readonly JsonOptions Default = new();
+    public static readonly JsonOptions Web = new(PropertyNamingPolicy: JsonNamingPolicy.CamelCase);
 }

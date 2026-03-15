@@ -95,7 +95,7 @@ public class HttpServerFixture : GlobalFixture
             {
                 { "body", body.ToJsonNode() },
                 { "encoding", request.Headers.ContentEncoding.ToString() },
-                { "headers", headers.ToJsonNode() },
+                { "headers", JsonNode.From(headers) },
             };
             await context.Response.WriteAsync(obj.ToString());
         });
