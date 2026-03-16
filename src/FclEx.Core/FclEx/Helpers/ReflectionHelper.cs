@@ -71,15 +71,24 @@ public static class ReflectionHelper
         return $"<{propertyName}>k__BackingField";
     }
 
-    public static bool AccessorUsesField(MethodInfo? method, FieldInfo field)
+    /// <summary>
+    /// Determines whether the specified accessor method reads from or writes to the specified field.
+    /// </summary>
+    /// <param name="method">The accessor method to inspect.</param>
+    /// <param name="field">The field to check for usage.</param>
+    /// <returns>
+    /// <see langword="true"/> if the accessor contains an IL instruction that accesses the field;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
+    public static bool AccessorAccessesField(MethodInfo? method, FieldInfo field)
     {
-        if (method is null)
+        if (method?.DeclaringType is not { } declaringType)
             return false;
 
         if (method.IsCompilerGenerated() == false)
             return false;
 
-        if (method.DeclaringType != field.DeclaringType)
+        if (declaringType != field.DeclaringType)
             return false;
 
         var body = method.GetMethodBody();
@@ -89,6 +98,9 @@ public static class ReflectionHelper
 
         var fieldToken = field.MetadataToken;
         var isStatic = field.IsStatic;
+
+        var genericTypeArgs = declaringType.IsGenericType ? declaringType.GetGenericArguments() : null;
+        var genericMethodArgs = method.IsGenericMethod ? method.GetGenericArguments() : null;
 
         for (var i = 0; i < il.Length - 4; i++)
         {
@@ -106,8 +118,21 @@ public static class ReflectionHelper
             }
 
             var token = BitConverter.ToInt32(il, i + 1);
+
             if (token == fieldToken)
                 return true;
+
+            try
+            {
+                var resolveField = declaringType.Module.ResolveField(token, genericTypeArgs, genericMethodArgs);
+                if (field == resolveField)
+                    return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.ToString());
+                continue;
+            }
         }
 
         return false;

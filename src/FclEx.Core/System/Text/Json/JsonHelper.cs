@@ -51,7 +51,7 @@ public static class JsonHelper
             options.Converters.Add(TypeJsonConverter.Instance);
 
         if (jsonOptions.AddObjectConverter)
-            options.Converters.Add(ObjectConverterFactory.Instance);
+            options.Converters.Add(ObjectJsonConverter.Instance);
 
         return options;
     }

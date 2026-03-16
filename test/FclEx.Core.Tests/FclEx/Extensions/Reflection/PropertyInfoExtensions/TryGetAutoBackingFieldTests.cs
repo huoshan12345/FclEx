@@ -5,37 +5,6 @@ namespace FclEx.Extensions.Reflection.PropertyInfoExtensions;
 
 public class TryGetAutoBackingFieldTests
 {
-    private class TestClass
-    {
-        public int AutoProperty { get; set; }
-
-        public int ReadOnlyAuto { get; }
-
-        public int InitOnly { get; init; }
-
-        public static int StaticAuto { get; set; }
-
-        public int NormalProperty
-        {
-            get => _field;
-            set => _field = value;
-        }
-
-        private int _field;
-    }
-
-    private struct TestStruct
-    {
-        public int Value { get; set; }
-    }
-
-    private class BaseClass
-    {
-        public int BaseAuto { get; set; }
-    }
-
-    private class DerivedClass : BaseClass;
-
     [Fact]
     public void AutoProperty_ShouldReturnBackingField()
     {
@@ -124,5 +93,85 @@ public class TryGetAutoBackingFieldTests
 
         Assert.True(result);
         Assert.Equal("<BaseAuto>k__BackingField", field!.Name);
+    }
+
+    [Fact]
+    public void GenericAutoProperty_ShouldReturnBackingField()
+    {
+        var property = typeof(GenericClass<>).GetProperty(nameof(GenericClass<int>.Value))!;
+
+        var result = property.TryGetAutoBackingField(out var field);
+
+        Assert.True(result);
+        Assert.Equal("<Value>k__BackingField", field!.Name);
+    }
+
+    [Fact]
+    public void ClosedGenericAutoProperty_ShouldReturnBackingField()
+    {
+        var property = typeof(GenericClass<int>).GetProperty(nameof(GenericClass<int>.Value))!;
+
+        var result = property.TryGetAutoBackingField(out var field);
+
+        Assert.True(result);
+        Assert.Equal("<Value>k__BackingField", field!.Name);
+    }
+
+    [Fact]
+    public void GenericStructAutoProperty_ShouldReturnBackingField()
+    {
+        var property = typeof(GenericStruct<>).GetProperty(nameof(GenericStruct<int>.Value))!;
+
+        var result = property.TryGetAutoBackingField(out var field);
+
+        Assert.True(result);
+        Assert.Equal("<Value>k__BackingField", field!.Name);
+    }
+
+    [Fact]
+    public void GenericStaticProperty_ShouldReturnBackingField()
+    {
+        var property = typeof(GenericClass<>).GetProperty(nameof(GenericClass<int>.StaticValue))!;
+
+        var result = property.TryGetAutoBackingField(out var field);
+
+        Assert.True(result);
+        Assert.Equal("<StaticValue>k__BackingField", field!.Name);
+    }
+
+    [Fact]
+    public void GenericType_NonGenericProperty_ShouldReturnBackingField()
+    {
+        var property = typeof(GenericClass<>)
+            .GetProperty(nameof(GenericClass<int>.Id))!;
+
+        var result = property.TryGetAutoBackingField(out var field);
+
+        Assert.True(result);
+        Assert.Equal("<Id>k__BackingField", field!.Name);
+    }
+
+    [Fact]
+    public void ClosedGenericType_NonGenericProperty_ShouldReturnBackingField()
+    {
+        var property = typeof(GenericClass<int>)
+            .GetProperty(nameof(GenericClass<int>.Id))!;
+
+        var result = property.TryGetAutoBackingField(out var field);
+
+        Assert.True(result);
+        Assert.Equal("<Id>k__BackingField", field!.Name);
+    }
+
+    [Fact]
+    public void GenericType_StaticNonGenericProperty_ShouldReturnBackingField()
+    {
+        var property = typeof(GenericClass<>)
+            .GetProperty(nameof(GenericClass<int>.StaticId))!;
+
+        var result = property.TryGetAutoBackingField(out var field);
+
+        Assert.True(result);
+        Assert.Equal("<StaticId>k__BackingField", field!.Name);
     }
 }

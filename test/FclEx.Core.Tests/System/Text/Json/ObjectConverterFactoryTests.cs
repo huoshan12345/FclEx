@@ -1,11 +1,11 @@
 ﻿namespace System.Text.Json;
 
-public class ObjectConverterFactoryTests
+public class ObjectJsonConverterTests
 {
     private static JsonSerializerOptions CreateOptions()
     {
         var options = new JsonSerializerOptions();
-        options.Converters.Add(new ObjectConverterFactory());
+        options.Converters.Add(new ObjectJsonConverter());
         return options;
     }
 

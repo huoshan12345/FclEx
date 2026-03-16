@@ -104,6 +104,26 @@ public static class PropertyInfoExtensions
         return (m.Attributes & MethodAttributes.MemberAccessMask) <= MethodAttributes.Assembly;
     }
 
+    /// <summary>
+    /// Determines whether the specified property is an auto-implemented property.
+    /// </summary>
+    public static bool IsAutoProperty(this PropertyInfo property)
+    {
+        return property.TryGetAutoBackingField(out _);
+    }
+
+    /// <summary>
+    /// Gets the backing field associated with the specified auto-implemented property.
+    /// </summary>
+    /// <param name="property">The property to inspect.</param>
+    /// <param name="field">
+    /// When this method returns, contains the backing field if the property is an
+    /// auto-implemented property; otherwise, <see langword="null"/>.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if the property is auto-implemented and has a backing field;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
     public static bool TryGetAutoBackingField(this PropertyInfo property, [NotNullWhen(true)] out FieldInfo? field)
     {
         field = null;
@@ -126,11 +146,8 @@ public static class PropertyInfoExtensions
         if (f is null)
             return false;
 
-        if (getter is not null && AccessorUsesField(getter, f) == false)
-            return false;
-
-        if (setter is not null && AccessorUsesField(setter, f) == false)
-            return false;
+        // do not use ReflectionHelper.AccessorAccessesField to check whether the property accesses the field, 
+        // because it is not reliable for generic types
 
         field = f;
         return true;

@@ -1,6 +1,4 @@
-﻿using static FclEx.Helpers.ReflectionHelper;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static class FieldInfoExtensions
 {
@@ -23,6 +21,7 @@ public static class FieldInfoExtensions
     {
         return Expression.Field(parameter, field);
     }
+
     /// <summary>
     /// Determines whether the specified <see cref="FieldInfo"/> represents
     /// the compiler-generated storage field of a C# auto-property.
@@ -32,6 +31,18 @@ public static class FieldInfoExtensions
         return field.TryGetAutoProperty(out _);
     }
 
+    /// <summary>
+    /// Gets the auto-implemented property associated with the specified backing field.
+    /// </summary>
+    /// <param name="field">The field to inspect.</param>
+    /// <param name="property">
+    /// When this method returns, contains the associated property if the field is the backing field
+    /// of an auto-implemented property; otherwise, <see langword="null"/>.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if the field represents the backing field of an auto-implemented property;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
     public static bool TryGetAutoProperty(this FieldInfo field, [NotNullWhen(true)] out PropertyInfo? property)
     {
         property = null;
@@ -52,15 +63,15 @@ public static class FieldInfoExtensions
         var getter = p.GetMethod;
         var setter = p.SetMethod;
 
+        if (getter is null && setter is null)
+            return false;
+
         if (getter?.IsCompilerGenerated() == false
             || setter?.IsCompilerGenerated() == false)
             return false;
 
-        if (getter is not null && AccessorUsesField(getter, field) == false)
-            return false;
-
-        if (setter is not null && AccessorUsesField(setter, field) == false)
-            return false;
+        // do not use ReflectionHelper.AccessorAccessesField to check whether the property accesses the field, 
+        // because it is not reliable for generic types
 
         property = p;
         return true;

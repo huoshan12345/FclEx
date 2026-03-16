@@ -1,41 +1,8 @@
-﻿// ReSharper disable UnusedMember.Local
-// ReSharper disable UnassignedGetOnlyAutoProperty
-// ReSharper disable ConvertToAutoProperty
+﻿
 namespace FclEx.Extensions.Reflection.FieldInfoExtensions;
 
 public class TryGetAutoPropertyTests
 {
-    private class TestClass
-    {
-        public int AutoProperty { get; set; }
-
-        public int ReadOnlyAuto { get; }
-
-        public int InitOnly { get; init; }
-
-        public static int StaticAuto { get; set; }
-
-        public int NormalProperty
-        {
-            get => _field;
-            set => _field = value;
-        }
-
-        private int _field;
-    }
-
-    private struct TestStruct
-    {
-        public int Value { get; set; }
-    }
-
-    private class BaseClass
-    {
-        public int BaseAuto { get; set; }
-    }
-
-    private class DerivedClass : BaseClass;
-
     [Fact]
     public void AutoPropertyBackingField_ShouldReturnProperty()
     {
@@ -138,5 +105,93 @@ public class TryGetAutoPropertyTests
 
         Assert.True(result);
         Assert.Equal(nameof(BaseClass.BaseAuto), property!.Name);
+    }
+
+    [Fact]
+    public void GenericBackingField_ShouldReturnProperty()
+    {
+        var field = typeof(GenericClass<>).GetField(
+            "<Value>k__BackingField",
+            BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+        var result = field.TryGetAutoProperty(out var property);
+
+        Assert.True(result);
+        Assert.Equal("Value", property!.Name);
+    }
+
+    [Fact]
+    public void ClosedGenericBackingField_ShouldReturnProperty()
+    {
+        var field = typeof(GenericClass<int>).GetField(
+            "<Value>k__BackingField",
+            BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+        var result = field.TryGetAutoProperty(out var property);
+
+        Assert.True(result);
+        Assert.Equal("Value", property!.Name);
+    }
+
+    [Fact]
+    public void GenericStructBackingField_ShouldReturnProperty()
+    {
+        var field = typeof(GenericStruct<>).GetField(
+            "<Value>k__BackingField",
+            BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+        var result = field.TryGetAutoProperty(out var property);
+
+        Assert.True(result);
+        Assert.Equal("Value", property!.Name);
+    }
+
+    [Fact]
+    public void GenericStaticBackingField_ShouldReturnProperty()
+    {
+        var field = typeof(GenericClass<>).GetField(
+            "<StaticValue>k__BackingField",
+            BindingFlags.NonPublic | BindingFlags.Static)!;
+
+        var result = field.TryGetAutoProperty(out var property);
+
+        Assert.True(result);
+        Assert.Equal("StaticValue", property!.Name);
+    }
+
+    [Fact]
+    public void GenericType_NonGenericBackingField_ShouldReturnProperty()
+    {
+        var field = typeof(GenericClass<>)
+            .GetField("<Id>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+        var result = field.TryGetAutoProperty(out var property);
+
+        Assert.True(result);
+        Assert.Equal("Id", property!.Name);
+    }
+
+    [Fact]
+    public void ClosedGenericType_NonGenericBackingField_ShouldReturnProperty()
+    {
+        var field = typeof(GenericClass<int>)
+            .GetField("<Id>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+        var result = field.TryGetAutoProperty(out var property);
+
+        Assert.True(result);
+        Assert.Equal("Id", property!.Name);
+    }
+
+    [Fact]
+    public void GenericType_StaticNonGenericBackingField_ShouldReturnProperty()
+    {
+        var field = typeof(GenericClass<>)
+            .GetField("<StaticId>k__BackingField", BindingFlags.NonPublic | BindingFlags.Static)!;
+
+        var result = field.TryGetAutoProperty(out var property);
+
+        Assert.True(result);
+        Assert.Equal("StaticId", property!.Name);
     }
 }
