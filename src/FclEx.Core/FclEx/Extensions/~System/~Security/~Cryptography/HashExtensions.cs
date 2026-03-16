@@ -1,9 +1,9 @@
 ﻿namespace FclEx.Extensions;
 
-public static class HashExtensions
+public static partial class HashExtensions
 {
     [MethodImpl(AggressiveInlining)]
-    public static byte[] Hash(this HashAlgorithm algorithm, byte[] input)
+    public static byte[] Hash(this HashAlgorithm algorithm, byte[]? input)
     {
         return input.IsNullOrEmpty()
             ? []
@@ -11,10 +11,16 @@ public static class HashExtensions
     }
 
     [MethodImpl(AggressiveInlining)]
+    public static byte[] Hash(this HashAlgorithm algorithm, byte[]? input, int offset, int count)
+    {
+        return input.IsNullOrEmpty()
+            ? []
+            : algorithm.ComputeHash(input, offset, count);
+    }
+
+    [MethodImpl(AggressiveInlining)]
     public static byte[] Hash(this HashAlgorithm algorithm, ArraySegment<byte> input)
     {
-        return input.Array.IsNullOrEmpty()
-            ? []
-            : algorithm.ComputeHash(input.Array, input.Offset, input.Count);
+        return algorithm.Hash(input.Array, input.Offset, input.Count);
     }
 }
