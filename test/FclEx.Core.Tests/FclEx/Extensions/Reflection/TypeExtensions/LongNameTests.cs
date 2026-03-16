@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions.TypeExtensions;
+﻿namespace FclEx.Extensions.Reflection.TypeExtensions;
 
 public class LongNameTests
 {
@@ -25,6 +25,6 @@ public class LongNameTests
         var type = method.GetGenericArguments().First();
         Assert.True(type.IsGenericParameter);
         var name = type.LongName();
-        Assert.Equal("FclEx.Extensions.TypeExtensions.LongNameTests.Tester.T", name);
+        Assert.Equal(typeof(LongNameTests).FullName + ".Tester.T", name);
     }
 }

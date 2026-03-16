@@ -1,6 +1,4 @@
-﻿using System.Security.Cryptography;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static class CryptoTransformExtensions
 {

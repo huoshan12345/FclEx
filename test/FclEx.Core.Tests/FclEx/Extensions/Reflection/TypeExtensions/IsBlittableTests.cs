@@ -1,6 +1,6 @@
 ﻿using FclEx.TestModels;
 
-namespace FclEx.Extensions.TypeExtensions;
+namespace FclEx.Extensions.Reflection.TypeExtensions;
 
 public class IsBlittableTests(ITestOutputHelper output)
 {

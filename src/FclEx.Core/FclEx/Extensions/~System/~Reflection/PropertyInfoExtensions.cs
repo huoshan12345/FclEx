@@ -1,4 +1,6 @@
-﻿namespace FclEx.Extensions;
+﻿using static FclEx.Helpers.ReflectionHelper;
+
+namespace FclEx.Extensions;
 
 public static class PropertyInfoExtensions
 {
@@ -83,10 +85,10 @@ public static class PropertyInfoExtensions
     public static bool IsInitOnly(this PropertyInfo property)
     {
         var setter = property.SetMethod;
-        if (setter is null)
+        if (setter?.ReturnParameter is not { } returnParam)
             return false;
 
-        var mods = setter.ReturnParameter.GetRequiredCustomModifiers();
+        var mods = returnParam.GetRequiredCustomModifiers();
         return mods.Any(t => ReferenceEquals(t, _isExternalInit));
     }
 
@@ -100,5 +102,54 @@ public static class PropertyInfoExtensions
         // visible: public, protected(Family), protected internal(FamORAssem)
         // not visible: private, internal(Assembly), private protected(FamANDAssem)
         return (m.Attributes & MethodAttributes.MemberAccessMask) <= MethodAttributes.Assembly;
+    }
+
+    /// <summary>
+    /// Determines whether the specified property is an auto-implemented property.
+    /// </summary>
+    public static bool IsAutoProperty(this PropertyInfo property)
+    {
+        return property.TryGetAutoBackingField(out _);
+    }
+
+    /// <summary>
+    /// Gets the backing field associated with the specified auto-implemented property.
+    /// </summary>
+    /// <param name="property">The property to inspect.</param>
+    /// <param name="field">
+    /// When this method returns, contains the backing field if the property is an
+    /// auto-implemented property; otherwise, <see langword="null"/>.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if the property is auto-implemented and has a backing field;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
+    public static bool TryGetAutoBackingField(this PropertyInfo property, [NotNullWhen(true)] out FieldInfo? field)
+    {
+        field = null;
+
+        var getter = property.GetMethod;
+        var setter = property.SetMethod;
+
+        if (getter is null && setter is null)
+            return false;
+
+        if (getter?.IsCompilerGenerated() == false
+            || setter?.IsCompilerGenerated() == false)
+            return false;
+
+        if (property.DeclaringType is not { } type)
+            return false;
+
+        var fieldName = GetAutoBackingFieldName(property.Name);
+        var f = type.GetField(fieldName, BindingAttributes.Declared);
+        if (f is null)
+            return false;
+
+        // do not use ReflectionHelper.AccessorAccessesField to check whether the property accesses the field, 
+        // because it is not reliable for generic types
+
+        field = f;
+        return true;
     }
 }

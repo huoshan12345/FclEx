@@ -1,8 +1,8 @@
-﻿namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions.Reflection.PropertyInfoExtensions;
 
-public class PropertyInfoExtensionsTests
+public class BasicTests
 {
-    private class TestClass
+    private class TestModel
     {
         public string Name { get; set; } = "Hello";
         public int Number { get; set; } = 42;
@@ -21,7 +21,7 @@ public class PropertyInfoExtensionsTests
     [Fact]
     public void GetRequiredGetMethod_ShouldReturnGetterMethod()
     {
-        var prop = typeof(TestClass).GetProperty(nameof(TestClass.Name))!;
+        var prop = typeof(TestModel).GetProperty(nameof(TestModel.Name))!;
         var getter = prop.GetRequiredGetMethod();
 
         Assert.NotNull(getter);
@@ -31,14 +31,14 @@ public class PropertyInfoExtensionsTests
     [Fact]
     public void GetRequiredGetMethod_ShouldThrow_WhenNoGetter()
     {
-        var prop = typeof(TestClass).GetProperty(nameof(TestClass.SetterOnly))!;
+        var prop = typeof(TestModel).GetProperty(nameof(TestModel.SetterOnly))!;
         Assert.Throws<MissingMethodException>(() => prop.GetRequiredGetMethod());
     }
 
     [Fact]
     public void GetRequiredSetMethod_ShouldReturnSetterMethod()
     {
-        var prop = typeof(TestClass).GetProperty(nameof(TestClass.Name))!;
+        var prop = typeof(TestModel).GetProperty(nameof(TestModel.Name))!;
         var setter = prop.GetRequiredSetMethod();
 
         Assert.NotNull(setter);
@@ -48,15 +48,15 @@ public class PropertyInfoExtensionsTests
     [Fact]
     public void GetRequiredSetMethod_ShouldThrow_WhenNoSetter()
     {
-        var prop = typeof(TestClass).GetProperty(nameof(TestClass.GetterOnly))!;
+        var prop = typeof(TestModel).GetProperty(nameof(TestModel.GetterOnly))!;
         Assert.Throws<MissingMethodException>(() => prop.GetRequiredSetMethod());
     }
 
     [Fact]
     public void GetValue_Generic_ShouldReturnValue()
     {
-        var obj = new TestClass { Number = 100 };
-        var prop = typeof(TestClass).GetProperty(nameof(TestClass.Number))!;
+        var obj = new TestModel { Number = 100 };
+        var prop = typeof(TestModel).GetProperty(nameof(TestModel.Number))!;
 
         int result = prop.GetValue<int>(obj);
 
@@ -66,8 +66,8 @@ public class PropertyInfoExtensionsTests
     [Fact]
     public void GetRequiredValue_ShouldReturnNonNullValue()
     {
-        var obj = new TestClass { Name = "Test" };
-        var prop = typeof(TestClass).GetProperty(nameof(TestClass.Name))!;
+        var obj = new TestModel { Name = "Test" };
+        var prop = typeof(TestModel).GetProperty(nameof(TestModel.Name))!;
 
         var value = prop.GetRequiredValue(obj);
 
@@ -77,8 +77,8 @@ public class PropertyInfoExtensionsTests
     [Fact]
     public void GetRequiredValue_ShouldThrow_WhenValueIsNull()
     {
-        var obj = new TestClass { NullableString = null };
-        var prop = typeof(TestClass).GetProperty(nameof(TestClass.NullableString))!;
+        var obj = new TestModel { NullableString = null };
+        var prop = typeof(TestModel).GetProperty(nameof(TestModel.NullableString))!;
 
         Assert.Throws<InvalidOperationException>(() => prop.GetRequiredValue(obj));
     }
@@ -86,8 +86,8 @@ public class PropertyInfoExtensionsTests
     [Fact]
     public void GetRequiredValue_Generic_ShouldReturnNonNullValue()
     {
-        var obj = new TestClass { Number = 77 };
-        var prop = typeof(TestClass).GetProperty(nameof(TestClass.Number))!;
+        var obj = new TestModel { Number = 77 };
+        var prop = typeof(TestModel).GetProperty(nameof(TestModel.Number))!;
 
         int result = prop.GetRequiredValue<int>(obj);
 
@@ -97,14 +97,14 @@ public class PropertyInfoExtensionsTests
     [Fact]
     public void IsStatic_ShouldReturnTrue_ForStaticProperty()
     {
-        var prop = typeof(TestClass).GetProperty(nameof(TestClass.StaticProperty))!;
+        var prop = typeof(TestModel).GetProperty(nameof(TestModel.StaticProperty))!;
         Assert.True(prop.IsStatic());
     }
 
     [Fact]
     public void IsStatic_ShouldReturnFalse_ForInstanceProperty()
     {
-        var prop = typeof(TestClass).GetProperty(nameof(TestClass.Name))!;
+        var prop = typeof(TestModel).GetProperty(nameof(TestModel.Name))!;
         Assert.False(prop.IsStatic());
     }
 }

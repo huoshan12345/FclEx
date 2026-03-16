@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions.InterfaceBaseInvocationExtension;
+﻿namespace FclEx.Extensions.Reflection.InterfaceBaseInvocationExtension;
 
 public class InvokeGenericMethodTests
 {

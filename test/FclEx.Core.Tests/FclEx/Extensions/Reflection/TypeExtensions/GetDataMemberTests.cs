@@ -4,7 +4,7 @@
 // ReSharper disable UnusedMember.Global
 // ReSharper disable UnusedMember.Local
 #pragma warning disable CA2211
-namespace FclEx.Extensions.TypeExtensions;
+namespace FclEx.Extensions.Reflection.TypeExtensions;
 
 public class GetDataMemberTests
 {

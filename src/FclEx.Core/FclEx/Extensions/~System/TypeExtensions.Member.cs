@@ -31,7 +31,8 @@ partial class TypeExtensions
 
     public static FieldInfo GetAutoPropertyBackingField(this Type type, string propertyName, bool searchBaseTypes = false)
     {
-        return type.GetField($"<{propertyName}>k__BackingField", searchBaseTypes)
+        var name = ReflectionHelper.GetAutoBackingFieldName(propertyName);
+        return type.GetField(name, searchBaseTypes)
                ?? throw new InvalidOperationException($"Cannot find backing field for property '{propertyName}' in type '{type.FullName}'"); ;
     }
 
@@ -180,12 +181,12 @@ partial class TypeExtensions
             }
 
             // Field / Property filter
-            if (member.IsField)
+            if (member.MemberInfo is FieldInfo field)
             {
                 if ((flags & DataMemberFlags.Field) == 0)
                     continue;
 
-                if (member.IsAutoPropertyBackingField &&
+                if (field.IsAutoPropertyBackingField() &&
                     (flags & DataMemberFlags.AutoPropertyBackingField) == 0)
                 {
                     continue;

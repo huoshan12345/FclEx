@@ -21,6 +21,8 @@ global using Xunit.Sdk;
 
 #if FCLEX_XUNIT_V3
 global using Xunit.v3;
+global using System.Text.Json;
+global using System.Text.Json.Serialization;
 #else
 global using Xunit.Abstractions;
 #endif
