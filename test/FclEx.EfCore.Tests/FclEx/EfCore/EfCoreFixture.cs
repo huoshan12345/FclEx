@@ -1,4 +1,6 @@
-﻿using FclEx.Tests;
+﻿using System.Data.Common;
+using FclEx.Tests;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 
