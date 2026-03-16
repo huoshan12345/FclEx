@@ -9,8 +9,8 @@ public abstract class UserClientHttpAction<TClient, TAccount, T>(TClient client)
     public abstract HttpMethod Method { get; }
 
     public virtual IHttpService HttpService { get; } = client.HttpService;
-    public virtual bool IsFailed(HttpResponse response) => this.Base<IHttpAction<T>, bool>(m => m.IsFailed(response));
-    public virtual OperationResult<T> HandleFailed(HttpResponse response) => this.Base<IHttpAction<T>, OperationResult<T>>(m => m.HandleFailed(response));
+    public virtual OperationResult<HttpResponse> PreCheck(HttpResponse response)
+        => this.Base<IHttpAction<T>, OperationResult<HttpResponse>>(m => m.PreCheck(response));
     public abstract OperationResult<T> GetResult(HttpResponse response);
     public virtual HttpRequest BuildRequest() => this.Base<IHttpAction<T>, HttpRequest>(m => m.BuildRequest());
     public virtual void ModifyRequest(HttpRequest request) { }

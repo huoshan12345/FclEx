@@ -93,6 +93,13 @@ partial class OperationResultExtensions
             : (result.Exception, result.Elapsed);
     }
 
+    public static Task<OperationResult<TResult>> Then<T, TResult>(this OperationResult<T> result, Func<T, Task<OperationResult<TResult>>> func)
+    {
+        return result.IsSuccess
+            ? func(result.Value)
+            : Operation.Error<TResult>(result.Exception, result.Elapsed);
+    }
+
     public static OperationResult<TResult> ThenResult<T, TResult>(this OperationResult<T> result, Func<OperationResult<T>, OperationResult<TResult>> func)
     {
         return func(result);
