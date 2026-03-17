@@ -1,20 +1,17 @@
-﻿namespace System.Collections.Generic.OrderedList;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
+namespace System.Collections.Generic.OrderedList;
+
+/// <summary>
+/// Contains tests that ensure the correctness of the List class.
+/// </summary>
 public abstract partial class OrderedListTests<T> : IList_Generic_Tests<T>
 {
-    //protected override bool EnumeratorCurrentUndefinedOperationThrows => false;
-    //protected override bool SupportInsert => false;
-    //protected override bool SupportItemSet => false;
-
-    protected List<T> ToExpectedList(IList<T> list)
-    {
-        var comparer = ObjectHelper.GetRequiredFieldValue<IComparer<T>>(list, "_comparer");
-        var expected = list.ToList();
-        expected.StableSort(comparer);
-        return expected;
-    }
-
     #region IList<T> Helper Methods
+    protected override bool Enumerator_Empty_UsesSingletonInstance => true;
+    protected override bool Enumerator_Empty_Current_UndefinedOperation_Throws => true;
+    protected override bool Enumerator_Empty_ModifiedDuringEnumeration_ThrowsInvalidOperationException => false;
 
     protected override IList<T> GenericIListFactory()
     {
@@ -37,11 +34,11 @@ public abstract partial class OrderedListTests<T> : IList_Generic_Tests<T>
 
     protected virtual OrderedList<T> GenericListFactory(int count)
     {
-        var toCreateFrom = CreateEnumerable(EnumerableType.List, null!, count, 0, 0);
+        var toCreateFrom = CreateEnumerable(EnumerableType.List, null, count, 0, 0);
         return new OrderedList<T>(toCreateFrom);
     }
 
-    protected void VerifyList(OrderedList<T> list, OrderedList<T> expectedItems)
+    protected void VerifyList(List<T> list, List<T> expectedItems)
     {
         Assert.Equal(expectedItems.Count, list.Count);
 
@@ -49,12 +46,18 @@ public abstract partial class OrderedListTests<T> : IList_Generic_Tests<T>
         //do not have to verify consistency with any other method.
         for (var i = 0; i < list.Count; ++i)
         {
-            if (list[i] is null)
-                Assert.Null(expectedItems[i]);
-            else
-                Assert.Equal(list[i], expectedItems[i]);
+            Assert.True(list[i] == null ? expectedItems[i] == null : list[i].Equals(expectedItems[i]));
         }
     }
 
     #endregion
+
+    [Theory]
+    [MemberData(nameof(ValidCollectionSizes))]
+    public void CopyTo_ArgumentValidity(int count)
+    {
+        List<T> list = GenericListFactory(count);
+        AssertExtensions.Throws<ArgumentException>(null, () => list.CopyTo(0, [], 0, count + 1));
+        AssertExtensions.Throws<ArgumentException>(null, () => list.CopyTo(count, [], 0, 1));
+    }
 }
