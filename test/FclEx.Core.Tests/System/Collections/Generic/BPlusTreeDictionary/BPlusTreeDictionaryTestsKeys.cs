@@ -2,7 +2,7 @@
 
 public class BPlusTreeDictionaryTestsKeys : ICollection_Generic_Tests<string>
 {
-    protected override bool Enumerator_Empty_UsesSingletonInstance => false;
+    protected override bool Enumerator_Empty_UsesSingletonInstance => true;
     protected override bool Enumerator_Empty_Current_UndefinedOperation_Throws => true;
     protected override bool DefaultValueAllowed => false;
     protected override bool DuplicateValuesAllowed => false;

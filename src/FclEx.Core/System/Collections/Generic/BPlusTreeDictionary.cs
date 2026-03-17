@@ -57,7 +57,8 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IRea
     IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator()
     {
         return _count == 0
-            ? GenericEmptyEnumerator<KeyValuePair<TKey, TValue>>.Instance // use singleton empty enumerator to avoid unnecessary allocation when the dictionary is empty.
+            // use singleton empty enumerator to avoid unnecessary allocation when the dictionary is empty.
+            ? GenericEmptyEnumerator<KeyValuePair<TKey, TValue>>.Instance
             : GetEnumerator();
     }
 
@@ -673,18 +674,24 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IRea
     }
 
     [DebuggerDisplay("Count = {Count}")]
-    public sealed class KeyCollection(BPlusTreeDictionary<TKey, TValue> dictionary)
-        : ReadOnlyItemCollection<TKey, KeyCollection.KeyEnumerator>
+    public sealed class KeyCollection : ReadOnlyItemCollection<TKey, KeyCollection.KeyEnumerator>
     {
-        public override int Count => dictionary.Count;
-        public override KeyEnumerator GetEnumerator() => new(dictionary);
-        public override bool Contains(TKey item) => dictionary.ContainsKey(item);
+        private readonly BPlusTreeDictionary<TKey, TValue> _dictionary;
+
+        public KeyCollection(BPlusTreeDictionary<TKey, TValue> dictionary)
+        {
+            _dictionary = Check.NotNull(dictionary);
+        }
+
+        public override int Count => _dictionary.Count;
+        public override KeyEnumerator GetEnumerator() => new(_dictionary);
+        public override bool Contains(TKey item) => _dictionary.ContainsKey(item);
 
         public override void CopyTo(TKey[] array, int arrayIndex)
         {
-            Check.CanCopyTo(array, arrayIndex, dictionary.Count);
+            Check.CanCopyTo(array, arrayIndex, _dictionary.Count);
 
-            foreach (var (key, _) in dictionary)
+            foreach (var (key, _) in _dictionary)
                 array[arrayIndex++] = key;
         }
 
@@ -715,18 +722,24 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IRea
     }
 
     [DebuggerDisplay("Count = {Count}")]
-    public sealed class ValueCollection(BPlusTreeDictionary<TKey, TValue> dictionary)
-        : ReadOnlyItemCollection<TValue, ValueCollection.ValueEnumerator>
+    public sealed class ValueCollection : ReadOnlyItemCollection<TValue, ValueCollection.ValueEnumerator>
     {
-        public override int Count => dictionary.Count;
-        public override ValueEnumerator GetEnumerator() => new(dictionary);
-        public override bool Contains(TValue item) => dictionary.ContainsValue(item);
+        private readonly BPlusTreeDictionary<TKey, TValue> _dictionary;
+
+        public ValueCollection(BPlusTreeDictionary<TKey, TValue> dictionary)
+        {
+            _dictionary = Check.NotNull(dictionary);
+        }
+
+        public override int Count => _dictionary.Count;
+        public override ValueEnumerator GetEnumerator() => new(_dictionary);
+        public override bool Contains(TValue item) => _dictionary.ContainsValue(item);
 
         public override void CopyTo(TValue[] array, int arrayIndex)
         {
-            Check.CanCopyTo(array, arrayIndex, dictionary.Count);
+            Check.CanCopyTo(array, arrayIndex, _dictionary.Count);
 
-            foreach (var (_, value) in dictionary)
+            foreach (var (_, value) in _dictionary)
                 array[arrayIndex++] = value;
         }
 

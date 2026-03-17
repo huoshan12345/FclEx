@@ -7,8 +7,15 @@ public abstract class ReadOnlyItemCollection<T, TEnumerator> : ICollection<T>, I
     public abstract bool Contains(T item);
     public abstract void CopyTo(T[] array, int arrayIndex);
 
-    IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<T>)this).GetEnumerator();
+    IEnumerator<T> IEnumerable<T>.GetEnumerator()
+    {
+        return Count == 0
+            // use singleton empty enumerator to avoid unnecessary allocation when the dictionary is empty.
+            ? GenericEmptyEnumerator<T>.Instance
+            : GetEnumerator();
+    }
+
     void ICollection<T>.Add(T item) => throw new NotSupportedException();
     void ICollection<T>.Clear() => throw new NotSupportedException();
     bool ICollection<T>.Remove(T item) => throw new NotSupportedException();

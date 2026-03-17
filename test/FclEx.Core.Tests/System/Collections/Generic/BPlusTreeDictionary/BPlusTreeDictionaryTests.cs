@@ -3,9 +3,9 @@
 public abstract class BPlusTreeDictionaryTests<TKey, TValue> : IDictionary_Generic_Tests<TKey, TValue> where TKey : notnull
 {
     #region IDictionary<TKey, TValue> Helper Methods
-    protected override bool Enumerator_Empty_UsesSingletonInstance => false;
+    protected override bool Enumerator_Empty_UsesSingletonInstance => true;
     protected override bool Enumerator_Empty_Current_UndefinedOperation_Throws => true;
-    protected override bool Enumerator_Empty_ModifiedDuringEnumeration_ThrowsInvalidOperationException => true; // do not allow modification during enumeration even it was empty
+    protected override bool Enumerator_Empty_ModifiedDuringEnumeration_ThrowsInvalidOperationException => false; // uses a shared empty enumerator instance.
     protected override Type ICollection_Generic_CopyTo_IndexLargerThanArrayCount_ThrowType => typeof(ArgumentOutOfRangeException);
     protected override ModifyOperation ModifyEnumeratorThrows => ModifyOperation.Add | ModifyOperation.Insert | ModifyOperation.Remove | ModifyOperation.Clear;
     protected override ModifyOperation ModifyEnumeratorAllowed => ModifyOperation.Overwrite;
@@ -42,7 +42,7 @@ public abstract class BPlusTreeDictionaryTests<TKey, TValue> : IDictionary_Gener
     [Fact]
     public void BPlusTreeDictionary_Generic_Constructor_NullIDictionary_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => new BPlusTreeDictionary<TKey, TValue>(null));
+        Assert.Throws<ArgumentNullException>(() => new BPlusTreeDictionary<TKey, TValue>(null!));
     }
 
     [Theory]
