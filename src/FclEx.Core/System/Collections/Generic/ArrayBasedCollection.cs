@@ -145,6 +145,8 @@ public abstract class ArrayBasedCollection<TSelf, T> : IReadOnlyCollection<T>
         ++_version;
     }
 
+    public Span<T> AsSpan() => new(_items, 0, _count);
+
     public Enumerator GetEnumerator() => new((TSelf)this);
     IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

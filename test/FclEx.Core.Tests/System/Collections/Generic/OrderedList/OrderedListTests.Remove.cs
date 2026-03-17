@@ -1,5 +1,6 @@
 // ReSharper disable UnusedVariable
 // ReSharper disable ConvertToLocalFunction
+#pragma warning disable IDE0039 // Use local function
 namespace System.Collections.Generic.OrderedList;
 
 public abstract partial class OrderedListTests<T>
@@ -47,7 +48,7 @@ public abstract partial class OrderedListTests<T>
     [Fact]
     public void RemoveAll_NullMatchPredicate()
     {
-        AssertExtensions.Throws<ArgumentNullException>("match", () => new List<T>().RemoveAll(null!));
+        AssertExtensions.Throws<ArgumentNullException>("match", () => new OrderedList<T>().RemoveAll(null!));
     }
 
     #endregion
