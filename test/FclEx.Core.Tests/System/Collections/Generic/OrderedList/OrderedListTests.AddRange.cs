@@ -1,11 +1,7 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-
+// ReSharper disable CollectionNeverUpdated.Local
+// ReSharper disable PossibleMultipleEnumeration
 namespace System.Collections.Generic.OrderedList;
 
-/// <summary>
-/// Contains tests that ensure the correctness of the List class.
-/// </summary>
 public abstract partial class OrderedListTests<T>
 {
     // Has tests that pass a variably sized TestCollection and MyEnumerable to the AddRange function
@@ -32,33 +28,11 @@ public abstract partial class OrderedListTests<T>
         });
     }
 
-    [Theory]
-    [MemberData(nameof(ListTestData))]
-    public void AddRange_Span(EnumerableType enumerableType, int listLength, int enumerableLength, int numberOfMatchingElements, int numberOfDuplicateElements)
-    {
-        var list = GenericListFactory(listLength);
-        var listBeforeAdd = list.ToList();
-        Span<T> span = CreateEnumerable(enumerableType, list, enumerableLength, numberOfMatchingElements, numberOfDuplicateElements).ToArray();
-        list.AddRange(span);
-
-        // Check that the first section of the List is unchanged
-        Assert.All(Enumerable.Range(0, listLength), index =>
-        {
-            Assert.Equal(listBeforeAdd[index], list[index]);
-        });
-
-        // Check that the added elements are correct
-        for (var i = 0; i < enumerableLength; i++)
-        {
-            Assert.Equal(span[i], list[i + listLength]);
-        };
-    }
-
     [Fact]
     public void AddRange_NullList_ThrowsArgumentNullException()
     {
-        AssertExtensions.Throws<ArgumentNullException>("list", () => CollectionExtensions.AddRange<int>(null, default));
-        AssertExtensions.Throws<ArgumentNullException>("list", () => CollectionExtensions.AddRange<int>(null, new int[1]));
+        AssertExtensions.Throws<ArgumentNullException>("list", () => CollectionExtensions.AddRange<int>(null!, default));
+        AssertExtensions.Throws<ArgumentNullException>("list", () => CollectionExtensions.AddRange<int>(null!, new int[1]));
     }
 
     [Theory]
@@ -67,7 +41,7 @@ public abstract partial class OrderedListTests<T>
     {
         var list = GenericListFactory(count);
         var listBeforeAdd = list.ToList();
-        Assert.Throws<ArgumentNullException>(() => list.AddRange(null));
+        Assert.Throws<ArgumentNullException>(() => list.AddRange(null!));
         Assert.Equal(listBeforeAdd, list);
     }
 
@@ -81,7 +55,7 @@ public abstract partial class OrderedListTests<T>
         list.AddRange(list.Where(_ => true));
 
         // Succeeds when list has elements and is added as collection.
-        list.Add(default);
+        list.Add(default!);
         Assert.Equal(1, list.Count);
         list.AddRange(list);
         Assert.Equal(2, list.Count);

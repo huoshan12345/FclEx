@@ -1,11 +1,5 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-
 namespace System.Collections.Generic.OrderedList;
 
-/// <summary>
-/// Contains tests that ensure the correctness of the List class.
-/// </summary>
 public abstract partial class OrderedListTests<T> : IList_Generic_Tests<T>
 {
     #region IList<T> Helper Methods
@@ -38,7 +32,7 @@ public abstract partial class OrderedListTests<T> : IList_Generic_Tests<T>
         return new OrderedList<T>(toCreateFrom);
     }
 
-    protected void VerifyList(List<T> list, List<T> expectedItems)
+    protected void VerifyList(OrderedList<T> list, OrderedList<T> expectedItems)
     {
         Assert.Equal(expectedItems.Count, list.Count);
 
@@ -46,7 +40,9 @@ public abstract partial class OrderedListTests<T> : IList_Generic_Tests<T>
         //do not have to verify consistency with any other method.
         for (var i = 0; i < list.Count; ++i)
         {
-            Assert.True(list[i] == null ? expectedItems[i] == null : list[i].Equals(expectedItems[i]));
+            Assert.True(list[i] is { } item
+                ? item.Equals(expectedItems[i])
+                : expectedItems[i] == null);
         }
     }
 
@@ -56,7 +52,7 @@ public abstract partial class OrderedListTests<T> : IList_Generic_Tests<T>
     [MemberData(nameof(ValidCollectionSizes))]
     public void CopyTo_ArgumentValidity(int count)
     {
-        List<T> list = GenericListFactory(count);
+        var list = GenericListFactory(count);
         AssertExtensions.Throws<ArgumentException>(null, () => list.CopyTo(0, [], 0, count + 1));
         AssertExtensions.Throws<ArgumentException>(null, () => list.CopyTo(count, [], 0, 1));
     }

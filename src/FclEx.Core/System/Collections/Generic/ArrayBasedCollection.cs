@@ -1,6 +1,6 @@
 ﻿namespace System.Collections.Generic;
 
-public abstract class ArrayBasedCollection<TSelf, T> : IReadOnlyCollection<T> 
+public abstract class ArrayBasedCollection<TSelf, T> : IReadOnlyCollection<T>
     where TSelf : ArrayBasedCollection<TSelf, T>
 {
     protected const int DefaultCapacity = 4;
@@ -113,10 +113,22 @@ public abstract class ArrayBasedCollection<TSelf, T> : IReadOnlyCollection<T>
         }
     }
 
-    public void CopyTo(T[] array, int arrayIndex)
+    public void CopyTo(T[] array, int arrayIndex = 0)
     {
         // Delegate rest of error checking to Array.Copy.
         Array.Copy(_items, 0, array, arrayIndex, _count);
+    }
+
+    // Copies a section of this list to the given array at the given index.
+    //
+    // The method uses the Array.Copy method to copy the elements.
+    //
+    public void CopyTo(int index, T[] array, int arrayIndex, int count)
+    {
+        Check.NotGreaterThan(count, _count - index);
+
+        // Delegate rest of error checking to Array.Copy.
+        Array.Copy(_items, index, array, arrayIndex, count);
     }
 
     public void Clear()

@@ -1,18 +1,16 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-
+// ReSharper disable InvokeAsExtensionMember
 namespace System.Collections.Generic.OrderedList;
 
 /// <summary>
 /// Contains tests that ensure the correctness of the List class.
 /// </summary>
-public abstract partial class OrderedListTests<T> : IList_Generic_Tests<T>
+public abstract partial class OrderedListTests<T>
 {
     [Fact]
     public void CopyTo_InvalidArgs_Throws()
     {
-        AssertExtensions.Throws<ArgumentNullException>("list", () => CollectionExtensions.CopyTo(null, Span<int>.Empty));
-        AssertExtensions.Throws<ArgumentNullException>("list", () => CollectionExtensions.CopyTo(null, new Span<int>(new int[1])));
+        AssertExtensions.Throws<ArgumentNullException>("list", () => CollectionExtensions.CopyTo(null!, Span<int>.Empty));
+        AssertExtensions.Throws<ArgumentNullException>("list", () => CollectionExtensions.CopyTo(null!, new Span<int>(new int[1])));
 
         var list = new List<int>() { 1, 2, 3 };
         Assert.Throws<ArgumentException>(() => CollectionExtensions.CopyTo(list, (Span<int>)new int[2]));
@@ -21,11 +19,8 @@ public abstract partial class OrderedListTests<T> : IList_Generic_Tests<T>
     [Fact]
     public void CopyTo_ItemsCopiedCorrectly()
     {
-        List<int> list;
-        Span<int> destination;
-
-        list = [];
-        destination = Span<int>.Empty;
+        List<int> list = [];
+        var destination = Span<int>.Empty;
         list.CopyTo(destination);
 
         list = new List<int>() { 1, 2, 3 };
