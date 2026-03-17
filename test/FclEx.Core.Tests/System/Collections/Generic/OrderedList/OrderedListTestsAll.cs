@@ -3,7 +3,7 @@
 
 namespace System.Collections.Generic.OrderedList;
 
-public class List_Generic_Tests_string : OrderedListTests<string>
+public class OrderedListTests_String : OrderedListTests<string>
 {
     protected override string CreateT(int seed)
     {
@@ -15,7 +15,7 @@ public class List_Generic_Tests_string : OrderedListTests<string>
     }
 }
 
-public class List_Generic_Tests_int : OrderedListTests<int>
+public class OrderedListTests_Int : OrderedListTests<int>
 {
     protected override int CreateT(int seed)
     {
@@ -24,7 +24,7 @@ public class List_Generic_Tests_int : OrderedListTests<int>
     }
 }
 
-public class List_Generic_Tests_string_ReadOnly : OrderedListTests<string>
+public class OrderedListTests_String_ReadOnly : OrderedListTests<string>
 {
     protected override string CreateT(int seed)
     {
@@ -52,7 +52,7 @@ public class List_Generic_Tests_string_ReadOnly : OrderedListTests<string>
     protected override bool Enumerator_Empty_Current_UndefinedOperation_Throws => true;
 }
 
-public class List_Generic_Tests_int_ReadOnly : OrderedListTests<int>
+public class OrderedListTests_Int_ReadOnly : OrderedListTests<int>
 {
     protected override int CreateT(int seed)
     {

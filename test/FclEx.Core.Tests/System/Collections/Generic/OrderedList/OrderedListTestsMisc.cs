@@ -1,12 +1,6 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-
 namespace System.Collections.Generic.OrderedList;
 
-/// <summary>
-/// Contains tests that ensure the correctness of the List class.
-/// </summary>
-public class List_Generic_Tests_Insert
+public class OrderedListTestsMisc
 {
     internal class Driver<T>
     {
@@ -33,7 +27,7 @@ public class List_Generic_Tests_Insert
                 list.Insert(index, item);
             }
 
-            Assert.True(list.Contains(item)); //"Expect it to contain the item."
+            Assert.Contains(item, list); //"Expect it to contain the item."
             Assert.Equal(list.Count, items.Length + repeat); //"Expect to be the same."
 
 

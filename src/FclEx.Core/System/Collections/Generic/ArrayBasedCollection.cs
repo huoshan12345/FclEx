@@ -138,7 +138,7 @@ public abstract class ArrayBasedCollection<TSelf, T> : IReadOnlyCollection<T>
 
     public void Clear()
     {
-        if (RuntimeHelpersEx.IsReferenceOrContainsReferences<T>())
+        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
             Array.Clear(_items, 0, _count);
 
         _count = 0;

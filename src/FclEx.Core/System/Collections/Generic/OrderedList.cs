@@ -117,7 +117,7 @@ public class OrderedList<T> : ArrayBasedCollection<OrderedList<T>, T>, IList<T>,
         {
             Array.Copy(_items, index + 1, _items, index, _count - index);
         }
-        if (RuntimeHelpersEx.IsReferenceOrContainsReferences<T>())
+        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
         {
             _items[_count] = default!;
         }
@@ -437,6 +437,47 @@ public class OrderedList<T> : ArrayBasedCollection<OrderedList<T>, T>, IList<T>,
         return count;
     }
 
+    /// <summary>
+    /// This method removes all items which matches the predicate.<br/>
+    /// The complexity is O(n).
+    /// </summary>
+    public int RemoveAll(Predicate<T> match)
+    {
+        Check.NotNull(match);
+
+        var freeIndex = 0;   // the first free slot in items array
+
+        // Find the first item which needs to be removed.
+        while (freeIndex < _count && !match(_items[freeIndex]))
+            freeIndex++;
+
+        if (freeIndex >= _count)
+            return 0;
+
+        var current = freeIndex + 1;
+        while (current < _count)
+        {
+            // Find the first item which needs to be kept.
+            while (current < _count && match(_items[current])) current++;
+
+            if (current < _count)
+            {
+                // copy item to the free slot.
+                _items[freeIndex++] = _items[current++];
+            }
+        }
+
+        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+        {
+            Array.Clear(_items, freeIndex, _count - freeIndex); // Clear the elements so that the gc can reclaim the references.
+        }
+
+        var result = _count - freeIndex;
+        _count = freeIndex;
+        _version++;
+        return result;
+    }
+
     private void RemoveRange(int index, int count)
     {
         if (count <= 0)
@@ -451,7 +492,7 @@ public class OrderedList<T> : ArrayBasedCollection<OrderedList<T>, T>, IList<T>,
 
         ++_version;
 
-        if (RuntimeHelpersEx.IsReferenceOrContainsReferences<T>())
+        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
         {
             Array.Clear(_items, _count, count);
         }

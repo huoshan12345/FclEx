@@ -93,7 +93,7 @@ public class Heap<T> : ArrayBasedCollection<Heap<T>, T>, ICollection<T>
         var root = _items[0];
         var x = _items[last];
 
-        if (RuntimeHelpersEx.IsReferenceOrContainsReferences<T>())
+        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
             _items[last] = default!;
 
         if (last > 0)

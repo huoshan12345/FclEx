@@ -32,7 +32,7 @@ public abstract partial class OrderedListTests<T> : IList_Generic_Tests<T>
         return new OrderedList<T>(toCreateFrom);
     }
 
-    protected void VerifyList(OrderedList<T> list, OrderedList<T> expectedItems)
+    protected void VerifyList(IList<T> list, IList<T> expectedItems)
     {
         Assert.Equal(expectedItems.Count, list.Count);
 
