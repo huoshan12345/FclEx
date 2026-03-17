@@ -30,10 +30,15 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IRea
         : this(DefaultMinDegree, comparer)
     {
         Check.NotNull(enumerable);
+        AddRange(enumerable);
+    }
 
+    private void AddRange(IEnumerable<KeyValuePair<TKey, TValue>> enumerable)
+    {
+        // TODO: optimize this for some special cases
         foreach (var item in enumerable)
         {
-            Add(item);
+            Add(item.Key, item.Value);
         }
     }
 
@@ -48,8 +53,13 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IRea
     IEnumerable<TValue> IReadOnlyDictionary<TKey, TValue>.Values => Values;
 
     public Enumerator GetEnumerator() => new(this);
-    IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator() => GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<KeyValuePair<TKey, TValue>>)this).GetEnumerator();
+    IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator()
+    {
+        return _count == 0
+            ? GenericEmptyEnumerator<KeyValuePair<TKey, TValue>>.Instance // use singleton empty enumerator to avoid unnecessary allocation when the dictionary is empty.
+            : GetEnumerator();
+    }
 
     public void Clear()
     {
@@ -139,9 +149,13 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IRea
         return false;
     }
 
-    public void Add(KeyValuePair<TKey, TValue> item) => Add(item.Key, item.Value);
+    void ICollection<KeyValuePair<TKey, TValue>>.Add(KeyValuePair<TKey, TValue> item) => Add(item.Key, item.Value);
 
-    public bool Contains(KeyValuePair<TKey, TValue> item) => Find(item.Key, true, item.Value) != default;
+    bool ICollection<KeyValuePair<TKey, TValue>>.Contains(KeyValuePair<TKey, TValue> item)
+    {
+        Check.NotNull(item.Key, nameof(item)); // check here to set correct parameter name in exception
+        return Find(item.Key, true, item.Value) != default;
+    }
 
     public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
     {
@@ -153,7 +167,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IRea
         }
     }
 
-    public bool Remove(KeyValuePair<TKey, TValue> item)
+    bool ICollection<KeyValuePair<TKey, TValue>>.Remove(KeyValuePair<TKey, TValue> item)
     {
         var (node, index) = Find(item.Key, true, item.Value);
         if (node is null)
@@ -605,7 +619,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IRea
         private readonly BPlusTreeDictionary<TKey, TValue> _dictionary;
         private readonly int _version;
         private BPlusTreeNode? _node;
-        private KeyValuePair<TKey, TValue>? _current;
+        private KeyValuePair<TKey, TValue> _current;
         private int _index;
 
         internal Enumerator(BPlusTreeDictionary<TKey, TValue> dictionary)
@@ -623,7 +637,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IRea
 
             if (_node is null)
             {
-                _current = null;
+                _current = default;
                 return false;
             }
 
@@ -633,7 +647,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IRea
             _node = _node.Next;
             if (_node is null)
             {
-                _current = null;
+                _current = default;
                 return false;
             }
 
@@ -644,7 +658,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IRea
             return true;
         }
 
-        public readonly KeyValuePair<TKey, TValue> Current => _current ?? throw new InvalidOperationException();
+        public readonly KeyValuePair<TKey, TValue> Current => _current;
         readonly object IEnumerator.Current => Current;
 
         public void Reset()
