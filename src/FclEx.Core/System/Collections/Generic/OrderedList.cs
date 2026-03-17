@@ -31,14 +31,9 @@
 /// </para>
 /// </remarks>
 [DebuggerDisplay("Count = {Count}")]
-public class OrderedList<T> : IList<T>, IReadOnlyList<T>
+public class OrderedList<T> : ArrayBasedCollection<OrderedList<T>, T>, IList<T>, IReadOnlyList<T>
 {
-    private const int DefaultCapacity = 4;
-
-    private T[] _items;
-    private int _count;
     private readonly IComparer<T> _comparer;
-    private int _version;
 
     public OrderedList(int capacity = DefaultCapacity, IComparer<T>? comparer = null)
     {
@@ -59,10 +54,7 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
         _comparer = comparer ?? Comparer<T>.Default;
         AddRange(items);
     }
-
-    // ReSharper disable once ConvertToAutoPropertyWithPrivateSetter
-    public int Count => _count;
-
+    
     public bool IsReadOnly => false;
 
     /// <summary>
@@ -79,37 +71,6 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
             return _items[index];
         }
         set => throw new NotSupportedException("Cannot set item in OrderedList.");
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int GetNewCapacity(int capacity)
-    {
-        Debug.Assert(_items.Length < capacity);
-
-        var newCapacity = _items.Length == 0
-            ? DefaultCapacity
-            : 2 * _items.Length;
-
-        // Allow the list to grow to maximum possible capacity (~2G elements) before encountering overflow.
-        // Note that this check works even when _items.Length overflowed thanks to the (uint) cast
-        if ((uint)newCapacity > Array.MaxLength)
-            newCapacity = Array.MaxLength;
-
-        // If the computed capacity is still less than specified, set to the original argument.
-        // Capacities exceeding Array.MaxLength will be surfaced as OutOfMemoryException by Array.Resize.
-        if (newCapacity < capacity)
-            newCapacity = capacity;
-
-        return newCapacity;
-    }
-
-    /// <summary>
-    /// Increase the capacity of this list to at least the specified <paramref name="capacity"/>.
-    /// </summary>
-    /// <param name="capacity">The minimum capacity to ensure.</param>
-    internal void Grow(int capacity)
-    {
-        Capacity = GetNewCapacity(capacity);
     }
 
     public void Add(T item)
@@ -161,15 +122,6 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
             _items[_count] = default!;
         }
 
-        ++_version;
-    }
-
-    public void Clear()
-    {
-        if (RuntimeHelpersEx.IsReferenceOrContainsReferences<T>())
-            Array.Clear(_items, 0, _count);
-
-        _count = 0;
         ++_version;
     }
 
@@ -261,76 +213,7 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
             ? upper - 1
             : -1;
     }
-
-    public void CopyTo(T[] array, int arrayIndex)
-    {
-        // Delegate rest of error checking to Array.Copy.
-        Array.Copy(_items, 0, array, arrayIndex, _count);
-    }
-
-    // Sets the capacity of this list to the size of the list. This method can
-    // be used to minimize a list's memory overhead once it is known that no
-    // new elements will be added to the list. To completely clear a list and
-    // release all memory referenced by the list, execute the following
-    // statements:
-    //
-    // list.Clear();
-    // list.TrimExcess();
-    //
-    public void TrimExcess()
-    {
-        var threshold = (int)(((double)_items.Length) * 0.9);
-        if (_count < threshold)
-        {
-            Capacity = _count;
-        }
-    }
-
-    // Gets and sets the capacity of this list.  The capacity is the size of
-    // the internal array used to hold items.  When set, the internal
-    // array of the list is reallocated to the given capacity.
-    //
-    public int Capacity
-    {
-        get => _items.Length;
-        set
-        {
-            Check.NotLessThan(value, _count);
-
-            if (value == _items.Length)
-                return;
-
-            if (value > 0)
-            {
-                var newItems = new T[value];
-                if (_count > 0)
-                {
-                    Array.Copy(_items, newItems, _count);
-                }
-                _items = newItems;
-            }
-            else
-            {
-                _items = [];
-            }
-        }
-    }
-
-    /// <summary>
-    /// Ensures the heap can hold at least the specified number of elements without resizing.
-    /// </summary>
-    public void EnsureCapacity(int capacity)
-    {
-        Check.NotNegative(capacity);
-
-        if (_items.Length < capacity)
-            Array.Resize(ref _items, capacity);
-    }
-
-    public Enumerator GetEnumerator() => new(this);
-    IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
+    
     /// <summary>
     /// This operation is not supported because the list must remain sorted.
     /// </summary>
@@ -613,46 +496,5 @@ public class OrderedList<T> : IList<T>, IReadOnlyList<T>
         RemoveRange(start, count);
 
         return count;
-    }
-
-
-    public struct Enumerator : IEnumerator<T>
-    {
-        private readonly OrderedList<T> _list;
-        private readonly int _version;
-        private int _index = -1;
-        private T? _current;
-
-        internal Enumerator(OrderedList<T> list)
-        {
-            _list = list;
-            _version = list._version;
-        }
-
-        public readonly T Current => _current!;
-        readonly object IEnumerator.Current => Current!;
-
-        public bool MoveNext()
-        {
-            Check.VersionEqual(_list._version, _version);
-            // ReSharper disable once ConvertIfStatementToReturnStatement
-            if (++_index >= _list._count)
-            {
-                _current = default;
-                return false;
-            }
-
-            _current = _list._items[_index];
-            return true;
-        }
-
-        public void Reset()
-        {
-            Check.VersionEqual(_list._version, _version);
-            _index = -1;
-            _current = default;
-        }
-
-        public readonly void Dispose() { }
     }
 }

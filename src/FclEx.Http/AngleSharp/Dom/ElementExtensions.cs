@@ -50,18 +50,6 @@ public static class ElementExtensions
         return info;
     }
 
-    [return: NotNullIfNotNull(nameof(element))]
-    public static IElement? RemoveJsCss(this IElement? element)
-    {
-        if (element == null)
-            return null;
-
-        foreach (var node in element.QuerySelectorAll("script, style"))
-            node.Remove();
-
-        return element;
-    }
-
     public static OperationResult<(IElement Element, T Data)> QueryData<T>(this IElement? root, string?[] selectors, Func<IElement, T> func)
     {
         foreach (var selector in selectors)

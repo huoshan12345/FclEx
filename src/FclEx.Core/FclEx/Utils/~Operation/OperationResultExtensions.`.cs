@@ -152,4 +152,24 @@ partial class OperationResultExtensions
     {
         return result.IsSuccess && condition(result.Value);
     }
+
+    public static OperationResult<TNext> ThenIf<T, TNext>(this OperationResult<T> result, Func<T, bool> condition,
+        Func<T, OperationResult<TNext>> @true, Func<T, OperationResult<TNext>> @false)
+    {
+        Check.NotNull(condition);
+        Check.NotNull(@true);
+        Check.NotNull(@false);
+
+        return result.Then(t => condition(t) ? @true(t) : @false(t));
+    }
+
+    public static OperationResult<T> ThenIf<T>(this OperationResult<T> result, Func<T, bool> condition, Func<T, OperationResult<T>> next)
+    {
+        return result.ThenIf(condition, next, m => Operation.Success(m));
+    }
+
+    public static OperationResult ThenIf<T>(this OperationResult<T> result, Func<T, bool> condition, Func<T, OperationResult> next)
+    {
+        return result.ThenIf(condition, next, _ => Operation.Success(Unit.Default));
+    }
 }

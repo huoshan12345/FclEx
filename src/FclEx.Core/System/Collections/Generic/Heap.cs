@@ -22,14 +22,11 @@
 /// </list>
 /// </remarks>
 [DebuggerDisplay("Count = {Count}")]
-public class Heap<T> : ICollection<T>
+public class Heap<T> : ArrayBasedCollection<Heap<T>, T>, ICollection<T>
 {
     private const int Arity = 4;
 
-    private T[] _items;
-    private int _count;
     private readonly IComparer<T> _comparer;
-    private int _version;
 
     public Heap(int capacity = 4, IComparer<T>? comparer = null)
     {
@@ -56,29 +53,7 @@ public class Heap<T> : ICollection<T>
         Heapify();
     }
 
-    // ReSharper disable once ConvertToAutoPropertyWithPrivateSetter
-    public int Count => _count;
-
-    /// <remarks>
-    /// Enumeration does not return elements in sorted order.
-    /// </remarks>
-    public Enumerator GetEnumerator() => new(this);
-    IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
     public bool IsReadOnly => false;
-
-    /// <summary>
-    /// Removes all elements from the heap.
-    /// </summary>
-    public void Clear()
-    {
-        if (RuntimeHelpersEx.IsReferenceOrContainsReferences<T>())
-            Array.Clear(_items, 0, _count);
-
-        _count = 0;
-        ++_version;
-    }
 
     void ICollection<T>.Add(T item) => Push(item);
 
@@ -87,31 +62,9 @@ public class Heap<T> : ICollection<T>
         return Array.IndexOf(_items, item, 0, _count) >= 0;
     }
 
-    public void CopyTo(T[] array, int arrayIndex)
-    {
-        // Delegate rest of error checking to Array.Copy.
-        Array.Copy(_items, 0, array, arrayIndex, _count);
-    }
-
     bool ICollection<T>.Remove(T item)
     {
         throw new NotSupportedException("Removing specific items is not supported by Heap<T>.");
-    }
-
-    /// <summary>
-    /// Gets the total number of elements the internal storage can hold without resizing.
-    /// </summary>
-    public int Capacity => _items.Length;
-
-    /// <summary>
-    /// Ensures the heap can hold at least the specified number of elements without resizing.
-    /// </summary>
-    public void EnsureCapacity(int capacity)
-    {
-        Check.NotNegative(capacity);
-
-        if (_items.Length < capacity)
-            Array.Resize(ref _items, capacity);
     }
 
     /// <summary>
@@ -120,7 +73,7 @@ public class Heap<T> : ICollection<T>
     public void Push(T item)
     {
         if (_count == _items.Length)
-            Grow();
+            Grow(_count + 1);
 
         var index = _count++;
         SiftUp(index, item);
@@ -253,27 +206,6 @@ public class Heap<T> : ICollection<T>
         return root;
     }
 
-    /// <summary>
-    /// Sets the capacity to the actual number of elements, or to the specified capacity if provided.
-    /// </summary>
-    public void TrimExcess(int? capacity = null)
-    {
-        var count = _count;
-
-        var newCapacity = capacity ?? count;
-
-        if (newCapacity < count)
-            newCapacity = count;
-
-        if (newCapacity < 4)
-            newCapacity = 4;
-
-        if (newCapacity >= _items.Length)
-            return;
-
-        Array.Resize(ref _items, newCapacity);
-    }
-
     private void Heapify()
     {
         var start = Parent(_count - 1);
@@ -282,18 +214,6 @@ public class Heap<T> : ICollection<T>
         {
             SiftDown(i, _items[i]);
         }
-    }
-
-    private void Grow()
-    {
-        var newSize = _items.Length * 2;
-        if (newSize < 4)
-            newSize = 4;
-
-        if ((uint)newSize > Array.MaxLength)
-            newSize = Array.MaxLength;
-
-        Array.Resize(ref _items, newSize);
     }
 
     private static int Parent(int i) => (i - 1) / Arity;
@@ -356,45 +276,5 @@ public class Heap<T> : ICollection<T>
         _items[i] = item;
 
         ++_version;
-    }
-
-    public struct Enumerator : IEnumerator<T>
-    {
-        private readonly Heap<T> _heap;
-        private readonly int _version;
-        private int _index = -1;
-        private T? _current;
-
-        internal Enumerator(Heap<T> heap)
-        {
-            _heap = heap;
-            _version = heap._version;
-        }
-
-        public readonly T Current => _current!;
-        readonly object IEnumerator.Current => Current!;
-
-        public bool MoveNext()
-        {
-            Check.VersionEqual(_heap._version, _version);
-            // ReSharper disable once ConvertIfStatementToReturnStatement
-            if (++_index >= _heap._count)
-            {
-                _current = default;
-                return false;
-            }
-
-            _current = _heap._items[_index];
-            return true;
-        }
-
-        public void Reset()
-        {
-            Check.VersionEqual(_heap._version, _version);
-            _index = -1;
-            _current = default;
-        }
-
-        public readonly void Dispose() { }
     }
 }
