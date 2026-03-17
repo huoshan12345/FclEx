@@ -1,8 +1,8 @@
-﻿namespace System.Collections.Generic;
+﻿// ReSharper disable ConvertToAutoPropertyWhenPossible
+// ReSharper disable ConvertToAutoPropertyWithPrivateSetter
+namespace System.Collections.Generic;
 
 [DebuggerDisplay("Count = {Count}")]
-[SuppressMessage("ReSharper", "ConvertToAutoPropertyWithPrivateSetter")]
-[SuppressMessage("ReSharper", "ConvertToAutoPropertyWhenPossible")]
 public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>
     where TKey : notnull
 {
