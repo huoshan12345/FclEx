@@ -110,6 +110,23 @@ partial class XunitSerializableAttributeTests
         bool Valid = false)
         : IJsonTestModel<string>;
 
+    [XunitSerializable]
+    public partial record WithFileSystemInfo(string[] Sources, (string Path, string Namespace, string[] UsedPaths)[] Targets)
+    {
+        public FileInfo[] SourceFiles { get; } = Sources.Select(m => new FileInfo(m)).ToArray();
+        public DirectoryInfo[] SourceDirs { get; } = Sources.Select(m => new FileInfo(m).Directory).NotNull().ToArray();
+
+        public override string ToString()
+        {
+            return StringBuilderHelper.Build(m =>
+            {
+                m.AppendSquareBracketed(x => x.AppendJoin(", ", SourceFiles.Select(a => a.Name)));
+                m.Append(", ");
+                m.AppendSquareBracketed(x => x.AppendJoin(", ", SourceDirs.Select(a => a.Name)));
+            });
+        }
+    }
+
     private static void AssertTestModel<TModel, T>(Func<TModel> creator, bool checkSelector = false) where TModel : IJsonTestModel<T>, IXunitSerializable
     {
         var original = creator();
@@ -175,5 +192,25 @@ partial class XunitSerializableAttributeTests
     public void Should_RoundTrip_WithJsonConverterOnProperty()
     {
         AssertTestModel<WithJsonConverterOnProperty, string>(() => new(m => m.Length, typeof(string), 1), checkSelector: true);
+    }
+
+    [Fact]
+    public void Should_RoundTrip_WithFileSystemInfo()
+    {
+        var original = new WithFileSystemInfo(["source"], [("path", "namespace", ["used-path"])]);
+        var info = CreateSerializationInfo();
+        original.Serialize(info);
+
+        var deserialized = new WithFileSystemInfo([], []);
+        deserialized.Deserialize(info);
+
+        Assert.Equal(original.Sources, deserialized.Sources);
+        Assert.MembersEqual(original.Targets, deserialized.Targets); // use member equality for tuples instead of structural equality
+
+        var comparer = FileSystemInfoEqualityComparer.CaseSensitive;
+        Assert.Equal(original.SourceFiles, deserialized.SourceFiles, comparer);
+        Assert.Equal(original.SourceDirs, deserialized.SourceDirs, comparer);
+
+        Assert.Equal(original.ToString(), deserialized.ToString());
     }
 }
