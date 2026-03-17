@@ -10,6 +10,10 @@
 #pragma warning disable IDE0350 // Use implicitly typed lambda
 #pragma warning disable IDE0044 // Add readonly modifier
 #pragma warning disable xUnit2015 // Do not use typeof expression to check the exception type.
+#pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
+#pragma warning disable CA1068 // CancellationToken parameters must come last
+#pragma warning disable CA2263 // Prefer generic overload when type is known
+#pragma warning disable IDE0066 // Convert switch statement to expression
 
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
@@ -664,7 +668,7 @@ namespace System
                 exception = ex;
             }
 
-            switch(exception)
+            switch (exception)
             {
                 case null:
                     throw ThrowsException.ForNoException(typeof(E));
@@ -689,7 +693,7 @@ namespace System
                 exception = ex;
             }
 
-            switch(exception)
+            switch (exception)
             {
                 case null:
                     throw ThrowsException.ForNoException(typeof(E));
