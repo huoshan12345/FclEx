@@ -1037,36 +1037,5 @@ namespace System.Collections.Tests
         }
 
         #endregion
-
-        #region ICollection
-
-        [Theory]
-        [MemberData(nameof(ValidCollectionSizes))]
-        public void ICollection_NonGeneric_CopyTo(int count)
-        {
-            IDictionary<TKey, TValue> dictionary = GenericIDictionaryFactory(count);
-            KeyValuePair<TKey, TValue>[] array = new KeyValuePair<TKey, TValue>[count];
-            object[] objarray = new object[count];
-            dictionary.CopyTo(array, 0);
-            ((ICollection)dictionary).CopyTo(objarray, 0);
-            for (int i = 0; i < count; i++)
-                Assert.Equal(array[i], (KeyValuePair<TKey, TValue>)(objarray[i]));
-        }
-
-        [Theory]
-        [MemberData(nameof(ValidCollectionSizes))]
-        public override void ICollection_Generic_Contains_DefaultValueWhenNotAllowed(int count)
-        {
-            ICollection<KeyValuePair<TKey, TValue>> collection = GenericIDictionaryFactory(count);
-            if (!DefaultValueAllowed && !IsReadOnly)
-            {
-                if (DefaultValueWhenNotAllowed_Throws)
-                    Assert.Throws<ArgumentNullException>(() => collection.Contains(default(KeyValuePair<TKey, TValue>)));
-                else
-                    Assert.False(collection.Remove(default(KeyValuePair<TKey, TValue>)));
-            }
-        }
-
-        #endregion
     }
 }

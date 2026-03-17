@@ -1,21 +1,28 @@
 ﻿namespace System.Collections.Generic.BPlusTreeDictionary;
 
-public class BPlusTreeTestsStringString : BPlusTreeDictionaryTests<string, string>
+public class BPlusTreeDictionaryTests_String_String : BPlusTreeDictionaryTests<string, string>
 {
-    protected override KeyValuePair<string, string> CreateT(int seed) => new(CreateTKey(seed), CreateTKey(seed + 500));
+    protected override KeyValuePair<string, string> CreateT(int seed)
+    {
+        return new KeyValuePair<string, string>(CreateTKey(seed), CreateTKey(seed + 500));
+    }
 
     protected override string CreateTKey(int seed)
     {
         var stringLength = seed % 10 + 5;
+        var rand = new Random(seed);
         var bytes1 = new byte[stringLength];
-        new Random(seed).NextBytes(bytes1);
+        rand.NextBytes(bytes1);
         return Convert.ToBase64String(bytes1);
     }
 
-    protected override string CreateTValue(int seed) => CreateTKey(seed);
+    protected override string CreateTValue(int seed)
+    {
+        return CreateTKey(seed);
+    }
 }
 
-public class BPlusTreeTestsIntInt : BPlusTreeDictionaryTests<int, int>
+public class BPlusTreeDictionaryTests_Int_Int : BPlusTreeDictionaryTests<int, int>
 {
     protected override bool DefaultValueAllowed => true;
 
@@ -25,22 +32,40 @@ public class BPlusTreeTestsIntInt : BPlusTreeDictionaryTests<int, int>
         return new KeyValuePair<int, int>(rand.Next(), rand.Next());
     }
 
-    protected override int CreateTKey(int seed) => new Random(seed).Next();
+    protected override int CreateTKey(int seed)
+    {
+        var rand = new Random(seed);
+        return rand.Next();
+    }
 
-    protected override int CreateTValue(int seed) => CreateTKey(seed);
+    protected override int CreateTValue(int seed)
+    {
+        return CreateTKey(seed);
+    }
 }
 
-public class BPlusTreeTestsSimpleIntIntWithComparerWrapStructuralSimpleInt : BPlusTreeDictionaryTests<SimpleInt, int>
+public class BPlusTreeDictionaryTests_EquatableBackwardsOrder_Int : BPlusTreeDictionaryTests<EquatableBackwardsOrder, int>
 {
-    protected override bool DefaultValueAllowed => true;
+    protected override KeyValuePair<EquatableBackwardsOrder, int> CreateT(int seed)
+    {
+        var rand = new Random(seed);
+        return new KeyValuePair<EquatableBackwardsOrder, int>(new EquatableBackwardsOrder(rand.Next()), rand.Next());
+    }
 
-    public override IEqualityComparer<SimpleInt> GetKeyIEqualityComparer() => new WrapStructural_SimpleInt();
+    protected override EquatableBackwardsOrder CreateTKey(int seed)
+    {
+        var rand = new Random(seed);
+        return new EquatableBackwardsOrder(rand.Next());
+    }
 
-    public override IComparer<SimpleInt> GetKeyIComparer() => new WrapStructural_SimpleInt();
+    protected override int CreateTValue(int seed)
+    {
+        var rand = new Random(seed);
+        return rand.Next();
+    }
 
-    protected override SimpleInt CreateTKey(int seed) => new(new Random(seed).Next());
-
-    protected override int CreateTValue(int seed) => new Random(seed).Next();
-
-    protected override KeyValuePair<SimpleInt, int> CreateT(int seed) => new(CreateTKey(seed), CreateTValue(seed));
+    protected override IDictionary<EquatableBackwardsOrder, int> GenericIDictionaryFactory()
+    {
+        return new BPlusTreeDictionary<EquatableBackwardsOrder, int>();
+    }
 }

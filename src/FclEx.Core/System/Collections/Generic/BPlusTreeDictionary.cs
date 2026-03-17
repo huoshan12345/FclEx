@@ -3,7 +3,8 @@
 [DebuggerDisplay("Count = {Count}")]
 [SuppressMessage("ReSharper", "ConvertToAutoPropertyWithPrivateSetter")]
 [SuppressMessage("ReSharper", "ConvertToAutoPropertyWhenPossible")]
-public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where TKey : notnull
+public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>
+    where TKey : notnull
 {
     private const int DefaultMinDegree = 16;
 
@@ -36,12 +37,15 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         }
     }
 
+    public IComparer<TKey> Comparer => _comparer;
     public int Level => _level;
     public int MinDegree => _minKeyCount;
     public int Count => _count;
     public bool IsReadOnly => false;
     public ICollection<TKey> Keys => field ??= new KeyCollection(this);
     public ICollection<TValue> Values => field ??= new ValueCollection(this);
+    IEnumerable<TKey> IReadOnlyDictionary<TKey, TValue>.Keys => Keys;
+    IEnumerable<TValue> IReadOnlyDictionary<TKey, TValue>.Values => Values;
 
     public Enumerator GetEnumerator() => new(this);
     IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator() => GetEnumerator();
@@ -601,7 +605,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         private readonly BPlusTreeDictionary<TKey, TValue> _dictionary;
         private readonly int _version;
         private BPlusTreeNode? _node;
-        private KeyValuePair<TKey, TValue> _current;
+        private KeyValuePair<TKey, TValue>? _current;
         private int _index;
 
         internal Enumerator(BPlusTreeDictionary<TKey, TValue> dictionary)
@@ -619,7 +623,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
 
             if (_node is null)
             {
-                _current = default;
+                _current = null;
                 return false;
             }
 
@@ -629,7 +633,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
             _node = _node.Next;
             if (_node is null)
             {
-                _current = default;
+                _current = null;
                 return false;
             }
 
@@ -640,7 +644,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
             return true;
         }
 
-        public readonly KeyValuePair<TKey, TValue> Current => _current;
+        public readonly KeyValuePair<TKey, TValue> Current => _current ?? throw new InvalidOperationException();
         readonly object IEnumerator.Current => Current;
 
         public void Reset()
@@ -654,6 +658,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         public readonly void Dispose() { }
     }
 
+    [DebuggerDisplay("Count = {Count}")]
     public sealed class KeyCollection(BPlusTreeDictionary<TKey, TValue> dictionary)
         : ReadOnlyItemCollection<TKey, KeyCollection.KeyEnumerator>
     {
@@ -695,6 +700,7 @@ public class BPlusTreeDictionary<TKey, TValue> : IDictionary<TKey, TValue> where
         }
     }
 
+    [DebuggerDisplay("Count = {Count}")]
     public sealed class ValueCollection(BPlusTreeDictionary<TKey, TValue> dictionary)
         : ReadOnlyItemCollection<TValue, ValueCollection.ValueEnumerator>
     {
