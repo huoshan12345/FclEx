@@ -1,12 +1,12 @@
 ﻿namespace System.Collections.Generic.BPlusTreeDictionary;
 
-public class BPlusTreeDictionaryTestsValues : ICollectionGenericTests<string>
+public class BPlusTreeDictionaryTestsValues : ICollection_Generic_Tests<string>
 {
     protected override bool DefaultValueAllowed => true;
     protected override bool DuplicateValuesAllowed => true;
     protected override bool IsReadOnly => true;
-    protected override bool EnumeratorCurrentUndefinedOperationThrows => false;
-    protected override IEnumerable<ModifyEnumerable> ModifyEnumerables => new List<ModifyEnumerable>();
+    //protected override bool EnumeratorCurrentUndefinedOperationThrows => false;
+    //protected override IEnumerable<ModifyEnumerable> ModifyEnumerables => new List<ModifyEnumerable>();
 
     protected override ICollection<string> GenericICollectionFactory() => new BPlusTreeDictionary<string, string>().Values;
 

@@ -1,12 +1,12 @@
 ﻿namespace System.Collections.Generic.OrderedList;
 
-public abstract partial class OrderedListTests<T> : IListGenericTests<T>
+public abstract partial class OrderedListTests<T> : IList_Generic_Tests<T>
 {
-    protected override bool EnumeratorCurrentUndefinedOperationThrows => false;
-    protected override bool SupportInsert => false;
-    protected override bool SupportItemSet => false;
+    //protected override bool EnumeratorCurrentUndefinedOperationThrows => false;
+    //protected override bool SupportInsert => false;
+    //protected override bool SupportItemSet => false;
 
-    protected override List<T> ToExpectedList(IList<T> list)
+    protected List<T> ToExpectedList(IList<T> list)
     {
         var comparer = ObjectHelper.GetRequiredFieldValue<IComparer<T>>(list, "_comparer");
         var expected = list.ToList();

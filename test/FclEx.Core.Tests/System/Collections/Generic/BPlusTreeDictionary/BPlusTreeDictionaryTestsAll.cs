@@ -34,9 +34,9 @@ public class BPlusTreeTestsSimpleIntIntWithComparerWrapStructuralSimpleInt : BPl
 {
     protected override bool DefaultValueAllowed => true;
 
-    public override IEqualityComparer<SimpleInt> GetKeyIEqualityComparer() => new WrapStructuralSimpleInt();
+    public override IEqualityComparer<SimpleInt> GetKeyIEqualityComparer() => new WrapStructural_SimpleInt();
 
-    public override IComparer<SimpleInt> GetKeyIComparer() => new WrapStructuralSimpleInt();
+    public override IComparer<SimpleInt> GetKeyIComparer() => new WrapStructural_SimpleInt();
 
     protected override SimpleInt CreateTKey(int seed) => new(new Random(seed).Next());
 

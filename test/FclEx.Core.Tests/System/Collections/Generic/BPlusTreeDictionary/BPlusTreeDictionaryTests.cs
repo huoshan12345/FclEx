@@ -1,11 +1,13 @@
 ﻿#pragma warning disable CA1859 // Use concrete types when possible for improved performance
+
+
 namespace System.Collections.Generic.BPlusTreeDictionary;
 
-public abstract class BPlusTreeDictionaryTests<TKey, TValue> : IDictionaryGenericTests<TKey, TValue> where TKey : notnull
+public abstract class BPlusTreeDictionaryTests<TKey, TValue> : IDictionary_Generic_Tests<TKey, TValue> where TKey : notnull
 {
     #region IDictionary<TKey, TValue Helper Methods
 
-    protected override bool EnumeratorCurrentUndefinedOperationThrows => false;
+    //protected override bool EnumeratorCurrentUndefinedOperationThrows => false;
 
     protected override IDictionary<TKey, TValue> GenericIDictionaryFactory() => new BPlusTreeDictionary<TKey, TValue>();
 

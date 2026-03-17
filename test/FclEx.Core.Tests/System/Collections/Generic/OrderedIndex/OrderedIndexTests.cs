@@ -2,10 +2,10 @@
 #pragma warning disable IDE0060 // Remove unused parameter
 namespace System.Collections.Generic.OrderedIndex;
 
-public abstract class OrderedIndexTests<TScore, TValue> : IGenericSharedApiTests<(TScore, TValue)>
+public abstract class OrderedIndexTests<TScore, TValue> : IGenericSharedAPI_Tests<(TScore, TValue)>
     where TValue : notnull
 {
-    protected override bool EnumeratorCurrentUndefinedOperationThrows => false;
+    //protected override bool EnumeratorCurrentUndefinedOperationThrows => false;
     protected override bool DefaultValueAllowed => false;
     protected override bool DuplicateValuesAllowed => false;
     protected override bool DefaultValueWhenNotAllowed_Throws => false;

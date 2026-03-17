@@ -2,9 +2,9 @@
 #pragma warning disable IDE0060 // Remove unused parameter
 namespace System.Collections.Generic.Heap;
 
-public abstract class HeapTests<T> : IGenericSharedApiTests<T>
+public abstract class HeapTests<T> : IGenericSharedAPI_Tests<T>
 {
-    protected override bool EnumeratorCurrentUndefinedOperationThrows => false;
+    //protected override bool EnumeratorCurrentUndefinedOperationThrows => false;
 
     #region Heap<T> Helper Methods
 
