@@ -54,7 +54,7 @@ public class OrderedList<T> : ArrayBasedCollection<OrderedList<T>, T>, IList<T>,
         _comparer = comparer ?? Comparer<T>.Default;
         AddRange(items);
     }
-    
+
     public bool IsReadOnly => false;
 
     /// <summary>
@@ -213,7 +213,7 @@ public class OrderedList<T> : ArrayBasedCollection<OrderedList<T>, T>, IList<T>,
             ? upper - 1
             : -1;
     }
-    
+
     /// <summary>
     /// This operation is not supported because the list must remain sorted.
     /// </summary>

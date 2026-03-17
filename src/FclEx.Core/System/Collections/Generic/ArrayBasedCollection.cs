@@ -131,6 +131,11 @@ public abstract class ArrayBasedCollection<TSelf, T> : IReadOnlyCollection<T>
         Array.Copy(_items, index, array, arrayIndex, count);
     }
 
+    public void CopyTo(Span<T> destination)
+    {
+        new ReadOnlySpan<T>(_items, 0, _count).CopyTo(destination);
+    }
+
     public void Clear()
     {
         if (RuntimeHelpersEx.IsReferenceOrContainsReferences<T>())

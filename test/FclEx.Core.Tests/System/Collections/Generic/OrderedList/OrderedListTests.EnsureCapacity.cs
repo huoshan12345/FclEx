@@ -1,19 +1,16 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-
+// ReSharper disable GenericEnumeratorNotDisposed
+// ReSharper disable UnusedVariable
+// ReSharper disable CollectionNeverUpdated.Local
 namespace System.Collections.Generic.OrderedList;
 
-/// <summary>
-/// Contains tests that ensure the correctness of the List class.
-/// </summary>
-public abstract partial class OrderedListTests<T> : IList_Generic_Tests<T>
+public abstract partial class OrderedListTests<T>
 {
     [Theory]
     [MemberData(nameof(ValidCollectionSizes))]
     public void EnsureCapacity_RequestingLargerCapacity_DoesNotInvalidateEnumeration(int count)
     {
-        List<T> list = GenericListFactory(count);
-        IEnumerator<T> copiedListEnumerator = new List<T>(list).GetEnumerator();
+        var list = GenericListFactory(count);
+        IEnumerator<T> copiedListEnumerator = new OrderedList<T>(list).GetEnumerator();
         IEnumerator<T> enumerator = list.GetEnumerator();
         var capacity = list.Capacity;
 
@@ -25,7 +22,7 @@ public abstract partial class OrderedListTests<T> : IList_Generic_Tests<T>
     [Fact]
     public void EnsureCapacity_NotInitialized_RequestedZero_ReturnsZero()
     {
-        var list = new List<T>();
+        var list = GenericListFactory();
         Assert.Equal(0, list.EnsureCapacity(0));
         Assert.Equal(0, list.Capacity);
     }
@@ -33,7 +30,7 @@ public abstract partial class OrderedListTests<T> : IList_Generic_Tests<T>
     [Fact]
     public void EnsureCapacity_NegativeCapacityRequested_Throws()
     {
-        var list = new List<T>();
+        var list = GenericListFactory();
         AssertExtensions.Throws<ArgumentOutOfRangeException>("capacity", () => list.EnsureCapacity(-1));
     }
 
@@ -45,10 +42,9 @@ public abstract partial class OrderedListTests<T> : IList_Generic_Tests<T>
 
     [Theory]
     [MemberData(nameof(EnsureCapacity_LargeCapacity_Throws_MemberData))]
-    [ActiveIssue("https://github.com/dotnet/runtime/issues/51411", TestRuntimes.Mono)]
     public void EnsureCapacity_LargeCapacity_Throws(int count, int requestCapacity)
     {
-        List<T> list = GenericListFactory(count);
+        var list = GenericListFactory(count);
         Assert.Throws<OutOfMemoryException>(() => list.EnsureCapacity(requestCapacity));
     }
 
@@ -56,7 +52,7 @@ public abstract partial class OrderedListTests<T> : IList_Generic_Tests<T>
     [InlineData(5)]
     public void EnsureCapacity_RequestedCapacitySmallerThanOrEqualToCurrent_CapacityUnchanged(int currentCapacity)
     {
-        var list = new List<T>(currentCapacity);
+        var list = new OrderedList<T>(currentCapacity);
 
         for (var requestCapacity = 0; requestCapacity <= currentCapacity; requestCapacity++)
         {
@@ -69,7 +65,7 @@ public abstract partial class OrderedListTests<T> : IList_Generic_Tests<T>
     [MemberData(nameof(ValidCollectionSizes))]
     public void EnsureCapacity_RequestedCapacitySmallerThanOrEqualToCount_CapacityUnchanged(int count)
     {
-        List<T> list = GenericListFactory(count);
+        var list = GenericListFactory(count);
         var currentCapacity = list.Capacity;
 
         for (var requestCapacity = 0; requestCapacity <= count; requestCapacity++)
@@ -85,7 +81,7 @@ public abstract partial class OrderedListTests<T> : IList_Generic_Tests<T>
     [InlineData(5)]
     public void EnsureCapacity_CapacityIsAtLeastTheRequested(int count)
     {
-        List<T> list = GenericListFactory(count);
+        var list = GenericListFactory(count);
 
         var currentCapacity = list.Capacity;
         var requestCapacity = currentCapacity + 1;
@@ -97,8 +93,8 @@ public abstract partial class OrderedListTests<T> : IList_Generic_Tests<T>
     [MemberData(nameof(ValidCollectionSizes))]
     public void EnsureCapacity_RequestingLargerCapacity_DoesNotImpactListContent(int count)
     {
-        List<T> list = GenericListFactory(count);
-        var copiedList = new List<T>(list);
+        var list = GenericListFactory(count);
+        var copiedList = new OrderedList<T>(list);
 
         list.EnsureCapacity(list.Capacity + 1);
         Assert.Equal(copiedList, list);
