@@ -18,7 +18,6 @@ public class SmallPrimeUtility
     /// </summary>
     private SmallPrimeUtility()
     {
-        ;
     }
 
     /// <summary>

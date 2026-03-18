@@ -11,7 +11,7 @@ public class PublisherTests : RabbitMQTests
             Name = Fixture.WithAssemblyInfo("test.publisher"),
             Type = "topic",
             IsDelayed = true,
-        }; ;
+        };
     }
 
     private Task<TestPublisher> CreatePublisher()

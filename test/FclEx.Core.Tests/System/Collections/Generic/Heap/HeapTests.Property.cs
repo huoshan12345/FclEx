@@ -164,20 +164,19 @@ public partial class HeapTests
         {
             yield return [genElement(random)!];
         }
-        ;
     }
 
     private static T[] GenArray<T>(Func<Random, T> genElement, Random random)
     {
         const int maxArraySize = 100;
         var arraySize = random.Next(maxArraySize);
-        var array = new T[arraySize];
+        var set = new HashSet<T>();
         for (var i = 0; i < arraySize; i++)
         {
-            array[i] = genElement(random);
+            set.Add(genElement(random));
         }
 
-        return array;
+        return set.ToArray();
     }
 
     private static int GenInt(Random random) => random.Next();

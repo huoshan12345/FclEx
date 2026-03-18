@@ -33,7 +33,7 @@ partial class TypeExtensions
     {
         var name = ReflectionHelper.GetAutoBackingFieldName(propertyName);
         return type.GetField(name, searchBaseTypes)
-               ?? throw new InvalidOperationException($"Cannot find backing field for property '{propertyName}' in type '{type.FullName}'"); ;
+               ?? throw new InvalidOperationException($"Cannot find backing field for property '{propertyName}' in type '{type.FullName}'");
     }
 
     public static PropertyInfo? GetProperty(this Type type, string name, bool searchBaseTypes)
