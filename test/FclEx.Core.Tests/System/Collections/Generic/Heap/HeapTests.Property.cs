@@ -154,15 +154,15 @@ public partial class HeapTests
         Assert.False(heap.TryPeek(out _));
     }
 
-    public static IEnumerable<object[]> GetRandomStringArrays() => GenerateMemberData(random => GenArray(GenString, random));
-    public static IEnumerable<object[]> GetRandomIntArrays() => GenerateMemberData(random => GenArray(GenInt, random));
+    public static TheoryData<string[]> GetRandomStringArrays() => GenerateMemberData(random => GenArray(GenString, random)).ToTheoryData();
+    public static TheoryData<int[]> GetRandomIntArrays() => GenerateMemberData(random => GenArray(GenInt, random)).ToTheoryData();
 
-    private static IEnumerable<object[]> GenerateMemberData<T>(Func<Random, T> genElement)
+    private static IEnumerable<T> GenerateMemberData<T>(Func<Random, T> genElement)
     {
         var random = new Random(Seed);
         for (var i = 0; i < MaxTest; i++)
         {
-            yield return [genElement(random)!];
+            yield return genElement(random);
         }
     }
 
