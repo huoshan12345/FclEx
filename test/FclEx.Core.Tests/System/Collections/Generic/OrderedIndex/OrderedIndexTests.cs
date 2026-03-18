@@ -9,6 +9,7 @@ public abstract class OrderedIndexTests<TScore, TValue> : IGenericSharedAPI_Test
     protected override bool DefaultValueAllowed => false;
     protected override bool DuplicateValuesAllowed => false;
     protected override bool DefaultValueWhenNotAllowed_Throws => false;
+    protected override Type IGenericSharedAPI_CopyTo_IndexLargerThanArrayCount_ThrowType { get; } = typeof(ArgumentOutOfRangeException);
 
     #region OrderedIndex<TScore, TValue> Helper Methods
 
@@ -51,6 +52,7 @@ public abstract class OrderedIndexTests<TScore, TValue> : IGenericSharedAPI_Test
 
     protected override void CopyTo(IEnumerable<(TScore, TValue)> enumerable, (TScore, TValue)[] array, int index)
         => ((OrderedIndex<TScore, TValue>)enumerable).CopyTo(array, index);
+
     protected override bool Remove(IEnumerable<(TScore, TValue)> enumerable)
     {
         var col = ((ICollection<(TScore, TValue)>)enumerable);

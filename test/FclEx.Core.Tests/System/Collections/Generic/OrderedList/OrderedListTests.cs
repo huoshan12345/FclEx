@@ -3,11 +3,24 @@ namespace System.Collections.Generic.OrderedList;
 public abstract partial class OrderedListTests<T> : IList_Generic_Tests<T>
 {
     #region IList<T> Helper Methods
+
+    protected override bool SupportsInsert => false;
+    protected override bool SupportsRemoveAt => false;
+    protected override bool SupportsItemSet => false;
+
     protected override bool Enumerator_Empty_UsesSingletonInstance => true;
     protected override bool Enumerator_Empty_Current_UndefinedOperation_Throws => true;
     protected override bool Enumerator_Empty_ModifiedDuringEnumeration_ThrowsInvalidOperationException => false;
     protected override ModifyOperation ModifyEnumeratorThrows => ModifyOperation.Add | ModifyOperation.Remove | ModifyOperation.Clear;
     protected override ModifyOperation ModifyEnumeratorAllowed => ModifyOperation.Overwrite;
+
+    protected override List<T> ToExpectedList(IList<T> list)
+    {
+        var comparer = ObjectHelper.GetRequiredFieldValue<IComparer<T>>(list, "_comparer");
+        var expected = list.ToList();
+        expected.StableSort(comparer);
+        return expected;
+    }
 
     protected override IList<T> GenericIListFactory()
     {
@@ -55,7 +68,7 @@ public abstract partial class OrderedListTests<T> : IList_Generic_Tests<T>
     public void CopyTo_ArgumentValidity(int count)
     {
         var list = GenericListFactory(count);
-        AssertExtensions.Throws<ArgumentException>(null, () => list.CopyTo(0, [], 0, count + 1));
-        AssertExtensions.Throws<ArgumentException>(null, () => list.CopyTo(count, [], 0, 1));
+        AssertExtensions.Throws<ArgumentOutOfRangeException>("count", () => list.CopyTo(0, [], 0, count + 1));
+        AssertExtensions.Throws<ArgumentOutOfRangeException>("count", () => list.CopyTo(count, [], 0, 1));
     }
 }

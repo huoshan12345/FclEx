@@ -6,7 +6,7 @@ public abstract class BPlusTreeDictionaryTests<TKey, TValue> : IDictionary_Gener
     protected override bool Enumerator_Empty_UsesSingletonInstance => true;
     protected override bool Enumerator_Empty_Current_UndefinedOperation_Throws => true;
     protected override bool Enumerator_Empty_ModifiedDuringEnumeration_ThrowsInvalidOperationException => false; // uses a shared empty enumerator instance.
-    protected override Type ICollection_Generic_CopyTo_IndexLargerThanArrayCount_ThrowType => typeof(ArgumentOutOfRangeException);
+    protected override Type ICollection_Generic_CopyTo_IndexLargerThanArrayCount_ThrowType { get; } = typeof(ArgumentOutOfRangeException);
     protected override ModifyOperation ModifyEnumeratorThrows => ModifyOperation.Add | ModifyOperation.Insert | ModifyOperation.Remove | ModifyOperation.Clear;
     protected override ModifyOperation ModifyEnumeratorAllowed => ModifyOperation.Overwrite;
 

@@ -35,13 +35,14 @@ public class OrderedList<T> : ArrayBasedCollection<OrderedList<T>, T>, IList<T>,
 {
     private readonly IComparer<T> _comparer;
 
-    public OrderedList(int capacity = DefaultCapacity, IComparer<T>? comparer = null)
+    public OrderedList(int capacity = 0, IComparer<T>? comparer = null)
     {
         Check.NotNegative(capacity);
 
-        _items = capacity == 0
-            ? []
-            : new T[capacity];
+        // _items is initialized to an empty array in the base class, so only allocate a new array if capacity > 0
+        if (capacity != 0)
+            _items = new T[capacity];
+
         _comparer = comparer ?? Comparer<T>.Default;
     }
 
@@ -222,9 +223,9 @@ public class OrderedList<T> : ArrayBasedCollection<OrderedList<T>, T>, IList<T>,
         throw new NotSupportedException("Cannot insert at arbitrary position in OrderedList.");
     }
 
-    private void AddRange(List<T> items)
+    private void AppendSorted(T[] items)
     {
-        var count = items.Count;
+        var count = items.Length;
         var requiredCapacity = _count + count;
         if (_items.Length < requiredCapacity)
         {
@@ -269,35 +270,39 @@ public class OrderedList<T> : ArrayBasedCollection<OrderedList<T>, T>, IList<T>,
 
         Check.NotNull(items);
 
-        var temp = new List<T>(items);
-        if (temp.Count == 0)
+        if (items.TryGetNonEnumeratedCount(out var c) && c == 0)
             return;
 
-        temp.StableSort(_comparer);
-
-        if (_count == 0)
-        {
-            AddRange(temp);
-            return;
-        }
+        // always create a new array to avoid mutating the input collection if it's already an array or list
+        var temp = items.ToArray();
 
         // Materialize and sort the new items.
+        temp.StableSort(_comparer);
 
+        // ReSharper disable once ConvertIfStatementToSwitchStatement
+        if (_count == 0)
+        {
+            // If the list is currently empty, we can skip the merge step and just take the new items as-is.
+            _items = temp;
+            _count = temp.Length;
+            ++_version;
+            return;
+        }
 
         // Fast path for appending to the end if the new items are all greater than or equal to the last item.
         if (_count > 0 &&
             _comparer.Compare(_items[_count - 1], temp[0]) <= 0)
         {
-            AddRange(temp);
+            AppendSorted(temp);
             return;
         }
 
         // merge
-        var merged = new T[_count + temp.Count];
+        var merged = new T[_count + temp.Length];
 
         int i = 0, j = 0, count = 0;
 
-        while (i < _count && j < temp.Count)
+        while (i < _count && j < temp.Length)
         {
             merged[count++] = _comparer.Compare(_items[i], temp[j]) <= 0
                 ? _items[i++]
@@ -309,7 +314,7 @@ public class OrderedList<T> : ArrayBasedCollection<OrderedList<T>, T>, IList<T>,
             merged[count++] = _items[i++];
         }
 
-        while (j < temp.Count)
+        while (j < temp.Length)
         {
             merged[count++] = temp[j++];
         }

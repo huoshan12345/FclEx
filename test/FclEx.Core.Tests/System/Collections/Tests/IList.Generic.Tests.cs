@@ -1,19 +1,20 @@
 // ReSharper disable all
 // ReSharper disable InvalidXmlDocComment
 #nullable disable
-#pragma warning disable IDE0002 // Simplify member access.
-#pragma warning disable IDE0005 // Using directive is unnecessary.
-#pragma warning disable IDE0251 // Make member 'readonly'
-#pragma warning disable IDE0057 // Use range operator
-#pragma warning disable IDE0019 // Use pattern matching
-#pragma warning disable IDE0034 // Simplify 'default' expression
-#pragma warning disable IDE0350 // Use implicitly typed lambda
-#pragma warning disable IDE0044 // Add readonly modifier
-#pragma warning disable xUnit2015 // Do not use typeof expression to check the exception type.
-#pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
 #pragma warning disable CA1068 // CancellationToken parameters must come last
 #pragma warning disable CA2263 // Prefer generic overload when type is known
+#pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
+#pragma warning disable IDE0002 // Simplify member access.
+#pragma warning disable IDE0005 // Using directive is unnecessary.
+#pragma warning disable IDE0019 // Use pattern matching
+#pragma warning disable IDE0034 // Simplify 'default' expression
+#pragma warning disable IDE0044 // Add readonly modifier
+#pragma warning disable IDE0057 // Use range operator
 #pragma warning disable IDE0066 // Convert switch statement to expression
+#pragma warning disable IDE0251 // Make member 'readonly'
+#pragma warning disable IDE0301 // Use collection expression for empty
+#pragma warning disable IDE0350 // Use implicitly typed lambda
+#pragma warning disable xUnit2015 // Do not use typeof expression to check the exception type.
 
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
@@ -31,6 +32,15 @@ namespace System.Collections.Tests
     public abstract class IList_Generic_Tests<T> : ICollection_Generic_Tests<T>
     {
         #region IList<T> Helper Methods
+
+        protected virtual bool SupportsInsert => true;
+        protected virtual bool SupportsRemoveAt => true;
+        protected virtual bool SupportsItemSet => true;
+
+        protected virtual List<T> ToExpectedList(IList<T> list)
+        {
+            return list.ToList();
+        }
 
         /// <summary>
         /// Creates an instance of an IList{T} that can be used for testing.
@@ -172,73 +182,73 @@ namespace System.Collections.Tests
         [MemberData(nameof(ValidCollectionSizes))]
         public void IList_Generic_ItemSet_NegativeIndex_ThrowsException(int count)
         {
-            if (!IsReadOnly)
-            {
-                IList<T> list = GenericIListFactory(count);
-                T validAdd = CreateT(0);
-                Assert.Throws(IList_Generic_Item_InvalidIndex_ThrowType, () => list[-1] = validAdd);
-                Assert.Throws(IList_Generic_Item_InvalidIndex_ThrowType, () => list[int.MinValue] = validAdd);
-                Assert.Equal(count, list.Count);
-            }
+            if (IsReadOnly || !SupportsItemSet)
+                return;
+
+            IList<T> list = GenericIListFactory(count);
+            T validAdd = CreateT(0);
+            Assert.Throws(IList_Generic_Item_InvalidIndex_ThrowType, () => list[-1] = validAdd);
+            Assert.Throws(IList_Generic_Item_InvalidIndex_ThrowType, () => list[int.MinValue] = validAdd);
+            Assert.Equal(count, list.Count);
         }
 
         [Theory]
         [MemberData(nameof(ValidCollectionSizes))]
         public void IList_Generic_ItemSet_IndexGreaterThanListCount_ThrowsException(int count)
         {
-            if (!IsReadOnly)
-            {
-                IList<T> list = GenericIListFactory(count);
-                T validAdd = CreateT(0);
-                Assert.Throws(IList_Generic_Item_InvalidIndex_ThrowType, () => list[count] = validAdd);
-                Assert.Throws(IList_Generic_Item_InvalidIndex_ThrowType, () => list[count + 1] = validAdd);
-                Assert.Equal(count, list.Count);
-            }
+            if (IsReadOnly || !SupportsItemSet)
+                return;
+
+            IList<T> list = GenericIListFactory(count);
+            T validAdd = CreateT(0);
+            Assert.Throws(IList_Generic_Item_InvalidIndex_ThrowType, () => list[count] = validAdd);
+            Assert.Throws(IList_Generic_Item_InvalidIndex_ThrowType, () => list[count + 1] = validAdd);
+            Assert.Equal(count, list.Count);
         }
 
         [Theory]
         [MemberData(nameof(ValidCollectionSizes))]
         public void IList_Generic_ItemSet_OnReadOnlyList(int count)
         {
-            if (IsReadOnly && count > 0)
-            {
-                IList<T> list = GenericIListFactory(count);
-                T before = list[count / 2];
-                Assert.Throws<NotSupportedException>(() => list[count / 2] = CreateT(321432));
-                Assert.Equal(before, list[count / 2]);
-            }
+            if (!IsReadOnly || count <= 0 || !SupportsItemSet)
+                return;
+
+            IList<T> list = GenericIListFactory(count);
+            T before = list[count / 2];
+            Assert.Throws<NotSupportedException>(() => list[count / 2] = CreateT(321432));
+            Assert.Equal(before, list[count / 2]);
         }
 
         [Theory]
         [MemberData(nameof(ValidCollectionSizes))]
         public void IList_Generic_ItemSet_FirstItemToNonDefaultValue(int count)
         {
-            if (count > 0 && !IsReadOnly)
-            {
-                IList<T> list = GenericIListFactory(count);
-                T value = CreateT(123452);
-                list[0] = value;
-                Assert.Equal(value, list[0]);
-            }
+            if (!IsReadOnly || count <= 0 || !SupportsItemSet)
+                return;
+
+            IList<T> list = GenericIListFactory(count);
+            T value = CreateT(123452);
+            list[0] = value;
+            Assert.Equal(value, list[0]);
         }
 
         [Theory]
         [MemberData(nameof(ValidCollectionSizes))]
         public void IList_Generic_ItemSet_FirstItemToDefaultValue(int count)
         {
-            if (count > 0 && !IsReadOnly)
+            if (!IsReadOnly || count <= 0 || !SupportsItemSet)
+                return;
+
+            IList<T> list = GenericIListFactory(count);
+            if (DefaultValueAllowed)
             {
-                IList<T> list = GenericIListFactory(count);
-                if (DefaultValueAllowed)
-                {
-                    list[0] = default(T);
-                    Assert.Equal(default(T), list[0]);
-                }
-                else
-                {
-                    Assert.Throws<ArgumentNullException>(() => list[0] = default(T));
-                    Assert.NotEqual(default(T), list[0]);
-                }
+                list[0] = default(T);
+                Assert.Equal(default(T), list[0]);
+            }
+            else
+            {
+                Assert.Throws<ArgumentNullException>(() => list[0] = default(T));
+                Assert.NotEqual(default(T), list[0]);
             }
         }
 
@@ -246,34 +256,34 @@ namespace System.Collections.Tests
         [MemberData(nameof(ValidCollectionSizes))]
         public void IList_Generic_ItemSet_LastItemToNonDefaultValue(int count)
         {
-            if (count > 0 && !IsReadOnly)
-            {
-                IList<T> list = GenericIListFactory(count);
-                T value = CreateT(123452);
-                int lastIndex = count > 0 ? count - 1 : 0;
-                list[lastIndex] = value;
-                Assert.Equal(value, list[lastIndex]);
-            }
+            if (!IsReadOnly || count <= 0 || !SupportsItemSet)
+                return;
+
+            IList<T> list = GenericIListFactory(count);
+            T value = CreateT(123452);
+            int lastIndex = count > 0 ? count - 1 : 0;
+            list[lastIndex] = value;
+            Assert.Equal(value, list[lastIndex]);
         }
 
         [Theory]
         [MemberData(nameof(ValidCollectionSizes))]
         public void IList_Generic_ItemSet_LastItemToDefaultValue(int count)
         {
-            if (count > 0 && !IsReadOnly && DefaultValueAllowed)
+            if (count <= 0 || IsReadOnly || !DefaultValueAllowed || !SupportsItemSet)
+                return;
+
+            IList<T> list = GenericIListFactory(count);
+            int lastIndex = count > 0 ? count - 1 : 0;
+            if (DefaultValueAllowed)
             {
-                IList<T> list = GenericIListFactory(count);
-                int lastIndex = count > 0 ? count - 1 : 0;
-                if (DefaultValueAllowed)
-                {
-                    list[lastIndex] = default(T);
-                    Assert.Equal(default(T), list[lastIndex]);
-                }
-                else
-                {
-                    Assert.Throws<ArgumentNullException>(() => list[lastIndex] = default(T));
-                    Assert.NotEqual(default(T), list[lastIndex]);
-                }
+                list[lastIndex] = default(T);
+                Assert.Equal(default(T), list[lastIndex]);
+            }
+            else
+            {
+                Assert.Throws<ArgumentNullException>(() => list[lastIndex] = default(T));
+                Assert.NotEqual(default(T), list[lastIndex]);
             }
         }
 
@@ -281,29 +291,29 @@ namespace System.Collections.Tests
         [MemberData(nameof(ValidCollectionSizes))]
         public void IList_Generic_ItemSet_DuplicateValues(int count)
         {
-            if (count >= 2 && !IsReadOnly && DuplicateValuesAllowed)
-            {
-                IList<T> list = GenericIListFactory(count);
-                T value = CreateT(123452);
-                list[0] = value;
-                list[1] = value;
-                Assert.Equal(value, list[0]);
-                Assert.Equal(value, list[1]);
-            }
+            if (count < 2 || IsReadOnly || !DuplicateValuesAllowed || !SupportsItemSet)
+                return;
+
+            IList<T> list = GenericIListFactory(count);
+            T value = CreateT(123452);
+            list[0] = value;
+            list[1] = value;
+            Assert.Equal(value, list[0]);
+            Assert.Equal(value, list[1]);
         }
 
         [Theory]
         [MemberData(nameof(ValidCollectionSizes))]
         public void IList_Generic_ItemSet_InvalidValue(int count)
         {
-            if (count > 0&& !IsReadOnly)
+            if (count <= 0 || IsReadOnly || !SupportsItemSet) 
+                return;
+
+            Assert.All(InvalidValues, value =>
             {
-                Assert.All(InvalidValues, value =>
-                {
-                    IList<T> list = GenericIListFactory(count);
-                    Assert.Throws<ArgumentException>(() => list[count / 2] = value);
-                });
-            }
+                IList<T> list = GenericIListFactory(count);
+                Assert.Throws<ArgumentException>(() => list[count / 2] = value);
+            });
         }
 
         #endregion
@@ -337,18 +347,20 @@ namespace System.Collections.Tests
         [MemberData(nameof(ValidCollectionSizes))]
         public void IList_Generic_IndexOf_DefaultValueContainedInList(int count)
         {
-            if (count > 0 && DefaultValueAllowed)
+            if (count <= 0 || !DefaultValueAllowed) 
+                return;
+
+            IList<T> list = GenericIListFactory(count);
+            T value = default(T);
+            if (!list.Contains(value))
             {
-                IList<T> list = GenericIListFactory(count);
-                T value = default(T);
-                if (!list.Contains(value))
-                {
-                    if (IsReadOnly)
-                        return;
-                    list[0] = value;
-                }
-                Assert.Equal(0, list.IndexOf(value));
+                if (IsReadOnly)
+                    return;
+                list.Add(value);
             }
+            var expectedList = ToExpectedList(list);
+
+            Assert.Equal(expectedList.IndexOf(value), list.IndexOf(value));
         }
 
         [Theory]
@@ -367,15 +379,17 @@ namespace System.Collections.Tests
         [MemberData(nameof(ValidCollectionSizes))]
         public void IList_Generic_IndexOf_ValueInCollectionMultipleTimes(int count)
         {
-            if (count > 0 && !IsReadOnly && DuplicateValuesAllowed)
-            {
-                // IndexOf should always return the lowest index for which a matching element is found
-                IList<T> list = GenericIListFactory(count);
-                T value = CreateT(12345);
-                list[0] = value;
-                list[count / 2] = value;
-                Assert.Equal(0, list.IndexOf(value));
-            }
+            if (count <= 0 || IsReadOnly || !DuplicateValuesAllowed) 
+                return;
+
+            // IndexOf should always return the lowest index for which a matching element is found
+            IList<T> list = GenericIListFactory(count);
+            T value = CreateT(12345);
+            list.Add(value);
+            list.Add(value);
+            var expectedList = ToExpectedList(list);
+
+            Assert.Equal(expectedList.IndexOf(value), list.IndexOf(value));
         }
 
         [Theory]
@@ -408,17 +422,20 @@ namespace System.Collections.Tests
         [MemberData(nameof(ValidCollectionSizes))]
         public void IList_Generic_IndexOf_ReturnsFirstMatchingValue(int count)
         {
-            if (!IsReadOnly && !AddRemoveClear_ThrowsNotSupported && DuplicateValuesAllowed)
-            {
-                IList<T> list = GenericIListFactory(count);
-                foreach (T duplicate in list.ToList()) // hard copies list to circumvent enumeration error
-                    list.Add(duplicate);
-                List<T> expectedList = list.ToList();
+            if (IsReadOnly || AddRemoveClear_ThrowsNotSupported || !DuplicateValuesAllowed)
+                return;
 
-                Assert.All(Enumerable.Range(0, count), (index =>
-                    Assert.Equal(index, list.IndexOf(expectedList[index]))
-                ));
-            }
+            IList<T> list = GenericIListFactory(count);
+            foreach (T duplicate in list.ToList()) // hard copies list to circumvent enumeration error
+                list.Add(duplicate);
+
+            var expectedList = ToExpectedList(list);
+
+            Assert.All(Enumerable.Range(0, count), index =>
+            {
+                var item = expectedList[index];
+                Assert.Equal(expectedList.IndexOf(item), list.IndexOf(item));
+            });
         }
 
         #endregion
@@ -429,120 +446,120 @@ namespace System.Collections.Tests
         [MemberData(nameof(ValidCollectionSizes))]
         public void IList_Generic_Insert_NegativeIndex_ThrowsArgumentOutOfRangeException(int count)
         {
-            if (!IsReadOnly && !AddRemoveClear_ThrowsNotSupported)
-            {
-                IList<T> list = GenericIListFactory(count);
-                T validAdd = CreateT(0);
-                Assert.Throws<ArgumentOutOfRangeException>(() => list.Insert(-1, validAdd));
-                Assert.Throws<ArgumentOutOfRangeException>(() => list.Insert(int.MinValue, validAdd));
-                Assert.Equal(count, list.Count);
-            }
+            if (IsReadOnly || AddRemoveClear_ThrowsNotSupported || !SupportsInsert) 
+                return;
+
+            IList<T> list = GenericIListFactory(count);
+            T validAdd = CreateT(0);
+            Assert.Throws<ArgumentOutOfRangeException>(() => list.Insert(-1, validAdd));
+            Assert.Throws<ArgumentOutOfRangeException>(() => list.Insert(int.MinValue, validAdd));
+            Assert.Equal(count, list.Count);
         }
 
         [Theory]
         [MemberData(nameof(ValidCollectionSizes))]
         public void IList_Generic_Insert_IndexGreaterThanListCount_Appends(int count)
         {
-            if (!IsReadOnly && !AddRemoveClear_ThrowsNotSupported)
-            {
-                IList<T> list = GenericIListFactory(count);
-                T validAdd = CreateT(12350);
-                list.Insert(count, validAdd);
-                Assert.Equal(count + 1, list.Count);
-                Assert.Equal(validAdd, list[count]);
-            }
+            if (IsReadOnly || AddRemoveClear_ThrowsNotSupported || !SupportsInsert) 
+                return;
+
+            IList<T> list = GenericIListFactory(count);
+            T validAdd = CreateT(12350);
+            list.Insert(count, validAdd);
+            Assert.Equal(count + 1, list.Count);
+            Assert.Equal(validAdd, list[count]);
         }
 
         [Theory]
         [MemberData(nameof(ValidCollectionSizes))]
         public void IList_Generic_Insert_ToReadOnlyList(int count)
         {
-            if (IsReadOnly || AddRemoveClear_ThrowsNotSupported)
-            {
-                IList<T> list = GenericIListFactory(count);
-                Assert.Throws<NotSupportedException>(() => list.Insert(count / 2, CreateT(321432)));
-                Assert.Equal(count, list.Count);
-            }
+            if (!IsReadOnly && !AddRemoveClear_ThrowsNotSupported || !SupportsInsert)
+                return;
+
+            IList<T> list = GenericIListFactory(count);
+            Assert.Throws<NotSupportedException>(() => list.Insert(count / 2, CreateT(321432)));
+            Assert.Equal(count, list.Count);
         }
 
         [Theory]
         [MemberData(nameof(ValidCollectionSizes))]
         public void IList_Generic_Insert_FirstItemToNonDefaultValue(int count)
         {
-            if (!IsReadOnly && !AddRemoveClear_ThrowsNotSupported)
-            {
-                IList<T> list = GenericIListFactory(count);
-                T value = CreateT(123452);
-                list.Insert(0, value);
-                Assert.Equal(value, list[0]);
-                Assert.Equal(count + 1, list.Count);
-            }
+            if (IsReadOnly || AddRemoveClear_ThrowsNotSupported || !SupportsInsert)
+                return;
+
+            IList<T> list = GenericIListFactory(count);
+            T value = CreateT(123452);
+            list.Insert(0, value);
+            Assert.Equal(value, list[0]);
+            Assert.Equal(count + 1, list.Count);
         }
 
         [Theory]
         [MemberData(nameof(ValidCollectionSizes))]
         public void IList_Generic_Insert_FirstItemToDefaultValue(int count)
         {
-            if (!IsReadOnly && !AddRemoveClear_ThrowsNotSupported && DefaultValueAllowed)
-            {
-                IList<T> list = GenericIListFactory(count);
-                T value = default(T);
-                list.Insert(0, value);
-                Assert.Equal(value, list[0]);
-                Assert.Equal(count + 1, list.Count);
-            }
+            if (IsReadOnly || AddRemoveClear_ThrowsNotSupported || !DefaultValueAllowed || !SupportsInsert)
+                return;
+
+            IList<T> list = GenericIListFactory(count);
+            T value = default(T);
+            list.Insert(0, value);
+            Assert.Equal(value, list[0]);
+            Assert.Equal(count + 1, list.Count);
         }
 
         [Theory]
         [MemberData(nameof(ValidCollectionSizes))]
         public void IList_Generic_Insert_LastItemToNonDefaultValue(int count)
         {
-            if (!IsReadOnly && !AddRemoveClear_ThrowsNotSupported)
-            {
-                IList<T> list = GenericIListFactory(count);
-                T value = CreateT(123452);
-                int lastIndex = count > 0 ? count - 1 : 0;
-                list.Insert(lastIndex, value);
-                Assert.Equal(value, list[lastIndex]);
-                Assert.Equal(count + 1, list.Count);
-            }
+            if (IsReadOnly || AddRemoveClear_ThrowsNotSupported || !SupportsInsert) 
+                return;
+
+            IList<T> list = GenericIListFactory(count);
+            T value = CreateT(123452);
+            int lastIndex = count > 0 ? count - 1 : 0;
+            list.Insert(lastIndex, value);
+            Assert.Equal(value, list[lastIndex]);
+            Assert.Equal(count + 1, list.Count);
         }
 
         [Theory]
         [MemberData(nameof(ValidCollectionSizes))]
         public void IList_Generic_Insert_LastItemToDefaultValue(int count)
         {
-            if (!IsReadOnly && !AddRemoveClear_ThrowsNotSupported && DefaultValueAllowed)
-            {
-                IList<T> list = GenericIListFactory(count);
-                T value = default(T);
-                int lastIndex = count > 0 ? count - 1 : 0;
-                list.Insert(lastIndex, value);
-                Assert.Equal(value, list[lastIndex]);
-                Assert.Equal(count + 1, list.Count);
-            }
+            if (IsReadOnly || AddRemoveClear_ThrowsNotSupported || !DefaultValueAllowed || !SupportsInsert)
+                return;
+
+            IList<T> list = GenericIListFactory(count);
+            T value = default(T);
+            int lastIndex = count > 0 ? count - 1 : 0;
+            list.Insert(lastIndex, value);
+            Assert.Equal(value, list[lastIndex]);
+            Assert.Equal(count + 1, list.Count);
         }
 
         [Theory]
         [MemberData(nameof(ValidCollectionSizes))]
         public void IList_Generic_Insert_DuplicateValues(int count)
         {
-            if (!IsReadOnly && !AddRemoveClear_ThrowsNotSupported && DuplicateValuesAllowed)
+            if (IsReadOnly || AddRemoveClear_ThrowsNotSupported || !DuplicateValuesAllowed || !SupportsInsert) 
+                return;
+
+            IList<T> list = GenericIListFactory(count);
+            T value = CreateT(123452);
+            if (AddRemoveClear_ThrowsNotSupported)
             {
-                IList<T> list = GenericIListFactory(count);
-                T value = CreateT(123452);
-                if (AddRemoveClear_ThrowsNotSupported)
-                {
-                    Assert.Throws<NotSupportedException>(() => list.Insert(0, value));
-                }
-                else
-                {
-                    list.Insert(0, value);
-                    list.Insert(1, value);
-                    Assert.Equal(value, list[0]);
-                    Assert.Equal(value, list[1]);
-                    Assert.Equal(count + 2, list.Count);
-                }
+                Assert.Throws<NotSupportedException>(() => list.Insert(0, value));
+            }
+            else
+            {
+                list.Insert(0, value);
+                list.Insert(1, value);
+                Assert.Equal(value, list[0]);
+                Assert.Equal(value, list[1]);
+                Assert.Equal(count + 2, list.Count);
             }
         }
 
@@ -550,14 +567,14 @@ namespace System.Collections.Tests
         [MemberData(nameof(ValidCollectionSizes))]
         public void IList_Generic_Insert_InvalidValue(int count)
         {
-            if (!IsReadOnly && !AddRemoveClear_ThrowsNotSupported)
+            if (IsReadOnly || AddRemoveClear_ThrowsNotSupported || !SupportsInsert) 
+                return;
+
+            Assert.All(InvalidValues, value =>
             {
-                Assert.All(InvalidValues, value =>
-                {
-                    IList<T> list = GenericIListFactory(count);
-                    Assert.Throws<ArgumentException>(() => list.Insert(count / 2, value));
-                });
-            }
+                IList<T> list = GenericIListFactory(count);
+                Assert.Throws<ArgumentException>(() => list.Insert(count / 2, value));
+            });
         }
 
         #endregion

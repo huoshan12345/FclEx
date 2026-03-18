@@ -43,7 +43,7 @@ public abstract partial class OrderedListTests<T>
     }
 
     [Fact]
-    public void AddRange_AddSelfAsEnumerable_ThrowsExceptionWhenNotEmpty()
+    public void AddRange_AddSelfAsEnumerable_DoesNotThrowExceptionWhenNotEmpty()
     {
         var list = GenericListFactory(0);
 
@@ -59,20 +59,20 @@ public abstract partial class OrderedListTests<T>
         list.AddRange(list);
         Assert.Equal(4, list.Count);
 
-        // Fails version check when list has elements and is added as non-collection.
-        Assert.Throws<InvalidOperationException>(() => list.AddRange(list.Where(_ => true)));
+        // does not throw because the enumerable is enumerated before adding to the list, so the list is not modified during enumeration.
+        list.AddRange(list.Where(_ => true));
         Assert.Equal(5, list.Count);
-        Assert.Throws<InvalidOperationException>(() => list.AddRange(list.Where(_ => true)));
+        list.AddRange(list.Where(_ => true));
         Assert.Equal(6, list.Count);
     }
 
     [Fact]
-    public void AddRange_CollectionWithLargeCount_ThrowsOverflowException()
+    public void AddRange_CollectionWithLargeCount_ThrowsOutOfMemoryException()
     {
         var list = GenericListFactory(count: 1);
         ICollection<T> collection = new CollectionWithLargeCount();
 
-        Assert.Throws<OverflowException>(() => list.AddRange(collection));
+        Assert.Throws<OutOfMemoryException>(() => list.AddRange(collection));
     }
 
     private class CollectionWithLargeCount : ICollection<T>
