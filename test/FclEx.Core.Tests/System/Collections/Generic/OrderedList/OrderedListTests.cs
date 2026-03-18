@@ -16,7 +16,7 @@ public abstract partial class OrderedListTests<T> : IList_Generic_Tests<T>
 
     protected override List<T> ToExpectedList(IList<T> list)
     {
-        var comparer = ObjectHelper.GetRequiredFieldValue<IComparer<T>>(list, "_comparer");
+        var comparer = ((OrderedList<T>)list).Comparer;
         var expected = list.ToList();
         expected.StableSort(comparer);
         return expected;

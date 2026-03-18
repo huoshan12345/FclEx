@@ -1,4 +1,6 @@
-﻿namespace System.Collections.Generic;
+﻿// ReSharper disable ConvertToAutoPropertyWithPrivateSetter
+// ReSharper disable ConvertToAutoPropertyWhenPossible
+namespace System.Collections.Generic;
 
 /// <summary>
 /// Represents a min-heap based priority queue implemented as a 4-ary heap.
@@ -28,16 +30,16 @@ public class Heap<T> : ArrayBasedCollection<Heap<T>, T>, ICollection<T>
 
     private readonly IComparer<T> _comparer;
 
-    public Heap(int capacity = 4, IComparer<T>? comparer = null)
+    public Heap(int capacity, IComparer<T>? comparer = null)
     {
-        if (capacity < 4)
-            capacity = 4;
+        _items = capacity == 0
+            ? []
+            : new T[capacity];
 
-        _items = new T[capacity];
         _comparer = comparer ?? Comparer<T>.Default;
     }
 
-    public Heap(IComparer<T> comparer) : this(4, comparer)
+    public Heap(IComparer<T>? comparer = null) : this(0, comparer)
     {
     }
 
@@ -47,12 +49,13 @@ public class Heap<T> : ArrayBasedCollection<Heap<T>, T>, ICollection<T>
         _items = items.ToArray();
         _count = _items.Length;
 
-        if (_items.Length < 4)
-            Array.Resize(ref _items, 4);
-
-        Heapify();
+        if (_count > 1)
+        {
+            Heapify();
+        }
     }
 
+    public IComparer<T> Comparer => _comparer;
     public bool IsReadOnly => false;
 
     void ICollection<T>.Add(T item) => Push(item);
@@ -77,6 +80,27 @@ public class Heap<T> : ArrayBasedCollection<Heap<T>, T>, ICollection<T>
 
         var index = _count++;
         SiftUp(index, item);
+    }
+
+    public void PushRange(IEnumerable<T> items)
+    {
+        Check.NotNull(items);
+
+        if (items.TryGetNonEnumeratedCount(out var count))
+        {
+            if (count == 0)
+                return;
+
+            if (count > Capacity - _count)
+            {
+                Grow(checked(_count + count));
+            }
+        }
+
+        foreach (var item in items)
+        {
+            Push(item);
+        }
     }
 
     /// <summary>
@@ -159,7 +183,7 @@ public class Heap<T> : ArrayBasedCollection<Heap<T>, T>, ICollection<T>
     /// <remarks>
     /// If the heap is empty, the item is inserted and returned.
     /// </remarks>
-    public T ReplaceTop(T item)
+    public T PopPush(T item)
     {
         if (_count == 0)
         {
@@ -167,29 +191,9 @@ public class Heap<T> : ArrayBasedCollection<Heap<T>, T>, ICollection<T>
             return item;
         }
 
-        var data = _items;
-        var root = data[0];
+        var root = _items[0];
         SiftDown(0, item);
         return root;
-    }
-
-    /// <summary>
-    /// Attempts to replace the smallest element with the specified item.
-    /// </summary>
-    /// <returns><see langword="true"/> if the heap was not empty; otherwise <see langword="false"/>.</returns>
-    public bool TryReplaceTop(T item, out T? old)
-    {
-        if (_count == 0)
-        {
-            old = default;
-            Push(item);
-            return false;
-        }
-
-        old = _items[0];
-        SiftDown(0, item);
-
-        return true;
     }
 
     /// <summary>

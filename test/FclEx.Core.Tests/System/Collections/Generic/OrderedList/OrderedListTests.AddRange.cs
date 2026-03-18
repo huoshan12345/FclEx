@@ -70,22 +70,8 @@ public abstract partial class OrderedListTests<T>
     public void AddRange_CollectionWithLargeCount_ThrowsOutOfMemoryException()
     {
         var list = GenericListFactory(count: 1);
-        ICollection<T> collection = new CollectionWithLargeCount();
+        var collection = new CollectionWithLargeCount<T>();
 
         Assert.Throws<OutOfMemoryException>(() => list.AddRange(collection));
-    }
-
-    private class CollectionWithLargeCount : ICollection<T>
-    {
-        public int Count => int.MaxValue;
-
-        public bool IsReadOnly => throw new NotImplementedException();
-        public void Add(T item) => throw new NotImplementedException();
-        public void Clear() => throw new NotImplementedException();
-        public bool Contains(T item) => throw new NotImplementedException();
-        public void CopyTo(T[] array, int arrayIndex) => throw new NotImplementedException();
-        public IEnumerator<T> GetEnumerator() => throw new NotImplementedException();
-        public bool Remove(T item) => throw new NotImplementedException();
-        IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
     }
 }

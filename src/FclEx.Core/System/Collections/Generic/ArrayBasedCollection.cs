@@ -1,4 +1,5 @@
-﻿namespace System.Collections.Generic;
+﻿// ReSharper disable ConvertToAutoPropertyWithPrivateSetter
+namespace System.Collections.Generic;
 
 public abstract class ArrayBasedCollection<TSelf, T> : IReadOnlyCollection<T>
     where TSelf : ArrayBasedCollection<TSelf, T>
@@ -9,7 +10,6 @@ public abstract class ArrayBasedCollection<TSelf, T> : IReadOnlyCollection<T>
     protected int _count;
     protected int _version;
 
-    // ReSharper disable once ConvertToAutoPropertyWithPrivateSetter
     public int Count => _count;
 
     /// <summary>
@@ -151,8 +151,8 @@ public abstract class ArrayBasedCollection<TSelf, T> : IReadOnlyCollection<T>
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<T>)this).GetEnumerator();
     IEnumerator<T> IEnumerable<T>.GetEnumerator()
     {
+        // use singleton empty enumerator to avoid unnecessary allocation when the dictionary is empty.
         return Count == 0
-            // use singleton empty enumerator to avoid unnecessary allocation when the dictionary is empty.
             ? GenericEmptyEnumerator<T>.Instance
             : GetEnumerator();
     }

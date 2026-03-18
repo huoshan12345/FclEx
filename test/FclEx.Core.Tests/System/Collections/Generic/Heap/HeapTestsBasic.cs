@@ -43,7 +43,7 @@ public class HeapTestsBasic
         heap.Push(2);
         heap.Push(3);
 
-        var old = heap.ReplaceTop(10);
+        var old = heap.PopPush(10);
 
         Assert.Equal(1, old);
         Assert.Equal(2, heap.Pop());
@@ -270,7 +270,7 @@ public class HeapTestsBasic
         for (var i = 0; i < 1000; i++)
             heap.Push(i);
 
-        heap.ReplaceTop(5000);
+        heap.PopPush(5000);
 
         var prev = heap.Pop();
 
@@ -409,7 +409,7 @@ public class HeapTestsBasic
 
                     if (list.Count == 0)
                     {
-                        heap.ReplaceTop(v);
+                        heap.PopPush(v);
                         list.Add(v);
                         break;
                     }
@@ -419,7 +419,7 @@ public class HeapTestsBasic
                     var expected = list[0];
                     list[0] = v;
 
-                    var actual = heap.ReplaceTop(v);
+                    var actual = heap.PopPush(v);
 
                     Assert.Equal(expected, actual);
                     break;
@@ -517,7 +517,7 @@ public class HeapTestsBasic
 
         for (var i = 0; i < 1000; i++)
         {
-            heap.ReplaceTop(10000 - i);
+            heap.PopPush(10000 - i);
         }
 
         var prev = heap.Pop();

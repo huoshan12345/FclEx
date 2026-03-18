@@ -1,4 +1,6 @@
-﻿namespace System.Collections.Generic;
+﻿// ReSharper disable ConvertToAutoPropertyWithPrivateSetter
+// ReSharper disable ConvertToAutoPropertyWhenPossible
+namespace System.Collections.Generic;
 
 /// <summary>
 /// Represents a list that maintains its elements in sorted order.
@@ -46,7 +48,7 @@ public class OrderedList<T> : ArrayBasedCollection<OrderedList<T>, T>, IList<T>,
         _comparer = comparer ?? Comparer<T>.Default;
     }
 
-    public OrderedList(IComparer<T> comparer) : this(DefaultCapacity, comparer)
+    public OrderedList(IComparer<T> comparer) : this(0, comparer)
     {
     }
 
@@ -56,6 +58,7 @@ public class OrderedList<T> : ArrayBasedCollection<OrderedList<T>, T>, IList<T>,
         AddRange(items);
     }
 
+    public IComparer<T> Comparer => _comparer;
     public bool IsReadOnly => false;
 
     /// <summary>
