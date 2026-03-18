@@ -129,6 +129,14 @@ public abstract partial class OrderedListTests<T>
         list.AddRange(list); // 2 duplicates
         list.AddRange(list); // 4 duplicates
         list.AddRange(list); // 8 duplicates
+
+        if (count == 0)
+        {
+            Assert.Equal(0, list.Count);
+            Assert.Empty(list);
+            return;
+        }
+
         var dupTimes = list.Count / withoutDuplicates.Count;
 
         Assert.All(Enumerable.Range(0, count), i =>
@@ -152,6 +160,14 @@ public abstract partial class OrderedListTests<T>
         list.AddRange(list); // 2 duplicates
         list.AddRange(list); // 4 duplicates
         list.AddRange(list); // 8 duplicates
+
+        if (count == 0)
+        {
+            Assert.Equal(0, list.Count);
+            Assert.Empty(list);
+            return;
+        }
+
         var dupTimes = list.Count / withoutDuplicates.Count;
 
         Assert.All(Enumerable.Range(0, count), i =>

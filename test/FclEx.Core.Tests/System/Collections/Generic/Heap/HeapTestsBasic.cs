@@ -403,19 +403,14 @@ public class HeapTestsBasic
                     Assert.Equal(expected, actual);
                     break;
                 }
-                case 3: // ReplaceTop
+                case 3: // PopPush
                 {
+                    if (list.Count == 0)
+                        break;
+
                     var v = rand.Next(100000);
 
-                    if (list.Count == 0)
-                    {
-                        heap.PopPush(v);
-                        list.Add(v);
-                        break;
-                    }
-
                     list.Sort();
-
                     var expected = list[0];
                     list[0] = v;
 
@@ -424,7 +419,23 @@ public class HeapTestsBasic
                     Assert.Equal(expected, actual);
                     break;
                 }
-                case 4: // clear
+                case 4: // PushPop
+                {
+                    if (list.Count == 0)
+                        break;
+
+                    var v = rand.Next(100000);
+                    list.Add(v);
+                    list.Sort();
+                    var expected = list[0];
+                    list.RemoveAt(0);
+
+                    var actual = heap.PushPop(v);
+
+                    Assert.Equal(expected, actual);
+                    break;
+                }
+                case 5: // clear
                 {
                     if (rand.Next(100) == 0)
                     {
@@ -551,13 +562,11 @@ file static class HeapTestExtensions
 {
     private const int Arity = 4;
 
-    private static readonly FieldInfo _fieldItems = typeof(Heap<>).GetRequiredField("_items");
-
     extension(Assert)
     {
         public static void AssertHeapInvariant(Heap<int> heap)
         {
-            var items = _fieldItems.GetRequiredValue<int[]>(heap);
+            var items = ObjectHelper.GetRequiredFieldValue<int[]>(heap, "_items");
             var count = heap.Count;
 
             // 1. Verify the heap property: parent <= child

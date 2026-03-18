@@ -68,7 +68,7 @@ namespace System.Collections.Tests
             foreach (ModifyEnumerable item in base.GetModifyEnumerables(operations))
                 yield return item;
 
-            if (!AddRemoveClear_ThrowsNotSupported && (operations & ModifyOperation.Insert) == ModifyOperation.Insert)
+            if (!AddRemoveClear_ThrowsNotSupported && SupportsInsert && (operations & ModifyOperation.Insert) == ModifyOperation.Insert)
             {
                 yield return (IEnumerable<T> enumerable) =>
                 {
@@ -81,7 +81,7 @@ namespace System.Collections.Tests
                     return false;
                 };
             }
-            if (!AddRemoveClear_ThrowsNotSupported && (operations & ModifyOperation.Overwrite) == ModifyOperation.Overwrite)
+            if (!AddRemoveClear_ThrowsNotSupported && SupportsItemSet && (operations & ModifyOperation.Overwrite) == ModifyOperation.Overwrite)
             {
                 yield return (IEnumerable<T> enumerable) =>
                 {
@@ -94,7 +94,7 @@ namespace System.Collections.Tests
                     return false;
                 };
             }
-            if (!AddRemoveClear_ThrowsNotSupported && (operations & ModifyOperation.Remove) == ModifyOperation.Remove)
+            if (!AddRemoveClear_ThrowsNotSupported && SupportsRemoveAt && (operations & ModifyOperation.Remove) == ModifyOperation.Remove)
             {
                 yield return (IEnumerable<T> enumerable) =>
                 {

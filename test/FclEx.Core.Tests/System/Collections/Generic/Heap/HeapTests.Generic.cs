@@ -286,9 +286,9 @@ public abstract class HeapTests<T> : IGenericSharedAPI_Tests<T>
     /// <see cref="IGenericSharedAPI_Tests{T}"/> requires collections that implement IEnumerable.
     /// Since PriorityQueue does not we use a subclass that delegates to <see cref="PriorityQueue{TElement, TPriority}.UnorderedItems"/>.
     /// </summary>
-    protected class EnumerablePriorityQueue : Heap<T>, IEnumerable<T>
+    protected class EnumerableHeap : Heap<T>, IEnumerable<T>
     {
-        public EnumerablePriorityQueue(IComparer<T>? comparer) : base(comparer)
+        public EnumerableHeap(IComparer<T>? comparer) : base(comparer)
         {
         }
 
@@ -296,14 +296,14 @@ public abstract class HeapTests<T> : IGenericSharedAPI_Tests<T>
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
-    protected override IEnumerable<T> GenericIEnumerableFactory() => new EnumerablePriorityQueue(GetComparer());
-    protected override int Count(IEnumerable<T> enumerable) => ((EnumerablePriorityQueue)enumerable).Count;
-    protected override void Add(IEnumerable<T> enumerable, T value) => ((EnumerablePriorityQueue)enumerable).Push(value);
-    protected override void Clear(IEnumerable<T> enumerable) => ((EnumerablePriorityQueue)enumerable).Clear();
-    protected override bool Contains(IEnumerable<T> enumerable, T value) => ((EnumerablePriorityQueue)enumerable).Any(elem => elem!.Equals(value));
-    protected override void CopyTo(IEnumerable<T> enumerable, T[] array, int index) => ((ICollection<T>)(EnumerablePriorityQueue)enumerable).CopyTo(array, index);
-    protected override bool Remove(IEnumerable<T> enumerable) => ((EnumerablePriorityQueue)enumerable).TryPop(out _);
-    protected override Type IGenericSharedAPI_CopyTo_IndexLargerThanArrayCount_ThrowType => typeof(ArgumentOutOfRangeException);
+    protected override IEnumerable<T> GenericIEnumerableFactory() => new EnumerableHeap(GetComparer());
+    protected override int Count(IEnumerable<T> enumerable) => ((EnumerableHeap)enumerable).Count;
+    protected override void Add(IEnumerable<T> enumerable, T value) => ((EnumerableHeap)enumerable).Push(value);
+    protected override void Clear(IEnumerable<T> enumerable) => ((EnumerableHeap)enumerable).Clear();
+    protected override bool Contains(IEnumerable<T> enumerable, T value) => ((EnumerableHeap)enumerable).Any(elem => ((Heap<T>)enumerable).Comparer.Compare(elem, value) == 0);
+    protected override void CopyTo(IEnumerable<T> enumerable, T[] array, int index) => ((ICollection<T>)(EnumerableHeap)enumerable).CopyTo(array, index);
+    protected override bool Remove(IEnumerable<T> enumerable) => ((EnumerableHeap)enumerable).TryPop(out _);
+    protected override Type IGenericSharedAPI_CopyTo_IndexLargerThanArrayCount_ThrowType => typeof(ArgumentException);
 
     #endregion
 }

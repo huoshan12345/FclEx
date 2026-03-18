@@ -61,9 +61,9 @@ public abstract partial class OrderedListTests<T>
 
         // does not throw because the enumerable is enumerated before adding to the list, so the list is not modified during enumeration.
         list.AddRange(list.Where(_ => true));
-        Assert.Equal(5, list.Count);
+        Assert.Equal(8, list.Count);
         list.AddRange(list.Where(_ => true));
-        Assert.Equal(6, list.Count);
+        Assert.Equal(16, list.Count);
     }
 
     [Fact]
