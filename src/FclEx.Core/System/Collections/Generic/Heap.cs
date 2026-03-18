@@ -32,6 +32,8 @@ public class Heap<T> : ArrayBasedCollection<Heap<T>, T>, ICollection<T>
 
     public Heap(int capacity, IComparer<T>? comparer = null)
     {
+        Check.NotNegative(capacity);
+
         _items = capacity == 0
             ? []
             : new T[capacity];
@@ -45,6 +47,8 @@ public class Heap<T> : ArrayBasedCollection<Heap<T>, T>, ICollection<T>
 
     public Heap(IEnumerable<T> items, IComparer<T>? comparer = null)
     {
+        Check.NotNull(items);
+
         _comparer = comparer ?? Comparer<T>.Default;
         _items = items.ToArray();
         _count = _items.Length;
@@ -103,14 +107,20 @@ public class Heap<T> : ArrayBasedCollection<Heap<T>, T>, ICollection<T>
         }
     }
 
+    [MethodImpl(AggressiveInlining)]
+    private void EnsureNotEmpty()
+    {
+        if (_count == 0)
+            throw new InvalidOperationException("Heap empty.");
+    }
+
     /// <summary>
     /// Removes and returns the smallest element in the heap.
     /// </summary>
     /// <exception cref="InvalidOperationException">The heap is empty.</exception>
     public T Pop()
     {
-        if (_count == 0)
-            throw new InvalidOperationException();
+        EnsureNotEmpty();
 
         var last = --_count;
 
@@ -185,11 +195,7 @@ public class Heap<T> : ArrayBasedCollection<Heap<T>, T>, ICollection<T>
     /// </remarks>
     public T PopPush(T item)
     {
-        if (_count == 0)
-        {
-            Push(item);
-            return item;
-        }
+        EnsureNotEmpty();
 
         var root = _items[0];
         SiftDown(0, item);

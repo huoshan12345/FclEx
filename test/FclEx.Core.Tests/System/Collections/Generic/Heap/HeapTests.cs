@@ -1,24 +1,21 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-
+#pragma warning disable xUnit1044 // Avoid using TheoryData type arguments that are not serializable
 namespace System.Collections.Generic.Heap;
 
 public partial class HeapTests : TestBase
 {
-    protected Heap<string> CreateSmallPriorityQueue(out HashSet<string> items)
+    protected Heap<int> CreateSmallHeap(out HashSet<int> items)
     {
-        items = new HashSet<string>
+        items = new HashSet<int>
         {
-            "one",
-            "two",
-            "three",
+            1,
+            2,
+            3,
         };
-        var queue = new Heap<string>(items);
-
-        return queue;
+        var heap = new Heap<int>(items);
+        return heap;
     }
 
-    protected Heap<int> CreatePriorityQueue(int initialCapacity, int count)
+    protected Heap<int> CreateHeap(int initialCapacity, int count)
     {
         var pq = new Heap<int>(initialCapacity);
         for (var i = 0; i < count; i++)
@@ -32,141 +29,141 @@ public partial class HeapTests : TestBase
     [Fact]
     public void Heap_PushPop_Empty()
     {
-        var queue = new Heap<string>();
+        var heap = new Heap<string>();
 
-        Assert.Equal("hello", queue.PushPop("hello"));
-        Assert.Equal(0, queue.Count);
+        Assert.Equal("hello", heap.PushPop("hello"));
+        Assert.Equal(0, heap.Count);
     }
 
     [Fact]
     public void Heap_PushPop_SmallerThanMin()
     {
-        var queue = CreateSmallPriorityQueue(out var enqueuedItems);
+        var heap = CreateSmallHeap(out var items);
 
-        var actualElement = queue.PushPop("zero");
+        var actualElement = heap.PushPop(0);
 
-        Assert.Equal("zero", actualElement);
-        Assert.True(enqueuedItems.SetEquals(queue));
+        Assert.Equal(0, actualElement);
+        Assert.True(items.SetEquals(heap));
     }
 
     [Fact]
     public void Heap_PushPop_LargerThanMin()
     {
-        var queue = CreateSmallPriorityQueue(out _);
+        var heap = CreateSmallHeap(out _);
 
-        var actualElement = queue.PushPop("four");
+        var actualElement = heap.PushPop(4);
 
-        Assert.Equal("one", actualElement);
-        Assert.Equal("two", queue.Pop());
-        Assert.Equal("three", queue.Pop());
-        Assert.Equal("four", queue.Pop());
+        Assert.Equal(1, actualElement);
+        Assert.Equal(2, heap.Pop());
+        Assert.Equal(3, heap.Pop());
+        Assert.Equal(4, heap.Pop());
     }
 
     [Fact]
     public void Heap_PushPop_EqualToMin()
     {
-        var queue = CreateSmallPriorityQueue(out var enqueuedItems);
+        var heap = CreateSmallHeap(out var items);
 
-        var actualElement = queue.PushPop("one-not-to-enqueue");
+        var actualElement = heap.PushPop(1);
 
-        Assert.Equal("one-not-to-enqueue", actualElement);
-        Assert.True(enqueuedItems.SetEquals(queue));
+        Assert.Equal(1, actualElement);
+        Assert.True(items.SetEquals(heap));
     }
 
     [Fact]
     public void Heap_EmptyCollection_PopPush_ShouldThrowInvalidOperationException()
     {
-        var queue = new Heap<int>();
+        var heap = new Heap<int>();
 
-        Assert.Equal(0, queue.Count);
-        Assert.Throws<InvalidOperationException>(() => queue.PopPush(1));
-        Assert.Equal(0, queue.Count);
+        Assert.Equal(0, heap.Count);
+        Assert.Throws<InvalidOperationException>(() => heap.PopPush(1));
+        Assert.Equal(0, heap.Count);
     }
 
     [Fact]
     public void Heap_PopPush_SmallerThanMin()
     {
-        var queue = CreateSmallPriorityQueue(out _);
+        var heap = CreateSmallHeap(out _);
 
-        var actualElement = queue.PopPush("zero");
+        var actualElement = heap.PopPush(0);
 
-        Assert.Equal("one", actualElement);
-        Assert.Equal("zero", queue.Pop());
-        Assert.Equal("two", queue.Pop());
-        Assert.Equal("three", queue.Pop());
+        Assert.Equal(1, actualElement);
+        Assert.Equal(0, heap.Pop());
+        Assert.Equal(2, heap.Pop());
+        Assert.Equal(3, heap.Pop());
     }
 
     [Fact]
     public void Heap_PopPush_LargerThanMin()
     {
-        var queue = CreateSmallPriorityQueue(out _);
+        var heap = CreateSmallHeap(out _);
 
-        var actualElement = queue.PopPush("four");
+        var actualElement = heap.PopPush(4);
 
-        Assert.Equal("one", actualElement);
-        Assert.Equal("two", queue.Pop());
-        Assert.Equal("three", queue.Pop());
-        Assert.Equal("four", queue.Pop());
+        Assert.Equal(1, actualElement);
+        Assert.Equal(2, heap.Pop());
+        Assert.Equal(3, heap.Pop());
+        Assert.Equal(4, heap.Pop());
     }
 
     [Fact]
     public void Heap_PopPush_EqualToMin()
     {
-        var queue = CreateSmallPriorityQueue(out _);
+        var heap = CreateSmallHeap(out _);
 
-        var actualElement = queue.PopPush("one-to-replace");
+        var actualElement = heap.PopPush(1);
 
-        Assert.Equal("one", actualElement);
-        Assert.Equal("one-to-replace", queue.Pop());
-        Assert.Equal("two", queue.Pop());
-        Assert.Equal("three", queue.Pop());
+        Assert.Equal(1, actualElement);
+        Assert.Equal(1, heap.Pop());
+        Assert.Equal(2, heap.Pop());
+        Assert.Equal(3, heap.Pop());
     }
 
     [Fact]
     public void Heap_Constructor_IEnumerable_Null()
     {
-        var itemsToEnqueue = new[] { null, "one" };
-        var queue = new Heap<string?>(itemsToEnqueue);
-        Assert.Null(queue.Pop());
-        Assert.Equal("one", queue.Pop());
+        var items = new[] { null, "1" };
+        var heap = new Heap<string?>(items);
+        Assert.Null(heap.Pop());
+        Assert.Equal("1", heap.Pop());
     }
 
     [Fact]
-    public void Heap_Enqueue_Null()
+    public void Heap_Push_Null()
     {
-        var queue = new Heap<string?>();
+        var heap = new Heap<string?>();
 
-        queue.Push(null);
-        queue.Push("zero");
-        queue.Push("two");
+        heap.Push(null);
+        heap.Push("0");
+        heap.Push("2");
 
-        Assert.Equal("zero", queue.Pop());
-        Assert.Null(queue.Pop());
-        Assert.Equal("two", queue.Pop());
+        Assert.Null(heap.Pop());
+        Assert.Equal("0", heap.Pop());
+        Assert.Equal("2", heap.Pop());
     }
 
     [Fact]
     public void Heap_PushRange_Null()
     {
-        var queue = new Heap<string?>();
+        var heap = new Heap<string?>();
 
-        queue.PushRange([null, null, null]);
-        queue.PushRange(["not null"]);
-        queue.PushRange([null, null, null]);
+        heap.PushRange([null, null, null]);
+        heap.PushRange(["not null"]);
+        heap.PushRange([null, null, null]);
 
         for (var i = 0; i < 6; ++i)
         {
-            Assert.Null(queue.Pop());
+            Assert.Null(heap.Pop());
         }
 
-        Assert.Equal("not null", queue.Pop());
+        Assert.Equal("not null", heap.Pop());
     }
 
     [Fact]
     public void Heap_Constructor_Int_Negative_ThrowsArgumentOutOfRangeException()
     {
-        AssertExtensions.Throws<ArgumentOutOfRangeException>("initialCapacity", () => new Heap<int>(-1));
-        AssertExtensions.Throws<ArgumentOutOfRangeException>("initialCapacity", () => new Heap<int>(int.MinValue));
+        AssertExtensions.Throws<ArgumentOutOfRangeException>("capacity", () => new Heap<int>(-1));
+        AssertExtensions.Throws<ArgumentOutOfRangeException>("capacity", () => new Heap<int>(int.MinValue));
     }
 
     [Fact]
@@ -179,27 +176,27 @@ public partial class HeapTests : TestBase
     [Fact]
     public void Heap_PushRange_Null_ThrowsArgumentNullException()
     {
-        var queue = new Heap<int>();
-        AssertExtensions.Throws<ArgumentNullException>("items", () => queue.PushRange(null!));
+        var heap = new Heap<int>();
+        AssertExtensions.Throws<ArgumentNullException>("items", () => heap.PushRange(null!));
     }
 
     [Fact]
-    public void Heap_EmptyCollection_Dequeue_ShouldThrowException()
+    public void Heap_EmptyCollection_Pop_ShouldThrowException()
     {
-        var queue = new Heap<int>();
+        var heap = new Heap<int>();
 
-        Assert.Equal(0, queue.Count);
-        Assert.False(queue.TryPop(out _));
-        Assert.Throws<InvalidOperationException>(() => queue.Pop());
+        Assert.Equal(0, heap.Count);
+        Assert.False(heap.TryPop(out _));
+        Assert.Throws<InvalidOperationException>(() => heap.Pop());
     }
 
     [Fact]
     public void Heap_EmptyCollection_Peek_ShouldReturnFalse()
     {
-        var queue = new Heap<int>();
+        var heap = new Heap<int>();
 
-        Assert.False(queue.TryPeek(out _));
-        Assert.Throws<InvalidOperationException>(() => queue.Peek());
+        Assert.False(heap.TryPeek(out _));
+        Assert.Throws<InvalidOperationException>(() => heap.Peek());
     }
 
     #region EnsureCapacity, TrimExcess
@@ -207,9 +204,9 @@ public partial class HeapTests : TestBase
     [Fact]
     public void Heap_EnsureCapacity_Negative_ShouldThrowException()
     {
-        var queue = new Heap<int>();
-        AssertExtensions.Throws<ArgumentOutOfRangeException>("capacity", () => queue.EnsureCapacity(-1));
-        AssertExtensions.Throws<ArgumentOutOfRangeException>("capacity", () => queue.EnsureCapacity(int.MinValue));
+        var heap = new Heap<int>();
+        AssertExtensions.Throws<ArgumentOutOfRangeException>("capacity", () => heap.EnsureCapacity(-1));
+        AssertExtensions.Throws<ArgumentOutOfRangeException>("capacity", () => heap.EnsureCapacity(int.MinValue));
     }
 
     [Theory]
@@ -219,53 +216,53 @@ public partial class HeapTests : TestBase
     [InlineData(3, 100)]
     public void Heap_TrimExcess_ShouldNotChangeCount(int initialCapacity, int count)
     {
-        var queue = CreatePriorityQueue(initialCapacity, count);
+        var heap = CreateHeap(initialCapacity, count);
 
-        Assert.Equal(count, queue.Count);
-        queue.TrimExcess();
-        Assert.Equal(count, queue.Count);
+        Assert.Equal(count, heap.Count);
+        heap.TrimExcess();
+        Assert.Equal(count, heap.Count);
     }
 
     [Theory]
     [MemberData(nameof(ValidPositiveCollectionSizes))]
     public void Heap_TrimExcess_Repeatedly_ShouldNotChangeCount(int count)
     {
-        var queue = CreatePriorityQueue(initialCapacity: count, count);
+        var heap = CreateHeap(initialCapacity: count, count);
 
-        Assert.Equal(count, queue.Count);
-        queue.TrimExcess();
-        queue.TrimExcess();
-        queue.TrimExcess();
-        Assert.Equal(count, queue.Count);
+        Assert.Equal(count, heap.Count);
+        heap.TrimExcess();
+        heap.TrimExcess();
+        heap.TrimExcess();
+        Assert.Equal(count, heap.Count);
     }
 
     [Theory]
     [MemberData(nameof(ValidPositiveCollectionSizes))]
     public void Heap_EnsureCapacityAndTrimExcess(int count)
     {
-        var itemsToEnqueue = Enumerable.Range(1, count).ToArray();
-        var queue = new Heap<int>();
+        var items = Enumerable.Range(1, count).ToArray();
+        var heap = new Heap<int>();
         var expectedCount = 0;
         var random = new Random(Seed: 34);
 
-        foreach (var element in itemsToEnqueue)
+        foreach (var element in items)
         {
             TrimAndEnsureCapacity();
-            queue.Push(element);
+            heap.Push(element);
             expectedCount++;
-            Assert.Equal(expectedCount, queue.Count);
+            Assert.Equal(expectedCount, heap.Count);
         }
 
         while (expectedCount > 0)
         {
-            queue.Pop();
+            heap.Pop();
             TrimAndEnsureCapacity();
             expectedCount--;
-            Assert.Equal(expectedCount, queue.Count);
+            Assert.Equal(expectedCount, heap.Count);
         }
 
         TrimAndEnsureCapacity();
-        Assert.Equal(0, queue.Count);
+        Assert.Equal(0, heap.Count);
 
         int GetNextEnsureCapacity()
         {
@@ -274,22 +271,22 @@ public partial class HeapTests : TestBase
 
         void TrimAndEnsureCapacity()
         {
-            queue.TrimExcess();
+            heap.TrimExcess();
 
-            var capacityAfterEnsureCapacity = queue.EnsureCapacity(GetNextEnsureCapacity());
-            Assert.Equal(capacityAfterEnsureCapacity, GetUnderlyingBufferCapacity(queue));
+            var capacityAfterEnsureCapacity = heap.EnsureCapacity(GetNextEnsureCapacity());
+            Assert.Equal(capacityAfterEnsureCapacity, GetUnderlyingBufferCapacity(heap));
 
-            var capacityAfterTrimExcess = queue.Count < (int)(capacityAfterEnsureCapacity * 0.9) ? queue.Count : capacityAfterEnsureCapacity;
-            queue.TrimExcess();
-            Assert.Equal(capacityAfterTrimExcess, GetUnderlyingBufferCapacity(queue));
+            var capacityAfterTrimExcess = heap.Count < (int)(capacityAfterEnsureCapacity * 0.9) ? heap.Count : capacityAfterEnsureCapacity;
+            heap.TrimExcess();
+            Assert.Equal(capacityAfterTrimExcess, GetUnderlyingBufferCapacity(heap));
         }
     }
 
-    private static int GetUnderlyingBufferCapacity<T>(Heap<T> queue)
+    private static int GetUnderlyingBufferCapacity<T>(Heap<T> heap)
     {
         var field = typeof(Heap<T>).GetField("_items", BindingFlags.NonPublic | BindingFlags.Instance);
         Assert.NotNull(field);
-        var array = (T[]?)field.GetValue(queue);
+        var array = (T[]?)field.GetValue(heap);
         Assert.NotNull(array);
         return array.Length;
     }
@@ -302,9 +299,9 @@ public partial class HeapTests : TestBase
     [MemberData(nameof(NonModifyingOperations))]
     public void Heap_Enumeration_ValidOnNonModifyingOperation(Action<Heap<int>> nonModifyingOperation, int count)
     {
-        var queue = CreatePriorityQueue(initialCapacity: count, count: count);
-        using var enumerator = queue.GetEnumerator();
-        nonModifyingOperation(queue);
+        var heap = CreateHeap(initialCapacity: count, count: count);
+        using var enumerator = heap.GetEnumerator();
+        nonModifyingOperation(heap);
         enumerator.MoveNext();
     }
 
@@ -312,38 +309,60 @@ public partial class HeapTests : TestBase
     [MemberData(nameof(ModifyingOperations))]
     public void Heap_Enumeration_InvalidationOnModifyingOperation(Action<Heap<int>> modifyingOperation, int count)
     {
-        var queue = CreatePriorityQueue(initialCapacity: count, count: count);
-        using var enumerator = queue.GetEnumerator();
-        modifyingOperation(queue);
-        Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext());
+        {
+            var heap = CreateHeap(initialCapacity: count, count: count);
+            using var enumerator = heap.GetEnumerator();
+            modifyingOperation(heap);
+
+            Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext());
+            Assert.Default(enumerator.Current);
+        }
+        {
+            var heap = CreateHeap(initialCapacity: count, count: count);
+            using var enumerator = ((IEnumerable<int>)heap).GetEnumerator();
+            modifyingOperation(heap);
+
+            if (count == 0)
+            {
+                // GenericEmptyEnumerator does not throw on MoveNext() even if the collection was modified
+                Assert.False(enumerator.MoveNext());
+
+                // GenericEmptyEnumerator throws on Current
+                Assert.Throws<InvalidOperationException>(() => enumerator.Current);
+
+            }
+            else
+            {
+                Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext());
+                Assert.Default(enumerator.Current);
+            }
+        }
     }
 
     public static readonly TheoryData<Action<Heap<int>>, int> ModifyingOperations = new()
     {
-        (queue => queue.Push(42), 0),
-        (queue => queue.Pop(), 5),
-        (queue => queue.TryPop(out _), 5),
-        (queue => queue.PushPop(5), 5),
-        (queue => queue.PushPop(5), 5),
-        (queue => queue.PushRange([1]), 0),
-        (queue => queue.PushRange([1]), 10),
-        (queue => queue.PushRange([1, 2]), 0),
-        (queue => queue.PushRange([1, 2]), 10),
-        (queue => queue.EnsureCapacity(2 * queue.Count), 4),
-        (queue => queue.Clear(), 5),
-        (queue => queue.Clear(), 0),
+        (m => m.Push(42), 0),
+        (m => m.Pop(), 5),
+        (m => m.TryPop(out _), 5),
+        (m => m.PushPop(5), 6),
+        (m => m.PushRange([1]), 0),
+        (m => m.PushRange([1]), 10),
+        (m => m.PushRange([1, 2]), 0),
+        (m => m.PushRange([1, 2]), 10),
+        (m => m.Clear(), 5),
+        (m => m.Clear(), 0),
     };
 
     public static readonly TheoryData<Action<Heap<int>>, int> NonModifyingOperations = new()
     {
-        (queue => queue.Peek(), 1),
-        (queue => queue.TryPeek(out _), 1),
-        (queue => queue.TryPop(out _), 0),
-        (queue => queue.PushPop(5), 1),
-        (queue => queue.PushPop(5), 0),
-        (queue => queue.PushRange([]), 5),
-        (queue => queue.PushRange([]), 5),
-        (queue => queue.EnsureCapacity(5), 5),
+        (m => m.Peek(), 1),
+        (m => m.TryPeek(out _), 1),
+        (m => m.TryPop(out _), 0),
+        (m => m.PushPop(-1), 5), // the min element before the operation is 0, so PushPop(-1) will return -1 and leave the heap unchanged
+        (m => m.PushPop(0), 5),
+        (m => m.PushRange([]), 5),
+        (m => m.PushRange([]), 5),
+        (m => m.EnsureCapacity(5), 5),
     };
 
     #endregion
