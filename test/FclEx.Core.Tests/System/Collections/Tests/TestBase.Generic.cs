@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Xunit;
+using static System.Collections.Tests.TestBase;
 
 namespace System.Collections.Tests
 {
@@ -55,49 +56,55 @@ namespace System.Collections.Tests
         /// MemberData to be passed to tests that take an IEnumerable{T}. This method returns every permutation of
         /// EnumerableType to test on (e.g. HashSet, Queue), and size of set to test with (e.g. 0, 1, etc.).
         /// </summary>
-        public static IEnumerable<object[]> EnumerableTestData() =>
-            ((IEnumerable<EnumerableType>)Enum.GetValues(typeof(EnumerableType))).SelectMany(GetEnumerableTestData);
+        public static TheoryData<EnumerableType, int, int, int, int> EnumerableTestData() =>
+            Enum.GetValues<EnumerableType>()
+                .SelectMany(GetEnumerableTestData)
+                .Distinct()
+                .ToTheoryData();
 
         /// <summary>
         /// MemberData to be passed to tests that take an IEnumerable{T}. This method returns results for various
         /// sizes of sets to test with (e.g. 0, 1, etc.) but only for List.
         /// </summary>
-        public static IEnumerable<object[]> ListTestData() =>
-            GetEnumerableTestData(EnumerableType.List);
+        public static TheoryData<EnumerableType, int, int, int, int> ListTestData() =>
+            GetEnumerableTestData(EnumerableType.List)
+                .Distinct()
+                .ToTheoryData();
 
-        protected static IEnumerable<object[]> GetEnumerableTestData(EnumerableType enumerableType)
+        protected static IEnumerable<(EnumerableType, int SetLength, int EnumerableLength, int NumberOfMatchingElements, int NumberOfDuplicateElements)>
+            GetEnumerableTestData(EnumerableType enumerableType)
         {
-            foreach (object[] collectionSizeArray in ValidCollectionSizes())
+            foreach (var collectionSizeArray in ValidCollectionSizes())
             {
-                int count = (int)collectionSizeArray[0];
-                yield return new object[] { enumerableType, count, 0, 0, 0 };                       // Empty Enumerable
-                yield return new object[] { enumerableType, count, count + 1, 0, 0 };               // Enumerable that is 1 larger
+                var count = (int)collectionSizeArray[0];
+                yield return new(enumerableType, count, 0, 0, 0);                       // Empty Enumerable
+                yield return new(enumerableType, count, count + 1, 0, 0);               // Enumerable that is 1 larger
 
                 if (count >= 1)
                 {
-                    yield return new object[] { enumerableType, count, count, 0, 0 };               // Enumerable of the same size
-                    yield return new object[] { enumerableType, count, count - 1, 0, 0 };           // Enumerable that is 1 smaller
-                    yield return new object[] { enumerableType, count, count, 1, 0 };               // Enumerable of the same size with 1 matching element
-                    yield return new object[] { enumerableType, count, count + 1, 1, 0 };           // Enumerable that is 1 longer with 1 matching element
-                    yield return new object[] { enumerableType, count, count, count, 0 };           // Enumerable with all elements matching
-                    yield return new object[] { enumerableType, count, count + 1, count, 0 };       // Enumerable with all elements matching plus one extra
+                    yield return new(enumerableType, count, count, 0, 0);               // Enumerable of the same size
+                    yield return new(enumerableType, count, count - 1, 0, 0);           // Enumerable that is 1 smaller
+                    yield return new(enumerableType, count, count, 1, 0);               // Enumerable of the same size with 1 matching element
+                    yield return new(enumerableType, count, count + 1, 1, 0);           // Enumerable that is 1 longer with 1 matching element
+                    yield return new(enumerableType, count, count, count, 0);           // Enumerable with all elements matching
+                    yield return new(enumerableType, count, count + 1, count, 0);       // Enumerable with all elements matching plus one extra
                 }
 
                 if (count >= 2)
                 {
-                    yield return new object[] { enumerableType, count, count - 1, 1, 0 };           // Enumerable that is 1 smaller with 1 matching element
-                    yield return new object[] { enumerableType, count, count + 2, 2, 0 };           // Enumerable that is 2 longer with 2 matching element
-                    yield return new object[] { enumerableType, count, count - 1, count - 1, 0 };   // Enumerable with all elements matching minus one
-                    yield return new object[] { enumerableType, count, count, 2, 0 };               // Enumerable of the same size with 2 matching element
-                    if ((enumerableType == EnumerableType.List || enumerableType == EnumerableType.Queue))
-                        yield return new object[] { enumerableType, count, count, 0, 1 };           // Enumerable with 1 element duplicated
+                    yield return new(enumerableType, count, count - 1, 1, 0);           // Enumerable that is 1 smaller with 1 matching element
+                    yield return new(enumerableType, count, count + 2, 2, 0);           // Enumerable that is 2 longer with 2 matching element
+                    yield return new(enumerableType, count, count - 1, count - 1, 0);   // Enumerable with all elements matching minus one
+                    yield return new(enumerableType, count, count, 2, 0);               // Enumerable of the same size with 2 matching element
+                    if (enumerableType is EnumerableType.List or EnumerableType.Queue)
+                        yield return new(enumerableType, count, count, 0, 1);           // Enumerable with 1 element duplicated
                 }
 
                 if (count >= 3)
                 {
-                    if ((enumerableType == EnumerableType.List || enumerableType == EnumerableType.Queue))
-                        yield return new object[] { enumerableType, count, count, 0, 1 };           // Enumerable with all elements duplicated
-                    yield return new object[] { enumerableType, count, count - 1, 2, 0 };           // Enumerable that is 1 smaller with 2 matching elements
+                    if (enumerableType is EnumerableType.List or EnumerableType.Queue)
+                        yield return new(enumerableType, count, count, 0, 1);           // Enumerable with all elements duplicated
+                    yield return new(enumerableType, count, count - 1, 2, 0);           // Enumerable that is 1 smaller with 2 matching elements
                 }
             }
         }
@@ -284,7 +291,7 @@ namespace System.Collections.Tests
 
             for (int i = 0; i < count; i++)
             {
-                while (!set.Add(CreateT(seed++)));
+                while (!set.Add(CreateT(seed++))) ;
             }
 
             return set;
