@@ -4,27 +4,24 @@ namespace System.Collections.Generic.OrderedList;
 
 public abstract partial class OrderedListTests<T>
 {
-    // Has tests that pass a variably sized TestCollection and MyEnumerable to the AddRange function
-
     [Theory]
     [MemberData(nameof(EnumerableTestData))]
     public void AddRange(EnumerableType enumerableType, int listLength, int enumerableLength, int numberOfMatchingElements, int numberOfDuplicateElements)
     {
         var list = GenericListFactory(listLength);
-        var listBeforeAdd = list.ToList();
+        var sorted = list.ToList();
         var enumerable = CreateEnumerable(enumerableType, list, enumerableLength, numberOfMatchingElements, numberOfDuplicateElements);
         list.AddRange(enumerable);
+        sorted.AddRange(enumerable);
+        sorted.StableSort();
 
-        // Check that the first section of the List is unchanged
-        Assert.All(Enumerable.Range(0, listLength), index =>
-        {
-            Assert.Equal(listBeforeAdd[index], list[index]);
-        });
+        Assert.Equal(listLength + enumerableLength, list.Count);
+        Assert.Equal(sorted.Count, list.Count);
 
         // Check that the added elements are correct
-        Assert.All(Enumerable.Range(0, enumerableLength), index =>
+        Assert.All(Enumerable.Range(0, sorted.Count), index =>
         {
-            Assert.Equal(enumerable.ElementAt(index), list[index + listLength]);
+            Assert.Equal(sorted[index], list[index]);
         });
     }
 

@@ -3,9 +3,9 @@
 public abstract class ReadOnlyItemCollection<T, TEnumerator> : ICollection<T>, IReadOnlyCollection<T>
     where TEnumerator : IEnumerator<T>
 {
-    public abstract TEnumerator GetEnumerator();
     public abstract bool Contains(T item);
     public abstract void CopyTo(T[] array, int arrayIndex);
+    public abstract TEnumerator GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<T>)this).GetEnumerator();
     IEnumerator<T> IEnumerable<T>.GetEnumerator()

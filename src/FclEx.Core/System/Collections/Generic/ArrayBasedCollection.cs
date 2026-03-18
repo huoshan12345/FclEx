@@ -148,8 +148,15 @@ public abstract class ArrayBasedCollection<TSelf, T> : IReadOnlyCollection<T>
     public Span<T> AsSpan() => new(_items, 0, _count);
 
     public Enumerator GetEnumerator() => new((TSelf)this);
-    IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<T>)this).GetEnumerator();
+    IEnumerator<T> IEnumerable<T>.GetEnumerator()
+    {
+        return Count == 0
+            // use singleton empty enumerator to avoid unnecessary allocation when the dictionary is empty.
+            ? GenericEmptyEnumerator<T>.Instance
+            : GetEnumerator();
+    }
+
 
     public struct Enumerator : IEnumerator<T>
     {
