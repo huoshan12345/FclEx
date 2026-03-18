@@ -191,6 +191,13 @@ public abstract partial class OrderedListTests<T>
         list.AddRange(list); // 8 duplicates
         var dupTimes = list.Count / withoutDuplicates.Count;
 
+        if (count == 0)
+        {
+            Assert.Equal(0, list.Count);
+            Assert.Empty(list);
+            return;
+        }
+
         Assert.All(Enumerable.Range(0, count), i =>
         {
             Assert.All(Enumerable.Range(0, 4), j =>

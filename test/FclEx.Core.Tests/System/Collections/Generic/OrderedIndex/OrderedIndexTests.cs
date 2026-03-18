@@ -9,6 +9,9 @@ public abstract class OrderedIndexTests<TScore, TValue> : IGenericSharedAPI_Test
     protected override bool DefaultValueAllowed => false;
     protected override bool DuplicateValuesAllowed => false;
     protected override bool DefaultValueWhenNotAllowed_Throws => false;
+    protected override bool Enumerator_Empty_UsesSingletonInstance => true;
+    protected override bool Enumerator_Empty_Current_UndefinedOperation_Throws => true;
+    protected override bool Enumerator_Empty_ModifiedDuringEnumeration_ThrowsInvalidOperationException => false;
     protected override Type IGenericSharedAPI_CopyTo_IndexLargerThanArrayCount_ThrowType { get; } = typeof(ArgumentOutOfRangeException);
 
     #region OrderedIndex<TScore, TValue> Helper Methods
