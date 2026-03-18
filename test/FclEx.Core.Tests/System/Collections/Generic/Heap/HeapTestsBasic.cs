@@ -263,7 +263,7 @@ public class HeapTestsBasic
     }
 
     [Fact]
-    public void ReplaceTop_ShouldMaintainHeap()
+    public void PopPush_ShouldMaintainHeap()
     {
         var heap = new Heap<int>();
 
@@ -557,7 +557,7 @@ file static class HeapTestExtensions
     {
         public static void AssertHeapInvariant(Heap<int> heap)
         {
-            var items = ObjectHelper.GetRequiredFieldValue<int[]>(heap, "_items");
+            var items = _fieldItems.GetRequiredValue<int[]>(heap);
             var count = heap.Count;
 
             // 1. Verify the heap property: parent <= child

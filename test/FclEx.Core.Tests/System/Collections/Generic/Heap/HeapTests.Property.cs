@@ -5,14 +5,14 @@ public partial class HeapTests
     const int MaxTest = 100;
     const int Seed = 42;
 
-    private static readonly IComparer<string> s_stringComparer = StringComparer.Ordinal;
+    private static readonly IComparer<string> _stringComparer = StringComparer.Ordinal;
 
     [Theory]
     [MemberData(nameof(GetRandomStringArrays))]
     public static void HeapSort_Heapify_String(string[] elements)
     {
-        IEnumerable<string> expected = elements.OrderBy(e => e, s_stringComparer);
-        IEnumerable<string> actual = HeapSort_Heapify(elements, s_stringComparer);
+        var expected = elements.OrderBy(e => e, _stringComparer);
+        var actual = HeapSort_Heapify(elements, _stringComparer);
         Assert.Equal(expected, actual);
     }
 
@@ -20,17 +20,16 @@ public partial class HeapTests
     [MemberData(nameof(GetRandomIntArrays))]
     public static void HeapSort_Heapify_Int(int[] elements)
     {
-        IEnumerable<int> expected = elements.OrderBy(e => e);
-        IEnumerable<int> actual = HeapSort_Heapify(elements);
+        var expected = elements.OrderBy(e => e);
+        var actual = HeapSort_Heapify(elements);
         Assert.Equal(expected, actual);
     }
 
-    private static IEnumerable<TElement> HeapSort_Heapify<TElement>(IEnumerable<TElement> inputs, IComparer<TElement>? comparer = null)
+    private static IEnumerable<T> HeapSort_Heapify<T>(IEnumerable<T> inputs, IComparer<T>? comparer = null)
     {
-        var queue = new PriorityQueue<TElement, TElement>(inputs.Select(e => (e, e)), comparer);
-        foreach ((TElement element, TElement priority) in DrainHeap(queue))
+        var heap = new Heap<T>(inputs, comparer);
+        foreach (var element in DrainHeap(heap))
         {
-            Assert.Equal(element, priority);
             yield return element;
         }
     }
@@ -39,8 +38,8 @@ public partial class HeapTests
     [MemberData(nameof(GetRandomStringArrays))]
     public static void HeapSort_EnqueueRange_String(string[] elements)
     {
-        IEnumerable<string> expected = elements.OrderBy(e => e, s_stringComparer);
-        IEnumerable<string> actual = HeapSort_EnqueueRange(elements, s_stringComparer);
+        var expected = elements.OrderBy(e => e, _stringComparer);
+        var actual = HeapSort_EnqueueRange(elements, _stringComparer);
         Assert.Equal(expected, actual);
     }
 
@@ -48,18 +47,17 @@ public partial class HeapTests
     [MemberData(nameof(GetRandomIntArrays))]
     public static void HeapSort_EnqueueRange_Int(int[] elements)
     {
-        IEnumerable<int> expected = elements.OrderBy(e => e);
-        IEnumerable<int> actual = HeapSort_EnqueueRange(elements);
+        var expected = elements.OrderBy(e => e);
+        var actual = HeapSort_EnqueueRange(elements);
         Assert.Equal(expected, actual);
     }
 
-    private static IEnumerable<TElement> HeapSort_EnqueueRange<TElement>(IEnumerable<TElement> inputs, IComparer<TElement>? comparer = null)
+    private static IEnumerable<T> HeapSort_EnqueueRange<T>(IEnumerable<T> inputs, IComparer<T>? comparer = null)
     {
-        var queue = new PriorityQueue<TElement, TElement>(comparer);
-        queue.EnqueueRange(inputs.Select(e => (e, e)));
-        foreach ((TElement element, TElement priority) in DrainHeap(queue))
+        var heap = new Heap<T>(comparer);
+        heap.PushRange(inputs);
+        foreach (var element in DrainHeap(heap))
         {
-            Assert.Equal(element, priority);
             yield return element;
         }
     }
@@ -68,8 +66,8 @@ public partial class HeapTests
     [MemberData(nameof(GetRandomStringArrays))]
     public static void HeapSort_Enqueue_String(string[] elements)
     {
-        IEnumerable<string> expected = elements.OrderBy(e => e, s_stringComparer);
-        IEnumerable<string> actual = HeapSort_Enqueue(elements, s_stringComparer);
+        var expected = elements.OrderBy(e => e, _stringComparer);
+        var actual = HeapSort_Enqueue(elements, _stringComparer);
         Assert.Equal(expected, actual);
     }
 
@@ -77,23 +75,22 @@ public partial class HeapTests
     [MemberData(nameof(GetRandomIntArrays))]
     public static void HeapSort_Enqueue_Int(int[] elements)
     {
-        IEnumerable<int> expected = elements.OrderBy(e => e);
-        IEnumerable<int> actual = HeapSort_Enqueue(elements);
+        var expected = elements.OrderBy(e => e);
+        var actual = HeapSort_Enqueue(elements);
         Assert.Equal(expected, actual);
     }
 
-    private static IEnumerable<TElement> HeapSort_Enqueue<TElement>(IEnumerable<TElement> inputs, IComparer<TElement>? comparer = null)
+    private static IEnumerable<T> HeapSort_Enqueue<T>(IEnumerable<T> inputs, IComparer<T>? comparer = null)
     {
-        var queue = new PriorityQueue<TElement, TElement>(comparer);
+        var heap = new Heap<T>(comparer);
 
-        foreach (TElement input in inputs)
+        foreach (var input in inputs)
         {
-            queue.Enqueue(input, input);
+            heap.Push(input);
         }
 
-        foreach ((TElement element, TElement priority) in DrainHeap(queue))
+        foreach (var element in DrainHeap(heap))
         {
-            Assert.Equal(element, priority);
             yield return element;
         }
     }
@@ -103,8 +100,8 @@ public partial class HeapTests
     public static void KMaxElements_String(string[] elements)
     {
         const int k = 5;
-        IEnumerable<string> expected = elements.OrderByDescending(e => e, s_stringComparer).Take(k);
-        IEnumerable<string> actual = KMaxElements(elements, k, s_stringComparer);
+        var expected = elements.OrderByDescending(e => e, _stringComparer).Take(k);
+        var actual = KMaxElements(elements, k, _stringComparer);
         Assert.Equal(expected, actual);
     }
 
@@ -113,50 +110,48 @@ public partial class HeapTests
     public static void KMaxElements_Int(int[] elements)
     {
         const int k = 5;
-        IEnumerable<int> expected = elements.OrderByDescending(e => e).Take(k);
-        IEnumerable<int> actual = KMaxElements(elements, k);
+        var expected = elements.OrderByDescending(e => e).Take(k);
+        var actual = KMaxElements(elements, k);
         Assert.Equal(expected, actual);
     }
 
-    private static IEnumerable<TElement> KMaxElements<TElement>(TElement[] elements, int k, IComparer<TElement>? comparer = null)
+    private static IEnumerable<T> KMaxElements<T>(T[] elements, int k, IComparer<T>? comparer = null)
     {
-        var queue = new PriorityQueue<TElement, TElement>(comparer);
-        comparer = queue.Comparer;
+        var heap = new Heap<T>(comparer);
+        comparer = heap.Comparer;
 
-        int heapSize = Math.Min(k, elements.Length);
-        for (int i = 0; i < heapSize; i++)
+        var heapSize = Math.Min(k, elements.Length);
+        for (var i = 0; i < heapSize; i++)
         {
-            TElement element = elements[i];
-            queue.Enqueue(element, element);
+            var element = elements[i];
+            heap.Push(element);
         }
 
-        for (int i = k; i < elements.Length; i++)
+        for (var i = k; i < elements.Length; i++)
         {
-            TElement element = elements[i];
-            TElement dequeued = queue.EnqueueDequeue(element, element);
+            var element = elements[i];
+            var dequeued = heap.PushPop(element);
             Assert.True(comparer.Compare(dequeued, element) <= 0);
-            Assert.Equal(k, queue.Count);
+            Assert.Equal(k, heap.Count);
         }
 
-        foreach ((TElement element, TElement priority) in DrainHeap(queue).Reverse())
+        foreach (var element in DrainHeap(heap).Reverse())
         {
-            Assert.Equal(element, priority);
             yield return element;
         }
     }
 
-    private static IEnumerable<(TElement Element, TPriority Priority)> DrainHeap<TElement, TPriority>(PriorityQueue<TElement, TPriority> queue)
+    private static IEnumerable<T> DrainHeap<T>(Heap<T> heap)
     {
-        while (queue.Count > 0)
+        while (heap.Count > 0)
         {
-            Assert.True(queue.TryPeek(out TElement element, out TPriority priority));
-            Assert.True(queue.TryDequeue(out TElement element2, out TPriority priority2));
+            Assert.True(heap.TryPeek(out var element));
+            Assert.True(heap.TryPop(out var element2));
             Assert.Equal(element, element2);
-            Assert.Equal(priority, priority2);
-            yield return (element, priority);
+            yield return element;
         }
 
-        Assert.False(queue.TryPeek(out _, out _));
+        Assert.False(heap.TryPeek(out _));
     }
 
     public static IEnumerable<object[]> GetRandomStringArrays() => GenerateMemberData(random => GenArray(GenString, random));
@@ -165,18 +160,19 @@ public partial class HeapTests
     private static IEnumerable<object[]> GenerateMemberData<T>(Func<Random, T> genElement)
     {
         var random = new Random(Seed);
-        for (int i = 0; i < MaxTest; i++)
+        for (var i = 0; i < MaxTest; i++)
         {
-            yield return new object[] { genElement(random) };
-        };
+            yield return [genElement(random)!];
+        }
+        ;
     }
 
     private static T[] GenArray<T>(Func<Random, T> genElement, Random random)
     {
-        const int MaxArraySize = 100;
-        int arraySize = random.Next(MaxArraySize);
+        const int maxArraySize = 100;
+        var arraySize = random.Next(maxArraySize);
         var array = new T[arraySize];
-        for (int i = 0; i < arraySize; i++)
+        for (var i = 0; i < arraySize; i++)
         {
             array[i] = genElement(random);
         }
@@ -188,8 +184,8 @@ public partial class HeapTests
 
     private static string GenString(Random random)
     {
-        const int MaxSize = 50;
-        int size = random.Next(MaxSize);
+        const int maxSize = 50;
+        var size = random.Next(maxSize);
         var buffer = new byte[size];
         random.NextBytes(buffer);
         return Convert.ToBase64String(buffer);
