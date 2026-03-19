@@ -24,7 +24,7 @@ public static class DataMemberInfoExtensions
             : Expression.Field(parameter, info.MemberInfo.CastTo<FieldInfo>());
     }
 
-    public static (FieldInfo?, PropertyInfo?) GetFieldPropertyPair(this DataMemberInfo member)
+    public static (FieldInfo? Field, PropertyInfo? Property) GetFieldPropertyPair(this DataMemberInfo member)
     {
         switch (member.MemberInfo)
         {
