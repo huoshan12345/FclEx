@@ -318,7 +318,7 @@ public class ObjectJsonConverterTests
     {
         var options = CreateOptions();
 
-        const string json = "{ \"a\": 1, }"; // trailing comma（默认不允许）
+        const string json = "{ \"a\": 1, }";
 
         Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<object>(json, options));
     }

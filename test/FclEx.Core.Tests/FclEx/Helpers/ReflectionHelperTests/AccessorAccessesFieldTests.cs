@@ -11,6 +11,8 @@ namespace FclEx.Helpers.ReflectionHelperTests;
 
 public class AccessorAccessesFieldTests
 {
+    private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.NonPublic;
+
     private class Simple
     {
         public int Value { get; set; }
@@ -20,8 +22,7 @@ public class AccessorAccessesFieldTests
     public void InstanceGetter_ShouldAccessBackingField()
     {
         var prop = typeof(Simple).GetProperty(nameof(Simple.Value))!;
-        var field = typeof(Simple).GetField("<Value>k__BackingField",
-            BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var field = typeof(Simple).GetField("<Value>k__BackingField", Flags)!;
 
         var getter = prop.GetMethod!;
 
@@ -32,8 +33,7 @@ public class AccessorAccessesFieldTests
     public void InstanceSetter_ShouldAccessBackingField()
     {
         var prop = typeof(Simple).GetProperty(nameof(Simple.Value))!;
-        var field = typeof(Simple).GetField("<Value>k__BackingField",
-            BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var field = typeof(Simple).GetField("<Value>k__BackingField", Flags)!;
 
         var setter = prop.SetMethod!;
 
@@ -49,8 +49,7 @@ public class AccessorAccessesFieldTests
     public void StructProperty_ShouldAccessBackingField()
     {
         var prop = typeof(StructType).GetProperty("Value")!;
-        var field = typeof(StructType).GetField("<Value>k__BackingField",
-            BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var field = typeof(StructType).GetField("<Value>k__BackingField", Flags)!;
 
         Assert.True(AccessorAccessesField(prop.GetMethod!, field));
     }
@@ -63,11 +62,8 @@ public class AccessorAccessesFieldTests
     [Fact]
     public void StaticProperty_ShouldAccessBackingField()
     {
-        var prop = typeof(StaticType).GetProperty("Value",
-            BindingFlags.Public | BindingFlags.Static)!;
-
-        var field = typeof(StaticType).GetField("<Value>k__BackingField",
-            BindingFlags.NonPublic | BindingFlags.Static)!;
+        var prop = typeof(StaticType).GetProperty("Value", BindingFlags.Public | BindingFlags.Static)!;
+        var field = typeof(StaticType).GetField("<Value>k__BackingField", BindingFlags.NonPublic | BindingFlags.Static)!;
 
         Assert.True(AccessorAccessesField(prop.GetMethod!, field));
     }
@@ -81,8 +77,7 @@ public class AccessorAccessesFieldTests
     public void GenericOpenType_ShouldAccessBackingField()
     {
         var prop = typeof(Generic<>).GetProperty("Value")!;
-        var field = typeof(Generic<>).GetField("<Value>k__BackingField",
-            BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var field = typeof(Generic<>).GetField("<Value>k__BackingField", Flags)!;
 
         Assert.True(AccessorAccessesField(prop.GetMethod!, field));
     }
@@ -91,8 +86,7 @@ public class AccessorAccessesFieldTests
     public void GenericClosedType_ShouldAccessBackingField()
     {
         var prop = typeof(Generic<int>).GetProperty("Value")!;
-        var field = typeof(Generic<int>).GetField("<Value>k__BackingField",
-            BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var field = typeof(Generic<int>).GetField("<Value>k__BackingField", Flags)!;
 
         Assert.True(AccessorAccessesField(prop.GetMethod!, field));
     }
@@ -106,8 +100,7 @@ public class AccessorAccessesFieldTests
     public void GenericType_NonGenericProperty_ShouldWork()
     {
         var prop = typeof(GenericMixed<int>).GetProperty("Id")!;
-        var field = typeof(GenericMixed<int>).GetField("<Id>k__BackingField",
-            BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var field = typeof(GenericMixed<int>).GetField("<Id>k__BackingField", Flags)!;
 
         Assert.True(AccessorAccessesField(prop.GetMethod!, field));
     }
@@ -125,8 +118,7 @@ public class AccessorAccessesFieldTests
     public void InheritedProperty_ShouldAccessBaseBackingField()
     {
         var prop = typeof(Derived).GetProperty("Value")!;
-        var field = typeof(Base).GetField("<Value>k__BackingField",
-            BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var field = typeof(Base).GetField("<Value>k__BackingField", Flags)!;
 
         Assert.True(AccessorAccessesField(prop.GetMethod!, field));
     }
@@ -134,16 +126,19 @@ public class AccessorAccessesFieldTests
     [Fact]
     public void HashSet_Count_ShouldNotMatchAnyField()
     {
-        var prop = typeof(HashSet<int>).GetProperty("Count")!;
-        var fields = typeof(HashSet<int>).GetFields(
-            BindingFlags.NonPublic | BindingFlags.Instance);
+        // public int Count => _count - _freeCount;
+        var type = typeof(HashSet<int>);
+        var prop = type.GetProperty("Count")!;
+        var fields = type.GetFields(Flags);
+        var backingFields = new[] { "_count", "_freeCount" }
+            .Select(name => type.GetField(name, Flags))
+            .ToArray();
 
         var getter = prop.GetMethod!;
 
-        // HashSet.Count 不是 auto-property（它有逻辑）
         foreach (var field in fields)
         {
-            Assert.False(AccessorAccessesField(getter, field));
+            Assert.Equal(backingFields.Contains(field), AccessorAccessesField(getter, field), () => field.Name);
         }
     }
 
@@ -158,15 +153,14 @@ public class AccessorAccessesFieldTests
     }
 
     [Fact]
-    public void IReadOnlyCollection_Implementation_ShouldNotMatchBackingField()
+    public void IReadOnlyCollection_Implementation_ShouldAccessField()
     {
         var prop = typeof(MyCollection<int>).GetProperty("Count")!;
-        var field = typeof(MyCollection<int>).GetField("_list",
-            BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var field = typeof(MyCollection<int>).GetField("_list", Flags)!;
 
         var getter = prop.GetMethod!;
 
-        Assert.False(AccessorAccessesField(getter, field));
+        Assert.True(AccessorAccessesField(getter, field));
     }
 
     private class ExplicitImpl : IReadOnlyCollection<int>
@@ -187,8 +181,7 @@ public class AccessorAccessesFieldTests
             .TargetMethods
             .First(m => m.Name.Contains("Count"));
 
-        var field = typeof(ExplicitImpl).GetField("_count",
-            BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var field = typeof(ExplicitImpl).GetField("_count", Flags)!;
 
         Assert.True(AccessorAccessesField(prop, field));
     }
@@ -205,12 +198,12 @@ public class AccessorAccessesFieldTests
     }
 
     [Fact]
-    public void NonAutoProperty_ShouldNotMatchBackingField()
+    public void NonAutoProperty_ShouldAccessField()
     {
         var prop = typeof(NonAuto).GetProperty("Value")!;
-        var field = typeof(NonAuto).GetField("_x",
-            BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var field = typeof(NonAuto).GetField("_x", Flags)!;
 
-        Assert.False(AccessorAccessesField(prop.GetMethod!, field));
+        Assert.True(AccessorAccessesField(prop.GetMethod, field));
+        Assert.True(AccessorAccessesField(prop.SetMethod, field));
     }
 }
