@@ -186,8 +186,8 @@ partial class TypeExtensions
                 if ((flags & DataMemberFlags.Field) == 0)
                     continue;
 
-                if (field.IsAutoPropertyBackingField() &&
-                    (flags & DataMemberFlags.AutoPropertyBackingField) == 0)
+                if (field.IsAutoPropertyBackingField()
+                    && (flags & DataMemberFlags.AutoPropertyBackingField) == 0)
                 {
                     continue;
                 }
@@ -196,6 +196,12 @@ partial class TypeExtensions
             {
                 if ((flags & DataMemberFlags.Property) == 0)
                     continue;
+
+                if (member.IsIndexer
+                    && (flags & DataMemberFlags.Indexer) == 0)
+                {
+                    continue;
+                }
             }
 
             // Read filter

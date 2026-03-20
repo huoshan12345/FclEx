@@ -1,9 +1,13 @@
 ﻿// ReSharper disable UnusedMember.Global
 // ReSharper disable ConvertToAutoProperty
+// ReSharper disable ValueParameterNotUsed
 #pragma warning disable CS0169 // Field is never used
 #pragma warning disable CS0649 // Field is never assigned
+#pragma warning disable CA2211 // Non-constant fields should not be visible
+#pragma warning disable IDE0044 // Add readonly modifier
+#pragma warning disable IDE0051
 
-namespace FclEx.Extensions.TypeExtensions;
+namespace FclEx.Extensions.Reflection.TypeExtensions;
 
 public partial class GetDataMembersTests
 {
@@ -50,6 +54,27 @@ public partial class GetDataMembersTests
 
         public int NormalField;
     }
+
+    public class IndexerTestClass
+    {
+        public int NormalProperty { get; set; }
+
+        public int this[int i]
+        {
+            get => i;
+            set { }
+        }
+
+        public string this[string key]
+        {
+            get => key;
+            set { }
+        }
+
+        private int PrivateProperty { get; set; }
+    }
+
+    public class DerivedWithIndexer : IndexerTestClass;
 
     [Fact]
     public void DeclaredOnly_Should_Exclude_BaseMembers()
@@ -291,5 +316,115 @@ public partial class GetDataMembersTests
 
         Assert.False(normal.IsInitOnly());
         Assert.True(init.IsInitOnly());
+    }
+
+    [Fact]
+    public void GetDataMembers_WithoutIndexerFlag_Should_Exclude_Indexers()
+    {
+        var members = typeof(IndexerTestClass)
+            .GetDataMembers(DataMemberFlags.Property
+                            | DataMemberFlags.Public
+                            | DataMemberFlags.Instance
+                            | DataMemberFlags.CanRead
+                            | DataMemberFlags.Declared)
+            .ToArray();
+
+        Assert.NotEmpty(members);
+
+        Assert.DoesNotContain(members, m =>
+            m.MemberInfo is PropertyInfo p &&
+            p.GetIndexParameters().Length > 0);
+    }
+
+    [Fact]
+    public void GetDataMembers_WithIndexerFlag_Should_Include_Indexers()
+    {
+        var members = typeof(IndexerTestClass)
+            .GetDataMembers(DataMemberFlags.Property
+                            | DataMemberFlags.Public
+                            | DataMemberFlags.Instance
+                            | DataMemberFlags.CanRead
+                            | DataMemberFlags.Indexer
+                            | DataMemberFlags.Declared);
+
+        var indexers = members
+            .Select(m => m.MemberInfo)
+            .OfType<PropertyInfo>()
+            .Where(p => p.GetIndexParameters().Length > 0)
+            .ToList();
+
+        Assert.NotEmpty(indexers);
+        Assert.Equal(2, indexers.Count);
+    }
+
+    [Fact]
+    public void GetDataMembers_WithIndexerAndNonPublic_Should_RespectVisibility()
+    {
+        var members = typeof(IndexerTestClass)
+            .GetDataMembers(DataMemberFlags.Property
+                            | DataMemberFlags.NonPublic
+                            | DataMemberFlags.Instance
+                            | DataMemberFlags.Indexer
+                            | DataMemberFlags.CanRead
+                            | DataMemberFlags.Declared)
+            .ToArray();
+
+        Assert.NotEmpty(members);
+
+        Assert.DoesNotContain(members, m =>
+            m.MemberInfo is PropertyInfo p &&
+            p.GetIndexParameters().Length > 0);
+    }
+
+    [Fact]
+    public void GetDataMembers_WithoutPropertyFlag_Should_NotReturn_Indexers()
+    {
+        var members = typeof(IndexerTestClass)
+            .GetDataMembers(DataMemberFlags.Indexer
+                            | DataMemberFlags.Public
+                            | DataMemberFlags.Instance
+                            | DataMemberFlags.CanRead
+                            | DataMemberFlags.Declared)
+            .ToArray();
+
+        Assert.Empty(members);
+
+        Assert.DoesNotContain(members, m => m.MemberInfo is PropertyInfo);
+    }
+
+    [Fact]
+    public void GetDataMembers_WithIndexerFlag_Should_Return_Both_Normal_And_Indexer()
+    {
+        var members = typeof(IndexerTestClass)
+            .GetDataMembers(DataMemberFlags.Property
+                            | DataMemberFlags.Public
+                            | DataMemberFlags.Instance
+                            | DataMemberFlags.CanRead
+                            | DataMemberFlags.Indexer
+                            | DataMemberFlags.Declared);
+
+        var props = members
+            .Select(m => m.MemberInfo)
+            .OfType<PropertyInfo>()
+            .ToList();
+
+        Assert.Contains(props, p => p.Name == nameof(IndexerTestClass.NormalProperty));
+        Assert.Contains(props, p => p.GetIndexParameters().Length > 0);
+    }
+
+    [Fact]
+    public void GetDataMembers_InheritedIndexer_Should_Work()
+    {
+        var members = typeof(DerivedWithIndexer)
+            .GetDataMembers(DataMemberFlags.Property
+                            | DataMemberFlags.Public
+                            | DataMemberFlags.Instance
+                            | DataMemberFlags.CanRead
+                            | DataMemberFlags.Indexer
+                            | DataMemberFlags.Inherited);
+
+        Assert.Contains(members, m =>
+            m.MemberInfo is PropertyInfo p &&
+            p.GetIndexParameters().Length > 0);
     }
 }

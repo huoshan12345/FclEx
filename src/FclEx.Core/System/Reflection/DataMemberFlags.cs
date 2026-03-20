@@ -13,7 +13,8 @@ public enum DataMemberFlags
     Field = 1 << 6,
     AutoPropertyBackingField = 1 << 7,
     Property = 1 << 8,
-    CanRead = 1 << 9,
-    CanWrite = 1 << 10,
-    UnsafeWrite = 1 << 11,
+    Indexer = 1 << 9,
+    CanRead = 1 << 10,
+    CanWrite = 1 << 11,
+    UnsafeWrite = 1 << 12,
 }
