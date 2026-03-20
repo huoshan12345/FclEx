@@ -17,13 +17,16 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="appsettings.json">
+    <Content Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+
+    <None Include="xunit.runner.debug.json" Condition="'$(Configuration)' == 'Debug'">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="xunit.runner.json">
+      <TargetPath>xunit.runner.json</TargetPath>
+    </None>
+    <None Include="xunit.runner.release.json" Condition="'$(Configuration)' == 'Release'">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>xunit.runner.json</TargetPath>
     </None>
   </ItemGroup>
+
 </Project>
