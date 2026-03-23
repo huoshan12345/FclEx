@@ -85,9 +85,6 @@ public static class ReflectionHelper
         if (method?.DeclaringType is not { } declaringType)
             return false;
 
-        if (method.IsCompilerGenerated() == false)
-            return false;
-
         if (declaringType != field.DeclaringType)
             return false;
 
@@ -122,17 +119,9 @@ public static class ReflectionHelper
             if (token == fieldToken)
                 return true;
 
-            try
-            {
-                var resolveField = declaringType.Module.ResolveField(token, genericTypeArgs, genericMethodArgs);
-                if (field == resolveField)
-                    return true;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.ToString());
-                continue;
-            }
+            var resolveField = declaringType.Module.ResolveField(token, genericTypeArgs, genericMethodArgs);
+            if (field == resolveField)
+                return true;
         }
 
         return false;

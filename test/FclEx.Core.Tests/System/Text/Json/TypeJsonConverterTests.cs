@@ -96,7 +96,6 @@ public class TypeJsonConverterTests
         Assert.Equal(type, result);
     }
 
-    // 用于测试私有类型
     private class PrivateTestType;
 
     [Fact]
@@ -162,7 +161,6 @@ public class TypeJsonConverterTests
     {
         var options = CreateOptions();
 
-        // 通过反射拿到真正的 private 类型
         var type = typeof(Container).GetNestedType(
             "HiddenType",
             BindingFlags.NonPublic);

@@ -72,7 +72,7 @@ public class ObjectJsonConverterTests
     {
         var options = CreateOptions();
 
-        var json = """{ "a": 1, "b": true }""";
+        const string json = """{ "a": 1, "b": true }""";
 
         var result = JsonSerializer.Deserialize<object>(json, options);
 
@@ -87,7 +87,7 @@ public class ObjectJsonConverterTests
     {
         var options = CreateOptions();
 
-        var json = """{ "a": { "b": 2 } }""";
+        const string json = """{ "a": { "b": 2 } }""";
 
         var result = JsonSerializer.Deserialize<object>(json, options);
 
@@ -103,7 +103,7 @@ public class ObjectJsonConverterTests
     {
         var options = CreateOptions();
 
-        var json = "[1, true, \"abc\"]";
+        const string json = "[1, true, \"abc\"]";
 
         var result = JsonSerializer.Deserialize<List<object>>(json, options);
 
@@ -118,7 +118,7 @@ public class ObjectJsonConverterTests
     {
         var options = CreateOptions();
 
-        var json = """{ "x": 1, "y": "abc" }""";
+        const string json = """{ "x": 1, "y": "abc" }""";
 
         var result = JsonSerializer.Deserialize<Dictionary<string, object>>(json, options);
 
@@ -210,5 +210,133 @@ public class ObjectJsonConverterTests
         var result = JsonSerializer.Deserialize<IEnumerable<object>>(json, options)!;
 
         Assert.Equal(3, result.Count());
+    }
+
+    [Fact]
+    public void Deserialize_ScientificNotation_ShouldWork()
+    {
+        var options = CreateOptions();
+
+        var result = JsonSerializer.Deserialize<object>("1e3", options);
+
+        Assert.IsType<double>(result);
+        Assert.Equal(1000d, result);
+    }
+
+    [Fact]
+    public void Deserialize_LargeInteger_ShouldFallbackToLongOrDouble()
+    {
+        var options = CreateOptions();
+
+        const string json = "9223372036854775807"; // long.MaxValue
+
+        var result = JsonSerializer.Deserialize<object>(json, options);
+
+        Assert.IsType<long>(result);
+    }
+
+    [Fact]
+    public void Deserialize_TooLargeInteger_ShouldBecomeDouble()
+    {
+        var options = CreateOptions();
+
+        const string json = "922337203685477580799";
+
+        var result = JsonSerializer.Deserialize<object>(json, options);
+
+        Assert.IsType<double>(result);
+    }
+
+    [Fact]
+    public void Deserialize_EmptyObject_ShouldWork()
+    {
+        var options = CreateOptions();
+
+        var result = JsonSerializer.Deserialize<object>("{}", options);
+
+        var dict = Assert.IsType<Dictionary<string, object>>(result);
+        Assert.Empty(dict);
+    }
+
+    [Fact]
+    public void Deserialize_EmptyArray_ShouldWork()
+    {
+        var options = CreateOptions();
+
+        var result = JsonSerializer.Deserialize<object>("[]", options);
+
+        var list = Assert.IsType<List<object>>(result);
+        Assert.Empty(list);
+    }
+
+    [Fact]
+    public void Deserialize_DeepJson_ShouldRespectMaxDepth()
+    {
+        var options = CreateOptions();
+
+        var json = new StringBuilder();
+        for (var i = 0; i < 70; i++) json.Append("{\"a\":");
+        json.Append('1');
+        for (var i = 0; i < 70; i++) json.Append('}');
+
+        Assert.Throws<JsonException>(() =>
+            JsonSerializer.Deserialize<object>(json.ToString(), options));
+    }
+
+    [Fact]
+    public void Deserialize_ArrayOfObjects_ShouldWork()
+    {
+        var options = CreateOptions();
+
+        const string json = """[{"a":1},{"b":2}]""";
+
+        var result = JsonSerializer.Deserialize<object>(json, options);
+
+        var list = Assert.IsType<List<object>>(result);
+
+        var d1 = Assert.IsType<Dictionary<string, object>>(list[0]);
+        var d2 = Assert.IsType<Dictionary<string, object>>(list[1]);
+
+        Assert.Equal(1, d1["a"]);
+        Assert.Equal(2, d2["b"]);
+    }
+
+    [Fact]
+    public void Deserialize_DateTimeOffsetString_ShouldStayStringOrDateTime()
+    {
+        var options = CreateOptions();
+
+        const string json = "\"2024-01-01T12:00:00+02:00\"";
+
+        var result = JsonSerializer.Deserialize<object>(json, options);
+
+        Assert.True(result is DateTime or string);
+    }
+
+    [Fact]
+    public void Deserialize_InvalidJson_ShouldThrow()
+    {
+        var options = CreateOptions();
+
+        const string json = "{ \"a\": 1, }";
+
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<object>(json, options));
+    }
+
+    [Fact]
+    public void Deserialize_MixedArray_ShouldPreserveTypes()
+    {
+        var options = CreateOptions();
+
+        const string json = "[1, 1.5, true, \"x\"]";
+
+        var result = JsonSerializer.Deserialize<object>(json, options);
+
+        var list = Assert.IsType<List<object>>(result);
+
+        Assert.IsType<int>(list[0]);
+        Assert.IsType<double>(list[1]);
+        Assert.IsType<bool>(list[2]);
+        Assert.IsType<string>(list[3]);
     }
 }
