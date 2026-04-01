@@ -1,10 +1,8 @@
-using FclEx.Logging;
-
 namespace FclEx.AspNetCore;
 
 public static class HttpRequestExtensions
 {
-    public static JwtSecurityToken? GetJwtOrNull(this HttpRequest request)
+    public static JsonWebToken? GetJwtOrNull(this HttpRequest request)
     {
         var tokenStr = request.Headers[HeaderNames.Authorization]
             .ToString()
@@ -13,13 +11,13 @@ public static class HttpRequestExtensions
 
         return string.IsNullOrEmpty(tokenStr)
             ? null
-            : new JwtSecurityToken(tokenStr);
+            : new JsonWebToken(tokenStr);
     }
 
-    // Some properties may be null in unit tests
     [SuppressMessage("ReSharper", "ConditionalAccessQualifierIsNonNullableAccordingToAPIContract")]
     public static IPAddress? RemoteIpAddressOrNull(this HttpRequest request)
     {
+        // ReSharper disable once InvertIf
         if (request.Headers?.TryGetValue("X-Real-IP", out var header) is true)
         {
             var couldParse = IPAddress.TryParse(header, out var address);
@@ -48,42 +46,20 @@ public static class HttpRequestExtensions
         request.Body.Position = 0;
         return body;
     }
-
-    public static JwtSecurityToken? GetJwtToken(this HttpRequest request)
-    {
-        var logger = request.HttpContext.RequestServices.CreateLogger(typeof(HttpRequestExtensions));
-
-        try
-        {
-            var tokenStr = request.Headers[HeaderNames.Authorization]
-                .ToString()
-                .SkipUntil(OidcConstants.TokenResponse.BearerTokenType)
-                .Trim();
-
-            return string.IsNullOrEmpty(tokenStr)
-                ? null
-                : new JwtSecurityToken(tokenStr);
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, $"Failed to parse jwt token due to {ex.Message}");
-            return null;
-        }
-    }
-
-    public static JwtTokenInfo? GetJwtTokenInfo(this HttpRequest request)
+    
+    public static JwtInfo? GetJwtInfo(this HttpRequest request)
     {
         var items = request.HttpContext.Items;
 
-        if (items.TryGetValue(nameof(JwtTokenInfo), out var value) && value is JwtTokenInfo info)
+        if (items.TryGetValue(nameof(JwtInfo), out var value) && value is JwtInfo info)
             return info;
 
-        var token = request.GetJwtToken();
+        var token = request.GetJwtOrNull();
         if (token is null)
             return null;
 
-        info = new JwtTokenInfo(token);
-        items[nameof(JwtTokenInfo)] = info;
+        info = new JwtInfo(token);
+        items[nameof(JwtInfo)] = info;
         return info;
     }
 

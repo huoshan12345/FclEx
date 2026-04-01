@@ -27,4 +27,11 @@ public static class HttpClientBuilderExtensions
         builder.AddPolicyHandler(PollyHelper.GetIORetryPolicy(retryCount));
         return builder;
     }
+
+    public static IHttpClientBuilder AddHttpMessageHandlerBy<T, TDependency>(this IHttpClientBuilder builder, Func<TDependency, T> configureHandler)
+        where T : DelegatingHandler
+        where TDependency : class
+    {
+        return builder.AddHttpMessageHandler(m => configureHandler(m.GetRequiredService<TDependency>()));
+    }
 }

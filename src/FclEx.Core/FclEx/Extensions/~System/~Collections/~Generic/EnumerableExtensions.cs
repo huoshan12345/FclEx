@@ -4,19 +4,19 @@ public readonly record struct IndexedItem<T>(int Index, T Item, bool IsFirst, bo
 
 public static partial class EnumerableExtensions
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this IEnumerable<T>? source) => source is null || source.AnyEx() == false;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static bool IsEmpty<T>(this IEnumerable<T> source) => source.AnyEx() == false;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static bool IsNotEmpty<T>([NotNullWhen(true)] this IEnumerable<T>? enumerable) => enumerable.IsNullOrEmpty() == false;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T>? source) => source ?? [];
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static string JoinWith<T>(this IEnumerable<T> enumerable, string? separator)
     {
         return StringBuilderHelper.Build(m => m.AppendJoin(separator, enumerable));
@@ -31,7 +31,7 @@ public static partial class EnumerableExtensions
     /// <remarks>
     /// This method uses <see cref="MethodImplOptions.AggressiveInlining"/> for potential performance optimization.
     /// </remarks>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> enumerable)
         => enumerable.Where(m => m is not null)!;
 
@@ -44,7 +44,7 @@ public static partial class EnumerableExtensions
     /// <remarks>
     /// This method uses <see cref="MethodImplOptions.AggressiveInlining"/> for potential performance optimization.
     /// </remarks>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> enumerable) where T : struct
         => enumerable.Where(m => m is not null).Select(m => m.Get());
 
@@ -244,9 +244,9 @@ public static partial class EnumerableExtensions
             : enumerable.Any();
     }
 
-    public static IEnumerable<T> Concat<T>(this IEnumerable<IEnumerable<T>> arrays)
+    public static IEnumerable<T> Concat<T>(this IEnumerable<IEnumerable<T>> enumerable)
     {
-        return arrays.SelectMany(m => m);
+        return enumerable.SelectMany(m => m);
     }
 
     public static IEnumerable<T> Concat<T>(this IEnumerable<T> source, IEnumerable<T>[] arrays)

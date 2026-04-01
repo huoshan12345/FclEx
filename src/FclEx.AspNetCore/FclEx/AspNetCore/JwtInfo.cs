@@ -1,26 +1,25 @@
-﻿namespace FclEx.AspNetCore;
+﻿using FclEx.Http;
 
-public class JwtTokenInfo
+namespace FclEx.AspNetCore;
+
+public class JwtInfo
 {
-    public JwtTokenInfo(JwtSecurityToken token)
+    public JwtInfo(JsonWebToken token)
     {
         Token = Check.NotNull(token);
         ExpirationTime = token.ValidTo;
         IssuedAt = token.IssuedAt;
-        AuthenticationTime = token.Payload.AuthTime is { } authTime
-            ? DateTimeOffset.FromUnixTimeSeconds(authTime)
-            : DateTimeOffset.MinValue;
         JwtId = token.Id;
         Issuer = token.Issuer;
         Audiences = token.Audiences.AsIReadOnlyList();
         Subject = token.Subject;
-        Type = token.Header.Typ;
-        AuthorizedParty = token.Payload.Azp;
-        Scopes = token.Payload.Claims.FirstOrDefault(m => m.Type == JwtClaimTypes.Scope)?.Value.Split(' ') ?? [];
+        Type = token.Typ;
+        AuthorizedParty = token.Azp;
+        Scopes = token.GetScopes();
     }
 
     [LogPropertyIgnore]
-    public JwtSecurityToken Token { get; }
+    public JsonWebToken Token { get; }
 
     /// <summary>
     /// exp: Timestamp indicating when the token will expire.<br/>
@@ -33,12 +32,6 @@ public class JwtTokenInfo
     /// Value is Unix epoch time.
     /// </summary>
     public DateTimeOffset IssuedAt { get; }
-
-    /// <summary>
-    /// auth_time: Timestamp indicating when the user was authenticated.<br/>
-    /// Value is Unix epoch time.
-    /// </summary>
-    public DateTimeOffset AuthenticationTime { get; }
 
     /// <summary>
     /// jti: Unique identifier for the token. Useful for preventing token reuse (replay attacks).<br/>
@@ -77,5 +70,5 @@ public class JwtTokenInfo
     /// <summary>
     /// scope: Space-separated list of granted scopes. Scopes define access permissions. 
     /// </summary>
-    public string[] Scopes { get; }
+    public List<string> Scopes { get; }
 }
