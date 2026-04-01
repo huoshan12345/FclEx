@@ -1,4 +1,6 @@
-﻿namespace FclEx.Http.Auth;
+﻿using static Duende.IdentityModel.OidcConstants;
+
+namespace FclEx.Http.Auth;
 
 public class ClientCredentialsTokenProviderTests : AuthTests
 {
@@ -40,10 +42,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     [Fact]
     public async Task GetToken_ShouldRefresh_WhenExpired()
     {
-        var handler = new MutateTokenResponseHandler
-        {
-            ExpiresIn = 1,
-        };
+        var handler = new MutateTokenResponseHandler((_, _, _, m) => m[TokenResponse.ExpiresIn] = 1);
         var provider = CreateTestTokenProvider(handler);
         await provider.GetTokenAsync("api");
         await Task.Delay(1500);

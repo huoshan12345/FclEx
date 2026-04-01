@@ -1,4 +1,5 @@
 ﻿using FclEx.Tests;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using static Duende.IdentityModel.OidcConstants;
@@ -77,6 +78,7 @@ public class HttpServerFixture : GlobalFixture
     }
 
     public const string TokenPath = "/oauth/openid-connect/token";
+    public const string RequiredScope = "test-scope";
 
     private static async Task RunApiServer()
     {
@@ -85,7 +87,6 @@ public class HttpServerFixture : GlobalFixture
         builder.Services.AddLogging(b => b.SetMinimumLevel(LogLevel.Error));
 
         builder.Services
-            .AddAuthorization()
             .AddAuthentication()
             .AddJwtBearer(o =>
             {
@@ -103,6 +104,12 @@ public class HttpServerFixture : GlobalFixture
                     IssuerSigningKey = GetSecurityKey(),
                 };
             });
+
+        builder.Services.AddSingleton<IAuthorizationHandler, ScopeAuthorizationHandler>()
+            .AddAuthorizationBuilder()
+            .AddDefaultPolicy("Scope", x => x
+                .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+                .AddRequirements(ScopeRequirement.Instance));
 
 #if NET7_0_OR_GREATER
         // Should use ZlibSteam to handle deflate decompression, which has been done since aspnet core 8.
@@ -194,7 +201,7 @@ public class HttpServerFixture : GlobalFixture
         app.UseAuthentication();
         app.UseAuthorization();
 
-        app.MapGet("/auth/test", [Authorize, RequiredScope("test-scope")] async (context) =>
+        app.MapGet("/auth/test", [Authorize, RequiredScope(RequiredScope)] async (context) =>
         {
             var auth = context.Request.Headers.Authorization.ToString();
             await context.Response.WriteAsync(auth);
