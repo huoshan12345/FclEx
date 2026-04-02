@@ -30,11 +30,16 @@ partial class StringExtensions
 {
     public static readonly char[] NewLineChars = ['\r', '\n'];
 
-    public static string[] SplitToLines(this string? str, StringSplitOptions options = StringSplitOptions.RemoveEmptyEntries)
+    public static string[] SplitToLines(this string? str, StringSplitOptions options)
     {
         return str.IsNullOrEmpty()
             ? []
             : str.Split(NewLineChars, options);
+    }
+
+    public static string[] SplitToLines(this string? str, SplitOptions options = SplitOptions.TrimAndRemoveEmpty)
+    {
+        return str.SplitToLines(options.ToStringSplitOptions());
     }
 
     /// <summary>

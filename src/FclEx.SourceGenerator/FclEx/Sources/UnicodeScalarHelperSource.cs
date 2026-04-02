@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Net.Http;
@@ -157,6 +156,7 @@ internal static class UnicodeScalarHelperSource
     {
         await Task.Yield();
 
+        // ReSharper disable once ShortLivedHttpClient
         using var httpClient = new HttpClient();
 
         // the official website: https://unicode.org/emoji/charts/full-emoji-list.html
@@ -164,7 +164,7 @@ internal static class UnicodeScalarHelperSource
         var text = await httpClient.GetStringAsync("https://unicode-org.github.io/emoji/emoji/charts-16.0/emoji-list.html");
 
         var htmlParser = new HtmlParser();
-        var htmlDocument = htmlParser.ParseDocument(text);
+        var htmlDocument = await htmlParser.ParseDocumentAsync(text);
 
         var emojiSet = new SortedSet<int>();
         // HTML above contains elements like 

@@ -1,4 +1,5 @@
 ﻿using FclEx.Sources.DependencyInjection;
+using FclEx.Sources.Http;
 using FclEx.Sources.Xunit;
 
 namespace FclEx;
@@ -30,6 +31,10 @@ public class SourceGenerator : IIncrementalGenerator
                     NumberExtensionsSource.Generate(),
                     StringBuilderExtensionsSource.Generate(),
                     HashExtensionsSource.Generate(),
+                ],
+                "FclEx.Http" =>
+                [
+                    HttpClientBuilderExtensionsSource.Generate(),
                 ],
                 "FclEx.Xunit" =>
                 [

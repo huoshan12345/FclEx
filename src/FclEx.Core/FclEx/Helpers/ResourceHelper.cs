@@ -34,7 +34,12 @@ public static class ResourceHelper
                 .Split(_newLineChars, options);
         }
 
-        public static byte[] ReadBytes(Assembly assembly, string resourceName, Encoding? encoding = null)
+        public static string[] ReadLines(Assembly assembly, string resourceName, Encoding? encoding = null, SplitOptions options = SplitOptions.TrimAndRemoveEmpty)
+        {
+            return ReadLines(assembly, resourceName, encoding, options.ToStringSplitOptions());
+        }
+
+        public static byte[] ReadBytes(Assembly assembly, string resourceName)
             => ReadAs(assembly, resourceName, s => s.ReadAllBytes());
     }
 }

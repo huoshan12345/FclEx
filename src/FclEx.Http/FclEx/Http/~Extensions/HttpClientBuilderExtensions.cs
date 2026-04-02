@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Http;
 
-public static class HttpClientBuilderExtensions
+public static partial class HttpClientBuilderExtensions
 {
     public static IHttpClientBuilder AddRetryPolicy(this IHttpClientBuilder builder, TimeSpan? timeout = null, int retryCount = 2, bool autoUpdateTotalTimeout = true, SleepDurationProvider? sleepDurationProvider = null)
     {
