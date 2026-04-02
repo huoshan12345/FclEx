@@ -73,9 +73,9 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
         await locker.WaitAsync();
         try
         {
-            if (!forceRefresh &&
-                _cache.TryGetValue(scope, out var cached) &&
-                !cached.IsExpired())
+            if (forceRefresh == false
+                && _cache.TryGetValue(scope, out var cached)
+                && cached.IsExpired() == false)
             {
                 return cached.AccessToken;
             }
@@ -84,7 +84,7 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
             var disco = await GetDiscoveryAsync();
 
             // try refresh_token
-            if (!forceRefresh
+            if (forceRefresh == false
                 && _cache.TryGetValue(scope, out cached)
                 && cached.RefreshToken is { Length: > 0 } refreshToken)
             {
@@ -114,7 +114,7 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
             });
 
             if (token.IsError)
-                throw new Exception(token.Error);
+                throw HttpRequestException.From(token.Error, null, token.HttpStatusCode);
 
             var item = CreateCacheItem(token);
             _cache[scope] = item;

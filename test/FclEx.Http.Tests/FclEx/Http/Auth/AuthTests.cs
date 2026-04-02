@@ -5,7 +5,7 @@ public class AuthTests : HttpServerTests
     public static IAccessTokenProvider CreateTestTokenProvider(MutateTokenResponseHandler? handler = null)
     {
         return new ServiceCollection()
-            .AddTestTokenProvider()
+            .AddTestTokenProvider(handler)
             .BuildServiceProvider()
             .GetRequiredService<IAccessTokenProvider>();
     }

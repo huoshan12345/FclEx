@@ -28,10 +28,6 @@ public static class HttpStatusCodeExtensions
             return;
 
         var error = $"Returned {code.ToPairString()} via {method} {uri}";
-#if NETSTANDARD2_0
-        throw new HttpRequestException(error);
-#else
-        throw new HttpRequestException(error, null, code);
-#endif
+        throw HttpRequestException.From(error, null, code);
     }
 }
