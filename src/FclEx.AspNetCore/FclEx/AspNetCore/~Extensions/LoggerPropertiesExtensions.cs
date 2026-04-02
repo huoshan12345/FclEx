@@ -1,5 +1,3 @@
-using FclEx.Logging;
-
 namespace FclEx.AspNetCore;
 
 public static class LoggerPropertiesExtensions

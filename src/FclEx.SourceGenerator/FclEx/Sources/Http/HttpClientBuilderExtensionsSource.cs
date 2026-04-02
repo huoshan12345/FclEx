@@ -1,13 +1,13 @@
-﻿namespace FclEx.Sources.DependencyInjection;
+﻿namespace FclEx.Sources.Http;
 
-internal class ServiceCollectionExtensionsSource
+internal class HttpClientBuilderExtensionsSource
 {
     private const int Max = 8;
 
     internal static SourceInfo Generate()
     {
-        const string @namespace = "FclEx.DependencyInjection";
-        const string className = "ServiceCollectionExtensions";
+        const string @namespace = "FclEx.Http";
+        const string className = "HttpClientBuilderExtensions";
 
         using var builder = new SourceBuilder()
             .WriteGeneratedHeader()
@@ -20,24 +20,7 @@ internal class ServiceCollectionExtensionsSource
         builder.WriteLine($"public partial class {className}")
             .WriteOpeningBracket();
 
-        /*
-           public static IServiceCollection AddSingletonBy<T, TDependency1, TDependency2>(this IServiceCollection services, Func<TDependency1, TDependency2, T> func)
-               where T : class
-               where TDependency1 : notnull
-               where TDependency2 : notnull
-           {
-               services.AddSingleton(s => 
-               {
-                   var service1 = s.GetRequiredService<TDependency1>();
-                   var service2 = s.GetRequiredService<TDependency2>();
-                   return func(service1, service2);
-               });
-               return services;
-           }
-         */
-        var methodNames = new[] { "Add", "TryAdd" }
-            .SelectMany(m => new[] { "Singleton", "Scoped", "Transient" }, (p, m) => p + m)
-            .ToArray();
+        var methodNames = new[] { "AddHttpMessageHandler", "ConfigurePrimaryHttpMessageHandler" };
 
         for (var i = 2; i <= Max; i++)
         {
@@ -46,10 +29,10 @@ internal class ServiceCollectionExtensionsSource
             foreach (var methodName in methodNames)
             {
                 // NOTE: there is a "By" suffix.
-                builder.WriteLine($"public static IServiceCollection {methodName}By<T, {types}>(this IServiceCollection services, Func<{types}, T> func)");
+                builder.WriteLine($"public static IHttpClientBuilder {methodName}By<T, {types}>(this IHttpClientBuilder builder, Func<{types}, T> func)");
 
                 builder.Indent();
-                builder.WriteLine("where T : class");
+                builder.WriteLine("where T : DelegatingHandler");
                 foreach (var j in Enumerable.Range(1, i))
                 {
                     builder.WriteLine($"where TDependency{j} : notnull");
@@ -58,7 +41,7 @@ internal class ServiceCollectionExtensionsSource
 
                 builder.WriteOpeningBracket();
 
-                builder.WriteLine($"services.{methodName}(s => ");
+                builder.WriteLine($"builder.{methodName}(s => ");
                 builder.WriteOpeningBracket();
 
                 var variables = new List<string>();
@@ -73,7 +56,7 @@ internal class ServiceCollectionExtensionsSource
                 builder.Unindent();
                 builder.WriteLine("});");
 
-                builder.WriteLine("return services;");
+                builder.WriteLine("return builder;");
 
                 builder.WriteClosingBracket();
                 builder.WriteLine();

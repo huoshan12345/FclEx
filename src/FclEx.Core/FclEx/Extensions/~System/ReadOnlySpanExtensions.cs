@@ -173,4 +173,76 @@ public static class ReadOnlySpanExtensions
 
         return code;
     }
+
+    public static SplitEnumerator EnumerateSplit(this ReadOnlySpan<char> span, ReadOnlySpan<char> separators, StringSplitOptions options)
+        => new(span, separators, options.ToSplitOptions());
+
+    public static SplitEnumerator EnumerateSplit(this ReadOnlySpan<char> span, ReadOnlySpan<char> separators, SplitOptions options = SplitOptions.TrimAndRemoveEmpty)
+        => new(span, separators, options);
+
+    public ref struct SplitEnumerator
+    {
+        private readonly ReadOnlySpan<char> _separators;
+        private readonly SplitOptions _options;
+        private ReadOnlySpan<char> _remaining;
+        private ReadOnlySpan<char> _current;
+
+        public SplitEnumerator(
+            ReadOnlySpan<char> span,
+            ReadOnlySpan<char> separators,
+            SplitOptions options)
+        {
+            _remaining = span;
+            _separators = separators;
+            _options = options;
+            _current = default;
+        }
+
+        public readonly SplitEnumerator GetEnumerator() => this;
+
+        // ReSharper disable once ConvertToAutoPropertyWithPrivateSetter
+        public readonly ReadOnlySpan<char> Current => _current;
+
+        public bool MoveNext()
+        {
+            while (true)
+            {
+                if (_remaining.IsEmpty)
+                    return false;
+
+                var idx = _remaining.IndexOfAny(_separators);
+
+                ReadOnlySpan<char> slice;
+
+                if (idx < 0)
+                {
+                    slice = _remaining;
+                    _remaining = default;
+                }
+                else
+                {
+                    slice = _remaining[..idx];
+                    _remaining = _remaining[(idx + 1)..];
+                }
+
+                // TrimEntries
+                if ((_options & SplitOptions.TrimEntries) != 0)
+                {
+                    slice = slice.Trim();
+                }
+
+                // RemoveEmptyEntries
+                if ((_options & SplitOptions.RemoveEmptyEntries) != 0 && slice.IsEmpty)
+                {
+                    if (_remaining.IsEmpty)
+                        return false;
+
+                    continue; // 跳过空项
+                }
+
+                _current = slice;
+                return true;
+            }
+        }
+    }
 }

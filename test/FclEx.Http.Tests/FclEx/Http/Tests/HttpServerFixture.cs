@@ -1,4 +1,8 @@
 ﻿using FclEx.Tests;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.Tokens;
+using static Duende.IdentityModel.OidcConstants;
 
 namespace FclEx.Http.Tests;
 
@@ -37,15 +41,75 @@ public class HttpServerFixture : GlobalFixture
         = File.ReadAllText(Path.Combine("TestData", "SimpleCookies.json"))
             .FromJson<List<SimpleCookie>>()!;
 
-    public static readonly Lazy<string> VisitorHtml = new(() =>
+    private static readonly Lazy<string> VisitorHtml = new(() =>
         ResourceHelper.Embedded.ReadString(typeof(HttpServerFixture).Assembly, "visitor.html"));
-    public static readonly Encoding Gb2312 = Encoding.GetEncoding("gb2312");
+    private static readonly Encoding Gb2312 = Encoding.GetEncoding("gb2312");
+
+    private static SymmetricSecurityKey GetSecurityKey()
+    {
+        const string key = "MTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMQ==";
+        return new SymmetricSecurityKey(key.Base64ToBytes());
+    }
+
+    public static string CreateToken(string[] scopes)
+    {
+        var key = GetSecurityKey();
+        var claims = new Dictionary<string, object>
+        {
+            [JwtClaimTypes.Name] = "TestUser",
+            [JwtClaimTypes.JwtId] = Guid.NewGuid(),
+            [JwtClaimTypes.SessionId] = Guid.NewGuid(),
+            [JwtClaimTypes.Scope] = scopes.JoinWith(" "),
+        };
+        var descriptor = new SecurityTokenDescriptor
+        {
+            Issuer = "TestIssuer",
+            Audience = "TestAudience",
+            Claims = claims,
+            IssuedAt = DateTime.UtcNow,
+            NotBefore = DateTime.UtcNow,
+            Expires = DateTime.UtcNow.AddHours(1),
+            IncludeKeyIdInHeader = true,
+            SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256),
+        };
+
+        var handler = new JsonWebTokenHandler { SetDefaultTimesOnTokenCreation = false };
+        return handler.CreateToken(descriptor);
+    }
+
+    public const string TokenPath = "/oauth/openid-connect/token";
+    public const string RequiredScope = "test-scope";
 
     private static async Task RunApiServer()
     {
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseUrls(TestUri.ToString());
         builder.Services.AddLogging(b => b.SetMinimumLevel(LogLevel.Error));
+
+        builder.Services
+            .AddAuthentication()
+            .AddJwtBearer(o =>
+            {
+                o.MapInboundClaims = false;
+                o.RequireHttpsMetadata = false;
+                o.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero,
+                    RequireExpirationTime = true,
+                    RequireSignedTokens = true,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = GetSecurityKey(),
+                };
+            });
+
+        builder.Services.AddSingleton<IAuthorizationHandler, ScopeAuthorizationHandler>()
+            .AddAuthorizationBuilder()
+            .AddDefaultPolicy("Scope", x => x
+                .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+                .AddRequirements(ScopeRequirement.Instance));
 
 #if NET7_0_OR_GREATER
         // Should use ZlibSteam to handle deflate decompression, which has been done since aspnet core 8.
@@ -60,15 +124,10 @@ public class HttpServerFixture : GlobalFixture
         app.UseExceptionHandler(m => m.Run(async context =>
         {
             var feature = context.Features.Get<IExceptionHandlerPathFeature>();
-
-            if (feature?.Error is { } ex)
-            {
-                await context.Response.WriteAsync(ex.Message);
-            }
-            else
-            {
-                await context.Response.WriteAsync("Unknown error occurred.");
-            }
+            var error = feature?.Error is { } ex
+                ? ex.Message
+                : "Unknown error occurred.";
+            await context.Response.WriteAsync(error);
         }));
 
         app.UseMiddleware<EnableBufferingMiddleware>();
@@ -111,6 +170,41 @@ public class HttpServerFixture : GlobalFixture
         {
             context.Response.ContentType = MediaTypes.Html; // do not set charset, to test auto-detect encoding
             await context.Response.WriteAsync(VisitorHtml.Value, Gb2312);
+        });
+
+        app.MapGet("/oauth/.well-known/openid-configuration", async context =>
+        {
+            var request = context.Request;
+            var issuer = $"{request.Scheme}://{request.Host}/oauth";
+            var token = $"{request.Scheme}://{request.Host}{TokenPath}";
+            var discovery = new JsonObject
+            {
+                {Discovery.Issuer, issuer},
+                {Discovery.TokenEndpoint, token},
+            };
+            await context.Response.WriteAsync(discovery.ToJsonString());
+        });
+
+        app.MapPost(TokenPath, async context =>
+        {
+            var scopes = context.Request.Form[TokenRequest.Scope].ToString().Split(' ');
+            var token = CreateToken(scopes);
+            var tokenResponse = new JsonObject
+            {
+                {TokenResponse.AccessToken, token},
+                {TokenResponse.ExpiresIn, 3600},
+                {TokenResponse.TokenType, TokenResponse.BearerTokenType},
+            };
+            await context.Response.WriteAsync(tokenResponse.ToJsonString());
+        });
+
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        app.MapGet("/auth/test", [Authorize, RequiredScope(RequiredScope)] async (context) =>
+        {
+            var auth = context.Request.Headers.Authorization.ToString();
+            await context.Response.WriteAsync(auth);
         });
 
         await app.StartAsync();

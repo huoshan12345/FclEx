@@ -51,7 +51,7 @@ public class ScopeAuthorizationHandlerTests
     }
 
     [Fact]
-    public async Task HandleRequirementAsync_WithNonMatchingScope_Authenticated_ShouldSucceed()
+    public async Task HandleRequirementAsync_WithNonMatchingScope_Authenticated_ShouldNotSucceed()
     {
         var handler = new ScopeAuthorizationHandler<TestRequirement>();
         var requirement = new TestRequirement();
@@ -66,7 +66,7 @@ public class ScopeAuthorizationHandlerTests
 
         await handler.HandleAsync(context);
 
-        Assert.True(context.HasSucceeded);
+        Assert.False(context.HasSucceeded);
     }
 
     [Fact]
@@ -90,7 +90,7 @@ public class ScopeAuthorizationHandlerTests
     }
 
     [Fact]
-    public async Task HandleRequirementAsync_WithMultipleRequiredScopes_OneDoesNotMatch_Authenticated_ShouldSucceed()
+    public async Task HandleRequirementAsync_WithMultipleRequiredScopes_OneDoesNotMatch_Authenticated_ShouldNotSucceed()
     {
         var handler = new ScopeAuthorizationHandler<TestRequirement>();
         var requirement = new TestRequirement();
@@ -100,6 +100,25 @@ public class ScopeAuthorizationHandlerTests
         };
         var user = new ClaimsPrincipal(new ClaimsIdentity(claims, "testAuth"));
         var attributes = new[] { new RequiredScopeAttribute("read", "admin") };
+        var resource = MockHttpContextWithAttributes(attributes);
+        var context = new AuthorizationHandlerContext([requirement], user, resource);
+
+        await handler.HandleAsync(context);
+
+        Assert.False(context.HasSucceeded);
+    }
+
+    [Fact]
+    public async Task HandleRequirementAsync_WithMultipleRequiredScopeAttributes_OneMatches_ShouldSucceed()
+    {
+        var handler = new ScopeAuthorizationHandler<TestRequirement>();
+        var requirement = new TestRequirement();
+        var claims = new List<Claim>
+        {
+            new(JwtClaimTypes.Scope, "read write"),
+        };
+        var user = new ClaimsPrincipal(new ClaimsIdentity(claims, "testAuth"));
+        var attributes = new[] { new RequiredScopeAttribute("read", "admin"), new RequiredScopeAttribute("read", "write") };
         var resource = MockHttpContextWithAttributes(attributes);
         var context = new AuthorizationHandlerContext([requirement], user, resource);
 

@@ -4,7 +4,9 @@ public static class HttpContentExtensions
 {
 #if NETSTANDARD2_0
     // ReSharper disable once UnusedParameter.Global
+#pragma warning disable IDE0060 // Remove unused parameter
     public static Task<Stream> ReadAsStreamAsync(this HttpContent content, CancellationToken token)
+#pragma warning restore IDE0060 // Remove unused parameter
     {
         return content.ReadAsStreamAsync();
     }
@@ -64,5 +66,19 @@ public static class HttpContentExtensions
 #endif
             _ => throw new ArgumentOutOfRangeException(nameof(compressionMethod), compressionMethod, null)
         };
+    }
+
+    extension(HttpContent)
+    {
+        public static HttpContent FromJson(string json)
+        {
+            return new StringContent(json, Encoding.UTF8, MediaTypes.Json);
+        }
+
+        public static HttpContent Json<T>(T obj, JsonSerializerOptions? options = null)
+        {
+            var json = obj.ToJson(options);
+            return new StringContent(json, Encoding.UTF8, MediaTypes.Json);
+        }
     }
 }

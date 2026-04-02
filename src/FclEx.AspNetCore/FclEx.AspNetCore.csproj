@@ -6,10 +6,7 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Duende.IdentityModel" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
-  </ItemGroup>
-  <ItemGroup>
+    <ProjectReference Include="..\FclEx.Http\FclEx.Http.csproj" />
     <ProjectReference Include="..\FclEx.Logging\FclEx.Logging.csproj" />
     <ProjectReference Include="..\FclEx.Options\FclEx.Options.csproj" />
   </ItemGroup>
