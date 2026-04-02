@@ -1,4 +1,3 @@
-using FclEx.Logging;
 using Microsoft.AspNetCore.Builder;
 
 namespace FclEx.AspNetCore;
@@ -25,8 +24,8 @@ public static class ApplicationBuilderExtensions
 
             if (withJwtInfo)
             {
-                var tokenInfo = request.GetJwtTokenInfo();
-                logs.Push(nameof(JwtTokenInfo), tokenInfo, true);
+                var tokenInfo = request.GetJwtInfo();
+                logs.Push(nameof(JwtInfo), tokenInfo, true);
             }
 
             await next().ConfigureAwait(false);

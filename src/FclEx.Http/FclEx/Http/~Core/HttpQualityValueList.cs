@@ -12,7 +12,7 @@ namespace FclEx.Http;
 [DebuggerDisplay("QValue[{Count}, {AcceptWildcard}]")]
 public sealed class HttpQualityValueList : IEnumerable<HttpQualityValue>
 {
-    private static readonly char[] _delimiters = { ',' };
+    private static readonly char[] _delimiters = [','];
     private static readonly IComparer<float> _comparer =
         MemberComparerBuilder<float>
             .Create(m => m, true)
@@ -29,11 +29,11 @@ public sealed class HttpQualityValueList : IEnumerable<HttpQualityValue>
 
     /// <summary>
     /// Creates a new instance of an QValueList list from 
-    /// the given string of comma delimited values
+    /// the given string of comma-delimited values
     /// </summary>
-    /// <param name="values">The raw string of qvalues to load</param>
-    public HttpQualityValueList(string values)
-        : this(null == values ? Array.Empty<string>() : values.Split(_delimiters, StringSplitOptions.RemoveEmptyEntries))
+    /// <param name="values">The raw string of q-values to load</param>
+    public HttpQualityValueList(string? values)
+        : this(null == values ? [] : values.Split(_delimiters, StringSplitOptions.RemoveEmptyEntries))
     {
 
     }
@@ -86,7 +86,7 @@ public sealed class HttpQualityValueList : IEnumerable<HttpQualityValue>
     {
         if (!_dic.TryGetValue(item.Weight, out var list))
         {
-            list = new List<HttpQualityValue>();
+            list = [];
             _dic[item.Weight] = list;
         }
         list.Add(item);

@@ -3,6 +3,14 @@ on:
   push:
     branches:
       - main
+    paths:
+      - src/**
+      - test/**
+      - '*.slnx'
+      - '*.sln'
+      - NuGet.Config
+      - build/**
+      - .github/workflows/build.yml
   pull_request_target: # use pull_request_target instead of pull_request to let dependabot have permission to access action secrets.
     branches:
       - main
@@ -55,12 +63,12 @@ jobs:
           echo "IS_PUSH_DEFAULT: ${{ env.IS_PUSH_DEFAULT }}"
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ steps.pr.outputs.merge_commit_sha }}
 
       - name: Setup dotnet
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: |
             8.0.x

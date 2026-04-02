@@ -28,6 +28,7 @@ global using System.Xml.XPath;
 global using AngleSharp.Dom;
 global using AngleSharp.Html.Dom;
 global using AngleSharp.Html.Parser;
+global using Duende.IdentityModel.Client;
 global using FclEx.Actions;
 global using FclEx.DependencyInjection;
 global using FclEx.Extensions;

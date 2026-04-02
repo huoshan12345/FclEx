@@ -78,7 +78,7 @@ partial class ExceptionExtensions
                     }
                 }
 
-                var info = GetInfo(ex, ref index, parent, stackTraceLineFilter);
+                var info = ex.GetInfo(ref index, parent, stackTraceLineFilter);
                 list.Add(info);
 
                 foreach (var inner in inners)
@@ -91,7 +91,7 @@ partial class ExceptionExtensions
             }
             else
             {
-                var info = GetInfo(ex, ref index, parent, stackTraceLineFilter);
+                var info = ex.GetInfo(ref index, parent, stackTraceLineFilter);
                 list.Add(info);
 
                 if (ex.InnerException is { } inner)
@@ -110,7 +110,7 @@ partial class ExceptionExtensions
         var lines = exception.StackTrace is not { } trace
             ? []
             : trace
-                .SplitToLines()
+                .SplitToLines(StringSplitOptions.RemoveEmptyEntries) // NOTE: Do not use StringSplitOptions.TrimEntries here, because we need to trim "   at " prefix later.
                 .Select(m => m.TrimStart("   at ").TrimStart()) // see https://source.dot.net/#System.Private.CoreLib/src/libraries/System.Private.CoreLib/src/System/Diagnostics/StackTrace.cs,226
                 .Not(stackTraceLineFilter)
                 .Reverse() // reverse frames to be more readable (from the outermost to the innermost).

@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <!--to support C# feature like required keyword in lower dotnet versions-->
-    <PackageReference Include="PolySharp" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\FclEx.Http\FclEx.Http.csproj" />

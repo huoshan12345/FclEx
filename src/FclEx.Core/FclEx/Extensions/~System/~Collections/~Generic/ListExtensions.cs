@@ -79,7 +79,7 @@ public static class ListExtensions
     public static Span<T> AsSpan<T>(this List<T>? list)
     {
 #if NETSTANDARD2_0
-        return list is null ? default : ListAccessor<T>.Items(list);
+        return list is null ? default : ListAccessor<T>.Items(list).AsSpan(0, list.Count);
 #else
         return CollectionsMarshal.AsSpan(list);
 #endif
@@ -123,8 +123,8 @@ public static class ListExtensions
             var count = list.Count + other.Count;
             var result = new List<T>(count);
             var array = result.Items();
-            list.Items().CopyTo(array);
-            other.Items().CopyTo(array, list.Count);
+            list.CopyTo(array);
+            other.CopyTo(array, list.Count);
             result.SetCount(count);
             return result;
         }

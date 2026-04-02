@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Http;
 
-public static class HttpClientBuilderExtensions
+public static partial class HttpClientBuilderExtensions
 {
     public static IHttpClientBuilder AddRetryPolicy(this IHttpClientBuilder builder, TimeSpan? timeout = null, int retryCount = 2, bool autoUpdateTotalTimeout = true, SleepDurationProvider? sleepDurationProvider = null)
     {
@@ -26,5 +26,11 @@ public static class HttpClientBuilderExtensions
         builder.AddPolicyHandler(PollyHelper.GetConnectTimeoutPolicy(retryCount));
         builder.AddPolicyHandler(PollyHelper.GetIORetryPolicy(retryCount));
         return builder;
+    }
+
+    public static IHttpClientBuilder AddHttpMessageHandlerBy<TDependency>(this IHttpClientBuilder builder, Func<TDependency, DelegatingHandler> configureHandler)
+        where TDependency : class
+    {
+        return builder.AddHttpMessageHandler(m => configureHandler(m.GetRequiredService<TDependency>()));
     }
 }

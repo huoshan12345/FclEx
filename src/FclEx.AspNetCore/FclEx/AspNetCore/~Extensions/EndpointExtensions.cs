@@ -26,7 +26,9 @@ public static class EndpointExtensions
 
         var actionDescriptor = endpoint.Metadata.OfType<ControllerActionDescriptor>().FirstOrDefault();
         if (actionDescriptor is null)
-            return [];
+        {
+            return endpoint.Metadata.OfType<T>().ToArray(); // when it is not a controller action, just return the attributes from the endpoint metadata
+        }
 
         var attributes = actionDescriptor.MethodInfo
             .GetCustomAttributes<T>(inherit)

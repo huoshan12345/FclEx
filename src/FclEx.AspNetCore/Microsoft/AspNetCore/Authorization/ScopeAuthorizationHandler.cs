@@ -40,7 +40,7 @@ public class ScopeAuthorizationHandler<T> : AuthorizationHandler<T> where T : IA
         // ReSharper disable once LoopCanBeConvertedToQuery
         foreach (var attribute in attributes)
         {
-            if (attribute.Scopes.All(m => scopes.Contains(m)) == false)
+            if (attribute.Scopes.All(scopes.Contains) == false)
                 continue;
 
             return context.SucceedAsync(requirement);
