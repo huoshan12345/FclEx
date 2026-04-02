@@ -4,8 +4,10 @@ using static FclEx.Serilog.ExceptionIndexOptions;
 namespace FclEx.Serilog.Formatting;
 
 [Collection(nameof(Console))]
-public class JsonFormatterTests(ITestOutputHelper output)
+public class JsonFormatterTests
 {
+    public ITestOutputHelper? Output => TestContext.Current.TestOutputHelper;
+
     public static readonly IEnumerable<object[]> TestCases =
         from len in new int?[] { null, 5 }
         from omitParams in new[] { true, false }
@@ -36,8 +38,8 @@ public class JsonFormatterTests(ITestOutputHelper output)
         catch (Exception ex)
         {
 #if DEBUG
-            output.WriteLine(ex.ToString());
-            output.WriteLine("\n\n\n");
+            Output?.WriteLine(ex.ToString());
+            Output?.WriteLine("\n\n\n");
 #endif
             await AssertLogMessage(ex);
 
@@ -70,7 +72,7 @@ public class JsonFormatterTests(ITestOutputHelper output)
             {
                 Assert.DoesNotContain("at ", line);
 #if DEBUG
-                output.WriteLine(line);
+                Output?.WriteLine(line);
 #endif
             }
         }
