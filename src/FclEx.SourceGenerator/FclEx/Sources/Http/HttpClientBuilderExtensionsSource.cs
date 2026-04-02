@@ -29,10 +29,9 @@ internal class HttpClientBuilderExtensionsSource
             foreach (var methodName in methodNames)
             {
                 // NOTE: there is a "By" suffix.
-                builder.WriteLine($"public static IHttpClientBuilder {methodName}By<T, {types}>(this IHttpClientBuilder builder, Func<{types}, T> func)");
+                builder.WriteLine($"public static IHttpClientBuilder {methodName}By<{types}>(this IHttpClientBuilder builder, Func<{types}, DelegatingHandler> func)");
 
                 builder.Indent();
-                builder.WriteLine("where T : DelegatingHandler");
                 foreach (var j in Enumerable.Range(1, i))
                 {
                     builder.WriteLine($"where TDependency{j} : notnull");

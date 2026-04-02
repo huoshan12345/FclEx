@@ -28,8 +28,7 @@ public static partial class HttpClientBuilderExtensions
         return builder;
     }
 
-    public static IHttpClientBuilder AddHttpMessageHandlerBy<T, TDependency>(this IHttpClientBuilder builder, Func<TDependency, T> configureHandler)
-        where T : DelegatingHandler
+    public static IHttpClientBuilder AddHttpMessageHandlerBy<TDependency>(this IHttpClientBuilder builder, Func<TDependency, DelegatingHandler> configureHandler)
         where TDependency : class
     {
         return builder.AddHttpMessageHandler(m => configureHandler(m.GetRequiredService<TDependency>()));
