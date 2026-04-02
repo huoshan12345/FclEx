@@ -10,6 +10,7 @@ public partial class JsonFormatter : ITextFormatter
     public JsonFormatter(JsonFormatterOptions? options = null)
     {
         Options = options ?? JsonFormatterOptions.Default;
+        // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
         Options.ExceptionFormatOptions ??= ExceptionFormatOptions.Default;
     }
 
@@ -146,7 +147,7 @@ public partial class JsonFormatter : ITextFormatter
                     }
                     case '\\':
                     {
-                        output.Write("\\\\");
+                        output.Write(@"\\");
                         break;
                     }
                     case '\n':
@@ -182,7 +183,7 @@ public partial class JsonFormatter : ITextFormatter
         if (anyEscaped)
         {
             if (cleanSegmentStart != str.Length)
-                output.Write(str.Substring(cleanSegmentStart));
+                output.Write(str[cleanSegmentStart..]);
         }
         else
         {

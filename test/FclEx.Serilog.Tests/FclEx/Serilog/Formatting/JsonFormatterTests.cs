@@ -4,15 +4,8 @@ using static FclEx.Serilog.ExceptionIndexOptions;
 namespace FclEx.Serilog.Formatting;
 
 [Collection(nameof(Console))]
-public class JsonFormatterTests
+public class JsonFormatterTests(ITestOutputHelper output)
 {
-    private readonly ITestOutputHelper _output;
-
-    public JsonFormatterTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
-
     public static readonly IEnumerable<object[]> TestCases =
         from len in new int?[] { null, 5 }
         from omitParams in new[] { true, false }
@@ -43,13 +36,13 @@ public class JsonFormatterTests
         catch (Exception ex)
         {
 #if DEBUG
-            _output.WriteLine(ex.ToString());
-            _output.WriteLine("\n\n\n");
+            output.WriteLine(ex.ToString());
+            output.WriteLine("\n\n\n");
 #endif
             await AssertLogMessage(ex);
 
             var str = writer.ToString();
-            Assert.Empty(str);
+            Assert.Empty(str); // nothing should be written to console by JsonFormatter.
         }
 
         return;
@@ -77,7 +70,7 @@ public class JsonFormatterTests
             {
                 Assert.DoesNotContain("at ", line);
 #if DEBUG
-                _output.WriteLine(line);
+                output.WriteLine(line);
 #endif
             }
         }
@@ -94,7 +87,7 @@ public class JsonFormatterTests
         formatter.Format(logEvent, sw);
 
         var jsonElement = sw.ToString().ToJsonElement();
-        Assert.Equal(LogEventLevel.Information.ToString(), jsonElement.GetProperty(options.LogLevelName).GetString());
+        Assert.Equal(nameof(LogEventLevel.Information), jsonElement.GetProperty(options.LogLevelName).GetString());
         Assert.Equal("Message from Tom", jsonElement.GetProperty(options.MessageName).GetString());
         Assert.Equal(logEvent.Timestamp.UtcDateTime.ToString("O"), jsonElement.GetProperty(options.UtcTimeName).GetString());
     }
