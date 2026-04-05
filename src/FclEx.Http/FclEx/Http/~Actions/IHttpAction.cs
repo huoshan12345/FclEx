@@ -8,12 +8,6 @@ public interface IHttpAction<T> : IAbstractAction<T>
     Uri Uri { get; }
     HttpMethod Method { get; }
 
-    Task<OperationResult<T>> HandleResponseAsync(HttpResponse response)
-    {
-        return PreCheck(response)
-            .Then(GetResultAsync);
-    }
-
     async Task<OperationResult<T>> IAbstractAction<T>.ExecuteActionAsync(CancellationToken token)
     {
         var logger = HttpService.Logger;
@@ -23,7 +17,8 @@ public interface IHttpAction<T> : IAbstractAction<T>
             request = BuildRequest();
             var response = await HttpService.SendAsync(request, token);
             if (response.IsSuccess)
-                return await HandleResponseAsync(response);
+                return await HandleResponseAsync(response)
+                    .Then(GetResultAsync);
 
             if (logger.IsEnabled(LogLevel.Trace))
             {
@@ -55,16 +50,16 @@ public interface IHttpAction<T> : IAbstractAction<T>
 
     void ModifyRequest(HttpRequest request) { }
 
-    OperationResult<HttpResponse> PreCheck(HttpResponse response)
+    Task<OperationResult<HttpResponse>> HandleResponseAsync(HttpResponse response)
     {
         // response.IsError is false here.
         if (response.StatusCode.IsSuccess())
-            return response;
+            return Operation.Success(response, response.Elapsed);
 
         var code = response.StatusCode;
         var error = $"The response with status code {code.ToString()}/{code.ToInt()} is unsuccessful: "
                     + response.ResponseString.Truncate(256);
-        return error;
+        return Operation.Error<HttpResponse>(error, response.Elapsed);
     }
 
     Task<OperationResult<T>> GetResultAsync(HttpResponse response) => GetResult(response);
