@@ -56,7 +56,7 @@ namespace System.Collections.Tests
         /// MemberData to be passed to tests that take an IEnumerable{T}. This method returns every permutation of
         /// EnumerableType to test on (e.g. HashSet, Queue), and size of set to test with (e.g. 0, 1, etc.).
         /// </summary>
-        public static TheoryData<EnumerableType, int, int, int, int> EnumerableTestData() =>
+        public static readonly TheoryData<EnumerableType, int, int, int, int> EnumerableTestData =
             Enum.GetValues<EnumerableType>()
                 .SelectMany(GetEnumerableTestData)
                 .Distinct()
@@ -66,7 +66,7 @@ namespace System.Collections.Tests
         /// MemberData to be passed to tests that take an IEnumerable{T}. This method returns results for various
         /// sizes of sets to test with (e.g. 0, 1, etc.) but only for List.
         /// </summary>
-        public static TheoryData<EnumerableType, int, int, int, int> ListTestData() =>
+        public static readonly TheoryData<EnumerableType, int, int, int, int> ListTestData =
             GetEnumerableTestData(EnumerableType.List)
                 .Distinct()
                 .ToTheoryData();
@@ -74,9 +74,9 @@ namespace System.Collections.Tests
         protected static IEnumerable<(EnumerableType, int SetLength, int EnumerableLength, int NumberOfMatchingElements, int NumberOfDuplicateElements)>
             GetEnumerableTestData(EnumerableType enumerableType)
         {
-            foreach (var collectionSizeArray in ValidCollectionSizes())
+            foreach (var row in ValidCollectionSizes)
             {
-                var count = (int)collectionSizeArray[0];
+                var count = row.Data;
                 yield return new(enumerableType, count, 0, 0, 0);                       // Empty Enumerable
                 yield return new(enumerableType, count, count + 1, 0, 0);               // Enumerable that is 1 larger
 

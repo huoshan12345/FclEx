@@ -51,21 +51,23 @@ public abstract partial class OrderedListTests<T>
     /// is used to specify the ordering (front-to-back or back-to-front (e.g. LastIndexOf)) that the IndexOf method
     /// searches in.
     /// </summary>
-    public static IEnumerable<object[]> IndexOfTestData()
+    public static readonly TheoryData<IndexOfMethod, int, bool> IndexOfTestData = GetIndexOfTestData().ToTheoryData();
+
+    private static IEnumerable<(IndexOfMethod indexOfMethod, int count, bool frontToBackOrder)> GetIndexOfTestData()
     {
-        foreach (object[] sizes in ValidCollectionSizes())
+        foreach (var row in ValidCollectionSizes)
         {
-            var count = (int)sizes[0];
-            yield return [IndexOfMethod.IndexOf_T, count, true];
-            yield return [IndexOfMethod.LastIndexOf_T, count, false];
+            var count = row.Data;
+            yield return (IndexOfMethod.IndexOf_T, count, true);
+            yield return (IndexOfMethod.LastIndexOf_T, count, false);
 
             if (count <= 0)
                 continue; // 0 is an invalid index for IndexOf when the count is 0.
 
-            yield return [IndexOfMethod.IndexOf_T_Int, count, true];
-            yield return [IndexOfMethod.LastIndexOf_T_Int, count, false];
-            yield return [IndexOfMethod.IndexOf_T_Int_Int, count, true];
-            yield return [IndexOfMethod.LastIndexOf_T_Int_Int, count, false];
+            yield return (IndexOfMethod.IndexOf_T_Int, count, true);
+            yield return (IndexOfMethod.LastIndexOf_T_Int, count, false);
+            yield return (IndexOfMethod.IndexOf_T_Int_Int, count, true);
+            yield return (IndexOfMethod.LastIndexOf_T_Int_Int, count, false);
         }
     }
 

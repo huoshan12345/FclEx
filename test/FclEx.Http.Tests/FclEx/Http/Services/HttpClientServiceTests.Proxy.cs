@@ -3,12 +3,9 @@
 [SuppressMessage("ReSharper", "ReturnTypeCanBeEnumerable.Global")]
 partial class HttpClientServiceTests
 {
-    public static IWebProxy[] ProxyList { get; } =
-    [
-        DefaultProxy,
-    ];
+    public static readonly IWebProxy[] ProxyList = [DefaultProxy];
 
-    public static IEnumerable<object[]> Cases { get; } = ProxyList.SelectMany(m => TestUrls, (x, y) => new object[] { x, y });
+    public static readonly TheoryData<IWebProxy, string> Cases = ProxyList.CrossJoin(TestUrls).ToTheoryData();
 
     [RetryTheory]
     [MemberData(nameof(Cases))]

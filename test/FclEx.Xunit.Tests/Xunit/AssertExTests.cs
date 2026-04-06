@@ -1,3 +1,5 @@
+using FclEx.Xunit;
+
 namespace Xunit;
 
 public partial class AssertExTests
@@ -9,10 +11,11 @@ public partial class AssertExTests
         True,
     }
 
-    public static readonly IEnumerable<object?[]> EqualTestCases = Enum.GetValues<Flags>()
+    public static readonly TheoryData<Flags?, int?> EqualTestCases = Enum.GetValues<Flags>()
         .Cast<Flags?>()
         .Append(null)
-        .Select(m => new object?[] { m, m.CastTo<int?>() });
+        .Select(m => (m, m.CastTo<int?>()))
+        .ToTheoryData<Flags?, int?>();
 
     [Theory]
     [MemberData(nameof(EqualTestCases))]

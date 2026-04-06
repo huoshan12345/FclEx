@@ -11,11 +11,7 @@ public class ConsoleTableTests
 
     private static readonly bool[] BoolValues = [true, false];
 
-    public static readonly IEnumerable<object[]> TestCases =
-        from x in BoolValues
-        from y in BoolValues
-        from z in BoolValues
-        select new object[] { x, y, z };
+    public static readonly TheoryData<bool, bool, bool> TestCases = BoolValues.CrossJoinCube().ToTheoryData();
 
     [Theory]
     [MemberData(nameof(TestCases))]

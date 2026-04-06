@@ -2,23 +2,23 @@
 
 public class IndexExTests
 {
-    public static IEnumerable<int> Empty { get; } = [];
+    public static readonly IEnumerable<int> Empty = [];
 
-    public static IEnumerable<int> Numbers { get; } = Enumerable.Range(1, 10);
+    public static readonly IEnumerable<int> Numbers = Enumerable.Range(1, 10);
 
-    public static IEnumerable<object[]> NonEmptyEnumerableCases { get; } =
-    [
-        [Numbers],
-        [Numbers.ToList()],
-        [Numbers.ToArray()],
-    ];
+    public static readonly TheoryData<IEnumerable<int>> NonEmptyEnumerableCases = new()
+    {
+        Numbers,
+        Numbers.ToList(),
+        Numbers.ToArray(),
+    };
 
-    public static IEnumerable<object[]> EmptyEnumerableCases { get; } =
-    [
-        [Empty],
-        [Empty.ToList()],
-        [Empty.ToArray()],
-    ];
+    public static readonly TheoryData<IEnumerable<int>> EmptyEnumerableCases = new()
+    {
+        Empty,
+        Empty.ToList(),
+        Empty.ToArray(),
+    };
 
     [Theory]
     [MemberData(nameof(NonEmptyEnumerableCases))]

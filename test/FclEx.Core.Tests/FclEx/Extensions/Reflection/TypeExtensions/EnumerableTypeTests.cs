@@ -20,14 +20,15 @@ public class EnumerableTypeTests
         (typeof(IMyEnumerable<int>), typeof(int)),
     ];
 
-    public static readonly IEnumerable<object?[]> Cases = Values
+    public static readonly TheoryData<Type, Type?> Cases = Values
         .Select(m => (m.Item1.GetType(), (Type?)m.Item2))
         .Concat(Types)
-        .Select(m => new object?[] { m.Item1, m.Item2 });
+        .Select(m => (m.Item1, m.Item2))
+        .ToTheoryData();
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void EnumerableType_Test(Type type, Type expected)
+    public void EnumerableType_Test(Type type, Type? expected)
     {
         var t = type.EnumerableType();
         Assert.Equal(expected, t);

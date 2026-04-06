@@ -9,8 +9,8 @@ public abstract class UserClientHttpAction<TClient, TAccount, T>(TClient client)
     public abstract HttpMethod Method { get; }
 
     public virtual IHttpService HttpService { get; } = client.HttpService;
-    public virtual OperationResult<HttpResponse> PreCheck(HttpResponse response)
-        => this.Base<IHttpAction<T>, OperationResult<HttpResponse>>(m => m.PreCheck(response));
+    public virtual Task<OperationResult<HttpResponse>> HandleResponseAsync(HttpResponse response)
+        => this.Base<IHttpAction<T>, Task<OperationResult<HttpResponse>>>(m => m.HandleResponseAsync(response));
     public abstract OperationResult<T> GetResult(HttpResponse response);
     public virtual HttpRequest BuildRequest() => this.Base<IHttpAction<T>, HttpRequest>(m => m.BuildRequest());
     public virtual void ModifyRequest(HttpRequest request) { }

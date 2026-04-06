@@ -13,12 +13,12 @@ public partial class ExceptionExtensionsTests
         }
     }
 
-    public static IEnumerable<object[]> Exceptions { get; } = new[]
+    public static readonly TheoryData<Exception> Exceptions = new()
     {
         new InnermostException(),
         new Exception("", new Exception("", new InnermostException())),
         new AggregateException("", new InnermostException(), new AggregateException(new InnermostException())),
-    }.Select(m => new object[] { m }).ToArray();
+    };
 
     [Theory]
     [MemberData(nameof(Exceptions))]

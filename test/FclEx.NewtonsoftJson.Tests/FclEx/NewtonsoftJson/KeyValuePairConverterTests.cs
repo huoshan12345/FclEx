@@ -1,6 +1,8 @@
-﻿namespace FclEx.NewtonsoftJson;
+﻿using FclEx.Xunit;
 
-public class KeyValuePairConverterTests
+namespace FclEx.NewtonsoftJson;
+
+public partial class KeyValuePairConverterTests
 {
     private class MyList<T> : List<T>;
 
@@ -14,7 +16,7 @@ public class KeyValuePairConverterTests
 
     private static string ToCharStr(int i) => i.CastTo<char>().ToString();
 
-    public static IDictionary[] Dictionaries { get; } =
+    public static readonly IDictionary[] Dictionaries =
     [
         Source.ToDictionary(m => m, m => -m),
         Source.ToDictionary(m => m, m => ToCharStr(m + 'a' - 1)),
@@ -26,7 +28,7 @@ public class KeyValuePairConverterTests
         Source.ToDictionary(m => (m + 'A' - 1).CastTo<char>(), m => (m + 'a' - 1).CastTo<char>()),
     ];
 
-    public static (string Name, Func<Type, Type> Converter)[] KvToColConverters { get; } =
+    public static readonly (string Name, Func<Type, Type> Converter)[] KvToColConverters =
     [
         (nameof(Array), t => t.MakeArrayType()),
         (nameof(IEnumerable<int>), t => typeof(IEnumerable<>).MakeGenericType(t)),
@@ -40,14 +42,16 @@ public class KeyValuePairConverterTests
         (nameof(MyListWithCtor<int>), t => typeof(MyListWithCtor<>).MakeGenericType(t)),
     ];
 
-    public record TestCase(string Name, IDictionary Dictionary, [property: JsonIgnore] Func<Type, Type> Converter)
+    [XunitSerializable]
+    public partial record TestCase(string Name, IDictionary Dictionary, [property: JsonIgnore] Func<Type, Type> Converter)
     {
         public override string ToString() => Name;
     }
 
-    public static IEnumerable<object[]> Cases { get; } = Dictionaries.Index()
+    public static readonly TheoryData<TestCase> Cases = Dictionaries.Index()
         .CrossJoin(KvToColConverters)
-        .Select(static m => new object[] { new TestCase(m.Item2.Name + "_" + m.Item1.Index, m.Item1.Item, m.Item2.Converter) }).ToArray();
+        .Select(static m => new TestCase(m.Item2.Name + "_" + m.Item1.Index, m.Item1.Item, m.Item2.Converter))
+        .ToTheoryData();
 
     private static void ReadTestGeneric<T, TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> raw)
         where T : IEnumerable<KeyValuePair<TKey, TValue>>

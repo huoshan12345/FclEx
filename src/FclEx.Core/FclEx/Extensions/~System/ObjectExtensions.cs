@@ -2,7 +2,7 @@
 
 public static partial class ObjectExtensions
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     [return: NotNullIfNotNull(nameof(obj))]
     public static T? CastTo<T>(this object? obj)
     {
@@ -25,7 +25,7 @@ public static partial class ObjectExtensions
         return value;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static T? ToNullable<T>(this T value) where T : struct
     {
         return value;

@@ -1,6 +1,6 @@
-﻿namespace FclEx.Helpers;
+﻿namespace FclEx.Helpers.ObjectHelperTests;
 
-public class ObjectHelperTests
+public class GetObjectIdTests
 {
     [Fact]
     public void GetObjectId_SameInstance()
