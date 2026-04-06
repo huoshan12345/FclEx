@@ -22,18 +22,12 @@ public class TrySetTests
         public TestStruct Inner;
     }
 
-
-    private struct CustomStruct
+    private class CustomComparer : IEqualityComparer<TestStruct>
     {
-        public int Value;
-    }
-
-    private class CustomComparer : IEqualityComparer<CustomStruct>
-    {
-        public bool Equals(CustomStruct x, CustomStruct y)
+        public bool Equals(TestStruct x, TestStruct y)
             => Math.Abs(x.Value - y.Value) < 10;
 
-        public int GetHashCode(CustomStruct obj)
+        public int GetHashCode(TestStruct obj)
             => obj.Value;
     }
 
@@ -189,7 +183,8 @@ public class TrySetTests
             Inner = new TestStruct { Value = 1 }
         };
 
-        Assert.Throws<ArgumentException>(() => ObjectHelper.TrySet(ref obj, x => x.Inner.Value, 2));
+        var ex = Assert.Throws<ArgumentException>(() => ObjectHelper.TrySet(ref obj, x => x.Inner.Value, 2));
+        Assert.Contains("must not reference a nested member", ex.Message);
     }
 
     [Fact]
@@ -236,13 +231,16 @@ public class TrySetTests
     [Fact]
     public void Struct_Should_Respect_Custom_Comparer()
     {
-        var obj = new CustomStruct { Value = 100 };
+        var obj = new ContainerStruct
+        {
+            Inner = new TestStruct { Value = 100 }
+        };
 
         var comparer = new CustomComparer();
 
-        var result = ObjectHelper.TrySet(ref obj, x => x, new CustomStruct { Value = 105 }, comparer);
+        var result = ObjectHelper.TrySet(ref obj, x => x.Inner, new TestStruct { Value = 105 }, comparer);
 
         Assert.False(result);
-        Assert.Equal(100, obj.Value);
+        Assert.Equal(100, obj.Inner.Value);
     }
 }

@@ -68,7 +68,8 @@ public static class ObjectHelper
     private static readonly ConcurrentDictionary<MemberInfo, Delegate> _getterCache = new();
 
     public static bool TrySet<T, TMember>(T obj, Expression<Func<T, TMember>> selector,
-    TMember newValue, IEqualityComparer<TMember>? comparer = null) where T : class
+        TMember newValue, IEqualityComparer<TMember>? comparer = null)
+        where T : class
     {
         return TrySet(ref obj, selector, newValue, comparer);
     }

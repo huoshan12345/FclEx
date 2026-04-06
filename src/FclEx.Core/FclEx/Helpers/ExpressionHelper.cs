@@ -30,18 +30,41 @@ public static class ExpressionHelper
         throw new ArgumentException($"Expression '{selector}' does not refer to a method.");
     }
 
-    public static MemberInfo GetMember(Expression expression)
+    public static MemberInfo GetMember(Expression expression, bool allowNested = false)
     {
         Check.NotNull(expression);
 
         return expression switch
         {
             MethodCallExpression methodCall => methodCall.Method,
-            LambdaExpression lambda => GetMember(lambda.Body),
-            UnaryExpression unary => GetMember(unary.Operand),
-            MemberExpression member => member.Member,
+            LambdaExpression lambda => GetMember(lambda.Body, allowNested),
+            UnaryExpression unary => GetMember(unary.Operand, allowNested),
+            MemberExpression member => GetMemberInfo(member),
             _ => throw new ArgumentException($"Expression '{expression}' does not refer to a member.")
         };
+
+        MemberInfo GetMemberInfo(MemberExpression member)
+        {
+            if (allowNested)
+                return member.Member;
+
+            var level = GetMemberNestingLevel(member.Expression);
+            return level > 0
+                ? throw new ArgumentException($"Expression '{expression}' must not reference a nested member.")
+                : member.Member;
+        }
+
+        static int GetMemberNestingLevel(Expression? expression)
+        {
+            return expression switch
+            {
+                MemberExpression memberExp => 1 + GetMemberNestingLevel(memberExp.Expression),
+                LambdaExpression lambda => GetMemberNestingLevel(lambda.Body),
+                UnaryExpression unary => GetMemberNestingLevel(unary.Operand),
+                _ => 0
+            };
+            // Base case: not a member access (could be Parameter, Constant, etc.)
+        }
     }
 
     public static MemberInfo GetMember(Expression expression, Type type)
@@ -53,7 +76,7 @@ public static class ExpressionHelper
         // If the MemberInfo object is a global member (that is, if it was obtained from the Module.GetMethods method,
         // which returns global methods on a module), the returned DeclaringType will be null.
         if (reflectedType == null)
-            throw new ArgumentException($"Expression '{expression}' does not refer to a member of a class.");
+            throw new ArgumentException($"Expression '{expression}' does not refer to a member of a type.");
 
         if (type != reflectedType && !type.IsSubclassOf(reflectedType))
             throw new ArgumentException($"Expression '{expression}' refers to a member that is not from type {type.LongName()}.");
