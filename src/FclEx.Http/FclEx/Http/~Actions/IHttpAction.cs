@@ -7,6 +7,7 @@ public interface IHttpAction<T> : IAbstractAction<T>
     IHttpService HttpService { get; }
     Uri Uri { get; }
     HttpMethod Method { get; }
+    bool EnsureSuccessStatusCode => true;
 
     async Task<OperationResult<T>> IAbstractAction<T>.ExecuteActionAsync(CancellationToken token)
     {
@@ -53,11 +54,11 @@ public interface IHttpAction<T> : IAbstractAction<T>
     Task<OperationResult<HttpResponse>> HandleResponseAsync(HttpResponse response)
     {
         // response.IsError is false here.
-        if (response.StatusCode.IsSuccess())
+        if (EnsureSuccessStatusCode || response.StatusCode.IsSuccess())
             return Operation.Success(response, response.Elapsed);
 
         var code = response.StatusCode;
-        var error = $"The response with status code {code.ToString()}/{code.ToInt()} is unsuccessful: "
+        var error = $"The response with status code {code}/{code.ToInt()} is unsuccessful: "
                     + response.ResponseString.Truncate(256);
         return Operation.Error<HttpResponse>(error, response.Elapsed);
     }
