@@ -4,14 +4,14 @@ public static class ExpressionHelper
 {
     public static PropertyInfo GetProperty<T, TMember>(Expression<Func<T, TMember>> selector)
     {
-        var member = GetMember(selector);
+        var member = GetMember(selector, false);
         if (member is PropertyInfo info) return info;
         throw new ArgumentException($"Expression '{selector}' does not refer to a property.");
     }
 
     public static FieldInfo GetField<T, TMember>(Expression<Func<T, TMember>> selector)
     {
-        var member = GetMember(selector);
+        var member = GetMember(selector, false);
         if (member is FieldInfo info) return info;
         throw new ArgumentException($"Expression '{selector}' does not refer to a field.");
     }
@@ -30,7 +30,7 @@ public static class ExpressionHelper
         throw new ArgumentException($"Expression '{selector}' does not refer to a method.");
     }
 
-    public static MemberInfo GetMember(Expression expression, bool allowNested = false)
+    public static MemberInfo GetMember(Expression expression, bool allowNested = true)
     {
         Check.NotNull(expression);
 
@@ -40,7 +40,7 @@ public static class ExpressionHelper
             LambdaExpression lambda => GetMember(lambda.Body, allowNested),
             UnaryExpression unary => GetMember(unary.Operand, allowNested),
             MemberExpression member => GetMemberInfo(member),
-            _ => throw new ArgumentException($"Expression '{expression}' does not refer to a member.")
+            _ => throw new ArgumentException($"Expression '{expression}' does not refer to a member."),
         };
 
         MemberInfo GetMemberInfo(MemberExpression member)
@@ -61,9 +61,8 @@ public static class ExpressionHelper
                 MemberExpression memberExp => 1 + GetMemberNestingLevel(memberExp.Expression),
                 LambdaExpression lambda => GetMemberNestingLevel(lambda.Body),
                 UnaryExpression unary => GetMemberNestingLevel(unary.Operand),
-                _ => 0
+                _ => 0,
             };
-            // Base case: not a member access (could be Parameter, Constant, etc.)
         }
     }
 
@@ -96,7 +95,7 @@ public static class ExpressionHelper
 
     public static MemberInfo GetDataMember<T, TMember>(Expression<Func<T, TMember>> selector)
     {
-        var member = GetMember(selector);
+        var member = GetMember(selector, false);
         return member switch
         {
             PropertyInfo prop => prop,
@@ -107,7 +106,7 @@ public static class ExpressionHelper
 
     public static DataMemberInfo GetDataMemberInfo<T, TMember>(Expression<Func<T, TMember>> selector)
     {
-        var member = GetMember(selector);
+        var member = GetMember(selector, false);
         return member.ToDataMemberInfo();
     }
 

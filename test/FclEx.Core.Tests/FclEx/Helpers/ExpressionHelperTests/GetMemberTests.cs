@@ -5,10 +5,10 @@ public class GetMemberTests
     [Fact]
     public void GetMember_Field_Test()
     {
-        var memberInfo = ExpressionHelper.GetMember<Tester>(m => m.Field);
+        var memberInfo = ExpressionHelper.GetMember<TestModel>(m => m.Field);
 
-        Assert.Equal(typeof(Tester), memberInfo.DeclaringType);
-        Assert.Equal(nameof(Tester.Field), memberInfo.Name);
+        Assert.Equal(typeof(TestModel), memberInfo.DeclaringType);
+        Assert.Equal(nameof(TestModel.Field), memberInfo.Name);
 
         var info = memberInfo as FieldInfo;
         Assert.NotNull(info);
@@ -17,10 +17,10 @@ public class GetMemberTests
     [Fact]
     public void GetMember_Property_Test()
     {
-        var memberInfo = ExpressionHelper.GetMember<Tester>(m => m.Property);
+        var memberInfo = ExpressionHelper.GetMember<TestModel>(m => m.Property);
 
-        Assert.Equal(typeof(Tester), memberInfo.DeclaringType);
-        Assert.Equal(nameof(Tester.Property), memberInfo.Name);
+        Assert.Equal(typeof(TestModel), memberInfo.DeclaringType);
+        Assert.Equal(nameof(TestModel.Property), memberInfo.Name);
 
         var info = memberInfo as PropertyInfo;
         Assert.NotNull(info);
@@ -29,10 +29,10 @@ public class GetMemberTests
     [Fact]
     public void GetMember_VoidMethod_Test()
     {
-        var memberInfo = ExpressionHelper.GetMember<Tester>(m => m.VoidMethod());
+        var memberInfo = ExpressionHelper.GetMember<TestModel>(m => m.VoidMethod());
 
-        Assert.Equal(typeof(Tester), memberInfo.DeclaringType);
-        Assert.Equal(nameof(Tester.VoidMethod), memberInfo.Name);
+        Assert.Equal(typeof(TestModel), memberInfo.DeclaringType);
+        Assert.Equal(nameof(TestModel.VoidMethod), memberInfo.Name);
 
         var info = memberInfo as MethodInfo;
         Assert.NotNull(info);
@@ -41,10 +41,10 @@ public class GetMemberTests
     [Fact]
     public void GetMember_IntMethod_Test()
     {
-        var memberInfo = ExpressionHelper.GetMember<Tester>(m => m.IntMethod());
+        var memberInfo = ExpressionHelper.GetMember<TestModel>(m => m.IntMethod());
 
-        Assert.Equal(typeof(Tester), memberInfo.DeclaringType);
-        Assert.Equal(nameof(Tester.IntMethod), memberInfo.Name);
+        Assert.Equal(typeof(TestModel), memberInfo.DeclaringType);
+        Assert.Equal(nameof(TestModel.IntMethod), memberInfo.Name);
 
         var info = memberInfo as MethodInfo;
         Assert.NotNull(info);
@@ -53,10 +53,10 @@ public class GetMemberTests
     [Fact]
     public void GetMember_StaticIntMethod_Test()
     {
-        var memberInfo = ExpressionHelper.GetMember<Tester>(m => Tester.StaticIntMethod());
+        var memberInfo = ExpressionHelper.GetMember<TestModel>(m => TestModel.StaticIntMethod());
 
-        Assert.Equal(typeof(Tester), memberInfo.DeclaringType);
-        Assert.Equal(nameof(Tester.StaticIntMethod), memberInfo.Name);
+        Assert.Equal(typeof(TestModel), memberInfo.DeclaringType);
+        Assert.Equal(nameof(TestModel.StaticIntMethod), memberInfo.Name);
 
         var info = memberInfo as MethodInfo;
         Assert.NotNull(info);
@@ -66,25 +66,42 @@ public class GetMemberTests
     public void GetMember_Field_NonMember_Test()
     {
         var obj = new { Age = 1 };
-        var ex = Assert.Throws<ArgumentException>(() => ExpressionHelper.GetMember<Tester>(m => obj.Age));
+        var ex = Assert.Throws<ArgumentException>(() => ExpressionHelper.GetMember<TestModel>(m => obj.Age));
         Assert.Contains("refers to a member that is not from type", ex.Message);
+    }
+
+    [Fact]
+    public void GetMember_Field_NonMember_Value_Test()
+    {
+        // ReSharper disable once ConvertToConstant.Local
+        var value = 1; // do not use const.
+        var ex = Assert.Throws<ArgumentException>(() => ExpressionHelper.GetMember<TestModel>(m => value));
+        Assert.Contains("refers to a member that is not from type", ex.Message);
+    }
+
+    [Fact]
+    public void GetMember_Field_NonMember_ConstValue_Test()
+    {
+        const int value = 1;
+        var ex = Assert.Throws<ArgumentException>(() => ExpressionHelper.GetMember<TestModel>(m => value));
+        Assert.Contains("does not refer to a member", ex.Message);
     }
 
     [Fact]
     public void GetMember_Property_NonMember_Test()
     {
-        var ex = Assert.Throws<ArgumentException>(() => ExpressionHelper.GetMember<Tester>(m => "test".Length));
+        var ex = Assert.Throws<ArgumentException>(() => ExpressionHelper.GetMember<TestModel>(m => "test".Length));
         Assert.Contains("refers to a member that is not from type", ex.Message);
     }
 
     [Fact]
     public void GetMember_NonMemberMethod_Test()
     {
-        var ex = Assert.Throws<ArgumentException>(() => ExpressionHelper.GetMember<Tester>(m => string.IsNullOrEmpty("")));
+        var ex = Assert.Throws<ArgumentException>(() => ExpressionHelper.GetMember<TestModel>(m => string.IsNullOrEmpty("")));
         Assert.Contains("refers to a member that is not from type", ex.Message);
     }
 
-    public class Tester
+    public class TestModel
     {
         public int Property { get; set; }
         public int Field;
