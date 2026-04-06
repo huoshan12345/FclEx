@@ -3,7 +3,7 @@
 public class HttpQualityValueTests
 {
     //  When no "q=" is specified, it defaults to 1
-    public static string[] AcceptEncodings { get; } =
+    public static readonly string[] AcceptEncodings =
     [
         "gzip,deflate",
         "deflate,gzip",
@@ -12,8 +12,8 @@ public class HttpQualityValueTests
         "deflate;q=0.5,gzip;q=0.5,identity",
         "*",
     ];
-    public static string[] PreferOrder { get; } = ["gzip", "deflate"];
-    public static string?[] ExpectedEncoding { get; } =
+    public static readonly string[] PreferOrder = ["gzip", "deflate"];
+    public static readonly string?[] ExpectedEncoding =
     [
         "gzip",
         "gzip",
@@ -23,11 +23,11 @@ public class HttpQualityValueTests
         "gzip",
     ];
 
-    public static IEnumerable<object?[]> Cases { get; } = AcceptEncodings.Zip(ExpectedEncoding, (a, e) => (a, e)).Select(m => new object?[] { m.a, m.e });
+    public static readonly TheoryData<string, string?> Cases = AcceptEncodings.Zip(ExpectedEncoding, (a, e) => (a, e)).ToTheoryData();
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void Test(string acceptEncoding, string expectedEncoding)
+    public void Test(string acceptEncoding, string? expectedEncoding)
     {
         var encodings = new HttpQualityValueList(acceptEncoding);
         var preferred = encodings.FindPreferred(PreferOrder);

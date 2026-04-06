@@ -7,7 +7,7 @@ partial class DbConnectionExtensionsTests
 #if !DISABLE_NPGSQL
     [Theory]
     [MemberData(nameof(SchemaCases))]
-    public async Task InsertAsync_EntityWithPostgresqlJsonb_Test(string schema)
+    public async Task InsertAsync_EntityWithPostgresqlJsonb_Test(string? schema)
     {
         using var x = output.SetConsole();
 
@@ -36,7 +36,7 @@ partial class DbConnectionExtensionsTests
 
     [LocalOnlyTheory]
     [MemberData(nameof(SchemaCases))]
-    public async Task InsertAsync_EntityWithSqlServerXml_Test(string schema)
+    public async Task InsertAsync_EntityWithSqlServerXml_Test(string? schema)
     {
         using var x = output.SetConsole();
 
@@ -90,13 +90,13 @@ partial class DbConnectionExtensionsTests
     }
 
 #if !DISABLE_MYSQL
-    public static readonly IEnumerable<object?[]> MySqlSchemaCases = new[] { DbProviderType.MySqlConnector, DbProviderType.MySql }
+    public static readonly TheoryData<DbProviderType, string?> MySqlSchemaCases = new[] { DbProviderType.MySqlConnector, DbProviderType.MySql }
         .SelectMany(Schemas)
-        .Select(m => new object?[] { m.Left, m.Right });
+        .ToTheoryData();
 
     [LocalOnlyTheory]
     [MemberData(nameof(MySqlSchemaCases))]
-    public async Task InsertAsync_EntityWithMySqlBlob_Test(DbProviderType type, string schema)
+    public async Task InsertAsync_EntityWithMySqlBlob_Test(DbProviderType type, string? schema)
     {
         using var x = output.SetConsole();
 

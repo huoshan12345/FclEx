@@ -14,7 +14,7 @@ public class MarshalToBytesEqualityComparerTests(ITestOutputHelper output)
         typeof(MarshalableClass),
         typeof(MarshalableStruct)]);
 
-    public static readonly IEnumerable<object[]> TypeCases = ValueTypes.Select(m => new object[] { m });
+    public static readonly TheoryData<Type> TypeCases = ValueTypes.ToTheoryData();
 
     private static readonly MethodInfo _equals = typeof(MarshalToBytesEqualityComparerTests).GetRequiredMethod(nameof(Equals));
 

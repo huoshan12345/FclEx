@@ -1,6 +1,8 @@
 // ReSharper disable GenericEnumeratorNotDisposed
 // ReSharper disable UnusedVariable
 // ReSharper disable CollectionNeverUpdated.Local
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
+
 namespace System.Collections.Generic.OrderedList;
 
 public abstract partial class OrderedListTests<T>
@@ -34,11 +36,11 @@ public abstract partial class OrderedListTests<T>
         AssertExtensions.Throws<ArgumentOutOfRangeException>("capacity", () => list.EnsureCapacity(-1));
     }
 
-    public static IEnumerable<object[]> EnsureCapacity_LargeCapacity_Throws_MemberData()
+    public static TheoryData<int, int> EnsureCapacity_LargeCapacity_Throws_MemberData = new()
     {
-        yield return [5, Array.MaxLength + 1];
-        yield return [1, int.MaxValue];
-    }
+        (5, Array.MaxLength + 1),
+        (1, int.MaxValue),
+    };
 
     [Theory]
     [MemberData(nameof(EnsureCapacity_LargeCapacity_Throws_MemberData))]

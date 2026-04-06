@@ -7,9 +7,9 @@ public class MarshalToTests
     private static readonly MethodInfo _marshalTo = typeof(MarshalToTests).GetRequiredMethod(nameof(MarshalTo));
     private static readonly MethodInfo _marshalToArray = typeof(MarshalToTests).GetRequiredMethod(nameof(MarshalToArray));
 
-    public static int[] IntArr { get; } = Enumerable.Range(1, 5).ToArray();
+    public static readonly int[] IntArr = Enumerable.Range(1, 5).ToArray();
 
-    public static IEnumerable<object[]> ArrayCases { get; } = new object[]
+    public static readonly TheoryData<Array> ArrayCases = new()
     {
         IntArr.Select(m => m.CastTo<byte>()).ToArray(),
         IntArr.Select(m => m.CastTo<short>()).ToArray(),
@@ -27,9 +27,9 @@ public class MarshalToTests
             Char = m.ToString()[0],
             Array = Enumerable.Repeat(m, 4).Select(x => x.CastTo<byte>()).ToArray(),
         }).ToArray(),
-    }.Select(m => new[] { m }).ToArray();
+    };
 
-    public static IEnumerable<object[]> ItemCases { get; } = new object[]
+    public static readonly TheoryData<object> ItemCases = new()
     {
         byte.MaxValue,
         short.MaxValue,
@@ -47,7 +47,7 @@ public class MarshalToTests
             Char = 'A',
             Array = [0x1, 0x2, 0x3, 0x4],
         },
-    }.Select(m => new[] { m }).ToArray();
+    };
 
     private static void MarshalTo<T>(T item)
     {

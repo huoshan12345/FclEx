@@ -3,15 +3,17 @@
 public partial class DbConnectionExtensionsTests(ITestOutputHelper output, DapperFixture fixture) : DapperTests(fixture)
 {
     public static readonly int[] Counts = [0, 1, 5];
-    public static readonly IEnumerable<object[]> BulkInsertTestCases =
+    public static readonly TheoryData<DbProviderType, string?, int> BulkInsertTestCases =
+    (
         from x in DatabaseTypes
         from y in Schemas
         from z in Counts
-        select new object[] { x, y, z };
+        select (x, y, z)
+    ).ToTheoryData();
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task InsertAsync_EntityWithAutoKey_Test(DbProviderType dbProviderType, string schema)
+    public async Task InsertAsync_EntityWithAutoKey_Test(DbProviderType dbProviderType, string? schema)
     {
         await using var db = Fixture.CreateDbContext(dbProviderType, schema);
 
@@ -29,7 +31,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task InsertAsync_EntityWithAutoKey_IncludeAutoKey_Test(DbProviderType dbProviderType, string schema)
+    public async Task InsertAsync_EntityWithAutoKey_IncludeAutoKey_Test(DbProviderType dbProviderType, string? schema)
     {
         await using var db = Fixture.CreateDbContext(dbProviderType, schema);
         var maxId = await db.EntityWithAutoKey.MaxAsync(m => (int?)m.Id);
@@ -74,7 +76,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task InsertAsync_EntityWithoutKey_Test(DbProviderType dbProviderType, string schema)
+    public async Task InsertAsync_EntityWithoutKey_Test(DbProviderType dbProviderType, string? schema)
     {
         await using var db = Fixture.CreateDbContext(dbProviderType, schema);
 
@@ -90,7 +92,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
 
     [Theory]
     [MemberData(nameof(BulkInsertTestCases))]
-    public async Task BulkInsertAsync_EntityWithAutoKey_Test(DbProviderType dbProviderType, string schema, int count)
+    public async Task BulkInsertAsync_EntityWithAutoKey_Test(DbProviderType dbProviderType, string? schema, int count)
     {
         await using var db = Fixture.CreateDbContext(dbProviderType, schema);
 
@@ -112,7 +114,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
 
     [Theory]
     [MemberData(nameof(BulkInsertTestCases))]
-    public async Task BulkInsertAsync_EntityWithAutoKey_IncludeAutoKey_Test(DbProviderType dbProviderType, string schema, int count)
+    public async Task BulkInsertAsync_EntityWithAutoKey_IncludeAutoKey_Test(DbProviderType dbProviderType, string? schema, int count)
     {
         await using var db = Fixture.CreateDbContext(dbProviderType, schema);
 

@@ -1,49 +1,48 @@
-﻿#nullable enable
-namespace FclEx.Extensions.StringExtensions;
+﻿namespace FclEx.Extensions.StringExtensions;
 
 public record TrimCase(string? Source, string? Trim, string? Result);
 
 public class TrimTests
 {
-    public static readonly IEnumerable<object?[]> TrimStartCases = new TrimCase[]
+    public static readonly TheoryData<string?, string?, string?> TrimStartCases = new()
     {
-        new(null, null, null),
-        new(null, "", null),
-        new("", null, ""),
-        new("aa_xx", "aa", "_xx"),
-        new("aaaa_xx", "aa", "_xx"),
-        new("aaaaa_xx", "aa", "a_xx"),
-        new("aaaaaa_xx", "aa", "_xx"),
-        new("aa_xx", "_", "aa_xx"),
-        new("aa_xx", "", "aa_xx"),
-        new("aa_xx", "xx", "aa_xx"),
-    }.Select(m => new object?[] { m.Source, m.Trim, m.Result });
+        (null, null, null),
+        (null, "", null),
+        ("", null, ""),
+        ("aa_xx", "aa", "_xx"),
+        ("aaaa_xx", "aa", "_xx"),
+        ("aaaaa_xx", "aa", "a_xx"),
+        ("aaaaaa_xx", "aa", "_xx"),
+        ("aa_xx", "_", "aa_xx"),
+        ("aa_xx", "", "aa_xx"),
+        ("aa_xx", "xx", "aa_xx"),
+    };
 
     [Theory]
     [MemberData(nameof(TrimStartCases))]
-    public void TrimStart_Test(string source, string trim, string result)
+    public void TrimStart_Test(string? source, string? trim, string? result)
     {
         var actual = source.TrimStart(trim);
         Assert.Equal(result, actual);
     }
 
-    public static readonly IEnumerable<object?[]> TrimEndCases = new TrimCase[]
+    public static readonly TheoryData<string?, string?, string?> TrimEndCases = new()
     {
-        new(null, null, null),
-        new(null, "", null),
-        new("", null, ""),
-        new("aa_xx", "xx", "aa_"),
-        new("aa_xxx", "xx", "aa_x"),
-        new("aa_xxxx", "xx", "aa_"),
-        new("aa_xxxxxx", "xx", "aa_"),
-        new("aa_xx", "_", "aa_xx"),
-        new("aa_xx", "", "aa_xx"),
-        new("aa_xx", "aa", "aa_xx"),
-    }.Select(m => new object?[] { m.Source, m.Trim, m.Result });
+        (null, null, null),
+        (null, "", null),
+        ("", null, ""),
+        ("aa_xx", "xx", "aa_"),
+        ("aa_xxx", "xx", "aa_x"),
+        ("aa_xxxx", "xx", "aa_"),
+        ("aa_xxxxxx", "xx", "aa_"),
+        ("aa_xx", "_", "aa_xx"),
+        ("aa_xx", "", "aa_xx"),
+        ("aa_xx", "aa", "aa_xx"),
+    };
 
     [Theory]
     [MemberData(nameof(TrimEndCases))]
-    public void TrimEnd_Test(string source, string trim, string result)
+    public void TrimEnd_Test(string? source, string? trim, string? result)
     {
         var actual = source.TrimEnd(trim);
         Assert.Equal(result, actual);
@@ -56,7 +55,7 @@ public class TrimTests
     [Fact]
     public void TrimStart_Contains_Test()
     {
-        var source = "Bearer token";
+        const string source = "Bearer token";
         var result = source.TrimStart("Bearer ");
         Assert.Equal("token", result);
     }
@@ -64,7 +63,7 @@ public class TrimTests
     [Fact]
     public void TrimStart_DoesNotContain_Test()
     {
-        var source = "Basic token";
+        const string source = "Basic token";
         var result = source.TrimStart("Bearer ");
         Assert.Equal("Basic token", result);
     }
@@ -80,7 +79,7 @@ public class TrimTests
     [Fact]
     public void TrimStart_Null_TrimString_Test()
     {
-        var source = "Basic token";
+        const string source = "Basic token";
         var result = source.TrimStart(null);
         Assert.Equal(source, result);
     }

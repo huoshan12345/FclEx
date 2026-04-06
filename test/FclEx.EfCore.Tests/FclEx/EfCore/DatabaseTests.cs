@@ -9,16 +9,12 @@ public class EfCoreTestsCollection : ICollectionFixture<EfCoreFixture>;
 [Collection(nameof(EfCoreTestsCollection))]
 public class DatabaseTests
 {
-    public static readonly IEnumerable<object?[]> DbTestCases = DatabaseTypes
-        .Select(m => new object[] { m });
+    public static readonly TheoryData<DbProviderType> DbTestCases = DatabaseTypes.ToTheoryData();
 
-    public static readonly IEnumerable<object?[]> SchemaCases = Schemas.Select(m => new object?[] { m });
+    public static readonly TheoryData<string?> SchemaCases = Schemas.ToTheoryData();
 
-    public static readonly IEnumerable<object?[]> DbSchemaTestCases = DatabaseTypes
-        .SelectMany(m => Schemas, (x, y) => (x, y))
-        .Select(m => new object?[] { m.x, m.y });
-
-
+    public static readonly TheoryData<DbProviderType, string?> DbSchemaTestCases = DatabaseTypes.CrossJoin(Schemas).ToTheoryData();
+    
     public static DbParameter CreateParameter(DbProviderType dbProviderType, string name, object value)
     {
         return dbProviderType switch

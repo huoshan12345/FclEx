@@ -77,8 +77,7 @@ public class PropertyTests : HttpServerTests
         Assert.Equal(value, response.ResponseString.Contains(keyword));
     }
 
-    public static readonly IEnumerable<object[]> CompressionMethods
-        = EnumHelper.GetValues<CompressionMethod>().Select(m => new object[] { m });
+    public static readonly TheoryData<CompressionMethod> CompressionMethods = EnumHelper.GetValues<CompressionMethod>().ToTheoryData();
 
     [RetryTheory]
     [MemberData(nameof(CompressionMethods))]

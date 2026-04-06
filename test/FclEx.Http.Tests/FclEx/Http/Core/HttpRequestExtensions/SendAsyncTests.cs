@@ -2,8 +2,7 @@
 
 public class SendAsyncTests : HttpServerTests
 {
-    public static IEnumerable<object[]> Cases => TestUrls
-        .Select(m => new object[] { m });
+    public static TheoryData<string> TestUrlCases => TestUrls.ToTheoryData();
 
     public static bool InterfaceHasIpv6Enabled(NetworkInterface @interface)
     {
@@ -56,7 +55,7 @@ public class SendAsyncTests : HttpServerTests
     }
 
     [Theory]
-    [MemberData(nameof(Cases))]
+    [MemberData(nameof(TestUrlCases))]
     public async Task Get_Test(string url)
     {
         var response = await HttpRequest.Get(url)

@@ -18,7 +18,7 @@ public class BytewiseEqualityComparerTests
         typeof(MarshalableClass),
         typeof(MarshalableStruct)]);
 
-    public static readonly IEnumerable<object[]> TypeCases = TestTypes.Select(m => new object[] { m });
+    public static readonly TheoryData<Type> TypeCases = TestTypes.ToTheoryData();
 
     private static readonly MethodInfo _equals = typeof(BytewiseEqualityComparerTests).GetRequiredMethod(nameof(SameValue_Equals));
 

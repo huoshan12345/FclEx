@@ -15,8 +15,7 @@ public class UnsafeHelperTests(ITestOutputHelper output)
         typeof(ValueTuple<DateTimeOffset, int, DateTime>), // non-blittable
     ];
 
-    public static readonly IEnumerable<object[]> BuiltInValueTypeCases = CommonValueTypes
-        .Select(m => new object[] { m });
+    public static readonly TheoryData<Type> BuiltInValueTypeCases = CommonValueTypes.ToTheoryData();
 
     private static readonly MethodInfo _sizeOfTTest = typeof(UnsafeHelperTests).GetRequiredMethod(nameof(SizeOf_T_Test), 1);
     private static readonly MethodInfo _sizeOf = typeof(UnsafeHelper).GetRequiredMethod(nameof(UnsafeHelper.SizeOf), 1);

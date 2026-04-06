@@ -2,14 +2,14 @@
 
 public class GetStringExtensions
 {
-    public static readonly IEnumerable<object[]> Strings = new[]
+    public static readonly TheoryData<string> Strings = new()
     {
         string.Empty,
         "123",
         "123asefajljsl;",
         "  \t\n  ",
         "   "
-    }.Select(m => new object[] { m });
+    };
 
     [Theory]
     [MemberData(nameof(Strings))]
@@ -31,8 +31,7 @@ public class GetStringExtensions
     public void GetString_ArraySegment_Index_Test()
     {
         var bytesList = Strings
-            .Select(m => m.First())
-            .Cast<string>()
+            .Select(m => m.Data)
             .Select(m => (Str: m, Bytes: Encoding.UTF8.GetBytes(m)))
             .ToList();
 

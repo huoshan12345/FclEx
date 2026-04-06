@@ -2,13 +2,13 @@
 
 public class CtorTests
 {
-    public static string[] Urls { get; } =
+    public static readonly string[] Urls =
     [
         "https://www.cnblogs.com/armfly/p/9378170.html",
         "/parent/change-old-passwd",
     ];
 
-    public static HttpMethod[] Methods { get; } =
+    public static readonly HttpMethod[] Methods =
     [
         HttpMethod.Get,
         HttpMethod.Post,
@@ -18,8 +18,7 @@ public class CtorTests
         HttpMethod.Options,
     ];
 
-    public static IEnumerable<object[]> CtorCases { get; } =
-        Urls.SelectMany(m => Methods, (u, m) => new object[] { u, m });
+    public static readonly TheoryData<string, HttpMethod> CtorCases = Urls.CrossJoin(Methods).ToTheoryData();
 
     [Theory]
     [MemberData(nameof(CtorCases))]
