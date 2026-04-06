@@ -2,7 +2,7 @@
 
 public class SetHostTests
 {
-    public static string[] Hosts { get; } =
+    public static readonly string[] Hosts =
     [
         "localhost",
         "www.baidu.com",
@@ -10,19 +10,18 @@ public class SetHostTests
         "220.181.112.244",
     ];
 
-    public static int[] Ports { get; } = [80, 8080, 1234];
+    public static readonly int[] Ports = [80, 8080, 1234];
 
-    public static IEnumerable<object[]> HostPortsPair { get; } = Hosts
-        .SelectMany(m => Ports, (i, j) => (h: i, p: j)).SelectMany((i, j) => new object[]
-        {
+    public static readonly TheoryData<string, int, string, string, int, string> HostPortsPair = Hosts
+        .SelectMany(m => Ports, (i, j) => (h: i, p: j)).SelectMany((i, j) =>
+        (
             i.h,
             i.p,
             $"{i.h}:{i.p}",
             j.h,
             j.p,
-            $"{j.h}:{j.p}",
-        })
-        .ToArray();
+            $"{j.h}:{j.p}"
+        )).ToTheoryData();
 
 
     [Theory]

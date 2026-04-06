@@ -11,14 +11,15 @@ public class ZipArchiveEntryExtensionsTests
         "dir-files-nested.zip",
     ];
 
-    public static readonly IEnumerable<object[]> TestCasesOfExtractToDir = ZipFiles
+    public static readonly TheoryData<string> ZipFileCases = ZipFiles.ToTheoryData();
+
+    public static readonly TheoryData<string, bool> TestCasesOfExtractToDir = ZipFiles
         .CrossJoin([false, true])
-        .Select(m => new object[] { m.Item1, m.Item2 });
+        .Select(m => (m.Item1, m.Item2))
+        .ToTheoryData();
 
     [Theory]
-    [InlineData("files.zip")]
-    [InlineData("dir-files.zip")]
-    [InlineData("dir-files-nested.zip")]
+    [MemberData(nameof(ZipFileCases))]
     public void BuildTree_Test(string zipFile)
     {
         var zip = Path.Combine("TestData", zipFile);

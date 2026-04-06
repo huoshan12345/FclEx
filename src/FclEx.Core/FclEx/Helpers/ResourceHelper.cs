@@ -1,6 +1,4 @@
-﻿using static System.StringSplitOptions;
-
-namespace FclEx.Helpers;
+﻿namespace FclEx.Helpers;
 
 public static class ResourceHelper
 {
@@ -28,15 +26,15 @@ public static class ResourceHelper
             return sr.ReadToEnd();
         });
 
-        public static string[] ReadLines(Assembly assembly, string resourceName, Encoding? encoding = null, StringSplitOptions options = RemoveEmptyEntries)
+        public static string[] ReadLines(Assembly assembly, string resourceName, StringSplitOptions options, Encoding? encoding = null)
         {
             return ReadString(assembly, resourceName, encoding)
                 .Split(_newLineChars, options);
         }
 
-        public static string[] ReadLines(Assembly assembly, string resourceName, Encoding? encoding = null, SplitOptions options = SplitOptions.TrimAndRemoveEmpty)
+        public static string[] ReadLines(Assembly assembly, string resourceName, SplitOptions options = SplitOptions.TrimAndRemoveEmpty, Encoding? encoding = null)
         {
-            return ReadLines(assembly, resourceName, encoding, options.ToStringSplitOptions());
+            return ReadLines(assembly, resourceName, options.ToStringSplitOptions(), encoding);
         }
 
         public static byte[] ReadBytes(Assembly assembly, string resourceName)

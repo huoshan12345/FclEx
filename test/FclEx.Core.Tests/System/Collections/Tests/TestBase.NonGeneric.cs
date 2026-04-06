@@ -30,18 +30,15 @@ namespace System.Collections.Tests
     {
         #region Helper Methods
 
-        public static IEnumerable<object[]> ValidCollectionSizes()
+        public static readonly TheoryData<int> ValidCollectionSizes = new()
         {
-            yield return new object[] { 0 };
-            yield return new object[] { 1 };
-            yield return new object[] { 75 };
-        }
+            0, 1, 75,
+        };
 
-        public static IEnumerable<object[]> ValidPositiveCollectionSizes()
+        public static readonly TheoryData<int> ValidPositiveCollectionSizes = new()
         {
-            yield return new object[] { 1 };
-            yield return new object[] { 75 };
-        }
+            1, 75,
+        };
 
         public enum EnumerableType
         {

@@ -8,11 +8,13 @@ public class JsonFormatterTests
 {
     public ITestOutputHelper? Output => TestContext.Current.TestOutputHelper;
 
-    public static readonly IEnumerable<object[]> TestCases =
+    public static readonly TheoryData<int?, bool, ExceptionIndexOptions> TestCases =
+    (
         from len in new int?[] { null, 5 }
         from omitParams in new[] { true, false }
         from indexOp in new[] { None, Default }
-        select new object[] { len, omitParams, indexOp };
+        select (len, omitParams, indexOp)
+    ).ToTheoryData();
 
     [Theory]
     [MemberData(nameof(TestCases))]

@@ -11,8 +11,7 @@ public class IsBlittableTests(ITestOutputHelper output)
 
     // NOTE: single-element ValueTuple of blittable type is also blittable
     // ValueTuple types that contains more than 1 element are marked as LayoutKind.Auto, so they are not blittable.
-    public static readonly IEnumerable<object[]> BlittableTestCases = Types.BlittableTypes
-        .Select(m => new object[] { m });
+    public static readonly TheoryData<Type> BlittableTestCases = Types.BlittableTypes.ToTheoryData();
 
     [Theory]
     [MemberData(nameof(BlittableTestCases))]
@@ -113,7 +112,7 @@ public class IsBlittableTests(ITestOutputHelper output)
         Assert.Contains("is not blittable.", ex.Message);
     }
 
-    public static readonly IEnumerable<object?[]> PinnableTestCases = new object?[]
+    public static readonly TheoryData<object?> PinnableTestCases = new object?[]
     {
         null,
         "a",
@@ -124,7 +123,7 @@ public class IsBlittableTests(ITestOutputHelper output)
         new ValueTuple<int>(1),
         new BlittableClass(),
         new BlittableStruct(),
-    }.Select(m => new[] { m });
+    }.ToTheoryData();
 
     [Theory]
     [MemberData(nameof(PinnableTestCases))]
@@ -132,16 +131,17 @@ public class IsBlittableTests(ITestOutputHelper output)
     {
         GCHandle.Alloc(value, GCHandleType.Pinned).Free();
     }
-    public static readonly IEnumerable<object?[]> AccordingToClrVersion = new (object?, IntCondition)[]
+
+    public static readonly TheoryData<object?, IntCondition> AccordingToClrVersion = new (object?, IntCondition)[]
     {
-       ('a', NET60_OR_GREATER),
-       (true, NET60_OR_GREATER),
-       (new int?[] { null }, NET60_OR_GREATER),
-       (new int?[] { 1, null }, NET60_OR_GREATER),
-       (new int?[] { 1, 2 }, NET60_OR_GREATER),
-       (new Tuple<int, int>(1, 1), NET60_OR_GREATER),
-       (new ValueTuple<int, int>(1, 1), NET60_OR_GREATER),
-    }.Select(m => new object?[] { m.Item1, m.Item2 });
+        ('a', NET60_OR_GREATER),
+        (true, NET60_OR_GREATER),
+        (new int?[] { null }, NET60_OR_GREATER),
+        (new int?[] { 1, null }, NET60_OR_GREATER),
+        (new int?[] { 1, 2 }, NET60_OR_GREATER),
+        (new Tuple<int, int>(1, 1), NET60_OR_GREATER),
+        (new ValueTuple<int, int>(1, 1), NET60_OR_GREATER),
+    }.ToTheoryData();
 
     [Theory]
     [MemberData(nameof(AccordingToClrVersion))]
@@ -164,16 +164,16 @@ public class IsBlittableTests(ITestOutputHelper output)
     }
 
 
-    public static readonly IEnumerable<object?[]> NonPinnable = new object?[]
+    public static readonly TheoryData<object> NonPinnable = new()
     {
         new MarshalableStruct(),
         new MarshalableClass(),
         new[] { "a" }
-    }.Select(m => new[] { m });
+    };
 
     [Theory]
     [MemberData(nameof(NonPinnable))]
-    public void GCHandle_Pinned_NonPinnable_Test(object? value)
+    public void GCHandle_Pinned_NonPinnable_Test(object value)
     {
         Assert.Throws<ArgumentException>(() => GCHandle.Alloc(value, GCHandleType.Pinned).Free());
     }

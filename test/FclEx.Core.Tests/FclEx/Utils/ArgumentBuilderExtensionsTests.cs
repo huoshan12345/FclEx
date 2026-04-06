@@ -25,7 +25,7 @@ public class ArgumentBuilderExtensionsTests
         .Concat([typeof(IGeneric<>).MakeGenericType(typeof(IGeneric<>)), typeof(GenericA<>).MakeGenericType(typeof(GenericA<>)),
         ]);
 
-    public static IEnumerable<object[]> TypePairs { get; } = AllTypes.SelectMany((x, y) => new object[] { x, y });
+    public static TheoryData<Type, Type> TypePairs { get; } = AllTypes.CrossJoin().ToTheoryData();
 
     [Theory]
     [MemberData(nameof(TypePairs))]

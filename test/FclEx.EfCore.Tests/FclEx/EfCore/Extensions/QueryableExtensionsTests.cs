@@ -2,9 +2,9 @@
 
 public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {
-    public static readonly IEnumerable<object?[]> ContainsAnyTestCases = DbTestCases
-        .SelectMany([true, false])
-        .Select(x => x.Left.Append(x.Right).ToArray());
+    public static readonly TheoryData<DbProviderType, bool> ContainsAnyTestCases = DatabaseTypes
+        .CrossJoin([true, false])
+        .ToTheoryData();
 
     [Theory]
     [MemberData(nameof(ContainsAnyTestCases))]

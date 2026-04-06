@@ -2,12 +2,12 @@
 
 public class ShortNameTests
 {
-    public static IEnumerable<object[]> Cases { get; } = new (object, string)[]
+    public static readonly TheoryData<Type, string> Cases = new()
     {
         (typeof(int), nameof(Int32)),
         (typeof(Dictionary<string, int>), "Dictionary<String, Int32>"),
         (typeof(Dictionary<List<string>, HashSet<int>>), "Dictionary<List<String>, HashSet<Int32>>"),
-    }.Select(m => new[] { m.Item1, m.Item2 }).ToArray();
+    };
 
     [Theory]
     [MemberData(nameof(Cases))]
