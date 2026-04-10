@@ -10,6 +10,6 @@
     <ProjectReference Include="..\FclEx.Logging\FclEx.Logging.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)..\FclEx.Core\FclExUsing.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\FclEx.Core\FclExUsings.cs" />
   </ItemGroup>
 </Project>

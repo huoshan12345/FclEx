@@ -8,9 +8,7 @@ public abstract class UserClientAction<TClient, TAccount, T> : IUserClientAction
     protected UserClientAction(TClient client)
     {
         Client = client;
-        Logger = GetType().Assembly.IsDebug()
-            ? client.Logger
-            : NullLogger.Instance;
+        Logger = client.Logger;
     }
 
     public virtual IUserClientSession Session => Client.Session;

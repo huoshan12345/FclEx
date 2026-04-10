@@ -4,7 +4,6 @@ public static class ResourceHelper
 {
     private static readonly char[] _newLineChars = Environment.NewLine.ToCharArray();
 
-
     public static class Embedded
     {
         public static Stream? GetStream(Assembly assembly, string name)

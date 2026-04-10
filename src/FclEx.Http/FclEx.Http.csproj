@@ -17,6 +17,6 @@
   </ItemGroup>
   <Import Project="..\EmitGeneratedFiles.props" Condition=" '$(Configuration)' == 'Debug' AND $(GITHUB_ACTION) == '' AND '$(OS)' == 'Windows_NT' " />
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)..\FclEx.Core\FclExUsing.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\FclEx.Core\FclExUsings.cs" />
   </ItemGroup>
 </Project>
