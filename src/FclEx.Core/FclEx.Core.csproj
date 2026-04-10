@@ -18,7 +18,7 @@
   </ItemGroup>
   <Import Project="..\EmitGeneratedFiles.props" Condition=" '$(Configuration)' == 'Debug' AND $(GITHUB_ACTION) == '' AND '$(OS)' == 'Windows_NT' " />
   <ItemGroup Label="FilesToCopy">
-    <Content Include="FclExUsing.cs" Pack="true" BuildAction="None" PackagePath="content/" />
+    <Content Include="FclExUsings.cs" Pack="true" BuildAction="None" PackagePath="content/" />
     <Content Include="FclEx.Core.targets" Pack="true" BuildAction="None" PackagePath="buildTransitive/" />
   </ItemGroup>
 </Project>
