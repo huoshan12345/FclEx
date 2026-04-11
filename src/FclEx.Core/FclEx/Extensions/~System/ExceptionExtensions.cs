@@ -171,7 +171,7 @@ public static partial class ExceptionExtensions
     /// <returns>The exception with its message modified.</returns>
     public static Exception SetMessage(this Exception ex, string? message)
     {
-        Fields.Exception_Message.SetValue(ex, message);
+        FieldInfos.Exception_Message.SetValue(ex, message);
         return ex;
     }
 
@@ -193,7 +193,7 @@ public static partial class ExceptionExtensions
     /// <returns>The message of the exception.</returns>
     public static string? GetMessage(this Exception ex)
     {
-        return Fields.Exception_Message.GetValue<string>(ex);
+        return FieldInfos.Exception_Message.GetValue<string>(ex);
     }
 
     /// <summary>
@@ -205,7 +205,7 @@ public static partial class ExceptionExtensions
     public static Exception SetStackTrace(this Exception ex, string? trace = null)
     {
         trace ??= new StackTrace(1, true).ToString();
-        Fields.Exception_StackTrace.SetValue(ex, trace);
+        FieldInfos.Exception_StackTrace.SetValue(ex, trace);
         return ex;
     }
 
@@ -216,6 +216,6 @@ public static partial class ExceptionExtensions
     /// <returns>The stack trace of the exception.</returns>
     public static string? GetStackTrace(this Exception ex)
     {
-        return Fields.Exception_StackTrace.GetValue<string>(ex);
+        return FieldInfos.Exception_StackTrace.GetValue<string>(ex);
     }
 }

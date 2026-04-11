@@ -30,17 +30,15 @@ public static class FileInfoExtensions
     /// <param name="dest">The destination file.</param>
     /// <param name="bufferSize">The buffer size in bytes to use during the copy. Default is 4 KB.</param>
     /// <param name="token"></param>
-    public static async Task CopyToAsync(this FileInfo file, FileInfo dest, int bufferSize = 4 * 1024, CancellationToken token = default)
+    public static async Task<FileInfo> CopyToAsync(this FileInfo file, FileInfo dest, int bufferSize = 4 * 1024, CancellationToken token = default)
     {
         Check.NotNull(file);
         Check.NotNull(dest);
         Check.EqualTo(file.Exists, true);
 
-        if (file.FullName == dest.FullName)
-            return;
-
-        if (dest.Exists && FileHelper.AreFilesEqual(file, dest))
-            return;
+        if (file.FullName == dest.FullName
+            || dest.Exists && FileHelper.AreFilesEqual(file, dest))
+            return dest;
 
         using var _ = Disposable.Create(dest.Refresh);
 
@@ -53,6 +51,8 @@ public static class FileInfoExtensions
 #endif
         using Stream destination = File.Create(dest.FullName, bufferSize);
         await source.CopyToAsync(destination, bufferSize, token);
+
+        return dest;
     }
 
     /// <summary>
@@ -62,7 +62,7 @@ public static class FileInfoExtensions
     /// <param name="dir">The destination directory.</param>
     /// <param name="bufferSize">The buffer size in bytes to use during the copy. Default is 4 KB.</param>
     /// <param name="token"></param>
-    public static Task CopyToAsync(this FileInfo file, DirectoryInfo dir, int bufferSize = 4 * 1024, CancellationToken token = default)
+    public static Task<FileInfo> CopyToAsync(this FileInfo file, DirectoryInfo dir, int bufferSize = 4 * 1024, CancellationToken token = default)
     {
         Check.NotNull(file);
         Check.NotNull(dir);
@@ -79,13 +79,13 @@ public static class FileInfoExtensions
     /// <param name="options">Specifies how to handle conflicts when the destination already exists.</param>
     /// <param name="bufferSize">The buffer size in bytes to use during the copy. Default is 4 KB.</param>
     /// <param name="token"></param>
-    public static async Task CopyToAsync(this FileInfo file, FileInfo dest, FileConflictOptions options, int bufferSize = 4 * 1024, CancellationToken token = default)
+    public static async Task<FileInfo> CopyToAsync(this FileInfo file, FileInfo dest, FileConflictOptions options, int bufferSize = 4 * 1024, CancellationToken token = default)
     {
         Check.NotNull(file);
         Check.NotNull(dest);
 
         if (file.FullName == dest.FullName)
-            return;
+            return dest;
 
         using var _ = Disposable.Create(() =>
         {
@@ -95,15 +95,15 @@ public static class FileInfoExtensions
 
         if (dest.Exists == false)
         {
-            await CopyToAsync(file, dest, bufferSize, token);
-            return;
+            await file.CopyToAsync(dest, bufferSize, token);
+            return dest;
         }
 
         if (options.HasFlag(IgnoreConflictIfDuplicate))
         {
             if (dest.Exists && FileHelper.AreFilesEqual(file, dest))
             {
-                return;
+                return dest;
             }
         }
 
@@ -111,21 +111,23 @@ public static class FileInfoExtensions
         // ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
         switch (options & ResolutionStrategies)
         {
-            case Cancel: return;
+            case Cancel: break;
             case ThrowOnConflict: throw new InvalidOperationException("File already exists: " + dest.FullName);
             case Overwrite:
             {
-                await CopyToAsync(file, dest, bufferSize, token);
-                return;
+                await file.CopyToAsync(dest, bufferSize, token);
+                break;
             }
             case AutoRename:
             {
                 var newName = FileHelper.GetNextFileName(dest.Name);
                 var newDest = new FileInfo(Path.Combine(dest.DirectoryName!, newName));
                 await file.CopyToAsync(newDest, options, bufferSize, token);
-                return;
+                break;
             }
         }
+
+        return dest;
     }
 
     /// <summary>
@@ -136,7 +138,7 @@ public static class FileInfoExtensions
     /// <param name="options">Specifies how to handle conflicts when the file already exists in the directory.</param>
     /// <param name="bufferSize">The buffer size in bytes to use during the copy. Default is 4 KB.</param>
     /// <param name="token"></param>
-    public static Task CopyToAsync(this FileInfo file, DirectoryInfo dir, FileConflictOptions options, int bufferSize = 4096, CancellationToken token = default)
+    public static Task<FileInfo> CopyToAsync(this FileInfo file, DirectoryInfo dir, FileConflictOptions options, int bufferSize = 4096, CancellationToken token = default)
     {
         Check.NotNull(file);
         Check.NotNull(dir);
@@ -296,5 +298,15 @@ public static class FileInfoExtensions
         Check.NotNull(content);
 
         return File.WriteAllTextAsync(file.FullName, content, encoding ?? Encoding.UTF8, token);
+    }
+
+    public static FileInfo CopyTo(this FileInfo fileInfo, FileInfo destFileInfo, bool overwrite = false)
+    {
+        Check.NotNull(fileInfo);
+        Check.NotNull(destFileInfo);
+
+        return fileInfo.FullName == destFileInfo.FullName
+            ? destFileInfo
+            : fileInfo.CopyTo(destFileInfo.FullName, overwrite);
     }
 }
