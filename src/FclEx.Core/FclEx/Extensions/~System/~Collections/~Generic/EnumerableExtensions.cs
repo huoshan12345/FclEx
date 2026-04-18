@@ -55,24 +55,42 @@ public static partial class EnumerableExtensions
     /// <param name="enumerable">The collection of elements to filter.</param>
     /// <param name="predicate">The predicate function that defines the condition to exclude.</param>
     /// <returns>An IEnumerable containing elements that do not satisfy the predicate.</returns>
+    [MethodImpl(AggressiveInlining)]
     public static IEnumerable<T> Not<T>(this IEnumerable<T> enumerable, Func<T, bool> predicate)
         => enumerable.Where(m => predicate(m) == false);
 
+    [MethodImpl(AggressiveInlining)]
     public static IEnumerable<T> WhereIf<T>(this IEnumerable<T> enumerable, Func<T, bool> predicate, bool condition)
         => condition ? enumerable.Where(predicate) : enumerable;
 
+    [MethodImpl(AggressiveInlining)]
     public static IEnumerable<T> WhereIf<T>(this IEnumerable<T> enumerable, bool condition, Func<T, bool> predicate)
         => enumerable.WhereIf(predicate, condition);
 
+    [MethodImpl(AggressiveInlining)]
     public static IEnumerable<T> WhereIf<T>(this IEnumerable<T> enumerable, Func<T, int, bool> predicate, bool condition)
         => condition ? enumerable.Where(predicate) : enumerable;
 
+    [MethodImpl(AggressiveInlining)]
     public static IEnumerable<T> WhereIf<T>(this IEnumerable<T> enumerable, bool condition, Func<T, int, bool> predicate)
         => enumerable.WhereIf(predicate, condition);
 
+    [MethodImpl(AggressiveInlining)]
     public static IEnumerable<T> TryTake<T>(this IEnumerable<T> enumerable, int? count)
     {
         return count is { } c ? enumerable.Take(c) : enumerable;
+    }
+
+    [MethodImpl(AggressiveInlining)]
+    public static IEnumerable<T> TryWhere<T>(this IEnumerable<T> enumerable, Func<T, bool>? predicate)
+    {
+        return predicate != null ? enumerable.Where(predicate) : enumerable;
+    }
+
+    [MethodImpl(AggressiveInlining)]
+    public static IEnumerable<T> TryWhere<T>(this IEnumerable<T> enumerable, Func<T, int, bool>? predicate)
+    {
+        return predicate != null ? enumerable.Where(predicate) : enumerable;
     }
 
     [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]

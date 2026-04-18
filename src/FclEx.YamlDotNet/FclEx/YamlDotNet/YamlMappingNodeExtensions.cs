@@ -38,44 +38,35 @@ public static class YamlMappingNodeExtensions
         return node;
     }
 
-    public static IEnumerable<(TKey Key, TValue Value)> Children<TKey, TValue>(this YamlMappingNode node)
+    public static IEnumerable<KeyValuePair<TKey, TValue>> Children<TKey, TValue>(this YamlMappingNode node, Func<YamlNode, YamlNode, bool>? filter = null)
         where TKey : YamlNode
         where TValue : YamlNode
     {
         foreach (var (key, value) in node.Children)
         {
-            yield return (key.CastTo<TKey>(), value.CastTo<TValue>());
+            if (filter == null || filter(key, value))
+            {
+                yield return KeyValuePair.Create(key.CastTo<TKey>(), value.CastTo<TValue>());
+            }
         }
     }
 
-    public static IEnumerable<(YamlScalarNode Key, TValue Value)> Children<TValue>(this YamlMappingNode node) where TValue : YamlNode
+    public static IEnumerable<KeyValuePair<YamlScalarNode, TValue>> Children<TValue>(this YamlMappingNode node, Func<YamlNode, YamlNode, bool>? filter = null)
+        where TValue : YamlNode
     {
-        return node.Children<YamlScalarNode, TValue>();
+        return node.Children<YamlScalarNode, TValue>(filter);
     }
 
-    public static IEnumerable<(YamlScalarNode Key, YamlNode Value)> Children(this YamlMappingNode node)
+    public static IEnumerable<KeyValuePair<YamlScalarNode, YamlNode>> Children(this YamlMappingNode node, Func<YamlNode, YamlNode, bool>? filter = null)
     {
-        return node.Children<YamlNode>();
+        return node.Children<YamlNode>(filter);
     }
-
-    public static IEnumerable<T> Children<T>(this YamlMappingNode node, Func<KeyValuePair<YamlNode, YamlNode>, bool> filter) where T : YamlNode
+    
+    public static IEnumerable<KeyValuePair<TKey, TValue>> Children<TKey, TValue>(this YamlMappingNode node, IReadOnlyCollection<string> keys)
+        where TKey : YamlNode
+        where TValue : YamlNode
     {
-        return node.Children.Where(filter).Select(m => m.Value.CastTo<T>());
-    }
-
-    public static IEnumerable<T> Children<T>(this YamlMappingNode node, Func<YamlNode, YamlNode, bool> filter) where T : YamlNode
-    {
-        return node.Children<T>(m => filter(m.Key, m.Value));
-    }
-
-    public static IEnumerable<T> Children<T>(this YamlMappingNode node, Func<YamlNode, bool> keyFilter) where T : YamlNode
-    {
-        return node.Children<T>(m => keyFilter(m.Key));
-    }
-
-    public static IEnumerable<T> Children<T>(this YamlMappingNode node, IReadOnlyCollection<string> keys) where T : YamlNode
-    {
-        return node.Children<T>(m => keys.Any(x => m.Key.IsScalar(x)));
+        return node.Children<TKey, TValue>((k, v) => keys.Any(k.IsScalar));
     }
 
     public static (YamlScalarNode Child, bool Changed) AddOrUpdateChild(this YamlMappingNode node, string key, string value,

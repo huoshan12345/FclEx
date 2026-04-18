@@ -22,7 +22,7 @@ public record RegexReplacer(Regex Regex, MatchEvaluator Evaluator)
     /// </summary>
     public static readonly RegexReplacer LineEndingToLf = new(@"\r\n?|\n", "\n");
 
-    public RegexReplacer(string pattern, string replacement, RegexOptions options = RegexOptions.Compiled)
+    public RegexReplacer([StringSyntax(StringSyntaxAttribute.Regex, nameof(options))] string pattern, string replacement, RegexOptions options = RegexOptions.Compiled)
         : this(new Regex(pattern, options), m => replacement) { }
 
     public string Replace(string input)
