@@ -2,11 +2,10 @@ namespace FclEx.YamlDotNet;
 
 public static class YamlMappingNodeExtensions
 {
-    // ReSharper disable once ReturnTypeCanBeNotNullable
     public static T? Child<T>(this YamlMappingNode node, string key) where T : YamlNode
     {
         var (_, value) = node.Children.SingleOrDefault(m => m.Key.IsScalar(key));
-        return value.CastTo<T>();
+        return value?.CastTo<T>();
     }
 
     public static T RequiredChild<T>(this YamlMappingNode node, string key) where T : YamlNode
@@ -39,44 +38,97 @@ public static class YamlMappingNodeExtensions
         return node;
     }
 
-    public static IEnumerable<(TKey Key, TValue Value)> Children<TKey, TValue>(this YamlMappingNode node)
+    public static IEnumerable<KeyValuePair<TKey, TValue>> Children<TKey, TValue>(this YamlMappingNode node, Func<YamlNode, YamlNode, bool>? filter = null)
         where TKey : YamlNode
         where TValue : YamlNode
     {
         foreach (var (key, value) in node.Children)
         {
-            yield return (key.CastTo<TKey>(), value.CastTo<TValue>());
+            if (filter == null || filter(key, value))
+            {
+                yield return KeyValuePair.Create(key.CastTo<TKey>(), value.CastTo<TValue>());
+            }
         }
     }
 
-    public static IEnumerable<(YamlScalarNode Key, TValue Value)> Children<TValue>(this YamlMappingNode node) where TValue : YamlNode
+    public static IEnumerable<KeyValuePair<YamlScalarNode, TValue>> Children<TValue>(this YamlMappingNode node, Func<YamlNode, YamlNode, bool>? filter = null)
+        where TValue : YamlNode
     {
-        return node.Children<YamlScalarNode, TValue>();
+        return node.Children<YamlScalarNode, TValue>(filter);
     }
 
-    public static IEnumerable<(YamlScalarNode Key, YamlNode Value)> Children(this YamlMappingNode node)
+    public static IEnumerable<KeyValuePair<YamlScalarNode, YamlNode>> Children(this YamlMappingNode node, Func<YamlNode, YamlNode, bool>? filter = null)
     {
-        return node.Children<YamlNode>();
+        return node.Children<YamlNode>(filter);
+    }
+    
+    public static IEnumerable<KeyValuePair<TKey, TValue>> Children<TKey, TValue>(this YamlMappingNode node, IReadOnlyCollection<string> keys)
+        where TKey : YamlNode
+        where TValue : YamlNode
+    {
+        return node.Children<TKey, TValue>((k, v) => keys.Any(k.IsScalar));
     }
 
-
-    public static IEnumerable<T> Children<T>(this YamlMappingNode node, Func<KeyValuePair<YamlNode, YamlNode>, bool> filter) where T : YamlNode
+    public static (YamlScalarNode Child, bool Changed) AddOrUpdateChild(this YamlMappingNode node, string key, string value,
+        ScalarStyle valueStyle = ScalarStyle.Any, bool throwOnTypeMismatch = false)
     {
-        return node.Children.Where(filter).Select(m => m.Value.CastTo<T>());
+        var keyNode = new YamlScalarNode(key);
+
+        if (node.Children.TryGetValue(keyNode, out var existingNode))
+        {
+            if (existingNode is YamlScalarNode scalarNode)
+            {
+                var valueChanged = scalarNode.Value != value;
+                var styleChanged = scalarNode.Style != valueStyle;
+
+                if (!valueChanged && !styleChanged)
+                    return (scalarNode, false);
+
+                scalarNode.Value = value;
+                scalarNode.Style = valueStyle;
+                return (scalarNode, true);
+            }
+
+            if (throwOnTypeMismatch)
+            {
+                throw new InvalidOperationException($"Key '{key}' already exists but is of type {existingNode.GetType().Name}, not expected {nameof(YamlScalarNode)}.");
+            }
+
+            node.Children.Remove(keyNode);
+        }
+
+        var newNode = new YamlScalarNode(value) { Style = valueStyle };
+        node.Children.Add(keyNode, newNode);
+        return (newNode, true);
     }
 
-    public static IEnumerable<T> Children<T>(this YamlMappingNode node, Func<YamlNode, YamlNode, bool> filter) where T : YamlNode
+    public static (YamlScalarNode Child, bool Changed) AddOrUpdateChild(this YamlMappingNode node, string key, bool value)
     {
-        return node.Children<T>(m => filter(m.Key, m.Value));
+        return node.AddOrUpdateChild(key, value.ToLower(), ScalarStyle.Plain);
     }
 
-    public static IEnumerable<T> Children<T>(this YamlMappingNode node, Func<YamlNode, bool> keyFilter) where T : YamlNode
+    public static (T Child, bool Added) GetOrAddChild<T>(this YamlMappingNode node, string key, Func<T> factory)
+        where T : YamlNode
     {
-        return node.Children<T>(m => keyFilter(m.Key));
+        var keyNode = new YamlScalarNode(key);
+        if (node.Children.TryGetValue(keyNode, out var existingNode))
+        {
+            if (existingNode is T targetNode)
+            {
+                return (targetNode, false);
+            }
+
+            throw new InvalidOperationException($"Key '{key}' already exists but is of type {existingNode.GetType().Name}, not expected {typeof(T).Name}.");
+        }
+
+        var newNode = factory.Invoke();
+        node.Add(keyNode, newNode);
+        return (newNode, true);
     }
 
-    public static IEnumerable<T> Children<T>(this YamlMappingNode node, IReadOnlyCollection<string> keys) where T : YamlNode
+    public static (T Child, bool Added) GetOrAddChild<T>(this YamlMappingNode node, string key)
+        where T : YamlNode, new()
     {
-        return node.Children<T>(m => keys.Any(x => m.Key.IsScalar(x)));
+        return node.GetOrAddChild<T>(key, () => new T());
     }
 }

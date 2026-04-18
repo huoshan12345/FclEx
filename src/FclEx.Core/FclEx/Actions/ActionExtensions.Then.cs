@@ -57,4 +57,21 @@ partial class ActionExtensions
     {
         return action.Then(m => func(m) ?? SuccessAction.Create(m));
     }
+
+    public static IAction<TNext[]> Then<T, TNext>(this IAction<T> action, Func<T, IEnumerable<IAction<TNext>>> next, bool parallel = true)
+    {
+        return action.Then(m => parallel
+            ? ParallelAction.Create(next(m))
+            : SeriesAction.Create(next(m)));
+    }
+
+    public static IAction<TNext[]> Then<T, TNext>(this IAction<T> action, Func<T, IEnumerable<OperationResult<TNext>>> next, bool parallel = true)
+    {
+        return action.Then(m => next(m).Select(x => Operation.Action(t => x)), parallel);
+    }
+
+    public static IAction<TNext[]> Then<T, TNext>(this IAction<T> action, Func<T, IEnumerable<Task<OperationResult<TNext>>>> next, bool parallel = true)
+    {
+        return action.Then(m => next(m).Select(x => Operation.Action(t => x)), parallel);
+    }
 }
