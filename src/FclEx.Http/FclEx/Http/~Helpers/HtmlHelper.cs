@@ -15,22 +15,17 @@ public static class HtmlHelper
     }
 
 
-    private static char[] TrimChars { get; } = { '\'', '"', ';' };
+    private static readonly char[] TrimChars = ['\'', '"', ';'];
 
     public static string? GetMetaCharSet(string html)
     {
         if (html.IsNullOrEmpty())
             return null;
 
-        var match = CommonWebRegexes.CharSet.Match(html);
-        if (match.Success)
-        {
-            return match.Groups[1].Value.Trim(TrimChars);
-        }
-        else
-        {
-            return null;
-        }
+        var match = Regexes.CharSet.Match(html);
+        return match.Success
+            ? match.Groups[1].Value.Trim(TrimChars)
+            : null;
     }
 
     public static string? GetMetaRefreshUrl(string html)
@@ -38,7 +33,8 @@ public static class HtmlHelper
         if (html.IsNullOrWhiteSpace())
             return null;
 
-        var match = CommonWebRegexes.MetaRefresh.Match(html);
+        var match = Regexes.MetaRefresh.Match(html);
+        // ReSharper disable once InvertIf
         if (match.Success)
         {
             var refresh = match.Groups[1].Value;
@@ -48,21 +44,19 @@ public static class HtmlHelper
                 .Replace("&#x22;", "\"")
                 .Replace("&#34;", "\"")
                 .Trim();
-            var nextMatch = CommonWebRegexes.MetaRefreshUrl.Match(refresh);
+
+            var nextMatch = Regexes.MetaRefreshUrl.Match(refresh);
+            // ReSharper disable once InvertIf
             if (nextMatch.Success)
             {
                 var g = nextMatch.Groups;
                 return (g[2].Value, g[3].Value).FirstNotEmpty();
             }
+        }
 
-            return null;
-        }
-        else
-        {
-            return null;
-        }
+        return null;
     }
-    
+
     public static string? GetTextContent(string str)
     {
         var html = DefaultHtmlParser.ParseDocument(str);

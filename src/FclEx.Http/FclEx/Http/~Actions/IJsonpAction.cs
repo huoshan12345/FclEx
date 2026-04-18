@@ -9,12 +9,12 @@ public interface IJsonpAction<T> : IJsonAction<T>, IHttpAction<T>
 
     void IHttpAction<T>.ModifyRequest(HttpRequest request)
     {
-        request.AddQueryParam(CallbackParamName, CommonWebRegexes.CallBackName);
+        request.AddQueryParam(CallbackParamName, Regexes.CallBackName);
     }
 
     OperationResult<string> IJsonAction<T>.GetJson(HttpResponse response)
     {
-        var match = CommonWebRegexes.CallBackContent.Match(response.ResponseString);
+        var match = Regexes.CallBackContent.Match(response.ResponseString);
         return match.Success
             ? Operation.Success(match.Value)
             : Operation.Error<string>("Failed to parse callback: " + response.ResponseString.Truncate(200));
