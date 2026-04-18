@@ -1195,7 +1195,7 @@ public class JPathExecuteTests
                                                        "text": "Sort yard 12"
                                                    },
                                                    {
-                                                       "id": "9200002010.0.6",
+                                                       "id": "92000020100005",
                                                        "text": "Yard 13"
                                                    }
                                                ]
