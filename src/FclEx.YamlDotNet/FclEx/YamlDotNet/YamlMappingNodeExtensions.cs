@@ -102,12 +102,12 @@ public static class YamlMappingNodeExtensions
         return (newNode, true);
     }
 
-    public static (YamlScalarNode Child, bool Updated) AddOrUpdateChild(this YamlMappingNode node, string key, bool value)
+    public static (YamlScalarNode Child, bool Changed) AddOrUpdateChild(this YamlMappingNode node, string key, bool value)
     {
         return node.AddOrUpdateChild(key, value.ToLower(), ScalarStyle.Plain);
     }
 
-    public static (T Child, bool Created) GetOrAddChild<T>(this YamlMappingNode node, string key, Func<T> factory)
+    public static (T Child, bool Added) GetOrAddChild<T>(this YamlMappingNode node, string key, Func<T> factory)
         where T : YamlNode
     {
         var keyNode = new YamlScalarNode(key);
@@ -126,7 +126,7 @@ public static class YamlMappingNodeExtensions
         return (newNode, true);
     }
 
-    public static (T Child, bool Created) GetOrAddChild<T>(this YamlMappingNode node, string key)
+    public static (T Child, bool Added) GetOrAddChild<T>(this YamlMappingNode node, string key)
         where T : YamlNode, new()
     {
         return node.GetOrAddChild<T>(key, () => new T());
