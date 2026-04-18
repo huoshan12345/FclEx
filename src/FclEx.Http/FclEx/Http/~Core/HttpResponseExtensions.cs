@@ -57,47 +57,76 @@ public static class HttpResponseExtensions
             ? element.Value.Deserialize<T>(options)!
             : Operation.Error<T>("The path does not exist in json: " + path);
     }
+    
+    public static async Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, DownloadOptions options)
+    {
+        var request = new HttpRequest(options.Uri, options.Method)
+            .ReadAsBytes()
+            .ReadHeadersTimeout(options.ConnectTimeout)
+            .ReadBufferTimeout(options.ReadBufferTimeout)
+            .AcceptCompress();
 
-    private static readonly Regex _regexOfNonWord = new(@"\W", RegexOptions.Compiled);
-    public static HttpFileDownloadInfo GetDownloadInfo(this HttpResponse response)
+        if (options.Content is { } content)
+        {
+            request.Content(content);
+        }
+
+        var response = await request.SendAsync(http, options.CancellationToken);
+        return response.IsError
+            ? Operation.ObjectError(response, response.Exception, response.Elapsed)
+                .Cast<HttpFileDownloadInfo>()
+            : response.GetDownloadInfo(options.FileBaseName, options.FileExtension);
+    }
+
+    private static readonly Regex _regexOfNonWord = new(@"\W+", RegexOptions.Compiled);
+
+    public static HttpFileDownloadInfo GetDownloadInfo(this HttpResponse response, string? baseName = null, string? extension = null)
     {
         var uri = response.RedirectUris.Last();
         var fileName = uri.Segments
             .Select(m => m.Trim('/'))
             .LastOrDefault(m => m.IsNotEmpty());
         var ext = Path.GetExtension(fileName);
-        var fileBaseName = fileName.TrimEnd(ext);
-        if (fileBaseName.IsNullOrEmpty())
+
+        if (baseName is null)
         {
-            fileBaseName = uri.Host.Replace(_regexOfNonWord, "_").TrimEnd("_");
+            baseName = fileName.TrimEnd(ext);
+            if (baseName.IsNullOrEmpty())
+            {
+                baseName = uri.Host.Replace(_regexOfNonWord, "_").TrimEnd("_");
+            }
         }
 
         var mimeType = response.Headers.GetLast(HttpHeaderNames.ContentType) ?? "";
-        if (mimeType.IsNotEmpty())
+
+        if (extension is null)
         {
-            if (mimeType.Contains(';'))
+            if (mimeType.IsNotEmpty())
             {
-                var contentType = new ContentType(mimeType);
-                mimeType = contentType.MediaType;
+                if (mimeType.Contains(';'))
+                {
+                    var contentType = new ContentType(mimeType);
+                    mimeType = contentType.MediaType;
+                }
+                if (MimeTypeMap.TryGetExtension(MimeTypeFix(mimeType), out extension))
+                    ext = extension;
             }
-            if (MimeTypeMap.TryGetExtension(MimeTypeFix(mimeType), out var extension))
-                ext = extension;
         }
 
         ext ??= string.Empty;
-        var info = new HttpFileDownloadInfo(uri, fileBaseName, ext, response.ResponseBytes, mimeType);
+        var info = new HttpFileDownloadInfo(uri, baseName, ext, response.ResponseBytes, mimeType);
         return info;
-    }
 
-    internal static string MimeTypeFix(string mimeType)
-    {
-        // avoid throwing exceptions in MimeTypeMap.TryGetExtension.
-        return mimeType switch
+        static string MimeTypeFix(string mimeType)
         {
-            null => string.Empty,
-            "image/jpg" => "image/jpeg",
-            _ => mimeType.TrimStart("."),
-        };
+            // avoid throwing exceptions in MimeTypeMap.TryGetExtension.
+            return mimeType switch
+            {
+                null => string.Empty,
+                "image/jpg" => "image/jpeg",
+                _ => mimeType.TrimStart("."),
+            };
+        }
     }
 
     public static Uri LastUri(this HttpResponse response) => response.RedirectUris.Last();
