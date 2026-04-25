@@ -3,7 +3,6 @@
 public abstract class AbstractHttpService : IHttpService
 {
     protected readonly CookieContainer _cookieContainer = new();
-    private ILogger _logger = NullLogger.Instance;
 
     // ReSharper disable once MemberCanBeProtected.Global
     public bool UseCookie { get; set; } = true;
@@ -89,9 +88,9 @@ public abstract class AbstractHttpService : IHttpService
     [AllowNull]
     public ILogger Logger
     {
-        get => _logger;
-        set => _logger = value ?? NullLogger.Instance;
-    }
+        get;
+        set => field = value ?? NullLogger.Instance;
+    } = NullLogger.Instance;
 
     protected void SaveCookies(Uri responseUri, string cookieStr)
     {

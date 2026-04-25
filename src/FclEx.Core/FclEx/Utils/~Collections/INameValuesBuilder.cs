@@ -6,7 +6,12 @@ namespace FclEx.Utils;
 
 public interface INameValuesBuilder
 {
-    NameValuesBuilderOptions Options { get; }
+    NameValuesBuilderOptions Options
+#if NET6_0_OR_GREATER
+    => NameValuesBuilderOptions.Default;
+#else
+    { get; }
+#endif
 
     List<KeyValuePair<string, string>> Build()
 #if NET6_0_OR_GREATER

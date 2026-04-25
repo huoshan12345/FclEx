@@ -256,4 +256,10 @@ partial class OperationResultExtensions
     {
         return task.ThenIf(condition, next, _ => Operation.Success(Unit.Default));
     }
+    
+    public static IAction<T[]> ToAction<T>(this IEnumerable<Task<OperationResult<T>>> tasks, bool parallel)
+    {
+        var actions = tasks.Select(m => Operation.Action(t => m));
+        return actions.Merge(parallel);
+    }
 }

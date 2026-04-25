@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.Transactions;
+﻿using System.Transactions;
 
 namespace FclEx.Dapper;
 
@@ -25,7 +24,14 @@ public static class DapperHelper
 
     internal class AssemblyLocker
     {
-        public object LockObj { get; } = new();
+        public
+#if NET9_0_OR_GREATER
+            Lock
+#else
+            object 
+#endif
+            LockObj { get; } = new();
+
         public bool Initialized { get; set; } = false;
     }
     internal static readonly ConcurrentDictionary<Assembly, AssemblyLocker> Lockers = new();
@@ -63,7 +69,7 @@ public static class DapperHelper
 
             if (assembly.GetName().Name?.StartsWith("Microsoft.TestPlatform.") == true)
             { 
-                // Skip test platform assemblies to avoid the error "Could not load type 'System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute' from assembly 'Microsoft.TestPlatform.CoreUtilities".
+                // Skip test platform assemblies to avoid the error "Could not load type 'System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute' from assembly 'Microsoft.TestPlatform.CoreUtilities'".
                 locker.Initialized = true;
                 return;
             }

@@ -1,7 +1,7 @@
 ﻿namespace FclEx.Utils;
 
 /// <summary>
-/// Specifies conditions for omitting an uri parameter during serialization or processing.
+/// Specifies conditions for omitting a uri parameter during serialization or processing.
 /// </summary>
 [Flags]
 public enum NameValueOmitOption

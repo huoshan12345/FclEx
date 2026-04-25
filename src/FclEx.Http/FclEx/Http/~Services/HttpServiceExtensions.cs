@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Http;
 
-public static class IHttpServiceExtensions
+public static class HttpServiceExtensions
 {
     public static Task<HttpResponse> GetAsync(this IHttpService http, string url, string? charSet = null, int? timeoutMilliseconds = 10 * 1000)
     {
@@ -105,4 +105,31 @@ public static class IHttpServiceExtensions
 
     public static Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, string url, HttpMethod? method = null, TimeSpan? timeout = null)
         => http.DownloadAsync(new Uri(url), method, timeout);
+
+    public static IEnumerable<Task<OperationResult<HttpFileDownloadInfo>>> BatchDownloadAsync(this IHttpService httpService, IEnumerable<string> uris, BatchDownloadOptions? options = null)
+    {
+        return httpService.BatchDownloadAsync(uris.Select(m => new Uri(m, UriKind.RelativeOrAbsolute)), options);
+    }
+
+    public static IEnumerable<Task<OperationResult<HttpFileDownloadInfo>>> BatchDownloadAsync(this IHttpService httpService, IEnumerable<Uri> uris, BatchDownloadOptions? options = null)
+    {
+        return uris.Select(uri =>
+        {
+            if (uri.IsAbsoluteUri == false && options?.BaseAddress is { } baseAddress)
+            {
+                uri = baseAddress.Resolve(uri);
+            }
+            return httpService.DownloadAsync(new DownloadOptions
+            {
+                Uri = uri,
+                Method = options?.Method ?? HttpMethod.Get,
+                Content = options?.Content,
+                ConnectTimeout = options?.ConnectTimeout,
+                ReadBufferTimeout = options?.ReadBufferTimeout,
+                CancellationToken = options?.CancellationToken ?? default,
+                FileBaseName = null,
+                FileExtension = null,
+            });
+        });
+    }
 }
