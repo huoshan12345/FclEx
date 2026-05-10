@@ -110,7 +110,7 @@ jobs:
         uses: huoshan12345/update-tag@v1
         with:
           tag_name: ${{ env.VERSION }}
-          update_if_exists: false
+          update_if_exists: true
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
 
