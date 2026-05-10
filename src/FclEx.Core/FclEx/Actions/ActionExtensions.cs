@@ -241,4 +241,10 @@ public static partial class ActionExtensions
         return result;
     }
 
+    public static IAction<T[]> Merge<T>(this IEnumerable<IAction<T>> actions, bool parallel)
+    {
+        return parallel
+            ? ParallelAction.Create(actions)
+            : SeriesAction.Create(actions);
+    }
 }
