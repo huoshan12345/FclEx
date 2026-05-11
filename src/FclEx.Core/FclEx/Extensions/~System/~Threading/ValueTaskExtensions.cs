@@ -21,4 +21,13 @@ public static class ValueTaskExtensions
     {
         return task.ConfigureAwait(false);
     }
+
+    extension(ValueTask)
+    {
+#if NETSTANDARD
+        public static ValueTask CompletedTask => default;
+
+        public static ValueTask<TResult> FromResult<TResult>(TResult result) => new(result);
+#endif
+    }
 }

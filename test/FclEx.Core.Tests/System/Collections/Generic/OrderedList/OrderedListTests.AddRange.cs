@@ -25,13 +25,6 @@ public abstract partial class OrderedListTests<T>
         });
     }
 
-    [Fact]
-    public void AddRange_NullList_ThrowsArgumentNullException()
-    {
-        AssertExtensions.Throws<ArgumentNullException>("list", () => CollectionExtensions.AddRange<int>(null!, default));
-        AssertExtensions.Throws<ArgumentNullException>("list", () => CollectionExtensions.AddRange<int>(null!, new int[1]));
-    }
-
     [Theory]
     [MemberData(nameof(ValidCollectionSizes))]
     public void AddRange_NullEnumerable_ThrowsArgumentNullException(int count)

@@ -1,6 +1,7 @@
-﻿namespace FclEx.Extensions.Reflection.InterfaceBaseInvocationExtension;
+﻿#if NET6_0_OR_GREATER
+namespace FclEx.Extensions.Reflection.InterfaceBaseInvocationExtension;
 
-public class InvokeReabstractmMethodInClassTests
+public class InvokeReabstractMethodInClassTests
 {
     public interface I0
     {
@@ -35,3 +36,4 @@ public class InvokeReabstractmMethodInClassTests
         Assert.Equal(2, ((I2)c).Count());
     }
 }
+#endif

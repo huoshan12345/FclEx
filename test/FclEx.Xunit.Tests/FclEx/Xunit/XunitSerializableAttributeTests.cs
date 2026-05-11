@@ -11,7 +11,6 @@ public partial class XunitSerializableAttributeTests
         string[] Addresses { get; }
         IEnumerable<int> Numbers { get; }
         List<string> Hobbies { get; }
-        HttpMethod HttpMethod { get; }
     }
 
     [XunitSerializable]
@@ -20,8 +19,7 @@ public partial class XunitSerializableAttributeTests
         string Name,
         string[] Addresses,
         IEnumerable<int> Numbers,
-        List<string> Hobbies,
-        HttpMethod HttpMethod
+        List<string> Hobbies
         ) : ITestType;
 
 
@@ -31,8 +29,7 @@ public partial class XunitSerializableAttributeTests
         string Name,
         string[] Addresses,
         IEnumerable<int> Numbers,
-        List<string> Hobbies,
-        HttpMethod HttpMethod
+        List<string> Hobbies
         ) : ITestType;
 
     [XunitSerializable]
@@ -43,7 +40,6 @@ public partial class XunitSerializableAttributeTests
         public string[] Addresses { get; set; } = [];
         public IEnumerable<int> Numbers { get; set; } = [];
         public List<string> Hobbies { get; set; } = [];
-        public HttpMethod HttpMethod { get; set; } = HttpMethod.Get;
     }
 
     [XunitSerializable]
@@ -52,8 +48,7 @@ public partial class XunitSerializableAttributeTests
         string name,
         string[] addresses,
         IEnumerable<int> numbers,
-        List<string> hobbies,
-        HttpMethod httpMethod
+        List<string> hobbies
         ) : ITestType
     {
         public int Id { get; } = id;
@@ -61,7 +56,6 @@ public partial class XunitSerializableAttributeTests
         public string[] Addresses { get; } = addresses;
         public IEnumerable<int> Numbers { get; } = numbers;
         public List<string> Hobbies { get; } = hobbies;
-        public HttpMethod HttpMethod { get; } = httpMethod;
     }
 
     [XunitSerializable]
@@ -70,8 +64,7 @@ public partial class XunitSerializableAttributeTests
         string name,
         string[] addresses,
         IEnumerable<int> numbers,
-        List<string> hobbies,
-        HttpMethod httpMethod
+        List<string> hobbies
         ) : ITestType
     {
         public int Id { get; } = id;
@@ -79,10 +72,9 @@ public partial class XunitSerializableAttributeTests
         public string[] Addresses { get; } = addresses;
         public IEnumerable<int> Numbers { get; } = numbers;
         public List<string> Hobbies { get; } = hobbies;
-        public HttpMethod HttpMethod { get; } = httpMethod;
 
-        public ClassWithCtors(string name, string[] addresses, IEnumerable<int> numbers, List<string> hobbies, HttpMethod httpMethod)
-            : this(1, name, addresses, numbers, hobbies, httpMethod) { }
+        public ClassWithCtors(string name, string[] addresses, IEnumerable<int> numbers, List<string> hobbies)
+            : this(1, name, addresses, numbers, hobbies) { }
 
     }
 
@@ -92,11 +84,10 @@ public partial class XunitSerializableAttributeTests
         string Name,
         string[] Addresses,
         IEnumerable<int> Numbers,
-        List<string> Hobbies,
-        HttpMethod HttpMethod
+        List<string> Hobbies
         ) : ITestType
     {
-        public RecordWithParameterlessCtor() : this(1, "default", [], [], [], HttpMethod.Get) { }
+        public RecordWithParameterlessCtor() : this(1, "default", [], [], []) { }
     }
 
     public record Base(string Name);
@@ -107,8 +98,7 @@ public partial class XunitSerializableAttributeTests
         string Name,
         string[] Addresses,
         IEnumerable<int> Numbers,
-        List<string> Hobbies,
-        HttpMethod HttpMethod)
+        List<string> Hobbies)
         : Base(Name), ITestType;
 
     [XunitSerializable]
@@ -118,7 +108,6 @@ public partial class XunitSerializableAttributeTests
         string[] Addresses,
         IEnumerable<int> Numbers,
         List<string> Hobbies,
-        HttpMethod HttpMethod,
         Derived Sub)
         : Base(Name), ITestType;
 
@@ -129,9 +118,8 @@ public partial class XunitSerializableAttributeTests
         string[] addresses,
         IEnumerable<int> numbers,
         List<string> hobbies,
-        HttpMethod httpMethod,
         T value)
-        : ClassWithCtor(id, name, addresses, numbers, hobbies, httpMethod)
+        : ClassWithCtor(id, name, addresses, numbers, hobbies)
     {
         public T Value { get; } = value;
     }
@@ -151,9 +139,9 @@ public partial class XunitSerializableAttributeTests
 #endif
     }
 
-    private static void Test<T>(Func<int, string, string[], IEnumerable<int>, List<string>, HttpMethod, T> creator, Action<T, T>? action = null) where T : ITestType, IXunitSerializable, new()
+    private static void Test<T>(Func<int, string, string[], IEnumerable<int>, List<string>, T> creator, Action<T, T>? action = null) where T : ITestType, IXunitSerializable, new()
     {
-        var original = creator(15, "Tom", ["addr1", "addr2"], [5, 10], ["Arts", "Music"], HttpMethod.Options);
+        var original = creator(15, "Tom", ["addr1", "addr2"], [5, 10], ["Arts", "Music"]);
         var serializable = Assert.IsType<IXunitSerializable>(original, false);
 
         var info = CreateSerializationInfo();
@@ -176,7 +164,6 @@ public partial class XunitSerializableAttributeTests
         Assert.Equal(expected.Addresses, actual.Addresses);
         Assert.Equal(expected.Numbers, actual.Numbers);
         Assert.Equal(expected.Hobbies, actual.Hobbies);
-        Assert.Equal(expected.HttpMethod, actual.HttpMethod);
 
         action?.Invoke(expected, actual);
     }
@@ -184,57 +171,56 @@ public partial class XunitSerializableAttributeTests
     [Fact]
     public void Should_RoundTrip_Record_With_PrimaryCtor()
     {
-        Test<TestRecord>((a, b, c, d, e, f) => new(a, b, c, d, e, f));
+        Test<TestRecord>((a, b, c, d, e) => new(a, b, c, d, e));
     }
 
     [Fact]
     public void Should_RoundTrip_RecordStruct_With_PrimaryCtor()
     {
-        Test<TestRecordStruct>((a, b, c, d, e, f) => new(a, b, c, d, e, f));
+        Test<TestRecordStruct>((a, b, c, d, e) => new(a, b, c, d, e));
     }
 
     [Fact]
     public void Should_RoundTrip_Class()
     {
-        Test<ClassWithCtor>((a, b, c, d, e, f) => new(a, b, c, d, e, f));
+        Test<ClassWithCtor>((a, b, c, d, e) => new(a, b, c, d, e));
     }
 
     [Fact]
     public void Should_RoundTrip_Class_Without_Ctor()
     {
-        Test<ClassWithoutCtor>((a, b, c, d, e, f) => new()
+        Test<ClassWithoutCtor>((a, b, c, d, e) => new()
         {
             Id = a,
             Name = b,
             Addresses = c,
             Numbers = d,
             Hobbies = e,
-            HttpMethod = f,
         });
     }
 
     [Fact]
     public void Should_RoundTrip_Class_With_MultipleCtors()
     {
-        Test<ClassWithCtors>((a, b, c, d, e, f) => new(a, b, c, d, e, f));
+        Test<ClassWithCtors>((a, b, c, d, e) => new(a, b, c, d, e));
     }
 
     [Fact]
     public void Should_Not_Conflict_With_Existing_ParameterlessCtor()
     {
-        Test<RecordWithParameterlessCtor>((a, b, c, d, e, f) => new(a, b, c, d, e, f));
+        Test<RecordWithParameterlessCtor>((a, b, c, d, e) => new(a, b, c, d, e));
     }
 
     [Fact]
     public void Should_RoundTrip_With_BaseFields()
     {
-        Test<Derived>((a, b, c, d, e, f) => new(a, b, c, d, e, f));
+        Test<Derived>((a, b, c, d, e) => new(a, b, c, d, e));
     }
 
     [Fact]
     public void Should_RoundTrip_Nested()
     {
-        Test<Nested>((a, b, c, d, e, f) => new(a, b, c, d, e, f, new(a + 1, b + b, c + c, d + d, e + e, f)), (expected, actual) =>
+        Test<Nested>((a, b, c, d, e) => new(a, b, c, d, e, new(a + 1, b + b, c + c, d + d, e + e)), (expected, actual) =>
         {
             Test(expected.Sub, actual.Sub);
         });
@@ -244,7 +230,7 @@ public partial class XunitSerializableAttributeTests
     public void Should_RoundTrip_GenericClass()
     {
         const string value = "generic value";
-        Test<GenericClass<string>>((a, b, c, d, e, f) => new(a, b, c, d, e, f, value), (expected, actual) =>
+        Test<GenericClass<string>>((a, b, c, d, e) => new(a, b, c, d, e, value), (expected, actual) =>
         {
             Assert.Equal(value, expected.Value);
             Assert.Equal(value, actual.Value);

@@ -16,9 +16,11 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
   </ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 5.0))">
+    <PackageReference Include="System.IO.Compression" />
+  </ItemGroup>
   <ItemGroup>
     <Content Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
-
     <None Include="xunit.runner.debug.json" Condition="'$(Configuration)' == 'Debug'">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>xunit.runner.json</TargetPath>
@@ -28,5 +30,4 @@
       <TargetPath>xunit.runner.json</TargetPath>
     </None>
   </ItemGroup>
-
 </Project>

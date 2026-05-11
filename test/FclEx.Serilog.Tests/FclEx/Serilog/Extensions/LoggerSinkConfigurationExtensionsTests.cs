@@ -15,7 +15,12 @@ public class LoggerSinkConfigurationExtensionsTests
             logger.Information(i + "_" + Random.Shared.NextString(40));
         }
 
+#if NET6_0_OR_GREATER
         await logger.DisposeAsync();
         await Log.CloseAndFlushAsync();
+#else
+        logger.Dispose();
+        Log.CloseAndFlush();
+#endif
     }
 }

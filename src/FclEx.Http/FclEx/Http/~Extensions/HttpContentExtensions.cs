@@ -2,13 +2,24 @@
 
 public static class HttpContentExtensions
 {
+    public const int DefaultBufferSize = 256 * 1024;
+
 #if NETSTANDARD2_0
-    // ReSharper disable once UnusedParameter.Global
-#pragma warning disable IDE0060 // Remove unused parameter
-    public static Task<Stream> ReadAsStreamAsync(this HttpContent content, CancellationToken token)
-#pragma warning restore IDE0060 // Remove unused parameter
+    public static async Task<Stream> ReadAsStreamAsync(this HttpContent content, CancellationToken token)
     {
-        return content.ReadAsStreamAsync();
+        return await content.ReadAsStreamAsync(DefaultBufferSize, null, token);
+    }
+
+    public static async Task<string> ReadAsStringAsync(this HttpContent content, CancellationToken token)
+    {
+        using var stream = await content.ReadAsStreamAsync(DefaultBufferSize, null, token);
+        using var sr = new StreamReader(stream, true);
+        return await sr.ReadToEndAsync();
+    }
+
+    public static Task<byte[]> ReadAsByteArrayAsync(this HttpContent content, CancellationToken token)
+    {
+        return content.ReadAsByteArrayAsync(DefaultBufferSize, null, token);
     }
 #endif
 
@@ -36,11 +47,11 @@ public static class HttpContentExtensions
         return ms.ToArray();
     }
 
-    public static BufferedContent ToBuffered(this HttpContent content, TimeSpan? timeout = null, int bufferSize = 256 * 1024, CancellationToken token = default)
+    public static BufferedContent ToBuffered(this HttpContent content, TimeSpan? timeout = null, int bufferSize = DefaultBufferSize, CancellationToken token = default)
         => new(content, timeout, bufferSize, token);
 
     public static GZipContent ToGZip(this HttpContent content, CompressionLevel compressionLevel = CompressionLevel.Optimal,
-        TimeSpan? timeout = null, int bufferSize = 256 * 1024, CancellationToken token = default)
+        TimeSpan? timeout = null, int bufferSize = DefaultBufferSize, CancellationToken token = default)
         => new(content, compressionLevel, timeout, bufferSize, token);
 
 #if NET6_0_OR_GREATER
@@ -50,11 +61,11 @@ public static class HttpContentExtensions
 #endif
 
     public static DeflateContent ToDeflate(this HttpContent content, CompressionLevel compressionLevel = CompressionLevel.Optimal,
-        TimeSpan? timeout = null, int bufferSize = 256 * 1024, CancellationToken token = default)
+        TimeSpan? timeout = null, int bufferSize = DefaultBufferSize, CancellationToken token = default)
         => new(content, compressionLevel, timeout, bufferSize, token);
 
     public static HttpContent ToCompressed(this HttpContent content, CompressionMethod compressionMethod, CompressionLevel compressionLevel = CompressionLevel.Optimal,
-        TimeSpan? timeout = null, int bufferSize = 256 * 1024, CancellationToken token = default)
+        TimeSpan? timeout = null, int bufferSize = DefaultBufferSize, CancellationToken token = default)
     {
         return compressionMethod switch
         {

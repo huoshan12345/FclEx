@@ -79,8 +79,7 @@ public class SendAsyncTests : HttpServerTests
         Assert.False(response.IsError);
         var body = response.ResponseString;
         Assert.NotNull(body);
-        var actual = HttpUtility.ParseQueryString(body)
-            .Enumerate()
+        var actual = UriParams.Parse(body)
             .ToDictionary(m => m.Key, m => m.Value);
         Assert.Equal(expected, actual);
     }

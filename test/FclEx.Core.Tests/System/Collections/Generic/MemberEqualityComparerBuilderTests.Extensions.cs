@@ -191,7 +191,7 @@ partial class MemberEqualityComparerBuilderTests
             .Add(nameof(Person.Id))
             .Build();
 
-        Assert.True(cmp.Equals(null, null));
+        Assert.True(cmp.Equals(null!, null!));
     }
 
     [Fact]
@@ -204,6 +204,6 @@ partial class MemberEqualityComparerBuilderTests
 
         var a = new Person { Id = 1 };
 
-        Assert.False(cmp.Equals(a, null));
+        Assert.False(cmp.Equals(a, null!));
     }
 }

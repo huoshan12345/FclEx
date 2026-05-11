@@ -112,7 +112,7 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
         return provider.GetRequiredService<IHttpClientFactory>();
     }
 
-    private static void CheckProxy(HttpMessageInvoker client, IWebProxy? proxy)
+    private static void CheckProxy(HttpClient client, IWebProxy? proxy)
     {
         var handler = client.GetHandler()
             .EnumerateInner()
