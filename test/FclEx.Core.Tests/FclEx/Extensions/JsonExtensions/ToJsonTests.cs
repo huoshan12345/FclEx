@@ -26,7 +26,7 @@ public class ToJsonTests
     [Fact]
     public void DateTimeToJsonCamel_Test()
     {
-        foreach (var kind in EnumHelper.GetValues<DateTimeKind>())
+        foreach (var kind in Enum.GetValues<DateTimeKind>())
         {
             var obj = new DateTimeTestModel { DateTime = new DateTime(2019, 1, 2, 3, 4, 5, kind) };
             var json = obj.ToJson(new JsonOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });

@@ -1,7 +1,4 @@
 ﻿using FclEx.Tests;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.IdentityModel.Tokens;
 using static Duende.IdentityModel.OidcConstants;
 
 namespace FclEx.Http.Tests;
@@ -80,6 +77,7 @@ public class HttpServerFixture : GlobalFixture
     public const string TokenPath = "/oauth/openid-connect/token";
     public const string RequiredScope = "test-scope";
 
+#if NET8_0_OR_GREATER
     private static async Task RunApiServer()
     {
         var builder = WebApplication.CreateBuilder();
@@ -111,14 +109,13 @@ public class HttpServerFixture : GlobalFixture
                 .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
                 .AddRequirements(ScopeRequirement.Instance));
 
-#if NET7_0_OR_GREATER
         // Should use ZlibSteam to handle deflate decompression, which has been done since aspnet core 8.
         // https://github.com/dotnet/runtime/issues/38022
         Action<RequestDecompressionOptions> action = Environment.Version.Major == 7
             ? m => m.DecompressionProviders["deflate"] = new ZLibDecompressionProvider()
             : m => { };
         builder.Services.AddRequestDecompression(action);
-#endif
+
         var app = builder.Build();
 
         app.UseExceptionHandler(m => m.Run(async context =>
@@ -131,9 +128,8 @@ public class HttpServerFixture : GlobalFixture
         }));
 
         app.UseMiddleware<EnableBufferingMiddleware>();
-#if NET7_0_OR_GREATER
         app.UseRequestDecompression();
-#endif
+
         app.MapGet("/api/sleep", async (double seconds) =>
         {
             await TaskHelper.Delay(TimeSpan.FromSeconds(seconds));
@@ -209,8 +205,9 @@ public class HttpServerFixture : GlobalFixture
 
         await app.StartAsync();
     }
-
-
+#else
+    private static Task RunApiServer() => Task.CompletedTask;
+#endif
     public override async ValueTask InitializeAsync()
     {
         await RunApiServer();
