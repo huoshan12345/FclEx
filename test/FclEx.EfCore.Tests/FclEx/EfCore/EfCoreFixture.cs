@@ -1,4 +1,5 @@
-﻿using FclEx.Tests;
+﻿using System.Runtime.InteropServices;
+using FclEx.Tests;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 
@@ -25,24 +26,37 @@ public class EfCoreFixture : GlobalFixture
 
     public static DatabaseConfig Postgres { get; } = Config.GetSection("Postgres").Get<DatabaseConfig>()!;
 
-    public static readonly DbProviderType[] DatabaseTypes = TestHelper.IsGithubAction
-        ? [
+    public static readonly DbProviderType[] DatabaseTypes = GetDatabaseTypes();
+
+    private static DbProviderType[] GetDatabaseTypes()
+    {
+        if (TestHelper.IsGithubAction == false)
+        {
+            return
+            [
+#if !DISABLE_NPGSQL
+                DbProviderType.Npgsql,
+#endif
+#if !DISABLE_MYSQL
+                DbProviderType.MySql,
+                DbProviderType.MySqlConnector,
+#endif
+                DbProviderType.Sqlite,
+                DbProviderType.SqlServer,
+            ];
+        }
+
+        if (TestHelper.IsWindows)
+            return [DbProviderType.Sqlite];
+
+        return
+        [
 #if !DISABLE_NPGSQL
             DbProviderType.Npgsql,
 #endif
             DbProviderType.Sqlite,
-        ]
-        : [
-#if !DISABLE_NPGSQL
-            DbProviderType.Npgsql, 
-#endif
-#if !DISABLE_MYSQL
-            DbProviderType.MySql,
-            DbProviderType.MySqlConnector,
-#endif
-            DbProviderType.Sqlite,
-            DbProviderType.SqlServer,
         ];
+    }
 
     public GlobalDbContext CreateDbContext(DbProviderType dbProviderType, string? schema = null, bool isUser = false)
     {
