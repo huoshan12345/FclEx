@@ -23,6 +23,9 @@ public class PublisherTests : RabbitMQTests
     [Fact]
     public async Task Publish_Test()
     {
+        if (Skip)
+            return;
+
         await using var publisher = await CreatePublisher();
         await publisher.PublishAsync("test", "test");
     }
@@ -30,6 +33,9 @@ public class PublisherTests : RabbitMQTests
     [Fact]
     public async Task Publish_Serially_Test()
     {
+        if (Skip)
+            return;
+
         await using var publisher = await CreatePublisher();
         for (var i = 0; i < 10; i++)
         {
@@ -40,6 +46,9 @@ public class PublisherTests : RabbitMQTests
     [Fact]
     public async Task Publish_List_Test()
     {
+        if (Skip)
+            return;
+
         await using var publisher = await CreatePublisher();
         await publisher.PublishAsync<string>(Enumerable.Range(1, 10).Select(m => "test"), "test");
     }
@@ -47,6 +56,9 @@ public class PublisherTests : RabbitMQTests
     [Fact]
     public async Task Publish_Multi_Test()
     {
+        if (Skip)
+            return;
+
         await using var publisher1 = await CreatePublisher();
         await using var publisher2 = await CreatePublisher();
         await publisher1.PublishAsync("test", "test");

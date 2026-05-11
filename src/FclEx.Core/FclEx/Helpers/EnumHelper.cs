@@ -8,16 +8,7 @@ public static class EnumHelper
 
     public static EnumInfo[] GetInfos<T>() where T : struct, Enum
     {
-        return _infos.GetOrAdd(typeof(T), m => GetValues<T>().Select(x => x.Info()).ToArray());
-    }
-
-    public static T[] GetValues<T>() where T : struct, Enum
-    {
-#if NET5_0_OR_GREATER
-        return Enum.GetValues<T>();
-#else
-        return (T[])Enum.GetValues(typeof(T));
-#endif
+        return _infos.GetOrAdd(typeof(T), m => Enum.GetValues<T>().Select(x => x.Info()).ToArray());
     }
 
     public static bool TryParse<TEnum>([NotNullWhen(true)] string? value, bool ignoreCase, bool fromNumeric, out TEnum result) where TEnum : struct, Enum

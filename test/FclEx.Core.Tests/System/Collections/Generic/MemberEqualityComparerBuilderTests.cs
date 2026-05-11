@@ -68,7 +68,7 @@ public partial class MemberEqualityComparerBuilderTests
             .Add(x => x.Id)
             .Build();
 
-        Assert.True(cmp.Equals(null, null));
+        Assert.True(cmp.Equals(null!, null!));
     }
 
     [Fact]
@@ -81,7 +81,7 @@ public partial class MemberEqualityComparerBuilderTests
 
         var a = new Person { Id = 1 };
 
-        Assert.False(cmp.Equals(a, null));
+        Assert.False(cmp.Equals(a, null!));
     }
 
     [Fact]
@@ -141,7 +141,7 @@ public partial class MemberEqualityComparerBuilderTests
 
         var set = new HashSet<Person>(cmp)
         {
-            new Person { Id = 1 }
+            new (){ Id = 1 }
         };
 
         Assert.Contains(new Person { Id = 1 }, set);

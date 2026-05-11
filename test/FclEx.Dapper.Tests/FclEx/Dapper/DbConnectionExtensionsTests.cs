@@ -58,7 +58,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task InsertAsync_EntityWithGuidKey_Test(DbProviderType dbProviderType, string schema)
+    public async Task InsertAsync_EntityWithGuidKey_Test(DbProviderType dbProviderType, string? schema)
     {
         await using var db = Fixture.CreateDbContext(dbProviderType, schema);
 
@@ -143,7 +143,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task GetAsync_EntityWithGuidKey_Test(DbProviderType dbProviderType, string schema)
+    public async Task GetAsync_EntityWithGuidKey_Test(DbProviderType dbProviderType, string? schema)
     {
         await using var db = Fixture.CreateDbContext(dbProviderType, schema);
 
@@ -162,7 +162,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task GetAsync_EntityWithoutKey_RaiseException(DbProviderType dbProviderType, string schema)
+    public async Task GetAsync_EntityWithoutKey_RaiseException(DbProviderType dbProviderType, string? schema)
     {
         await using var db = Fixture.CreateDbContext(dbProviderType, schema);
 
@@ -173,7 +173,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task DeleteAsync_EntityWithGuidKey_Test(DbProviderType dbProviderType, string schema)
+    public async Task DeleteAsync_EntityWithGuidKey_Test(DbProviderType dbProviderType, string? schema)
     {
         await using var db = Fixture.CreateDbContext(dbProviderType, schema);
 
@@ -196,7 +196,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task DeleteAsync_EntityWithoutKey_RaiseException(DbProviderType dbProviderType, string schema)
+    public async Task DeleteAsync_EntityWithoutKey_RaiseException(DbProviderType dbProviderType, string? schema)
     {
         await using var db = Fixture.CreateDbContext(dbProviderType, schema);
 
@@ -207,7 +207,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task DoTransactionAsync_Test(DbProviderType dbProviderType, string schema)
+    public async Task DoTransactionAsync_Test(DbProviderType dbProviderType, string? schema)
     {
         await using var db = Fixture.CreateDbContext(dbProviderType, schema);
 
@@ -240,7 +240,7 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task DoTransactionAsync_Rollback_Test(DbProviderType dbProviderType, string schema)
+    public async Task DoTransactionAsync_Rollback_Test(DbProviderType dbProviderType, string? schema)
     {
         await using var db = Fixture.CreateDbContext(dbProviderType, schema);
         await db.EntityWithGuidKey.ExecuteDeleteAsync();

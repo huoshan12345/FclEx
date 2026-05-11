@@ -77,14 +77,16 @@ public class PropertyTests : HttpServerTests
         Assert.Equal(value, response.ResponseString.Contains(keyword));
     }
 
-    public static readonly TheoryData<CompressionMethod> CompressionMethods = EnumHelper.GetValues<CompressionMethod>().ToTheoryData();
+    public static readonly TheoryData<CompressionMethod> CompressionMethods = Enum.GetValues<CompressionMethod>().ToTheoryData();
 
     [RetryTheory]
     [MemberData(nameof(CompressionMethods))]
     public async Task Compress_Test(CompressionMethod compression)
     {
+#if NET6_0_OR_GREATER
         if (compression == CompressionMethod.Brotli) // the website does not support
             return;
+#endif
 
         var random = new Random();
         var model = new MockApiModel
@@ -138,7 +140,9 @@ public class PropertyTests : HttpServerTests
             CompressionMethod.None => (null, 1293),
             CompressionMethod.GZip => ("gzip", 666),
             CompressionMethod.Deflate => ("deflate", 891),
+#if NET6_0_OR_GREATER
             CompressionMethod.Brotli => ("br", 891),
+#endif
             _ => throw new ArgumentOutOfRangeException(nameof(compression), compression, null)
         };
 

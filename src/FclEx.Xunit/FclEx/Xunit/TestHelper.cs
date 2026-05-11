@@ -64,6 +64,8 @@ public static class TestHelper
     /// on whether the code is being run as part of a GitHub Action workflow.
     /// </remarks>
     public static readonly bool IsGithubAction = Environment.GetEnvironmentVariable(GithubActionEnvKey).IsNullOrEmpty() == false;
+    public static readonly bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+    public static readonly bool IsLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
     public static readonly Assembly[] Assemblies = AppDomain.CurrentDomain.GetAssemblies();
     public static readonly string AssemblyFullName = typeof(TestHelper).Assembly.GetName().FullName;
 

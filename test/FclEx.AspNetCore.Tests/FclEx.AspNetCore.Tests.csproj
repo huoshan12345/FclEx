@@ -1,4 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\FclEx.AspNetCore\FclEx.AspNetCore.csproj" />
     <ProjectReference Include="..\FclEx.Core.Tests\FclEx.Core.Tests.csproj" />

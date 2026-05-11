@@ -117,6 +117,7 @@ public class CheckTests
         }
     }
 
+#if NET5_0_OR_GREATER
     [Fact]
     public void NotEmpty_IReadOnlySet()
     {
@@ -130,4 +131,5 @@ public class CheckTests
             Check.NotEmpty(col);
         }
     }
+#endif
 }

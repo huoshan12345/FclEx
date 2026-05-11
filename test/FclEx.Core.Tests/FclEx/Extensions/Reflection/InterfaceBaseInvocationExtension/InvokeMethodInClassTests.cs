@@ -1,4 +1,5 @@
-﻿namespace FclEx.Extensions.Reflection.InterfaceBaseInvocationExtension;
+﻿#if NET6_0_OR_GREATER
+namespace FclEx.Extensions.Reflection.InterfaceBaseInvocationExtension;
 
 public class InvokeMethodInClassTests
 {
@@ -74,3 +75,4 @@ public class InvokeMethodInClassTests
             c.BaseByDynamicMethod<I1, int>(m => Operation.Execute(() => m.Compute(0)).Unwrap()));
     }
 }
+#endif

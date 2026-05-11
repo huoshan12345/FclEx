@@ -1,10 +1,8 @@
-﻿using FclEx.Helpers;
-
-namespace FclEx.Logging.Extensions;
+﻿namespace FclEx.Logging.Extensions;
 
 public class LoggerFactoryExtensionsTests
 {
-    public static readonly TheoryData<LogLevel> LogLevelCases = EnumHelper.GetValues<LogLevel>().ToTheoryData();
+    public static readonly TheoryData<LogLevel> LogLevelCases = Enum.GetValues<LogLevel>().ToTheoryData();
 
     [Theory]
     [MemberData(nameof(LogLevelCases))]

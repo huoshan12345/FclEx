@@ -1,4 +1,5 @@
-﻿namespace FclEx.Utils;
+﻿#if NET6_0_OR_GREATER
+namespace FclEx.Utils;
 
 public class NameIdentifierTests
 {
@@ -109,3 +110,4 @@ public class NameIdentifierTests
         Assert.False(id1.Equals(id2));
     }
 }
+#endif

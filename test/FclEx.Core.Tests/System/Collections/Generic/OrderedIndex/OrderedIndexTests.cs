@@ -103,7 +103,7 @@ public abstract class OrderedIndexTests<TScore, TValue> : IGenericSharedAPI_Test
     public void Generic_ToArray(int count)
     {
         var orderedIndex = Factory(count);
-        Assert.True(ArrayExtensions.SequenceEqual(orderedIndex.ToArray(), orderedIndex.ToArray<(TScore, TValue)>()));
+        Assert.True(orderedIndex.ToArray().SequenceEqual(orderedIndex.ToArray<(TScore, TValue)>()));
     }
 
     #endregion

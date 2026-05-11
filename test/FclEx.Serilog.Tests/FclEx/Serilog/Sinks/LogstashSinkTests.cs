@@ -26,7 +26,11 @@ public class LogstashSinkTests
             logger.Error(new SimpleException("Error"), "test message: " + i);
         }
 
+#if NET6_0_OR_GREATER
         await Log.CloseAndFlushAsync();
+#else
+        Log.CloseAndFlush();
+#endif
         await Task.Delay(TimeSpan.FromSeconds(1));
     }
 }

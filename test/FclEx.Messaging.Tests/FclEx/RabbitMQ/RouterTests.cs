@@ -44,6 +44,9 @@ public class RouterTests(RabbitMQFixture fixture) : RabbitMQTests(fixture)
     [InlineData(false)]
     public async Task Route_Test(bool sameAsInputExchange)
     {
+        if (Skip)
+            return;
+
         var inputExchange = new ExchangeSettings
         {
             Name = Fixture.WithAssemblyInfo("test.router.input", '.'),
@@ -92,18 +95,18 @@ public class RouterTests(RabbitMQFixture fixture) : RabbitMQTests(fixture)
              semaphore.Release();
          });
 
-        var msgs = Enumerable.Range(1, 10).Select(m => m.ToString())
+        var messages = Enumerable.Range(1, 10).Select(m => m.ToString())
             .SelectMany(m => new[] { m, "str_" + m }).ToList();
 
-        await publisher.PublishAsync<string>(msgs, "input");
+        await publisher.PublishAsync<string>(messages, "input");
 
-        var evenMsgs = msgs.Where(m => GetRoutingKey(m).EndsWith("even")).ToSortedSet();
-        var strings = msgs.Where(m => !int.TryParse(m, out _)).ToSortedSet();
+        var evenMessages = messages.Where(m => GetRoutingKey(m).EndsWith("even")).ToSortedSet();
+        var strings = messages.Where(m => !int.TryParse(m, out _)).ToSortedSet();
 
-        var flag = await semaphore.WaitAsync(evenMsgs.Count + strings.Count, TimeSpan.FromSeconds(2));
+        var flag = await semaphore.WaitAsync(evenMessages.Count + strings.Count, TimeSpan.FromSeconds(2));
         Assert.True(flag);
 
-        Assert.Equal(evenMsgs, evenList);
+        Assert.Equal(evenMessages, evenList);
         Assert.Equal(strings, stringList);
     }
 }

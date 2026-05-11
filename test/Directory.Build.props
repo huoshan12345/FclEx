@@ -1,16 +1,22 @@
 <Project>
   <PropertyGroup>
+    <IsWindows Condition="'$(OS)' == 'Windows_NT'">true</IsWindows>
+    <TargetFrameworkVersion>$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <IsPackable>false</IsPackable>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <NoWarn>$(NoWarn);xUnit2013;xUnit1041;NU1901;NU1902;NU1903;NU1904;xUnit1051;AD0001;CS8500;NU1900</NoWarn>
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(IsWindows)' == 'true'">$(TargetFrameworks);net472;</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <TargetFrameworkVersion>$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
     <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
     <SuppressTfmSupportBuildErrors>true</SuppressTfmSupportBuildErrors>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <OutputType Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 5.0))">Exe</OutputType>
   </PropertyGroup>
 
   <PropertyGroup>

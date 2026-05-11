@@ -1,7 +1,10 @@
-﻿#if NET6_0_OR_GREATER
-namespace FclEx.Web;
+﻿namespace FclEx.Web;
 
-public abstract class UserClientAction<TClient, TAccount, T> : IUserClientAction<TClient, TAccount, T>
+public abstract class UserClientAction<TClient, TAccount, T> :
+#if !NET6_0_OR_GREATER
+    PipelineAction<T>,
+#endif
+    IUserClientAction<TClient, TAccount, T>
     where TClient : IUserClient<TAccount>
     where TAccount : IUserAccount
 {
@@ -12,10 +15,12 @@ public abstract class UserClientAction<TClient, TAccount, T> : IUserClientAction
     }
 
     public virtual IUserClientSession Session => Client.Session;
-    public virtual IUserAccount Account => Client.Account;
+    public virtual TAccount Account => Client.Account;
     public TClient Client { get; }
     public ILogger Logger { get; }
+#if NET6_0_OR_GREATER
     public abstract Task<OperationResult<T>> ExecuteActionAsync(CancellationToken token = default);
+#endif
 }
 
 public abstract class UserClientAction<TClient, T> : UserClientAction<TClient, IUserAccount, T>, IUserClientAction<TClient, T>
@@ -25,4 +30,3 @@ public abstract class UserClientAction<TClient, T> : UserClientAction<TClient, I
     {
     }
 }
-#endif

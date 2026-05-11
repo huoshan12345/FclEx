@@ -1,4 +1,5 @@
-﻿namespace FclEx.Extensions.Reflection.InterfaceBaseInvocationExtension;
+﻿#if NET6_0_OR_GREATER
+namespace FclEx.Extensions.Reflection.InterfaceBaseInvocationExtension;
 
 public class InvokePropertyInInterfaceTests
 {
@@ -72,3 +73,4 @@ public class InvokePropertyInInterfaceTests
         Assert.Equal(3, ((I2)c).Count);
     }
 }
+#endif

@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\src\FclEx.Http\FclEx.Http.csproj" />
-    <ProjectReference Include="..\..\src\FclEx.AspNetCore\FclEx.AspNetCore.csproj" />
     <ProjectReference Include="..\FclEx.Core.Tests\FclEx.Core.Tests.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), 8.0))">
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <ProjectReference Include="..\..\src\FclEx.AspNetCore\FclEx.AspNetCore.csproj" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\**\*.*" />

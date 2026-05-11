@@ -21,6 +21,9 @@ public class ConsumerTests : RabbitMQTests
     [Fact]
     public async Task Consume_Test()
     {
+        if (Skip)
+            return;
+
         var connection = RmqConnection;
         await using var publisher = await TestPublisher.CreateAsync(new PublisherSettings(connection, DefaultExchange));
 
@@ -95,6 +98,9 @@ public class ConsumerTests : RabbitMQTests
     [InlineData(0.3)]
     public async Task Consume_PushBack_String_Test(double delaySeconds)
     {
+        if (Skip)
+            return;
+
         await ConsumePushBackTest("test", TimeSpan.FromSeconds(delaySeconds));
     }
 
@@ -103,6 +109,9 @@ public class ConsumerTests : RabbitMQTests
     [InlineData(0.3)]
     public async Task Consume_PushBack_Int_Test(double delaySeconds)
     {
+        if (Skip)
+            return;
+
         await ConsumePushBackTest(10, TimeSpan.FromSeconds(delaySeconds));
     }
 
@@ -111,6 +120,9 @@ public class ConsumerTests : RabbitMQTests
     [InlineData(0.3)]
     public async Task Consume_PushBack_Class_Test(double delaySeconds)
     {
+        if (Skip)
+            return;
+
         await ConsumePushBackTest(new Person
         {
             Id = 10,
@@ -123,6 +135,9 @@ public class ConsumerTests : RabbitMQTests
     [Fact]
     public async Task Consume_MultiBind_Test()
     {
+        if (Skip)
+            return;
+
         var connection = RmqConnection;
         await using var publisher = await TestPublisher.CreateAsync(new PublisherSettings(connection, DefaultExchange));
 

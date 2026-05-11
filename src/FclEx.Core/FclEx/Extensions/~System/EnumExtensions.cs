@@ -90,7 +90,7 @@ public static class EnumExtensions
             _ => throw new InvalidCastException($"Cannot cast {typeof(TEnum).Name} to long")
         };
     }
-    
+
     public static bool IsValid<T>(this T value) where T : struct, Enum
     {
         var validValues = (T[])Enum.GetValues(typeof(T));
@@ -117,5 +117,15 @@ public static class EnumExtensions
         var enumInt = e.ToLong();
         var flagInt = flag.ToLong();
         return (enumInt & flagInt) == flagInt;
+    }
+
+    extension(Enum)
+    {
+#if NETSTANDARD2_0
+        public static T[] GetValues<T>() where T : struct, Enum
+        {
+            return (T[])Enum.GetValues(typeof(T));
+        }
+#endif
     }
 }

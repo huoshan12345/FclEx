@@ -1,28 +1,61 @@
-﻿#if NET6_0_OR_GREATER
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
-public interface IHttpAction<T> : IAbstractAction<T>
+public interface IHttpAction<T> : IPipelineAction<T>, IHttpResponseHandler<T>
 {
     IHttpService HttpService { get; }
     Uri Uri { get; }
     HttpMethod Method { get; }
-    bool EnsureSuccessStatusCode => true;
+    bool EnsureSuccessStatusCode
+#if NET6_0_OR_GREATER
+        => true;
+#else
+    { get; }
+#endif
 
-    async Task<OperationResult<T>> IAbstractAction<T>.ExecuteActionAsync(CancellationToken token)
+#if NET6_0_OR_GREATER
+    Task<OperationResult<T>> IPipelineAction<T>.ExecuteActionAsync(CancellationToken token)
+        => DefaultHttpAction.ExecuteActionAsync(this, token);
+#endif
+
+    HttpRequest BuildRequest()
+#if NET6_0_OR_GREATER
+        => DefaultHttpAction.BuildRequest(this);
+#else
+    ;
+#endif
+
+    void ModifyRequest(HttpRequest request)
+#if NET6_0_OR_GREATER
+        { }
+#else
+    ;
+#endif
+
+    Task<OperationResult<HttpResponse>> HandleResponseAsync(HttpResponse response)
+#if NET6_0_OR_GREATER
+        => DefaultHttpAction.HandleResponseAsync(this, response);
+#else
+    ;
+#endif
+}
+
+public static class DefaultHttpAction
+{
+    public static async Task<OperationResult<T>> ExecuteActionAsync<T>(IHttpAction<T> action, CancellationToken token)
     {
-        var logger = HttpService.Logger;
+        var logger = action.HttpService.Logger;
         HttpRequest? request = null;
         try
         {
-            request = BuildRequest();
-            var response = await HttpService.SendAsync(request, token);
+            request = action.BuildRequest();
+            var response = await action.HttpService.SendAsync(request, token);
             if (response.IsSuccess)
-                return await HandleResponseAsync(response)
-                    .Then(GetResultAsync);
+                return await action.HandleResponseAsync(response)
+                    .Then(action.GetResultAsync);
 
             if (logger.IsEnabled(LogLevel.Trace))
             {
-                var dump = request.Dump(HttpService);
+                var dump = request.Dump(action.HttpService);
                 logger.LogTrace(dump);
             }
 
@@ -32,28 +65,26 @@ public interface IHttpAction<T> : IAbstractAction<T>
         {
             if (logger.IsEnabled(LogLevel.Trace) && request is not null)
             {
-                var dump = request.Dump(HttpService);
+                var dump = request.Dump(action.HttpService);
                 logger.LogTrace(ex, dump);
             }
             return ex;
         }
     }
 
-    HttpRequest BuildRequest()
+    public static HttpRequest BuildRequest<T>(IHttpAction<T> action)
     {
-        var request = HttpRequest.Create(Uri, Method)
+        var request = HttpRequest.Create(action.Uri, action.Method)
             .EnsureSuccessStatusCode(false)
             .AcceptCompress();
-        ModifyRequest(request);
+        action.ModifyRequest(request);
         return request;
     }
 
-    void ModifyRequest(HttpRequest request) { }
-
-    Task<OperationResult<HttpResponse>> HandleResponseAsync(HttpResponse response)
+    public static Task<OperationResult<HttpResponse>> HandleResponseAsync<T>(IHttpAction<T> action, HttpResponse response)
     {
         // response.IsError is false here.
-        if (EnsureSuccessStatusCode || response.StatusCode.IsSuccess())
+        if (action.EnsureSuccessStatusCode || response.StatusCode.IsSuccess())
             return Operation.Success(response, response.Elapsed);
 
         var code = response.StatusCode;
@@ -61,9 +92,19 @@ public interface IHttpAction<T> : IAbstractAction<T>
                     + response.ResponseString.Truncate(256);
         return Operation.Error<HttpResponse>(error, response.Elapsed);
     }
-
-    Task<OperationResult<T>> GetResultAsync(HttpResponse response) => GetResult(response);
-
-    OperationResult<T> GetResult(HttpResponse response);
 }
-#endif
+
+public abstract class HttpAction<T> : PipelineAction<T>, IHttpAction<T>
+{
+    public abstract IHttpService HttpService { get; }
+    public abstract Uri Uri { get; }
+    public abstract HttpMethod Method { get; }
+    public virtual bool EnsureSuccessStatusCode => true;
+    public virtual HttpRequest BuildRequest() => DefaultHttpAction.BuildRequest(this);
+    public virtual void ModifyRequest(HttpRequest request) { }
+    public virtual Task<OperationResult<HttpResponse>> HandleResponseAsync(HttpResponse response)
+        => DefaultHttpAction.HandleResponseAsync(this, response);
+    public abstract OperationResult<T> GetResult(HttpResponse response);
+    public virtual Task<OperationResult<T>> GetResultAsync(HttpResponse response)
+        => DefaultHttpResponseHandler.GetResultAsync(this, response);
+}
