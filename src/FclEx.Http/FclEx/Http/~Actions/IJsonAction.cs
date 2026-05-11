@@ -1,10 +1,15 @@
-﻿#if NET6_0_OR_GREATER
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 public interface IJsonAction<T> : IHttpResponseHandler<T>
 {
-    string? JsonResultPath { get; }
+    string? JsonResultPath
+#if NET6_0_OR_GREATER
+        => null;
+#else
+    { get; }
+#endif
 
+#if NET6_0_OR_GREATER
     OperationResult<T> IHttpResponseHandler<T>.GetResult(HttpResponse response)
     {
         return GetJson(response)
@@ -38,10 +43,12 @@ public interface IJsonAction<T> : IHttpResponseHandler<T>
             ? token.ToObject<T>()!
             : nameof(context.ResultToken) + " is null";
     }
+#endif
 }
 
 public interface IJsonAction : IJsonAction<Unit>
 {
+#if NET6_0_OR_GREATER
     OperationResult IJsonAction<Unit>.GetResult(JsonActionContext context) => Operation.Success();
-}
 #endif
+}

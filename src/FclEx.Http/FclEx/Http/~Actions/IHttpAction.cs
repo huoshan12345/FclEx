@@ -1,13 +1,18 @@
-﻿#if NET6_0_OR_GREATER
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
-public interface IHttpAction<T> : IAbstractAction<T>
+public interface IHttpAction<T> : IAbstractAction<T>, IHttpResponseHandler<T>
 {
     IHttpService HttpService { get; }
     Uri Uri { get; }
     HttpMethod Method { get; }
-    bool EnsureSuccessStatusCode => true;
+    bool EnsureSuccessStatusCode
+#if NET6_0_OR_GREATER
+        => true;
+#else
+    { get; }
+#endif
 
+#if NET6_0_OR_GREATER
     async Task<OperationResult<T>> IAbstractAction<T>.ExecuteActionAsync(CancellationToken token)
     {
         var logger = HttpService.Logger;
@@ -39,6 +44,7 @@ public interface IHttpAction<T> : IAbstractAction<T>
         }
     }
 
+
     HttpRequest BuildRequest()
     {
         var request = HttpRequest.Create(Uri, Method)
@@ -48,7 +54,8 @@ public interface IHttpAction<T> : IAbstractAction<T>
         return request;
     }
 
-    void ModifyRequest(HttpRequest request) { }
+    void ModifyRequest(HttpRequest request){ }
+
 
     Task<OperationResult<HttpResponse>> HandleResponseAsync(HttpResponse response)
     {
@@ -62,8 +69,7 @@ public interface IHttpAction<T> : IAbstractAction<T>
         return Operation.Error<HttpResponse>(error, response.Elapsed);
     }
 
-    Task<OperationResult<T>> GetResultAsync(HttpResponse response) => GetResult(response);
+    Task<OperationResult<T>> GetResultAsync(HttpResponse response)=> GetResult(response);
 
-    OperationResult<T> GetResult(HttpResponse response);
-}
 #endif
+}

@@ -1,10 +1,17 @@
-﻿#if NET6_0_OR_GREATER
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 public interface IHtmlAction<T> : IHttpResponseHandler<T>
 {
-    string? HtmlResultPath { get; }
+    string? HtmlResultPath
+#if NET6_0_OR_GREATER
+        => null;
+#else
+    { get; }
+#endif
 
+    OperationResult<T> GetResult(HtmlActionContext context);
+
+#if NET6_0_OR_GREATER
     OperationResult<T> IHttpResponseHandler<T>.GetResult(HttpResponse response)
     {
         return GetHtml(response)
@@ -34,12 +41,12 @@ public interface IHtmlAction<T> : IHttpResponseHandler<T>
         error = error + ": " + context.Html.Truncate(256);
         return error;
     }
-
-    OperationResult<T> GetResult(HtmlActionContext context);
+#endif
 }
 
 public interface IHtmlAction : IHtmlAction<Unit>
 {
+#if NET6_0_OR_GREATER
     OperationResult IHtmlAction<Unit>.GetResult(HtmlActionContext context) => Operation.Success();
-}
 #endif
+}

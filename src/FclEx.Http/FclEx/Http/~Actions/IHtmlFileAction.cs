@@ -1,10 +1,10 @@
-﻿#if NET6_0_OR_GREATER
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 public interface IHtmlFileAction<T> : IHttpAction<T>
 {
     string FilePath { get; }
 
+#if NET6_0_OR_GREATER
     async Task<OperationResult<T>> IAbstractAction<T>.ExecuteActionAsync(CancellationToken token)
     {
         var logger = HttpService.Logger;
@@ -32,5 +32,5 @@ public interface IHtmlFileAction<T> : IHttpAction<T>
             return ex;
         }
     }
-}
 #endif
+}

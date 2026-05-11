@@ -1,11 +1,12 @@
-﻿#if NET6_0_OR_GREATER
-namespace FclEx.Http;
+﻿namespace FclEx.Http;
 
 public interface IJsonpAction<T> : IJsonAction<T>, IHttpAction<T>
 {
+    string CallbackParamName { get; }
+
+#if NET6_0_OR_GREATER
     string? IJsonAction<T>.JsonResultPath => null;
     HttpMethod IHttpAction<T>.Method => HttpMethod.Get;
-    string CallbackParamName { get; }
 
     void IHttpAction<T>.ModifyRequest(HttpRequest request)
     {
@@ -19,5 +20,5 @@ public interface IJsonpAction<T> : IJsonAction<T>, IHttpAction<T>
             ? Operation.Success(match.Value)
             : Operation.Error<string>("Failed to parse callback: " + response.ResponseString.Truncate(200));
     }
-}
 #endif
+}

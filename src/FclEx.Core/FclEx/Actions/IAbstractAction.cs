@@ -1,14 +1,32 @@
-﻿#if NET6_0_OR_GREATER
+﻿
 namespace FclEx.Actions;
 
 public interface IAbstractAction<T> : IAction<T>
 {
     Task<OperationResult<T>> ExecuteActionAsync(CancellationToken token = default);
 
-    string GetName() => GetType().ShortName();
-    Task<OperationResult<T>> HandleCancellationAsync(Exception ex) => Operation.Cancel<T>(ex);
-    Task<OperationResult<T>> HandleErrorAsync(Exception ex) => Operation.Error<T>(ex);
+    string GetName()
+#if NET6_0_OR_GREATER
+        => GetType().ShortName();
+#else
+    ;
+#endif
 
+    Task<OperationResult<T>> HandleCancellationAsync(Exception ex)
+#if NET6_0_OR_GREATER
+        => Operation.Cancel<T>(ex);
+#else
+    ;
+#endif
+
+    Task<OperationResult<T>> HandleErrorAsync(Exception ex)
+#if NET6_0_OR_GREATER
+        => Operation.Error<T>(ex);
+#else
+    ;
+#endif
+
+#if NET6_0_OR_GREATER
     async Task<OperationResult<T>> IAction<T>.ExecuteAsync(CancellationToken token)
     {
         var time = ValueStopwatch.StartNew();
@@ -27,5 +45,5 @@ public interface IAbstractAction<T> : IAction<T>
         Debug.WriteLine($"[{GetName()}]End, after {result.Elapsed.TotalMilliseconds:f3} ms]");
         return result;
     }
-}
 #endif
+}
