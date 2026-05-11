@@ -29,8 +29,10 @@ public class JsonFormatterTests
                 IndexOptions = indexOptions,
             }
         };
-
-        await using var writer = new StringWriter();
+#if NET6_0_OR_GREATER
+        await
+#endif
+        using var writer = new StringWriter();
         using var x = writer.SetConsole();
 
         try
@@ -57,7 +59,10 @@ public class JsonFormatterTests
                 MessageTemplate.Empty, []);
 
             var formatter = new JsonFormatter(options);
-            await using var sw = new StringWriter();
+#if NET6_0_OR_GREATER
+            await
+#endif
+            using var sw = new StringWriter();
 
             formatter.Format(logEvent, sw);
 

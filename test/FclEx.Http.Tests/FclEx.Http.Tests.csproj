@@ -7,9 +7,6 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <ProjectReference Include="..\..\src\FclEx.AspNetCore\FclEx.AspNetCore.csproj" />
   </ItemGroup>
-  <ItemGroup Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 5.0))">
-
-  </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\**\*.*" />
   </ItemGroup>
