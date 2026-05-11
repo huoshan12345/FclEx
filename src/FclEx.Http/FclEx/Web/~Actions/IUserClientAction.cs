@@ -1,6 +1,6 @@
-﻿namespace FclEx.Http;
+﻿namespace FclEx.Web;
 
-public interface IUserClientAction<out TClient, out TAccount, T> : IAbstractAction<T>
+public interface IUserClientAction<out TClient, out TAccount, T> : IPipelineAction<T>
     where TClient : IUserClient<TAccount>
     where TAccount : IUserAccount
 {

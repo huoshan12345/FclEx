@@ -1,5 +1,4 @@
-﻿#if NET6_0_OR_GREATER
-namespace FclEx.Web;
+﻿namespace FclEx.Web;
 
 public abstract class UserClientJsonAction<TClient, T> : UserClientHttpAction<TClient, T>, IJsonAction<T>
     where TClient : IUserClient
@@ -9,12 +8,11 @@ public abstract class UserClientJsonAction<TClient, T> : UserClientHttpAction<TC
     protected UserClientJsonAction(TClient client) : base(client) { }
 
     public override OperationResult<T> GetResult(HttpResponse response)
-        => this.Base<IJsonAction<T>, OperationResult<T>>(m => m.GetResult(response));
-
+        => DefaultJsonAction.GetResult(this, response);
     public virtual OperationResult<JsonActionContext> CreateContext(HttpResponse response, string json)
-        => this.Base<IJsonAction<T>, OperationResult<JsonActionContext>>(m => m.CreateContext(response, json));
-
+        => DefaultJsonAction.CreateContext(this, response, json);
     public virtual OperationResult<T> GetResult(JsonActionContext context)
-        => this.Base<IJsonAction<T>, OperationResult<T>>(m => m.GetResult(context));
+        => DefaultJsonAction.GetResult(this, context);
+    public virtual OperationResult<string> GetJson(HttpResponse response)
+        => DefaultJsonAction.GetJson(this, response);
 }
-#endif

@@ -13,13 +13,41 @@ public interface IHtmlAction<T> : IHttpResponseHandler<T>
 
 #if NET6_0_OR_GREATER
     OperationResult<T> IHttpResponseHandler<T>.GetResult(HttpResponse response)
-    {
-        return GetHtml(response)
-            .Then(m => CreateContext(response, m))
-            .Then(GetResult);
-    }
+        => DefaultHtmlAction.GetResult(this, response);
+#endif
 
     OperationResult<string> GetHtml(HttpResponse response)
+#if NET6_0_OR_GREATER
+        => DefaultHtmlAction.GetHtml(this, response);
+#else
+    ;
+#endif
+
+    OperationResult<HtmlActionContext> CreateContext(HttpResponse response, string json)
+#if NET6_0_OR_GREATER
+        => DefaultHtmlAction.CreateContext(this, response, json);
+#else
+    ;
+#endif
+}
+
+public interface IHtmlAction : IHtmlAction<Unit>
+{
+#if NET6_0_OR_GREATER
+    OperationResult IHtmlAction<Unit>.GetResult(HtmlActionContext context) => Operation.Success();
+#endif
+}
+
+public static class DefaultHtmlAction
+{
+    public static OperationResult<T> GetResult<T>(IHtmlAction<T> action, HttpResponse response)
+    {
+        return action.GetHtml(response)
+            .Then(m => action.CreateContext(response, m))
+            .Then(action.GetResult);
+    }
+
+    public static OperationResult<string> GetHtml<T>(IHtmlAction<T> action, HttpResponse response)
     {
         var str = response.ResponseString;
         return str switch
@@ -30,23 +58,32 @@ public interface IHtmlAction<T> : IHttpResponseHandler<T>
         };
     }
 
-    OperationResult<HtmlActionContext> CreateContext(HttpResponse response, string json)
+    public static OperationResult<HtmlActionContext> CreateContext<T>(IHtmlAction<T> action, HttpResponse response, string json)
     {
-        var context = new HtmlActionContext(response, json, HtmlResultPath);
+        var context = new HtmlActionContext(response, json, action.HtmlResultPath);
         if (context.ResultElements.IsNotEmpty())
             return context;
 
         const string msg = "The result object does not exist in html";
-        var error = HtmlResultPath == null ? msg : msg + " at " + HtmlResultPath;
+        var error = action.HtmlResultPath == null ? msg : msg + " at " + action.HtmlResultPath;
         error = error + ": " + context.Html.Truncate(256);
         return error;
     }
-#endif
 }
 
-public interface IHtmlAction : IHtmlAction<Unit>
+public abstract class HtmlAction<T> : HttpResponseHandler<T>, IHtmlAction<T>
 {
-#if NET6_0_OR_GREATER
-    OperationResult IHtmlAction<Unit>.GetResult(HtmlActionContext context) => Operation.Success();
-#endif
+    public virtual string? HtmlResultPath => null;
+    public abstract OperationResult<T> GetResult(HtmlActionContext context);
+    public virtual OperationResult<string> GetHtml(HttpResponse response)
+        => DefaultHtmlAction.GetHtml(this, response);
+    public virtual OperationResult<HtmlActionContext> CreateContext(HttpResponse response, string json)
+        => DefaultHtmlAction.CreateContext(this, response, json);
+    public override OperationResult<T> GetResult(HttpResponse response)
+        => DefaultHtmlAction.GetResult(this, response);
+}
+
+public abstract class HtmlAction : HtmlAction<Unit>
+{
+    public override OperationResult GetResult(HtmlActionContext context) => Operation.Success();
 }

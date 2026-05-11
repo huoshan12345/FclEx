@@ -16,6 +16,19 @@ public static class FileExtensions
             await sw.FlushAsync(token);
             await fs.FlushAsync(token);
         }
+
+        public static Task WriteAllTextAsync(string path, string content, CancellationToken token = default)
+            => File.WriteAllTextAsync(path, content, null, token);
+
+        public static async Task<string> ReadAllTextAsync(string path, Encoding? encoding = null, CancellationToken token = default)
+        {
+            using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, DefaultBufferSize, true);
+            using var sr = new StreamReader(fs, encoding ?? Encoding.UTF8);
+            return await sr.ReadToEndAsync();
+        }
+
+        public static Task<string> ReadAllTextAsync(string path, CancellationToken token = default)
+            => File.ReadAllTextAsync(path, null, token);
 #endif
     }
 }
