@@ -130,17 +130,19 @@ jobs:
         with:
           dotnet-version: ${{ steps.sdk_check.outputs.missing }}
 
-      - name: Restore
-        run: dotnet restore ${{ env.SOLUTION }} -v q
+      - name: Restore x86
+        run: dotnet restore ${{ env.SOLUTION }} -v q --arch x86
 
       - name: Test Release x86
         timeout-minutes: 10
-        run: dotnet test ${{ env.SOLUTION }} --no-restore -c Release --arch x86
+        run: dotnet test ${{ env.SOLUTION }} -c Release --arch x86 --no-restore
+
+      - name: Restore x64
+        run: dotnet restore ${{ env.SOLUTION }} -v q --arch x64
 
       - name: Test Release x64
         timeout-minutes: 10
-        run: dotnet test ${{ env.SOLUTION }} --no-restore -c Release --arch x64
-
+        run: dotnet test ${{ env.SOLUTION }} -c Release --arch x64 --no-restore
       - name: Test Report
         uses: dorny/test-reporter@main
         if: (success() || failure())
