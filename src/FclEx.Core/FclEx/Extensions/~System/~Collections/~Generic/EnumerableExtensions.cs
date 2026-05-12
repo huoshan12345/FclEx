@@ -202,7 +202,7 @@ public static partial class EnumerableExtensions
     }
 #endif
 
-#if !NET6_0_OR_GREATER
+#if !NET5_0_OR_GREATER
     public static bool TryGetNonEnumeratedCount<T>([NoEnumeration] this IEnumerable<T> source, out int count)
     {
         switch (source)

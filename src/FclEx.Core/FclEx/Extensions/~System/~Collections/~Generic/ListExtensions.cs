@@ -106,7 +106,7 @@ public static class ListExtensions
         ref var size = ref ListAccessor<T>.Size(list);
         if (count > list.Capacity)
         {
-            ListAccessor<T>.Grow(list, count);
+            list.Capacity = count;
         }
         else if (count < size)
         {
