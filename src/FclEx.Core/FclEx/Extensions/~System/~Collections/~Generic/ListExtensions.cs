@@ -79,7 +79,9 @@ public static class ListExtensions
     public static Span<T> AsSpan<T>(this List<T>? list)
     {
 #if !NET5_0_OR_GREATER
-        return list is null ? default : ListAccessor<T>.Items(list).AsSpan(0, list.Count);
+        return list.IsNullOrEmpty()
+            ? default
+            : ListAccessor<T>.Items(list).AsSpan(0, list.Count);
 #else
         return CollectionsMarshal.AsSpan(list);
 #endif

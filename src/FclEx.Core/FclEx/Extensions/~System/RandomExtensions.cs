@@ -29,30 +29,30 @@ public static class RandomExtensions
         => random.NextDouble() >= 1.0D - trueProbability;
 
     [MethodImpl(AggressiveInlining)]
-    public static sbyte NextSByte(this Random random, sbyte min = sbyte.MinValue, sbyte max = sbyte.MaxValue)
+    public static sbyte NextSByte(this Random random, sbyte min = 0, sbyte max = sbyte.MaxValue)
         => (sbyte)random.Next(min, max);
 
     [MethodImpl(AggressiveInlining)]
-    public static byte NextByte(this Random random, byte min = byte.MinValue, byte max = byte.MaxValue)
+    public static byte NextByte(this Random random, byte min = 0, byte max = byte.MaxValue)
         => (byte)random.Next(min, max);
 
     [MethodImpl(AggressiveInlining)]
-    public static short NextInt16(this Random random, short min = short.MinValue, short max = short.MaxValue)
+    public static short NextInt16(this Random random, short min = 0, short max = short.MaxValue)
         => (short)random.Next(min, max);
 
     [MethodImpl(AggressiveInlining)]
-    public static ushort NextUInt16(this Random random, ushort min = ushort.MinValue, ushort max = ushort.MaxValue)
+    public static ushort NextUInt16(this Random random, ushort min = 0, ushort max = ushort.MaxValue)
         => (ushort)random.Next(min, max);
 
     [MethodImpl(AggressiveInlining)]
-    public static uint NextUInt32(this Random random, uint min = uint.MinValue, uint max = uint.MaxValue)
+    public static uint NextUInt32(this Random random, uint min = 0, uint max = uint.MaxValue)
         => (uint)random.NextUInt64(min, max);
 
     [MethodImpl(AggressiveInlining)]
-    public static long NextInt64(this Random random) => random.NextInt64(long.MinValue, long.MaxValue);
+    public static long NextInt64(this Random random) => random.NextInt64(0, long.MaxValue);
 
     [MethodImpl(AggressiveInlining)]
-    public static ulong NextUInt64(this Random random, ulong min = ulong.MinValue, ulong max = ulong.MaxValue)
+    public static ulong NextUInt64(this Random random, ulong min = 0, ulong max = ulong.MaxValue)
     {
         var r = random.NextDouble();
         return (ulong)(max * r + min * (1 - r));
@@ -66,14 +66,14 @@ public static class RandomExtensions
     }
 
     [MethodImpl(AggressiveInlining)]
-    public static float NextSingle(this Random random, float min = float.MinValue, float max = float.MaxValue)
+    public static float NextSingle(this Random random, float min = 0, float max = float.MaxValue)
     {
         var r = (float)random.NextDouble();
         return max * r + min * (1 - r);
     }
 
     [MethodImpl(AggressiveInlining)]
-    public static decimal NextDecimal(this Random random, decimal min = decimal.MinValue, decimal max = decimal.MaxValue)
+    public static decimal NextDecimal(this Random random, decimal min = 0, decimal max = decimal.MaxValue)
     {
         // min + (max - min) * r => max * r + min * (1 - r)
         // because max - min may be larger than Type.MaxValue.
@@ -141,12 +141,12 @@ public static class RandomExtensions
 #endif
         T NextUnmanaged<T>(this Random random) where T : unmanaged
     {
-        Unsafe.SkipInit(out T result);
 #if !NET5_0_OR_GREATER
         var bytes = new byte[sizeof(T)];
-        Unsafe.As<byte, T>(ref bytes[0]) = result;
         random.NextBytes(bytes);
+        var result = Unsafe.As<byte, T>(ref bytes[0]) ;
 #else
+        Unsafe.SkipInit(out T result);
         random.NextBytes(Span.AsBytes(ref result));
 #endif
         return result;
@@ -155,8 +155,16 @@ public static class RandomExtensions
 #if !NET5_0_OR_GREATER
     public static long NextInt64(this Random random, long min, long max)
     {
-        var rand = random.NextUnmanaged<long>();
-        return min + rand % (max + 1 - min);
+        var range = (ulong)(max - min);
+        var limit = ulong.MaxValue - ulong.MaxValue % range;
+        ulong r;
+
+        do
+        {
+            r = random.NextUnmanaged<ulong>();
+        } while (r >= limit);
+
+        return (long)(r % range) + min;
     }
 #endif
 
@@ -325,10 +333,11 @@ public static class RandomExtensions
         throw e;
     }
 
-    public static T NextElement<T>(this Random random, IReadOnlyList<T> list)
+    public static T Sample<T>(this Random random, IReadOnlyList<T> list)
     {
         Check.NotNull(random);
         Check.NotEmpty(list);
+
         var i = random.Next(0, list.Count - 1);
         return list[i];
     }

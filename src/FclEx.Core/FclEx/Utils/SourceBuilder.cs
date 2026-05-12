@@ -1,12 +1,13 @@
 ﻿// ReSharper disable RedundantUsingDirective
+#pragma warning disable IDE0005 // Using directive is unnecessary.
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security;
 using System.Text;
-using System.Reflection;
 
 namespace FclEx.Utils;
 
@@ -22,6 +23,15 @@ public
     private readonly StringWriter _stringWriter;
     private readonly IndentedTextWriter _writer;
 
+    private static readonly FieldInfo? _tabsPending = typeof(IndentedTextWriter).GetField(
+#if NETFRAMEWORK
+        "tabsPending"
+#else
+        "_tabsPending"
+#endif
+        , BindingFlags.Instance | BindingFlags.NonPublic
+    );
+
     public SourceBuilder()
     {
         _stringWriter = new StringWriter(_builder);
@@ -30,9 +40,7 @@ public
 #if !NET9_0_OR_GREATER
         // Fixes a bug in IndentedTextWriter where it doesn't indent the first line for dotnet 8.0 or lower
         // because _tabsPending is not true by default.
-        typeof(IndentedTextWriter)
-            .GetField("_tabsPending", BindingFlags.Instance | BindingFlags.NonPublic)?
-            .SetValue(_writer, true);
+        _tabsPending?.SetValue(_writer, true);
 #endif
     }
 

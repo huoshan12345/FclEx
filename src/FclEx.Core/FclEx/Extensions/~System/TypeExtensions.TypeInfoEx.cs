@@ -57,7 +57,7 @@ partial class TypeExtensions
             if (type.IsValueType == false
                 || nullableUnderlyingType != null
                 || type.ContainsGenericParameters
-                || type.Name == "ArgIterator"
+                || type.FullName is "System.ArgIterator" or "System.RuntimeArgumentHandle" or "System.TypedReference"
                 // Byref-like structures are declared using ref struct keyword in C#. 
 #if !NET5_0_OR_GREATER
                 || IsByRefLike(type)
@@ -67,7 +67,15 @@ partial class TypeExtensions
                 || type == typeof(void))
                 return null;
 
-            return Activator.CreateInstance(type);
+            try
+            {
+                return Activator.CreateInstance(type);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceWarning($"Failed to create instance of type {type.FullName}: {ex}");
+                return null;
+            }
         }
 #if !NET5_0_OR_GREATER
         static bool IsByRefLike(Type type)

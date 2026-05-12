@@ -5,7 +5,7 @@ namespace FclEx.Utils;
 public class LfuCacheTests
 {
     [Fact]
-    public void Test()
+    public void Fuzz_Test()
     {
         const int capacity = 10;
         var random = new Random(31);
@@ -15,7 +15,7 @@ public class LfuCacheTests
 
         for (var i = 0; i < numbers.Length * capacity; i++)
         {
-            var num = random.NextElement(numbers);
+            var num = random.Sample(numbers);
             dic[num] = dic[num].Get(-1) + 1;
             var keys = cache.Keys;
             var removeFlag = cache.IsFull() && !keys.Contains(num);
@@ -58,7 +58,7 @@ public class LfuCacheTests
     }
 
     [Fact]
-    public async Task BasicScenarios_Test()
+    public async Task Basic_Test()
     {
         var cd = new LfuCache<int, int>(10);
 

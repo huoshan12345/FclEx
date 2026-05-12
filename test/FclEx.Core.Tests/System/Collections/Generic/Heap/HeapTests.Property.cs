@@ -157,13 +157,16 @@ public partial class HeapTests
     public static TheoryData<string[]> GetRandomStringArrays() => GenerateMemberData(random => GenArray(GenString, random)).ToTheoryData();
     public static TheoryData<int[]> GetRandomIntArrays() => GenerateMemberData(random => GenArray(GenInt, random)).ToTheoryData();
 
-    private static IEnumerable<T> GenerateMemberData<T>(Func<Random, T> genElement)
+    private static IEnumerable<T[]> GenerateMemberData<T>(Func<Random, T[]> genElement)
     {
+        // deduplicate arrays to avoid running the same test multiple times
+        var set = new HashSet<T[]>(EnumerableEqualityComparer.Default<T>());
         var random = new Random(Seed);
         for (var i = 0; i < MaxTest; i++)
         {
-            yield return genElement(random);
+            set.Add(genElement(random));
         }
+        return set;
     }
 
     private static T[] GenArray<T>(Func<Random, T> genElement, Random random)

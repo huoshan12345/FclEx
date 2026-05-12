@@ -46,13 +46,11 @@ public static class IPAddressExtensions
     }
 
 #if !NET5_0_OR_GREATER
-    private static readonly FieldInfo _numbers = typeof(IPAddress).GetRequiredField("_numbers");
-
     /// <summary>Gets whether the address is an IPv6 Unique Local address.</summary>
     public static bool IsIPv6UniqueLocal(this IPAddress ip)
     {
         // return ((_numbers[0] & 0xFE00) == 0xFC00);
-        return (_numbers.GetValue<int>(ip) & 0xFE00) == 0xFC00;
+        return (FieldInfos.IPAddress_Numbers.GetRequiredValue<ushort[]>(ip)[0] & 0xFE00) == 0xFC00;
     }
 #endif
 

@@ -18,6 +18,9 @@ public class SshDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [Fact]
     public async Task Connect_WithoutSsh_Test()
     {
+        if (DatabaseTypes.Contains(DbProviderType.Npgsql) == false)
+            return;
+
         var ctx = CreateNpgsqlContext(null);
         await ctx.Context.Database.OpenConnectionAsync();
         await ctx.Context.Database.CloseConnectionAsync();
