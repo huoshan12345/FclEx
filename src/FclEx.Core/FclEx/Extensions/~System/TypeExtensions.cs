@@ -24,6 +24,7 @@ public static partial class TypeExtensions
         throw new MissingMethodException();
     }
 
+    [MethodImpl(AggressiveInlining)]
     public static T CreateObject<T>(this Type type, params object?[] args)
     {
         return type.CreateObject(args).CastTo<T>();
@@ -58,6 +59,7 @@ public static partial class TypeExtensions
     /// <remarks>
     /// This method internally uses <see cref="GetImplementedInterface"/> to perform the check.
     /// </remarks>
+    [MethodImpl(AggressiveInlining)]
     public static bool Implements(this Type type, Type interfaceType)
     {
         return type.GetImplementedInterface(interfaceType) != null;
@@ -90,26 +92,33 @@ public static partial class TypeExtensions
         return false;
     }
 
+    [MethodImpl(AggressiveInlining)]
     public static bool IsDynamic(this Type type)
     {
         return type.IsDefined<DynamicAttribute>(true);
     }
 
+    [MethodImpl(AggressiveInlining)]
     public static bool IsCompilerGenerated(this Type type)
     {
         return type.IsDefined<CompilerGeneratedAttribute>(false);
     }
 
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
+    [MethodImpl(AggressiveInlining)]
     public static ConstructorInfo? GetConstructor(this Type type, BindingFlags bindingAttr, Type[] types)
     {
         return type.GetConstructor(bindingAttr, null, types, null);
     }
 
-    public static bool IsAssignableTo(this Type type, [NotNullWhen(true)] Type? targetType) => targetType?.IsAssignableFrom(type) ?? false;
+    [MethodImpl(AggressiveInlining)]
+    public static bool IsAssignableTo(this Type type, [NotNullWhen(true)] Type? targetType)
+    {
+        return targetType?.IsAssignableFrom(type) ?? false;
+    }
 #endif
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static TypeCode GetTypeCode(this Type type)
     {
         return Type.GetTypeCode(type);

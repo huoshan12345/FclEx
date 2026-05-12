@@ -9,6 +9,9 @@ partial class DbConnectionExtensionsTests
     [MemberData(nameof(SchemaCases))]
     public async Task InsertAsync_EntityWithPostgresqlJsonb_Test(string? schema)
     {
+        if (DatabaseTypes.Contains(DbProviderType.Npgsql) == false)
+            return;
+
         using var x = output.SetConsole();
 
         await using var db = Fixture.CreateDbContext(DbProviderType.Npgsql, schema);

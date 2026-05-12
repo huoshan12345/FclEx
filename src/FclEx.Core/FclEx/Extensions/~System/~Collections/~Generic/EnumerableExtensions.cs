@@ -562,7 +562,7 @@ public static partial class EnumerableExtensions
     }
 #endif
 
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
     /// <summary>Produces a sequence of tuples with elements from the two specified sequences.</summary>
     /// <param name="first">The first sequence to merge.</param>
     /// <param name="second">The second sequence to merge.</param>
@@ -573,7 +573,9 @@ public static partial class EnumerableExtensions
     {
         return first.Zip(second, (f, s) => (f, s));
     }
+#endif
 
+#if !NET5_0_OR_GREATER && !NET472_OR_GREATER
     /// <summary>Creates a <see cref="T:System.Collections.Generic.HashSet`1" /> from an <see cref="T:System.Collections.Generic.IEnumerable`1" /> using the <paramref name="comparer" /> to compare keys.</summary>
     /// <param name="source">An <see cref="T:System.Collections.Generic.IEnumerable`1" /> to create a <see cref="T:System.Collections.Generic.HashSet`1" /> from.</param>
     /// <param name="comparer">An <see cref="T:System.Collections.Generic.IEqualityComparer`1" /> to compare keys.</param>

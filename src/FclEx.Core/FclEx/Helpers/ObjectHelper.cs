@@ -4,7 +4,7 @@ public static class ObjectHelper
 {
     public static object GetUninitializedObject(Type type)
     {
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
         return FormatterServices.GetUninitializedObject(type);
 #else
         return RuntimeHelpers.GetUninitializedObject(type);

@@ -24,55 +24,55 @@ public static class RandomExtensions
         return new string(stringChars);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static bool NextBoolean(this Random random, double trueProbability = 0.5)
         => random.NextDouble() >= 1.0D - trueProbability;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static sbyte NextSByte(this Random random, sbyte min = sbyte.MinValue, sbyte max = sbyte.MaxValue)
         => (sbyte)random.Next(min, max);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static byte NextByte(this Random random, byte min = byte.MinValue, byte max = byte.MaxValue)
         => (byte)random.Next(min, max);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static short NextInt16(this Random random, short min = short.MinValue, short max = short.MaxValue)
         => (short)random.Next(min, max);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static ushort NextUInt16(this Random random, ushort min = ushort.MinValue, ushort max = ushort.MaxValue)
         => (ushort)random.Next(min, max);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static uint NextUInt32(this Random random, uint min = uint.MinValue, uint max = uint.MaxValue)
         => (uint)random.NextUInt64(min, max);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static long NextInt64(this Random random) => random.NextInt64(long.MinValue, long.MaxValue);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static ulong NextUInt64(this Random random, ulong min = ulong.MinValue, ulong max = ulong.MaxValue)
     {
         var r = random.NextDouble();
         return (ulong)(max * r + min * (1 - r));
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static double NextDouble(this Random random, double min, double max)
     {
         var r = random.NextDouble();
         return max * r + min * (1 - r);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static float NextSingle(this Random random, float min = float.MinValue, float max = float.MaxValue)
     {
         var r = (float)random.NextDouble();
         return max * r + min * (1 - r);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static decimal NextDecimal(this Random random, decimal min = decimal.MinValue, decimal max = decimal.MaxValue)
     {
         // min + (max - min) * r => max * r + min * (1 - r)
@@ -136,13 +136,13 @@ public static class RandomExtensions
     /// <returns>The randomly generated value.</returns>
     [SkipLocalsInit]
     public static
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
         unsafe
 #endif
         T NextUnmanaged<T>(this Random random) where T : unmanaged
     {
         Unsafe.SkipInit(out T result);
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
         var bytes = new byte[sizeof(T)];
         Unsafe.As<byte, T>(ref bytes[0]) = result;
         random.NextBytes(bytes);
@@ -152,7 +152,7 @@ public static class RandomExtensions
         return result;
     }
 
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
     public static long NextInt64(this Random random, long min, long max)
     {
         var rand = random.NextUnmanaged<long>();
@@ -160,14 +160,14 @@ public static class RandomExtensions
     }
 #endif
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static T Next<T>(this Random random)
     {
         Check.NotNull(random);
         return (T)random.Next(typeof(T), null, null);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static object Next(this Random random, Type type)
     {
         Check.NotNull(random);
@@ -345,10 +345,11 @@ public static class RandomExtensions
         }
     }
 
-#if NETSTANDARD2_0
+
     extension(Random)
     {
+#if !NET5_0_OR_GREATER
         public static Random Shared => ThreadSafeRandom.Instance;
-    }
 #endif
+    }
 }

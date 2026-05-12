@@ -50,7 +50,7 @@ static partial class StringExtensions
         return source.StartsWith(value, StringComparison.OrdinalIgnoreCase);
     }
 
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
     public static bool Contains(this string source, string value, StringComparison comparison)
     {
         return source.IndexOf(value, comparison) >= 0;

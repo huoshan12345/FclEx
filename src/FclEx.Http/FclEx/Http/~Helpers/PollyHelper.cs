@@ -15,7 +15,7 @@ public static class PollyHelper
         static bool Filter(HttpResponseMessage m)
         {
             return m.StatusCode.IsServerError()
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
                    || m.StatusCode.ToInt() == 429
 #else
                    || m.StatusCode == HttpStatusCode.TooManyRequests

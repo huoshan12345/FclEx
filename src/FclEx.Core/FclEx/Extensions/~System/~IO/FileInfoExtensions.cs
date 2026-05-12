@@ -147,7 +147,7 @@ public static class FileInfoExtensions
         return file.CopyToAsync(dest, options, bufferSize, token);
     }
 
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
     private static readonly MethodInfo? _methodMoveTo = typeof(FileInfo).GetMethod(
         name: nameof(FileInfo.MoveTo),
         bindingAttr: BindingFlags.Public | BindingFlags.Instance,

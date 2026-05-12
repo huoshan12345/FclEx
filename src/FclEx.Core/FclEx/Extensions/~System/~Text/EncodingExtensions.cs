@@ -2,7 +2,7 @@
 
 public static class EncodingExtensions
 {
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
     public static unsafe string GetString(this Encoding encoding, ReadOnlySpan<byte> bytes)
     {
         fixed (byte* p = bytes)

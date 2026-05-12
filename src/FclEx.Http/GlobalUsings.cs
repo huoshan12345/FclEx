@@ -45,6 +45,6 @@ global using Microsoft.Extensions.Logging.Abstractions;
 global using Polly;
 global using Polly.Timeout;
 global using SleepDurationProvider = System.Func<int, System.TimeSpan>;
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
 global using SocketsHttpHandler = System.Net.Http.StandardSocketsHttpHandler;
 #endif

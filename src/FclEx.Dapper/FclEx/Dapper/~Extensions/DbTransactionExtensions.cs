@@ -2,7 +2,7 @@
 
 public static class DbTransactionExtensions
 {
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
     public static Task CommitAsync(this DbTransaction tran)
     {
         tran.Commit();

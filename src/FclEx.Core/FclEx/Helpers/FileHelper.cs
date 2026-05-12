@@ -48,7 +48,7 @@ public static class FileHelper
         using var stream1 = File.OpenRead(f1.FullName);
         using var stream2 = File.OpenRead(f2.FullName);
 
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
         var buf1 = new byte[4096];
         var buf2 = new byte[4096];
 #else
@@ -68,7 +68,7 @@ public static class FileHelper
 
             // read a chunk from each and compare
 
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
             var i = stream1.Read(buf1, 0, toRead);
             var j = stream2.Read(buf2, 0, toRead);
 #else

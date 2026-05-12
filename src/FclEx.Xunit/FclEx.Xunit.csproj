@@ -6,10 +6,6 @@
   <ItemGroup>
     <PackageReference Include="xunit" />
   </ItemGroup>
-  <ItemGroup Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 8.0))">
-    <!--net6.0 and net7.0 require this package to support CollectionBuilder-->
-    <PackageReference Include="PolySharp" PrivateAssets="all" />
-  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FclEx.Logging\FclEx.Logging.csproj" />
   </ItemGroup>

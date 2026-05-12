@@ -29,6 +29,6 @@ public class ReferenceEqualityComparer<T> : IEqualityComparer<T>
     }
 }
 
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
 public class ReferenceEqualityComparer : ReferenceEqualityComparer<object>;
 #endif

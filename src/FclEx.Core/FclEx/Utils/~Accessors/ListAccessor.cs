@@ -5,9 +5,10 @@ public delegate ref int GetRefInt<T>(List<T> list);
 public static class ListAccessor<T>
 {
     public static readonly Func<List<T>, T[]> Items = BuildItemsAccessor();
+    public static readonly Action<List<T>, int> Grow = BuildGrowAccessor();
+
     public static readonly GetRefInt<T> Size = BuildSizeAccessor();
     public static readonly GetRefInt<T> Version = BuildVersionAccessor();
-    public static readonly Action<List<T>, int> Grow = BuildGrowAccessor();
 
     private static DynamicMethod CreateDynamicMethod(string name, Type returnType, Type[] parameterTypes)
     {

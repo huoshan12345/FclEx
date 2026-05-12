@@ -83,7 +83,7 @@ public static class TaskHelper
         catch (TaskCanceledException) { }
     }
 
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
     // https://stackoverflow.com/a/22078975/4255140
     public static async Task<TResult> WaitAsync<TResult>(this Task<TResult> task, TimeSpan timeout)
     {

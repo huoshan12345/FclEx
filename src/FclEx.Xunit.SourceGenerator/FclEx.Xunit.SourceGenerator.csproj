@@ -10,7 +10,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
-    <PackageReference Include="PolySharp" PrivateAssets="all" />
   </ItemGroup>
   <PropertyGroup>
     <!--when using GetFullPath, combine with MSBuildProjectDirectory to ensure correct resolution-->

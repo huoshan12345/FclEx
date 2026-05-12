@@ -6,7 +6,7 @@ public record SocketsHttpHandlerOptions // use record so that with expression ca
     public IPVersionPolicy IPVersionPolicy { get; set; } = IPVersionPolicy.PreferIPv4;
     public bool AllowAutoRedirect { get; set; } = true;
     public DecompressionMethods AutomaticDecompression { get; set; } =
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
         DecompressionMethods.GZip;
 #else
         DecompressionMethods.All;

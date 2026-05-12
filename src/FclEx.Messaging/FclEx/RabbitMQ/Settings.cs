@@ -25,7 +25,7 @@ public class ConnectionSettings
 
     public override string ToString()
     {
-        return $"amqp://{HttpUtility.UrlEncode(UserName)}:{HttpUtility.UrlEncode(Password)}@{Host}:{Port}";
+        return $"amqp://{UserName.UrlEncode()}:{Password.UrlEncode()}@{Host}:{Port}";
     }
 }
 

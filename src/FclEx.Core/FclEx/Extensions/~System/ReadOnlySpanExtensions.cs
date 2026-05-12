@@ -8,6 +8,12 @@ public static class ReadOnlySpanExtensions
         return span.StartsWith(valueSpan);
     }
 
+    public static bool EndsWith<T>(this ReadOnlySpan<T> span, T value) where T : IEquatable<T>
+    {
+        var valueSpan = Span.Create(ref value);
+        return span.EndsWith(valueSpan);
+    }
+
     public static string GetString(this ReadOnlySpan<byte> span, Encoding? encoding = null)
     {
         return (encoding ?? Encoding.UTF8).GetString(span);

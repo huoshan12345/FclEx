@@ -47,7 +47,7 @@ public static class CollectionExtensions
         return col;
     }
 
-#if NETSTANDARD
+#if !NET5_0_OR_GREATER
     /// <summary>
     /// Returns a read-only <see cref="ReadOnlyCollection{T}"/> wrapper
     /// for the specified list.

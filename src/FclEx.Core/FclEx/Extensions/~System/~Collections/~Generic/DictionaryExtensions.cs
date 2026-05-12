@@ -125,7 +125,7 @@ public static partial class DictionaryExtensions
         };
     }
 
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
     public static bool Remove<TKey, TValue>(this Dictionary<TKey, TValue> dic, TKey key, [NotNullWhen(true)] out TValue value) where TKey : notnull
     {
         if (dic.TryGetValue(key, out value))

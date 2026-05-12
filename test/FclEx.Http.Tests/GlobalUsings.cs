@@ -3,6 +3,7 @@
 global using System.Diagnostics;
 global using System.Diagnostics.CodeAnalysis;
 global using System.Net;
+global using System.Net.Http;
 global using System.Net.NetworkInformation;
 global using System.Text;
 global using System.Text.Json;
@@ -29,8 +30,6 @@ global using static FclEx.Http.Tests.HttpServerFixture;
 
 #if !NET5_0_OR_GREATER
 global using SocketsHttpHandler = System.Net.Http.StandardSocketsHttpHandler;
-global using System.Web;
-global using System.Net.Http;
 #endif
 
 #if NET8_0_OR_GREATER

@@ -48,7 +48,7 @@ public static class HttpClientHelper
                 // note: this method throws a SocketException when there is no IP address for the host
                 var ips = IPAddress.TryParse(host, out var ip)
                     ? [ip]
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
                     : (await Dns.GetHostEntryAsync(host)).AddressList;
 #else
                     : (await Dns.GetHostEntryAsync(host, family, token)).AddressList;
@@ -72,7 +72,7 @@ public static class HttpClientHelper
                 {
                     try
                     {
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
                         socket.Connect(address, context.DnsEndPoint.Port);
 #else
                         await socket.ConnectAsync(address, context.DnsEndPoint.Port, token);

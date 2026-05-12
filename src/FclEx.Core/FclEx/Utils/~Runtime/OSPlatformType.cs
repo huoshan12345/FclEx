@@ -11,11 +11,12 @@ public enum OSPlatformType
 public static class OSPlatformTypeExtensions
 {
     public static OSPlatform FreeBSD { get; } =
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
         OSPlatform.Create("FREEBSD");
 #else
         OSPlatform.FreeBSD;
 #endif
+
     public static OSPlatform ToOSPlatform(this OSPlatformType type)
     {
         return type switch
