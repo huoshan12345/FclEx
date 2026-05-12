@@ -78,6 +78,11 @@ public static class TestHelper
         .Distinct()
         .ToArray();
 
+    public static bool IsRunningUnderReSharper()
+    {
+        return Assemblies.Any(a => a.FullName?.StartsWith("ReSharperTestRunner", StringComparison.OrdinalIgnoreCase) == true);
+    }
+
     public static string? GetSkipReason(SkipReasonInfo info)
     {
         if (info.Reason is { Length: > 0 } reason)

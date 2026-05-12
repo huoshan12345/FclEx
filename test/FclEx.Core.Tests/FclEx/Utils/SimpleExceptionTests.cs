@@ -2,14 +2,7 @@
 
 public class SimpleExceptionTests
 {
-    private readonly ITestOutputHelper _output;
-
-    public SimpleExceptionTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
-
-    private void CheckSimpleException(Exception ex, bool noStackTrace)
+    private static void CheckSimpleException(Exception ex, bool noStackTrace)
     {
         Assert.IsType<SimpleException>(ex);
 
@@ -21,8 +14,6 @@ public class SimpleExceptionTests
         {
             Assert.NotNullNorEmpty(ex.StackTrace);
         }
-
-        _output.WriteLine(ex.ToString());
     }
 
     [Theory]

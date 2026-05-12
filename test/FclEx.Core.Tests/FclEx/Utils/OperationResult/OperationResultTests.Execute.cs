@@ -3,7 +3,7 @@
 partial class OperationResultTests
 {
     [Fact]
-    public void TestExecute()
+    public void Execute_Test()
     {
         var r = Operation.Execute(() => new object());
 
@@ -13,10 +13,11 @@ partial class OperationResultTests
     }
 
     [Fact]
-    public void TestExecuteError()
+    public void Execute_Error_Test()
     {
         var r = Operation.Execute((Func<object>)(() => throw new SimpleException("")));
-        Assert.True(!r.IsSuccess);
+
+        Assert.False(r.IsSuccess);
         Assert.Null(r.Value);
         Assert.NotEqual(default, r.Elapsed);
         Assert.NotNull(r.Exception);

@@ -47,7 +47,7 @@ public partial class AppendWrappedTests
     {
         var sb = new StringBuilder();
         var ex = Assert.Throws<ArgumentNullException>(() => sb.AppendWrapped("[", (Action<StringBuilder>?)null!, "]"));
-        Assert.Contains("'appendContent'", ex.Message);
+        Assert.Contains("appendContent", ex.Message); // in nfx the parameter name is not single-quoted
     }
 
     [Fact]
@@ -111,7 +111,7 @@ public partial class AppendWrappedTests
     {
         var sb = new StringBuilder();
         var ex = Assert.Throws<ArgumentNullException>(() => sb.AppendWrapped('"', (Action<StringBuilder>?)null!, '"'));
-        Assert.Contains("'appendContent'", ex.Message);
+        Assert.Contains("appendContent", ex.Message);
     }
 
     // ------------------------------------------------------------

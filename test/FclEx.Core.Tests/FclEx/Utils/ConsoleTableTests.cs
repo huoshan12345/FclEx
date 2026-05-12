@@ -2,13 +2,6 @@ namespace FclEx.Utils;
 
 public class ConsoleTableTests
 {
-    private readonly ITestOutputHelper _output;
-
-    public ConsoleTableTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
-
     private static readonly bool[] BoolValues = [true, false];
 
     public static readonly TheoryData<bool, bool, bool> TestCases = BoolValues.CrossJoinCube().ToTheoryData();
@@ -42,6 +35,10 @@ public class ConsoleTableTests
 
         var sb = new StringBuilder(1024);
         table.Render(sb);
-        _output.WriteLine(sb.ToString());
+
+        if (TestHelper.IsRunningUnderReSharper())
+        {
+            TestContext.Current.TestOutputHelper?.WriteLine(sb.ToString());
+        }
     }
 }

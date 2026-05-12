@@ -9,18 +9,6 @@ public class FirstNotEmptyTests
         _output = output;
     }
 
-    private void Print(int index, IEnumerable<string?> items, string? result)
-    {
-        _output.WriteLine($"[{index}]({items.Select(ToStr).JoinWith(", ")}) => {ToStr(result)}");
-
-        static string ToStr(string? m) => m switch
-        {
-            null => "null",
-            "" => "empty",
-            _ => m
-        };
-    }
-
     [Fact]
     public void TwoElements_Test()
     {
@@ -29,7 +17,6 @@ public class FirstNotEmptyTests
             Assert.Equal(2, items.Count);
             var result = (items[0], items[1]).FirstNotEmpty(null);
             Assert.Equal(items.FirstOrDefault(m => m.IsNotEmpty()), result);
-            Print(i, items, result);
         }
     }
 
@@ -41,7 +28,6 @@ public class FirstNotEmptyTests
             Assert.Equal(3, items.Count);
             var result = (items[0], items[1], items[2]).FirstNotEmpty(null);
             Assert.Equal(items.FirstOrDefault(m => m.IsNotEmpty()), result);
-            Print(i, items, result);
         }
     }
 
@@ -53,7 +39,6 @@ public class FirstNotEmptyTests
             Assert.Equal(4, items.Count);
             var result = (items[0], items[1], items[2], items[3]).FirstNotEmpty(null);
             Assert.Equal(items.FirstOrDefault(m => m.IsNotEmpty()), result);
-            Print(i, items, result);
         }
     }
 }

@@ -78,6 +78,7 @@ jobs:
         run: dotnet restore ${{ env.SOLUTION }}
 
       - name: Test Release
+        timeout-minutes: 10
         run: dotnet test ${{ env.SOLUTION }} --no-restore -c Release
 
       - name: Test Report
@@ -132,8 +133,13 @@ jobs:
       - name: Restore
         run: dotnet restore ${{ env.SOLUTION }} -v q
 
-      - name: Test Release
-        run: dotnet test ${{ env.SOLUTION }} --no-restore -c Release
+      - name: Test Release x86
+        timeout-minutes: 10
+        run: dotnet test ${{ env.SOLUTION }} --no-restore -c Release --arch x86
+
+      - name: Test Release x64
+        timeout-minutes: 10
+        run: dotnet test ${{ env.SOLUTION }} --no-restore -c Release --arch x64
 
       - name: Test Report
         uses: dorny/test-reporter@main

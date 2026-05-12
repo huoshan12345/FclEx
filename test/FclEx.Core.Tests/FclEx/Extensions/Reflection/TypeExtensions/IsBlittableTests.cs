@@ -2,7 +2,7 @@
 
 namespace FclEx.Extensions.Reflection.TypeExtensions;
 
-public class IsBlittableTests(ITestOutputHelper output)
+public class IsBlittableTests
 {
     /// <summary>
     /// Error from <see cref="GCHandle.Alloc(object, GCHandleType)"/> with <see cref="GCHandleType.Pinned"/>
@@ -46,7 +46,6 @@ public class IsBlittableTests(ITestOutputHelper output)
         var result = type.IsBlittable(out var ex);
         Assert.False(result);
         Assert.IsType<ArgumentException>(ex);
-        output.WriteLine(ex.ToString());
         Assert.Contains("is not blittable.", ex.Message);
     }
 
@@ -58,7 +57,6 @@ public class IsBlittableTests(ITestOutputHelper output)
         var result = type.IsBlittable(out var ex);
         Assert.False(result);
         Assert.IsType<ArgumentException>(ex);
-        output.WriteLine(ex.ToString());
         Assert.Contains("is not blittable.", ex.Message);
     }
 
@@ -71,7 +69,6 @@ public class IsBlittableTests(ITestOutputHelper output)
         var result = type.IsBlittable(out var ex);
         Assert.False(result);
         Assert.IsType<ArgumentException>(ex);
-        output.WriteLine(ex.ToString());
         Assert.Contains("is not blittable", ex.Message);
     }
 
@@ -84,7 +81,6 @@ public class IsBlittableTests(ITestOutputHelper output)
         var result = type.IsBlittable(out var ex);
         Assert.False(result);
         Assert.IsType<ArgumentException>(ex);
-        output.WriteLine(ex.ToString());
         Assert.Contains("is not blittable because it is laid out automatically.", ex.Message);
     }
 
@@ -108,7 +104,6 @@ public class IsBlittableTests(ITestOutputHelper output)
         var result = type.IsBlittable(out var ex);
         Assert.False(result);
         Assert.IsType<ArgumentException>(ex);
-        output.WriteLine(ex.ToString());
         Assert.Contains("is not blittable.", ex.Message);
     }
 

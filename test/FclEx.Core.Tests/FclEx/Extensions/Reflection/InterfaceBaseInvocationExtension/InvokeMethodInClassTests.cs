@@ -12,13 +12,13 @@ public class InvokeMethodInClassTests
     public interface I1 : I0
     {
         int I0.Compute(int number) => number + 1;
-        void I0.Call() => Console.WriteLine(nameof(I1) + "." + nameof(Call));
+        void I0.Call() { }
     }
 
     public interface I2 : I1
     {
         int I0.Compute(int number) => number + 2;
-        void I0.Call() => Console.WriteLine(nameof(I2) + "." + nameof(Call));
+        void I0.Call() { }
     }
 
     public class InheritI2 : I2

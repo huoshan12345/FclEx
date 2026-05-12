@@ -42,13 +42,9 @@ public static partial class DictionaryExtensions
         return dic.TryGetValue(key, out var value) && value is not null ? selector(value) : defaultValue;
     }
 
-    public static bool TryAdd<TKey, TValue>(this Dictionary<TKey, TValue> dic, TKey? key, TValue value) where TKey : notnull
-    {
-        return key is not null && dic.TryAdd(key, value);
-    }
-
     public static void Add<TCol, TKey, TValue>(this IDictionary<TKey, TCol> dic, TKey key, TValue? value) where TCol : ICollection<TValue?>, new()
     {
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         if (dic.TryGetValue(key, out var col) && col is not null)
         {
             col.Add(value);
@@ -75,10 +71,7 @@ public static partial class DictionaryExtensions
         foreach (var item in items)
         {
             var key = func(item);
-            if (!dic.ContainsKey(key))
-            {
-                dic.Add(key, item);
-            }
+            dic.TryAdd(key, item);
         }
     }
 
@@ -107,11 +100,11 @@ public static partial class DictionaryExtensions
 
     public static TValue GetOrAdd<TKey, TValue>(this Dictionary<TKey, TValue> dic, TKey key, Func<TKey, TValue> valueFactory) where TKey : notnull
     {
-        if (!dic.TryGetValue(key, out var value))
-        {
-            value = valueFactory(key);
-            dic[key] = value;
-        }
+        if (dic.TryGetValue(key, out var value))
+            return value;
+
+        value = valueFactory(key);
+        dic[key] = value;
         return value;
     }
 

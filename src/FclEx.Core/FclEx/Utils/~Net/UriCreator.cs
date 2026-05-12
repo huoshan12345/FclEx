@@ -144,7 +144,8 @@ public class UriCreator
     public string Fragment
     {
         get => _builder.Fragment;
-        set => _builder.Fragment = value;
+        // nfx will automatically add a '#' if the fragment is not empty, so we need to trim it to avoid duplication.
+        set => _builder.Fragment = value.TrimStart('#'); 
     }
 
     public Uri Build()

@@ -2,7 +2,7 @@
 
 namespace FclEx.Helpers;
 
-public class UnsafeHelperTests(ITestOutputHelper output)
+public class UnsafeHelperTests
 {
     public static readonly ReadOnlySet<Type> CommonValueTypes =
     [
@@ -27,8 +27,7 @@ public class UnsafeHelperTests(ITestOutputHelper output)
     [MemberData(nameof(BuiltInValueTypeCases))]
     public void SizeOf_BuiltInValueType_Test(Type type)
     {
-        var size = _sizeOfTTest.MakeGenericMethod(type).Invoke<int>(null, null);
-        output.WriteLine($"{type.ShortName()}'s size: " + size);
+        _sizeOfTTest.MakeGenericMethod(type).Invoke<int>(null, null);
     }
 
     [Fact]
@@ -107,8 +106,10 @@ public class UnsafeHelperTests(ITestOutputHelper output)
             table.Rows.Add([type.ShortName(), marshalSize, unsafeSize, calculatorSize, size]);
         }
 
-        output.WriteLine(table.ToString());
-        return;
+        if (TestHelper.IsRunningUnderReSharper())
+        {
+            TestContext.Current.TestOutputHelper?.WriteLine(table.ToString());
+        }
 
         static string GetSize(Type type, Func<Type, int> getter)
         {

@@ -10,7 +10,7 @@ public partial class OperationResultTests
         Assert.True(r.IsSuccess);
         Assert.Equal(expected, r.Value);
 
-        OperationResult<int> Test(int input)
+        static OperationResult<int> Test(int input)
         {
             return input;
         }
@@ -23,7 +23,7 @@ public partial class OperationResultTests
         Assert.False(r.IsSuccess);
         Assert.IsType<SimpleException>(r.Exception);
 
-        OperationResult<int> Test()
+        static OperationResult<int> Test()
         {
             return "";
         }
@@ -37,9 +37,9 @@ public partial class OperationResultTests
         Assert.False(r.IsSuccess);
         Assert.IsType(ex.GetType(), r.Exception);
 
-        OperationResult<int> Test(Exception e)
+        static OperationResult<int> Test(Exception e)
         {
-            return ex;
+            return e;
         }
     }
 }

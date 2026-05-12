@@ -3,7 +3,7 @@ using Xunit.Sdk;
 
 namespace System.Collections.Generic;
 
-public class MarshalToBytesEqualityComparerTests(ITestOutputHelper output)
+public class MarshalToBytesEqualityComparerTests
 {
     public static readonly IEnumerable<Type> ValueTypes = Types.BlittableTypes.Concat([
         typeof(decimal),
@@ -32,7 +32,6 @@ public class MarshalToBytesEqualityComparerTests(ITestOutputHelper output)
         var random = new Random(0);
         var x = random.Next<T>();
         Assert.Equal<T>(x, x, MarshalToBytesEqualityComparer<T>.Instance);
-        output.WriteLine(x);
     }
 
     [Theory]
@@ -47,7 +46,6 @@ public class MarshalToBytesEqualityComparerTests(ITestOutputHelper output)
         var ex = Assert.Throws<TargetInvocationException>(() => _equals.MakeGenericMethod(type).Invoke(this, null));
         var inner = Assert.IsType<EqualException>(ex.InnerException);
         var innermost = Assert.IsType<ArgumentException>(inner.InnerException);
-        output.WriteLine(innermost.Message);
         Assert.Contains("is not marshalable because it is auto layout.", innermost.Message);
     }
 
@@ -59,7 +57,6 @@ public class MarshalToBytesEqualityComparerTests(ITestOutputHelper output)
         var ex = Assert.Throws<TargetInvocationException>(() => _equals.MakeGenericMethod(type).Invoke(this, null));
         var inner = Assert.IsType<EqualException>(ex.InnerException);
         var innermost = Assert.IsType<ArgumentException>(inner.InnerException);
-        output.WriteLine(innermost.Message);
         Assert.Contains("is not marshalable because it is generic", innermost.Message);
     }
 }
