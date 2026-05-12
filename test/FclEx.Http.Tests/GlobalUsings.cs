@@ -16,6 +16,7 @@ global using FclEx.Helpers;
 global using FclEx.Http;
 global using FclEx.Http.Tests;
 global using FclEx.Http.Tests.Models;
+global using FclEx.Logging;
 global using FclEx.Utils;
 global using FclEx.Xunit;
 global using Microsoft.Extensions.DependencyInjection;

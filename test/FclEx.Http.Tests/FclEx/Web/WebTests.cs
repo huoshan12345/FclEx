@@ -2,14 +2,11 @@
 
 public abstract class WebTests
 {
-    protected readonly ITestOutputHelper _outputHelper;
-
-    protected WebTests(ITestOutputHelper outputHelper)
+    protected WebTests()
     {
-        _outputHelper = outputHelper;
         ServiceProvider = new ServiceCollection()
             .AddUserClient<TestUserClient>()
-            .AddLogging(m => m.AddXunit(outputHelper, false).SetMinimumLevel(LogLevel.Trace))
+            .AddLogging(m => m.AddXunit(false).SetMinimumLevel(LogLevel.Trace))
             .BuildServiceProvider();
     }
 
