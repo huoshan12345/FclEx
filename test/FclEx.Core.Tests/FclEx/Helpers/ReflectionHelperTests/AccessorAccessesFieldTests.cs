@@ -130,7 +130,14 @@ public class AccessorAccessesFieldTests
         var type = typeof(HashSet<int>);
         var prop = type.GetProperty("Count")!;
         var fields = type.GetFields(Flags);
-        var backingFields = new[] { "_count", "_freeCount" }
+        var backingFields = new[]
+            {
+#if NETFRAMEWORK
+                "m_count",
+#else
+                "_count", "_freeCount",
+#endif
+            }
             .Select(name => type.GetField(name, Flags))
             .ToArray();
 

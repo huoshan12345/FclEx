@@ -14,7 +14,7 @@ public class DeflateContent : CompressedContent
     {
         // Yes, ZLibStream over DeflateStream.
         // See this note: https://github.com/dotnet/runtime/blob/7ab969c84ef05ba948c0075392716ce335b47744/src/libraries/System.Net.Http/src/System/Net/Http/SocketsHttpHandler/DecompressionHandler.cs#L231
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
         return new DeflateStream(stream, CompressionLevel, true);
 #else
         return new ZLibStream(stream, CompressionLevel, true);

@@ -18,12 +18,25 @@ public static class TimeSpanExtensions
         return TimeSpan.FromTicks((long)(multiplicand.Ticks * multiplier));
     }
 
+    /// <summary>
+    /// Formats the <see cref="TimeSpan"/> into a string, strictly excluding the millisecond component.
+    /// Unlike the default ToString(), this method ensures the precision stops at seconds.
+    /// </summary>
+    /// <param name="timeSpan">The time interval to format.</param>
+    /// <returns>
+    /// A string formatted as "hh:mm:ss" or "d.hh:mm:ss" depending on the duration.
+    /// </returns>
     public static string ToSecondsString(this TimeSpan timeSpan)
     {
-        var format = timeSpan.Days > 0
+        var format = timeSpan.Days != 0
             ? @"d\.hh\:mm\:ss"
             : @"hh\:mm\:ss";
-        return timeSpan.ToString(format);
+        var str = timeSpan.ToString(format);
+        if (timeSpan < TimeSpan.Zero)
+        {
+            str = "-" + str;
+        }
+        return str;
     }
 
     /// <summary>

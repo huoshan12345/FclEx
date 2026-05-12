@@ -6,7 +6,7 @@ public static class FileExtensions
 
     extension(File)
     {
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
         public static async Task WriteAllBytesAsync(string path, byte[] bytes, CancellationToken cancellationToken = default)
         {
             using var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, DefaultBufferSize, useAsync: true);

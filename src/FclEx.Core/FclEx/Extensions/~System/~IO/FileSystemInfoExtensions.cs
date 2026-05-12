@@ -2,16 +2,28 @@
 
 public static class FileSystemInfoExtensions
 {
+    public static readonly string DirectorySeparator = Path.DirectorySeparatorChar.ToString();
+
+    /// <summary>
+    /// Checks if the file or directory has the <see cref="FileAttributes.Hidden"/> attribute.
+    /// </summary>
     public static bool IsHidden(this FileSystemInfo info)
     {
         return info.Attributes.HasFlag(FileAttributes.Hidden);
     }
 
-    public static readonly string DirectorySeparator = Path.DirectorySeparatorChar.ToString();
-
-    public static int GetLevel(this FileSystemInfo info)
+    /// <summary>
+    /// Gets the depth level of the current path relative to the root. <br/>
+    /// Examples: <br/>
+    /// <example>
+    /// C:\ -> 0 (for DirectoryInfo) <br/>
+    /// C:\foo\ -> 1 <br/>
+    /// C:\foo\bar.txt -> 1
+    /// </example>
+    /// </summary>
+    public static int GetDepth(this FileSystemInfo info)
     {
-        var path = info.GetFullPathWithoutRoot();
+        var path = info.GetRelativeRootPath();
         var count = path.Count(m => m == Path.DirectorySeparatorChar);
         // the path of directory always ends with a slash
         return info is DirectoryInfo
@@ -19,101 +31,115 @@ public static class FileSystemInfoExtensions
             : count;
     }
 
+    /// <summary>
+    /// Determines whether the current <see cref="FileSystemInfo"/> represents the root of a drive or network share.
+    /// </summary>
     public static bool IsRoot(this FileSystemInfo info)
     {
-        return info.GetFullPathWithoutRoot() == DirectorySeparator;
+        return info.FullName.Equals(info.GetRootPath(), StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
-    /// Get root dir (drive or network), which always does not end with <see cref="DirectorySeparator"/>. <br/>
+    /// Gets the root portion of the path (e.g., "C:\" or "\\server\share\"). <br/>
+    /// The result always ends with a <see cref="DirectorySeparator"/>. <br/>
     /// Examples: <br/>
-    /// * C:\ -> C: <br/>
-    /// * C:\foo\bar -> C: <br/>
-    /// * C:\foo\bar\text.txt -> C: <br/>
-    /// * \\network-machine\ -> \\network-machine <br/>
-    /// * \\network-machine\foo\bar\ -> \\network-machine <br/>
-    /// * \\network-machine\foo\bar\text.txt -> \\network-machine
+    /// <example>
+    /// Windows: C:\foo -> C:\ <br/>
+    /// Windows: \\server\share\foo -> \\server\share\ <br/>
+    /// Unix: /home/user -> /
+    /// </example>
     /// </summary>
-    /// <param name="info"></param>
-    /// <returns></returns>
-    [SuppressMessage("ReSharper", "CommentTypo")]
-    public static string GetRoot(this FileSystemInfo info)
+    public static string GetRootPath(this FileSystemInfo info)
     {
         var path = info.FullName;
 
-        if (path.Length < 2)
-            return ""; // path without root
+        if (string.IsNullOrEmpty(path))
+            return string.Empty;
 
-        // C:\foo\bar -> C:
-        if (path[1] == Path.VolumeSeparatorChar)
+        // Handle Windows drive letters (e.g., "C:\")
+        if (path.Length >= 2 && path[1] == Path.VolumeSeparatorChar)
         {
-            return path[..2];
+            // Return "C:\"
+            return path.Length > 2 && path[2] == Path.DirectorySeparatorChar
+                ? path[..3]
+                : path[..2] + DirectorySeparator;
         }
 
-        // network path
-        // ReSharper disable once InvertIf
-        if (path[0] == Path.DirectorySeparatorChar
-            && path[1] == Path.DirectorySeparatorChar)
+        // Handle UNC paths (e.g., "\\server\share\file")
+        if (path.StartsWith(DirectorySeparator + DirectorySeparator))
         {
-            for (var i = 2; i < path.Length; i++)
-            {
-                // \\network-machine\foo\bar -> \\network-machine
-                if (path[i] == Path.DirectorySeparatorChar)
-                    return path[..i];
-            }
+            // Find the position after \\server\share
+            var firstSlash = path.IndexOf(Path.DirectorySeparatorChar, 2);
+            if (firstSlash == -1) return path + DirectorySeparator;
 
-            // \\network-machine -> \\network-machine
-            return path;
+            var secondSlash = path.IndexOf(Path.DirectorySeparatorChar, firstSlash + 1);
+
+            if (secondSlash == -1)
+                return path + DirectorySeparator;
+
+            // Return "\\server\share\"
+            return path[..(secondSlash + 1)];
         }
 
-        return "";
+        // Handle Unix root or any path starting with /
+        return path.StartsWith(DirectorySeparator) 
+            ? DirectorySeparator 
+            : string.Empty;
     }
 
     /// <summary>
-    /// The first dir name from the path. <br/>
-    /// Example: <br/>
+    /// Gets the name of the first directory immediately following the root. <br/>
+    /// Examples: <br/>
+    /// <example>
     /// C:\foo\bar\ -> foo <br/>
     /// C:\foo\bar\text.txt -> foo
+    /// </example>
     /// </summary>
-    public static string GetFirstDir(this FileSystemInfo info)
+    public static string GetTopLevelDirectoryName(this FileSystemInfo info)
     {
-        var path = info.GetFullPathWithoutRoot();
+        var path = info.GetRelativeRootPath();
         for (var i = 1; i < path.Length; i++)
         {
             if (path[i] == Path.DirectorySeparatorChar)
-                return path.Substring(1, i - 1);
+                return path[1..i];
         }
         return "";
     }
 
     /// <summary>
-    /// Get full path without root dir (drive or network), which always starts and ends with <see cref="DirectorySeparator"/>. <br/>
+    /// Returns the path relative to the root, ensured to start with a separator. <br/>
+    /// Directories will also end with a separator. <br/>
     /// Examples: <br/>
-    /// * C:\ -> \ <br/>
-    /// * C:\foo\bar\ -> \foo\bar\ <br/>
-    /// * C:\foo\bar\text.txt -> \foo\bar\text.txt <br/>
-    /// * \\network-machine\ -> \ <br/>
-    /// * \\network-machine\foo\bar\ -> \foo\bar\ <br/>
-    /// * \\network-machine\foo\bar\text.txt -> \foo\bar\text.txt
+    /// <example>
+    /// C:\ -> \ <br/>
+    /// C:\foo\bar.txt -> \foo\bar.txt <br/>
+    /// C:\foo\bar\ -> \foo\bar\
+    /// </example>
     /// </summary>
-    /// <param name="info"></param>
-    /// <returns></returns>
-    [SuppressMessage("ReSharper", "CommentTypo")]
-    [SuppressMessage("ReSharper", "ConvertIfStatementToReturnStatement")]
-    public static string GetFullPathWithoutRoot(this FileSystemInfo info)
+    public static string GetRelativeRootPath(this FileSystemInfo info)
     {
-        // the path always starts with a slash
-        // the path of directory always ends with a slash
-        // C:\foo\bar -> \foo\bar\
-        // \\network-machine\foo\bar -> \foo\bar\
-        var root = info.GetRoot();
-        var path = info.FullName.TrimStart(root);
+        var root = info.GetRootPath();
+        var fullPath = info.FullName;
 
-        if (path == "")
-            return DirectorySeparator;
+        // Since root now ends with a separator, 
+        // we take the substring starting from the last character of the root.
+        // Example: Full="C:\foo", Root="C:\", Substring starts at index 2 -> "\foo"
+        var path = fullPath.Length >= root.Length
+            ? fullPath[(root.Length - 1)..]
+            : DirectorySeparator;
 
-        return info is DirectoryInfo && path.EndsWith(DirectorySeparator) == false
-            ? path + DirectorySeparator
-            : path;
+        // Basic cleanup: ensure it starts with a separator
+        if (string.IsNullOrEmpty(path) || !path.StartsWith(DirectorySeparator))
+        {
+            path = DirectorySeparator + path;
+        }
+
+        // Ensure directories end with a separator
+        if (info is DirectoryInfo && !path.EndsWith(DirectorySeparator))
+        {
+            path += DirectorySeparator;
+        }
+
+        return path;
     }
 }

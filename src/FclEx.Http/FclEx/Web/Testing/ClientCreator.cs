@@ -21,17 +21,13 @@ public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
         var path = GetCookiesFilePath(account);
         if (File.Exists(path))
         {
-#if NETSTANDARD2_0
-            var str = File.ReadAllText(path);
-#else            
             var str = await File.ReadAllTextAsync(path);
-#endif
             var cookies = str.FromJson<List<SimpleCookie>>()!;
             return cookies;
         }
         else
         {
-            return Array.Empty<SimpleCookie>();
+            return [];
         }
     }
 
@@ -40,11 +36,7 @@ public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
         var cookies = client.HttpService.GetAllSimpleCookies();
         var str = cookies.ToJson(new JsonOptions(true));
         var path = GetCookiesFilePath(client.Account);
-#if NETSTANDARD2_0
-        File.WriteAllText(path, str, Encoding.UTF8);
-#else
         await File.WriteAllTextAsync(path, str, Encoding.UTF8);
-#endif
     }
 
     public virtual Task<TClient> CreateClient(TAccount account, bool login, bool fakeLogin = true, bool useCache = true, bool readCookie = true, string? proxy = null)

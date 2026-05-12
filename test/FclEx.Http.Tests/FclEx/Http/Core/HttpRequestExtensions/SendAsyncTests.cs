@@ -68,6 +68,9 @@ public class SendAsyncTests : HttpServerTests
     [Fact]
     public async Task Form_Test()
     {
+        if (HasApiServer == false)
+            return;
+
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 3).ToDictionary(m => m.ToString(), m => random.NextString(5));
         var response = await HttpRequest.Post("api/post")
@@ -87,6 +90,9 @@ public class SendAsyncTests : HttpServerTests
     [Fact]
     public async Task Json_Test()
     {
+        if (HasApiServer == false)
+            return;
+
         var list = Enumerable.Range(1, 10).ToList();
         var response = await HttpRequest.Post("api/post")
             .JsonContent(list)
@@ -113,6 +119,9 @@ public class SendAsyncTests : HttpServerTests
     [InlineData("ISO-8859-1")]
     public async Task CharSet_Test(string charSet)
     {
+        if (HasApiServer == false)
+            return;
+
         var response = await HttpRequest.Post("api/charset")
             .AddQueryParam("charset", charSet)
             .SendAsync(TestHttp)
@@ -140,6 +149,9 @@ public class SendAsyncTests : HttpServerTests
     [Fact]
     public async Task Redirection_Test()
     {
+        if (HasApiServer == false)
+            return;
+
         var url = TestUrls.First();
         var response = await HttpRequest.Get("api/redirect")
             .AddQueryParam("u", url)

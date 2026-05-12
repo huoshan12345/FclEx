@@ -53,7 +53,7 @@ public static class JsonSerializerOptionsExtensions
             options = new(options);
         }
 
-        options.Converters.AddRangeSafely(converters);
+        options.Converters.AddRangeIfNotNull(converters);
         if (readOnly)
         {
             options.MakeReadOnly(false);

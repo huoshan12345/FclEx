@@ -20,6 +20,9 @@ public class AuthenticationHandlerTests : AuthTests
     [Fact]
     public async Task WithoutToken_401()
     {
+        if (HasApiServer == false)
+            return;
+
         var client = CreateHttpClient([RequiredScope], requireToken: false);
         var request = new HttpRequestMessage(HttpMethod.Get, TestUri.WithPath("/auth/test"));
         var response = await client.SendAsync(request);
@@ -29,6 +32,9 @@ public class AuthenticationHandlerTests : AuthTests
     [Fact]
     public async Task WithToken_200()
     {
+        if (HasApiServer == false)
+            return;
+
         var client = CreateHttpClient([RequiredScope]);
         var request = new HttpRequestMessage(HttpMethod.Get, TestUri.WithPath("/auth/test"));
         var response = await client.SendAsync(request);
@@ -38,6 +44,9 @@ public class AuthenticationHandlerTests : AuthTests
     [Fact]
     public async Task WithWrongScope_403()
     {
+        if (HasApiServer == false)
+            return;
+
         var client = CreateHttpClient([RequiredScope + "-1"]);
         var request = new HttpRequestMessage(HttpMethod.Get, TestUri.WithPath("/auth/test"));
         var response = await client.SendAsync(request);
@@ -47,6 +56,9 @@ public class AuthenticationHandlerTests : AuthTests
     [Fact]
     public async Task Should_UseCachedToken_AcrossMultipleRequests()
     {
+        if (HasApiServer == false)
+            return;
+
         var handler = new MutateTokenResponseHandler();
         var client = CreateHttpClient([RequiredScope], handler);
 
@@ -63,6 +75,9 @@ public class AuthenticationHandlerTests : AuthTests
     [Fact]
     public async Task Should_Retry_On401_WithNewToken()
     {
+        if (HasApiServer == false)
+            return;
+
         var handler = new MutateTokenResponseHandler((h, req, res, json) =>
         {
             if (h.TokenRequestCount == 1)
@@ -82,6 +97,9 @@ public class AuthenticationHandlerTests : AuthTests
     [Fact]
     public async Task Should_NotRetry_IfSecondAttemptFails()
     {
+        if (HasApiServer == false)
+            return;
+
         var handler = new MutateTokenResponseHandler((h, req, res, json) =>
         {
             json[TokenResponse.AccessToken] = "";

@@ -5,7 +5,7 @@ public class HttpResponseTests : HttpServerTests
     [Fact]
     public async Task Task_HttpResponse_ThrowIfError_Test()
     {
-        var error = nameof(Task_HttpResponse_ThrowIfError_Test);
+        const string error = nameof(Task_HttpResponse_ThrowIfError_Test);
         var task = Task.Run(async () =>
         {
             await Task.Yield();
@@ -19,6 +19,9 @@ public class HttpResponseTests : HttpServerTests
     [Fact]
     public async Task Task_HttpResponse_ReadJsonAs_Test()
     {
+        if (HasApiServer == false)
+            return;
+
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 3).ToDictionary(m => m.ToString(), m => random.NextString(5));
         var actual = await HttpRequest.Post("api/post")
@@ -35,6 +38,9 @@ public class HttpResponseTests : HttpServerTests
     [Fact]
     public async Task Task_HttpResponse_ReadJsonAsRequired_Test()
     {
+        if (HasApiServer == false)
+            return;
+
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 3).ToDictionary(m => m.ToString(), m => random.NextString(5));
         var actual = await HttpRequest.Post("api/post")

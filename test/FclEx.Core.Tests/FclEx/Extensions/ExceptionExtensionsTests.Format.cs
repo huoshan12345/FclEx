@@ -2,30 +2,6 @@
 
 partial class ExceptionExtensionsTests
 {
-    private readonly ITestOutputHelper _output;
-
-    public ExceptionExtensionsTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
-
-    private void Print(Exception ex)
-    {
-        _output.WriteLine(ex.ToString());
-        _output.WriteLine(Environment.NewLine);
-
-        var (infos, _) = ex.BuildTree();
-
-        foreach (var info in infos)
-        {
-            _output.WriteLine($"[{info.Index}->{info.ParentIndex}][{info.Type.Name}]: " + info.Message);
-            foreach (var stackTrace in info.StackTraceLines)
-            {
-                _output.WriteLine(stackTrace);
-            }
-        }
-    }
-
     [Fact]
     public async Task BuildTree_Complex_Test()
     {
@@ -35,7 +11,15 @@ partial class ExceptionExtensionsTests
         }
         catch (Exception ex)
         {
-            Print(ex);
+            var (infos, _) = ex.BuildTree();
+
+            foreach (var info in infos)
+            {
+                foreach (var line in info.StackTraceLines)
+                {
+                    Assert.True(ExceptionExtensions.ExcludeStackTracePrefixes.All(m => line.StartsWith(m) == false));
+                }
+            }
         }
     }
 
@@ -51,7 +35,6 @@ partial class ExceptionExtensionsTests
         foreach (var line in info.StackTraceLines)
         {
             Assert.True(ExceptionExtensions.ExcludeStackTracePrefixes.All(m => line.StartsWith(m) == false));
-            _output.WriteLine(line);
         }
     }
 }

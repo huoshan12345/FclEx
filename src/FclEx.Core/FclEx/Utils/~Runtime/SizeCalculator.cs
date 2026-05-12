@@ -40,7 +40,8 @@ public static class SizeCalculator
         var addresses = ObjectAccessor.GetAllFieldAddresses(ref instance, type);
         Debug.Assert(addresses.Length == fields.Count);
 
-        var ((firstAddress, _), (lastAddress, lastField)) = addresses.Zip(fields).MinMaxBy(m => m.First);
+        // nint in netfx does not implement IComparable, so we need to use ToInt64 for comparison
+        var ((firstAddress, _), (lastAddress, lastField)) = addresses.Zip(fields).MinMaxBy(m => m.First.ToInt64());
         var lastFieldOffset = (int)lastAddress.AbsDiff(firstAddress);
         var lastFieldSize = lastField.FieldType.IsValueType
             ? CalculateValueTypeInstance(lastField.FieldType)

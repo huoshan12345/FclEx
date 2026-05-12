@@ -4,10 +4,12 @@ public static class HttpContentExtensions
 {
     public const int DefaultBufferSize = 256 * 1024;
 
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
     public static async Task<Stream> ReadAsStreamAsync(this HttpContent content, CancellationToken token)
     {
-        return await content.ReadAsStreamAsync(DefaultBufferSize, null, token);
+        // NOTE: do not call ReadAsStreamAsync(this HttpContent content, int bufferSize, TimeSpan? readBufferTimeout, CancellationToken token)
+        // to avoid circular call.
+        return await content.ReadAsStreamAsync();
     }
 
     public static async Task<string> ReadAsStringAsync(this HttpContent content, CancellationToken token)
@@ -27,7 +29,7 @@ public static class HttpContentExtensions
     {
         var len = content.Headers.ContentLength ?? 0;
         var ms = new MemoryStream((int)len);
-#if NET6_0_OR_GREATER
+#if NET5_0_OR_GREATER
         await
 #endif
         using (var stream = await content.ReadAsStreamAsync(token))
@@ -40,7 +42,7 @@ public static class HttpContentExtensions
 
     public static async Task<byte[]> ReadAsByteArrayAsync(this HttpContent content, int bufferSize, TimeSpan? readBufferTimeout, CancellationToken token)
     {
-#if NET6_0_OR_GREATER
+#if NET5_0_OR_GREATER
         await
 #endif
         using var ms = await content.ReadAsStreamAsync(bufferSize, readBufferTimeout, token);
@@ -54,7 +56,7 @@ public static class HttpContentExtensions
         TimeSpan? timeout = null, int bufferSize = DefaultBufferSize, CancellationToken token = default)
         => new(content, compressionLevel, timeout, bufferSize, token);
 
-#if NET6_0_OR_GREATER
+#if NET5_0_OR_GREATER
     public static BrotliContent ToBrotli(this HttpContent content, CompressionLevel compressionLevel = CompressionLevel.Optimal,
         TimeSpan? timeout = null, int bufferSize = 256 * 1024, CancellationToken token = default)
         => new(content, compressionLevel, timeout, bufferSize, token);    

@@ -78,8 +78,10 @@ public static class ListExtensions
 
     public static Span<T> AsSpan<T>(this List<T>? list)
     {
-#if NETSTANDARD2_0
-        return list is null ? default : ListAccessor<T>.Items(list).AsSpan(0, list.Count);
+#if !NET5_0_OR_GREATER
+        return list.IsNullOrEmpty()
+            ? default
+            : ListAccessor<T>.Items(list).AsSpan(0, list.Count);
 #else
         return CollectionsMarshal.AsSpan(list);
 #endif
@@ -106,7 +108,7 @@ public static class ListExtensions
         ref var size = ref ListAccessor<T>.Size(list);
         if (count > list.Capacity)
         {
-            ListAccessor<T>.Grow(list, count);
+            list.Capacity = count;
         }
         else if (count < size)
         {
@@ -115,6 +117,18 @@ public static class ListExtensions
         }
         size = count;
     }
+
+#if !NET5_0_OR_GREATER
+    /// <summary>
+    /// Returns a read-only <see cref="ReadOnlyCollection{T}"/> wrapper
+    /// for the specified list.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the collection.</typeparam>
+    /// <param name="list">The list to wrap.</param>
+    /// <returns>An object that acts as a read-only wrapper around the current <see cref="IList{T}"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="list"/> is null.</exception>
+    public static ReadOnlyCollection<T> AsReadOnly<T>(this IList<T> list) => new(list);
+#endif
 
     extension<T>(List<T>)
     {

@@ -21,4 +21,9 @@ public static class ReadOnlyListExtensions
             ? value
             : defaultValue;
     }
+
+    public static T Sample<T>(this IReadOnlyList<T> list, Random? random = null)
+    {
+        return (random ?? Random.Shared).Sample(list);
+    }
 }

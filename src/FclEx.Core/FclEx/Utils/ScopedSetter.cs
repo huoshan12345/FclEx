@@ -31,6 +31,8 @@ public class ScopedSetter<T>(T obj) : IDisposable
 
     public void Dispose()
     {
+        GC.SuppressFinalize(this);
+
         foreach (var (member, value) in _members)
         {
             member.SetValue(_obj, value);

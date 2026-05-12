@@ -40,7 +40,7 @@ public static class DefaultPipelineAction
     public static Task<OperationResult<T>> ExecuteAsync<T>(IPipelineAction<T> action, CancellationToken token)
     {
         var time = ValueStopwatch.StartNew();
-        Debug.WriteLine($"[{action.GetName()}]Begin");
+        Trace.WriteLine($"[{action.GetName()}]Begin");
 
         var future = Operation.Action(action.ExecuteActionAsync)
             .ThenResult<T, T>(r => r.IsSuccess
@@ -52,7 +52,7 @@ public static class DefaultPipelineAction
         return future.ThenResult(m =>
         {
             var r = m.Elapsed(time.GetElapsedTime());
-            Debug.WriteLine($"[{action.GetName()}]End, after {r.Elapsed.TotalMilliseconds:f3} ms]");
+            Trace.WriteLine($"[{action.GetName()}]End, after {r.Elapsed.TotalMilliseconds:f3} ms]");
             return r;
         }).ExecuteAsync(token);
     }

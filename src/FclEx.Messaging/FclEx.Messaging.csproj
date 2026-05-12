@@ -3,9 +3,6 @@
     <PackageReference Include="Confluent.Kafka" />
     <PackageReference Include="RabbitMQ.Client" />
   </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-    <PackageReference Include="PolySharp" PrivateAssets="all" />
-  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FclEx.Logging\FclEx.Logging.csproj" />
   </ItemGroup>

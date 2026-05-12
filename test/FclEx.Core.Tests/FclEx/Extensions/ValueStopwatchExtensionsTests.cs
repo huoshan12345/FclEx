@@ -1,22 +1,27 @@
 ﻿namespace FclEx.Extensions;
 
-public class ValueStopwatchExtensionsTests(ITestOutputHelper output)
+public class ValueStopwatchExtensionsTests
 {
-    [Fact]
-    public void ToSecondsString_Test()
+    [Theory]
+    [InlineData(0, 1, 2, 3, 500, "01:02:03")]
+    [InlineData(0, 0, 0, 0, 999, "00:00:00")]
+    [InlineData(1, 0, 0, 0, 0, "1.00:00:00")]
+    [InlineData(1, 2, 3, 4, 5, "1.02:03:04")]
+    [InlineData(0, 25, 0, 0, 0, "1.01:00:00")]
+    [InlineData(0, 0, 0, 59, 0, "00:00:59")]
+    public void ToSecondsString_FormatsCorrectly(int d, int h, int m, int s, int ms, string expected)
     {
-        var timeSpans = new TimeSpan[]
-        {
-            new(1, 1, 1, 1, 100),
-            new(0, 1, 1, 1, 100),
-        };
+        var ts = new TimeSpan(d, h, m, s, ms);
+        var result = ts.ToSecondsString();
+        Assert.Equal(expected, result);
+    }
 
-        foreach (var timeSpan in timeSpans)
-        {
-            output.WriteLine(timeSpan.ToString());
-            output.WriteLine(timeSpan.ToSecondsString());
-            output.WriteLine();
-        }
+    [Fact]
+    public void ToSecondsString_HandlesNegativeTime()
+    {
+        var ts = TimeSpan.FromSeconds(-70);
+        var result = ts.ToSecondsString();
+        Assert.Equal("-00:01:10", result);
     }
 
     [Fact]

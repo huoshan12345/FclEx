@@ -35,7 +35,7 @@ public static class IPAddressExtensions
         {
             return ip.IsIPv6LinkLocal
                    || ip.IsIPv6SiteLocal
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
                    || ip.IsIPv6UniqueLocal();
 #else
                    || ip.IsIPv6UniqueLocal;
@@ -45,14 +45,12 @@ public static class IPAddressExtensions
         throw new NotSupportedException($"IP address family {ip.AddressFamily} is not supported, expected only IPv4 (InterNetwork) or IPv6 (InterNetworkV6).");
     }
 
-#if NETSTANDARD2_0
-    private static readonly FieldInfo _numbers = typeof(IPAddress).GetRequiredField("_numbers");
-
+#if !NET5_0_OR_GREATER
     /// <summary>Gets whether the address is an IPv6 Unique Local address.</summary>
     public static bool IsIPv6UniqueLocal(this IPAddress ip)
     {
         // return ((_numbers[0] & 0xFE00) == 0xFC00);
-        return (_numbers.GetValue<int>(ip) & 0xFE00) == 0xFC00;
+        return (FieldInfos.IPAddress_Numbers.GetRequiredValue<ushort[]>(ip)[0] & 0xFE00) == 0xFC00;
     }
 #endif
 

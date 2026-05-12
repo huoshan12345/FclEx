@@ -36,8 +36,8 @@ public class HttpHeaders() : NameValues<HttpHeaders>(StringComparer.OrdinalIgnor
 
     public static HttpHeaders Parse(string? query)
     {
-        var dic = HttpUtility.ParseQueryString(query ?? "");
-        return new HttpHeaders().Add(dic.Enumerate());
+        var dic = UriParams.Parse(query ?? "");
+        return new HttpHeaders().Add(dic);
     }
 
     public static HttpHeaders From(IEnumerable<KeyValuePair<string, string>> pairs) => new HttpHeaders().Add(pairs);

@@ -5,9 +5,8 @@
     <PackageReference Include="Duende.IdentityModel" />
     <PackageReference Include="AngleSharp" />
   </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+  <ItemGroup Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 5.0))">
     <PackageReference Include="StandardSocketsHttpHandler" />
-    <PackageReference Include="PolySharp" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FclEx.Logging\FclEx.Logging.csproj" />

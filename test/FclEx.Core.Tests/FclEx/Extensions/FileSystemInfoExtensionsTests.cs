@@ -1,132 +1,108 @@
 ﻿namespace FclEx.Extensions;
 
-public class FileSystemInfoExtensionsTests(ITestOutputHelper output)
+public class FileSystemInfoExtensionsTests
 {
+    private static bool IsWindows => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+
     [Theory]
-    [InlineData("C:", "C:")]
-    [InlineData(@"C:\", "C:")]
-    [InlineData(@"C:\foo\bar", "C:")]
-    [InlineData(@"\\network-machine\foo\bar", @"\\network-machine")]
-    [InlineData(@"\\network-machine", @"\\network-machine")]
-    [InlineData(@"\\network-machine\", @"\\network-machine")]
-    public void GetRoot_Directory_Test(string path, string expected)
+    // Windows Local Paths
+    [InlineData(@"C:\", @"C:\", true)]
+    [InlineData(@"C:\foo\bar.txt", @"C:\", false)]
+    // Windows UNC Paths
+    [InlineData(@"\\server\share\", @"\\server\share\", true)]
+    [InlineData(@"\\server\share\file.txt", @"\\server\share\", false)]
+    // Linux Paths
+    [InlineData("/", "/", true)]
+    [InlineData("/home/user", "/", false)]
+    public void GetRootPath_ShouldReturnCorrectRoot(string path, string expectedRoot, bool isRoot)
     {
-        // TODO: Fix this test on Linux
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) == false)
+        // Skip Windows tests on Linux and vice versa
+        if (IsWindows != path.Contains('\\')) 
             return;
 
-        Assert.Equal(expected, new DirectoryInfo(path).GetRoot());
+        // Special handling for NFX: new DirectoryInfo(@"\\server") throws ArgumentException
+        // Our GetRootPath should handle the string logic even if the object construction is tricky
+        var info = CreateInfo(path);
+
+        var actualRoot = info.GetRootPath();
+        Assert.Equal(expectedRoot, actualRoot);
+        Assert.Equal(isRoot, info.IsRoot());
     }
 
     [Theory]
-    [InlineData(@"C:\foo\bar\test.txt", "C:")]
-    [InlineData(@"\\network-machine\foo\bar\test.txt", @"\\network-machine")]
-    [InlineData(@"\\network-machine\test.txt", @"\\network-machine")]
-    public void GetRoot_File_Test(string path, string expected)
-    {
-        // TODO: Fix this test on Linux
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) == false)
-            return;
-
-        Assert.Equal(expected, new FileInfo(path).GetRoot());
-    }
-
-    [Theory]
-    [InlineData("C:", @"\")]
-    [InlineData(@"C:\", @"\")]
-    [InlineData(@"C:\foo\bar", @"\foo\bar\")]
     [InlineData(@"C:\foo\bar\", @"\foo\bar\")]
-    [InlineData(@"\\network-machine\foo\bar", @"\foo\bar\")]
-    [InlineData(@"\\network-machine\foo\bar\", @"\foo\bar\")]
-    [InlineData(@"\\network-machine\", @"\")]
-    [InlineData(@"\\network-machine", @"\")]
-    public void GetFullPathWithoutRoot_Directory_Test(string path, string expected)
+    [InlineData(@"C:\foo\file.txt", @"\foo\file.txt")]
+    [InlineData(@"\\server\share\sub\file.txt", @"\sub\file.txt")]
+    [InlineData("/", @"\")] // Linux root maps to our defined separator
+    public void GetRelativeRootPath_ShouldReturnFormattedPath(string fullPath, string expectedRelative)
     {
-        // TODO: Fix this test on Linux
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) == false)
+        if (IsWindows != fullPath.Contains('\\')) 
             return;
 
-        Assert.Equal(expected, new DirectoryInfo(path).GetFullPathWithoutRoot());
+        var info = CreateInfo(fullPath);
+        var result = info.GetRelativeRootPath();
+
+        // On Linux, Path.DirectorySeparatorChar is '/', adjust expectation
+        var platformExpected = expectedRelative.Replace('\\', Path.DirectorySeparatorChar);
+        Assert.Equal(platformExpected, result);
     }
 
     [Theory]
-    [InlineData(@"C:\test.txt", @"\test.txt")]
-    [InlineData(@"C:\foo\bar\test.txt", @"\foo\bar\test.txt")]
-    [InlineData(@"\\network-machine\test.txt", @"\test.txt")]
-    [InlineData(@"\\network-machine\foo\bar\test.txt", @"\foo\bar\test.txt")]
-    public void GetFullPathWithoutRoot_File_Test(string path, string result)
-    {
-        // TODO: Fix this test on Linux
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) == false)
-            return;
-
-        output.WriteLine(Path.GetPathRoot(path) ?? "");
-        Assert.Equal(result, new FileInfo(path).GetFullPathWithoutRoot());
-    }
-
-    [Theory]
-    [InlineData("C:", 0)]
-    [InlineData(@"C:\", 0)]
-    [InlineData(@"C:\foo", 1)]
-    [InlineData(@"C:\foo\", 1)]
-    [InlineData(@"C:\foo\bar", 2)]
-    [InlineData(@"\\network-machine\foo\bar", 2)]
-    [InlineData(@"\\network-machine", 0)]
-    [InlineData(@"\\network-machine\", 0)]
-    public void GetLevel_Directory_Test(string path, int expected)
-    {
-        // TODO: Fix this test on Linux
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) == false)
-            return;
-
-        Assert.Equal(expected, new DirectoryInfo(path).GetLevel());
-    }
-
-
-    [Theory]
-    [InlineData(@"C:\test.txt", 1)]
-    [InlineData(@"C:\foo\bar\test.txt", 3)]
-    [InlineData(@"\\network-machine\test.txt", 1)]
-    [InlineData(@"\\network-machine\foo\bar\test.txt", 3)]
-    public void GetLevel_File_Test(string path, int expected)
-    {
-        // TODO: Fix this test on Linux
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) == false)
-            return;
-
-        Assert.Equal(expected, new FileInfo(path).GetLevel());
-    }
-
-    [Theory]
-    [InlineData("C:", "")]
-    [InlineData(@"C:\", "")]
-    [InlineData(@"C:\foo\bar", "foo")]
     [InlineData(@"C:\foo\bar\", "foo")]
-    [InlineData(@"\\network-machine\foo\bar", "foo")]
-    [InlineData(@"\\network-machine\foo\bar\", "foo")]
-    [InlineData(@"\\network-machine\", "")]
-    [InlineData(@"\\network-machine", "")]
-    public void GetFirstDir_Directory_Test(string path, string expected)
+    [InlineData(@"C:\temp\test.txt", "temp")]
+    [InlineData(@"\\server\share\photos\cat.jpg", "photos")]
+    [InlineData(@"C:\", "")]
+    public void GetTopLevelDirectoryName_ShouldExtractFirstFolder(string path, string expectedName)
     {
-        // TODO: Fix this test on Linux
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) == false)
+        if (IsWindows != path.Contains('\\')) 
             return;
 
-        Assert.Equal(expected, new DirectoryInfo(path).GetFirstDir());
+        var info = CreateInfo(path);
+        Assert.Equal(expectedName, info.GetTopLevelDirectoryName());
     }
 
     [Theory]
-    [InlineData(@"C:\test.txt", "")]
-    [InlineData(@"C:\foo\bar\test.txt", "foo")]
-    [InlineData(@"\\network-machine\test.txt", "")]
-    [InlineData(@"\\network-machine\foo\bar\test.txt", "foo")]
-    public void GetFirstDir_File_Test(string path, string expected)
+    [InlineData(@"C:\", 0)]
+    [InlineData(@"C:\foo\", 1)]
+    [InlineData(@"C:\foo\bar.txt", 2)]
+    [InlineData(@"\\server\share\a\b\c.txt", 3)]
+    public void GetDepth_ShouldReturnCorrectInteger(string path, int expectedDepth)
     {
-        // TODO: Fix this test on Linux
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) == false)
+        if (IsWindows != path.Contains('\\'))
             return;
 
-        output.WriteLine(Path.GetPathRoot(path) ?? "");
-        Assert.Equal(expected, new FileInfo(path).GetFirstDir());
+        var info = CreateInfo(path);
+        Assert.Equal(expectedDepth, info.GetDepth());
+    }
+
+    /// <summary>
+    /// Helper to create FileInfo or DirectoryInfo based on path string.
+    /// Handles NFX vs NET5+ UNC constraints.
+    /// </summary>
+    private static FileSystemInfo CreateInfo(string path)
+    {
+        // On .NET Framework, normalizing a partial UNC like "\\server" throws.
+        // We wrap it in a try-catch or handle it via conditional compilation.
+        try
+        {
+            if (path.EndsWith(Path.DirectorySeparatorChar.ToString()) || !path.Contains("."))
+                return new DirectoryInfo(path);
+            return new FileInfo(path);
+        }
+        catch (ArgumentException) when (!IsNet5OrNewer())
+        {
+            // If it's NFX and it's a "broken" UNC, we might need a dummy or a more manual test
+            // Since we are testing EXTENSIONS, we can sometimes mock the FileSystemInfo if needed
+            throw;
+        }
+    }
+
+    private static bool IsNet5OrNewer()
+    {
+#if NET5_0_OR_GREATER
+        return true;
+#else
+        return false;
+#endif
     }
 }

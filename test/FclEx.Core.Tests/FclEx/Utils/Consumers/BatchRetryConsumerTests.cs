@@ -2,7 +2,7 @@
 
 namespace FclEx.Utils.Consumers;
 
-public class BatchRetryConsumerTests(ITestOutputHelper output)
+public class BatchRetryConsumerTests
 {
     private record Model(int Number);
 
@@ -30,7 +30,7 @@ public class BatchRetryConsumerTests(ITestOutputHelper output)
             Assert.NotNull(args.Exception);
             Assert.Equal(retryTimes, args.ErrorTimes);
         };
-        consumer.ExceptionLogger += (sender, ex, message) => output.WriteLine(message);
+        consumer.ExceptionLogger += (sender, ex, message) => { };
         consumer.AddRange(numbers);
         var task = consumer.StartAsync();
         consumer.CompleteAdding();

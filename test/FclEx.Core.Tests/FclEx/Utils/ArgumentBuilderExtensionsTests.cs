@@ -31,15 +31,16 @@ public class ArgumentBuilderExtensionsTests
     [MemberData(nameof(TypePairs))]
     public void GetInheritDepthFromClassTo_SameType(Type type, Type inheritType)
     {
-        if (type.IsClass)
-        {
-            Assert.Equal(0, type.GetInheritDepthFromClassTo(type));
-            if (type == inheritType)
-            {
-                Assert.Equal(0, type.GetInheritDepthFromClassTo(inheritType));
-                Assert.Equal(0, inheritType.GetInheritDepthFromClassTo(type));
-            }
-        }
+        if (!type.IsClass) 
+            return;
+
+        Assert.Equal(0, type.GetInheritDepthFromClassTo(type));
+
+        if (type != inheritType) 
+            return;
+
+        Assert.Equal(0, type.GetInheritDepthFromClassTo(inheritType));
+        Assert.Equal(0, inheritType.GetInheritDepthFromClassTo(type));
     }
 
     [Theory]
@@ -69,23 +70,24 @@ public class ArgumentBuilderExtensionsTests
     [MemberData(nameof(TypePairs))]
     public void GetInheritDepthFromInterfaceTo(Type type, Type inheritType)
     {
-        if (type.IsInterface)
+        if (!type.IsInterface) 
+            return;
+
+        Assert.Equal(0, type.GetInheritDepthFromInterfaceTo(type)); // test for sameType with
+
+        if (type == inheritType)
         {
-            Assert.Equal(0, type.GetInheritDepthFromInterfaceTo(type)); // test for sameType with
-            if (type == inheritType)
-            {
-                Assert.Equal(0, type.GetInheritDepthFromInterfaceTo(inheritType));
-                Assert.Equal(0, inheritType.GetInheritDepthFromInterfaceTo(type));
-            }
-            else if (type.IsAssignableFrom(inheritType))
-            {
-                Assert.Equal(1, type.GetInheritDepthFromInterfaceTo(inheritType));
-                Assert.Equal(-1, inheritType.GetInheritDepthFromInterfaceTo(type));
-            }
-            else
-            {
-                Assert.Equal(-1, type.GetInheritDepthFromInterfaceTo(inheritType));
-            }
+            Assert.Equal(0, type.GetInheritDepthFromInterfaceTo(inheritType));
+            Assert.Equal(0, inheritType.GetInheritDepthFromInterfaceTo(type));
+        }
+        else if (type.IsAssignableFrom(inheritType))
+        {
+            Assert.Equal(1, type.GetInheritDepthFromInterfaceTo(inheritType));
+            Assert.Equal(-1, inheritType.GetInheritDepthFromInterfaceTo(type));
+        }
+        else
+        {
+            Assert.Equal(-1, type.GetInheritDepthFromInterfaceTo(inheritType));
         }
     }
 

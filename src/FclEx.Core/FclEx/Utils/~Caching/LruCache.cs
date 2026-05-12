@@ -11,7 +11,7 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
 
     public LruCache(int? capacity = null, IEqualityComparer<TKey>? comparer = null)
     {
-        if (capacity is <= 0) 
+        if (capacity is <= 0)
             throw new ArgumentOutOfRangeException(nameof(capacity));
 
         Capacity = capacity ?? ushort.MaxValue;
@@ -147,7 +147,8 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
 
     public void Dispose()
     {
-        _lock?.Dispose();
+        GC.SuppressFinalize(this);
+        _lock.Dispose();
     }
 
     private T Read<T>(Func<T> func)

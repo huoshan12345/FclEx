@@ -4,7 +4,7 @@ partial class TypeExtensions
 {
     private static readonly ConcurrentDictionary<Type, TypeInfoEx> TypeInfoDic = new();
 
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
     private static readonly Lazy<PropertyInfo?> _isByRefLike = new(() => typeof(Type).GetProperty("IsByRefLike", BindingAttributes.Declared));
 #endif
 
@@ -57,9 +57,9 @@ partial class TypeExtensions
             if (type.IsValueType == false
                 || nullableUnderlyingType != null
                 || type.ContainsGenericParameters
-                || type.Name == "ArgIterator"
+                || type.FullName is "System.ArgIterator" or "System.RuntimeArgumentHandle" or "System.TypedReference"
                 // Byref-like structures are declared using ref struct keyword in C#. 
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
                 || IsByRefLike(type)
 #else
                 || type.IsByRefLike
@@ -67,9 +67,17 @@ partial class TypeExtensions
                 || type == typeof(void))
                 return null;
 
-            return Activator.CreateInstance(type);
+            try
+            {
+                return Activator.CreateInstance(type);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceWarning($"Failed to create instance of type {type.FullName}: {ex}");
+                return null;
+            }
         }
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
         static bool IsByRefLike(Type type)
         {
             return _isByRefLike.Value is { } field && field.GetValue<bool>(type);

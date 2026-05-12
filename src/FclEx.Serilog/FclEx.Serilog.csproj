@@ -3,7 +3,9 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Configuration" />
     <PackageReference Include="Serilog.Extensions.Logging" />
     <PackageReference Include="Destructurama.Attributed" />
-    <PackageReference Include="PolySharp" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <Reference Include="System.IO.Compression" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FclEx.Http\FclEx.Http.csproj" />

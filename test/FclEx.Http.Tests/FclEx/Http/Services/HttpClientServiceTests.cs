@@ -173,7 +173,7 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
         var http = HttpClientService.Create(m =>
         {
             m.ConnectTimeout = TimeSpan.FromMinutes(1);
-            m.SleepDurationProvider = m => TimeSpan.Zero;
+            m.SleepDurationProvider = _ => TimeSpan.Zero;
             m.RetryCount = retryCount;
         });
         var response = await HttpRequest.Get("https://baidu.com:444/")

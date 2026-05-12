@@ -121,7 +121,7 @@ public static class EnumExtensions
 
     extension(Enum)
     {
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
         public static T[] GetValues<T>() where T : struct, Enum
         {
             return (T[])Enum.GetValues(typeof(T));

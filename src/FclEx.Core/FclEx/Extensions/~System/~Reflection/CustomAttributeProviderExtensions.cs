@@ -8,7 +8,7 @@ public static class CustomAttributeProviderExtensions
         return attribute != null;
     }
 
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
     // this method's return type in dotnet version is IEnumerable<T> instead of T[], so we can't change it.
     public static IEnumerable<T> GetCustomAttributes<T>(this ICustomAttributeProvider provider, bool inherit) where T : Attribute
     {

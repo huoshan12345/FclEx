@@ -3,19 +3,20 @@
 public class LruCacheTests
 {
     [Fact]
-    public void Test()
+    public void Fuzz_Test()
     {
         const int capacity = 10;
         var random = new Random(31);
         var numbers = Enumerable.Range(-8, 16).ToArray();
         var cache = new LruCache<int, string>(capacity);
-        var dic = numbers.ToDictionary(m => m, m => default(DateTime?));
+        var dic = numbers.ToDictionary(m => m, m => default(int?));
+        var access = 0;
 
         for (var i = 0; i < numbers.Length * capacity; i++)
         {
-            var num = random.NextElement(numbers);
+            var num = random.Sample(numbers);
             var exist = dic.TryGetValue(num, out var existTime) && existTime.HasValue;
-            dic[num] = DateTime.UtcNow;
+            dic[num] = access++;
 
             var keys = cache.Keys;
             Assert.Equal(exist, keys.Contains(num));
@@ -56,7 +57,7 @@ public class LruCacheTests
     }
 
     [Fact]
-    public async Task BasicScenarios_Test()
+    public async Task Basic_Test()
     {
         var cd = new LruCache<int, int>(10);
 
@@ -98,20 +99,16 @@ public class LruCacheTests
         await Task.WhenAll(tks);
     }
 
-    [Fact]
-    public void Add_Test()
-    {
-        TestAdd1(1, 1, 1, 1000);
-        TestAdd1(5, 1, 1, 1000);
-        TestAdd1(1, 1, 2, 500);
-        TestAdd1(1, 1, 5, 200);
-        TestAdd1(4, 0, 4, 200);
-        TestAdd1(16, 31, 4, 200);
-        TestAdd1(64, 5, 5, 500);
-        TestAdd1(5, 5, 5, 250);
-    }
-
-    private static void TestAdd1(int cLevel, int initSize, int threads, int addsPerThread)
+    [Theory]
+    [InlineData(1, 1, 1, 1000)]
+    [InlineData(5, 1, 1, 1000)]
+    [InlineData(1, 1, 2, 500)]
+    [InlineData(1, 1, 5, 200)]
+    [InlineData(4, 0, 4, 200)]
+    [InlineData(16, 31, 4, 200)]
+    [InlineData(64, 5, 5, 500)]
+    [InlineData(5, 5, 5, 250)]
+    public void Add_Test(int cLevel, int initSize, int threads, int addsPerThread)
     {
         var dict = new LruCache<int, int>();
 
@@ -169,20 +166,16 @@ public class LruCacheTests
         Assert.Equal(expectedCount, dict.ToArray().Length);
     }
 
-    [Fact]
-    public static void Update_Test()
-    {
-        TestUpdate1(1, 1, 1000);
-        TestUpdate1(5, 1, 1000);
-        TestUpdate1(1, 2, 500);
-        TestUpdate1(1, 5, 201);
-        TestUpdate1(4, 4, 201);
-        TestUpdate1(15, 5, 201);
-        TestUpdate1(64, 5, 500);
-        TestUpdate1(5, 5, 2500);
-    }
-
-    private static void TestUpdate1(int cLevel, int threads, int updatesPerThread)
+    [Theory]
+    [InlineData(1, 1, 1000)]
+    [InlineData(5, 1, 1000)]
+    [InlineData(1, 2, 500)]
+    [InlineData(1, 5, 200)]
+    [InlineData(4, 4, 200)]
+    [InlineData(15, 5, 201)]
+    [InlineData(64, 5, 500)]
+    [InlineData(5, 5, 250)]
+    public void Update_Test(int cLevel, int threads, int updatesPerThread)
     {
         var dict = new LruCache<int, int>();
 

@@ -24,7 +24,7 @@ public static class ValueTaskExtensions
 
     extension(ValueTask)
     {
-#if NETSTANDARD
+#if !NET5_0_OR_GREATER
         public static ValueTask CompletedTask => default;
 
         public static ValueTask<TResult> FromResult<TResult>(TResult result) => new(result);

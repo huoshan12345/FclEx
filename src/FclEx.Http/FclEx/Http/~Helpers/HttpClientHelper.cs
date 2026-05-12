@@ -48,7 +48,7 @@ public static class HttpClientHelper
                 // note: this method throws a SocketException when there is no IP address for the host
                 var ips = IPAddress.TryParse(host, out var ip)
                     ? [ip]
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
                     : (await Dns.GetHostEntryAsync(host)).AddressList;
 #else
                     : (await Dns.GetHostEntryAsync(host, family, token)).AddressList;
@@ -72,16 +72,19 @@ public static class HttpClientHelper
                 {
                     try
                     {
-#if NETSTANDARD2_0
-                        socket.Connect(address, context.DnsEndPoint.Port);
-#else
                         await socket.ConnectAsync(address, context.DnsEndPoint.Port, token);
-#endif
                         return new NetworkStream(socket, ownsSocket: true);
                     }
+
                     catch (Exception ex)
                     {
                         lastEx = ex;
+
+                        if (ex is OperationCanceledException canceledException
+                           && canceledException.CancellationToken == token && token.IsCancellationRequested)
+                        {
+                            break;
+                        }
                     }
                 }
 
@@ -113,48 +116,5 @@ public static class HttpClientHelper
             if (sentBytesCount != 1)
                 throw new InvalidOperationException("Cannot send any data via socket.");
         }
-    }
-
-    private static readonly FieldInfo _underlyingHandler =
-            typeof(HttpClientHandler).GetRequiredField("_underlyingHandler");
-
-    // NOTE: we only change some properties of the handler instead of creating a new one, in order to keep the settings made in other packages.
-    // e.g. Matrix client adds a certificate into HttpClientHandler, which should be kept.
-    private static void ConfigureHttpMessageHandler(HttpMessageHandler handler)
-    {
-        // NOTE: HttpClient use HttpClientHandler as the primary handler, but other types may be used like SocketsHttpHandler.
-        switch (handler)
-        {
-            case HttpClientHandler httpClientHandler:
-                ConfigureHttpClientHandler(httpClientHandler);
-                break;
-
-            case SocketsHttpHandler socketsHttpHandler:
-                ConfigureSocketsHttpHandler(socketsHttpHandler);
-                break;
-        }
-    }
-
-    private static void ConfigureHttpClientHandler(HttpClientHandler handler)
-    {
-        var inner = _underlyingHandler.GetValue(handler);
-
-        if (inner is SocketsHttpHandler socketsHttpHandler)
-        {
-            ConfigureSocketsHttpHandler(socketsHttpHandler);
-        }
-        // NOTE: the underlying handler may also be BrowserHttpHandler, which is probably used in blazor.
-    }
-
-    private static void ConfigureSocketsHttpHandler(SocketsHttpHandler handler)
-    {
-        // The connection is reestablished periodically to reflect the DNS or other network changes.
-        handler.PooledConnectionLifetime = TimeSpan.FromMinutes(2);
-        handler.PooledConnectionIdleTimeout = TimeSpan.FromMinutes(1);
-        handler.ConnectTimeout = TimeSpan.FromSeconds(10);
-        handler.MaxConnectionsPerServer = ushort.MaxValue;
-        handler.UseCookies = false;
-        handler.AllowAutoRedirect = true;
-        handler.UseProxy = false;
     }
 }

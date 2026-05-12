@@ -6,6 +6,9 @@ public class DataAnnotationTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [Fact]
     public async Task TableName_Postfix_Test()
     {
+        if (DatabaseTypes.Contains(DbProviderType.Npgsql) == false)
+            return;
+
         await using var context = Fixture.CreateDbContext(DbProviderType.Npgsql);
         var e = new HasPostfixEntity();
         await context.InsertAsync(e);
@@ -19,6 +22,9 @@ public class DataAnnotationTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [Fact]
     public async Task TableName_TableAttribute_Test()
     {
+        if (DatabaseTypes.Contains(DbProviderType.Npgsql) == false)
+            return;
+
         await using var context = Fixture.CreateDbContext(DbProviderType.Npgsql);
         var e = new HasTableAttributeEntity();
         await context.InsertAsync(e);
@@ -32,6 +38,9 @@ public class DataAnnotationTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [Fact]
     public async Task IEntity_Id_AutoIncrement_Test()
     {
+        if (DatabaseTypes.Contains(DbProviderType.Npgsql) == false)
+            return;
+
         await using var context = Fixture.CreateDbContext(DbProviderType.Npgsql);
         var e = new EntityWithIndex();
         await context.InsertAsync(e);
@@ -41,6 +50,9 @@ public class DataAnnotationTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [Fact]
     public async Task IEntity_Id_PrimaryKey_Test()
     {
+        if (DatabaseTypes.Contains(DbProviderType.Npgsql) == false)
+            return;
+
         await using var context = Fixture.CreateDbContext(DbProviderType.Npgsql);
         var entityType = context.Model.FindEntityType(typeof(EntityWithIndex));
         Assert.NotNull(entityType);
@@ -67,6 +79,9 @@ public class DataAnnotationTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [Fact]
     public async Task IEntity_Indexes_Test()
     {
+        if (DatabaseTypes.Contains(DbProviderType.Npgsql) == false)
+            return;
+
         await using var context = Fixture.CreateDbContext(DbProviderType.Npgsql);
         var entityType = context.Model.FindEntityType(typeof(EntityWithIndex));
         Assert.NotNull(entityType);

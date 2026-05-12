@@ -2,7 +2,7 @@
 
 namespace FclEx.Extensions;
 
-public class RandomExtensionsTests(ITestOutputHelper output)
+public class RandomExtensionsTests
 {
     [Fact]
     public void NextMarshalable_Struct_Test()
@@ -12,7 +12,6 @@ public class RandomExtensionsTests(ITestOutputHelper output)
         {
             var x = random.NextMarshalable<MarshalableStruct>();
             Assert.Equal(4, x.Array?.Length);
-            output.WriteLine(x);
         }
     }
 }

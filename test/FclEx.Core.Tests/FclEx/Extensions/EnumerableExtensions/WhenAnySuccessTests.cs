@@ -2,13 +2,6 @@
 
 public class WhenAnySuccessTests
 {
-    private readonly ITestOutputHelper _output;
-
-    public WhenAnySuccessTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
-
     [Fact]
     public async Task WhenAnySuccess_Test()
     {
@@ -16,7 +9,6 @@ public class WhenAnySuccessTests
         var tasks = numbers.Select((m, i) => Task.Run(async () =>
         {
             await Task.Delay(TimeSpan.FromMilliseconds(100));
-            _output.WriteLine("task " + i);
             return Interlocked.Increment(ref numbers[i]);
         }));
         var result = await tasks.WhenAnySuccess(m => m > 0, () => 0);
@@ -29,7 +21,6 @@ public class WhenAnySuccessTests
         var tasks = Enumerable.Range(1, 3).Select((m, i) => Task.Run<int>(async () =>
         {
             await Task.Delay(TimeSpan.FromMilliseconds(100));
-            _output.WriteLine("task " + i);
             throw new Exception();
         }));
 

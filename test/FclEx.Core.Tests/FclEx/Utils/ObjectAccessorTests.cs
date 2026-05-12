@@ -1,9 +1,10 @@
 ﻿using FclEx.TestModels;
+using Microsoft.VisualStudio.TestPlatform.Utilities;
 using Xunit.Sdk;
 
 namespace FclEx.Utils;
 
-public class ObjectAccessorTests(ITestOutputHelper output)
+public class ObjectAccessorTests
 {
     [Fact]
     public unsafe void GetAddress_Null_Test()
@@ -32,7 +33,8 @@ public class ObjectAccessorTests(ITestOutputHelper output)
         Assert.Equal(expected.ToHexString(), actual.ToHexString());
     }
 
-    private void GetAllFieldAddresses_Test<T>(ref T obj, IReadOnlyList<nint> addresses) where T : notnull
+    // Prefer IntPtr over nint here to avoid member resolution issues in .NET Framework.
+    private static void GetAllFieldAddresses_Test<T>(ref T obj, IReadOnlyList<IntPtr> addresses) where T : notnull
     {
         GC.Collect(); // test movable object.
 
@@ -41,7 +43,7 @@ public class ObjectAccessorTests(ITestOutputHelper output)
 
         var table = new ConsoleTable(new() { Columns = ["Name", "Type", "Address", "Offset", "Value"], RenderColumns = true });
 
-        foreach (var ((field, address), (_, prevAddr)) in fields.Zip(addresses).OrderBy(m => m.Second).WithPrevious())
+        foreach (var ((field, address), (_, prevAddr)) in fields.Zip(addresses).OrderBy(m => m.Second.ToInt64()).WithPrevious())
         {
             var value = UnsafeHelper.GetValue(address, field.FieldType);
             var expectedValue = field.GetValue(obj);
@@ -60,7 +62,10 @@ public class ObjectAccessorTests(ITestOutputHelper output)
             table.Rows.Add([name, field.FieldType.ShortName(), address.ToHexString(), offset, expectedValue]);
         }
 
-        output.WriteLine(table.ToString());
+        if (TestHelper.IsRunningUnderReSharper())
+        {
+            TestContext.Current.TestOutputHelper?.WriteLine(table.ToString());
+        }
     }
 
     [Fact]

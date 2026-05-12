@@ -2,7 +2,7 @@
 
 public static class CookieContainerExtensions
 {
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
     private static readonly FieldInfo _domainTable = typeof(CookieContainer).GetRequiredField("m_domainTable");
 
     [SuppressMessage("ReSharper", "LoopCanBeConvertedToQuery")]

@@ -60,22 +60,22 @@ public class ConsoleTable : IRenderable
 
         string BuildFormat()
         {
-            using var builder = new ValueStringBuilder(1024);
+            using var sb = new ValueStringBuilder(1024);
 
             for (var i = 0; i < Columns.Length; i++)
             {
                 // find the longest column by searching each row
                 var len = GetColumnLength(i);
-                builder.Append(" | {");
-                builder.Append(i.ToString());
-                builder.Append(',');
-                builder.Append('-');
-                builder.Append(len.ToString());
-                builder.Append('}');
+                sb.Append(" | {");
+                sb.Append(i.ToString());
+                sb.Append(',');
+                sb.Append('-');
+                sb.Append(len.ToString());
+                sb.Append('}');
             }
-            builder.Append(" |");
+            sb.Append(" |");
 
-            return builder.ToString();
+            return sb.ToString();
         }
 
         int GetColumnLength(int index)

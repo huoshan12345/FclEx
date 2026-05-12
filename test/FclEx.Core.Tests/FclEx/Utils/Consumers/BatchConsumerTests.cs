@@ -2,39 +2,23 @@
 
 public class BatchConsumerTests
 {
-    private readonly ITestOutputHelper _output;
-
-    public BatchConsumerTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
-
     [Fact]
     public async Task Test()
     {
         using var consumer = new BatchConsumer<int>(5, TimeSpan.FromMilliseconds(100), 2);
-        consumer.ConsumingHandler += (_, _) =>
-        {
-            _output.WriteLine("OnConsume");
-            throw new Exception();
-        };
+        consumer.ConsumingHandler += (_, _) => throw new Exception();
+
         var exceptions = 0;
         consumer.ExceptionHandler += (_, args) =>
         {
             exceptions++;
             args.ForEach(m =>
             {
-                _output.WriteLine("OnException");
                 Assert.NotNull(m.Exception);
-                Assert.IsAssignableFrom<Exception>(m.Exception);
             });
         };
-        consumer.DiscardHandler += (_, args) => args.ForEach(m =>
-        {
-            _output.WriteLine("OnDiscard");
-            Assert.NotNull(m.Exception);
-            Assert.IsAssignableFrom<Exception>(m.Exception);
-        });
+        consumer.DiscardHandler += (_, args) => args.ForEach(m => Assert.NotNull(m.Exception));
+
         var task = consumer.StartAsync();
         var items = Enumerable.Range(1, 3).ToArray();
 

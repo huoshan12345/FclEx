@@ -2,7 +2,7 @@
 
 public static class ProcessExtensions
 {
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
     /// <summary>
     /// Waits asynchronously for the process to exit.
     /// </summary>

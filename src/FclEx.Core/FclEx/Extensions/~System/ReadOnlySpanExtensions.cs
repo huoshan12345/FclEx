@@ -2,12 +2,21 @@
 
 public static class ReadOnlySpanExtensions
 {
+    [MethodImpl(AggressiveInlining)]
     public static bool StartsWith<T>(this ReadOnlySpan<T> span, T value) where T : IEquatable<T>
     {
         var valueSpan = Span.Create(ref value);
         return span.StartsWith(valueSpan);
     }
 
+    [MethodImpl(AggressiveInlining)]
+    public static bool EndsWith<T>(this ReadOnlySpan<T> span, T value) where T : IEquatable<T>
+    {
+        var valueSpan = Span.Create(ref value);
+        return span.EndsWith(valueSpan);
+    }
+
+    [MethodImpl(AggressiveInlining)]
     public static string GetString(this ReadOnlySpan<byte> span, Encoding? encoding = null)
     {
         return (encoding ?? Encoding.UTF8).GetString(span);
@@ -89,7 +98,7 @@ public static class ReadOnlySpanExtensions
     /// <exception cref="System.ArgumentException">
     /// Thrown when <typeparamref name="TFrom"/> or <typeparamref name="TTo"/> contains pointers.
     /// </exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static ReadOnlySpan<TTo> Cast<TFrom, TTo>(this ReadOnlySpan<TFrom> span)
         where TFrom : struct
         where TTo : struct
@@ -108,7 +117,7 @@ public static class ReadOnlySpanExtensions
     /// <exception cref="System.OverflowException">
     /// Thrown if the Length property of the new Span would exceed int.MaxValue.
     /// </exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static ReadOnlySpan<byte> AsBytes<T>(this ReadOnlySpan<T> span) where T : struct
     {
         return MemoryMarshal.AsBytes(span);
@@ -124,19 +133,19 @@ public static class ReadOnlySpanExtensions
         return col;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static TCollection ToCollection<T, TCollection>(this ReadOnlySpan<T> span) where TCollection : ICollection<T>, new()
     {
         return span.ToCollection(() => new TCollection());
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static HashSet<T> ToHashSet<T>(this ReadOnlySpan<T> span)
     {
         return span.ToCollection<T, HashSet<T>>();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static List<T> ToList<T>(this ReadOnlySpan<T> span)
     {
         return span.ToCollection<T, List<T>>();

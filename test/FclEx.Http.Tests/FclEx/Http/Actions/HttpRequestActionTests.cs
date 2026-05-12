@@ -5,6 +5,9 @@ public class HttpRequestActionTests : HttpServerTests
     [Fact]
     public async Task MultipleActions_Tests()
     {
+        if (HasApiServer == false)
+            return;
+
         var path = new Uri("api/post", UriKind.RelativeOrAbsolute);
         var (successful, data, ex, _) = await HttpRequest.Post(path)
             .JsonContent(Enumerable.Range(1, 10).ToList())

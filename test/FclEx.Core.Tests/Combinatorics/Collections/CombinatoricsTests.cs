@@ -5,13 +5,6 @@
 /// </summary>
 public class CombinatoricsTests
 {
-    private readonly ITestOutputHelper _output;
-
-    public CombinatoricsTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
-
     /// <summary>
     /// Standard permutations simply provide every single ordering of the input set.
     /// Permutations of {A B C}: {A B C}, {A C B}, {B A C}, {B C A}, {C A B}, {C B A}
@@ -25,14 +18,7 @@ public class CombinatoricsTests
     public void Generate_Permutations_Without_Repetition_On_3_Unique_Input_Items_Should_Create_6_Output_Permutations()
     {
         var integers = new List<int> { 1, 2, 3 };
-
         var p = new Permutations<int>(integers, GenerateOption.WithoutRepetition);
-
-        foreach (var v in p)
-        {
-            _output.WriteLine(string.Join(",", v));
-        }
-
         Assert.Equal(6, p.Count);
     }
 
@@ -52,14 +38,7 @@ public class CombinatoricsTests
     public void Generate_Permutations_With_Repetition_On_4_Input_Items_Including_Duplicates_Should_Create_24_Output_Permutations()
     {
         var integers = new List<int> { 1, 1, 2, 3 };
-
         var p = new Permutations<int>(integers, GenerateOption.WithRepetition);
-
-        foreach (var v in p)
-        {
-            _output.WriteLine(string.Join(",", v));
-        }
-
         Assert.Equal(24, p.Count);
     }
 
@@ -75,14 +54,7 @@ public class CombinatoricsTests
     public void Generate_Combinations_of_3_Without_Repetition_On_6_Input_Items_Should_Create_20_Output_Items()
     {
         var integers = new List<int> { 1, 2, 3, 4, 5, 6 };
-
         var c = new Combinations<int>(integers, 3, GenerateOption.WithoutRepetition);
-
-        foreach (var v in c)
-        {
-            _output.WriteLine(string.Join(",", v));
-        }
-
         Assert.Equal(20, c.Count);
     }
 
@@ -96,14 +68,7 @@ public class CombinatoricsTests
     public void Generate_Combinations_of_2_With_Repetition_On_6_Input_Items_Should_Create_21_Output_Items()
     {
         var integers = new List<int> { 1, 2, 3, 4, 5, 6 };
-
         var c = new Combinations<int>(integers, 2, GenerateOption.WithRepetition);
-
-        foreach (var v in c)
-        {
-            _output.WriteLine(string.Join(",", v));
-        }
-
         Assert.Equal(21, c.Count);
     }
 
@@ -125,14 +90,7 @@ public class CombinatoricsTests
     public void Generate_Variations_of_3_Without_Repetition_On_6_Input_Items_Should_Create_120_Output_Items()
     {
         var integers = new List<int> { 1, 2, 3, 4, 5, 6 };
-
         var v = new Variations<int>(integers, 3, GenerateOption.WithoutRepetition);
-
-        foreach (var vv in v)
-        {
-            _output.WriteLine(string.Join(",", vv));
-        }
-
         Assert.Equal(120, v.Count);
     }
 
@@ -150,14 +108,7 @@ public class CombinatoricsTests
     public void Generate_Variations_of_3_With_Repetition_On_6_Input_Items_Should_Create_216_Output_Items()
     {
         var integers = new List<int> { 1, 2, 3, 4, 5, 6 };
-
         var v = new Variations<int>(integers, 3, GenerateOption.WithRepetition);
-
-        foreach (var vv in v)
-        {
-            _output.WriteLine(string.Join(",", vv));
-        }
-
         Assert.Equal(216, v.Count);
     }
 }

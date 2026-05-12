@@ -1,22 +1,7 @@
-﻿using System.Collections.ObjectModel;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static partial class DictionaryExtensions
 {
-    public static bool TryGetAndDo<TKey, TValue>([NotNullWhen(true)] this IDictionary<TKey, TValue>? dic, [NotNullWhen(true), MaybeNull] TKey key, Action<TValue> action)
-    {
-        if (key is null || dic is null)
-            return false;
-
-        var result = dic.TryGetValue(key, out var value);
-        if (result)
-        {
-            action(value!);
-        }
-        return result;
-    }
-
     [return: NotNullIfNotNull(nameof(defaultValue))]
     public static TValue? Get<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey key, TValue? defaultValue = default)
     {
@@ -42,13 +27,9 @@ public static partial class DictionaryExtensions
         return dic.TryGetValue(key, out var value) && value is not null ? selector(value) : defaultValue;
     }
 
-    public static bool TryAdd<TKey, TValue>(this Dictionary<TKey, TValue> dic, TKey? key, TValue value) where TKey : notnull
-    {
-        return key is not null && dic.TryAdd(key, value);
-    }
-
     public static void Add<TCol, TKey, TValue>(this IDictionary<TKey, TCol> dic, TKey key, TValue? value) where TCol : ICollection<TValue?>, new()
     {
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         if (dic.TryGetValue(key, out var col) && col is not null)
         {
             col.Add(value);
@@ -75,10 +56,7 @@ public static partial class DictionaryExtensions
         foreach (var item in items)
         {
             var key = func(item);
-            if (!dic.ContainsKey(key))
-            {
-                dic.Add(key, item);
-            }
+            dic.TryAdd(key, item);
         }
     }
 
@@ -107,11 +85,11 @@ public static partial class DictionaryExtensions
 
     public static TValue GetOrAdd<TKey, TValue>(this Dictionary<TKey, TValue> dic, TKey key, Func<TKey, TValue> valueFactory) where TKey : notnull
     {
-        if (!dic.TryGetValue(key, out var value))
-        {
-            value = valueFactory(key);
-            dic[key] = value;
-        }
+        if (dic.TryGetValue(key, out var value))
+            return value;
+
+        value = valueFactory(key);
+        dic[key] = value;
         return value;
     }
 
@@ -125,7 +103,7 @@ public static partial class DictionaryExtensions
         };
     }
 
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
     public static bool Remove<TKey, TValue>(this Dictionary<TKey, TValue> dic, TKey key, [NotNullWhen(true)] out TValue value) where TKey : notnull
     {
         if (dic.TryGetValue(key, out value))
@@ -136,6 +114,17 @@ public static partial class DictionaryExtensions
 #pragma warning restore CS8762 // Parameter must have a non-null value when exiting in some condition.
         }
         return false;
+    }
+    
+    public static bool TryAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
+    {
+        Check.NotNull(dictionary);
+
+        if (dictionary.ContainsKey(key))
+            return false;
+
+        dictionary.Add(key, value);
+        return true;
     }
 #endif
 }

@@ -4,11 +4,9 @@ public delegate void OnHttpFailedCode(HttpResponseMessage response, string conte
 
 public static class HttpClientExtensions
 {
-    private static readonly FieldInfo _handler = typeof(HttpMessageInvoker).GetRequiredField("_handler");
-
     public static HttpMessageHandler GetHandler(this HttpClient httpClient)
     {
-        return _handler.GetRequiredValue<HttpMessageHandler>(httpClient);
+        return FieldInfos.HttpMessageInvoker_Handler.GetRequiredValue<HttpMessageHandler>(httpClient);
     }
 
     public static HttpMessageHandler GetPrimaryHandler(this HttpClient httpClient)

@@ -8,9 +8,10 @@ public class SocketsHttpHandlerOptionsEqualityComparer : IEqualityComparer<Socke
     public bool Equals(SocketsHttpHandlerOptions? x, SocketsHttpHandlerOptions? y)
     {
         if (ReferenceEquals(x, y)) return true;
-        if (ReferenceEquals(x, null)) return false;
-        if (ReferenceEquals(y, null)) return false;
+        if (x is null) return false;
+        if (y is null) return false;
         if (x.GetType() != y.GetType()) return false;
+
         return x.ConnectTimeout.Equals(y.ConnectTimeout)
                && x.IPVersionPolicy == y.IPVersionPolicy
                && x.AllowAutoRedirect == y.AllowAutoRedirect

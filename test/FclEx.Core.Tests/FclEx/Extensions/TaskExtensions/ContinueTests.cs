@@ -77,8 +77,10 @@ public class ContinueTests
         var action = CreateCanceledTask<int>();
         var result = await Assert.ThrowsAsync<TaskCanceledException>(() => task.Then(() => action));
 
-        Assert.Equal(action, result.Task);
-        Assert.Equal("A task was canceled.", result.Message);
+#if NET5_0_OR_GREATER
+        Assert.Equal(action, result.Task); // they are not equal in .net framework
+#endif
+        Assert.Equal(TaskCanceledExceptionMessage, result.Message);
         Assert.DoesNotContain("<Then>", result.StackTrace);
     }
 
@@ -145,7 +147,9 @@ public class ContinueTests
         var action = CreateCanceledTask<string>();
         var result = await Assert.ThrowsAsync<TaskCanceledException>(() => task.Then(value => action));
 
-        Assert.Equal(action, result.Task);
+#if NET5_0_OR_GREATER
+        Assert.Equal(action, result.Task); // they are not equal in .net framework
+#endif
         Assert.Equal("A task was canceled.", result.Message);
         Assert.True(result.StackTrace.IsNotEmpty());
     }

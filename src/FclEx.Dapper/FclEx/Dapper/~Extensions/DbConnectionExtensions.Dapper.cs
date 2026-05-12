@@ -64,7 +64,7 @@ partial class DbConnectionExtensions
     }
 
 
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
     internal static Task<DbTransactionWrapper> BeginTransactionAsync(this DbConnection con, IsolationLevel isolationLevel)
     {
         var tran = con.BeginTransaction(isolationLevel);

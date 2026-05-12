@@ -113,7 +113,7 @@ public static partial class StringBuilderExtensions
     }
 
 
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
     public static StringBuilder AppendJoin<T>(this StringBuilder builder, string? separator, IEnumerable<T> values)
     {
         Check.NotNull(builder);
@@ -124,12 +124,12 @@ public static partial class StringBuilderExtensions
         if (!e.MoveNext())
             return builder;
 
-        builder.Append(e.Current?.ToString());
+        builder.Append(e.Current);
 
         while (e.MoveNext())
         {
             builder.Append(separator);
-            builder.Append(e.Current?.ToString());
+            builder.Append(e.Current);
         }
 
         return builder;

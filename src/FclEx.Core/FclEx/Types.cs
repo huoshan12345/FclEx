@@ -5,7 +5,7 @@ public static class Types
     /// <summary>
     /// 10 built-in integer types.
     /// </summary>
-    public static readonly ReadOnlySet<Type> IntegerTypes =
+    public static readonly ReadOnlyHashSet<Type> IntegerTypes =
     [
         typeof(sbyte),
         typeof(byte),
@@ -22,7 +22,7 @@ public static class Types
     /// <summary>
     /// 2 built-in floating types.
     /// </summary>
-    public static readonly ReadOnlySet<Type> FloatingTypes =
+    public static readonly ReadOnlyHashSet<Type> FloatingTypes =
     [
         typeof(float),
         typeof(double),
@@ -31,7 +31,7 @@ public static class Types
     /// <summary>
     /// 14 primitive types.
     /// </summary>
-    public static readonly ReadOnlySet<Type> PrimitiveTypes =
+    public static readonly ReadOnlyHashSet<Type> PrimitiveTypes =
     [
         ..IntegerTypes,
         ..FloatingTypes,
@@ -42,7 +42,7 @@ public static class Types
     /// <summary>
     /// 12 blittable types.
     /// </summary>
-    public static readonly ReadOnlySet<Type> BlittableTypes =
+    public static readonly ReadOnlyHashSet<Type> BlittableTypes =
     [
         ..IntegerTypes,
         ..FloatingTypes,

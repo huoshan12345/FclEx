@@ -157,7 +157,6 @@ public abstract class ArrayBasedCollection<TSelf, T> : IReadOnlyCollection<T>
             : GetEnumerator();
     }
 
-
     public struct Enumerator : IEnumerator<T>
     {
         private readonly TSelf _self;

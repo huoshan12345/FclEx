@@ -279,6 +279,9 @@ public class OrderedList<T> : ArrayBasedCollection<OrderedList<T>, T>, IList<T>,
         // always create a new array to avoid mutating the input collection if it's already an array or list
         var temp = items.ToArray();
 
+        if (temp.Length == 0)
+            return;
+
         // Materialize and sort the new items.
         temp.StableSort(_comparer);
 
@@ -293,8 +296,8 @@ public class OrderedList<T> : ArrayBasedCollection<OrderedList<T>, T>, IList<T>,
         }
 
         // Fast path for appending to the end if the new items are all greater than or equal to the last item.
-        if (_count > 0 &&
-            _comparer.Compare(_items[_count - 1], temp[0]) <= 0)
+        // _count > 0 and temp.Length > 0 at this point.
+        if (_comparer.Compare(_items[_count - 1], temp[0]) <= 0)
         {
             AppendSorted(temp);
             return;

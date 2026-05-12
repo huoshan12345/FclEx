@@ -2,9 +2,8 @@
   <ItemGroup>
     <PackageReference Include="Dapper" />
   </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-    <PackageReference Include="System.ComponentModel.Annotations" />
-    <PackageReference Include="PolySharp" PrivateAssets="all" />
+  <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <Reference Include="System.Transactions" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FclEx.Core\FclEx.Core.csproj" />

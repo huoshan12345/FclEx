@@ -4,7 +4,7 @@ public static class BitConverterExtensions
 {
     extension(BitConverter)
     {
-#if NETSTANDARD
+#if !NET5_0_OR_GREATER
         [MethodImpl(AggressiveInlining)]
         public static int ToInt32(ReadOnlySpan<byte> value)
         {

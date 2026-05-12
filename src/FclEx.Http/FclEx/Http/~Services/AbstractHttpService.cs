@@ -44,7 +44,7 @@ public abstract class AbstractHttpService : IHttpService
     public IReadOnlyCollection<Cookie> GetCookies(Uri uri)
     {
         return UseCookie
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
             ? _cookieContainer.GetCookies(uri).Enumerate().AsIReadOnlyCollection()
 #else
             ? _cookieContainer.GetCookies(uri)
@@ -75,12 +75,12 @@ public abstract class AbstractHttpService : IHttpService
     public IReadOnlyCollection<Cookie> GetAllCookies()
     {
         return UseCookie
-#if NETSTANDARD2_0
+#if !NET5_0_OR_GREATER
             ? _cookieContainer.GetAllCookies().Enumerate().AsIReadOnlyCollection()
 #else
             ? _cookieContainer.GetAllCookies()
 #endif
-            : Array.Empty<Cookie>();
+            : [];
     }
 
     public virtual IWebProxy? Proxy { get; set; }

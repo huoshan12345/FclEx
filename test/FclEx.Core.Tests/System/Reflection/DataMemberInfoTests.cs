@@ -1,13 +1,9 @@
 ﻿// ReSharper disable UnusedAutoPropertyAccessor.Local
-
 #pragma warning disable CS0414
 #pragma warning disable IDE0051
 namespace System.Reflection;
 
-[SuppressMessage("ReSharper", "InconsistentNaming")]
-[SuppressMessage("ReSharper", "UnusedMember.Global")]
-[SuppressMessage("ReSharper", "UnusedMember.Local")]
-public class DataMemberInfoTests(ITestOutputHelper output)
+public class DataMemberInfoTests
 {
     public class Model
     {
@@ -45,8 +41,6 @@ public class DataMemberInfoTests(ITestOutputHelper output)
         foreach (var member in typeof(Model).EnumerateDataMember())
         {
             Assert.Equal(member.ToDataMemberInfo(), member.ToDataMemberInfo());
-            output.WriteLine(member.Name);
-
             count++;
         }
         Assert.Equal(18, count);
