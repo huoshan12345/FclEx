@@ -1,5 +1,7 @@
 ﻿using FclEx.Tests;
+#if NET8_0_OR_GREATER
 using static Duende.IdentityModel.OidcConstants;
+#endif
 
 namespace FclEx.Http.Tests;
 
@@ -38,6 +40,13 @@ public class HttpServerFixture : GlobalFixture
         = File.ReadAllText(Path.Combine("TestData", "SimpleCookies.json"))
             .FromJson<List<SimpleCookie>>()!;
 
+    public const string TokenPath = "/oauth/openid-connect/token";
+    public const string RequiredScope = "test-scope";
+    
+#if NET8_0_OR_GREATER
+
+    public static readonly bool HasApiServer = true;
+
     private static readonly Lazy<string> VisitorHtml = new(() =>
         ResourceHelper.Embedded.ReadString(typeof(HttpServerFixture).Assembly, "visitor.html"));
     private static readonly Encoding Gb2312 = Encoding.GetEncoding("gb2312");
@@ -48,7 +57,7 @@ public class HttpServerFixture : GlobalFixture
         return new SymmetricSecurityKey(key.Base64ToBytes());
     }
 
-    public static string CreateToken(string[] scopes)
+    private static string CreateToken(string[] scopes)
     {
         var key = GetSecurityKey();
         var claims = new Dictionary<string, object>
@@ -74,10 +83,6 @@ public class HttpServerFixture : GlobalFixture
         return handler.CreateToken(descriptor);
     }
 
-    public const string TokenPath = "/oauth/openid-connect/token";
-    public const string RequiredScope = "test-scope";
-
-#if NET8_0_OR_GREATER
     private static async Task RunApiServer()
     {
         var builder = WebApplication.CreateBuilder();
@@ -206,8 +211,11 @@ public class HttpServerFixture : GlobalFixture
         await app.StartAsync();
     }
 #else
+    public static readonly bool HasApiServer = false;
+
     private static Task RunApiServer() => Task.CompletedTask;
 #endif
+
     public override async ValueTask InitializeAsync()
     {
         await RunApiServer();

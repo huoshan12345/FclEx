@@ -2,15 +2,20 @@
 
 public class WebProxyEqualityComparer : IEqualityComparer<WebProxy>
 {
+    private static readonly IEqualityComparer<IEnumerable<string>> BypassListComparer
+        = EnumerableEqualityComparer.StringOrdinalIgnoreCase;
+    private static readonly IEqualityComparer<Uri> AddressComparer
+        = UriOriginEqualityComparer.Instance;
+
     public bool Equals(WebProxy? x, WebProxy? y)
     {
         if (ReferenceEquals(x, y)) return true;
-        if (ReferenceEquals(x, null)) return false;
-        if (ReferenceEquals(y, null)) return false;
+        if (x is null) return false;
+        if (y is null) return false;
         if (x.GetType() != y.GetType()) return false;
 
-        return SchemeAndServerEqualityComparer.Instance.Equals(x.Address, y.Address)
-               && x.BypassList.SequenceEqual(y.BypassList)
+        return AddressComparer.Equals(x.Address, y.Address)
+               && BypassListComparer.Equals(x.BypassList, y.BypassList)
                && x.BypassProxyOnLocal == y.BypassProxyOnLocal
                && Equals(x.Credentials, y.Credentials)
                && x.UseDefaultCredentials == y.UseDefaultCredentials;
@@ -18,9 +23,12 @@ public class WebProxyEqualityComparer : IEqualityComparer<WebProxy>
 
     public int GetHashCode(WebProxy obj)
     {
+        var addressCode = AddressComparer.GetHashCodeOrDefault(obj.Address);
+        var bypassListCode = BypassListComparer.GetHashCodeOrDefault(obj.BypassList);
+
         return HashCode.Combine(
-            obj.Address,
-            obj.BypassList,
+            addressCode,
+            bypassListCode,
             obj.BypassProxyOnLocal,
             obj.Credentials,
             obj.UseDefaultCredentials);

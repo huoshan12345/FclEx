@@ -2,13 +2,6 @@
 
 public class HttpClientHelperTests
 {
-    private readonly ITestOutputHelper _output;
-
-    public HttpClientHelperTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
-
     [RetryFact]
     public async Task GetRetryPolicy_Timeout_Test()
     {
@@ -38,15 +31,17 @@ public class HttpClientHelperTests
     {
         var timeout = TimeSpan.FromSeconds(0.2);
         var handler = HttpClientHelper.CreateSocketsHttpHandler(new() { ConnectTimeout = TimeSpan.FromHours(1) });
+        // ReSharper disable once ShortLivedHttpClient
         using var httpClient = new HttpClient(handler, true) { Timeout = timeout };
 
         var watch = ValueStopwatch.StartNew();
         var ex = await Assert.ThrowsAnyAsync<TaskCanceledException>(() => httpClient.GetAsync("https://google.com:444/", HttpCompletionOption.ResponseHeadersRead));
         var time = watch.GetElapsedTime();
 
+#if NET5_0_OR_GREATER
         Assert.Contains("configured HttpClient.Timeout", ex.Message);
         Assert.NotNull(ex.InnerException);
-
+#endif
         Assert.Equal(timeout, time, TimeSpan.FromSeconds(0.1));
     }
 }

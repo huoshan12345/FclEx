@@ -22,4 +22,13 @@ public static class FieldInfos
             "_numbers"
 #endif
         );
+
+    public static readonly FieldInfo HttpMessageInvoker_Handler = typeof(HttpMessageInvoker)
+        .GetRequiredField(
+#if NETFRAMEWORK
+            "handler"
+#else
+            "_handler"
+#endif
+        );
 }

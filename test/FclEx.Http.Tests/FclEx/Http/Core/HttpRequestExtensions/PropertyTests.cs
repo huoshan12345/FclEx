@@ -30,6 +30,9 @@ public class PropertyTests : HttpServerTests
     [InlineData(false)]
     public async Task CharSet_Test(bool value)
     {
+        if (HasApiServer == false)
+            return;
+
         var (_, testUrl, charset, keyword) = CharSetTestCase;
 
         var request = HttpRequest.Get(testUrl);
@@ -48,6 +51,9 @@ public class PropertyTests : HttpServerTests
     [InlineData(false)]
     public async Task FallbackCharSet_Test(bool value)
     {
+        if (HasApiServer == false)
+            return;
+
         var (_, testUrl, charset, keyword) = CharSetTestCase;
 
         var request = HttpRequest.Get(testUrl);
@@ -66,6 +72,9 @@ public class PropertyTests : HttpServerTests
     [InlineData(false)]
     public async Task DetectCharSet_Test(bool value)
     {
+        if (HasApiServer == false)
+            return;
+
         var (_, testUrl, _, keyword) = CharSetTestCase;
 
         var response = await HttpRequest
@@ -83,6 +92,9 @@ public class PropertyTests : HttpServerTests
     [MemberData(nameof(CompressionMethods))]
     public async Task Compress_Test(CompressionMethod compression)
     {
+        if (HasApiServer == false)
+            return;
+
 #if NET6_0_OR_GREATER
         if (compression == CompressionMethod.Brotli) // the website does not support
             return;
@@ -112,6 +124,9 @@ public class PropertyTests : HttpServerTests
     [MemberData(nameof(CompressionMethods))]
     public async Task Compress_LocalServer_Test(CompressionMethod compression)
     {
+        if (HasApiServer == false)
+            return;
+
         if (compression != CompressionMethod.None && Environment.Version.Major < 7)
             return; // test server in aspnet 6.0 has not configured decompression.
 

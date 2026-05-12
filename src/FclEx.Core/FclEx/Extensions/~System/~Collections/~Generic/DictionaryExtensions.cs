@@ -1,22 +1,7 @@
-﻿using System.Collections.ObjectModel;
-
-namespace FclEx.Extensions;
+﻿namespace FclEx.Extensions;
 
 public static partial class DictionaryExtensions
 {
-    public static bool TryGetAndDo<TKey, TValue>([NotNullWhen(true)] this IDictionary<TKey, TValue>? dic, [NotNullWhen(true), MaybeNull] TKey key, Action<TValue> action)
-    {
-        if (key is null || dic is null)
-            return false;
-
-        var result = dic.TryGetValue(key, out var value);
-        if (result)
-        {
-            action(value!);
-        }
-        return result;
-    }
-
     [return: NotNullIfNotNull(nameof(defaultValue))]
     public static TValue? Get<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey key, TValue? defaultValue = default)
     {
@@ -129,6 +114,17 @@ public static partial class DictionaryExtensions
 #pragma warning restore CS8762 // Parameter must have a non-null value when exiting in some condition.
         }
         return false;
+    }
+    
+    public static bool TryAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
+    {
+        Check.NotNull(dictionary);
+
+        if (dictionary.ContainsKey(key))
+            return false;
+
+        dictionary.Add(key, value);
+        return true;
     }
 #endif
 }

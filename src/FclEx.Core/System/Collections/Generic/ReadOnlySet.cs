@@ -3,7 +3,7 @@
 // NOTE: The ReadOnlySet from .Net 9.0 does not support collection initializer,
 // so we implement our own version here and do not put it in the same namespace.
 [CollectionBuilder(typeof(ReadOnlySetBuilder), nameof(ReadOnlySetBuilder.Create))]
-public class ReadOnlySet<T>(ISet<T>? set = null) : IReadOnlyContainer<T>
+public class ReadOnlyHashSet<T>(ISet<T>? set = null) : IReadOnlyContainer<T>
 {
     private readonly ISet<T> _set = set ?? new HashSet<T>();
 
@@ -15,13 +15,13 @@ public class ReadOnlySet<T>(ISet<T>? set = null) : IReadOnlyContainer<T>
 
 internal static class ReadOnlySetBuilder
 {
-    internal static ReadOnlySet<T> Create<T>(ReadOnlySpan<T> values) => new(values.ToHashSet());
+    internal static ReadOnlyHashSet<T> Create<T>(ReadOnlySpan<T> values) => new(values.ToHashSet());
 }
 
 public static class ReadOnlySetExtensions
 {
-    public static ReadOnlySet<T> ToReadOnlySet<T>(this IEnumerable<T> enumerable)
+    public static ReadOnlyHashSet<T> ToReadOnlySet<T>(this IEnumerable<T> enumerable)
     {
-        return new ReadOnlySet<T>(enumerable.AsISet());
+        return new ReadOnlyHashSet<T>(enumerable.AsISet());
     }
 }

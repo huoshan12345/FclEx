@@ -4,7 +4,7 @@ namespace FclEx.Helpers;
 
 public class UnsafeHelperTests
 {
-    public static readonly ReadOnlySet<Type> CommonValueTypes =
+    public static readonly ReadOnlyHashSet<Type> CommonValueTypes =
     [
         ..Types.BlittableTypes,
         typeof(DateTime), // non-blittable

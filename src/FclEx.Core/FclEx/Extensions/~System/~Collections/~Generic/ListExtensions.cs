@@ -118,6 +118,18 @@ public static class ListExtensions
         size = count;
     }
 
+#if !NET5_0_OR_GREATER
+    /// <summary>
+    /// Returns a read-only <see cref="ReadOnlyCollection{T}"/> wrapper
+    /// for the specified list.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the collection.</typeparam>
+    /// <param name="list">The list to wrap.</param>
+    /// <returns>An object that acts as a read-only wrapper around the current <see cref="IList{T}"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="list"/> is null.</exception>
+    public static ReadOnlyCollection<T> AsReadOnly<T>(this IList<T> list) => new(list);
+#endif
+
     extension<T>(List<T>)
     {
         public static List<T> operator +(List<T> list, List<T> other)

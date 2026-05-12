@@ -7,6 +7,9 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     [Fact]
     public async Task GetToken_ShouldReturnAccessToken()
     {
+        if (HasApiServer == false)
+            return;
+
         const string scope = "api";
         var provider = CreateTestTokenProvider();
         var token = await provider.GetTokenAsync(scope);
@@ -19,6 +22,9 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     [Fact]
     public async Task GetToken_ShouldUseCache_ForSameScope()
     {
+        if (HasApiServer == false)
+            return;
+
         var handler = new MutateTokenResponseHandler();
         var provider = CreateTestTokenProvider(handler);
         var token1 = await provider.GetTokenAsync("api");
@@ -31,6 +37,9 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     [Fact]
     public async Task GetToken_ShouldCachePerScope()
     {
+        if (HasApiServer == false)
+            return;
+
         var handler = new MutateTokenResponseHandler();
         var provider = CreateTestTokenProvider(handler);
         await provider.GetTokenAsync("scope1");
@@ -42,6 +51,9 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     [Fact]
     public async Task GetToken_ShouldRefresh_WhenExpired()
     {
+        if (HasApiServer == false)
+            return;
+
         var handler = new MutateTokenResponseHandler((_, _, _, m) => m[TokenResponse.ExpiresIn] = 1);
         var provider = CreateTestTokenProvider(handler);
         await provider.GetTokenAsync("api");
@@ -54,6 +66,9 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     [Fact]
     public async Task GetToken_ShouldOnlyRequestOnce_UnderConcurrency()
     {
+        if (HasApiServer == false)
+            return;
+
         const string scope = "api";
         var handler = new MutateTokenResponseHandler();
         var provider = CreateTestTokenProvider(handler);
@@ -74,6 +89,9 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     [Fact]
     public async Task GetToken_ShouldForceRefresh_WhenRequested()
     {
+        if (HasApiServer == false)
+            return;
+
         var handler = new MutateTokenResponseHandler();
         var provider = CreateTestTokenProvider(handler);
         await provider.GetTokenAsync("api");

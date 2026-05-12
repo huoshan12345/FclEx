@@ -7,7 +7,9 @@ public static class HttpContentExtensions
 #if !NET5_0_OR_GREATER
     public static async Task<Stream> ReadAsStreamAsync(this HttpContent content, CancellationToken token)
     {
-        return await content.ReadAsStreamAsync(DefaultBufferSize, null, token);
+        // NOTE: do not call ReadAsStreamAsync(this HttpContent content, int bufferSize, TimeSpan? readBufferTimeout, CancellationToken token)
+        // to avoid circular call.
+        return await content.ReadAsStreamAsync();
     }
 
     public static async Task<string> ReadAsStringAsync(this HttpContent content, CancellationToken token)

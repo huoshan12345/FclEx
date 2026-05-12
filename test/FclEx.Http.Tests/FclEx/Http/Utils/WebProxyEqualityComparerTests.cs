@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace FclEx.Http.Utils;
+﻿namespace FclEx.Http.Utils;
 
 public class WebProxyEqualityComparerTests
 {
@@ -13,5 +8,35 @@ public class WebProxyEqualityComparerTests
     public void Equals_Empty_Test()
     {
         Assert.True(Comparer.Equals(WebProxyHelper.Empty, new WebProxy()));
+    }
+
+    [Fact]
+    public void GetHashCode_Empty_Test()
+    {
+        Assert.Equal(
+            Comparer.GetHashCode(WebProxyHelper.Empty), 
+            Comparer.GetHashCode(new WebProxy()));
+    }
+
+    [Fact]
+    public void Equals_SameUri_Test()
+    {
+        var uri = new Uri("http://127.0.0.1:8888");
+        var proxy1 = WebProxyHelper.Create(uri);
+        var proxy2 = WebProxyHelper.Create(uri);
+
+        Assert.True(Comparer.Equals(proxy1, proxy2));
+    }
+
+    [Fact]
+    public void GetHashCode_SameUri_Test()
+    {
+        var uri = new Uri("http://127.0.0.1:8888");
+        var proxy1 = WebProxyHelper.Create(uri);
+        var proxy2 = WebProxyHelper.Create(uri);
+
+        Assert.Equal(
+            Comparer.GetHashCode(proxy1),
+            Comparer.GetHashCode(proxy2));
     }
 }
