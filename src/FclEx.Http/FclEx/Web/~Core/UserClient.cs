@@ -39,8 +39,6 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
 
     public virtual ILogger Logger => _logger.Value;
 
-    public virtual bool IsOnline => State.SessionStatus == UserClientSessionStatus.Online;
-
     protected UserClient(TAccount account, ILoggerFactory? loggerFactory = null)
     {
         _account = Check.NotNull(account);
@@ -67,7 +65,6 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
         return
         [
             (nameof(Account), () => Account),
-            (nameof(IsOnline), () => IsOnline),
             (nameof(State.SessionStatus), () => State.SessionStatus),
             (nameof(State.AccountStatus), () => State.AccountStatus),
         ];
@@ -95,7 +92,7 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
 
     protected async Task<OperationResult> DoLoginAsync(Func<CancellationToken, Task<OperationResult>> loginAction, CancellationToken token)
     {
-        if (IsOnline)
+        if (this.IsOnline)
         {
             Logger.LogTrace("Already online");
             return Operation.Success();
@@ -103,7 +100,7 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
 
         using var _ = await LoginLocker.LockAsync(token);
 
-        if (IsOnline)
+        if (this.IsOnline)
         {
             Logger.LogTrace("Already online");
             return Operation.Success();

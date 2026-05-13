@@ -4,7 +4,6 @@ public interface IUserClient<TAccount> where TAccount : IUserAccount
 {
     int Id { get; }
     ILogger Logger { get; }
-    bool IsOnline { get; }
     TAccount Account { get; set; }
     IUserClientSession Session { get; }
     IUserClientState State { get; }

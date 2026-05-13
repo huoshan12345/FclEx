@@ -17,6 +17,11 @@ public static class UserClientStateExtensions
         return state.SessionStatus == UserClientSessionStatus.LoggingIn;
     }
 
+    public static bool IsAccountNormal(this IUserClientState state)
+    {
+        return state.AccountStatus == UserAccountStatus.Normal;
+    }
+
     public static void Offline(this IUserClientState state)
     {
         state.SessionStatus = UserClientSessionStatus.Offline;
