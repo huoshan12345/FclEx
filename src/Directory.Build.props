@@ -22,6 +22,14 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <EnableNETAnalyzers>False</EnableNETAnalyzers>
+    <AnalysisLevel>none</AnalysisLevel>
+    <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+    <RunAnalyzersDuringLiveAnalysis>false</RunAnalyzersDuringLiveAnalysis>
+    <RunAnalyzers>false</RunAnalyzers>
+  </PropertyGroup>
+
   <ItemGroup Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 8.0))">
     <PackageReference Include="PolySharp" PrivateAssets="all" />
   </ItemGroup>
@@ -36,18 +44,5 @@
       <_Parameter1>$(AssemblyName).Tests</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
-
-  <PropertyGroup>
-    <BlockedCompilePackages Condition="$(MSBuildProjectName) != 'FclEx.NewtonsoftJson'">Newtonsoft.Json</BlockedCompilePackages>
-    <BlockedCompilePackages>$(BlockedCompilePackages);IdentityModel</BlockedCompilePackages>
-    <BlockedCompilePackages>;$(BlockedCompilePackages);</BlockedCompilePackages>
-  </PropertyGroup>
-
-  <Target Name="RemoveCompileTimeReferences" AfterTargets="ResolvePackageAssets" BeforeTargets="ResolveLockFileReferences">
-    <ItemGroup>
-      <ResolvedCompileFileDefinitions Remove="@(ResolvedCompileFileDefinitions)"
-                                      Condition="$([System.String]::Copy('$(BlockedCompilePackages)').Contains(';%(NuGetPackageId);'))" />
-    </ItemGroup>
-  </Target>
 
 </Project>

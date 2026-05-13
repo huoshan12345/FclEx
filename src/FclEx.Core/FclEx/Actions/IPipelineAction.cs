@@ -34,7 +34,7 @@ public interface IPipelineAction<T> : IAction<T>
 
 public static class DefaultPipelineAction
 {
-    public static string GetName<T>(IPipelineAction<T> action) => action.GetName();
+    public static string GetName<T>(IPipelineAction<T> action) => action.GetType().ShortName();
     public static Task<OperationResult<T>> HandleCancellationAsync<T>(IPipelineAction<T> action, Exception ex) => Operation.Cancel<T>(ex);
     public static Task<OperationResult<T>> HandleErrorAsync<T>(IPipelineAction<T> action, Exception ex) => Operation.Error<T>(ex);
     public static Task<OperationResult<T>> ExecuteAsync<T>(IPipelineAction<T> action, CancellationToken token)

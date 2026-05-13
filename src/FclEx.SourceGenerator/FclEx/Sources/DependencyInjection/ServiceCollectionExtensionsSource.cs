@@ -17,7 +17,7 @@ internal class ServiceCollectionExtensionsSource
         builder.WriteNamespace(@namespace, true);
 
         // Class declaration
-        builder.WriteLine($"public partial class {className}")
+        builder.WriteLine($"public static partial class {className}")
             .WriteOpeningBracket();
 
         /*

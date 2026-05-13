@@ -37,7 +37,7 @@ internal static class UnicodeScalarHelperSource
             .WriteOpeningBracket();
 
         // Class declaration
-        builder.WriteLine($"public partial class {className}")
+        builder.WriteLine($"public static partial class {className}")
             .WriteOpeningBracket();
 
         builder.WriteLine(methodName)

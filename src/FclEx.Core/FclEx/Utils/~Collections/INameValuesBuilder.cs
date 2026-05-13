@@ -1,6 +1,4 @@
-﻿#if NET6_0_OR_GREATER
-using static FclEx.Utils.NameValueOmitOption;
-#endif
+﻿using static FclEx.Utils.NameValueOmitOption;
 
 namespace FclEx.Utils;
 
@@ -8,17 +6,26 @@ public interface INameValuesBuilder
 {
     NameValuesBuilderOptions Options
 #if NET6_0_OR_GREATER
-    => NameValuesBuilderOptions.Default;
+        => NameValuesBuilderOptions.Default;
 #else
     { get; }
 #endif
 
     List<KeyValuePair<string, string>> Build()
 #if NET6_0_OR_GREATER
+        => DefaultNameValuesBuilder.Build(this);
+#else
+    ;
+#endif
+}
+
+public static class DefaultNameValuesBuilder
+{
+    public static List<KeyValuePair<string, string>> Build(INameValuesBuilder builder)
     {
         var list = new List<KeyValuePair<string, string>>();
 
-        var members = GetType().GetDataMembers()
+        var members = builder.GetType().GetDataMembers()
             .Where(m => m is { IsStatic: false, HasPublicGetter: true });
 
         foreach (var member in members)
@@ -28,10 +35,10 @@ public interface INameValuesBuilder
 
             var omit = queryAttr.OmitOption;
             if (omit == Unset)
-                omit = Options.OmitOption;
+                omit = builder.Options.OmitOption;
 
             var name = queryAttr.Name ?? member.Name;
-            var value = member.GetValue(this);
+            var value = member.GetValue(builder);
             var type = member.DataMemberType.UnwrapNullable();
 
             if (value is not null)
@@ -49,7 +56,7 @@ public interface INameValuesBuilder
                 {
                     var convention = queryAttr.BoolValueConvention;
                     if (convention == BoolValueConvention.Unset)
-                        convention = Options.BoolValueConvention;
+                        convention = builder.Options.BoolValueConvention;
 
                     var flag = (bool)value;
                     value = convention switch
@@ -73,7 +80,12 @@ public interface INameValuesBuilder
 
         return list;
     }
-#else
-;
-#endif
+}
+
+public class NameValuesBuilder : INameValuesBuilder
+{
+    public virtual NameValuesBuilderOptions Options { get; }
+        = NameValuesBuilderOptions.Default;
+    public virtual List<KeyValuePair<string, string>> Build()
+        => DefaultNameValuesBuilder.Build(this);
 }

@@ -53,7 +53,7 @@ public class RouterTests(RabbitMQFixture fixture) : RabbitMQTests(fixture)
             Type = "topic",
             IsDelayed = true,
         };
-        var connection = RmqConnection;
+        var connection = RabbitMQConnection;
         await using var publisher = await TestPublisher.CreateAsync(new PublisherSettings(connection, inputExchange));
 
         var routerSettings = new RouterSettings(connection, inputExchange, new QueueSettings

@@ -4,11 +4,9 @@ public interface IUserClient<TAccount> where TAccount : IUserAccount
 {
     int Id { get; }
     ILogger Logger { get; }
-    bool IsOnline { get; }
     TAccount Account { get; set; }
     IUserClientSession Session { get; }
-    AccountStatus AccountStatus { get; set; }
-    event Action<AccountStatus> OnAccountStatusChanged;
+    IUserClientState State { get; }
     IHttpService HttpService { get; set; }
     Task<OperationResult> LoginAsync(CancellationToken token = default);
     Task<OperationResult> FakeLoginAsync(bool loginIfFail = true, CancellationToken token = default);

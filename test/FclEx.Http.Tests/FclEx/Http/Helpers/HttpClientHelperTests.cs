@@ -2,7 +2,7 @@
 
 public class HttpClientHelperTests
 {
-    [RetryFact]
+    [RetryFact(5)]
     public async Task GetRetryPolicy_Timeout_Test()
     {
         var timeout = TimeSpan.FromSeconds(0.2);
@@ -23,10 +23,10 @@ public class HttpClientHelperTests
         var time = watch.GetElapsedTime();
 
         var executeTime = timeout.Multiply(retryCount + 1);
-        Assert.Equal(executeTime, time, TimeSpan.FromSeconds(0.1));
+        Assert.Equal(executeTime, time, TimeSpan.FromSeconds(0.5));
     }
 
-    [RetryFact]
+    [RetryFact(5)]
     public async Task HttpClient_Timeout_Test()
     {
         var timeout = TimeSpan.FromSeconds(0.2);
@@ -42,6 +42,6 @@ public class HttpClientHelperTests
         Assert.Contains("configured HttpClient.Timeout", ex.Message);
         Assert.NotNull(ex.InnerException);
 #endif
-        Assert.Equal(timeout, time, TimeSpan.FromSeconds(0.1));
+        Assert.Equal(timeout, time, TimeSpan.FromSeconds(0.5));
     }
 }

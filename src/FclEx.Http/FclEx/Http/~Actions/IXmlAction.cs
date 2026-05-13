@@ -82,10 +82,14 @@ public static class DefaultXmlAction
 public abstract class XmlAction<T> : HttpResponseHandler<T>, IXmlAction<T>
 {
     public virtual string? XmlResultPath => null;
-    public virtual OperationResult<string> GetXml(HttpResponse response) => DefaultXmlAction.GetXml(this, response);
+    public virtual OperationResult<string> GetXml(HttpResponse response)
+        => DefaultXmlAction.GetXml(this, response);
     public virtual OperationResult<XmlActionContext> CreateContext(HttpResponse response, string xml)
         => DefaultXmlAction.CreateContext(this, response, xml);
-    public virtual OperationResult<T> GetResult(XmlActionContext context) => DefaultXmlAction.GetResult(this, context);
+    public virtual OperationResult<T> GetResult(XmlActionContext context)
+        => DefaultXmlAction.GetResult(this, context);
+    public override OperationResult<T> GetResult(HttpResponse response)
+        => DefaultXmlAction.GetResult(this, response);
 }
 
 public abstract class XmlAction : XmlAction<Unit>, IXmlAction

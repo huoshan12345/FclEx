@@ -2,5 +2,5 @@
 
 public class RabbitMQFixture : GlobalFixture
 {
-    public static ConnectionSettings RmqConnection { get; } = Config.GetSection("Rmq").Get<ConnectionSettings>()!;
+    public static ConnectionSettings RabbitMQConnection { get; } = Config.GetSection("RabbitMQ").Get<ConnectionSettings>()!;
 }

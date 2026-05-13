@@ -13,6 +13,10 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
 
     public virtual int Id { get; } = Interlocked.Increment(ref _id);
 
+    public virtual IUserClientSession Session { get; } = new UserClientSession();
+
+    public virtual IUserClientState State { get; } = new UserClientState();
+
     public virtual IHttpService HttpService
     {
         get => _httpService ??= new HttpClientService { Logger = Logger };
@@ -29,27 +33,11 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
         set
         {
             _account = Check.NotNull(value);
-            AccountStatus = AccountStatus.Normal;
-        }
-    }
-
-    public virtual AccountStatus AccountStatus
-    {
-        get;
-        set
-        {
-            if (field == value)
-                return;
-
-            field = value;
-            OnAccountStatusChanged.Invoke(field);
+            State.AccountStatus = UserAccountStatus.Normal;
         }
     }
 
     public virtual ILogger Logger => _logger.Value;
-    public event Action<AccountStatus> OnAccountStatusChanged = status => { };
-    public virtual IUserClientSession Session { get; } = new UserClientSession();
-    public virtual bool IsOnline => Session.SessionState == UserClientSessionState.Online;
 
     protected UserClient(TAccount account, ILoggerFactory? loggerFactory = null)
     {
@@ -77,8 +65,8 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
         return
         [
             (nameof(Account), () => Account),
-            (nameof(IsOnline), () => IsOnline),
-            (nameof(UserClientSessionState), () => Session.SessionState),
+            (nameof(State.SessionStatus), () => State.SessionStatus),
+            (nameof(State.AccountStatus), () => State.AccountStatus),
         ];
     }
 
@@ -104,7 +92,7 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
 
     protected async Task<OperationResult> DoLoginAsync(Func<CancellationToken, Task<OperationResult>> loginAction, CancellationToken token)
     {
-        if (IsOnline)
+        if (this.IsOnline)
         {
             Logger.LogTrace("Already online");
             return Operation.Success();
@@ -112,7 +100,7 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
 
         using var _ = await LoginLocker.LockAsync(token);
 
-        if (IsOnline)
+        if (this.IsOnline)
         {
             Logger.LogTrace("Already online");
             return Operation.Success();
@@ -124,14 +112,14 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
         var time = ValueStopwatch.StartNew();
         try
         {
-            Session.LoggingIn();
+            State.LoggingIn();
 
             var response = await loginAction(token)
-                .OnValue(_ => Session.Online())
+                .OnValue(_ => State.Online())
                 .OnException(_ =>
                 {
-                    if (Session.IsLoggingIn())
-                        Session.Offline();
+                    if (State.IsLoggingIn())
+                        State.Offline();
                 });
 
             return response.Elapsed(time.GetElapsedTime());
@@ -160,7 +148,7 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
     public Task<OperationResult> LogoutAsync(CancellationToken token = default)
     {
         HttpService.ClearAllCookies();
-        Session.Offline();
+        State.Offline();
         return Operation.Success();
     }
 

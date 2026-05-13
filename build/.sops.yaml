@@ -1,0 +1,3 @@
+creation_rules:
+  - path_regex: \.decrypted\.json$
+    age: age1r7qeyxw68lx3e7hkvlacp9e7z2z4grkys8xkz4cqcpwmtfc8x9hsd076cr

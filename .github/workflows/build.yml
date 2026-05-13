@@ -26,8 +26,12 @@ permissions:
 env:
   SOLUTION: FclEx.slnx
   DOTNET_NOLOGO: 1
-  MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
-  NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
+  NUGET_SOURCE: https://api.nuget.org/v3/index.json
+  MYGET_SOURCE: https://www.myget.org/F/huoshan12345/api/v2/package
+  USE_NUGET: true
+  USE_MYGET: false
+  ARTIFACTS_NAME: nuget-packages
+  ARTIFACTS_DIR: ./artifacts/nuget/
 
 jobs:
   build:
@@ -50,13 +54,17 @@ jobs:
           - 5432:5432
         options: >-
           --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    outputs:
+      version: ${{ steps.set_version.outputs.version }}
+
     steps:
       - name: Get PR
         if: ${{ github.event_name == 'pull_request_target' }}
         uses: suzuki-shunsuke/get-pr-action@v0.1.0
         id: pr
 
-      - name: Print variables
+      - name: Print commit sha
         shell: pwsh
         run: |
           echo "merge_commit_sha: ${{ steps.pr.outputs.merge_commit_sha }}"
@@ -66,6 +74,19 @@ jobs:
         with:
           ref: ${{ steps.pr.outputs.merge_commit_sha }}
 
+      - name: Setup sops
+        uses: nhedger/setup-sops@v2
+
+      - name: Setup age
+        uses: alessiodionisi/setup-age-action@v1.4.0
+
+      - name: Decrypt appsettings
+        shell: pwsh
+        env:
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+        run: |
+          ./build/decrypt.ps1
+
       - name: Setup dotnet
         uses: actions/setup-dotnet@v5
         with:
@@ -74,12 +95,15 @@ jobs:
             9.0.x
             10.0.x
 
-      - name: NuGet Restore
-        run: dotnet restore ${{ env.SOLUTION }}
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION }} -v q
+
+      - name: Build
+        run: dotnet build ${{ env.SOLUTION }} -c Release --no-restore
 
       - name: Test Release
         timeout-minutes: 10
-        run: dotnet test ${{ env.SOLUTION }} --no-restore -c Release
+        run: dotnet test ${{ env.SOLUTION }} -c Release --no-restore --no-build
 
       - name: Test Report
         uses: dorny/test-reporter@main
@@ -91,11 +115,66 @@ jobs:
           list-suites: failed
           list-tests: failed
 
+      - name: Set version
+        id: set_version
+        shell: pwsh
+        run: |
+          $ver = Get-Content -Path ./build/pkg.version
+          echo "version=$ver" >> $Env:GITHUB_OUTPUT
+          echo $ver
+
+      - name: Pack
+        run: >
+          dotnet pack ${{ env.SOLUTION }} -v q -c Release --no-restore --no-build
+          --include-symbols -p:SymbolPackageFormat=snupkg
+          -p:PackageVersion=${{ steps.set_version.outputs.version }}
+          -o ${{ env.ARTIFACTS_DIR }}
+
+      - name: Upload
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ env.ARTIFACTS_NAME }}
+          path: ${{ env.ARTIFACTS_DIR }}
+
   build-win:
-    runs-on: windows-2022
+    runs-on: windows-latest
+    env:
+      TMP: D:\tmp
+      TEMP: D:\tmp
+      DOTNET_INSTALL_DIR: D:\tools\dotnet
+      NUGET_PACKAGES: D:\.nuget\packages
     steps:
+      - name: Get PR
+        if: ${{ github.event_name == 'pull_request_target' }}
+        uses: suzuki-shunsuke/get-pr-action@v0.1.0
+        id: pr
+
+      - name: Print commit sha
+        shell: pwsh
+        run: |
+          echo "merge_commit_sha: ${{ steps.pr.outputs.merge_commit_sha }}"
+
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.pr.outputs.merge_commit_sha }}
+
+      - name: Setup sops
+        shell: pwsh
+        run: |
+          choco install sops -y --no-progress
+
+      - name: Setup age
+        shell: pwsh
+        run: |
+          choco install age.portable -y --no-progress
+
+      - name: Decrypt appsettings
+        shell: pwsh
+        env:
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+        run: |
+          ./build/decrypt.ps1
 
       - name: Check missing SDKs
         id: sdk_check
@@ -128,18 +207,12 @@ jobs:
         if: steps.sdk_check.outputs.missing != ''
         uses: actions/setup-dotnet@v5
         with:
+          cache: true
           dotnet-version: ${{ steps.sdk_check.outputs.missing }}
-
-      - name: Restore
-        run: dotnet restore ${{ env.SOLUTION }} -v q
 
       - name: Test Release
         timeout-minutes: 10
-        run: dotnet test ${{ env.SOLUTION }} -c Release --no-restore
-        
-      - name: Test Release nfx-x64
-        timeout-minutes: 10
-        run: dotnet test ${{ env.SOLUTION }} -c Release -f net472 --arch x64
+        run: dotnet test ${{ env.SOLUTION }} -c Release
 
       - name: Test Report
         uses: dorny/test-reporter@main
@@ -158,34 +231,45 @@ jobs:
       - build
       - build-win
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup dotnet
-        uses: actions/setup-dotnet@v5
+      - name: Download packages
+        uses: actions/download-artifact@v8
         with:
-          dotnet-version: |
-            8.0.x
-            9.0.x
-            10.0.x
+          name: ${{ env.ARTIFACTS_NAME }}
+          path: ${{ env.ARTIFACTS_DIR }}
+
+      - name: List packages
+        shell: bash
+        run: |
+          echo "Downloaded files:"
+          ls -lhR ${{ env.ARTIFACTS_DIR }}
 
       - name: NuGet Publish
-        shell: pwsh
-        run: |
-          ./build/pack.ps1
+        if: env.USE_NUGET == 'true'
+        run: >
+          dotnet nuget push "${{ env.ARTIFACTS_DIR }}*.nupkg"
+          --api-key "${{ secrets.NUGET_APIKEY }}"
+          --source "${{ env.NUGET_SOURCE }}"
+          --skip-duplicate
 
-      - name: Set variables
+      - name: MyGet Publish
+        if: env.USE_MYGET == 'true'
+        run: >
+          dotnet nuget push "${{ env.ARTIFACTS_DIR }}*.nupkg"
+          --api-key "${{ secrets.MYGET_APIKEY }}"
+          --source "${{ env.MYGET_SOURCE }}"
+          --skip-duplicate
+
+      - name: Set version
         shell: pwsh
         run: |
-          $ver = Get-Content -Path ./build/pkg.version
-          echo "VERSION=$ver" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
+          $ver = "${{ needs.build.outputs.version }}"
+          echo "VERSION=$ver" >> $Env:GITHUB_ENV
           echo $ver
 
       - name: Create Tag
         uses: huoshan12345/update-tag@v1
         with:
           tag_name: ${{ env.VERSION }}
-          on_tag_exists: skip
           update_if_exists: false
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
@@ -196,5 +280,5 @@ jobs:
           tag: ${{ env.VERSION }}
           token: ${{ secrets.PAT }}
           generateReleaseNotes: true
-          skipIfReleaseExists: true          
+          skipIfReleaseExists: true
 ...

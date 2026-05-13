@@ -7,7 +7,6 @@
 public class SimpleException : Exception
 {
     private readonly bool _noStackTrace;
-    private readonly string? _stackTrace;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SimpleException"/> class with the specified error message.
@@ -31,14 +30,14 @@ public class SimpleException : Exception
         _noStackTrace = noStackTrace;
 
         if (noStackTrace == false)
-            _stackTrace = new StackTrace(true).ToString();
+            StackTrace = new StackTrace(true).ToString();
     }
 
     /// <summary>
     /// Gets the stack trace string for this exception.
     /// Returns null if the exception was created with noStackTrace set to true.
     /// </summary>
-    public override string? StackTrace => _noStackTrace ? null : base.StackTrace ?? _stackTrace;
+    public override string? StackTrace => _noStackTrace ? null : base.StackTrace ?? field;
 
     /// <summary>
     /// Returns a string representation of the exception.
@@ -49,7 +48,7 @@ public class SimpleException : Exception
     public override string ToString()
     {
         return this.IsJustMessage()
-            ? Message
+            ? Message.IfEmpty(nameof(SimpleException))
             : base.ToString();
     }
 }

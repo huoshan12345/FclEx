@@ -16,7 +16,7 @@ public class PublisherTests : RabbitMQTests
 
     private Task<TestPublisher> CreatePublisher()
     {
-        var connection = RmqConnection;
+        var connection = RabbitMQConnection;
         return TestPublisher.CreateAsync(new PublisherSettings(connection, DefaultExchange));
     }
 

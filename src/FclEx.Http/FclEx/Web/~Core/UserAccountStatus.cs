@@ -1,8 +1,8 @@
 ﻿namespace FclEx.Web;
 
-public enum AccountStatus
+public enum UserAccountStatus
 {
-    Normal = 0,
+    Normal,
     InvalidCredentials,
     Locked,
 }

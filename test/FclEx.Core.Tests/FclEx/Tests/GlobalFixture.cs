@@ -14,17 +14,7 @@ public class GlobalFixture : IAsyncLifetime
         var builder = new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", false, false)
-            .AddEnvironmentVariables("FclEx__");
-
-        if (TestHelper.IsGithubAction)
-        {
-            builder.AddJsonFile("appsettings.github.json", true, false);
-        }
-        else
-        {
-            var machineName = Environment.MachineName.ToLower();
-            builder.AddJsonFile($"appsettings.{machineName}.json", true, false);
-        }
+            .AddJsonFile("appsettings.decrypted.json", true, false);
 
         return builder.Build();
     }
@@ -32,7 +22,11 @@ public class GlobalFixture : IAsyncLifetime
     public static IConfigurationRoot Config { get; } = BuildConfig();
 
     public virtual ValueTask InitializeAsync() => ValueTask.CompletedTask;
-    public virtual ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    public virtual ValueTask DisposeAsync()
+    {
+        GC.SuppressFinalize(this);
+        return ValueTask.CompletedTask;
+    }
 
     public Assembly CurrentAssembly { get; }
 

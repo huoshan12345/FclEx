@@ -4,8 +4,12 @@
     <File Path=".github/workflows/send-event.yml" />
   </Folder>
   <Folder Name="/build/">
+    <File Path="build/.sops.yaml" />
+    <File Path="build/BlockedCompilePackages.targets" />
     <File Path="build/bump-version.ps1" />
     <File Path="build/clean.ps1" />
+    <File Path="build/decrypt.ps1" />
+    <File Path="build/encrypt.ps1" />
     <File Path="build/pack.ps1" />
     <File Path="build/pkg.version" />
   </Folder>
@@ -31,9 +35,12 @@
     <Project Path="src/FclEx.Http/FclEx.Http.csproj" />
     <Project Path="src/FclEx.Logging/FclEx.Logging.csproj" />
     <Project Path="src/FclEx.Messaging/FclEx.Messaging.csproj" />
+    <Project Path="src/FclEx.NewRelic/FclEx.NewRelic.csproj" />
     <Project Path="src/FclEx.NewtonsoftJson/FclEx.NewtonsoftJson.csproj" />
     <Project Path="src/FclEx.Options/FclEx.Options.csproj" />
+    <Project Path="src/FclEx.Serilog.Slack/FclEx.Serilog.Slack.csproj" />
     <Project Path="src/FclEx.Serilog/FclEx.Serilog.csproj" />
+    <Project Path="src/FclEx.Slack/FclEx.Slack.csproj" />
     <Project Path="src/FclEx.SourceGenerator/FclEx.SourceGenerator.csproj" />
     <Project Path="src/FclEx.Xunit.SourceGenerator/FclEx.Xunit.SourceGenerator.csproj" />
     <Project Path="src/FclEx.Xunit.v3.SourceGenerator/FclEx.Xunit.v3.SourceGenerator.csproj" />
@@ -53,8 +60,11 @@
     <Project Path="test/FclEx.Http.Tests/FclEx.Http.Tests.csproj" />
     <Project Path="test/FclEx.Logging.Tests/FclEx.Logging.Tests.csproj" />
     <Project Path="test/FclEx.Messaging.Tests/FclEx.Messaging.Tests.csproj" />
+    <Project Path="test/FclEx.NewRelic.Tests/FclEx.NewRelic.Tests.csproj" />
     <Project Path="test/FclEx.NewtonsoftJson.Tests/FclEx.NewtonsoftJson.Tests.csproj" />
+    <Project Path="test/FclEx.Serilog.Slack.Tests/FclEx.Serilog.Slack.Tests.csproj" />
     <Project Path="test/FclEx.Serilog.Tests/FclEx.Serilog.Tests.csproj" />
+    <Project Path="test/FclEx.Slack.Tests/FclEx.Slack.Tests.csproj" />
     <Project Path="test/FclEx.Xunit.Tests/FclEx.Xunit.Tests.csproj" />
     <Project Path="test/FclEx.Xunit.v3.Tests/FclEx.Xunit.v3.Tests.csproj" />
     <Project Path="test/FclEx.YamlDotNet.Tests/FclEx.YamlDotNet.Tests.csproj" />

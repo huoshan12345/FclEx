@@ -1,0 +1,6 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\FclEx.Serilog\FclEx.Serilog.csproj" />
+    <ProjectReference Include="..\FclEx.Slack\FclEx.Slack.csproj" />
+  </ItemGroup>
+</Project>

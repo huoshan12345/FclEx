@@ -250,3 +250,4 @@ BenchmarkDotNet.Artifacts/
 
 ~Generated/
 * - Backup.*.csproj
+*.decrypted.*
