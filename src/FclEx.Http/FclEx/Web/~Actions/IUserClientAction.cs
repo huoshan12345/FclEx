@@ -5,9 +5,9 @@ public interface IUserClientAction<out TClient, out TAccount, T> : IPipelineActi
     where TAccount : IUserAccount
 {
     TClient Client { get; }
-    IUserClientSession Session
+    IUserClientState State
 #if NET6_0_OR_GREATER
-        => Client.Session;
+        => Client.State;
 #else
      { get; }
 #endif

@@ -2,6 +2,6 @@
 
 public interface IUserClientSession
 {
-    UserClientSessionState SessionState { get; set; }
-    event Action<UserClientSessionState> OnSessionStateChanged;
+    string UserId { get; }
+    string UserName { get; }
 }
