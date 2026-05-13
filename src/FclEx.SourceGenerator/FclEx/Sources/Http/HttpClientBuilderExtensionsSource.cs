@@ -17,7 +17,7 @@ internal class HttpClientBuilderExtensionsSource
         builder.WriteNamespace(@namespace, true);
 
         // Class declaration
-        builder.WriteLine($"public partial class {className}")
+        builder.WriteLine($"public static partial class {className}")
             .WriteOpeningBracket();
 
         var methodNames = new[] { "AddHttpMessageHandler", "ConfigurePrimaryHttpMessageHandler" };

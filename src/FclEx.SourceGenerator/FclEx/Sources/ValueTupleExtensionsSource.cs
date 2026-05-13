@@ -26,7 +26,7 @@ internal static class ValueTupleExtensionsSource
             .WriteOpeningBracket();
 
         // Class declaration
-        builder.WriteLine($"public partial class {className}")
+        builder.WriteLine($"public static partial class {className}")
             .WriteOpeningBracket();
 
         for (var i = 2; i <= Max; i++)

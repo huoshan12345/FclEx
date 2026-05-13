@@ -45,7 +45,7 @@ internal static class BytesExtensionsSource
             .WriteOpeningBracket();
 
         // Class declaration
-        builder.WriteLine($"public partial class {className}")
+        builder.WriteLine($"public static partial class {className}")
             .WriteOpeningBracket();
 
         foreach (var type in _types)
@@ -101,7 +101,7 @@ internal static class BytesExtensionsSource
             .WriteOpeningBracket();
 
         // Class declaration
-        builder.WriteLine($"public partial class {className}")
+        builder.WriteLine($"public static partial class {className}")
             .WriteOpeningBracket();
 
         foreach (var type in _types)

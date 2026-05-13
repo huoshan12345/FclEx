@@ -128,6 +128,9 @@ partial class ExceptionExtensions
     /// <returns></returns>
     public static string ToFormattedString(this Exception exception, int indent = 3)
     {
+        if (exception.IsJustMessage())
+            return exception.ToString();
+
         var (infos, _) = exception.BuildTree();
 
         return StringBuilderHelper.Build(m =>

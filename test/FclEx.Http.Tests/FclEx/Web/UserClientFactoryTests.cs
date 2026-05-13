@@ -1,13 +1,7 @@
-﻿using FclEx.Logging;
-
-namespace FclEx.Web;
+﻿namespace FclEx.Web;
 
 public class UserClientFactoryTests : WebTests
 {
-    public UserClientFactoryTests(ITestOutputHelper output) : base(output)
-    {
-    }
-
     [Fact]
     public void Resolve_Test()
     {

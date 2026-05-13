@@ -1,6 +1,6 @@
 ﻿namespace FclEx.Extensions;
 
-public static partial class HashExtensions
+public static class HashAlgorithmExtensions
 {
     [MethodImpl(AggressiveInlining)]
     public static byte[] Hash(this HashAlgorithm algorithm, byte[]? input)

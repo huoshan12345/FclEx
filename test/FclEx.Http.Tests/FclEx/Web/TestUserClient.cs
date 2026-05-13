@@ -1,9 +1,10 @@
 ﻿namespace FclEx.Web;
 
-public class TestUserClient(ILoggerFactory loggerFactory) : UserClient(loggerFactory: loggerFactory)
+public class TestUserClient(ILoggerFactory loggerFactory, Func<OperationResult>? loginAction = null)
+    : UserClient(loggerFactory: loggerFactory)
 {
     protected override Task<OperationResult> LoginActionAsync(CancellationToken token)
     {
-        return Operation.Success();
+        return loginAction?.Invoke() ?? Operation.Success();
     }
 }

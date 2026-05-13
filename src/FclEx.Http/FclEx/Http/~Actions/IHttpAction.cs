@@ -107,4 +107,6 @@ public abstract class HttpAction<T> : PipelineAction<T>, IHttpAction<T>
     public abstract OperationResult<T> GetResult(HttpResponse response);
     public virtual Task<OperationResult<T>> GetResultAsync(HttpResponse response)
         => DefaultHttpResponseHandler.GetResultAsync(this, response);
+    public override Task<OperationResult<T>> ExecuteActionAsync(CancellationToken token = default)
+        => DefaultHttpAction.ExecuteActionAsync(this, token);
 }

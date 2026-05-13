@@ -8,6 +8,8 @@ public delegate ref TMember RefGetter<in T, TMember>(T obj);
 
 public unsafe delegate TMember* PtrGetter<in T, TMember>(T obj);
 
+public delegate void ValueChangedHandler<in T>(T oldValue, T newValue);
+
 public static class DelegateExtensions
 {
     public static RefGetter<T, TMember> AsRef<T, TMember>(this PtrGetter<T, TMember> getter)

@@ -26,7 +26,7 @@ internal static class TypeExtensionsSource
             .WriteOpeningBracket();
 
         // Class declaration
-        builder.WriteLine($"public partial class {className}")
+        builder.WriteLine($"public static partial class {className}")
             .WriteOpeningBracket();
 
         for (var i = 1; i <= Max; i++)
