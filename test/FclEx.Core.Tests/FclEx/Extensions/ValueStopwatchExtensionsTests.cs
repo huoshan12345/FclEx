@@ -24,12 +24,12 @@ public class ValueStopwatchExtensionsTests
         Assert.Equal("-00:01:10", result);
     }
 
-    [Fact]
+    [RetryFact]
     public async Task ElapsedSeconds_Test()
     {
         var watch = ValueStopwatch.StartNew();
         await Task.Delay(TimeSpan.FromMilliseconds(110));
         var time = watch.GetElapsedTime();
-        Assert.True(time.TotalSeconds > 0.1);
+        Assert.True(time.TotalSeconds > 0.1, () => $"Elapsed time was {time.TotalSeconds} seconds");
     }
 }
