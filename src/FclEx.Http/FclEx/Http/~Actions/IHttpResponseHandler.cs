@@ -15,7 +15,7 @@ public static class DefaultHttpResponseHandler
 {
     public static Task<OperationResult<T>> GetResultAsync<T>(IHttpResponseHandler<T> handler, HttpResponse response)
     {
-        return handler.GetResultAsync(response);
+        return handler.GetResult(response);
     }
 }
 

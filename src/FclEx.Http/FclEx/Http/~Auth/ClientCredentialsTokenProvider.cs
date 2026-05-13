@@ -114,7 +114,7 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
             });
 
             if (token.IsError)
-                throw HttpRequestException.From(token.Error, null, token.HttpStatusCode);
+                throw HttpRequestException.From(token.ErrorDescription, null, token.HttpStatusCode);
 
             var item = CreateCacheItem(token);
             _cache[scope] = item;

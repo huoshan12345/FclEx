@@ -36,7 +36,7 @@ internal class StringBuilderExtensionsSource
             .WriteOpeningBracket();
 
         // Class declaration
-        builder.WriteLine($"public partial class {className}")
+        builder.WriteLine($"public static partial class {className}")
             .WriteOpeningBracket();
 
         foreach (var (name, openingQuote, closingQuote, commentForValue, commentForAction) in _methods)
