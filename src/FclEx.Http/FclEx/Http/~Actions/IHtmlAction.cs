@@ -74,11 +74,11 @@ public static class DefaultHtmlAction
 public abstract class HtmlAction<T> : HttpResponseHandler<T>, IHtmlAction<T>
 {
     public virtual string? HtmlResultPath => null;
-    public abstract OperationResult<T> GetResult(HtmlActionContext context);
     public virtual OperationResult<string> GetHtml(HttpResponse response)
         => DefaultHtmlAction.GetHtml(this, response);
     public virtual OperationResult<HtmlActionContext> CreateContext(HttpResponse response, string json)
         => DefaultHtmlAction.CreateContext(this, response, json);
+    public abstract OperationResult<T> GetResult(HtmlActionContext context);
     public override OperationResult<T> GetResult(HttpResponse response)
         => DefaultHtmlAction.GetResult(this, response);
 }

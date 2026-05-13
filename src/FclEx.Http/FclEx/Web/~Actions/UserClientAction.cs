@@ -15,6 +15,7 @@ public abstract class UserClientAction<TClient, TAccount, T> :
     }
 
     public virtual IUserClientState State => Client.State;
+    public virtual IUserClientSession Session => Client.Session;
     public virtual TAccount Account => Client.Account;
     public TClient Client { get; }
     public ILogger Logger { get; }

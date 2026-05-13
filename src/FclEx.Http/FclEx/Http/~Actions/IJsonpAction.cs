@@ -34,7 +34,8 @@ public abstract class JsonpAction<T> : HttpAction<T>, IJsonpAction<T>
 {
     public virtual string? JsonResultPath => null;
     public abstract string CallbackParamName { get; }
-    public virtual OperationResult<string> GetJson(HttpResponse response) => DefaultJsonpAction.GetJson(this, response);
+    public virtual OperationResult<string> GetJson(HttpResponse response) 
+        => DefaultJsonpAction.GetJson(this, response);
     public virtual OperationResult<JsonActionContext> CreateContext(HttpResponse response, string json)
         => DefaultJsonAction.CreateContext(this, response, json);
     public abstract OperationResult<T> GetResult(JsonActionContext context);
