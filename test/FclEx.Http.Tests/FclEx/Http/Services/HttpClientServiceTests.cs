@@ -162,7 +162,7 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
         CheckProxy(fac2.CreateClient(), null);
     }
 
-    [RetryTheory]
+    [RetryTheory(5)]
     [InlineData(1, 0.1)]
     [InlineData(2, 0.1)]
     [InlineData(2, 0.2)]
@@ -176,7 +176,7 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
             m.SleepDurationProvider = _ => TimeSpan.Zero;
             m.RetryCount = retryCount;
         });
-        var response = await HttpRequest.Get("https://baidu.com:444/")
+        var response = await HttpRequest.Get("https://google.com:444/")
             .ReadHeadersTimeout(timeout)
             .SendAsync(http);
 
