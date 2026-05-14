@@ -107,7 +107,7 @@ jobs:
         shell: pwsh
         run: |
           $ver = Get-Content -Path ./build/pkg.version
-          echo "VERSION=$ver" >> $Env:GITHUB_OUTPUT
+          echo "version=$ver" >> $Env:GITHUB_OUTPUT
           echo $ver
 
       - name: Pack
