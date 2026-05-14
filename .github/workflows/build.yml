@@ -26,8 +26,12 @@ permissions:
 env:
   SOLUTION: FclEx.slnx
   DOTNET_NOLOGO: 1
-  MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
-  NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
+  NUGET_SOURCE: https://api.nuget.org/v3/index.json
+  MYGET_SOURCE: https://www.myget.org/F/huoshan12345/api/v2/package
+  USE_NUGET: true
+  USE_MYGET: false
+  ARTIFACTS_NAME: nuget-packages
+  ARTIFACTS_DIR: ./artifacts/nuget/
 
 jobs:
   build:
@@ -74,8 +78,11 @@ jobs:
             9.0.x
             10.0.x
 
-      - name: NuGet Restore
-        run: dotnet restore ${{ env.SOLUTION }}
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION }} -v q
+
+      - name: Build
+        run: dotnet build ${{ env.SOLUTION }} -c Release --no-restore
 
       - name: Test Release
         timeout-minutes: 10
@@ -91,8 +98,24 @@ jobs:
           list-suites: failed
           list-tests: failed
 
+      - name: Pack
+        run: >
+          dotnet pack ${{ env.SOLUTION }} -v q -c Release --no-restore --no-build
+          --include-symbols -p:SymbolPackageFormat=snupkg -o ${{ env.ARTIFACTS_DIR }}
+
+      - name: Upload
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ env.ARTIFACTS_NAME }}
+          path: ${{ env.ARTIFACTS_DIR }}
+
   build-win:
-    runs-on: windows-2022
+    runs-on: windows-latest
+    env:
+      TMP: D:\tmp
+      TEMP: D:\tmp
+      DOTNET_INSTALL_DIR: D:\tools\dotnet
+      NUGET_PACKAGES: D:\.nuget\packages
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -128,18 +151,18 @@ jobs:
         if: steps.sdk_check.outputs.missing != ''
         uses: actions/setup-dotnet@v5
         with:
+          cache: true
           dotnet-version: ${{ steps.sdk_check.outputs.missing }}
 
       - name: Restore
         run: dotnet restore ${{ env.SOLUTION }} -v q
 
+      - name: Build
+        run: dotnet build ${{ env.SOLUTION }} -c Release --no-restore
+
       - name: Test Release
         timeout-minutes: 10
-        run: dotnet test ${{ env.SOLUTION }} -c Release --no-restore
-        
-      - name: Test Release nfx-x64
-        timeout-minutes: 10
-        run: dotnet test ${{ env.SOLUTION }} -c Release -f net472 --arch x64
+        run: dotnet test ${{ env.SOLUTION }} -c Release --no-restore --no-build
 
       - name: Test Report
         uses: dorny/test-reporter@main
@@ -161,18 +184,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup dotnet
-        uses: actions/setup-dotnet@v5
+      - name: Download packages
+        uses: actions/download-artifact@v8
         with:
-          dotnet-version: |
-            8.0.x
-            9.0.x
-            10.0.x
+          name: ${{ env.ARTIFACTS_NAME }}
+          path: ${{ env.ARTIFACTS_DIR }}
+
+      - name: List packages
+        shell: bash
+        run: |
+          echo "Downloaded files:"
+          ls -lhR ${{ env.ARTIFACTS_DIR }}
 
       - name: NuGet Publish
-        shell: pwsh
-        run: |
-          ./build/pack.ps1
+        if: env.USE_NUGET == 'true'
+        run: >
+          dotnet nuget push "${{ env.ARTIFACTS_DIR }}*.nupkg"
+          --api-key "${{ secrets.NUGET_APIKEY }}"
+          --source "${{ env.NUGET_SOURCE }}"
+          --skip-duplicate
+
+      - name: MyGet Publish
+        if: env.USE_MYGET == 'true'
+        run: >
+          dotnet nuget push "${{ env.ARTIFACTS_DIR }}*.nupkg"
+          --api-key "${{ secrets.MYGET_APIKEY }}"
+          --source "${{ env.MYGET_SOURCE }}"
+          --skip-duplicate
 
       - name: Set variables
         shell: pwsh
@@ -185,7 +223,6 @@ jobs:
         uses: huoshan12345/update-tag@v1
         with:
           tag_name: ${{ env.VERSION }}
-          on_tag_exists: skip
           update_if_exists: false
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
@@ -196,5 +233,5 @@ jobs:
           tag: ${{ env.VERSION }}
           token: ${{ secrets.PAT }}
           generateReleaseNotes: true
-          skipIfReleaseExists: true          
+          skipIfReleaseExists: true
 ...
