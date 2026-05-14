@@ -86,7 +86,7 @@ jobs:
 
       - name: Test Release
         timeout-minutes: 10
-        run: dotnet test ${{ env.SOLUTION }} --no-restore -c Release
+        run: dotnet test ${{ env.SOLUTION }} -c Release --no-restore --no-build
 
       - name: Test Report
         uses: dorny/test-reporter@main
@@ -154,15 +154,9 @@ jobs:
           cache: true
           dotnet-version: ${{ steps.sdk_check.outputs.missing }}
 
-      - name: Restore
-        run: dotnet restore ${{ env.SOLUTION }} -v q
-
-      - name: Build
-        run: dotnet build ${{ env.SOLUTION }} -c Release --no-restore
-
       - name: Test Release
         timeout-minutes: 10
-        run: dotnet test ${{ env.SOLUTION }} -c Release --no-restore --no-build
+        run: dotnet test ${{ env.SOLUTION }} -c Release
 
       - name: Test Report
         uses: dorny/test-reporter@main
