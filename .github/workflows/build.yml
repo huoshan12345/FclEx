@@ -88,8 +88,9 @@ jobs:
       - name: Set version
         shell: pwsh
         run: |
-          "VERSION=${{ needs.build.outputs.version }}" >> $Env:GITHUB_ENV
-          echo ${{ env.VERSION }}
+          $ver = "${{ needs.build.outputs.version }}"
+          echo "VERSION=$ver" >> $Env:GITHUB_ENV
+          echo $ver
 
       - name: Create Tag
         uses: huoshan12345/update-tag@v1
