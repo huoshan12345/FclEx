@@ -85,34 +85,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Download packages
-        uses: actions/download-artifact@v8
-        with:
-          name: ${{ env.ARTIFACTS_NAME }}
-          path: ${{ env.ARTIFACTS_DIR }}
-
-      - name: List packages
-        shell: bash
-        run: |
-          echo "Downloaded files:"
-          ls -lhR ${{ env.ARTIFACTS_DIR }}
-
-      - name: NuGet Publish
-        if: env.USE_NUGET == 'true'
-        run: >
-          dotnet nuget push "${{ env.ARTIFACTS_DIR }}*.nupkg"
-          --api-key "${{ secrets.NUGET_APIKEY }}"
-          --source "${{ env.NUGET_SOURCE }}"
-          --skip-duplicate
-
-      - name: MyGet Publish
-        if: env.USE_MYGET == 'true'
-        run: >
-          dotnet nuget push "${{ env.ARTIFACTS_DIR }}*.nupkg"
-          --api-key "${{ secrets.MYGET_APIKEY }}"
-          --source "${{ env.MYGET_SOURCE }}"
-          --skip-duplicate
-
       - name: Set version
         shell: pwsh
         run: |
