@@ -36,6 +36,24 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      rabbitmq:
+        image: heidiks/rabbitmq-delayed-message-exchange:4.0.2-management
+        env:
+          RABBITMQ_DEFAULT_USER: rmq
+          RABBITMQ_DEFAULT_PASS: 111111
+        ports:
+          - 5672:5672
+        options: >-
+          --health-cmd "rabbitmqctl node_health_check" --health-interval 10s --health-timeout 5s --health-retries 5
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: 111111
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     outputs:
       version: ${{ steps.set_version.outputs.version }}
@@ -56,6 +74,34 @@ jobs:
         with:
           ref: ${{ steps.pr.outputs.merge_commit_sha }}
 
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION }} -v q
+
+      - name: Build
+        run: dotnet build ${{ env.SOLUTION }} -c Release --no-restore
+
+      - name: Test Release
+        timeout-minutes: 10
+        run: dotnet test ${{ env.SOLUTION }} -c Release --no-restore --no-build
+
+      - name: Test Report
+        uses: dorny/test-reporter@main
+        if: (success() || failure())
+        with:
+          name: Test Report
+          path: TestResults/**/*.trx
+          reporter: dotnet-trx
+          list-suites: failed
+          list-tests: failed
+
       - name: Set version
         id: set_version
         shell: pwsh
@@ -63,6 +109,19 @@ jobs:
           $ver = Get-Content -Path ./build/pkg.version
           echo "version=$ver" >> $Env:GITHUB_OUTPUT
           echo $ver
+
+      - name: Pack
+        run: >
+          dotnet pack ${{ env.SOLUTION }} -v q -c Release --no-restore --no-build
+          --include-symbols -p:SymbolPackageFormat=snupkg
+          -p:PackageVersion=${{ steps.set_version.outputs.version }}
+          -o ${{ env.ARTIFACTS_DIR }}
+
+      - name: Upload
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ env.ARTIFACTS_NAME }}
+          path: ${{ env.ARTIFACTS_DIR }}
 
   build-win:
     runs-on: windows-latest
@@ -75,6 +134,54 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Check missing SDKs
+        id: sdk_check
+        shell: pwsh
+        run: |
+          $wanted = @(
+            '8.0.x'
+            '9.0.x'
+            '10.0.x'
+          )
+
+          $installed = dotnet --list-sdks
+
+          $missing = foreach ($sdk in $wanted) {
+            $prefix = $sdk -replace 'x$', ''
+            if (-not ($installed -match "^$([regex]::Escape($prefix))")) {
+              $sdk
+            }
+          }
+
+          $joined = $missing -join "`n"
+
+          "missing<<EOF" >> $env:GITHUB_OUTPUT
+          $joined >> $env:GITHUB_OUTPUT
+          "EOF" >> $env:GITHUB_OUTPUT
+
+          Write-Host "Missing SDKs: $joined"
+
+      - name: Setup missing SDKs
+        if: steps.sdk_check.outputs.missing != ''
+        uses: actions/setup-dotnet@v5
+        with:
+          cache: true
+          dotnet-version: ${{ steps.sdk_check.outputs.missing }}
+
+      - name: Test Release
+        timeout-minutes: 10
+        run: dotnet test ${{ env.SOLUTION }} -c Release
+
+      - name: Test Report
+        uses: dorny/test-reporter@main
+        if: (success() || failure())
+        with:
+          name: Test Report
+          path: TestResults/**/*.trx
+          reporter: dotnet-trx
+          list-suites: failed
+          list-tests: failed
+
   publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -84,6 +191,34 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Download packages
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ env.ARTIFACTS_NAME }}
+          path: ${{ env.ARTIFACTS_DIR }}
+
+      - name: List packages
+        shell: bash
+        run: |
+          echo "Downloaded files:"
+          ls -lhR ${{ env.ARTIFACTS_DIR }}
+
+      - name: NuGet Publish
+        if: env.USE_NUGET == 'true'
+        run: >
+          dotnet nuget push "${{ env.ARTIFACTS_DIR }}*.nupkg"
+          --api-key "${{ secrets.NUGET_APIKEY }}"
+          --source "${{ env.NUGET_SOURCE }}"
+          --skip-duplicate
+
+      - name: MyGet Publish
+        if: env.USE_MYGET == 'true'
+        run: >
+          dotnet nuget push "${{ env.ARTIFACTS_DIR }}*.nupkg"
+          --api-key "${{ secrets.MYGET_APIKEY }}"
+          --source "${{ env.MYGET_SOURCE }}"
+          --skip-duplicate
 
       - name: Set version
         shell: pwsh
