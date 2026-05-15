@@ -221,7 +221,6 @@ jobs:
           --skip-duplicate
 
       - name: Set version
-        id: set_version
         shell: pwsh
         run: |
           $ver = ${{ needs.build.outputs.version }}
