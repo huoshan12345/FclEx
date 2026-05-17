@@ -131,8 +131,20 @@ jobs:
       DOTNET_INSTALL_DIR: D:\tools\dotnet
       NUGET_PACKAGES: D:\.nuget\packages
     steps:
+      - name: Get PR
+        if: ${{ github.event_name == 'pull_request_target' }}
+        uses: suzuki-shunsuke/get-pr-action@v0.1.0
+        id: pr
+
+      - name: Print commit sha
+        shell: pwsh
+        run: |
+          echo "merge_commit_sha: ${{ steps.pr.outputs.merge_commit_sha }}"
+
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.pr.outputs.merge_commit_sha }}
 
       - name: Check missing SDKs
         id: sdk_check
@@ -189,9 +201,6 @@ jobs:
       - build
       - build-win
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
       - name: Download packages
         uses: actions/download-artifact@v8
         with:
