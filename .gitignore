@@ -250,3 +250,4 @@ BenchmarkDotNet.Artifacts/
 
 ~Generated/
 * - Backup.*.csproj
+/test/FclEx.Core.Tests/appsettings.decrypted.json

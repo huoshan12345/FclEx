@@ -24,7 +24,7 @@ public class ConsumerTests : RabbitMQTests
         if (Skip)
             return;
 
-        var connection = RmqConnection;
+        var connection = RabbitMQConnection;
         await using var publisher = await TestPublisher.CreateAsync(new PublisherSettings(connection, DefaultExchange));
 
         var msgList = Enumerable.Range(1, 10).Select(m => (Seq: m, Msg: "msg_" + m)).ToList();
@@ -56,7 +56,7 @@ public class ConsumerTests : RabbitMQTests
 
     private async Task ConsumePushBackTest<T>(T valueToPublish, TimeSpan delay = default)
     {
-        var connection = RmqConnection;
+        var connection = RabbitMQConnection;
         await using var publisher = await TestPublisher.CreateAsync(new PublisherSettings(connection, DefaultExchange));
 
         var name = typeof(T).ShortName();
@@ -138,7 +138,7 @@ public class ConsumerTests : RabbitMQTests
         if (Skip)
             return;
 
-        var connection = RmqConnection;
+        var connection = RabbitMQConnection;
         await using var publisher = await TestPublisher.CreateAsync(new PublisherSettings(connection, DefaultExchange));
 
         var msgList = Enumerable.Range(1, 10).Select(m => (Seq: m, Msg: "msg_" + m)).ToList();

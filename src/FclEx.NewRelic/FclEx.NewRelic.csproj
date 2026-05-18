@@ -1,0 +1,10 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="GraphQL.Client.Serializer.SystemTextJson" />
+    <PackageReference Include="NewRelic.Agent.Api" />
+    <PackageReference Include="GraphQL.Client" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FclEx.Http\FclEx.Http.csproj" />
+  </ItemGroup>
+</Project>

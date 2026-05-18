@@ -16,7 +16,6 @@
     <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
     <SuppressTfmSupportBuildErrors>true</SuppressTfmSupportBuildErrors>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <OutputType Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 5.0))">Exe</OutputType>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
@@ -44,6 +43,9 @@
   </Target>
 
   <ItemGroup>
+    <Content Include="appsettings*.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="TestData\**\*.*">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -65,22 +67,15 @@
              Text="IsInList: @( __DisableParallel->AnyHaveMetadataValue('Identity', '$(MSBuildProjectName)') )" />
   </Target>-->
 
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <OutputType Condition="'$(IsTestProject)' != 'false'">Exe</OutputType>
+    <Prefer32Bit>false</Prefer32Bit>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
   </ItemGroup>
-
-  <PropertyGroup>
-    <BlockedCompilePackages Condition="$(MSBuildProjectName) != 'FclEx.NewtonsoftJson.Tests'">Newtonsoft.Json</BlockedCompilePackages>
-    <BlockedCompilePackages>$(BlockedCompilePackages);IdentityModel</BlockedCompilePackages>
-    <BlockedCompilePackages>;$(BlockedCompilePackages);</BlockedCompilePackages>
-  </PropertyGroup>
-
-  <Target Name="RemoveCompileTimeReferences" AfterTargets="ResolvePackageAssets" BeforeTargets="ResolveLockFileReferences">
-    <ItemGroup>
-      <ResolvedCompileFileDefinitions Remove="@(ResolvedCompileFileDefinitions)"
-                                      Condition="$([System.String]::Copy('$(BlockedCompilePackages)').Contains(';%(NuGetPackageId);'))" />
-    </ItemGroup>
-  </Target>
 
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)..\src\FclEx.Core\FclExUsings.cs" />

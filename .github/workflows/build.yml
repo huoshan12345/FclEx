@@ -74,6 +74,19 @@ jobs:
         with:
           ref: ${{ steps.pr.outputs.merge_commit_sha }}
 
+      - name: Setup sops
+        uses: nhedger/setup-sops@v2
+
+      - name: Setup age
+        uses: alessiodionisi/setup-age-action@v1.4.0
+
+      - name: Decrypt appsettings
+        shell: pwsh
+        env:
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+        run: |
+          ./build/decrypt.ps1
+
       - name: Setup dotnet
         uses: actions/setup-dotnet@v5
         with:
@@ -145,6 +158,23 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: ${{ steps.pr.outputs.merge_commit_sha }}
+
+      - name: Setup sops
+        shell: pwsh
+        run: |
+          choco install sops -y --no-progress
+
+      - name: Setup age
+        shell: pwsh
+        run: |
+          choco install age.portable -y --no-progress
+
+      - name: Decrypt appsettings
+        shell: pwsh
+        env:
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+        run: |
+          ./build/decrypt.ps1
 
       - name: Check missing SDKs
         id: sdk_check

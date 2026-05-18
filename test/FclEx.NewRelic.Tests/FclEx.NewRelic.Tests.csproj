@@ -1,0 +1,6 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\FclEx.NewRelic\FclEx.NewRelic.csproj" />
+    <ProjectReference Include="..\FclEx.Core.Tests\FclEx.Core.Tests.csproj" />
+  </ItemGroup>
+</Project>

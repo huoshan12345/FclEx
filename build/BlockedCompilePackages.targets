@@ -1,0 +1,28 @@
+<Project>
+  <ItemGroup>
+    <_NonBlockedCompileProjects Include="FclEx.NewtonsoftJson" />
+    <_NonBlockedCompileProjects Include="FclEx.NewtonsoftJson.Tests" />
+    <_NonBlockedCompileProjects Include="FclEx.Slack" />
+    <_NonBlockedCompileProjects Include="FclEx.Slack.Tests" />
+    <_NonBlockedCompileProjects Include="FclEx.Serilog.Slack" />
+    <_NonBlockedCompileProjects Include="FclEx.Serilog.Slack.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <_BlockedCompilePackages Include="IdentityModel" />
+    <_BlockedCompilePackages Include="Newtonsoft.Json"
+                             Condition="!@(_NonBlockedCompileProjects->AnyHaveMetadataValue('Identity','$(MSBuildProjectName)'))"/>
+  </ItemGroup>
+  <Target Name="RemoveCompileTimeReferences" AfterTargets="ResolvePackageAssets" BeforeTargets="ResolveLockFileReferences">
+    <PropertyGroup>
+      <!--must compute here instead of out of the target, otherwise it works in the message but won't work in the condition of ResolvedCompileFileDefinitions.-->
+      <_BlockedCompilePackagesWrapped>;@(_BlockedCompilePackages);</_BlockedCompilePackagesWrapped>
+    </PropertyGroup>
+    <!--<Message Importance="High" Text="BlockedCompilePackages for $(MSBuildProjectName): $(_BlockedCompilePackagesWrapped)" />-->
+    <!--<Message Importance="High" Text="Before removal - ResolvedCompileFileDefinitions count: @(ResolvedCompileFileDefinitions->Count())" />-->
+    <ItemGroup>
+      <ResolvedCompileFileDefinitions Remove="@(ResolvedCompileFileDefinitions)"
+                                      Condition="$([System.String]::Copy('$(_BlockedCompilePackagesWrapped)').Contains(';%(NuGetPackageId);'))" />
+    </ItemGroup>
+    <!--<Message Importance="High" Text="After removal - ResolvedCompileFileDefinitions count: @(ResolvedCompileFileDefinitions->Count())" />-->
+  </Target>
+</Project>

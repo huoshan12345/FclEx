@@ -1,5 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using FclEx.Tests;
+﻿using FclEx.Tests;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 
