@@ -6,6 +6,7 @@ public class YamlMappingNodeExtensionsTests
                                          ---
                                          receipt:     Oz-Ware Purchase Invoice
                                          date:        2012-08-06
+                                         enabled:     true
                                          customer:
                                              first_name:   Dorothy
                                              family_name:  Gale
