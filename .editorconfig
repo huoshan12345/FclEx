@@ -73,7 +73,7 @@ dotnet_diagnostic.IDE0200.severity = silent
 dotnet_diagnostic.IDE0048.severity = none
 
 # CA1861: Avoid constant arrays as arguments
-dotnet_diagnostic.CA1861.severity = none
+dotnet_diagnostic.CA1861.severity = silent
 
 # IDE0011: Add braces
 dotnet_diagnostic.IDE0011.severity = none

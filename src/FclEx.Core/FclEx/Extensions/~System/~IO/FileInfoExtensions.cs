@@ -291,6 +291,16 @@ public static class FileInfoExtensions
     {
         file.MoveTo(null, name, appendExt, options);
     }
+    
+    public static FileInfo CopyTo(this FileInfo fileInfo, FileInfo destFileInfo, bool overwrite = false)
+    {
+        Check.NotNull(fileInfo);
+        Check.NotNull(destFileInfo);
+
+        return fileInfo.FullName == destFileInfo.FullName
+            ? destFileInfo
+            : fileInfo.CopyTo(destFileInfo.FullName, overwrite);
+    }
 
     public static Task WriteAllTextAsync(this FileInfo file, string content, Encoding? encoding = null, CancellationToken token = default)
     {
@@ -300,13 +310,22 @@ public static class FileInfoExtensions
         return File.WriteAllTextAsync(file.FullName, content, encoding ?? Encoding.UTF8, token);
     }
 
-    public static FileInfo CopyTo(this FileInfo fileInfo, FileInfo destFileInfo, bool overwrite = false)
+    public static Task<string> ReadAllTextAsync(this FileInfo file, Encoding? encoding = null, CancellationToken token = default)
     {
-        Check.NotNull(fileInfo);
-        Check.NotNull(destFileInfo);
+        Check.NotNull(file);
+        return File.ReadAllTextAsync(file.FullName, encoding ?? Encoding.UTF8, token);
+    }
 
-        return fileInfo.FullName == destFileInfo.FullName
-            ? destFileInfo
-            : fileInfo.CopyTo(destFileInfo.FullName, overwrite);
+    public static string ReadAllText(this FileInfo file, Encoding? encoding = null)
+    {
+        Check.NotNull(file);
+        return File.ReadAllText(file.FullName, encoding ?? Encoding.UTF8);
+    }
+
+    public static void WriteAllText(this FileInfo file, string content, Encoding? encoding = null)
+    {
+        Check.NotNull(file);
+        Check.NotNull(content);
+        File.WriteAllText(file.FullName, content, encoding ?? Encoding.UTF8);
     }
 }

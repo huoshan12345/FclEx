@@ -24,6 +24,7 @@ public class EfCoreFixture : GlobalFixture
     ];
 
     public static DatabaseConfig Postgres { get; } = Config.GetSection("Postgres").Get<DatabaseConfig>()!;
+    public static DatabaseConfig MySql { get; } = Config.GetSection("MySql").Get<DatabaseConfig>()!;
 
     public static readonly DbProviderType[] DatabaseTypes = GetDatabaseTypes();
 

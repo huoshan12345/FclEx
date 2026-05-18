@@ -125,10 +125,7 @@ jobs:
 
       - name: Pack
         run: >
-          dotnet pack ${{ env.SOLUTION }} -v q -c Release --no-restore --no-build
-          --include-symbols -p:SymbolPackageFormat=snupkg
-          -p:PackageVersion=${{ steps.set_version.outputs.version }}
-          -o ${{ env.ARTIFACTS_DIR }}
+          dotnet pack ${{ env.SOLUTION }} -v q -c Release --no-restore --no-build --include-symbols -p:SymbolPackageFormat=snupkg -p:PackageVersion=${{ steps.set_version.outputs.version }} -o ${{ env.ARTIFACTS_DIR }}
 
       - name: Upload
         uses: actions/upload-artifact@v7
@@ -143,6 +140,7 @@ jobs:
       TEMP: D:\tmp
       DOTNET_INSTALL_DIR: D:\tools\dotnet
       NUGET_PACKAGES: D:\.nuget\packages
+
     steps:
       - name: Get PR
         if: ${{ github.event_name == 'pull_request_target' }}
@@ -227,9 +225,11 @@ jobs:
   publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+
     needs:
       - build
       - build-win
+
     steps:
       - name: Download packages
         uses: actions/download-artifact@v8
@@ -246,18 +246,12 @@ jobs:
       - name: NuGet Publish
         if: env.USE_NUGET == 'true'
         run: >
-          dotnet nuget push "${{ env.ARTIFACTS_DIR }}*.nupkg"
-          --api-key "${{ secrets.NUGET_APIKEY }}"
-          --source "${{ env.NUGET_SOURCE }}"
-          --skip-duplicate
+          dotnet nuget push "${{ env.ARTIFACTS_DIR }}*.nupkg" --api-key "${{ secrets.NUGET_APIKEY }}" --source "${{ env.NUGET_SOURCE }}" --skip-duplicate
 
       - name: MyGet Publish
         if: env.USE_MYGET == 'true'
         run: >
-          dotnet nuget push "${{ env.ARTIFACTS_DIR }}*.nupkg"
-          --api-key "${{ secrets.MYGET_APIKEY }}"
-          --source "${{ env.MYGET_SOURCE }}"
-          --skip-duplicate
+          dotnet nuget push "${{ env.ARTIFACTS_DIR }}*.nupkg" --api-key "${{ secrets.MYGET_APIKEY }}" --source "${{ env.MYGET_SOURCE }}" --skip-duplicate
 
       - name: Set version
         shell: pwsh

@@ -1,7 +1,15 @@
-﻿namespace FclEx.Http;
+namespace FclEx.Http;
 
+/// <summary>
+/// Handles an HTTP response whose body is JSON.
+/// </summary>
+/// <typeparam name="T">The result type produced from the selected JSON token.</typeparam>
 public interface IJsonAction<T> : IHttpResponseHandler<T>
 {
+    /// <summary>
+    /// Gets the optional JSON path used to select result tokens.
+    /// </summary>
+    /// <remarks>When <see langword="null"/>, the root JSON token is used.</remarks>
     string? JsonResultPath
 #if NET6_0_OR_GREATER
         => null;
@@ -14,6 +22,11 @@ public interface IJsonAction<T> : IHttpResponseHandler<T>
         => DefaultJsonAction.GetResult(this, response);
 #endif
 
+    /// <summary>
+    /// Gets JSON text from the response.
+    /// </summary>
+    /// <param name="response">The response containing JSON text.</param>
+    /// <returns>The JSON text, or an error when the response does not look like JSON.</returns>
     OperationResult<string> GetJson(HttpResponse response)
 #if NET6_0_OR_GREATER
         => DefaultJsonAction.GetJson(this, response);
@@ -21,6 +34,13 @@ public interface IJsonAction<T> : IHttpResponseHandler<T>
     ;
 #endif
 
+    /// <summary>
+    /// Creates a JSON action context from response JSON.
+    /// </summary>
+    /// <param name="response">The source response.</param>
+    /// <param name="json">The JSON text to parse.</param>
+    /// <returns>A context when the path matches at least one token; otherwise an error result.</returns>
+    /// <remarks>Invalid JSON may throw; callers that need operation errors should invoke this through the action pipeline.</remarks>
     OperationResult<JsonActionContext> CreateContext(HttpResponse response, string json)
 #if NET6_0_OR_GREATER
         => DefaultJsonAction.CreateContext(this, response, json);
@@ -28,6 +48,11 @@ public interface IJsonAction<T> : IHttpResponseHandler<T>
     ;
 #endif
 
+    /// <summary>
+    /// Converts a JSON context into the final result.
+    /// </summary>
+    /// <param name="context">The parsed JSON context. The default pipeline disposes it after this method returns.</param>
+    /// <returns>The result produced from the selected JSON token.</returns>
     OperationResult<T> GetResult(JsonActionContext context)
 #if NET6_0_OR_GREATER
         => DefaultJsonAction.GetResult(this, context);
@@ -36,64 +61,13 @@ public interface IJsonAction<T> : IHttpResponseHandler<T>
 #endif
 }
 
+/// <summary>
+/// Handles a JSON response when only success or failure matters.
+/// </summary>
 public interface IJsonAction : IJsonAction<Unit>
 {
 #if NET6_0_OR_GREATER
+    /// <inheritdoc />
     OperationResult IJsonAction<Unit>.GetResult(JsonActionContext context) => Operation.Success();
 #endif
-}
-
-public static class DefaultJsonAction
-{
-    public static OperationResult<T> GetResult<T>(IJsonAction<T> action, HttpResponse response)
-    {
-        return action.GetJson(response)
-            .Then(m => action.CreateContext(response, m))
-            .Then(action.GetResult);
-    }
-
-    public static OperationResult<string> GetJson<T>(IJsonAction<T> action, HttpResponse response)
-    {
-        var str = response.ResponseString;
-        return str.IsPossibleJson()
-            ? Operation.Success(response.ResponseString)
-            : Operation.Error<string>("The response string is not a valid json: " + str.Truncate(256));
-    }
-
-    public static OperationResult<JsonActionContext> CreateContext<T>(IJsonAction<T> action, HttpResponse response, string json)
-    {
-        var context = new JsonActionContext(response, json, action.JsonResultPath);
-        if (context.ResultTokens.IsNotEmpty())
-            return context;
-
-        const string msg = "The result object does not exist in json";
-        var error = action.JsonResultPath == null ? msg : msg + " at " + action.JsonResultPath;
-        error = error + ": " + context.Json.Truncate(256);
-        return error;
-    }
-
-    public static OperationResult<T> GetResult<T>(IJsonAction<T> action, JsonActionContext context)
-    {
-        return context.ResultToken is { } token
-            ? token.ToObject<T>()!
-            : nameof(context.ResultToken) + " is null";
-    }
-}
-
-public abstract class JsonAction<T> : HttpResponseHandler<T>, IJsonAction<T>
-{
-    public virtual string? JsonResultPath => null;
-    public virtual OperationResult<string> GetJson(HttpResponse response) 
-        => DefaultJsonAction.GetJson(this, response);
-    public virtual OperationResult<JsonActionContext> CreateContext(HttpResponse response, string json) 
-        => DefaultJsonAction.CreateContext(this, response, json);
-    public virtual OperationResult<T> GetResult(JsonActionContext context) 
-        => DefaultJsonAction.GetResult(this, context);
-    public override OperationResult<T> GetResult(HttpResponse response)
-        => DefaultJsonAction.GetResult(this, response);
-}
-
-public abstract class JsonAction : JsonAction<Unit>, IJsonAction
-{
-    public override OperationResult GetResult(JsonActionContext context) => Operation.Success();
 }

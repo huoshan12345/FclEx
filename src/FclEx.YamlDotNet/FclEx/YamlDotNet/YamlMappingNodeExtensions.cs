@@ -61,7 +61,7 @@ public static class YamlMappingNodeExtensions
     {
         return node.Children<YamlNode>(filter);
     }
-    
+
     public static IEnumerable<KeyValuePair<TKey, TValue>> Children<TKey, TValue>(this YamlMappingNode node, IReadOnlyCollection<string> keys)
         where TKey : YamlNode
         where TValue : YamlNode
@@ -70,7 +70,7 @@ public static class YamlMappingNodeExtensions
     }
 
     public static (YamlScalarNode Child, bool Changed) AddOrUpdateChild(this YamlMappingNode node, string key, string value,
-        ScalarStyle valueStyle = ScalarStyle.Any, bool throwOnTypeMismatch = false)
+        ScalarStyle? valueStyle = null, bool throwOnTypeMismatch = false)
     {
         var keyNode = new YamlScalarNode(key);
 
@@ -79,13 +79,13 @@ public static class YamlMappingNodeExtensions
             if (existingNode is YamlScalarNode scalarNode)
             {
                 var valueChanged = scalarNode.Value != value;
-                var styleChanged = scalarNode.Style != valueStyle;
+                var styleChanged = valueStyle is not null && scalarNode.Style != valueStyle;
 
                 if (!valueChanged && !styleChanged)
                     return (scalarNode, false);
 
                 scalarNode.Value = value;
-                scalarNode.Style = valueStyle;
+                scalarNode.Style = valueStyle ?? scalarNode.Style;
                 return (scalarNode, true);
             }
 
@@ -97,7 +97,7 @@ public static class YamlMappingNodeExtensions
             node.Children.Remove(keyNode);
         }
 
-        var newNode = new YamlScalarNode(value) { Style = valueStyle };
+        var newNode = new YamlScalarNode(value) { Style = valueStyle ?? ScalarStyle.Any };
         node.Children.Add(keyNode, newNode);
         return (newNode, true);
     }

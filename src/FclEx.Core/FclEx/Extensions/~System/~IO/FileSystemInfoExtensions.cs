@@ -2,6 +2,7 @@
 
 public static class FileSystemInfoExtensions
 {
+    public static readonly char DirectorySeparatorChar = Path.DirectorySeparatorChar;
     public static readonly string DirectorySeparator = Path.DirectorySeparatorChar.ToString();
 
     /// <summary>
@@ -21,10 +22,10 @@ public static class FileSystemInfoExtensions
     /// C:\foo\bar.txt -> 1
     /// </example>
     /// </summary>
-    public static int GetDepth(this FileSystemInfo info)
+    public static int GetDirectoryDepth(this FileSystemInfo info)
     {
-        var path = info.GetRelativeRootPath();
-        var count = path.Count(m => m == Path.DirectorySeparatorChar);
+        var path = info.GetRootRelativePath();
+        var count = path.Count(m => m == DirectorySeparatorChar);
         // the path of directory always ends with a slash
         return info is DirectoryInfo
             ? count - 1
@@ -41,7 +42,7 @@ public static class FileSystemInfoExtensions
 
     /// <summary>
     /// Gets the root portion of the path (e.g., "C:\" or "\\server\share\"). <br/>
-    /// The result always ends with a <see cref="DirectorySeparator"/>. <br/>
+    /// The result always ends with a <see cref="DirectorySeparatorChar"/>. <br/>
     /// Examples: <br/>
     /// <example>
     /// Windows: C:\foo -> C:\ <br/>
@@ -51,40 +52,13 @@ public static class FileSystemInfoExtensions
     /// </summary>
     public static string GetRootPath(this FileSystemInfo info)
     {
-        var path = info.FullName;
+        var root = Path.GetPathRoot(info.FullName);
+        if (root.IsNullOrEmpty())
+            return "";
 
-        if (string.IsNullOrEmpty(path))
-            return string.Empty;
-
-        // Handle Windows drive letters (e.g., "C:\")
-        if (path.Length >= 2 && path[1] == Path.VolumeSeparatorChar)
-        {
-            // Return "C:\"
-            return path.Length > 2 && path[2] == Path.DirectorySeparatorChar
-                ? path[..3]
-                : path[..2] + DirectorySeparator;
-        }
-
-        // Handle UNC paths (e.g., "\\server\share\file")
-        if (path.StartsWith(DirectorySeparator + DirectorySeparator))
-        {
-            // Find the position after \\server\share
-            var firstSlash = path.IndexOf(Path.DirectorySeparatorChar, 2);
-            if (firstSlash == -1) return path + DirectorySeparator;
-
-            var secondSlash = path.IndexOf(Path.DirectorySeparatorChar, firstSlash + 1);
-
-            if (secondSlash == -1)
-                return path + DirectorySeparator;
-
-            // Return "\\server\share\"
-            return path[..(secondSlash + 1)];
-        }
-
-        // Handle Unix root or any path starting with /
-        return path.StartsWith(DirectorySeparator) 
-            ? DirectorySeparator 
-            : string.Empty;
+        return root.EndsWith(DirectorySeparatorChar)
+            ? root
+            : root + DirectorySeparatorChar;
     }
 
     /// <summary>
@@ -97,7 +71,7 @@ public static class FileSystemInfoExtensions
     /// </summary>
     public static string GetTopLevelDirectoryName(this FileSystemInfo info)
     {
-        var path = info.GetRelativeRootPath();
+        var path = info.GetRootRelativePath();
         for (var i = 1; i < path.Length; i++)
         {
             if (path[i] == Path.DirectorySeparatorChar)
@@ -116,7 +90,7 @@ public static class FileSystemInfoExtensions
     /// C:\foo\bar\ -> \foo\bar\
     /// </example>
     /// </summary>
-    public static string GetRelativeRootPath(this FileSystemInfo info)
+    public static string GetRootRelativePath(this FileSystemInfo info)
     {
         var root = info.GetRootPath();
         var fullPath = info.FullName;
@@ -129,17 +103,30 @@ public static class FileSystemInfoExtensions
             : DirectorySeparator;
 
         // Basic cleanup: ensure it starts with a separator
-        if (string.IsNullOrEmpty(path) || !path.StartsWith(DirectorySeparator))
+        if (string.IsNullOrEmpty(path) || !path.StartsWith(DirectorySeparatorChar))
         {
-            path = DirectorySeparator + path;
+            path = DirectorySeparatorChar + path;
         }
 
         // Ensure directories end with a separator
-        if (info is DirectoryInfo && !path.EndsWith(DirectorySeparator))
+        if (info is DirectoryInfo && !path.EndsWith(DirectorySeparatorChar))
         {
-            path += DirectorySeparator;
+            path += DirectorySeparatorChar;
         }
 
         return path;
+    }
+
+    /// <summary>
+    /// Gets the Windows drive letter (e.g., "C").<br/>
+    /// Returns an empty string for UNC and Unix paths.
+    /// </summary>
+    public static string GetDriveLetter(this FileSystemInfo info)
+    {
+        var root = Path.GetPathRoot(info.FullName);
+
+        return root is [_, ':', ..]
+            ? root[..1]
+            : "";
     }
 }

@@ -20,7 +20,7 @@ public abstract class UserClientAction<TClient, TAccount, T> :
     public TClient Client { get; }
     public ILogger Logger { get; }
 #if NET6_0_OR_GREATER
-    public abstract Task<OperationResult<T>> ExecuteActionAsync(CancellationToken token = default);
+    public abstract Task<OperationResult<T>> ExecuteCoreAsync(CancellationToken token = default);
 #endif
 }
 

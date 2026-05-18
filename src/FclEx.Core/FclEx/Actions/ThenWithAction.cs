@@ -1,13 +1,20 @@
 ﻿namespace FclEx.Actions;
 
-public class UnionAction<T, TNext> : IAction<(T, TNext)>
+public class ThenWithAction<T, TNext> : IAction<(T, TNext)>
 {
     private readonly IAction<T> _action;
     private readonly Func<T, IAction<TNext>?> _next;
     private readonly bool _errorWhenNextNull;
     private readonly bool _prevWhenNextError;
 
-    public UnionAction(IAction<T> action, Func<T, IAction<TNext>?> next,
+    /// <summary>
+    /// Creates an action that returns both the current and next successful values.
+    /// </summary>
+    /// <param name="action">The source action.</param>
+    /// <param name="next">Creates the next action from the successful source value.</param>
+    /// <param name="errorWhenNextNull">Whether a <see langword="null"/> next action should fail the result.</param>
+    /// <param name="prevWhenNextError">Whether to keep the source value when the next action fails.</param>
+    public ThenWithAction(IAction<T> action, Func<T, IAction<TNext>?> next,
         bool errorWhenNextNull = true, bool prevWhenNextError = false)
     {
         _action = Check.NotNull(action);
@@ -16,6 +23,12 @@ public class UnionAction<T, TNext> : IAction<(T, TNext)>
         _prevWhenNextError = prevWhenNextError;
     }
 
+    /// <summary>
+    /// Executes the source action and then the next action, returning both values.
+    /// </summary>
+    /// <param name="token">The cancellation token passed to both actions.</param>
+    /// <returns>A tuple of both successful values, or a failure result.</returns>
+    /// <remarks>The next action is not created when the source action fails.</remarks>
     public async Task<OperationResult<(T, TNext)>> ExecuteAsync(CancellationToken token = default)
     {
         var result = await _action.ExecuteAsync(token);
