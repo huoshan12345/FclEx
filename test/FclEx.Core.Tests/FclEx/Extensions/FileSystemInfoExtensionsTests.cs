@@ -34,13 +34,13 @@ public class FileSystemInfoExtensionsTests
     [InlineData(@"C:\foo\file.txt", @"\foo\file.txt")]
     [InlineData(@"\\server\share\sub\file.txt", @"\sub\file.txt")]
     [InlineData("/", @"\")] // Linux root maps to our defined separator
-    public void GetRelativeRootPath_ShouldReturnFormattedPath(string fullPath, string expectedRelative)
+    public void GetRootRelativePath_ShouldReturnFormattedPath(string fullPath, string expectedRelative)
     {
         if (IsWindows != fullPath.Contains('\\')) 
             return;
 
         var info = CreateInfo(fullPath);
-        var result = info.GetRelativeRootPath();
+        var result = info.GetRootRelativePath();
 
         // On Linux, Path.DirectorySeparatorChar is '/', adjust expectation
         var platformExpected = expectedRelative.Replace('\\', Path.DirectorySeparatorChar);
@@ -66,13 +66,13 @@ public class FileSystemInfoExtensionsTests
     [InlineData(@"C:\foo\", 1)]
     [InlineData(@"C:\foo\bar.txt", 2)]
     [InlineData(@"\\server\share\a\b\c.txt", 3)]
-    public void GetDepth_ShouldReturnCorrectInteger(string path, int expectedDepth)
+    public void GetDirectoryDepth_ShouldReturnCorrectInteger(string path, int expectedDepth)
     {
         if (IsWindows != path.Contains('\\'))
             return;
 
         var info = CreateInfo(path);
-        Assert.Equal(expectedDepth, info.GetDepth());
+        Assert.Equal(expectedDepth, info.GetDirectoryDepth());
     }
 
     /// <summary>
