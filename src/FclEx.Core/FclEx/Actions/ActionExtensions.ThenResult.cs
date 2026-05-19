@@ -60,6 +60,6 @@ partial class ActionExtensions
 
     public static IAction<T> ThenResultIf<T>(this IAction<T> action, Func<OperationResult<T>, bool> condition, Func<OperationResult<T>, IAction<T>> next)
     {
-        return action.ThenResultIf<T>(condition, next, m => ResultAction.Create(m));
+        return action.ThenResultIf<T>(condition, next, m => ResultAction.Create(m.Elapsed(default)));
     }
 }

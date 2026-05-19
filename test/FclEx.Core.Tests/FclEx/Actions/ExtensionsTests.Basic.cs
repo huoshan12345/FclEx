@@ -49,7 +49,7 @@ public partial class ExtensionsTests
     {
         var invoked = false;
 
-        var (success, value, _, _) = await SuccessAction.Create(3)
+        var (success, value, _, elapsed) = await SuccessAction.Create(3, TimeSpan.FromSeconds(2))
             .MapError(ex =>
             {
                 invoked = true;
@@ -60,6 +60,7 @@ public partial class ExtensionsTests
         Assert.True(success);
         Assert.Equal(3, value);
         Assert.False(invoked);
+        Assert.Equal(TimeSpan.FromSeconds(2), elapsed);
     }
 
     [Fact]
@@ -143,14 +144,30 @@ public partial class ExtensionsTests
     {
         OperationResult<int> observed = default;
 
-        var (success, value, _, _) = await SuccessAction.Create(5)
+        var (success, value, _, elapsed) = await SuccessAction.Create(5, TimeSpan.FromSeconds(2))
             .OnResult(r => observed = r)
             .ExecuteAsync();
 
         Assert.True(success);
         Assert.Equal(5, value);
+        Assert.True(elapsed >= TimeSpan.FromSeconds(2), elapsed.ToString());
+        Assert.True(elapsed < TimeSpan.FromSeconds(3), elapsed.ToString());
         Assert.True(observed.IsSuccess);
         Assert.Equal(5, observed.Value);
+    }
+
+    [Fact]
+    public async Task OnResult_WhenCallbackThrows_ReturnsCallbackError()
+    {
+        var (success, _, ex, elapsed) = await SuccessAction.Create(5, TimeSpan.FromSeconds(2))
+            .OnResult(_ => throw new InvalidOperationException("callback"))
+            .ExecuteAsync();
+
+        Assert.False(success);
+        Assert.IsType<InvalidOperationException>(ex);
+        Assert.Equal("callback", ex.Message);
+        Assert.True(elapsed >= TimeSpan.FromSeconds(2), elapsed.ToString());
+        Assert.True(elapsed < TimeSpan.FromSeconds(3), elapsed.ToString());
     }
 
     [Fact]
@@ -261,11 +278,11 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task EnumerableExecuteAsync_RunsActionsInOrder()
+    public async Task Chain_RunsActionsInOrder()
     {
         var order = new List<int>();
         IAction<int>[] actions =
-        {
+        [
             Operation.Action<int>(_ =>
             {
                 order.Add(1);
@@ -275,10 +292,10 @@ public partial class ExtensionsTests
             {
                 order.Add(2);
                 return 2;
-            }),
-        };
+            })
+        ];
 
-        var (success, value, _, _) = await actions.ExecuteAsync().ExecuteAsync();
+        var (success, value, _, _) = await actions.Chain().ExecuteAsync();
 
         Assert.True(success);
         Assert.Equal(2, value);
@@ -286,10 +303,23 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task EnumerableExecuteAsync_WithEmptySequence_ReturnsDefaultValue()
+    public async Task Chain_RemainsCompatibleAliasForChain()
+    {
+        var (success, value, _, _) = await new[]
+        {
+            SuccessAction.Create(1),
+            SuccessAction.Create(2),
+        }.Chain().ExecuteAsync();
+
+        Assert.True(success);
+        Assert.Equal(2, value);
+    }
+
+    [Fact]
+    public async Task Chain_WithEmptySequence_ReturnsDefaultValue()
     {
         var (success, value, _, _) = await Array.Empty<IAction<int>>()
-            .ExecuteAsync()
+            .Chain()
             .ExecuteAsync();
 
         Assert.True(success);

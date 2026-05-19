@@ -150,11 +150,12 @@ public partial class ExtensionsTests
     [Fact]
     public async Task ThenResultIf_WithSingleNext_LeavesResultUnchangedWhenConditionIsFalse()
     {
-        var (success, _, ex, _) = await ErrorAction.Create<int>("error")
+        var (success, _, ex, elapsed) = await ErrorAction.Create<int>("error", TimeSpan.FromSeconds(2))
             .ThenResultIf(r => r.IsSuccess, _ => SuccessAction.Create(2))
             .ExecuteAsync();
 
         Assert.False(success);
         Assert.Equal("error", ex?.Message);
+        Assert.Equal(TimeSpan.FromSeconds(2), elapsed);
     }
 }

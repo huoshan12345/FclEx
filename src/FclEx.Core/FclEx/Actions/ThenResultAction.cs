@@ -17,7 +17,7 @@ public class ThenResultAction<T, TNext> : IAction<TNext>
 
         var nextActor = _next(result);
         if (nextActor == null)
-            return Constants.NullNextError;
+            return (Constants.NullNextError, result.Elapsed);
 
         var nextResult = await nextActor.ExecuteAsync(token);
         return nextResult.Elapsed(result.Elapsed + nextResult.Elapsed);

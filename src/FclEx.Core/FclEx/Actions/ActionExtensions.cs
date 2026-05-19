@@ -62,7 +62,8 @@ public static partial class ActionExtensions
     public static IAction<T> OnResult<T>(this IAction<T> action, Func<OperationResult<T>, Task> resultAction)
     {
         Check.NotNull(resultAction);
-        return action.ThenResult(r => resultAction(r).Then(() => r));
+        return action.ThenResult(r => Operation.ExecuteAsync(() => resultAction(r))
+            .ThenResult(x => x.Then(_ => r.Elapsed(x.Elapsed))));
     }
 
     public static IAction<T> OnResult<T>(this IAction<T> action, Action<OperationResult<T>> resultAction)
@@ -80,7 +81,7 @@ public static partial class ActionExtensions
         Check.NotNull(condition);
         Check.NotNull(resultAction);
 
-        return action.OnResult(r => condition(r) ? resultAction(r) : r);
+        return action.OnResult(r => condition(r) ? resultAction(r) : Task.CompletedTask);
     }
 
     public static IAction<T> WhenResult<T>(this IAction<T> action, Func<OperationResult<T>, bool> condition, Action<OperationResult<T>> resultAction)
@@ -178,7 +179,7 @@ public static partial class ActionExtensions
         return action.RepeatUntil(until, TimeSpan.FromSeconds(delayInSeconds), timeoutInSeconds.HasValue ? TimeSpan.FromSeconds(timeoutInSeconds.Value) : null);
     }
 
-    public static IAction<T> ExecuteAsync<T>(this IEnumerable<IAction<T>> actions)
+    public static IAction<T> Chain<T>(this IEnumerable<IAction<T>> actions)
     {
         IAction<T> seed = new SuccessAction<T>(default!);
         return actions.Aggregate(seed, (sum, next) => sum.Then(next), m => m);
