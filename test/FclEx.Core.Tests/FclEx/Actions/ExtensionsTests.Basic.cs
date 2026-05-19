@@ -34,10 +34,10 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task MapToResult_WhenMapperReturnsError_ReturnsMappedError()
+    public async Task MapResult_WhenMapperReturnsError_ReturnsMappedError()
     {
         var (success, _, ex, _) = await SuccessAction.Create(1)
-            .MapToResult(_ => Operation.Error<string>("mapped"))
+            .MapResult(_ => Operation.Error<string>("mapped"))
             .ExecuteAsync();
 
         Assert.False(success);
@@ -88,10 +88,10 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task Fail_AfterSuccess_ReturnsErrorFromValue()
+    public async Task Reject_AfterSuccess_ReturnsErrorFromValue()
     {
         var (success, _, ex, _) = await SuccessAction.Create(9)
-            .Fail(v => new InvalidOperationException($"bad {v}"))
+            .Reject(v => new InvalidOperationException($"bad {v}"))
             .ExecuteAsync();
 
         Assert.False(success);
@@ -100,12 +100,12 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task Fail_WhenPreviousFails_DoesNotInvokeErrorFactory()
+    public async Task Reject_WhenPreviousFails_DoesNotInvokeErrorFactory()
     {
         var invoked = false;
 
         var (success, _, ex, _) = await ErrorAction.Create<int>("original")
-            .Fail(_ =>
+            .Reject(_ =>
             {
                 invoked = true;
                 return "new";
@@ -118,10 +118,10 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task FailIf_WhenConditionIsFalse_KeepsOriginalValue()
+    public async Task RejectIf_WhenConditionIsFalse_KeepsOriginalValue()
     {
         var (success, value, _, _) = await SuccessAction.Create(3)
-            .FailIf(v => v > 10, v => $"bad {v}")
+            .RejectIf(v => v > 10, v => $"bad {v}")
             .ExecuteAsync();
 
         Assert.True(success);
@@ -129,10 +129,10 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task FailIf_WhenConditionIsTrue_ReturnsError()
+    public async Task RejectIf_WhenConditionIsTrue_ReturnsError()
     {
         var (success, _, ex, _) = await SuccessAction.Create(11)
-            .FailIf(v => v > 10, v => $"bad {v}")
+            .RejectIf(v => v > 10, v => $"bad {v}")
             .ExecuteAsync();
 
         Assert.False(success);
@@ -233,13 +233,13 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task RepeatOnceIf_WhenConditionMatches_ReexecutesActionOnce()
+    public async Task RetryOnceIf_WhenConditionMatches_ReexecutesActionOnce()
     {
         var count = 0;
         var action = Operation.Action<int>(_ => ++count);
 
         var (success, value, _, _) = await action
-            .RepeatOnceIf(v => v == 1)
+            .RetryOnceIf(v => v == 1)
             .ExecuteAsync();
 
         Assert.True(success);
@@ -248,13 +248,13 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task RepeatOnceIf_WhenConditionDoesNotMatch_ReturnsFirstResult()
+    public async Task RetryOnceIf_WhenConditionDoesNotMatch_ReturnsFirstResult()
     {
         var count = 0;
         var action = Operation.Action<int>(_ => ++count);
 
         var (success, value, _, _) = await action
-            .RepeatOnceIf(v => v > 1)
+            .RetryOnceIf(v => v > 1)
             .ExecuteAsync();
 
         Assert.True(success);
@@ -263,9 +263,9 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public void RepeatOnceIf_RejectsNullCondition()
+    public void RetryOnceIf_RejectsNullCondition()
     {
-        Assert.Throws<ArgumentNullException>(() => SuccessAction.Create(1).RepeatOnceIf(null!));
+        Assert.Throws<ArgumentNullException>(() => SuccessAction.Create(1).RetryOnceIf(null!));
     }
 
     [Fact]
@@ -315,16 +315,29 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task Chain_RemainsCompatibleAliasForChain()
+    public async Task CombineInSeries_ReturnsValuesInOrder()
     {
         var (success, value, _, _) = await new[]
         {
             SuccessAction.Create(1),
             SuccessAction.Create(2),
-        }.Chain().ExecuteAsync();
+        }.CombineInSeries().ExecuteAsync();
 
         Assert.True(success);
-        Assert.Equal(2, value);
+        Assert.Equal(new[] { 1, 2 }, value);
+    }
+
+    [Fact]
+    public async Task CombineInParallel_ReturnsValuesInOrder()
+    {
+        var (success, value, _, _) = await new[]
+        {
+            SuccessAction.Create(1),
+            SuccessAction.Create(2),
+        }.CombineInParallel().ExecuteAsync();
+
+        Assert.True(success);
+        Assert.Equal(new[] { 1, 2 }, value);
     }
 
     [Fact]

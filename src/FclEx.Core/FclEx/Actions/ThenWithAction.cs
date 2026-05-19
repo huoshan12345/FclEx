@@ -1,13 +1,13 @@
 ﻿namespace FclEx.Actions;
 
-public class UnionAction<T, TNext> : IAction<(T, TNext)>
+public class ThenWithAction<T, TNext> : IAction<(T, TNext)>
 {
     private readonly IAction<T> _action;
     private readonly Func<T, IAction<TNext>?> _next;
     private readonly bool _errorWhenNextNull;
     private readonly bool _prevWhenNextError;
 
-    public UnionAction(IAction<T> action, Func<T, IAction<TNext>?> next,
+    public ThenWithAction(IAction<T> action, Func<T, IAction<TNext>?> next,
         bool errorWhenNextNull = true, bool prevWhenNextError = false)
     {
         _action = Check.NotNull(action);

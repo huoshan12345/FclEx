@@ -137,10 +137,10 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task ThenTry_WhenFuncReturnsNull_KeepsOriginalValue()
+    public async Task ThenOptional_WhenFuncReturnsNull_KeepsOriginalValue()
     {
         var (success, value, _, _) = await SuccessAction.Create(5)
-            .ThenTry(_ => null)
+            .ThenOptional(_ => null)
             .ExecuteAsync();
 
         Assert.True(success);

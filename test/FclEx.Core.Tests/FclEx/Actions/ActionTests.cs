@@ -78,10 +78,10 @@ public class ActionTests
     }
 
     [Fact]
-    public void MapToResultAction_ConstructorRejectsNullArguments()
+    public void MapResultAction_ConstructorRejectsNullArguments()
     {
-        Assert.Throws<ArgumentNullException>(() => new MapToResultAction<int, string>(null!, _ => Operation.Success("")));
-        Assert.Throws<ArgumentNullException>(() => new MapToResultAction<int, string>(SuccessAction.Create(1), null!));
+        Assert.Throws<ArgumentNullException>(() => new MapResultAction<int, string>(null!, _ => Operation.Success("")));
+        Assert.Throws<ArgumentNullException>(() => new MapResultAction<int, string>(SuccessAction.Create(1), null!));
     }
 
     [Fact]
@@ -99,10 +99,10 @@ public class ActionTests
     }
 
     [Fact]
-    public void UnionAction_ConstructorRejectsNullArguments()
+    public void ThenWithAction_ConstructorRejectsNullArguments()
     {
-        Assert.Throws<ArgumentNullException>(() => new UnionAction<int, string>(null!, _ => SuccessAction.Create("")));
-        Assert.Throws<ArgumentNullException>(() => new UnionAction<int, string>(SuccessAction.Create(1), null!));
+        Assert.Throws<ArgumentNullException>(() => new ThenWithAction<int, string>(null!, _ => SuccessAction.Create("")));
+        Assert.Throws<ArgumentNullException>(() => new ThenWithAction<int, string>(SuccessAction.Create(1), null!));
     }
 
     [Fact]

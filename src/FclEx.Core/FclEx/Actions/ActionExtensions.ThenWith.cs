@@ -1,0 +1,19 @@
+﻿namespace FclEx.Actions;
+
+partial class ActionExtensions
+{
+    public static IAction<(T Cur, TNext Next)> ThenWith<T, TNext>(this IAction<T> action, Func<T, IAction<TNext>> next)
+    {
+        return new ThenWithAction<T, TNext>(action, next);
+    }
+
+    public static IAction<(T Cur, TNext Next)> ThenWith<T, TNext>(this IAction<T> action, Func<T, OperationResult<TNext>> next)
+    {
+        return new ThenWithAction<T, TNext>(action, m => Operation.Action(t => next(m)));
+    }
+
+    public static IAction<(T1, T2, TNext)> ThenWith<T1, T2, TNext>(this IAction<(T1, T2)> action, Func<T1, T2, IAction<TNext>> next)
+    {
+        return new ThenWithAction<(T1, T2), TNext>(action, m => next(m.Item1, m.Item2)).MapValue(m => (m.Item1.Item1, m.Item1.Item2, m.Item2));
+    }
+}

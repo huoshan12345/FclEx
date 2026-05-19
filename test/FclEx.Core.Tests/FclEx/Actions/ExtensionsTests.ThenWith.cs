@@ -3,11 +3,11 @@ namespace FclEx.Actions;
 public partial class ExtensionsTests
 {
     [Fact]
-    public async Task Union_ChainsTupleValuesAcrossSuccessfulActions()
+    public async Task ThenWith_ChainsTupleValuesAcrossSuccessfulActions()
     {
         var (successful, result, _, elapsed) = await SuccessAction.Create(1, TimeSpan.FromSeconds(1))
-            .Union(r => SuccessAction.Create(1 + r, TimeSpan.FromSeconds(2)))
-            .Union((a, b) => SuccessAction.Create(1 + a + b, TimeSpan.FromSeconds(3)))
+            .ThenWith(r => SuccessAction.Create(1 + r, TimeSpan.FromSeconds(2)))
+            .ThenWith((a, b) => SuccessAction.Create(1 + a + b, TimeSpan.FromSeconds(3)))
             .ExecuteAsync();
 
         Assert.True(successful);
@@ -16,12 +16,12 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task Union_WhenFirstActionFails_DoesNotCreateNextAction()
+    public async Task ThenWith_WhenFirstActionFails_DoesNotCreateNextAction()
     {
         var invoked = false;
 
         var (successful, _, ex, elapsed) = await ErrorAction.Create<int>("error", TimeSpan.FromSeconds(4))
-            .Union(r =>
+            .ThenWith(r =>
             {
                 invoked = true;
                 return SuccessAction.Create(1 + r);
@@ -35,17 +35,17 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task Union_WhenMiddleActionFails_DoesNotCreateFinalAction()
+    public async Task ThenWith_WhenMiddleActionFails_DoesNotCreateFinalAction()
     {
         var invoked = false;
 
         var (successful, _, ex, _) = await SuccessAction.Create(1)
-            .Union(r =>
+            .ThenWith(r =>
             {
                 Assert.Equal(1, r);
                 return ErrorAction.Create<int>("error");
             })
-            .Union((_, _) =>
+            .ThenWith((_, _) =>
             {
                 invoked = true;
                 return SuccessAction.Create(1);
@@ -58,11 +58,11 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task Union_WhenFinalActionFails_ReturnsFinalError()
+    public async Task ThenWith_WhenFinalActionFails_ReturnsFinalError()
     {
         var (successful, _, ex, _) = await SuccessAction.Create(1)
-            .Union(r => SuccessAction.Create(1 + r))
-            .Union((a, b) =>
+            .ThenWith(r => SuccessAction.Create(1 + r))
+            .ThenWith((a, b) =>
             {
                 Assert.Equal(1, a);
                 Assert.Equal(2, b);
@@ -75,10 +75,10 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task Union_WhenMultipleActionsCanFail_ReturnsFirstError()
+    public async Task ThenWith_WhenMultipleActionsCanFail_ReturnsFirstError()
     {
         var (successful, _, ex, _) = await ErrorAction.Create<int>("error1")
-            .Union(_ => ErrorAction.Create<int>("error2"))
+            .ThenWith(_ => ErrorAction.Create<int>("error2"))
             .ExecuteAsync();
 
         Assert.False(successful);
@@ -86,10 +86,10 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task Union_WithOperationResultFactory_ReturnsTuple()
+    public async Task ThenWith_WithOperationResultFactory_ReturnsTuple()
     {
         var (successful, result, _, _) = await SuccessAction.Create("a")
-            .Union(v => Operation.Success(v + "b"))
+            .ThenWith(v => Operation.Success(v + "b"))
             .ExecuteAsync();
 
         Assert.True(successful);
@@ -97,10 +97,10 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task Union_WhenNextActionIsNull_ReturnsNullNextError()
+    public async Task ThenWith_WhenNextActionIsNull_ReturnsNullNextError()
     {
         var (successful, _, ex, _) = await SuccessAction.Create(1)
-            .Union<int, string>(_ => null!)
+            .ThenWith<int, string>((Func<int, IAction<string>>)(_ => null!))
             .ExecuteAsync();
 
         Assert.False(successful);
@@ -108,9 +108,9 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task UnionAction_WhenConfiguredToAllowNullNext_ReturnsPreviousValueWithDefaultNext()
+    public async Task ThenWithAction_WhenConfiguredToAllowNullNext_ReturnsPreviousValueWithDefaultNext()
     {
-        var action = new UnionAction<int, string>(
+        var action = new ThenWithAction<int, string>(
             SuccessAction.Create(7, TimeSpan.FromSeconds(2)),
             _ => null,
             errorWhenNextNull: false);
@@ -123,9 +123,9 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task UnionAction_WhenConfiguredToKeepPreviousOnNextError_ReturnsPreviousValueWithDefaultNext()
+    public async Task ThenWithAction_WhenConfiguredToKeepPreviousOnNextError_ReturnsPreviousValueWithDefaultNext()
     {
-        var action = new UnionAction<int, string>(
+        var action = new ThenWithAction<int, string>(
             SuccessAction.Create(7, TimeSpan.FromSeconds(2)),
             _ => ErrorAction.Create<string>("next failed", TimeSpan.FromSeconds(5)),
             prevWhenNextError: true);

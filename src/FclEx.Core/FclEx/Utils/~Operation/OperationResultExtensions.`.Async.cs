@@ -260,6 +260,6 @@ partial class OperationResultExtensions
     public static IAction<T[]> ToAction<T>(this IEnumerable<Task<OperationResult<T>>> tasks, bool parallel)
     {
         var actions = tasks.Select(m => Operation.Action(t => m));
-        return actions.Merge(parallel);
+        return parallel ? actions.CombineInParallel() : actions.CombineInSeries();
     }
 }

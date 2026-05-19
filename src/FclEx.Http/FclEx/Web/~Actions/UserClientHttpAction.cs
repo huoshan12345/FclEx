@@ -17,8 +17,8 @@ public abstract class UserClientHttpAction<TClient, TAccount, T>(TClient client)
     public virtual void ModifyRequest(HttpRequest request) { }
     public virtual Task<OperationResult<T>> GetResultAsync(HttpResponse response)
         => DefaultHttpResponseHandler.GetResultAsync(this, response);
-    public override Task<OperationResult<T>> ExecuteActionAsync(CancellationToken token = default)
-        => DefaultHttpAction.ExecuteActionAsync(this, token);
+    public override Task<OperationResult<T>> ExecuteCoreAsync(CancellationToken token = default)
+        => DefaultHttpAction.ExecuteCoreAsync(this, token);
 }
 
 public abstract class UserClientHttpAction<TClient, T>(TClient client)

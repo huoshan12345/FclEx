@@ -13,8 +13,8 @@ public interface IHttpAction<T> : IPipelineAction<T>, IHttpResponseHandler<T>
 #endif
 
 #if NET6_0_OR_GREATER
-    Task<OperationResult<T>> IPipelineAction<T>.ExecuteActionAsync(CancellationToken token)
-        => DefaultHttpAction.ExecuteActionAsync(this, token);
+    Task<OperationResult<T>> IPipelineAction<T>.ExecuteCoreAsync(CancellationToken token)
+        => DefaultHttpAction.ExecuteCoreAsync(this, token);
 #endif
 
     HttpRequest BuildRequest()
@@ -41,7 +41,7 @@ public interface IHttpAction<T> : IPipelineAction<T>, IHttpResponseHandler<T>
 
 public static class DefaultHttpAction
 {
-    public static async Task<OperationResult<T>> ExecuteActionAsync<T>(IHttpAction<T> action, CancellationToken token)
+    public static async Task<OperationResult<T>> ExecuteCoreAsync<T>(IHttpAction<T> action, CancellationToken token)
     {
         var logger = action.HttpService.Logger;
         HttpRequest? request = null;
@@ -107,6 +107,6 @@ public abstract class HttpAction<T> : PipelineAction<T>, IHttpAction<T>
     public abstract OperationResult<T> GetResult(HttpResponse response);
     public virtual Task<OperationResult<T>> GetResultAsync(HttpResponse response)
         => DefaultHttpResponseHandler.GetResultAsync(this, response);
-    public override Task<OperationResult<T>> ExecuteActionAsync(CancellationToken token = default)
-        => DefaultHttpAction.ExecuteActionAsync(this, token);
+    public override Task<OperationResult<T>> ExecuteCoreAsync(CancellationToken token = default)
+        => DefaultHttpAction.ExecuteCoreAsync(this, token);
 }

@@ -5,14 +5,14 @@ public interface IHtmlFileAction<T> : IHttpAction<T>
     string FilePath { get; }
 
 #if NET6_0_OR_GREATER
-    Task<OperationResult<T>> IPipelineAction<T>.ExecuteActionAsync(CancellationToken token)
-        => DefaultHtmlFileAction.ExecuteActionAsync(this, token);
+    Task<OperationResult<T>> IPipelineAction<T>.ExecuteCoreAsync(CancellationToken token)
+        => DefaultHtmlFileAction.ExecuteCoreAsync(this, token);
 #endif
 }
 
 public static class DefaultHtmlFileAction
 {
-    public static async Task<OperationResult<T>> ExecuteActionAsync<T>(IHtmlFileAction<T> action, CancellationToken token)
+    public static async Task<OperationResult<T>> ExecuteCoreAsync<T>(IHtmlFileAction<T> action, CancellationToken token)
     {
         var logger = action.HttpService.Logger;
         HttpRequest? request = null;
@@ -44,6 +44,6 @@ public static class DefaultHtmlFileAction
 public abstract class HtmlFileAction<T> : HttpAction<T>, IHtmlFileAction<T>
 {
     public abstract string FilePath { get; }
-    public override Task<OperationResult<T>> ExecuteActionAsync(CancellationToken token = default)
-        => DefaultHtmlFileAction.ExecuteActionAsync(this, token);
+    public override Task<OperationResult<T>> ExecuteCoreAsync(CancellationToken token = default)
+        => DefaultHtmlFileAction.ExecuteCoreAsync(this, token);
 }

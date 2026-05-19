@@ -53,7 +53,7 @@ partial class ActionExtensions
         return action.ThenIf(condition, next, _ => SuccessAction.Create(Unit.Default));
     }
 
-    public static IAction<T> ThenTry<T>(this IAction<T> action, Func<T, IAction<T>?> func)
+    public static IAction<T> ThenOptional<T>(this IAction<T> action, Func<T, IAction<T>?> func)
     {
         return action.Then(m => func(m) ?? SuccessAction.Create(m));
     }
@@ -61,8 +61,8 @@ partial class ActionExtensions
     public static IAction<TNext[]> Then<T, TNext>(this IAction<T> action, Func<T, IEnumerable<IAction<TNext>>> next, bool parallel = true)
     {
         return action.Then(m => parallel
-            ? ParallelAction.Create(next(m))
-            : SeriesAction.Create(next(m)));
+            ? next(m).CombineInParallel()
+            : next(m).CombineInSeries());
     }
 
     public static IAction<TNext[]> Then<T, TNext>(this IAction<T> action, Func<T, IEnumerable<OperationResult<TNext>>> next, bool parallel = true)

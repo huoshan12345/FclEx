@@ -12,9 +12,9 @@ public static partial class ActionExtensions
         return new MapValueAction<T, T2>(action, map);
     }
 
-    public static IAction<T2> MapToResult<T, T2>(this IAction<T> action, Func<T, OperationResult<T2>> map)
+    public static IAction<T2> MapResult<T, T2>(this IAction<T> action, Func<T, OperationResult<T2>> map)
     {
-        return new MapToResultAction<T, T2>(action, map);
+        return new MapResultAction<T, T2>(action, map);
     }
 
     public static IAction<T> MapError<T>(this IAction<T> action, Func<Exception, Exception> func)
@@ -27,19 +27,19 @@ public static partial class ActionExtensions
         return action.MapError(e => e.SetMessage(func(e.Message)));
     }
 
-    public static IAction<T> Fail<T>(this IAction<T> action, Func<T, Exception> errorFunc)
+    public static IAction<T> Reject<T>(this IAction<T> action, Func<T, Exception> errorFunc)
     {
         Check.NotNull(errorFunc);
         return action.Then(t => ErrorAction.Create<T>(errorFunc(t)));
     }
 
-    public static IAction<T> Fail<T>(this IAction<T> action, Func<T, string> errorFunc)
+    public static IAction<T> Reject<T>(this IAction<T> action, Func<T, string> errorFunc)
     {
         Check.NotNull(errorFunc);
         return action.Then(t => new ErrorAction<T>(errorFunc(t)));
     }
 
-    public static IAction<T> FailIf<T>(this IAction<T> action, Func<T, bool> condition, Func<T, Exception> errorFunc)
+    public static IAction<T> RejectIf<T>(this IAction<T> action, Func<T, bool> condition, Func<T, Exception> errorFunc)
     {
         Check.NotNull(condition);
         Check.NotNull(errorFunc);
@@ -49,7 +49,7 @@ public static partial class ActionExtensions
             : SuccessAction.Create(t));
     }
 
-    public static IAction<T> FailIf<T>(this IAction<T> action, Func<T, bool> condition, Func<T, string> errorFunc)
+    public static IAction<T> RejectIf<T>(this IAction<T> action, Func<T, bool> condition, Func<T, string> errorFunc)
     {
         Check.NotNull(condition);
         Check.NotNull(errorFunc);
@@ -149,7 +149,7 @@ public static partial class ActionExtensions
         return action.WhenResult(r => r.IsError, r => errorAction(r.Exception!));
     }
     
-    public static IAction<T> RepeatOnceIf<T>(this IAction<T> action, Func<T, bool> condition)
+    public static IAction<T> RetryOnceIf<T>(this IAction<T> action, Func<T, bool> condition)
     {
         Check.NotNull(condition);
         return action.Then(t => condition(t) ? action : SuccessAction.Create(t));
@@ -245,10 +245,13 @@ public static partial class ActionExtensions
         return result;
     }
 
-    public static IAction<T[]> Merge<T>(this IEnumerable<IAction<T>> actions, bool parallel)
+    public static IAction<T[]> CombineInSeries<T>(this IEnumerable<IAction<T>> actions)
     {
-        return parallel
-            ? ParallelAction.Create(actions)
-            : SeriesAction.Create(actions);
+        return SeriesAction.Create(actions);
+    }
+
+    public static IAction<T[]> CombineInParallel<T>(this IEnumerable<IAction<T>> actions)
+    {
+        return ParallelAction.Create(actions);
     }
 }

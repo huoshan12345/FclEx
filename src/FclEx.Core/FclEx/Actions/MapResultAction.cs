@@ -1,11 +1,11 @@
 ﻿namespace FclEx.Actions;
 
-public class MapToResultAction<T, TDest> : IAction<TDest>
+public class MapResultAction<T, TDest> : IAction<TDest>
 {
     private readonly IAction<T> _action;
     private readonly Func<T, OperationResult<TDest>> _map;
 
-    public MapToResultAction(IAction<T> action, Func<T, OperationResult<TDest>> map)
+    public MapResultAction(IAction<T> action, Func<T, OperationResult<TDest>> map)
     {
         _action = Check.NotNull(action);
         _map = Check.NotNull(map);
