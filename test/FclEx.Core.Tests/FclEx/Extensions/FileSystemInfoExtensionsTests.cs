@@ -75,6 +75,22 @@ public class FileSystemInfoExtensionsTests
         Assert.Equal(expectedDepth, info.GetDirectoryDepth());
     }
 
+    [Theory]
+    [InlineData(@"C:\", "C")]
+    [InlineData(@"C:\foo\bar.txt", "C")]
+    [InlineData(@"\\server\share\", "")]
+    [InlineData(@"\\server\share\file.txt", "")]
+    [InlineData("/", "")]
+    [InlineData("/home/user/file.txt", "")]
+    public void GetDriveLetter_ShouldReturnDriveLetterOrEmpty(string path, string expectedDrive)
+    {
+        if (IsWindows != path.Contains('\\'))
+            return;
+
+        var info = CreateInfo(path);
+        Assert.Equal(expectedDrive, info.GetDriveLetter());
+    }
+
     /// <summary>
     /// Helper to create FileInfo or DirectoryInfo based on path string.
     /// Handles NFX vs NET5+ UNC constraints.

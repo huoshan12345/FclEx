@@ -116,4 +116,17 @@ public static class FileSystemInfoExtensions
 
         return path;
     }
+
+    /// <summary>
+    /// Gets the Windows drive letter (e.g., "C").<br/>
+    /// Returns an empty string for UNC and Unix paths.
+    /// </summary>
+    public static string GetDriveLetter(this FileSystemInfo info)
+    {
+        var root = Path.GetPathRoot(info.FullName);
+
+        return root is [_, ':', ..]
+            ? root[..1]
+            : "";
+    }
 }
