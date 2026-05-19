@@ -233,13 +233,13 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task RepeatOnce_WhenConditionMatches_ReexecutesActionOnce()
+    public async Task RepeatOnceIf_WhenConditionMatches_ReexecutesActionOnce()
     {
         var count = 0;
         var action = Operation.Action<int>(_ => ++count);
 
         var (success, value, _, _) = await action
-            .RepeatOnce(v => v == 1)
+            .RepeatOnceIf(v => v == 1)
             .ExecuteAsync();
 
         Assert.True(success);
@@ -248,18 +248,24 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task RepeatOnce_WhenConditionDoesNotMatch_ReturnsFirstResult()
+    public async Task RepeatOnceIf_WhenConditionDoesNotMatch_ReturnsFirstResult()
     {
         var count = 0;
         var action = Operation.Action<int>(_ => ++count);
 
         var (success, value, _, _) = await action
-            .RepeatOnce(v => v > 1)
+            .RepeatOnceIf(v => v > 1)
             .ExecuteAsync();
 
         Assert.True(success);
         Assert.Equal(1, value);
         Assert.Equal(1, count);
+    }
+
+    [Fact]
+    public void RepeatOnceIf_RejectsNullCondition()
+    {
+        Assert.Throws<ArgumentNullException>(() => SuccessAction.Create(1).RepeatOnceIf(null!));
     }
 
     [Fact]
@@ -275,6 +281,12 @@ public partial class ExtensionsTests
         Assert.True(success);
         Assert.Equal(3, value);
         Assert.Equal(3, count);
+    }
+
+    [Fact]
+    public void RepeatUntil_RejectsNullCondition()
+    {
+        Assert.Throws<ArgumentNullException>(() => SuccessAction.Create(1).RepeatUntil(null!, 0));
     }
 
     [Fact]

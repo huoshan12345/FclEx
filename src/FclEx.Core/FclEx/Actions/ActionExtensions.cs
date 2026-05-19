@@ -148,14 +148,17 @@ public static partial class ActionExtensions
         Check.NotNull(errorAction);
         return action.WhenResult(r => r.IsError, r => errorAction(r.Exception!));
     }
-
-    public static IAction<T> RepeatOnce<T>(this IAction<T> action, Func<T, bool> condition)
+    
+    public static IAction<T> RepeatOnceIf<T>(this IAction<T> action, Func<T, bool> condition)
     {
+        Check.NotNull(condition);
         return action.Then(t => condition(t) ? action : SuccessAction.Create(t));
     }
 
-    public static IAction<T> RepeatUntil<T>(this IAction<T> action, Func<T, bool>? until, TimeSpan delay = default, TimeSpan? timeout = null)
+    public static IAction<T> RepeatUntil<T>(this IAction<T> action, Func<T, bool> until, TimeSpan delay = default, TimeSpan? timeout = null)
     {
+        Check.NotNull(until);
+
         return Operation.Action<T>(async t =>
         {
             using var cts = t.WithTimeout(timeout > TimeSpan.Zero ? timeout : null);
@@ -165,7 +168,7 @@ public static partial class ActionExtensions
                 if (!r.IsSuccess)
                     return r;
 
-                if (until != null && until(r.Value!))
+                if (until(r.Value!))
                     return r;
 
                 await TaskHelper.Delay(delay, t);
@@ -174,7 +177,7 @@ public static partial class ActionExtensions
         });
     }
 
-    public static IAction<T> RepeatUntil<T>(this IAction<T> action, Func<T, bool>? until, int delayInSeconds = default, int? timeoutInSeconds = null)
+    public static IAction<T> RepeatUntil<T>(this IAction<T> action, Func<T, bool> until, int delayInSeconds = default, int? timeoutInSeconds = null)
     {
         return action.RepeatUntil(until, TimeSpan.FromSeconds(delayInSeconds), timeoutInSeconds.HasValue ? TimeSpan.FromSeconds(timeoutInSeconds.Value) : null);
     }

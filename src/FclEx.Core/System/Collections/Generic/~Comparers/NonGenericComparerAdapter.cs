@@ -2,14 +2,14 @@
 
 public class NonGenericComparerAdapter
 {
-    public static UntypedComparer<T> Create<T>(IComparer<T> comparer) => new(comparer);
+    public static NonGenericComparerAdapter<T> Create<T>(IComparer<T> comparer) => new(comparer);
 }
 
-public class UntypedComparer<T> : IComparer
+public class NonGenericComparerAdapter<T> : IComparer
 {
     private readonly IComparer<T> _comparer;
 
-    public UntypedComparer(IComparer<T> comparer)
+    public NonGenericComparerAdapter(IComparer<T> comparer)
     {
         _comparer = comparer;
     }
