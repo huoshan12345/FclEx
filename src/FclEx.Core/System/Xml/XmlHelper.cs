@@ -15,12 +15,27 @@ public static class XmlHelper
 
     public static T Deserialize<T>(string xml, LoadOptions options = LoadOptions.None)
     {
-        var xle = XElement.Parse(xml, options);
-        return Deserialize<T>(xle);
+        var element = XElement.Parse(xml, options);
+        return Deserialize<T>(element);
     }
 
     public static T Deserialize<T>(XElement element)
     {
+        if (typeof(T) == typeof(string))
+            return (T)(object)element.Value;
+
+        var targetType = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);
+
+        if (targetType.IsPrimitive
+            || targetType == typeof(decimal)
+            || targetType == typeof(DateTime)
+            || targetType == typeof(Guid)
+            )
+        {
+            var value = Convert.ChangeType(element.Value, targetType, CultureInfo.InvariantCulture);
+            return (T)value;
+        }
+
         var serializer = XmlSerializers.GetOrAdd(typeof(T), t => new XmlSerializer(t));
         using var reader = element.CreateReader();
         return (T)serializer.Deserialize(reader)!;

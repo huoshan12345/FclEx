@@ -7,16 +7,16 @@ public readonly struct XmlActionContext
         Response = response;
         Xml = xml;
         Path = path;
-        Element = XElement.Parse(xml);
+        Document = XDocument.Parse(xml);
         ResultElements = path == null
-            ? [Element]
-            : Element.XPathSelectElements(path)!;
+            ? [Document.Root!]
+            : Document.XPathSelectElements(path);
     }
 
     public HttpResponse Response { get; }
     public string? Path { get; }
     public string Xml { get; }
-    public XElement Element { get; }
+    public XDocument Document { get; }
     public IEnumerable<XElement> ResultElements { get; }
     public XElement? ResultElement => ResultElements.FirstOrDefault();
 }
