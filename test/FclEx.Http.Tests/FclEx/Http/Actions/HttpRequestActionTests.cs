@@ -12,9 +12,9 @@ public class HttpRequestActionTests : HttpServerTests
         var (successful, data, ex, _) = await HttpRequest.Post(path)
             .JsonContent(Enumerable.Range(1, 10).ToList())
             .ToAction(TestHttp)
-            .ReadJson<List<int>>()
-            .NextRequest(m => HttpRequest.Post(path).JsonContent(m.Select(x => x.ToString()).ToDictionary(x => x, x => x + x)), TestHttp)
-            .ReadJson<Dictionary<string, string>>()
+            .ReadJsonAs<List<int>>()
+            .ThenRequest(m => HttpRequest.Post(path).JsonContent(m.Select(x => x.ToString()).ToDictionary(x => x, x => x + x)), TestHttp)
+            .ReadJsonAs<Dictionary<string, string>>()
             .ExecuteAsync();
 
         Assert.True(successful, ex?.Message);

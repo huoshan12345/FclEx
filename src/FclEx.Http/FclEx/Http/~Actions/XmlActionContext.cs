@@ -1,7 +1,5 @@
 ﻿namespace FclEx.Http;
 
-#if NET6_0_OR_GREATER
-#endif
 public readonly struct XmlActionContext
 {
     public XmlActionContext(HttpResponse response, string xml, string? path)

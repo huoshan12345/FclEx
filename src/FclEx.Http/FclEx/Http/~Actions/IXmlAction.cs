@@ -60,9 +60,9 @@ public static class DefaultXmlAction
             : Operation.Error<string>("The response string is not a valid xml: " + str.Truncate(256));
     }
 
-    public static OperationResult<XmlActionContext> CreateContext<T>(IXmlAction<T> action, HttpResponse response, string json)
+    public static OperationResult<XmlActionContext> CreateContext<T>(IXmlAction<T> action, HttpResponse response, string xml)
     {
-        var context = new XmlActionContext(response, json, action.XmlResultPath);
+        var context = new XmlActionContext(response, xml, action.XmlResultPath);
         if (context.ResultElements.IsNotEmpty())
             return context;
         const string msg = "The result object does not exist in xml";

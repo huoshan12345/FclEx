@@ -26,7 +26,14 @@ public interface IHttpAction<T> : IPipelineAction<T>, IHttpResponseHandler<T>
 
     void ModifyRequest(HttpRequest request)
 #if NET6_0_OR_GREATER
-        { }
+    { }
+#else
+    ;
+#endif
+
+    Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken token = default)
+#if NET6_0_OR_GREATER
+        => DefaultHttpAction.GetResponseAsync(this, request, token);
 #else
     ;
 #endif
@@ -48,7 +55,7 @@ public static class DefaultHttpAction
         try
         {
             request = action.BuildRequest();
-            var response = await action.HttpService.SendAsync(request, token);
+            var response = await action.GetResponseAsync(request, token);
             if (response.IsSuccess)
                 return await action.HandleResponseAsync(response)
                     .Then(action.GetResultAsync);
@@ -56,7 +63,7 @@ public static class DefaultHttpAction
             if (logger.IsEnabled(LogLevel.Trace))
             {
                 var dump = request.Dump(action.HttpService);
-                logger.LogTrace(dump);
+                logger.LogTrace("{Dump}", dump);
             }
 
             return (response.Exception, response.Elapsed);
@@ -66,7 +73,7 @@ public static class DefaultHttpAction
             if (logger.IsEnabled(LogLevel.Trace) && request is not null)
             {
                 var dump = request.Dump(action.HttpService);
-                logger.LogTrace(ex, dump);
+                logger.LogTrace(ex, "{Dump}", dump);
             }
             return ex;
         }
@@ -81,10 +88,14 @@ public static class DefaultHttpAction
         return request;
     }
 
+    public static Task<HttpResponse> GetResponseAsync<T>(IHttpAction<T> action, HttpRequest request, CancellationToken token)
+    {
+        return action.HttpService.SendAsync(request, token);
+    }
+
     public static Task<OperationResult<HttpResponse>> HandleResponseAsync<T>(IHttpAction<T> action, HttpResponse response)
     {
-        // response.IsError is false here.
-        if (action.EnsureSuccessStatusCode || response.StatusCode.IsSuccess())
+        if (action.EnsureSuccessStatusCode == false || response.StatusCode.IsSuccess())
             return Operation.Success(response, response.Elapsed);
 
         var code = response.StatusCode;
@@ -102,6 +113,8 @@ public abstract class HttpAction<T> : PipelineAction<T>, IHttpAction<T>
     public virtual bool EnsureSuccessStatusCode => true;
     public virtual HttpRequest BuildRequest() => DefaultHttpAction.BuildRequest(this);
     public virtual void ModifyRequest(HttpRequest request) { }
+    public virtual Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken token = default)
+        => DefaultHttpAction.GetResponseAsync(this, request, token);
     public virtual Task<OperationResult<HttpResponse>> HandleResponseAsync(HttpResponse response)
         => DefaultHttpAction.HandleResponseAsync(this, response);
     public abstract OperationResult<T> GetResult(HttpResponse response);

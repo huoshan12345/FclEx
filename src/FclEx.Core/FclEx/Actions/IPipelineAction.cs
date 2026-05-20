@@ -59,7 +59,8 @@ public static class DefaultPipelineAction
     /// <typeparam name="T">The action value type.</typeparam>
     /// <param name="action">The pipeline action.</param>
     /// <returns>The short type name of the action.</returns>
-    public static string GetName<T>(IPipelineAction<T> action) => action.GetType().ShortName();
+    public static string GetName<T>(IPipelineAction<T> action) 
+        => action.GetType().ShortName();
 
     /// <summary>
     /// Converts a cancellation exception into a canceled result.
@@ -68,7 +69,8 @@ public static class DefaultPipelineAction
     /// <param name="action">The pipeline action.</param>
     /// <param name="ex">The cancellation exception.</param>
     /// <returns>A canceled operation result.</returns>
-    public static Task<OperationResult<T>> HandleCancellationAsync<T>(IPipelineAction<T> action, Exception ex) => Operation.Cancel<T>(ex);
+    public static Task<OperationResult<T>> HandleCancellationAsync<T>(IPipelineAction<T> action, Exception ex) 
+        => Operation.Cancel<T>(ex);
 
     /// <summary>
     /// Converts an exception into an error result.
@@ -77,7 +79,8 @@ public static class DefaultPipelineAction
     /// <param name="action">The pipeline action.</param>
     /// <param name="ex">The exception.</param>
     /// <returns>An error operation result.</returns>
-    public static Task<OperationResult<T>> HandleErrorAsync<T>(IPipelineAction<T> action, Exception ex) => Operation.Error<T>(ex);
+    public static Task<OperationResult<T>> HandleErrorAsync<T>(IPipelineAction<T> action, Exception ex) 
+        => Operation.Error<T>(ex);
 
     /// <summary>
     /// Executes a pipeline action with tracing and error handling.

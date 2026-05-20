@@ -18,6 +18,6 @@ public readonly struct HttpRequestAction : IAction<HttpResponse>
         var response = await _httpService.SendAsync(_request, token);
         return response.IsError && _unwrapError
             ? Operation.ObjectError(response, response.Exception!, response.Elapsed).Cast<HttpResponse>()
-            : Operation.Success(response);
+            : Operation.Success(response, response.Elapsed);
     }
 }
