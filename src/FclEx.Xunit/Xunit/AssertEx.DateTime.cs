@@ -92,6 +92,25 @@ partial class AssertEx
         }
 
         /// <summary>
+        /// Asserts that two <see cref="DateTimeOffset"/> values are equal when compared
+        /// at second precision.
+        /// </summary>
+        /// <param name="expected">The expected value.</param>
+        /// <param name="actual">The actual value.</param>
+        /// <remarks>
+        /// Sub-second precision (milliseconds and ticks) is ignored during the comparison.
+        /// This is useful when working with systems or databases that do not support
+        /// microsecond or tick-level precision.
+        /// </remarks>
+        public static void EqualToSeconds(DateTimeOffset? expected, DateTimeOffset? actual)
+        {
+            if (Assert.HandleEqualNulls(expected, actual))
+                return;
+
+            Assert.Equal(expected.Value.TruncateToSeconds(), actual.Value.TruncateToSeconds());
+        }
+
+        /// <summary>
         /// Asserts that two <see cref="DateTimeOffset"/> values are not equal when compared
         /// at millisecond precision.
         /// </summary>
@@ -108,6 +127,25 @@ partial class AssertEx
                 return;
 
             Assert.NotEqual(expected.Value.TruncateToMilliseconds(), actual.Value.TruncateToMilliseconds());
+        }
+
+        /// <summary>
+        /// Asserts that two <see cref="DateTimeOffset"/> values are not equal when compared
+        /// at second precision.
+        /// </summary>
+        /// <param name="expected">The expected value.</param>
+        /// <param name="actual">The actual value.</param>
+        /// <remarks>
+        /// Sub-second precision (milliseconds and ticks) is ignored during the comparison.
+        /// This is useful when working with systems or databases that do not support
+        /// microsecond or tick-level precision.
+        /// </remarks>
+        public static void NotEqualToSeconds(DateTimeOffset? expected, DateTimeOffset? actual)
+        {
+            if (Assert.HandleNotEqualNulls(expected, actual))
+                return;
+
+            Assert.NotEqual(expected.Value.TruncateToSeconds(), actual.Value.TruncateToSeconds());
         }
     }
 }

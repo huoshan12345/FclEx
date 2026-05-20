@@ -1,6 +1,6 @@
 ﻿namespace FclEx.RabbitMQ;
 
-public interface IMessagePublisher : IMessageProcessor<PublisherSettings>
+public interface IMessagePublisher : IMessageProcessor<RabbitMqPublisherOptions>
 {
     Task PublishAsync<T>(IEnumerable<RoutingMessage<T>> messages);
 }

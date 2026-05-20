@@ -2,46 +2,55 @@
 
 public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {
-    public static readonly TheoryData<DbProviderType, bool> ContainsAnyTestCases = DatabaseTypes
+    public static readonly TheoryData<DbDriver, bool> ContainsAnyTestCases = DbDrivers
         .CrossJoin([true, false])
         .ToTheoryData();
 
     [Theory]
     [MemberData(nameof(ContainsAnyTestCases))]
-    public async Task ContainsAny_Test(DbProviderType dbProviderType, bool containsPercentSign)
+    public async Task ContainsAny_Test(DbDriver dbDriver, bool containsPercentSign)
     {
-        await using var context = Fixture.CreateDbContext(dbProviderType);
-        await context.EntityWithAutoKey.ExecuteDeleteAsync();
+        await using var context = Fixture.CreateDbContext(dbDriver);
 
+        var value = dbDriver.ToInt();
+        var prefix = Guid.NewGuid().ToString();
         var list = Enumerable.Range(1, 9)
             .Select(CreateName)
             .Select(m => new EntityWithAutoKey
             {
-                Name = m,
-                Value = 1,
-            });
+                Name = prefix + m,
+                Value = value,
+            })
+            .ToArray();
+
         context.EntityWithAutoKey.AddRange(list);
         await context.SaveChangesAsync();
 
-        var keywords = new[] { CreateKeyword(4), CreateKeyword(6) };
+        var keywordValues = new[] { "x", "y", "z" }; // do not use characters that may be in a guid.
+        var keywords = keywordValues.Select(CreateKeyword).ToArray();
 
-        var result = await context.EntityWithAutoKey
-            .ContainsAny(m => m.Name, keywords)
-            .ToListAsync();
+        var escapeEscapeCharacter = dbDriver is DbDriver.MySql;
+        var query = context.EntityWithAutoKey
+            .Where(m => m.Value == value)
+            .ContainsAny(m => m.Name, keywords, escapeEscapeCharacter: escapeEscapeCharacter);
 
-        Assert.Equal(2, result.Count);
-        Assert.True(keywords.All(m => result.Any(x => x.Name!.Contains(m))));
+        Output?.WriteLine(query.ToQueryString());
 
-        string CreateKeyword(int number)
+        var result = await query.ToListAsync();
+
+        Assert.Equal(list.Count(m => m.Name?.ContainsAny(keywords) == true && m.Value == value), result.Count);
+        Assert.True(result.All(m => m.Name?.ContainsAny(keywords) == true && m.Value == value));
+
+        string CreateKeyword(string raw)
         {
             return StringBuilderHelper.Build(m =>
             {
-                m.Append(number);
+                m.Append(raw);
                 if (containsPercentSign)
                 {
                     m.Append('%');
                 }
-                m.Append(number);
+                m.Append(raw);
             });
         }
 
@@ -49,21 +58,21 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
         {
             return StringBuilderHelper.Build(m =>
             {
-                m.Append("prefix_");
-                m.Append(CreateKeyword(number));
+                m.Append("_prefix_");
+                m.Append(CreateKeyword(number.ToString()));
                 m.Append("_postfix");
             });
         }
     }
 
     [Theory]
-    [MemberData(nameof(DbTestCases))]
-    public async Task GetAsync_ShouldReturnEntity_WhenEntityExists(DbProviderType dbProviderType)
+    [MemberData(nameof(DbDriverCases))]
+    public async Task GetAsync_ShouldReturnEntity_WhenEntityExists(DbDriver dbDriver)
     {
-        var entity = await CreateEntityHasStatesAsync(dbProviderType);
+        var entity = await CreateEntityHasStatesAsync(dbDriver);
 
         // need to create a new context to ensure no tracked entities.
-        await using var context = Fixture.CreateDbContext(dbProviderType);
+        await using var context = Fixture.CreateDbContext(dbDriver);
         var result = await context.EntityHasStates.GetAsync(entity.Id);
 
         Assert.NotNull(result);
@@ -72,10 +81,10 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
     }
 
     [Theory]
-    [MemberData(nameof(DbTestCases))]
-    public async Task GetAsync_ShouldReturnNull_WhenEntityDoesNotExist(DbProviderType dbProviderType)
+    [MemberData(nameof(DbDriverCases))]
+    public async Task GetAsync_ShouldReturnNull_WhenEntityDoesNotExist(DbDriver dbDriver)
     {
-        await using var context = Fixture.CreateDbContext(dbProviderType);
+        await using var context = Fixture.CreateDbContext(dbDriver);
 
         var result = await context.EntityHasStates.GetAsync(0);
 
@@ -83,13 +92,13 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
     }
 
     [Theory]
-    [MemberData(nameof(DbTestCases))]
-    public async Task GetAsync_ShouldNotTrackEntity_WhenNoTrackingIsTrue(DbProviderType dbProviderType)
+    [MemberData(nameof(DbDriverCases))]
+    public async Task GetAsync_ShouldNotTrackEntity_WhenNoTrackingIsTrue(DbDriver dbDriver)
     {
-        var entity = await CreateEntityHasStatesAsync(dbProviderType);
+        var entity = await CreateEntityHasStatesAsync(dbDriver);
 
         // need to create a new context to ensure no tracked entities.
-        await using var context = Fixture.CreateDbContext(dbProviderType);
+        await using var context = Fixture.CreateDbContext(dbDriver);
         var result = await context.EntityHasStates.GetAsync(entity.Id, noTracking: true);
 
         Assert.NotNull(result);
@@ -97,13 +106,13 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
     }
 
     [Theory]
-    [MemberData(nameof(DbTestCases))]
-    public async Task GetAsync_ShouldTrackEntity_WhenNoTrackingIsFalse(DbProviderType dbProviderType)
+    [MemberData(nameof(DbDriverCases))]
+    public async Task GetAsync_ShouldTrackEntity_WhenNoTrackingIsFalse(DbDriver dbDriver)
     {
-        var entity = await CreateEntityHasStatesAsync(dbProviderType);
+        var entity = await CreateEntityHasStatesAsync(dbDriver);
 
         // need to create a new context to ensure no tracked entities.
-        await using var context = Fixture.CreateDbContext(dbProviderType);
+        await using var context = Fixture.CreateDbContext(dbDriver);
         var result = await context.EntityHasStates.GetAsync(entity.Id, noTracking: false);
 
         Assert.NotNull(result);
@@ -111,13 +120,13 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
     }
 
     [Theory]
-    [MemberData(nameof(DbTestCases))]
-    public async Task ExecuteUpdateAsync_Updates_Single_Property(DbProviderType dbProviderType)
+    [MemberData(nameof(DbDriverCases))]
+    public async Task ExecuteUpdateAsync_Updates_Single_Property(DbDriver dbDriver)
     {
-        var entity = await CreateEntityHasStatesAsync(dbProviderType);
+        var entity = await CreateEntityHasStatesAsync(dbDriver);
 
         // need to create a new context to ensure no tracked entities.
-        await using var context = Fixture.CreateDbContext(dbProviderType);
+        await using var context = Fixture.CreateDbContext(dbDriver);
 
         var updated = await context.EntityHasStates
             .Where(p => p.Id == entity.Id)
@@ -134,13 +143,13 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
     }
 
     [Theory]
-    [MemberData(nameof(DbTestCases))]
-    public async Task ExecuteUpdateAsync_Updates_Multiple_Properties(DbProviderType dbProviderType)
+    [MemberData(nameof(DbDriverCases))]
+    public async Task ExecuteUpdateAsync_Updates_Multiple_Properties(DbDriver dbDriver)
     {
-        var entity = await CreateEntityHasStatesAsync(dbProviderType);
+        var entity = await CreateEntityHasStatesAsync(dbDriver);
 
         // need to create a new context to ensure no tracked entities.
-        await using var context = Fixture.CreateDbContext(dbProviderType);
+        await using var context = Fixture.CreateDbContext(dbDriver);
 
         var updated = await context.EntityHasStates
             .Where(p => p.Id == entity.Id)
@@ -159,10 +168,10 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
     }
 
     [Theory]
-    [MemberData(nameof(DbTestCases))]
-    public async Task ExecuteUpdateAsync_Throws_When_Property_Not_Found(DbProviderType dbProviderType)
+    [MemberData(nameof(DbDriverCases))]
+    public async Task ExecuteUpdateAsync_Throws_When_Property_Not_Found(DbDriver dbDriver)
     {
-        await using var context = Fixture.CreateDbContext(dbProviderType);
+        await using var context = Fixture.CreateDbContext(dbDriver);
 
         await Assert.ThrowsAsync<ArgumentException>(() =>
             context.EntityHasStates.ExecuteUpdateAsync(new Dictionary<string, object?>
@@ -173,13 +182,13 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
     }
 
     [Theory]
-    [MemberData(nameof(DbTestCases))]
-    public async Task ExecuteUpdateAsync_No_Updates_When_FieldValues_Empty(DbProviderType dbProviderType)
+    [MemberData(nameof(DbDriverCases))]
+    public async Task ExecuteUpdateAsync_No_Updates_When_FieldValues_Empty(DbDriver dbDriver)
     {
-        var entity = await CreateEntityHasStatesAsync(dbProviderType);
+        var entity = await CreateEntityHasStatesAsync(dbDriver);
 
         // need to create a new context to ensure no tracked entities.
-        await using var context = Fixture.CreateDbContext(dbProviderType);
+        await using var context = Fixture.CreateDbContext(dbDriver);
 
         var updated = await context.EntityHasStates
             .Where(p => p.Id == entity.Id)
@@ -193,10 +202,10 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
     }
 
     [Theory]
-    [MemberData(nameof(DbTestCases))]
-    public async Task ExecuteUpdateAsync_Cancels_When_Token_Requested(DbProviderType dbProviderType)
+    [MemberData(nameof(DbDriverCases))]
+    public async Task ExecuteUpdateAsync_Cancels_When_Token_Requested(DbDriver dbDriver)
     {
-        await using var context = Fixture.CreateDbContext(dbProviderType);
+        await using var context = Fixture.CreateDbContext(dbDriver);
         var cts = new CancellationTokenSource();
         await cts.CancelAsync();
 

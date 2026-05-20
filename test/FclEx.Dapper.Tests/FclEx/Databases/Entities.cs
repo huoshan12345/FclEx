@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace FclEx.EfCore;
+﻿namespace FclEx.Databases;
 
 public class EntityWithAutoKey
 {
@@ -76,11 +74,9 @@ public class HasTableAttributeEntity
     public int Id { get; set; }
 }
 
-[Index(nameof(Name), IsUnique = true)]
-[Index(nameof(Value))]
-public class EntityWithIndex : IHasId<int>
+public class EntityWithIdAndIndex : IHasId<int>
 {
-    public int Id { get; set; }
+    public int Id { get; set; }  // Automatically becomes auto-incrementing PK
     [Required]
     public string Name { get; set; } = "";
     public int Value { get; set; }

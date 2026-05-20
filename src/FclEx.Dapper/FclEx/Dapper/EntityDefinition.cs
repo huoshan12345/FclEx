@@ -15,10 +15,10 @@ public class EntityDefinition
     public string? Alias { get; internal init; }
     public string TableName => Alias ?? EntityType.Name;
     public Type EntityType { get; }
-    public IReadOnlyList<FieldDefinition> Fields { get; internal set; } = Array.Empty<FieldDefinition>();
-    public IReadOnlyList<FieldDefinition> InsertFields { get; internal set; } = Array.Empty<FieldDefinition>();
-    public IReadOnlyList<FieldDefinition> Keys { get; internal set; } = Array.Empty<FieldDefinition>();
-    public IReadOnlyList<FieldDefinition> AutoKeys { get; internal set; } = Array.Empty<FieldDefinition>();
+    public IReadOnlyList<FieldDefinition> Fields { get; internal set; } = [];
+    public IReadOnlyList<FieldDefinition> InsertFields { get; internal set; } = [];
+    public IReadOnlyList<FieldDefinition> Keys { get; internal set; } = [];
+    public IReadOnlyList<FieldDefinition> AutoKeys { get; internal set; } = [];
 
     public static EntityDefinition GetDefinition(Type type)
     {

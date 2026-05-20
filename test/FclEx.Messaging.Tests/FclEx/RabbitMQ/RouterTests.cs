@@ -44,37 +44,30 @@ public class RouterTests(RabbitMQFixture fixture) : RabbitMQTests(fixture)
     [InlineData(false)]
     public async Task Route_Test(bool sameAsInputExchange)
     {
-        if (Skip)
-            return;
-
-        var inputExchange = new ExchangeSettings
+        var inputExchange = new RabbitMqExchangeOptions
         {
-            Name = Fixture.WithAssemblyInfo("test.router.input", '.'),
-            Type = "topic",
-            IsDelayed = true,
+            Name = GetExchangeName(nameof(Route_Test) + "_input", sameAsInputExchange),
         };
-        var connection = RabbitMQConnection;
-        await using var publisher = await TestPublisher.CreateAsync(new PublisherSettings(connection, inputExchange));
+        var connection = RabbitMQFixture.ConnectionSettings;
+        await using var publisher = await TestPublisher.CreateAsync(new RabbitMqPublisherOptions(connection, inputExchange));
 
-        var routerSettings = new RouterSettings(connection, inputExchange, new QueueSettings
+        var routerSettings = new RabbitMqRouterOptions(connection, inputExchange, new RabbitMqQueueOptions
         {
-            Name = Fixture.WithAssemblyInfo("test.router", '.'),
+            Name = GetQueueName(nameof(Route_Test), sameAsInputExchange),
             BindKeys = ["input.#"],
-        }, new ExchangeSettings
+        }, new RabbitMqExchangeOptions
         {
-            Name = sameAsInputExchange ? inputExchange.Name : inputExchange.Name + ".output",
-            Type = "topic",
-            IsDelayed = true,
+            Name = sameAsInputExchange ? inputExchange.Name : GetExchangeName(nameof(Route_Test) + "_route", sameAsInputExchange),
         });
 
         using var semaphore = new SemaphoreSlim(0);
         await using var router = await TestRouter.CreateAsync(routerSettings, GetRoutingKey);
 
         var evenList = new SortedSet<string>();
-        await using var evenConsumer = await TestConsumer.CreateAsync(new ConsumerSettings(connection,
-          routerSettings.TargetExchange, new QueueSettings
+        await using var evenConsumer = await TestConsumer.CreateAsync(new RabbitMqConsumerOptions(connection,
+          routerSettings.TargetExchange, new RabbitMqQueueOptions
           {
-              Name = Fixture.WithAssemblyInfo("test.router.even", '.'),
+              Name = GetQueueName(nameof(Route_Test) + "_even", sameAsInputExchange),
               BindKeys = ["output.*.even"],
           }), m =>
           {
@@ -84,10 +77,10 @@ public class RouterTests(RabbitMQFixture fixture) : RabbitMQTests(fixture)
 
         var stringList = new SortedSet<string>();
 
-        await using var stringConsumer = await TestConsumer.CreateAsync(new ConsumerSettings(connection,
-         routerSettings.TargetExchange, new QueueSettings
+        await using var stringConsumer = await TestConsumer.CreateAsync(new RabbitMqConsumerOptions(connection,
+         routerSettings.TargetExchange, new RabbitMqQueueOptions
          {
-             Name = Fixture.WithAssemblyInfo("test.router.string", '.'),
+             Name = GetQueueName(nameof(Route_Test) + "_string", sameAsInputExchange),
              BindKeys = ["output.string.*"],
          }), m =>
          {

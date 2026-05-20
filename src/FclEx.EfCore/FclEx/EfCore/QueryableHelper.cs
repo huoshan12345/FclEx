@@ -14,7 +14,14 @@ public static class QueryableHelper
         return _contains.GetOrAdd(value, m => $"%{m.Replace("%", @"\%")}%");
     }
 
-    public static Expression<Func<T, bool>> BuildLike<T>(Expression<Func<T, string?>> selector, string pattern, bool suppressValueConverter)
+    private static readonly Expression EscapeChar = Expression.Constant(@"\");
+    private static readonly Expression EscapedEscapeChar = Expression.Constant(@"\\");
+
+    public static Expression<Func<T, bool>> BuildLike<T>(
+        Expression<Func<T, string?>> selector,
+        string pattern,
+        bool suppressValueConverter,
+        bool escapeEscapeCharacter)
     {
         var member = selector.Body;
         if (suppressValueConverter)
@@ -23,19 +30,24 @@ public static class QueryableHelper
             member = Expression.Convert(convertToObject, typeof(string));
         }
         var expPattern = Expression.Constant(pattern, typeof(string));
-        var call = Expression.Call(null, EfLike, EfFunctions, member, expPattern, Expression.Constant("\\"));
+        var escapeChar = escapeEscapeCharacter ? EscapedEscapeChar : EscapeChar;
+        var call = Expression.Call(null, EfLike, EfFunctions, member, expPattern, escapeChar);
         var where = Expression.Lambda<Func<T, bool>>(call, selector.Parameters);
         return where;
     }
 
-    public static Expression<Func<T, bool>>? BuildContainsAny<T>(Expression<Func<T, string?>> selector, IEnumerable<string> keywords, bool suppressValueConverter = false)
+    public static Expression<Func<T, bool>>? BuildContainsAny<T>(
+        Expression<Func<T, string?>> selector,
+        IEnumerable<string> keywords,
+        bool suppressValueConverter = false,
+        bool escapeEscapeCharacter = false)
     {
         Expression<Func<T, bool>>? where = null;
         // ReSharper disable once LoopCanBeConvertedToQuery
         foreach (var keyword in keywords)
         {
             var pattern = GetContainsPattern(keyword);
-            var expression = BuildLike(selector, pattern, suppressValueConverter);
+            var expression = BuildLike(selector, pattern, suppressValueConverter, escapeEscapeCharacter);
             where = where.Or(expression);
         }
         return where;

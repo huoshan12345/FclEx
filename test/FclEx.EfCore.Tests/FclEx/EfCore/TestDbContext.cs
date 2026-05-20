@@ -1,27 +1,27 @@
-﻿#pragma warning disable EF1001
+﻿using MySql.Data.MySqlClient;
 
+#if NET10_0_OR_GREATER
+using Microting.EntityFrameworkCore.MySql.Infrastructure.Internal;
+using Microting.EntityFrameworkCore.MySql.Storage.Internal;
+using Microting.EntityFrameworkCore.MySql.Infrastructure;
+#else
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure.Internal;
+using Pomelo.EntityFrameworkCore.MySql.Storage.Internal;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
+#endif
+
+#pragma warning disable EF1001
 namespace FclEx.EfCore;
 
-public enum DbProviderType
-{
-    SqlServer,
-    Sqlite,
-#if !DISABLE_NPGSQL
-    Npgsql,
-    MySql,
-    MySqlConnector,
-#endif
-}
-
 // EfCore is used for helping us to do tests
-public class GlobalDbContext(
-    DbProviderType dbProviderType,
+public class TestDbContext(
+    DbDriver dbDriver,
     string connectionString,
     string? schema = null)
     : SchemaDbContext(schema)
 {
 
-    public DbProviderType DbProviderType { get; } = dbProviderType;
+    public DbDriver DbProviderType { get; } = dbDriver;
     public string ConnectionString { get; } = connectionString;
 
     public DbSet<EntityWithAutoKey> EntityWithAutoKey { get; set; }
@@ -30,7 +30,7 @@ public class GlobalDbContext(
 
     public DbSet<HasPostfixEntity> HasPostfix { get; set; }
     public DbSet<HasTableAttributeEntity> HasTableAttribute { get; set; }
-    public DbSet<EntityWithIndex> EntityWithIdAndIndex { get; set; }
+    public DbSet<EntityWithIdAndIndex> EntityWithIdAndIndex { get; set; }
 
     public DbSet<EntityHasStates> EntityHasStates { get; set; }
     public DbSet<EntityWithNavigation> EntityWithNavigation { get; set; }
@@ -41,25 +41,21 @@ public class GlobalDbContext(
 
         switch (DbProviderType)
         {
-            case DbProviderType.SqlServer:
+            case DbDriver.SqlServer:
                 builder.UseSqlServer(ConnectionString);
                 break;
-            case DbProviderType.Sqlite:
+            case DbDriver.Sqlite:
                 builder.UseSqlite(ConnectionString);
                 break;
-#if !DISABLE_NPGSQL
-            case DbProviderType.Npgsql:
+            case DbDriver.Npgsql:
                 builder.UseNpgsql(ConnectionString);
                 break;
-#endif
-#if !DISABLE_MYSQL
-            case DbProviderType.MySql:
+            case DbDriver.MySql:
                 UseMySQL(builder, ConnectionString, Schema);
                 break;
-            case DbProviderType.MySqlConnector:
+            case DbDriver.MySqlConnector:
                 UseMySql(builder, ConnectionString, Schema);
                 break;
-#endif
             default:
                 throw new ArgumentOutOfRangeException(nameof(DbProviderType), DbProviderType, null);
         }
@@ -70,29 +66,30 @@ public class GlobalDbContext(
         base.OnModelCreating(modelBuilder);
 
 
-        if (DbProviderType == DbProviderType.Sqlite)
+        if (DbProviderType == DbDriver.Sqlite)
         {
             var e = modelBuilder.Entity<EntityWithSqliteBlob>();
         }
 
-        if (DbProviderType == DbProviderType.SqlServer)
+        if (DbProviderType == DbDriver.SqlServer)
         {
             var e = modelBuilder.Entity<EntityWithSqlServerXml>();
         }
 
-#if !DISABLE_NPGSQL
-        if (DbProviderType == DbProviderType.Npgsql)
+        if (DbProviderType == DbDriver.Npgsql)
         {
             var e = modelBuilder.Entity<EntityWithPostgresqlJsonb>();
         }
-#endif
-#if !DISABLE_MYSQL
-        if (DbProviderType is DbProviderType.MySqlConnector or DbProviderType.MySql)
+
+        if (DbProviderType is DbDriver.MySqlConnector or DbDriver.MySql)
         {
             var e = modelBuilder.Entity<EntityWithMySqlBlob>();
         }
-#endif
+
         modelBuilder.Entity<EntityWithoutKey>().HasNoKey();
+
+        modelBuilder.Entity<EntityWithIdAndIndex>().HasIndex(e => e.Name).IsUnique();
+        modelBuilder.Entity<EntityWithIdAndIndex>().HasIndex(e => e.Value);
 
         modelBuilder.Entity<EntityWithNavigation>()
             .HasOne(m => m.Navigation)
@@ -112,7 +109,6 @@ public class GlobalDbContext(
         return base.SaveChanges(acceptAllChangesOnSuccess);
     }
 
-#if !DISABLE_MYSQL
     private static void UseMySql(DbContextOptionsBuilder builder, string connectionString, string? schema)
     {
         var sb = new MySqlConnectionStringBuilder(connectionString);
@@ -142,5 +138,4 @@ public class GlobalDbContext(
         }
         builder.UseMySQL(sb.ConnectionString);
     }
-#endif
 }

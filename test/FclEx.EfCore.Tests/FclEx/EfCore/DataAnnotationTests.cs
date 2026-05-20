@@ -2,30 +2,13 @@
 
 public class DataAnnotationTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {
-#if !DISABLE_NPGSQL
-    [Fact]
-    public async Task TableName_Postfix_Test()
-    {
-        if (DatabaseTypes.Contains(DbProviderType.Npgsql) == false)
-            return;
-
-        await using var context = Fixture.CreateDbContext(DbProviderType.Npgsql);
-        var e = new HasPostfixEntity();
-        await context.InsertAsync(e);
-
-        var con = context.Database.GetDbConnection();
-        // use double-quoted to prevent PostgreSQL from folding into lowercase
-        var count = await con.ExecuteScalarAsync<int>("select count(1) from \"HasPostfix\" where \"Id\" = @Id", new { e.Id });
-        Assert.Equal(1, count);
-    }
-
     [Fact]
     public async Task TableName_TableAttribute_Test()
     {
-        if (DatabaseTypes.Contains(DbProviderType.Npgsql) == false)
+        if (DbDrivers.Contains(DbDriver.Npgsql) == false)
             return;
 
-        await using var context = Fixture.CreateDbContext(DbProviderType.Npgsql);
+        await using var context = Fixture.CreateDbContext(DbDriver.Npgsql);
         var e = new HasTableAttributeEntity();
         await context.InsertAsync(e);
 
@@ -38,11 +21,15 @@ public class DataAnnotationTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [Fact]
     public async Task IEntity_Id_AutoIncrement_Test()
     {
-        if (DatabaseTypes.Contains(DbProviderType.Npgsql) == false)
+        if (DbDrivers.Contains(DbDriver.Npgsql) == false)
             return;
 
-        await using var context = Fixture.CreateDbContext(DbProviderType.Npgsql);
-        var e = new EntityWithIndex();
+        await using var context = Fixture.CreateDbContext(DbDriver.Npgsql);
+        var e = new EntityWithIdAndIndex
+        {
+            Name = Guid.NewGuid().ToString(),
+            Value = (int)DateTime.UtcNow.Ticks,
+        };
         await context.InsertAsync(e);
         Assert.NotEqual(0, e.Id);
     }
@@ -50,11 +37,11 @@ public class DataAnnotationTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [Fact]
     public async Task IEntity_Id_PrimaryKey_Test()
     {
-        if (DatabaseTypes.Contains(DbProviderType.Npgsql) == false)
+        if (DbDrivers.Contains(DbDriver.Npgsql) == false)
             return;
 
-        await using var context = Fixture.CreateDbContext(DbProviderType.Npgsql);
-        var entityType = context.Model.FindEntityType(typeof(EntityWithIndex));
+        await using var context = Fixture.CreateDbContext(DbDriver.Npgsql);
+        var entityType = context.Model.FindEntityType(typeof(EntityWithIdAndIndex));
         Assert.NotNull(entityType);
         var (table, schema) = (entityType.GetTableName(), entityType.GetSchema() ?? "public");
 
@@ -73,17 +60,17 @@ public class DataAnnotationTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         var list = enumerable.AsIList();
 
         Assert.Single(list);
-        Assert.Equal(nameof(EntityWithIndex.Id), list[0]);
+        Assert.Equal(nameof(EntityWithIdAndIndex.Id), list[0]);
     }
 
     [Fact]
     public async Task IEntity_Indexes_Test()
     {
-        if (DatabaseTypes.Contains(DbProviderType.Npgsql) == false)
+        if (DbDrivers.Contains(DbDriver.Npgsql) == false)
             return;
 
-        await using var context = Fixture.CreateDbContext(DbProviderType.Npgsql);
-        var entityType = context.Model.FindEntityType(typeof(EntityWithIndex));
+        await using var context = Fixture.CreateDbContext(DbDriver.Npgsql);
+        var entityType = context.Model.FindEntityType(typeof(EntityWithIdAndIndex));
         Assert.NotNull(entityType);
         var (table, schema) = (entityType.GetTableName(), entityType.GetSchema() ?? "public");
 
@@ -104,9 +91,8 @@ public class DataAnnotationTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         var list = enumerable.OrderBy(m => m.Item1).AsIList();
 
         Assert.Equal(3, list.Count);
-        Assert.Equal((nameof(EntityWithIndex.Id), true), list[0]);
-        Assert.Equal((nameof(EntityWithIndex.Name), true), list[1]);
-        Assert.Equal((nameof(EntityWithIndex.Value), false), list[2]);
+        Assert.Equal((nameof(EntityWithIdAndIndex.Id), true), list[0]);
+        Assert.Equal((nameof(EntityWithIdAndIndex.Name), true), list[1]);
+        Assert.Equal((nameof(EntityWithIdAndIndex.Value), false), list[2]);
     }
-#endif
 }

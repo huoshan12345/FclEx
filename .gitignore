@@ -251,3 +251,5 @@ BenchmarkDotNet.Artifacts/
 ~Generated/
 * - Backup.*.csproj
 *.decrypted.*
+/test/FclEx.Core.Tests/appsettings.local.json
+!Directory.Build.rsp

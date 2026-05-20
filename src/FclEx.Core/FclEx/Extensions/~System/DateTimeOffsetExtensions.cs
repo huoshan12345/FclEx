@@ -40,4 +40,16 @@ public static class DateTimeOffsetExtensions
     {
         return new DateTimeOffset(time.Year, time.Month, time.Day, time.Hour, time.Minute, time.Second, time.Millisecond, time.Offset);
     }
+
+    /// <summary>
+    /// Truncates the <see cref="DateTimeOffset"/> to second precision by removing any sub-second components.
+    /// </summary>
+    /// <param name="time">The <see cref="DateTimeOffset"/> value to truncate.</param>
+    /// <returns>
+    /// A new <see cref="DateTimeOffset"/> truncated to seconds, preserving the original offset.
+    /// </returns>
+    public static DateTimeOffset TruncateToSeconds(this DateTimeOffset time)
+    {
+        return new DateTimeOffset(time.Year, time.Month, time.Day, time.Hour, time.Minute, time.Second, 0, time.Offset);
+    }
 }

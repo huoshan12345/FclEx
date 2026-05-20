@@ -1,6 +1,6 @@
 ﻿namespace FclEx.RabbitMQ;
 
-public class MessagePublisher : MessageProcessor<PublisherSettings>, IMessagePublisher
+public class MessagePublisher : MessageProcessor<RabbitMqPublisherOptions>, IMessagePublisher
 {
     protected MessagePublisher(ILoggerFactory? loggerFactory, IMemoryBytesSerializer? serializer)
         : base(loggerFactory, serializer)
@@ -16,7 +16,7 @@ public class MessagePublisher : MessageProcessor<PublisherSettings>, IMessagePub
         ];
     }
 
-    public override async Task InitializeAsync(PublisherSettings settings)
+    public override async Task InitializeAsync(RabbitMqPublisherOptions settings)
     {
         await base.InitializeAsync(settings);
         Logger.LogInformation("Started an instance");

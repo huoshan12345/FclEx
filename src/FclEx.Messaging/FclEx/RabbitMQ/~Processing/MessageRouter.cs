@@ -1,6 +1,6 @@
 ﻿namespace FclEx.RabbitMQ;
 
-public abstract class MessageRouter<TInput, TOutput> : MessageConsumer<TInput, RouterSettings>, IMessageRouter<TInput, TOutput>
+public abstract class MessageRouter<TInput, TOutput> : MessageConsumer<TInput, RabbitMqRouterOptions>, IMessageRouter<TInput, TOutput>
 {
     protected MessageRouter(
         ILoggerFactory? loggerFactory,
@@ -20,8 +20,8 @@ public abstract class MessageRouter<TInput, TOutput> : MessageConsumer<TInput, R
         return
         [
             ("RouterType", GetType().ShortName()),
-            (nameof(Settings.Queue), s.Queue.Name),
-            (nameof(Settings.Queue.BindKeys), s.Queue.BindKeys),
+            (nameof(Settings.RabbitMqQueue), s.RabbitMqQueue.Name),
+            (nameof(Settings.RabbitMqQueue.BindKeys), s.RabbitMqQueue.BindKeys),
             (nameof(Settings.Exchange), s.Exchange.Name),
             (nameof(Settings.TargetExchange), s.TargetExchange.Name),
             (nameof(MessageType), MessageType.ShortName()),
@@ -29,7 +29,7 @@ public abstract class MessageRouter<TInput, TOutput> : MessageConsumer<TInput, R
         ];
     }
 
-    public override async Task InitializeAsync(RouterSettings settings)
+    public override async Task InitializeAsync(RabbitMqRouterOptions settings)
     {
         await base.InitializeAsync(settings);
 
@@ -41,8 +41,7 @@ public abstract class MessageRouter<TInput, TOutput> : MessageConsumer<TInput, R
              type: Settings.TargetExchange.Type,
              durable: true,
              autoDelete: false,
-             arguments: null,
-             isDelayed: Settings.TargetExchange.IsDelayed);
+             arguments: null);
     }
 
     protected virtual async Task<OperationResult> RouteAsync(BasicDeliverEventArgs args, TInput input)

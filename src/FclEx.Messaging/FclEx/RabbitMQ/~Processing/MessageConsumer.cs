@@ -1,7 +1,7 @@
 ﻿namespace FclEx.RabbitMQ;
 
 public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings>, IMessageConsumer<T, TSettings>
-    where TSettings : ConsumerSettings
+    where TSettings : RabbitMqConsumerOptions
 {
     public delegate Task<OperationResult> ConsumeHandler(BasicDeliverEventArgs props, T input);
     public delegate Task<OperationResult> ConsumeErrorHandler(BasicDeliverEventArgs props, T input, Exception exception);
@@ -14,6 +14,7 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
 
     protected IChannel? Channel { get; set; }
     protected AsyncEventingBasicConsumer? Consumer { get; set; }
+    protected string? ConsumerTag { get; set; }
     protected virtual TimeSpan ProcessInterval => TimeSpan.Zero;
     protected virtual int MaxRetryTimes => 2;
 
@@ -25,13 +26,13 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
         Check.NotNull(Connection);
 
         Channel = await Connection.CreateChannelAsync();
-        var queue = await Channel.QueueDeclareAsync(queue: settings.Queue.Name,
+        var queue = await Channel.QueueDeclareAsync(queue: settings.RabbitMqQueue.Name,
             durable: true,
             exclusive: false,
             autoDelete: false,
             arguments: null);
 
-        foreach (var key in Settings.Queue.BindKeys.Append(queue.QueueName)) // bind queue.QueueName for PushBack
+        foreach (var key in Settings.RabbitMqQueue.BindKeys.Append(queue.QueueName)) // bind queue.QueueName for PushBack
         {
             await Channel.QueueBindAsync(
                 queue: queue.QueueName,
@@ -41,13 +42,13 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
 
         await Channel.BasicQosAsync(
             prefetchSize: 0,
-            prefetchCount: Settings.Queue.PrefetchCount,
+            prefetchCount: Settings.RabbitMqQueue.PrefetchCount,
             global: false);
 
         Consumer = new AsyncEventingBasicConsumer(Channel);
-        Consumer.ReceivedAsync += (sender, args) => ConsumeAsync(args);
-        await Channel.BasicConsumeAsync(
-            queue: Settings.Queue.Name,
+        Consumer.ReceivedAsync += OnReceivedAsync;
+        ConsumerTag = await Channel.BasicConsumeAsync(
+            queue: Settings.RabbitMqQueue.Name,
             autoAck: false,
             consumer: Consumer);
 
@@ -59,8 +60,8 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
         return
         [
             ("ConsumerType", GetType().ShortName()),
-            (nameof(Settings.Queue), Settings!.Queue.Name),
-            (nameof(Settings.Queue.BindKeys), Settings!.Queue.BindKeys),
+            (nameof(Settings.RabbitMqQueue), Settings!.RabbitMqQueue.Name),
+            (nameof(Settings.RabbitMqQueue.BindKeys), Settings!.RabbitMqQueue.BindKeys),
             (nameof(Settings.Exchange), Settings!.Exchange.Name),
             (nameof(MessageType), MessageType.ShortName()),
         ];
@@ -74,6 +75,39 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
         // we cannot publish to the default exchange whose name is empty because it is not a delay exchange.
         await BasicPublishAsync(Channel, ExchangeName, args.Body, args.RoutingKey, args.BasicProperties);
         Logger.LogTrace("Push back successfully");
+    }
+
+    protected virtual Task OnReceivedAsync(object sender, BasicDeliverEventArgs args)
+    {
+        return ConsumeAsync(args);
+    }
+
+    protected virtual async Task StopConsumingAsync()
+    {
+        if (Consumer is not null)
+        {
+            Consumer.ReceivedAsync -= OnReceivedAsync;
+            Consumer = null;
+        }
+
+        if (Channel is not null && ConsumerTag is not null)
+        {
+            await Channel.BasicCancelAsync(ConsumerTag);
+            ConsumerTag = null;
+        }
+    }
+
+    protected override async ValueTask DisposeActionAsync()
+    {
+        if (Channel is not null)
+        {
+            await StopConsumingAsync();
+            await Channel.CloseAsync();
+            await Channel.DisposeAsync();
+            Channel = null;
+        }
+
+        await base.DisposeActionAsync();
     }
 
     protected virtual async Task ConsumeAsync(BasicDeliverEventArgs args)
@@ -184,7 +218,7 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
     }
 }
 
-public abstract class MessageConsumer<T> : MessageConsumer<T, ConsumerSettings>, IMessageConsumer<T>
+public abstract class MessageConsumer<T> : MessageConsumer<T, RabbitMqConsumerOptions>, IMessageConsumer<T>
 {
     protected MessageConsumer(ILoggerFactory? loggerFactory, IMemoryBytesSerializer? serializer) : base(loggerFactory, serializer)
     {

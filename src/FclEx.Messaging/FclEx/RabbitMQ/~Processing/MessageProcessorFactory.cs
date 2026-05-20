@@ -5,7 +5,7 @@ namespace FclEx.RabbitMQ;
 public class MessageProcessorFactory(IServiceProvider Provider)
 {
     protected virtual async Task<TProcessor> CreateAsync<TProcessor, TSettings>(TSettings settings)
-        where TSettings : ProcessorSettings
+        where TSettings : RabbitMqProcessorOptions
         where TProcessor : IMessageProcessor<TSettings>
     {
         var processor = Provider.GetRequiredService<TProcessor>();
@@ -13,18 +13,18 @@ public class MessageProcessorFactory(IServiceProvider Provider)
         return processor;
     }
 
-    public Task<T> CreatePublisherAsync<T>(PublisherSettings settings) where T : IMessagePublisher
+    public Task<T> CreatePublisherAsync<T>(RabbitMqPublisherOptions settings) where T : IMessagePublisher
     {
-        return CreateAsync<T, PublisherSettings>(settings);
+        return CreateAsync<T, RabbitMqPublisherOptions>(settings);
     }
 
-    public Task<T> CreateConsumerAsync<T>(ConsumerSettings settings) where T : IMessageConsumer<T>
+    public Task<T> CreateConsumerAsync<T>(RabbitMqConsumerOptions settings) where T : IMessageConsumer<T>
     {
-        return CreateAsync<T, ConsumerSettings>(settings);
+        return CreateAsync<T, RabbitMqConsumerOptions>(settings);
     }
 
-    public Task<T> CreatePublisherAsync<T, TInput, TOutput>(RouterSettings settings) where T : IMessageRouter<TInput, TOutput>
+    public Task<T> CreatePublisherAsync<T, TInput, TOutput>(RabbitMqRouterOptions settings) where T : IMessageRouter<TInput, TOutput>
     {
-        return CreateAsync<T, RouterSettings>(settings);
+        return CreateAsync<T, RabbitMqRouterOptions>(settings);
     }
 }

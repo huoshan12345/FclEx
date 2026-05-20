@@ -1,6 +1,6 @@
 ﻿namespace FclEx.RabbitMQ;
 
-public abstract class MessageProcessor<TSettings> : IMessageProcessor<TSettings> where TSettings : ProcessorSettings
+public abstract class MessageProcessor<TSettings> : IMessageProcessor<TSettings> where TSettings : RabbitMqProcessorOptions
 {
     private bool _isDisposed;
 
@@ -49,8 +49,7 @@ public abstract class MessageProcessor<TSettings> : IMessageProcessor<TSettings>
             type: Settings.Exchange.Type,
             durable: true,
             autoDelete: false,
-            arguments: null,
-            isDelayed: Settings.Exchange.IsDelayed);
+            arguments: null);
     }
 
     protected ValueTask BasicPublishAsync(IChannel channel, string exchange, ReadOnlyMemory<byte> body, string routingKey, IReadOnlyBasicProperties properties)

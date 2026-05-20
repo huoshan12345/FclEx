@@ -14,9 +14,12 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" />
   </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <PackageReference Include="Microting.EntityFrameworkCore.MySql" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\FclEx.Dapper\FclEx.Dapper.csproj" />
     <ProjectReference Include="..\..\src\FclEx.EfCore\FclEx.EfCore.csproj" />
-    <ProjectReference Include="..\FclEx.Core.Tests\FclEx.Core.Tests.csproj" />
+    <ProjectReference Include="..\FclEx.Dapper.Tests\FclEx.Dapper.Tests.csproj" />
   </ItemGroup>
 </Project>

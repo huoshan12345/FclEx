@@ -5,7 +5,10 @@ partial class DbConnectionExtensions
     public static async Task<T> DoTransactionAsync<T>(this DbConnection con, Func<DbTransaction, Task<T>> action, IsolationLevel level = IsolationLevel.ReadUncommitted)
     {
         await con.TryOpenAsync();
-        await using var tran = await con.BeginTransactionAsync(level);
+#if NET5_0_OR_GREATER
+        await
+#endif
+        using var tran = await con.BeginTransactionAsync(level);
         try
         {
             var result = await action(tran);
@@ -22,7 +25,10 @@ partial class DbConnectionExtensions
     public static async Task DoTransactionAsync(this DbConnection con, Func<DbTransaction, Task> action, IsolationLevel level = IsolationLevel.ReadUncommitted)
     {
         await con.TryOpenAsync();
-        await using var tran = await con.BeginTransactionAsync(level);
+#if NET5_0_OR_GREATER
+        await
+#endif
+        using var tran = await con.BeginTransactionAsync(level);
         try
         {
             await action(tran);
@@ -62,45 +68,4 @@ partial class DbConnectionExtensions
 
         return con.OpenAsync(token);
     }
-
-
-#if !NET5_0_OR_GREATER
-    internal static Task<DbTransactionWrapper> BeginTransactionAsync(this DbConnection con, IsolationLevel isolationLevel)
-    {
-        var tran = con.BeginTransaction(isolationLevel);
-        var wrapper = new DbTransactionWrapper(tran);
-        return Task.FromResult(wrapper);
-    }
-
-    internal class DbTransactionWrapper : DbTransaction, IAsyncDisposable
-    {
-        private readonly DbTransaction _transaction;
-
-        public DbTransactionWrapper(DbTransaction connection)
-        {
-            _transaction = connection is DbTransactionWrapper wrapper
-                ? wrapper._transaction
-                : connection;
-        }
-
-        public ValueTask DisposeAsync()
-        {
-            _transaction.Dispose();
-            return new(Task.CompletedTask);
-        }
-
-        public override void Commit()
-        {
-            _transaction.Commit();
-        }
-
-        public override void Rollback()
-        {
-            _transaction.Rollback();
-        }
-
-        protected override DbConnection DbConnection => _transaction.Connection;
-        public override IsolationLevel IsolationLevel => _transaction.IsolationLevel;
-    }
-#endif
 }

@@ -27,11 +27,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <!--<DefineConstants Condition="'$(TargetFramework)' == 'net10.0'">$(DefineConstants);DISABLE_NPGSQL</DefineConstants>-->
-    <DefineConstants Condition="'$(TargetFramework)' == 'net10.0'">$(DefineConstants);DISABLE_MYSQL</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <_RootDir>$(MSBuildThisFileDirectory)..\</_RootDir>
     <VSTestLogger>trx%3bLogFileName=$(MSBuildProjectName).trx</VSTestLogger>
   </PropertyGroup>
@@ -44,6 +39,9 @@
 
   <ItemGroup>
     <Content Include="appsettings*.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="xunit.runner.*.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\**\*.*">
@@ -75,6 +73,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 8.0))">
+    <PackageReference Include="PolySharp" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

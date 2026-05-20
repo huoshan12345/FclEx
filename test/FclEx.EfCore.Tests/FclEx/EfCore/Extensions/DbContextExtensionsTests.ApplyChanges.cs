@@ -3,10 +3,10 @@
 partial class DbContextExtensionsTests
 {
     [Theory]
-    [MemberData(nameof(DbTestCases))]
-    public async Task ApplyChanges_ShouldInsertNewEntities(DbProviderType dbProviderType)
+    [MemberData(nameof(DbDriverCases))]
+    public async Task ApplyChanges_ShouldInsertNewEntities(DbDriver dbDriver)
     {
-        await using var context = Fixture.CreateDbContext(dbProviderType);
+        await using var context = Fixture.CreateDbContext(dbDriver);
         var dtos = new[]
         {
             new EntityHasStates { Name = "Alice" },
@@ -29,10 +29,10 @@ partial class DbContextExtensionsTests
     }
 
     [Theory]
-    [MemberData(nameof(DbTestCases))]
-    public async Task ApplyChanges_ShouldUpdateExistingEntities(DbProviderType dbProviderType)
+    [MemberData(nameof(DbDriverCases))]
+    public async Task ApplyChanges_ShouldUpdateExistingEntities(DbDriver dbDriver)
     {
-        await using var context = Fixture.CreateDbContext(dbProviderType);
+        await using var context = Fixture.CreateDbContext(dbDriver);
         var existing = new[]
         {
             new EntityHasStates { Name = "Alice" }
@@ -66,10 +66,10 @@ partial class DbContextExtensionsTests
     }
 
     [Theory]
-    [MemberData(nameof(DbTestCases))]
-    public async Task ApplyChanges_ShouldDeleteMissingEntities_WhenAllowed(DbProviderType dbProviderType)
+    [MemberData(nameof(DbDriverCases))]
+    public async Task ApplyChanges_ShouldDeleteMissingEntities_WhenAllowed(DbDriver dbDriver)
     {
-        await using var context = Fixture.CreateDbContext(dbProviderType);
+        await using var context = Fixture.CreateDbContext(dbDriver);
         var existing = new[]
         {
             new EntityHasStates { Name = "Old" },
@@ -100,10 +100,10 @@ partial class DbContextExtensionsTests
     }
 
     [Theory]
-    [MemberData(nameof(DbTestCases))]
-    public async Task ApplyChanges_ShouldNotDelete_WhenAllowDeletionIsFalse(DbProviderType dbProviderType)
+    [MemberData(nameof(DbDriverCases))]
+    public async Task ApplyChanges_ShouldNotDelete_WhenAllowDeletionIsFalse(DbDriver dbDriver)
     {
-        await using var context = Fixture.CreateDbContext(dbProviderType);
+        await using var context = Fixture.CreateDbContext(dbDriver);
         var existing = new[]
         {
             new EntityHasStates { Name = "Old" },
@@ -133,10 +133,10 @@ partial class DbContextExtensionsTests
     }
 
     [Theory]
-    [MemberData(nameof(DbTestCases))]
-    public async Task ApplyChanges_ShouldRestoreSoftDeletedEntity(DbProviderType dbProviderType)
+    [MemberData(nameof(DbDriverCases))]
+    public async Task ApplyChanges_ShouldRestoreSoftDeletedEntity(DbDriver dbDriver)
     {
-        await using var context = Fixture.CreateDbContext(dbProviderType);
+        await using var context = Fixture.CreateDbContext(dbDriver);
         var existing = new[]
         {
             new EntityHasStates { Name = "Alice", IsDeleted = true }
@@ -170,10 +170,10 @@ partial class DbContextExtensionsTests
     }
 
     [Theory]
-    [MemberData(nameof(DbTestCases))]
-    public async Task ApplyChanges_ShouldHandleMixedOperations(DbProviderType dbProviderType)
+    [MemberData(nameof(DbDriverCases))]
+    public async Task ApplyChanges_ShouldHandleMixedOperations(DbDriver dbDriver)
     {
-        await using var context = Fixture.CreateDbContext(dbProviderType);
+        await using var context = Fixture.CreateDbContext(dbDriver);
         var existing = new[]
         {
             new EntityHasStates { Name = "Keep" },

@@ -21,16 +21,21 @@ public sealed class TestRouter : MessageRouter<string, string>
 
     protected override async ValueTask DisposeActionAsync()
     {
-        if (Channel is null || Settings is null)
-            return;
+        if (Channel is not null && Settings is not null)
+        {
+            await StopConsumingAsync();
 
-        await Channel.QueueDeleteAsync(Settings!.Queue.Name);
-        await Channel.ExchangeDeleteAsync(Settings.Exchange.Name);
-        await Channel.ExchangeDeleteAsync(Settings.TargetExchange.Name);
+            await Channel.QueueDeleteAsync(Settings.RabbitMqQueue.Name, ifUnused: false, ifEmpty: false);
+            await Channel.ExchangeDeleteAsync(Settings.Exchange.Name, ifUnused: false);
+
+            if (Settings.TargetExchange.Name != Settings.Exchange.Name)
+                await Channel.ExchangeDeleteAsync(Settings.TargetExchange.Name, ifUnused: false);
+        }
+
         await base.DisposeActionAsync();
     }
 
-    public static async Task<TestRouter> CreateAsync(RouterSettings settings, Func<string, string> keyFunc)
+    public static async Task<TestRouter> CreateAsync(RabbitMqRouterOptions settings, Func<string, string> keyFunc)
     {
         var publisher = new TestRouter(keyFunc);
         await publisher.InitializeAsync(settings);

@@ -28,9 +28,10 @@ public static class DapperHelper
 #if NET9_0_OR_GREATER
             Lock
 #else
-            object 
+            object
 #endif
-            LockObj { get; } = new();
+            LockObj
+        { get; } = new();
 
         public bool Initialized { get; set; } = false;
     }
@@ -50,7 +51,8 @@ public static class DapperHelper
 
         foreach (var entityType in types)
         {
-            var map = new CustomPropertyTypeMap(entityType, (t, name) => GetEntityDefinition(t).Fields.FirstOrDefault(p => p.FieldName == name)?.PropertyInfo!);
+            var map = new CustomPropertyTypeMap(entityType, (t, name) =>
+                GetEntityDefinition(t).Fields.FirstOrDefault(p => p.FieldName == name)?.PropertyInfo!);
             SqlMapper.SetTypeMap(entityType, map);
         }
     }
@@ -68,7 +70,7 @@ public static class DapperHelper
                 return;
 
             if (assembly.GetName().Name?.StartsWith("Microsoft.TestPlatform.") == true)
-            { 
+            {
                 // Skip test platform assemblies to avoid the error "Could not load type 'System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute' from assembly 'Microsoft.TestPlatform.CoreUtilities'".
                 locker.Initialized = true;
                 return;
@@ -108,7 +110,7 @@ public static class DapperHelper
     {
         return Adapters.GetOrAdd(connection.GetType().FullName!, conName => throw new ArgumentException("Unsupported connection type: " + conName));
     }
-
+    
     public static string GetTableNameWithSchema(ISqlAdapter sqlAdapter, string? schema, Type entityType)
     {
         return TableNamesWithSchema.GetOrAdd((sqlAdapter.GetType(), schema, entityType), k =>
@@ -118,6 +120,31 @@ public static class DapperHelper
                 ? sqlAdapter.GetQuotedTableName(tableName)
                 : $"{sqlAdapter.GetQuotedTableName(k.Schema)}.{sqlAdapter.GetQuotedTableName(tableName)}";
         });
+    }
+
+    public static string GetTableNameWithSchema(IDbConnection connection, string? schema, Type entityType)
+    {
+        return GetTableNameWithSchema(GetSqlAdapter(connection), schema, entityType);
+    }
+
+    public static string GetQuotedColumnName(ISqlAdapter sqlAdapter, Type entityType, string columnName)
+    {
+        var entityDef = GetEntityDefinition(entityType);
+        var fieldDef = entityDef.Fields.FirstOrDefault(f => f.FieldName == columnName);
+        return fieldDef == null
+            ? throw new ArgumentException($"Column '{columnName}' not found in entity '{entityType.FullName}'.")
+            : sqlAdapter.GetQuotedColumnName(fieldDef.FieldName);
+    }
+
+    public static string GetQuotedColumnName(IDbConnection connection, Type entityType, string columnName)
+    {
+        return GetQuotedColumnName(GetSqlAdapter(connection), entityType, columnName);
+    }
+
+    public static string GetQuotedColumnName<T>(IDbConnection connection, Expression<Func<T, object?>> selector)
+    {
+        var member = ExpressionHelper.GetMember(selector);
+        return GetQuotedColumnName(GetSqlAdapter(connection), typeof(T), member.Name);
     }
 
     public static TransactionScope CreateAsyncTransactionScope(System.Transactions.IsolationLevel isolationLevel = System.Transactions.IsolationLevel.ReadCommitted)

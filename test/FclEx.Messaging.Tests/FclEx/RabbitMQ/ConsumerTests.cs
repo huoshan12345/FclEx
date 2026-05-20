@@ -1,43 +1,32 @@
 ﻿using FclEx.TestModels;
-using xRetry;
 
 namespace FclEx.RabbitMQ;
 
 [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
-public class ConsumerTests : RabbitMQTests
+public class ConsumerTests(RabbitMQFixture fixture) : RabbitMQTests(fixture)
 {
-    public readonly ExchangeSettings DefaultExchange;
-
-    public ConsumerTests(RabbitMQFixture fixture) : base(fixture)
-    {
-        DefaultExchange = new()
-        {
-            Name = Fixture.WithAssemblyInfo("test.consumer"),
-            Type = "topic",
-            IsDelayed = true,
-        };
-    }
-
     [Fact]
     public async Task Consume_Test()
     {
-        if (Skip)
-            return;
+        var exchange = new RabbitMqExchangeOptions
+        {
+            Name = GetExchangeName(nameof(Consume_Test)),
+        };
 
-        var connection = RabbitMQConnection;
-        await using var publisher = await TestPublisher.CreateAsync(new PublisherSettings(connection, DefaultExchange));
+        var connection = RabbitMQFixture.ConnectionSettings;
+        await using var publisher = await TestPublisher.CreateAsync(new RabbitMqPublisherOptions(connection, exchange));
 
         var msgList = Enumerable.Range(1, 10).Select(m => (Seq: m, Msg: "msg_" + m)).ToList();
         var list = new List<string>();
 
         using var semaphore = new SemaphoreSlim(0);
-        await using var consumer = await TestConsumer.CreateAsync(new ConsumerSettings
+        await using var consumer = await TestConsumer.CreateAsync(new RabbitMqConsumerOptions
         {
             Connection = connection,
-            Exchange = DefaultExchange,
-            Queue = new QueueSettings
+            Exchange = exchange,
+            RabbitMqQueue = new RabbitMqQueueOptions
             {
-                Name = Fixture.WithAssemblyInfo("test.consumer", '.'),
+                Name = GetQueueName(nameof(Consume_Test)),
                 BindKeys = ["#"],
             },
         }, m =>
@@ -54,24 +43,28 @@ public class ConsumerTests : RabbitMQTests
         Assert.Equal(msgList.Select(m => m.Msg), list);
     }
 
-    private async Task ConsumePushBackTest<T>(T valueToPublish, TimeSpan delay = default)
+    private static async Task ConsumePushBackTest<T>(string testName, T valueToPublish, TimeSpan delay = default)
     {
-        var connection = RabbitMQConnection;
-        await using var publisher = await TestPublisher.CreateAsync(new PublisherSettings(connection, DefaultExchange));
+        var exchange = new RabbitMqExchangeOptions
+        {
+            Name = GetExchangeName<T>(testName),
+        };
 
-        var name = typeof(T).ShortName();
-        var key = nameof(ConsumePushBackTest) + "." + name;
+        var connection = RabbitMQFixture.ConnectionSettings;
+        await using var publisher = await TestPublisher.CreateAsync(new RabbitMqPublisherOptions(connection, exchange));
+
+        var key = GetKeyName<T>(testName);
         var list = new List<T>();
 
         const int retryTimes = 1;
         using var semaphore = new SemaphoreSlim(0);
-        await using var consumer = await TestConsumer<T>.CreateAsync(new ConsumerSettings
+        await using var consumer = await TestConsumer<T>.CreateAsync(new RabbitMqConsumerOptions
         {
             Connection = connection,
-            Exchange = DefaultExchange,
-            Queue = new QueueSettings
+            Exchange = exchange,
+            RabbitMqQueue = new RabbitMqQueueOptions
             {
-                Name = Fixture.WithAssemblyInfo("test.consumer" + "." + name.ToLower(), '.'),
+                Name = GetQueueName<T>(testName),
                 BindKeys = [key],
             },
         }, m =>
@@ -98,10 +91,7 @@ public class ConsumerTests : RabbitMQTests
     [InlineData(0.3)]
     public async Task Consume_PushBack_String_Test(double delaySeconds)
     {
-        if (Skip)
-            return;
-
-        await ConsumePushBackTest("test", TimeSpan.FromSeconds(delaySeconds));
+        await ConsumePushBackTest(nameof(Consume_PushBack_String_Test), "testValue", TimeSpan.FromSeconds(delaySeconds));
     }
 
     [RetryTheory]
@@ -109,10 +99,7 @@ public class ConsumerTests : RabbitMQTests
     [InlineData(0.3)]
     public async Task Consume_PushBack_Int_Test(double delaySeconds)
     {
-        if (Skip)
-            return;
-
-        await ConsumePushBackTest(10, TimeSpan.FromSeconds(delaySeconds));
+        await ConsumePushBackTest(nameof(Consume_PushBack_Int_Test), 10, TimeSpan.FromSeconds(delaySeconds));
     }
 
     [RetryTheory]
@@ -120,10 +107,7 @@ public class ConsumerTests : RabbitMQTests
     [InlineData(0.3)]
     public async Task Consume_PushBack_Class_Test(double delaySeconds)
     {
-        if (Skip)
-            return;
-
-        await ConsumePushBackTest(new Person
+        await ConsumePushBackTest(nameof(Consume_PushBack_Class_Test), new Person
         {
             Id = 10,
             Name = "Jim",
@@ -135,23 +119,25 @@ public class ConsumerTests : RabbitMQTests
     [Fact]
     public async Task Consume_MultiBind_Test()
     {
-        if (Skip)
-            return;
+        var exchange = new RabbitMqExchangeOptions
+        {
+            Name = GetExchangeName(nameof(Consume_MultiBind_Test)),
+        };
 
-        var connection = RabbitMQConnection;
-        await using var publisher = await TestPublisher.CreateAsync(new PublisherSettings(connection, DefaultExchange));
+        var connection = RabbitMQFixture.ConnectionSettings;
+        await using var publisher = await TestPublisher.CreateAsync(new RabbitMqPublisherOptions(connection, exchange));
 
         var msgList = Enumerable.Range(1, 10).Select(m => (Seq: m, Msg: "msg_" + m)).ToList();
         var list = new List<string>();
 
         using var semaphore = new SemaphoreSlim(0);
-        await using var consumer = await TestConsumer.CreateAsync(new ConsumerSettings()
+        await using var consumer = await TestConsumer.CreateAsync(new RabbitMqConsumerOptions
         {
             Connection = connection,
-            Exchange = DefaultExchange,
-            Queue = new QueueSettings
+            Exchange = exchange,
+            RabbitMqQueue = new RabbitMqQueueOptions
             {
-                Name = Fixture.WithAssemblyInfo("test.consumer", '.'),
+                Name = GetQueueName(nameof(Consume_MultiBind_Test)),
                 BindKeys = ["output.0", "output.1"],
             }
         }, m =>

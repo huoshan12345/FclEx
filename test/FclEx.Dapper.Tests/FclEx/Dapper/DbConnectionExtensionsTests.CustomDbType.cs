@@ -1,20 +1,21 @@
 ﻿using System.Xml;
+using System.Xml.Linq;
+using MySqlX.XDevAPI;
 
 namespace FclEx.Dapper;
 
 partial class DbConnectionExtensionsTests
 {
-#if !DISABLE_NPGSQL
     [Theory]
     [MemberData(nameof(SchemaCases))]
     public async Task InsertAsync_EntityWithPostgresqlJsonb_Test(string? schema)
     {
-        if (DatabaseTypes.Contains(DbProviderType.Npgsql) == false)
+        if (DbDrivers.Contains(DbDriver.Npgsql) == false)
             return;
 
         using var x = output.SetConsole();
 
-        await using var db = Fixture.CreateDbContext(DbProviderType.Npgsql, schema);
+        using var con = Fixture.CreateDbConnection(DbDriver.Npgsql, schema);
 
         var payload = new EntityWithGuidKey
         {
@@ -26,8 +27,10 @@ partial class DbConnectionExtensionsTests
             Json = payload.ToJson(),
         };
 
-        var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity, db.Schema);
-        var e = await db.Set<EntityWithPostgresqlJsonb>().Where(m => m.Id == id).FirstOrDefaultAsync();
+        var id = (long?)await con.InsertAsync(entity, schema);
+        Assert.NotNull(id);
+
+        var e = await con.GetAsync<EntityWithPostgresqlJsonb>(id, schema);
         Assert.NotNull(e);
         Assert.NotNullNorEmpty(e.Json);
 
@@ -35,15 +38,17 @@ partial class DbConnectionExtensionsTests
         Assert.Equal(payload.Id, actualPayload.Id);
         Assert.Equal(payload.Value, actualPayload.Value);
     }
-#endif
 
-    [LocalOnlyTheory]
+    [Theory]
     [MemberData(nameof(SchemaCases))]
     public async Task InsertAsync_EntityWithSqlServerXml_Test(string? schema)
     {
+        if (DbDrivers.Contains(DbDriver.SqlServer) == false)
+            return;
+
         using var x = output.SetConsole();
 
-        await using var db = Fixture.CreateDbContext(DbProviderType.SqlServer, schema);
+        using var con = Fixture.CreateDbConnection(DbDriver.SqlServer, schema);
 
         var payload = new EntityWithGuidKey
         {
@@ -55,8 +60,10 @@ partial class DbConnectionExtensionsTests
             Xml = XmlHelper.Serialize(payload),
         };
 
-        var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity, db.Schema);
-        var e = await db.Set<EntityWithSqlServerXml>().Where(m => m.Id == id).FirstOrDefaultAsync();
+        var id = (long?)await con.InsertAsync(entity, schema);
+        Assert.NotNull(id);
+
+        var e = await con.GetAsync<EntityWithSqlServerXml>(id, schema);
         Assert.NotNull(e);
         Assert.NotNullNorEmpty(e.Xml);
 
@@ -65,12 +72,15 @@ partial class DbConnectionExtensionsTests
         Assert.Equal(payload.Value, actualPayload.Value);
     }
 
-    [Fact]
+    [LocalOnlyFact]
     public async Task InsertAsync_EntityWithSqliteBlob_Test()
     {
+        if (DbDrivers.Contains(DbDriver.Sqlite) == false)
+            return;
+
         using var x = output.SetConsole();
 
-        await using var db = Fixture.CreateDbContext(DbProviderType.Sqlite);
+        using var con = Fixture.CreateDbConnection(DbDriver.Sqlite, null);
 
         var payload = new EntityWithGuidKey
         {
@@ -82,8 +92,10 @@ partial class DbConnectionExtensionsTests
             Blob = payload.ToJson().ToBytes(),
         };
 
-        var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity);
-        var e = await db.Set<EntityWithSqliteBlob>().Where(m => m.Id == id).FirstOrDefaultAsync();
+        var id = (long?)await con.InsertAsync(entity);
+        Assert.NotNull(id);
+
+        var e = await con.GetAsync<EntityWithSqliteBlob>(id);
         Assert.NotNull(e);
         Assert.NotNullNorEmpty(e.Blob);
 
@@ -92,18 +104,16 @@ partial class DbConnectionExtensionsTests
         Assert.Equal(payload.Value, actualPayload.Value);
     }
 
-#if !DISABLE_MYSQL
-    public static readonly TheoryData<DbProviderType, string?> MySqlSchemaCases = new[] { DbProviderType.MySqlConnector, DbProviderType.MySql }
-        .SelectMany(Schemas)
-        .ToTheoryData();
-
     [LocalOnlyTheory]
     [MemberData(nameof(MySqlSchemaCases))]
-    public async Task InsertAsync_EntityWithMySqlBlob_Test(DbProviderType type, string? schema)
+    public async Task InsertAsync_EntityWithMySqlBlob_Test(DbDriver dbDriver, string? schema)
     {
+        if (DbDrivers.Contains(DbDriver.MySql) == false)
+            return;
+
         using var x = output.SetConsole();
 
-        await using var db = Fixture.CreateDbContext(type, schema);
+        using var con = Fixture.CreateDbConnection(dbDriver, schema);
 
         var payload = new EntityWithGuidKey
         {
@@ -115,8 +125,10 @@ partial class DbConnectionExtensionsTests
             Blob = payload.ToJson().ToBytes(),
         };
 
-        var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity, db.Schema);
-        var e = await db.Set<EntityWithMySqlBlob>().Where(m => m.Id == id).FirstOrDefaultAsync();
+        var id = (long?)await con.InsertAsync(entity, schema);
+        Assert.NotNull(id);
+
+        var e = await con.GetAsync<EntityWithMySqlBlob>(id, schema);
         Assert.NotNull(e);
         Assert.NotNullNorEmpty(e.Blob);
 
@@ -124,5 +136,4 @@ partial class DbConnectionExtensionsTests
         Assert.Equal(payload.Id, actualPayload.Id);
         Assert.Equal(payload.Value, actualPayload.Value);
     }
-#endif
 }

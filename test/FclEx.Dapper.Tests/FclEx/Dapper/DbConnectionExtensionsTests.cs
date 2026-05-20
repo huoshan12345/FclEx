@@ -1,66 +1,79 @@
-﻿namespace FclEx.Dapper;
+﻿using System.Data;
+using Dapper;
+using FclEx.Utils;
+using Xunit.v3.Priority;
 
+// ReSharper disable AccessToDisposedClosure
+
+namespace FclEx.Dapper;
+
+[DefaultPriority(0)]
+[TestCaseOrderer(typeof(PriorityOrderer))]
 public partial class DbConnectionExtensionsTests(ITestOutputHelper output, DapperFixture fixture) : DapperTests(fixture)
 {
-    public static readonly int[] Counts = [0, 1, 5];
-    public static readonly TheoryData<DbProviderType, string?, int> BulkInsertTestCases =
-    (
-        from x in DatabaseTypes
-        from y in Schemas
-        from z in Counts
-        select (x, y, z)
-    ).ToTheoryData();
+    [Theory(Skip = "x"), Priority(-1)]
+    [MemberData(nameof(DbSchemaTestCases))]
+    public async Task FixAutoIncrement_Test(DbDriver dbDriver, string? schema)
+    {
+        using var con = Fixture.CreateDbConnection(dbDriver, schema);
+        await FixAutoIncrement<EntityWithAutoKey>(con, dbDriver, schema);
+    }
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task InsertAsync_EntityWithAutoKey_Test(DbProviderType dbProviderType, string? schema)
+    public async Task InsertAsync_EntityWithAutoKey_Test(DbDriver dbDriver, string? schema)
     {
-        await using var db = Fixture.CreateDbContext(dbProviderType, schema);
-
         var entity = new EntityWithAutoKey
         {
-            Value = 100,
+            Value = Random.Shared.Next(),
             Name = Guid.NewGuid().ToString(),
         };
-        var id = (long?)await db.Database.GetDbConnection().InsertAsync(entity, db.Schema);
-        var e = await db.EntityWithAutoKey.Where(m => m.Name == entity.Name).FirstOrDefaultAsync();
+        using var con = Fixture.CreateDbConnection(dbDriver, schema);
+        var id = (long?)await con.InsertAsync(entity, schema);
+        Assert.NotNull(id);
+
+        var e = await con.GetAsync<EntityWithAutoKey>(id, schema);
         Assert.NotNull(e);
+        Assert.Equal(entity.Name, e.Name);
         Assert.Equal(entity.Value, e.Value);
         Assert.Equal(id, e.Id);
     }
 
-    [Theory]
+    [Theory, Priority(1)]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task InsertAsync_EntityWithAutoKey_IncludeAutoKey_Test(DbProviderType dbProviderType, string? schema)
+    public async Task InsertAsync_EntityWithAutoKey_IncludeAutoKey_Test(DbDriver dbDriver, string? schema)
     {
-        await using var db = Fixture.CreateDbContext(dbProviderType, schema);
-        var maxId = await db.EntityWithAutoKey.MaxAsync(m => (int?)m.Id);
+        using var con = Fixture.CreateDbConnection(dbDriver, schema);
+        var maxId = await GetMaxId<EntityWithAutoKey>(con, schema) + 1;
 
         var entity = new EntityWithAutoKey
         {
-            Id = maxId.Get(1) + 50,
+            Id = maxId + dbDriver.ToInt(),
             Value = 100,
             Name = Guid.NewGuid().ToString(),
         };
-        await db.Database.GetDbConnection().InsertAsync(entity, db.Schema, includeAutoKey: true);
 
-        var e = await db.EntityWithAutoKey
-            .AsNoTracking()
-            .Where(m => m.Id == entity.Id)
-            .FirstOrDefaultAsync();
+        await con.InsertAsync(entity, schema, includeAutoKey: true);
+
+        // need to delete the inserted data with specified id to avoid affecting sequence of auto key generation in later tests
+        await using var _ = AsyncDisposable.Create(async () =>
+        {
+            await con.DeleteAsync<EntityWithAutoKey>(entity.Id, schema);
+            await FixAutoIncrement<EntityWithAutoKey>(con, dbDriver, schema);
+        });
+
+        var e = await con.GetAsync<EntityWithAutoKey>(entity.Id, schema);
 
         Assert.NotNull(e);
         Assert.Equal(entity.Value, e.Value);
         Assert.Equal(entity.Id, e.Id);
-
-        await db.EntityWithAutoKey.Where(m => m.Id == entity.Id).ExecuteDeleteAsync();
     }
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task InsertAsync_EntityWithGuidKey_Test(DbProviderType dbProviderType, string? schema)
+    public async Task InsertAsync_EntityWithGuidKey_Test(DbDriver dbDriver, string? schema)
     {
-        await using var db = Fixture.CreateDbContext(dbProviderType, schema);
+        using var con = Fixture.CreateDbConnection(dbDriver, schema);
 
         var entity = new EntityWithGuidKey
         {
@@ -68,150 +81,159 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
             Value = 100,
             Order = null,
         };
-        var value = await db.Database.GetDbConnection().InsertAsync(entity, db.Schema);
+
+        var value = await con.InsertAsync(entity, schema);
         Assert.Null(value);
-        var e = await db.EntityWithGuidKey.Where(m => m.Id == entity.Id).FirstAsync();
-        Assert.Equal(entity.Value, e.Value);
-    }
 
-    [Theory]
-    [MemberData(nameof(DbSchemaTestCases))]
-    public async Task InsertAsync_EntityWithoutKey_Test(DbProviderType dbProviderType, string? schema)
-    {
-        await using var db = Fixture.CreateDbContext(dbProviderType, schema);
-
-        var entity = new EntityWithoutKey
-        {
-            Name = Guid.NewGuid().ToString(),
-            Value = 1
-        };
-        await db.Database.GetDbConnection().InsertAsync(entity, db.Schema);
-        var e = await db.EntityWithoutKey.Where(m => m.Name == entity.Name).FirstAsync();
-        Assert.Equal(entity.Value, e.Value);
-    }
-
-    [Theory]
-    [MemberData(nameof(BulkInsertTestCases))]
-    public async Task BulkInsertAsync_EntityWithAutoKey_Test(DbProviderType dbProviderType, string? schema, int count)
-    {
-        await using var db = Fixture.CreateDbContext(dbProviderType, schema);
-
-        var entities = Enumerable.Range(1, count).Select(m => new EntityWithAutoKey
-        {
-            Value = m,
-            Name = Guid.NewGuid().ToString(),
-        }).ToArray();
-
-        var rows = await db.Database.GetDbConnection().BulkInsertAsync(entities, db.Schema);
-        Assert.Equal(count, rows);
-
-        foreach (var entity in entities)
-        {
-            var e = await db.EntityWithAutoKey.Where(m => m.Name == entity.Name).FirstAsync();
-            Assert.Equal(e.Value, entity.Value);
-        }
-    }
-
-    [Theory]
-    [MemberData(nameof(BulkInsertTestCases))]
-    public async Task BulkInsertAsync_EntityWithAutoKey_IncludeAutoKey_Test(DbProviderType dbProviderType, string? schema, int count)
-    {
-        await using var db = Fixture.CreateDbContext(dbProviderType, schema);
-
-        var maxId = await db.EntityWithAutoKey.MaxAsync(m => (int?)m.Id);
-
-        var entities = Enumerable.Range(1, count).Select(m => new EntityWithAutoKey
-        {
-            Id = maxId.Get(1) + m,
-            Value = m,
-            Name = Guid.NewGuid().ToString(),
-        }).ToArray();
-
-        var rows = await db.Database.GetDbConnection().BulkInsertAsync(entities, db.Schema, true);
-        Assert.Equal(count, rows);
-
-        foreach (var entity in entities)
-        {
-            var e = await db.EntityWithAutoKey.Where(m => m.Name == entity.Name).FirstAsync();
-            Assert.Equal(e.Value, entity.Value);
-            Assert.Equal(e.Id, entity.Id);
-        }
-
-        var ids = entities.Select(m => m.Id).ToArray();
-        await db.EntityWithAutoKey.Where(m => ids.Contains(m.Id)).ExecuteDeleteAsync();
-    }
-
-    [Theory]
-    [MemberData(nameof(DbSchemaTestCases))]
-    public async Task GetAsync_EntityWithGuidKey_Test(DbProviderType dbProviderType, string? schema)
-    {
-        await using var db = Fixture.CreateDbContext(dbProviderType, schema);
-
-        var entity = new EntityWithGuidKey
-        {
-            Id = Guid.NewGuid(),
-            Value = 1
-        };
-        await db.EntityWithGuidKey.AddAsync(entity);
-        await db.SaveChangesAsync();
-
-        var e = await db.Database.GetDbConnection().GetAsync<EntityWithGuidKey>(entity.Id, db.Schema);
+        var e = await con.GetAsync<EntityWithGuidKey>(entity.Id, schema);
         Assert.NotNull(e);
         Assert.Equal(entity.Value, e.Value);
     }
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task GetAsync_EntityWithoutKey_RaiseException(DbProviderType dbProviderType, string? schema)
+    public async Task InsertAsync_EntityWithoutKey_Test(DbDriver dbDriver, string? schema)
     {
-        await using var db = Fixture.CreateDbContext(dbProviderType, schema);
+        using var con = Fixture.CreateDbConnection(dbDriver, schema);
 
-        var con = db.Database.GetDbConnection();
-        var ex = await Assert.ThrowsAsync<DataException>(() => con.GetAsync<EntityWithoutKey>(0, "test"));
+        var entity = new EntityWithoutKey
+        {
+            Name = Guid.NewGuid().ToString(),
+            Value = 1
+        };
+        await con.InsertAsync(entity, schema);
+
+        var tableName = DapperHelper.GetTableNameWithSchema(con, schema, typeof(EntityWithoutKey));
+        var sql = $"select * from {tableName} where {DapperHelper.GetQuotedColumnName<EntityWithoutKey>(con, m => m.Name)} = @Name";
+        var e = await con.QueryFirstAsync<EntityWithoutKey>(sql, new { entity.Name });
+        Assert.Equal(entity.Value, e.Value);
+    }
+
+    [Theory]
+    [MemberData(nameof(BulkInsertTestCases))]
+    public async Task BulkInsertAsync_EntityWithAutoKey_Test(DbDriver dbDriver, string? schema, int count)
+    {
+        using var con = Fixture.CreateDbConnection(dbDriver, schema);
+
+        var entities = Enumerable.Range(1, count).Select(m => new EntityWithAutoKey
+        {
+            Value = m,
+            Name = Guid.NewGuid().ToString(),
+        }).ToArray();
+
+        var rows = await con.BulkInsertAsync(entities, schema);
+        Assert.Equal(count, rows);
+
+        var tableName = DapperHelper.GetTableNameWithSchema(con, schema, typeof(EntityWithAutoKey));
+        var sql = $"select * from {tableName} where {DapperHelper.GetQuotedColumnName<EntityWithAutoKey>(con, m => m.Name)} = @Name";
+        foreach (var entity in entities)
+        {
+            var e = await con.QueryFirstAsync<EntityWithAutoKey>(sql, new { entity.Name });
+            Assert.Equal(e.Value, entity.Value);
+        }
+    }
+
+    [Theory, Priority(2)]
+    [MemberData(nameof(BulkInsertTestCases))]
+    public async Task BulkInsertAsync_EntityWithAutoKey_IncludeAutoKey_Test(DbDriver dbDriver, string? schema, int count)
+    {
+        using var con = Fixture.CreateDbConnection(dbDriver, schema);
+        var tableName = DapperHelper.GetTableNameWithSchema(con, schema, typeof(EntityWithAutoKey));
+        var maxId = await GetMaxId<EntityWithAutoKey>(con, schema) + 1;
+
+        var seed = (dbDriver.ToInt() + count) * 10;
+        var entities = Enumerable.Range(1, count).Select(m => new EntityWithAutoKey
+        {
+            Id = maxId + m + seed,
+            Value = m,
+            Name = Guid.NewGuid().ToString(),
+        }).ToArray();
+
+        var rows = await con.BulkInsertAsync(entities, schema, true);
+        Assert.Equal(count, rows);
+
+        if (count == 0)
+            return;
+
+        // need to delete the inserted data with specified id to avoid affecting sequence of auto key generation in later tests
+        await using var _ = AsyncDisposable.Create(async () =>
+        {
+            var parameters = entities.ToDynamicParameters((m, i) => i.ToString(), (m, i) => m.Id);
+            var names = parameters.PrefixedNames().JoinWith(", ");
+            var sql = $"delete from {tableName} where {DapperHelper.GetQuotedColumnName<EntityWithAutoKey>(con, m => m.Id)} in ({names})";
+            await con.ExecuteAsync(sql, parameters);
+            await FixAutoIncrement<EntityWithAutoKey>(con, dbDriver, schema);
+        });
+
+        var sql = $"select * from {tableName} where {DapperHelper.GetQuotedColumnName<EntityWithAutoKey>(con, m => m.Name)} = @Name";
+        foreach (var entity in entities)
+        {
+            var e = await con.QueryFirstAsync<EntityWithAutoKey>(sql, new { entity.Name });
+            Assert.Equal(e.Value, entity.Value);
+            Assert.Equal(e.Id, entity.Id);
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(DbSchemaTestCases))]
+    public async Task GetAsync_EntityWithGuidKey_Test(DbDriver dbDriver, string? schema)
+    {
+        using var con = Fixture.CreateDbConnection(dbDriver, schema);
+
+        var entity = new EntityWithGuidKey
+        {
+            Id = Guid.NewGuid(),
+            Value = 1,
+        };
+
+        await con.InsertAsync(entity, schema);
+
+        var e = await con.GetAsync<EntityWithGuidKey>(entity.Id, schema);
+        Assert.NotNull(e);
+        Assert.Equal(entity.Value, e.Value);
+    }
+
+    [Theory]
+    [MemberData(nameof(DbSchemaTestCases))]
+    public async Task GetAsync_EntityWithoutKey_RaiseException(DbDriver dbDriver, string? schema)
+    {
+        using var con = Fixture.CreateDbConnection(dbDriver, schema);
+        var ex = await Assert.ThrowsAsync<DataException>(() => con.GetAsync<EntityWithoutKey>(0, schema));
         Assert.Contains("Only supports an entity with a [Key] property", ex.Message);
     }
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task DeleteAsync_EntityWithGuidKey_Test(DbProviderType dbProviderType, string? schema)
+    public async Task DeleteAsync_EntityWithGuidKey_Test(DbDriver dbDriver, string? schema)
     {
-        await using var db = Fixture.CreateDbContext(dbProviderType, schema);
+        using var con = Fixture.CreateDbConnection(dbDriver, schema);
 
         var entities = Enumerable.Range(1, 3).Select(m => new EntityWithGuidKey
         {
             Id = Guid.NewGuid(),
             Value = m,
         }).ToArray();
-        await db.EntityWithGuidKey.AddRangeAsync(entities);
-        await db.SaveChangesAsync();
 
-        var count = await db.Database.GetDbConnection().DeleteAsync<EntityWithGuidKey>(entities.First().Id, db.Schema);
+        await con.BulkInsertAsync(entities, schema);
+
+        var count = await con.DeleteAsync<EntityWithGuidKey>(entities.First().Id, schema);
         Assert.Equal(1, count);
-
-        foreach (var e in entities.Skip(1))
-        {
-            await db.EntityWithGuidKey.AnyAsync(m => m.Id == e.Id);
-        }
     }
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task DeleteAsync_EntityWithoutKey_RaiseException(DbProviderType dbProviderType, string? schema)
+    public async Task DeleteAsync_EntityWithoutKey_RaiseException(DbDriver dbDriver, string? schema)
     {
-        await using var db = Fixture.CreateDbContext(dbProviderType, schema);
-
-        var con = db.Database.GetDbConnection();
-        var ex = await Assert.ThrowsAsync<DataException>(() => con.DeleteAsync<EntityWithoutKey>(0, "test"));
+        using var con = Fixture.CreateDbConnection(dbDriver, schema);
+        var ex = await Assert.ThrowsAsync<DataException>(() => con.DeleteAsync<EntityWithoutKey>(0, schema));
         Assert.Contains("Only supports an entity with a [Key] property", ex.Message);
     }
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task DoTransactionAsync_Test(DbProviderType dbProviderType, string? schema)
+    public async Task DoTransactionAsync_Test(DbDriver dbDriver, string? schema)
     {
-        await using var db = Fixture.CreateDbContext(dbProviderType, schema);
-
-        var con = db.Database.GetDbConnection();
+        using var con = Fixture.CreateDbConnection(dbDriver, schema);
 
         var entity = new EntityWithAutoKey
         {
@@ -220,44 +242,78 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
         };
         var entity2 = new EntityWithAutoKey
         {
-            Value = 100,
+            Value = 200,
             Name = Guid.NewGuid().ToString(),
         };
 
         var (id, id2) = await con.DoTransactionAsync(async tran =>
         {
-            var id = (long?)await tran.InsertAsync(entity, db.Schema);
-            var id2 = (long?)await tran.InsertAsync(entity2, db.Schema);
-            return (id, id2);
+            var id = (long?)await tran.InsertAsync(entity, schema);
+            var id2 = (long?)await tran.InsertAsync(entity2, schema);
+            return (id1: id, id2);
         });
 
-        var e = await db.EntityWithAutoKey.Where(m => m.Id == id).FirstOrDefaultAsync();
+        Assert.NotNull(id);
+        var e = await con.GetAsync<EntityWithAutoKey>(id, schema);
         Assert.NotNull(e);
+        Assert.Equal(entity.Name, e.Name);
 
-        var e2 = await db.EntityWithAutoKey.Where(m => m.Id == id2).FirstOrDefaultAsync();
+        Assert.NotNull(id2);
+        var e2 = await con.GetAsync<EntityWithAutoKey>(id2, schema);
         Assert.NotNull(e2);
+        Assert.Equal(entity2.Name, e2.Name);
     }
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task DoTransactionAsync_Rollback_Test(DbProviderType dbProviderType, string? schema)
+    public async Task DoTransactionAsync_Rollback_Test(DbDriver dbDriver, string? schema)
     {
-        await using var db = Fixture.CreateDbContext(dbProviderType, schema);
-        await db.EntityWithGuidKey.ExecuteDeleteAsync();
+        using var con = Fixture.CreateDbConnection(dbDriver, schema);
 
-        var con = db.Database.GetDbConnection();
+        var count = await GetCount<EntityWithGuidKey>(con, schema);
 
+        var id = Guid.NewGuid();
         await Assert.ThrowsAsync<InvalidOperationException>(() => con.DoTransactionAsync(async tran =>
         {
             await tran.InsertAsync(new EntityWithGuidKey
             {
-                Id = Guid.NewGuid(),
+                Id = id,
                 Value = 100,
-            }, db.Schema);
+            }, schema);
             throw new InvalidOperationException();
         }));
 
-        var count = await db.EntityWithGuidKey.CountAsync();
-        Assert.Equal(0, count);
+        var e = await con.GetAsync<EntityWithGuidKey>(id, schema);
+        Assert.Null(e);
+    }
+
+    private static Task<int> GetCount<T>(IDbConnection con, string? schema)
+    {
+        var tableName = DapperHelper.GetTableNameWithSchema(con, schema, typeof(T));
+        var sql = $"select count(1) from {tableName}";
+        return con.ExecuteScalarAsync<int>(sql);
+    }
+
+    private static Task<int> GetMaxId<T>(IDbConnection con, string? schema)
+    {
+        var tableName = DapperHelper.GetTableNameWithSchema(con, schema, typeof(T));
+        var columnName = DapperHelper.GetQuotedColumnName(con, typeof(T), "Id");
+        return con.ExecuteScalarAsync<int>($"select max({columnName}) from {tableName}");
+    }
+
+    private static Task<int> FixAutoIncrement<T>(IDbConnection con, DbDriver dbDriver, string? schema)
+    {
+        if (dbDriver is not DbDriver.Npgsql)
+            return Task.FromResult(0);
+
+        var tableName = DapperHelper.GetTableNameWithSchema(con, schema, typeof(T));
+        var sql = $"""
+                  SELECT setval(
+                      pg_get_serial_sequence('{tableName}', 'Id'),
+                      COALESCE((SELECT MAX("Id") FROM {tableName}), 0) + 1,
+                      false
+                  );
+                  """;
+        return con.ExecuteScalarAsync<int>(sql);
     }
 }

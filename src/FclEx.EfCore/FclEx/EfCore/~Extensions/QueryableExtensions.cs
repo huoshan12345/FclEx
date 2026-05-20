@@ -63,14 +63,19 @@ public static class QueryableExtensions
         return new(new PagedList<TModel>(arr, pageIndex, pageSize, count));
     }
 
-    public static IQueryable<T> ContainsAny<T>(this IQueryable<T> queryable, Expression<Func<T, string?>> selector, IEnumerable<string> keywords, bool suppressValueConverter = false)
+    public static IQueryable<T> ContainsAny<T>(
+        this IQueryable<T> queryable,
+        Expression<Func<T, string?>> selector,
+        IEnumerable<string> keywords,
+        bool suppressValueConverter = false,
+        bool escapeEscapeCharacter = false)
     {
         Expression<Func<T, bool>>? where = null;
         // ReSharper disable once LoopCanBeConvertedToQuery
         foreach (var keyword in keywords)
         {
             var pattern = QueryableHelper.GetContainsPattern(keyword);
-            var expression = QueryableHelper.BuildLike(selector, pattern, suppressValueConverter);
+            var expression = QueryableHelper.BuildLike(selector, pattern, suppressValueConverter, escapeEscapeCharacter);
             where = where.Or(expression);
         }
         return where == null ? queryable : queryable.Where(where);

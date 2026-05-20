@@ -27,11 +27,14 @@ public class TestConsumer<T> : CommonConsumer<T>
 
     protected override async ValueTask DisposeActionAsync()
     {
-        if (Settings is null || Channel is null)
-            return;
+        if (Settings is not null && Channel is not null)
+        {
+            await StopConsumingAsync();
 
-        await Channel.QueueDeleteAsync(Settings.Queue.Name);
-        await Channel.ExchangeDeleteAsync(Settings.Exchange.Name);
+            await Channel.QueueDeleteAsync(Settings.RabbitMqQueue.Name, ifUnused: false, ifEmpty: false);
+            await Channel.ExchangeDeleteAsync(exchange: Settings.Exchange.Name, ifUnused: false);
+        }
+
         await base.DisposeActionAsync();
     }
 
@@ -46,14 +49,14 @@ public class TestConsumer<T> : CommonConsumer<T>
         return base.OnConsumeErrorAsync(args, input, exception);
     }
 
-    public static async Task<TestConsumer<T>> CreateAsync(ConsumerSettings settings, Func<T, OperationResult> action, int maxRetryTimes = 3, Func<int, TimeSpan>? delay = null)
+    public static async Task<TestConsumer<T>> CreateAsync(RabbitMqConsumerOptions settings, Func<T, OperationResult> action, int maxRetryTimes = 3, Func<int, TimeSpan>? delay = null)
     {
         var publisher = new TestConsumer<T>(action, maxRetryTimes, delay);
         await publisher.InitializeAsync(settings);
         return publisher;
     }
 
-    public static async Task<TestConsumer<T>> CreateAsync(ConsumerSettings settings, Action<T> action, int maxRetryTimes = 3, Func<int, TimeSpan>? delay = null)
+    public static async Task<TestConsumer<T>> CreateAsync(RabbitMqConsumerOptions settings, Action<T> action, int maxRetryTimes = 3, Func<int, TimeSpan>? delay = null)
     {
         var publisher = new TestConsumer<T>(action, maxRetryTimes, delay);
         await publisher.InitializeAsync(settings);

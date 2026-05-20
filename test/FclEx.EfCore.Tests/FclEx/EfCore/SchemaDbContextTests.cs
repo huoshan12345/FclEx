@@ -1,11 +1,12 @@
 ﻿using FclEx.Dapper;
-using Microsoft.Data.SqlClient;
+using MySql.Data.MySqlClient;
+using Npgsql;
 
 namespace FclEx.EfCore;
 
 public class SchemaDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {
-    private static async Task TestData(GlobalDbContext context, string? schema)
+    private static async Task TestData(TestDbContext context, string? schema)
     {
         var entity = new EntityWithAutoKey
         {
@@ -25,46 +26,47 @@ public class SchemaDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         Assert.Equal(entity.Value, entityFromDb.Value);
     }
 
-    private async Task<string?> GetUserDefaultSchema(DbProviderType dbProviderType)
+    private async Task<string?> GetUserDefaultSchema(DbDriver dbDriver)
     {
         var cs = Fixture.ConnectionStrings;
-        switch (dbProviderType)
+        switch (dbDriver)
         {
-#if !DISABLE_NPGSQL
-            case DbProviderType.Npgsql:
+            case DbDriver.Npgsql:
             {
-                var conStr = cs.Get(DbProviderType.Npgsql, true);
-                await using var con = new NpgsqlConnection(conStr);
+                await using var con = cs.Get(DbDriver.Npgsql, true).CreateDbConnection();
                 return await con.ExecuteScalarAsync<string>("SHOW SEARCH_PATH;");
             }
-#endif
-#if !DISABLE_MYSQL
-            case DbProviderType.MySql:
-            case DbProviderType.MySqlConnector:
+            case DbDriver.MySql:
+            case DbDriver.MySqlConnector:
             {
-                return new MySqlConnectionStringBuilder(cs.Get(DbProviderType.MySql, true)).Database;
+                await using var con = cs.Get(dbDriver, true).CreateDbConnection();
+                return await con.ExecuteScalarAsync<string>("SELECT SCHEMA();");
             }
-#endif
-            case DbProviderType.SqlServer:
+            case DbDriver.SqlServer:
             {
-                var conStr = cs.Get(DbProviderType.SqlServer, true);
-                await using var con = new SqlConnection(conStr);
+                await using var con = cs.Get(DbDriver.SqlServer, true).CreateDbConnection();
                 return await con.ExecuteScalarAsync<string>("SELECT SCHEMA_NAME();");
             }
-            case DbProviderType.Sqlite:
+            case DbDriver.Sqlite:
             default:
                 return null;
         }
     }
 
     [Theory]
-    [MemberData(nameof(DbTestCases))]
-    public async Task DbContext_UserDefaultSchema_Test(DbProviderType dbProviderType)
+    [MemberData(nameof(DbDriverCases))]
+    public async Task DbContext_UserDefaultSchema_Test(DbDriver dbDriver)
     {
-        var defaultSchema = await GetUserDefaultSchema(dbProviderType);
-        if (dbProviderType == DbProviderType.Sqlite)
+        var defaultSchema = await GetUserDefaultSchema(dbDriver);
+        if (dbDriver == DbDriver.Sqlite)
         {
             Assert.Null(defaultSchema);
+        }
+        else if (dbDriver.IsMySql())
+        {
+            Assert.NotNull(defaultSchema);
+            var conStr = Fixture.ConnectionStrings.Get(dbDriver, true);
+            Assert.Equal(conStr.Database, defaultSchema);
         }
         else
         {
@@ -72,16 +74,16 @@ public class SchemaDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
             Assert.Equal(Fixture.DefaultUser.DefaultSchema, defaultSchema);
         }
 
-        await using var context = Fixture.CreateDbContext(dbProviderType, null, true);
+        await using var context = Fixture.CreateDbContext(dbDriver, null, true);
         await TestData(context, defaultSchema);
     }
 
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task DbContext_WithSchema_Test(DbProviderType dbProviderType, string? schema)
+    public async Task DbContext_WithSchema_Test(DbDriver dbDriver, string? schema)
     {
         // the default schema for user will be used.
-        await using var context = Fixture.CreateDbContext(dbProviderType, schema);
-        await TestData(context, Fixture.WithAssemblyInfoIfNotNull(schema));
+        await using var context = Fixture.CreateDbContext(dbDriver, schema);
+        await TestData(context, schema);
     }
 }

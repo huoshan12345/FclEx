@@ -1,42 +1,26 @@
 ﻿namespace FclEx.RabbitMQ;
 
-public class PublisherTests : RabbitMQTests
+public class PublisherTests(RabbitMQFixture fixture) : RabbitMQTests(fixture)
 {
-    public readonly ExchangeSettings DefaultExchange;
-
-    public PublisherTests(RabbitMQFixture fixture) : base(fixture)
-    {
-        DefaultExchange = new()
-        {
-            Name = Fixture.WithAssemblyInfo("test.publisher"),
-            Type = "topic",
-            IsDelayed = true,
-        };
-    }
-
-    private Task<TestPublisher> CreatePublisher()
-    {
-        var connection = RabbitMQConnection;
-        return TestPublisher.CreateAsync(new PublisherSettings(connection, DefaultExchange));
-    }
-
     [Fact]
     public async Task Publish_Test()
     {
-        if (Skip)
-            return;
-
-        await using var publisher = await CreatePublisher();
+        var exchange = new RabbitMqExchangeOptions
+        {
+            Name = GetExchangeName(nameof(Publish_Test)),
+        };
+        await using var publisher = await TestPublisher.CreateAsync(new(RabbitMQFixture.ConnectionSettings, exchange));
         await publisher.PublishAsync("test", "test");
     }
 
     [Fact]
     public async Task Publish_Serially_Test()
     {
-        if (Skip)
-            return;
-
-        await using var publisher = await CreatePublisher();
+        var exchange = new RabbitMqExchangeOptions
+        {
+            Name = GetExchangeName(nameof(Publish_Serially_Test)),
+        };
+        await using var publisher = await TestPublisher.CreateAsync(new(RabbitMQFixture.ConnectionSettings, exchange));
         for (var i = 0; i < 10; i++)
         {
             await publisher.PublishAsync("test", "test");
@@ -46,21 +30,23 @@ public class PublisherTests : RabbitMQTests
     [Fact]
     public async Task Publish_List_Test()
     {
-        if (Skip)
-            return;
-
-        await using var publisher = await CreatePublisher();
+        var exchange = new RabbitMqExchangeOptions
+        {
+            Name = GetExchangeName(nameof(Publish_List_Test)),
+        };
+        await using var publisher = await TestPublisher.CreateAsync(new(RabbitMQFixture.ConnectionSettings, exchange));
         await publisher.PublishAsync<string>(Enumerable.Range(1, 10).Select(m => "test"), "test");
     }
 
     [Fact]
     public async Task Publish_Multi_Test()
     {
-        if (Skip)
-            return;
-
-        await using var publisher1 = await CreatePublisher();
-        await using var publisher2 = await CreatePublisher();
+        var exchange = new RabbitMqExchangeOptions
+        {
+            Name = GetExchangeName(nameof(Publish_Multi_Test)),
+        };
+        await using var publisher1 = await TestPublisher.CreateAsync(new(RabbitMQFixture.ConnectionSettings, exchange));
+        await using var publisher2 = await TestPublisher.CreateAsync(new(RabbitMQFixture.ConnectionSettings, exchange));
         await publisher1.PublishAsync("test", "test");
         await publisher2.PublishAsync("test", "test");
     }

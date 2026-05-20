@@ -1,4 +1,4 @@
-﻿namespace FclEx.EfCore;
+﻿namespace FclEx.Databases;
 
 public class DatabaseConfig
 {

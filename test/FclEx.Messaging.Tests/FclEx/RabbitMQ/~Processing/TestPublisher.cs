@@ -18,7 +18,7 @@ public class TestPublisher : MessagePublisher
         await base.DisposeActionAsync();
     }
 
-    public static async Task<TestPublisher> CreateAsync(PublisherSettings settings)
+    public static async Task<TestPublisher> CreateAsync(RabbitMqPublisherOptions settings)
     {
         var publisher = new TestPublisher();
         await publisher.InitializeAsync(settings);

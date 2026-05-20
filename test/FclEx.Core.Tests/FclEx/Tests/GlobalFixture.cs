@@ -1,9 +1,12 @@
-﻿using FclEx.Xunit;
-
-namespace FclEx.Tests;
+﻿namespace FclEx.Tests;
 
 public class GlobalFixture : IAsyncLifetime
 {
+    public static ITestOutputHelper? Output => TestContext.Current.TestOutputHelper;
+    public static readonly IConfigurationRoot Config = BuildConfig();
+
+    public Assembly CurrentAssembly { get; }
+
     public GlobalFixture()
     {
         CurrentAssembly = GetType().Assembly;
@@ -11,24 +14,24 @@ public class GlobalFixture : IAsyncLifetime
 
     public static IConfigurationRoot BuildConfig()
     {
+        var env = TestHelper.IsGithubAction ? "github" : "local";
+
         var builder = new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", false, false)
-            .AddJsonFile("appsettings.decrypted.json", true, false);
+            .AddJsonFile("appsettings.decrypted.json", true, false)
+            .AddJsonFile($"appsettings.{env}.json", true, false);
 
         return builder.Build();
     }
 
-    public static IConfigurationRoot Config { get; } = BuildConfig();
-
     public virtual ValueTask InitializeAsync() => ValueTask.CompletedTask;
+
     public virtual ValueTask DisposeAsync()
     {
         GC.SuppressFinalize(this);
         return ValueTask.CompletedTask;
     }
-
-    public Assembly CurrentAssembly { get; }
 
 #pragma warning disable CA2255
     [ModuleInitializer]
@@ -44,15 +47,11 @@ public class GlobalFixture : IAsyncLifetime
     }
 
     [return: NotNullIfNotNull(nameof(str))]
-    public string? WithAssemblyInfoIfNotNull(string? str, char separator = '_')
+    public static string? WithAssemblyInfo(string? str, string? assemblyName, int dotNetVersion, string os, char separator = '_')
     {
-        return str is null
-            ? null
-            : WithAssemblyInfo(str, separator);
-    }
+        if (str is null)
+            return null;
 
-    public string WithAssemblyInfo(string str, char separator = '_')
-    {
         // used to ensure every test assembly uses unique service, such as database.
         return StringBuilderHelper.Build(m =>
         {
@@ -62,19 +61,47 @@ public class GlobalFixture : IAsyncLifetime
                 m.Append(separator);
             }
 
-            var assemblyName = CurrentAssembly.GetName().Name;
             if (assemblyName.IsNotEmpty())
             {
-                // as short as possible cause database don't like long name.
-                var name = assemblyName.TrimStart("FclEx").TrimEnd("Tests").Replace(".", "").ToLower();
-                if (name.IsNotEmpty())
-                {
-                    m.Append(name);
-                    m.Append(separator);
-                }
+                m.Append(assemblyName);
+                m.Append(separator);
             }
 
-            m.Append(Environment.Version.Major);
+            m.Append(dotNetVersion);
+            m.Append(separator);
+            m.Append(os);
         });
+    }
+
+
+    [return: NotNullIfNotNull(nameof(str))]
+    public static string? WithAssemblyInfo(string? str, Assembly assembly, char separator = '_')
+    {
+        if (str is null)
+            return null;
+
+        var assemblyShortName = assembly.GetName().Name.TrimStart("FclEx.").TrimEnd(".Tests")?.ToLower();
+        var os = GetOSName().ToLower();
+        return WithAssemblyInfo(str, assemblyShortName, Environment.Version.Major, os, separator);
+    }
+
+    [return: NotNullIfNotNull(nameof(str))]
+    public string? WithAssemblyInfo(string? str, char separator = '_')
+    {
+        return WithAssemblyInfo(str, CurrentAssembly, separator);
+    }
+
+    public static string GetOSName()
+    {
+        var os = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? nameof(OSPlatform.Windows)
+            : RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+                ? nameof(OSPlatform.Linux)
+                : RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+                    ? nameof(OSPlatform.OSX)
+                    : RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD)
+                        ? "FreeBSD"
+                        : "Unknown";
+        return os;
     }
 }

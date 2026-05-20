@@ -3,10 +3,10 @@
 public class ChangeTrackerExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {
     [Theory]
-    [MemberData(nameof(DbTestCases))]
-    public async Task SetsTimestamps_ForAddedEntities(DbProviderType dbProviderType)
+    [MemberData(nameof(DbDriverCases))]
+    public async Task SetsTimestamps_ForAddedEntities(DbDriver dbDriver)
     {
-        await using var context = Fixture.CreateDbContext(dbProviderType);
+        await using var context = Fixture.CreateDbContext(dbDriver);
         var entity = new EntityHasStates();
         context.Add(entity);
 
@@ -18,10 +18,10 @@ public class ChangeTrackerExtensionsTests(EfCoreFixture fixture) : EfCoreTests(f
     }
 
     [Theory]
-    [MemberData(nameof(DbTestCases))]
-    public async Task UpdatesTimestamp_ForModifiedEntities(DbProviderType dbProviderType)
+    [MemberData(nameof(DbDriverCases))]
+    public async Task UpdatesTimestamp_ForModifiedEntities(DbDriver dbDriver)
     {
-        await using var context = Fixture.CreateDbContext(dbProviderType);
+        await using var context = Fixture.CreateDbContext(dbDriver);
         var entity = new EntityHasStates { CreatedAt = DateTimeOffset.UtcNow.AddDays(-1) };
         context.Add(entity);
         await context.SaveChangesAsync();
@@ -36,10 +36,10 @@ public class ChangeTrackerExtensionsTests(EfCoreFixture fixture) : EfCoreTests(f
     }
 
     [Theory]
-    [MemberData(nameof(DbTestCases))]
-    public async Task HandlesSoftDelete_ForDeletedEntities(DbProviderType dbProviderType)
+    [MemberData(nameof(DbDriverCases))]
+    public async Task HandlesSoftDelete_ForDeletedEntities(DbDriver dbDriver)
     {
-        await using var context = Fixture.CreateDbContext(dbProviderType);
+        await using var context = Fixture.CreateDbContext(dbDriver);
         var entity = new EntityHasStates { CreatedAt = DateTimeOffset.UtcNow };
         context.Add(entity);
         await context.SaveChangesAsync();
@@ -54,10 +54,10 @@ public class ChangeTrackerExtensionsTests(EfCoreFixture fixture) : EfCoreTests(f
     }
 
     [Theory]
-    [MemberData(nameof(DbTestCases))]
-    public async Task DoesNotModifyUntrackedOrUnchangedEntities(DbProviderType dbProviderType)
+    [MemberData(nameof(DbDriverCases))]
+    public async Task DoesNotModifyUntrackedOrUnchangedEntities(DbDriver dbDriver)
     {
-        await using var context = Fixture.CreateDbContext(dbProviderType);
+        await using var context = Fixture.CreateDbContext(dbDriver);
         var entity = new EntityHasStates { CreatedAt = DateTimeOffset.UtcNow };
         context.Add(entity);
         await context.SaveChangesAsync();

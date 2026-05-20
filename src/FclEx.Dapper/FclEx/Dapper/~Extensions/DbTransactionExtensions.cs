@@ -14,6 +14,17 @@ public static class DbTransactionExtensions
         tran.Rollback();
         return Task.CompletedTask;
     }
+
+    public static Task<DbTransaction> BeginTransactionAsync(this DbConnection con, IsolationLevel level = IsolationLevel.ReadUncommitted)
+    {
+        return Task.FromResult(con.BeginTransaction(level));
+    }
+
+    public static ValueTask DisposeAsync(this DbTransaction tran)
+    {
+        tran.Dispose();
+        return ValueTask.CompletedTask;
+    }
 #endif
 
     public static async Task TryRollbackAsync(this DbTransaction tran)
