@@ -1,7 +1,17 @@
 ﻿namespace FclEx.Http;
 
+/// <summary>
+/// Provides default behavior for <see cref="IHtmlAction{T}"/>.
+/// </summary>
 public static class DefaultHtmlAction
 {
+    /// <summary>
+    /// Reads HTML, creates a context, and converts the selected element to the result type.
+    /// </summary>
+    /// <typeparam name="T">The result type.</typeparam>
+    /// <param name="action">The HTML action.</param>
+    /// <param name="response">The response containing HTML text.</param>
+    /// <returns>The converted result, or an error from validation or selector matching.</returns>
     public static OperationResult<T> GetResult<T>(IHtmlAction<T> action, HttpResponse response)
     {
         return action.GetHtml(response)
@@ -9,6 +19,13 @@ public static class DefaultHtmlAction
             .Then(action.GetResult);
     }
 
+    /// <summary>
+    /// Gets HTML text from a response.
+    /// </summary>
+    /// <typeparam name="T">The action result type.</typeparam>
+    /// <param name="action">The HTML action.</param>
+    /// <param name="response">The response to read.</param>
+    /// <returns>The response text, or an error when it is empty.</returns>
     public static OperationResult<string> GetHtml<T>(IHtmlAction<T> action, HttpResponse response)
     {
         var str = response.ResponseString;
@@ -20,6 +37,15 @@ public static class DefaultHtmlAction
         };
     }
 
+    /// <summary>
+    /// Creates an HTML context and verifies that the configured selector has a match.
+    /// </summary>
+    /// <typeparam name="T">The action result type.</typeparam>
+    /// <param name="action">The HTML action.</param>
+    /// <param name="response">The source response.</param>
+    /// <param name="html">The HTML text to parse.</param>
+    /// <returns>A context when a result element exists; otherwise an error result.</returns>
+    /// <remarks>Invalid selectors may throw so the outer action pipeline can capture them.</remarks>
     public static OperationResult<HtmlActionContext> CreateContext<T>(IHtmlAction<T> action, HttpResponse response, string html)
     {
         var context = new HtmlActionContext(response, html, action.HtmlResultPath);
