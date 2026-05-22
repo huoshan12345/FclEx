@@ -186,7 +186,6 @@ jobs:
         if: steps.sdk_check.outputs.missing != ''
         uses: actions/setup-dotnet@v5
         with:
-          cache: true
           dotnet-version: ${{ steps.sdk_check.outputs.missing }}
 
       - name: Test Release
