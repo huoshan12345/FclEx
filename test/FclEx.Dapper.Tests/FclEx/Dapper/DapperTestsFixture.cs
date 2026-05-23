@@ -7,7 +7,7 @@ using Npgsql;
 
 namespace FclEx.Dapper;
 
-public class DapperFixture : GlobalFixture
+public class DapperTestsFixture : CoreTestsFixture
 {
     public static readonly DbDriver[] DbDrivers = GetDbProviderTypes();
     public static readonly DatabasesConfig Databases = Config.GetSection("Databases").Get<DatabasesConfig>()!;
@@ -20,7 +20,7 @@ public class DapperFixture : GlobalFixture
     public const string UserPassword = "123456";
     public const string UserSchema = "schema";
 
-    public DapperFixture()
+    public DapperTestsFixture()
     {
         DefaultUser = new(WithAssemblyInfo(UserName), UserPassword, WithAssemblyInfo(UserSchema));
         ConnectionStrings = new(Databases, WithAssemblyInfo(DbName), DefaultUser);

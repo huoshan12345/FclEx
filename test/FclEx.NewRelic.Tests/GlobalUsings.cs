@@ -6,4 +6,4 @@ global using FclEx.Utils;
 global using Microsoft.Extensions.DependencyInjection;
 global using Xunit;
 global using Xunit.Sdk;
-global using static FclEx.NewRelic.NewRelicFixture;
+global using static FclEx.NewRelic.NewRelicTestsFixture;

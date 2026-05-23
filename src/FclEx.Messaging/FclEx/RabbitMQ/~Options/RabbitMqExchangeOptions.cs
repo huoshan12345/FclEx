@@ -3,5 +3,5 @@
 public class RabbitMqExchangeOptions
 {
     public string Name { get; set; } = string.Empty;
-    public string Type { get; set; } = RabbitMQConstants.DefaultExchangeType;
+    public string Type { get; set; } = ExchangeTypes.Topic;
 }

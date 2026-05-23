@@ -31,7 +31,7 @@ public static class SlackChannels
     public static readonly SlackObject MonitoringLogTest = new(SlackChannelIds.MonitoringLogTest, "monitoring-log-test");
 }
 
-public class SlackFixture : GlobalFixture
+public class SlackFixture : CoreTestsFixture
 {
     private static readonly ConcurrentBag<SlackMessage> Messages = [];
 

@@ -2,7 +2,7 @@ namespace FclEx.NewRelic;
 
 public class NewRelicClientTests
 {
-    private static readonly string AccountId = NewRelicFixture.NewRelicConfig.AccountId;
+    private static readonly string AccountId = NewRelicTestsFixture.NewRelicConfig.AccountId;
 
     private readonly ITestOutputHelper _output;
 

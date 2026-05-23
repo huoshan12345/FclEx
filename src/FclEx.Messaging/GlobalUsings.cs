@@ -17,3 +17,4 @@ global using Microsoft.Extensions.Logging;
 global using Microsoft.Extensions.Logging.Abstractions;
 global using RabbitMQ.Client;
 global using RabbitMQ.Client.Events;
+global using static RabbitMQ.Client.RabbitMqConstants;

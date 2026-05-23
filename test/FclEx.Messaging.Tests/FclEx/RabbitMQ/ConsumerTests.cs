@@ -3,7 +3,7 @@
 namespace FclEx.RabbitMQ;
 
 [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
-public class ConsumerTests(RabbitMQFixture fixture) : RabbitMQTests(fixture)
+public class ConsumerTests(RabbitMqTestsFixture fixture) : RabbitMqTests(fixture)
 {
     [Fact]
     public async Task Consume_Test()
@@ -13,7 +13,7 @@ public class ConsumerTests(RabbitMQFixture fixture) : RabbitMQTests(fixture)
             Name = GetExchangeName(nameof(Consume_Test)),
         };
 
-        var connection = RabbitMQFixture.ConnectionSettings;
+        var connection = RabbitMqTestsFixture.ConnectionSettings;
         await using var publisher = await TestPublisher.CreateAsync(new RabbitMqPublisherOptions(connection, exchange));
 
         var msgList = Enumerable.Range(1, 10).Select(m => (Seq: m, Msg: "msg_" + m)).ToList();
@@ -50,7 +50,7 @@ public class ConsumerTests(RabbitMQFixture fixture) : RabbitMQTests(fixture)
             Name = GetExchangeName<T>(testName),
         };
 
-        var connection = RabbitMQFixture.ConnectionSettings;
+        var connection = RabbitMqTestsFixture.ConnectionSettings;
         await using var publisher = await TestPublisher.CreateAsync(new RabbitMqPublisherOptions(connection, exchange));
 
         var key = GetKeyName<T>(testName);
@@ -124,7 +124,7 @@ public class ConsumerTests(RabbitMQFixture fixture) : RabbitMQTests(fixture)
             Name = GetExchangeName(nameof(Consume_MultiBind_Test)),
         };
 
-        var connection = RabbitMQFixture.ConnectionSettings;
+        var connection = RabbitMqTestsFixture.ConnectionSettings;
         await using var publisher = await TestPublisher.CreateAsync(new RabbitMqPublisherOptions(connection, exchange));
 
         var msgList = Enumerable.Range(1, 10).Select(m => (Seq: m, Msg: "msg_" + m)).ToList();

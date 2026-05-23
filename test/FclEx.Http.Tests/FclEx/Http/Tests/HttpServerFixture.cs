@@ -1,11 +1,10 @@
-﻿using FclEx.Tests;
-#if NET8_0_OR_GREATER
+﻿#if NET8_0_OR_GREATER
 using static Duende.IdentityModel.OidcConstants;
 #endif
 
 namespace FclEx.Http.Tests;
 
-public class HttpServerFixture : GlobalFixture
+public class HttpServerFixture : CoreTestsFixture
 {
     public static readonly Uri TestUri = ((Func<Uri>)(() =>
     {

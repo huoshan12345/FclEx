@@ -17,4 +17,4 @@ global using FclEx.Tests;
 global using FclEx.Databases;
 global using FclEx.EfCore;
 global using Meziantou.Xunit.v3;
-global using static FclEx.Dapper.DapperFixture;
+global using static FclEx.Dapper.DapperTestsFixture;
