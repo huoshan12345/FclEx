@@ -1,8 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Description>New Relic agent helpers and NerdGraph NRQL client support.</Description>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="GraphQL.Client.Serializer.SystemTextJson" />
     <PackageReference Include="NewRelic.Agent.Api" />

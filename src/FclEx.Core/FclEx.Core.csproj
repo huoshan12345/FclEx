@@ -1,8 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Description>Foundational extensions, operation results, action pipelines, domain entity contracts, collection helpers, JSON/XML helpers, and general utilities.</Description>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="System.Text.Json" />
   </ItemGroup>

@@ -7,7 +7,7 @@ Where-Object {
   $_.FullName -notmatch $excludedPattern
 } |
 Where-Object {
-  $_.Extension -in ".cs", ".ts", ".js", ".json", ".md", ".yml", ".yaml"
+  $_.Extension -in ".cs", ".ts", ".js", ".json", ".md", ".yml", ".yaml", ".csproj"
 } |
 ForEach-Object {
   $content = Get-Content $_.FullName -Raw
