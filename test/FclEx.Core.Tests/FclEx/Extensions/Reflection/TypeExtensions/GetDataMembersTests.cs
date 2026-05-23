@@ -1,4 +1,4 @@
-﻿#pragma warning disable IDE0051
+#pragma warning disable IDE0051
 namespace FclEx.Extensions.Reflection.TypeExtensions;
 
 public partial class GetDataMembersTests

@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions;
+namespace FclEx.Extensions;
 
 [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 public static partial class EnumerableExtensions

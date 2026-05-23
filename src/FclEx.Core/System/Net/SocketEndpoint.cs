@@ -1,4 +1,4 @@
-﻿namespace System.Net;
+namespace System.Net;
 
 public readonly record struct SocketEndpoint(string Host, int Port)
 {

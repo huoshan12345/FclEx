@@ -1,4 +1,4 @@
-﻿namespace FclEx.Web;
+namespace FclEx.Web;
 
 public interface IUserClientAction<out TClient, out TAccount, T> : IPipelineAction<T>
     where TClient : IUserClient<TAccount>

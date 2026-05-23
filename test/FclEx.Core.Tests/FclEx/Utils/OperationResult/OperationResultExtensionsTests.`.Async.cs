@@ -1,4 +1,4 @@
-﻿using FclEx.Actions;
+using FclEx.Actions;
 
 namespace FclEx.Utils.OperationResult;
 

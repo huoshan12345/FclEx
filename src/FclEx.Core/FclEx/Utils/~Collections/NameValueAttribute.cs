@@ -1,4 +1,4 @@
-﻿namespace FclEx.Utils;
+namespace FclEx.Utils;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 public class NameValueAttribute(string? name) : Attribute

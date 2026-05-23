@@ -1,4 +1,4 @@
-﻿namespace FclEx.RabbitMQ;
+namespace FclEx.RabbitMQ;
 
 [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
 public class RouterTests(RabbitMqTestsFixture fixture) : RabbitMqTests(fixture)

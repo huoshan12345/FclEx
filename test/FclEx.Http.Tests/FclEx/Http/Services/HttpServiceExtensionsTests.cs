@@ -1,4 +1,4 @@
-﻿namespace FclEx.Http.Services;
+namespace FclEx.Http.Services;
 
 public class HttpServiceExtensionsTests
 {

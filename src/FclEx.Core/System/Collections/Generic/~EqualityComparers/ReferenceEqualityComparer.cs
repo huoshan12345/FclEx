@@ -1,4 +1,4 @@
-﻿namespace System.Collections.Generic;
+namespace System.Collections.Generic;
 
 /// <summary>
 /// A generic object comparer that would only use object's reference, 

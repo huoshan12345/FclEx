@@ -1,4 +1,4 @@
-﻿namespace FclEx.Serilog;
+namespace FclEx.Serilog;
 
 [SuppressMessage("ReSharper", "AutoPropertyCanBeMadeGetOnly.Global")]
 public class JsonFormatterOptions

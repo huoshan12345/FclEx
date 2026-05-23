@@ -1,4 +1,4 @@
-﻿using FclEx.TestModels;
+using FclEx.TestModels;
 using Xunit.Sdk;
 
 namespace System.Collections.Generic;

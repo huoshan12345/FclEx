@@ -1,4 +1,4 @@
-﻿using FclEx.Slack;
+using FclEx.Slack;
 using Serilog.Core;
 using Serilog.Debugging;
 using Serilog.Events;

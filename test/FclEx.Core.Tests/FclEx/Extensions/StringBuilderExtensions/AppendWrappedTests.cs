@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions.StringBuilderExtensions;
+namespace FclEx.Extensions.StringBuilderExtensions;
 
 public partial class AppendWrappedTests
 {

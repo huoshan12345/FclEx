@@ -1,4 +1,4 @@
-﻿namespace FclEx.Serilog;
+namespace FclEx.Serilog;
 
 public record PropertyExcluder(string? Source, string Name, string? Value, LogEventLevel? MaxLevel = null) : ILogEventExcluder
 {

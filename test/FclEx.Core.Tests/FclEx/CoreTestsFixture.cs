@@ -1,4 +1,4 @@
-﻿namespace FclEx;
+namespace FclEx;
 
 public class CoreTestsFixture : IAsyncLifetime
 {

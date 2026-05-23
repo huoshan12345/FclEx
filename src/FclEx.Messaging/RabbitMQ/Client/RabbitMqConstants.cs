@@ -1,4 +1,4 @@
-﻿namespace RabbitMQ.Client;
+namespace RabbitMQ.Client;
 
 /// <summary>
 /// Provides constants for well-known RabbitMQ names, types, and argument keys.

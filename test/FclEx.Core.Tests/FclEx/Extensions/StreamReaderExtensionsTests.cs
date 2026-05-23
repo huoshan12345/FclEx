@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions;
+namespace FclEx.Extensions;
 
 [SuppressMessage("ReSharper", "MethodHasAsyncOverload")]
 [SuppressMessage("ReSharper", "ConvertToConstant.Local")]

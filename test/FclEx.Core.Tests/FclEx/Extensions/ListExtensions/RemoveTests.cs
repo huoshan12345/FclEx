@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions.ListExtensions;
+namespace FclEx.Extensions.ListExtensions;
 
 public class RemoveTests
 {

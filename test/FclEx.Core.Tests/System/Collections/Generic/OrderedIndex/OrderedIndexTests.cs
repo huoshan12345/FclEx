@@ -1,4 +1,4 @@
-﻿#pragma warning disable xUnit1026 // Theory methods should use all of their parameters
+#pragma warning disable xUnit1026 // Theory methods should use all of their parameters
 #pragma warning disable IDE0060 // Remove unused parameter
 namespace System.Collections.Generic.OrderedIndex;
 

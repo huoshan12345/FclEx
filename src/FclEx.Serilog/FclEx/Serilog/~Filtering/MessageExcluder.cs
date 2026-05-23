@@ -1,4 +1,4 @@
-﻿namespace FclEx.Serilog;
+namespace FclEx.Serilog;
 
 public record MessageExcluder(string? Source, string Message, LogEventLevel? MaxLevel) : ILogEventExcluder
 {

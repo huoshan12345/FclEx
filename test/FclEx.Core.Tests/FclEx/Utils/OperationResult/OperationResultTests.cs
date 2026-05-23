@@ -1,4 +1,4 @@
-﻿namespace FclEx.Utils.OperationResult;
+namespace FclEx.Utils.OperationResult;
 
 public partial class OperationResultTests
 {

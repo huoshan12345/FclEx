@@ -1,4 +1,4 @@
-﻿namespace FclEx.RabbitMQ;
+namespace FclEx.RabbitMQ;
 
 public interface IMessagePublisher : IMessageProcessor<RabbitMqPublisherOptions>
 {

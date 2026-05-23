@@ -1,4 +1,4 @@
-﻿namespace FclEx.Slack;
+namespace FclEx.Slack;
 
 public static class ServiceCollectionExtensions
 {

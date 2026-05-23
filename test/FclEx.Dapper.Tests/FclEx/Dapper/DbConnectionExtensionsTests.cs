@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using Dapper;
 using FclEx.Utils;
 using Xunit.v3.Priority;

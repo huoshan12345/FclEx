@@ -1,4 +1,4 @@
-﻿#pragma warning disable IDE0306 // Simplify collection initialization
+#pragma warning disable IDE0306 // Simplify collection initialization
 
 namespace Xunit;
 

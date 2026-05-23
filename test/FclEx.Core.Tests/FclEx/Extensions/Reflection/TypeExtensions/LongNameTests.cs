@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions.Reflection.TypeExtensions;
+namespace FclEx.Extensions.Reflection.TypeExtensions;
 
 public class LongNameTests
 {

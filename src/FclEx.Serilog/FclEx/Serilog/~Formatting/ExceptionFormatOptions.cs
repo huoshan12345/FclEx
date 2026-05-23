@@ -1,4 +1,4 @@
-﻿namespace FclEx.Serilog;
+namespace FclEx.Serilog;
 
 /// <summary>
 /// Configures the formatting options for exceptions when logging or rendering them.

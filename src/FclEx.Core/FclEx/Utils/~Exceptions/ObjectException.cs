@@ -1,4 +1,4 @@
-﻿namespace FclEx.Utils;
+namespace FclEx.Utils;
 
 /// <summary>
 /// A generic exception that wraps an object of type T, allowing the exception to carry additional data.

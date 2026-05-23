@@ -1,4 +1,4 @@
-﻿namespace Microsoft.EntityFrameworkCore.Metadata.Conventions;
+namespace Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
 /// <summary>
 /// A convention that configures soft delete indexes during the model finalizing stage.

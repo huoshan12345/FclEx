@@ -1,4 +1,4 @@
-﻿namespace System.Collections.Generic;
+namespace System.Collections.Generic;
 
 public abstract class ReadOnlyItemCollection<T, TEnumerator> : ICollection<T>, IReadOnlyCollection<T>
     where TEnumerator : IEnumerator<T>

@@ -1,4 +1,4 @@
-﻿namespace FclEx.Domain;
+namespace FclEx.Domain;
 
 /// <summary>
 /// Represents an entity that has an identifiable primary key.

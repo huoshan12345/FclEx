@@ -1,4 +1,4 @@
-﻿using static FclEx.Helpers.ExpressionHelper;
+using static FclEx.Helpers.ExpressionHelper;
 
 namespace FclEx.Helpers.ExpressionHelperTests;
 

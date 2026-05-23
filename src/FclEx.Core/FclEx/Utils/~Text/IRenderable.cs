@@ -1,4 +1,4 @@
-﻿namespace FclEx.Utils;
+namespace FclEx.Utils;
 
 /// <summary>
 /// Defines a contract for objects that can be rendered to a <see cref="StringBuilder"/>.

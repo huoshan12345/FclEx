@@ -1,4 +1,4 @@
-﻿// ReSharper disable UnusedAutoPropertyAccessor.Local
+// ReSharper disable UnusedAutoPropertyAccessor.Local
 #pragma warning disable CS0414
 #pragma warning disable IDE0051
 namespace System.Reflection;

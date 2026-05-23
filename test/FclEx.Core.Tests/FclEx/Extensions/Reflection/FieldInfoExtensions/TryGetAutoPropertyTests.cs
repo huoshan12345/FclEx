@@ -1,4 +1,4 @@
-﻿
+
 namespace FclEx.Extensions.Reflection.FieldInfoExtensions;
 
 public class TryGetAutoPropertyTests

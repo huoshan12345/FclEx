@@ -1,4 +1,4 @@
-﻿namespace System.Threading;
+namespace System.Threading;
 
 public delegate void TimerCallback<in T>(T state);
 

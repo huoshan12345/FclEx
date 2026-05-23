@@ -1,4 +1,4 @@
-﻿namespace FclEx.Domain;
+namespace FclEx.Domain;
 
 public interface IKeyValueService
 {

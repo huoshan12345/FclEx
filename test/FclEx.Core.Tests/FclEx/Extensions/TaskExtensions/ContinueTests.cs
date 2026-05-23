@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions.TaskExtensions;
+namespace FclEx.Extensions.TaskExtensions;
 
 public class ContinueTests
 {

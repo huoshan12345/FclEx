@@ -1,4 +1,4 @@
-﻿namespace FclEx.Domain;
+namespace FclEx.Domain;
 
 /// <summary>
 /// Represents an entity with support for soft deletion, including properties for tracking the deletion timestamp 

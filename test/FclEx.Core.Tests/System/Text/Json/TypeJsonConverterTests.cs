@@ -1,4 +1,4 @@
-﻿// ReSharper disable UnusedType.Local
+// ReSharper disable UnusedType.Local
 // ReSharper disable UnusedTypeParameter
 namespace System.Text.Json;
 

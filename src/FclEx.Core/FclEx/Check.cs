@@ -1,4 +1,4 @@
-﻿namespace FclEx;
+namespace FclEx;
 
 [DebuggerStepThrough]
 [SuppressMessage("ReSharper", "InvertIf")]

@@ -1,4 +1,4 @@
-﻿namespace FclEx.DependencyInjection;
+namespace FclEx.DependencyInjection;
 
 public class ServiceDescriptorEqualityComparer : IEqualityComparer<ServiceDescriptor>
 {

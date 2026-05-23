@@ -1,4 +1,4 @@
-﻿namespace FclEx.Sources.Xunit;
+namespace FclEx.Sources.Xunit;
 
 internal class TheoryDataRowExtensionsSource
 {

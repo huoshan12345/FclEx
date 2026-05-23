@@ -1,4 +1,4 @@
-﻿namespace FclEx.Domain;
+namespace FclEx.Domain;
 
 /// <summary>
 /// Represents an update operation on an entity, holding both its new and existing versions.

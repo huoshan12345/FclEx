@@ -1,4 +1,4 @@
-﻿namespace FclEx.Utils;
+namespace FclEx.Utils;
 
 [SuppressMessage("ReSharper", "MemberInitializerValueIgnored")]
 public sealed class BatchRetryConsumer<T> : IConsumer<T>,

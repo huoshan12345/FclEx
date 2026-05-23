@@ -1,4 +1,4 @@
-﻿namespace System;
+namespace System;
 
 /// <summary>
 /// Provides a custom equality comparison for <see cref="DateTimeOffset"/> objects

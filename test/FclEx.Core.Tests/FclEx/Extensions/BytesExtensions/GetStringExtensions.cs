@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions.BytesExtensions;
+namespace FclEx.Extensions.BytesExtensions;
 
 public class GetStringExtensions
 {

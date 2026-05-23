@@ -1,4 +1,4 @@
-﻿// ReSharper disable UnusedMember.Global
+// ReSharper disable UnusedMember.Global
 // ReSharper disable ConvertToAutoProperty
 // ReSharper disable ValueParameterNotUsed
 #pragma warning disable CS0169 // Field is never used

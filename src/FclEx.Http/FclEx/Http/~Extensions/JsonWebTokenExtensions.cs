@@ -1,4 +1,4 @@
-﻿using Duende.IdentityModel;
+using Duende.IdentityModel;
 using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace FclEx.Http;

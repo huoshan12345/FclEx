@@ -1,4 +1,4 @@
-﻿using static FclEx.Logging.LogPropertyNames;
+using static FclEx.Logging.LogPropertyNames;
 
 namespace FclEx.Logging;
 

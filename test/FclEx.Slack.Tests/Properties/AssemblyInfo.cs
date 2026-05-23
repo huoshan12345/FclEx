@@ -1,1 +1,1 @@
-﻿[assembly: CaptureConsole]
+[assembly: CaptureConsole]

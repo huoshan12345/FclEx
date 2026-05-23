@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace FclEx.CodeAnalysis;
 

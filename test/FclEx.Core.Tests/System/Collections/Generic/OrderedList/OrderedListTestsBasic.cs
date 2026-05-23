@@ -1,4 +1,4 @@
-﻿#pragma warning disable CA1825 // Avoid zero-length array allocations
+#pragma warning disable CA1825 // Avoid zero-length array allocations
 
 namespace System.Collections.Generic;
 

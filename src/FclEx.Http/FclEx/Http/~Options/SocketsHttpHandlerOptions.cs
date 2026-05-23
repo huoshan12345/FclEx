@@ -1,4 +1,4 @@
-﻿namespace FclEx.Http;
+namespace FclEx.Http;
 
 public record SocketsHttpHandlerOptions // use record so that with expression can be used
 {

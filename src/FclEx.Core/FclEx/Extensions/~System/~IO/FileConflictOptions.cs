@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions;
+namespace FclEx.Extensions;
 
 /// <summary>
 /// Specifies how to handle conflicts when copying or moving files.

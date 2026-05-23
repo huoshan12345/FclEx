@@ -1,4 +1,4 @@
-﻿namespace FclEx.Xunit;
+namespace FclEx.Xunit;
 
 // ReSharper disable once PartialTypeWithSinglePart
 public static partial class Extensions

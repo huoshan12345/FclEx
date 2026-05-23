@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions.ValueTupleExtensions;
+namespace FclEx.Extensions.ValueTupleExtensions;
 
 public class FirstNotEmptyTests
 {

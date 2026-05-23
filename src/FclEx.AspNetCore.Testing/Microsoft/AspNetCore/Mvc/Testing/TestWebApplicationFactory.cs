@@ -1,4 +1,4 @@
-﻿#pragma warning disable IDE0001
+#pragma warning disable IDE0001
 
 namespace Microsoft.AspNetCore.Mvc.Testing;
 

@@ -1,4 +1,4 @@
-﻿namespace FclEx.Dapper;
+namespace FclEx.Dapper;
 
 [CollectionDefinition(nameof(DapperTestsCollection))]
 public class DapperTestsCollection : ICollectionFixture<DapperTestsFixture>;

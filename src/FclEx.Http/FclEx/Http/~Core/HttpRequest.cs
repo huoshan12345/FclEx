@@ -1,4 +1,4 @@
-﻿namespace FclEx.Http;
+namespace FclEx.Http;
 
 [SuppressMessage("ReSharper", "PropertyCanBeMadeInitOnly.Global")]
 public partial class HttpRequest

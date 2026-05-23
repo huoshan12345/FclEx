@@ -1,4 +1,4 @@
-﻿namespace Xunit.Testing;
+namespace Xunit.Testing;
 
 public static class Comparable<T> where T : IComparable<T>
 {

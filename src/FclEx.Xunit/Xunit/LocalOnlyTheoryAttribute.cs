@@ -1,4 +1,4 @@
-﻿namespace Xunit;
+namespace Xunit;
 
 public class LocalOnlyTheoryAttribute : TheoryAttribute
 {

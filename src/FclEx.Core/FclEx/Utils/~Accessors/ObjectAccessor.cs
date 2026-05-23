@@ -1,4 +1,4 @@
-﻿namespace FclEx.Utils;
+namespace FclEx.Utils;
 
 public delegate IntPtr[] GetAllFieldAddresses<T>(ref T instance);
 

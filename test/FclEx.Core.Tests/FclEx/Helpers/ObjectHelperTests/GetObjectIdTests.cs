@@ -1,4 +1,4 @@
-﻿namespace FclEx.Helpers.ObjectHelperTests;
+namespace FclEx.Helpers.ObjectHelperTests;
 
 public class GetObjectIdTests
 {

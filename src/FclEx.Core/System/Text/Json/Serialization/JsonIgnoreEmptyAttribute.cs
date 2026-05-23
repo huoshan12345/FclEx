@@ -1,4 +1,4 @@
-﻿namespace System.Text.Json.Serialization;
+namespace System.Text.Json.Serialization;
 
 /// <summary>
 /// Specifies that the target property or field should be ignored during serialization if it contains an empty value.<br/>

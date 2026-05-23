@@ -1,4 +1,4 @@
-﻿namespace FclEx.Domain;
+namespace FclEx.Domain;
 
 /// <summary>
 /// Represents a common entity with standard properties and behaviors, including an identifier, creation and update timestamps,

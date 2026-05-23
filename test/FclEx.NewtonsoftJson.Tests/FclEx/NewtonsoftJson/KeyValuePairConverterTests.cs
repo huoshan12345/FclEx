@@ -1,4 +1,4 @@
-﻿using FclEx.Xunit;
+using FclEx.Xunit;
 
 namespace FclEx.NewtonsoftJson;
 

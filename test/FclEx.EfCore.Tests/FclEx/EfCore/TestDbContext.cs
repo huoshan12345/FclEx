@@ -1,4 +1,4 @@
-﻿using MySql.Data.MySqlClient;
+using MySql.Data.MySqlClient;
 
 #if NET10_0_OR_GREATER
 using Microting.EntityFrameworkCore.MySql.Infrastructure.Internal;

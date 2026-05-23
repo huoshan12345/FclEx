@@ -1,4 +1,4 @@
-﻿namespace FclEx.Serilog.Extensions;
+namespace FclEx.Serilog.Extensions;
 
 public class LogEventExtensionsTests
 {

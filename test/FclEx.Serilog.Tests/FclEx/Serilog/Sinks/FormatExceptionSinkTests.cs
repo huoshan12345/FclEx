@@ -1,4 +1,4 @@
-﻿namespace FclEx.Serilog.Sinks;
+namespace FclEx.Serilog.Sinks;
 
 [Collection(nameof(Console))]
 public class FormatExceptionSinkTests

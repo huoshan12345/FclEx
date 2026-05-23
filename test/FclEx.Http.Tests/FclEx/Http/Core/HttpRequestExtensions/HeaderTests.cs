@@ -1,4 +1,4 @@
-﻿namespace FclEx.Http.Core.HttpRequestExtensions;
+namespace FclEx.Http.Core.HttpRequestExtensions;
 
 [SuppressMessage("ReSharper", "CollectionNeverUpdated.Local")]
 public class HeaderTests

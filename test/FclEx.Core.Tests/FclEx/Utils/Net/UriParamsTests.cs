@@ -1,4 +1,4 @@
-﻿namespace FclEx.Utils.Net;
+namespace FclEx.Utils.Net;
 
 public class UriParamsTests
 {

@@ -1,4 +1,4 @@
-﻿// ReSharper disable All
+// ReSharper disable All
 #if !NET5_0_OR_GREATER
 namespace FclEx.Extensions;
 

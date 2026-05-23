@@ -1,4 +1,4 @@
-﻿namespace FclEx.RabbitMQ;
+namespace FclEx.RabbitMQ;
 
 [CollectionDefinition(nameof(RabbitMqTestsCollection))]
 public class RabbitMqTestsCollection : ICollectionFixture<RabbitMqTestsFixture>;

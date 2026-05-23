@@ -1,4 +1,4 @@
-﻿namespace FclEx.Sources.Http;
+namespace FclEx.Sources.Http;
 
 internal class HttpClientBuilderExtensionsSource
 {

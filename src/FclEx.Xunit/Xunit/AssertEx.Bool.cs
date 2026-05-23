@@ -1,4 +1,4 @@
-﻿namespace Xunit;
+namespace Xunit;
 
 partial class AssertEx
 {

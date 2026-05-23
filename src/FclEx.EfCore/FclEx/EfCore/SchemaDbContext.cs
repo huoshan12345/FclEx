@@ -1,4 +1,4 @@
-﻿namespace FclEx.EfCore;
+namespace FclEx.EfCore;
 
 public class SchemaDbContext : DbContext, IHasSchema
 {

@@ -1,4 +1,4 @@
-﻿using static System.Text.StringBuilderCache;
+using static System.Text.StringBuilderCache;
 
 namespace FclEx.Helpers;
 

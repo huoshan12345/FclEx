@@ -1,4 +1,4 @@
-﻿using FclEx.TestModels;
+using FclEx.TestModels;
 using Microsoft.VisualStudio.TestPlatform.Utilities;
 using Xunit.Sdk;
 

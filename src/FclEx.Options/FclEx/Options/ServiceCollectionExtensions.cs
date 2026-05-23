@@ -1,4 +1,4 @@
-﻿namespace FclEx.Options;
+namespace FclEx.Options;
 
 public static class ServiceCollectionExtensions
 {

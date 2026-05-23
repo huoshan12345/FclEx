@@ -1,4 +1,4 @@
-﻿using MimeTypes;
+using MimeTypes;
 
 namespace FclEx.Http;
 

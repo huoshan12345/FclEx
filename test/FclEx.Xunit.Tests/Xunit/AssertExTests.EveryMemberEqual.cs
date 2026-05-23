@@ -1,4 +1,4 @@
-﻿// CS8620 here is caused by known bug: https://github.com/dotnet/roslyn/issues/80024#issuecomment-3594618986
+// CS8620 here is caused by known bug: https://github.com/dotnet/roslyn/issues/80024#issuecomment-3594618986
 #pragma warning disable CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
 
 namespace Xunit;

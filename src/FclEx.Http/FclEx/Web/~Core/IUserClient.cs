@@ -1,4 +1,4 @@
-﻿namespace FclEx.Web;
+namespace FclEx.Web;
 
 public interface IUserClient<TAccount> where TAccount : IUserAccount
 {

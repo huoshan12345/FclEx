@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Nodes;
+using System.Text.Json.Nodes;
 using static FclEx.Serilog.ExceptionIndexOptions;
 
 namespace FclEx.Serilog.Formatting;

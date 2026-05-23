@@ -1,4 +1,4 @@
-﻿namespace FclEx.RabbitMQ;
+namespace FclEx.RabbitMQ;
 
 public abstract class MultipleMessageRouter<TInput, TOutput> : MessageRouter<TInput, IReadOnlyCollection<TOutput>>
 {

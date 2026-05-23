@@ -1,4 +1,4 @@
-﻿namespace FclEx.RabbitMQ;
+namespace FclEx.RabbitMQ;
 
 public sealed class StringToStringConverter : IMessageConverter<string, string>
 {

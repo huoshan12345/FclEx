@@ -1,4 +1,4 @@
-﻿namespace RabbitMQ.Client;
+namespace RabbitMQ.Client;
 
 public static class ChannelExtensions
 {

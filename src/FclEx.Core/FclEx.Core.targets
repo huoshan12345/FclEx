@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
   <ItemGroup Condition="'$(FclExExcludeFclExUsings)' != 'true'">
     <Compile Condition="'$(ProjectExt)' == '.csproj'"
              Include="$(MSBuildThisFileDirectory)..\content\FclExUsings.cs"/>

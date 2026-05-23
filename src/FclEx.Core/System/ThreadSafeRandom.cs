@@ -1,4 +1,4 @@
-﻿namespace System;
+namespace System;
 
 //  see https://andrewlock.net/building-a-thread-safe-random-implementation-for-dotnet-framework/
 [SuppressMessage("ReSharper", "ReplaceWithFieldKeyword")]

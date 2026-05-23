@@ -1,4 +1,4 @@
-﻿namespace FclEx.Logging;
+namespace FclEx.Logging;
 
 public static class LoggerFactoryExtensions
 {

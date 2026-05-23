@@ -1,4 +1,4 @@
-﻿using static FclEx.Http.IPVersionPolicy;
+using static FclEx.Http.IPVersionPolicy;
 
 namespace FclEx.Http;
 

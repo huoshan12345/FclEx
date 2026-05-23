@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions;
+namespace FclEx.Extensions;
 
 [SuppressMessage("ReSharper", "MoveToExtensionBlock")]
 public static class ListExtensions

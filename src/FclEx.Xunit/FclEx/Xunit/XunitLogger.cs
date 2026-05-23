@@ -1,4 +1,4 @@
-﻿using FclEx.Helpers;
+using FclEx.Helpers;
 
 namespace FclEx.Xunit;
 

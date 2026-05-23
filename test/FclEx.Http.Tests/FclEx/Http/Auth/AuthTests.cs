@@ -1,4 +1,4 @@
-﻿namespace FclEx.Http.Auth;
+namespace FclEx.Http.Auth;
 
 public class AuthTests : HttpServerTests
 {

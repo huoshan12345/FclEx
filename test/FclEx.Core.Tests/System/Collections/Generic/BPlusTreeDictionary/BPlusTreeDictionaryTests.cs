@@ -1,4 +1,4 @@
-﻿namespace System.Collections.Generic.BPlusTreeDictionary;
+namespace System.Collections.Generic.BPlusTreeDictionary;
 
 public abstract class BPlusTreeDictionaryTests<TKey, TValue> : IDictionary_Generic_Tests<TKey, TValue> where TKey : notnull
 {

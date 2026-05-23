@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions.Reflection.PropertyInfoExtensions;
+namespace FclEx.Extensions.Reflection.PropertyInfoExtensions;
 
 public class BasicTests
 {

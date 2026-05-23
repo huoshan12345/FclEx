@@ -1,4 +1,4 @@
-﻿using FclEx.TestModels;
+using FclEx.TestModels;
 
 namespace FclEx.Helpers;
 

@@ -1,4 +1,4 @@
-﻿using static System.Reflection.BindingAttributes;
+using static System.Reflection.BindingAttributes;
 
 namespace FclEx.Extensions;
 

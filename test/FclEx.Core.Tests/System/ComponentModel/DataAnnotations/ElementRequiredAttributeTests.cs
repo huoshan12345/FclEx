@@ -1,4 +1,4 @@
-﻿namespace System.ComponentModel.DataAnnotations;
+namespace System.ComponentModel.DataAnnotations;
 
 public class ElementRequiredAttributeTests
 {

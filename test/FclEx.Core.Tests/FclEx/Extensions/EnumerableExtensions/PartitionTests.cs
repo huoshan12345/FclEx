@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions.EnumerableExtensions;
+namespace FclEx.Extensions.EnumerableExtensions;
 
 public class PartitionTests
 {

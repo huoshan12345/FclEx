@@ -1,4 +1,4 @@
-﻿namespace FclEx.Utils;
+namespace FclEx.Utils;
 
 public sealed class AutoRetryConsumer<T> : AbstractConsumer<AutoRetryConsumer<T>, T>,
     IAsyncConsumer<AutoRetryConsumer<T>, T>,

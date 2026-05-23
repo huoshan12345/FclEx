@@ -1,4 +1,4 @@
-﻿#if !NET5_0_OR_GREATER
+#if !NET5_0_OR_GREATER
 namespace System.Collections.Generic;
 
 /// <summary>Creates instances of the <see cref="T:System.Collections.Generic.KeyValuePair`2" /> struct.</summary>

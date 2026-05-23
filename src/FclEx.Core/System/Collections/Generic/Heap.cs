@@ -1,4 +1,4 @@
-﻿// ReSharper disable ConvertToAutoPropertyWithPrivateSetter
+// ReSharper disable ConvertToAutoPropertyWithPrivateSetter
 // ReSharper disable ConvertToAutoPropertyWhenPossible
 namespace System.Collections.Generic;
 

@@ -1,4 +1,4 @@
-﻿namespace FclEx.Http;
+namespace FclEx.Http;
 
 /// <summary>
 /// Contains the standard set of headers applicable to an HTTP request.

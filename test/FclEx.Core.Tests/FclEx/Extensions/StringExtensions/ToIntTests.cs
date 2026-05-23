@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions.StringExtensions;
+namespace FclEx.Extensions.StringExtensions;
 
 public class ToIntTests
 {

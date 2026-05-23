@@ -1,4 +1,4 @@
-﻿using System.Transactions;
+using System.Transactions;
 
 namespace FclEx.Dapper;
 

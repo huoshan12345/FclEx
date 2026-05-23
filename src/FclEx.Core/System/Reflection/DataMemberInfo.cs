@@ -1,4 +1,4 @@
-﻿namespace System.Reflection;
+namespace System.Reflection;
 
 [DebuggerDisplay("{" + nameof(Name) + "}")]
 public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>

@@ -1,4 +1,4 @@
-﻿#if NET6_0_OR_GREATER
+#if NET6_0_OR_GREATER
 namespace System.Text.Json.Serialization;
 
 public class FromToStringJsonConverter<T> : StringJsonConverter<T> where T : IFromString<T>

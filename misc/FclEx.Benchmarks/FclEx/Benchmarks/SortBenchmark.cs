@@ -1,4 +1,4 @@
-﻿namespace FclEx.Benchmarks;
+namespace FclEx.Benchmarks;
 
 [MemoryDiagnoser]
 public class SortBenchmark

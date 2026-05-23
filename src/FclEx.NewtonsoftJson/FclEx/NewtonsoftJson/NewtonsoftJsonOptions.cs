@@ -1,4 +1,4 @@
-﻿namespace FclEx.NewtonsoftJson;
+namespace FclEx.NewtonsoftJson;
 
 public readonly record struct NewtonsoftJsonOptions(
     Formatting Formatting = Formatting.None,

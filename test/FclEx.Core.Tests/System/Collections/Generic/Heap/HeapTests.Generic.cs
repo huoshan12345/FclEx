@@ -1,4 +1,4 @@
-﻿// ReSharper disable CollectionNeverUpdated.Local
+// ReSharper disable CollectionNeverUpdated.Local
 namespace System.Collections.Generic.Heap;
 
 public abstract class HeapTests<T> : IGenericSharedAPI_Tests<T>

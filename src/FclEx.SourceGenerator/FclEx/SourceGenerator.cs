@@ -1,4 +1,4 @@
-﻿using FclEx.Sources.DependencyInjection;
+using FclEx.Sources.DependencyInjection;
 using FclEx.Sources.Http;
 using FclEx.Sources.Xunit;
 
