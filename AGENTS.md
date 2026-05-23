@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-FclEx is a multi-package .NET library solution defined by `FclEx.slnx`. Production projects live in `src/`, usually one package per directory such as `src/FclEx.Core`, `src/FclEx.Http`, and `src/FclEx.Serilog`. Tests live in matching `test/*.Tests` projects, with test files mirroring the source namespace layout. Shared MSBuild settings are in `src/Directory.Build.*` and `test/Directory.Build.*`; common build and packaging scripts are in `build/`. Benchmarks and non-shipping experiments belong under `misc/`.
+FclEx means "fundamental class libraries extensions". It is a multi-package .NET library solution defined by `FclEx.slnx`. It started as extensions for the .NET standard libraries and now also includes focused integration packages for common libraries such as `Microsoft.Extensions.*`, ASP.NET Core, Entity Framework Core, Dapper, Serilog, SlackNet, RabbitMQ, Kafka, Newtonsoft.Json, YamlDotNet, New Relic, and xUnit. Production projects live in `src/`, usually one package per directory such as `src/FclEx.Core`, `src/FclEx.Http`, and `src/FclEx.Serilog`. Tests live in matching `test/*.Tests` projects, with test files mirroring the source namespace layout. Shared MSBuild settings are in `src/Directory.Build.*` and `test/Directory.Build.*`; common build and packaging scripts are in `build/`. Benchmarks and non-shipping experiments belong under `misc/`.
 
 ## Build, Test, and Development Commands
 
@@ -14,11 +14,35 @@ FclEx is a multi-package .NET library solution defined by `FclEx.slnx`. Producti
 
 ## Coding Style & Naming Conventions
 
-Use C# with nullable reference types enabled and `LangVersion` set to `latest`. Keep the existing 4-space indentation and file-scoped namespaces. Public types and members use `PascalCase`; locals and parameters use `camelCase`; interfaces keep the `I` prefix. Follow existing partial-file naming patterns such as `AssertEx.Equal.cs` and test grouping names such as `DbContextExtensionsTests.ApplyChanges.cs`. Centralize package versions in `src/Directory.Packages.props` or `test/Directory.Packages.props`.
+Use C# with nullable reference types enabled and `LangVersion` set to `latest`. Keep the existing 4-space indentation and file-scoped namespaces. Write text files as UTF-8 without BOM. Use the native line ending for the current environment: CRLF on Windows and LF on Unix-like systems such as macOS and Linux. Public types and members use `PascalCase`; locals and parameters use `camelCase`; interfaces keep the `I` prefix. Follow existing partial-file naming patterns such as `AssertEx.Equal.cs` and test grouping names such as `DbContextExtensionsTests.ApplyChanges.cs`. Centralize package versions in `src/Directory.Packages.props` or `test/Directory.Packages.props`.
+
+When asked to improve or optimize code, treat naming review as part of the work. Check class names, method names, parameter names, local variable names, and public API names for functional accuracy, natural English, readability, and consistency with the surrounding package. Call out questionable names even when the implementation itself is otherwise correct.
+
+## Package Boundaries & Public API
+
+Respect the multi-package structure. Keep `FclEx.Core` focused on fundamental, broadly reusable helpers and avoid introducing dependencies on optional external ecosystems there. Put integrations with ASP.NET Core, EF Core, Dapper, Serilog, Slack, messaging, JSON libraries, YAML libraries, or test frameworks in the matching package.
+
+These projects produce public NuGet packages, so do not casually rename, remove, or reshape public APIs without explicit user direction. However, always call out public API concerns when you see them, especially unclear names, unnatural English, confusing parameter names, or APIs whose shape does not match their behavior. This repository is still early enough that breaking changes may be acceptable after discussion; silence is worse than pointing out a questionable API.
+
+When changing package purpose, public surface area, naming, or behavior, check whether the root `README.md`, the package-level `README.md`, and the project `Description` metadata should be updated together.
+
+## Multi-Targeting & Compatibility
+
+Many packages target multiple frameworks, including older targets such as `netstandard2.0` and `net472` as well as current .NET targets. Before using newer BCL or framework APIs, verify they are available on every target for the project. Use existing compatibility helpers, conditional compilation, or target-specific references when needed.
+
+Source generators are part of the package surface for several projects. When changing generators or generated APIs, check the package that consumes the generator as well as the generator project itself.
 
 ## Testing Guidelines
 
 Tests use xUnit v3 and should be added beside the matching package under `test/<Package>.Tests`. Name test classes after the subject, for example `YamlHelperTests`, and use clear method names that describe the behavior under test. Prefer `[Theory]` with `MemberData` for combinatorial cases. Some projects disable parallelization; respect existing fixture and collection patterns before changing test execution behavior.
+
+Organize new tests by the class or interface being tested. Split large test files when multiple tested subjects are involved, and cover boundary cases such as nulls, empty collections, duplicate values, failed operations, exceptions, cancellation, and framework-specific behavior when relevant.
+
+Prefer running the narrowest useful test project for the code you changed before considering full-solution tests. Some tests have external service dependencies: `FclEx.Dapper.Tests`, `FclEx.EfCore.Tests`, and `FclEx.Messaging.Tests`. The local test databases and message queues are expected to be provisioned, but be mindful that `FclEx.Messaging` includes Kafka support while `FclEx.Messaging.Tests` currently does not cover Kafka and no Kafka test service is assumed yet.
+
+## File Edits & Encoding
+
+After editing text files, especially with patch tools, verify that the result follows the repository encoding and line-ending rules: UTF-8 without BOM and native line endings for the current OS. On Windows, make sure patched files do not accidentally contain mixed or bare LF line endings.
 
 ## Commit & Pull Request Guidelines
 
