@@ -1,4 +1,4 @@
-﻿namespace Xunit;
+namespace Xunit;
 
 using FclEx.Extensions;
 

@@ -1,4 +1,4 @@
-﻿namespace FclEx.Dapper.SqlAdapters;
+namespace FclEx.Dapper.SqlAdapters;
 
 public readonly record struct QuotationMarks(char Prefix, char Suffix)
 {

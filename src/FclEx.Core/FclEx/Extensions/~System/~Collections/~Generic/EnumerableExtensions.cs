@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions;
+namespace FclEx.Extensions;
 
 public readonly record struct IndexedItem<T>(int Index, T Item, bool IsFirst, bool IsLast);
 

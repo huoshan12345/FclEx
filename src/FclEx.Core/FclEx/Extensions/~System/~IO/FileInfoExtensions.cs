@@ -1,4 +1,4 @@
-﻿using static FclEx.Extensions.FileConflictOptions;
+using static FclEx.Extensions.FileConflictOptions;
 
 namespace FclEx.Extensions;
 

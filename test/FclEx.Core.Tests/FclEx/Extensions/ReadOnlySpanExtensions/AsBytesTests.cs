@@ -1,4 +1,4 @@
-﻿// ReSharper disable ConvertToConstant.Local
+// ReSharper disable ConvertToConstant.Local
 namespace FclEx.Extensions.ReadOnlySpanExtensions;
 
 public class AsBytesTests

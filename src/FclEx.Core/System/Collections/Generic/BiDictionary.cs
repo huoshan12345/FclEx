@@ -1,4 +1,4 @@
-﻿namespace System.Collections.Generic;
+namespace System.Collections.Generic;
 
 /// <summary>
 /// Represents a bidirectional dictionary that allows efficient lookups by both keys and values.

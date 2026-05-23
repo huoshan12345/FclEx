@@ -1,4 +1,4 @@
-﻿namespace FclEx.Dapper.SqlAdapters;
+namespace FclEx.Dapper.SqlAdapters;
 
 /// <summary>
 /// Adapter for MySqlConnector

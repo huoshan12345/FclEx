@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 
 namespace FclEx.NewRelic;
 
@@ -9,7 +9,7 @@ public class NewRelicConfig
     public string AccountId { get; set; } = "";
 }
 
-public class NewRelicFixture : GlobalFixture
+public class NewRelicTestsFixture : CoreTestsFixture
 {
     public static NewRelicConfig NewRelicConfig { get; } = Config.GetSection("NewRelic").Get<NewRelicConfig>()!;
 

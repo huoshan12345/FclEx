@@ -1,4 +1,4 @@
-﻿namespace FclEx.Kafka;
+namespace FclEx.Kafka;
 
 public enum KafkaErrorType
 {

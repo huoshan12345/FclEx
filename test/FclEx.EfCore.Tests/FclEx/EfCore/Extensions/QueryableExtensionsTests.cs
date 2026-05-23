@@ -1,4 +1,4 @@
-﻿namespace FclEx.EfCore.Extensions;
+namespace FclEx.EfCore.Extensions;
 
 public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {

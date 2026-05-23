@@ -1,4 +1,4 @@
-﻿using FclEx.Dapper;
+using FclEx.Dapper;
 using MySql.Data.MySqlClient;
 using Npgsql;
 

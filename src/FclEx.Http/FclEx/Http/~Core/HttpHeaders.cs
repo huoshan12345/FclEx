@@ -1,4 +1,4 @@
-﻿namespace FclEx.Http;
+namespace FclEx.Http;
 
 public class HttpHeaders() : NameValues<HttpHeaders>(StringComparer.OrdinalIgnoreCase), IRenderable
 {

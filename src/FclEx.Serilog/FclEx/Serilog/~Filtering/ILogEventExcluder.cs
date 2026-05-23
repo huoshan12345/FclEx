@@ -1,4 +1,4 @@
-﻿namespace FclEx.Serilog;
+namespace FclEx.Serilog;
 
 public interface  ILogEventExcluder
 {

@@ -1,4 +1,4 @@
-﻿#pragma warning disable RS1035
+#pragma warning disable RS1035
 
 using System.Diagnostics;
 using System.Reflection;

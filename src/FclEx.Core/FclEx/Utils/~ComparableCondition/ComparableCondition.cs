@@ -1,4 +1,4 @@
-﻿namespace FclEx.Utils;
+namespace FclEx.Utils;
 
 /// <summary>
 /// Represents a condition for comparing two values of type T.

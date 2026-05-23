@@ -1,4 +1,4 @@
-﻿namespace FclEx.AspNetCore;
+namespace FclEx.AspNetCore;
 
 public static class AuthorizationHandlerContextExtensions
 {

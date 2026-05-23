@@ -1,4 +1,4 @@
-﻿namespace Xunit;
+namespace Xunit;
 
 [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
 public class ConditionalTheoryAttribute : TheoryAttribute

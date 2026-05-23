@@ -1,4 +1,4 @@
-﻿namespace FclEx.Utils;
+namespace FclEx.Utils;
 
 /// <summary>
 /// Represents a collection of disposable objects that can be disposed as a single unit.

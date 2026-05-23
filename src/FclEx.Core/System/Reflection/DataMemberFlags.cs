@@ -1,4 +1,4 @@
-﻿namespace System.Reflection;
+namespace System.Reflection;
 
 /// <summary>
 /// Specifies filters for selecting data members (fields and properties)

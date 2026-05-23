@@ -1,4 +1,4 @@
-﻿namespace FclEx.Http;
+namespace FclEx.Http;
 
 public delegate void OnHttpFailedCode(HttpResponseMessage response, string content);
 

@@ -1,4 +1,4 @@
-﻿namespace MimeTypes
+namespace MimeTypes
 {
     /// <summary>
     /// Class MimeTypeMap.

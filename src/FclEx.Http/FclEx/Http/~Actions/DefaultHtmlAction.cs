@@ -1,4 +1,4 @@
-﻿namespace FclEx.Http;
+namespace FclEx.Http;
 
 /// <summary>
 /// Provides default behavior for <see cref="IHtmlAction{T}"/>.

@@ -1,4 +1,4 @@
-﻿namespace Xunit.Testing;
+namespace Xunit.Testing;
 
 public sealed class WatchableEnumerator<T>(IEnumerator<T> source) : IEnumerator<T>
 {

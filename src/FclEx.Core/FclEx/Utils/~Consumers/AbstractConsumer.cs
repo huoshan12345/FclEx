@@ -1,4 +1,4 @@
-﻿namespace FclEx.Utils;
+namespace FclEx.Utils;
 
 public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>, ICancellationListener<TSelf, IReadOnlyList<T>>
     where TSelf : AbstractConsumer<TSelf, T>

@@ -1,4 +1,4 @@
-﻿namespace FclEx.Http.Core;
+namespace FclEx.Http.Core;
 
 public class HttpRequestTests
 {

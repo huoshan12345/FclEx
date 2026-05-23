@@ -1,4 +1,4 @@
-﻿// ReSharper disable UnassignedField.Global
+// ReSharper disable UnassignedField.Global
 namespace FclEx.TestModels;
 
 [StructLayout(LayoutKind.Sequential)]

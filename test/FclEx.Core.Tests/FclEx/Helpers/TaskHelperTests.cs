@@ -1,4 +1,4 @@
-﻿namespace FclEx.Helpers;
+namespace FclEx.Helpers;
 
 public class TaskHelperTests
 {

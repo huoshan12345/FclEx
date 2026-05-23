@@ -1,4 +1,4 @@
-﻿// ReSharper disable ConvertToConstant.Local
+// ReSharper disable ConvertToConstant.Local
 #pragma warning disable CS0169 // Field is never used
 #pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
 namespace FclEx.Extensions.Reflection.TypeExtensions;

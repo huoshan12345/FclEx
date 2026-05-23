@@ -11,4 +11,4 @@ global using Microsoft.Extensions.Configuration;
 global using xRetry.v3;
 global using Xunit;
 global using Xunit.Sdk;
-global using static FclEx.RabbitMQ.RabbitMQFixture;
+global using static FclEx.RabbitMQ.RabbitMqTestsFixture;

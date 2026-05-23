@@ -1,4 +1,4 @@
-﻿// ReSharper disable ConvertToAutoProperty
+// ReSharper disable ConvertToAutoProperty
 // ReSharper disable UnusedMember.Local
 // ReSharper disable ReplaceWithFieldKeyword
 // ReSharper disable CollectionNeverUpdated.Local

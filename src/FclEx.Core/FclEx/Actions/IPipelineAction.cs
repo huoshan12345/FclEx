@@ -1,4 +1,4 @@
-﻿
+
 namespace FclEx.Actions;
 
 public interface IPipelineAction<T> : IAction<T>

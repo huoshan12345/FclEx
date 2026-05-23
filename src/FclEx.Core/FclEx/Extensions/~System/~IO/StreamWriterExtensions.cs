@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions;
+namespace FclEx.Extensions;
 
 // ReSharper disable once UnusedMember.Global
 public static class StreamWriterExtensions

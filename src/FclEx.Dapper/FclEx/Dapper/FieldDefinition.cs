@@ -1,4 +1,4 @@
-﻿namespace FclEx.Dapper;
+namespace FclEx.Dapper;
 
 public class FieldDefinition(PropertyInfo propertyInfo)
 {

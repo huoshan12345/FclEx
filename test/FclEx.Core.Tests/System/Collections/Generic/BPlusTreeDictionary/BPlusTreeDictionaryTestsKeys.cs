@@ -1,4 +1,4 @@
-﻿namespace System.Collections.Generic.BPlusTreeDictionary;
+namespace System.Collections.Generic.BPlusTreeDictionary;
 
 public class BPlusTreeDictionaryTestsKeys : ICollection_Generic_Tests<string>
 {

@@ -1,4 +1,4 @@
-﻿namespace System.Text.Json;
+namespace System.Text.Json;
 
 internal class ScanMultipleFilter : PathFilter
 {

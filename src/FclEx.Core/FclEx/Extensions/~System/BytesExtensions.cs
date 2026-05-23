@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions;
+namespace FclEx.Extensions;
 
 /// <summary>
 /// Provides extension methods for working with byte arrays, <see cref="Span{T}"/>, 

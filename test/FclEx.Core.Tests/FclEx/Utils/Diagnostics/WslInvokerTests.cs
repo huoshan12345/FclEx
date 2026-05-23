@@ -1,4 +1,4 @@
-﻿namespace FclEx.Utils.Diagnostics;
+namespace FclEx.Utils.Diagnostics;
 
 public class WslInvokerTests
 {

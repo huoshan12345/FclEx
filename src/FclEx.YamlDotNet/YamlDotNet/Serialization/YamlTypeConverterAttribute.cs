@@ -1,4 +1,4 @@
-﻿namespace YamlDotNet.Serialization;
+namespace YamlDotNet.Serialization;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Enum | AttributeTargets.Struct)]
 public class YamlTypeConverterAttribute(Type converterType) : Attribute

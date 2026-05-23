@@ -1,4 +1,4 @@
-﻿namespace System.Collections.Generic;
+namespace System.Collections.Generic;
 
 public readonly struct CommonEnumerable<TEnumerator, T>(TEnumerator enumerator)
     : IEnumerable<T> where TEnumerator : IEnumerator<T>

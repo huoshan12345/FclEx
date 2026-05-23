@@ -1,4 +1,4 @@
-﻿namespace FclEx.RabbitMQ;
+namespace FclEx.RabbitMQ;
 
 public abstract class MessageRouter<TInput, TOutput> : MessageConsumer<TInput, RabbitMqRouterOptions>, IMessageRouter<TInput, TOutput>
 {

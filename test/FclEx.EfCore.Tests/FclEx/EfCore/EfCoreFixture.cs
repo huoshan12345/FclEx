@@ -1,8 +1,8 @@
-﻿using FclEx.Dapper;
+using FclEx.Dapper;
 
 namespace FclEx.EfCore;
 
-public class EfCoreFixture : DapperFixture
+public class EfCoreFixture : DapperTestsFixture
 {
     public TestDbContext CreateDbContext(DbDriver dbDriver, string? schema = null, bool isUser = false)
     {

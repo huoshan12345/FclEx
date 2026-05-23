@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions;
+namespace FclEx.Extensions;
 
 // ReSharper disable once PartialTypeWithSinglePart
 public static partial class AsyncEventHandlerExtensions

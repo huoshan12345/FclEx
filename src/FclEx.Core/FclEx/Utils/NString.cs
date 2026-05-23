@@ -1,4 +1,4 @@
-﻿namespace FclEx.Utils;
+namespace FclEx.Utils;
 
 [DebuggerDisplay("{" + nameof(Value) + "}")]
 [JsonConverter(typeof(NStringJsonConverter))]

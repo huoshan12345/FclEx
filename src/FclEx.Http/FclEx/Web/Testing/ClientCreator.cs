@@ -1,4 +1,4 @@
-﻿#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 namespace FclEx.Web.Testing;
 
 public class ClientCreator<TClient, TAccount>(IServiceProvider provider)

@@ -1,4 +1,4 @@
-﻿namespace FclEx.Actions;
+namespace FclEx.Actions;
 
 public class MapResultAction<T, TDest> : IAction<TDest>
 {

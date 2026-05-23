@@ -1,4 +1,4 @@
-﻿namespace System.Text.Encodings.Web;
+namespace System.Text.Encodings.Web;
 
 /// <summary>
 /// JavaScript encoder built on top of <see cref="JavaScriptEncoder.UnsafeRelaxedJsonEscaping"/> that does not escape emoji.

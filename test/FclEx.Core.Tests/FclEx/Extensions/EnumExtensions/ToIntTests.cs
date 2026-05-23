@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions.EnumExtensions;
+namespace FclEx.Extensions.EnumExtensions;
 
 public class ToIntTests
 {

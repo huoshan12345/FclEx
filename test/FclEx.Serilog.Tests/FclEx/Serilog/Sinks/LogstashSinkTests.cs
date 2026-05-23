@@ -1,4 +1,4 @@
-﻿using Serilog.Sinks.XUnit3;
+using Serilog.Sinks.XUnit3;
 
 namespace FclEx.Serilog.Sinks;
 

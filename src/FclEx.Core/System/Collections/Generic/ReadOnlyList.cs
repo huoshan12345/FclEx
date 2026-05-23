@@ -1,4 +1,4 @@
-﻿namespace System.Collections.Generic;
+namespace System.Collections.Generic;
 
 [CollectionBuilder(typeof(ReadOnlyListBuilder), nameof(ReadOnlyListBuilder.Create))]
 public class ReadOnlyList<T>(IReadOnlyList<T>? list = null) : IReadOnlyList<T>, IReadOnlyContainer<T>

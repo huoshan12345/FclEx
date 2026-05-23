@@ -1,18 +1,18 @@
-﻿namespace FclEx.Dapper;
+namespace FclEx.Dapper;
 
 [CollectionDefinition(nameof(DapperTestsCollection))]
-public class DapperTestsCollection : ICollectionFixture<DapperFixture>;
+public class DapperTestsCollection : ICollectionFixture<DapperTestsFixture>;
 
 [EnableParallelization]
 [Collection(nameof(DapperTestsCollection))]
-public class DapperTests(DapperFixture fixture) : DatabaseTests
+public class DapperTests(DapperTestsFixture fixture) : DatabaseTests
 {
-    public DapperFixture Fixture { get; } = fixture;
+    public DapperTestsFixture Fixture { get; } = fixture;
 
     [return: NotNullIfNotNull(nameof(str))]
     public static string? WithAssemblyInfo(string? str, char separator = '_')
     {
-        return GlobalFixture.WithAssemblyInfo(str, typeof(DapperTests).Assembly, separator);
+        return CoreTestsFixture.WithAssemblyInfo(str, typeof(DapperTests).Assembly, separator);
     }
 
     public static readonly int[] Counts = [1, 5];

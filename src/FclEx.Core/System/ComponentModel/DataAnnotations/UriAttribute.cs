@@ -1,4 +1,4 @@
-﻿namespace System.ComponentModel.DataAnnotations;
+namespace System.ComponentModel.DataAnnotations;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
 public class UriAttribute : ValidationAttribute

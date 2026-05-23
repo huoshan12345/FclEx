@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using FclEx.Dapper;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
@@ -27,7 +27,7 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     public async Task SetupDatabase(DbDriver dbDriver, string assemblyName, int dotNetVersion, string os)
     {
         var defaultUser = new DatabaseUser(WithAssemblyInfo(UserName), UserPassword, WithAssemblyInfo(UserSchema));
-        var connectionStrings = new ConnectionStrings(DapperFixture.Databases, WithAssemblyInfo(DbName), defaultUser);
+        var connectionStrings = new ConnectionStrings(DapperTestsFixture.Databases, WithAssemblyInfo(DbName), defaultUser);
         var connectionString = connectionStrings.Get(dbDriver, false).Build();
 
         foreach (var (_, schema, isFirst, _) in SchemaNames.IndexEx())
@@ -62,7 +62,7 @@ public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         [return: NotNullIfNotNull(nameof(str))]
         string? WithAssemblyInfo(string? str)
         {
-            return GlobalFixture.WithAssemblyInfo(str, assemblyName, dotNetVersion, os);
+            return CoreTestsFixture.WithAssemblyInfo(str, assemblyName, dotNetVersion, os);
         }
     }
 

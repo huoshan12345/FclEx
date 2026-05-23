@@ -1,4 +1,4 @@
-﻿using TaskExtensions = FclEx.Extensions.TaskExtensions;
+using TaskExtensions = FclEx.Extensions.TaskExtensions;
 
 namespace FclEx.Utils;
 

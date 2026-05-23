@@ -1,4 +1,4 @@
-﻿using SlackNet.WebApi;
+using SlackNet.WebApi;
 
 namespace FclEx.Slack;
 

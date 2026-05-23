@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using Dapper;
 using FclEx.Utils;
 using Xunit.v3.Priority;
@@ -9,7 +9,7 @@ namespace FclEx.Dapper;
 
 [DefaultPriority(0)]
 [TestCaseOrderer(typeof(PriorityOrderer))]
-public partial class DbConnectionExtensionsTests(ITestOutputHelper output, DapperFixture fixture) : DapperTests(fixture)
+public partial class DbConnectionExtensionsTests(ITestOutputHelper output, DapperTestsFixture fixture) : DapperTests(fixture)
 {
     [Theory(Skip = "x"), Priority(-1)]
     [MemberData(nameof(DbSchemaTestCases))]

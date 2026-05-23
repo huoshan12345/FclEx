@@ -1,4 +1,4 @@
-﻿using static System.Reflection.DataMemberFlags;
+using static System.Reflection.DataMemberFlags;
 
 namespace System.Collections.Generic;
 

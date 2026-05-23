@@ -1,7 +1,7 @@
-﻿namespace FclEx.RabbitMQ;
+namespace FclEx.RabbitMQ;
 
 [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
-public class RouterTests(RabbitMQFixture fixture) : RabbitMQTests(fixture)
+public class RouterTests(RabbitMqTestsFixture fixture) : RabbitMqTests(fixture)
 {
     private static string GetRoutingKey(string output)
     {
@@ -48,7 +48,7 @@ public class RouterTests(RabbitMQFixture fixture) : RabbitMQTests(fixture)
         {
             Name = GetExchangeName(nameof(Route_Test) + "_input", sameAsInputExchange),
         };
-        var connection = RabbitMQFixture.ConnectionSettings;
+        var connection = RabbitMqTestsFixture.ConnectionSettings;
         await using var publisher = await TestPublisher.CreateAsync(new RabbitMqPublisherOptions(connection, inputExchange));
 
         var routerSettings = new RabbitMqRouterOptions(connection, inputExchange, new RabbitMqQueueOptions

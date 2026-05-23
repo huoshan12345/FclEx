@@ -1,4 +1,4 @@
-﻿namespace FclEx.Web;
+namespace FclEx.Web;
 
 public abstract class UserClientHttpAction<TClient, TAccount, T>(TClient client)
     : UserClientAction<TClient, TAccount, T>(client), IHttpAction<T>

@@ -1,4 +1,4 @@
-﻿namespace FclEx.CodeAnalysis;
+namespace FclEx.CodeAnalysis;
 
 public record SourceInfo(bool Success, string FileName, string Text)
 {

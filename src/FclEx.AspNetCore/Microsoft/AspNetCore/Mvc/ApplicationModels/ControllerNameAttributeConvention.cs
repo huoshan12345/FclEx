@@ -1,4 +1,4 @@
-﻿namespace Microsoft.AspNetCore.Mvc.ApplicationModels;
+namespace Microsoft.AspNetCore.Mvc.ApplicationModels;
 
 public class ControllerNameAttributeConvention : IControllerModelConvention
 {

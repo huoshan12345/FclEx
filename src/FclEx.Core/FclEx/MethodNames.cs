@@ -1,4 +1,4 @@
-﻿namespace FclEx;
+namespace FclEx;
 
 [SuppressMessage("ReSharper", "UnusedMember.Global")]
 public static class MethodNames

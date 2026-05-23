@@ -1,4 +1,4 @@
-﻿namespace FclEx.Domain;
+namespace FclEx.Domain;
 
 /// <summary>
 /// Represents an entity that can be soft-deleted, where the deletion status is tracked without removing the entity from storage.

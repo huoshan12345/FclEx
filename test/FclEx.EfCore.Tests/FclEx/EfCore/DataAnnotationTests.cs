@@ -1,4 +1,4 @@
-﻿namespace FclEx.EfCore;
+namespace FclEx.EfCore;
 
 public class DataAnnotationTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {

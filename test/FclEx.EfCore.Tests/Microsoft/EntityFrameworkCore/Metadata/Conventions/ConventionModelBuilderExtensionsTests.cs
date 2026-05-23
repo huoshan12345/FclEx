@@ -1,4 +1,4 @@
-﻿namespace Microsoft.EntityFrameworkCore.Metadata.Conventions;
+namespace Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
 public class ConventionModelBuilderExtensionsTests
 {

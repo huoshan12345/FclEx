@@ -1,4 +1,4 @@
-﻿namespace System.ComponentModel.DataAnnotations;
+namespace System.ComponentModel.DataAnnotations;
 
 /// <summary>
 /// A validation attribute that checks if a string expression is a valid regular expression.

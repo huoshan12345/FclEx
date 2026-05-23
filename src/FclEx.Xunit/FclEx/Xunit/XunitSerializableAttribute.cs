@@ -1,4 +1,4 @@
-﻿namespace FclEx.Xunit;
+namespace FclEx.Xunit;
 
 /// <summary>
 /// Indicates that a type should have an <see cref="IXunitSerializable"/>

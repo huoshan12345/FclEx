@@ -1,4 +1,4 @@
-﻿namespace FclEx.RabbitMQ;
+namespace FclEx.RabbitMQ;
 
 public abstract class MessageProcessor<TSettings> : IMessageProcessor<TSettings> where TSettings : RabbitMqProcessorOptions
 {

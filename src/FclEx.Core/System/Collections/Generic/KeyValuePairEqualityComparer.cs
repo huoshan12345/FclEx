@@ -1,4 +1,4 @@
-﻿namespace System.Collections.Generic;
+namespace System.Collections.Generic;
 
 public class KeyValuePairEqualityComparer<TKey, TValue> : IEqualityComparer<KeyValuePair<TKey, TValue>>
 {

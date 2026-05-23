@@ -1,4 +1,4 @@
-﻿#pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
+#pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
 namespace System.Collections.Generic;
 
 public unsafe class BytewiseEqualityComparer<T> : IEqualityComparer<T>

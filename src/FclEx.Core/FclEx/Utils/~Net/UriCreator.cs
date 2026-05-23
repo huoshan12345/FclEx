@@ -1,4 +1,4 @@
-﻿namespace FclEx.Utils;
+namespace FclEx.Utils;
 
 /// <summary>
 /// The UriCreator class provides a fluent interface for constructing URIs.<br/>

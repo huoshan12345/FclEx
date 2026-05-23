@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using FclEx;
 
 namespace System.Xml.Linq;

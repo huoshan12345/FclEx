@@ -1,4 +1,4 @@
-﻿namespace FclEx.Dapper;
+namespace FclEx.Dapper;
 
 partial class DbConnectionExtensions
 {

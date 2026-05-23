@@ -1,4 +1,4 @@
-﻿namespace FclEx.Web;
+namespace FclEx.Web;
 
 public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable where TAccount : IUserAccount
 {

@@ -1,4 +1,4 @@
-﻿using Npgsql;
+using Npgsql;
 
 namespace FclEx.EfCore;
 

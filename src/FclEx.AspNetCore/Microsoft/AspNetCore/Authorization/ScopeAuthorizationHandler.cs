@@ -1,4 +1,4 @@
-﻿namespace Microsoft.AspNetCore.Authorization;
+namespace Microsoft.AspNetCore.Authorization;
 
 /// <summary>
 /// Handles the authorization requirement by validating the user's claims against the required scopes.

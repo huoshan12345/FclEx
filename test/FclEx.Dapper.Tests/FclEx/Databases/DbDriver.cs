@@ -1,4 +1,4 @@
-﻿namespace FclEx.Databases;
+namespace FclEx.Databases;
 
 public enum DbDriver
 {

@@ -1,4 +1,4 @@
-﻿namespace FclEx.Serilog;
+namespace FclEx.Serilog;
 
 public record ExceptionExcluder(string? Source, Func<Exception, bool> Predicate) : ILogEventExcluder
 {

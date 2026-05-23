@@ -1,4 +1,4 @@
-﻿// ReSharper disable MemberCanBeProtected.Global
+// ReSharper disable MemberCanBeProtected.Global
 // ReSharper disable NotAccessedField.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable UnusedMember.Global

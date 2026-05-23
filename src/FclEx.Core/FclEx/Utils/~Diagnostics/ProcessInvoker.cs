@@ -1,4 +1,4 @@
-﻿namespace FclEx.Utils;
+namespace FclEx.Utils;
 
 public class ProcessInvoker(string fileName, Func<string, string> argumentsConverter)
 {

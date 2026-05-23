@@ -1,4 +1,4 @@
-﻿namespace FclEx.Web;
+namespace FclEx.Web;
 
 public class UserClientLogger<TAccount> : ILogger where TAccount : IUserAccount
 {

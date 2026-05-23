@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 5.0))">Library</OutputType>
   </PropertyGroup>

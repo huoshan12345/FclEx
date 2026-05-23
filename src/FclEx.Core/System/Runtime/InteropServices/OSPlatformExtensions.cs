@@ -1,4 +1,4 @@
-﻿namespace System.Runtime.InteropServices;
+namespace System.Runtime.InteropServices;
 
 public static class OSPlatformExtensions
 {

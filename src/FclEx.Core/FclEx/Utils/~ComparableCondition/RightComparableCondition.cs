@@ -1,4 +1,4 @@
-﻿namespace FclEx.Utils;
+namespace FclEx.Utils;
 
 public record RightComparableCondition<T>(ComparisonOperator Operator, T Right) where T : IComparable<T>
 {

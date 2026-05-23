@@ -1,4 +1,4 @@
-﻿namespace FclEx.Web.Testing;
+namespace FclEx.Web.Testing;
 
 public class UserAccountEqualityComparer : IEqualityComparer<UserAccount>
 {

@@ -1,4 +1,4 @@
-﻿namespace System.Text.Json.JsonDocumentPathTests;
+namespace System.Text.Json.JsonDocumentPathTests;
 
 public static class ExceptionAssert
 {

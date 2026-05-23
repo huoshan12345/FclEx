@@ -1,4 +1,4 @@
-﻿namespace FclEx.AspNetCore.Authorization;
+namespace FclEx.AspNetCore.Authorization;
 
 public class ScopeAuthorizationHandlerTests
 {

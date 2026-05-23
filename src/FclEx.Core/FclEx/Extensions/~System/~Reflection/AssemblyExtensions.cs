@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions;
+namespace FclEx.Extensions;
 
 public enum BuildType
 {

@@ -1,4 +1,4 @@
-﻿namespace FclEx.Actions;
+namespace FclEx.Actions;
 
 public class ThenWithAction<T, TNext> : IAction<(T, TNext)>
 {

@@ -1,4 +1,4 @@
-﻿using static FclEx.Serilog.ExceptionIndexOptions;
+using static FclEx.Serilog.ExceptionIndexOptions;
 
 namespace FclEx.Serilog;
 

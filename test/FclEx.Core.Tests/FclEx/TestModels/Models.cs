@@ -1,4 +1,4 @@
-﻿namespace FclEx.TestModels;
+namespace FclEx.TestModels;
 
 [SuppressMessage("ReSharper", "PropertyCanBeMadeInitOnly.Global")]
 public record Person

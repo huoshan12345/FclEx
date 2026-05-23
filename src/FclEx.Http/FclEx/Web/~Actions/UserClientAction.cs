@@ -1,4 +1,4 @@
-﻿namespace FclEx.Web;
+namespace FclEx.Web;
 
 public abstract class UserClientAction<TClient, TAccount, T> :
 #if !NET6_0_OR_GREATER

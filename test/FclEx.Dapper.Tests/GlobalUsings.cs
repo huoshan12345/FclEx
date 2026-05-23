@@ -12,4 +12,4 @@ global using FclEx.Domain;
 global using Meziantou.Xunit.v3;
 global using Xunit;
 global using Xunit.Sdk;
-global using static FclEx.Dapper.DapperFixture;
+global using static FclEx.Dapper.DapperTestsFixture;

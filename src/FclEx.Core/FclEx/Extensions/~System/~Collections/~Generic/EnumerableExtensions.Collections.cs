@@ -1,4 +1,4 @@
-﻿using Combinatorics.Collections;
+using Combinatorics.Collections;
 
 namespace FclEx.Extensions;
 

@@ -1,4 +1,4 @@
-﻿namespace FclEx;
+namespace FclEx;
 
 [JsonConverter(typeof(IgnoreJsonConverter))]
 public readonly record struct Unit

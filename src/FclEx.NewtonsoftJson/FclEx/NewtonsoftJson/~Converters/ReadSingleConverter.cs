@@ -1,4 +1,4 @@
-﻿namespace FclEx.NewtonsoftJson;
+namespace FclEx.NewtonsoftJson;
 
 public abstract class ReadSingleConverter : JsonConverter
 {

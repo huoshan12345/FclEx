@@ -1,4 +1,4 @@
-﻿// ReSharper disable UnusedMember.Local
+// ReSharper disable UnusedMember.Local
 // ReSharper disable UnassignedGetOnlyAutoProperty
 // ReSharper disable ConvertToAutoProperty
 namespace FclEx.Extensions.Reflection.PropertyInfoExtensions;

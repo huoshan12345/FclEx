@@ -1,4 +1,4 @@
-﻿// ReSharper disable PropertyCanBeMadeInitOnly.Local
+// ReSharper disable PropertyCanBeMadeInitOnly.Local
 namespace FclEx.Helpers.ObjectHelperTests;
 
 public class TrySetTests

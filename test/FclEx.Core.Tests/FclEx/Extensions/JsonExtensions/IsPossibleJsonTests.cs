@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions.JsonExtensions;
+namespace FclEx.Extensions.JsonExtensions;
 
 public class IsPossibleJsonTests
 {

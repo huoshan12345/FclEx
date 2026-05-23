@@ -1,4 +1,4 @@
-﻿// ReSharper disable ConvertToAutoPropertyWithPrivateSetter
+// ReSharper disable ConvertToAutoPropertyWithPrivateSetter
 namespace System.Collections.Generic;
 
 public abstract class ArrayBasedCollection<TSelf, T> : IReadOnlyCollection<T>

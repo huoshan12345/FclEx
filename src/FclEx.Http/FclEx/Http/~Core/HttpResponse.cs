@@ -1,4 +1,4 @@
-﻿namespace FclEx.Http;
+namespace FclEx.Http;
 
 public class HttpResponse
 {

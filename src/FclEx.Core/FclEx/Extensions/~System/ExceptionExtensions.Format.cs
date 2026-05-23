@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions;
+namespace FclEx.Extensions;
 
 /// <summary>
 /// Represents detailed information about an exception. br/>

@@ -4,14 +4,15 @@ on:
     branches:
       - main
     paths:
-      - .github/workflows/build.yml
       - '*.sln'
       - '*.slnx'
+      - .github/workflows/build.yml
       - build/pack.ps1
       - build/pkg.version
       - NuGet.Config
       - src/**
       - test/**
+      - '!src/**/*.md'
   pull_request_target: # use pull_request_target instead of pull_request to let dependabot have permission to access action secrets.
     branches:
       - main
@@ -105,8 +106,11 @@ jobs:
           echo $ver
 
       - name: Pack
-        run: >
-          dotnet pack ${{ env.SOLUTION }} -v q -c Release --no-restore --no-build --include-symbols -p:SymbolPackageFormat=snupkg -p:PackageVersion=${{ steps.set_version.outputs.version }} -o ${{ env.ARTIFACTS_DIR }}
+        shell: pwsh
+        run: |
+          dotnet pack ${{ env.SOLUTION }} -v q -c Release --no-restore --no-build `
+          --include-symbols -p:SymbolPackageFormat=snupkg -p:PackageVersion=${{ steps.set_version.outputs.version }} `
+          -o ${{ env.ARTIFACTS_DIR }}
 
       - name: Upload
         uses: actions/upload-artifact@v7
@@ -186,12 +190,17 @@ jobs:
         if: steps.sdk_check.outputs.missing != ''
         uses: actions/setup-dotnet@v5
         with:
-          cache: true
           dotnet-version: ${{ steps.sdk_check.outputs.missing }}
+
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION }} -v q
+
+      - name: Build
+        run: dotnet build ${{ env.SOLUTION }} -c Release --no-restore
 
       - name: Test Release
         timeout-minutes: 10
-        run: dotnet test /nr:false ${{ env.SOLUTION }} -c Release
+        run: dotnet test /nr:false ${{ env.SOLUTION }} -c Release --no-restore --no-build
 
       - name: Test Report
         uses: dorny/test-reporter@main
@@ -226,13 +235,21 @@ jobs:
 
       - name: NuGet Publish
         if: env.USE_NUGET == 'true'
-        run: >
-          dotnet nuget push "${{ env.ARTIFACTS_DIR }}*.nupkg" --api-key "${{ secrets.NUGET_APIKEY }}" --source "${{ env.NUGET_SOURCE }}" --skip-duplicate
+        shell: pwsh
+        run: |
+          dotnet nuget push "${{ env.ARTIFACTS_DIR }}*.nupkg" `
+            --api-key "${{ secrets.NUGET_APIKEY }}" `
+            --source "${{ env.NUGET_SOURCE }}" `
+            --skip-duplicate
 
       - name: MyGet Publish
         if: env.USE_MYGET == 'true'
-        run: >
-          dotnet nuget push "${{ env.ARTIFACTS_DIR }}*.nupkg" --api-key "${{ secrets.MYGET_APIKEY }}" --source "${{ env.MYGET_SOURCE }}" --skip-duplicate
+        shell: pwsh
+        run: |
+          dotnet nuget push "${{ env.ARTIFACTS_DIR }}*.nupkg" `
+            --api-key "${{ secrets.MYGET_APIKEY }}" `
+            --source "${{ env.MYGET_SOURCE }}" `
+            --skip-duplicate
 
       - name: Set version
         shell: pwsh

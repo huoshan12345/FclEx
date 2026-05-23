@@ -1,4 +1,4 @@
-﻿namespace FclEx.Web;
+namespace FclEx.Web;
 
 /// <summary>
 /// Represents an HTML form and its associated data.

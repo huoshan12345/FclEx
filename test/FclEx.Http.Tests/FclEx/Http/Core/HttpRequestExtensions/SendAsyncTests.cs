@@ -1,4 +1,4 @@
-﻿namespace FclEx.Http.Core.HttpRequestExtensions;
+namespace FclEx.Http.Core.HttpRequestExtensions;
 
 public class SendAsyncTests : HttpServerTests
 {

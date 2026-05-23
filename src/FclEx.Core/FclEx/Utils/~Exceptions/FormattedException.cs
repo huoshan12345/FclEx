@@ -1,4 +1,4 @@
-﻿namespace FclEx.Utils;
+namespace FclEx.Utils;
 
 /// <summary>
 /// Represents an exception that wraps another exception and provides a formatted string representation.

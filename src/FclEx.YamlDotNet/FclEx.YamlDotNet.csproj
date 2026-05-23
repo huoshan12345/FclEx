@@ -1,4 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>YamlDotNet helpers, options, converters, naming conventions, and YAML node extensions.</Description>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="YamlDotNet" />
   </ItemGroup>

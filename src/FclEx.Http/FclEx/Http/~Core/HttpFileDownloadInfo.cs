@@ -1,4 +1,4 @@
-﻿namespace FclEx.Http;
+namespace FclEx.Http;
 
 /// <summary>
 /// Represents detailed information about a file being downloaded via HTTP.

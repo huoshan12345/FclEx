@@ -1,4 +1,4 @@
-﻿namespace FclEx.YamlDotNet;
+namespace FclEx.YamlDotNet;
 
 public record YamlDeserializeOptions : YamlOptions
 {

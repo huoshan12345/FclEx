@@ -1,4 +1,4 @@
-﻿namespace FclEx.EfCore.Extensions;
+namespace FclEx.EfCore.Extensions;
 
 public class ChangeTrackerExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {

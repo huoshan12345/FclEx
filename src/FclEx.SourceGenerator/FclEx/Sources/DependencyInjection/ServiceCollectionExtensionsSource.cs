@@ -1,4 +1,4 @@
-﻿namespace FclEx.Sources.DependencyInjection;
+namespace FclEx.Sources.DependencyInjection;
 
 internal class ServiceCollectionExtensionsSource
 {

@@ -1,4 +1,4 @@
-﻿namespace FclEx.Serilog;
+namespace FclEx.Serilog;
 
 /// <summary>
 /// Specifies the options for including exception indexes in log messages.

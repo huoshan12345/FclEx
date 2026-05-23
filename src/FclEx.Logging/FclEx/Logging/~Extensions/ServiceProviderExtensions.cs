@@ -1,4 +1,4 @@
-﻿using FclEx.DependencyInjection;
+using FclEx.DependencyInjection;
 
 namespace FclEx.Logging;
 

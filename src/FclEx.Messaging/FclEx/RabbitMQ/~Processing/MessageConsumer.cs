@@ -1,4 +1,4 @@
-﻿namespace FclEx.RabbitMQ;
+namespace FclEx.RabbitMQ;
 
 public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings>, IMessageConsumer<T, TSettings>
     where TSettings : RabbitMqConsumerOptions

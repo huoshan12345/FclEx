@@ -1,4 +1,4 @@
-﻿namespace FclEx.NewtonsoftJson;
+namespace FclEx.NewtonsoftJson;
 
 public class ReadStringAsObjectConverter : JsonConverter
 {

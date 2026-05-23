@@ -1,4 +1,4 @@
-﻿namespace System.IO;
+namespace System.IO;
 
 public enum PathComparison
 {

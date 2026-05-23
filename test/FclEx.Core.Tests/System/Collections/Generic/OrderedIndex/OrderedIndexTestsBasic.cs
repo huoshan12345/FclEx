@@ -1,4 +1,4 @@
-﻿namespace System.Collections.Generic.OrderedIndex;
+namespace System.Collections.Generic.OrderedIndex;
 
 public class OrderedIndexTestsBasic
 {

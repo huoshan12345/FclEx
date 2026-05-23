@@ -1,4 +1,4 @@
-﻿namespace System.Text.Json.Serialization;
+namespace System.Text.Json.Serialization;
 
 /// <summary>
 /// A custom JSON converter that deserializes any JSON value into its string representation.

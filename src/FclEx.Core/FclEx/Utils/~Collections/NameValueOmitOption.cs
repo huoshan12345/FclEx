@@ -1,4 +1,4 @@
-﻿namespace FclEx.Utils;
+namespace FclEx.Utils;
 
 /// <summary>
 /// Specifies conditions for omitting a uri parameter during serialization or processing.

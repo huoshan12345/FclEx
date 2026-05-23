@@ -1,4 +1,4 @@
-﻿using static FclEx.Dapper.DapperHelper;
+using static FclEx.Dapper.DapperHelper;
 
 // ReSharper disable RedundantCast
 #pragma warning disable IDE0004

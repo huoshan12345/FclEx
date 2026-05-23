@@ -1,4 +1,4 @@
-﻿// ReSharper disable InconsistentNaming
+// ReSharper disable InconsistentNaming
 // ReSharper disable ArrangeTypeMemberModifiers
 // ReSharper disable ClassNeverInstantiated.Local
 // ReSharper disable ConvertToConstant.Local

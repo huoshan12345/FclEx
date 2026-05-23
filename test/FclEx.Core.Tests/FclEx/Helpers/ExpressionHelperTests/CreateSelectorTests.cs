@@ -1,4 +1,4 @@
-﻿namespace FclEx.Helpers.ExpressionHelperTests;
+namespace FclEx.Helpers.ExpressionHelperTests;
 
 public class CreateSelectorTests
 {

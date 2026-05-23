@@ -1,4 +1,4 @@
-﻿namespace System.Collections.Generic.Heap;
+namespace System.Collections.Generic.Heap;
 
 public class HeapTests_String : HeapTests<string>
 {

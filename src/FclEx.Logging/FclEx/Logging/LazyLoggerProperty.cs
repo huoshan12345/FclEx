@@ -1,4 +1,4 @@
-﻿namespace FclEx.Logging;
+namespace FclEx.Logging;
 
 public readonly record struct LazyLoggerProperty(string Key, Func<object?> Value)
 {

@@ -1,4 +1,4 @@
-﻿namespace System;
+namespace System;
 
 internal abstract class GenericEmptyEnumeratorBase : IDisposable, IEnumerator
 {

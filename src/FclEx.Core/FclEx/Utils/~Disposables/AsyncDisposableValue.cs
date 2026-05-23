@@ -1,4 +1,4 @@
-﻿namespace FclEx.Utils;
+namespace FclEx.Utils;
 
 public class AsyncDisposableValue<T>(T value, Func<T, ValueTask>? disposeAction = null) : IAsyncDisposable
 {

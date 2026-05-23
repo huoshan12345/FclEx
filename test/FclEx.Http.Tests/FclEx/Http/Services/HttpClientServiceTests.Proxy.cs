@@ -1,4 +1,4 @@
-﻿namespace FclEx.Http.Services;
+namespace FclEx.Http.Services;
 
 [SuppressMessage("ReSharper", "ReturnTypeCanBeEnumerable.Global")]
 partial class HttpClientServiceTests

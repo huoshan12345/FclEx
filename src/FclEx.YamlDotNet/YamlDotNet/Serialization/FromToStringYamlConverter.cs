@@ -1,4 +1,4 @@
-﻿#if NET6_0_OR_GREATER
+#if NET6_0_OR_GREATER
 namespace YamlDotNet.Serialization;
 
 public class FromToStringYamlConverter<T> : BasicYamlTypeConverter<T> where T : class, IFromString<T>

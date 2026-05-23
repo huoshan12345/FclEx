@@ -1,4 +1,4 @@
-﻿using FclEx.Http;
+using FclEx.Http;
 
 namespace FclEx.AspNetCore;
 

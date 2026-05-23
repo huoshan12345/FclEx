@@ -1,4 +1,4 @@
-﻿namespace FclEx.Tests;
+namespace FclEx.Tests;
 
 public static class TaskExtensions
 {

@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions.ObjectExtensions;
+namespace FclEx.Extensions.ObjectExtensions;
 
 [SuppressMessage("ReSharper", "MergeConditionalExpression")]
 public class CastToTests

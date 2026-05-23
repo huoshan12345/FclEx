@@ -1,4 +1,4 @@
-﻿// ReSharper disable ClassNeverInstantiated.Local
+// ReSharper disable ClassNeverInstantiated.Local
 namespace FclEx.AspNetCore.Extensions;
 
 public class EndpointExtensionsTests

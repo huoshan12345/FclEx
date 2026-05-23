@@ -1,4 +1,4 @@
-﻿namespace FclEx.Actions;
+namespace FclEx.Actions;
 
 partial class ActionExtensions
 {

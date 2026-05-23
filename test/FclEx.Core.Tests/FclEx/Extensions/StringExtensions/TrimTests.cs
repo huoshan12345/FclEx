@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions.StringExtensions;
+namespace FclEx.Extensions.StringExtensions;
 
 public record TrimCase(string? Source, string? Trim, string? Result);
 

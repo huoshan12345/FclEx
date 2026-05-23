@@ -1,4 +1,4 @@
-﻿namespace System.IO;
+namespace System.IO;
 
 public sealed class FileSystemInfoEqualityComparer : IEqualityComparer<FileSystemInfo?>
 {

@@ -1,4 +1,4 @@
-﻿namespace FclEx.Helpers;
+namespace FclEx.Helpers;
 
 public record EnumInfo(string Name, string Lower, string Upper, long Value, string? EnumMemberValue);
 

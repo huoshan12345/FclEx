@@ -1,4 +1,4 @@
-﻿namespace Xunit.Testing;
+namespace Xunit.Testing;
 
 [Flags]
 public enum Options

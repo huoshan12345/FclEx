@@ -1,4 +1,4 @@
-﻿namespace FclEx;
+namespace FclEx;
 
 internal class Program
 {

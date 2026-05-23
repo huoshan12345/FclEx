@@ -1,4 +1,4 @@
-﻿using static Duende.IdentityModel.OidcConstants;
+using static Duende.IdentityModel.OidcConstants;
 
 namespace FclEx.Http.Auth;
 

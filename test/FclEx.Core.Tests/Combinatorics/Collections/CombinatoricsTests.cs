@@ -1,4 +1,4 @@
-﻿namespace Combinatorics.Collections;
+namespace Combinatorics.Collections;
 
 /// <summary>
 /// Tests Cases &amp; Examples for Combinations, Permutations &amp; Variations with & without repetition in the output sets.

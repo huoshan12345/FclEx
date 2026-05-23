@@ -1,4 +1,4 @@
-﻿namespace FclEx.RabbitMQ;
+namespace FclEx.RabbitMQ;
 
 public class RabbitMqConsumerOptions : RabbitMqPublisherOptions
 {

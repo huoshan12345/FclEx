@@ -1,4 +1,4 @@
-﻿#pragma warning disable IDE0059
+#pragma warning disable IDE0059
 #pragma warning disable CA1861
 
 namespace FclEx.Extensions.EnumerableExtensions;

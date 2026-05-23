@@ -1,4 +1,4 @@
-﻿namespace FclEx;
+namespace FclEx;
 
 public static class RegexPatterns
 {

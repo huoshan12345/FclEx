@@ -1,4 +1,4 @@
-﻿namespace System.Text.Json.Serialization;
+namespace System.Text.Json.Serialization;
 
 public sealed class FileInfoJsonConverter : JsonConverter<FileInfo>
 {

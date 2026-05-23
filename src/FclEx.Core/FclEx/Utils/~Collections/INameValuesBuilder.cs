@@ -1,4 +1,4 @@
-﻿using static FclEx.Utils.NameValueOmitOption;
+using static FclEx.Utils.NameValueOmitOption;
 
 namespace FclEx.Utils;
 

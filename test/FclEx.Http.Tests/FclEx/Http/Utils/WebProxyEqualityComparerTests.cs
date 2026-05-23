@@ -1,4 +1,4 @@
-﻿namespace FclEx.Http.Utils;
+namespace FclEx.Http.Utils;
 
 public class WebProxyEqualityComparerTests
 {

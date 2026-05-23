@@ -1,4 +1,4 @@
-﻿namespace FclEx.Serilog;
+namespace FclEx.Serilog;
 
 public partial class JsonFormatter : ITextFormatter
 {

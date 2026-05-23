@@ -1,4 +1,4 @@
-﻿namespace FclEx.RabbitMQ;
+namespace FclEx.RabbitMQ;
 
 public class MessageConverter<TSource, TDestination> : IMessageConverter<TSource, TDestination>
 {

@@ -1,4 +1,4 @@
-﻿using static System.Threading.Tasks.TaskContinuationOptions;
+using static System.Threading.Tasks.TaskContinuationOptions;
 
 namespace FclEx.Extensions;
 

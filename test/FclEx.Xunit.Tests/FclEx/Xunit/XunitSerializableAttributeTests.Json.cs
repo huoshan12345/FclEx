@@ -1,4 +1,4 @@
-﻿namespace FclEx.Xunit;
+namespace FclEx.Xunit;
 
 public class SelectorJsonConverter<T> : JsonConverter<Expression<Func<T, object?>>>
 {

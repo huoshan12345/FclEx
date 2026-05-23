@@ -1,4 +1,4 @@
-﻿namespace Microsoft.AspNetCore.Mvc;
+namespace Microsoft.AspNetCore.Mvc;
 
 [AttributeUsage(AttributeTargets.Class)]
 public class ControllerNameAttribute(string name) : Attribute

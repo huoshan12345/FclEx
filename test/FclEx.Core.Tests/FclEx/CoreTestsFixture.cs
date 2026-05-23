@@ -1,13 +1,13 @@
-﻿namespace FclEx.Tests;
+namespace FclEx;
 
-public class GlobalFixture : IAsyncLifetime
+public class CoreTestsFixture : IAsyncLifetime
 {
     public static ITestOutputHelper? Output => TestContext.Current.TestOutputHelper;
     public static readonly IConfigurationRoot Config = BuildConfig();
 
     public Assembly CurrentAssembly { get; }
 
-    public GlobalFixture()
+    public CoreTestsFixture()
     {
         CurrentAssembly = GetType().Assembly;
     }

@@ -1,4 +1,4 @@
-﻿using FclEx.Extensions;
+using FclEx.Extensions;
 
 namespace FclEx.DependencyInjection;
 

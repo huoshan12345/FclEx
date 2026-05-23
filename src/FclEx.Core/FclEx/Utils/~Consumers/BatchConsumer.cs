@@ -1,4 +1,4 @@
-﻿namespace FclEx.Utils;
+namespace FclEx.Utils;
 
 public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
     IAsyncConsumer<BatchConsumer<T>, IReadOnlyList<T>>,

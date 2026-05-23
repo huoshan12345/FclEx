@@ -1,4 +1,4 @@
-﻿using FclEx.DependencyInjection;
+using FclEx.DependencyInjection;
 using FclEx.Logging;
 using Microsoft.Extensions.Logging;
 

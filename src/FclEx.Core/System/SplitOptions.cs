@@ -1,4 +1,4 @@
-﻿namespace System;
+namespace System;
 
 [Flags]
 public enum SplitOptions

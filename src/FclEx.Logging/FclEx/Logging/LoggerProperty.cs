@@ -1,4 +1,4 @@
-﻿namespace FclEx.Logging;
+namespace FclEx.Logging;
 
 public readonly record struct LoggerProperty(string Key, object? Value)
 {

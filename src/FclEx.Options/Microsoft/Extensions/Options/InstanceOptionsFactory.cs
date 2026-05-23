@@ -1,4 +1,4 @@
-﻿namespace Microsoft.Extensions.Options;
+namespace Microsoft.Extensions.Options;
 
 public class InstanceOptionsFactory<TOptions> : OptionsFactory<TOptions> where TOptions : class
 {

@@ -1,4 +1,4 @@
-﻿using static FclEx.Extensions.SeparatorLocationOption;
+using static FclEx.Extensions.SeparatorLocationOption;
 
 namespace FclEx.Extensions;
 

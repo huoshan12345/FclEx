@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using FclEx.Dapper;
 
 namespace FclEx.EfCore;
@@ -43,6 +43,6 @@ public class EfCoreTests(EfCoreFixture fixture) : DatabaseTests
     [return: NotNullIfNotNull(nameof(str))]
     public static string? WithAssemblyInfo(string? str, char separator = '_')
     {
-        return GlobalFixture.WithAssemblyInfo(str, typeof(EfCoreTests).Assembly, separator);
+        return CoreTestsFixture.WithAssemblyInfo(str, typeof(EfCoreTests).Assembly, separator);
     }
 }

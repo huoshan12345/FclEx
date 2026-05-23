@@ -1,4 +1,4 @@
-﻿using FclEx.Messaging;
+using FclEx.Messaging;
 using static FclEx.Kafka.KafkaErrorType;
 
 namespace FclEx.Kafka;

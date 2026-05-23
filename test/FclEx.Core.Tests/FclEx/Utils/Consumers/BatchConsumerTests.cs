@@ -1,4 +1,4 @@
-﻿namespace FclEx.Utils.Consumers;
+namespace FclEx.Utils.Consumers;
 
 public class BatchConsumerTests
 {
