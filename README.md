@@ -75,4 +75,5 @@ For example:
 
 ## Notes
 
-The packages are small by design: most APIs are extension methods, focused helpers, or composable building blocks. Prefer referencing the package that matches the library you are extending instead of pulling in the full repository surface.
+The packages are small by design: most APIs are extension methods, focused helpers, or composable building blocks.  
+Prefer referencing the package that matches the library you are extending instead of pulling in the full repository surface.
