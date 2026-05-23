@@ -12,6 +12,8 @@
     <File Path="build/encrypt.ps1" />
     <File Path="build/pack.ps1" />
     <File Path="build/pkg.version" />
+    <File Path="build/Testing.props" />
+    <File Path="build/Testing.targets" />
   </Folder>
   <Folder Name="/config/">
     <File Path=".editorconfig" />

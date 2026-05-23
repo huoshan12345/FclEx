@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup>
+    <_RootDir>$(MSBuildThisFileDirectory)..\</_RootDir>
+    <VSTestLogger>trx%3bLogFileName=$(MSBuildProjectName).trx</VSTestLogger>
+  </PropertyGroup>
+
+  <Target Name="ComputeCustomTestResultsDirectory" BeforeTargets="VSTest">
+    <PropertyGroup>
+      <VSTestResultsDirectory>$([System.IO.Path]::Combine($(_RootDir), TestResults, $(Configuration), $(TargetFramework), $(PlatformTarget)))</VSTestResultsDirectory>
+    </PropertyGroup>
+  </Target>
+</Project>
