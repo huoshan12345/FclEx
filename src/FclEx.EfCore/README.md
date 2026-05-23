@@ -13,16 +13,6 @@ Entity Framework Core helpers for common query, update, schema, and testing scen
 - Soft-delete index convention helpers.
 - Test helpers for temporarily adding entity types to a context.
 
-## Target Frameworks
-
-This project targets `net8.0`, `net9.0`, and `net10.0`.
-
-## Dependencies
-
-- `Microsoft.EntityFrameworkCore.Relational`
-- `SSH.NET`
-- `FclEx.Core`
-
 ## Notes
 
 The query helpers build EF expression trees, so provider support still depends on the active EF Core provider. Test helpers are intended for test infrastructure rather than production model configuration.

@@ -13,16 +13,6 @@ The foundational package for FclEx. It contains general-purpose extensions, data
 - Utility types for disposables, lazy values, caching, paging, console tables, regexes, runtime checks, and source building.
 - Combinatorics collections for combinations, permutations, and variations.
 
-## Target Frameworks
-
-By default this project targets `netstandard2.0`, `net472`, `net8.0`, `net9.0`, and `net10.0`.
-
-## Dependencies
-
-- `System.Text.Json`
-- Compatibility packages for older target frameworks.
-- `FclEx.SourceGenerator` as an analyzer.
-
 ## Notes
 
 This package is intentionally broad. Prefer using the focused extension methods and small utility types directly rather than treating it as an application framework.

@@ -13,16 +13,6 @@ Messaging helpers for Kafka and RabbitMQ.
 - RabbitMQ constants for exchange types, queue arguments, binding arguments, and headers.
 - RabbitMQ basic-property extensions for headers, retry counts, and delay metadata.
 
-## Target Frameworks
-
-By default this project targets `netstandard2.0`, `net472`, `net8.0`, `net9.0`, and `net10.0`.
-
-## Dependencies
-
-- `Confluent.Kafka`
-- `RabbitMQ.Client`
-- `FclEx.Logging`
-
 ## Notes
 
 The RabbitMQ processors are asynchronous and disposable. Always dispose publishers, consumers, and routers so channels and connections are closed cleanly.

@@ -11,17 +11,6 @@ ASP.NET Core integration helpers for the FclEx library family.
 - Hosting helpers such as `UseApplicationName`.
 - Logging property enrichment from ASP.NET Core request data.
 
-## Target Frameworks
-
-This project targets `net8.0`, `net9.0`, and `net10.0`.
-
-## Dependencies
-
-- `Microsoft.AspNetCore.App`
-- `FclEx.Http`
-- `FclEx.Logging`
-- `FclEx.Options`
-
 ## Notes
 
 Use this package from ASP.NET Core applications that already use the FclEx HTTP, logging, or options helpers. The request-body helpers depend on buffering being enabled before the body is read.

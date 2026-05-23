@@ -12,17 +12,6 @@ Serilog integration helpers, enrichers, filters, formatters, and sinks.
 - TCP and UDP Logstash input helpers.
 - Extensions for `LoggerConfiguration`, `LoggerSinkConfiguration`, Serilog `ILogger`, and Microsoft logging builders.
 
-## Target Frameworks
-
-By default this project targets `netstandard2.0`, `net472`, `net8.0`, `net9.0`, and `net10.0`.
-
-## Dependencies
-
-- `Microsoft.Extensions.Logging.Configuration`
-- `Serilog.Extensions.Logging`
-- `Destructurama.Attributed`
-- `FclEx.Http`
-
 ## Notes
 
 Several helpers use reflection against Serilog internals to mutate or format log events. Recheck behavior when upgrading Serilog major versions.

@@ -13,17 +13,6 @@ xUnit v2 test helpers for FclEx-based test projects.
 - Testing sequence helpers for verifying enumeration behavior.
 - `XunitSerializableAttribute` and related source-generated serialization support.
 
-## Target Frameworks
-
-By default this project targets `netstandard2.0`, `net472`, `net8.0`, `net9.0`, and `net10.0`.
-
-## Dependencies
-
-- `xunit`
-- `FclEx.Logging`
-- `FclEx.SourceGenerator` as an analyzer
-- `FclEx.Xunit.SourceGenerator` as an analyzer
-
 ## Notes
 
 This package is marked as a non-test project so it can be referenced by test projects without being discovered as a test assembly.

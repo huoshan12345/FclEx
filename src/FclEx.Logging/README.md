@@ -13,15 +13,6 @@ Logging helpers built on `Microsoft.Extensions.Logging`.
 - Service collection helpers for removing logging registrations.
 - `LogPropertyIgnoreAttribute` for excluding members from log-property extraction.
 
-## Target Frameworks
-
-By default this project targets `netstandard2.0`, `net472`, `net8.0`, `net9.0`, and `net10.0`.
-
-## Dependencies
-
-- `Microsoft.Extensions.Logging`
-- `FclEx.Options`
-
 ## Notes
 
 Property scopes are disposable. Prefer `using` blocks or `using var` when pushing properties to ensure scopes are closed even when an operation fails.

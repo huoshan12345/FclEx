@@ -11,15 +11,6 @@ SlackNet extensions and formatting helpers.
 - Conversation lookup, history, reply, and reaction helpers.
 - Table-data conversion and chunked posting helpers for Slack messages and webhooks.
 
-## Target Frameworks
-
-By default this project targets `netstandard2.0`, `net472`, `net8.0`, `net9.0`, and `net10.0`.
-
-## Dependencies
-
-- `SlackNet.AspNetCore`
-- `FclEx.Http`
-
 ## Notes
 
 Slack API methods are rate-limited by Slack. Use the chunking helpers for large table outputs and keep retry behavior aligned with the SlackNet client configuration.

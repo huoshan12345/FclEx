@@ -12,15 +12,6 @@ YamlDotNet helpers, converters, and node extensions.
 - `YamlMappingNode` and `YamlNode` helpers for querying, adding, updating, and removing child nodes.
 - Emitter helpers for scalar output.
 
-## Target Frameworks
-
-By default this project targets `netstandard2.0`, `net472`, `net8.0`, `net9.0`, and `net10.0`.
-
-## Dependencies
-
-- `YamlDotNet`
-- `FclEx.Core`
-
 ## Notes
 
 Attribute-based converter registration scans assemblies. Pass a specific assembly when you want deterministic converter discovery.

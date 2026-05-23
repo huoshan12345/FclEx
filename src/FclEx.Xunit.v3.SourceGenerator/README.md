@@ -8,15 +8,6 @@ Source generator for xUnit v3 serialization helpers.
 - Shared source-generation utilities from `FclEx.Core` and `FclEx.SourceGenerator`.
 - Linked generator implementation from `FclEx.Xunit.SourceGenerator`.
 
-## Target Frameworks
-
-This project targets `netstandard2.0`.
-
-## Dependencies
-
-- `Microsoft.CodeAnalysis.CSharp`
-- `Microsoft.CodeAnalysis.Analyzers`
-
 ## Notes
 
 This generator is packaged through `FclEx.Xunit.v3` as an analyzer. It exists separately so xUnit v3-specific generated code can be emitted without affecting xUnit v2 consumers.

@@ -12,15 +12,6 @@ Newtonsoft.Json helpers, converters, and extension methods.
 - Converter resolver support for bypassing selected converters.
 - Helpers for required child values in `JToken`.
 
-## Target Frameworks
-
-By default this project targets `netstandard2.0`, `net472`, `net8.0`, `net9.0`, and `net10.0`.
-
-## Dependencies
-
-- `Newtonsoft.Json`
-- `FclEx.Core`
-
 ## Notes
 
 Some converters intentionally relax input shape, such as allowing a single value where an array is expected. Use them only for APIs whose payload shape is known to vary.
