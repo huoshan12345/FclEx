@@ -107,7 +107,7 @@ jobs:
 
       - name: Pack
         shell: pwsh
-        run: >
+        run: |
           dotnet pack ${{ env.SOLUTION }} -v q -c Release --no-restore --no-build `
           --include-symbols -p:SymbolPackageFormat=snupkg -p:PackageVersion=${{ steps.set_version.outputs.version }} `
           -o ${{ env.ARTIFACTS_DIR }}
