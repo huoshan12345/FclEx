@@ -1,4 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Serilog sink support for sending batched log events to Slack.</Description>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\FclEx.Serilog\FclEx.Serilog.csproj" />
     <ProjectReference Include="..\FclEx.Slack\FclEx.Slack.csproj" />

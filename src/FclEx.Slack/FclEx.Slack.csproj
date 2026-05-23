@@ -1,4 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>SlackNet registration, Slack API extensions, message builders, webhook helpers, and table-to-message formatting.</Description>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="SlackNet.AspNetCore" />
   </ItemGroup>

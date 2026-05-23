@@ -6,6 +6,7 @@
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
     <DefineConstants>$(DefineConstants);FCLEX_INTERNAL</DefineConstants>
+    <Description>Shared source generator used by FclEx packages to emit extension overloads and small helper APIs.</Description>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AngleSharp" PrivateAssets="all" GeneratePathProperty="true" />

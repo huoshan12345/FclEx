@@ -3,6 +3,7 @@
     <IsPackable>true</IsPackable>
     <IsTestProject>false</IsTestProject>
     <DefineConstants>$(DefineConstants);FCLEX_XUNIT_V3</DefineConstants>
+    <Description>xUnit v3 variant of the FclEx test helper package.</Description>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="xunit.v3.assert" />

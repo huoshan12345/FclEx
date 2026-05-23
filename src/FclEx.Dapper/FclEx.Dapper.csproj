@@ -1,4 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Dapper and ADO.NET helpers for CRUD operations, transactions, dynamic parameters, SQL adapters, and type handlers.</Description>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Dapper" />
   </ItemGroup>

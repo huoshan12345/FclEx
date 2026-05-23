@@ -2,6 +2,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <IsTestProject>false</IsTestProject>
+    <Description>xUnit v2 assertions, conditional test attributes, output helpers, logging integration, and test utilities.</Description>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="xunit" />

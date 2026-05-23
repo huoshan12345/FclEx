@@ -1,4 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Newtonsoft.Json converters and helpers for flexible JSON parsing, serialization, JToken, and XML conversion.</Description>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
