@@ -11,6 +11,7 @@ on:
       - build/pkg.version
       - NuGet.Config
       - src/**
+      - '!src/**/*.md'
       - test/**
   pull_request_target: # use pull_request_target instead of pull_request to let dependabot have permission to access action secrets.
     branches:
