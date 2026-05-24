@@ -51,6 +51,11 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    if: needs.changes.outputs.should-build == 'true'
+
+    needs:
+      - changes
+
     outputs:
       version: ${{ steps.set_version.outputs.version }}
 
@@ -122,6 +127,11 @@ jobs:
 
   build-win:
     runs-on: windows-latest
+    if: needs.changes.outputs.should-build == 'true'
+
+    needs:
+      - changes
+
     env:
       TMP: D:\tmp
       TEMP: D:\tmp
