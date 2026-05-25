@@ -2,6 +2,13 @@ namespace FclEx.Extensions;
 
 public static class EncodingExtensions
 {
+    private static readonly Encoding _utf8WithoutBom = new UTF8Encoding(false);
+
+    extension(Encoding)
+    {
+        public static Encoding Utf8WithoutBom => _utf8WithoutBom;
+    }
+
 #if !NET5_0_OR_GREATER
     public static unsafe string GetString(this Encoding encoding, ReadOnlySpan<byte> bytes)
     {

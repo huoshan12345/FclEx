@@ -608,6 +608,58 @@ public static partial class EnumerableExtensions
     public static IEnumerable<T> SelectIf<T>(this IEnumerable<T> enumerable, bool condition, Func<T, int, T> selector)
         => enumerable.SelectIf(selector, condition);
 
+    public static int FindIndex<T>(this IEnumerable<T> source, Predicate<T> match)
+    {
+        Check.NotNull(source);
+        Check.NotNull(match);
+
+        return source switch
+        {
+            List<T> list => list.FindIndex(match),
+            T[] array => Array.FindIndex(array, match),
+            _ => FindIndexCore(source, match),
+        };
+
+        static int FindIndexCore(IEnumerable<T> source, Predicate<T> match)
+        {
+            var index = 0;
+            foreach (var item in source)
+            {
+                if (match(item))
+                    return index;
+
+                index++;
+            }
+            return -1;
+        }
+    }
+
+    public static int FindIndex<T>(this IEnumerable<T> source, int startIndex, Predicate<T> match)
+    {
+        Check.NotNull(source);
+        Check.NotNull(match);
+
+        return source switch
+        {
+            List<T> list => list.FindIndex(startIndex, match),
+            T[] array => Array.FindIndex(array, startIndex, match),
+            _ => source.Skip(startIndex).FindIndex(match),
+        };
+    }
+
+    public static int FindIndex<T>(this IEnumerable<T> source, int startIndex, int count, Predicate<T> match)
+    {
+        Check.NotNull(source);
+        Check.NotNull(match);
+
+        return source switch
+        {
+            List<T> list => list.FindIndex(startIndex, count, match),
+            T[] array => Array.FindIndex(array, startIndex, count, match),
+            _ => source.Skip(startIndex).Take(count).FindIndex(match),
+        };
+    }
+
     extension<T>(IEnumerable<T>)
     {
         public static IEnumerable<T> operator +(IEnumerable<T> enumerable, IEnumerable<T> other)

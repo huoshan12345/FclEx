@@ -118,6 +118,48 @@ public static class ListExtensions
         size = count;
     }
 
+    /// <summary>
+    /// Moves the element at the specified source index to the specified target index by swapping adjacent elements.
+    /// </summary>
+    /// <remarks>
+    /// This method preserves the relative order of all other elements.<br/>
+    /// For example, moving index 1 to index 3 in [A, B, C, D, E] produces [A, C, D, B, E].
+    /// </remarks>
+    /// <typeparam name="T">The type of elements in the list.</typeparam>
+    /// <param name="list">The list whose element should be moved.</param>
+    /// <param name="oldIndex">The current index of the element to move.</param>
+    /// <param name="newIndex">The target index to move the element to.</param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="list"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when <paramref name="oldIndex"/> or <paramref name="newIndex"/> is outside the valid index range.
+    /// </exception>
+    public static void MoveAt<T>(this IList<T> list, int oldIndex, int newIndex)
+    {
+        Check.NotNull(list);
+        Check.Between(oldIndex, 0, list.Count - 1);
+        Check.Between(newIndex, 0, list.Count - 1);
+
+        if (oldIndex == newIndex)
+            return;
+
+        if (oldIndex < newIndex)
+        {
+            for (var i = oldIndex; i < newIndex; i++)
+            {
+                list.Swap(i, i + 1);
+            }
+        }
+        else
+        {
+            for (var i = oldIndex; i > newIndex; i--)
+            {
+                list.Swap(i, i - 1);
+            }
+        }
+    }
+
 #if !NET5_0_OR_GREATER
     /// <summary>
     /// Returns a read-only <see cref="ReadOnlyCollection{T}"/> wrapper

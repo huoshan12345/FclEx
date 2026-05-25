@@ -131,4 +131,104 @@ public static class YamlMappingNodeExtensions
     {
         return node.GetOrAddChild<T>(key, () => new T());
     }
+
+    public static bool TryRemoveChild<T>(this YamlMappingNode node, Func<YamlScalarNode, T, bool> match, [NotNullWhen(true)] out T? removedNode)
+    where T : YamlNode
+    {
+        var (_, value, index) = node.FindChild(match);
+        if (value is null)
+        {
+            removedNode = null;
+            return false;
+        }
+
+        node.Children.RemoveAt(index);
+        removedNode = value;
+        return true;
+    }
+
+    public static bool TryRemoveChild<T>(this YamlMappingNode node, string key, [NotNullWhen(true)] out T? removedNode) where T : YamlNode
+    {
+        return node.TryRemoveChild((k, v) => k.Value == key, out removedNode);
+    }
+
+    public static bool TryRemoveChild(this YamlMappingNode node, string key)
+    {
+        return node.TryRemoveChild<YamlNode>(key, out _);
+    }
+
+    public static (YamlScalarNode? Key, T? Value, int Index) FindChild<T>(this YamlMappingNode node, Func<YamlScalarNode, T, bool> match) where T : YamlNode
+    {
+        var index = 0;
+        foreach (var (key, value) in node.Children)
+        {
+            var k = (YamlScalarNode)key;
+            if (value is T t && match(k, t))
+                return (k, t, index);
+
+            index++;
+        }
+        return (null, null, -1);
+    }
+
+    public static (YamlScalarNode? Key, T? Value, int Index) FindChild<T>(this YamlMappingNode node, string key) where T : YamlNode
+    {
+        return node.FindChild<T>((k, v) => k.Value == key);
+    }
+
+    public static List<(YamlScalarNode Key, T Value, int Index)> FindChildren<T>(this YamlMappingNode node, Func<YamlScalarNode, T, bool> match) where T : YamlNode
+    {
+        var results = new List<(YamlScalarNode Key, T Value, int Index)>();
+        var index = 0;
+        foreach (var (key, value) in node.Children)
+        {
+            var k = (YamlScalarNode)key;
+            if (value is T t && match(k, t))
+                results.Add((k, t, index));
+
+            index++;
+        }
+        return results;
+    }
+
+    public static bool HasChild<T>(this YamlMappingNode node, Func<YamlScalarNode, T, bool> match) where T : YamlNode
+    {
+        return node.FindChild(match).Key != null;
+    }
+
+    public static bool HasChild<T>(this YamlMappingNode node, string key) where T : YamlNode
+    {
+        return node.HasChild<T>((k, v) => k.Value == key);
+    }
+
+    public static bool HasChild(this YamlMappingNode node, string key, string value)
+    {
+        return node.HasChild<YamlScalarNode>((k, v) => k.Value == key && v.Value == value);
+    }
+
+    public static bool MoveChild(this YamlMappingNode node, YamlNode childValueNode, int newIndex)
+    {
+        var oldIndex = node.Children.FindIndex(m => ReferenceEquals(m.Value, childValueNode));
+        if (oldIndex < 0)
+            throw new KeyNotFoundException("Child node not found in the YAML mapping node.");
+
+        if (oldIndex == newIndex)
+            return false;
+
+        node.Children.MoveAt(oldIndex, newIndex);
+        return true;
+    }
+
+    public static bool MoveChild(this YamlMappingNode node, string key, int newIndex)
+    {
+        var (_, _, oldIndex) = node.FindChild<YamlNode>(key);
+        if (oldIndex < 0)
+            throw new KeyNotFoundException($"Key '{key}' not found in the YAML mapping node.");
+
+        if (oldIndex == newIndex)
+            return false;
+
+        node.Children.MoveAt(oldIndex, newIndex);
+        return true;
+    }
 }
