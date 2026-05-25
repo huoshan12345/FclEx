@@ -2,6 +2,9 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace FclEx.YamlDotNet;
 
+/// <summary>
+/// Identifies a YamlDotNet naming convention by a stable enum value.
+/// </summary>
 public enum YamlNamingConvention
 {
     /// <summary>
@@ -35,8 +38,17 @@ public enum YamlNamingConvention
     PascalCase,
 }
 
+/// <summary>
+/// Provides conversion helpers for <see cref="YamlNamingConvention"/>.
+/// </summary>
 public static class YamlNamingConventionExtensions
 {
+    /// <summary>
+    /// Converts a <see cref="YamlNamingConvention"/> value to the matching YamlDotNet naming convention instance.
+    /// </summary>
+    /// <param name="convention">The convention value to convert.</param>
+    /// <returns>The matching YamlDotNet naming convention.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="convention"/> is not a defined value.</exception>
     public static INamingConvention ToNamingConvention(this YamlNamingConvention convention)
     {
         return convention switch

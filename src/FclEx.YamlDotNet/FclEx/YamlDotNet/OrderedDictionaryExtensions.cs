@@ -1,7 +1,20 @@
 namespace FclEx.YamlDotNet;
 
+/// <summary>
+/// Provides index-based operations for YamlDotNet ordered dictionaries.
+/// </summary>
 public static class OrderedDictionaryExtensions
 {
+    /// <summary>
+    /// Swaps two entries in an ordered dictionary.
+    /// </summary>
+    /// <typeparam name="TKey">The dictionary key type.</typeparam>
+    /// <typeparam name="TValue">The dictionary value type.</typeparam>
+    /// <param name="dictionary">The ordered dictionary to update.</param>
+    /// <param name="index1">The zero-based index of the first entry.</param>
+    /// <param name="index2">The zero-based index of the second entry.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="dictionary"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when either index is outside the dictionary bounds.</exception>
     public static void Swap<TKey, TValue>(this global::YamlDotNet.Helpers.IOrderedDictionary<TKey, TValue> dictionary, int index1, int index2)
         where TKey : notnull
     {
@@ -9,6 +22,9 @@ public static class OrderedDictionaryExtensions
         SwapCore(dictionary, index1, index2);
     }
 
+    /// <summary>
+    /// Swaps two entries without repeating null validation.
+    /// </summary>
     private static void SwapCore<TKey, TValue>(global::YamlDotNet.Helpers.IOrderedDictionary<TKey, TValue> dictionary, int index1, int index2)
         where TKey : notnull
     {
@@ -21,6 +37,16 @@ public static class OrderedDictionaryExtensions
         dictionary[index2] = item1;
     }
 
+    /// <summary>
+    /// Moves an entry from one index to another while preserving the relative order of the other entries.
+    /// </summary>
+    /// <typeparam name="TKey">The dictionary key type.</typeparam>
+    /// <typeparam name="TValue">The dictionary value type.</typeparam>
+    /// <param name="dictionary">The ordered dictionary to update.</param>
+    /// <param name="sourceIndex">The zero-based index of the entry to move.</param>
+    /// <param name="destinationIndex">The zero-based index where the entry should be placed.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="dictionary"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when either index is outside the dictionary bounds.</exception>
     public static void MoveAt<TKey, TValue>(this global::YamlDotNet.Helpers.IOrderedDictionary<TKey, TValue> dictionary, int sourceIndex, int destinationIndex)
         where TKey : notnull
     {
