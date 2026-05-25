@@ -1,3 +1,6 @@
+using System.Collections;
+using System.Collections.ObjectModel;
+
 namespace FclEx.Extensions.EnumerableExtensions;
 
 public class FindIndexTests
@@ -7,6 +10,7 @@ public class FindIndexTests
         Yield(10, 20, 30, 40),
         new List<int> { 10, 20, 30, 40 },
         new[] { 10, 20, 30, 40 },
+        new ReadOnlyCollection<int>(new List<int> { 10, 20, 30, 40 }),
     };
 
     [Theory]
@@ -145,11 +149,83 @@ public class FindIndexTests
         Assert.False(predicateCalled);
     }
 
+    [Fact]
+    public void FindIndex_WithKnownCountSourceAndCountPastEnd_ShouldThrowBeforeEnumerating()
+    {
+        var source = new ThrowingCollection<int>([1, 2, 3]);
+
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => source.FindIndex(2, 2, _ => true));
+
+        Assert.Equal("count", exception.ParamName);
+    }
+
+    [Fact]
+    public void FindIndex_WithUnknownCountSourceAndValidRange_ShouldNotEnumeratePastRange()
+    {
+        var source = YieldWithTailThatThrows(1, 2);
+
+        var index = source.FindIndex(0, 2, m => m == 3);
+
+        Assert.Equal(-1, index);
+    }
+
     private static IEnumerable<int> Yield(params int[] values)
     {
         foreach (var value in values)
         {
             yield return value;
+        }
+    }
+
+    private static IEnumerable<int> YieldWithTailThatThrows(params int[] values)
+    {
+        foreach (var value in values)
+        {
+            yield return value;
+        }
+
+        throw new InvalidOperationException("The sequence was enumerated past the requested range.");
+    }
+
+    private sealed class ThrowingCollection<T>(IReadOnlyList<T> items) : ICollection<T>
+    {
+        public int Count => items.Count;
+
+        public bool IsReadOnly => true;
+
+        public void Add(T item)
+        {
+            throw new NotSupportedException();
+        }
+
+        public void Clear()
+        {
+            throw new NotSupportedException();
+        }
+
+        public bool Contains(T item)
+        {
+            throw new NotSupportedException();
+        }
+
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            throw new NotSupportedException();
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            throw new InvalidOperationException("The sequence should not be enumerated.");
+        }
+
+        public bool Remove(T item)
+        {
+            throw new NotSupportedException();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

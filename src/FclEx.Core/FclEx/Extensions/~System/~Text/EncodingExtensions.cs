@@ -6,6 +6,9 @@ public static class EncodingExtensions
 
     extension(Encoding)
     {
+        /// <summary>
+        /// Gets a UTF-8 encoding instance that does not emit a byte order mark.
+        /// </summary>
         public static Encoding Utf8WithoutBom => _utf8WithoutBom;
     }
 

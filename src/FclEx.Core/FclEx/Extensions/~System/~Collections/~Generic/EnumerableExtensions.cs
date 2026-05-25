@@ -608,6 +608,13 @@ public static partial class EnumerableExtensions
     public static IEnumerable<T> SelectIf<T>(this IEnumerable<T> enumerable, bool condition, Func<T, int, T> selector)
         => enumerable.SelectIf(selector, condition);
 
+    /// <summary>
+    /// Searches for the first element that satisfies the specified predicate.
+    /// </summary>
+    /// <typeparam name="T">The sequence element type.</typeparam>
+    /// <param name="source">The sequence to search.</param>
+    /// <param name="match">The predicate that defines the element to find.</param>
+    /// <returns>The zero-based index of the first matching element, or -1 when no element matches.</returns>
     public static int FindIndex<T>(this IEnumerable<T> source, Predicate<T> match)
     {
         Check.NotNull(source);
@@ -634,6 +641,15 @@ public static partial class EnumerableExtensions
         }
     }
 
+    /// <summary>
+    /// Searches for the first element that satisfies the specified predicate, starting at a given index.
+    /// </summary>
+    /// <typeparam name="T">The sequence element type.</typeparam>
+    /// <param name="source">The sequence to search.</param>
+    /// <param name="startIndex">The zero-based starting index of the search.</param>
+    /// <param name="match">The predicate that defines the element to find.</param>
+    /// <returns>The zero-based index of the first matching element, or -1 when no element matches.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="startIndex"/> is negative or greater than the sequence length.</exception>
     public static int FindIndex<T>(this IEnumerable<T> source, int startIndex, Predicate<T> match)
     {
         Check.NotNull(source);
@@ -665,6 +681,23 @@ public static partial class EnumerableExtensions
         }
     }
 
+    /// <summary>
+    /// Searches a range for the first element that satisfies the specified predicate.
+    /// </summary>
+    /// <typeparam name="T">The sequence element type.</typeparam>
+    /// <param name="source">The sequence to search.</param>
+    /// <param name="startIndex">The zero-based starting index of the search range.</param>
+    /// <param name="count">The number of elements in the search range.</param>
+    /// <param name="match">The predicate that defines the element to find.</param>
+    /// <returns>The zero-based index of the first matching element, or -1 when no element matches.</returns>
+    /// <remarks>
+    /// For non-countable sequences, the method enumerates only enough elements to validate the requested range and search it.
+    /// The predicate is not invoked when the requested range is invalid.
+    /// </remarks>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when <paramref name="startIndex"/> or <paramref name="count"/> is negative,
+    /// or when the requested range extends past the sequence length.
+    /// </exception>
     public static int FindIndex<T>(this IEnumerable<T> source, int startIndex, int count, Predicate<T> match)
     {
         Check.NotNull(source);
@@ -710,30 +743,25 @@ public static partial class EnumerableExtensions
 
         static int FindIndexInRangeWithUnknownCount(IEnumerable<T> source, int startIndex, int count, Predicate<T> match)
         {
-            var endIndex = (long)startIndex + count;
-            var index = 0;
             var candidates = new List<T>();
+            using var enumerator = source.GetEnumerator();
 
-            foreach (var item in source)
+            var index = 0;
+            while (index < startIndex)
             {
-                if (index < startIndex)
-                {
-                    index++;
-                    continue;
-                }
+                if (enumerator.MoveNext() == false)
+                    throw new ArgumentOutOfRangeException(nameof(startIndex), startIndex, $"The value must be between 0 and {index}.");
 
-                if (index >= endIndex)
-                    break;
-
-                candidates.Add(item);
                 index++;
             }
 
-            if (startIndex > index)
-                throw new ArgumentOutOfRangeException(nameof(startIndex), startIndex, $"The value must be between 0 and {index}.");
+            for (var i = 0; i < count; i++)
+            {
+                if (enumerator.MoveNext() == false)
+                    throw new ArgumentOutOfRangeException(nameof(count), count, $"The value must be between 0 and {i}.");
 
-            if (endIndex > index)
-                throw new ArgumentOutOfRangeException(nameof(count), count, $"The value must be between 0 and {index - startIndex}.");
+                candidates.Add(enumerator.Current);
+            }
 
             for (var i = 0; i < candidates.Count; i++)
             {

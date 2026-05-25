@@ -49,36 +49,84 @@ public static class ArrayExtensions
         return array.AsSpan();
     }
 
+    /// <summary>
+    /// Searches for the first element that satisfies the specified predicate.
+    /// </summary>
+    /// <typeparam name="T">The array element type.</typeparam>
+    /// <param name="array">The array to search.</param>
+    /// <param name="match">The predicate that defines the element to find.</param>
+    /// <returns>The zero-based index of the first matching element, or -1 when no element matches.</returns>
     [MethodImpl(AggressiveInlining)]
     public static int FindIndex<T>(this T[] array, Predicate<T> match)
     {
         return Array.FindIndex(array, match);
     }
 
+    /// <summary>
+    /// Searches for the first element that satisfies the specified predicate, starting at a given index.
+    /// </summary>
+    /// <typeparam name="T">The array element type.</typeparam>
+    /// <param name="array">The array to search.</param>
+    /// <param name="startIndex">The zero-based starting index of the search.</param>
+    /// <param name="match">The predicate that defines the element to find.</param>
+    /// <returns>The zero-based index of the first matching element, or -1 when no element matches.</returns>
     [MethodImpl(AggressiveInlining)]
     public static int FindIndex<T>(this T[] array, int startIndex, Predicate<T> match)
     {
         return Array.FindIndex(array, startIndex, match);
     }
 
+    /// <summary>
+    /// Searches a range for the first element that satisfies the specified predicate.
+    /// </summary>
+    /// <typeparam name="T">The array element type.</typeparam>
+    /// <param name="array">The array to search.</param>
+    /// <param name="startIndex">The zero-based starting index of the search range.</param>
+    /// <param name="count">The number of elements in the search range.</param>
+    /// <param name="match">The predicate that defines the element to find.</param>
+    /// <returns>The zero-based index of the first matching element, or -1 when no element matches.</returns>
     [MethodImpl(AggressiveInlining)]
     public static int FindIndex<T>(this T[] array, int startIndex, int count, Predicate<T> match)
     {
         return Array.FindIndex(array, startIndex, count, match);
     }
 
+    /// <summary>
+    /// Searches for the last element that satisfies the specified predicate.
+    /// </summary>
+    /// <typeparam name="T">The array element type.</typeparam>
+    /// <param name="array">The array to search.</param>
+    /// <param name="match">The predicate that defines the element to find.</param>
+    /// <returns>The zero-based index of the last matching element, or -1 when no element matches.</returns>
     [MethodImpl(AggressiveInlining)]
     public static int FindLastIndex<T>(this T[] array, Predicate<T> match)
     {
         return Array.FindLastIndex(array, match);
     }
 
+    /// <summary>
+    /// Searches backward for an element that satisfies the specified predicate, starting at a given index.
+    /// </summary>
+    /// <typeparam name="T">The array element type.</typeparam>
+    /// <param name="array">The array to search.</param>
+    /// <param name="startIndex">The zero-based starting index of the backward search.</param>
+    /// <param name="match">The predicate that defines the element to find.</param>
+    /// <returns>The zero-based index of the last matching element, or -1 when no element matches.</returns>
     [MethodImpl(AggressiveInlining)]
     public static int FindLastIndex<T>(this T[] array, int startIndex, Predicate<T> match)
     {
         return Array.FindLastIndex(array, startIndex, match);
     }
 
+    /// <summary>
+    /// Searches a range backward for an element that satisfies the specified predicate.
+    /// </summary>
+    /// <typeparam name="T">The array element type.</typeparam>
+    /// <param name="array">The array to search.</param>
+    /// <param name="startIndex">The zero-based starting index of the backward search.</param>
+    /// <param name="count">The number of elements in the backward search range.</param>
+    /// <param name="match">The predicate that defines the element to find.</param>
+    /// <returns>The zero-based index of the last matching element, or -1 when no element matches.</returns>
     [MethodImpl(AggressiveInlining)]
     public static int FindLastIndex<T>(this T[] array, int startIndex, int count, Predicate<T> match)
     {

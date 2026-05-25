@@ -119,7 +119,7 @@ public static class ListExtensions
     }
 
     /// <summary>
-    /// Moves the element at the specified source index to the specified target index by swapping adjacent elements.
+    /// Moves the element at the specified source index to the specified destination index.
     /// </summary>
     /// <remarks>
     /// This method preserves the relative order of all other elements.<br/>
@@ -144,20 +144,24 @@ public static class ListExtensions
         if (sourceIndex == destinationIndex)
             return;
 
+        var item = list[sourceIndex];
+
         if (sourceIndex < destinationIndex)
         {
             for (var i = sourceIndex; i < destinationIndex; i++)
             {
-                list.Swap(i, i + 1);
+                list[i] = list[i + 1];
             }
         }
         else
         {
             for (var i = sourceIndex; i > destinationIndex; i--)
             {
-                list.Swap(i, i - 1);
+                list[i] = list[i - 1];
             }
         }
+
+        list[destinationIndex] = item;
     }
 
 #if !NET5_0_OR_GREATER

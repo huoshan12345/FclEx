@@ -27,6 +27,14 @@ public class MoveAtTests
     }
 
     [Fact]
+    public void MoveAt_WhenListIsArray_ShouldMoveItem()
+    {
+        string[] list = ["A", "B", "C", "D"];
+        list.MoveAt(1, 3);
+        Assert.Equal(["A", "C", "D", "B"], list);
+    }
+
+    [Fact]
     public void MoveAt_WhenMovingFirstItemToLastIndex_ShouldMoveItemToEnd()
     {
         var list = new List<string> { "A", "B", "C", "D" };
@@ -48,6 +56,14 @@ public class MoveAtTests
         List<string>? list = null;
         var exception = Assert.Throws<ArgumentNullException>(() => list!.MoveAt(0, 1));
         Assert.Equal("list", exception.ParamName);
+    }
+
+    [Fact]
+    public void MoveAt_WhenListIsEmpty_ShouldThrowArgumentOutOfRangeException()
+    {
+        var list = new List<string>();
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => list.MoveAt(0, 0));
+        Assert.Equal("sourceIndex", exception.ParamName);
     }
 
     [Theory]
