@@ -30,6 +30,8 @@
     <File Path="src/EmitGeneratedFiles.props" />
     <Project Path="src/FclEx.AspNetCore.Testing/FclEx.AspNetCore.Testing.csproj" Id="41b52676-4b6a-4aca-bf52-8f7f42d55ff8" />
     <Project Path="src/FclEx.AspNetCore/FclEx.AspNetCore.csproj" />
+    <Project Path="src/FclEx.Caching.Redis/FclEx.Caching.Redis.csproj" Id="4a7cfa3c-c66a-491c-b23f-e59b084b30d3" />
+    <Project Path="src/FclEx.Caching/FclEx.Caching.csproj" Id="f62641b6-a4d7-40c9-8a70-edb37e7eea95" />
     <Project Path="src/FclEx.Core/FclEx.Core.csproj" />
     <Project Path="src/FclEx.Dapper/FclEx.Dapper.csproj" />
     <Project Path="src/FclEx.DependencyInjection/FclEx.DependencyInjection.csproj" />

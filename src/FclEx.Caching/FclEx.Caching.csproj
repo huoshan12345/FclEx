@@ -1,0 +1,10 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="EasyCaching.InMemory" />
+    <PackageReference Include="EasyCaching.Serialization.SystemTextJson" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FclEx.Options\FclEx.Options.csproj" />
+  </ItemGroup>
+</Project>
