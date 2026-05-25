@@ -127,33 +127,33 @@ public static class ListExtensions
     /// </remarks>
     /// <typeparam name="T">The type of elements in the list.</typeparam>
     /// <param name="list">The list whose element should be moved.</param>
-    /// <param name="oldIndex">The current index of the element to move.</param>
-    /// <param name="newIndex">The target index to move the element to.</param>
+    /// <param name="sourceIndex">The current index of the element to move.</param>
+    /// <param name="destinationIndex">The target index to move the element to.</param>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="list"/> is <see langword="null"/>.
     /// </exception>
     /// <exception cref="ArgumentOutOfRangeException">
-    /// Thrown when <paramref name="oldIndex"/> or <paramref name="newIndex"/> is outside the valid index range.
+    /// Thrown when <paramref name="sourceIndex"/> or <paramref name="destinationIndex"/> is outside the valid index range.
     /// </exception>
-    public static void MoveAt<T>(this IList<T> list, int oldIndex, int newIndex)
+    public static void MoveAt<T>(this IList<T> list, int sourceIndex, int destinationIndex)
     {
         Check.NotNull(list);
-        Check.Between(oldIndex, 0, list.Count - 1);
-        Check.Between(newIndex, 0, list.Count - 1);
+        Check.Between(sourceIndex, 0, list.Count - 1);
+        Check.Between(destinationIndex, 0, list.Count - 1);
 
-        if (oldIndex == newIndex)
+        if (sourceIndex == destinationIndex)
             return;
 
-        if (oldIndex < newIndex)
+        if (sourceIndex < destinationIndex)
         {
-            for (var i = oldIndex; i < newIndex; i++)
+            for (var i = sourceIndex; i < destinationIndex; i++)
             {
                 list.Swap(i, i + 1);
             }
         }
         else
         {
-            for (var i = oldIndex; i > newIndex; i--)
+            for (var i = sourceIndex; i > destinationIndex; i--)
             {
                 list.Swap(i, i - 1);
             }

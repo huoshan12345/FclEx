@@ -1,4 +1,4 @@
-﻿namespace FclEx.Extensions.ListExtensions;
+namespace FclEx.Extensions.ListExtensions;
 
 public class MoveAtTests
 {
@@ -53,20 +53,20 @@ public class MoveAtTests
     [Theory]
     [InlineData(-1, 0)]
     [InlineData(3, 0)]
-    public void MoveAt_WhenOldIndexIsOutOfRange_ShouldThrowArgumentOutOfRangeException(int oldIndex, int newIndex)
+    public void MoveAt_WhenSourceIndexIsOutOfRange_ShouldThrowArgumentOutOfRangeException(int sourceIndex, int destinationIndex)
     {
         var list = new List<string> { "A", "B", "C" };
-        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => list.MoveAt(oldIndex, newIndex));
-        Assert.Equal("oldIndex", exception.ParamName);
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => list.MoveAt(sourceIndex, destinationIndex));
+        Assert.Equal("sourceIndex", exception.ParamName);
     }
 
     [Theory]
     [InlineData(0, -1)]
     [InlineData(0, 3)]
-    public void MoveAt_WhenNewIndexIsOutOfRange_ShouldThrowArgumentOutOfRangeException(int oldIndex, int newIndex)
+    public void MoveAt_WhenDestinationIndexIsOutOfRange_ShouldThrowArgumentOutOfRangeException(int sourceIndex, int destinationIndex)
     {
         var list = new List<string> { "A", "B", "C" };
-        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => list.MoveAt(oldIndex, newIndex));
-        Assert.Equal("newIndex", exception.ParamName);
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => list.MoveAt(sourceIndex, destinationIndex));
+        Assert.Equal("destinationIndex", exception.ParamName);
     }
 }

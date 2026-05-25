@@ -638,26 +638,120 @@ public static partial class EnumerableExtensions
     {
         Check.NotNull(source);
         Check.NotNull(match);
+        Check.NotNegative(startIndex);
 
         return source switch
         {
             List<T> list => list.FindIndex(startIndex, match),
             T[] array => Array.FindIndex(array, startIndex, match),
-            _ => source.Skip(startIndex).FindIndex(match),
+            _ => FindIndexCore(source, startIndex, match),
         };
+
+        static int FindIndexCore(IEnumerable<T> source, int startIndex, Predicate<T> match)
+        {
+            var index = 0;
+            foreach (var item in source)
+            {
+                if (index >= startIndex && match(item))
+                    return index;
+
+                index++;
+            }
+
+            if (startIndex > index)
+                throw new ArgumentOutOfRangeException(nameof(startIndex), startIndex, $"The value must be between 0 and {index}.");
+
+            return -1;
+        }
     }
 
     public static int FindIndex<T>(this IEnumerable<T> source, int startIndex, int count, Predicate<T> match)
     {
         Check.NotNull(source);
         Check.NotNull(match);
+        Check.NotNegative(startIndex);
+        Check.NotNegative(count);
 
         return source switch
         {
             List<T> list => list.FindIndex(startIndex, count, match),
             T[] array => Array.FindIndex(array, startIndex, count, match),
-            _ => source.Skip(startIndex).Take(count).FindIndex(match),
+            _ => FindIndexCore(source, startIndex, count, match),
         };
+
+        static int FindIndexCore(IEnumerable<T> source, int startIndex, int count, Predicate<T> match)
+        {
+            if (source.TryGetNonEnumeratedCount(out var sourceCount))
+            {
+                EnsureValidRange(startIndex, count, sourceCount);
+                return FindIndexInRange(source, startIndex, count, match);
+            }
+
+            return FindIndexInRangeWithUnknownCount(source, startIndex, count, match);
+        }
+
+        static int FindIndexInRange(IEnumerable<T> source, int startIndex, int count, Predicate<T> match)
+        {
+            var endIndex = startIndex + count;
+            var index = 0;
+            foreach (var item in source)
+            {
+                if (index >= endIndex)
+                    return -1;
+
+                if (index >= startIndex && match(item))
+                    return index;
+
+                index++;
+            }
+
+            return -1;
+        }
+
+        static int FindIndexInRangeWithUnknownCount(IEnumerable<T> source, int startIndex, int count, Predicate<T> match)
+        {
+            var endIndex = (long)startIndex + count;
+            var index = 0;
+            var candidates = new List<T>();
+
+            foreach (var item in source)
+            {
+                if (index < startIndex)
+                {
+                    index++;
+                    continue;
+                }
+
+                if (index >= endIndex)
+                    break;
+
+                candidates.Add(item);
+                index++;
+            }
+
+            if (startIndex > index)
+                throw new ArgumentOutOfRangeException(nameof(startIndex), startIndex, $"The value must be between 0 and {index}.");
+
+            if (endIndex > index)
+                throw new ArgumentOutOfRangeException(nameof(count), count, $"The value must be between 0 and {index - startIndex}.");
+
+            for (var i = 0; i < candidates.Count; i++)
+            {
+                if (match(candidates[i]))
+                    return startIndex + i;
+            }
+
+            return -1;
+        }
+
+        static void EnsureValidRange(int startIndex, int count, int sourceCount)
+        {
+            if (startIndex > sourceCount)
+                throw new ArgumentOutOfRangeException(nameof(startIndex), startIndex, $"The value must be between 0 and {sourceCount}.");
+
+            if (count > sourceCount - startIndex)
+                throw new ArgumentOutOfRangeException(nameof(count), count, $"The value must be between 0 and {sourceCount - startIndex}.");
+        }
     }
 
     extension<T>(IEnumerable<T>)
