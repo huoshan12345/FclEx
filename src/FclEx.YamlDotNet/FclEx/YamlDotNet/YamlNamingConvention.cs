@@ -2,12 +2,12 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace FclEx.YamlDotNet;
 
-public enum NamingConventionType
+public enum YamlNamingConvention
 {
     /// <summary>
-    /// Convert the string from camelcase (thisIsATest) to an underscored (this_is_a_test) string
+    /// Performs no naming conversion.
     /// </summary>
-    Underscored,
+    None,
     /// <summary>
     /// Convert the string with underscores (this_is_a_test) or hyphens (this-is-a-test) to 
     /// camel case (thisIsATest). Camel case is the same as Pascal case, except the first letter
@@ -17,16 +17,16 @@ public enum NamingConventionType
     /// <summary>
     /// Convert the string from camelcase (thisIsATest) to a hyphenated (this-is-a-test) string
     /// </summary>
-    Hyphenated,
+    KebabCase,
     /// <summary>
     /// Convert the string with underscores (this_is_a_test) or hyphens (this-is-a-test) to 
     /// lower case (thisisatest).
     /// </summary>
     LowerCase,
     /// <summary>
-    /// Performs no naming conversion.
+    /// Convert the string from camelcase (thisIsATest) to an underscored (this_is_a_test) string
     /// </summary>
-    Null,
+    SnakeCase,
     /// <summary>
     /// Convert the string with underscores (this_is_a_test) or hyphens (this-is-a-test) to 
     /// pascal case (ThisIsATest). Pascal case is the same as camel case, except the first letter
@@ -35,19 +35,19 @@ public enum NamingConventionType
     PascalCase,
 }
 
-public static class NamingConventionExtensions
+public static class YamlNamingConventionExtensions
 {
-    public static INamingConvention ToNamingConvention(this NamingConventionType type)
+    public static INamingConvention ToNamingConvention(this YamlNamingConvention convention)
     {
-        return type switch
+        return convention switch
         {
-            NamingConventionType.Underscored => UnderscoredNamingConvention.Instance,
-            NamingConventionType.CamelCase => CamelCaseNamingConvention.Instance,
-            NamingConventionType.Hyphenated => HyphenatedNamingConvention.Instance,
-            NamingConventionType.LowerCase => LowerCaseNamingConvention.Instance,
-            NamingConventionType.Null => NullNamingConvention.Instance,
-            NamingConventionType.PascalCase => PascalCaseNamingConvention.Instance,
-            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+            YamlNamingConvention.None => NullNamingConvention.Instance,
+            YamlNamingConvention.CamelCase => CamelCaseNamingConvention.Instance,
+            YamlNamingConvention.KebabCase => HyphenatedNamingConvention.Instance,
+            YamlNamingConvention.LowerCase => LowerCaseNamingConvention.Instance,
+            YamlNamingConvention.SnakeCase => UnderscoredNamingConvention.Instance,
+            YamlNamingConvention.PascalCase => PascalCaseNamingConvention.Instance,
+            _ => throw new ArgumentOutOfRangeException(nameof(convention), convention, null)
         };
     }
 }

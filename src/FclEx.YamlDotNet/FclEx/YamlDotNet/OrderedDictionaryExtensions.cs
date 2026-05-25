@@ -1,8 +1,15 @@
-﻿namespace FclEx.YamlDotNet;
+namespace FclEx.YamlDotNet;
 
 public static class OrderedDictionaryExtensions
 {
     public static void Swap<TKey, TValue>(this global::YamlDotNet.Helpers.IOrderedDictionary<TKey, TValue> dictionary, int index1, int index2)
+        where TKey : notnull
+    {
+        Check.NotNull(dictionary);
+        SwapCore(dictionary, index1, index2);
+    }
+
+    private static void SwapCore<TKey, TValue>(global::YamlDotNet.Helpers.IOrderedDictionary<TKey, TValue> dictionary, int index1, int index2)
         where TKey : notnull
     {
         if (index1 == index2)
@@ -14,28 +21,28 @@ public static class OrderedDictionaryExtensions
         dictionary[index2] = item1;
     }
 
-    public static void MoveAt<TKey, TValue>(this global::YamlDotNet.Helpers.IOrderedDictionary<TKey, TValue> dictionary, int oldIndex, int newIndex)
+    public static void MoveAt<TKey, TValue>(this global::YamlDotNet.Helpers.IOrderedDictionary<TKey, TValue> dictionary, int sourceIndex, int destinationIndex)
         where TKey : notnull
     {
         Check.NotNull(dictionary);
-        Check.Between(oldIndex, 0, dictionary.Count - 1);
-        Check.Between(newIndex, 0, dictionary.Count - 1);
+        Check.Between(sourceIndex, 0, dictionary.Count - 1);
+        Check.Between(destinationIndex, 0, dictionary.Count - 1);
 
-        if (oldIndex == newIndex)
+        if (sourceIndex == destinationIndex)
             return;
 
-        if (oldIndex < newIndex)
+        if (sourceIndex < destinationIndex)
         {
-            for (var i = oldIndex; i < newIndex; i++)
+            for (var i = sourceIndex; i < destinationIndex; i++)
             {
-                dictionary.Swap(i, i + 1);
+                SwapCore(dictionary, i, i + 1);
             }
         }
         else
         {
-            for (var i = oldIndex; i > newIndex; i--)
+            for (var i = sourceIndex; i > destinationIndex; i--)
             {
-                dictionary.Swap(i, i - 1);
+                SwapCore(dictionary, i, i - 1);
             }
         }
     }

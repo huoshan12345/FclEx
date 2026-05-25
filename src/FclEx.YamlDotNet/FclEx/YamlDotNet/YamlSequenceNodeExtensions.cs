@@ -1,4 +1,4 @@
-﻿namespace FclEx.YamlDotNet;
+namespace FclEx.YamlDotNet;
 
 public static class YamlSequenceNodeExtensions
 {
@@ -34,19 +34,25 @@ public static class YamlSequenceNodeExtensions
         return node.FindChild(match).Child != null;
     }
 
-    public static bool TryRemove<T>(this YamlSequenceNode node, Predicate<T> match, out List<T> removedNodes) where T : YamlNode
+    public static bool TryRemoveChildren<T>(this YamlSequenceNode node, Predicate<T> match, out List<T> removedNodes) where T : YamlNode
     {
         removedNodes = [];
-        foreach (var child in node.Children)
+        for (var i = node.Children.Count - 1; i >= 0; i--)
         {
+            var child = node.Children[i];
             if (child is T t && match(t))
+            {
                 removedNodes.Add(t);
+                node.Children.RemoveAt(i);
+            }
         }
+
+        removedNodes.Reverse();
         return removedNodes.IsNotEmpty();
     }
 
-    public static bool TryRemove<T>(this YamlSequenceNode node, Predicate<T> match) where T : YamlNode
+    public static bool TryRemoveChildren<T>(this YamlSequenceNode node, Predicate<T> match) where T : YamlNode
     {
-        return node.TryRemove(match, out _);
+        return node.TryRemoveChildren(match, out _);
     }
 }

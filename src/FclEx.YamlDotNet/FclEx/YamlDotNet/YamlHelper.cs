@@ -10,14 +10,14 @@ public static class YamlHelper
         options ??= YamlSerializeOptions.Default;
         return _serializers.GetOrAdd(options, m =>
         {
-            var convention = m.NamingConventionType.ToNamingConvention();
+            var convention = m.NamingConvention.ToNamingConvention();
             var builder = new SerializerBuilder()
                 .WithNamingConvention(convention);
 
-            if (options.WithTypeConverterAttribute)
-                builder.WithTypeConverterAttribute();
+            if (options.UseTypeConverterAttributes)
+                builder.WithAttributedTypeConverters(options.TypeConverterAssemblies ?? AppDomain.CurrentDomain.GetAssemblies());
 
-            if (options.WithIndentedSequences)
+            if (options.IndentedSequences)
                 builder.WithIndentedSequences();
 
             return builder.Build();
@@ -29,15 +29,15 @@ public static class YamlHelper
         options ??= YamlDeserializeOptions.Default;
         return _deserializers.GetOrAdd(options, m =>
         {
-            var convention = m.NamingConventionType.ToNamingConvention();
+            var convention = m.NamingConvention.ToNamingConvention();
             var builder = new DeserializerBuilder()
                 .WithNamingConvention(convention);
 
             if (options.IgnoreUnmatchedProperties)
                 builder.IgnoreUnmatchedProperties();
 
-            if (options.WithTypeConverterAttribute)
-                builder.WithTypeConverterAttribute();
+            if (options.UseTypeConverterAttributes)
+                builder.WithAttributedTypeConverters(options.TypeConverterAssemblies ?? AppDomain.CurrentDomain.GetAssemblies());
 
             return builder.Build();
         });

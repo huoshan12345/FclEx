@@ -1,12 +1,12 @@
 namespace YamlDotNet.Serialization;
 
-public abstract class BasicYamlTypeConverter<T> : IYamlTypeConverter
+public abstract class YamlTypeConverterBase<T> : IYamlTypeConverter
 {
-    public Type Type { get; } = typeof(T);
+    public Type TargetType { get; } = typeof(T);
 
     public virtual bool Accepts(Type type)
     {
-        return type == Type;
+        return type == TargetType;
     }
 
     public abstract T? ReadYaml(IParser parser, ObjectDeserializer deserializer);

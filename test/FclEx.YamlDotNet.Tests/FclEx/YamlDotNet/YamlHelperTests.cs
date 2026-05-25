@@ -3,6 +3,15 @@ namespace FclEx.YamlDotNet;
 public class YamlHelperTests
 {
     [Fact]
+    public void DefaultOptions_ShouldPreserveMemberNamesAndDisableAttributeScanning()
+    {
+        Assert.Equal(YamlNamingConvention.None, YamlSerializeOptions.Default.NamingConvention);
+        Assert.Equal(YamlNamingConvention.None, YamlDeserializeOptions.Default.NamingConvention);
+        Assert.False(YamlSerializeOptions.Default.UseTypeConverterAttributes);
+        Assert.False(YamlDeserializeOptions.Default.UseTypeConverterAttributes);
+    }
+
+    [Fact]
     public void GetSerializer_DefaultOptions_ReturnsDefaultSerializer()
     {
         var defaultOptions = YamlSerializeOptions.Default;
@@ -19,7 +28,7 @@ public class YamlHelperTests
     {
         var customOptions = new YamlSerializeOptions
         {
-            NamingConventionType = NamingConventionType.Underscored,
+            NamingConvention = YamlNamingConvention.SnakeCase,
         };
 
         var serializer = YamlHelper.GetSerializer(customOptions);
@@ -46,7 +55,7 @@ public class YamlHelperTests
     {
         var customOptions = new YamlDeserializeOptions
         {
-            NamingConventionType = NamingConventionType.CamelCase,
+            NamingConvention = YamlNamingConvention.CamelCase,
             IgnoreUnmatchedProperties = true,
         };
 
@@ -62,7 +71,7 @@ public class YamlHelperTests
     {
         var customOptions = new YamlDeserializeOptions
         {
-            NamingConventionType = NamingConventionType.CamelCase,
+            NamingConvention = YamlNamingConvention.CamelCase,
             IgnoreUnmatchedProperties = false,
         };
 
@@ -78,12 +87,12 @@ public class YamlHelperTests
     {
         var options1 = new YamlSerializeOptions
         {
-            NamingConventionType = NamingConventionType.CamelCase,
+            NamingConvention = YamlNamingConvention.CamelCase,
         };
 
         var options2 = new YamlSerializeOptions
         {
-            NamingConventionType = NamingConventionType.Underscored,
+            NamingConvention = YamlNamingConvention.SnakeCase,
         };
 
         var serializer1 = YamlHelper.GetSerializer(options1);
@@ -97,13 +106,13 @@ public class YamlHelperTests
     {
         var options1 = new YamlDeserializeOptions
         {
-            NamingConventionType = NamingConventionType.CamelCase,
+            NamingConvention = YamlNamingConvention.CamelCase,
             IgnoreUnmatchedProperties = true,
         };
 
         var options2 = new YamlDeserializeOptions
         {
-            NamingConventionType = NamingConventionType.Underscored,
+            NamingConvention = YamlNamingConvention.SnakeCase,
             IgnoreUnmatchedProperties = false,
         };
 

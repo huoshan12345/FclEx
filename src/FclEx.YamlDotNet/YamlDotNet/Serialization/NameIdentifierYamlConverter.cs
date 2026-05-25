@@ -1,7 +1,7 @@
 #if NET6_0_OR_GREATER
 namespace YamlDotNet.Serialization;
 
-public class NameIdentifierYamlConverter<T> : BasicYamlTypeConverter<T> where T : class, INameIdentifier<T>
+public class NameIdentifierYamlConverter<T> : YamlTypeConverterBase<T> where T : class, INameIdentifier<T>
 {
     public override T? ReadYaml(IParser parser, ObjectDeserializer deserializer)
     {
@@ -14,7 +14,10 @@ public class NameIdentifierYamlConverter<T> : BasicYamlTypeConverter<T> where T 
     public override void WriteYaml(IEmitter emitter, T? value, ObjectSerializer serializer)
     {
         if (value is null)
+        {
+            emitter.Emit(new Scalar(null!));
             return;
+        }
 
         emitter.Emit(value.Name);
     }
