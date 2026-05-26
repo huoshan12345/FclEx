@@ -1,4 +1,4 @@
-﻿namespace EasyCaching.Serialization.SystemTextJson;
+namespace EasyCaching.Serialization.SystemTextJson;
 
 internal sealed class PatchedJsonOptionsExtension : IEasyCachingOptionsExtension
 {

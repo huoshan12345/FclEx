@@ -1,4 +1,4 @@
-﻿namespace FclEx.Caching;
+namespace FclEx.Caching;
 
 public class CachingTestsFixture : CoreTestsFixture
 {

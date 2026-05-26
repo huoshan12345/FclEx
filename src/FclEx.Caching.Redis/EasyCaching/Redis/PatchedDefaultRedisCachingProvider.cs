@@ -1,4 +1,4 @@
-﻿namespace EasyCaching.Redis;
+namespace EasyCaching.Redis;
 
 public class PatchedRedisCachingProvider : DefaultRedisCachingProvider, IRedisCachingProvider
 {

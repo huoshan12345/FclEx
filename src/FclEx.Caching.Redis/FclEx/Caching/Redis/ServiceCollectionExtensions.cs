@@ -1,4 +1,4 @@
-﻿namespace FclEx.Caching.Redis;
+namespace FclEx.Caching.Redis;
 
 public static class ServiceCollectionExtensions
 {

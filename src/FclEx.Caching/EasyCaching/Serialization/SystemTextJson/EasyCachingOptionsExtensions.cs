@@ -1,4 +1,4 @@
-﻿namespace EasyCaching.Serialization.SystemTextJson;
+namespace EasyCaching.Serialization.SystemTextJson;
 
 public static class EasyCachingOptionsExtensions
 {

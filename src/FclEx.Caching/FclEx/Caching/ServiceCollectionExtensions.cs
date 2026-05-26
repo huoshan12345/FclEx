@@ -1,4 +1,4 @@
-﻿using EasyCaching.Serialization.SystemTextJson;
+using EasyCaching.Serialization.SystemTextJson;
 using Microsoft.Extensions.Caching.Distributed;
 
 namespace FclEx.Caching;

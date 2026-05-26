@@ -1,4 +1,4 @@
-﻿namespace Microsoft.Extensions.Logging;
+namespace Microsoft.Extensions.Logging;
 
 public class ExtensionsTests
 {

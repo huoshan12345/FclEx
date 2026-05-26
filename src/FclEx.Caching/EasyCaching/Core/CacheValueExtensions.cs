@@ -1,4 +1,4 @@
-﻿namespace EasyCaching.Core;
+namespace EasyCaching.Core;
 
 public static class CacheValueExtensions
 {

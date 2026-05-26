@@ -1,4 +1,4 @@
-﻿namespace EasyCaching.Redis;
+namespace EasyCaching.Redis;
 
 internal class PatchedRedisOptionsExtension : IEasyCachingOptionsExtension
 {

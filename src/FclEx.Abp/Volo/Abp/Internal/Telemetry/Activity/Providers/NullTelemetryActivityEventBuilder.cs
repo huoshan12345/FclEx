@@ -1,4 +1,4 @@
-﻿namespace Volo.Abp.Internal.Telemetry.Activity.Providers;
+namespace Volo.Abp.Internal.Telemetry.Activity.Providers;
 
 public class NullTelemetryActivityEventBuilder : ITelemetryActivityEventBuilder
 {
