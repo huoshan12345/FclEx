@@ -11,7 +11,7 @@
     <ProjectReference Include="..\FclEx.Http\FclEx.Http.csproj" />
     <ProjectReference Include="..\FclEx.SourceGenerator\FclEx.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
-  <Import Project="..\EmitGeneratedFiles.props" />
+  <Import Project="..\..\build\EmitGeneratedFiles.props" />
   <Import Project="FclEx.Abp.targets" />
   <ItemGroup>
     <Content Include="$(GeneratedSourceDir)\FclEx.SourceGenerator\FclEx.SourceGenerator\AbpCoreUsings.cs" Link="AbpCoreUsings.cs" Pack="true" PackagePath="content\" Visible="false" />

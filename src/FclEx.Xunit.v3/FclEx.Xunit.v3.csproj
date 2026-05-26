@@ -11,13 +11,11 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FclEx.Logging\FclEx.Logging.csproj" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\FclEx.SourceGenerator\FclEx.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\FclEx.Xunit.v3.SourceGenerator\FclEx.Xunit.v3.SourceGenerator.csproj" ReferenceOutputAssembly="false" />
     <None Include="..\FclEx.Xunit.v3.SourceGenerator\bin\$(Configuration)\netstandard2.0\FclEx.Xunit.v3.SourceGenerator.dll" PackagePath="analyzers\dotnet\cs" Pack="true" Visible="false" />
   </ItemGroup>
-  <Import Project="..\EmitGeneratedFiles.props" Condition=" '$(Configuration)' == 'Debug' AND $(GITHUB_ACTION) == '' AND '$(OS)' == 'Windows_NT' " />
+  <Import Project="..\..\build\EmitGeneratedFiles.props" />
   <ItemGroup>
     <Compile Include="..\FclEx.Xunit\**\*.cs" Exclude="..\FclEx.Xunit\obj\**\*;..\FclEx.Xunit\bin\**\*" />
   </ItemGroup>

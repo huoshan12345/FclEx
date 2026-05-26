@@ -14,5 +14,5 @@
   <ItemGroup>
     <Compile Include="..\FclEx.Xunit.Tests\**\*.cs" Exclude="..\FclEx.Xunit.Tests\obj\**\*;..\FclEx.Xunit.Tests\bin\**\*" />
   </ItemGroup>
-  <Import Project="..\..\src\EmitGeneratedFiles.props" Condition=" '$(Configuration)' == 'Debug' AND $(GITHUB_ACTION) == '' AND '$(OS)' == 'Windows_NT' " />
+  <Import Project="..\..\build\EmitGeneratedFiles.props" />
 </Project>
