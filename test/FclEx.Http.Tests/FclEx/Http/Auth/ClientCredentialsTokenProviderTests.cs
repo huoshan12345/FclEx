@@ -1,5 +1,3 @@
-using static Duende.IdentityModel.OidcConstants;
-
 namespace FclEx.Http.Auth;
 
 public class ClientCredentialsTokenProviderTests : AuthTests

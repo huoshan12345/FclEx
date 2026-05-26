@@ -1,5 +1,6 @@
 namespace FclEx.RabbitMQ;
 
+[EnableParallelization]
 [CollectionDefinition(nameof(RabbitMqTestsCollection))]
 public class RabbitMqTestsCollection : ICollectionFixture<RabbitMqTestsFixture>;
 

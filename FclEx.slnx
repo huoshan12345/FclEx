@@ -5,13 +5,16 @@
   </Folder>
   <Folder Name="/build/">
     <File Path="build/.sops.yaml" />
-    <File Path="build/BlockedCompilePackages.targets" />
     <File Path="build/bump-version.ps1" />
     <File Path="build/clean.ps1" />
     <File Path="build/decrypt.ps1" />
     <File Path="build/encrypt.ps1" />
     <File Path="build/pack.ps1" />
     <File Path="build/pkg.version" />
+  </Folder>
+  <Folder Name="/build/msbuild/">
+    <File Path="build/BlockedCompilePackages.targets" />
+    <File Path="build/EmitGeneratedFiles.props" />
     <File Path="build/Testing.props" />
     <File Path="build/Testing.targets" />
   </Folder>
@@ -28,8 +31,11 @@
     <File Path="src/Directory.Build.targets" />
     <File Path="src/Directory.Packages.props" />
     <File Path="src/EmitGeneratedFiles.props" />
+    <Project Path="src/FclEx.Abp/FclEx.Abp.csproj" Id="1566afc0-96c5-485c-96c2-e1ea0dfef6a1" />
     <Project Path="src/FclEx.AspNetCore.Testing/FclEx.AspNetCore.Testing.csproj" Id="41b52676-4b6a-4aca-bf52-8f7f42d55ff8" />
     <Project Path="src/FclEx.AspNetCore/FclEx.AspNetCore.csproj" />
+    <Project Path="src/FclEx.Caching.Redis/FclEx.Caching.Redis.csproj" Id="4a7cfa3c-c66a-491c-b23f-e59b084b30d3" />
+    <Project Path="src/FclEx.Caching/FclEx.Caching.csproj" Id="f62641b6-a4d7-40c9-8a70-edb37e7eea95" />
     <Project Path="src/FclEx.Core/FclEx.Core.csproj" />
     <Project Path="src/FclEx.Dapper/FclEx.Dapper.csproj" />
     <Project Path="src/FclEx.DependencyInjection/FclEx.DependencyInjection.csproj" />
@@ -55,7 +61,10 @@
     <File Path="test/Directory.Build.props" />
     <File Path="test/Directory.Build.targets" />
     <File Path="test/Directory.Packages.props" />
+    <Project Path="test/FclEx.Abp.Tests/FclEx.Abp.Tests.csproj" Id="44e7f851-0306-4aa8-89b0-0409e4d5a06e" />
     <Project Path="test/FclEx.AspNetCore.Tests/FclEx.AspNetCore.Tests.csproj" />
+    <Project Path="test/FclEx.Caching.Redis.Tests/FclEx.Caching.Redis.Tests.csproj" Id="6fd3ede4-a9e8-4ec2-8799-d8c9bbf4d346" />
+    <Project Path="test/FclEx.Caching.Tests/FclEx.Caching.Tests.csproj" Id="4558fa5b-1bf0-41a8-8ac5-ee2d65d1842f" />
     <Project Path="test/FclEx.Core.Tests/FclEx.Core.Tests.csproj" />
     <Project Path="test/FclEx.Dapper.Tests/FclEx.Dapper.Tests.csproj" />
     <Project Path="test/FclEx.EfCore.Tests/FclEx.EfCore.Tests.csproj" />

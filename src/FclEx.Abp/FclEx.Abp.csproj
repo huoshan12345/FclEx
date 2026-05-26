@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>ABP integration helpers for FclEx, including module setup, conventional registration, telemetry suppression, and AspectCore-based login retry and return-value caching interceptors.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.Core" />
+    <PackageReference Include="AspectCore.Extensions.DependencyInjection" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FclEx.Caching\FclEx.Caching.csproj" />
+    <ProjectReference Include="..\FclEx.Http\FclEx.Http.csproj" />
+    <ProjectReference Include="..\FclEx.SourceGenerator\FclEx.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <Import Project="..\..\build\EmitGeneratedFiles.props" />
+  <Import Project="FclEx.Abp.targets" />
+  <ItemGroup>
+    <Content Include="$(GeneratedSourceDir)\FclEx.SourceGenerator\FclEx.SourceGenerator\AbpCoreUsings.cs" Link="AbpCoreUsings.cs" Pack="true" PackagePath="content\" Visible="false" />
+    <Content Include="FclEx.Abp.props" Pack="true" BuildAction="None" PackagePath="buildTransitive\FclEx.Abp.props" />
+    <Content Include="FclEx.Abp.targets" Pack="true" BuildAction="None" PackagePath="buildTransitive\FclEx.Abp.targets" />
+  </ItemGroup>
+</Project>

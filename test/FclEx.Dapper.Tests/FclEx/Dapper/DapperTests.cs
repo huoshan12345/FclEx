@@ -1,5 +1,6 @@
 namespace FclEx.Dapper;
 
+[EnableParallelization]
 [CollectionDefinition(nameof(DapperTestsCollection))]
 public class DapperTestsCollection : ICollectionFixture<DapperTestsFixture>;
 

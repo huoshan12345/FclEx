@@ -1,0 +1,10 @@
+<Project>
+  <Target Name="AddAbpCoreAlias" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences"
+          Condition="'$(FclExExcludeAbpCoreUsings)' != 'true'">
+    <ItemGroup>
+      <ReferencePath Condition="'%(FileName)' == 'Volo.Abp.Core'">
+        <Aliases>AbpCore</Aliases>
+      </ReferencePath>
+    </ItemGroup>
+  </Target>
+</Project>

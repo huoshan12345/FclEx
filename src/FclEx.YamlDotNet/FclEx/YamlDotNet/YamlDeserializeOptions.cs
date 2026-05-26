@@ -1,8 +1,18 @@
 namespace FclEx.YamlDotNet;
 
+/// <summary>
+/// Provides options used when creating a YAML deserializer.
+/// </summary>
 public record YamlDeserializeOptions : YamlOptions
 {
+    /// <summary>
+    /// Gets the default deserializer options.
+    /// </summary>
     public static readonly YamlDeserializeOptions Default = new();
 
-    public bool IgnoreUnmatchedProperties { get; set; } = true;
+    /// <summary>
+    /// Gets whether YAML keys without matching .NET members should be ignored.
+    /// Set to <c>false</c> to make unmatched keys fail deserialization.
+    /// </summary>
+    public bool IgnoreUnmatchedProperties { get; init; } = true;
 }

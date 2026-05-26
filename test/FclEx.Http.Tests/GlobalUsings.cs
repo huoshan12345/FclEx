@@ -14,8 +14,6 @@ global using FclEx.DependencyInjection;
 global using FclEx.Extensions;
 global using FclEx.Helpers;
 global using FclEx.Http;
-global using FclEx.Http.Tests;
-global using FclEx.Http.Tests.Models;
 global using FclEx.Logging;
 global using FclEx.Utils;
 global using FclEx.Xunit;
@@ -27,7 +25,8 @@ global using Microsoft.IdentityModel.Tokens;
 global using Polly.Timeout;
 global using Xunit;
 global using xRetry.v3;
-global using static FclEx.Http.Tests.HttpServerFixture;
+global using static Duende.IdentityModel.OidcConstants;
+global using static FclEx.Http.HttpServerFixture;
 
 #if !NET5_0_OR_GREATER
 global using SocketsHttpHandler = System.Net.Http.StandardSocketsHttpHandler;

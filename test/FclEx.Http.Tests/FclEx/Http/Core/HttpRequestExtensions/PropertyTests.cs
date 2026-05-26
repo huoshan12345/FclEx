@@ -1,9 +1,11 @@
+using FclEx.Http.Models;
+
 namespace FclEx.Http.Core.HttpRequestExtensions;
 
 public class PropertyTests : HttpServerTests
 {
     public static readonly (string Url, string TestUrl, string CharSet, string Keyword) CharSetTestCase
-        = ("https://passport.weibo.com/visitor/visitor", "/api/charset-detect/gb2312", "gb2312", "是否采集设备指纹");
+        = ("https://passport.weibo.com/visitor/visitor", TestApiPaths.CharsetDetectGb2312, "gb2312", "是否采集设备指纹");
 
     [LocalOnlyFact]
     public async Task SaveCharSetTestResponseBytes()
@@ -132,7 +134,7 @@ public class PropertyTests : HttpServerTests
 
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 100).ToDictionary(m => m.ToString(), m => random.NextString(5));
-        var response = await HttpRequest.Post("api/compress")
+        var response = await HttpRequest.Post(TestApiPaths.Compress)
             .JsonContent(expected)
             .Compression(compression)
             .SendAsync(TestHttp);

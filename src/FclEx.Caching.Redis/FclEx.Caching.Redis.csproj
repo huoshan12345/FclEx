@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Redis-backed caching extensions for FclEx, including EasyCaching Redis integration, typed Redis collection wrappers, and collection configuration helpers.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="EasyCaching.Redis" />
+    <PackageReference Include="StackExchange.Redis" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FclEx.Caching\FclEx.Caching.csproj" />
+  </ItemGroup>
+</Project>

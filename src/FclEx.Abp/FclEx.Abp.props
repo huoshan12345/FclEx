@@ -1,0 +1,6 @@
+<Project>
+  <ItemGroup Condition="'$(FclExExcludeAbpCoreUsings)' != 'true'">
+    <Compile Condition="'$(ProjectExt)' == '.csproj'"
+             Include="$(MSBuildThisFileDirectory)..\content\AbpCoreUsings.cs"/>
+  </ItemGroup>
+</Project>

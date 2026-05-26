@@ -1,8 +1,17 @@
 namespace FclEx.YamlDotNet;
 
+/// <summary>
+/// Provides helpers for working with YAML nodes.
+/// </summary>
 public static class YamlNodeExtensions
 {
-    public static bool IsScalar(this YamlNode node, string value)
+    /// <summary>
+    /// Determines whether the node is a scalar node with the specified value.
+    /// </summary>
+    /// <param name="node">The YAML node to inspect.</param>
+    /// <param name="value">The scalar value to compare with <see cref="YamlScalarNode.Value"/>.</param>
+    /// <returns><c>true</c> when <paramref name="node"/> is a scalar node with the specified value; otherwise, <c>false</c>.</returns>
+    public static bool IsScalarValue(this YamlNode node, string value)
     {
         return node is YamlScalarNode scalar && scalar.Value == value;
     }

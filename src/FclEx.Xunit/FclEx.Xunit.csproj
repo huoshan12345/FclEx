@@ -15,5 +15,5 @@
     <ProjectReference Include="..\FclEx.Xunit.SourceGenerator\FclEx.Xunit.SourceGenerator.csproj" ReferenceOutputAssembly="false" />
     <None Include="..\FclEx.Xunit.SourceGenerator\bin\$(Configuration)\netstandard2.0\FclEx.Xunit.SourceGenerator.dll" PackagePath="analyzers\dotnet\cs" Pack="true" Visible="false" />
   </ItemGroup>
-  <Import Project="..\EmitGeneratedFiles.props" Condition=" '$(Configuration)' == 'Debug' AND $(GITHUB_ACTION) == '' AND '$(OS)' == 'Windows_NT' " />
+  <Import Project="..\..\build\EmitGeneratedFiles.props" />
 </Project>
