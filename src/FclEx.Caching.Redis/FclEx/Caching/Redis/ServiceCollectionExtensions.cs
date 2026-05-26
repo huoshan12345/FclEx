@@ -4,12 +4,9 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddFclExCachingWithRedis(
         this IServiceCollection services,
-        Action<RedisOptions>? configureRedis = null,
+        RedisOptions options,
         Action<CacheManagerOptions>? configureCacheManager = null)
     {
-        var options = new RedisOptions();
-        configureRedis?.Invoke(options);
-
         services.AddOptions();
         services.AddOptionsInstance(options);
         services.AddSingleton<IStringSerializer>(StringAsRawSerializer.Instance);
@@ -21,7 +18,7 @@ public static class ServiceCollectionExtensions
             {
                 c.SerializerName = options.SerializerName;
                 c.DBConfig = options.DbOptions;
-            });
+            }).WithPatchedSystemTextJson();
         });
         return services;
     }

@@ -2,7 +2,7 @@ namespace FclEx.Caching.Redis;
 
 public class RedisOptions
 {
-    public string? SerializerName { get; set; } = "json";
+    public string SerializerName { get; set; } = "json";
     public RedisDBOptions DbOptions { get; set; } = new();
     public List<RedisCollectionConfigurator> CollectionConfigurators { get; } = [];
 

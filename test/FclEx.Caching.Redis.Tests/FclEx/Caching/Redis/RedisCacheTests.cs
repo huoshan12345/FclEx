@@ -1,5 +1,3 @@
-using EasyCaching.Serialization.SystemTextJson;
-
 namespace FclEx.Caching.Redis;
 
 public class RedisCacheTests(RedisTestsFixture fixture) : RedisTests(fixture)
@@ -31,7 +29,7 @@ public class RedisCacheTests(RedisTestsFixture fixture) : RedisTests(fixture)
     public async Task Basic_Test()
     {
         var name = nameof(Basic_Test) + Environment.Version.Major;
-    
+
         var cache = CacheManager.GetCache<string>(name);
         var obj = await cache.GetAsync(name, k => Task.FromResult(name));
         Assert.True(obj.HasValue);

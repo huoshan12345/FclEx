@@ -10,6 +10,7 @@ global using EasyCaching.Core.Configurations;
 global using EasyCaching.Core.Serialization;
 global using EasyCaching.Redis;
 global using EasyCaching.Redis.DistributedLock;
+global using EasyCaching.Serialization.SystemTextJson;
 global using FclEx.Caching;
 global using FclEx.Extensions;
 global using FclEx.Options;

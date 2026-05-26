@@ -4,6 +4,7 @@ global using System.Globalization;
 global using System.Reflection;
 global using EasyCaching.Core;
 global using EasyCaching.Redis;
+global using EasyCaching.Serialization.SystemTextJson;
 global using FclEx.Caching;
 global using FclEx.Caching.Redis;
 global using FclEx.Extensions;

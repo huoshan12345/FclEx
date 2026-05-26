@@ -8,8 +8,7 @@ public class RedisConfig
     public string UserName { get; set; } = "";
     public string Password { get; set; } = "";
     public int Port { get; set; } = 6379;
-    public int ConnectionTimeout { get; set; }
-    public int AsyncTimeout { get; set; }
+    public int? ConnectionTimeout { get; set; }
 }
 
 public class RedisTestsFixture : CoreTestsFixture
@@ -30,30 +29,31 @@ public class RedisTestsFixture : CoreTestsFixture
     public IServiceProvider CreateServices()
     {
         var config = GetRedisConfig();
+        var dbOptions = new RedisDBOptions
+        {
+            Username = config.UserName,
+            Password = config.Password,
+            Endpoints =
+            {
+                new()
+                {
+                    Host = config.Host,
+                    Port = config.Port,
+                }
+            },
+            Database = Environment.Version.Major,
+        };
+
+        if (config.ConnectionTimeout is { } connectionTimeout)
+            dbOptions.ConnectionTimeout = connectionTimeout;
+
+        var options = new RedisOptions { DbOptions = dbOptions }
+            .ConfigureAllCollections(x => x.UseGlobalPrefix = true);
+
         return new ServiceCollection()
-            .AddFclExCachingWithRedis()
-            .Configure<RedisOptions>(options =>
-             {
-                 options.ConfigureAllCollections(x => x.UseGlobalPrefix = true);
-                 options.DbOptions = new RedisDBOptions
-                 {
-                     Username = config.UserName,
-                     Password = config.Password,
-                     ConnectionTimeout = config.ConnectionTimeout,
-                     AsyncTimeout = config.AsyncTimeout,
-                     Endpoints =
-                     {
-                        new()
-                        {
-                            Host = config.Host,
-                            Port = config.Port,
-                        }
-                     },
-                     Database = Environment.Version.Major,
-                 };
-             })
-             .AddTransient<IRedisService, RedisService>()
-             .BuildServiceProvider();
+            .AddFclExCachingWithRedis(options)
+            .AddTransient<IRedisService, RedisService>()
+            .BuildServiceProvider();
     }
 }
 

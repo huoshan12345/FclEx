@@ -9,6 +9,9 @@ public class AbpRedisTestsCollection : ICollectionFixture<RedisTestsFixture>;
 [Collection(nameof(AbpRedisTestsCollection))]
 public class RedisTests(RedisTestsFixture fixture)
 {
+    public static ITestOutputHelper? Output => TestContext.Current.TestOutputHelper;
+    public static CancellationToken CancellationToken => TestContext.Current.CancellationToken;
+
     public RedisTestsFixture Fixture => fixture;
     public IServiceProvider Services => Fixture.Services;
     public IRedisCachingProvider RedisCachingProvider => Services.GetRequiredService<IRedisCachingProvider>();
