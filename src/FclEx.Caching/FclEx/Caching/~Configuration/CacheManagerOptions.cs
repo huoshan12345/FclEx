@@ -1,6 +1,6 @@
 namespace FclEx.Caching;
 
-public class CacheManagerOptions
+public class CacheManagerOptions : IReadOnlyCacheManagerOptions
 {
     public char? Separator { get; set; } = ':';
     public TimeSpan DefaultExpiration { get; set; } = TimeSpan.FromDays(1);

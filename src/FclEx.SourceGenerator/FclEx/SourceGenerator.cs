@@ -1,3 +1,4 @@
+using FclEx.Sources.Abp;
 using FclEx.Sources.DependencyInjection;
 using FclEx.Sources.Http;
 using FclEx.Sources.Xunit;
@@ -15,9 +16,11 @@ public class SourceGenerator : IIncrementalGenerator
         var provider = context.CompilationProvider.Combine(context.AnalyzerConfigOptionsProvider);
         context.RegisterImplementationSourceOutput(provider, (ctx, value) =>
         {
-            var assembly = value.Left.AssemblyName;
-            SourceInfo[] codes = assembly switch
+            var (compilation, options) = value;
+            var assembly = compilation.AssemblyName;
+            var codes = assembly switch
             {
+                "FclEx.Abp" => GenerateAbpSources(),
                 "FclEx.Core" =>
                 [
                     ..BytesExtensionsSource.Generate(),
@@ -76,6 +79,23 @@ public class SourceGenerator : IIncrementalGenerator
                     defaultSeverity: DiagnosticSeverity.Error,
                     isEnabledByDefault: true);
                 ctx.ReportDiagnostic(Diagnostic.Create(descriptor, null, messageArgs: args));
+            }
+
+            SourceInfo[] GenerateAbpSources()
+            {
+                const string abpCoreAssemblyName = "Volo.Abp.Core";
+                var abpCoreAssembly = compilation.SourceModule.ReferencedAssemblySymbols.FirstOrDefault(a => a.Name == abpCoreAssemblyName);
+                // ReSharper disable once InvertIf
+                if (abpCoreAssembly is null)
+                {
+                    Report("Cannot find referenced assembly: {0}", abpCoreAssemblyName);
+                    return [];
+                }
+
+                return
+                [
+                    AbpCoreUsingsSource.Generate(abpCoreAssembly),
+                ];
             }
         });
     }

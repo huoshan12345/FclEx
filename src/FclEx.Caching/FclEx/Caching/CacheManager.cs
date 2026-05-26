@@ -6,6 +6,9 @@ public sealed class CacheManager : ICacheManager
     private readonly IEasyCachingProvider _provider;
     private readonly ConcurrentDictionary<string, ICache> _caches = new();
 
+    public ProviderInfo ProviderInfo => _provider.GetProviderInfo();
+    public IReadOnlyCacheManagerOptions Options => _options;
+
     public CacheManager(
         IEasyCachingProvider provider,
         IOptions<CacheManagerOptions> options)
@@ -38,12 +41,11 @@ public sealed class CacheManager : ICacheManager
     public ICache GetCache(string name)
     {
         Check.NotNull(name);
-        if (_caches.TryGetValue(name, out var cache))
-            return cache;
-        throw new InvalidOperationException($"the cache with name({name}) does not exist, you must add it first.");
-    }
 
-    public ProviderInfo ProviderInfo => _provider.GetProviderInfo();
+        return _caches.TryGetValue(name, out var cache)
+            ? cache
+            : throw new InvalidOperationException($"the cache with name({name}) does not exist, you must add it first.");
+    }
 
     private Cache<T> CreateCache<T>(string name)
     {

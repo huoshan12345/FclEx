@@ -13,7 +13,7 @@ public class SlackSinkTests : SlackTests
         var writer = new StringWriter();
         using var x = writer.SetSelfLog();
 
-        var sink = new SlackSink(SlackFixture.SlackConfig.BotToken, channel.Name);
+        var sink = new SlackSink(SlackTestsFixture.SlackConfig.BotToken, channel.Name);
         var ex = new Exception("test error").SetStackTrace("random stack trace");
         var events = Enumerable.Range(1, 2)
             .Select(m => LogEventExtensionsTests.CreateLogEvent(LogEventLevel.Information, ex, "Message {Index}", m))

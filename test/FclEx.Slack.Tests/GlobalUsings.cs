@@ -8,4 +8,4 @@ global using FclEx.Utils;
 global using Microsoft.Extensions.DependencyInjection;
 global using xRetry.v3;
 global using Xunit;
-global using static FclEx.Slack.SlackFixture;
+global using static FclEx.Slack.SlackTestsFixture;

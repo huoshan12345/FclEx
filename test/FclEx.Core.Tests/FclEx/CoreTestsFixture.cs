@@ -3,6 +3,8 @@ namespace FclEx;
 public class CoreTestsFixture : IAsyncLifetime
 {
     public static ITestOutputHelper? Output => TestContext.Current.TestOutputHelper;
+    public static CancellationToken CancellationToken => TestContext.Current.CancellationToken;
+
     public static readonly IConfigurationRoot Config = BuildConfig();
 
     public Assembly CurrentAssembly { get; }

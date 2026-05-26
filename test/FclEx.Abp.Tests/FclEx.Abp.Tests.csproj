@@ -1,0 +1,6 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\FclEx.Abp\FclEx.Abp.csproj" />
+    <ProjectReference Include="..\FclEx.Core.Tests\FclEx.Core.Tests.csproj" />
+  </ItemGroup>
+</Project>
