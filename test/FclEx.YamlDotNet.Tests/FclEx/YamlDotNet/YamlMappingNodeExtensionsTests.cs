@@ -233,7 +233,7 @@ public class YamlMappingNodeExtensionsTests
     {
         var root = ReadYaml();
 
-        var children = root.GetChildren<YamlMappingNode>((key, _) => key.IsScalarValue("customer")).ToArray();
+        var children = root.GetChildren<YamlMappingNode>((key, _) => key.IsScalarWithValue("customer")).ToArray();
 
         var child = Assert.Single(children);
         Assert.Equal("customer", child.Key.Value);
@@ -584,7 +584,7 @@ public class YamlMappingNodeExtensionsTests
     {
         var root = ReadYaml();
 
-        var (key, value, index) = root.FindChild<YamlScalarNode>((k, v) => k.IsScalarValue("date") && v.Value == "2012-08-06");
+        var (key, value, index) = root.FindChild<YamlScalarNode>((k, v) => k.IsScalarWithValue("date") && v.Value == "2012-08-06");
 
         Assert.NotNull(key);
         Assert.NotNull(value);
@@ -628,7 +628,7 @@ public class YamlMappingNodeExtensionsTests
             { key, value },
         };
 
-        var (foundKey, foundValue, index) = node.FindChild<YamlScalarNode>(key);
+        var (foundKey, foundValue, index) = node.FindChild<YamlMappingNode, YamlScalarNode>(key);
 
         Assert.Same(key, foundKey);
         Assert.Same(value, foundValue);
@@ -700,7 +700,7 @@ public class YamlMappingNodeExtensionsTests
     {
         var root = ReadYaml();
 
-        var result = root.HasChild<YamlScalarNode>((k, v) => k.IsScalarValue("receipt") && v.Value == "Oz-Ware Purchase Invoice");
+        var result = root.HasChild<YamlScalarNode>((k, v) => k.IsScalarWithValue("receipt") && v.Value == "Oz-Ware Purchase Invoice");
 
         Assert.True(result);
     }

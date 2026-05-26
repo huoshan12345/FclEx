@@ -11,7 +11,7 @@ public static class YamlNodeExtensions
     /// <param name="node">The YAML node to inspect.</param>
     /// <param name="value">The scalar value to compare with <see cref="YamlScalarNode.Value"/>.</param>
     /// <returns><c>true</c> when <paramref name="node"/> is a scalar node with the specified value; otherwise, <c>false</c>.</returns>
-    public static bool IsScalarValue(this YamlNode node, string value)
+    public static bool IsScalarWithValue(this YamlNode node, string value)
     {
         return node is YamlScalarNode scalar && scalar.Value == value;
     }
