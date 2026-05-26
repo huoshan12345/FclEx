@@ -1,20 +1,12 @@
 <Project>
   <PropertyGroup>
-    <SourceDir>$(MSBuildProjectDirectory)\obj\Generated\</SourceDir>
+    <GeneratedSourceDir>$(MSBuildProjectDirectory)\obj\Generated\</GeneratedSourceDir>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-    <CompilerGeneratedFilesOutputPath>$(SourceDir.TrimEnd('\'))</CompilerGeneratedFilesOutputPath>
+    <CompilerGeneratedFilesOutputPath>$(GeneratedSourceDir.TrimEnd('\').TrimEnd('/'))</CompilerGeneratedFilesOutputPath>
   </PropertyGroup>
 
-  <Target Name="CleanSourceGeneratedFiles" BeforeTargets="DispatchToInnerBuilds">
-    <!--only exeuted once before every build-->
-    <ItemGroup>
-      <FilesToDelete Include="$(SourceDir)**\*"/>
-    </ItemGroup>
-    <Delete Files="@(FilesToDelete)" ContinueOnError="true" />
-  </Target>
-
-  <ItemGroup>
-    <Content Include="$(SourceDir)**\*$(DefaultLanguageSourceExtension)">
+  <ItemGroup Condition=" '$(Configuration)' == 'Debug' AND $(GITHUB_ACTION) == '' AND '$(OS)' == 'Windows_NT' ">
+    <None Include="$(GeneratedSourceDir)**\*$(DefaultLanguageSourceExtension)">
       <!--this is the path that ends with source generator name -->
       <FolderPath>$([System.IO.Directory]::GetParent(%(FullPath)))</FolderPath>
       <!--this is the path that ends with source generator's assembly name-->
@@ -22,6 +14,7 @@
       <!--this is the source generator's assembly name-->
       <ParentName>$([System.IO.Path]::GetFileName(%(ParentPath)))</ParentName>
       <Link>Generated\%(ParentName)\%(FileName)%(Extension)</Link>
-    </Content>
+    </None>
   </ItemGroup>
+
 </Project>
