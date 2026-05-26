@@ -18,15 +18,4 @@ public class AbpTestsCollection : ICollectionFixture<AbpTestsFixture>;
 
 [EnableParallelization]
 [Collection(nameof(AbpTestsCollection))]
-public class AbpTests(AbpTestsFixture fixture) : AbpTests<AbpTestsModule, AbpTestsFixture>(fixture)
-{
-    [ModuleInitializer]
-    public static void Initialize()
-    {
-        ThreadPool.SetMinThreads(100, 100);
-#pragma warning disable SYSLIB0014
-        ServicePointManager.DefaultConnectionLimit = short.MaxValue;
-#pragma warning restore SYSLIB0014
-        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-    }
-}
+public class AbpTests(AbpTestsFixture fixture) : AbpTests<AbpTestsModule, AbpTestsFixture>(fixture);

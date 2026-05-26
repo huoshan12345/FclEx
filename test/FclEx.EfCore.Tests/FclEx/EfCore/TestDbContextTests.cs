@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace FclEx.EfCore;
 
-[EnableParallelization]
 public class TestDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {
     public static readonly string[] OSNames = ["windows", "linux"];
