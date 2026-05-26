@@ -1,4 +1,4 @@
-﻿using Volo.Abp.Modularity;
+using Volo.Abp.Modularity;
 
 namespace FclEx.Abp;
 
@@ -13,12 +13,11 @@ public class AbpTests<TModule, TFixture>(TFixture fixture)
 }
 
 [CollectionDefinition(nameof(AbpTestsCollection))]
-public class AbpTestsCollection : ICollectionFixture<AbpTestsFixture<AbpTestsModule>>;
+public class AbpTestsCollection : ICollectionFixture<AbpTestsFixture>;
 
 [EnableParallelization]
 [Collection(nameof(AbpTestsCollection))]
-public class AbpTests(AbpTestsFixture<AbpTestsModule> fixture)
-    : AbpTests<AbpTestsModule, AbpTestsFixture<AbpTestsModule>>(fixture)
+public class AbpTests(AbpTestsFixture fixture) : AbpTests<AbpTestsModule, AbpTestsFixture>(fixture)
 {
     [ModuleInitializer]
     public static void Initialize()
