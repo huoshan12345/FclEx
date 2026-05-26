@@ -241,13 +241,14 @@ public class YamlMappingNodeExtensionsTests
     }
 
     [Fact]
-    public void GetChildren_ThrowsWhenUnfilteredChildCannotBeCast()
+    public void GetChildren_ReturnsOnlyChildrenMatchingRequestedValueType()
     {
         var root = ReadYaml();
 
-        var exception = Assert.ThrowsAny<Exception>(() => root.GetChildren<YamlMappingNode>().ToArray());
+        var children = root.GetChildren<YamlMappingNode>().ToArray();
 
-        Assert.Equal("Microsoft.CSharp.RuntimeBinder.RuntimeBinderException", exception.GetType().FullName);
+        Assert.Equal(new[] { "customer", "bill-to", "ship-to" }, children.Select(m => m.Key.Value).ToArray());
+        Assert.All(children, m => Assert.IsType<YamlMappingNode>(m.Value));
     }
 
     [Fact]
@@ -283,11 +284,11 @@ public class YamlMappingNodeExtensionsTests
     }
 
     [Fact]
-    public void SetScalarChildOrDefault_AddsScalarWhenKeyDoesNotExist()
+    public void TrySetScalarChild_AddsScalarWhenKeyDoesNotExist()
     {
         var node = new YamlMappingNode();
 
-        var (child, changed) = node.SetScalarChildOrDefault("name", "Dorothy", ScalarStyle.DoubleQuoted);
+        var (child, changed) = node.TrySetScalarChild("name", "Dorothy", ScalarStyle.DoubleQuoted);
 
         Assert.NotNull(child);
         Assert.True(changed);
@@ -297,12 +298,12 @@ public class YamlMappingNodeExtensionsTests
     }
 
     [Fact]
-    public void SetScalarChildOrDefault_ReturnsExistingScalarWithoutChangeWhenValueAndStyleMatch()
+    public void TrySetScalarChild_ReturnsExistingScalarWithoutChangeWhenValueAndStyleMatch()
     {
         var node = new YamlMappingNode();
-        var (original, _) = node.SetScalarChildOrDefault("name", "Dorothy", ScalarStyle.SingleQuoted);
+        var (original, _) = node.TrySetScalarChild("name", "Dorothy", ScalarStyle.SingleQuoted);
 
-        var (child, changed) = node.SetScalarChildOrDefault("name", "Dorothy", ScalarStyle.SingleQuoted);
+        var (child, changed) = node.TrySetScalarChild("name", "Dorothy", ScalarStyle.SingleQuoted);
 
         Assert.NotNull(original);
         Assert.NotNull(child);
@@ -312,12 +313,12 @@ public class YamlMappingNodeExtensionsTests
     }
 
     [Fact]
-    public void SetScalarChildOrDefault_UpdatesExistingScalarValueAndKeepsStyleWhenStyleIsNotSpecified()
+    public void TrySetScalarChild_UpdatesExistingScalarValueAndKeepsStyleWhenStyleIsNotSpecified()
     {
         var node = new YamlMappingNode();
-        var (original, _) = node.SetScalarChildOrDefault("name", "Dorothy", ScalarStyle.DoubleQuoted);
+        var (original, _) = node.TrySetScalarChild("name", "Dorothy", ScalarStyle.DoubleQuoted);
 
-        var (child, changed) = node.SetScalarChildOrDefault("name", "Gale");
+        var (child, changed) = node.TrySetScalarChild("name", "Gale");
 
         Assert.NotNull(original);
         Assert.NotNull(child);
@@ -328,12 +329,12 @@ public class YamlMappingNodeExtensionsTests
     }
 
     [Fact]
-    public void SetScalarChildOrDefault_UpdatesExistingScalarStyleWithoutChangingValue()
+    public void TrySetScalarChild_UpdatesExistingScalarStyleWithoutChangingValue()
     {
         var node = new YamlMappingNode();
-        var (original, _) = node.SetScalarChildOrDefault("name", "Dorothy", ScalarStyle.Plain);
+        var (original, _) = node.TrySetScalarChild("name", "Dorothy", ScalarStyle.Plain);
 
-        var (child, changed) = node.SetScalarChildOrDefault("name", "Dorothy", ScalarStyle.DoubleQuoted);
+        var (child, changed) = node.TrySetScalarChild("name", "Dorothy", ScalarStyle.DoubleQuoted);
 
         Assert.NotNull(original);
         Assert.NotNull(child);
@@ -344,14 +345,14 @@ public class YamlMappingNodeExtensionsTests
     }
 
     [Fact]
-    public void SetScalarChildOrDefault_ReplacesNonScalarValueWhenTypeMismatchIsAllowed()
+    public void TrySetScalarChild_ReplacesNonScalarValueWhenConflictBehaviorIsReplace()
     {
         var node = new YamlMappingNode
         {
             { new YamlScalarNode("name"), new YamlMappingNode() },
         };
 
-        var (child, changed) = node.SetScalarChildOrDefault("name", "Dorothy");
+        var (child, changed) = node.TrySetScalarChild("name", "Dorothy", conflictBehavior: YamlScalarChildConflictBehavior.Replace);
 
         Assert.NotNull(child);
         Assert.True(changed);
@@ -360,21 +361,21 @@ public class YamlMappingNodeExtensionsTests
     }
 
     [Fact]
-    public void SetScalarChildOrDefault_ThrowsForNonScalarValueWhenTypeMismatchThrows()
+    public void TrySetScalarChild_ThrowsForNonScalarValueWhenConflictBehaviorIsThrow()
     {
         var node = new YamlMappingNode
         {
             { new YamlScalarNode("name"), new YamlMappingNode() },
         };
 
-        var exception = Assert.Throws<InvalidOperationException>(() => node.SetScalarChildOrDefault("name", "Dorothy", conflictBehavior: YamlScalarChildConflictBehavior.Throw));
+        var exception = Assert.Throws<InvalidOperationException>(() => node.TrySetScalarChild("name", "Dorothy", conflictBehavior: YamlScalarChildConflictBehavior.Throw));
 
         Assert.Contains("name", exception.Message);
         Assert.Contains(nameof(YamlScalarNode), exception.Message);
     }
 
     [Fact]
-    public void SetScalarChildOrDefault_IgnoresNonScalarValueWhenConflictBehaviorIsIgnore()
+    public void TrySetScalarChild_IgnoresNonScalarValueByDefault()
     {
         var existing = new YamlMappingNode();
         var node = new YamlMappingNode
@@ -382,7 +383,7 @@ public class YamlMappingNodeExtensionsTests
             { new YamlScalarNode("name"), existing },
         };
 
-        var (child, changed) = node.SetScalarChildOrDefault("name", "Dorothy", conflictBehavior: YamlScalarChildConflictBehavior.Ignore);
+        var (child, changed) = node.TrySetScalarChild("name", "Dorothy");
 
         Assert.Null(child);
         Assert.False(changed);
@@ -390,11 +391,11 @@ public class YamlMappingNodeExtensionsTests
     }
 
     [Fact]
-    public void SetScalarChildOrDefault_BoolWritesLowercasePlainScalar()
+    public void TrySetScalarChild_BoolWritesLowercasePlainScalar()
     {
         var node = new YamlMappingNode();
 
-        var (child, changed) = node.SetScalarChildOrDefault("enabled", true);
+        var (child, changed) = node.TrySetScalarChild("enabled", true);
 
         Assert.NotNull(child);
         Assert.True(changed);
@@ -403,15 +404,42 @@ public class YamlMappingNodeExtensionsTests
     }
 
     [Fact]
-    public void SetScalarChildOrDefault_BoolWritesFalseAsLowercasePlainScalar()
+    public void TrySetScalarChild_BoolWritesFalseAsLowercasePlainScalar()
     {
         var node = new YamlMappingNode();
 
-        var (child, changed) = node.SetScalarChildOrDefault("enabled", false);
+        var (child, changed) = node.TrySetScalarChild("enabled", false);
 
         Assert.NotNull(child);
         Assert.True(changed);
         Assert.Equal("false", child.Value);
+        Assert.Equal(ScalarStyle.Plain, child.Style);
+    }
+
+    [Fact]
+    public void SetScalarChild_ReplacesNonScalarValueByDefault()
+    {
+        var node = new YamlMappingNode
+        {
+            { new YamlScalarNode("name"), new YamlMappingNode() },
+        };
+
+        var (child, changed) = node.SetScalarChild("name", "Dorothy");
+
+        Assert.True(changed);
+        Assert.Equal("Dorothy", child.Value);
+        Assert.Same(child, node.GetRequiredChild<YamlScalarNode>("name"));
+    }
+
+    [Fact]
+    public void SetScalarChild_BoolWritesLowercasePlainScalar()
+    {
+        var node = new YamlMappingNode();
+
+        var (child, changed) = node.SetScalarChild("enabled", true);
+
+        Assert.True(changed);
+        Assert.Equal("true", child.Value);
         Assert.Equal(ScalarStyle.Plain, child.Style);
     }
 
@@ -628,7 +656,7 @@ public class YamlMappingNodeExtensionsTests
             { key, value },
         };
 
-        var (foundKey, foundValue, index) = node.FindChild<YamlMappingNode, YamlScalarNode>(key);
+        var (foundKey, foundValue, index) = node.FindChild<YamlScalarNode>(key);
 
         Assert.Same(key, foundKey);
         Assert.Same(value, foundValue);
@@ -682,6 +710,24 @@ public class YamlMappingNodeExtensionsTests
         var child = Assert.Single(children);
         Assert.Equal("receipt", child.Key.Value);
         Assert.Equal("Oz-Ware Purchase Invoice", child.Value.Value);
+        Assert.Equal(0, child.Index);
+    }
+
+    [Fact]
+    public void FindChildren_WithYamlNodeKeyReturnsMatchedChildren()
+    {
+        var key = new YamlMappingNode { { "kind", "name" } };
+        var value = new YamlScalarNode("Dorothy");
+        var node = new YamlMappingNode
+        {
+            { key, value },
+        };
+
+        var children = node.FindChildren<YamlScalarNode>(key);
+
+        var child = Assert.Single(children);
+        Assert.Same(key, child.Key);
+        Assert.Same(value, child.Value);
         Assert.Equal(0, child.Index);
     }
 
@@ -764,7 +810,7 @@ public class YamlMappingNodeExtensionsTests
     }
 
     [Fact]
-    public void MoveChildByKey_MovesChildAtKeyNodeToDestinationIndex()
+    public void MoveChildByKey_MovesChildAtEqualKeyNodeToDestinationIndex()
     {
         var firstKey = new YamlScalarNode("first");
         var secondKey = new YamlScalarNode("second");
@@ -776,7 +822,7 @@ public class YamlMappingNodeExtensionsTests
             { thirdKey, new YamlScalarNode("3") },
         };
 
-        var moved = node.MoveChildByKey(thirdKey, 0);
+        var moved = node.MoveChildByKey(new YamlScalarNode("third"), 0);
 
         Assert.True(moved);
         Assert.Equal(new[] { "third", "first", "second" }, node.GetChildren().Select(m => m.Key.Value).ToArray());
@@ -799,18 +845,37 @@ public class YamlMappingNodeExtensionsTests
     }
 
     [Fact]
-    public void MoveChildByKey_ThrowsWhenKeyNodeReferenceDoesNotExist()
+    public void MoveChildByKeyReference_MovesChildAtKeyNodeReferenceToDestinationIndex()
+    {
+        var firstKey = new YamlScalarNode("first");
+        var secondKey = new YamlScalarNode("second");
+        var thirdKey = new YamlScalarNode("third");
+        var node = new YamlMappingNode
+        {
+            { firstKey, new YamlScalarNode("1") },
+            { secondKey, new YamlScalarNode("2") },
+            { thirdKey, new YamlScalarNode("3") },
+        };
+
+        var moved = node.MoveChildByKeyReference(thirdKey, 0);
+
+        Assert.True(moved);
+        Assert.Equal(new[] { "third", "first", "second" }, node.GetChildren().Select(m => m.Key.Value).ToArray());
+    }
+
+    [Fact]
+    public void MoveChildByKeyReference_ThrowsWhenKeyNodeReferenceDoesNotExist()
     {
         var node = new YamlMappingNode
         {
             { "first", "1" },
         };
 
-        Assert.Throws<KeyNotFoundException>(() => node.MoveChildByKey(new YamlScalarNode("first"), 0));
+        Assert.Throws<KeyNotFoundException>(() => node.MoveChildByKeyReference(new YamlScalarNode("first"), 0));
     }
 
     [Fact]
-    public void MoveChildByValue_MovesChildAtValueNodeToDestinationIndex()
+    public void MoveChildByValue_MovesChildAtEqualValueNodeToDestinationIndex()
     {
         var firstValue = new YamlScalarNode("1");
         var secondValue = new YamlScalarNode("2");
@@ -822,7 +887,7 @@ public class YamlMappingNodeExtensionsTests
             { new YamlScalarNode("third"), thirdValue },
         };
 
-        var moved = node.MoveChildByValue(thirdValue, 0);
+        var moved = node.MoveChildByValue(new YamlScalarNode("3"), 0);
 
         Assert.True(moved);
         Assert.Equal(new[] { "third", "first", "second" }, node.GetChildren().Select(m => m.Key.Value).ToArray());
@@ -845,14 +910,49 @@ public class YamlMappingNodeExtensionsTests
     }
 
     [Fact]
-    public void MoveChildByValue_ThrowsWhenValueNodeReferenceDoesNotExist()
+    public void MoveChildByValue_MovesFirstEqualValueNode()
+    {
+        var node = new YamlMappingNode
+        {
+            { new YamlScalarNode("first"), new YamlScalarNode("same") },
+            { new YamlScalarNode("second"), new YamlScalarNode("same") },
+            { new YamlScalarNode("third"), new YamlScalarNode("other") },
+        };
+
+        var moved = node.MoveChildByValue(new YamlScalarNode("same"), 2);
+
+        Assert.True(moved);
+        Assert.Equal(new[] { "second", "third", "first" }, node.GetChildren().Select(m => m.Key.Value).ToArray());
+    }
+
+    [Fact]
+    public void MoveChildByValueReference_MovesChildAtValueNodeReferenceToDestinationIndex()
+    {
+        var firstValue = new YamlScalarNode("1");
+        var secondValue = new YamlScalarNode("2");
+        var thirdValue = new YamlScalarNode("3");
+        var node = new YamlMappingNode
+        {
+            { new YamlScalarNode("first"), firstValue },
+            { new YamlScalarNode("second"), secondValue },
+            { new YamlScalarNode("third"), thirdValue },
+        };
+
+        var moved = node.MoveChildByValueReference(thirdValue, 0);
+
+        Assert.True(moved);
+        Assert.Equal(new[] { "third", "first", "second" }, node.GetChildren().Select(m => m.Key.Value).ToArray());
+    }
+
+    [Fact]
+    public void MoveChildByValueReference_ThrowsWhenValueNodeReferenceDoesNotExist()
     {
         var node = new YamlMappingNode
         {
             { "first", "1" },
         };
 
-        Assert.Throws<KeyNotFoundException>(() => node.MoveChildByValue(new YamlScalarNode("1"), 0));
+        Assert.Throws<KeyNotFoundException>(() => node.MoveChildByValueReference(new YamlScalarNode("1"), 0));
     }
 
     [Fact]
