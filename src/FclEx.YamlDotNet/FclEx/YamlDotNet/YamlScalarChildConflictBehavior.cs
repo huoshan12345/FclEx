@@ -1,7 +1,7 @@
 namespace FclEx.YamlDotNet;
 
 /// <summary>
-/// Defines how <see cref="YamlMappingNodeExtensions.SetScalarChild(YamlMappingNode, string, string, ScalarStyle?, YamlScalarChildConflictBehavior)"/>
+/// Defines how <see cref="YamlMappingNodeExtensions.SetScalarChildOrDefault(YamlMappingNode, string, string, ScalarStyle?, YamlScalarChildConflictBehavior)"/>
 /// handles an existing child whose value is not a <see cref="YamlScalarNode"/>.
 /// </summary>
 public enum YamlScalarChildConflictBehavior

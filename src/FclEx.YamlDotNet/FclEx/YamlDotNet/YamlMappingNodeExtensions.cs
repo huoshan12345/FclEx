@@ -197,8 +197,8 @@ public static class YamlMappingNodeExtensions
     /// The scalar child and whether the mapping changed. The child is <c>null</c> when a non-scalar conflict is ignored.
     /// </returns>
     /// <exception cref="InvalidOperationException">Thrown when a non-scalar child exists and <paramref name="conflictBehavior"/> is <see cref="YamlScalarChildConflictBehavior.Throw"/>.</exception>
-    public static (YamlScalarNode? Child, bool Changed) SetScalarChild(this YamlMappingNode node, string key, string value, ScalarStyle? valueStyle = null,
-        YamlScalarChildConflictBehavior conflictBehavior = YamlScalarChildConflictBehavior.Replace)
+    public static (YamlScalarNode? Child, bool Changed) SetScalarChildOrDefault(this YamlMappingNode node, string key, string value, ScalarStyle? valueStyle = null,
+        YamlScalarChildConflictBehavior conflictBehavior = YamlScalarChildConflictBehavior.Ignore)
     {
         var keyNode = new YamlScalarNode(key);
 
@@ -223,7 +223,9 @@ public static class YamlMappingNodeExtensions
             }
 
             if (conflictBehavior == YamlScalarChildConflictBehavior.Ignore)
+            {
                 return (null, false);
+            }
 
             node.Children.Remove(keyNode);
         }
@@ -240,9 +242,36 @@ public static class YamlMappingNodeExtensions
     /// <param name="key">The scalar key value to add or update.</param>
     /// <param name="value">The boolean value to write.</param>
     /// <returns>The scalar child and whether the mapping changed.</returns>
-    public static (YamlScalarNode? Child, bool Changed) SetScalarChild(this YamlMappingNode node, string key, bool value)
+    public static (YamlScalarNode? Child, bool Changed) SetScalarChildOrDefault(this YamlMappingNode node, string key, bool value)
     {
-        return node.SetScalarChild(key, value.ToLower(), ScalarStyle.Plain, YamlScalarChildConflictBehavior.Replace);
+        return node.SetScalarChildOrDefault(key, value.ToLower(), ScalarStyle.Plain);
+    }
+
+    /// <summary>
+    /// Adds or updates a scalar child value.
+    /// </summary>
+    /// <param name="node">The mapping node to update.</param>
+    /// <param name="key">The scalar key value to add or update.</param>
+    /// <param name="value">The scalar value to write.</param>
+    /// <param name="valueStyle">The optional scalar style. When omitted for an existing scalar, its current style is preserved.</param>
+    /// <returns>
+    /// The scalar child and whether the mapping changed.
+    /// </returns>
+    public static (YamlScalarNode Child, bool Changed) SetScalarChild(this YamlMappingNode node, string key, string value, ScalarStyle? valueStyle = null)
+    {
+        return node.SetScalarChildOrDefault(key, value, valueStyle, YamlScalarChildConflictBehavior.Replace)!;
+    }
+
+    /// <summary>
+    /// Adds or updates a boolean scalar child value using lower-case YAML boolean text and plain style.
+    /// </summary>
+    /// <param name="node">The mapping node to update.</param>
+    /// <param name="key">The scalar key value to add or update.</param>
+    /// <param name="value">The boolean value to write.</param>
+    /// <returns>The scalar child and whether the mapping changed.</returns>
+    public static (YamlScalarNode Child, bool Changed) SetScalarChild(this YamlMappingNode node, string key, bool value)
+    {
+        return node.SetScalarChild(key, value.ToLower(), ScalarStyle.Plain);
     }
 
     /// <summary>

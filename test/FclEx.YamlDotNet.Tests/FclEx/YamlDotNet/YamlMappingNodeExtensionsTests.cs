@@ -283,11 +283,11 @@ public class YamlMappingNodeExtensionsTests
     }
 
     [Fact]
-    public void SetScalarChild_AddsScalarWhenKeyDoesNotExist()
+    public void SetScalarChildOrDefault_AddsScalarWhenKeyDoesNotExist()
     {
         var node = new YamlMappingNode();
 
-        var (child, changed) = node.SetScalarChild("name", "Dorothy", ScalarStyle.DoubleQuoted);
+        var (child, changed) = node.SetScalarChildOrDefault("name", "Dorothy", ScalarStyle.DoubleQuoted);
 
         Assert.NotNull(child);
         Assert.True(changed);
@@ -297,12 +297,12 @@ public class YamlMappingNodeExtensionsTests
     }
 
     [Fact]
-    public void SetScalarChild_ReturnsExistingScalarWithoutChangeWhenValueAndStyleMatch()
+    public void SetScalarChildOrDefault_ReturnsExistingScalarWithoutChangeWhenValueAndStyleMatch()
     {
         var node = new YamlMappingNode();
-        var (original, _) = node.SetScalarChild("name", "Dorothy", ScalarStyle.SingleQuoted);
+        var (original, _) = node.SetScalarChildOrDefault("name", "Dorothy", ScalarStyle.SingleQuoted);
 
-        var (child, changed) = node.SetScalarChild("name", "Dorothy", ScalarStyle.SingleQuoted);
+        var (child, changed) = node.SetScalarChildOrDefault("name", "Dorothy", ScalarStyle.SingleQuoted);
 
         Assert.NotNull(original);
         Assert.NotNull(child);
@@ -312,12 +312,12 @@ public class YamlMappingNodeExtensionsTests
     }
 
     [Fact]
-    public void SetScalarChild_UpdatesExistingScalarValueAndKeepsStyleWhenStyleIsNotSpecified()
+    public void SetScalarChildOrDefault_UpdatesExistingScalarValueAndKeepsStyleWhenStyleIsNotSpecified()
     {
         var node = new YamlMappingNode();
-        var (original, _) = node.SetScalarChild("name", "Dorothy", ScalarStyle.DoubleQuoted);
+        var (original, _) = node.SetScalarChildOrDefault("name", "Dorothy", ScalarStyle.DoubleQuoted);
 
-        var (child, changed) = node.SetScalarChild("name", "Gale");
+        var (child, changed) = node.SetScalarChildOrDefault("name", "Gale");
 
         Assert.NotNull(original);
         Assert.NotNull(child);
@@ -328,12 +328,12 @@ public class YamlMappingNodeExtensionsTests
     }
 
     [Fact]
-    public void SetScalarChild_UpdatesExistingScalarStyleWithoutChangingValue()
+    public void SetScalarChildOrDefault_UpdatesExistingScalarStyleWithoutChangingValue()
     {
         var node = new YamlMappingNode();
-        var (original, _) = node.SetScalarChild("name", "Dorothy", ScalarStyle.Plain);
+        var (original, _) = node.SetScalarChildOrDefault("name", "Dorothy", ScalarStyle.Plain);
 
-        var (child, changed) = node.SetScalarChild("name", "Dorothy", ScalarStyle.DoubleQuoted);
+        var (child, changed) = node.SetScalarChildOrDefault("name", "Dorothy", ScalarStyle.DoubleQuoted);
 
         Assert.NotNull(original);
         Assert.NotNull(child);
@@ -344,14 +344,14 @@ public class YamlMappingNodeExtensionsTests
     }
 
     [Fact]
-    public void SetScalarChild_ReplacesNonScalarValueWhenTypeMismatchIsAllowed()
+    public void SetScalarChildOrDefault_ReplacesNonScalarValueWhenTypeMismatchIsAllowed()
     {
         var node = new YamlMappingNode
         {
             { new YamlScalarNode("name"), new YamlMappingNode() },
         };
 
-        var (child, changed) = node.SetScalarChild("name", "Dorothy");
+        var (child, changed) = node.SetScalarChildOrDefault("name", "Dorothy");
 
         Assert.NotNull(child);
         Assert.True(changed);
@@ -360,21 +360,21 @@ public class YamlMappingNodeExtensionsTests
     }
 
     [Fact]
-    public void SetScalarChild_ThrowsForNonScalarValueWhenTypeMismatchThrows()
+    public void SetScalarChildOrDefault_ThrowsForNonScalarValueWhenTypeMismatchThrows()
     {
         var node = new YamlMappingNode
         {
             { new YamlScalarNode("name"), new YamlMappingNode() },
         };
 
-        var exception = Assert.Throws<InvalidOperationException>(() => node.SetScalarChild("name", "Dorothy", conflictBehavior: YamlScalarChildConflictBehavior.Throw));
+        var exception = Assert.Throws<InvalidOperationException>(() => node.SetScalarChildOrDefault("name", "Dorothy", conflictBehavior: YamlScalarChildConflictBehavior.Throw));
 
         Assert.Contains("name", exception.Message);
         Assert.Contains(nameof(YamlScalarNode), exception.Message);
     }
 
     [Fact]
-    public void SetScalarChild_IgnoresNonScalarValueWhenConflictBehaviorIsIgnore()
+    public void SetScalarChildOrDefault_IgnoresNonScalarValueWhenConflictBehaviorIsIgnore()
     {
         var existing = new YamlMappingNode();
         var node = new YamlMappingNode
@@ -382,7 +382,7 @@ public class YamlMappingNodeExtensionsTests
             { new YamlScalarNode("name"), existing },
         };
 
-        var (child, changed) = node.SetScalarChild("name", "Dorothy", conflictBehavior: YamlScalarChildConflictBehavior.Ignore);
+        var (child, changed) = node.SetScalarChildOrDefault("name", "Dorothy", conflictBehavior: YamlScalarChildConflictBehavior.Ignore);
 
         Assert.Null(child);
         Assert.False(changed);
@@ -390,11 +390,11 @@ public class YamlMappingNodeExtensionsTests
     }
 
     [Fact]
-    public void SetScalarChild_BoolWritesLowercasePlainScalar()
+    public void SetScalarChildOrDefault_BoolWritesLowercasePlainScalar()
     {
         var node = new YamlMappingNode();
 
-        var (child, changed) = node.SetScalarChild("enabled", true);
+        var (child, changed) = node.SetScalarChildOrDefault("enabled", true);
 
         Assert.NotNull(child);
         Assert.True(changed);
@@ -403,11 +403,11 @@ public class YamlMappingNodeExtensionsTests
     }
 
     [Fact]
-    public void SetScalarChild_BoolWritesFalseAsLowercasePlainScalar()
+    public void SetScalarChildOrDefault_BoolWritesFalseAsLowercasePlainScalar()
     {
         var node = new YamlMappingNode();
 
-        var (child, changed) = node.SetScalarChild("enabled", false);
+        var (child, changed) = node.SetScalarChildOrDefault("enabled", false);
 
         Assert.NotNull(child);
         Assert.True(changed);
