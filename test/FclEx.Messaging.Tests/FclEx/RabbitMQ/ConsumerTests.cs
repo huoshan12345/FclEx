@@ -91,7 +91,7 @@ public class ConsumerTests(RabbitMqTestsFixture fixture) : RabbitMqTests(fixture
     [InlineData(0.3)]
     public async Task Consume_PushBack_String_Test(double delaySeconds)
     {
-        await ConsumePushBackTest(nameof(Consume_PushBack_String_Test), "testValue", TimeSpan.FromSeconds(delaySeconds));
+        await ConsumePushBackTest(nameof(Consume_PushBack_String_Test) + delaySeconds, "testValue", TimeSpan.FromSeconds(delaySeconds));
     }
 
     [RetryTheory]
@@ -99,7 +99,7 @@ public class ConsumerTests(RabbitMqTestsFixture fixture) : RabbitMqTests(fixture
     [InlineData(0.3)]
     public async Task Consume_PushBack_Int_Test(double delaySeconds)
     {
-        await ConsumePushBackTest(nameof(Consume_PushBack_Int_Test), 10, TimeSpan.FromSeconds(delaySeconds));
+        await ConsumePushBackTest(nameof(Consume_PushBack_Int_Test) + delaySeconds, 10, TimeSpan.FromSeconds(delaySeconds));
     }
 
     [RetryTheory]
@@ -107,7 +107,7 @@ public class ConsumerTests(RabbitMqTestsFixture fixture) : RabbitMqTests(fixture
     [InlineData(0.3)]
     public async Task Consume_PushBack_Class_Test(double delaySeconds)
     {
-        await ConsumePushBackTest(nameof(Consume_PushBack_Class_Test), new Person
+        await ConsumePushBackTest(nameof(Consume_PushBack_Class_Test) + delaySeconds, new Person
         {
             Id = 10,
             Name = "Jim",
