@@ -50,12 +50,14 @@ public class RedisCacheTests(RedisTestsFixture fixture) : RedisTests(fixture)
             .ToArray();
 
         var sep = CacheManagerOptions.Separator;
-        foreach (var value in array)
+        var tasks = array.SelectMany(m => new[]
         {
-            await TestAsync(nameof(TestModel) + sep + value.Name, value); // class
-            await TestAsync(nameof(TestModel.Name) + sep + value.Name, value.Name); // string
-            await TestAsync(nameof(TestModel.Age) + sep + value.Age, value.Age); // int
-        }
+            TestAsync(nameof(TestModel) + sep + m.Name, m), // class
+            TestAsync(nameof(TestModel.Name) + sep + m.Name, m.Name), // string
+            TestAsync(nameof(TestModel.Age) + sep + m.Age, m.Age) // int
+        });
+
+        await Task.WhenAll(tasks);
     }
 
     [RetryFact]
