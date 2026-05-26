@@ -12,6 +12,7 @@ public class AbpTests<TModule, TFixture>(TFixture fixture)
     protected IServiceProvider Services => Fixture.Services;
 }
 
+[EnableParallelization]
 [CollectionDefinition(nameof(AbpTestsCollection))]
 public class AbpTestsCollection : ICollectionFixture<AbpTestsFixture>;
 

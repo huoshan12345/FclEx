@@ -8,7 +8,7 @@ public class HttpRequestActionTests : HttpServerTests
         if (HasApiServer == false)
             return;
 
-        var path = new Uri("api/post", UriKind.RelativeOrAbsolute);
+        var path = new Uri(TestApiPaths.Post, UriKind.RelativeOrAbsolute);
         var (successful, data, ex, _) = await HttpRequest.Post(path)
             .JsonContent(Enumerable.Range(1, 10).ToList())
             .ToAction(TestHttp)

@@ -3,6 +3,7 @@ using FclEx.Dapper;
 
 namespace FclEx.EfCore;
 
+[EnableParallelization]
 [CollectionDefinition(nameof(EfCoreTestsCollection))]
 public class EfCoreTestsCollection : ICollectionFixture<EfCoreFixture>;
 

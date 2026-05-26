@@ -23,7 +23,7 @@ public class MutateTokenResponseHandler : DelegatingHandler
 
         // ReSharper disable once InvertIf
         if (request.RequestUri is { } uri
-            && uri.AbsolutePath.StartsWith(TokenPath)
+            && uri.AbsolutePath.StartsWith(TestApiPaths.Token)
             && response.IsSuccessStatusCode)
         {
             TokenRequestCount++;

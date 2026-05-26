@@ -1,4 +1,4 @@
-namespace FclEx.Http.Tests.Models;
+namespace FclEx.Http.Models;
 
 /// <summary>
 /// Model to test APIs on mockapi.io

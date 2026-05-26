@@ -1,15 +1,23 @@
 namespace FclEx.Http.Core.HttpRequestExtensions;
 
-public class TimeoutTests
+public class TimeoutTests : HttpServerTests
 {
-    [RetryTheory(Skip = "test url is not avaible")]
+    [RetryTheory]
     [InlineData(0.1)]
     [InlineData(0.3)]
-    public async Task ConnectTimeout_Test(double timeoutSeconds)
+    public async Task ReadHeadersTimeout_Test(double timeoutSeconds)
     {
-        var http = HttpClientService.Create(m => m.RetryCount = 0);
+        if (HasApiServer == false)
+            return;
+
+        var http = HttpClientService.Create(m =>
+        {
+            m.BaseAddress = TestUri;
+            m.RetryCount = 0;
+        });
         var timeout = TimeSpan.FromSeconds(timeoutSeconds);
-        var task = HttpRequest.Get("https://httpstat.us/504?sleep=60000")
+        var task = HttpRequest.Get(TestApiPaths.Sleep)
+            .AddQueryParam("seconds", "3")
             .ReadHeadersTimeout(timeout)
             .SendAsync(http)
             .ThrowIfError();

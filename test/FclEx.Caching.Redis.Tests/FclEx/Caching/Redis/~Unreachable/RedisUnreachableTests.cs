@@ -1,5 +1,6 @@
 namespace FclEx.Caching.Redis._Unreachable;
 
+[EnableParallelization]
 [CollectionDefinition(nameof(RedisUnreachableTestsCollection))]
 public class RedisUnreachableTestsCollection : ICollectionFixture<RedisUnreachableTestsFixture>;
 

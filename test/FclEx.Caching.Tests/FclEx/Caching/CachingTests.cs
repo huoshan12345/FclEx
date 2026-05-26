@@ -2,6 +2,7 @@ using Meziantou.Xunit.v3;
 
 namespace FclEx.Caching;
 
+[EnableParallelization]
 [CollectionDefinition(nameof(CachingTestsCollection))]
 public class CachingTestsCollection : ICollectionFixture<CachingTestsFixture>;
 

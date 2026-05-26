@@ -73,7 +73,7 @@ public class SendAsyncTests : HttpServerTests
 
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 3).ToDictionary(m => m.ToString(), m => random.NextString(5));
-        var response = await HttpRequest.Post("api/post")
+        var response = await HttpRequest.Post(TestApiPaths.Post)
             .AddFormParam(expected)
             .ReadHeadersTimeout(TimeSpan.FromSeconds(5))
             .SendAsync(TestHttp)
@@ -94,7 +94,7 @@ public class SendAsyncTests : HttpServerTests
             return;
 
         var list = Enumerable.Range(1, 10).ToList();
-        var response = await HttpRequest.Post("api/post")
+        var response = await HttpRequest.Post(TestApiPaths.Post)
             .JsonContent(list)
             .SendAsync(TestHttp)
             .ThrowIfError();
@@ -122,7 +122,7 @@ public class SendAsyncTests : HttpServerTests
         if (HasApiServer == false)
             return;
 
-        var response = await HttpRequest.Post("api/charset")
+        var response = await HttpRequest.Post(TestApiPaths.Charset)
             .AddQueryParam("charset", charSet)
             .SendAsync(TestHttp)
             .ThrowIfError();
@@ -153,7 +153,7 @@ public class SendAsyncTests : HttpServerTests
             return;
 
         var url = TestUrls.First();
-        var response = await HttpRequest.Get("api/redirect")
+        var response = await HttpRequest.Get(TestApiPaths.Redirect)
             .AddQueryParam("u", url)
             .EnsureSuccessStatusCode()
             .SendAsync(TestHttp)

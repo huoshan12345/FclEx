@@ -1,8 +1,17 @@
-#if NET8_0_OR_GREATER
-using static Duende.IdentityModel.OidcConstants;
-#endif
+namespace FclEx.Http;
 
-namespace FclEx.Http.Tests;
+public class TestApiPaths
+{
+    public const string Sleep = "/api/sleep";
+    public const string Post = "/api/post";
+    public const string Compress = "/api/compress";
+    public const string Charset = "/api/charset";
+    public const string Redirect = "/api/redirect";
+    public const string CharsetDetectGb2312 = "/api/charset-detect/gb2312";
+    public const string Discovery = "/oauth/.well-known/openid-configuration";
+    public const string Token = "/oauth/openid-connect/token";
+    public const string AuthTest = "/api/auth-test";
+}
 
 public class HttpServerFixture : CoreTestsFixture
 {
@@ -39,9 +48,8 @@ public class HttpServerFixture : CoreTestsFixture
         = File.ReadAllText(Path.Combine("TestData", "SimpleCookies.json"))
             .FromJson<List<SimpleCookie>>()!;
 
-    public const string TokenPath = "/oauth/openid-connect/token";
     public const string RequiredScope = "test-scope";
-    
+
 #if NET8_0_OR_GREATER
 
     public static readonly bool HasApiServer = true;
@@ -134,18 +142,18 @@ public class HttpServerFixture : CoreTestsFixture
         app.UseMiddleware<EnableBufferingMiddleware>();
         app.UseRequestDecompression();
 
-        app.MapGet("/api/sleep", async (double seconds) =>
+        app.MapGet(TestApiPaths.Sleep, async (HttpContext context, double seconds) =>
         {
-            await TaskHelper.Delay(TimeSpan.FromSeconds(seconds));
+            await TaskHelper.Delay(TimeSpan.FromSeconds(seconds), context.RequestAborted);
         });
 
-        app.MapPost("/api/post", async context =>
+        app.MapPost(TestApiPaths.Post, async context =>
         {
             var body = await context.Request.GetRawBodyAsync();
             await context.Response.WriteAsync(body);
         });
 
-        app.MapPost("/api/compress", async context =>
+        app.MapPost(TestApiPaths.Compress, async context =>
         {
             var request = context.Request;
             var body = await request.GetRawBodyAsync();
@@ -159,24 +167,24 @@ public class HttpServerFixture : CoreTestsFixture
             await context.Response.WriteAsync(obj.ToString());
         });
 
-        app.MapPost("/api/charset", (HttpContext context, string charSet) =>
+        app.MapPost(TestApiPaths.Charset, (HttpContext context, string charSet) =>
         {
             context.Response.ContentType = $"text/plain;charset={charSet}";
         });
 
-        app.MapGet("/api/redirect", (string u) => Results.Redirect(u));
+        app.MapGet(TestApiPaths.Redirect, (string u) => Results.Redirect(u));
 
-        app.MapGet("/api/charset-detect/gb2312", async context =>
+        app.MapGet(TestApiPaths.CharsetDetectGb2312, async context =>
         {
             context.Response.ContentType = MediaTypes.Html; // do not set charset, to test auto-detect encoding
             await context.Response.WriteAsync(VisitorHtml.Value, Gb2312);
         });
 
-        app.MapGet("/oauth/.well-known/openid-configuration", async context =>
+        app.MapGet(TestApiPaths.Discovery, async context =>
         {
             var request = context.Request;
             var issuer = $"{request.Scheme}://{request.Host}/oauth";
-            var token = $"{request.Scheme}://{request.Host}{TokenPath}";
+            var token = $"{request.Scheme}://{request.Host}{TestApiPaths.Token}";
             var discovery = new JsonObject
             {
                 {Discovery.Issuer, issuer},
@@ -185,7 +193,7 @@ public class HttpServerFixture : CoreTestsFixture
             await context.Response.WriteAsync(discovery.ToJsonString());
         });
 
-        app.MapPost(TokenPath, async context =>
+        app.MapPost(TestApiPaths.Token, async context =>
         {
             var scopes = context.Request.Form[TokenRequest.Scope].ToString().Split(' ');
             var token = CreateToken(scopes);
@@ -201,7 +209,7 @@ public class HttpServerFixture : CoreTestsFixture
         app.UseAuthentication();
         app.UseAuthorization();
 
-        app.MapGet("/auth/test", [Authorize, RequiredScope(RequiredScope)] async (context) =>
+        app.MapGet(TestApiPaths.AuthTest, [Authorize, RequiredScope(RequiredScope)] async (context) =>
         {
             var auth = context.Request.Headers.Authorization.ToString();
             await context.Response.WriteAsync(auth);

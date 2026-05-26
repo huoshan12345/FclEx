@@ -1,5 +1,3 @@
-using static Duende.IdentityModel.OidcConstants;
-
 namespace FclEx.Http.Auth;
 
 public class AuthenticationHandlerTests : AuthTests
@@ -24,7 +22,7 @@ public class AuthenticationHandlerTests : AuthTests
             return;
 
         var client = CreateHttpClient([RequiredScope], requireToken: false);
-        var request = new HttpRequestMessage(HttpMethod.Get, TestUri.WithPath("/auth/test"));
+        var request = new HttpRequestMessage(HttpMethod.Get, TestUri.WithPath(TestApiPaths.AuthTest));
         var response = await client.SendAsync(request);
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -36,7 +34,7 @@ public class AuthenticationHandlerTests : AuthTests
             return;
 
         var client = CreateHttpClient([RequiredScope]);
-        var request = new HttpRequestMessage(HttpMethod.Get, TestUri.WithPath("/auth/test"));
+        var request = new HttpRequestMessage(HttpMethod.Get, TestUri.WithPath(TestApiPaths.AuthTest));
         var response = await client.SendAsync(request);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
@@ -48,7 +46,7 @@ public class AuthenticationHandlerTests : AuthTests
             return;
 
         var client = CreateHttpClient([RequiredScope + "-1"]);
-        var request = new HttpRequestMessage(HttpMethod.Get, TestUri.WithPath("/auth/test"));
+        var request = new HttpRequestMessage(HttpMethod.Get, TestUri.WithPath(TestApiPaths.AuthTest));
         var response = await client.SendAsync(request);
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
@@ -64,7 +62,7 @@ public class AuthenticationHandlerTests : AuthTests
 
         for (var i = 0; i < 3; i++)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, TestUri.WithPath("/auth/test"));
+            var request = new HttpRequestMessage(HttpMethod.Get, TestUri.WithPath(TestApiPaths.AuthTest));
             var response = await client.SendAsync(request);
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
@@ -87,7 +85,7 @@ public class AuthenticationHandlerTests : AuthTests
         });
 
         var client = CreateHttpClient([RequiredScope], handler);
-        var request = new HttpRequestMessage(HttpMethod.Get, TestUri.WithPath("/auth/test"));
+        var request = new HttpRequestMessage(HttpMethod.Get, TestUri.WithPath(TestApiPaths.AuthTest));
         var response = await client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -106,7 +104,7 @@ public class AuthenticationHandlerTests : AuthTests
         });
 
         var client = CreateHttpClient([RequiredScope], handler);
-        var request = new HttpRequestMessage(HttpMethod.Get, TestUri.WithPath("/auth/test"));
+        var request = new HttpRequestMessage(HttpMethod.Get, TestUri.WithPath(TestApiPaths.AuthTest));
         var response = await client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
