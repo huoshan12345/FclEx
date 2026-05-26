@@ -1,4 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>ABP integration helpers for FclEx, including module setup, conventional registration, telemetry suppression, and AspectCore-based login retry and return-value caching interceptors.</Description>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Volo.Abp.Core" />
     <PackageReference Include="AspectCore.Extensions.DependencyInjection" />

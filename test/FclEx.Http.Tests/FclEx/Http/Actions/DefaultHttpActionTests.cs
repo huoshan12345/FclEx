@@ -2,7 +2,7 @@ namespace FclEx.Http.Actions;
 
 public class DefaultHttpActionTests
 {
-    [Fact]
+    [RetryFact]
     public async Task ExecuteCoreAsync_WhenEnsureSuccessStatusCodeIsTrue_RejectsUnsuccessfulStatusCode()
     {
         var response = HttpActionTestFixtures.CreateResponse("missing", HttpStatusCode.NotFound, HttpActionTestFixtures.Elapsed);

@@ -1,4 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Cache abstractions and EasyCaching-based implementations for FclEx, including typed cache managers, configuration helpers, and System.Text.Json serialization patches.</Description>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="EasyCaching.InMemory" />
     <PackageReference Include="EasyCaching.Serialization.SystemTextJson" />
