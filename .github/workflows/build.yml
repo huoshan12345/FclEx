@@ -229,11 +229,6 @@ jobs:
 
           $jobs = @(
             @{
-              Name = "changes"
-              Result = "${{ needs.changes.result }}"
-              AllowSkipped = $false
-            },
-            @{
               Name = "build"
               Result = "${{ needs.build.result }}"
               AllowSkipped = -not $shouldBuild
@@ -242,6 +237,11 @@ jobs:
               Name = "build-win"
               Result = "${{ needs.build-win.result }}"
               AllowSkipped = -not $shouldBuild
+            },
+            @{
+              Name = "changes"
+              Result = "${{ needs.changes.result }}"
+              AllowSkipped = $false
             }
           )
 

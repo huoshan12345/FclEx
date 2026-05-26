@@ -764,7 +764,7 @@ public class YamlMappingNodeExtensionsTests
     }
 
     [Fact]
-    public void MoveChildByKeyNode_MovesChildAtKeyNodeToDestinationIndex()
+    public void MoveChildByKey_MovesChildAtKeyNodeToDestinationIndex()
     {
         var firstKey = new YamlScalarNode("first");
         var secondKey = new YamlScalarNode("second");
@@ -776,14 +776,14 @@ public class YamlMappingNodeExtensionsTests
             { thirdKey, new YamlScalarNode("3") },
         };
 
-        var moved = node.MoveChildByKeyNode(thirdKey, 0);
+        var moved = node.MoveChildByKey(thirdKey, 0);
 
         Assert.True(moved);
         Assert.Equal(new[] { "third", "first", "second" }, node.GetChildren().Select(m => m.Key.Value).ToArray());
     }
 
     [Fact]
-    public void MoveChildByKeyNode_ReturnsFalseWhenSourceAndDestinationAreSame()
+    public void MoveChildByKey_ReturnsFalseWhenSourceAndDestinationAreSame()
     {
         var key = new YamlScalarNode("first");
         var node = new YamlMappingNode
@@ -792,25 +792,25 @@ public class YamlMappingNodeExtensionsTests
             { new YamlScalarNode("second"), new YamlScalarNode("2") },
         };
 
-        var moved = node.MoveChildByKeyNode(key, 0);
+        var moved = node.MoveChildByKey(key, 0);
 
         Assert.False(moved);
         Assert.Equal(new[] { "first", "second" }, node.GetChildren().Select(m => m.Key.Value).ToArray());
     }
 
     [Fact]
-    public void MoveChildByKeyNode_ThrowsWhenKeyNodeReferenceDoesNotExist()
+    public void MoveChildByKey_ThrowsWhenKeyNodeReferenceDoesNotExist()
     {
         var node = new YamlMappingNode
         {
             { "first", "1" },
         };
 
-        Assert.Throws<KeyNotFoundException>(() => node.MoveChildByKeyNode(new YamlScalarNode("first"), 0));
+        Assert.Throws<KeyNotFoundException>(() => node.MoveChildByKey(new YamlScalarNode("first"), 0));
     }
 
     [Fact]
-    public void MoveChildByValueNode_MovesChildAtValueNodeToDestinationIndex()
+    public void MoveChildByValue_MovesChildAtValueNodeToDestinationIndex()
     {
         var firstValue = new YamlScalarNode("1");
         var secondValue = new YamlScalarNode("2");
@@ -822,14 +822,14 @@ public class YamlMappingNodeExtensionsTests
             { new YamlScalarNode("third"), thirdValue },
         };
 
-        var moved = node.MoveChildByValueNode(thirdValue, 0);
+        var moved = node.MoveChildByValue(thirdValue, 0);
 
         Assert.True(moved);
         Assert.Equal(new[] { "third", "first", "second" }, node.GetChildren().Select(m => m.Key.Value).ToArray());
     }
 
     [Fact]
-    public void MoveChildByValueNode_ReturnsFalseWhenSourceAndDestinationAreSame()
+    public void MoveChildByValue_ReturnsFalseWhenSourceAndDestinationAreSame()
     {
         var value = new YamlScalarNode("1");
         var node = new YamlMappingNode
@@ -838,21 +838,21 @@ public class YamlMappingNodeExtensionsTests
             { new YamlScalarNode("second"), new YamlScalarNode("2") },
         };
 
-        var moved = node.MoveChildByValueNode(value, 0);
+        var moved = node.MoveChildByValue(value, 0);
 
         Assert.False(moved);
         Assert.Equal(new[] { "first", "second" }, node.GetChildren().Select(m => m.Key.Value).ToArray());
     }
 
     [Fact]
-    public void MoveChildByValueNode_ThrowsWhenValueNodeReferenceDoesNotExist()
+    public void MoveChildByValue_ThrowsWhenValueNodeReferenceDoesNotExist()
     {
         var node = new YamlMappingNode
         {
             { "first", "1" },
         };
 
-        Assert.Throws<KeyNotFoundException>(() => node.MoveChildByValueNode(new YamlScalarNode("1"), 0));
+        Assert.Throws<KeyNotFoundException>(() => node.MoveChildByValue(new YamlScalarNode("1"), 0));
     }
 
     [Fact]
@@ -872,7 +872,7 @@ public class YamlMappingNodeExtensionsTests
     }
 
     [Fact]
-    public void MoveChildByKey_ReturnsFalseWhenSourceAndDestinationAreSame()
+    public void MoveChildByKey_String_ReturnsFalseWhenSourceAndDestinationAreSame()
     {
         var node = new YamlMappingNode
         {

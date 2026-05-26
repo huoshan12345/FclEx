@@ -612,7 +612,7 @@ public static class YamlMappingNodeExtensions
     /// <returns><c>true</c> when the child was moved; <c>false</c> when it was already at the destination index.</returns>
     /// <exception cref="KeyNotFoundException">Thrown when <paramref name="valueNode"/> is not a value instance in the mapping.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="destinationIndex"/> is outside the mapping bounds.</exception>
-    public static bool MoveChildByValueNode(this YamlMappingNode node, YamlNode valueNode, int destinationIndex)
+    public static bool MoveChildByValue(this YamlMappingNode node, YamlNode valueNode, int destinationIndex)
     {
         var sourceIndex = node.Children.FindIndex(m => Equals(m.Value, valueNode));
         if (sourceIndex < 0)
@@ -634,7 +634,7 @@ public static class YamlMappingNodeExtensions
     /// <returns><c>true</c> when the child was moved; <c>false</c> when it was already at the destination index.</returns>
     /// <exception cref="KeyNotFoundException">Thrown when <paramref name="keyNode"/> is not a key instance in the mapping.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="destinationIndex"/> is outside the mapping bounds.</exception>
-    public static bool MoveChildByKeyNode(this YamlMappingNode node, YamlNode keyNode, int destinationIndex)
+    public static bool MoveChildByKey(this YamlMappingNode node, YamlNode keyNode, int destinationIndex)
     {
         var sourceIndex = node.Children.FindIndex(m => Equals(m.Key, keyNode));
         if (sourceIndex < 0)
