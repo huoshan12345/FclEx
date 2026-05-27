@@ -30,6 +30,8 @@ When changing package purpose, public surface area, naming, or behavior, check w
 
 Many packages target multiple frameworks, including older targets such as `netstandard2.0` and `net472` as well as current .NET targets. Before using newer BCL or framework APIs, verify they are available on every target for the project. Use existing compatibility helpers, conditional compilation, or target-specific references when needed.
 
+One purpose of this repository is to backfill APIs that are missing from older .NET versions. When an FclEx extension method has the same name as a method later added by .NET, keep the FclEx API name aligned with the official API instead of renaming it to avoid the conflict. Match the official .NET behavior and use conditional compilation so FclEx provides the method only for target frameworks where the BCL does not.
+
 Source generators are part of the package surface for several projects. When changing generators or generated APIs, check the package that consumes the generator as well as the generator project itself.
 
 ## Testing Guidelines
