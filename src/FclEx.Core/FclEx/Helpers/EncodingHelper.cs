@@ -4,8 +4,6 @@ namespace FclEx.Helpers;
 
 public static partial class EncodingHelper
 {
-    public static Encoding Utf8WithoutBom { get; } = new UTF8Encoding(false);
-
     public static Encoding DetectEncoding(string filePath, Encoding? defaultEncoding = null)
     {
         defaultEncoding ??= Encoding.UTF8;
@@ -43,7 +41,7 @@ public static partial class EncodingHelper
         }
         stream.Seek(0, SeekOrigin.Begin);
         return IsUtf8(stream)
-            ? Utf8WithoutBom
+            ? Encoding.Utf8WithoutBom
             : defaultEncoding;
     }
 
