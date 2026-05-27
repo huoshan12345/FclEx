@@ -2,12 +2,14 @@ namespace FclEx.Extensions;
 
 public static class TimeSpanExtensions
 {
+    private const int TicksPerMicrosecond = 10;
+
     /// <summary>
     /// Multiplies a timespan by an integer value
     /// </summary>
     public static TimeSpan Multiply(this TimeSpan timeSpan, int factor)
     {
-        return TimeSpan.FromTicks(timeSpan.Ticks * factor);
+        return TimeSpan.FromTicks(checked(timeSpan.Ticks * factor));
     }
 
     /// <summary>
@@ -15,7 +17,14 @@ public static class TimeSpanExtensions
     /// </summary>
     public static TimeSpan Multiply(this TimeSpan timeSpan, double factor)
     {
-        return TimeSpan.FromTicks((long)(timeSpan.Ticks * factor));
+        if (double.IsNaN(factor))
+            throw new ArgumentException("Factor cannot be NaN.", nameof(factor));
+
+        var ticks = timeSpan.Ticks * factor;
+        if (double.IsInfinity(ticks) || ticks > long.MaxValue || ticks < long.MinValue)
+            throw new OverflowException();
+
+        return TimeSpan.FromTicks((long)ticks);
     }
 
     /// <summary>
@@ -45,7 +54,8 @@ public static class TimeSpanExtensions
         int? minutes = null,
         int? seconds = null,
         int? milliseconds = null,
-        int? microseconds = null)
+        int? microseconds = null,
+        int? ticks = null)
     {
         return TimeSpan.New(
             days ?? timeSpan.Days,
@@ -53,12 +63,8 @@ public static class TimeSpanExtensions
             minutes ?? timeSpan.Minutes,
             seconds ?? timeSpan.Seconds,
             milliseconds ?? timeSpan.Milliseconds,
-            microseconds ??
-#if NET5_0_OR_GREATER
-            timeSpan.Microseconds
-#else
-            (int)((timeSpan.Ticks % TimeSpan.TicksPerMillisecond) / 10)
-#endif
+            microseconds ?? GetMicrosecondComponent(timeSpan),
+            ticks ?? GetTickComponent(timeSpan)
         );
     }
 
@@ -75,50 +81,50 @@ public static class TimeSpanExtensions
     /// </remarks>
     public static TimeSpan TruncateToMilliseconds(this TimeSpan timeSpan)
     {
-        return timeSpan.With(microseconds: 0);
+        return timeSpan.TruncateTo(TimeSpan.TicksPerMillisecond);
     }
 
-    public static TimeSpan TruncateToSecond(this TimeSpan timeSpan)
+    public static TimeSpan TruncateToSeconds(this TimeSpan timeSpan)
     {
-        return timeSpan.With(milliseconds: 0, microseconds: 0);
+        return timeSpan.TruncateTo(TimeSpan.TicksPerSecond);
     }
 
-    public static TimeSpan TruncateToMinute(this TimeSpan timeSpan)
+    public static TimeSpan TruncateToMinutes(this TimeSpan timeSpan)
     {
-        return timeSpan.With(seconds: 0, milliseconds: 0, microseconds: 0);
+        return timeSpan.TruncateTo(TimeSpan.TicksPerMinute);
     }
 
-    public static TimeSpan TruncateToHour(this TimeSpan timeSpan)
+    public static TimeSpan TruncateToHours(this TimeSpan timeSpan)
     {
-        return timeSpan.With(minutes: 0, seconds: 0, milliseconds: 0, microseconds: 0);
+        return timeSpan.TruncateTo(TimeSpan.TicksPerHour);
     }
 
-    public static TimeSpan TruncateToDay(this TimeSpan timeSpan)
+    public static TimeSpan TruncateToDays(this TimeSpan timeSpan)
     {
-        return timeSpan.With(hours: 0, minutes: 0, seconds: 0, milliseconds: 0, microseconds: 0);
+        return timeSpan.TruncateTo(TimeSpan.TicksPerDay);
     }
 
-    public static long WholeMilliseconds(this TimeSpan timeSpan)
+    public static long TotalWholeMilliseconds(this TimeSpan timeSpan)
     {
         return timeSpan.Ticks / TimeSpan.TicksPerMillisecond;
     }
 
-    public static long WholeSeconds(this TimeSpan timeSpan)
+    public static long TotalWholeSeconds(this TimeSpan timeSpan)
     {
         return timeSpan.Ticks / TimeSpan.TicksPerSecond;
     }
 
-    public static long WholeMinutes(this TimeSpan timeSpan)
+    public static long TotalWholeMinutes(this TimeSpan timeSpan)
     {
         return timeSpan.Ticks / TimeSpan.TicksPerMinute;
     }
 
-    public static long WholeHours(this TimeSpan timeSpan)
+    public static long TotalWholeHours(this TimeSpan timeSpan)
     {
         return timeSpan.Ticks / TimeSpan.TicksPerHour;
     }
 
-    public static long WholeDays(this TimeSpan timeSpan)
+    public static long TotalWholeDays(this TimeSpan timeSpan)
     {
         return timeSpan.Ticks / TimeSpan.TicksPerDay;
     }
@@ -131,47 +137,88 @@ public static class TimeSpanExtensions
         if (timeSpan == TimeSpan.Zero)
             return "0s";
 
-        var disposable = StringBuilderHelper.GetCached();
+        var ticks = timeSpan.Ticks;
+        var negative = ticks < 0;
+        var absoluteTicks = GetAbsoluteTicks(ticks);
+
+        var days = absoluteTicks / (ulong)TimeSpan.TicksPerDay;
+        absoluteTicks %= (ulong)TimeSpan.TicksPerDay;
+        var hours = absoluteTicks / (ulong)TimeSpan.TicksPerHour;
+        absoluteTicks %= (ulong)TimeSpan.TicksPerHour;
+        var minutes = absoluteTicks / (ulong)TimeSpan.TicksPerMinute;
+        absoluteTicks %= (ulong)TimeSpan.TicksPerMinute;
+        var seconds = absoluteTicks / (ulong)TimeSpan.TicksPerSecond;
+
+        if (days == 0 && hours == 0 && minutes == 0 && seconds == 0)
+            return "0s";
+
+        using var disposable = StringBuilderHelper.GetCached();
         var builder = disposable.Value;
-
-        if (timeSpan.Days != 0)
+        if (negative)
         {
-            builder.Append(timeSpan.Days).Append('d');
+            builder.Append('-');
         }
 
-        if (timeSpan.Hours != 0)
+        if (days != 0)
         {
-            builder.Append(timeSpan.Hours).Append('h');
+            builder.Append(days).Append('d');
         }
 
-        if (timeSpan.Minutes != 0)
+        if (hours != 0)
         {
-            builder.Append(timeSpan.Minutes).Append('m');
+            builder.Append(hours).Append('h');
         }
 
-        if (timeSpan.Seconds != 0)
+        if (minutes != 0)
         {
-            builder.Append(timeSpan.Seconds).Append('s');
+            builder.Append(minutes).Append('m');
+        }
+
+        if (seconds != 0)
+        {
+            builder.Append(seconds).Append('s');
         }
 
         return builder.ToString();
     }
 
+    private static TimeSpan TruncateTo(this TimeSpan timeSpan, long ticksPerUnit)
+    {
+        return TimeSpan.FromTicks(timeSpan.Ticks / ticksPerUnit * ticksPerUnit);
+    }
+
+    private static int GetMicrosecondComponent(TimeSpan timeSpan)
+    {
+        return (int)((timeSpan.Ticks % TimeSpan.TicksPerMillisecond) / TicksPerMicrosecond);
+    }
+
+    private static int GetTickComponent(TimeSpan timeSpan)
+    {
+        return (int)(timeSpan.Ticks % TicksPerMicrosecond);
+    }
+
+    private static ulong GetAbsoluteTicks(long ticks)
+    {
+        return ticks == long.MinValue
+            ? (ulong)long.MaxValue + 1
+            : (ulong)Math.Abs(ticks);
+    }
+
     extension(TimeSpan)
     {
-        public static TimeSpan New(int days, int hours, int minutes, int seconds, int milliseconds, int microseconds)
+        public static int TicksPerMicrosecond => 10;
+
+        public static TimeSpan New(int days, int hours, int minutes, int seconds, int milliseconds, int microseconds, int ticks = 0)
         {
-#if NET5_0_OR_GREATER
-            return new TimeSpan(days, hours, minutes, seconds, milliseconds, microseconds);
-#else
-            var ticks = days * TimeSpan.TicksPerDay +
-                        hours * TimeSpan.TicksPerHour +
-                        minutes * TimeSpan.TicksPerMinute +
-                        seconds * TimeSpan.TicksPerSecond +
-                        milliseconds * TimeSpan.TicksPerMillisecond +
-                        microseconds * 10; // 1 microsecond = 10 ticks
-            return new TimeSpan(ticks);
-#endif
+            var totalTicks = checked(
+                days * TimeSpan.TicksPerDay +
+                hours * TimeSpan.TicksPerHour +
+                minutes * TimeSpan.TicksPerMinute +
+                seconds * TimeSpan.TicksPerSecond +
+                milliseconds * TimeSpan.TicksPerMillisecond +
+                microseconds * TicksPerMicrosecond +
+                ticks);
+            return TimeSpan.FromTicks(totalTicks);
         }
 
         public static TimeSpan operator *(TimeSpan timeSpan, int factor)
