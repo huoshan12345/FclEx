@@ -10,7 +10,7 @@ public static class TimeSpanExtensions
     /// </summary>
     /// <param name="timeSpan">The time interval to multiply.</param>
     /// <param name="factor">The floating-point factor to multiply by.</param>
-    /// <returns>A new <see cref="TimeSpan"/> whose ticks equal the truncated product of <paramref name="timeSpan"/> and <paramref name="factor"/>.</returns>
+    /// <returns>A new <see cref="TimeSpan"/> whose ticks equal the rounded product of <paramref name="timeSpan"/> and <paramref name="factor"/>.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="factor"/> is <see cref="double.NaN"/>.</exception>
     /// <exception cref="OverflowException">Thrown when the result is infinite, NaN, or outside the range of <see cref="TimeSpan"/>.</exception>
     public static TimeSpan Multiply(this TimeSpan timeSpan, double factor)
@@ -24,6 +24,14 @@ public static class TimeSpanExtensions
         return IntervalFromDoubleTicks(ticks);
     }
 
+    /// <summary>
+    /// Divides a time interval by a floating-point divisor.
+    /// </summary>
+    /// <param name="timeSpan">The time interval to divide.</param>
+    /// <param name="divisor">The floating-point divisor to divide by.</param>
+    /// <returns>A new <see cref="TimeSpan"/> whose ticks equal the rounded quotient of <paramref name="timeSpan"/> and <paramref name="divisor"/>.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="divisor"/> is <see cref="double.NaN"/>.</exception>
+    /// <exception cref="OverflowException">Thrown when the result is infinite, NaN, or outside the range of <see cref="TimeSpan"/>.</exception>
     public static TimeSpan Divide(this TimeSpan timeSpan, double divisor)
     {
         if (double.IsNaN(divisor))
@@ -318,7 +326,9 @@ public static class TimeSpanExtensions
         /// </summary>
         /// <param name="timeSpan">The time interval to multiply.</param>
         /// <param name="factor">The floating-point factor to multiply by.</param>
-        /// <returns>The multiplied time interval.</returns>
+        /// <returns>The multiplied time interval, rounded to the nearest tick.</returns>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="factor"/> is <see cref="double.NaN"/>.</exception>
+        /// <exception cref="OverflowException">Thrown when the result is infinite, NaN, or outside the range of <see cref="TimeSpan"/>.</exception>
         public static TimeSpan operator *(TimeSpan timeSpan, double factor)
         {
             return timeSpan.Multiply(factor);
@@ -329,12 +339,22 @@ public static class TimeSpanExtensions
         /// </summary>
         /// <param name="factor">The floating-point factor to multiply by.</param>
         /// <param name="timeSpan">The time interval to multiply.</param>
-        /// <returns>The multiplied time interval.</returns>
+        /// <returns>The multiplied time interval, rounded to the nearest tick.</returns>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="factor"/> is <see cref="double.NaN"/>.</exception>
+        /// <exception cref="OverflowException">Thrown when the result is infinite, NaN, or outside the range of <see cref="TimeSpan"/>.</exception>
         public static TimeSpan operator *(double factor, TimeSpan timeSpan)
         {
             return timeSpan.Multiply(factor);
         }
 
+        /// <summary>
+        /// Divides a time interval by a floating-point divisor.
+        /// </summary>
+        /// <param name="timeSpan">The time interval to divide.</param>
+        /// <param name="divisor">The floating-point divisor to divide by.</param>
+        /// <returns>The divided time interval, rounded to the nearest tick.</returns>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="divisor"/> is <see cref="double.NaN"/>.</exception>
+        /// <exception cref="OverflowException">Thrown when the result is infinite, NaN, or outside the range of <see cref="TimeSpan"/>.</exception>
         public static TimeSpan operator /(TimeSpan timeSpan, double divisor)
         {
             return timeSpan.Divide(divisor);

@@ -17,7 +17,7 @@ public class TimeSpanExtensionsTests
     }
 
     [Fact]
-    public void Multiply_Double_ReturnsTruncatedTickProduct()
+    public void Multiply_Double_ReturnsRoundedTickProduct()
     {
         var result = TimeSpan.FromTicks(3).Multiply(0.5);
         Assert.Equal(TimeSpan.FromTicks(2), result);
@@ -46,6 +46,53 @@ public class TimeSpanExtensionsTests
     {
         Assert.Equal(TimeSpan.FromSeconds(6), TimeSpan.FromSeconds(2) * 3);
         Assert.Equal(TimeSpan.FromTicks(15), TimeSpan.FromTicks(10) * 1.5);
+    }
+
+    [Fact]
+    public void Divide_Double_ReturnsRoundedTickQuotient()
+    {
+        var result = TimeSpan.FromTicks(3).Divide(2.0);
+
+        Assert.Equal(TimeSpan.FromTicks(2), result);
+    }
+
+    [Fact]
+    public void Divide_Double_ByPositiveInfinityReturnsZero()
+    {
+        var result = TimeSpan.FromSeconds(1).Divide(double.PositiveInfinity);
+
+        Assert.Equal(TimeSpan.Zero, result);
+    }
+
+    [Fact]
+    public void Divide_Double_ThrowsForNaNDivisor()
+    {
+        Assert.Throws<ArgumentException>(() => TimeSpan.FromSeconds(1).Divide(double.NaN));
+    }
+
+    [Fact]
+    public void Divide_Double_ThrowsWhenResultIsNaN()
+    {
+        Assert.Throws<OverflowException>(() => TimeSpan.Zero.Divide(0.0));
+    }
+
+    [Fact]
+    public void Divide_Double_ThrowsWhenResultIsInfinite()
+    {
+        Assert.Throws<OverflowException>(() => TimeSpan.FromSeconds(1).Divide(0.0));
+    }
+
+    [Fact]
+    public void Divide_Double_ThrowsWhenResultOverflows()
+    {
+        Assert.Throws<OverflowException>(() => TimeSpan.MaxValue.Divide(0.5));
+    }
+
+    [Fact]
+    public void Divide_OperatorReturnsQuotient()
+    {
+        Assert.Equal(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(6) / 3);
+        Assert.Equal(TimeSpan.FromTicks(2), TimeSpan.FromTicks(3) / 2.0);
     }
 
     [Fact]
