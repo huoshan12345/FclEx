@@ -11,7 +11,7 @@ public abstract class UserClientHttpAction<TClient, TAccount, T>(TClient client)
     public virtual IHttpService HttpService { get; } = client.HttpService;
 
     public abstract OperationResult<T> GetResult(HttpResponse response);
-    public Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken token = default)
+    public virtual Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken token = default)
         => DefaultHttpAction.GetResponseAsync(this, request, token);
     public virtual Task<OperationResult<HttpResponse>> HandleResponseAsync(HttpResponse response)
         => DefaultHttpAction.HandleResponseAsync(this, response);
