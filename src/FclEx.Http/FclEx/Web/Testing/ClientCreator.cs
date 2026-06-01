@@ -8,6 +8,7 @@ public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
     protected readonly IServiceProvider _provider = provider;
 
     protected readonly ConcurrentDictionary<TAccount, TClient> _dic = new();
+    protected readonly ConcurrentDictionary<string, AsyncLock> _locks = new();
 
     public virtual string GetCookiesFilePath(IUserAccount account)
     {
@@ -18,6 +19,8 @@ public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
 
     public virtual async Task<IList<SimpleCookie>> ReadCookies(IUserAccount account)
     {
+        using var _ = await GetLock(account).LockAsync();
+
         var path = GetCookiesFilePath(account);
         if (File.Exists(path))
         {
@@ -31,8 +34,16 @@ public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
         }
     }
 
+    protected virtual AsyncLock GetLock(IUserAccount account)
+    {
+        var key = $"{typeof(TClient).ShortName()}_{account.UserName}";
+        return _locks.GetOrAdd(key, _ => new AsyncLock());
+    }
+
     public virtual async Task SaveCookies(TClient client)
     {
+        using var _ = await GetLock(client.Account).LockAsync();
+
         var cookies = client.HttpService.GetAllSimpleCookies();
         var str = cookies.ToJson(new JsonOptions(true));
         var path = GetCookiesFilePath(client.Account);
