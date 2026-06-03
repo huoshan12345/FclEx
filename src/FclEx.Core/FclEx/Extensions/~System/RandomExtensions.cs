@@ -338,7 +338,8 @@ public static class RandomExtensions
         Check.NotNull(random);
         Check.NotEmpty(list);
 
-        var i = random.Next(0, list.Count - 1);
+        // the upper bound is exclusive, so no need to minus 1.
+        var i = random.Next(0, list.Count);
         return list[i];
     }
 
