@@ -3,7 +3,7 @@ namespace FclEx.Dapper.SqlAdapters;
 /// <summary>
 /// Adapter for Npgsql
 /// </summary>
-public class NpgsqlAdapter : AbstractSqlAdapter<NpgsqlAdapter>
+public class NpgsqlAdapter : SqlAdapterBase<NpgsqlAdapter>
 {
     public override string SelectIdentitySql { get; } = "SELECT LASTVAL()";
 

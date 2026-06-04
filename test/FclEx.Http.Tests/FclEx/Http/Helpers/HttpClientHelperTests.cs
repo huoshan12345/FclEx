@@ -21,7 +21,7 @@ public class HttpClientHelperTests
         var callback = handler.SslOptions.RemoteCertificateValidationCallback;
 
         Assert.NotNull(callback);
-        Assert.True(callback(null!, null, null, System.Net.Security.SslPolicyErrors.RemoteCertificateNameMismatch));
+        Assert.True(callback(null!, null, null, SslPolicyErrors.RemoteCertificateNameMismatch));
     }
 
     [RetryFact(5)]

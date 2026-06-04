@@ -1,6 +1,6 @@
 namespace FclEx.Http;
 
-public abstract class AbstractHttpService : IHttpService
+public abstract class HttpServiceBase : IHttpService
 {
     protected readonly CookieContainer _cookieContainer = new();
 

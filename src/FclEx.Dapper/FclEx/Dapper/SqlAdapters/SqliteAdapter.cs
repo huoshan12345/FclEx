@@ -9,7 +9,7 @@ namespace FclEx.Dapper.SqlAdapters;
 /// <summary>
 /// Adapter for Microsoft.Data.Sqlite
 /// </summary>
-public class SqliteAdapter : AbstractSqlAdapter<SqliteAdapter>
+public class SqliteAdapter : SqlAdapterBase<SqliteAdapter>
 {
     public override bool SupportSchema { get; } = false;
     public override string SelectIdentitySql { get; } = "SELECT last_insert_rowid()";

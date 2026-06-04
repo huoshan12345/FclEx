@@ -12,7 +12,7 @@ public readonly record struct HttpClientContext(
     }
 }
 
-public abstract class AbstractHttpClientService : AbstractHttpService
+public abstract class HttpClientServiceBase : HttpServiceBase
 {
     protected static readonly Encoding DefaultEncoding = Encoding.UTF8;
 
@@ -173,7 +173,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         return charSet == null ? null : Encoding.GetEncoding(charSet);
     }
 
-    protected static HttpRequestMessage BuildHttpRequest(HttpRequest request, HttpContent? content, Uri? baseAddress, CookieContainer cc, CancellationToken token)
+    protected internal static HttpRequestMessage BuildHttpRequest(HttpRequest request, BufferedContent? content, Uri? baseAddress, CookieContainer cc, CancellationToken token)
     {
         var uri = request.GetUri();
         var requestMessage = new HttpRequestMessage(request.Method, uri)
@@ -188,7 +188,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         {
             if (content is not null)
             {
-                requestMessage.Content = content;
+                requestMessage.Content = content.CloneIfDisposed();
             }
             else if (request.Form.IsNotEmpty())
             {
@@ -252,22 +252,28 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         return requestMessage;
     }
 
+    protected internal static async Task<BufferedContent?> CreateBufferedContentAsync(HttpRequest request, CancellationToken cancellationToken)
+    {
+        var content = request.Content;
+        return content switch
+        {
+            null => null,
+            BufferedContent bufferedContent => bufferedContent,
+            _ => await BufferedContent.CreateAsync(content, request.ReadBufferTimeout, request.BufferSize, cancellationToken),
+        };
+    }
+
     protected virtual async Task<HttpResponseMessage> SendAsync(HttpClientContext context, HttpRequest request, CancellationToken token)
     {
         var (client, policy, _) = context;
 
-        var content = request.Content;
-
-        if (content is not null and not BufferedContent)
-        {
-            content = await BufferedContent.CreateAsync(content, request.ReadBufferTimeout, request.BufferSize, token);
-        }
-
+        using var _ = request.Content;
+        using var bufferedContent = await CreateBufferedContentAsync(request, token);
         var response = await policy.ExecuteAsync(async () =>
         {
             // Create request in every retry to avoid the following error:
             // The request message was already sent. Cannot send the same request message multiple times.
-            using var httpRequest = BuildHttpRequest(request, content, client.BaseAddress, _cookieContainer, token);
+            using var httpRequest = BuildHttpRequest(request, bufferedContent, client.BaseAddress, _cookieContainer, token);
             using var cts = token.WithTimeout(request.ReadHeadersTimeout);
             return await client.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cts.Token);
         });

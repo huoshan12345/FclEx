@@ -3,7 +3,7 @@ namespace FclEx.Dapper.SqlAdapters;
 /// <summary>
 /// Adapter for Microsoft.Data.SqlClient
 /// </summary>
-public class SqlServerAdapter : AbstractSqlAdapter<SqlServerAdapter>
+public class SqlServerAdapter : SqlAdapterBase<SqlServerAdapter>
 {
     public override string SelectIdentitySql { get; } = "SELECT SCOPE_IDENTITY()"; // NOTICE: SCOPE_IDENTITY() return a decimal instead of an integer?
 

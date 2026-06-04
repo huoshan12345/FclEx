@@ -2,11 +2,21 @@ namespace FclEx.Http;
 
 public class BufferedContent : HttpContent
 {
+    private bool _disposed;
     private readonly byte[] _buffer;
 
     private BufferedContent(byte[] buffer)
     {
         _buffer = buffer;
+    }
+
+    public BufferedContent CloneIfDisposed()
+    {
+        if (!_disposed)
+            return this;
+
+        var content = new BufferedContent(_buffer);
+        return content;
     }
 
     public static async Task<BufferedContent> CreateAsync(HttpContent inner, TimeSpan? timeout = null, int bufferSize = 256 * 1024, CancellationToken cancellationToken = default)
@@ -36,10 +46,9 @@ public class BufferedContent : HttpContent
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing)
-        {
-            _buffer.Clear();
-        }
+        if (disposing) 
+            _disposed = true;
+
         base.Dispose(disposing);
     }
 }

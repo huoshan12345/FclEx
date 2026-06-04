@@ -1,6 +1,6 @@
 namespace FclEx.Http;
 
-public class HttpClientService : AbstractHttpClientService
+public class HttpClientService : HttpClientServiceBase
 {
     private static readonly Lazy<HttpClientService> _default = new(() => new(new HttpClientOptions()) { UseCookie = false });
     public static HttpClientService Default => _default.Value;

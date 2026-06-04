@@ -5,11 +5,11 @@ public readonly record struct QuotationMarks(char Prefix, char Suffix)
     public QuotationMarks(char mark) : this(mark, mark) { }
 }
 
-public abstract class AbstractSqlAdapter<TSelf> : ISqlAdapter where TSelf : AbstractSqlAdapter<TSelf>, new()
+public abstract class SqlAdapterBase<TSelf> : ISqlAdapter where TSelf : SqlAdapterBase<TSelf>, new()
 {
     protected readonly Lazy<DbParameterCreator> _creator;
 
-    protected AbstractSqlAdapter()
+    protected SqlAdapterBase()
     {
         _creator = new(BuildParameterCreator, true);
     }

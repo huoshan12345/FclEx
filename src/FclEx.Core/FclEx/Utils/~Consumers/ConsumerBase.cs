@@ -1,7 +1,7 @@
 namespace FclEx.Utils;
 
-public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>, ICancellationListener<TSelf, IReadOnlyList<T>>
-    where TSelf : AbstractConsumer<TSelf, T>
+public abstract class ConsumerBase<TSelf, T> : IConsumer<T>, ICancellationListener<TSelf, IReadOnlyList<T>>
+    where TSelf : ConsumerBase<TSelf, T>
 {
     protected string TypeName { get; }
     protected readonly AsyncLock _locker = new();
@@ -18,7 +18,7 @@ public abstract class AbstractConsumer<TSelf, T> : IConsumer<T>, ICancellationLi
     public event EventHandler<TSelf, IReadOnlyList<T>> CancellationHandler = (sender, list) => { };
     public event EventHandler<TSelf, Exception, string> ExceptionLogger = (sender, exception, message) => { };
 
-    protected AbstractConsumer()
+    protected ConsumerBase()
     {
         TypeName = GetType().ShortName();
     }
