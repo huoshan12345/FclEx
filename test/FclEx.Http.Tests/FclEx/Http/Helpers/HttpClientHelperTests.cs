@@ -1,7 +1,54 @@
+using System.Net.Sockets;
+
 namespace FclEx.Http.Helpers;
 
 public class HttpClientHelperTests
 {
+    public static TheoryData<IPVersionPolicy, AddressFamily[]> IPAddressOrderCases { get; } = new()
+    {
+        { IPVersionPolicy.OnlyIPv4, [AddressFamily.InterNetwork] },
+        { IPVersionPolicy.OnlyIPv6, [AddressFamily.InterNetworkV6] },
+        { IPVersionPolicy.PreferIPv4, [AddressFamily.InterNetwork, AddressFamily.InterNetworkV6] },
+        { IPVersionPolicy.PreferIPv6, [AddressFamily.InterNetworkV6, AddressFamily.InterNetwork] },
+    };
+
+    [Theory]
+    [MemberData(nameof(IPAddressOrderCases))]
+    public void FilterAndOrderIPAddresses_ReturnsAddressesForPolicy(IPVersionPolicy policy, AddressFamily[] expectedFamilies)
+    {
+        var actual = HttpClientHelper.FilterAndOrderIPAddresses(
+            [IPAddress.IPv6Loopback, IPAddress.Loopback],
+            policy);
+
+        Assert.Equal(expectedFamilies, actual.Select(address => address.AddressFamily));
+    }
+
+    [Fact]
+    public async Task ConnectAsync_WhenFirstAddressFails_ConnectsToNextAddressWithNewSocket()
+    {
+        var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        try
+        {
+            var port = listener.LocalEndpoint.CastTo<IPEndPoint>().Port;
+            var acceptTask = listener.AcceptSocketAsync();
+
+            using var stream = await HttpClientHelper.ConnectAsync(
+                new DnsEndPoint("localhost", port),
+                [IPAddress.IPv6Loopback, IPAddress.Loopback],
+                CancellationToken.None);
+            using var socket = await acceptTask;
+
+            var remoteEndPoint = Assert.IsType<IPEndPoint>(socket.RemoteEndPoint);
+            Assert.True(stream.CanWrite);
+            Assert.Equal(AddressFamily.InterNetwork, remoteEndPoint.AddressFamily);
+        }
+        finally
+        {
+            listener.Stop();
+        }
+    }
+
     [Fact]
     public void CreateSocketsHttpHandler_ByDefault_UsesDefaultServerCertificateValidation()
     {

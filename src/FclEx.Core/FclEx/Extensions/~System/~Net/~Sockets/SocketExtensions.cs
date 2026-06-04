@@ -10,7 +10,7 @@ public static class SocketExtensions
             socket.EndConnect,
             host, port, null);
 
-        using (token.Register(() => socket.Close()))
+        using (token.Register(socket.Close))
         {
             try
             {

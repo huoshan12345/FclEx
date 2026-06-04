@@ -16,11 +16,11 @@ This file records the improvement suggestions from the review of `src/FclEx.Http
 
 6. [Resolved] `src/FclEx.Http/FclEx/Http/~Services/HttpClientServiceBase.cs`: manual redirect handling always creates a new GET request. This loses method and body semantics for `307` and `308`, and there is no maximum redirect count or loop detection.
 
-7. `src/FclEx.Http/FclEx/Http/~Core/HttpQualityValueList.cs`: `FindPreferred` only searches the highest weight group. If the highest weighted value is not a candidate, lower weighted valid candidates are ignored. Traverse all accepted q-values according to weight and candidate preference.
+7. [Removed] `src/FclEx.Http/FclEx/Http/~Core/HttpQualityValueList.cs`: `FindPreferred` only searches the highest weight group. If the highest weighted value is not a candidate, lower weighted valid candidates are ignored. Traverse all accepted q-values according to weight and candidate preference.
 
-8. `src/FclEx.Http/FclEx/Http/~Helpers/HttpClientHelper.cs`: `ConnectCallback` reuses one `Socket` across multiple IP address attempts. A failed connect can leave the socket unusable. Create a new socket per candidate address and dispose failed sockets.
+8. [Resolved] `src/FclEx.Http/FclEx/Http/~Helpers/HttpClientHelper.cs`: `ConnectCallback` reuses one `Socket` across multiple IP address attempts. A failed connect can leave the socket unusable. Create a new socket per candidate address and dispose failed sockets.
 
-9. `src/FclEx.Http/FclEx/Http/~Helpers/HttpClientHelper.cs`: `ConnectCallback` creates the socket with `new Socket(SocketType.Stream, ProtocolType.Tcp)`, which may not match IPv4/IPv6 address family choices. Create sockets with the selected address family's `AddressFamily`.
+9. [Resolved] `src/FclEx.Http/FclEx/Http/~Helpers/HttpClientHelper.cs`: `ConnectCallback` creates the socket with `new Socket(SocketType.Stream, ProtocolType.Tcp)`, which may not match IPv4/IPv6 address family choices. Create sockets with the selected address family's `AddressFamily`.
 
 10. `src/FclEx.Http/FclEx/Http/~Core/HttpResponseExtensions.cs`: `ReadJsonAs<T>` parses a `JsonDocument` without disposing it. Wrap the document in `using`.
 
@@ -70,7 +70,7 @@ This file records the improvement suggestions from the review of `src/FclEx.Http
 
 33. `src/FclEx.Http/FclEx/Http/~Core/HttpResponseStream.cs`: `Dispose(bool)` disposes the `HttpResponseMessage` but not the wrapped stream directly and does not call `base.Dispose(disposing)`. Make disposal explicit and conventional.
 
-34. `src/FclEx.Http/FclEx/Http/~Helpers/HttpClientHelper.cs`: local function `CheckSocketConnection` is unused. Remove it or wire it into connection validation if it is still needed.
+34. [Resolved] `src/FclEx.Http/FclEx/Http/~Helpers/HttpClientHelper.cs`: local function `CheckSocketConnection` is unused. Remove it or wire it into connection validation if it is still needed.
 
 35. `src/FclEx.Http/FclEx/Http/~Core/HttpResponseExtensions.cs` and `src/FclEx.Http/FclEx/Http/~Services/HttpServiceExtensions.cs`: download helpers are split across response extensions and service extensions. Consolidate them under one module to reduce discoverability friction.
 
