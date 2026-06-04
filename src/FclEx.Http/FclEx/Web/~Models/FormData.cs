@@ -24,6 +24,11 @@ public class FormData(Uri submitUri)
     public Uri SubmitUri { get; set; } = submitUri;
 
     /// <summary>
+    /// Gets or sets the HTTP method used to submit the form.
+    /// </summary>
+    public HttpMethod Method { get; set; } = HttpMethod.Get;
+
+    /// <summary>
     /// Gets or sets the collection of parameters (name-value pairs) 
     /// to be submitted with the form.
     /// </summary>

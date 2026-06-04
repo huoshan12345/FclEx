@@ -23,31 +23,138 @@ public static class ElementExtensions
         if (element?.QuerySelector(formSelector) is not { } form)
             return null;
 
-        if (form.GetAttribute("action") is not { } action)
+        var baseUri = GetBaseUri(element, uri);
+        var action = form.GetAttribute("action");
+        var submitUri = string.IsNullOrEmpty(action)
+            ? baseUri
+            : new Uri(action, UriKind.RelativeOrAbsolute);
+        if (submitUri == null)
             return null;
 
-
-        var info = new FormData(new Uri(action, UriKind.RelativeOrAbsolute));
+        var info = new FormData(submitUri)
+        {
+            Method = GetFormMethod(form)
+        };
 
         if (!info.SubmitUri.IsAbsoluteUri)
         {
-            var baseUri = uri ?? (element.BaseUrl is { } u ? (Uri)u : null);
             if (baseUri != null)
             {
                 info.SubmitUri = new Uri(baseUri, info.SubmitUri);
             }
         }
 
-        foreach (var input in form.QuerySelectorAll("input").OfType<IHtmlInputElement>().Where(m => m.Type == "hidden"))
+        foreach (var control in form.QuerySelectorAll("input, select, textarea"))
         {
-            var name = input.GetAttribute("name");
-            if (name.IsNullOrEmpty())
+            if (!IsSuccessfulControl(control))
                 continue;
 
-            info.Params[name] = input.GetAttribute("value");
+            AddControlValue(info.Params, control);
         }
 
         return info;
+    }
+
+    private static HttpMethod GetFormMethod(IElement form)
+    {
+        var method = form.GetAttribute("method");
+        return string.Equals(method, "post", StringComparison.OrdinalIgnoreCase)
+            ? HttpMethod.Post
+            : HttpMethod.Get;
+    }
+
+    private static Uri? GetBaseUri(IElement element, Uri? uri)
+    {
+        if (uri != null)
+            return uri;
+
+        return element.BaseUrl is { } baseUrl
+            ? new Uri(baseUrl.ToString(), UriKind.Absolute)
+            : null;
+    }
+
+    private static bool IsSuccessfulControl(IElement control)
+    {
+        var name = control.GetAttribute("name");
+        if (name.IsNullOrEmpty())
+            return false;
+
+        if (control.HasAttribute("disabled"))
+            return false;
+
+        if (control.Ancestors<IElement>().Any(m => m.LocalName.EqualsIgnoreCase("fieldset") && m.HasAttribute("disabled")))
+            return false;
+
+        if (control is IHtmlInputElement)
+        {
+            var type = GetInputType(control);
+            if (type is "button" or "submit" or "reset" or "image" or "file")
+                return false;
+
+            if (type is "checkbox" or "radio")
+                return control.HasAttribute("checked");
+        }
+
+        return true;
+    }
+
+    private static void AddControlValue(UriParams parameters, IElement control)
+    {
+        var name = control.GetAttribute("name");
+        if (name.IsNullOrEmpty())
+            return;
+
+        if (control is IHtmlInputElement)
+        {
+            parameters.Add(name, GetInputValue(control));
+            return;
+        }
+
+        if (control is IHtmlTextAreaElement)
+        {
+            parameters.Add(name, control.TextContent);
+            return;
+        }
+
+        if (control is IHtmlSelectElement)
+        {
+            AddSelectValue(parameters, name, control);
+        }
+    }
+
+    private static string? GetInputValue(IElement input)
+    {
+        var type = GetInputType(input);
+        var value = input.GetAttribute("value");
+        return type is "checkbox" or "radio"
+            ? string.IsNullOrEmpty(value) ? "on" : value
+            : value ?? "";
+    }
+
+    private static string GetInputType(IElement input)
+    {
+        var rawType = input.GetAttribute("type");
+        return string.IsNullOrEmpty(rawType)
+            ? "text"
+            : rawType!.ToLowerInvariant();
+    }
+
+    private static void AddSelectValue(UriParams parameters, string name, IElement select)
+    {
+        var options = select.QuerySelectorAll("option").ToArray();
+        var selectedOptions = options
+            .Where(m => m.HasAttribute("selected") && m.HasAttribute("disabled") == false)
+            .ToArray();
+
+        if (select.HasAttribute("multiple") == false && selectedOptions.Length == 0)
+        {
+            selectedOptions = options.Where(m => m.HasAttribute("disabled") == false).Take(1).ToArray();
+        }
+
+        foreach (var option in selectedOptions)
+        {
+            parameters.Add(name, option.GetAttribute("value") ?? option.TextContent);
+        }
     }
 
     public static OperationResult<(IElement Element, T Data)> QueryData<T>(this IElement? root, string?[] selectors, Func<IElement, T> func)

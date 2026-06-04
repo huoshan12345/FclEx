@@ -64,7 +64,7 @@ This file records the improvement suggestions from the review of `src/FclEx.Http
 
 30. [Removed] `src/FclEx.Http/FclEx/Http/~Extensions/HttpClientExtensions.cs`: helper `SendAsync` methods do not accept a `CancellationToken`. Add overloads or parameters so callers can cancel direct `HttpClient` helper calls.
 
-31. `src/FclEx.Http/FclEx/Web/~Models/FormData.cs`: `FormData` currently captures hidden inputs only and does not model form method, normal inputs, selects, textareas, or submit button behavior. Either broaden it into a more complete form model or rename it to reflect the narrower hidden-field use case.
+31. [Resolved] `src/FclEx.Http/FclEx/Web/~Models/FormData.cs`: `FormData` currently captures hidden inputs only and does not model form method, normal inputs, selects, textareas, or submit button behavior. Either broaden it into a more complete form model or rename it to reflect the narrower hidden-field use case.
 
 32. `src/FclEx.Http/AngleSharp/Dom/ElementExtensions.cs`: `QueryId` interpolates `prefix` into a CSS selector without escaping. Prefix values containing quotes or selector syntax can break the selector or select unintended elements.
 
