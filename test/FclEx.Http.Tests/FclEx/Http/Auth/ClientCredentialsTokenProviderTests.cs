@@ -133,6 +133,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
         var handler = new CaptureCancellationTokenHandler();
         using var httpClient = new HttpClient(handler);
         var provider = new ClientCredentialsTokenProvider(
+            // ReSharper disable once AccessToDisposedClosure
             () => httpClient,
             new()
             {
@@ -149,7 +150,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
 
         Assert.Equal("access-token", token);
         Assert.Equal(2, handler.CancellationTokens.Count);
-        Assert.All(handler.CancellationTokens, token => Assert.Equal(cts.Token, token));
+        Assert.All(handler.CancellationTokens, t => Assert.Equal(cts.Token, t));
     }
 
     private sealed class CaptureCancellationTokenHandler : HttpMessageHandler

@@ -57,7 +57,7 @@ public static class HttpResponseExtensions
             ? element.Value.Deserialize<T>(options)!
             : Operation.Error<T>("The path does not exist in json: " + path);
     }
-    
+
     public static async Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, DownloadOptions options)
     {
         var request = new HttpRequest(options.Uri, options.Method)
@@ -90,10 +90,10 @@ public static class HttpResponseExtensions
 
         if (baseName is null)
         {
-            baseName = fileName.TrimEnd(ext);
+            baseName = fileName.TrimEnd(ext, onlyOnce: true);
             if (baseName.IsNullOrEmpty())
             {
-                baseName = uri.Host.Replace(_regexOfNonWord, "_").TrimEnd("_");
+                baseName = uri.Host.Replace(_regexOfNonWord, "_").TrimEnd('_');
             }
         }
 
@@ -153,7 +153,7 @@ public static class HttpResponseExtensions
         mediaType = null;
         return false;
     }
-    
+
     /// <summary>
     /// Creates a redirect action when a redirect URL can be resolved from a response.
     /// </summary>
