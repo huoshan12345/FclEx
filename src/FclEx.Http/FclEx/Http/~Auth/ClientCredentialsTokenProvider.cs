@@ -18,12 +18,7 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
         _documentRequest = new DiscoveryDocumentRequest
         {
             Address = options.Authority,
-            Policy =
-            {
-                RequireHttps = false,
-                ValidateEndpoints = false,
-                RequireKeySet = false,
-            }
+            Policy = options.Policy,
         };
     }
 

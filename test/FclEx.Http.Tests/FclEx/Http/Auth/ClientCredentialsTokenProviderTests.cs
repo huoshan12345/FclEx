@@ -3,6 +3,32 @@ namespace FclEx.Http.Auth;
 public class ClientCredentialsTokenProviderTests : AuthTests
 {
     [Fact]
+    public void Constructor_UsesConfiguredDiscoveryPolicy()
+    {
+        var policy = new DiscoveryPolicy
+        {
+            RequireHttps = false,
+            ValidateEndpoints = false,
+            RequireKeySet = false,
+        };
+        var provider = new ClientCredentialsTokenProvider(
+            () => throw new InvalidOperationException("No HTTP request should be sent in this test."),
+            new()
+            {
+                Authority = "http://localhost/oauth",
+                ClientId = "client",
+                ClientSecret = "secret",
+                Policy = policy,
+            });
+
+        var request = typeof(ClientCredentialsTokenProvider)
+            .GetRequiredField("_documentRequest")
+            .GetRequiredValue<DiscoveryDocumentRequest>(provider);
+
+        Assert.Same(policy, request.Policy);
+    }
+
+    [Fact]
     public async Task GetToken_ShouldReturnAccessToken()
     {
         if (HasApiServer == false)

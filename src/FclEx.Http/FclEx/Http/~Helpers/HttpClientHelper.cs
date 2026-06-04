@@ -1,3 +1,5 @@
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using static FclEx.Http.IPVersionPolicy;
 
 namespace FclEx.Http;
@@ -7,6 +9,11 @@ public static class HttpClientHelper
     public static HttpClient Create(SocketsHttpHandlerOptions? options = null)
     {
         return new(CreateSocketsHttpHandler(options));
+    }
+
+    private static bool BypassServerCertificateValidation(object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
+    {
+        return true;
     }
 
     public static SocketsHttpHandler CreateSocketsHttpHandler(SocketsHttpHandlerOptions? options = null)
@@ -28,7 +35,9 @@ public static class HttpClientHelper
 #endif
             SslOptions = new()
             {
-                RemoteCertificateValidationCallback = (sender, certificate, chain, errors) => true,
+                RemoteCertificateValidationCallback = options.DisableServerCertificateValidation
+                    ? BypassServerCertificateValidation
+                    : null, // if DisableServerCertificateValidation is false, use the default validation callback (which is null)
             },
             ConnectCallback = async (context, token) =>
             {

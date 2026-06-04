@@ -4,9 +4,9 @@ This file records the improvement suggestions from the review of `src/FclEx.Http
 
 ## Issues
 
-1. `src/FclEx.Http/FclEx/Http/~Extensions/HttpMessageHandlerExtensions.cs`: `EnumerateInner` can loop forever when the current handler is not a `DelegatingHandler`, because `p` is never advanced or cleared. Add an `else break`.
+1. [Resolved] `src/FclEx.Http/FclEx/Http/~Extensions/HttpMessageHandlerExtensions.cs`: `EnumerateInner` can loop forever when the current handler is not a `DelegatingHandler`, because `p` is never advanced or cleared. Add an `else break`.
 
-2. `src/FclEx.Http/FclEx/Http/~Auth/AuthenticationHandler.cs`: after receiving `401 Unauthorized`, the handler resends the same `HttpRequestMessage`. `HttpClient` does not allow sending the same request instance twice. Clone the request, or refresh the token and let an outer retry pipeline create a new request.
+2. [Resolved] `src/FclEx.Http/FclEx/Http/~Auth/AuthenticationHandler.cs`: after receiving `401 Unauthorized`, the handler resends the same `HttpRequestMessage`. `HttpClient` does not allow sending the same request instance twice. Clone the request, or refresh the token and let an outer retry pipeline create a new request.
 
 3. `src/FclEx.Http/FclEx/Http/~Helpers/HttpClientHelper.cs`: `CreateSocketsHttpHandler` ignores all TLS certificate validation by default through `RemoteCertificateValidationCallback = (_, _, _, _) => true`. Make secure validation the default and require explicit opt-in for insecure/test scenarios.
 

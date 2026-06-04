@@ -19,6 +19,7 @@ public class SocketsHttpHandlerOptionsEqualityComparer : IEqualityComparer<Socke
                && x.EnableMultipleHttp2Connections == y.EnableMultipleHttp2Connections
                && x.PooledConnectionLifetime.Equals(y.PooledConnectionLifetime)
                && x.PooledConnectionIdleTimeout.Equals(y.PooledConnectionIdleTimeout)
+               && x.DisableServerCertificateValidation == y.DisableServerCertificateValidation
                && ProxyEqualityComparer.Equals(x.Proxy!, y.Proxy!);
     }
 
@@ -36,6 +37,7 @@ public class SocketsHttpHandlerOptionsEqualityComparer : IEqualityComparer<Socke
             obj.EnableMultipleHttp2Connections,
             obj.PooledConnectionLifetime,
             obj.PooledConnectionIdleTimeout,
+            obj.DisableServerCertificateValidation,
             proxyCode);
     }
 }

@@ -162,6 +162,15 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
         CheckProxy(fac2.CreateClient(), null);
     }
 
+    [Fact]
+    public void GetFactory_DisableServerCertificateValidation_NotSame()
+    {
+        var fac1 = GetFactory(new() { DisableServerCertificateValidation = true });
+        var fac2 = GetFactory(new() { DisableServerCertificateValidation = false });
+
+        Assert.NotEqual(fac1, fac2, ReferenceEqualityComparer.Instance);
+    }
+
     [RetryTheory(5)]
     [InlineData(1, 0.1)]
     [InlineData(2, 0.1)]

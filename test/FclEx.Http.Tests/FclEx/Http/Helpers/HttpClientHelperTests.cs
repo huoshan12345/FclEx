@@ -2,6 +2,28 @@ namespace FclEx.Http.Helpers;
 
 public class HttpClientHelperTests
 {
+    [Fact]
+    public void CreateSocketsHttpHandler_ByDefault_UsesDefaultServerCertificateValidation()
+    {
+        using var handler = HttpClientHelper.CreateSocketsHttpHandler();
+
+        Assert.Null(handler.SslOptions.RemoteCertificateValidationCallback);
+    }
+
+    [Fact]
+    public void CreateSocketsHttpHandler_WhenCertificateValidationIsDisabled_BypassesServerCertificateValidation()
+    {
+        using var handler = HttpClientHelper.CreateSocketsHttpHandler(new()
+        {
+            DisableServerCertificateValidation = true,
+        });
+
+        var callback = handler.SslOptions.RemoteCertificateValidationCallback;
+
+        Assert.NotNull(callback);
+        Assert.True(callback(null, null, null, System.Net.Security.SslPolicyErrors.RemoteCertificateNameMismatch));
+    }
+
     [RetryFact(5)]
     public async Task GetRetryPolicy_Timeout_Test()
     {
