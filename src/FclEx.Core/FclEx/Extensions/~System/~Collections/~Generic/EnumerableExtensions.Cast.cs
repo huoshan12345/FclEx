@@ -35,12 +35,12 @@ public static partial class EnumerableExtensions
 
     public static IReadOnlyList<T> AsIReadOnlyList<T>(this IEnumerable<T> source)
     {
-        return source.AsCollection<T, IReadOnlyList<T>>(m => m.ToReadOnlyList());
+        return source.AsCollection<T, IReadOnlyList<T>>(m => m.ToList());
     }
 
     public static IReadOnlyCollection<T> AsIReadOnlyCollection<T>(this IEnumerable<T> source)
     {
-        return source.AsCollection<T, IReadOnlyCollection<T>>(m => m.ToReadOnlyList());
+        return source.AsCollection<T, IReadOnlyCollection<T>>(m => m.ToList());
     }
 
     public static List<T> AsList<T>(this IEnumerable<T> source)

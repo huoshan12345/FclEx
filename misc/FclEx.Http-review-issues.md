@@ -22,11 +22,11 @@ This file records the improvement suggestions from the review of `src/FclEx.Http
 
 9. [Resolved] `src/FclEx.Http/FclEx/Http/~Helpers/HttpClientHelper.cs`: `ConnectCallback` creates the socket with `new Socket(SocketType.Stream, ProtocolType.Tcp)`, which may not match IPv4/IPv6 address family choices. Create sockets with the selected address family's `AddressFamily`.
 
-10. `src/FclEx.Http/FclEx/Http/~Core/HttpResponseExtensions.cs`: `ReadJsonAs<T>` parses a `JsonDocument` without disposing it. Wrap the document in `using`.
+10. [Resolved] `src/FclEx.Http/FclEx/Http/~Core/HttpResponseExtensions.cs`: `ReadJsonAs<T>` parses a `JsonDocument` without disposing it. Wrap the document in `using`.
 
-11. `src/FclEx.Http/FclEx/Http/~Actions/JsonActionContext.cs`: `ResultTokens` is an enumerable over a `JsonDocument` and can be evaluated after the context is disposed. Materialize selected tokens during construction or make lifetime rules stricter.
+11. [Resolved] `src/FclEx.Http/FclEx/Http/~Actions/JsonActionContext.cs`: `ResultTokens` is an enumerable over a `JsonDocument` and can be evaluated after the context is disposed. Materialize selected tokens during construction or make lifetime rules stricter.
 
-12. `src/FclEx.Http/FclEx/Http/~Actions/JsonActionContext.cs`: `ResultToken` returns `JsonElement?`, but `FirstOrDefault()` on value-type `JsonElement` can produce a default element that is not a meaningful null. Use an explicit `TryGetResultToken(out JsonElement token)`, a cached array, or a nullable projection that distinguishes no match.
+12. [Resolved] `src/FclEx.Http/FclEx/Http/~Actions/JsonActionContext.cs`: `ResultToken` returns `JsonElement?`, but `FirstOrDefault()` on value-type `JsonElement` can produce a default element that is not a meaningful null. Use an explicit `TryGetResultToken(out JsonElement token)`, a cached array, or a nullable projection that distinguishes no match.
 
 13. `src/FclEx.Http/FclEx/Http/~Core/HttpRequestExtensions.Header.cs`: `TrySetHeader` is named like a .NET `Try*` method but returns `HttpRequest` and only sets the header when it is missing. Rename to something like `SetHeaderIfMissing` or `SetDefaultHeader`.
 

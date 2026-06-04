@@ -3,6 +3,28 @@ namespace FclEx.Http.Core;
 public class HttpResponseTests : HttpServerTests
 {
     [Fact]
+    public void HttpResponse_ReadJsonAs_WhenPathMatches_ReturnsDeserializedValue()
+    {
+        var response = CreateResponse("""{"data":{"count":3}}""");
+
+        var actual = response.ReadJsonAs<int>("data.count");
+
+        Assert.True(actual.IsSuccess, actual.Exception?.ToString());
+        Assert.Equal(3, actual.Value);
+    }
+
+    [Fact]
+    public void HttpResponse_ReadJsonAs_WhenPathDoesNotMatch_ReturnsError()
+    {
+        var response = CreateResponse("""{"data":{"count":3}}""");
+
+        var actual = response.ReadJsonAs<int>("missing.count");
+
+        Assert.True(actual.IsError);
+        Assert.Contains("missing.count", actual.Exception!.Message);
+    }
+
+    [Fact]
     public async Task Task_HttpResponse_ThrowIfError_Test()
     {
         const string error = nameof(Task_HttpResponse_ThrowIfError_Test);
@@ -50,5 +72,14 @@ public class HttpResponseTests : HttpServerTests
             .ReadJsonAsRequired<Dictionary<string, string>>();
 
         Assert.Equal(expected, actual);
+    }
+
+    private static HttpResponse CreateResponse(string responseString)
+    {
+        var response = new HttpResponse(HttpRequest.Get("https://example.com/api"));
+        typeof(HttpResponse)
+            .GetProperty(nameof(HttpResponse.ResponseString))!
+            .SetValue(response, responseString);
+        return response;
     }
 }
