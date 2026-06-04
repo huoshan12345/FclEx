@@ -42,6 +42,10 @@ Organize new tests by the class or interface being tested. Split large test file
 
 Prefer running the narrowest useful test project for the code you changed before considering full-solution tests. Some tests have external service dependencies: `FclEx.Dapper.Tests`, `FclEx.EfCore.Tests`, and `FclEx.Messaging.Tests`. The local test databases and message queues are expected to be provisioned, but be mindful that `FclEx.Messaging` includes Kafka support while `FclEx.Messaging.Tests` currently does not cover Kafka and no Kafka test service is assumed yet.
 
+## Review and Issue Lists
+
+When listing problems, review findings, or improvement suggestions, prefer numbered lists instead of unordered bullet lists so later discussion can reference items by number. Use multi-level numbering when grouping is necessary.
+
 ## File Edits & Encoding
 
 After editing text files, especially with patch tools, verify that the result follows the repository encoding and line-ending rules: UTF-8 without BOM and native line endings for the current OS. On Windows, make sure patched files do not accidentally contain mixed or bare LF line endings.
