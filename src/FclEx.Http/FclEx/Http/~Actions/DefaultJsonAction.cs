@@ -45,12 +45,12 @@ public static class DefaultJsonAction
     /// <remarks>Malformed JSON is allowed to throw so the outer action pipeline can capture it.</remarks>
     public static OperationResult<JsonActionContext> CreateContext<T>(IJsonAction<T> action, HttpResponse response, string json)
     {
-        var context = new JsonActionContext(response, json, action.JsonResultPath);
+        var context = new JsonActionContext(response, json, action.JsonPath);
         if (context.ResultTokens.IsNotEmpty())
             return context;
 
         const string msg = "The result object does not exist in json";
-        var error = action.JsonResultPath == null ? msg : msg + " at " + action.JsonResultPath;
+        var error = action.JsonPath == null ? msg : msg + " at " + action.JsonPath;
         error = error + ": " + context.Json.Truncate(256);
         return error;
     }

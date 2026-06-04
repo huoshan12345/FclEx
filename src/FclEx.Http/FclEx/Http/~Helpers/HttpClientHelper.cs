@@ -11,7 +11,7 @@ public static class HttpClientHelper
         return new(CreateSocketsHttpHandler(options));
     }
 
-    private static bool BypassServerCertificateValidation(object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
+    public static bool BypassServerCertificateValidation(object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
     {
         return true;
     }

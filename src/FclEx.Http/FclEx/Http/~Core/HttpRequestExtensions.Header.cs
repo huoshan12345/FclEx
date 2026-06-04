@@ -84,7 +84,7 @@ partial class HttpRequestExtensions
         return request.SetHeader(HttpHeaderNames.Cookie, cookies.JoinWith("; "));
     }
 
-    public static HttpRequest AddHeaderPair(this HttpRequest request, string pair, char separator = ':')
+    public static HttpRequest AddHeaderLine(this HttpRequest request, string pair, char separator = ':')
     {
         Check.NotEmpty(pair);
         var parts = pair.Split(separator);
@@ -107,9 +107,16 @@ partial class HttpRequestExtensions
         return request.SetHeader(HttpHeaderNames.XRequestedWith, "XMLHttpRequest");
     }
 
-    public static HttpRequest AcceptCompress(this HttpRequest request)
+    private static readonly string[] _defaultEncodings =
+#if NET5_0_OR_GREATER
+        ["gzip", "deflate", "br"];
+#else
+        ["gzip"];
+#endif
+
+    public static HttpRequest AcceptCompress(this HttpRequest request, IEnumerable<string>? encodings = null)
     {
-        return request.SetHeader(HttpHeaderNames.AcceptEncoding, "gzip");
+        return request.SetHeader(HttpHeaderNames.AcceptEncoding, string.Join(", ", encodings ?? _defaultEncodings));
     }
 
     public static HttpRequest UseGZip(this HttpRequest request, bool gzip = true, CompressionLevel level = CompressionLevel.Optimal)

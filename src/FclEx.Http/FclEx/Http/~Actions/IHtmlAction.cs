@@ -10,7 +10,7 @@ public interface IHtmlAction<T> : IHttpResponseHandler<T>
     /// Gets the optional CSS selector used to select result elements.
     /// </summary>
     /// <remarks>When <see langword="null"/>, the document element is used.</remarks>
-    string? HtmlResultPath
+    string? HtmlSelector
 #if NET6_0_OR_GREATER
         => null;
 #else

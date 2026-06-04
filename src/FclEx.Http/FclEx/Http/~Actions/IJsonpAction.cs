@@ -13,7 +13,7 @@ public interface IJsonpAction<T> : IJsonAction<T>, IHttpAction<T>
 
 #if NET6_0_OR_GREATER
     /// <inheritdoc />
-    string? IJsonAction<T>.JsonResultPath => null;
+    string? IJsonAction<T>.JsonPath => null;
 
     /// <inheritdoc />
     HttpMethod IHttpAction<T>.Method => HttpMethod.Get;

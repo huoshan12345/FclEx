@@ -10,7 +10,7 @@ public interface IXmlAction<T> : IHttpResponseHandler<T>
     /// Gets the optional XPath used to select result elements.
     /// </summary>
     /// <remarks>When <see langword="null"/>, the document root element is used.</remarks>
-    string? XmlResultPath
+    string? XPath
 #if NET6_0_OR_GREATER
         => null;
 #else
@@ -117,11 +117,11 @@ public static class DefaultXmlAction
     /// <remarks>Malformed XML may throw so the outer action pipeline can capture it.</remarks>
     public static OperationResult<XmlActionContext> CreateContext<T>(IXmlAction<T> action, HttpResponse response, string xml)
     {
-        var context = new XmlActionContext(response, xml, action.XmlResultPath);
+        var context = new XmlActionContext(response, xml, action.XPath);
         if (context.ResultElements.IsNotEmpty())
             return context;
         const string msg = "The result object does not exist in xml";
-        var error = action.XmlResultPath == null ? msg : msg + " at " + action.XmlResultPath;
+        var error = action.XPath == null ? msg : msg + " at " + action.XPath;
         error = error + ": " + context.Xml.Truncate(256);
         return error;
     }
@@ -148,7 +148,7 @@ public static class DefaultXmlAction
 public abstract class XmlAction<T> : HttpResponseHandler<T>, IXmlAction<T>
 {
     /// <inheritdoc />
-    public virtual string? XmlResultPath => null;
+    public virtual string? XPath => null;
 
     /// <inheritdoc />
     public virtual OperationResult<string> GetXml(HttpResponse response)

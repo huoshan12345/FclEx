@@ -48,12 +48,12 @@ public static class DefaultHtmlAction
     /// <remarks>Invalid selectors may throw so the outer action pipeline can capture them.</remarks>
     public static OperationResult<HtmlActionContext> CreateContext<T>(IHtmlAction<T> action, HttpResponse response, string html)
     {
-        var context = new HtmlActionContext(response, html, action.HtmlResultPath);
+        var context = new HtmlActionContext(response, html, action.HtmlSelector);
         if (context.ResultElements.IsNotEmpty())
             return context;
 
         const string msg = "The result object does not exist in html";
-        var error = action.HtmlResultPath == null ? msg : msg + " at " + action.HtmlResultPath;
+        var error = action.HtmlSelector == null ? msg : msg + " at " + action.HtmlSelector;
         error = error + ": " + context.Html.Truncate(256);
         return error;
     }

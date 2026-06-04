@@ -6,7 +6,7 @@ public class JsonActionTests
     public void GetResult_WhenPathMatches_DeserializesResultToken()
     {
         var response = HttpActionTestFixtures.CreateResponse("""{"data":{"count":3}}""");
-        var action = new JsonCountAction { JsonResultPathValue = "data.count" };
+        var action = new JsonCountAction { JsonPathValue = "data.count" };
 
         var result = action.GetResult(response);
 
@@ -42,7 +42,7 @@ public class JsonActionTests
     public void GetResult_WhenPathDoesNotMatch_ReturnsError()
     {
         var response = HttpActionTestFixtures.CreateResponse("""{"data":{"count":3}}""");
-        var action = new JsonCountAction { JsonResultPathValue = "missing.count" };
+        var action = new JsonCountAction { JsonPathValue = "missing.count" };
 
         var result = action.GetResult(response);
 
@@ -77,7 +77,7 @@ public class JsonActionTests
     public void CreateContext_WhenJsonIsValidButPathIsMissing_ReturnsError()
     {
         var response = HttpActionTestFixtures.CreateResponse();
-        var action = new JsonCountAction { JsonResultPathValue = "missing" };
+        var action = new JsonCountAction { JsonPathValue = "missing" };
 
         var result = action.CreateContext(response, """{"value":1}""");
 

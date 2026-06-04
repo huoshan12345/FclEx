@@ -10,7 +10,7 @@ public abstract class HtmlFileAction<T> : HttpAction<T>, IHtmlFileAction<T>
     public abstract string FilePath { get; }
 
     /// <inheritdoc />
-    public virtual string? HtmlResultPath { get; } = null;
+    public virtual string? HtmlSelector { get; } = null;
 
     /// <inheritdoc />
     public override IHttpService HttpService { get; } = HttpClientService.Default;

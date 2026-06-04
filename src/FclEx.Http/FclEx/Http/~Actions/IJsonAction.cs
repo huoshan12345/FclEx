@@ -10,7 +10,7 @@ public interface IJsonAction<T> : IHttpResponseHandler<T>
     /// Gets the optional JSON path used to select result tokens.
     /// </summary>
     /// <remarks>When <see langword="null"/>, the root JSON token is used.</remarks>
-    string? JsonResultPath
+    string? JsonPath
 #if NET6_0_OR_GREATER
         => null;
 #else

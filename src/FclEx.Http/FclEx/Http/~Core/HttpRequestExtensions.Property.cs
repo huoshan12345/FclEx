@@ -115,7 +115,7 @@ partial class HttpRequestExtensions
 
     public static HttpRequest TryCharSet(this HttpRequest request, string? chartSet)
     {
-        request.CharSet = chartSet;
+        request.CharSet ??= chartSet;
         return request;
     }
 

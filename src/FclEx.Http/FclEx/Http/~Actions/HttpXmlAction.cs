@@ -7,7 +7,7 @@ namespace FclEx.Http;
 public abstract class HttpXmlAction<T> : HttpAction<T>, IXmlAction<T>
 {
     /// <inheritdoc />
-    public virtual string? XmlResultPath { get; } = null;
+    public virtual string? XPath { get; } = null;
 
     /// <inheritdoc />
     public override OperationResult<T> GetResult(HttpResponse response)

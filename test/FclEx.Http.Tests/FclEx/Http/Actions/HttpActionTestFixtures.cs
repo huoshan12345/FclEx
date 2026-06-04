@@ -133,16 +133,16 @@ internal sealed class ThrowingJsonHttpAction(HttpResponse httpResponse) : Pipeli
 
 internal sealed class JsonCountAction : JsonAction<int>
 {
-    public string? JsonResultPathValue { get; init; }
+    public string? JsonPathValue { get; init; }
 
-    public override string? JsonResultPath => JsonResultPathValue;
+    public override string? JsonPath => JsonPathValue;
 }
 
 internal sealed class JsonStringAction : JsonAction<string>
 {
-    public string? JsonResultPathValue { get; init; }
+    public string? JsonPathValue { get; init; }
 
-    public override string? JsonResultPath => JsonResultPathValue;
+    public override string? JsonPath => JsonPathValue;
 }
 
 internal sealed class UnitJsonAction : JsonAction
@@ -167,14 +167,14 @@ internal sealed class XmlIntAction : XmlAction<int>
 {
     public string? XmlResultPathValue { get; init; }
 
-    public override string? XmlResultPath => XmlResultPathValue;
+    public override string? XPath => XmlResultPathValue;
 }
 
 internal sealed class XmlStringAction : XmlAction<string>
 {
     public string? XmlResultPathValue { get; init; }
 
-    public override string? XmlResultPath => XmlResultPathValue;
+    public override string? XPath => XmlResultPathValue;
 }
 
 internal sealed class UnitXmlAction : XmlAction
@@ -199,7 +199,7 @@ internal sealed class HtmlTextAction : HtmlAction<string>
 {
     public string? HtmlResultPathValue { get; init; }
 
-    public override string? HtmlResultPath => HtmlResultPathValue;
+    public override string? HtmlSelector => HtmlResultPathValue;
 
     public override OperationResult<string> GetResult(HtmlActionContext context)
     {
@@ -217,7 +217,7 @@ internal sealed class TestHtmlFileAction(string filePath) : HtmlFileAction<strin
 
     public override string FilePath { get; } = filePath;
 
-    public override string? HtmlResultPath => HtmlResultPathValue;
+    public override string? HtmlSelector => HtmlResultPathValue;
 
     public override OperationResult<string> GetResult(HtmlActionContext context)
     {
