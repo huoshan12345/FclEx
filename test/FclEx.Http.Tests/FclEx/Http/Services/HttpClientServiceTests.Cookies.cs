@@ -11,7 +11,10 @@ public partial class HttpClientServiceTests
             disposeHttpClient: true,
             options: new()
             {
-                RetryCount = 0,
+                RetryPolicyOptions = new()
+                {
+                    RetryCount = 0,
+                },
             });
 
         var response = await HttpRequest.Get("https://example.com/api")

@@ -41,8 +41,11 @@ public partial class HttpClientServiceTests
             disposeHttpClient: true,
             options: new()
             {
-                RetryCount = 1,
-                SleepDurationProvider = _ => TimeSpan.Zero,
+                RetryPolicyOptions = new()
+                {
+                    RetryCount = 1,
+                    SleepDurationProvider = _ => TimeSpan.Zero,
+                },
             },
             useCookie: false);
 
@@ -66,8 +69,11 @@ public partial class HttpClientServiceTests
             disposeHttpClient: true,
             options: new()
             {
-                RetryCount = 1,
-                SleepDurationProvider = _ => TimeSpan.Zero,
+                RetryPolicyOptions = new()
+                {
+                    RetryCount = 1,
+                    SleepDurationProvider = _ => TimeSpan.Zero,
+                },
             },
             useCookie: false);
 
@@ -89,8 +95,11 @@ public partial class HttpClientServiceTests
             disposeHttpClient: true,
             options: new()
             {
-                RetryCount = 1,
-                SleepDurationProvider = _ => TimeSpan.Zero,
+                RetryPolicyOptions = new()
+                {
+                    RetryCount = 1,
+                    SleepDurationProvider = _ => TimeSpan.Zero,
+                },
             },
             useCookie: false);
 

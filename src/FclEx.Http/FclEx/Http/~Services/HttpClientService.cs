@@ -38,19 +38,20 @@ public class HttpClientService : HttpClientServiceBase
 
         // NOTE: always use with keyword to create new instance cause it used as key in cache.
         // do not try to change property directly or reuse options.
-        _options = options with { AllowAutoRedirect = false };
+        _options = options with { HandlerOptions = options.HandlerOptions with { AllowAutoRedirect = false } };
     }
 
     public override IWebProxy? Proxy
     {
-        get => _options.Proxy;
+        get => _options.HandlerOptions.Proxy;
         set
         {
-            if (IWebProxyEqualityComparer.Instance.Equals(_options.Proxy, value))
+            var options = _options.HandlerOptions;
+            if (IWebProxyEqualityComparer.Instance.Equals(options.Proxy, value))
                 return;
 
             // NOTE: use with keyword to create new instance instead of changing property directly cause it used as key in cache.
-            _options = _options with { Proxy = value };
+            _options = _options with { HandlerOptions = options with { Proxy = value } };
         }
     }
 
@@ -96,14 +97,15 @@ public class HttpClientService : HttpClientServiceBase
     {
         return Providers.Value.GetOrAdd(options, m =>
         {
+            var retryOptions = m.RetryPolicyOptions;
             // this policy is created to retry Task.WithTimeout()
             var policy = Policy<HttpResponseMessage>
                 .Handle<OperationCanceledException>(IsPureCanceledException)
-                .WaitAndRetryAsync(options.RetryCount, options.SleepDurationProvider);
+                .WaitAndRetryAsync(retryOptions.RetryCount, retryOptions.SleepDurationProvider);
 
             return new ServiceCollection()
                 .AddSingleton<IAsyncPolicy<HttpResponseMessage>>(policy)
-                .AddHttpClientWithPolly(string.Empty, options)
+                .AddHttpClientWithPolly(string.Empty, m)
                 .Services
                 .Remove(x => x.ServiceType == typeof(IHttpMessageHandlerBuilderFilter)
                              && x.ImplementationType?.FullName == "Microsoft.Extensions.Http.LoggingHttpMessageHandlerBuilderFilter")
@@ -150,17 +152,17 @@ public class HttpClientService : HttpClientServiceBase
 
     public static HttpClientService Create(IWebProxy? proxy, bool useCookie = true, ILoggerFactory? loggerFactory = null)
     {
-        return Create(m => m.Proxy = proxy, useCookie, loggerFactory);
+        return Create(m => m.HandlerOptions = m.HandlerOptions with { Proxy = proxy }, useCookie, loggerFactory);
     }
 
     public static HttpClientService Create(Uri? proxy, bool useCookie = true, ILoggerFactory? loggerFactory = null)
     {
-        return Create(m => m.Proxy = WebProxyHelper.Create(proxy), useCookie, loggerFactory);
+        return Create(WebProxyHelper.Create(proxy), useCookie, loggerFactory);
     }
 
     public static HttpClientService Create(string? proxy, bool useCookie = true, ILoggerFactory? loggerFactory = null)
     {
-        return Create(m => m.Proxy = WebProxyHelper.Create(proxy), useCookie, loggerFactory);
+        return Create(WebProxyHelper.Create(proxy), useCookie, loggerFactory);
     }
 
     public static HttpClientService Create(

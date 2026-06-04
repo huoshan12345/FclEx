@@ -78,10 +78,18 @@ public class HttpClientHelperTests
         const int retryCount = 2;
         var services = new ServiceCollection();
 
+        var options = new HttpClientRetryPolicyOptions
+        {
+            ExecutionTimeout = timeout,
+            RetryCount = 2,
+            AutoUpdateTotalTimeout = true,
+            SleepDurationProvider = m => TimeSpan.Zero,
+        };
+
         services.AddHttpClient(string.Empty)
             // NOTE: to test HttpClient.Timeout, we need to make it less than SocketsHttpHandler.ConnectTimeout
             .ConfigurePrimaryHttpMessageHandler(() => HttpClientHelper.CreateSocketsHttpHandler(new() { ConnectTimeout = TimeSpan.FromHours(1) }))
-            .AddRetryPolicy(timeout, 2, true, m => TimeSpan.Zero);
+            .AddRetryPolicy(options);
 
         var provider = services.BuildServiceProvider();
 

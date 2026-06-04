@@ -28,6 +28,9 @@ public static class HttpContentExtensions
     public static async Task<MemoryStream> ReadAsStreamAsync(this HttpContent content, int bufferSize, TimeSpan? readBufferTimeout, CancellationToken token)
     {
         var len = content.Headers.ContentLength ?? 0;
+        if (len > int.MaxValue)
+            throw new InvalidOperationException("Content length is too large.");
+
         var ms = new MemoryStream((int)len);
 #if NET5_0_OR_GREATER
         await
@@ -56,7 +59,7 @@ public static class HttpContentExtensions
 #if NET5_0_OR_GREATER
     public static BrotliContent ToBrotli(this HttpContent content, CompressionLevel compressionLevel = CompressionLevel.Optimal,
         TimeSpan? timeout = null, int bufferSize = 256 * 1024, CancellationToken token = default)
-        => new(content, compressionLevel, timeout, bufferSize, token);    
+        => new(content, compressionLevel, timeout, bufferSize, token);
 #endif
 
     public static DeflateContent ToDeflate(this HttpContent content, CompressionLevel compressionLevel = CompressionLevel.Optimal,

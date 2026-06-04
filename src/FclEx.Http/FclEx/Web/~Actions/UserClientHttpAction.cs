@@ -7,7 +7,7 @@ public abstract class UserClientHttpAction<TClient, TAccount, T>(TClient client)
 {
     public abstract Uri Uri { get; }
     public abstract HttpMethod Method { get; }
-    public bool EnsureSuccessStatusCode { get; } = true;
+    public virtual bool EnsureSuccessStatusCode { get; } = true;
     public virtual IHttpService HttpService { get; } = client.HttpService;
 
     public abstract OperationResult<T> GetResult(HttpResponse response);

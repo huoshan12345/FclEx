@@ -12,7 +12,7 @@ public class HttpRequestTests
 
     private static async Task TimeoutRequestWrap()
     {
-        var http = HttpClientService.Create(m => m.RetryCount = 0);
+        var http = HttpClientService.Create(m => m.RetryPolicyOptions.RetryCount = 0);
         await HttpRequest.Get("https://www.google.com")
             .TotalTimeout(TimeSpan.FromSeconds(0.1))
             .SendAsync(http)
@@ -24,9 +24,9 @@ public class HttpRequestTests
     {
         var http = HttpClientService.Create(m =>
         {
-            m.ConnectTimeout = TimeSpan.FromMilliseconds(200);
-            m.RetryCount = 1;
-            m.SleepDurationProvider = x => TimeSpan.FromMilliseconds(100 * x);
+            m.HandlerOptions.ConnectTimeout = TimeSpan.FromMilliseconds(200);
+            m.RetryPolicyOptions.RetryCount = 1;
+            m.RetryPolicyOptions.SleepDurationProvider = x => TimeSpan.FromMilliseconds(100 * x);
         });
         await Assert.ThrowsAnyAsync<Exception>(async () =>
             await HttpRequest.Get("http://localhost:9999")

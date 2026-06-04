@@ -13,7 +13,11 @@ public class TimeoutTests : HttpServerTests
         var http = HttpClientService.Create(m =>
         {
             m.BaseAddress = TestUri;
-            m.RetryCount = 0;
+            m.RetryPolicyOptions = new()
+            {
+                RetryCount = 0,
+                SleepDurationProvider = _ => TimeSpan.Zero,
+            };
         });
         var timeout = TimeSpan.FromSeconds(timeoutSeconds);
         var task = HttpRequest.Get(TestApiPaths.Sleep)

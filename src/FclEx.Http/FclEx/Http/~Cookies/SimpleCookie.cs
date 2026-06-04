@@ -12,13 +12,8 @@ public class SimpleCookie
         Path = path ?? "/";
     }
 
-    public string Name { get; set; } = string.Empty;
-    public string Value { get; set; } = string.Empty;
-    public string Domain { get; set; } = string.Empty;
-    public string Path { get; set; } = string.Empty;
-
-    public Cookie ToCookie()
-    {
-        return new Cookie(Name, Value, Path, Domain);
-    }
+    public string Name { get; set; } = "";
+    public string Value { get; set; } = "";
+    public string Domain { get; set; } = "";
+    public string Path { get; set; } = "";
 }
