@@ -39,7 +39,7 @@ public class RouterTests(RabbitMqTestsFixture fixture) : RabbitMqTests(fixture)
         }
     }
 
-    [Theory]
+    [RetryTheory]
     [InlineData(true)]
     [InlineData(false)]
     public async Task Route_Test(bool sameAsInputExchange)

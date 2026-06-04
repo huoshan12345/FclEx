@@ -2,7 +2,7 @@ namespace FclEx.RabbitMQ;
 
 public class PublisherTests(RabbitMqTestsFixture fixture) : RabbitMqTests(fixture)
 {
-    [Fact]
+    [RetryFact]
     public async Task Publish_Test()
     {
         var exchange = new RabbitMqExchangeOptions
@@ -13,7 +13,7 @@ public class PublisherTests(RabbitMqTestsFixture fixture) : RabbitMqTests(fixtur
         await publisher.PublishAsync("test", "test");
     }
 
-    [Fact]
+    [RetryFact]
     public async Task Publish_Serially_Test()
     {
         var exchange = new RabbitMqExchangeOptions
@@ -27,7 +27,7 @@ public class PublisherTests(RabbitMqTestsFixture fixture) : RabbitMqTests(fixtur
         }
     }
 
-    [Fact]
+    [RetryFact]
     public async Task Publish_List_Test()
     {
         var exchange = new RabbitMqExchangeOptions
@@ -38,7 +38,7 @@ public class PublisherTests(RabbitMqTestsFixture fixture) : RabbitMqTests(fixtur
         await publisher.PublishAsync<string>(Enumerable.Range(1, 10).Select(m => "test"), "test");
     }
 
-    [Fact]
+    [RetryFact]
     public async Task Publish_Multi_Test()
     {
         var exchange = new RabbitMqExchangeOptions

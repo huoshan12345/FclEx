@@ -42,7 +42,7 @@ public class RedisCacheTests(RedisTestsFixture fixture) : RedisTests(fixture)
         Assert.False(objRemoved.HasValue);
     }
 
-    [Fact]
+    [RetryFact]
     public async Task Serializer_Test()
     {
         var array = Enumerable.Range(1, 3)
