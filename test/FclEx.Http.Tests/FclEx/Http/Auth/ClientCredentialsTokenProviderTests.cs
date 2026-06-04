@@ -125,4 +125,61 @@ public class ClientCredentialsTokenProviderTests : AuthTests
 
         Assert.Equal(2, handler.TokenRequestCount);
     }
+
+    [Fact]
+    public async Task GetToken_ShouldPassCancellationToken_ToDiscoveryAndTokenRequests()
+    {
+        using var cts = new CancellationTokenSource();
+        var handler = new CaptureCancellationTokenHandler();
+        using var httpClient = new HttpClient(handler);
+        var provider = new ClientCredentialsTokenProvider(
+            () => httpClient,
+            new()
+            {
+                Authority = "https://auth.example.com",
+                ClientId = "client",
+                ClientSecret = "secret",
+                Policy = new()
+                {
+                    RequireKeySet = false,
+                },
+            });
+
+        var token = await provider.GetTokenAsync("api", cancellationToken: cts.Token);
+
+        Assert.Equal("access-token", token);
+        Assert.Equal(2, handler.CancellationTokens.Count);
+        Assert.All(handler.CancellationTokens, token => Assert.Equal(cts.Token, token));
+    }
+
+    private sealed class CaptureCancellationTokenHandler : HttpMessageHandler
+    {
+        public List<CancellationToken> CancellationTokens { get; } = [];
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            CancellationTokens.Add(cancellationToken);
+
+            var content = request.RequestUri!.AbsolutePath.EndsWith("/.well-known/openid-configuration", StringComparison.Ordinal)
+                ? """
+                  {
+                    "issuer": "https://auth.example.com",
+                    "token_endpoint": "https://auth.example.com/connect/token"
+                  }
+                  """
+                : """
+                  {
+                    "access_token": "access-token",
+                    "expires_in": 3600,
+                    "token_type": "Bearer"
+                  }
+                  """;
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(content, Encoding.UTF8, "application/json"),
+                RequestMessage = request,
+            });
+        }
+    }
 }

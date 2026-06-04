@@ -25,6 +25,31 @@ public class HttpResponseTests : HttpServerTests
     }
 
     [Fact]
+    public void GetDownloadInfo_WhenFileNameEndsWithExtension_RemovesExactExtensionOnly()
+    {
+        var response = CreateResponse("", "https://example.com/download/report.zip.zip");
+
+        var info = response.GetDownloadInfo();
+
+        Assert.Equal("report.zip", info.FileNameWithoutExtension);
+        Assert.Equal(".zip", info.FileExtension);
+        Assert.Equal("report.zip.zip", info.FileName);
+    }
+
+    [Fact]
+    public void GetDownloadInfo_WhenContentTypeHasKnownExtension_UsesMimeTypeExtension()
+    {
+        var response = CreateResponse("", "https://example.com/download/file");
+        response.Headers.Add(HttpHeaderNames.ContentType, "image/jpg; charset=utf-8");
+
+        var info = response.GetDownloadInfo();
+
+        Assert.Equal("file", info.FileNameWithoutExtension);
+        Assert.Equal(".jpg", info.FileExtension);
+        Assert.Equal("image/jpg", info.MimeType);
+    }
+
+    [Fact]
     public async Task Task_HttpResponse_ThrowIfError_Test()
     {
         const string error = nameof(Task_HttpResponse_ThrowIfError_Test);
@@ -74,9 +99,10 @@ public class HttpResponseTests : HttpServerTests
         Assert.Equal(expected, actual);
     }
 
-    private static HttpResponse CreateResponse(string responseString)
+    private static HttpResponse CreateResponse(string responseString, string requestUri = "https://example.com/api")
     {
-        var response = new HttpResponse(HttpRequest.Get("https://example.com/api"));
+        var response = new HttpResponse(HttpRequest.Get(requestUri));
+        response.VisitedUris.Add(new Uri(requestUri));
         typeof(HttpResponse)
             .GetProperty(nameof(HttpResponse.ResponseString))!
             .SetValue(response, responseString);

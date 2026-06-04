@@ -44,25 +44,25 @@ This file records the improvement suggestions from the review of `src/FclEx.Http
 
 20. [Deferred] `src/FclEx.Http`: the package mixes transport, retry, AngleSharp helpers, web-client abstractions, testing helpers, cookies, authentication, and MIME lookup. Consider splitting into focused packages such as `FclEx.Http`, `FclEx.Http.Actions`, `FclEx.AngleSharp`, and `FclEx.WebClient`.
 
-21. `src/FclEx.Http/FclEx/Web/Testing`: testing helpers are included in the production package. Move them to test projects or a separate testing package.
+21. [Deferred] `src/FclEx.Http/FclEx/Web/Testing`: testing helpers are included in the production package. Move them to test projects or a separate testing package.
 
-22. `src/FclEx.Http`: multiple public classes are simply named `Extensions`, such as `FclEx.Web.Extensions` and HTTP action `Extensions`. Rename them to more discoverable names like `UserClientServiceCollectionExtensions` and `HttpActionExtensions`.
+22. [Resolved] `src/FclEx.Http`: multiple public classes are simply named `Extensions`, such as `FclEx.Web.Extensions` and HTTP action `Extensions`. Rename them to more discoverable names like `UserClientServiceCollectionExtensions` and `HttpActionExtensions`.
 
-23. `src/FclEx.Http`: directory names such as `~Core`, `~Actions`, and `~Helpers` help ordering but are unusual for readers. Consider removing `~` if ordering is not essential.
+23. [No change] `src/FclEx.Http`: directory names such as `~Core`, `~Actions`, and `~Helpers` help ordering but are unusual for readers. Consider removing `~` if ordering is not essential.
 
-24. `src/FclEx.Http/FclEx/Http/~Services/HttpClientService.cs`: provider caching stores `IServiceProvider` instances with a very large max count and no visible disposal strategy on eviction. This can accumulate providers and handlers in long-running processes.
+24. [Resolved] `src/FclEx.Http/FclEx/Http/~Services/HttpClientService.cs`: provider caching stores `IServiceProvider` instances with a very large max count and no visible disposal strategy on eviction. This can accumulate providers and handlers in long-running processes.
 
-25. `src/FclEx.Http/FclEx/Http/~Services/HttpClientService.cs`: `IsPureCanceledException` classifies cancellation by exception message text, which is culture- and implementation-sensitive. Prefer cancellation token state, exception type, or Polly timeout exceptions.
+25. [No change] `src/FclEx.Http/FclEx/Http/~Services/HttpClientService.cs`: `IsPureCanceledException` classifies cancellation by exception message text, which is culture- and implementation-sensitive. Prefer cancellation token state, exception type, or Polly timeout exceptions.
 
-26. `src/FclEx.Http/FclEx/Http/~Core/HttpResponseExtensions.cs`: `GetDownloadInfo` uses `fileName.TrimEnd(ext)`, which removes any trailing characters contained in the extension rather than removing the exact extension. Use `Path.GetFileNameWithoutExtension`.
+26. [No change] `src/FclEx.Http/FclEx/Http/~Core/HttpResponseExtensions.cs`: `GetDownloadInfo` uses `fileName.TrimEnd(ext)`, which removes any trailing characters contained in the extension rather than removing the exact extension. Use `Path.GetFileNameWithoutExtension`. This uses FclEx's string-suffix overload, not the BCL char-set overload.
 
-27. `src/FclEx.Http/FclEx/Http/~Handlers/LoggingDelegatingHandler.cs`: `_group` is assigned but unused. Either use it in log scopes/properties or remove it.
+27. [Resolved] `src/FclEx.Http/FclEx/Http/~Handlers/LoggingDelegatingHandler.cs`: `_group` is assigned but unused. Either use it in log scopes/properties or remove it.
 
-28. `src/FclEx.Http/FclEx/Http/~Handlers/LoggingDelegatingHandler.cs`: successful requests are logged once inside the `try` block and again in `finally`. Decide whether both logs are useful; otherwise remove one.
+28. [Resolved] `src/FclEx.Http/FclEx/Http/~Handlers/LoggingDelegatingHandler.cs`: successful requests are logged once inside the `try` block and again in `finally`. Decide whether both logs are useful; otherwise remove one.
 
-29. `src/FclEx.Http/FclEx/Http/~Auth/IAccessTokenProvider.cs` and related implementations: token requests and discovery requests do not accept a `CancellationToken`. Add cancellation support through the public API and implementation.
+29. [Resolved] `src/FclEx.Http/FclEx/Http/~Auth/IAccessTokenProvider.cs` and related implementations: token requests and discovery requests do not accept a `CancellationToken`. Add cancellation support through the public API and implementation.
 
-30. `src/FclEx.Http/FclEx/Http/~Extensions/HttpClientExtensions.cs`: helper `SendAsync` methods do not accept a `CancellationToken`. Add overloads or parameters so callers can cancel direct `HttpClient` helper calls.
+30. [Removed] `src/FclEx.Http/FclEx/Http/~Extensions/HttpClientExtensions.cs`: helper `SendAsync` methods do not accept a `CancellationToken`. Add overloads or parameters so callers can cancel direct `HttpClient` helper calls.
 
 31. `src/FclEx.Http/FclEx/Web/~Models/FormData.cs`: `FormData` currently captures hidden inputs only and does not model form method, normal inputs, selects, textareas, or submit button behavior. Either broaden it into a more complete form model or rename it to reflect the narrower hidden-field use case.
 

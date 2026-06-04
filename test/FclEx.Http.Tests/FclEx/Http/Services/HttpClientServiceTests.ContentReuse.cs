@@ -80,6 +80,39 @@ public partial class HttpClientServiceTests
         Assert.Equal(new[] { "payload", "payload" }, handler.RequestContents);
     }
 
+    [Fact]
+    public async Task SendAsync_WhenTaskCanceledExceptionHasCustomMessage_DoesNotRetry()
+    {
+        var handler = new CustomCancellationHandler();
+        using var service = HttpClientService.Create(
+            () => new HttpClient(handler),
+            disposeHttpClient: true,
+            options: new()
+            {
+                RetryCount = 1,
+                SleepDurationProvider = _ => TimeSpan.Zero,
+            },
+            useCookie: false);
+
+        var response = await HttpRequest.Get("https://example.com/api")
+            .SendAsync(service);
+
+        Assert.True(response.IsError);
+        Assert.IsType<TaskCanceledException>(response.Exception);
+        Assert.Equal(1, handler.SendCount);
+    }
+
+    private sealed class CustomCancellationHandler : HttpMessageHandler
+    {
+        public int SendCount { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            SendCount++;
+            throw new TaskCanceledException("The caller canceled this request explicitly.");
+        }
+    }
+
     private sealed class CancelOnceThenOkHandler : HttpMessageHandler
     {
         public List<string> RequestContents { get; } = [];
