@@ -5,7 +5,7 @@
   <ItemGroup>
     <PackageVersion Include="AngleSharp" Version="1.4.0" />
     <PackageVersion Include="AspectCore.Extensions.DependencyInjection" Version="2.4.1-preview.2" />
-    <PackageVersion Include="Confluent.Kafka" Version="2.14.0" />
+    <PackageVersion Include="Confluent.Kafka" Version="2.14.2" />
     <PackageVersion Include="Dapper" Version="2.1.79" />
     <PackageVersion Include="Destructurama.Attributed" Version="5.3.0" />
     <PackageVersion Include="Duende.IdentityModel" Version="8.1.0" />
@@ -25,20 +25,21 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="[9.0.16, 10.0.0)" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.8" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.8" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.8" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.8" />
     <PackageVersion Include="Microsoft.Extensions.Http.Polly" Version="10.0.8" />
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.8" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Configuration" Version="10.0.8" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.8" />
-    <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.18.0" />
+    <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.19.1" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageVersion Include="NewRelic.Agent.Api" Version="10.51.0" />
-    <PackageVersion Include="PolySharp" Version="1.15.0" />
+    <PackageVersion Include="NewRelic.Agent.Api" Version="10.51.1" />
+    <PackageVersion Include="PolySharp" Version="1.16.0" />
     <PackageVersion Include="RabbitMQ.Client" Version="7.2.1" />
     <PackageVersion Include="Serilog.Extensions.Logging" Version="10.0.0" />
     <PackageVersion Include="SlackNet.AspNetCore" Version="0.17.10" />
     <PackageVersion Include="SSH.NET" Version="2025.1.0" />
-    <PackageVersion Include="StackExchange.Redis" Version="2.13.1" />
+    <PackageVersion Include="StackExchange.Redis" Version="2.13.17" />
     <PackageVersion Include="StandardSocketsHttpHandler" Version="2.2.0.10" />
     <PackageVersion Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.16.0" />
@@ -46,7 +47,7 @@
     <PackageVersion Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
     <PackageVersion Include="System.Text.Encoding.CodePages" Version="10.0.8" />
     <PackageVersion Include="System.Text.Json" Version="10.0.8" />
-    <PackageVersion Include="Volo.Abp.Core" Version="10.4.0" />
+    <PackageVersion Include="Volo.Abp.Core" Version="10.4.1" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.v3.assert" Version="3.2.2" />
     <PackageVersion Include="xunit.v3.extensibility.core" Version="3.2.2" />
