@@ -127,9 +127,8 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     }
 
     [Fact]
-    public async Task GetToken_ShouldPassCancellationToken_ToDiscoveryAndTokenRequests()
+    public async Task GetToken_ShouldSendCancelableTokens_ToDiscoveryAndTokenRequests()
     {
-        using var cts = new CancellationTokenSource();
         var handler = new CaptureCancellationTokenHandler();
         using var httpClient = new HttpClient(handler);
         var provider = new ClientCredentialsTokenProvider(
@@ -146,11 +145,41 @@ public class ClientCredentialsTokenProviderTests : AuthTests
                 },
             });
 
+        using var cts = new CancellationTokenSource();
+
         var token = await provider.GetTokenAsync("api", cancellationToken: cts.Token);
 
         Assert.Equal("access-token", token);
         Assert.Equal(2, handler.CancellationTokens.Count);
-        Assert.All(handler.CancellationTokens, t => Assert.Equal(cts.Token, t));
+        Assert.All(handler.CancellationTokens, t => Assert.True(t.CanBeCanceled));
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task GetToken_WhenCancellationIsRequestedDuringHttpRequest_CancelsRequest(int cancelRequestIndex)
+    {
+        using var cts = new CancellationTokenSource();
+        var handler = new CancelRequestHandler(cts, cancelRequestIndex);
+        using var httpClient = new HttpClient(handler);
+        var provider = new ClientCredentialsTokenProvider(
+            // ReSharper disable once AccessToDisposedClosure
+            () => httpClient,
+            new()
+            {
+                Authority = "https://auth.example.com",
+                ClientId = "client",
+                ClientSecret = "secret",
+                Policy = new()
+                {
+                    RequireKeySet = false,
+                },
+            });
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            provider.GetTokenAsync("api", cancellationToken: cts.Token));
+
+        Assert.Equal(cancelRequestIndex, handler.RequestCount);
     }
 
     private sealed class CaptureCancellationTokenHandler : HttpMessageHandler
@@ -181,6 +210,33 @@ public class ClientCredentialsTokenProviderTests : AuthTests
                 Content = new StringContent(content, Encoding.UTF8, "application/json"),
                 RequestMessage = request,
             });
+        }
+    }
+
+    private sealed class CancelRequestHandler(CancellationTokenSource source, int cancelRequestIndex) : HttpMessageHandler
+    {
+        public int RequestCount { get; private set; }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            RequestCount++;
+            if (RequestCount == cancelRequestIndex)
+            {
+                source.Cancel();
+                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+                throw new InvalidOperationException("Cancellation was not propagated to the HTTP request.");
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""
+                                            {
+                                              "issuer": "https://auth.example.com",
+                                              "token_endpoint": "https://auth.example.com/connect/token"
+                                            }
+                                            """, Encoding.UTF8, "application/json"),
+                RequestMessage = request,
+            };
         }
     }
 }
