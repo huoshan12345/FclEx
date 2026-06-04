@@ -1,3 +1,5 @@
+using Duende.IdentityModel.Client;
+
 namespace FclEx.Http.Auth;
 
 public class ClientCredentialsTokenProviderTests : AuthTests
@@ -78,7 +80,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
         if (HasApiServer == false)
             return;
 
-        var handler = new MutateTokenResponseHandler((_, _, _, m) => m[TokenResponse.ExpiresIn] = 1);
+        var handler = new MutateTokenResponseHandler((_, _, _, m) => m[OidcConstants.TokenResponse.ExpiresIn] = 1);
         var provider = CreateTestTokenProvider(handler);
         await provider.GetTokenAsync("api");
         await Task.Delay(1500);

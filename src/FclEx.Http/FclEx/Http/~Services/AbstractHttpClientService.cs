@@ -255,6 +255,12 @@ public abstract class AbstractHttpClientService : AbstractHttpService
     protected virtual async Task<HttpResponseMessage> SendAsync(HttpClientContext context, HttpRequest request, CancellationToken token)
     {
         var (client, policy, _) = context;
+
+        if (request.Content is { } content and not BufferedContent)
+        {
+            request.Content = await BufferedContent.CreateAsync(content, request.ReadBufferTimeout, request.BufferSize, token);
+        }
+
         var response = await policy.ExecuteAsync(async () =>
         {
             // Create request in every retry to avoid the following error:

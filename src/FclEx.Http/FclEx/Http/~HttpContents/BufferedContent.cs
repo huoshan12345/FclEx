@@ -2,45 +2,43 @@ namespace FclEx.Http;
 
 public class BufferedContent : HttpContent
 {
-    public HttpContent Content { get; }
-    public int BufferSize { get; }
-    public TimeSpan? Timeout { get; }
-    public CancellationToken Token { get; }
+    private readonly byte[] _buffer;
 
-    protected static readonly MethodInfo MethodOfTryComputeLength
-        = typeof(HttpContent).GetRequiredMethod(nameof(TryComputeLength));
-
-    public BufferedContent(HttpContent content, TimeSpan? timeout = null, int bufferSize = 256 * 1024, CancellationToken token = default)
+    private BufferedContent(byte[] buffer)
     {
-        Content = content;
-        Timeout = timeout;
-        Token = token;
-        BufferSize = bufferSize;
-        content.Headers.CopyTo(Headers);
+        _buffer = buffer;
     }
 
-    protected override async Task SerializeToStreamAsync(Stream stream, TransportContext? context)
+    public static async Task<BufferedContent> CreateAsync(HttpContent inner, TimeSpan? timeout = null, int bufferSize = 256 * 1024, CancellationToken cancellationToken = default)
     {
-#if NET6_0_OR_GREATER
-        await
-#endif
-        using var contentStream = await Content.ReadAsStreamAsync(Token);
-        await contentStream.CopyToAsync(stream, BufferSize, Timeout, Token);
+        var buffer = await inner
+            .ReadAsByteArrayAsync(bufferSize, timeout, cancellationToken)
+            .ConfigureAwait(false);
+
+        var content = new BufferedContent(buffer);
+        foreach (var header in inner.Headers)
+        {
+            content.Headers.TryAddWithoutValidation(header.Key, header.Value);
+        }
+        return content;
+    }
+
+    protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context)
+    {
+        return stream.WriteAsync(_buffer, 0, _buffer.Length);
     }
 
     protected override bool TryComputeLength(out long length)
     {
-        var paras = new object?[] { null };
-        var result = MethodOfTryComputeLength.InvokeInstance<bool>(Content, paras);
-        length = paras[0].CastTo<long>();
-        return result;
+        length = _buffer.Length;
+        return true;
     }
 
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
-            Content.Dispose();
+            _buffer.Clear();
         }
         base.Dispose(disposing);
     }

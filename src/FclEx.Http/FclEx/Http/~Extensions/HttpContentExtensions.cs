@@ -49,9 +49,6 @@ public static class HttpContentExtensions
         return ms.ToArray();
     }
 
-    public static BufferedContent ToBuffered(this HttpContent content, TimeSpan? timeout = null, int bufferSize = DefaultBufferSize, CancellationToken token = default)
-        => new(content, timeout, bufferSize, token);
-
     public static GZipContent ToGZip(this HttpContent content, CompressionLevel compressionLevel = CompressionLevel.Optimal,
         TimeSpan? timeout = null, int bufferSize = DefaultBufferSize, CancellationToken token = default)
         => new(content, compressionLevel, timeout, bufferSize, token);
@@ -71,7 +68,7 @@ public static class HttpContentExtensions
     {
         return compressionMethod switch
         {
-            CompressionMethod.None => content.ToBuffered(timeout, bufferSize, token),
+            CompressionMethod.None => content,
             CompressionMethod.GZip => content.ToGZip(compressionLevel, timeout, bufferSize, token),
             CompressionMethod.Deflate => content.ToDeflate(compressionLevel, timeout, bufferSize, token),
 #if NET6_0_OR_GREATER

@@ -25,19 +25,16 @@ public class SocketsHttpHandlerOptionsEqualityComparer : IEqualityComparer<Socke
 
     public int GetHashCode(SocketsHttpHandlerOptions obj)
     {
-        var proxyCode = obj.Proxy is null
-            ? 0
-            : ProxyEqualityComparer.GetHashCode(obj.Proxy);
-
-        return HashCode.Combine(
-            obj.ConnectTimeout,
-            obj.IPVersionPolicy,
-            obj.AllowAutoRedirect,
-            obj.AutomaticDecompression,
-            obj.EnableMultipleHttp2Connections,
-            obj.PooledConnectionLifetime,
-            obj.PooledConnectionIdleTimeout,
-            obj.DisableServerCertificateValidation,
-            proxyCode);
+        var hash = new HashCode();
+        hash.Add(obj.ConnectTimeout);
+        hash.Add(obj.IPVersionPolicy);
+        hash.Add(obj.AllowAutoRedirect);
+        hash.Add(obj.AutomaticDecompression);
+        hash.Add(obj.EnableMultipleHttp2Connections);
+        hash.Add(obj.PooledConnectionLifetime);
+        hash.Add(obj.PooledConnectionIdleTimeout);
+        hash.Add(obj.DisableServerCertificateValidation);
+        hash.Add(ProxyEqualityComparer.GetHashCodeOrDefault(obj.Proxy));
+        return hash.ToHashCode();
     }
 }

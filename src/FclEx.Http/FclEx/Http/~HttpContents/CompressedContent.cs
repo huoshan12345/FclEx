@@ -1,13 +1,21 @@
 namespace FclEx.Http;
 
-public abstract class CompressedContent : BufferedContent
+public abstract class CompressedContent : HttpContent
 {
+    public HttpContent Content { get; }
+    public int BufferSize { get; }
+    public TimeSpan? Timeout { get; }
+    public CancellationToken Token { get; }
     public CompressionLevel CompressionLevel { get; }
     public abstract string Encoding { get; }
 
     protected CompressedContent(HttpContent content, CompressionLevel compressionLevel, TimeSpan? timeout = null, int bufferSize = 262144, CancellationToken token = default)
-        : base(content, timeout, bufferSize, token)
     {
+        Content = content;
+        Timeout = timeout;
+        Token = token;
+        BufferSize = bufferSize;
+        content.Headers.CopyTo(Headers);
         CompressionLevel = compressionLevel;
         Headers.Add(HttpHeaderNames.ContentEncoding, Encoding);
     }
@@ -28,5 +36,14 @@ public abstract class CompressedContent : BufferedContent
     {
         length = 0;
         return false;
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            Content.Dispose();
+        }
+        base.Dispose(disposing);
     }
 }
