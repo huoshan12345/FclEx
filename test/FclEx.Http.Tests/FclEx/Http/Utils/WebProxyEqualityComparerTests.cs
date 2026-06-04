@@ -39,4 +39,17 @@ public class WebProxyEqualityComparerTests
             Comparer.GetHashCode(proxy1),
             Comparer.GetHashCode(proxy2));
     }
+
+    [Fact]
+    public void InterfaceComparer_UsesWebProxyValueEquality()
+    {
+        var uri = new Uri("http://127.0.0.1:8888");
+        IWebProxy proxy1 = WebProxyHelper.Create(uri)!;
+        IWebProxy proxy2 = WebProxyHelper.Create(uri)!;
+
+        Assert.True(WebProxyInterfaceEqualityComparer.Instance.Equals(proxy1, proxy2));
+        Assert.Equal(
+            WebProxyInterfaceEqualityComparer.Instance.GetHashCode(proxy1),
+            WebProxyInterfaceEqualityComparer.Instance.GetHashCode(proxy2));
+    }
 }

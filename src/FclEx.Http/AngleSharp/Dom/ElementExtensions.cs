@@ -305,11 +305,12 @@ public static class ElementExtensions
 
     public static string? GetMetaRefreshUrl(this IElement element)
     {
-        var metaTag = element.QuerySelector("meta[http-equiv='refresh']");
+        var metaTag = element.QuerySelectorAll("meta")
+            .FirstOrDefault(m => string.Equals(m.GetAttribute("http-equiv"), "refresh", StringComparison.OrdinalIgnoreCase));
         if (metaTag is null)
             return null;
 
-        var content = element.GetAttribute("content");
+        var content = metaTag.GetAttribute("content");
         return content == null
             ? null
             : ExtractUrlFromContent(content);

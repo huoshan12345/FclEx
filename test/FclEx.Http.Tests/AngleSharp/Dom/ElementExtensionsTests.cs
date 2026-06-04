@@ -189,5 +189,38 @@ public class ElementExtensionsTests
         Assert.True(result.IsError);
     }
 
+    [Theory]
+    [InlineData("""<meta content="0; url=/next" http-equiv="refresh">""", "/next")]
+    [InlineData("""<meta http-equiv='REFRESH' content='5; URL="/quoted path"'>""", "/quoted path")]
+    [InlineData("""<meta data-x="1" http-equiv="refresh" content="0; Url='https://example.com/a?b=1'">""", "https://example.com/a?b=1")]
+    public void GetMetaRefreshUrl_ParsesRefreshMetaTagWithFlexibleHtml(string metaTag, string expected)
+    {
+        var document = HtmlHelper.Parse($"""
+                                        <html>
+                                        <head>{metaTag}</head>
+                                        <body></body>
+                                        </html>
+                                        """);
+
+        var actual = document.DocumentElement.GetMetaRefreshUrl();
+
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public void GetMetaRefreshUrl_WhenRefreshMetaTagHasNoUrl_ReturnsNull()
+    {
+        var document = HtmlHelper.Parse("""
+                                        <html>
+                                        <head><meta http-equiv="refresh" content="5"></head>
+                                        <body></body>
+                                        </html>
+                                        """);
+
+        var actual = document.DocumentElement.GetMetaRefreshUrl();
+
+        Assert.Null(actual);
+    }
+
     private static string HtmlEncode(string value) => System.Net.WebUtility.HtmlEncode(value);
 }
