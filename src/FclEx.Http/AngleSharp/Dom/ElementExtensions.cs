@@ -244,7 +244,51 @@ public static class ElementExtensions
 
     public static OperationResult<string> QueryId(this IElement? root, string prefix)
     {
-        return root.QueryAttribute($"*[id^='{prefix}']", "id").MapValue(m => m.Attribute.SkipUntil(prefix));
+        return root.QueryAttribute($"*[id^='{EscapeCssString(prefix)}']", "id").MapValue(m => m.Attribute.SkipUntil(prefix));
+    }
+
+    private static string EscapeCssString(string value)
+    {
+        using var disposable = StringBuilderHelper.GetCached();
+        var builder = disposable.Value;
+
+        foreach (var c in value)
+        {
+            switch (c)
+            {
+                case '\\':
+                case '\'':
+                    builder.Append('\\');
+                    builder.Append(c);
+                    break;
+                case '\r':
+                    builder.Append("\\D ");
+                    break;
+                case '\n':
+                    builder.Append("\\A ");
+                    break;
+                case '\f':
+                    builder.Append("\\C ");
+                    break;
+                case '\t':
+                    builder.Append("\\9 ");
+                    break;
+                default:
+                    if (char.IsControl(c))
+                    {
+                        builder.Append('\\');
+                        builder.Append(((int)c).ToString("X", CultureInfo.InvariantCulture));
+                        builder.Append(' ');
+                    }
+                    else
+                    {
+                        builder.Append(c);
+                    }
+                    break;
+            }
+        }
+
+        return builder.ToString();
     }
 
     public static string OwnText(this IElement element)

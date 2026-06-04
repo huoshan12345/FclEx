@@ -66,12 +66,12 @@ This file records the improvement suggestions from the review of `src/FclEx.Http
 
 31. [Resolved] `src/FclEx.Http/FclEx/Web/~Models/FormData.cs`: `FormData` currently captures hidden inputs only and does not model form method, normal inputs, selects, textareas, or submit button behavior. Either broaden it into a more complete form model or rename it to reflect the narrower hidden-field use case.
 
-32. `src/FclEx.Http/AngleSharp/Dom/ElementExtensions.cs`: `QueryId` interpolates `prefix` into a CSS selector without escaping. Prefix values containing quotes or selector syntax can break the selector or select unintended elements.
+32. [Resolved] `src/FclEx.Http/AngleSharp/Dom/ElementExtensions.cs`: `QueryId` interpolates `prefix` into a CSS selector without escaping. Prefix values containing quotes or selector syntax can break the selector or select unintended elements.
 
-33. `src/FclEx.Http/FclEx/Http/~Core/HttpResponseStream.cs`: `Dispose(bool)` disposes the `HttpResponseMessage` but not the wrapped stream directly and does not call `base.Dispose(disposing)`. Make disposal explicit and conventional.
+33. [Resolved] `src/FclEx.Http/FclEx/Http/~Core/HttpResponseStream.cs`: `Dispose(bool)` disposes the `HttpResponseMessage` but not the wrapped stream directly and does not call `base.Dispose(disposing)`. Make disposal explicit and conventional.
 
 34. [Resolved] `src/FclEx.Http/FclEx/Http/~Helpers/HttpClientHelper.cs`: local function `CheckSocketConnection` is unused. Remove it or wire it into connection validation if it is still needed.
 
-35. `src/FclEx.Http/FclEx/Http/~Core/HttpResponseExtensions.cs` and `src/FclEx.Http/FclEx/Http/~Services/HttpServiceExtensions.cs`: download helpers are split across response extensions and service extensions. Consolidate them under one module to reduce discoverability friction.
+35. [No change] `src/FclEx.Http/FclEx/Http/~Core/HttpResponseExtensions.cs` and `src/FclEx.Http/FclEx/Http/~Services/HttpServiceExtensions.cs`: download helpers are split across response extensions and service extensions. Consolidate them under one module to reduce discoverability friction.
 
-36. `src/FclEx.Http/MimeTypes/MimeTypeMap.cs`: MIME lookup is a large standalone table inside the HTTP package. Consider whether it belongs in its own package or a core MIME utility namespace if other packages need it.
+36. [No change] `src/FclEx.Http/MimeTypes/MimeTypeMap.cs`: MIME lookup is a large standalone table inside the HTTP package. Consider whether it belongs in its own package or a core MIME utility namespace if other packages need it.

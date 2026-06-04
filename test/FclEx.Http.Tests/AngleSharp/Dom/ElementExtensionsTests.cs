@@ -134,4 +134,60 @@ public class ElementExtensionsTests
         Assert.Equal("https://www.example.com/current?x=1", formData.SubmitUri.AbsoluteUri);
         Assert.Equal("fclex", formData.Params["q"]);
     }
+
+    [Theory]
+    [InlineData("prefix", "value")]
+    [InlineData("pre'fix", "value")]
+    [InlineData("pre\\fix", "value")]
+    [InlineData("pre]fix", "value")]
+    public void QueryId_WhenPrefixContainsSelectorSyntax_EscapesPrefix(string prefix, string suffix)
+    {
+        var id = prefix + suffix;
+        var html = $$"""
+                     <html>
+                     <body>
+                         <div id="{{HtmlEncode(id)}}"></div>
+                         <div id="other"></div>
+                     </body>
+                     </html>
+                     """;
+        var document = HtmlHelper.Parse(html);
+
+        var result = document.Body.QueryId(prefix);
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Equal(suffix, result.Value);
+    }
+
+    [Fact]
+    public void QueryId_WhenPrefixContainsNewLine_EscapesPrefix()
+    {
+        const string prefix = "pre\nfix";
+        const string suffix = "value";
+        var html = $$"""
+                     <html>
+                     <body>
+                         <div id="{{HtmlEncode(prefix + suffix)}}"></div>
+                     </body>
+                     </html>
+                     """;
+        var document = HtmlHelper.Parse(html);
+
+        var result = document.Body.QueryId(prefix);
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Equal(suffix, result.Value);
+    }
+
+    [Fact]
+    public void QueryId_WhenNoElementMatches_ReturnsError()
+    {
+        var document = HtmlHelper.Parse("<html><body><div id=\"other\"></div></body></html>");
+
+        var result = document.Body.QueryId("missing'prefix");
+
+        Assert.True(result.IsError);
+    }
+
+    private static string HtmlEncode(string value) => System.Net.WebUtility.HtmlEncode(value);
 }
