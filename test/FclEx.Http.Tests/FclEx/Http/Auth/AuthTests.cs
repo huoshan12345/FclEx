@@ -20,12 +20,12 @@ public static class AuthTestsExtensions
             .AddHttpClient(nameof(ClientCredentialsTokenProvider))
             .AddHttpMessageHandler(m => handler);
 
-        services.AddSingletonBy<IAccessTokenProvider, IHttpClientFactory>(m => new ClientCredentialsTokenProvider(m, new()
+        services.AddSingletonBy<IAccessTokenProvider, IHttpClientFactory>(m => new ClientCredentialsTokenProvider(new()
         {
             Authority = TestUri.WithPath("/oauth").AbsoluteUri,
             ClientId = "client",
             ClientSecret = "secret",
-        }));
+        }, m));
 
         return services;
     }

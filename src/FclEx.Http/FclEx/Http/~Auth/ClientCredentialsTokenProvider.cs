@@ -3,6 +3,7 @@ namespace FclEx.Http;
 public class ClientCredentialsTokenProvider : IAccessTokenProvider
 {
     private readonly Func<HttpClient> _httpClientFactory;
+    private readonly bool _disposeHttpClient;
     private readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new();
     private readonly ConcurrentDictionary<string, TokenCacheItem> _cache = new();
     private readonly SemaphoreSlim _discoveryLock = new(1, 1);
@@ -11,10 +12,11 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
 
     private DiscoveryDocumentResponse? _discovery;
 
-    public ClientCredentialsTokenProvider(Func<HttpClient> httpClientFactory, ClientCredentialsTokenProviderOptions options)
+    public ClientCredentialsTokenProvider(ClientCredentialsTokenProviderOptions options, Func<HttpClient> httpClientFactory, bool disposeHttpClient = true)
     {
-        _httpClientFactory = httpClientFactory;
         _options = options;
+        _httpClientFactory = httpClientFactory;
+        _disposeHttpClient = disposeHttpClient;
         _documentRequest = new DiscoveryDocumentRequest
         {
             Address = options.Authority,
@@ -22,8 +24,13 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
         };
     }
 
-    public ClientCredentialsTokenProvider(IHttpClientFactory httpClientFactory, ClientCredentialsTokenProviderOptions options)
-        : this(() => httpClientFactory.CreateClient(nameof(ClientCredentialsTokenProvider)), options)
+    public ClientCredentialsTokenProvider(ClientCredentialsTokenProviderOptions options, IHttpClientFactory httpClientFactory)
+        : this(options, () => httpClientFactory.CreateClient(nameof(ClientCredentialsTokenProvider)), false)
+    {
+    }
+
+    public ClientCredentialsTokenProvider(ClientCredentialsTokenProviderOptions options, HttpClient httpClient)
+    : this(options, () => httpClient, false)
     {
     }
 
@@ -35,12 +42,13 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
             return _discovery;
 
         await _discoveryLock.WaitAsync(cancellationToken);
+        var httpClient = CreateClient();
         try
         {
             if (_discovery != null)
                 return _discovery;
 
-            var disco = await CreateClient().GetDiscoveryDocumentAsync(_documentRequest, cancellationToken);
+            var disco = await httpClient.GetDiscoveryDocumentAsync(_documentRequest, cancellationToken);
 
             if (disco.IsError)
                 throw new Exception(disco.Error);
@@ -50,6 +58,9 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
         }
         finally
         {
+            if (_disposeHttpClient)
+                httpClient.Dispose();
+
             _discoveryLock.Release();
         }
     }
@@ -66,6 +77,7 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
         var locker = _locks.GetOrAdd(scope, _ => new SemaphoreSlim(1, 1));
 
         await locker.WaitAsync(cancellationToken);
+        var httpClient = CreateClient();
         try
         {
             if (forceRefresh == false
@@ -75,7 +87,6 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
                 return cached.AccessToken;
             }
 
-            var httpClient = CreateClient();
             var disco = await GetDiscoveryAsync(cancellationToken);
 
             // try refresh_token
@@ -117,6 +128,9 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
         }
         finally
         {
+            if (_disposeHttpClient)
+                httpClient.Dispose();
+
             locker.Release();
         }
     }

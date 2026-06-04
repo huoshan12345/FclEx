@@ -17,7 +17,7 @@ public class HttpClientService : HttpClientServiceBase
         HttpClient client;
         if (_httpClientProvider is null)
         {
-            client = provider.GetRequiredService<IHttpClientFactory>().CreateClient();
+            client = provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(HttpClientService));
         }
         else
         {
@@ -47,7 +47,7 @@ public class HttpClientService : HttpClientServiceBase
         set
         {
             var options = _options.HandlerOptions;
-            if (IWebProxyEqualityComparer.Instance.Equals(options.Proxy, value))
+            if (WebProxyInterfaceEqualityComparer.Instance.Equals(options.Proxy, value))
                 return;
 
             // NOTE: use with keyword to create new instance instead of changing property directly cause it used as key in cache.

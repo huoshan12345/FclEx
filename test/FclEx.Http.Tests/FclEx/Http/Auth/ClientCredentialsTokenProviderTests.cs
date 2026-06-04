@@ -13,15 +13,13 @@ public class ClientCredentialsTokenProviderTests : AuthTests
             ValidateEndpoints = false,
             RequireKeySet = false,
         };
-        var provider = new ClientCredentialsTokenProvider(
-            () => throw new InvalidOperationException("No HTTP request should be sent in this test."),
-            new()
-            {
-                Authority = "http://localhost/oauth",
-                ClientId = "client",
-                ClientSecret = "secret",
-                Policy = policy,
-            });
+        var provider = new ClientCredentialsTokenProvider(new()
+        {
+            Authority = "http://localhost/oauth",
+            ClientId = "client",
+            ClientSecret = "secret",
+            Policy = policy,
+        }, () => throw new InvalidOperationException("No HTTP request should be sent in this test."));
 
         var request = typeof(ClientCredentialsTokenProvider)
             .GetRequiredField("_documentRequest")
@@ -131,19 +129,16 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     {
         var handler = new CaptureCancellationTokenHandler();
         using var httpClient = new HttpClient(handler);
-        var provider = new ClientCredentialsTokenProvider(
-            // ReSharper disable once AccessToDisposedClosure
-            () => httpClient,
-            new()
+        var provider = new ClientCredentialsTokenProvider(new()
+        {
+            Authority = "https://auth.example.com",
+            ClientId = "client",
+            ClientSecret = "secret",
+            Policy = new()
             {
-                Authority = "https://auth.example.com",
-                ClientId = "client",
-                ClientSecret = "secret",
-                Policy = new()
-                {
-                    RequireKeySet = false,
-                },
-            });
+                RequireKeySet = false,
+            },
+        }, httpClient);
 
         using var cts = new CancellationTokenSource();
 
@@ -162,19 +157,16 @@ public class ClientCredentialsTokenProviderTests : AuthTests
         using var cts = new CancellationTokenSource();
         var handler = new CancelRequestHandler(cts, cancelRequestIndex);
         using var httpClient = new HttpClient(handler);
-        var provider = new ClientCredentialsTokenProvider(
-            // ReSharper disable once AccessToDisposedClosure
-            () => httpClient,
-            new()
+        var provider = new ClientCredentialsTokenProvider(new()
+        {
+            Authority = "https://auth.example.com",
+            ClientId = "client",
+            ClientSecret = "secret",
+            Policy = new()
             {
-                Authority = "https://auth.example.com",
-                ClientId = "client",
-                ClientSecret = "secret",
-                Policy = new()
-                {
-                    RequireKeySet = false,
-                },
-            });
+                RequireKeySet = false,
+            },
+        }, httpClient);
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
             provider.GetTokenAsync("api", cancellationToken: cts.Token));

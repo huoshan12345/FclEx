@@ -120,7 +120,7 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
             .FirstOrDefault();
         Assert.NotNull(handler);
         var webProxy = handler.Proxy.CastTo<IWebProxy>();
-        Assert.Equal<IWebProxy>(proxy, webProxy, IWebProxyEqualityComparer.Instance);
+        Assert.Equal<IWebProxy>(proxy, webProxy, WebProxyInterfaceEqualityComparer.Instance);
     }
 
     [Fact]

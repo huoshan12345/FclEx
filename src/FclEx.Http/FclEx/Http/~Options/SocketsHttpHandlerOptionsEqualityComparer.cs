@@ -2,7 +2,7 @@ namespace FclEx.Http;
 
 public class SocketsHttpHandlerOptionsEqualityComparer : IEqualityComparer<SocketsHttpHandlerOptions>
 {
-    public static readonly IEqualityComparer<IWebProxy> ProxyEqualityComparer = IWebProxyEqualityComparer.Instance;
+    public static readonly IEqualityComparer<IWebProxy> ProxyEqualityComparer = WebProxyInterfaceEqualityComparer.Instance;
     public static readonly SocketsHttpHandlerOptionsEqualityComparer Instance = new();
 
     public bool Equals(SocketsHttpHandlerOptions? x, SocketsHttpHandlerOptions? y)

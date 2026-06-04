@@ -302,4 +302,32 @@ public static class ElementExtensions
         }
         return builder.ToString();
     }
+
+    public static string? GetMetaRefreshUrl(this IElement element)
+    {
+        var metaTag = element.QuerySelector("meta[http-equiv='refresh']");
+        if (metaTag is null)
+            return null;
+
+        var content = element.GetAttribute("content");
+        return content == null
+            ? null
+            : ExtractUrlFromContent(content);
+
+        static string? ExtractUrlFromContent(string content)
+        {
+            const string urlKey = "url=";
+            var urlIndex = content.IndexOf(urlKey, StringComparison.OrdinalIgnoreCase);
+
+            if (urlIndex < 0)
+                return null;
+
+            // Extract everything after "url="
+            var redirectUrl = content[(urlIndex + urlKey.Length)..];
+
+            // Remove trailing quotes if the HTML contained them (e.g., URL='...')
+            return redirectUrl.Trim('\'', '"', ' ');
+
+        }
+    }
 }

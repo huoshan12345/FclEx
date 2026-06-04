@@ -28,35 +28,6 @@ public static class HtmlHelper
             : null;
     }
 
-    public static string? GetMetaRefreshUrl(string html)
-    {
-        if (html.IsNullOrWhiteSpace())
-            return null;
-
-        var match = Regexes.MetaRefresh.Match(html);
-        // ReSharper disable once InvertIf
-        if (match.Success)
-        {
-            var refresh = match.Groups[1].Value;
-
-            refresh = refresh.Replace("&#x27;", "'")
-                .Replace("&#39;", "'")
-                .Replace("&#x22;", "\"")
-                .Replace("&#34;", "\"")
-                .Trim();
-
-            var nextMatch = Regexes.MetaRefreshUrl.Match(refresh);
-            // ReSharper disable once InvertIf
-            if (nextMatch.Success)
-            {
-                var g = nextMatch.Groups;
-                return (g[2].Value, g[3].Value).FirstNotEmpty();
-            }
-        }
-
-        return null;
-    }
-
     public static string? GetTextContent(string str)
     {
         var html = DefaultHtmlParser.ParseDocument(str);
