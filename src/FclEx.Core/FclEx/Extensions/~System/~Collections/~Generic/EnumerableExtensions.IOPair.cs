@@ -25,13 +25,7 @@ partial class EnumerableExtensions
         return new(successItems, failureItems);
     }
 
-    public static Task<OperationIOPairs<T, TResult>> ToOperationIOPairs<T, TResult>(this IEnumerable<T> enumerable, 
-        Func<T, Task<TResult>> taskSelector, int batchSize, CancellationToken token = default)
-    {
-        return enumerable.ToOperationIOPairs(async m => Operation.Success(await taskSelector(m)), batchSize, token);
-    }
-
-    public static async Task<OperationIOPairs<T, TResult>> ToOperationIOPairs<T, TResult>(this IEnumerable<T> enumerable, 
+    public static async Task<OperationIOPairs<T, TResult>> ToOperationIOPairs<T, TResult>(this IEnumerable<T> enumerable,
         Func<T, Task<OperationResult<TResult>>> taskSelector, int batchSize, CancellationToken token = default)
     {
         // ReSharper disable once PossibleMultipleEnumeration
@@ -64,10 +58,16 @@ partial class EnumerableExtensions
         return (success, failure);
     }
 
+    public static Task<OperationIOPairs<T, TResult>> ToOperationIOPairs<T, TResult>(this IEnumerable<T> enumerable,
+        Func<T, Task<TResult>> taskSelector, int batchSize, CancellationToken token = default)
+    {
+        return enumerable.ToOperationIOPairs(m => Operation.ExecuteAsync(() => taskSelector(m)), batchSize, token);
+    }
+
     public static Task<OperationIOPairs<T, TResult>> ToOperationIOPairsSerially<T, TResult>(this IEnumerable<T> enumerable,
         Func<T, Task<TResult>> taskSelector, int intervalSeconds = 0, CancellationToken token = default)
     {
-        return enumerable.ToOperationIOPairsSerially(async m => Operation.Success(await taskSelector(m)), intervalSeconds, token);
+        return enumerable.ToOperationIOPairsSerially(m => Operation.ExecuteAsync(() => taskSelector(m)), intervalSeconds, token);
     }
 
     public static async Task<OperationIOPairs<T, TResult>> ToOperationIOPairsSerially<T, TResult>(this IEnumerable<T> enumerable,
