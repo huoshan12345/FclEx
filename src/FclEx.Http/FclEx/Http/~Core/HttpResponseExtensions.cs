@@ -42,7 +42,7 @@ public static class HttpResponseExtensions
         if (!str.IsPossibleJson())
             return Operation.Error<T>("Can not parse json from empty string");
 
-        var doc = JsonDocument.Parse(str, new()
+        using var doc = JsonDocument.Parse(str, new()
         {
             AllowTrailingCommas = options?.AllowTrailingCommas ?? false,
             CommentHandling = options?.ReadCommentHandling ?? JsonCommentHandling.Disallow,

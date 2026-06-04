@@ -24,7 +24,7 @@ public readonly struct JsonActionContext : IDisposable
         Token = _jsonDocument.RootElement;
         ResultTokens = path == null
             ? [Token]
-            : Token.SelectElements(path, false).NotNull();
+            : Token.SelectElements(path, false).NotNull().AsIReadOnlyList();
     }
 
     /// <summary>
@@ -50,7 +50,7 @@ public readonly struct JsonActionContext : IDisposable
     /// <summary>
     /// Gets the selected result tokens.
     /// </summary>
-    public IEnumerable<JsonElement> ResultTokens { get; }
+    public IReadOnlyList<JsonElement> ResultTokens { get; }
 
     /// <summary>
     /// Gets the first selected result token, or <see langword="null"/> when no token matched.
