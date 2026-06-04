@@ -32,6 +32,8 @@ public class HttpResponseStream : Stream
         if (disposing == false)
             return;
 
+        base.Dispose(true);
         _response.Dispose();
+        _stream.Dispose();
     }
 }

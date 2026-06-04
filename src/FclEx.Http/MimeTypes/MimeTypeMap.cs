@@ -1,8 +1,7 @@
+// ReSharper disable ArrangeNamespaceBody
 namespace MimeTypes
 {
-    /// <summary>
-    /// Class MimeTypeMap.
-    /// </summary>
+    // see https://github.com/khellang/MimeTypes
     public static class MimeTypeMap
     {
         private const string Dot = ".";
