@@ -1,3 +1,4 @@
+// ReSharper disable ConvertToAutoPropertyWhenPossible
 namespace FclEx.Utils;
 
 /// <summary>
@@ -9,21 +10,24 @@ namespace FclEx.Utils;
 [DebuggerDisplay("Count = {" + nameof(Count) + "}")]
 public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : notnull
 {
+    private static readonly IEqualityComparer<TValue> _valueComparer = EqualityComparer<TValue>.Default;
     private readonly LinkedList<KvCount> _list = [];
     private readonly IDictionary<TKey, LinkedListNode<KvCount>> _dic;
     private readonly ReaderWriterLockSlim _lock;
-    private static readonly IEqualityComparer<TValue> _valueComparer = EqualityComparer<TValue>.Default;
     private readonly IEqualityComparer<TKey> _keyComparer;
+    private readonly int _capacity;
+
+    public event Action<TKey, TValue> OnItemCleared = (key, value) => { };
 
     public LfuCache(int? capacity = null, IEqualityComparer<TKey>? comparer = null)
     {
         if (capacity is <= 0)
             throw new ArgumentOutOfRangeException(nameof(capacity));
 
-        Capacity = capacity ?? ushort.MaxValue;
+        _capacity = capacity ?? int.MaxValue;
         _keyComparer = comparer ?? EqualityComparer<TKey>.Default;
         _lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
-        _dic = new Dictionary<TKey, LinkedListNode<KvCount>>(comparer);
+        _dic = new Dictionary<TKey, LinkedListNode<KvCount>>(_keyComparer);
     }
 
     public LfuCache(IEqualityComparer<TKey>? comparer) : this(ushort.MaxValue, comparer)
@@ -133,7 +137,7 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
 
     public int Count => Read(() => _dic.Count);
     public bool IsReadOnly { get; } = false;
-    public int Capacity { get; }
+    public int Capacity => _capacity;
 
     public void Add(KeyValuePair<TKey, TValue> item)
     {
@@ -230,11 +234,13 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
 
     private LinkedListNode<KvCount> AddInternal(TKey key, TValue value)
     {
-        if (_dic.Count >= Capacity)
+        if (_dic.Count >= _capacity)
         {
-            var toRemove = _list.Last;
-            _dic.Remove(toRemove!.Value.Key);
+            var toRemove = _list.Last!;
+            _dic.Remove(toRemove.Value.Key);
             _list.Remove(toRemove);
+
+            OnItemCleared(toRemove.Value.Key, toRemove.Value.Value);
         }
         var node = LinkedListNodeHelper.Create(new KvCount(key, value));
         _list.AddLast(node);

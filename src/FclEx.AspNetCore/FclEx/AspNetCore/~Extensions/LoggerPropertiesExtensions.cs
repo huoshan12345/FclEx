@@ -7,11 +7,11 @@ public static class LoggerPropertiesExtensions
         var ip = request.RemoteIpAddressOrNull();
 
         properties
-            .Push(nameof(ConnectionInfo.RemoteIpAddress), ip)
             .Push(LogPropertyNames.RequestPath, request.Path)
+            .Push(nameof(HttpRequest.Host), request.Host)
+            .Push(nameof(ConnectionInfo.RemoteIpAddress), ip)
             .Push(nameof(HttpRequest.ContentType), request.ContentType)
             .Push(nameof(HttpRequest.ContentLength), request.ContentLength)
-            .Push(nameof(HttpRequest.Host), request.Host)
             .Push(nameof(HttpRequest.Protocol), request.Protocol)
             .Push(nameof(HttpRequest.Method), request.Method);
 

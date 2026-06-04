@@ -59,15 +59,38 @@ public class HttpClientService : HttpClientServiceBase
         GC.SuppressFinalize(this);
     }
 
-    public static int MaxCacheCount { get; } = ushort.MaxValue;
+    public static int MaxCacheCount
+    {
+        get;
+        set
+        {
+            Check.Positive(value);
 
-    protected static readonly Lazy<LfuCache<HttpClientOptions, IServiceProvider>> Providers = new(() => new(Math.Max(1, MaxCacheCount), HttpClientOptionsEqualityComparer.Instance));
+            if (Providers.IsValueCreated)
+                throw new InvalidOperationException("Cannot change MaxCacheCount after cache is created.");
+
+            field = value;
+        }
+    } = ushort.MaxValue;
+
+    protected static readonly Lazy<LfuCache<HttpClientOptions, IServiceProvider>> Providers = new(CreateCache);
 
     protected static readonly string[] CanceledErrors =
     [
         new TaskCanceledException(Task.CompletedTask).Message,
         new OperationCanceledException(CancellationToken.None).Message,
     ];
+
+    protected static LfuCache<HttpClientOptions, IServiceProvider> CreateCache()
+    {
+        var cache = new LfuCache<HttpClientOptions, IServiceProvider>(MaxCacheCount, HttpClientOptionsEqualityComparer.Instance);
+        cache.OnItemCleared += (options, provider) =>
+        {
+            if (provider is IDisposable disposable)
+                disposable.Dispose();
+        };
+        return cache;
+    }
 
     protected internal static IServiceProvider GetProvider(HttpClientOptions options)
     {
@@ -92,7 +115,7 @@ public class HttpClientService : HttpClientServiceBase
             var p = ex;
             while (p is OperationCanceledException)
             {
-                if (CanceledErrors.Contains(p.Message) == false)
+                if (CanceledErrors.Contains(p.Message, StringComparer.Ordinal) == false)
                     return false;
 
                 if (p.InnerException is null)
@@ -152,5 +175,20 @@ public class HttpClientService : HttpClientServiceBase
             UseCookie = useCookie,
             Logger = loggerFactory?.CreateLogger<HttpClientService>()
         };
+    }
+
+    public static void ClearCache()
+    {
+        if (Providers.IsValueCreated == false)
+            return;
+
+        var cache = Providers.Value;
+        foreach (var (_, value) in cache)
+        {
+            if (value is IDisposable disposable)
+                disposable.Dispose();
+        }
+
+        cache.Clear();
     }
 }

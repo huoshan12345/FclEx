@@ -143,7 +143,7 @@ public class AuthenticationHandlerTests : AuthTests
 
         public List<(string[] Scopes, bool ForceRefresh)> Requests { get; } = [];
 
-        public Task<string> GetTokenAsync(string[] scopes, bool forceRefresh = false)
+        public Task<string> GetTokenAsync(string[] scopes, bool forceRefresh = false, CancellationToken cancellationToken = default)
         {
             Requests.Add((scopes, forceRefresh));
             var token = tokens[Math.Min(_index, tokens.Length - 1)];

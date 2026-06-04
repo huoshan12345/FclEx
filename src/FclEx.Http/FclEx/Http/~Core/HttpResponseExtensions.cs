@@ -131,21 +131,6 @@ public static class HttpResponseExtensions
 
     public static Uri LastUri(this HttpResponse response) => response.VisitedUris.Last();
 
-    public static Task<HttpResponse> Error(this Task<HttpResponse> task, Action<Exception> action)
-    {
-        return task.When(m => m.IsError, m => action(m.Exception!));
-    }
-
-    public static Task<HttpResponse> Ok(this Task<HttpResponse> task, Action<HttpResponse> action)
-    {
-        return task.When(m => !m.IsError, action);
-    }
-
-    public static Task<HttpResponse> Ok(this Task<HttpResponse> task, Func<HttpResponse, Task> action)
-    {
-        return task.When(m => !m.IsError, action);
-    }
-
     public static HttpResponse AddCookies(this HttpResponse response, IEnumerable<string> cookies)
     {
         response.Headers.AddRange(HttpHeaderNames.SetCookie, cookies);
@@ -167,5 +152,31 @@ public static class HttpResponseExtensions
 
         mediaType = null;
         return false;
+    }
+    
+    /// <summary>
+    /// Creates a redirect action when a redirect URL can be resolved from a response.
+    /// </summary>
+    /// <param name="response">The response used to resolve the redirect URL.</param>
+    /// <param name="httpService">The service used to send the redirect request.</param>
+    /// <param name="urlFunc">Returns the redirect URL. Returning <see langword="null"/> means no redirect action is created.</param>
+    /// <returns>A GET redirect action, or <see langword="null"/> when no URL is available.</returns>
+    public static IAction<HttpResponse>? TryCreateRedirectAction(this HttpResponse response, IHttpService httpService, Func<HttpResponse, string?> urlFunc)
+    {
+        Check.NotNull(urlFunc);
+        var url = urlFunc(response);
+        return url == null ? null : HttpRequest.Get(url).ToAction(httpService);
+    }
+
+    /// <summary>
+    /// Creates a redirect action when the given URL is not null.
+    /// </summary>
+    /// <param name="response">The response associated with the redirect decision.</param>
+    /// <param name="httpService">The service used to send the redirect request.</param>
+    /// <param name="url">The redirect URL. When <see langword="null"/>, no action is created.</param>
+    /// <returns>A GET redirect action, or <see langword="null"/> when <paramref name="url"/> is null.</returns>
+    public static IAction<HttpResponse>? TryCreateRedirectAction(this HttpResponse response, IHttpService httpService, string? url)
+    {
+        return response.TryCreateRedirectAction(httpService, r => url);
     }
 }

@@ -29,18 +29,18 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
 
     protected virtual HttpClient CreateClient() => _httpClientFactory();
 
-    private async Task<DiscoveryDocumentResponse> GetDiscoveryAsync()
+    private async Task<DiscoveryDocumentResponse> GetDiscoveryAsync(CancellationToken cancellationToken = default)
     {
         if (_discovery != null)
             return _discovery;
 
-        await _discoveryLock.WaitAsync();
+        await _discoveryLock.WaitAsync(cancellationToken);
         try
         {
             if (_discovery != null)
                 return _discovery;
 
-            var disco = await CreateClient().GetDiscoveryDocumentAsync(_documentRequest);
+            var disco = await CreateClient().GetDiscoveryDocumentAsync(_documentRequest, cancellationToken);
 
             if (disco.IsError)
                 throw new Exception(disco.Error);
@@ -54,7 +54,7 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
         }
     }
 
-    public async Task<string> GetTokenAsync(string[] scopes, bool forceRefresh = false)
+    public async Task<string> GetTokenAsync(string[] scopes, bool forceRefresh = false, CancellationToken cancellationToken = default)
     {
         var scope = scopes.Length switch
         {
@@ -65,7 +65,7 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
 
         var locker = _locks.GetOrAdd(scope, _ => new SemaphoreSlim(1, 1));
 
-        await locker.WaitAsync();
+        await locker.WaitAsync(cancellationToken);
         try
         {
             if (forceRefresh == false
@@ -76,7 +76,7 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
             }
 
             var httpClient = CreateClient();
-            var disco = await GetDiscoveryAsync();
+            var disco = await GetDiscoveryAsync(cancellationToken);
 
             // try refresh_token
             if (forceRefresh == false
@@ -89,7 +89,7 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
                     ClientId = _options.ClientId,
                     ClientSecret = _options.ClientSecret,
                     RefreshToken = refreshToken,
-                });
+                }, cancellationToken);
 
                 if (refresh.IsError == false)
                 {
@@ -106,7 +106,7 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
                 ClientId = _options.ClientId,
                 ClientSecret = _options.ClientSecret,
                 Scope = scope,
-            });
+            }, cancellationToken);
 
             if (token.IsError)
                 throw HttpRequestException.From(token.ErrorDescription, null, token.HttpStatusCode);
