@@ -21,7 +21,7 @@ public abstract class HttpClientServiceBase : HttpServiceBase
             return;
 
         response.AddCookies(arr);
-        SaveCookies(responseMessage.RequestMessage?.RequestUri!, arr);
+        SaveCookies(responseMessage.RequestMessage?.RequestUri, arr);
     }
 
     protected static void ReadHeader(HttpResponseMessage responseMessage, HttpResponse response)
@@ -332,8 +332,9 @@ public abstract class HttpClientServiceBase : HttpServiceBase
 
                 var responseMessage = await SendAsync(context, currentRequest, currentContent, cts.Token);
                 responses.Add(responseMessage);
-                var responseUri = responseMessage.RequestMessage?.RequestUri!;
-                response.VisitedUris.Add(responseUri);
+
+                var responseUri = responseMessage.RequestMessage?.RequestUri;
+                response.VisitedUris.AddIfNotNull(responseUri);
 
                 if (request.ReadCookies)
                     ReadCookies(responseMessage, response);

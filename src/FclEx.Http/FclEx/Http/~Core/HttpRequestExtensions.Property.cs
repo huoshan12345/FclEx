@@ -107,15 +107,15 @@ partial class HttpRequestExtensions
         return request.SetHeader(HttpHeaderNames.Authorization, "Bearer " + token);
     }
 
-    public static HttpRequest CharSet(this HttpRequest request, string? chartSet)
+    public static HttpRequest CharSet(this HttpRequest request, string? charSet)
     {
-        request.CharSet = chartSet;
+        request.CharSet = charSet;
         return request;
     }
 
-    public static HttpRequest TryCharSet(this HttpRequest request, string? chartSet)
+    public static HttpRequest TryCharSet(this HttpRequest request, string? charSet)
     {
-        request.CharSet ??= chartSet;
+        request.CharSet ??= charSet;
         return request;
     }
 
@@ -125,15 +125,15 @@ partial class HttpRequestExtensions
         return request;
     }
 
-    public static HttpRequest FallbackCharSet(this HttpRequest request, string? chartSet)
+    public static HttpRequest FallbackCharSet(this HttpRequest request, string? charSet)
     {
-        request.FallbackCharSet = chartSet;
+        request.FallbackCharSet = charSet;
         return request;
     }
 
-    public static HttpRequest TryFallbackCharSet(this HttpRequest request, string? chartSet)
+    public static HttpRequest TryFallbackCharSet(this HttpRequest request, string? charSet)
     {
-        request.FallbackCharSet ??= chartSet;
+        request.FallbackCharSet ??= charSet;
         return request;
     }
 

@@ -101,7 +101,9 @@ partial class HttpRequestExtensions
     public static HttpRequest AddHeaderLine(this HttpRequest request, string pair, string separator = ":")
     {
         Check.NotEmpty(pair);
-        var (key, value) = pair.Partition(separator.ToString());
+        Check.NotEmpty(separator);
+
+        var (key, value) = pair.Partition(separator);
         request.AddHeader(key, value);
         return request;
     }

@@ -75,3 +75,31 @@ This file records the improvement suggestions from the review of `src/FclEx.Http
 35. [No change] `src/FclEx.Http/FclEx/Http/~Core/HttpResponseExtensions.cs` and `src/FclEx.Http/FclEx/Http/~Services/HttpServiceExtensions.cs`: download helpers are split across response extensions and service extensions. Consolidate them under one module to reduce discoverability friction.
 
 36. [No change] `src/FclEx.Http/MimeTypes/MimeTypeMap.cs`: MIME lookup is a large standalone table inside the HTTP package. Consider whether it belongs in its own package or a core MIME utility namespace if other packages need it.
+
+37. `src/FclEx.Http/FclEx/Http/~Core/HttpRequestExtensions.Form.cs`: `AddFormParam<T>(this HttpRequest request, string? key, string? value)` has an unused generic type parameter. The type cannot be inferred from the arguments, so this overload is awkward or impossible to call normally. Make it non-generic, matching `AddQueryParam(this HttpRequest request, string? key, string? value)`.
+
+38. `src/FclEx.Http/FclEx/Http/~Core/HttpRequestExtensions.Header.cs`: `AddHeaderLine` validates `pair` but not `separator`, and calls `separator.ToString()` even though `separator` is already a string. Add a null/empty check for `separator` and pass it directly to `Partition`.
+
+39. `src/FclEx.Http/FclEx/Http/~Core/HttpRequestExtensions.Property.cs`: the parameters named `chartSet` should be `charSet` in `CharSet`, `TryCharSet`, `FallbackCharSet`, and `TryFallbackCharSet`. Parameter names are part of the public API experience and generated documentation.
+
+40. `src/FclEx.Http/FclEx/Http/~Core/HttpResponseExtensions.cs`: `GetDownloadInfo` and `LastUri` assume `VisitedUris` is non-empty. A manually constructed response, a partially populated response, or a test double can throw `InvalidOperationException`. Fall back to `response.Request.GetUri()` where possible, or return/throw a clearer error.
+
+41. `src/FclEx.Http/FclEx/Http/~Core/HttpResponseExtensions.cs`: `ReadJsonAs<T>` returns `OperationResult<T>`, but malformed JSON or deserialization failures can still escape as exceptions from `JsonDocument.Parse` or `JsonElement.Deserialize<T>`. Either catch JSON/deserialization exceptions and return an error result, or document that only missing paths are represented as `OperationResult` errors.
+
+42. `src/FclEx.Http/FclEx/Http/~Services/HttpClientServiceBase.cs`: `ReadCookies` and redirect bookkeeping use null-forgiving access to `responseMessage.RequestMessage?.RequestUri!`. Real `HttpClient` responses usually have it, but fake handlers and unusual responses may not. Guard the value or fall back to the current request URI.
+
+43. `src/FclEx.Http/FclEx/Http/~HttpContents/CompressedContent.cs`: the base constructor reads the virtual/abstract `Encoding` property before derived `GZipContent`, `DeflateContent`, or `BrotliContent` property initializers run. This can add a null `Content-Encoding` or throw during construction. Pass the encoding name into the base constructor or use a non-virtual constructor parameter.
+
+44. `src/FclEx.Http/FclEx/Http/~Extensions/HttpContentExtensions.cs`: `ReadAsStreamAsync` casts `ContentLength` to `int` for `MemoryStream` capacity. A content length greater than `int.MaxValue` can overflow before any read happens. Avoid the cast or cap the initial capacity.
+
+45. `src/FclEx.Http/FclEx/Http/~Extensions/CookieExtensions.cs`: `ToSimpleCookie` drops `Cookie.Path`, so a cookie round trip through `SimpleCookie` changes its scope. Preserve the path when creating `SimpleCookie`.
+
+46. `src/FclEx.Http/FclEx/RegexesExtensions.cs` and `src/FclEx.Http/FclEx/Http/~Actions/DefaultJsonpAction.cs`: `CallbackContent` is a greedy, unanchored regex tied to the fixed `_callback` name. It can match too much when extra text or multiple callback calls are present, and it does not make the callback name configurable. Use an anchored parser/regex with a single captured body and align it with the callback name actually sent.
+
+47. `src/FclEx.Http/FclEx/Web/~Actions/UserClientHttpAction.cs`: `EnsureSuccessStatusCode` is a non-virtual get-only property, so derived user-client HTTP actions cannot disable status enforcement even though `HttpAction<T>` exposes this as virtual behavior. Make it virtual or otherwise configurable.
+
+48. `src/FclEx.Http/FclEx/Http/~Auth/ClientCredentialsTokenProvider.cs`: clients created through the `Func<HttpClient>` constructor are not disposed after discovery or token requests. This is fine for `IHttpClientFactory`, but unclear for a factory delegate that returns a new disposable client. Document ownership semantics or dispose only when the provider explicitly owns created clients.
+
+49. `src/FclEx.Http/FclEx/Http/~Utils/IWebProxyEqualityComparer.cs`: `IWebProxyEqualityComparer` is a class with an `I` prefix, which conflicts with normal .NET naming expectations for interfaces. Rename it to something like `WebProxyInterfaceEqualityComparer` or `WebProxyEqualityComparerAdapter`.
+
+50. `src/FclEx.Http/FclEx/Http/~Helpers/HtmlHelper.cs`: `GetMetaRefreshUrl` relies on a very narrow `<meta http-equiv="refresh" content="..."/>` regex. Valid HTML commonly uses different attribute order, single quotes, whitespace, or non-self-closing meta tags. Consider parsing with AngleSharp or broadening the extractor.

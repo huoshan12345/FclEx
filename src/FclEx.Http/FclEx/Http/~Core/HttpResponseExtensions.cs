@@ -54,7 +54,7 @@ public static class HttpResponseExtensions
             : doc.SelectElement(path);
 
         return element.HasValue
-            ? element.Value.Deserialize<T>(options)!
+            ? Operation.Execute(() => element.Value.Deserialize<T>(options)!)
             : Operation.Error<T>("The path does not exist in json: " + path);
     }
 
@@ -82,7 +82,7 @@ public static class HttpResponseExtensions
 
     public static HttpFileDownloadInfo GetDownloadInfo(this HttpResponse response, string? baseName = null, string? extension = null)
     {
-        var uri = response.VisitedUris.Last();
+        var uri = response.LastUri();
         var fileName = uri.Segments
             .Select(m => m.Trim('/'))
             .LastOrDefault(m => m.IsNotEmpty());
@@ -129,7 +129,10 @@ public static class HttpResponseExtensions
         }
     }
 
-    public static Uri LastUri(this HttpResponse response) => response.VisitedUris.Last();
+    public static Uri LastUri(this HttpResponse response)
+    {
+        return response.VisitedUris.LastOrDefault() ?? throw new InvalidOperationException("No visited URIs available.");
+    }
 
     public static HttpResponse AddCookies(this HttpResponse response, IEnumerable<string> cookies)
     {

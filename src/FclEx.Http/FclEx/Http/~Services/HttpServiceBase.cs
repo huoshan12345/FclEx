@@ -125,12 +125,12 @@ public abstract class HttpServiceBase : IHttpService
         }
     }
 
-    protected void SaveCookies(Uri responseUri, IEnumerable<string> cookieStrs)
+    protected void SaveCookies(Uri? responseUri, IEnumerable<string> cookieStrings)
     {
-        if (UseCookie == false)
+        if (UseCookie == false || responseUri is null)
             return;
 
-        foreach (var cookieStr in cookieStrs)
+        foreach (var cookieStr in cookieStrings)
         {
             try
             {

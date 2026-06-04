@@ -7,9 +7,9 @@ public abstract class CompressedContent : HttpContent
     public TimeSpan? Timeout { get; }
     public CancellationToken Token { get; }
     public CompressionLevel CompressionLevel { get; }
-    public abstract string Encoding { get; }
 
-    protected CompressedContent(HttpContent content, CompressionLevel compressionLevel, TimeSpan? timeout = null, int bufferSize = 262144, CancellationToken token = default)
+    protected CompressedContent(HttpContent content, string encoding, CompressionLevel compressionLevel,
+        TimeSpan? timeout = null, int bufferSize = 262144, CancellationToken token = default)
     {
         Content = content;
         Timeout = timeout;
@@ -17,7 +17,7 @@ public abstract class CompressedContent : HttpContent
         BufferSize = bufferSize;
         CompressionLevel = compressionLevel;
         content.Headers.CopyTo(Headers, HttpHeaderNames.ContentLength, HttpHeaderNames.ContentEncoding);
-        Headers.Add(HttpHeaderNames.ContentEncoding, Encoding);
+        Headers.Add(HttpHeaderNames.ContentEncoding, encoding);
     }
 
     protected abstract Stream CreateCompressedStream(Stream stream);
