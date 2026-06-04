@@ -20,6 +20,13 @@ partial class HttpRequestExtensions
         return request;
     }
 
+    /// <summary>
+    /// Adds a header only when the request does not already contain the header key.
+    /// </summary>
+    /// <remarks>
+    /// The <c>Try</c> prefix follows the Microsoft.Extensions.DependencyInjection <c>TryAdd*</c> convention:
+    /// the method is conditional, but still returns the request for fluent chaining.
+    /// </remarks>
     public static HttpRequest TryAddHeader(this HttpRequest request, string key, string? value)
     {
         if (request.Headers.ContainsKey(key) == false)
@@ -29,6 +36,13 @@ partial class HttpRequestExtensions
         return request;
     }
 
+    /// <summary>
+    /// Sets a header only when the request does not already contain the header key.
+    /// </summary>
+    /// <remarks>
+    /// The <c>Try</c> prefix follows the Microsoft.Extensions.DependencyInjection <c>TryAdd*</c> convention:
+    /// the method is conditional, but still returns the request for fluent chaining.
+    /// </remarks>
     public static HttpRequest TrySetHeader(this HttpRequest request, string key, string? value)
     {
         if (request.Headers.ContainsKey(key) == false)
@@ -84,11 +98,11 @@ partial class HttpRequestExtensions
         return request.SetHeader(HttpHeaderNames.Cookie, cookies.JoinWith("; "));
     }
 
-    public static HttpRequest AddHeaderLine(this HttpRequest request, string pair, char separator = ':')
+    public static HttpRequest AddHeaderLine(this HttpRequest request, string pair, string separator = ":")
     {
         Check.NotEmpty(pair);
-        var parts = pair.Split(separator);
-        request.AddHeader(parts[0], pair.Length > 1 ? parts[1] : "");
+        var (key, value) = pair.Partition(separator.ToString());
+        request.AddHeader(key, value);
         return request;
     }
 

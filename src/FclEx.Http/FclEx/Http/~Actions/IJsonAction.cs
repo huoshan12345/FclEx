@@ -51,7 +51,7 @@ public interface IJsonAction<T> : IHttpResponseHandler<T>
     /// <summary>
     /// Converts a JSON context into the final result.
     /// </summary>
-    /// <param name="context">The parsed JSON context. The default pipeline disposes it after this method returns.</param>
+    /// <param name="context">The parsed JSON context.</param>
     /// <returns>The result produced from the selected JSON token.</returns>
     OperationResult<T> GetResult(JsonActionContext context)
 #if NET6_0_OR_GREATER

@@ -165,16 +165,16 @@ internal sealed class PipelineJsonAction<T>(HttpResponse response) : HttpJsonAct
 
 internal sealed class XmlIntAction : XmlAction<int>
 {
-    public string? XmlResultPathValue { get; init; }
+    public string? XPathValue { get; init; }
 
-    public override string? XPath => XmlResultPathValue;
+    public override string? XPath => XPathValue;
 }
 
 internal sealed class XmlStringAction : XmlAction<string>
 {
-    public string? XmlResultPathValue { get; init; }
+    public string? XPathValue { get; init; }
 
-    public override string? XPath => XmlResultPathValue;
+    public override string? XPath => XPathValue;
 }
 
 internal sealed class UnitXmlAction : XmlAction
@@ -197,9 +197,9 @@ internal sealed class PipelineXmlAction<T>(HttpResponse response) : HttpXmlActio
 
 internal sealed class HtmlTextAction : HtmlAction<string>
 {
-    public string? HtmlResultPathValue { get; init; }
+    public string? HtmlSelectorValue { get; init; }
 
-    public override string? HtmlSelector => HtmlResultPathValue;
+    public override string? HtmlSelector => HtmlSelectorValue;
 
     public override OperationResult<string> GetResult(HtmlActionContext context)
     {
@@ -213,11 +213,11 @@ internal sealed class UnitHtmlAction : HtmlAction
 
 internal sealed class TestHtmlFileAction(string filePath) : HtmlFileAction<string>
 {
-    public string? HtmlResultPathValue { get; init; }
+    public string? HtmlSelectorValue { get; init; }
 
     public override string FilePath { get; } = filePath;
 
-    public override string? HtmlSelector => HtmlResultPathValue;
+    public override string? HtmlSelector => HtmlSelectorValue;
 
     public override OperationResult<string> GetResult(HtmlActionContext context)
     {

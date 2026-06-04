@@ -86,6 +86,19 @@ public class JsonActionTests
     }
 
     [Fact]
+    public void CreateContext_UsesJsonPathToSelectResultTokens()
+    {
+        var response = HttpActionTestFixtures.CreateResponse();
+        var action = new JsonCountAction { JsonPathValue = "items[*].id" };
+
+        var result = action.CreateContext(response, """{"items":[{"id":1},{"id":2}]}""");
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Equal("items[*].id", result.Value!.Path);
+        Assert.Equal([1, 2], result.Value.ResultTokens.Select(token => token.GetInt32()));
+    }
+
+    [Fact]
     public void CreateContext_WhenJsonParsingFails_Throws()
     {
         var response = HttpActionTestFixtures.CreateResponse();

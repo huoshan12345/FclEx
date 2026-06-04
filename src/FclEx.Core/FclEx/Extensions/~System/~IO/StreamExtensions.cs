@@ -28,7 +28,7 @@ public static class StreamExtensions
         bool leaveOpen = false,
         CancellationToken token = default)
     {
-        using var reader = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks, bufferSize, leaveOpen);
+        using var reader = new StreamReader(stream, encoding ?? Encoding.UTF8, detectEncodingFromByteOrderMarks, bufferSize, leaveOpen);
         var text = await reader.ReadToEndAsync(token);
         return text;
     }

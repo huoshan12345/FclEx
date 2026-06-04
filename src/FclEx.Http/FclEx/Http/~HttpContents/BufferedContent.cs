@@ -16,11 +16,14 @@ public class BufferedContent : HttpContent
             return this;
 
         var content = new BufferedContent(_buffer);
-        foreach (var header in Headers)
-        {
-            content.Headers.TryAddWithoutValidation(header.Key, header.Value);
-        }
+        CopyHeaders(Headers, content.Headers);
         return content;
+    }
+
+    protected static void CopyHeaders(HttpContentHeaders source, HttpContentHeaders destination)
+    {
+        // Remove Content-Length header to allow HttpContent to compute it based on the buffer length
+        source.CopyTo(destination, HttpHeaderNames.ContentLength);
     }
 
     public static async Task<BufferedContent> CreateAsync(HttpContent inner, TimeSpan? timeout = null, int bufferSize = 256 * 1024, CancellationToken cancellationToken = default)
@@ -30,10 +33,7 @@ public class BufferedContent : HttpContent
             .ConfigureAwait(false);
 
         var content = new BufferedContent(buffer);
-        foreach (var header in inner.Headers)
-        {
-            content.Headers.TryAddWithoutValidation(header.Key, header.Value);
-        }
+        CopyHeaders(inner.Headers, content.Headers);
         return content;
     }
 
@@ -50,7 +50,7 @@ public class BufferedContent : HttpContent
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing) 
+        if (disposing)
             _disposed = true;
 
         base.Dispose(disposing);

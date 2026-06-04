@@ -15,8 +15,8 @@ public abstract class CompressedContent : HttpContent
         Timeout = timeout;
         Token = token;
         BufferSize = bufferSize;
-        content.Headers.CopyTo(Headers);
         CompressionLevel = compressionLevel;
+        content.Headers.CopyTo(Headers, HttpHeaderNames.ContentLength, HttpHeaderNames.ContentEncoding);
         Headers.Add(HttpHeaderNames.ContentEncoding, Encoding);
     }
 

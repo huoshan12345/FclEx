@@ -28,21 +28,21 @@ This file records the improvement suggestions from the review of `src/FclEx.Http
 
 12. [Resolved] `src/FclEx.Http/FclEx/Http/~Actions/JsonActionContext.cs`: `ResultToken` returns `JsonElement?`, but `FirstOrDefault()` on value-type `JsonElement` can produce a default element that is not a meaningful null. Use an explicit `TryGetResultToken(out JsonElement token)`, a cached array, or a nullable projection that distinguishes no match.
 
-13. `src/FclEx.Http/FclEx/Http/~Core/HttpRequestExtensions.Header.cs`: `TrySetHeader` is named like a .NET `Try*` method but returns `HttpRequest` and only sets the header when it is missing. Rename to something like `SetHeaderIfMissing` or `SetDefaultHeader`.
+13. [Resolved] `src/FclEx.Http/FclEx/Http/~Core/HttpRequestExtensions.Header.cs`: `TrySetHeader` is named like a .NET `Try*` method but returns `HttpRequest` and only sets the header when it is missing. Rename to something like `SetHeaderIfMissing` or `SetDefaultHeader`. Kept the `Try*` name to match the Microsoft.Extensions.DependencyInjection `TryAdd*` convention and documented that it means conditional fluent mutation, not a Boolean-returning try pattern.
 
-14. `src/FclEx.Http/FclEx/Http/~Core/HttpRequestExtensions.Property.cs`: `TryCharSet` currently overwrites `CharSet`, so the name does not match behavior. Either make it conditional like `TryFallbackCharSet`, or rename it.
+14. [Resolved] `src/FclEx.Http/FclEx/Http/~Core/HttpRequestExtensions.Property.cs`: `TryCharSet` currently overwrites `CharSet`, so the name does not match behavior. Either make it conditional like `TryFallbackCharSet`, or rename it.
 
-15. `src/FclEx.Http/FclEx/Http/~Core/HttpRequestExtensions.Header.cs`: `AddHeaderPair` should be renamed to `AddHeaderLine` or `ParseAndAddHeader`. Its implementation splits on every separator and should split only on the first separator so values containing `:` remain intact.
+15. [Resolved] `src/FclEx.Http/FclEx/Http/~Core/HttpRequestExtensions.Header.cs`: `AddHeaderPair` should be renamed to `AddHeaderLine` or `ParseAndAddHeader`. Its implementation splits on every separator and should split only on the first separator so values containing `:` remain intact.
 
-16. `src/FclEx.Http/FclEx/Http/~Core/HttpRequestExtensions.Header.cs`: `AcceptCompress` only sets `Accept-Encoding: gzip`. Rename it to `AcceptGZip`, or make `AcceptCompress` include supported encodings such as `br`, `gzip`, and `deflate`.
+16. [Resolved] `src/FclEx.Http/FclEx/Http/~Core/HttpRequestExtensions.Header.cs`: `AcceptCompress` only sets `Accept-Encoding: gzip`. Rename it to `AcceptGZip`, or make `AcceptCompress` include supported encodings such as `br`, `gzip`, and `deflate`.
 
-17. `src/FclEx.Http/FclEx/Http/~Extensions/HttpClientExtensions.cs`: extension methods named `SendAsync` return response strings or JSON values, which differs significantly from BCL `HttpClient.SendAsync`. Rename to `SendStringAsync`, `SendJsonAsync`, or similar, and add `CancellationToken` parameters.
+17. [Removed] `src/FclEx.Http/FclEx/Http/~Extensions/HttpClientExtensions.cs`: extension methods named `SendAsync` return response strings or JSON values, which differs significantly from BCL `HttpClient.SendAsync`. Rename to `SendStringAsync`, `SendJsonAsync`, or similar, and add `CancellationToken` parameters.
 
-18. `src/FclEx.Http/FclEx/Http/~Actions`: `JsonResultPath`, `HtmlResultPath`, and `XmlResultPath` use "Path" for JSON path, CSS selector, and XPath. Rename to clearer names such as `JsonPath`, `HtmlSelector`, and `XPath`.
+18. [Resolved] `src/FclEx.Http/FclEx/Http/~Actions`: `JsonResultPath`, `HtmlResultPath`, and `XmlResultPath` use "Path" for JSON path, CSS selector, and XPath. Rename to clearer names such as `JsonPath`, `HtmlSelector`, and `XPath`.
 
-19. `src/FclEx.Http/FclEx/RegexesExtensions.cs`: `Regexes.CallbackName => CallbackName` is ambiguous-looking. Qualify it as `RegexesExtensions.CallbackName`.
+19. [No change] `src/FclEx.Http/FclEx/RegexesExtensions.cs`: `Regexes.CallbackName => CallbackName` is ambiguous-looking. Qualify it as `RegexesExtensions.CallbackName`.
 
-20. `src/FclEx.Http`: the package mixes transport, retry, AngleSharp helpers, web-client abstractions, testing helpers, cookies, authentication, and MIME lookup. Consider splitting into focused packages such as `FclEx.Http`, `FclEx.Http.Actions`, `FclEx.AngleSharp`, and `FclEx.WebClient`.
+20. [Deferred] `src/FclEx.Http`: the package mixes transport, retry, AngleSharp helpers, web-client abstractions, testing helpers, cookies, authentication, and MIME lookup. Consider splitting into focused packages such as `FclEx.Http`, `FclEx.Http.Actions`, `FclEx.AngleSharp`, and `FclEx.WebClient`.
 
 21. `src/FclEx.Http/FclEx/Web/Testing`: testing helpers are included in the production package. Move them to test projects or a separate testing package.
 

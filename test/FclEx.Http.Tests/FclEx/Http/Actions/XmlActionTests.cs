@@ -6,7 +6,7 @@ public class XmlActionTests
     public void GetResult_WhenPathMatches_DeserializesResultElement()
     {
         var response = HttpActionTestFixtures.CreateResponse("<root><value>42</value></root>");
-        var action = new XmlIntAction { XmlResultPathValue = "/root/value" };
+        var action = new XmlIntAction { XPathValue = "/root/value" };
 
         var result = action.GetResult(response);
 
@@ -30,7 +30,7 @@ public class XmlActionTests
     public void GetResult_WhenTargetTypeIsString_ReturnsElementValue()
     {
         var response = HttpActionTestFixtures.CreateResponse("<root><name>fclex</name></root>");
-        var action = new XmlStringAction { XmlResultPathValue = "/root/name" };
+        var action = new XmlStringAction { XPathValue = "/root/name" };
 
         var result = action.GetResult(response);
 
@@ -42,7 +42,7 @@ public class XmlActionTests
     public void GetResult_WhenPathDoesNotMatch_ReturnsError()
     {
         var response = HttpActionTestFixtures.CreateResponse("<root><value>42</value></root>");
-        var action = new XmlIntAction { XmlResultPathValue = "/root/missing" };
+        var action = new XmlIntAction { XPathValue = "/root/missing" };
 
         var result = action.GetResult(response);
 
@@ -77,14 +77,28 @@ public class XmlActionTests
     public void CreateContext_ExposesDocumentAndSelectedElements()
     {
         var response = HttpActionTestFixtures.CreateResponse();
-        var action = new XmlIntAction { XmlResultPathValue = "/root/value" };
+        var action = new XmlIntAction { XPathValue = "/root/value" };
 
         var result = action.CreateContext(response, "<root><value>42</value><value>43</value></root>");
 
         Assert.True(result.IsSuccess, result.Exception?.ToString());
         Assert.Equal("root", result.Value!.Document.Root!.Name.LocalName);
+        Assert.Equal("/root/value", result.Value.Path);
         Assert.Equal(new[] { 42, 43 }, result.Value.ResultElements.Select(x => int.Parse(x.Value)).ToArray());
         Assert.Equal("42", result.Value.ResultElement!.Value);
+    }
+
+    [Fact]
+    public void CreateContext_UsesXPathToSelectResultElements()
+    {
+        var response = HttpActionTestFixtures.CreateResponse();
+        var action = new XmlIntAction { XPathValue = "/root/items/item/value" };
+
+        var result = action.CreateContext(response, "<root><items><item><value>7</value></item></items></root>");
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Equal("/root/items/item/value", result.Value!.Path);
+        Assert.Equal("7", result.Value.ResultElement!.Value);
     }
 
     [Fact]

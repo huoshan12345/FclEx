@@ -6,7 +6,7 @@ public class HtmlFileActionTests
     public async Task ExecuteAsync_ReadsFileAndUsesSelector()
     {
         var path = HttpActionTestFixtures.CreateTempFile("<html><body><h1>Title</h1></body></html>");
-        var action = new TestHtmlFileAction(path) { HtmlResultPathValue = "h1" };
+        var action = new TestHtmlFileAction(path) { HtmlSelectorValue = "h1" };
 
         try
         {
@@ -56,7 +56,7 @@ public class HtmlFileActionTests
     public async Task ExecuteAsync_WhenCreateContextThrows_IsCaughtByPipeline()
     {
         var path = HttpActionTestFixtures.CreateTempFile("<html><body><h1>Title</h1></body></html>");
-        var action = new TestHtmlFileAction(path) { HtmlResultPathValue = "[" };
+        var action = new TestHtmlFileAction(path) { HtmlSelectorValue = "[" };
 
         try
         {

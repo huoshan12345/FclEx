@@ -1,16 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace FclEx.Http;
 
 public static class HttpContentHeadersExtensions
 {
-    public static void CopyTo(this HttpContentHeaders headers, HttpContentHeaders other)
+    public static void CopyTo(this HttpContentHeaders headers, HttpContentHeaders other, params string[] excludeHeaders)
     {
         foreach (var (key, values) in headers)
-            other.Add(key, values);
+        {
+            if (excludeHeaders.Contains(key, StringComparer.OrdinalIgnoreCase))
+                continue;
+
+            other.TryAddWithoutValidation(key, values);
+        }
     }
 }
