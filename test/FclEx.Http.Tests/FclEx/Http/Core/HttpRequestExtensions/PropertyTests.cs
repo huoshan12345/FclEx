@@ -116,6 +116,20 @@ public class PropertyTests : HttpServerTests
     }
 
     [Theory]
+    [InlineData(nameof(global::FclEx.Http.HttpRequestExtensions.CharSet))]
+    [InlineData(nameof(global::FclEx.Http.HttpRequestExtensions.TryCharSet))]
+    [InlineData(nameof(global::FclEx.Http.HttpRequestExtensions.FallbackCharSet))]
+    [InlineData(nameof(global::FclEx.Http.HttpRequestExtensions.TryFallbackCharSet))]
+    public void CharSetMethods_UseCorrectParameterName(string methodName)
+    {
+        var method = typeof(global::FclEx.Http.HttpRequestExtensions)
+            .GetMethods()
+            .Single(m => m.Name == methodName && m.GetParameters().Length == 2);
+
+        Assert.Equal("charSet", method.GetParameters()[1].Name);
+    }
+
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public async Task DetectCharSet_Test(bool value)

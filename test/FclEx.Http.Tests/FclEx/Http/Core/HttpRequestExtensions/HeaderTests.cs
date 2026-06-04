@@ -216,6 +216,16 @@ public class HeaderTests
         Assert.Equal(expectedValue, request.Headers.Get(expectedKey));
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData(null)]
+    public void AddHeaderLine_WhenSeparatorIsEmpty_Throws(string? separator)
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        Assert.ThrowsAny<ArgumentException>(() => request.AddHeaderLine("X-Trace:abc", separator!));
+    }
+
     [Fact]
     public void AcceptCompress_WhenEncodingsAreOmitted_UsesDefaultHandlerEncodings()
     {

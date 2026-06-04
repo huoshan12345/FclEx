@@ -25,6 +25,48 @@ public class HttpResponseTests : HttpServerTests
     }
 
     [Fact]
+    public void HttpResponse_ReadJsonAs_WhenJsonIsMalformed_ReturnsError()
+    {
+        var response = CreateResponse("""{"data":}""");
+
+        var actual = response.ReadJsonAs<int>("data.count");
+
+        Assert.True(actual.IsError);
+        Assert.Contains(actual.Exception.EnumerateInner(), m => m is JsonException);
+    }
+
+    [Fact]
+    public void HttpResponse_ReadJsonAs_WhenDeserializationFails_ReturnsError()
+    {
+        var response = CreateResponse("""{"data":{"count":"abc"}}""");
+
+        var actual = response.ReadJsonAs<int>("data.count");
+
+        Assert.True(actual.IsError);
+        Assert.Contains(actual.Exception.EnumerateInner(), m => m is JsonException);
+    }
+
+    [Fact]
+    public void LastUri_WhenVisitedUrisIsEmpty_ThrowsClearError()
+    {
+        var response = CreateResponse("", addVisitedUri: false);
+
+        var ex = Assert.Throws<InvalidOperationException>(() => response.LastUri());
+
+        Assert.Contains("No visited URIs", ex.Message);
+    }
+
+    [Fact]
+    public void GetDownloadInfo_WhenVisitedUrisIsEmpty_ThrowsClearError()
+    {
+        var response = CreateResponse("", addVisitedUri: false);
+
+        var ex = Assert.Throws<InvalidOperationException>(() => response.GetDownloadInfo());
+
+        Assert.Contains("No visited URIs", ex.Message);
+    }
+
+    [Fact]
     public void GetDownloadInfo_WhenFileNameEndsWithExtension_RemovesExactExtensionOnly()
     {
         var response = CreateResponse("", "https://example.com/download/report.zip.zip");
@@ -99,10 +141,13 @@ public class HttpResponseTests : HttpServerTests
         Assert.Equal(expected, actual);
     }
 
-    private static HttpResponse CreateResponse(string responseString, string requestUri = "https://example.com/api")
+    private static HttpResponse CreateResponse(string responseString, string requestUri = "https://example.com/api", bool addVisitedUri = true)
     {
         var response = new HttpResponse(HttpRequest.Get(requestUri));
-        response.VisitedUris.Add(new Uri(requestUri));
+        if (addVisitedUri)
+        {
+            response.VisitedUris.Add(new Uri(requestUri));
+        }
         typeof(HttpResponse)
             .GetProperty(nameof(HttpResponse.ResponseString))!
             .SetValue(response, responseString);

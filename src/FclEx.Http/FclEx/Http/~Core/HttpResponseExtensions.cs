@@ -39,23 +39,27 @@ public static class HttpResponseExtensions
             return (ex, response.Elapsed);
 
         var str = response.ResponseString;
-        if (!str.IsPossibleJson())
-            return Operation.Error<T>("Can not parse json from empty string");
+        return str.IsPossibleJson()
+            ? Operation.Execute(() => Deserialize(str, path, options))
+            : Operation.Error<T>("Can not parse json from non-JSON string");
 
-        using var doc = JsonDocument.Parse(str, new()
+        static T Deserialize(string str, string? path, JsonSerializerOptions? options)
         {
-            AllowTrailingCommas = options?.AllowTrailingCommas ?? false,
-            CommentHandling = options?.ReadCommentHandling ?? JsonCommentHandling.Disallow,
-            MaxDepth = options?.MaxDepth ?? 0,
-        });
+            using var doc = JsonDocument.Parse(str, new()
+            {
+                AllowTrailingCommas = options?.AllowTrailingCommas ?? false,
+                CommentHandling = options?.ReadCommentHandling ?? JsonCommentHandling.Disallow,
+                MaxDepth = options?.MaxDepth ?? 0,
+            });
 
-        var element = path.IsNullOrEmpty()
-            ? doc.RootElement
-            : doc.SelectElement(path);
+            var element = path.IsNullOrEmpty()
+                ? doc.RootElement
+                : doc.SelectElement(path);
 
-        return element.HasValue
-            ? Operation.Execute(() => element.Value.Deserialize<T>(options)!)
-            : Operation.Error<T>("The path does not exist in json: " + path);
+            return element.HasValue
+                ? element.Value.Deserialize<T>(options)!
+                : throw new InvalidOperationException("The path does not exist in json: " + path);
+        }
     }
 
     public static async Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, DownloadOptions options)
