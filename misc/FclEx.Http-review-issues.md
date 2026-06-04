@@ -8,13 +8,13 @@ This file records the improvement suggestions from the review of `src/FclEx.Http
 
 2. [Resolved] `src/FclEx.Http/FclEx/Http/~Auth/AuthenticationHandler.cs`: after receiving `401 Unauthorized`, the handler resends the same `HttpRequestMessage`. `HttpClient` does not allow sending the same request instance twice. Clone the request, or refresh the token and let an outer retry pipeline create a new request.
 
-3. `src/FclEx.Http/FclEx/Http/~Helpers/HttpClientHelper.cs`: `CreateSocketsHttpHandler` ignores all TLS certificate validation by default through `RemoteCertificateValidationCallback = (_, _, _, _) => true`. Make secure validation the default and require explicit opt-in for insecure/test scenarios.
+3. [Resolved] `src/FclEx.Http/FclEx/Http/~Helpers/HttpClientHelper.cs`: `CreateSocketsHttpHandler` ignores all TLS certificate validation by default through `RemoteCertificateValidationCallback = (_, _, _, _) => true`. Make secure validation the default and require explicit opt-in for insecure/test scenarios.
 
-4. `src/FclEx.Http/FclEx/Http/~Auth/ClientCredentialsTokenProvider.cs`: OIDC discovery disables HTTPS, endpoint, and keyset validation by default. These should be safe by default, with explicit options for test or nonstandard identity servers.
+4. [Resolved] `src/FclEx.Http/FclEx/Http/~Auth/ClientCredentialsTokenProvider.cs`: OIDC discovery disables HTTPS, endpoint, and keyset validation by default. These should be safe by default, with explicit options for test or nonstandard identity servers.
 
-5. `src/FclEx.Http/FclEx/Http/~Services/AbstractHttpClientService.cs`: request retries rebuild `HttpRequestMessage` but may reuse the same `HttpContent`. Disposing the first request can dispose the content, so later retries with a body may fail. Store a content factory or buffer reusable content before retries.
+5. [Resolved] `src/FclEx.Http/FclEx/Http/~Services/HttpClientServiceBase.cs`: request retries rebuild `HttpRequestMessage` but may reuse the same `HttpContent`. Disposing the first request can dispose the content, so later retries with a body may fail. Store a content factory or buffer reusable content before retries.
 
-6. `src/FclEx.Http/FclEx/Http/~Services/AbstractHttpClientService.cs`: manual redirect handling always creates a new GET request. This loses method and body semantics for `307` and `308`, and there is no maximum redirect count or loop detection.
+6. [Resolved] `src/FclEx.Http/FclEx/Http/~Services/HttpClientServiceBase.cs`: manual redirect handling always creates a new GET request. This loses method and body semantics for `307` and `308`, and there is no maximum redirect count or loop detection.
 
 7. `src/FclEx.Http/FclEx/Http/~Core/HttpQualityValueList.cs`: `FindPreferred` only searches the highest weight group. If the highest weighted value is not a candidate, lower weighted valid candidates are ignored. Traverse all accepted q-values according to weight and candidate preference.
 

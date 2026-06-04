@@ -16,6 +16,10 @@ public class BufferedContent : HttpContent
             return this;
 
         var content = new BufferedContent(_buffer);
+        foreach (var header in Headers)
+        {
+            content.Headers.TryAddWithoutValidation(header.Key, header.Value);
+        }
         return content;
     }
 

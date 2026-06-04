@@ -32,6 +32,7 @@ public partial class HttpRequest
     public HttpContentType ResponseContentType { get; set; } = HttpContentType.String;
     public bool ReadContent { get; set; } = true;
     public bool ReadCookies { get; set; } = true;
+    public int MaxRedirectCount { get; set; } = 50;
 
     /// <summary>
     /// Indicates whether a default User-Agent header should be applied

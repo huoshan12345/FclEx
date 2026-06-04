@@ -12,7 +12,7 @@ public abstract class HttpServiceBase : IHttpService
         GC.SuppressFinalize(this);
     }
 
-    protected abstract Task ExecuteAsyncInternal(HttpRequest httpRequest, HttpResponse httpResponse, CancellationToken token);
+    protected abstract Task ExecuteAsyncInternal(HttpRequest request, HttpResponse response, CancellationToken token);
 
     public async Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken token = default)
     {

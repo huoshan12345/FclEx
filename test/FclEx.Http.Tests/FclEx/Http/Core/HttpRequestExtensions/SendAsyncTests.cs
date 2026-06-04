@@ -159,7 +159,7 @@ public class SendAsyncTests : HttpServerTests
             .SendAsync(TestHttp)
             .ThrowIfError();
 
-        Assert.Equal(2, response.RedirectUris.Count);
+        Assert.Equal(2, response.VisitedUris.Count);
         Assert.Equal(url, response.LastUri().ToString());
     }
 }

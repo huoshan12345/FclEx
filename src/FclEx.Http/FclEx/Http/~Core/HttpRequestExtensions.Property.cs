@@ -8,6 +8,12 @@ partial class HttpRequestExtensions
         return request;
     }
 
+    public static HttpRequest MaxRedirectCount(this HttpRequest request, int value)
+    {
+        request.MaxRedirectCount = value;
+        return request;
+    }
+
     public static HttpRequest ReadCookies(this HttpRequest request, bool value)
     {
         request.ReadCookies = value;

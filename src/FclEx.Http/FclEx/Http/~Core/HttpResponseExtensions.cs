@@ -82,7 +82,7 @@ public static class HttpResponseExtensions
 
     public static HttpFileDownloadInfo GetDownloadInfo(this HttpResponse response, string? baseName = null, string? extension = null)
     {
-        var uri = response.RedirectUris.Last();
+        var uri = response.VisitedUris.Last();
         var fileName = uri.Segments
             .Select(m => m.Trim('/'))
             .LastOrDefault(m => m.IsNotEmpty());
@@ -129,7 +129,7 @@ public static class HttpResponseExtensions
         }
     }
 
-    public static Uri LastUri(this HttpResponse response) => response.RedirectUris.Last();
+    public static Uri LastUri(this HttpResponse response) => response.VisitedUris.Last();
 
     public static Task<HttpResponse> Error(this Task<HttpResponse> task, Action<Exception> action)
     {

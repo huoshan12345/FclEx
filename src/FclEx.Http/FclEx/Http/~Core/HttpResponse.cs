@@ -24,7 +24,7 @@ public class HttpResponse
     public DateTimeOffset EndTime => StartTime + Elapsed;
     public MultiValueDictionary<string, string?> Headers { get; } = new(StringComparer.OrdinalIgnoreCase);
     public HttpStatusCode StatusCode { get; internal set; }
-    public List<Uri> RedirectUris { get; } = [];
+    public List<Uri> VisitedUris { get; } = [];
 
     public static HttpResponse FromError(HttpRequest request, Exception ex) => new(request) { Exception = ex };
 }

@@ -8,6 +8,19 @@ public static class HttpStatusCodeExtensions
     public static bool IsClientError(this HttpStatusCode code) => (int)code >= 400 && (int)code <= 499;
     public static bool IsServerError(this HttpStatusCode code) => (int)code >= 500 && (int)code <= 599;
 
+    /// <summary>
+    /// Returns whether this redirect status code preserves the original HTTP method and request content.
+    /// </summary>
+    /// <remarks>
+    /// This applies to 307 Temporary Redirect and 308 Permanent Redirect.<br/>
+    /// Unlike 301, 302, and 303, these status codes require the redirected request to use the same method
+    /// and keep the original request content.
+    /// </remarks>
+    public static bool PreservesMethodAndContent(this HttpStatusCode statusCode)
+    {
+        return (int)statusCode is 307 or 308;
+    }
+
     public static HttpStatusCodeType GetCodeType(this HttpStatusCode code)
     {
         var digit = ((int)code) / 100;
