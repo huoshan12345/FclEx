@@ -40,7 +40,7 @@ This file records the improvement suggestions from the review of `src/FclEx.Http
 
 18. [Resolved] `src/FclEx.Http/FclEx/Http/~Actions`: `JsonResultPath`, `HtmlResultPath`, and `XmlResultPath` use "Path" for JSON path, CSS selector, and XPath. Rename to clearer names such as `JsonPath`, `HtmlSelector`, and `XPath`.
 
-19. [No change] `src/FclEx.Http/FclEx/RegexesExtensions.cs`: `Regexes.CallbackName => CallbackName` is ambiguous-looking. Qualify it as `RegexesExtensions.CallbackName`.
+19. [Removed] `src/FclEx.Http/FclEx/RegexesExtensions.cs`: `Regexes.CallbackName => CallbackName` is ambiguous-looking. Qualify it as `RegexesExtensions.CallbackName`. This JSONP-specific helper was removed from `Regexes`.
 
 20. [Deferred] `src/FclEx.Http`: the package mixes transport, retry, AngleSharp helpers, web-client abstractions, testing helpers, cookies, authentication, and MIME lookup. Consider splitting into focused packages such as `FclEx.Http`, `FclEx.Http.Actions`, `FclEx.AngleSharp`, and `FclEx.WebClient`.
 
@@ -94,7 +94,7 @@ This file records the improvement suggestions from the review of `src/FclEx.Http
 
 45. [Resolved] `src/FclEx.Http/FclEx/Http/~Extensions/CookieExtensions.cs`: `ToSimpleCookie` drops `Cookie.Path`, so a cookie round trip through `SimpleCookie` changes its scope. Preserve the path when creating `SimpleCookie`.
 
-46. [Deferred] `src/FclEx.Http/FclEx/RegexesExtensions.cs` and `src/FclEx.Http/FclEx/Http/~Actions/DefaultJsonpAction.cs`: `CallbackContent` is a greedy, unanchored regex tied to the fixed `_callback` name. It can match too much when extra text or multiple callback calls are present, and it does not make the callback name configurable. Use an anchored parser/regex with a single captured body and align it with the callback name actually sent.
+46. [Resolved] `src/FclEx.Http/FclEx/RegexesExtensions.cs` and `src/FclEx.Http/FclEx/Http/~Actions/DefaultJsonpAction.cs`: `CallbackContent` is a greedy, unanchored regex tied to the fixed `_callback` name. It can match too much when extra text or multiple callback calls are present, and it does not make the callback name configurable. Use an anchored parser/regex with a single captured body and align it with the callback name actually sent.
 
 47. [Resolved] `src/FclEx.Http/FclEx/Web/~Actions/UserClientHttpAction.cs`: `EnsureSuccessStatusCode` is a non-virtual get-only property, so derived user-client HTTP actions cannot disable status enforcement even though `HttpAction<T>` exposes this as virtual behavior. Make it virtual or otherwise configurable.
 

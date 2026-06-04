@@ -16,6 +16,9 @@ public abstract class JsonpAction<T> : HttpAction<T>, IJsonpAction<T>
     public abstract string CallbackParamName { get; }
 
     /// <inheritdoc />
+    public virtual string CallbackName => DefaultJsonpAction.DefaultCallbackName;
+
+    /// <inheritdoc />
     public override void ModifyRequest(HttpRequest request)
         => DefaultJsonpAction.ModifyRequest(this, request);
 

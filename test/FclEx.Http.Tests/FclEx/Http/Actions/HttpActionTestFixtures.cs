@@ -233,6 +233,10 @@ internal sealed class TestJsonpAction(HttpResponse? response = null) : JsonpActi
 
     public override string CallbackParamName { get; } = "cb";
 
+    public string CallbackNameValue { get; init; } = DefaultJsonpAction.DefaultCallbackName;
+
+    public override string CallbackName => CallbackNameValue;
+
     public override Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken token = default)
     {
         return Task.FromResult(response ?? HttpActionTestFixtures.CreateResponse());
