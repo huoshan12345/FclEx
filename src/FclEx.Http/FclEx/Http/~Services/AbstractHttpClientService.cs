@@ -173,7 +173,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         return charSet == null ? null : Encoding.GetEncoding(charSet);
     }
 
-    protected static HttpRequestMessage BuildHttpRequest(HttpRequest request, Uri? baseAddress, CookieContainer cc, CancellationToken token)
+    protected static HttpRequestMessage BuildHttpRequest(HttpRequest request, HttpContent? content, Uri? baseAddress, CookieContainer cc, CancellationToken token)
     {
         var uri = request.GetUri();
         var requestMessage = new HttpRequestMessage(request.Method, uri)
@@ -186,7 +186,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
 
         if (request.Method.IsGet() == false)
         {
-            if (request.Content is { } content)
+            if (content is not null)
             {
                 requestMessage.Content = content;
             }
@@ -256,16 +256,18 @@ public abstract class AbstractHttpClientService : AbstractHttpService
     {
         var (client, policy, _) = context;
 
-        if (request.Content is { } content and not BufferedContent)
+        var content = request.Content;
+
+        if (content is not null and not BufferedContent)
         {
-            request.Content = await BufferedContent.CreateAsync(content, request.ReadBufferTimeout, request.BufferSize, token);
+            content = await BufferedContent.CreateAsync(content, request.ReadBufferTimeout, request.BufferSize, token);
         }
 
         var response = await policy.ExecuteAsync(async () =>
         {
             // Create request in every retry to avoid the following error:
             // The request message was already sent. Cannot send the same request message multiple times.
-            using var httpRequest = BuildHttpRequest(request, client.BaseAddress, _cookieContainer, token);
+            using var httpRequest = BuildHttpRequest(request, content, client.BaseAddress, _cookieContainer, token);
             using var cts = token.WithTimeout(request.ReadHeadersTimeout);
             return await client.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cts.Token);
         });
