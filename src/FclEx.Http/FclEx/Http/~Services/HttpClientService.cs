@@ -3,6 +3,7 @@ namespace FclEx.Http;
 public class HttpClientService : HttpClientServiceBase
 {
     private static readonly Lazy<HttpClientService> _default = new(() => new(new HttpClientOptions()) { UseCookie = false });
+
     public static HttpClientService Default => _default.Value;
 
     protected HttpClientOptions _options;
@@ -17,7 +18,7 @@ public class HttpClientService : HttpClientServiceBase
         HttpClient client;
         if (_httpClientProvider is null)
         {
-            client = provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(HttpClientService));
+            client = provider.GetRequiredService<IHttpClientFactory>().CreateClient();
         }
         else
         {
