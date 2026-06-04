@@ -308,12 +308,11 @@ public partial class GetDataMembersTests
     [Fact]
     public void IsInitOnly_Should_Work()
     {
-        var normal = typeof(InitOnlyTestClass)
-            .GetProperty(nameof(InitOnlyTestClass.NormalProp))!;
+        var normal = typeof(InitOnlyTestClass).GetProperty(nameof(InitOnlyTestClass.NormalProp));
+        var init = typeof(InitOnlyTestClass).GetProperty(nameof(InitOnlyTestClass.InitProp));
 
-        var init = typeof(InitOnlyTestClass)
-            .GetProperty(nameof(InitOnlyTestClass.InitProp))!;
-
+        Assert.NotNull(normal);
+        Assert.NotNull(init);
         Assert.False(normal.IsInitOnly());
         Assert.True(init.IsInitOnly());
     }
