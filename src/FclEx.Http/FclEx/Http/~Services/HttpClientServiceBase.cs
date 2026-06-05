@@ -204,7 +204,7 @@ public abstract class HttpClientServiceBase : HttpServiceBase
             request.BasicAuth(request.UserName, request.Password);
         }
 
-        foreach (var (key, value) in request.Headers.Where(h => h.Key.Length > 0 && NotAddHeaderNames.Contains(h.Key) == false))
+        foreach (var (key, value) in request.Headers.Where(h => h.Key.Length > 0 && NotAddHeaderNames.Contains(h.Key, StringComparer.OrdinalIgnoreCase) == false))
         {
             if (request.AddHeaderWithoutValidation)
             {
