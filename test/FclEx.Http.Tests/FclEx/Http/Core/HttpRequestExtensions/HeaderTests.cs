@@ -251,4 +251,15 @@ public class HeaderTests
         Assert.Same(request, result);
         Assert.Equal("zstd, gzip", request.Headers.Get(HttpHeaderNames.AcceptEncoding));
     }
+
+    [Fact]
+    public void AcceptChinese_SetsChineseAcceptLanguageHeader()
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        var result = request.AcceptChinese();
+
+        Assert.Same(request, result);
+        Assert.Equal("zh-CN,zh;q=0.8", request.Headers.Get(HttpHeaderNames.AcceptLanguage));
+    }
 }

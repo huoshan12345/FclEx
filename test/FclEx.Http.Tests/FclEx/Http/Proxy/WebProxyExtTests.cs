@@ -2,6 +2,15 @@ namespace FclEx.Http.Proxy;
 
 public class WebProxyExtTests
 {
+    [Fact]
+    public void WebProxyHelper_IsStaticUtilityClass()
+    {
+        var type = typeof(WebProxyHelper);
+
+        Assert.True(type.IsAbstract);
+        Assert.True(type.IsSealed);
+    }
+
     [Theory]
     [InlineData("userName", "password")]
     [InlineData("user@Name", "pass@word")]

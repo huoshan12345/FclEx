@@ -33,7 +33,46 @@ public class HttpServiceExtensionsBatchDownloadTests
 
         Assert.All(results, result => Assert.True(result.IsSuccess, result.Exception?.ToString()));
         Assert.Equal(1, content.SerializeCount);
+        Assert.True(content.IsDisposed);
         Assert.Equal(["payload", "payload"], handler.RequestBodies);
+    }
+
+    [Fact]
+    public async Task BatchDownloadAsync_WhenDisposeContentIsFalse_KeepsSourceContentAlive()
+    {
+        var handler = new CaptureBodyHandler();
+        using var service = HttpClientService.Create(
+            () => new HttpClient(handler),
+            disposeHttpClient: true,
+            options: new()
+            {
+                RetryPolicyOptions = new()
+                {
+                    RetryCount = 0,
+                },
+            },
+            useCookie: false);
+        var content = new SingleReadContent("payload");
+
+        var results = await service.BatchDownloadAsync(
+            [
+                new Uri("https://example.com/one"),
+                new Uri("https://example.com/two"),
+            ],
+            new()
+            {
+                Method = HttpMethod.Post,
+                Content = content,
+                DisposeContent = false,
+                ExecuteInParallel = false,
+            });
+
+        Assert.All(results, result => Assert.True(result.IsSuccess, result.Exception?.ToString()));
+        Assert.Equal(1, content.SerializeCount);
+        Assert.False(content.IsDisposed);
+        Assert.Equal(["payload", "payload"], handler.RequestBodies);
+
+        content.Dispose();
     }
 
     private sealed class CaptureBodyHandler : HttpMessageHandler
@@ -58,6 +97,8 @@ public class HttpServiceExtensionsBatchDownloadTests
     {
         public int SerializeCount { get; private set; }
 
+        public bool IsDisposed { get; private set; }
+
         protected override async Task SerializeToStreamAsync(Stream stream, TransportContext? context)
         {
             SerializeCount++;
@@ -74,6 +115,14 @@ public class HttpServiceExtensionsBatchDownloadTests
         {
             length = Encoding.UTF8.GetByteCount(value);
             return true;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                IsDisposed = true;
+
+            base.Dispose(disposing);
         }
     }
 }

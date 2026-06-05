@@ -64,6 +64,7 @@ public static class HttpResponseExtensions
 
     public static async Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, DownloadOptions options)
     {
+        HttpContent? contentToDispose = null;
         var request = new HttpRequest(options.Uri, options.Method)
             .ReadAsBytes()
             .ReadHeadersTimeout(options.ReadHeadersTimeout)
@@ -73,7 +74,20 @@ public static class HttpResponseExtensions
 
         if (options.Content is { } content)
         {
-            request.Content(content);
+            if (options.DisposeContent)
+            {
+                request.Content(content);
+            }
+            else
+            {
+                var bufferedContent = content is BufferedContent buffered
+                    ? buffered
+                    : await BufferedContent.CreateAsync(content, options.ReadBufferTimeout, options.BufferSize, options.CancellationToken);
+                contentToDispose = ReferenceEquals(bufferedContent, content)
+                    ? bufferedContent.Clone()
+                    : bufferedContent;
+                request.Content(contentToDispose);
+            }
         }
 
         try
@@ -86,8 +100,10 @@ public static class HttpResponseExtensions
         }
         finally
         {
-            if (options.DisposeContent) 
+            if (options.DisposeContent)
                 options.Content?.Dispose();
+
+            contentToDispose?.Dispose();
         }
     }
 

@@ -189,6 +189,17 @@ public class ElementExtensionsTests
         Assert.True(result.IsError);
     }
 
+    [Fact]
+    public void QueryHref_WhenHrefIsInvalid_ReturnsError()
+    {
+        var document = HtmlHelper.Parse("""<html><body><a href="http://[">broken</a></body></html>""");
+
+        var result = document.Body.QueryHref("a", new Uri("https://example.com"));
+
+        Assert.True(result.IsError);
+        Assert.IsAssignableFrom<UriFormatException>(result.Exception);
+    }
+
     [Theory]
     [InlineData("""<meta content="0; url=/next" http-equiv="refresh">""", "/next")]
     [InlineData("""<meta http-equiv='REFRESH' content='5; URL="/quoted path"'>""", "/quoted path")]

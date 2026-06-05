@@ -18,6 +18,19 @@ public partial class HttpClientServiceTests
     }
 
     [Fact]
+    public void RegexesCharSet_CannotBeMutatedThroughListInterfaces()
+    {
+        var regexes = Regexes.CharSet;
+
+        Assert.IsAssignableFrom<IReadOnlyList<System.Text.RegularExpressions.Regex>>(regexes);
+
+        if (regexes is IList<System.Text.RegularExpressions.Regex> mutableList)
+        {
+            Assert.Throws<NotSupportedException>(() => mutableList[0] = new System.Text.RegularExpressions.Regex(".*"));
+        }
+    }
+
+    [Fact]
     public async Task SendAsync_WhenDetectedMetaCharsetIsInvalidAndInvalidCharsetsAreIgnored_FallsBackToUtf8()
     {
         using var service = CreateService(new HtmlResponseHandler("""<meta charset="not-a-charset"><p>ok</p>"""));

@@ -137,6 +137,36 @@ public partial class HttpClientServiceTests
         Assert.Equal("target=cookie", handler.Requests[1].Cookie);
     }
 
+    [Fact]
+    public async Task SendAsync_WhenRedirecting_DropsTargetSpecificHeaders()
+    {
+        var handler = new RedirectHandler((_, index) => index == 1
+            ? CreateRedirectResponse(HttpStatusCode.Found, "https://other.example.com/target")
+            : CreateOkResponse());
+        using var service = CreateService(handler);
+
+        var response = await HttpRequest.Get("https://example.com/start")
+            .BearerAuth("token")
+            .SetCookies("source=cookie")
+            .Origin("https://origin.example.com")
+            .Referrer("https://example.com/referrer")
+            .SetHeader(HttpHeaderNames.Host, "example.com")
+            .SendAsync(service);
+
+        Assert.False(response.IsError, response.Exception?.ToString());
+        Assert.Equal(2, handler.Requests.Count);
+        Assert.Equal("Bearer token", handler.Requests[0].Authorization);
+        Assert.Equal("source=cookie", handler.Requests[0].Cookie);
+        Assert.Equal("https://origin.example.com", handler.Requests[0].Origin);
+        Assert.Equal("https://example.com/referrer", handler.Requests[0].Referrer);
+        Assert.Equal("example.com", handler.Requests[0].Host);
+        Assert.Null(handler.Requests[1].Authorization);
+        Assert.Null(handler.Requests[1].Cookie);
+        Assert.Null(handler.Requests[1].Origin);
+        Assert.Null(handler.Requests[1].Referrer);
+        Assert.Null(handler.Requests[1].Host);
+    }
+
     private static HttpClientService CreateService(HttpMessageHandler handler, bool useCookie = false)
     {
         return HttpClientService.Create(
@@ -188,13 +218,36 @@ public partial class HttpClientServiceTests
             var cookie = request.Headers.TryGetValues(HttpHeaderNames.Cookie, out var cookies)
                 ? cookies.JoinWith("; ")
                 : null;
-            Requests.Add(new(request.Method, request.RequestUri!, body, request.Headers.Authorization?.ToString(), cookie));
+            Requests.Add(new(
+                request.Method,
+                request.RequestUri!,
+                body,
+                request.Headers.Authorization?.ToString(),
+                cookie,
+                GetHeader(request, HttpHeaderNames.Origin),
+                GetHeader(request, HttpHeaderNames.Referrer),
+                request.Headers.Host));
 
             var response = responseFactory(request, Requests.Count);
             response.RequestMessage ??= request;
             return response;
         }
+
+        private static string? GetHeader(HttpRequestMessage request, string name)
+        {
+            return request.Headers.TryGetValues(name, out var values)
+                ? values.FirstOrDefault()
+                : null;
+        }
     }
 
-    private readonly record struct SentRequest(HttpMethod Method, Uri Uri, string? Body, string? Authorization, string? Cookie);
+    private readonly record struct SentRequest(
+        HttpMethod Method,
+        Uri Uri,
+        string? Body,
+        string? Authorization,
+        string? Cookie,
+        string? Origin,
+        string? Referrer,
+        string? Host);
 }
