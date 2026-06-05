@@ -3,17 +3,16 @@ namespace FclEx.Http;
 public class HttpClientOptionsEqualityComparer : IEqualityComparer<HttpClientOptions>
 {
     public static readonly HttpClientOptionsEqualityComparer Instance = new();
-    private static readonly IEqualityComparer<SocketsHttpHandlerOptions> HandlerOptionsComparer
-        = SocketsHttpHandlerOptionsEqualityComparer.Instance;
-    private static readonly IEqualityComparer<HttpClientRetryPolicyOptions> RetryPolicyOptionsComparer
-    = EqualityComparer<HttpClientRetryPolicyOptions>.Default;
+
+    private static IEqualityComparer<SocketsHttpHandlerOptions> HandlerOptionsComparer
+        => SocketsHttpHandlerOptionsEqualityComparer.Instance;
+    private static IEqualityComparer<HttpClientRetryPolicyOptions> RetryPolicyOptionsComparer
+        => EqualityComparer<HttpClientRetryPolicyOptions>.Default;
 
     public bool Equals(HttpClientOptions? x, HttpClientOptions? y)
     {
-        if (ReferenceEquals(x, y)) return true;
-        if (x is null) return false;
-        if (y is null) return false;
-        if (x.GetType() != y.GetType()) return false;
+        if (ComparerHelper.TryEquals(x, y, out var result))
+            return result.Value;
 
         return HandlerOptionsComparer.Equals(x.HandlerOptions, y.HandlerOptions)
                && RetryPolicyOptionsComparer.Equals(x.RetryPolicyOptions, y.RetryPolicyOptions)
@@ -28,7 +27,7 @@ public class HttpClientOptionsEqualityComparer : IEqualityComparer<HttpClientOpt
     public int GetHashCode(HttpClientOptions obj)
     {
         var code = HashCode.Combine(
-            obj.BaseAddress?.AbsoluteUri,
+            StringComparer.OrdinalIgnoreCase.GetHashCodeOrDefault(obj.BaseAddress?.AbsoluteUri),
 #if NET6_0_OR_GREATER
             obj.HttpVersion,
             obj.HttpVersionPolicy,

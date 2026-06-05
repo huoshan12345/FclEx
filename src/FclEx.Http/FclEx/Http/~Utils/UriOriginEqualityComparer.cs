@@ -2,12 +2,12 @@ namespace FclEx.Http;
 
 public class UriOriginEqualityComparer : IEqualityComparer<Uri>
 {
+    public static readonly UriOriginEqualityComparer Instance = new();
+
     public bool Equals(Uri? x, Uri? y)
     {
-        if (ReferenceEquals(x, y)) return true;
-        if (x is null) return false;
-        if (y is null) return false;
-        if (x.GetType() != y.GetType()) return false;
+        if (ComparerHelper.TryEquals(x, y, out var result))
+            return result.Value;
 
         return string.Equals(x.Host, y.Host, StringComparison.OrdinalIgnoreCase)
                && x.Port == y.Port
@@ -18,6 +18,4 @@ public class UriOriginEqualityComparer : IEqualityComparer<Uri>
     {
         return HashCode.Combine(obj.Host.ToLower(), obj.Port, obj.Scheme.ToLower());
     }
-
-    public static readonly UriOriginEqualityComparer Instance = new();
 }

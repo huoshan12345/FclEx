@@ -26,7 +26,10 @@ public abstract class CompressedContent : HttpContent
 
     protected override async Task SerializeToStreamAsync(Stream stream, TransportContext? context)
     {
-        var contentStream = await Content.ReadAsStreamAsync(Token);
+#if NET6_0_OR_GREATER
+        await
+#endif
+        using var contentStream = await Content.ReadAsStreamAsync(Token);
 #if NET6_0_OR_GREATER
         await
 #endif

@@ -1,3 +1,4 @@
+// ReSharper disable InheritdocInvalidUsage
 namespace FclEx.Http;
 
 /// <summary>

@@ -64,7 +64,7 @@ public static class HttpRequestMessageExtensions
         // 3. Clone custom request options/properties
         foreach (var (key, value) in request.Options)
         {
-            clone.Options.Set(new HttpRequestOptionsKey<object?>(key), value);
+            clone.Options.Set(key, value);
         }
 #else
         // 3. Clone custom request options/properties

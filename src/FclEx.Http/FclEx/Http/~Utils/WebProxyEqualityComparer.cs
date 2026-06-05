@@ -2,22 +2,24 @@ namespace FclEx.Http;
 
 public class WebProxyEqualityComparer : IEqualityComparer<WebProxy>
 {
-    private static readonly IEqualityComparer<IEnumerable<string>> BypassListComparer
-        = EnumerableEqualityComparer.StringOrdinalIgnoreCase;
-    private static readonly IEqualityComparer<Uri> AddressComparer
-        = UriOriginEqualityComparer.Instance;
+    public static readonly WebProxyEqualityComparer Instance = new();
+
+    private static IEqualityComparer<IEnumerable<string>> BypassListComparer
+        => EnumerableEqualityComparer.StringOrdinalIgnoreCase;
+    private static IEqualityComparer<Uri> AddressComparer
+        => UriOriginEqualityComparer.Instance;
+    private static IEqualityComparer<ICredentials> CredentialsComparer
+        => CredentialsEqualityComparer.Instance;
 
     public bool Equals(WebProxy? x, WebProxy? y)
     {
-        if (ReferenceEquals(x, y)) return true;
-        if (x is null) return false;
-        if (y is null) return false;
-        if (x.GetType() != y.GetType()) return false;
+        if (ComparerHelper.TryEquals(x, y, out var result))
+            return result.Value;
 
         return AddressComparer.Equals(x.Address, y.Address)
                && BypassListComparer.Equals(x.BypassList, y.BypassList)
                && x.BypassProxyOnLocal == y.BypassProxyOnLocal
-               && Equals(x.Credentials, y.Credentials)
+               && CredentialsComparer.Equals(x.Credentials, y.Credentials)
                && x.UseDefaultCredentials == y.UseDefaultCredentials;
     }
 
@@ -25,14 +27,13 @@ public class WebProxyEqualityComparer : IEqualityComparer<WebProxy>
     {
         var addressCode = AddressComparer.GetHashCodeOrDefault(obj.Address);
         var bypassListCode = BypassListComparer.GetHashCodeOrDefault(obj.BypassList);
+        var credentialsCode = CredentialsComparer.GetHashCodeOrDefault(obj.Credentials);
 
         return HashCode.Combine(
             addressCode,
             bypassListCode,
             obj.BypassProxyOnLocal,
-            obj.Credentials,
+            credentialsCode,
             obj.UseDefaultCredentials);
     }
-
-    public static readonly WebProxyEqualityComparer Instance = new();
 }

@@ -13,10 +13,9 @@ public class DefaultOptionsHandler : DelegatingHandler
 
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        var options = (IDictionary<string, object?>)request.Options;
-        foreach (var option in Options)
+        foreach (var (key, value) in Options)
         {
-            options[option.Key] = option.Value;
+            request.Options.Set(key, value);
         }
 
         return base.SendAsync(request, cancellationToken);

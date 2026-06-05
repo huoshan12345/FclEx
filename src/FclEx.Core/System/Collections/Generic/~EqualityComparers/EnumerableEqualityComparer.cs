@@ -23,9 +23,6 @@ public class EnumerableEqualityComparer<T>(IEqualityComparer<T>? itemComparer = 
         if (ComparerHelper.TryEquals(x, y, out var result))
             return result.Value;
 
-        if (x.GetType() != y.GetType())
-            return false;
-
 #if NET6_0_OR_GREATER
         if (x.TryGetNonEnumeratedCount(out var count1)
             && y.TryGetNonEnumeratedCount(out var count2))

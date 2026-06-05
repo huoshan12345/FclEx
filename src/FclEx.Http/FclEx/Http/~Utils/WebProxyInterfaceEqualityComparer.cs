@@ -2,27 +2,27 @@ namespace FclEx.Http;
 
 public class WebProxyInterfaceEqualityComparer : IEqualityComparer<IWebProxy>
 {
+    public static readonly WebProxyInterfaceEqualityComparer Instance = new();
+
+    private static IEqualityComparer<WebProxy> WebProxyComparer
+        => WebProxyEqualityComparer.Instance;
+
     public bool Equals(IWebProxy? x, IWebProxy? y)
     {
-        if (ReferenceEquals(x, y)) return true;
-        if (x is null) return false;
-        if (y is null) return false;
-        if (x.GetType() != y.GetType()) return false;
+        if (ComparerHelper.TryEquals(x, y, out var result))
+            return result.Value;
 
-        if (x is WebProxy webProxy)
-        {
-            return WebProxyEqualityComparer.Instance.Equals(webProxy, y.CastTo<WebProxy>());
-        }
+        if (x is WebProxy wx && y is WebProxy wy)
+            return WebProxyComparer.Equals(wx, wy);
 
         return false;
     }
 
     public int GetHashCode(IWebProxy obj)
     {
-        return obj is WebProxy webProxy
-            ? WebProxyEqualityComparer.Instance.GetHashCode(webProxy)
-            : obj.GetHashCode();
-    }
+        if (obj is WebProxy webProxy)
+            return WebProxyComparer.GetHashCode(webProxy);
 
-    public static readonly WebProxyInterfaceEqualityComparer Instance = new();
+        return obj.GetHashCode();
+    }
 }

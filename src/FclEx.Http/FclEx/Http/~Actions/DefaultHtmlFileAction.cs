@@ -25,9 +25,11 @@ public static class DefaultHtmlFileAction
     {
         var text = await File.ReadAllTextAsync(action.FilePath, token);
 
-        var response = new HttpResponse(request);
-        PropertyInfos.HttpResponse_ResponseString.SetValue(response, text);
-        PropertyInfos.HttpResponse_StatusCode.SetValue(response, HttpStatusCode.OK);
+        var response = new HttpResponse(request)
+        {
+            ResponseString = text,
+            StatusCode = HttpStatusCode.OK
+        };
         return response;
     }
 }
