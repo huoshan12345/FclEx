@@ -29,4 +29,10 @@ public record SocketsHttpHandlerOptions // use record so that with expression ca
     /// Gets or sets how long a connection can be idle in the pool to be considered reusable.
     /// </summary>
     public TimeSpan PooledConnectionIdleTimeout { get; set; } = TimeSpan.FromMinutes(2);
+
+    /// <summary>
+    /// Whether to disable server certificate validation.
+    /// This should only be enabled in development or trusted test environments.
+    /// </summary>
+    public bool DisableServerCertificateValidation { get; set; }
 }

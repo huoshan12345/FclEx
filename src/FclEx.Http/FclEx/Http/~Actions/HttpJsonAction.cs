@@ -7,7 +7,7 @@ namespace FclEx.Http;
 public abstract class HttpJsonAction<T>: HttpAction<T>, IJsonAction<T>
 {
     /// <inheritdoc />
-    public virtual string? JsonResultPath { get; } = null;
+    public virtual string? JsonPath { get; } = null;
 
     /// <inheritdoc />
     public override OperationResult<T> GetResult(HttpResponse response)

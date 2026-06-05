@@ -1,26 +1,23 @@
 namespace FclEx.Http;
 
-public readonly record struct HttpClientContext(
-    HttpClient Client,
-    IAsyncPolicy<HttpResponseMessage> Policy,
-    bool DisposeHttpClient) : IDisposable
-{
-    public void Dispose()
-    {
-        if (DisposeHttpClient)
-            Client.Dispose();
-    }
-}
-
-public abstract class AbstractHttpClientService : AbstractHttpService
+public abstract class HttpClientServiceBase : HttpServiceBase
 {
     protected static readonly Encoding DefaultEncoding = Encoding.UTF8;
 
     protected static readonly string[] NotAddHeaderNames =
     [
         HttpHeaderNames.ContentType,
-        HttpHeaderNames.Cookie,
         HttpHeaderNames.ContentLength,
+        HttpHeaderNames.Cookie,
+    ];
+
+    protected static readonly string[] NotCopyHeaderNames =
+    [
+        HttpHeaderNames.Authorization,
+        HttpHeaderNames.Cookie,
+        HttpHeaderNames.Origin,
+        HttpHeaderNames.Host,
+        HttpHeaderNames.Referrer,
     ];
 
     protected void ReadCookies(HttpResponseMessage responseMessage, HttpResponse response)
@@ -33,7 +30,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             return;
 
         response.AddCookies(arr);
-        SaveCookies(responseMessage.RequestMessage?.RequestUri!, arr);
+        SaveCookies(responseMessage.RequestMessage?.RequestUri, arr);
     }
 
     protected static void ReadHeader(HttpResponseMessage responseMessage, HttpResponse response)
@@ -149,7 +146,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
                     var media = headers.ContentType?.MediaType;
                     if (media != null && media.Contains("html")) // html or xhtml
                     {
-                        encoding = DetectCharSet(buffer);
+                        encoding = DetectCharSet(buffer, ignoreInvalidCharSet);
                     }
                 }
             }
@@ -162,7 +159,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         return (str, encoding);
     }
 
-    private static Encoding? DetectCharSet(Span<byte> data)
+    protected virtual Encoding? DetectCharSet(Span<byte> data, bool ignoreInvalidCharSet)
     {
         if (data.Length == 0)
             return null;
@@ -170,10 +167,10 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         var len = Math.Min(1024, data.Length);
         var prefix = Encoding.Default.GetString(data[..len]);
         var charSet = HtmlHelper.GetMetaCharSet(prefix);
-        return charSet == null ? null : Encoding.GetEncoding(charSet);
+        return GetEncodingFromCharSet(charSet, ignoreInvalidCharSet);
     }
 
-    protected static HttpRequestMessage BuildHttpRequest(HttpRequest request, Uri? baseAddress, CookieContainer cc, CancellationToken token)
+    protected internal static HttpRequestMessage BuildHttpRequest(HttpRequest request, BufferedContent? content, Uri? baseAddress, CookieContainer cc, CancellationToken token)
     {
         var uri = request.GetUri();
         var requestMessage = new HttpRequestMessage(request.Method, uri)
@@ -186,9 +183,9 @@ public abstract class AbstractHttpClientService : AbstractHttpService
 
         if (request.Method.IsGet() == false)
         {
-            if (request.Content is { } content)
+            if (content is not null)
             {
-                requestMessage.Content = content;
+                requestMessage.Content = content.CloneIfDisposed();
             }
             else if (request.Form.IsNotEmpty())
             {
@@ -216,7 +213,7 @@ public abstract class AbstractHttpClientService : AbstractHttpService
             request.BasicAuth(request.UserName, request.Password);
         }
 
-        foreach (var (key, value) in request.Headers.Where(h => h.Key.Length > 0 && NotAddHeaderNames.Contains(h.Key) == false))
+        foreach (var (key, value) in request.Headers.Where(h => h.Key.Length > 0 && NotAddHeaderNames.Contains(h.Key, StringComparer.OrdinalIgnoreCase) == false))
         {
             if (request.AddHeaderWithoutValidation)
             {
@@ -252,61 +249,149 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         return requestMessage;
     }
 
-    protected virtual async Task<HttpResponseMessage> SendAsync(HttpClientContext context, HttpRequest request, CancellationToken token)
+    protected virtual async Task<HttpResponseMessage> SendAsync(HttpClientContext context, HttpRequest request, BufferedContent? bufferedContent, CancellationToken token)
     {
         var (client, policy, _) = context;
         var response = await policy.ExecuteAsync(async () =>
         {
             // Create request in every retry to avoid the following error:
             // The request message was already sent. Cannot send the same request message multiple times.
-            using var httpRequest = BuildHttpRequest(request, client.BaseAddress, _cookieContainer, token);
+            using var httpRequest = BuildHttpRequest(request, bufferedContent, client.BaseAddress, _cookieContainer, token);
             using var cts = token.WithTimeout(request.ReadHeadersTimeout);
             return await client.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cts.Token);
         });
         return response;
     }
 
+    protected internal static HttpRequest CreateRedirectRequest(HttpRequest request, HttpResponseMessage response, Uri uri)
+    {
+        var preserveMethodAndContent = response.StatusCode.PreservesMethodAndContent();
+        var method = preserveMethodAndContent || request.Method == HttpMethod.Head
+            ? request.Method
+            : HttpMethod.Get;
+
+        var redirectRequest = HttpRequest.Create(uri, method);
+        CopyRedirectOptions(request, redirectRequest, preserveMethodAndContent);
+        return redirectRequest;
+    }
+
+    private static void CopyRedirectOptions(HttpRequest source, HttpRequest target, bool preserveContent)
+    {
+        target.EnsureSuccessStatusCode = source.EnsureSuccessStatusCode;
+        target.Version = source.Version;
+#if NET6_0_OR_GREATER
+        target.VersionPolicy = source.VersionPolicy;
+#endif
+        target.BufferSize = source.BufferSize;
+        target.TotalTimeout = source.TotalTimeout;
+        target.ReadBufferTimeout = source.ReadBufferTimeout;
+        target.ReadHeadersTimeout = source.ReadHeadersTimeout;
+        target.MediaType = preserveContent ? source.MediaType : null;
+        target.CharSet = preserveContent ? source.CharSet : null;
+        target.DetectCharSet = source.DetectCharSet;
+        target.FallbackCharSet = source.FallbackCharSet;
+        target.IgnoreInvalidCharSet = source.IgnoreInvalidCharSet;
+        target.CompressionMethod = preserveContent ? source.CompressionMethod : CompressionMethod.None;
+        target.CompressionLevel = preserveContent ? source.CompressionLevel : CompressionLevel.NoCompression;
+        target.ResponseContentType = source.ResponseContentType;
+        target.ReadContent = source.ReadContent;
+        target.ReadCookies = source.ReadCookies;
+        target.UseDefaultUserAgent = source.UseDefaultUserAgent;
+        target.AddHeaderWithoutValidation = source.AddHeaderWithoutValidation;
+        target.MaxRedirectCount = source.MaxRedirectCount;
+        target.AllowInsecureRedirects = source.AllowInsecureRedirects;
+
+        foreach (var (key, value) in source.Headers)
+        {
+            if (NotCopyHeaderNames.Contains(key, StringComparer.OrdinalIgnoreCase) == false)
+            {
+                target.Headers.Add(key, value);
+            }
+        }
+
+        if (preserveContent)
+        {
+            target.Form.Add(source.Form);
+        }
+    }
+
+    protected internal static bool IsRedirectAllowed(HttpRequest request, HttpResponseMessage response, Uri uri)
+    {
+        if (request.AllowInsecureRedirects)
+            return true;
+
+        var sourceUri = response.RequestMessage?.RequestUri ?? request.GetUri();
+        return sourceUri.IsAbsoluteUri == false
+               || uri.IsAbsoluteUri == false
+               || sourceUri.Scheme.EqualsIgnoreCase(Uri.UriSchemeHttps) == false
+               || uri.Scheme.EqualsIgnoreCase(Uri.UriSchemeHttp) == false;
+    }
+
     // ReSharper disable once MemberCanBeProtected.Global
     protected internal abstract HttpClientContext CreateHttpClientContext();
 
-    protected override async Task ExecuteAsyncInternal(HttpRequest httpRequest, HttpResponse httpResponse, CancellationToken token)
+    protected override async Task ExecuteAsyncInternal(HttpRequest request, HttpResponse response, CancellationToken token)
     {
-        var cts = token.WithTimeout(httpRequest.TotalTimeout);
+        var cts = token.WithTimeout(request.TotalTimeout);
         var context = CreateHttpClientContext();
+        var bufferedContent = await request.CreateBufferedContentAsync(cts.Token);
         var responses = new List<HttpResponseMessage>();
+
         try
         {
-            var currentRequest = httpRequest;
+            var currentContent = bufferedContent;
+            var currentRequest = request;
+            var redirectCount = 0;
+
             while (true)
             {
                 if (Logger.IsEnabled(LogLevel.Trace))
                     Logger.LogTrace("{Dump}", currentRequest.Dump(this));
 
-                var response = await SendAsync(context, currentRequest, cts.Token);
-                responses.Add(response);
-                httpResponse.RedirectUris.Add(response.RequestMessage?.RequestUri!);
+                var responseMessage = await SendAsync(context, currentRequest, currentContent, cts.Token);
+                responses.Add(responseMessage);
 
-                if (httpRequest.ReadCookies)
-                    ReadCookies(response, httpResponse);
+                var responseUri = responseMessage.RequestMessage?.RequestUri;
+                response.VisitedUris.AddIfNotNull(responseUri);
 
-                if (response.TryGetRedirection(out var uri) == false)
+                if (request.ReadCookies)
+                    ReadCookies(responseMessage, response);
+
+                if (responseMessage.TryGetRedirection(out var uri) == false)
                     break;
 
-                currentRequest = HttpRequest.Get(uri).SetHeader(currentRequest.Headers);
+                if (IsRedirectAllowed(currentRequest, responseMessage, uri) == false)
+                    break;
+
+                if (request.MaxRedirectCount <= 0)
+                    break;
+
+                if (response.VisitedUris.Contains(uri))
+                    throw new InvalidOperationException("Redirect loop detected.");
+
+                if (redirectCount >= request.MaxRedirectCount)
+                    throw new InvalidOperationException($"The maximum number of redirects has been reached: {request.MaxRedirectCount}.");
+
+                redirectCount++;
+
+                currentRequest = CreateRedirectRequest(currentRequest, responseMessage, uri);
+                currentContent = responseMessage.StatusCode.PreservesMethodAndContent()
+                    ? bufferedContent
+                    : null;
             }
 
             var last = responses.Last(); // responses should not be empty
-            httpResponse.StatusCode = last.StatusCode;
-            ReadHeader(last, httpResponse);
+            response.StatusCode = last.StatusCode;
+            ReadHeader(last, response);
 
-            if (httpRequest.EnsureSuccessStatusCode)
+            if (request.EnsureSuccessStatusCode)
                 last.EnsureSuccess();
 
-            if (httpRequest.ReadContent)
+            if (request.ReadContent)
             {
-                await ReadContentAsync(last, httpResponse, cts.Token);
+                await ReadContentAsync(last, response, cts.Token);
 
-                if (httpRequest.ResponseContentType == HttpContentType.Stream)
+                if (request.ResponseContentType == HttpContentType.Stream)
                 {
                     // the last will be disposed in HttpResponse.ResponseStream instead of here.
                     responses.Remove(last);
@@ -315,6 +400,9 @@ public abstract class AbstractHttpClientService : AbstractHttpService
         }
         finally
         {
+            request.Content?.Dispose();
+            bufferedContent?.Dispose();
+
             cts.Dispose();
             responses.ForEach(m => m.Dispose());
             responses.Clear();

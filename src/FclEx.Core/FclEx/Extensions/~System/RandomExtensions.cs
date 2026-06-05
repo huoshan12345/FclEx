@@ -338,8 +338,35 @@ public static class RandomExtensions
         Check.NotNull(random);
         Check.NotEmpty(list);
 
-        var i = random.Next(0, list.Count - 1);
+        // the upper bound is exclusive, so no need to minus 1.
+        var i = random.Next(0, list.Count);
         return list[i];
+    }
+
+    public static T Sample<T>(this Random random, IEnumerable<T> source)
+    {
+        Check.NotNull(random);
+        Check.NotNull(source);
+
+        using var enumerator = source.GetEnumerator();
+
+        if (enumerator.MoveNext() == false)
+            throw new ArgumentException("The source sequence must not be empty.", nameof(source));
+
+        var selected = enumerator.Current;
+        var count = 1;
+
+        while (enumerator.MoveNext())
+        {
+            count++;
+
+            if (random.Next(count) == 0)
+            {
+                selected = enumerator.Current;
+            }
+        }
+
+        return selected;
     }
 
     public static void Shuffle<T>(this Random random, IList<T> list)
@@ -353,7 +380,6 @@ public static class RandomExtensions
             (list[i], list[index]) = (list[index], list[i]);
         }
     }
-
 
     extension(Random)
     {

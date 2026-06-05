@@ -23,31 +23,156 @@ public static class ElementExtensions
         if (element?.QuerySelector(formSelector) is not { } form)
             return null;
 
-        if (form.GetAttribute("action") is not { } action)
+        var baseUri = GetBaseUri(element, uri);
+        var action = form.GetAttribute("action");
+        var submitUri = string.IsNullOrEmpty(action)
+            ? baseUri
+            : new Uri(action, UriKind.RelativeOrAbsolute);
+        if (submitUri == null)
             return null;
 
-
-        var info = new FormData(new Uri(action, UriKind.RelativeOrAbsolute));
+        var info = new FormData(submitUri)
+        {
+            Method = GetFormMethod(form)
+        };
 
         if (!info.SubmitUri.IsAbsoluteUri)
         {
-            var baseUri = uri ?? (element.BaseUrl is { } u ? (Uri)u : null);
             if (baseUri != null)
             {
                 info.SubmitUri = new Uri(baseUri, info.SubmitUri);
             }
         }
 
-        foreach (var input in form.QuerySelectorAll("input").OfType<IHtmlInputElement>().Where(m => m.Type == "hidden"))
+        foreach (var control in form.QuerySelectorAll("input, select, textarea"))
         {
-            var name = input.GetAttribute("name");
-            if (name.IsNullOrEmpty())
+            if (!IsSuccessfulControl(control))
                 continue;
 
-            info.Params[name] = input.GetAttribute("value");
+            AddControlValue(info.Params, control);
         }
 
         return info;
+    }
+
+    private static HttpMethod GetFormMethod(IElement form)
+    {
+        var method = form.GetAttribute("method");
+        return string.Equals(method, "post", StringComparison.OrdinalIgnoreCase)
+            ? HttpMethod.Post
+            : HttpMethod.Get;
+    }
+
+    private static Uri? GetBaseUri(IElement element, Uri? uri)
+    {
+        if (uri != null)
+            return uri;
+
+        return element.BaseUrl is { } baseUrl
+            ? new Uri(baseUrl.ToString(), UriKind.Absolute)
+            : null;
+    }
+
+    private static bool IsSuccessfulControl(IElement control)
+    {
+        var name = control.GetAttribute("name");
+        if (name.IsNullOrEmpty())
+            return false;
+
+        if (control.HasAttribute("disabled"))
+            return false;
+
+        if (control.Ancestors<IElement>().Any(fieldset => IsDisabledFieldSetAncestor(fieldset, control)))
+            return false;
+
+        if (control is IHtmlInputElement)
+        {
+            var type = GetInputType(control);
+            if (type is "button" or "submit" or "reset" or "image" or "file")
+                return false;
+
+            if (type is "checkbox" or "radio")
+                return control.HasAttribute("checked");
+        }
+
+        return true;
+    }
+
+    private static bool IsDisabledFieldSetAncestor(IElement fieldset, IElement control)
+    {
+        if (fieldset.LocalName.EqualsIgnoreCase("fieldset") == false || fieldset.HasAttribute("disabled") == false)
+            return false;
+
+        var firstLegend = fieldset.Children.FirstOrDefault(m => m.LocalName.EqualsIgnoreCase("legend"));
+        return firstLegend == null || control.Ancestors<IElement>().Contains(firstLegend) == false;
+    }
+
+    private static void AddControlValue(UriParams parameters, IElement control)
+    {
+        var name = control.GetAttribute("name");
+        if (name.IsNullOrEmpty())
+            return;
+
+        if (control is IHtmlInputElement)
+        {
+            parameters.Add(name, GetInputValue(control));
+            return;
+        }
+
+        if (control is IHtmlTextAreaElement)
+        {
+            parameters.Add(name, control.TextContent);
+            return;
+        }
+
+        if (control is IHtmlSelectElement)
+        {
+            AddSelectValue(parameters, name, control);
+        }
+    }
+
+    private static string? GetInputValue(IElement input)
+    {
+        var type = GetInputType(input);
+        var value = input.GetAttribute("value");
+        return type is "checkbox" or "radio"
+            ? string.IsNullOrEmpty(value) ? "on" : value
+            : value ?? "";
+    }
+
+    private static string GetInputType(IElement input)
+    {
+        var rawType = input.GetAttribute("type");
+        return string.IsNullOrEmpty(rawType)
+            ? "text"
+            : rawType!.ToLowerInvariant();
+    }
+
+    private static void AddSelectValue(UriParams parameters, string name, IElement select)
+    {
+        var options = select.QuerySelectorAll("option").ToArray();
+        var selectedOptions = options
+            .Where(m => m.HasAttribute("selected"))
+            .ToArray();
+        var enabledSelectedOptions = selectedOptions
+            .Where(IsEnabledOption)
+            .ToArray();
+
+        if (select.HasAttribute("multiple") == false && selectedOptions.Length == 0)
+        {
+            enabledSelectedOptions = options.Where(IsEnabledOption).Take(1).ToArray();
+        }
+
+        foreach (var option in enabledSelectedOptions)
+        {
+            parameters.Add(name, option.GetAttribute("value") ?? option.TextContent);
+        }
+    }
+
+    private static bool IsEnabledOption(IElement option)
+    {
+        return option.HasAttribute("disabled") == false
+               && option.Ancestors<IElement>().Any(m => m.LocalName.EqualsIgnoreCase("optgroup") && m.HasAttribute("disabled")) == false;
     }
 
     public static OperationResult<(IElement Element, T Data)> QueryData<T>(this IElement? root, string?[] selectors, Func<IElement, T> func)
@@ -123,11 +248,16 @@ public static class ElementExtensions
             return element.Exception;
 
         var (e, href) = element.Value;
-        var u = baseUri is null
-            ? new Uri(href, UriKind.RelativeOrAbsolute)
-            : new Uri(baseUri, href);
-        var uriCreator = new UriCreator(u);
-        return (e, uriCreator);
+        return Operation.Execute(() => Create(e, href, baseUri));
+
+        static (IElement Element, UriCreator Href) Create(IElement e, string href, Uri? baseUri)
+        {
+            var u = baseUri is null
+                ? new Uri(href, UriKind.RelativeOrAbsolute)
+                : new Uri(baseUri, href);
+            var uriCreator = new UriCreator(u);
+            return (e, uriCreator);
+        }
     }
 
     public static OperationResult<(IElement Element, UriCreator Href)> QueryHref(this IElement? root, string? selector, Uri? baseUri = null)
@@ -137,7 +267,51 @@ public static class ElementExtensions
 
     public static OperationResult<string> QueryId(this IElement? root, string prefix)
     {
-        return root.QueryAttribute($"*[id^='{prefix}']", "id").MapValue(m => m.Attribute.SkipUntil(prefix));
+        return root.QueryAttribute($"*[id^='{EscapeCssString(prefix)}']", "id").MapValue(m => m.Attribute.SkipUntil(prefix));
+    }
+
+    private static string EscapeCssString(string value)
+    {
+        using var disposable = StringBuilderHelper.GetCached();
+        var builder = disposable.Value;
+
+        foreach (var c in value)
+        {
+            switch (c)
+            {
+                case '\\':
+                case '\'':
+                    builder.Append('\\');
+                    builder.Append(c);
+                    break;
+                case '\r':
+                    builder.Append("\\D ");
+                    break;
+                case '\n':
+                    builder.Append("\\A ");
+                    break;
+                case '\f':
+                    builder.Append("\\C ");
+                    break;
+                case '\t':
+                    builder.Append("\\9 ");
+                    break;
+                default:
+                    if (char.IsControl(c))
+                    {
+                        builder.Append('\\');
+                        builder.Append(((int)c).ToString("X", CultureInfo.InvariantCulture));
+                        builder.Append(' ');
+                    }
+                    else
+                    {
+                        builder.Append(c);
+                    }
+                    break;
+            }
+        }
+
+        return builder.ToString();
     }
 
     public static string OwnText(this IElement element)
@@ -150,5 +324,34 @@ public static class ElementExtensions
             builder.Append(node.Data);
         }
         return builder.ToString();
+    }
+
+    public static string? GetMetaRefreshUrl(this IElement element)
+    {
+        var metaTag = element.QuerySelectorAll("meta")
+            .FirstOrDefault(m => string.Equals(m.GetAttribute("http-equiv"), "refresh", StringComparison.OrdinalIgnoreCase));
+        if (metaTag is null)
+            return null;
+
+        var content = metaTag.GetAttribute("content");
+        return content == null
+            ? null
+            : ExtractUrlFromContent(content);
+
+        static string? ExtractUrlFromContent(string content)
+        {
+            const string urlKey = "url=";
+            var urlIndex = content.IndexOf(urlKey, StringComparison.OrdinalIgnoreCase);
+
+            if (urlIndex < 0)
+                return null;
+
+            // Extract everything after "url="
+            var redirectUrl = content[(urlIndex + urlKey.Length)..];
+
+            // Remove trailing quotes if the HTML contained them (e.g., URL='...')
+            return redirectUrl.Trim('\'', '"', ' ');
+
+        }
     }
 }

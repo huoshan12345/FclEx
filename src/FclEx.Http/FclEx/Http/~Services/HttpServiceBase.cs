@@ -1,6 +1,6 @@
 namespace FclEx.Http;
 
-public abstract class AbstractHttpService : IHttpService
+public abstract class HttpServiceBase : IHttpService
 {
     protected readonly CookieContainer _cookieContainer = new();
 
@@ -12,7 +12,7 @@ public abstract class AbstractHttpService : IHttpService
         GC.SuppressFinalize(this);
     }
 
-    protected abstract Task ExecuteAsyncInternal(HttpRequest httpRequest, HttpResponse httpResponse, CancellationToken token);
+    protected abstract Task ExecuteAsyncInternal(HttpRequest request, HttpResponse response, CancellationToken token);
 
     public async Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken token = default)
     {
@@ -125,12 +125,12 @@ public abstract class AbstractHttpService : IHttpService
         }
     }
 
-    protected void SaveCookies(Uri responseUri, IEnumerable<string> cookieStrs)
+    protected void SaveCookies(Uri? responseUri, IEnumerable<string> cookieStrings)
     {
-        if (UseCookie == false)
+        if (UseCookie == false || responseUri is null)
             return;
 
-        foreach (var cookieStr in cookieStrs)
+        foreach (var cookieStr in cookieStrings)
         {
             try
             {

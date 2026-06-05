@@ -6,16 +6,21 @@ public static class HttpResponseMessageExtensions
     {
         if (response.StatusCode.IsRedirection() && response.Headers.Location is { } u)
         {
-            uri = u.IsAbsoluteUri
-                ? u
-                : new Uri(response.RequestMessage!.RequestUri!, u);
-            return true;
+            if (u.IsAbsoluteUri)
+            {
+                uri = u;
+                return true;
+            }
+
+            if (response.RequestMessage?.RequestUri is { } baseUri)
+            {
+                uri = new Uri(baseUri, u);
+                return true;
+            }
         }
-        else
-        {
-            uri = null;
-            return false;
-        }
+
+        uri = null;
+        return false;
     }
 
     /// <summary>

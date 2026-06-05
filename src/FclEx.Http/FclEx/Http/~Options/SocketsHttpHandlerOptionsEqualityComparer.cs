@@ -2,15 +2,15 @@ namespace FclEx.Http;
 
 public class SocketsHttpHandlerOptionsEqualityComparer : IEqualityComparer<SocketsHttpHandlerOptions>
 {
-    public static readonly IEqualityComparer<IWebProxy> ProxyEqualityComparer = IWebProxyEqualityComparer.Instance;
     public static readonly SocketsHttpHandlerOptionsEqualityComparer Instance = new();
+
+    public static IEqualityComparer<IWebProxy> WebProxyComparer
+        => WebProxyInterfaceEqualityComparer.Instance;
 
     public bool Equals(SocketsHttpHandlerOptions? x, SocketsHttpHandlerOptions? y)
     {
-        if (ReferenceEquals(x, y)) return true;
-        if (x is null) return false;
-        if (y is null) return false;
-        if (x.GetType() != y.GetType()) return false;
+        if (ComparerHelper.TryEquals(x, y, out var result))
+            return result.Value;
 
         return x.ConnectTimeout.Equals(y.ConnectTimeout)
                && x.IPVersionPolicy == y.IPVersionPolicy
@@ -19,23 +19,22 @@ public class SocketsHttpHandlerOptionsEqualityComparer : IEqualityComparer<Socke
                && x.EnableMultipleHttp2Connections == y.EnableMultipleHttp2Connections
                && x.PooledConnectionLifetime.Equals(y.PooledConnectionLifetime)
                && x.PooledConnectionIdleTimeout.Equals(y.PooledConnectionIdleTimeout)
-               && ProxyEqualityComparer.Equals(x.Proxy!, y.Proxy!);
+               && x.DisableServerCertificateValidation == y.DisableServerCertificateValidation
+               && WebProxyComparer.Equals(x.Proxy!, y.Proxy!);
     }
 
     public int GetHashCode(SocketsHttpHandlerOptions obj)
     {
-        var proxyCode = obj.Proxy is null
-            ? 0
-            : ProxyEqualityComparer.GetHashCode(obj.Proxy);
-
-        return HashCode.Combine(
-            obj.ConnectTimeout,
-            obj.IPVersionPolicy,
-            obj.AllowAutoRedirect,
-            obj.AutomaticDecompression,
-            obj.EnableMultipleHttp2Connections,
-            obj.PooledConnectionLifetime,
-            obj.PooledConnectionIdleTimeout,
-            proxyCode);
+        var hash = new HashCode();
+        hash.Add(obj.ConnectTimeout);
+        hash.Add(obj.IPVersionPolicy);
+        hash.Add(obj.AllowAutoRedirect);
+        hash.Add(obj.AutomaticDecompression);
+        hash.Add(obj.EnableMultipleHttp2Connections);
+        hash.Add(obj.PooledConnectionLifetime);
+        hash.Add(obj.PooledConnectionIdleTimeout);
+        hash.Add(obj.DisableServerCertificateValidation);
+        hash.Add(WebProxyComparer.GetHashCodeOrDefault(obj.Proxy));
+        return hash.ToHashCode();
     }
 }

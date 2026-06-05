@@ -12,16 +12,11 @@ public static class DefaultJsonAction
     /// <param name="action">The JSON action.</param>
     /// <param name="response">The response containing JSON text.</param>
     /// <returns>The converted result, or an error from validation, path matching, or deserialization.</returns>
-    /// <remarks>The created <see cref="JsonActionContext"/> is disposed after result conversion.</remarks>
     public static OperationResult<T> GetResult<T>(IJsonAction<T> action, HttpResponse response)
     {
         return action.GetJson(response)
             .Then(m => action.CreateContext(response, m))
-            .Then(m =>
-            {
-                using var _ = m;
-                return action.GetResult(m);
-            });
+            .Then(action.GetResult);
     }
 
     /// <summary>
@@ -50,12 +45,12 @@ public static class DefaultJsonAction
     /// <remarks>Malformed JSON is allowed to throw so the outer action pipeline can capture it.</remarks>
     public static OperationResult<JsonActionContext> CreateContext<T>(IJsonAction<T> action, HttpResponse response, string json)
     {
-        var context = new JsonActionContext(response, json, action.JsonResultPath);
+        var context = new JsonActionContext(response, json, action.JsonPath);
         if (context.ResultTokens.IsNotEmpty())
             return context;
 
         const string msg = "The result object does not exist in json";
-        var error = action.JsonResultPath == null ? msg : msg + " at " + action.JsonResultPath;
+        var error = action.JsonPath == null ? msg : msg + " at " + action.JsonPath;
         error = error + ": " + context.Json.Truncate(256);
         return error;
     }
@@ -69,7 +64,7 @@ public static class DefaultJsonAction
     /// <returns>The deserialized result, or an error if no token was selected.</returns>
     public static OperationResult<T> GetResult<T>(IJsonAction<T> action, JsonActionContext context)
     {
-        return context.ResultToken is { } token
+        return context.TryGetResultToken(out var token)
             ? token.ToObject<T>()!
             : nameof(context.ResultToken) + " is null";
     }

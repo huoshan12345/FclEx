@@ -12,7 +12,7 @@ public partial class HttpRequest
     public HttpVersionPolicy VersionPolicy { get; set; } = HttpVersionPolicy.RequestVersionOrLower;
 #endif
     public Version Version { get; set; } = HttpVersion.Version11;
-    public int BufferSize { get; set; } = 256 * 1024;
+    public int? BufferSize { get; set; }
     public TimeSpan? TotalTimeout { get; set; } = TimeSpan.FromMinutes(2);
     public TimeSpan? ReadBufferTimeout { get; set; } = TimeSpan.FromSeconds(10);
     public TimeSpan? ReadHeadersTimeout { get; set; } = TimeSpan.FromSeconds(10);
@@ -32,6 +32,8 @@ public partial class HttpRequest
     public HttpContentType ResponseContentType { get; set; } = HttpContentType.String;
     public bool ReadContent { get; set; } = true;
     public bool ReadCookies { get; set; } = true;
+    public int MaxRedirectCount { get; set; } = 50;
+    public bool AllowInsecureRedirects { get; set; } = true;
 
     /// <summary>
     /// Indicates whether a default User-Agent header should be applied

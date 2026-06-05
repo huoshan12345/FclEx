@@ -1,20 +1,24 @@
+// ReSharper disable ConvertToAutoPropertyWhenPossible
 namespace FclEx.Utils;
 
 [DebuggerDisplay("Count = {" + nameof(Count) + "}")]
 public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : notnull
 {
+    private static readonly IEqualityComparer<TValue?> _valueComparer = EqualityComparer<TValue?>.Default;
     private readonly LinkedList<KeyValue> _list = [];
     private readonly IDictionary<TKey, LinkedListNode<KeyValue>> _dic;
     private readonly ReaderWriterLockSlim _lock;
-    private static readonly IEqualityComparer<TValue?> _valueComparer = EqualityComparer<TValue?>.Default;
     private readonly IEqualityComparer<TKey> _keyComparer;
+    private readonly int _capacity;
+
+    public event Action<TKey, TValue> OnItemCleared = (key, value) => { };
 
     public LruCache(int? capacity = null, IEqualityComparer<TKey>? comparer = null)
     {
         if (capacity is <= 0)
             throw new ArgumentOutOfRangeException(nameof(capacity));
 
-        Capacity = capacity ?? ushort.MaxValue;
+        _capacity = capacity ?? int.MaxValue;
         _keyComparer = comparer ?? EqualityComparer<TKey>.Default;
         _lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
         _dic = new Dictionary<TKey, LinkedListNode<KeyValue>>(_keyComparer);
@@ -126,17 +130,16 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
 
     public TValue this[TKey key]
     {
-        get
-        {
-            if (!TryGetValue(key, out var value))
-                throw new KeyNotFoundException($"The given key {key} was not present.");
-            return value;
-        }
+        get => TryGetValue(key, out var value)
+            ? value
+            : throw new KeyNotFoundException($"The given key {key} was not present.");
         set => AddOrUpdate(key, value);
     }
 
     public int Count => Read(() => _list.Count);
-    public int Capacity { get; }
+
+    public int Capacity => _capacity;
+
     public ICollection<TKey> Keys => Read(() => _list.Select(m => m.Key).AsReadOnlyCollection());
     public ICollection<TValue> Values => Read(() => _list.Select(m => m.Value).AsReadOnlyCollection());
 
@@ -178,11 +181,13 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
 
     private LinkedListNode<KeyValue> AddInternal(TKey key, TValue value)
     {
-        if (_dic.Count >= Capacity)
+        if (_dic.Count >= _capacity)
         {
-            var toRemove = _list.Last;
-            _dic.Remove(toRemove!.Value.Key);
+            var toRemove = _list.Last!;
+            _dic.Remove(toRemove.Value.Key);
             _list.Remove(toRemove);
+
+            OnItemCleared(toRemove.Value.Key, toRemove.Value.Value);
         }
         var node = LinkedListNodeHelper.Create(new KeyValue(key, value));
         _list.AddFirst(node);

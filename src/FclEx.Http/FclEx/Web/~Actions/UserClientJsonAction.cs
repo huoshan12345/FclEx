@@ -3,7 +3,7 @@ namespace FclEx.Web;
 public abstract class UserClientJsonAction<TClient, T> : UserClientHttpAction<TClient, T>, IJsonAction<T>
     where TClient : IUserClient
 {
-    public virtual string? JsonResultPath { get; } = null;
+    public virtual string? JsonPath { get; } = null;
 
     protected UserClientJsonAction(TClient client) : base(client) { }
 

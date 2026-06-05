@@ -133,16 +133,16 @@ internal sealed class ThrowingJsonHttpAction(HttpResponse httpResponse) : Pipeli
 
 internal sealed class JsonCountAction : JsonAction<int>
 {
-    public string? JsonResultPathValue { get; init; }
+    public string? JsonPathValue { get; init; }
 
-    public override string? JsonResultPath => JsonResultPathValue;
+    public override string? JsonPath => JsonPathValue;
 }
 
 internal sealed class JsonStringAction : JsonAction<string>
 {
-    public string? JsonResultPathValue { get; init; }
+    public string? JsonPathValue { get; init; }
 
-    public override string? JsonResultPath => JsonResultPathValue;
+    public override string? JsonPath => JsonPathValue;
 }
 
 internal sealed class UnitJsonAction : JsonAction
@@ -165,16 +165,16 @@ internal sealed class PipelineJsonAction<T>(HttpResponse response) : HttpJsonAct
 
 internal sealed class XmlIntAction : XmlAction<int>
 {
-    public string? XmlResultPathValue { get; init; }
+    public string? XPathValue { get; init; }
 
-    public override string? XmlResultPath => XmlResultPathValue;
+    public override string? XPath => XPathValue;
 }
 
 internal sealed class XmlStringAction : XmlAction<string>
 {
-    public string? XmlResultPathValue { get; init; }
+    public string? XPathValue { get; init; }
 
-    public override string? XmlResultPath => XmlResultPathValue;
+    public override string? XPath => XPathValue;
 }
 
 internal sealed class UnitXmlAction : XmlAction
@@ -197,9 +197,9 @@ internal sealed class PipelineXmlAction<T>(HttpResponse response) : HttpXmlActio
 
 internal sealed class HtmlTextAction : HtmlAction<string>
 {
-    public string? HtmlResultPathValue { get; init; }
+    public string? HtmlSelectorValue { get; init; }
 
-    public override string? HtmlResultPath => HtmlResultPathValue;
+    public override string? HtmlSelector => HtmlSelectorValue;
 
     public override OperationResult<string> GetResult(HtmlActionContext context)
     {
@@ -213,11 +213,11 @@ internal sealed class UnitHtmlAction : HtmlAction
 
 internal sealed class TestHtmlFileAction(string filePath) : HtmlFileAction<string>
 {
-    public string? HtmlResultPathValue { get; init; }
+    public string? HtmlSelectorValue { get; init; }
 
     public override string FilePath { get; } = filePath;
 
-    public override string? HtmlResultPath => HtmlResultPathValue;
+    public override string? HtmlSelector => HtmlSelectorValue;
 
     public override OperationResult<string> GetResult(HtmlActionContext context)
     {
@@ -232,6 +232,10 @@ internal sealed class TestJsonpAction(HttpResponse? response = null) : JsonpActi
     public override Uri Uri { get; } = new("https://example.com/jsonp");
 
     public override string CallbackParamName { get; } = "cb";
+
+    public string CallbackNameValue { get; init; } = DefaultJsonpAction.DefaultCallbackName;
+
+    public override string CallbackName => CallbackNameValue;
 
     public override Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken token = default)
     {

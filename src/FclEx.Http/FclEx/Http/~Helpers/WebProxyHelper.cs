@@ -1,9 +1,10 @@
 namespace FclEx.Http;
 
-public class WebProxyHelper
+public static class WebProxyHelper
 {
     public static WebProxy Create(Uri? address, bool bypassOnLocal = false, string[]? bypassList = null, ICredentials? credentials = null)
     {
+        // ReSharper disable once InvertIf
         if (address is { UserInfo: { Length: > 0 } userInfo } && credentials == null)
         {
             var (user, pass) = userInfo.Partition(":");

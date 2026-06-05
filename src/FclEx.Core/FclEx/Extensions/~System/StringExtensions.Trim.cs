@@ -3,7 +3,7 @@ namespace FclEx.Extensions;
 public static partial class StringExtensions
 {
     [return: NotNullIfNotNull(nameof(source))]
-    public static string? TrimStart(this string? source, string? trimString)
+    public static string? TrimStart(this string? source, string? trimString, bool onlyOnce = false)
     {
         if (source.IsNullOrEmpty() || trimString.IsNullOrEmpty())
             return source;
@@ -12,12 +12,14 @@ public static partial class StringExtensions
         while (result.StartsWith(trimString))
         {
             result = result[trimString.Length..];
+            if (onlyOnce)
+                break;
         }
         return result;
     }
 
     [return: NotNullIfNotNull(nameof(source))]
-    public static string? TrimEnd(this string? source, string? trimString)
+    public static string? TrimEnd(this string? source, string? trimString, bool onlyOnce = false)
     {
         if (source.IsNullOrEmpty() || trimString.IsNullOrEmpty())
             return source;
@@ -26,6 +28,8 @@ public static partial class StringExtensions
         while (result.EndsWith(trimString))
         {
             result = result[..^trimString.Length];
+            if (onlyOnce)
+                break;
         }
         return result;
     }

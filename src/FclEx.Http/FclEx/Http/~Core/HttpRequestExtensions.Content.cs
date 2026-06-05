@@ -45,4 +45,9 @@ partial class HttpRequestExtensions
         request.Content = new FormUrlEncodedContent(nameValueCollection);
         return request;
     }
+
+    public static Task<BufferedContent?> CreateBufferedContentAsync(this HttpRequest request, CancellationToken token = default)
+    {
+        return request.Content.ToBufferedContentAsync(request.ReadBufferTimeout, request.BufferSize, token);
+    }
 }

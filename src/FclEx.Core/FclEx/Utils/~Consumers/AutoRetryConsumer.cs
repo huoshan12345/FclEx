@@ -1,6 +1,6 @@
 namespace FclEx.Utils;
 
-public sealed class AutoRetryConsumer<T> : AbstractConsumer<AutoRetryConsumer<T>, T>,
+public sealed class AutoRetryConsumer<T> : ConsumerBase<AutoRetryConsumer<T>, T>,
     IAsyncConsumer<AutoRetryConsumer<T>, T>,
     IDiscardListener<AutoRetryConsumer<T>, ProcessingItem<T>>,
     IExceptionListener<AutoRetryConsumer<T>, ProcessingItem<T>>

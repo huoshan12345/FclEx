@@ -38,10 +38,13 @@ public class SendAsyncTests : HttpServerTests
 
         using var http = HttpClientService.Create(m =>
         {
-            m.IPVersionPolicy = ipv6
-                ? IPVersionPolicy.OnlyIPv6
-                : IPVersionPolicy.OnlyIPv4;
-            m.ConnectTimeout = TimeSpan.FromSeconds(3);
+            m.HandlerOptions = new()
+            {
+                IPVersionPolicy = ipv6
+                    ? IPVersionPolicy.OnlyIPv6
+                    : IPVersionPolicy.OnlyIPv4,
+                ConnectTimeout = TimeSpan.FromSeconds(3)
+            };
         });
 
         const string ipv4Url = "https://ip4only.me/api/";
@@ -159,7 +162,7 @@ public class SendAsyncTests : HttpServerTests
             .SendAsync(TestHttp)
             .ThrowIfError();
 
-        Assert.Equal(2, response.RedirectUris.Count);
+        Assert.Equal(2, response.VisitedUris.Count);
         Assert.Equal(url, response.LastUri().ToString());
     }
 }

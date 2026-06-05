@@ -6,123 +6,109 @@ partial class EnumerableExtensions
 
     public static Task<T[]> WhenAll<T>(this IEnumerable<Task<T>> tasks) => Task.WhenAll(tasks);
 
-    public static async Task ToSeriallyExecutedTask<T>(this IEnumerable<T> enumerable, Func<T, Task> taskSelector, int intervalSeconds = 0, CancellationToken token = default)
+    public static async Task ExecuteSequentiallyAsync<T>(this IEnumerable<T> enumerable, Func<T, Task> operation,
+        TimeSpan interval = default, CancellationToken token = default)
     {
         Check.NotNull(enumerable);
-        Check.NotNull(taskSelector);
+        Check.NotNull(operation);
 
         foreach (var item in enumerable)
         {
             if (token.IsCancellationRequested)
                 break;
 
-            await taskSelector(item);
-            await TaskHelper.Delay(intervalSeconds, token);
+            await operation(item);
+
+            await TaskHelper.Delay(interval, token);
         }
     }
 
-    public static async Task<List<TResult>> ToSeriallyExecutedTask<T, TResult>(this IEnumerable<T> enumerable,
-        Func<T, Task<TResult>> taskSelector, int intervalSeconds = 0, CancellationToken token = default)
+    public static async Task<TResult[]> ExecuteSequentiallyAsync<T, TResult>(this IEnumerable<T> enumerable, Func<T, Task<TResult>> operation,
+        TimeSpan interval = default, CancellationToken token = default)
     {
-        // ReSharper disable once PossibleMultipleEnumeration
         Check.NotNull(enumerable);
-        Check.NotNull(taskSelector);
+        Check.NotNull(operation);
 
         var list = new List<TResult>();
-        // ReSharper disable once PossibleMultipleEnumeration
         foreach (var item in enumerable)
         {
             if (token.IsCancellationRequested)
                 break;
 
-            var r = await taskSelector(item);
+            var r = await operation(item);
             list.Add(r);
-            await TaskHelper.Delay(intervalSeconds, token);
+
+            await TaskHelper.Delay(interval, token);
         }
-        return list;
+        return list.ToArray();
     }
 
-    public static async Task<OperationResult<List<T>>> ToSeriallyExecutedTask<T>(this IEnumerable<T> enumerable, Func<T, Task<OperationResult<T>>> taskSelector,
-        int intervalSeconds = 0, CancellationToken token = default, bool terminateOnFirstError = false)
+    public static async Task ExecuteInParallelAsync<T>(this IEnumerable<T> enumerable, Func<T, Task> operation,
+        int? concurrency = null, TimeSpan interval = default, CancellationToken token = default)
     {
         Check.NotNull(enumerable);
-        Check.NotNull(taskSelector);
+        Check.NotNull(operation);
 
-        var span = TimeSpan.Zero;
-        var list = new List<T>();
-        IList<Exception>? exceptions = null;
-        foreach (var obj in enumerable)
+        if (concurrency is null)
         {
-            if (!token.IsCancellationRequested)
-            {
-                var r = await taskSelector(obj);
-                span += r.Elapsed;
-                if (r.IsSuccess)
-                {
-                    list.Add(r.Value!);
-                }
-                else
-                {
-                    if (terminateOnFirstError)
-                    {
-                        return r.Cast<List<T>>();
-                    }
-                    else
-                    {
-                        exceptions ??= new List<Exception>();
-                        exceptions.Add(r.Exception!);
-                    }
-                }
-                await TaskHelper.Delay(intervalSeconds, token);
+            await enumerable.Select(operation).WhenAll();
+            return;
+        }
 
-            }
-            else
-            {
+        var size = Check.Positive(concurrency.Value, nameof(concurrency));
+
+        foreach (var batch in enumerable.Chunk(size))
+        {
+            if (token.IsCancellationRequested)
                 break;
-            }
-        }
-        if (exceptions.IsNotEmpty())
-        {
-            return (new AggregateException(exceptions), span);
-        }
-        else
-        {
-            return (list, span);
+
+            await batch.Select(operation).WhenAll();
+
+            await TaskHelper.Delay(interval, token);
         }
     }
 
-    public static async Task<List<TResult>> ToParallellyExecutedTask<T, TResult>(this IEnumerable<T> enumerable, Func<T, Task<TResult>> taskSelector, int batchSize, CancellationToken token = default)
+    public static async Task<TResult[]> ExecuteInParallelAsync<T, TResult>(this IEnumerable<T> enumerable, Func<T, Task<TResult>> operation,
+        int? concurrency = null, TimeSpan interval = default, CancellationToken token = default)
     {
-        // ReSharper disable once PossibleMultipleEnumeration
         Check.NotNull(enumerable);
-        Check.NotNull(taskSelector);
-        Check.NotLessThan(batchSize, 1);
+        Check.NotNull(operation);
+
+        if (concurrency is null)
+        {
+            return await enumerable.Select(operation).WhenAll();
+        }
+
+        var size = Check.Positive(concurrency.Value, nameof(concurrency));
 
         var list = new List<TResult>();
-        // ReSharper disable once PossibleMultipleEnumeration
-        foreach (var batch in enumerable.Chunk(batchSize))
+        foreach (var batch in enumerable.Chunk(size))
         {
             if (token.IsCancellationRequested)
                 break;
 
-            var rs = await batch.Select(taskSelector).WhenAll();
+            var rs = await batch.Select(operation).WhenAll();
             list.AddRange(rs);
+
+            await TaskHelper.Delay(interval, token);
         }
-        return list;
+        return list.ToArray();
     }
 
-    public static async Task ToParallellyExecutedTask<T>(this IEnumerable<T> enumerable, Func<T, Task> taskSelector, int batchSize, CancellationToken token = default)
+    public static Task ExecuteAsync<T>(this IEnumerable<T> enumerable, Func<T, Task> operation, bool executeInParallel,
+        int? concurrency = null, TimeSpan interval = default, CancellationToken token = default)
     {
-        Check.NotNull(enumerable);
-        Check.NotNull(taskSelector);
-        Check.NotLessThan(batchSize, 1);
+        return executeInParallel
+            ? enumerable.ExecuteInParallelAsync(operation, concurrency, interval, token)
+            : enumerable.ExecuteSequentiallyAsync(operation, interval, token);
+    }
 
-        foreach (var batch in enumerable.Chunk(batchSize))
-        {
-            if (token.IsCancellationRequested)
-                break;
-            await batch.Select(taskSelector).WhenAll();
-        }
+    public static Task<TResult[]> ExecuteAsync<T, TResult>(this IEnumerable<T> enumerable, Func<T, Task<TResult>> operation, bool executeInParallel,
+        int? concurrency = null, TimeSpan interval = default, CancellationToken token = default)
+    {
+        return executeInParallel
+            ? enumerable.ExecuteInParallelAsync(operation, concurrency, interval, token)
+            : enumerable.ExecuteSequentiallyAsync(operation, interval, token);
     }
 
     public static async Task<T> WhenAny<T>(this IEnumerable<Task<T>> tasks)

@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using FclEx.Http;
@@ -29,23 +28,5 @@ public class AllowExternalHandler(bool allowAutoRedirect = true) : DelegatingHan
 
             request = new HttpRequestMessage(HttpMethod.Get, uri);
         }
-    }
-}
-
-public static class HttpRequestExtensions
-{
-    private const int MessageNotYetSent = 0;
-    private const int MessageAlreadySent = 1;
-    private const int MessageIsRedirect = 2;
-    private const int MessageDisposed = 4;
-
-    [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_sendStatus")]
-    private static extern ref int HttpRequestMessageSendStatus(HttpRequestMessage uri);
-
-    public static HttpRequestMessage SetNotSend(this HttpRequestMessage request)
-    {
-        ref var status = ref HttpRequestMessageSendStatus(request);
-        status = MessageNotYetSent;
-        return request;
     }
 }

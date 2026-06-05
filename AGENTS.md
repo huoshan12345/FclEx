@@ -4,6 +4,8 @@
 
 FclEx means "fundamental class libraries extensions". It is a multi-package .NET library solution defined by `FclEx.slnx`. It started as extensions for the .NET standard libraries and now also includes focused integration packages for common libraries such as `Microsoft.Extensions.*`, ASP.NET Core, Entity Framework Core, Dapper, Serilog, SlackNet, RabbitMQ, Kafka, Newtonsoft.Json, YamlDotNet, New Relic, and xUnit. Production projects live in `src/`, usually one package per directory such as `src/FclEx.Core`, `src/FclEx.Http`, and `src/FclEx.Serilog`. Tests live in matching `test/*.Tests` projects, with test files mirroring the source namespace layout. Shared MSBuild settings are in `src/Directory.Build.*` and `test/Directory.Build.*`; common build and packaging scripts are in `build/`. Benchmarks and non-shipping experiments belong under `misc/`.
 
+Some source folders intentionally use a `~` prefix, such as `~Extensions`, and have ReSharper namespace provider disabled. This keeps public namespaces flatter and reduces the number of `using` directives needed by package consumers. Test folders should not use the `~` prefix and do not need namespace-provider changes. Because of this, a test namespace may intentionally differ from the source namespace even when the test path mirrors the source path without `~`; for example, `src/FclEx.Http/FclEx/Http/~Extensions/HttpMessageHandlerExtensions.cs` can be in namespace `FclEx.Http`, while `test/FclEx.Http.Tests/FclEx/Http/Extensions/HttpMessageHandlerExtensionsTests.cs` can be in namespace `FclEx.Http.Extensions`.
+
 ## Build, Test, and Development Commands
 
 - `dotnet restore FclEx.slnx -v q`: restore all solution packages using `NuGet.Config`.
@@ -41,6 +43,12 @@ Tests use xUnit v3 and should be added beside the matching package under `test/<
 Organize new tests by the class or interface being tested. Split large test files when multiple tested subjects are involved, and cover boundary cases such as nulls, empty collections, duplicate values, failed operations, exceptions, cancellation, and framework-specific behavior when relevant.
 
 Prefer running the narrowest useful test project for the code you changed before considering full-solution tests. Some tests have external service dependencies: `FclEx.Dapper.Tests`, `FclEx.EfCore.Tests`, and `FclEx.Messaging.Tests`. The local test databases and message queues are expected to be provisioned, but be mindful that `FclEx.Messaging` includes Kafka support while `FclEx.Messaging.Tests` currently does not cover Kafka and no Kafka test service is assumed yet.
+
+When `FclEx.Http` tests need a real local HTTP server, use or follow `test/FclEx.Http.Tests/FclEx/Http/HttpServerFixture.cs`.
+
+## Review and Issue Lists
+
+When listing problems, review findings, or improvement suggestions, prefer numbered lists instead of unordered bullet lists so later discussion can reference items by number. Use multi-level numbering when grouping is necessary.
 
 ## File Edits & Encoding
 

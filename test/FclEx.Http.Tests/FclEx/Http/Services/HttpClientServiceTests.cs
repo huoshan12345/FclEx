@@ -120,15 +120,15 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
             .FirstOrDefault();
         Assert.NotNull(handler);
         var webProxy = handler.Proxy.CastTo<IWebProxy>();
-        Assert.Equal<IWebProxy>(proxy, webProxy, IWebProxyEqualityComparer.Instance);
+        Assert.Equal<IWebProxy>(proxy, webProxy, WebProxyInterfaceEqualityComparer.Instance);
     }
 
     [Fact]
     public void GetFactory_Proxy_Test()
     {
         var uri = new Uri("http://127.0.0.1:8888");
-        var fac1 = GetFactory(new() { Proxy = WebProxyHelper.Create(uri) });
-        var fac2 = GetFactory(new() { Proxy = WebProxyHelper.Create(uri) });
+        var fac1 = GetFactory(new() { HandlerOptions = new() { Proxy = WebProxyHelper.Create(uri) } });
+        var fac2 = GetFactory(new() { HandlerOptions = new() { Proxy = WebProxyHelper.Create(uri) } });
         Assert.Equal(fac1, fac2, ReferenceEqualityComparer.Instance);
         CheckProxy(fac1.CreateClient(), WebProxyHelper.Create(uri));
         CheckProxy(fac2.CreateClient(), WebProxyHelper.Create(uri));
@@ -155,11 +155,20 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
     public void GetFactory_Proxy_NotSame()
     {
         var uri = new Uri("http://127.0.0.1:8888");
-        var fac1 = GetFactory(new() { Proxy = WebProxyHelper.Create(uri) });
-        var fac2 = GetFactory(new() { Proxy = null });
+        var fac1 = GetFactory(new() { HandlerOptions = new() { Proxy = WebProxyHelper.Create(uri) } });
+        var fac2 = GetFactory(new() { HandlerOptions = new() { Proxy = null } });
         Assert.NotEqual(fac1, fac2, ReferenceEqualityComparer.Instance);
         CheckProxy(fac1.CreateClient(), WebProxyHelper.Create(uri));
         CheckProxy(fac2.CreateClient(), null);
+    }
+
+    [Fact]
+    public void GetFactory_DisableServerCertificateValidation_NotSame()
+    {
+        var fac1 = GetFactory(new() { HandlerOptions = new() { DisableServerCertificateValidation = true } });
+        var fac2 = GetFactory(new() { HandlerOptions = new() { DisableServerCertificateValidation = false } });
+
+        Assert.NotEqual(fac1, fac2, ReferenceEqualityComparer.Instance);
     }
 
     [RetryTheory(5)]
@@ -172,9 +181,9 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
         var timeout = TimeSpan.FromSeconds(timeoutSeconds);
         var http = HttpClientService.Create(m =>
         {
-            m.ConnectTimeout = TimeSpan.FromMinutes(1);
-            m.SleepDurationProvider = _ => TimeSpan.Zero;
-            m.RetryCount = retryCount;
+            m.HandlerOptions.ConnectTimeout = TimeSpan.FromMinutes(1);
+            m.RetryPolicyOptions.SleepDurationProvider = _ => TimeSpan.Zero;
+            m.RetryPolicyOptions.RetryCount = retryCount;
         });
         var response = await HttpRequest.Get("https://google.com:444/")
             .ReadHeadersTimeout(timeout)

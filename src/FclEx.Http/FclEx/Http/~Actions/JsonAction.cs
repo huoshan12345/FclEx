@@ -1,3 +1,4 @@
+// ReSharper disable InheritdocInvalidUsage
 namespace FclEx.Http;
 
 /// <summary>
@@ -7,7 +8,7 @@ namespace FclEx.Http;
 public abstract class JsonAction<T> : HttpResponseHandler<T>, IJsonAction<T>
 {
     /// <inheritdoc />
-    public virtual string? JsonResultPath => null;
+    public virtual string? JsonPath => null;
 
     /// <inheritdoc />
     public virtual OperationResult<string> GetJson(HttpResponse response)

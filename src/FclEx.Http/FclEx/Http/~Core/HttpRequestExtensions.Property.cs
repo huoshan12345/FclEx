@@ -8,6 +8,18 @@ partial class HttpRequestExtensions
         return request;
     }
 
+    public static HttpRequest MaxRedirectCount(this HttpRequest request, int value)
+    {
+        request.MaxRedirectCount = value;
+        return request;
+    }
+
+    public static HttpRequest AllowInsecureRedirects(this HttpRequest request, bool value = true)
+    {
+        request.AllowInsecureRedirects = value;
+        return request;
+    }
+
     public static HttpRequest ReadCookies(this HttpRequest request, bool value)
     {
         request.ReadCookies = value;
@@ -101,15 +113,15 @@ partial class HttpRequestExtensions
         return request.SetHeader(HttpHeaderNames.Authorization, "Bearer " + token);
     }
 
-    public static HttpRequest CharSet(this HttpRequest request, string? chartSet)
+    public static HttpRequest CharSet(this HttpRequest request, string? charSet)
     {
-        request.CharSet = chartSet;
+        request.CharSet = charSet;
         return request;
     }
 
-    public static HttpRequest TryCharSet(this HttpRequest request, string? chartSet)
+    public static HttpRequest TryCharSet(this HttpRequest request, string? charSet)
     {
-        request.CharSet = chartSet;
+        request.CharSet ??= charSet;
         return request;
     }
 
@@ -119,15 +131,15 @@ partial class HttpRequestExtensions
         return request;
     }
 
-    public static HttpRequest FallbackCharSet(this HttpRequest request, string? chartSet)
+    public static HttpRequest FallbackCharSet(this HttpRequest request, string? charSet)
     {
-        request.FallbackCharSet = chartSet;
+        request.FallbackCharSet = charSet;
         return request;
     }
 
-    public static HttpRequest TryFallbackCharSet(this HttpRequest request, string? chartSet)
+    public static HttpRequest TryFallbackCharSet(this HttpRequest request, string? charSet)
     {
-        request.FallbackCharSet ??= chartSet;
+        request.FallbackCharSet ??= charSet;
         return request;
     }
 
@@ -152,6 +164,18 @@ partial class HttpRequestExtensions
     public static HttpRequest TryReadBufferTimeout(this HttpRequest request, TimeSpan? timeout)
     {
         request.ReadBufferTimeout ??= timeout;
+        return request;
+    }
+
+    public static HttpRequest BufferSize(this HttpRequest request, int? bufferSize)
+    {
+        request.BufferSize = bufferSize;
+        return request;
+    }
+
+    public static HttpRequest TryBufferSize(this HttpRequest request, int? bufferSize)
+    {
+        request.BufferSize ??= bufferSize;
         return request;
     }
 

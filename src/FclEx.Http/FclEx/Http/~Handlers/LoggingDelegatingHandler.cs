@@ -3,15 +3,15 @@ namespace FclEx.Http;
 public class LoggingDelegatingHandler : DelegatingHandler
 {
     private readonly ILogger<LoggingDelegatingHandler> _logger;
-    private readonly string _group;
     private readonly LogLevel _successLevel;
     private readonly LogLevel _failureLevel;
 
-    public LoggingDelegatingHandler(ILoggerFactory logger, string group, 
-        LogLevel successLevel = LogLevel.Debug, LogLevel failureLevel = LogLevel.Warning)
+    public LoggingDelegatingHandler(
+        ILoggerFactory logger,
+        LogLevel successLevel = LogLevel.Information,
+        LogLevel failureLevel = LogLevel.Warning)
     {
         _logger = logger.CreateLogger<LoggingDelegatingHandler>();
-        _group = group;
         _successLevel = successLevel;
         _failureLevel = failureLevel;
     }
@@ -19,8 +19,6 @@ public class LoggingDelegatingHandler : DelegatingHandler
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         var uri = request.RequestUri;
-        var host = uri?.Host;
-        var path = uri?.LocalPath;
         var start = DateTime.UtcNow;
         var e = default(Exception);
         var statusCode = default(HttpStatusCode?);
@@ -29,10 +27,6 @@ public class LoggingDelegatingHandler : DelegatingHandler
         {
             var response = await base.SendAsync(request, cancellationToken);
             statusCode = response.StatusCode;
-            var duration = DateTime.UtcNow - start;
-            _logger.LogInformation("OutRequest Method={OutRequest.Method}. Host={OutRequest.Host}. Path={OutRequest.Path}. StatusCode={OutRequest.StatusCode}. took {OutRequest.DurationMS:f3} ms",
-                request.Method, host, path, response.StatusCode, duration.TotalMilliseconds);
-
             return response;
         }
         catch (Exception ex)

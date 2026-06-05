@@ -193,10 +193,10 @@ jobs:
           dotnet-version: ${{ steps.sdk_check.outputs.missing }}
 
       - name: Restore
-        run: dotnet restore ${{ env.SOLUTION }} -v q
+        run: dotnet restore /nr:false ${{ env.SOLUTION }} -v q
 
       - name: Build
-        run: dotnet build ${{ env.SOLUTION }} -c Release --no-restore
+        run: dotnet build /nr:false ${{ env.SOLUTION }} -c Release --no-restore
 
       - name: Test Release
         timeout-minutes: 10

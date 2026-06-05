@@ -110,4 +110,84 @@ public class AuthenticationHandlerTests : AuthTests
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         Assert.Equal(2, handler.TokenRequestCount);
     }
+
+    [Fact]
+    public async Task Should_ReuseRequestMessage_WhenRetryingInsideDelegatingHandler()
+    {
+        var tokenProvider = new TestAccessTokenProvider("expired-token", "fresh-token");
+        var innerHandler = new UnauthorizedThenOkHandler();
+        using var handler = new AuthenticationHandler(tokenProvider, [RequiredScope])
+        {
+            InnerHandler = innerHandler,
+        };
+        using var invoker = new HttpMessageInvoker(handler);
+        using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com/api");
+
+        using var response = await invoker.SendAsync(request, CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(2, tokenProvider.Requests.Count);
+        Assert.Equal(new[] { RequiredScope }, tokenProvider.Requests[0].Scopes);
+        Assert.Equal(new[] { RequiredScope }, tokenProvider.Requests[1].Scopes);
+        Assert.False(tokenProvider.Requests[0].ForceRefresh);
+        Assert.True(tokenProvider.Requests[1].ForceRefresh);
+        Assert.Equal(2, innerHandler.Requests.Count);
+        Assert.Same(request, innerHandler.Requests[0]);
+        Assert.Same(request, innerHandler.Requests[1]);
+        Assert.Equal(new[] { "expired-token", "fresh-token" }, innerHandler.AuthorizationTokens);
+    }
+
+    [Fact]
+    public async Task Should_PassCancellationToken_ToTokenProvider()
+    {
+        var tokenProvider = new TestAccessTokenProvider("expired-token", "fresh-token");
+        var innerHandler = new UnauthorizedThenOkHandler();
+        using var handler = new AuthenticationHandler(tokenProvider, [RequiredScope])
+        {
+            InnerHandler = innerHandler,
+        };
+        using var invoker = new HttpMessageInvoker(handler);
+        using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com/api");
+        using var cts = new CancellationTokenSource();
+
+        using var response = await invoker.SendAsync(request, cts.Token);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(2, tokenProvider.Requests.Count);
+        Assert.Equal(cts.Token, tokenProvider.Requests[0].CancellationToken);
+        Assert.Equal(cts.Token, tokenProvider.Requests[1].CancellationToken);
+    }
+
+    private sealed class TestAccessTokenProvider(params string[] tokens) : IAccessTokenProvider
+    {
+        private int _index;
+
+        public List<(string[] Scopes, bool ForceRefresh, CancellationToken CancellationToken)> Requests { get; } = [];
+
+        public Task<string> GetTokenAsync(string[] scopes, bool forceRefresh = false, CancellationToken cancellationToken = default)
+        {
+            Requests.Add((scopes, forceRefresh, cancellationToken));
+            var token = tokens[Math.Min(_index, tokens.Length - 1)];
+            _index++;
+            return Task.FromResult(token);
+        }
+    }
+
+    private sealed class UnauthorizedThenOkHandler : HttpMessageHandler
+    {
+        public List<HttpRequestMessage> Requests { get; } = [];
+        public List<string?> AuthorizationTokens { get; } = [];
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            Requests.Add(request);
+            AuthorizationTokens.Add(request.Headers.Authorization?.Parameter);
+
+            var statusCode = Requests.Count == 1
+                ? HttpStatusCode.Unauthorized
+                : HttpStatusCode.OK;
+
+            return Task.FromResult(new HttpResponseMessage(statusCode));
+        }
+    }
 }

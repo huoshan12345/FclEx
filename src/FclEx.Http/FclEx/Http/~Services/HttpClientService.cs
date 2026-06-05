@@ -1,8 +1,9 @@
 namespace FclEx.Http;
 
-public class HttpClientService : AbstractHttpClientService
+public class HttpClientService : HttpClientServiceBase
 {
     private static readonly Lazy<HttpClientService> _default = new(() => new(new HttpClientOptions()) { UseCookie = false });
+
     public static HttpClientService Default => _default.Value;
 
     protected HttpClientOptions _options;
@@ -38,19 +39,20 @@ public class HttpClientService : AbstractHttpClientService
 
         // NOTE: always use with keyword to create new instance cause it used as key in cache.
         // do not try to change property directly or reuse options.
-        _options = options with { AllowAutoRedirect = false };
+        _options = options with { HandlerOptions = options.HandlerOptions with { AllowAutoRedirect = false } };
     }
 
     public override IWebProxy? Proxy
     {
-        get => _options.Proxy;
+        get => _options.HandlerOptions.Proxy;
         set
         {
-            if (IWebProxyEqualityComparer.Instance.Equals(_options.Proxy, value))
+            var options = _options.HandlerOptions;
+            if (WebProxyInterfaceEqualityComparer.Instance.Equals(options.Proxy, value))
                 return;
 
             // NOTE: use with keyword to create new instance instead of changing property directly cause it used as key in cache.
-            _options = _options with { Proxy = value };
+            _options = _options with { HandlerOptions = options with { Proxy = value } };
         }
     }
 
@@ -59,9 +61,21 @@ public class HttpClientService : AbstractHttpClientService
         GC.SuppressFinalize(this);
     }
 
-    public static int MaxCacheCount { get; } = ushort.MaxValue;
+    public static int MaxCacheCount
+    {
+        get;
+        set
+        {
+            Check.Positive(value);
 
-    protected static readonly Lazy<LfuCache<HttpClientOptions, IServiceProvider>> Providers = new(() => new(Math.Max(1, MaxCacheCount), HttpClientOptionsEqualityComparer.Instance));
+            if (Providers.IsValueCreated)
+                throw new InvalidOperationException("Cannot change MaxCacheCount after cache is created.");
+
+            field = value;
+        }
+    } = ushort.MaxValue;
+
+    protected static readonly Lazy<LfuCache<HttpClientOptions, IServiceProvider>> Providers = new(CreateCache);
 
     protected static readonly string[] CanceledErrors =
     [
@@ -69,18 +83,30 @@ public class HttpClientService : AbstractHttpClientService
         new OperationCanceledException(CancellationToken.None).Message,
     ];
 
+    protected static LfuCache<HttpClientOptions, IServiceProvider> CreateCache()
+    {
+        var cache = new LfuCache<HttpClientOptions, IServiceProvider>(MaxCacheCount, HttpClientOptionsEqualityComparer.Instance);
+        cache.OnItemCleared += (options, provider) =>
+        {
+            if (provider is IDisposable disposable)
+                disposable.Dispose();
+        };
+        return cache;
+    }
+
     protected internal static IServiceProvider GetProvider(HttpClientOptions options)
     {
         return Providers.Value.GetOrAdd(options, m =>
         {
+            var retryOptions = m.RetryPolicyOptions;
             // this policy is created to retry Task.WithTimeout()
             var policy = Policy<HttpResponseMessage>
                 .Handle<OperationCanceledException>(IsPureCanceledException)
-                .WaitAndRetryAsync(options.RetryCount, options.SleepDurationProvider);
+                .WaitAndRetryAsync(retryOptions.RetryCount, retryOptions.SleepDurationProvider);
 
             return new ServiceCollection()
                 .AddSingleton<IAsyncPolicy<HttpResponseMessage>>(policy)
-                .AddHttpClientWithPolly(string.Empty, options)
+                .AddHttpClientWithPolly(string.Empty, m)
                 .Services
                 .Remove(x => x.ServiceType == typeof(IHttpMessageHandlerBuilderFilter)
                              && x.ImplementationType?.FullName == "Microsoft.Extensions.Http.LoggingHttpMessageHandlerBuilderFilter")
@@ -92,7 +118,7 @@ public class HttpClientService : AbstractHttpClientService
             var p = ex;
             while (p is OperationCanceledException)
             {
-                if (CanceledErrors.Contains(p.Message) == false)
+                if (CanceledErrors.Contains(p.Message, StringComparer.Ordinal) == false)
                     return false;
 
                 if (p.InnerException is null)
@@ -127,17 +153,17 @@ public class HttpClientService : AbstractHttpClientService
 
     public static HttpClientService Create(IWebProxy? proxy, bool useCookie = true, ILoggerFactory? loggerFactory = null)
     {
-        return Create(m => m.Proxy = proxy, useCookie, loggerFactory);
+        return Create(m => m.HandlerOptions = m.HandlerOptions with { Proxy = proxy }, useCookie, loggerFactory);
     }
 
     public static HttpClientService Create(Uri? proxy, bool useCookie = true, ILoggerFactory? loggerFactory = null)
     {
-        return Create(m => m.Proxy = WebProxyHelper.Create(proxy), useCookie, loggerFactory);
+        return Create(WebProxyHelper.Create(proxy), useCookie, loggerFactory);
     }
 
     public static HttpClientService Create(string? proxy, bool useCookie = true, ILoggerFactory? loggerFactory = null)
     {
-        return Create(m => m.Proxy = WebProxyHelper.Create(proxy), useCookie, loggerFactory);
+        return Create(WebProxyHelper.Create(proxy), useCookie, loggerFactory);
     }
 
     public static HttpClientService Create(
@@ -152,5 +178,20 @@ public class HttpClientService : AbstractHttpClientService
             UseCookie = useCookie,
             Logger = loggerFactory?.CreateLogger<HttpClientService>()
         };
+    }
+
+    public static void ClearCache()
+    {
+        if (Providers.IsValueCreated == false)
+            return;
+
+        var cache = Providers.Value;
+        foreach (var (_, value) in cache)
+        {
+            if (value is IDisposable disposable)
+                disposable.Dispose();
+        }
+
+        cache.Clear();
     }
 }

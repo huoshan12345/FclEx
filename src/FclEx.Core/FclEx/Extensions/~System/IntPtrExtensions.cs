@@ -2,9 +2,9 @@ namespace FclEx.Extensions;
 
 public static class IntPtrExtensions
 {
-    public static DisposableValue<IntPtr> ToDisposable(this IntPtr ptr)
+    public static DisposableValue<IntPtr> ToDisposable(this IntPtr ptr, Action<IntPtr> freeAction)
     {
-        return Disposable.FromValue(ptr, Marshal.FreeHGlobal);
+        return Disposable.FromValue(ptr, freeAction);
     }
 
     public static string ToHexString(this IntPtr ptr)

@@ -4,11 +4,26 @@ public delegate void OnHttpFailedCode(HttpResponseMessage response, string conte
 
 public static class HttpClientExtensions
 {
+    /// <summary>
+    /// Gets the root message handler stored by <see cref="HttpClient"/>.
+    /// </summary>
+    /// <remarks>
+    /// This method reads a private runtime field inherited from <see cref="HttpMessageInvoker"/>. It is useful
+    /// for diagnostics and tests, but may break if runtime internals change and may not be suitable for trimming
+    /// or AOT scenarios.
+    /// </remarks>
     public static HttpMessageHandler GetHandler(this HttpClient httpClient)
     {
         return FieldInfos.HttpMessageInvoker_Handler.GetRequiredValue<HttpMessageHandler>(httpClient);
     }
 
+    /// <summary>
+    /// Gets the last non-delegating handler in the <see cref="HttpClient"/> handler chain.
+    /// </summary>
+    /// <remarks>
+    /// This method depends on <see cref="GetHandler(HttpClient)"/> and therefore reads a private runtime field.
+    /// It is best suited for diagnostics and tests rather than application control flow.
+    /// </remarks>
     public static HttpMessageHandler GetPrimaryHandler(this HttpClient httpClient)
     {
         var handler = httpClient.GetHandler();
@@ -27,64 +42,15 @@ public static class HttpClientExtensions
     public static void IgnoreRemoteCertificateValidation(this HttpClient httpClient)
     {
         var handler = httpClient.GetPrimaryHandler();
-        if (handler is SocketsHttpHandler socketsHttpHandler)
+        switch (handler)
         {
-            socketsHttpHandler.SslOptions.RemoteCertificateValidationCallback = (_, _, _, _) => true;
+            case SocketsHttpHandler socketsHttpHandler:
+                socketsHttpHandler.SslOptions.RemoteCertificateValidationCallback = HttpClientHelper.BypassServerCertificateValidation;
+                break;
+            case HttpClientHandler httpClientHandler:
+                httpClientHandler.ServerCertificateCustomValidationCallback = HttpClientHelper.BypassServerCertificateValidation;
+                httpClientHandler.ClientCertificateOptions = ClientCertificateOption.Manual;
+                break;
         }
-        if (handler is HttpClientHandler httpClientHandler)
-        {
-            httpClientHandler.ServerCertificateCustomValidationCallback = (_, _, _, _) => true;
-            httpClientHandler.ClientCertificateOptions = ClientCertificateOption.Manual;
-        }
-    }
-
-    public static readonly OnHttpFailedCode ThrowOnFailedCode = (response, content) =>
-    {
-        var error = content.Truncate(100);
-        throw HttpRequestException.From(error, null, response.StatusCode);
-    };
-
-    public static readonly OnHttpFailedCode IgnoreOnFailedCode = (response, content) => { };
-
-    public static async Task<string> SendAsync(this HttpClient httpClient, HttpMethod method, Uri uri,
-        Action<HttpRequestMessage>? configure = null, OnHttpFailedCode? onFailedCode = null)
-    {
-        if (method == null) throw new ArgumentNullException(nameof(method));
-        if (uri == null) throw new ArgumentNullException(nameof(uri));
-
-        using var request = new HttpRequestMessage(method, uri);
-        configure?.Invoke(request);
-
-        using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-        var content = await response.Content.ReadAsStringAsync();
-        if (response.IsSuccessStatusCode == false)
-        {
-            onFailedCode ??= ThrowOnFailedCode;
-            onFailedCode.Invoke(response, content);
-        }
-        return content;
-    }
-
-    public static Task<string> SendAsync(this HttpClient httpClient, HttpMethod method, string uri,
-        Action<HttpRequestMessage>? configure = null, OnHttpFailedCode? onFailedCode = null)
-    {
-        if (uri == null) throw new ArgumentNullException(nameof(uri));
-        return httpClient.SendAsync(method, new Uri(uri, UriKind.RelativeOrAbsolute), configure, onFailedCode);
-    }
-
-
-    public static async Task<T?> SendAsync<T>(this HttpClient httpClient, HttpMethod method, Uri uri,
-        Action<HttpRequestMessage>? configure = null, OnHttpFailedCode? onFailedCode = null)
-    {
-        var content = await httpClient.SendAsync(method, uri, configure, onFailedCode);
-        var result = content.FromJson<T>();
-        return result;
-    }
-
-    public static Task<T?> SendAsync<T>(this HttpClient httpClient, HttpMethod method, string uri,
-        Action<HttpRequestMessage>? configure = null, OnHttpFailedCode? onFailedCode = null)
-    {
-        if (uri == null) throw new ArgumentNullException(nameof(uri));
-        return httpClient.SendAsync<T>(method, new Uri(uri, UriKind.RelativeOrAbsolute), configure, onFailedCode);
     }
 }

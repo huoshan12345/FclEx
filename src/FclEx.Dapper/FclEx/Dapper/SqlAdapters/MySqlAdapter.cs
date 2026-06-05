@@ -3,7 +3,7 @@ namespace FclEx.Dapper.SqlAdapters;
 /// <summary>
 /// Adapter for MySql.Data.MySqlClient
 /// </summary>
-public class MySqlAdapter : AbstractSqlAdapter<MySqlAdapter>
+public class MySqlAdapter : SqlAdapterBase<MySqlAdapter>
 {
     public override bool SupportSchema { get; } = false;
     public override string SelectIdentitySql { get; } = "SELECT LAST_INSERT_ID()";

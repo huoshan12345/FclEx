@@ -3,7 +3,7 @@ namespace FclEx.Dapper.SqlAdapters;
 /// <summary>
 /// Adapter for MySqlConnector
 /// </summary>
-public class MySqlConnectorAdapter : AbstractSqlAdapter<MySqlConnectorAdapter>
+public class MySqlConnectorAdapter : SqlAdapterBase<MySqlConnectorAdapter>
 {
     public override string SelectIdentitySql { get; } = "SELECT LAST_INSERT_ID()";
 

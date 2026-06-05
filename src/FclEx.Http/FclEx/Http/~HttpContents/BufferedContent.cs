@@ -2,46 +2,61 @@ namespace FclEx.Http;
 
 public class BufferedContent : HttpContent
 {
-    public HttpContent Content { get; }
-    public int BufferSize { get; }
-    public TimeSpan? Timeout { get; }
-    public CancellationToken Token { get; }
+    private bool _disposed;
+    private readonly byte[] _buffer;
 
-    protected static readonly MethodInfo MethodOfTryComputeLength
-        = typeof(HttpContent).GetRequiredMethod(nameof(TryComputeLength));
-
-    public BufferedContent(HttpContent content, TimeSpan? timeout = null, int bufferSize = 256 * 1024, CancellationToken token = default)
+    private BufferedContent(byte[] buffer)
     {
-        Content = content;
-        Timeout = timeout;
-        Token = token;
-        BufferSize = bufferSize;
-        content.Headers.CopyTo(Headers);
+        _buffer = buffer;
     }
 
-    protected override async Task SerializeToStreamAsync(Stream stream, TransportContext? context)
+    public BufferedContent CloneIfDisposed()
     {
-#if NET6_0_OR_GREATER
-        await
-#endif
-        using var contentStream = await Content.ReadAsStreamAsync(Token);
-        await contentStream.CopyToAsync(stream, BufferSize, Timeout, Token);
+        return _disposed
+            ? Clone()
+            : this;
+    }
+
+    public BufferedContent Clone()
+    {
+        var content = new BufferedContent(_buffer);
+        CopyHeaders(Headers, content.Headers);
+        return content;
+    }
+
+    protected static void CopyHeaders(HttpContentHeaders source, HttpContentHeaders destination)
+    {
+        // Remove Content-Length header to allow HttpContent to compute it based on the buffer length
+        source.CopyTo(destination, HttpHeaderNames.ContentLength);
+    }
+
+    public static async Task<BufferedContent> CreateAsync(HttpContent inner, TimeSpan? timeout = null, int? bufferSize = null, CancellationToken cancellationToken = default)
+    {
+        var buffer = await inner
+            .ReadAsByteArrayAsync(bufferSize, timeout, cancellationToken)
+            .ConfigureAwait(false);
+
+        var content = new BufferedContent(buffer);
+        CopyHeaders(inner.Headers, content.Headers);
+        return content;
+    }
+
+    protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context)
+    {
+        return stream.WriteAsync(_buffer, 0, _buffer.Length);
     }
 
     protected override bool TryComputeLength(out long length)
     {
-        var paras = new object?[] { null };
-        var result = MethodOfTryComputeLength.InvokeInstance<bool>(Content, paras);
-        length = paras[0].CastTo<long>();
-        return result;
+        length = _buffer.Length;
+        return true;
     }
 
     protected override void Dispose(bool disposing)
     {
         if (disposing)
-        {
-            Content.Dispose();
-        }
+            _disposed = true;
+
         base.Dispose(disposing);
     }
 }

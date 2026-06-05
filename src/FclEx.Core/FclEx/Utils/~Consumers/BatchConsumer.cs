@@ -1,6 +1,6 @@
 namespace FclEx.Utils;
 
-public sealed class BatchConsumer<T> : AbstractConsumer<BatchConsumer<T>, T>,
+public sealed class BatchConsumer<T> : ConsumerBase<BatchConsumer<T>, T>,
     IAsyncConsumer<BatchConsumer<T>, IReadOnlyList<T>>,
     IDiscardListener<BatchConsumer<T>, IReadOnlyList<ProcessingItem<T>>>,
     IExceptionListener<BatchConsumer<T>, IReadOnlyList<ProcessingItem<T>>>

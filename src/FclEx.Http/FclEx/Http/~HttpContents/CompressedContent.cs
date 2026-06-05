@@ -1,22 +1,35 @@
 namespace FclEx.Http;
 
-public abstract class CompressedContent : BufferedContent
+public abstract class CompressedContent : HttpContent
 {
-    public CompressionLevel CompressionLevel { get; }
-    public abstract string Encoding { get; }
+    public const int DefaultBufferSize = 256 * 1024;
 
-    protected CompressedContent(HttpContent content, CompressionLevel compressionLevel, TimeSpan? timeout = null, int bufferSize = 262144, CancellationToken token = default)
-        : base(content, timeout, bufferSize, token)
+    public HttpContent Content { get; }
+    public int BufferSize { get; }
+    public TimeSpan? Timeout { get; }
+    public CancellationToken Token { get; }
+    public CompressionLevel CompressionLevel { get; }
+
+    protected CompressedContent(HttpContent content, string encoding, CompressionLevel compressionLevel,
+        TimeSpan? timeout = null, int? bufferSize = null, CancellationToken token = default)
     {
+        Content = content;
+        Timeout = timeout;
+        Token = token;
+        BufferSize = bufferSize ?? DefaultBufferSize;
         CompressionLevel = compressionLevel;
-        Headers.Add(HttpHeaderNames.ContentEncoding, Encoding);
+        content.Headers.CopyTo(Headers, HttpHeaderNames.ContentLength, HttpHeaderNames.ContentEncoding);
+        Headers.Add(HttpHeaderNames.ContentEncoding, encoding);
     }
 
     protected abstract Stream CreateCompressedStream(Stream stream);
 
     protected override async Task SerializeToStreamAsync(Stream stream, TransportContext? context)
     {
-        var contentStream = await Content.ReadAsStreamAsync(Token);
+#if NET6_0_OR_GREATER
+        await
+#endif
+        using var contentStream = await Content.ReadAsStreamAsync(Token);
 #if NET6_0_OR_GREATER
         await
 #endif
@@ -28,5 +41,14 @@ public abstract class CompressedContent : BufferedContent
     {
         length = 0;
         return false;
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            Content.Dispose();
+        }
+        base.Dispose(disposing);
     }
 }

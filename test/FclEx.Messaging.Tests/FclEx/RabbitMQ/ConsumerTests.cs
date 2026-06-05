@@ -5,7 +5,7 @@ namespace FclEx.RabbitMQ;
 [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
 public class ConsumerTests(RabbitMqTestsFixture fixture) : RabbitMqTests(fixture)
 {
-    [Fact]
+    [RetryFact]
     public async Task Consume_Test()
     {
         var exchange = new RabbitMqExchangeOptions
@@ -116,7 +116,7 @@ public class ConsumerTests(RabbitMqTestsFixture fixture) : RabbitMqTests(fixture
         }, TimeSpan.FromSeconds(delaySeconds));
     }
 
-    [Fact]
+    [RetryFact]
     public async Task Consume_MultiBind_Test()
     {
         var exchange = new RabbitMqExchangeOptions

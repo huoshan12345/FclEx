@@ -10,17 +10,17 @@ public readonly struct HtmlActionContext
     /// </summary>
     /// <param name="response">The source HTTP response.</param>
     /// <param name="html">The HTML text to parse.</param>
-    /// <param name="path">The optional CSS selector. When <see langword="null"/>, the document element is selected.</param>
+    /// <param name="htmlSelector">The optional CSS selector. When <see langword="null"/>, the document element is selected.</param>
     /// <remarks>Invalid selectors may throw during construction.</remarks>
-    public HtmlActionContext(HttpResponse response, string html, string? path)
+    public HtmlActionContext(HttpResponse response, string html, string? htmlSelector)
     {
         Response = response;
         Html = html;
-        Path = path;
+        HtmlSelector = htmlSelector;
         Element = HtmlHelper.Parse(html).DocumentElement;
-        ResultElements = path == null
+        ResultElements = htmlSelector == null
             ? Enumerable.Repeat(Element, 1).ToCollection()
-            : Element.QuerySelectorAll(path)!;
+            : Element.QuerySelectorAll(htmlSelector)!;
     }
 
     /// <summary>
@@ -31,7 +31,7 @@ public readonly struct HtmlActionContext
     /// <summary>
     /// Gets the CSS selector used to select result elements.
     /// </summary>
-    public string? Path { get; }
+    public string? HtmlSelector { get; }
 
     /// <summary>
     /// Gets the original HTML text.

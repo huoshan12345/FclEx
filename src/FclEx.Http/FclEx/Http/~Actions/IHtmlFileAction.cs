@@ -26,6 +26,6 @@ public interface IHtmlFileAction<T> : IHttpAction<T>, IHtmlAction<T>
     HttpMethod IHttpAction<T>.Method => HttpMethod.Get;
 
     /// <inheritdoc />
-    string? IHtmlAction<T>.HtmlResultPath => null;
+    string? IHtmlAction<T>.HtmlSelector => null;
 #endif
 }

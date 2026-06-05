@@ -48,6 +48,29 @@ public class PropertyTests : HttpServerTests
         Assert.Equal(value, response.ResponseString.Contains(keyword));
     }
 
+    [Fact]
+    public void TryCharSet_WhenCharSetExists_DoesNotOverwriteValue()
+    {
+        var request = HttpRequest.Get("http://localhost")
+            .CharSet("utf-8");
+
+        var result = request.TryCharSet("gb2312");
+
+        Assert.Same(request, result);
+        Assert.Equal("utf-8", request.CharSet);
+    }
+
+    [Fact]
+    public void TryCharSet_WhenCharSetIsMissing_SetsValue()
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        var result = request.TryCharSet("gb2312");
+
+        Assert.Same(request, result);
+        Assert.Equal("gb2312", request.CharSet);
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
@@ -67,6 +90,43 @@ public class PropertyTests : HttpServerTests
             .ThrowIfError();
 
         Assert.Equal(value, response.ResponseString.Contains(keyword));
+    }
+
+    [Fact]
+    public void TryFallbackCharSet_WhenFallbackCharSetExists_DoesNotOverwriteValue()
+    {
+        var request = HttpRequest.Get("http://localhost")
+            .FallbackCharSet("utf-8");
+
+        var result = request.TryFallbackCharSet("gb2312");
+
+        Assert.Same(request, result);
+        Assert.Equal("utf-8", request.FallbackCharSet);
+    }
+
+    [Fact]
+    public void TryFallbackCharSet_WhenFallbackCharSetIsMissing_SetsValue()
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        var result = request.TryFallbackCharSet("gb2312");
+
+        Assert.Same(request, result);
+        Assert.Equal("gb2312", request.FallbackCharSet);
+    }
+
+    [Theory]
+    [InlineData(nameof(global::FclEx.Http.HttpRequestExtensions.CharSet))]
+    [InlineData(nameof(global::FclEx.Http.HttpRequestExtensions.TryCharSet))]
+    [InlineData(nameof(global::FclEx.Http.HttpRequestExtensions.FallbackCharSet))]
+    [InlineData(nameof(global::FclEx.Http.HttpRequestExtensions.TryFallbackCharSet))]
+    public void CharSetMethods_UseCorrectParameterName(string methodName)
+    {
+        var method = typeof(global::FclEx.Http.HttpRequestExtensions)
+            .GetMethods()
+            .Single(m => m.Name == methodName && m.GetParameters().Length == 2);
+
+        Assert.Equal("charSet", method.GetParameters()[1].Name);
     }
 
     [Theory]

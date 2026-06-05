@@ -106,30 +106,48 @@ public static class HttpServiceExtensions
     public static Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, string url, HttpMethod? method = null, TimeSpan? timeout = null)
         => http.DownloadAsync(new Uri(url), method, timeout);
 
-    public static IEnumerable<Task<OperationResult<HttpFileDownloadInfo>>> BatchDownloadAsync(this IHttpService httpService, IEnumerable<string> uris, BatchDownloadOptions? options = null)
+    public static Task<OperationResult<HttpFileDownloadInfo>[]> BatchDownloadAsync(this IHttpService httpService, IEnumerable<string> uris, BatchDownloadOptions? options = null)
     {
         return httpService.BatchDownloadAsync(uris.Select(m => new Uri(m, UriKind.RelativeOrAbsolute)), options);
     }
 
-    public static IEnumerable<Task<OperationResult<HttpFileDownloadInfo>>> BatchDownloadAsync(this IHttpService httpService, IEnumerable<Uri> uris, BatchDownloadOptions? options = null)
+    public static async Task<OperationResult<HttpFileDownloadInfo>[]> BatchDownloadAsync(this IHttpService httpService, IEnumerable<Uri> uris, BatchDownloadOptions? options = null)
     {
-        return uris.Select(uri =>
+        var token = options?.CancellationToken ?? default;
+        var readBufferTimeout = options?.ReadBufferTimeout ?? null;
+        var bufferSize = options?.BufferSize ?? null;
+
+        var sourceContent = options?.Content;
+        var content = await sourceContent.ToBufferedContentAsync(readBufferTimeout, bufferSize, token);
+
+        try
         {
-            if (uri.IsAbsoluteUri == false && options?.BaseAddress is { } baseAddress)
+            return await uris.ExecuteAsync(uri =>
             {
-                uri = baseAddress.Resolve(uri);
-            }
-            return httpService.DownloadAsync(new DownloadOptions
-            {
-                Uri = uri,
-                Method = options?.Method ?? HttpMethod.Get,
-                Content = options?.Content,
-                ConnectTimeout = options?.ConnectTimeout,
-                ReadBufferTimeout = options?.ReadBufferTimeout,
-                CancellationToken = options?.CancellationToken ?? default,
-                FileBaseName = null,
-                FileExtension = null,
-            });
-        });
+                if (uri.IsAbsoluteUri == false && options?.BaseAddress is { } baseAddress)
+                {
+                    uri = baseAddress.Resolve(uri);
+                }
+                return httpService.DownloadAsync(new DownloadOptions
+                {
+                    Uri = uri,
+                    Method = options?.Method ?? HttpMethod.Get,
+                    Content = content?.Clone(),
+                    ReadHeadersTimeout = options?.ReadHeadersTimeout,
+                    BufferSize = bufferSize,
+                    ReadBufferTimeout = options?.ReadBufferTimeout,
+                    CancellationToken = token,
+                    FileBaseName = null,
+                    FileExtension = null,
+                });
+            }, options?.ExecuteInParallel ?? true, options?.Concurrency, TimeSpan.Zero, token);
+        }
+        finally
+        {
+            content?.Dispose();
+
+            if (ReferenceEquals(sourceContent, content) == false)
+                sourceContent?.Dispose();
+        }
     }
 }

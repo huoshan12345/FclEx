@@ -76,6 +76,11 @@ partial class TaskExtensions
         return task.Then(t => action(t).Then(() => task));
     }
 
+    public static Task<IOPair<TInput, TOutput>> ToIOPair<TInput, TOutput>(this Task<TOutput> task, TInput input)
+    {
+        return task.Then(m => IOPair.Create(input, m));
+    }
+
     public static Task Catch(this Task task, Func<Exception, Task> action)
     {
         Check.NotNull(task);

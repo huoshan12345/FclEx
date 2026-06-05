@@ -6,7 +6,7 @@ public class HtmlActionTests
     public void GetResult_WhenSelectorMatches_ReturnsSelectedElement()
     {
         var response = HttpActionTestFixtures.CreateResponse("""<html><body><span class="name">fclex</span></body></html>""");
-        var action = new HtmlTextAction { HtmlResultPathValue = ".name" };
+        var action = new HtmlTextAction { HtmlSelectorValue = ".name" };
 
         var result = action.GetResult(response);
 
@@ -18,7 +18,7 @@ public class HtmlActionTests
     public void GetResult_WhenSelectorMatchesMultipleElements_ReturnsFirstElement()
     {
         var response = HttpActionTestFixtures.CreateResponse("<html><body><span>first</span><span>second</span></body></html>");
-        var action = new HtmlTextAction { HtmlResultPathValue = "span" };
+        var action = new HtmlTextAction { HtmlSelectorValue = "span" };
 
         var result = action.GetResult(response);
 
@@ -42,7 +42,7 @@ public class HtmlActionTests
     public void GetResult_WhenSelectorDoesNotMatch_ReturnsError()
     {
         var response = HttpActionTestFixtures.CreateResponse("<html><body></body></html>");
-        var action = new HtmlTextAction { HtmlResultPathValue = ".missing" };
+        var action = new HtmlTextAction { HtmlSelectorValue = ".missing" };
 
         var result = action.GetResult(response);
 
@@ -77,14 +77,27 @@ public class HtmlActionTests
     public void CreateContext_ExposesHtmlResponseAndSelectedElements()
     {
         var response = HttpActionTestFixtures.CreateResponse();
-        var action = new HtmlTextAction { HtmlResultPathValue = "li" };
+        var action = new HtmlTextAction { HtmlSelectorValue = "li" };
 
         var result = action.CreateContext(response, "<html><body><ul><li>A</li><li>B</li></ul></body></html>");
 
         Assert.True(result.IsSuccess, result.Exception?.ToString());
         Assert.Same(response, result.Value!.Response);
-        Assert.Equal("li", result.Value.Path);
+        Assert.Equal("li", result.Value.HtmlSelector);
         Assert.Equal(2, result.Value.ResultElements.Count());
+        Assert.Equal("A", result.Value.ResultElement!.TextContent);
+    }
+
+    [Fact]
+    public void CreateContext_UsesHtmlSelectorToSelectResultElements()
+    {
+        var response = HttpActionTestFixtures.CreateResponse();
+        var action = new HtmlTextAction { HtmlSelectorValue = ".item" };
+
+        var result = action.CreateContext(response, """<html><body><span class="item">A</span><span>B</span></body></html>""");
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Equal(".item", result.Value!.HtmlSelector);
         Assert.Equal("A", result.Value.ResultElement!.TextContent);
     }
 
@@ -92,7 +105,7 @@ public class HtmlActionTests
     public void CreateContext_WhenSelectorIsInvalid_DoesNotReturnSuccess()
     {
         var response = HttpActionTestFixtures.CreateResponse();
-        var action = new HtmlTextAction { HtmlResultPathValue = "[" };
+        var action = new HtmlTextAction { HtmlSelectorValue = "[" };
 
         try
         {

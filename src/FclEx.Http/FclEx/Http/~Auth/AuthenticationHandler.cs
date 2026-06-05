@@ -20,7 +20,7 @@ public class AuthenticationHandler : DelegatingHandler
             return await base.SendAsync(request, cancellationToken);
         }
 
-        var token = await _tokenProvider.GetTokenAsync(_scopes);
+        var token = await _tokenProvider.GetTokenAsync(_scopes, forceRefresh: false, cancellationToken);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var response = await base.SendAsync(request, cancellationToken);
@@ -30,7 +30,7 @@ public class AuthenticationHandler : DelegatingHandler
 
         response.Dispose();
 
-        var newToken = await _tokenProvider.GetTokenAsync(_scopes, forceRefresh: true);
+        var newToken = await _tokenProvider.GetTokenAsync(_scopes, forceRefresh: true, cancellationToken);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", newToken);
         return await base.SendAsync(request, cancellationToken);
     }

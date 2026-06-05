@@ -42,4 +42,23 @@ public static class UriExtensions
         };
         return builder.Uri;
     }
+
+    /// <summary>
+    /// Gets the path part of the URI without the query string or fragment.
+    /// </summary>
+    /// <remarks>
+    /// For absolute URIs, this returns <see cref="Uri.AbsolutePath"/>.<br/>
+    /// For relative URIs, this removes the query string and fragment from
+    /// <see cref="Uri.OriginalString"/>.
+    /// </remarks>
+    public static string GetPath(this Uri uri)
+    {
+        if (uri.IsAbsoluteUri)
+            return uri.AbsolutePath;
+
+        var text = uri.OriginalString;
+        var endIndex = text.IndexOfAny(['?', '#']);
+
+        return endIndex >= 0 ? text[..endIndex] : text;
+    }
 }

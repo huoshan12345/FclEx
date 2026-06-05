@@ -11,9 +11,19 @@ public interface IJsonpAction<T> : IJsonAction<T>, IHttpAction<T>
     /// </summary>
     string CallbackParamName { get; }
 
+    /// <summary>
+    /// Gets the JSONP callback function name sent as the callback parameter value and expected in the response wrapper.
+    /// </summary>
+    string CallbackName
+#if NET6_0_OR_GREATER
+        => DefaultJsonpAction.DefaultCallbackName;
+#else
+    { get; }
+#endif
+
 #if NET6_0_OR_GREATER
     /// <inheritdoc />
-    string? IJsonAction<T>.JsonResultPath => null;
+    string? IJsonAction<T>.JsonPath => null;
 
     /// <inheritdoc />
     HttpMethod IHttpAction<T>.Method => HttpMethod.Get;

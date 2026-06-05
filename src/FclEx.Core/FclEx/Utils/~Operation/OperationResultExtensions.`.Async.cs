@@ -1,5 +1,3 @@
-using TaskExtensions = FclEx.Extensions.TaskExtensions;
-
 namespace FclEx.Utils;
 
 partial class OperationResultExtensions
@@ -232,11 +230,6 @@ partial class OperationResultExtensions
         return task.ContinueWith(m => m.Result.Unwrap(defaultValue));
     }
 
-    public static Task<IOPair<TInput, OperationResult<TOutput>>> ToIOPair<TInput, TOutput>(this Task<OperationResult<TOutput>> task, TInput input)
-    {
-        return TaskExtensions.Then(task, m => IOPair.Create(input, m));
-    }
-
     public static Task<OperationResult<TNext>> ThenIf<T, TNext>(this Task<OperationResult<T>> task, Func<T, bool> condition,
         Func<T, Task<OperationResult<TNext>>> @true, Func<T, Task<OperationResult<TNext>>> @false)
     {
@@ -256,10 +249,45 @@ partial class OperationResultExtensions
     {
         return task.ThenIf(condition, next, _ => Operation.Success(Unit.Default));
     }
-    
+
     public static IAction<T[]> ToAction<T>(this IEnumerable<Task<OperationResult<T>>> tasks, bool parallel)
     {
         var actions = tasks.Select(m => Operation.Action(t => m));
         return parallel ? actions.CombineInParallel() : actions.CombineInSeries();
+    }
+
+    public static Task<OperationResult<T>> FallBack<T>(this Task<OperationResult<T>> result, Func<OperationResult<T>, Task<OperationResult<T>>> fallback)
+    {
+        return result.ThenResult(r => r.IsError ? fallback(r) : r);
+    }
+
+    public static Task<OperationResult<T>> FallBack<T>(this Task<OperationResult<T>> result, Func<OperationResult<T>, OperationResult<T>> fallback)
+    {
+        return result.ThenResult(r => r.IsError ? fallback(r) : r);
+    }
+
+    public static Task<OperationResult<T>> FallBack<T>(this Task<OperationResult<T>> result, Func<OperationResult<T>, T> fallback)
+    {
+        return result.ThenResult(r => r.IsError ? fallback(r) : r);
+    }
+
+    public static Task<OperationResult<T>> FallBack<T>(this Task<OperationResult<T>> result, T fallback)
+    {
+        return result.ThenResult(r => r.IsError ? fallback : r);
+    }
+
+    public static Task<OperationResult<TNext>> Then<T, TNext>(this Task<OperationResult<T>> task, Func<T, Task<TNext>> next)
+    {
+        return task.Then<T, TNext>(m => Operation.ExecuteAsync(() => next(m)));
+    }
+
+    public static Task<OperationResult<(T, TNext)>> ThenWith<T, TNext>(this Task<OperationResult<T>> task, Func<T, Task<TNext>> next)
+    {
+        return task.Then<T, (T, TNext)>(m => Operation.ExecuteAsync(() => next(m).Then(x => (m, x))));
+    }
+
+    public static Task<OperationResult<(T, TNext)>> ThenWith<T, TNext>(this Task<OperationResult<T>> task, Func<T, Task<OperationResult<TNext>>> next)
+    {
+        return task.Then<T, (T, TNext)>(m => Operation.ExecuteAsync(() => next(m).MapValue(x => (m, x))));
     }
 }

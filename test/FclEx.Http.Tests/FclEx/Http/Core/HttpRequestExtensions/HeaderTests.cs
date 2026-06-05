@@ -153,4 +153,113 @@ public class HeaderTests
         Assert.Same(request, result);
         Assert.Empty(request.Headers);
     }
+
+    [Fact]
+    public void TryAddHeader_WhenHeaderExists_DoesNotAddAnotherValue()
+    {
+        var request = HttpRequest.Get("http://localhost")
+            .AddHeader("X-Trace", "existing");
+
+        var result = request.TryAddHeader("X-Trace", "fallback");
+
+        Assert.Same(request, result);
+        Assert.Equal(["existing"], request.Headers.GetValues("X-Trace"));
+    }
+
+    [Fact]
+    public void TryAddHeader_WhenHeaderIsMissing_AddsValue()
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        var result = request.TryAddHeader("X-Trace", "fallback");
+
+        Assert.Same(request, result);
+        Assert.Equal("fallback", request.Headers.Get("X-Trace"));
+    }
+
+    [Fact]
+    public void TrySetHeader_WhenHeaderExists_DoesNotOverwriteValue()
+    {
+        var request = HttpRequest.Get("http://localhost")
+            .AddHeader("X-Trace", "existing")
+            .AddHeader("X-Trace", "second");
+
+        var result = request.TrySetHeader("X-Trace", "fallback");
+
+        Assert.Same(request, result);
+        Assert.Equal(["existing", "second"], request.Headers.GetValues("X-Trace"));
+    }
+
+    [Fact]
+    public void TrySetHeader_WhenHeaderIsMissing_SetsValue()
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        var result = request.TrySetHeader("X-Trace", "fallback");
+
+        Assert.Same(request, result);
+        Assert.Equal("fallback", request.Headers.Get("X-Trace"));
+    }
+
+    [Theory]
+    [InlineData("Authorization:Bearer token:with:colon", ":", "Authorization", "Bearer token:with:colon")]
+    [InlineData("X-Trace=abc=123", "=", "X-Trace", "abc=123")]
+    [InlineData("X-Empty:", ":", "X-Empty", "")]
+    [InlineData("X-Flag", ":", "X-Flag", "")]
+    public void AddHeaderLine_ParsesLineUsingFirstSeparatorOnly(string line, string separator, string expectedKey, string expectedValue)
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        var result = request.AddHeaderLine(line, separator);
+
+        Assert.Same(request, result);
+        Assert.Equal(expectedValue, request.Headers.Get(expectedKey));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(null)]
+    public void AddHeaderLine_WhenSeparatorIsEmpty_Throws(string? separator)
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        Assert.ThrowsAny<ArgumentException>(() => request.AddHeaderLine("X-Trace:abc", separator!));
+    }
+
+    [Fact]
+    public void AcceptCompress_WhenEncodingsAreOmitted_UsesDefaultHandlerEncodings()
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        var result = request.AcceptCompress();
+
+        Assert.Same(request, result);
+#if NET5_0_OR_GREATER
+        Assert.Equal("gzip, deflate, br", request.Headers.Get(HttpHeaderNames.AcceptEncoding));
+#else
+        Assert.Equal("gzip", request.Headers.Get(HttpHeaderNames.AcceptEncoding));
+#endif
+    }
+
+    [Fact]
+    public void AcceptCompress_WhenEncodingsAreSpecified_UsesProvidedEncodings()
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        var result = request.AcceptCompress(["zstd", "gzip"]);
+
+        Assert.Same(request, result);
+        Assert.Equal("zstd, gzip", request.Headers.Get(HttpHeaderNames.AcceptEncoding));
+    }
+
+    [Fact]
+    public void AcceptChinese_SetsChineseAcceptLanguageHeader()
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        var result = request.AcceptChinese();
+
+        Assert.Same(request, result);
+        Assert.Equal("zh-CN,zh;q=0.8", request.Headers.Get(HttpHeaderNames.AcceptLanguage));
+    }
 }

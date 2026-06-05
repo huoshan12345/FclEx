@@ -20,6 +20,13 @@ partial class HttpRequestExtensions
         return request;
     }
 
+    /// <summary>
+    /// Adds a header only when the request does not already contain the header key.
+    /// </summary>
+    /// <remarks>
+    /// The <c>Try</c> prefix follows the Microsoft.Extensions.DependencyInjection <c>TryAdd*</c> convention:
+    /// the method is conditional, but still returns the request for fluent chaining.
+    /// </remarks>
     public static HttpRequest TryAddHeader(this HttpRequest request, string key, string? value)
     {
         if (request.Headers.ContainsKey(key) == false)
@@ -29,6 +36,13 @@ partial class HttpRequestExtensions
         return request;
     }
 
+    /// <summary>
+    /// Sets a header only when the request does not already contain the header key.
+    /// </summary>
+    /// <remarks>
+    /// The <c>Try</c> prefix follows the Microsoft.Extensions.DependencyInjection <c>TryAdd*</c> convention:
+    /// the method is conditional, but still returns the request for fluent chaining.
+    /// </remarks>
     public static HttpRequest TrySetHeader(this HttpRequest request, string key, string? value)
     {
         if (request.Headers.ContainsKey(key) == false)
@@ -84,11 +98,13 @@ partial class HttpRequestExtensions
         return request.SetHeader(HttpHeaderNames.Cookie, cookies.JoinWith("; "));
     }
 
-    public static HttpRequest AddHeaderPair(this HttpRequest request, string pair, char separator = ':')
+    public static HttpRequest AddHeaderLine(this HttpRequest request, string pair, string separator = ":")
     {
         Check.NotEmpty(pair);
-        var parts = pair.Split(separator);
-        request.AddHeader(parts[0], pair.Length > 1 ? parts[1] : "");
+        Check.NotEmpty(separator);
+
+        var (key, value) = pair.Partition(separator);
+        request.AddHeader(key, value);
         return request;
     }
 
@@ -97,7 +113,7 @@ partial class HttpRequestExtensions
         return request.SetHeader(HttpHeaderNames.AcceptCharset, "utf-8");
     }
 
-    public static HttpRequest AcceptCn(this HttpRequest request)
+    public static HttpRequest AcceptChinese(this HttpRequest request)
     {
         return request.SetHeader(HttpHeaderNames.AcceptLanguage, "zh-CN,zh;q=0.8");
     }
@@ -107,9 +123,16 @@ partial class HttpRequestExtensions
         return request.SetHeader(HttpHeaderNames.XRequestedWith, "XMLHttpRequest");
     }
 
-    public static HttpRequest AcceptCompress(this HttpRequest request)
+    private static readonly string[] _defaultEncodings =
+#if NET5_0_OR_GREATER
+        ["gzip", "deflate", "br"];
+#else
+        ["gzip"];
+#endif
+
+    public static HttpRequest AcceptCompress(this HttpRequest request, IEnumerable<string>? encodings = null)
     {
-        return request.SetHeader(HttpHeaderNames.AcceptEncoding, "gzip");
+        return request.SetHeader(HttpHeaderNames.AcceptEncoding, string.Join(", ", encodings ?? _defaultEncodings));
     }
 
     public static HttpRequest UseGZip(this HttpRequest request, bool gzip = true, CompressionLevel level = CompressionLevel.Optimal)

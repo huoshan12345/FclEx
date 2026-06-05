@@ -1,3 +1,5 @@
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using static FclEx.Http.IPVersionPolicy;
 
 namespace FclEx.Http;
@@ -7,6 +9,11 @@ public static class HttpClientHelper
     public static HttpClient Create(SocketsHttpHandlerOptions? options = null)
     {
         return new(CreateSocketsHttpHandler(options));
+    }
+
+    public static bool BypassServerCertificateValidation(object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
+    {
+        return true;
     }
 
     public static SocketsHttpHandler CreateSocketsHttpHandler(SocketsHttpHandlerOptions? options = null)
@@ -28,93 +35,95 @@ public static class HttpClientHelper
 #endif
             SslOptions = new()
             {
-                RemoteCertificateValidationCallback = (sender, certificate, chain, errors) => true,
+                RemoteCertificateValidationCallback = options.DisableServerCertificateValidation
+                    ? BypassServerCertificateValidation
+                    : null, // if DisableServerCertificateValidation is false, use the default validation callback (which is null)
             },
             ConnectCallback = async (context, token) =>
             {
-                var host = context.DnsEndPoint.Host;
-                var family = options.IPVersionPolicy switch
-                {
-                    OnlyIPv4 => AddressFamily.InterNetwork,
-                    OnlyIPv6 => AddressFamily.InterNetworkV6,
-                    PreferIPv4 or PreferIPv6 => AddressFamily.Unspecified,
-                    _ => throw new ArgumentOutOfRangeException(nameof(options.IPVersionPolicy), options.IPVersionPolicy, null)
-                };
-
-                // Use DNS to look up the IP addresses of the target host:
-                // - IP v4: AddressFamily.InterNetwork
-                // - IP v6: AddressFamily.InterNetworkV6
-                // - IP v4 or IP v6: AddressFamily.Unspecified
-                // note: this method throws a SocketException when there is no IP address for the host
-                var ips = IPAddress.TryParse(host, out var ip)
-                    ? [ip]
-#if !NET5_0_OR_GREATER
-                    : (await Dns.GetHostEntryAsync(host)).AddressList;
-#else
-                    : (await Dns.GetHostEntryAsync(host, family, token)).AddressList;
-#endif
-
-                if (ips.IsEmpty())
-                {
-                    throw new InvalidOperationException($"Cannot get any ipv4 addresses whose family is {family} for {host}");
-                }
-
-                // Open the connection to the target host/port
-                var socket = new Socket(SocketType.Stream, ProtocolType.Tcp)
-                {
-                    // Turn off Nagle algorithm since it degrades performance in most HttpClient scenarios.
-                    NoDelay = true,
-                };
-
-                var desc = options.IPVersionPolicy is PreferIPv6 or OnlyIPv6;
-                Exception? lastEx = null;
-                foreach (var address in ips.OrderBy(m => m.AddressFamily, desc)) // make sure ipv4 addresses are preferred
-                {
-                    try
-                    {
-                        await socket.ConnectAsync(address, context.DnsEndPoint.Port, token);
-                        return new NetworkStream(socket, ownsSocket: true);
-                    }
-
-                    catch (Exception ex)
-                    {
-                        lastEx = ex;
-
-                        if (ex is OperationCanceledException canceledException
-                           && canceledException.CancellationToken == token && token.IsCancellationRequested)
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                socket.Dispose();
-
-                lastEx!.ReThrow(); // should not be null here.
-                return default;
+                var ips = await GetIPAddressesAsync(context.DnsEndPoint.Host, options.IPVersionPolicy, token);
+                return await ConnectAsync(context.DnsEndPoint, ips, token);
             }
         };
+    }
 
-        static async Task CheckSocketConnection(Socket s)
+    internal static async Task<IPAddress[]> GetIPAddressesAsync(string host, IPVersionPolicy policy, CancellationToken token)
+    {
+#if NET5_0_OR_GREATER
+        var family = policy switch
         {
-            /*
-                s.Poll returns true if
-                    connection is closed, reset, terminated or pending (meaning no active connection)
-                    connection is active and there is data available for reading
+            OnlyIPv4 => AddressFamily.InterNetwork,
+            OnlyIPv6 => AddressFamily.InterNetworkV6,
+            PreferIPv4 or PreferIPv6 => AddressFamily.Unspecified,
+            _ => throw new ArgumentOutOfRangeException(nameof(policy), policy, null)
+        };
+#endif
 
-                s.Available returns number of bytes available for reading
+        // Use DNS to look up the IP addresses of the target host:
+        // - IP v4: AddressFamily.InterNetwork
+        // - IP v6: AddressFamily.InterNetworkV6
+        // - IP v4 or IP v6: AddressFamily.Unspecified
+        // note: this method throws a SocketException when there is no IP address for the host
+        var ips = IPAddress.TryParse(host, out var ip)
+            ? [ip]
+#if !NET5_0_OR_GREATER
+            : (await Dns.GetHostEntryAsync(host)).AddressList;
+#else
+            : (await Dns.GetHostEntryAsync(host, family, token)).AddressList;
+#endif
 
-                if both are true:
-                    there is no data available to read so connection is not active
-            */
-            var part1 = s.Poll(1000, SelectMode.SelectRead);
-            var part2 = s.Available == 0;
-            if (part1 && part2)
-                throw new InvalidOperationException("There is no data available to read from socket.");
+        var orderedIps = FilterAndOrderIPAddresses(ips, policy);
+        return orderedIps.IsEmpty()
+            ? throw new InvalidOperationException($"Cannot get any IP addresses whose family matches {policy} for {host}")
+            : orderedIps;
+    }
 
-            var sentBytesCount = await s.SendAsync(new ArraySegment<byte>(new byte[1], 1, 0), SocketFlags.None);
-            if (sentBytesCount != 1)
-                throw new InvalidOperationException("Cannot send any data via socket.");
+    internal static IPAddress[] FilterAndOrderIPAddresses(IEnumerable<IPAddress> addresses, IPVersionPolicy policy)
+    {
+        var filtered = policy switch
+        {
+            OnlyIPv4 => addresses.Where(address => address.AddressFamily == AddressFamily.InterNetwork),
+            OnlyIPv6 => addresses.Where(address => address.AddressFamily == AddressFamily.InterNetworkV6),
+            PreferIPv4 or PreferIPv6 => addresses,
+            _ => throw new ArgumentOutOfRangeException(nameof(policy), policy, null)
+        };
+        var preferIPv6 = policy is PreferIPv6 or OnlyIPv6;
+        return filtered.OrderBy(address => address.AddressFamily, preferIPv6).ToArray();
+    }
+
+    internal static async Task<NetworkStream> ConnectAsync(DnsEndPoint endpoint, IEnumerable<IPAddress> addresses, CancellationToken token)
+    {
+        Exception? lastEx = null;
+        foreach (var address in addresses)
+        {
+            var socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp)
+            {
+                // Turn off Nagle algorithm since it degrades performance in most HttpClient scenarios.
+                NoDelay = true,
+            };
+
+            try
+            {
+                await socket.ConnectAsync(address, endpoint.Port, token);
+                return new NetworkStream(socket, ownsSocket: true);
+            }
+            catch (Exception ex)
+            {
+                socket.Dispose();
+                lastEx = ex;
+
+                if (ex is OperationCanceledException canceledException
+                    && canceledException.CancellationToken == token
+                    && token.IsCancellationRequested)
+                {
+                    break;
+                }
+            }
         }
+
+        lastEx?.ReThrow();
+
+        // This should never happen since the caller will throw a SocketException when there is no IP address for the host, but just in case.
+        throw new InvalidOperationException($"Cannot connect to {endpoint}.");
     }
 }

@@ -9,8 +9,10 @@ public static class HttpMessageHandlerExtensions
         {
             yield return p;
 
-            if (p is DelegatingHandler delegatingHandler) 
+            if (p is DelegatingHandler delegatingHandler)
                 p = delegatingHandler.InnerHandler;
+            else
+                break;
         }
     }
 }

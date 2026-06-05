@@ -2,21 +2,23 @@ namespace FclEx;
 
 public static class RegexesExtensions
 {
-    public const string CallbackName = "_callback";
-
     private static readonly Regex _emailCheck = new(@"[\da-zA-Z]+@[\da-zA-Z]+[\.][\da-zA-Z]{2,5}", RegexOptions.Compiled);
-    private static readonly Regex _callbackContent = new("(?<=" + CallbackName + @"\().+(?=\))", RegexOptions.Compiled);
-    private static readonly Regex _metaRefresh = new("""<meta +http-equiv="refresh" +content="(.+)"/>""", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-    private static readonly Regex _metaRefreshUrl = new("""^\s*(\d+)(?:\s*;(?:\s*url\s*=)?\s*(?:["']\s*(.*?)\s*['"]|(.*?)))?\s*$""", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-    private static readonly Regex _charSet = new("<meta[^<]*charset=([^<]*)[\"']", RegexOptions.Compiled);
+
+    // Supports common charset declarations such as:
+    // <meta charset="utf-8">
+    // <meta charset='gb2312'>
+    // <meta charset=utf-8>
+    // <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    // <meta content='text/html; charset=gb2312' http-equiv='Content-Type'>
+    private static readonly IReadOnlyList<Regex> _charSet =
+    [
+        new("""<meta\b[^>]*\bcharset\s*=\s*(?:"(?<charset>[^"]+)"|'(?<charset>[^']+)'|(?<charset>[^\s"'/>;]+))""", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        new("""<meta\b[^>]*\bcontent\s*=\s*(?:"[^"]*?\bcharset\s*=\s*(?<charset>[^"\s;]+)[^"]*"|'[^']*?\bcharset\s*=\s*(?<charset>[^'\s;]+)[^']*')""", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+    ];
 
     extension(Regexes)
     {
-        public static string CallbackName => CallbackName;
         public static Regex EmailCheck => _emailCheck;
-        public static Regex CallbackContent => _callbackContent;
-        public static Regex MetaRefresh => _metaRefresh;
-        public static Regex MetaRefreshUrl => _metaRefreshUrl;
-        public static Regex CharSet => _charSet;
+        public static IReadOnlyList<Regex> CharSet => _charSet;
     }
 }

@@ -5,7 +5,7 @@
   <ItemGroup>
     <PackageReference Include="EasyCaching.InMemory" />
     <PackageReference Include="EasyCaching.Serialization.SystemTextJson" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FclEx.Options\FclEx.Options.csproj" />

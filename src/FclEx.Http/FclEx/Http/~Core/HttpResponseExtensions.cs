@@ -39,31 +39,36 @@ public static class HttpResponseExtensions
             return (ex, response.Elapsed);
 
         var str = response.ResponseString;
-        if (!str.IsPossibleJson())
-            return Operation.Error<T>("Can not parse json from empty string");
+        return str.IsPossibleJson()
+            ? Operation.Execute(() => Deserialize(str, path, options))
+            : Operation.Error<T>("Can not parse json from non-JSON string");
 
-        var doc = JsonDocument.Parse(str, new()
+        static T Deserialize(string str, string? path, JsonSerializerOptions? options)
         {
-            AllowTrailingCommas = options?.AllowTrailingCommas ?? false,
-            CommentHandling = options?.ReadCommentHandling ?? JsonCommentHandling.Disallow,
-            MaxDepth = options?.MaxDepth ?? 0,
-        });
+            using var doc = JsonDocument.Parse(str, new()
+            {
+                AllowTrailingCommas = options?.AllowTrailingCommas ?? false,
+                CommentHandling = options?.ReadCommentHandling ?? JsonCommentHandling.Disallow,
+                MaxDepth = options?.MaxDepth ?? 0,
+            });
 
-        var element = path.IsNullOrEmpty()
-            ? doc.RootElement
-            : doc.SelectElement(path);
+            var element = path.IsNullOrEmpty()
+                ? doc.RootElement
+                : doc.SelectElement(path);
 
-        return element.HasValue
-            ? element.Value.Deserialize<T>(options)!
-            : Operation.Error<T>("The path does not exist in json: " + path);
+            return element.HasValue
+                ? element.Value.Deserialize<T>(options)!
+                : throw new InvalidOperationException("The path does not exist in json: " + path);
+        }
     }
-    
+
     public static async Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, DownloadOptions options)
     {
         var request = new HttpRequest(options.Uri, options.Method)
             .ReadAsBytes()
-            .ReadHeadersTimeout(options.ConnectTimeout)
+            .ReadHeadersTimeout(options.ReadHeadersTimeout)
             .ReadBufferTimeout(options.ReadBufferTimeout)
+            .BufferSize(options.BufferSize)
             .AcceptCompress();
 
         if (options.Content is { } content)
@@ -71,18 +76,25 @@ public static class HttpResponseExtensions
             request.Content(content);
         }
 
-        var response = await request.SendAsync(http, options.CancellationToken);
-        return response.IsError
-            ? Operation.ObjectError(response, response.Exception, response.Elapsed)
-                .Cast<HttpFileDownloadInfo>()
-            : response.GetDownloadInfo(options.FileBaseName, options.FileExtension);
+        try
+        {
+            var response = await request.SendAsync(http, options.CancellationToken);
+            return response.IsError
+                ? Operation.ObjectError(response, response.Exception, response.Elapsed)
+                    .Cast<HttpFileDownloadInfo>()
+                : response.GetDownloadInfo(options.FileBaseName, options.FileExtension);
+        }
+        finally
+        {
+            options.Content?.Dispose();
+        }
     }
 
     private static readonly Regex _regexOfNonWord = new(@"\W+", RegexOptions.Compiled);
 
     public static HttpFileDownloadInfo GetDownloadInfo(this HttpResponse response, string? baseName = null, string? extension = null)
     {
-        var uri = response.RedirectUris.Last();
+        var uri = response.LastUri();
         var fileName = uri.Segments
             .Select(m => m.Trim('/'))
             .LastOrDefault(m => m.IsNotEmpty());
@@ -90,10 +102,10 @@ public static class HttpResponseExtensions
 
         if (baseName is null)
         {
-            baseName = fileName.TrimEnd(ext);
+            baseName = fileName.TrimEnd(ext, onlyOnce: true);
             if (baseName.IsNullOrEmpty())
             {
-                baseName = uri.Host.Replace(_regexOfNonWord, "_").TrimEnd("_");
+                baseName = uri.Host.Replace(_regexOfNonWord, "_").TrimEnd('_');
             }
         }
 
@@ -129,21 +141,9 @@ public static class HttpResponseExtensions
         }
     }
 
-    public static Uri LastUri(this HttpResponse response) => response.RedirectUris.Last();
-
-    public static Task<HttpResponse> Error(this Task<HttpResponse> task, Action<Exception> action)
+    public static Uri LastUri(this HttpResponse response)
     {
-        return task.When(m => m.IsError, m => action(m.Exception!));
-    }
-
-    public static Task<HttpResponse> Ok(this Task<HttpResponse> task, Action<HttpResponse> action)
-    {
-        return task.When(m => !m.IsError, action);
-    }
-
-    public static Task<HttpResponse> Ok(this Task<HttpResponse> task, Func<HttpResponse, Task> action)
-    {
-        return task.When(m => !m.IsError, action);
+        return response.VisitedUris.LastOrDefault() ?? throw new InvalidOperationException("No visited URIs available.");
     }
 
     public static HttpResponse AddCookies(this HttpResponse response, IEnumerable<string> cookies)
@@ -167,5 +167,31 @@ public static class HttpResponseExtensions
 
         mediaType = null;
         return false;
+    }
+
+    /// <summary>
+    /// Creates a redirect action when a redirect URL can be resolved from a response.
+    /// </summary>
+    /// <param name="response">The response used to resolve the redirect URL.</param>
+    /// <param name="httpService">The service used to send the redirect request.</param>
+    /// <param name="urlFunc">Returns the redirect URL. Returning <see langword="null"/> means no redirect action is created.</param>
+    /// <returns>A GET redirect action, or <see langword="null"/> when no URL is available.</returns>
+    public static IAction<HttpResponse>? TryCreateRedirectAction(this HttpResponse response, IHttpService httpService, Func<HttpResponse, string?> urlFunc)
+    {
+        Check.NotNull(urlFunc);
+        var url = urlFunc(response);
+        return url == null ? null : HttpRequest.Get(url).ToAction(httpService);
+    }
+
+    /// <summary>
+    /// Creates a redirect action when the given URL is not null.
+    /// </summary>
+    /// <param name="response">The response associated with the redirect decision.</param>
+    /// <param name="httpService">The service used to send the redirect request.</param>
+    /// <param name="url">The redirect URL. When <see langword="null"/>, no action is created.</param>
+    /// <returns>A GET redirect action, or <see langword="null"/> when <paramref name="url"/> is null.</returns>
+    public static IAction<HttpResponse>? TryCreateRedirectAction(this HttpResponse response, IHttpService httpService, string? url)
+    {
+        return response.TryCreateRedirectAction(httpService, r => url);
     }
 }

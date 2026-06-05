@@ -1,3 +1,4 @@
+// ReSharper disable InheritdocInvalidUsage
 namespace FclEx.Http;
 
 /// <summary>
@@ -7,7 +8,7 @@ namespace FclEx.Http;
 public abstract class HtmlAction<T> : HttpResponseHandler<T>, IHtmlAction<T>
 {
     /// <inheritdoc />
-    public virtual string? HtmlResultPath => null;
+    public virtual string? HtmlSelector => null;
 
     /// <inheritdoc />
     public virtual OperationResult<string> GetHtml(HttpResponse response)

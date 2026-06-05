@@ -81,7 +81,7 @@ public static class PropertyInfoExtensions
 
     private static readonly Type _isExternalInit = typeof(IsExternalInit);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static bool IsInitOnly(this PropertyInfo property)
     {
         var setter = property.SetMethod;
@@ -89,10 +89,10 @@ public static class PropertyInfoExtensions
             return false;
 
         var mods = returnParam.GetRequiredCustomModifiers();
-        return mods.Any(t => ReferenceEquals(t, _isExternalInit));
+        return mods.Any(t => t.FullName == _isExternalInit.FullName);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static bool IsNotVisibleToDerived(this PropertyInfo property)
     {
         var m = property.GetMethod ?? property.SetMethod;

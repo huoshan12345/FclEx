@@ -1,7 +1,34 @@
+using System.Collections.Concurrent;
+using Duende.IdentityModel.Client;
+
 namespace FclEx.Http.Auth;
 
 public class ClientCredentialsTokenProviderTests : AuthTests
 {
+    [Fact]
+    public void Constructor_UsesConfiguredDiscoveryPolicy()
+    {
+        var policy = new DiscoveryPolicy
+        {
+            RequireHttps = false,
+            ValidateEndpoints = false,
+            RequireKeySet = false,
+        };
+        var provider = new ClientCredentialsTokenProvider(new()
+        {
+            Authority = "http://localhost/oauth",
+            ClientId = "client",
+            ClientSecret = "secret",
+            Policy = policy,
+        }, () => throw new InvalidOperationException("No HTTP request should be sent in this test."));
+
+        var request = typeof(ClientCredentialsTokenProvider)
+            .GetRequiredField("_documentRequest")
+            .GetRequiredValue<DiscoveryDocumentRequest>(provider);
+
+        Assert.Same(policy, request.Policy);
+    }
+
     [Fact]
     public async Task GetToken_ShouldReturnAccessToken()
     {
@@ -52,7 +79,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
         if (HasApiServer == false)
             return;
 
-        var handler = new MutateTokenResponseHandler((_, _, _, m) => m[TokenResponse.ExpiresIn] = 1);
+        var handler = new MutateTokenResponseHandler((_, _, _, m) => m[OidcConstants.TokenResponse.ExpiresIn] = 1);
         var provider = CreateTestTokenProvider(handler);
         await provider.GetTokenAsync("api");
         await Task.Delay(1500);
@@ -96,5 +123,282 @@ public class ClientCredentialsTokenProviderTests : AuthTests
         await provider.GetTokenAsync("api", forceRefresh: true);
 
         Assert.Equal(2, handler.TokenRequestCount);
+    }
+
+    [Fact]
+    public async Task GetToken_ShouldSendCancelableTokens_ToDiscoveryAndTokenRequests()
+    {
+        var handler = new CaptureCancellationTokenHandler();
+        using var httpClient = new HttpClient(handler);
+        var provider = new ClientCredentialsTokenProvider(new()
+        {
+            Authority = "https://auth.example.com",
+            ClientId = "client",
+            ClientSecret = "secret",
+            Policy = new()
+            {
+                RequireKeySet = false,
+            },
+        }, httpClient);
+
+        using var cts = new CancellationTokenSource();
+
+        var token = await provider.GetTokenAsync("api", cancellationToken: cts.Token);
+
+        Assert.Equal("access-token", token);
+        Assert.Equal(2, handler.CancellationTokens.Count);
+        Assert.All(handler.CancellationTokens, t => Assert.True(t.CanBeCanceled));
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task GetToken_WhenCancellationIsRequestedDuringHttpRequest_CancelsRequest(int cancelRequestIndex)
+    {
+        using var cts = new CancellationTokenSource();
+        var handler = new CancelRequestHandler(cts, cancelRequestIndex);
+        using var httpClient = new HttpClient(handler);
+        var provider = new ClientCredentialsTokenProvider(new()
+        {
+            Authority = "https://auth.example.com",
+            ClientId = "client",
+            ClientSecret = "secret",
+            Policy = new()
+            {
+                RequireKeySet = false,
+            },
+        }, httpClient);
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            provider.GetTokenAsync("api", cancellationToken: cts.Token));
+
+        Assert.Equal(cancelRequestIndex, handler.RequestCount);
+    }
+
+    [Fact]
+    public async Task GetToken_WhenFuncCreatesClients_DisposesCreatedClientsByDefault()
+    {
+        var clients = new List<TrackingHttpClient>();
+        var provider = new ClientCredentialsTokenProvider(new()
+        {
+            Authority = "https://auth.example.com",
+            ClientId = "client",
+            ClientSecret = "secret",
+            Policy = new()
+            {
+                RequireKeySet = false,
+            },
+        }, () =>
+        {
+            var client = new TrackingHttpClient(new TokenProviderHandler());
+            clients.Add(client);
+            return client;
+        });
+
+        var token = await provider.GetTokenAsync("api");
+
+        Assert.Equal("access-token", token);
+        Assert.Equal(2, clients.Count);
+        Assert.All(clients, client => Assert.True(client.IsDisposed));
+    }
+
+    [Fact]
+    public async Task GetToken_WhenUsingHttpClientFactory_DoesNotDisposeFactoryClient()
+    {
+        using var client = new TrackingHttpClient(new TokenProviderHandler());
+        var provider = new ClientCredentialsTokenProvider(new()
+        {
+            Authority = "https://auth.example.com",
+            ClientId = "client",
+            ClientSecret = "secret",
+            Policy = new()
+            {
+                RequireKeySet = false,
+            },
+        }, new StaticHttpClientFactory(client));
+
+        var token = await provider.GetTokenAsync("api");
+
+        Assert.Equal("access-token", token);
+        Assert.False(client.IsDisposed);
+    }
+
+    [Fact]
+    public async Task GetToken_WhenDiscoveryIsSharedByConcurrentScopes_DoesNotCreateUnusedDiscoveryClients()
+    {
+        var clients = new ConcurrentBag<TrackingHttpClient>();
+        var handler = new DelayedTokenProviderHandler();
+        var provider = new ClientCredentialsTokenProvider(new()
+        {
+            Authority = "https://auth.example.com",
+            ClientId = "client",
+            ClientSecret = "secret",
+            Policy = new()
+            {
+                RequireKeySet = false,
+            },
+        }, () =>
+        {
+            var client = new TrackingHttpClient(handler);
+            clients.Add(client);
+            return client;
+        });
+
+        var tokens = await Task.WhenAll(
+            provider.GetTokenAsync("scope1"),
+            provider.GetTokenAsync("scope2"));
+
+        Assert.Equal(["access-token", "access-token"], tokens);
+        Assert.Equal(1, handler.DiscoveryRequestCount);
+        Assert.Equal(2, handler.TokenRequestCount);
+        Assert.Equal(3, clients.Count);
+        Assert.All(clients, client => Assert.True(client.IsDisposed));
+    }
+
+    private sealed class CaptureCancellationTokenHandler : HttpMessageHandler
+    {
+        public List<CancellationToken> CancellationTokens { get; } = [];
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            CancellationTokens.Add(cancellationToken);
+
+            var content = request.RequestUri!.AbsolutePath.EndsWith("/.well-known/openid-configuration", StringComparison.Ordinal)
+                ? """
+                  {
+                    "issuer": "https://auth.example.com",
+                    "token_endpoint": "https://auth.example.com/connect/token"
+                  }
+                  """
+                : """
+                  {
+                    "access_token": "access-token",
+                    "expires_in": 3600,
+                    "token_type": "Bearer"
+                  }
+                  """;
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(content, Encoding.UTF8, "application/json"),
+                RequestMessage = request,
+            });
+        }
+    }
+
+    private sealed class CancelRequestHandler(CancellationTokenSource source, int cancelRequestIndex) : HttpMessageHandler
+    {
+        public int RequestCount { get; private set; }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            RequestCount++;
+            if (RequestCount == cancelRequestIndex)
+            {
+                source.Cancel();
+                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+                throw new InvalidOperationException("Cancellation was not propagated to the HTTP request.");
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""
+                                            {
+                                              "issuer": "https://auth.example.com",
+                                              "token_endpoint": "https://auth.example.com/connect/token"
+                                            }
+                                            """, Encoding.UTF8, "application/json"),
+                RequestMessage = request,
+            };
+        }
+    }
+
+    private sealed class TokenProviderHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var content = request.RequestUri!.AbsolutePath.EndsWith("/.well-known/openid-configuration", StringComparison.Ordinal)
+                ? """
+                  {
+                    "issuer": "https://auth.example.com",
+                    "token_endpoint": "https://auth.example.com/connect/token"
+                  }
+                  """
+                : """
+                  {
+                    "access_token": "access-token",
+                    "expires_in": 3600,
+                    "token_type": "Bearer"
+                  }
+                  """;
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(content, Encoding.UTF8, "application/json"),
+                RequestMessage = request,
+            });
+        }
+    }
+
+    private sealed class DelayedTokenProviderHandler : HttpMessageHandler
+    {
+        private int _discoveryRequestCount;
+
+        private int _tokenRequestCount;
+
+        public int DiscoveryRequestCount => _discoveryRequestCount;
+
+        public int TokenRequestCount => _tokenRequestCount;
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            if (request.RequestUri!.AbsolutePath.EndsWith("/.well-known/openid-configuration", StringComparison.Ordinal))
+            {
+                Interlocked.Increment(ref _discoveryRequestCount);
+                await Task.Delay(50, cancellationToken);
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""
+                                                {
+                                                  "issuer": "https://auth.example.com",
+                                                  "token_endpoint": "https://auth.example.com/connect/token"
+                                                }
+                                                """, Encoding.UTF8, "application/json"),
+                    RequestMessage = request,
+                };
+            }
+
+            Interlocked.Increment(ref _tokenRequestCount);
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""
+                                            {
+                                              "access_token": "access-token",
+                                              "expires_in": 3600,
+                                              "token_type": "Bearer"
+                                            }
+                                            """, Encoding.UTF8, "application/json"),
+                RequestMessage = request,
+            };
+        }
+    }
+
+    private sealed class TrackingHttpClient(HttpMessageHandler handler) : HttpClient(handler)
+    {
+        public bool IsDisposed { get; private set; }
+
+        protected override void Dispose(bool disposing)
+        {
+            IsDisposed = true;
+            base.Dispose(disposing);
+        }
+    }
+
+    private sealed class StaticHttpClientFactory(HttpClient client) : IHttpClientFactory
+    {
+        public HttpClient CreateClient(string name)
+        {
+            return client;
+        }
     }
 }

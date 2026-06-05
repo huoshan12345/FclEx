@@ -172,4 +172,25 @@ partial class OperationResultExtensions
     {
         return result.ThenIf(condition, next, _ => Operation.Success(Unit.Default));
     }
+
+    public static OperationResult<T> FallBack<T>(this OperationResult<T> result, Func<OperationResult<T>> fallback)
+    {
+        return result.IsError
+            ? fallback()
+            : result;
+    }
+
+    public static OperationResult<T> FallBack<T>(this OperationResult<T> result, Func<T> fallback)
+    {
+        return result.IsError
+            ? Operation.Success(fallback())
+            : result;
+    }
+
+    public static OperationResult<T> FallBack<T>(this OperationResult<T> result, T fallback)
+    {
+        return result.IsError
+            ? Operation.Success(fallback)
+            : result;
+    }
 }

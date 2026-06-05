@@ -25,6 +25,17 @@ public class JsonpActionTests
     }
 
     [Fact]
+    public void ModifyRequest_WhenCallbackNameIsCustom_AddsConfiguredCallbackName()
+    {
+        var action = new TestJsonpAction { CallbackNameValue = "jsonp123" };
+        var request = HttpRequest.Get("https://example.com/api");
+
+        action.ModifyRequest(request);
+
+        Assert.Equal("https://example.com/api?cb=jsonp123", request.GetUri().ToString());
+    }
+
+    [Fact]
     public void GetJson_ExtractsCallbackBody()
     {
         var response = HttpActionTestFixtures.CreateResponse("""_callback({"value":5})""");
@@ -37,6 +48,42 @@ public class JsonpActionTests
     }
 
     [Fact]
+    public void GetJson_WhenCallbackNameIsCustom_ExtractsCallbackBody()
+    {
+        var response = HttpActionTestFixtures.CreateResponse("""jsonp123({"value":5})""");
+        var action = new TestJsonpAction { CallbackNameValue = "jsonp123" };
+
+        var result = action.GetJson(response);
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Equal("""{"value":5}""", result.Value);
+    }
+
+    [Fact]
+    public void GetJson_WhenCallbackHasWhitespaceAndTrailingSemicolon_ExtractsCallbackBody()
+    {
+        var response = HttpActionTestFixtures.CreateResponse("""  _callback ( {"value":5} ) ;  """);
+        var action = new TestJsonpAction();
+
+        var result = action.GetJson(response);
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Equal("""{"value":5}""", result.Value);
+    }
+
+    [Fact]
+    public void GetJson_WhenJsonContainsClosingParenthesis_ExtractsWholeCallbackBody()
+    {
+        var response = HttpActionTestFixtures.CreateResponse("""_callback({"text":")"})""");
+        var action = new TestJsonpAction();
+
+        var result = action.GetJson(response);
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Equal("""{"text":")"}""", result.Value);
+    }
+
+    [Fact]
     public void GetJson_WhenCallbackIsMissing_ReturnsError()
     {
         var response = HttpActionTestFixtures.CreateResponse("""{"value":5}""");
@@ -45,7 +92,19 @@ public class JsonpActionTests
         var result = action.GetJson(response);
 
         Assert.True(result.IsError);
-        Assert.Contains("Failed to parse callback", result.Exception!.Message);
+        Assert.Contains("Failed to parse JSONP callback", result.Exception!.Message);
+    }
+
+    [Fact]
+    public void GetJson_WhenCallbackNameDoesNotMatch_ReturnsError()
+    {
+        var response = HttpActionTestFixtures.CreateResponse("""other({"value":5})""");
+        var action = new TestJsonpAction();
+
+        var result = action.GetJson(response);
+
+        Assert.True(result.IsError);
+        Assert.Contains("Failed to parse JSONP callback", result.Exception!.Message);
     }
 
     [Fact]

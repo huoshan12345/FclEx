@@ -30,7 +30,7 @@ public static partial class HttpRequestExtensions
 
     public static string Dump(this HttpRequest request, IEnumerable<Cookie> cookies)
     {
-        var disposable = StringBuilderHelper.GetCached();
+        using var disposable = StringBuilderHelper.GetCached();
         var builder = disposable.Value;
 
         builder.Append(request.Method);
@@ -58,6 +58,19 @@ public static partial class HttpRequestExtensions
 
     public static string Dump(this HttpRequest request, IHttpService service)
     {
-        return request.Dump(service.GetCookies(request.GetUri()));
+        var uri = request.GetUri();
+        return request.Dump(uri.IsAbsoluteUri ? service.GetCookies(uri) : []);
+    }
+    
+    /// <summary>
+    /// Wraps an HTTP request as an executable action.
+    /// </summary>
+    /// <param name="request">The request to send.</param>
+    /// <param name="httpService">The service used to send the request. Uses the default service when <see langword="null"/>.</param>
+    /// <param name="unwrapError">Whether a failed <see cref="HttpResponse"/> should become an error result containing that response.</param>
+    /// <returns>An action that sends <paramref name="request"/> and returns the response.</returns>
+    public static IAction<HttpResponse> ToAction(this HttpRequest request, IHttpService? httpService = null, bool unwrapError = true)
+    {
+        return new HttpRequestAction(request, httpService ?? HttpClientService.Default, unwrapError);
     }
 }

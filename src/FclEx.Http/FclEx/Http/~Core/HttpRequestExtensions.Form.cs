@@ -2,7 +2,7 @@ namespace FclEx.Http;
 
 partial class HttpRequestExtensions
 {
-    public static HttpRequest AddFormParam<T>(this HttpRequest request, string? key, string? value)
+    public static HttpRequest AddFormParam(this HttpRequest request, string? key, string? value)
     {
         request.Form.Add(key, value);
         return request;
