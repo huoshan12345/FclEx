@@ -290,4 +290,25 @@ partial class OperationResultExtensions
     {
         return task.Then<T, (T, TNext)>(m => Operation.ExecuteAsync(() => next(m).MapValue(x => (m, x))));
     }
+
+    public static Task<OperationResult<T[]>> Merge<T, TResults>(this Task<TResults> task) where TResults : IEnumerable<OperationResult<T>>
+    {
+        return task.Then(m => m.Merge());
+    }
+
+    public static Task<OperationResult<T[]>> Merge<T>(this Task<OperationResult<T>[]> task)
+    {
+        return task.Merge<T, OperationResult<T>[]>();
+    }
+
+    public static IAction<T[]> ToAction<T, TResults>(this Task<TResults> task) where TResults : IEnumerable<OperationResult<T>>
+    {
+        return Operation.Action(t => task.Merge<T, TResults>());
+    }
+
+    public static IAction<T[]> ToAction<T>(this Task<OperationResult<T>[]> task)
+    {
+        return task.ToAction<T, OperationResult<T>[]>();
+    }
+
 }

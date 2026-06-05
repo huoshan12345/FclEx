@@ -34,6 +34,7 @@ public class SourceGenerator : IIncrementalGenerator
                     NumberExtensionsSource.Generate(),
                     StringBuilderExtensionsSource.Generate(),
                     HashExtensionsSource.Generate(),
+                    OperationResultExtensionsSource.Generate(),
                 ],
                 "FclEx.Http" =>
                 [

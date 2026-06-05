@@ -29,18 +29,18 @@ public static partial class OperationResultExtensions
     {
         Check.NotNull(enumerable);
 
-        var (time, exceptions) = enumerable.Aggregate((Time: TimeSpan.Zero, List: new List<Exception>()), (seed, m) =>
+        var (exceptions, time) = enumerable.Aggregate((Exceptions: new List<Exception>(), Time: TimeSpan.Zero), (seed, m) =>
         {
             var t = seed.Time + m.Elapsed;
             var e = m.Exception;
-            return (t, e is null ? seed.List : seed.List.Push(e));
+            return (e is null ? seed.Exceptions : seed.Exceptions.Push(e), t);
         });
 
         return exceptions.Count switch
         {
             0 => Operation.Success(time),
-            1 => Operation.Error(exceptions[0], time),
-            _ => Operation.Error(new AggregateException(exceptions), time)
+            1 => (exceptions[0], time),
+            _ => (new AggregateException(exceptions), time)
         };
     }
 
