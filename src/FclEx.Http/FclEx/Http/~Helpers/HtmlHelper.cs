@@ -15,17 +15,27 @@ public static class HtmlHelper
     }
 
 
-    private static readonly char[] TrimChars = ['\'', '"', ';'];
+    private static readonly char[] TrimChars = ['\'', '"', ';', ' '];
+
+    private static readonly Regex[] CharSetRegexes =
+    [
+        new("""<meta\b[^>]*\bcharset\s*=\s*(?:"(?<charset>[^"]+)"|'(?<charset>[^']+)'|(?<charset>[^\s"'/>;]+))""", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        new("""<meta\b[^>]*\bcontent\s*=\s*(?:"[^"]*?\bcharset\s*=\s*(?<charset>[^"\s;]+)[^"]*"|'[^']*?\bcharset\s*=\s*(?<charset>[^'\s;]+)[^']*')""", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+    ];
 
     public static string? GetMetaCharSet(string html)
     {
         if (html.IsNullOrEmpty())
             return null;
 
-        var match = Regexes.CharSet.Match(html);
-        return match.Success
-            ? match.Groups[1].Value.Trim(TrimChars)
-            : null;
+        foreach (var regex in CharSetRegexes)
+        {
+            var match = regex.Match(html);
+            if (match.Success)
+                return match.Groups["charset"].Value.Trim(TrimChars);
+        }
+
+        return null;
     }
 
     public static string? GetTextContent(string str)

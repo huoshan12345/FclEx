@@ -137,7 +137,7 @@ public abstract class HttpClientServiceBase : HttpServiceBase
                     var media = headers.ContentType?.MediaType;
                     if (media != null && media.Contains("html")) // html or xhtml
                     {
-                        encoding = DetectCharSet(buffer);
+                        encoding = DetectCharSet(buffer, ignoreInvalidCharSet);
                     }
                 }
             }
@@ -150,7 +150,7 @@ public abstract class HttpClientServiceBase : HttpServiceBase
         return (str, encoding);
     }
 
-    private static Encoding? DetectCharSet(Span<byte> data)
+    protected virtual Encoding? DetectCharSet(Span<byte> data, bool ignoreInvalidCharSet)
     {
         if (data.Length == 0)
             return null;
@@ -158,7 +158,7 @@ public abstract class HttpClientServiceBase : HttpServiceBase
         var len = Math.Min(1024, data.Length);
         var prefix = Encoding.Default.GetString(data[..len]);
         var charSet = HtmlHelper.GetMetaCharSet(prefix);
-        return charSet == null ? null : Encoding.GetEncoding(charSet);
+        return GetEncodingFromCharSet(charSet, ignoreInvalidCharSet);
     }
 
     protected internal static HttpRequestMessage BuildHttpRequest(HttpRequest request, BufferedContent? content, Uri? baseAddress, CookieContainer cc, CancellationToken token)
