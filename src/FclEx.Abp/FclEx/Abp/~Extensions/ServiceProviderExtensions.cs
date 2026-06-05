@@ -16,6 +16,15 @@ public static class ServiceProviderExtensions
         return provider;
     }
 
+    public static async Task CloseAbpAsync(this IServiceProvider provider, bool dispose = true)
+    {
+        var app = provider.GetRequiredService<IAbpApplicationWithExternalServiceProvider>();
+        await app.ShutdownAsync();
+
+        if (dispose)
+            app.Dispose();
+    }
+
     public static T? GetObject<T>(this IServiceProvider provider)
     {
         return provider.GetRequiredService<IObjectAccessor<T>>().Value;

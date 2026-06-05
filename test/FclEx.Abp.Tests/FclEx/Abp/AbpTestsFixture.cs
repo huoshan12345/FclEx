@@ -37,19 +37,21 @@ public class AbpTestsFixture<TModule> : CoreTestsFixture where TModule : AbpModu
         return services.BuildServiceProviderFromFactory();
     }
 
-    public override ValueTask DisposeAsync()
-    {
-        GC.SuppressFinalize(this);
-
-        if (_services.IsValueCreated)
-            Disposable.FromValue(Services).Dispose();
-
-        return ValueTask.CompletedTask;
-    }
-
     public override async ValueTask InitializeAsync()
     {
         await Services.UseAbpAsync();
+    }
+
+    public override async ValueTask DisposeAsync()
+    {
+        GC.SuppressFinalize(this);
+
+        if (!_services.IsValueCreated)
+            return;
+
+        await Services.CloseAbpAsync();
+
+        Disposable.FromValue(Services).Dispose();
     }
 }
 

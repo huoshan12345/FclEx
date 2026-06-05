@@ -4,15 +4,9 @@ public class DisposableValue<T>(T value, Action<T>? disposeAction = null) : IDis
 {
     private volatile bool _disposed;
 
-    public T Value
-    {
-        get
-        {
-            if (_disposed)
-                throw new ObjectDisposedException(nameof(Value));
-            return value;
-        }
-    }
+    public T Value => _disposed
+        ? throw new ObjectDisposedException(nameof(Value))
+        : value;
 
     public static implicit operator T(DisposableValue<T> disposable) => disposable.Value;
 
@@ -20,6 +14,8 @@ public class DisposableValue<T>(T value, Action<T>? disposeAction = null) : IDis
     {
         if (_disposed)
             return;
+
+        GC.SuppressFinalize(this);
 
         if (disposeAction != null)
         {
