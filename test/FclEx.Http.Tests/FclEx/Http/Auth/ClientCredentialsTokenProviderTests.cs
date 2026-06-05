@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Duende.IdentityModel.Client;
 
 namespace FclEx.Http.Auth;
@@ -225,7 +226,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     [Fact]
     public async Task GetToken_WhenDiscoveryIsSharedByConcurrentScopes_DoesNotCreateUnusedDiscoveryClients()
     {
-        var clients = new List<TrackingHttpClient>();
+        var clients = new ConcurrentBag<TrackingHttpClient>();
         var handler = new DelayedTokenProviderHandler();
         var provider = new ClientCredentialsTokenProvider(new()
         {
