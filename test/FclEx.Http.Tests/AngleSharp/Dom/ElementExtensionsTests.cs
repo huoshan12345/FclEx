@@ -67,6 +67,9 @@ public class ElementExtensionsTests
                                     <input type="text" value="missing-name">
                                     <input type="text" name="disabled" value="ignored" disabled>
                                     <fieldset disabled>
+                                        <legend>
+                                            <input type="text" name="legendInput" value="kept">
+                                        </legend>
                                         <input type="text" name="fieldsetDisabled" value="ignored">
                                     </fieldset>
                                     <input type="submit" name="submit" value="ignored">
@@ -85,6 +88,19 @@ public class ElementExtensionsTests
                                         <option value="disabled-first" disabled>Disabled First</option>
                                         <option value="first">First</option>
                                         <option value="second">Second</option>
+                                    </select>
+                                    <select name="optgroupDisabledChoice">
+                                        <optgroup label="disabled group" disabled>
+                                            <option value="disabled-selected" selected>Disabled Selected</option>
+                                            <option value="disabled-default">Disabled Default</option>
+                                        </optgroup>
+                                        <option value="enabled-default">Enabled Default</option>
+                                    </select>
+                                    <select name="optgroupTags" multiple>
+                                        <optgroup label="disabled group" disabled>
+                                            <option value="disabled-tag" selected>Disabled Tag</option>
+                                        </optgroup>
+                                        <option value="enabled-tag" selected>Enabled Tag</option>
                                     </select>
                                 </form>
                             </body>
@@ -107,8 +123,11 @@ public class ElementExtensionsTests
         Assert.Equal("us", formData.Params["country"]);
         Assert.Equal(["red", "Green"], formData.Params.GetValues("tags"));
         Assert.Equal("first", formData.Params["defaultChoice"]);
+        Assert.Equal("kept", formData.Params["legendInput"]);
+        Assert.Equal("enabled-tag", formData.Params["optgroupTags"]);
         Assert.False(formData.Params.ContainsKey("disabled"));
         Assert.False(formData.Params.ContainsKey("fieldsetDisabled"));
+        Assert.False(formData.Params.ContainsKey("optgroupDisabledChoice"));
         Assert.False(formData.Params.ContainsKey("submit"));
         Assert.False(formData.Params.ContainsKey("upload"));
     }

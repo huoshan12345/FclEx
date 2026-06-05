@@ -82,7 +82,7 @@ public static class ElementExtensions
         if (control.HasAttribute("disabled"))
             return false;
 
-        if (control.Ancestors<IElement>().Any(m => m.LocalName.EqualsIgnoreCase("fieldset") && m.HasAttribute("disabled")))
+        if (control.Ancestors<IElement>().Any(fieldset => IsDisabledFieldSetAncestor(fieldset, control)))
             return false;
 
         if (control is IHtmlInputElement)
@@ -96,6 +96,15 @@ public static class ElementExtensions
         }
 
         return true;
+    }
+
+    private static bool IsDisabledFieldSetAncestor(IElement fieldset, IElement control)
+    {
+        if (fieldset.LocalName.EqualsIgnoreCase("fieldset") == false || fieldset.HasAttribute("disabled") == false)
+            return false;
+
+        var firstLegend = fieldset.Children.FirstOrDefault(m => m.LocalName.EqualsIgnoreCase("legend"));
+        return firstLegend == null || control.Ancestors<IElement>().Contains(firstLegend) == false;
     }
 
     private static void AddControlValue(UriParams parameters, IElement control)
@@ -143,18 +152,27 @@ public static class ElementExtensions
     {
         var options = select.QuerySelectorAll("option").ToArray();
         var selectedOptions = options
-            .Where(m => m.HasAttribute("selected") && m.HasAttribute("disabled") == false)
+            .Where(m => m.HasAttribute("selected"))
+            .ToArray();
+        var enabledSelectedOptions = selectedOptions
+            .Where(IsEnabledOption)
             .ToArray();
 
         if (select.HasAttribute("multiple") == false && selectedOptions.Length == 0)
         {
-            selectedOptions = options.Where(m => m.HasAttribute("disabled") == false).Take(1).ToArray();
+            enabledSelectedOptions = options.Where(IsEnabledOption).Take(1).ToArray();
         }
 
-        foreach (var option in selectedOptions)
+        foreach (var option in enabledSelectedOptions)
         {
             parameters.Add(name, option.GetAttribute("value") ?? option.TextContent);
         }
+    }
+
+    private static bool IsEnabledOption(IElement option)
+    {
+        return option.HasAttribute("disabled") == false
+               && option.Ancestors<IElement>().Any(m => m.LocalName.EqualsIgnoreCase("optgroup") && m.HasAttribute("disabled")) == false;
     }
 
     public static OperationResult<(IElement Element, T Data)> QueryData<T>(this IElement? root, string?[] selectors, Func<IElement, T> func)

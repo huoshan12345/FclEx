@@ -52,4 +52,16 @@ public class WebProxyEqualityComparerTests
             WebProxyInterfaceEqualityComparer.Instance.GetHashCode(proxy1),
             WebProxyInterfaceEqualityComparer.Instance.GetHashCode(proxy2));
     }
+
+    [Fact]
+    public void Equals_WhenNetworkCredentialsHaveSameValues_UsesCredentialValueEquality()
+    {
+        var proxy1 = WebProxyHelper.Create("http://user:pass@127.0.0.1:8888");
+        var proxy2 = WebProxyHelper.Create(
+            new Uri("http://127.0.0.1:8888"),
+            credentials: new NetworkCredential("user", "pass"));
+
+        Assert.True(Comparer.Equals(proxy1, proxy2));
+        Assert.Equal(Comparer.GetHashCode(proxy1), Comparer.GetHashCode(proxy2));
+    }
 }

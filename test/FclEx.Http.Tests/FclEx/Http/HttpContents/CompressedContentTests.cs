@@ -25,4 +25,49 @@ public class CompressedContentTests
 
         Assert.Same(source, content);
     }
+
+    [Fact]
+    public async Task CopyToAsync_DisposesSourceReadStream()
+    {
+        var stream = new TrackingMemoryStream(Encoding.UTF8.GetBytes("payload"));
+        using var source = new StreamContentForTest(stream);
+        using var content = source.ToGZip();
+        using var destination = new MemoryStream();
+
+        await content.CopyToAsync(destination);
+
+        Assert.True(stream.IsDisposed);
+    }
+
+    private sealed class StreamContentForTest(TrackingMemoryStream stream) : HttpContent
+    {
+        protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context)
+        {
+            throw new NotSupportedException();
+        }
+
+        protected override bool TryComputeLength(out long length)
+        {
+            length = stream.Length;
+            return true;
+        }
+
+        protected override Task<Stream> CreateContentReadStreamAsync()
+        {
+            return Task.FromResult<Stream>(stream);
+        }
+    }
+
+    private sealed class TrackingMemoryStream(byte[] buffer) : MemoryStream(buffer)
+    {
+        public bool IsDisposed { get; private set; }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                IsDisposed = true;
+
+            base.Dispose(disposing);
+        }
+    }
 }
