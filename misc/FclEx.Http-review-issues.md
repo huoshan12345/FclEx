@@ -128,7 +128,7 @@ This file records the improvement suggestions from the review of `src/FclEx.Http
 
 62. [Resolved] `src/FclEx.Http/FclEx/Http/~Core/DownloadOptions.cs` and `src/FclEx.Http/FclEx/Http/~Core/HttpRequest.cs`: request/download content ownership is not clear. `HttpClientServiceBase.ExecuteAsyncInternal` disposes `request.Content`, so callers that pass a content instance through `HttpRequest.Content` or `DownloadOptions.Content` lose ownership after sending. Document this explicitly or switch the API to content factories/buffered clones when caller-owned content should remain reusable.
 
-63. [Partially resolved] `src/FclEx.Http/FclEx/Http/~Auth/ClientCredentialsTokenProvider.cs`: `_cache` is now bounded, but `_locks` still grows by scope string and has no eviction or clear API. This is fine for a small fixed scope set, but dynamic/user-derived scopes can accumulate semaphores for the provider lifetime. Consider bounding/removing lock entries, or document that scopes are expected to be low-cardinality.
+63. [Resolved] `src/FclEx.Http/FclEx/Http/~Auth/ClientCredentialsTokenProvider.cs`: both `_cache` and `_locks` are bounded, so dynamic/user-derived scopes no longer accumulate token entries or semaphores for the provider lifetime.
 
 64. [Resolved] `src/FclEx.Http/FclEx/Http/~Helpers/WebProxyHelper.cs`: `WebProxyHelper` only contains static members but is declared as an instantiable class. Make it a `static class` to match its usage and the surrounding helper types.
 

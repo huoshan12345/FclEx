@@ -11,5 +11,4 @@ public class DownloadOptions
     public CancellationToken CancellationToken { get; set; } = default;
     public string? FileBaseName { get; set; }
     public string? FileExtension { get; set; }
-    public bool DisposeContent { get; set; } = true;
 }

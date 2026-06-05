@@ -37,44 +37,6 @@ public class HttpServiceExtensionsBatchDownloadTests
         Assert.Equal(["payload", "payload"], handler.RequestBodies);
     }
 
-    [Fact]
-    public async Task BatchDownloadAsync_WhenDisposeContentIsFalse_KeepsSourceContentAlive()
-    {
-        var handler = new CaptureBodyHandler();
-        using var service = HttpClientService.Create(
-            () => new HttpClient(handler),
-            disposeHttpClient: true,
-            options: new()
-            {
-                RetryPolicyOptions = new()
-                {
-                    RetryCount = 0,
-                },
-            },
-            useCookie: false);
-        var content = new SingleReadContent("payload");
-
-        var results = await service.BatchDownloadAsync(
-            [
-                new Uri("https://example.com/one"),
-                new Uri("https://example.com/two"),
-            ],
-            new()
-            {
-                Method = HttpMethod.Post,
-                Content = content,
-                DisposeContent = false,
-                ExecuteInParallel = false,
-            });
-
-        Assert.All(results, result => Assert.True(result.IsSuccess, result.Exception?.ToString()));
-        Assert.Equal(1, content.SerializeCount);
-        Assert.False(content.IsDisposed);
-        Assert.Equal(["payload", "payload"], handler.RequestBodies);
-
-        content.Dispose();
-    }
-
     private sealed class CaptureBodyHandler : HttpMessageHandler
     {
         public List<string> RequestBodies { get; } = [];

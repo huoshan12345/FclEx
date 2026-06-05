@@ -11,5 +11,4 @@ public class BatchDownloadOptions
     public bool ExecuteInParallel { get; set; } = true;
     public int? Concurrency { get; set; }
     public CancellationToken CancellationToken { get; set; }
-    public bool DisposeContent { get; set; } = true;
 }

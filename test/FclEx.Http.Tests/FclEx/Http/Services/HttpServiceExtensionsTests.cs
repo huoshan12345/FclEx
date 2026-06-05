@@ -39,10 +39,8 @@ public class HttpServiceExtensionsTests
         Assert.Equal(readBufferTimeout, service.Request.ReadBufferTimeout);
     }
 
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public async Task DownloadAsync_RespectsDisposeContentOption(bool disposeContent)
+    [Fact]
+    public async Task DownloadAsync_DisposesContentAfterSend()
     {
         var handler = new CaptureDownloadBodyHandler();
         using var service = HttpClientService.Create(
@@ -63,15 +61,11 @@ public class HttpServiceExtensionsTests
             Uri = new Uri("https://example.com/file.txt"),
             Method = HttpMethod.Post,
             Content = content,
-            DisposeContent = disposeContent,
         });
 
         Assert.True(result.IsSuccess, result.Exception?.ToString());
         Assert.Equal("payload", handler.RequestBody);
-        Assert.Equal(disposeContent, content.IsDisposed);
-
-        if (content.IsDisposed == false)
-            content.Dispose();
+        Assert.True(content.IsDisposed);
     }
 
     private sealed class CaptureRequestHttpService : IHttpService

@@ -116,11 +116,9 @@ public static class HttpServiceExtensions
         var token = options?.CancellationToken ?? default;
         var readBufferTimeout = options?.ReadBufferTimeout ?? null;
         var bufferSize = options?.BufferSize ?? null;
-        var disposeContent = options?.DisposeContent ?? true;
 
         var sourceContent = options?.Content;
         var content = await sourceContent.ToBufferedContentAsync(readBufferTimeout, bufferSize, token);
-        var ownsBufferedContent = content is not null && ReferenceEquals(content, sourceContent) == false;
 
         try
         {
@@ -141,16 +139,14 @@ public static class HttpServiceExtensions
                     CancellationToken = token,
                     FileBaseName = null,
                     FileExtension = null,
-                    DisposeContent = true,
                 });
             }, options?.ExecuteInParallel ?? true, options?.Concurrency, TimeSpan.Zero, token);
         }
         finally
         {
-            if (ownsBufferedContent || disposeContent)
-                content?.Dispose();
+            content?.Dispose();
 
-            if (disposeContent && ReferenceEquals(sourceContent, content) == false)
+            if (ReferenceEquals(sourceContent, content) == false)
                 sourceContent?.Dispose();
         }
     }
