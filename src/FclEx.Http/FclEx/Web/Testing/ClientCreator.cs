@@ -1,4 +1,3 @@
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 namespace FclEx.Web.Testing;
 
 public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
@@ -7,8 +6,8 @@ public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
 {
     protected readonly IServiceProvider _provider = provider;
 
-    protected readonly ConcurrentDictionary<TAccount, TClient> _dic = new();
-    protected readonly ConcurrentDictionary<string, AsyncLock> _locks = new();
+    protected readonly ConcurrentDictionary<TAccount, TClient> _dic = [];
+    protected readonly ConcurrentDictionary<string, AsyncLock> _locks = [];
 
     public virtual string GetCookiesFilePath(IUserAccount account)
     {
@@ -50,7 +49,7 @@ public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
         await File.WriteAllTextAsync(path, str, Encoding.UTF8);
     }
 
-    public virtual Task<TClient> CreateClient(TAccount account, bool login, bool fakeLogin = true, bool useCache = true, bool readCookie = true, string? proxy = null)
+    public virtual Task<TClient> CreateClient(TAccount account, bool login, bool fakeLogin = true, bool useCache = false, bool readCookie = true, string? proxy = null)
         => CreateClient(account, new LoginOptions(login, fakeLogin, useCache, readCookie, WebProxyHelper.Create(proxy)));
 
     public virtual async Task<TClient> CreateClient(TAccount account, LoginOptions options)
