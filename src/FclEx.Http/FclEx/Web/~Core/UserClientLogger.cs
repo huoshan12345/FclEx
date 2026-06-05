@@ -20,7 +20,7 @@ public class UserClientLogger<TAccount> : ILogger where TAccount : IUserAccount
 
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
-        if (_client.Account?.UserName is not { Length: > 0 } name)
+        if (_client.Account.UserName is not { Length: > 0 } name)
         {
             _logger.Log(logLevel, eventId, state, exception, formatter);
             return;

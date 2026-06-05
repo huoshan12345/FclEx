@@ -68,6 +68,7 @@ public static class HttpResponseExtensions
             .ReadAsBytes()
             .ReadHeadersTimeout(options.ConnectTimeout)
             .ReadBufferTimeout(options.ReadBufferTimeout)
+            .BufferSize(options.BufferSize)
             .AcceptCompress();
 
         if (options.Content is { } content)

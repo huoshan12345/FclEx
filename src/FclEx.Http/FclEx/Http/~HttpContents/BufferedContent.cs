@@ -12,9 +12,13 @@ public class BufferedContent : HttpContent
 
     public BufferedContent CloneIfDisposed()
     {
-        if (!_disposed)
-            return this;
+        return _disposed
+            ? Clone()
+            : this;
+    }
 
+    public BufferedContent Clone()
+    {
         var content = new BufferedContent(_buffer);
         CopyHeaders(Headers, content.Headers);
         return content;
@@ -26,7 +30,7 @@ public class BufferedContent : HttpContent
         source.CopyTo(destination, HttpHeaderNames.ContentLength);
     }
 
-    public static async Task<BufferedContent> CreateAsync(HttpContent inner, TimeSpan? timeout = null, int bufferSize = 256 * 1024, CancellationToken cancellationToken = default)
+    public static async Task<BufferedContent> CreateAsync(HttpContent inner, TimeSpan? timeout = null, int? bufferSize = null, CancellationToken cancellationToken = default)
     {
         var buffer = await inner
             .ReadAsByteArrayAsync(bufferSize, timeout, cancellationToken)

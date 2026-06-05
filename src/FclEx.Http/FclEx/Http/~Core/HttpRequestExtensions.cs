@@ -30,7 +30,7 @@ public static partial class HttpRequestExtensions
 
     public static string Dump(this HttpRequest request, IEnumerable<Cookie> cookies)
     {
-        var disposable = StringBuilderHelper.GetCached();
+        using var disposable = StringBuilderHelper.GetCached();
         var builder = disposable.Value;
 
         builder.Append(request.Method);

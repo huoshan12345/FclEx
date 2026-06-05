@@ -106,14 +106,20 @@ public static class HttpServiceExtensions
     public static Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, string url, HttpMethod? method = null, TimeSpan? timeout = null)
         => http.DownloadAsync(new Uri(url), method, timeout);
 
-    public static IEnumerable<Task<OperationResult<HttpFileDownloadInfo>>> BatchDownloadAsync(this IHttpService httpService, IEnumerable<string> uris, BatchDownloadOptions? options = null)
+    public static Task<OperationResult<HttpFileDownloadInfo>[]> BatchDownloadAsync(this IHttpService httpService, IEnumerable<string> uris, BatchDownloadOptions? options = null)
     {
         return httpService.BatchDownloadAsync(uris.Select(m => new Uri(m, UriKind.RelativeOrAbsolute)), options);
     }
 
-    public static IEnumerable<Task<OperationResult<HttpFileDownloadInfo>>> BatchDownloadAsync(this IHttpService httpService, IEnumerable<Uri> uris, BatchDownloadOptions? options = null)
+    public static async Task<OperationResult<HttpFileDownloadInfo>[]> BatchDownloadAsync(this IHttpService httpService, IEnumerable<Uri> uris, BatchDownloadOptions? options = null)
     {
-        return uris.Select(uri =>
+        var token = options?.CancellationToken ?? default;
+        var readBufferTimeout = options?.ReadBufferTimeout ?? null;
+        var bufferSize = options?.BufferSize ?? null;
+
+        var content = await (options?.Content).ToBufferedContentAsync(readBufferTimeout, bufferSize, token);
+
+        return await uris.ExecuteAsync(uri =>
         {
             if (uri.IsAbsoluteUri == false && options?.BaseAddress is { } baseAddress)
             {
@@ -123,13 +129,14 @@ public static class HttpServiceExtensions
             {
                 Uri = uri,
                 Method = options?.Method ?? HttpMethod.Get,
-                Content = options?.Content,
+                Content = content?.Clone(),
                 ConnectTimeout = options?.ConnectTimeout,
+                BufferSize = bufferSize,
                 ReadBufferTimeout = options?.ReadBufferTimeout,
-                CancellationToken = options?.CancellationToken ?? default,
+                CancellationToken = token,
                 FileBaseName = null,
                 FileExtension = null,
             });
-        });
+        }, options?.ExecuteInParallel ?? true, options?.Concurrency, TimeSpan.Zero, token);
     }
 }

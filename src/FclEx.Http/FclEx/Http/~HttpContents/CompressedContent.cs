@@ -2,6 +2,8 @@ namespace FclEx.Http;
 
 public abstract class CompressedContent : HttpContent
 {
+    public const int DefaultBufferSize = 256 * 1024;
+
     public HttpContent Content { get; }
     public int BufferSize { get; }
     public TimeSpan? Timeout { get; }
@@ -9,12 +11,12 @@ public abstract class CompressedContent : HttpContent
     public CompressionLevel CompressionLevel { get; }
 
     protected CompressedContent(HttpContent content, string encoding, CompressionLevel compressionLevel,
-        TimeSpan? timeout = null, int bufferSize = 262144, CancellationToken token = default)
+        TimeSpan? timeout = null, int? bufferSize = null, CancellationToken token = default)
     {
         Content = content;
         Timeout = timeout;
         Token = token;
-        BufferSize = bufferSize;
+        BufferSize = bufferSize ?? DefaultBufferSize;
         CompressionLevel = compressionLevel;
         content.Headers.CopyTo(Headers, HttpHeaderNames.ContentLength, HttpHeaderNames.ContentEncoding);
         Headers.Add(HttpHeaderNames.ContentEncoding, encoding);

@@ -4,7 +4,7 @@ namespace FclEx.Http;
 public class BrotliContent : CompressedContent
 {
     public BrotliContent(HttpContent content, CompressionLevel compressionLevel,
-        TimeSpan? timeout = null, int bufferSize = 262144, CancellationToken token = default)
+        TimeSpan? timeout = null, int? bufferSize = null, CancellationToken token = default)
         : base(content, "br", compressionLevel, timeout, bufferSize, token)
     {
     }

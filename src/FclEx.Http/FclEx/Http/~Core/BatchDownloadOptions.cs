@@ -6,6 +6,9 @@ public class BatchDownloadOptions
     public HttpMethod Method { get; set; } = HttpMethod.Get;
     public HttpContent? Content { get; set; }
     public TimeSpan? ConnectTimeout { get; set; }
+    public int? BufferSize { get; set; }
     public TimeSpan? ReadBufferTimeout { get; set; }
+    public bool ExecuteInParallel { get; set; } = true;
+    public int? Concurrency { get; set; }
     public CancellationToken CancellationToken { get; set; }
 }

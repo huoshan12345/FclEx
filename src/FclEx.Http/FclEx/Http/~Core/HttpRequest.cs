@@ -12,7 +12,7 @@ public partial class HttpRequest
     public HttpVersionPolicy VersionPolicy { get; set; } = HttpVersionPolicy.RequestVersionOrLower;
 #endif
     public Version Version { get; set; } = HttpVersion.Version11;
-    public int BufferSize { get; set; } = 256 * 1024;
+    public int? BufferSize { get; set; }
     public TimeSpan? TotalTimeout { get; set; } = TimeSpan.FromMinutes(2);
     public TimeSpan? ReadBufferTimeout { get; set; } = TimeSpan.FromSeconds(10);
     public TimeSpan? ReadHeadersTimeout { get; set; } = TimeSpan.FromSeconds(10);

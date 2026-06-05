@@ -167,6 +167,18 @@ partial class HttpRequestExtensions
         return request;
     }
 
+    public static HttpRequest BufferSize(this HttpRequest request, int? bufferSize)
+    {
+        request.BufferSize = bufferSize;
+        return request;
+    }
+
+    public static HttpRequest TryBufferSize(this HttpRequest request, int? bufferSize)
+    {
+        request.BufferSize ??= bufferSize;
+        return request;
+    }
+
     public static HttpRequest TotalTimeout(this HttpRequest request, TimeSpan? timeout)
     {
         request.TotalTimeout = timeout;

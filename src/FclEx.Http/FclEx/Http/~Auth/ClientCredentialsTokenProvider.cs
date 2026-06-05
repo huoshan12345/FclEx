@@ -77,7 +77,7 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
         var locker = _locks.GetOrAdd(scope, _ => new SemaphoreSlim(1, 1));
 
         await locker.WaitAsync(cancellationToken);
-        var httpClient = CreateClient();
+        HttpClient? httpClient = null;
         try
         {
             if (forceRefresh == false
@@ -88,6 +88,10 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
             }
 
             var disco = await GetDiscoveryAsync(cancellationToken);
+            if (disco.IsError)
+                throw HttpRequestException.From(disco.Error, null, disco.HttpStatusCode);
+
+            httpClient = CreateClient();
 
             // try refresh_token
             if (forceRefresh == false
@@ -129,7 +133,7 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
         finally
         {
             if (_disposeHttpClient)
-                httpClient.Dispose();
+                httpClient?.Dispose();
 
             locker.Release();
         }

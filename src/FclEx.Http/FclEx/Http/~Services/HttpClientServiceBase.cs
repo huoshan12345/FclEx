@@ -240,17 +240,6 @@ public abstract class HttpClientServiceBase : HttpServiceBase
         return requestMessage;
     }
 
-    protected internal static async Task<BufferedContent?> CreateBufferedContentAsync(HttpRequest request, CancellationToken cancellationToken)
-    {
-        var content = request.Content;
-        return content switch
-        {
-            null => null,
-            BufferedContent bufferedContent => bufferedContent,
-            _ => await BufferedContent.CreateAsync(content, request.ReadBufferTimeout, request.BufferSize, cancellationToken),
-        };
-    }
-
     protected virtual async Task<HttpResponseMessage> SendAsync(HttpClientContext context, HttpRequest request, BufferedContent? bufferedContent, CancellationToken token)
     {
         var (client, policy, _) = context;
@@ -342,7 +331,7 @@ public abstract class HttpClientServiceBase : HttpServiceBase
     {
         var cts = token.WithTimeout(request.TotalTimeout);
         var context = CreateHttpClientContext();
-        var bufferedContent = await CreateBufferedContentAsync(request, cts.Token);
+        var bufferedContent = await request.CreateBufferedContentAsync(cts.Token);
         var responses = new List<HttpResponseMessage>();
 
         try

@@ -9,7 +9,7 @@ public class HttpContentExtensionsTests
         content.Headers.ContentLength = (long)int.MaxValue + 1;
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            content.ReadAsStreamAsync(HttpContentExtensions.DefaultBufferSize, null, CancellationToken.None));
+            content.ReadAsStreamAsync(null, null, CancellationToken.None));
 
         Assert.Contains("Content length is too large", ex.Message);
     }

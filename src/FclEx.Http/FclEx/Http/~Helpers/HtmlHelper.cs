@@ -14,21 +14,14 @@ public static class HtmlHelper
         return DefaultHtmlParser.ParseDocumentAsync(html);
     }
 
-
     private static readonly char[] TrimChars = ['\'', '"', ';', ' '];
-
-    private static readonly Regex[] CharSetRegexes =
-    [
-        new("""<meta\b[^>]*\bcharset\s*=\s*(?:"(?<charset>[^"]+)"|'(?<charset>[^']+)'|(?<charset>[^\s"'/>;]+))""", RegexOptions.Compiled | RegexOptions.IgnoreCase),
-        new("""<meta\b[^>]*\bcontent\s*=\s*(?:"[^"]*?\bcharset\s*=\s*(?<charset>[^"\s;]+)[^"]*"|'[^']*?\bcharset\s*=\s*(?<charset>[^'\s;]+)[^']*')""", RegexOptions.Compiled | RegexOptions.IgnoreCase),
-    ];
 
     public static string? GetMetaCharSet(string html)
     {
         if (html.IsNullOrEmpty())
             return null;
 
-        foreach (var regex in CharSetRegexes)
+        foreach (var regex in Regexes.CharSet)
         {
             var match = regex.Match(html);
             if (match.Success)
