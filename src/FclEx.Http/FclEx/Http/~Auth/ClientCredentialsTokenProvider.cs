@@ -42,12 +42,13 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
             return _discovery;
 
         await _discoveryLock.WaitAsync(cancellationToken);
-        var httpClient = CreateClient();
+        HttpClient? httpClient = null;
         try
         {
             if (_discovery != null)
                 return _discovery;
 
+            httpClient = CreateClient();
             var disco = await httpClient.GetDiscoveryDocumentAsync(_documentRequest, cancellationToken);
 
             if (disco.IsError)
@@ -59,7 +60,7 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
         finally
         {
             if (_disposeHttpClient)
-                httpClient.Dispose();
+                httpClient?.Dispose();
 
             _discoveryLock.Release();
         }

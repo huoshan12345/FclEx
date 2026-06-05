@@ -58,7 +58,8 @@ public static partial class HttpRequestExtensions
 
     public static string Dump(this HttpRequest request, IHttpService service)
     {
-        return request.Dump(service.GetCookies(request.GetUri()));
+        var uri = request.GetUri();
+        return request.Dump(uri.IsAbsoluteUri ? service.GetCookies(uri) : []);
     }
     
     /// <summary>

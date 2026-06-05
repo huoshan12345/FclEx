@@ -222,6 +222,38 @@ public class ClientCredentialsTokenProviderTests : AuthTests
         Assert.False(client.IsDisposed);
     }
 
+    [Fact]
+    public async Task GetToken_WhenDiscoveryIsSharedByConcurrentScopes_DoesNotCreateUnusedDiscoveryClients()
+    {
+        var clients = new List<TrackingHttpClient>();
+        var handler = new DelayedTokenProviderHandler();
+        var provider = new ClientCredentialsTokenProvider(new()
+        {
+            Authority = "https://auth.example.com",
+            ClientId = "client",
+            ClientSecret = "secret",
+            Policy = new()
+            {
+                RequireKeySet = false,
+            },
+        }, () =>
+        {
+            var client = new TrackingHttpClient(handler);
+            clients.Add(client);
+            return client;
+        });
+
+        var tokens = await Task.WhenAll(
+            provider.GetTokenAsync("scope1"),
+            provider.GetTokenAsync("scope2"));
+
+        Assert.Equal(["access-token", "access-token"], tokens);
+        Assert.Equal(1, handler.DiscoveryRequestCount);
+        Assert.Equal(2, handler.TokenRequestCount);
+        Assert.Equal(3, clients.Count);
+        Assert.All(clients, client => Assert.True(client.IsDisposed));
+    }
+
     private sealed class CaptureCancellationTokenHandler : HttpMessageHandler
     {
         public List<CancellationToken> CancellationTokens { get; } = [];
@@ -304,6 +336,49 @@ public class ClientCredentialsTokenProviderTests : AuthTests
                 Content = new StringContent(content, Encoding.UTF8, "application/json"),
                 RequestMessage = request,
             });
+        }
+    }
+
+    private sealed class DelayedTokenProviderHandler : HttpMessageHandler
+    {
+        private int _discoveryRequestCount;
+
+        private int _tokenRequestCount;
+
+        public int DiscoveryRequestCount => _discoveryRequestCount;
+
+        public int TokenRequestCount => _tokenRequestCount;
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            if (request.RequestUri!.AbsolutePath.EndsWith("/.well-known/openid-configuration", StringComparison.Ordinal))
+            {
+                Interlocked.Increment(ref _discoveryRequestCount);
+                await Task.Delay(50, cancellationToken);
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""
+                                                {
+                                                  "issuer": "https://auth.example.com",
+                                                  "token_endpoint": "https://auth.example.com/connect/token"
+                                                }
+                                                """, Encoding.UTF8, "application/json"),
+                    RequestMessage = request,
+                };
+            }
+
+            Interlocked.Increment(ref _tokenRequestCount);
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""
+                                            {
+                                              "access_token": "access-token",
+                                              "expires_in": 3600,
+                                              "token_type": "Bearer"
+                                            }
+                                            """, Encoding.UTF8, "application/json"),
+                RequestMessage = request,
+            };
         }
     }
 

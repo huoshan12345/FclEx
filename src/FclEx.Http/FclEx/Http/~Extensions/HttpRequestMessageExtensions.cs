@@ -19,6 +19,13 @@ public static class HttpRequestMessageExtensions
     private static extern ref int HttpRequestMessageSendStatus(HttpRequestMessage uri);
 #endif
 
+    /// <summary>
+    /// Resets the internal send status so the same request message can be sent again.
+    /// </summary>
+    /// <remarks>
+    /// This method relies on private runtime implementation details and may break when .NET changes
+    /// <see cref="HttpRequestMessage"/> internals. Prefer <see cref="CloneAsync"/> when a reusable request is needed.
+    /// </remarks>
     public static HttpRequestMessage SetNotSend(this HttpRequestMessage request)
     {
 #if NET8_0_OR_GREATER
@@ -30,12 +37,21 @@ public static class HttpRequestMessageExtensions
         return request;
     }
 
+    /// <summary>
+    /// Creates a reusable copy of an HTTP request message, including headers, options/properties, and buffered content.
+    /// </summary>
+    /// <param name="request">The request message to clone.</param>
+    /// <returns>A new request message whose content can be sent independently from the original request.</returns>
+    /// <remarks>The original content is buffered into memory, so this is not suitable for very large streaming payloads.</remarks>
     public static async Task<HttpRequestMessage> CloneAsync(this HttpRequestMessage request)
     {
         // 1. Clone basic request properties
         var clone = new HttpRequestMessage(request.Method, request.RequestUri)
         {
-            Version = request.Version
+            Version = request.Version,
+#if NET5_0_OR_GREATER
+            VersionPolicy = request.VersionPolicy,
+#endif
         };
 
         // 2. Clone headers
@@ -49,6 +65,12 @@ public static class HttpRequestMessageExtensions
         foreach (var (key, value) in request.Options)
         {
             clone.Options.Set(new HttpRequestOptionsKey<object?>(key), value);
+        }
+#else
+        // 3. Clone custom request options/properties
+        foreach (var (key, value) in request.Properties)
+        {
+            clone.Properties[key] = value;
         }
 #endif
 
