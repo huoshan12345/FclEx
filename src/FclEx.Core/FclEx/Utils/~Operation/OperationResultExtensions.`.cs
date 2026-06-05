@@ -193,4 +193,24 @@ partial class OperationResultExtensions
             ? Operation.Success(fallback)
             : result;
     }
+
+    public static OperationResult<T[]> Merge<T>(this IEnumerable<OperationResult<T>> enumerable)
+    {
+        Check.NotNull(enumerable);
+
+        var (values, exceptions, time) = enumerable.Aggregate((Values: new List<T>(), Exceptions: new List<Exception>(), Time: TimeSpan.Zero), (seed, m) =>
+        {
+            var t = seed.Time + m.Elapsed;
+            return m.IsSuccess
+                ? (seed.Values.Push(m.Value), seed.Exceptions, t)
+                : (seed.Values, seed.Exceptions.Push(m.Exception), t);
+        });
+
+        return exceptions.Count switch
+        {
+            0 => (values.ToArray(), time),
+            1 => (exceptions[0], time),
+            _ => (new AggregateException(exceptions), time)
+        };
+    }
 }
