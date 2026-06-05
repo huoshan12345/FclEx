@@ -230,11 +230,16 @@ public static class ElementExtensions
             return element.Exception;
 
         var (e, href) = element.Value;
-        var u = baseUri is null
-            ? new Uri(href, UriKind.RelativeOrAbsolute)
-            : new Uri(baseUri, href);
-        var uriCreator = new UriCreator(u);
-        return (e, uriCreator);
+        return Operation.Execute(() => Create(e, href, baseUri));
+
+        static (IElement Element, UriCreator Href) Create(IElement e, string href, Uri? baseUri)
+        {
+            var u = baseUri is null
+                ? new Uri(href, UriKind.RelativeOrAbsolute)
+                : new Uri(baseUri, href);
+            var uriCreator = new UriCreator(u);
+            return (e, uriCreator);
+        }
     }
 
     public static OperationResult<(IElement Element, UriCreator Href)> QueryHref(this IElement? root, string? selector, Uri? baseUri = null)

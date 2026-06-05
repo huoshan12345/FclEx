@@ -116,27 +116,37 @@ public static class HttpServiceExtensions
         var token = options?.CancellationToken ?? default;
         var readBufferTimeout = options?.ReadBufferTimeout ?? null;
         var bufferSize = options?.BufferSize ?? null;
+        var disposeContent = options?.DisposeContent ?? true;
 
         var content = await (options?.Content).ToBufferedContentAsync(readBufferTimeout, bufferSize, token);
 
-        return await uris.ExecuteAsync(uri =>
+        try
         {
-            if (uri.IsAbsoluteUri == false && options?.BaseAddress is { } baseAddress)
+            return await uris.ExecuteAsync(uri =>
             {
-                uri = baseAddress.Resolve(uri);
-            }
-            return httpService.DownloadAsync(new DownloadOptions
-            {
-                Uri = uri,
-                Method = options?.Method ?? HttpMethod.Get,
-                Content = content?.Clone(),
-                ConnectTimeout = options?.ConnectTimeout,
-                BufferSize = bufferSize,
-                ReadBufferTimeout = options?.ReadBufferTimeout,
-                CancellationToken = token,
-                FileBaseName = null,
-                FileExtension = null,
-            });
-        }, options?.ExecuteInParallel ?? true, options?.Concurrency, TimeSpan.Zero, token);
+                if (uri.IsAbsoluteUri == false && options?.BaseAddress is { } baseAddress)
+                {
+                    uri = baseAddress.Resolve(uri);
+                }
+                return httpService.DownloadAsync(new DownloadOptions
+                {
+                    Uri = uri,
+                    Method = options?.Method ?? HttpMethod.Get,
+                    Content = content?.Clone(),
+                    ReadHeadersTimeout = options?.ReadHeadersTimeout,
+                    BufferSize = bufferSize,
+                    ReadBufferTimeout = options?.ReadBufferTimeout,
+                    CancellationToken = token,
+                    FileBaseName = null,
+                    FileExtension = null,
+                    DisposeContent = disposeContent,
+                });
+            }, options?.ExecuteInParallel ?? true, options?.Concurrency, TimeSpan.Zero, token);
+        }
+        finally
+        {
+            if (disposeContent)
+                content?.Dispose();
+        }
     }
 }

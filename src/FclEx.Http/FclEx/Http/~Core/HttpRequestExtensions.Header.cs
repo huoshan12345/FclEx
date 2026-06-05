@@ -113,7 +113,7 @@ partial class HttpRequestExtensions
         return request.SetHeader(HttpHeaderNames.AcceptCharset, "utf-8");
     }
 
-    public static HttpRequest AcceptCn(this HttpRequest request)
+    public static HttpRequest AcceptChinese(this HttpRequest request)
     {
         return request.SetHeader(HttpHeaderNames.AcceptLanguage, "zh-CN,zh;q=0.8");
     }

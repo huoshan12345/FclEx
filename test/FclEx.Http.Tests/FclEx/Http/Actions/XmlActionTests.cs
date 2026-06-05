@@ -83,7 +83,7 @@ public class XmlActionTests
 
         Assert.True(result.IsSuccess, result.Exception?.ToString());
         Assert.Equal("root", result.Value!.Document.Root!.Name.LocalName);
-        Assert.Equal("/root/value", result.Value.Path);
+        Assert.Equal("/root/value", result.Value.XPath);
         Assert.Equal(new[] { 42, 43 }, result.Value.ResultElements.Select(x => int.Parse(x.Value)).ToArray());
         Assert.Equal("42", result.Value.ResultElement!.Value);
     }
@@ -97,7 +97,7 @@ public class XmlActionTests
         var result = action.CreateContext(response, "<root><items><item><value>7</value></item></items></root>");
 
         Assert.True(result.IsSuccess, result.Exception?.ToString());
-        Assert.Equal("/root/items/item/value", result.Value!.Path);
+        Assert.Equal("/root/items/item/value", result.Value!.XPath);
         Assert.Equal("7", result.Value.ResultElement!.Value);
     }
 

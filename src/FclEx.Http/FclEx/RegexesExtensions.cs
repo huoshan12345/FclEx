@@ -10,7 +10,7 @@ public static class RegexesExtensions
     // <meta charset=utf-8>
     // <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     // <meta content='text/html; charset=gb2312' http-equiv='Content-Type'>
-    private static readonly Regex[] _charSet =
+    private static readonly IReadOnlyList<Regex> _charSet =
     [
         new("""<meta\b[^>]*\bcharset\s*=\s*(?:"(?<charset>[^"]+)"|'(?<charset>[^']+)'|(?<charset>[^\s"'/>;]+))""", RegexOptions.Compiled | RegexOptions.IgnoreCase),
         new("""<meta\b[^>]*\bcontent\s*=\s*(?:"[^"]*?\bcharset\s*=\s*(?<charset>[^"\s;]+)[^"]*"|'[^']*?\bcharset\s*=\s*(?<charset>[^'\s;]+)[^']*')""", RegexOptions.Compiled | RegexOptions.IgnoreCase),
@@ -19,6 +19,6 @@ public static class RegexesExtensions
     extension(Regexes)
     {
         public static Regex EmailCheck => _emailCheck;
-        public static Regex[] CharSet => _charSet;
+        public static IReadOnlyList<Regex> CharSet => _charSet;
     }
 }

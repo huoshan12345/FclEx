@@ -7,8 +7,17 @@ public abstract class HttpClientServiceBase : HttpServiceBase
     protected static readonly string[] NotAddHeaderNames =
     [
         HttpHeaderNames.ContentType,
-        HttpHeaderNames.Cookie,
         HttpHeaderNames.ContentLength,
+        HttpHeaderNames.Cookie,
+    ];
+
+    protected static readonly string[] NotCopyHeaderNames =
+    [
+        HttpHeaderNames.Authorization,
+        HttpHeaderNames.Cookie,
+        HttpHeaderNames.Origin,
+        HttpHeaderNames.Host,
+        HttpHeaderNames.Referrer,
     ];
 
     protected void ReadCookies(HttpResponseMessage responseMessage, HttpResponse response)
@@ -294,7 +303,7 @@ public abstract class HttpClientServiceBase : HttpServiceBase
 
         foreach (var (key, value) in source.Headers)
         {
-            if (ShouldCopyRedirectHeader(key))
+            if (NotCopyHeaderNames.Contains(key, StringComparer.OrdinalIgnoreCase) == false)
             {
                 target.Headers.Add(key, value);
             }
@@ -304,12 +313,6 @@ public abstract class HttpClientServiceBase : HttpServiceBase
         {
             target.Form.Add(source.Form);
         }
-    }
-
-    private static bool ShouldCopyRedirectHeader(string key)
-    {
-        return key.EqualsIgnoreCase(HttpHeaderNames.Authorization) == false
-               && key.EqualsIgnoreCase(HttpHeaderNames.Cookie) == false;
     }
 
     protected internal static bool IsRedirectAllowed(HttpRequest request, HttpResponseMessage response, Uri uri)

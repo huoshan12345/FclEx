@@ -5,7 +5,7 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
     private readonly Func<HttpClient> _httpClientFactory;
     private readonly bool _disposeHttpClient;
     private readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new();
-    private readonly ConcurrentDictionary<string, TokenCacheItem> _cache = new();
+    private readonly LfuCache<string, TokenCacheItem> _cache = new(byte.MaxValue);
     private readonly SemaphoreSlim _discoveryLock = new(1, 1);
     private readonly ClientCredentialsTokenProviderOptions _options;
     private readonly DiscoveryDocumentRequest _documentRequest;

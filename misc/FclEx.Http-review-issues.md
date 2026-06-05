@@ -104,7 +104,7 @@ This file records the improvement suggestions from the review of `src/FclEx.Http
 
 50. [Resolved] `src/FclEx.Http/FclEx/Http/~Helpers/HtmlHelper.cs`: `GetMetaRefreshUrl` relies on a very narrow `<meta http-equiv="refresh" content="..."/>` regex. Valid HTML commonly uses different attribute order, single quotes, whitespace, or non-self-closing meta tags. Consider parsing with AngleSharp or broadening the extractor.
 
-51. [Resolved] `src/FclEx.Http/FclEx/Http/~Services/HttpClientServiceBase.cs`: manual redirects copy all request headers to the redirected request. For cross-origin redirects this can leak origin-specific or sensitive headers such as `Authorization`, explicit `Cookie`, `Origin`, and possibly `Referer`. Preserve safe headers only, or drop sensitive headers when the redirect target origin differs.
+51. [Partially resolved] `src/FclEx.Http/FclEx/Http/~Services/HttpClientServiceBase.cs`: manual redirects now drop `Authorization` and explicit `Cookie`, but still copy other target-specific headers such as `Host`, `Origin`, and `Referer`. For cross-origin redirects, review whether these should be removed or recomputed to better match `HttpClientHandler` redirect behavior and avoid leaking origin-specific request metadata.
 
 52. [Resolved] `src/FclEx.Http/FclEx/Http/~Services/HttpClientServiceBase.cs` and `src/FclEx.Http/FclEx/Http/~Helpers/HtmlHelper.cs`: charset auto-detection from HTML meta tags calls `Encoding.GetEncoding(charSet)` directly, so `IgnoreInvalidCharSet = true` does not protect callers when the detected meta charset is invalid. The regex in `GetMetaCharSet` is also too narrow for common forms such as `<meta charset=utf-8>`. Route detected charsets through the same validation path as header/fallback charsets, and consider parsing or broadening the meta charset extractor.
 
@@ -121,3 +121,21 @@ This file records the improvement suggestions from the review of `src/FclEx.Http
 58. [Tested] `src/FclEx.Http/FclEx/Web/~Core/UserClientLogger.cs`: `UserClientLogger` reflects the internal `Microsoft.Extensions.Logging.FormattedLogValues` type and private fields. This can break when `Microsoft.Extensions.Logging` changes its implementation. Prefer a public logging abstraction, a scope/property wrapper, or accept prefix formatting without reconstructing internal state.
 
 59. [Removed] `src/FclEx.Http/FclEx/RegexesExtensions.cs`: `Regexes.MetaRefresh` and `Regexes.MetaRefreshUrl` remain public even though meta refresh extraction now uses AngleSharp. These stale regex helpers duplicate old behavior and may keep callers on the less robust path. Remove them or clearly mark them as legacy if they must remain.
+
+60. [Open] `src/FclEx.Http/FclEx/Http/~Core/DownloadOptions.cs` and `src/FclEx.Http/FclEx/Http/~Services/HttpServiceExtensions.cs`: timeout naming in the download APIs is ambiguous. `DownloadOptions.ConnectTimeout` is applied to `HttpRequest.ReadHeadersTimeout`, while the simpler `DownloadAsync(..., TimeSpan? timeout)` overload applies its timeout to `ReadBufferTimeout`. Rename the option to `ReadHeadersTimeout` or split the API into clearly named total/header/body timeout options.
+
+61. [Open] `src/FclEx.Http/FclEx/Http/~Services/HttpServiceExtensions.cs`: `BatchDownloadAsync` buffers `options.Content` once and clones it for each request, but the buffered content created from a non-buffered `options.Content` is not disposed after all downloads finish. Wrap the buffered content lifetime in `try/finally`, while preserving ownership of a caller-supplied `BufferedContent` if that is intended.
+
+62. [Open] `src/FclEx.Http/FclEx/Http/~Core/DownloadOptions.cs` and `src/FclEx.Http/FclEx/Http/~Core/HttpRequest.cs`: request/download content ownership is not clear. `HttpClientServiceBase.ExecuteAsyncInternal` disposes `request.Content`, so callers that pass a content instance through `HttpRequest.Content` or `DownloadOptions.Content` lose ownership after sending. Document this explicitly or switch the API to content factories/buffered clones when caller-owned content should remain reusable.
+
+63. [Open] `src/FclEx.Http/FclEx/Http/~Auth/ClientCredentialsTokenProvider.cs`: `_cache` and `_locks` grow by scope string and have no eviction or clear API. This is fine for a small fixed scope set, but dynamic/user-derived scopes can accumulate token cache entries and semaphores for the provider lifetime. Consider a bounded cache, removal of expired entries, or a documented expectation that scopes are low-cardinality.
+
+64. [Open] `src/FclEx.Http/FclEx/Http/~Helpers/WebProxyHelper.cs`: `WebProxyHelper` only contains static members but is declared as an instantiable class. Make it a `static class` to match its usage and the surrounding helper types.
+
+65. [Open] `src/FclEx.Http/FclEx/RegexesExtensions.cs`: `Regexes.CharSet` exposes the mutable backing `Regex[]`. External callers can mutate the array and change global charset detection behavior for the process. Return a read-only collection, an immutable array, or a defensive copy.
+
+66. [Open] `src/FclEx.Http/FclEx/Http/~Actions/JsonActionContext.cs`, `src/FclEx.Http/FclEx/Http/~Actions/HtmlActionContext.cs`, and `src/FclEx.Http/FclEx/Http/~Actions/XmlActionContext.cs`: the context property/constructor parameter is still named `Path` even though the public action APIs now use `JsonPath`, `HtmlSelector`, and `XPath`. Rename these context members to match their selector language and reduce the leftover ambiguity from the earlier `*ResultPath` naming.
+
+67. [Open] `src/FclEx.Http/AngleSharp/Dom/ElementExtensions.cs`: `QueryHref` returns `OperationResult`, but invalid href values or invalid base/relative URI combinations can throw `UriFormatException` directly from `new Uri(...)`. Catch URI creation failures and return an error result, or document that only missing attributes are represented as operation errors.
+
+68. [Open] `src/FclEx.Http/FclEx/Http/~Core/HttpRequestExtensions.Header.cs`: `AcceptCn` is an unclear public name for setting `Accept-Language: zh-CN,zh;q=0.8`. Rename it to something more natural and behavior-focused, such as `AcceptChinese`, `AcceptSimplifiedChinese`, or `AcceptChineseLanguage`.

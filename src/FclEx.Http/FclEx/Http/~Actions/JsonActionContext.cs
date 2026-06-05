@@ -11,18 +11,18 @@ public readonly struct JsonActionContext
     /// </summary>
     /// <param name="response">The source HTTP response.</param>
     /// <param name="json">The JSON text to parse.</param>
-    /// <param name="path">The optional JSON path. When <see langword="null"/>, the root token is selected.</param>
+    /// <param name="jsonPath">The optional JSON path. When <see langword="null"/>, the root token is selected.</param>
     /// <remarks>Malformed JSON may throw during construction.</remarks>
-    public JsonActionContext(HttpResponse response, string json, string? path)
+    public JsonActionContext(HttpResponse response, string json, string? jsonPath)
     {
         Response = response;
         Json = json;
-        Path = path;
+        JsonPath = jsonPath;
         using var jsonDocument = JsonDocument.Parse(json);
         Token = jsonDocument.RootElement.Clone();
-        ResultTokens = path == null
+        ResultTokens = jsonPath == null
             ? [Token]
-            : jsonDocument.RootElement.SelectElements(path, false)
+            : jsonDocument.RootElement.SelectElements(jsonPath, false)
                 .NotNull()
                 .Select(token => token.Clone())
                 .AsIReadOnlyList();
@@ -36,7 +36,7 @@ public readonly struct JsonActionContext
     /// <summary>
     /// Gets the JSON path used to select result tokens.
     /// </summary>
-    public string? Path { get; }
+    public string? JsonPath { get; }
 
     /// <summary>
     /// Gets the original JSON text.

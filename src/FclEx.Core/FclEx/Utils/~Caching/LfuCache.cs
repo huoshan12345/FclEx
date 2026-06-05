@@ -54,12 +54,9 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
 
     public TValue this[TKey key]
     {
-        get
-        {
-            if (!TryGetValue(key, out var value))
-                throw new KeyNotFoundException($"The given key {key} was not present.");
-            return value;
-        }
+        get => TryGetValue(key, out var value)
+            ? value
+            : throw new KeyNotFoundException($"The given key {key} was not present.");
         set => AddOrUpdate(key, value);
     }
 

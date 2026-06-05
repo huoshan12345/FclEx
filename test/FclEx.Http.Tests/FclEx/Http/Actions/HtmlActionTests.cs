@@ -83,7 +83,7 @@ public class HtmlActionTests
 
         Assert.True(result.IsSuccess, result.Exception?.ToString());
         Assert.Same(response, result.Value!.Response);
-        Assert.Equal("li", result.Value.Path);
+        Assert.Equal("li", result.Value.HtmlSelector);
         Assert.Equal(2, result.Value.ResultElements.Count());
         Assert.Equal("A", result.Value.ResultElement!.TextContent);
     }
@@ -97,7 +97,7 @@ public class HtmlActionTests
         var result = action.CreateContext(response, """<html><body><span class="item">A</span><span>B</span></body></html>""");
 
         Assert.True(result.IsSuccess, result.Exception?.ToString());
-        Assert.Equal(".item", result.Value!.Path);
+        Assert.Equal(".item", result.Value!.HtmlSelector);
         Assert.Equal("A", result.Value.ResultElement!.TextContent);
     }
 

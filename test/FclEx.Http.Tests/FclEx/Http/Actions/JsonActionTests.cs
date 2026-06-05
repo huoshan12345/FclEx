@@ -94,7 +94,7 @@ public class JsonActionTests
         var result = action.CreateContext(response, """{"items":[{"id":1},{"id":2}]}""");
 
         Assert.True(result.IsSuccess, result.Exception?.ToString());
-        Assert.Equal("items[*].id", result.Value!.Path);
+        Assert.Equal("items[*].id", result.Value!.JsonPath);
         Assert.Equal([1, 2], result.Value.ResultTokens.Select(token => token.GetInt32()));
     }
 

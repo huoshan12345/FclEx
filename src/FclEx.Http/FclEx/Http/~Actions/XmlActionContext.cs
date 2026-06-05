@@ -10,17 +10,17 @@ public readonly struct XmlActionContext
     /// </summary>
     /// <param name="response">The source HTTP response.</param>
     /// <param name="xml">The XML text to parse.</param>
-    /// <param name="path">The optional XPath. When <see langword="null"/>, the document root element is selected.</param>
+    /// <param name="xPath">The optional XPath. When <see langword="null"/>, the document root element is selected.</param>
     /// <remarks>Malformed XML may throw during construction.</remarks>
-    public XmlActionContext(HttpResponse response, string xml, string? path)
+    public XmlActionContext(HttpResponse response, string xml, string? xPath)
     {
         Response = response;
         Xml = xml;
-        Path = path;
+        XPath = xPath;
         Document = XDocument.Parse(xml);
-        ResultElements = path == null
+        ResultElements = xPath == null
             ? [Document.Root!]
-            : Document.XPathSelectElements(path);
+            : Document.XPathSelectElements(xPath);
     }
 
     /// <summary>
@@ -31,7 +31,7 @@ public readonly struct XmlActionContext
     /// <summary>
     /// Gets the XPath used to select result elements.
     /// </summary>
-    public string? Path { get; }
+    public string? XPath { get; }
 
     /// <summary>
     /// Gets the original XML text.

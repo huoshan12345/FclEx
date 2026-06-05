@@ -66,7 +66,7 @@ public static class HttpResponseExtensions
     {
         var request = new HttpRequest(options.Uri, options.Method)
             .ReadAsBytes()
-            .ReadHeadersTimeout(options.ConnectTimeout)
+            .ReadHeadersTimeout(options.ReadHeadersTimeout)
             .ReadBufferTimeout(options.ReadBufferTimeout)
             .BufferSize(options.BufferSize)
             .AcceptCompress();
@@ -76,11 +76,19 @@ public static class HttpResponseExtensions
             request.Content(content);
         }
 
-        var response = await request.SendAsync(http, options.CancellationToken);
-        return response.IsError
-            ? Operation.ObjectError(response, response.Exception, response.Elapsed)
-                .Cast<HttpFileDownloadInfo>()
-            : response.GetDownloadInfo(options.FileBaseName, options.FileExtension);
+        try
+        {
+            var response = await request.SendAsync(http, options.CancellationToken);
+            return response.IsError
+                ? Operation.ObjectError(response, response.Exception, response.Elapsed)
+                    .Cast<HttpFileDownloadInfo>()
+                : response.GetDownloadInfo(options.FileBaseName, options.FileExtension);
+        }
+        finally
+        {
+            if (options.DisposeContent) 
+                options.Content?.Dispose();
+        }
     }
 
     private static readonly Regex _regexOfNonWord = new(@"\W+", RegexOptions.Compiled);
