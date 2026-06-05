@@ -14,6 +14,12 @@ partial class HttpRequestExtensions
         return request;
     }
 
+    public static HttpRequest AllowInsecureRedirects(this HttpRequest request, bool value = true)
+    {
+        request.AllowInsecureRedirects = value;
+        return request;
+    }
+
     public static HttpRequest ReadCookies(this HttpRequest request, bool value)
     {
         request.ReadCookies = value;

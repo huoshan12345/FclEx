@@ -33,6 +33,7 @@ public partial class HttpRequest
     public bool ReadContent { get; set; } = true;
     public bool ReadCookies { get; set; } = true;
     public int MaxRedirectCount { get; set; } = 50;
+    public bool AllowInsecureRedirects { get; set; } = true;
 
     /// <summary>
     /// Indicates whether a default User-Agent header should be applied

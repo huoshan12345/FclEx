@@ -301,12 +301,38 @@ public abstract class HttpClientServiceBase : HttpServiceBase
         target.UseDefaultUserAgent = source.UseDefaultUserAgent;
         target.AddHeaderWithoutValidation = source.AddHeaderWithoutValidation;
         target.MaxRedirectCount = source.MaxRedirectCount;
-        target.Headers.Add(source.Headers);
+        target.AllowInsecureRedirects = source.AllowInsecureRedirects;
+
+        foreach (var (key, value) in source.Headers)
+        {
+            if (ShouldCopyRedirectHeader(key))
+            {
+                target.Headers.Add(key, value);
+            }
+        }
 
         if (preserveContent)
         {
             target.Form.Add(source.Form);
         }
+    }
+
+    private static bool ShouldCopyRedirectHeader(string key)
+    {
+        return key.EqualsIgnoreCase(HttpHeaderNames.Authorization) == false
+               && key.EqualsIgnoreCase(HttpHeaderNames.Cookie) == false;
+    }
+
+    protected internal static bool IsRedirectAllowed(HttpRequest request, HttpResponseMessage response, Uri uri)
+    {
+        if (request.AllowInsecureRedirects)
+            return true;
+
+        var sourceUri = response.RequestMessage?.RequestUri ?? request.GetUri();
+        return sourceUri.IsAbsoluteUri == false
+               || uri.IsAbsoluteUri == false
+               || sourceUri.Scheme.EqualsIgnoreCase(Uri.UriSchemeHttps) == false
+               || uri.Scheme.EqualsIgnoreCase(Uri.UriSchemeHttp) == false;
     }
 
     // ReSharper disable once MemberCanBeProtected.Global
@@ -340,6 +366,9 @@ public abstract class HttpClientServiceBase : HttpServiceBase
                     ReadCookies(responseMessage, response);
 
                 if (responseMessage.TryGetRedirection(out var uri) == false)
+                    break;
+
+                if (IsRedirectAllowed(currentRequest, responseMessage, uri) == false)
                     break;
 
                 if (request.MaxRedirectCount <= 0)

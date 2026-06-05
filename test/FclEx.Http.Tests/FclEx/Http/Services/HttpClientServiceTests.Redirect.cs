@@ -82,7 +82,62 @@ public partial class HttpClientServiceTests
         Assert.Equal(2, handler.Requests.Count);
     }
 
-    private static HttpClientService CreateService(HttpMessageHandler handler)
+    [Fact]
+    public async Task SendAsync_WhenInsecureRedirectIsAllowed_FollowsHttpsToHttpRedirect()
+    {
+        var handler = new RedirectHandler((request, index) => index == 1
+            ? CreateRedirectResponse(HttpStatusCode.Found, "http://example.com/target")
+            : CreateOkResponse(request));
+        using var service = CreateService(handler);
+
+        var response = await HttpRequest.Get("https://example.com/start")
+            .SendAsync(service);
+
+        Assert.False(response.IsError, response.Exception?.ToString());
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(2, handler.Requests.Count);
+        Assert.Equal(new Uri("http://example.com/target"), handler.Requests[1].Uri);
+    }
+
+    [Fact]
+    public async Task SendAsync_WhenInsecureRedirectIsNotAllowed_DoesNotFollowHttpsToHttpRedirect()
+    {
+        var handler = new RedirectHandler((_, _) => CreateRedirectResponse(HttpStatusCode.Found, "http://example.com/target"));
+        using var service = CreateService(handler);
+
+        var response = await HttpRequest.Get("https://example.com/start")
+            .AllowInsecureRedirects(false)
+            .SendAsync(service);
+
+        Assert.False(response.IsError, response.Exception?.ToString());
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        Assert.Single(handler.Requests);
+    }
+
+    [Fact]
+    public async Task SendAsync_WhenRedirecting_RemovesAuthorizationAndUsesCookiesForRedirectUri()
+    {
+        var handler = new RedirectHandler((request, index) => index == 1
+            ? CreateRedirectResponse(HttpStatusCode.Found, "/target")
+            : CreateOkResponse(request));
+        using var service = CreateService(handler, useCookie: true);
+        service.AddCookie(new Cookie("target", "cookie", "/target"), new Uri("https://example.com/target"));
+
+        var response = await HttpRequest.Get("https://example.com/start")
+            .BearerAuth("token")
+            .SetCookies("source=cookie")
+            .SendAsync(service);
+
+        Assert.False(response.IsError, response.Exception?.ToString());
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(2, handler.Requests.Count);
+        Assert.Equal("Bearer token", handler.Requests[0].Authorization);
+        Assert.Equal("source=cookie", handler.Requests[0].Cookie);
+        Assert.Null(handler.Requests[1].Authorization);
+        Assert.Equal("target=cookie", handler.Requests[1].Cookie);
+    }
+
+    private static HttpClientService CreateService(HttpMessageHandler handler, bool useCookie = false)
     {
         return HttpClientService.Create(
             () => new HttpClient(handler),
@@ -94,7 +149,7 @@ public partial class HttpClientServiceTests
                     RetryCount = 0,
                 },
             },
-            useCookie: false);
+            useCookie: useCookie);
     }
 
     private static HttpResponseMessage CreateRedirectResponse(HttpStatusCode statusCode, string location)
@@ -130,7 +185,10 @@ public partial class HttpClientServiceTests
             var body = request.Content is null
                 ? null
                 : await request.Content.ReadAsStringAsync(cancellationToken);
-            Requests.Add(new(request.Method, request.RequestUri!, body));
+            var cookie = request.Headers.TryGetValues(HttpHeaderNames.Cookie, out var cookies)
+                ? cookies.JoinWith("; ")
+                : null;
+            Requests.Add(new(request.Method, request.RequestUri!, body, request.Headers.Authorization?.ToString(), cookie));
 
             var response = responseFactory(request, Requests.Count);
             response.RequestMessage ??= request;
@@ -138,5 +196,5 @@ public partial class HttpClientServiceTests
         }
     }
 
-    private readonly record struct SentRequest(HttpMethod Method, Uri Uri, string? Body);
+    private readonly record struct SentRequest(HttpMethod Method, Uri Uri, string? Body, string? Authorization, string? Cookie);
 }
