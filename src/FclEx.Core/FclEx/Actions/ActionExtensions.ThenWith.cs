@@ -30,6 +30,19 @@ partial class ActionExtensions
     }
 
     /// <summary>
+    /// Runs the next value factory and returns both successful values.
+    /// </summary>
+    /// <typeparam name="T">The source value type.</typeparam>
+    /// <typeparam name="TNext">The next value type.</typeparam>
+    /// <param name="action">The source action.</param>
+    /// <param name="next">A function that produces the next value from the source value.</param>
+    /// <returns>An action whose successful value contains both source and next values.</returns>
+    public static IAction<(T Cur, TNext Next)> ThenWith<T, TNext>(this IAction<T> action, Func<T, TNext> next)
+    {
+        return action.Then<T, (T, TNext)>(m => Operation.Success((m, next(m))));
+    }
+
+    /// <summary>
     /// Runs the next action for a pair and returns all successful values.
     /// </summary>
     /// <typeparam name="T1">The first source value type.</typeparam>

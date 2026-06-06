@@ -213,4 +213,14 @@ partial class OperationResultExtensions
             _ => (new AggregateException(exceptions), time)
         };
     }
+
+    public static OperationResult<(T, TNext)> ThenWith<T, TNext>(this OperationResult<T> result, Func<T, TNext> next)
+    {
+        return result.MapValue(m => (m, next(m)));
+    }
+
+    public static OperationResult<(T, TNext)> ThenWith<T, TNext>(this OperationResult<T> result, Func<T, OperationResult<TNext>> next)
+    {
+        return result.Then(m => next(m).MapValue(x => (m, x)));
+    }
 }
