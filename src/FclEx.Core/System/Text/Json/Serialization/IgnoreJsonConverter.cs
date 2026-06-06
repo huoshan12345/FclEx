@@ -17,6 +17,7 @@ public class IgnoreJsonConverterImpl<T> : JsonConverter<T>
 
     public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
+        reader.Skip();
         return default;
     }
 
