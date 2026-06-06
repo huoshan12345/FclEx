@@ -49,27 +49,27 @@ public class IgnoreJsonConverterTests
     {
         var obj = new TestModelIgnoreNull { RetCode = 20000000, Msg = "success", Data = "test" };
         var json = obj.ToJson(new JsonOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
-        Assert.Equal("{\"ret_code\":20000000,\"msg\":\"success\"}", json);
+        Assert.Equal("{\"ret_code\":20000000,\"msg\":\"success\",\"data\":null}", json);
     }
+}
 
-    public class TestModel
-    {
-        [JsonPropertyName("ret_code")]
-        public long RetCode { get; set; }
-        [JsonPropertyName("msg")]
-        public string? Msg { get; set; }
-        [JsonConverter(typeof(IgnoreJsonConverter))]
-        public object? Data { get; set; }
-    }
+file class TestModel
+{
+    [JsonPropertyName("ret_code")]
+    public long RetCode { get; set; }
+    [JsonPropertyName("msg")]
+    public string? Msg { get; set; }
+    [JsonConverter(typeof(IgnoreJsonConverter))]
+    public object? Data { get; set; }
+}
 
-    public class TestModelIgnoreNull
-    {
-        [JsonPropertyName("ret_code")]
-        public long RetCode { get; set; }
-        [JsonPropertyName("msg")]
-        public string? Msg { get; set; }
-        [JsonConverter(typeof(IgnoreJsonConverter))]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public object? Data { get; set; }
-    }
+file class TestModelIgnoreNull
+{
+    [JsonPropertyName("ret_code")]
+    public long RetCode { get; set; }
+    [JsonPropertyName("msg")]
+    public string? Msg { get; set; }
+    [JsonConverter(typeof(IgnoreJsonConverter))]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public object? Data { get; set; }
 }

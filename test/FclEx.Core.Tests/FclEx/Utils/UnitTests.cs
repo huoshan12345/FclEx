@@ -21,6 +21,15 @@ public class UnitTests
         var json = new TestModel().ToJson();
         Assert.Equal("{\"Unit\":null,\"Units\":[null,null]}", json);
     }
+
+    [Fact]
+    public void FromJson_AsProperty_Test()
+    {
+        const string json = "{\"Unit\":{},\"Units\":[{},null]}";
+        var model = json.FromJson<TestModel>()!;
+        Assert.Equal(default, model.Unit);
+        Assert.Equal(new Unit[] { default, default }, model.Units);
+    }
 }
 
 file class TestModel
