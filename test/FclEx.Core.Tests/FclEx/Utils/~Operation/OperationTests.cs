@@ -22,4 +22,25 @@ public partial class OperationTests
         Assert.NotEqual(default, r.Elapsed);
         Assert.NotNull(r.Exception);
     }
+
+    [Fact]
+    public void Execute_OperationResult_UsesOuterElapsed()
+    {
+        var r = Operation.Execute(() => Operation.Success(TimeSpan.FromHours(1)));
+
+        Assert.True(r.IsSuccess);
+        Assert.NotEqual(TimeSpan.FromHours(1), r.Elapsed);
+        Assert.True(r.Elapsed < TimeSpan.FromMinutes(1), r.Elapsed.ToString());
+    }
+
+    [Fact]
+    public void Execute_OperationResult_T_UsesOuterElapsed()
+    {
+        var r = Operation.Execute(() => Operation.Success(1, TimeSpan.FromHours(1)));
+
+        Assert.True(r.IsSuccess);
+        Assert.Equal(1, r.Value);
+        Assert.NotEqual(TimeSpan.FromHours(1), r.Elapsed);
+        Assert.True(r.Elapsed < TimeSpan.FromMinutes(1), r.Elapsed.ToString());
+    }
 }
