@@ -1,6 +1,6 @@
 using FclEx.Actions;
 
-namespace FclEx.Utils.OperationResult;
+namespace FclEx.Utils;
 
 partial class OperationResultExtensionsTests
 {

@@ -1,6 +1,6 @@
-namespace FclEx.Utils.OperationResult;
+namespace FclEx.Utils;
 
-partial class OperationResultTests
+partial class OperationTests
 {
     [RetryFact(3, 100)]
     public async Task ExecuteAsync_Timeout_Test()

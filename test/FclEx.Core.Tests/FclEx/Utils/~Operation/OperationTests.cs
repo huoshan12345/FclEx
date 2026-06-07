@@ -1,6 +1,6 @@
-namespace FclEx.Utils.OperationResult;
+namespace FclEx.Utils;
 
-partial class OperationResultTests
+public partial class OperationTests
 {
     [Fact]
     public void Execute_Test()
