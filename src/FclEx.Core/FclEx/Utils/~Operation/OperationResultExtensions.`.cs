@@ -228,7 +228,7 @@ partial class OperationResultExtensions
         {
             0 => (values.ToArray(), time),
             1 => (exceptions[0], time),
-            _ => (new AggregateException(exceptions), time)
+            _ => (new AggregateException(exceptions), time),
         };
     }
 

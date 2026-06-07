@@ -276,7 +276,8 @@ partial class OperationResultExtensions
 
     public static Task<OperationResult<T[]>> Merge<T, TResults>(this Task<TResults> task) where TResults : IEnumerable<OperationResult<T>>
     {
-        return task.Then(m => m.Merge());
+        var watch = ValueStopwatch.StartNew();
+        return task.Then(m => m.Merge().Elapsed(watch.GetElapsedTime()));
     }
 
     public static Task<OperationResult<T[]>> Merge<T>(this Task<OperationResult<T>[]> task)
