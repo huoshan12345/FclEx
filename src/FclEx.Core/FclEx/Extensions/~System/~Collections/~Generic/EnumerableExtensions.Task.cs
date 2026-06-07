@@ -244,7 +244,7 @@ partial class EnumerableExtensions
         return Parallel.ForEachAsync(withIndexes, parallelOptions, async (entry, ct) =>
         {
             var (item, index) = entry;
-            var result = await body(item, ct).ConfigureAwait(false);
+            var result = await body(item, ct).NoCapture();
             lock (results)
             {
 #if NET8_0_OR_GREATER

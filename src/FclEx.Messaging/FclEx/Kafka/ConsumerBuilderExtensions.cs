@@ -73,7 +73,7 @@ public static class ConsumerBuilderExtensions
             var value = message.Value;
             try
             {
-                await options.MessageHandler(value).ConfigureAwait(false);
+                await options.MessageHandler(value).NoCapture();
             }
             catch (Exception ex)
             {

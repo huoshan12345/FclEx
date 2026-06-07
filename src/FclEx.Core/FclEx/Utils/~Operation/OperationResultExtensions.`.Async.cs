@@ -134,13 +134,13 @@ partial class OperationResultExtensions
 
     public static async Task<OperationResult<T>> ThrowIfError<T>(this Task<OperationResult<T>> task)
     {
-        var result = await task.ConfigureAwait(false);
+        var result = await task.NoCapture();
         return result.Unwrap();
     }
 
     public static async Task<OperationResult> WithoutValue<T>(this Task<OperationResult<T>> task)
     {
-        var result = await task.ConfigureAwait(false);
+        var result = await task.NoCapture();
         return result.WithoutValue();
     }
 
@@ -148,11 +148,11 @@ partial class OperationResultExtensions
     {
         return Operation.ExecuteAsync(async () =>
         {
-            var result = await task.ConfigureAwait(false);
+            var result = await task.NoCapture();
             if (result.IsError)
                 return result.Cast<TNext>();
 
-            var nextResult = await next(result.Value).ConfigureAwait(false);
+            var nextResult = await next(result.Value).NoCapture();
             return nextResult;
         });
     }
@@ -185,8 +185,8 @@ partial class OperationResultExtensions
     {
         return Operation.ExecuteAsync(async () =>
         {
-            var result = await task.ConfigureAwait(false);
-            var nextResult = await next(result).ConfigureAwait(false);
+            var result = await task.NoCapture();
+            var nextResult = await next(result).NoCapture();
             return nextResult;
         });
     }
@@ -203,13 +203,13 @@ partial class OperationResultExtensions
 
     public static async Task<T> Unwrap<T>(this Task<OperationResult<T>> task)
     {
-        var result = await task.ConfigureAwait(false);
+        var result = await task.NoCapture();
         return result.Unwrap();
     }
 
     public static async Task<T> Unwrap<T>(this Task<OperationResult<T>> task, T defaultValue)
     {
-        var result = await task.ConfigureAwait(false);
+        var result = await task.NoCapture();
         return result.Unwrap(defaultValue);
     }
 

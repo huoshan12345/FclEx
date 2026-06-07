@@ -7,12 +7,12 @@ public static partial class TaskExtensions
         return task is { IsFaulted: false, IsCanceled: false, Status: TaskStatus.RanToCompletion };
     }
 
-    public static ConfiguredTaskAwaitable IgnoreSyncContext(this Task task)
+    public static ConfiguredTaskAwaitable NoCapture(this Task task)
     {
         return task.ConfigureAwait(false);
     }
 
-    public static ConfiguredTaskAwaitable<T> IgnoreSyncContext<T>(this Task<T> task)
+    public static ConfiguredTaskAwaitable<T> NoCapture<T>(this Task<T> task)
     {
         return task.ConfigureAwait(false);
     }

@@ -24,8 +24,8 @@ partial class TaskExtensions
         Check.NotNull(task);
         Check.NotNull(action);
 
-        await task.ConfigureAwait(false);
-        return await action().ConfigureAwait(false);
+        await task.NoCapture();
+        return await action().NoCapture();
     }
 
     public static Task<T> Then<T>(this Task task, Func<T> action)
@@ -38,8 +38,8 @@ partial class TaskExtensions
         Check.NotNull(task);
         Check.NotNull(action);
 
-        await task.ConfigureAwait(false);
-        return await action(task.Result).ConfigureAwait(false);
+        await task.NoCapture();
+        return await action(task.Result).NoCapture();
     }
 
     public static Task<TResult> Then<T, TResult>(this Task<T> task, Func<T, TResult> action)
@@ -81,11 +81,11 @@ partial class TaskExtensions
 
         try
         {
-            await task.ConfigureAwait(false);
+            await task.NoCapture();
         }
         catch (Exception ex)
         {
-            await action(ex).ConfigureAwait(false);
+            await action(ex).NoCapture();
         }
     }
 
@@ -105,11 +105,11 @@ partial class TaskExtensions
 
         try
         {
-            return await task.ConfigureAwait(false);
+            return await task.NoCapture();
         }
         catch (Exception ex)
         {
-            return await action(ex).ConfigureAwait(false);
+            return await action(ex).NoCapture();
         }
     }
 
@@ -129,11 +129,11 @@ partial class TaskExtensions
 
         try
         {
-            return await task.ConfigureAwait(false);
+            return await task.NoCapture();
         }
         finally
         {
-            await action().ConfigureAwait(false);
+            await action().NoCapture();
         }
     }
 
@@ -153,11 +153,11 @@ partial class TaskExtensions
 
         try
         {
-            await task.ConfigureAwait(false);
+            await task.NoCapture();
         }
         finally
         {
-            await action().ConfigureAwait(false);
+            await action().NoCapture();
         }
     }
 

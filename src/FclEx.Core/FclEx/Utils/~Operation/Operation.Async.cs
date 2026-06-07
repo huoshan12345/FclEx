@@ -13,7 +13,7 @@ partial class Operation
         var watch = ValueStopwatch.StartNew();
         try
         {
-            await TaskHelper.Run(action, timeout).ConfigureAwait(false);
+            await TaskHelper.Run(action, timeout).NoCapture();
             return Success(watch.GetElapsedTime());
         }
         catch (Exception ex)
@@ -39,7 +39,7 @@ partial class Operation
         var watch = ValueStopwatch.StartNew();
         try
         {
-            var result = await TaskHelper.Run(action, timeout).ConfigureAwait(false);
+            var result = await TaskHelper.Run(action, timeout).NoCapture();
             return (result, watch.GetElapsedTime());
         }
         catch (Exception ex)
@@ -53,7 +53,7 @@ partial class Operation
         var watch = ValueStopwatch.StartNew();
         try
         {
-            var result = await TaskHelper.Run(action, timeout).ConfigureAwait(false);
+            var result = await TaskHelper.Run(action, timeout).NoCapture();
             return (result, watch.GetElapsedTime());
         }
         catch (Exception ex)
@@ -63,14 +63,14 @@ partial class Operation
     }
 
     public static async ValueTask<OperationResult> ExecuteValueAsync(Func<ValueTask<OperationResult>> action, TimeSpan? timeout = null)
-        => (await ExecuteValueAsync<OperationResult>(action, timeout).ConfigureAwait(false)).Unwrap();
+        => (await ExecuteValueAsync<OperationResult>(action, timeout).NoCapture()).Unwrap();
 
     public static async ValueTask<OperationResult> ExecuteValueAsync(Func<ValueTask> action, TimeSpan? timeout = null)
     {
         var watch = ValueStopwatch.StartNew();
         try
         {
-            await TaskHelper.Run(action, timeout).ConfigureAwait(false);
+            await TaskHelper.Run(action, timeout).NoCapture();
             return Success(watch.GetElapsedTime());
         }
         catch (Exception ex)
@@ -80,5 +80,5 @@ partial class Operation
     }
 
     public static async ValueTask<OperationResult<T>> ExecuteValueAsync<T>(Func<ValueTask<OperationResult<T>>> action, TimeSpan? timeout = null)
-        => (await ExecuteValueAsync<OperationResult<T>>(action, timeout).ConfigureAwait(false)).Unwrap();
+        => (await ExecuteValueAsync<OperationResult<T>>(action, timeout).NoCapture()).Unwrap();
 }

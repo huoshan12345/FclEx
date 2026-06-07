@@ -28,7 +28,7 @@ public static class ApplicationBuilderExtensions
                 logs.Push(nameof(JwtInfo), tokenInfo, true);
             }
 
-            await next().ConfigureAwait(false);
+            await next().NoCapture();
 
             var end = DateTime.UtcNow;
             var duration = end - start;
