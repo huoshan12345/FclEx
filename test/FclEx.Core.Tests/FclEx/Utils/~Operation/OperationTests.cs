@@ -69,4 +69,50 @@ public partial class OperationTests
         Assert.Throws<ArgumentNullException>(() => { _ = Operation.ObjectError("value", (Exception)null!); });
         Assert.Throws<ArgumentNullException>(() => { _ = OperationResult<int>.FromError((string)null!); });
     }
+
+    [Fact]
+    public void Cancel_FromNonCancellationException_ReturnsCanceledResult()
+    {
+        var exception = new SimpleException("stop");
+
+        var result = Operation.Cancel<int>(exception, TimeSpan.FromSeconds(1));
+
+        Assert.False(result.IsSuccess);
+        Assert.True(result.IsCanceled());
+        Assert.IsType<OperationCanceledException>(result.Exception);
+        Assert.Same(exception, result.Exception.InnerException);
+        Assert.Equal(TimeSpan.FromSeconds(1), result.Elapsed);
+    }
+
+    [Fact]
+    public void Cancel_FromOperationCanceledException_PreservesException()
+    {
+        var exception = new OperationCanceledException("stop");
+
+        var result = Operation.Cancel<int>(exception);
+
+        Assert.False(result.IsSuccess);
+        Assert.True(result.IsCanceled());
+        Assert.Same(exception, result.Exception);
+    }
+
+    [Fact]
+    public void ObjectError_RoundTripsAssociatedValue()
+    {
+        var result = Operation.ObjectError<string, int>("input", new SimpleException("x"), TimeSpan.FromSeconds(1));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("input", result.FromObjectError<string>());
+        Assert.True(result.IsObjectError<string>((value, exception) => value == "input" && exception.Message == "x"));
+        Assert.Equal(TimeSpan.FromSeconds(1), result.Elapsed);
+    }
+
+    [Fact]
+    public void NotImplemented_ReturnsNotImplementedError()
+    {
+        var result = Operation.NotImplemented<int>();
+
+        Assert.False(result.IsSuccess);
+        Assert.IsType<NotImplementedException>(result.Exception);
+    }
 }

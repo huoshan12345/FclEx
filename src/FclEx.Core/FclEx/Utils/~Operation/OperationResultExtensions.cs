@@ -2,6 +2,9 @@ namespace FclEx.Utils;
 
 public static partial class OperationResultExtensions
 {
+    /// <summary>
+    /// Deconstructs a non-generic operation result into success, exception, and elapsed values.
+    /// </summary>
     public static void Deconstruct(this OperationResult result, out bool success, out Exception? exception, out TimeSpan elapsed)
     {
         success = result.IsSuccess;
@@ -9,6 +12,9 @@ public static partial class OperationResultExtensions
         exception = result.Exception;
     }
 
+    /// <summary>
+    /// Deconstructs a non-generic operation result into success and exception values.
+    /// </summary>
     public static void Deconstruct(this OperationResult result, out bool success, out Exception? exception)
     {
         success = result.IsSuccess;
@@ -20,11 +26,10 @@ public static partial class OperationResultExtensions
     /// </summary>
     /// <param name="enumerable">The collection of <see cref="OperationResult"/> instances to merge.</param>
     /// <returns>
-    /// A new <see cref="OperationResult"/> representing the merged results.<br/>
-    /// If all results are successful, it returns a success result with the total elapsed time.<br/>
-    /// If there is one exception, it returns an error result with that exception.
-    /// If multiple exceptions exist, it returns an error result with an <see cref="AggregateException"/>.
+    /// A success result when all inputs are successful, an error result with the single exception when one input fails,
+    /// or an error result with an <see cref="AggregateException"/> when multiple inputs fail.
     /// </returns>
+    /// <remarks>Elapsed times are summed.</remarks>
     public static OperationResult Merge(this IEnumerable<OperationResult> enumerable)
     {
         Check.NotNull(enumerable);
@@ -45,8 +50,7 @@ public static partial class OperationResultExtensions
     }
 
     /// <summary>
-    /// Determines whether the operation result represents an error that satisfies a given condition 
-    /// based on the exception's associated object.
+    /// Determines whether the result is an object error with an associated object that satisfies a condition.
     /// </summary>
     /// <typeparam name="T">The expected type of the associated object.</typeparam>
     /// <param name="result">The operation result to check.</param>
@@ -65,8 +69,7 @@ public static partial class OperationResultExtensions
     }
 
     /// <summary>
-    /// Determines whether the operation result represents an error that satisfies a given condition 
-    /// based on the exception's associated object, without extracting the object.
+    /// Determines whether the result is an object error with an associated object that satisfies a condition.
     /// </summary>
     /// <typeparam name="T">The expected type of the associated object.</typeparam>
     /// <param name="result">The operation result to check.</param>
@@ -81,7 +84,7 @@ public static partial class OperationResultExtensions
     }
 
     /// <summary>
-    /// Determines whether the operation result represents a canceled operation.
+    /// Determines whether the result is an error represented by a cancellation exception.
     /// </summary>
     /// <param name="result">The operation result to check.</param>
     /// <returns>
@@ -96,11 +99,10 @@ public static partial class OperationResultExtensions
     }
 
     /// <summary>
-    /// Determines whether the operation result represents a faulted state, which occurs when an error is present and
-    /// the operation has not been canceled.
+    /// Determines whether the result is an error that is not cancellation.
     /// </summary>
     /// <param name="result">The operation result to check.</param>
-    /// <returns>true if the operation result is faulted; otherwise, false.</returns>
+    /// <returns><see langword="true"/> when the result is faulted; otherwise, <see langword="false"/>.</returns>
     public static bool IsFaulted(this IOperationResult result)
     {
         Check.NotNull(result);
@@ -109,10 +111,10 @@ public static partial class OperationResultExtensions
     }
 
     /// <summary>
-    /// Checks if the operation result indicates an error and that the error is represented as a simple string message.
+    /// Determines whether the result is an error represented by a simple string message.
     /// </summary>
     /// <param name="result">The operation result to check.</param>
-    /// <returns>True if the result is an error and the error is a simple string message, false otherwise.</returns>
+    /// <returns><see langword="true"/> when the result is a string error; otherwise, <see langword="false"/>.</returns>
     public static bool IsStringError(this IOperationResult result)
     {
         Check.NotNull(result);
@@ -121,11 +123,10 @@ public static partial class OperationResultExtensions
     }
 
     /// <summary>
-    /// Checks if the operation result indicates an error and that the error is *not* represented as a simple string message.
-    /// This implies the error is a more complex type (e.g., an exception object with details).
+    /// Determines whether the result is an error that is not represented by a simple string message.
     /// </summary>
     /// <param name="result">The operation result to check.</param>
-    /// <returns>True if the result is an error and the error is *not* a simple string message, false otherwise.</returns>
+    /// <returns><see langword="true"/> when the result is a non-string error; otherwise, <see langword="false"/>.</returns>
     public static bool IsNonStringError(this IOperationResult result)
     {
         Check.NotNull(result);

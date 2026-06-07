@@ -50,55 +50,109 @@ public readonly struct OperationResult<T> : IOperationResult<T>
         Value = result;
     }
 
+    /// <summary>
+    /// Creates a successful operation result.
+    /// </summary>
+    /// <param name="value">The success value.</param>
+    /// <param name="elapsed">The elapsed time to store in the result.</param>
+    /// <returns>A success result containing <paramref name="value"/>.</returns>
     public static OperationResult<T> FromSuccess(T value, TimeSpan elapsed = default) => new(value!, elapsed);
 
+    /// <summary>
+    /// Creates an error result from a message.
+    /// </summary>
+    /// <param name="error">The error message.</param>
+    /// <param name="elapsed">The elapsed time to store in the result.</param>
+    /// <returns>An error result containing a <see cref="SimpleException"/>.</returns>
     public static OperationResult<T> FromError(string error, TimeSpan elapsed = default) => new(new SimpleException(Check.NotNull(error)), elapsed);
 
+    /// <summary>
+    /// Creates an error result from an exception.
+    /// </summary>
+    /// <param name="exception">The exception to store in the result.</param>
+    /// <param name="elapsed">The elapsed time to store in the result.</param>
+    /// <returns>An error result containing <paramref name="exception"/>.</returns>
     public static OperationResult<T> FromError(Exception exception, TimeSpan elapsed = default)
     {
         return new OperationResult<T>(exception, elapsed);
     }
 
+    /// <summary>
+    /// Converts an exception to an error result.
+    /// </summary>
+    /// <param name="exception">The exception to store in the result.</param>
     public static implicit operator OperationResult<T>(Exception exception)
     {
         return FromError(exception, TimeSpan.Zero);
     }
 
+    /// <summary>
+    /// Converts a string message to an error result.
+    /// </summary>
+    /// <param name="error">The error message.</param>
     public static implicit operator OperationResult<T>(string error)
     {
         return FromError(error, TimeSpan.Zero);
     }
 
+    /// <summary>
+    /// Converts an error-message and elapsed tuple to an error result.
+    /// </summary>
+    /// <param name="tuple">The error message and elapsed time.</param>
     public static implicit operator OperationResult<T>((string, TimeSpan) tuple)
     {
         return FromError(tuple.Item1, tuple.Item2);
     }
 
+    /// <summary>
+    /// Converts an elapsed and error-message tuple to an error result.
+    /// </summary>
+    /// <param name="tuple">The elapsed time and error message.</param>
     public static implicit operator OperationResult<T>((TimeSpan, string) tuple)
     {
         return FromError(tuple.Item2, tuple.Item1);
     }
 
+    /// <summary>
+    /// Converts an exception and elapsed tuple to an error result.
+    /// </summary>
+    /// <param name="tuple">The exception and elapsed time.</param>
     public static implicit operator OperationResult<T>((Exception, TimeSpan) tuple)
     {
         return FromError(tuple.Item1, tuple.Item2);
     }
 
+    /// <summary>
+    /// Converts an elapsed and exception tuple to an error result.
+    /// </summary>
+    /// <param name="tuple">The elapsed time and exception.</param>
     public static implicit operator OperationResult<T>((TimeSpan, Exception) tuple)
     {
         return FromError(tuple.Item2, tuple.Item1);
     }
 
+    /// <summary>
+    /// Converts a value to a success result.
+    /// </summary>
+    /// <param name="value">The success value.</param>
     public static implicit operator OperationResult<T>(T value)
     {
         return FromSuccess(value, TimeSpan.Zero);
     }
 
+    /// <summary>
+    /// Converts a value and elapsed tuple to a success result.
+    /// </summary>
+    /// <param name="tuple">The success value and elapsed time.</param>
     public static implicit operator OperationResult<T>((T, TimeSpan) tuple)
     {
         return FromSuccess(tuple.Item1, tuple.Item2);
     }
 
+    /// <summary>
+    /// Drops the typed value and converts this result to a non-generic result while preserving success, error, and elapsed time.
+    /// </summary>
+    /// <param name="result">The typed operation result.</param>
     public static implicit operator OperationResult(OperationResult<T> result)
     {
         return result.IsSuccess
@@ -106,6 +160,10 @@ public readonly struct OperationResult<T> : IOperationResult<T>
             : OperationResult.FromError(result.Exception, result.Elapsed);
     }
 
+    /// <summary>
+    /// Wraps an operation result in a completed task.
+    /// </summary>
+    /// <param name="result">The operation result to wrap.</param>
     public static implicit operator Task<OperationResult<T>>(OperationResult<T> result)
     {
         return Task.FromResult(result);

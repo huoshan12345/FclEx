@@ -157,6 +157,18 @@ partial class OperationResultExtensionsTests
     }
 
     [Fact]
+    public async Task Fallback_TaskOperationResult_FillsDefaultSourceElapsedBeforeAddingFallbackElapsed()
+    {
+        var result = await Task.Delay(20)
+            .Then(() => Operation.Error<int>("x"))
+            .Fallback(_ => Task.FromResult(Operation.Success(2, TimeSpan.FromSeconds(3))));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.Value);
+        Assert.True(result.Elapsed > TimeSpan.FromSeconds(3));
+    }
+
+    [Fact]
     public async Task ThenWith_TaskOperationResult_TaskOperationResult_AddsElapsedFromBothResults()
     {
         var result = await Task.FromResult(Operation.Success("a", TimeSpan.FromSeconds(2)))
