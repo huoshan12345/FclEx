@@ -88,6 +88,15 @@ public partial class ExtensionsTests
     }
 
     [Fact]
+    public void MapError_RejectsNullMapper()
+    {
+        var action = SuccessAction.Create(1);
+
+        Assert.Throws<ArgumentNullException>(() => { _ = action.MapError(null!); });
+        Assert.Throws<ArgumentNullException>(() => { _ = action.MapErrorMessage(null!); });
+    }
+
+    [Fact]
     public async Task Reject_AfterSuccess_ReturnsErrorFromValue()
     {
         var (success, _, ex, _) = await SuccessAction.Create(9)

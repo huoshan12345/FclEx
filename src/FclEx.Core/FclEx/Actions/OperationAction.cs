@@ -7,10 +7,10 @@ public class OperationAction<T> : IAction<T>
     /// <summary>
     /// Creates an action from an async operation delegate.
     /// </summary>
-    /// <param name="func">The delegate invoked when the action executes.</param>
-    public OperationAction(Func<CancellationToken, Task<OperationResult<T>>> func)
+    /// <param name="execute">The delegate invoked when the action executes.</param>
+    public OperationAction(Func<CancellationToken, Task<OperationResult<T>>> execute)
     {
-        _func = Check.NotNull(func);
+        _func = Check.NotNull(execute);
     }
 
     /// <summary>

@@ -15,48 +15,56 @@ partial class OperationResultExtensionsTests
     }
 
     [Fact]
-    public async Task Then_OperationResult_Func_T_Task_OperationResult_TNext_ThrownException_ReturnsError()
+    public async Task Then_OperationResult_Func_T_Task_OperationResult_TNext_ThrownException_FaultsTask()
     {
         var ex = new SimpleException("x");
         Func<string, Task<OperationResult<int>>> next = _ => throw ex;
 
-        var result = await Operation.Success("x").Then(next);
+        var actual = await Assert.ThrowsAsync<SimpleException>(() => Operation.Success("x").Then(next));
 
-        Assert.False(result.IsSuccess);
-        Assert.Same(ex, result.Exception);
+        Assert.Same(ex, actual);
     }
 
     [Fact]
-    public async Task Then_OperationResult_Func_T_Task_OperationResult_TNext_FaultedTask_ReturnsError()
+    public async Task Then_OperationResult_Func_T_Task_OperationResult_TNext_FaultedTask_FaultsTask()
     {
         var ex = new SimpleException("x");
         Func<string, Task<OperationResult<int>>> next = _ => Task.FromException<OperationResult<int>>(ex);
 
-        var result = await Operation.Success("x").Then(next);
+        var actual = await Assert.ThrowsAsync<SimpleException>(() => Operation.Success("x").Then(next));
 
-        Assert.False(result.IsSuccess);
-        Assert.Same(ex, result.Exception);
+        Assert.Same(ex, actual);
     }
 
     [Fact]
-    public async Task Then_TaskOperationResult_Func_T_OperationResult_TNext_ThrownException_ReturnsError()
+    public async Task Then_TaskOperationResult_Func_T_OperationResult_TNext_ThrownException_FaultsTask()
     {
         var ex = new SimpleException("x");
         Func<string, OperationResult<int>> next = _ => throw ex;
 
-        var result = await Task.FromResult(Operation.Success("x")).Then(next);
+        var actual = await Assert.ThrowsAsync<SimpleException>(() => Task.FromResult(Operation.Success("x")).Then(next));
 
-        Assert.False(result.IsSuccess);
-        Assert.Same(ex, result.Exception);
+        Assert.Same(ex, actual);
     }
 
     [Fact]
-    public async Task ThenResult_TaskOperationResult_Func_Result_Task_OperationResult_TNext_ThrownException_ReturnsError()
+    public async Task ThenResult_TaskOperationResult_Func_Result_Task_OperationResult_TNext_ThrownException_FaultsTask()
     {
         var ex = new SimpleException("x");
         Func<OperationResult<string>, Task<OperationResult<int>>> next = _ => throw ex;
 
-        var result = await Task.FromResult(Operation.Success("x")).ThenResult(next);
+        var actual = await Assert.ThrowsAsync<SimpleException>(() => Task.FromResult(Operation.Success("x")).ThenResult(next));
+
+        Assert.Same(ex, actual);
+    }
+
+    [Fact]
+    public async Task Then_TaskOperationResult_SourceFault_ReturnsError()
+    {
+        var ex = new SimpleException("x");
+
+        var result = await Task.FromException<OperationResult<string>>(ex)
+            .Then(m => Task.FromResult(Operation.Success(m.Length)));
 
         Assert.False(result.IsSuccess);
         Assert.Same(ex, result.Exception);

@@ -44,11 +44,12 @@ public static partial class ActionExtensions
     /// </summary>
     /// <typeparam name="T">The action value type.</typeparam>
     /// <param name="action">The source action.</param>
-    /// <param name="func">The exception mapper invoked only when the source action fails.</param>
+    /// <param name="map">The exception mapper invoked only when the source action fails.</param>
     /// <returns>An action that keeps success values and replaces failures.</returns>
-    public static IAction<T> MapError<T>(this IAction<T> action, Func<Exception, Exception> func)
+    public static IAction<T> MapError<T>(this IAction<T> action, Func<Exception, Exception> map)
     {
-        return action.ThenResultIf(m => m.IsError, m => new ErrorAction<T>(func(m.Exception!)));
+        Check.NotNull(map);
+        return action.ThenResultIf(m => m.IsError, m => new ErrorAction<T>(map(m.Exception!)));
     }
 
     /// <summary>
@@ -56,11 +57,12 @@ public static partial class ActionExtensions
     /// </summary>
     /// <typeparam name="T">The action value type.</typeparam>
     /// <param name="action">The source action.</param>
-    /// <param name="func">The message mapper invoked only when the source action fails.</param>
+    /// <param name="map">The message mapper invoked only when the source action fails.</param>
     /// <returns>An action that keeps success values and replaces failure messages.</returns>
-    public static IAction<T> MapErrorMessage<T>(this IAction<T> action, Func<string, string> func)
+    public static IAction<T> MapErrorMessage<T>(this IAction<T> action, Func<string, string> map)
     {
-        return action.MapError(e => e.SetMessage(func(e.Message)));
+        Check.NotNull(map);
+        return action.MapError(e => e.SetMessage(map(e.Message)));
     }
 
     /// <summary>

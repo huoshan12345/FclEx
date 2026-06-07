@@ -89,39 +89,45 @@ partial class OperationResultExtensions
             : (result.Exception, result.Elapsed);
     }
 
-    public static OperationResult<TResult> MapValue<T, TResult>(this OperationResult<T> result, Func<T, TResult> func)
+    public static OperationResult<TResult> MapValue<T, TResult>(this OperationResult<T> result, Func<T, TResult> map)
     {
+        Check.NotNull(map);
+
         return result.IsSuccess
-            ? (func(result.Value), result.Elapsed)
+            ? (map(result.Value), result.Elapsed)
             : (result.Exception, result.Elapsed);
     }
 
-    public static OperationResult<TResult> Then<T, TResult>(this OperationResult<T> result, Func<T, OperationResult<TResult>> func)
+    public static OperationResult<TResult> Then<T, TResult>(this OperationResult<T> result, Func<T, OperationResult<TResult>> next)
     {
-        Check.NotNull(func);
+        Check.NotNull(next);
 
         return result.IsSuccess
-            ? func(result.Value)
+            ? next(result.Value)
             : (result.Exception, result.Elapsed);
     }
 
-    public static Task<OperationResult<TResult>> Then<T, TResult>(this OperationResult<T> result, Func<T, Task<OperationResult<TResult>>> func)
+    public static Task<OperationResult<TResult>> Then<T, TResult>(this OperationResult<T> result, Func<T, Task<OperationResult<TResult>>> next)
     {
-        Check.NotNull(func);
+        Check.NotNull(next);
 
         return result.IsSuccess
-            ? func(result.Value)
+            ? next(result.Value)
             : Operation.Error<TResult>(result.Exception, result.Elapsed);
     }
 
-    public static OperationResult<TResult> ThenResult<T, TResult>(this OperationResult<T> result, Func<OperationResult<T>, OperationResult<TResult>> func)
+    public static OperationResult<TResult> ThenResult<T, TResult>(this OperationResult<T> result, Func<OperationResult<T>, OperationResult<TResult>> next)
     {
-        return func(result);
+        Check.NotNull(next);
+
+        return next(result);
     }
 
-    public static OperationResult<TResult> ThenResult<T, TResult>(this OperationResult<T> result, Func<OperationResult<T>, TResult> func)
+    public static OperationResult<TResult> ThenResult<T, TResult>(this OperationResult<T> result, Func<OperationResult<T>, TResult> next)
     {
-        return func(result);
+        Check.NotNull(next);
+
+        return next(result);
     }
 
     public static T UnwrapOr<T>(this OperationResult<T> result, T defaultValue)
@@ -139,6 +145,8 @@ partial class OperationResultExtensions
 
     public static T FromObjectError<T>(this IOperationResult result) where T : notnull
     {
+        Check.NotNull(result);
+
         if (result.IsObjectError<T>(static (_, _) => true, out var value))
             return value;
 
@@ -147,6 +155,8 @@ partial class OperationResultExtensions
 
     public static T FromObjectError<T>(this IOperationResult<T> result) where T : notnull
     {
+        Check.NotNull(result);
+
         return result.CastTo<IOperationResult>().FromObjectError<T>();
     }
 
@@ -164,6 +174,8 @@ partial class OperationResultExtensions
 
     public static bool IsSuccess<T>(this OperationResult<T> result, Func<T, bool> condition)
     {
+        Check.NotNull(condition);
+
         return result.IsSuccess && condition(result.Value);
     }
 
@@ -179,11 +191,15 @@ partial class OperationResultExtensions
 
     public static OperationResult<T> ThenIf<T>(this OperationResult<T> result, Func<T, bool> condition, Func<T, OperationResult<T>> next)
     {
+        Check.NotNull(next);
+
         return result.ThenIf(condition, next, m => Operation.Success(m));
     }
 
     public static OperationResult ThenIf<T>(this OperationResult<T> result, Func<T, bool> condition, Func<T, OperationResult> next)
     {
+        Check.NotNull(next);
+
         return result.ThenIf(condition, next, _ => Operation.Success(Unit.Default));
     }
 
@@ -234,11 +250,15 @@ partial class OperationResultExtensions
 
     public static OperationResult<(T, TNext)> ThenWith<T, TNext>(this OperationResult<T> result, Func<T, TNext> next)
     {
+        Check.NotNull(next);
+
         return result.MapValue(m => (m, next(m)));
     }
 
     public static OperationResult<(T, TNext)> ThenWith<T, TNext>(this OperationResult<T> result, Func<T, OperationResult<TNext>> next)
     {
+        Check.NotNull(next);
+
         return result.Then(m => next(m).MapValue(x => (m, x)));
     }
 }

@@ -4,6 +4,8 @@ public static partial class Operation
 {
     public static OperationResult Execute(Action action)
     {
+        Check.NotNull(action);
+
         var watch = ValueStopwatch.StartNew();
         try
         {
@@ -18,6 +20,8 @@ public static partial class Operation
 
     public static OperationResult<T> Execute<T>(Func<T> action)
     {
+        Check.NotNull(action);
+
         var watch = ValueStopwatch.StartNew();
         try
         {

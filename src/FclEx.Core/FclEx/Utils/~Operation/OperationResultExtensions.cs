@@ -2,17 +2,17 @@ namespace FclEx.Utils;
 
 public static partial class OperationResultExtensions
 {
-    public static void Deconstruct(this OperationResult result, out bool success, out Exception? ex, out TimeSpan elapsed)
+    public static void Deconstruct(this OperationResult result, out bool success, out Exception? exception, out TimeSpan elapsed)
     {
         success = result.IsSuccess;
         elapsed = result.Elapsed;
-        ex = result.Exception;
+        exception = result.Exception;
     }
 
-    public static void Deconstruct(this OperationResult result, out bool success, out Exception? ex)
+    public static void Deconstruct(this OperationResult result, out bool success, out Exception? exception)
     {
         success = result.IsSuccess;
-        ex = result.Exception;
+        exception = result.Exception;
     }
 
     /// <summary>
@@ -58,6 +58,9 @@ public static partial class OperationResultExtensions
     /// </returns>
     public static bool IsObjectError<T>(this IOperationResult result, Func<T, Exception, bool> condition, [NotNullWhen(true)] out T? value) where T : notnull
     {
+        Check.NotNull(result);
+        Check.NotNull(condition);
+
         return result.Exception.IsObjectException(out value) && condition(value, result.Exception);
     }
 
@@ -87,6 +90,8 @@ public static partial class OperationResultExtensions
     /// </returns>
     public static bool IsCanceled(this IOperationResult result)
     {
+        Check.NotNull(result);
+
         return result.IsError && result.Exception.IsCanceled();
     }
 
@@ -98,6 +103,8 @@ public static partial class OperationResultExtensions
     /// <returns>true if the operation result is faulted; otherwise, false.</returns>
     public static bool IsFaulted(this IOperationResult result)
     {
+        Check.NotNull(result);
+
         return result.IsError && !result.IsCanceled();
     }
 
@@ -108,6 +115,8 @@ public static partial class OperationResultExtensions
     /// <returns>True if the result is an error and the error is a simple string message, false otherwise.</returns>
     public static bool IsStringError(this IOperationResult result)
     {
+        Check.NotNull(result);
+
         return result.IsError && result.Exception.IsJustMessage();
     }
 
@@ -119,6 +128,8 @@ public static partial class OperationResultExtensions
     /// <returns>True if the result is an error and the error is *not* a simple string message, false otherwise.</returns>
     public static bool IsNonStringError(this IOperationResult result)
     {
+        Check.NotNull(result);
+
         return result.IsError && result.Exception.IsJustMessage() == false;
     }
 }

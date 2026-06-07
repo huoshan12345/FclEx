@@ -8,7 +8,9 @@ Reviewed on 2026-06-05. The review focused on naming, public API shape, implemen
 
 1. `dotnet build src\FclEx.Core\FclEx.Core.csproj -c Release --no-restore`: passed for `net472`, `netstandard2.0`, `net8.0`, `net9.0`, and `net10.0`.
 
-2. `dotnet test test\FclEx.Core.Tests\FclEx.Core.Tests.csproj -c Release --no-restore --filter FullyQualifiedName~Operation`: passed 347 tests for `net472`, `net8.0`, `net9.0`, and `net10.0`.
+2. `dotnet test test\FclEx.Core.Tests\FclEx.Core.Tests.csproj -c Release --no-restore --filter "FullyQualifiedName~Operation|FullyQualifiedName~Actions"`: passed 433 tests for `net472`, `net8.0`, `net9.0`, and `net10.0`.
+
+3. `dotnet test test\FclEx.Core.Tests\FclEx.Core.Tests.csproj -c Release --no-restore --no-build`: passed for `net472` with 9976 passed and 3 skipped tests, and for `net8.0`, `net9.0`, and `net10.0` with 10020 passed and 3 skipped tests each.
 
 ## Issues
 
@@ -26,7 +28,7 @@ Reviewed on 2026-06-05. The review focused on naming, public API shape, implemen
 
 7. [Resolved] `src/FclEx.Core/FclEx/Utils/~Operation/OperationResultExtensions.*.Async.cs`: async `OnFaulted<T>(Func<OperationResult<T>, Task>)` now uses `m.IsFaulted()`, so cancellations are not treated as faults. Covered by `OnFaulted_DoesNotRunForCanceledResult` and `OnFaulted_RunsForNonCanceledError`.
 
-8. [Resolved] `src/FclEx.Core/FclEx/Utils/~Operation/OperationResultExtensions.*.cs` and `OperationResultExtensions.*.Async.cs`: async result-chain methods now consistently route throwing or faulted `next` delegates through `Operation.ExecuteAsync`, producing error results instead of faulting the returned task. Covered by thrown/faulted-task tests for `Then` and thrown-delegate tests for `ThenResult`.
+8. [Documented] `src/FclEx.Core/FclEx/Utils/~Operation/OperationResultExtensions.*.cs` and `OperationResultExtensions.*.Async.cs`: result-returning delegates passed to `Then`/`ThenResult` are treated as trusted result factories. These combinators do not catch delegate exceptions into error results; use `Operation.Execute`, `Operation.ExecuteAsync`, or `Operation.Action` at exception boundaries when arbitrary throwing code should be converted into `OperationResult`.
 
 9. [Resolved] `src/FclEx.Core/FclEx/Utils/~Operation/OperationResultExtensions.*.Async.cs`: the `~Operation` async helpers now use `async`/`await` and `NoCapture()` instead of raw `ContinueWith`. Remaining `ContinueWith` usages found by repository search are outside the reviewed `~Operation` code path.
 
@@ -34,23 +36,23 @@ Reviewed on 2026-06-05. The review focused on naming, public API shape, implemen
 
 11. [Documented] `src/FclEx.Core/FclEx/Utils/~Operation/Operation.Async.cs` and `Operation.Action.cs`: synchronous delegates passed to async operation/action factories are intentionally executed through `Task.Run`. This keeps timeout behavior aligned with `Task.WaitAsync`: a timeout stops waiting for the work but does not stop the underlying delegate. Avoid these overloads for thread-affine work.
 
-12. [Open] `src/FclEx.Core/FclEx/Utils/~Operation/Operation.Create.*.cs`: `Cancel<T>(Exception ex, ...)` turns any non-`OperationCanceledException` into an `OperationCanceledException`. This can misclassify ordinary failures if callers pass the wrong exception. Either require/validate cancellation exception types, rename the method to indicate wrapping, or expose a separate `FromCancellation(Exception)` API.
+12. [No change] `src/FclEx.Core/FclEx/Utils/~Operation/Operation.Create.*.cs`: `Cancel<T>(Exception ex, ...)` intentionally creates a canceled result by ensuring the stored exception is an `OperationCanceledException`. Result state is classified by exception type: cancellation exceptions mean canceled, other exceptions mean faulted.
 
-13. [Open] `src/FclEx.Core/FclEx/Utils/~Operation/Operation.Create*.cs`: error-message factories accept `string?`, which allows an error result with a null or empty message. For a public result API, a null message is not very diagnostic. Require a non-empty message, normalize to a default message, or keep the nullable overload internal.
+13. [Resolved] `src/FclEx.Core/FclEx/Utils/~Operation/Operation.Create*.cs`: error-message factories now use non-null `string` parameters.
 
-14. [Open] `src/FclEx.Core/FclEx/Utils/~Operation/OperationResult.cs`: `Cast<TTarget>()` uses `Value.CastTo<TTarget>()`, which relies on `dynamic` conversion and can throw from a successful result path. The name also suggests a CLR cast, while the helper may perform dynamic conversions. Consider renaming to `ConvertValue`, catching conversion failures into an error result, or providing separate throwing and non-throwing APIs.
+14. [Resolved] `src/FclEx.Core/FclEx/Utils/~Operation/OperationResult.cs`: `Cast<TTarget>()` now returns an error result when value conversion fails instead of throwing from the successful result path.
 
-15. [Open] `src/FclEx.Core/FclEx/Utils/~Operation/OperationResultExtensions.*.cs`: `Then<T, TResult>(OperationResult<T>, Func<T, OperationResult<TResult>>)` and related synchronous chain methods do not validate null delegates. Because these are public APIs, null arguments currently turn into later `NullReferenceException`s. Validate with `Check.NotNull` consistently, as many action APIs already do.
+15. [Resolved] `src/FclEx.Core/FclEx/Utils/~Operation` and `src/FclEx.Core/FclEx/Actions`: public operation factories and result/action combinators now validate null delegate parameters more consistently with `Check.NotNull`. Covered by `Execute_RejectsNullAction`, `Action_RejectsNullExecute`, `OperationResultExtensions_RejectNullDelegates`, `MapError_RejectsNullMapper`, and `Then_RejectsNullNextDelegates`.
 
-16. [Open] `src/FclEx.Core/FclEx/Utils/~Operation/OperationResultExtensions.*.cs`: method naming around `Unwrap` is overloaded across very different meanings: extracting a value and throwing on error, extracting a value with a default fallback, and flattening nested `OperationResult<OperationResult<T>>`. Split these into clearer names such as `GetValueOrThrow`, `GetValueOrDefault`, and `Flatten`.
+16. [Resolved] `src/FclEx.Core/FclEx/Utils/~Operation/OperationResultExtensions.*.cs`: value extraction keeps the Rust-inspired `Unwrap` name, default fallback is now `UnwrapOr`, and nested result flattening is now `Flatten`.
 
-17. [Open] `src/FclEx.Core/FclEx/Utils/~Operation/OperationResultExtensions.*.cs`: `FallBack` should be named `Fallback` for normal .NET naming and natural English when used as a method. If the intent is a verb phrase, use `OrElse`, `Recover`, or `RecoverWith`; if the intent is a noun concept, use `Fallback`.
+17. [Resolved] `src/FclEx.Core/FclEx/Utils/~Operation/OperationResultExtensions.*.cs`: `FallBack` has been renamed to `Fallback`.
 
-18. [Open] `src/FclEx.Core/FclEx/Utils/~Operation/Operation.Action.cs`, `Operation.Create*.cs`, and related action classes: public parameter names such as `obj`, `func`, and `timeSpan` are less descriptive than `value`, `execute`, `operation`, or `elapsed`. Since these are public NuGet APIs and appear in IntelliSense and named arguments, rename them for clarity.
+18. [Resolved] `src/FclEx.Core/FclEx/Utils/~Operation/Operation.Action.cs`, `Operation.Create*.cs`, `OperationResult.cs`, and related action classes: public parameter names such as `obj`, `func`, `timeSpan`, `paras`, `item`, and `ex` have been renamed to clearer names such as `value`, `execute`, `elapsed`, `tuple`, and `exception`.
 
-19. [Open] `src/FclEx.Core/FclEx/Utils/~Operation/Operation.Action.cs`: the `Operation.Action(...)` factory name is easy to confuse with `System.Action`, while the return type is `IAction<T>`. Consider `Operation.CreateAction`, `Operation.ToAction`, or static factories on `OperationAction`/`ResultAction` to make the API easier to discover.
+19. [No change] `src/FclEx.Core/FclEx/Utils/~Operation/Operation.Action.cs`: `Operation.Action(...)` is kept because it is already scoped under the `Operation` static class and matches the nearby concise factory style such as `Operation.Success(...)` and `Operation.Error(...)`.
 
-20. [Open] `src/FclEx.Core/FclEx/Utils/~Operation/OperationResultExtensions*.cs`: `Merge` sums elapsed time for every result. That is reasonable for serial operations but misleading for parallel work, where wall-clock elapsed is usually the maximum or separately measured duration. Rename to make summed elapsed explicit, or add merge options for sum/max/preserve.
+20. [Resolved] `src/FclEx.Core/FclEx/Utils/~Operation/OperationResultExtensions*.cs`: task-based merge now applies wall-clock elapsed measured around the awaited task rather than blindly using the sum of child result elapsed times.
 
 21. [Open] `src/FclEx.Core/FclEx/Utils/~Operation/OperationResultExtensions*.cs`: `Merge` accepts `IEnumerable<IOperationResult>` and `IEnumerable<OperationResult<T>>` but does not protect against null elements for the interface overload. Add null validation for elements or document that null entries are invalid.
 

@@ -43,4 +43,30 @@ public partial class OperationTests
         Assert.NotEqual(TimeSpan.FromHours(1), r.Elapsed);
         Assert.True(r.Elapsed < TimeSpan.FromMinutes(1), r.Elapsed.ToString());
     }
+
+    [Fact]
+    public void Execute_RejectsNullAction()
+    {
+        Assert.Throws<ArgumentNullException>(() => { _ = Operation.Execute((Action)null!); });
+        Assert.Throws<ArgumentNullException>(() => { _ = Operation.Execute((Func<int>)null!); });
+    }
+
+    [Fact]
+    public void Action_RejectsNullExecute()
+    {
+        Assert.Throws<ArgumentNullException>(() => { _ = Operation.Action<int>((Func<CancellationToken, int>)null!); });
+        Assert.Throws<ArgumentNullException>(() => { _ = Operation.Action((Action<CancellationToken>)null!); });
+    }
+
+    [Fact]
+    public void CreateFactories_RejectNullInputs()
+    {
+        Assert.Throws<ArgumentNullException>(() => { _ = Operation.Cancel<int>((Exception)null!); });
+        Assert.Throws<ArgumentNullException>(() => { _ = Operation.Error<int>((Exception)null!); });
+        Assert.Throws<ArgumentNullException>(() => { _ = Operation.Error<int>((string)null!); });
+        Assert.Throws<ArgumentNullException>(() => { _ = Operation.ObjectError<string>(null!, "error"); });
+        Assert.Throws<ArgumentNullException>(() => { _ = Operation.ObjectError("value", (string)null!); });
+        Assert.Throws<ArgumentNullException>(() => { _ = Operation.ObjectError("value", (Exception)null!); });
+        Assert.Throws<ArgumentNullException>(() => { _ = OperationResult<int>.FromError((string)null!); });
+    }
 }

@@ -24,11 +24,11 @@ public interface IPipelineAction<T> : IAction<T>
     /// <summary>
     /// Handles a cancellation result from the core action.
     /// </summary>
-    /// <param name="ex">The cancellation exception from the core action.</param>
+    /// <param name="exception">The cancellation exception from the core action.</param>
     /// <returns>The result returned after cancellation handling.</returns>
-    Task<OperationResult<T>> HandleCancellationAsync(Exception ex)
+    Task<OperationResult<T>> HandleCancellationAsync(Exception exception)
 #if NET6_0_OR_GREATER
-        => DefaultPipelineAction.HandleCancellationAsync(this, ex);
+        => DefaultPipelineAction.HandleCancellationAsync(this, exception);
 #else
     ;
 #endif
@@ -36,11 +36,11 @@ public interface IPipelineAction<T> : IAction<T>
     /// <summary>
     /// Handles an error result from the core action.
     /// </summary>
-    /// <param name="ex">The exception from the core action.</param>
+    /// <param name="exception">The exception from the core action.</param>
     /// <returns>The result returned after error handling.</returns>
-    Task<OperationResult<T>> HandleErrorAsync(Exception ex)
+    Task<OperationResult<T>> HandleErrorAsync(Exception exception)
 #if NET6_0_OR_GREATER
-        => DefaultPipelineAction.HandleErrorAsync(this, ex);
+        => DefaultPipelineAction.HandleErrorAsync(this, exception);
 #else
     ;
 #endif
@@ -67,20 +67,20 @@ public static class DefaultPipelineAction
     /// </summary>
     /// <typeparam name="T">The action value type.</typeparam>
     /// <param name="action">The pipeline action.</param>
-    /// <param name="ex">The cancellation exception.</param>
+    /// <param name="exception">The cancellation exception.</param>
     /// <returns>A canceled operation result.</returns>
-    public static Task<OperationResult<T>> HandleCancellationAsync<T>(IPipelineAction<T> action, Exception ex) 
-        => Operation.Cancel<T>(ex);
+    public static Task<OperationResult<T>> HandleCancellationAsync<T>(IPipelineAction<T> action, Exception exception)
+        => Operation.Cancel<T>(exception);
 
     /// <summary>
     /// Converts an exception into an error result.
     /// </summary>
     /// <typeparam name="T">The action value type.</typeparam>
     /// <param name="action">The pipeline action.</param>
-    /// <param name="ex">The exception.</param>
+    /// <param name="exception">The exception.</param>
     /// <returns>An error operation result.</returns>
-    public static Task<OperationResult<T>> HandleErrorAsync<T>(IPipelineAction<T> action, Exception ex) 
-        => Operation.Error<T>(ex);
+    public static Task<OperationResult<T>> HandleErrorAsync<T>(IPipelineAction<T> action, Exception exception)
+        => Operation.Error<T>(exception);
 
     /// <summary>
     /// Executes a pipeline action with tracing and error handling.
@@ -136,16 +136,16 @@ public abstract class PipelineAction<T> : IPipelineAction<T>
     /// <summary>
     /// Handles a cancellation result from the core action.
     /// </summary>
-    /// <param name="ex">The cancellation exception from the core action.</param>
+    /// <param name="exception">The cancellation exception from the core action.</param>
     /// <returns>The result returned after cancellation handling.</returns>
-    public virtual Task<OperationResult<T>> HandleCancellationAsync(Exception ex)
-        => DefaultPipelineAction.HandleCancellationAsync(this, ex);
+    public virtual Task<OperationResult<T>> HandleCancellationAsync(Exception exception)
+        => DefaultPipelineAction.HandleCancellationAsync(this, exception);
 
     /// <summary>
     /// Handles an error result from the core action.
     /// </summary>
-    /// <param name="ex">The exception from the core action.</param>
+    /// <param name="exception">The exception from the core action.</param>
     /// <returns>The result returned after error handling.</returns>
-    public virtual Task<OperationResult<T>> HandleErrorAsync(Exception ex)
-        => DefaultPipelineAction.HandleErrorAsync(this, ex);
+    public virtual Task<OperationResult<T>> HandleErrorAsync(Exception exception)
+        => DefaultPipelineAction.HandleErrorAsync(this, exception);
 }
