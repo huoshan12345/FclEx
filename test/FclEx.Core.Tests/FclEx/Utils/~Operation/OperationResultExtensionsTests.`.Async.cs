@@ -1,3 +1,4 @@
+// ReSharper disable ConvertToLocalFunction
 #pragma warning disable IDE0039
 namespace FclEx.Utils;
 
