@@ -239,22 +239,22 @@ partial class OperationResultExtensions
         return parallel ? actions.CombineInParallel() : actions.CombineInSeries();
     }
 
-    public static Task<OperationResult<T>> FallBack<T>(this Task<OperationResult<T>> result, Func<OperationResult<T>, Task<OperationResult<T>>> fallback)
+    public static Task<OperationResult<T>> Fallback<T>(this Task<OperationResult<T>> result, Func<OperationResult<T>, Task<OperationResult<T>>> fallback)
     {
         return result.ThenResult(r => r.IsError ? fallback(r) : r);
     }
 
-    public static Task<OperationResult<T>> FallBack<T>(this Task<OperationResult<T>> result, Func<OperationResult<T>, OperationResult<T>> fallback)
+    public static Task<OperationResult<T>> Fallback<T>(this Task<OperationResult<T>> result, Func<OperationResult<T>, OperationResult<T>> fallback)
     {
         return result.ThenResult(r => r.IsError ? fallback(r) : r);
     }
 
-    public static Task<OperationResult<T>> FallBack<T>(this Task<OperationResult<T>> result, Func<OperationResult<T>, T> fallback)
+    public static Task<OperationResult<T>> Fallback<T>(this Task<OperationResult<T>> result, Func<OperationResult<T>, T> fallback)
     {
         return result.ThenResult(r => r.IsError ? fallback(r) : r);
     }
 
-    public static Task<OperationResult<T>> FallBack<T>(this Task<OperationResult<T>> result, T fallback)
+    public static Task<OperationResult<T>> Fallback<T>(this Task<OperationResult<T>> result, T fallback)
     {
         return result.ThenResult(r => r.IsError ? fallback : r);
     }
