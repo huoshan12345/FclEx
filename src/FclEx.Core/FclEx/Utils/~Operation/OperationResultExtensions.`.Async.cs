@@ -175,10 +175,11 @@ partial class OperationResultExtensions
         return task.Then(m => Task.FromResult(next(m)));
     }
 
-    public static Task<OperationResult<TNext>> Then<T, TNext>(this Task<OperationResult<T>> task, Func<T, TNext> next)
-    {
-        return task.Then(m => Operation.Success(next(m)));
-    }
+    // this method is sometimes ambiguous with the Task<TNext> Then<T, TNext>(this Task<T> task, Func<T, TNext> next), so we provide MapValue as an alias for it.
+    //public static Task<OperationResult<TNext>> Then<T, TNext>(this Task<OperationResult<T>> task, Func<T, TNext> next)
+    //{
+    //    return task.Then(m => Operation.Success(next(m)));
+    //}
 
     /// <summary>
     /// Alias for Then with <see cref="Func{T, TNext}"/> to avoid ambiguous.
@@ -190,7 +191,7 @@ partial class OperationResultExtensions
     /// <returns></returns>
     public static Task<OperationResult<TNext>> MapValue<T, TNext>(this Task<OperationResult<T>> task, Func<T, TNext> next)
     {
-        return task.Then(next);
+        return task.Then(m => Operation.Success(next(m)));
     }
 
     public static Task<OperationResult<TNext>> ThenResult<T, TNext>(this Task<OperationResult<T>> task, Func<OperationResult<T>, Task<OperationResult<TNext>>> next)

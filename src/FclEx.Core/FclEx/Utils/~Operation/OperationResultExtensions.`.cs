@@ -75,7 +75,7 @@ partial class OperationResultExtensions
     public static OperationResult<T> Unwrap<T>(this OperationResult<OperationResult<T>> result)
     {
         return result.IsSuccess
-            ? result.Value
+            ? result.Value.Elapsed(result.Elapsed)
             : (result.Exception, result.Elapsed);
     }
 

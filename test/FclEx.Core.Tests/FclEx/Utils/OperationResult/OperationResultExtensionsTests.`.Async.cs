@@ -48,7 +48,7 @@ partial class OperationResultExtensionsTests
     public async Task Then_T_Task_T_Next_Func_T_TNext()
     {
         var result = await Operation.ExecuteAsync(() => "x")
-            .Then(m => m + "y");
+            .MapValue(m => m + "y");
 
         Assert.True(result.IsSuccess);
         Assert.Equal("xy", result.Value);
