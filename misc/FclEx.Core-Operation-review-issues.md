@@ -64,7 +64,7 @@ Reviewed on 2026-06-05. The review focused on naming, public API shape, implemen
 
 24. [Resolved] `src/FclEx.Core/FclEx/Utils/~Operation/Operation*.cs`, `OperationResultExtensions*.cs`, and `OperationIOPairs.cs`: partial type declarations now spell the full intended modifiers consistently.
 
-25. [Resolved] `src/FclEx.Core/FclEx/Utils/~Operation/OperationResultExtensions*.cs`: `Then`, `ThenResult`, and `ThenWith` now treat result-returning delegates as serial composition and add elapsed time from both the source result and next result. Async `Task<OperationResult<T>>` chains preserve the source result's elapsed time when the source task succeeds, while still converting source task faults/cancellations into error results.
+25. [Resolved] `src/FclEx.Core/FclEx/Utils/~Operation/OperationResultExtensions*.cs`: `Then`, `ThenResult`, and `ThenWith` now treat result-returning delegates as serial composition and add elapsed time from both the source result and next result. The async `Normalize` helper exists only to normalize a source `Task<OperationResult<T>>` before chaining: successful tasks keep the inner result's elapsed time, while faulted or canceled source tasks are converted to error results measured with the outer wait elapsed time.
 
 26. [Open] `src/FclEx.Core/FclEx/Utils/~Operation`: XML documentation is uneven across public methods. `OperationResult<T>` and `IOperationResult` have summaries, but many public extension and factory methods are undocumented or have placeholder generic docs. Because this is package surface area, add concise XML docs for behavior, exception/cancellation semantics, elapsed-time semantics, and null-value behavior.
 

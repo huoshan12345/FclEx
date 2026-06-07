@@ -206,15 +206,11 @@ public static partial class OperationResultExtensions
 
     public static OperationResult<T> ThenIf<T>(this OperationResult<T> result, Func<T, bool> condition, Func<T, OperationResult<T>> next)
     {
-        Check.NotNull(next);
-
         return result.ThenIf(condition, next, m => Operation.Success(m));
     }
 
     public static OperationResult ThenIf<T>(this OperationResult<T> result, Func<T, bool> condition, Func<T, OperationResult> next)
     {
-        Check.NotNull(next);
-
         return result.ThenIf(condition, next, _ => Operation.Success(Unit.Default));
     }
 

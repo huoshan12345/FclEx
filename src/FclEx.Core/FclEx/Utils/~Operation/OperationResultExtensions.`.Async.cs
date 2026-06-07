@@ -12,7 +12,6 @@ public static partial class OperationResultExtensions
 
     public static Task<OperationResult<T>> When<T>(this Task<OperationResult<T>> result, Func<T, bool> condition, Action<T> action)
     {
-        Check.NotNull(condition);
         Check.NotNull(action);
 
         return result.When(condition, v =>
@@ -34,7 +33,6 @@ public static partial class OperationResultExtensions
 
     public static Task<OperationResult<T>> WhenResult<T>(this Task<OperationResult<T>> result, Func<OperationResult<T>, bool> condition, Action<OperationResult<T>> action)
     {
-        Check.NotNull(condition);
         Check.NotNull(action);
 
         return result.WhenResult(condition, r =>
@@ -46,15 +44,11 @@ public static partial class OperationResultExtensions
 
     public static Task<OperationResult<T>> OnResult<T>(this Task<OperationResult<T>> task, Action<OperationResult<T>> action)
     {
-        Check.NotNull(action);
-
         return task.Then(action);
     }
 
     public static Task<OperationResult<T>> OnResult<T>(this Task<OperationResult<T>> task, Func<OperationResult<T>, Task> action)
     {
-        Check.NotNull(action);
-
         return task.Then(action);
     }
 
@@ -283,15 +277,11 @@ public static partial class OperationResultExtensions
 
     public static Task<OperationResult<T>> ThenIf<T>(this Task<OperationResult<T>> task, Func<T, bool> condition, Func<T, Task<OperationResult<T>>> next)
     {
-        Check.NotNull(next);
-
         return task.ThenIf(condition, next, m => Operation.Success(m));
     }
 
     public static Task<OperationResult> ThenIf<T>(this Task<OperationResult<T>> task, Func<T, bool> condition, Func<T, Task<OperationResult>> next)
     {
-        Check.NotNull(next);
-
         return task.ThenIf(condition, next, _ => Operation.Success(Unit.Default));
     }
 
@@ -394,6 +384,7 @@ public static partial class OperationResultExtensions
         var watch = ValueStopwatch.StartNew();
         try
         {
+            // Successful tasks keep the inner operation elapsed; only task faults/cancellations use the outer elapsed.
             return await task.NoCapture();
         }
         catch (Exception exception)
