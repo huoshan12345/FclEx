@@ -384,8 +384,11 @@ public static partial class OperationResultExtensions
         var watch = ValueStopwatch.StartNew();
         try
         {
-            // Successful tasks keep the inner operation elapsed; only task faults/cancellations use the outer elapsed.
-            return await task.NoCapture();
+            // Successful tasks keep non-default inner elapsed; default elapsed is treated as unspecified.
+            var result = await task.NoCapture();
+            return result.Elapsed == default
+                ? result.Elapsed(watch.GetElapsedTime())
+                : result;
         }
         catch (Exception exception)
         {
