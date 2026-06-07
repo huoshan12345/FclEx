@@ -1,6 +1,6 @@
 namespace FclEx.Utils;
 
-partial class OperationResultExtensions
+public static partial class OperationResultExtensions
 {
     public static OperationResult<T> When<T>(this OperationResult<T> result, Func<T, bool> condition, Action<OperationResult<T>> action)
     {

@@ -16,16 +16,16 @@ public static partial class OperationResultExtensions
     }
 
     /// <summary>
-    /// Merges multiple <see cref="IOperationResult"/> instances into a single result.
+    /// Merges multiple <see cref="OperationResult"/> instances into a single result.
     /// </summary>
-    /// <param name="enumerable">The collection of <see cref="IOperationResult"/> instances to merge.</param>
+    /// <param name="enumerable">The collection of <see cref="OperationResult"/> instances to merge.</param>
     /// <returns>
     /// A new <see cref="OperationResult"/> representing the merged results.<br/>
     /// If all results are successful, it returns a success result with the total elapsed time.<br/>
     /// If there is one exception, it returns an error result with that exception.
     /// If multiple exceptions exist, it returns an error result with an <see cref="AggregateException"/>.
     /// </returns>
-    public static OperationResult Merge(this IEnumerable<IOperationResult> enumerable)
+    public static OperationResult Merge(this IEnumerable<OperationResult> enumerable)
     {
         Check.NotNull(enumerable);
 

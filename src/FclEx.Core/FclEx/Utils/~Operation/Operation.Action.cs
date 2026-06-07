@@ -1,6 +1,6 @@
 namespace FclEx.Utils;
 
-partial class Operation
+public static partial class Operation
 {
     public static IAction<T> Action<T>(Func<CancellationToken, Task<OperationResult<T>>> execute)
     {

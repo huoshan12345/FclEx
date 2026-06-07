@@ -1,3 +1,4 @@
+#pragma warning disable IDE0005
 // ReSharper disable All
 
 // Licensed to the .NET Foundation under one or more agreements.

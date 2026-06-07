@@ -1,3 +1,4 @@
+// ReSharper disable NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
 namespace FclEx.Utils;
 
 public static class OperationIOPairs
@@ -18,10 +19,13 @@ public readonly partial record struct OperationIOPairs<TInput, TOutput>(
     {
         return new(tuple.Success, tuple.Failure);
     }
+
+    public IReadOnlyList<IOPair<TInput, TOutput>> Success { get; init; } = Success ?? [];
+    public IReadOnlyList<IOPair<TInput, OperationResult<TOutput>>> Failure { get; init; } = Failure ?? [];
 }
 
 #if NET7_0_OR_GREATER
-partial record struct OperationIOPairs<TInput, TOutput>
+public readonly partial record struct OperationIOPairs<TInput, TOutput>
     : IAdditionOperators<
         OperationIOPairs<TInput, TOutput>,
         OperationIOPairs<TInput, TOutput>,
@@ -29,9 +33,19 @@ partial record struct OperationIOPairs<TInput, TOutput>
 {
     public static OperationIOPairs<TInput, TOutput> operator +(OperationIOPairs<TInput, TOutput> left, OperationIOPairs<TInput, TOutput> right)
     {
-        var success = left.Success.Concat(right.Success).ToArray();
-        var failure = left.Failure.Concat(right.Failure).ToArray();
+        var success = Concat(left.Success, right.Success);
+        var failure = Concat(left.Failure, right.Failure);
         return new(success, failure);
+
+        static IReadOnlyList<T> Concat<T>(IReadOnlyList<T>? first, IReadOnlyList<T>? second)
+        {
+            if (first.IsNullOrEmpty())
+                return second ?? [];
+            if (second.IsNullOrEmpty())
+                return first ?? [];
+
+            return first.Concat(second).ToArray();
+        }
     }
 }
 #endif

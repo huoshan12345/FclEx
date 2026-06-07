@@ -1,6 +1,6 @@
 namespace FclEx.Utils;
 
-public partial class Operation
+public static partial class Operation
 {
     public static OperationResult NotImplemented() => NotImplemented<Unit>();
 

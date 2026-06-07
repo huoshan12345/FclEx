@@ -1,6 +1,6 @@
 namespace FclEx.Utils;
 
-partial class Operation
+public static partial class Operation
 {
     public static Task<OperationResult> ExecuteAsync(Action action, TimeSpan? timeout = null)
     {
