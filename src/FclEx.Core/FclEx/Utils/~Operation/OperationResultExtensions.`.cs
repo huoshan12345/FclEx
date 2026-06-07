@@ -84,9 +84,12 @@ public static partial class OperationResultExtensions
 
     public static OperationResult<T> Flatten<T>(this OperationResult<OperationResult<T>> result)
     {
-        return result.IsSuccess
-            ? result.Value.Elapsed(result.Elapsed)
-            : (result.Exception, result.Elapsed);
+        if (result.IsError)
+            return (result.Exception, result.Elapsed);
+
+        return result.Elapsed == default
+            ? result.Value
+            : result.Value.Elapsed(result.Elapsed);
     }
 
     public static OperationResult<TResult> MapValue<T, TResult>(this OperationResult<T> result, Func<T, TResult> map)
