@@ -4,24 +4,24 @@ namespace FclEx.Utils;
 public static class OperationIOPairs
 {
     public static OperationIOPairs<TInput, TOutput> Create<TInput, TOutput>(
-        IReadOnlyList<IOPair<TInput, TOutput>> success,
-        IReadOnlyList<IOPair<TInput, OperationResult<TOutput>>> failure)
-        => new(success, failure);
+        IReadOnlyList<IOPair<TInput, TOutput>> succeeded,
+        IReadOnlyList<IOPair<TInput, OperationResult<TOutput>>> failed)
+        => new(succeeded, failed);
 }
 
 public readonly partial record struct OperationIOPairs<TInput, TOutput>(
-    IReadOnlyList<IOPair<TInput, TOutput>> Success,
-    IReadOnlyList<IOPair<TInput, OperationResult<TOutput>>> Failure)
+    IReadOnlyList<IOPair<TInput, TOutput>> Succeeded,
+    IReadOnlyList<IOPair<TInput, OperationResult<TOutput>>> Failed)
 {
     public static implicit operator OperationIOPairs<TInput, TOutput>((
-        IReadOnlyList<IOPair<TInput, TOutput>> Success,
-        IReadOnlyList<IOPair<TInput, OperationResult<TOutput>>> Failure) tuple)
+        IReadOnlyList<IOPair<TInput, TOutput>> Succeeded,
+        IReadOnlyList<IOPair<TInput, OperationResult<TOutput>>> Failed) tuple)
     {
-        return new(tuple.Success, tuple.Failure);
+        return new(tuple.Succeeded, tuple.Failed);
     }
 
-    public IReadOnlyList<IOPair<TInput, TOutput>> Success { get; init; } = Success ?? [];
-    public IReadOnlyList<IOPair<TInput, OperationResult<TOutput>>> Failure { get; init; } = Failure ?? [];
+    public IReadOnlyList<IOPair<TInput, TOutput>> Succeeded { get; init; } = Succeeded ?? [];
+    public IReadOnlyList<IOPair<TInput, OperationResult<TOutput>>> Failed { get; init; } = Failed ?? [];
 }
 
 #if NET7_0_OR_GREATER
@@ -33,9 +33,9 @@ public readonly partial record struct OperationIOPairs<TInput, TOutput>
 {
     public static OperationIOPairs<TInput, TOutput> operator +(OperationIOPairs<TInput, TOutput> left, OperationIOPairs<TInput, TOutput> right)
     {
-        var success = Concat(left.Success, right.Success);
-        var failure = Concat(left.Failure, right.Failure);
-        return new(success, failure);
+        var succeeded = Concat(left.Succeeded, right.Succeeded);
+        var failed = Concat(left.Failed, right.Failed);
+        return new(succeeded, failed);
 
         static IReadOnlyList<T> Concat<T>(IReadOnlyList<T>? first, IReadOnlyList<T>? second)
         {

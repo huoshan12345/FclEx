@@ -54,13 +54,13 @@ Reviewed on 2026-06-05. The review focused on naming, public API shape, implemen
 
 20. [Resolved] `src/FclEx.Core/FclEx/Utils/~Operation/OperationResultExtensions*.cs`: task-based merge now applies wall-clock elapsed measured around the awaited task rather than blindly using the sum of child result elapsed times.
 
-21. [Open] `src/FclEx.Core/FclEx/Utils/~Operation/OperationResultExtensions*.cs`: `Merge` accepts `IEnumerable<IOperationResult>` and `IEnumerable<OperationResult<T>>` but does not protect against null elements for the interface overload. Add null validation for elements or document that null entries are invalid.
+21. [Resolved] `src/FclEx.Core/FclEx/Utils/~Operation/OperationResultExtensions*.cs`: `Merge` now uses concrete `OperationResult` inputs instead of `IOperationResult`, keeping the interface reserved for covariance or overload reduction cases and avoiding the previous null-element concern.
 
-22. [Open] `src/FclEx.Core/FclEx/Utils/~Operation/OperationIOPairs.cs`: `OperationIOPairs` is an opaque abbreviation-heavy public name, and the `Success`/`Failure` properties use different output shapes. Consider a clearer name such as `OperationInputOutputPairs`, `OperationBatchResult<TInput, TOutput>`, or `OperationPartition<TInput, TOutput>`, and consider exposing more intention-revealing property names such as `Succeeded` and `Failed`.
+22. [Resolved] `src/FclEx.Core/FclEx/Utils/~Operation/OperationIOPairs.cs`: `OperationIOPairs` keeps the existing `IO` abbreviation to stay aligned with `IOPair`, and the partition properties have been renamed from `Success`/`Failure` to `Succeeded`/`Failed`.
 
-23. [Open] `src/FclEx.Core/FclEx/Utils/~Operation/OperationIOPairs.cs`: the record struct can be default-constructed with null `Success` and `Failure` lists, and the `+` operator assumes both sides are initialized. Use empty arrays for defaults where possible, validate constructor inputs, or make this a reference type if an always-initialized invariant matters.
+23. [Resolved] `src/FclEx.Core/FclEx/Utils/~Operation/OperationIOPairs.cs`: `Succeeded` and `Failed` now fall back to empty lists, and the `+` operator handles default-created values.
 
-24. [Open] `src/FclEx.Core/FclEx/Utils/~Operation/Operation.cs`, `Operation.Async.cs`, `Operation.Action.cs`, and `OperationResultExtensions*.cs`: partial type declarations are inconsistent. Some parts spell `public static partial class`, while others omit `public` and/or `static`. The project builds, but the style makes source review unnecessarily confusing. Spell the full intended modifiers on every partial declaration.
+24. [Resolved] `src/FclEx.Core/FclEx/Utils/~Operation/Operation*.cs`, `OperationResultExtensions*.cs`, and `OperationIOPairs.cs`: partial type declarations now spell the full intended modifiers consistently.
 
 25. [Open] `src/FclEx.Core/FclEx/Utils/~Operation`: XML documentation is uneven across public methods. `OperationResult<T>` and `IOperationResult` have summaries, but many public extension and factory methods are undocumented or have placeholder generic docs. Because this is package surface area, add concise XML docs for behavior, exception/cancellation semantics, elapsed-time semantics, and null-value behavior.
 
