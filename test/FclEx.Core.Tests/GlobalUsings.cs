@@ -24,3 +24,4 @@ global using Xunit;
 global using Xunit.Sdk;
 global using static FclEx.Tests.Conditions;
 global using System.Collections.Tests;
+global using FclEx.Actions;

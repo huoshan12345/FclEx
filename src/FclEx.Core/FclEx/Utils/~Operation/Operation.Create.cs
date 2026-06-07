@@ -12,5 +12,5 @@ public partial class Operation
 
     public static OperationResult Error(Exception ex, TimeSpan elapsed = default) => Error<Unit>(ex, elapsed);
 
-    public static OperationResult Error(string? error, TimeSpan elapsed = default) => Error(new SimpleException(error), elapsed);
+    public static OperationResult Error(string error, TimeSpan elapsed = default) => Error(new SimpleException(error), elapsed);
 }

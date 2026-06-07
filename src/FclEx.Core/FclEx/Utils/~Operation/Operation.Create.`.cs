@@ -12,7 +12,7 @@ public partial class Operation
 
     public static OperationResult<T> Error<T>(Exception ex, TimeSpan elapsed = default) => new(ex, elapsed);
 
-    public static OperationResult<T> Error<T>(string? error, TimeSpan elapsed = default) => Error<T>(new SimpleException(error), elapsed);
+    public static OperationResult<T> Error<T>(string error, TimeSpan elapsed = default) => Error<T>(new SimpleException(error), elapsed);
 
     public static OperationResult<T> ObjectError<T>(T obj, string error, TimeSpan elapsed = default) where T : notnull
     {

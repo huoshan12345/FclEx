@@ -207,10 +207,10 @@ partial class OperationResultExtensions
         return result.Unwrap();
     }
 
-    public static async Task<T> Unwrap<T>(this Task<OperationResult<T>> task, T defaultValue)
+    public static async Task<T> UnwrapOr<T>(this Task<OperationResult<T>> task, T defaultValue)
     {
         var result = await task.NoCapture();
-        return result.Unwrap(defaultValue);
+        return result.UnwrapOr(defaultValue);
     }
 
     public static Task<OperationResult<TNext>> ThenIf<T, TNext>(this Task<OperationResult<T>> task, Func<T, bool> condition,

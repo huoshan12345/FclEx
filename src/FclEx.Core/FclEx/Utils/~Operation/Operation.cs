@@ -30,8 +30,8 @@ public static partial class Operation
         }
     }
 
-    public static OperationResult Execute(Func<OperationResult> action) => Execute<OperationResult>(action).Unwrap();
+    public static OperationResult Execute(Func<OperationResult> action) => Execute<OperationResult>(action).Flatten();
 
-    public static OperationResult<T> Execute<T>(Func<OperationResult<T>> action) => Execute<OperationResult<T>>(action).Unwrap();
+    public static OperationResult<T> Execute<T>(Func<OperationResult<T>> action) => Execute<OperationResult<T>>(action).Flatten();
 }
 

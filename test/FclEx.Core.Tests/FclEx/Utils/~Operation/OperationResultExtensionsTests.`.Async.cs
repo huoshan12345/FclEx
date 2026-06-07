@@ -1,5 +1,4 @@
-using FclEx.Actions;
-
+#pragma warning disable IDE0039
 namespace FclEx.Utils;
 
 partial class OperationResultExtensionsTests

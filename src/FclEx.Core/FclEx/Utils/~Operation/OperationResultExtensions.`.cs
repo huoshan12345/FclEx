@@ -4,6 +4,9 @@ partial class OperationResultExtensions
 {
     public static OperationResult<T> When<T>(this OperationResult<T> result, Func<T, bool> condition, Action<OperationResult<T>> action)
     {
+        Check.NotNull(condition);
+        Check.NotNull(action);
+    
         if (result.IsSuccess && condition(result.Value))
             action(result);
         return result;
@@ -11,6 +14,9 @@ partial class OperationResultExtensions
 
     public static OperationResult<T> WhenResult<T>(this OperationResult<T> result, Func<OperationResult<T>, bool> condition, Action<OperationResult<T>> action)
     {
+        Check.NotNull(condition);
+        Check.NotNull(action);
+
         if (condition(result))
             action(result);
         return result;
@@ -38,21 +44,25 @@ partial class OperationResultExtensions
 
     public static OperationResult<T> OnValue<T>(this OperationResult<T> result, Action<T> action)
     {
+        Check.NotNull(action);
         return result.OnSucceeded(m => action(m.Value!));
     }
 
     public static OperationResult<T> OnValue<T>(this OperationResult<T> result, Action<T, TimeSpan> action)
     {
+        Check.NotNull(action);
         return result.OnSucceeded(m => action(m.Value!, m.Elapsed));
     }
 
     public static OperationResult<T> OnException<T>(this OperationResult<T> result, Action<Exception> action)
     {
+        Check.NotNull(action);
         return result.OnFailed(t => action(t.Exception!));
     }
 
     public static OperationResult<T> OnException<T>(this OperationResult<T> result, Action<Exception, TimeSpan> action)
     {
+        Check.NotNull(action);
         return result.OnFailed(t => action(t.Exception!, t.Elapsed));
     }
 
@@ -72,7 +82,7 @@ partial class OperationResultExtensions
         return result;
     }
 
-    public static OperationResult<T> Unwrap<T>(this OperationResult<OperationResult<T>> result)
+    public static OperationResult<T> Flatten<T>(this OperationResult<OperationResult<T>> result)
     {
         return result.IsSuccess
             ? result.Value.Elapsed(result.Elapsed)
@@ -82,12 +92,14 @@ partial class OperationResultExtensions
     public static OperationResult<TResult> MapValue<T, TResult>(this OperationResult<T> result, Func<T, TResult> func)
     {
         return result.IsSuccess
-            ? (func(result.Value)!, result.Elapsed)
+            ? (func(result.Value), result.Elapsed)
             : (result.Exception, result.Elapsed);
     }
 
     public static OperationResult<TResult> Then<T, TResult>(this OperationResult<T> result, Func<T, OperationResult<TResult>> func)
     {
+        Check.NotNull(func);
+
         return result.IsSuccess
             ? func(result.Value)
             : (result.Exception, result.Elapsed);
@@ -95,6 +107,8 @@ partial class OperationResultExtensions
 
     public static Task<OperationResult<TResult>> Then<T, TResult>(this OperationResult<T> result, Func<T, Task<OperationResult<TResult>>> func)
     {
+        Check.NotNull(func);
+
         return result.IsSuccess
             ? func(result.Value)
             : Operation.Error<TResult>(result.Exception, result.Elapsed);
@@ -110,7 +124,7 @@ partial class OperationResultExtensions
         return func(result);
     }
 
-    public static T Unwrap<T>(this OperationResult<T> result, T defaultValue)
+    public static T UnwrapOr<T>(this OperationResult<T> result, T defaultValue)
     {
         return result.IsSuccess ? result.Value : defaultValue;
     }
@@ -175,6 +189,8 @@ partial class OperationResultExtensions
 
     public static OperationResult<T> FallBack<T>(this OperationResult<T> result, Func<OperationResult<T>> fallback)
     {
+        Check.NotNull(fallback);
+
         return result.IsError
             ? fallback()
             : result;
@@ -182,6 +198,8 @@ partial class OperationResultExtensions
 
     public static OperationResult<T> FallBack<T>(this OperationResult<T> result, Func<T> fallback)
     {
+        Check.NotNull(fallback);
+
         return result.IsError
             ? Operation.Success(fallback())
             : result;

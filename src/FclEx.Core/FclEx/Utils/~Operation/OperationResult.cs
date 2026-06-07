@@ -126,7 +126,9 @@ public readonly struct OperationResult<T> : IOperationResult<T>
     public OperationResult<TTarget> Cast<TTarget>()
     {
         return IsSuccess
-            ? (Value.CastTo<TTarget>(), Elapsed)
+            ? Value is TTarget castValue
+                ? Operation.Success(castValue, Elapsed)
+                : Operation.Error<TTarget>(new InvalidCastException($"Cannot cast value of type {typeof(T)} to {typeof(TTarget)}.").SetStackTrace(), Elapsed)
             : (Exception, Elapsed);
     }
 
