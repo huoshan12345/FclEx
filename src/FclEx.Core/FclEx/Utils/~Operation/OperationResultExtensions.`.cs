@@ -102,9 +102,13 @@ public static partial class OperationResultExtensions
     {
         Check.NotNull(next);
 
-        return result.IsSuccess
-            ? next(result.Value)
-            : (result.Exception, result.Elapsed);
+        if (result.IsError)
+            return (result.Exception, result.Elapsed);
+
+        var nextResult = next(result.Value);
+        return nextResult.IsSuccess
+            ? (nextResult.Value, result.Elapsed + nextResult.Elapsed)
+            : (nextResult.Exception, result.Elapsed + nextResult.Elapsed);
     }
 
     public static Task<OperationResult<TResult>> Then<T, TResult>(this OperationResult<T> result, Func<T, Task<OperationResult<TResult>>> next)
@@ -112,22 +116,33 @@ public static partial class OperationResultExtensions
         Check.NotNull(next);
 
         return result.IsSuccess
-            ? next(result.Value)
+            ? ThenAsync()
             : Operation.Error<TResult>(result.Exception, result.Elapsed);
+
+        async Task<OperationResult<TResult>> ThenAsync()
+        {
+            var nextResult = await next(result.Value).NoCapture();
+            return nextResult.IsSuccess
+                ? (nextResult.Value, result.Elapsed + nextResult.Elapsed)
+                : (nextResult.Exception, result.Elapsed + nextResult.Elapsed);
+        }
     }
 
     public static OperationResult<TResult> ThenResult<T, TResult>(this OperationResult<T> result, Func<OperationResult<T>, OperationResult<TResult>> next)
     {
         Check.NotNull(next);
 
-        return next(result);
+        var nextResult = next(result);
+        return nextResult.IsSuccess
+            ? (nextResult.Value, result.Elapsed + nextResult.Elapsed)
+            : (nextResult.Exception, result.Elapsed + nextResult.Elapsed);
     }
 
     public static OperationResult<TResult> ThenResult<T, TResult>(this OperationResult<T> result, Func<OperationResult<T>, TResult> next)
     {
         Check.NotNull(next);
 
-        return next(result);
+        return Operation.Success(next(result), result.Elapsed);
     }
 
     public static T UnwrapOr<T>(this OperationResult<T> result, T defaultValue)

@@ -42,4 +42,31 @@ public partial class OperationResultTests
             return e;
         }
     }
+
+    [Fact]
+    public void Cast_NullSuccess_ToReferenceTarget_ReturnsSuccess()
+    {
+        var result = Operation.Success<object?>(null).Cast<string?>();
+
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.Value);
+    }
+
+    [Fact]
+    public void Cast_NullSuccess_ToNonNullableValueTarget_ReturnsError()
+    {
+        var result = Operation.Success<object?>(null).Cast<int>();
+
+        Assert.False(result.IsSuccess);
+        Assert.IsType<InvalidCastException>(result.Exception);
+    }
+
+    [Fact]
+    public void Cast_FailedRuntimeCast_UsesActualSourceTypeInMessage()
+    {
+        var result = Operation.Success<object>(1).Cast<string>();
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(typeof(int).ToString(), result.Exception?.Message);
+    }
 }

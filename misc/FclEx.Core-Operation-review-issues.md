@@ -10,7 +10,9 @@ Reviewed on 2026-06-05. The review focused on naming, public API shape, implemen
 
 2. `dotnet test test\FclEx.Core.Tests\FclEx.Core.Tests.csproj -c Release --no-restore --filter "FullyQualifiedName~Operation|FullyQualifiedName~Actions"`: passed 433 tests for `net472`, `net8.0`, `net9.0`, and `net10.0`.
 
-3. `dotnet test test\FclEx.Core.Tests\FclEx.Core.Tests.csproj -c Release --no-restore --no-build`: passed for `net472` with 9976 passed and 3 skipped tests, and for `net8.0`, `net9.0`, and `net10.0` with 10020 passed and 3 skipped tests each.
+3. `dotnet test test\FclEx.Core.Tests\FclEx.Core.Tests.csproj -c Release --no-restore --no-build`: passed for `net472` with 9987 passed and 3 skipped tests, and for `net8.0`, `net9.0`, and `net10.0` with 10031 passed and 3 skipped tests each.
+
+4. `dotnet test test\FclEx.Core.Tests\FclEx.Core.Tests.csproj -c Release --no-restore --filter "FullyQualifiedName~Operation"`: passed 363 tests for `net472`, `net8.0`, `net9.0`, and `net10.0`.
 
 ## Issues
 
@@ -40,7 +42,7 @@ Reviewed on 2026-06-05. The review focused on naming, public API shape, implemen
 
 13. [Resolved] `src/FclEx.Core/FclEx/Utils/~Operation/Operation.Create*.cs`: error-message factories now use non-null `string` parameters.
 
-14. [Resolved] `src/FclEx.Core/FclEx/Utils/~Operation/OperationResult.cs`: `Cast<TTarget>()` now returns an error result when value conversion fails instead of throwing from the successful result path.
+14. [Resolved] `src/FclEx.Core/FclEx/Utils/~Operation/OperationResult.cs`: `Cast<TTarget>()` now returns an error result when value conversion fails instead of throwing from the successful result path. It preserves successful nulls for nullable/reference targets and reports the runtime source type in cast failure messages.
 
 15. [Resolved] `src/FclEx.Core/FclEx/Utils/~Operation` and `src/FclEx.Core/FclEx/Actions`: public operation factories and result/action combinators now validate null delegate parameters more consistently with `Check.NotNull`. Covered by `Execute_RejectsNullAction`, `Action_RejectsNullExecute`, `OperationResultExtensions_RejectNullDelegates`, `MapError_RejectsNullMapper`, and `Then_RejectsNullNextDelegates`.
 
@@ -62,6 +64,8 @@ Reviewed on 2026-06-05. The review focused on naming, public API shape, implemen
 
 24. [Resolved] `src/FclEx.Core/FclEx/Utils/~Operation/Operation*.cs`, `OperationResultExtensions*.cs`, and `OperationIOPairs.cs`: partial type declarations now spell the full intended modifiers consistently.
 
-25. [Open] `src/FclEx.Core/FclEx/Utils/~Operation`: XML documentation is uneven across public methods. `OperationResult<T>` and `IOperationResult` have summaries, but many public extension and factory methods are undocumented or have placeholder generic docs. Because this is package surface area, add concise XML docs for behavior, exception/cancellation semantics, elapsed-time semantics, and null-value behavior.
+25. [Resolved] `src/FclEx.Core/FclEx/Utils/~Operation/OperationResultExtensions*.cs`: `Then`, `ThenResult`, and `ThenWith` now treat result-returning delegates as serial composition and add elapsed time from both the source result and next result. Async `Task<OperationResult<T>>` chains preserve the source result's elapsed time when the source task succeeds, while still converting source task faults/cancellations into error results.
 
-26. [Open] `test/FclEx.Core.Tests/FclEx/Utils/OperationResult`: tests currently cover only a small slice of the public API. Add focused tests for null success values, `string`/`Exception` success-value ambiguity, default result behavior, `ValueTask<OperationResult<T>>` timeout, async `WhenResult`, async `OnFaulted` cancellation behavior, thrown exceptions from async chain delegates, `Merge` empty/null-element cases, and `OperationIOPairs` default/operator behavior.
+26. [Open] `src/FclEx.Core/FclEx/Utils/~Operation`: XML documentation is uneven across public methods. `OperationResult<T>` and `IOperationResult` have summaries, but many public extension and factory methods are undocumented or have placeholder generic docs. Because this is package surface area, add concise XML docs for behavior, exception/cancellation semantics, elapsed-time semantics, and null-value behavior.
+
+27. [Open] `test/FclEx.Core.Tests/FclEx/Utils/OperationResult`: tests currently cover only a small slice of the public API. Add focused tests for null success values, `string`/`Exception` success-value ambiguity, default result behavior, `ValueTask<OperationResult<T>>` timeout, async `WhenResult`, async `OnFaulted` cancellation behavior, thrown exceptions from async chain delegates, `Merge` empty/null-element cases, and `OperationIOPairs` default/operator behavior.

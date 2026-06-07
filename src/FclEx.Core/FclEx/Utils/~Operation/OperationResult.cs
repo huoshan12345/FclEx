@@ -125,11 +125,25 @@ public readonly struct OperationResult<T> : IOperationResult<T>
     /// </returns>
     public OperationResult<TTarget> Cast<TTarget>()
     {
-        return IsSuccess
-            ? Value is TTarget castValue
-                ? Operation.Success(castValue, Elapsed)
-                : Operation.Error<TTarget>(new InvalidCastException($"Cannot cast value of type {typeof(T)} to {typeof(TTarget)}.").SetStackTrace(), Elapsed)
-            : (Exception, Elapsed);
+        if (IsError)
+            return (Exception, Elapsed);
+
+        if (Value is null)
+        {
+            return default(TTarget) is null
+                ? Operation.Success(default(TTarget)!, Elapsed)
+                : CreateInvalidCastError<TTarget>(null);
+        }
+
+        return Value is TTarget castValue
+            ? Operation.Success(castValue, Elapsed)
+            : CreateInvalidCastError<TTarget>(Value.GetType());
+    }
+
+    private OperationResult<TTarget> CreateInvalidCastError<TTarget>(Type? sourceType)
+    {
+        var sourceTypeName = sourceType?.ToString() ?? "null";
+        return Operation.Error<TTarget>(new InvalidCastException($"Cannot cast value of type {sourceTypeName} to {typeof(TTarget)}.").SetStackTrace(), Elapsed);
     }
 
     /// <summary>

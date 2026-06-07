@@ -101,6 +101,61 @@ partial class OperationResultExtensionsTests
     }
 
     [Fact]
+    public async Task Then_TaskOperationResult_AddsElapsedFromBothResults()
+    {
+        var result = await Task.FromResult(Operation.Success(1, TimeSpan.FromSeconds(2)))
+            .Then(value => Task.FromResult(Operation.Success(value + 1, TimeSpan.FromSeconds(3))));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.Value);
+        Assert.Equal(TimeSpan.FromSeconds(5), result.Elapsed);
+    }
+
+    [Fact]
+    public async Task ThenResult_TaskOperationResult_AddsElapsedFromBothResults()
+    {
+        var result = await Task.FromResult(Operation.Success(1, TimeSpan.FromSeconds(2)))
+            .ThenResult(_ => Task.FromResult(Operation.Success("x", TimeSpan.FromSeconds(3))));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("x", result.Value);
+        Assert.Equal(TimeSpan.FromSeconds(5), result.Elapsed);
+    }
+
+    [Fact]
+    public async Task Fallback_TaskOperationResult_Success_DoesNotDoubleElapsed()
+    {
+        var result = await Task.FromResult(Operation.Success(1, TimeSpan.FromSeconds(2)))
+            .Fallback(_ => Task.FromResult(Operation.Success(2, TimeSpan.FromSeconds(3))));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1, result.Value);
+        Assert.Equal(TimeSpan.FromSeconds(2), result.Elapsed);
+    }
+
+    [Fact]
+    public async Task Fallback_TaskOperationResult_Error_AddsElapsedFromFallback()
+    {
+        var result = await Task.FromResult(Operation.Error<int>("x", TimeSpan.FromSeconds(2)))
+            .Fallback(_ => Task.FromResult(Operation.Success(2, TimeSpan.FromSeconds(3))));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.Value);
+        Assert.Equal(TimeSpan.FromSeconds(5), result.Elapsed);
+    }
+
+    [Fact]
+    public async Task ThenWith_TaskOperationResult_TaskOperationResult_AddsElapsedFromBothResults()
+    {
+        var result = await Task.FromResult(Operation.Success("a", TimeSpan.FromSeconds(2)))
+            .ThenWith(value => Task.FromResult(Operation.Success(value + "b", TimeSpan.FromSeconds(3))));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(("a", "ab"), result.Value);
+        Assert.Equal(TimeSpan.FromSeconds(5), result.Elapsed);
+    }
+
+    [Fact]
     public async Task Then_T_Task_T_Next_Func_T_TNext()
     {
         var result = await Operation.ExecuteAsync(() => "x")

@@ -190,11 +190,14 @@ public static partial class OperationResultExtensions
 
         async Task<OperationResult<TNext>> ThenAsync()
         {
-            var result = await Operation.ExecuteAsync(() => task).NoCapture();
+            var result = await Normalize(task).NoCapture();
             if (result.IsError)
                 return result.Cast<TNext>();
 
-            return await next(result.Value).NoCapture();
+            var nextResult = await next(result.Value).NoCapture();
+            return nextResult.IsSuccess
+                ? (nextResult.Value, result.Elapsed + nextResult.Elapsed)
+                : (nextResult.Exception, result.Elapsed + nextResult.Elapsed);
         }
     }
 
@@ -234,8 +237,11 @@ public static partial class OperationResultExtensions
 
         async Task<OperationResult<TNext>> ThenResultAsync()
         {
-            var result = await Operation.ExecuteAsync(() => task).NoCapture();
-            return await next(result).NoCapture();
+            var result = await Normalize(task).NoCapture();
+            var nextResult = await next(result).NoCapture();
+            return nextResult.IsSuccess
+                ? (nextResult.Value, result.Elapsed + nextResult.Elapsed)
+                : (nextResult.Exception, result.Elapsed + nextResult.Elapsed);
         }
     }
 
@@ -301,26 +307,38 @@ public static partial class OperationResultExtensions
     {
         Check.NotNull(fallback);
 
-        return result.ThenResult(r => r.IsError ? fallback(r) : r);
+        return FallbackAsync();
+
+        async Task<OperationResult<T>> FallbackAsync()
+        {
+            var r = await Normalize(result).NoCapture();
+            if (r.IsSuccess)
+                return r;
+
+            var fallbackResult = await fallback(r).NoCapture();
+            return fallbackResult.IsSuccess
+                ? (fallbackResult.Value, r.Elapsed + fallbackResult.Elapsed)
+                : (fallbackResult.Exception, r.Elapsed + fallbackResult.Elapsed);
+        }
     }
 
     public static Task<OperationResult<T>> Fallback<T>(this Task<OperationResult<T>> result, Func<OperationResult<T>, OperationResult<T>> fallback)
     {
         Check.NotNull(fallback);
 
-        return result.ThenResult(r => r.IsError ? fallback(r) : r);
+        return result.Fallback(r => Task.FromResult(fallback(r)));
     }
 
     public static Task<OperationResult<T>> Fallback<T>(this Task<OperationResult<T>> result, Func<OperationResult<T>, T> fallback)
     {
         Check.NotNull(fallback);
 
-        return result.ThenResult(r => r.IsError ? fallback(r) : r);
+        return result.Fallback(r => Task.FromResult(Operation.Success(fallback(r))));
     }
 
     public static Task<OperationResult<T>> Fallback<T>(this Task<OperationResult<T>> result, T fallback)
     {
-        return result.ThenResult(r => r.IsError ? fallback : r);
+        return result.Fallback(_ => Task.FromResult(Operation.Success(fallback)));
     }
 
     public static Task<OperationResult<TNext>> Then<T, TNext>(this Task<OperationResult<T>> task, Func<T, Task<TNext>> next)
@@ -341,7 +359,11 @@ public static partial class OperationResultExtensions
     {
         Check.NotNull(next);
 
-        return task.Then<T, (T, TNext)>(m => Operation.ExecuteAsync(() => next(m).MapValue(x => (m, x))));
+        return task.Then<T, (T, TNext)>(async m =>
+        {
+            var nextResult = await next(m).NoCapture();
+            return nextResult.MapValue(x => (m, x));
+        });
     }
 
     public static Task<OperationResult<T[]>> Merge<T, TResults>(this Task<TResults> task) where TResults : IEnumerable<OperationResult<T>>
@@ -365,4 +387,18 @@ public static partial class OperationResultExtensions
         return task.ToAction<T, OperationResult<T>[]>();
     }
 
+    private static async Task<OperationResult<T>> Normalize<T>(Task<OperationResult<T>> task)
+    {
+        task = Check.NotNull(task);
+
+        var watch = ValueStopwatch.StartNew();
+        try
+        {
+            return await task.NoCapture();
+        }
+        catch (Exception exception)
+        {
+            return Operation.Error<T>(exception, watch.GetElapsedTime());
+        }
+    }
 }
