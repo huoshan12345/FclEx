@@ -80,5 +80,5 @@ partial class Operation
     }
 
     public static async ValueTask<OperationResult<T>> ExecuteValueAsync<T>(Func<ValueTask<OperationResult<T>>> action, TimeSpan? timeout = null)
-        => (await ExecuteValueAsync<OperationResult<T>>(action).ConfigureAwait(false)).Unwrap();
+        => (await ExecuteValueAsync<OperationResult<T>>(action, timeout).ConfigureAwait(false)).Unwrap();
 }

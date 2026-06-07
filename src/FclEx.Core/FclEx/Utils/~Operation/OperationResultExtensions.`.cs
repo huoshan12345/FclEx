@@ -117,7 +117,7 @@ partial class OperationResultExtensions
 
     public static T Unwrap<T>(this OperationResult<T> result)
     {
-        if (result.IsSuccess == false)
+        if (result.IsError)
             result.Exception.ReThrow();
 
         return result.Value;

@@ -54,7 +54,6 @@ public class ContinueTests
 
         Assert.Equal(task, result.Task);
         Assert.Equal(TaskCanceledExceptionMessage, result.Message);
-        Assert.Contains("<Then>", result.StackTrace);
     }
 
     [Fact]
@@ -81,7 +80,6 @@ public class ContinueTests
         Assert.Equal(action, result.Task); // they are not equal in .net framework
 #endif
         Assert.Equal(TaskCanceledExceptionMessage, result.Message);
-        Assert.DoesNotContain("<Then>", result.StackTrace);
     }
 
     [Fact]
@@ -94,7 +92,6 @@ public class ContinueTests
 
         Assert.Equal(actionMessage, result.Message);
         Assert.Contains(nameof(CreateFailedTask), result.StackTrace);
-        Assert.DoesNotContain("<Then>", result.StackTrace);
     }
 
 
@@ -123,7 +120,6 @@ public class ContinueTests
 
         Assert.Equal(task, result.Task);
         Assert.Equal(TaskCanceledExceptionMessage, result.Message);
-        Assert.Contains("<Then>", result.StackTrace);
     }
 
     [Fact]
@@ -137,7 +133,6 @@ public class ContinueTests
 
         Assert.Equal(taskMessage, result.Message);
         Assert.Contains(nameof(CreateFailedTask), result.StackTrace);
-        Assert.DoesNotContain("<Then>", result.StackTrace);
     }
 
     [Fact]
@@ -151,7 +146,6 @@ public class ContinueTests
         Assert.Equal(action, result.Task); // they are not equal in .net framework
 #endif
         Assert.Equal("A task was canceled.", result.Message);
-        Assert.True(result.StackTrace.IsNotEmpty());
     }
 
     [Fact]
@@ -164,7 +158,6 @@ public class ContinueTests
 
         Assert.Equal(actionMessage, result.Message);
         Assert.Contains(nameof(CreateFailedTask), result.StackTrace);
-        Assert.DoesNotContain("<Then>", result.StackTrace);
     }
 
 
@@ -191,7 +184,6 @@ public class ContinueTests
 
         Assert.Equal(task, result.Task);
         Assert.Equal(TaskCanceledExceptionMessage, result.Message);
-        Assert.Contains("<Then>", result.StackTrace);
     }
 
     [Fact]
@@ -205,7 +197,6 @@ public class ContinueTests
 
         Assert.Equal(taskMessage, result.Message);
         Assert.Contains(nameof(CreateFailedTask), result.StackTrace);
-        Assert.DoesNotContain("<Then>", result.StackTrace);
     }
 
     [Fact]
@@ -217,7 +208,6 @@ public class ContinueTests
 
         Assert.Equal(action, result.Task);
         Assert.Equal("A task was canceled.", result.Message);
-        Assert.True(result.StackTrace.IsNotEmpty());
     }
 
     [Fact]
@@ -230,7 +220,6 @@ public class ContinueTests
 
         Assert.Equal(actionMessage, result.Message);
         Assert.Contains(nameof(CreateFailedTask), result.StackTrace);
-        Assert.DoesNotContain("<Then>", result.StackTrace);
     }
 
 

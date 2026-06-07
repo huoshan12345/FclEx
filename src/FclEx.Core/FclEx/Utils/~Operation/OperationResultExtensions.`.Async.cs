@@ -27,8 +27,8 @@ partial class OperationResultExtensions
         Check.NotNull(action);
 
         return result.Then(r => condition(r)
-            ? r
-            : action(r).Then(() => r));
+            ? action(r).Then(() => r)
+            : r);
     }
 
     public static Task<OperationResult<T>> WhenResult<T>(this Task<OperationResult<T>> result, Func<OperationResult<T>, bool> condition, Action<OperationResult<T>> action)
@@ -79,7 +79,7 @@ partial class OperationResultExtensions
 
     public static Task<OperationResult<T>> OnFaulted<T>(this Task<OperationResult<T>> task, Func<OperationResult<T>, Task> action)
     {
-        return task.ThenIf(action, m => m.IsError);
+        return task.ThenIf(action, m => m.IsFaulted());
     }
 
     public static Task<OperationResult<T>> OnCanceled<T>(this Task<OperationResult<T>> task, Action<OperationResult<T>> action)
@@ -132,42 +132,29 @@ partial class OperationResultExtensions
         return task.OnFailed(t => action(t.Exception!));
     }
 
-    public static Task<OperationResult<T>> ThrowIfError<T>(this Task<OperationResult<T>> task)
+    public static async Task<OperationResult<T>> ThrowIfError<T>(this Task<OperationResult<T>> task)
     {
-        return task.ContinueWith(m =>
-        {
-            if (task.Exception is { } ex)
-                ex.GetBaseException().ReThrow();
-
-            if (task.IsCanceled)
-                throw new TaskCanceledException(m);
-
-            return m.Result.ThrowIfError();
-        });
+        var result = await task.ConfigureAwait(false);
+        return result.Unwrap();
     }
 
-    public static Task<OperationResult> WithoutValue<T>(this Task<OperationResult<T>> task)
+    public static async Task<OperationResult> WithoutValue<T>(this Task<OperationResult<T>> task)
     {
-        return task.ContinueWith(t => t.Result.WithoutValue());
+        var result = await task.ConfigureAwait(false);
+        return result.WithoutValue();
     }
 
     public static Task<OperationResult<TNext>> Then<T, TNext>(this Task<OperationResult<T>> task, Func<T, Task<OperationResult<TNext>>> next)
     {
-        var watch = ValueStopwatch.StartNew();
-        return task.ContinueWith(async m =>
+        return Operation.ExecuteAsync(async () =>
         {
-            var elapsed = watch.GetElapsedTime();
+            var result = await task.ConfigureAwait(false);
+            if (result.IsError)
+                return result.Cast<TNext>();
 
-            if (task.Exception is { } ex)
-                return Operation.Error<TNext>(ex.GetBaseException(), elapsed);
-
-            if (task.IsCanceled)
-                return Operation.Cancel<TNext>(elapsed);
-
-            return m.Result.IsSuccess
-                ? await next(m.Result.Value)
-                : m.Result.Cast<TNext>();
-        }).Unwrap();
+            var nextResult = await next(result.Value).ConfigureAwait(false);
+            return nextResult;
+        });
     }
 
     public static Task<OperationResult<TNext>> Then<T, TNext>(this Task<OperationResult<T>> task, Func<T, OperationResult<TNext>> next)
@@ -196,19 +183,12 @@ partial class OperationResultExtensions
 
     public static Task<OperationResult<TNext>> ThenResult<T, TNext>(this Task<OperationResult<T>> task, Func<OperationResult<T>, Task<OperationResult<TNext>>> next)
     {
-        var watch = ValueStopwatch.StartNew();
-        return task.ContinueWith(async m =>
+        return Operation.ExecuteAsync(async () =>
         {
-            var elapsed = watch.GetElapsedTime();
-
-            if (task.Exception is { } ex)
-                return Operation.Error<TNext>(ex.GetBaseException(), elapsed);
-
-            if (task.IsCanceled)
-                return Operation.Cancel<TNext>(elapsed);
-
-            return await next(m.Result);
-        }).Unwrap();
+            var result = await task.ConfigureAwait(false);
+            var nextResult = await next(result).ConfigureAwait(false);
+            return nextResult;
+        });
     }
 
     public static Task<OperationResult<TNext>> ThenResult<T, TNext>(this Task<OperationResult<T>> task, Func<OperationResult<T>, OperationResult<TNext>> next)
@@ -221,14 +201,16 @@ partial class OperationResultExtensions
         return task.ThenResult(m => Operation.Success(next(m)));
     }
 
-    public static Task<T> Unwrap<T>(this Task<OperationResult<T>> task)
+    public static async Task<T> Unwrap<T>(this Task<OperationResult<T>> task)
     {
-        return task.ContinueWith(m => m.Result.Unwrap());
+        var result = await task.ConfigureAwait(false);
+        return result.Unwrap();
     }
 
-    public static Task<T> Unwrap<T>(this Task<OperationResult<T>> task, T defaultValue)
+    public static async Task<T> Unwrap<T>(this Task<OperationResult<T>> task, T defaultValue)
     {
-        return task.ContinueWith(m => m.Result.Unwrap(defaultValue));
+        var result = await task.ConfigureAwait(false);
+        return result.Unwrap(defaultValue);
     }
 
     public static Task<OperationResult<TNext>> ThenIf<T, TNext>(this Task<OperationResult<T>> task, Func<T, bool> condition,

@@ -1,3 +1,4 @@
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 using static System.Threading.Tasks.TaskContinuationOptions;
 
 namespace FclEx.Extensions;
@@ -17,18 +18,14 @@ partial class TaskExtensions
             return Task.CompletedTask;
         });
     }
-    
-    public static Task<T> Then<T>(this Task task, Func<Task<T>> action)
+
+    public static async Task<T> Then<T>(this Task task, Func<Task<T>> action)
     {
         Check.NotNull(task);
         Check.NotNull(action);
 
-        return task.ContinueWith(t => t switch
-        {
-            { IsFaulted: true, Exception: { } ex } => new TaskCompletionSource<T>().Exception(ex).Task,
-            { IsCanceled: true } => throw new TaskCanceledException(t),
-            _ => action(),
-        }, ExecuteSynchronously).Unwrap();
+        await task.ConfigureAwait(false);
+        return await action().ConfigureAwait(false);
     }
 
     public static Task<T> Then<T>(this Task task, Func<T> action)
@@ -36,17 +33,13 @@ partial class TaskExtensions
         return task.Then(() => Task.FromResult(action()));
     }
 
-    public static Task<TResult> Then<T, TResult>(this Task<T> task, Func<T, Task<TResult>> action)
+    public static async Task<TResult> Then<T, TResult>(this Task<T> task, Func<T, Task<TResult>> action)
     {
         Check.NotNull(task);
         Check.NotNull(action);
 
-        return task.ContinueWith(t => t switch
-        {
-            { IsFaulted: true, Exception: { } ex } => new TaskCompletionSource<TResult>().Exception(ex).Task,
-            { IsCanceled: true } => throw new TaskCanceledException(t),
-            _ => action(t.Result),
-        }, ExecuteSynchronously).Unwrap();
+        await task.ConfigureAwait(false);
+        return await action(task.Result).ConfigureAwait(false);
     }
 
     public static Task<TResult> Then<T, TResult>(this Task<T> task, Func<T, TResult> action)
@@ -81,17 +74,19 @@ partial class TaskExtensions
         return task.Then(m => IOPair.Create(input, m));
     }
 
-    public static Task Catch(this Task task, Func<Exception, Task> action)
+    public static async Task Catch(this Task task, Func<Exception, Task> action)
     {
         Check.NotNull(task);
         Check.NotNull(action);
 
-        return task.ContinueWith(t => t switch
+        try
         {
-            { IsFaulted: true, Exception: { } ex } => action(ex.GetBaseException()),
-            { IsCanceled: true } => action(new TaskCanceledException(t).SetStackTrace()),
-            _ => Task.CompletedTask,
-        }, ExecuteSynchronously).Unwrap();
+            await task.ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            await action(ex).ConfigureAwait(false);
+        }
     }
 
     public static Task Catch(this Task task, Action<Exception> action)
@@ -103,17 +98,19 @@ partial class TaskExtensions
         });
     }
 
-    public static Task<T> Catch<T>(this Task<T> task, Func<Exception, Task<T>> action)
+    public static async Task<T> Catch<T>(this Task<T> task, Func<Exception, Task<T>> action)
     {
         Check.NotNull(task);
         Check.NotNull(action);
 
-        return task.ContinueWith(t => t switch
+        try
         {
-            { IsFaulted: true, Exception: { } ex } => action(ex.GetBaseException()),
-            { IsCanceled: true } => action(new TaskCanceledException(t).SetStackTrace()),
-            _ => Task.FromResult(t.Result),
-        }, ExecuteSynchronously).Unwrap();
+            return await task.ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            return await action(ex).ConfigureAwait(false);
+        }
     }
 
     public static Task<T> Catch<T>(this Task<T> task, Action<Exception> action)
@@ -125,17 +122,19 @@ partial class TaskExtensions
         });
     }
 
-    public static Task<T> Finally<T>(this Task<T> task, Func<Task> action)
+    public static async Task<T> Finally<T>(this Task<T> task, Func<Task> action)
     {
         Check.NotNull(task);
         Check.NotNull(action);
 
-        return task.ContinueWith(t => action().ContinueWith(_ => t switch
+        try
         {
-            { IsFaulted: true, Exception: { } ex } => Task.FromException<T>(ex),
-            { IsCanceled: true } => Task.FromCanceled<T>(new CancellationToken(true)),
-            _ => Task.FromResult(t.Result),
-        }, ExecuteSynchronously), ExecuteSynchronously).Unwrap().Unwrap();
+            return await task.ConfigureAwait(false);
+        }
+        finally
+        {
+            await action().ConfigureAwait(false);
+        }
     }
 
     public static Task<T> Finally<T>(this Task<T> task, Action action)
@@ -147,17 +146,19 @@ partial class TaskExtensions
         });
     }
 
-    public static Task Finally(this Task task, Func<Task> action)
+    public static async Task Finally(this Task task, Func<Task> action)
     {
         Check.NotNull(task);
         Check.NotNull(action);
 
-        return task.ContinueWith(t => action().ContinueWith(_ => t switch
+        try
         {
-            { IsFaulted: true, Exception: { } ex } => Task.FromException(ex),
-            { IsCanceled: true } => Task.FromCanceled(new CancellationToken(true)),
-            _ => Task.CompletedTask,
-        }, ExecuteSynchronously), ExecuteSynchronously).Unwrap().Unwrap();
+            await task.ConfigureAwait(false);
+        }
+        finally
+        {
+            await action().ConfigureAwait(false);
+        }
     }
 
     public static Task Finally(this Task task, Action action)
