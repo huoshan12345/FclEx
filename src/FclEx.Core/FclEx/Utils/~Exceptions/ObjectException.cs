@@ -4,7 +4,7 @@ namespace FclEx.Utils;
 /// A generic exception that wraps an object of type T, allowing the exception to carry additional data.
 /// </summary>
 /// <typeparam name="T">The type of the object being wrapped by this exception.</typeparam>
-public class ObjectException<T> : SimpleException
+public class ObjectException<T> : SimpleException, IValueProvider<T>
 {
     /// <summary>
     /// Gets the object value contained within this exception.

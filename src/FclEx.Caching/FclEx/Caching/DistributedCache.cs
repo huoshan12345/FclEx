@@ -27,7 +27,7 @@ public class DistributedCache : IDistributedCache
 
     public async Task<byte[]?> GetAsync(string key, CancellationToken token = new())
     {
-        var v = await Cache.GetAsync(key).IgnoreSyncContext();
+        var v = await Cache.GetAsync(key).NoCapture();
         return v.Value;
     }
 
@@ -42,9 +42,9 @@ public class DistributedCache : IDistributedCache
     public async Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = new())
     {
         var exp = GetExpiration(options);
-        await Cache.SetAsync(key, value, exp).IgnoreSyncContext();
+        await Cache.SetAsync(key, value, exp).NoCapture();
         if (exp is { } timeSpan)
-            await CacheOfExpiration.SetAsync(key, timeSpan, timeSpan).IgnoreSyncContext();
+            await CacheOfExpiration.SetAsync(key, timeSpan, timeSpan).NoCapture();
     }
 
     public void Refresh(string key)
@@ -62,8 +62,8 @@ public class DistributedCache : IDistributedCache
         if (CacheOfExpiration.TryGet(key, out var timeSpan)
             && Cache.TryGet(key, out var bytes))
         {
-            await Cache.SetAsync(key, bytes, timeSpan).IgnoreSyncContext();
-            await CacheOfExpiration.SetAsync(key, timeSpan, timeSpan).IgnoreSyncContext();
+            await Cache.SetAsync(key, bytes, timeSpan).NoCapture();
+            await CacheOfExpiration.SetAsync(key, timeSpan, timeSpan).NoCapture();
         }
     }
 
@@ -75,8 +75,8 @@ public class DistributedCache : IDistributedCache
 
     public async Task RemoveAsync(string key, CancellationToken token = new())
     {
-        await Cache.RemoveAsync(key).IgnoreSyncContext();
-        await CacheOfExpiration.RemoveAsync(key).IgnoreSyncContext();
+        await Cache.RemoveAsync(key).NoCapture();
+        await CacheOfExpiration.RemoveAsync(key).NoCapture();
     }
 
     private static TimeSpan? GetExpiration(DistributedCacheEntryOptions? options)

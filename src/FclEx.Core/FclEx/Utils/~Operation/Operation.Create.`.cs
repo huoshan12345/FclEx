@@ -1,32 +1,113 @@
 namespace FclEx.Utils;
 
-public partial class Operation
+public static partial class Operation
 {
-    public static OperationResult<T> NotImplemented<T>() => Error<T>(new NotImplementedException());
+    /// <summary>
+    /// Creates a typed not-implemented error result.
+    /// </summary>
+    /// <typeparam name="T">The result value type.</typeparam>
+    /// <returns>An error result containing a <see cref="NotImplementedException"/>.</returns>
+    public static OperationResult<T> NotImplemented<T>() => Error<T>(new NotImplementedException().SetStackTrace());
 
-    public static OperationResult<T> Cancel<T>(Exception ex, TimeSpan elapsed = default) => Error<T>(ex is OperationCanceledException ? ex : new OperationCanceledException(ex.Message, ex), elapsed);
+    /// <summary>
+    /// Creates a typed canceled result from an exception.
+    /// </summary>
+    /// <typeparam name="T">The result value type.</typeparam>
+    /// <param name="exception">The exception describing the cancellation.</param>
+    /// <param name="elapsed">The elapsed time to store in the result.</param>
+    /// <returns>An error result whose exception is an <see cref="OperationCanceledException"/>. Non-cancellation exceptions are wrapped as the inner exception.</returns>
+    public static OperationResult<T> Cancel<T>(Exception exception, TimeSpan elapsed = default)
+    {
+        Check.NotNull(exception);
+        return Error<T>(exception is OperationCanceledException ? exception : new OperationCanceledException(exception.Message, exception).SetStackTrace(), elapsed);
+    }
 
-    public static OperationResult<T> Cancel<T>(TimeSpan elapsed = default) => Error<T>(new OperationCanceledException(), elapsed);
+    /// <summary>
+    /// Creates a typed canceled result.
+    /// </summary>
+    /// <typeparam name="T">The result value type.</typeparam>
+    /// <param name="elapsed">The elapsed time to store in the result.</param>
+    /// <returns>An error result whose exception is an <see cref="OperationCanceledException"/>.</returns>
+    public static OperationResult<T> Cancel<T>(TimeSpan elapsed = default) => Error<T>(new OperationCanceledException().SetStackTrace(), elapsed);
 
+    /// <summary>
+    /// Creates a typed success result.
+    /// </summary>
+    /// <typeparam name="T">The result value type.</typeparam>
+    /// <param name="value">The success value.</param>
+    /// <param name="elapsed">The elapsed time to store in the result.</param>
+    /// <returns>A success result containing <paramref name="value"/>.</returns>
     public static OperationResult<T> Success<T>(T value, TimeSpan elapsed = default) => OperationResult<T>.FromSuccess(value, elapsed);
 
-    public static OperationResult<T> Error<T>(Exception ex, TimeSpan elapsed = default) => new(ex, elapsed);
-
-    public static OperationResult<T> Error<T>(string? error, TimeSpan elapsed = default) => Error<T>(new SimpleException(error), elapsed);
-
-    public static OperationResult<T> ObjectError<T>(T obj, string error, TimeSpan elapsed = default) where T : notnull
+    /// <summary>
+    /// Creates a typed error result.
+    /// </summary>
+    /// <typeparam name="T">The result value type.</typeparam>
+    /// <param name="exception">The exception to store in the result.</param>
+    /// <param name="elapsed">The elapsed time to store in the result.</param>
+    /// <returns>An error result containing <paramref name="exception"/>.</returns>
+    public static OperationResult<T> Error<T>(Exception exception, TimeSpan elapsed = default)
     {
-        return new(ObjectException.Create(obj, error), elapsed);
+        Check.NotNull(exception);
+        return new(exception, elapsed);
     }
 
-    public static OperationResult<T> ObjectError<T>(T obj, Exception ex, TimeSpan elapsed = default) where T : notnull
+    /// <summary>
+    /// Creates a typed error result from a message.
+    /// </summary>
+    /// <typeparam name="T">The result value type.</typeparam>
+    /// <param name="error">The error message.</param>
+    /// <param name="elapsed">The elapsed time to store in the result.</param>
+    /// <returns>An error result containing a <see cref="SimpleException"/>.</returns>
+    public static OperationResult<T> Error<T>(string error, TimeSpan elapsed = default) => Error<T>(new SimpleException(Check.NotNull(error)), elapsed);
+
+    /// <summary>
+    /// Creates an error result whose exception carries the input object that caused the error.
+    /// </summary>
+    /// <typeparam name="T">The input object type and result value type.</typeparam>
+    /// <param name="value">The object associated with the error.</param>
+    /// <param name="error">The error message.</param>
+    /// <param name="elapsed">The elapsed time to store in the result.</param>
+    /// <returns>An error result containing an object-associated exception.</returns>
+    public static OperationResult<T> ObjectError<T>(T value, string error, TimeSpan elapsed = default) where T : notnull
     {
-        return new(ObjectException.Create(obj, ex.Message, ex), elapsed);
+        Check.NotNull(value);
+        Check.NotNull(error);
+
+        return new(ObjectException.Create(value, error).SetStackTrace(), elapsed);
     }
 
-    public static OperationResult<TResult> ObjectError<T, TResult>(T obj, Exception ex, TimeSpan elapsed = default) where T : notnull
+    /// <summary>
+    /// Creates an error result whose exception carries the input object that caused the error.
+    /// </summary>
+    /// <typeparam name="T">The input object type and result value type.</typeparam>
+    /// <param name="value">The object associated with the error.</param>
+    /// <param name="exception">The exception associated with the object.</param>
+    /// <param name="elapsed">The elapsed time to store in the result.</param>
+    /// <returns>An error result containing an object-associated exception.</returns>
+    public static OperationResult<T> ObjectError<T>(T value, Exception exception, TimeSpan elapsed = default) where T : notnull
     {
-        var objEx = ObjectException.Create(obj, ex.Message, ex);
-        return new(objEx, elapsed);
+        Check.NotNull(value);
+        Check.NotNull(exception);
+
+        return new(ObjectException.Create(value, exception.Message, exception).SetStackTrace(), elapsed);
+    }
+
+    /// <summary>
+    /// Creates an error result whose exception carries the input object that caused the error while returning a different result type.
+    /// </summary>
+    /// <typeparam name="T">The input object type.</typeparam>
+    /// <typeparam name="TResult">The result value type.</typeparam>
+    /// <param name="value">The object associated with the error.</param>
+    /// <param name="exception">The exception associated with the object.</param>
+    /// <param name="elapsed">The elapsed time to store in the result.</param>
+    /// <returns>An error result containing an object-associated exception.</returns>
+    public static OperationResult<TResult> ObjectError<T, TResult>(T value, Exception exception, TimeSpan elapsed = default) where T : notnull
+    {
+        Check.NotNull(value);
+        Check.NotNull(exception);
+
+        var objectException = ObjectException.Create(value, exception.Message, exception).SetStackTrace();
+        return new(objectException, elapsed);
     }
 }

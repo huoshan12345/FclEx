@@ -265,6 +265,28 @@ public static class ElementExtensions
         return root.QueryHref([selector], baseUri);
     }
 
+    private static readonly string?[] TopLevelSelectors = [null];
+
+    public static OperationResult<(IElement Element, T Data)> QueryData<T>(this IElement? root, Func<IElement, T> func)
+    {
+        return root.QueryData(TopLevelSelectors, func);
+    }
+
+    public static OperationResult<(IElement Element, string Text)> QueryOwnText(this IElement? root, bool trim = true, bool ensureValueIsNotEmpty = true)
+    {
+        return root.QueryOwnText(TopLevelSelectors, trim, ensureValueIsNotEmpty);
+    }
+
+    public static OperationResult<(IElement Element, string Attribute)> QueryAttribute(this IElement? root, string attribute, bool ensureValueIsNotEmpty = true)
+    {
+        return root.QueryAttribute(TopLevelSelectors, attribute, ensureValueIsNotEmpty);
+    }
+
+    public static OperationResult<(IElement Element, UriCreator Href)> QueryHref(this IElement? root, Uri? baseUri = null)
+    {
+        return root.QueryHref(TopLevelSelectors, baseUri);
+    }
+
     public static OperationResult<string> QueryId(this IElement? root, string prefix)
     {
         return root.QueryAttribute($"*[id^='{EscapeCssString(prefix)}']", "id").MapValue(m => m.Attribute.SkipUntil(prefix));

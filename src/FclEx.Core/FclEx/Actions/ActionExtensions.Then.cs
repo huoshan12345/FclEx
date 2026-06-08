@@ -53,6 +53,7 @@ partial class ActionExtensions
     /// <returns>An action that returns the result produced by <paramref name="next"/>.</returns>
     public static IAction<TNext> Then<T, TNext>(this IAction<T> action, Func<T, OperationResult<TNext>> next)
     {
+        Check.NotNull(next);
         return action.Then(r => Operation.Action(t => next(r)));
     }
 
@@ -66,6 +67,7 @@ partial class ActionExtensions
     /// <returns>An action that wraps the produced value in a successful result.</returns>
     public static IAction<TNext> Then<T, TNext>(this IAction<T> action, Func<T, Task<TNext>> next)
     {
+        Check.NotNull(next);
         return action.Then(r => Operation.Action(t => next(r)));
     }
 
@@ -79,6 +81,7 @@ partial class ActionExtensions
     /// <returns>An action that returns the async result produced by <paramref name="next"/>.</returns>
     public static IAction<TNext> Then<T, TNext>(this IAction<T> action, Func<T, Task<OperationResult<TNext>>> next)
     {
+        Check.NotNull(next);
         return action.Then(r => Operation.Action(t => next(r)));
     }
 
@@ -133,12 +136,13 @@ partial class ActionExtensions
     /// </summary>
     /// <typeparam name="T">The action value type.</typeparam>
     /// <param name="action">The source action.</param>
-    /// <param name="func">Creates an optional next action from the successful value.</param>
+    /// <param name="next">Creates an optional next action from the successful value.</param>
     /// <returns>An action that runs the optional action or preserves the successful value.</returns>
-    /// <remarks>A <see langword="null"/> return from <paramref name="func"/> is treated as no-op.</remarks>
-    public static IAction<T> ThenOptional<T>(this IAction<T> action, Func<T, IAction<T>?> func)
+    /// <remarks>A <see langword="null"/> return from <paramref name="next"/> is treated as no-op.</remarks>
+    public static IAction<T> ThenOptional<T>(this IAction<T> action, Func<T, IAction<T>?> next)
     {
-        return action.Then(m => func(m) ?? SuccessAction.Create(m));
+        Check.NotNull(next);
+        return action.Then(m => next(m) ?? SuccessAction.Create(m));
     }
 
     /// <summary>
@@ -152,6 +156,8 @@ partial class ActionExtensions
     /// <returns>An action that returns all next action values.</returns>
     public static IAction<TNext[]> Then<T, TNext>(this IAction<T> action, Func<T, IEnumerable<IAction<TNext>>> next, bool parallel = true)
     {
+        Check.NotNull(next);
+
         return action.Then(m => parallel
             ? next(m).CombineInParallel()
             : next(m).CombineInSeries());
@@ -168,6 +174,7 @@ partial class ActionExtensions
     /// <returns>An action that returns all successful values.</returns>
     public static IAction<TNext[]> Then<T, TNext>(this IAction<T> action, Func<T, IEnumerable<OperationResult<TNext>>> next, bool parallel = true)
     {
+        Check.NotNull(next);
         return action.Then(m => next(m).Select(x => Operation.Action(t => x)), parallel);
     }
 
@@ -182,6 +189,7 @@ partial class ActionExtensions
     /// <returns>An action that returns all successful values.</returns>
     public static IAction<TNext[]> Then<T, TNext>(this IAction<T> action, Func<T, IEnumerable<Task<OperationResult<TNext>>>> next, bool parallel = true)
     {
+        Check.NotNull(next);
         return action.Then(m => next(m).Select(x => Operation.Action(t => x)), parallel);
     }
 }

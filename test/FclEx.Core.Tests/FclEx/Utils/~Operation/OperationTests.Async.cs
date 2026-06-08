@@ -1,6 +1,6 @@
-namespace FclEx.Utils.OperationResult;
+namespace FclEx.Utils;
 
-partial class OperationResultTests
+partial class OperationTests
 {
     [RetryFact(3, 100)]
     public async Task ExecuteAsync_Timeout_Test()
@@ -53,5 +53,29 @@ partial class OperationResultTests
         Assert.True(success);
         Assert.Equal(1, result);
         Assert.True(elapsed < TimeSpan.FromSeconds(1.5), elapsed.ToString());
+    }
+
+    [RetryFact(3, 100)]
+    public async Task ExecuteValueAsync_OperationResult_Timeout_Test()
+    {
+        var (success, _, exception, elapsed) = await Operation.ExecuteValueAsync(async () =>
+        {
+            await Task.Delay(TimeSpan.FromSeconds(5));
+            return Operation.Success(1);
+        }, TimeSpan.FromSeconds(0.1));
+
+        Assert.False(success);
+        Assert.True(elapsed < TimeSpan.FromSeconds(1.5), elapsed.ToString());
+        Assert.IsType<TimeoutException>(exception);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_OperationResult_UsesOuterElapsed()
+    {
+        var r = await Operation.ExecuteAsync(() => Task.FromResult(Operation.Success(TimeSpan.FromHours(1))));
+
+        Assert.True(r.IsSuccess);
+        Assert.NotEqual(TimeSpan.FromHours(1), r.Elapsed);
+        Assert.True(r.Elapsed < TimeSpan.FromMinutes(1), r.Elapsed.ToString());
     }
 }

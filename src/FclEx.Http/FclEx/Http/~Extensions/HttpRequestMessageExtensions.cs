@@ -80,7 +80,7 @@ public static class HttpRequestMessageExtensions
         // 4. Deep clone HTTP Content and Content Headers
         // Read existing content into a memory stream to ensure it can be read again safely
         var ms = new MemoryStream();
-        await request.Content.CopyToAsync(ms).ConfigureAwait(false);
+        await request.Content.CopyToAsync(ms).NoCapture();
         ms.Position = 0;
 
         clone.Content = new StreamContent(ms);

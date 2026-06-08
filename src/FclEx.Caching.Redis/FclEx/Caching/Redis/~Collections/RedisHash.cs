@@ -30,7 +30,7 @@ internal class RedisHash<T> : RedisCollection<T>, IRedisHash<T>
 
     public async Task<T> HGetAsync(string field)
     {
-        var str = await _provider.HGetAsync(Key, field).IgnoreSyncContext();
+        var str = await _provider.HGetAsync(Key, field).NoCapture();
         return _stringSerializer.Deserialize<T>(str)!;
     }
 
@@ -42,21 +42,21 @@ internal class RedisHash<T> : RedisCollection<T>, IRedisHash<T>
 
     public async Task<Dictionary<string, T>> HGetAllAsync()
     {
-        var vals = await _provider.HGetAllAsync(Key).IgnoreSyncContext();
+        var vals = await _provider.HGetAllAsync(Key).NoCapture();
         var dic = vals.ToDictionary(m => m.Key, m => _stringSerializer.Deserialize<T>(m.Value));
         return dic!;
     }
 
     public async Task<List<T>> HValsAsync()
     {
-        var vals = await _provider.HValsAsync(Key).IgnoreSyncContext();
+        var vals = await _provider.HValsAsync(Key).NoCapture();
         var list = vals.Select(m => _stringSerializer.Deserialize<T>(m)).ToList();
         return list!;
     }
 
     public async Task<Dictionary<string, T>> HmGetAsync(IList<string> fields)
     {
-        var vals = await _provider.HMGetAsync(Key, fields).IgnoreSyncContext();
+        var vals = await _provider.HMGetAsync(Key, fields).NoCapture();
         var dic = vals.ToDictionary(m => m.Key, m => _stringSerializer.Deserialize<T>(m.Value));
         return dic!;
     }

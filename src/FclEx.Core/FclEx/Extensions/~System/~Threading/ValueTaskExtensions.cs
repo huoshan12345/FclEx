@@ -12,12 +12,12 @@ public static class ValueTaskExtensions
         return tasks.Select(t => t.AsTask()).WhenAll();
     }
 
-    public static ConfiguredValueTaskAwaitable<T> IgnoreSyncContext<T>(this ValueTask<T> task)
+    public static ConfiguredValueTaskAwaitable<T> NoCapture<T>(this ValueTask<T> task)
     {
         return task.ConfigureAwait(false);
     }
 
-    public static ConfiguredValueTaskAwaitable IgnoreSyncContext(this ValueTask task)
+    public static ConfiguredValueTaskAwaitable NoCapture(this ValueTask task)
     {
         return task.ConfigureAwait(false);
     }

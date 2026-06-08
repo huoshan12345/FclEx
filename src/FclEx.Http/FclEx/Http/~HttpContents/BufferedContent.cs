@@ -34,7 +34,7 @@ public class BufferedContent : HttpContent
     {
         var buffer = await inner
             .ReadAsByteArrayAsync(bufferSize, timeout, cancellationToken)
-            .ConfigureAwait(false);
+            .NoCapture();
 
         var content = new BufferedContent(buffer);
         CopyHeaders(inner.Headers, content.Headers);

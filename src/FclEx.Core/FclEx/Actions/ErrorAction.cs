@@ -7,23 +7,23 @@ public static class ErrorAction
     /// </summary>
     /// <typeparam name="T">The value type.</typeparam>
     /// <param name="error">The failure message.</param>
-    /// <param name="timeSpan">The elapsed time assigned to the result.</param>
+    /// <param name="elapsed">The elapsed time assigned to the result.</param>
     /// <returns>An action that always returns an error result.</returns>
-    public static IAction<T> Create<T>(string error, TimeSpan timeSpan = default)
+    public static IAction<T> Create<T>(string error, TimeSpan elapsed = default)
     {
-        return new ErrorAction<T>(error, timeSpan);
+        return new ErrorAction<T>(error, elapsed);
     }
 
     /// <summary>
     /// Creates an action that always fails with the given exception.
     /// </summary>
     /// <typeparam name="T">The value type.</typeparam>
-    /// <param name="ex">The exception returned by the action.</param>
-    /// <param name="timeSpan">The elapsed time assigned to the result.</param>
+    /// <param name="exception">The exception returned by the action.</param>
+    /// <param name="elapsed">The elapsed time assigned to the result.</param>
     /// <returns>An action that always returns an error result.</returns>
-    public static IAction<T> Create<T>(Exception ex, TimeSpan timeSpan = default)
+    public static IAction<T> Create<T>(Exception exception, TimeSpan elapsed = default)
     {
-        return new ErrorAction<T>(ex, timeSpan);
+        return new ErrorAction<T>(exception, elapsed);
     }
 }
 
@@ -35,20 +35,20 @@ public class ErrorAction<T> : IAction<T>
     /// Creates an action that always fails with the given message.
     /// </summary>
     /// <param name="error">The failure message.</param>
-    /// <param name="timeSpan">The elapsed time assigned to the result.</param>
-    public ErrorAction(string error, TimeSpan timeSpan = default)
+    /// <param name="elapsed">The elapsed time assigned to the result.</param>
+    public ErrorAction(string error, TimeSpan elapsed = default)
     {
-        _result = Operation.Error<T>(error, timeSpan);
+        _result = Operation.Error<T>(error, elapsed);
     }
 
     /// <summary>
     /// Creates an action that always fails with the given exception.
     /// </summary>
-    /// <param name="ex">The exception returned by the action.</param>
-    /// <param name="timeSpan">The elapsed time assigned to the result.</param>
-    public ErrorAction(Exception ex, TimeSpan timeSpan = default)
+    /// <param name="exception">The exception returned by the action.</param>
+    /// <param name="elapsed">The elapsed time assigned to the result.</param>
+    public ErrorAction(Exception exception, TimeSpan elapsed = default)
     {
-        _result = Operation.Error<T>(ex, timeSpan);
+        _result = Operation.Error<T>(exception, elapsed);
     }
 
     /// <summary>

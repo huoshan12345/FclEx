@@ -99,9 +99,9 @@ public static partial class ExceptionExtensions
     /// </remarks>
     public static bool IsObjectException<T>([NotNullWhen(true)] this Exception? ex, [NotNullWhen(true)] out T? value) where T : notnull
     {
-        if (ex is ObjectException<T> objEx)
+        if (ex is IValueProvider<T> valueProvider)
         {
-            value = objEx.Value;
+            value = valueProvider.Value;
             return true;
         }
         else

@@ -11,7 +11,7 @@ public static class FileExtensions
         {
             using var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, DefaultBufferSize, useAsync: true);
             await fs.WriteAsync(bytes, 0, bytes.Length, cancellationToken);
-            await fs.FlushAsync(cancellationToken).ConfigureAwait(false);
+            await fs.FlushAsync(cancellationToken).NoCapture();
         }
 
         public static async Task WriteAllTextAsync(string path, string content, Encoding encoding, CancellationToken token = default)

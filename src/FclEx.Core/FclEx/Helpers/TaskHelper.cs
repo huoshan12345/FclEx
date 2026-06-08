@@ -125,7 +125,7 @@ public static class TaskHelper
 
     public static Task<TResult> Run<TResult>(Func<ValueTask<TResult>> task, TimeSpan? timeout = null)
     {
-        return Run((Func<Task<TResult>>)(async () => await task()), timeout);
+        return Run((Func<Task<TResult>>)(async () => await task().NoCapture()), timeout);
     }
 
     public static Task Run(Func<Task> task, TimeSpan? timeout = null)
@@ -137,7 +137,7 @@ public static class TaskHelper
 
     public static Task Run(Func<ValueTask> task, TimeSpan? timeout = null)
     {
-        return Run((Func<Task>)(async () => await task()), timeout);
+        return Run((Func<Task>)(async () => await task().NoCapture()), timeout);
     }
 
     private static readonly Type TypeOfVoidTaskResult = Type.GetType("System.Threading.Tasks.VoidTaskResult", true)!;

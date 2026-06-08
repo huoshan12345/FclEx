@@ -6,12 +6,12 @@ public static class SuccessAction
     /// Creates an action that always succeeds with the given value.
     /// </summary>
     /// <typeparam name="T">The value type.</typeparam>
-    /// <param name="obj">The value returned by the action.</param>
-    /// <param name="timeSpan">The elapsed time assigned to the result.</param>
+    /// <param name="value">The value returned by the action.</param>
+    /// <param name="elapsed">The elapsed time assigned to the result.</param>
     /// <returns>An action that always returns a successful result.</returns>
-    public static IAction<T> Create<T>(T obj, TimeSpan timeSpan = default)
+    public static IAction<T> Create<T>(T value, TimeSpan elapsed = default)
     {
-        return new SuccessAction<T>(obj, timeSpan);
+        return new SuccessAction<T>(value, elapsed);
     }
 }
 
@@ -19,9 +19,9 @@ public static class SuccessAction
 /// An action that always returns a successful result.
 /// </summary>
 /// <typeparam name="T">The value type.</typeparam>
-/// <param name="obj">The value returned by the action.</param>
-/// <param name="timeSpan">The elapsed time assigned to the result.</param>
-public class SuccessAction<T>(T obj, TimeSpan timeSpan = default) : IAction<T>
+/// <param name="value">The value returned by the action.</param>
+/// <param name="elapsed">The elapsed time assigned to the result.</param>
+public class SuccessAction<T>(T value, TimeSpan elapsed = default) : IAction<T>
 {
     /// <summary>
     /// Returns the configured successful result.
@@ -30,6 +30,6 @@ public class SuccessAction<T>(T obj, TimeSpan timeSpan = default) : IAction<T>
     /// <returns>The configured successful result.</returns>
     public Task<OperationResult<T>> ExecuteAsync(CancellationToken token = default)
     {
-        return Operation.Success(obj, timeSpan);
+        return Operation.Success(value, elapsed);
     }
 }

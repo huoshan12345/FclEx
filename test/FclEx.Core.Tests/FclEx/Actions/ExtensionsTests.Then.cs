@@ -148,6 +148,20 @@ public partial class ExtensionsTests
     }
 
     [Fact]
+    public void Then_RejectsNullNextDelegates()
+    {
+        var action = SuccessAction.Create(1);
+
+        Assert.Throws<ArgumentNullException>(() => { _ = action.Then<int, string>((Func<int, OperationResult<string>>)null!); });
+        Assert.Throws<ArgumentNullException>(() => { _ = action.Then<int, string>((Func<int, Task<string>>)null!); });
+        Assert.Throws<ArgumentNullException>(() => { _ = action.Then<int, string>((Func<int, Task<OperationResult<string>>>)null!); });
+        Assert.Throws<ArgumentNullException>(() => { _ = action.ThenOptional(null!); });
+        Assert.Throws<ArgumentNullException>(() => { _ = action.Then<int, string>((Func<int, IEnumerable<IAction<string>>>)null!); });
+        Assert.Throws<ArgumentNullException>(() => { _ = action.Then<int, string>((Func<int, IEnumerable<OperationResult<string>>>)null!); });
+        Assert.Throws<ArgumentNullException>(() => { _ = action.Then<int, string>((Func<int, IEnumerable<Task<OperationResult<string>>>>)null!); });
+    }
+
+    [Fact]
     public async Task Then_WithActionSequence_CanRunInSeries()
     {
         var order = new List<int>();
