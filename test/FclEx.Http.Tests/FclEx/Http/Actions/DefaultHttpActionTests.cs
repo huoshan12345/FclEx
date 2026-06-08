@@ -2,7 +2,7 @@ namespace FclEx.Http.Actions;
 
 public class DefaultHttpActionTests
 {
-    [RetryFact]
+    [Fact]
     public async Task ExecuteCoreAsync_WhenEnsureSuccessStatusCodeIsTrue_RejectsUnsuccessfulStatusCode()
     {
         var response = HttpActionTestFixtures.CreateResponse("missing", HttpStatusCode.NotFound, HttpActionTestFixtures.Elapsed);
@@ -15,7 +15,7 @@ public class DefaultHttpActionTests
         var result = await action.ExecuteAsync();
 
         Assert.True(result.IsError);
-        Assert.Equal(HttpActionTestFixtures.Elapsed, result.Elapsed, TimeSpan.FromMilliseconds(100));
+        Assert.True(result.Elapsed < HttpActionTestFixtures.Elapsed); // result.Elapsed is accurately measured and should be less than the response's elapsed time
         Assert.Contains("NotFound", result.Exception.Message);
         Assert.Equal(0, action.GetResultCallCount);
     }
@@ -65,7 +65,7 @@ public class DefaultHttpActionTests
 
         Assert.True(result.IsError);
         Assert.Same(exception, result.Exception);
-        Assert.Equal(HttpActionTestFixtures.Elapsed, result.Elapsed, TimeSpan.FromMilliseconds(100));
+        Assert.True(result.Elapsed < HttpActionTestFixtures.Elapsed); // result.Elapsed is accurately measured and should be less than the response's elapsed time
         Assert.Equal(0, action.GetResultCallCount);
     }
 

@@ -265,9 +265,7 @@ public static partial class OperationResultExtensions
                 return result.Cast<TNext>();
 
             var nextResult = await next(result.Value).NoCapture();
-            return nextResult.IsSuccess
-                ? (nextResult.Value, result.Elapsed + nextResult.Elapsed)
-                : (nextResult.Exception, result.Elapsed + nextResult.Elapsed);
+            return nextResult.AddElapsed(result.Elapsed);
         }
     }
 
@@ -313,9 +311,7 @@ public static partial class OperationResultExtensions
         {
             var result = await Normalize(task).NoCapture();
             var nextResult = await next(result).NoCapture();
-            return nextResult.IsSuccess
-                ? (nextResult.Value, result.Elapsed + nextResult.Elapsed)
-                : (nextResult.Exception, result.Elapsed + nextResult.Elapsed);
+            return nextResult.AddElapsed(result.Elapsed);
         }
     }
 
@@ -418,9 +414,7 @@ public static partial class OperationResultExtensions
                 return r;
 
             var fallbackResult = await fallback(r).NoCapture();
-            return fallbackResult.IsSuccess
-                ? (fallbackResult.Value, r.Elapsed + fallbackResult.Elapsed)
-                : (fallbackResult.Exception, r.Elapsed + fallbackResult.Elapsed);
+            return fallbackResult.AddElapsed(r.Elapsed);
         }
     }
 

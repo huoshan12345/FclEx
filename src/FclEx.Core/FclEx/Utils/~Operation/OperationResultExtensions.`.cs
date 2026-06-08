@@ -108,7 +108,17 @@ public static partial class OperationResultExtensions
     {
         return result.IsSuccess
             ? (result.Value, span)
-            : (result.Exception!, span);
+            : (result.Exception, span);
+    }
+
+    /// <summary>
+    /// Returns a copy of the result with the elapsed time increased by a span.
+    /// </summary>
+    public static OperationResult<T> AddElapsed<T>(this OperationResult<T> result, TimeSpan span)
+    {
+        return result.IsSuccess
+            ? (result.Value, result.Elapsed + span)
+            : (result.Exception, result.Elapsed + span);
     }
 
     /// <summary>
@@ -122,20 +132,23 @@ public static partial class OperationResultExtensions
     }
 
     /// <summary>
-    /// Flattens a nested operation result.
+    /// Flattens a nested operation result into a single layer, combining success, error, and elapsed time according to the inner and outer results.
     /// </summary>
-    /// <remarks>
-    /// An outer error wins. For an outer success, a non-default outer elapsed time replaces the inner elapsed time;
-    /// a default outer elapsed time is treated as unspecified and the inner elapsed time is preserved.
-    /// </remarks>
-    public static OperationResult<T> Flatten<T>(this OperationResult<OperationResult<T>> result)
+    public static OperationResult<T> Flatten<T>(this OperationResult<OperationResult<T>> result, bool preferInnerElapsed = false)
     {
         if (result.IsError)
             return (result.Exception, result.Elapsed);
 
-        return result.Elapsed == default
-            ? result.Value
-            : result.Value.Elapsed(result.Elapsed);
+        var value = result.Value;
+        var elapsed = (result.Elapsed.Ticks, value.Elapsed.Ticks) switch
+        {
+            ( > 0, <= 0) => result.Elapsed,
+            ( <= 0, > 0) => value.Elapsed,
+            ( > 0, > 0) => preferInnerElapsed ? value.Elapsed : result.Elapsed,
+            _ => default
+        };
+
+        return value.Elapsed(elapsed);
     }
 
     /// <summary>
@@ -241,7 +254,7 @@ public static partial class OperationResultExtensions
     {
         Check.NotNull(result);
 
-        if (result.IsObjectError<T>(static (_, _) => true, out var value))
+        if (result.IsObjectError<T>(out var value))
             return value;
 
         throw new InvalidOperationException($"The result is not an object error of type '{typeof(T).LongName()}'");

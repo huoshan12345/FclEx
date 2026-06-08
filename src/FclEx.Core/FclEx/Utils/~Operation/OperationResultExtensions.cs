@@ -69,6 +69,21 @@ public static partial class OperationResultExtensions
     }
 
     /// <summary>
+    /// Determines whether the result is an object error with an associated object of a specific type.
+    /// </summary>
+    /// <typeparam name="T">The expected type of the associated object.</typeparam>
+    /// <param name="result">The operation result to check.</param>
+    /// <param name="value">The extracted object associated with the exception, if present.</param>
+    /// <returns>
+    /// <see langword="true"/> if the exception has an associated object of type <typeparamref name="T"/>; otherwise, <see langword="false"/>.
+    /// </returns>
+    public static bool IsObjectError<T>(this IOperationResult result, [NotNullWhen(true)] out T? value) where T : notnull
+    {
+        Check.NotNull(result);
+        return result.Exception.IsObjectException(out value);
+    }
+
+    /// <summary>
     /// Determines whether the result is an object error with an associated object that satisfies a condition.
     /// </summary>
     /// <typeparam name="T">The expected type of the associated object.</typeparam>

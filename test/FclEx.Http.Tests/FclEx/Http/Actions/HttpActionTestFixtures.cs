@@ -12,10 +12,12 @@ internal static class HttpActionTestFixtures
         string requestUri = "https://example.com/source")
     {
         var request = HttpRequest.Get(requestUri);
-        var response = exception is null ? new HttpResponse(request) : HttpResponse.FromError(request, exception);
-        SetResponseProperty(response, nameof(HttpResponse.ResponseString), responseString);
-        SetResponseProperty(response, nameof(HttpResponse.StatusCode), statusCode);
-        SetResponseProperty(response, nameof(HttpResponse.Elapsed), elapsed ?? TimeSpan.Zero);
+        var response = exception is null 
+            ? new HttpResponse(request) 
+            : HttpResponse.FromError(request, exception);
+        response.ResponseString = responseString;
+        response.StatusCode = statusCode;
+        response.Elapsed = elapsed ?? TimeSpan.Zero;
         return response;
     }
 
@@ -24,11 +26,6 @@ internal static class HttpActionTestFixtures
         var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".html");
         File.WriteAllText(path, content);
         return path;
-    }
-
-    private static void SetResponseProperty<T>(HttpResponse response, string name, T value)
-    {
-        typeof(HttpResponse).GetProperty(name)!.SetValue(response, value);
     }
 }
 
