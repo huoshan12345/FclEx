@@ -4,14 +4,17 @@ namespace FclEx.Logging;
 
 public static class Extensions
 {
-    public static bool IsNullOrNullLogger([NotNullWhen(false)] this ILogger? logger)
+    public static bool IsNullLogger(this ILogger logger)
     {
-        if (logger == null) return true;
-
         var type = logger.GetType();
 
         return type == typeof(NullLogger)
                || type.IsGenericType && type.GetGenericTypeDefinition() == typeof(NullLogger<>);
+    }
+
+    public static bool IsNullOrNullLogger([NotNullWhen(false)] this ILogger? logger)
+    {
+        return logger == null || logger.IsNullLogger();
     }
 
     public static ILogger With(this ILogger logger, IEnumerable<KeyValuePair<string, object?>> properties)

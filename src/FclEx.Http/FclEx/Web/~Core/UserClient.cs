@@ -4,7 +4,6 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
 {
     private static int _id;
 
-    private readonly Lazy<ILogger> _logger;
     private TAccount _account;
     private IHttpService? _httpService;
 
@@ -37,19 +36,36 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
         }
     }
 
-    public virtual ILogger Logger => _logger.Value;
+    private Lazy<ILogger> _lazyLogger;
+
+    [AllowNull]
+    public virtual ILogger Logger
+    {
+        get => field ?? _lazyLogger.Value;
+        set
+        {
+            if (value is UserClientLogger<TAccount> || value.IsNullOrNullLogger())
+            {
+                field = value;
+            }
+            else
+            {
+                field = null;
+                _lazyLogger = new(() => CreateLogger(value));
+            }
+        }
+    }
 
     protected UserClient(TAccount account, ILoggerFactory? loggerFactory = null)
     {
         _account = Check.NotNull(account);
-        _logger = new(() => CreateLogger(loggerFactory), true);
+        _lazyLogger = new(() => CreateLogger(loggerFactory.CreateLoggerOrDefault(GetType())));
     }
 
-    protected virtual ILogger CreateLogger(ILoggerFactory? factory)
+    protected virtual ILogger CreateLogger(ILogger logger)
     {
-        var logger = factory.CreateLoggerOrDefault(GetType());
-        var logger2 = new PropertiesLogger(logger, GetLogProperties(), GetLogLazyProperties());
-        return new UserClientLogger<TAccount>(logger2, this);
+        var propertiesLogger = new PropertiesLogger(logger, GetLogProperties(), GetLogLazyProperties());
+        return new UserClientLogger<TAccount>(propertiesLogger, this);
     }
 
     protected virtual IEnumerable<LoggerProperty> GetLogProperties()
@@ -183,10 +199,9 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
 public abstract class UserClient(IUserAccount? account = null, ILoggerFactory? loggerFactory = null)
     : UserClient<IUserAccount>(account ?? UserAccount.Empty, loggerFactory), IUserClient
 {
-    protected override ILogger CreateLogger(ILoggerFactory? factory)
+    protected override ILogger CreateLogger(ILogger logger)
     {
-        var logger = factory.CreateLoggerOrDefault(GetType());
-        var logger2 = new PropertiesLogger(logger, GetLogProperties(), GetLogLazyProperties());
-        return new UserClientLogger(logger2, this); // Use non-generic logger for IUserClient
+        var propertiesLogger = new PropertiesLogger(logger, GetLogProperties(), GetLogLazyProperties());
+        return new UserClientLogger(propertiesLogger, this); // Use non-generic logger for IUserClient
     }
 }
