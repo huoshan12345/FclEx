@@ -79,6 +79,19 @@ public class WebProxyEqualityComparerTests
     }
 
     [Fact]
+    public void GetHashCode_WhenBypassListDiffersOnlyByCase_ReturnsSameHashCode()
+    {
+        var proxy1 = WebProxyHelper.Create(
+            new Uri("http://127.0.0.1:8888"),
+            bypassList: ["LOCALHOST", "EXAMPLE\\.COM"]);
+        var proxy2 = WebProxyHelper.Create(
+            new Uri("http://127.0.0.1:8888"),
+            bypassList: ["localhost", "example\\.com"]);
+
+        Assert.Equal(Comparer.GetHashCode(proxy1), Comparer.GetHashCode(proxy2));
+    }
+
+    [Fact]
     public void Equals_WhenBypassProxyOnLocalDiffers_ReturnsFalse()
     {
         var uri = new Uri("http://127.0.0.1:8888");
