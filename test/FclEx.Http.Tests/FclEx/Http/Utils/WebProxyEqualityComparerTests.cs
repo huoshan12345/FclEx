@@ -64,4 +64,46 @@ public class WebProxyEqualityComparerTests
         Assert.True(Comparer.Equals(proxy1, proxy2));
         Assert.Equal(Comparer.GetHashCode(proxy1), Comparer.GetHashCode(proxy2));
     }
+
+    [Fact]
+    public void Equals_WhenBypassListDiffersOnlyByCase_TreatsBypassListAsEqual()
+    {
+        var proxy1 = WebProxyHelper.Create(
+            new Uri("http://127.0.0.1:8888"),
+            bypassList: ["LOCALHOST", "EXAMPLE\\.COM"]);
+        var proxy2 = WebProxyHelper.Create(
+            new Uri("http://127.0.0.1:8888"),
+            bypassList: ["localhost", "example\\.com"]);
+
+        Assert.True(Comparer.Equals(proxy1, proxy2));
+    }
+
+    [Fact]
+    public void Equals_WhenBypassProxyOnLocalDiffers_ReturnsFalse()
+    {
+        var uri = new Uri("http://127.0.0.1:8888");
+        var proxy1 = WebProxyHelper.Create(uri, bypassOnLocal: true);
+        var proxy2 = WebProxyHelper.Create(uri, bypassOnLocal: false);
+
+        Assert.False(Comparer.Equals(proxy1, proxy2));
+    }
+
+    [Fact]
+    public void InterfaceComparer_WhenCustomProxyInstancesDiffer_ReturnsFalse()
+    {
+        IWebProxy proxy1 = new CustomProxy();
+        IWebProxy proxy2 = new CustomProxy();
+
+        Assert.True(WebProxyInterfaceEqualityComparer.Instance.Equals(proxy1, proxy1));
+        Assert.False(WebProxyInterfaceEqualityComparer.Instance.Equals(proxy1, proxy2));
+    }
+
+    private sealed class CustomProxy : IWebProxy
+    {
+        public ICredentials? Credentials { get; set; }
+
+        public Uri? GetProxy(Uri destination) => destination;
+
+        public bool IsBypassed(Uri host) => false;
+    }
 }

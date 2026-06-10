@@ -28,6 +28,12 @@ These projects produce public NuGet packages, so do not casually rename, remove,
 
 When changing package purpose, public surface area, naming, or behavior, check whether the root `README.md`, the package-level `README.md`, and the project `Description` metadata should be updated together.
 
+## Documentation & Work Scope
+
+When writing XML documentation, do not settle for surface-level summaries such as "Gets or sets X" or "Executes the X operation" unless that is genuinely the most useful description. Read the implementation and describe the behavior, important parameters, return values, side effects, failure cases, and compatibility notes that would help a package consumer. If the behavior or intent is unclear after reading the code, ask the user instead of guessing.
+
+If a requested change covers too much code to handle thoughtfully in one pass, say so and propose splitting the work into batches. Prefer smaller, well-reviewed slices over broad mechanical edits that create low-value churn.
+
 ## Multi-Targeting & Compatibility
 
 Many packages target multiple frameworks, including older targets such as `netstandard2.0` and `net472` as well as current .NET targets. Before using newer BCL or framework APIs, verify they are available on every target for the project. Use existing compatibility helpers, conditional compilation, or target-specific references when needed.
