@@ -24,7 +24,7 @@ public static class HttpResponseMessageExtensions
     }
 
     /// <summary>
-    /// Provide more information than <see cref="HttpResponseMessage.EnsureSuccessStatusCode"/>>
+    /// Provide more information than <see cref="HttpResponseMessage.EnsureSuccessStatusCode"/>
     /// </summary>
     /// <param name="response"></param>
     /// <returns></returns>

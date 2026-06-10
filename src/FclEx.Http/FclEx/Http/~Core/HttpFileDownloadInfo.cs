@@ -4,7 +4,7 @@ namespace FclEx.Http;
 /// Represents detailed information about a file being downloaded via HTTP.
 /// </summary>
 /// <remarks>
-/// This struct contains metadata and content for a file download, including the file's URL,
+/// This class contains metadata and content for a file download, including the file's URL,
 /// name (with and without extension), its MIME type, and the raw byte content of the file.
 /// </remarks>
 public class HttpFileDownloadInfo

@@ -62,10 +62,7 @@ public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
 
         if (!client.IsOnline && options.FakeLogin)
         {
-            if (options.FakeLogin)
-            {
-                await client.FakeLoginAsync(false);
-            }
+            await client.FakeLoginAsync(false);
         }
 
         if (!client.IsOnline && options.Login)
