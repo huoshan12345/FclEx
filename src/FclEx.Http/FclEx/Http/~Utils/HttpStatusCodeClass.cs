@@ -1,9 +1,8 @@
 namespace FclEx.Http;
 
-public enum HttpStatusCodeType
+public enum HttpStatusCodeClass
 {
-    Unknown = -1,
-    None = 0,
+    Unknown = 0,
     Info = 1,
     Success = 2,
     Redirection = 3,

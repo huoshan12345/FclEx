@@ -3,17 +3,17 @@ namespace FclEx.Http.Extensions;
 public class HttpStatusCodeExtensionsTests
 {
     [Theory]
-    [InlineData(100, true, false, false, false, false, HttpStatusCodeType.Info)]
-    [InlineData(199, true, false, false, false, false, HttpStatusCodeType.Info)]
-    [InlineData(200, false, true, false, false, false, HttpStatusCodeType.Success)]
-    [InlineData(299, false, true, false, false, false, HttpStatusCodeType.Success)]
-    [InlineData(300, false, false, true, false, false, HttpStatusCodeType.Redirection)]
-    [InlineData(399, false, false, true, false, false, HttpStatusCodeType.Redirection)]
-    [InlineData(400, false, false, false, true, false, HttpStatusCodeType.ClientError)]
-    [InlineData(499, false, false, false, true, false, HttpStatusCodeType.ClientError)]
-    [InlineData(500, false, false, false, false, true, HttpStatusCodeType.ServerError)]
-    [InlineData(599, false, false, false, false, true, HttpStatusCodeType.ServerError)]
-    [InlineData(600, false, false, false, false, false, HttpStatusCodeType.Unknown)]
+    [InlineData(100, true, false, false, false, false, HttpStatusCodeClass.Info)]
+    [InlineData(199, true, false, false, false, false, HttpStatusCodeClass.Info)]
+    [InlineData(200, false, true, false, false, false, HttpStatusCodeClass.Success)]
+    [InlineData(299, false, true, false, false, false, HttpStatusCodeClass.Success)]
+    [InlineData(300, false, false, true, false, false, HttpStatusCodeClass.Redirection)]
+    [InlineData(399, false, false, true, false, false, HttpStatusCodeClass.Redirection)]
+    [InlineData(400, false, false, false, true, false, HttpStatusCodeClass.ClientError)]
+    [InlineData(499, false, false, false, true, false, HttpStatusCodeClass.ClientError)]
+    [InlineData(500, false, false, false, false, true, HttpStatusCodeClass.ServerError)]
+    [InlineData(599, false, false, false, false, true, HttpStatusCodeClass.ServerError)]
+    [InlineData(600, false, false, false, false, false, HttpStatusCodeClass.Unknown)]
     public void StatusClassMethods_ClassifyByHttpStatusCodeRange(
         int value,
         bool isInfo,
@@ -21,7 +21,7 @@ public class HttpStatusCodeExtensionsTests
         bool isRedirection,
         bool isClientError,
         bool isServerError,
-        HttpStatusCodeType codeType)
+        HttpStatusCodeClass codeType)
     {
         var code = (HttpStatusCode)value;
 
@@ -30,7 +30,7 @@ public class HttpStatusCodeExtensionsTests
         Assert.Equal(isRedirection, code.IsRedirection());
         Assert.Equal(isClientError, code.IsClientError());
         Assert.Equal(isServerError, code.IsServerError());
-        Assert.Equal(codeType, code.GetCodeType());
+        Assert.Equal(codeType, code.GetStatusCodeClass());
     }
 
     [Theory]

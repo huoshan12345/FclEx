@@ -21,12 +21,12 @@ public static class HttpStatusCodeExtensions
         return (int)statusCode is 307 or 308;
     }
 
-    public static HttpStatusCodeType GetCodeType(this HttpStatusCode code)
+    public static HttpStatusCodeClass GetStatusCodeClass(this HttpStatusCode code)
     {
         var digit = ((int)code) / 100;
-        return digit is >= 0 and <= 5
-            ? (HttpStatusCodeType)digit
-            : HttpStatusCodeType.Unknown;
+        return digit is >= 1 and <= 5
+            ? (HttpStatusCodeClass)digit
+            : HttpStatusCodeClass.Unknown;
     }
 
     private static readonly ConcurrentDictionary<HttpStatusCode, string> _cache = new();
