@@ -27,17 +27,6 @@
     </Content>
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="xunit.runner.debug.json"
-          CopyToOutputDirectory="PreserveNewest"
-          TargetPath="xunit.runner.json"
-          Condition="'$(Configuration)' == 'Debug'" />
-    <None Include="xunit.runner.release.json"
-          CopyToOutputDirectory="PreserveNewest"
-          TargetPath="xunit.runner.json"
-          Condition="'$(Configuration)' == 'Release'" />
-  </ItemGroup>
-
   <ItemGroup Condition="'$(IsTestProject)' != 'false'">
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
   </ItemGroup>

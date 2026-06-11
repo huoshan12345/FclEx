@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="..\..\src\FclEx.Xunit.v3\FclEx.Xunit.v3.csproj" />
   </ItemGroup>
@@ -19,5 +19,15 @@
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <Reference Include="System.IO.Compression" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="xunit.runner.debug.json"
+          CopyToOutputDirectory="PreserveNewest"
+          TargetPath="xunit.runner.json"
+          Condition="'$(Configuration)' == 'Debug'" />
+    <None Include="xunit.runner.release.json"
+          CopyToOutputDirectory="PreserveNewest"
+          TargetPath="xunit.runner.json"
+          Condition="'$(Configuration)' == 'Release'" />
   </ItemGroup>
 </Project>

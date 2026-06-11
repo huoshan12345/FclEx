@@ -1,3 +1,5 @@
+using System.Net.Http.Headers;
+
 namespace FclEx.Http.Auth;
 
 public class AuthenticationHandlerTests : AuthTests
@@ -158,6 +160,44 @@ public class AuthenticationHandlerTests : AuthTests
         Assert.Equal(cts.Token, tokenProvider.Requests[1].CancellationToken);
     }
 
+    [Fact]
+    public async Task Should_NotRequestToken_WhenRequireTokenIsFalse()
+    {
+        var tokenProvider = new TestAccessTokenProvider("unused-token");
+        var innerHandler = new CaptureAuthorizationHandler();
+        using var handler = new AuthenticationHandler(tokenProvider, [RequiredScope], requireToken: false)
+        {
+            InnerHandler = innerHandler,
+        };
+        using var invoker = new HttpMessageInvoker(handler);
+        using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com/api");
+
+        using var response = await invoker.SendAsync(request, CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Empty(tokenProvider.Requests);
+        Assert.Null(innerHandler.AuthorizationHeader);
+    }
+
+    [Fact]
+    public async Task Should_DisposeUnauthorizedResponseBeforeRetrying()
+    {
+        var tokenProvider = new TestAccessTokenProvider("expired-token", "fresh-token");
+        var firstContent = new TrackingContent();
+        var innerHandler = new UnauthorizedThenOkHandler(firstContent);
+        using var handler = new AuthenticationHandler(tokenProvider, [RequiredScope])
+        {
+            InnerHandler = innerHandler,
+        };
+        using var invoker = new HttpMessageInvoker(handler);
+        using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com/api");
+
+        using var response = await invoker.SendAsync(request, CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(firstContent.IsDisposed);
+    }
+
     private sealed class TestAccessTokenProvider(params string[] tokens) : IAccessTokenProvider
     {
         private int _index;
@@ -173,7 +213,18 @@ public class AuthenticationHandlerTests : AuthTests
         }
     }
 
-    private sealed class UnauthorizedThenOkHandler : HttpMessageHandler
+    private sealed class CaptureAuthorizationHandler : HttpMessageHandler
+    {
+        public AuthenticationHeaderValue? AuthorizationHeader { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            AuthorizationHeader = request.Headers.Authorization;
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+        }
+    }
+
+    private sealed class UnauthorizedThenOkHandler(HttpContent? firstContent = null) : HttpMessageHandler
     {
         public List<HttpRequestMessage> Requests { get; } = [];
         public List<string?> AuthorizationTokens { get; } = [];
@@ -187,7 +238,34 @@ public class AuthenticationHandlerTests : AuthTests
                 ? HttpStatusCode.Unauthorized
                 : HttpStatusCode.OK;
 
-            return Task.FromResult(new HttpResponseMessage(statusCode));
+            return Task.FromResult(new HttpResponseMessage(statusCode)
+            {
+                Content = Requests.Count == 1 ? firstContent : null,
+            });
+        }
+    }
+
+    private sealed class TrackingContent : HttpContent
+    {
+        public bool IsDisposed { get; private set; }
+
+        protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context)
+        {
+            return Task.CompletedTask;
+        }
+
+        protected override bool TryComputeLength(out long length)
+        {
+            length = 0;
+            return true;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                IsDisposed = true;
+
+            base.Dispose(disposing);
         }
     }
 }

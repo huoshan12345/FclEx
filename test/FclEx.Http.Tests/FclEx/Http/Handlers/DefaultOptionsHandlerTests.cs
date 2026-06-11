@@ -55,6 +55,24 @@ public class DefaultOptionsHandlerTests
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
+    [Fact]
+    public async Task SendAsync_OverwritesExistingRequestOption()
+    {
+        var key = new HttpRequestOptionsKey<string>("name");
+        using var handler = new DefaultOptionsHandler()
+        {
+            InnerHandler = new CaptureOptionsHandler(key),
+        };
+        handler.SetOption(key, "expected");
+        using var invoker = new HttpMessageInvoker(handler);
+        using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com");
+        request.Options.Set(key, "original");
+
+        using var response = await invoker.SendAsync(request, CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
     private sealed class CaptureOptionsHandler(HttpRequestOptionsKey<string> key) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
