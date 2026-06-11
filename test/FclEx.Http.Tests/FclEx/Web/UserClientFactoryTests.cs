@@ -60,6 +60,18 @@ public class UserClientFactoryTests : WebTests
     }
 
     [Fact]
+    public void ServiceProviderCreateUserClient_WhenHttpServiceIsProvided_AssignsService()
+    {
+        var account = new UserAccount("test", "test");
+        using var httpService = new HttpClientService();
+
+        var client = ServiceProvider.CreateUserClient<TestUserClient>(account, httpService);
+
+        Assert.Equal(account, client.Account);
+        Assert.Same(httpService, client.HttpService);
+    }
+
+    [Fact]
     public void FactoryCreate_WhenHttpServiceIsProvided_AssignsServiceAndLogger()
     {
         var account = new UserAccount("test", "test");
@@ -101,6 +113,35 @@ public class UserClientFactoryTests : WebTests
         var proxy = WebProxyHelper.Create("http://localhost:8888");
         client = factory.Create(account, proxy);
         Assert.Equal(proxy, client.HttpService.Proxy);
+    }
+
+    [Theory]
+    [InlineData("http://localhost:8888")]
+    [InlineData(null)]
+    public void Create_WithStringProxy_CreatesHttpServiceWithProxy(string? proxy)
+    {
+        var account = new UserAccount("test", "test");
+        var factory = ServiceProvider.GetRequiredService<IUserClientFactory<TestUserClient>>();
+
+        var client = factory.Create(account, proxy);
+
+        Assert.True(WebProxyInterfaceEqualityComparer.Instance.Equals(
+            WebProxyHelper.Create(proxy),
+            client.HttpService.Proxy));
+    }
+
+    [Fact]
+    public void Create_WithUriProxy_CreatesHttpServiceWithProxy()
+    {
+        var account = new UserAccount("test", "test");
+        var factory = ServiceProvider.GetRequiredService<IUserClientFactory<TestUserClient>>();
+        var proxy = new Uri("http://localhost:8888");
+
+        var client = factory.Create(account, proxy);
+
+        Assert.True(WebProxyInterfaceEqualityComparer.Instance.Equals(
+            WebProxyHelper.Create(proxy),
+            client.HttpService.Proxy));
     }
 
     private sealed record TestAccount(string UserName, string Password) : IUserAccount
