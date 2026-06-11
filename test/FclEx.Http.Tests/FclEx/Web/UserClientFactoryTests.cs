@@ -7,6 +7,9 @@ public class UserClientFactoryTests : WebTests
     {
         var factory = ServiceProvider.GetRequiredService<IUserClientFactory<TestUserClient>>();
         Assert.IsType<UserClientFactory<TestUserClient>>(factory);
+
+        var genericFactory = ServiceProvider.GetRequiredService<IUserClientFactory<TestUserClient, IUserAccount>>();
+        Assert.IsType<UserClientFactory<TestUserClient, IUserAccount>>(genericFactory);
     }
 
     [Fact]
@@ -46,6 +49,48 @@ public class UserClientFactoryTests : WebTests
     }
 
     [Fact]
+    public void ServiceProviderCreateUserClient_CreatesClientWithAccount()
+    {
+        var account = new UserAccount("test", "test");
+
+        var client = ServiceProvider.CreateUserClient<TestUserClient>(account);
+
+        Assert.Equal(account, client.Account);
+        Assert.IsType<TestUserClient>(client);
+    }
+
+    [Fact]
+    public void FactoryCreate_WhenHttpServiceIsProvided_AssignsServiceAndLogger()
+    {
+        var account = new UserAccount("test", "test");
+        var factory = ServiceProvider.GetRequiredService<IUserClientFactory<TestUserClient>>();
+        using var httpService = new HttpClientService();
+
+        var client = factory.Create(account, httpService);
+
+        Assert.Same(httpService, client.HttpService);
+        Assert.Same(client.Logger, httpService.Logger);
+    }
+
+    [Fact]
+    public void AddUserClientGenericAccount_RegistersFactoryClientAndEmptyAccount()
+    {
+        var emptyAccount = new TestAccount("empty", "pwd");
+        var provider = new ServiceCollection()
+            .AddLogging()
+            .AddUserClient<TestGenericUserClient, TestAccount>(emptyAccount)
+            .BuildServiceProvider();
+
+        var factory = provider.GetRequiredService<IUserClientFactory<TestGenericUserClient, TestAccount>>();
+        var resolvedAccount = provider.GetRequiredService<TestAccount>();
+        var client = provider.GetRequiredService<TestGenericUserClient>();
+
+        Assert.IsType<UserClientFactory<TestGenericUserClient, TestAccount>>(factory);
+        Assert.Same(emptyAccount, resolvedAccount);
+        Assert.Equal(emptyAccount, client.Account);
+    }
+
+    [Fact]
     public void Create_WithProxy_Test()
     {
         var account = new UserAccount("test", "test");
@@ -56,5 +101,19 @@ public class UserClientFactoryTests : WebTests
         var proxy = WebProxyHelper.Create("http://localhost:8888");
         client = factory.Create(account, proxy);
         Assert.Equal(proxy, client.HttpService.Proxy);
+    }
+
+    private sealed record TestAccount(string UserName, string Password) : IUserAccount
+    {
+        public override string ToString() => UserName;
+    }
+
+    private sealed class TestGenericUserClient(TestAccount account, ILoggerFactory loggerFactory)
+        : UserClient<TestAccount>(account, loggerFactory)
+    {
+        protected override Task<OperationResult> LoginActionAsync(CancellationToken token)
+        {
+            return Operation.Success();
+        }
     }
 }
