@@ -24,6 +24,68 @@ public class HttpClientHelperTests
     }
 
     [Fact]
+    public void FilterAndOrderIPAddresses_WhenNoAddressMatchesPolicy_ReturnsEmptyArray()
+    {
+        var actual = HttpClientHelper.FilterAndOrderIPAddresses(
+            [IPAddress.IPv6Loopback],
+            IPVersionPolicy.OnlyIPv4);
+
+        Assert.Empty(actual);
+    }
+
+    [Fact]
+    public void FilterAndOrderIPAddresses_WhenPolicyIsUnknown_ThrowsArgumentOutOfRangeException()
+    {
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() =>
+            HttpClientHelper.FilterAndOrderIPAddresses([IPAddress.Loopback], (IPVersionPolicy)999));
+
+        Assert.Equal("policy", ex.ParamName);
+    }
+
+    [Fact]
+    public async Task GetIPAddressesAsync_WhenLiteralAddressDoesNotMatchPolicy_ThrowsInvalidOperationException()
+    {
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            HttpClientHelper.GetIPAddressesAsync("127.0.0.1", IPVersionPolicy.OnlyIPv6, CancellationToken.None));
+
+        Assert.Contains("OnlyIPv6", ex.Message);
+        Assert.Contains("127.0.0.1", ex.Message);
+    }
+
+    [Fact]
+    public void CreateSocketsHttpHandler_CopiesOptionsAndDisablesCookieContainer()
+    {
+        var proxy = new WebProxy("http://127.0.0.1:8888");
+        var options = new SocketsHttpHandlerOptions
+        {
+            ConnectTimeout = TimeSpan.FromSeconds(3),
+            PooledConnectionLifetime = TimeSpan.FromMinutes(2),
+            PooledConnectionIdleTimeout = TimeSpan.FromMinutes(1),
+            AllowAutoRedirect = false,
+            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+            Proxy = proxy,
+#if NET6_0_OR_GREATER
+            EnableMultipleHttp2Connections = true,
+#endif
+        };
+
+        using var handler = HttpClientHelper.CreateSocketsHttpHandler(options);
+
+        Assert.Equal(options.ConnectTimeout, handler.ConnectTimeout);
+        Assert.Equal(options.PooledConnectionLifetime, handler.PooledConnectionLifetime);
+        Assert.Equal(options.PooledConnectionIdleTimeout, handler.PooledConnectionIdleTimeout);
+        Assert.Equal(int.MaxValue, handler.MaxConnectionsPerServer);
+        Assert.False(handler.UseCookies);
+        Assert.False(handler.AllowAutoRedirect);
+        Assert.Equal(options.AutomaticDecompression, handler.AutomaticDecompression);
+        Assert.True(handler.UseProxy);
+        Assert.Same(proxy, handler.Proxy);
+#if NET6_0_OR_GREATER
+        Assert.True(handler.EnableMultipleHttp2Connections);
+#endif
+    }
+
+    [Fact]
     public async Task ConnectAsync_WhenFirstAddressFails_ConnectsToNextAddressWithNewSocket()
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);

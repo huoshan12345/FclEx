@@ -50,6 +50,8 @@ Organize new tests by the class or interface being tested. Split large test file
 
 Prefer running the narrowest useful test project for the code you changed before considering full-solution tests. Some tests have external service dependencies: `FclEx.Dapper.Tests`, `FclEx.EfCore.Tests`, and `FclEx.Messaging.Tests`. The local test databases and message queues are expected to be provisioned, but be mindful that `FclEx.Messaging` includes Kafka support while `FclEx.Messaging.Tests` currently does not cover Kafka and no Kafka test service is assumed yet.
 
+When a new or changed test fails, do not change the implementation or weaken the test merely to make the suite pass. First determine whether the failure indicates a real implementation issue, an incorrect test assumption, an environment problem, or a legitimately wrong test case. Only modify the implementation or the test when that diagnosis supports it; otherwise, summarize the failure and ask the user how they want to proceed.
+
 When `FclEx.Http` tests need a real local HTTP server, use or follow `test/FclEx.Http.Tests/FclEx/Http/HttpServerFixture.cs`.
 
 ## Review and Issue Lists

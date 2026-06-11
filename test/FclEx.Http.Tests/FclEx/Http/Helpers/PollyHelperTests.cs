@@ -2,6 +2,79 @@ namespace FclEx.Http.Helpers;
 
 public class PollyHelperTests
 {
+    [Theory]
+    [InlineData(HttpStatusCode.InternalServerError)]
+    [InlineData(HttpStatusCode.RequestTimeout)]
+#if NET5_0_OR_GREATER
+    [InlineData(HttpStatusCode.TooManyRequests)]
+#else
+    [InlineData((HttpStatusCode)429)]
+#endif
+    public async Task GetHttpRetryPolicy_WhenStatusCodeIsRetryable_RetriesConfiguredNumberOfTimes(HttpStatusCode statusCode)
+    {
+        var attempts = 0;
+        var policy = PollyHelper.GetHttpRetryPolicy(2, _ => TimeSpan.Zero);
+
+        using var response = await policy.ExecuteAsync(() =>
+        {
+            attempts++;
+            return Task.FromResult(new HttpResponseMessage(attempts <= 2 ? statusCode : HttpStatusCode.OK));
+        });
+
+        Assert.Equal(3, attempts);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetHttpRetryPolicy_WhenStatusCodeIsNotRetryable_DoesNotRetry()
+    {
+        var attempts = 0;
+        var policy = PollyHelper.GetHttpRetryPolicy(2, _ => TimeSpan.Zero);
+
+        using var response = await policy.ExecuteAsync(() =>
+        {
+            attempts++;
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.BadRequest));
+        });
+
+        Assert.Equal(1, attempts);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetIORetryPolicy_WhenInnerExceptionIsIOException_RetriesConfiguredNumberOfTimes()
+    {
+        var attempts = 0;
+        var policy = PollyHelper.GetIORetryPolicy(2, _ => TimeSpan.Zero);
+
+        using var response = await policy.ExecuteAsync(() =>
+        {
+            attempts++;
+            return attempts <= 2
+                ? Task.FromException<HttpResponseMessage>(new InvalidOperationException("outer", new IOException("io")))
+                : Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+        });
+
+        Assert.Equal(3, attempts);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetConnectTimeoutPolicy_WhenExceptionMessageDoesNotMatch_DoesNotRetry()
+    {
+        var attempts = 0;
+        var policy = PollyHelper.GetConnectTimeoutPolicy(2, _ => TimeSpan.Zero);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => policy.ExecuteAsync(() =>
+        {
+            attempts++;
+            return Task.FromException<HttpResponseMessage>(new InvalidOperationException("different timeout"));
+        }));
+
+        Assert.Equal("different timeout", ex.Message);
+        Assert.Equal(1, attempts);
+    }
+
     [RetryTheory]
     [InlineData(1, 0.1)]
     [InlineData(2, 0.1)]
