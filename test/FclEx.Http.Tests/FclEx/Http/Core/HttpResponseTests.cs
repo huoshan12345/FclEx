@@ -3,6 +3,103 @@ namespace FclEx.Http.Core;
 public class HttpResponseTests : HttpServerTests
 {
     [Fact]
+    public void Constructor_WhenRequestIsNull_ThrowsArgumentNullException()
+    {
+        var ex = Assert.Throws<ArgumentNullException>(() => new HttpResponse(null!));
+
+        Assert.Equal("request", ex.ParamName);
+    }
+
+    [Fact]
+    public void FromError_CreatesErrorResponseWithRequestAndException()
+    {
+        var request = HttpRequest.Get("https://example.com/api");
+        var exception = new InvalidOperationException("broken");
+
+        var response = HttpResponse.FromError(request, exception);
+
+        Assert.Same(request, response.Request);
+        Assert.Same(exception, response.Exception);
+        Assert.False(response.IsSuccess);
+        Assert.True(response.IsError);
+    }
+
+    [Fact]
+    public void EnsureSuccessStatusCode_WhenStatusCodeIsSuccessful_ReturnsResponse()
+    {
+        var response = CreateResponse("", "https://example.com/api");
+        typeof(HttpResponse)
+            .GetProperty(nameof(HttpResponse.StatusCode))!
+            .SetValue(response, HttpStatusCode.NoContent);
+
+        var result = response.EnsureSuccessStatusCode();
+
+        Assert.Same(response, result);
+    }
+
+    [Fact]
+    public void EnsureSuccessStatusCode_WhenStatusCodeIsFailure_ThrowsWithRequestContext()
+    {
+        var response = CreateResponse("", "https://example.com/api");
+        typeof(HttpResponse)
+            .GetProperty(nameof(HttpResponse.StatusCode))!
+            .SetValue(response, HttpStatusCode.BadRequest);
+
+        var ex = Assert.Throws<HttpRequestException>(() => response.EnsureSuccessStatusCode());
+
+        Assert.Equal(HttpStatusCode.BadRequest, ex.StatusCode);
+        Assert.Contains("BadRequest/400", ex.Message);
+        Assert.Contains("GET https://example.com/api", ex.Message);
+    }
+
+    [Fact]
+    public void ThrowIfError_WhenResponseHasNoException_ReturnsResponse()
+    {
+        var response = CreateResponse("");
+
+        var result = response.ThrowIfError();
+
+        Assert.Same(response, result);
+    }
+
+    [Fact]
+    public void AddCookies_AppendsSetCookieHeadersAndReturnsResponse()
+    {
+        var response = CreateResponse("");
+
+        var result = response.AddCookies(["sid=abc", "theme=dark"]);
+
+        Assert.Same(response, result);
+        Assert.Equal(["sid=abc", "theme=dark"], response.Headers.Get(HttpHeaderNames.SetCookie));
+    }
+
+    [Fact]
+    public void TryGetMediaType_WhenMultipleContentTypesExist_ReturnsLastParsableValue()
+    {
+        var response = CreateResponse("");
+        response.Headers.Add(HttpHeaderNames.ContentType, "not a media type");
+        response.Headers.Add(HttpHeaderNames.ContentType, "application/json; charset=utf-8");
+
+        var found = response.TryGetMediaType(out var mediaType);
+
+        Assert.True(found);
+        Assert.NotNull(mediaType);
+        Assert.Equal(MediaTypes.Json, mediaType.MediaType);
+        Assert.Equal("utf-8", mediaType.CharSet);
+    }
+
+    [Fact]
+    public void TryGetMediaType_WhenContentTypeIsMissing_ReturnsFalse()
+    {
+        var response = CreateResponse("");
+
+        var found = response.TryGetMediaType(out var mediaType);
+
+        Assert.False(found);
+        Assert.Null(mediaType);
+    }
+
+    [Fact]
     public void HttpResponse_ReadJsonAs_WhenPathMatches_ReturnsDeserializedValue()
     {
         var response = CreateResponse("""{"data":{"count":3}}""");
@@ -89,6 +186,18 @@ public class HttpResponseTests : HttpServerTests
         Assert.Equal("file", info.FileNameWithoutExtension);
         Assert.Equal(".jpg", info.FileExtension);
         Assert.Equal("image/jpg", info.MimeType);
+    }
+
+    [Fact]
+    public void GetDownloadInfo_WhenUriHasNoFileName_UsesSanitizedHostAsBaseName()
+    {
+        var response = CreateResponse("payload", "https://example.com/");
+
+        var info = response.GetDownloadInfo();
+
+        Assert.Equal("example_com", info.FileNameWithoutExtension);
+        Assert.Equal("", info.FileExtension);
+        Assert.Equal("example_com", info.FileName);
     }
 
     [Fact]

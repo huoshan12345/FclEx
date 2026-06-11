@@ -7,6 +7,129 @@ public class PropertyTests : HttpServerTests
     public static readonly (string Url, string TestUrl, string CharSet, string Keyword) CharSetTestCase
         = ("https://passport.weibo.com/visitor/visitor", TestApiPaths.CharsetDetectGb2312, "gb2312", "是否采集设备指纹");
 
+    [Fact]
+    public void BasicAuth_EncodesUserNameAndPasswordAsBasicAuthorizationHeader()
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        var result = request.BasicAuth("alice", "p@ss");
+
+        Assert.Same(request, result);
+        Assert.Equal("Basic YWxpY2U6cEBzcw==", request.Authorization);
+    }
+
+    [Fact]
+    public void BearerAuth_SetsBearerAuthorizationHeader()
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        var result = request.BearerAuth("token");
+
+        Assert.Same(request, result);
+        Assert.Equal("Bearer token", request.Authorization);
+    }
+
+    [Fact]
+    public void FluentBooleanAndValueProperties_SetRequestPropertiesAndReturnRequest()
+    {
+        var request = HttpRequest.Get("http://localhost");
+        var version = new Version(2, 0);
+
+        var result = request
+            .EnsureSuccessStatusCode()
+            .ReadContent(false)
+            .ReadCookies(false)
+            .UseDefaultUserAgent(false)
+            .AddHeaderWithoutValidation(true)
+            .AllowInsecureRedirects(false)
+            .MaxRedirectCount(3)
+            .BufferSize(4096)
+            .ReadHeadersTimeout(TimeSpan.FromSeconds(1))
+            .ReadBufferTimeout(TimeSpan.FromSeconds(2))
+            .TotalTimeout(TimeSpan.FromSeconds(3))
+            .ReadAsBytes()
+            .Method(HttpMethod.Post)
+            .Version(version);
+
+        Assert.Same(request, result);
+        Assert.True(request.EnsureSuccessStatusCode);
+        Assert.False(request.ReadContent);
+        Assert.False(request.ReadCookies);
+        Assert.False(request.UseDefaultUserAgent);
+        Assert.True(request.AddHeaderWithoutValidation);
+        Assert.False(request.AllowInsecureRedirects);
+        Assert.Equal(3, request.MaxRedirectCount);
+        Assert.Equal(4096, request.BufferSize);
+        Assert.Equal(TimeSpan.FromSeconds(1), request.ReadHeadersTimeout);
+        Assert.Equal(TimeSpan.FromSeconds(2), request.ReadBufferTimeout);
+        Assert.Equal(TimeSpan.FromSeconds(3), request.TotalTimeout);
+        Assert.Equal(HttpContentType.Bytes, request.ResponseContentType);
+        Assert.Equal(HttpMethod.Post, request.Method);
+        Assert.Equal(version, request.Version);
+    }
+
+    [Fact]
+    public void TryTimeoutAndBufferMethods_DoNotOverwriteExistingValues()
+    {
+        var request = HttpRequest.Get("http://localhost")
+            .ReadHeadersTimeout(TimeSpan.FromSeconds(1))
+            .ReadBufferTimeout(TimeSpan.FromSeconds(2))
+            .TotalTimeout(TimeSpan.FromSeconds(3))
+            .BufferSize(1024);
+
+        var result = request
+            .TryReadHeadersTimeout(TimeSpan.FromSeconds(10))
+            .TryReadBufferTimeout(TimeSpan.FromSeconds(20))
+            .TryTotalTimeout(TimeSpan.FromSeconds(30))
+            .TryBufferSize(2048);
+
+        Assert.Same(request, result);
+        Assert.Equal(TimeSpan.FromSeconds(1), request.ReadHeadersTimeout);
+        Assert.Equal(TimeSpan.FromSeconds(2), request.ReadBufferTimeout);
+        Assert.Equal(TimeSpan.FromSeconds(3), request.TotalTimeout);
+        Assert.Equal(1024, request.BufferSize);
+    }
+
+    [Fact]
+    public void TryTimeoutAndBufferMethods_SetMissingValues()
+    {
+        var request = HttpRequest.Get("http://localhost")
+            .ReadHeadersTimeout(null)
+            .ReadBufferTimeout(null)
+            .TotalTimeout(null)
+            .BufferSize(null);
+
+        var result = request
+            .TryReadHeadersTimeout(TimeSpan.FromSeconds(10))
+            .TryReadBufferTimeout(TimeSpan.FromSeconds(20))
+            .TryTotalTimeout(TimeSpan.FromSeconds(30))
+            .TryBufferSize(2048);
+
+        Assert.Same(request, result);
+        Assert.Equal(TimeSpan.FromSeconds(10), request.ReadHeadersTimeout);
+        Assert.Equal(TimeSpan.FromSeconds(20), request.ReadBufferTimeout);
+        Assert.Equal(TimeSpan.FromSeconds(30), request.TotalTimeout);
+        Assert.Equal(2048, request.BufferSize);
+    }
+
+    [Fact]
+    public void UriPropertyMethods_UpdateBuiltUri()
+    {
+        var request = HttpRequest.Get("http://user:pass@example.com:8080/old?x=1#old");
+
+        var result = request
+            .Scheme("https")
+            .Host("api.example.com")
+            .Port(8443)
+            .UserName("alice")
+            .Password("secret")
+            .Path("/v1/items")
+            .Fragment("section");
+
+        Assert.Same(request, result);
+        Assert.Equal("https://alice:secret@api.example.com:8443/v1/items?x=1#section", request.GetUri().ToString());
+    }
+
     [LocalOnlyFact]
     public async Task SaveCharSetTestResponseBytes()
     {
