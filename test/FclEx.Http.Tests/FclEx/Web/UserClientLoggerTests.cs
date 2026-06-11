@@ -32,6 +32,58 @@ public class UserClientLoggerTests
         Assert.Equal("Hello 42", Assert.Single(logger.Messages));
     }
 
+    [Fact]
+    public void Log_WhenStateIsNotFormattedLogValues_PrefixesFormattedMessage()
+    {
+        var logger = new CaptureLogger();
+        using var factory = new CaptureLoggerFactory(logger);
+        var client = new TestUserClient(factory)
+        {
+            Account = new UserAccount("alice", "pwd"),
+        };
+
+        client.Logger.Log(
+            LogLevel.Information,
+            new EventId(7, "event"),
+            "raw-message",
+            null,
+            static (state, _) => state);
+
+        Assert.Equal("[alice]raw-message", Assert.Single(logger.Messages));
+    }
+
+    [Fact]
+    public void BeginScope_DelegatesToInnerLogger()
+    {
+        var logger = new CaptureLogger();
+        using var factory = new CaptureLoggerFactory(logger);
+        var client = new TestUserClient(factory);
+        var scope = KeyValuePair.Create("scope", (object?)"value");
+
+        using (client.Logger.BeginScope(scope))
+        {
+        }
+
+        Assert.Equal(scope, Assert.Single(logger.Scopes));
+        Assert.Equal(1, logger.DisposedScopeCount);
+    }
+
+    [Fact]
+    public void IsEnabled_DelegatesToInnerLogger()
+    {
+        var logger = new CaptureLogger
+        {
+            Enabled = false,
+        };
+        using var factory = new CaptureLoggerFactory(logger);
+        var client = new TestUserClient(factory);
+
+        var enabled = client.Logger.IsEnabled(LogLevel.Information);
+
+        Assert.False(enabled);
+        Assert.Equal(LogLevel.Information, logger.LastIsEnabledLevel);
+    }
+
     private sealed class CaptureLoggerFactory(ILogger logger) : ILoggerFactory
     {
         public ILogger CreateLogger(string categoryName) => logger;
@@ -49,12 +101,25 @@ public class UserClientLoggerTests
     {
         public List<string> Messages { get; } = [];
 
+        public List<object> Scopes { get; } = [];
+
+        public int DisposedScopeCount { get; private set; }
+
+        public bool Enabled { get; init; } = true;
+
+        public LogLevel? LastIsEnabledLevel { get; private set; }
+
         public IDisposable BeginScope<TState>(TState state) where TState : notnull
         {
-            return Disposable.Empty;
+            Scopes.Add(state);
+            return Disposable.Create(() => DisposedScopeCount++);
         }
 
-        public bool IsEnabled(LogLevel logLevel) => true;
+        public bool IsEnabled(LogLevel logLevel)
+        {
+            LastIsEnabledLevel = logLevel;
+            return Enabled;
+        }
 
         public void Log<TState>(
             LogLevel logLevel,

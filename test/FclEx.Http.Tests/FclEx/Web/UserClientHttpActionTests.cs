@@ -49,6 +49,132 @@ public class UserClientHttpActionTests : WebTests
         Assert.Equal("accepted", result.Value);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_UsesClientHttpServiceAndPassesCancellationToken()
+    {
+        var response = CreateResponse("handled");
+        var service = new CaptureHttpService(response);
+        var client = new TestUserClient(ServiceProvider.GetRequiredService<ILoggerFactory>())
+        {
+            HttpService = service,
+        };
+        var action = new ServiceBackedUserClientHttpAction(client);
+        using var cts = new CancellationTokenSource();
+
+        var result = await ((FclEx.Actions.IAction<string>)action).ExecuteAsync(cts.Token);
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Equal("handled", result.Value);
+        Assert.Single(service.Requests);
+        Assert.Equal(cts.Token, service.Tokens.Single());
+        Assert.Equal(action.Uri, service.Requests[0].GetUri());
+        Assert.Equal(action.Method, service.Requests[0].Method);
+        Assert.Equal("yes", service.Requests[0].Headers.Get("X-Modified"));
+        Assert.Equal(1, action.ModifyRequestCallCount);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhenResponseHasException_ReturnsExceptionWithoutCallingGetResult()
+    {
+        var exception = new InvalidOperationException("send failed");
+        var response = CreateResponse(exception: exception);
+        var service = new CaptureHttpService(response);
+        var client = new TestUserClient(ServiceProvider.GetRequiredService<ILoggerFactory>())
+        {
+            HttpService = service,
+        };
+        var action = new ServiceBackedUserClientHttpAction(client);
+
+        var result = await ((FclEx.Actions.IAction<string>)action).ExecuteAsync();
+
+        Assert.True(result.IsError);
+        Assert.Same(exception, result.Exception);
+        Assert.Equal(0, action.GetResultCallCount);
+    }
+
+    [Fact]
+    public async Task HandleResponseAsync_WhenEnsureSuccessStatusCodeIsTrue_ReturnsErrorForFailureStatus()
+    {
+        var client = new TestUserClient(ServiceProvider.GetRequiredService<ILoggerFactory>());
+        var action = new InspectableUserClientHttpAction(client);
+        var response = CreateResponse("missing", HttpStatusCode.NotFound);
+
+        var result = await action.HandleResponseAsync(response);
+
+        Assert.True(result.IsError);
+        Assert.Contains("NotFound", result.Exception.Message);
+    }
+
+    private static FclEx.Http.HttpResponse CreateResponse(
+        string responseString = "",
+        HttpStatusCode statusCode = HttpStatusCode.OK,
+        Exception? exception = null)
+    {
+        var request = FclEx.Http.HttpRequest.Get("https://example.com/source");
+        var response = exception is null
+            ? new FclEx.Http.HttpResponse(request)
+            : FclEx.Http.HttpResponse.FromError(request, exception);
+        typeof(FclEx.Http.HttpResponse)
+            .GetProperty(nameof(FclEx.Http.HttpResponse.ResponseString))!
+            .SetValue(response, responseString);
+        typeof(FclEx.Http.HttpResponse)
+            .GetProperty(nameof(FclEx.Http.HttpResponse.StatusCode))!
+            .SetValue(response, statusCode);
+        return response;
+    }
+
+    private sealed class CaptureHttpService(FclEx.Http.HttpResponse response) : IHttpService
+    {
+        public List<FclEx.Http.HttpRequest> Requests { get; } = [];
+
+        public List<CancellationToken> Tokens { get; } = [];
+
+        public Task<FclEx.Http.HttpResponse> SendAsync(FclEx.Http.HttpRequest request, CancellationToken token = default)
+        {
+            Requests.Add(request);
+            Tokens.Add(token);
+            return Task.FromResult(response);
+        }
+
+        public void AddCookie(Cookie cookie, Uri? uri = null, bool overrideDomain = false) { }
+
+        public Cookie? GetCookie(Uri uri, string name) => null;
+
+        public IReadOnlyCollection<Cookie> GetCookies(Uri uri) => [];
+
+        public IReadOnlyCollection<Cookie> GetAllCookies() => [];
+
+        public IWebProxy? Proxy { get; set; }
+
+        public ILogger Logger { get; set; } = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+
+        public void Dispose() { }
+    }
+
+    private sealed class ServiceBackedUserClientHttpAction(TestUserClient client)
+        : UserClientHttpAction<TestUserClient, string>(client)
+    {
+        public int ModifyRequestCallCount { get; private set; }
+
+        public int GetResultCallCount { get; private set; }
+
+        public override Uri Uri { get; } = new("https://example.com/api");
+
+        public override HttpMethod Method { get; } = HttpMethod.Put;
+
+        public override void ModifyRequest(FclEx.Http.HttpRequest request)
+        {
+            ModifyRequestCallCount++;
+            request.SetHeader("X-Modified", "yes");
+        }
+
+        public override OperationResult<string> GetResult(FclEx.Http.HttpResponse response)
+        {
+            GetResultCallCount++;
+            return Operation.Success(response.ResponseString);
+        }
+    }
+
     private sealed class NonEnforcingUserClientHttpAction(TestUserClient client)
         : UserClientHttpAction<TestUserClient, string>(client)
     {
