@@ -2,6 +2,19 @@ namespace FclEx.Http.Services;
 
 public class HttpClientContextTests
 {
+    [Fact]
+    public void Constructor_StoresClientPolicyAndDisposeFlag()
+    {
+        using var client = new HttpClient(new TrackingHandler());
+        var policy = Polly.Policy.NoOpAsync<HttpResponseMessage>();
+
+        var context = new HttpClientContext(client, policy, DisposeHttpClient: false);
+
+        Assert.Same(client, context.Client);
+        Assert.Same(policy, context.Policy);
+        Assert.False(context.DisposeHttpClient);
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
