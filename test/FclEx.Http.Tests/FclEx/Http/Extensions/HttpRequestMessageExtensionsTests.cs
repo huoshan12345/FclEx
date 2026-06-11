@@ -3,6 +3,27 @@ namespace FclEx.Http.Extensions;
 public class HttpRequestMessageExtensionsTests
 {
     [Fact]
+    public void AddCookie_WhenCookieIsNullOrEmpty_DoesNotAddCookieHeader()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com");
+
+        request.AddCookie(null).AddCookie("");
+
+        Assert.False(request.Headers.Contains(HttpHeaderNames.Cookie));
+    }
+
+    [Fact]
+    public void AddCookie_WhenCookieHasValue_AddsCookieHeaderAndReturnsRequest()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com");
+
+        var result = request.AddCookie("sid=abc");
+
+        Assert.Same(request, result);
+        Assert.Equal("sid=abc", Assert.Single(request.Headers.GetValues(HttpHeaderNames.Cookie)));
+    }
+
+    [Fact]
     public async Task CloneAsync_CopiesRequestMetadataHeadersOptionsAndBufferedContent()
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://example.com/api")

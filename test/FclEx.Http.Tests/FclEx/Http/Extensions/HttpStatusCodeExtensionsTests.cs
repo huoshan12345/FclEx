@@ -3,10 +3,10 @@ namespace FclEx.Http.Extensions;
 public class HttpStatusCodeExtensionsTests
 {
     [Theory]
-    [InlineData(100, true, false, false, false, false, HttpStatusCodeClass.Info)]
-    [InlineData(199, true, false, false, false, false, HttpStatusCodeClass.Info)]
-    [InlineData(200, false, true, false, false, false, HttpStatusCodeClass.Success)]
-    [InlineData(299, false, true, false, false, false, HttpStatusCodeClass.Success)]
+    [InlineData(100, true, false, false, false, false, HttpStatusCodeClass.Informational)]
+    [InlineData(199, true, false, false, false, false, HttpStatusCodeClass.Informational)]
+    [InlineData(200, false, true, false, false, false, HttpStatusCodeClass.Successful)]
+    [InlineData(299, false, true, false, false, false, HttpStatusCodeClass.Successful)]
     [InlineData(300, false, false, true, false, false, HttpStatusCodeClass.Redirection)]
     [InlineData(399, false, false, true, false, false, HttpStatusCodeClass.Redirection)]
     [InlineData(400, false, false, false, true, false, HttpStatusCodeClass.ClientError)]
@@ -14,6 +14,9 @@ public class HttpStatusCodeExtensionsTests
     [InlineData(500, false, false, false, false, true, HttpStatusCodeClass.ServerError)]
     [InlineData(599, false, false, false, false, true, HttpStatusCodeClass.ServerError)]
     [InlineData(600, false, false, false, false, false, HttpStatusCodeClass.Unknown)]
+    [InlineData(99, false, false, false, false, false, HttpStatusCodeClass.Unknown)]
+    [InlineData(0, false, false, false, false, false, HttpStatusCodeClass.Unknown)]
+    [InlineData(-1, false, false, false, false, false, HttpStatusCodeClass.Unknown)]
     public void StatusClassMethods_ClassifyByHttpStatusCodeRange(
         int value,
         bool isInfo,
