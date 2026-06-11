@@ -1,7 +1,4 @@
-using System.Xml;
-using System.Xml.Linq;
-using MySqlX.XDevAPI;
-
+// ReSharper disable UseAwaitUsing
 namespace FclEx.Dapper;
 
 partial class DbConnectionExtensionsTests

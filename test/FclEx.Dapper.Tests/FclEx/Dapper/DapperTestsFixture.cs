@@ -1,3 +1,4 @@
+// ReSharper disable UseAwaitUsing
 using System.Data.Common;
 using Microsoft.Data.SqlClient;
 using Microsoft.Data.Sqlite;
@@ -34,6 +35,14 @@ public class DapperTestsFixture : CoreTestsFixture
         //"schema_2",
     ];
 
+    public static readonly string?[] Schemas = SchemaNames.Select(m => WithAssemblyInfo(m)).ToArray();
+
+    [return: NotNullIfNotNull(nameof(str))]
+    public new static string? WithAssemblyInfo(string? str, char separator = '_')
+    {
+        return WithAssemblyInfo(str, typeof(DapperTests).Assembly, separator);
+    }
+
     private static DbDriver[] GetDbProviderTypes()
     {
         return TestHelper.IsGithubAction
@@ -68,5 +77,30 @@ public class DapperTestsFixture : CoreTestsFixture
     {
         var database = dbDriver.IsMySql() ? schema : null;
         return ConnectionStrings.Get(dbDriver, database, isUser).CreateDbConnection();
+    }
+
+    public override async ValueTask InitializeAsync()
+    {
+        foreach (var (dbDriver, schema) in DbDrivers.CrossJoin(Schemas))
+        {
+            using var con = CreateDbConnection(dbDriver, schema);
+            await FixAutoIncrement<EntityWithAutoKey>(con, dbDriver, schema);
+        }
+    }
+
+    public static Task<int> FixAutoIncrement<T>(IDbConnection con, DbDriver dbDriver, string? schema)
+    {
+        if (dbDriver is not DbDriver.Npgsql)
+            return Task.FromResult(0);
+
+        var tableName = DapperHelper.GetTableNameWithSchema(con, schema, typeof(T));
+        var sql = $"""
+                  SELECT setval(
+                      pg_get_serial_sequence('{tableName}', 'Id'),
+                      COALESCE((SELECT MAX("Id") FROM {tableName}), 0) + 1,
+                      false
+                  );
+                  """;
+        return con.ExecuteScalarAsync<int>(sql);
     }
 }

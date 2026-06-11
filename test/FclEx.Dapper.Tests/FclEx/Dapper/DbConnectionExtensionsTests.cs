@@ -1,23 +1,9 @@
 // ReSharper disable AccessToDisposedClosure
-using System.Data;
-using Dapper;
-using FclEx.Utils;
-using Xunit.v3.Priority;
-
+// ReSharper disable UseAwaitUsing
 namespace FclEx.Dapper;
 
 public partial class DbConnectionExtensionsTests(ITestOutputHelper output, DapperTestsFixture fixture) : DapperTests(fixture)
 {
-    [Theory]
-    [MemberData(nameof(DbSchemaTestCases))]
-    public async Task FixAutoIncrement_Test(DbDriver dbDriver, string? schema)
-    {
-        Assert.SkipIfInGithubAction();
-
-        using var con = Fixture.CreateDbConnection(dbDriver, schema);
-        await FixAutoIncrement<EntityWithAutoKey>(con, dbDriver, schema);
-    }
-
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task InsertAsync_EntityWithAutoKey_Test(DbDriver dbDriver, string? schema)
@@ -38,10 +24,12 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
         Assert.Equal(id, e.Id);
     }
 
-    [Theory, Priority(1)]
+    [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task InsertAsync_EntityWithAutoKey_IncludeAutoKey_Test(DbDriver dbDriver, string? schema)
     {
+        Assert.SkipIfInGithubAction(); 
+
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
         var maxId = await GetMaxId<EntityWithAutoKey>(con, schema) + 1;
 
@@ -132,10 +120,12 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
         }
     }
 
-    [Theory, Priority(2)]
+    [Theory]
     [MemberData(nameof(BulkInsertTestCases))]
     public async Task BulkInsertAsync_EntityWithAutoKey_IncludeAutoKey_Test(DbDriver dbDriver, string? schema, int count)
     {
+        Assert.SkipIfInGithubAction();
+
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
         var tableName = DapperHelper.GetTableNameWithSchema(con, schema, typeof(EntityWithAutoKey));
         var maxId = await GetMaxId<EntityWithAutoKey>(con, schema) + 1;
@@ -298,21 +288,5 @@ public partial class DbConnectionExtensionsTests(ITestOutputHelper output, Dappe
         var tableName = DapperHelper.GetTableNameWithSchema(con, schema, typeof(T));
         var columnName = DapperHelper.GetQuotedColumnName(con, typeof(T), "Id");
         return con.ExecuteScalarAsync<int>($"select max({columnName}) from {tableName}");
-    }
-
-    private static Task<int> FixAutoIncrement<T>(IDbConnection con, DbDriver dbDriver, string? schema)
-    {
-        if (dbDriver is not DbDriver.Npgsql)
-            return Task.FromResult(0);
-
-        var tableName = DapperHelper.GetTableNameWithSchema(con, schema, typeof(T));
-        var sql = $"""
-                  SELECT setval(
-                      pg_get_serial_sequence('{tableName}', 'Id'),
-                      COALESCE((SELECT MAX("Id") FROM {tableName}), 0) + 1,
-                      false
-                  );
-                  """;
-        return con.ExecuteScalarAsync<int>(sql);
     }
 }

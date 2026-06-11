@@ -10,15 +10,7 @@ public class DapperTests(DapperTestsFixture fixture) : DatabaseTests
 {
     public DapperTestsFixture Fixture { get; } = fixture;
 
-    [return: NotNullIfNotNull(nameof(str))]
-    public static string? WithAssemblyInfo(string? str, char separator = '_')
-    {
-        return CoreTestsFixture.WithAssemblyInfo(str, typeof(DapperTests).Assembly, separator);
-    }
-
     public static readonly int[] Counts = [1, 5];
-
-    public static readonly string?[] Schemas = SchemaNames.Select(m => WithAssemblyInfo(m)).ToArray();
 
     public static readonly TheoryData<DbDriver, string?, int> BulkInsertTestCases =
     (
