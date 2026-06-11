@@ -35,13 +35,8 @@ public class DapperTestsFixture : CoreTestsFixture
         //"schema_2",
     ];
 
-    public static readonly string?[] Schemas = SchemaNames.Select(m => WithAssemblyInfo(m)).ToArray();
-
-    [return: NotNullIfNotNull(nameof(str))]
-    public new static string? WithAssemblyInfo(string? str, char separator = '_')
-    {
-        return WithAssemblyInfo(str, typeof(DapperTests).Assembly, separator);
-    }
+    internal static Assembly Assembly => typeof(DapperTestsFixture).Assembly;
+    internal static readonly string?[] Schemas = SchemaNames.Select(m => WithAssemblyInfo(m, Assembly)).ToArray();
 
     private static DbDriver[] GetDbProviderTypes()
     {

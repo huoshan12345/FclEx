@@ -5,6 +5,7 @@ global using System.ComponentModel.DataAnnotations.Schema;
 global using System.Data;
 global using System.Diagnostics;
 global using System.Diagnostics.CodeAnalysis;
+global using System.Reflection;
 global using System.Xml;
 global using System.Xml.Linq;
 global using Dapper;
