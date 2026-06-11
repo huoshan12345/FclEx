@@ -2,10 +2,10 @@ namespace FclEx.Http;
 
 public static class HttpServiceExtensions
 {
-    public static Task<HttpResponse> GetAsync(this IHttpService http, string url, string? charSet = null, int? timeoutMilliseconds = 10 * 1000)
+    public static Task<HttpResponse> GetAsync(this IHttpService http, string url, string? charSet = null, TimeSpan? timeout = null)
     {
         return HttpRequest.Get(url)
-            .TryReadHeadersTimeout(timeoutMilliseconds is { } t ? TimeSpan.FromMilliseconds(t) : null)
+            .ReadHeadersTimeout(timeout)
             .CharSet(charSet)
             .SendAsync(http);
     }
