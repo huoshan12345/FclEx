@@ -18,17 +18,18 @@ public class ReturnValueCacheTests(AbpTestsFixture fixture) : AbpTests(fixture)
         Assert.True(service.IsProxy());
     }
 
-    [RetryTheory]
+    [Theory]
     [MemberData(nameof(Numbers))]
     public void SameInstance_Test(int no)
     {
+        const string name = nameof(SameInstance_Test);
         var service = Services.GetRequiredService<IService>();
-        var itemFromStatic = service.GetStatic(no);
-        var itemFromInstance = service.Get(no);
+        var itemFromStatic = service.GetStatic(name, no);
+        var itemFromInstance = service.Get(name, no);
 
         for (var i = 0; i < 2; i++)
         {
-            var (_, tempItem, ex, t) = Operation.Execute(() => service.Get(no));
+            var (_, tempItem, ex, t) = Operation.Execute(() => service.Get(name, no));
             Assert.Null(ex);
             Assert.NotNull(tempItem);
             Assert.Equal(itemFromInstance.Id, tempItem.Id);
@@ -36,7 +37,7 @@ public class ReturnValueCacheTests(AbpTestsFixture fixture) : AbpTests(fixture)
         }
         for (var i = 0; i < 2; i++)
         {
-            var (_, tempItem, ex, t) = Operation.Execute(() => service.GetStatic(no));
+            var (_, tempItem, ex, t) = Operation.Execute(() => service.GetStatic(name, no));
             Assert.Null(ex);
             Assert.NotNull(tempItem);
             Assert.Equal(itemFromStatic.Id, tempItem.Id);
@@ -56,25 +57,26 @@ public class ReturnValueCacheTests(AbpTestsFixture fixture) : AbpTests(fixture)
         Assert.True(_errorCount >= 3); // Retry 3 times
     }
 
-    [RetryTheory]
+    [Theory]
     [MemberData(nameof(Numbers))]
     public void DifferentInstance_Test(int no)
     {
+        const string name = nameof(DifferentInstance_Test);
         var service = Services.GetRequiredService<IService>();
-        var itemFromStatic = service.GetStatic(no);
+        var itemFromStatic = service.GetStatic(name, no);
 
         for (var i = 0; i < 2; i++)
         {
             var tempService = Services.GetRequiredService<IService>(); // new instance
 
-            var (_, fromStatic, _, timeFromStatic) = Operation.Execute(() => tempService.GetStatic(no));
-            var (_, fromInstance, _, timeFromInstance) = Operation.Execute(() => tempService.Get(no)); // should not be cached
+            var (_, fromStatic, _, timeFromStatic) = Operation.Execute(() => tempService.GetStatic(name, no));
+            var (_, fromInstance, _, timeFromInstance) = Operation.Execute(() => tempService.Get(name, no)); // should not be cached
 
             Assert.NotNull(fromStatic);
             Assert.Equal(itemFromStatic.Id, fromStatic.Id);
 
             Assert.NotNull(fromInstance);
-            Assert.Equal($"{tempService.Id}_{no}", fromInstance.Id);
+            Assert.Equal($"{name}_{tempService.Id}_{no}", fromInstance.Id);
 
             Assert.True(timeFromStatic < CacheMaxTime, timeFromStatic.ToString());
             Assert.True(timeFromInstance > SleepTime, timeFromInstance.ToString());
