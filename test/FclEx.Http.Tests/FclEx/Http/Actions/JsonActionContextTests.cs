@@ -3,6 +3,21 @@ namespace FclEx.Http.Actions;
 public class JsonActionContextTests
 {
     [Fact]
+    public void Constructor_WhenPathIsNull_SelectsRootTokenAndKeepsResponseAndJson()
+    {
+        var response = HttpActionTestFixtures.CreateResponse();
+
+        var context = new JsonActionContext(response, """{"value":42}""", null);
+
+        Assert.Same(response, context.Response);
+        Assert.Null(context.JsonPath);
+        Assert.Equal("""{"value":42}""", context.Json);
+        Assert.Single(context.ResultTokens);
+        Assert.True(context.TryGetResultToken(out var token));
+        Assert.Equal(42, token.GetProperty("value").GetInt32());
+    }
+
+    [Fact]
     public void ResultTokens_WhenParserDocumentIsDisposed_RemainReadable()
     {
         var response = HttpActionTestFixtures.CreateResponse();

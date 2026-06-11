@@ -107,6 +107,36 @@ public class JsonpActionTests
         Assert.Contains("Failed to parse JSONP callback", result.Exception!.Message);
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("_callback()")]
+    [InlineData("_callback(   )")]
+    [InlineData("_callback {\"value\":5}")]
+    [InlineData("_callback({\"value\":5}")]
+    public void GetJson_WhenCallbackWrapperIsMalformed_ReturnsError(string responseString)
+    {
+        var response = HttpActionTestFixtures.CreateResponse(responseString);
+        var action = new TestJsonpAction();
+
+        var result = action.GetJson(response);
+
+        Assert.True(result.IsError);
+        Assert.Contains("Failed to parse JSONP callback", result.Exception!.Message);
+    }
+
+    [Fact]
+    public void GetJson_WhenCallbackNameIsEmpty_ReturnsError()
+    {
+        var response = HttpActionTestFixtures.CreateResponse("""({"value":5})""");
+        var action = new TestJsonpAction { CallbackNameValue = "" };
+
+        var result = action.GetJson(response);
+
+        Assert.True(result.IsError);
+        Assert.Contains("Failed to parse JSONP callback", result.Exception!.Message);
+    }
+
     [Fact]
     public void GetResult_DeserializesExtractedCallbackBody()
     {

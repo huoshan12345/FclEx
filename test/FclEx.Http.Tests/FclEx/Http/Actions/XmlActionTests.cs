@@ -89,6 +89,21 @@ public class XmlActionTests
     }
 
     [Fact]
+    public void CreateContext_WhenXPathIsNull_SelectsDocumentRoot()
+    {
+        var response = HttpActionTestFixtures.CreateResponse();
+        var action = new XmlStringAction();
+
+        var result = action.CreateContext(response, "<root>value</root>");
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Same(response, result.Value.Response);
+        Assert.Null(result.Value.XPath);
+        Assert.Equal("root", result.Value.ResultElement!.Name.LocalName);
+        Assert.Equal("value", result.Value.ResultElement.Value);
+    }
+
+    [Fact]
     public void CreateContext_UsesXPathToSelectResultElements()
     {
         var response = HttpActionTestFixtures.CreateResponse();

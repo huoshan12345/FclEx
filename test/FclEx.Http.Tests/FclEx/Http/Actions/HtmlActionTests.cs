@@ -63,6 +63,18 @@ public class HtmlActionTests
     }
 
     [Fact]
+    public void GetHtml_WhenResponseIsPlainText_ReturnsSuccess()
+    {
+        var response = HttpActionTestFixtures.CreateResponse("plain text");
+        var action = new HtmlTextAction();
+
+        var result = action.GetHtml(response);
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Equal("plain text", result.Value);
+    }
+
+    [Fact]
     public void GetResult_ForUnitAction_ReturnsSuccessWhenHtmlExists()
     {
         var response = HttpActionTestFixtures.CreateResponse("<html><body>ok</body></html>");

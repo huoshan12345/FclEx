@@ -55,6 +55,38 @@ public class DefaultHttpActionTests
     }
 
     [Fact]
+    public async Task HandleResponseAsync_WhenStatusCodeIsSuccessful_ReturnsSuccessWithResponseElapsed()
+    {
+        var response = HttpActionTestFixtures.CreateResponse("ok", HttpStatusCode.OK, HttpActionTestFixtures.Elapsed);
+        var action = new PipelineHttpAction<string>(response)
+        {
+            EnsureSuccessStatusCodeValue = true,
+        };
+
+        var result = await action.HandleResponseAsync(response);
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Same(response, result.Value);
+        Assert.Equal(HttpActionTestFixtures.Elapsed, result.Elapsed);
+    }
+
+    [Fact]
+    public async Task HandleResponseAsync_WhenSuccessEnforcementIsDisabled_ReturnsSuccessForFailureStatus()
+    {
+        var response = HttpActionTestFixtures.CreateResponse("missing", HttpStatusCode.NotFound, HttpActionTestFixtures.Elapsed);
+        var action = new PipelineHttpAction<string>(response)
+        {
+            EnsureSuccessStatusCodeValue = false,
+        };
+
+        var result = await action.HandleResponseAsync(response);
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Same(response, result.Value);
+        Assert.Equal(HttpActionTestFixtures.Elapsed, result.Elapsed);
+    }
+
+    [Fact]
     public async Task ExecuteCoreAsync_WhenResponseHasException_ReturnsResponseExceptionWithoutHandlingResult()
     {
         var exception = new InvalidOperationException("send failed");
