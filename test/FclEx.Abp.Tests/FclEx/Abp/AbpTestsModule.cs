@@ -34,8 +34,8 @@ public class Service : IService
     private static int _id = short.MinValue;
     public int Id { get; }
 
-    public static readonly TimeSpan CacheMaxTime = TimeSpan.FromMilliseconds(50);
-    public static readonly TimeSpan SleepTime = TimeSpan.FromMilliseconds(100);
+    public static readonly TimeSpan CacheMaxTime = TimeSpan.FromMilliseconds(100);
+    public static readonly TimeSpan SleepTime = TimeSpan.FromMilliseconds(200);
 
     public Service()
     {

@@ -29,19 +29,19 @@ public class ReturnValueCacheTests(AbpTestsFixture fixture) : AbpTests(fixture)
 
         for (var i = 0; i < 2; i++)
         {
-            var (_, tempItem, ex, t) = Operation.Execute(() => service.Get(name, no));
+            var (_, tempItem, ex, getTime) = Operation.Execute(() => service.Get(name, no));
             Assert.Null(ex);
             Assert.NotNull(tempItem);
             Assert.Equal(itemFromInstance.Id, tempItem.Id);
-            Assert.True(t < CacheMaxTime, t.ToString());
+            Assert.True(getTime < CacheMaxTime, () => $"Expected {nameof(getTime)} < {CacheMaxTime}, but was {getTime}");
         }
         for (var i = 0; i < 2; i++)
         {
-            var (_, tempItem, ex, t) = Operation.Execute(() => service.GetStatic(name, no));
+            var (_, tempItem, ex, getStaticTime) = Operation.Execute(() => service.GetStatic(name, no));
             Assert.Null(ex);
             Assert.NotNull(tempItem);
             Assert.Equal(itemFromStatic.Id, tempItem.Id);
-            Assert.True(t < CacheMaxTime, t.ToString());
+            Assert.True(getStaticTime < CacheMaxTime, () => $"Expected {nameof(getStaticTime)} < {CacheMaxTime}, but was {getStaticTime}");
         }
     }
 
@@ -78,8 +78,8 @@ public class ReturnValueCacheTests(AbpTestsFixture fixture) : AbpTests(fixture)
             Assert.NotNull(fromInstance);
             Assert.Equal($"{name}_{tempService.Id}_{no}", fromInstance.Id);
 
-            Assert.True(timeFromStatic < CacheMaxTime, timeFromStatic.ToString());
-            Assert.True(timeFromInstance > SleepTime, timeFromInstance.ToString());
+            Assert.True(timeFromStatic < CacheMaxTime, () => $"Expected {nameof(timeFromStatic)} < {CacheMaxTime}, but was {timeFromStatic}");
+            Assert.True(timeFromInstance > SleepTime, () => $"Expected {nameof(timeFromInstance)} > {SleepTime}, but was {timeFromInstance}");
         }
     }
 }

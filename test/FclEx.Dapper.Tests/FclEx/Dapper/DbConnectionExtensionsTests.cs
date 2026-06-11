@@ -1,20 +1,19 @@
+// ReSharper disable AccessToDisposedClosure
 using System.Data;
 using Dapper;
 using FclEx.Utils;
 using Xunit.v3.Priority;
 
-// ReSharper disable AccessToDisposedClosure
-
 namespace FclEx.Dapper;
 
-[DefaultPriority(0)]
-[TestCaseOrderer(typeof(PriorityOrderer))]
 public partial class DbConnectionExtensionsTests(ITestOutputHelper output, DapperTestsFixture fixture) : DapperTests(fixture)
 {
-    [Theory(Skip = "x"), Priority(-1)]
+    [Theory]
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task FixAutoIncrement_Test(DbDriver dbDriver, string? schema)
     {
+        Assert.SkipIfInGithubAction();
+
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
         await FixAutoIncrement<EntityWithAutoKey>(con, dbDriver, schema);
     }
