@@ -15,10 +15,10 @@ public class RegexesExtensionsTests
 
     [Theory]
     [InlineData("""<meta charset="utf-8">""", "utf-8")]
-    [InlineData("""<meta charset='gb2312'>""", "gb2312")]
-    [InlineData("""<meta charset=utf-8>""", "utf-8")]
+    [InlineData("<meta charset='gb2312'>", "gb2312")]
+    [InlineData("<meta charset=utf-8>", "utf-8")]
     [InlineData("""<meta http-equiv="Content-Type" content="text/html; charset=utf-8">""", "utf-8")]
-    [InlineData("""<meta content='text/html; charset=gb2312' http-equiv='Content-Type'>""", "gb2312")]
+    [InlineData("<meta content='text/html; charset=gb2312' http-equiv='Content-Type'>", "gb2312")]
     public void CharSet_ExtractsCharsetFromSupportedMetaForms(string html, string expected)
     {
         var match = Regexes.CharSet
@@ -31,6 +31,6 @@ public class RegexesExtensionsTests
     [Fact]
     public void CharSet_WhenNoMetaCharsetExists_DoesNotMatch()
     {
-        Assert.All(Regexes.CharSet, regex => Assert.False(regex.IsMatch("<html><head></head></html>")));
+        Assert.All(Regexes.CharSet, regex => Assert.DoesNotMatch(regex, "<html><head></head></html>"));
     }
 }

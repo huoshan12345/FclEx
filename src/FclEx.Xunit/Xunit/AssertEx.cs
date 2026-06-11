@@ -10,6 +10,6 @@ public partial class AssertEx
             if (TestHelper.IsGithubAction)
                 Assert.Skip("Skipping test in GitHub Action.");
         }
-    }
 #endif
+    }
 }
