@@ -25,7 +25,7 @@ public static partial class HttpRequestExtensions
         IAsyncPolicy policy,
         CancellationToken token = default)
     {
-        return policy.ExecuteAsync(() => request.SendAsync(service, token));
+        return policy.ExecuteAsync(policyToken => request.SendAsync(service, policyToken), token);
     }
 
     public static string Dump(this HttpRequest request, IEnumerable<Cookie> cookies)

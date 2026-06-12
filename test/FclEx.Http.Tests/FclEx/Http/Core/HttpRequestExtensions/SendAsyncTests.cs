@@ -69,6 +69,19 @@ public class SendAsyncTests : HttpServerTests
     }
 
     [Fact]
+    public async Task SendAsync_WithOptimisticTimeoutPolicy_PassesPolicyCancellationTokenToService()
+    {
+        using var service = new DelayedHttpService();
+        var policy = Polly.Policy.TimeoutAsync(TimeSpan.FromMilliseconds(20));
+
+        await Assert.ThrowsAsync<TimeoutRejectedException>(() =>
+            HttpRequest.Get("https://example.com/").SendAsync(service, policy));
+
+        Assert.True(service.ObservedToken.CanBeCanceled);
+        Assert.True(service.ObservedToken.IsCancellationRequested);
+    }
+
+    [Fact]
     public async Task Form_Test()
     {
         if (HasApiServer == false)
@@ -164,5 +177,42 @@ public class SendAsyncTests : HttpServerTests
 
         Assert.Equal(2, response.VisitedUris.Count);
         Assert.Equal(url, response.LastUri().ToString());
+    }
+
+    private sealed class DelayedHttpService : IHttpService
+    {
+        public CancellationToken ObservedToken { get; private set; }
+        public IWebProxy? Proxy { get; set; }
+        public ILogger Logger { get; set; } = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+
+        public async Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken token = default)
+        {
+            ObservedToken = token;
+            await Task.Delay(TimeSpan.FromSeconds(5), token);
+            return new HttpResponse(request);
+        }
+
+        public Cookie? GetCookie(Uri uri, string name)
+        {
+            return null;
+        }
+
+        public IReadOnlyCollection<Cookie> GetCookies(Uri uri)
+        {
+            return [];
+        }
+
+        public void AddCookie(Cookie cookie, Uri? uri = null, bool overrideDomain = false)
+        {
+        }
+
+        public IReadOnlyCollection<Cookie> GetAllCookies()
+        {
+            return [];
+        }
+
+        public void Dispose()
+        {
+        }
     }
 }
