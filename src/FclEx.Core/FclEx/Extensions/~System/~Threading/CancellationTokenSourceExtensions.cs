@@ -13,4 +13,12 @@ public static class CancellationTokenSourceExtensions
         }
         catch { }
     }
+
+#if !NET5_0_OR_GREATER
+    public static Task CancelAsync(this CancellationTokenSource cts)
+    {
+        cts.Cancel();
+        return Task.CompletedTask;
+    }
+#endif
 }

@@ -84,35 +84,46 @@ public static class TaskHelper
     }
 
 #if !NET5_0_OR_GREATER
-    // https://stackoverflow.com/a/22078975/4255140
+    public static async Task<T> WaitAsync<T>(this Task<T> task, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var tcs = new TaskCompletionSource<T>();
+
+        using (cancellationToken.Register(static state => ((TaskCompletionSource<T>)state!).TrySetResult(default!), tcs))
+        {
+            if (task != await Task.WhenAny(task, tcs.Task).ConfigureAwait(false))
+                cancellationToken.ThrowIfCancellationRequested();
+        }
+
+        return await task.ConfigureAwait(false);
+    }
+
+    public static async Task WaitAsync(this Task task, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        
+        var tcs = new TaskCompletionSource<object?>();
+
+        using (cancellationToken.Register(static state => ((TaskCompletionSource<object?>)state!).TrySetResult(null), tcs))
+        {
+            if (task != await Task.WhenAny(task, tcs.Task).ConfigureAwait(false))
+                cancellationToken.ThrowIfCancellationRequested();
+        }
+
+        await task;
+    }
+
     public static async Task<TResult> WaitAsync<TResult>(this Task<TResult> task, TimeSpan timeout)
     {
-        using var cts = new CancellationTokenSource();
-        var completedTask = await Task.WhenAny(task, Task.Delay(timeout, cts.Token));
-        if (completedTask == task)
-        {
-            cts.Cancel();
-            return await task;  // Very important in order to propagate exceptions
-        }
-        else
-        {
-            throw new TimeoutException("The operation has timed out.");
-        }
+        using var cts = new CancellationTokenSource(timeout);
+        return await task.WaitAsync(cts.Token);
     }
 
     public static async Task WaitAsync(this Task task, TimeSpan timeout)
     {
-        using var cts = new CancellationTokenSource();
-        var completedTask = await Task.WhenAny(task, Task.Delay(timeout, cts.Token));
-        if (completedTask == task)
-        {
-            cts.Cancel();
-            await task;  // Very important in order to propagate exceptions
-        }
-        else
-        {
-            throw new TimeoutException("The operation has timed out.");
-        }
+        using var cts = new CancellationTokenSource(timeout);
+        await task.WaitAsync(cts.Token);
     }
 #endif
 

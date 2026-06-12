@@ -86,6 +86,30 @@ public class JsonActionTests
     }
 
     [Fact]
+    public void GetJson_WhenResponseStringIsJsonArray_ReturnsJson()
+    {
+        var response = HttpActionTestFixtures.CreateResponse("""[1,2,3]""");
+        var action = new JsonCountAction();
+
+        var result = action.GetJson(response);
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Equal("""[1,2,3]""", result.Value);
+    }
+
+    [Fact]
+    public void GetResult_WhenSelectedTokenIsNullLiteral_ReturnsMissingPathError()
+    {
+        var response = HttpActionTestFixtures.CreateResponse("""{"value":null}""");
+        var action = new NullableJsonCountAction { JsonPathValue = "value" };
+
+        var result = action.GetResult(response);
+
+        Assert.True(result.IsError);
+        Assert.Contains("value", result.Exception!.Message);
+    }
+
+    [Fact]
     public void CreateContext_UsesJsonPathToSelectResultTokens()
     {
         var response = HttpActionTestFixtures.CreateResponse();
@@ -117,5 +141,25 @@ public class JsonActionTests
 
         Assert.True(result.IsError);
         Assert.IsType<JsonException>(result.Exception, false);
+    }
+
+    [Fact]
+    public async Task HttpJsonAction_WhenResponseIsValidJson_UsesDefaultPipeline()
+    {
+        var response = HttpActionTestFixtures.CreateResponse("3", HttpStatusCode.OK, HttpActionTestFixtures.Elapsed);
+        var action = new PipelineJsonAction<int>(response);
+
+        var result = await action.ExecuteAsync();
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Equal(3, result.Value);
+        Assert.True(result.Elapsed >= TimeSpan.Zero);
+    }
+
+    private sealed class NullableJsonCountAction : JsonAction<int?>
+    {
+        public string? JsonPathValue { get; init; }
+
+        public override string? JsonPath => JsonPathValue;
     }
 }

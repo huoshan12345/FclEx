@@ -150,6 +150,27 @@ public class JsonpActionTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_WhenCallbackBodyIsValidJson_ReturnsParsedValue()
+    {
+        var response = HttpActionTestFixtures.CreateResponse("""_callback({"value":5})""", HttpStatusCode.OK, HttpActionTestFixtures.Elapsed);
+        var action = new TestJsonpAction(response);
+
+        var result = await action.ExecuteAsync();
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Equal(5, result.Value.GetProperty("value").GetInt32());
+        Assert.True(result.Elapsed >= TimeSpan.Zero);
+    }
+
+    [Fact]
+    public void Method_DefaultsToGet()
+    {
+        var action = new TestJsonpAction();
+
+        Assert.Equal(HttpMethod.Get, action.Method);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_WhenCallbackBodyIsInvalidJson_ReturnsError()
     {
         var response = HttpActionTestFixtures.CreateResponse("_callback({ invalid-json })");

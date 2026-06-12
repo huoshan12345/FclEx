@@ -49,7 +49,6 @@ public class HttpClientExtensionsTests
             SslPolicyErrors.RemoteCertificateNameMismatch));
     }
 
-#if NET5_0_OR_GREATER
     [Fact]
     public void IgnoreRemoteCertificateValidation_WhenPrimaryHandlerIsSocketsHttpHandler_ConfiguresBypassCallback()
     {
@@ -65,7 +64,6 @@ public class HttpClientExtensionsTests
             null,
             SslPolicyErrors.RemoteCertificateNameMismatch));
     }
-#endif
 
     private sealed class PassThroughHandler : DelegatingHandler;
 

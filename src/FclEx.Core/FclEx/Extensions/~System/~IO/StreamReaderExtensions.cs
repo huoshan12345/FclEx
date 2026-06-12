@@ -3,7 +3,7 @@ namespace FclEx.Extensions;
 public static class StreamReaderExtensions
 {
 #if !NET7_0_OR_GREATER
-    private static readonly MethodInfo? _methodReadToEndAsync 
+    private static readonly MethodInfo? _methodReadToEndAsync
         = typeof(StreamWriter).GetMethod(nameof(StreamReader.ReadToEndAsync), 0, [typeof(CancellationToken)]);
 
     /// <summary>
@@ -22,11 +22,11 @@ public static class StreamReaderExtensions
         }
         else
         {
-            return reader.ReadToEndAsync();
+            return reader.ReadToEndAsync().WaitAsync(cancellationToken);
         }
     }
 
-    private static readonly MethodInfo? _methodReadLineAsync 
+    private static readonly MethodInfo? _methodReadLineAsync
         = typeof(StreamWriter).GetMethod(nameof(StreamReader.ReadLineAsync), 0, [typeof(CancellationToken)]);
 
     /// <summary>
@@ -48,7 +48,7 @@ public static class StreamReaderExtensions
         }
         else
         {
-            return reader.ReadLineAsync().ToValueTask();
+            return reader.ReadLineAsync().WaitAsync(cancellationToken).ToValueTask();
         }
     }
 #endif

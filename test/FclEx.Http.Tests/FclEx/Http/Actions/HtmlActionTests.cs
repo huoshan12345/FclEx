@@ -101,6 +101,32 @@ public class HtmlActionTests
     }
 
     [Fact]
+    public void CreateContext_WhenSelectorIsNull_SelectsDocumentElement()
+    {
+        var response = HttpActionTestFixtures.CreateResponse();
+        var action = new HtmlTextAction();
+
+        var result = action.CreateContext(response, "<html><body><main>content</main></body></html>");
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Null(result.Value!.HtmlSelector);
+        Assert.Equal("HTML", result.Value.ResultElement!.TagName);
+        Assert.Contains("content", result.Value.ResultElement.TextContent);
+    }
+
+    [Fact]
+    public void CreateContext_WhenSelectorDoesNotMatch_ReturnsError()
+    {
+        var response = HttpActionTestFixtures.CreateResponse();
+        var action = new HtmlTextAction { HtmlSelectorValue = ".missing" };
+
+        var result = action.CreateContext(response, "<html><body><main>content</main></body></html>");
+
+        Assert.True(result.IsError);
+        Assert.Contains(".missing", result.Exception!.Message);
+    }
+
+    [Fact]
     public void CreateContext_UsesHtmlSelectorToSelectResultElements()
     {
         var response = HttpActionTestFixtures.CreateResponse();

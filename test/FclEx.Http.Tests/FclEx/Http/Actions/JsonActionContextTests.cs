@@ -18,6 +18,18 @@ public class JsonActionContextTests
     }
 
     [Fact]
+    public void Constructor_WhenPathMatchesNothing_KeepsRootTokenAndEmptyResultTokens()
+    {
+        var response = HttpActionTestFixtures.CreateResponse();
+
+        var context = new JsonActionContext(response, """{"value":42}""", "missing");
+
+        Assert.Equal(42, context.Token.GetProperty("value").GetInt32());
+        Assert.Empty(context.ResultTokens);
+        Assert.Null(context.ResultToken);
+    }
+
+    [Fact]
     public void ResultTokens_WhenParserDocumentIsDisposed_RemainReadable()
     {
         var response = HttpActionTestFixtures.CreateResponse();
