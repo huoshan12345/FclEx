@@ -103,6 +103,35 @@ public class UserClientFactoryTests : WebTests
     }
 
     [Fact]
+    public void AddUserClient_RegistersEmptyAccountAsBothInterfaceAndConcreteType()
+    {
+        var provider = new ServiceCollection()
+            .AddLogging()
+            .AddUserClient<TestUserClient>()
+            .BuildServiceProvider();
+
+        Assert.Same(UserAccount.Empty, provider.GetRequiredService<IUserAccount>());
+        Assert.Same(UserAccount.Empty, provider.GetRequiredService<UserAccount>());
+    }
+
+    [Fact]
+    public void AddUserClient_DoesNotReplaceExistingRegistrations()
+    {
+        var account = new UserAccount("existing", "pwd");
+        var provider = new ServiceCollection()
+            .AddLogging()
+            .AddSingleton<IUserAccount>(account)
+            .AddSingleton<UserAccount>(account)
+            .AddSingleton<IUserClientFactory<TestUserClient>>(new ExistingFactory())
+            .AddUserClient<TestUserClient>()
+            .BuildServiceProvider();
+
+        Assert.Same(account, provider.GetRequiredService<IUserAccount>());
+        Assert.Same(account, provider.GetRequiredService<UserAccount>());
+        Assert.IsType<ExistingFactory>(provider.GetRequiredService<IUserClientFactory<TestUserClient>>());
+    }
+
+    [Fact]
     public void Create_WithProxy_Test()
     {
         var account = new UserAccount("test", "test");
@@ -155,6 +184,16 @@ public class UserClientFactoryTests : WebTests
         protected override Task<OperationResult> LoginActionAsync(CancellationToken token)
         {
             return Operation.Success();
+        }
+    }
+
+    private sealed class ExistingFactory : IUserClientFactory<TestUserClient>
+    {
+        public IServiceProvider ServiceProvider { get; } = new ServiceCollection().BuildServiceProvider();
+
+        public TestUserClient Create(IUserAccount account, IHttpService? httpService = null)
+        {
+            throw new NotSupportedException();
         }
     }
 }

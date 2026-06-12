@@ -44,6 +44,17 @@ public class HttpResponseMessageExtensionsTests
     }
 
     [Fact]
+    public void TryGetRedirection_WhenRedirectStatusCodeHasNoLocation_ReturnsFalse()
+    {
+        using var response = new HttpResponseMessage(HttpStatusCode.Redirect);
+
+        var found = response.TryGetRedirection(out var uri);
+
+        Assert.False(found);
+        Assert.Null(uri);
+    }
+
+    [Fact]
     public void TryGetRedirection_WhenLocationIsRelativeWithoutRequestUri_ReturnsFalse()
     {
         using var response = new HttpResponseMessage(HttpStatusCode.Redirect);
@@ -78,6 +89,17 @@ public class HttpResponseMessageExtensionsTests
         Assert.Equal(HttpStatusCode.NotFound, ex.StatusCode);
         Assert.Contains("NotFound/404", ex.Message);
         Assert.Contains("DELETE https://example.com/items/1", ex.Message);
+    }
+
+    [Fact]
+    public void EnsureSuccess_WhenFailureHasNoRequestMessage_ThrowsWithStatusCode()
+    {
+        using var response = new HttpResponseMessage(HttpStatusCode.BadGateway);
+
+        var ex = Assert.Throws<HttpRequestException>(() => response.EnsureSuccess());
+
+        Assert.Equal(HttpStatusCode.BadGateway, ex.StatusCode);
+        Assert.Contains("BadGateway/502", ex.Message);
     }
 
     [Fact]
