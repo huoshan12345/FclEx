@@ -252,11 +252,11 @@ public abstract class HttpClientServiceBase : HttpServiceBase
     protected virtual async Task<HttpResponseMessage> SendAsync(HttpClientContext context, HttpRequest request, BufferedContent? bufferedContent, CancellationToken token)
     {
         var (client, policy, _) = context;
-        var response = await policy.ExecuteAsync(async policyToken =>
+        var response = await policy.ExecuteAsync(async t =>
         {
             // Create request in every retry to avoid the following error:
             // The request message was already sent. Cannot send the same request message multiple times.
-            using var cts = policyToken.WithTimeout(request.ReadHeadersTimeout);
+            using var cts = t.WithTimeout(request.ReadHeadersTimeout);
             using var httpRequest = BuildHttpRequest(request, bufferedContent, client.BaseAddress, _cookieContainer, cts.Token);
             return await client.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cts.Token);
         }, token);
