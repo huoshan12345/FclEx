@@ -164,6 +164,25 @@ public class HttpClientHelperTests
         Assert.Equal(TimeSpan.FromSeconds(100), client.Timeout);
     }
 
+    [Fact]
+    public void Create_UsesSocketsHttpHandlerConfiguredFromOptions()
+    {
+        var proxy = new WebProxy("http://127.0.0.1:8888");
+
+        using var client = HttpClientHelper.Create(new()
+        {
+            Proxy = proxy,
+            AllowAutoRedirect = false,
+            DisableServerCertificateValidation = true,
+        });
+
+        var handler = Assert.IsType<SocketsHttpHandler>(client.GetHandler());
+        Assert.False(handler.AllowAutoRedirect);
+        Assert.True(handler.UseProxy);
+        Assert.Same(proxy, handler.Proxy);
+        Assert.NotNull(handler.SslOptions.RemoteCertificateValidationCallback);
+    }
+
     [RetryFact(5)]
     public async Task GetRetryPolicy_Timeout_Test()
     {

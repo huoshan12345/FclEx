@@ -68,6 +68,16 @@ public class HttpContentExtensionsTests
     }
 
     [Fact]
+    public void ToCompressed_WhenCompressionMethodIsNone_ReturnsOriginalContent()
+    {
+        using var content = new StringContent("payload");
+
+        var result = content.ToCompressed(CompressionMethod.None);
+
+        Assert.Same(content, result);
+    }
+
+    [Fact]
     public void ToCompressed_WhenCompressionMethodIsGZip_ReturnsGZipContentWithOptions()
     {
         using var source = new StringContent("payload");

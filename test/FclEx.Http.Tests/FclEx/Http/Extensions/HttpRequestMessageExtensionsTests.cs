@@ -87,4 +87,40 @@ public class HttpRequestMessageExtensionsTests
 
         Assert.Equal("payload", await clone.Content!.ReadAsStringAsync());
     }
+
+    [Fact]
+    public async Task SetNotSend_AllowsSameRequestMessageToBeSentAgain()
+    {
+        using var client = new HttpClient(new CountingHandler());
+        using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com/api");
+
+        using var first = await client.SendAsync(request, CancellationToken.None);
+        request.SetNotSend();
+        using var second = await client.SendAsync(request, CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, second.StatusCode);
+    }
+
+    [Fact]
+    public async Task SetNotSend_WhenNotCalled_SendingSameRequestMessageAgainThrows()
+    {
+        using var client = new HttpClient(new CountingHandler());
+        using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com/api");
+
+        using var response = await client.SendAsync(request, CancellationToken.None);
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            client.SendAsync(request, CancellationToken.None));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("already sent", ex.Message);
+    }
+
+    private sealed class CountingHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+        }
+    }
 }
