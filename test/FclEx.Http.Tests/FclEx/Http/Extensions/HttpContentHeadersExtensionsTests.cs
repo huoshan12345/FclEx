@@ -27,4 +27,29 @@ public class HttpContentHeadersExtensionsTests
         Assert.False(destination.Headers.Contains("X-Custom"));
         Assert.Null(destination.Headers.ContentType);
     }
+
+    [Fact]
+    public void CopyTo_WhenDestinationAlreadyHasHeader_AppendsValues()
+    {
+        using var source = new StringContent("source");
+        using var destination = new StringContent("destination");
+        source.Headers.TryAddWithoutValidation("X-Custom", "source");
+        destination.Headers.TryAddWithoutValidation("X-Custom", "destination");
+
+        source.Headers.CopyTo(destination.Headers);
+
+        Assert.Equal(["destination", "source"], destination.Headers.GetValues("X-Custom"));
+    }
+
+    [Fact]
+    public void CopyTo_WhenSourceHasNoHeaders_LeavesDestinationUnchanged()
+    {
+        using var source = new ByteArrayContent([]);
+        using var destination = new StringContent("destination");
+        destination.Headers.TryAddWithoutValidation("X-Custom", "destination");
+
+        source.Headers.CopyTo(destination.Headers);
+
+        Assert.Equal("destination", Assert.Single(destination.Headers.GetValues("X-Custom")));
+    }
 }

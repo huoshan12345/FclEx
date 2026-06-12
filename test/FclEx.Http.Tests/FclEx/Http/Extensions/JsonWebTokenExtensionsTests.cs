@@ -17,6 +17,26 @@ public class JsonWebTokenExtensionsTests
     }
 
     [Fact]
+    public void GetScopes_WhenScopeClaimContainsRepeatedSpaces_OnlyReturnsNonEmptySegments()
+    {
+        var token = CreateToken(new Claim(JwtClaimTypes.Scope, "read  write "));
+
+        var scopes = token.GetScopes();
+
+        Assert.Equal(["read", "write"], scopes);
+    }
+
+    [Fact]
+    public void GetScopes_WhenScopeClaimIsEmpty_ReturnsEmptyList()
+    {
+        var token = CreateToken(new Claim(JwtClaimTypes.Scope, ""));
+
+        var scopes = token.GetScopes();
+
+        Assert.Empty(scopes);
+    }
+
+    [Fact]
     public void GetScopes_WhenTokenHasNoScopeClaim_ReturnsEmptyList()
     {
         var token = CreateToken(new Claim(JwtClaimTypes.Name, "alice"));
