@@ -81,6 +81,69 @@ public class UserClientTests : WebTests
     }
 
     [Fact]
+    public async Task LoginAsync_WhenTokenIsCanceledBeforeLogin_ThrowsWithoutRunningLogin()
+    {
+        using var loggerFactory = LoggerFactory.Create(_ => { });
+        var client = new CountingUserClient(loggerFactory);
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => client.LoginAsync(cts.Token));
+
+        Assert.Equal(0, client.LoginCount);
+        Assert.Equal(UserClientSessionStatus.Offline, client.State.SessionStatus);
+    }
+
+    [Fact]
+    public void AccountSetter_UpdatesAccountAndResetsAccountStatusToNormal()
+    {
+        using var loggerFactory = LoggerFactory.Create(_ => { });
+        var client = new CountingUserClient(loggerFactory);
+        client.State.AccountStatus = UserAccountStatus.Locked;
+        var account = new UserAccount("new-user", "new-password");
+
+        client.Account = account;
+
+        Assert.Same(account, client.Account);
+        Assert.Equal(UserAccountStatus.Normal, client.State.AccountStatus);
+    }
+
+    [Fact]
+    public void AccountSetter_WhenAccountIsNull_ThrowsArgumentNullException()
+    {
+        using var loggerFactory = LoggerFactory.Create(_ => { });
+        var client = new CountingUserClient(loggerFactory);
+
+        var ex = Assert.Throws<ArgumentNullException>(() => client.Account = null!);
+
+        Assert.Equal("value", ex.ParamName);
+    }
+
+    [Fact]
+    public void HttpServiceSetter_AssignsLoggerToService()
+    {
+        using var loggerFactory = LoggerFactory.Create(_ => { });
+        var client = new CountingUserClient(loggerFactory);
+        var service = new TrackingHttpService();
+
+        client.HttpService = service;
+
+        Assert.Same(service, client.HttpService);
+        Assert.Same(client.Logger, service.Logger);
+    }
+
+    [Fact]
+    public void LoggerSetter_WhenLoggerIsNull_UsesUserClientLoggerWrapper()
+    {
+        using var loggerFactory = LoggerFactory.Create(_ => { });
+        var client = new CountingUserClient(loggerFactory);
+
+        client.Logger = null!;
+
+        Assert.IsType<UserClientLogger>(client.Logger);
+    }
+
+    [Fact]
     public async Task FakeLoginAsync_WhenFakeLoginFailsAndLoginIfFailIsTrue_FallsBackToLogin()
     {
         using var loggerFactory = LoggerFactory.Create(_ => { });
@@ -94,6 +157,20 @@ public class UserClientTests : WebTests
         Assert.True(result.IsSuccess, result.Exception?.ToString());
         Assert.Equal(1, client.FakeLoginCount);
         Assert.Equal(1, client.LoginCount);
+        Assert.True(client.IsOnline);
+    }
+
+    [Fact]
+    public async Task FakeLoginAsync_WhenFakeLoginSucceeds_DoesNotRunRealLogin()
+    {
+        using var loggerFactory = LoggerFactory.Create(_ => { });
+        var client = new CountingUserClient(loggerFactory);
+
+        var result = await client.FakeLoginAsync(loginIfFail: true);
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Equal(1, client.FakeLoginCount);
+        Assert.Equal(0, client.LoginCount);
         Assert.True(client.IsOnline);
     }
 

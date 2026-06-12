@@ -36,7 +36,7 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
         }
     }
 
-    private Lazy<ILogger> _lazyLogger;
+    private readonly Lazy<ILogger> _lazyLogger;
 
     [AllowNull]
     public virtual ILogger Logger
@@ -50,9 +50,10 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
             }
             else
             {
-                field = null;
-                _lazyLogger = new(() => CreateLogger(value));
+                field = CreateLogger(value);
             }
+
+            HttpService.Logger = Logger;
         }
     }
 
