@@ -3,6 +3,59 @@ namespace FclEx.Http.Services;
 public class HttpServiceExtensionsBatchDownloadTests
 {
     [Fact]
+    public async Task BatchDownloadAsync_WithStringUris_ConvertsEachUri()
+    {
+        var service = new CaptureDownloadRequestService();
+
+        var results = await service.BatchDownloadAsync(
+            [
+                "https://example.com/one.txt",
+                "two.txt",
+            ],
+            new()
+            {
+                BaseAddress = new Uri("https://example.com/root/"),
+                ExecuteInParallel = false,
+            });
+
+        Assert.All(results, result => Assert.True(result.IsSuccess, result.Exception?.ToString()));
+        Assert.Equal(
+        [
+            new Uri("https://example.com/one.txt"),
+            new Uri("https://example.com/root/two.txt"),
+        ], service.Requests.Select(m => m.GetUri()));
+    }
+
+    [Fact]
+    public async Task BatchDownloadAsync_WhenOptionsAreNull_UsesDefaultOptions()
+    {
+        var service = new CaptureDownloadRequestService();
+
+        var results = await service.BatchDownloadAsync(
+        [
+            new Uri("https://example.com/one.txt"),
+        ]);
+
+        var result = Assert.Single(results);
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        var request = Assert.Single(service.Requests);
+        Assert.Equal(HttpMethod.Get, request.Method);
+        Assert.Equal(HttpContentType.Bytes, request.ResponseContentType);
+        Assert.Null(request.Content);
+    }
+
+    [Fact]
+    public async Task BatchDownloadAsync_WhenUrisAreEmpty_ReturnsEmptyArray()
+    {
+        var service = new CaptureDownloadRequestService();
+
+        var results = await service.BatchDownloadAsync(Array.Empty<Uri>(), new() { ExecuteInParallel = false });
+
+        Assert.Empty(results);
+        Assert.Empty(service.Requests);
+    }
+
+    [Fact]
     public async Task BatchDownloadAsync_WhenBaseAddressIsProvided_ResolvesRelativeUris()
     {
         var service = new CaptureDownloadRequestService();

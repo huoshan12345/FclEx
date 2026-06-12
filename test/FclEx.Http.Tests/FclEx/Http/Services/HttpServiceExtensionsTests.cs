@@ -42,6 +42,20 @@ public class HttpServiceExtensionsTests
     }
 
     [Fact]
+    public void AddCookie_WhenUrlIsNull_DelegatesWithNullUri()
+    {
+        var service = new CaptureRequestHttpService();
+        var cookie = new Cookie("sid", "abc");
+
+        service.AddCookie(cookie);
+
+        var call = Assert.Single(service.AddCookieCalls);
+        Assert.Same(cookie, call.Cookie);
+        Assert.Null(call.Uri);
+        Assert.False(call.OverrideDomain);
+    }
+
+    [Fact]
     public void AddCookie_WithSimpleCookie_ConvertsAndAddsCookie()
     {
         var service = new CaptureRequestHttpService();
@@ -55,6 +69,62 @@ public class HttpServiceExtensionsTests
         Assert.Equal("/account", call.Cookie.Path);
         Assert.Equal("example.com", call.Cookie.Domain);
         Assert.Null(call.Uri);
+    }
+
+    [Fact]
+    public void AddCookies_WithCookieEnumerable_AddsEachCookieWithSameUri()
+    {
+        var service = new CaptureRequestHttpService();
+        var uri = new Uri("https://example.com/account");
+        var cookies = new[]
+        {
+            new Cookie("one", "1"),
+            new Cookie("two", "2"),
+        };
+
+        service.AddCookies(cookies, uri);
+
+        Assert.Equal(["one", "two"], service.AddCookieCalls.Select(m => m.Cookie.Name));
+        Assert.All(service.AddCookieCalls, call => Assert.Equal(uri, call.Uri));
+    }
+
+    [Fact]
+    public void AddCookies_WhenHttpServiceIsNull_ThrowsArgumentNullException()
+    {
+        IHttpService service = null!;
+
+        var ex = Assert.Throws<ArgumentNullException>(() =>
+            service.AddCookies([new Cookie("sid", "abc")], (Uri?)null));
+
+        Assert.Equal("http", ex.ParamName);
+    }
+
+    [Fact]
+    public void AddCookies_WhenCookiesAreNull_ThrowsArgumentNullException()
+    {
+        var service = new CaptureRequestHttpService();
+        IEnumerable<Cookie> cookies = null!;
+
+        var ex = Assert.Throws<ArgumentNullException>(() =>
+            service.AddCookies(cookies, (Uri?)null));
+
+        Assert.Equal("cookies", ex.ParamName);
+    }
+
+    [Fact]
+    public void AddCookies_WithSimpleCookiesAndStringUrl_AddsEachCookieWithUri()
+    {
+        var service = new CaptureRequestHttpService();
+        SimpleCookie[] cookies =
+        [
+            new("one", "1", "/", "example.com"),
+            new("two", "2", "/", "example.com"),
+        ];
+
+        service.AddCookies(cookies, "https://example.com/account");
+
+        Assert.Equal(["one", "two"], service.AddCookieCalls.Select(m => m.Cookie.Name));
+        Assert.All(service.AddCookieCalls, call => Assert.Equal(new Uri("https://example.com/account"), call.Uri));
     }
 
     [Fact]
@@ -112,6 +182,16 @@ public class HttpServiceExtensionsTests
         Assert.Equal("abc", cookie.Value);
         Assert.Equal("/account", cookie.Path);
         Assert.Equal("example.com", cookie.Domain);
+    }
+
+    [Fact]
+    public void GetAllSimpleCookies_WhenHttpServiceIsNull_ThrowsArgumentNullException()
+    {
+        IHttpService service = null!;
+
+        var ex = Assert.Throws<ArgumentNullException>(() => service.GetAllSimpleCookies());
+
+        Assert.Equal("http", ex.ParamName);
     }
 
     [Fact]
@@ -183,6 +263,66 @@ public class HttpServiceExtensionsTests
     }
 
     [Fact]
+    public async Task DownloadAsync_WithUriAndSuccess_ReturnsDownloadInfoFromResponse()
+    {
+        var service = new CaptureRequestHttpService
+        {
+            ResponseFactory = request =>
+            {
+                var response = new HttpResponse(request)
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    ResponseBytes = Encoding.UTF8.GetBytes("file"),
+                };
+                response.Headers.Add(HttpHeaderNames.ContentType, "text/plain");
+                response.VisitedUris.Add(request.GetUri());
+                return response;
+            },
+        };
+
+        var result = await service.DownloadAsync(new Uri("https://example.com/files/report.txt"), HttpMethod.Head, TimeSpan.FromSeconds(7));
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.NotNull(service.Request);
+        Assert.Equal(HttpMethod.Head, service.Request.Method);
+        Assert.Equal(HttpContentType.Bytes, service.Request.ResponseContentType);
+        Assert.Equal(TimeSpan.FromSeconds(7), service.Request.ReadBufferTimeout);
+#if NET5_0_OR_GREATER
+        Assert.Equal("gzip, deflate, br", service.Request.Headers.Get(HttpHeaderNames.AcceptEncoding));
+#else
+        Assert.Equal("gzip", service.Request.Headers.Get(HttpHeaderNames.AcceptEncoding));
+#endif
+        Assert.Equal("report.txt", result.Value!.FileName);
+        Assert.Equal("text/plain", result.Value.MimeType);
+        Assert.Equal(Encoding.UTF8.GetBytes("file"), result.Value.FileBytes);
+    }
+
+    [Fact]
+    public async Task DownloadAsync_WithStringUrl_ConvertsUrlAndUsesDefaultGetMethod()
+    {
+        var service = new CaptureRequestHttpService
+        {
+            ResponseFactory = request =>
+            {
+                var response = new HttpResponse(request)
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    ResponseBytes = [],
+                };
+                response.VisitedUris.Add(request.GetUri());
+                return response;
+            },
+        };
+
+        var result = await service.DownloadAsync("https://example.com/files/report");
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.NotNull(service.Request);
+        Assert.Equal(HttpMethod.Get, service.Request.Method);
+        Assert.Equal(new Uri("https://example.com/files/report"), service.Request.GetUri());
+    }
+
+    [Fact]
     public async Task DownloadAsync_DisposesContentAfterSend()
     {
         var handler = new CaptureDownloadBodyHandler();
@@ -220,10 +360,14 @@ public class HttpServiceExtensionsTests
         public Uri? LastGetCookieUri { get; private set; }
         public string? LastGetCookieName { get; private set; }
         public Uri? LastGetCookiesUri { get; private set; }
+        public Func<HttpRequest, HttpResponse>? ResponseFactory { get; init; }
 
         public Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken token = default)
         {
             Request = request;
+            if (ResponseFactory is not null)
+                return Task.FromResult(ResponseFactory(request));
+
             return Task.FromResult(HttpResponse.FromError(request, new InvalidOperationException("Stop after capturing request.")));
         }
 
