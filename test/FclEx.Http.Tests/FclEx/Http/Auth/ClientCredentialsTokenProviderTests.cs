@@ -6,6 +6,18 @@ namespace FclEx.Http.Auth;
 public class ClientCredentialsTokenProviderTests : AuthTests
 {
     [Fact]
+    public void Options_DefaultsToEmptyCredentialsAndDiscoveryPolicyWithoutKeySetRequirement()
+    {
+        var options = new ClientCredentialsTokenProviderOptions();
+
+        Assert.Equal("", options.Authority);
+        Assert.Equal("", options.ClientId);
+        Assert.Equal("", options.ClientSecret);
+        Assert.NotNull(options.Policy);
+        Assert.False(options.Policy.RequireKeySet);
+    }
+
+    [Fact]
     public void Constructor_UsesConfiguredDiscoveryPolicy()
     {
         var policy = new DiscoveryPolicy
