@@ -13,6 +13,17 @@ public class HttpContentExtensionsTests
     }
 
     [Fact]
+    public async Task ReadAsStreamAsync_ReturnsMemoryStreamPositionedAtBeginning()
+    {
+        using var content = new StringContent("hello", Encoding.UTF8, MediaTypes.Text);
+
+        using var stream = await content.ReadAsStreamAsync(2, TimeSpan.FromSeconds(1), CancellationToken.None);
+
+        Assert.Equal(0, stream.Position);
+        Assert.Equal("hello", Encoding.UTF8.GetString(stream.ToArray()));
+    }
+
+    [Fact]
     public async Task ReadAsStreamAsync_WhenContentLengthExceedsInt32MaxValue_ThrowsClearError()
     {
         using var content = new StringContent("");
@@ -55,6 +66,39 @@ public class HttpContentExtensionsTests
 
         Assert.Equal("compressionMethod", ex.ParamName);
     }
+
+    [Fact]
+    public void ToCompressed_WhenCompressionMethodIsGZip_ReturnsGZipContentWithOptions()
+    {
+        using var source = new StringContent("payload");
+        using var content = source.ToCompressed(CompressionMethod.GZip, CompressionLevel.Fastest, TimeSpan.FromSeconds(1), 17, CancellationToken.None);
+
+        var gzipContent = Assert.IsType<GZipContent>(content);
+        Assert.Same(source, gzipContent.Content);
+        Assert.Equal(CompressionLevel.Fastest, gzipContent.CompressionLevel);
+        Assert.Equal(TimeSpan.FromSeconds(1), gzipContent.Timeout);
+        Assert.Equal(17, gzipContent.BufferSize);
+    }
+
+    [Fact]
+    public void ToCompressed_WhenCompressionMethodIsDeflate_ReturnsDeflateContent()
+    {
+        using var source = new StringContent("payload");
+        using var content = source.ToCompressed(CompressionMethod.Deflate);
+
+        Assert.IsType<DeflateContent>(content);
+    }
+
+#if NET6_0_OR_GREATER
+    [Fact]
+    public void ToCompressed_WhenCompressionMethodIsBrotli_ReturnsBrotliContent()
+    {
+        using var source = new StringContent("payload");
+        using var content = source.ToCompressed(CompressionMethod.Brotli);
+
+        Assert.IsType<BrotliContent>(content);
+    }
+#endif
 
     [Fact]
     public async Task FromJson_CreatesUtf8JsonContent()

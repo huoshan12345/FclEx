@@ -14,9 +14,18 @@ public class HtmlHelperTests
     [InlineData("""<meta charset="utf-8;">""", "utf-8")]
     [InlineData("""<meta charset='gb2312;' >""", "gb2312")]
     [InlineData("""<meta http-equiv="Content-Type" content="text/html; charset=utf-8;">""", "utf-8")]
+    [InlineData("""<meta content="text/html; charset='Shift_JIS'">""", "Shift_JIS")]
     public void GetMetaCharSet_TrimsQuotesSpacesAndTrailingSemicolon(string html, string expected)
     {
         Assert.Equal(expected, HtmlHelper.GetMetaCharSet(html));
+    }
+
+    [Fact]
+    public void GetMetaCharSet_WhenCharsetMetaIsMissing_ReturnsNull()
+    {
+        var charset = HtmlHelper.GetMetaCharSet("""<meta name="viewport" content="width=device-width">""");
+
+        Assert.Null(charset);
     }
 
     [Fact]
@@ -49,5 +58,13 @@ public class HtmlHelperTests
         var text = HtmlHelper.RemoveHtmlTags("<p>Hello <b>world</b></p>");
 
         Assert.Equal("Hello world", text);
+    }
+
+    [Fact]
+    public void RemoveHtmlTags_WhenDocumentHasNoBodyText_ReturnsEmptyString()
+    {
+        var text = HtmlHelper.RemoveHtmlTags("<!doctype html><html><head><title>Only title</title></head></html>");
+
+        Assert.Equal("", text);
     }
 }
