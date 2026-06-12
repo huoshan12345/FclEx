@@ -16,6 +16,42 @@ public class ContentTests
     }
 
     [Fact]
+    public async Task Content_AssignsContentAndReturnsRequest()
+    {
+        var request = HttpRequest.Post("https://example.com/api");
+        using var content = new StringContent("payload");
+
+        var result = request.Content(content);
+
+        Assert.Same(request, result);
+        Assert.Same(content, request.Content);
+        Assert.Equal("payload", await request.Content!.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task StringContent_WhenEncodingIsProvided_UsesProvidedEncoding()
+    {
+        var request = HttpRequest.Post("https://example.com/api");
+
+        request.StringContent("hello", Encoding.Unicode);
+
+        Assert.Equal(Encoding.Unicode.WebName, request.Content!.Headers.ContentType?.CharSet);
+        Assert.Equal("hello", await request.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task ByteArrayContent_WithWholeArray_UsesAllBytes()
+    {
+        var request = HttpRequest.Post("https://example.com/api");
+        byte[] bytes = [1, 2, 3];
+
+        var result = request.ByteArrayContent(bytes);
+
+        Assert.Same(request, result);
+        Assert.Equal([1, 2, 3], await request.Content!.ReadAsByteArrayAsync());
+    }
+
+    [Fact]
     public async Task ByteArrayContent_WithArraySegment_UsesSegmentRange()
     {
         var request = HttpRequest.Post("https://example.com/api");
@@ -37,6 +73,17 @@ public class ContentTests
         Assert.Same(request, result);
         Assert.Equal("""{"Name":"alice","Count":3}""", await request.Content!.ReadAsStringAsync());
         Assert.Equal(MediaTypes.Json, request.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task JsonContent_WithSerializerOptions_UsesOptions()
+    {
+        var request = HttpRequest.Post("https://example.com/api");
+        var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
+        request.JsonContent(new JsonModel("alice", 3), options);
+
+        Assert.Equal("""{"name":"alice","count":3}""", await request.Content!.ReadAsStringAsync());
     }
 
     [Fact]

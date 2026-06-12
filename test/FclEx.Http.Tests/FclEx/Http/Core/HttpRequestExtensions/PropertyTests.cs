@@ -69,6 +69,73 @@ public class PropertyTests : HttpServerTests
     }
 
     [Fact]
+    public void FluentStringMethod_SetsCustomHttpMethod()
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        var result = request.Method("PATCH");
+
+        Assert.Same(request, result);
+        Assert.Equal(new HttpMethod("PATCH"), request.Method);
+    }
+
+    [Fact]
+    public void AuthorizationHelpers_OverwriteAndRemoveAuthorizationHeader()
+    {
+        var request = HttpRequest.Get("http://localhost")
+            .BearerAuth("token");
+
+        request.Auth("Custom value");
+        Assert.Equal("Custom value", request.Authorization);
+
+        request.Auth(null);
+        Assert.Null(request.Authorization);
+        Assert.False(request.Headers.ContainsKey(HttpHeaderNames.Authorization));
+    }
+
+    [Fact]
+    public void TryOrigin_WhenOriginExists_DoesNotOverwriteValue()
+    {
+        var request = HttpRequest.Get("http://localhost")
+            .Origin("https://first.example");
+
+        var result = request.TryOrigin("https://second.example");
+
+        Assert.Same(request, result);
+        Assert.Equal("https://first.example", request.Origin);
+    }
+
+    [Fact]
+    public void TryOrigin_WhenOriginIsMissing_SetsValue()
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        var result = request.TryOrigin("https://first.example");
+
+        Assert.Same(request, result);
+        Assert.Equal("https://first.example", request.Origin);
+    }
+
+    [Theory]
+    [InlineData(nameof(global::FclEx.Http.HttpRequestExtensions.ReadAsString), HttpContentType.String)]
+    [InlineData(nameof(global::FclEx.Http.HttpRequestExtensions.ReadAsBytes), HttpContentType.Bytes)]
+    [InlineData(nameof(global::FclEx.Http.HttpRequestExtensions.ReadAsStream), HttpContentType.Stream)]
+    public void ReadAsShortcuts_SetResponseContentType(string methodName, HttpContentType expected)
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        _ = methodName switch
+        {
+            nameof(global::FclEx.Http.HttpRequestExtensions.ReadAsString) => request.ReadAsString(),
+            nameof(global::FclEx.Http.HttpRequestExtensions.ReadAsBytes) => request.ReadAsBytes(),
+            nameof(global::FclEx.Http.HttpRequestExtensions.ReadAsStream) => request.ReadAsStream(),
+            _ => throw new ArgumentOutOfRangeException(nameof(methodName), methodName, null),
+        };
+
+        Assert.Equal(expected, request.ResponseContentType);
+    }
+
+    [Fact]
     public void TryTimeoutAndBufferMethods_DoNotOverwriteExistingValues()
     {
         var request = HttpRequest.Get("http://localhost")

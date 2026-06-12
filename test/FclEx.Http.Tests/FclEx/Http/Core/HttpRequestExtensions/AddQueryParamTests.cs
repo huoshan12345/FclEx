@@ -46,4 +46,32 @@ public class AddQueryParamTests
 
         Assert.Equal("http://localhost/?index.html", request.GetUri().AbsoluteUri);
     }
+
+    [Fact]
+    public void AddQueryParam_WithPairs_AddsAllPairsAndReturnsRequest()
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        var result = request.AddQueryParam(
+        [
+            KeyValuePair.Create("name", "alice"),
+            KeyValuePair.Create("city", "st john's"),
+        ]);
+
+        Assert.Same(request, result);
+        Assert.Equal("http://localhost/?name=alice&city=st+john%27s", request.GetUri().AbsoluteUri);
+    }
+
+    [Fact]
+    public void AddQueryParam_WithMultiValuePairs_AddsEveryValue()
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        request.AddQueryParam(
+        [
+            KeyValuePair.Create("tag", new[] { "one", "two" }),
+        ]);
+
+        Assert.Equal("http://localhost/?tag=one&tag=two", request.GetUri().AbsoluteUri);
+    }
 }
