@@ -29,6 +29,18 @@ public class ExtensionsTests
     }
 
     [Fact]
+    public async Task ReadJsonAs_WhenSourceActionFails_DoesNotParseResponse()
+    {
+        var exception = new InvalidOperationException("source failed");
+        var action = Operation.ErrorAction<HttpResponse>(exception).ReadJsonAs<int>();
+
+        var result = await action.ExecuteAsync();
+
+        Assert.True(result.IsError);
+        Assert.Same(exception, result.Exception);
+    }
+
+    [Fact]
     public async Task ThenRequest_UsesFactoryResultAndProvidedHttpService()
     {
         var response = HttpActionTestFixtures.CreateResponse("next");
@@ -43,6 +55,23 @@ public class ExtensionsTests
         Assert.Single(service.Requests);
         Assert.Equal(HttpMethod.Post, service.Requests[0].Method);
         Assert.Equal("https://example.com/id", service.Requests[0].GetUri().ToString());
+    }
+
+    [Fact]
+    public async Task ThenRequest_WhenUnwrapErrorIsFalse_ReturnsErrorResponseAsSuccess()
+    {
+        var failure = new InvalidOperationException("network failed");
+        var response = HttpActionTestFixtures.CreateResponse("failed", exception: failure, elapsed: HttpActionTestFixtures.Elapsed);
+        var service = new StubHttpService(response);
+        var action = Operation.SuccessAction("id")
+            .ThenRequest(_ => HttpRequest.Get("https://example.com/next"), service, unwrapError: false);
+
+        var result = await action.ExecuteAsync();
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Same(response, result.Value);
+        Assert.True(result.Value!.IsError);
+        Assert.Equal(HttpActionTestFixtures.Elapsed, result.Elapsed);
     }
 
     [Fact]
