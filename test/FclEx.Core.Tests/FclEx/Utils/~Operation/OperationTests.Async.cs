@@ -9,8 +9,12 @@ partial class OperationTests
             => Task.Delay(TimeSpan.FromSeconds(5)), TimeSpan.FromSeconds(0.1));
 
         Assert.False(success);
-        Assert.True(elapsed < TimeSpan.FromSeconds(1.5), elapsed.ToString());
+        Assert.True(elapsed < TimeSpan.FromSeconds(1.5), () => $"Expected {nameof(elapsed)} < {TimeSpan.FromSeconds(1.5)}, but was {elapsed}");
+#if NET5_0_OR_GREATER
         Assert.IsType<TimeoutException>(exception);
+#else
+        Assert.IsType<OperationCanceledException>(exception);
+#endif
     }
 
     [RetryFact(3, 100)]
@@ -24,7 +28,7 @@ partial class OperationTests
 
         Assert.True(success);
         Assert.Equal(1, result);
-        Assert.True(elapsed < TimeSpan.FromSeconds(1.5), elapsed.ToString());
+        Assert.True(elapsed < TimeSpan.FromSeconds(1.5), () => $"Expected {nameof(elapsed)} < {TimeSpan.FromSeconds(1.5)}, but was {elapsed}");
     }
 
     [RetryFact(3, 100)]
@@ -37,8 +41,12 @@ partial class OperationTests
         }, TimeSpan.FromSeconds(0.1));
 
         Assert.False(success);
-        Assert.True(elapsed < TimeSpan.FromSeconds(1.5), elapsed.ToString());
+        Assert.True(elapsed < TimeSpan.FromSeconds(1.5), () => $"Expected {nameof(elapsed)} < {TimeSpan.FromSeconds(1.5)}, but was {elapsed}");
+#if NET5_0_OR_GREATER
         Assert.IsType<TimeoutException>(exception);
+#else
+        Assert.IsType<OperationCanceledException>(exception);
+#endif
     }
 
     [RetryFact(3, 100)]
@@ -52,7 +60,7 @@ partial class OperationTests
 
         Assert.True(success);
         Assert.Equal(1, result);
-        Assert.True(elapsed < TimeSpan.FromSeconds(1.5), elapsed.ToString());
+        Assert.True(elapsed < TimeSpan.FromSeconds(1.5), () => $"Expected {nameof(elapsed)} < {TimeSpan.FromSeconds(1.5)}, but was {elapsed}");
     }
 
     [RetryFact(3, 100)]
@@ -65,8 +73,12 @@ partial class OperationTests
         }, TimeSpan.FromSeconds(0.1));
 
         Assert.False(success);
-        Assert.True(elapsed < TimeSpan.FromSeconds(1.5), elapsed.ToString());
+        Assert.True(elapsed < TimeSpan.FromSeconds(1.5), () => $"Expected {nameof(elapsed)} < {TimeSpan.FromSeconds(1.5)}, but was {elapsed}");
+#if NET5_0_OR_GREATER
         Assert.IsType<TimeoutException>(exception);
+#else
+        Assert.IsType<OperationCanceledException>(exception);
+#endif
     }
 
     [Fact]
@@ -76,6 +88,6 @@ partial class OperationTests
 
         Assert.True(r.IsSuccess);
         Assert.NotEqual(TimeSpan.FromHours(1), r.Elapsed);
-        Assert.True(r.Elapsed < TimeSpan.FromMinutes(1), r.Elapsed.ToString());
+        Assert.True(r.Elapsed < TimeSpan.FromMinutes(1), () => $"Expected {nameof(r.Elapsed)} < {TimeSpan.FromMinutes(1)}, but was {r.Elapsed}");
     }
 }
