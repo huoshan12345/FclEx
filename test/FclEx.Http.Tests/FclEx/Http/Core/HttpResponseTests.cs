@@ -11,6 +11,44 @@ public class HttpResponseTests : HttpServerTests
     }
 
     [Fact]
+    public void Constructor_InitializesDefaultResponseState()
+    {
+        var request = HttpRequest.Get("https://example.com/api");
+
+        var response = new HttpResponse(request);
+
+        Assert.Same(request, response.Request);
+        Assert.True(response.IsSuccess);
+        Assert.False(response.IsError);
+        Assert.Null(response.Exception);
+        Assert.Equal("", response.ResponseString);
+        Assert.Empty(response.ResponseBytes);
+        Assert.Same(Stream.Null, response.ResponseStream);
+        Assert.Null(response.Encoding);
+        Assert.Equal(default, response.Elapsed);
+        Assert.Equal(default, response.StartTime);
+        Assert.Equal(default, response.EndTime);
+        Assert.Empty(response.Headers);
+        Assert.Equal(default, response.StatusCode);
+        Assert.Empty(response.VisitedUris);
+    }
+
+    [Fact]
+    public void EndTime_ReturnsStartTimePlusElapsed()
+    {
+        var response = CreateResponse("");
+        var start = new DateTimeOffset(2026, 6, 12, 1, 2, 3, TimeSpan.Zero);
+        typeof(HttpResponse)
+            .GetProperty(nameof(HttpResponse.StartTime))!
+            .SetValue(response, start);
+        typeof(HttpResponse)
+            .GetProperty(nameof(HttpResponse.Elapsed))!
+            .SetValue(response, TimeSpan.FromSeconds(4));
+
+        Assert.Equal(start + TimeSpan.FromSeconds(4), response.EndTime);
+    }
+
+    [Fact]
     public void FromError_CreatesErrorResponseWithRequestAndException()
     {
         var request = HttpRequest.Get("https://example.com/api");
@@ -133,6 +171,29 @@ public class HttpResponseTests : HttpServerTests
     }
 
     [Fact]
+    public void HttpResponse_ReadJsonAs_WhenResponseHasException_ReturnsThatException()
+    {
+        var exception = new InvalidOperationException("network failed");
+        var response = HttpResponse.FromError(HttpRequest.Get("https://example.com/api"), exception);
+
+        var actual = response.ReadJsonAs<int>();
+
+        Assert.True(actual.IsError);
+        Assert.Same(exception, actual.Exception);
+    }
+
+    [Fact]
+    public void HttpResponse_ReadJsonAs_WhenResponseStringIsNotJson_ReturnsError()
+    {
+        var response = CreateResponse("plain text");
+
+        var actual = response.ReadJsonAs<int>();
+
+        Assert.True(actual.IsError);
+        Assert.Contains("non-JSON", actual.Exception!.Message);
+    }
+
+    [Fact]
     public void HttpResponse_ReadJsonAs_WhenDeserializationFails_ReturnsError()
     {
         var response = CreateResponse("""{"data":{"count":"abc"}}""");
@@ -198,6 +259,36 @@ public class HttpResponseTests : HttpServerTests
         Assert.Equal("example_com", info.FileNameWithoutExtension);
         Assert.Equal("", info.FileExtension);
         Assert.Equal("example_com", info.FileName);
+    }
+
+    [Fact]
+    public void GetDownloadInfo_WhenBaseNameAndExtensionAreProvided_UsesBaseNameAndExistingUriExtension()
+    {
+        var response = CreateResponse("payload", "https://example.com/download/report.bin");
+        typeof(HttpResponse)
+            .GetProperty(nameof(HttpResponse.ResponseBytes))!
+            .SetValue(response, new byte[] { 1, 2, 3 });
+        response.Headers.Add(HttpHeaderNames.ContentType, "application/octet-stream");
+
+        var info = response.GetDownloadInfo("custom", ".dat");
+
+        Assert.Equal("custom", info.FileNameWithoutExtension);
+        Assert.Equal(".dat", info.FileExtension);
+        Assert.Equal("custom.dat", info.FileName);
+        Assert.Equal("application/octet-stream", info.MimeType);
+        Assert.Equal([1, 2, 3], info.FileBytes);
+    }
+
+    [Fact]
+    public void GetDownloadInfo_WhenUriHasNoExtension_UsesProvidedExtension()
+    {
+        var response = CreateResponse("payload", "https://example.com/download/report");
+
+        var info = response.GetDownloadInfo("custom", ".dat");
+
+        Assert.Equal("custom", info.FileNameWithoutExtension);
+        Assert.Equal(".dat", info.FileExtension);
+        Assert.Equal("custom.dat", info.FileName);
     }
 
     [Fact]

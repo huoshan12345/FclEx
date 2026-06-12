@@ -43,7 +43,7 @@ public class HttpRequestTests
             .OnException(e =>
             {
                 flag = true;
-                Assert.IsType<TaskCanceledException>(e);
+                Assert.IsType<OperationCanceledException>(e, false);
             });
         Assert.False(!flag ^ r.IsSuccess);
     }

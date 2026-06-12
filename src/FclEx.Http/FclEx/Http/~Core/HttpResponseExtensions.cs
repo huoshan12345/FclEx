@@ -90,7 +90,7 @@ public static class HttpResponseExtensions
         }
     }
 
-    private static readonly Regex _regexOfNonWord = new(@"\W+", RegexOptions.Compiled);
+    private static readonly Regex _regNonWord = new(@"\W+", RegexOptions.Compiled);
 
     public static HttpFileDownloadInfo GetDownloadInfo(this HttpResponse response, string? baseName = null, string? extension = null)
     {
@@ -98,35 +98,35 @@ public static class HttpResponseExtensions
         var fileName = uri.Segments
             .Select(m => m.Trim('/'))
             .LastOrDefault(m => m.IsNotEmpty());
-        var ext = Path.GetExtension(fileName);
 
-        if (baseName is null)
+        if (fileName.IsNotEmpty())
         {
-            baseName = fileName.TrimEnd(ext, onlyOnce: true);
-            if (baseName.IsNullOrEmpty())
-            {
-                baseName = uri.Host.Replace(_regexOfNonWord, "_").TrimEnd('_');
-            }
+            var (name, ext) = PathHelper.GetNameAndExtension(fileName);
+            baseName ??= name;
+            extension ??= ext;
+        }
+
+        if (baseName.IsNullOrEmpty())
+        {
+            baseName = uri.Host.Replace(_regNonWord, "_").TrimEnd('_');
         }
 
         var mimeType = response.Headers.GetLast(HttpHeaderNames.ContentType) ?? "";
 
-        if (extension is null)
+        if (extension.IsNullOrEmpty() && mimeType.IsNotEmpty())
         {
-            if (mimeType.IsNotEmpty())
+            if (mimeType.Contains(';'))
             {
-                if (mimeType.Contains(';'))
-                {
-                    var contentType = new ContentType(mimeType);
-                    mimeType = contentType.MediaType;
-                }
-                if (MimeTypeMap.TryGetExtension(MimeTypeFix(mimeType), out extension))
-                    ext = extension;
+                var contentType = new ContentType(mimeType);
+                mimeType = contentType.MediaType;
             }
+
+            if (MimeTypeMap.TryGetExtension(MimeTypeFix(mimeType), out var e))
+                extension = e;
         }
 
-        ext ??= string.Empty;
-        var info = new HttpFileDownloadInfo(uri, baseName, ext, response.ResponseBytes, mimeType);
+        extension ??= "";
+        var info = new HttpFileDownloadInfo(uri, baseName, extension, response.ResponseBytes, mimeType);
         return info;
 
         static string MimeTypeFix(string mimeType)
