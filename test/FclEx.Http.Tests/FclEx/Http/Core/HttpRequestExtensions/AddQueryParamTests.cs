@@ -74,4 +74,24 @@ public class AddQueryParamTests
 
         Assert.Equal("http://localhost/?tag=one&tag=two", request.GetUri().AbsoluteUri);
     }
+
+    [Fact]
+    public void AddQueryParam_WithBuilder_AddsBuiltValues()
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        var result = request.AddQueryParam(new TestNameValuesBuilder());
+
+        Assert.Same(request, result);
+        Assert.Equal("http://localhost/?name=alice&count=3", request.GetUri().AbsoluteUri);
+    }
+
+    private sealed class TestNameValuesBuilder : NameValuesBuilder
+    {
+        [NameValue("name")]
+        public string Name { get; } = "alice";
+
+        [NameValue("count")]
+        public int Count { get; } = 3;
+    }
 }

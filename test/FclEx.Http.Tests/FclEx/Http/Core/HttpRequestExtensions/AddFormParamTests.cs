@@ -62,4 +62,25 @@ public class AddFormParamTests
 
         Assert.Equal(["one", "two"], request.Form.GetValues("tag"));
     }
+
+    [Fact]
+    public void AddFormParam_WithBuilder_AddsBuiltValues()
+    {
+        var request = HttpRequest.Post("https://example.com/api");
+
+        var result = request.AddFormParam(new TestNameValuesBuilder());
+
+        Assert.Same(request, result);
+        Assert.Equal(["alice"], request.Form.GetValues("name"));
+        Assert.Equal(["3"], request.Form.GetValues("count"));
+    }
+
+    private sealed class TestNameValuesBuilder : NameValuesBuilder
+    {
+        [NameValue("name")]
+        public string Name { get; } = "alice";
+
+        [NameValue("count")]
+        public int Count { get; } = 3;
+    }
 }

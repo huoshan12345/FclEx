@@ -226,6 +226,16 @@ public class HeaderTests
         Assert.ThrowsAny<ArgumentException>(() => request.AddHeaderLine("X-Trace:abc", separator!));
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData(null)]
+    public void AddHeaderLine_WhenPairIsEmpty_Throws(string? pair)
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        Assert.ThrowsAny<ArgumentException>(() => request.AddHeaderLine(pair!));
+    }
+
     [Fact]
     public void AcceptCompress_WhenEncodingsAreOmitted_UsesDefaultHandlerEncodings()
     {
@@ -358,6 +368,18 @@ public class HeaderTests
 
         Assert.Same(request, result);
         Assert.Equal(expected, request.CompressionMethod);
+        Assert.Equal(CompressionLevel.Fastest, request.CompressionLevel);
+    }
+
+    [Fact]
+    public void Compression_SetsCompressionMethodAndLevel()
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        var result = request.Compression(CompressionMethod.Deflate, CompressionLevel.Fastest);
+
+        Assert.Same(request, result);
+        Assert.Equal(CompressionMethod.Deflate, request.CompressionMethod);
         Assert.Equal(CompressionLevel.Fastest, request.CompressionLevel);
     }
 }

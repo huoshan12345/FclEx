@@ -79,6 +79,32 @@ public class PropertyTests : HttpServerTests
         Assert.Equal(new HttpMethod("PATCH"), request.Method);
     }
 
+#if NET6_0_OR_GREATER
+    [Fact]
+    public void VersionPolicy_SetsRequestVersionPolicy()
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        var result = request.VersionPolicy(HttpVersionPolicy.RequestVersionOrHigher);
+
+        Assert.Same(request, result);
+        Assert.Equal(HttpVersionPolicy.RequestVersionOrHigher, request.VersionPolicy);
+    }
+#endif
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void DetectCharSet_SetsFlagAndReturnsRequest(bool value)
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        var result = request.DetectCharSet(value);
+
+        Assert.Same(request, result);
+        Assert.Equal(value, request.DetectCharSet);
+    }
+
     [Fact]
     public void AuthorizationHelpers_OverwriteAndRemoveAuthorizationHeader()
     {

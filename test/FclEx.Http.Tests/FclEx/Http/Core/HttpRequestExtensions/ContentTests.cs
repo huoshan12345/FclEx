@@ -52,6 +52,18 @@ public class ContentTests
     }
 
     [Fact]
+    public async Task ByteArrayContent_WithOffsetAndCount_UsesSpecifiedRange()
+    {
+        var request = HttpRequest.Post("https://example.com/api");
+        byte[] bytes = [1, 2, 3, 4, 5];
+
+        var result = request.ByteArrayContent(bytes, 2, 2);
+
+        Assert.Same(request, result);
+        Assert.Equal([3, 4], await request.Content!.ReadAsByteArrayAsync());
+    }
+
+    [Fact]
     public async Task ByteArrayContent_WithArraySegment_UsesSegmentRange()
     {
         var request = HttpRequest.Post("https://example.com/api");
@@ -61,6 +73,17 @@ public class ContentTests
 
         Assert.Same(request, result);
         Assert.Equal([2, 3, 4], await request.Content!.ReadAsByteArrayAsync());
+    }
+
+    [Fact]
+    public async Task ByteArrayContent_WithDefaultArraySegment_UsesEmptyArray()
+    {
+        var request = HttpRequest.Post("https://example.com/api");
+
+        var result = request.ByteArrayContent(default(ArraySegment<byte>));
+
+        Assert.Same(request, result);
+        Assert.Empty(await request.Content!.ReadAsByteArrayAsync());
     }
 
     [Fact]
@@ -82,6 +105,16 @@ public class ContentTests
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
         request.JsonContent(new JsonModel("alice", 3), options);
+
+        Assert.Equal("""{"name":"alice","count":3}""", await request.Content!.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task JsonContent_WithJsonOptions_UsesResolvedOptions()
+    {
+        var request = HttpRequest.Post("https://example.com/api");
+
+        request.JsonContent(new JsonModel("alice", 3), JsonOptions.Web);
 
         Assert.Equal("""{"name":"alice","count":3}""", await request.Content!.ReadAsStringAsync());
     }
