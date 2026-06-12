@@ -151,6 +151,34 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
         }
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CreateHttpClientContext_WhenHttpClientProviderIsUsed_UsesConfiguredDisposeFlag(bool disposeHttpClient)
+    {
+        using var client = new TrackingHttpClient(new CaptureHandler());
+        using var service = HttpClientService.Create(
+            () => client,
+            disposeHttpClient,
+            options: new()
+            {
+                RetryPolicyOptions = new()
+                {
+                    RetryCount = 0,
+                },
+            },
+            useCookie: false);
+
+        var context = service.CreateHttpClientContext();
+
+        Assert.Same(client, context.Client);
+        Assert.Equal(disposeHttpClient, context.DisposeHttpClient);
+
+        context.Dispose();
+
+        Assert.Equal(disposeHttpClient, client.Disposed);
+    }
+
     [Fact]
     public void GetFactory_Proxy_NotSame()
     {
@@ -194,5 +222,24 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
 
         Assert.IsType<TaskCanceledException>(response.Exception);
         Assert.Equal(expectedTime, response.Elapsed, TimeSpan.FromSeconds(0.2));
+    }
+
+    private sealed class TrackingHttpClient(HttpMessageHandler handler) : HttpClient(handler)
+    {
+        public bool Disposed { get; private set; }
+
+        protected override void Dispose(bool disposing)
+        {
+            Disposed = true;
+            base.Dispose(disposing);
+        }
+    }
+
+    private sealed class CaptureHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+        }
     }
 }
