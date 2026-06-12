@@ -292,6 +292,73 @@ public class HttpResponseTests : HttpServerTests
     }
 
     [Fact]
+    public async Task DownloadAsync_WhenResponseIsSuccessful_BuildsDownloadRequestAndUsesSpecifiedFileName()
+    {
+        var service = new CaptureHttpService(request =>
+        {
+            var response = CreateResponse("", request.GetUri().ToString());
+            response.Headers.Add(HttpHeaderNames.ContentType, "application/octet-stream");
+            typeof(HttpResponse)
+                .GetProperty(nameof(HttpResponse.ResponseBytes))!
+                .SetValue(response, new byte[] { 1, 2, 3 });
+            return response;
+        });
+        using var content = new TrackingContent();
+        using var cts = new CancellationTokenSource();
+        var options = new DownloadOptions
+        {
+            Uri = new Uri("https://example.com/download/original.bin"),
+            Method = HttpMethod.Post,
+            Content = content,
+            BufferSize = 8192,
+            ReadHeadersTimeout = TimeSpan.FromSeconds(3),
+            ReadBufferTimeout = TimeSpan.FromSeconds(4),
+            CancellationToken = cts.Token,
+            FileBaseName = "specified",
+            FileExtension = ".dat",
+        };
+
+        var result = await service.DownloadAsync(options);
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Equal("specified", result.Value.FileNameWithoutExtension);
+        Assert.Equal(".dat", result.Value.FileExtension);
+        Assert.Equal("specified.dat", result.Value.FileName);
+        Assert.Equal([1, 2, 3], result.Value.FileBytes);
+        Assert.Equal("application/octet-stream", result.Value.MimeType);
+        Assert.NotNull(service.Request);
+        Assert.Equal(options.Uri, service.Request.GetUri());
+        Assert.Equal(HttpMethod.Post, service.Request.Method);
+        Assert.Same(content, service.Request.Content);
+        Assert.Equal(HttpContentType.Bytes, service.Request.ResponseContentType);
+        Assert.Equal(options.BufferSize, service.Request.BufferSize);
+        Assert.Equal(options.ReadHeadersTimeout, service.Request.ReadHeadersTimeout);
+        Assert.Equal(options.ReadBufferTimeout, service.Request.ReadBufferTimeout);
+        Assert.Contains("gzip", service.Request.Headers.Get(HttpHeaderNames.AcceptEncoding)!);
+        Assert.Equal(cts.Token, service.Token);
+        Assert.True(content.IsDisposed);
+    }
+
+    [Fact]
+    public async Task DownloadAsync_WhenResponseIsError_ReturnsErrorAndDisposesContent()
+    {
+        var exception = new InvalidOperationException("download failed");
+        var service = new CaptureHttpService(request => HttpResponse.FromError(request, exception));
+        using var content = new TrackingContent();
+        var options = new DownloadOptions
+        {
+            Uri = new Uri("https://example.com/download/report.bin"),
+            Content = content,
+        };
+
+        var result = await service.DownloadAsync(options);
+
+        Assert.True(result.IsError);
+        Assert.Same(exception, result.Exception!.InnerException);
+        Assert.True(content.IsDisposed);
+    }
+
+    [Fact]
     public async Task Task_HttpResponse_ThrowIfError_Test()
     {
         const string error = nameof(Task_HttpResponse_ThrowIfError_Test);
@@ -352,5 +419,58 @@ public class HttpResponseTests : HttpServerTests
             .GetProperty(nameof(HttpResponse.ResponseString))!
             .SetValue(response, responseString);
         return response;
+    }
+
+    private sealed class CaptureHttpService(Func<HttpRequest, HttpResponse> responseFactory) : IHttpService
+    {
+        public HttpRequest? Request { get; private set; }
+        public CancellationToken Token { get; private set; }
+        public IWebProxy? Proxy { get; set; }
+        public ILogger Logger { get; set; } = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+
+        public Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken token = default)
+        {
+            Request = request;
+            Token = token;
+            return Task.FromResult(responseFactory(request));
+        }
+
+        public void AddCookie(Cookie cookie, Uri? uri = null, bool overrideDomain = false)
+        {
+        }
+
+        public Cookie? GetCookie(Uri uri, string name)
+        {
+            return null;
+        }
+
+        public IReadOnlyCollection<Cookie> GetCookies(Uri uri)
+        {
+            return [];
+        }
+
+        public IReadOnlyCollection<Cookie> GetAllCookies()
+        {
+            return [];
+        }
+
+        public void Dispose()
+        {
+        }
+    }
+
+    private sealed class TrackingContent : ByteArrayContent
+    {
+        public bool IsDisposed { get; private set; }
+
+        public TrackingContent() : base([1, 2, 3])
+        {
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            IsDisposed = true;
+            base.Dispose(disposing);
+        }
     }
 }

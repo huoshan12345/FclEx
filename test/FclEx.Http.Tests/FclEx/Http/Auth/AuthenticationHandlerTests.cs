@@ -180,6 +180,27 @@ public class AuthenticationHandlerTests : AuthTests
     }
 
     [Fact]
+    public async Task Should_UseEmptyScopes_WhenScopesAreNull()
+    {
+        var tokenProvider = new TestAccessTokenProvider("token");
+        var innerHandler = new CaptureAuthorizationHandler();
+        using var handler = new AuthenticationHandler(tokenProvider, scopes: null)
+        {
+            InnerHandler = innerHandler,
+        };
+        using var invoker = new HttpMessageInvoker(handler);
+        using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com/api");
+
+        using var response = await invoker.SendAsync(request, CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var tokenRequest = Assert.Single(tokenProvider.Requests);
+        Assert.Empty(tokenRequest.Scopes);
+        Assert.False(tokenRequest.ForceRefresh);
+        Assert.Equal("token", innerHandler.AuthorizationHeader?.Parameter);
+    }
+
+    [Fact]
     public async Task Should_DisposeUnauthorizedResponseBeforeRetrying()
     {
         var tokenProvider = new TestAccessTokenProvider("expired-token", "fresh-token");
