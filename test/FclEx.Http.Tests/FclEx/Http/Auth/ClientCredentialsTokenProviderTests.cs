@@ -255,6 +255,78 @@ public class ClientCredentialsTokenProviderTests : AuthTests
         Assert.All(clients, client => Assert.True(client.IsDisposed));
     }
 
+    [Fact]
+    public async Task GetToken_WhenMultipleScopesAreProvided_SendsSpaceSeparatedScope()
+    {
+        var handler = new CaptureTokenRequestHandler();
+        using var httpClient = new HttpClient(handler);
+        var provider = CreateLocalProvider(httpClient);
+
+        var token = await provider.GetTokenAsync(["scope-a", "scope-b"]);
+
+        Assert.Equal("client-token-1", token);
+        var request = Assert.Single(handler.TokenRequests);
+        Assert.Equal("client_credentials", request["grant_type"]);
+        Assert.Equal("scope-a scope-b", request["scope"]);
+    }
+
+    [Fact]
+    public async Task GetToken_WhenExpiredCachedTokenHasRefreshToken_UsesRefreshTokenBeforeClientCredentials()
+    {
+        var handler = new CaptureTokenRequestHandler
+        {
+            ClientCredentialsExpiresIn = 1,
+        };
+        using var httpClient = new HttpClient(handler);
+        var provider = CreateLocalProvider(httpClient);
+
+        var first = await provider.GetTokenAsync("api");
+        var second = await provider.GetTokenAsync("api");
+
+        Assert.Equal("client-token-1", first);
+        Assert.Equal("refresh-token-1", second);
+        Assert.Equal(2, handler.TokenRequests.Count);
+        Assert.Equal("client_credentials", handler.TokenRequests[0]["grant_type"]);
+        Assert.Equal("refresh_token", handler.TokenRequests[1]["grant_type"]);
+        Assert.Equal("refresh-1", handler.TokenRequests[1]["refresh_token"]);
+    }
+
+    [Fact]
+    public async Task GetToken_WhenRefreshTokenRequestFails_FallsBackToClientCredentials()
+    {
+        var handler = new CaptureTokenRequestHandler
+        {
+            ClientCredentialsExpiresIn = 1,
+            RefreshFails = true,
+        };
+        using var httpClient = new HttpClient(handler);
+        var provider = CreateLocalProvider(httpClient);
+
+        var first = await provider.GetTokenAsync("api");
+        var second = await provider.GetTokenAsync("api");
+
+        Assert.Equal("client-token-1", first);
+        Assert.Equal("client-token-2", second);
+        Assert.Equal(3, handler.TokenRequests.Count);
+        Assert.Equal("client_credentials", handler.TokenRequests[0]["grant_type"]);
+        Assert.Equal("refresh_token", handler.TokenRequests[1]["grant_type"]);
+        Assert.Equal("client_credentials", handler.TokenRequests[2]["grant_type"]);
+    }
+
+    private static ClientCredentialsTokenProvider CreateLocalProvider(HttpClient httpClient)
+    {
+        return new(new()
+        {
+            Authority = "https://auth.example.com",
+            ClientId = "client",
+            ClientSecret = "secret",
+            Policy = new()
+            {
+                RequireKeySet = false,
+            },
+        }, httpClient);
+    }
+
     private sealed class CaptureCancellationTokenHandler : HttpMessageHandler
     {
         public List<CancellationToken> CancellationTokens { get; } = [];
@@ -337,6 +409,105 @@ public class ClientCredentialsTokenProviderTests : AuthTests
                 Content = new StringContent(content, Encoding.UTF8, "application/json"),
                 RequestMessage = request,
             });
+        }
+    }
+
+    private sealed class CaptureTokenRequestHandler : HttpMessageHandler
+    {
+        private int _clientTokenIndex;
+        private int _refreshTokenIndex;
+
+        public int ClientCredentialsExpiresIn { get; init; } = 3600;
+
+        public bool RefreshFails { get; init; }
+
+        public List<Dictionary<string, string>> TokenRequests { get; } = [];
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            if (request.RequestUri!.AbsolutePath.EndsWith("/.well-known/openid-configuration", StringComparison.Ordinal))
+            {
+                return JsonResponse("""
+                                    {
+                                      "issuer": "https://auth.example.com",
+                                      "token_endpoint": "https://auth.example.com/connect/token"
+                                    }
+                                    """, request);
+            }
+
+            var form = await request.Content!.ReadAsStringAsync(cancellationToken);
+            var captured = ParseForm(form);
+            TokenRequests.Add(captured);
+
+            return captured["grant_type"] == "refresh_token"
+                ? CreateRefreshTokenResponse(request)
+                : CreateClientCredentialsResponse(request);
+        }
+
+        private static Dictionary<string, string> ParseForm(string form)
+        {
+            return form
+                .Split(['&'], StringSplitOptions.RemoveEmptyEntries)
+                .Select(SplitPair)
+                .ToDictionary(
+                    pair => WebUtility.UrlDecode(pair.Key),
+                    pair => WebUtility.UrlDecode(pair.Value));
+        }
+
+        private static KeyValuePair<string, string> SplitPair(string pair)
+        {
+            var index = pair.IndexOf('=');
+            return index < 0
+                ? KeyValuePair.Create(pair, "")
+                : KeyValuePair.Create(pair[..index], pair[(index + 1)..]);
+        }
+
+        private HttpResponseMessage CreateClientCredentialsResponse(HttpRequestMessage request)
+        {
+            _clientTokenIndex++;
+            return JsonResponse($$"""
+                                  {
+                                    "access_token": "client-token-{{_clientTokenIndex}}",
+                                    "refresh_token": "refresh-{{_clientTokenIndex}}",
+                                    "expires_in": {{ClientCredentialsExpiresIn}},
+                                    "token_type": "Bearer"
+                                  }
+                                  """, request);
+        }
+
+        private HttpResponseMessage CreateRefreshTokenResponse(HttpRequestMessage request)
+        {
+            if (RefreshFails)
+            {
+                return JsonResponse("""
+                                    {
+                                      "error": "invalid_grant",
+                                      "error_description": "refresh failed"
+                                    }
+                                    """, request, HttpStatusCode.BadRequest);
+            }
+
+            _refreshTokenIndex++;
+            return JsonResponse($$"""
+                                  {
+                                    "access_token": "refresh-token-{{_refreshTokenIndex}}",
+                                    "refresh_token": "refresh-next-{{_refreshTokenIndex}}",
+                                    "expires_in": 3600,
+                                    "token_type": "Bearer"
+                                  }
+                                  """, request);
+        }
+
+        private static HttpResponseMessage JsonResponse(
+            string json,
+            HttpRequestMessage request,
+            HttpStatusCode statusCode = HttpStatusCode.OK)
+        {
+            return new(statusCode)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json"),
+                RequestMessage = request,
+            };
         }
     }
 
