@@ -15,6 +15,27 @@ public class SocketsHttpHandlerOptionsEqualityComparerTests
     }
 
     [Fact]
+    public void Equals_WhenBothOptionsAreNull_ReturnsTrue()
+    {
+        Assert.True(Comparer.Equals(null, null));
+    }
+
+    [Fact]
+    public void Equals_WhenOnlyOneOptionIsNull_ReturnsFalse()
+    {
+        Assert.False(Comparer.Equals(CreateOptions(), null));
+        Assert.False(Comparer.Equals(null, CreateOptions()));
+    }
+
+    [Fact]
+    public void Equals_WhenSameInstance_ReturnsTrue()
+    {
+        var options = CreateOptions();
+
+        Assert.True(Comparer.Equals(options, options));
+    }
+
+    [Fact]
     public void Equals_WhenProxyValuesMatch_UsesProxyValueEquality()
     {
         var options1 = new SocketsHttpHandlerOptions

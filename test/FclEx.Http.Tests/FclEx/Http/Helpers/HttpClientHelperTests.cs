@@ -43,6 +43,23 @@ public class HttpClientHelperTests
     }
 
     [Fact]
+    public async Task GetIPAddressesAsync_WhenLiteralAddressMatchesPolicy_ReturnsLiteralAddress()
+    {
+        var addresses = await HttpClientHelper.GetIPAddressesAsync("127.0.0.1", IPVersionPolicy.OnlyIPv4, CancellationToken.None);
+
+        Assert.Equal([IPAddress.Loopback], addresses);
+    }
+
+    [Fact]
+    public async Task GetIPAddressesAsync_WhenPolicyIsUnknown_ThrowsArgumentOutOfRangeException()
+    {
+        var ex = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            HttpClientHelper.GetIPAddressesAsync("127.0.0.1", (IPVersionPolicy)999, CancellationToken.None));
+
+        Assert.Equal("policy", ex.ParamName);
+    }
+
+    [Fact]
     public async Task GetIPAddressesAsync_WhenLiteralAddressDoesNotMatchPolicy_ThrowsInvalidOperationException()
     {
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -131,6 +148,20 @@ public class HttpClientHelperTests
 
         Assert.NotNull(callback);
         Assert.True(callback(null!, null, null, SslPolicyErrors.RemoteCertificateNameMismatch));
+    }
+
+    [Fact]
+    public void Create_ReturnsHttpClientWithDefaultClientTimeout()
+    {
+        var proxy = new WebProxy("http://127.0.0.1:8888");
+
+        using var client = HttpClientHelper.Create(new()
+        {
+            Proxy = proxy,
+            ConnectTimeout = TimeSpan.FromSeconds(3),
+        });
+
+        Assert.Equal(TimeSpan.FromSeconds(100), client.Timeout);
     }
 
     [RetryFact(5)]

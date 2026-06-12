@@ -90,6 +90,27 @@ public class HttpClientBuilderExtensionsTests
     }
 
     [Fact]
+    public void AddRetryPolicy_WhenAutoUpdateTotalTimeoutIsTrue_KeepsLongerHttpClientTimeout()
+    {
+        var expectedTimeout = TimeSpan.FromSeconds(30);
+        var services = new ServiceCollection();
+        services.AddHttpClient("retry-long-timeout", m => m.Timeout = expectedTimeout)
+            .ConfigurePrimaryHttpMessageHandler(() => new CaptureRequestHandler())
+            .AddRetryPolicy(new HttpClientRetryPolicyOptions
+            {
+                ExecutionTimeout = TimeSpan.FromSeconds(2),
+                RetryCount = 1,
+                AutoUpdateTotalTimeout = true,
+                SleepDurationProvider = _ => TimeSpan.FromSeconds(3),
+            });
+        using var provider = services.BuildServiceProvider();
+
+        var client = provider.GetRequiredService<IHttpClientFactory>().CreateClient("retry-long-timeout");
+
+        Assert.Equal(expectedTimeout, client.Timeout);
+    }
+
+    [Fact]
     public void AddRetryPolicy_WhenAutoUpdateTotalTimeoutIsFalse_KeepsConfiguredHttpClientTimeout()
     {
         var expectedTimeout = TimeSpan.FromSeconds(7);
@@ -132,6 +153,31 @@ public class HttpClientBuilderExtensionsTests
         var client = provider.GetRequiredService<IHttpClientFactory>().CreateClient("retry-options-factory");
 
         Assert.Equal(TimeSpan.FromSeconds(8), client.Timeout);
+    }
+
+    [Fact]
+    public void AddRetryPolicy_WhenOptionsFactoryDisablesAutoUpdate_KeepsConfiguredHttpClientTimeout()
+    {
+        var expectedTimeout = TimeSpan.FromSeconds(7);
+        var services = new ServiceCollection();
+        services.AddSingleton(new RetryOptionsProvider
+        {
+            Options = new()
+            {
+                ExecutionTimeout = TimeSpan.FromSeconds(1),
+                RetryCount = 2,
+                AutoUpdateTotalTimeout = false,
+                SleepDurationProvider = _ => TimeSpan.FromSeconds(2),
+            },
+        });
+        services.AddHttpClient("retry-options-factory-no-update", m => m.Timeout = expectedTimeout)
+            .ConfigurePrimaryHttpMessageHandler(() => new CaptureRequestHandler())
+            .AddRetryPolicy(m => m.GetRequiredService<RetryOptionsProvider>().Options);
+        using var provider = services.BuildServiceProvider();
+
+        var client = provider.GetRequiredService<IHttpClientFactory>().CreateClient("retry-options-factory-no-update");
+
+        Assert.Equal(expectedTimeout, client.Timeout);
     }
 
     private sealed record HandlerDependency(string HeaderValue)
