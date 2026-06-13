@@ -33,6 +33,39 @@ public class RandomExtensionsTests
         public Node? Next = null;
     }
 
+    private sealed class TwoNodes
+    {
+        public Node? Left = null;
+        public Node? Right = null;
+    }
+
+    private sealed class ConstructorOnly
+    {
+        public ConstructorOnly(int id, string name, Node node)
+        {
+            Id = id;
+            Name = name;
+            Node = node;
+        }
+
+        public int Id { get; }
+        public string Name { get; }
+        public Node Node { get; }
+    }
+
+    private sealed class ArrayHolder
+    {
+        public int[]? Numbers = null;
+        public string[]? Names = null;
+    }
+
+    private enum SampleEnum
+    {
+        Zero,
+        One,
+        Two
+    }
+
     [Fact]
     public void NextMarshalable_Struct_Test()
     {
@@ -190,6 +223,134 @@ public class RandomExtensionsTests
         Assert.Equal(4, value.Array?.Length);
     }
 
+    [Theory]
+    [InlineData(typeof(bool))]
+    [InlineData(typeof(byte))]
+    [InlineData(typeof(sbyte))]
+    [InlineData(typeof(short))]
+    [InlineData(typeof(ushort))]
+    [InlineData(typeof(int))]
+    [InlineData(typeof(uint))]
+    [InlineData(typeof(long))]
+    [InlineData(typeof(ulong))]
+    [InlineData(typeof(float))]
+    [InlineData(typeof(double))]
+    [InlineData(typeof(decimal))]
+    [InlineData(typeof(char))]
+    [InlineData(typeof(string))]
+    [InlineData(typeof(DateTime))]
+    [InlineData(typeof(TimeSpan))]
+    [InlineData(typeof(Guid))]
+    [InlineData(typeof(IntPtr))]
+    [InlineData(typeof(UIntPtr))]
+    [InlineData(typeof(object))]
+    [InlineData(typeof(DBNull))]
+    public void Next_ShouldCreateCommonTypes(Type type)
+    {
+        var random = new Random(0);
+
+        var value = random.Next(type);
+
+        Assert.NotNull(value);
+        Assert.IsAssignableFrom(type, value);
+    }
+
+#if NET6_0_OR_GREATER
+    [Theory]
+    [InlineData(typeof(DateOnly))]
+    [InlineData(typeof(TimeOnly))]
+    public void Next_ShouldCreateNet6Types(Type type)
+    {
+        var random = new Random(0);
+
+        var value = random.Next(type);
+
+        Assert.NotNull(value);
+        Assert.IsAssignableFrom(type, value);
+    }
+#endif
+
+    [Fact]
+    public void Next_ShouldCreateNullableUnderlyingValue()
+    {
+        var random = new Random(0);
+
+        var value = random.Next<int?>();
+
+        Assert.True(value.HasValue);
+    }
+
+    [Fact]
+    public void Next_ShouldCreateArrays()
+    {
+        var random = new Random(0);
+
+        var values = random.Next<int[]>();
+
+        Assert.NotNull(values);
+        Assert.InRange(values.Length, 1, 4);
+    }
+
+    [Fact]
+    public void Next_ShouldPopulateArrayFields()
+    {
+        var random = new Random(0);
+
+        var value = random.Next<ArrayHolder>();
+
+        Assert.NotNull(value.Numbers);
+        Assert.NotNull(value.Names);
+        Assert.InRange(value.Numbers.Length, 1, 4);
+        Assert.InRange(value.Names.Length, 1, 4);
+        Assert.All(value.Names, Assert.NotNull);
+    }
+
+    [Fact]
+    public void Next_ShouldCreateTypesWithParameterizedConstructors()
+    {
+        var random = new Random(0);
+
+        var value = random.Next<ConstructorOnly>();
+
+        Assert.NotEqual(0, value.Id);
+        Assert.NotNull(value.Name);
+        Assert.NotNull(value.Node);
+    }
+
+    [Fact]
+    public void Next_ShouldCreateRecordsWithPrimaryConstructor()
+    {
+        var random = new Random(0);
+
+        var value = random.Next<CommonRecord>();
+
+        Assert.NotEqual(0, value.Int);
+        Assert.NotEqual(default, value.DateTime);
+        Assert.NotNull(value.String);
+    }
+
+    [Fact]
+    public void Next_ShouldCreateRecordStructs()
+    {
+        var random = new Random(0);
+
+        var value = random.Next<CommonRecordStruct>();
+
+        Assert.NotEqual(0, value.Int);
+        Assert.NotEqual(default, value.DateTime);
+        Assert.NotNull(value.String);
+    }
+
+    [Fact]
+    public void Next_ShouldCreateEnumValues()
+    {
+        var random = new Random(0);
+
+        var value = random.Next<SampleEnum>();
+
+        Assert.True(Enum.IsDefined(typeof(SampleEnum), value));
+    }
+
     [Fact]
     public void Next_ShouldStopRecursiveReferenceChains()
     {
@@ -205,6 +366,17 @@ public class RandomExtensionsTests
         }
 
         Assert.Equal(10, count);
+    }
+
+    [Fact]
+    public void Next_ShouldTrackRecursiveDepthPerPath()
+    {
+        var random = new Random(0);
+
+        var value = random.Next<TwoNodes>();
+
+        Assert.Equal(10, CountNodes(value.Left));
+        Assert.Equal(10, CountNodes(value.Right));
     }
 
     [Fact]
@@ -240,5 +412,16 @@ public class RandomExtensionsTests
         random.Shuffle(list);
 
         Assert.Equal(Enumerable.Range(0, 10), list.OrderBy(x => x));
+    }
+
+    private static int CountNodes(Node? node)
+    {
+        var count = 0;
+        for (var current = node; current is not null; current = current.Next)
+        {
+            count++;
+            Assert.True(count <= 10);
+        }
+        return count;
     }
 }

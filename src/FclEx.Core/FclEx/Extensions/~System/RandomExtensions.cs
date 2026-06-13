@@ -283,6 +283,12 @@ public static class RandomExtensions
         if (Nullable.GetUnderlyingType(type) is { } nullable)
             type = nullable;
 
+        if (type.IsEnum)
+        {
+            var values = Enum.GetValues(type);
+            return values.GetValue(random.Next(values.Length))!;
+        }
+
         if (type.GetElementType() is { } elementType)
         {
             int? length = null;
