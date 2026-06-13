@@ -138,7 +138,7 @@ public class HttpResponseTests : HttpServerTests
     }
 
     [Fact]
-    public void HttpResponse_ReadJsonAs_WhenPathMatches_ReturnsDeserializedValue()
+    public void ReadJsonAs_WhenPathMatches_ReturnsDeserializedValue()
     {
         var response = CreateResponse("""{"data":{"count":3}}""");
 
@@ -149,7 +149,7 @@ public class HttpResponseTests : HttpServerTests
     }
 
     [Fact]
-    public void HttpResponse_ReadJsonAs_WhenPathDoesNotMatch_ReturnsError()
+    public void ReadJsonAs_WhenPathDoesNotMatch_ReturnsError()
     {
         var response = CreateResponse("""{"data":{"count":3}}""");
 
@@ -160,7 +160,7 @@ public class HttpResponseTests : HttpServerTests
     }
 
     [Fact]
-    public void HttpResponse_ReadJsonAs_WhenJsonIsMalformed_ReturnsError()
+    public void ReadJsonAs_WhenJsonIsMalformed_ReturnsError()
     {
         var response = CreateResponse("""{"data":}""");
 
@@ -171,7 +171,7 @@ public class HttpResponseTests : HttpServerTests
     }
 
     [Fact]
-    public void HttpResponse_ReadJsonAs_WhenResponseHasException_ReturnsThatException()
+    public void ReadJsonAs_WhenResponseHasException_ReturnsThatException()
     {
         var exception = new InvalidOperationException("network failed");
         var response = HttpResponse.FromError(HttpRequest.Get("https://example.com/api"), exception);
@@ -183,7 +183,7 @@ public class HttpResponseTests : HttpServerTests
     }
 
     [Fact]
-    public void HttpResponse_ReadJsonAs_WhenResponseStringIsNotJson_ReturnsError()
+    public void ReadJsonAs_WhenResponseStringIsNotJson_ReturnsError()
     {
         var response = CreateResponse("plain text");
 
@@ -194,7 +194,7 @@ public class HttpResponseTests : HttpServerTests
     }
 
     [Fact]
-    public void HttpResponse_ReadJsonAs_WhenDeserializationFails_ReturnsError()
+    public void ReadJsonAs_WhenDeserializationFails_ReturnsError()
     {
         var response = CreateResponse("""{"data":{"count":"abc"}}""");
 

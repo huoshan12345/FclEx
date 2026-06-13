@@ -15,7 +15,7 @@ public class FormDataExtensionsTests
     }
 
     [Fact]
-    public void Properties_CanBeReplaced()
+    public void Properties_WhenAssigned_ReturnAssignedValues()
     {
         var form = new FormData(new Uri("https://example.com/form"));
         var submitUri = new Uri("https://example.com/post");

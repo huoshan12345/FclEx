@@ -18,7 +18,7 @@ public class AuthenticationHandlerTests : AuthTests
     }
 
     [Fact]
-    public async Task WithoutToken_401()
+    public async Task SendAsync_WhenTokenIsNotRequiredAndNoAuthorizationIsSent_ReturnsUnauthorized()
     {
         if (HasApiServer == false)
             return;
@@ -30,7 +30,7 @@ public class AuthenticationHandlerTests : AuthTests
     }
 
     [Fact]
-    public async Task WithToken_200()
+    public async Task SendAsync_WhenRequiredScopeIsGranted_ReturnsOk()
     {
         if (HasApiServer == false)
             return;
@@ -42,7 +42,7 @@ public class AuthenticationHandlerTests : AuthTests
     }
 
     [Fact]
-    public async Task WithWrongScope_403()
+    public async Task SendAsync_WhenWrongScopeIsGranted_ReturnsForbidden()
     {
         if (HasApiServer == false)
             return;
@@ -54,7 +54,7 @@ public class AuthenticationHandlerTests : AuthTests
     }
 
     [Fact]
-    public async Task Should_UseCachedToken_AcrossMultipleRequests()
+    public async Task SendAsync_WhenMultipleRequestsUseSameScope_ReusesCachedToken()
     {
         if (HasApiServer == false)
             return;
@@ -73,7 +73,7 @@ public class AuthenticationHandlerTests : AuthTests
     }
 
     [Fact]
-    public async Task Should_Retry_On401_WithNewToken()
+    public async Task SendAsync_WhenFirstTokenIsRejected_RetriesWithForceRefresh()
     {
         if (HasApiServer == false)
             return;
@@ -95,7 +95,7 @@ public class AuthenticationHandlerTests : AuthTests
     }
 
     [Fact]
-    public async Task Should_NotRetry_IfSecondAttemptFails()
+    public async Task SendAsync_WhenRetryTokenIsRejected_DoesNotRetryAgain()
     {
         if (HasApiServer == false)
             return;
@@ -114,7 +114,7 @@ public class AuthenticationHandlerTests : AuthTests
     }
 
     [Fact]
-    public async Task Should_ReuseRequestMessage_WhenRetryingInsideDelegatingHandler()
+    public async Task SendAsync_WhenRetryingAfterUnauthorized_ReusesOriginalRequestMessage()
     {
         var tokenProvider = new TestAccessTokenProvider("expired-token", "fresh-token");
         var innerHandler = new UnauthorizedThenOkHandler();
@@ -140,7 +140,7 @@ public class AuthenticationHandlerTests : AuthTests
     }
 
     [Fact]
-    public async Task Should_PassCancellationToken_ToTokenProvider()
+    public async Task SendAsync_ForwardsCancellationTokenToTokenProvider()
     {
         var tokenProvider = new TestAccessTokenProvider("expired-token", "fresh-token");
         var innerHandler = new UnauthorizedThenOkHandler();
@@ -161,7 +161,7 @@ public class AuthenticationHandlerTests : AuthTests
     }
 
     [Fact]
-    public async Task Should_NotRequestToken_WhenRequireTokenIsFalse()
+    public async Task SendAsync_WhenTokenIsNotRequired_DoesNotRequestToken()
     {
         var tokenProvider = new TestAccessTokenProvider("unused-token");
         var innerHandler = new CaptureAuthorizationHandler();
@@ -180,7 +180,7 @@ public class AuthenticationHandlerTests : AuthTests
     }
 
     [Fact]
-    public async Task Should_UseEmptyScopes_WhenScopesAreNull()
+    public async Task SendAsync_WhenScopesAreNull_RequestsTokenWithEmptyScopes()
     {
         var tokenProvider = new TestAccessTokenProvider("token");
         var innerHandler = new CaptureAuthorizationHandler();
@@ -201,7 +201,7 @@ public class AuthenticationHandlerTests : AuthTests
     }
 
     [Fact]
-    public async Task Should_DisposeUnauthorizedResponseBeforeRetrying()
+    public async Task SendAsync_WhenUnauthorizedResponseIsRetried_DisposesUnauthorizedResponse()
     {
         var tokenProvider = new TestAccessTokenProvider("expired-token", "fresh-token");
         var firstContent = new TrackingContent();

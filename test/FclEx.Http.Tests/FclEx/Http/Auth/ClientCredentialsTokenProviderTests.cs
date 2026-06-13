@@ -42,7 +42,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     }
 
     [Fact]
-    public async Task GetToken_ShouldReturnAccessToken()
+    public async Task GetTokenAsync_ReturnsAccessTokenWithRequestedScope()
     {
         if (HasApiServer == false)
             return;
@@ -57,7 +57,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     }
 
     [Fact]
-    public async Task GetToken_ShouldUseCache_ForSameScope()
+    public async Task GetTokenAsync_WhenScopeMatchesCachedToken_UsesCachedToken()
     {
         if (HasApiServer == false)
             return;
@@ -72,7 +72,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     }
 
     [Fact]
-    public async Task GetToken_ShouldCachePerScope()
+    public async Task GetTokenAsync_WhenScopesDiffer_CachesEachScopeSeparately()
     {
         if (HasApiServer == false)
             return;
@@ -86,7 +86,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     }
 
     [Fact]
-    public async Task GetToken_ShouldRefresh_WhenExpired()
+    public async Task GetTokenAsync_WhenCachedTokenExpires_RequestsNewToken()
     {
         if (HasApiServer == false)
             return;
@@ -101,7 +101,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     }
 
     [Fact]
-    public async Task GetToken_ShouldOnlyRequestOnce_UnderConcurrency()
+    public async Task GetTokenAsync_WhenConcurrentRequestsUseSameScope_SendsSingleTokenRequest()
     {
         if (HasApiServer == false)
             return;
@@ -124,7 +124,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     }
 
     [Fact]
-    public async Task GetToken_ShouldForceRefresh_WhenRequested()
+    public async Task GetTokenAsync_WhenForceRefreshIsRequested_RequestsNewToken()
     {
         if (HasApiServer == false)
             return;
@@ -138,7 +138,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     }
 
     [Fact]
-    public async Task GetToken_ShouldSendCancelableTokens_ToDiscoveryAndTokenRequests()
+    public async Task GetTokenAsync_ForwardsCancellationTokenToDiscoveryAndTokenRequests()
     {
         var handler = new CaptureCancellationTokenHandler();
         using var httpClient = new HttpClient(handler);
@@ -165,7 +165,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     [Theory]
     [InlineData(1)]
     [InlineData(2)]
-    public async Task GetToken_WhenCancellationIsRequestedDuringHttpRequest_CancelsRequest(int cancelRequestIndex)
+    public async Task GetTokenAsync_WhenCancellationIsRequestedDuringHttpRequest_CancelsRequest(int cancelRequestIndex)
     {
         using var cts = new CancellationTokenSource();
         var handler = new CancelRequestHandler(cts, cancelRequestIndex);
@@ -188,7 +188,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     }
 
     [Fact]
-    public async Task GetToken_WhenFuncCreatesClients_DisposesCreatedClientsByDefault()
+    public async Task GetTokenAsync_WhenFuncCreatesClients_DisposesCreatedClientsByDefault()
     {
         var clients = new List<TrackingHttpClient>();
         var provider = new ClientCredentialsTokenProvider(new()
@@ -215,7 +215,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     }
 
     [Fact]
-    public async Task GetToken_WhenUsingHttpClientFactory_DoesNotDisposeFactoryClient()
+    public async Task GetTokenAsync_WhenUsingHttpClientFactory_DoesNotDisposeFactoryClient()
     {
         using var client = new TrackingHttpClient(new TokenProviderHandler());
         var provider = new ClientCredentialsTokenProvider(new()
@@ -236,7 +236,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     }
 
     [Fact]
-    public async Task GetToken_WhenDiscoveryIsSharedByConcurrentScopes_DoesNotCreateUnusedDiscoveryClients()
+    public async Task GetTokenAsync_WhenDiscoveryIsSharedByConcurrentScopes_DoesNotCreateUnusedDiscoveryClients()
     {
         var clients = new ConcurrentBag<TrackingHttpClient>();
         var handler = new DelayedTokenProviderHandler();
@@ -268,7 +268,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     }
 
     [Fact]
-    public async Task GetToken_WhenMultipleScopesAreProvided_SendsSpaceSeparatedScope()
+    public async Task GetTokenAsync_WhenMultipleScopesAreProvided_SendsSpaceSeparatedScope()
     {
         var handler = new CaptureTokenRequestHandler();
         using var httpClient = new HttpClient(handler);
@@ -283,7 +283,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     }
 
     [Fact]
-    public async Task GetToken_WhenExpiredCachedTokenHasRefreshToken_UsesRefreshTokenBeforeClientCredentials()
+    public async Task GetTokenAsync_WhenExpiredCachedTokenHasRefreshToken_UsesRefreshTokenBeforeClientCredentials()
     {
         var handler = new CaptureTokenRequestHandler
         {
@@ -304,7 +304,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     }
 
     [Fact]
-    public async Task GetToken_WhenRefreshTokenRequestFails_FallsBackToClientCredentials()
+    public async Task GetTokenAsync_WhenRefreshTokenRequestFails_FallsBackToClientCredentials()
     {
         var handler = new CaptureTokenRequestHandler
         {

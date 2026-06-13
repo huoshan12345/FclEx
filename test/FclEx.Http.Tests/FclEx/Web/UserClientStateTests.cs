@@ -39,7 +39,7 @@ public class UserClientStateTests
     }
 
     [Fact]
-    public void SessionStatusExtensions_ReportCurrentSessionState()
+    public void SessionStatusExtensions_ReturnTrueForMatchingSessionStatus()
     {
         var state = new UserClientState();
 
@@ -56,7 +56,7 @@ public class UserClientStateTests
     }
 
     [Fact]
-    public void SessionStatusExtensions_UpdateSessionStatus()
+    public void SessionStatusExtensions_SetOnlineAndOfflineStatus()
     {
         var state = new UserClientState();
 

@@ -12,7 +12,7 @@ public class UserClientSessionTests
     }
 
     [Fact]
-    public void Properties_CanBeUpdated()
+    public void Properties_WhenAssigned_ReturnAssignedValues()
     {
         var session = new UserClientSession
         {

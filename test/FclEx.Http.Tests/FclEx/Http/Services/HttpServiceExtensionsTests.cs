@@ -229,7 +229,7 @@ public class HttpServiceExtensionsTests
     [InlineData("https://www.google.com/", "www_google_com.html")]
     [InlineData("https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/proposals/csharp-9.0/covariant-returns", "covariant-returns.html")]
     [InlineData("https://devblogs.microsoft.com/dotnet/csharp-exploring-extension-members/#comments", "csharp-exploring-extension-members.html")]
-    public async Task DownloadAsync_WithUriAndOptionalFileName_ReturnsExpectedFileName(string uri, string fileName)
+    public async Task DownloadAsync_WithStringUri_DerivesFileNameFromResolvedResponse(string uri, string fileName)
     {
         using var http = new HttpClientService();
 
@@ -243,7 +243,7 @@ public class HttpServiceExtensionsTests
     }
 
     [Fact]
-    public async Task DownloadAsync_MapsReadHeadersTimeoutToRequest()
+    public async Task DownloadAsync_MapsReadTimeoutOptionsToRequest()
     {
         var service = new CaptureRequestHttpService();
         var readHeadersTimeout = TimeSpan.FromSeconds(3);
@@ -263,7 +263,7 @@ public class HttpServiceExtensionsTests
     }
 
     [Fact]
-    public async Task DownloadAsync_WithUriAndSuccess_ReturnsDownloadInfoFromResponse()
+    public async Task DownloadAsync_WhenResponseSucceeds_ReturnsDownloadInfoFromResponse()
     {
         var service = new CaptureRequestHttpService
         {
