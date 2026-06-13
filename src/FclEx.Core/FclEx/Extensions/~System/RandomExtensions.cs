@@ -207,7 +207,7 @@ public static class RandomExtensions
             var array = Array.CreateInstance(elementType, length.Value);
             for (var i = 0; i < length; i++)
             {
-                var element = random.Next(elementType, provider, depth);
+                var element = random.Next(elementType, null, depth);
                 array.SetValue(element, i);
             }
             return array;
