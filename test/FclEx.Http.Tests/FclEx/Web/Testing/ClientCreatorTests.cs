@@ -207,6 +207,22 @@ public class ClientCreatorTests
             client.HttpService.Proxy));
     }
 
+    [Fact]
+    public async Task CreateRandomClient_CreatesOfflineClientWithRequestedCredentialLengths()
+    {
+        using var provider = new ServiceCollection()
+            .AddLogging()
+            .AddUserClient<TestUserClient>()
+            .BuildServiceProvider();
+        var creator = new ClientCreator<TestUserClient>(provider);
+
+        var client = await creator.CreateRandomClient(6, 8);
+
+        Assert.Equal(6, client.Account.UserName.Length);
+        Assert.Equal(8, client.Account.Password.Length);
+        Assert.False(client.IsOnline);
+    }
+
     private sealed class TestContext : IDisposable
     {
         private readonly ServiceProvider _provider;
