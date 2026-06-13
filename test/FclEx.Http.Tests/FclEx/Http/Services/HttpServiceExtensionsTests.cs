@@ -21,7 +21,7 @@ public class HttpServiceExtensionsTests
     {
         var service = new CaptureRequestHttpService();
 
-        await service.GetAsync("https://example.com/api", timeout: null);
+        await service.GetAsync("https://example.com/api", readHeadersTimeout: null);
 
         Assert.NotNull(service.Request);
         Assert.Null(service.Request.ReadHeadersTimeout);

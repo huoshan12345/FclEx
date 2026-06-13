@@ -37,6 +37,11 @@ public class BatchDownloadOptions
     public TimeSpan? ReadBufferTimeout { get; set; }
 
     /// <summary>
+    /// Optional total timeout for the entire download operation, including sending the request and reading the response content.
+    /// </summary>
+    public TimeSpan? TotalTimeout { get; set; }
+
+    /// <summary>
     /// Whether downloads should run concurrently.
     /// </summary>
     public bool ExecuteInParallel { get; set; } = true;

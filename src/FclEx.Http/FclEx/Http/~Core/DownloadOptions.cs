@@ -36,6 +36,11 @@ public class DownloadOptions
     public TimeSpan? ReadBufferTimeout { get; set; }
 
     /// <summary>
+    /// Optional total timeout for the entire download operation, including sending the request and reading the response content.
+    /// </summary>
+    public TimeSpan? TotalTimeout { get; set; }
+
+    /// <summary>
     /// Cancellation token passed to the send and content-reading operations.
     /// </summary>
     public CancellationToken CancellationToken { get; set; } = default;

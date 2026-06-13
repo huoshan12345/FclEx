@@ -9,10 +9,11 @@ public static class HttpServiceExtensions
     /// Sends a GET request to a URL string and returns the raw <see cref="HttpResponse"/>.
     /// The optional charset is used as the preferred response decoding charset, and the optional timeout limits waiting for response headers.
     /// </summary>
-    public static Task<HttpResponse> GetAsync(this IHttpService http, string url, string? charSet = null, TimeSpan? timeout = null)
+    public static Task<HttpResponse> GetAsync(this IHttpService http, string url, string? charSet = null, TimeSpan? readHeadersTimeout = null, TimeSpan? totalTimeout = null)
     {
         return HttpRequest.Get(url)
-            .ReadHeadersTimeout(timeout)
+            .ReadHeadersTimeout(readHeadersTimeout)
+            .TotalTimeout(totalTimeout)
             .CharSet(charSet)
             .SendAsync(http);
     }
@@ -136,29 +137,34 @@ public static class HttpServiceExtensions
     public static void AddCookies(this IHttpService http, CookieCollection cc, string? url = null)
         => AddCookies(http, cc.OfType<Cookie>(), url);
 
-    /// <summary>
-    /// Downloads a URI into memory and returns file metadata plus response bytes.
-    /// The request accepts compressed responses, reads the body as bytes, and uses the optional timeout while reading the response body.
-    /// </summary>
-    public static async Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, Uri uri, HttpMethod? method = null, TimeSpan? timeout = null)
+    public static async Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, DownloadOptions options)
     {
-        var request = new HttpRequest(uri, method ?? HttpMethod.Get)
+        var request = new HttpRequest(options.Uri, options.Method)
             .ReadAsBytes()
-            .ReadBufferTimeout(timeout)
+            .ReadHeadersTimeout(options.ReadHeadersTimeout)
+            .ReadBufferTimeout(options.ReadBufferTimeout)
+            .TotalTimeout(options.TotalTimeout)
+            .BufferSize(options.BufferSize)
             .AcceptCompress();
 
-        var response = await request.SendAsync(http);
-        return response.IsError
-            ? Operation.ObjectError(response, response.Exception!, response.Elapsed)
-                .Cast<HttpFileDownloadInfo>()
-            : response.GetDownloadInfo();
-    }
+        if (options.Content is { } content)
+        {
+            request.Content(content);
+        }
 
-    /// <summary>
-    /// Downloads a URL string into memory and returns file metadata plus response bytes.
-    /// </summary>
-    public static Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, string url, HttpMethod? method = null, TimeSpan? timeout = null)
-        => http.DownloadAsync(new Uri(url), method, timeout);
+        try
+        {
+            var response = await request.SendAsync(http, options.CancellationToken);
+            return response.IsError
+                ? Operation.ObjectError(response, response.Exception, response.Elapsed)
+                    .Cast<HttpFileDownloadInfo>()
+                : response.GetDownloadInfo(options.FileBaseName, options.FileExtension);
+        }
+        finally
+        {
+            options.Content?.Dispose();
+        }
+    }
 
     /// <summary>
     /// Downloads multiple URL strings using the same batch options.
@@ -198,6 +204,7 @@ public static class HttpServiceExtensions
                     ReadHeadersTimeout = options?.ReadHeadersTimeout,
                     BufferSize = bufferSize,
                     ReadBufferTimeout = options?.ReadBufferTimeout,
+                    TotalTimeout = options?.TotalTimeout,
                     CancellationToken = token,
                     FileBaseName = null,
                     FileExtension = null,

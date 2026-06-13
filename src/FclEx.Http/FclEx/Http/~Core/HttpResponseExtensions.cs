@@ -62,34 +62,6 @@ public static class HttpResponseExtensions
         }
     }
 
-    public static async Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, DownloadOptions options)
-    {
-        var request = new HttpRequest(options.Uri, options.Method)
-            .ReadAsBytes()
-            .ReadHeadersTimeout(options.ReadHeadersTimeout)
-            .ReadBufferTimeout(options.ReadBufferTimeout)
-            .BufferSize(options.BufferSize)
-            .AcceptCompress();
-
-        if (options.Content is { } content)
-        {
-            request.Content(content);
-        }
-
-        try
-        {
-            var response = await request.SendAsync(http, options.CancellationToken);
-            return response.IsError
-                ? Operation.ObjectError(response, response.Exception, response.Elapsed)
-                    .Cast<HttpFileDownloadInfo>()
-                : response.GetDownloadInfo(options.FileBaseName, options.FileExtension);
-        }
-        finally
-        {
-            options.Content?.Dispose();
-        }
-    }
-
     private static readonly Regex _regNonWord = new(@"\W+", RegexOptions.Compiled);
 
     public static HttpFileDownloadInfo GetDownloadInfo(this HttpResponse response, string? baseName = null, string? extension = null)
