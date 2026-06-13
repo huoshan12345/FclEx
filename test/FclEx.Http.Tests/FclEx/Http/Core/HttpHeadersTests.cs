@@ -84,6 +84,14 @@ public class HttpHeadersTests
     }
 
     [Fact]
+    public void Parse_PreservesRepeatedHeaderValues()
+    {
+        var headers = HttpHeaders.Parse("Accept=application%2Fjson&Accept=text%2Fplain");
+
+        Assert.Equal(["application/json", "text/plain"], headers.GetValues("Accept"));
+    }
+
+    [Fact]
     public void Parse_WhenInputIsNull_ReturnsEmptyHeaders()
     {
         var headers = HttpHeaders.Parse(null);
@@ -101,6 +109,19 @@ public class HttpHeadersTests
         ]);
 
         Assert.Equal("application/json", headers.Get("Accept"));
+        Assert.Equal("value", headers.Get("X-Test"));
+    }
+
+    [Fact]
+    public void From_IgnoresPairsWithEmptyHeaderName()
+    {
+        var headers = HttpHeaders.From(
+        [
+            KeyValuePair.Create("", "ignored"),
+            KeyValuePair.Create("X-Test", "value"),
+        ]);
+
+        Assert.Single(headers);
         Assert.Equal("value", headers.Get("X-Test"));
     }
 
