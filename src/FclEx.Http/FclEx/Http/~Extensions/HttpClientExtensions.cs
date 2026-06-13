@@ -1,7 +1,13 @@
 namespace FclEx.Http;
 
+/// <summary>
+/// Called when an HTTP response has an unsuccessful status code and its content has been read.
+/// </summary>
 public delegate void OnHttpFailedCode(HttpResponseMessage response, string content);
 
+/// <summary>
+/// Extensions for inspecting and modifying <see cref="HttpClient"/> handler behavior.
+/// </summary>
 public static class HttpClientExtensions
 {
     /// <summary>
@@ -39,6 +45,10 @@ public static class HttpClientExtensions
         }
     }
 
+    /// <summary>
+    /// Disables remote server certificate validation on the primary handler of an existing client when the primary handler type supports it.
+    /// This mutates <see cref="SocketsHttpHandler"/> or <see cref="HttpClientHandler"/> instances and has no effect for other primary handler types.
+    /// </summary>
     public static void IgnoreRemoteCertificateValidation(this HttpClient httpClient)
     {
         var handler = httpClient.GetPrimaryHandler();

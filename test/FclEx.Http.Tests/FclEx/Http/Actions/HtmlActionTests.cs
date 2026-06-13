@@ -63,6 +63,18 @@ public class HtmlActionTests
     }
 
     [Fact]
+    public void GetHtml_WhenResponseIsPlainText_ReturnsSuccess()
+    {
+        var response = HttpActionTestFixtures.CreateResponse("plain text");
+        var action = new HtmlTextAction();
+
+        var result = action.GetHtml(response);
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Equal("plain text", result.Value);
+    }
+
+    [Fact]
     public void GetResult_ForUnitAction_ReturnsSuccessWhenHtmlExists()
     {
         var response = HttpActionTestFixtures.CreateResponse("<html><body>ok</body></html>");
@@ -86,6 +98,32 @@ public class HtmlActionTests
         Assert.Equal("li", result.Value.HtmlSelector);
         Assert.Equal(2, result.Value.ResultElements.Count());
         Assert.Equal("A", result.Value.ResultElement!.TextContent);
+    }
+
+    [Fact]
+    public void CreateContext_WhenSelectorIsNull_SelectsDocumentElement()
+    {
+        var response = HttpActionTestFixtures.CreateResponse();
+        var action = new HtmlTextAction();
+
+        var result = action.CreateContext(response, "<html><body><main>content</main></body></html>");
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Null(result.Value!.HtmlSelector);
+        Assert.Equal("HTML", result.Value.ResultElement!.TagName);
+        Assert.Contains("content", result.Value.ResultElement.TextContent);
+    }
+
+    [Fact]
+    public void CreateContext_WhenSelectorDoesNotMatch_ReturnsError()
+    {
+        var response = HttpActionTestFixtures.CreateResponse();
+        var action = new HtmlTextAction { HtmlSelectorValue = ".missing" };
+
+        var result = action.CreateContext(response, "<html><body><main>content</main></body></html>");
+
+        Assert.True(result.IsError);
+        Assert.Contains(".missing", result.Exception!.Message);
     }
 
     [Fact]

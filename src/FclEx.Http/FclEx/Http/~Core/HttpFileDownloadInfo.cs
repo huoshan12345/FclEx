@@ -1,14 +1,26 @@
 namespace FclEx.Http;
 
 /// <summary>
-/// Represents detailed information about a file being downloaded via HTTP.
+/// Contains the bytes and resolved file metadata returned by an HTTP download.
 /// </summary>
 /// <remarks>
-/// This struct contains metadata and content for a file download, including the file's URL,
-/// name (with and without extension), its MIME type, and the raw byte content of the file.
+/// Instances are normally created by <see cref="HttpResponseExtensions.GetDownloadInfo(HttpResponse, string?, string?)"/>
+/// or the download helpers. The constructor stores the supplied values as-is, except that
+/// <see cref="FileName"/> is computed by concatenating <see cref="FileNameWithoutExtension"/> and
+/// <see cref="FileExtension"/>. It does not add a leading dot to the extension, infer a MIME type,
+/// sanitize file-system characters, or copy the byte array.
 /// </remarks>
 public class HttpFileDownloadInfo
 {
+    /// <summary>
+    /// Creates a download result from an already resolved URL, file name parts, content bytes, and MIME type.
+    /// </summary>
+    /// <param name="fileUrl">The final URL associated with the downloaded bytes, usually the last visited URI after redirects.</param>
+    /// <param name="fileNameWithoutExtension">The base file name to expose, without any extension suffix.</param>
+    /// <param name="fileExtension">The extension suffix to append to the base name, including the leading dot when one is desired.</param>
+    /// <param name="fileBytes">The downloaded content bytes. The array reference is stored directly.</param>
+    /// <param name="mimeType">The response MIME type used for this result, or an empty string when none was resolved.</param>
+    /// <exception cref="ArgumentNullException">Thrown when any argument is <see langword="null"/>.</exception>
     public HttpFileDownloadInfo(Uri fileUrl, string fileNameWithoutExtension, string fileExtension, byte[] fileBytes, string mimeType)
     {
         FileUrl = fileUrl ?? throw new ArgumentNullException(nameof(fileUrl));
@@ -20,32 +32,32 @@ public class HttpFileDownloadInfo
     }
 
     /// <summary>
-    /// The file's name without the extension (e.g., "document" from "document.pdf").
+    /// Gets the resolved base file name without <see cref="FileExtension"/>.
     /// </summary>
     public string FileNameWithoutExtension { get; }
 
     /// <summary>
-    /// The full file name including the extension (e.g., "document.pdf").
+    /// Gets the full file name formed by concatenating <see cref="FileNameWithoutExtension"/> and <see cref="FileExtension"/>.
     /// </summary>
     public string FileName { get; }
 
     /// <summary>
-    /// The file's extension (e.g., ".pdf").
+    /// Gets the resolved extension suffix. This value may be empty and is not normalized by the constructor.
     /// </summary>
     public string FileExtension { get; }
 
     /// <summary>
-    /// The raw byte content of the file being downloaded.
+    /// Gets the downloaded content bytes.
     /// </summary>
     public byte[] FileBytes { get; }
 
     /// <summary>
-    /// The URL from which the file is being downloaded.
+    /// Gets the URL associated with the downloaded content.
     /// </summary>
     public Uri FileUrl { get; }
 
     /// <summary>
-    /// The MIME type of the file (e.g., "application/pdf").
+    /// Gets the resolved MIME type string, or an empty string when no MIME type was available.
     /// </summary>
     public string MimeType { get; }
 }

@@ -1,13 +1,15 @@
 # FclEx.Xunit.SourceGenerator
 
-Source generator for xUnit v2 serialization helpers.
+xUnit v2 source generator for FclEx test serialization helpers.
 
 ## What Is Included
 
-- An incremental source generator for `XunitSerializableAttribute`.
-- Shared source-generation utilities linked from `FclEx.Core` and `FclEx.SourceGenerator`.
-- Generated code that supports xUnit serialization patterns used by `FclEx.Xunit`.
+- Incremental generator for xUnit serialization support.
+- Shared Roslyn/source-building utilities.
+- Source metadata helpers shared with other FclEx generators.
 
-## Notes
+## Usage Notes
 
-This generator is packaged through `FclEx.Xunit` as an analyzer. It is not intended to be referenced as a normal runtime assembly.
+- This project is packaged as an analyzer dependency of `FclEx.Xunit`.
+- It is not intended as a runtime library.
+- Use `FclEx.Xunit.v3.SourceGenerator` with xUnit v3 projects.

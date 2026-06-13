@@ -53,6 +53,29 @@ public class HtmlFileActionTests
     }
 
     [Fact]
+    public void Uri_ReturnsAbsoluteFileUriAndCachesValue()
+    {
+        var relativePath = Path.Combine(".", "relative-file.html");
+        var action = new TestHtmlFileAction(relativePath);
+
+        var first = action.Uri;
+        var second = action.Uri;
+
+        Assert.True(first.IsAbsoluteUri);
+        Assert.Equal(new Uri(Path.GetFullPath(relativePath)), first);
+        Assert.Same(first, second);
+    }
+
+    [Fact]
+    public void DefaultHttpMembers_UseDefaultServiceAndGetMethod()
+    {
+        var action = new TestHtmlFileAction("file.html");
+
+        Assert.Same(HttpClientService.Default, action.HttpService);
+        Assert.Equal(HttpMethod.Get, action.Method);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_WhenCreateContextThrows_IsCaughtByPipeline()
     {
         var path = HttpActionTestFixtures.CreateTempFile("<html><body><h1>Title</h1></body></html>");
@@ -85,6 +108,26 @@ public class HtmlFileActionTests
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             Assert.Equal("<html><body>raw</body></html>", response.ResponseString);
             Assert.Same(request, response.Request);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task GetResponseAsync_WhenTokenIsCanceled_ReturnsCanceledTask()
+    {
+        var path = HttpActionTestFixtures.CreateTempFile("<html><body>raw</body></html>");
+        var action = new TestHtmlFileAction(path);
+        var request = action.BuildRequest();
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        try
+        {
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+                action.GetResponseAsync(request, cts.Token));
         }
         finally
         {

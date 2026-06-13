@@ -9,9 +9,9 @@ public class NonGenericEqualityComparerAdapter<T> : IEqualityComparer, IEquality
 {
     private readonly IEqualityComparer<T> _comparer;
 
-    public NonGenericEqualityComparerAdapter(IEqualityComparer<T> comparer)
+    public NonGenericEqualityComparerAdapter(IEqualityComparer<T>? comparer = null)
     {
-        _comparer = comparer;
+        _comparer = comparer ?? EqualityComparer<T>.Default;
     }
 
     public new bool Equals(object? x, object? y)
@@ -23,7 +23,7 @@ public class NonGenericEqualityComparerAdapter<T> : IEqualityComparer, IEquality
 
     public int GetHashCode(object obj)
     {
-        return _comparer.GetHashCode(obj.CastTo<T>());
+        return _comparer.GetHashCode((T)obj);
     }
 }
 

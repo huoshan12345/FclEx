@@ -2,8 +2,15 @@ using MimeTypes;
 
 namespace FclEx.Http;
 
+/// <summary>
+/// Helpers for validating, parsing, and extracting data from <see cref="HttpResponse"/>.
+/// </summary>
 public static class HttpResponseExtensions
 {
+    /// <summary>
+    /// Throws when the response status code is outside the HTTP success range.
+    /// The exception message includes the request URI and HTTP method.
+    /// </summary>
     public static HttpResponse EnsureSuccessStatusCode(this HttpResponse response)
     {
         var request = response.Request;
@@ -11,6 +18,9 @@ public static class HttpResponseExtensions
         return response;
     }
 
+    /// <summary>
+    /// Rethrows the captured response exception when <see cref="HttpResponse.IsError"/> is true.
+    /// </summary>
     public static HttpResponse ThrowIfError(this HttpResponse response)
     {
         if (response.IsError)
@@ -18,21 +28,35 @@ public static class HttpResponseExtensions
         return response;
     }
 
+    /// <summary>
+    /// Awaits a response task and rethrows the captured response exception when present.
+    /// </summary>
     public static Task<HttpResponse> ThrowIfError(this Task<HttpResponse> task)
     {
         return task.Then(m => m.ThrowIfError());
     }
 
+    /// <summary>
+    /// Awaits a response task, reads JSON from the response string, and unwraps the operation result.
+    /// </summary>
+    /// <remarks>An error result is converted to an exception by <c>Unwrap</c>.</remarks>
     public static Task<T> ReadJsonAsRequired<T>(this Task<HttpResponse> task, string? path = null)
     {
         return task.Then(m => m.ReadJsonAs<T>(path)).Unwrap();
     }
 
+    /// <summary>
+    /// Awaits a response task and reads JSON from the response string.
+    /// </summary>
     public static Task<OperationResult<T>> ReadJsonAs<T>(this Task<HttpResponse> task, string? path = null)
     {
         return task.Then(m => m.ReadJsonAs<T>(path));
     }
 
+    /// <summary>
+    /// Reads the response string as JSON and deserializes either the root element or the element selected by <paramref name="path"/>.
+    /// Captured response exceptions are returned as operation errors.
+    /// </summary>
     public static OperationResult<T> ReadJsonAs<T>(this HttpResponse response, string? path = null, JsonSerializerOptions? options = null)
     {
         if (response.Exception is { } ex)
@@ -62,71 +86,47 @@ public static class HttpResponseExtensions
         }
     }
 
-    public static async Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, DownloadOptions options)
-    {
-        var request = new HttpRequest(options.Uri, options.Method)
-            .ReadAsBytes()
-            .ReadHeadersTimeout(options.ReadHeadersTimeout)
-            .ReadBufferTimeout(options.ReadBufferTimeout)
-            .BufferSize(options.BufferSize)
-            .AcceptCompress();
+    private static readonly Regex _regNonWord = new(@"\W+", RegexOptions.Compiled);
 
-        if (options.Content is { } content)
-        {
-            request.Content(content);
-        }
-
-        try
-        {
-            var response = await request.SendAsync(http, options.CancellationToken);
-            return response.IsError
-                ? Operation.ObjectError(response, response.Exception, response.Elapsed)
-                    .Cast<HttpFileDownloadInfo>()
-                : response.GetDownloadInfo(options.FileBaseName, options.FileExtension);
-        }
-        finally
-        {
-            options.Content?.Dispose();
-        }
-    }
-
-    private static readonly Regex _regexOfNonWord = new(@"\W+", RegexOptions.Compiled);
-
+    /// <summary>
+    /// Creates download metadata from a byte response.
+    /// Non-null <paramref name="baseName"/> or <paramref name="extension"/> values override names derived from the final URI, Content-Type header, or MIME map.
+    /// </summary>
     public static HttpFileDownloadInfo GetDownloadInfo(this HttpResponse response, string? baseName = null, string? extension = null)
     {
         var uri = response.LastUri();
         var fileName = uri.Segments
             .Select(m => m.Trim('/'))
             .LastOrDefault(m => m.IsNotEmpty());
-        var ext = Path.GetExtension(fileName);
 
-        if (baseName is null)
+        if (fileName.IsNotEmpty())
         {
-            baseName = fileName.TrimEnd(ext, onlyOnce: true);
-            if (baseName.IsNullOrEmpty())
-            {
-                baseName = uri.Host.Replace(_regexOfNonWord, "_").TrimEnd('_');
-            }
+            var (name, ext) = PathHelper.GetNameAndExtension(fileName);
+            baseName ??= name;
+            extension ??= ext;
+        }
+
+        if (baseName.IsNullOrEmpty())
+        {
+            baseName = uri.Host.Replace(_regNonWord, "_").TrimEnd('_');
         }
 
         var mimeType = response.Headers.GetLast(HttpHeaderNames.ContentType) ?? "";
 
-        if (extension is null)
+        if (extension.IsNullOrEmpty() && mimeType.IsNotEmpty())
         {
-            if (mimeType.IsNotEmpty())
+            if (mimeType.Contains(';'))
             {
-                if (mimeType.Contains(';'))
-                {
-                    var contentType = new ContentType(mimeType);
-                    mimeType = contentType.MediaType;
-                }
-                if (MimeTypeMap.TryGetExtension(MimeTypeFix(mimeType), out extension))
-                    ext = extension;
+                var contentType = new ContentType(mimeType);
+                mimeType = contentType.MediaType;
             }
+
+            if (MimeTypeMap.TryGetExtension(MimeTypeFix(mimeType), out var e))
+                extension = e;
         }
 
-        ext ??= string.Empty;
-        var info = new HttpFileDownloadInfo(uri, baseName, ext, response.ResponseBytes, mimeType);
+        extension ??= "";
+        var info = new HttpFileDownloadInfo(uri, baseName, extension, response.ResponseBytes, mimeType);
         return info;
 
         static string MimeTypeFix(string mimeType)
@@ -141,17 +141,28 @@ public static class HttpResponseExtensions
         }
     }
 
+    /// <summary>
+    /// Returns the last URI visited by the response workflow.
+    /// Throws when the response has no visited URI record.
+    /// </summary>
     public static Uri LastUri(this HttpResponse response)
     {
         return response.VisitedUris.LastOrDefault() ?? throw new InvalidOperationException("No visited URIs available.");
     }
 
+    /// <summary>
+    /// Adds raw Set-Cookie header values to the response header collection.
+    /// </summary>
     public static HttpResponse AddCookies(this HttpResponse response, IEnumerable<string> cookies)
     {
         response.Headers.AddRange(HttpHeaderNames.SetCookie, cookies);
         return response;
     }
 
+    /// <summary>
+    /// Attempts to parse the last valid Content-Type header value as a media type.
+    /// Header values are checked from newest to oldest.
+    /// </summary>
     public static bool TryGetMediaType(this HttpResponse response, [NotNullWhen(true)] out MediaTypeHeaderValue? mediaType)
     {
         if (response.Headers.TryGetValue(HttpHeaderNames.ContentType, out var contentTypes))

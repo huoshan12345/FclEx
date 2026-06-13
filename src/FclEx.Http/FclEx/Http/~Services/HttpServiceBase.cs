@@ -1,12 +1,20 @@
 namespace FclEx.Http;
 
+/// <summary>
+/// Base implementation of <see cref="IHttpService"/> with cookie storage and response timing/error capture.
+/// </summary>
 public abstract class HttpServiceBase : IHttpService
 {
     protected readonly CookieContainer _cookieContainer = new();
 
     // ReSharper disable once MemberCanBeProtected.Global
+    /// <summary>
+    /// Whether the built-in cookie container should be used.
+    /// </summary>
+    /// <remarks>When disabled, adding cookies is ignored and cookie lookup methods return empty results.</remarks>
     public bool UseCookie { get; set; } = true;
 
+    /// <inheritdoc />
     public virtual void Dispose()
     {
         GC.SuppressFinalize(this);
@@ -14,6 +22,7 @@ public abstract class HttpServiceBase : IHttpService
 
     protected abstract Task ExecuteAsyncInternal(HttpRequest request, HttpResponse response, CancellationToken token);
 
+    /// <inheritdoc />
     public async Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken token = default)
     {
         token.ThrowIfCancellationRequested();
@@ -34,6 +43,7 @@ public abstract class HttpServiceBase : IHttpService
         return response;
     }
 
+    /// <inheritdoc />
     public Cookie? GetCookie(Uri uri, string name)
     {
         return UseCookie
@@ -41,6 +51,7 @@ public abstract class HttpServiceBase : IHttpService
             : null;
     }
 
+    /// <inheritdoc />
     public IReadOnlyCollection<Cookie> GetCookies(Uri uri)
     {
         return UseCookie
@@ -52,6 +63,7 @@ public abstract class HttpServiceBase : IHttpService
             : [];
     }
 
+    /// <inheritdoc />
     public void AddCookie(Cookie cookie, Uri? uri = null, bool overrideDomain = false)
     {
         if (UseCookie == false)
@@ -72,6 +84,7 @@ public abstract class HttpServiceBase : IHttpService
         _cookieContainer.Add(uri, cookie);
     }
 
+    /// <inheritdoc />
     public IReadOnlyCollection<Cookie> GetAllCookies()
     {
         return UseCookie
@@ -83,8 +96,10 @@ public abstract class HttpServiceBase : IHttpService
             : [];
     }
 
+    /// <inheritdoc />
     public virtual IWebProxy? Proxy { get; set; }
 
+    /// <inheritdoc />
     [AllowNull]
     public ILogger Logger
     {

@@ -1,13 +1,17 @@
 # FclEx.Options
 
-Helpers for registering and configuring `Microsoft.Extensions.Options`.
+Options registration helpers for `Microsoft.Extensions.Options`.
 
 ## What Is Included
 
-- `AddOptionsInstance` overloads for registering prebuilt or factory-created options instances.
-- `InstanceOptionsFactory<TOptions>` for returning named options from a supplied factory.
-- Service-aware `Configure<TOptions, TService>` registration.
+- Register prebuilt options instances.
+- Register options created by factories.
+- Configure options from services.
+- Resolve option values from service providers.
+- `InstanceOptionsFactory<TOptions>` for options backed by an existing instance.
 
-## Notes
+## Usage Notes
 
-Use instance options when a component needs options that are already constructed outside the normal configuration binding path.
+- This package builds on `Microsoft.Extensions.Options` and `FclEx.DependencyInjection`.
+- Use it when options need to be composed from existing services or prebuilt objects.
+- Prefer the built-in options APIs for simple configuration binding.

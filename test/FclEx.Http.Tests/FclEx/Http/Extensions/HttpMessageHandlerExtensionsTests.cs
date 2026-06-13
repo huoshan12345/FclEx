@@ -14,6 +14,17 @@ public class HttpMessageHandlerExtensionsTests
     }
 
     [Fact]
+    public void EnumerateInner_WhenDelegatingHandlerHasNoInnerHandler_ReturnsOnlyDelegatingHandler()
+    {
+        var handler = new PassThroughHandler();
+
+        var handlers = handler.EnumerateInner().ToArray();
+
+        Assert.Single(handlers);
+        Assert.Same(handler, handlers[0]);
+    }
+
+    [Fact]
     public void EnumerateInner_WhenHandlerChainHasPrimaryHandler_ReturnsChainAndStopsAtPrimaryHandler()
     {
         var primary = new TerminalHandler();

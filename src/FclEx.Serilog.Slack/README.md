@@ -1,13 +1,15 @@
 # FclEx.Serilog.Slack
 
-A Serilog sink for sending batched log events to Slack.
+Serilog sink support for Slack.
 
 ## What Is Included
 
-- `SlackSink`, an `IBatchedLogEventSink` implementation.
-- `LoggerSinkConfiguration.Slack(...)` extension for configuring the sink.
-- Integration with the Slack formatting and webhook helpers from `FclEx.Slack`.
+- `SlackSink` for batched log delivery to Slack.
+- Logger sink configuration extensions.
+- Integration with `FclEx.Serilog` formatting and `FclEx.Slack` message delivery.
 
-## Notes
+## Usage Notes
 
-Slack messages should be kept concise. For high-volume logs, configure Serilog level filters or FclEx Serilog excluders before sending events to Slack.
+- Use this package when logs should be sent to Slack through Serilog.
+- General Slack API helpers live in `FclEx.Slack`.
+- Configure batching and channel behavior in the sink setup used by your Serilog pipeline.

@@ -2,6 +2,9 @@
 namespace MimeTypes
 {
     // see https://github.com/khellang/MimeTypes
+    /// <summary>
+    /// Maps file extensions to MIME types and MIME types back to a deterministic default extension.
+    /// </summary>
     public static class MimeTypeMap
     {
         private const string Dot = ".";
@@ -828,6 +831,12 @@ namespace MimeTypes
             return string.Empty;
         }
 
+        /// <summary>
+        /// Attempts to get the default file extension registered for a MIME type.
+        /// </summary>
+        /// <param name="mimeType">MIME type to look up. The value must not include a leading dot.</param>
+        /// <param name="extension">The registered extension, including the leading dot, when found.</param>
+        /// <returns><see langword="true"/> when the MIME type is registered; otherwise, <see langword="false"/>.</returns>
         public static bool TryGetExtension(string mimeType, [NotNullWhen(true)] out string? extension)
         {
             return _mappings.Value.TryGetValue(mimeType, out extension);

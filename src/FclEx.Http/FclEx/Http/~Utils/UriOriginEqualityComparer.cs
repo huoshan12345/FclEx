@@ -1,7 +1,14 @@
 namespace FclEx.Http;
 
+/// <summary>
+/// Compares URIs by scheme, host, and port only.
+/// </summary>
+/// <remarks>Path, query, fragment, user info, and host/scheme casing are ignored.</remarks>
 public class UriOriginEqualityComparer : IEqualityComparer<Uri>
 {
+    /// <summary>
+    /// A shared comparer instance.
+    /// </summary>
     public static readonly UriOriginEqualityComparer Instance = new();
 
     public bool Equals(Uri? x, Uri? y)

@@ -89,6 +89,45 @@ public class XmlActionTests
     }
 
     [Fact]
+    public void CreateContext_WhenXPathDoesNotMatch_ReturnsError()
+    {
+        var response = HttpActionTestFixtures.CreateResponse();
+        var action = new XmlIntAction { XPathValue = "/root/missing" };
+
+        var result = action.CreateContext(response, "<root><value>42</value></root>");
+
+        Assert.True(result.IsError);
+        Assert.Contains("/root/missing", result.Exception!.Message);
+    }
+
+    [Fact]
+    public void CreateContext_WhenXPathIsNull_SelectsDocumentRoot()
+    {
+        var response = HttpActionTestFixtures.CreateResponse();
+        var action = new XmlStringAction();
+
+        var result = action.CreateContext(response, "<root>value</root>");
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Same(response, result.Value.Response);
+        Assert.Null(result.Value.XPath);
+        Assert.Equal("root", result.Value.ResultElement!.Name.LocalName);
+        Assert.Equal("value", result.Value.ResultElement.Value);
+    }
+
+    [Fact]
+    public void GetXml_WhenResponseStringStartsWithXmlDeclaration_ReturnsError()
+    {
+        var response = HttpActionTestFixtures.CreateResponse("""<?xml version="1.0"?><root />""");
+        var action = new XmlStringAction();
+
+        var result = action.GetXml(response);
+
+        Assert.True(result.IsError);
+        Assert.Contains("not a valid xml", result.Exception!.Message);
+    }
+
+    [Fact]
     public void CreateContext_UsesXPathToSelectResultElements()
     {
         var response = HttpActionTestFixtures.CreateResponse();
@@ -120,5 +159,18 @@ public class XmlActionTests
 
         Assert.True(result.IsError);
         Assert.IsType<System.Xml.XmlException>(result.Exception);
+    }
+
+    [Fact]
+    public async Task HttpXmlAction_WhenResponseIsValidXml_UsesDefaultPipeline()
+    {
+        var response = HttpActionTestFixtures.CreateResponse("<root>42</root>", HttpStatusCode.OK, HttpActionTestFixtures.Elapsed);
+        var action = new PipelineXmlAction<int>(response);
+
+        var result = await action.ExecuteAsync();
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Equal(42, result.Value);
+        Assert.True(result.Elapsed >= TimeSpan.Zero);
     }
 }

@@ -3,7 +3,7 @@ namespace FclEx.Http.Core.HttpRequestExtensions;
 public class HttpContentTypeTests
 {
     [RetryFact]
-    public async Task ReadAsStream_Test()
+    public async Task ReadAsStream_WhenResponseIsRead_LeavesBytesAndStringEmpty()
     {
         var response = await HttpRequest.Get("https://google.com")
             .ReadAsStream()

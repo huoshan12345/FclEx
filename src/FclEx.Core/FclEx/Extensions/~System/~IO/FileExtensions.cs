@@ -31,7 +31,7 @@ public static class FileExtensions
         {
             using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, DefaultBufferSize, useAsync: true);
             using var sr = new StreamReader(fs, encoding);
-            return await sr.ReadToEndAsync();
+            return await sr.ReadToEndAsync(token);
         }
 
         public static Task<string> ReadAllTextAsync(string path, CancellationToken token = default)

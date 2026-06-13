@@ -26,7 +26,7 @@ public class SetHostTests
 
     [Theory]
     [MemberData(nameof(HostPortsPair))]
-    public void TestSetHost(string host, int port, string hp, string newHost, int newPort, string newHp)
+    public void Host_WhenValueContainsPort_SetsHostAndPort(string host, int port, string hp, string newHost, int newPort, string newHp)
     {
         var request = HttpRequest.Get("http://" + host);
         Assert.Equal(host, request.Host);
@@ -42,7 +42,7 @@ public class SetHostTests
     }
 
     [Fact]
-    public void SetHostWithSchemeTest()
+    public void Host_WhenRequestUriIsRelativeAndSchemeIsSet_SetsHostAndPort()
     {
         var request = HttpRequest.Get("/teacher/app/clean-redis-cache")
             .Scheme("https")

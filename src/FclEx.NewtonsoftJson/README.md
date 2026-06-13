@@ -1,17 +1,17 @@
 # FclEx.NewtonsoftJson
 
-Newtonsoft.Json helpers, converters, and extension methods.
+Newtonsoft.Json helpers and converters for FclEx.
 
 ## What Is Included
 
-- JSON serialization helpers with configurable camel-case and null-handling behavior.
-- Extensions for converting objects, strings, XML nodes, and `JToken` values.
-- Safe parsing helpers for `JObject`, `JArray`, and `JToken`.
-- Converters for reading single values as arrays, reading strings as objects, writing values as strings, and ignoring values.
-- `FromToStringJsonConverter<T>` for types that implement string conversion contracts.
-- Converter resolver support for bypassing selected converters.
-- Helpers for required child values in `JToken`.
+- Serialization and deserialization helper methods.
+- `JToken` extension methods.
+- Converters for string-backed values, single-or-array payloads, ignored values, key/value pairs, and read/write-as-string scenarios.
+- XML conversion helpers through Newtonsoft.Json.
+- Contract resolver support for bypassing converters where needed.
 
-## Notes
+## Usage Notes
 
-Some converters intentionally relax input shape, such as allowing a single value where an array is expected. Use them only for APIs whose payload shape is known to vary.
+- `System.Text.Json` helpers live in `FclEx.Core`.
+- Use this package when Newtonsoft.Json-specific behavior or converters are required.
+- Converter selection can affect both read and write behavior; prefer explicit serializer settings for public contracts.

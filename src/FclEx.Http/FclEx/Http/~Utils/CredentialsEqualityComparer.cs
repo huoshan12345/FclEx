@@ -1,7 +1,14 @@
 namespace FclEx.Http;
 
+/// <summary>
+/// Compares credential objects when both sides are <see cref="NetworkCredential"/>.
+/// </summary>
+/// <remarks>Other <see cref="ICredentials"/> implementations are only equal when they are the same instance.</remarks>
 public class CredentialsEqualityComparer : IEqualityComparer<ICredentials>
 {
+    /// <summary>
+    /// A shared comparer instance.
+    /// </summary>
     public static readonly CredentialsEqualityComparer Instance = new();
 
     private static IEqualityComparer<NetworkCredential> NetworkCredentialComparer

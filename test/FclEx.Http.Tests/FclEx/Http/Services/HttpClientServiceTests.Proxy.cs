@@ -9,7 +9,7 @@ partial class HttpClientServiceTests
 
     [RetryTheory]
     [MemberData(nameof(Cases))]
-    public async Task SendAsync_WithProxy_Success(IWebProxy proxy, string url)
+    public async Task SendAsync_WithProxy_ReturnsSuccessfulResponse(IWebProxy proxy, string url)
     {
         var http = HttpClientService.Create(proxy);
         var response = await HttpRequest.Get(url)

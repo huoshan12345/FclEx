@@ -3,6 +3,36 @@ namespace FclEx.Http.Cookies;
 public class SimpleCookieTests
 {
     [Fact]
+    public void DefaultConstructor_UsesEmptyNameValueDomainAndRootPath()
+    {
+        var cookie = new SimpleCookie();
+
+        Assert.Equal("", cookie.Name);
+        Assert.Equal("", cookie.Value);
+        Assert.Equal("", cookie.Domain);
+        Assert.Equal("/", cookie.Path);
+    }
+
+    [Fact]
+    public void Constructor_WhenOptionalValuesAreNull_UsesEmptyValueDomainAndRootPath()
+    {
+        var cookie = new SimpleCookie("sid", null, null, null);
+
+        Assert.Equal("sid", cookie.Name);
+        Assert.Equal("", cookie.Value);
+        Assert.Equal("", cookie.Domain);
+        Assert.Equal("/", cookie.Path);
+    }
+
+    [Fact]
+    public void Constructor_WhenNameIsNull_ThrowsArgumentNullException()
+    {
+        var ex = Assert.Throws<ArgumentNullException>(() => new SimpleCookie(null!, "abc", "/", "example.com"));
+
+        Assert.Equal("name", ex.ParamName);
+    }
+
+    [Fact]
     public void ToSimpleCookie_PreservesCookiePath()
     {
         var cookie = new Cookie("sid", "abc", "/account", "example.com");

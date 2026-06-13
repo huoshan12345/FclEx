@@ -23,10 +23,10 @@ public interface IService
     int Id { get; }
 
     [ReturnValueCache(IsStatic = true)]
-    Model GetStatic(int id);
+    Model GetStatic(string name, int id);
 
     [ReturnValueCache]
-    Model Get(int id);
+    Model Get(string name, int id);
 }
 
 public class Service : IService
@@ -34,24 +34,24 @@ public class Service : IService
     private static int _id = short.MinValue;
     public int Id { get; }
 
-    public static readonly TimeSpan CacheMaxTime = TimeSpan.FromMilliseconds(50);
-    public static readonly TimeSpan SleepTime = TimeSpan.FromMilliseconds(100);
+    public static readonly TimeSpan CacheMaxTime = TimeSpan.FromMilliseconds(100);
+    public static readonly TimeSpan SleepTime = TimeSpan.FromMilliseconds(200);
 
     public Service()
     {
         Id = Interlocked.Increment(ref _id);
     }
 
-    public Model GetStatic(int id)
+    public Model GetStatic(string name, int id)
     {
         Thread.Sleep(SleepTime);
-        return new Model(id.ToString());
+        return new Model($"{name}_{id}");
     }
 
-    public Model Get(int id)
+    public Model Get(string name, int id)
     {
         Thread.Sleep(SleepTime);
-        return new Model($"{Id}_{id}");
+        return new Model($"{name}_{Id}_{id}");
     }
 
     public override int GetHashCode()

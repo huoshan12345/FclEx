@@ -55,6 +55,55 @@ public class DefaultHttpActionTests
     }
 
     [Fact]
+    public async Task HandleResponseAsync_WhenStatusCodeIsSuccessful_ReturnsSuccessWithResponseElapsed()
+    {
+        var response = HttpActionTestFixtures.CreateResponse("ok", HttpStatusCode.OK, HttpActionTestFixtures.Elapsed);
+        var action = new PipelineHttpAction<string>(response)
+        {
+            EnsureSuccessStatusCodeValue = true,
+        };
+
+        var result = await action.HandleResponseAsync(response);
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Same(response, result.Value);
+        Assert.Equal(HttpActionTestFixtures.Elapsed, result.Elapsed);
+    }
+
+    [Fact]
+    public async Task HandleResponseAsync_WhenSuccessEnforcementIsDisabled_ReturnsSuccessForFailureStatus()
+    {
+        var response = HttpActionTestFixtures.CreateResponse("missing", HttpStatusCode.NotFound, HttpActionTestFixtures.Elapsed);
+        var action = new PipelineHttpAction<string>(response)
+        {
+            EnsureSuccessStatusCodeValue = false,
+        };
+
+        var result = await action.HandleResponseAsync(response);
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Same(response, result.Value);
+        Assert.Equal(HttpActionTestFixtures.Elapsed, result.Elapsed);
+    }
+
+    [Fact]
+    public async Task HandleResponseAsync_WhenStatusCodeIsUnsuccessful_TruncatesResponseStringInError()
+    {
+        var response = HttpActionTestFixtures.CreateResponse(new string('x', 300), HttpStatusCode.BadGateway, HttpActionTestFixtures.Elapsed);
+        var action = new PipelineHttpAction<string>(response)
+        {
+            EnsureSuccessStatusCodeValue = true,
+        };
+
+        var result = await action.HandleResponseAsync(response);
+
+        Assert.True(result.IsError);
+        Assert.Equal(HttpActionTestFixtures.Elapsed, result.Elapsed);
+        Assert.Contains("BadGateway/502", result.Exception!.Message);
+        Assert.True(result.Exception.Message.Length < 420);
+    }
+
+    [Fact]
     public async Task ExecuteCoreAsync_WhenResponseHasException_ReturnsResponseExceptionWithoutHandlingResult()
     {
         var exception = new InvalidOperationException("send failed");
@@ -101,6 +150,11 @@ public class DefaultHttpActionTests
         Assert.Equal(HttpMethod.Post, request.Method);
         Assert.False(request.EnsureSuccessStatusCode);
         Assert.Equal("yes", request.Headers.Get("X-Modified"));
+#if NET5_0_OR_GREATER
+        Assert.Equal("gzip, deflate, br", request.Headers.Get(HttpHeaderNames.AcceptEncoding));
+#else
+        Assert.Equal("gzip", request.Headers.Get(HttpHeaderNames.AcceptEncoding));
+#endif
         Assert.Equal(1, action.ModifyRequestCallCount);
     }
 

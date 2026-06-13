@@ -23,4 +23,13 @@ public static class HttpRequestExceptionExtensions
             return HttpRequestException.From(message, null, statusCode);
         }
     }
+
+#if !NET5_0_OR_GREATER
+    extension(HttpRequestException ex)
+    {
+        public HttpStatusCode StatusCode => ex.Data is { } data && data["StatusCode"] is HttpStatusCode code
+            ? code
+            : default;
+    }
+#endif
 }

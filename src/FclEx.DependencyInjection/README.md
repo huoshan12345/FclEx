@@ -1,17 +1,17 @@
 # FclEx.DependencyInjection
 
-Convenience extensions for `Microsoft.Extensions.DependencyInjection`.
+Dependency-injection conveniences for `Microsoft.Extensions.DependencyInjection`.
 
 ## What Is Included
 
-- Short generic registration helpers for `Add`, `TryAdd`, and lifetime-specific registrations.
-- Factory helpers such as `AddSingletonBy`, `AddScopedBy`, and `AddTransientBy`.
+- Service registration helpers for common lifetime patterns.
 - Service replacement and removal helpers.
-- Service wrapping helpers for decorating an existing registration.
-- `IServiceProvider` and `IServiceScope` helper extensions.
-- `ServiceDescriptorEqualityComparer` for comparing registrations.
-- Source-generated overloads for factory helpers with multiple dependencies.
+- Decoration helpers.
+- Scope and service-provider lookup helpers.
+- Source-generated overloads for service registration APIs.
 
-## Notes
+## Usage Notes
 
-The wrapping helpers are useful for lightweight decoration, but be mindful of service lifetimes when replacing or wrapping registrations.
+- This package is a small layer over the built-in Microsoft DI abstractions.
+- It does not replace the container or require a separate service-provider implementation.
+- `FclEx.Options`, `FclEx.Logging`, and other packages build on these helpers.

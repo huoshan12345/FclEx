@@ -5,13 +5,13 @@ public class WebProxyEqualityComparerTests
     public static readonly IEqualityComparer<WebProxy> Comparer = WebProxyEqualityComparer.Instance;
 
     [Fact]
-    public void Equals_Empty_Test()
+    public void Equals_WhenBothProxiesAreEmpty_ReturnsTrue()
     {
         Assert.True(Comparer.Equals(WebProxyHelper.Empty, new WebProxy()));
     }
 
     [Fact]
-    public void GetHashCode_Empty_Test()
+    public void GetHashCode_WhenBothProxiesAreEmpty_ReturnsSameHashCode()
     {
         Assert.Equal(
             Comparer.GetHashCode(WebProxyHelper.Empty), 
@@ -19,7 +19,7 @@ public class WebProxyEqualityComparerTests
     }
 
     [Fact]
-    public void Equals_SameUri_Test()
+    public void Equals_WhenProxyAddressesMatch_ReturnsTrue()
     {
         var uri = new Uri("http://127.0.0.1:8888");
         var proxy1 = WebProxyHelper.Create(uri);
@@ -29,7 +29,7 @@ public class WebProxyEqualityComparerTests
     }
 
     [Fact]
-    public void GetHashCode_SameUri_Test()
+    public void GetHashCode_WhenProxyAddressesMatch_ReturnsSameHashCode()
     {
         var uri = new Uri("http://127.0.0.1:8888");
         var proxy1 = WebProxyHelper.Create(uri);
@@ -63,5 +63,60 @@ public class WebProxyEqualityComparerTests
 
         Assert.True(Comparer.Equals(proxy1, proxy2));
         Assert.Equal(Comparer.GetHashCode(proxy1), Comparer.GetHashCode(proxy2));
+    }
+
+    [Fact]
+    public void Equals_WhenBypassListDiffersOnlyByCase_TreatsBypassListAsEqual()
+    {
+        var proxy1 = WebProxyHelper.Create(
+            new Uri("http://127.0.0.1:8888"),
+            bypassList: ["LOCALHOST", "EXAMPLE\\.COM"]);
+        var proxy2 = WebProxyHelper.Create(
+            new Uri("http://127.0.0.1:8888"),
+            bypassList: ["localhost", "example\\.com"]);
+
+        Assert.True(Comparer.Equals(proxy1, proxy2));
+    }
+
+    [Fact]
+    public void GetHashCode_WhenBypassListDiffersOnlyByCase_ReturnsSameHashCode()
+    {
+        var proxy1 = WebProxyHelper.Create(
+            new Uri("http://127.0.0.1:8888"),
+            bypassList: ["LOCALHOST", "EXAMPLE\\.COM"]);
+        var proxy2 = WebProxyHelper.Create(
+            new Uri("http://127.0.0.1:8888"),
+            bypassList: ["localhost", "example\\.com"]);
+
+        Assert.Equal(Comparer.GetHashCode(proxy1), Comparer.GetHashCode(proxy2));
+    }
+
+    [Fact]
+    public void Equals_WhenBypassProxyOnLocalDiffers_ReturnsFalse()
+    {
+        var uri = new Uri("http://127.0.0.1:8888");
+        var proxy1 = WebProxyHelper.Create(uri, bypassOnLocal: true);
+        var proxy2 = WebProxyHelper.Create(uri, bypassOnLocal: false);
+
+        Assert.False(Comparer.Equals(proxy1, proxy2));
+    }
+
+    [Fact]
+    public void InterfaceComparer_WhenCustomProxyInstancesDiffer_ReturnsFalse()
+    {
+        IWebProxy proxy1 = new CustomProxy();
+        IWebProxy proxy2 = new CustomProxy();
+
+        Assert.True(WebProxyInterfaceEqualityComparer.Instance.Equals(proxy1, proxy1));
+        Assert.False(WebProxyInterfaceEqualityComparer.Instance.Equals(proxy1, proxy2));
+    }
+
+    private sealed class CustomProxy : IWebProxy
+    {
+        public ICredentials? Credentials { get; set; }
+
+        public Uri? GetProxy(Uri destination) => destination;
+
+        public bool IsBypassed(Uri host) => false;
     }
 }

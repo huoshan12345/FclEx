@@ -27,4 +27,47 @@ public class WebProxyExtTests
         Assert.Equal(userName, auth.UserName);
         Assert.Equal(password, auth.Password);
     }
+
+    [Fact]
+    public void Create_WithAuthUri_RemovesUserInfoFromProxyAddress()
+    {
+        var proxy = WebProxyHelper.Create("http://user:pass@127.0.0.1:8888/proxy");
+
+        Assert.Equal(new Uri("http://127.0.0.1:8888/proxy"), proxy.Address);
+    }
+
+    [Fact]
+    public void Create_WhenExplicitCredentialsAreProvided_DoesNotUseCredentialsFromUri()
+    {
+        var credentials = new NetworkCredential("explicit-user", "explicit-pass");
+
+        var proxy = WebProxyHelper.Create("http://uri-user:uri-pass@127.0.0.1:8888", credentials: credentials);
+
+        Assert.Same(credentials, proxy.Credentials);
+        Assert.Equal(new Uri("http://uri-user:uri-pass@127.0.0.1:8888/"), proxy.Address);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void Create_WhenAddressIsNullOrEmpty_ReturnsProxyWithoutAddress(string? address)
+    {
+        var proxy = WebProxyHelper.Create(address);
+
+        Assert.Null(proxy.Address);
+    }
+
+    [Fact]
+    public void Create_CopiesBypassOptions()
+    {
+        string[] bypassList = [@".*\.local", @"127\.0\.0\.1"];
+
+        var proxy = WebProxyHelper.Create(
+            "http://127.0.0.1:8888",
+            bypassOnLocal: true,
+            bypassList: bypassList);
+
+        Assert.True(proxy.BypassProxyOnLocal);
+        Assert.Equal(bypassList, proxy.BypassList);
+    }
 }

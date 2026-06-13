@@ -20,7 +20,7 @@ public class HttpRequestTests
     }
 
     [Fact]
-    public async Task ThrowIfError_ValueTask_Test()
+    public async Task ThrowIfError_WhenSendAsyncReturnsError_ThrowsResponseException()
     {
         var http = HttpClientService.Create(m =>
         {
@@ -36,20 +36,20 @@ public class HttpRequestTests
     }
 
     [Fact]
-    public async Task ThrowIfError_ValueTask_Execute_Test()
+    public async Task OperationExecuteAsync_WhenWrappedRequestTimesOut_ReturnsFailure()
     {
         var flag = false;
         var r = await Operation.ExecuteAsync(TimeoutRequestWrap)
             .OnException(e =>
             {
                 flag = true;
-                Assert.IsType<TaskCanceledException>(e);
+                Assert.IsType<OperationCanceledException>(e, false);
             });
         Assert.False(!flag ^ r.IsSuccess);
     }
 
     [Fact]
-    public async Task Execute_Test()
+    public async Task OperationExecuteAsync_WhenWrappedRequestSucceeds_ReturnsSuccess()
     {
         var flag = false;
         var r = await Operation.ExecuteAsync(SuccessRequestWrap)

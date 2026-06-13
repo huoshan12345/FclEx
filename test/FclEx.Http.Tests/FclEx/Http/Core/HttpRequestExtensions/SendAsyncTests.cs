@@ -31,7 +31,7 @@ public class SendAsyncTests : HttpServerTests
     [LocalOnlyTheory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task Get_IpVersion_Test(bool ipv6)
+    public async Task SendAsync_WithIpVersionPolicy_UsesRequestedAddressFamily(bool ipv6)
     {
         if (ipv6 && _supportsIPv6 == false)
             return;
@@ -59,7 +59,7 @@ public class SendAsyncTests : HttpServerTests
 
     [Theory]
     [MemberData(nameof(TestUrlCases))]
-    public async Task Get_Test(string url)
+    public async Task SendAsync_WithGetRequest_ReturnsSuccessfulResponse(string url)
     {
         var response = await HttpRequest.Get(url)
             .ReadHeadersTimeout(TimeSpan.FromSeconds(5))
@@ -69,7 +69,20 @@ public class SendAsyncTests : HttpServerTests
     }
 
     [Fact]
-    public async Task Form_Test()
+    public async Task SendAsync_WithOptimisticTimeoutPolicy_PassesPolicyCancellationTokenToService()
+    {
+        using var service = new DelayedHttpService();
+        var policy = Polly.Policy.TimeoutAsync(TimeSpan.FromMilliseconds(20));
+
+        await Assert.ThrowsAsync<TimeoutRejectedException>(() =>
+            HttpRequest.Get("https://example.com/").SendAsync(service, policy));
+
+        Assert.True(service.ObservedToken.CanBeCanceled);
+        Assert.True(service.ObservedToken.IsCancellationRequested);
+    }
+
+    [Fact]
+    public async Task SendAsync_WithFormContent_PostsEncodedFormValues()
     {
         if (HasApiServer == false)
             return;
@@ -91,7 +104,7 @@ public class SendAsyncTests : HttpServerTests
     }
 
     [Fact]
-    public async Task Json_Test()
+    public async Task SendAsync_WithJsonContent_PostsSerializedJson()
     {
         if (HasApiServer == false)
             return;
@@ -120,7 +133,7 @@ public class SendAsyncTests : HttpServerTests
     [InlineData("gb18030")]
     [InlineData("big5")]
     [InlineData("ISO-8859-1")]
-    public async Task CharSet_Test(string charSet)
+    public async Task SendAsync_WhenResponseSpecifiesCharset_UsesMatchingEncoding(string charSet)
     {
         if (HasApiServer == false)
             return;
@@ -150,7 +163,7 @@ public class SendAsyncTests : HttpServerTests
     }
 
     [Fact]
-    public async Task Redirection_Test()
+    public async Task SendAsync_WhenResponseRedirects_TracksVisitedUris()
     {
         if (HasApiServer == false)
             return;
@@ -164,5 +177,42 @@ public class SendAsyncTests : HttpServerTests
 
         Assert.Equal(2, response.VisitedUris.Count);
         Assert.Equal(url, response.LastUri().ToString());
+    }
+
+    private sealed class DelayedHttpService : IHttpService
+    {
+        public CancellationToken ObservedToken { get; private set; }
+        public IWebProxy? Proxy { get; set; }
+        public ILogger Logger { get; set; } = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+
+        public async Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken token = default)
+        {
+            ObservedToken = token;
+            await Task.Delay(TimeSpan.FromSeconds(5), token);
+            return new HttpResponse(request);
+        }
+
+        public Cookie? GetCookie(Uri uri, string name)
+        {
+            return null;
+        }
+
+        public IReadOnlyCollection<Cookie> GetCookies(Uri uri)
+        {
+            return [];
+        }
+
+        public void AddCookie(Cookie cookie, Uri? uri = null, bool overrideDomain = false)
+        {
+        }
+
+        public IReadOnlyCollection<Cookie> GetAllCookies()
+        {
+            return [];
+        }
+
+        public void Dispose()
+        {
+        }
     }
 }

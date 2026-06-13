@@ -3,6 +3,27 @@ namespace FclEx.Http.Extensions;
 public class HttpRequestMessageExtensionsTests
 {
     [Fact]
+    public void AddCookie_WhenCookieIsNullOrEmpty_DoesNotAddCookieHeader()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com");
+
+        request.AddCookie(null).AddCookie("");
+
+        Assert.False(request.Headers.Contains(HttpHeaderNames.Cookie));
+    }
+
+    [Fact]
+    public void AddCookie_WhenCookieHasValue_AddsCookieHeaderAndReturnsRequest()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com");
+
+        var result = request.AddCookie("sid=abc");
+
+        Assert.Same(request, result);
+        Assert.Equal("sid=abc", Assert.Single(request.Headers.GetValues(HttpHeaderNames.Cookie)));
+    }
+
+    [Fact]
     public async Task CloneAsync_CopiesRequestMetadataHeadersOptionsAndBufferedContent()
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://example.com/api")
@@ -39,5 +60,67 @@ public class HttpRequestMessageExtensionsTests
         Assert.Equal(["one", "two"], clone.Headers.GetValues("X-Test"));
         Assert.Equal("content-header", Assert.Single(clone.Content!.Headers.GetValues("X-Content")));
         Assert.Equal("payload", await clone.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task CloneAsync_WhenRequestHasNoContent_LeavesCloneContentNull()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com/api");
+
+        using var clone = await request.CloneAsync();
+
+        Assert.Null(clone.Content);
+    }
+
+    [Fact]
+    public async Task CloneAsync_BuffersContentFromCurrentPositionAndKeepsCloneReadable()
+    {
+        var source = new MemoryStream(Encoding.UTF8.GetBytes("prefix-payload"));
+        source.Position = "prefix-".Length;
+        using var request = new HttpRequestMessage(HttpMethod.Post, "https://example.com/api")
+        {
+            Content = new StreamContent(source),
+        };
+
+        using var clone = await request.CloneAsync();
+        request.Content.Dispose();
+
+        Assert.Equal("payload", await clone.Content!.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task SetNotSend_AllowsSameRequestMessageToBeSentAgain()
+    {
+        using var client = new HttpClient(new CountingHandler());
+        using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com/api");
+
+        using var first = await client.SendAsync(request, CancellationToken.None);
+        request.SetNotSend();
+        using var second = await client.SendAsync(request, CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, second.StatusCode);
+    }
+
+    [Fact]
+    public async Task SetNotSend_WhenNotCalled_SendingSameRequestMessageAgainThrows()
+    {
+        using var client = new HttpClient(new CountingHandler());
+        using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com/api");
+
+        using var response = await client.SendAsync(request, CancellationToken.None);
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            client.SendAsync(request, CancellationToken.None));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("already sent", ex.Message);
+    }
+
+    private sealed class CountingHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+        }
     }
 }

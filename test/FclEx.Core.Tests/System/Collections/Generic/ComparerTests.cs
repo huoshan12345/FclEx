@@ -39,11 +39,11 @@ public class ComparerTests
     }
 
     [Fact]
-    public void CommonComparer_Test()
+    public void DelegateComparer_Test()
     {
         var testers = Generate();
         var testersOrdered = testers.OrderBy(m => m.Id).ToArray();
-        var comparer = CommonComparer.Create<TestModel>((x, y) => Comparer<int>.Default.Compare(x.Id, y.Id));
+        var comparer = DelegateComparer.Create<TestModel>((x, y) => Comparer<int>.Default.Compare(x.Id, y.Id));
         var sortList = new SortedSet<TestModel>(testers, comparer);
         Assert.True(testersOrdered.SequenceEqual(sortList));
     }

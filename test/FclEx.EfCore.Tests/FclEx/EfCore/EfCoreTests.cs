@@ -1,6 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-using FclEx.Dapper;
-
 namespace FclEx.EfCore;
 
 [EnableParallelization]
@@ -11,8 +8,7 @@ public class EfCoreTestsCollection : ICollectionFixture<EfCoreFixture>;
 [Collection(nameof(EfCoreTestsCollection))]
 public class EfCoreTests(EfCoreFixture fixture) : DatabaseTests
 {
-    public static readonly string?[] Schemas = SchemaNames.Select(m => WithAssemblyInfo(m)).ToArray();
-    public static readonly TheoryData<DbDriver, string?> DbSchemaTestCases = DbDrivers.CrossJoin(Schemas).ToTheoryData();
+    public static readonly TheoryData<DbDriver, string?> DbSchemaTestCases = DbDrivers.CrossJoin(EfCoreFixture.Schemas).ToTheoryData();
 
     public EfCoreFixture Fixture { get; } = fixture;
 
@@ -39,11 +35,5 @@ public class EfCoreTests(EfCoreFixture fixture) : DatabaseTests
         context.Add(entity);
         await context.SaveChangesAsync();
         return entity;
-    }
-
-    [return: NotNullIfNotNull(nameof(str))]
-    public static string? WithAssemblyInfo(string? str, char separator = '_')
-    {
-        return CoreTestsFixture.WithAssemblyInfo(str, typeof(EfCoreTests).Assembly, separator);
     }
 }

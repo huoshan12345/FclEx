@@ -14,6 +14,8 @@ HTTP, HTML, cookie, authentication, and web-client helpers for FclEx.
 - Form data models and helpers for web form submission.
 - Source-generated `HttpClientBuilder` helper overloads.
 
-## Notes
+## Usage Notes
 
-The action types wrap HTTP responses into `OperationResult<T>`. When implementing custom actions, keep parsing and validation errors inside the action pipeline so callers can handle them consistently.
+- The action types wrap HTTP responses into `OperationResult<T>`.
+- When implementing custom actions, keep parsing and validation errors inside the action pipeline so callers can handle them consistently.
+- ASP.NET Core server-side helpers live in `FclEx.AspNetCore`.

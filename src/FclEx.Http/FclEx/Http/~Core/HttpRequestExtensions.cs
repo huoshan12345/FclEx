@@ -1,7 +1,13 @@
 namespace FclEx.Http;
 
+/// <summary>
+/// Fluent helpers for sending, inspecting, and converting <see cref="HttpRequest"/> instances.
+/// </summary>
 public static partial class HttpRequestExtensions
 {
+    /// <summary>
+    /// Sends a request through the supplied service, or through <see cref="HttpClientService.Default"/> when no service is supplied.
+    /// </summary>
     public static Task<HttpResponse> SendAsync(
         this HttpRequest request,
         IHttpService? service = null,
@@ -10,6 +16,10 @@ public static partial class HttpRequestExtensions
         return (service ?? HttpClientService.Default).SendAsync(request, token);
     }
 
+    /// <summary>
+    /// Sends a request through a temporary <see cref="HttpClientService"/> created from a client provider.
+    /// The created service follows <paramref name="disposeHttpClient"/> when it disposes the provided client.
+    /// </summary>
     public static Task<HttpResponse> SendAsync(
         this HttpRequest request,
         Func<HttpClient> httpClientProvider,
@@ -19,15 +29,23 @@ public static partial class HttpRequestExtensions
         return HttpClientService.Create(httpClientProvider, disposeHttpClient).SendAsync(request, token);
     }
 
+    /// <summary>
+    /// Executes request sending through an external Polly policy.
+    /// The policy receives the caller's cancellation token.
+    /// </summary>
     public static Task<HttpResponse> SendAsync(
         this HttpRequest request,
         IHttpService service,
         IAsyncPolicy policy,
         CancellationToken token = default)
     {
-        return policy.ExecuteAsync(() => request.SendAsync(service, token));
+        return policy.ExecuteAsync(t => request.SendAsync(service, t), token);
     }
 
+    /// <summary>
+    /// Formats the request line, request headers, and supplied cookies for trace logging.
+    /// The request body is not included.
+    /// </summary>
     public static string Dump(this HttpRequest request, IEnumerable<Cookie> cookies)
     {
         using var disposable = StringBuilderHelper.GetCached();
@@ -56,6 +74,9 @@ public static partial class HttpRequestExtensions
         return builder.ToString();
     }
 
+    /// <summary>
+    /// Formats the request for trace logging and includes cookies from the service when the request URI is absolute.
+    /// </summary>
     public static string Dump(this HttpRequest request, IHttpService service)
     {
         var uri = request.GetUri();

@@ -1,5 +1,9 @@
 namespace FclEx.Http;
 
+/// <summary>
+/// <see cref="HttpContent"/> implementation backed by an in-memory byte buffer.
+/// It is used to make request content reusable across retries and redirects.
+/// </summary>
 public class BufferedContent : HttpContent
 {
     private bool _disposed;
@@ -10,6 +14,10 @@ public class BufferedContent : HttpContent
         _buffer = buffer;
     }
 
+    /// <summary>
+    /// Returns this instance while it has not been disposed, otherwise returns a clone that shares the same byte buffer and headers.
+    /// This allows request-building code to reuse buffered content until <see cref="HttpContent"/> disposal makes a fresh instance necessary.
+    /// </summary>
     public BufferedContent CloneIfDisposed()
     {
         return _disposed
@@ -17,6 +25,9 @@ public class BufferedContent : HttpContent
             : this;
     }
 
+    /// <summary>
+    /// Creates another <see cref="BufferedContent"/> over the same immutable byte buffer and copies the content headers.
+    /// </summary>
     public BufferedContent Clone()
     {
         var content = new BufferedContent(_buffer);
@@ -30,6 +41,10 @@ public class BufferedContent : HttpContent
         source.CopyTo(destination, HttpHeaderNames.ContentLength);
     }
 
+    /// <summary>
+    /// Creates buffered content by reading the inner content into memory.
+    /// Content headers are copied except Content-Length, which is recomputed from the buffer length.
+    /// </summary>
     public static async Task<BufferedContent> CreateAsync(HttpContent inner, TimeSpan? timeout = null, int? bufferSize = null, CancellationToken cancellationToken = default)
     {
         var buffer = await inner

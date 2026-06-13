@@ -1,7 +1,13 @@
 namespace FclEx.Http;
 
+/// <summary>
+/// Extensions for mutating and cloning <see cref="HttpRequestMessage"/> instances.
+/// </summary>
 public static class HttpRequestMessageExtensions
 {
+    /// <summary>
+    /// Adds a Cookie header when <paramref name="cookie"/> is not null or empty.
+    /// </summary>
     public static HttpRequestMessage AddCookie(this HttpRequestMessage request, string? cookie)
     {
         if (cookie.IsNotEmpty())

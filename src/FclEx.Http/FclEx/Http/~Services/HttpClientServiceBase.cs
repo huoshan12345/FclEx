@@ -1,5 +1,9 @@
 namespace FclEx.Http;
 
+/// <summary>
+/// Base implementation for HTTP services backed by <see cref="HttpClient"/>.
+/// It handles request-message construction, retries through the provided context policy, redirects, cookies, response decoding, and disposal of response resources.
+/// </summary>
 public abstract class HttpClientServiceBase : HttpServiceBase
 {
     protected static readonly Encoding DefaultEncoding = Encoding.UTF8;
@@ -252,14 +256,14 @@ public abstract class HttpClientServiceBase : HttpServiceBase
     protected virtual async Task<HttpResponseMessage> SendAsync(HttpClientContext context, HttpRequest request, BufferedContent? bufferedContent, CancellationToken token)
     {
         var (client, policy, _) = context;
-        var response = await policy.ExecuteAsync(async () =>
+        var response = await policy.ExecuteAsync(async t =>
         {
             // Create request in every retry to avoid the following error:
             // The request message was already sent. Cannot send the same request message multiple times.
-            using var httpRequest = BuildHttpRequest(request, bufferedContent, client.BaseAddress, _cookieContainer, token);
-            using var cts = token.WithTimeout(request.ReadHeadersTimeout);
+            using var cts = t.WithTimeout(request.ReadHeadersTimeout);
+            using var httpRequest = BuildHttpRequest(request, bufferedContent, client.BaseAddress, _cookieContainer, cts.Token);
             return await client.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cts.Token);
-        });
+        }, token);
         return response;
     }
 

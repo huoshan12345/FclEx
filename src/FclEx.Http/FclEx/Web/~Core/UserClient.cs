@@ -1,22 +1,33 @@
 namespace FclEx.Web;
 
+/// <summary>
+/// Base implementation for stateful user clients.
+/// </summary>
+/// <typeparam name="TAccount">The account type used by the client.</typeparam>
+/// <remarks>
+/// Login operations are serialized with an async lock. If the client is already online, login methods return success
+/// without invoking the underlying login action. Assigning a new account resets the account status to normal.
+/// </remarks>
 public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable where TAccount : IUserAccount
 {
     private static int _id;
 
-    private readonly Lazy<ILogger> _logger;
     private TAccount _account;
     private IHttpService? _httpService;
 
     protected AsyncLock LoginLocker { get; } = new();
     protected bool _isDisposed;
 
+    /// <inheritdoc />
     public virtual int Id { get; } = Interlocked.Increment(ref _id);
 
+    /// <inheritdoc />
     public virtual IUserClientSession Session { get; } = new UserClientSession();
 
+    /// <inheritdoc />
     public virtual IUserClientState State { get; } = new UserClientState();
 
+    /// <inheritdoc />
     public virtual IHttpService HttpService
     {
         get => _httpService ??= new HttpClientService { Logger = Logger };
@@ -27,6 +38,7 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
         }
     }
 
+    /// <inheritdoc />
     public virtual TAccount Account
     {
         get => _account;
@@ -37,19 +49,48 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
         }
     }
 
-    public virtual ILogger Logger => _logger.Value;
+    private readonly Lazy<ILogger> _lazyLogger;
 
+    /// <inheritdoc />
+    [AllowNull]
+    public virtual ILogger Logger
+    {
+        get => field ?? _lazyLogger.Value;
+        set
+        {
+            if (value is UserClientLogger<TAccount> || value.IsNullOrNullLogger())
+            {
+                field = value;
+            }
+            else
+            {
+                field = CreateLogger(value);
+            }
+
+            HttpService.Logger = Logger;
+        }
+    }
+
+    /// <summary>
+    /// Initializes a user client with an account and optional logger factory.
+    /// </summary>
+    /// <param name="account">The initial account. It cannot be null.</param>
+    /// <param name="loggerFactory">Optional factory used to create the underlying logger.</param>
     protected UserClient(TAccount account, ILoggerFactory? loggerFactory = null)
     {
         _account = Check.NotNull(account);
-        _logger = new(() => CreateLogger(loggerFactory), true);
+        _lazyLogger = new(() => CreateLogger(loggerFactory.CreateLoggerOrDefault(GetType())));
     }
 
-    protected virtual ILogger CreateLogger(ILoggerFactory? factory)
+    /// <summary>
+    /// Creates the logger wrapper used by this client.
+    /// </summary>
+    /// <param name="logger">The inner logger.</param>
+    /// <returns>A logger enriched with client/account state.</returns>
+    protected virtual ILogger CreateLogger(ILogger logger)
     {
-        var logger = factory.CreateLoggerOrDefault(GetType());
-        var logger2 = new PropertiesLogger(logger, GetLogProperties(), GetLogLazyProperties());
-        return new UserClientLogger<TAccount>(logger2, this);
+        var propertiesLogger = new PropertiesLogger(logger, GetLogProperties(), GetLogLazyProperties());
+        return new UserClientLogger<TAccount>(propertiesLogger, this);
     }
 
     protected virtual IEnumerable<LoggerProperty> GetLogProperties()
@@ -78,13 +119,27 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
             .OnException(ex => Logger.LogWarning(ex, "Failed to login: {Error}", ex.Message));
     }
 
+    /// <summary>
+    /// Runs the implementation-specific real login action.
+    /// </summary>
+    /// <param name="token">A cancellation token for the login operation.</param>
+    /// <returns>The login result.</returns>
     protected abstract Task<OperationResult> LoginActionAsync(CancellationToken token);
 
+    /// <summary>
+    /// Runs the implementation-specific fake-login action.
+    /// </summary>
+    /// <param name="token">A cancellation token for the fake-login operation.</param>
+    /// <returns>The fake-login result. The default implementation succeeds without doing work.</returns>
     protected virtual Task<OperationResult> FakeLoginActionAsync(CancellationToken token)
     {
         return Operation.Success();
     }
 
+    /// <summary>
+    /// Disposes resources owned by this client.
+    /// </summary>
+    /// <remarks>The default implementation disposes the assigned HTTP service if one has been created.</remarks>
     protected virtual void DisposeAction()
     {
         _httpService?.Dispose();
@@ -135,16 +190,19 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
         }
     }
 
+    /// <inheritdoc />
     public Task<OperationResult> LoginAsync(CancellationToken token = default)
     {
         return DoLoginAsync(LoginActionWrapperAsync, token);
     }
 
+    /// <inheritdoc />
     public async Task WaitLoginAsync(CancellationToken token = default)
     {
         using (await LoginLocker.LockAsync(token)) { }
     }
 
+    /// <inheritdoc />
     public Task<OperationResult> LogoutAsync(CancellationToken token = default)
     {
         HttpService.ClearAllCookies();
@@ -152,6 +210,7 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
         return Operation.Success();
     }
 
+    /// <inheritdoc />
     public Task<OperationResult> FakeLoginAsync(bool loginIfFail = true, CancellationToken token = default)
     {
         return DoLoginAsync(async t =>
@@ -169,6 +228,7 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
         }, token);
     }
 
+    /// <inheritdoc />
     public void Dispose()
     {
         if (_isDisposed)
@@ -180,13 +240,15 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
     }
 }
 
+/// <summary>
+/// Base implementation for user clients that use <see cref="IUserAccount"/>.
+/// </summary>
 public abstract class UserClient(IUserAccount? account = null, ILoggerFactory? loggerFactory = null)
     : UserClient<IUserAccount>(account ?? UserAccount.Empty, loggerFactory), IUserClient
 {
-    protected override ILogger CreateLogger(ILoggerFactory? factory)
+    protected override ILogger CreateLogger(ILogger logger)
     {
-        var logger = factory.CreateLoggerOrDefault(GetType());
-        var logger2 = new PropertiesLogger(logger, GetLogProperties(), GetLogLazyProperties());
-        return new UserClientLogger(logger2, this); // Use non-generic logger for IUserClient
+        var propertiesLogger = new PropertiesLogger(logger, GetLogProperties(), GetLogLazyProperties());
+        return new UserClientLogger(propertiesLogger, this); // Use non-generic logger for IUserClient
     }
 }

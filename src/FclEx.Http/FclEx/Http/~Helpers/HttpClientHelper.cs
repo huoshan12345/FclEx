@@ -4,18 +4,40 @@ using static FclEx.Http.IPVersionPolicy;
 
 namespace FclEx.Http;
 
+/// <summary>
+/// Creates <see cref="HttpClient"/> and <see cref="SocketsHttpHandler"/> instances from FclEx HTTP options.
+/// </summary>
 public static class HttpClientHelper
 {
+    /// <summary>
+    /// Creates an <see cref="HttpClient"/> backed by a configured <see cref="SocketsHttpHandler"/>.
+    /// </summary>
+    /// <param name="options">Handler options. When <see langword="null"/>, default <see cref="SocketsHttpHandlerOptions"/> values are used.</param>
+    /// <returns>A client that owns the created handler.</returns>
     public static HttpClient Create(SocketsHttpHandlerOptions? options = null)
     {
         return new(CreateSocketsHttpHandler(options));
     }
 
+    /// <summary>
+    /// A certificate validation callback that accepts every server certificate.
+    /// </summary>
+    /// <returns>Always <see langword="true"/>.</returns>
+    /// <remarks>Use only when certificate validation has explicitly been disabled.</remarks>
     public static bool BypassServerCertificateValidation(object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
     {
         return true;
     }
 
+    /// <summary>
+    /// Creates a <see cref="SocketsHttpHandler"/> configured from <see cref="SocketsHttpHandlerOptions"/>.
+    /// </summary>
+    /// <param name="options">Handler options. When <see langword="null"/>, default options are used.</param>
+    /// <returns>
+    /// A handler with cookie handling disabled, automatic redirects and decompression copied from the options,
+    /// optional proxy support, optional certificate validation bypass, and a connect callback that applies
+    /// <see cref="SocketsHttpHandlerOptions.IPVersionPolicy"/>.
+    /// </returns>
     public static SocketsHttpHandler CreateSocketsHttpHandler(SocketsHttpHandlerOptions? options = null)
     {
         options ??= new();

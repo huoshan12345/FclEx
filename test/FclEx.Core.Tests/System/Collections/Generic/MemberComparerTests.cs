@@ -10,7 +10,7 @@ public class MemberComparerTests
         foreach (var num in Enumerable.Range(100, 5))
         {
             var random = new Random(num);
-            var list = Enumerable.Range(1, 10000).Select(m => random.NextBoolean(20) ? null : new Person
+            var list = Enumerable.Range(1, 10000).Select(m => random.NextBooleanPercent(20) ? null : new Person
             {
                 Id = 0,
                 Age = random.Next(1, 100),

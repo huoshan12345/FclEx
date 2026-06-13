@@ -3,7 +3,7 @@ namespace FclEx.Http.Actions;
 public class HttpRequestActionTests : HttpServerTests
 {
     [Fact]
-    public async Task MultipleActions_Tests()
+    public async Task ExecuteAsync_WhenActionsAreChained_PassesPreviousResultToNextRequest()
     {
         if (HasApiServer == false)
             return;

@@ -1,14 +1,29 @@
-using System;
-using System.Runtime.InteropServices;
-
 namespace FclEx.Extensions;
 
+/// <summary>
+/// Provides extensions for generating pseudo-random values from <see cref="Random" />.
+/// </summary>
+/// <remarks>
+/// These APIs use <see cref="Random" /> and are not suitable for cryptographic keys, passwords, tokens, or other
+/// security-sensitive values. Range-based methods follow the <see cref="Random" /> convention: the lower bound is
+/// inclusive and the upper bound is exclusive. <see cref="Next{T}(Random)" /> creates test data and does not
+/// guarantee that generated objects satisfy their domain invariants.
+/// </remarks>
 public static class RandomExtensions
 {
     private const string Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    private const int DefaultMaxObjectGraphDepth = 10;
+
+    extension(Random)
+    {
+#if !NET5_0_OR_GREATER
+        public static Random Shared => ThreadSafeRandom.Instance;
+#endif
+    }
 
     public static char NextChar(this Random random)
     {
+        Check.NotNull(random);
         var index = random.Next(0, Chars.Length);
         return Chars[index];
     }
@@ -26,7 +41,19 @@ public static class RandomExtensions
 
     [MethodImpl(AggressiveInlining)]
     public static bool NextBoolean(this Random random, double trueProbability = 0.5)
-        => random.NextDouble() >= 1.0D - trueProbability;
+    {
+        Check.NotNull(random);
+        CheckProbability(trueProbability);
+        return random.NextDouble() >= 1.0D - trueProbability;
+    }
+
+    [MethodImpl(AggressiveInlining)]
+    public static bool NextBooleanPercent(this Random random, double truePercentage = 50)
+    {
+        Check.NotNull(random);
+        CheckPercentage(truePercentage);
+        return random.NextBoolean(truePercentage / 100D);
+    }
 
     [MethodImpl(AggressiveInlining)]
     public static sbyte NextSByte(this Random random, sbyte min = 0, sbyte max = sbyte.MaxValue)
@@ -54,13 +81,33 @@ public static class RandomExtensions
     [MethodImpl(AggressiveInlining)]
     public static ulong NextUInt64(this Random random, ulong min = 0, ulong max = ulong.MaxValue)
     {
-        var r = random.NextDouble();
-        return (ulong)(max * r + min * (1 - r));
+        Check.NotNull(random);
+        CheckRange(min, max);
+
+        if (min == max)
+            return min;
+
+        var range = max - min;
+        var limit = ulong.MaxValue - ulong.MaxValue % range;
+        ulong r;
+
+        do
+        {
+            r = random.NextUnmanaged<ulong>();
+        } while (r >= limit);
+
+        return r % range + min;
     }
 
     [MethodImpl(AggressiveInlining)]
     public static double NextDouble(this Random random, double min, double max)
     {
+        Check.NotNull(random);
+        CheckRange(min, max);
+
+        if (min == max)
+            return min;
+
         var r = random.NextDouble();
         return max * r + min * (1 - r);
     }
@@ -68,6 +115,12 @@ public static class RandomExtensions
     [MethodImpl(AggressiveInlining)]
     public static float NextSingle(this Random random, float min = 0, float max = float.MaxValue)
     {
+        Check.NotNull(random);
+        CheckRange(min, max);
+
+        if (min == max)
+            return min;
+
         var r = (float)random.NextDouble();
         return max * r + min * (1 - r);
     }
@@ -75,6 +128,12 @@ public static class RandomExtensions
     [MethodImpl(AggressiveInlining)]
     public static decimal NextDecimal(this Random random, decimal min = 0, decimal max = decimal.MaxValue)
     {
+        Check.NotNull(random);
+        CheckRange(min, max);
+
+        if (min == max)
+            return min;
+
         // min + (max - min) * r => max * r + min * (1 - r)
         // because max - min may be larger than Type.MaxValue.
         var r = (decimal)random.NextDouble();
@@ -83,30 +142,58 @@ public static class RandomExtensions
 
     public static DateTime NextDateTime(this Random random, DateTime? minValue = null, DateTime? maxValue = null)
     {
+        Check.NotNull(random);
         var min = minValue ?? DateTimeExtensions.UnixEpoch;
         var max = maxValue ?? DateTime.MaxValue;
+        CheckRange(min, max);
+
+        if (min == max)
+            return min;
+
         var ticks = random.NextInt64(min.Ticks, max.Ticks);
-        return new DateTime(ticks);
+        return new DateTime(ticks, min.Kind);
     }
 
     public static DateTimeOffset NextDateTimeOffset(this Random random, DateTimeOffset? minValue = null, DateTimeOffset? maxValue = null)
     {
-        return random.NextDateTime(minValue?.UtcDateTime, maxValue?.UtcDateTime);
+        Check.NotNull(random);
+        var min = minValue ?? DateTimeOffset.FromUnixTimeSeconds(0);
+        var max = maxValue ?? DateTimeOffset.MaxValue;
+        CheckRange(min, max);
+
+        if (min == max)
+            return min;
+
+        var ticks = random.NextInt64(min.UtcTicks, max.UtcTicks);
+        var utcValue = new DateTimeOffset(ticks, TimeSpan.Zero);
+        return utcValue.ToOffset(min.Offset);
     }
 
 #if NET6_0_OR_GREATER
     public static DateOnly NextDateOnly(this Random random, DateOnly? minValue = null, DateOnly? maxValue = null)
     {
+        Check.NotNull(random);
         var min = minValue ?? DateOnly.MinValue;
         var max = maxValue ?? DateOnly.MaxValue;
+        CheckRange(min, max);
+
+        if (min == max)
+            return min;
+
         var number = random.Next(min.DayNumber, max.DayNumber);
         return DateOnly.FromDayNumber(number);
     }
 
     public static TimeOnly NextTimeOnly(this Random random, TimeOnly? minValue = null, TimeOnly? maxValue = null)
     {
+        Check.NotNull(random);
         var min = minValue ?? TimeOnly.MinValue;
         var max = maxValue ?? TimeOnly.MaxValue;
+        CheckRange(min, max);
+
+        if (min == max)
+            return min;
+
         var ticks = random.NextInt64(min.Ticks, max.Ticks);
         return new TimeOnly(ticks);
     }
@@ -120,6 +207,7 @@ public static class RandomExtensions
     /// <returns>The randomly generated value.</returns>
     public static T NextMarshalable<T>(this Random random)
     {
+        Check.NotNull(random);
         typeof(T).EnsureMarshalable();
         var size = Marshal.SizeOf<T>();
         var bytes = new byte[size];
@@ -141,10 +229,11 @@ public static class RandomExtensions
 #endif
         T NextUnmanaged<T>(this Random random) where T : unmanaged
     {
+        Check.NotNull(random);
 #if !NET5_0_OR_GREATER
         var bytes = new byte[sizeof(T)];
         random.NextBytes(bytes);
-        var result = Unsafe.As<byte, T>(ref bytes[0]) ;
+        var result = MemoryMarshal.Read<T>(bytes);
 #else
         Unsafe.SkipInit(out T result);
         random.NextBytes(Span.AsBytes(ref result));
@@ -155,6 +244,12 @@ public static class RandomExtensions
 #if !NET5_0_OR_GREATER
     public static long NextInt64(this Random random, long min, long max)
     {
+        Check.NotNull(random);
+        CheckRange(min, max);
+
+        if (min == max)
+            return min;
+
         var range = (ulong)(max - min);
         var limit = ulong.MaxValue - ulong.MaxValue % range;
         ulong r;
@@ -179,6 +274,7 @@ public static class RandomExtensions
     public static object Next(this Random random, Type type)
     {
         Check.NotNull(random);
+        Check.NotNull(type);
         return random.Next(type, null, null);
     }
 
@@ -187,14 +283,16 @@ public static class RandomExtensions
         if (Nullable.GetUnderlyingType(type) is { } nullable)
             type = nullable;
 
+        if (type.IsEnum)
+        {
+            var values = Enum.GetValues(type);
+            return values.GetValue(random.Next(values.Length))!;
+        }
+
         if (type.GetElementType() is { } elementType)
         {
             int? length = null;
-            if (type.GetProperty("IsFixedSize", false) is { } property)
-            {
-                // TODO
-            }
-            else if (provider != null && provider.TryGetAttribute<MarshalAsAttribute>(false, out var attribute))
+            if (provider != null && provider.TryGetAttribute<MarshalAsAttribute>(false, out var attribute))
             {
                 if (attribute.Value is UnmanagedType.ByValArray)
                 {
@@ -207,7 +305,7 @@ public static class RandomExtensions
             var array = Array.CreateInstance(elementType, length.Value);
             for (var i = 0; i < length; i++)
             {
-                var element = random.Next(elementType, provider, depth);
+                var element = random.Next(elementType, null, depth);
                 array.SetValue(element, i);
             }
             return array;
@@ -274,14 +372,13 @@ public static class RandomExtensions
             return random.NextTimeOnly();
 #endif
 
-        depth ??= [];
-        depth[type] = depth.Get(type) + 1; // only care about the depth of compound type types
+        depth = NextDepth(depth, type);
         var instance = random.CreateInstance(type, depth);
         var fields = type.GetAllInstanceFields();
         foreach (var field in fields)
         {
             // to avoid too much circular references.
-            if (depth.Get(field.FieldType) >= 10)
+            if (HasReachedMaxDepth(field.FieldType, depth))
                 continue;
 
             var value = random.Next(field.FieldType, field, depth);
@@ -290,7 +387,7 @@ public static class RandomExtensions
         return instance;
     }
 
-    private static object CreateInstance(this Random random, Type type, Dictionary<Type, int>? depth)
+    private static object CreateInstance(this Random random, Type type, Dictionary<Type, int> depth)
     {
         if (type.IsValueType)
             return Activator.CreateInstance(type)!;
@@ -308,13 +405,15 @@ public static class RandomExtensions
         foreach (var ctor in ctors)
         {
             var paras = ctor.GetParameters();
-            var args = new List<object>();
+            var args = new List<object?>();
 
             try
             {
                 foreach (var para in paras)
                 {
-                    var arg = random.Next(para.ParameterType, para, depth);
+                    var arg = HasReachedMaxDepth(para.ParameterType, depth)
+                        ? GetDefaultValue(para.ParameterType)
+                        : random.Next(para.ParameterType, para, depth);
                     args.Add(arg);
                 }
 
@@ -381,10 +480,44 @@ public static class RandomExtensions
         }
     }
 
-    extension(Random)
+    private static void CheckRange<T>(T min, T max) where T : IComparable<T>
     {
-#if !NET5_0_OR_GREATER
-        public static Random Shared => ThreadSafeRandom.Instance;
-#endif
+        if (Comparer<T>.Default.Compare(min, max) > 0)
+            throw new ArgumentOutOfRangeException(nameof(max), max, "The maximum value must be greater than or equal to the minimum value.");
+    }
+
+    private static void CheckProbability(double probability)
+    {
+        if (double.IsNaN(probability) || probability is < 0D or > 1D)
+            throw new ArgumentOutOfRangeException(nameof(probability), probability, "The probability must be between 0 and 1.");
+    }
+
+    private static void CheckPercentage(double percentage)
+    {
+        if (double.IsNaN(percentage) || percentage is < 0D or > 100D)
+            throw new ArgumentOutOfRangeException(nameof(percentage), percentage, "The percentage must be between 0 and 100.");
+    }
+
+    private static Dictionary<Type, int> NextDepth(Dictionary<Type, int>? depth, Type type)
+    {
+        var result = depth is null
+            ? []
+            : new Dictionary<Type, int>(depth);
+        result[type] = result.Get(type) + 1;
+        return result;
+    }
+
+    private static bool HasReachedMaxDepth(Type type, Dictionary<Type, int> depth)
+    {
+        var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
+        return underlyingType.IsValueType == false
+            && depth.Get(underlyingType) >= DefaultMaxObjectGraphDepth;
+    }
+
+    private static object? GetDefaultValue(Type type)
+    {
+        return type.IsValueType
+            ? Activator.CreateInstance(type)
+            : null;
     }
 }

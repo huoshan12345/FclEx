@@ -4,7 +4,7 @@ namespace FclEx.Http.Core.HttpRequestExtensions;
 public class HeaderTests
 {
     [Fact]
-    public void AddHeader_IEnumerable_KeyValuePair_Nullability()
+    public void AddHeader_WithEnumerableOverloads_AcceptsEmptyCollectionsAndExistingHeaders()
     {
         var request = HttpRequest.Get("http://localhost");
         {
@@ -63,7 +63,7 @@ public class HeaderTests
     }
 
     [Fact]
-    public void AddHeader_WithNullValues_HandlesGracefully()
+    public void AddHeader_WithEmptyValues_AddsEmptyHeaderValues()
     {
 
         var headers = new Dictionary<string, string>
@@ -118,7 +118,7 @@ public class HeaderTests
     }
 
     [Fact]
-    public void AddHeader_WithMultiValueDictionaryContainingNulls_HandlesGracefully()
+    public void AddHeader_WithMultiValueDictionaryContainingEmptyValues_AddsEmptyHeaderValues()
     {
 
         var multiValueHeaders = new Dictionary<string, List<string>>
@@ -226,6 +226,16 @@ public class HeaderTests
         Assert.ThrowsAny<ArgumentException>(() => request.AddHeaderLine("X-Trace:abc", separator!));
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData(null)]
+    public void AddHeaderLine_WhenPairIsEmpty_Throws(string? pair)
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        Assert.ThrowsAny<ArgumentException>(() => request.AddHeaderLine(pair!));
+    }
+
     [Fact]
     public void AcceptCompress_WhenEncodingsAreOmitted_UsesDefaultHandlerEncodings()
     {
@@ -261,5 +271,115 @@ public class HeaderTests
 
         Assert.Same(request, result);
         Assert.Equal("zh-CN,zh;q=0.8", request.Headers.Get(HttpHeaderNames.AcceptLanguage));
+    }
+
+    [Fact]
+    public void SetHeader_ReplacesExistingValuesAndReturnsRequest()
+    {
+        var request = HttpRequest.Get("http://localhost")
+            .AddHeader("X-Trace", "one")
+            .AddHeader("X-Trace", "two");
+
+        var result = request.SetHeader("X-Trace", "three");
+
+        Assert.Same(request, result);
+        Assert.Equal(["three"], request.Headers.GetValues("X-Trace"));
+    }
+
+    [Fact]
+    public void RemoveHeader_RemovesHeaderAndReturnsRequest()
+    {
+        var request = HttpRequest.Get("http://localhost")
+            .AddHeader("X-Trace", "one");
+
+        var result = request.RemoveHeader("X-Trace");
+
+        Assert.Same(request, result);
+        Assert.False(request.Headers.ContainsKey("X-Trace"));
+    }
+
+    [Fact]
+    public void AddCookiesAndSetCookies_WriteCookieHeaderValues()
+    {
+        var request = HttpRequest.Get("http://localhost");
+        var cookies = new[]
+        {
+            new Cookie("sid", "abc"),
+            new Cookie("theme", "dark"),
+        };
+
+        request.AddCookies("lang=en");
+        request.AddCookies(cookies);
+        Assert.Equal(["lang=en", "sid=abc; theme=dark"], request.Headers.GetValues(HttpHeaderNames.Cookie));
+
+        request.SetCookies(cookies);
+        Assert.Equal(["sid=abc; theme=dark"], request.Headers.GetValues(HttpHeaderNames.Cookie));
+    }
+
+    [Fact]
+    public void HeaderShortcutMethods_SetExpectedHeaderValues()
+    {
+        var request = HttpRequest.Get("http://localhost")
+            .AcceptUtf8()
+            .Ajax()
+            .Referrer("https://referrer.example")
+            .UserAgent("test-agent");
+
+        Assert.Equal("utf-8", request.Headers.Get(HttpHeaderNames.AcceptCharset));
+        Assert.Equal("XMLHttpRequest", request.Headers.Get(HttpHeaderNames.XRequestedWith));
+        Assert.Equal("https://referrer.example", request.Referrer);
+        Assert.Equal("test-agent", request.UserAgent);
+    }
+
+    [Fact]
+    public void TryReferrerAndTryUserAgent_DoNotOverwriteExistingValues()
+    {
+        var request = HttpRequest.Get("http://localhost")
+            .Referrer("https://first.example")
+            .UserAgent("first-agent");
+
+        request.TryReferrer("https://second.example")
+            .TryUserAgent("second-agent");
+
+        Assert.Equal("https://first.example", request.Referrer);
+        Assert.Equal("first-agent", request.UserAgent);
+    }
+
+    [Fact]
+    public void TryReferrerAndTryUserAgent_SetMissingValues()
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        request.TryReferrer("https://first.example")
+            .TryUserAgent("first-agent");
+
+        Assert.Equal("https://first.example", request.Referrer);
+        Assert.Equal("first-agent", request.UserAgent);
+    }
+
+    [Theory]
+    [InlineData(true, CompressionMethod.GZip)]
+    [InlineData(false, CompressionMethod.None)]
+    public void UseGZip_UpdatesCompressionMethod(bool gzip, CompressionMethod expected)
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        var result = request.UseGZip(gzip, CompressionLevel.Fastest);
+
+        Assert.Same(request, result);
+        Assert.Equal(expected, request.CompressionMethod);
+        Assert.Equal(CompressionLevel.Fastest, request.CompressionLevel);
+    }
+
+    [Fact]
+    public void Compression_SetsCompressionMethodAndLevel()
+    {
+        var request = HttpRequest.Get("http://localhost");
+
+        var result = request.Compression(CompressionMethod.Deflate, CompressionLevel.Fastest);
+
+        Assert.Same(request, result);
+        Assert.Equal(CompressionMethod.Deflate, request.CompressionMethod);
+        Assert.Equal(CompressionLevel.Fastest, request.CompressionLevel);
     }
 }

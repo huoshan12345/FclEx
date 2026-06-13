@@ -28,6 +28,12 @@ These projects produce public NuGet packages, so do not casually rename, remove,
 
 When changing package purpose, public surface area, naming, or behavior, check whether the root `README.md`, the package-level `README.md`, and the project `Description` metadata should be updated together.
 
+## Documentation & Work Scope
+
+When writing XML documentation, do not settle for surface-level summaries such as "Gets or sets X" or "Executes the X operation" unless that is genuinely the most useful description. Read the implementation and describe the behavior, important parameters, return values, side effects, failure cases, and compatibility notes that would help a package consumer. If the behavior or intent is unclear after reading the code, ask the user instead of guessing.
+
+If a requested change covers too much code to handle thoughtfully in one pass, say so and propose splitting the work into batches. Prefer smaller, well-reviewed slices over broad mechanical edits that create low-value churn.
+
 ## Multi-Targeting & Compatibility
 
 Many packages target multiple frameworks, including older targets such as `netstandard2.0` and `net472` as well as current .NET targets. Before using newer BCL or framework APIs, verify they are available on every target for the project. Use existing compatibility helpers, conditional compilation, or target-specific references when needed.
@@ -43,6 +49,8 @@ Tests use xUnit v3 and should be added beside the matching package under `test/<
 Organize new tests by the class or interface being tested. Split large test files when multiple tested subjects are involved, and cover boundary cases such as nulls, empty collections, duplicate values, failed operations, exceptions, cancellation, and framework-specific behavior when relevant.
 
 Prefer running the narrowest useful test project for the code you changed before considering full-solution tests. Some tests have external service dependencies: `FclEx.Dapper.Tests`, `FclEx.EfCore.Tests`, and `FclEx.Messaging.Tests`. The local test databases and message queues are expected to be provisioned, but be mindful that `FclEx.Messaging` includes Kafka support while `FclEx.Messaging.Tests` currently does not cover Kafka and no Kafka test service is assumed yet.
+
+When a new or changed test fails, do not change the implementation or weaken the test merely to make the suite pass. First determine whether the failure indicates a real implementation issue, an incorrect test assumption, an environment problem, or a legitimately wrong test case. Only modify the implementation or the test when that diagnosis supports it; otherwise, summarize the failure and ask the user how they want to proceed.
 
 When `FclEx.Http` tests need a real local HTTP server, use or follow `test/FclEx.Http.Tests/FclEx/Http/HttpServerFixture.cs`.
 

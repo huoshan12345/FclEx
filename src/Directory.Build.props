@@ -34,8 +34,15 @@
     <PackageReference Include="PolySharp" PrivateAssets="all" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <ProjectReadmePath>$(MSBuildProjectDirectory)\README.md</ProjectReadmePath>
+    <FallbackReadmePath>$(MSBuildThisFileDirectory)..\README.md</FallbackReadmePath>
+    <PackageReadmePath Condition="Exists('$(ProjectReadmePath)')">$(ProjectReadmePath)</PackageReadmePath>
+    <PackageReadmePath Condition="'$(PackageReadmePath)' == ''">$(FallbackReadmePath)</PackageReadmePath>
+  </PropertyGroup>
+
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)..\README.md" Pack="true" PackagePath="\" Visible="false"/>
+    <None Include="$(PackageReadmePath)" Pack="true" PackagePath="\" Visible="false" />
     <None Include="$(MSBuildThisFileDirectory)..\LICENSE.TXT" Pack="true" PackagePath="\" Visible="false"/>
   </ItemGroup>
 

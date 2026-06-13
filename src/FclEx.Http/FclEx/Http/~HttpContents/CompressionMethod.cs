@@ -1,5 +1,8 @@
 namespace FclEx.Http;
 
+/// <summary>
+/// Compression algorithms that can be applied to outgoing request content.
+/// </summary>
 public enum CompressionMethod
 {
     /// <summary>Do not use compression.</summary>

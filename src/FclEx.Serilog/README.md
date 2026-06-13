@@ -1,17 +1,18 @@
 # FclEx.Serilog
 
-Serilog integration helpers, enrichers, filters, formatters, and sinks.
+Serilog helpers for FclEx.
 
 ## What Is Included
 
-- `SerilogConfiguration` and fluent configuration helpers.
-- Common enrichers for OS, host, assembly, and request-related context.
-- Log-event excluders for source, property, message, and exception filtering.
-- JSON formatter support with exception formatting options.
-- Sinks for mutating log events, formatting exceptions, New Relic output, and Logstash output.
-- TCP and UDP Logstash input helpers.
-- Extensions for `LoggerConfiguration`, `LoggerSinkConfiguration`, Serilog `ILogger`, and Microsoft logging builders.
+- Serilog configuration helpers and service registration.
+- Enrichers and structured-property helpers.
+- Excluder/filter types for source, message, property, and exception filtering.
+- JSON formatter and exception formatting options.
+- Log event extensions and level helpers.
+- Sinks for log mutation, exception formatting, Logstash, and New Relic.
 
-## Notes
+## Usage Notes
 
-Several helpers use reflection against Serilog internals to mutate or format log events. Recheck behavior when upgrading Serilog major versions.
+- This package bridges FclEx HTTP/logging helpers with Serilog.
+- Slack-specific Serilog sinks live in `FclEx.Serilog.Slack`.
+- Use the formatter options to keep exception output consistent across sinks.

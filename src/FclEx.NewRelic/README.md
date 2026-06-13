@@ -1,17 +1,17 @@
 # FclEx.NewRelic
 
-New Relic helpers for agent instrumentation and NerdGraph NRQL queries.
+New Relic agent and NerdGraph helpers for FclEx.
 
 ## What Is Included
 
-- Helpers for getting the current transaction and span from the New Relic agent.
-- Safe custom event recording and custom attribute helpers.
-- `NewRelicClient` for calling NerdGraph.
-- NRQL query helpers that return typed `NrqlResult<T>` models.
-- Retry policy support for NerdGraph responses.
-- `NrqlException` and serializable exception info models.
-- Dependency injection registration for `NewRelicClient`.
+- New Relic agent helper methods.
+- `NewRelicClient` and extensions for NerdGraph/NRQL queries.
+- NRQL response models and metadata types.
+- NRQL exception types and retry policy helpers.
+- Service registration extensions.
 
-## Notes
+## Usage Notes
 
-NRQL helpers expect a valid account id and API key. Agent helpers are only meaningful when the New Relic agent is present in the running process.
+- Use this package when application code needs to report to New Relic or query NerdGraph.
+- HTTP behavior is built on `FclEx.Http`.
+- Configure New Relic credentials and account information outside the package.

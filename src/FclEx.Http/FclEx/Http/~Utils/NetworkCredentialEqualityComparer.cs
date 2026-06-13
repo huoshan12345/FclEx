@@ -1,7 +1,13 @@
 namespace FclEx.Http;
 
+/// <summary>
+/// Compares <see cref="NetworkCredential"/> instances by user name, password, and domain.
+/// </summary>
 public class NetworkCredentialEqualityComparer : IEqualityComparer<NetworkCredential>
 {
+    /// <summary>
+    /// A shared comparer instance.
+    /// </summary>
     public static readonly NetworkCredentialEqualityComparer Instance = new();
 
     public bool Equals(NetworkCredential? x, NetworkCredential? y)

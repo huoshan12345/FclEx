@@ -126,6 +126,11 @@ public static class EnumExtensions
         {
             return (T[])Enum.GetValues(typeof(T));
         }
+
+        public static bool IsDefined<T>(T value) where T : struct, Enum
+        {
+            return Enum.IsDefined(typeof(T), value);
+        }
 #endif
     }
 }

@@ -1,9 +1,18 @@
 #pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
 namespace System.Collections.Generic;
 
-public unsafe class BytewiseEqualityComparer<T> : IEqualityComparer<T>
+/// <summary>
+/// Compares objects by reading the bytes stored in their instance memory.
+/// </summary>
+/// <remarks>
+/// This comparer intentionally supports reference types as well as value types, but it compares runtime object memory
+/// rather than logical equality. Results can depend on CLR object layout, padding bytes, reference field addresses,
+/// runtime version, platform architecture, and implementation details that may change between executions.
+/// Use it only when those object-memory semantics are explicitly desired.
+/// </remarks>
+public unsafe class ObjectMemoryEqualityComparer<T> : IEqualityComparer<T>
 {
-    public static readonly BytewiseEqualityComparer<T> Instance = new();
+    public static readonly ObjectMemoryEqualityComparer<T> Instance = new();
 
     public bool Equals(T? x, T? y)
     {
@@ -29,12 +38,7 @@ public unsafe class BytewiseEqualityComparer<T> : IEqualityComparer<T>
 
         var p = &obj;
         var span = AsSpan(p);
-        var hashCode = 0;
-        foreach (var m in span)
-        {
-            hashCode = (hashCode << 3) | (hashCode >> (29)) ^ m;
-        }
-        return hashCode;
+        return span.ComputeHashCode();
     }
 
     private static Span<byte> AsSpan(T?* pointer)

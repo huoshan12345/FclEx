@@ -1,7 +1,27 @@
+using AngleSharp.Html.Dom;
+
 namespace AngleSharp.Dom;
 
 public class HtmlAnchorTests
 {
+    [Fact]
+    public void Constructor_ParsesPathQueryTextAndTitle()
+    {
+        var document = HtmlHelper.Parse("""<html><body><a href="/items?id=42&tag=a" title="Details">Open</a></body></html>""");
+        var element = document.QuerySelector<IHtmlAnchorElement>("a");
+        Assert.NotNull(element);
+
+        var anchor = new HtmlAnchor(element);
+
+        var (text, path, query, title, deconstructedElement) = anchor;
+        Assert.Equal("Open", text);
+        Assert.EndsWith("/items", path);
+        Assert.Equal("42", query["id"]);
+        Assert.Equal("a", query["tag"]);
+        Assert.Equal("Details", title);
+        Assert.Same(element, deconstructedElement);
+    }
+
     [Fact]
     public void Empty_test()
     {

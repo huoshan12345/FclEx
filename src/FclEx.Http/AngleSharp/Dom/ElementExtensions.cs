@@ -1,7 +1,15 @@
 namespace AngleSharp.Dom;
 
+/// <summary>
+/// Extensions for extracting links, forms, attributes, and typed query results from AngleSharp elements.
+/// Query helpers return <see cref="OperationResult{T}"/> so missing elements or empty values can be handled without exceptions.
+/// </summary>
 public static class ElementExtensions
 {
+    /// <summary>
+    /// Returns an anchor wrapper for the current element or for the first descendant matching a selector.
+    /// The method returns <see langword="null"/> when the selected element is not an anchor.
+    /// </summary>
     public static HtmlAnchor? GetAnchor(this IElement? element, string? selector = null)
     {
         var a = selector == null
@@ -13,11 +21,33 @@ public static class ElementExtensions
             : null;
     }
 
+    /// <summary>
+    /// Returns the element's raw <c>href</c> attribute value.
+    /// </summary>
     public static string? Href(this IElement? element) => element?.GetAttribute("href");
+
+    /// <summary>
+    /// Returns the element's raw <c>type</c> attribute value.
+    /// </summary>
     public static string? Type(this IElement? element) => element?.GetAttribute("type");
+
+    /// <summary>
+    /// Returns the element's raw <c>value</c> attribute value.
+    /// </summary>
     public static string? Value(this IElement? element) => element?.GetAttribute("value");
+
+    /// <summary>
+    /// Returns the element's raw <c>title</c> attribute value.
+    /// </summary>
     public static string? Title(this IElement? element) => element?.GetAttribute("title");
 
+    /// <summary>
+    /// Extracts submit URI, method, and successful form-control values from the first form matching <paramref name="formSelector"/>.
+    /// Disabled controls, disabled fieldsets, file/button/reset/submit/image inputs, and unchecked checkbox or radio inputs are skipped.
+    /// </summary>
+    /// <param name="element">Root element used to search for the form.</param>
+    /// <param name="formSelector">CSS selector for the form element.</param>
+    /// <param name="uri">Optional base URI used to resolve a relative form action. When omitted, the element's AngleSharp base URL is used.</param>
     public static FormData? GetFormData(this IElement? element, string formSelector, Uri? uri)
     {
         if (element?.QuerySelector(formSelector) is not { } form)
@@ -175,6 +205,10 @@ public static class ElementExtensions
                && option.Ancestors<IElement>().Any(m => m.LocalName.EqualsIgnoreCase("optgroup") && m.HasAttribute("disabled")) == false;
     }
 
+    /// <summary>
+    /// Queries the first element matching any selector and maps it to caller-defined data.
+    /// A <see langword="null"/> selector means the root element itself.
+    /// </summary>
     public static OperationResult<(IElement Element, T Data)> QueryData<T>(this IElement? root, string?[] selectors, Func<IElement, T> func)
     {
         foreach (var selector in selectors)
@@ -193,11 +227,19 @@ public static class ElementExtensions
         return $"No element found by selectors '{selectors.JoinWith(", ")}'";
     }
 
+    /// <summary>
+    /// Queries one selector and maps the matched element to caller-defined data.
+    /// A <see langword="null"/> selector means the root element itself.
+    /// </summary>
     public static OperationResult<(IElement Element, T Data)> QueryData<T>(this IElement? root, string? selector, Func<IElement, T> func)
     {
         return root.QueryData([selector], func);
     }
 
+    /// <summary>
+    /// Queries the first matching element and returns only its direct text-node content.
+    /// Child element text is not included.
+    /// </summary>
     public static OperationResult<(IElement Element, string Text)> QueryOwnText(this IElement? root, string?[] selectors, bool trim = true, bool ensureValueIsNotEmpty = true)
     {
         var result = root.QueryData(selectors, m => m.OwnText());
@@ -215,11 +257,19 @@ public static class ElementExtensions
         return (element, value);
     }
 
+    /// <summary>
+    /// Queries one selector and returns only the matched element's direct text-node content.
+    /// Child element text is not included.
+    /// </summary>
     public static OperationResult<(IElement Element, string Text)> QueryOwnText(this IElement? root, string? selector, bool trim = true, bool ensureValueIsNotEmpty = true)
     {
         return root.QueryOwnText([selector], trim, ensureValueIsNotEmpty);
     }
 
+    /// <summary>
+    /// Queries the first matching element and returns a required attribute value.
+    /// Missing attributes and, by default, empty values are returned as operation errors.
+    /// </summary>
     public static OperationResult<(IElement Element, string Attribute)> QueryAttribute(this IElement? root, string?[] selectors, string attribute, bool ensureValueIsNotEmpty = true)
     {
         var result = root.QueryData(selectors, m => m.GetAttribute(attribute));
@@ -236,11 +286,19 @@ public static class ElementExtensions
         return (element, value);
     }
 
+    /// <summary>
+    /// Queries one selector and returns a required attribute value.
+    /// Missing attributes and, by default, empty values are returned as operation errors.
+    /// </summary>
     public static OperationResult<(IElement Element, string Attribute)> QueryAttribute(this IElement? root, string? selector, string attribute, bool ensureValueIsNotEmpty = true)
     {
         return root.QueryAttribute([selector], attribute, ensureValueIsNotEmpty);
     }
 
+    /// <summary>
+    /// Queries the first matching element, reads its <c>href</c> attribute, and returns a mutable URI wrapper.
+    /// When <paramref name="baseUri"/> is supplied, relative href values are resolved against it.
+    /// </summary>
     public static OperationResult<(IElement Element, UriCreator Href)> QueryHref(this IElement? root, string?[] selectors, Uri? baseUri = null)
     {
         var element = root.QueryAttribute(selectors, "href");
@@ -260,6 +318,10 @@ public static class ElementExtensions
         }
     }
 
+    /// <summary>
+    /// Queries one selector, reads its <c>href</c> attribute, and returns a mutable URI wrapper.
+    /// When <paramref name="baseUri"/> is supplied, relative href values are resolved against it.
+    /// </summary>
     public static OperationResult<(IElement Element, UriCreator Href)> QueryHref(this IElement? root, string? selector, Uri? baseUri = null)
     {
         return root.QueryHref([selector], baseUri);
@@ -267,26 +329,45 @@ public static class ElementExtensions
 
     private static readonly string?[] TopLevelSelectors = [null];
 
+    /// <summary>
+    /// Maps the root element itself to caller-defined data.
+    /// </summary>
     public static OperationResult<(IElement Element, T Data)> QueryData<T>(this IElement? root, Func<IElement, T> func)
     {
         return root.QueryData(TopLevelSelectors, func);
     }
 
+    /// <summary>
+    /// Returns only the root element's direct text-node content.
+    /// Child element text is not included.
+    /// </summary>
     public static OperationResult<(IElement Element, string Text)> QueryOwnText(this IElement? root, bool trim = true, bool ensureValueIsNotEmpty = true)
     {
         return root.QueryOwnText(TopLevelSelectors, trim, ensureValueIsNotEmpty);
     }
 
+    /// <summary>
+    /// Returns a required attribute value from the root element.
+    /// Missing attributes and, by default, empty values are returned as operation errors.
+    /// </summary>
     public static OperationResult<(IElement Element, string Attribute)> QueryAttribute(this IElement? root, string attribute, bool ensureValueIsNotEmpty = true)
     {
         return root.QueryAttribute(TopLevelSelectors, attribute, ensureValueIsNotEmpty);
     }
 
+    /// <summary>
+    /// Reads the root element's <c>href</c> attribute and returns a mutable URI wrapper.
+    /// When <paramref name="baseUri"/> is supplied, relative href values are resolved against it.
+    /// </summary>
     public static OperationResult<(IElement Element, UriCreator Href)> QueryHref(this IElement? root, Uri? baseUri = null)
     {
         return root.QueryHref(TopLevelSelectors, baseUri);
     }
 
+    /// <summary>
+    /// Finds the first element whose id starts with <paramref name="prefix"/> and returns the part after the prefix.
+    /// The prefix is escaped before being embedded in the CSS attribute selector.
+    /// </summary>
     public static OperationResult<string> QueryId(this IElement? root, string prefix)
     {
         return root.QueryAttribute($"*[id^='{EscapeCssString(prefix)}']", "id").MapValue(m => m.Attribute.SkipUntil(prefix));
@@ -336,6 +417,10 @@ public static class ElementExtensions
         return builder.ToString();
     }
 
+    /// <summary>
+    /// Returns text from direct child text nodes only.
+    /// Text inside descendant elements is intentionally excluded.
+    /// </summary>
     public static string OwnText(this IElement element)
     {
         using var disposable = StringBuilderHelper.GetCached();
@@ -348,6 +433,10 @@ public static class ElementExtensions
         return builder.ToString();
     }
 
+    /// <summary>
+    /// Reads the URL target from a meta refresh tag under the element.
+    /// The returned value is the raw text after <c>url=</c>, with surrounding quotes and spaces removed.
+    /// </summary>
     public static string? GetMetaRefreshUrl(this IElement element)
     {
         var metaTag = element.QuerySelectorAll("meta")

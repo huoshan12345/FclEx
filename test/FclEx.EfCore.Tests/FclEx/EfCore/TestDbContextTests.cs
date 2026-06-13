@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using FclEx.Dapper;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace FclEx.EfCore;
