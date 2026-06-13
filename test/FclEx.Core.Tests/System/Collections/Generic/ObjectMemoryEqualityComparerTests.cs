@@ -4,7 +4,7 @@ using FclEx.TestModels;
 
 namespace System.Collections.Generic;
 
-public class BytewiseEqualityComparerTests
+public class ObjectMemoryEqualityComparerTests
 {
     public static readonly IEnumerable<Type> TestTypes = Types.BlittableTypes.Concat([
         typeof(ValueTuple<int>), // non-blittable
@@ -20,7 +20,7 @@ public class BytewiseEqualityComparerTests
 
     public static readonly TheoryData<Type> TypeCases = TestTypes.ToTheoryData();
 
-    private static readonly MethodInfo _equals = typeof(BytewiseEqualityComparerTests).GetRequiredMethod(nameof(SameValue_Equals));
+    private static readonly MethodInfo _equals = typeof(ObjectMemoryEqualityComparerTests).GetRequiredMethod(nameof(SameValue_Equals));
 
     [Theory]
     [MemberData(nameof(TypeCases))]
@@ -33,7 +33,7 @@ public class BytewiseEqualityComparerTests
     {
         var random = new Random(0);
         var x = random.Next<T>();
-        AssertBytewiseEqual(x, x);
+        AssertObjectMemoryEqual(x, x);
     }
 
     [Fact]
@@ -42,7 +42,7 @@ public class BytewiseEqualityComparerTests
         var random = new Random(0);
         var x = random.Next<CommonRecord>();
         var y = x with { }; // clone
-        AssertBytewiseEqual(x, y);
+        AssertObjectMemoryEqual(x, y);
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public class BytewiseEqualityComparerTests
         {
             // lock status stores in object header.
             // so the object headers of x and y are different.
-            AssertBytewiseEqual(x, y);
+            AssertObjectMemoryEqual(x, y);
         }
     }
 
@@ -64,7 +64,7 @@ public class BytewiseEqualityComparerTests
     {
         var x = new object();
         var y = new object();
-        AssertBytewiseEqual(x, y);
+        AssertObjectMemoryEqual(x, y);
     }
 
     [Fact]
@@ -72,7 +72,7 @@ public class BytewiseEqualityComparerTests
     {
         var x = nameof(StringLiteral_Equals);
         var y = nameof(StringLiteral_Equals);
-        AssertBytewiseEqual(x, y);
+        AssertObjectMemoryEqual(x, y);
     }
 
     [Fact]
@@ -80,18 +80,30 @@ public class BytewiseEqualityComparerTests
     {
         var x = new string(nameof(StringObject_Equals).ToArray());
         var y = new string(nameof(StringObject_Equals).ToArray());
-        AssertBytewiseEqual(x, y);
+        AssertObjectMemoryEqual(x, y);
     }
 
-    private static void AssertBytewiseEqual<T>(T expected, T actual)
+    [Fact]
+    public void GetHashCode_ShouldReturnSameHash_ForSameObjectMemory()
     {
-        if (BytewiseEqualityComparer<T>.Instance.Equals(expected, actual))
+        var random = new Random(0);
+        var x = random.Next<CommonRecordStruct>();
+        var y = x;
+
+        var comparer = ObjectMemoryEqualityComparer<CommonRecordStruct>.Instance;
+
+        Assert.Equal(comparer.GetHashCode(x), comparer.GetHashCode(y));
+    }
+
+    private static void AssertObjectMemoryEqual<T>(T expected, T actual)
+    {
+        if (ObjectMemoryEqualityComparer<T>.Instance.Equals(expected, actual))
             return;
 
-        var method = BytewiseEqualityComparer<T>.GetBytes;
+        var method = ObjectMemoryEqualityComparer<T>.GetBytes;
         var expectedBytes = method(expected);
         var actualBytes = method(actual);
         Assert.Equal(expectedBytes, actualBytes);
-        Assert.Fail("BytewiseEqualityComparer reported inequality, but the byte sequences are identical.");
+        Assert.Fail("ObjectMemoryEqualityComparer reported inequality, but the byte sequences are identical.");
     }
 }

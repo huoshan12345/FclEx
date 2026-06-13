@@ -17,9 +17,9 @@ public static class MemberEqualityComparerBuilderExtensions
 
     private static readonly ConcurrentDictionary<Type, MethodInfo> _addMethodCache = new();
 
-    private static MethodInfo GetAddMethod(Type memberType)
+    private static MethodInfo GetAddMethod(Type builderType)
     {
-        return _addMethodCache.GetOrAdd(memberType, t =>
+        return _addMethodCache.GetOrAdd(builderType, t =>
         {
             var method = typeof(MemberEqualityComparerBuilder<>)
                 .MakeGenericType(t)
@@ -27,7 +27,7 @@ public static class MemberEqualityComparerBuilderExtensions
                 .Single(x =>
                     x is { Name: nameof(MemberEqualityComparerBuilder<>.Add), IsGenericMethodDefinition: true }
                     && x.GetParameters().Length == 2);
-            return method.MakeGenericMethod(t);
+            return method;
         });
     }
 

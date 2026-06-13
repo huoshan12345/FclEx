@@ -9,7 +9,7 @@ public static class EqualityComparerBuilderExtensions
 
     public static EqualityComparerBuilder<T> Common<T>(this EqualityComparerBuilder<T> builder, Func<T, T, bool> compareFunc, Func<T, int> hashFunc)
     {
-        return builder.Set(CommonEqualityComparer.Create(compareFunc, hashFunc));
+        return builder.Set(DelegateEqualityComparer.Create(compareFunc, hashFunc));
     }
 
     public static EqualityComparerBuilder<T> Reference<T>(this EqualityComparerBuilder<T> builder)
@@ -17,7 +17,7 @@ public static class EqualityComparerBuilderExtensions
         return builder.Set(ReferenceEqualityComparer<T>.Instance);
     }
 
-    public static EqualityComparerBuilder<string> FileExtension<T>(this EqualityComparerBuilder<string> builder)
+    public static EqualityComparerBuilder<string> FileExtension(this EqualityComparerBuilder<string> builder)
     {
         return builder.Set(FileExtensionEqualityComparer.Instance);
     }

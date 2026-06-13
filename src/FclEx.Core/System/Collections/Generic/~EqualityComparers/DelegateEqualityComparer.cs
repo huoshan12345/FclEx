@@ -1,19 +1,19 @@
 namespace System.Collections.Generic;
 
-public class CommonEqualityComparer
+public class DelegateEqualityComparer
 {
-    public static CommonEqualityComparer<T> Create<T>(Func<T, T, bool> compareFunc, Func<T, int> hashFunc)
+    public static DelegateEqualityComparer<T> Create<T>(Func<T, T, bool> compareFunc, Func<T, int> hashFunc)
     {
         return new(compareFunc, hashFunc);
     }
 }
 
-public class CommonEqualityComparer<T> : IEqualityComparer<T>
+public class DelegateEqualityComparer<T> : IEqualityComparer<T>
 {
     private readonly Func<T, T, bool> _compareFunc;
     private readonly Func<T, int> _hashFunc;
 
-    public CommonEqualityComparer(Func<T, T, bool> compareFunc, Func<T, int> hashFunc)
+    public DelegateEqualityComparer(Func<T, T, bool> compareFunc, Func<T, int> hashFunc)
     {
         _compareFunc = compareFunc ?? throw new ArgumentNullException(nameof(compareFunc));
         _hashFunc = hashFunc ?? throw new ArgumentNullException(nameof(hashFunc));

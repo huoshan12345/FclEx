@@ -9,7 +9,7 @@ public static class ComparerBuilderExtensions
 
     public static ComparerBuilder<T> Common<T>(this ComparerBuilder<T> builder, Comparison<T?> comparison)
     {
-        return builder.Set(CommonComparer.Create(comparison));
+        return builder.Set(DelegateComparer.Create(comparison));
     }
 
     public static MemberComparerBuilder<T> Member<T>(this IComparerBuilder<T> _)

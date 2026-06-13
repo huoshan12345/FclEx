@@ -104,4 +104,26 @@ public class EnumerableEqualityComparerTests
 
         Assert.NotEqual(hash1, hash2);
     }
+
+    [Fact]
+    public void Equals_ShouldHandleNullItems()
+    {
+        var comparer = new EnumerableEqualityComparer<string?>();
+        string?[] sequence1 = ["a", null, "c"];
+        string?[] sequence2 = ["a", null, "c"];
+
+        Assert.True(comparer.Equals(sequence1, sequence2));
+        Assert.Equal(comparer.GetHashCode(sequence1), comparer.GetHashCode(sequence2));
+    }
+
+    [Fact]
+    public void GetHashCode_ShouldRespectCustomItemComparer()
+    {
+        var comparer = new EnumerableEqualityComparer<string>(StringComparer.OrdinalIgnoreCase);
+        var sequence1 = new[] { "a", "B" };
+        var sequence2 = new[] { "A", "b" };
+
+        Assert.True(comparer.Equals(sequence1, sequence2));
+        Assert.Equal(comparer.GetHashCode(sequence1), comparer.GetHashCode(sequence2));
+    }
 }

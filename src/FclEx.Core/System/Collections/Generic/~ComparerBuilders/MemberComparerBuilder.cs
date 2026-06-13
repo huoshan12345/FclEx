@@ -47,7 +47,7 @@ public class MemberComparerBuilder<T> : IComparerBuilder<T>
         };
     }
 
-    public IComparer<T> Build() => CommonComparer.Create(CreateComparison());
+    public IComparer<T> Build() => DelegateComparer.Create(CreateComparison());
     
     private interface IOrderMember
     {

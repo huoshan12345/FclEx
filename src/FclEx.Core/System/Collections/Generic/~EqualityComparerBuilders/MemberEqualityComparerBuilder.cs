@@ -58,7 +58,7 @@ public class MemberEqualityComparerBuilder<T> : IEqualityComparerBuilder<T>
 
     public IEqualityComparer<T> Build()
     {
-        return new CommonEqualityComparer<T>(CreateCompareFunc(), CreateHashFunc());
+        return new DelegateEqualityComparer<T>(CreateCompareFunc(), CreateHashFunc());
     }
 
     private interface IEqualityMember

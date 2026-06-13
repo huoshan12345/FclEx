@@ -4,6 +4,13 @@ public class SecureStringEqualityComparer : IEqualityComparer<SecureString>
 {
     public static readonly SecureStringEqualityComparer Instance = new();
 
+    /// <summary>
+    /// Compares two secure strings by converting them to managed strings and using ordinal string comparison.
+    /// </summary>
+    /// <remarks>
+    /// The comparison temporarily materializes each value as a managed <see cref="string" />. That copy is controlled by
+    /// the GC and cannot be cleared deterministically, so use this comparer only when that exposure is acceptable.
+    /// </remarks>
     public bool Equals(SecureString? x, SecureString? y)
     {
         if (ComparerHelper.TryEquals(x, y, out var result))
@@ -18,10 +25,17 @@ public class SecureStringEqualityComparer : IEqualityComparer<SecureString>
         return string.Equals(str1, str2, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// Computes an ordinal hash code for the secure string contents.
+    /// </summary>
+    /// <remarks>
+    /// This method temporarily materializes the value as a managed <see cref="string" />. That copy is controlled by the
+    /// GC and cannot be cleared deterministically, so use this comparer only when that exposure is acceptable.
+    /// </remarks>
     public int GetHashCode(SecureString obj)
     {
         using var disposable = MarshalHelper.SecureStringToBSTR(obj);
         var str = Marshal.PtrToStringBSTR(disposable.Value);
-        return str?.GetHashCode() ?? 0;
+        return str?.GetHashCode(StringComparison.Ordinal) ?? 0;
     }
 }
