@@ -24,6 +24,19 @@ public class CredentialsEqualityComparerTests
     }
 
     [Fact]
+    public void Equals_WhenBothAreNull_ReturnsTrue()
+    {
+        Assert.True(Comparer.Equals(null, null));
+    }
+
+    [Fact]
+    public void Equals_WhenOnlyOneSideIsNull_ReturnsFalse()
+    {
+        Assert.False(Comparer.Equals(new NetworkCredential("user", "password"), null));
+        Assert.False(Comparer.Equals(null, new NetworkCredential("user", "password")));
+    }
+
+    [Fact]
     public void Equals_WhenCustomCredentialInstancesDiffer_ReturnsFalse()
     {
         ICredentials credential1 = new CustomCredentials();

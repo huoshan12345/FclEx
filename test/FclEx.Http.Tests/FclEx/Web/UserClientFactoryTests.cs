@@ -72,6 +72,20 @@ public class UserClientFactoryTests : WebTests
     }
 
     [Fact]
+    public void ServiceProviderCreateUserClient_WithGenericAccount_CreatesClientWithTypedAccount()
+    {
+        var account = new TestAccount("typed", "pwd");
+        var provider = new ServiceCollection()
+            .AddLogging()
+            .AddUserClient<TestGenericUserClient, TestAccount>(new TestAccount("empty", "pwd"))
+            .BuildServiceProvider();
+
+        var client = provider.CreateUserClient<TestGenericUserClient, TestAccount>(account);
+
+        Assert.Same(account, client.Account);
+    }
+
+    [Fact]
     public void FactoryCreate_WhenHttpServiceIsProvided_AssignsServiceAndLogger()
     {
         var account = new UserAccount("test", "test");

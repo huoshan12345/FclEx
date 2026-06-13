@@ -148,6 +148,65 @@ public class ClientCreatorTests
         Assert.True(client.IsOnline);
     }
 
+    [Fact]
+    public async Task CreateClient_WhenLoginIsTrueAndClientIsOffline_CallsLoginAndSavesCookies()
+    {
+        using var context = new TestContext();
+        var account = new UserAccount("alice", "pwd");
+
+        var client = await context.Creator.CreateClient(
+            account,
+            new LoginOptions(
+                Login: true,
+                FakeLogin: false,
+                UseCache: false,
+                ReadCookie: false,
+                Proxy: null));
+
+        Assert.Equal(1, client.LoginCount);
+        Assert.Equal(0, client.FakeLoginCount);
+        Assert.True(client.IsOnline);
+        Assert.True(File.Exists(context.Creator.GetCookiesFilePath(account)));
+    }
+
+    [Fact]
+    public async Task CreateClient_WhenCachedClientIsAlreadyOnline_DoesNotLoginAgain()
+    {
+        using var context = new TestContext();
+        var account = new UserAccount("alice", "pwd");
+        var options = new LoginOptions(
+            Login: true,
+            FakeLogin: true,
+            UseCache: true,
+            ReadCookie: false,
+            Proxy: null);
+
+        var first = await context.Creator.CreateClient(account, options);
+        var second = await context.Creator.CreateClient(account, options);
+
+        Assert.Same(first, second);
+        Assert.Equal(1, first.FakeLoginCount);
+        Assert.Equal(0, first.LoginCount);
+    }
+
+    [Fact]
+    public async Task CreateClient_WithStringProxy_CreatesClientServiceWithProxy()
+    {
+        using var context = new TestContext();
+
+        var client = await context.Creator.CreateClient(
+            new UserAccount("alice", "pwd"),
+            login: false,
+            fakeLogin: false,
+            useCache: false,
+            readCookie: false,
+            proxy: "http://127.0.0.1:8888");
+
+        Assert.True(WebProxyInterfaceEqualityComparer.Instance.Equals(
+            WebProxyHelper.Create("http://127.0.0.1:8888"),
+            client.HttpService.Proxy));
+    }
+
     private sealed class TestContext : IDisposable
     {
         private readonly ServiceProvider _provider;
