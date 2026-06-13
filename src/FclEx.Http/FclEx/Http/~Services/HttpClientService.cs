@@ -153,7 +153,7 @@ public class HttpClientService : HttpClientServiceBase
 
     public static HttpClientService Create(IWebProxy? proxy, bool useCookie = true, ILoggerFactory? loggerFactory = null)
     {
-        return Create(m => m.HandlerOptions = m.HandlerOptions with { Proxy = proxy }, useCookie, loggerFactory);
+        return Create(m => m.HandlerOptions.Proxy = proxy, useCookie, loggerFactory);
     }
 
     public static HttpClientService Create(Uri? proxy, bool useCookie = true, ILoggerFactory? loggerFactory = null)
