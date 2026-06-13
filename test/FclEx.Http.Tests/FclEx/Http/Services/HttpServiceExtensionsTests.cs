@@ -272,7 +272,7 @@ public class HttpServiceExtensionsTests
                 var response = new HttpResponse(request)
                 {
                     StatusCode = HttpStatusCode.OK,
-                    ResponseBytes = Encoding.UTF8.GetBytes("file"),
+                    ResponseBytes = "file"u8.ToArray(),
                 };
                 response.Headers.Add(HttpHeaderNames.ContentType, "text/plain");
                 response.VisitedUris.Add(request.GetUri());
@@ -280,7 +280,12 @@ public class HttpServiceExtensionsTests
             },
         };
 
-        var result = await service.DownloadAsync(new Uri("https://example.com/files/report.txt"), HttpMethod.Head, TimeSpan.FromSeconds(7));
+        var result = await service.DownloadAsync(new DownloadOptions
+        {
+            Uri = new Uri("https://example.com/files/report.txt"),
+            Method = HttpMethod.Head,
+            ReadBufferTimeout = TimeSpan.FromSeconds(7),
+        });
 
         Assert.True(result.IsSuccess, result.Exception?.ToString());
         Assert.NotNull(service.Request);

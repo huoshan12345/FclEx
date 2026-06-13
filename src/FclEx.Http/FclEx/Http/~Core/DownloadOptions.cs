@@ -16,7 +16,7 @@ public class DownloadOptions
     public HttpMethod Method { get; set; } = HttpMethod.Get;
 
     /// <summary>
-    /// Optional request body content. It is disposed by the download helper after the send completes.
+    /// Optional request body content. It is disposed by the download helper after the request completes.
     /// </summary>
     public HttpContent? Content { get; set; }
 

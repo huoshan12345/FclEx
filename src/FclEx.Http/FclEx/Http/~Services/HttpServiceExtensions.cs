@@ -167,6 +167,31 @@ public static class HttpServiceExtensions
     }
 
     /// <summary>
+    /// Downloads a URI into memory and returns file metadata plus response bytes.
+    /// The request accepts compressed responses, reads the body as bytes, and uses the optional timeout while reading the response body.
+    /// </summary>
+    public static Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, Uri uri,
+        HttpMethod? method = null, TimeSpan? readHeadersTimeout = null, TimeSpan? totalTimeout = null)
+    {
+        return http.DownloadAsync(new DownloadOptions
+        {
+            Uri = uri,
+            Method = method ?? HttpMethod.Get,
+            ReadHeadersTimeout = readHeadersTimeout,
+            TotalTimeout = totalTimeout,
+        });
+    }
+
+    /// <summary>
+    /// Downloads a URL string into memory and returns file metadata plus response bytes.
+    /// </summary>
+    public static Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, string url,
+        HttpMethod? method = null, TimeSpan? readHeadersTimeout = null, TimeSpan? totalTimeout = null)
+    {
+        return http.DownloadAsync(new Uri(url), method, readHeadersTimeout, totalTimeout);
+    }
+
+    /// <summary>
     /// Downloads multiple URL strings using the same batch options.
     /// Relative URL strings are resolved by <see cref="BatchDownloadOptions.BaseAddress"/> when one is provided.
     /// </summary>
