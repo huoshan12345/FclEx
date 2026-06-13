@@ -7,7 +7,8 @@ public static class HttpServiceExtensions
 {
     /// <summary>
     /// Sends a GET request to a URL string and returns the raw <see cref="HttpResponse"/>.
-    /// The optional charset is used as the preferred response decoding charset, and the optional timeout limits waiting for response headers.
+    /// The optional charset is used as the preferred response decoding charset.
+    /// <paramref name="readHeadersTimeout"/> limits waiting for response headers, while <paramref name="totalTimeout"/> limits the whole request workflow.
     /// </summary>
     public static Task<HttpResponse> GetAsync(this IHttpService http, string url, string? charSet = null, TimeSpan? readHeadersTimeout = null, TimeSpan? totalTimeout = null)
     {
@@ -137,6 +138,10 @@ public static class HttpServiceExtensions
     public static void AddCookies(this IHttpService http, CookieCollection cc, string? url = null)
         => AddCookies(http, cc.OfType<Cookie>(), url);
 
+    /// <summary>
+    /// Downloads a file using a full option object and returns parsed file metadata plus response bytes.
+    /// The helper reads the response body into memory, accepts compressed responses, and disposes <see cref="DownloadOptions.Content"/> after the request completes.
+    /// </summary>
     public static async Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, DownloadOptions options)
     {
         var request = new HttpRequest(options.Uri, options.Method)
@@ -168,7 +173,7 @@ public static class HttpServiceExtensions
 
     /// <summary>
     /// Downloads a URI into memory and returns file metadata plus response bytes.
-    /// The request accepts compressed responses, reads the body as bytes, and uses the optional timeout while reading the response body.
+    /// The request accepts compressed responses, reads the body as bytes, and keeps header and total timeouts separate.
     /// </summary>
     public static Task<OperationResult<HttpFileDownloadInfo>> DownloadAsync(this IHttpService http, Uri uri,
         HttpMethod? method = null, TimeSpan? readHeadersTimeout = null, TimeSpan? totalTimeout = null)

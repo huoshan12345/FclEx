@@ -1,7 +1,14 @@
 namespace FclEx.Http;
 
+/// <summary>
+/// Extensions for interpreting <see cref="HttpResponseMessage"/> values.
+/// </summary>
 public static class HttpResponseMessageExtensions
 {
+    /// <summary>
+    /// Attempts to resolve a redirect target from a redirection response.
+    /// Relative Location headers are resolved against the original request URI when it is available.
+    /// </summary>
     public static bool TryGetRedirection(this HttpResponseMessage response, [NotNullWhen(true)] out Uri? uri)
     {
         if (response.StatusCode.IsRedirection() && response.Headers.Location is { } u)
@@ -39,6 +46,9 @@ public static class HttpResponseMessageExtensions
         return response;
     }
 
+    /// <summary>
+    /// Attempts to read Set-Cookie header values from the response.
+    /// </summary>
     public static bool TryGetCookies(this HttpResponseMessage response, [NotNullWhen(true)] out IEnumerable<string>? cookies)
     {
         return response.Headers.TryGetValues(HttpHeaderNames.SetCookie, out cookies);
