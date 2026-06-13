@@ -9,15 +9,15 @@ public class NonGenericComparerAdapter<T> : IComparer
 {
     private readonly IComparer<T> _comparer;
 
-    public NonGenericComparerAdapter(IComparer<T> comparer)
+    public NonGenericComparerAdapter(IComparer<T>? comparer = null)
     {
-        _comparer = comparer;
+        _comparer = comparer ?? Comparer<T>.Default;
     }
 
     public int Compare(object? x, object? y)
     {
         return ComparerHelper.TryCompare(x, y, out var result)
             ? result.Value
-            : _comparer.Compare(x.CastTo<T>(), y.CastTo<T>());
+            : _comparer.Compare((T)x, (T)y);
     }
 }

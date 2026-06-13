@@ -15,15 +15,27 @@ public static class MemberEqualityComparerBuilderExtensions
         return builder;
     }
 
+    private static readonly ConcurrentDictionary<Type, MethodInfo> _addMethodCache = new();
+
+    private static MethodInfo GetAddMethod(Type memberType)
+    {
+        return _addMethodCache.GetOrAdd(memberType, t =>
+        {
+            var method = typeof(MemberEqualityComparerBuilder<>)
+                .MakeGenericType(t)
+                .GetMethods()
+                .Single(x =>
+                    x is { Name: nameof(MemberEqualityComparerBuilder<>.Add), IsGenericMethodDefinition: true }
+                    && x.GetParameters().Length == 2);
+            return method.MakeGenericMethod(t);
+        });
+    }
+
     public static MemberEqualityComparerBuilder<T> Add<T>(this MemberEqualityComparerBuilder<T> builder, params IEnumerable<MemberInfo> members)
     {
-        var addMethod = typeof(MemberEqualityComparerBuilder<T>)
-            .GetMethods()
-            .Single(x =>
-                x is { Name: nameof(MemberEqualityComparerBuilder<>.Add), IsGenericMethodDefinition: true }
-                && x.GetParameters().Length == 2);
-
-        var param = Expression.Parameter(typeof(T));
+        var type = typeof(T);
+        var addMethod = GetAddMethod(type);
+        var param = Expression.Parameter(type);
 
         foreach (var member in members)
         {
