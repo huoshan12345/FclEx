@@ -1,5 +1,14 @@
 namespace FclEx.Http;
 
+/// <summary>
+/// Acquires and caches OAuth/OIDC access tokens using the client-credentials flow.
+/// </summary>
+/// <remarks>
+/// The discovery document is loaded once and shared across requests. Access tokens are cached per joined scope string;
+/// concurrent requests for the same scope are serialized so only one token request is made for a missing or expired token.
+/// Cached refresh tokens are tried before falling back to a client-credentials token request. Cached access tokens are
+/// treated as expired 30 seconds before the server-reported expiration.
+/// </remarks>
 public class ClientCredentialsTokenProvider : IAccessTokenProvider
 {
     private readonly Func<HttpClient> _httpClientFactory;
@@ -12,6 +21,14 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
 
     private DiscoveryDocumentResponse? _discovery;
 
+    /// <summary>
+    /// Initializes a provider that creates an <see cref="HttpClient"/> for discovery and token requests.
+    /// </summary>
+    /// <param name="options">The client credentials and discovery settings.</param>
+    /// <param name="httpClientFactory">Creates clients used for discovery, refresh-token, and client-credentials requests.</param>
+    /// <param name="disposeHttpClient">
+    /// Whether clients created by <paramref name="httpClientFactory"/> should be disposed after each discovery or token request.
+    /// </param>
     public ClientCredentialsTokenProvider(ClientCredentialsTokenProviderOptions options, Func<HttpClient> httpClientFactory, bool disposeHttpClient = true)
     {
         _options = options;
@@ -24,16 +41,32 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
         };
     }
 
+    /// <summary>
+    /// Initializes a provider that obtains clients from an <see cref="IHttpClientFactory"/>.
+    /// </summary>
+    /// <remarks>The created clients are not disposed by this provider, following the ownership model of <see cref="IHttpClientFactory"/>.</remarks>
+    /// <param name="options">The client credentials and discovery settings.</param>
+    /// <param name="httpClientFactory">The factory used to create named clients for token requests.</param>
     public ClientCredentialsTokenProvider(ClientCredentialsTokenProviderOptions options, IHttpClientFactory httpClientFactory)
         : this(options, () => httpClientFactory.CreateClient(nameof(ClientCredentialsTokenProvider)), false)
     {
     }
 
+    /// <summary>
+    /// Initializes a provider that reuses a supplied <see cref="HttpClient"/>.
+    /// </summary>
+    /// <remarks>The supplied client is not disposed by this provider.</remarks>
+    /// <param name="options">The client credentials and discovery settings.</param>
+    /// <param name="httpClient">The client used for discovery and token requests.</param>
     public ClientCredentialsTokenProvider(ClientCredentialsTokenProviderOptions options, HttpClient httpClient)
     : this(options, () => httpClient, false)
     {
     }
 
+    /// <summary>
+    /// Creates the client used by one discovery or token request.
+    /// </summary>
+    /// <returns>An HTTP client. Ownership depends on the constructor overload used.</returns>
     protected virtual HttpClient CreateClient() => _httpClientFactory();
 
     private async Task<DiscoveryDocumentResponse> GetDiscoveryAsync(CancellationToken cancellationToken = default)
@@ -66,6 +99,7 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
         }
     }
 
+    /// <inheritdoc />
     public async Task<string> GetTokenAsync(string[] scopes, bool forceRefresh = false, CancellationToken cancellationToken = default)
     {
         var scope = scopes.Length switch

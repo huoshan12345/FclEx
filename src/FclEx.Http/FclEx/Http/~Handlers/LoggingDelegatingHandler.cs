@@ -1,11 +1,24 @@
 namespace FclEx.Http;
 
+/// <summary>
+/// Logs each outgoing <see cref="HttpClient"/> request after the inner handler completes or throws.
+/// </summary>
+/// <remarks>
+/// The log scope includes the request properties, response status code when one is available, start time, end time,
+/// and duration. Successful sends use the configured success level; exceptions are logged with the configured failure level.
+/// </remarks>
 public class LoggingDelegatingHandler : DelegatingHandler
 {
     private readonly ILogger<LoggingDelegatingHandler> _logger;
     private readonly LogLevel _successLevel;
     private readonly LogLevel _failureLevel;
 
+    /// <summary>
+    /// Initializes a logging handler.
+    /// </summary>
+    /// <param name="logger">The logger factory used to create the handler logger.</param>
+    /// <param name="successLevel">The level used when the inner handler returns a response.</param>
+    /// <param name="failureLevel">The level used when the inner handler throws.</param>
     public LoggingDelegatingHandler(
         ILoggerFactory logger,
         LogLevel successLevel = LogLevel.Information,

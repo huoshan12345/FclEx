@@ -1,7 +1,17 @@
 namespace FclEx.Http;
 
+/// <summary>
+/// Compares <see cref="WebProxy"/> instances by their effective proxy settings.
+/// </summary>
+/// <remarks>
+/// Proxy addresses are compared by origin, bypass lists are compared case-insensitively, and credentials are compared
+/// with <see cref="CredentialsEqualityComparer"/>.
+/// </remarks>
 public class WebProxyEqualityComparer : IEqualityComparer<WebProxy>
 {
+    /// <summary>
+    /// A shared comparer instance.
+    /// </summary>
     public static readonly WebProxyEqualityComparer Instance = new();
 
     private static IEqualityComparer<IEnumerable<string>> BypassListComparer

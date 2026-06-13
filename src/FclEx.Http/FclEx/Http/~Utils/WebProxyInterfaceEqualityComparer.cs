@@ -1,7 +1,14 @@
 namespace FclEx.Http;
 
+/// <summary>
+/// Compares <see cref="IWebProxy"/> values, using value equality for <see cref="WebProxy"/> instances.
+/// </summary>
+/// <remarks>Custom <see cref="IWebProxy"/> implementations are only equal when they are the same instance.</remarks>
 public class WebProxyInterfaceEqualityComparer : IEqualityComparer<IWebProxy>
 {
+    /// <summary>
+    /// A shared comparer instance.
+    /// </summary>
     public static readonly WebProxyInterfaceEqualityComparer Instance = new();
 
     private static IEqualityComparer<WebProxy> WebProxyComparer
