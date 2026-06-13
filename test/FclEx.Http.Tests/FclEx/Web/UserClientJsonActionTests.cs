@@ -19,6 +19,35 @@ public class UserClientJsonActionTests : WebTests
     }
 
     [Fact]
+    public void GetResult_WhenJsonPathIsNull_DeserializesRootToken()
+    {
+        var client = new TestUserClient(ServiceProvider.GetRequiredService<ILoggerFactory>());
+        var action = new CountJsonAction(client);
+        var response = CreateResponse("3");
+
+        var result = action.GetResult(response);
+
+        Assert.True(result.IsSuccess, result.Exception?.ToString());
+        Assert.Equal(3, result.Value);
+    }
+
+    [Fact]
+    public void GetResult_WhenJsonPathDoesNotMatch_ReturnsError()
+    {
+        var client = new TestUserClient(ServiceProvider.GetRequiredService<ILoggerFactory>());
+        var action = new CountJsonAction(client)
+        {
+            JsonPathValue = "missing.count",
+        };
+        var response = CreateResponse("""{"data":{"count":3}}""");
+
+        var result = action.GetResult(response);
+
+        Assert.True(result.IsError);
+        Assert.Contains("missing.count", result.Exception!.Message);
+    }
+
+    [Fact]
     public void GetJson_WhenResponseIsNotJson_ReturnsError()
     {
         var client = new TestUserClient(ServiceProvider.GetRequiredService<ILoggerFactory>());

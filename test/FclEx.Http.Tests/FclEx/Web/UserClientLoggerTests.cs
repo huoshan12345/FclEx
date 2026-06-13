@@ -53,6 +53,22 @@ public class UserClientLoggerTests
     }
 
     [Fact]
+    public void Constructor_WhenInnerLoggerIsAlreadyUserClientLogger_DoesNotPrefixTwice()
+    {
+        var logger = new CaptureLogger();
+        using var factory = new CaptureLoggerFactory(logger);
+        var client = new TestUserClient(factory)
+        {
+            Account = new UserAccount("alice", "pwd"),
+        };
+        var wrappedAgain = new UserClientLogger<IUserAccount>(client.Logger, client);
+
+        wrappedAgain.LogInformation("Hello");
+
+        Assert.Equal("[alice]Hello", Assert.Single(logger.Messages));
+    }
+
+    [Fact]
     public void BeginScope_DelegatesToInnerLogger()
     {
         var logger = new CaptureLogger();

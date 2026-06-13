@@ -1,36 +1,28 @@
 namespace FclEx.Web;
 
 /// <summary>
-/// Represents an HTML form and its associated data.
+/// Describes a form submission target and the name-value pairs to submit.
 /// </summary>
 /// <remarks>
-/// This class encapsulates the core properties of an HTML form:
-/// <list type="bullet">
-/// <item>
-/// <description>The submission destination URI (equivalent to the 'action' attribute)</description>
-/// </item>
-/// <item>
-/// <description>The parameters/fields to be submitted with the form</description>
-/// </item>
-/// </list>
+/// This type is only a data container. It does not parse an HTML document, infer the form method,
+/// or send the request. Callers can populate <see cref="Params"/> from a parsed form and then use
+/// <see cref="SubmitUri"/> and <see cref="Method"/> to build the actual HTTP request.
 /// </remarks>
-/// <param name="submitUri">The URI where the form data will be submitted, corresponding to the HTML form's 'action' attribute</param>
+/// <param name="submitUri">The URI to submit to, usually resolved from a form's action attribute.</param>
 public class FormData(Uri submitUri)
 {
     /// <summary>
-    /// Gets or sets the destination URI where the form data will be submitted.<br/>
-    /// Equivalent to the 'action' attribute in an HTML form.
+    /// Gets or sets the URI to submit to.
     /// </summary>
     public Uri SubmitUri { get; set; } = submitUri;
 
     /// <summary>
-    /// Gets or sets the HTTP method used to submit the form.
+    /// Gets or sets the HTTP method to use when submitting the parameters.
     /// </summary>
     public HttpMethod Method { get; set; } = HttpMethod.Get;
 
     /// <summary>
-    /// Gets or sets the collection of parameters (name-value pairs) 
-    /// to be submitted with the form.
+    /// Gets or sets the parameters to submit. Duplicate keys and keyless values are preserved by <see cref="UriParams"/>.
     /// </summary>
     public UriParams Params { get; set; } = [];
 }
