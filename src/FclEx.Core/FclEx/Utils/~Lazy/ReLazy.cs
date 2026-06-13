@@ -47,6 +47,7 @@ public class ReLazy<TSelf, T> : IDisposable where TSelf : ReLazy<TSelf, T>
 
     public virtual void Dispose()
     {
+        GC.SuppressFinalize(this);
         DiscardValue();
     }
 }

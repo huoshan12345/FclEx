@@ -1,22 +1,23 @@
 namespace FclEx.Utils;
 
+public class DisposableTestModel : IDisposable
+{
+    public bool IsDisposed { get; private set; }
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        IsDisposed = true;
+    }
+}
+
 public class ReLazyTests
 {
-    public class Tester;
-
-    public class DisposableTester : IDisposable
-    {
-        public bool IsDisposed { get; private set; }
-        public void Dispose()
-        {
-            IsDisposed = true;
-        }
-    }
+    public class TestModel;
 
     [Fact]
     public void Recreate_Test()
     {
-        var lazy = new ReLazy<Tester>(() => new Tester());
+        var lazy = new ReLazy<TestModel>(() => new TestModel());
         Assert.False(lazy.IsValueCreated);
 
         var value = lazy.Value;
@@ -39,7 +40,7 @@ public class ReLazyTests
     [Fact]
     public void Recreate_Dispose_Test()
     {
-        var lazy = new ReLazy<DisposableTester>(() => new DisposableTester());
+        var lazy = new ReLazy<DisposableTestModel>(() => new DisposableTestModel());
         Assert.False(lazy.IsValueCreated);
 
         var value = lazy.Value;
