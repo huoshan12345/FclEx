@@ -1,5 +1,8 @@
 namespace FclEx.Http;
 
+/// <summary>
+/// Extensions for inspecting handlers stored inside <see cref="HttpMessageInvoker"/>.
+/// </summary>
 public static class HttpMessageInvokerExtensions
 {
     /// <summary>

@@ -1,5 +1,9 @@
 namespace FclEx.Http;
 
+/// <summary>
+/// Mutable request model used by FclEx HTTP services.
+/// It combines URI editing, headers, request content, response-reading options, redirect behavior, and timeout settings before being converted to <see cref="HttpRequestMessage"/>.
+/// </summary>
 [SuppressMessage("ReSharper", "PropertyCanBeMadeInitOnly.Global")]
 public partial class HttpRequest
 {

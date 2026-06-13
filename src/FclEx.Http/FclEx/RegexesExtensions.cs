@@ -1,5 +1,8 @@
 namespace FclEx;
 
+/// <summary>
+/// Adds HTTP-related regular expressions to the shared <see cref="Regexes"/> holder.
+/// </summary>
 public static class RegexesExtensions
 {
     private static readonly Regex _emailCheck = new(@"[\da-zA-Z]+@[\da-zA-Z]+[\.][\da-zA-Z]{2,5}", RegexOptions.Compiled);
@@ -18,7 +21,14 @@ public static class RegexesExtensions
 
     extension(Regexes)
     {
+        /// <summary>
+        /// Regular expression used for a lightweight email-shape check.
+        /// </summary>
         public static Regex EmailCheck => _emailCheck;
+
+        /// <summary>
+        /// Regular expressions used to extract charset declarations from HTML meta tags.
+        /// </summary>
         public static IReadOnlyList<Regex> CharSet => _charSet;
     }
 }

@@ -185,6 +185,9 @@ public class ClientCredentialsTokenProvider : IAccessTokenProvider
 
     private record TokenCacheItem(string AccessToken, string? RefreshToken, DateTime ExpireAt)
     {
+        /// <summary>
+        /// Returns whether the cached access token has reached the pre-adjusted expiration time.
+        /// </summary>
         public bool IsExpired() => DateTime.UtcNow >= ExpireAt;
     }
 }

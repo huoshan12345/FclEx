@@ -1,7 +1,12 @@
 namespace FclEx.Web;
 
+/// <summary>
+/// Default mutable implementation of <see cref="IUserClientState"/>.
+/// Change events are raised only when a status value actually changes.
+/// </summary>
 public class UserClientState : IUserClientState
 {
+    /// <inheritdoc />
     public virtual UserClientSessionStatus SessionStatus
     {
         get;
@@ -16,6 +21,7 @@ public class UserClientState : IUserClientState
         }
     }
 
+    /// <inheritdoc />
     public virtual UserAccountStatus AccountStatus
     {
         get;
@@ -30,6 +36,9 @@ public class UserClientState : IUserClientState
         }
     }
 
+    /// <inheritdoc />
     public event ValueChangedHandler<UserClientSessionStatus> SessionStatusChanged = (oldValue, newValue) => { };
+
+    /// <inheritdoc />
     public event ValueChangedHandler<UserAccountStatus> AccountStatusChanged = (oldValue, newValue) => { };
 }

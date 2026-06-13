@@ -1,5 +1,9 @@
 namespace FclEx.Http;
 
+/// <summary>
+/// Base implementation for HTTP services backed by <see cref="HttpClient"/>.
+/// It handles request-message construction, retries through the provided context policy, redirects, cookies, response decoding, and disposal of response resources.
+/// </summary>
 public abstract class HttpClientServiceBase : HttpServiceBase
 {
     protected static readonly Encoding DefaultEncoding = Encoding.UTF8;
