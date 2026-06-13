@@ -10,14 +10,14 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
     [InlineData(null)]
     [InlineData("")]
     [InlineData("http://localhost:1080")]
-    public void Constructor_Test(string? proxy)
+    public void Create_WithStringProxy_ConfiguresServiceProxy(string? proxy)
     {
         var http = HttpClientService.Create(proxy);
         Assert.Equal(WebProxyHelper.Create(proxy).CastTo<WebProxy>().Address, http.Proxy.CastTo<WebProxy>()!.Address);
     }
 
     [Fact]
-    public async Task SendAsync_Success()
+    public async Task SendAsync_WhenRequestSucceeds_ReturnsSuccessfulResponse()
     {
         var url = TestUrls.First();
         using var service = HttpClientService.Create(false);
@@ -29,7 +29,7 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
 
     [Theory]
     [MemberData(nameof(AddCookieTestData))]
-    public void AddCookie_Test(bool useCookie, bool sameDomain, bool overrideDomain)
+    public void AddCookie_WhenCookieDomainDiffers_RequiresDomainOverride(bool useCookie, bool sameDomain, bool overrideDomain)
     {
         var uri = sameDomain
             ? new Uri("https://www.instagram.com/")
@@ -54,7 +54,7 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public void AddCookie_NullUri_Test(bool useCookie)
+    public void AddCookie_WhenUriIsNull_DoesNotValidateCookieDomain(bool useCookie)
     {
         var cookies = SimpleCookies;
         using var service = HttpClientService.Create(useCookie);
@@ -65,7 +65,7 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public void GetAllCookies_Test(bool useCookie)
+    public void GetAllCookies_ReturnsCookiesOnlyWhenCookieContainerIsEnabled(bool useCookie)
     {
         var cookies = SimpleCookies.Select(m => m.ToCookie()).ToDictionary(m => m.Name);
         using var service = HttpClientService.Create(useCookie);
@@ -91,7 +91,7 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public void GetFactory_Default_Test()
+    public void GetFactory_WhenOptionsAreEquivalent_ReusesFactory()
     {
         var fac1 = GetFactory(new());
         var fac2 = GetFactory(new());
@@ -99,7 +99,7 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public void LoggingHttpMessageHandlerBuilderFilter_Remove_Test()
+    public void GetProvider_RemovesDefaultLoggingHttpMessageHandlerBuilderFilter()
     {
         var provider = HttpClientService.GetProvider(new());
         var filter = provider.GetService<IHttpMessageHandlerBuilderFilter>();
@@ -124,7 +124,7 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public void GetFactory_Proxy_Test()
+    public void GetFactory_WhenProxyOptionsAreEquivalent_ReusesFactory()
     {
         var uri = new Uri("http://127.0.0.1:8888");
         var fac1 = GetFactory(new() { HandlerOptions = new() { Proxy = WebProxyHelper.Create(uri) } });
@@ -135,7 +135,7 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public void SetProxy_Test()
+    public void ProxySetter_RebuildsClientContextWithNewProxy()
     {
         var http = HttpClientService.Create();
         {
@@ -180,7 +180,7 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public void GetFactory_Proxy_NotSame()
+    public void GetFactory_WhenProxyOptionsDiffer_CreatesDifferentFactories()
     {
         var uri = new Uri("http://127.0.0.1:8888");
         var fac1 = GetFactory(new() { HandlerOptions = new() { Proxy = WebProxyHelper.Create(uri) } });
@@ -191,7 +191,7 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public void GetFactory_DisableServerCertificateValidation_NotSame()
+    public void GetFactory_WhenCertificateValidationOptionsDiffer_CreatesDifferentFactories()
     {
         var fac1 = GetFactory(new() { HandlerOptions = new() { DisableServerCertificateValidation = true } });
         var fac2 = GetFactory(new() { HandlerOptions = new() { DisableServerCertificateValidation = false } });
@@ -203,7 +203,7 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
     [InlineData(1, 0.1)]
     [InlineData(2, 0.1)]
     [InlineData(2, 0.2)]
-    public async Task CreateHttpClientContext_Policy_Test(int retryCount, double timeoutSeconds)
+    public async Task CreateHttpClientContext_AppliesRetryPolicyTimeoutForEachAttempt(int retryCount, double timeoutSeconds)
     {
         var expectedTime = TimeSpan.FromSeconds(timeoutSeconds).Multiply(retryCount + 1);
         var timeout = TimeSpan.FromSeconds(timeoutSeconds);

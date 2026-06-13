@@ -4,7 +4,7 @@ namespace FclEx.Http.Core.HttpRequestExtensions;
 public class HeaderTests
 {
     [Fact]
-    public void AddHeader_IEnumerable_KeyValuePair_Nullability()
+    public void AddHeader_WithEnumerableOverloads_AcceptsEmptyCollectionsAndExistingHeaders()
     {
         var request = HttpRequest.Get("http://localhost");
         {
@@ -63,7 +63,7 @@ public class HeaderTests
     }
 
     [Fact]
-    public void AddHeader_WithNullValues_HandlesGracefully()
+    public void AddHeader_WithEmptyValues_AddsEmptyHeaderValues()
     {
 
         var headers = new Dictionary<string, string>
@@ -118,7 +118,7 @@ public class HeaderTests
     }
 
     [Fact]
-    public void AddHeader_WithMultiValueDictionaryContainingNulls_HandlesGracefully()
+    public void AddHeader_WithMultiValueDictionaryContainingEmptyValues_AddsEmptyHeaderValues()
     {
 
         var multiValueHeaders = new Dictionary<string, List<string>>
@@ -299,7 +299,7 @@ public class HeaderTests
     }
 
     [Fact]
-    public void CookieHelpers_AddAndSetCookieHeaders()
+    public void AddCookiesAndSetCookies_WriteCookieHeaderValues()
     {
         var request = HttpRequest.Get("http://localhost");
         var cookies = new[]
@@ -317,7 +317,7 @@ public class HeaderTests
     }
 
     [Fact]
-    public void HeaderShortcuts_SetExpectedHeaders()
+    public void HeaderShortcutMethods_SetExpectedHeaderValues()
     {
         var request = HttpRequest.Get("http://localhost")
             .AcceptUtf8()

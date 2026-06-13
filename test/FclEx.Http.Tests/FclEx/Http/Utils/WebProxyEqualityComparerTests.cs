@@ -5,13 +5,13 @@ public class WebProxyEqualityComparerTests
     public static readonly IEqualityComparer<WebProxy> Comparer = WebProxyEqualityComparer.Instance;
 
     [Fact]
-    public void Equals_Empty_Test()
+    public void Equals_WhenBothProxiesAreEmpty_ReturnsTrue()
     {
         Assert.True(Comparer.Equals(WebProxyHelper.Empty, new WebProxy()));
     }
 
     [Fact]
-    public void GetHashCode_Empty_Test()
+    public void GetHashCode_WhenBothProxiesAreEmpty_ReturnsSameHashCode()
     {
         Assert.Equal(
             Comparer.GetHashCode(WebProxyHelper.Empty), 
@@ -19,7 +19,7 @@ public class WebProxyEqualityComparerTests
     }
 
     [Fact]
-    public void Equals_SameUri_Test()
+    public void Equals_WhenProxyAddressesMatch_ReturnsTrue()
     {
         var uri = new Uri("http://127.0.0.1:8888");
         var proxy1 = WebProxyHelper.Create(uri);
@@ -29,7 +29,7 @@ public class WebProxyEqualityComparerTests
     }
 
     [Fact]
-    public void GetHashCode_SameUri_Test()
+    public void GetHashCode_WhenProxyAddressesMatch_ReturnsSameHashCode()
     {
         var uri = new Uri("http://127.0.0.1:8888");
         var proxy1 = WebProxyHelper.Create(uri);

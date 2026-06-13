@@ -3,7 +3,7 @@ namespace FclEx.Http.Core.HttpRequestExtensions;
 public class AddQueryParamTests
 {
     [Fact]
-    public void AddQueryParam_Test()
+    public void AddQueryParam_AddsKeyValuePairToUri()
     {
         var request = HttpRequest.Get("http://localhost")
             .AddQueryParam("path", "index");
@@ -12,7 +12,7 @@ public class AddQueryParamTests
     }
 
     [Fact]
-    public void AddQueryParam_UrlEncode_Test()
+    public void AddQueryParam_UrlEncodesKeyAndValue()
     {
         var request = HttpRequest.Get("http://localhost")
             .AddQueryParam("pa=th", "in=dex");
@@ -21,7 +21,7 @@ public class AddQueryParamTests
     }
 
     [Fact]
-    public void AddQueryParam_NullValue_Test()
+    public void AddQueryParam_WhenValueIsNull_AddsEmptyValue()
     {
         var request = HttpRequest.Get("http://localhost")
             .AddQueryParam("index.html", null);
@@ -30,7 +30,7 @@ public class AddQueryParamTests
     }
 
     [Fact]
-    public void AddQueryParam_NullKey_Test()
+    public void AddQueryParam_WhenKeyIsNull_AddsQueryValue()
     {
         var request = HttpRequest.Get("http://localhost")
             .AddQueryParam(null, "index.html");
@@ -39,7 +39,7 @@ public class AddQueryParamTests
     }
 
     [Fact]
-    public void AddQueryValue_Test()
+    public void AddQueryValue_AddsValueWithoutKey()
     {
         var request = HttpRequest.Get("http://localhost")
             .AddQueryValue("index.html");

@@ -229,7 +229,7 @@ public class HttpServiceExtensionsTests
     [InlineData("https://www.google.com/", "www_google_com.html")]
     [InlineData("https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/proposals/csharp-9.0/covariant-returns", "covariant-returns.html")]
     [InlineData("https://devblogs.microsoft.com/dotnet/csharp-exploring-extension-members/#comments", "csharp-exploring-extension-members.html")]
-    public async Task DownloadAsync_Test(string uri, string fileName)
+    public async Task DownloadAsync_WithUriAndOptionalFileName_ReturnsExpectedFileName(string uri, string fileName)
     {
         using var http = new HttpClientService();
 

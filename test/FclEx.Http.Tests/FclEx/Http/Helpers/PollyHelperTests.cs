@@ -133,7 +133,7 @@ public class PollyHelperTests
     [InlineData(1, 0.1)]
     [InlineData(2, 0.1)]
     [InlineData(3, 0.1)]
-    public async Task GetConnectTimeoutPolicy_Test(int retryCount, double timeoutSeconds)
+    public async Task GetConnectTimeoutPolicy_WhenConnectTimeoutOccurs_RetriesAndPreservesExpectedElapsedTime(int retryCount, double timeoutSeconds)
     {
         if (TestHelper.IsGithubAction && retryCount > 1)
             return;

@@ -5,7 +5,7 @@ public class TimeoutTests : HttpServerTests
     [RetryTheory]
     [InlineData(0.1)]
     [InlineData(0.3)]
-    public async Task ReadHeadersTimeout_Test(double timeoutSeconds)
+    public async Task ReadHeadersTimeout_WhenServerDelaysHeaders_CancelsNearConfiguredTimeout(double timeoutSeconds)
     {
         if (HasApiServer == false)
             return;

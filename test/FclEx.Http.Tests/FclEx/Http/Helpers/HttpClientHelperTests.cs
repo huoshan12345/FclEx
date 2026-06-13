@@ -184,7 +184,7 @@ public class HttpClientHelperTests
     }
 
     [RetryFact(5)]
-    public async Task GetRetryPolicy_Timeout_Test()
+    public async Task AddRetryPolicy_WhenExecutionTimeoutIsConfigured_TimesOutEachAttempt()
     {
         var timeout = TimeSpan.FromSeconds(0.2);
         const int retryCount = 2;
@@ -216,7 +216,7 @@ public class HttpClientHelperTests
     }
 
     [RetryFact(5)]
-    public async Task HttpClient_Timeout_Test()
+    public async Task HttpClientTimeout_WhenConnectionDoesNotComplete_CancelsAfterConfiguredTimeout()
     {
         var timeout = TimeSpan.FromSeconds(0.2);
         var handler = HttpClientHelper.CreateSocketsHttpHandler(new() { ConnectTimeout = TimeSpan.FromHours(1) });

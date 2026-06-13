@@ -105,7 +105,7 @@ public class CtorTests
 
     [Theory]
     [MemberData(nameof(CtorCases))]
-    public void TestCtor(string url, HttpMethod method)
+    public void Constructor_WithRelativeOrAbsoluteUri_AllowsHostMutation(string url, HttpMethod method)
     {
         var request = new HttpRequest(new Uri(url, UriKind.RelativeOrAbsolute), method);
         request.Host("localhost");
@@ -113,7 +113,7 @@ public class CtorTests
     }
 
     [Fact]
-    public void Ctor_WithUserInfo()
+    public void Constructor_WhenUriContainsUserInfo_InitializesUserNameAndPassword()
     {
         var request = new HttpRequest(new Uri("http://tom:tom123@localhost/api/save"), HttpMethod.Get);
         Assert.Equal("tom", request.UserName);

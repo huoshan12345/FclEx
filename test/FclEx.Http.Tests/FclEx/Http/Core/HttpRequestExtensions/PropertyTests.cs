@@ -246,7 +246,7 @@ public class PropertyTests : HttpServerTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task CharSet_Test(bool value)
+    public async Task CharSet_WhenConfigured_DecodesResponseWithSpecifiedEncoding(bool value)
     {
         if (HasApiServer == false)
             return;
@@ -290,7 +290,7 @@ public class PropertyTests : HttpServerTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task FallbackCharSet_Test(bool value)
+    public async Task FallbackCharSet_WhenConfigured_DecodesResponseWhenHeadersDoNotProvideCharset(bool value)
     {
         if (HasApiServer == false)
             return;
@@ -348,7 +348,7 @@ public class PropertyTests : HttpServerTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task DetectCharSet_Test(bool value)
+    public async Task DetectCharSet_WhenEnabled_DetectsCharsetFromResponseBody(bool value)
     {
         if (HasApiServer == false)
             return;
@@ -368,7 +368,7 @@ public class PropertyTests : HttpServerTests
 
     [RetryTheory]
     [MemberData(nameof(CompressionMethods))]
-    public async Task Compress_Test(CompressionMethod compression)
+    public async Task Compression_WhenRemoteServerReceivesRequest_RoundTripsCompressedJson(CompressionMethod compression)
     {
         if (HasApiServer == false)
             return;
@@ -400,7 +400,7 @@ public class PropertyTests : HttpServerTests
 
     [Theory]
     [MemberData(nameof(CompressionMethods))]
-    public async Task Compress_LocalServer_Test(CompressionMethod compression)
+    public async Task Compression_WhenLocalServerReceivesRequest_RoundTripsCompressedJson(CompressionMethod compression)
     {
         if (HasApiServer == false)
             return;

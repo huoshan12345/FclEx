@@ -3,7 +3,7 @@ namespace FclEx.Web;
 public class UserClientFactoryTests : WebTests
 {
     [Fact]
-    public void Resolve_Test()
+    public void ServiceProvider_ResolvesNonGenericAndGenericFactories()
     {
         var factory = ServiceProvider.GetRequiredService<IUserClientFactory<TestUserClient>>();
         Assert.IsType<UserClientFactory<TestUserClient>>(factory);
@@ -13,7 +13,7 @@ public class UserClientFactoryTests : WebTests
     }
 
     [Fact]
-    public void Create_Test()
+    public void FactoryCreate_CreatesClientWithAccountAndWrappedLogger()
     {
         var account = new UserAccount("test", "test");
         var factory = ServiceProvider.GetRequiredService<IUserClientFactory<TestUserClient>>();
@@ -146,7 +146,7 @@ public class UserClientFactoryTests : WebTests
     }
 
     [Fact]
-    public void Create_WithProxy_Test()
+    public void FactoryCreate_WithWebProxy_AssignsProxyToClientService()
     {
         var account = new UserAccount("test", "test");
         var factory = ServiceProvider.GetRequiredService<IUserClientFactory<TestUserClient>>();

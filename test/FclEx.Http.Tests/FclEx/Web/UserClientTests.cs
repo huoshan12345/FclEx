@@ -3,7 +3,7 @@ namespace FclEx.Web;
 public class UserClientTests : WebTests
 {
     [Fact]
-    public void Log_Test()
+    public void Logger_WhenAccountChanges_LogsBeforeAndAfterAccountAssignment()
     {
         var account = new UserAccount("user", "password");
         var client = new TestUserClient(ServiceProvider.GetRequiredService<ILoggerFactory>());
@@ -13,7 +13,7 @@ public class UserClientTests : WebTests
     }
 
     [Fact]
-    public async Task Login_Test()
+    public async Task LoginAsync_WhenLoginActionSucceeds_ReturnsSuccess()
     {
         var client = new TestUserClient(ServiceProvider.GetRequiredService<ILoggerFactory>())
         {
@@ -24,7 +24,7 @@ public class UserClientTests : WebTests
     }
 
     [Fact]
-    public async Task Login_Failure_Test()
+    public async Task LoginAsync_WhenLoginActionFails_ReturnsFailure()
     {
         var client = new TestUserClient(ServiceProvider.GetRequiredService<ILoggerFactory>(), () => "Login failed")
         {

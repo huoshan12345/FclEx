@@ -262,7 +262,7 @@ public class HttpResponseTests : HttpServerTests
     }
 
     [Fact]
-    public void GetDownloadInfo_WhenBaseNameAndExtensionAreProvided_UsesBaseNameAndExistingUriExtension()
+    public void GetDownloadInfo_WhenBaseNameAndExtensionAreProvided_UsesProvidedValues()
     {
         var response = CreateResponse("payload", "https://example.com/download/report.bin");
         typeof(HttpResponse)
@@ -359,9 +359,9 @@ public class HttpResponseTests : HttpServerTests
     }
 
     [Fact]
-    public async Task Task_HttpResponse_ThrowIfError_Test()
+    public async Task TaskThrowIfError_WhenResponseTaskReturnsError_ThrowsResponseException()
     {
-        const string error = nameof(Task_HttpResponse_ThrowIfError_Test);
+        const string error = nameof(TaskThrowIfError_WhenResponseTaskReturnsError_ThrowsResponseException);
         var task = Task.Run(async () =>
         {
             await Task.Yield();
@@ -373,7 +373,7 @@ public class HttpResponseTests : HttpServerTests
     }
 
     [Fact]
-    public async Task Task_HttpResponse_ReadJsonAs_Test()
+    public async Task TaskReadJsonAs_WhenResponseTaskSucceeds_DeserializesJson()
     {
         if (HasApiServer == false)
             return;
@@ -392,7 +392,7 @@ public class HttpResponseTests : HttpServerTests
 
 
     [Fact]
-    public async Task Task_HttpResponse_ReadJsonAsRequired_Test()
+    public async Task TaskReadJsonAsRequired_WhenResponseTaskSucceeds_ReturnsDeserializedJson()
     {
         if (HasApiServer == false)
             return;
