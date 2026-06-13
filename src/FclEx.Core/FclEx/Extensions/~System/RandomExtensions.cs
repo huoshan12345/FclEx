@@ -12,7 +12,7 @@ namespace FclEx.Extensions;
 public static class RandomExtensions
 {
     private const string Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    private const int MaxObjectGraphDepth = 10;
+    private const int DefaultMaxObjectGraphDepth = 10;
 
     extension(Random)
     {
@@ -511,7 +511,7 @@ public static class RandomExtensions
     {
         var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
         return underlyingType.IsValueType == false
-            && depth.Get(underlyingType) >= MaxObjectGraphDepth;
+            && depth.Get(underlyingType) >= DefaultMaxObjectGraphDepth;
     }
 
     private static object? GetDefaultValue(Type type)
