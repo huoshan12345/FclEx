@@ -1,6 +1,3 @@
-using System;
-using System.Runtime.InteropServices;
-
 namespace FclEx.Extensions;
 
 public static class RandomExtensions
