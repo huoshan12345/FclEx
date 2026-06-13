@@ -1,17 +1,17 @@
 # FclEx.Dapper
 
-Dapper and ADO.NET helpers for common CRUD, transaction, and SQL-generation workflows.
+Dapper and ADO.NET helpers for FclEx.
 
 ## What Is Included
 
-- Extension methods for `DbConnection`, `DbTransaction`, `DbCommand`, and Dapper `DynamicParameters`.
-- Insert, bulk insert, get-by-id, and delete helpers built around generated SQL.
-- Transaction helpers for single and multiple connections, including rollback-on-failure behavior.
-- SQL adapter abstractions for database-specific SQL syntax.
-- Built-in adapters for SQL Server, SQLite, PostgreSQL, MySQL, and MySqlConnector.
-- Type handlers for `DateTime` and `Guid`.
-- Entity and field metadata helpers used by SQL generation.
+- CRUD-oriented `IDbConnection` extensions.
+- Transaction helpers and operation wrappers.
+- Dynamic-parameter utilities.
+- SQL adapter abstractions for provider-specific SQL fragments.
+- Type-handler helpers for custom Dapper mappings.
 
-## Notes
+## Usage Notes
 
-The CRUD helpers depend on entity metadata inferred from type and property information. For provider-specific SQL, pass an `ISqlAdapter` when the default adapter cannot infer the desired dialect.
+- This package depends on Dapper and `FclEx.Core`.
+- The APIs stay close to ADO.NET and Dapper concepts rather than introducing a full repository framework.
+- Some tests expect local database services to be available.

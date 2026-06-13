@@ -1,16 +1,19 @@
 # FclEx.Slack
 
-SlackNet extensions and formatting helpers.
+SlackNet helpers for FclEx.
 
 ## What Is Included
 
-- Service registration helpers for SlackNet and Slack HTTP integration.
-- `SlackHttp`, an HTTP implementation backed by FclEx HTTP services.
-- `SlackStringBuilder` and extensions for Slack markdown formatting.
-- Message and block helpers for constructing Slack messages.
-- Conversation lookup, history, reply, and reaction helpers.
-- Table-data conversion and chunked posting helpers for Slack messages and webhooks.
+- SlackNet service registration helpers.
+- Slack API client extensions for chat, conversations, reactions, and webhooks.
+- Message and block-building helpers.
+- Slack-friendly string builder.
+- Table-to-message formatting helpers.
+- Slack HTTP adapter integration.
+- Date/time formatting helpers for Slack message markup.
 
-## Notes
+## Usage Notes
 
-Slack API methods are rate-limited by Slack. Use the chunking helpers for large table outputs and keep retry behavior aligned with the SlackNet client configuration.
+- This package depends on SlackNet and `FclEx.Http`.
+- Serilog sink support lives in `FclEx.Serilog.Slack`.
+- Keep Slack tokens and webhook URLs in application configuration or secret storage.

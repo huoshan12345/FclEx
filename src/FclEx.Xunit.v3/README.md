@@ -1,15 +1,15 @@
 # FclEx.Xunit.v3
 
-xUnit v3 test helpers for FclEx-based test projects.
+xUnit v3 helpers for FclEx test projects.
 
 ## What Is Included
 
-- The shared test helper surface from `FclEx.Xunit`, compiled for xUnit v3.
-- xUnit v3 assertion and extensibility support.
-- Logging integration for writing Microsoft logging output to xUnit test output.
-- Conditional and local-only test attributes adapted for xUnit v3.
-- Source-generated xUnit serialization support through the v3 generator.
+- xUnit v3 variant of the `FclEx.Xunit` helper APIs.
+- Extended assertions, conditional attributes, output helpers, logging integration, and test utilities.
+- Analyzer packaging for xUnit v3 serialization support.
 
-## Notes
+## Usage Notes
 
-This project links the source files from `FclEx.Xunit` and compiles them with the `FCLEX_XUNIT_V3` constant. Use this package for xUnit v3 projects instead of `FclEx.Xunit`.
+- This package compiles the shared `FclEx.Xunit` source with xUnit v3 symbols enabled.
+- Use `FclEx.Xunit` for xUnit v2 projects.
+- The package references xUnit v3 assert and extensibility packages.

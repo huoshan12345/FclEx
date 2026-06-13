@@ -1,16 +1,19 @@
 # FclEx.AspNetCore
 
-ASP.NET Core integration helpers for the FclEx library family.
+ASP.NET Core helpers for FclEx applications.
 
 ## What Is Included
 
-- Request and response helpers for `HttpContext`, `HttpRequest`, `ISession`, endpoints, and MVC model state.
-- JWT extraction helpers that parse bearer tokens into `JwtInfo`.
-- Scope-based authorization attributes and authorization handler support.
-- Request body buffering middleware and request decompression providers for gzip, deflate, Brotli, and zlib.
-- Hosting helpers such as `UseApplicationName`.
-- Logging property enrichment from ASP.NET Core request data.
+- Request, context, session, endpoint, action-context, model-state, and authorization extensions.
+- Request buffering middleware and request-decompression providers for Brotli, Deflate, GZip, and ZLib.
+- `ControllerNameAttribute` and MVC application-model convention support.
+- Required-scope authorization attribute, requirement, and handlers.
+- Logging context helpers for ASP.NET Core request data.
+- Host and web-host builder convenience extensions.
+- JWT information helpers for request and authorization flows.
 
-## Notes
+## Usage Notes
 
-Use this package from ASP.NET Core applications that already use the FclEx HTTP, logging, or options helpers. The request-body helpers depend on buffering being enabled before the body is read.
+- This package targets `net8.0`, `net9.0`, and `net10.0`.
+- General HTTP client helpers live in `FclEx.Http`.
+- Options and logging integration come through `FclEx.Options` and `FclEx.Logging`.

@@ -1,14 +1,16 @@
 # FclEx.AspNetCore.Testing
 
-Testing helpers for ASP.NET Core applications that use `WebApplicationFactory`.
+Integration-test helpers for ASP.NET Core applications.
 
 ## What Is Included
 
-- `TestWebApplicationFactory<TStartup>` for configuring application factories in integration tests.
-- Content-root helpers for test hosts.
-- `AllowExternalHandler`, a delegating handler that can pass selected requests to an external HTTP pipeline.
-- `SetNotSend` for marking a request as not intended to be sent by the external handler.
+- `TestWebApplicationFactory<TStartup>` for `WebApplicationFactory`-based tests.
+- Test content-root and web-host builder helpers.
+- `AllowExternalHandler` for forwarding selected HTTP requests outside the in-memory test server.
+- Integration with the ASP.NET Core and HTTP helpers from FclEx.
 
-## Notes
+## Usage Notes
 
-This package is intended for test projects. It is useful when a test host should handle most requests in-memory while still allowing selected calls to reach a real HTTP endpoint.
+- This package targets `net8.0`, `net9.0`, and `net10.0`.
+- It is intended for test projects rather than production deployments.
+- Use `AllowExternalHandler` only when tests intentionally call external services.

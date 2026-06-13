@@ -1,18 +1,17 @@
 # FclEx.Logging
 
-Logging helpers built on `Microsoft.Extensions.Logging`.
+`Microsoft.Extensions.Logging` helpers for FclEx.
 
 ## What Is Included
 
-- Logger property scopes through `LoggerProperties`, `LoggerProperty`, and `LazyLoggerProperty`.
-- Extensions for adding scoped properties to `ILogger`.
-- Helpers for creating loggers from service providers, factories, and providers.
-- Null-logger fallback helpers.
-- Operation timing and operation error logging helpers.
-- `LogException` and common log property names.
-- Service collection helpers for removing logging registrations.
-- `LogPropertyIgnoreAttribute` for excluding members from log-property extraction.
+- Logger factory and provider convenience helpers.
+- Scoped logging-property helpers.
+- Operation timing helpers.
+- Null logger fallbacks and cleanup utilities.
+- Service registration helpers for logging-related options.
 
-## Notes
+## Usage Notes
 
-Property scopes are disposable. Prefer `using` blocks or `using var` when pushing properties to ensure scopes are closed even when an operation fails.
+- This package uses Microsoft logging abstractions.
+- Serilog-specific helpers live in `FclEx.Serilog`.
+- Use scoped properties when downstream providers need structured context for an operation.

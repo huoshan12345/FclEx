@@ -1,18 +1,18 @@
 # FclEx.EfCore
 
-Entity Framework Core helpers for common query, update, schema, and testing scenarios.
+Entity Framework Core helpers for FclEx.
 
 ## What Is Included
 
-- Query helpers for get-by-id, paging, soft-delete filtering, enabled filtering, and `ContainsAny` search.
-- `ExecuteSoftDeleteAsync` and dictionary-based `ExecuteUpdateAsync` helpers.
-- `DbContext` save helpers with selective update exclusion.
-- Change-tracker rules for common entity state behavior.
-- Schema-aware `DbContext` support through `IHasSchema`, `SchemaDbContext`, and model cache keys.
-- SSH tunnel support for creating a context through an SSH-forwarded connection string.
-- Soft-delete index convention helpers.
-- Test helpers for temporarily adding entity types to a context.
+- Query helpers for EF Core `IQueryable` and `DbContext` workflows.
+- Update and change-application helpers.
+- Soft-delete helpers and entity-state utilities.
+- Relational schema helpers.
+- SSH tunnel helpers for database access during local or integration workflows.
+- Test-model and test-data conveniences used by EF-oriented tests.
 
-## Notes
+## Usage Notes
 
-The query helpers build EF expression trees, so provider support still depends on the active EF Core provider. Test helpers are intended for test infrastructure rather than production model configuration.
+- This package targets `net8.0`, `net9.0`, and `net10.0`.
+- It depends on `Microsoft.EntityFrameworkCore.Relational` and `FclEx.Core`.
+- Keep provider-specific SQL behavior in application code or provider-specific packages.
