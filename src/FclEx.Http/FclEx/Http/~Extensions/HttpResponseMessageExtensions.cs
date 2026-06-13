@@ -24,11 +24,14 @@ public static class HttpResponseMessageExtensions
     }
 
     /// <summary>
-    /// Provide more information than <see cref="HttpResponseMessage.EnsureSuccessStatusCode"/>
+    /// Throws when the response status code is outside the successful 2xx range.
     /// </summary>
-    /// <param name="response"></param>
-    /// <returns></returns>
-    /// <exception cref="WebException"></exception>
+    /// <param name="response">The response to validate.</param>
+    /// <returns>The same response when the status code is successful.</returns>
+    /// <exception cref="HttpRequestException">
+    /// Thrown for non-successful status codes. The exception includes the numeric status code and,
+    /// when available, the original request method and URI.
+    /// </exception>
     public static HttpResponseMessage EnsureSuccess(this HttpResponseMessage response)
     {
         var request = response.RequestMessage;
