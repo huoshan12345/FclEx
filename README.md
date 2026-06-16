@@ -1,4 +1,4 @@
-# FclEx [![LICENSE](https://img.shields.io/github/license/mashape/apistatus.svg)](LICENSE.TXT) [![Build](https://github.com/huoshan12345/FclEx/actions/workflows/build.yml/badge.svg)](https://github.com/huoshan12345/FclEx/actions/workflows/build.yml)
+# FclEx [![LICENSE](https://img.shields.io/github/license/mashape/apistatus.svg?style=flat)](LICENSE.TXT) [![Build](https://github.com/huoshan12345/FclEx/actions/workflows/build.yml/badge.svg)](https://github.com/huoshan12345/FclEx/actions/workflows/build.yml)
 
 FclEx means **fundamental class libraries extensions**.
 
