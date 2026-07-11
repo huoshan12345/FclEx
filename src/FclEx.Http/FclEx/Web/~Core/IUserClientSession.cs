@@ -6,11 +6,6 @@ namespace FclEx.Web;
 public interface IUserClientSession
 {
     /// <summary>
-    /// User identifier associated with the current session.
-    /// </summary>
-    string UserId { get; }
-
-    /// <summary>
     /// User display or login name associated with the current session.
     /// </summary>
     string UserName { get; }

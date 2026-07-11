@@ -4,6 +4,6 @@
   "parallelizeTestCollections": true,
   "maxParallelThreads": "2x",
   "preEnumerateTheories": true,
-  "shadowCopy": true,
+  "shadowCopy": false,
   "diagnosticMessages": true
 }
