@@ -9,6 +9,26 @@ public class IsBlittableTests
     /// </summary>
     private const string NonPinnableError = "Object contains non-primitive or non-blittable data.";
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RepeatedBlittableFieldStruct
+    {
+        public BlittableStruct First;
+        public BlittableStruct Second;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RepeatedMarshalableFieldStruct
+    {
+        public MarshalableStruct First;
+        public MarshalableStruct Second;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public class CircularFieldClass
+    {
+        public CircularFieldClass? Next;
+    }
+
     // NOTE: single-element ValueTuple of blittable type is also blittable
     // ValueTuple types that contains more than 1 element are marked as LayoutKind.Auto, so they are not blittable.
     public static readonly TheoryData<Type> BlittableTestCases = Types.BlittableTypes.ToTheoryData();
@@ -35,6 +55,14 @@ public class IsBlittableTests
     public void NonAutoLayout_Test(Type type)
     {
         var result = type.IsBlittable(out var ex);
+        Assert.True(result, ex?.ToString());
+    }
+
+    [Fact]
+    public void RepeatedBlittableFieldType_ShouldNotBeTreatedAsCircularReference()
+    {
+        var result = typeof(RepeatedBlittableFieldStruct).IsBlittable(out var ex);
+
         Assert.True(result, ex?.ToString());
     }
 
@@ -105,6 +133,34 @@ public class IsBlittableTests
         Assert.False(result);
         Assert.IsType<ArgumentException>(ex);
         Assert.Contains("is not blittable.", ex.Message);
+    }
+
+    [Fact]
+    public void CircularFieldType_ShouldNotBeBlittable()
+    {
+        var result = typeof(CircularFieldClass).IsBlittable(out var ex);
+
+        Assert.False(result);
+        Assert.IsType<ArgumentException>(ex);
+        Assert.Contains("circular referenced", ex.Message);
+    }
+
+    [Fact]
+    public void RepeatedMarshalableFieldType_ShouldNotBeTreatedAsCircularReference()
+    {
+        var result = typeof(RepeatedMarshalableFieldStruct).IsMarshalable(out var ex);
+
+        Assert.True(result, ex?.ToString());
+    }
+
+    [Fact]
+    public void CircularFieldType_ShouldNotBeMarshalable()
+    {
+        var result = typeof(CircularFieldClass).IsMarshalable(out var ex);
+
+        Assert.False(result);
+        Assert.IsType<ArgumentException>(ex);
+        Assert.Contains("circular referenced", ex.Message);
     }
 
     public static readonly TheoryData<object?> PinnableTestCases = new object?[]
