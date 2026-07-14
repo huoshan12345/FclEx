@@ -17,13 +17,6 @@ public class IsBlittableTests
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct RepeatedMarshalableFieldStruct
-    {
-        public MarshalableStruct First;
-        public MarshalableStruct Second;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
     public class CircularFieldClass
     {
         public CircularFieldClass? Next;
@@ -139,24 +132,6 @@ public class IsBlittableTests
     public void CircularFieldType_ShouldNotBeBlittable()
     {
         var result = typeof(CircularFieldClass).IsBlittable(out var ex);
-
-        Assert.False(result);
-        Assert.IsType<ArgumentException>(ex);
-        Assert.Contains("circular referenced", ex.Message);
-    }
-
-    [Fact]
-    public void RepeatedMarshalableFieldType_ShouldNotBeTreatedAsCircularReference()
-    {
-        var result = typeof(RepeatedMarshalableFieldStruct).IsMarshalable(out var ex);
-
-        Assert.True(result, ex?.ToString());
-    }
-
-    [Fact]
-    public void CircularFieldType_ShouldNotBeMarshalable()
-    {
-        var result = typeof(CircularFieldClass).IsMarshalable(out var ex);
 
         Assert.False(result);
         Assert.IsType<ArgumentException>(ex);

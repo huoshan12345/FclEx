@@ -21,18 +21,18 @@ partial class TypeExtensions
         static TypeInfoEx GetTypeInfoExtInternal(Type type)
         {
             var nullableUnderlyingType = Nullable.GetUnderlyingType(type);
-            var defaultValue = GetDefaultValueInternal(type, nullableUnderlyingType);
-            var enumerableUnderlyingType = GetEnumerableUnderlyingTypeInternal(type);
-            var simpleName = SimpleNameInternal(type);
-            var shortName = ShortNameInternal(type, simpleName);
-            var longName = LongNameInternal(type, shortName);
-            var isInteger = IsIntegerInternal(type, nullableUnderlyingType);
-            var isFloat = IsFloatInternal(type, nullableUnderlyingType);
+            var defaultValue = GetDefaultValue(type, nullableUnderlyingType);
+            var enumerableElementType = EnumerableElementType(type);
+            var simpleName = SimpleName(type);
+            var shortName = ShortName(type, simpleName);
+            var longName = LongName(type, shortName);
+            var isInteger = IsInteger(type, nullableUnderlyingType);
+            var isFloat = IsFloat(type, nullableUnderlyingType);
 
             return new TypeInfoEx(
                 Type: type,
                 NullableUnderlyingType: nullableUnderlyingType,
-                EnumerableUnderlyingType: enumerableUnderlyingType,
+                EnumerableElementType: enumerableElementType,
                 DefaultValue: defaultValue,
                 SimpleName: simpleName,
                 ShortName: shortName,
@@ -41,7 +41,7 @@ partial class TypeExtensions
                 IsFloat: isFloat);
         }
 
-        static object? GetDefaultValueInternal(Type type, Type? nullableUnderlyingType)
+        static object? GetDefaultValue(Type type, Type? nullableUnderlyingType)
         {
             /*
                 Acc_CreateGeneric = Cannot create a type for which Type.ContainsGenericParameters is true.
@@ -89,7 +89,7 @@ partial class TypeExtensions
         }
 #endif
         [SuppressMessage("ReSharper", "ConvertIfStatementToReturnStatement")]
-        static Type? GetEnumerableUnderlyingTypeInternal(Type type)
+        static Type? EnumerableElementType(Type type)
         {
             // type is Array
             if (type.IsArray)
@@ -110,7 +110,7 @@ partial class TypeExtensions
             return null;
         }
 
-        static string SimpleNameInternal(Type type)
+        static string SimpleName(Type type)
         {
             var name = type.Name;
 
@@ -121,24 +121,24 @@ partial class TypeExtensions
             return index == -1 ? name : name[..index];
         }
 
-        static string ShortNameInternal(Type type, string simpleName)
+        static string ShortName(Type type, string simpleName)
         {
             if (!type.IsGenericType) return type.Name;
             var paraName = string.Join(", ", type.GenericTypeArguments!.Select(m => m.ShortName()));
             return simpleName + "<" + paraName + ">";
         }
 
-        static string LongNameInternal(Type type, string shortName)
+        static string LongName(Type type, string shortName)
         {
-            return GetTypePrefixInternal(type) + shortName;
+            return GetTypePrefix(type) + shortName;
         }
 
-        static string GetTypePrefixInternal(Type type)
+        static string GetTypePrefix(Type type)
         {
             if (type.IsNested)
             {
                 var declaringType = type.DeclaringType!;
-                return GetTypePrefixInternal(declaringType) + declaringType.ShortName() + ".";
+                return GetTypePrefix(declaringType) + declaringType.ShortName() + ".";
             }
             else
             {
@@ -167,7 +167,7 @@ partial class TypeExtensions
             }
         }
 
-        static bool IsIntegerInternal(Type type, Type? nullableUnderlyingType)
+        static bool IsInteger(Type type, Type? nullableUnderlyingType)
         {
             type = nullableUnderlyingType ?? type;
             return type == typeof(long)
@@ -180,7 +180,7 @@ partial class TypeExtensions
                    || type == typeof(sbyte);
         }
 
-        static bool IsFloatInternal(Type type, Type? nullableUnderlyingType)
+        static bool IsFloat(Type type, Type? nullableUnderlyingType)
         {
             type = nullableUnderlyingType ?? type;
             return type == typeof(float)
@@ -248,7 +248,7 @@ partial class TypeExtensions
     /// </returns>
     public static Type? EnumerableElementType(this Type type)
     {
-        return type.GetTypeInfoEx().EnumerableUnderlyingType;
+        return type.GetTypeInfoEx().EnumerableElementType;
     }
 
     /// <summary>
@@ -334,7 +334,7 @@ partial class TypeExtensions
 public record TypeInfoEx(
     Type Type,
     Type? NullableUnderlyingType,
-    Type? EnumerableUnderlyingType,
+    Type? EnumerableElementType,
     object? DefaultValue,
     string SimpleName,
     string ShortName,
@@ -343,6 +343,6 @@ public record TypeInfoEx(
     bool IsFloat)
 {
     public bool IsNullable { get; } = NullableUnderlyingType != null;
-    public bool IsEnumerable { get; } = EnumerableUnderlyingType != null;
+    public bool IsEnumerable { get; } = EnumerableElementType != null;
     public bool IsNumeric { get; } = IsInteger || IsFloat;
 }
