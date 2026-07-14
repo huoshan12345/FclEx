@@ -34,6 +34,12 @@ public class IsBlittableTests
         Assert.True(result, ex?.ToString());
     }
 
+    [Fact]
+    public void EnsureBlittable_ShouldNotThrow_WhenTypeIsBlittable()
+    {
+        typeof(BlittableStruct).EnsureBlittable();
+    }
+
     [Theory]
     [MemberData(nameof(BlittableTestCases))]
     public void ArrayOfBlittableType_Test(Type type)
@@ -68,6 +74,12 @@ public class IsBlittableTests
         Assert.False(result);
         Assert.IsType<ArgumentException>(ex);
         Assert.Contains("is not blittable.", ex.Message);
+    }
+
+    [Fact]
+    public void EnsureBlittable_ShouldThrow_WhenTypeIsNotBlittable()
+    {
+        Assert.Throws<ArgumentException>(() => typeof(string).EnsureBlittable());
     }
 
     [Theory]

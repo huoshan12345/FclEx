@@ -19,16 +19,48 @@ partial class TypeExtensions
         return null;
     }
 
+    /// <summary>
+    /// Retrieves a field by name from the specified type, optionally searching base types.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <param name="name">The field name.</param>
+    /// <param name="searchBaseTypes">
+    /// <see langword="true"/> to continue searching base types when the field is not declared on
+    /// <paramref name="type"/>; otherwise, <see langword="false"/>.
+    /// </param>
+    /// <returns>The matching field, or <see langword="null"/> when no field is found.</returns>
     public static FieldInfo? GetField(this Type type, string name, bool searchBaseTypes)
     {
         return type.GetMember(m => m.GetField(name, Declared), searchBaseTypes);
     }
 
+    /// <summary>
+    /// Retrieves a field by name and throws when it cannot be found.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <param name="name">The field name.</param>
+    /// <param name="searchBaseTypes">
+    /// <see langword="true"/> to continue searching base types when the field is not declared on
+    /// <paramref name="type"/>; otherwise, <see langword="false"/>.
+    /// </param>
+    /// <returns>The matching field.</returns>
+    /// <exception cref="InvalidOperationException">No matching field is found.</exception>
     public static FieldInfo GetRequiredField(this Type type, string name, bool searchBaseTypes = false)
     {
         return type.GetField(name, searchBaseTypes) ?? throw new InvalidOperationException($"Cannot find field '{name}' in type '{type.FullName}'");
     }
 
+    /// <summary>
+    /// Gets the compiler-generated backing field for an auto-implemented property.
+    /// </summary>
+    /// <param name="type">The type that declares or inherits the property.</param>
+    /// <param name="propertyName">The property name whose backing field should be found.</param>
+    /// <param name="searchBaseTypes">
+    /// <see langword="true"/> to continue searching base types when the backing field is not declared on
+    /// <paramref name="type"/>; otherwise, <see langword="false"/>.
+    /// </param>
+    /// <returns>The auto-property backing field.</returns>
+    /// <exception cref="InvalidOperationException">No matching backing field is found.</exception>
     public static FieldInfo GetAutoPropertyBackingField(this Type type, string propertyName, bool searchBaseTypes = false)
     {
         var name = ReflectionHelper.GetAutoBackingFieldName(propertyName);
@@ -36,11 +68,32 @@ partial class TypeExtensions
                ?? throw new InvalidOperationException($"Cannot find backing field for property '{propertyName}' in type '{type.FullName}'");
     }
 
+    /// <summary>
+    /// Retrieves a property by name from the specified type, optionally searching base types.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <param name="name">The property name.</param>
+    /// <param name="searchBaseTypes">
+    /// <see langword="true"/> to continue searching base types when the property is not declared on
+    /// <paramref name="type"/>; otherwise, <see langword="false"/>.
+    /// </param>
+    /// <returns>The matching property, or <see langword="null"/> when no property is found.</returns>
     public static PropertyInfo? GetProperty(this Type type, string name, bool searchBaseTypes)
     {
         return type.GetMember(m => m.GetProperty(name, Declared), searchBaseTypes);
     }
 
+    /// <summary>
+    /// Retrieves a property by name and throws when it cannot be found.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <param name="name">The property name.</param>
+    /// <param name="searchBaseTypes">
+    /// <see langword="true"/> to continue searching base types when the property is not declared on
+    /// <paramref name="type"/>; otherwise, <see langword="false"/>.
+    /// </param>
+    /// <returns>The matching property.</returns>
+    /// <exception cref="InvalidOperationException">No matching property is found.</exception>
     public static PropertyInfo GetRequiredProperty(this Type type, string name, bool searchBaseTypes = false)
     {
         return type.GetProperty(name, searchBaseTypes) ?? throw new InvalidOperationException($"Cannot find property '{name}' in type '{type.FullName}'");
@@ -66,11 +119,35 @@ partial class TypeExtensions
         return type.GetMember(m => m.GetMethod(name, Declared), searchBaseTypes);
     }
 
+    /// <summary>
+    /// Retrieves a method by name and throws when it cannot be found.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <param name="name">The method name.</param>
+    /// <param name="searchBaseTypes">
+    /// <see langword="true"/> to continue searching base types when the method is not declared on
+    /// <paramref name="type"/>; otherwise, <see langword="false"/>.
+    /// </param>
+    /// <returns>The matching method.</returns>
+    /// <exception cref="InvalidOperationException">No matching method is found.</exception>
+    /// <inheritdoc cref="GetMethod(Type, string, bool)"/>
     public static MethodInfo GetRequiredMethod(this Type type, string name, bool searchBaseTypes = false)
     {
         return type.GetMethod(name, searchBaseTypes) ?? throw new InvalidOperationException($"Cannot find method '{name}' in type '{type.FullName}'");
     }
 
+    /// <summary>
+    /// Retrieves a generic or non-generic method by name, generic argument count, and exact parameter types.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <param name="name">The method name.</param>
+    /// <param name="genericArgumentCount">The number of generic method parameters.</param>
+    /// <param name="paramTypes">The exact method parameter types.</param>
+    /// <param name="searchBaseTypes">
+    /// <see langword="true"/> to continue searching base types when the method is not declared on
+    /// <paramref name="type"/>; otherwise, <see langword="false"/>.
+    /// </param>
+    /// <returns>The matching method, or <see langword="null"/> when no method is found.</returns>
     public static MethodInfo? GetMethod(this Type type, string name, int genericArgumentCount, Type[] paramTypes, bool searchBaseTypes = false)
     {
         return type.GetMember(t =>
@@ -86,17 +163,48 @@ partial class TypeExtensions
         }, searchBaseTypes);
     }
 
+    /// <summary>
+    /// Retrieves a generic or non-generic method by name, generic argument count, and exact parameter types,
+    /// and throws when it cannot be found.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <param name="name">The method name.</param>
+    /// <param name="genericArgumentCount">The number of generic method parameters.</param>
+    /// <param name="paramTypes">The exact method parameter types.</param>
+    /// <param name="searchBaseTypes">
+    /// <see langword="true"/> to continue searching base types when the method is not declared on
+    /// <paramref name="type"/>; otherwise, <see langword="false"/>.
+    /// </param>
+    /// <returns>The matching method.</returns>
+    /// <exception cref="InvalidOperationException">No matching method is found.</exception>
     public static MethodInfo GetRequiredMethod(this Type type, string name, int genericArgumentCount, Type[] paramTypes, bool searchBaseTypes)
     {
         return type.GetMethod(name, genericArgumentCount, paramTypes, searchBaseTypes)
                ?? throw new InvalidOperationException($"Cannot find method '{name}<`{genericArgumentCount}>({paramTypes.Select(m => m.Name).JoinWith(", ")})' in type '{type.FullName}'");
     }
 
+    /// <summary>
+    /// Retrieves a declared generic or non-generic method by name, generic argument count, and exact parameter types,
+    /// and throws when it cannot be found.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <param name="name">The method name.</param>
+    /// <param name="genericArgumentCount">The number of generic method parameters.</param>
+    /// <param name="paramTypes">The exact method parameter types.</param>
+    /// <returns>The matching method.</returns>
+    /// <exception cref="InvalidOperationException">No matching method is found.</exception>
     public static MethodInfo GetRequiredMethod(this Type type, string name, int genericArgumentCount, params Type[] paramTypes)
     {
         return type.GetRequiredMethod(name, genericArgumentCount, paramTypes, false);
     }
 
+    /// <summary>
+    /// Retrieves a public or non-public instance constructor whose parameters exactly match the supplied types.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <param name="types">The constructor parameter types.</param>
+    /// <returns>The matching constructor.</returns>
+    /// <exception cref="InvalidOperationException">No matching constructor is found.</exception>
     public static ConstructorInfo GetRequiredConstructor(this Type type, params Type[] types)
     {
         return type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, types)
@@ -131,6 +239,14 @@ partial class TypeExtensions
         }
     }
 
+    /// <summary>
+    /// Retrieves all data members discovered for the specified type.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <returns>
+    /// Fields and properties declared by the type and its relevant base/interface hierarchy, as discovered by
+    /// <see cref="ReflectionHelper.GetDataMembers(Type)"/>.
+    /// </returns>
     public static IReadOnlyList<DataMemberInfo> GetDataMembers(this Type type) => ReflectionHelper.GetDataMembers(type);
 
     /// <summary>
@@ -261,8 +377,21 @@ partial class TypeExtensions
         }
     }
 
+    /// <summary>
+    /// Retrieves the first data member with the specified name.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <param name="name">The field or property name.</param>
+    /// <returns>The matching data member, or <see langword="null"/> when no member is found.</returns>
     public static DataMemberInfo? GetDataMember(this Type type, string name) => ReflectionHelper.GetDataMembers(type).FirstOrDefault(m => m.Name == name);
 
+    /// <summary>
+    /// Retrieves the first data member with the specified name and throws when it cannot be found.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <param name="name">The field or property name.</param>
+    /// <returns>The matching data member.</returns>
+    /// <exception cref="InvalidOperationException">No matching field or property is found.</exception>
     public static DataMemberInfo GetRequiredDataMember(this Type type, string name)
     {
         return type.GetDataMember(name) ?? throw new InvalidOperationException($"Cannot find field or property '{name}' in type '{type.FullName}'");

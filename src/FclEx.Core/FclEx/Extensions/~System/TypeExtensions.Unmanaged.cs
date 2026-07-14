@@ -47,11 +47,21 @@ partial class TypeExtensions
             : (false, new ArgumentException(result.ErrorMessage, result.ParamName).SetStackTrace());
     }
 
+    /// <summary>
+    /// Throws when the specified type is not blittable.
+    /// </summary>
+    /// <param name="type">The type to validate.</param>
+    /// <exception cref="ArgumentException">The type is not blittable.</exception>
     public static void EnsureBlittable(this Type type)
     {
         type.Ensure(IsBlittable, "blittable");
     }
 
+    /// <summary>
+    /// Throws when the specified type is not marshalable.
+    /// </summary>
+    /// <param name="type">The type to validate.</param>
+    /// <exception cref="ArgumentException">The type is not marshalable.</exception>
     public static void EnsureMarshalable(this Type type)
     {
         type.Ensure(IsMarshalable, "marshalable");

@@ -1,5 +1,8 @@
 namespace FclEx.Extensions;
 
+/// <summary>
+/// Provides reflection-oriented extension methods for <see cref="Type"/>.
+/// </summary>
 public static partial class TypeExtensions
 {
     /// <summary>
@@ -95,6 +98,14 @@ public static partial class TypeExtensions
         }
     }
 
+    /// <summary>
+    /// Creates an instance of the specified type and casts it to <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">The expected result type.</typeparam>
+    /// <param name="type">The type to instantiate.</param>
+    /// <param name="args">The constructor arguments.</param>
+    /// <returns>The created object cast to <typeparamref name="T"/>.</returns>
+    /// <inheritdoc cref="CreateObject(Type, object?[])"/>
     [MethodImpl(AggressiveInlining)]
     public static T CreateObject<T>(this Type type, params object?[] args)
     {
@@ -169,12 +180,22 @@ public static partial class TypeExtensions
         return false;
     }
 
+    /// <summary>
+    /// Determines whether the type is annotated with <see cref="DynamicAttribute"/>.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <returns><see langword="true"/> if the type has the dynamic marker attribute; otherwise, <see langword="false"/>.</returns>
     [MethodImpl(AggressiveInlining)]
     public static bool IsDynamic(this Type type)
     {
         return type.IsDefined<DynamicAttribute>(true);
     }
 
+    /// <summary>
+    /// Determines whether the type is marked with <see cref="CompilerGeneratedAttribute"/>.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <returns><see langword="true"/> when the type is compiler-generated; otherwise, <see langword="false"/>.</returns>
     [MethodImpl(AggressiveInlining)]
     public static bool IsCompilerGenerated(this Type type)
     {
@@ -182,12 +203,27 @@ public static partial class TypeExtensions
     }
 
 #if !NET5_0_OR_GREATER
+    /// <summary>
+    /// Gets the constructor whose parameters match the specified types.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <param name="bindingAttr">The binding flags used to search for the constructor.</param>
+    /// <param name="types">The constructor parameter types.</param>
+    /// <returns>The matching constructor, or <see langword="null"/> when no constructor is found.</returns>
+    /// <remarks>This polyfills the shorter overload available on newer target frameworks.</remarks>
     [MethodImpl(AggressiveInlining)]
     public static ConstructorInfo? GetConstructor(this Type type, BindingFlags bindingAttr, Type[] types)
     {
         return type.GetConstructor(bindingAttr, null, types, null);
     }
 
+    /// <summary>
+    /// Determines whether the type can be assigned to the target type.
+    /// </summary>
+    /// <param name="type">The source type.</param>
+    /// <param name="targetType">The target type.</param>
+    /// <returns><see langword="true"/> when <paramref name="targetType"/> is assignable from <paramref name="type"/>; otherwise, <see langword="false"/>.</returns>
+    /// <remarks>This polyfills <see cref="Type.IsAssignableTo(Type?)"/> on older target frameworks.</remarks>
     [MethodImpl(AggressiveInlining)]
     public static bool IsAssignableTo(this Type type, [NotNullWhen(true)] Type? targetType)
     {
@@ -195,6 +231,11 @@ public static partial class TypeExtensions
     }
 #endif
 
+    /// <summary>
+    /// Gets the <see cref="TypeCode"/> for the specified type.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <returns>The type code returned by <see cref="Type.GetTypeCode(Type)"/>.</returns>
     [MethodImpl(AggressiveInlining)]
     public static TypeCode GetTypeCode(this Type type)
     {

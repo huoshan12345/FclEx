@@ -333,6 +333,18 @@ partial class TypeExtensions
     }
 }
 
+/// <summary>
+/// Contains cached reflection metadata and derived type facts for a <see cref="Type"/>.
+/// </summary>
+/// <param name="Type">The inspected type.</param>
+/// <param name="NullableUnderlyingType">The underlying value type for <see cref="Nullable{T}"/>, or <see langword="null"/>.</param>
+/// <param name="EnumerableElementType">The element type exposed by arrays and enumerable types, or <see langword="null"/>.</param>
+/// <param name="DefaultValue">The default CLR value for value types, or <see langword="null"/> for types without a boxed default value.</param>
+/// <param name="SimpleName">The type name without namespace or generic argument information.</param>
+/// <param name="ShortName">The type name without namespace, including formatted generic arguments.</param>
+/// <param name="LongName">The type name with namespace and formatted generic arguments.</param>
+/// <param name="IsInteger">Whether the type is an integer type or nullable integer type.</param>
+/// <param name="IsFloatingPoint">Whether the type is a floating-point type, decimal type, or nullable form of either.</param>
 public record TypeInfoEx(
     Type Type,
     Type? NullableUnderlyingType,
@@ -344,7 +356,18 @@ public record TypeInfoEx(
     bool IsInteger,
     bool IsFloatingPoint)
 {
+    /// <summary>
+    /// Gets a value indicating whether <see cref="Type"/> is a constructed <see cref="Nullable{T}"/> value type.
+    /// </summary>
     public bool IsNullable { get; } = NullableUnderlyingType != null;
+
+    /// <summary>
+    /// Gets a value indicating whether <see cref="Type"/> is an array or implements <see cref="IEnumerable"/>.
+    /// </summary>
     public bool IsEnumerable { get; } = EnumerableElementType != null;
+
+    /// <summary>
+    /// Gets a value indicating whether <see cref="Type"/> is an integer or floating-point numeric type.
+    /// </summary>
     public bool IsNumeric { get; } = IsInteger || IsFloatingPoint;
 }

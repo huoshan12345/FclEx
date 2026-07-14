@@ -18,6 +18,18 @@ public class IsMarshalableTests
     }
 
     [Fact]
+    public void EnsureMarshalable_ShouldNotThrow_WhenTypeIsMarshalable()
+    {
+        typeof(MarshalableStruct).EnsureMarshalable();
+    }
+
+    [Fact]
+    public void EnsureMarshalable_ShouldThrow_WhenTypeIsNotMarshalable()
+    {
+        Assert.Throws<ArgumentException>(() => typeof(string).EnsureMarshalable());
+    }
+
+    [Fact]
     public void RepeatedMarshalableFieldType_ShouldNotBeTreatedAsCircularReference()
     {
         var result = typeof(RepeatedMarshalableFieldStruct).IsMarshalable(out var ex);
