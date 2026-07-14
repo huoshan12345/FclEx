@@ -11,7 +11,7 @@ public class KeyValuePairsConverter : BypassSelfJsonConverter
 
     public override bool CanConvert(Type objectType)
     {
-        var elementType = objectType.EnumerableType();
+        var elementType = objectType.EnumerableElementType();
         if (elementType == null)
             return false;
 
@@ -82,7 +82,7 @@ public class KeyValuePairsConverter : BypassSelfJsonConverter
             return token.ToObject(objectType, BypassSerializer);
         }
 
-        var kvType = objectType.EnumerableType()!;
+        var kvType = objectType.EnumerableElementType()!;
         var keyType = kvType.GenericTypeArguments[0];
         var valueType = kvType.GenericTypeArguments[1];
 

@@ -2,10 +2,12 @@ namespace FclEx.Extensions;
 
 partial class TypeExtensions
 {
-    // let Exception be an out parameter to provider the reason why the check is not passed.
+    // Let Exception be an out parameter to provide the reason why the check did not pass.
     private delegate bool TypeCheck(Type type, [NotNullWhen(false)] out Exception? ex);
 
-    private static readonly ConcurrentDictionary<(Type, string), (bool, Exception?)> _flagCache = new();
+    private readonly record struct TypeCheckResult(bool Passed, string? ErrorMessage, string? ParamName);
+
+    private static readonly ConcurrentDictionary<(Type, string), TypeCheckResult> _typeCheckCache = [];
 
     private static void Ensure(this Type type, TypeCheck check, string predicateName)
     {
@@ -24,43 +26,80 @@ partial class TypeExtensions
 
     private static (bool, Exception?) Check(this Type type, string checkName, Action<Type> action)
     {
-        return _flagCache.GetOrAdd((type, checkName), m =>
+        var result = _typeCheckCache.GetOrAdd((type, checkName), _ =>
         {
             try
             {
                 action(type);
-                return (true, null);
+                return new TypeCheckResult(true, null, null);
             }
             catch (Exception ex)
             {
-                return (false, ex);
+                return new TypeCheckResult(
+                    false,
+                    ex.Message,
+                    ex is ArgumentException argumentException ? argumentException.ParamName : null);
             }
         });
+
+        return result.Passed
+            ? (true, null)
+            : (false, new ArgumentException(result.ErrorMessage, result.ParamName).SetStackTrace());
     }
 
+    /// <summary>
+    /// Throws when the specified type is not blittable.
+    /// </summary>
+    /// <param name="type">The type to validate.</param>
+    /// <exception cref="ArgumentException">The type is not blittable.</exception>
     public static void EnsureBlittable(this Type type)
     {
         type.Ensure(IsBlittable, "blittable");
     }
 
+    /// <summary>
+    /// Throws when the specified type is not marshalable.
+    /// </summary>
+    /// <param name="type">The type to validate.</param>
+    /// <exception cref="ArgumentException">The type is not marshalable.</exception>
     public static void EnsureMarshalable(this Type type)
     {
         type.Ensure(IsMarshalable, "marshalable");
     }
 
     /// <summary>
-    /// Blittable types have an identical presentation in memory for both managed and unmanaged code.<br/>
-    /// * There are 12 primitive types are blittable. The type of <see cref="bool"/> 和 <see cref="char"/> are NOT blittable.<br/>
-    /// * One-dimensional arrays of blittable primitive types, such as an array of integers.
-    /// However, a type that contains a variable array of blittable types is NOT itself blittable.<br/>
-    /// * Formatted value types that contain only blittable types (and classes if they are marshalled as formatted types).
+    /// Determines whether the type has the same binary representation in managed and unmanaged memory.
     /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <param name="ex">
+    /// When the method returns <see langword="false"/>, contains the exception describing why the type is not blittable.
+    /// </param>
+    /// <returns><see langword="true"/> if the type is blittable; otherwise, <see langword="false"/>.</returns>
+    /// <remarks>
+    /// Blittable types include the primitive numeric types, one-dimensional arrays of blittable primitive types,
+    /// and sequential or explicit-layout types whose instance fields are also blittable. <see cref="bool"/>,
+    /// <see cref="char"/>, strings, delegates, generic types, auto-layout types, nested arrays, and
+    /// multi-dimensional arrays are rejected.
+    /// </remarks>
     public static bool IsBlittable(this Type type, [NotNullWhen(false)] out Exception? ex)
     {
-        (var flag, ex) = type.Check(nameof(IsBlittable), m => CheckBlittable(m, null, null));
+        (var flag, ex) = type.Check(nameof(IsBlittable), m => m.CheckBlittable(null, null));
         return flag;
     }
 
+    /// <summary>
+    /// Determines whether the type can be marshalled by the runtime interop marshaler.
+    /// </summary>
+    /// <param name="type">The type to inspect. Nullable value types are checked as their underlying value type.</param>
+    /// <param name="ex">
+    /// When the method returns <see langword="false"/>, contains the exception describing why the type is not marshalable.
+    /// </param>
+    /// <returns><see langword="true"/> if the type is marshalable; otherwise, <see langword="false"/>.</returns>
+    /// <remarks>
+    /// The check accepts primitive and enum types, sequential or explicit-layout types whose fields are marshalable,
+    /// and fields with an explicit <see cref="MarshalAsAttribute"/>. Generic, abstract, auto-layout, string,
+    /// object, delegate, and circularly referenced types are rejected.
+    /// </remarks>
     public static bool IsMarshalable(this Type type, [NotNullWhen(false)] out Exception? ex)
     {
         (var flag, ex) = type.Check(nameof(IsMarshalable), m => CheckMarshalable(m, null, null, null));
@@ -89,19 +128,26 @@ partial class TypeExtensions
         if (type.IsAbstract)
             ThrowBlittable(type, "abstract", path);
 
-        visited ??= [];
+        var stack = visited ?? [];
 
-        if (visited.Add(type) == false)
+        if (stack.Add(type) == false)
             ThrowBlittable(type, "circular referenced", path);
 
-        foreach (var m in type.GetAllInstanceFields())
+        try
         {
-            var name = m.GetAutoPropertyOrFieldName();
-            var fieldPath = (path ?? "$") + "." + name;
-            CheckBlittable(m.FieldType, visited, fieldPath);
-        }
+            foreach (var m in type.GetAllInstanceFields())
+            {
+                var name = m.GetAutoPropertyOrFieldName();
+                var fieldPath = (path ?? "$") + "." + name;
+                m.FieldType.CheckBlittable(stack, fieldPath);
+            }
 
-        CheckPinnable(type, visited, path);
+            CheckPinnable(type, stack, path);
+        }
+        finally
+        {
+            stack.Remove(type);
+        }
 
         return;
 
@@ -116,7 +162,7 @@ partial class TypeExtensions
                 if (elementType.IsArray)
                     ThrowBlittable(type, "nested array", path);
 
-                CheckBlittable(elementType, visited, path); // check if element type is pinnable as well.
+                elementType.CheckBlittable(visited, path); // check if element type is pinnable as well.
 
                 var array = Array.CreateInstance(elementType, 1);
                 var entry = ObjectHelper.GetUninitializedObject(elementType);
@@ -161,19 +207,26 @@ partial class TypeExtensions
             || type.IsAssignableTo(typeof(Delegate)))
             ThrowMarshalable(type, null, path);
 
-        visited ??= [];
+        var stack = visited ?? [];
 
-        if (visited.Add(type) == false)
+        if (stack.Add(type) == false)
             ThrowMarshalable(type, "circular referenced", path);
 
-        foreach (var m in type.GetAllInstanceFields())
+        try
         {
-            var name = m.GetAutoPropertyOrFieldName();
-            var fieldPath = (path ?? "$") + "." + name;
-            CheckMarshalable(m.FieldType, m, visited, fieldPath);
-        }
+            foreach (var m in type.GetAllInstanceFields())
+            {
+                var name = m.GetAutoPropertyOrFieldName();
+                var fieldPath = (path ?? "$") + "." + name;
+                CheckMarshalable(m.FieldType, m, stack, fieldPath);
+            }
 
-        _ = Marshal.SizeOf(type);
+            _ = Marshal.SizeOf(type);
+        }
+        finally
+        {
+            stack.Remove(type);
+        }
     }
 
     [DoesNotReturn]

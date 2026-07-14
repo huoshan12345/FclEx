@@ -6,12 +6,7 @@ namespace FclEx.Web;
 public class UserClientSession : IUserClientSession
 {
     /// <summary>
-    /// The authenticated user identifier, or an empty string when unknown.
-    /// </summary>
-    public virtual string UserId { get; set; } = "";
-
-    /// <summary>
-    /// The authenticated display/user name, or an empty string when unknown.
+    /// The authenticated username, or an empty string when unknown.
     /// </summary>
     public virtual string UserName { get; set; } = "";
 }

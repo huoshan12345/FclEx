@@ -64,7 +64,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Setup sops
-        uses: nhedger/setup-sops@v2
+        uses: nhedger/setup-sops@v3
 
       - name: Setup age
         uses: alessiodionisi/setup-age-action@v1.4.0

@@ -119,19 +119,6 @@ partial class ActionExtensions
     }
 
     /// <summary>
-    /// Runs the next unit action when the successful value matches the condition.
-    /// </summary>
-    /// <typeparam name="T">The source value type.</typeparam>
-    /// <param name="action">The source action.</param>
-    /// <param name="condition">The condition evaluated only for successful values.</param>
-    /// <param name="next">Creates the unit action when the condition matches.</param>
-    /// <returns>An action that returns <see cref="Unit"/>.</returns>
-    public static IAction<Unit> ThenIf<T>(this IAction<T> action, Func<T, bool> condition, Func<T, IAction<Unit>> next)
-    {
-        return action.ThenIf(condition, next, _ => SuccessAction.Create(Unit.Default));
-    }
-
-    /// <summary>
     /// Runs an optional next action, preserving the value when no action is returned.
     /// </summary>
     /// <typeparam name="T">The action value type.</typeparam>

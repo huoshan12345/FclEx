@@ -20,43 +20,43 @@ public class GetConstructorTests
     }
 
     [Fact]
-    public void GetDefaultConstructor_ShouldReturnNull_WhenNoDefaultConstructorExists()
+    public void GetParameterlessConstructor_ShouldReturnNull_WhenNoParameterlessConstructorExists()
     {
-        var result = typeof(NoDefaultCtorClass).GetDefaultConstructor();
+        var result = typeof(NoDefaultCtorClass).GetParameterlessConstructor();
 
         Assert.Null(result);
     }
 
     [Fact]
-    public void GetDefaultConstructor_ShouldReturnConstructor_WhenDefaultConstructorExists()
+    public void GetParameterlessConstructor_ShouldReturnConstructor_WhenParameterlessConstructorExists()
     {
-        var result = typeof(TestClass).GetDefaultConstructor();
+        var result = typeof(TestClass).GetParameterlessConstructor();
 
         Assert.NotNull(result);
         Assert.Equal(0, result.GetParameters().Length);
     }
 
     [Fact]
-    public void GetDefaultConstructor_ShouldReturnConstructor_WhenPrivateDefaultConstructorExists()
+    public void GetParameterlessConstructor_ShouldReturnConstructor_WhenPrivateParameterlessConstructorExists()
     {
-        var result = typeof(PrivateDefaultCtorClass).GetDefaultConstructor();
+        var result = typeof(PrivateDefaultCtorClass).GetParameterlessConstructor();
 
         Assert.NotNull(result);
         Assert.Equal(0, result.GetParameters().Length);
     }
 
     [Fact]
-    public void GetRequiredDefaultConstructor_ShouldThrowArgumentException_WhenNoDefaultConstructorExists()
+    public void GetRequiredParameterlessConstructor_ShouldThrowArgumentException_WhenNoParameterlessConstructorExists()
     {
-        var exception = Assert.Throws<ArgumentException>(() => typeof(NoDefaultCtorClass).GetRequiredDefaultConstructor());
+        var exception = Assert.Throws<ArgumentException>(() => typeof(NoDefaultCtorClass).GetRequiredParameterlessConstructor());
 
-        Assert.Contains($"The type '{typeof(GetConstructorTests).FullName}.{nameof(NoDefaultCtorClass)}' does not have a default constructor.", exception.Message);
+        Assert.Contains($"The type '{typeof(GetConstructorTests).FullName}.{nameof(NoDefaultCtorClass)}' does not have a parameterless constructor.", exception.Message);
     }
 
     [Fact]
-    public void GetRequiredDefaultConstructor_ShouldReturnConstructor_WhenDefaultConstructorExists()
+    public void GetRequiredParameterlessConstructor_ShouldReturnConstructor_WhenParameterlessConstructorExists()
     {
-        var result = typeof(TestClass).GetRequiredDefaultConstructor();
+        var result = typeof(TestClass).GetRequiredParameterlessConstructor();
 
         Assert.NotNull(result);
         Assert.Equal(0, result.GetParameters().Length);

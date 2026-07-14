@@ -7,7 +7,6 @@ public class UserClientSessionTests
     {
         var session = new UserClientSession();
 
-        Assert.Equal("", session.UserId);
         Assert.Equal("", session.UserName);
     }
 
@@ -16,11 +15,9 @@ public class UserClientSessionTests
     {
         var session = new UserClientSession
         {
-            UserId = "42",
             UserName = "alice",
         };
 
-        Assert.Equal("42", session.UserId);
         Assert.Equal("alice", session.UserName);
     }
 

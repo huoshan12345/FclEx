@@ -28,10 +28,10 @@ public class EnumerableTypeTests
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void EnumerableType_Test(Type type, Type? expected)
+    public void EnumerableElementType_Test(Type type, Type? expected)
     {
-        var t = type.EnumerableType();
-        Assert.Equal(expected, t);
+        var elementType = type.EnumerableElementType();
+        Assert.Equal(expected, elementType);
     }
 
     private interface IEmptyEnumerable : IEnumerable<object>;

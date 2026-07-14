@@ -15,7 +15,6 @@
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <OutputType Condition="'$(IsTestProject)' != 'false'">Exe</OutputType>
     <Prefer32Bit>false</Prefer32Bit>
-    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>

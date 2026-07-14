@@ -4,7 +4,7 @@ public static class MethodBaseExtensions
 {
     public static bool ArgumentListMatches(this MethodBase m, Type[] args)
     {
-        // If there are less arguments, then it just doesn't matter.
+        // If there are fewer arguments, then it just doesn't matter.
         var pInfo = m.GetParameters();
         if (pInfo.Length < args.Length)
             return false;
