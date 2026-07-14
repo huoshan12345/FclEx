@@ -30,7 +30,7 @@ public class EnumerableTypeTests
     [MemberData(nameof(Cases))]
     public void EnumerableType_Test(Type type, Type? expected)
     {
-        var t = type.EnumerableType();
+        var t = type.EnumerableElementType();
         Assert.Equal(expected, t);
     }
 

@@ -191,7 +191,7 @@ partial class TypeExtensions
 
     public static Type UnwrapNullable(this Type type)
     {
-        return type.GetTypeInfoEx().NullableUnderlyingType ?? type;
+        return type.NullableUnderlyingType() ?? type;
     }
 
     public static object? DefaultValue(this Type type)
@@ -199,12 +199,12 @@ partial class TypeExtensions
         return type.GetTypeInfoEx().DefaultValue;
     }
 
-    public static Type? NullableType(this Type type)
+    public static Type? NullableUnderlyingType(this Type type)
     {
         return type.GetTypeInfoEx().NullableUnderlyingType;
     }
 
-    public static Type? EnumerableType(this Type type)
+    public static Type? EnumerableElementType(this Type type)
     {
         return type.GetTypeInfoEx().EnumerableUnderlyingType;
     }
