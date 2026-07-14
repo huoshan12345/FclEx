@@ -68,7 +68,7 @@ public static partial class TypeExtensions
     /// <summary>
     /// Determines whether the specified type inherits from a given base type.
     /// </summary>
-    /// <param name="type">The <see cref="Type"/> to inspect. Can be <see langword="null"/>.</param>
+    /// <param name="type">The <see cref="Type"/> to inspect.</param>
     /// <param name="baseType">The base type to check against.</param>
     /// <returns>
     /// <see langword="true"/> if the type inherits from the specified base type; otherwise, <see langword="false"/>.
@@ -76,15 +76,15 @@ public static partial class TypeExtensions
     /// <remarks>
     /// This method supports both direct inheritance and generic type definitions.
     /// </remarks>
-    public static bool Inherits(this Type? type, Type baseType)
+    public static bool Inherits(this Type type, Type baseType)
     {
-        var t = type;
+        var t = type.BaseType;
         while (t != null)
         {
             if (t == baseType)
                 return true;
 
-            if (t.IsGenericType && t.GetGenericTypeDefinition() == baseType)
+            if (t.IsConstructedGenericType && t.GetGenericTypeDefinition() == baseType)
                 return true;
 
             t = t.BaseType;
