@@ -69,7 +69,7 @@ partial class TypeExtensions
 
             try
             {
-                return Activator.CreateInstance(type);
+                return ObjectHelper.GetUninitializedObject(type);
             }
             catch (Exception ex)
             {
