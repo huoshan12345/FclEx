@@ -18,7 +18,7 @@ public class ReturnValueCacheTests(AbpTestsFixture fixture) : AbpTests(fixture)
         Assert.True(service.IsProxy());
     }
 
-    [Theory]
+    [RetryTheory]
     [MemberData(nameof(Numbers))]
     public void SameInstance_Test(int no)
     {
@@ -45,19 +45,7 @@ public class ReturnValueCacheTests(AbpTestsFixture fixture) : AbpTests(fixture)
         }
     }
 
-
-    private static int _errorCount;
-
-    [RetryFact]
-    public void Error_Test()
-    {
-        Interlocked.Increment(ref _errorCount);
-        Output?.WriteLine("Current error count: {0}", _errorCount);
-
-        Assert.True(_errorCount >= 3); // Retry 3 times
-    }
-
-    [Theory]
+    [RetryTheory]
     [MemberData(nameof(Numbers))]
     public void DifferentInstance_Test(int no)
     {

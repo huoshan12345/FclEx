@@ -7,7 +7,7 @@ partial class TypeExtensions
 
     private readonly record struct TypeCheckResult(bool Passed, string? ErrorMessage, string? ParamName);
 
-    private static readonly ConcurrentDictionary<(Type, string), TypeCheckResult> _typeCheckCache = new();
+    private static readonly ConcurrentDictionary<(Type, string), TypeCheckResult> _typeCheckCache = [];
 
     private static void Ensure(this Type type, TypeCheck check, string predicateName)
     {
