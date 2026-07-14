@@ -16,7 +16,8 @@ public static partial class TypeExtensions
     /// <exception cref="AmbiguousMatchException">More than one public constructor matches the supplied arguments.</exception>
     /// <remarks>
     /// This method is intended to behave like a default-parameter-aware version of
-    /// <c>Activator.CreateInstance(type, args)</c>. It does not reorder arguments.
+    /// <c>Activator.CreateInstance(type, args)</c>. It supports primitive widening conversions accepted by
+    /// the default reflection binder, but it does not reorder arguments.
     /// </remarks>
     public static object CreateObject(this Type type, params object?[] args)
     {
@@ -69,8 +70,28 @@ public static partial class TypeExtensions
             if (parameterType.IsAssignableFrom(argType))
                 return true;
 
-            return Nullable.GetUnderlyingType(parameterType) is { } underlyingType
-                   && underlyingType.IsAssignableFrom(argType);
+            if (Nullable.GetUnderlyingType(parameterType) is { } underlyingType)
+                return underlyingType.IsAssignableFrom(argType);
+
+            return CanWidenPrimitive(argType, parameterType);
+        }
+
+        static bool CanWidenPrimitive(Type sourceType, Type targetType)
+        {
+            return Type.GetTypeCode(sourceType) switch
+            {
+                TypeCode.Char => Type.GetTypeCode(targetType) is TypeCode.UInt16 or TypeCode.UInt32 or TypeCode.Int32 or TypeCode.UInt64 or TypeCode.Int64 or TypeCode.Single or TypeCode.Double,
+                TypeCode.SByte => Type.GetTypeCode(targetType) is TypeCode.Int16 or TypeCode.Int32 or TypeCode.Int64 or TypeCode.Single or TypeCode.Double,
+                TypeCode.Byte => Type.GetTypeCode(targetType) is TypeCode.Char or TypeCode.UInt16 or TypeCode.Int16 or TypeCode.UInt32 or TypeCode.Int32 or TypeCode.UInt64 or TypeCode.Int64 or TypeCode.Single or TypeCode.Double,
+                TypeCode.Int16 => Type.GetTypeCode(targetType) is TypeCode.Int32 or TypeCode.Int64 or TypeCode.Single or TypeCode.Double,
+                TypeCode.UInt16 => Type.GetTypeCode(targetType) is TypeCode.UInt32 or TypeCode.Int32 or TypeCode.UInt64 or TypeCode.Int64 or TypeCode.Single or TypeCode.Double,
+                TypeCode.Int32 => Type.GetTypeCode(targetType) is TypeCode.Int64 or TypeCode.Single or TypeCode.Double,
+                TypeCode.UInt32 => Type.GetTypeCode(targetType) is TypeCode.UInt64 or TypeCode.Int64 or TypeCode.Single or TypeCode.Double,
+                TypeCode.Int64 => Type.GetTypeCode(targetType) is TypeCode.Single or TypeCode.Double,
+                TypeCode.UInt64 => Type.GetTypeCode(targetType) is TypeCode.Single or TypeCode.Double,
+                TypeCode.Single => Type.GetTypeCode(targetType) is TypeCode.Double,
+                _ => false,
+            };
         }
     }
 
@@ -193,7 +214,7 @@ public static partial class TypeExtensions
     /// <see langword="true"/> when a public static <c>op_Implicit</c> method with the requested source and
     /// target types is found; otherwise, <see langword="false"/>.
     /// </returns>
-    public static bool HasImplicitConversion(this Type sourceType, Type targetType, Type? declaringType = null)
+    public static bool HasImplicitConversionOperator(this Type sourceType, Type targetType, Type? declaringType = null)
     {
         var declaringTypes = declaringType is null
             ? [sourceType, targetType]

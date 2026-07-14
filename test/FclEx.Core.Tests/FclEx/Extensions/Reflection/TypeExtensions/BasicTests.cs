@@ -93,27 +93,27 @@ public class BasicTests
     }
 
     [Fact]
-    public void HasImplicitConversion_ShouldFindOperatorDeclaredOnSourceType()
+    public void HasImplicitConversionOperator_ShouldFindOperatorDeclaredOnSourceType()
     {
-        Assert.True(typeof(SourceDefinedConversion).HasImplicitConversion(typeof(ConversionTarget)));
+        Assert.True(typeof(SourceDefinedConversion).HasImplicitConversionOperator(typeof(ConversionTarget)));
     }
 
     [Fact]
-    public void HasImplicitConversion_ShouldFindOperatorDeclaredOnTargetType()
+    public void HasImplicitConversionOperator_ShouldFindOperatorDeclaredOnTargetType()
     {
-        Assert.True(typeof(SourceForTargetDefinedConversion).HasImplicitConversion(typeof(TargetDefinedConversion), typeof(TargetDefinedConversion)));
+        Assert.True(typeof(SourceForTargetDefinedConversion).HasImplicitConversionOperator(typeof(TargetDefinedConversion), typeof(TargetDefinedConversion)));
     }
 
     [Fact]
-    public void HasImplicitConversion_ShouldSearchSourceAndTargetTypes_WhenDeclaringTypeIsNotSpecified()
+    public void HasImplicitConversionOperator_ShouldSearchSourceAndTargetTypes_WhenDeclaringTypeIsNotSpecified()
     {
-        Assert.True(typeof(SourceForTargetDefinedConversion).HasImplicitConversion(typeof(TargetDefinedConversion)));
+        Assert.True(typeof(SourceForTargetDefinedConversion).HasImplicitConversionOperator(typeof(TargetDefinedConversion)));
     }
 
     [Fact]
-    public void HasImplicitConversion_ShouldReturnFalseForExplicitOperator()
+    public void HasImplicitConversionOperator_ShouldReturnFalseForExplicitOperator()
     {
-        Assert.False(typeof(ExplicitConversionSource).HasImplicitConversion(typeof(ExplicitConversionTarget)));
+        Assert.False(typeof(ExplicitConversionSource).HasImplicitConversionOperator(typeof(ExplicitConversionTarget)));
     }
 
     [Fact]
@@ -137,5 +137,23 @@ public class BasicTests
         var value = Assert.IsType<StructWithParameterlessConstructor>(typeof(StructWithParameterlessConstructor).DefaultValue());
 
         Assert.Equal(0, value.Value);
+    }
+
+    [Fact]
+    public void IsInteger_ShouldIncludeNativeSizedIntegers()
+    {
+        Assert.True(typeof(nint).IsInteger());
+        Assert.True(typeof(nuint).IsInteger());
+    }
+
+    [Theory]
+    [InlineData(typeof(float), true)]
+    [InlineData(typeof(double), true)]
+    [InlineData(typeof(decimal), true)]
+    [InlineData(typeof(decimal?), true)]
+    [InlineData(typeof(int), false)]
+    public void IsFloatingPoint_ShouldReturnExpectedResult(Type type, bool expected)
+    {
+        Assert.Equal(expected, type.IsFloatingPoint());
     }
 }

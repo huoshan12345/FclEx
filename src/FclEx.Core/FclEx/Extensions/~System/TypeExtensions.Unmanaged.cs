@@ -5,7 +5,9 @@ partial class TypeExtensions
     // Let Exception be an out parameter to provide the reason why the check did not pass.
     private delegate bool TypeCheck(Type type, [NotNullWhen(false)] out Exception? ex);
 
-    private static readonly ConcurrentDictionary<(Type, string), (bool, Exception?)> _flagCache = new();
+    private readonly record struct TypeCheckResult(bool Passed, string? ErrorMessage, string? ParamName);
+
+    private static readonly ConcurrentDictionary<(Type, string), TypeCheckResult> _typeCheckCache = new();
 
     private static void Ensure(this Type type, TypeCheck check, string predicateName)
     {
@@ -24,18 +26,25 @@ partial class TypeExtensions
 
     private static (bool, Exception?) Check(this Type type, string checkName, Action<Type> action)
     {
-        return _flagCache.GetOrAdd((type, checkName), m =>
+        var result = _typeCheckCache.GetOrAdd((type, checkName), _ =>
         {
             try
             {
                 action(type);
-                return (true, null);
+                return new TypeCheckResult(true, null, null);
             }
             catch (Exception ex)
             {
-                return (false, ex);
+                return new TypeCheckResult(
+                    false,
+                    ex.Message,
+                    ex is ArgumentException argumentException ? argumentException.ParamName : null);
             }
         });
+
+        return result.Passed
+            ? (true, null)
+            : (false, new ArgumentException(result.ErrorMessage, result.ParamName).SetStackTrace());
     }
 
     public static void EnsureBlittable(this Type type)
@@ -64,7 +73,7 @@ partial class TypeExtensions
     /// </remarks>
     public static bool IsBlittable(this Type type, [NotNullWhen(false)] out Exception? ex)
     {
-        (var flag, ex) = type.Check(nameof(IsBlittable), m => CheckBlittable(m, null, null));
+        (var flag, ex) = type.Check(nameof(IsBlittable), m => m.CheckBlittable(null, null));
         return flag;
     }
 
@@ -120,7 +129,7 @@ partial class TypeExtensions
             {
                 var name = m.GetAutoPropertyOrFieldName();
                 var fieldPath = (path ?? "$") + "." + name;
-                CheckBlittable(m.FieldType, stack, fieldPath);
+                m.FieldType.CheckBlittable(stack, fieldPath);
             }
 
             CheckPinnable(type, stack, path);
@@ -143,7 +152,7 @@ partial class TypeExtensions
                 if (elementType.IsArray)
                     ThrowBlittable(type, "nested array", path);
 
-                CheckBlittable(elementType, visited, path); // check if element type is pinnable as well.
+                elementType.CheckBlittable(visited, path); // check if element type is pinnable as well.
 
                 var array = Array.CreateInstance(elementType, 1);
                 var entry = ObjectHelper.GetUninitializedObject(elementType);

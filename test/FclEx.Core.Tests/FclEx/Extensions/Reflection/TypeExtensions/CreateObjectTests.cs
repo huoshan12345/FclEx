@@ -58,6 +58,16 @@ public class CreateObjectTests
         public int Value { get; }
     }
 
+    public class PrimitiveWideningCtor
+    {
+        public PrimitiveWideningCtor(long value)
+        {
+            Value = value;
+        }
+
+        public long Value { get; }
+    }
+
     public class AmbiguousNullCtor
     {
         public AmbiguousNullCtor(string? value)
@@ -143,6 +153,14 @@ public class CreateObjectTests
     public void CreateObject_ShouldNotMatchNull_ToNonNullableValueType()
     {
         Assert.Throws<MissingMethodException>(() => typeof(NonNullableValueCtor).CreateObject((object?)null));
+    }
+
+    [Fact]
+    public void CreateObject_ShouldMatchPrimitiveWideningConversion()
+    {
+        var obj = typeof(PrimitiveWideningCtor).CreateObject<PrimitiveWideningCtor>(1);
+
+        Assert.Equal(1L, obj.Value);
     }
 
     [Fact]

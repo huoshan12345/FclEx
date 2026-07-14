@@ -2,7 +2,7 @@ namespace FclEx.Extensions;
 
 partial class TypeExtensions
 {
-    private static readonly ConcurrentDictionary<Type, TypeInfoEx> TypeInfoDic = new();
+    private static readonly ConcurrentDictionary<Type, TypeInfoEx> _typeInfoCache = new();
 
 #if !NET5_0_OR_GREATER
     private static readonly Lazy<PropertyInfo?> _isByRefLike = new(() => typeof(Type).GetProperty("IsByRefLike", BindingAttributes.Declared));
@@ -16,18 +16,18 @@ partial class TypeExtensions
     public static TypeInfoEx GetTypeInfoEx(this Type type)
     {
         FclEx.Check.NotNull(type);
-        return TypeInfoDic.GetOrAdd(type, GetTypeInfoExtInternal);
+        return _typeInfoCache.GetOrAdd(type, GetTypeInfoExCore);
 
-        static TypeInfoEx GetTypeInfoExtInternal(Type type)
+        static TypeInfoEx GetTypeInfoExCore(Type type)
         {
             var nullableUnderlyingType = Nullable.GetUnderlyingType(type);
-            var defaultValue = GetDefaultValue(type, nullableUnderlyingType);
-            var enumerableElementType = EnumerableElementType(type);
-            var simpleName = SimpleName(type);
-            var shortName = ShortName(type, simpleName);
-            var longName = LongName(type, shortName);
-            var isInteger = IsInteger(type, nullableUnderlyingType);
-            var isFloat = IsFloat(type, nullableUnderlyingType);
+            var defaultValue = GetDefaultValueCore(type, nullableUnderlyingType);
+            var enumerableElementType = GetEnumerableElementTypeCore(type);
+            var simpleName = GetSimpleNameCore(type);
+            var shortName = GetShortNameCore(type, simpleName);
+            var longName = GetLongNameCore(type, shortName);
+            var isInteger = IsIntegerCore(type, nullableUnderlyingType);
+            var isFloatingPoint = IsFloatingPointCore(type, nullableUnderlyingType);
 
             return new TypeInfoEx(
                 Type: type,
@@ -38,10 +38,10 @@ partial class TypeExtensions
                 ShortName: shortName,
                 LongName: longName,
                 IsInteger: isInteger,
-                IsFloat: isFloat);
+                IsFloatingPoint: isFloatingPoint);
         }
 
-        static object? GetDefaultValue(Type type, Type? nullableUnderlyingType)
+        static object? GetDefaultValueCore(Type type, Type? nullableUnderlyingType)
         {
             /*
                 Acc_CreateGeneric = Cannot create a type for which Type.ContainsGenericParameters is true.
@@ -89,7 +89,7 @@ partial class TypeExtensions
         }
 #endif
         [SuppressMessage("ReSharper", "ConvertIfStatementToReturnStatement")]
-        static Type? EnumerableElementType(Type type)
+        static Type? GetEnumerableElementTypeCore(Type type)
         {
             // type is Array
             if (type.IsArray)
@@ -110,7 +110,7 @@ partial class TypeExtensions
             return null;
         }
 
-        static string SimpleName(Type type)
+        static string GetSimpleNameCore(Type type)
         {
             var name = type.Name;
 
@@ -121,24 +121,24 @@ partial class TypeExtensions
             return index == -1 ? name : name[..index];
         }
 
-        static string ShortName(Type type, string simpleName)
+        static string GetShortNameCore(Type type, string simpleName)
         {
             if (!type.IsGenericType) return type.Name;
             var paraName = string.Join(", ", type.GenericTypeArguments!.Select(m => m.ShortName()));
             return simpleName + "<" + paraName + ">";
         }
 
-        static string LongName(Type type, string shortName)
+        static string GetLongNameCore(Type type, string shortName)
         {
-            return GetTypePrefix(type) + shortName;
+            return GetTypePrefixCore(type) + shortName;
         }
 
-        static string GetTypePrefix(Type type)
+        static string GetTypePrefixCore(Type type)
         {
             if (type.IsNested)
             {
                 var declaringType = type.DeclaringType!;
-                return GetTypePrefix(declaringType) + declaringType.ShortName() + ".";
+                return GetTypePrefixCore(declaringType) + declaringType.ShortName() + ".";
             }
             else
             {
@@ -167,7 +167,7 @@ partial class TypeExtensions
             }
         }
 
-        static bool IsInteger(Type type, Type? nullableUnderlyingType)
+        static bool IsIntegerCore(Type type, Type? nullableUnderlyingType)
         {
             type = nullableUnderlyingType ?? type;
             return type == typeof(long)
@@ -177,10 +177,12 @@ partial class TypeExtensions
                    || type == typeof(short)
                    || type == typeof(ushort)
                    || type == typeof(byte)
-                   || type == typeof(sbyte);
+                   || type == typeof(sbyte)
+                   || type == typeof(nint)
+                   || type == typeof(nuint);
         }
 
-        static bool IsFloat(Type type, Type? nullableUnderlyingType)
+        static bool IsFloatingPointCore(Type type, Type? nullableUnderlyingType)
         {
             type = nullableUnderlyingType ?? type;
             return type == typeof(float)
@@ -294,7 +296,7 @@ partial class TypeExtensions
     /// Determines whether the type is an integer type, or a nullable integer type.
     /// </summary>
     /// <param name="type">The type to inspect.</param>
-    /// <returns><see langword="true"/> for signed and unsigned integral types except native-sized integers; otherwise, <see langword="false"/>.</returns>
+    /// <returns><see langword="true"/> for signed, unsigned, and native-sized integral types; otherwise, <see langword="false"/>.</returns>
     public static bool IsInteger(this Type type)
     {
         return type.GetTypeInfoEx().IsInteger;
@@ -315,9 +317,9 @@ partial class TypeExtensions
     /// </summary>
     /// <param name="type">The type to inspect.</param>
     /// <returns><see langword="true"/> for <see cref="float"/>, <see cref="double"/>, <see cref="decimal"/>, and their nullable forms; otherwise, <see langword="false"/>.</returns>
-    public static bool IsFloat(this Type type)
+    public static bool IsFloatingPoint(this Type type)
     {
-        return type.GetTypeInfoEx().IsFloat;
+        return type.GetTypeInfoEx().IsFloatingPoint;
     }
 
     /// <summary>
@@ -340,9 +342,9 @@ public record TypeInfoEx(
     string ShortName,
     string LongName,
     bool IsInteger,
-    bool IsFloat)
+    bool IsFloatingPoint)
 {
     public bool IsNullable { get; } = NullableUnderlyingType != null;
     public bool IsEnumerable { get; } = EnumerableElementType != null;
-    public bool IsNumeric { get; } = IsInteger || IsFloat;
+    public bool IsNumeric { get; } = IsInteger || IsFloatingPoint;
 }

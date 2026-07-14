@@ -46,6 +46,21 @@ partial class TypeExtensions
         return type.GetProperty(name, searchBaseTypes) ?? throw new InvalidOperationException($"Cannot find property '{name}' in type '{type.FullName}'");
     }
 
+    /// <summary>
+    /// Retrieves a method by name from the specified type, optionally searching base types.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <param name="name">The method name.</param>
+    /// <param name="searchBaseTypes">
+    /// <see langword="true"/> to continue searching base types when the method is not declared on
+    /// <paramref name="type"/>; otherwise, <see langword="false"/>.
+    /// </param>
+    /// <returns>The matching method, or <see langword="null"/> when no method is found.</returns>
+    /// <remarks>
+    /// This method follows <see cref="Type.GetMethod(string, BindingFlags)"/> behavior for a single type in
+    /// the hierarchy. If more than one declared overload has the specified name, it can throw
+    /// <see cref="AmbiguousMatchException"/>.
+    /// </remarks>
     public static MethodInfo? GetMethod(this Type type, string name, bool searchBaseTypes)
     {
         return type.GetMember(m => m.GetMethod(name, Declared), searchBaseTypes);
@@ -88,7 +103,7 @@ partial class TypeExtensions
                ?? throw new InvalidOperationException($"Cannot find constructor({types.Select(m => m.Name).JoinWith(", ")}) in type '{type.FullName}'");
     }
 
-    private static readonly ConcurrentDictionary<Type, IReadOnlyList<FieldInfo>> _cache = new();
+    private static readonly ConcurrentDictionary<Type, IReadOnlyList<FieldInfo>> _allInstanceFieldsCache = new();
 
     /// <summary>
     /// Retrieves all instance fields of a specified type, including fields declared in its base types.
@@ -104,7 +119,7 @@ partial class TypeExtensions
     /// </remarks>
     public static IReadOnlyList<FieldInfo> GetAllInstanceFields(this Type type)
     {
-        return _cache.GetOrAdd(type, Impl);
+        return _allInstanceFieldsCache.GetOrAdd(type, Impl);
 
         static IReadOnlyList<FieldInfo> Impl(Type type)
         {
@@ -118,6 +133,20 @@ partial class TypeExtensions
 
     public static IReadOnlyList<DataMemberInfo> GetDataMembers(this Type type) => ReflectionHelper.GetDataMembers(type);
 
+    /// <summary>
+    /// Retrieves data members from the specified type using the supplied flag filters.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <param name="flags">
+    /// The filters to apply. At least one flag from each required group must be specified:
+    /// <see cref="DataMemberFlags.Declared"/> or <see cref="DataMemberFlags.Inherited"/>,
+    /// <see cref="DataMemberFlags.Instance"/> or <see cref="DataMemberFlags.Static"/>,
+    /// <see cref="DataMemberFlags.Public"/> or <see cref="DataMemberFlags.NonPublic"/>,
+    /// <see cref="DataMemberFlags.Field"/> or <see cref="DataMemberFlags.Property"/>, and
+    /// <see cref="DataMemberFlags.CanRead"/> or <see cref="DataMemberFlags.CanWrite"/>.
+    /// Missing any required group returns an empty sequence.
+    /// </param>
+    /// <returns>The matching data members.</returns>
     public static IEnumerable<DataMemberInfo> GetDataMembers(this Type type, DataMemberFlags flags)
     {
         // Must choose Declared or Inherited
@@ -239,49 +268,49 @@ partial class TypeExtensions
         return type.GetDataMember(name) ?? throw new InvalidOperationException($"Cannot find field or property '{name}' in type '{type.FullName}'");
     }
 
-    private const BindingFlags DefaultCtorFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+    private const BindingFlags ParameterlessCtorFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
     /// <summary>
-    /// Retrieves the default (parameterless) constructor of the specified type, if available.
+    /// Retrieves the public or non-public parameterless constructor of the specified type, if available.
     /// </summary>
-    /// <param name="type">The type to search for a default constructor.</param>
+    /// <param name="type">The type to search for a parameterless constructor.</param>
     /// <returns>
-    /// The default constructor of the specified type, or <c>null</c> if no such constructor exists.
+    /// The parameterless constructor of the specified type, or <c>null</c> if no such constructor exists.
     /// </returns>
-    public static ConstructorInfo? GetDefaultConstructor(this Type type)
+    public static ConstructorInfo? GetParameterlessConstructor(this Type type)
     {
-        var ctors = type.GetConstructors(DefaultCtorFlags);
+        var ctors = type.GetConstructors(ParameterlessCtorFlags);
         if (ctors.Length == 0)
             return null;
 
-        var defaultCtor = ctors.FirstOrDefault(m => m.GetParameters().Length == 0);
+        var parameterlessCtor = ctors.FirstOrDefault(m => m.GetParameters().Length == 0);
 
-        return defaultCtor;
+        return parameterlessCtor;
     }
 
     /// <summary>
-    /// Retrieves the default (parameterless) constructor of the specified type.
-    /// Throws an exception if the type does not have a default constructor.
+    /// Retrieves the public or non-public parameterless constructor of the specified type.
+    /// Throws an exception if the type does not have a parameterless constructor.
     /// </summary>
-    /// <param name="type">The type to search for a default constructor.</param>
+    /// <param name="type">The type to search for a parameterless constructor.</param>
     /// <returns>
-    /// The default constructor of the specified type.
+    /// The parameterless constructor of the specified type.
     /// </returns>
     /// <exception cref="ArgumentException">
-    /// Thrown if the type does not have any constructors or does not have a default constructor.
+    /// Thrown if the type does not have any constructors or does not have a parameterless constructor.
     /// </exception>
-    public static ConstructorInfo GetRequiredDefaultConstructor(this Type type)
+    public static ConstructorInfo GetRequiredParameterlessConstructor(this Type type)
     {
-        var ctors = type.GetConstructors(DefaultCtorFlags);
+        var ctors = type.GetConstructors(ParameterlessCtorFlags);
         if (ctors.Length == 0)
             throw new ArgumentException($"The type '{type.LongName()}' does not have any constructors.");
 
-        var defaultCtor = ctors.FirstOrDefault(m => m.GetParameters().Length == 0);
+        var parameterlessCtor = ctors.FirstOrDefault(m => m.GetParameters().Length == 0);
 
-        if (defaultCtor is null)
-            throw new ArgumentException($"The type '{type.LongName()}' does not have a default constructor.");
+        if (parameterlessCtor is null)
+            throw new ArgumentException($"The type '{type.LongName()}' does not have a parameterless constructor.");
 
-        return defaultCtor;
+        return parameterlessCtor;
     }
 
     /// <summary>

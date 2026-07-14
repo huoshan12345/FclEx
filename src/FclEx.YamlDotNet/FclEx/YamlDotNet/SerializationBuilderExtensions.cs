@@ -53,7 +53,7 @@ public static class SerializationBuilderExtensions
         if (converterType.IsAssignableTo(typeof(IYamlTypeConverter)) == false)
             throw new InvalidOperationException($"YAML converter type '{converterType.FullName}' for '{type.FullName}' must implement {nameof(IYamlTypeConverter)}.");
 
-        var ctor = converterType.GetDefaultConstructor();
+        var ctor = converterType.GetParameterlessConstructor();
 
         if (ctor is null)
             throw new InvalidOperationException($"YAML converter type '{converterType.FullName}' for '{type.FullName}' must have a parameterless constructor.");
