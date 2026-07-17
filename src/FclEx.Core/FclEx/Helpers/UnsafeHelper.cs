@@ -3,7 +3,7 @@ namespace FclEx.Helpers;
 public static unsafe class UnsafeHelper
 {
     private static readonly MethodInfo _sizeof = typeof(UnsafeHelper).GetRequiredMethod(nameof(SizeOfImpl), 1);
-    private static readonly ConcurrentDictionary<Type, int> _cache = new();
+    private static readonly ConcurrentDictionary<Type, int> _cache = [];
 
     private static readonly ConcurrentDictionary<(Type, string), MethodInfo> _methods = new();
 
@@ -53,7 +53,7 @@ public static unsafe class UnsafeHelper
     }
 
     // code from https://benbowen.blog/post/fun_with_makeref/
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static void WriteTo<T>(IntPtr dest, T value, int sizeOfT) where T : struct
     {
         var bytePtr = (byte*)dest;
@@ -75,7 +75,7 @@ public static unsafe class UnsafeHelper
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static T ReadFrom<T>(IntPtr source, int sizeOfT) where T : struct
     {
         var bytePtr = (byte*)source;
@@ -92,7 +92,7 @@ public static unsafe class UnsafeHelper
         return result;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static TOut Reinterpret<TIn, TOut>(TIn curValue, int sizeBytes)
         where TIn : struct
         where TOut : struct
