@@ -7,11 +7,11 @@
     <PackageVersion Include="Meziantou.Xunit.v3.ParallelTestFramework" Version="1.0.6" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.6.0" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.0.2" />
-    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.9" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.9" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.9" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.9" />
-    <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.10" />
     <PackageVersion Include="Moq" Version="4.20.72" />
     <PackageVersion Include="morelinq" Version="4.4.0" />
     <PackageVersion Include="MySql.Data" Version="9.7.0" />
@@ -22,7 +22,7 @@
     <PackageVersion Include="Serilog.Sinks.XUnit3" Version="1.2.0" />
     <PackageVersion Include="xRetry.v3" Version="1.0.0-rc3" />
     <PackageVersion Include="xunit.v3" Version="3.2.2" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.8.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageVersion Include="Xunit.v3.Priority" Version="1.1.18" />
     <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
@@ -33,25 +33,25 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
     <PackageVersion Include="Npgsql" Version="[8.0.9, 9.0.0)" />
     <PackageVersion Include="Pomelo.EntityFrameworkCore.MySql" Version="[8.0.3, 9.0.0)" />
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="[8.0.28, 9.0.0)" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="[8.0.28, 9.0.0)" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="[8.0.28, 9.0.0)" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="[8.0.29, 9.0.0)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="[8.0.29, 9.0.0)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="[8.0.29, 9.0.0)" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="[8.0.11, 9.0.0)" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
     <PackageVersion Include="Npgsql" Version="[9.0.5, 10.0.0)" />
     <PackageVersion Include="Pomelo.EntityFrameworkCore.MySql" Version="[9.0.0, 10.0.0)" />
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="[9.0.17, 10.0.0)" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="[9.0.17, 10.0.0)" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="[9.0.17, 10.0.0)" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="[9.0.18, 10.0.0)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="[9.0.18, 10.0.0)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="[9.0.18, 10.0.0)" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="[9.0.4, 10.0.0)" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
     <PackageVersion Include="Npgsql" Version="[10.0.3, 11.0.0)" />
-    <PackageVersion Include="Microting.EntityFrameworkCore.MySql" Version="[10.0.9, 11.0.0)" />
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="[10.0.9, 11.0.0)" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="[10.0.9, 11.0.0)" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="[10.0.9, 11.0.0)" />
+    <PackageVersion Include="Microting.EntityFrameworkCore.MySql" Version="[10.0.10, 11.0.0)" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="[10.0.10, 11.0.0)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="[10.0.10, 11.0.0)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="[10.0.10, 11.0.0)" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="[10.0.3, 11.0.0)" />
   </ItemGroup>
 </Project>
