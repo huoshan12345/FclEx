@@ -67,6 +67,46 @@ partial class DbContextExtensionsTests
 
     [Theory]
     [MemberData(nameof(DbDriverCases))]
+    public async Task ApplyChanges_ShouldPersistReplacementReturnedByUpdateEntity(DbDriver dbDriver)
+    {
+        var existing = await CreateEntityHasStatesAsync(dbDriver);
+
+        await using (var context = Fixture.CreateDbContext(dbDriver))
+        {
+            var tracked = await context.EntityHasStates.SingleAsync(e => e.Id == existing.Id);
+            var dtos = new[]
+            {
+                new EntityHasStates { Id = existing.Id, Name = "Replacement" }
+            };
+
+            var result = context.ApplyChanges(
+                dtos,
+                dto => dto.Id,
+                [tracked],
+                entity => entity.Id,
+                dto => dto,
+                (dto, _) => new EntityHasStates
+                {
+                    Id = dto.Id,
+                    Name = dto.Name,
+                });
+
+            Assert.Single(result.Updated);
+            Assert.Equal("Replacement", result.Updated[0].New.Name);
+
+            await context.SaveChangesAsync();
+        }
+
+        await using var verificationContext = Fixture.CreateDbContext(dbDriver);
+        var persisted = await verificationContext.EntityHasStates
+            .AsNoTracking()
+            .SingleAsync(e => e.Id == existing.Id);
+
+        Assert.Equal("Replacement", persisted.Name);
+    }
+
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
     public async Task ApplyChanges_ShouldDeleteMissingEntities_WhenAllowed(DbDriver dbDriver)
     {
         await using var context = Fixture.CreateDbContext(dbDriver);

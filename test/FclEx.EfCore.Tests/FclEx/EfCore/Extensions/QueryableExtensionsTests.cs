@@ -2,6 +2,11 @@ namespace FclEx.EfCore.Extensions;
 
 public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {
+    private sealed class NullableKeyEntity : IHasId<string?>
+    {
+        public string? Id { get; set; }
+    }
+
     public static readonly TheoryData<DbDriver, bool> ContainsAnyTestCases = DbDrivers
         .CrossJoin([true, false])
         .ToTheoryData();
@@ -63,6 +68,54 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
                 m.Append("_postfix");
             });
         }
+    }
+
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
+    public async Task ContainsAny_ShouldTreatUnderscoreAsLiteral(DbDriver dbDriver)
+    {
+        await using var context = Fixture.CreateDbContext(dbDriver);
+
+        var prefix = Guid.NewGuid().ToString();
+        var literalMatch = new EntityWithAutoKey { Name = $"{prefix}_a_b" };
+        var wildcardMatch = new EntityWithAutoKey { Name = $"{prefix}_axb" };
+        context.EntityWithAutoKey.AddRange(literalMatch, wildcardMatch);
+        await context.SaveChangesAsync();
+
+        var escapeEscapeCharacter = dbDriver is DbDriver.MySql;
+        var result = await context.EntityWithAutoKey
+            .Where(e => e.Name!.StartsWith(prefix))
+            .ContainsAny(e => e.Name, ["a_b"], escapeEscapeCharacter: escapeEscapeCharacter)
+            .ToListAsync();
+
+        Assert.Collection(result, entity => Assert.Equal(literalMatch.Id, entity.Id));
+    }
+
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
+    public async Task ContainsAny_ShouldReturnNoMatches_WhenKeywordsAreEmpty(DbDriver dbDriver)
+    {
+        await using var context = Fixture.CreateDbContext(dbDriver);
+
+        var prefix = Guid.NewGuid().ToString();
+        context.EntityWithAutoKey.Add(new EntityWithAutoKey { Name = prefix });
+        await context.SaveChangesAsync();
+
+        var result = await context.EntityWithAutoKey
+            .Where(e => e.Name == prefix)
+            .ContainsAny(e => e.Name, [])
+            .ToListAsync();
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task GetAsync_ShouldThrow_WhenIdIsNull()
+    {
+        var query = Array.Empty<NullableKeyEntity>().AsQueryable();
+
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            () => query.GetAsync<NullableKeyEntity, string?>(null));
     }
 
     [Theory]

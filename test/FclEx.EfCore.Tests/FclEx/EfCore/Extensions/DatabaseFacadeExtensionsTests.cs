@@ -2,6 +2,20 @@ namespace FclEx.EfCore.Extensions;
 
 public class DatabaseFacadeExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {
+    [Fact]
+    public async Task ExecuteScalarRawAsync_UsesCurrentSqlServerTransaction()
+    {
+        if (DbDrivers.Contains(DbDriver.SqlServer) == false)
+            return;
+
+        await using var context = Fixture.CreateDbContext(DbDriver.SqlServer);
+        await using var transaction = await context.Database.BeginTransactionAsync();
+
+        var result = await context.Database.ExecuteScalarRawAsync<int>("SELECT 1");
+
+        Assert.Equal(1, result);
+    }
+
     [Theory]
     [MemberData(nameof(DbDriverCases))]
     public async Task ExecuteScalarRawAsync_ReturnsValue(DbDriver dbDriver)

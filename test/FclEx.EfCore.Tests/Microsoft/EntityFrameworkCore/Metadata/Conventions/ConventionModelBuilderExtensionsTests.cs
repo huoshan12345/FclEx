@@ -42,6 +42,10 @@ public class ConventionModelBuilderExtensionsTests
 
     public class TestDbContext : DbContext
     {
+        public const string SoftDeleteIndexDatabaseName = "UX_EntityWithSoftDelete_Name";
+        public const string SoftDeleteIndexFilter = "\"Name\" IS NOT NULL";
+        public const string SoftDeleteIndexAnnotation = "Test:Annotation";
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlite($"Data Source={Guid.NewGuid()};Mode=Memory;Cache=Shared");
@@ -54,6 +58,14 @@ public class ConventionModelBuilderExtensionsTests
             modelBuilder.Entity<EntityWithSoftDelete>();
             modelBuilder.Entity<EntityWithDeletedAt>();
             modelBuilder.Entity<EntityWithBoth>();
+
+            modelBuilder.Entity<EntityWithSoftDelete>()
+                .HasIndex(e => e.Name)
+                .IsUnique()
+                .IsDescending()
+                .HasDatabaseName(SoftDeleteIndexDatabaseName)
+                .HasFilter(SoftDeleteIndexFilter)
+                .HasAnnotation(SoftDeleteIndexAnnotation, true);
         }
 
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
@@ -102,6 +114,24 @@ public class ConventionModelBuilderExtensionsTests
         Assert.Equal(2, index.Properties.Count);
         Assert.Contains(index.Properties, p => p.Name == nameof(ISoftDeletable.IsDeleted));
         Assert.Contains(index.Properties, p => p.Name == nameof(EntityWithoutSoftDelete.Name));
+    }
+
+    [Fact]
+    public async Task ConfigureSoftDeleteIndexes_ShouldPreserveIndexMetadata()
+    {
+        await using var context = new TestDbContext();
+        var entityType = context.Model.FindEntityType(typeof(EntityWithSoftDelete));
+        Assert.NotNull(entityType);
+
+        var index = Assert.Single(entityType.GetIndexes());
+
+        Assert.Equal(TestDbContext.SoftDeleteIndexDatabaseName, index.GetDatabaseName());
+        Assert.Equal(TestDbContext.SoftDeleteIndexFilter, index.GetFilter());
+        Assert.Equal(true, index[TestDbContext.SoftDeleteIndexAnnotation]);
+        Assert.Equal(
+            [nameof(EntityWithSoftDelete.Name), nameof(EntityWithSoftDelete.IsDeleted)],
+            index.Properties.Select(property => property.Name));
+        Assert.Equal([true, false], index.IsDescending);
     }
 
     [Fact]
