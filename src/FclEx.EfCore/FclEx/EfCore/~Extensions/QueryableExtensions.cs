@@ -100,11 +100,11 @@ public static class QueryableExtensions
     {
         var type = typeof(T);
         var deletable = type.IsAssignableTo(typeof(ISoftDeletable));
-        var hasDeleteAt = type.IsAssignableTo(typeof(IHasDeletedAt));
 
-        if (!deletable || !hasDeleteAt)
+        if (deletable == false)
             return query.ExecuteDeleteAsync(cancellationToken);
 
+        var hasDeleteAt = type.IsAssignableTo(typeof(IHasDeletedAt));
         var values = new Dictionary<string, object?>();
 
         if (deletable)
