@@ -1,4 +1,5 @@
 using System.Data;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace FclEx.EfCore;
 
@@ -30,6 +31,7 @@ public static class DatabaseFacadeExtensions
 
         try
         {
+            command.Transaction = database.CurrentTransaction?.GetDbTransaction();
             command.CommandText = sql;
             command.CommandType = CommandType.Text;
 
