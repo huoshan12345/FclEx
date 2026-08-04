@@ -71,7 +71,7 @@ public static partial class DbContextExtensions
         await context.SaveChangesAsync();
         return entity;
     }
-    
+
     /// <summary>
     /// Prevents the specified properties or navigation members from being marked as modified
     /// during an update operation.
@@ -222,6 +222,12 @@ public static partial class DbContextExtensions
                 if (update && updatedEntity is not null)
                 {
                     var entry = context.Entry(entity);
+
+                    if (ReferenceEquals(updatedEntity, entity) == false)
+                    {
+                        entry.CurrentValues.SetValues(updatedEntity);
+                    }
+
                     entry.State = EntityState.Modified;
                     entry.ExcludeFromUpdate(excludeOnUpdate);
 
