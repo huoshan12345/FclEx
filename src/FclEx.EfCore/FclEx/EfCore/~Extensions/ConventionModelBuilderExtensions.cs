@@ -5,6 +5,9 @@ public static class ConventionModelBuilderExtensions
     public static IConventionModelBuilder ConfigureSoftDeleteIndexes(this IConventionModelBuilder modelBuilder, IConventionEntityType type)
     {
         var clrType = type.ClrType;
+        if (clrType.GetCustomAttribute<ConfigureSoftDeleteIndexesAttribute>()?.Enabled == false)
+            return modelBuilder;
+
         var deletable = clrType.IsAssignableTo(typeof(ISoftDeletable));
         var hasDeleteAt = clrType.IsAssignableTo(typeof(IHasDeletedAt));
 

@@ -40,6 +40,24 @@ public class ConventionModelBuilderExtensionsTests
         public required string Name { get; set; }
     }
 
+    [ConfigureSoftDeleteIndexes(false)]
+    [Index(nameof(Name), IsUnique = true)]
+    public class EntityWithSoftDeleteIndexesDisabled : ISoftDeletable
+    {
+        public int Id { get; set; }
+        public bool IsDeleted { get; set; }
+        public required string Name { get; set; }
+    }
+
+    [ConfigureSoftDeleteIndexes]
+    [Index(nameof(Name), IsUnique = true)]
+    public class EntityWithSoftDeleteIndexesEnabled : ISoftDeletable
+    {
+        public int Id { get; set; }
+        public bool IsDeleted { get; set; }
+        public required string Name { get; set; }
+    }
+
     public class TestDbContext : DbContext
     {
         public const string SoftDeleteIndexDatabaseName = "UX_EntityWithSoftDelete_Name";
@@ -58,6 +76,8 @@ public class ConventionModelBuilderExtensionsTests
             modelBuilder.Entity<EntityWithSoftDelete>();
             modelBuilder.Entity<EntityWithDeletedAt>();
             modelBuilder.Entity<EntityWithBoth>();
+            modelBuilder.Entity<EntityWithSoftDeleteIndexesDisabled>();
+            modelBuilder.Entity<EntityWithSoftDeleteIndexesEnabled>();
 
             modelBuilder.Entity<EntityWithSoftDelete>()
                 .HasIndex(e => e.Name)
@@ -167,5 +187,35 @@ public class ConventionModelBuilderExtensionsTests
         Assert.Contains(index.Properties, p => p.Name == nameof(ISoftDeletable.IsDeleted));
         Assert.Contains(index.Properties, p => p.Name == nameof(IHasDeletedAt.DeletedAt));
         Assert.Contains(index.Properties, p => p.Name == nameof(EntityWithoutSoftDelete.Name));
+    }
+
+    [Fact]
+    public async Task ConfigureSoftDeleteIndexes_WithDisabledAttribute_ShouldNotModifyIndexes()
+    {
+        await using var context = new TestDbContext();
+        var entityType = context.Model.FindEntityType(typeof(EntityWithSoftDeleteIndexesDisabled));
+        Assert.NotNull(entityType);
+
+        var index = Assert.Single(entityType.GetIndexes());
+
+        Assert.True(index.IsUnique);
+        Assert.Collection(
+            index.Properties,
+            property => Assert.Equal(nameof(EntityWithSoftDeleteIndexesDisabled.Name), property.Name));
+    }
+
+    [Fact]
+    public async Task ConfigureSoftDeleteIndexes_WithEnabledAttribute_ShouldModifyIndexes()
+    {
+        await using var context = new TestDbContext();
+        var entityType = context.Model.FindEntityType(typeof(EntityWithSoftDeleteIndexesEnabled));
+        Assert.NotNull(entityType);
+
+        var index = Assert.Single(entityType.GetIndexes());
+
+        Assert.True(index.IsUnique);
+        Assert.Equal(
+            [nameof(EntityWithSoftDeleteIndexesEnabled.Name), nameof(ISoftDeletable.IsDeleted)],
+            index.Properties.Select(property => property.Name));
     }
 }
