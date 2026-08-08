@@ -31,6 +31,7 @@
     <File Path="src/Directory.Build.targets" />
     <File Path="src/Directory.Packages.props" />
     <Project Path="src/FclEx.Abp/FclEx.Abp.csproj" Id="1566afc0-96c5-485c-96c2-e1ea0dfef6a1" />
+    <Project Path="src/FclEx.Aop/FclEx.Aop.csproj" Id="808572d6-1650-40a0-802f-9c087e2788c5" />
     <Project Path="src/FclEx.AspNetCore.Testing/FclEx.AspNetCore.Testing.csproj" Id="41b52676-4b6a-4aca-bf52-8f7f42d55ff8" />
     <Project Path="src/FclEx.AspNetCore/FclEx.AspNetCore.csproj" />
     <Project Path="src/FclEx.Caching.Redis/FclEx.Caching.Redis.csproj" Id="4a7cfa3c-c66a-491c-b23f-e59b084b30d3" />
@@ -61,6 +62,7 @@
     <File Path="test/Directory.Build.targets" />
     <File Path="test/Directory.Packages.props" />
     <Project Path="test/FclEx.Abp.Tests/FclEx.Abp.Tests.csproj" Id="44e7f851-0306-4aa8-89b0-0409e4d5a06e" />
+    <Project Path="test/FclEx.Aop.Tests/FclEx.Aop.Tests.csproj" Id="9d60a0f1-b390-40f0-b257-ce95452de561" />
     <Project Path="test/FclEx.AspNetCore.Tests/FclEx.AspNetCore.Tests.csproj" />
     <Project Path="test/FclEx.Caching.Redis.Tests/FclEx.Caching.Redis.Tests.csproj" Id="6fd3ede4-a9e8-4ec2-8799-d8c9bbf4d346" />
     <Project Path="test/FclEx.Caching.Tests/FclEx.Caching.Tests.csproj" Id="4558fa5b-1bf0-41a8-8ac5-ee2d65d1842f" />

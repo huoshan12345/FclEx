@@ -14,8 +14,8 @@
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.10" />
     <PackageVersion Include="Moq" Version="4.20.72" />
     <PackageVersion Include="morelinq" Version="4.4.0" />
-    <PackageVersion Include="MySql.Data" Version="9.7.0" />
-    <PackageVersion Include="MySql.EntityFrameworkCore" Version="10.0.7" />
+    <PackageVersion Include="MySql.Data" Version="26.7.0" />
+    <PackageVersion Include="MySql.EntityFrameworkCore" Version="10.0.9" />
     <PackageVersion Include="MySqlConnector" Version="2.6.1" />
     <PackageVersion Include="PolySharp" Version="1.16.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
@@ -25,7 +25,7 @@
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageVersion Include="Xunit.v3.Priority" Version="1.1.18" />
-    <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
+    <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <PackageVersion Include="Npgsql" Version="[8.0.9, 9.0.0)" />

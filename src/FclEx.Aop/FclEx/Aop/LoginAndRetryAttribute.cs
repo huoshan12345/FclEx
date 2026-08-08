@@ -1,10 +1,6 @@
-using System;
-using AspectCore.DynamicProxy;
-using FclEx.Web;
-
 namespace FclEx.Aop;
 
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+[AttributeUsage(AttributeTargets.Method)]
 public class LoginAndRetryAttribute : AbstractInterceptorAttribute
 {
     public virtual Func<object?, bool> NeedRetry { get; } = o => o is IOperationResult { IsError: true };

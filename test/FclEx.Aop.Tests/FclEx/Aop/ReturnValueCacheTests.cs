@@ -1,6 +1,6 @@
 namespace FclEx.Aop;
 
-public class ReturnValueCacheTests(AbpTestsFixture fixture) : AbpTests(fixture)
+public class ReturnValueCacheTests : AopTests
 {
     public static TimeSpan CacheMaxTime => Service.CacheMaxTime;
     public static TimeSpan SleepTime => Service.SleepTime;

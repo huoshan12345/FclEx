@@ -4,7 +4,6 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Volo.Abp.Core" />
-    <PackageReference Include="AspectCore.Extensions.DependencyInjection" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FclEx.Caching\FclEx.Caching.csproj" />

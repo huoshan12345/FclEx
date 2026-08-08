@@ -1,24 +1,8 @@
 namespace FclEx.Aop;
 
-public class LoginAndRetryClient(ILoggerFactory loggerFactory) : UserClient(loggerFactory: loggerFactory)
+public class LoginAndRetryAttributeTests : AopTests
 {
-    [LoginAndRetry]
-    public virtual Task<OperationResult> DoAsync()
-    {
-        return this.IsOnline
-            ? Operation.Success()
-            : Operation.Error("");
-    }
-
-    protected override Task<OperationResult> LoginActionAsync(CancellationToken token)
-    {
-        return Operation.Success();
-    }
-}
-
-public class LoginAndRetryAttributeTests(AbpTestsFixture fixture) : AbpTests(fixture)
-{
-    private LoginAndRetryClient CreateClient()
+    private static LoginAndRetryClient CreateClient()
     {
         var account = new UserAccount("test", "test");
         var factory = Services.GetRequiredService<IUserClientFactory<LoginAndRetryClient>>();
