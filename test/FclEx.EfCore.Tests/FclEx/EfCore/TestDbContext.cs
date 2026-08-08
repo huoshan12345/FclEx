@@ -1,4 +1,6 @@
 using MySql.Data.MySqlClient;
+using System.Collections.Concurrent;
+
 
 #if NET10_0_OR_GREATER
 using Microting.EntityFrameworkCore.MySql.Infrastructure.Internal;
@@ -109,6 +111,8 @@ public class TestDbContext(
         return base.SaveChanges(acceptAllChangesOnSuccess);
     }
 
+    private static readonly ConcurrentDictionary<string, ServerVersion> MySqlServerVersions = new();
+
     private static void UseMySql(DbContextOptionsBuilder builder, string connectionString, string? schema)
     {
         var sb = new MySqlConnectionStringBuilder(connectionString);
@@ -116,7 +120,7 @@ public class TestDbContext(
         {
             sb.Database = schema;
         }
-        var ver = ServerVersion.AutoDetect(connectionString);
+        var ver = MySqlServerVersions.GetOrAdd(sb.ConnectionString, m => ServerVersion.AutoDetect(m));
         builder.UseMySql(sb.ConnectionString, ver, o => o.SchemaBehavior(MySqlSchemaBehavior.Translate, (_, table) => table));
         builder.ReplaceService<ISqlGenerationHelper, CustomMySqlSqlGenerationHelper>();
     }
