@@ -110,12 +110,11 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
     }
 
     [Fact]
-    public async Task GetAsync_ShouldThrow_WhenIdIsNull()
+    public async Task GetAsync_ShouldReturnNull_WhenIdIsNull()
     {
         var query = Array.Empty<NullableKeyEntity>().AsQueryable();
-
-        await Assert.ThrowsAsync<ArgumentNullException>(
-            () => query.GetAsync<NullableKeyEntity, string?>(null));
+        var result = await query.GetAsync<NullableKeyEntity, string?>(null);
+        Assert.Null(result);
     }
 
     [Theory]

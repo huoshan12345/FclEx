@@ -35,29 +35,51 @@ public static class QueryableExtensions
         return queryable.GetAsync<T, long>(id, noTracking, cancellationToken);
     }
 
-    private static async Task<(T[] items, int TotalCount)> ToArrayAndCountAsync<T>(this IQueryable<T> queryable, int pageSize, int pageIndex)
+    private static async Task<(T[] items, int TotalCount)> ToArrayAndCountAsync<T>(
+        this IQueryable<T> queryable,
+        int pageSize,
+        int pageIndex,
+        bool noTracking = true,
+        CancellationToken cancellationToken = default)
+        where T : class
     {
-        var count = await queryable.CountAsync();
+        var query = noTracking
+            ? queryable.AsNoTracking()
+            : queryable;
+
+        var count = await queryable.CountAsync(cancellationToken);
         if (count == 0)
             return ([], 0);
 
         var items = await queryable
             .Skip(pageIndex * pageSize)
             .Take(pageSize)
-            .ToArrayAsync();
+            .ToArrayAsync(cancellationToken);
 
         return (items, count);
     }
 
-    public static async Task<PagedListModel<T>> ToPagedListAsync<T>(this IQueryable<T> queryable, int pageSize, int pageIndex)
+    public static async Task<PagedListModel<T>> ToPagedListAsync<T>(
+        this IQueryable<T> queryable,
+        int pageSize,
+        int pageIndex,
+        bool noTracking = true,
+        CancellationToken cancellationToken = default)
+        where T : class
     {
-        var (items, count) = await queryable.ToArrayAndCountAsync(pageSize, pageIndex);
+        var (items, count) = await queryable.ToArrayAndCountAsync(pageSize, pageIndex, noTracking, cancellationToken);
         return new(new PagedList<T>(items, pageIndex, pageSize, count));
     }
 
-    public static async Task<PagedListModel<TModel>> ToPagedListAsync<T, TModel>(this IQueryable<T> queryable, int pageSize, int pageIndex, Func<T, TModel> selector)
+    public static async Task<PagedListModel<TModel>> ToPagedListAsync<T, TModel>(
+        this IQueryable<T> queryable,
+        int pageSize,
+        int pageIndex,
+        Func<T, TModel> selector,
+        bool noTracking = true,
+        CancellationToken cancellationToken = default) where T : class
     {
-        var (items, count) = await queryable.ToArrayAndCountAsync(pageSize, pageIndex);
+        var (items, count) = await queryable.ToArrayAndCountAsync(pageSize, pageIndex, noTracking, cancellationToken);
         var arr = items.Select(selector).ToArray();
         return new(new PagedList<TModel>(arr, pageIndex, pageSize, count));
     }
