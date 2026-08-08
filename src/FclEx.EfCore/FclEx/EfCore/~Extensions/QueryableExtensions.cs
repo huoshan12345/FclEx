@@ -99,7 +99,10 @@ public static class QueryableExtensions
             var expression = QueryableHelper.BuildLike(selector, pattern, suppressValueConverter, escapeEscapeCharacter);
             where = where.Or(expression);
         }
-        return where == null ? queryable : queryable.Where(where);
+
+        return where == null
+            ? queryable.Where(m => false)
+            : queryable.Where(where);
     }
 
     public static IQueryable<T> NotDeleted<T>(this IQueryable<T> queryable) where T : ISoftDeletable
