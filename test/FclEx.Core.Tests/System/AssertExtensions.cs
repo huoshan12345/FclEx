@@ -867,7 +867,7 @@ namespace System
         /// <param name="expected">The expected value</param>
         /// <param name="actual">The value to be compared against</param>
         /// <param name="variance">The total variance allowed between the expected and actual results.</param>
-        /// <param name="banner">The banner to show; if <c>null</c>, then the standard
+        /// <param name="banner">The banner to show; if <see langword="null"/>, then the standard
         /// banner of "Values differ" will be used</param>
         /// <exception cref="EqualException">Thrown when the values are not equal</exception>
         public static void Equal(double expected, double actual, double variance, string? banner = null)
@@ -982,7 +982,7 @@ namespace System
         /// <param name="expected">The expected value</param>
         /// <param name="actual">The value to be compared against</param>
         /// <param name="variance">The total variance allowed between the expected and actual results.</param>
-        /// <param name="banner">The banner to show; if <c>null</c>, then the standard
+        /// <param name="banner">The banner to show; if <see langword="null"/>, then the standard
         /// banner of "Values differ" will be used</param>
         /// <exception cref="EqualException">Thrown when the values are not equal</exception>
         public static void Equal(float expected, float actual, float variance, string? banner = null)
@@ -1098,7 +1098,7 @@ namespace System
         /// <param name="expected">The expected value</param>
         /// <param name="actual">The value to be compared against</param>
         /// <param name="variance">The total variance allowed between the expected and actual results.</param>
-        /// <param name="banner">The banner to show; if <c>null</c>, then the standard
+        /// <param name="banner">The banner to show; if <see langword="null"/>, then the standard
         /// banner of "Values differ" will be used</param>
         /// <exception cref="EqualException">Thrown when the values are not equal</exception>
         public static void Equal(Half expected, Half actual, Half variance, string? banner = null)

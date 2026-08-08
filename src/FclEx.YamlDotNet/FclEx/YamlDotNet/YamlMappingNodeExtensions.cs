@@ -11,7 +11,7 @@ public static class YamlMappingNodeExtensions
     /// <typeparam name="TValue">The expected child value type.</typeparam>
     /// <param name="node">The mapping node to read from.</param>
     /// <param name="key">The YAML key node to look up.</param>
-    /// <returns>The child value, or <c>null</c> when the key is missing or the value has a different type.</returns>
+    /// <returns>The child value, or <see langword="null"/> when the key is missing or the value has a different type.</returns>
     public static TValue? GetChild<TValue>(this YamlMappingNode node, YamlNode key) where TValue : YamlNode
     {
         return node.Children.TryGetValue(key, out var value)
@@ -25,7 +25,7 @@ public static class YamlMappingNodeExtensions
     /// <typeparam name="TValue">The expected child value type.</typeparam>
     /// <param name="node">The mapping node to read from.</param>
     /// <param name="key">The scalar key value to look up.</param>
-    /// <returns>The child value, or <c>null</c> when the key is missing or the value has a different type.</returns>
+    /// <returns>The child value, or <see langword="null"/> when the key is missing or the value has a different type.</returns>
     public static TValue? GetChild<TValue>(this YamlMappingNode node, string key) where TValue : YamlNode
     {
         return node.GetChild<TValue>(new YamlScalarNode(key));
@@ -71,7 +71,7 @@ public static class YamlMappingNodeExtensions
     /// <param name="node">The mapping node to update.</param>
     /// <param name="key">The scalar key value to add.</param>
     /// <param name="value">The scalar child value to add.</param>
-    /// <param name="index">The optional zero-based insertion index. When <c>null</c>, the child is appended.</param>
+    /// <param name="index">The optional zero-based insertion index. When <see langword="null"/>, the child is appended.</param>
     /// <returns>The same mapping node instance.</returns>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="index"/> is outside the valid insertion range.</exception>
     public static YamlMappingNode AddScalarChild(this YamlMappingNode node, string key, string value, int? index = null)
@@ -194,7 +194,7 @@ public static class YamlMappingNodeExtensions
     /// <param name="valueStyle">The optional scalar style. When omitted for an existing scalar, its current style is preserved.</param>
     /// <param name="conflictBehavior">Controls how an existing non-scalar child with the same key is handled.</param>
     /// <returns>
-    /// The scalar child and whether the mapping changed. The child is <c>null</c> when a non-scalar conflict is ignored; <c>Changed</c> only reports whether the mapping was modified.
+    /// The scalar child and whether the mapping changed. The child is <see langword="null"/> when a non-scalar conflict is ignored; <c>Changed</c> only reports whether the mapping was modified.
     /// </returns>
     /// <exception cref="InvalidOperationException">Thrown when a non-scalar child exists and <paramref name="conflictBehavior"/> is <see cref="YamlScalarChildConflictBehavior.Throw"/>.</exception>
     public static (YamlScalarNode? Child, bool Changed) TrySetScalarChild(this YamlMappingNode node, string key, string value, ScalarStyle? valueStyle = null,

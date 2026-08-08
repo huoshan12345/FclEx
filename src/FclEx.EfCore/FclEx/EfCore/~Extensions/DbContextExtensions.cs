@@ -14,7 +14,7 @@ public static partial class DbContextExtensions
     /// <param name="factory">The factory function to create a new entity if no match is found.</param>
     /// <returns>The existing or newly added entity.</returns>
     /// <exception cref="ArgumentNullException">
-    /// Thrown if <paramref name="context"/>, <paramref name="filter"/>, or <paramref name="factory"/> is <c>null</c>.
+    /// Thrown if <paramref name="context"/>, <paramref name="filter"/>, or <paramref name="factory"/> is <see langword="null"/>.
     /// </exception>
     public static async Task<T> GetOrAddAsync<T>(this DbContext context, Expression<Func<T, bool>> filter, Func<T> factory) where T : class
     {

@@ -12,7 +12,7 @@ public class FromStringYamlConverter<T> : YamlTypeConverterBase<T> where T : cla
     /// </summary>
     /// <param name="parser">The YAML parser positioned at a scalar event.</param>
     /// <param name="deserializer">The nested deserializer. This converter does not use it.</param>
-    /// <returns><c>null</c> for null or empty scalar values; otherwise, the value returned by <see cref="IFromString{T}.FromString"/>.</returns>
+    /// <returns><see langword="null"/> for null or empty scalar values; otherwise, the value returned by <see cref="IFromString{T}.FromString"/>.</returns>
     public override T? ReadYaml(IParser parser, ObjectDeserializer deserializer)
     {
         var value = parser.Consume<Scalar>().Value;
@@ -25,9 +25,9 @@ public class FromStringYamlConverter<T> : YamlTypeConverterBase<T> where T : cla
     /// Writes the value using its <see cref="object.ToString"/> result.
     /// </summary>
     /// <param name="emitter">The YAML emitter that receives events.</param>
-    /// <param name="value">The value to write. <c>null</c> is emitted as a null scalar.</param>
+    /// <param name="value">The value to write. <see langword="null"/> is emitted as a null scalar.</param>
     /// <param name="serializer">The nested serializer. This converter does not use it.</param>
-    /// <remarks>If <see cref="object.ToString"/> returns <c>null</c>, a null scalar is emitted.</remarks>
+    /// <remarks>If <see cref="object.ToString"/> returns <see langword="null"/>, a null scalar is emitted.</remarks>
     public override void WriteYaml(IEmitter emitter, T? value, ObjectSerializer serializer)
     {
         if (value is null)

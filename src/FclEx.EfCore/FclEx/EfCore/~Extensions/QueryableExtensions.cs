@@ -14,8 +14,7 @@ public static class QueryableExtensions
     /// Defaults to <c>true</c>.
     /// </param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
-    /// <returns>The entity if found; otherwise, <c>null</c>.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="id"/> is null.</exception>
+    /// <returns>The entity if found; otherwise, <see langword="null"/>.</returns>
     public static Task<T?> GetAsync<T, TKey>(this IQueryable<T> queryable, TKey id, bool noTracking = true, CancellationToken cancellationToken = default)
         where T : class, IHasId<TKey>
     {

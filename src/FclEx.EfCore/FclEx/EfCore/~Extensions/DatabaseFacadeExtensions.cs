@@ -15,7 +15,7 @@ public static class DatabaseFacadeExtensions
     /// <param name="cancellationToken">A token to observe while waiting for the operation to complete.</param>
     /// <returns>
     /// The first column of the first row in the result set cast to <typeparamref name="T"/>.
-    /// Returns <c>default</c> if the result is <c>null</c> or <see cref="DBNull"/>.
+    /// Returns <c>default</c> if the result is <see langword="null"/> or <see cref="DBNull"/>.
     /// </returns>
     public static async Task<T?> ExecuteScalarRawAsync<T>(this DatabaseFacade database, string sql,
         IEnumerable<IDbDataParameter>? parameters = null, CancellationToken cancellationToken = default)

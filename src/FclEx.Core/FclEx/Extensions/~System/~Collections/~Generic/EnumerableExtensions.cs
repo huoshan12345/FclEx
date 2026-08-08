@@ -387,7 +387,7 @@ public static partial class EnumerableExtensions
     /// elements from the other sequence are yielded.
     /// </remarks>
     /// <exception cref="ArgumentNullException">
-    /// Thrown if <paramref name="first"/> or <paramref name="second"/> is <c>null</c>.
+    /// Thrown if <paramref name="first"/> or <paramref name="second"/> is <see langword="null"/>.
     /// </exception>
     /// <exception cref="ArgumentOutOfRangeException">
     /// Thrown if <paramref name="firstGrouping"/> or <paramref name="secondGrouping"/> is less than or equal to zero.

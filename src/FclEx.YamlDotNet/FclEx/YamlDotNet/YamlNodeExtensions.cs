@@ -9,7 +9,7 @@ public static class YamlNodeExtensions
     /// Determines whether the node is a scalar node with the specified value.
     /// </summary>
     /// <param name="node">The YAML node to inspect.</param>
-    /// <param name="value">The scalar value to compare with <see cref="YamlScalarNode.Value"/>, including <c>null</c>.</param>
+    /// <param name="value">The scalar value to compare with <see cref="YamlScalarNode.Value"/>, including <see langword="null"/>.</param>
     /// <returns><c>true</c> when <paramref name="node"/> is a scalar node with the specified value; otherwise, <c>false</c>.</returns>
     public static bool IsScalarWithValue(this YamlNode node, string? value)
     {

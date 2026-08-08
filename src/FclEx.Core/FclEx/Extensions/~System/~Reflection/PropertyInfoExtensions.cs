@@ -28,7 +28,7 @@ public static class PropertyInfoExtensions
 
     /// <summary>
     /// Gets the value of the property and attempts to cast it to <typeparamref name="T"/>.
-    /// Returns <c>null</c> if the value is null.
+    /// Returns <see langword="null"/> if the value is null.
     /// </summary>
     /// <typeparam name="T">The expected type of the property value.</typeparam>
     /// <param name="property">The property metadata.</param>

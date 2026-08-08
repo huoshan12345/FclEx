@@ -258,7 +258,7 @@ public static class FileInfoExtensions
     /// Moves the file to a new directory and/or renames it.
     /// </summary>
     /// <param name="file">The source file.</param>
-    /// <param name="dir">The destination directory, or <c>null</c> to use the file’s current directory.</param>
+    /// <param name="dir">The destination directory, or <see langword="null"/> to use the file’s current directory.</param>
     /// <param name="name">The new file name.</param>
     /// <param name="appendExt">Whether to append the original extension to the new name.</param>
     /// <param name="options">Specifies how to handle conflicts. Default is <see cref="FileConflictOptions.Default"/>.</param>

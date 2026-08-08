@@ -19,7 +19,7 @@ public static class EndpointExtensions
     /// <returns>
     /// An array of attributes of the specified type. If no attributes are found, an empty array is returned.
     /// </returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="endpoint"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="endpoint"/> is <see langword="null"/>.</exception>
     public static T[] GetAttributes<T>(this Endpoint endpoint, bool combineController, bool inherit = true) where T : Attribute
     {
         Check.NotNull(endpoint);

@@ -65,7 +65,7 @@ public static class JsonDocumentPathExtensions
     /// <param name="path">
     /// A <see cref="String"/> that contains a JSONPath expression.
     /// </param>
-    /// <returns>A <see cref="JsonDocument"/>, or <c>null</c>.</returns>
+    /// <returns>A <see cref="JsonDocument"/>, or <see langword="null"/>.</returns>
     public static JsonElement? SelectElement(this JsonDocument src, string path)
     {
         return SelectElement(src.RootElement, path, false);
@@ -78,7 +78,7 @@ public static class JsonDocumentPathExtensions
     /// <param name="path">
     /// A <see cref="String"/> that contains a JSONPath expression.
     /// </param>
-    /// <returns>A <see cref="JsonElement"/>, or <c>null</c>.</returns>
+    /// <returns>A <see cref="JsonElement"/>, or <see langword="null"/>.</returns>
     public static JsonElement? SelectElement(this JsonElement src, string path)
     {
         return SelectElement(src, path, false);

@@ -11,9 +11,9 @@ partial class EnumerableExtensions
     /// <param name="source">The sequence of elements to evaluate.</param>
     /// <param name="keySelector">A function that extracts the key from each element for comparison.</param>
     /// <param name="maxima">If <c>true</c>, finds the maximum elements; if <c>false</c>, finds the minimum elements.</param>
-    /// <param name="comparer">An optional comparer to compare the keys. If <c>null</c>, the default comparer for <typeparamref name="TKey"/> is used.</param>
+    /// <param name="comparer">An optional comparer to compare the keys. If <see langword="null"/>, the default comparer for <typeparamref name="TKey"/> is used.</param>
     /// <returns>A tuple containing a read-only list of the extrema elements and the total count of elements processed in the source sequence.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> or <paramref name="keySelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
     public static (IReadOnlyList<T> Items, int TotalCount) ExtremaBy<T, TKey>(this IEnumerable<T> source, Func<T, TKey> keySelector, bool maxima, IComparer<TKey>? comparer = null)
     {
         Check.NotNull(source);
@@ -63,9 +63,9 @@ partial class EnumerableExtensions
     /// <typeparam name="TKey">The type of the key used for comparison.</typeparam>
     /// <param name="source">The sequence of elements to evaluate.</param>
     /// <param name="keySelector">A function that extracts the key from each element for comparison.</param>
-    /// <param name="comparer">An optional comparer to compare the keys. If <c>null</c>, the default comparer for <typeparamref name="TKey"/> is used.</param>
+    /// <param name="comparer">An optional comparer to compare the keys. If <see langword="null"/>, the default comparer for <typeparamref name="TKey"/> is used.</param>
     /// <returns>A tuple containing a read-only list of the minimum elements and the total count of elements processed in the source sequence.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> or <paramref name="keySelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
     public static (IReadOnlyList<T> Items, int TotalCount) MinimaBy<T, TKey>(this IEnumerable<T> source, Func<T, TKey> keySelector, IComparer<TKey>? comparer = null)
     {
         return source.ExtremaBy(keySelector, false, comparer);
@@ -78,9 +78,9 @@ partial class EnumerableExtensions
     /// <typeparam name="TKey">The type of the key used for comparison.</typeparam>
     /// <param name="source">The sequence of elements to evaluate.</param>
     /// <param name="keySelector">A function that extracts the key from each element for comparison.</param>
-    /// <param name="comparer">An optional comparer to compare the keys. If <c>null</c>, the default comparer for <typeparamref name="TKey"/> is used.</param>
+    /// <param name="comparer">An optional comparer to compare the keys. If <see langword="null"/>, the default comparer for <typeparamref name="TKey"/> is used.</param>
     /// <returns>A tuple containing a read-only list of the maximum elements and the total count of elements processed in the source sequence.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> or <paramref name="keySelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
     public static (IReadOnlyList<T> Items, int TotalCount) MaximaBy<T, TKey>(this IEnumerable<T> source, Func<T, TKey> keySelector, IComparer<TKey>? comparer = null)
     {
         return source.ExtremaBy(keySelector, true, comparer);
@@ -95,7 +95,7 @@ partial class EnumerableExtensions
     /// <param name="source">The sequence of elements to evaluate.</param>
     /// <param name="keySelector">A function that extracts the key from each element for comparison.</param>
     /// <param name="comparer">
-    /// An optional comparer to compare the keys. If <c>null</c>, the default comparer for <typeparamref name="TKey"/> is used.
+    /// An optional comparer to compare the keys. If <see langword="null"/>, the default comparer for <typeparamref name="TKey"/> is used.
     /// </param>
     /// <returns>
     /// A tuple containing the elements with the minimum and maximum keys as determined by <paramref name="keySelector"/>.
@@ -103,7 +103,7 @@ partial class EnumerableExtensions
     /// otherwise, throws an <see cref="InvalidOperationException"/>.
     /// </returns>
     /// <exception cref="InvalidOperationException">Thrown if the sequence is empty and <typeparamref name="T"/> is a value type.</exception>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> or <paramref name="keySelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
     public static (T? Min, T? Max) MinMaxBy<T, TKey>(this IEnumerable<T> source, Func<T, TKey> keySelector, IComparer<TKey>? comparer = null)
     {
         Check.NotNull(source);

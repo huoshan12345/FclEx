@@ -404,7 +404,7 @@ partial class TypeExtensions
     /// </summary>
     /// <param name="type">The type to search for a parameterless constructor.</param>
     /// <returns>
-    /// The parameterless constructor of the specified type, or <c>null</c> if no such constructor exists.
+    /// The parameterless constructor of the specified type, or <see langword="null"/> if no such constructor exists.
     /// </returns>
     public static ConstructorInfo? GetParameterlessConstructor(this Type type)
     {

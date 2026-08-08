@@ -45,7 +45,7 @@ public abstract class YamlTypeConverterBase<T> : IYamlTypeConverter
     /// Writes a value of <typeparamref name="T"/> as YAML.
     /// </summary>
     /// <param name="emitter">The YAML emitter that receives events.</param>
-    /// <param name="value">The value to write. Implementations should decide how to represent <c>null</c>.</param>
+    /// <param name="value">The value to write. Implementations should decide how to represent <see langword="null"/>.</param>
     /// <param name="serializer">The nested serializer that can be used for complex values.</param>
     public abstract void WriteYaml(IEmitter emitter, T? value, ObjectSerializer serializer);
 

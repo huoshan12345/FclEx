@@ -33,7 +33,7 @@ public static class JsonNodeExtensions
     /// <param name="options">Optional serializer options. If not provided, default options from <see cref="JsonHelper.GetOptions"/> are used.</param>
     /// <returns>
     /// A string representation of the node:<br/>
-    /// If <paramref name="node"/> is <c>null</c>, returns <c>null</c>.<br/>
+    /// If <paramref name="node"/> is <see langword="null"/>, returns <see langword="null"/>.<br/>
     /// If <paramref name="node"/> is a <see cref="JsonValue"/> containing a string, returns that string directly.<br/>
     /// Otherwise, serializes the node to a JSON string using the provided or default options.
     /// </returns>

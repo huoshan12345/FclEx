@@ -636,7 +636,7 @@ public class MultiValueDictionary<TKey, TValue> :
     /// </summary>
     /// <param name="key">The <typeparamref name="TKey"/> of the element to add.</param>
     /// <param name="value">The <typeparamref name="TValue"/> of the element to add.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="key"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="key"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// Unlike the Add for <see cref="IDictionary" />, the <see cref="MultiValueDictionary{TKey,TValue}"/> Add will not
     /// throw any exceptions. If the given <typeparamref name="TKey"/> is already in the <see cref="MultiValueDictionary{TKey,TValue}"/>,
@@ -696,7 +696,7 @@ public class MultiValueDictionary<TKey, TValue> :
     /// </summary>
     /// <param name="key">The <typeparamref name="TKey"/> of the elements to remove</param>
     /// <returns><c>true</c> if the removal was successful; otherwise <c>false</c></returns>
-    /// <exception cref="ArgumentNullException"><paramref name="key"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="key"/> is <see langword="null"/>.</exception>
     public bool Remove(TKey key)
     {
         if (key == null)

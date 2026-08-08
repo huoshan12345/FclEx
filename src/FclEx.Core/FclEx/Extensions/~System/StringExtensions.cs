@@ -100,7 +100,7 @@ partial class StringExtensions
     /// Thrown when the input string has an odd number of characters, as this is not a valid hexadecimal representation.
     /// </exception>
     /// <remarks>
-    /// This method first checks if the input string is <c>null</c> and validates the length. 
+    /// This method first checks if the input string is <see langword="null"/> and validates the length. 
     /// If the string is valid, it processes each pair of characters, converting them into their 
     /// corresponding byte values. The method supports both uppercase and lowercase hexadecimal characters.
     /// An empty input string returns an empty byte array.
