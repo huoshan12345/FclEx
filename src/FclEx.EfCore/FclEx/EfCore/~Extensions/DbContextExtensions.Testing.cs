@@ -2,7 +2,7 @@ namespace FclEx.EfCore;
 
 partial class DbContextExtensions
 {
-    public static readonly MethodInfo MethodOfTestEntity = typeof(DbContextExtensions)
+    private static readonly MethodInfo _methodTestEntity = typeof(DbContextExtensions)
         .GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static)
         .Single(m => m.Name == nameof(TestEntity));
 
@@ -15,7 +15,7 @@ partial class DbContextExtensions
 
     public static async Task TestEntities(this DbContext context, params Type[] types)
     {
-        var disposable = types.Select(m => MethodOfTestEntity.MakeGenericMethod(m).Invoke(null, [context]))
+        var disposable = types.Select(m => _methodTestEntity.MakeGenericMethod(m).Invoke(null, [context]))
             .Cast<IDisposable>()
             .Merge();
 

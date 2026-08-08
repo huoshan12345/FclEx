@@ -93,6 +93,10 @@ partial class DbContextExtensionsTests
 
             Assert.Single(result.Updated);
             Assert.Equal("Replacement", result.Updated[0].New.Name);
+            Assert.NotSame(tracked, result.Updated[0].New);
+            Assert.Same(tracked, result.Updated[0].Existing);
+            Assert.Equal("Replacement", tracked.Name);
+            Assert.Equal(EntityState.Modified, context.Entry(tracked).State);
 
             await context.SaveChangesAsync();
         }

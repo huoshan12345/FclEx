@@ -9,12 +9,12 @@ namespace FclEx.Utils;
 /// and dispose them all with a single call. This is useful for managing
 /// related resources that need to be released together.
 /// </remarks>
-public readonly struct CompositeDisposable<T> : IDisposable where T : IDisposable
+public class CompositeDisposable<T> : IDisposable where T : IDisposable
 {
-    private readonly ICollection<T> _disposables;
+    private readonly List<T> _disposables;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="CompositeDisposable{T}"/> struct
+    /// Initializes a new instance of the <see cref="CompositeDisposable{T}"/> class
     /// with the specified collection of disposable objects.
     /// </summary>
     /// <param name="enumerable">The collection of disposable objects to include in this composite.</param>
@@ -24,17 +24,28 @@ public readonly struct CompositeDisposable<T> : IDisposable where T : IDisposabl
     /// </remarks>
     public CompositeDisposable(IEnumerable<T>? enumerable)
     {
-        _disposables = enumerable?.Where(x => x != null).ToArray() ?? [];
+        _disposables = enumerable?.AsList() ?? [];
+    }
+
+    public CompositeDisposable<T> Add(T disposable)
+    {
+        _disposables.Add(disposable);
+        return this;
     }
 
     public void Dispose()
     {
+        GC.SuppressFinalize(this);
+
         foreach (var e in _disposables)
         {
             e.Dispose();
         }
     }
 }
+
+public class CompositeDisposable(IEnumerable<IDisposable>? enumerable)
+    : CompositeDisposable<IDisposable>(enumerable);
 
 public static class CompositeDisposableExtensions
 {

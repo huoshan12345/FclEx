@@ -8,7 +8,7 @@ public class EntityTypeBuilderExtensionsTests
     }
 
     [Fact]
-    public void ExcludeFromMigrations_ShouldRemoveEntitySuffixFromDefaultTableName()
+    public void ExcludeFromMigrations_ShouldPreserveDefaultTableName()
     {
         var modelBuilder = new ModelBuilder(new ConventionSet());
 
