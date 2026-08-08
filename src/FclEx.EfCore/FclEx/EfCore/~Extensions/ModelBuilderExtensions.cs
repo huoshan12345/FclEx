@@ -2,9 +2,9 @@ namespace FclEx.EfCore;
 
 public static class ModelBuilderExtensions
 {
-    public static EntityTypeBuilder<TEntity> ExcludeFromMigrations<TEntity>(this ModelBuilder modelBuilder, string? tableName = null) where TEntity : class
+    public static EntityTypeBuilder<TEntity> ExcludeFromMigrations<TEntity>(this ModelBuilder modelBuilder, string? tableName = null, string? schema = null) where TEntity : class
     {
-        return modelBuilder.Entity<TEntity>().ExcludeFromMigrations(tableName);
+        return modelBuilder.Entity<TEntity>().ExcludeFromMigrations(tableName, schema);
     }
 
     private static LambdaExpression GetLambdaExpression<T>(Expression<Func<T, bool>> filter, Type targetType)

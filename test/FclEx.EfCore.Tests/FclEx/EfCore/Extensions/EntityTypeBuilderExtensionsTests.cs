@@ -14,7 +14,7 @@ public class EntityTypeBuilderExtensionsTests
 
         var builder = modelBuilder.Entity<CustomerEntity>().ExcludeFromMigrations();
 
-        Assert.Equal("Customer", builder.Metadata.GetTableName());
+        Assert.Equal(nameof(CustomerEntity), builder.Metadata.GetTableName());
         Assert.True(builder.Metadata.IsTableExcludedFromMigrations());
     }
 
