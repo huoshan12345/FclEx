@@ -13,6 +13,24 @@ public class QueryableHelperTests(ITestOutputHelper output)
         public string Id { get; set; } = string.Empty;
     }
 
+    [Theory]
+    [InlineData("plain", "%plain%")]
+    [InlineData("a%b", @"%a\%b%")]
+    [InlineData("a_b", @"%a\_b%")]
+    [InlineData(@"a\b", @"%a\\b%")]
+    [InlineData("a[b", @"%a\[b%")]
+    [InlineData(@"a\%_[b", @"%a\\\%\_\[b%")]
+    public void GetContainsPattern_ShouldEscapeLikeMetacharacters(string value, string expected)
+    {
+        Assert.Equal(expected, QueryableHelper.GetContainsPattern(value));
+    }
+
+    [Fact]
+    public void GetContainsPattern_WhenEscapeCharacterRequiresSqlEscaping_ShouldDoubleEscapeCharacter()
+    {
+        Assert.Equal(@"%a\\\\b%", QueryableHelper.GetContainsPattern(@"a\b", escapeEscapeCharacter: true));
+    }
+
     [Fact]
     public void BuildIdFilter_GeneratesCorrectExpression_ForIntId()
     {

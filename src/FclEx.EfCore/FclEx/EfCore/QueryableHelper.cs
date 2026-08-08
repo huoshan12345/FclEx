@@ -8,10 +8,27 @@ public static class QueryableHelper
     public static MethodInfo EfLike { get; } = typeof(DbFunctionsExtensions)
         .GetRequiredMethod(nameof(DbFunctionsExtensions.Like), 0, typeof(DbFunctions), typeof(string), typeof(string), typeof(string));
 
-    private static readonly ConcurrentDictionary<string, string> _contains = new();
+    private static readonly ConcurrentDictionary<(string Value, bool EscapeEscapeCharacter), string> _containsPatterns = new();
+
     public static string GetContainsPattern(string value)
     {
-        return _contains.GetOrAdd(value, m => $"%{m.Replace("%", @"\%")}%");
+        return GetContainsPattern(value, false);
+    }
+
+    internal static string GetContainsPattern(string value, bool escapeEscapeCharacter)
+    {
+        return _containsPatterns.GetOrAdd(
+            (value, escapeEscapeCharacter),
+            static item => $"%{EscapeLikePattern(item.Value, item.EscapeEscapeCharacter)}%");
+    }
+
+    private static string EscapeLikePattern(string value, bool escapeEscapeCharacter)
+    {
+        return value
+            .Replace(@"\", escapeEscapeCharacter ? @"\\\\" : @"\\")
+            .Replace("%", @"\%")
+            .Replace("_", @"\_")
+            .Replace("[", @"\[");
     }
 
     private static readonly Expression EscapeChar = Expression.Constant(@"\");
@@ -46,7 +63,7 @@ public static class QueryableHelper
         // ReSharper disable once LoopCanBeConvertedToQuery
         foreach (var keyword in keywords)
         {
-            var pattern = GetContainsPattern(keyword);
+            var pattern = GetContainsPattern(keyword, escapeEscapeCharacter);
             var expression = BuildLike(selector, pattern, suppressValueConverter, escapeEscapeCharacter);
             where = where.Or(expression);
         }

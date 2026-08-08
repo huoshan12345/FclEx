@@ -95,7 +95,7 @@ public static class QueryableExtensions
         // ReSharper disable once LoopCanBeConvertedToQuery
         foreach (var keyword in keywords)
         {
-            var pattern = QueryableHelper.GetContainsPattern(keyword);
+            var pattern = QueryableHelper.GetContainsPattern(keyword, escapeEscapeCharacter);
             var expression = QueryableHelper.BuildLike(selector, pattern, suppressValueConverter, escapeEscapeCharacter);
             where = where.Or(expression);
         }
