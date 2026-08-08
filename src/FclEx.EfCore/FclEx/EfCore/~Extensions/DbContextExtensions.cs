@@ -168,7 +168,7 @@ public static partial class DbContextExtensions
     /// If not provided or returns null, the entity remains unchanged.
     /// </param>
     /// <param name="allowDeletion">
-    /// When <c>true</c>, any entities that exist in the database but not in the DTOs will be deleted.
+    /// When <see langword="true"/>, any entities that exist in the database but not in the DTOs will be deleted.
     /// Set to <c>false</c> when performing partial updates where deletion should not occur.
     /// </param>
     /// <param name="excludeOnUpdate">
@@ -275,7 +275,7 @@ public static partial class DbContextExtensions
     /// If not provided or returns null, the entity remains unchanged.
     /// </param>
     /// <param name="allowDeletion">
-    /// When <c>true</c>, any entities that exist in the database but not in <paramref name="newEntities"/> will be deleted.
+    /// When <see langword="true"/>, any entities that exist in the database but not in <paramref name="newEntities"/> will be deleted.
     /// </param>
     /// <param name="excludeOnUpdate">
     /// Names of properties or navigation properties that should not be modified during an update operation.

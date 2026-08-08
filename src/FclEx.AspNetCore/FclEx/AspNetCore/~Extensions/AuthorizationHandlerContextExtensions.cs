@@ -11,11 +11,11 @@ public static class AuthorizationHandlerContextExtensions
     /// <param name="combineController">
     /// A boolean value indicating whether to combine attributes from both the controller and the action method.
     /// If <c>false</c>, only action-level attributes are returned unless none exist, in which case controller-level attributes are returned.
-    /// If <c>true</c>, attributes from both the action and controller are returned.
+    /// If <see langword="true"/>, attributes from both the action and controller are returned.
     /// </param>
     /// <param name="inherit">
     /// A boolean value indicating whether to search the inheritance chain of the action and controller for attributes.
-    /// Defaults to <c>true</c>.
+    /// Defaults to <see langword="true"/>.
     /// </param>
     /// <returns>
     /// An array of attributes of type <typeparamref name="T"/> found on the action, controller, or both, depending on the value of 

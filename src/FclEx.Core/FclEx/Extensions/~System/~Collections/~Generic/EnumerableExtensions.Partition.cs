@@ -8,15 +8,15 @@ partial class EnumerableExtensions
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <param name="enumerable">The input sequence to partition.</param>
     /// <param name="predicate">A function that determines the criteria for partitioning the elements. 
-    /// Elements that return <c>true</c> are placed in the "True" list, while those that return <c>false</c> 
+    /// Elements that return <see langword="true"/> are placed in the "True" list, while those that return <c>false</c> 
     /// are placed in the "False" list.</param>
     /// <returns>A tuple containing two <see cref="IReadOnlyList{T}"/>: 
-    /// the first list contains elements for which the predicate returned <c>true</c>, 
+    /// the first list contains elements for which the predicate returned <see langword="true"/>, 
     /// and the second list contains elements for which the predicate returned <c>false</c>.</returns>
     /// <remarks>
     /// This method initializes two lists, iterates through the input sequence, 
     /// and assigns each element to the appropriate list based on the evaluation of the predicate.
-    /// If the predicate returns <c>true</c> for an item, it is added to the "True" list; 
+    /// If the predicate returns <see langword="true"/> for an item, it is added to the "True" list; 
     /// otherwise, it goes into the "False" list. The lists are returned as arrays wrapped in an IReadOnlyList interface.
     /// </remarks>
     public static (IReadOnlyList<T> True, IReadOnlyList<T> False) Partition<T>(this IEnumerable<T> enumerable, Func<T, bool> predicate)

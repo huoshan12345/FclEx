@@ -695,7 +695,7 @@ public class MultiValueDictionary<TKey, TValue> :
     /// from the <see cref="MultiValueDictionary{TKey,TValue}"/>.
     /// </summary>
     /// <param name="key">The <typeparamref name="TKey"/> of the elements to remove</param>
-    /// <returns><c>true</c> if the removal was successful; otherwise <c>false</c></returns>
+    /// <returns><see langword="true"/> if the removal was successful; otherwise <c>false</c></returns>
     /// <exception cref="ArgumentNullException"><paramref name="key"/> is <see langword="null"/>.</exception>
     public bool Remove(TKey key)
     {
@@ -717,7 +717,7 @@ public class MultiValueDictionary<TKey, TValue> :
     /// <param name="key">The <typeparamref name="TKey"/> of the element to remove</param>
     /// <param name="value">The <typeparamref name="TValue"/> of the element to remove</param>
     /// <exception cref="ArgumentNullException"><paramref name="key"/> must be non-null</exception>
-    /// <returns><c>true</c> if the removal was successful; otherwise <c>false</c></returns>
+    /// <returns><see langword="true"/> if the removal was successful; otherwise <c>false</c></returns>
     /// <remarks>
     /// If the <typeparamref name="TValue"/> being removed is the last one associated with its <typeparamref name="TKey"/>, then that 
     /// <typeparamref name="TKey"/> will be removed from the <see cref="MultiValueDictionary{TKey,TValue}"/> and its 
@@ -761,7 +761,7 @@ public class MultiValueDictionary<TKey, TValue> :
     /// </summary>
     /// <param name="key">The <typeparamref name="TKey"/> of the element.</param>
     /// <param name="value">The <typeparamref name="TValue"/> of the element.</param>
-    /// <returns><c>true</c> if found; otherwise <c>false</c></returns>
+    /// <returns><see langword="true"/> if found; otherwise <c>false</c></returns>
     /// <exception cref="ArgumentNullException"><paramref name="key"/> must be non-null</exception>
     public bool Contains(TKey key, TValue value)
     {
@@ -775,7 +775,7 @@ public class MultiValueDictionary<TKey, TValue> :
     /// Determines if the given <typeparamref name="TValue"/> exists within this <see cref="MultiValueDictionary{TKey,TValue}"/>.
     /// </summary>
     /// <param name="value">A <typeparamref name="TValue"/> to search the <see cref="MultiValueDictionary{TKey,TValue}"/> for</param>
-    /// <returns><c>true</c> if the <see cref="MultiValueDictionary{TKey,TValue}"/> contains the <paramref name="value"/>; otherwise <c>false</c></returns>      
+    /// <returns><see langword="true"/> if the <see cref="MultiValueDictionary{TKey,TValue}"/> contains the <paramref name="value"/>; otherwise <c>false</c></returns>      
     public bool ContainsValue(TValue value)
     {
         foreach (InnerCollectionView sublist in _dictionary.Values)
@@ -806,7 +806,7 @@ public class MultiValueDictionary<TKey, TValue> :
     /// at least one <typeparamref name="TValue"/> associated with it.
     /// </summary>
     /// <param name="key">The <typeparamref name="TKey"/> to search the <see cref="MultiValueDictionary{TKey,TValue}"/> for</param>
-    /// <returns><c>true</c> if the <see cref="MultiValueDictionary{TKey,TValue}"/> contains the requested <typeparamref name="TKey"/>;
+    /// <returns><see langword="true"/> if the <see cref="MultiValueDictionary{TKey,TValue}"/> contains the requested <typeparamref name="TKey"/>;
     /// otherwise <c>false</c>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="key"/> must be non-null</exception>
     public bool ContainsKey(TKey key)
@@ -842,7 +842,7 @@ public class MultiValueDictionary<TKey, TValue> :
     /// <typeparamref name="TKey"/> if it is found; otherwise contains the default value of <typeparamref name="TValue"/>.
     /// </param>
     /// <returns>
-    /// <c>true</c> if the <see cref="MultiValueDictionary{TKey,TValue}"/> contains an element with the specified 
+    /// <see langword="true"/> if the <see cref="MultiValueDictionary{TKey,TValue}"/> contains an element with the specified 
     /// <typeparamref name="TKey"/>; otherwise, <c>false</c>.
     /// </returns>
     /// <exception cref="ArgumentNullException"><paramref name="key"/> must be non-null</exception>

@@ -58,7 +58,7 @@ public static class TestHelper
     /// Indicates whether the current environment is running within a GitHub Action context.
     /// </summary>
     /// <remarks>
-    /// This static readonly field evaluates to <c>true</c> if the environment variable associated
+    /// This static readonly field evaluates to <see langword="true"/> if the environment variable associated
     /// with <see cref="GithubActionEnvKey"/> ("GITHUB_ACTION") is set and contains a non-empty value.<br/>
     /// This allows for conditionally executing logic based 
     /// on whether the code is being run as part of a GitHub Action workflow.

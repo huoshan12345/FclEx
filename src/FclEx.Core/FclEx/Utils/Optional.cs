@@ -33,7 +33,7 @@ public readonly record struct Optional<T>(T? Value)
     /// Indicates whether the optional value is present (i.e., not null).
     /// </summary>
     /// <remarks>
-    /// If <c>HasValue</c> is <c>true</c>, then the <c>Value</c> property is guaranteed to be non-null.
+    /// If <c>HasValue</c> is <see langword="true"/>, then the <c>Value</c> property is guaranteed to be non-null.
     /// </remarks>
     [MemberNotNullWhen(true, nameof(Value))]
     public bool HasValue => Value is not null;

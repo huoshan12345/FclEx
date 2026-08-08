@@ -17,7 +17,7 @@ public abstract record YamlOptions
 
     /// <summary>
     /// Gets the assemblies to scan for attributed YAML converters.
-    /// When <see langword="null"/> and <see cref="UseTypeConverterAttributes"/> is <c>true</c>, all currently loaded app-domain assemblies are scanned.
+    /// When <see langword="null"/> and <see cref="UseTypeConverterAttributes"/> is <see langword="true"/>, all currently loaded app-domain assemblies are scanned.
     /// </summary>
     public IReadOnlyCollection<Assembly>? TypeConverterAssemblies { get; init; }
 }

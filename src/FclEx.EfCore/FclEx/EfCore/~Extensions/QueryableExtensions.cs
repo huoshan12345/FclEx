@@ -11,7 +11,7 @@ public static class QueryableExtensions
     /// <param name="id">The primary key value of the entity to retrieve.</param>
     /// <param name="noTracking">
     /// Whether the query should be executed with "no tracking" to optimize for read-only scenarios.
-    /// Defaults to <c>true</c>.
+    /// Defaults to <see langword="true"/>.
     /// </param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>The entity if found; otherwise, <see langword="null"/>.</returns>

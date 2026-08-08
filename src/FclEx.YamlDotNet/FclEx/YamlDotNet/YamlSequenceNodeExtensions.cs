@@ -52,7 +52,7 @@ public static class YamlSequenceNodeExtensions
     /// <typeparam name="T">The child node type to match.</typeparam>
     /// <param name="node">The sequence node to search.</param>
     /// <param name="match">The predicate applied to children assignable to <typeparamref name="T"/>.</param>
-    /// <returns><c>true</c> when a matching child exists; otherwise, <c>false</c>.</returns>
+    /// <returns><see langword="true"/> when a matching child exists; otherwise, <c>false</c>.</returns>
     public static bool HasChild<T>(this YamlSequenceNode node, Predicate<T> match) where T : YamlNode
     {
         return node.FindChild(match).Child != null;
@@ -65,7 +65,7 @@ public static class YamlSequenceNodeExtensions
     /// <param name="node">The sequence node to update.</param>
     /// <param name="match">The predicate applied to children assignable to <typeparamref name="T"/>.</param>
     /// <param name="removedNodes">The removed nodes in their original order.</param>
-    /// <returns><c>true</c> when at least one child is removed; otherwise, <c>false</c>.</returns>
+    /// <returns><see langword="true"/> when at least one child is removed; otherwise, <c>false</c>.</returns>
     public static bool TryRemoveChildren<T>(this YamlSequenceNode node, Predicate<T> match, out List<T> removedNodes) where T : YamlNode
     {
         removedNodes = [];
@@ -89,7 +89,7 @@ public static class YamlSequenceNodeExtensions
     /// <typeparam name="T">The child node type to match.</typeparam>
     /// <param name="node">The sequence node to update.</param>
     /// <param name="match">The predicate applied to children assignable to <typeparamref name="T"/>.</param>
-    /// <returns><c>true</c> when at least one child is removed; otherwise, <c>false</c>.</returns>
+    /// <returns><see langword="true"/> when at least one child is removed; otherwise, <c>false</c>.</returns>
     public static bool TryRemoveChildren<T>(this YamlSequenceNode node, Predicate<T> match) where T : YamlNode
     {
         return node.TryRemoveChildren(match, out _);
