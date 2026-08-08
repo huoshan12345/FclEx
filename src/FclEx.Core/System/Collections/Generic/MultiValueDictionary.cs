@@ -695,7 +695,7 @@ public class MultiValueDictionary<TKey, TValue> :
     /// from the <see cref="MultiValueDictionary{TKey,TValue}"/>.
     /// </summary>
     /// <param name="key">The <typeparamref name="TKey"/> of the elements to remove</param>
-    /// <returns><see langword="true"/> if the removal was successful; otherwise <c>false</c></returns>
+    /// <returns><see langword="true"/> if the removal was successful; otherwise <see langword="false"/></returns>
     /// <exception cref="ArgumentNullException"><paramref name="key"/> is <see langword="null"/>.</exception>
     public bool Remove(TKey key)
     {
@@ -717,7 +717,7 @@ public class MultiValueDictionary<TKey, TValue> :
     /// <param name="key">The <typeparamref name="TKey"/> of the element to remove</param>
     /// <param name="value">The <typeparamref name="TValue"/> of the element to remove</param>
     /// <exception cref="ArgumentNullException"><paramref name="key"/> must be non-null</exception>
-    /// <returns><see langword="true"/> if the removal was successful; otherwise <c>false</c></returns>
+    /// <returns><see langword="true"/> if the removal was successful; otherwise <see langword="false"/></returns>
     /// <remarks>
     /// If the <typeparamref name="TValue"/> being removed is the last one associated with its <typeparamref name="TKey"/>, then that 
     /// <typeparamref name="TKey"/> will be removed from the <see cref="MultiValueDictionary{TKey,TValue}"/> and its 
@@ -761,7 +761,7 @@ public class MultiValueDictionary<TKey, TValue> :
     /// </summary>
     /// <param name="key">The <typeparamref name="TKey"/> of the element.</param>
     /// <param name="value">The <typeparamref name="TValue"/> of the element.</param>
-    /// <returns><see langword="true"/> if found; otherwise <c>false</c></returns>
+    /// <returns><see langword="true"/> if found; otherwise <see langword="false"/></returns>
     /// <exception cref="ArgumentNullException"><paramref name="key"/> must be non-null</exception>
     public bool Contains(TKey key, TValue value)
     {
@@ -775,7 +775,7 @@ public class MultiValueDictionary<TKey, TValue> :
     /// Determines if the given <typeparamref name="TValue"/> exists within this <see cref="MultiValueDictionary{TKey,TValue}"/>.
     /// </summary>
     /// <param name="value">A <typeparamref name="TValue"/> to search the <see cref="MultiValueDictionary{TKey,TValue}"/> for</param>
-    /// <returns><see langword="true"/> if the <see cref="MultiValueDictionary{TKey,TValue}"/> contains the <paramref name="value"/>; otherwise <c>false</c></returns>      
+    /// <returns><see langword="true"/> if the <see cref="MultiValueDictionary{TKey,TValue}"/> contains the <paramref name="value"/>; otherwise <see langword="false"/></returns>      
     public bool ContainsValue(TValue value)
     {
         foreach (InnerCollectionView sublist in _dictionary.Values)
@@ -807,7 +807,7 @@ public class MultiValueDictionary<TKey, TValue> :
     /// </summary>
     /// <param name="key">The <typeparamref name="TKey"/> to search the <see cref="MultiValueDictionary{TKey,TValue}"/> for</param>
     /// <returns><see langword="true"/> if the <see cref="MultiValueDictionary{TKey,TValue}"/> contains the requested <typeparamref name="TKey"/>;
-    /// otherwise <c>false</c>.</returns>
+    /// otherwise <see langword="false"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="key"/> must be non-null</exception>
     public bool ContainsKey(TKey key)
     {
@@ -843,7 +843,7 @@ public class MultiValueDictionary<TKey, TValue> :
     /// </param>
     /// <returns>
     /// <see langword="true"/> if the <see cref="MultiValueDictionary{TKey,TValue}"/> contains an element with the specified 
-    /// <typeparamref name="TKey"/>; otherwise, <c>false</c>.
+    /// <typeparamref name="TKey"/>; otherwise, <see langword="false"/>.
     /// </returns>
     /// <exception cref="ArgumentNullException"><paramref name="key"/> must be non-null</exception>
     public bool TryGetValue(TKey key, out IReadOnlyCollection<TValue> value)

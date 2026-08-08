@@ -68,7 +68,7 @@ public static class PropertyInfoExtensions
     /// </summary>
     /// <param name="property">The property metadata.</param>
     /// <param name="nonPublic">Whether to include non-public accessors in the check.</param>
-    /// <returns><see langword="true"/> if the property is static; otherwise, <c>false</c>.</returns>
+    /// <returns><see langword="true"/> if the property is static; otherwise, <see langword="false"/>.</returns>
     public static bool IsStatic(this PropertyInfo property, bool nonPublic = false)
     {
         return property.GetAccessors(nonPublic).Any(x => x.IsStatic);

@@ -59,7 +59,7 @@ public static partial class StringBuilderExtensions
     /// <param name="startIndex">The zero-based starting index in the <see cref="StringBuilder"/>.</param>
     /// <returns>
     /// <see langword="true"/> if the substring of the <see cref="StringBuilder"/> matches the given span;
-    /// otherwise, <c>false</c>.
+    /// otherwise, <see langword="false"/>.
     /// </returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException">
@@ -89,7 +89,7 @@ public static partial class StringBuilderExtensions
     /// <param name="span">The character span to compare to the start of the <see cref="StringBuilder"/>.</param>
     /// <returns>
     /// <see langword="true"/> if the <see cref="StringBuilder"/> starts with the specified span;
-    /// otherwise, <c>false</c>.
+    /// otherwise, <see langword="false"/>.
     /// </returns>
     public static bool StartsWith(this StringBuilder builder, ReadOnlySpan<char> span)
     {
@@ -104,7 +104,7 @@ public static partial class StringBuilderExtensions
     /// <param name="span">The character span to compare to the end of the <see cref="StringBuilder"/>.</param>
     /// <returns>
     /// <see langword="true"/> if the <see cref="StringBuilder"/> ends with the specified span;
-    /// otherwise, <c>false</c>.
+    /// otherwise, <see langword="false"/>.
     /// </returns>
     public static bool EndsWith(this StringBuilder builder, ReadOnlySpan<char> span)
     {

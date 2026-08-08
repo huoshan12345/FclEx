@@ -4,7 +4,7 @@ namespace FclEx.EfCore;
 /// Controls whether unique indexes declared on an entity are extended with its soft-delete properties.
 /// </summary>
 /// <remarks>
-/// Entities are processed by default. Apply this attribute with <c>false</c> to leave the entity's indexes unchanged.
+/// Entities are processed by default. Apply this attribute with <see langword="false"/> to leave the entity's indexes unchanged.
 /// </remarks>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
 public sealed class ConfigureSoftDeleteIndexesAttribute(bool enabled = true) : Attribute

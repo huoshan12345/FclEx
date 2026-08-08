@@ -31,7 +31,7 @@ public static class FileHelper
     /// </summary>
     /// <param name="f1">The first file to compare.</param>
     /// <param name="f2">The second file to compare.</param>
-    /// <returns><see langword="true"/> if both files exist, have the same length, and identical content; otherwise <c>false</c>.</returns>
+    /// <returns><see langword="true"/> if both files exist, have the same length, and identical content; otherwise <see langword="false"/>.</returns>
     /// <exception cref="ArgumentNullException">Thrown if either file is null.</exception>
     /// <exception cref="ArgumentException">Thrown if either file does not exist.</exception>
     public static bool AreFilesEqual(FileInfo f1, FileInfo f2)

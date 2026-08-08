@@ -8,11 +8,11 @@ partial class EnumerableExtensions
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <param name="enumerable">The input sequence to partition.</param>
     /// <param name="predicate">A function that determines the criteria for partitioning the elements. 
-    /// Elements that return <see langword="true"/> are placed in the "True" list, while those that return <c>false</c> 
+    /// Elements that return <see langword="true"/> are placed in the "True" list, while those that return <see langword="false"/> 
     /// are placed in the "False" list.</param>
     /// <returns>A tuple containing two <see cref="IReadOnlyList{T}"/>: 
     /// the first list contains elements for which the predicate returned <see langword="true"/>, 
-    /// and the second list contains elements for which the predicate returned <c>false</c>.</returns>
+    /// and the second list contains elements for which the predicate returned <see langword="false"/>.</returns>
     /// <remarks>
     /// This method initializes two lists, iterates through the input sequence, 
     /// and assigns each element to the appropriate list based on the evaluation of the predicate.

@@ -9,7 +9,7 @@ public static class EndpointExtensions
     /// <param name="endpoint">The endpoint from which to retrieve attributes.</param>
     /// <param name="combineController">
     /// When <see langword="true"/>, combines the attributes from both the action and its controller.
-    /// When <c>false</c>, returns only the action's attributes if they exist, 
+    /// When <see langword="false"/>, returns only the action's attributes if they exist, 
     /// or the controller's attributes if the action's attributes are absent.
     /// </param>
     /// <param name="inherit">

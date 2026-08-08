@@ -10,7 +10,7 @@ public static class AuthorizationHandlerContextExtensions
     /// <param name="authContext">The <see cref="AuthorizationHandlerContext"/> containing the resource to inspect.</param>
     /// <param name="combineController">
     /// A boolean value indicating whether to combine attributes from both the controller and the action method.
-    /// If <c>false</c>, only action-level attributes are returned unless none exist, in which case controller-level attributes are returned.
+    /// If <see langword="false"/>, only action-level attributes are returned unless none exist, in which case controller-level attributes are returned.
     /// If <see langword="true"/>, attributes from both the action and controller are returned.
     /// </param>
     /// <param name="inherit">

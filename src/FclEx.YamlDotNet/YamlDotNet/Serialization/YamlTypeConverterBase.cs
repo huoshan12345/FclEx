@@ -15,7 +15,7 @@ public abstract class YamlTypeConverterBase<T> : IYamlTypeConverter
     /// Determines whether this converter accepts the specified type.
     /// </summary>
     /// <param name="type">The type being tested by YamlDotNet.</param>
-    /// <returns><see langword="true"/> when <paramref name="type"/> exactly matches <typeparamref name="T"/>; otherwise, <c>false</c>.</returns>
+    /// <returns><see langword="true"/> when <paramref name="type"/> exactly matches <typeparamref name="T"/>; otherwise, <see langword="false"/>.</returns>
     public virtual bool Accepts(Type type)
     {
         return type == TargetType;

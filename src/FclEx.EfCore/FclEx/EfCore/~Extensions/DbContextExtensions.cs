@@ -82,7 +82,7 @@ public static partial class DbContextExtensions
     /// <returns>The same <see cref="EntityEntry{T}"/> instance for chaining.</returns>
     /// <remarks>
     /// This method sets <see cref="PropertyEntry.IsModified"/> or <see cref="NavigationEntry.IsModified"/>
-    /// to <c>false</c> for each specified member, ensuring they are not included in database update operations.
+    /// to <see langword="false"/> for each specified member, ensuring they are not included in database update operations.
     /// </remarks>
     public static EntityEntry<T> ExcludeFromUpdate<T>(this EntityEntry<T> entry, params IEnumerable<string> propertyNames) where T : class
     {
@@ -169,7 +169,7 @@ public static partial class DbContextExtensions
     /// </param>
     /// <param name="allowDeletion">
     /// When <see langword="true"/>, any entities that exist in the database but not in the DTOs will be deleted.
-    /// Set to <c>false</c> when performing partial updates where deletion should not occur.
+    /// Set to <see langword="false"/> when performing partial updates where deletion should not occur.
     /// </param>
     /// <param name="excludeOnUpdate">
     /// Names of properties or navigation properties that should not be modified during an update operation.
