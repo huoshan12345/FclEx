@@ -1,6 +1,7 @@
 // Global using directives
 
 global using AspectCore.DynamicProxy;
+global using AspectCore.Extensions.DependencyInjection;
 global using FclEx.DependencyInjection;
 global using FclEx.Extensions;
 global using FclEx.Logging;

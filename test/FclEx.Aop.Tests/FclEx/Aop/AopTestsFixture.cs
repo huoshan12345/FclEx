@@ -1,11 +1,16 @@
-﻿namespace FclEx.Aop;
+﻿using FclEx.Caching;
+
+namespace FclEx.Aop;
 
 public class AopTestsFixture
 {
     public static readonly IServiceProvider Services = new ServiceCollection()
         .AddTransient<IService, Service>()
+        .AddUserClient<LoginAndRetryClient>()
+        .AddFclExCaching()
+        .AddLogging()
         .AddAop()
-        .BuildServiceProvider();
+        .BuildDynamicProxyProvider();
 }
 
 public class Model(string id)
