@@ -79,10 +79,48 @@ public static class QueryableExtensions
         bool noTracking = true,
         CancellationToken cancellationToken = default) where T : class
     {
-        // TODO: Add server-side expression projection and validate page size/index.
+        // TODO: Validate page size/index.
         var (items, count) = await queryable.ToArrayAndCountAsync(pageSize, pageIndex, noTracking, cancellationToken);
         var arr = items.Select(selector).ToArray();
         return new(new PagedList<TModel>(arr, pageIndex, pageSize, count));
+    }
+
+    /// <summary>
+    /// Creates a page by projecting matching entities in the database before materialization.
+    /// </summary>
+    /// <typeparam name="T">The entity type being queried.</typeparam>
+    /// <typeparam name="TModel">The projected result type.</typeparam>
+    /// <param name="queryable">The query to count, page, and project.</param>
+    /// <param name="selector">An expression translated by the database provider to select the required values.</param>
+    /// <param name="pageSize">The maximum number of items in the page.</param>
+    /// <param name="pageIndex">The zero-based page index.</param>
+    /// <param name="noTracking">Whether entity tracking should be disabled before applying the projection.</param>
+    /// <param name="cancellationToken">A token to observe while waiting for the queries to complete.</param>
+    /// <returns>The projected page and the total number of matching rows.</returns>
+    public static async Task<PagedListModel<TModel>> ToPagedListAsync<T, TModel>(
+        this IQueryable<T> queryable,
+        Expression<Func<T, TModel>> selector,
+        int pageSize,
+        int pageIndex,
+        bool noTracking = true,
+        CancellationToken cancellationToken = default)
+        where T : class
+    {
+        var query = noTracking
+            ? queryable.AsNoTracking()
+            : queryable;
+
+        var count = await query.CountAsync(cancellationToken);
+        if (count == 0)
+            return new(new PagedList<TModel>([], pageIndex, pageSize, 0));
+
+        var items = await query
+            .Skip(pageIndex * pageSize)
+            .Take(pageSize)
+            .Select(selector)
+            .ToArrayAsync(cancellationToken);
+
+        return new(new PagedList<TModel>(items, pageIndex, pageSize, count));
     }
 
     public static IQueryable<T> ContainsAny<T>(

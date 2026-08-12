@@ -248,6 +248,41 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
 
     [Theory]
     [MemberData(nameof(DbDriverCases))]
+    public async Task ToPagedListAsync_ExpressionSelector_ShouldProjectInDatabase(DbDriver dbDriver)
+    {
+        var entity = await CreateEntityHasStatesAsync(dbDriver);
+        await using var context = Fixture.CreateDbContext(dbDriver);
+
+        var result = await context.EntityHasStates
+            .Where(e => e.Id == entity.Id)
+            .ToPagedListAsync(
+                e => e.Name,
+                pageSize: 10,
+                pageIndex: 0,
+                noTracking: false);
+
+        Assert.Equal(1, result.TotalCount);
+        Assert.Equal([entity.Name], result.Items);
+        Assert.Empty(context.ChangeTracker.Entries());
+    }
+
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
+    public async Task ToPagedListAsync_ExpressionSelector_ShouldReturnEmptyPage(DbDriver dbDriver)
+    {
+        await using var context = Fixture.CreateDbContext(dbDriver);
+
+        var result = await context.EntityHasStates
+            .Where(e => false)
+            .ToPagedListAsync(e => e.Name, pageSize: 10, pageIndex: 0);
+
+        Assert.Equal(0, result.TotalCount);
+        Assert.Empty(result.Items);
+        Assert.Empty(context.ChangeTracker.Entries());
+    }
+
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
     public async Task ExecuteUpdateAsync_Updates_Single_Property(DbDriver dbDriver)
     {
         var entity = await CreateEntityHasStatesAsync(dbDriver);
