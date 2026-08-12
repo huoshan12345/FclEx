@@ -21,55 +21,61 @@ public static class DatabaseFacadeExtensions
         IEnumerable<IDbDataParameter>? parameters = null, CancellationToken cancellationToken = default)
     {
         var connection = database.GetDbConnection();
+        var commandTimeout = database.GetCommandTimeout();
+        var commandParameters = parameters?.ToArray();
+        var strategy = database.CreateExecutionStrategy();
 
-        var shouldClose = connection.State != ConnectionState.Open;
-
-        if (shouldClose)
-            await connection.OpenAsync(cancellationToken);
-
-        var command = connection.CreateCommand();
-
-        try
+        return await strategy.ExecuteAsync(async () =>
         {
-            command.Transaction = database.CurrentTransaction?.GetDbTransaction();
-            command.CommandText = sql;
-            command.CommandType = CommandType.Text;
-
-            if (parameters != null)
+            var shouldClose = connection.State != ConnectionState.Open;
+            try
             {
-                foreach (var p in parameters)
-                    command.Parameters.Add(p);
-            }
+                if (shouldClose)
+                    await connection.OpenAsync(cancellationToken);
 
-            var strategy = database.CreateExecutionStrategy();
+                await using var command = connection.CreateCommand();
+                command.Transaction = database.CurrentTransaction?.GetDbTransaction();
+                command.CommandText = sql;
+                command.CommandType = CommandType.Text;
 
-            return await strategy.ExecuteAsync(async () =>
-            {
-                var result = await command.ExecuteScalarAsync(cancellationToken);
+                if (commandTimeout is { } timeout)
+                    command.CommandTimeout = timeout;
 
-                switch (result)
+                if (commandParameters != null)
                 {
-                    case null or DBNull:
-                        return default;
-                    case T t:
-                        return t;
+                    foreach (var parameter in commandParameters)
+                        command.Parameters.Add(parameter);
                 }
 
-                var type = typeof(T).UnwrapNullable();
+                try
+                {
+                    var result = await command.ExecuteScalarAsync(cancellationToken);
 
-                if (type == typeof(Guid))
-                    return (T)(object)Guid.Parse(result.ToString()!);
+                    switch (result)
+                    {
+                        case null or DBNull:
+                            return default;
+                        case T t:
+                            return t;
+                    }
 
-                return Convert.ChangeType<T>(result);
-            });
-        }
-        finally
-        {
-            await command.DisposeAsync();
+                    var type = typeof(T).UnwrapNullable();
 
-            if (shouldClose)
-                await connection.CloseAsync();
-        }
+                    if (type == typeof(Guid))
+                        return (T)(object)Guid.Parse(result.ToString()!);
 
+                    return Convert.ChangeType<T>(result);
+                }
+                finally
+                {
+                    command.Parameters.Clear();
+                }
+            }
+            finally
+            {
+                if (shouldClose && connection.State != ConnectionState.Closed)
+                    await connection.CloseAsync();
+            }
+        });
     }
 }

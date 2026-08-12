@@ -47,11 +47,11 @@ public static class QueryableExtensions
             ? queryable.AsNoTracking()
             : queryable;
 
-        var count = await queryable.CountAsync(cancellationToken);
+        var count = await query.CountAsync(cancellationToken);
         if (count == 0)
             return ([], 0);
 
-        var items = await queryable
+        var items = await query
             .Skip(pageIndex * pageSize)
             .Take(pageSize)
             .ToArrayAsync(cancellationToken);
@@ -79,6 +79,7 @@ public static class QueryableExtensions
         bool noTracking = true,
         CancellationToken cancellationToken = default) where T : class
     {
+        // TODO: Add server-side expression projection and validate page size/index.
         var (items, count) = await queryable.ToArrayAndCountAsync(pageSize, pageIndex, noTracking, cancellationToken);
         var arr = items.Select(selector).ToArray();
         return new(new PagedList<TModel>(arr, pageIndex, pageSize, count));
@@ -91,6 +92,7 @@ public static class QueryableExtensions
         bool suppressValueConverter = false,
         bool escapeEscapeCharacter = false)
     {
+        // TODO: Share expression construction with QueryableHelper and parameterize patterns.
         Expression<Func<T, bool>>? where = null;
         // ReSharper disable once LoopCanBeConvertedToQuery
         foreach (var keyword in keywords)
@@ -120,6 +122,13 @@ public static class QueryableExtensions
         return queryable.NotDeleted().Enabled();
     }
 
+    /// <summary>
+    /// Deletes matching rows, using a bulk update for soft-deletable entities and a bulk delete otherwise.
+    /// </summary>
+    /// <remarks>
+    /// The operation executes directly in the database and does not update entities already held by the change tracker.
+    /// Reload or detach tracked instances before relying on their state after this operation.
+    /// </remarks>
     public static Task<int> ExecuteSoftDeleteAsync<T>(this IQueryable<T> query, CancellationToken cancellationToken = default)
     {
         var type = typeof(T);
@@ -178,13 +187,14 @@ public static class QueryableExtensions
     /// </exception>
     /// <exception cref="ArgumentException">
     /// Thrown if a property name in <paramref name="fieldValues"/> does not exist on
-    /// <typeparamref name="T"/>.
+    /// <typeparamref name="T"/>, or if <see langword="null"/> is assigned to a non-nullable value type.
     /// </exception>
     /// <remarks>
     /// This is a helper method that constructs the required update lambda for
     /// Entity Framework Core's batch update API at runtime. It supports simple
     /// member assignments and performs runtime conversion of supplied values to
-    /// the appropriate property types.
+    /// the appropriate property types. The operation executes directly in the database and does not update
+    /// entities already held by the change tracker.
     /// </remarks>
     public static Task<int> ExecuteUpdateAsync<T>(this IQueryable<T> query, IReadOnlyDictionary<string, object?> fieldValues, CancellationToken cancellationToken = default)
     {
@@ -240,6 +250,9 @@ public static class QueryableExtensions
     {
         if (value == null)
         {
+            if (desiredType.IsValueType && Nullable.GetUnderlyingType(desiredType) is null)
+                throw new ArgumentException($"Null cannot be assigned to non-nullable type '{desiredType}'.", nameof(value));
+
             return Expression.Default(desiredType);
         }
 

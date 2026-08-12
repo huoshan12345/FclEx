@@ -8,6 +8,7 @@ public static class QueryableHelper
     public static MethodInfo EfLike { get; } = typeof(DbFunctionsExtensions)
         .GetRequiredMethod(nameof(DbFunctionsExtensions.Like), 0, typeof(DbFunctions), typeof(string), typeof(string), typeof(string));
 
+    // TODO: Remove or bound this cache so arbitrary search terms are not retained indefinitely.
     private static readonly ConcurrentDictionary<(string Value, bool EscapeEscapeCharacter), string> _containsPatterns = new();
 
     public static string GetContainsPattern(string value)
@@ -84,9 +85,10 @@ public static class QueryableHelper
             foreach (var property in index.Properties)
             {
                 var member = Expression.PropertyOrField(objParam, property.Name);
-                var value = Expression.Constant(property.GetGetter().GetClrValue(entity));
+                var propertyValue = property.GetGetter().GetClrValue(entity);
+                var value = Expression.Constant(propertyValue, member.Type);
                 var equal = Expression.Equal(member, value);
-                condition = condition is null ? equal : Expression.Add(condition, equal);
+                condition = condition is null ? equal : Expression.AndAlso(condition, equal);
             }
 
             Check.NotNull(condition);

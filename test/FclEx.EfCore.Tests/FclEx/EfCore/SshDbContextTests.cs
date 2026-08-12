@@ -1,4 +1,5 @@
 using Npgsql;
+using System.Net;
 
 namespace FclEx.EfCore;
 
@@ -9,10 +10,13 @@ public class SshDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     private SshDbContext<TestDbContext> CreateNpgsqlContext(ConnectionInfo? ssh)
     {
         var connectionString = Fixture.ConnectionStrings.Get(DbDriver.Npgsql, false).Build();
-        return SshDbContext.CreateSshDbContext(connectionString, m => new TestDbContext(DbDriver.Npgsql, connectionString), ssh, m =>
+        return SshDbContext.CreateSshDbContext(connectionString, m => new TestDbContext(DbDriver.Npgsql, m), ssh, (m, localEndpoint) =>
         {
             var builder = new NpgsqlConnectionStringBuilder(m);
-            return (new(builder.Host!, builder.Port), builder.ConnectionString);
+            var remoteEndpoint = new SocketEndpoint(builder.Host!, builder.Port);
+            builder.Host = localEndpoint.Host;
+            builder.Port = localEndpoint.Port;
+            return (remoteEndpoint, builder.ConnectionString);
         });
     }
 
@@ -22,17 +26,22 @@ public class SshDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         if (DbDrivers.Contains(DbDriver.Npgsql) == false)
             return;
 
-        var ctx = CreateNpgsqlContext(null);
+        await using var ctx = CreateNpgsqlContext(null);
+        Assert.Equal(Fixture.ConnectionStrings.Get(DbDriver.Npgsql, false).Build(), ctx.Context.ConnectionString);
         await ctx.Context.Database.OpenConnectionAsync();
         await ctx.Context.Database.CloseConnectionAsync();
     }
 
     [LocalOnlyFact]
-    public async Task Connect_WitSsh_Test()
+    public async Task Connect_WithSsh_Test()
     {
         // ensure key is copied to ssh server.
         var info = new PrivateKeyConnectionInfo("127.0.0.1", 22, "root", new PrivateKeyFile(SshKeyPath));
-        var ctx = CreateNpgsqlContext(info);
+        await using var ctx = CreateNpgsqlContext(info);
+        var original = new NpgsqlConnectionStringBuilder(Fixture.ConnectionStrings.Get(DbDriver.Npgsql, false).Build());
+        var forwarded = new NpgsqlConnectionStringBuilder(ctx.Context.ConnectionString);
+        Assert.Equal(IPAddress.Loopback.ToString(), forwarded.Host);
+        Assert.NotEqual(original.Port, forwarded.Port);
         await ctx.Context.Database.OpenConnectionAsync();
         await ctx.Context.Database.CloseConnectionAsync();
     }

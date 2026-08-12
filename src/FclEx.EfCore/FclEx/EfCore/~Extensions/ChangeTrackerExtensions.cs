@@ -35,11 +35,21 @@ public static class ChangeTrackerExtensions
 
                     var exclude = new HashSet<string>();
 
-                    // ignore when updating IsDeleted to true, but allow updating to false
-                    if (entity is ISoftDeletable { IsDeleted: true })
-                        exclude.Add(nameof(ISoftDeletable.IsDeleted));
+                    var restoringSoftDeletedEntity = false;
+                    if (entity is ISoftDeletable deletable)
+                    {
+                        // Ignore direct updates to true, but persist the false transition used to restore an entity.
+                        if (deletable.IsDeleted)
+                        {
+                            exclude.Add(nameof(ISoftDeletable.IsDeleted));
+                        }
+                        else
+                        {
+                            restoringSoftDeletedEntity = Equals(entry.Property(nameof(ISoftDeletable.IsDeleted)).OriginalValue, true);
+                        }
+                    }
 
-                    if (entity is IHasDeletedAt)
+                    if (entity is IHasDeletedAt && restoringSoftDeletedEntity == false)
                         exclude.Add(nameof(IHasDeletedAt.DeletedAt));
 
                     if (entity is IHasCreatedAt)

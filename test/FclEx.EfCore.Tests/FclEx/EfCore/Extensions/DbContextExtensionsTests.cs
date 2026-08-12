@@ -43,6 +43,44 @@ public partial class DbContextExtensionsTests(EfCoreFixture fixture) : EfCoreTes
         }
     }
 
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
+    public async Task GetOrAddAsync_ObservesCancellationToken(DbDriver dbDriver)
+    {
+        await using var context = Fixture.CreateDbContext(dbDriver);
+        using var cancellation = new CancellationTokenSource();
+        await cancellation.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => context.GetOrAddAsync(
+            entity => entity.Name == "cancelled",
+            () => new EntityHasStates(),
+            cancellation.Token));
+    }
+
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
+    public async Task InsertAsync_ObservesCancellationToken(DbDriver dbDriver)
+    {
+        await using var context = Fixture.CreateDbContext(dbDriver);
+        using var cancellation = new CancellationTokenSource();
+        await cancellation.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            context.InsertAsync(new EntityHasStates(), cancellation.Token));
+    }
+
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
+    public async Task SaveAsync_ObservesCancellationToken(DbDriver dbDriver)
+    {
+        await using var context = Fixture.CreateDbContext(dbDriver);
+        using var cancellation = new CancellationTokenSource();
+        await cancellation.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            context.SaveAsync(new EntityHasStates(), cancellation.Token));
+    }
+
     private static void AssertDateTime(DbDriver dbDriver, DateTimeOffset expected, DateTimeOffset actual)
     {
         switch (dbDriver)

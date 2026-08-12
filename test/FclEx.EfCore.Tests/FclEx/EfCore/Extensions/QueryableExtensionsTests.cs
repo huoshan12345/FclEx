@@ -218,6 +218,36 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
 
     [Theory]
     [MemberData(nameof(DbDriverCases))]
+    public async Task ToPagedListAsync_ShouldNotTrackEntities_WhenNoTrackingIsTrue(DbDriver dbDriver)
+    {
+        var entity = await CreateEntityHasStatesAsync(dbDriver);
+        await using var context = Fixture.CreateDbContext(dbDriver);
+
+        var result = await context.EntityHasStates
+            .Where(e => e.Id == entity.Id)
+            .ToPagedListAsync(pageSize: 10, pageIndex: 0, noTracking: true);
+
+        Assert.Single(result.Items);
+        Assert.Empty(context.ChangeTracker.Entries());
+    }
+
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
+    public async Task ToPagedListAsync_ShouldTrackEntities_WhenNoTrackingIsFalse(DbDriver dbDriver)
+    {
+        var entity = await CreateEntityHasStatesAsync(dbDriver);
+        await using var context = Fixture.CreateDbContext(dbDriver);
+
+        var result = await context.EntityHasStates
+            .Where(e => e.Id == entity.Id)
+            .ToPagedListAsync(pageSize: 10, pageIndex: 0, noTracking: false);
+
+        Assert.Single(result.Items);
+        Assert.Single(context.ChangeTracker.Entries<EntityHasStates>());
+    }
+
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
     public async Task ExecuteUpdateAsync_Updates_Single_Property(DbDriver dbDriver)
     {
         var entity = await CreateEntityHasStatesAsync(dbDriver);
@@ -313,5 +343,50 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
                 cts.Token
             )
         );
+    }
+
+    [Fact]
+    public void ExecuteUpdateAsync_Throws_WhenNullIsAssignedToNonNullableProperty()
+    {
+        using var context = new UpdateContext();
+
+        var exception = Assert.Throws<ArgumentException>(() =>
+        {
+            _ = context.Entities.ExecuteUpdateAsync(new Dictionary<string, object?>
+            {
+                [nameof(UpdateEntity.Value)] = null,
+            });
+        });
+
+        Assert.Equal("value", exception.ParamName);
+    }
+
+    [Fact]
+    public void ExecuteUpdateAsync_AllowsNullForNullableProperty()
+    {
+        using var context = new UpdateContext();
+
+        var exception = Record.Exception(() => QueryableExtensions.BuildUpdateBody(
+            typeof(UpdateEntity),
+            new Dictionary<string, object?> { [nameof(UpdateEntity.NullableValue)] = null }));
+
+        Assert.Null(exception);
+    }
+
+    private sealed class UpdateContext : DbContext
+    {
+        public DbSet<UpdateEntity> Entities => Set<UpdateEntity>();
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseSqlite("Data Source=:memory:");
+        }
+    }
+
+    private sealed class UpdateEntity
+    {
+        public int Id { get; set; }
+        public int Value { get; set; }
+        public int? NullableValue { get; set; }
     }
 }

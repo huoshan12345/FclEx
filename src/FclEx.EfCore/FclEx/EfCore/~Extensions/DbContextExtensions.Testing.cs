@@ -15,14 +15,19 @@ partial class DbContextExtensions
 
     public static async Task TestEntities(this DbContext context, params Type[] types)
     {
+        await context.TestEntities(default, types);
+    }
+
+    public static async Task TestEntities(this DbContext context, CancellationToken cancellationToken, params Type[] types)
+    {
         var disposable = types.Select(m => _methodTestEntity.MakeGenericMethod(m).Invoke(null, [context]))
             .Cast<IDisposable>()
             .Merge();
 
         using (disposable)
         {
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(cancellationToken);
         }
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(cancellationToken);
     }
 }
