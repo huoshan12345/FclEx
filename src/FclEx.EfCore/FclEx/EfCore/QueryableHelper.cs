@@ -8,10 +8,14 @@ public static class QueryableHelper
     public static MethodInfo EfLike { get; } = typeof(DbFunctionsExtensions)
         .GetRequiredMethod(nameof(DbFunctionsExtensions.Like), 0, typeof(DbFunctions), typeof(string), typeof(string), typeof(string));
 
-    // TODO: Remove or bound this cache so arbitrary search terms are not retained indefinitely.
-    private static readonly ConcurrentDictionary<(string Value, bool EscapeEscapeCharacter), string> _containsPatterns = new();
+    private static readonly LfuCache<(string Value, bool EscapeEscapeCharacter), string> _containsPatterns = new(capacity: short.MaxValue);
 
-    public static string GetContainsPattern(string value)
+    public static void ClearCache()
+    {
+        _containsPatterns.Clear();
+    }
+
+    internal static string GetContainsPattern(string value)
     {
         return GetContainsPattern(value, false);
     }

@@ -11,6 +11,10 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
     private readonly IEqualityComparer<TKey> _keyComparer;
     private readonly int _capacity;
 
+    public int Count => Read(() => _list.Count);
+    public int Capacity => _capacity;
+    public ICollection<TKey> Keys => Read(() => _list.Select(m => m.Key).AsReadOnlyCollection());
+
     public event Action<TKey, TValue> OnItemCleared = (key, value) => { };
 
     public LruCache(int? capacity = null, IEqualityComparer<TKey>? comparer = null)
@@ -135,13 +139,6 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
             : throw new KeyNotFoundException($"The given key {key} was not present.");
         set => AddOrUpdate(key, value);
     }
-
-    public int Count => Read(() => _list.Count);
-
-    public int Capacity => _capacity;
-
-    public ICollection<TKey> Keys => Read(() => _list.Select(m => m.Key).AsReadOnlyCollection());
-    public ICollection<TValue> Values => Read(() => _list.Select(m => m.Value).AsReadOnlyCollection());
 
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         => LockEnumerator.Create(_list.Select(m => KeyValuePair.Create(m.Key, m.Value)).GetEnumerator(), _lock);

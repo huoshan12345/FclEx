@@ -92,16 +92,7 @@ public static class QueryableExtensions
         bool suppressValueConverter = false,
         bool escapeEscapeCharacter = false)
     {
-        // TODO: Share expression construction with QueryableHelper and parameterize patterns.
-        Expression<Func<T, bool>>? where = null;
-        // ReSharper disable once LoopCanBeConvertedToQuery
-        foreach (var keyword in keywords)
-        {
-            var pattern = QueryableHelper.GetContainsPattern(keyword, escapeEscapeCharacter);
-            var expression = QueryableHelper.BuildLike(selector, pattern, suppressValueConverter, escapeEscapeCharacter);
-            where = where.Or(expression);
-        }
-
+        var where = QueryableHelper.BuildContainsAny(selector, keywords, suppressValueConverter, escapeEscapeCharacter);
         return where == null
             ? queryable.Where(m => false)
             : queryable.Where(where);

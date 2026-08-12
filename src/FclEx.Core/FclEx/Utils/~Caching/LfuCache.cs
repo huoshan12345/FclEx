@@ -17,6 +17,10 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
     private readonly IEqualityComparer<TKey> _keyComparer;
     private readonly int _capacity;
 
+    public int Count => Read(() => _dic.Count);
+    public int Capacity => _capacity;
+    public ICollection<TKey> Keys => Read(() => _list.Select(m => m.Key).AsReadOnlyCollection());
+    
     public event Action<TKey, TValue> OnItemCleared = (key, value) => { };
 
     public LfuCache(int? capacity = null, IEqualityComparer<TKey>? comparer = null)
@@ -131,16 +135,7 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
     {
         return TryRemove(item.Key, true, item.Value);
     }
-
-    public int Count => Read(() => _dic.Count);
-    public bool IsReadOnly { get; } = false;
-    public int Capacity => _capacity;
-
-    public void Add(KeyValuePair<TKey, TValue> item)
-    {
-        Add(item.Key, item.Value);
-    }
-
+    
     public void Clear()
     {
         using (_lock.LockWrite())
@@ -150,46 +145,10 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
         }
     }
 
-    public bool Contains(KeyValuePair<TKey, TValue> item)
-    {
-        if (!TryGetValue(item.Key, out var value))
-            return false;
-        return _valueComparer.Equals(value, item.Value);
-    }
-
-    public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
-    {
-        if (array == null) throw new ArgumentNullException(nameof(array));
-        if (arrayIndex < 0) throw new ArgumentOutOfRangeException(nameof(arrayIndex), arrayIndex, "Non-negative number required.");
-        if (arrayIndex > array.Length) throw new ArgumentOutOfRangeException(nameof(arrayIndex), arrayIndex, "Larger than collection size.");
-        if (array.Length - arrayIndex < Count) throw new ArgumentException("The specified space is not sufficient to copy the elements from this Collection.");
-
-        using (_lock.LockRead())
-        {
-            foreach (var item in _list)
-            {
-                array[arrayIndex++] = item;
-            }
-        }
-    }
-
-    public void Add(TKey key, TValue value)
-    {
-        if (!TryAdd(key, value))
-            throw new ArgumentException($"The key {key} already existed.");
-    }
-
-    public bool ContainsKey(TKey key)
-    {
-        return TryGetValue(key, out _);
-    }
-
     public bool Remove(TKey key)
     {
         return TryRemove(key, false, default);
     }
-
-    public ICollection<TKey> Keys => Read(() => _list.Select(m => m.Key).AsReadOnlyCollection());
 
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         => LockEnumerator.Create(_list.Select(m => KeyValuePair.Create(m.Key, m.Value)).GetEnumerator(), _lock);
