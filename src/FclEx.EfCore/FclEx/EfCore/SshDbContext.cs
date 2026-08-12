@@ -1,3 +1,5 @@
+using Renci.SshNet.Common;
+
 namespace FclEx.EfCore;
 
 public class SshDbContext<T> : IAsyncDisposable where T : DbContext
@@ -24,15 +26,42 @@ public class SshDbContext<T> : IAsyncDisposable where T : DbContext
 
 public class SshDbContext
 {
+    /// <summary>
+    /// Creates a database context that optionally connects through a local SSH tunnel.
+    /// </summary>
+    /// <typeparam name="T">The database context type.</typeparam>
+    /// <param name="connectionString">The original database connection string.</param>
+    /// <param name="createContext">Creates the database context from the effective connection string.</param>
+    /// <param name="ssh">The SSH connection information, or <see langword="null"/> to connect without a tunnel.</param>
+    /// <param name="createNewConnectionString">
+    /// Creates the remote database endpoint and a connection string targeting the supplied local tunnel endpoint.
+    /// </param>
+    /// <param name="hostKeyReceived">
+    /// An optional handler registered before the SSH connection is opened. The handler can inspect the server key
+    /// and set <see cref="HostKeyEventArgs.CanTrust"/> to control whether the connection is accepted.
+    /// </param>
+    /// <returns>A wrapper that owns the context and any SSH resources created for it.</returns>
     public static SshDbContext<T> CreateSshDbContext<T>(string connectionString, Func<string, T> createContext, ConnectionInfo? ssh,
-        Func<string, SocketEndpoint, (SocketEndpoint RemoteEndpoint, string ConnectionString)> createNewConnectionString) where T : DbContext
+        Func<string, SocketEndpoint, (SocketEndpoint RemoteEndpoint, string ConnectionString)> createNewConnectionString,
+        EventHandler<HostKeyEventArgs>? hostKeyReceived = null) where T : DbContext
     {
         if (ssh == null)
             return new SshDbContext<T>(createContext(connectionString), null, null);
 
-        // TODO: Allow host-key validation before Connect and make partial construction exception-safe.
+        // TODO: Make tunnel/context partial construction exception-safe.
         var sshClient = new SshClient(ssh);
-        sshClient.Connect();
+        if (hostKeyReceived is not null)
+            sshClient.HostKeyReceived += hostKeyReceived;
+
+        try
+        {
+            sshClient.Connect();
+        }
+        catch
+        {
+            sshClient.Dispose();
+            throw;
+        }
 
         var localEndpoint = IPEndPointHelper.NextLocalEndpoint();
         var (remoteEndpoint, newConnectionString) = createNewConnectionString(connectionString, localEndpoint);
