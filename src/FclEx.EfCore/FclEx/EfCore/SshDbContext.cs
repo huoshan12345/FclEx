@@ -18,9 +18,21 @@ public class SshDbContext<T> : IAsyncDisposable where T : DbContext
     public virtual async ValueTask DisposeAsync()
     {
         GC.SuppressFinalize(this);
-        await Context.DisposeAsync();
-        Tunnel?.Dispose();
-        SshClient?.Dispose();
+        try
+        {
+            await Context.DisposeAsync();
+        }
+        finally
+        {
+            try
+            {
+                Tunnel?.Dispose();
+            }
+            finally
+            {
+                SshClient?.Dispose();
+            }
+        }
     }
 }
 
@@ -48,32 +60,49 @@ public class SshDbContext
         if (ssh == null)
             return new SshDbContext<T>(createContext(connectionString), null, null);
 
-        // TODO: Make tunnel/context partial construction exception-safe.
         var sshClient = new SshClient(ssh);
-        if (hostKeyReceived is not null)
-            sshClient.HostKeyReceived += hostKeyReceived;
+        ForwardedPortLocal? tunnel = null;
+        T? context = null;
 
         try
         {
+            if (hostKeyReceived is not null)
+                sshClient.HostKeyReceived += hostKeyReceived;
+
             sshClient.Connect();
+
+            var localEndpoint = IPEndPointHelper.NextLocalEndpoint();
+            var (remoteEndpoint, newConnectionString) = createNewConnectionString(connectionString, localEndpoint);
+            tunnel = new ForwardedPortLocal(
+                localEndpoint.Host,
+                (uint)localEndpoint.Port,
+                remoteEndpoint.Host,
+                (uint)remoteEndpoint.Port);
+            sshClient.AddForwardedPort(tunnel);
+            tunnel.Start();
+
+            context = createContext(newConnectionString);
+            return new(context, sshClient, tunnel);
         }
         catch
         {
-            sshClient.Dispose();
+            try
+            {
+                context?.Dispose();
+            }
+            finally
+            {
+                try
+                {
+                    tunnel?.Dispose();
+                }
+                finally
+                {
+                    sshClient.Dispose();
+                }
+            }
+
             throw;
         }
-
-        var localEndpoint = IPEndPointHelper.NextLocalEndpoint();
-        var (remoteEndpoint, newConnectionString) = createNewConnectionString(connectionString, localEndpoint);
-        var tunnel = new ForwardedPortLocal(
-            localEndpoint.Host,
-            (uint)localEndpoint.Port,
-            remoteEndpoint.Host,
-            (uint)remoteEndpoint.Port);
-        sshClient.AddForwardedPort(tunnel);
-        tunnel.Start();
-
-        var context = createContext(newConnectionString);
-        return new(context, sshClient, tunnel);
     }
 }

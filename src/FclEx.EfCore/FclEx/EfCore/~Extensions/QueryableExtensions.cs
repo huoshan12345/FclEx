@@ -79,7 +79,6 @@ public static class QueryableExtensions
         bool noTracking = true,
         CancellationToken cancellationToken = default) where T : class
     {
-        // TODO: Validate page size/index.
         var (items, count) = await queryable.ToArrayAndCountAsync(pageSize, pageIndex, noTracking, cancellationToken);
         var arr = items.Select(selector).ToArray();
         return new(new PagedList<TModel>(arr, pageIndex, pageSize, count));

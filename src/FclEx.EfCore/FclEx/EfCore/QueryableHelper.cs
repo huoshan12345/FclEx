@@ -8,13 +8,6 @@ public static class QueryableHelper
     public static MethodInfo EfLike { get; } = typeof(DbFunctionsExtensions)
         .GetRequiredMethod(nameof(DbFunctionsExtensions.Like), 0, typeof(DbFunctions), typeof(string), typeof(string), typeof(string));
 
-    private static readonly LfuCache<(string Value, bool EscapeEscapeCharacter), string> _containsPatterns = new(capacity: short.MaxValue);
-
-    public static void ClearCache()
-    {
-        _containsPatterns.Clear();
-    }
-
     internal static string GetContainsPattern(string value)
     {
         return GetContainsPattern(value, false);
@@ -22,9 +15,7 @@ public static class QueryableHelper
 
     internal static string GetContainsPattern(string value, bool escapeEscapeCharacter)
     {
-        return _containsPatterns.GetOrAdd(
-            (value, escapeEscapeCharacter),
-            static item => $"%{EscapeLikePattern(item.Value, item.EscapeEscapeCharacter)}%");
+        return $"%{EscapeLikePattern(value, escapeEscapeCharacter)}%";
     }
 
     private static string EscapeLikePattern(string value, bool escapeEscapeCharacter)
@@ -51,9 +42,22 @@ public static class QueryableHelper
             var convertToObject = Expression.Convert(selector.Body, typeof(object));
             member = Expression.Convert(convertToObject, typeof(string));
         }
-        var expPattern = Expression.Constant(pattern, typeof(string));
+        Expression patternExpression;
+        if (escapeEscapeCharacter)
+        {
+            patternExpression = Expression.Constant(pattern, typeof(string));
+        }
+        else
+        {
+#if NET9_0_OR_GREATER
+            Expression<Func<string>> patternParameter = () => EF.Parameter(pattern);
+#else
+            Expression<Func<string>> patternParameter = () => pattern;
+#endif
+            patternExpression = patternParameter.Body;
+        }
         var escapeChar = escapeEscapeCharacter ? EscapedEscapeChar : EscapeChar;
-        var call = Expression.Call(null, EfLike, EfFunctions, member, expPattern, escapeChar);
+        var call = Expression.Call(null, EfLike, EfFunctions, member, patternExpression, escapeChar);
         var where = Expression.Lambda<Func<T, bool>>(call, selector.Parameters);
         return where;
     }

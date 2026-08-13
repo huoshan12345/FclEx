@@ -1,5 +1,6 @@
 using Npgsql;
 using System.Net;
+using System.Net.Sockets;
 using Renci.SshNet.Common;
 
 namespace FclEx.EfCore;
@@ -67,5 +68,45 @@ public class SshDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         }));
 
         Assert.True(untrustedHostKeyReceived);
+
+        SshClient? callbackFailureClient = null;
+        Assert.Throws<InvalidOperationException>(() => SshDbContext.CreateSshDbContext(
+            Fixture.ConnectionStrings.Get(DbDriver.Npgsql, false).Build(),
+            m => new TestDbContext(DbDriver.Npgsql, m),
+            info,
+            (_, _) => throw new InvalidOperationException("Connection-string factory failed."),
+            (sender, args) =>
+            {
+                callbackFailureClient = Assert.IsType<SshClient>(sender);
+                args.CanTrust = true;
+            }));
+        Assert.NotNull(callbackFailureClient);
+        Assert.Throws<ObjectDisposedException>(() => callbackFailureClient.IsConnected);
+
+        SshClient? contextFailureClient = null;
+        SocketEndpoint? localEndpoint = null;
+        var connectionString = Fixture.ConnectionStrings.Get(DbDriver.Npgsql, false).Build();
+        Assert.Throws<InvalidOperationException>(() => SshDbContext.CreateSshDbContext<TestDbContext>(
+            connectionString,
+            _ => throw new InvalidOperationException("Context factory failed."),
+            info,
+            (value, local) =>
+            {
+                localEndpoint = local;
+                var builder = new NpgsqlConnectionStringBuilder(value);
+                return (new SocketEndpoint(builder.Host!, builder.Port), value);
+            },
+            (sender, args) =>
+            {
+                contextFailureClient = Assert.IsType<SshClient>(sender);
+                args.CanTrust = true;
+            }));
+
+        Assert.NotNull(contextFailureClient);
+        Assert.Throws<ObjectDisposedException>(() => contextFailureClient.IsConnected);
+        Assert.NotNull(localEndpoint);
+        using var tcpClient = new TcpClient();
+        await Assert.ThrowsAsync<SocketException>(() =>
+            tcpClient.ConnectAsync(localEndpoint.Value.Host, localEndpoint.Value.Port));
     }
 }

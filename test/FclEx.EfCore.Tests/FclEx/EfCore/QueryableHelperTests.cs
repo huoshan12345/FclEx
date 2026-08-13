@@ -64,9 +64,9 @@ public class QueryableHelperTests
         var filter = QueryableHelper.BuildContainsAny<TestEntity>(m => m.Name, ["Tom", "Jerry", "Linda"]);
 
         Assert.NotNull(filter);
-        Assert.Equal("m => ((value(Microsoft.EntityFrameworkCore.DbFunctions).Like(m.Name, \"%Tom%\", \"\\\") " +
-                     "OrElse value(Microsoft.EntityFrameworkCore.DbFunctions).Like(m.Name, \"%Jerry%\", \"\\\")) " +
-                     "OrElse value(Microsoft.EntityFrameworkCore.DbFunctions).Like(m.Name, \"%Linda%\", \"\\\"))", filter.ToString());
+        Assert.Contains(nameof(DbFunctionsExtensions.Like), filter.ToString());
+        Assert.Contains(nameof(ExpressionType.OrElse), filter.ToString());
+        Assert.DoesNotContain("%Tom%", filter.ToString());
     }
 
     [Theory]

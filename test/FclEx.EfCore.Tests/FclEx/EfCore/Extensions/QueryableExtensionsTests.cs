@@ -11,6 +11,10 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
         .CrossJoin([true, false])
         .ToTheoryData();
 
+    public static readonly TheoryData<DbDriver> ParameterizedPatternDbDriverCases = DbDrivers
+        .Where(driver => driver.IsMySql() == false)
+        .ToTheoryData();
+
     [Theory]
     [MemberData(nameof(ContainsAnyTestCases))]
     public async Task ContainsAny_Test(DbDriver dbDriver, bool containsPercentSign)
@@ -152,6 +156,24 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
             .ToListAsync();
 
         Assert.Empty(result);
+    }
+
+    [Theory]
+    [MemberData(nameof(ParameterizedPatternDbDriverCases))]
+    public void ContainsAny_ShouldParameterizePatterns(DbDriver dbDriver)
+    {
+        using var context = Fixture.CreateDbContext(dbDriver);
+        var keyword = $"sensitive-{Guid.NewGuid():N}";
+        var escapeEscapeCharacter = dbDriver is DbDriver.MySql;
+
+        var sql = context.EntityWithAutoKey
+            .ContainsAny(e => e.Name, [keyword], escapeEscapeCharacter: escapeEscapeCharacter)
+            .ToQueryString();
+
+        Output?.WriteLine(sql);
+        Assert.Matches(@"LIKE\s+@\w+", sql);
+        Assert.DoesNotContain($"LIKE '%{keyword}%'", sql);
+        Assert.DoesNotContain($"LIKE N'%{keyword}%'", sql);
     }
 
     [Fact]
