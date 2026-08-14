@@ -24,7 +24,7 @@ public sealed class ReadAsArrayUsingBuiltInJsonConverter : JsonConverter<object>
         if (typeToConvert == typeof(string) || typeToConvert.IsEnumerable() == false)
             return token.Deserialize(typeInfo);
 
-        if (token.ValueKind == JsonValueKind.Null || token.ValueKind == JsonValueKind.Array)
+        if (token.ValueKind is JsonValueKind.Null or JsonValueKind.Array)
             return token.Deserialize(typeInfo);
 
         var arrayToken = new JsonArray(token.ToJsonNode());
