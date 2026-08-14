@@ -43,66 +43,108 @@ public static class DateTimeExtensions
         return dateTime.AddDays(numberOfWeeks * 7);
     }
 
-    public static DateTime StartOfWeek(this DateTime dt, int hour = 0, int minute = 0, int second = 0, DayOfWeek startOfWeek = DayOfWeek.Monday)
+    public static DateTime FirstDayOfWeek(
+        this DateTime dt,
+        int hour = 0,
+        int minute = 0,
+        int second = 0,
+        int millisecond = 0,
+        DayOfWeek weekStartsOn = DayOfWeek.Monday)
     {
-        var diff = (7 + (dt.DayOfWeek - startOfWeek)) % 7;
-        return dt.Today(hour, minute, second).AddDays(-1 * diff);
+        if ((uint)weekStartsOn > (uint)DayOfWeek.Saturday)
+            throw new ArgumentOutOfRangeException(nameof(weekStartsOn), weekStartsOn, null);
+
+        var daysSinceStartOfWeek = (7 + (dt.DayOfWeek - weekStartsOn)) % 7;
+        return dt.Today(hour, minute, second, millisecond).AddDays(-daysSinceStartOfWeek);
     }
 
-    public static DateTime EndOfWeek(this DateTime dt, int hour = 0, int minute = 0, int second = 0, DayOfWeek startOfWeek = DayOfWeek.Monday)
+    public static DateTime LastDayOfWeek(
+        this DateTime dt,
+        int hour = 0,
+        int minute = 0,
+        int second = 0,
+        int millisecond = 0,
+        DayOfWeek weekStartsOn = DayOfWeek.Monday)
     {
-        return dt.StartOfWeek(hour, minute, second, startOfWeek).AddDays(6);
+        return dt.FirstDayOfWeek(hour, minute, second, millisecond, weekStartsOn).AddDays(6);
     }
 
-    public static DateTime Today(this DateTime dt, int hour = 0, int minute = 0, int second = 0)
+    public static DateTime Today(this DateTime dt, int hour = 0, int minute = 0, int second = 0, int millisecond = 0)
     {
-        return new DateTime(dt.Year, dt.Month, dt.Day, hour, minute, second);
+        return new DateTime(dt.Year, dt.Month, dt.Day, hour, minute, second, millisecond, dt.Kind);
     }
 
-    public static DateTime Tomorrow(this DateTime dt, int hour = 0, int minute = 0, int second = 0)
+    public static DateTime Tomorrow(this DateTime dt, int hour = 0, int minute = 0, int second = 0, int millisecond = 0)
     {
-        return dt.Today(hour, minute, second).AddDays(1);
+        return dt.Today(hour, minute, second, millisecond).AddDays(1);
     }
 
-    public static DateTime Yesterday(this DateTime dt, int hour = 0, int minute = 0, int second = 0)
+    public static DateTime Yesterday(this DateTime dt, int hour = 0, int minute = 0, int second = 0, int millisecond = 0)
     {
-        return dt.Today(hour, minute, second).AddDays(-1);
+        return dt.Today(hour, minute, second, millisecond).AddDays(-1);
     }
 
-    public static DateTime ThisYear(this DateTime dt, int month, int day, int hour = 0, int minute = 0, int second = 0)
+    public static DateTime ThisYear(
+        this DateTime dt,
+        int month,
+        int day,
+        int hour = 0,
+        int minute = 0,
+        int second = 0,
+        int millisecond = 0)
     {
-        return new DateTime(dt.Year, month, day, hour, minute, second);
+        return new DateTime(dt.Year, month, day, hour, minute, second, millisecond, dt.Kind);
     }
 
-    public static DateTime ThisMonth(this DateTime dt, int day, int hour = 0, int minute = 0, int second = 0)
+    public static DateTime ThisMonth(
+        this DateTime dt,
+        int day,
+        int hour = 0,
+        int minute = 0,
+        int second = 0,
+        int millisecond = 0)
     {
-        return new DateTime(dt.Year, dt.Month, day, hour, minute, second);
+        return new DateTime(dt.Year, dt.Month, day, hour, minute, second, millisecond, dt.Kind);
     }
 
-    public static DateTime EndOfMonth(this DateTime dt, int hour = 0, int minute = 0, int second = 0)
+    public static DateTime LastDayOfMonth(
+        this DateTime dt,
+        int hour = 0,
+        int minute = 0,
+        int second = 0,
+        int millisecond = 0)
     {
-        return new DateTime(dt.Year, dt.Month, DateTime.DaysInMonth(dt.Year, dt.Month), hour, minute, second);
+        return new DateTime(dt.Year, dt.Month, DateTime.DaysInMonth(dt.Year, dt.Month), hour, minute, second, millisecond, dt.Kind);
     }
 
-    public static DateTime StartOfMonth(this DateTime dt, int hour = 0, int minute = 0, int second = 0)
+    public static DateTime FirstDayOfMonth(
+        this DateTime dt,
+        int hour = 0,
+        int minute = 0,
+        int second = 0,
+        int millisecond = 0)
     {
-        return new DateTime(dt.Year, dt.Month, 1, hour, minute, second);
+        return new DateTime(dt.Year, dt.Month, 1, hour, minute, second, millisecond, dt.Kind);
     }
 
-    public static DateTime LastTickOfMonth(this DateTime dt, int hour = 0, int minute = 0, int second = 0)
+    public static DateTime LastTickOfDay(this DateTime dt)
     {
-        var lastDay = dt.EndOfMonth();
-        return lastDay.AddDays(1).AddTicks(-1);
+        return dt.Today().AddTicks(TimeSpan.TicksPerDay - 1);
     }
 
-    public static DateTime GetMaxTimeOfDate(this DateTime dt)
+    public static DateTime LastTickOfWeek(this DateTime dt, DayOfWeek weekStartsOn = DayOfWeek.Monday)
     {
-        return dt.Date.AddDays(1).AddTicks(-1);
+        return dt.LastDayOfWeek(weekStartsOn: weekStartsOn).AddTicks(TimeSpan.TicksPerDay - 1);
     }
 
-    public static DateTime? GetMaxTimeOfDate(this DateTime? dt)
+    public static DateTime LastTickOfMonth(this DateTime dt)
     {
-        return dt?.GetMaxTimeOfDate();
+        return dt.LastDayOfMonth().AddTicks(TimeSpan.TicksPerDay - 1);
+    }
+
+    public static DateTime? LastTickOfDay(this DateTime? dt)
+    {
+        return dt?.LastTickOfDay();
     }
 
     public static DateTime? GetDate(this DateTime? dt)

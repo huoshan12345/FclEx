@@ -13,7 +13,7 @@ public static class HttpContentExtensions
     /// </summary>
     public static async Task<Stream> ReadAsStreamAsync(this HttpContent content, CancellationToken token)
     {
-        // NOTE: do not call ReadAsStreamAsync(this HttpContent content, int bufferSize, TimeSpan? readBufferTimeout, CancellationToken token)
+        // NOTE: do not call ReadAsStreamAsync(this HttpContent content, int bufferSize, TimeSpan? bufferTransferTimeout, CancellationToken token)
         // to avoid circular call.
         return await content.ReadAsStreamAsync();
     }
@@ -42,7 +42,7 @@ public static class HttpContentExtensions
     /// Reads content into a seekable <see cref="MemoryStream"/>.
     /// The method preallocates from Content-Length when available and throws when that length exceeds <see cref="int.MaxValue"/>.
     /// </summary>
-    public static async Task<MemoryStream> ReadAsStreamAsync(this HttpContent content, int? bufferSize, TimeSpan? readBufferTimeout, CancellationToken token)
+    public static async Task<MemoryStream> ReadAsStreamAsync(this HttpContent content, int? bufferSize, TimeSpan? bufferTransferTimeout, CancellationToken token)
     {
         var len = content.Headers.ContentLength ?? 0;
         if (len > int.MaxValue)
@@ -54,21 +54,21 @@ public static class HttpContentExtensions
 #endif
         using (var stream = await content.ReadAsStreamAsync(token))
         {
-            await stream.CopyToAsync(ms, bufferSize, readBufferTimeout, token);
+            await stream.CopyToAsync(ms, bufferSize, bufferTransferTimeout, token);
         }
         ms.Seek(0, SeekOrigin.Begin);
         return ms;
     }
 
     /// <summary>
-    /// Reads content into a byte array using the optional copy buffer size and read timeout.
+    /// Reads content into a byte array using the optional copy buffer size and per-buffer transfer timeout.
     /// </summary>
-    public static async Task<byte[]> ReadAsByteArrayAsync(this HttpContent content, int? bufferSize, TimeSpan? readBufferTimeout, CancellationToken token)
+    public static async Task<byte[]> ReadAsByteArrayAsync(this HttpContent content, int? bufferSize, TimeSpan? bufferTransferTimeout, CancellationToken token)
     {
 #if NET5_0_OR_GREATER
         await
 #endif
-        using var ms = await content.ReadAsStreamAsync(bufferSize, readBufferTimeout, token);
+        using var ms = await content.ReadAsStreamAsync(bufferSize, bufferTransferTimeout, token);
         return ms.ToArray();
     }
 

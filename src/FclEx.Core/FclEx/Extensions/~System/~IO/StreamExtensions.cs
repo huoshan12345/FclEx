@@ -13,11 +13,11 @@ public static class StreamExtensions
 
     public static async Task<byte[]> ReadAllBytesAsync(this Stream stream,
         int? bufferSize = null,
-        TimeSpan? readBufferTimeout = null,
+        TimeSpan? bufferTransferTimeout = null,
         CancellationToken token = default)
     {
         using var memoryStream = new MemoryStream();
-        await stream.CopyToAsync(memoryStream, bufferSize ?? DefaultBufferSize, readBufferTimeout, token);
+        await stream.CopyToAsync(memoryStream, bufferSize ?? DefaultBufferSize, bufferTransferTimeout, token);
         return memoryStream.ToArray();
     }
 
@@ -47,7 +47,7 @@ public static class StreamExtensions
         this Stream source,
         Stream dest,
         int? bufferSize = null,
-        TimeSpan? readBufferTimeout = null,
+        TimeSpan? bufferTransferTimeout = null,
         CancellationToken token = default)
     {
         using var disposable = ArrayPool<byte>.Shared.GetPooled(bufferSize ?? DefaultBufferSize);
@@ -55,7 +55,7 @@ public static class StreamExtensions
 
         while (true)
         {
-            using var cts = token.WithTimeout(readBufferTimeout);
+            using var cts = token.WithTimeout(bufferTransferTimeout);
             var bytesCopied = await source.ReadAsync(buffer, 0, buffer.Length, cts.Token);
             if (bytesCopied <= 0)
                 break;

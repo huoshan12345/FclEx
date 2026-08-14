@@ -98,7 +98,7 @@
 
 20. **[P1][已修复] `ActionHelper` 会捕获取消异常并继续重试**
     位置：`src/FclEx.Core/FclEx/Helpers/ActionHelper.cs:56-107`。异步重试使用 `catch (Exception)`，把 `OperationCanceledException` 当普通失败处理，且 API 没有 cancellation token；取消后的操作可能继续执行多次。建议异步重载接收 token，单独重新抛出与该 token 相关的取消异常，并将 delay 也绑定到 token。
-    修复：两个异步重载改为接收 token-aware delegate 和 `CancellationToken`，重试延迟改用 `TimeSpan` 并绑定同一 token；任何 `OperationCanceledException` 都立即传播。公开参数改为语义明确的 `maxRetryCount`、`retryDelay`、`onFailure`/`fallback`，泛型与非泛型版本共享同一个重试循环。
+    修复：异步重试 API 最初改为 token-aware delegate，并将 token 同时传给操作和重试延迟；问题 32 的后续重构又以 `RetryHelper` 取代了整个 `ActionHelper`。当前同步和异步执行都传播 `OperationCanceledException`，取消也能中断重试等待。已增加操作内取消和重试延迟取消测试。
 
 21. **[P1][已修复] `Disposable`/`AsyncDisposable` 每次释放都会重复执行回调**
     位置：`src/FclEx.Core/FclEx/Utils/~Disposables/Disposable.cs:12-16`、`AsyncDisposable.cs:12-16`。这些公共资源包装器没有 disposed 状态，重复 `Dispose`/`DisposeAsync` 会重复释放底层资源；这违反常见 IDisposable 幂等约定，也会使 `GCHandle.Free` 等动作抛错。建议用 `Interlocked.Exchange` 原子取走回调，只允许执行一次。
@@ -140,17 +140,21 @@
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~IO/FileInfoExtensions.cs:118-130`。递归复制到 `newDest` 后忽略其返回值，最终仍返回原本冲突的 `dest`，调用者无法知道真实文件名。应直接 `return await file.CopyToAsync(newDest, ...)`，并测试连续多个冲突后的最终路径。
     修复：`AutoRename` 分支直接返回递归复制的结果；连续存在 `report.txt`、`report_1.txt` 时会返回实际创建并已刷新的 `report_2.txt`。已增加多次冲突后的路径、内容及原文件未覆盖测试。
 
-32. **[P2] `ActionHelper` 实际是重试执行器，但同步与异步 API 是两套不一致的模型**
+32. **[P2][已修复] `ActionHelper` 实际是重试执行器，但同步与异步 API 是两套不一致的模型**
     位置：`src/FclEx.Core/FclEx/Helpers/ActionHelper.cs:5-141`。提供基础重试能力本身合理，但 `ActionHelper.Try` 这个名称没有表达重试；同步重载仍使用 `retryTimes`、整数秒、`onFail`、`throwOnFail` 和可空返回值，异步重载则使用 `maxRetryCount`、`TimeSpan`、token-aware delegate、fallback/defaultValue 和 `throwOnFailure`。同步版本还会在最后一次失败后延迟，并用 `throw lastEx` 丢失原始调用栈。源码中没有同步重载的实际调用方。建议先把它重建为单一、明确的重试抽象（或直接删除未使用的同步 API），统一 attempt/retry 计数、延迟、失败返回和异常传播；不要用布尔参数切换互斥的失败契约。若保留同步实现，应与异步实现共享策略，只在确实还有下一次尝试时等待，并通过 `ExceptionDispatchInfo` 重抛。
+    修复：删除 `ActionHelper`，改为职责明确的 `RetryHelper.Execute`/`ExecuteAsync`。同步和异步重载现在统一使用 token-aware operation、`maxRetryCount`、`TimeSpan retryDelay`、可选 `shouldRetry` 谓词和 cancellation token；成功时返回 operation 结果，拒绝重试或耗尽次数时始终原样抛出异常，不再用布尔参数切换失败契约，也不会在最终失败后等待。已覆盖同步/异步重试成功、不可重试异常、最终异常、参数校验以及取消 operation/等待的测试。
 
-33. **[P2] `readBufferTimeout` 同时限制写入操作**  
+33. **[P2][已修复] `readBufferTimeout` 同时限制写入操作**
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~IO/StreamExtensions.cs:46-64`。同一个带超时的 CTS 先用于 read，随后也用于 `dest.WriteAsync`；慢目标流会被名为“读取超时”的参数取消，而且写入消耗的是 read 剩余时间。应让 read timeout 只包围 read，写操作仅使用调用方 token，或把参数改成明确的 per-iteration timeout。
+    修复：保留“每轮读取和写入共享一个超时预算”的既有行为，将 Core 的 `ReadAllBytesAsync`/`CopyToAsync` 及 Http 转发 API 的参数统一改为 `bufferTransferTimeout`，明确它限制的是一次 buffer transfer，而不只是读取。
 
-34. **[P2] `LastTickOfMonth` 暴露的时间参数完全无效**  
+34. **[P2][已修复] `LastTickOfMonth` 暴露的时间参数完全无效**
     位置：`src/FclEx.Core/FclEx/Extensions/~System/DateTimeExtensions.cs:92-96`。`hour/minute/second` 从未传给 `EndOfMonth`，任何参数值都返回当月最后一刻。应删除这些参数，或按明确语义应用它们；当前 API 会让调用者误以为可控制基准时间。
+    修复：`LastTickOfMonth` 删除全部时间参数，并补充语义一致的 `LastTickOfDay`、`LastTickOfWeek`。原 `StartOfWeek`/`EndOfWeek`、`StartOfMonth`/`EndOfMonth` 分别改名为 `FirstDayOfWeek`/`LastDayOfWeek`、`FirstDayOfMonth`/`LastDayOfMonth`，避免把“最后一天的指定时间”误称为 period end；这些日历日期方法现在都支持毫秒参数，周方法继续允许指定一周从星期几开始。原 `GetMaxTimeOfDate` 被含义更准确的 `LastTickOfDay` 取代。
 
-35. **[P2] 多个 DateTime 日历辅助方法丢失 `Kind`**  
+35. **[P2][已修复] 多个 DateTime 日历辅助方法丢失 `Kind`**
     位置：`src/FclEx.Core/FclEx/Extensions/~System/DateTimeExtensions.cs:46-90`。`Today`、`ThisYear`、`ThisMonth`、`StartOfMonth`、`EndOfMonth` 使用不带 kind 的构造函数，输入即使是 Local/Utc，输出也变为 Unspecified。应使用包含 `dt.Kind` 的构造函数，或明确记录并命名为创建 Unspecified 时间。
+    修复：所有会重建日期的日历方法都使用带 `DateTimeKind` 的构造函数；`Today`、`Tomorrow`、`Yesterday`、`ThisYear`、`ThisMonth` 以及第一天/最后一天方法均保留输入的 `Kind`，并统一支持毫秒参数。已对 Unspecified、Utc、Local 三种 Kind 添加覆盖。
 
 36. **[P2] `DateTime.ToCnTime` 的返回类型无法安全表达它声称的时区转换**
     位置：`src/FclEx.Core/FclEx/Extensions/~System/DateTimeExtensions.cs:120-143`、`DateTimeOffsetExtensions.cs:5-20`。问题不只是 `ToUtc().AddHours(8)` 保留了错误的 `Utc` Kind；`DateTime` 本身也不能携带 UTC+8 offset，因而不适合作为时区转换结果。`Cn` 还是含义不清的公共缩写。建议删除 `DateTime.ToCnTime`/`ToCnTimeStr`，只保留以 `DateTimeOffset` 表达 instant 与 offset 的转换，并将 API 命名为 `ToChinaStandardTime` 或直接显式使用 `ToOffset(TimeSpan.FromHours(8))`；字符串格式化应建立在正确的 `DateTimeOffset` 结果之上。
@@ -205,6 +209,6 @@
 ## 建议处理顺序
 
 1. 已修复项继续保留为历史记录，不再按旧实现重复处理。
-2. 下一批优先讨论并处理整体设计不成立或需要重建的 32、36、37、40、43、49、50；先决定删除/重构方向，再写实现细节。
-3. 随后处理整体用途明确的局部契约问题 33–35、38–39、41–42、44–48，并为每项增加边界测试。
+2. 下一批优先讨论并处理整体设计不成立或需要重建的 36、37、40、43、49、50；先决定删除/重构方向，再写实现细节。
+3. 随后处理整体用途明确的局部契约问题 38–39、41–42、44–48，并为每项增加边界测试。
 4. 破坏性变更不是阻碍；完成删除或重塑后，应同步检查 Core/Http 调用方、XML 文档和包说明。
