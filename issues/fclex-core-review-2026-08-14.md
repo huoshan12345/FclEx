@@ -43,10 +43,10 @@
    位置：`src/FclEx.Core/System/Xml/Linq/XElementEqualityComparer.cs:15-16`。属性使用 `OrderBy(m => m.Name)`，而 `XName` 只实现 `IEquatable<XName>`，未实现 `IComparable`；两个或更多不同属性名会触发“至少一个对象必须实现 IComparable”。应提供明确比较器，例如按 namespace URI、local name 做 ordinal 排序，或改用按名称查找的无序比较。
    修复：随问题 6 一并移除了 `XElementEqualityComparer`。
 
-8. **[P1][待讨论] `ObjectMemoryEqualityComparer` 在未固定对象时创建原始内存 Span**
+8. **[P1][已修复] `ObjectMemoryEqualityComparer` 在未固定对象时创建原始内存 Span**
 
    位置：`src/FclEx.Core/System/Collections/Generic/~EqualityComparers/ObjectMemoryEqualityComparer.cs:17-60`。从托管引用计算地址后直接构造 `Span<byte>`，期间 GC 可以移动对象，使地址失效并读取任意旧内存；引用类型布局算法也依赖 CLR 内部实现。即使保留该低层 API，也应限制为明确可安全处理的 unmanaged 值类型；否则必须在读取期间 pin 对象，并在文档中标为运行时相关、不适合作为通用 comparer。
-   状态：`GCHandle.Alloc(instance, GCHandleType.Pinned)` 不能统一固定任意对象，而且临时固定根对象仍不能使原始内存比较成为稳定的相等/哈希契约；等待设计讨论后再决定是否移除或收窄 API。
+   修复：删除了 `ObjectMemoryEqualityComparer<T>`，替换为受 `where T : unmanaged` 约束的 `BitwiseEqualityComparer<T>`；比较和哈希均基于完整内存表示，并明确记录 padding、架构和端序语义。
 
 9. **[P1][已修复] `FileHelper.AreFilesEqual` 会比较未初始化的栈内存**
 
