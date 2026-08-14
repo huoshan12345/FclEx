@@ -2,101 +2,76 @@ namespace System.Text.Json;
 
 public class ReadAsArrayJsonConverterTests
 {
-    public class TestModel
+    private const string ModelWithArrays = """
+                                                 {
+                                                   "Array": ["1", "2"],
+                                                   "List": ["1", "2"]
+                                                 }
+                                                 """;
+
+    private const string ModelWithSingleValues = """
+                                                       {
+                                                         "Array": "1",
+                                                         "List": "1"
+                                                       }
+                                                       """;
+
+    [Theory]
+    [InlineData(typeof(ReadAsArrayJsonConverter))]
+    [InlineData(typeof(ReadAsArrayUsingBuiltInJsonConverter))]
+    public void ReadRootCollectionFromSingleValue(Type converterType)
     {
-        [JsonConverter(typeof(ReadAsArrayJsonConverter))]
-        public string?[]? Array { get; set; }
-        [JsonConverter(typeof(ReadAsArrayJsonConverter))]
-        public List<string>? List { get; set; }
+        var value = JsonSerializer.Deserialize<TestModel[]>(ModelWithArrays, CreateOptions(converterType));
+
+        var model = Assert.Single(value!);
+        Assert.Equal(["1", "2"], model.Array!);
+        Assert.Equal(["1", "2"], model.List);
     }
 
-    [Fact]
-    public void Read_Model_FromSingleValue_Test()
+    [Theory]
+    [InlineData(typeof(ReadAsArrayJsonConverter))]
+    [InlineData(typeof(ReadAsArrayUsingBuiltInJsonConverter))]
+    public void ReadCollectionMembersFromArrays(Type converterType)
     {
-        const string json = """
-                            {
-                            	"Array": ["1", "2"],
-                            	"List": ["1", "2"]
-                            }
-                            """;
+        var model = JsonSerializer.Deserialize<TestModel>(ModelWithArrays, CreateOptions(converterType));
 
-        var array = json.FromJson<TestModel[]>(JsonHelper.GetOptions().AddConverters([new ReadAsArrayJsonConverter()]))!;
-
-        Assert.NotNull(array);
-        Assert.Single(array);
-
-        var obj = array[0];
-        Assert.Equal(new[] { "1", "2" }, obj.Array);
-        Assert.Equal(new[] { "1", "2" }, obj.List);
+        Assert.Equal(["1", "2"], model!.Array!);
+        Assert.Equal(["1", "2"], model.List);
     }
 
-    [Fact]
-    public void Read_Member_FromArray_Test()
+    [Theory]
+    [InlineData(typeof(ReadAsArrayJsonConverter))]
+    [InlineData(typeof(ReadAsArrayUsingBuiltInJsonConverter))]
+    public void ReadCollectionMembersFromSingleValues(Type converterType)
     {
-        const string json = """
-                            {
-                            	"Array": ["1", "2"],
-                            	"List": ["1", "2"]
-                            }
-                            """;
-        var obj = json.FromJson<TestModel>()!;
-        Assert.NotNull(obj);
-        Assert.NotNull(obj.Array);
-        Assert.Equal(new[] { "1", "2" }, obj.Array);
-        Assert.Equal(new[] { "1", "2" }, obj.List);
+        var model = JsonSerializer.Deserialize<TestModel>(ModelWithSingleValues, CreateOptions(converterType));
+
+        Assert.Equal(["1"], model!.Array!);
+        Assert.Equal(["1"], model.List);
     }
 
-    [Fact]
-    public void Read_Member_FromSingleValue_Test()
+    [Theory]
+    [InlineData(typeof(ReadAsArrayJsonConverter))]
+    [InlineData(typeof(ReadAsArrayUsingBuiltInJsonConverter))]
+    public void WriteUsesNormalCollectionRepresentation(Type converterType)
     {
-        const string json = """
-                            {
-                            	"Array": "1",
-                            	"List": "1"
-                            }
-                            """;
-        var obj = json.FromJson<TestModel>()!;
-        Assert.NotNull(obj);
-        Assert.NotNull(obj.Array);
-        Assert.Equal(new[] { "1" }, obj.Array);
-        Assert.Equal(new[] { "1" }, obj.List);
-    }
-
-
-    [Fact]
-    public void Write_Test()
-    {
-        var obj = new TestModel
+        var value = new TestModel
         {
             Array = ["1", "2"],
-            List = ["1", "2"],
-        };
-        const string json = """{"Array":["1","2"],"List":["1","2"]}""";
-        Assert.Equal(json, obj.ToJson());
-    }
-
-    [Fact]
-    public void Write_WithGlobalConverter_DoesNotReenterConverter()
-    {
-        var options = JsonHelper.GetOptions().AddConverters([ReadAsArrayJsonConverter.Instance]);
-        var value = new[]
-        {
-            new TestModel
-            {
-                Array = ["1", "2"],
-                List = ["3", "4"],
-            }
+            List = ["3", "4"],
         };
 
-        var json = JsonSerializer.Serialize(value, options);
+        var json = JsonSerializer.Serialize(value, CreateOptions(converterType));
 
-        Assert.Equal("""[{"Array":["1","2"],"List":["3","4"]}]""", json);
+        Assert.Equal("""{"Array":["1","2"],"List":["3","4"]}""", json);
     }
 
-    [Fact]
-    public void ReadAndWrite_NestedCollections()
+    [Theory]
+    [InlineData(typeof(ReadAsArrayJsonConverter))]
+    [InlineData(typeof(ReadAsArrayUsingBuiltInJsonConverter))]
+    public void ReadAndWriteNestedCollections(Type converterType)
     {
-        var options = JsonHelper.GetOptions().AddConverters([ReadAsArrayJsonConverter.Instance]);
+        var options = CreateOptions(converterType);
 
         var value = JsonSerializer.Deserialize<List<int[]>>("1", options);
         var json = JsonSerializer.Serialize(value, options);
@@ -106,13 +81,39 @@ public class ReadAsArrayJsonConverterTests
         Assert.Equal("[[1]]", json);
     }
 
-    [Fact]
-    public void ReadAndWrite_ComposesElementConverter()
+    [Theory]
+    [InlineData(typeof(ReadAsArrayJsonConverter))]
+    [InlineData(typeof(ReadAsArrayUsingBuiltInJsonConverter))]
+    public void ReadAndWriteUsingDefaultQueueConverter(Type converterType)
     {
-        var options = JsonHelper.GetOptions().AddConverters([
-            ReadAsArrayJsonConverter.Instance,
-            IncrementingIntJsonConverter.Instance,
-        ]);
+        var options = CreateOptions(converterType);
+
+        var value = JsonSerializer.Deserialize<Queue<int>>("1", options);
+        var json = JsonSerializer.Serialize(value, options);
+
+        Assert.Equal(1, Assert.Single(value!));
+        Assert.Equal("[1]", json);
+    }
+
+    [Theory]
+    [InlineData(typeof(PropertyModelUsingPublicApiConverter))]
+    [InlineData(typeof(PropertyModelUsingBuiltInConverter))]
+    public void PropertyAttributeSupportsSingleValues(Type modelType)
+    {
+        var model = (IPropertyModel)JsonSerializer.Deserialize(ModelWithSingleValues, modelType, JsonHelper.GetOptions())!;
+        var json = JsonSerializer.Serialize(model, modelType, JsonHelper.GetOptions());
+
+        Assert.Equal(["1"], model.Array!);
+        Assert.Equal(["1"], model.List);
+        Assert.Equal("""{"Array":["1"],"List":["1"]}""", json);
+    }
+
+    [Fact]
+    public void PublicApiConverterComposesElementConverter()
+    {
+        var options = CreateOptions(
+            typeof(ReadAsArrayJsonConverter),
+            IncrementingIntJsonConverter.Instance);
 
         var value = JsonSerializer.Deserialize<int[]>("1", options);
         var json = JsonSerializer.Serialize(value, options);
@@ -122,22 +123,13 @@ public class ReadAsArrayJsonConverterTests
     }
 
     [Fact]
-    public void CanConvert_RejectsNonSequenceAndDictionaryShapes()
+    public void BuiltInConverterBypassesElementConverter()
     {
-        var converter = ReadAsArrayJsonConverter.Instance;
+        var options = CreateOptions(
+            typeof(ReadAsArrayUsingBuiltInJsonConverter),
+            IncrementingIntJsonConverter.Instance);
 
-        Assert.False(converter.CanConvert(typeof(string)));
-        Assert.False(converter.CanConvert(typeof(Dictionary<string, int>)));
-        Assert.False(converter.CanConvert(typeof(int[,])));
-        Assert.True(converter.CanConvert(typeof(Queue<int>)));
-    }
-
-    [Fact]
-    public void ReadAndWrite_UsesDefaultCollectionConverter()
-    {
-        var options = JsonHelper.GetOptions().AddConverters([ReadAsArrayJsonConverter.Instance]);
-
-        var value = JsonSerializer.Deserialize<Queue<int>>("1", options);
+        var value = JsonSerializer.Deserialize<int[]>("1", options);
         var json = JsonSerializer.Serialize(value, options);
 
         Assert.Equal(1, Assert.Single(value!));
@@ -145,12 +137,11 @@ public class ReadAsArrayJsonConverterTests
     }
 
     [Fact]
-    public void ReadAndWrite_ComposesNextCollectionConverter()
+    public void PublicApiConverterComposesNextCollectionConverter()
     {
-        var options = JsonHelper.GetOptions().AddConverters([
-            ReadAsArrayJsonConverter.Instance,
-            QueueJsonConverter.Instance,
-        ]);
+        var options = CreateOptions(
+            typeof(ReadAsArrayJsonConverter),
+            QueueJsonConverter.Instance);
 
         var value = JsonSerializer.Deserialize<Queue<int>>("1", options);
         var json = JsonSerializer.Serialize(value, options);
@@ -160,12 +151,89 @@ public class ReadAsArrayJsonConverterTests
     }
 
     [Fact]
-    public void TypeLevelRegistration_IsRejectedInsteadOfRecursing()
+    public void BuiltInConverterBypassesNextCollectionConverter()
+    {
+        var options = CreateOptions(
+            typeof(ReadAsArrayUsingBuiltInJsonConverter),
+            QueueJsonConverter.Instance);
+
+        var value = JsonSerializer.Deserialize<Queue<int>>("1", options);
+        var json = JsonSerializer.Serialize(value, options);
+
+        Assert.Equal(1, Assert.Single(value!));
+        Assert.Equal("[1]", json);
+    }
+
+    [Fact]
+    public void ConvertersAdvertiseTheirDifferentScopes()
+    {
+        var publicApiConverter = ReadAsArrayJsonConverter.Instance;
+        var builtInConverter = ReadAsArrayUsingBuiltInJsonConverter.Instance;
+
+        Assert.False(publicApiConverter.CanConvert(typeof(string)));
+        Assert.False(publicApiConverter.CanConvert(typeof(Dictionary<string, int>)));
+        Assert.False(publicApiConverter.CanConvert(typeof(int[,])));
+        Assert.True(publicApiConverter.CanConvert(typeof(Queue<int>)));
+
+        Assert.True(builtInConverter.CanConvert(typeof(string)));
+        Assert.True(builtInConverter.CanConvert(typeof(Dictionary<string, int>)));
+        Assert.True(builtInConverter.CanConvert(typeof(int[,])));
+        Assert.True(builtInConverter.CanConvert(typeof(Queue<int>)));
+    }
+
+    [Fact]
+    public void PublicApiConverterRejectsTypeLevelRegistration()
     {
         var exception = Assert.Throws<NotSupportedException>(
-            () => JsonSerializer.Deserialize<AttributedList>("1"));
+            () => JsonSerializer.Deserialize<AttributedListUsingPublicApiConverter>("1"));
 
         Assert.Contains("Apply ReadAsArrayJsonConverter to a property", exception.Message);
+    }
+
+    [Fact]
+    public void BuiltInConverterSupportsTypeLevelRegistration()
+    {
+        var value = JsonSerializer.Deserialize<AttributedListUsingBuiltInConverter>("1");
+        var json = JsonSerializer.Serialize(value);
+
+        Assert.Equal(1, Assert.Single(value!));
+        Assert.Equal("[1]", json);
+    }
+
+    private static JsonSerializerOptions CreateOptions(Type converterType, params JsonConverter[] additionalConverters)
+    {
+        var converter = (JsonConverter)Activator.CreateInstance(converterType)!;
+        return JsonHelper.GetOptions().AddConverters([converter, .. additionalConverters]);
+    }
+
+    public sealed class TestModel
+    {
+        public string[]? Array { get; set; }
+        public List<string>? List { get; set; }
+    }
+
+    public interface IPropertyModel
+    {
+        string[]? Array { get; }
+        List<string>? List { get; }
+    }
+
+    public sealed class PropertyModelUsingPublicApiConverter : IPropertyModel
+    {
+        [JsonConverter(typeof(ReadAsArrayJsonConverter))]
+        public string[]? Array { get; set; }
+
+        [JsonConverter(typeof(ReadAsArrayJsonConverter))]
+        public List<string>? List { get; set; }
+    }
+
+    public sealed class PropertyModelUsingBuiltInConverter : IPropertyModel
+    {
+        [JsonConverter(typeof(ReadAsArrayUsingBuiltInJsonConverter))]
+        public string[]? Array { get; set; }
+
+        [JsonConverter(typeof(ReadAsArrayUsingBuiltInJsonConverter))]
+        public List<string>? List { get; set; }
     }
 
     private sealed class IncrementingIntJsonConverter : JsonConverter<int>
@@ -198,5 +266,8 @@ public class ReadAsArrayJsonConverterTests
     }
 
     [JsonConverter(typeof(ReadAsArrayJsonConverter))]
-    private sealed class AttributedList : List<int>;
+    private sealed class AttributedListUsingPublicApiConverter : List<int>;
+
+    [JsonConverter(typeof(ReadAsArrayUsingBuiltInJsonConverter))]
+    private sealed class AttributedListUsingBuiltInConverter : List<int>;
 }

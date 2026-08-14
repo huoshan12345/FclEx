@@ -264,7 +264,7 @@
 
 59. **[P2][已确认保留] `GetBuiltInJsonTypeInfo` 对 `System.Text.Json` 私有实现存在版本耦合**
 
-    位置：`src/FclEx.Core/FclEx/Extensions/~System/~Text/~Json/JsonSerializerOptionsExtensions.cs:5-35`。代码反射调用 `GetBuiltInConverter`、`ExpandConverterFactory` 和 `CreateTypeInfoCore`，这些名称和签名不是兼容性契约，会随 System.Text.Json 更新、裁剪或 NativeAOT 失效。复核结论：截至目前，公开 API 只能取得当前 options 最终选中的 converter，并没有“跳过当前 converter、继续取得默认 converter”的通用能力。复制 options 并移除 converter 只适用于通过 options 注册且能够控制注册方式的局部场景，无法绕过定义在目标类型上的 `[JsonConverter]`；而类型级 converter 复用默认 converter 的需求本身合理且常见。当前没有功能等价且设计更好的公开实现方式，因此不得不保留这层私有反射，并明确接受相应的版本、裁剪和 NativeAOT 兼容性风险。本条不再作为待修复问题；升级 System.Text.Json 时应继续通过兼容性测试确认这些私有入口仍然有效。
+    位置：`src/FclEx.Core/FclEx/Extensions/~System/~Text/~Json/JsonSerializerOptionsExtensions.cs:5-35`。代码反射调用 `GetBuiltInConverter`、`ExpandConverterFactory` 和 `CreateTypeInfoCore`，这些名称和签名不是兼容性契约，会随 System.Text.Json 更新、裁剪或 NativeAOT 失效。复核结论：截至目前，公开 API 只能取得当前 options 最终选中的 converter，并没有“跳过当前 converter、继续取得默认 converter”的通用能力。复制 options 并移除 converter 只适用于通过 options 注册且能够控制注册方式的局部场景，无法绕过定义在目标类型上的 `[JsonConverter]`；而类型级 converter 复用默认 converter 的需求本身合理且常见。当前没有功能等价且设计更好的公开实现方式，因此不得不保留这层私有反射，并明确接受相应的版本、裁剪和 NativeAOT 兼容性风险。本条不再作为待修复问题；升级 System.Text.Json 时应继续通过兼容性测试确认这些私有入口仍然有效。仓库同时保留公开 API 组合版 `ReadAsArrayJsonConverter` 和依赖该能力、支持类型级特性的 `ReadAsArrayUsingBuiltInJsonConverter`，测试明确覆盖两者的共同契约和差异。
 
 60. **[P1][已修复] `ObjectJsonConverter` 会静默损失合法 JSON 数字的精度**
 
