@@ -17,8 +17,22 @@ public static class CancellationTokenSourceExtensions
 #if !NET5_0_OR_GREATER
     public static Task CancelAsync(this CancellationTokenSource cts)
     {
-        cts.Cancel();
-        return Task.CompletedTask;
+        var tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        ThreadPool.QueueUserWorkItem(_ =>
+        {
+            try
+            {
+                cts.Cancel();
+                tcs.SetResult(0);
+            }
+            catch (Exception ex)
+            {
+                // ex is already an AggregateException (if multiple callbacks threw),
+                // so set it directly instead of letting Task wrap/unwrap it again.
+                tcs.SetException(ex);
+            }
+        });
+        return tcs.Task;
     }
 #endif
 }

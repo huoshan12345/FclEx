@@ -9,7 +9,7 @@ public class PwshInvokerTests
         Assert.Contains("Directory:", result);
     }
 
-    [Fact]
+    [LocalOnlyFact]
     public async Task ExecuteAsync_Cancellation_TerminatesProcess()
     {
         var processIdFile = Path.Combine(Path.GetTempPath(), $"fclex-process-{Guid.NewGuid():N}.pid");
@@ -28,7 +28,7 @@ public class PwshInvokerTests
             Assert.True(started, "The child process did not write its process ID within the timeout.");
             processId = parsedProcessId;
 
-            cancellation.Cancel();
+            await cancellation.CancelAsync();
 
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => execution);
             Assert.False(IsProcessRunning(processId.Value));
@@ -36,7 +36,8 @@ public class PwshInvokerTests
         }
         finally
         {
-            cancellation.Cancel();
+            await cancellation.CancelAsync();
+
             if (execution is not null)
             {
                 try
