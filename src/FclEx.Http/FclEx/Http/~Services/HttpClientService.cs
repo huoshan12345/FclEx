@@ -109,9 +109,9 @@ public class HttpClientService : HttpClientServiceBase
     protected static LfuCache<HttpClientOptions, IServiceProvider> CreateCache()
     {
         var cache = new LfuCache<HttpClientOptions, IServiceProvider>(MaxCacheCount, HttpClientOptionsEqualityComparer.Instance);
-        cache.OnItemCleared += (options, provider) =>
+        cache.EntryRemoved += (_, args) =>
         {
-            if (provider is IDisposable disposable)
+            if (args.Value is IDisposable disposable)
                 disposable.Dispose();
         };
         return cache;
@@ -242,13 +242,6 @@ public class HttpClientService : HttpClientServiceBase
         if (Providers.IsValueCreated == false)
             return;
 
-        var cache = Providers.Value;
-        foreach (var (_, value) in cache)
-        {
-            if (value is IDisposable disposable)
-                disposable.Dispose();
-        }
-
-        cache.Clear();
+        Providers.Value.Clear();
     }
 }

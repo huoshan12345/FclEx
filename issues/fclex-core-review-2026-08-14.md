@@ -19,11 +19,11 @@
 
 2. **[P1][已修复] `LruCache.TryGetValue` 在读锁下修改链表**  
    位置：`src/FclEx.Core/FclEx/Utils/~Caching/LruCache.cs:116-126`。方法取得 `LockRead` 后调用 `UpdateInternal`，后者会 `Remove`/`AddFirst` 修改 `_list`。多个读者可同时写同一链表，造成结构损坏或随机异常。应使用可升级读锁并在写锁内更新 LRU 顺序，或将查找与触碰顺序合并到写锁中。
-   修复：查找改用可升级读锁，并在写锁内更新 LRU 链表；已增加并发读取回归测试。
+   修复：后续整体重构中改用普通互斥锁，将字典查找与 LRU 链表触碰合并为一次原子操作；快照枚举不持锁，并增加并发访问回归测试。
 
 3. **[P1][已修复] `LfuCache.TryGetValue` 同样在读锁下修改频率和链表**  
    位置：`src/FclEx.Core/FclEx/Utils/~Caching/LfuCache.cs:41-51`。`UpdateInternal` 会改写节点计数、交换节点值并更新字典，但调用方只持有读锁。应提升为写锁，并补充高并发 `TryGetValue` 后校验字典、链表和频率顺序一致性的压力测试。
-   修复：查找改用可升级读锁，并在写锁内更新频率、链表和字典；已增加并发读取回归测试。
+   修复：后续整体重构中改用普通互斥锁，并以“频率桶 + 桶内 LRU”维护 LFU 状态；命中时的频率和节点迁移在同一临界区完成，并增加并发访问回归测试。
 
 4. **[P1][已修复] `BiDictionary` 的写操作不是原子的，会破坏双射不变量**  
    位置：`src/FclEx.Core/System/Collections/Generic/BiDictionary.cs:54-88`。`Add` 先写 `_dic1`，若值已存在，第二次 `Add` 抛出后 `_dic1` 已残留新项；两个索引器还会用另一个键已占用的值直接覆盖反向映射，却保留旧的正向映射。建议所有写操作预先检查键和值冲突，或在失败时回滚，并统一实现为一个维护双向映射的原子内部方法。
@@ -110,11 +110,13 @@
     位置：`src/FclEx.Core/FclEx/Utils/~Threading/AsyncTimer.cs:3-44`。构造函数立即启动 `_task`，但字段私有且类型不实现 `IDisposable/IAsyncDisposable`；due/period delay 的取消异常位于 try/catch 外，`onException` 自身抛错也会 fault 一个无人观察的任务。建议提供显式 `StartAsync`/`Completion` 和异步停止释放协议，避免构造函数 fire-and-forget。
     修复：`AsyncTimer` 重建为显式启动、单次运行的异步定时器。构造函数不再启动后台任务；`RunAsync` 返回生命周期任务，`Completion` 可再次观察，`StopAsync` 与 `IAsyncDisposable` 会取消并等待活动回调。回调不重叠，period 采用 callback 完成后的 fixed-delay 语义；未处理异常会 fault 运行任务，显式异步异常处理器成功后才继续运行。
 
-24. **[P1] LRU/LFU 在写锁内调用公开的 eviction 事件**  
+24. **[P1][已修复] LRU/LFU 在写锁内调用公开的 eviction 事件**
     位置：`LruCache.cs:177-192`、`LfuCache.cs:191-204`。`OnItemCleared` 在内部状态更新中且持有 `ReaderWriterLockSlim` 写锁时执行；handler 重入缓存会触发锁递归异常，handler 抛错还会造成“旧项已删、新项未加”的半完成状态。应先完成内部事务，释放锁后再触发回调，并决定回调异常是否传播。
+    修复：将含糊且只覆盖容量驱逐的 `OnItemCleared` 重建为 `EntryRemoved`，统一报告 `Evicted`、`Removed`、`Replaced` 和 `Cleared`。所有状态变更先在锁内完整提交，通知在锁外执行；即使 handler 失败也会继续通知其余 handler，最后再传播单个异常或聚合异常。`HttpClientService` 已改用统一通知释放 provider，`ClearCache` 不再重复释放。
 
-25. **[P1] LRU/LFU 在写锁内执行调用方的 value factory**  
+25. **[P1][已修复] LRU/LFU 在写锁内执行调用方的 value factory**
     位置：`LruCache.cs:35-55`、`LfuCache.cs:67-87`。`activator(key)` 作为 `AddInternal` 参数在写锁作用域内求值；慢 factory 会阻塞全部访问，重入缓存会因 `NoRecursion` 失败。建议在锁外创建值，再在写锁内二次检查；若要求单次创建，应使用 per-key lazy，而不是在全局写锁中运行用户代码。
+    修复：`GetOrAdd` 以每 key 的 `Lazy<TValue>` 协调并发创建，同一缺失 key 的并发调用共享一次 factory，factory 始终在缓存锁外执行，不同 key 可并行创建；失败的创建记录会移除并允许后续重试。缓存整体也已重构：公共抽象由容易与 Microsoft 缓存混淆的 `IMemoryCache` 改为语义明确的 `IBoundedCache`，删除无意义的 `IDisposable`；LRU 使用字典与双向链表，LFU 使用频率桶、桶内 LRU，并按可配置访问周期将频率减半以淘汰已经降温的历史热点。
 
 26. **[P1] `SafeCounter.IncrementToThreshold` 不是一个原子的阈值操作**  
     位置：`src/FclEx.Core/FclEx/Utils/~Threading/SafeCounterExtensions.cs:10-29`。多个线程可同时得到 `>= threshold`，并发执行 action 后相互 reset；期间的新增量还可能被 reset 丢失。名称中的 `Safe` 容易让调用者误认为整个组合操作线程安全。应使用 CAS 状态机/交换固定批次，或明确改名并记录仅单次增减原子。
@@ -189,7 +191,7 @@
     位置：`src/FclEx.Core/FclEx/Utils/~Runtime/SizeCalculator.cs:19-25`。CLR 中空 struct 仍有非零实例大小，返回 0 也会让“引用类型最后一个字段为空 struct”的计算继续低估。值类型应统一通过可靠的 `Unsafe.SizeOf`/生成泛型调用计算，并用空 struct、显式布局、嵌套 struct 做验证。
 
 50. **[P3] 多个公共名称不准确或不符合自然英语，应在发布前统一**  
-    位置示例：`FclEx/Helpers/DebuggerHepler.cs:3`（拼写错误，应为 `DebuggerHelper`）；`System/ComponentModel/DataAnnotations/UriAttribute.cs:28`（URI 术语是 scheme，应为 `AllowedSchemes`）；`TaskHelper.cs:70`（`DelayMilli` 应为 `DelayMilliseconds`）；`DateTimeExtensions.cs:136`/`DateTimeOffsetExtensions.cs:5`（`Cn` 含义含混，建议 `ChinaStandardTime`）；`LruCache.cs:18`/`LfuCache.cs:19`（事件只在容量驱逐时触发，`OnItemCleared` 应为 `ItemEvicted`）；`IPEndPointHelper.cs:9`（端口在 socket 释放后不再保留，`NextLocalEndpoint` 应明确为 candidate）。这些都是公共 NuGet API，建议采用新增正确名称、旧名称 `[Obsolete]` 转发、到下一个 major 再删除的兼容迁移方式。
+    位置示例：`FclEx/Helpers/DebuggerHepler.cs:3`（拼写错误，应为 `DebuggerHelper`）；`System/ComponentModel/DataAnnotations/UriAttribute.cs:28`（URI 术语是 scheme，应为 `AllowedSchemes`）；`TaskHelper.cs:70`（`DelayMilli` 应为 `DelayMilliseconds`）；`DateTimeExtensions.cs:136`/`DateTimeOffsetExtensions.cs:5`（`Cn` 含义含混，建议 `ChinaStandardTime`）；`IPEndPointHelper.cs:9`（端口在 socket 释放后不再保留，`NextLocalEndpoint` 应明确为 candidate）。这些都是公共 NuGet API，建议采用准确且与实际行为一致的命名；是否提供兼容转发可按具体 API 单独决定。
 
 ## 建议处理顺序
 

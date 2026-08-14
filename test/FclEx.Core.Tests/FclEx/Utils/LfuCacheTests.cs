@@ -1,22 +1,111 @@
-using MoreLinq;
-
 namespace FclEx.Utils;
 
 public class LfuCacheTests
 {
     [Fact]
-    public async Task TryGetValue_ConcurrentReads_PreservesAllEntries()
+    public void LeastFrequentlyUsedEntry_IsEvicted()
     {
-        const int itemCount = 32;
-        using var cache = new LfuCache<int, int>(itemCount);
-        for (var i = 0; i < itemCount; i++)
-            cache.TryAdd(i, i);
+        var cache = new LfuCache<int, string>(2);
+        cache.Set(1, "one");
+        cache.Set(2, "two");
+        Assert.True(cache.TryGetValue(1, out _));
 
+        cache.Set(3, "three");
+
+        Assert.True(cache.TryGetValue(1, out _));
+        Assert.False(cache.TryGetValue(2, out _));
+        Assert.True(cache.TryGetValue(3, out _));
+    }
+
+    [Fact]
+    public void EqualFrequency_UsesLeastRecentlyUsedTieBreaker()
+    {
+        var cache = new LfuCache<int, string>(2);
+        cache.Set(1, "one");
+        cache.Set(2, "two");
+
+        cache.Set(3, "three");
+
+        Assert.False(cache.TryGetValue(1, out _));
+        Assert.True(cache.TryGetValue(2, out _));
+        Assert.True(cache.TryGetValue(3, out _));
+    }
+
+    [Fact]
+    public void FrequencyDecay_AllowsOldHotEntryToAgeOut()
+    {
+        var cache = new LfuCache<string, int>(2, frequencyDecayInterval: 4);
+        cache.Set("old-hot", 1);
+        cache.Set("current-hot", 2);
+        for (var i = 0; i < 100; i++)
+            Assert.True(cache.TryGetValue("old-hot", out _));
+        for (var i = 0; i < 40; i++)
+            Assert.True(cache.TryGetValue("current-hot", out _));
+
+        cache.Set("new", 3);
+
+        Assert.False(cache.TryGetValue("old-hot", out _));
+        Assert.True(cache.TryGetValue("current-hot", out _));
+        Assert.True(cache.TryGetValue("new", out _));
+    }
+
+    [Fact]
+    public async Task GetOrAdd_ConcurrentCallsForSameKey_InvokeFactoryOnce()
+    {
+        var cache = new LfuCache<int, object>(2);
+        var start = new ManualResetEventSlim();
+        var factoryCalls = 0;
+        var tasks = Enumerable.Range(0, 16)
+            .Select(_ => Task.Run(() =>
+            {
+                start.Wait();
+                return cache.GetOrAdd(1, _ =>
+                {
+                    Interlocked.Increment(ref factoryCalls);
+                    Thread.Sleep(20);
+                    return new object();
+                });
+            }))
+            .ToArray();
+
+        start.Set();
+        var values = await Task.WhenAll(tasks);
+
+        Assert.Equal(1, factoryCalls);
+        Assert.All(values, value => Assert.Same(values[0], value));
+    }
+
+    [Fact]
+    public void EntryRemoved_HandlerCanReenterCache()
+    {
+        var cache = new LfuCache<int, int>(1);
+        CacheEntryRemovedEventArgs<int, int>? notification = null;
+        cache.Set(1, 1);
+        cache.EntryRemoved += (_, args) =>
+        {
+            notification = args;
+            Assert.True(cache.TryGetValue(2, out var value));
+            Assert.Equal(2, value);
+        };
+
+        cache.Set(2, 2);
+
+        Assert.NotNull(notification);
+        Assert.Equal(1, notification.Key);
+        Assert.Equal(CacheEntryRemovalReason.Evicted, notification.Reason);
+    }
+
+    [Fact]
+    public async Task ConcurrentAccess_PreservesCapacityAndUniqueKeys()
+    {
+        const int capacity = 32;
+        var cache = new LfuCache<int, int>(capacity, frequencyDecayInterval: 128);
         var tasks = Enumerable.Range(0, 8).Select(worker => Task.Run(() =>
         {
             for (var i = 0; i < 5_000; i++)
             {
-                var key = (i + worker) % itemCount;
+                var key = (i + worker) % capacity;
+                cache.Set(key, key);
                 Assert.True(cache.TryGetValue(key, out var value));
                 Assert.Equal(key, value);
             }
@@ -24,103 +113,17 @@ public class LfuCacheTests
 
         await Task.WhenAll(tasks);
 
-        Assert.Equal(itemCount, cache.Count);
-        Assert.Equal(itemCount, cache.Select(m => m.Key).Distinct().Count());
+        Assert.Equal(capacity, cache.Count);
+        Assert.Equal(cache.Count, cache.Select(pair => pair.Key).Distinct().Count());
     }
 
-    [Fact]
-    public void Fuzz_Test()
+    [Theory]
+    [InlineData(0, 1)]
+    [InlineData(-1, 1)]
+    [InlineData(1, 0)]
+    [InlineData(1, -1)]
+    public void Constructor_RejectsInvalidArguments(int capacity, int decayInterval)
     {
-        const int capacity = 10;
-        var random = new Random(31);
-        var numbers = Enumerable.Range(-8, 16).ToArray();
-        var cache = new LfuCache<int, string>(capacity);
-        var dic = numbers.ToDictionary(m => m, k => default(int?));
-
-        for (var i = 0; i < numbers.Length * capacity; i++)
-        {
-            var num = random.Sample(numbers);
-            dic[num] = dic[num].Get(-1) + 1;
-            var keys = cache.Keys;
-            var removeFlag = cache.IsFull() && !keys.Contains(num);
-            var value = cache.GetOrAdd(num, k => k.ToString());
-            Assert.Equal(num.ToString(), value);
-            var newKeys = cache.Keys;
-
-            Assert.True(cache.Count <= capacity);
-
-            var expectedCachedItem = dic.Where(m => m.Value.HasValue).ToArray();
-            if (removeFlag)
-            {
-                Assert.True(cache.Count == capacity);
-                Assert.True(expectedCachedItem.Length == capacity + 1);
-                var expectedRemoveItems = expectedCachedItem.Where(m => m.Key != num)
-                    .Minima(m => m.Value).Select(m => m.Key).ToArray();
-
-                var removedKey = keys.Except(newKeys).Single();
-                Assert.Contains(removedKey, expectedRemoveItems);
-
-                var addedKeys = newKeys.Except(keys).ToArray();
-                Assert.Single(addedKeys);
-                Assert.Equal(num, addedKeys[0]);
-
-                dic[removedKey] = null;
-            }
-            else
-            {
-                var actualKeys = newKeys.OrderBy(m => m).ToArray();
-                var expectKeys = expectedCachedItem
-                    .Where(m => m.Value.HasValue)
-                    .OrderByDescending(m => m.Value)
-                    .Take(capacity)
-                    .Select(m => m.Key)
-                    .OrderBy(m => m)
-                    .ToArray();
-                Assert.True(expectKeys.SequenceEqual(actualKeys));
-            }
-        }
-    }
-
-    [Fact]
-    public async Task Basic_Test()
-    {
-        var cd = new LfuCache<int, int>(10);
-
-        var tks = new Task[2];
-        tks[0] = Task.Run(() =>
-        {
-            var ret = cd.TryAdd(1, 11);
-            if (!ret)
-            {
-                var value = cd.AddOrUpdate(1, 11);
-                Assert.Equal(11, value);
-            }
-
-            ret = cd.TryAdd(2, 22);
-            if (!ret)
-            {
-                var value = cd.AddOrUpdate(2, 22);
-                Assert.Equal(22, value);
-            }
-        });
-
-        tks[1] = Task.Run(() =>
-        {
-            var ret = cd.TryAdd(2, 222);
-            if (!ret)
-            {
-                var value = cd.AddOrUpdate(2, 222);
-                Assert.Equal(222, value);
-            }
-
-            ret = cd.TryAdd(1, 111);
-            if (!ret)
-            {
-                var value = cd.AddOrUpdate(1, 111);
-                Assert.Equal(111, value);
-            }
-        });
-
-        await Task.WhenAll(tks);
+        Assert.Throws<ArgumentOutOfRangeException>(() => new LfuCache<int, int>(capacity, decayInterval));
     }
 }

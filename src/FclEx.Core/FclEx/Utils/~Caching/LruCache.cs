@@ -1,226 +1,296 @@
-// ReSharper disable ConvertToAutoPropertyWhenPossible
 namespace FclEx.Utils;
 
-[DebuggerDisplay("Count = {" + nameof(Count) + "}")]
-public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : notnull
+/// <summary>
+/// A thread-safe bounded cache that evicts the least recently used entry.
+/// </summary>
+/// <remarks>
+/// Successful reads and writes make an entry the most recently used. Snapshot operations such as enumeration and
+/// <see cref="Keys"/> do not affect recency.
+/// </remarks>
+[DebuggerDisplay("Count = {Count}, Capacity = {Capacity}")]
+public sealed class LruCache<TKey, TValue> : IBoundedCache<TKey, TValue> where TKey : notnull
 {
-    private static readonly IEqualityComparer<TValue?> _valueComparer = EqualityComparer<TValue?>.Default;
-    private readonly LinkedList<KeyValue> _list = [];
-    private readonly IDictionary<TKey, LinkedListNode<KeyValue>> _dic;
-    private readonly ReaderWriterLockSlim _lock;
-    private readonly IEqualityComparer<TKey> _keyComparer;
-    private readonly int _capacity;
+    private readonly object _sync = new();
+    private readonly Dictionary<TKey, LinkedListNode<Entry>> _entries;
+    private readonly LinkedList<Entry> _recency = [];
+    private readonly Dictionary<TKey, Lazy<TValue>> _pendingCreations;
 
-    public int Count => Read(() => _list.Count);
-    public int Capacity => _capacity;
-    public ICollection<TKey> Keys => Read(() => _list.Select(m => m.Key).AsReadOnlyCollection());
-
-    public event Action<TKey, TValue> OnItemCleared = (key, value) => { };
-
-    public LruCache(int? capacity = null, IEqualityComparer<TKey>? comparer = null)
+    /// <summary>Initializes a cache with the specified maximum number of entries.</summary>
+    public LruCache(int capacity, IEqualityComparer<TKey>? comparer = null)
     {
-        if (capacity is <= 0)
-            throw new ArgumentOutOfRangeException(nameof(capacity));
+        if (capacity <= 0)
+            throw new ArgumentOutOfRangeException(nameof(capacity), capacity, "Capacity must be greater than zero.");
 
-        _capacity = capacity ?? int.MaxValue;
-        _keyComparer = comparer ?? EqualityComparer<TKey>.Default;
-        _lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
-        _dic = new Dictionary<TKey, LinkedListNode<KeyValue>>(_keyComparer);
+        Capacity = capacity;
+        comparer ??= EqualityComparer<TKey>.Default;
+        _entries = new Dictionary<TKey, LinkedListNode<Entry>>(comparer);
+        _pendingCreations = new Dictionary<TKey, Lazy<TValue>>(comparer);
     }
 
-    public LruCache(IEqualityComparer<TKey>? comparer) : this(ushort.MaxValue, comparer)
+    /// <inheritdoc />
+    public event EventHandler<CacheEntryRemovedEventArgs<TKey, TValue>>? EntryRemoved;
+
+    /// <inheritdoc />
+    public int Capacity { get; }
+
+    /// <inheritdoc />
+    public int Count
     {
-    }
-
-    public TValue GetOrAdd(TKey key, Func<TKey, TValue> activator)
-    {
-        Check.NotNull(key);
-        Check.NotNull(activator);
-
-        using var _ = _lock.LockUpgradeableRead();
-
-        var exist = _dic.TryGetValue(key, out var node);
-        if (exist)
+        get
         {
-            Debug.Assert(_keyComparer.Equals(key, node!.Value.Key));
-        }
-
-        using (_lock.LockWrite())
-        {
-            node = exist
-                ? UpdateInternal(node!)
-                : AddInternal(key, activator(key));
-        }
-        return node.Value.Value;
-    }
-
-    public TValue AddOrUpdate(TKey key, TValue value)
-    {
-        Check.NotNull(key);
-
-        using var _ = _lock.LockUpgradeableRead();
-
-        var exist = _dic.TryGetValue(key, out var node);
-        if (exist)
-        {
-            Debug.Assert(_keyComparer.Equals(key, node!.Value.Key));
-        }
-
-        if (!(exist && _valueComparer.Equals(node!.Value.Value!, value!)))
-        {
-            using (_lock.LockWrite())
-            {
-                node = exist
-                    ? UpdateInternal(node!, value)
-                    : AddInternal(key, value);
-            }
-        }
-        return node.Value.Value;
-    }
-
-    public bool TryAdd(TKey key, TValue value)
-    {
-        Check.NotNull(key);
-
-        using var _ = _lock.LockUpgradeableRead();
-
-        var exist = _dic.TryGetValue(key, out var node);
-        if (exist)
-        {
-            Debug.Assert(_keyComparer.Equals(key, node!.Value.Key));
-        }
-        else
-        {
-            using (_lock.LockWrite())
-            {
-                node = AddInternal(key, value);
-            }
-        }
-        return !exist;
-    }
-
-    public void Clear()
-    {
-        using (_lock.LockWrite())
-        {
-            _list.Clear();
-            _dic.Clear();
+            lock (_sync)
+                return _entries.Count;
         }
     }
 
-    public bool Remove(TKey key)
+    /// <inheritdoc />
+    public IReadOnlyCollection<TKey> Keys
     {
-        return TryRemove(key, false, default);
-    }
-
-    public bool TryGetValue(TKey key, [NotNullWhen(true)] out TValue? value)
-    {
-        Check.NotNull(key);
-
-        using var _ = _lock.LockUpgradeableRead();
-
-        if (_dic.TryGetValue(key, out var node))
+        get
         {
-            using (_lock.LockWrite())
-            {
-                UpdateInternal(node);
-            }
-            value = node.Value.Value!;
-            return true;
-        }
-        else
-        {
-            value = default;
-            return false;
+            lock (_sync)
+                return _recency.Select(entry => entry.Key).ToArray();
         }
     }
 
+    /// <inheritdoc />
     public TValue this[TKey key]
     {
         get => TryGetValue(key, out var value)
             ? value
-            : throw new KeyNotFoundException($"The given key {key} was not present.");
-        set => AddOrUpdate(key, value);
+            : throw new KeyNotFoundException($"The key '{key}' was not found in the cache.");
+        set => Set(key, value);
     }
 
-    public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
-        => LockEnumerator.Create(_list.Select(m => KeyValuePair.Create(m.Key, m.Value)).GetEnumerator(), _lock);
-
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-    public void Dispose()
+    /// <inheritdoc />
+    public TValue GetOrAdd(TKey key, Func<TKey, TValue> valueFactory)
     {
-        GC.SuppressFinalize(this);
-        _lock.Dispose();
-    }
+        Check.NotNull(key);
+        Check.NotNull(valueFactory);
 
-    private T Read<T>(Func<T> func)
-    {
-        using (_lock.LockRead())
+        Lazy<TValue> creation;
+        lock (_sync)
         {
-            return func();
-        }
-    }
+            if (_entries.TryGetValue(key, out var existing))
+                return Touch(existing).Value.Value;
 
-    private LinkedListNode<KeyValue> UpdateInternal(LinkedListNode<KeyValue> node)
-    {
-        var first = _list.First;
-        if (node != first)
+            if (!_pendingCreations.TryGetValue(key, out creation!))
+            {
+                creation = new Lazy<TValue>(
+                    () => valueFactory(key),
+                    LazyThreadSafetyMode.ExecutionAndPublication);
+                _pendingCreations.Add(key, creation);
+            }
+        }
+
+        TValue createdValue;
+        try
         {
-            _list.Remove(node);
-            _list.AddFirst(node);
+            createdValue = creation.Value;
         }
-        return node;
-    }
-
-    private LinkedListNode<KeyValue> UpdateInternal(LinkedListNode<KeyValue> node, TValue value)
-    {
-        node.Value = node.Value with { Value = value };
-        return UpdateInternal(node);
-    }
-
-    private LinkedListNode<KeyValue> AddInternal(TKey key, TValue value)
-    {
-        if (_dic.Count >= _capacity)
+        catch
         {
-            var toRemove = _list.Last!;
-            _dic.Remove(toRemove.Value.Key);
-            _list.Remove(toRemove);
-
-            OnItemCleared(toRemove.Value.Key, toRemove.Value.Value);
+            RemovePendingCreation(key, creation);
+            throw;
         }
-        var node = LinkedListNodeHelper.Create(new KeyValue(key, value));
-        _list.AddFirst(node);
-        _dic[key] = node;
-        return node;
+
+        CacheEntryRemovedEventArgs<TKey, TValue>? notification = null;
+        TValue result;
+        EventHandler<CacheEntryRemovedEventArgs<TKey, TValue>>? handlers;
+        lock (_sync)
+        {
+            RemovePendingCreationInternal(key, creation);
+            if (_entries.TryGetValue(key, out var existing))
+            {
+                result = Touch(existing).Value.Value;
+            }
+            else
+            {
+                notification = AddInternal(key, createdValue);
+                result = createdValue;
+            }
+            handlers = EntryRemoved;
+        }
+
+        Notify(handlers, notification);
+        return result;
     }
 
-    private bool TryRemove(TKey key, bool matchValue, TValue? oldValue)
+    /// <inheritdoc />
+    public void Set(TKey key, TValue value)
     {
         Check.NotNull(key);
 
-        using var _ = _lock.LockUpgradeableRead();
-
-        var success = _dic.TryGetValue(key, out var node);
-        if (success)
+        CacheEntryRemovedEventArgs<TKey, TValue>? notification;
+        EventHandler<CacheEntryRemovedEventArgs<TKey, TValue>>? handlers;
+        lock (_sync)
         {
-            Debug.Assert(_keyComparer.Equals(key, node!.Value.Key));
+            if (_entries.TryGetValue(key, out var existing))
+            {
+                var oldValue = existing.Value.Value;
+                existing.Value = new Entry(key, value);
+                Touch(existing);
+                notification = ReferenceEquals(oldValue, value)
+                    ? null
+                    : new CacheEntryRemovedEventArgs<TKey, TValue>(key, oldValue, CacheEntryRemovalReason.Replaced);
+            }
+            else
+            {
+                notification = AddInternal(key, value);
+            }
+            handlers = EntryRemoved;
+        }
 
-            if (matchValue && !_valueComparer.Equals(oldValue, node.Value.Value))
+        Notify(handlers, notification);
+    }
+
+    /// <inheritdoc />
+    public bool TryAdd(TKey key, TValue value)
+    {
+        Check.NotNull(key);
+
+        CacheEntryRemovedEventArgs<TKey, TValue>? notification;
+        EventHandler<CacheEntryRemovedEventArgs<TKey, TValue>>? handlers;
+        lock (_sync)
+        {
+            if (_entries.ContainsKey(key))
                 return false;
 
-            using (_lock.LockWrite())
-            {
-                _list.Remove(node);
-                _dic.Remove(key);
-            }
+            notification = AddInternal(key, value);
+            handlers = EntryRemoved;
         }
-        return success;
+
+        Notify(handlers, notification);
+        return true;
     }
 
-    internal readonly record struct KeyValue(TKey Key, TValue Value)
+    /// <inheritdoc />
+    public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value)
     {
-        public static implicit operator KeyValuePair<TKey, TValue>(KeyValue kv)
-            => KeyValuePair.Create(kv.Key, kv.Value!);
+        Check.NotNull(key);
+
+        lock (_sync)
+        {
+            if (_entries.TryGetValue(key, out var node))
+            {
+                value = Touch(node).Value.Value;
+                return true;
+            }
+        }
+
+        value = default;
+        return false;
     }
+
+    /// <inheritdoc />
+    public bool Remove(TKey key)
+    {
+        Check.NotNull(key);
+
+        CacheEntryRemovedEventArgs<TKey, TValue>? notification;
+        EventHandler<CacheEntryRemovedEventArgs<TKey, TValue>>? handlers;
+        lock (_sync)
+        {
+            if (!_entries.TryGetValue(key, out var node))
+                return false;
+
+            _entries.Remove(key);
+            _recency.Remove(node);
+            notification = new CacheEntryRemovedEventArgs<TKey, TValue>(
+                node.Value.Key,
+                node.Value.Value,
+                CacheEntryRemovalReason.Removed);
+            handlers = EntryRemoved;
+        }
+
+        Notify(handlers, notification);
+        return true;
+    }
+
+    /// <inheritdoc />
+    public void Clear()
+    {
+        CacheEntryRemovedEventArgs<TKey, TValue>[] notifications;
+        EventHandler<CacheEntryRemovedEventArgs<TKey, TValue>>? handlers;
+        lock (_sync)
+        {
+            notifications = _recency
+                .Select(entry => new CacheEntryRemovedEventArgs<TKey, TValue>(
+                    entry.Key,
+                    entry.Value,
+                    CacheEntryRemovalReason.Cleared))
+                .ToArray();
+            _entries.Clear();
+            _recency.Clear();
+            handlers = EntryRemoved;
+        }
+
+        CacheNotificationHelper.Notify(this, handlers, notifications);
+    }
+
+    /// <inheritdoc />
+    public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
+    {
+        KeyValuePair<TKey, TValue>[] snapshot;
+        lock (_sync)
+        {
+            snapshot = _recency
+                .Select(entry => KeyValuePair.Create(entry.Key, entry.Value))
+                .ToArray();
+        }
+        return ((IEnumerable<KeyValuePair<TKey, TValue>>)snapshot).GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    private LinkedListNode<Entry> Touch(LinkedListNode<Entry> node)
+    {
+        if (node != _recency.First)
+        {
+            _recency.Remove(node);
+            _recency.AddFirst(node);
+        }
+        return node;
+    }
+
+    private CacheEntryRemovedEventArgs<TKey, TValue>? AddInternal(TKey key, TValue value)
+    {
+        CacheEntryRemovedEventArgs<TKey, TValue>? notification = null;
+        if (_entries.Count == Capacity)
+        {
+            var evicted = _recency.Last!;
+            _recency.RemoveLast();
+            _entries.Remove(evicted.Value.Key);
+            notification = new CacheEntryRemovedEventArgs<TKey, TValue>(
+                evicted.Value.Key,
+                evicted.Value.Value,
+                CacheEntryRemovalReason.Evicted);
+        }
+
+        var node = _recency.AddFirst(new Entry(key, value));
+        _entries.Add(key, node);
+        return notification;
+    }
+
+    private void RemovePendingCreation(TKey key, Lazy<TValue> creation)
+    {
+        lock (_sync)
+            RemovePendingCreationInternal(key, creation);
+    }
+
+    private void RemovePendingCreationInternal(TKey key, Lazy<TValue> creation)
+    {
+        if (_pendingCreations.TryGetValue(key, out var current) && ReferenceEquals(current, creation))
+            _pendingCreations.Remove(key);
+    }
+
+    private void Notify(
+        EventHandler<CacheEntryRemovedEventArgs<TKey, TValue>>? handlers,
+        CacheEntryRemovedEventArgs<TKey, TValue>? notification)
+    {
+        if (notification is not null)
+            CacheNotificationHelper.Notify(this, handlers, new[] { notification });
+    }
+
+    private readonly record struct Entry(TKey Key, TValue Value);
 }

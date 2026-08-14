@@ -3,18 +3,139 @@ namespace FclEx.Utils;
 public class LruCacheTests
 {
     [Fact]
-    public async Task TryGetValue_ConcurrentReads_PreservesAllEntries()
+    public void LeastRecentlyUsedEntry_IsEvicted()
     {
-        const int itemCount = 32;
-        using var cache = new LruCache<int, int>(itemCount);
-        for (var i = 0; i < itemCount; i++)
-            cache.TryAdd(i, i);
+        var cache = new LruCache<int, string>(2);
+        cache.Set(1, "one");
+        cache.Set(2, "two");
 
+        Assert.True(cache.TryGetValue(1, out _));
+        cache.Set(3, "three");
+
+        Assert.Equal(new[] { 3, 1 }, cache.Keys);
+        Assert.False(cache.TryGetValue(2, out _));
+    }
+
+    [Fact]
+    public async Task GetOrAdd_ConcurrentCallsForSameKey_InvokeFactoryOnce()
+    {
+        var cache = new LruCache<int, object>(2);
+        var start = new ManualResetEventSlim();
+        var factoryCalls = 0;
+        var tasks = Enumerable.Range(0, 16)
+            .Select(_ => Task.Run(() =>
+            {
+                start.Wait();
+                return cache.GetOrAdd(1, _ =>
+                {
+                    Interlocked.Increment(ref factoryCalls);
+                    Thread.Sleep(20);
+                    return new object();
+                });
+            }))
+            .ToArray();
+
+        start.Set();
+        var values = await Task.WhenAll(tasks);
+
+        Assert.Equal(1, factoryCalls);
+        Assert.All(values, value => Assert.Same(values[0], value));
+    }
+
+    [Fact]
+    public void GetOrAdd_FactoryRunsOutsideLockAndCanUseAnotherKey()
+    {
+        var cache = new LruCache<int, int>(2);
+
+        var value = cache.GetOrAdd(1, _ => cache.GetOrAdd(2, _ => 20) + 1);
+
+        Assert.Equal(21, value);
+        Assert.Equal(2, cache.Count);
+    }
+
+    [Fact]
+    public void FailedFactory_CanBeRetried()
+    {
+        var cache = new LruCache<int, int>(1);
+        var calls = 0;
+
+        Assert.Throws<InvalidOperationException>(() => cache.GetOrAdd(1, _ =>
+        {
+            calls++;
+            throw new InvalidOperationException();
+        }));
+
+        Assert.Equal(42, cache.GetOrAdd(1, _ =>
+        {
+            calls++;
+            return 42;
+        }));
+        Assert.Equal(2, calls);
+    }
+
+    [Fact]
+    public void EntryRemoved_ReportsEveryRemovalReasonOutsideLock()
+    {
+        var cache = new LruCache<int, string>(2);
+        var notifications = new List<(int Key, string Value, CacheEntryRemovalReason Reason)>();
+        cache.EntryRemoved += (_, args) =>
+        {
+            _ = cache.Count;
+            notifications.Add((args.Key, args.Value, args.Reason));
+        };
+
+        cache.Set(1, "one");
+        cache.Set(1, "ONE");
+        Assert.True(cache.Remove(1));
+        cache.Set(2, "two");
+        cache.Set(3, "three");
+        cache.Set(4, "four");
+        cache.Clear();
+
+        Assert.Contains((1, "one", CacheEntryRemovalReason.Replaced), notifications);
+        Assert.Contains((1, "ONE", CacheEntryRemovalReason.Removed), notifications);
+        Assert.Contains((2, "two", CacheEntryRemovalReason.Evicted), notifications);
+        Assert.Contains((3, "three", CacheEntryRemovalReason.Cleared), notifications);
+        Assert.Contains((4, "four", CacheEntryRemovalReason.Cleared), notifications);
+        Assert.Equal(5, notifications.Count);
+    }
+
+    [Fact]
+    public void ThrowingRemovalHandlers_DoNotInterruptStateChangeOrOtherHandlers()
+    {
+        var cache = new LruCache<int, int>(1);
+        cache.Set(1, 1);
+        var handlerCalls = 0;
+        cache.EntryRemoved += (_, _) =>
+        {
+            handlerCalls++;
+            throw new InvalidOperationException("first");
+        };
+        cache.EntryRemoved += (_, _) =>
+        {
+            handlerCalls++;
+            throw new ArgumentException("second");
+        };
+
+        var exception = Assert.Throws<AggregateException>(() => cache.Set(2, 2));
+
+        Assert.Equal(2, handlerCalls);
+        Assert.Equal(2, exception.InnerExceptions.Count);
+        Assert.Equal(2, cache[2]);
+        Assert.False(cache.TryGetValue(1, out _));
+    }
+
+    [Fact]
+    public async Task ConcurrentAccess_PreservesCapacityAndUniqueKeys()
+    {
+        const int capacity = 32;
+        var cache = new LruCache<int, int>(capacity);
         var tasks = Enumerable.Range(0, 8).Select(worker => Task.Run(() =>
         {
             for (var i = 0; i < 5_000; i++)
             {
-                var key = (i + worker) % itemCount;
+                var key = (i + worker) % capacity;
+                cache.Set(key, key);
                 Assert.True(cache.TryGetValue(key, out var value));
                 Assert.Equal(key, value);
             }
@@ -22,238 +143,15 @@ public class LruCacheTests
 
         await Task.WhenAll(tasks);
 
-        Assert.Equal(itemCount, cache.Count);
-        Assert.Equal(itemCount, cache.Select(m => m.Key).Distinct().Count());
-    }
-
-    [Fact]
-    public void Fuzz_Test()
-    {
-        const int capacity = 10;
-        var random = new Random(31);
-        var numbers = Enumerable.Range(-8, 16).ToArray();
-        var cache = new LruCache<int, string>(capacity);
-        var dic = numbers.ToDictionary(m => m, m => default(int?));
-        var access = 0;
-
-        for (var i = 0; i < numbers.Length * capacity; i++)
-        {
-            var num = random.Sample(numbers);
-            var exist = dic.TryGetValue(num, out var existTime) && existTime.HasValue;
-            dic[num] = access++;
-
-            var keys = cache.Keys;
-            Assert.Equal(exist, keys.Contains(num));
-
-            var last = cache.LastOrDefault();
-            var value = cache.GetOrAdd(num, k => k.ToString());
-
-            Assert.Equal(num.ToString(), value);
-            Assert.Equal(num, cache.First().Key);
-            Assert.True(cache.Count <= capacity);
-
-            var newKeys = cache.Keys;
-            if (exist)
-            {
-                var list = new List<int>(newKeys.Count) { num };
-                list.AddRange(keys.Where(m => m != num));
-                Assert.Equal(list, newKeys);
-            }
-
-            var removeFlag = keys.Count == capacity && !keys.Contains(num);
-            if (removeFlag)
-            {
-                var existItems = dic.Where(m => m.Value.HasValue).ToList();
-                Assert.True(cache.Count == capacity);
-                Assert.True(existItems.Count == capacity + 1);
-
-                var expectedRemoveItem = existItems.OrderBy(m => m.Value.Get()).First().Key;
-                Assert.Equal(expectedRemoveItem, last.Key);
-
-                dic[expectedRemoveItem] = null;
-            }
-            var expectedCacheItems = dic
-                .Where(m => m.Value.HasValue)
-                .OrderByDescending(m => m.Value.Get())
-                .Select(m => m.Key);
-            Assert.Equal(expectedCacheItems, newKeys);
-        }
-    }
-
-    [Fact]
-    public async Task Basic_Test()
-    {
-        var cd = new LruCache<int, int>(10);
-
-        var tks = new Task[2];
-        tks[0] = Task.Run(() =>
-        {
-            var ret = cd.TryAdd(1, 11);
-            if (!ret)
-            {
-                var value = cd.AddOrUpdate(1, 11);
-                Assert.Equal(11, value);
-            }
-
-            ret = cd.TryAdd(2, 22);
-            if (!ret)
-            {
-                var value = cd.AddOrUpdate(2, 22);
-                Assert.Equal(22, value);
-            }
-        });
-
-        tks[1] = Task.Run(() =>
-        {
-            var ret = cd.TryAdd(2, 222);
-            if (!ret)
-            {
-                var value = cd.AddOrUpdate(2, 222);
-                Assert.Equal(222, value);
-            }
-
-            ret = cd.TryAdd(1, 111);
-            if (!ret)
-            {
-                var value = cd.AddOrUpdate(1, 111);
-                Assert.Equal(111, value);
-            }
-        });
-
-        await Task.WhenAll(tks);
+        Assert.Equal(capacity, cache.Count);
+        Assert.Equal(cache.Count, cache.Select(pair => pair.Key).Distinct().Count());
     }
 
     [Theory]
-    [InlineData(1, 1, 1, 1000)]
-    [InlineData(5, 1, 1, 1000)]
-    [InlineData(1, 1, 2, 500)]
-    [InlineData(1, 1, 5, 200)]
-    [InlineData(4, 0, 4, 200)]
-    [InlineData(16, 31, 4, 200)]
-    [InlineData(64, 5, 5, 500)]
-    [InlineData(5, 5, 5, 250)]
-    public void Add_Test(int cLevel, int initSize, int threads, int addsPerThread)
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void Constructor_RejectsNonPositiveCapacity(int capacity)
     {
-        var dict = new LruCache<int, int>();
-
-        var count = threads;
-        using (var mre = new ManualResetEvent(false))
-        {
-            for (var i = 0; i < threads; i++)
-            {
-                var ii = i;
-                Task.Run(() =>
-                {
-                    for (var j = 0; j < addsPerThread; j++)
-                    {
-                        dict.TryAdd(j + ii * addsPerThread, -(j + ii * addsPerThread));
-                    }
-                    if (Interlocked.Decrement(ref count) == 0)
-                    {
-                        // ReSharper disable once AccessToDisposedClosure
-                        mre.Set();
-                    }
-                });
-            }
-            mre.WaitOne();
-        }
-
-        foreach (var pair in dict)
-        {
-            Assert.Equal(pair.Key, -pair.Value);
-        }
-
-        var gotKeys = new List<int>();
-        foreach (var pair in dict)
-            gotKeys.Add(pair.Key);
-
-        gotKeys.Sort();
-
-        var expectKeys = new List<int>();
-        var itemCount = threads * addsPerThread;
-        for (var i = 0; i < itemCount; i++)
-            expectKeys.Add(i);
-
-        Assert.Equal(expectKeys.Count, gotKeys.Count);
-
-        for (var i = 0; i < expectKeys.Count; i++)
-        {
-            Assert.True(expectKeys[i].Equals(gotKeys[i]),
-                string.Format("The set of keys in the dictionary is are not the same as the expected" + Environment.NewLine +
-                              "TestAdd1(cLevel={0}, initSize={1}, threads={2}, addsPerThread={3})", cLevel, initSize, threads, addsPerThread)
-            );
-        }
-
-        // Finally, let's verify that the count is reported correctly.
-        var expectedCount = threads * addsPerThread;
-        Assert.Equal(expectedCount, dict.Count);
-        Assert.Equal(expectedCount, dict.ToArray().Length);
-    }
-
-    [Theory]
-    [InlineData(1, 1, 1000)]
-    [InlineData(5, 1, 1000)]
-    [InlineData(1, 2, 500)]
-    [InlineData(1, 5, 200)]
-    [InlineData(4, 4, 200)]
-    [InlineData(15, 5, 201)]
-    [InlineData(64, 5, 500)]
-    [InlineData(5, 5, 250)]
-    public void Update_Test(int cLevel, int threads, int updatesPerThread)
-    {
-        var dict = new LruCache<int, int>();
-
-        for (var i = 1; i <= updatesPerThread; i++) dict[i] = i;
-
-        var running = threads;
-        using (var mre = new ManualResetEvent(false))
-        {
-            for (var i = 0; i < threads; i++)
-            {
-                var ii = i;
-                Task.Run(() =>
-                {
-                    for (var j = 1; j <= updatesPerThread; j++)
-                    {
-                        dict[j] = (ii + 2) * j;
-                    }
-                    if (Interlocked.Decrement(ref running) == 0)
-                    {
-                        // ReSharper disable once AccessToDisposedClosure
-                        mre.Set();
-                    }
-                });
-            }
-            mre.WaitOne();
-        }
-
-        foreach (var pair in dict)
-        {
-            var div = pair.Value / pair.Key;
-            var rem = pair.Value % pair.Key;
-
-            Assert.Equal(0, rem);
-            Assert.True(div > 1 && div <= threads + 1,
-                string.Format("* Invalid value={3}! TestUpdate1(cLevel={0}, threads={1}, updatesPerThread={2})", cLevel, threads, updatesPerThread, div));
-        }
-
-        var gotKeys = new List<int>();
-        foreach (var pair in dict)
-            gotKeys.Add(pair.Key);
-        gotKeys.Sort();
-
-        var expectKeys = new List<int>();
-        for (var i = 1; i <= updatesPerThread; i++)
-            expectKeys.Add(i);
-
-        Assert.Equal(expectKeys.Count, gotKeys.Count);
-
-        for (var i = 0; i < expectKeys.Count; i++)
-        {
-            Assert.True(expectKeys[i].Equals(gotKeys[i]),
-                string.Format("The set of keys in the dictionary is are not the same as the expected." + Environment.NewLine +
-                              "TestUpdate1(cLevel={0}, threads={1}, updatesPerThread={2})", cLevel, threads, updatesPerThread)
-            );
-        }
+        Assert.Throws<ArgumentOutOfRangeException>(() => new LruCache<int, int>(capacity));
     }
 }
