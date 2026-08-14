@@ -24,7 +24,7 @@ When asked to improve or optimize code, treat naming review as part of the work.
 
 Respect the multi-package structure. Keep `FclEx.Core` focused on fundamental, broadly reusable helpers and avoid introducing dependencies on optional external ecosystems there. Put integrations with ASP.NET Core, EF Core, Dapper, Serilog, Slack, messaging, JSON libraries, YAML libraries, or test frameworks in the matching package.
 
-These projects produce public NuGet packages, so do not casually rename, remove, or reshape public APIs without explicit user direction. However, always call out public API concerns when you see them, especially unclear names, unnatural English, confusing parameter names, or APIs whose shape does not match their behavior. This repository is still early enough that breaking changes may be acceptable after discussion; silence is worse than pointing out a questionable API.
+These projects produce public NuGet packages, but design correctness, conceptual coherence, and a clear long-term API take priority over preserving backward compatibility. A change being breaking is not, by itself, a reason to keep a flawed design. Avoid gratuitous churn, but rename, remove, or reshape APIs when that produces the more appropriate design; identify the compatibility impact explicitly and update tests and documentation together. Always call out public API concerns when you see them, especially unclear names, unnatural English, confusing parameter names, or APIs whose shape does not match their behavior.
 
 When changing package purpose, public surface area, naming, or behavior, check whether the root `README.md`, the package-level `README.md`, and the project `Description` metadata should be updated together.
 

@@ -33,20 +33,30 @@
    位置：`src/FclEx.Core/FclEx/Helpers/TaskHelper.cs:29-44`。`Enumerable.Repeat(Task.Run(action), times)` 复制的是同一个已经创建的 `Task`，并不会重复调用 `action`；返回数组也只是重复同一结果。应改为重复委托后逐次调用，例如 `Enumerable.Range(...).Select(_ => Task.Run(action))`，并测试调用次数和结果实例。
    修复：改为按次数分别创建并启动任务；已验证 `Action` 和 `Func<TResult>` 的调用次数及返回结果。
 
-6. **[P1] `XElementEqualityComparer.Equals` 忽略元素名和子树结构，并违反哈希契约**  
+6. **[P1][已修复] `XElementEqualityComparer.Equals` 忽略元素名和子树结构，并违反哈希契约**
+
    位置：`src/FclEx.Core/System/Xml/Linq/XElementEqualityComparer.cs:9-25`。`Equals` 只比较聚合后的 `Value` 和属性，因此 `<a><b>x</b></a>` 可能等于 `<c>x</c>`；但 `GetHashCode` 又包含 `obj.Name`，导致“相等对象必须有相同哈希码”的契约被破坏。建议明确需要结构相等还是浅层相等；结构相等可基于 `XNode.DeepEquals`，并由同一组字段生成哈希码。
+   修复：按决定直接移除了 `XElementEqualityComparer` 公共类型；仓库内没有调用方。
 
-7. **[P1] 多属性元素可能使 `XElementEqualityComparer` 直接抛异常**  
+7. **[P1][已修复] 多属性元素可能使 `XElementEqualityComparer` 直接抛异常**
+
    位置：`src/FclEx.Core/System/Xml/Linq/XElementEqualityComparer.cs:15-16`。属性使用 `OrderBy(m => m.Name)`，而 `XName` 只实现 `IEquatable<XName>`，未实现 `IComparable`；两个或更多不同属性名会触发“至少一个对象必须实现 IComparable”。应提供明确比较器，例如按 namespace URI、local name 做 ordinal 排序，或改用按名称查找的无序比较。
+   修复：随问题 6 一并移除了 `XElementEqualityComparer`。
 
-8. **[P1] `ObjectMemoryEqualityComparer` 在未固定对象时创建原始内存 Span**  
+8. **[P1][待讨论] `ObjectMemoryEqualityComparer` 在未固定对象时创建原始内存 Span**
+
    位置：`src/FclEx.Core/System/Collections/Generic/~EqualityComparers/ObjectMemoryEqualityComparer.cs:17-60`。从托管引用计算地址后直接构造 `Span<byte>`，期间 GC 可以移动对象，使地址失效并读取任意旧内存；引用类型布局算法也依赖 CLR 内部实现。即使保留该低层 API，也应限制为明确可安全处理的 unmanaged 值类型；否则必须在读取期间 pin 对象，并在文档中标为运行时相关、不适合作为通用 comparer。
+   状态：`GCHandle.Alloc(instance, GCHandleType.Pinned)` 不能统一固定任意对象，而且临时固定根对象仍不能使原始内存比较成为稳定的相等/哈希契约；等待设计讨论后再决定是否移除或收窄 API。
 
-9. **[P1] `FileHelper.AreFilesEqual` 会比较未初始化的栈内存**  
+9. **[P1][已修复] `FileHelper.AreFilesEqual` 会比较未初始化的栈内存**
+
    位置：`src/FclEx.Core/FclEx/Helpers/FileHelper.cs:55-83`。`NET5_0_OR_GREATER` 分支分配两个 4096 字节的 `stackalloc` 缓冲区，却对整个缓冲区做 `SequenceEqual`，而短文件或最后一块之后的区域未必初始化；相同文件可能被误判为不同。还应处理 `Read` 短读，而不是预先按请求长度递减。建议只比较 `buf[..i]`/`buf[..j]`，按实际读取数推进，并循环填满或正确处理短读。
+   修复：改为循环读取至填满当前逻辑块，只比较有效范围，并在完整读取后推进长度；已覆盖空文件、短文件、块边界及跨块文件。
 
-10. **[P1] 取消 `ProcessInvoker` 只停止等待，不终止子进程**  
+10. **[P1][已修复] 取消 `ProcessInvoker` 只停止等待，不终止子进程**
+
     位置：`src/FclEx.Core/FclEx/Utils/~Diagnostics/ProcessInvoker.cs:34-46`。`WaitForExitAsync` 因 token 取消后，`Process` 被 dispose，但操作系统进程通常继续运行；对于 PowerShell/WSL 命令会遗留后台进程和副作用。建议明确取消语义，并在取消时按需 `Kill(entireProcessTree: true)`（旧框架使用兼容实现），随后等待退出并保留原取消异常。
+    修复：取消时现代 .NET 终止整个进程树，旧目标终止所启动的进程，等待退出后重新抛出取消异常；已增加真实进程终止测试。
 
 11. **[P1] `ObjectHelper.TrySet` 的委托缓存键缺少泛型签名**  
     位置：`src/FclEx.Core/FclEx/Helpers/ObjectHelper.cs:62-86`。缓存只以 `MemberInfo` 为键；若同一个基类成员先通过 `Derived` selector 使用，再通过 `Base` selector 使用，缓存中的 `Func<Derived, TMember>` 会被强制转换为 `Func<Base, TMember>` 并抛 `InvalidCastException`，setter 同理。缓存键应包含成员、目标类型和成员类型，或按封闭泛型类型拆分缓存。

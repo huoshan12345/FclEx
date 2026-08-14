@@ -39,7 +39,31 @@ public class ProcessInvoker(string fileName, Func<string, string> argumentsConve
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
 
-        await process.WaitForExitAsync(invocation.CancellationToken);
+        try
+        {
+            await process.WaitForExitAsync(invocation.CancellationToken);
+        }
+        catch (OperationCanceledException) when (invocation.CancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                if (!process.HasExited)
+                {
+#if NET5_0_OR_GREATER
+                    process.Kill(true);
+#else
+                    process.Kill();
+#endif
+                    await process.WaitForExitAsync();
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                // The process exited between the HasExited check and Kill.
+            }
+
+            throw;
+        }
 
         var output = queue.Where(m => m is not null).JoinWith(Environment.NewLine);
 
