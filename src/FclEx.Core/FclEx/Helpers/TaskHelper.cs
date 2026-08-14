@@ -62,26 +62,6 @@ public static class TaskHelper
         return Task.WhenAll(tasks);
     }
 
-    /// <summary>
-    /// Asynchronously waits until <paramref name="delay"/> elapses or <paramref name="cancellationToken"/> is canceled.
-    /// </summary>
-    /// <remarks>
-    /// Unlike <see cref="Task.Delay(TimeSpan, CancellationToken)"/>, cancellation ends the wait early without putting
-    /// the returned task into the canceled state. Other exceptions are not suppressed.
-    /// </remarks>
-    public static async Task DelayIgnoringCancellationAsync(
-        TimeSpan delay,
-        CancellationToken cancellationToken = default)
-    {
-        if (delay.Ticks <= 0)
-            return;
-        try
-        {
-            await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
-    }
-
 #if !NET5_0_OR_GREATER
     public static async Task<T> WaitAsync<T>(this Task<T> task, CancellationToken cancellationToken)
     {

@@ -94,7 +94,7 @@ partial class EnumerableExtensions
                 else
                     failure.Add((item, r));
             }
-            await TaskHelper.DelayIgnoringCancellationAsync(TimeSpan.FromSeconds(intervalSeconds), token);
+            await Task.DelaySafely(TimeSpan.FromSeconds(intervalSeconds), token);
         }
         return (success, failure);
     }

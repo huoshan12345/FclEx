@@ -137,7 +137,7 @@ public class HttpServerFixture : CoreTestsFixture
 
         app.MapGet(TestApiPaths.Sleep, async (HttpContext context, double seconds) =>
         {
-            await TaskHelper.DelayIgnoringCancellationAsync(TimeSpan.FromSeconds(seconds), context.RequestAborted);
+            await Task.DelaySafely(TimeSpan.FromSeconds(seconds), context.RequestAborted);
         });
 
         app.MapPost(TestApiPaths.Post, async context =>

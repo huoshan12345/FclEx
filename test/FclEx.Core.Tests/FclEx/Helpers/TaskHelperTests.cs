@@ -1,3 +1,5 @@
+using FclEx.Extensions.TaskExtensions;
+
 namespace FclEx.Helpers;
 
 public class TaskHelperTests
@@ -21,16 +23,6 @@ public class TaskHelperTests
 
         Assert.Equal(5, invocationCount);
         Assert.Equal([1, 2, 3, 4, 5], results.OrderBy(m => m).ToArray());
-    }
-
-    [RetryFact]
-    public async Task DelayIgnoringCancellationAsync_CancellationEndsDelayWithoutCancelingReturnedTask()
-    {
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(0.1));
-        var watch = ValueStopwatch.StartNew();
-        await TaskHelper.DelayIgnoringCancellationAsync(TimeSpan.FromSeconds(10), cts.Token);
-        var time = watch.GetElapsedTime();
-        Assert.True(time.TotalSeconds < 1, time.ToString());
     }
 
     [RetryFact]
