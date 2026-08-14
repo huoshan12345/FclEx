@@ -2,10 +2,10 @@ namespace FclEx.EfCore;
 
 public static class QueryableHelper
 {
-    public static readonly Expression EfFunctions = Expression.Constant(EF.Functions);
-    public static MethodInfo ContainsOfString { get; } = typeof(string).GetRequiredMethod(nameof(string.Contains), 0, typeof(string));
-
-    public static MethodInfo EfLike { get; } = typeof(DbFunctionsExtensions)
+    private static readonly Expression EscapeChar = Expression.Constant(@"\");
+    private static readonly Expression EscapedEscapeChar = Expression.Constant(@"\\");
+    private static readonly Expression EfFunctions = Expression.Constant(EF.Functions);
+    private static MethodInfo EfLike { get; } = typeof(DbFunctionsExtensions)
         .GetRequiredMethod(nameof(DbFunctionsExtensions.Like), 0, typeof(DbFunctions), typeof(string), typeof(string), typeof(string));
 
     internal static string GetContainsPattern(string value)
@@ -26,9 +26,6 @@ public static class QueryableHelper
             .Replace("_", @"\_")
             .Replace("[", @"\[");
     }
-
-    private static readonly Expression EscapeChar = Expression.Constant(@"\");
-    private static readonly Expression EscapedEscapeChar = Expression.Constant(@"\\");
 
     public static Expression<Func<T, bool>> BuildLike<T>(
         Expression<Func<T, string?>> selector,
