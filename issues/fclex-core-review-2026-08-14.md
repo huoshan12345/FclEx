@@ -98,14 +98,17 @@
     位置：`src/FclEx.Core/FclEx/Helpers/ActionHelper.cs:56-107`。异步重试使用 `catch (Exception)`，把 `OperationCanceledException` 当普通失败处理，且 API 没有 cancellation token；取消后的操作可能继续执行多次。建议异步重载接收 token，单独重新抛出与该 token 相关的取消异常，并将 delay 也绑定到 token。
     修复：两个异步重载改为接收 token-aware delegate 和 `CancellationToken`，重试延迟改用 `TimeSpan` 并绑定同一 token；任何 `OperationCanceledException` 都立即传播。公开参数改为语义明确的 `maxRetryCount`、`retryDelay`、`onFailure`/`fallback`，泛型与非泛型版本共享同一个重试循环。
 
-21. **[P1] `Disposable`/`AsyncDisposable` 每次释放都会重复执行回调**  
+21. **[P1][已修复] `Disposable`/`AsyncDisposable` 每次释放都会重复执行回调**
     位置：`src/FclEx.Core/FclEx/Utils/~Disposables/Disposable.cs:12-16`、`AsyncDisposable.cs:12-16`。这些公共资源包装器没有 disposed 状态，重复 `Dispose`/`DisposeAsync` 会重复释放底层资源；这违反常见 IDisposable 幂等约定，也会使 `GCHandle.Free` 等动作抛错。建议用 `Interlocked.Exchange` 原子取走回调，只允许执行一次。
+    修复：同步版本通过 `Interlocked.Exchange` 原子取走回调。异步版本只发布一个共享释放任务，所有并发或后续调用都会等待并观察同一次释放结果；释放失败也不会重新执行回调。
 
-22. **[P1] `DisposableValue` 与 `AsyncDisposableValue` 的释放检查不是原子的**  
+22. **[P1][已修复] `DisposableValue` 与 `AsyncDisposableValue` 的释放检查不是原子的**
     位置：`src/FclEx.Core/FclEx/Utils/~Disposables/DisposableValue.cs:13-30`、`AsyncDisposableValue.cs:21-40`。两个线程都可能看到 `_disposed == false` 并重复释放；回调重入也会重复进入，因为状态在回调完成后才设置。应在调用用户代码前原子完成状态转换，并定义回调失败后对象是否仍视为 disposed。
+    修复：两个类型都在调用用户释放逻辑前原子进入 disposed 状态；即使回调失败，值仍不可访问且释放不会重试。异步版本的并发调用共享同一个任务，并将原本公开的 `_disposeAction` 收回为私有实现细节。
 
-23. **[P1] `AsyncTimer` 的后台任务不可观察、不可等待也不可释放**  
+23. **[P1][已修复] `AsyncTimer` 的后台任务不可观察、不可等待也不可释放**
     位置：`src/FclEx.Core/FclEx/Utils/~Threading/AsyncTimer.cs:3-44`。构造函数立即启动 `_task`，但字段私有且类型不实现 `IDisposable/IAsyncDisposable`；due/period delay 的取消异常位于 try/catch 外，`onException` 自身抛错也会 fault 一个无人观察的任务。建议提供显式 `StartAsync`/`Completion` 和异步停止释放协议，避免构造函数 fire-and-forget。
+    修复：`AsyncTimer` 重建为显式启动、单次运行的异步定时器。构造函数不再启动后台任务；`RunAsync` 返回生命周期任务，`Completion` 可再次观察，`StopAsync` 与 `IAsyncDisposable` 会取消并等待活动回调。回调不重叠，period 采用 callback 完成后的 fixed-delay 语义；未处理异常会 fault 运行任务，显式异步异常处理器成功后才继续运行。
 
 24. **[P1] LRU/LFU 在写锁内调用公开的 eviction 事件**  
     位置：`LruCache.cs:177-192`、`LfuCache.cs:191-204`。`OnItemCleared` 在内部状态更新中且持有 `ReaderWriterLockSlim` 写锁时执行；handler 重入缓存会触发锁递归异常，handler 抛错还会造成“旧项已删、新项未加”的半完成状态。应先完成内部事务，释放锁后再触发回调，并决定回调异常是否传播。

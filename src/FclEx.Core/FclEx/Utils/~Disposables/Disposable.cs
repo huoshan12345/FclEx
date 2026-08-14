@@ -2,7 +2,7 @@ namespace FclEx.Utils;
 
 public class Disposable : IDisposable
 {
-    private readonly Action _disposeBody;
+    private Action? _disposeBody;
 
     public Disposable(Action disposeBody)
     {
@@ -11,8 +11,12 @@ public class Disposable : IDisposable
 
     public void Dispose()
     {
+        var disposeBody = Interlocked.Exchange(ref _disposeBody, null);
+        if (disposeBody is null)
+            return;
+
         GC.SuppressFinalize(this);
-        _disposeBody();
+        disposeBody();
     }
 
     public static IDisposable Empty => Create(() => { });

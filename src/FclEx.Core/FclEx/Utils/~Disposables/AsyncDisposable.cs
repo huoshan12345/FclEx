@@ -2,7 +2,8 @@ namespace FclEx.Utils;
 
 public class AsyncDisposable : IAsyncDisposable
 {
-    private readonly Func<Task> _disposeBody;
+    private Func<Task>? _disposeBody;
+    private Task? _disposeTask;
 
     public AsyncDisposable(Func<Task> disposeBody)
     {
@@ -11,8 +12,38 @@ public class AsyncDisposable : IAsyncDisposable
 
     public ValueTask DisposeAsync()
     {
+        var disposeTask = Volatile.Read(ref _disposeTask);
+        if (disposeTask is not null)
+            return new ValueTask(disposeTask);
+
+        var completion = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        disposeTask = Interlocked.CompareExchange(ref _disposeTask, completion.Task, null);
+        if (disposeTask is not null)
+            return new ValueTask(disposeTask);
+
         GC.SuppressFinalize(this);
-        return new(_disposeBody());
+        var disposeBody = Interlocked.Exchange(ref _disposeBody, null)!;
+        _ = CompleteDisposalAsync(disposeBody, completion);
+        return new ValueTask(completion.Task);
+    }
+
+    private static async Task CompleteDisposalAsync(
+        Func<Task> disposeBody,
+        TaskCompletionSource<object?> completion)
+    {
+        try
+        {
+            await disposeBody().ConfigureAwait(false);
+            completion.TrySetResult(null);
+        }
+        catch (OperationCanceledException)
+        {
+            completion.TrySetCanceled();
+        }
+        catch (Exception ex)
+        {
+            completion.TrySetException(ex);
+        }
     }
 
     public static readonly IAsyncDisposable Empty = Create(() => Task.CompletedTask);
