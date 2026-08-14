@@ -6,18 +6,18 @@ namespace FclEx.Extensions;
 /// </summary>
 public static partial class BytesExtensions
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static MemoryStream ToStream(this byte[] bytes) => new(bytes);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static string GetString(this byte[] bytes, Encoding? encoding = null)
         => bytes.AsReadOnlySpan().GetString(encoding);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static string GetString(this ArraySegment<byte> bytes, Encoding? encoding = null)
         => bytes.AsReadOnlySpan().GetString(encoding);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static string ToBase64(this byte[] bytes) => Convert.ToBase64String(bytes);
 
     public static string ToHex(this byte[] bytes, bool upperCase = false)
@@ -47,11 +47,11 @@ public static partial class BytesExtensions
         return obj!;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static T MarshalTo<T>(this byte[] bytes)
     {
         var i = 0;
-        return MarshalTo<T>(bytes, ref i);
+        return bytes.MarshalTo<T>(ref i);
     }
 
     public static T[] MarshalToArray<T>(this byte[] bytes, int count, ref int offset)
@@ -76,12 +76,12 @@ public static partial class BytesExtensions
         return result;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static T[] MarshalToArray<T>(this byte[] bytes)
     {
         var length = Marshal.SizeOf<T>();
         var i = 0;
-        return MarshalToArray<T>(bytes, bytes.Length / length, ref i);
+        return bytes.MarshalToArray<T>(bytes.Length / length, ref i);
     }
 
     public static byte[] MarshalArrayToBytes<T>(this IReadOnlyList<T> list)
@@ -108,13 +108,13 @@ public static partial class BytesExtensions
         return bufByte;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static void WriteTo(this byte[] bytes, Stream stream) => stream.Write(bytes, 0, bytes.Length);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static Task WriteToAsync(this byte[] bytes, Stream stream) => stream.WriteAsync(bytes, 0, bytes.Length);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static int IndexOf(this byte[] bytes, byte[] subBytes)
     {
         return bytes.AsReadOnlySpan().IndexOf(subBytes);
@@ -170,7 +170,7 @@ public static partial class BytesExtensions
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static int ComputeHashCode(this byte[] bytes)
     {
         return bytes.AsReadOnlySpan().ComputeHashCode();
