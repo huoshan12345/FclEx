@@ -2,14 +2,14 @@ namespace FclEx.Utils;
 
 public class SafeCounter
 {
-    private volatile int _value;
+    private int _value;
 
     public SafeCounter(int value = 0)
     {
         _value = value;
     }
 
-    public int Value => _value;
+    public int Value => Volatile.Read(ref _value);
 
     /// <summary>
     /// Increments this counter, as an atomic operation.
@@ -41,8 +41,35 @@ public class SafeCounter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Set(int value) => Interlocked.Exchange(ref _value, value);
 
+    /// <summary>
+    /// Atomically increments the counter and resets it to zero when the increment reaches the specified threshold.
+    /// </summary>
+    /// <param name="threshold">The positive number of increments in one batch.</param>
+    /// <returns>
+    /// <see langword="true"/> only for the caller that completed and claimed a threshold-sized batch; otherwise,
+    /// <see langword="false"/>.
+    /// </returns>
+    /// <remarks>
+    /// The increment and conditional reset are one compare-and-swap operation. Increments performed after a batch is
+    /// claimed belong to the next batch and cannot be erased by the caller processing the completed batch.
+    /// </remarks>
+    public bool IncrementAndResetIfThresholdReached(int threshold)
+    {
+        if (threshold <= 0)
+            throw new ArgumentOutOfRangeException(nameof(threshold), threshold, "Threshold must be greater than zero.");
+
+        while (true)
+        {
+            var current = Volatile.Read(ref _value);
+            var thresholdReached = current >= threshold - 1;
+            var next = thresholdReached ? 0 : current + 1;
+            if (Interlocked.CompareExchange(ref _value, next, current) == current)
+                return thresholdReached;
+        }
+    }
+
     public override string ToString()
     {
-        return _value.ToString();
+        return Value.ToString();
     }
 }

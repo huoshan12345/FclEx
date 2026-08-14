@@ -9,6 +9,18 @@ public class PwshInvokerTests
         Assert.Contains("Directory:", result);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_CapturesTrailingStandardOutputAndError()
+    {
+        const string command = "1..2000 | ForEach-Object { [Console]::Out.WriteLine(('stdout-' + $_)); [Console]::Error.WriteLine(('stderr-' + $_)) }; [Console]::Out.WriteLine('stdout-tail'); [Console]::Error.WriteLine('stderr-tail')";
+
+        var result = await PwshInvoker.Instance.ExecuteAsync(command);
+
+        var lines = result.Split([Environment.NewLine], StringSplitOptions.None);
+        Assert.Contains("stdout-tail", lines);
+        Assert.Contains("stderr-tail", lines);
+    }
+
     [LocalOnlyFact]
     public async Task ExecuteAsync_Cancellation_TerminatesProcess()
     {

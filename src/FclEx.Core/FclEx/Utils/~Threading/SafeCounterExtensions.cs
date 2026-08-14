@@ -9,21 +9,33 @@ public static class SafeCounterExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int Reset(this SafeCounter counter) => counter.Set(0);
 
-    public static async Task IncrementToThreshold(this SafeCounter counter, int threshold, Func<Task> action)
+    /// <summary>
+    /// Atomically increments the counter and asynchronously invokes an action when this caller completes a batch.
+    /// </summary>
+    /// <remarks>
+    /// The batch is claimed before the action starts. A failed action is not retried and does not restore the batch.
+    /// Actions belonging to different completed batches may overlap.
+    /// </remarks>
+    public static async Task IncrementAndInvokeAtThresholdAsync(this SafeCounter counter, int threshold, Func<Task> action)
     {
-        if (counter.Increment() >= threshold)
-        {
+        Check.NotNull(counter);
+        Check.NotNull(action);
+
+        if (counter.IncrementAndResetIfThresholdReached(threshold))
             await action();
-            counter.Reset();
-        }
     }
 
-    public static void IncrementToThreshold(this SafeCounter counter, int threshold, Action action)
+    /// <summary>Atomically increments the counter and invokes an action when this caller completes a batch.</summary>
+    /// <remarks>
+    /// The batch is claimed before the action starts. A failed action is not retried and does not restore the batch.
+    /// Actions belonging to different completed batches may overlap.
+    /// </remarks>
+    public static void IncrementAndInvokeAtThreshold(this SafeCounter counter, int threshold, Action action)
     {
-        if (counter.Increment() >= threshold)
-        {
+        Check.NotNull(counter);
+        Check.NotNull(action);
+
+        if (counter.IncrementAndResetIfThresholdReached(threshold))
             action();
-            counter.Reset();
-        }
     }
 }

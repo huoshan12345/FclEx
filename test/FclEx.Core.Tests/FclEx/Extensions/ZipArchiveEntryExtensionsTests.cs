@@ -80,6 +80,37 @@ public class ZipArchiveEntryExtensionsTests
         }
     }
 
+    [Fact]
+    public void BuildTree_MissingDirectoryEntriesAndRepeatedLocalNames_CreatesIndependentBranches()
+    {
+        using var stream = new MemoryStream();
+        using (var writeArchive = new ZipArchive(stream, ZipArchiveMode.Create, true))
+        {
+            writeArchive.CreateEntry("left/common/left.txt");
+            writeArchive.CreateEntry("right/common/right.txt");
+            writeArchive.CreateEntry("left/");
+        }
+
+        stream.Position = 0;
+        using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
+
+        var root = archive.BuildTree();
+
+        var left = Assert.Single(root.Children, node => node.Value.Name == "left");
+        var right = Assert.Single(root.Children, node => node.Value.Name == "right");
+        Assert.False(left.Value.IsSynthetic);
+        Assert.True(right.Value.IsSynthetic);
+
+        var leftCommon = Assert.Single(left.Children);
+        var rightCommon = Assert.Single(right.Children);
+        Assert.Equal("left/common", leftCommon.Value.FullName);
+        Assert.Equal("right/common", rightCommon.Value.FullName);
+        Assert.True(leftCommon.Value.IsSynthetic);
+        Assert.True(rightCommon.Value.IsSynthetic);
+        Assert.Equal("left.txt", Assert.Single(leftCommon.Children).Value.Name);
+        Assert.Equal("right.txt", Assert.Single(rightCommon.Children).Value.Name);
+    }
+
     private static void CheckNode(DirectoryInfo di, TreeNode<ZipArchiveEntryInfo> node)
     {
         var files = di.EnumerateFileSystemInfos("*", SearchOption.TopDirectoryOnly)

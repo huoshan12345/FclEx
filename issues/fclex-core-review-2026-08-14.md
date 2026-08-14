@@ -118,20 +118,25 @@
     位置：`LruCache.cs:35-55`、`LfuCache.cs:67-87`。`activator(key)` 作为 `AddInternal` 参数在写锁作用域内求值；慢 factory 会阻塞全部访问，重入缓存会因 `NoRecursion` 失败。建议在锁外创建值，再在写锁内二次检查；若要求单次创建，应使用 per-key lazy，而不是在全局写锁中运行用户代码。
     修复：`GetOrAdd` 以每 key 的 `Lazy<TValue>` 协调并发创建，同一缺失 key 的并发调用共享一次 factory，factory 始终在缓存锁外执行，不同 key 可并行创建；失败的创建记录会移除并允许后续重试。缓存整体也已重构：公共抽象由容易与 Microsoft 缓存混淆的 `IMemoryCache` 改为语义明确的 `IBoundedCache`，删除无意义的 `IDisposable`；LRU 使用字典与双向链表，LFU 使用频率桶、桶内 LRU，并按可配置访问周期将频率减半以淘汰已经降温的历史热点。
 
-26. **[P1] `SafeCounter.IncrementToThreshold` 不是一个原子的阈值操作**  
+26. **[P1][已修复] `SafeCounter.IncrementToThreshold` 不是一个原子的阈值操作**
     位置：`src/FclEx.Core/FclEx/Utils/~Threading/SafeCounterExtensions.cs:10-29`。多个线程可同时得到 `>= threshold`，并发执行 action 后相互 reset；期间的新增量还可能被 reset 丢失。名称中的 `Safe` 容易让调用者误认为整个组合操作线程安全。应使用 CAS 状态机/交换固定批次，或明确改名并记录仅单次增减原子。
+    修复：在 `SafeCounter` 内新增 `IncrementAndResetIfThresholdReached`，通过 CAS 将递增和条件归零合并为一次原子状态转换；只有成功认领完整批次的调用方返回 true，之后的增量属于下一批，不会被回调后的 reset 清除。回调扩展重命名为 `IncrementAndInvokeAtThreshold`/`IncrementAndInvokeAtThresholdAsync`，并明确回调失败不恢复批次、不同批次的回调可以重叠。已增加高并发整批计数、余数保留和回调重入测试。
 
-27. **[P1] `PrecisionDateTimeOffsetComparer` 不能满足 `IEqualityComparer` 契约**  
+27. **[P1][已修复] `PrecisionDateTimeOffsetComparer` 不能满足 `IEqualityComparer` 契约**
     位置：`src/FclEx.Core/System/DateTimeOffsetComparers.cs:19-42`。“差值小于容差”不具传递性，例如 A≈B、B≈C 但 A≉C；非零 precision 的 `GetHashCode` 还直接抛错，因此不能用于 `Dictionary`/`HashSet`。建议不要实现 `IEqualityComparer`，改为显式 `IsWithinTolerance`；若确需 comparer，应采用离散 bucket 规则并保证 Equals/GetHashCode 一致，同时拒绝负 precision。
+    修复：按决定直接删除 `PrecisionDateTimeOffsetComparer` 及其专用测试；源码中没有其他调用方。
 
-28. **[P1] `ProcessInvoker` 在旧目标框架上可能丢失末尾输出**  
+28. **[P1][已修复] `ProcessInvoker` 在旧目标框架上可能丢失末尾输出**
     位置：`src/FclEx.Core/FclEx/Utils/~Diagnostics/ProcessInvoker.cs:35-45`、`FclEx/Extensions/~System/~Diagnostics/ProcessExtensions.cs:5-26`。`net472/netstandard2.0` 的兼容 `WaitForExitAsync` 只等待 Exited 事件，没有等待异步 stdout/stderr reader 的 EOF；进程退出后立即读取队列可能漏掉尾部行。应等待两个流的完成信号，或在进程退出后执行兼容的 drain/`WaitForExit` 收尾。
+    修复：分别以 `DataReceived` 的 null 终止事件跟踪 stdout 和 stderr EOF，正常退出及取消终止进程后都会等待两个流完成再读取结果或释放进程。旧框架 `WaitForExitAsync` 同时改为异步延续、正确注销 Exited handler 和 cancellation registration。已增加大量 stdout/stderr 后紧跟尾标记的回归测试，并覆盖 net472。
 
-29. **[P1] `ZipArchive.BuildTree` 用局部目录名作为父节点键，无法表示一般 ZIP 树**  
+29. **[P1][已修复] `ZipArchive.BuildTree` 用局部目录名作为父节点键，无法表示一般 ZIP 树**
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~IO/~Compression/ZipArchiveEntryExtensions.cs:52-80`、`System/IO/Compression/ZipArchiveEntryInfo.cs:18-20`。父键只是上一段目录名，每层还重建字典；不同分支出现同名目录会冲突，而且 ZIP 未显式包含目录 entry 时会找不到父节点。应以规范化完整路径为键，并在遇到文件时按需创建缺失祖先目录。
+    修复：树构建改用 `/` 分隔的规范化完整路径索引目录；遇到缺失祖先时按需合成目录节点，因此不同分支下的同名目录互不冲突。`ZipArchiveEntryInfo` 改为只读属性，并通过可空 `Entry` 与 `IsSynthetic` 明确物理 entry 和合成目录的区别；`Parent` 现在保存完整父路径。已增加“省略目录 entry + 两个分支包含同名目录”的测试。
 
-30. **[P2] `CopyToAsync(..., AutoRename)` 返回错误的目标 `FileInfo`**  
+30. **[P2][已修复] `CopyToAsync(..., AutoRename)` 返回错误的目标 `FileInfo`**
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~IO/FileInfoExtensions.cs:118-130`。递归复制到 `newDest` 后忽略其返回值，最终仍返回原本冲突的 `dest`，调用者无法知道真实文件名。应直接 `return await file.CopyToAsync(newDest, ...)`，并测试连续多个冲突后的最终路径。
+    修复：`AutoRename` 分支直接返回递归复制的结果；连续存在 `report.txt`、`report_1.txt` 时会返回实际创建并已刷新的 `report_2.txt`。已增加多次冲突后的路径、内容及原文件未覆盖测试。
 
 31. **[P2] `ActionHelper.TryAsync` 的 `delaySeconds` 实际按毫秒解释**  
     位置：`src/FclEx.Core/FclEx/Helpers/ActionHelper.cs:56-74`。非泛型异步重载调用 `Task.Delay(delaySeconds)`，而同步重载和泛型异步重载都按秒延迟。应统一使用 `TimeSpan`，或调用 `Task.Delay(TimeSpan.FromSeconds(delaySeconds))`；公共参数最好避免用整数表达时间单位。

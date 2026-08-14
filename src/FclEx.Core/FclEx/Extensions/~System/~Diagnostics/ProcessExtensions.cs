@@ -6,24 +6,32 @@ public static class ProcessExtensions
     /// <summary>
     /// Waits asynchronously for the process to exit.
     /// </summary>
-    /// <param name="process">The process to wait for cancellation.</param>
-    /// <param name="cancellationToken">A cancellation token. If invoked, the task will return immediately as canceled.</param>
+    /// <param name="process">The process to wait for.</param>
+    /// <param name="cancellationToken">A cancellation token that cancels waiting but does not terminate the process.</param>
     /// <returns>A Task representing waiting for the process to end.</returns>
-    public static Task WaitForExitAsync(this Process process, CancellationToken cancellationToken = default)
+    public static async Task WaitForExitAsync(this Process process, CancellationToken cancellationToken = default)
     {
         if (process.HasExited)
-            return Task.CompletedTask;
+            return;
 
-        var tcs = new TaskCompletionSource<object?>();
+        var tcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        void OnExited(object? sender, EventArgs args) => tcs.TrySetResult(null);
+
         process.EnableRaisingEvents = true;
-        process.Exited += (sender, args) => tcs.TrySetResult(null);
+        process.Exited += OnExited;
 
-        if (cancellationToken != default)
-            cancellationToken.Register(() => tcs.TrySetCanceled());
+        try
+        {
+            if (process.HasExited)
+                return;
 
-        return process.HasExited
-            ? Task.CompletedTask
-            : tcs.Task;
+            using var registration = cancellationToken.Register(() => tcs.TrySetCanceled());
+            await tcs.Task;
+        }
+        finally
+        {
+            process.Exited -= OnExited;
+        }
     }
 #endif
 }

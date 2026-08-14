@@ -32,9 +32,11 @@ public class ProcessInvoker(string fileName, Func<string, string> argumentsConve
             EnableRaisingEvents = true,
         };
 
-        var queue = new ConcurrentQueue<string?>();
-        process.OutputDataReceived += (sender, e) => queue.Enqueue(e.Data);
-        process.ErrorDataReceived += (sender, e) => queue.Enqueue(e.Data);
+        var queue = new ConcurrentQueue<string>();
+        var outputCompleted = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var errorCompleted = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        process.OutputDataReceived += (_, e) => CaptureOutput(e, outputCompleted);
+        process.ErrorDataReceived += (_, e) => CaptureOutput(e, errorCompleted);
         process.Start();
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
@@ -54,22 +56,35 @@ public class ProcessInvoker(string fileName, Func<string, string> argumentsConve
 #else
                     process.Kill();
 #endif
-                    await process.WaitForExitAsync();
                 }
+
+                await process.WaitForExitAsync();
             }
             catch (InvalidOperationException)
             {
                 // The process exited between the HasExited check and Kill.
             }
 
+            await Task.WhenAll(outputCompleted.Task, errorCompleted.Task);
+
             throw;
         }
 
-        var output = queue.Where(m => m is not null).JoinWith(Environment.NewLine);
+        await Task.WhenAll(outputCompleted.Task, errorCompleted.Task);
+
+        var output = queue.JoinWith(Environment.NewLine);
 
         if (process.ExitCode != 0 && invocation.IgnoreNonZeroExitCode == false)
             throw new ProcessException(process.ExitCode, output);
 
         return output;
+
+        void CaptureOutput(DataReceivedEventArgs args, TaskCompletionSource<object?> completion)
+        {
+            if (args.Data is null)
+                completion.TrySetResult(null);
+            else
+                queue.Enqueue(args.Data);
+        }
     }
 }

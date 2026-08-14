@@ -45,11 +45,6 @@ public static class ZipArchiveEntryExtensions
         return entry.ExtractToFileAsync(fi.FullName, overwrite, bufferSize, token);
     }
 
-    public static string Name(this ZipArchiveEntryInfo info)
-    {
-        return info.Segments.Last();
-    }
-
     public static bool IsDirectory(this ZipArchiveEntry entry)
     {
         var last = entry.FullName.LastOrDefault();
@@ -61,32 +56,70 @@ public static class ZipArchiveEntryExtensions
         return !entry.IsDirectory();
     }
 
+    /// <summary>Builds a hierarchy for all files and directories in an archive.</summary>
+    /// <remarks>
+    /// Paths are normalized to <c>/</c>-separated full paths. Missing directory entries are represented by synthetic
+    /// <see cref="ZipArchiveEntryInfo"/> nodes whose <see cref="ZipArchiveEntryInfo.Entry"/> is <see langword="null"/>.
+    /// Directories precede files and each group is ordered by name.
+    /// </remarks>
     public static TreeNode<ZipArchiveEntryInfo> BuildTree(this ZipArchive archive)
     {
-        var entries = archive.Entries
-            .Select(m => new ZipArchiveEntryInfo(m))
-            .GroupBy(m => m.Segments.Length);
+        Check.NotNull(archive);
 
         var root = new TreeNode<ZipArchiveEntryInfo>(default);
-
-        var parents = new[] { (root, ".") }.ToDictionary(m => m.Item2, m => m.Item1);
-        foreach (var group in entries)
+        var entries = archive.Entries
+            .Where(entry => ZipArchiveEntryInfo.NormalizePath(entry.FullName).Length != 0)
+            .Select(entry => new ZipArchiveEntryInfo(entry))
+            .ToArray();
+        var explicitDirectories = entries
+            .Where(entry => entry.IsDirectory)
+            .GroupBy(entry => entry.FullName, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
+        var directoryNodes = new Dictionary<string, TreeNode<ZipArchiveEntryInfo>>(StringComparer.Ordinal)
         {
-            var dic = new Dictionary<string, TreeNode<ZipArchiveEntryInfo>>();
+            [string.Empty] = root,
+        };
 
-            foreach (var info in group
-                         .OrderBy(m => m.IsDirectory == false)
-                         .ThenBy(m => m.Name()))
-            {
-                var parent = parents[info.Parent];
-                var child = parent.AddChild(info);
-                if (info.IsDirectory)
-                {
-                    dic.Add(info.Name(), child);
-                }
-            }
-            parents = dic;
+        foreach (var entry in entries)
+        {
+            if (entry.IsDirectory)
+                EnsureDirectory(entry.FullName);
+            else
+                EnsureDirectory(entry.Parent).AddChild(entry);
         }
+
+        var nodes = new Queue<TreeNode<ZipArchiveEntryInfo>>();
+        nodes.Enqueue(root);
+        while (nodes.Count != 0)
+        {
+            var node = nodes.Dequeue();
+            node.Children.Sort((left, right) =>
+            {
+                var typeComparison = right.Value.IsDirectory.CompareTo(left.Value.IsDirectory);
+                return typeComparison != 0
+                    ? typeComparison
+                    : StringComparer.Ordinal.Compare(left.Value.Name, right.Value.Name);
+            });
+            foreach (var child in node.Children.Where(child => child.Value.IsDirectory))
+                nodes.Enqueue(child);
+        }
+
         return root;
+
+        TreeNode<ZipArchiveEntryInfo> EnsureDirectory(string path)
+        {
+            if (directoryNodes.TryGetValue(path, out var existing))
+                return existing;
+
+            var separatorIndex = path.LastIndexOf('/');
+            var parentPath = separatorIndex < 0 ? string.Empty : path[..separatorIndex];
+            var parent = EnsureDirectory(parentPath);
+            var info = explicitDirectories.TryGetValue(path, out var explicitDirectory)
+                ? explicitDirectory
+                : ZipArchiveEntryInfo.CreateSyntheticDirectory(path);
+            var created = parent.AddChild(info);
+            directoryNodes.Add(path, created);
+            return created;
+        }
     }
 }

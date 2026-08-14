@@ -122,8 +122,7 @@ public static class FileInfoExtensions
             {
                 var newName = FileHelper.GetNextFileName(dest.Name);
                 var newDest = new FileInfo(Path.Combine(dest.DirectoryName!, newName));
-                await file.CopyToAsync(newDest, options, bufferSize, token);
-                break;
+                return await file.CopyToAsync(newDest, options, bufferSize, token);
             }
         }
 

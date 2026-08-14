@@ -213,6 +213,25 @@ public class FileInfoExtensionsTests
     }
 
     [Fact]
+    public async Task CopyToAsync_WithMultipleRenameConflicts_ReturnsActualDestination()
+    {
+        var source = CreateTempFile("new");
+        var directory = CreateTempDir();
+        var destination = CreateTempFile("existing", directory.FullName, "report.txt");
+        var firstRenamedDestination = CreateTempFile("existing-1", directory.FullName, "report_1.txt");
+
+        var result = await source.CopyToAsync(destination, FileConflictOptions.AutoRename);
+
+        Assert.Equal(Path.Combine(directory.FullName, "report_2.txt"), result.FullName);
+        Assert.True(result.Exists);
+        Assert.Equal("new", await File.ReadAllTextAsync(result.FullName));
+        Assert.Equal("existing", await File.ReadAllTextAsync(destination.FullName));
+        Assert.Equal("existing-1", await File.ReadAllTextAsync(firstRenamedDestination.FullName));
+
+        Cleanup(source, directory);
+    }
+
+    [Fact]
     public void MoveTo_WithConflict_IgnoreDuplicate()
     {
         var dir = CreateTempDir();
