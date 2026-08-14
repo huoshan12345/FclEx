@@ -58,20 +58,25 @@
     位置：`src/FclEx.Core/FclEx/Utils/~Diagnostics/ProcessInvoker.cs:34-46`。`WaitForExitAsync` 因 token 取消后，`Process` 被 dispose，但操作系统进程通常继续运行；对于 PowerShell/WSL 命令会遗留后台进程和副作用。建议明确取消语义，并在取消时按需 `Kill(entireProcessTree: true)`（旧框架使用兼容实现），随后等待退出并保留原取消异常。
     修复：取消时现代 .NET 终止整个进程树，旧目标终止所启动的进程，等待退出后重新抛出取消异常；已增加真实进程终止测试。
 
-11. **[P1] `ObjectHelper.TrySet` 的委托缓存键缺少泛型签名**  
+11. **[P1][已修复] `ObjectHelper.TrySet` 的委托缓存键缺少泛型签名**
     位置：`src/FclEx.Core/FclEx/Helpers/ObjectHelper.cs:62-86`。缓存只以 `MemberInfo` 为键；若同一个基类成员先通过 `Derived` selector 使用，再通过 `Base` selector 使用，缓存中的 `Func<Derived, TMember>` 会被强制转换为 `Func<Base, TMember>` 并抛 `InvalidCastException`，setter 同理。缓存键应包含成员、目标类型和成员类型，或按封闭泛型类型拆分缓存。
+    修复：缓存按封闭的 `T, TMember` 泛型类型拆分，并改为强类型 getter/setter 字典；已增加同一基类成员分别通过派生类型和基类型 selector 使用的回归测试。
 
-12. **[P1] Marshal 辅助方法泄漏非 blittable 结构的嵌套非托管内存**  
+12. **[P1][已修复] Marshal 辅助方法泄漏非 blittable 结构的嵌套非托管内存**
     位置：`src/FclEx.Core/FclEx/Helpers/ObjectHelper.cs:43-53`、`src/FclEx.Core/FclEx/Extensions/~System/BytesExtensions.cs:88-108`。`Marshal.StructureToPtr(..., false)` 可能为字符串、数组等字段分配嵌套内存，但代码只 `FreeHGlobal` 外层块，从不 `Marshal.DestroyStructure`；数组版本还反复复用同一块内存。应限定 `unmanaged`/blittable 类型，或在每次成功 marshal 后可靠调用 `DestroyStructure<T>`，并在异常路径清理。
+    修复：每次 `StructureToPtr` 成功后都在 `finally` 中调用 `DestroyStructure<T>`；数组转换会先销毁当前元素的嵌套非托管数据，再复用外层缓冲区。
 
-13. **[P1] `OperationResult<T>` 的 nullability 属性向编译器提供了错误保证**  
+13. **[P1][已修复] `OperationResult<T>` 的 nullability 属性向编译器提供了错误保证**
     位置：`src/FclEx.Core/FclEx/Utils/~Operation/OperationResult.cs:18-27`。`IsSuccess == true` 被标注为 `Value` 非 null，但 `FromSuccess(default)`、隐式转换以及成功构造函数都允许 null；消费方会因此消除必要的 null 检查并可能触发 NRE。应移除关于 `Value` 的 `MemberNotNullWhen`，或从类型设计上禁止成功的 null 值。
+    修复：成功构造函数统一拒绝 null，所有成功工厂和隐式转换均经由该入口。由于值类型的默认值无法经过构造函数，XML 文档明确规定 `default(OperationResult<T>)` 不是有效结果；已增加正常构造路径拒绝 null 以及默认值例外的回归测试。
 
-14. **[P1] Consumer 的 `Add` 与 `CompleteAdding` 存在竞态**  
+14. **[P1][已修复] Consumer 的 `Add` 与 `CompleteAdding` 存在竞态**
     位置：`src/FclEx.Core/FclEx/Utils/~Consumers/ConsumerBase.cs:98-132`。`Add` 无锁检查 `_isAddingCompleted`，随后另一个线程可完成添加，再由当前线程把项目放入队列；消费循环可能已经按“完成且空”退出，留下永不处理的项目。应使用 `BlockingCollection.CompleteAdding`/`Add` 的原生原子语义，或在同一锁内检查状态并入队。
+    修复：外部 `Add` 现在在生命周期锁内完成 disposed/completed 检查和入队，`CompleteAdding` 使用同一把锁；绕过完成检查的公开 API 已移除，仅保留内部重试入队路径。已增加并发添加与完成的回归测试，确保所有成功接收的项目都会被处理。
 
-15. **[P1] Consumer 的停止和释放未与工作任务完成同步**  
+15. **[P1][已修复] Consumer 的停止和释放未与工作任务完成同步**
     位置：`src/FclEx.Core/FclEx/Utils/~Consumers/ConsumerBase.cs:63-76,104-160`。`Dispose` 不持有生命周期锁，取消后立即 drain 并 dispose `_items`/`_cts`，而 `ProcessAsync` 可能仍在取项或执行 handler；`Stop` 也在持锁时调用外部 `CancellationHandler`，重入时可能死锁。建议维护单一运行任务，先取消、在锁外等待其结束，再释放资源；所有外部回调都应在锁外调用。
+    修复：Consumer 保存单一运行任务；`Stop`/`Dispose` 在锁内只转换状态并取消，然后在锁外等待任务结束、drain 队列并调用取消回调，最后释放资源。`BatchRetryConsumer` 同样保存组合运行任务，并按批处理、重试的依赖顺序停止和释放。已增加释放等待活动 handler 完成的回归测试。
 
 16. **[P1] `RepeatUntil` 创建了超时 token，却没有传给实际操作**  
     位置：`src/FclEx.Core/FclEx/Actions/ActionExtensions.cs:333-352`。循环检查 `cts.IsCancellationRequested`，但执行 action 和 delay 时都传原 token `t`，因此一次长时间 action 或 delay 可以无限超过总 timeout。应把 `cts.Token` 传给两者，并区分调用方取消与内部超时生成的结果。

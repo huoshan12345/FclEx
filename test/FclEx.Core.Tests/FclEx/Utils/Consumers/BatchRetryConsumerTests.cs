@@ -53,17 +53,29 @@ public class BatchRetryConsumerTests
         Assert.True(task.IsCompleted);
     }
 
-    [RetryFact]
-    public async Task Dispose_DuringConsuming_Test()
+    [Fact]
+    public async Task Dispose_Waits_For_Active_Consumption()
     {
         var consumer = new BatchRetryConsumer<Model>(5, TimeSpan.FromMilliseconds(100), 1);
-        consumer.ConsumingHandler += (sender, list) => Task.Delay(TimeSpan.FromMilliseconds(100));
+        var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        consumer.ConsumingHandler += async (_, _) =>
+        {
+            entered.TrySetResult(true);
+            await release.Task;
+        };
+
         var task = consumer.StartAsync();
         consumer.Add(new Model(0));
-        consumer.Dispose();
-        Assert.False(task.IsCompleted);
-        var finishTask = await Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(10)));
-        Assert.Equal(task, finishTask);
+        Assert.Same(entered.Task, await Task.WhenAny(entered.Task, Task.Delay(TimeSpan.FromSeconds(10))));
+
+        var disposeTask = Task.Run(consumer.Dispose);
+        await Task.Delay(TimeSpan.FromMilliseconds(50));
+        Assert.False(disposeTask.IsCompleted);
+
+        release.SetResult(true);
+        await disposeTask;
+        Assert.True(task.IsCompleted);
     }
 
     [RetryFact]

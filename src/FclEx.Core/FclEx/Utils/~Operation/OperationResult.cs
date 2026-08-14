@@ -5,6 +5,13 @@ namespace FclEx.Utils;
 /// an optional value, an optional exception, and the elapsed time.
 /// </summary>
 /// <typeparam name="T">The type of the value returned by the operation.</typeparam>
+/// <remarks>
+/// A successful result cannot contain <see langword="null"/>. Do not use <see langword="default"/>
+/// to create an instance: the default value bypasses constructor validation and therefore has
+/// <see cref="IsSuccess"/> set to <see langword="true"/> while <see cref="Value"/> is
+/// <see langword="null"/>. Create results through a constructor or the <see cref="Operation"/>
+/// factory methods instead.
+/// </remarks>
 public readonly struct OperationResult<T> : IOperationResult<T>
 {
     /// <inheritdoc />
@@ -41,22 +48,24 @@ public readonly struct OperationResult<T> : IOperationResult<T>
     /// <summary>
     /// Initializes a new instance of the <see cref="OperationResult{T}"/> struct for a successful operation.
     /// </summary>
-    /// <param name="result">The result value.</param>
+    /// <param name="value">The result value, which cannot be <see langword="null"/>.</param>
     /// <param name="elapsed">The time elapsed during the operation.</param>
-    public OperationResult(T result, TimeSpan elapsed)
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
+    public OperationResult(T value, TimeSpan elapsed)
     {
         Exception = null;
         Elapsed = elapsed;
-        Value = result;
+        Value = Check.NotNull(value);
     }
 
     /// <summary>
     /// Creates a successful operation result.
     /// </summary>
-    /// <param name="value">The success value.</param>
+    /// <param name="value">The success value, which cannot be <see langword="null"/>.</param>
     /// <param name="elapsed">The elapsed time to store in the result.</param>
     /// <returns>A success result containing <paramref name="value"/>.</returns>
-    public static OperationResult<T> FromSuccess(T value, TimeSpan elapsed = default) => new(value!, elapsed);
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
+    public static OperationResult<T> FromSuccess(T value, TimeSpan elapsed = default) => new(value, elapsed);
 
     /// <summary>
     /// Creates an error result from a message.

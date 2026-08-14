@@ -34,9 +34,10 @@ public static partial class Operation
     /// Creates a typed success result.
     /// </summary>
     /// <typeparam name="T">The result value type.</typeparam>
-    /// <param name="value">The success value.</param>
+    /// <param name="value">The success value, which cannot be <see langword="null"/>.</param>
     /// <param name="elapsed">The elapsed time to store in the result.</param>
     /// <returns>A success result containing <paramref name="value"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
     public static OperationResult<T> Success<T>(T value, TimeSpan elapsed = default) => OperationResult<T>.FromSuccess(value, elapsed);
 
     /// <summary>

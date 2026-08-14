@@ -101,8 +101,18 @@ public static partial class BytesExtensions
             var item = list[i];
             Check.NotNull(item, nameof(list) + $"[{i}]");
 
-            Marshal.StructureToPtr(item, ptr, false);
-            Marshal.Copy(ptr, bufByte, i * length, length);
+            var structureInitialized = false;
+            try
+            {
+                Marshal.StructureToPtr(item, ptr, false);
+                structureInitialized = true;
+                Marshal.Copy(ptr, bufByte, i * length, length);
+            }
+            finally
+            {
+                if (structureInitialized)
+                    Marshal.DestroyStructure<T>(ptr);
+            }
         }
 
         return bufByte;

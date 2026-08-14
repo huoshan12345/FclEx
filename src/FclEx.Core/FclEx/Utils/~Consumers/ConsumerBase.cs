@@ -11,6 +11,7 @@ public abstract class ConsumerBase<TSelf, T> : IConsumer<T>, ICancellationListen
     protected volatile bool _isDisposed;
     protected bool IsCompleteNoLock => (_isDisposed || _items.Count == 0) && _isAddingCompleted;
     protected CancellationTokenSource _cts = new();
+    private Task _runTask = Task.CompletedTask;
 
     public ConsumerCounter Counter { get; } = new();
     public int Count => _locker.Do(() => _isDisposed ? 0 : _items.Count);
@@ -31,13 +32,10 @@ public abstract class ConsumerBase<TSelf, T> : IConsumer<T>, ICancellationListen
 
     protected virtual void HandleCancellation()
     {
-        if (_isDisposed)
-            return;
-
         var list = new List<T>();
         try
         {
-            while (!_isDisposed && _items.TryTake(out var item))
+            while (_items.TryTake(out var item))
                 list.Add(item.Item);
         }
         catch (Exception ex)
@@ -86,7 +84,7 @@ public abstract class ConsumerBase<TSelf, T> : IConsumer<T>, ICancellationListen
     protected void EnsureRunning()
     {
         if (!_isRunning)
-            throw new InvalidOperationException("The consumer is no running");
+            throw new InvalidOperationException("The consumer is not running.");
     }
 
     protected void EnsureNotRunning()
@@ -113,56 +111,100 @@ public abstract class ConsumerBase<TSelf, T> : IConsumer<T>, ICancellationListen
                 _items.Clear();
             }
             if (_cts.IsCancellationRequested)
+            {
+                _cts.Dispose();
                 _cts = new CancellationTokenSource();
+            }
             _isRunning = true;
-            task = Task.Run(ProcessAsync);
+            task = _runTask = Task.Run(ProcessAsync);
         }
         await task; // NOTE: DO NOT await this task in above lock scope
     }
 
     public virtual void Add(T item)
     {
-        EnsureNotCompleteAdding();
-        AddWithoutCheckingCompleteAdding(item);
+        _locker.Do(() =>
+        {
+            EnsureNonDisposed();
+            EnsureNotCompleteAdding();
+            _items.Add(new ProcessingItem<T>(item));
+        });
     }
 
-    public virtual void AddWithoutCheckingCompleteAdding(T item)
+    internal void AddForRetry(T item)
     {
-        EnsureNonDisposed();
-        _items.Add(new ProcessingItem<T>(item));
+        _locker.Do(() =>
+        {
+            EnsureNonDisposed();
+            _items.Add(new ProcessingItem<T>(item));
+        });
     }
 
     public virtual void CompleteAdding()
     {
-        _locker.Do(() => _isAddingCompleted = true);
+        _locker.Do(() =>
+        {
+            EnsureNonDisposed();
+            _isAddingCompleted = true;
+        });
     }
 
     public virtual void Stop()
     {
+        Task runTask;
         using (_locker.Lock())
         {
             EnsureNonDisposed();
             EnsureRunning();
             _cts.Cancel();
+            runTask = _runTask;
+        }
+
+        try
+        {
+            WaitForRunToFinish(runTask);
+        }
+        finally
+        {
             HandleCancellation();
-            _isRunning = false;
         }
     }
 
     public virtual void Dispose()
     {
-        if (_isDisposed)
-            return;
+        Task runTask;
+        using (_locker.Lock())
+        {
+            if (_isDisposed)
+                return;
+
+            _isDisposed = true;
+            _isAddingCompleted = true;
+            _cts.Cancel();
+            runTask = _runTask;
+        }
 
         GC.SuppressFinalize(this);
+        try
+        {
+            WaitForRunToFinish(runTask);
+        }
+        finally
+        {
+            try
+            {
+                HandleCancellation();
+            }
+            finally
+            {
+                _cts.Dispose();
+                _items.Dispose();
+            }
+        }
+    }
 
-        _cts.Cancel();
-        HandleCancellation();
-
-        _cts.Dispose();
-        _items.Dispose();
-
-        _isRunning = false;
-        _isDisposed = true;
+    private static void WaitForRunToFinish(Task runTask)
+    {
+        runTask.GetAwaiter().GetResult();
     }
 }
