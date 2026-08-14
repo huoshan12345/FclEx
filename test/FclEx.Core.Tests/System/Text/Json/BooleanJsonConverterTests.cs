@@ -31,8 +31,22 @@ public class BooleanJsonConverterTests
         Assert.False(model.Value);
     }
 
+    [Fact]
+    public void ParameterlessConstructorSupportsConverterAttribute()
+    {
+        var model = JsonSerializer.Deserialize<AttributeBooleanModel>("""{"Value":"true"}""");
+
+        Assert.True(model!.Value);
+    }
+
     private sealed class BooleanModel
     {
         public bool Value { get; set; } = true;
+    }
+
+    private sealed class AttributeBooleanModel
+    {
+        [JsonConverter(typeof(BooleanJsonConverter))]
+        public bool Value { get; set; }
     }
 }

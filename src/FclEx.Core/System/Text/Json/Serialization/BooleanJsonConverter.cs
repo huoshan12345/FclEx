@@ -5,7 +5,12 @@ public class BooleanJsonConverter : JsonConverter<bool>
     public static readonly BooleanJsonConverter Strict = new(false);
     public static readonly BooleanJsonConverter NullAsFalse = new(true);
 
-    public BooleanJsonConverter(bool treatNullAsFalse = false)
+    public BooleanJsonConverter()
+        : this(false)
+    {
+    }
+
+    public BooleanJsonConverter(bool treatNullAsFalse)
     {
         TreatNullAsFalse = treatNullAsFalse;
     }

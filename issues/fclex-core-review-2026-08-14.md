@@ -260,11 +260,11 @@
 58. **[P1][已修复] `BooleanJsonConverter` 把非 nullable `bool` 的 JSON `null` 静默转换为 `false`**
 
     位置：`src/FclEx.Core/System/Text/Json/Serialization/BooleanJsonConverter.cs:7-22`。这会把显式的无效/缺失值与合法的 `false` 合并，隐藏上游数据错误。非 nullable converter 应对 `Null` 抛 `JsonException`；需要接受 null 时应由 `bool?` 的 converter 和类型系统表达。
-    修复：构造函数新增 `treatNullAsFalse` 参数，并提供语义明确的 `Strict` 与 `NullAsFalse` 实例；默认/strict converter 对 null 抛 `JsonException`。按决定，`JsonOptions.AllowBoolFromString` 启用时使用 `NullAsFalse` 版本；字符串解析改用大小写不敏感的 `bool.TryParse`，不再通过 `ToLower` 创建额外字符串。测试覆盖 strict、显式兼容模式及 JsonHelper 配置。
+    修复：构造函数新增 `treatNullAsFalse` 参数，并提供语义明确的 `Strict` 与 `NullAsFalse` 实例；默认/strict converter 对 null 抛 `JsonException`。按决定，`JsonOptions.AllowBoolFromString` 启用时使用 `NullAsFalse` 版本；字符串解析改用大小写不敏感的 `bool.TryParse`，不再通过 `ToLower` 创建额外字符串。后续补回真正的公开无参构造函数，使 `[JsonConverter(typeof(BooleanJsonConverter))]` 可以由 System.Text.Json 反射实例化；带 bool 参数的构造函数不再依赖可选参数伪装成无参形式。测试覆盖 strict、显式兼容模式、特性注册及 JsonHelper 配置。
 
-59. **[P2][部分处理] `GetBuiltInJsonTypeInfo` 对 `System.Text.Json` 私有实现存在版本耦合**
+59. **[P2][已确认保留] `GetBuiltInJsonTypeInfo` 对 `System.Text.Json` 私有实现存在版本耦合**
 
-    位置：`src/FclEx.Core/FclEx/Extensions/~System/~Text/~Json/JsonSerializerOptionsExtensions.cs:5-35`。代码反射调用 `GetBuiltInConverter`、`ExpandConverterFactory` 和 `CreateTypeInfoCore`，这些名称和签名不是兼容性契约，会随 System.Text.Json 更新、裁剪或 NativeAOT 失效。复核后确认，公开 API 只能取得当前 options 最终选中的 converter，并没有“跳过当前 converter、继续取得默认 converter”的通用能力；当自定义 converter 的行为确实要装饰默认 converter 时，反射是有意接受的兼容性风险，不能简单用 resolver 或 converter factory 替代。`ReadAsArrayJsonConverter` 已通过收窄为序列集合并逐元素组合 converter 去除这项依赖，但这只是该具体功能的解法，不解决通用需求。本条后续应改进为隔离并明确标注这层运行时耦合、在每次 System.Text.Json 升级时运行兼容性测试，并为反射成员缺失提供清晰失败信息，而不是删除 `GetBuiltInJsonTypeInfo`。
+    位置：`src/FclEx.Core/FclEx/Extensions/~System/~Text/~Json/JsonSerializerOptionsExtensions.cs:5-35`。代码反射调用 `GetBuiltInConverter`、`ExpandConverterFactory` 和 `CreateTypeInfoCore`，这些名称和签名不是兼容性契约，会随 System.Text.Json 更新、裁剪或 NativeAOT 失效。复核结论：截至目前，公开 API 只能取得当前 options 最终选中的 converter，并没有“跳过当前 converter、继续取得默认 converter”的通用能力。复制 options 并移除 converter 只适用于通过 options 注册且能够控制注册方式的局部场景，无法绕过定义在目标类型上的 `[JsonConverter]`；而类型级 converter 复用默认 converter 的需求本身合理且常见。当前没有功能等价且设计更好的公开实现方式，因此不得不保留这层私有反射，并明确接受相应的版本、裁剪和 NativeAOT 兼容性风险。本条不再作为待修复问题；升级 System.Text.Json 时应继续通过兼容性测试确认这些私有入口仍然有效。
 
 60. **[P1][已修复] `ObjectJsonConverter` 会静默损失合法 JSON 数字的精度**
 
