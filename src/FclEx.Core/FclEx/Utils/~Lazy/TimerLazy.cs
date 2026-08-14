@@ -3,23 +3,35 @@ namespace FclEx.Utils;
 public class TimerLazy<T> : ReLazy<TimerLazy<T>, T>
 {
     private readonly StatelessTimer _timer;
+    private readonly object _timerCallbackLock = new();
 
-    public TimerLazy(Func<T> valueFactory, TimeSpan dueTime, TimeSpan period, bool isThreadSafe = true,
+    public TimerLazy(Func<T> valueFactory, TimeSpan dueTime, TimeSpan period,
         Action<TimerLazy<T>, T>? discardValueHandler = null)
-        : base(valueFactory, isThreadSafe, discardValueHandler)
+        : base(valueFactory, discardValueHandler)
     {
-        _timer = NonCapturingTimer.Create(Recreate, dueTime, period);
+        _timer = NonCapturingTimer.Create(OnTimer, dueTime, period);
     }
 
     public TimerLazy(Func<T> valueFactory, TimeSpan period, Action<TimerLazy<T>, T>? discardValueHandler = null)
-        : this(valueFactory, default, period, true, discardValueHandler)
+        : this(valueFactory, default, period, discardValueHandler)
     {
     }
 
     public override void Dispose()
     {
-        GC.SuppressFinalize(this);
-        base.Dispose();
         _timer.Dispose();
+
+        lock (_timerCallbackLock)
+        {
+            base.Dispose();
+        }
+    }
+
+    private void OnTimer()
+    {
+        lock (_timerCallbackLock)
+        {
+            TryRecreate();
+        }
     }
 }

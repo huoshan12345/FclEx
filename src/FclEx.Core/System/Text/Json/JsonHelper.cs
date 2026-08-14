@@ -43,7 +43,7 @@ public static class JsonHelper
         };
 
         if (jsonOptions.AllowBoolFromString)
-            options.Converters.Add(BooleanJsonConverter.Instance);
+            options.Converters.Add(BooleanJsonConverter.NullAsFalse);
 
         if (jsonOptions.AddTypeConverter)
             options.Converters.Add(TypeJsonConverter.Instance);

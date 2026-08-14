@@ -5,15 +5,15 @@ public static class ReadOnlySpanExtensions
     [MethodImpl(AggressiveInlining)]
     public static bool StartsWith<T>(this ReadOnlySpan<T> span, T value) where T : IEquatable<T>
     {
-        var valueSpan = Span.Create(ref value);
-        return span.StartsWith(valueSpan);
+        return span.IsEmpty == false
+               && EqualityComparer<T>.Default.Equals(span[0], value);
     }
 
     [MethodImpl(AggressiveInlining)]
     public static bool EndsWith<T>(this ReadOnlySpan<T> span, T value) where T : IEquatable<T>
     {
-        var valueSpan = Span.Create(ref value);
-        return span.EndsWith(valueSpan);
+        return span.IsEmpty == false
+               && EqualityComparer<T>.Default.Equals(span[^1], value);
     }
 
     [MethodImpl(AggressiveInlining)]

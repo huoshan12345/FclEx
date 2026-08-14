@@ -60,4 +60,28 @@ public class ReLazyTests
 
         lazy.Dispose();
     }
+
+    [Fact]
+    public void Dispose_IsIdempotent_And_PreventsFurtherUse()
+    {
+        var discardedCount = 0;
+        var lazy = new ReLazy<DisposableTestModel>(
+            () => new DisposableTestModel(),
+            discardValueHandler: (_, value) =>
+            {
+                discardedCount++;
+                value.Dispose();
+            });
+        var value = lazy.Value;
+
+        lazy.Dispose();
+        lazy.Dispose();
+
+        Assert.Equal(1, discardedCount);
+        Assert.True(value.IsDisposed);
+        Assert.Throws<ObjectDisposedException>(() => lazy.Value);
+        Assert.Throws<ObjectDisposedException>(() => lazy.IsValueCreated);
+        Assert.Throws<ObjectDisposedException>(() => lazy.Recreate());
+        Assert.Throws<ObjectDisposedException>(() => lazy.SetValueFactory(() => new DisposableTestModel()));
+    }
 }

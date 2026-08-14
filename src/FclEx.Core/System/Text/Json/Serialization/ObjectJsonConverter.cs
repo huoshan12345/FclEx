@@ -60,11 +60,53 @@ public class ObjectJsonConverterImpl : JsonConverter<object>
             if (reader.TryGetInt64(out var l))
                 return l;
 
-            // ReSharper disable once ConvertIfStatementToReturnStatement
-            if (reader.TryGetDouble(out var d))
-                return d;
+            var rawNumber = reader.HasValueSequence
+                ? Encoding.UTF8.GetString(reader.ValueSequence.ToArray())
+                : Encoding.UTF8.GetString(reader.ValueSpan);
+
+            if (IsIntegerLiteral(rawNumber)
+                && BigInteger.TryParse(rawNumber, NumberStyles.Integer, CultureInfo.InvariantCulture, out var integer))
+            {
+                return integer;
+            }
+
+            var hasDecimal = reader.TryGetDecimal(out var decimalValue);
+
+            if (hasDecimal == false
+                && BigInteger.TryParse(rawNumber, NumberStyles.Float, CultureInfo.InvariantCulture, out integer))
+            {
+                return integer;
+            }
+
+            if (reader.TryGetDouble(out var doubleValue))
+            {
+                if (hasDecimal && DoubleLosesPrecision(doubleValue, decimalValue))
+                    return decimalValue;
+
+                return doubleValue;
+            }
+
+            if (hasDecimal)
+                return decimalValue;
 
             throw new JsonException("Invalid JSON number.");
+
+            static bool IsIntegerLiteral(string value)
+                => value.IndexOf('.') < 0
+                   && value.IndexOf('e') < 0
+                   && value.IndexOf('E') < 0;
+
+            static bool DoubleLosesPrecision(double doubleValue, decimal decimalValue)
+            {
+                try
+                {
+                    return (decimal)doubleValue != decimalValue;
+                }
+                catch (OverflowException)
+                {
+                    return true;
+                }
+            }
         }
 
         static object ReadObject(ref Utf8JsonReader reader, JsonSerializerOptions options, int depth)
@@ -112,6 +154,12 @@ public class ObjectJsonConverterImpl : JsonConverter<object>
         if (value is null)
         {
             writer.WriteNullValue();
+            return;
+        }
+
+        if (value is BigInteger integer)
+        {
+            writer.WriteRawValue(integer.ToString(CultureInfo.InvariantCulture));
             return;
         }
 

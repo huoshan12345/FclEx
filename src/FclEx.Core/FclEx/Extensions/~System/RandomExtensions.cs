@@ -236,7 +236,8 @@ public static class RandomExtensions
         var result = MemoryMarshal.Read<T>(bytes);
 #else
         Unsafe.SkipInit(out T result);
-        random.NextBytes(Span.AsBytes(ref result));
+        var value = MemoryMarshal.CreateSpan(ref result, 1);
+        random.NextBytes(MemoryMarshal.AsBytes(value));
 #endif
         return result;
     }

@@ -22,4 +22,28 @@ public class TimerLazyTests
         Assert.NotNull(newValue);
         Assert.NotEqual(value, newValue);
     }
+
+    [Fact]
+    public async Task Dispose_StopsTimer_AndPreventsFurtherUse()
+    {
+        var discardedCount = 0;
+        var lazy = new TimerLazy<DisposableTestModel>(
+            () => new DisposableTestModel(),
+            TimeSpan.FromDays(1),
+            TimeSpan.FromDays(1),
+            discardValueHandler: (_, value) =>
+            {
+                discardedCount++;
+                value.Dispose();
+            });
+        var value = lazy.Value;
+
+        lazy.Dispose();
+        lazy.Dispose();
+        await Task.Delay(50);
+
+        Assert.Equal(1, discardedCount);
+        Assert.True(value.IsDisposed);
+        Assert.Throws<ObjectDisposedException>(() => lazy.Value);
+    }
 }

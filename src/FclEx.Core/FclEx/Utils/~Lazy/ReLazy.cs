@@ -2,60 +2,143 @@ namespace FclEx.Utils;
 
 public class ReLazy<TSelf, T> : IDisposable where TSelf : ReLazy<TSelf, T>
 {
-    protected readonly object _lock = new();
-    protected volatile Lazy<T> _lazy;
-    protected volatile Func<T> _valueFactory;
-    protected readonly bool _isThreadSafe;
+    private readonly object _lock = new();
+    private readonly Action<TSelf, T>? _discardValueHandler;
 
-    private readonly Action<TSelf, T>? _onDiscardValue;
+    private Lazy<T> _lazy;
+    private Func<T> _valueFactory;
+    private bool _isDisposed;
 
-    public ReLazy(Func<T> valueFactory, bool isThreadSafe = true, Action<TSelf, T>? discardValueHandler = null)
+    public ReLazy(Func<T> valueFactory, Action<TSelf, T>? discardValueHandler = null)
     {
-        _valueFactory = valueFactory;
-        _isThreadSafe = isThreadSafe;
-        _lazy = new Lazy<T>(_valueFactory, isThreadSafe);
-        _onDiscardValue = discardValueHandler;
+        _valueFactory = Check.NotNull(valueFactory);
+        _lazy = CreateLazy(valueFactory);
+        _discardValueHandler = discardValueHandler;
     }
 
-    public T Value => _lazy.Value;
-    public bool IsValueCreated => _lazy.IsValueCreated;
+    public T Value
+    {
+        get
+        {
+            lock (_lock)
+            {
+                ThrowIfDisposed();
+                return _lazy.Value;
+            }
+        }
+    }
+
+    public bool IsValueCreated
+    {
+        get
+        {
+            lock (_lock)
+            {
+                ThrowIfDisposed();
+                return _lazy.IsValueCreated;
+            }
+        }
+    }
 
     public void SetValueFactory(Func<T> valueFactory)
     {
-        LockHelper.DoubleCheckAndDo(() => _valueFactory != valueFactory, _lock, () =>
+        Check.NotNull(valueFactory);
+
+        Lazy<T>? discardedValue = null;
+        lock (_lock)
         {
-            DiscardValue();
+            ThrowIfDisposed();
+            if (_valueFactory == valueFactory)
+                return;
+
+            if (_lazy.IsValueCreated)
+                discardedValue = _lazy;
+
             _valueFactory = valueFactory;
-            _lazy = new Lazy<T>(valueFactory, _isThreadSafe);
-        });
+            _lazy = CreateLazy(valueFactory);
+        }
+
+        DiscardValue(discardedValue);
     }
 
     public void Recreate()
     {
-        LockHelper.DoubleCheckAndDo(() => _lazy.IsValueCreated, _lock, () =>
-        {
-            DiscardValue();
-            _lazy = new Lazy<T>(_valueFactory, _isThreadSafe);
-        });
+        var discardedValue = ReplaceCreatedValue(throwIfDisposed: true);
+        DiscardValue(discardedValue);
     }
 
-    protected virtual void DiscardValue()
+    protected bool TryRecreate()
     {
-        if (_lazy.IsValueCreated && _onDiscardValue != null)
-            _onDiscardValue((TSelf)this, _lazy.Value);
+        var discardedValue = ReplaceCreatedValue(throwIfDisposed: false);
+        if (discardedValue is null)
+            return false;
+
+        DiscardValue(discardedValue);
+        return true;
+    }
+
+    private Lazy<T>? ReplaceCreatedValue(bool throwIfDisposed)
+    {
+        lock (_lock)
+        {
+            if (_isDisposed)
+            {
+                if (throwIfDisposed)
+                    ThrowIfDisposed();
+
+                return null;
+            }
+
+            if (_lazy.IsValueCreated == false)
+                return null;
+
+            var discardedValue = _lazy;
+            _lazy = CreateLazy(_valueFactory);
+            return discardedValue;
+        }
+    }
+
+    private static Lazy<T> CreateLazy(Func<T> valueFactory) => new(valueFactory, true);
+
+    private void DiscardValue(Lazy<T>? lazy)
+    {
+        if (lazy is not null)
+            _discardValueHandler?.Invoke((TSelf)this, lazy.Value);
     }
 
     public virtual void Dispose()
     {
-        GC.SuppressFinalize(this);
-        DiscardValue();
+        Lazy<T>? discardedValue;
+        lock (_lock)
+        {
+            if (_isDisposed)
+                return;
+
+            _isDisposed = true;
+            discardedValue = _lazy.IsValueCreated ? _lazy : null;
+        }
+
+        try
+        {
+            DiscardValue(discardedValue);
+        }
+        finally
+        {
+            GC.SuppressFinalize(this);
+        }
+    }
+
+    private void ThrowIfDisposed()
+    {
+        if (_isDisposed)
+            throw new ObjectDisposedException(GetType().FullName);
     }
 }
 
 public class ReLazy<T> : ReLazy<ReLazy<T>, T>
 {
-    public ReLazy(Func<T> valueFactory, bool isThreadSafe = true, Action<ReLazy<T>, T>? discardValueHandler = null)
-        : base(valueFactory, isThreadSafe, discardValueHandler)
+    public ReLazy(Func<T> valueFactory, Action<ReLazy<T>, T>? discardValueHandler = null)
+        : base(valueFactory, discardValueHandler)
     {
     }
 }

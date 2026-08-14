@@ -1,5 +1,7 @@
 namespace System.Text.Json;
 
+using System.Globalization;
+
 public class ObjectJsonConverterTests
 {
     private static JsonSerializerOptions CreateOptions()
@@ -236,7 +238,7 @@ public class ObjectJsonConverterTests
     }
 
     [Fact]
-    public void Deserialize_TooLargeInteger_ShouldBecomeDouble()
+    public void Deserialize_TooLargeInteger_ShouldBecomeBigInteger()
     {
         var options = CreateOptions();
 
@@ -244,7 +246,35 @@ public class ObjectJsonConverterTests
 
         var result = JsonSerializer.Deserialize<object>(json, options);
 
-        Assert.IsType<double>(result);
+        Assert.IsType<BigInteger>(result);
+        Assert.Equal(BigInteger.Parse(json, CultureInfo.InvariantCulture), result);
+    }
+
+    [Fact]
+    public void Deserialize_HighPrecisionFraction_ShouldBecomeDecimal()
+    {
+        var options = CreateOptions();
+
+        const string json = "0.1234567890123456789012345678";
+
+        var result = JsonSerializer.Deserialize<object>(json, options);
+
+        Assert.IsType<decimal>(result);
+        Assert.Equal(decimal.Parse(json, CultureInfo.InvariantCulture), result);
+    }
+
+    [Fact]
+    public void Serialize_BigIntegerAndDecimal_ShouldPreserveValues()
+    {
+        var options = CreateOptions();
+        var integer = BigInteger.Parse("922337203685477580799", CultureInfo.InvariantCulture);
+        const decimal fraction = 0.1234567890123456789012345678m;
+
+        var integerJson = JsonSerializer.Serialize<object>(integer, options);
+        var fractionJson = JsonSerializer.Serialize<object>(fraction, options);
+
+        Assert.Equal(integer.ToString(CultureInfo.InvariantCulture), integerJson);
+        Assert.Equal(fraction.ToString(CultureInfo.InvariantCulture), fractionJson);
     }
 
     [Fact]
