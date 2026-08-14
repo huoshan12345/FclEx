@@ -262,9 +262,9 @@
     位置：`src/FclEx.Core/System/Text/Json/Serialization/BooleanJsonConverter.cs:7-22`。这会把显式的无效/缺失值与合法的 `false` 合并，隐藏上游数据错误。非 nullable converter 应对 `Null` 抛 `JsonException`；需要接受 null 时应由 `bool?` 的 converter 和类型系统表达。
     修复：构造函数新增 `treatNullAsFalse` 参数，并提供语义明确的 `Strict` 与 `NullAsFalse` 实例；默认/strict converter 对 null 抛 `JsonException`。按决定，`JsonOptions.AllowBoolFromString` 启用时使用 `NullAsFalse` 版本；字符串解析改用大小写不敏感的 `bool.TryParse`，不再通过 `ToLower` 创建额外字符串。测试覆盖 strict、显式兼容模式及 JsonHelper 配置。
 
-59. **[P1] `GetBuiltInJsonTypeInfo` 直接调用 `System.Text.Json` 私有实现**
+59. **[P2][部分处理] `GetBuiltInJsonTypeInfo` 对 `System.Text.Json` 私有实现存在版本耦合**
 
-    位置：`src/FclEx.Core/FclEx/Extensions/~System/~Text/~Json/JsonSerializerOptionsExtensions.cs:5-35`。代码反射调用 `GetBuiltInConverter`、`ExpandConverterFactory` 和 `CreateTypeInfoCore`，这些名称和签名不是兼容性契约，会随 runtime servicing、裁剪、NativeAOT 或新框架版本失效。应只通过公开 `IJsonTypeInfoResolver`/`JsonSerializerOptions.GetTypeInfo` 获取元数据；若目的是绕过自定义 converter，需要重新设计 converter 组合，而不是穿透运行时内部。
+    位置：`src/FclEx.Core/FclEx/Extensions/~System/~Text/~Json/JsonSerializerOptionsExtensions.cs:5-35`。代码反射调用 `GetBuiltInConverter`、`ExpandConverterFactory` 和 `CreateTypeInfoCore`，这些名称和签名不是兼容性契约，会随 System.Text.Json 更新、裁剪或 NativeAOT 失效。复核后确认，公开 API 只能取得当前 options 最终选中的 converter，并没有“跳过当前 converter、继续取得默认 converter”的通用能力；当自定义 converter 的行为确实要装饰默认 converter 时，反射是有意接受的兼容性风险，不能简单用 resolver 或 converter factory 替代。`ReadAsArrayJsonConverter` 已通过收窄为序列集合并逐元素组合 converter 去除这项依赖，但这只是该具体功能的解法，不解决通用需求。本条后续应改进为隔离并明确标注这层运行时耦合、在每次 System.Text.Json 升级时运行兼容性测试，并为反射成员缺失提供清晰失败信息，而不是删除 `GetBuiltInJsonTypeInfo`。
 
 60. **[P1][已修复] `ObjectJsonConverter` 会静默损失合法 JSON 数字的精度**
 
