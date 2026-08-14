@@ -156,35 +156,45 @@
     位置：`src/FclEx.Core/FclEx/Extensions/~System/DateTimeExtensions.cs:46-90`。`Today`、`ThisYear`、`ThisMonth`、`StartOfMonth`、`EndOfMonth` 使用不带 kind 的构造函数，输入即使是 Local/Utc，输出也变为 Unspecified。应使用包含 `dt.Kind` 的构造函数，或明确记录并命名为创建 Unspecified 时间。
     修复：所有会重建日期的日历方法都使用带 `DateTimeKind` 的构造函数；`Today`、`Tomorrow`、`Yesterday`、`ThisYear`、`ThisMonth` 以及第一天/最后一天方法均保留输入的 `Kind`，并统一支持毫秒参数。已对 Unspecified、Utc、Local 三种 Kind 添加覆盖。
 
-36. **[P2] `DateTime.ToCnTime` 的返回类型无法安全表达它声称的时区转换**
+36. **[P2][已修复] `DateTime.ToCnTime` 的返回类型无法安全表达它声称的时区转换**
     位置：`src/FclEx.Core/FclEx/Extensions/~System/DateTimeExtensions.cs:120-143`、`DateTimeOffsetExtensions.cs:5-20`。问题不只是 `ToUtc().AddHours(8)` 保留了错误的 `Utc` Kind；`DateTime` 本身也不能携带 UTC+8 offset，因而不适合作为时区转换结果。`Cn` 还是含义不清的公共缩写。建议删除 `DateTime.ToCnTime`/`ToCnTimeStr`，只保留以 `DateTimeOffset` 表达 instant 与 offset 的转换，并将 API 命名为 `ToChinaStandardTime` 或直接显式使用 `ToOffset(TimeSpan.FromHours(8))`；字符串格式化应建立在正确的 `DateTimeOffset` 结果之上。
+    修复：删除 `DateTime.ToCnTime`/`ToCnTimeStr`，同时删除会保留钟面值却改变 instant 的 `SetOffset`/`SetCnOffset` 以及公开的 `CnTimeZone`。现在只保留 `DateTimeOffset.ToChinaStandardTime`，通过 `ToOffset(+08:00)` 在保留 instant 的前提下返回正确 offset；测试同时验证 offset 和 UTC instant。
 
-37. **[P2] `DateTimeHelper` 只是对 BCL Unix 时间 API 的有损包装，整体没有保留价值**
+37. **[P2][已修复] `DateTimeHelper` 只是对 BCL Unix 时间 API 的有损包装，整体没有保留价值**
     位置：`src/FclEx.Core/FclEx/Helpers/DateTimeHelper.cs:3-9`。两个方法没有调用方，只把 `DateTimeOffset.FromUnixTimeSeconds/Milliseconds` 的结果取 `.DateTime`，丢失 offset 并生成 `DateTimeKind.Unspecified`。既然所有目标框架都已有原生 `DateTimeOffset` API，这个 helper 没有形成更好的抽象。建议直接删除 `DateTimeHelper`；调用方需要 `DateTime` 时应显式选择 `.UtcDateTime` 或 `.LocalDateTime`，而不是由工具方法暗中丢失语义。
+    修复：按决定直接删除无调用方的 `DateTimeHelper`，不再包装 BCL API 或暗中选择 `DateTimeKind.Unspecified`。
 
-38. **[P2] `Partition` 的 `Both` 选项实现成了 `None`**  
+38. **[P2][已修复] `Partition` 的 `Both` 选项实现成了 `None`**
     位置：`src/FclEx.Core/FclEx/Extensions/~System/StringExtensions.Split.cs:52-82`。文档称 separator 同时包含在左右两部分，但实现返回 `source[..index]` 和 `source[sepEndIndex..]`，两边都排除了 separator。应返回 `(source[..sepEndIndex], source[index..])` 并覆盖左右搜索和多字符 separator。
+    修复：`Both` 改为返回 `(source[..sepEndIndex], source[index..])`；已覆盖从左、从右搜索以及多字符 separator。
 
-39. **[P2] `HexToBytes` 拒绝小写 `b` 到 `f`**  
+39. **[P2][已修复] `HexToBytes` 拒绝小写 `b` 到 `f`**
     位置：`src/FclEx.Core/FclEx/Extensions/~System/StringExtensions.cs:126-138`。匹配范围写成 `>= 'a' and <= 'a'`，只有小写 `a` 可通过。应改为 `<= 'f'`，增加 `abcdef`、混合大小写和非法字符测试。
+    修复：小写匹配范围改为 `a`–`f`，并以同时覆盖全部小写高位字符和混合大小写的 `aBcDeF` 增强测试；非法字符测试继续保留。
 
-40. **[P2] `IsPossibleHtml` 没有可成立的判定契约，应删除而不是补一个脆弱启发式**
+40. **[P2][已修复] `IsPossibleHtml` 没有可成立的判定契约，应删除而不是补一个脆弱启发式**
     位置：`src/FclEx.Core/FclEx/Extensions/~System/StringExtensions.cs:86-93`、`src/FclEx.Http/FclEx/Http/~Actions/DefaultHtmlAction.cs:27-38`。AngleSharp 可以把普通非空文本解析为 HTML 文档，因此当前实现实际上只是非空检查；若改成查找标签，又会错误拒绝合法片段或接受格式错误文本。这个 API 既不能证明有效 HTML，也没有为调用方提供额外信息。建议删除 `IsPossibleHtml`，让 `DefaultHtmlAction.GetHtml` 只负责非空验证，真正的解析和 selector 匹配继续由 HTML parser/context 决定。
+    修复：删除 `IsPossibleHtml`。`DefaultHtmlAction.GetHtml` 现在只验证响应文本非空，并删除不再使用的泛型和 action 参数；解析及 selector 匹配仍由后续 context 阶段负责。现有 plain-text 成功和空文本失败测试继续覆盖该契约。
 
-41. **[P2] 按字符拆行会把 CRLF 当作两个换行符**  
+41. **[P2][已修复] 按字符拆行会把 CRLF 当作两个换行符**
     位置：`src/FclEx.Core/FclEx/Extensions/~System/StringExtensions.Split.cs:29-42`、`FclEx/Helpers/ResourceHelper.cs:3,28-36`。`Split(['\r','\n'], StringSplitOptions.None)` 会在每个 `\r\n` 中间制造空行；默认 RemoveEmpty 又会误删真实空白行。应按 `\r\n|\r|\n` 作为完整分隔序列处理，并分别测试保留/删除空行。
+    修复：`SplitToLines` 统一按 `"\r\n"`、`"\r"`、`"\n"` 三个完整序列拆分，先 trim 再按需删除空项，并在旧框架自行解释 `TrimEntries` 位；`ResourceHelper.Embedded.ReadLines` 直接复用该实现。测试覆盖三种换行、混合换行、CRLF 空行保留以及 trim/remove 组合。
 
-42. **[P2] `ArraySegment.ToSegment` 没有遵守“从当前 segment 切片”的契约，名称也未与 BCL 对齐**
+42. **[P2][已修复] `ArraySegment.ToSegment` 没有遵守“从当前 segment 切片”的契约，名称也未与 BCL 对齐**
     位置：`src/FclEx.Core/FclEx/Extensions/~System/ArraySegmentExtensions.cs:24-29`。构造时只依赖底层数组的范围检查，例如父 segment 只有 2 项，但请求 count 10 只要底层数组够大就会成功。整体用途是创建子 segment，应该优先使用或回填 BCL 的 `ArraySegment<T>.Slice` 语义，而不是另造 `ToSegment` 名称。若目标框架已有 `Slice`，应删除该方法；若确需为旧框架回填，应命名为 `Slice`、只在缺失框架编译，并验证 `offset >= 0`、`count >= 0`、`offset + count <= segment.Count`。
+    修复：删除 `ToSegment`，在 `!NET5_0_OR_GREATER` 下提供与 BCL 同名的 `Slice` 回填，并按父 segment 的相对范围验证 offset/count；.NET 5+ 直接绑定 BCL 实现。内部 `Segments` 也统一调用 `Slice`，测试在所有目标上验证相对 offset 和越过父边界时抛错。
 
-43. **[P1] `Enumerable` 异步执行扩展的并发、取消和部分结果模型整体不一致**
+43. **[P1][已修复] `Enumerable` 异步执行扩展的并发、取消和部分结果模型整体不一致**
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Collections/~Generic/EnumerableExtensions.Task.cs:7-116`。`ExecuteInParallelAsync` 的有限并发实际是整批 `Task.WhenAll`，不是持续补充 worker 的最大并行度；`concurrency == null` 会立即枚举并启动全部操作且忽略 token；有限并发和顺序版本在取消时 `break` 并以成功状态返回部分结果；operation 又不接收 token，而间隔调用的 `TaskHelper.Delay` 会吞掉取消异常。`ExecuteAsync(..., bool executeInParallel, ...)` 还用布尔参数把两种执行模型塞进同一签名。建议整体重建这组 API：operation 使用 `Func<T, CancellationToken, ValueTask[<TResult>]>`，取消统一以 canceled task 结束，有限并发使用固定 worker/信号量或现代框架的 `Parallel.ForEachAsync`，明确结果是否保持输入顺序，并删除布尔模式参数和含糊的“null 表示无限并发”约定。
+    修复：删除旧的 `ExecuteSequentiallyAsync`、`ExecuteInParallelAsync`、布尔模式 `ExecuteAsync` 以及重复的 `ParallelForEachAsync`/`ForEachAsync` 包装，重建为 `ForEachSequentiallyAsync`、`SelectSequentiallyAsync`、`ForEachConcurrentlyAsync`、`SelectConcurrentlyAsync`。operation 全部接收 cancellation token 并返回 `ValueTask`；并发 API 使用固定数量 worker 懒枚举 source，要求显式的正数 `maxDegreeOfParallelism`，失败或取消后停止领取新项，结果 API 始终保持输入顺序且绝不成功返回部分结果。Http 批量下载同步改为单一 `MaxDegreeOfParallelism` 配置，默认上限为 8，设置为 1 即顺序执行。已覆盖持续并发上限、顺序、结果顺序、token 传递、取消和非法并行度。
 
-44. **[P2] Base32 解码静默接受无效的短输入**  
+44. **[P2][已修复] Base32 解码静默接受无效的短输入**
     位置：`src/FclEx.Core/FclEx/Extensions/~System/BytesExtensions.Base32.cs:5-44`。例如单字符 `"A"` 计算出的 `byteCount` 为 0，最终返回空数组而非报告无效编码；padding 长度和被丢弃的尾位也未校验。应验证 RFC 4648 合法长度、padding 位置和尾部零位，或明确提供 tolerant 模式。
+    修复：解码器现在严格验证 RFC 4648 的有效数据长度、padding 只能位于完整 8 字符块末尾、padding 数量以及未使用尾位必须为零；仍接受语义明确的无 padding 形式和大小写字母。已加入 RFC 4648 各余数长度样例及非法短输入、padding、尾位测试。
 
-45. **[P2] 静态 JSON 成员的值在元数据创建时被永久捕获**  
+45. **[P2][已修复] 静态 JSON 成员的值在元数据创建时被永久捕获**
     位置：`src/FclEx.Core/System/Text/Json/JsonHelper.cs:137-157`。`var value = member.GetValue(null)` 只执行一次，`propertyInfo.Get = _ => value` 使以后修改的静态属性/字段仍序列化旧值；还用首次运行时类型代替声明类型创建 contract。getter 应每次读取 `member.GetValue(null)`，类型应使用 `member.DataMemberType`。
+    修复：静态成员的 `JsonPropertyInfo` 始终使用声明类型创建，getter 在每次序列化时重新调用 `member.GetValue(null)`。测试使用声明为 `object` 的可变静态属性，验证同一 options/metadata 在值从字符串变为整数后会输出最新值及正确 JSON 类型。
 
 46. **[P2] `ReadAsStringJsonConverter` 会改变数字文本并损失精度**  
     位置：`src/FclEx.Core/System/Text/Json/Serialization/ReadAsStringJsonConverter.cs:20-42`。非 Int64 数字先转 `double` 再格式化，诸如高精度 decimal、超大整数或特定指数表示无法保留原始值。既然目标是字符串表示，应从 reader 的原始 UTF-8 token 获取文本，或通过 `JsonDocument.ParseValue(...).RootElement.GetRawText()` 保真。
@@ -204,11 +214,10 @@
     2. `System/ComponentModel/DataAnnotations/UriAttribute.cs` 的验证职责成立，但 URI 术语是 scheme，不是 schema；`AllowedSchemas` 应改为 `AllowedSchemes`，错误消息也应同步修正。
     3. `TaskHelper.DelayMilli` 与 BCL `Task.Delay(int, token)` 重复；更重要的是同文件的 `Delay` 会吞掉 `TaskCanceledException`，名称却没有表达“忽略取消”。应删除毫秒包装，并让普通 `Delay` 传播取消；确需吞取消的调用点应显式捕获或使用准确命名的专用方法。
     4. `IPEndPointHelper.NextLocalEndpoint` 无法提供它名字暗示的保证：socket 释放后端口立即可能被其他进程占用。应删除这个 TOCTOU helper，让服务器直接绑定端口 0 后读取实际端口；若只能用于测试，也应把实现放在测试基础设施而不是 Core 公共 API。
-    5. `CnTime` 相关命名和返回类型已归入第 36 条，不应再作为孤立拼写问题处理。
 
 ## 建议处理顺序
 
 1. 已修复项继续保留为历史记录，不再按旧实现重复处理。
-2. 下一批优先讨论并处理整体设计不成立或需要重建的 36、37、40、43、49、50；先决定删除/重构方向，再写实现细节。
-3. 随后处理整体用途明确的局部契约问题 38–39、41–42、44–48，并为每项增加边界测试。
+2. 下一批优先讨论并处理整体设计不成立或需要重建的 49、50；先决定删除/重构方向，再写实现细节。
+3. 随后处理整体用途明确的局部契约问题 46–48，并为每项增加边界测试。
 4. 破坏性变更不是阻碍；完成删除或重塑后，应同步检查 Core/Http 调用方、XML 文档和包说明。

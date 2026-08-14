@@ -4,44 +4,60 @@ partial class BytesExtensions
 {
     public static byte[] Base32ToBytes(this string input)
     {
-        if (input.IsNullOrEmpty())
+        Check.NotNull(input);
+        if (input.Length == 0)
             return [];
 
-        input = input.TrimEnd('='); //remove padding characters
-        var byteCount = input.Length * 5 / 8; //this must be TRUNCATED
-        var returnArray = new byte[byteCount];
-
-        byte curByte = 0, bitsRemaining = 8;
-        var arrayIndex = 0;
-
-        foreach (var c in input)
+        var paddingIndex = input.IndexOf('=');
+        var dataLength = paddingIndex < 0 ? input.Length : paddingIndex;
+        var paddingLength = input.Length - dataLength;
+        if (paddingIndex >= 0)
         {
-            var cValue = CharToValue(c);
+            if (input.Length % 8 != 0)
+                throw new ArgumentException("Base32 padding must appear only at the end of a complete 8-character block.", nameof(input));
 
-            var mask = 0;
-            if (bitsRemaining > 5)
+            for (var i = paddingIndex; i < input.Length; i++)
             {
-                mask = cValue << (bitsRemaining - 5);
-                curByte = (byte)(curByte | mask);
-                bitsRemaining -= 5;
-            }
-            else
-            {
-                mask = cValue >> (5 - bitsRemaining);
-                curByte = (byte)(curByte | mask);
-                returnArray[arrayIndex++] = curByte;
-                curByte = (byte)(cValue << (3 + bitsRemaining));
-                bitsRemaining += 3;
+                if (input[i] != '=')
+                    throw new ArgumentException("Base32 padding must appear only at the end of a complete 8-character block.", nameof(input));
             }
         }
 
-        //if we didn't end with a full byte
-        if (arrayIndex != byteCount)
+        var remainder = dataLength % 8;
+        var expectedPaddingLength = remainder switch
         {
-            returnArray[arrayIndex] = curByte;
+            0 => 0,
+            2 => 6,
+            4 => 4,
+            5 => 3,
+            7 => 1,
+            _ => throw new ArgumentException("The Base32 input has an invalid length.", nameof(input)),
+        };
+
+        if (paddingLength > 0 && paddingLength != expectedPaddingLength)
+            throw new ArgumentException("The Base32 input has an invalid padding length.", nameof(input));
+
+        var result = new byte[dataLength * 5 / 8];
+        var resultIndex = 0;
+        var bitBuffer = 0;
+        var bitCount = 0;
+
+        for (var i = 0; i < dataLength; i++)
+        {
+            bitBuffer = (bitBuffer << 5) | CharToValue(input[i], nameof(input));
+            bitCount += 5;
+            if (bitCount < 8)
+                continue;
+
+            bitCount -= 8;
+            result[resultIndex++] = (byte)(bitBuffer >> bitCount);
+            bitBuffer &= (1 << bitCount) - 1;
         }
 
-        return returnArray;
+        if (bitBuffer != 0)
+            throw new ArgumentException("The unused bits at the end of the Base32 input must be zero.", nameof(input));
+
+        return result;
     }
 
     public static string ToBase32(this byte[] bytes)
@@ -87,7 +103,7 @@ partial class BytesExtensions
         return new string(returnArray);
     }
 
-    private static int CharToValue(char c)
+    private static int CharToValue(char c, string parameterName)
     {
         var value = (int)c;
 
@@ -96,7 +112,7 @@ partial class BytesExtensions
             < 91 and > 64 => value - 65, // 65-90 == uppercase letters
             < 56 and > 49 => value - 24, // 50-55 == numbers 2-7
             < 123 and > 96 => value - 97, // 97-122 == lowercase letters
-            _ => throw new ArgumentException("Character is not a Base32 character.", nameof(c))
+            _ => throw new ArgumentException($"'{c}' is not a Base32 character.", parameterName)
         };
     }
 

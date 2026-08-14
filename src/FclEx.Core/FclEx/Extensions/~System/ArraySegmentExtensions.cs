@@ -2,30 +2,39 @@ namespace FclEx.Extensions;
 
 public static class ArraySegmentExtensions
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static bool IsNullOrEmpty<T>(this ArraySegment<T> segment)
     {
         return segment.Array.IsNullOrEmpty() || segment.Count == 0;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static MemoryStream ToMemoryStream(this ArraySegment<byte> segment)
     {
         return new MemoryStream(segment.Array!, segment.Offset, segment.Count);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static ReadOnlySpan<T> AsReadOnlySpan<T>(this ArraySegment<T> segment)
     {
         return segment.AsSpan();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ArraySegment<T> ToSegment<T>(this ArraySegment<T> segment, int offset, int count)
+#if !NET5_0_OR_GREATER
+    [MethodImpl(AggressiveInlining)]
+    public static ArraySegment<T> Slice<T>(this ArraySegment<T> segment, int offset, int count)
     {
         Check.NotNull(segment.Array);
+
+        if ((uint)offset > (uint)segment.Count)
+            throw new ArgumentOutOfRangeException(nameof(offset));
+
+        if ((uint)count > (uint)(segment.Count - offset))
+            throw new ArgumentOutOfRangeException(nameof(count));
+
         return new(segment.Array, segment.Offset + offset, count);
     }
+#endif
 
     public static IEnumerable<ArraySegment<T>> Segments<T>(this ArraySegment<T> segment, int maxSize)
     {
@@ -41,7 +50,7 @@ public static class ArraySegmentExtensions
             var length = i + 1 == count
                 ? segment.Count - i * maxSize
                 : maxSize;
-            yield return segment.ToSegment(i * maxSize, length);
+            yield return segment.Slice(i * maxSize, length);
         }
     }
 }

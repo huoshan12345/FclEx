@@ -2,8 +2,6 @@ namespace FclEx.Helpers;
 
 public static class ResourceHelper
 {
-    private static readonly char[] _newLineChars = Environment.NewLine.ToCharArray();
-
     public static class Embedded
     {
         public static Stream? GetStream(Assembly assembly, string name)
@@ -28,7 +26,7 @@ public static class ResourceHelper
         public static string[] ReadLines(Assembly assembly, string resourceName, StringSplitOptions options, Encoding? encoding = null)
         {
             return ReadString(assembly, resourceName, encoding)
-                .Split(_newLineChars, options);
+                .SplitToLines(options);
         }
 
         public static string[] ReadLines(Assembly assembly, string resourceName, SplitOptions options = SplitOptions.TrimAndRemoveEmpty, Encoding? encoding = null)

@@ -28,18 +28,40 @@ public enum SeparatorLocationOption
 
 partial class StringExtensions
 {
-    public static readonly char[] NewLineChars = ['\r', '\n'];
+    private static readonly string[] NewLineSeparators = ["\r\n", "\r", "\n"];
 
     public static string[] SplitToLines(this string? str, StringSplitOptions options)
     {
-        return str.IsNullOrEmpty()
-            ? []
-            : str.Split(NewLineChars, options);
+        return SplitToLines(str, (int)options, nameof(options));
     }
 
     public static string[] SplitToLines(this string? str, SplitOptions options = SplitOptions.TrimAndRemoveEmpty)
     {
-        return str.SplitToLines(options.ToStringSplitOptions());
+        return SplitToLines(str, (int)options, nameof(options));
+    }
+
+    private static string[] SplitToLines(string? str, int options, string parameterName)
+    {
+        const int removeEmptyEntries = (int)SplitOptions.RemoveEmptyEntries;
+        const int trimEntries = (int)SplitOptions.TrimEntries;
+        const int supportedOptions = removeEmptyEntries | trimEntries;
+
+        if ((options & ~supportedOptions) != 0)
+            throw new ArgumentOutOfRangeException(parameterName, options, null);
+
+        if (str.IsNullOrEmpty())
+            return [];
+
+        var lines = str.Split(NewLineSeparators, StringSplitOptions.None);
+        if ((options & trimEntries) != 0)
+        {
+            for (var i = 0; i < lines.Length; i++)
+                lines[i] = lines[i].Trim();
+        }
+
+        return (options & removeEmptyEntries) != 0
+            ? lines.Where(line => line.Length > 0).ToArray()
+            : lines;
     }
 
     /// <summary>
@@ -77,7 +99,7 @@ partial class StringExtensions
             None => (source[..index], source[sepEndIndex..]),
             Left => (source[..sepEndIndex], source[sepEndIndex..]),
             Right => (source[..index], source[index..]),
-            Both => (source[..index], source[sepEndIndex..]),
+            Both => (source[..sepEndIndex], source[index..]),
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
         };
     }

@@ -6,6 +6,11 @@ namespace FclEx.Http;
 public class BatchDownloadOptions
 {
     /// <summary>
+    /// Default upper bound for simultaneously active downloads.
+    /// </summary>
+    public const int DefaultMaxDegreeOfParallelism = 8;
+
+    /// <summary>
     /// Optional base address used to resolve relative download URIs.
     /// </summary>
     public Uri? BaseAddress { get; set; }
@@ -42,14 +47,10 @@ public class BatchDownloadOptions
     public TimeSpan? TotalTimeout { get; set; }
 
     /// <summary>
-    /// Whether downloads should run concurrently.
+    /// Maximum number of downloads that may be active at the same time.
     /// </summary>
-    public bool ExecuteInParallel { get; set; } = true;
-
-    /// <summary>
-    /// Optional maximum concurrency when <see cref="ExecuteInParallel"/> is enabled.
-    /// </summary>
-    public int? Concurrency { get; set; }
+    /// <remarks>Set this to 1 for sequential execution.</remarks>
+    public int MaxDegreeOfParallelism { get; set; } = DefaultMaxDegreeOfParallelism;
 
     /// <summary>
     /// Cancellation token passed to each download request.

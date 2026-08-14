@@ -32,8 +32,8 @@ public class HexToBytesTests
     [Fact]
     public void HexToBytes_UppercaseAndLowercase_ShouldConvertCorrectly()
     {
-        var hex = "4a6F68"; // Represents the byte array [0x4A, 0x6F, 0x68]
-        var expected = "Joh"u8.ToArray();
+        var hex = "aBcDeF";
+        byte[] expected = [0xAB, 0xCD, 0xEF];
         var result = hex.HexToBytes();
         Assert.Equal(expected, result);
     }

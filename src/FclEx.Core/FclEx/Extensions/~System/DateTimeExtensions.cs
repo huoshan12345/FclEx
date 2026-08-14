@@ -175,16 +175,6 @@ public static class DateTimeExtensions
         return DateTime.SpecifyKind(time, kind);
     }
 
-    public static DateTime ToCnTime(this DateTime time)
-    {
-        return time.ToUtc().AddHours(8);
-    }
-
-    public static string ToCnTimeStr(this DateTime time)
-    {
-        return time.ToCnTime().ToCommon();
-    }
-
     /// <summary>
     /// Truncates the <see cref="DateTime"/> to millisecond precision by removing any sub-millisecond components.
     /// </summary>

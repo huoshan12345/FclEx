@@ -2,21 +2,14 @@ namespace FclEx.Extensions;
 
 public static class DateTimeOffsetExtensions
 {
-    public static readonly TimeZoneInfo CnTimeZone = TimeZoneInfo.CreateCustomTimeZone("China", TimeSpan.FromHours(8), null, null);
+    private static readonly TimeSpan ChinaStandardTimeOffset = TimeSpan.FromHours(8);
 
-    public static DateTimeOffset SetOffset(this DateTimeOffset time, TimeSpan offset)
+    /// <summary>
+    /// Converts an instant to China Standard Time (UTC+08:00) while preserving the represented instant.
+    /// </summary>
+    public static DateTimeOffset ToChinaStandardTime(this DateTimeOffset time)
     {
-        return new DateTimeOffset(time.DateTime, offset);
-    }
-
-    public static DateTimeOffset SetCnOffset(this DateTimeOffset time)
-    {
-        return time.SetOffset(CnTimeZone.BaseUtcOffset);
-    }
-
-    public static DateTimeOffset ToCnTime(this DateTimeOffset time)
-    {
-        return time.ToOffset(CnTimeZone.BaseUtcOffset);
+        return time.ToOffset(ChinaStandardTimeOffset);
     }
 
     public static TimeSpan Duration(this DateTimeOffset time, DateTimeOffset other)

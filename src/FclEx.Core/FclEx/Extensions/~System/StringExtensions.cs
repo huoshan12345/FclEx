@@ -83,14 +83,6 @@ partial class StringExtensions
         return true;
     }
 
-    public static bool IsPossibleHtml([NotNullWhen(true)] this string? data)
-    {
-        if (!data.IsNotEmpty())
-            return false;
-
-        return true;
-    }
-
     /// <summary>
     /// Converts a hexadecimal string representation into a byte array.
     /// </summary>
@@ -132,7 +124,7 @@ partial class StringExtensions
             return hex switch
             {
                 >= 'A' and <= 'F' => hex - 'A' + 10,
-                >= 'a' and <= 'a' => hex - 'a' + 10,
+                >= 'a' and <= 'f' => hex - 'a' + 10,
                 >= '0' and <= '9' => hex - '0',
                 _ => throw new ArgumentException($"'{hex}' is not a valid hexadecimal character.", nameof(hex)),
             };

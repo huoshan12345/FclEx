@@ -146,9 +146,8 @@ public static class JsonHelper
                        ?? typeInfo.Options.PropertyNamingPolicy?.ConvertName(member.Name)
                        ?? member.Name;
 
-            var value = member.GetValue(null);
-            var propertyInfo = typeInfo.CreateJsonPropertyInfo(value?.GetType() ?? member.DataMemberType, name);
-            propertyInfo.Get = (o) => value;
+            var propertyInfo = typeInfo.CreateJsonPropertyInfo(member.DataMemberType, name);
+            propertyInfo.Get = _ => member.GetValue(null);
             propertyInfo.CustomConverter = member.GetCustomAttribute<JsonConverterAttribute>()?.ConverterType is { } converterType
                 ? (JsonConverter?)Activator.CreateInstance(converterType)
                 : null;

@@ -21,7 +21,8 @@ public class RetryingBatchConsumerTests
         consumer.CompleteAdding();
         await CompletesWithin(runTask);
 
-        Assert.Equal([1, 2, 3], consumed.Task.Result);
+        Assert.True(consumed.Task.IsCompleted);
+        Assert.Equal([1, 2, 3], await consumed.Task);
         Assert.Equal(3, consumer.Metrics.ConsumedItemCount);
     }
 
@@ -33,6 +34,7 @@ public class RetryingBatchConsumerTests
         await using var consumer = new RetryingBatchConsumer<int>(
             (_, _) =>
             {
+                // ReSharper disable once AccessToModifiedClosure
                 Interlocked.Increment(ref calls);
                 consumed.TrySetResult(true);
                 return Task.CompletedTask;
@@ -92,7 +94,8 @@ public class RetryingBatchConsumerTests
         consumer.CompleteAdding();
         await CompletesWithin(runTask);
 
-        Assert.Equal([1], consumed.Task.Result);
+        Assert.True(consumed.Task.IsCompleted);
+        Assert.Equal([1], await consumed.Task);
     }
 
     [Fact]

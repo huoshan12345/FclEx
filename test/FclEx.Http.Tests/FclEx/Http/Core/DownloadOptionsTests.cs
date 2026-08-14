@@ -21,7 +21,7 @@ public class DownloadOptionsTests
     }
 
     [Fact]
-    public void BatchDownloadOptions_DefaultsToGetAndParallelExecution()
+    public void BatchDownloadOptions_Uses_Bounded_Concurrency_By_Default()
     {
         var options = new BatchDownloadOptions();
 
@@ -31,8 +31,7 @@ public class DownloadOptionsTests
         Assert.Null(options.ReadHeadersTimeout);
         Assert.Null(options.BufferSize);
         Assert.Null(options.ReadBufferTimeout);
-        Assert.True(options.ExecuteInParallel);
-        Assert.Null(options.Concurrency);
+        Assert.Equal(BatchDownloadOptions.DefaultMaxDegreeOfParallelism, options.MaxDegreeOfParallelism);
         Assert.False(options.CancellationToken.IsCancellationRequested);
     }
 }

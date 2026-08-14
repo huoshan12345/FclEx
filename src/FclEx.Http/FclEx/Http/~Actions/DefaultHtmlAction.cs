@@ -29,12 +29,9 @@ public static class DefaultHtmlAction
     public static OperationResult<string> GetHtml<T>(IHtmlAction<T> action, HttpResponse response)
     {
         var str = response.ResponseString;
-        return str switch
-        {
-            _ when str.IsNullOrEmpty() => Operation.Error<string>("The response string is empty"),
-            _ when str.IsPossibleHtml() => Operation.Success(response.ResponseString),
-            _ => Operation.Error<string>("The response string is not a valid html: " + str.Truncate(256))
-        };
+        return str.IsNullOrEmpty()
+            ? Operation.Error<string>("The response string is empty")
+            : Operation.Success(str);
     }
 
     /// <summary>
