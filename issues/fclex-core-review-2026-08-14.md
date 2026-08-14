@@ -4,12 +4,14 @@
 
 - 审查范围：`src/FclEx.Core` 下的 C# 源码，明确排除任何 `Combinatorics` 目录。
 - 规模：424 个 C# 文件，约 34,179 行。
-- 方法：结合编译、现有测试、公共 API/命名审查和重点静态分析；优先检查并发、异步、资源释放、集合不变量、I/O、安全、序列化和多目标框架兼容性。
-- 停止条件：候选问题已经超过 50 个。按要求停止继续扩展，本报告只保留证据最强、优先级最高的 50 条；未把剩余候选写入报告。
+- 方法：采用自顶向下的顺序，先判断功能目的、包归属、职责边界、数据/并发模型和公共抽象是否合理；整体设计成立后，再检查命名、签名、内部实现和边界条件。结合编译、现有测试和重点静态分析，优先检查并发、异步、资源释放、集合不变量、I/O、安全、序列化和多目标框架兼容性。
+- 停止条件：初审候选问题超过 50 个，按要求停止扩展并保留了证据最强的 50 条。按最新标准复审未修复项后，第 31 条已因前序重构不再适用并直接移除；当前报告保留 49 条历史及待处理记录，没有借复审继续增加新问题。
 - 基线验证：`dotnet build src/FclEx.Core/FclEx.Core.csproj -c Release --no-restore` 在 `net472`、`netstandard2.0`、`net8.0`、`net9.0`、`net10.0` 上均成功，0 warning、0 error。
 - 测试验证：`dotnet test test/FclEx.Core.Tests/FclEx.Core.Tests.csproj -c Release --no-restore --no-build /nr:false` 全部通过；`net472` 通过 10,138 条、跳过 3 条，其他三个测试目标各通过 10,186 条、跳过 3 条。
 
 严重性约定：P0 为安全或数据破坏风险；P1 为较高概率的错误、死锁、竞态或公共契约破坏；P2 为边界错误、资源/兼容性风险或明显的行为歧义；P3 为命名和可维护性问题。
+
+复审说明：未修复的第 31–50 条已按“整体设计优先”重新检查。第 31 条所指的旧异步重载已经被 token-aware、`TimeSpan` 形式的实现替换，因此删除；第 32、36、37、40、42、43、49、50 条按当前代码重新表述为设计层问题；其余未修复条目的用途和总体方向成立，原问题仍适用。
 
 ## 问题清单
 
@@ -138,11 +140,8 @@
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~IO/FileInfoExtensions.cs:118-130`。递归复制到 `newDest` 后忽略其返回值，最终仍返回原本冲突的 `dest`，调用者无法知道真实文件名。应直接 `return await file.CopyToAsync(newDest, ...)`，并测试连续多个冲突后的最终路径。
     修复：`AutoRename` 分支直接返回递归复制的结果；连续存在 `report.txt`、`report_1.txt` 时会返回实际创建并已刷新的 `report_2.txt`。已增加多次冲突后的路径、内容及原文件未覆盖测试。
 
-31. **[P2] `ActionHelper.TryAsync` 的 `delaySeconds` 实际按毫秒解释**  
-    位置：`src/FclEx.Core/FclEx/Helpers/ActionHelper.cs:56-74`。非泛型异步重载调用 `Task.Delay(delaySeconds)`，而同步重载和泛型异步重载都按秒延迟。应统一使用 `TimeSpan`，或调用 `Task.Delay(TimeSpan.FromSeconds(delaySeconds))`；公共参数最好避免用整数表达时间单位。
-
-32. **[P2] `ActionHelper` 重新抛出时丢失原始调用栈，且最后一次失败后仍延迟**  
-    位置：`src/FclEx.Core/FclEx/Helpers/ActionHelper.cs:13-31,38-52,61-83,91-106`。`throw lastEx` 把栈顶重置到 helper；每个 catch（包括最后一次）都 sleep/delay，导致已确定失败的返回被无意义推迟。建议只在还有下一次尝试时延迟，并通过 `ExceptionDispatchInfo.Capture(lastEx).Throw()` 保留原栈。
+32. **[P2] `ActionHelper` 实际是重试执行器，但同步与异步 API 是两套不一致的模型**
+    位置：`src/FclEx.Core/FclEx/Helpers/ActionHelper.cs:5-141`。提供基础重试能力本身合理，但 `ActionHelper.Try` 这个名称没有表达重试；同步重载仍使用 `retryTimes`、整数秒、`onFail`、`throwOnFail` 和可空返回值，异步重载则使用 `maxRetryCount`、`TimeSpan`、token-aware delegate、fallback/defaultValue 和 `throwOnFailure`。同步版本还会在最后一次失败后延迟，并用 `throw lastEx` 丢失原始调用栈。源码中没有同步重载的实际调用方。建议先把它重建为单一、明确的重试抽象（或直接删除未使用的同步 API），统一 attempt/retry 计数、延迟、失败返回和异常传播；不要用布尔参数切换互斥的失败契约。若保留同步实现，应与异步实现共享策略，只在确实还有下一次尝试时等待，并通过 `ExceptionDispatchInfo` 重抛。
 
 33. **[P2] `readBufferTimeout` 同时限制写入操作**  
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~IO/StreamExtensions.cs:46-64`。同一个带超时的 CTS 先用于 read，随后也用于 `dest.WriteAsync`；慢目标流会被名为“读取超时”的参数取消，而且写入消耗的是 read 剩余时间。应让 read timeout 只包围 read，写操作仅使用调用方 token，或把参数改成明确的 per-iteration timeout。
@@ -153,11 +152,11 @@
 35. **[P2] 多个 DateTime 日历辅助方法丢失 `Kind`**  
     位置：`src/FclEx.Core/FclEx/Extensions/~System/DateTimeExtensions.cs:46-90`。`Today`、`ThisYear`、`ThisMonth`、`StartOfMonth`、`EndOfMonth` 使用不带 kind 的构造函数，输入即使是 Local/Utc，输出也变为 Unspecified。应使用包含 `dt.Kind` 的构造函数，或明确记录并命名为创建 Unspecified 时间。
 
-36. **[P2] `DateTime.ToCnTime` 返回带 `Utc` Kind 的中国本地钟面时间**  
-    位置：`src/FclEx.Core/FclEx/Extensions/~System/DateTimeExtensions.cs:120-143`。`ToUtc().AddHours(8)` 保留 `DateTimeKind.Utc`，但数值已经是 UTC+8；后续再转 UTC 会重复偏移。应优先返回 `DateTimeOffset` 并用 `TimeZoneInfo.ConvertTime`，或至少把本地钟面值标记为 Unspecified。
+36. **[P2] `DateTime.ToCnTime` 的返回类型无法安全表达它声称的时区转换**
+    位置：`src/FclEx.Core/FclEx/Extensions/~System/DateTimeExtensions.cs:120-143`、`DateTimeOffsetExtensions.cs:5-20`。问题不只是 `ToUtc().AddHours(8)` 保留了错误的 `Utc` Kind；`DateTime` 本身也不能携带 UTC+8 offset，因而不适合作为时区转换结果。`Cn` 还是含义不清的公共缩写。建议删除 `DateTime.ToCnTime`/`ToCnTimeStr`，只保留以 `DateTimeOffset` 表达 instant 与 offset 的转换，并将 API 命名为 `ToChinaStandardTime` 或直接显式使用 `ToOffset(TimeSpan.FromHours(8))`；字符串格式化应建立在正确的 `DateTimeOffset` 结果之上。
 
-37. **[P2] `DateTimeHelper.FromUnixTime*` 返回 Unspecified Kind**  
-    位置：`src/FclEx.Core/FclEx/Helpers/DateTimeHelper.cs:3-9`。使用 `DateTimeOffset.DateTime` 会丢失 offset 并生成 `DateTimeKind.Unspecified`，与 Unix 时间天然为 UTC 的语义不符。应返回 `.UtcDateTime`，或直接以 `DateTimeOffset` 作为公共返回类型。
+37. **[P2] `DateTimeHelper` 只是对 BCL Unix 时间 API 的有损包装，整体没有保留价值**
+    位置：`src/FclEx.Core/FclEx/Helpers/DateTimeHelper.cs:3-9`。两个方法没有调用方，只把 `DateTimeOffset.FromUnixTimeSeconds/Milliseconds` 的结果取 `.DateTime`，丢失 offset 并生成 `DateTimeKind.Unspecified`。既然所有目标框架都已有原生 `DateTimeOffset` API，这个 helper 没有形成更好的抽象。建议直接删除 `DateTimeHelper`；调用方需要 `DateTime` 时应显式选择 `.UtcDateTime` 或 `.LocalDateTime`，而不是由工具方法暗中丢失语义。
 
 38. **[P2] `Partition` 的 `Both` 选项实现成了 `None`**  
     位置：`src/FclEx.Core/FclEx/Extensions/~System/StringExtensions.Split.cs:52-82`。文档称 separator 同时包含在左右两部分，但实现返回 `source[..index]` 和 `source[sepEndIndex..]`，两边都排除了 separator。应返回 `(source[..sepEndIndex], source[index..])` 并覆盖左右搜索和多字符 separator。
@@ -165,17 +164,17 @@
 39. **[P2] `HexToBytes` 拒绝小写 `b` 到 `f`**  
     位置：`src/FclEx.Core/FclEx/Extensions/~System/StringExtensions.cs:126-138`。匹配范围写成 `>= 'a' and <= 'a'`，只有小写 `a` 可通过。应改为 `<= 'f'`，增加 `abcdef`、混合大小写和非法字符测试。
 
-40. **[P2] `IsPossibleHtml` 对任何非空字符串都返回 true**  
-    位置：`src/FclEx.Core/FclEx/Extensions/~System/StringExtensions.cs:86-93`。`"not html"` 也被认定为可能的 HTML，API 名称传达了并不存在的判定能力。若只想检查非空应删除/改名；若保留 HTML 探测，应定义最小判据和误判边界。
+40. **[P2] `IsPossibleHtml` 没有可成立的判定契约，应删除而不是补一个脆弱启发式**
+    位置：`src/FclEx.Core/FclEx/Extensions/~System/StringExtensions.cs:86-93`、`src/FclEx.Http/FclEx/Http/~Actions/DefaultHtmlAction.cs:27-38`。AngleSharp 可以把普通非空文本解析为 HTML 文档，因此当前实现实际上只是非空检查；若改成查找标签，又会错误拒绝合法片段或接受格式错误文本。这个 API 既不能证明有效 HTML，也没有为调用方提供额外信息。建议删除 `IsPossibleHtml`，让 `DefaultHtmlAction.GetHtml` 只负责非空验证，真正的解析和 selector 匹配继续由 HTML parser/context 决定。
 
 41. **[P2] 按字符拆行会把 CRLF 当作两个换行符**  
     位置：`src/FclEx.Core/FclEx/Extensions/~System/StringExtensions.Split.cs:29-42`、`FclEx/Helpers/ResourceHelper.cs:3,28-36`。`Split(['\r','\n'], StringSplitOptions.None)` 会在每个 `\r\n` 中间制造空行；默认 RemoveEmpty 又会误删真实空白行。应按 `\r\n|\r|\n` 作为完整分隔序列处理，并分别测试保留/删除空行。
 
-42. **[P2] 子 `ArraySegment` 可以越过父 segment 的边界**  
-    位置：`src/FclEx.Core/FclEx/Extensions/~System/ArraySegmentExtensions.cs:24-29`。构造时只依赖底层数组的范围检查，例如父 segment 只有 2 项，但请求 count 10 只要底层数组够大就会成功。应验证 `offset >= 0`、`count >= 0` 且 `offset + count <= segment.Count`。
+42. **[P2] `ArraySegment.ToSegment` 没有遵守“从当前 segment 切片”的契约，名称也未与 BCL 对齐**
+    位置：`src/FclEx.Core/FclEx/Extensions/~System/ArraySegmentExtensions.cs:24-29`。构造时只依赖底层数组的范围检查，例如父 segment 只有 2 项，但请求 count 10 只要底层数组够大就会成功。整体用途是创建子 segment，应该优先使用或回填 BCL 的 `ArraySegment<T>.Slice` 语义，而不是另造 `ToSegment` 名称。若目标框架已有 `Slice`，应删除该方法；若确需为旧框架回填，应命名为 `Slice`、只在缺失框架编译，并验证 `offset >= 0`、`count >= 0`、`offset + count <= segment.Count`。
 
-43. **[P2] 无限并发分支完全忽略 cancellation token**  
-    位置：`src/FclEx.Core/FclEx/Extensions/~System/~Collections/~Generic/EnumerableExtensions.Task.cs:46-84`。当 `concurrency is null` 时直接枚举并启动所有 operation，不检查已经取消的 token；同一 API 在分批分支才检查取消。至少应在开始枚举前 `ThrowIfCancellationRequested`，并考虑提供接收 token 的 operation 委托，使取消语义一致。
+43. **[P1] `Enumerable` 异步执行扩展的并发、取消和部分结果模型整体不一致**
+    位置：`src/FclEx.Core/FclEx/Extensions/~System/~Collections/~Generic/EnumerableExtensions.Task.cs:7-116`。`ExecuteInParallelAsync` 的有限并发实际是整批 `Task.WhenAll`，不是持续补充 worker 的最大并行度；`concurrency == null` 会立即枚举并启动全部操作且忽略 token；有限并发和顺序版本在取消时 `break` 并以成功状态返回部分结果；operation 又不接收 token，而间隔调用的 `TaskHelper.Delay` 会吞掉取消异常。`ExecuteAsync(..., bool executeInParallel, ...)` 还用布尔参数把两种执行模型塞进同一签名。建议整体重建这组 API：operation 使用 `Func<T, CancellationToken, ValueTask[<TResult>]>`，取消统一以 canceled task 结束，有限并发使用固定 worker/信号量或现代框架的 `Parallel.ForEachAsync`，明确结果是否保持输入顺序，并删除布尔模式参数和含糊的“null 表示无限并发”约定。
 
 44. **[P2] Base32 解码静默接受无效的短输入**  
     位置：`src/FclEx.Core/FclEx/Extensions/~System/BytesExtensions.Base32.cs:5-44`。例如单字符 `"A"` 计算出的 `byteCount` 为 0，最终返回空数组而非报告无效编码；padding 长度和被丢弃的尾位也未校验。应验证 RFC 4648 合法长度、padding 位置和尾部零位，或明确提供 tolerant 模式。
@@ -192,15 +191,20 @@
 48. **[P2] `FileExtensionEqualityComparer` 把无扩展名的整个文件名当作扩展名**  
     位置：`src/FclEx.Core/System/Collections/Generic/~EqualityComparers/FileExtensionEqualityComparer.cs:7-21`。`SkipUntil(".", untilLast: true)` 找不到点时返回原字符串，因此 `foo` 与 `bar` 被认为扩展名不同；`.gitignore` 等边界也与 `Path.GetExtension` 语义不一致。应基于 `Path.GetExtension`，并明确是否接受完整路径、尾点和 dotfile。
 
-49. **[P2] `SizeCalculator` 把无字段值类型的大小报告为 0**  
-    位置：`src/FclEx.Core/FclEx/Utils/~Runtime/SizeCalculator.cs:19-25`。CLR 中空 struct 仍有非零实例大小，返回 0 也会让“引用类型最后一个字段为空 struct”的计算继续低估。值类型应统一通过可靠的 `Unsafe.SizeOf`/生成泛型调用计算，并用空 struct、显式布局、嵌套 struct 做验证。
+49. **[P2] `SizeCalculator` 对“托管对象大小”的公共承诺本身不可靠，空 struct 返回 0 只是一个症状**
+    位置：`src/FclEx.Core/FclEx/Utils/~Runtime/SizeCalculator.cs`。该类型把 value size、引用类型 shallow instance size、对象头和对齐混成一个 `SizeOf(Type)` 契约，并通过未初始化对象和字段地址差推断 CLR 私有布局；接口被报告为最小对象大小，抽象类/开放泛型却因无法实例化而抛错，行为并不一致。空 struct 返回 0 进一步证明实现不能稳定表达运行时布局。建议先决定真实用途：若只需要值类型的 managed size，应删除引用类型分支并基于受约束泛型 `Unsafe.SizeOf<T>()`；若确实需要诊断当前运行时的 shallow object size，应改成明确的诊断型名称和返回契约，接受实例而不是伪造对象，注明 runtime/architecture 限制，并用空 struct、显式/自动布局、继承、数组和运行时差异验证。不要继续把当前结果描述为通用、精确的对象大小。
 
-50. **[P3] 多个公共名称不准确或不符合自然英语，应在发布前统一**  
-    位置示例：`FclEx/Helpers/DebuggerHepler.cs:3`（拼写错误，应为 `DebuggerHelper`）；`System/ComponentModel/DataAnnotations/UriAttribute.cs:28`（URI 术语是 scheme，应为 `AllowedSchemes`）；`TaskHelper.cs:70`（`DelayMilli` 应为 `DelayMilliseconds`）；`DateTimeExtensions.cs:136`/`DateTimeOffsetExtensions.cs:5`（`Cn` 含义含混，建议 `ChinaStandardTime`）；`IPEndPointHelper.cs:9`（端口在 socket 释放后不再保留，`NextLocalEndpoint` 应明确为 candidate）。这些都是公共 NuGet API，建议采用准确且与实际行为一致的命名；是否提供兼容转发可按具体 API 单独决定。
+50. **[P2] 剩余名称问题不能作为一次机械改名处理，其中多个 API 应先删除或重新定义用途**
+    复审结果：
+    1. `FclEx/Helpers/DebuggerHepler.cs` 不仅拼写错误，而且没有调用方，只是薄封装 `Debugger.Log`；应优先删除，确有统一日志入口需求时再设计，而不是直接改成 `DebuggerHelper`。
+    2. `System/ComponentModel/DataAnnotations/UriAttribute.cs` 的验证职责成立，但 URI 术语是 scheme，不是 schema；`AllowedSchemas` 应改为 `AllowedSchemes`，错误消息也应同步修正。
+    3. `TaskHelper.DelayMilli` 与 BCL `Task.Delay(int, token)` 重复；更重要的是同文件的 `Delay` 会吞掉 `TaskCanceledException`，名称却没有表达“忽略取消”。应删除毫秒包装，并让普通 `Delay` 传播取消；确需吞取消的调用点应显式捕获或使用准确命名的专用方法。
+    4. `IPEndPointHelper.NextLocalEndpoint` 无法提供它名字暗示的保证：socket 释放后端口立即可能被其他进程占用。应删除这个 TOCTOU helper，让服务器直接绑定端口 0 后读取实际端口；若只能用于测试，也应把实现放在测试基础设施而不是 Core 公共 API。
+    5. `CnTime` 相关命名和返回类型已归入第 36 条，不应再作为孤立拼写问题处理。
 
 ## 建议处理顺序
 
-1. 先修复 1-15，尤其是 ZIP 路径穿越、缓存锁、双向字典不变量、XML comparer、原始内存读取和 Consumer 生命周期。
-2. 再处理异步协调与资源释放问题 16-29，并为每个竞态增加可重复的并发测试。
-3. 处理 30-49 的边界和契约问题；这些修复中有若干会改变当前错误行为，应在 release notes 中说明。
-4. 对第 50 条单独做一次公共 API 命名决策。避免直接删除旧成员，先提供兼容转发层。
+1. 已修复项继续保留为历史记录，不再按旧实现重复处理。
+2. 下一批优先讨论并处理整体设计不成立或需要重建的 32、36、37、40、43、49、50；先决定删除/重构方向，再写实现细节。
+3. 随后处理整体用途明确的局部契约问题 33–35、38–39、41–42、44–48，并为每项增加边界测试。
+4. 破坏性变更不是阻碍；完成删除或重塑后，应同步检查 Core/Http 调用方、XML 文档和包说明。
