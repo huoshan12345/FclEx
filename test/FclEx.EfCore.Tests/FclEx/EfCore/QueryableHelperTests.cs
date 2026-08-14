@@ -6,7 +6,6 @@ public class QueryableHelperTests
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
-        public int? Order { get; set; }
     }
 
     private class TestEntityWithStringId : IHasId<string>
@@ -69,45 +68,4 @@ public class QueryableHelperTests
         Assert.DoesNotContain("%Tom%", filter.ToString());
     }
 
-    [Theory]
-    [InlineData(42, "match", 7, true)]
-    [InlineData(42, "other", 7, false)]
-    [InlineData(42, "match", 8, false)]
-    [InlineData(42, "match", null, false)]
-    public void BuildFilter_CombinesPropertiesWithinCompositeIndexWithAnd(int id, string name, int? order, bool expected)
-    {
-        using var context = new CompositeIndexContext();
-        var entity = new TestEntity { Id = 42, Name = "match", Order = 7 };
-        var index = context.Model.FindEntityType(typeof(TestEntity))!.GetIndexes().Single();
-
-        var filter = QueryableHelper.BuildFilter([index], entity).Compile();
-
-        Assert.Equal(expected, filter(new TestEntity { Id = id, Name = name, Order = order }));
-    }
-
-    [Fact]
-    public void BuildFilter_SupportsNullNullableIndexValue()
-    {
-        using var context = new CompositeIndexContext();
-        var entity = new TestEntity { Id = 42, Name = "match", Order = null };
-        var index = context.Model.FindEntityType(typeof(TestEntity))!.GetIndexes().Single();
-
-        var filter = QueryableHelper.BuildFilter([index], entity).Compile();
-
-        Assert.True(filter(new TestEntity { Id = 42, Name = "match", Order = null }));
-        Assert.False(filter(new TestEntity { Id = 42, Name = "match", Order = 7 }));
-    }
-
-    private sealed class CompositeIndexContext : DbContext
-    {
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseSqlite("Data Source=:memory:");
-        }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<TestEntity>().HasIndex(e => new { e.Id, e.Name, e.Order });
-        }
-    }
 }

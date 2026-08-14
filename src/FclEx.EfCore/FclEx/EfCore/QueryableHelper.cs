@@ -79,35 +79,6 @@ public static class QueryableHelper
         return where;
     }
 
-    public static Expression<Func<T, bool>> BuildFilter<T>(IEnumerable<IIndex> indexes, T entity) where T : notnull
-    {
-        // m => m.Property == value || m.Property2 == value2
-        var objParam = Expression.Parameter(typeof(T));
-
-        Expression? conditions = null;
-        foreach (var index in indexes)
-        {
-            Check.NotEmpty(index.Properties);
-
-            Expression? condition = null;
-            foreach (var property in index.Properties)
-            {
-                var member = Expression.PropertyOrField(objParam, property.Name);
-                var propertyValue = property.GetGetter().GetClrValue(entity);
-                var value = Expression.Constant(propertyValue, member.Type);
-                var equal = Expression.Equal(member, value);
-                condition = condition is null ? equal : Expression.AndAlso(condition, equal);
-            }
-
-            Check.NotNull(condition);
-            conditions = conditions is null ? condition : Expression.OrElse(conditions, condition);
-        }
-
-        Check.NotNull(conditions);
-        var lambda = Expression.Lambda<Func<T, bool>>(conditions, objParam);
-        return lambda;
-    }
-
     public static Expression<Func<T, bool>> BuildIdFilter<T, TKey>(TKey id) where T : IHasId<TKey>
     {
         // m => m.Id == id
