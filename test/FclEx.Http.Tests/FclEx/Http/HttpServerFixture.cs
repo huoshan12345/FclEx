@@ -15,16 +15,8 @@ public class TestApiPaths
 
 public class HttpServerFixture : CoreTestsFixture
 {
-    public static readonly Uri TestUri = ((Func<Uri>)(() =>
-    {
-        var (host, port) = IPEndPointHelper.NextLocalEndpoint();
-        return new Uri($"http://{host}:{port}");
-    }))();
-
-    public static readonly HttpClientService TestHttp = HttpClientService.Create(m =>
-    {
-        m.BaseAddress = TestUri;
-    });
+    public static Uri TestUri { get; private set; } = null!;
+    public static HttpClientService TestHttp { get; private set; } = null!;
 
     private static string GetDefaultProxyUrl()
     {
@@ -53,6 +45,7 @@ public class HttpServerFixture : CoreTestsFixture
 #if NET8_0_OR_GREATER
 
     public static readonly bool HasApiServer = true;
+    private WebApplication? _app;
 
     private static readonly Lazy<string> VisitorHtml = new(() =>
         ResourceHelper.Embedded.ReadString(typeof(HttpServerFixture).Assembly, "visitor.html"));
@@ -90,10 +83,10 @@ public class HttpServerFixture : CoreTestsFixture
         return handler.CreateToken(descriptor);
     }
 
-    private static async Task RunApiServer()
+    private async Task RunApiServer()
     {
         var builder = WebApplication.CreateBuilder();
-        builder.WebHost.UseUrls(TestUri.ToString());
+        builder.WebHost.UseUrls("http://127.0.0.1:0");
         builder.Services.AddLogging(b => b.SetMinimumLevel(LogLevel.Error));
 
         builder.Services
@@ -144,7 +137,7 @@ public class HttpServerFixture : CoreTestsFixture
 
         app.MapGet(TestApiPaths.Sleep, async (HttpContext context, double seconds) =>
         {
-            await TaskHelper.Delay(TimeSpan.FromSeconds(seconds), context.RequestAborted);
+            await TaskHelper.DelayIgnoringCancellationAsync(TimeSpan.FromSeconds(seconds), context.RequestAborted);
         });
 
         app.MapPost(TestApiPaths.Post, async context =>
@@ -216,15 +209,35 @@ public class HttpServerFixture : CoreTestsFixture
         });
 
         await app.StartAsync();
+        var server = app.Services.GetRequiredService<Microsoft.AspNetCore.Hosting.Server.IServer>();
+        var addresses = server.Features
+            .Get<Microsoft.AspNetCore.Hosting.Server.Features.IServerAddressesFeature>()
+            ?.Addresses;
+        var address = addresses?.SingleOrDefault()
+            ?? throw new InvalidOperationException("Kestrel did not report its bound test address.");
+
+        TestUri = new Uri(address);
+        TestHttp = HttpClientService.Create(options => options.BaseAddress = TestUri);
+        _app = app;
     }
 #else
     public static readonly bool HasApiServer = false;
 
-    private static Task RunApiServer() => Task.CompletedTask;
+    private Task RunApiServer() => Task.CompletedTask;
 #endif
 
     public override async ValueTask InitializeAsync()
     {
         await RunApiServer();
+    }
+
+    public override async ValueTask DisposeAsync()
+    {
+#if NET8_0_OR_GREATER
+        TestHttp.Dispose();
+        if (_app is not null)
+            await _app.DisposeAsync();
+#endif
+        await base.DisposeAsync();
     }
 }

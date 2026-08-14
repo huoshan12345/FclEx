@@ -196,24 +196,29 @@
     位置：`src/FclEx.Core/System/Text/Json/JsonHelper.cs:137-157`。`var value = member.GetValue(null)` 只执行一次，`propertyInfo.Get = _ => value` 使以后修改的静态属性/字段仍序列化旧值；还用首次运行时类型代替声明类型创建 contract。getter 应每次读取 `member.GetValue(null)`，类型应使用 `member.DataMemberType`。
     修复：静态成员的 `JsonPropertyInfo` 始终使用声明类型创建，getter 在每次序列化时重新调用 `member.GetValue(null)`。测试使用声明为 `object` 的可变静态属性，验证同一 options/metadata 在值从字符串变为整数后会输出最新值及正确 JSON 类型。
 
-46. **[P2] `ReadAsStringJsonConverter` 会改变数字文本并损失精度**  
+46. **[P2][已修复] `ReadAsStringJsonConverter` 会改变数字文本并损失精度**
     位置：`src/FclEx.Core/System/Text/Json/Serialization/ReadAsStringJsonConverter.cs:20-42`。非 Int64 数字先转 `double` 再格式化，诸如高精度 decimal、超大整数或特定指数表示无法保留原始值。既然目标是字符串表示，应从 reader 的原始 UTF-8 token 获取文本，或通过 `JsonDocument.ParseValue(...).RootElement.GetRawText()` 保真。
+    修复：数字和其他复合 JSON 值统一通过 `JsonDocument.ParseValue` 读取原始 JSON 文本，不再经过 `Int64`/`double` 转换。测试覆盖超出 `Int64` 的整数、高精度小数和带尾零的指数表示。
 
-47. **[P2] 多值 `NameValues.Set` 只保留最后一个值**  
+47. **[P2][已修复] 多值 `NameValues.Set` 只保留最后一个值**
     位置：`src/FclEx.Core/FclEx/Utils/~Collections/NameValuesExtensions.cs:64-76`。每个 value 都调用 `self.Set(key, value)`，后一次会删除前一次，所以 `IEnumerable<string>` 重载与“多值”类型目的相违。应对每个 key 先 Remove 一次，再逐个 Add；空 values 的行为也需明确定义。
+    修复：每个键只在添加前删除一次，随后保留输入序列中的全部新值；空值序列明确表示移除该键。已覆盖替换多个旧值和空序列两种情况。
 
-48. **[P2] `FileExtensionEqualityComparer` 把无扩展名的整个文件名当作扩展名**  
+48. **[P2][已修复] `FileExtensionEqualityComparer` 把无扩展名的整个文件名当作扩展名**
     位置：`src/FclEx.Core/System/Collections/Generic/~EqualityComparers/FileExtensionEqualityComparer.cs:7-21`。`SkipUntil(".", untilLast: true)` 找不到点时返回原字符串，因此 `foo` 与 `bar` 被认为扩展名不同；`.gitignore` 等边界也与 `Path.GetExtension` 语义不一致。应基于 `Path.GetExtension`，并明确是否接受完整路径、尾点和 dotfile。
+    修复：比较和哈希都基于 `Path.GetExtension` 并使用 `OrdinalIgnoreCase`；完整路径、无扩展名、尾点和 dotfile 均遵循 BCL 语义，且相等值具有相同哈希码。
 
-49. **[P2] `SizeCalculator` 对“托管对象大小”的公共承诺本身不可靠，空 struct 返回 0 只是一个症状**
+49. **[P2][已修复] `SizeCalculator` 对“托管对象大小”的公共承诺本身不可靠，空 struct 返回 0 只是一个症状**
     位置：`src/FclEx.Core/FclEx/Utils/~Runtime/SizeCalculator.cs`。该类型把 value size、引用类型 shallow instance size、对象头和对齐混成一个 `SizeOf(Type)` 契约，并通过未初始化对象和字段地址差推断 CLR 私有布局；接口被报告为最小对象大小，抽象类/开放泛型却因无法实例化而抛错，行为并不一致。空 struct 返回 0 进一步证明实现不能稳定表达运行时布局。建议先决定真实用途：若只需要值类型的 managed size，应删除引用类型分支并基于受约束泛型 `Unsafe.SizeOf<T>()`；若确实需要诊断当前运行时的 shallow object size，应改成明确的诊断型名称和返回契约，接受实例而不是伪造对象，注明 runtime/architecture 限制，并用空 struct、显式/自动布局、继承、数组和运行时差异验证。不要继续把当前结果描述为通用、精确的对象大小。
+    修复：重命名为 `TypeSizeCalculator.GetInstanceFieldStorageSize`，契约收窄为实例字段的浅层存储总和：值类型字段按内联 managed size，引用字段按指针，包含继承字段但不含对象头、引用对象、变长尾部数据、字段间填充和对象对齐。实现不再创建未初始化对象或推断 CLR 私有布局；数组、接口、抽象类型、开放泛型及其他无实例布局类型明确抛出 `ArgumentException`，`string` 按其固定声明字段计算。
 
-50. **[P2] 剩余名称问题不能作为一次机械改名处理，其中多个 API 应先删除或重新定义用途**
+50. **[P2][已修复] 剩余名称问题不能作为一次机械改名处理，其中多个 API 应先删除或重新定义用途**
     复审结果：
     1. `FclEx/Helpers/DebuggerHepler.cs` 不仅拼写错误，而且没有调用方，只是薄封装 `Debugger.Log`；应优先删除，确有统一日志入口需求时再设计，而不是直接改成 `DebuggerHelper`。
     2. `System/ComponentModel/DataAnnotations/UriAttribute.cs` 的验证职责成立，但 URI 术语是 scheme，不是 schema；`AllowedSchemas` 应改为 `AllowedSchemes`，错误消息也应同步修正。
     3. `TaskHelper.DelayMilli` 与 BCL `Task.Delay(int, token)` 重复；更重要的是同文件的 `Delay` 会吞掉 `TaskCanceledException`，名称却没有表达“忽略取消”。应删除毫秒包装，并让普通 `Delay` 传播取消；确需吞取消的调用点应显式捕获或使用准确命名的专用方法。
     4. `IPEndPointHelper.NextLocalEndpoint` 无法提供它名字暗示的保证：socket 释放后端口立即可能被其他进程占用。应删除这个 TOCTOU helper，让服务器直接绑定端口 0 后读取实际端口；若只能用于测试，也应把实现放在测试基础设施而不是 Core 公共 API。
+    修复：删除无调用方的 `DebuggerHepler`；将 `AllowedSchemas` 改为 `AllowedSchemes` 并修正验证消息；删除含糊的数字 delay 重载，改为只接受 `TimeSpan` 的 `DelayIgnoringCancellationAsync`，名称和文档明确取消会提前结束等待但不取消返回任务；删除 `IPEndPointHelper`，SSH 调用方直接使用 `IPAddress.Loopback`，HTTP 测试服务器则让 Kestrel 绑定 `127.0.0.1:0` 并在启动后读取实际地址，同时在 fixture 结束时释放服务器和 HTTP client。
 
 ## 建议处理顺序
 

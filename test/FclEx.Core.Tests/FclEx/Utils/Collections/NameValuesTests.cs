@@ -85,6 +85,37 @@ public class NameValuesTests
     }
 
     [Fact]
+    public void Set_MultipleValues_ReplacesExistingValuesAndPreservesAllNewValues()
+    {
+        var nameValues = new NameValues(StringComparer.OrdinalIgnoreCase)
+            .Add("color", "red")
+            .Add("color", "blue");
+        KeyValuePair<string, string[]>[] pairs =
+        [
+            new("color", ["green", "yellow"]),
+        ];
+
+        nameValues.Set(pairs);
+
+        Assert.Equal(["green", "yellow"], nameValues.GetValues("color"));
+    }
+
+    [Fact]
+    public void Set_EmptyValueSequence_RemovesExistingKey()
+    {
+        var nameValues = new NameValues(StringComparer.OrdinalIgnoreCase)
+            .Add("color", "red");
+        KeyValuePair<string, string[]>[] pairs =
+        [
+            new("color", []),
+        ];
+
+        nameValues.Set(pairs);
+
+        Assert.False(nameValues.ContainsKey("color"));
+    }
+
+    [Fact]
     public void Get_ReturnsLastValue()
     {
         // Arrange

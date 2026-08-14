@@ -23,20 +23,13 @@ public class ReadAsStringJsonConverter : JsonConverter<string?>
         {
             JsonTokenType.Null => null,
             JsonTokenType.String => reader.GetString(),
-            JsonTokenType.Number => ReadNumber(ref reader),
+            JsonTokenType.Number => ReadRawValue(ref reader),
             JsonTokenType.True => "true",
             JsonTokenType.False => "false",
-            _ => ReadOther(ref reader),
+            _ => ReadRawValue(ref reader),
         };
 
-        static string ReadNumber(ref Utf8JsonReader reader)
-        {
-            return reader.TryGetInt64(out var longValue)
-                ? longValue.ToString()
-                : reader.GetDouble().ToString(CultureInfo.InvariantCulture);
-        }
-
-        static string ReadOther(ref Utf8JsonReader reader)
+        static string ReadRawValue(ref Utf8JsonReader reader)
         {
             using var document = JsonDocument.ParseValue(ref reader);
             return document.RootElement.GetRawText();

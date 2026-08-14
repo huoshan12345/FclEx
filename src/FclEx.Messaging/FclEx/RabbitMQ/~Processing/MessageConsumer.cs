@@ -153,7 +153,7 @@ public abstract class MessageConsumer<T, TSettings> : MessageProcessor<TSettings
             Logger.LogTrace("Consume finished, it takes {ElapsedSeconds:f3} seconds", watch.GetElapsedTime().TotalSeconds);
             disposable.Dispose();
 
-            await TaskHelper.Delay(ProcessInterval);
+            await Task.Delay(ProcessInterval);
             await Channel.BasicAckAsync(deliveryTag: args.DeliveryTag, multiple: false);
         }
 

@@ -24,21 +24,11 @@ public class TaskHelperTests
     }
 
     [RetryFact]
-    public async Task Delay_WithToken_Test()
+    public async Task DelayIgnoringCancellationAsync_CancellationEndsDelayWithoutCancelingReturnedTask()
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(0.1));
         var watch = ValueStopwatch.StartNew();
-        await TaskHelper.Delay(10, cts.Token);
-        var time = watch.GetElapsedTime();
-        Assert.True(time.TotalSeconds < 1, time.ToString());
-    }
-
-    [RetryFact]
-    public async Task DelayMilli_WithToken_Test()
-    {
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(0.1));
-        var watch = ValueStopwatch.StartNew();
-        await TaskHelper.DelayMilli(10 * 1000, cts.Token);
+        await TaskHelper.DelayIgnoringCancellationAsync(TimeSpan.FromSeconds(10), cts.Token);
         var time = watch.GetElapsedTime();
         Assert.True(time.TotalSeconds < 1, time.ToString());
     }

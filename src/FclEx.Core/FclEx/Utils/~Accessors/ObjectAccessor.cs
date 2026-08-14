@@ -33,7 +33,7 @@ public static class ObjectAccessor
     /// <param name="instance">A reference to the instance whose memory address is to be obtained.</param>
     /// <returns>An <see cref="IntPtr"/> representing the memory address of the instance.</returns>
     /// <remarks>
-    /// This method uses unsafe code and the <see cref="System.Runtime.CompilerServices.Unsafe"/> class to 
+    /// This method uses unsafe code and the <see cref="Unsafe"/> class to 
     /// convert the reference to a raw pointer. Note that even null references have an address, so no null-check 
     /// is performed on the input.
     /// </remarks>

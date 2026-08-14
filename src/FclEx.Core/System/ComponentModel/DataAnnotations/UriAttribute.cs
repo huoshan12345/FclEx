@@ -22,10 +22,13 @@ public class UriAttribute : ValidationAttribute
         if (Uri.TryCreate(stringValue, UriKind.Absolute, out var uri) == false)
             return false;
 
-        return AllowedSchemas.IsEmpty() || AllowedSchemas.Any(m => string.Equals(m, uri.Scheme, StringComparison.OrdinalIgnoreCase));
+        return AllowedSchemes.IsEmpty() || AllowedSchemes.Any(m => string.Equals(m, uri.Scheme, StringComparison.OrdinalIgnoreCase));
     }
 
-    public string[] AllowedSchemas { get; set; } = [];
+    /// <summary>
+    /// Gets or sets the URI schemes accepted by this attribute. An empty array allows any explicit scheme.
+    /// </summary>
+    public string[] AllowedSchemes { get; set; } = [];
 
     /// <summary>
     /// Gets or sets a value that indicates whether an empty string is allowed.
@@ -34,9 +37,9 @@ public class UriAttribute : ValidationAttribute
 
     public override string FormatErrorMessage(string name)
     {
-        var format = AllowedSchemas.IsEmpty()
-            ? "The {0} field is not a valid uri."
-            : $$"""The {0} field is not a valid uri with any allowed schemas: {{AllowedSchemas.JoinWith(", ")}}.""";
+        var format = AllowedSchemes.IsEmpty()
+            ? "The {0} field is not a valid URI."
+            : $$"""The {0} field is not a valid URI with one of the allowed schemes: {{AllowedSchemes.JoinWith(", ")}}.""";
 
         return string.Format(format, name);
     }

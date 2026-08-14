@@ -77,7 +77,7 @@ public class UnsafeHelperTests
     {
         var table = new ConsoleTable(new()
         {
-            Columns = ["Type", nameof(Marshal), nameof(Unsafe), nameof(SizeCalculator), nameof(UnsafeHelper)],
+            Columns = ["Type", nameof(Marshal), nameof(Unsafe), nameof(UnsafeHelper)],
             RenderColumns = true,
         });
 
@@ -101,9 +101,8 @@ public class UnsafeHelperTests
         {
             var marshalSize = GetSize(type, Marshal.SizeOf);
             var unsafeSize = UnsafeSizeOf(type);
-            var calculatorSize = GetSize(type, SizeCalculator.SizeOf);
             var size = SizeOf(type);
-            table.Rows.Add([type.ShortName(), marshalSize, unsafeSize, calculatorSize, size]);
+            table.Rows.Add([type.ShortName(), marshalSize, unsafeSize, size]);
         }
 
         if (TestHelper.IsRunningUnderReSharper())

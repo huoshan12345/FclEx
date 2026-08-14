@@ -66,18 +66,18 @@ public class UriAttributeTests
     }
 
     [Fact]
-    public void AllowedSchemas_Empty_Should_Allow_Any_Scheme()
+    public void AllowedSchemes_Empty_Should_Allow_Any_Scheme()
     {
         var attr = new UriAttribute();
         Assert.True(attr.IsValid("ftp://example.com"));
     }
 
     [Fact]
-    public void AllowedSchemas_Should_Restrict_Scheme()
+    public void AllowedSchemes_Should_Restrict_Scheme()
     {
         var attr = new UriAttribute
         {
-            AllowedSchemas = ["https"]
+            AllowedSchemes = ["https"]
         };
 
         Assert.True(attr.IsValid("https://example.com"));
@@ -85,11 +85,11 @@ public class UriAttributeTests
     }
 
     [Fact]
-    public void AllowedSchemas_Should_Be_Case_Insensitive()
+    public void AllowedSchemes_Should_Be_Case_Insensitive()
     {
         var attr = new UriAttribute
         {
-            AllowedSchemas = ["HTTPS"]
+            AllowedSchemes = ["HTTPS"]
         };
 
         Assert.True(attr.IsValid("https://example.com"));
@@ -101,7 +101,7 @@ public class UriAttributeTests
         var attr = new UriAttribute();
         var msg = attr.FormatErrorMessage("Url");
 
-        Assert.Equal("The Url field is not a valid uri.", msg);
+        Assert.Equal("The Url field is not a valid URI.", msg);
     }
 
     [Fact]
@@ -109,11 +109,11 @@ public class UriAttributeTests
     {
         var attr = new UriAttribute
         {
-            AllowedSchemas = ["http", "https"]
+            AllowedSchemes = ["http", "https"]
         };
 
         var msg = attr.FormatErrorMessage("Url");
 
-        Assert.Equal("The Url field is not a valid uri with any allowed schemas: http, https.", msg);
+        Assert.Equal("The Url field is not a valid URI with one of the allowed schemes: http, https.", msg);
     }
 }

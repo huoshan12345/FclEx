@@ -107,7 +107,7 @@ public class SshDbContext
 
             var remoteEndpoint = getRemoteEndpoint(connectionString);
             tunnel = new ForwardedPortLocal(
-                IPEndPointHelper.LoopbackAddress.ToString(),
+                IPAddress.Loopback.ToString(),
                 0,
                 remoteEndpoint.Host,
                 (uint)remoteEndpoint.Port);

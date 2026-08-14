@@ -67,9 +67,10 @@ public static class NameValuesExtensions
     {
         foreach (var (key, values) in pairs)
         {
+            self.Remove(key);
             foreach (var value in values)
             {
-                self.Set(key, value);
+                self.Add(key, value);
             }
         }
         return self;

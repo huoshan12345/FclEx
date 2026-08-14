@@ -27,6 +27,17 @@ public class ReadAsStringJsonConverterTests
     }
 
     [Theory]
+    [InlineData("9223372036854775808")]
+    [InlineData("12345678901234567890.12345678901234567890")]
+    [InlineData("1.2300e+100")]
+    public void Read_Number_PreservesRawJsonText(string json)
+    {
+        var result = JsonSerializer.Deserialize<string>(json, _options);
+
+        Assert.Equal(json, result);
+    }
+
+    [Theory]
     [InlineData("\"hello\"", "hello")]
     [InlineData("123", "123")]
     [InlineData("123.45", "123.45")]
