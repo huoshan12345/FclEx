@@ -3,6 +3,30 @@ namespace FclEx.Utils;
 public class LruCacheTests
 {
     [Fact]
+    public async Task TryGetValue_ConcurrentReads_PreservesAllEntries()
+    {
+        const int itemCount = 32;
+        using var cache = new LruCache<int, int>(itemCount);
+        for (var i = 0; i < itemCount; i++)
+            cache.TryAdd(i, i);
+
+        var tasks = Enumerable.Range(0, 8).Select(worker => Task.Run(() =>
+        {
+            for (var i = 0; i < 5_000; i++)
+            {
+                var key = (i + worker) % itemCount;
+                Assert.True(cache.TryGetValue(key, out var value));
+                Assert.Equal(key, value);
+            }
+        }));
+
+        await Task.WhenAll(tasks);
+
+        Assert.Equal(itemCount, cache.Count);
+        Assert.Equal(itemCount, cache.Select(m => m.Key).Distinct().Count());
+    }
+
+    [Fact]
     public void Fuzz_Test()
     {
         const int capacity = 10;

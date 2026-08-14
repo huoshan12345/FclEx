@@ -25,9 +25,20 @@ public static class ZipArchiveEntryExtensions
 
     public static Task ExtractToDirAsync(this ZipArchiveEntry entry, string dir, bool ignoreEntryDir, bool overwrite, int bufferSize = 4 * 1024, CancellationToken token = default)
     {
-        var path = ignoreEntryDir
-            ? Path.Combine(dir, entry.Name)
-            : Path.Combine(dir, entry.FullName);
+        Check.NotNull(entry);
+        Check.NotEmpty(dir);
+
+        var destinationDirectory = Path.GetFullPath(dir)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            + Path.DirectorySeparatorChar;
+        var entryPath = ignoreEntryDir ? entry.Name : entry.FullName;
+        var path = Path.GetFullPath(Path.Combine(destinationDirectory, entryPath));
+        var comparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+
+        if (!path.StartsWith(destinationDirectory, comparison))
+            throw new InvalidDataException($"The ZIP entry '{entry.FullName}' would be extracted outside the destination directory.");
 
         var fi = new FileInfo(path);
         fi.Directory?.TryCreate();

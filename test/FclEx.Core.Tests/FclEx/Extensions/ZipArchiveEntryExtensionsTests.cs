@@ -4,6 +4,43 @@ namespace FclEx.Extensions;
 
 public class ZipArchiveEntryExtensionsTests
 {
+    [Fact]
+    public async Task ExtractToDirAsync_PathTraversal_ThrowsWithoutWritingOutsideDestination()
+    {
+        var testDirectory = new DirectoryInfo(Path.Combine(".", nameof(ExtractToDirAsync_PathTraversal_ThrowsWithoutWritingOutsideDestination)));
+        testDirectory.CreateNew();
+        var outsideFile = new FileInfo(Path.Combine(testDirectory.Parent!.FullName, $"outside-{Guid.NewGuid():N}.txt"));
+
+        try
+        {
+            using var stream = new MemoryStream();
+            using (var writeArchive = new ZipArchive(stream, ZipArchiveMode.Create, true))
+            {
+                var maliciousEntry = writeArchive.CreateEntry("../" + outsideFile.Name);
+                using var writer = maliciousEntry.Open();
+                var bytes = Encoding.UTF8.GetBytes("malicious");
+                await writer.WriteAsync(bytes, 0, bytes.Length);
+            }
+
+            stream.Position = 0;
+            using var readArchive = new ZipArchive(stream, ZipArchiveMode.Read);
+            var entry = Assert.Single(readArchive.Entries);
+
+            await Assert.ThrowsAsync<InvalidDataException>(() =>
+                entry.ExtractToDirAsync(testDirectory.FullName, false, true));
+            Assert.False(outsideFile.Exists);
+        }
+        finally
+        {
+            testDirectory.Refresh();
+            if (testDirectory.Exists)
+                testDirectory.Delete(true);
+            outsideFile.Refresh();
+            if (outsideFile.Exists)
+                outsideFile.Delete();
+        }
+    }
+
     public static readonly string[] ZipFiles =
     [
         "files.zip",

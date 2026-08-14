@@ -53,8 +53,7 @@ public class BiDictionary<TKey, TValue> : IDictionary<TKey, TValue> where TKey :
 
     public void Add(TKey key, TValue value)
     {
-        _dic1.Add(key, value);
-        _dic2.Add(value, key);
+        AddMapping(_dic1, _dic2, key, value);
     }
 
     public bool Remove(TKey key)
@@ -78,26 +77,66 @@ public class BiDictionary<TKey, TValue> : IDictionary<TKey, TValue> where TKey :
     public TValue this[TKey key]
     {
         get => _dic1[key];
-        set
-        {
-            if (_dic1.TryGetValue(key, out var oldValue))
-                _dic2.Remove(oldValue);
-
-            _dic1[key] = value;
-            _dic2[value] = key;
-        }
+        set => SetMapping(_dic1, _dic2, key, value, "An item with the same value has already been added.");
     }
 
     public TKey this[TValue v]
     {
         get => _dic2[v];
-        set
-        {
-            if (_dic2.TryGetValue(v, out var oldKey))
-                _dic1.Remove(oldKey);
+        set => SetMapping(_dic2, _dic1, v, value, "An item with the same key has already been added.");
+    }
 
-            _dic1[value] = v;
-            _dic2[v] = value;
+    private static void SetMapping<TForward, TReverse>(
+        Dictionary<TForward, TReverse> forward,
+        Dictionary<TReverse, TForward> reverse,
+        TForward key,
+        TReverse value,
+        string duplicateMessage)
+        where TForward : notnull
+        where TReverse : notnull
+    {
+        if (!forward.TryGetValue(key, out var oldValue))
+        {
+            AddMapping(forward, reverse, key, value);
+            return;
+        }
+
+        if (reverse.Comparer.Equals(oldValue, value))
+            return;
+
+        if (reverse.ContainsKey(value))
+            throw new ArgumentException(duplicateMessage, nameof(value));
+
+        reverse.Add(value, key);
+        try
+        {
+            forward[key] = value;
+        }
+        catch
+        {
+            reverse.Remove(value);
+            throw;
+        }
+        reverse.Remove(oldValue);
+    }
+
+    private static void AddMapping<TForward, TReverse>(
+        Dictionary<TForward, TReverse> forward,
+        Dictionary<TReverse, TForward> reverse,
+        TForward key,
+        TReverse value)
+        where TForward : notnull
+        where TReverse : notnull
+    {
+        forward.Add(key, value);
+        try
+        {
+            reverse.Add(value, key);
+        }
+        catch
+        {
+            forward.Remove(key);
+            throw;
         }
     }
 }

@@ -31,7 +31,7 @@ public static class TaskHelper
         Check.NotNull(action);
         Check.NotLessThan(times, 0);
 
-        var tasks = Enumerable.Repeat(Task.Run(action), times);
+        var tasks = Enumerable.Range(0, times).Select(_ => Task.Run(action));
         return Task.WhenAll(tasks);
     }
 
@@ -40,7 +40,7 @@ public static class TaskHelper
         Check.NotNull(action);
         Check.NotLessThan(times, 0);
 
-        var tasks = Enumerable.Repeat(Task.Run(action), times);
+        var tasks = Enumerable.Range(0, times).Select(_ => Task.Run(action));
         return Task.WhenAll(tasks);
     }
 

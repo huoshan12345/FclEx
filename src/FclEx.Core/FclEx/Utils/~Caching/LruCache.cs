@@ -117,11 +117,14 @@ public class LruCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TKey : no
     {
         Check.NotNull(key);
 
-        using var _ = _lock.LockRead();
+        using var _ = _lock.LockUpgradeableRead();
 
         if (_dic.TryGetValue(key, out var node))
         {
-            UpdateInternal(node);
+            using (_lock.LockWrite())
+            {
+                UpdateInternal(node);
+            }
             value = node.Value.Value!;
             return true;
         }

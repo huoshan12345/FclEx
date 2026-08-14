@@ -42,10 +42,13 @@ public sealed class LfuCache<TKey, TValue> : IMemoryCache<TKey, TValue> where TK
     {
         Check.NotNull(key);
 
-        using var _ = _lock.LockRead();
+        using var _ = _lock.LockUpgradeableRead();
         if (_dic.TryGetValue(key, out var node))
         {
-            node = UpdateInternal(node);
+            using (_lock.LockWrite())
+            {
+                node = UpdateInternal(node);
+            }
             value = node.Value.Value!;
             return true;
         }

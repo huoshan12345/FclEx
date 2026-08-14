@@ -115,5 +115,44 @@ public class BiDictionaryTests
         var biDict = new BiDictionary<int, string> { { 1, "One" } };
 
         Assert.Throws<ArgumentException>(() => biDict.Add(2, "One"));
+
+        Assert.Single(biDict);
+        Assert.False(biDict.ContainsKey(2));
+        Assert.Equal("One", biDict[1]);
+        Assert.Equal(1, biDict["One"]);
+    }
+
+    [Fact]
+    public void KeyIndexer_DuplicateValue_ShouldThrowWithoutChangingMappings()
+    {
+        var biDict = new BiDictionary<int, string>
+        {
+            { 1, "One" },
+            { 2, "Two" },
+        };
+
+        Assert.Throws<ArgumentException>(() => biDict[1] = "Two");
+
+        Assert.Equal("One", biDict[1]);
+        Assert.Equal("Two", biDict[2]);
+        Assert.Equal(1, biDict["One"]);
+        Assert.Equal(2, biDict["Two"]);
+    }
+
+    [Fact]
+    public void ValueIndexer_DuplicateKey_ShouldThrowWithoutChangingMappings()
+    {
+        var biDict = new BiDictionary<int, string>
+        {
+            { 1, "One" },
+            { 2, "Two" },
+        };
+
+        Assert.Throws<ArgumentException>(() => biDict["One"] = 2);
+
+        Assert.Equal("One", biDict[1]);
+        Assert.Equal("Two", biDict[2]);
+        Assert.Equal(1, biDict["One"]);
+        Assert.Equal(2, biDict["Two"]);
     }
 }
