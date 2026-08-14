@@ -43,6 +43,7 @@ public static class QueryableExtensions
         CancellationToken cancellationToken = default)
         where T : class
     {
+        var offset = GetPageOffset(pageSize, pageIndex);
         var query = noTracking
             ? queryable.AsNoTracking()
             : queryable;
@@ -52,7 +53,7 @@ public static class QueryableExtensions
             return ([], 0);
 
         var items = await query
-            .Skip(pageIndex * pageSize)
+            .Skip(offset)
             .Take(pageSize)
             .ToArrayAsync(cancellationToken);
 
@@ -105,6 +106,7 @@ public static class QueryableExtensions
         CancellationToken cancellationToken = default)
         where T : class
     {
+        var offset = GetPageOffset(pageSize, pageIndex);
         var query = noTracking
             ? queryable.AsNoTracking()
             : queryable;
@@ -114,7 +116,7 @@ public static class QueryableExtensions
             return new(new PagedList<TModel>([], pageIndex, pageSize, 0));
 
         var items = await query
-            .Skip(pageIndex * pageSize)
+            .Skip(offset)
             .Take(pageSize)
             .Select(selector)
             .ToArrayAsync(cancellationToken);
@@ -122,6 +124,30 @@ public static class QueryableExtensions
         return new(new PagedList<TModel>(items, pageIndex, pageSize, count));
     }
 
+    private static int GetPageOffset(int pageSize, int pageIndex)
+    {
+        Check.NotLessThan(pageSize, 1);
+        Check.NotLessThan(pageIndex, 0);
+
+        if (pageIndex > (int.MaxValue - 1) / pageSize)
+            throw new ArgumentOutOfRangeException(nameof(pageIndex), pageIndex, "The page offset is too large.");
+
+        return pageIndex * pageSize;
+    }
+
+    /// <summary>
+    /// Filters the query to rows whose selected string contains at least one keyword.
+    /// SQL LIKE metacharacters in keywords are treated as literal characters.
+    /// </summary>
+    /// <param name="queryable">The query to filter.</param>
+    /// <param name="selector">Selects the string column to search.</param>
+    /// <param name="keywords">The keywords to search for. An empty sequence produces a query with no matches.</param>
+    /// <param name="suppressValueConverter">Whether to suppress an EF Core value converter on the selected member.</param>
+    /// <param name="escapeEscapeCharacter">
+    /// Whether the SQL escape character must itself be escaped by the provider. Set this to <see langword="true"/>
+    /// for Oracle's MySql.EntityFrameworkCore provider; leave it <see langword="false"/> for SQL Server,
+    /// PostgreSQL, and MySqlConnector-based providers.
+    /// </param>
     public static IQueryable<T> ContainsAny<T>(
         this IQueryable<T> queryable,
         Expression<Func<T, string?>> selector,
@@ -169,7 +195,14 @@ public static class QueryableExtensions
         var values = new Dictionary<string, object?>();
 
         if (deletable)
+        {
+            var entity = Expression.Parameter(type, "entity");
+            var isDeleted = Expression.Property(entity, nameof(ISoftDeletable.IsDeleted));
+            var notDeleted = Expression.Lambda<Func<T, bool>>(
+                Expression.Equal(isDeleted, Expression.Constant(false)), entity);
+            query = query.Where(notDeleted);
             values.Add(nameof(ISoftDeletable.IsDeleted), true);
+        }
 
         if (hasDeleteAt)
             values.Add(nameof(IHasDeletedAt.DeletedAt), DateTimeOffset.UtcNow);
@@ -226,6 +259,9 @@ public static class QueryableExtensions
     /// </remarks>
     public static Task<int> ExecuteUpdateAsync<T>(this IQueryable<T> query, IReadOnlyDictionary<string, object?> fieldValues, CancellationToken cancellationToken = default)
     {
+        Check.NotNull(query);
+        Check.NotNull(fieldValues);
+
         if (fieldValues.Count == 0)
             return Task.FromResult(0);
 

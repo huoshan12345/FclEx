@@ -93,4 +93,22 @@ public class PagedListTests
         Assert.Equal(11, pagedList.ItemStart);
         Assert.Equal(20, pagedList.ItemEnd);
     }
+
+    [Fact]
+    public void Constructor_ShouldRejectZeroPageSize_WhenItemsAreEmpty()
+    {
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new PagedList<int>([], pageIndex: 0, pageSize: 0, totalCount: 0));
+
+        Assert.Equal("pageSize", exception.ParamName);
+    }
+
+    [Fact]
+    public void Constructor_ShouldRejectPageOffsetThatCannotBeRepresented()
+    {
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new PagedList<int>([], pageIndex: int.MaxValue, pageSize: 2, totalCount: 0));
+
+        Assert.Equal("pageIndex", exception.ParamName);
+    }
 }

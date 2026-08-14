@@ -7,6 +7,11 @@ namespace FclEx.EfCore.Extensions;
 
 public class DatabaseFacadeExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {
+    private enum ScalarStatus
+    {
+        Active = 1,
+    }
+
     [Fact]
     public async Task ExecuteScalarRawAsync_UsesCurrentSqlServerTransaction()
     {
@@ -102,6 +107,26 @@ public class DatabaseFacadeExtensionsTests(EfCoreFixture fixture) : EfCoreTests(
         var result = await context.Database.ExecuteScalarRawAsync<long>("SELECT COUNT(*)");
 
         Assert.Equal(1L, result);
+    }
+
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
+    public async Task ExecuteScalarRawAsync_NullableNumericWidening(DbDriver dbDriver)
+    {
+        await using var context = Fixture.CreateDbContext(dbDriver);
+        var result = await context.Database.ExecuteScalarRawAsync<long?>("SELECT 1");
+
+        Assert.Equal(1L, result);
+    }
+
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
+    public async Task ExecuteScalarRawAsync_ConvertsNullableEnum(DbDriver dbDriver)
+    {
+        await using var context = Fixture.CreateDbContext(dbDriver);
+        var result = await context.Database.ExecuteScalarRawAsync<ScalarStatus?>("SELECT 1");
+
+        Assert.Equal(ScalarStatus.Active, result);
     }
 
     [Theory]

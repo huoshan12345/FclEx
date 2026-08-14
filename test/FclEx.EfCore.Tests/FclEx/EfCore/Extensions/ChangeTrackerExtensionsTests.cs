@@ -55,17 +55,37 @@ public class ChangeTrackerExtensionsTests(EfCoreFixture fixture) : EfCoreTests(f
 
     [Theory]
     [MemberData(nameof(DbDriverCases))]
-    public async Task DoesNotModifyUntrackedOrUnchangedEntities(DbDriver dbDriver)
+    public async Task DoesNotModifyUnchangedEntities(DbDriver dbDriver)
     {
         await using var context = Fixture.CreateDbContext(dbDriver);
         var entity = new EntityHasStates { CreatedAt = DateTimeOffset.UtcNow };
         context.Add(entity);
         await context.SaveChangesAsync();
+        var createdAt = entity.CreatedAt;
+        var updatedAt = entity.UpdatedAt;
 
         context.ChangeTracker.ApplyEntityStateRules();
 
-        Assert.Equal(entity.CreatedAt, entity.CreatedAt);
+        Assert.Equal(createdAt, entity.CreatedAt);
+        Assert.Equal(updatedAt, entity.UpdatedAt);
         Assert.Equal(default, entity.DeletedAt);
         Assert.False(entity.IsDeleted);
+    }
+
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
+    public async Task DoesNotModifyDetachedEntities(DbDriver dbDriver)
+    {
+        await using var context = Fixture.CreateDbContext(dbDriver);
+        var entity = new EntityHasStates();
+        context.Add(entity);
+        await context.SaveChangesAsync();
+        context.Entry(entity).State = EntityState.Detached;
+        var updatedAt = entity.UpdatedAt;
+
+        context.ChangeTracker.ApplyEntityStateRules();
+
+        Assert.Equal(updatedAt, entity.UpdatedAt);
+        Assert.Empty(context.ChangeTracker.Entries<EntityHasStates>());
     }
 }

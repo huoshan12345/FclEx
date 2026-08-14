@@ -45,16 +45,16 @@ public class SshDbContext
     /// <param name="connectionString">The original database connection string.</param>
     /// <param name="createContext">Creates the database context from the effective connection string.</param>
     /// <param name="ssh">The SSH connection information, or <see langword="null"/> to connect without a tunnel.</param>
-    /// <param name="createNewConnectionString">
-    /// Creates the remote database endpoint and a connection string targeting the supplied local tunnel endpoint.
-    /// </param>
+    /// <param name="getRemoteEndpoint">Gets the database endpoint to reach from the SSH server.</param>
+    /// <param name="createNewConnectionString">Creates a connection string targeting the supplied local tunnel endpoint.</param>
     /// <param name="hostKeyReceived">
     /// An optional handler registered before the SSH connection is opened. The handler can inspect the server key
     /// and set <see cref="HostKeyEventArgs.CanTrust"/> to control whether the connection is accepted.
     /// </param>
     /// <returns>A wrapper that owns the context and any SSH resources created for it.</returns>
     public static SshDbContext<T> CreateSshDbContext<T>(string connectionString, Func<string, T> createContext, ConnectionInfo? ssh,
-        Func<string, SocketEndpoint, (SocketEndpoint RemoteEndpoint, string ConnectionString)> createNewConnectionString,
+        Func<string, SocketEndpoint> getRemoteEndpoint,
+        Func<string, SocketEndpoint, string> createNewConnectionString,
         EventHandler<HostKeyEventArgs>? hostKeyReceived = null) where T : DbContext
     {
         if (ssh == null)
@@ -71,16 +71,17 @@ public class SshDbContext
 
             sshClient.Connect();
 
-            var localEndpoint = IPEndPointHelper.NextLocalEndpoint();
-            var (remoteEndpoint, newConnectionString) = createNewConnectionString(connectionString, localEndpoint);
+            var remoteEndpoint = getRemoteEndpoint(connectionString);
             tunnel = new ForwardedPortLocal(
-                localEndpoint.Host,
-                (uint)localEndpoint.Port,
+                IPEndPointHelper.LoopbackAddress.ToString(),
+                0,
                 remoteEndpoint.Host,
                 (uint)remoteEndpoint.Port);
             sshClient.AddForwardedPort(tunnel);
             tunnel.Start();
 
+            var localEndpoint = new SocketEndpoint(tunnel.BoundHost, checked((int)tunnel.BoundPort));
+            var newConnectionString = createNewConnectionString(connectionString, localEndpoint);
             context = createContext(newConnectionString);
             return new(context, sshClient, tunnel);
         }

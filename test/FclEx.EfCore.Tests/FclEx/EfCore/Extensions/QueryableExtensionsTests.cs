@@ -305,6 +305,25 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
 
     [Theory]
     [MemberData(nameof(DbDriverCases))]
+    public async Task ToPagedListAsync_ShouldRejectInvalidPagingBeforeQuery(DbDriver dbDriver)
+    {
+        await using var context = Fixture.CreateDbContext(dbDriver);
+        var query = context.EntityHasStates.Where(e => false);
+
+        var pageSizeException = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            query.ToPagedListAsync(pageSize: 0, pageIndex: 0));
+        var offsetException = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            query.ToPagedListAsync(pageSize: 2, pageIndex: int.MaxValue));
+        var projectedOffsetException = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            query.ToPagedListAsync(e => e.Name, pageSize: 2, pageIndex: int.MaxValue));
+
+        Assert.Equal("pageSize", pageSizeException.ParamName);
+        Assert.Equal("pageIndex", offsetException.ParamName);
+        Assert.Equal("pageIndex", projectedOffsetException.ParamName);
+    }
+
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
     public async Task ExecuteUpdateAsync_Updates_Single_Property(DbDriver dbDriver)
     {
         var entity = await CreateEntityHasStatesAsync(dbDriver);
@@ -324,6 +343,31 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
         var result = await context.EntityHasStates.FindAsync(entity.Id);
         Assert.NotNull(result);
         Assert.Equal("Updated Name", result.Name);
+    }
+
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
+    public async Task ExecuteSoftDeleteAsync_ShouldNotRewriteDeletedEntity(DbDriver dbDriver)
+    {
+        var entity = await CreateEntityHasStatesAsync(dbDriver);
+        await using var context = Fixture.CreateDbContext(dbDriver);
+        var query = context.EntityHasStates.Where(e => e.Id == entity.Id);
+
+        var firstUpdateCount = await query.ExecuteSoftDeleteAsync();
+        var firstDeletedAt = await context.EntityHasStates
+            .Where(e => e.Id == entity.Id)
+            .Select(e => e.DeletedAt)
+            .SingleAsync();
+        var secondUpdateCount = await query.ExecuteSoftDeleteAsync();
+        var secondDeletedAt = await context.EntityHasStates
+            .Where(e => e.Id == entity.Id)
+            .Select(e => e.DeletedAt)
+            .SingleAsync();
+
+        Assert.Equal(1, firstUpdateCount);
+        Assert.Equal(0, secondUpdateCount);
+        Assert.NotEqual(default, firstDeletedAt);
+        Assert.Equal(firstDeletedAt, secondDeletedAt);
     }
 
     [Theory]
@@ -428,6 +472,26 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
             new Dictionary<string, object?> { [nameof(UpdateEntity.NullableValue)] = null }));
 
         Assert.Null(exception);
+    }
+
+    [Fact]
+    public void ExecuteUpdateAsync_ThrowsArgumentNullException_ForNullArguments()
+    {
+        using var context = new UpdateContext();
+        IQueryable<UpdateEntity> nullQuery = null!;
+        IReadOnlyDictionary<string, object?> nullFieldValues = null!;
+
+        var queryException = Assert.Throws<ArgumentNullException>(() =>
+        {
+            _ = nullQuery.ExecuteUpdateAsync(new Dictionary<string, object?>());
+        });
+        var valuesException = Assert.Throws<ArgumentNullException>(() =>
+        {
+            _ = context.Entities.ExecuteUpdateAsync(nullFieldValues);
+        });
+
+        Assert.Equal("query", queryException.ParamName);
+        Assert.Equal("fieldValues", valuesException.ParamName);
     }
 
     private sealed class UpdateContext : DbContext

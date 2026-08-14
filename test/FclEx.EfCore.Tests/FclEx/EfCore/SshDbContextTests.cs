@@ -14,14 +14,25 @@ public class SshDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         EventHandler<HostKeyEventArgs>? hostKeyReceived = null)
     {
         var connectionString = Fixture.ConnectionStrings.Get(DbDriver.Npgsql, false).Build();
-        return SshDbContext.CreateSshDbContext(connectionString, m => new TestDbContext(DbDriver.Npgsql, m), ssh, (m, localEndpoint) =>
-        {
-            var builder = new NpgsqlConnectionStringBuilder(m);
-            var remoteEndpoint = new SocketEndpoint(builder.Host!, builder.Port);
-            builder.Host = localEndpoint.Host;
-            builder.Port = localEndpoint.Port;
-            return (remoteEndpoint, builder.ConnectionString);
-        }, hostKeyReceived);
+        return SshDbContext.CreateSshDbContext(
+            connectionString,
+            m => new TestDbContext(DbDriver.Npgsql, m),
+            ssh,
+            m =>
+            {
+                var builder = new NpgsqlConnectionStringBuilder(m);
+                return new(builder.Host!, builder.Port);
+            },
+            (m, localEndpoint) =>
+            {
+                var builder = new NpgsqlConnectionStringBuilder(m)
+                {
+                    Host = localEndpoint.Host,
+                    Port = localEndpoint.Port,
+                };
+                return builder.ConnectionString;
+            },
+            hostKeyReceived);
     }
 
     [Fact]
@@ -74,6 +85,11 @@ public class SshDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
             Fixture.ConnectionStrings.Get(DbDriver.Npgsql, false).Build(),
             m => new TestDbContext(DbDriver.Npgsql, m),
             info,
+            value =>
+            {
+                var builder = new NpgsqlConnectionStringBuilder(value);
+                return new(builder.Host!, builder.Port);
+            },
             (_, _) => throw new InvalidOperationException("Connection-string factory failed."),
             (sender, args) =>
             {
@@ -90,11 +106,15 @@ public class SshDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
             connectionString,
             _ => throw new InvalidOperationException("Context factory failed."),
             info,
+            value =>
+            {
+                var builder = new NpgsqlConnectionStringBuilder(value);
+                return new(builder.Host!, builder.Port);
+            },
             (value, local) =>
             {
                 localEndpoint = local;
-                var builder = new NpgsqlConnectionStringBuilder(value);
-                return (new SocketEndpoint(builder.Host!, builder.Port), value);
+                return value;
             },
             (sender, args) =>
             {
@@ -105,6 +125,7 @@ public class SshDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         Assert.NotNull(contextFailureClient);
         Assert.Throws<ObjectDisposedException>(() => contextFailureClient.IsConnected);
         Assert.NotNull(localEndpoint);
+        Assert.InRange(localEndpoint.Value.Port, 1, IPEndPoint.MaxPort);
         using var tcpClient = new TcpClient();
         await Assert.ThrowsAsync<SocketException>(() =>
             tcpClient.ConnectAsync(localEndpoint.Value.Host, localEndpoint.Value.Port));

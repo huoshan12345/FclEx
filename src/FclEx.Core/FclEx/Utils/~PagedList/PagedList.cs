@@ -18,13 +18,11 @@ public class PagedList<T> : IPagedList<T>
     {
         Check.NotNull(items);
         Check.NotLessThan(pageIndex, 0);
+        Check.NotLessThan(pageSize, 1);
         Check.NotLessThan(totalCount, 0);
 
-        if (pageSize < 1 && totalCount > 0)
-            throw new ArgumentOutOfRangeException(nameof(pageSize), pageSize, "Value can not be less than 1.");
-
-        if (pageSize < 0 && totalCount == 0)
-            throw new ArgumentOutOfRangeException(nameof(pageSize), pageSize, "Value can not be less than 0.");
+        if (pageIndex > (int.MaxValue - 1) / pageSize)
+            throw new ArgumentOutOfRangeException(nameof(pageIndex), pageIndex, "The page offset is too large.");
 
         _items = items;
         PageIndex = pageIndex;
@@ -38,8 +36,9 @@ public class PagedList<T> : IPagedList<T>
         IsFirstPage = PageIndex <= 0;
         IsLastPage = PageNumber >= PageCount;
 
-        ItemStart = TotalCount == 0 ? 0 : PageIndex * PageSize + 1;
-        ItemEnd = Math.Min(PageIndex * PageSize + PageSize, TotalCount);
+        var offset = PageIndex * PageSize;
+        ItemStart = TotalCount == 0 ? 0 : offset + 1;
+        ItemEnd = (int)Math.Min((long)offset + PageSize, TotalCount);
     }
 
     public int PageCount { get; }

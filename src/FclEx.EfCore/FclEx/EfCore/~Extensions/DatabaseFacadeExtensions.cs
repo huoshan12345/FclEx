@@ -64,7 +64,13 @@ public static class DatabaseFacadeExtensions
                     if (type == typeof(Guid))
                         return (T)(object)Guid.Parse(result.ToString()!);
 
-                    return Convert.ChangeType<T>(result);
+                    var converted = type.IsEnum
+                        ? result is string name
+                            ? Enum.Parse(type, name)
+                            : Enum.ToObject(type, result)
+                        : Convert.ChangeType(result, type);
+
+                    return (T)converted;
                 }
                 finally
                 {
