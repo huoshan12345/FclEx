@@ -116,97 +116,83 @@ partial class EnumerableExtensions
         return await (await Task.WhenAny(tasks));
     }
 
-    private static Task<T> WhenAnySuccess<T>(this IEnumerable<Task<T>> tasks, Func<T, bool> predicate, Action<TaskCompletionSource<T>> onNoResult)
+    private static async Task<(bool HasResult, T Result)> TryGetFirstSuccessfulResultAsync<T>(
+        IEnumerable<Task<T>> tasks,
+        Func<T, bool> predicate)
     {
-        var tcs = new TaskCompletionSource<T>();
-        var taskList = tasks.AsIReadOnlyList();
-        var count = taskList.Count;
-        var completedCount = 0;
-
-        foreach (var task in taskList)
+        var remainingTasks = tasks.ToList();
+        while (remainingTasks.Count > 0)
         {
-            task.ContinueWith(t =>
-            {
-                if (t.Status == TaskStatus.RanToCompletion && predicate(t.Result))
-                {
-                    tcs.TrySetResult(t.Result);
-                }
+            var completedTask = await Task.WhenAny(remainingTasks).ConfigureAwait(false);
+            remainingTasks.Remove(completedTask);
 
-                if (Interlocked.Increment(ref completedCount) >= count)
-                {
-                    onNoResult(tcs);
-                }
-            });
+            if (completedTask.Status == TaskStatus.RanToCompletion)
+            {
+                var result = completedTask.Result;
+                if (predicate(result))
+                    return (true, result);
+            }
+            else if (completedTask.IsFaulted)
+            {
+                _ = completedTask.Exception;
+            }
         }
 
-        return tcs.Task;
+        return (false, default!);
     }
 
-    public static Task<T> WhenAnySuccess<T>(this IEnumerable<Task<T>> tasks, Func<T, bool> predicate, Func<T> defaultResultFunc)
+    public static async Task<T> WhenAnySuccess<T>(this IEnumerable<Task<T>> tasks, Func<T, bool> predicate, Func<T> defaultResultFunc)
     {
-        return tasks.WhenAnySuccess(predicate, tcs => tcs.TrySetResult(defaultResultFunc()));
+        Check.NotNull(tasks);
+        Check.NotNull(predicate);
+        Check.NotNull(defaultResultFunc);
+
+        var result = await TryGetFirstSuccessfulResultAsync(tasks, predicate).ConfigureAwait(false);
+        return result.HasResult ? result.Result : defaultResultFunc();
     }
 
-    public static Task<T> WhenAnySuccess<T>(this IEnumerable<Task<T>> tasks, Func<T, bool> predicate)
+    public static async Task<T> WhenAnySuccess<T>(this IEnumerable<Task<T>> tasks, Func<T, bool> predicate)
     {
-        return tasks.WhenAnySuccess(predicate, tcs => tcs.SetException(new InvalidOperationException("All tasks failed")));
+        Check.NotNull(tasks);
+        Check.NotNull(predicate);
+
+        var result = await TryGetFirstSuccessfulResultAsync(tasks, predicate).ConfigureAwait(false);
+        return result.HasResult
+            ? result.Result
+            : throw new InvalidOperationException("No task produced an acceptable successful result.");
     }
 
-    public static Task WhenAnySuccess(this IEnumerable<Task> tasks)
+    public static async Task WhenAnySuccess(this IEnumerable<Task> tasks)
     {
-        var tcs = new TaskCompletionSource<int>();
-        var taskList = tasks.AsIReadOnlyList();
-        var count = taskList.Count;
-        var completedCount = 0;
+        Check.NotNull(tasks);
 
-        foreach (var task in taskList)
+        var remainingTasks = tasks.ToList();
+        while (remainingTasks.Count > 0)
         {
-            task.ContinueWith(t =>
-            {
-                if (t.Status == TaskStatus.RanToCompletion)
-                {
-                    tcs.TrySetResult(default);
-                }
+            var completedTask = await Task.WhenAny(remainingTasks).ConfigureAwait(false);
+            remainingTasks.Remove(completedTask);
 
-                if (Interlocked.Increment(ref completedCount) >= count)
-                {
-                    tcs.SetException(new InvalidOperationException("All tasks failed"));
-                }
-            });
+            if (completedTask.Status == TaskStatus.RanToCompletion)
+                return;
+
+            if (completedTask.IsFaulted)
+                _ = completedTask.Exception;
         }
 
-        return tcs.Task;
+        throw new InvalidOperationException("No task completed successfully.");
     }
 
-    public static Task WhenAllOrError(this IEnumerable<Task> tasks)
+    public static async Task WhenAllOrError(this IEnumerable<Task> tasks)
     {
-        var tcs = new TaskCompletionSource<int>();
-        var taskList = tasks.AsIReadOnlyList();
-        var completedCount = 0;
+        Check.NotNull(tasks);
 
-        foreach (var task in taskList)
+        var remainingTasks = tasks.ToList();
+        while (remainingTasks.Count > 0)
         {
-            task.ContinueWith(t =>
-            {
-                if (t.IsCanceled)
-                {
-                    tcs.TrySetCanceled();
-                }
-                else if (t.IsFaulted)
-                {
-                    tcs.TrySetException(t.Exception!.InnerExceptions);
-                }
-                else
-                {
-                    if (Interlocked.Increment(ref completedCount) == taskList.Count)
-                    {
-                        tcs.TrySetResult(0);
-                    }
-                }
-            });
+            var completedTask = await Task.WhenAny(remainingTasks).ConfigureAwait(false);
+            remainingTasks.Remove(completedTask);
+            await completedTask.ConfigureAwait(false);
         }
-
-        return tcs.Task;
     }
 
 #if NET6_0_OR_GREATER

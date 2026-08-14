@@ -72,26 +72,31 @@
 
 14. **[P1][已修复] Consumer 的 `Add` 与 `CompleteAdding` 存在竞态**
     位置：`src/FclEx.Core/FclEx/Utils/~Consumers/ConsumerBase.cs:98-132`。`Add` 无锁检查 `_isAddingCompleted`，随后另一个线程可完成添加，再由当前线程把项目放入队列；消费循环可能已经按“完成且空”退出，留下永不处理的项目。应使用 `BlockingCollection.CompleteAdding`/`Add` 的原生原子语义，或在同一锁内检查状态并入队。
-    修复：外部 `Add` 现在在生命周期锁内完成 disposed/completed 检查和入队，`CompleteAdding` 使用同一把锁；绕过完成检查的公开 API 已移除，仅保留内部重试入队路径。已增加并发添加与完成的回归测试，确保所有成功接收的项目都会被处理。
+    修复：Consumer 子系统重建后，两个消费者都在同一同步边界内完成 producer enqueue 与 `CompleteAdding` 状态转换；内部重试拥有独立的私有入队路径，不再暴露可绕过完成状态的公共 API。已增加并发 enqueue/complete 回归测试，确保所有成功接收的项目都会被处理。
 
 15. **[P1][已修复] Consumer 的停止和释放未与工作任务完成同步**
     位置：`src/FclEx.Core/FclEx/Utils/~Consumers/ConsumerBase.cs:63-76,104-160`。`Dispose` 不持有生命周期锁，取消后立即 drain 并 dispose `_items`/`_cts`，而 `ProcessAsync` 可能仍在取项或执行 handler；`Stop` 也在持锁时调用外部 `CancellationHandler`，重入时可能死锁。建议维护单一运行任务，先取消、在锁外等待其结束，再释放资源；所有外部回调都应在锁外调用。
-    修复：Consumer 保存单一运行任务；`Stop`/`Dispose` 在锁内只转换状态并取消，然后在锁外等待任务结束、drain 队列并调用取消回调，最后释放资源。`BatchRetryConsumer` 同样保存组合运行任务，并按批处理、重试的依赖顺序停止和释放。已增加释放等待活动 handler 完成的回归测试。
+    修复：Consumer 改为单次运行的异步生命周期，使用 `StopAsync` 和 `IAsyncDisposable`；锁内只转换状态，锁外执行取消、等待、通知和资源释放。公开类型命名统一为 `RetryingConsumer` 和 `RetryingBatchConsumer`；批量版本不再组合两个后台 Consumer，而是由单一工作循环串行处理新批次与重试分片。已增加停止、取消、零次重试、批次间隔及重试分片优先级等回归测试。
 
-16. **[P1] `RepeatUntil` 创建了超时 token，却没有传给实际操作**  
+16. **[P1][已修复] `RepeatUntil` 创建了超时 token，却没有传给实际操作**
     位置：`src/FclEx.Core/FclEx/Actions/ActionExtensions.cs:333-352`。循环检查 `cts.IsCancellationRequested`，但执行 action 和 delay 时都传原 token `t`，因此一次长时间 action 或 delay 可以无限超过总 timeout。应把 `cts.Token` 传给两者，并区分调用方取消与内部超时生成的结果。
+    修复：action 与重试间隔现在都使用链接 token；调用方取消返回带 `OperationCanceledException` 的取消结果，内部总超时返回 `TimeoutException`，不再把两种终止原因混为一谈。已覆盖活动 action 和重试 delay 的超时取消，以及调用方取消。
 
-17. **[P1] `WhenAnySuccess` 和 `WhenAllOrError` 对空序列永久不完成**  
+17. **[P1][已修复] `WhenAnySuccess` 和 `WhenAllOrError` 对空序列永久不完成**
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Collections/~Generic/EnumerableExtensions.Task.cs:114-204`。三个实现都依赖 continuation 增加完成数；当任务数为 0 时没有 continuation，返回的 TCS 永远 pending。应在 materialize 后立即处理空集合：按 API 契约返回默认值、成功完成或抛出明确异常。
+    修复：空序列在带默认工厂的 `WhenAnySuccess` 中调用工厂，在无默认值的泛型及非泛型重载中抛出明确的 `InvalidOperationException`，在 `WhenAllOrError` 中立即成功完成。
 
-18. **[P1] 最后一个任务成功时，`WhenAnySuccess` 会在 continuation 中再次 `SetException`**  
+18. **[P1][已修复] 最后一个任务成功时，`WhenAnySuccess` 会在 continuation 中再次 `SetException`**
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Collections/~Generic/EnumerableExtensions.Task.cs:127-174`。成功分支先 `TrySetResult`，随后完成计数达到总数又调用 `SetException`；若成功发生在最后一个任务，第二次完成 TCS 会抛异常并成为未观察的 continuation 异常。所有终结路径应使用 `TrySet*`，并仅在尚无成功结果且所有任务结束时设置失败。
+    修复：移除 continuation/TCS 计数实现，改为单个 async 协调循环逐个观察已完成任务；一旦出现可接受的成功结果便直接返回，不再存在二次终结或未观察 continuation 异常。
 
-19. **[P1] `WhenAnySuccess` 的 predicate/default factory 抛异常时，返回任务可能永久 pending**  
+19. **[P1][已修复] `WhenAnySuccess` 的 predicate/default factory 抛异常时，返回任务可能永久 pending**
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Collections/~Generic/EnumerableExtensions.Task.cs:128-153`。用户委托在 `ContinueWith` 内无保护执行；异常只 fault continuation，不会完成对外返回的 TCS，而且完成计数也可能少一次。应捕获用户委托异常并 `TrySetException`，或使用一个可读性更高的 async 协调实现。
+    修复：predicate 与默认结果工厂现在位于对外 async 调用链中执行；其异常会直接 fault 返回任务。已添加两类用户委托异常的回归测试。
 
-20. **[P1] `ActionHelper` 会捕获取消异常并继续重试**  
+20. **[P1][已修复] `ActionHelper` 会捕获取消异常并继续重试**
     位置：`src/FclEx.Core/FclEx/Helpers/ActionHelper.cs:56-107`。异步重试使用 `catch (Exception)`，把 `OperationCanceledException` 当普通失败处理，且 API 没有 cancellation token；取消后的操作可能继续执行多次。建议异步重载接收 token，单独重新抛出与该 token 相关的取消异常，并将 delay 也绑定到 token。
+    修复：两个异步重载改为接收 token-aware delegate 和 `CancellationToken`，重试延迟改用 `TimeSpan` 并绑定同一 token；任何 `OperationCanceledException` 都立即传播。公开参数改为语义明确的 `maxRetryCount`、`retryDelay`、`onFailure`/`fallback`，泛型与非泛型版本共享同一个重试循环。
 
 21. **[P1] `Disposable`/`AsyncDisposable` 每次释放都会重复执行回调**  
     位置：`src/FclEx.Core/FclEx/Utils/~Disposables/Disposable.cs:12-16`、`AsyncDisposable.cs:12-16`。这些公共资源包装器没有 disposed 状态，重复 `Dispose`/`DisposeAsync` 会重复释放底层资源；这违反常见 IDisposable 幂等约定，也会使 `GCHandle.Free` 等动作抛错。建议用 `Interlocked.Exchange` 原子取走回调，只允许执行一次。

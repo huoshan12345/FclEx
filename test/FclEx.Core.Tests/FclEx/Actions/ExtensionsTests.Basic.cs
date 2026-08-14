@@ -299,6 +299,64 @@ public partial class ExtensionsTests
     }
 
     [Fact]
+    public async Task RepeatUntil_InternalTimeout_CancelsActiveAttemptAndReturnsTimeoutError()
+    {
+        CancellationToken observedToken = default;
+        var action = Operation.Action<int>(async token =>
+        {
+            observedToken = token;
+            await Task.Delay(TimeSpan.FromSeconds(30), token);
+            return 1;
+        });
+
+        var execution = action
+            .RepeatUntil(_ => false, timeout: TimeSpan.FromMilliseconds(50))
+            .ExecuteAsync();
+        var completedTask = await Task.WhenAny(execution, Task.Delay(TimeSpan.FromSeconds(5)));
+
+        Assert.Same(execution, completedTask);
+        var result = await execution;
+        Assert.True(result.IsError);
+        Assert.IsType<TimeoutException>(result.Exception);
+        Assert.True(observedToken.CanBeCanceled);
+    }
+
+    [Fact]
+    public async Task RepeatUntil_InternalTimeout_CancelsDelay()
+    {
+        var attemptCount = 0;
+        var action = Operation.Action<int>(_ => ++attemptCount);
+
+        var execution = action
+            .RepeatUntil(_ => false, TimeSpan.FromSeconds(30), TimeSpan.FromMilliseconds(50))
+            .ExecuteAsync();
+        var completedTask = await Task.WhenAny(execution, Task.Delay(TimeSpan.FromSeconds(5)));
+
+        Assert.Same(execution, completedTask);
+        var result = await execution;
+        Assert.IsType<TimeoutException>(result.Exception);
+        Assert.Equal(1, attemptCount);
+    }
+
+    [Fact]
+    public async Task RepeatUntil_CallerCancellation_ReturnsCanceledResult()
+    {
+        using var cancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(50));
+        var action = Operation.Action<int>(async token =>
+        {
+            await Task.Delay(TimeSpan.FromSeconds(30), token);
+            return 1;
+        });
+
+        var result = await action
+            .RepeatUntil(_ => false, timeout: TimeSpan.FromSeconds(30))
+            .ExecuteAsync(cancellation.Token);
+
+        Assert.True(result.IsCanceled());
+        Assert.IsType<OperationCanceledException>(result.Exception);
+    }
+
+    [Fact]
     public async Task Chain_RunsActionsInOrder()
     {
         var order = new List<int>();

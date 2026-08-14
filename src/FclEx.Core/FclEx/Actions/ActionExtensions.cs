@@ -329,26 +329,55 @@ public static partial class ActionExtensions
     /// <param name="delay">The delay between successful attempts that do not satisfy <paramref name="until"/>.</param>
     /// <param name="timeout">The optional total timeout for the repeated action.</param>
     /// <returns>An action that repeats until success satisfies the condition, failure, cancellation, or timeout.</returns>
-    /// <remarks>A nonmatching success repeats; a failure is returned immediately.</remarks>
+    /// <remarks>
+    /// A nonmatching success repeats and a failure is returned immediately. Caller cancellation produces
+    /// a canceled result; expiration of <paramref name="timeout"/> produces an error containing a <see cref="TimeoutException"/>.
+    /// </remarks>
     public static IAction<T> RepeatUntil<T>(this IAction<T> action, Func<T, bool> until, TimeSpan delay = default, TimeSpan? timeout = null)
     {
         Check.NotNull(until);
 
-        return Operation.Action<T>(async t =>
+        return Operation.Action<T>(async callerToken =>
         {
-            using var cts = t.WithTimeout(timeout > TimeSpan.Zero ? timeout : null);
-            while (!cts.IsCancellationRequested)
+            var effectiveTimeout = timeout > TimeSpan.Zero ? timeout : null;
+            using var cancellation = callerToken.WithTimeout(effectiveTimeout);
+
+            OperationResult<T> CreateTerminationResult()
             {
-                var r = await action.ExecuteAsync(t);
-                if (!r.IsSuccess)
-                    return r;
-
-                if (until(r.Value!))
-                    return r;
-
-                await TaskHelper.Delay(delay, t);
+                return callerToken.IsCancellationRequested
+                    ? Operation.Cancel<T>(new OperationCanceledException(callerToken))
+                    : Operation.Error<T>(new TimeoutException($"The repeated action did not complete within {effectiveTimeout}."));
             }
-            return Operation.Cancel<T>();
+
+            while (true)
+            {
+                if (cancellation.IsCancellationRequested)
+                    return CreateTerminationResult();
+
+                var result = await action.ExecuteAsync(cancellation.Token);
+                if (cancellation.IsCancellationRequested)
+                    return CreateTerminationResult();
+
+                if (!result.IsSuccess)
+                {
+                    return result;
+                }
+
+                if (until(result.Value!))
+                    return result;
+
+                if (delay <= TimeSpan.Zero)
+                    continue;
+
+                try
+                {
+                    await Task.Delay(delay, cancellation.Token);
+                }
+                catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+                {
+                    return CreateTerminationResult();
+                }
+            }
         });
     }
 
