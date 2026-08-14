@@ -2,6 +2,9 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace FclEx.EfCore;
 
+/// <summary>
+/// Provides common persistence, synchronization, and testing operations for <see cref="DbContext"/>.
+/// </summary>
 public static partial class DbContextExtensions
 {
     /// <summary>
@@ -65,6 +68,16 @@ public static partial class DbContextExtensions
         return await context.SaveAsync<T, TKey>(entity, default, excludeOnUpdate);
     }
 
+    /// <summary>
+    /// Inserts an entity whose key is the default value, or updates an entity whose key is non-default.
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <typeparam name="TKey">The entity key type.</typeparam>
+    /// <param name="context">The context used to save the entity.</param>
+    /// <param name="entity">The entity to insert or update.</param>
+    /// <param name="cancellationToken">A token to observe while saving changes.</param>
+    /// <param name="excludeOnUpdate">Property or navigation names that should not be updated for an existing entity.</param>
+    /// <returns>The supplied entity after changes have been saved.</returns>
     public static async Task<T> SaveAsync<T, TKey>(this DbContext context, T entity, CancellationToken cancellationToken,
         params IEnumerable<string> excludeOnUpdate)
         where T : class, IHasId<TKey>
@@ -113,12 +126,29 @@ public static partial class DbContextExtensions
         return entry;
     }
 
+    /// <summary>
+    /// Inserts or updates an entity with a <see cref="long"/> key, based on whether its key is the default value.
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <param name="context">The context used to save the entity.</param>
+    /// <param name="entity">The entity to insert or update.</param>
+    /// <param name="excludeOnUpdate">Property or navigation names that should not be updated for an existing entity.</param>
+    /// <returns>The supplied entity after changes have been saved.</returns>
     public static Task<T> SaveAsync<T>(this DbContext context, T entity, params IEnumerable<string> excludeOnUpdate)
         where T : class, IHasId<long>
     {
         return context.SaveAsync<T, long>(entity, excludeOnUpdate);
     }
 
+    /// <summary>
+    /// Inserts or updates an entity with a <see cref="long"/> key, based on whether its key is the default value.
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <param name="context">The context used to save the entity.</param>
+    /// <param name="entity">The entity to insert or update.</param>
+    /// <param name="cancellationToken">A token to observe while saving changes.</param>
+    /// <param name="excludeOnUpdate">Property or navigation names that should not be updated for an existing entity.</param>
+    /// <returns>The supplied entity after changes have been saved.</returns>
     public static Task<T> SaveAsync<T>(this DbContext context, T entity, CancellationToken cancellationToken,
         params IEnumerable<string> excludeOnUpdate)
         where T : class, IHasId<long>
@@ -126,42 +156,102 @@ public static partial class DbContextExtensions
         return context.SaveAsync<T, long>(entity, cancellationToken, excludeOnUpdate);
     }
 
+    /// <summary>
+    /// Adds an entity and immediately saves the context.
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <param name="context">The context used for the operation.</param>
+    /// <param name="item">The entity to add.</param>
+    /// <param name="cancellationToken">A token to observe while saving changes.</param>
+    /// <returns>The number of state entries written to the database.</returns>
     public static Task<int> InsertAsync<T>(this DbContext context, T item, CancellationToken cancellationToken = default) where T : class
     {
         context.Set<T>().Add(item);
         return context.SaveChangesAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Adds a sequence of entities and immediately saves the context.
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <param name="context">The context used for the operation.</param>
+    /// <param name="enumerable">The entities to add.</param>
+    /// <param name="cancellationToken">A token to observe while saving changes.</param>
+    /// <returns>The number of state entries written to the database.</returns>
     public static Task<int> InsertRangeAsync<T>(this DbContext context, IEnumerable<T> enumerable, CancellationToken cancellationToken = default) where T : class
     {
         context.Set<T>().AddRange(enumerable);
         return context.SaveChangesAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Marks an entity as modified and immediately saves the context.
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <param name="context">The context used for the operation.</param>
+    /// <param name="item">The entity to update.</param>
+    /// <param name="cancellationToken">A token to observe while saving changes.</param>
+    /// <returns>The number of state entries written to the database.</returns>
     public static Task<int> UpdateAsync<T>(this DbContext context, T item, CancellationToken cancellationToken = default) where T : class
     {
         context.Set<T>().Update(item);
         return context.SaveChangesAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Marks a sequence of entities as modified and immediately saves the context.
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <param name="context">The context used for the operation.</param>
+    /// <param name="enumerable">The entities to update.</param>
+    /// <param name="cancellationToken">A token to observe while saving changes.</param>
+    /// <returns>The number of state entries written to the database.</returns>
     public static Task<int> UpdateRangeAsync<T>(this DbContext context, IEnumerable<T> enumerable, CancellationToken cancellationToken = default) where T : class
     {
         context.Set<T>().UpdateRange(enumerable);
         return context.SaveChangesAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Marks an entity for deletion and immediately saves the context.
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <param name="context">The context used for the operation.</param>
+    /// <param name="item">The entity to delete.</param>
+    /// <param name="cancellationToken">A token to observe while saving changes.</param>
+    /// <returns>The number of state entries written to the database.</returns>
+    /// <remarks>A context that applies soft-delete state rules may convert this operation into an update.</remarks>
     public static Task<int> DeleteAsync<T>(this DbContext context, T item, CancellationToken cancellationToken = default) where T : class
     {
         context.Set<T>().Remove(item);
         return context.SaveChangesAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Marks a sequence of entities for deletion and immediately saves the context.
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <param name="context">The context used for the operation.</param>
+    /// <param name="enumerable">The entities to delete.</param>
+    /// <param name="cancellationToken">A token to observe while saving changes.</param>
+    /// <returns>The number of state entries written to the database.</returns>
+    /// <remarks>A context that applies soft-delete state rules may convert deletions into updates.</remarks>
     public static Task<int> DeleteRangeAsync<T>(this DbContext context, IEnumerable<T> enumerable, CancellationToken cancellationToken = default) where T : class
     {
         context.Set<T>().RemoveRange(enumerable);
         return context.SaveChangesAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Deletes the entity with the supplied key, using soft deletion when the entity type supports it.
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <typeparam name="TKey">The entity key type.</typeparam>
+    /// <param name="set">The entity set to query.</param>
+    /// <param name="id">The key of the entity to delete.</param>
+    /// <param name="cancellationToken">A token to observe while executing the database command.</param>
+    /// <returns>The number of rows affected.</returns>
+    /// <remarks>The operation executes directly in the database and does not synchronize tracked instances.</remarks>
     public static Task<int> SoftDeleteAsync<T, TKey>(this DbSet<T> set, TKey id, CancellationToken cancellationToken = default)
         where T : class, IHasId<TKey>
     {

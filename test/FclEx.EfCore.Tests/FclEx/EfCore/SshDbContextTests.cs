@@ -7,6 +7,17 @@ namespace FclEx.EfCore;
 
 public class SshDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {
+    private sealed class TrackingDbContext : DbContext
+    {
+        public bool IsDisposed { get; private set; }
+
+        public override async ValueTask DisposeAsync()
+        {
+            IsDisposed = true;
+            await base.DisposeAsync();
+        }
+    }
+
     public const string SshKeyPath = @"C:\Users\lijing\.ssh\id_rsa";
 
     private SshDbContext<TestDbContext> CreateNpgsqlContext(
@@ -33,6 +44,19 @@ public class SshDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
                 return builder.ConnectionString;
             },
             hostKeyReceived);
+    }
+
+    [Fact]
+    public async Task DisposeAsync_DisposesContext_WhenSshIsNotConfigured()
+    {
+        var context = new TrackingDbContext();
+        var wrapper = new SshDbContext<TrackingDbContext>(context, null, null);
+
+        Assert.Same(context, wrapper.Context);
+
+        await wrapper.DisposeAsync();
+
+        Assert.True(context.IsDisposed);
     }
 
     [Fact]

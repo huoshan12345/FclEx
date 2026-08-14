@@ -6,6 +6,9 @@ namespace FclEx.EfCore;
 /// <remarks>
 /// Entities are processed by default. Apply this attribute with <see langword="false"/> to leave the entity's indexes unchanged.
 /// </remarks>
+/// <param name="enabled">
+/// <see langword="true"/> to extend unique indexes with mapped soft-delete properties; otherwise, <see langword="false"/>.
+/// </param>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
 public sealed class ConfigureSoftDeleteIndexesAttribute(bool enabled = true) : Attribute
 {

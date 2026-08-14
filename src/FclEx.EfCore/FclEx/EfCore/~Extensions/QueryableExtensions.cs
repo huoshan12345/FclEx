@@ -1,5 +1,8 @@
 namespace FclEx.EfCore;
 
+/// <summary>
+/// Provides retrieval, paging, filtering, and set-based mutation operations for EF Core queries.
+/// </summary>
 public static class QueryableExtensions
 {
     /// <summary>
@@ -29,6 +32,15 @@ public static class QueryableExtensions
         return query.FirstOrDefaultAsync(filter, cancellationToken);
     }
 
+    /// <summary>
+    /// Retrieves an entity with a <see cref="long"/> primary key, optionally without tracking it.
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <param name="queryable">The query to search.</param>
+    /// <param name="id">The primary key value.</param>
+    /// <param name="noTracking">Whether to disable change tracking for the query.</param>
+    /// <param name="cancellationToken">A token to observe while executing the query.</param>
+    /// <returns>The matching entity, or <see langword="null"/> when no entity exists.</returns>
     public static Task<T?> GetAsync<T>(this IQueryable<T> queryable, long id, bool noTracking = true, CancellationToken cancellationToken = default)
         where T : class, IHasId<long>
     {
@@ -60,6 +72,17 @@ public static class QueryableExtensions
         return (items, count);
     }
 
+    /// <summary>
+    /// Materializes one page of entities and counts all matching rows.
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <param name="queryable">The query to count and page.</param>
+    /// <param name="pageSize">The maximum number of entities in the page.</param>
+    /// <param name="pageIndex">The zero-based page index.</param>
+    /// <param name="noTracking">Whether to disable change tracking before materialization.</param>
+    /// <param name="cancellationToken">A token to observe while executing the count and page queries.</param>
+    /// <returns>The requested page and total number of matching rows.</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="pageSize"/> is less than one, or the page index or resulting offset is invalid.</exception>
     public static async Task<PagedListModel<T>> ToPagedListAsync<T>(
         this IQueryable<T> queryable,
         int pageSize,
@@ -72,6 +95,19 @@ public static class QueryableExtensions
         return new(new PagedList<T>(items, pageIndex, pageSize, count));
     }
 
+    /// <summary>
+    /// Materializes one page of entities, projects it in memory, and counts all matching rows.
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <typeparam name="TModel">The projected result type.</typeparam>
+    /// <param name="queryable">The query to count and page.</param>
+    /// <param name="pageSize">The maximum number of entities in the page.</param>
+    /// <param name="pageIndex">The zero-based page index.</param>
+    /// <param name="selector">The in-memory projection applied after entities are materialized.</param>
+    /// <param name="noTracking">Whether to disable change tracking before materialization.</param>
+    /// <param name="cancellationToken">A token to observe while executing the count and page queries.</param>
+    /// <returns>The projected page and total number of matching rows.</returns>
+    /// <remarks>Use the expression-based overload to translate projection into SQL and avoid materializing full entities.</remarks>
     public static async Task<PagedListModel<TModel>> ToPagedListAsync<T, TModel>(
         this IQueryable<T> queryable,
         int pageSize,
@@ -97,6 +133,7 @@ public static class QueryableExtensions
     /// <param name="noTracking">Whether entity tracking should be disabled before applying the projection.</param>
     /// <param name="cancellationToken">A token to observe while waiting for the queries to complete.</param>
     /// <returns>The projected page and the total number of matching rows.</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="pageSize"/> is less than one, or the page index or resulting offset is invalid.</exception>
     public static async Task<PagedListModel<TModel>> ToPagedListAsync<T, TModel>(
         this IQueryable<T> queryable,
         Expression<Func<T, TModel>> selector,
@@ -161,16 +198,34 @@ public static class QueryableExtensions
             : queryable.Where(where);
     }
 
+    /// <summary>
+    /// Filters a query to entities that have not been soft-deleted.
+    /// </summary>
+    /// <typeparam name="T">The soft-deletable entity type.</typeparam>
+    /// <param name="queryable">The query to filter.</param>
+    /// <returns>A query constrained to rows whose <see cref="ISoftDeletable.IsDeleted"/> value is <see langword="false"/>.</returns>
     public static IQueryable<T> NotDeleted<T>(this IQueryable<T> queryable) where T : ISoftDeletable
     {
         return queryable.Where(m => m.IsDeleted == false);
     }
 
+    /// <summary>
+    /// Filters a query to entities that are enabled.
+    /// </summary>
+    /// <typeparam name="T">The disableable entity type.</typeparam>
+    /// <param name="queryable">The query to filter.</param>
+    /// <returns>A query constrained to rows whose <see cref="IDisableable.IsDisabled"/> value is <see langword="false"/>.</returns>
     public static IQueryable<T> Enabled<T>(this IQueryable<T> queryable) where T : IDisableable
     {
         return queryable.Where(m => m.IsDisabled == false);
     }
 
+    /// <summary>
+    /// Filters a query to entities that are neither soft-deleted nor disabled.
+    /// </summary>
+    /// <typeparam name="T">An entity type supporting soft deletion and disabling.</typeparam>
+    /// <param name="queryable">The query to filter.</param>
+    /// <returns>A query containing only active entities.</returns>
     public static IQueryable<T> Valid<T>(this IQueryable<T> queryable) where T : ISoftDeletable, IDisableable
     {
         return queryable.NotDeleted().Enabled();
@@ -183,6 +238,10 @@ public static class QueryableExtensions
     /// The operation executes directly in the database and does not update entities already held by the change tracker.
     /// Reload or detach tracked instances before relying on their state after this operation.
     /// </remarks>
+    /// <typeparam name="T">The queried entity type.</typeparam>
+    /// <param name="query">The rows to delete.</param>
+    /// <param name="cancellationToken">A token to observe while executing the command.</param>
+    /// <returns>The number of rows affected.</returns>
     public static Task<int> ExecuteSoftDeleteAsync<T>(this IQueryable<T> query, CancellationToken cancellationToken = default)
     {
         var type = typeof(T);
@@ -252,10 +311,10 @@ public static class QueryableExtensions
     /// </exception>
     /// <remarks>
     /// This is a helper method that constructs the required update lambda for
-    /// Entity Framework Core's batch update API at runtime. It supports simple
-    /// member assignments and performs runtime conversion of supplied values to
-    /// the appropriate property types. The operation executes directly in the database and does not update
-    /// entities already held by the change tracker.
+    /// Entity Framework Core's batch update API at runtime. It supports simple member assignments. Values whose runtime
+    /// type differs from the target member are represented with an expression-tree conversion; the CLR types must support
+    /// that conversion. An empty dictionary returns zero without executing a command. The operation executes directly in
+    /// the database and does not update entities already held by the change tracker.
     /// </remarks>
     public static Task<int> ExecuteUpdateAsync<T>(this IQueryable<T> query, IReadOnlyDictionary<string, object?> fieldValues, CancellationToken cancellationToken = default)
     {

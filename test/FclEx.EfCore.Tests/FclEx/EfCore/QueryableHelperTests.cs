@@ -13,6 +13,11 @@ public class QueryableHelperTests
         public string Id { get; set; } = string.Empty;
     }
 
+    private class TestEntityWithNullableId : IHasId<int?>
+    {
+        public int? Id { get; set; }
+    }
+
     [Theory]
     [InlineData("plain", "%plain%")]
     [InlineData("a%b", @"%a\%b%")]
@@ -58,6 +63,32 @@ public class QueryableHelperTests
     }
 
     [Fact]
+    public void BuildIdFilter_GeneratesCorrectExpression_ForNullNullableId()
+    {
+        var filter = QueryableHelper.BuildIdFilter<TestEntityWithNullableId, int?>(null).Compile();
+
+        Assert.True(filter(new TestEntityWithNullableId()));
+        Assert.False(filter(new TestEntityWithNullableId { Id = 1 }));
+    }
+
+    [Theory]
+    [InlineData(false, @"\")]
+    [InlineData(true, @"\\")]
+    public void BuildLike_UsesConfiguredEscapeCharacter(bool escapeEscapeCharacter, string expectedEscapeCharacter)
+    {
+        var filter = QueryableHelper.BuildLike<TestEntity>(
+            entity => entity.Name,
+            "%name%",
+            suppressValueConverter: false,
+            escapeEscapeCharacter);
+
+        var call = Assert.IsAssignableFrom<MethodCallExpression>(filter.Body);
+        Assert.Equal(nameof(DbFunctionsExtensions.Like), call.Method.Name);
+        var escapeCharacter = Assert.IsType<ConstantExpression>(call.Arguments[3]);
+        Assert.Equal(expectedEscapeCharacter, escapeCharacter.Value);
+    }
+
+    [Fact]
     public void BuildContainsAny_GeneratesCorrectExpression_ForStringId()
     {
         var filter = QueryableHelper.BuildContainsAny<TestEntity>(m => m.Name, ["Tom", "Jerry", "Linda"]);
@@ -66,6 +97,14 @@ public class QueryableHelperTests
         Assert.Contains(nameof(DbFunctionsExtensions.Like), filter.ToString());
         Assert.Contains(nameof(ExpressionType.OrElse), filter.ToString());
         Assert.DoesNotContain("%Tom%", filter.ToString());
+    }
+
+    [Fact]
+    public void BuildContainsAny_ReturnsNull_WhenKeywordsAreEmpty()
+    {
+        var filter = QueryableHelper.BuildContainsAny<TestEntity>(entity => entity.Name, []);
+
+        Assert.Null(filter);
     }
 
 }

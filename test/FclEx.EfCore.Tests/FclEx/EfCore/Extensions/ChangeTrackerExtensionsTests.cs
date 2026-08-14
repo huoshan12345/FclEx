@@ -37,6 +37,23 @@ public class ChangeTrackerExtensionsTests(EfCoreFixture fixture) : EfCoreTests(f
 
     [Theory]
     [MemberData(nameof(DbDriverCases))]
+    public async Task MarksUpdatedAtModified_WhenAutomaticChangeDetectionIsDisabled(DbDriver dbDriver)
+    {
+        await using var context = Fixture.CreateDbContext(dbDriver);
+        var entity = new EntityHasStates();
+        context.Add(entity);
+        await context.SaveChangesAsync();
+
+        context.ChangeTracker.AutoDetectChangesEnabled = false;
+        context.Entry(entity).Property(nameof(EntityHasStates.Name)).IsModified = true;
+
+        context.ChangeTracker.ApplyEntityStateRules();
+
+        Assert.True(context.Entry(entity).Property(nameof(EntityHasStates.UpdatedAt)).IsModified);
+    }
+
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
     public async Task HandlesSoftDelete_ForDeletedEntities(DbDriver dbDriver)
     {
         await using var context = Fixture.CreateDbContext(dbDriver);

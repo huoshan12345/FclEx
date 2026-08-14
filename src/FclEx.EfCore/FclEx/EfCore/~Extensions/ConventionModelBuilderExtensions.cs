@@ -1,9 +1,22 @@
 namespace FclEx.EfCore;
 
+/// <summary>
+/// Provides model-convention helpers for soft-delete-aware indexes.
+/// </summary>
 public static class ConventionModelBuilderExtensions
 {
     private readonly record struct IndexAnnotation(string Name, object? Value, ConfigurationSource ConfigurationSource);
 
+    /// <summary>
+    /// Extends each unique index on an entity with any mapped soft-delete properties required by its implemented interfaces.
+    /// </summary>
+    /// <param name="modelBuilder">The convention model builder.</param>
+    /// <param name="type">The entity type whose unique indexes should be inspected.</param>
+    /// <returns>The same model builder.</returns>
+    /// <remarks>
+    /// Index names, uniqueness, sort order, configuration sources, and annotations are retained. Processing is skipped when
+    /// <see cref="ConfigureSoftDeleteIndexesAttribute"/> is applied with <see langword="false"/>.
+    /// </remarks>
     public static IConventionModelBuilder ConfigureSoftDeleteIndexes(this IConventionModelBuilder modelBuilder, IConventionEntityType type)
     {
         var clrType = type.ClrType;

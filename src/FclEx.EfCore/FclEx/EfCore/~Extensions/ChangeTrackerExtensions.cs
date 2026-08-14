@@ -2,6 +2,9 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace FclEx.EfCore;
 
+/// <summary>
+/// Provides state-transition rules for entities tracked by Entity Framework Core.
+/// </summary>
 public static class ChangeTrackerExtensions
 {
     /// <summary>
@@ -10,6 +13,11 @@ public static class ChangeTrackerExtensions
     /// and ensuring certain properties remain unchanged during state transitions.
     /// </summary>
     /// <param name="tracker">The <see cref="ChangeTracker"/> managing entity state transitions.</param>
+    /// <remarks>
+    /// For modified entities, the generated update timestamp is explicitly marked as modified and therefore remains
+    /// persistent when <see cref="ChangeTracker.AutoDetectChangesEnabled"/> is disabled. Deleting an
+    /// <see cref="ISoftDeletable"/> entity changes its state to <see cref="EntityState.Modified"/> and writes only its soft-delete members.
+    /// </remarks>
     public static void ApplyEntityStateRules(this ChangeTracker tracker)
     {
         var now = DateTimeOffset.UtcNow;
@@ -31,7 +39,10 @@ public static class ChangeTrackerExtensions
                 case EntityState.Modified:
                 {
                     if (entity is IHasUpdatedAt hasUpdatedAt)
+                    {
                         hasUpdatedAt.UpdatedAt = now;
+                        entry.Property(nameof(IHasUpdatedAt.UpdatedAt)).IsModified = true;
+                    }
 
                     var exclude = new HashSet<string>();
 

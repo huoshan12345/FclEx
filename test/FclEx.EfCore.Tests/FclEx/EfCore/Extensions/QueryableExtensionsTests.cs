@@ -238,6 +238,19 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
         Assert.Single(context.ChangeTracker.Entries());
     }
 
+    [Fact]
+    public void StateFilters_ApplyExpectedPredicates()
+    {
+        var active = new EntityHasStates { Id = 1 };
+        var deleted = new EntityHasStates { Id = 2, IsDeleted = true };
+        var disabled = new EntityHasStates { Id = 3, IsDisabled = true };
+        var query = new[] { active, deleted, disabled }.AsQueryable();
+
+        Assert.Equal([active, disabled], query.NotDeleted().ToArray());
+        Assert.Equal([active, deleted], query.Enabled().ToArray());
+        Assert.Equal([active], query.Valid().ToArray());
+    }
+
     [Theory]
     [MemberData(nameof(DbDriverCases))]
     public async Task ToPagedListAsync_ShouldNotTrackEntities_WhenNoTrackingIsTrue(DbDriver dbDriver)
@@ -266,6 +279,22 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
 
         Assert.Single(result.Items);
         Assert.Single(context.ChangeTracker.Entries<EntityHasStates>());
+    }
+
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
+    public async Task ToPagedListAsync_FuncSelector_ShouldProjectAfterMaterialization(DbDriver dbDriver)
+    {
+        var entity = await CreateEntityHasStatesAsync(dbDriver);
+        await using var context = Fixture.CreateDbContext(dbDriver);
+        Func<EntityHasStates, string> selector = value => $"{value.Id}:{value.Name}";
+
+        var result = await context.EntityHasStates
+            .Where(value => value.Id == entity.Id)
+            .ToPagedListAsync(pageSize: 10, pageIndex: 0, selector);
+
+        Assert.Equal([$"{entity.Id}:{entity.Name}"], result.Items);
+        Assert.Empty(context.ChangeTracker.Entries());
     }
 
     [Theory]
@@ -368,6 +397,24 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
         Assert.Equal(0, secondUpdateCount);
         Assert.NotEqual(default, firstDeletedAt);
         Assert.Equal(firstDeletedAt, secondDeletedAt);
+    }
+
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
+    public async Task ExecuteSoftDeleteAsync_PhysicallyDeletesNonSoftDeletableEntity(DbDriver dbDriver)
+    {
+        var entity = new EntityWithAutoKey { Name = Guid.NewGuid().ToString() };
+        await using var context = Fixture.CreateDbContext(dbDriver);
+        context.EntityWithAutoKey.Add(entity);
+        await context.SaveChangesAsync();
+        context.Entry(entity).State = EntityState.Detached;
+
+        var affected = await context.EntityWithAutoKey
+            .Where(value => value.Id == entity.Id)
+            .ExecuteSoftDeleteAsync();
+
+        Assert.Equal(1, affected);
+        Assert.Null(await context.EntityWithAutoKey.FindAsync(entity.Id));
     }
 
     [Theory]

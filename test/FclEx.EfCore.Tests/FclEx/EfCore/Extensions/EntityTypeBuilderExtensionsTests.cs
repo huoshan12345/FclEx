@@ -31,4 +31,17 @@ public class EntityTypeBuilderExtensionsTests
         Assert.Equal("tenant", entityBuilder.Metadata.GetSchema());
         Assert.True(entityBuilder.Metadata.IsTableExcludedFromMigrations());
     }
+
+    [Fact]
+    public void ExcludeFromMigrations_ShouldUseExplicitTableAndSchema()
+    {
+        var modelBuilder = new ModelBuilder(new ConventionSet());
+
+        var builder = modelBuilder.Entity<CustomerEntity>()
+            .ExcludeFromMigrations("archived_customers", "archive");
+
+        Assert.Equal("archived_customers", builder.Metadata.GetTableName());
+        Assert.Equal("archive", builder.Metadata.GetSchema());
+        Assert.True(builder.Metadata.IsTableExcludedFromMigrations());
+    }
 }

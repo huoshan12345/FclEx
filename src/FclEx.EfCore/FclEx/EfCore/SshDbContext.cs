@@ -2,8 +2,21 @@ using Renci.SshNet.Common;
 
 namespace FclEx.EfCore;
 
+/// <summary>
+/// Owns a database context and the optional SSH resources through which it connects.
+/// </summary>
+/// <typeparam name="T">The database context type.</typeparam>
+/// <remarks>
+/// Disposing the wrapper asynchronously disposes the context first, followed by the forwarded port and SSH client.
+/// </remarks>
 public class SshDbContext<T> : IAsyncDisposable where T : DbContext
 {
+    /// <summary>
+    /// Initializes a wrapper that owns the supplied context and SSH resources.
+    /// </summary>
+    /// <param name="context">The database context to expose and dispose.</param>
+    /// <param name="sshClient">The SSH client to dispose, or <see langword="null"/> when no tunnel is used.</param>
+    /// <param name="tunnel">The forwarded port to dispose, or <see langword="null"/> when no tunnel is used.</param>
     public SshDbContext(T context, SshClient? sshClient, ForwardedPortLocal? tunnel)
     {
         Context = context;
@@ -11,10 +24,24 @@ public class SshDbContext<T> : IAsyncDisposable where T : DbContext
         Tunnel = tunnel;
     }
 
+    /// <summary>
+    /// Gets the database context configured with the effective connection string.
+    /// </summary>
     public T Context { get; }
+
+    /// <summary>
+    /// Gets the owned SSH client, or <see langword="null"/> when the context connects directly.
+    /// </summary>
     protected SshClient? SshClient { get; }
+
+    /// <summary>
+    /// Gets the owned local forwarded port, or <see langword="null"/> when the context connects directly.
+    /// </summary>
     protected ForwardedPortLocal? Tunnel { get; }
 
+    /// <summary>
+    /// Disposes the context asynchronously and then releases any tunnel and SSH client.
+    /// </summary>
     public virtual async ValueTask DisposeAsync()
     {
         GC.SuppressFinalize(this);
@@ -36,6 +63,9 @@ public class SshDbContext<T> : IAsyncDisposable where T : DbContext
     }
 }
 
+/// <summary>
+/// Creates database contexts that optionally connect through an SSH local port forward.
+/// </summary>
 public class SshDbContext
 {
     /// <summary>
@@ -52,6 +82,10 @@ public class SshDbContext
     /// and set <see cref="HostKeyEventArgs.CanTrust"/> to control whether the connection is accepted.
     /// </param>
     /// <returns>A wrapper that owns the context and any SSH resources created for it.</returns>
+    /// <remarks>
+    /// When <paramref name="ssh"/> is <see langword="null"/>, the context is created from the original connection string
+    /// and the endpoint callbacks are not invoked. If setup fails after SSH resources are created, those resources are disposed before the exception is rethrown.
+    /// </remarks>
     public static SshDbContext<T> CreateSshDbContext<T>(string connectionString, Func<string, T> createContext, ConnectionInfo? ssh,
         Func<string, SocketEndpoint> getRemoteEndpoint,
         Func<string, SocketEndpoint, string> createNewConnectionString,

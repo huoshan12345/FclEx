@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace FclEx.EfCore;
 
+/// <summary>
+/// Provides low-level relational command helpers for <see cref="DatabaseFacade"/>.
+/// </summary>
 public static class DatabaseFacadeExtensions
 {
     /// <summary>
@@ -17,6 +20,10 @@ public static class DatabaseFacadeExtensions
     /// The first column of the first row in the result set cast to <typeparamref name="T"/>.
     /// Returns <c>default</c> if the result is <see langword="null"/> or <see cref="DBNull"/>.
     /// </returns>
+    /// <remarks>
+    /// The command participates in the context's current transaction, uses the configured command timeout, and is executed
+    /// through the provider's execution strategy. A connection opened by this method is closed before the task completes.
+    /// </remarks>
     public static async Task<T?> ExecuteScalarRawAsync<T>(this DatabaseFacade database, string sql,
         IEnumerable<IDbDataParameter>? parameters = null, CancellationToken cancellationToken = default)
     {
