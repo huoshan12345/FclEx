@@ -480,9 +480,213 @@
 
     修复：插入被拆分为准备与无异常提交阶段；更新先保存完整移除计划，若新 score 的比较、节点分配或字典更新失败则原样恢复旧节点，成功时才链接新节点并推进版本。新增 comparer 抛异常后的内容、rank、score 与枚举器版本保持测试。
 
+## 第三轮审查（101–150）
+
+范围仍为 `FclEx.Core`，排除 `Combinatorics` 文件夹下的源码。本轮按整体设计、公共 API/签名、实现与跨目标兼容性的顺序继续审查；累计 50 个新问题后停止。
+
+101. **[P1] `JsonStringSerializer` 会在真正解析前拒绝合法 JSON**
+
+    位置：`src/FclEx.Core/FclEx/Utils/~Serialization/JsonStringSerializer.cs:8-12`、`src/FclEx.Core/FclEx/Extensions/~System/~Text/~Json/StringExtensions.cs:5-45`。`Deserialize` 先调用基于首尾字符的 `IsPossibleJson`，因此带合法外围空白的 `" null "`、`" [1] "` 会被拒绝，指数形式等值也受启发式规则限制。序列化器不应以不完备的外形检查覆盖 `JsonSerializer` 的语法判断；应直接反序列化并保留原始 `JsonException`。
+
+102. **[P1] `JsonMemoryBytesSerializer.Instance` 的线格式取决于运行时类型**
+
+    位置：`src/FclEx.Core/FclEx/Utils/~Serialization/JsonMemoryBytesSerializer.cs:3-13`、`StringAsRawSerializer.cs:14-26`。名为 JSON 的默认实例用 `StringAsRawSerializer`：字符串 `abc` 被写成裸字节 `abc`，其他对象才写成 JSON；同一入口因运行时类型改变协议，且与 `JsonBytesSerializer` 的直觉契约不一致。应让 JSON serializer 始终产生 JSON；需要字符串直通时使用另一个明确命名的组合器或显式选项。
+
+103. **[P1] `PagedList<T>` 允许构造互相矛盾的分页状态**
+
+    位置：`src/FclEx.Core/FclEx/Utils/~PagedList/PagedList.cs:17-41`。构造器只校验参数各自的范围，不校验 `items.Count <= pageSize`、`items.Count <= totalCount`、非空页是否落在 `PageCount` 内等关系；于是可出现 `TotalCount == 0` 但包含元素、`ItemStart > ItemEnd` 或超出末页仍带数据的对象。分页结果应有统一的不变量，并在构造边界拒绝不可能状态。
+
+104. **[P1] `PagedList<T>` 的元数据是快照，元素集合却仍可在外部变化**
+
+    位置：`src/FclEx.Core/FclEx/Utils/~PagedList/PagedList.cs:11,27-41,56-59`。构造器直接保存调用方的 `IReadOnlyList<T>`；该接口不代表不可变，传入 `List<T>` 后继续增删会改变 `Count` 和索引内容，而 `TotalCount`、`PageCount`、`ItemStart/ItemEnd` 永远不变。应明确采用快照并防御性复制，或把分页元数据改成随底层集合一致变化的 view；当前混合语义不可保持一致。
+
+105. **[P1] `UriCreator.SplitUri` 把 fragment 中的问号误判为非法查询顺序**
+
+    位置：`src/FclEx.Core/FclEx/Utils/~Net/UriCreator.cs:185-197`。`a#fragment?x` 是合法相对 URI，`?x` 属于 fragment；实现却因第一个 `?` 位于 `#` 后而抛 `ArgumentException`。应先定位 `#`，只在 fragment 之前寻找 query 分隔符，或交给标准 URI 解析逻辑。
+
+106. **[P1] `UriAttribute` 把 `://` 错当成所有绝对 URI 的必要条件**
+
+    位置：`src/FclEx.Core/System/ComponentModel/DataAnnotations/UriAttribute.cs:17-31`。`mailto:user@example.com`、`urn:isbn:...` 等合法绝对 URI 有显式 scheme 但没有 `://`，即使 `AllowedSchemes` 允许也会提前失败；文档所称“任意显式 scheme”与实现不符。应先用 `Uri.TryCreate(..., Absolute)`，再检查 `uri.Scheme`，不要用层次型 URI 的分隔符替代 scheme 判断。
+
+107. **[P2] `ElementRequiredAttribute.MinLength` 可被设置为负数并使校验失效**
+
+    位置：`src/FclEx.Core/System/ComponentModel/DataAnnotations/ElementRequiredAttribute.cs:6,27-49`。可写属性没有范围验证，负值会让所有字符串和 enumerable 都满足 `count >= MinLength`。attribute 配置应在 setter/构造器中拒绝负数；如果零是默认有效含义，也应在文档中明确。
+
+108. **[P1] `FormattedException` 不是标准异常包装器，且 null 校验不会按文档生效**
+
+    位置：`src/FclEx.Core/FclEx/Utils/~Exceptions/FormattedException.cs:6-23`。基类构造器先读取 `exception.Message`，传 null 得到 `NullReferenceException` 而非声明的 `ArgumentNullException`；正常输入又只保存到自定义 `Exception` 属性，没有作为 `InnerException` 传给基类，标准日志、异常遍历和 `GetBaseException` 看不到因果链。应先通过静态 helper 校验，并调用 `base(message, exception)`；自定义属性通常可直接删除。
+
+109. **[P1] `SimpleException` 的“省略栈以提升性能”设计并不能阻止抛出时捕获栈**
+
+    位置：`src/FclEx.Core/FclEx/Utils/~Exceptions/SimpleException.cs:3-53`。覆盖 `StackTrace` 返回 null 只隐藏诊断信息，CLR 在 throw 时仍会记录栈；`[StackTraceHidden]` 也只是影响格式化。反向选项 `noStackTrace == false` 在构造时额外抓取一次栈，但异常真正抛出后又优先返回 `base.StackTrace`，这份成本通常白付。建议删除该性能承诺和栈覆盖，让“仅消息”成为格式化策略而不是异常对象状态。
+
+110. **[P1] `DataMemberInfo.CanWrite` 对 readonly field 返回 true**
+
+    位置：`src/FclEx.Core/System/Reflection/DataMemberInfo.cs:6-20,61-75`。所有 field 都被标记 `CanWrite = true`，包括 `IsInitOnly` 字段；调用方按 `CanWrite` 选择 setter 后仍可能失败或绕过类型不变量。`CanWrite` 应表达实际支持的普通写入能力并排除 init-only/literal 字段，危险的反射写入若保留应独立命名。
+
+111. **[P1] `DataMemberInfo` 的统一 getter/setter 签名无法表示 indexer**
+
+    位置：`src/FclEx.Core/System/Reflection/DataMemberInfo.cs:24-40,71-75`。类型会收集 indexer 并设置 `IsIndexer = true`，但只暴露不带索引参数的 `Func<object?, object?>` / `Action<object?, object?>`；对 indexer 调用必然以参数数量错误失败。应在数据成员抽象中排除 indexer，或为它设计包含索引参数的独立访问模型，而不是暴露看似可调用的无效委托。
+
+112. **[P0] `ReferenceEqualityComparer<T>` 允许值类型，导致相等和哈希契约失真**
+
+    位置：`src/FclEx.Core/System/Collections/Generic/~EqualityComparers/ReferenceEqualityComparer.cs:8-29`。`T` 没有 `class` 约束；值类型参数在 `ReferenceEquals` 和 `RuntimeHelpers.GetHashCode` 中分别装箱，同一个值通常也不相等，哈希还随新装箱对象变化。应加 `where T : class`；值类型不存在可复用的“引用相等”语义。
+
+113. **[P1] `ComparerHelper.TryEquals` 在调用自定义 comparer 前强制要求运行时类型相同**
+
+    位置：`src/FclEx.Core/System/Collections/Generic/ComparerHelper.cs:25-43`，并影响 `EnumerableEqualityComparer`、`KeyEqualityComparer`、`DelegateEqualityComparer`、`MemberEqualityComparerBuilder` 等。对于声明为基类或接口的 `T`，比较器本可按成员/序列语义判定两个不同派生类型相等，该 helper 却提前返回 false；例如内容相同的数组和列表无法由序列 comparer 比较相等。helper 只应处理引用相同/null，运行时类型策略应由具体 comparer 决定。
+
+114. **[P0] `MarshalToBytesEqualityComparer<T>` 的相等与哈希依赖未定义的 padding 和地址值**
+
+    位置：`src/FclEx.Core/System/Collections/Generic/~EqualityComparers/MarshalToBytesEqualityComparer.cs:3-28`、`src/FclEx.Core/FclEx/Helpers/ObjectHelper.cs:42-62`。`Marshal.SizeOf` 包含 padding，而 `StructureToPtr` 不保证覆盖新分配 native buffer 的所有 padding；同一值的字节和哈希可能不稳定。带引用 marshaling 的字段还会把指针/分配结果纳入比较，而不是比较所指内容。该 comparer 无法提供通用 `IEqualityComparer<T>` 契约，应删除，或只为明确的 blittable 布局定义受约束的 bitwise comparer。
+
+115. **[P1] `ThenWithAction` 可把不存在的下一值或失败伪装成成功 tuple**
+
+    位置：`src/FclEx.Core/FclEx/Actions/ThenWithAction.cs:3-54`。`errorWhenNextNull=false` 返回 `(item, default(TNext))` 的成功结果；`prevWhenNextError=true` 还会吞掉 next 的异常并返回同样的成功值。返回类型承诺两个成功值，这两个布尔开关却允许缺值和失败进入成功通道。应以 `Optional<TNext>`/discriminated result 显式表达缺失，失败保留为失败；不要用布尔参数改变结果类型的真实性。
+
+116. **[P1] `IPipelineAction<T>` 在不同目标框架上要求实现不同的接口成员**
+
+    位置：`src/FclEx.Core/FclEx/Actions/IPipelineAction.cs:4-51`。NET6+ 通过 default interface implementation 提供 `GetName`、handler 和显式 `IAction.ExecuteAsync`，旧目标却把前三者变成必须实现且没有 `ExecuteAsync` 默认实现；同一消费者源码不能稳定跨该包支持的 TFM 编译。公共接口形状应跨目标一致：把默认逻辑放到抽象基类/组合器，或在所有 TFM 要求相同成员，而不是条件编译实现责任。
+
+117. **[P1] 把已经启动的 `Task` 转成 `IAction` 破坏了 action 的延迟和可重复执行语义**
+
+    位置：``src/FclEx.Core/FclEx/Utils/~Operation/OperationResultExtensions.`.Async.cs:387-398,504-517``。这些 overload 捕获现成 task；选择 series 并不能让任务串行启动，token 无法传入原操作，同一个 action 多次执行也只会反复观察同一个结果。应接受 `Func<CancellationToken, Task<...>>` 工厂；若只是等待现成任务，就不要包装成可执行 action。
+
+118. **[P2] 同名同步/异步 `Fallback` 对 elapsed 的定义相反**
+
+    位置：``src/FclEx.Core/FclEx/Utils/~Operation/OperationResultExtensions.`.cs:329-361``、``OperationResultExtensions.`.Async.cs:400-447``。同步 overload 直接返回 fallback 并丢弃源结果耗时，异步 overload 则把源耗时加到 fallback 上。相同概念不应因调用形态改变度量语义；应统一定义为端到端耗时或仅最终分支耗时，并让所有 overload 一致。
+
+119. **[P2] 同名同步/异步 `Merge` 使用不可比较的 elapsed 语义**
+
+    位置：``src/FclEx.Core/FclEx/Utils/~Operation/OperationResultExtensions.`.cs:364-385``、``OperationResultExtensions.`.Async.cs:486-501``。同步 `Merge` 汇总每个 result 的 elapsed，异步版本随后用等待 source task 的墙钟时间覆盖该值；串行、并行以及已完成 task 得到的数字含义完全不同。应明确选择 aggregate work time 或 wall-clock duration，并用不同属性/方法表达两种指标，而不是静默覆盖。
+
+120. **[P1] `Optional.Some(null)` 会静默变成 `None`**
+
+    位置：`src/FclEx.Core/FclEx/Utils/Optional.cs:7-53`。`Some<T>(T value)` 允许 nullable `T`，而 `HasValue` 完全由 `Value is not null` 推导，所以 API 名称承诺的“有值”可立即消失。若 null 不算值，应加 `where T : notnull` 并运行时校验；若要支持 `Some(null)`，结构必须保存独立的存在位。
+
+121. **[P1] `NameIdentifier<T>` 默认缓存会永久保留所有动态名称**
+
+    位置：`src/FclEx.Core/FclEx/Utils/NameIdentifier.cs:28-51`。每个闭合类型都有无界静态 `ConcurrentDictionary<string,T>`，`GetOrCreate` 又默认启用缓存；用户输入、路径、租户名等高基数名称会被进程永久持有，只能由全局 `ClearCache` 粗粒度清空。interning 不应成为所有 identifier 的默认责任；应由调用方显式提供有界缓存，或仅对已知有限集合启用。
+
+122. **[P1] `NameIdentifier<T>` 没有验证工厂结果与缓存 key 一致**
+
+    位置：`src/FclEx.Core/FclEx/Utils/NameIdentifier.cs:41-46`。`T.Create(name)` 可以规范化、忽略甚至返回另一个 `Name`，但结果仍缓存到原字符串 key；同一逻辑 identifier 因不同 key 出现多个实例，`GetOrCreate(x).Name` 也可能不等于 x。要么把规范化作为显式 key selector 并在查缓存前执行，要么强制校验工厂保持名称不变。
+
+123. **[P1] `ScopedSetter<T>` 对值类型看似成功，实际修改的是丢弃的装箱副本**
+
+    位置：`src/FclEx.Core/FclEx/Utils/ScopedSetter.cs:20,27-60`。泛型没有引用类型约束；当 `T` 是 struct 时 `_obj` 已是调用参数副本，反射访问还会再次装箱，临时值不会写回调用方变量。API 应限制 `where T : class`；若要支持 struct，必须改为 scoped `ref T` 设计，不能用当前持有值的 class。
+
+124. **[P1] `ScopedSetter.Dispose` 既不幂等，也不能保证完整恢复**
+
+    位置：`src/FclEx.Core/FclEx/Utils/ScopedSetter.cs:30-39`。Dispose 后没有清空/交换恢复表，第二次 Dispose 会再次覆盖对象在第一次 Dispose 后的新修改；恢复任一成员抛异常时，后续成员永远不恢复。应原子取走待恢复状态以保证最多执行一次，并在逐项恢复时收集异常或用可靠的 finally 策略完成其余恢复。
+
+125. **[P2] `SourceBuilder.WriteUsings` 让生成源码随当前文化排序**
+
+    位置：`src/FclEx.Core/FclEx/Utils/SourceBuilder.cs:175-185`。无 comparer 的 `OrderBy` 对字符串使用当前文化，生成文件在不同 OS/区域设置下可能顺序不同，造成增量生成和快照结果不稳定。源码生成应使用 `StringComparer.Ordinal`（并考虑去重）保证确定性。
+
+126. **[P1] `ArgumentBuilder` 会静默忽略调用方提供但未被构造器消费的参数**
+
+    位置：`src/FclEx.Core/FclEx/Utils/ArgumentBuilder.cs:39-90`。到达最后一个 parameter 就把路径视为匹配，从不要求 `RemainArgIndexes` 为空；parameterless constructor 更是不论传了多少参数都直接匹配。对象可能由错误构造器创建且调用方无从发现 typo/多余依赖。默认契约应要求每个 supplied argument 恰好消费一次，除非 API 明确提供“允许剩余参数”的模式。
+
+127. **[P1] `ArgumentBuilder` 的构造器排名会偏爱更多默认参数并对歧义做非确定选择**
+
+    位置：`src/FclEx.Core/FclEx/Utils/ArgumentBuilder.cs:17-35,77-83`。候选先按参数总数降序，再按 `UseDefaultCount` 降序，因而较长、更多参数靠默认值的构造器可能压过较短的精确匹配；完全同分时直接取反射枚举顺序的 `First()`。应优先最大化实际消费/精确匹配、最小化默认值，并在最佳候选不唯一时抛明确的 ambiguity error。
+
+128. **[P1] `ConsoleTable` 公开可变行列，允许绕过渲染所依赖的列数不变量**
+
+    位置：`src/FclEx.Core/FclEx/Utils/~ConsoleTable/ConsoleTable.cs:3-13,15-86`。`Columns` 数组和 `Rows` 的可变 `List<object?[]>` 都直接公开，调用方可插入长度不足的 row 或修改列数；`GetColumnLength` 随后无条件访问 `row[index]` 并抛越界异常。应私有化存储、复制输入，并只通过校验列数的 `AddRow`/builder API 修改。
+
+129. **[P0] `SynchronizationContextScope.RunAsync` 把线程局部状态跨越了 `await`**
+
+    位置：`src/FclEx.Core/FclEx/Utils/~Threading/SynchronizationContextScope.cs:6-11,29-43`。`Enter` 修改当前线程的 `SynchronizationContext`，`RunAsync` 在第一次未完成 await 时就把控制权返回给调用方，原线程仍保持被替换的 context；continuation 还可能在另一线程执行并在那里“恢复”旧 context。线程局部 scope 不能跨异步挂起；应删除两个 `RunAsync`，或通过显式 scheduler/context dispatch 执行 callback，而不是临时修改调用线程。
+
+130. **[P1] `ReaderWriterLockSlim` 的 `IDisposable` lease 可在错误线程释放锁**
+
+    位置：`src/FclEx.Core/FclEx/Extensions/~System/~Threading/ReaderWriterLockSlimExtensions.cs:3-21`。`ReaderWriterLockSlim` 的 enter/exit 是线程关联的，但返回普通 `IDisposable` 无法阻止 scope 跨 `await`、被传递或在另一线程 Dispose；此时 Exit 抛错并可能让锁永久保持。应至少用无法跨 await 的 `ref struct` lease 并明确仅同步作用域，或改用接受同步 callback 的 API。
+
+131. **[P1] `TaskCompletionSource.Exception` 擅自把调用方异常替换成 base exception**
+
+    位置：`src/FclEx.Core/FclEx/Extensions/~System/~Threading/TaskCompletionSourceExtensions.cs:5-10,25-29`。`GetBaseException()` 会剥掉普通包装异常及单 inner 的 `AggregateException`，丢失上层语义、消息和上下文；名为 `Exception(ex)` 的 helper 理应保存传入对象。应直接 `SetException(ex)`，若确需 unwrap 则提供显式命名的独立 API。
+
+132. **[P1] `StreamReaderExtensions` 在 `StreamWriter` 类型上查找读取方法**
+
+    位置：`src/FclEx.Core/FclEx/Extensions/~System/~IO/StreamReaderExtensions.cs:5-7,29-30`。两个反射字段都对 `typeof(StreamWriter)` 查找 `ReadToEndAsync`/`ReadLineAsync`，结果必为 null；旧目标程序集即使运行在提供原生 cancellation overload 的新 runtime 上也永远走 fallback，取消只停止等待而不中断底层读取。应改为 `typeof(StreamReader)`，并为反射返回类型分别验证 `Task<string>`/`ValueTask<string?>`。
+
+133. **[P1] 旧目标的异步文本写入宣称支持取消，但主体写入完全不观察 token**
+
+    位置：`src/FclEx.Core/FclEx/Extensions/~System/~IO/FileExtensions.cs:17-25`、`StreamWriterExtensions.cs:17-26`。`WriteAllTextAsync` 用无 token 的 `sw.WriteAsync(content)` 写完全部内容后才在 flush 检查取消；`FlushAsync(token)` fallback 又直接忽略 token。大文本操作可能在取消后继续长时间写盘却仍最终报告取消。应分块写入并在块间观察 token；无法取消底层 flush 时至少取消等待并在文档中说明 I/O 可能继续。
+
+134. **[P1] `TextWriter.SetConsole` 用可嵌套 scope 包装进程级全局状态**
+
+    位置：`src/FclEx.Core/FclEx/Extensions/~System/~IO/TextWriterExtensions.cs:3-10`。`Console.Out` 是进程全局属性；并发或非 LIFO Dispose 的两个 scope 会互相覆盖，并把过期 writer 恢复回来，没有任何同步或所有权检查。该能力不适合作为通用 `IDisposable` 扩展；应由应用启动层集中设置，测试重定向则使用串行 fixture/显式全局锁。
+
+135. **[P0] `PhysicalAddress.AddressBytes` 公开了可替换/可修改的私有后备数组**
+
+    位置：`src/FclEx.Core/FclEx/Extensions/~System/~Net/~NetworkInformation/PhysicalAddressExtensions.cs:5-32,52-56`。NET8+ 甚至返回 `ref byte[]`，调用方可替换 `_address`；旧目标也返回同一可变数组。对象可在作为 dictionary key 后被修改，破坏 equality/hash，不同 TFM 的返回签名还不一致，并依赖私有字段名。应删除该公共 API，格式化直接使用官方 `GetAddressBytes()` 的副本；确需零复制只能限于 internal、只读且目标受控的实现。
+
+136. **[P1] 旧目标回填的 `HttpRequestException.StatusCode` 与官方 nullability 契约不同**
+
+    位置：`src/FclEx.Core/FclEx/Extensions/~System/~Net/~Http/HttpRequestExceptionExtensions.cs:7-18,27-33`。官方属性是 `HttpStatusCode?`，这里却返回非 nullable enum，并用数值 0 表示不存在；调用方跨 TFM 编译时既看到不同签名，也无法区分“无状态码”和非法/默认值。回填 API 应精确匹配官方 nullable 类型与缺失语义。
+
+137. **[P1] `IsIPv6UniqueLocal` 为简单位判断依赖 `IPAddress` 私有字段布局**
+
+    位置：`src/FclEx.Core/FclEx/Extensions/~System/~Net/IPAddressExtensions.cs:48-54`、`src/FclEx.Core/FclEx/FieldInfos.cs:16-22`。旧目标实现读取 `_numbers`，字段名、元素顺序和存在性都不是 runtime 契约，在不同 Mono/.NET Framework 实现、裁剪或未来 runtime 上会失效。该判断只需官方 `GetAddressBytes()` 的首字节满足 `(b & 0xFE) == 0xFC`，没有使用反射的合理性。
+
+138. **[P1] embedded resource 的后缀匹配会在重名时任意选择第一个资源**
+
+    位置：`src/FclEx.Core/FclEx/Extensions/~System/~Reflection/AssemblyExtensions.cs:11-18`、`src/FclEx.Core/FclEx/Helpers/ResourceHelper.cs:7-16`。两个入口都对 manifest names 做无 `StringComparison` 的 `EndsWith(name)` 并取 `FirstOrDefault`；不同命名空间含同名资源时结果依赖枚举顺序，文化比较也不适合标识符。应优先要求完整资源名；若支持短名，使用 ordinal 比较并在多个候选时抛 ambiguity error。
+
+139. **[P1] `ReflectionHelper` 的全局 Type cache 会阻止 collectible assembly 卸载**
+
+    位置：`src/FclEx.Core/FclEx/Helpers/ReflectionHelper.cs:16-44`。静态 `ConcurrentDictionary<Type,...>` 强引用每个见过的 Type 及其 `MemberInfo`，插件/脚本通过 collectible `AssemblyLoadContext` 加载的程序集将永远被该 Core helper 固定。应使用 `ConditionalWeakTable<Type,...>` 或让缓存归属调用方/可卸载上下文。
+
+140. **[P0] `AccessorAccessesField` 没有解码 IL 指令，可能误判或解析任意 operand 为 metadata token**
+
+    位置：`src/FclEx.Core/FclEx/Helpers/ReflectionHelper.cs:83-127`。循环逐字节寻找 `0x7B/0x7D/0x7E/0x80`，这些字节也可能出现在其他指令的 operand 中；随后把后四字节交给 `ResolveField`，可抛出 metadata 异常或碰巧命中错误字段。必须按 opcode 和 operand 宽度完整解码 IL（含双字节 opcode），并只对真实 field 指令解析 token；否则应删除这一启发式公共 API。
+
+141. **[P0] `HashAlgorithm.Hash` 把空输入的摘要定义成空数组**
+
+    位置：`src/FclEx.Core/FclEx/Extensions/~System/~Security/~Cryptography/HashAlgorithmExtensions.cs:5-25`。空消息有标准且非空的 cryptographic digest，实现却对 null/空数组返回 `[]`，使所有算法在空输入上产生相同结果；offset/count overload 还因此跳过本应发生的范围校验。应对空数组调用 `ComputeHash`，对 null 明确抛 `ArgumentNullException` 或单独定义 nullable 语义。
+
+142. **[P1] `IAsyncEnumerable` materializer 没有取消入口**
+
+    位置：`src/FclEx.Core/FclEx/Extensions/~System/~Collections/~Generic/AsyncEnumerableExtensions.cs:3-19`。`ToListAsync`/`ToArrayAsync` 只能无 token 枚举，面对无限流、慢 I/O 或调用方取消时无法通过 API 传播 cancellation；这对异步 materializer 是核心签名缺失。应增加 `CancellationToken` 并使用 `source.WithCancellation(token).ConfigureAwait(false)`，保持与常见 async LINQ 约定一致。
+
+143. **[P1] `Exception.ForEach` 的实现并不遍历“每个异常”，且共享节点会重复执行**
+
+    位置：`src/FclEx.Core/FclEx/Extensions/~System/ExceptionExtensions.cs:37-86`。`action` 只在没有 inner 的叶节点调用，root `AggregateException` 和所有中间包装异常都被跳过，与文档相反；`handled` 又只在叶节点处理后写入，两个分支共享同一 inner 时会先重复入队并重复执行。应采用统一的 visited set，在 dequeue 时去重，并明确对每个节点（含 aggregate/container）执行一次还是只遍历 leaves，名称和文档须与选择一致。
+
+144. **[P1] `Enum.Info/GetAttribute` 对未命名值和复合 flags 值抛 `NullReferenceException`**
+
+    位置：`src/FclEx.Core/FclEx/Extensions/~System/EnumExtensions.cs:7-18,100-105`。`enumValue.ToString()` 对 `A | B` 返回 `"A, B"`，对未知数值返回数字字符串；`GetField(...)` 为 null 后被 `!` 掩盖并立即调用扩展。attribute 查询应在没有对应声明字段时返回 null，`Info` 还需定义复合值是按组成成员合并信息还是只提供格式化名称。
+
+145. **[P1] `TryToInteger<TEnum,TInteger>` 实际接受任意同尺寸 unmanaged 类型并做位重解释**
+
+    位置：`src/FclEx.Core/FclEx/Extensions/~System/EnumExtensions.cs:32-57`。`TInteger : unmanaged` 允许 `float`、`Guid`、用户 struct 等；只要 `Unsafe.SizeOf` 相同就返回 true，并非“转换为整数”。应为受支持的整型提供明确 overload/运行时类型检查并定义溢出策略；若保留位重解释，应改名为 `BitCast`，其目标不应伪装成 integer。
+
+146. **[P2] `Enum.Info` 的展示值受当前文化影响，缓存又会无界保存任意枚举数值**
+
+    位置：`src/FclEx.Core/FclEx/Extensions/~System/EnumExtensions.cs:5-18`。`ToLower()`/`ToUpper()` 使用当前文化，identifier 在土耳其语等文化下产生不同结果；cache 以 boxed `Enum` 值为 key，flags 任意组合和强转出的未知数值都会永久增长。应使用 invariant casing，并优先按 enum type/已声明 member 缓存元数据；动态组合值不应全局 intern。
+
+147. **[P1] `NameValues<TSelf>` 的 CRTP 基类可被直接实例化并在首次修改时强转失败**
+
+    位置：`src/FclEx.Core/FclEx/Utils/~Collections/NameValues.cs:8,29-32,71-76`。只要存在 `Foo : NameValues<Foo>`，调用方仍可合法创建 `new NameValues<Foo>(comparer)`；`Add` 随后执行 `(TSelf)this` 并抛 `InvalidCastException`。self-typed 基类应为 abstract 且构造器 protected，确保实际实例确实是 `TSelf`；或删除 CRTP，普通方法返回基类/void。
+
+148. **[P0] `EncodingHelper.GetEncoding` 的 BOM 判断会漏掉绝大多数 UTF-16/UTF-32 文件**
+
+    位置：`src/FclEx.Core/FclEx/Helpers/EncodingHelper.cs:22-45`。实现只读 3 字节，并要求 UTF-16 BE 的第三字节恰为 `0x00`、UTF-16 LE 的第三字节恰为 `0x41`，把正文首字节错误地当作 BOM；UTF-32 BOM 需要 4 字节也无法正确识别。应复用已经存在的 `TryDetectEncoding`，读取足够的最大 preamble 长度并按完整 BOM 匹配。
+
+149. **[P0] `EncodingHelper.IsUtf8` 既拒绝位于文件末尾的合法多字节字符，也接受非法 continuation byte**
+
+    位置：`src/FclEx.Core/FclEx/Helpers/EncodingHelper.cs:52-97`。读取 lead byte 后使用 `Position < Length - N`，刚好剩余 N 个 continuation bytes 时条件为 false，所以任何以非 ASCII 字符结尾的文件都可能被判非 UTF-8；continuation 只检查最高位为 1，`11xxxxxx` 也被接受，并未排除 overlong、surrogate 或超过 U+10FFFF。应使用严格的 `UTF8Encoding(false, true)` decoder（流式处理跨 buffer 序列），不要维护不完整的手写验证器。
+
+150. **[P1] `EncodingHelper.GetEncoding(Stream)` 未声明却夺取并重置/关闭调用方 stream**
+
+    位置：`src/FclEx.Core/FclEx/Helpers/EncodingHelper.cs:22-27,42-57`。方法要求 `Length`/`Seek`，把位置无条件重置到 0 而非原位置；`IsUtf8` 中 `using new BinaryReader(stream)` 又会在返回时关闭外部传入的 stream。应明确支持能力和所有权：通常保存并恢复原 position、使用 `leaveOpen: true`，对不可 seek stream 采用前缀缓冲或明确拒绝且文档说明。
+
 ## 建议处理顺序
 
-1. 先处理可能产生非法内存访问或悬空地址的 51、86、99，以及会泄漏许可或损坏集合状态的 53、70–75、77、80、100。
-2. 再决定整体用途或公共模型需要重建的 54–57、59–60、63、76、78–79、85、90、92、94–98；破坏性升级不应阻止合理设计。
-3. 随后处理其余边界、异常和多目标兼容问题，并为每项补充最窄范围的回归测试。
-4. 已修复的 1–50 继续作为历史记录；后续解决 51–100 时在对应条目下增加 `修复：` 说明和 `[已修复]` 标记。
+1. 先处理可能违反内存、线程和安全基础契约的 112、114、129、135、140、141、148、149。
+2. 再确定需要重塑或删除的公共设计：102–104、109、115–124、128、134、139、142、147；破坏性升级不应阻止合理设计。
+3. 随后修复解析/校验、跨目标兼容和异常语义问题，并为每项增加最窄范围的回归测试。
+4. 解决条目后继续在对应标题增加 `[已修复]`（或明确的保留决定），并在正文追加处理说明；历史条目不因已修复而删除。
