@@ -155,4 +155,31 @@ public class BiDictionaryTests
         Assert.Equal(1, biDict["One"]);
         Assert.Equal(2, biDict["Two"]);
     }
+
+    [Fact]
+    public void NamedMethods_ShouldRemainUsableWhenKeyAndValueTypesAreTheSame()
+    {
+        var biDict = new BiDictionary<string, string>
+        {
+            { "key", "value" },
+        };
+
+        Assert.Equal("value", biDict.GetValue("key"));
+        Assert.Equal("key", biDict.GetKey("value"));
+
+        biDict.SetValue("key", "updated-value");
+        Assert.Equal("updated-value", biDict.GetValue("key"));
+        Assert.Equal("key", biDict.GetKey("updated-value"));
+
+        biDict.SetKey("updated-value", "updated-key");
+        Assert.False(biDict.ContainsKey("key"));
+        Assert.Equal("updated-value", biDict.GetValue("updated-key"));
+
+        Assert.True(biDict.RemoveValue("updated-value"));
+        Assert.Empty(biDict);
+
+        biDict.Add("another-key", "another-value");
+        Assert.True(biDict.RemoveKey("another-key"));
+        Assert.Empty(biDict);
+    }
 }

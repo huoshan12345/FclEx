@@ -28,4 +28,28 @@ public class CollectionsMarshalExtensionsTests
 
         Assert.True(CollectionsMarshal.AsSpan(collection).IsEmpty);
     }
+
+    [Fact]
+    public void Items_ShouldExposeTheCompleteListCapacityArray()
+    {
+        var list = new List<int>(4) { 1 };
+
+        var items = CollectionsMarshal.Items(list);
+        items[0] = 2;
+
+        Assert.Equal(list.Capacity, items.Length);
+        Assert.Equal(2, list[0]);
+    }
+
+    [Fact]
+    public void SetCount_ShouldExposeInitializedCapacitySlots()
+    {
+        var list = new List<int>(4) { 1 };
+        var items = CollectionsMarshal.Items(list);
+        items[1] = 2;
+
+        CollectionsMarshal.SetCount(list, 2);
+
+        Assert.Equal([1, 2], list);
+    }
 }

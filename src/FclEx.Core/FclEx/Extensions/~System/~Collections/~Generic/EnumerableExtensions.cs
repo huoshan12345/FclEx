@@ -132,13 +132,28 @@ public static partial class EnumerableExtensions
         return TimeSpan.FromTicks(ticks);
     }
 
+    /// <summary>
+    /// Converts up to 32 Boolean values to the corresponding signed 32-bit bit pattern.
+    /// </summary>
+    /// <remarks>
+    /// The first value is the least-significant bit. When the 32nd value is set, the returned value is negative because
+    /// that position is the sign bit of <see cref="int"/>.
+    /// </remarks>
     public static int BitsToInt(this IEnumerable<bool> bits)
     {
+        Check.NotNull(bits);
+
         var num = 0;
-        foreach (var (i, b) in bits.Index())
+        var index = 0;
+        foreach (var bit in bits)
         {
-            var bit = b ? 1 : 0;
-            num &= (bit << i);
+            if (index == 32)
+                throw new ArgumentException("The sequence must contain at most 32 bits.", nameof(bits));
+
+            if (bit)
+                num |= 1 << index;
+
+            index++;
         }
         return num;
     }

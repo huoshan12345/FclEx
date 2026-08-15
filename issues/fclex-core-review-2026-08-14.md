@@ -321,45 +321,55 @@
     位置：`src/FclEx.Core/System/Collections/Generic/MultiValueDictionary.cs:674-695`。新 key 在枚举 `values` 前就加入内部字典，因此空序列或首次 `MoveNext` 抛异常都会留下空 collection；这与 `ContainsKey` 文档和内部“每个 key 至少一个 value”的不变量冲突。应先成功取得首项再插入，或在零项/异常时回滚新建 key。
     修复：新 key 的内部 value collection 先在未发布状态完整构建，只有至少包含一个 value 时才加入字典；空序列不添加 key，枚举或插入失败也不会留下部分发布的新 key。已有 key 的修改路径在枚举 values 前递增版本，确保循环中的修改和异常路径都会使既有枚举器失效；两个分支通过私有 `AddValues` 复用添加循环。测试覆盖空序列和产生首项后抛异常的枚举器。
 
-71. **[P1] `Deque<T>` 的空队列操作只靠 `Debug.Assert` 防护**
+71. **[P1][已修复] `Deque<T>` 的空队列操作只靠 `Debug.Assert` 防护**
 
     位置：`src/FclEx.Core/System/Collections/Generic/Deque.cs:49-95`。Release 下 `Peek`/`Dequeue` 会访问空数组或已分配数组中的默认槽位，后者还能把 `_size` 减成负数并永久损坏队列状态。应像 BCL 集合一样在空队列上抛 `InvalidOperationException`，并提供 `TryPeekHead`/`TryDequeueHead` 等非抛出 API。
+    修复：四个 `Peek`/`Dequeue` 操作在空 deque 上统一抛 `InvalidOperationException`；新增 head/tail 两端的 `TryPeek` 与 `TryDequeue`。测试覆盖从未分配和已经分配过后重新变空的两种状态，确认失败操作不会破坏 count、head 或 tail。
 
-72. **[P1] `Heap<T>` 在 comparer 抛异常时会损坏计数和堆结构**
+72. **[P1][已修复] `Heap<T>` 在 comparer 抛异常时会损坏计数和堆结构**
 
     位置：`src/FclEx.Core/System/Collections/Generic/Heap.cs:80-87,121-142,233-289`。`Push` 在比较前先增加 `_count`，`Pop` 在下沉比较前先减少计数并清空尾槽；`SiftUp`/`SiftDown` 又边比较边移动元素。自定义 comparer 一旦抛错，集合可能丢元素、出现未初始化项或不再满足堆序。应先计算移动路径再提交，或在异常时恢复原计数、元素和路径。
+    修复：上浮和下沉都拆成“只比较并计算目标/路径”与“不再调用 comparer 的提交”两个阶段；`Push` 在比较成功后才扩容和增加 count，`Pop` 在完整算出路径后才移动元素、清槽并减少 count。`PopPush`/`PushPop` 同样复用事务式下沉。测试让 comparer 在不同比较位置抛错，确认元素顺序、count、capacity、version 和后续堆操作均保持有效。
 
-73. **[P1] `OrderedList` 的公开 bound API 不验证搜索区间**
+73. **[P1][已修复] `OrderedList` 的公开 bound API 不验证搜索区间**
 
     位置：`src/FclEx.Core/System/Collections/Generic/OrderedList.cs:339-389`。负 lower、超过 `Count` 的 upper、以及 lower 大于 upper 都会产生随机索引异常、读取容量内未使用槽位或返回无效边界。应统一验证 `0 <= lower <= upper <= Count`，并让两个方法对非法范围抛出一致、参数名正确的异常。
+    修复：`LowerBound` 与 `UpperBound` 共用范围验证，统一要求 `0 <= lower <= upper <= Count`；越界 bound 抛参数名对应的 `ArgumentOutOfRangeException`，反向范围对 `upper` 抛 `ArgumentException`，并允许 `[Count, Count)` 空范围。内部有界 equality 判断也限制在指定搜索区间内。
 
-74. **[P1] `OrderedList.EqualRange` 永远漏掉最后一个匹配项**
+74. **[P1][已修复] `OrderedList.EqualRange` 永远漏掉最后一个匹配项**
 
     位置：`src/FclEx.Core/System/Collections/Generic/OrderedList.cs:527-537`。`end` 是最后一个匹配项的包含式索引，循环却使用 `i < end`；只有一个匹配项时结果为空，多个匹配项时少一个。应使用半开区间的 `LowerBound`/`UpperBound`，或将循环条件改为包含 end。
+    修复：复核发现把原循环改成 `i <= end` 虽能包含最后一个匹配项，但无匹配时 start/end 都为 `-1`，会读取 `_items[-1]`。最终改用标准的 `[LowerBound(item), UpperBound(item))` 半开区间，重复值完整返回，不存在的值返回空序列。
 
-75. **[P1] `OrderedList.RemoveRange(min, max)` 在反向范围上返回负删除数**
+75. **[P1][已修复] `OrderedList.RemoveRange(min, max)` 在反向范围上返回负删除数**
 
     位置：`src/FclEx.Core/System/Collections/Generic/OrderedList.cs:539-550`。当 `min > max` 时 `end - start` 为负，私有删除方法静默 no-op，公共方法却把负数作为“删除数量”返回。应先验证 comparer 意义上的 `min <= max`，或者明确定义反向范围删除 0 项且返回 0。
+    修复：该 API 表达包含式有效范围，因此 comparer 判定 `min > max` 时抛 `ArgumentException` 并保持列表不变；合法范围继续通过 lower/upper bound 删除全部边界重复项并返回非负删除数。
 
-76. **[P1] `BiDictionary<TKey,TValue>` 在两种类型相同时公共 API 变得不可调用**
+76. **[P1][已修复] `BiDictionary<TKey,TValue>` 在两种类型相同时公共 API 变得不可调用**
 
     位置：`src/FclEx.Core/System/Collections/Generic/BiDictionary.cs:59-86`。当 `TKey` 与 `TValue` 都是 `string` 等同一类型时，两个 `Remove` 和两个 indexer 的参数签名相同，C# 调用方无法凭返回类型消除歧义。类型约束却允许这种实例化。建议提供 `Forward`/`Reverse` 视图，或使用 `GetByKey`、`GetByValue`、`RemoveKey`、`RemoveValue` 等具名方法。
+    修复：增加方向明确的 `GetValue`/`GetKey`、`SetValue`/`SetKey` 和 `RemoveKey`/`RemoveValue`；现有 indexer 与 `Remove` 委托给具名实现以保持单一逻辑。相同 key/value 类型现在可完整查询、更新和删除，测试覆盖 `BiDictionary<string, string>`。
 
-77. **[P1] `StableSort(list, index, count)` 完全忽略 `index`**
+77. **[P1][已修复] `StableSort(list, index, count)` 完全忽略 `index`**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Collections/~Generic/ListExtensions.cs:33-64`。比较读取 `list[a]`/`list[b]`，回写也使用 `list[i]`，因此请求排序中间区间时实际排序的是前缀。所有读取和写入都应加上 `index`，临时数据也只需复制目标区间；空列表仍应先验证 index/count 契约。
+    修复：只复制 `[index, index + count)` 到临时数组，在该数组上稳定排序索引，并写回原区间；前后元素不再受影响。范围验证现在覆盖空列表、负 count、`index == Count` 的空范围和 index/count 越界，比较阶段抛错前也不会修改列表。
 
-78. **[P1] `List.Items`/`SetCount` 以安全名称公开了破坏 `List<T>` 不变量的能力**
+78. **[P1][已修复] `List.Items`/`SetCount` 以安全名称公开了破坏 `List<T>` 不变量的能力**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Collections/~Generic/ListExtensions.cs:96-119`。`Items` 返回整个私有容量数组，`SetCount` 直接写 `_size`/`_version`；调用方可以观察未使用槽位、制造未经初始化的“有效”元素，并依赖跨 runtime 不保证的私有布局。建议删除公共 API；不可替代的低层场景应使用目标框架公开的 `CollectionsMarshal`，并以 `Dangerous` 命名、限制目标框架和记录失效规则。
+    修复：按决定保留方法名，但从普通 list 实例扩展移到 `CollectionsMarshal.Items(list)` 与 `CollectionsMarshal.SetCount(list, count)` 的静态扩展边界；现代 .NET 使用自带的 `CollectionsMarshal.SetCount`，旧目标才提供回填。文档明确容量槽位、版本绕过、后备数组替换、未初始化元素和私有布局风险；测试覆盖后备数组访问与显式初始化后扩 count。
 
-79. **[P2] `List<T>` 的两个 `+` 运算符具有相反的所有权语义**
+79. **[P2][已修复] `List<T>` 的两个 `+` 运算符具有相反的所有权语义**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Collections/~Generic/ListExtensions.cs:179-196`。`list + otherList` 创建新列表，而 `list + item` 原地修改左操作数并返回同一实例；从相同符号无法判断是否产生副作用。建议让 `+` 始终是纯连接操作，原地修改只通过 `Add`/`AddRange`/`+=` 表达，或直接删除扩展运算符。
+    修复：复核确认 `list + item` 已改为创建新列表，`+` 的两个 overload 现在都不修改输入；新增的 `+= item` 与 `+= IEnumerable<T>` 明确执行原地添加，并经测试确认变量仍引用原 list。`list + list` 内部也改为普通 `AddRange`，不再依赖危险后备数组 API。
 
-80. **[P1] `BitsToInt` 对任何输入都返回 0**
+80. **[P1][已修复] `BitsToInt` 对任何输入都返回 0**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Collections/~Generic/EnumerableExtensions.cs:135-144`。累加器从 0 开始却使用按位与 `&=`，所以任何 bit 都无法被设置。应使用 `|=`，同时明确首项代表最低位还是最高位，并拒绝或定义超过 32 位时的行为。
+    修复：改用按位或设置 bit，明确首项是最低有效位，第 32 项对应 `int` 符号位；空序列返回 0，超过 32 项抛 `ArgumentException`，null 输入抛 `ArgumentNullException`。测试覆盖普通位型、符号位和超长序列。
 
 81. **[P1] `Enumerable.Split(parts)` 的延迟查询捕获了跨枚举共享的可变索引**
 

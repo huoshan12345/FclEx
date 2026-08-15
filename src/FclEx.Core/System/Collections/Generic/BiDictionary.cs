@@ -35,6 +35,12 @@ public class BiDictionary<TKey, TValue> : IDictionary<TKey, TValue> where TKey :
     public bool ContainsKey(TKey key) => _dic1.ContainsKey(key);
     public bool ContainsValue(TValue value) => _dic2.ContainsKey(value);
 
+    /// <summary>Gets the value associated with the specified key.</summary>
+    public TValue GetValue(TKey key) => _dic1[key];
+
+    /// <summary>Gets the key associated with the specified value.</summary>
+    public TKey GetKey(TValue value) => _dic2[value];
+
     public void Clear()
     {
         _dic1.Clear();
@@ -58,6 +64,17 @@ public class BiDictionary<TKey, TValue> : IDictionary<TKey, TValue> where TKey :
 
     public bool Remove(TKey key)
     {
+        return RemoveKey(key);
+    }
+
+    public bool Remove(TValue value)
+    {
+        return RemoveValue(value);
+    }
+
+    /// <summary>Removes the mapping identified by its key.</summary>
+    public bool RemoveKey(TKey key)
+    {
         if (!_dic1.Remove(key, out var value))
             return false;
 
@@ -65,7 +82,8 @@ public class BiDictionary<TKey, TValue> : IDictionary<TKey, TValue> where TKey :
         return true;
     }
 
-    public bool Remove(TValue value)
+    /// <summary>Removes the mapping identified by its value.</summary>
+    public bool RemoveValue(TValue value)
     {
         if (!_dic2.Remove(value, out var key))
             return false;
@@ -76,14 +94,26 @@ public class BiDictionary<TKey, TValue> : IDictionary<TKey, TValue> where TKey :
 
     public TValue this[TKey key]
     {
-        get => _dic1[key];
-        set => SetMapping(_dic1, _dic2, key, value, "An item with the same value has already been added.");
+        get => GetValue(key);
+        set => SetValue(key, value);
     }
 
-    public TKey this[TValue v]
+    public TKey this[TValue lookupValue]
     {
-        get => _dic2[v];
-        set => SetMapping(_dic2, _dic1, v, value, "An item with the same key has already been added.");
+        get => GetKey(lookupValue);
+        set => SetKey(lookupValue, value);
+    }
+
+    /// <summary>Adds or replaces the mapping identified by its key.</summary>
+    public void SetValue(TKey key, TValue value)
+    {
+        SetMapping(_dic1, _dic2, key, value, "An item with the same value has already been added.");
+    }
+
+    /// <summary>Adds or replaces the mapping identified by its value.</summary>
+    public void SetKey(TValue value, TKey key)
+    {
+        SetMapping(_dic2, _dic1, value, key, "An item with the same key has already been added.");
     }
 
     private static void SetMapping<TForward, TReverse>(
