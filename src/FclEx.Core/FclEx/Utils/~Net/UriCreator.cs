@@ -145,7 +145,7 @@ public class UriCreator
     {
         get => _builder.Fragment;
         // nfx will automatically add a '#' if the fragment is not empty, so we need to trim it to avoid duplication.
-        set => _builder.Fragment = value.TrimStart('#'); 
+        set => _builder.Fragment = value.TrimStart('#');
     }
 
     public Uri Build()
@@ -192,8 +192,8 @@ public class UriCreator
             (-1, -1) => (uri, "", ""),
             (_, -1) => (uri[..idx1], uri[(idx1 + 1)..], ""),
             (-1, _) => (uri[..idx2], "", uri[(idx2 + 1)..]),
-            (_, _) when idx1 >= idx2 => throw new ArgumentException("In URIs with a query and a fragment, the fragment should follows the query"),
-            _ => (uri[..idx1], uri[(idx1 + 1)..idx2], uri[(idx2 + 1)..]),
+            (_, _) when idx1 < idx2 => (uri[..idx1], uri[(idx1 + 1)..idx2], uri[(idx2 + 1)..]),
+            _ => (uri[..idx2], uri[(idx2 + 1)..idx1], uri[(idx1 + 1)..]), // '?' after '#'
         };
     }
 }
