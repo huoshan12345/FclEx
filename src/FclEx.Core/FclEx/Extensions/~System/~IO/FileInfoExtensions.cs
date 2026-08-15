@@ -41,7 +41,7 @@ public static class FileInfoExtensions
             if (IsIgnoredDuplicate(source, destination, options))
                 return destination;
 
-            await CopyContentsAsync(source, destination, options.BufferSize, FileMode.Create, cancellationToken).ConfigureAwait(false);
+            await CopyContentsAsync(source, destination, options.BufferSize, FileMode.Create, cancellationToken).NoCapture();
             destination.Refresh();
             return destination;
         }
@@ -66,7 +66,7 @@ public static class FileInfoExtensions
             }
         }
 
-        var stagingFile = await CreateStagedCopyAsync(source, candidate, options.BufferSize, cancellationToken).ConfigureAwait(false);
+        var stagingFile = await CreateStagedCopyAsync(source, candidate, options.BufferSize, cancellationToken).NoCapture();
         var moved = false;
         try
         {
@@ -127,7 +127,7 @@ public static class FileInfoExtensions
         var directoryName = destination.DirectoryName
                             ?? throw new InvalidOperationException("The destination has no containing directory.");
         var stagingFile = new FileInfo(Path.Combine(directoryName, $".fclex-{Guid.NewGuid():N}.tmp"));
-        await CopyContentsAsync(source, stagingFile, bufferSize, FileMode.CreateNew, cancellationToken).ConfigureAwait(false);
+        await CopyContentsAsync(source, stagingFile, bufferSize, FileMode.CreateNew, cancellationToken).NoCapture();
         return stagingFile;
     }
 
@@ -152,7 +152,7 @@ public static class FileInfoExtensions
             using var destinationStream = new FileStream(
                 destination.FullName, destinationMode, FileAccess.Write, FileShare.None, bufferSize, true);
             removeOnFailure = destinationMode == FileMode.CreateNew;
-            await sourceStream.CopyToAsync(destinationStream, bufferSize, cancellationToken).ConfigureAwait(false);
+            await sourceStream.CopyToAsync(destinationStream, bufferSize, cancellationToken).NoCapture();
         }
         catch
         {

@@ -94,24 +94,7 @@ public class TaskHelperTests
         Assert.Equal(new InternalClass(42), result);
         Assert.Equal(1, source.ConsumptionCount);
     }
-
-    [Fact]
-    public async Task RunAsync_ShouldInvokeTheOperationOnTheCallingContext()
-    {
-        var callingThread = Environment.CurrentManagedThreadId;
-        var operationThread = -1;
-
-        await TaskHelper.RunAsync(
-            _ =>
-            {
-                operationThread = Environment.CurrentManagedThreadId;
-                return Task.CompletedTask;
-            },
-            TimeSpan.FromSeconds(1));
-
-        Assert.Equal(callingThread, operationThread);
-    }
-
+    
     [Fact]
     public async Task RunAsync_ShouldCancelTheOperationAndThrowOnTimeout()
     {
@@ -159,9 +142,9 @@ public class TaskHelperTests
     }
 
     [Fact]
-    public async Task RunValueTaskAsync_ShouldReturnResult()
+    public async Task RunAsync_ValueTask_ShouldReturnResult()
     {
-        var result = await TaskHelper.RunValueTaskAsync(_ => ValueTask.FromResult(42));
+        var result = await TaskHelper.RunAsync(_ => ValueTask.FromResult(42).AsTask());
 
         Assert.Equal(42, result);
     }

@@ -16,7 +16,7 @@ public class AsyncDisposable : IAsyncDisposable
         if (disposeTask is not null)
             return new ValueTask(disposeTask);
 
-        var completion = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         disposeTask = Interlocked.CompareExchange(ref _disposeTask, completion.Task, null);
         if (disposeTask is not null)
             return new ValueTask(disposeTask);
@@ -27,14 +27,12 @@ public class AsyncDisposable : IAsyncDisposable
         return new ValueTask(completion.Task);
     }
 
-    private static async Task CompleteDisposalAsync(
-        Func<Task> disposeBody,
-        TaskCompletionSource<object?> completion)
+    private static async Task CompleteDisposalAsync(Func<Task> disposeBody, TaskCompletionSource completion)
     {
         try
         {
-            await disposeBody().ConfigureAwait(false);
-            completion.TrySetResult(null);
+            await disposeBody().NoCapture();
+            completion.TrySetResult();
         }
         catch (OperationCanceledException)
         {

@@ -95,7 +95,8 @@ public sealed class AsyncTimer : IAsyncDisposable
             _completion = Task.Run(() => RunLoopAsync(
                 _runCancellation.Token,
                 cancellationToken,
-                _stopCancellation.Token));
+                _stopCancellation.Token),
+                default);
             return _completion;
         }
     }
@@ -119,7 +120,7 @@ public sealed class AsyncTimer : IAsyncDisposable
 
         if (disposeTask is not null)
         {
-            await disposeTask.ConfigureAwait(false);
+            await disposeTask.NoCapture();
             return;
         }
 
@@ -136,7 +137,7 @@ public sealed class AsyncTimer : IAsyncDisposable
             cancellationFailure = ExceptionDispatchInfo.Capture(ex);
         }
 
-        await completion.ConfigureAwait(false);
+        await completion.NoCapture();
         cancellationFailure?.Throw();
     }
 
@@ -147,14 +148,14 @@ public sealed class AsyncTimer : IAsyncDisposable
         Task? completion;
         CancellationTokenSource? stopCancellation;
         CancellationTokenSource? runCancellation;
-        TaskCompletionSource<object?>? disposalCompletion = null;
+        TaskCompletionSource? disposalCompletion = null;
 
         lock (_sync)
         {
             disposeTask = _disposeTask;
             if (disposeTask is null)
             {
-                disposalCompletion = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+                disposalCompletion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                 disposeTask = disposalCompletion.Task;
                 _disposeTask = disposeTask;
                 _disposed = true;
@@ -167,7 +168,6 @@ public sealed class AsyncTimer : IAsyncDisposable
 
         if (disposalCompletion is not null)
         {
-            GC.SuppressFinalize(this);
             _ = CompleteDisposalAsync(
                 completion,
                 stopCancellation,
@@ -186,14 +186,14 @@ public sealed class AsyncTimer : IAsyncDisposable
         try
         {
             if (DueTime > TimeSpan.Zero)
-                await Task.Delay(DueTime, cancellationToken).ConfigureAwait(false);
+                await Task.Delay(DueTime, cancellationToken).NoCapture();
 
             while (true)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 try
                 {
-                    await _callback(cancellationToken).ConfigureAwait(false);
+                    await _callback(cancellationToken).NoCapture();
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
@@ -201,10 +201,10 @@ public sealed class AsyncTimer : IAsyncDisposable
                 }
                 catch (Exception ex) when (_handleExceptionAsync is not null)
                 {
-                    await _handleExceptionAsync(ex, cancellationToken).ConfigureAwait(false);
+                    await _handleExceptionAsync(ex, cancellationToken).NoCapture();
                 }
 
-                await Task.Delay(Period, cancellationToken).ConfigureAwait(false);
+                await Task.Delay(Period, cancellationToken).NoCapture();
             }
         }
         catch (OperationCanceledException) when (
@@ -215,11 +215,11 @@ public sealed class AsyncTimer : IAsyncDisposable
         }
     }
 
-    private async Task CompleteDisposalAsync(
+    private static async Task CompleteDisposalAsync(
         Task? completion,
         CancellationTokenSource? stopCancellation,
         CancellationTokenSource? runCancellation,
-        TaskCompletionSource<object?> disposalCompletion)
+        TaskCompletionSource disposalCompletion)
     {
         Exception? failure = null;
         try
@@ -237,7 +237,7 @@ public sealed class AsyncTimer : IAsyncDisposable
             {
                 try
                 {
-                    await completion.ConfigureAwait(false);
+                    await completion.NoCapture();
                 }
                 catch (OperationCanceledException)
                 {
@@ -256,7 +256,7 @@ public sealed class AsyncTimer : IAsyncDisposable
         }
 
         if (failure is null)
-            disposalCompletion.TrySetResult(null);
+            disposalCompletion.TrySetResult();
         else
             disposalCompletion.TrySetException(failure);
     }

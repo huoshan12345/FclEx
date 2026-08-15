@@ -41,8 +41,8 @@ public class ProcessInvoker(string fileName, Func<string, IReadOnlyList<string>>
 
         var standardOutput = new ConcurrentQueue<string>();
         var standardError = new ConcurrentQueue<string>();
-        var outputCompleted = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var errorCompleted = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var outputCompleted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var errorCompleted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         process.OutputDataReceived += (_, e) => CaptureOutput(e, standardOutput, outputCompleted);
         process.ErrorDataReceived += (_, e) => CaptureOutput(e, standardError, errorCompleted);
         process.Start();
@@ -93,10 +93,10 @@ public class ProcessInvoker(string fileName, Func<string, IReadOnlyList<string>>
         static void CaptureOutput(
             DataReceivedEventArgs args,
             ConcurrentQueue<string> destination,
-            TaskCompletionSource<object?> completion)
+            TaskCompletionSource completion)
         {
             if (args.Data is null)
-                completion.TrySetResult(null);
+                completion.TrySetResult();
             else
                 destination.Enqueue(args.Data);
         }

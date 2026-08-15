@@ -218,7 +218,7 @@ public sealed class RetryingBatchConsumer<T> : IAsyncDisposable
         if (abandoned is not null && abandoned.Count > 0)
             Notify(ItemsAbandoned, abandoned, nameof(ItemsAbandoned));
 
-        await completion.ConfigureAwait(false);
+        await completion.NoCapture();
         cancellationFailure?.Throw();
     }
 
@@ -228,7 +228,7 @@ public sealed class RetryingBatchConsumer<T> : IAsyncDisposable
         CancellationTokenSource? cancellation;
         try
         {
-            await StopAsync().ConfigureAwait(false);
+            await StopAsync().NoCapture();
         }
         finally
         {
@@ -270,9 +270,9 @@ public sealed class RetryingBatchConsumer<T> : IAsyncDisposable
                 if (state == WorkState.Wait)
                 {
                     if (waitTimeout is { } timeout)
-                        _ = await _signal.WaitAsync(timeout, cancellationToken).ConfigureAwait(false);
+                        _ = await _signal.WaitAsync(timeout, cancellationToken).NoCapture();
                     else
-                        await _signal.WaitAsync(cancellationToken).ConfigureAwait(false);
+                        await _signal.WaitAsync(cancellationToken).NoCapture();
                     continue;
                 }
 
@@ -280,7 +280,7 @@ public sealed class RetryingBatchConsumer<T> : IAsyncDisposable
                 _sinceLastConsumption = ValueStopwatch.StartNew();
                 try
                 {
-                    await _consumeAsync(segment.Items, cancellationToken).ConfigureAwait(false);
+                    await _consumeAsync(segment.Items, cancellationToken).NoCapture();
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {

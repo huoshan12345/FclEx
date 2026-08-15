@@ -14,12 +14,12 @@ public static class ValueTaskExtensions
 
     public static ConfiguredValueTaskAwaitable<T> NoCapture<T>(this ValueTask<T> task)
     {
-        return task.ConfigureAwait(false);
+        return task.NoCapture();
     }
 
     public static ConfiguredValueTaskAwaitable NoCapture(this ValueTask task)
     {
-        return task.ConfigureAwait(false);
+        return task.NoCapture();
     }
 
     extension(ValueTask)

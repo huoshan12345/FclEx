@@ -115,13 +115,13 @@ public static class RetryHelper
         await ExecuteAsync(
             async token =>
             {
-                await operation(token).ConfigureAwait(false);
+                await operation(token).NoCapture();
                 return true;
             },
             maxRetryCount,
             retryDelay,
             shouldRetry,
-            cancellationToken).ConfigureAwait(false);
+            cancellationToken).NoCapture();
     }
 
     /// <summary>
@@ -156,7 +156,7 @@ public static class RetryHelper
 
             try
             {
-                return await operation(cancellationToken).ConfigureAwait(false);
+                return await operation(cancellationToken).NoCapture();
             }
             catch (OperationCanceledException)
             {
@@ -167,7 +167,7 @@ public static class RetryHelper
                 (shouldRetry?.Invoke(exception) ?? true))
             {
                 if (retryDelay > TimeSpan.Zero)
-                    await Task.Delay(retryDelay, cancellationToken).ConfigureAwait(false);
+                    await Task.Delay(retryDelay, cancellationToken).NoCapture();
             }
         }
     }

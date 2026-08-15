@@ -26,9 +26,9 @@ partial class EnumerableExtensions
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (isFirstItem == false && delayBetweenItems > TimeSpan.Zero)
-                await Task.Delay(delayBetweenItems, cancellationToken).ConfigureAwait(false);
+                await Task.Delay(delayBetweenItems, cancellationToken).NoCapture();
 
-            await operation(item, cancellationToken).ConfigureAwait(false);
+            await operation(item, cancellationToken).NoCapture();
             isFirstItem = false;
         }
     }
@@ -55,9 +55,9 @@ partial class EnumerableExtensions
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (isFirstItem == false && delayBetweenItems > TimeSpan.Zero)
-                await Task.Delay(delayBetweenItems, cancellationToken).ConfigureAwait(false);
+                await Task.Delay(delayBetweenItems, cancellationToken).NoCapture();
 
-            results.Add(await operation(item, cancellationToken).ConfigureAwait(false));
+            results.Add(await operation(item, cancellationToken).NoCapture());
             isFirstItem = false;
         }
 
@@ -90,7 +90,7 @@ partial class EnumerableExtensions
         for (var i = 0; i < workers.Length; i++)
             workers[i] = RunWorkerAsync();
 
-        await Task.WhenAll(workers).ConfigureAwait(false);
+        await Task.WhenAll(workers).NoCapture();
         return;
 
         async Task RunWorkerAsync()
@@ -99,7 +99,7 @@ partial class EnumerableExtensions
             {
                 while (TryTakeNext(out var item))
                 {
-                    await operation(item, cancellationToken).ConfigureAwait(false);
+                    await operation(item, cancellationToken).NoCapture();
                 }
             }
             catch
@@ -167,7 +167,7 @@ partial class EnumerableExtensions
         for (var i = 0; i < workers.Length; i++)
             workers[i] = RunWorkerAsync();
 
-        await Task.WhenAll(workers).ConfigureAwait(false);
+        await Task.WhenAll(workers).NoCapture();
         return results.ToArray();
 
         async Task RunWorkerAsync()
@@ -176,7 +176,7 @@ partial class EnumerableExtensions
             {
                 while (TryTakeNext(out var item, out var index))
                 {
-                    var result = await operation(item, cancellationToken).ConfigureAwait(false);
+                    var result = await operation(item, cancellationToken).NoCapture();
                     lock (gate)
                         results[index] = result;
                 }
@@ -234,7 +234,7 @@ partial class EnumerableExtensions
         var remainingTasks = tasks.ToList();
         while (remainingTasks.Count > 0)
         {
-            var completedTask = await Task.WhenAny(remainingTasks).ConfigureAwait(false);
+            var completedTask = await Task.WhenAny(remainingTasks).NoCapture();
             remainingTasks.Remove(completedTask);
 
             if (completedTask.Status == TaskStatus.RanToCompletion)
@@ -258,7 +258,7 @@ partial class EnumerableExtensions
         Check.NotNull(predicate);
         Check.NotNull(defaultResultFunc);
 
-        var result = await TryGetFirstSuccessfulResultAsync(tasks, predicate).ConfigureAwait(false);
+        var result = await TryGetFirstSuccessfulResultAsync(tasks, predicate).NoCapture();
         return result.HasResult ? result.Result : defaultResultFunc();
     }
 
@@ -267,7 +267,7 @@ partial class EnumerableExtensions
         Check.NotNull(tasks);
         Check.NotNull(predicate);
 
-        var result = await TryGetFirstSuccessfulResultAsync(tasks, predicate).ConfigureAwait(false);
+        var result = await TryGetFirstSuccessfulResultAsync(tasks, predicate).NoCapture();
         return result.HasResult
             ? result.Result
             : throw new InvalidOperationException("No task produced an acceptable successful result.");
@@ -280,7 +280,7 @@ partial class EnumerableExtensions
         var remainingTasks = tasks.ToList();
         while (remainingTasks.Count > 0)
         {
-            var completedTask = await Task.WhenAny(remainingTasks).ConfigureAwait(false);
+            var completedTask = await Task.WhenAny(remainingTasks).NoCapture();
             remainingTasks.Remove(completedTask);
 
             if (completedTask.Status == TaskStatus.RanToCompletion)
@@ -317,9 +317,9 @@ partial class EnumerableExtensions
 
         while (remainingTasks.Count > 0)
         {
-            var completedTask = await Task.WhenAny(remainingTasks).ConfigureAwait(false);
+            var completedTask = await Task.WhenAny(remainingTasks).NoCapture();
             remainingTasks.Remove(completedTask);
-            await completedTask.ConfigureAwait(false);
+            await completedTask.NoCapture();
         }
 
         static void ObserveFault(Task task)

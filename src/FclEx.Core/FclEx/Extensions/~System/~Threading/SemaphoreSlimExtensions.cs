@@ -27,7 +27,7 @@ public static class SemaphoreSlimExtensions
         {
             for (; acquiredCount < count; acquiredCount++)
             {
-                if (await semaphore.WaitAsync(timeout, cancellationToken).ConfigureAwait(false) == false)
+                if (await semaphore.WaitAsync(timeout, cancellationToken).NoCapture() == false)
                     return false;
             }
 

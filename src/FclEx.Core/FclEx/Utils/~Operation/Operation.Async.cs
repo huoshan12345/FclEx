@@ -56,7 +56,6 @@ public static partial class Operation
     /// <returns>A task that resolves to the flattened result. The outer execution elapsed time is used when flattening.</returns>
     public static Task<OperationResult> ExecuteAsync(Func<Task<OperationResult>> action, TimeSpan? timeout = null)
     {
-        Check.NotNull(action);
         return ExecuteAsync<OperationResult>(action, timeout).Then(m => m.Flatten());
     }
 
@@ -131,30 +130,7 @@ public static partial class Operation
     /// <returns>A value task that resolves to the operation result.</returns>
     public static async ValueTask<OperationResult<T>> ExecuteValueAsync<T>(Func<ValueTask<T>> action, TimeSpan? timeout = null)
     {
-        Check.NotNull(action);
-
-        var watch = ValueStopwatch.StartNew();
-        try
-        {
-            var result = await TaskHelper.RunValueTaskAsync(_ => action(), timeout).NoCapture();
-            return (result, watch.GetElapsedTime());
-        }
-        catch (Exception ex)
-        {
-            return (ex, watch.GetElapsedTime());
-        }
-    }
-
-    /// <summary>
-    /// Awaits a <see cref="ValueTask{TResult}"/> operation-result factory and flattens the nested result.
-    /// </summary>
-    /// <param name="action">The asynchronous operation-result factory to execute.</param>
-    /// <param name="timeout">The optional maximum wait time.</param>
-    /// <returns>A value task that resolves to the flattened result. The outer execution elapsed time is used when flattening.</returns>
-    public static async ValueTask<OperationResult> ExecuteValueAsync(Func<ValueTask<OperationResult>> action, TimeSpan? timeout = null)
-    {
-        Check.NotNull(action);
-        return (await ExecuteValueAsync<OperationResult>(action, timeout).NoCapture()).Flatten();
+        return await ExecuteAsync(() => action().AsTask(), timeout).NoCapture();
     }
 
     /// <summary>
@@ -165,18 +141,18 @@ public static partial class Operation
     /// <returns>A value task that resolves to the operation result.</returns>
     public static async ValueTask<OperationResult> ExecuteValueAsync(Func<ValueTask> action, TimeSpan? timeout = null)
     {
-        Check.NotNull(action);
+        return await ExecuteAsync(() => action().AsTask(), timeout).NoCapture();
+    }
 
-        var watch = ValueStopwatch.StartNew();
-        try
-        {
-            await TaskHelper.RunValueTaskAsync(_ => action(), timeout).NoCapture();
-            return Success(watch.GetElapsedTime());
-        }
-        catch (Exception ex)
-        {
-            return (ex, watch.GetElapsedTime());
-        }
+    /// <summary>
+    /// Awaits a <see cref="ValueTask{TResult}"/> operation-result factory and flattens the nested result.
+    /// </summary>
+    /// <param name="action">The asynchronous operation-result factory to execute.</param>
+    /// <param name="timeout">The optional maximum wait time.</param>
+    /// <returns>A value task that resolves to the flattened result. The outer execution elapsed time is used when flattening.</returns>
+    public static async ValueTask<OperationResult> ExecuteValueAsync(Func<ValueTask<OperationResult>> action, TimeSpan? timeout = null)
+    {
+        return await ExecuteAsync(() => action().AsTask(), timeout).NoCapture();
     }
 
     /// <summary>
@@ -188,7 +164,6 @@ public static partial class Operation
     /// <returns>A value task that resolves to the flattened result. The outer execution elapsed time is used when flattening.</returns>
     public static async ValueTask<OperationResult<T>> ExecuteValueAsync<T>(Func<ValueTask<OperationResult<T>>> action, TimeSpan? timeout = null)
     {
-        Check.NotNull(action);
-        return (await ExecuteValueAsync<OperationResult<T>>(action, timeout).NoCapture()).Flatten();
+        return await ExecuteAsync(() => action().AsTask(), timeout).NoCapture();
     }
 }

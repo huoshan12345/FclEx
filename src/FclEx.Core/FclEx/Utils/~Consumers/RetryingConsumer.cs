@@ -184,7 +184,7 @@ public sealed class RetryingConsumer<T> : IAsyncDisposable
         if (abandoned is not null && abandoned.Count > 0)
             Notify(ItemsAbandoned, abandoned, nameof(ItemsAbandoned));
 
-        await completion.ConfigureAwait(false);
+        await completion.NoCapture();
         cancellationFailure?.Throw();
     }
 
@@ -194,7 +194,7 @@ public sealed class RetryingConsumer<T> : IAsyncDisposable
         CancellationTokenSource? cancellation;
         try
         {
-            await StopAsync().ConfigureAwait(false);
+            await StopAsync().NoCapture();
         }
         finally
         {
@@ -232,14 +232,14 @@ public sealed class RetryingConsumer<T> : IAsyncDisposable
                     if (ShouldComplete())
                         return;
 
-                    await _signal.WaitAsync(cancellationToken).ConfigureAwait(false);
+                    await _signal.WaitAsync(cancellationToken).NoCapture();
                     continue;
                 }
 
                 activeItem = queuedItem;
                 try
                 {
-                    await _consumeAsync(queuedItem.Item, cancellationToken).ConfigureAwait(false);
+                    await _consumeAsync(queuedItem.Item, cancellationToken).NoCapture();
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {

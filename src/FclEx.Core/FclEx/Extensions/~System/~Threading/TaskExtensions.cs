@@ -42,7 +42,7 @@ public static partial class TaskExtensions
                 return;
             try
             {
-                await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+                await Task.Delay(delay, cancellationToken).NoCapture();
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
         }

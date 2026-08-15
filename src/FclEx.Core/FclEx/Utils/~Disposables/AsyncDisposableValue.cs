@@ -30,7 +30,7 @@ public class AsyncDisposableValue<T> : IAsyncDisposable
         if (disposeTask is not null)
             return new ValueTask(disposeTask);
 
-        var completion = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         disposeTask = Interlocked.CompareExchange(ref _disposeTask, completion.Task, null);
         if (disposeTask is not null)
             return new ValueTask(disposeTask);
@@ -40,24 +40,24 @@ public class AsyncDisposableValue<T> : IAsyncDisposable
         return new ValueTask(completion.Task);
     }
 
-    private async Task CompleteDisposalAsync(TaskCompletionSource<object?> completion)
+    private async Task CompleteDisposalAsync(TaskCompletionSource completion)
     {
         try
         {
             if (_disposeAction is not null)
             {
-                await _disposeAction.Invoke(_value).ConfigureAwait(false);
+                await _disposeAction.Invoke(_value).NoCapture();
             }
             else if (_value is IAsyncDisposable asyncDisposable)
             {
-                await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+                await asyncDisposable.DisposeAsync().NoCapture();
             }
             else if (_value is IDisposable disposable)
             {
                 disposable.Dispose();
             }
 
-            completion.TrySetResult(null);
+            completion.TrySetResult();
         }
         catch (OperationCanceledException)
         {

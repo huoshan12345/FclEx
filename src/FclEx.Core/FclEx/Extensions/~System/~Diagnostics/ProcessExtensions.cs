@@ -14,8 +14,7 @@ public static class ProcessExtensions
         if (process.HasExited)
             return;
 
-        var tcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
-        void OnExited(object? sender, EventArgs args) => tcs.TrySetResult(null);
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         process.EnableRaisingEvents = true;
         process.Exited += OnExited;
@@ -32,6 +31,8 @@ public static class ProcessExtensions
         {
             process.Exited -= OnExited;
         }
+
+        void OnExited(object? sender, EventArgs args) => tcs.TrySetResult();
     }
 #endif
 }
