@@ -680,27 +680,15 @@ public class MultiValueDictionary<TKey, TValue> :
 
         if (_dictionary.TryGetValue(key, out InnerCollectionView collection))
         {
-            try
-            {
-                foreach (TValue value in values)
-                {
-                    collection.AddValue(value);
-                }
-            }
-            finally
-            {
-                _version++;
-            }
+            _version++;
+            collection.AddRange(values);
             return;
         }
 
         // Build a new value collection before publishing the key. This preserves the invariant that every key has at
         // least one value and also leaves the dictionary unchanged if enumeration or value insertion fails.
         collection = new InnerCollectionView(key, NewCollectionFactory());
-        foreach (TValue value in values)
-        {
-            collection.AddValue(value);
-        }
+        collection.AddRange(values);
 
         if (collection.Count != 0)
             _dictionary.Add(key, collection);

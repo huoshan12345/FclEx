@@ -14,12 +14,10 @@ public static class CollectionExtensions
         return false;
     }
 
-    public static void AddRangeIfNotNull<T>(this ICollection<T> collection, IEnumerable<T>? items)
+    public static void AddRange<T>(this ICollection<T> collection, IEnumerable<T> items)
     {
         Check.NotNull(collection);
-
-        if (items == null)
-            return;
+        Check.NotNull(items);
 
         if (collection is List<T> list)
         {
@@ -32,6 +30,14 @@ public static class CollectionExtensions
                 collection.Add(item);
             }
         }
+    }
+
+    public static void AddRangeIfNotNull<T>(this ICollection<T> collection, IEnumerable<T>? items)
+    {
+        if (items == null)
+            return;
+
+        collection.AddRange(items);
     }
 
     public static int CountSafely<T>(this ICollection<T>? col)

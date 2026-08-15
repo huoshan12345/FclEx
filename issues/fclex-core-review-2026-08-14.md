@@ -319,7 +319,7 @@
 70. **[P1][已修复] `MultiValueDictionary.AddRange` 可以留下没有任何 value 的 key**
 
     位置：`src/FclEx.Core/System/Collections/Generic/MultiValueDictionary.cs:674-695`。新 key 在枚举 `values` 前就加入内部字典，因此空序列或首次 `MoveNext` 抛异常都会留下空 collection；这与 `ContainsKey` 文档和内部“每个 key 至少一个 value”的不变量冲突。应先成功取得首项再插入，或在零项/异常时回滚新建 key。
-    修复：新 key 的内部 value collection 先在未发布状态完整构建，只有至少包含一个 value 时才加入字典；空序列不添加 key，枚举或插入失败也不会留下部分发布的新 key。已有 key 的修改路径用 `finally` 维护版本失效契约。测试覆盖空序列和产生首项后抛异常的枚举器。
+    修复：新 key 的内部 value collection 先在未发布状态完整构建，只有至少包含一个 value 时才加入字典；空序列不添加 key，枚举或插入失败也不会留下部分发布的新 key。已有 key 的修改路径在枚举 values 前递增版本，确保循环中的修改和异常路径都会使既有枚举器失效；两个分支通过私有 `AddValues` 复用添加循环。测试覆盖空序列和产生首项后抛异常的枚举器。
 
 71. **[P1] `Deque<T>` 的空队列操作只靠 `Debug.Assert` 防护**
 
