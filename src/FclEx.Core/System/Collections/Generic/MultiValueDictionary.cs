@@ -681,14 +681,14 @@ public class MultiValueDictionary<TKey, TValue> :
         if (_dictionary.TryGetValue(key, out InnerCollectionView collection))
         {
             _version++;
-            collection.AddRange(values);
+            collection.AddValues(values);
             return;
         }
 
         // Build a new value collection before publishing the key. This preserves the invariant that every key has at
         // least one value and also leaves the dictionary unchanged if enumeration or value insertion fails.
         collection = new InnerCollectionView(key, NewCollectionFactory());
-        collection.AddRange(values);
+        collection.AddValues(values);
 
         if (collection.Count != 0)
             _dictionary.Add(key, collection);
@@ -1038,6 +1038,12 @@ public class MultiValueDictionary<TKey, TValue> :
 
         public void AddValue(TValue item) => _collection.Add(item);
 
+        public void AddValues(IEnumerable<TValue> items)
+        {
+            foreach (var item in items)
+                _collection.Add(item);
+        }
+
         public bool RemoveValue(TValue item) => _collection.Remove(item);
 
         #endregion
@@ -1081,7 +1087,6 @@ public class MultiValueDictionary<TKey, TValue> :
         ======================================================================*/
 
         void ICollection<TValue>.Add(TValue item) => throw new NotSupportedException(Strings.ReadOnly_Modification);
-
 
         void ICollection<TValue>.Clear() => throw new NotSupportedException(Strings.ReadOnly_Modification);
 
