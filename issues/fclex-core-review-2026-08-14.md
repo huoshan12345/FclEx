@@ -271,45 +271,55 @@
     位置：`src/FclEx.Core/System/Text/Json/Serialization/ObjectJsonConverter.cs:55-67`。超出 `Int64` 或带高精度小数的数字统一降为 `double`，可能改变值；超出 double 范围但语法合法的 JSON 数字还会被拒绝。通用 object 模型应保留为 `JsonElement`/原始数字文本，或提供明确可配置的 `decimal`、大整数和浮点策略，而不是无提示地选 `double`。
     修复：数字策略改为：优先 `int`/`long`；更大的整数字面量使用 `BigInteger`；非整数字面量仍优先保留可精确表达的 `double`，当转成 double 会损失且 decimal 可表达时改用 `decimal`；decimal/double 都无法承载但能精确解析为整数的指数形式也使用 `BigInteger`。写入时显式把 `BigInteger` 输出为 JSON number，避免默认序列化为对象。测试覆盖 long、超大整数、高精度 decimal 及二者的写入，并保留普通小数和科学计数法的既有 double 行为。
 
-61. **[P2] 整数随机 API 的参数模型无法生成类型的完整取值域**
+61. **[P2][已修复] 整数随机 API 的参数模型无法生成类型的完整取值域**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/RandomExtensions.cs:58-100`。range API 采用 exclusive `max`，但 `byte`、`ushort`、`uint`、`ulong` 的参数类型无法表示 `MaxValue + 1`，默认值因此永远不会生成各自的 `MaxValue`；`sbyte` 和 `short` 的无参语义还只覆盖非负数。建议把“完整位域随机值”做成无参 overload（直接填充字节），range overload 保持并清楚记录半开区间。
+    修复：`NextSByte`、`NextByte`、`NextInt16`、`NextUInt16`、`NextUInt32` 和 `NextUInt64` 的无参 overload 现在直接填充完整位域，range overload 改为必须显式给出两个边界并继续采用 `[min, max)`。`NextInt64()` 保持与 BCL 同名 API 一致的非负语义；需要完整 `long` 位域时使用 `NextUnmanaged<long>()`。测试用全 1 位模式确认各自的负值或 `MaxValue` 可达。
 
-62. **[P1] `NextSingle` 可能返回声称排除的上界**
+62. **[P1][已修复] `NextSingle` 可能返回声称排除的上界**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/RandomExtensions.cs:116-126`。先把 `[0,1)` 的 double 转成 float，足够接近 1 的值会舍入成 `1f`，最终结果等于 `max`。应使用能保证 `< 1f` 的单精度采样算法（现代目标直接使用 BCL `Random.NextSingle`），并针对相邻浮点值和上界增加性质测试。
+    修复：把该 API 收窄为只在 .NET 6 以前提供的 BCL `Random.NextSingle()` 回填，不再混入额外的 range overload；实现从 24 位随机整数构造可精确表示的 `[0, 1)` 单精度值，最大采样也不会舍入到 `1f`。现代目标直接使用 BCL 实例方法，旧目标回归测试覆盖最大采样。
 
-63. **[P2] `Random.Next<T>` 的对象图生成职责不适合放在基础库的通用随机 API 中**
+63. **[P2][已确认保留] `Random.Next<T>` 的对象图生成职责不适合放在基础库的通用随机 API 中**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/RandomExtensions.cs:267-432`。实现会调用非公开构造函数、写入私有字段并触发任意构造副作用，仍无法保证对象不变量；接口、抽象类型、readonly/init-only 字段等形状也只能在运行时失败。建议把它移到专门的测试数据包，并以显式 factory/策略、成员选择和深度策略构建；Core 只保留明确、无副作用的标量与集合随机方法。
+    处理：按当前决定继续保留在 Core。XML 文档现在明确它只面向任意测试数据，会调用非公开构造函数和写入非公开字段、可能触发任意副作用、不保证对象不变量、递归深度为每条路径上同类型十层，并且接口、抽象类型、readonly 成员及拒绝随机参数的构造函数可能在运行时失败。补充了常见类型、数组、构造函数、递归图、接口失败和相同 seed 对对象图可复现等测试；这是一项明确接受限制的 API，而不是通用有效对象生成器。
 
-64. **[P2] 传入种子的 `Random` 不能让 `Next<Guid>` 可复现**
+64. **[P2][已修复] 传入种子的 `Random` 不能让 `Next<Guid>` 可复现**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/RandomExtensions.cs:339-347`。Guid 分支调用 `Guid.NewGuid()`，完全绕过调用方提供的随机源，因此相同 seed 产生不同对象图。若保留对象生成，应从该 `Random` 填充 16 字节后构造 Guid，并为 seeded generation 建立确定性契约。
+    修复：Guid 的 16 字节现在全部来自调用方传入的 `Random`，相同运行时上相同 seed 的 Guid 和包含随机字段的对象图可复现；增加了两项确定性测试。
 
-65. **[P1] 旧框架的 `Task.WaitAsync(TimeSpan)` 回填与官方超时契约不兼容**
+65. **[P1][已修复] 旧框架的 `Task.WaitAsync(TimeSpan)` 回填与官方超时契约不兼容**
 
     位置：`src/FclEx.Core/FclEx/Helpers/TaskHelper.cs:96-106`。实现用超时 CTS 调用 cancellation overload，因此超时抛 `OperationCanceledException`；官方同名 API 在 timeout 时抛 `TimeoutException`。仓库规则要求回填 BCL 名称时匹配官方行为，应区分调用方取消与内部 timeout，并补充旧目标回归测试。
+    修复：条件编译边界改为 API 实际引入的 .NET 6；timeout overload 现在只把自身 timeout token 导致的取消转换为 `TimeoutException`，原任务自身的 fault/cancellation 保持不变。取消等待时还会继续观察被放弃任务的后续 fault，旧目标测试确认超时异常契约。
 
-66. **[P1] `TaskHelper.Run` 会因是否设置 timeout 而改变委托的调度方式**
+66. **[P1][已修复] `TaskHelper.Run` 会因是否设置 timeout 而改变委托的调度方式**
 
     位置：`src/FclEx.Core/FclEx/Helpers/TaskHelper.cs:109-130`。没有 timeout 时直接调用委托，有 timeout 时却通过 `Task.Run` 强制切到线程池；超时只放弃等待，并不会取消仍在执行的 operation。这个签名把“调用”“调度”和“等待上限”混在一起。建议直接调用 operation，再等待其任务；若要终止工作，operation 必须接收 cancellation token，并把名字改为表达 timeout/cancellation 的 API。
+    修复：删除 `Run` overload，重建为 `RunAsync` 和为避免 async lambda 重载歧义而单独命名的 `RunValueTaskAsync`。operation 始终在当前执行上下文直接调用，并接收由调用方取消与 timeout 联合控制的 token；operation 返回 Task 后，等待会在取消或超时时结束，timeout 抛 `TimeoutException`，即使 operation 忽略 token 也不会继续阻塞调用方。同步委托调用本身无法被抢占，因此文档要求及时返回 Task。现有 `Operation` 调用链已同步迁移，测试覆盖调度一致性、timeout token、调用方取消和 ValueTask 结果。
 
-67. **[P1] `AwaitObject` 会消费 `ValueTask<T>` 两次**
+67. **[P1][已修复] `AwaitObject` 会消费 `ValueTask<T>` 两次**
 
     位置：`src/FclEx.Core/FclEx/Helpers/TaskHelper.cs:182-188,196-245`。代码先对 `value.AsTask()` 的结果执行 await，随后又从原始 boxed `ValueTask<T>.Result` 取值；基于 `IValueTaskSource<T>` 的 ValueTask 通常只允许单次消费。应从 `AsTask()` 返回的同一个 Task 中同时等待并取得结果，不再访问原 ValueTask。
+    修复：`AwaitObject` 只调用一次 `AsTask()`，随后从同一个 `Task<T>` 等待并读取结果，不再访问原始 boxed `ValueTask<T>`。新增只允许一次 `GetResult` 的 `IValueTaskSource<T>` 回归测试，确认消费次数严格为一。
 
-68. **[P2] `DateTime` 转 Unix 时间对 `Unspecified` 输入产生机器相关结果**
+68. **[P2][已修复] `DateTime` 转 Unix 时间对 `Unspecified` 输入产生机器相关结果**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/DateTimeExtensions.cs:10-32`。`new DateTimeOffset(dateTime)` 会把 `DateTimeKind.Unspecified` 当作本地时间，同一钟面值在不同时区得到不同 Unix 时间。API 应拒绝 `Unspecified`，或通过参数明确指定 offset/假定 UTC；不能在基础转换中隐式使用运行机器的本地时区。
+    修复：按决定保留无 offset 时与 `new DateTimeOffset(DateTime)` 完全一致的行为；`ToDateTimeOffset`、`ToUnixTimeSeconds` 和 `ToUnixTimeMilliseconds` 新增可选 `TimeSpan? offset`。显式 offset 时调用 `new DateTimeOffset(dateTime, offset)` 并保留其 Kind/offset 验证规则，测试覆盖默认兼容行为、Unspecified 的显式 offset 和非法 Utc/offset 组合。
 
-69. **[P1] `ArrayBasedCollection.AsSpan` 允许调用方绕过派生集合的不变量**
+69. **[P1][已修复] `ArrayBasedCollection.AsSpan` 允许调用方绕过派生集合的不变量**
 
     位置：`src/FclEx.Core/System/Collections/Generic/ArrayBasedCollection.cs:148`。该公共可写 span 被 `Heap<T>` 和 `OrderedList<T>` 继承，调用方可直接打乱堆或排序顺序，且 `_version` 不会变化，现有枚举器也察觉不到。公共基类不应暴露可写后备存储；至少改成 `ReadOnlySpan<T>`，确需危险访问时应放到类型特定、明确命名且记录不变量责任的 API。
+    修复：实例 `AsSpan` 改为 internal，公共实例入口改为 `AsReadOnlySpan`；可写访问集中到 `CollectionsMarshal.AsSpan(ArrayBasedCollection<...>)`。文档明确写入会绕过校验与版本更新、调用方必须维护堆序/排序等具体不变量，并说明 count/capacity 改动会使 span 失效。测试覆盖只读入口、marshal 可写入口和 null 行为。
 
-70. **[P1] `MultiValueDictionary.AddRange` 可以留下没有任何 value 的 key**
+70. **[P1][已修复] `MultiValueDictionary.AddRange` 可以留下没有任何 value 的 key**
 
     位置：`src/FclEx.Core/System/Collections/Generic/MultiValueDictionary.cs:674-695`。新 key 在枚举 `values` 前就加入内部字典，因此空序列或首次 `MoveNext` 抛异常都会留下空 collection；这与 `ContainsKey` 文档和内部“每个 key 至少一个 value”的不变量冲突。应先成功取得首项再插入，或在零项/异常时回滚新建 key。
+    修复：新 key 的内部 value collection 先在未发布状态完整构建，只有至少包含一个 value 时才加入字典；空序列不添加 key，枚举或插入失败也不会留下部分发布的新 key。已有 key 的修改路径用 `finally` 维护版本失效契约。测试覆盖空序列和产生首项后抛异常的枚举器。
 
 71. **[P1] `Deque<T>` 的空队列操作只靠 `Debug.Assert` 防护**
 

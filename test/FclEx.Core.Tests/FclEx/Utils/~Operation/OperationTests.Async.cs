@@ -10,11 +10,7 @@ partial class OperationTests
 
         Assert.False(success);
         Assert.True(elapsed < TimeSpan.FromSeconds(1.5), () => $"Expected {nameof(elapsed)} < {TimeSpan.FromSeconds(1.5)}, but was {elapsed}");
-#if NET5_0_OR_GREATER
         Assert.IsType<TimeoutException>(exception);
-#else
-        Assert.IsType<OperationCanceledException>(exception);
-#endif
     }
 
     [RetryFact(3, 100)]
@@ -32,21 +28,18 @@ partial class OperationTests
     }
 
     [RetryFact(3, 100)]
-    public async Task ExecuteAsync_Timeout_SyncBody_Test()
+    public async Task ExecuteAsync_Timeout_DoesNotMoveSynchronousDelegateBodyToTheThreadPool()
     {
         var (success, exception, elapsed) = await Operation.ExecuteAsync(() =>
         {
-            ThreadHelper.Sleep(10);
+            ThreadHelper.Sleep(0.1);
             return Task.CompletedTask;
-        }, TimeSpan.FromSeconds(0.1));
+        }, TimeSpan.FromSeconds(0.01));
 
-        Assert.False(success);
+        Assert.True(success);
+        Assert.Null(exception);
+        Assert.True(elapsed >= TimeSpan.FromSeconds(0.08), () => $"Expected {nameof(elapsed)} >= {TimeSpan.FromSeconds(0.08)}, but was {elapsed}");
         Assert.True(elapsed < TimeSpan.FromSeconds(1.5), () => $"Expected {nameof(elapsed)} < {TimeSpan.FromSeconds(1.5)}, but was {elapsed}");
-#if NET5_0_OR_GREATER
-        Assert.IsType<TimeoutException>(exception);
-#else
-        Assert.IsType<OperationCanceledException>(exception);
-#endif
     }
 
     [RetryFact(3, 100)]
@@ -74,11 +67,7 @@ partial class OperationTests
 
         Assert.False(success);
         Assert.True(elapsed < TimeSpan.FromSeconds(1.5), () => $"Expected {nameof(elapsed)} < {TimeSpan.FromSeconds(1.5)}, but was {elapsed}");
-#if NET5_0_OR_GREATER
         Assert.IsType<TimeoutException>(exception);
-#else
-        Assert.IsType<OperationCanceledException>(exception);
-#endif
     }
 
     [Fact]

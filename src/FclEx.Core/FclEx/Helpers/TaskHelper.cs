@@ -62,73 +62,189 @@ public static class TaskHelper
         return Task.WhenAll(tasks);
     }
 
-#if !NET5_0_OR_GREATER
+#if !NET6_0_OR_GREATER
     public static async Task<T> WaitAsync<T>(this Task<T> task, CancellationToken cancellationToken)
     {
-        cancellationToken.ThrowIfCancellationRequested();
-
-        var tcs = new TaskCompletionSource<T>();
-
-        using (cancellationToken.Register(static state => ((TaskCompletionSource<T>)state!).TrySetResult(default!), tcs))
-        {
-            if (task != await Task.WhenAny(task, tcs.Task).ConfigureAwait(false))
-                cancellationToken.ThrowIfCancellationRequested();
-        }
-
+        await ((Task)task).WaitAsync(cancellationToken).ConfigureAwait(false);
         return await task.ConfigureAwait(false);
     }
 
     public static async Task WaitAsync(this Task task, CancellationToken cancellationToken)
     {
-        cancellationToken.ThrowIfCancellationRequested();
-        
-        var tcs = new TaskCompletionSource<object?>();
-
-        using (cancellationToken.Register(static state => ((TaskCompletionSource<object?>)state!).TrySetResult(null), tcs))
+        if (task.IsCompleted || !cancellationToken.CanBeCanceled)
         {
-            if (task != await Task.WhenAny(task, tcs.Task).ConfigureAwait(false))
-                cancellationToken.ThrowIfCancellationRequested();
+            await task.ConfigureAwait(false);
+            return;
         }
 
-        await task;
+        cancellationToken.ThrowIfCancellationRequested();
+        
+        var cancellationTask = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        using (cancellationToken.Register(static state => ((TaskCompletionSource<object?>)state!).TrySetResult(null), cancellationTask))
+        {
+            if (task != await Task.WhenAny(task, cancellationTask.Task).ConfigureAwait(false))
+            {
+                ObserveFault(task);
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+        }
+
+        await task.ConfigureAwait(false);
     }
 
     public static async Task<TResult> WaitAsync<TResult>(this Task<TResult> task, TimeSpan timeout)
     {
-        using var cts = new CancellationTokenSource(timeout);
-        return await task.WaitAsync(cts.Token);
+        await ((Task)task).WaitAsync(timeout).ConfigureAwait(false);
+        return await task.ConfigureAwait(false);
     }
 
     public static async Task WaitAsync(this Task task, TimeSpan timeout)
     {
-        using var cts = new CancellationTokenSource(timeout);
-        await task.WaitAsync(cts.Token);
+        using var timeoutSource = new CancellationTokenSource(timeout);
+        try
+        {
+            await task.WaitAsync(timeoutSource.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException ex) when (ex.CancellationToken == timeoutSource.Token)
+        {
+            throw new TimeoutException("The operation did not complete within the specified timeout.", ex);
+        }
     }
 #endif
 
-    public static Task<TResult> Run<TResult>(Func<Task<TResult>> task, TimeSpan? timeout = null)
+    /// <summary>
+    /// Invokes an asynchronous operation on the current execution context and waits for it with optional timeout and cancellation.
+    /// </summary>
+    /// <remarks>
+    /// The operation receives a token that is canceled when either <paramref name="cancellationToken"/> is canceled or
+    /// <paramref name="timeout"/> expires. A timeout throws <see cref="TimeoutException"/>; caller cancellation throws
+    /// <see cref="OperationCanceledException"/>. Waiting ends even when the operation ignores the token, but ignored
+    /// cancellation cannot stop work that is already running.
+    /// The delegate itself is invoked synchronously and should return its task promptly; timeout and cancellation cannot
+    /// preempt synchronous code that blocks before the task is returned.
+    /// </remarks>
+    public static Task<TResult> RunAsync<TResult>(
+        Func<CancellationToken, Task<TResult>> operation,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
     {
-        return timeout is { } time
-            ? Task.Run(task).WaitAsync(time)
-            : task();
+        Check.NotNull(operation);
+        return RunCoreAsync(operation, timeout, cancellationToken);
     }
 
-    public static Task<TResult> Run<TResult>(Func<ValueTask<TResult>> task, TimeSpan? timeout = null)
+    /// <summary>
+    /// Invokes a <see cref="ValueTask{TResult}"/> operation on the current execution context and waits for it with
+    /// optional timeout and cancellation.
+    /// </summary>
+    /// <remarks>
+    /// This method follows the same timeout and cancellation contract as <see cref="RunAsync{TResult}"/>. It has a
+    /// distinct name so an <see langword="async"/> lambda is not ambiguous between Task and ValueTask delegate types.
+    /// </remarks>
+    public static Task<TResult> RunValueTaskAsync<TResult>(
+        Func<CancellationToken, ValueTask<TResult>> operation,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
     {
-        return Run((Func<Task<TResult>>)(async () => await task().NoCapture()), timeout);
+        Check.NotNull(operation);
+        return RunCoreAsync(token => operation(token).AsTask(), timeout, cancellationToken);
     }
 
-    public static Task Run(Func<Task> task, TimeSpan? timeout = null)
+    /// <summary>
+    /// Invokes an asynchronous operation on the current execution context and waits for it with optional timeout and cancellation.
+    /// </summary>
+    /// <remarks>
+    /// The delegate receives the combined cancellation token and is invoked synchronously. It should return its task
+    /// promptly because timeout and cancellation cannot preempt code that blocks before returning the task.
+    /// </remarks>
+    public static Task RunAsync(
+        Func<CancellationToken, Task> operation,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
     {
-        return timeout is { } time
-            ? Task.Run(task).WaitAsync(time)
-            : task();
+        Check.NotNull(operation);
+        return RunCoreAsync(operation, timeout, cancellationToken);
     }
 
-    public static Task Run(Func<ValueTask> task, TimeSpan? timeout = null)
+    /// <summary>
+    /// Invokes a <see cref="ValueTask"/> operation on the current execution context and waits for it with optional
+    /// timeout and cancellation.
+    /// </summary>
+    /// <remarks>
+    /// This method follows the same timeout and cancellation contract as the non-generic <see cref="RunAsync"/>.
+    /// </remarks>
+    public static Task RunValueTaskAsync(
+        Func<CancellationToken, ValueTask> operation,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
     {
-        return Run((Func<Task>)(async () => await task().NoCapture()), timeout);
+        Check.NotNull(operation);
+        return RunCoreAsync(token => operation(token).AsTask(), timeout, cancellationToken);
     }
+
+    private static async Task<TResult> RunCoreAsync<TResult>(
+        Func<CancellationToken, Task<TResult>> operation,
+        TimeSpan? timeout,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (timeout is null)
+        {
+            var task = operation(cancellationToken);
+            return await task.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        using var timeoutSource = new CancellationTokenSource(timeout.Value);
+        using var operationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutSource.Token);
+        try
+        {
+            var task = operation(operationSource.Token);
+            return await task.WaitAsync(operationSource.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException ex) when (timeoutSource.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+        {
+            throw new TimeoutException("The operation did not complete within the specified timeout.", ex);
+        }
+    }
+
+    private static async Task RunCoreAsync(
+        Func<CancellationToken, Task> operation,
+        TimeSpan? timeout,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (timeout is null)
+        {
+            var task = operation(cancellationToken);
+            await task.WaitAsync(cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        using var timeoutSource = new CancellationTokenSource(timeout.Value);
+        using var operationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutSource.Token);
+        try
+        {
+            var task = operation(operationSource.Token);
+            await task.WaitAsync(operationSource.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException ex) when (timeoutSource.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+        {
+            throw new TimeoutException("The operation did not complete within the specified timeout.", ex);
+        }
+    }
+
+#if !NET6_0_OR_GREATER
+    private static void ObserveFault(Task task)
+    {
+        _ = task.ContinueWith(
+            static completedTask => _ = completedTask.Exception,
+            CancellationToken.None,
+            TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+            TaskScheduler.Default);
+    }
+#endif
 
     private static readonly Type TypeOfVoidTaskResult = Type.GetType("System.Threading.Tasks.VoidTaskResult", true)!;
     private static readonly Type TypeOfTaskOfVoidTaskResult = typeof(Task<>).MakeGenericType(TypeOfVoidTaskResult);
@@ -183,8 +299,10 @@ public static class TaskHelper
             {
                 // NOTE: we can not use "result = (object)(await (dynamic)value)" here,
                 // because when T of ValueTask<T> is non-public, we will get a RuntimeBinderException that says "'System.ValueType' does not contain a definition for 'GetAwaiter'".
-                await ValueTaskWithResultToTask(value, type);
-                return GetTaskResult(value, type);
+                var task = ValueTaskWithResultToTask(value, type);
+                await task.ConfigureAwait(false);
+                var resultTaskType = typeof(Task<>).MakeGenericType(type.GetGenericArguments()[0]);
+                return GetTaskResult(task, resultTaskType);
             }
             default:
             {
@@ -224,7 +342,7 @@ public static class TaskHelper
         return exp.Compile();
     }
 
-    // value should be Task<T> or ValueTask<T>
+    // value should be Task<T>.
     private static object GetTaskResult(object value, Type type)
     {
         // There are several ways to get the value of "Result" of Task<T> or ValueTask<T> after it is awaited.

@@ -39,7 +39,7 @@ public static partial class Operation
         var watch = ValueStopwatch.StartNew();
         try
         {
-            await TaskHelper.Run(action, timeout).NoCapture();
+            await TaskHelper.RunAsync(_ => action(), timeout).NoCapture();
             return Success(watch.GetElapsedTime());
         }
         catch (Exception ex)
@@ -113,7 +113,7 @@ public static partial class Operation
         var watch = ValueStopwatch.StartNew();
         try
         {
-            var result = await TaskHelper.Run(action, timeout).NoCapture();
+            var result = await TaskHelper.RunAsync(_ => action(), timeout).NoCapture();
             return (result, watch.GetElapsedTime());
         }
         catch (Exception ex)
@@ -136,7 +136,7 @@ public static partial class Operation
         var watch = ValueStopwatch.StartNew();
         try
         {
-            var result = await TaskHelper.Run(action, timeout).NoCapture();
+            var result = await TaskHelper.RunValueTaskAsync(_ => action(), timeout).NoCapture();
             return (result, watch.GetElapsedTime());
         }
         catch (Exception ex)
@@ -170,7 +170,7 @@ public static partial class Operation
         var watch = ValueStopwatch.StartNew();
         try
         {
-            await TaskHelper.Run(action, timeout).NoCapture();
+            await TaskHelper.RunValueTaskAsync(_ => action(), timeout).NoCapture();
             return Success(watch.GetElapsedTime());
         }
         catch (Exception ex)

@@ -86,4 +86,33 @@ public class DateTimeExtensionsTests
 
         Assert.Null(dateTime.LastTickOfDay());
     }
+
+    [Fact]
+    public void ToDateTimeOffset_WithoutOffset_ShouldMatchFrameworkConstructor()
+    {
+        var dateTime = new DateTime(2024, 2, 14, 12, 34, 56, DateTimeKind.Unspecified);
+
+        Assert.Equal(new DateTimeOffset(dateTime), dateTime.ToDateTimeOffset());
+    }
+
+    [Fact]
+    public void ToDateTimeOffset_ShouldUseExplicitOffsetForUnspecifiedDateTime()
+    {
+        var dateTime = new DateTime(2024, 2, 14, 12, 34, 56, DateTimeKind.Unspecified);
+        var offset = TimeSpan.FromHours(8);
+
+        var result = dateTime.ToDateTimeOffset(offset);
+
+        Assert.Equal(new DateTimeOffset(dateTime, offset), result);
+        Assert.Equal(result.ToUnixTimeSeconds(), dateTime.ToUnixTimeSeconds(offset));
+        Assert.Equal(result.ToUnixTimeMilliseconds(), dateTime.ToUnixTimeMilliseconds(offset));
+    }
+
+    [Fact]
+    public void ToDateTimeOffset_WithOffset_ShouldPreserveFrameworkValidation()
+    {
+        var utc = new DateTime(2024, 2, 14, 12, 34, 56, DateTimeKind.Utc);
+
+        Assert.Throws<ArgumentException>(() => utc.ToDateTimeOffset(TimeSpan.FromHours(1)));
+    }
 }

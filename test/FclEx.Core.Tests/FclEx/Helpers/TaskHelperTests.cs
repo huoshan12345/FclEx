@@ -1,9 +1,36 @@
-using FclEx.Extensions.TaskExtensions;
+using System.Threading.Tasks.Sources;
 
 namespace FclEx.Helpers;
 
 public class TaskHelperTests
 {
+    private sealed class SingleConsumptionValueTaskSource<T>(T result) : IValueTaskSource<T>
+    {
+        public int ConsumptionCount { get; private set; }
+
+        public ValueTask<T> CreateValueTask() => new(this, 0);
+
+        public T GetResult(short token)
+        {
+            Assert.Equal((short)0, token);
+            if (++ConsumptionCount != 1)
+                throw new InvalidOperationException("The value task source was consumed more than once.");
+            return result;
+        }
+
+        public ValueTaskSourceStatus GetStatus(short token)
+        {
+            Assert.Equal((short)0, token);
+            return ValueTaskSourceStatus.Succeeded;
+        }
+
+        public void OnCompleted(Action<object?> continuation, object? state, short token, ValueTaskSourceOnCompletedFlags flags)
+        {
+            Assert.Equal((short)0, token);
+            continuation(state);
+        }
+    }
+
     [Fact]
     public async Task Repeat_Action_InvokesActionForEachRepetition()
     {
@@ -56,6 +83,107 @@ public class TaskHelperTests
         var result = await TaskHelper.AwaitObject(task);
         Assert.True(result is InternalClass { Value: 1 });
     }
+
+    [Fact]
+    public async Task AwaitObject_ShouldConsumeValueTaskSourceOnlyOnce()
+    {
+        var source = new SingleConsumptionValueTaskSource<InternalClass>(new InternalClass(42));
+
+        var result = await TaskHelper.AwaitObject(source.CreateValueTask());
+
+        Assert.Equal(new InternalClass(42), result);
+        Assert.Equal(1, source.ConsumptionCount);
+    }
+
+    [Fact]
+    public async Task RunAsync_ShouldInvokeTheOperationOnTheCallingContext()
+    {
+        var callingThread = Environment.CurrentManagedThreadId;
+        var operationThread = -1;
+
+        await TaskHelper.RunAsync(
+            _ =>
+            {
+                operationThread = Environment.CurrentManagedThreadId;
+                return Task.CompletedTask;
+            },
+            TimeSpan.FromSeconds(1));
+
+        Assert.Equal(callingThread, operationThread);
+    }
+
+    [Fact]
+    public async Task RunAsync_ShouldCancelTheOperationAndThrowOnTimeout()
+    {
+        CancellationToken operationToken = default;
+
+        await Assert.ThrowsAsync<TimeoutException>(() => TaskHelper.RunAsync(
+            async token =>
+            {
+                operationToken = token;
+                await Task.Delay(Timeout.InfiniteTimeSpan, token);
+            },
+            TimeSpan.FromMilliseconds(100)));
+
+        Assert.True(operationToken.IsCancellationRequested);
+    }
+
+    [Fact]
+    public async Task RunAsync_ShouldStopWaitingWhenTheOperationIgnoresTimeoutCancellation()
+    {
+        var operation = new TaskCompletionSource<object?>();
+
+        await Assert.ThrowsAsync<TimeoutException>(() => TaskHelper.RunAsync(
+            _ => operation.Task,
+            TimeSpan.FromMilliseconds(100)));
+
+        operation.TrySetResult(null);
+    }
+
+    [Fact]
+    public async Task RunAsync_ShouldPropagateCallerCancellation()
+    {
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        var invoked = false;
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => TaskHelper.RunAsync(
+            _ =>
+            {
+                invoked = true;
+                return Task.CompletedTask;
+            },
+            cancellationToken: cancellation.Token));
+
+        Assert.False(invoked);
+    }
+
+    [Fact]
+    public async Task RunValueTaskAsync_ShouldReturnResult()
+    {
+        var result = await TaskHelper.RunValueTaskAsync(_ => ValueTask.FromResult(42));
+
+        Assert.Equal(42, result);
+    }
+
+#if !NET6_0_OR_GREATER
+    [Fact]
+    public async Task WaitAsync_ShouldPreferAnAlreadyCompletedTaskOverCancellation()
+    {
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        await Task.CompletedTask.WaitAsync(cancellation.Token);
+    }
+
+    [Fact]
+    public async Task WaitAsync_ShouldThrowTimeoutExceptionWhenTheTimeoutExpires()
+    {
+        var task = new TaskCompletionSource<object?>().Task;
+
+        await Assert.ThrowsAsync<TimeoutException>(() => task.WaitAsync(TimeSpan.FromMilliseconds(20)));
+    }
+#endif
 
     public record InternalClass(int Value);
 }

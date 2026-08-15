@@ -7,29 +7,46 @@ public static class DateTimeExtensions
     public const string ShortTimeFormat = "yyyyMMddHHmmss";
     public const string CommonTimeFormat = "yyyy-MM-dd HH:mm:ss";
 
-    public static DateTimeOffset ToDateTimeOffset(this DateTime dateTime)
+    /// <summary>
+    /// Converts a <see cref="DateTime"/> to a <see cref="DateTimeOffset"/>.
+    /// </summary>
+    /// <param name="dateTime">The date and time to convert.</param>
+    /// <param name="offset">
+    /// The explicit UTC offset to use, or <see langword="null"/> to use the same behavior as
+    /// <see cref="DateTimeOffset.DateTimeOffset(DateTime)"/>.
+    /// </param>
+    /// <remarks>
+    /// When <paramref name="offset"/> is supplied, the validation rules of
+    /// <see cref="DateTimeOffset.DateTimeOffset(DateTime, TimeSpan)"/> apply, including its restrictions for
+    /// <see cref="DateTimeKind.Utc"/> and <see cref="DateTimeKind.Local"/> values.
+    /// </remarks>
+    public static DateTimeOffset ToDateTimeOffset(this DateTime dateTime, TimeSpan? offset = null)
     {
-        return new DateTimeOffset(dateTime);
+        return offset is { } value
+            ? new DateTimeOffset(dateTime, value)
+            : new DateTimeOffset(dateTime);
     }
 
     /// <summary>
     /// Returns the number of seconds that have elapsed since 1970-01-01T00:00:00Z.
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
-    public static long ToUnixTimeSeconds(this DateTime dateTime)
+    /// <param name="dateTime">The date and time to convert.</param>
+    /// <param name="offset">The explicit UTC offset, or <see langword="null"/> to use the <paramref name="dateTime"/> kind.</param>
+    /// <returns>The Unix timestamp in seconds.</returns>
+    public static long ToUnixTimeSeconds(this DateTime dateTime, TimeSpan? offset = null)
     {
-        return dateTime.ToDateTimeOffset().ToUnixTimeSeconds();
+        return dateTime.ToDateTimeOffset(offset).ToUnixTimeSeconds();
     }
 
     /// <summary>
     /// Returns the number of milliseconds that have elapsed since 1970-01-01T00:00:00.000Z.
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
-    public static long ToUnixTimeMilliseconds(this DateTime dateTime)
+    /// <param name="dateTime">The date and time to convert.</param>
+    /// <param name="offset">The explicit UTC offset, or <see langword="null"/> to use the <paramref name="dateTime"/> kind.</param>
+    /// <returns>The Unix timestamp in milliseconds.</returns>
+    public static long ToUnixTimeMilliseconds(this DateTime dateTime, TimeSpan? offset = null)
     {
-        return dateTime.ToDateTimeOffset().ToUnixTimeMilliseconds();
+        return dateTime.ToDateTimeOffset(offset).ToUnixTimeMilliseconds();
     }
 
     public static string ToShort(this DateTime @this) => @this.ToString(ShortTimeFormat);

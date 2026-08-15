@@ -28,6 +28,13 @@ public class RandomExtensionsTests
         }
     }
 
+#if !NET6_0_OR_GREATER
+    private sealed class MaximumIntRandom : Random
+    {
+        public override int Next(int maxValue) => maxValue - 1;
+    }
+#endif
+
     private sealed class Node
     {
         public Node? Next = null;
@@ -58,6 +65,8 @@ public class RandomExtensionsTests
         public int[]? Numbers = null;
         public string[]? Names = null;
     }
+
+    private interface ITestDataContract { }
 
     private enum SampleEnum
     {
@@ -134,6 +143,36 @@ public class RandomExtensionsTests
 
         Assert.Equal<ulong>(17, value);
     }
+
+    [Fact]
+    public void ParameterlessIntegerMethods_ShouldCoverTheCompleteBitPattern()
+    {
+        var random = new QueueBytesRandom(
+            byte.MaxValue,
+            byte.MaxValue,
+            ushort.MaxValue,
+            ushort.MaxValue,
+            uint.MaxValue,
+            ulong.MaxValue);
+
+        Assert.Equal(-1, random.NextSByte());
+        Assert.Equal(byte.MaxValue, random.NextByte());
+        Assert.Equal(-1, random.NextInt16());
+        Assert.Equal(ushort.MaxValue, random.NextUInt16());
+        Assert.Equal(uint.MaxValue, random.NextUInt32());
+        Assert.Equal(ulong.MaxValue, random.NextUInt64());
+    }
+
+#if !NET6_0_OR_GREATER
+    [Fact]
+    public void NextSingle_ShouldNeverRoundUpToOne()
+    {
+        var value = new MaximumIntRandom().NextSingle();
+
+        Assert.True(value < 1f);
+        Assert.Equal(1f - 1f / (1 << 24), value);
+    }
+#endif
 
     [Fact]
     public void NextUInt64_ShouldReturnMin_WhenRangeIsEmpty()
@@ -253,6 +292,33 @@ public class RandomExtensionsTests
 
         Assert.NotNull(value);
         Assert.IsAssignableFrom(type, value);
+    }
+
+    [Fact]
+    public void NextGuid_ShouldBeDeterministicForASeededRandom()
+    {
+        var first = new Random(42).Next<Guid>();
+        var second = new Random(42).Next<Guid>();
+
+        Assert.Equal(first, second);
+    }
+
+    [Fact]
+    public void Next_ShouldBeDeterministicForASeededObjectGraph()
+    {
+        var first = new Random(42).Next<ArrayHolder>();
+        var second = new Random(42).Next<ArrayHolder>();
+
+        Assert.Equal(first.Numbers, second.Numbers);
+        Assert.Equal(first.Names, second.Names);
+    }
+
+    [Fact]
+    public void Next_ShouldRejectAnInterfaceAtRuntime()
+    {
+        var random = new Random(0);
+
+        Assert.Throws<ArgumentException>(() => random.Next<ITestDataContract>());
     }
 
 #if NET6_0_OR_GREATER

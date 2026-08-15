@@ -56,30 +56,60 @@ public static class RandomExtensions
     }
 
     [MethodImpl(AggressiveInlining)]
-    public static sbyte NextSByte(this Random random, sbyte min = 0, sbyte max = sbyte.MaxValue)
-        => (sbyte)random.Next(min, max);
+    public static sbyte NextSByte(this Random random) => random.NextUnmanaged<sbyte>();
 
     [MethodImpl(AggressiveInlining)]
-    public static byte NextByte(this Random random, byte min = 0, byte max = byte.MaxValue)
-        => (byte)random.Next(min, max);
+    public static sbyte NextSByte(this Random random, sbyte min, sbyte max)
+    {
+        Check.NotNull(random);
+        return (sbyte)random.Next(min, max);
+    }
 
     [MethodImpl(AggressiveInlining)]
-    public static short NextInt16(this Random random, short min = 0, short max = short.MaxValue)
-        => (short)random.Next(min, max);
+    public static byte NextByte(this Random random) => random.NextUnmanaged<byte>();
 
     [MethodImpl(AggressiveInlining)]
-    public static ushort NextUInt16(this Random random, ushort min = 0, ushort max = ushort.MaxValue)
-        => (ushort)random.Next(min, max);
+    public static byte NextByte(this Random random, byte min, byte max)
+    {
+        Check.NotNull(random);
+        return (byte)random.Next(min, max);
+    }
 
     [MethodImpl(AggressiveInlining)]
-    public static uint NextUInt32(this Random random, uint min = 0, uint max = uint.MaxValue)
+    public static short NextInt16(this Random random) => random.NextUnmanaged<short>();
+
+    [MethodImpl(AggressiveInlining)]
+    public static short NextInt16(this Random random, short min, short max)
+    {
+        Check.NotNull(random);
+        return (short)random.Next(min, max);
+    }
+
+    [MethodImpl(AggressiveInlining)]
+    public static ushort NextUInt16(this Random random) => random.NextUnmanaged<ushort>();
+
+    [MethodImpl(AggressiveInlining)]
+    public static ushort NextUInt16(this Random random, ushort min, ushort max)
+    {
+        Check.NotNull(random);
+        return (ushort)random.Next(min, max);
+    }
+
+    [MethodImpl(AggressiveInlining)]
+    public static uint NextUInt32(this Random random) => random.NextUnmanaged<uint>();
+
+    [MethodImpl(AggressiveInlining)]
+    public static uint NextUInt32(this Random random, uint min, uint max)
         => (uint)random.NextUInt64(min, max);
 
     [MethodImpl(AggressiveInlining)]
     public static long NextInt64(this Random random) => random.NextInt64(0, long.MaxValue);
 
     [MethodImpl(AggressiveInlining)]
-    public static ulong NextUInt64(this Random random, ulong min = 0, ulong max = ulong.MaxValue)
+    public static ulong NextUInt64(this Random random) => random.NextUnmanaged<ulong>();
+
+    [MethodImpl(AggressiveInlining)]
+    public static ulong NextUInt64(this Random random, ulong min, ulong max)
     {
         Check.NotNull(random);
         CheckRange(min, max);
@@ -114,16 +144,11 @@ public static class RandomExtensions
 
 #if !NET6_0_OR_GREATER
     [MethodImpl(AggressiveInlining)]
-    public static float NextSingle(this Random random, float min = 0, float max = float.MaxValue)
+    public static float NextSingle(this Random random)
     {
         Check.NotNull(random);
-        CheckRange(min, max);
-
-        if (min == max)
-            return min;
-
-        var r = (float)random.NextDouble();
-        return max * r + min * (1 - r);
+        const int precision = 1 << 24;
+        return random.Next(precision) * (1f / precision);
     }
 #endif
 
@@ -266,6 +291,17 @@ public static class RandomExtensions
     }
 #endif
 
+    /// <summary>
+    /// Creates an arbitrary value of <typeparamref name="T"/> for test-data scenarios.
+    /// </summary>
+    /// <remarks>
+    /// This method recursively constructs object graphs by invoking constructors, including non-public constructors,
+    /// and then assigning instance fields, including non-public fields. Constructors and field assignment can have
+    /// arbitrary side effects. The generated value is not guaranteed to satisfy the type's invariants. Interfaces,
+    /// abstract types, unsupported runtime types, readonly members, and constructors that reject generated arguments
+    /// can fail at runtime. Recursive reference chains are truncated after ten occurrences of the same type on one path.
+    /// Use an explicit factory when valid domain objects are required.
+    /// </remarks>
     [MethodImpl(AggressiveInlining)]
     public static T Next<T>(this Random random)
     {
@@ -273,6 +309,13 @@ public static class RandomExtensions
         return (T)random.Next(typeof(T), null, null);
     }
 
+    /// <summary>
+    /// Creates an arbitrary value of <paramref name="type"/> for test-data scenarios.
+    /// </summary>
+    /// <remarks>
+    /// This overload has the same constructor, side-effect, invariant, and recursion limitations as
+    /// <see cref="Next{T}(Random)"/>.
+    /// </remarks>
     [MethodImpl(AggressiveInlining)]
     public static object Next(this Random random, Type type)
     {
@@ -346,7 +389,11 @@ public static class RandomExtensions
             return new object();
 
         if (type == typeof(Guid))
-            return Guid.NewGuid();
+        {
+            var bytes = new byte[16];
+            random.NextBytes(bytes);
+            return new Guid(bytes);
+        }
 
         if (type == typeof(IntPtr))
             return is64Bit
