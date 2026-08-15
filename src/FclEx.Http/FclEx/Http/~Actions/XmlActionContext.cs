@@ -19,7 +19,9 @@ public readonly struct XmlActionContext
         XPath = xPath;
         Document = XDocument.Parse(xml);
         ResultElements = xPath == null
-            ? [Document.Root!]
+            ? Document.Root is { } root
+                ? [root]
+                : []
             : Document.XPathSelectElements(xPath);
     }
 

@@ -28,10 +28,7 @@ public static class DefaultXmlAction
     /// <returns>The response text when it looks like XML; otherwise an error result.</returns>
     public static OperationResult<string> GetXml<T>(IXmlAction<T> action, HttpResponse response)
     {
-        var str = response.ResponseString;
-        return str.IsPossibleXml()
-            ? Operation.Success(response.ResponseString)
-            : Operation.Error<string>("The response string is not a valid xml: " + str.Truncate(256));
+        return Operation.Success(response.ResponseString);
     }
 
     /// <summary>
@@ -45,12 +42,16 @@ public static class DefaultXmlAction
     /// <remarks>Malformed XML may throw so the outer action pipeline can capture it.</remarks>
     public static OperationResult<XmlActionContext> CreateContext<T>(IXmlAction<T> action, HttpResponse response, string xml)
     {
-        var context = new XmlActionContext(response, xml, action.XPath);
-        if (context.ResultElements.IsNotEmpty())
+        var context = Operation.Execute(() => new XmlActionContext(response, xml, action.XPath));
+        if (context.IsError)
+            return context.Cast<XmlActionContext>();
+
+        if (context.Value.ResultElements.IsNotEmpty())
             return context;
+
         const string msg = "The result object does not exist in xml";
         var error = action.XPath == null ? msg : msg + " at " + action.XPath;
-        error = error + ": " + context.Xml.Truncate(256);
+        error = error + ": " + context.Value.Xml.Truncate(256);
         return error;
     }
 
