@@ -190,10 +190,10 @@ public class UriCreator
         return (idx1, idx2) switch
         {
             (-1, -1) => (uri, "", ""),
-            (_, -1) => (uri.Substring(0, idx1), uri.Substring(idx1 + 1), ""),
-            (-1, _) => (uri.Substring(0, idx2), "", uri.Substring(idx2 + 1)),
+            (_, -1) => (uri[..idx1], uri[(idx1 + 1)..], ""),
+            (-1, _) => (uri[..idx2], "", uri[(idx2 + 1)..]),
             (_, _) when idx1 >= idx2 => throw new ArgumentException("In URIs with a query and a fragment, the fragment should follows the query"),
-            _ => (uri.Substring(0, idx1), uri.Substring(idx1 + 1, idx2 - idx1 - 1), uri.Substring(idx2 + 1)),
+            _ => (uri[..idx1], uri.Substring(idx1 + 1, idx2 - idx1 - 1), uri[(idx2 + 1)..]),
         };
     }
 }
