@@ -144,7 +144,7 @@ public class TaskHelperTests
     public async Task RunAsync_ShouldPropagateCallerCancellation()
     {
         using var cancellation = new CancellationTokenSource();
-        cancellation.Cancel();
+        await cancellation.CancelAsync();
         var invoked = false;
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => TaskHelper.RunAsync(

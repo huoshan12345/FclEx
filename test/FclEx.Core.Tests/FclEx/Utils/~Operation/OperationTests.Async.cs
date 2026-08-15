@@ -16,42 +16,40 @@ partial class OperationTests
     [RetryFact(3, 100)]
     public async Task ExecuteAsync_Timeout_Success_Test()
     {
-        var (success, result, _, elapsed) = await Operation.ExecuteAsync(async () =>
+        var (success, result, exception, elapsed) = await Operation.ExecuteAsync(async () =>
         {
             await Task.Delay(TimeSpan.FromSeconds(0.1));
             return 1;
         }, TimeSpan.FromSeconds(10));
 
-        Assert.True(success);
+        Assert.True(success, () => exception?.ToString());
         Assert.Equal(1, result);
         Assert.True(elapsed < TimeSpan.FromSeconds(1.5), () => $"Expected {nameof(elapsed)} < {TimeSpan.FromSeconds(1.5)}, but was {elapsed}");
     }
 
     [RetryFact(3, 100)]
-    public async Task ExecuteAsync_Timeout_DoesNotMoveSynchronousDelegateBodyToTheThreadPool()
+    public async Task ExecuteAsync_Timeout_MoveSynchronousDelegateBodyToTheThreadPool()
     {
-        var (success, exception, elapsed) = await Operation.ExecuteAsync(() =>
+        var (success, _, elapsed) = await Operation.ExecuteAsync(() =>
         {
-            ThreadHelper.Sleep(0.1);
+            ThreadHelper.Sleep(1);
             return Task.CompletedTask;
         }, TimeSpan.FromSeconds(0.01));
 
-        Assert.True(success);
-        Assert.Null(exception);
-        Assert.True(elapsed >= TimeSpan.FromSeconds(0.08), () => $"Expected {nameof(elapsed)} >= {TimeSpan.FromSeconds(0.08)}, but was {elapsed}");
-        Assert.True(elapsed < TimeSpan.FromSeconds(1.5), () => $"Expected {nameof(elapsed)} < {TimeSpan.FromSeconds(1.5)}, but was {elapsed}");
+        Assert.False(success);
+        Assert.True(elapsed < TimeSpan.FromSeconds(0.1), () => $"Expected {nameof(elapsed)} < {TimeSpan.FromSeconds(0.1)}, but was {elapsed}");
     }
 
     [RetryFact(3, 100)]
     public async Task ExecuteAsync_Timeout_SyncBody_Success_Test()
     {
-        var (success, result, _, elapsed) = await Operation.ExecuteAsync(() =>
+        var (success, result, exception, elapsed) = await Operation.ExecuteAsync(() =>
         {
             ThreadHelper.Sleep(0.1);
             return Task.FromResult(1);
         }, TimeSpan.FromSeconds(1));
 
-        Assert.True(success);
+        Assert.True(success, () => exception?.ToString());
         Assert.Equal(1, result);
         Assert.True(elapsed < TimeSpan.FromSeconds(1.5), () => $"Expected {nameof(elapsed)} < {TimeSpan.FromSeconds(1.5)}, but was {elapsed}");
     }

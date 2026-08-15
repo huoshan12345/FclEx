@@ -2,25 +2,30 @@ namespace FclEx.Extensions;
 
 public static partial class TaskExtensions
 {
+    private static readonly Task<Unit> TaskUnit = Task.FromResult(Unit.Default);
+
+    [MethodImpl(AggressiveInlining)]
     public static bool IsSuccessful(this Task task)
     {
         return task is { IsFaulted: false, IsCanceled: false, Status: TaskStatus.RanToCompletion };
     }
 
+    [MethodImpl(AggressiveInlining)]
     public static ConfiguredTaskAwaitable NoCapture(this Task task)
     {
         return task.ConfigureAwait(false);
     }
 
+    [MethodImpl(AggressiveInlining)]
     public static ConfiguredTaskAwaitable<T> NoCapture<T>(this Task<T> task)
     {
         return task.ConfigureAwait(false);
     }
 
+    [MethodImpl(AggressiveInlining)]
     public static ValueTask<T> ToValueTask<T>(this Task<T> task) => new(task);
 
-    private static readonly Task<Unit> TaskUnit = Task.FromResult(Unit.Default);
-
+    [MethodImpl(AggressiveInlining)]
     public static Task<Unit> ToTaskUnit(this Task task) => task.Then(() => TaskUnit);
 
     extension(Task)
