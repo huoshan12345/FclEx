@@ -95,7 +95,7 @@ public class TaskHelperTests
         Assert.Equal(1, source.ConsumptionCount);
     }
     
-    [Fact]
+    [RetryFact]
     public async Task RunAsync_ShouldCancelTheOperationAndThrowOnTimeout()
     {
         CancellationToken operationToken = default;

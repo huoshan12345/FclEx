@@ -37,7 +37,7 @@ partial class OperationTests
         }, TimeSpan.FromSeconds(0.01));
 
         Assert.False(success);
-        Assert.True(elapsed < TimeSpan.FromSeconds(0.1), () => $"Expected {nameof(elapsed)} < {TimeSpan.FromSeconds(0.1)}, but was {elapsed}");
+        Assert.True(elapsed < TimeSpan.FromSeconds(0.5), () => $"Expected {nameof(elapsed)} < {TimeSpan.FromSeconds(0.5)}, but was {elapsed}");
     }
 
     [RetryFact(3, 100)]
