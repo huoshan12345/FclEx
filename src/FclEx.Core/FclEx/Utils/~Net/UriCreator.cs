@@ -182,18 +182,15 @@ public class UriCreator
         return Build().ToString();
     }
 
-    [SuppressMessage("ReSharper", "ReplaceSubstringWithRangeIndexer")]
     public static (string Path, string Query, string Fragment) SplitUri(string uri)
     {
-        var idx1 = uri.IndexOf('?');
-        var idx2 = uri.IndexOf('#');
-        return (idx1, idx2) switch
-        {
-            (-1, -1) => (uri, "", ""),
-            (_, -1) => (uri[..idx1], uri[(idx1 + 1)..], ""),
-            (-1, _) => (uri[..idx2], "", uri[(idx2 + 1)..]),
-            (_, _) when idx1 < idx2 => (uri[..idx1], uri[(idx1 + 1)..idx2], uri[(idx2 + 1)..]),
-            _ => (uri[..idx2], uri[(idx2 + 1)..idx1], uri[(idx1 + 1)..]), // '?' after '#'
-        };
+        var fragmentIndex = uri.IndexOf('#');
+        var pathAndQuery = fragmentIndex < 0 ? uri : uri[..fragmentIndex];
+        var fragment = fragmentIndex < 0 ? "" : uri[(fragmentIndex + 1)..];
+
+        var queryIndex = pathAndQuery.IndexOf('?');
+        return queryIndex < 0
+            ? (pathAndQuery, "", fragment)
+            : (pathAndQuery[..queryIndex], pathAndQuery[(queryIndex + 1)..], fragment);
     }
 }

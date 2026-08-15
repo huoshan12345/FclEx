@@ -484,25 +484,30 @@
 
 范围仍为 `FclEx.Core`，排除 `Combinatorics` 文件夹下的源码。本轮按整体设计、公共 API/签名、实现与跨目标兼容性的顺序继续审查；累计 50 个新问题后停止。
 
-101. **[P1] `JsonStringSerializer` 会在真正解析前拒绝合法 JSON**
+101. **[P1][已修复] `JsonStringSerializer` 会在真正解析前拒绝合法 JSON**
 
     位置：`src/FclEx.Core/FclEx/Utils/~Serialization/JsonStringSerializer.cs:8-12`、`src/FclEx.Core/FclEx/Extensions/~System/~Text/~Json/StringExtensions.cs:5-45`。`Deserialize` 先调用基于首尾字符的 `IsPossibleJson`，因此带合法外围空白的 `" null "`、`" [1] "` 会被拒绝，指数形式等值也受启发式规则限制。序列化器不应以不完备的外形检查覆盖 `JsonSerializer` 的语法判断；应直接反序列化并保留原始 `JsonException`。
+    修复：确认现实现已移除 `IsPossibleJson` 预检并直接调用正式 JSON parser；补充外围空白的标量和数组回归测试，合法 JSON 不再被启发式规则拦截。
 
-102. **[P1] `JsonMemoryBytesSerializer.Instance` 的线格式取决于运行时类型**
+102. **[P1][已修复] `JsonMemoryBytesSerializer.Instance` 的线格式取决于运行时类型**
 
     位置：`src/FclEx.Core/FclEx/Utils/~Serialization/JsonMemoryBytesSerializer.cs:3-13`、`StringAsRawSerializer.cs:14-26`。名为 JSON 的默认实例用 `StringAsRawSerializer`：字符串 `abc` 被写成裸字节 `abc`，其他对象才写成 JSON；同一入口因运行时类型改变协议，且与 `JsonBytesSerializer` 的直觉契约不一致。应让 JSON serializer 始终产生 JSON；需要字符串直通时使用另一个明确命名的组合器或显式选项。
+    修复：移除两个会掩盖组合语义的旧类型。新增 `StringPassthroughSerializer`，仅负责让 string 原样通过并把其他类型委托给 fallback；新增 `Utf8MemoryBytesSerializer`，只负责 string/UTF-8 memory 适配；`SerializerPresets.StringOrJson` 与 `Utf8StringOrJson` 明确组装“字符串原样、其他类型 JSON”的需求。Redis 与 Messaging 的默认 serializer 已迁移到具名组合，测试覆盖普通文本、看似 JSON 的字符串、非 ASCII 文本和对象 JSON 往返。
 
-103. **[P1] `PagedList<T>` 允许构造互相矛盾的分页状态**
+103. **[P1][已修复] `PagedList<T>` 允许构造互相矛盾的分页状态**
 
     位置：`src/FclEx.Core/FclEx/Utils/~PagedList/PagedList.cs:17-41`。构造器只校验参数各自的范围，不校验 `items.Count <= pageSize`、`items.Count <= totalCount`、非空页是否落在 `PageCount` 内等关系；于是可出现 `TotalCount == 0` 但包含元素、`ItemStart > ItemEnd` 或超出末页仍带数据的对象。分页结果应有统一的不变量，并在构造边界拒绝不可能状态。
+    修复：页数改用无浮点且不会中间溢出的整数计算；拒绝超出已知页数的 `pageIndex`，并按当前页在总结果中的剩余容量限制 `items.Count`，因此空总数带元素、超过 page size 以及末页元素过多都会失败。`ItemStart/ItemEnd` 现在按实际返回元素计算，空页统一为 0/0。
 
-104. **[P1] `PagedList<T>` 的元数据是快照，元素集合却仍可在外部变化**
+104. **[P1][已修复] `PagedList<T>` 的元数据是快照，元素集合却仍可在外部变化**
 
     位置：`src/FclEx.Core/FclEx/Utils/~PagedList/PagedList.cs:11,27-41,56-59`。构造器直接保存调用方的 `IReadOnlyList<T>`；该接口不代表不可变，传入 `List<T>` 后继续增删会改变 `Count` 和索引内容，而 `TotalCount`、`PageCount`、`ItemStart/ItemEnd` 永远不变。应明确采用快照并防御性复制，或把分页元数据改成随底层集合一致变化的 view；当前混合语义不可保持一致。
+    修复：构造时把输入复制到私有数组，后续调用方修改原 list/array 不再影响分页内容、Count 或范围元数据；测试覆盖修改和追加原集合后的稳定快照。
 
-105. **[P1] `UriCreator.SplitUri` 把 fragment 中的问号误判为非法查询顺序**
+105. **[P1][已修复] `UriCreator.SplitUri` 把 fragment 中的问号误判为非法查询顺序**
 
     位置：`src/FclEx.Core/FclEx/Utils/~Net/UriCreator.cs:185-197`。`a#fragment?x` 是合法相对 URI，`?x` 属于 fragment；实现却因第一个 `?` 位于 `#` 后而抛 `ArgumentException`。应先定位 `#`，只在 fragment 之前寻找 query 分隔符，或交给标准 URI 解析逻辑。
+    修复：先从第一个 `#` 拆出完整 fragment，再只在 fragment 之前的 path/query 部分查找 `?`；fragment 内的所有问号均原样保留。测试同时覆盖“只有 fragment 内问号”和“正常 query 加含问号 fragment”。
 
 106. **[P1] `UriAttribute` 把 `://` 错当成所有绝对 URI 的必要条件**
 

@@ -7,7 +7,7 @@ public abstract class MessageProcessor<TSettings> : IMessageProcessor<TSettings>
     protected MessageProcessor(ILoggerFactory? loggerFactory, IMemoryBytesSerializer? serializer)
     {
         _logger = new(() => CreateLogger(loggerFactory));
-        Serializer = serializer ?? JsonMemoryBytesSerializer.Instance;
+        Serializer = serializer ?? SerializerPresets.Utf8StringOrJson;
     }
 
     [MemberNotNull(nameof(ExchangeName))]

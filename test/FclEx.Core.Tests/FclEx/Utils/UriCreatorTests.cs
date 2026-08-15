@@ -106,9 +106,23 @@ public class UriCreatorTests
     }
 
     [Fact]
-    public void SplitUri_WithInvalidUriOrder_ShouldThrowArgumentException()
+    public void SplitUri_WithQuestionMarkInFragment_ShouldKeepItInFragment()
     {
-        Assert.Throws<ArgumentException>(() => UriCreator.SplitUri("/path#fragment?query=value"));
+        var (path, query, fragment) = UriCreator.SplitUri("/path#fragment?query=value");
+
+        Assert.Equal("/path", path);
+        Assert.Equal("", query);
+        Assert.Equal("fragment?query=value", fragment);
+    }
+
+    [Fact]
+    public void SplitUri_WithQueryAndQuestionMarkInFragment_ShouldSplitAtDelimitersBeforeFragmentOnly()
+    {
+        var (path, query, fragment) = UriCreator.SplitUri("/path?query=value#fragment?not-a-query");
+
+        Assert.Equal("/path", path);
+        Assert.Equal("query=value", query);
+        Assert.Equal("fragment?not-a-query", fragment);
     }
 
     [Fact]
