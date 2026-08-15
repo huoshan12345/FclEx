@@ -28,7 +28,10 @@ public static class DefaultXmlAction
     /// <returns>The response text when it looks like XML; otherwise an error result.</returns>
     public static OperationResult<string> GetXml<T>(IXmlAction<T> action, HttpResponse response)
     {
-        return Operation.Success(response.ResponseString);
+        var str = response.ResponseString;
+        return str.CouldBeXmlDocument()
+            ? Operation.Success(response.ResponseString)
+            : Operation.Error<string>("The response string is not a valid xml: " + str.Truncate(256));
     }
 
     /// <summary>

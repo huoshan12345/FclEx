@@ -93,7 +93,7 @@ public static class ZipArchiveEntryExtensions
         while (nodes.Count != 0)
         {
             var node = nodes.Dequeue();
-            node.Children.Sort((left, right) =>
+            node.SortChildren((left, right) =>
             {
                 var typeComparison = right.Value.IsDirectory.CompareTo(left.Value.IsDirectory);
                 return typeComparison != 0

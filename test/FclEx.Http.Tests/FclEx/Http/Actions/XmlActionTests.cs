@@ -1,3 +1,6 @@
+using System.Xml;
+using System.Xml.Linq;
+
 namespace FclEx.Http.Actions;
 
 public class XmlActionTests
@@ -59,7 +62,7 @@ public class XmlActionTests
         var result = action.GetResult(response);
 
         Assert.True(result.IsError);
-        Assert.Contains("not a valid xml", result.Exception!.Message);
+        Assert.Contains("The response string is not a valid xml", result.Exception.Message);
     }
 
     [Fact]
@@ -116,15 +119,17 @@ public class XmlActionTests
     }
 
     [Fact]
-    public void GetXml_WhenResponseStringStartsWithXmlDeclaration_ReturnsError()
+    public void GetXml_WhenResponseStringStartsWithXmlDeclaration()
     {
         var response = HttpActionTestFixtures.CreateResponse("""<?xml version="1.0"?><root />""");
         var action = new XmlStringAction();
 
         var result = action.GetXml(response);
 
-        Assert.True(result.IsError);
-        Assert.Contains("not a valid xml", result.Exception!.Message);
+        Assert.True(result.IsSuccess);
+
+        var doc = XDocument.Parse(result.Value);
+        Assert.Equal("", doc.Root?.Value);
     }
 
     [Fact]
@@ -146,7 +151,7 @@ public class XmlActionTests
         var response = HttpActionTestFixtures.CreateResponse();
         var action = new XmlIntAction();
 
-        Assert.Throws<System.Xml.XmlException>(() => (object)action.CreateContext(response, "<root><value></root>"));
+        Assert.Throws<XmlException>(() => action.CreateContext(response, "<root><value></root>").Unwrap());
     }
 
     [Fact]
@@ -158,7 +163,7 @@ public class XmlActionTests
         var result = await action.ExecuteAsync();
 
         Assert.True(result.IsError);
-        Assert.IsType<System.Xml.XmlException>(result.Exception);
+        Assert.IsType<XmlException>(result.Exception);
     }
 
     [Fact]

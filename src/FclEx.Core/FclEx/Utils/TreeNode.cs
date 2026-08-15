@@ -5,24 +5,37 @@ public static class TreeNode
     public static TreeNode<T> Create<T>(T value) => new(value);
 }
 
-public class TreeNode<T>
+public sealed class TreeNode<T>
 {
+    private readonly List<TreeNode<T>> _children = [];
+    private readonly IReadOnlyList<TreeNode<T>> _childrenView;
+
     public TreeNode(T? value)
     {
         Value = value;
+        _childrenView = _children.AsReadOnly();
     }
 
     [AllowNull]
     public T Value { get; }
-    public List<TreeNode<T>> Children { get; } = [];
+    public IReadOnlyList<TreeNode<T>> Children => _childrenView;
     public TreeNode<T>? Parent { get; private set; }
 
     public TreeNode<T> AddChild(T value)
     {
         var node = new TreeNode<T>(value);
-        Children.Add(node);
-        node.Parent = this;
+        AddChild(node);
         return node;
+    }
+
+    public TreeNode<T> AddChild(TreeNode<T> child)
+    {
+        Check.NotNull(child);
+        EnsureCanAttach(child);
+
+        _children.Add(child);
+        child.Parent = this;
+        return child;
     }
 
     public void AddChildren(IEnumerable<T> values)
@@ -30,34 +43,79 @@ public class TreeNode<T>
         values.ForEach(m => AddChild(m));
     }
 
-    public bool DeepEquals(TreeNode<T>? y, IEqualityComparer<T>? comparer = null)
+    public bool RemoveChild(TreeNode<T> child)
     {
-        if (y == null)
+        Check.NotNull(child);
+
+        if (!_children.Remove(child))
+            return false;
+
+        child.Parent = null;
+        return true;
+    }
+
+    public bool Detach()
+    {
+        return Parent?.RemoveChild(this) == true;
+    }
+
+    public void MoveTo(TreeNode<T> newParent)
+    {
+        Check.NotNull(newParent);
+
+        if (ReferenceEquals(Parent, newParent))
+            return;
+
+        newParent.EnsureCanAttach(this, allowExistingParent: true);
+
+        // Reserve the destination slot before changing the existing relationship. If allocation
+        // fails, this node remains attached to its original parent.
+        newParent._children.Add(this);
+        Parent?._children.Remove(this);
+        Parent = newParent;
+    }
+
+    public void SortChildren(Comparison<TreeNode<T>> comparison)
+    {
+        Check.NotNull(comparison);
+        _children.Sort(comparison);
+    }
+
+    public bool DeepEquals(TreeNode<T>? other, IEqualityComparer<T>? comparer = null)
+    {
+        if (other == null)
             return false;
 
         comparer ??= EqualityComparer<T>.Default;
-        var x = this;
-        var map = new Dictionary<TreeNode<T>, TreeNode<T>> { { x, y } };
-        var queue = new Queue<TreeNode<T>>();
-        queue.Enqueue(x);
+        var queue = new Queue<(TreeNode<T> Left, TreeNode<T> Right)>();
+        queue.Enqueue((this, other));
         while (queue.Count != 0)
         {
-            var left = queue.Dequeue();
+            var (left, right) = queue.Dequeue();
 
-            if (!map.TryGetValue(left, out var right))
-                return false;
             if (!comparer.Equals(left.Value!, right.Value!))
                 return false;
             if (left.Children.Count != right.Children.Count)
                 return false;
 
-            left.Children.ForEach((i, m) =>
-            {
-                queue.Enqueue(m);
-                map.Add(m, right.Children[i]);
-            });
+            for (var i = 0; i < left.Children.Count; i++)
+                queue.Enqueue((left.Children[i], right.Children[i]));
         }
         return true;
+    }
+
+    private void EnsureCanAttach(TreeNode<T> child, bool allowExistingParent = false)
+    {
+        if (ReferenceEquals(child, this))
+            throw new InvalidOperationException("A tree node cannot be its own child.");
+        if (!allowExistingParent && child.Parent is not null)
+            throw new InvalidOperationException("The child already has a parent. Use MoveTo to move an attached node.");
+
+        for (var ancestor = this; ancestor is not null; ancestor = ancestor.Parent)
+        {
+            if (ReferenceEquals(ancestor, child))
+                throw new InvalidOperationException("Attaching the node would create a cycle.");
+        }
     }
 }
 

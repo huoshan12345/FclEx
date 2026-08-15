@@ -6,16 +6,16 @@ public class PowerShellInvoker : ProcessInvoker
     /// create custom powershell process
     /// </summary>
     /// <param name="fileName"></param>
-    /// <param name="argumentsConverter"></param>
-    public PowerShellInvoker(string fileName, Func<string, string> argumentsConverter)
-        : base(fileName, argumentsConverter)
+    /// <param name="commandArgumentFactory"></param>
+    public PowerShellInvoker(string fileName, Func<string, IReadOnlyList<string>> commandArgumentFactory)
+        : base(fileName, commandArgumentFactory)
     {
     }
 
     /// <summary>
     /// create default powershell process.
     /// </summary>
-    public PowerShellInvoker() : this("powershell", text => $"-command \"{text}\"")
+    public PowerShellInvoker() : this("powershell", text => ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", text])
     {
     }
 

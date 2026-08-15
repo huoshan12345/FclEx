@@ -426,41 +426,59 @@
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~IO/FileInfoExtensions.cs:28-58,82-129`。`dest.Exists == false` 后调用的基础复制使用 `File.Create`，会覆盖在检查与创建之间由其他线程/进程新建的文件；`AutoRename` 的递归检查同样不能保证新名字仍空闲。应在非覆盖策略下用 `FileMode.CreateNew` 原子认领目标，AutoRename 遇到 `IOException` 再选择下一名称，只有明确 `Overwrite` 才使用 Create。
     修复：除显式 `Overwrite` 外，copy 先用 `FileMode.CreateNew` 写入目标目录中的唯一 staging file，完成后以非覆盖 move 原子认领最终名称；move 本身也使用非覆盖移动。只有真实存在的冲突才进入 cancel/throw/auto-rename 分支，自动重命名循环重试直至原子成功。失败或取消只清理自己的 staging file，最终路径不会暴露部分内容；并发 copy/move 测试确认两个操作获得不同目标且内容均保留。
 
-92. **[P2] `ProcessInvoker` 的返回模型丢失了进程结果的关键结构**
+92. **[P2][已修复] `ProcessInvoker` 的返回模型丢失了进程结果的关键结构**
 
     位置：`src/FclEx.Core/FclEx/Utils/~Diagnostics/ProcessInvoker.cs:35-80`、`ProcessInvocation.cs:3-10`。stdout 与 stderr 被并发写入同一队列，跨流顺序不确定且调用方无法分别处理；忽略非零退出码时又只返回字符串，连 exit code 也丢失。建议始终返回 `ProcessResult(ExitCode, StandardOutput, StandardError)`，再由显式策略决定非零退出是否抛异常。
 
-93. **[P1] PowerShell/Pwsh/WSL invoker 的命令参数拼接不能正确承载引号**
+    修复：`ExecuteAsync` 现在始终产生包含退出码、stdout 和 stderr 的 `ProcessResult`；`ProcessExitCodePolicy` 明确控制非零退出是抛出携带完整结果的 `ProcessException`，还是直接返回结果。
+
+93. **[P1][已修复] PowerShell/Pwsh/WSL invoker 的命令参数拼接不能正确承载引号**
 
     位置：`src/FclEx.Core/FclEx/Utils/~Diagnostics/PowerShellInvoker.cs:18`、`PwshInvoker.cs:17-21`、`WslInvoker.cs:18`。把完整命令插入 `-command "..."` 或 `-c "..."` 而不转义内部引号、反斜杠和换行，合法命令会被外层命令行解析器截断或改写。应使用 `ProcessStartInfo.ArgumentList` 把命令作为单独参数传递，旧框架使用经过平台验证的 quoting helper，复杂脚本则通过 stdin/临时脚本文件传入。
 
-94. **[P1] 软删除实体用两个独立可写属性表达同一个状态**
+    修复：invoker 现在生成独立参数列表；新目标使用 `ProcessStartInfo.ArgumentList`，旧目标使用集中实现的命令行 quoting。PowerShell/Pwsh 的命令作为 `-Command` 的单独参数传递，bash 命令作为 `-c` 的单独参数传递，并补充了引号、换行以及旧框架测试。
+
+94. **[P1][不修改] 软删除实体用两个独立可写属性表达同一个状态**
 
     位置：`src/FclEx.Core/FclEx/Domain/~Entities/SoftDeletableEntity.cs:9-15`、`IHasDeletedAt.cs:6-11`、`ISoftDeletable.cs:6-11`。`IsDeleted == false` 同时带任意 `DeletedAt`，或 `IsDeleted == true` 配 `DateTimeOffset.MinValue` 都是合法对象状态。建议以 nullable `DeletedAt` 作为单一事实来源并派生 `IsDeleted`，或者只暴露 `Delete(at)`/`Restore()` 转换以维护不变量。
 
-95. **[P2] `EntityChanges<T>` 是带可变 List 的 record，既不是值对象也不是稳定快照**
+    决定：按当前需求保留现有软删除状态模型，不修改源码。
+
+95. **[P2][已修复] `EntityChanges<T>` 是带可变 List 的 record，既不是值对象也不是稳定快照**
 
     位置：`src/FclEx.Core/FclEx/Domain/~Entities/EntityChanges.cs:20-43`。record equality 对三个 List 使用引用相等，两个内容相同的 changes 不相等；对象创建后列表仍可变，`init` 属性也能被显式赋 null，仅靠 nullable warning 阻止。应选择语义：可变工作集用普通 sealed class 和只读暴露，传输/值对象则复制到 immutable/read-only collection 并定义内容相等。
 
-96. **[P1] `GetRequiredAsync` 的 default 参数使“Required”名存实亡**
+    修复：明确采用稳定快照语义。`EntityChanges<T>` 改为普通 sealed class，构造时防御性复制三个序列并以只读列表暴露；EF Core 的 `ApplyChanges` 在局部列表中累积结果，完成后再创建快照。
+
+96. **[P1][不修改] `GetRequiredAsync` 的 default 参数使“Required”名存实亡**
 
     位置：`src/FclEx.Core/FclEx/Domain/~Services/IKeyValueService.cs:28-32`。缺少 key 时 `GetAsync` 会返回调用方提供的非 null default，方法因此成功而不是抛出；只有 default 本身为 null 才符合 Required 语义。应删除 defaultValue 参数并直接检测缺失，另设 `GetOrDefaultAsync`/`GetOrElseAsync` 表达 fallback。
 
-97. **[P1] `NString.Equals(object)` 违反相等关系的对称性**
+    决定：按当前需求保留现有签名与行为，不修改源码。
+
+97. **[P1][已修复] `NString.Equals(object)` 违反相等关系的对称性**
 
     位置：`src/FclEx.Core/FclEx/Utils/NString.cs:12-32`。`new NString("x").Equals("x")` 为 true，而 `"x".Equals(new NString("x"))` 为 false；跨类型 object equality 不满足 .NET 相等契约，会给集合和通用算法造成异常结果。`Equals(object)` 应只接受 `NString`，字符串便利性保留在显式/隐式转换或具名比较方法中。
 
-98. **[P1] `TreeNode.Children` 的公开可变列表绕过了 Parent 和树拓扑约束**
+    修复：`Equals(object)` 现在只接受 `NString`，并补充跨类型 object equality 的对称性测试；字符串转换和强类型运算符保持不变。
+
+98. **[P1][已修复] `TreeNode.Children` 的公开可变列表绕过了 Parent 和树拓扑约束**
 
     位置：`src/FclEx.Core/FclEx/Utils/TreeNode.cs:15-31,33-59`。调用方可直接加入已有节点、删除节点、创建环或共享子树，却不会更新 `Parent`；`DeepEquals` 随后假定严格树结构，并在重复节点上 `map.Add` 抛异常。应封装 children，提供维护双向关系的 Add/Remove/Move API，拒绝环和多父节点，并让遍历对非法图有明确行为。
 
-99. **[P0] `ObjectAccessor` 返回的托管对象地址在方法返回时就可能失效**
+    修复：children 改为只读视图，新增受控的节点 Add、Remove、Detach、Move 和排序 API；所有拓扑变更维护 `Parent`，并拒绝自引用、环与多父节点。`DeepEquals` 也简化为在受保证的树结构上逐对遍历。
+
+99. **[P0][已注明风险] `ObjectAccessor` 返回的托管对象地址在方法返回时就可能失效**
 
     位置：`src/FclEx.Core/FclEx/Utils/~Accessors/ObjectAccessor.cs:19-45,60-123,126-193`。这些方法把对象、引用槽位和字段的 managed byref 转成 `IntPtr[]` 后返回，期间没有也无法为任意对象建立可持续的 pin；下一次 GC 即可移动对象。`GetAddress(ref T)` 对引用类型返回的还是引用变量槽位地址，并非对象地址。建议删除面向任意托管对象的地址 API；仅对 `unmanaged` 值提供 scoped 操作，或让低层逻辑在受控 callback 内消费 byref，绝不把裸地址跨出生命周期。
 
-100. **[P1] `OrderedIndex.UpdateScore` 先删除再添加，失败时会永久丢失原项**
+    处理：按当前需求保留 API，但在委托、类型和各公开入口的 XML 文档中明确说明地址不带 pin、可能在返回后立即失效、引用类型的 `GetAddress` 返回引用槽位而非对象数据地址，以及任意托管对象并不都能安全 pin。
+
+100. **[P1][已修复] `OrderedIndex.UpdateScore` 先删除再添加，失败时会永久丢失原项**
 
     位置：`src/FclEx.Core/System/Collections/Generic/OrderedIndex.cs:245-253`。旧节点先从 skip list 和 map 移除，随后 `Add(newScore, value)` 若因 comparer 或其他异常失败，没有任何回滚，公开的“更新”操作变成删除。应在提交前完成所有可能失败的比较/分配，或保存旧 score/sequence 并在异常路径恢复原节点，保证操作成功或集合保持原状。
+
+    修复：插入被拆分为准备与无异常提交阶段；更新先保存完整移除计划，若新 score 的比较、节点分配或字典更新失败则原样恢复旧节点，成功时才链接新节点并推进版本。新增 comparer 抛异常后的内容、rank、score 与枚举器版本保持测试。
 
 ## 建议处理顺序
 

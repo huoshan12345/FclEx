@@ -121,7 +121,23 @@ public class OrderedIndex<TScore, TValue> : ICollection<(TScore Score, TValue Va
         if (_map.ContainsKey(value))
             return false;
 
-        var seq = ++_sequence;
+        var sequence = unchecked(_sequence + 1);
+        var node = PrepareInsertion(score, value, sequence);
+
+        // Dictionary hashing and allocation can fail. Complete that work before linking the
+        // node so an exception cannot leave the skip list and lookup map out of sync.
+        _map.Add(value, node);
+        LinkNode(node, _count);
+
+        _sequence = sequence;
+        ++_count;
+        ++_version;
+
+        return true;
+    }
+
+    private Node PrepareInsertion(TScore score, TValue value, long sequence)
+    {
         var x = _head;
 
         for (var i = _level - 1; i >= 0; i--)
@@ -129,7 +145,7 @@ public class OrderedIndex<TScore, TValue> : ICollection<(TScore Score, TValue Va
             _rank[i] = i == _level - 1 ? 0 : _rank[i + 1];
 
             while (x.Levels[i].Forward is { } forward &&
-                   Compare(forward, score, seq) < 0)
+                   Compare(forward, score, sequence) < 0)
             {
                 _rank[i] += x.Levels[i].Span;
                 x = forward;
@@ -139,20 +155,23 @@ public class OrderedIndex<TScore, TValue> : ICollection<(TScore Score, TValue Va
         }
 
         var lvl = RandomLevel();
+        return new Node(lvl, score, value, sequence);
+    }
 
+    private void LinkNode(Node node, int existingCount)
+    {
+        var lvl = node.Levels.Length;
         if (lvl > _level)
         {
             for (var i = _level; i < lvl; i++)
             {
                 _rank[i] = 0;
                 _update[i] = _head;
-                _head.Levels[i].Span = _count;
+                _head.Levels[i].Span = existingCount;
             }
 
             _level = lvl;
         }
-
-        var node = new Node(lvl, score, value, seq);
 
         for (var i = 0; i < lvl; i++)
         {
@@ -170,15 +189,9 @@ public class OrderedIndex<TScore, TValue> : ICollection<(TScore Score, TValue Va
 
         node.Backward = _update[0] == _head ? null : _update[0];
         node.Levels[0].Forward?.Backward = node;
-
-        _map[value] = node;
-        ++_count;
-        ++_version;
-
-        return true;
     }
 
-    private void RemoveNode(Node node)
+    private void FindRemovalPredecessors(Node node)
     {
         var x = _head;
         var score = node.Score;
@@ -195,7 +208,25 @@ public class OrderedIndex<TScore, TValue> : ICollection<(TScore Score, TValue Va
 
             _update[i] = x;
         }
+    }
 
+    private RemovalPlan CaptureRemovalPlan(Node node)
+    {
+        var predecessors = new Node[_level];
+        var predecessorSpans = new int[_level];
+        var directlyLinked = new bool[_level];
+        for (var i = 0; i < _level; i++)
+        {
+            predecessors[i] = _update[i];
+            predecessorSpans[i] = _update[i].Levels[i].Span;
+            directlyLinked[i] = _update[i].Levels[i].Forward == node;
+        }
+
+        return new RemovalPlan(predecessors, predecessorSpans, directlyLinked, _level);
+    }
+
+    private void UnlinkNode(Node node)
+    {
         for (var i = 0; i < _level; i++)
         {
             if (_update[i].Levels[i].Forward == node)
@@ -215,6 +246,42 @@ public class OrderedIndex<TScore, TValue> : ICollection<(TScore Score, TValue Va
             _level--;
     }
 
+    private void UnlinkNode(Node node, RemovalPlan plan)
+    {
+        for (var i = 0; i < plan.Level; i++)
+        {
+            var predecessor = plan.Predecessors[i];
+            if (plan.DirectlyLinked[i])
+            {
+                predecessor.Levels[i].Span += node.Levels[i].Span - 1;
+                predecessor.Levels[i].Forward = node.Levels[i].Forward;
+            }
+            else
+            {
+                predecessor.Levels[i].Span--;
+            }
+        }
+
+        node.Levels[0].Forward?.Backward = node.Backward;
+
+        while (_level > 1 && _head.Levels[_level - 1].Forward == null)
+            _level--;
+    }
+
+    private void RestoreNode(Node node, RemovalPlan plan)
+    {
+        for (var i = 0; i < plan.Level; i++)
+        {
+            var predecessor = plan.Predecessors[i];
+            predecessor.Levels[i].Span = plan.PredecessorSpans[i];
+            if (plan.DirectlyLinked[i])
+                predecessor.Levels[i].Forward = node;
+        }
+
+        node.Levels[0].Forward?.Backward = node;
+        _level = plan.Level;
+    }
+
     /// <summary>
     /// Removes the specified value from the index.
     /// </summary>
@@ -226,9 +293,9 @@ public class OrderedIndex<TScore, TValue> : ICollection<(TScore Score, TValue Va
         if (!_map.TryGetValue(value, out var node))
             return false;
 
-        RemoveNode(node);
-
+        FindRemovalPredecessors(node);
         _map.Remove(value);
+        UnlinkNode(node);
         --_count;
 
         ++_version;
@@ -244,10 +311,30 @@ public class OrderedIndex<TScore, TValue> : ICollection<(TScore Score, TValue Va
     /// </returns>
     public bool UpdateScore(TValue value, TScore newScore)
     {
-        if (!Remove(value))
+        if (!_map.TryGetValue(value, out var oldNode))
             return false;
 
-        Add(newScore, value);
+        FindRemovalPredecessors(oldNode);
+        var removal = CaptureRemovalPlan(oldNode);
+        UnlinkNode(oldNode, removal);
+
+        var sequence = unchecked(_sequence + 1);
+        Node newNode;
+        try
+        {
+            newNode = PrepareInsertion(newScore, value, sequence);
+            _map[value] = newNode;
+        }
+        catch
+        {
+            RestoreNode(oldNode, removal);
+            throw;
+        }
+
+        // All potentially throwing comparison, allocation, and dictionary work has completed.
+        LinkNode(newNode, _count - 1);
+        _sequence = sequence;
+        ++_version;
 
         return true;
     }
@@ -550,6 +637,12 @@ public class OrderedIndex<TScore, TValue> : ICollection<(TScore Score, TValue Va
         public readonly Level[] Levels = new Level[level];
     }
 
+    private sealed record RemovalPlan(
+        Node[] Predecessors,
+        int[] PredecessorSpans,
+        bool[] DirectlyLinked,
+        int Level);
+
     [MethodImpl(AggressiveInlining)]
     private static (TScore Score, TValue Value) GetScoreValue(Node? node)
     {
@@ -585,9 +678,9 @@ public class OrderedIndex<TScore, TValue> : ICollection<(TScore Score, TValue Va
             || _scoreComparer.Compare(node.Score, item.Score) != 0)
             return false;
 
-        RemoveNode(node);
-
+        FindRemovalPredecessors(node);
         _map.Remove(item.Value);
+        UnlinkNode(node);
         --_count;
         ++_version;
 

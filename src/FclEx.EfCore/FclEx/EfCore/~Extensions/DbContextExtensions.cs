@@ -310,7 +310,9 @@ public static partial class DbContextExtensions
         var existingDic = ToDictionary(existingEntities, entityKey, nameof(existingEntities));
         var keyedDtos = ToListWithUniqueKeys(dtos, dtoKey, nameof(dtos));
 
-        var changes = new EntityChanges<TEntity>();
+        var inserted = new List<TEntity>();
+        var updated = new List<EntityUpdate<TEntity>>();
+        var deleted = new List<TEntity>();
         foreach (var (key, dto) in keyedDtos)
         {
             if (existingDic.TryGetValue(key, out var entity))
@@ -364,7 +366,7 @@ public static partial class DbContextExtensions
                         }
                     }
 
-                    changes.Updated.Add(new(updatedEntity, entity));
+                    updated.Add(new(updatedEntity, entity));
                 }
 
                 // // Remove matched entity from deletion candidates since it is present in the incoming DTOs.
@@ -374,7 +376,7 @@ public static partial class DbContextExtensions
             {
                 var newEntity = insertEntity(dto);
                 set.Add(newEntity);
-                changes.Inserted.Add(newEntity);
+                inserted.Add(newEntity);
             }
         }
 
@@ -383,10 +385,10 @@ public static partial class DbContextExtensions
             foreach (var (_, entity) in existingDic)
             {
                 set.Remove(entity);
-                changes.Deleted.Add(entity);
+                deleted.Add(entity);
             }
         }
-        return changes;
+        return new EntityChanges<TEntity>(inserted, updated, deleted);
 
         static Dictionary<TKey, TValue> ToDictionary<TValue>(
             IEnumerable<TValue> values,

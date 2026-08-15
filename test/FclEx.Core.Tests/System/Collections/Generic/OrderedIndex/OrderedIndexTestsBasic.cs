@@ -119,6 +119,28 @@ public class OrderedIndexTestsBasic
     }
 
     [Fact]
+    public void UpdateScore_WhenComparerThrows_PreservesOriginalIndexAndEnumeratorVersion()
+    {
+        var comparer = new RejectingScoreComparer(99);
+        var idx = new OrderedIndex<int, string>(comparer)
+        {
+            { 10, "a" },
+            { 20, "b" },
+            { 30, "c" },
+        };
+        var enumerator = idx.GetEnumerator();
+
+        Assert.Throws<InvalidOperationException>(() => idx.UpdateScore("b", 99));
+
+        Assert.Equal([(10, "a"), (20, "b"), (30, "c")], idx.ToArray());
+        Assert.True(idx.TryGetScore("b", out var score));
+        Assert.Equal(20, score);
+        Assert.Equal(1, idx.Rank("b"));
+        Assert.True(enumerator.MoveNext());
+        Assert.Equal((10, "a"), enumerator.Current);
+    }
+
+    [Fact]
     public void StableSort_ShouldPreserveInsertionOrder()
     {
         var idx = new OrderedIndex<int, string>
@@ -740,6 +762,17 @@ public class OrderedIndexTestsBasic
 
             Assert.Equal(arr[i].Value, item.Value);
             Assert.Equal(arr[i].Score, item.Score);
+        }
+    }
+
+    private sealed class RejectingScoreComparer(int rejectedScore) : IComparer<int>
+    {
+        public int Compare(int x, int y)
+        {
+            if (x == rejectedScore || y == rejectedScore)
+                throw new InvalidOperationException("The score is rejected for testing.");
+
+            return x.CompareTo(y);
         }
     }
 }

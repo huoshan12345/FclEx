@@ -6,7 +6,7 @@ public class PwshInvokerTests
     public async Task GetChildItem_Test()
     {
         var result = await PwshInvoker.Instance.ExecuteAsync(new ProcessInvocation("Get-ChildItem", AppContext.BaseDirectory));
-        Assert.Contains("Directory:", result);
+        Assert.Contains("Directory:", result.StandardOutput);
     }
 
     [Fact]
@@ -16,9 +16,47 @@ public class PwshInvokerTests
 
         var result = await PwshInvoker.Instance.ExecuteAsync(command);
 
-        var lines = result.Split([Environment.NewLine], StringSplitOptions.None);
-        Assert.Contains("stdout-tail", lines);
-        Assert.Contains("stderr-tail", lines);
+        var outputLines = result.StandardOutput.Split([Environment.NewLine], StringSplitOptions.None);
+        var errorLines = result.StandardError.Split([Environment.NewLine], StringSplitOptions.None);
+        Assert.Contains("stdout-tail", outputLines);
+        Assert.Contains("stderr-tail", errorLines);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PreservesQuotedAndMultilineCommand()
+    {
+        const string command = "Write-Output 'a \"quoted\" value'\nWrite-Output 'second line'";
+
+        var result = await PwshInvoker.Instance.ExecuteAsync(command);
+
+        Assert.Equal($"a \"quoted\" value{Environment.NewLine}second line", result.StandardOutput);
+        Assert.Empty(result.StandardError);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnResultPolicy_PreservesExitCodeAndSeparateStreams()
+    {
+        var invocation = new ProcessInvocation(
+            "[Console]::Out.WriteLine('output'); [Console]::Error.WriteLine('error'); exit 7",
+            ExitCodePolicy: ProcessExitCodePolicy.ReturnResult);
+
+        var result = await PwshInvoker.Instance.ExecuteAsync(invocation);
+
+        Assert.Equal(7, result.ExitCode);
+        Assert.False(result.Succeeded);
+        Assert.Equal("output", result.StandardOutput);
+        Assert.Equal("error", result.StandardError);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ThrowPolicy_IncludesStructuredResult()
+    {
+        var exception = await Assert.ThrowsAsync<ProcessException>(() =>
+            PwshInvoker.Instance.ExecuteAsync("[Console]::Error.WriteLine('failure'); exit 9"));
+
+        Assert.Equal(9, exception.ExitCode);
+        Assert.Equal("failure", exception.Result.StandardError);
+        Assert.Empty(exception.Result.StandardOutput);
     }
 
     [LocalOnlyFact]
@@ -27,7 +65,7 @@ public class PwshInvokerTests
         var processIdFile = Path.Combine(Path.GetTempPath(), $"fclex-process-{Guid.NewGuid():N}.pid");
         var completedFile = Path.Combine(Path.GetTempPath(), $"fclex-process-{Guid.NewGuid():N}.completed");
         using var cancellation = new CancellationTokenSource();
-        Task<string>? execution = null;
+        Task<ProcessResult>? execution = null;
         int? processId = null;
 
         try

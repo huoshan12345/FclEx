@@ -22,15 +22,7 @@ public readonly struct NString(string? value) : IEquatable<NString>
     public static bool operator ==(NString left, NString right) => left.Equals(right);
     public static bool operator !=(NString left, NString right) => !(left == right);
 
-    public override bool Equals(object? obj)
-    {
-        return obj switch
-        {
-            NString other => Value == other.Value,
-            string other => Value == other,
-            _ => false,
-        };
-    }
+    public override bool Equals(object? obj) => obj is NString other && Equals(other);
 }
 
 public static class NStringExtensions
