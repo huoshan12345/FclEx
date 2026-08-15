@@ -26,38 +26,33 @@ public static class ReadOnlySpanExtensions
     public static string ToBase64(this ReadOnlySpan<byte> span) => Convert.ToBase64String(span);
 #endif
 
-    public static unsafe T MarshalTo<T>(this ReadOnlySpan<byte> span)
+    /// <summary>
+    /// Reads an unmanaged value from the beginning of the span using the managed layout of <typeparamref name="T"/>.
+    /// </summary>
+    /// <remarks>
+    /// Use <see cref="StructLayoutAttribute"/> and fixed buffers when the bytes originate from a native structure.
+    /// No byte-order conversion or interop marshaling is performed. Bytes after the value are ignored.
+    /// </remarks>
+    public static T ReadStruct<T>(this ReadOnlySpan<byte> span) where T : unmanaged
     {
-        var size = Marshal.SizeOf<T>();
-        Check.NotLessThan(span.Length, size);
-
-        using var disposable = MarshalHelper.AllocHGlobal(size);
-        var ptr = disposable.Value;
-
-        var buffer = new Span<byte>(ptr.ToPointer(), size);
-        span.CopyTo(buffer);
-        var obj = ptr.MarshalTo<T>();
-        return obj!;
+        return MemoryMarshal.Read<T>(span);
     }
 
-    public static unsafe T[] MarshalToArray<T>(this ReadOnlySpan<byte> span)
+    /// <summary>
+    /// Reads consecutive unmanaged values from the span.
+    /// </summary>
+    /// <exception cref="ArgumentException">The span length is not an exact multiple of the structure size.</exception>
+    public static T[] ReadStructArray<T>(this ReadOnlySpan<byte> span) where T : unmanaged
     {
-        var size = Marshal.SizeOf<T>();
-        Check.NotLessThan(span.Length, size);
+        var size = Unsafe.SizeOf<T>();
+        if (span.Length % size != 0)
+            throw new ArgumentException("The span length must be an exact multiple of the structure size.", nameof(span));
 
-        var count = span.Length / size; // count should be >= 1
-        var total = size * count;
-
-        using var disposable = MarshalHelper.AllocHGlobal(total);
-        var ptr = disposable.Value;
-
+        var count = span.Length / size;
         var result = new T[count];
         for (var i = 0; i < count; i++)
         {
-            var buffer = new Span<byte>(ptr.ToPointer(), size);
-            span.Slice(i * size, size).CopyTo(buffer);
-            var obj = ptr.MarshalTo<T>();
-            result[i] = obj!;
+            result[i] = MemoryMarshal.Read<T>(span.Slice(i * size, size));
         }
         return result;
     }
@@ -195,6 +190,7 @@ public static class ReadOnlySpanExtensions
         private readonly SplitOptions _options;
         private ReadOnlySpan<char> _remaining;
         private ReadOnlySpan<char> _current;
+        private bool _hasResult;
 
         public SplitEnumerator(
             ReadOnlySpan<char> span,
@@ -205,6 +201,7 @@ public static class ReadOnlySpanExtensions
             _separators = separators;
             _options = options;
             _current = default;
+            _hasResult = true;
         }
 
         public readonly SplitEnumerator GetEnumerator() => this;
@@ -216,7 +213,7 @@ public static class ReadOnlySpanExtensions
         {
             while (true)
             {
-                if (_remaining.IsEmpty)
+                if (_hasResult == false)
                     return false;
 
                 var idx = _remaining.IndexOfAny(_separators);
@@ -227,6 +224,7 @@ public static class ReadOnlySpanExtensions
                 {
                     slice = _remaining;
                     _remaining = default;
+                    _hasResult = false;
                 }
                 else
                 {
@@ -243,10 +241,7 @@ public static class ReadOnlySpanExtensions
                 // RemoveEmptyEntries
                 if ((_options & SplitOptions.RemoveEmptyEntries) != 0 && slice.IsEmpty)
                 {
-                    if (_remaining.IsEmpty)
-                        return false;
-
-                    continue; // 跳过空项
+                    continue;
                 }
 
                 _current = slice;

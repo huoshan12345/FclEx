@@ -293,16 +293,42 @@ partial class EnumerableExtensions
         throw new InvalidOperationException("No task completed successfully.");
     }
 
+    /// <summary>
+    /// Completes when every task succeeds, or propagates the first observed fault or cancellation without waiting for the
+    /// other tasks to finish.
+    /// </summary>
+    /// <remarks>
+    /// This method cannot cancel the remaining tasks. If it returns early, it continues to observe their faults so they do
+    /// not become unobserved task exceptions.
+    /// </remarks>
     public static async Task WhenAllOrError(this IEnumerable<Task> tasks)
     {
         Check.NotNull(tasks);
 
-        var remainingTasks = tasks.ToList();
+        var remainingTasks = new List<Task>();
+        foreach (var task in tasks)
+        {
+            if (task is null)
+                throw new ArgumentException("The sequence cannot contain a null task.", nameof(tasks));
+
+            ObserveFault(task);
+            remainingTasks.Add(task);
+        }
+
         while (remainingTasks.Count > 0)
         {
             var completedTask = await Task.WhenAny(remainingTasks).ConfigureAwait(false);
             remainingTasks.Remove(completedTask);
             await completedTask.ConfigureAwait(false);
+        }
+
+        static void ObserveFault(Task task)
+        {
+            _ = task.ContinueWith(
+                static faultedTask => _ = faultedTask.Exception,
+                CancellationToken.None,
+                TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnFaulted,
+                TaskScheduler.Default);
         }
     }
 

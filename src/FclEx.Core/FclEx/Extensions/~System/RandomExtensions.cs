@@ -239,8 +239,9 @@ public static class RandomExtensions
         var size = Marshal.SizeOf<T>();
         var bytes = new byte[size];
         random.NextBytes(bytes);
-        var result = bytes.MarshalTo<T>();
-        return result;
+        using var memory = MarshalHelper.AllocHGlobal(size);
+        Marshal.Copy(bytes, 0, memory.Value, size);
+        return Marshal.PtrToStructure<T>(memory.Value)!;
     }
 
     /// <summary>

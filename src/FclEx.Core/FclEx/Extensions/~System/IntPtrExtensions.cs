@@ -19,10 +19,20 @@ public static class IntPtrExtensions
     /// <param name="ptr">The first pointer.</param>
     /// <param name="other">The second pointer to compare with.</param>
     /// <returns>The absolute difference in bytes between <paramref name="ptr"/> and <paramref name="other"/>.</returns>
-    public static long AbsDiff(this IntPtr ptr, IntPtr other)
+    public static nuint AbsDiff(this IntPtr ptr, IntPtr other)
     {
-        var diff = ptr.ToInt64() - other.ToInt64();
-        return diff >= 0 ? diff : -diff;
+        if (IntPtr.Size == sizeof(int))
+        {
+            var left = unchecked((uint)ptr.ToInt32());
+            var right = unchecked((uint)other.ToInt32());
+            return left >= right ? left - right : right - left;
+        }
+
+        var left64 = unchecked((ulong)ptr.ToInt64());
+        var right64 = unchecked((ulong)other.ToInt64());
+        return left64 >= right64
+            ? (nuint)(left64 - right64)
+            : (nuint)(right64 - left64);
     }
 
     /// <summary>

@@ -8,7 +8,7 @@ public class ZipArchiveEntryExtensionsTests
     public async Task ExtractToDirAsync_PathTraversal_ThrowsWithoutWritingOutsideDestination()
     {
         var testDirectory = new DirectoryInfo(Path.Combine(".", nameof(ExtractToDirAsync_PathTraversal_ThrowsWithoutWritingOutsideDestination)));
-        testDirectory.CreateNew();
+        testDirectory.Recreate();
         var outsideFile = new FileInfo(Path.Combine(testDirectory.Parent!.FullName, $"outside-{Guid.NewGuid():N}.txt"));
 
         try
@@ -62,7 +62,7 @@ public class ZipArchiveEntryExtensionsTests
         var zip = Path.Combine("TestData", zipFile);
         using var archive = ZipFile.Open(zip, ZipArchiveMode.Read);
         var dir = new DirectoryInfo(Path.Combine(".", nameof(BuildTree_Test), zipFile));
-        dir.CreateNew();
+        dir.Recreate();
         archive.ExtractToDirectory(dir.FullName);
         var root = archive.BuildTree();
 
@@ -127,7 +127,7 @@ public class ZipArchiveEntryExtensionsTests
     {
         var dirName = zipFile + "_" + (ignoreEntryDir ? "ignore" : "");
         var dir = new DirectoryInfo(Path.Combine(".", nameof(ExtractToDir_Test), dirName));
-        dir.CreateNew();
+        dir.Recreate();
 
         var zip = Path.Combine("TestData", zipFile);
         using var archive = ZipFile.Open(zip, ZipArchiveMode.Read);

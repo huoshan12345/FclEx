@@ -371,49 +371,60 @@
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Collections/~Generic/EnumerableExtensions.cs:135-144`。累加器从 0 开始却使用按位与 `&=`，所以任何 bit 都无法被设置。应使用 `|=`，同时明确首项代表最低位还是最高位，并拒绝或定义超过 32 位时的行为。
     修复：改用按位或设置 bit，明确首项是最低有效位，第 32 项对应 `int` 符号位；空序列返回 0，超过 32 项抛 `ArgumentException`，null 输入抛 `ArgumentNullException`。测试覆盖普通位型、符号位和超长序列。
 
-81. **[P1] `Enumerable.Split(parts)` 的延迟查询捕获了跨枚举共享的可变索引**
+81. **[P1][已修复] `Enumerable.Split(parts)` 的延迟查询捕获了跨枚举共享的可变索引**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Collections/~Generic/EnumerableExtensions.cs:358-365`。`i` 在查询外定义，第二次枚举会从上一次结束值继续，并发枚举还会竞态；`parts <= 0` 也没有验证，错误延迟到枚举时才发生。应在 iterator 每次枚举时创建局部状态，验证正数，并把 round-robin 行为改成更准确的名称，因为它不是连续分块。
+    修复：API 重命名为 `DistributeRoundRobin(source, partitionCount)`，参数在调用时立即验证；索引成为 iterator 每次枚举独有的局部状态，重复或并发枚举不再共享进度。文档明确只返回非空 partition，测试覆盖分配顺序、重复枚举和分区数大于元素数。
 
-82. **[P1] `WhenAllOrError` 提前失败后不再观察剩余任务**
+82. **[P1][已修复] `WhenAllOrError` 提前失败后不再观察剩余任务**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Collections/~Generic/EnumerableExtensions.Task.cs:296-306`。任一已完成任务 fault/cancel 时 await 立即退出，列表中其他任务继续运行；它们随后 fault 时没有任何观察者，可能触发未观察异常。若契约要求 fail-fast，应给剩余任务附加可靠的异常观察并定义取消策略；否则直接使用 `Task.WhenAll` 并保留聚合完成语义。
+    修复：保留 fail-fast：第一个 fault/cancel 仍立即传播，不等待剩余任务；枚举任务时为每个任务预先注册只在 fault 时同步执行的异常观察 continuation，因而提前返回后发生的异常也会被观察。任务序列中的 null 现在立即以 `ArgumentException` 拒绝。
 
-83. **[P2] Span split 在未请求移除空项时仍会丢失空输入和尾部空项**
+83. **[P2][已修复] Span split 在未请求移除空项时仍会丢失空输入和尾部空项**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/ReadOnlySpanExtensions.cs:186-247`。`_remaining.IsEmpty` 会直接结束，因此空 span 不产生一个空项，`"a,"` 也不会产生尾部空项，和 `StringSplitOptions.None` 的预期不一致。枚举器需要单独记录“尚未开始/最后一个分隔符后仍有一个结果”的状态，而不能用 empty span 同时表示数据和完成。
+    修复：枚举器以独立 `_hasResult` 状态区分“剩余数据为空”和“枚举结束”；空输入、前导/尾部分隔符及连续分隔符在 `None` 下都保留空项，`RemoveEmptyEntries` 仍会完整移除它们，并覆盖 trim 组合测试。
 
-84. **[P2] `IntPtr.AbsDiff` 的返回类型和算术都无法表示合法地址差**
+84. **[P2][已修复] `IntPtr.AbsDiff` 的返回类型和算术都无法表示合法地址差**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/IntPtrExtensions.cs:16-25`。有符号减法可能溢出，`-long.MinValue` 仍是负数；两个 64 位地址之间的距离还可能大于 `long.MaxValue`。应以无符号算术计算并返回 `nuint`/`ulong`，或对不可表示的结果显式抛出 overflow。
+    修复：返回类型改为 `nuint`，根据进程位数将地址位型转换为 `uint`/`ulong` 后再以无符号大小关系相减，可表达从 0 到整个平台地址空间最大值的距离；测试覆盖交换操作数和全地址范围。
 
-85. **[P2] `IsPossibleXml` 没有可供调用方依赖的有效契约**
+85. **[P2][已修复] `IsPossibleXml` 没有可供调用方依赖的有效契约**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/StringExtensions.cs:51-83`。三个 regex 不检查标签匹配、嵌套、属性或实体，可接受明显损坏的 XML；同时会拒绝合法的空元素、前导空白等输入。与已移除的 `IsPossibleHtml` 相同，这种“可能是”判断没有稳定用途；应删除并让调用方直接解析，若只需便宜的外形检查则必须以名称和文档明确它不验证 XML。
+    修复：按实际用途改为 `CouldBeXmlDocument`，删除 regex，只做合法 XML 文档必需的廉价 envelope 检查（去除外围空白/BOM 后以 `<` 开始、以 `>` 结束）。文档明确 false 才能排除、true 不代表格式正确；若需要确定性验证仍必须交给 XML parser。
 
-86. **[P0] `MarshalTo<T>` 会把任意字节解释成原生地址并解引用**
+86. **[P0][已修复] `MarshalTo<T>` 会把任意字节解释成原生地址并解引用**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/BytesExtensions.cs:34-84`、`ReadOnlySpanExtensions.cs:29-62`。API 对 `T` 无约束，`PtrToStructure<T>` 遇到 string、数组或引用字段时会把输入字节当地址并解引用，可能产生访问冲突或读取非预期内存；span 单值版本在输入长于结构时还因复制整个 span 到较小缓冲区而抛错。应把原始二进制读取限制为 `unmanaged` 并用 `MemoryMarshal.Read`；真正的 interop marshaling 应使用明确命名、受控布局和可信输入，并只复制精确结构长度。
+    修复：原 API 改为 `ReadStruct<T>`/`ReadStructArray<T>` 且要求 `T : unmanaged`，通过 `MemoryMarshal.Read` 按托管布局读取，不再分配原生内存或解引用输入中的地址。顺序/显式布局、`Pack` 和 fixed buffer 仍可用于 C struct；含 `[MarshalAs(ByValArray)]` 等托管引用的结构不再支持。数组读取拒绝尾部残缺结构，单值读取只消费所需字节。
 
-87. **[P1] `DirectoryInfo.IsSubOf` 的路径判定在不同平台和边界输入上不可靠**
+87. **[P1][已修复] `DirectoryInfo.IsSubOf` 的路径判定在不同平台和边界输入上不可靠**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~IO/DirectoryInfoExtensions.cs:45-50`。实现无条件 `OrdinalIgnoreCase`，在大小写敏感文件系统上错误；父路径已有尾分隔符时会拼出双分隔符，无界静态 cache 还会永久保存任意路径。建议用规范化后的 `Path.GetRelativePath` 和平台正确的比较规则，明确“自身是否算子目录”及符号链接策略，并删除这个无收益缓存。
+    修复：重命名为 `IsDescendantOf`，删除无界缓存，规范化完整路径并用带目录分隔符的父路径进行边界比较；Windows 使用不区分大小写比较，其他平台区分大小写。自身明确不算 descendant，文档注明这是不解析符号链接的词法判定。
 
-88. **[P1] `DirectoryInfo.Sub`/`File` 允许 rooted 参数逃出父目录**
+88. **[P1][已修复] `DirectoryInfo.Sub`/`File` 允许 rooted 参数逃出父目录**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~IO/DirectoryInfoExtensions.cs:33-43`。`Path.Combine(parent, rootedName)` 会忽略 parent，安全感很强的子项 API 因而可以返回任意绝对路径。若契约真的是直接子项，应拒绝 rooted path、目录分隔符和 `..`；若只是路径组合，应改用不暗示 containment 的名称。
+    修复：两个 API 共用直接子项名称校验，拒绝空值、rooted path、`.`、`..` 以及任意目录分隔符；合法名称才与父目录组合。测试覆盖正常子目录/文件、嵌套路径、上级路径和绝对路径。
 
-89. **[P1] `CreateNew` 以普通创建名称执行递归删除**
+89. **[P1][已修复] `CreateNew` 以普通创建名称执行递归删除**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~IO/DirectoryInfoExtensions.cs:25-31`。调用者容易把它理解成“确保新目录存在”，实际却会不可恢复地删除现有目录及全部内容。应删除该 API或改为明确的 `Recreate`/`DeleteAndCreate`，文档突出破坏性、验证精确目标，并优先提供非破坏性的 `CreateIfMissing`。
+    修复：破坏性 API 重命名为 `Recreate`，XML 文档直述会递归删除全部内容，并禁止对文件系统根目录执行；原有内部测试调用已迁移，测试确认旧内容会被移除而目录被重新创建。
 
-90. **[P1] `FileConflictOptions` 把互斥策略建模为可任意组合的 flags**
+90. **[P1][已修复] `FileConflictOptions` 把互斥策略建模为可任意组合的 flags**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~IO/FileConflictOptions.cs:6-41`、`FileInfoExtensions.cs:7,110-129`。`ThrowOnConflict | Overwrite` 等组合通过位掩码后没有匹配的 switch case，方法会静默返回且不执行操作。应把 resolution strategy 建模为普通 enum，把 `IgnoreConflictIfDuplicate` 作为独立选项；过渡期至少验证恰好选择一个策略并拒绝未知位。
+    修复：移除 flags，新增普通 enum `FileConflictResolution` 与不可变 `FileTransferOptions`，分别承载 resolution、`IgnoreConflictIfDuplicate` 和 copy buffer size，且验证未知策略和非正 buffer。`CancellationToken` 保持每次异步调用的独立参数，避免把调用生命周期塞进可复用配置对象；copy/move/rename API 统一接受该 options，并返回自动重命名后的实际目标。
 
-91. **[P1] 文件冲突处理存在检查后覆盖的 TOCTOU 竞态**
+91. **[P1][已修复] 文件冲突处理存在检查后覆盖的 TOCTOU 竞态**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~IO/FileInfoExtensions.cs:28-58,82-129`。`dest.Exists == false` 后调用的基础复制使用 `File.Create`，会覆盖在检查与创建之间由其他线程/进程新建的文件；`AutoRename` 的递归检查同样不能保证新名字仍空闲。应在非覆盖策略下用 `FileMode.CreateNew` 原子认领目标，AutoRename 遇到 `IOException` 再选择下一名称，只有明确 `Overwrite` 才使用 Create。
+    修复：除显式 `Overwrite` 外，copy 先用 `FileMode.CreateNew` 写入目标目录中的唯一 staging file，完成后以非覆盖 move 原子认领最终名称；move 本身也使用非覆盖移动。只有真实存在的冲突才进入 cancel/throw/auto-rename 分支，自动重命名循环重试直至原子成功。失败或取消只清理自己的 staging file，最终路径不会暴露部分内容；并发 copy/move 测试确认两个操作获得不同目标且内容均保留。
 
 92. **[P2] `ProcessInvoker` 的返回模型丢失了进程结果的关键结构**
 

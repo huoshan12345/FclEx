@@ -31,57 +31,67 @@ public static partial class BytesExtensions
         return builder.ToString();
     }
 
-    public static T MarshalTo<T>(this byte[] bytes, ref int offset)
+    /// <summary>
+    /// Reads an unmanaged value from <paramref name="bytes"/> at <paramref name="offset"/> using the managed layout of
+    /// <typeparamref name="T"/>, then advances the offset by the value's size.
+    /// </summary>
+    /// <remarks>
+    /// Use <see cref="StructLayoutAttribute"/> and fixed buffers when the bytes originate from a native structure.
+    /// No byte-order conversion or interop marshaling is performed.
+    /// </remarks>
+    public static T ReadStruct<T>(this byte[] bytes, ref int offset) where T : unmanaged
     {
         Check.NotNull(bytes);
         Check.NotLessThan(offset, 0);
 
-        var length = Marshal.SizeOf<T>();
+        var length = Unsafe.SizeOf<T>();
         Check.NotLessThan(bytes.Length, length + offset);
 
-        using var disposable = MarshalHelper.AllocHGlobal(length);
-        var ptr = disposable.Value;
-        Marshal.Copy(bytes, offset, ptr, length);
-        var obj = Marshal.PtrToStructure<T>(ptr);
+        var result = MemoryMarshal.Read<T>(bytes.AsSpan(offset, length));
         offset += length;
-        return obj!;
+        return result;
     }
 
     [MethodImpl(AggressiveInlining)]
-    public static T MarshalTo<T>(this byte[] bytes)
+    public static T ReadStruct<T>(this byte[] bytes) where T : unmanaged
     {
         var i = 0;
-        return bytes.MarshalTo<T>(ref i);
+        return bytes.ReadStruct<T>(ref i);
     }
 
-    public static T[] MarshalToArray<T>(this byte[] bytes, int count, ref int offset)
+    /// <summary>
+    /// Reads <paramref name="count"/> consecutive unmanaged values and advances <paramref name="offset"/> past them.
+    /// </summary>
+    public static T[] ReadStructArray<T>(this byte[] bytes, int count, ref int offset) where T : unmanaged
     {
         Check.NotNull(bytes);
         Check.NotLessThan(offset, 0);
-        Check.NotLessThan(count, 1);
+        Check.NotLessThan(count, 0);
 
-        var length = Marshal.SizeOf<T>();
-        Check.NotLessThan(bytes.Length, length * count + offset);
+        var length = Unsafe.SizeOf<T>();
+        var totalLength = checked(length * count);
+        Check.NotLessThan(bytes.Length, checked(totalLength + offset));
 
         var result = new T[count];
-        using var disposable = MarshalHelper.AllocHGlobal(length);
-        var ptr = disposable.Value;
         for (var i = 0; i < count; i++)
         {
-            Marshal.Copy(bytes, offset, ptr, length);
-            var obj = Marshal.PtrToStructure<T>(ptr);
+            result[i] = MemoryMarshal.Read<T>(bytes.AsSpan(offset, length));
             offset += length;
-            result[i] = obj!;
         }
         return result;
     }
 
     [MethodImpl(AggressiveInlining)]
-    public static T[] MarshalToArray<T>(this byte[] bytes)
+    public static T[] ReadStructArray<T>(this byte[] bytes) where T : unmanaged
     {
-        var length = Marshal.SizeOf<T>();
+        Check.NotNull(bytes);
+
+        var length = Unsafe.SizeOf<T>();
+        if (bytes.Length % length != 0)
+            throw new ArgumentException("The byte array length must be an exact multiple of the structure size.", nameof(bytes));
+
         var i = 0;
-        return bytes.MarshalToArray<T>(bytes.Length / length, ref i);
+        return bytes.ReadStructArray<T>(bytes.Length / length, ref i);
     }
 
     public static byte[] MarshalArrayToBytes<T>(this IReadOnlyList<T> list)

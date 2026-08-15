@@ -2,6 +2,18 @@ namespace FclEx.Extensions;
 
 public class FileInfoExtensionsTests
 {
+    private static readonly FileTransferOptions OverwriteOptions = new()
+    {
+        ConflictResolution = FileConflictResolution.Overwrite,
+        IgnoreConflictIfDuplicate = false,
+    };
+
+    private static readonly FileTransferOptions AutoRenameOptions = new()
+    {
+        ConflictResolution = FileConflictResolution.AutoRename,
+        IgnoreConflictIfDuplicate = false,
+    };
+
     [Fact]
     public async Task CopyToAsync_CopiesFileContents()
     {
@@ -13,7 +25,7 @@ public class FileInfoExtensionsTests
         var src = new FileInfo(srcPath);
         var dest = new FileInfo(destPath);
 
-        await src.CopyToAsync(dest);
+        await src.CopyToAsync(dest, OverwriteOptions);
 
         Assert.True(dest.Exists);
         Assert.Equal("Hello World", await File.ReadAllTextAsync(dest.FullName));
@@ -44,7 +56,7 @@ public class FileInfoExtensionsTests
 
         var src = new FileInfo(srcPath);
         var dest = new FileInfo(srcPath); // simulate same file
-        await src.CopyToAsync(dest);
+        await src.CopyToAsync(dest, OverwriteOptions);
 
         Assert.True(dest.Exists);
         Assert.Equal("Test Content", await File.ReadAllTextAsync(dest.FullName));
@@ -62,7 +74,7 @@ public class FileInfoExtensionsTests
 
         var src = new FileInfo(srcPath);
         var dest = new FileInfo(destPath);
-        await src.CopyToAsync(dest);
+        await src.CopyToAsync(dest, OverwriteOptions);
 
         Assert.Equal("Source Content", await File.ReadAllTextAsync(dest.FullName));
 
@@ -109,7 +121,7 @@ public class FileInfoExtensionsTests
         var src = new FileInfo(srcPath);
         var dest = new FileInfo(destPath);
 
-        await src.CopyToAsync(dest, bufferSize: 128);
+        await src.CopyToAsync(dest, new FileTransferOptions { BufferSize = 128 });
 
         Assert.Equal(100_000, new FileInfo(destPath).Length);
 
@@ -186,7 +198,7 @@ public class FileInfoExtensionsTests
         var source = CreateTempFile("new");
         var dest = CreateTempFile("old");
 
-        await source.CopyToAsync(dest, FileConflictOptions.Overwrite);
+        await source.CopyToAsync(dest, OverwriteOptions);
 
         Assert.Equal("new", await File.ReadAllTextAsync(dest.FullName));
 
@@ -201,7 +213,7 @@ public class FileInfoExtensionsTests
         var dest = new FileInfo(Path.Combine(dir.FullName, source.Name));
         await File.WriteAllTextAsync(dest.FullName, "existing");
 
-        await source.CopyToAsync(dir, FileConflictOptions.AutoRename);
+        await source.CopyToAsync(dir, AutoRenameOptions);
 
         // Should not overwrite existing file
         Assert.Equal("existing", await File.ReadAllTextAsync(dest.FullName));
@@ -220,7 +232,7 @@ public class FileInfoExtensionsTests
         var destination = CreateTempFile("existing", directory.FullName, "report.txt");
         var firstRenamedDestination = CreateTempFile("existing-1", directory.FullName, "report_1.txt");
 
-        var result = await source.CopyToAsync(destination, FileConflictOptions.AutoRename);
+        var result = await source.CopyToAsync(destination, AutoRenameOptions);
 
         Assert.Equal(Path.Combine(directory.FullName, "report_2.txt"), result.FullName);
         Assert.True(result.Exists);
@@ -238,7 +250,11 @@ public class FileInfoExtensionsTests
         var dest = CreateTempFile("same", dir.FullName, "a.txt");
         var source = CreateTempFile("same", dir.FullName, "b.txt");
 
-        source.MoveTo(dest, FileConflictOptions.IgnoreConflictIfDuplicate);
+        source.MoveTo(dest, new FileTransferOptions
+        {
+            ConflictResolution = FileConflictResolution.Throw,
+            IgnoreConflictIfDuplicate = true,
+        });
 
         Assert.False(source.Exists); // deleted because identical
         Assert.True(dest.Exists);    // kept
@@ -253,8 +269,12 @@ public class FileInfoExtensionsTests
         var dest = CreateTempFile("data1", dir.FullName, "a.txt");
         var source = CreateTempFile("data2", dir.FullName, "b.txt");
 
-        Assert.Throws<InvalidOperationException>(() =>
-            source.MoveTo(dest, FileConflictOptions.ThrowOnConflict));
+        Assert.Throws<IOException>(() =>
+            source.MoveTo(dest, new FileTransferOptions
+            {
+                ConflictResolution = FileConflictResolution.Throw,
+                IgnoreConflictIfDuplicate = false,
+            }));
 
         Cleanup(source, dest, dir);
     }
@@ -271,5 +291,90 @@ public class FileInfoExtensionsTests
         Assert.True(file.Exists);
 
         Cleanup(file);
+    }
+
+    [Fact]
+    public async Task CopyToAsync_Cancel_DoesNotOverwriteExistingDestination()
+    {
+        var source = CreateTempFile("source");
+        var destination = CreateTempFile("destination");
+        var options = new FileTransferOptions
+        {
+            ConflictResolution = FileConflictResolution.Cancel,
+            IgnoreConflictIfDuplicate = false,
+        };
+
+        var actual = await source.CopyToAsync(destination, options);
+
+        Assert.Equal(destination.FullName, actual.FullName);
+        Assert.Equal("destination", await File.ReadAllTextAsync(destination.FullName));
+        Cleanup(source, destination);
+    }
+
+    [Fact]
+    public async Task CopyToAsync_ConcurrentAutoRename_DoesNotOverwriteEitherCopy()
+    {
+        var directory = CreateTempDir();
+        var firstSource = CreateTempFile("first");
+        var secondSource = CreateTempFile("second");
+        var destinationPath = Path.Combine(directory.FullName, "report.txt");
+
+        var results = await Task.WhenAll(
+            firstSource.CopyToAsync(new FileInfo(destinationPath), AutoRenameOptions),
+            secondSource.CopyToAsync(new FileInfo(destinationPath), AutoRenameOptions));
+
+        Assert.NotEqual(results[0].FullName, results[1].FullName);
+        Assert.Equal(
+            new[] { "first", "second" },
+            results.Select(result => File.ReadAllText(result.FullName)).OrderBy(value => value).ToArray());
+        Cleanup(firstSource, secondSource, directory);
+    }
+
+    [Fact]
+    public async Task CopyToAsync_PreCanceledToken_RemovesNewDestination()
+    {
+        var source = CreateTempFile(new string('x', 100_000));
+        var destination = new FileInfo(Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()));
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => source.CopyToAsync(destination, AutoRenameOptions, cancellation.Token));
+
+        Assert.False(File.Exists(destination.FullName));
+        Cleanup(source, destination);
+    }
+
+    [Fact]
+    public void MoveTo_ConcurrentAutoRename_DoesNotOverwriteEitherMove()
+    {
+        var directory = CreateTempDir();
+        var firstSource = CreateTempFile("first");
+        var secondSource = CreateTempFile("second");
+        var destinationPath = Path.Combine(directory.FullName, "report.txt");
+
+        var results = new FileInfo[2];
+        Parallel.Invoke(
+            () => results[0] = firstSource.MoveTo(new FileInfo(destinationPath), AutoRenameOptions),
+            () => results[1] = secondSource.MoveTo(new FileInfo(destinationPath), AutoRenameOptions));
+
+        Assert.NotEqual(results[0].FullName, results[1].FullName);
+        Assert.Equal(
+            new[] { "first", "second" },
+            results.Select(result => File.ReadAllText(result.FullName)).OrderBy(value => value).ToArray());
+        Cleanup(directory);
+    }
+
+    [Fact]
+    public async Task CopyToAsync_RejectsInvalidOptions()
+    {
+        var source = CreateTempFile();
+        var destination = new FileInfo(Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()));
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => source.CopyToAsync(
+            destination,
+            new FileTransferOptions { BufferSize = 0 }));
+
+        Cleanup(source, destination);
     }
 }
