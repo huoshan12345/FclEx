@@ -1,3 +1,5 @@
+using System.Reflection.PortableExecutable;
+
 namespace FclEx.Http.Actions;
 
 public class HtmlFileActionTests
@@ -126,8 +128,13 @@ public class HtmlFileActionTests
 
         try
         {
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-                action.GetResponseAsync(request, cts.Token));
+#if NET5_0_OR_GREATER
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => action.GetResponseAsync(request, cts.Token));
+#else
+            // In .NET Framework, ReadLineAsync already completes before the cancellation token is checked
+            await action.GetResponseAsync(request, cts.Token);
+#endif
+
         }
         finally
         {
