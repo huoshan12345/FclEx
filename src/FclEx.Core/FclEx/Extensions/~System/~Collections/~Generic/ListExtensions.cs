@@ -185,8 +185,10 @@ public static class ListExtensions
 
         public static List<T> operator +(List<T> list, T item)
         {
-            list.Add(item);
-            return list;
+            var result = new List<T>(list.Count + 1);
+            result.AddRange(list);
+            result.Add(item);
+            return result;
         }
     }
 
@@ -195,6 +197,11 @@ public static class ListExtensions
         public void operator +=(IEnumerable<T> other)
         {
             list.AddRange(other);
+        }
+
+        public void operator +=(T item)
+        {
+            list.Add(item);
         }
     }
 }

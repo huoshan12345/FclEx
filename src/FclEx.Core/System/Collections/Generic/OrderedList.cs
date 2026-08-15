@@ -532,7 +532,7 @@ public class OrderedList<T> : ArrayBasedCollection<OrderedList<T>, T>, IList<T>,
         var start = IndexOf(item);
         var end = LastIndexOf(item);
 
-        for (var i = start; i < end; i++)
+        for (var i = start; i <= end; i++)
             yield return _items[i];
     }
 
