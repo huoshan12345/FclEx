@@ -71,14 +71,19 @@ public static class TaskHelper
 
     public static async Task WaitAsync(this Task task, CancellationToken cancellationToken)
     {
-        if (task.IsCompleted || !cancellationToken.CanBeCanceled)
+        if (cancellationToken.CanBeCanceled)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return;
+        }
+
+        if (task.IsCompleted)
         {
             await task.ConfigureAwait(false);
             return;
         }
 
-        cancellationToken.ThrowIfCancellationRequested();
-        
+
         var cancellationTask = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         using (cancellationToken.Register(static state => ((TaskCompletionSource<object?>)state!).TrySetResult(null), cancellationTask))
