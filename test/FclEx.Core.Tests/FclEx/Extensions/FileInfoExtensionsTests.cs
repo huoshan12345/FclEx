@@ -139,7 +139,7 @@ public class FileInfoExtensionsTests
 
     private static DirectoryInfo CreateTempDir()
     {
-        string path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        string path = Path.Combine(Path.GetTempPath(), Environment.Version.ToString(), Path.GetRandomFileName());
         return Directory.CreateDirectory(path);
     }
 
