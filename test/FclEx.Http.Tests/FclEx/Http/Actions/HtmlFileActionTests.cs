@@ -134,7 +134,6 @@ public class HtmlFileActionTests
             // In .NET Framework, ReadLineAsync already completes before the cancellation token is checked
             await action.GetResponseAsync(request, cts.Token);
 #endif
-
         }
         finally
         {
