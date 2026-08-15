@@ -67,7 +67,7 @@ public static class TaskHelper
     {
         task = Check.NotNull(task);
 
-        if (task.IsCompleted)
+        if (task.IsCompleted || cancellationToken == default)
             return await task.NoCapture();
 
         var tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -87,7 +87,7 @@ public static class TaskHelper
     {
         task = Check.NotNull(task);
 
-        if (task.IsCompleted)
+        if (task.IsCompleted || cancellationToken == default)
         {
             await task.NoCapture();
             return;
@@ -111,6 +111,11 @@ public static class TaskHelper
 
     public static async Task<TResult> WaitAsync<TResult>(this Task<TResult> task, TimeSpan timeout)
     {
+        if (timeout <= TimeSpan.Zero)
+        {
+            return await task.NoCapture();
+        }
+
         using var timeoutSource = new CancellationTokenSource(timeout);
         try
         {
@@ -124,6 +129,12 @@ public static class TaskHelper
 
     public static async Task WaitAsync(this Task task, TimeSpan timeout)
     {
+        if (timeout <= TimeSpan.Zero)
+        {
+            await task.NoCapture();
+            return;
+        }
+
         using var timeoutSource = new CancellationTokenSource(timeout);
         try
         {

@@ -48,6 +48,7 @@ public class AsyncDisposableValue<T> : IAsyncDisposable
             {
                 await _disposeAction.Invoke(_value).NoCapture();
             }
+            // ReSharper disable once ConvertIfStatementToSwitchStatement
             else if (_value is IAsyncDisposable asyncDisposable)
             {
                 await asyncDisposable.DisposeAsync().NoCapture();

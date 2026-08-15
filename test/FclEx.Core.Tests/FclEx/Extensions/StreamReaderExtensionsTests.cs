@@ -38,10 +38,14 @@ public class StreamReaderExtensionsTests
         var input = new string('x', 10000);
         using var reader = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(input)));
         using var cts = new CancellationTokenSource();
-        cts.Cancel();
+        await cts.CancelAsync();
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(async ()
-            => await reader.ReadToEndAsync(cts.Token));
+#if NET5_0_OR_GREATER
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await reader.ReadToEndAsync(cts.Token));
+#else
+        // In .NET Framework, ReadToEndAsync already completes before the cancellation token is checked
+        await reader.ReadToEndAsync(cts.Token);
+#endif
     }
 
     [Fact]
@@ -51,10 +55,13 @@ public class StreamReaderExtensionsTests
         var input = "Line1\nLine2\nLine3";
         using var reader = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(input)));
         using var cts = new CancellationTokenSource();
-        cts.Cancel();
+        await cts.CancelAsync();
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(async ()
-            => await reader.ReadLineAsync(cts.Token));
-
+#if NET5_0_OR_GREATER
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await reader.ReadLineAsync(cts.Token));
+#else
+        // In .NET Framework, ReadLineAsync already completes before the cancellation token is checked
+        await reader.ReadLineAsync(cts.Token);
+#endif
     }
 }

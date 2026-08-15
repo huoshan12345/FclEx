@@ -12,14 +12,16 @@ public static class ValueTaskExtensions
         return tasks.Select(t => t.AsTask()).WhenAll();
     }
 
+    [MethodImpl(AggressiveInlining)]
     public static ConfiguredValueTaskAwaitable<T> NoCapture<T>(this ValueTask<T> task)
     {
-        return task.NoCapture();
+        return task.ConfigureAwait(false);
     }
 
+    [MethodImpl(AggressiveInlining)]
     public static ConfiguredValueTaskAwaitable NoCapture(this ValueTask task)
     {
-        return task.NoCapture();
+        return task.ConfigureAwait(false);
     }
 
     extension(ValueTask)
@@ -27,6 +29,7 @@ public static class ValueTaskExtensions
 #if !NET5_0_OR_GREATER
         public static ValueTask CompletedTask => default;
 
+        [MethodImpl(AggressiveInlining)]
         public static ValueTask<TResult> FromResult<TResult>(TResult result) => new(result);
 #endif
     }
