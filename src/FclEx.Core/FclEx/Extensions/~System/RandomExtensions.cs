@@ -112,6 +112,7 @@ public static class RandomExtensions
         return max * r + min * (1 - r);
     }
 
+#if !NET6_0_OR_GREATER
     [MethodImpl(AggressiveInlining)]
     public static float NextSingle(this Random random, float min = 0, float max = float.MaxValue)
     {
@@ -124,6 +125,7 @@ public static class RandomExtensions
         var r = (float)random.NextDouble();
         return max * r + min * (1 - r);
     }
+#endif
 
     [MethodImpl(AggressiveInlining)]
     public static decimal NextDecimal(this Random random, decimal min = 0, decimal max = decimal.MaxValue)
@@ -418,7 +420,7 @@ public static class RandomExtensions
                     args.Add(arg);
                 }
 
-                return ctor.Invoke(args.AsSpan().ToArray());
+                return ctor.Invoke(args.AsReadOnlySpan().ToArray());
             }
             catch (Exception ex)
             {

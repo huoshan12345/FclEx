@@ -35,7 +35,7 @@ partial class EnumerableExtensions
             list.Add(item);
         }
 
-        return (trueList.AsSpan().ToArray(), falseList.AsSpan().ToArray());
+        return (trueList.AsReadOnlySpan().ToArray(), falseList.AsReadOnlySpan().ToArray());
     }
 
     public static (IEnumerable<TMember> True, IEnumerable<TMember> False) Partition<T, TMember>(this IEnumerable<T> enumerable,

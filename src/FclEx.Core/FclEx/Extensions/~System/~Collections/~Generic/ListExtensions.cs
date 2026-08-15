@@ -76,15 +76,9 @@ public static class ListExtensions
         return list;
     }
 
-    public static Span<T> AsSpan<T>(this List<T>? list)
+    public static ReadOnlySpan<T> AsReadOnlySpan<T>(this List<T>? list)
     {
-#if !NET5_0_OR_GREATER
-        return list.IsNullOrEmpty()
-            ? default
-            : ListAccessor<T>.Items(list).AsSpan(0, list.Count);
-#else
         return CollectionsMarshal.AsSpan(list);
-#endif
     }
 
     public static void AddSorted<T>(this List<T> list, T value, IComparer<T>? comparer = null)

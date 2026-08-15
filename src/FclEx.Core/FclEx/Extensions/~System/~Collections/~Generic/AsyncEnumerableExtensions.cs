@@ -15,6 +15,6 @@ public static class AsyncEnumerableExtensions
     public static async Task<T[]> ToArrayAsync<T>(this IAsyncEnumerable<T> source)
     {
         var list = await source.ToListAsync();
-        return list.AsSpan().ToArray();
+        return list.AsReadOnlySpan().ToArray();
     }
 }
