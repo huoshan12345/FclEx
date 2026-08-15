@@ -32,66 +32,65 @@ public static partial class BytesExtensions
     }
 
     /// <summary>
-    /// Reads an unmanaged value from <paramref name="bytes"/> at <paramref name="offset"/> using the managed layout of
-    /// <typeparamref name="T"/>, then advances the offset by the value's size.
+    /// Uses the interop marshaler to read a structure from <paramref name="bytes"/> at <paramref name="offset"/>, then
+    /// advances the offset by its unmanaged size.
     /// </summary>
     /// <remarks>
-    /// Use <see cref="StructLayoutAttribute"/> and fixed buffers when the bytes originate from a native structure.
-    /// No byte-order conversion or interop marshaling is performed.
+    /// The structure must use sequential or explicit layout. Managed array fields are supported only when represented
+    /// inline with <see cref="UnmanagedType.ByValArray"/>; strings are supported only with
+    /// <see cref="UnmanagedType.ByValTStr"/>. Pointer-based managed fields are rejected so input bytes are never
+    /// dereferenced as external addresses. No byte-order conversion is performed.
     /// </remarks>
-    public static T ReadStruct<T>(this byte[] bytes, ref int offset) where T : unmanaged
+    public static T MarshalReadAs<T>(this byte[] bytes, ref int offset) where T : struct
     {
         Check.NotNull(bytes);
         Check.NotLessThan(offset, 0);
 
-        var length = Unsafe.SizeOf<T>();
-        Check.NotLessThan(bytes.Length, length + offset);
+        var length = MarshalHelper.SizeOf<T>();
+        Check.NotLessThan(bytes.Length, checked(length + offset));
 
-        var result = MemoryMarshal.Read<T>(bytes.AsSpan(offset, length));
+        var result = MarshalHelper.Read<T>(bytes.AsSpan(offset, length));
         offset += length;
         return result;
     }
 
     [MethodImpl(AggressiveInlining)]
-    public static T ReadStruct<T>(this byte[] bytes) where T : unmanaged
+    public static T MarshalReadAs<T>(this byte[] bytes) where T : struct
     {
         var i = 0;
-        return bytes.ReadStruct<T>(ref i);
+        return bytes.MarshalReadAs<T>(ref i);
     }
 
     /// <summary>
-    /// Reads <paramref name="count"/> consecutive unmanaged values and advances <paramref name="offset"/> past them.
+    /// Uses the interop marshaler to read <paramref name="count"/> consecutive structures and advances
+    /// <paramref name="offset"/> past their unmanaged representations.
     /// </summary>
-    public static T[] ReadStructArray<T>(this byte[] bytes, int count, ref int offset) where T : unmanaged
+    public static T[] MarshalReadArrayAs<T>(this byte[] bytes, int count, ref int offset) where T : struct
     {
         Check.NotNull(bytes);
         Check.NotLessThan(offset, 0);
         Check.NotLessThan(count, 0);
 
-        var length = Unsafe.SizeOf<T>();
+        var length = MarshalHelper.SizeOf<T>();
         var totalLength = checked(length * count);
         Check.NotLessThan(bytes.Length, checked(totalLength + offset));
 
-        var result = new T[count];
-        for (var i = 0; i < count; i++)
-        {
-            result[i] = MemoryMarshal.Read<T>(bytes.AsSpan(offset, length));
-            offset += length;
-        }
+        var result = MarshalHelper.ReadArray<T>(bytes.AsSpan(offset, totalLength), count);
+        offset += totalLength;
         return result;
     }
 
     [MethodImpl(AggressiveInlining)]
-    public static T[] ReadStructArray<T>(this byte[] bytes) where T : unmanaged
+    public static T[] MarshalReadArrayAs<T>(this byte[] bytes) where T : struct
     {
         Check.NotNull(bytes);
 
-        var length = Unsafe.SizeOf<T>();
+        var length = MarshalHelper.SizeOf<T>();
         if (bytes.Length % length != 0)
             throw new ArgumentException("The byte array length must be an exact multiple of the structure size.", nameof(bytes));
 
         var i = 0;
-        return bytes.ReadStructArray<T>(bytes.Length / length, ref i);
+        return bytes.MarshalReadArrayAs<T>(bytes.Length / length, ref i);
     }
 
     public static byte[] MarshalArrayToBytes<T>(this IReadOnlyList<T> list)

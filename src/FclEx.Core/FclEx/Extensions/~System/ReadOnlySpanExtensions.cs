@@ -27,34 +27,29 @@ public static class ReadOnlySpanExtensions
 #endif
 
     /// <summary>
-    /// Reads an unmanaged value from the beginning of the span using the managed layout of <typeparamref name="T"/>.
+    /// Uses the interop marshaler to read a structure from the beginning of the span.
     /// </summary>
     /// <remarks>
-    /// Use <see cref="StructLayoutAttribute"/> and fixed buffers when the bytes originate from a native structure.
-    /// No byte-order conversion or interop marshaling is performed. Bytes after the value are ignored.
+    /// Managed references are permitted only when represented inline by <see cref="UnmanagedType.ByValArray"/> or
+    /// <see cref="UnmanagedType.ByValTStr"/>. Bytes after the structure are ignored. No byte-order conversion is performed.
     /// </remarks>
-    public static T ReadStruct<T>(this ReadOnlySpan<byte> span) where T : unmanaged
+    public static T MarshalReadAs<T>(this ReadOnlySpan<byte> span) where T : struct
     {
-        return MemoryMarshal.Read<T>(span);
+        return MarshalHelper.Read<T>(span);
     }
 
     /// <summary>
-    /// Reads consecutive unmanaged values from the span.
+    /// Uses the interop marshaler to read consecutive structures from the span.
     /// </summary>
     /// <exception cref="ArgumentException">The span length is not an exact multiple of the structure size.</exception>
-    public static T[] ReadStructArray<T>(this ReadOnlySpan<byte> span) where T : unmanaged
+    public static T[] MarshalReadArrayAs<T>(this ReadOnlySpan<byte> span) where T : struct
     {
-        var size = Unsafe.SizeOf<T>();
+        var size = MarshalHelper.SizeOf<T>();
         if (span.Length % size != 0)
             throw new ArgumentException("The span length must be an exact multiple of the structure size.", nameof(span));
 
         var count = span.Length / size;
-        var result = new T[count];
-        for (var i = 0; i < count; i++)
-        {
-            result[i] = MemoryMarshal.Read<T>(span.Slice(i * size, size));
-        }
-        return result;
+        return MarshalHelper.ReadArray<T>(span, count);
     }
 
     public static byte[] ToBytes(this ReadOnlySpan<bool> bits)

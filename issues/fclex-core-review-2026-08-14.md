@@ -399,7 +399,7 @@
 86. **[P0][已修复] `MarshalTo<T>` 会把任意字节解释成原生地址并解引用**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/BytesExtensions.cs:34-84`、`ReadOnlySpanExtensions.cs:29-62`。API 对 `T` 无约束，`PtrToStructure<T>` 遇到 string、数组或引用字段时会把输入字节当地址并解引用，可能产生访问冲突或读取非预期内存；span 单值版本在输入长于结构时还因复制整个 span 到较小缓冲区而抛错。应把原始二进制读取限制为 `unmanaged` 并用 `MemoryMarshal.Read`；真正的 interop marshaling 应使用明确命名、受控布局和可信输入，并只复制精确结构长度。
-    修复：原 API 改为 `ReadStruct<T>`/`ReadStructArray<T>` 且要求 `T : unmanaged`，通过 `MemoryMarshal.Read` 按托管布局读取，不再分配原生内存或解引用输入中的地址。顺序/显式布局、`Pack` 和 fixed buffer 仍可用于 C struct；含 `[MarshalAs(ByValArray)]` 等托管引用的结构不再支持。数组读取拒绝尾部残缺结构，单值读取只消费所需字节。
+    修复：API 最终改为明确表达 interop marshaling 的 `MarshalReadAs<T>`/`MarshalReadArrayAs<T>`，约束为 `T : struct` 并通过 `Marshal.PtrToStructure` 读取。类型校验要求顺序或显式布局；托管数组只允许带正 `SizeConst` 的 `[MarshalAs(ByValArray)]`，字符串只允许 `[MarshalAs(ByValTStr)]`，其余会把输入解释成外部地址的托管引用在复制前即以 `NotSupportedException` 拒绝。单值只复制精确结构长度，数组拒绝尾部残缺结构。测试覆盖 fixed buffer、原始类型和结构体元素的 `ByValArray`，并在 .NET 8+ 覆盖相同两类元素的 `InlineArray`。
 
 87. **[P1][已修复] `DirectoryInfo.IsSubOf` 的路径判定在不同平台和边界输入上不可靠**
 
