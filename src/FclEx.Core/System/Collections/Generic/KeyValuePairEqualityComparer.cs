@@ -23,6 +23,8 @@ public class KeyValuePairEqualityComparer<TKey, TValue> : IEqualityComparer<KeyV
 
     public int GetHashCode(KeyValuePair<TKey, TValue> obj)
     {
-        return HashCode.Combine(obj.Key, obj.Value);
+        return HashCode.Combine(
+            _keyComparer.GetHashCodeOrDefault(obj.Key), 
+            _valueComparer.GetHashCodeOrDefault(obj.Value));
     }
 }

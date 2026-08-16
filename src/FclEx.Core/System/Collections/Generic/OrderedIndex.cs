@@ -441,6 +441,9 @@ public class OrderedIndex<TScore, TValue> : ICollection<(TScore Score, TValue Va
             return [];
 
         var end = Math.Min(start + count, _count);
+        var diff = end - start;
+        if (diff <= 0)
+            return [];
 
         var x = _head;
         var traversed = 0;
@@ -455,7 +458,7 @@ public class OrderedIndex<TScore, TValue> : ICollection<(TScore Score, TValue Va
             }
         }
 
-        var e = new RankRangeEnumerator(x, end - start);
+        var e = new RankRangeEnumerator(x, diff);
         return new(e);
     }
 
