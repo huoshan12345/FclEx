@@ -130,7 +130,7 @@ public sealed class AsyncTimer : IAsyncDisposable
         ExceptionDispatchInfo? cancellationFailure = null;
         try
         {
-            stopCancellation!.Cancel();
+            await stopCancellation!.CancelAsync();
         }
         catch (Exception ex)
         {
@@ -226,7 +226,8 @@ public sealed class AsyncTimer : IAsyncDisposable
         {
             try
             {
-                stopCancellation?.Cancel();
+                if (stopCancellation is not null)
+                    await stopCancellation.CancelAsync();
             }
             catch (Exception ex)
             {
