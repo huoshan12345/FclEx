@@ -166,7 +166,7 @@ public class MultiValueDictionary<TKey, TValue> :
     ======================================================================*/
 
     /// <summary>
-    /// Creates a new new instance of the <see cref="MultiValueDictionary{TKey, TValue}" /> 
+    /// Creates a new instance of the <see cref="MultiValueDictionary{TKey, TValue}" /> 
     /// class that is empty, has the default initial capacity, and uses the default
     /// <see cref="IEqualityComparer{TKey}" /> for <typeparamref name="TKey"/>. The 
     /// internal dictionary will use instances of the <typeparamref name="TValueCollection"/>
@@ -179,11 +179,11 @@ public class MultiValueDictionary<TKey, TValue> :
     /// <returns>A new <see cref="MultiValueDictionary{TKey, TValue}" /> with the specified
     /// parameters.</returns>
     /// <exception cref="InvalidOperationException"><typeparamref name="TValueCollection"/> must not have
-    /// IsReadOnly set to true by default.</exception>
+    /// IsReadOnly set to <see langword="true"/> by default.</exception>
     /// <remarks>
     /// Note that <typeparamref name="TValueCollection"/> must implement <see cref="ICollection{TValue}"/>
     /// in addition to being constructable through new(). The collection returned from the constructor
-    /// must also not have IsReadOnly set to True by default.
+    /// must also not have IsReadOnly set to <see langword="true"/> by default.
     /// </remarks>
     public static MultiValueDictionary<TKey, TValue> Create<TValueCollection>()
         where TValueCollection : ICollection<TValue>, new()
@@ -393,7 +393,7 @@ public class MultiValueDictionary<TKey, TValue> :
     ======================================================================*/
 
     /// <summary>
-    /// Creates a new new instance of the <see cref="MultiValueDictionary{TKey, TValue}" /> 
+    /// Creates a new instance of the <see cref="MultiValueDictionary{TKey, TValue}" /> 
     /// class that is empty, has the default initial capacity, and uses the default
     /// <see cref="IEqualityComparer{TKey}" /> for <typeparamref name="TKey"/>. The 
     /// internal dictionary will use instances of the <typeparamref name="TValueCollection"/>
@@ -408,11 +408,11 @@ public class MultiValueDictionary<TKey, TValue> :
     /// <returns>A new <see cref="MultiValueDictionary{TKey, TValue}" /> with the specified
     /// parameters.</returns>
     /// <exception cref="InvalidOperationException"><paramref name="collectionFactory"/> must create collections with
-    /// IsReadOnly set to true by default.</exception>
+    /// IsReadOnly set to <see langword="false"/> by default.</exception>
     /// <remarks>
     /// Note that <typeparamref name="TValueCollection"/> must implement <see cref="ICollection{TValue}"/>
     /// in addition to being constructable through new(). The collection returned from the constructor
-    /// must also not have IsReadOnly set to True by default.
+    /// must also not have IsReadOnly set to <see langword="true"/> by default.
     /// </remarks>
     public static MultiValueDictionary<TKey, TValue> Create<TValueCollection>(Func<TValueCollection> collectionFactory)
         where TValueCollection : ICollection<TValue>
