@@ -27,9 +27,9 @@ public static class HttpRequestExceptionExtensions
 #if !NET5_0_OR_GREATER
     extension(HttpRequestException ex)
     {
-        public HttpStatusCode StatusCode => ex.Data is { } data && data["StatusCode"] is HttpStatusCode code
+        public HttpStatusCode? StatusCode => ex.Data is { } data && data["StatusCode"] is HttpStatusCode code
             ? code
-            : default;
+            : null;
     }
 #endif
 }
