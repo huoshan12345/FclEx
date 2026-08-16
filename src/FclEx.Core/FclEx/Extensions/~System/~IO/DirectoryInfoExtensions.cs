@@ -105,7 +105,7 @@ public static class DirectoryInfoExtensions
     public static DirectoryInfo Rename(this DirectoryInfo dir, string name)
     {
         Check.NotNull(dir);
-        Check.NotEmpty(name);
+        ValidateDirectChildName(name);
 
         if (dir.Name == name)
             return dir;

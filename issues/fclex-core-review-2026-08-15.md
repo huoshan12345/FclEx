@@ -384,10 +384,10 @@
     位置：`src/FclEx.Core/FclEx/Check.cs:176-220`。文档一方面说“otherwise false”，另一方面又为 `(null, null)` 抛 `ArgumentNullException`；调用方不能把 `Try...` 当作完整的非抛分支。应在两个不满足“恰好一个”的情况都返回 false，或改名 `GetSingleNonNull` 并用显式结果/异常区分零个与两个。
     设计确认：把双 null 视为调用前置条件错误，因此保留异常；单 null 返回 true 和非 null `result`，双非 null 返回 false。当前 `[NotNullWhen(true)] out result` 与两个输入上的 `[NotNullWhen(false)]` 已精确表达两个正常返回分支，是该语义下最充分的 NRT flow contract。新增行为及编译期流分析用例，并修正 `ArgumentNullException.ParamName`。
 
-176. **[P1][未修复] `ActionExtensions.Chain<T>` 对 reference type 连非空 action 序列也无法构造**
+176. **[P1][已修复] `ActionExtensions.Chain<T>` 对 reference type 连非空 action 序列也无法构造**
 
     位置：`src/FclEx.Core/FclEx/Actions/ActionExtensions.cs:398-408`、`SuccessAction.cs:23-38`。`Aggregate` 的 seed 是 `new SuccessAction<T>(default!)`，而 `SuccessAction<T>` 明确拒绝 null；因此 `T` 为 reference type 时在枚举 actions 前就抛异常。应要求序列非空并以第一个 action 为 seed，或用 `Unit`/`Optional<T>` 表达空 chain，不能靠违反成功结果非 null invariant 的伪值。
-    复查：改为 `SuccessAction<T>.Default` 只把 null 检查从构造器延后到执行期；`OperationResult<T>` 同样拒绝成功 null，因此 non-empty `IAction<string>` chain 仍会在第一个真实 action 前抛 `ArgumentNullException`。已保留 reference type chain 的 failing reproducer；需决定改为拒绝空序列并以首个 action 为 seed，还是重新设计空 chain 的返回类型/语义。
+    修复：非空序列以第一个 action 为 seed，不再伪造成功的 `default(T)`；空序列改为抛 `ArgumentException`。XML 文档和测试同步为此契约，覆盖 reference type 的正常链和空序列。
 
 177. **[P2][已修复] `ThenWithAction` 只在成功路径累计两个 action 的 elapsed**
 
@@ -409,45 +409,55 @@
     位置：`src/FclEx.Core/FclEx/Actions/IAction.cs:3-10`、`OperationAction.cs:3-24` 以及各 action combinator。公共契约返回 `OperationResult<T>`，但 `OperationAction` 原样调用任意 delegate，combinator 也直接 await；同步抛出或 faulted task 会越过 `OperationResult`，使相同 pipeline 有两套失败通道。应在唯一执行边界统一捕获/规范化异常，或明确 IAction 本来就允许 throw 并重新评估 result wrapper 的职责。
     复审结论：不成立。`OperationAction<T>` 的职责是忠实执行一个已经返回 `Task<OperationResult<T>>` 的委托；`Operation.Action(...)` 工厂才负责通过 `Operation.ExecuteAsync(...)` 将普通 value/task delegate 的异常转换为 result。直接构造 `OperationAction<T>` 或自行实现 `IAction<T>` 的代码需遵守该委托/result 契约，抛出的异常按普通 .NET async 调用传播。因而 result 是受控 operation 工厂提供的失败通道，不是要求每个 `IAction<T>` 实现都吞掉异常的封闭异常模型。
 
-181. **[P2][异步设计] `Operation.ExecuteAsync(Func<Task...>)` 又把 naturally-async delegate 包进 `Task.Run`**
+181. **[P2][已修复] `Operation.ExecuteAsync(Func<Task...>)` 又把 naturally-async delegate 包进 `Task.Run`**
 
     位置：`src/FclEx.Core/FclEx/Utils/~Operation/Operation.Async.cs:35-48,95-121`。`Task.Run(action, token)` 增加一次 thread-pool 调度，并改变 delegate 启动所在的 execution/synchronization context；它并不会让异步 I/O 更异步。应直接调用并 await delegate，再在外层应用 timeout；只有同步 overload 才需要明确的 thread-pool offload。
+    修复：两个 naturally-async overload 不再额外嵌套一次 `Task.Run`；无 timeout 时直接在调用线程启动 delegate，有 timeout 时仅由 `TaskHelper` 统一负责必要的调度和超时控制。同步 overload 仍明确使用 `Task.Run`。测试验证无 timeout 的泛型 async delegate 在调用线程启动。
 
-182. **[P1][签名] `Queryable.OrderByIf` 在 condition=false 时伪造 `IOrderedQueryable<T>`**
+182. **[P1][已删除] `Queryable.OrderByIf` 在 condition=false 时伪造 `IOrderedQueryable<T>`**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Linq/QueryableExtensions.OrderBy.cs:20-31`。false 分支把任意 `IQueryable<T>` 强转成 `IOrderedQueryable<T>`；普通 provider 可立即抛 `InvalidCastException`，即便碰巧实现接口，也没有真实排序可供后续 `ThenBy` 追加。返回类型应是 `IQueryable<T>`，或 API 必须接收已经排序的 source/使用可选 ordering composer。
+    处理：已删除该 API；Core 源码中无残留实现。
 
-183. **[P1][取消设计] `ToOperationIOPairs` 取消后仍遍历并物化整个剩余 source**
+183. **[P1][设计确认/文档已说明] `ToOperationIOPairs` 取消后仍遍历并物化整个剩余 source**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Collections/~Generic/EnumerableExtensions.IOPair.cs:28-99`。selector 不接收 token；检测取消后，batch 版本和 serial 版本继续枚举每个剩余元素并记录 cancellation，长序列代价巨大，无限序列永不返回。应提供 token-aware selector，把 token 传播给实际任务，并在取消时停止枚举；若业务确实需要为剩余输入生成结果，必须要求有限、可计数输入并明确命名。
+    处理决定：取消时必须为所有尚未开始的输入生成 canceled result，以保留“每个输入恰有一个结果”的关联语义。两个公开 overload 的 XML 文档已说明会继续枚举、source 必须有限、不会调用剩余项的 selector；测试覆盖 batch 与 serial 的预取消路径。
 
-184. **[P2][命名] `TryGetFirstOfDiffSet` 返回的是有方向的 `right \ left`，不是通常意义的 diff set**
+184. **[P2][已删除] `TryGetFirstOfDiffSet` 返回的是有方向的 `right \ left`，不是通常意义的 diff set**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Collections/~Generic/EnumerableExtensions.Get.cs:5-26`。结果还取决于 right 的枚举顺序；名称既没表达方向，也容易被理解为对称差。应改名 `TryGetFirstExcept`/`TryGetFirstMissingFrom` 并明确 comparer，或真正实现并返回对称差集合。
+    处理：已删除该 API；Core 源码中无残留实现。
 
-185. **[P2][命名/API] `IEnumerable<string>.ContainsAny/ContainsAll` 实际做元素与 substring 的两层包含**
+185. **[P2][命名/API][已修复] `IEnumerable<string>.ContainsAny/ContainsAll` 实际做元素与 substring 的两层包含**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Collections/~Generic/EnumerableExtensions.String.cs:5-18`。集合 API 的 `ContainsAny` 通常表示元素相等，这里却调用 `m.Contains(n, comparison)`，语义是“任一/全部元素包含某些 substring”，而名称未透露方向；同时会反复枚举 values。应使用完整描述性名称，例如 `AnyElementContainsAnySubstring`，并按需要一次物化 patterns。
+    修复：改名为 `AnyContainsAny`、`AnyContainsAll`、`AllContainsAny`、`AllContainsAll`，以 receiver element 和 value 的量词准确表达 substring 匹配方向；测试覆盖四种组合语义。
 
-186. **[P1][路径安全] `DirectoryInfo.Rename` 允许 rooted/path-containing name 逃离父目录**
+186. **[P1][路径安全][已修复] `DirectoryInfo.Rename` 允许 rooted/path-containing name 逃离父目录**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~IO/DirectoryInfoExtensions.cs:105-128`。该方法只检查非空，然后 `Path.Combine(parent, name)`；绝对路径或包含目录分隔符的 name 可以把“重命名”变成移动到任意位置。应复用已经用于直接子项的名称校验，仅允许单个文件名；如果要支持移动，应提供另一个明确命名和授权边界的 API。
+    修复：`Rename` 现复用 `Sub`/`File` 的 direct-child 名称验证，拒绝 rooted path、`.`、`..` 以及任一目录分隔符。测试覆盖这些路径形式。
 
-187. **[P1][多目标兼容] 旧目标 `File.WriteAllTextAsync` 默认 overload 会写 UTF-8 BOM**
+187. **[P1][多目标兼容][已修复] 旧目标 `File.WriteAllTextAsync` 默认 overload 会写 UTF-8 BOM**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~IO/FileExtensions.cs:9-28`。回填 overload 把默认编码传为 `Encoding.UTF8`；在 .NET Framework 上该实例会发出 BOM，而现代官方 `File.WriteAllTextAsync(path, contents, token)` 使用无 BOM UTF-8。相同源码跨 TFM 会生成不同字节。应使用 `new UTF8Encoding(false)` 并用字节级测试锁定官方行为。
+    修复：旧目标回填 overload 使用 `Encoding.Utf8WithoutBom`；字节级测试验证默认写入没有 BOM 且内容为 UTF-8。
 
-188. **[P2][包边界/解析] `CookieHelper` 把 HTTP cookie 语义留在 Core，且会丢弃含 `=` 的合法值**
+188. **[P2][已删除] `CookieHelper` 把 HTTP cookie 语义留在 Core，且会丢弃含 `=` 的合法值**
 
     位置：`src/FclEx.Core/FclEx/Helpers/CookieHelper.cs:3-10`。按 `;` 后再对整段 `Split('=')`，base64/padding 等常见值因产生多个片段被静默忽略；同时 API 未说明解析的是 `Cookie` 还是 `Set-Cookie`，两者语法不同。HTTP 集成应移到 `FclEx.Http`，使用对应 header parser；若只保留简单 pair parser，至少按第一个 `=` 分割并用准确名称/documentation。
+    处理：已从 FclEx.Core 删除，Core 不再承担 HTTP cookie 解析语义。
 
-189. **[P1][兼容设计] `DelegateHelper` 把 runtime 私有 `AssemblyGen.DefineDelegateType` 当成公共依赖**
+189. **[P1][兼容设计][部分修复] `DelegateHelper` 把 runtime 私有 `AssemblyGen.DefineDelegateType` 当成公共依赖**
 
     位置：`src/FclEx.Core/FclEx/Helpers/DelegateHelper.cs:3-22`。类型初始化通过反射查找 `System.Linq.Expressions.Compiler.AssemblyGen` 私有成员，runtime 更新、裁剪或 AOT 都可能让整个 helper 以 `TypeInitializationException` 失效。应使用 `Expression.GetDelegateType` 等公共 API，或在确有必要时自行管理 `Reflection.Emit`，不能把实现细节暴露为库的稳定能力。
+    修复：改为由库自行创建 `AssemblyBuilder`/`ModuleBuilder`，不再反射依赖 runtime 私有 `AssemblyGen`；测试验证所生成类型可绑定并调用。剩余限制：该能力仍本质依赖 `Reflection.Emit`，因此不适用于 Native AOT；XML 文档已明确这一点。
 
-190. **[P2][命名/API] `Dictionary.Get` 把“key 存在且 value 为 null”当成 key 不存在**
+190. **[P2][命名/API][已修复] `Dictionary.Get` 把“key 存在且 value 为 null”当成 key 不存在**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Collections/~Generic/DictionaryExtensions.cs:5-28`。`TryGetValue` 成功后还要求 `value is not null` 才返回，因而会调用 fallback factory；这抹掉了 dictionary 对 present-null 与 absent 的重要区分，而普通名字 `Get` 没有提示。应只根据 `TryGetValue` 判断存在，或改名 `GetNonNullOrDefault` 并统一 selector overload 的契约。
+    修复：仅以 `TryGetValue` 的 bool 判断 key 是否存在，present-null 不再触发 fallback。测试锁定该区别。
 
 191. **[P2][命名/所有权] `AsReadOnlyDictionary` 经常原样返回可变 `Dictionary`**
 

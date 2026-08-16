@@ -401,7 +401,8 @@ public static partial class ActionExtensions
     /// <typeparam name="T">The action value type.</typeparam>
     /// <param name="actions">The actions to chain in enumeration order.</param>
     /// <returns>A single action that returns the last action's result.</returns>
-    /// <remarks>An empty sequence succeeds with <c>default(T)</c>.</remarks>
+    /// <exception cref="ArgumentException"><paramref name="actions"/> is empty.</exception>
+    /// <remarks>An empty sequence is rejected because a successful <c>default(T)</c> cannot be represented for every <typeparamref name="T"/>.</remarks>
     public static IAction<T> Chain<T>(this IEnumerable<IAction<T>> actions)
     {
         IAction<T>? result = null;

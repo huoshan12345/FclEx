@@ -27,6 +27,26 @@ partial class OperationTests
         Assert.True(elapsed < TimeSpan.FromSeconds(1.5), () => $"Expected {nameof(elapsed)} < {TimeSpan.FromSeconds(1.5)}, but was {elapsed}");
     }
 
+    [Fact]
+    public async Task ExecuteAsync_AsyncValueDelegate_StartsOnTheCallingThread()
+    {
+        var callerThreadId = Environment.CurrentManagedThreadId;
+        var invokedThreadId = 0;
+        var completion = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var execution = Operation.ExecuteAsync(async () =>
+        {
+            invokedThreadId = Environment.CurrentManagedThreadId;
+            return await completion.Task;
+        });
+
+        Assert.Equal(callerThreadId, invokedThreadId);
+
+        completion.SetResult(42);
+        var result = await execution;
+        Assert.Equal(42, result.Value);
+    }
+
     [RetryFact(3, 100)]
     public async Task ExecuteAsync_Timeout_MoveSynchronousDelegateBodyToTheThreadPool()
     {

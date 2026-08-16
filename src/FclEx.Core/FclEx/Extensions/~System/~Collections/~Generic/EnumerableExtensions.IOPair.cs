@@ -25,6 +25,14 @@ partial class EnumerableExtensions
         return new(successItems, failureItems);
     }
 
+    /// <summary>
+    /// Executes the asynchronous operations in batches and separates their successful outputs from failed inputs.
+    /// </summary>
+    /// <remarks>
+    /// If <paramref name="token"/> is canceled, the remaining source items are still enumerated and each
+    /// receives a canceled result. This preserves one result per input item, but requires a finite source because cancellation
+    /// does not stop enumeration. The selector is not invoked for those remaining items.
+    /// </remarks>
     public static async Task<OperationIOPairs<T, TResult>> ToOperationIOPairs<T, TResult>(
         this IEnumerable<T> enumerable,
         Func<T, Task<OperationResult<TResult>>> taskSelector,
@@ -79,6 +87,14 @@ partial class EnumerableExtensions
         return enumerable.ToOperationIOPairsSerially(m => Operation.ExecuteAsync(() => taskSelector(m)), interval, token);
     }
 
+    /// <summary>
+    /// Executes the asynchronous operations one at a time and separates their successful outputs from failed inputs.
+    /// </summary>
+    /// <remarks>
+    /// If <paramref name="token"/> is canceled, the remaining source items are still enumerated and each receives a canceled
+    /// result. This preserves one result per input item, but requires a finite source because cancellation does not stop
+    /// enumeration. The selector is not invoked for those remaining items.
+    /// </remarks>
     public static async Task<OperationIOPairs<T, TResult>> ToOperationIOPairsSerially<T, TResult>(
         this IEnumerable<T> enumerable,
         Func<T, Task<OperationResult<TResult>>> taskSelector,

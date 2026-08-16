@@ -433,14 +433,9 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task Chain_WithEmptySequence_ReturnsDefaultValue()
+    public void Chain_WithEmptySequence_ThrowsArgumentException()
     {
-        var (success, value, _, _) = await Array.Empty<IAction<int>>()
-            .Chain()
-            .ExecuteAsync();
-
-        Assert.True(success);
-        Assert.Equal(0, value);
+        Assert.Throws<ArgumentException>(() => Array.Empty<IAction<int>>().Chain());
     }
 
     [Fact]

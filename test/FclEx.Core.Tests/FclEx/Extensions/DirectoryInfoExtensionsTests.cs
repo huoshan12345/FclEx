@@ -15,6 +15,16 @@ public class DirectoryInfoExtensionsTests
     }
 
     [Fact]
+    public void Rename_OnlyAcceptsDirectChildNames()
+    {
+        var directory = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()));
+
+        Assert.Throws<ArgumentException>(() => directory.Rename(".."));
+        Assert.Throws<ArgumentException>(() => directory.Rename(Path.Combine("nested", "child")));
+        Assert.Throws<ArgumentException>(() => directory.Rename(Path.GetTempPath()));
+    }
+
+    [Fact]
     public void IsDescendantOf_UsesPathBoundariesAndExcludesSelf()
     {
         var parent = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "parent"));

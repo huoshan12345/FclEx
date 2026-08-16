@@ -112,7 +112,7 @@ public static partial class Operation
         var watch = ValueStopwatch.StartNew();
         try
         {
-            var result = await TaskHelper.RunAsync(t => Task.Run(action, t), timeout).NoCapture();
+            var result = await TaskHelper.RunAsync(t => action(), timeout).NoCapture();
             return (result, watch.GetElapsedTime());
         }
         catch (Exception ex)

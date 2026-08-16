@@ -27,6 +27,13 @@ public static class DelegateHelper
 #endif
     _lock = new();
 
+    /// <summary>
+    /// Creates a delegate type with the specified return and parameter types.
+    /// </summary>
+    /// <remarks>
+    /// The type is created with <see cref="AssemblyBuilder"/> and exists only at runtime. This API requires a runtime that
+    /// supports dynamic code generation and is not suitable for Native AOT scenarios.
+    /// </remarks>
     public static Type MakeNewCustomDelegate(Type returnType, IEnumerable<Type> parameterTypes)
     {
         var paras = parameterTypes.AsArray();
