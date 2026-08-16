@@ -387,13 +387,15 @@ public static partial class OperationResultExtensions
     /// <summary>
     /// Converts asynchronous operation results to actions and combines them.
     /// </summary>
-    /// <param name="tasks">The tasks representing asynchronous operation results.</param>
+    /// <param name="enumerable">The enumerable items to be converted to actions.</param>
+    /// <param name="selector">A function that selects an asynchronous operation result for each item.</param>
     /// <param name="parallel">Whether the generated actions should be combined in parallel.</param>
-    public static IAction<T[]> ToAction<T>(this IEnumerable<Task<OperationResult<T>>> tasks, bool parallel)
+    public static IAction<TResult[]> ToAction<T, TResult>(this IEnumerable<T> enumerable, Func<T, CancellationToken, Task<OperationResult<TResult>>> selector, bool parallel)
     {
-        Check.NotNull(tasks);
+        Check.NotNull(enumerable);
+        Check.NotNull(selector);
 
-        var actions = tasks.Select(m => Operation.Action(t => m));
+        var actions = enumerable.Select(m => Operation.Action(t => selector(m, t)));
         return parallel ? actions.CombineInParallel() : actions.CombineInSeries();
     }
 
