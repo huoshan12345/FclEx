@@ -534,45 +534,55 @@
     位置：`src/FclEx.Core/System/Reflection/DataMemberInfo.cs:6-20,61-75`。所有 field 都被标记 `CanWrite = true`，包括 `IsInitOnly` 字段；调用方按 `CanWrite` 选择 setter 后仍可能失败或绕过类型不变量。`CanWrite` 应表达实际支持的普通写入能力并排除 init-only/literal 字段，危险的反射写入若保留应独立命名。
     修复：field 的 `CanWrite` 和 `HasPublicSetter` 现在都会排除 init-only 与 literal 字段；现有 `UnsafeWrite` flag 仍作为显式选择 readonly 反射写入的独立入口，literal 字段不会被包含。测试覆盖 public/private、static/instance readonly field 以及 public/private constant。
 
-111. **[P1] `DataMemberInfo` 的统一 getter/setter 签名无法表示 indexer**
+111. **[P1][已修复] `DataMemberInfo` 的统一 getter/setter 签名无法表示 indexer**
 
     位置：`src/FclEx.Core/System/Reflection/DataMemberInfo.cs:24-40,71-75`。类型会收集 indexer 并设置 `IsIndexer = true`，但只暴露不带索引参数的 `Func<object?, object?>` / `Action<object?, object?>`；对 indexer 调用必然以参数数量错误失败。应在数据成员抽象中排除 indexer，或为它设计包含索引参数的独立访问模型，而不是暴露看似可调用的无效委托。
+    修复：为 indexer 增加独立的 `IndexerGetter` 与 `IndexerSetter`，两者均显式接收索引参数；普通 `Getter`/`Setter` 文档也明确只适用于非 indexer 成员。测试覆盖使用 int indexer 的读取与写入。
 
-112. **[P0] `ReferenceEqualityComparer<T>` 允许值类型，导致相等和哈希契约失真**
+112. **[P0][已修复] `ReferenceEqualityComparer<T>` 允许值类型，导致相等和哈希契约失真**
 
     位置：`src/FclEx.Core/System/Collections/Generic/~EqualityComparers/ReferenceEqualityComparer.cs:8-29`。`T` 没有 `class` 约束；值类型参数在 `ReferenceEquals` 和 `RuntimeHelpers.GetHashCode` 中分别装箱，同一个值通常也不相等，哈希还随新装箱对象变化。应加 `where T : class`；值类型不存在可复用的“引用相等”语义。
+    修复：`ReferenceEqualityComparer<T>` 现在以 `where T : class` 限制为引用类型，阻止值类型使用无意义的引用相等比较。
 
-113. **[P1] `ComparerHelper.TryEquals` 在调用自定义 comparer 前强制要求运行时类型相同**
+113. **[P1][已修复] `ComparerHelper.TryEquals` 在调用自定义 comparer 前强制要求运行时类型相同**
 
     位置：`src/FclEx.Core/System/Collections/Generic/ComparerHelper.cs:25-43`，并影响 `EnumerableEqualityComparer`、`KeyEqualityComparer`、`DelegateEqualityComparer`、`MemberEqualityComparerBuilder` 等。对于声明为基类或接口的 `T`，比较器本可按成员/序列语义判定两个不同派生类型相等，该 helper 却提前返回 false；例如内容相同的数组和列表无法由序列 comparer 比较相等。helper 只应处理引用相同/null，运行时类型策略应由具体 comparer 决定。
+    修复：新增 `requireSameRuntimeType` 参数，默认保持原有严格行为；传入 `false` 时，非 null 的不同运行时类型不会在 helper 中被提前判定，调用方可继续使用自身 comparer 语义。测试覆盖两种分支。
 
 114. **[P0] `MarshalToBytesEqualityComparer<T>` 的相等与哈希依赖未定义的 padding 和地址值**
 
     位置：`src/FclEx.Core/System/Collections/Generic/~EqualityComparers/MarshalToBytesEqualityComparer.cs:3-28`、`src/FclEx.Core/FclEx/Helpers/ObjectHelper.cs:42-62`。`Marshal.SizeOf` 包含 padding，而 `StructureToPtr` 不保证覆盖新分配 native buffer 的所有 padding；同一值的字节和哈希可能不稳定。带引用 marshaling 的字段还会把指针/分配结果纳入比较，而不是比较所指内容。该 comparer 无法提供通用 `IEqualityComparer<T>` 契约，应删除，或只为明确的 blittable 布局定义受约束的 bitwise comparer。
+    复核：现已调用 `EnsureMarshalable`，并在 XML 文档中说明只适用于全部内联值数据的布局。测试确认普通带 padding 的 sequential struct 在当前目标上稳定；但 `[MarshalAs(UnmanagedType.LPStr)] string` 也会通过 `EnsureMarshalable`，两个内容相同但独立分配的字符串字段实际比较为不相等。该失败用例未保留在套件中，等待确定是否收紧 `EnsureMarshalable`/comparer 的准入范围或移除 comparer 后再处理。
 
-115. **[P1] `ThenWithAction` 可把不存在的下一值或失败伪装成成功 tuple**
+115. **[P1][已修复] `ThenWithAction` 可把不存在的下一值或失败伪装成成功 tuple**
 
     位置：`src/FclEx.Core/FclEx/Actions/ThenWithAction.cs:3-54`。`errorWhenNextNull=false` 返回 `(item, default(TNext))` 的成功结果；`prevWhenNextError=true` 还会吞掉 next 的异常并返回同样的成功值。返回类型承诺两个成功值，这两个布尔开关却允许缺值和失败进入成功通道。应以 `Optional<TNext>`/discriminated result 显式表达缺失，失败保留为失败；不要用布尔参数改变结果类型的真实性。
+    修复：移除会伪造成功 tuple 的两个参数。next action 缺失时返回错误，next action 的失败保持为失败；测试覆盖缺失 next action 的错误路径。
 
-116. **[P1] `IPipelineAction<T>` 在不同目标框架上要求实现不同的接口成员**
+116. **[P1][不修改] `IPipelineAction<T>` 在不同目标框架上要求实现不同的接口成员**
 
     位置：`src/FclEx.Core/FclEx/Actions/IPipelineAction.cs:4-51`。NET6+ 通过 default interface implementation 提供 `GetName`、handler 和显式 `IAction.ExecuteAsync`，旧目标却把前三者变成必须实现且没有 `ExecuteAsync` 默认实现；同一消费者源码不能稳定跨该包支持的 TFM 编译。公共接口形状应跨目标一致：把默认逻辑放到抽象基类/组合器，或在所有 TFM 要求相同成员，而不是条件编译实现责任。
+    处理决定：保留条件编译的接口默认实现。低版本平台没有该语言/运行时能力；抽象基类不能替代接口，因为使用者可能已经需要继承其他基类。此处接受与 Serilog 类似的跨目标实现差异。
 
-117. **[P1] 把已经启动的 `Task` 转成 `IAction` 破坏了 action 的延迟和可重复执行语义**
+117. **[P1][已修复] 把已经启动的 `Task` 转成 `IAction` 破坏了 action 的延迟和可重复执行语义**
 
     位置：``src/FclEx.Core/FclEx/Utils/~Operation/OperationResultExtensions.`.Async.cs:387-398,504-517``。这些 overload 捕获现成 task；选择 series 并不能让任务串行启动，token 无法传入原操作，同一个 action 多次执行也只会反复观察同一个结果。应接受 `Func<CancellationToken, Task<...>>` 工厂；若只是等待现成任务，就不要包装成可执行 action。
+    修复：批量转换 overload 现在接受带 `CancellationToken` 的 selector 工厂，因而在 action 执行前不会启动操作，并且每次 `ExecuteAsync` 都会重新调用工厂。保留后两个 `Task` overload，它们明确只包装既有 task 的等待/合并语义；测试覆盖工厂延迟执行和重复执行。
 
-118. **[P2] 同名同步/异步 `Fallback` 对 elapsed 的定义相反**
+118. **[P2][已修复] 同名同步/异步 `Fallback` 对 elapsed 的定义相反**
 
     位置：``src/FclEx.Core/FclEx/Utils/~Operation/OperationResultExtensions.`.cs:329-361``、``OperationResultExtensions.`.Async.cs:400-447``。同步 overload 直接返回 fallback 并丢弃源结果耗时，异步 overload 则把源耗时加到 fallback 上。相同概念不应因调用形态改变度量语义；应统一定义为端到端耗时或仅最终分支耗时，并让所有 overload 一致。
+    修复：同步 fallback 在执行 fallback 时也累加源结果与 fallback 结果的 elapsed；文档和测试已与异步版本对齐。
 
-119. **[P2] 同名同步/异步 `Merge` 使用不可比较的 elapsed 语义**
+119. **[P2][已修复] 同名同步/异步 `Merge` 使用不可比较的 elapsed 语义**
 
     位置：``src/FclEx.Core/FclEx/Utils/~Operation/OperationResultExtensions.`.cs:364-385``、``OperationResultExtensions.`.Async.cs:486-501``。同步 `Merge` 汇总每个 result 的 elapsed，异步版本随后用等待 source task 的墙钟时间覆盖该值；串行、并行以及已完成 task 得到的数字含义完全不同。应明确选择 aggregate work time 或 wall-clock duration，并用不同属性/方法表达两种指标，而不是静默覆盖。
+    修复：异步 `Merge` 不再记录等待 source task 的墙钟时间，而与同步版本一样只汇总包含的 result elapsed；文档和延迟 task 回归测试确认此语义。
 
-120. **[P1] `Optional.Some(null)` 会静默变成 `None`**
+120. **[P1][已修复] `Optional.Some(null)` 会静默变成 `None`**
 
     位置：`src/FclEx.Core/FclEx/Utils/Optional.cs:7-53`。`Some<T>(T value)` 允许 nullable `T`，而 `HasValue` 完全由 `Value is not null` 推导，所以 API 名称承诺的“有值”可立即消失。若 null 不算值，应加 `where T : notnull` 并运行时校验；若要支持 `Some(null)`，结构必须保存独立的存在位。
+    修复：`Optional.Some` 现在运行时拒绝 null，防止其创建会立刻表现为 `None` 的值；测试覆盖 null 拒绝和非 null 创建。
 
 121. **[P1] `NameIdentifier<T>` 默认缓存会永久保留所有动态名称**
 

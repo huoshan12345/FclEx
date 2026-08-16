@@ -73,9 +73,18 @@ public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>
     public bool IsCompilerGenerated { get; }
     public bool HasPublicSetter { get; }
     public bool HasPublicGetter { get; }
+    /// <summary>Gets a non-indexer value from an object.</summary>
+    /// <remarks>Use <see cref="IndexerGetter"/> for indexer properties.</remarks>
     public Func<object?, object?> Getter { get; }
+
+    /// <summary>Sets a non-indexer value on an object.</summary>
+    /// <remarks>Use <see cref="IndexerSetter"/> for indexer properties.</remarks>
     public Action<object?, object?> Setter { get; }
+
+    /// <summary>Gets an indexer value using its index arguments, or <see langword="null"/> for a non-indexer member.</summary>
     public Func<object?, object?[]?, object?>? IndexerGetter { get; }
+
+    /// <summary>Sets an indexer value using its index arguments, or <see langword="null"/> for a non-indexer member.</summary>
     public Action<object?, object?, object?[]?>? IndexerSetter { get; }
 
     public object? GetValue(object? obj) => Getter(obj);

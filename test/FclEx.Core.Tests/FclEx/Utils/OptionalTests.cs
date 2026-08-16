@@ -3,6 +3,21 @@ namespace FclEx.Utils;
 public class OptionalTests
 {
     [Fact]
+    public void Some_Null_Should_Throw()
+    {
+        Assert.Throws<ArgumentNullException>(() => Optional.Some<string?>(null));
+    }
+
+    [Fact]
+    public void Some_NonNull_Should_Create_Value()
+    {
+        var optional = Optional.Some("value");
+
+        Assert.True(optional.HasValue);
+        Assert.Equal("value", optional.Value);
+    }
+
+    [Fact]
     public void HasValue_ShouldReturnTrue_WhenValueIsNotNull()
     {
         var optional = new Optional<int>(5);

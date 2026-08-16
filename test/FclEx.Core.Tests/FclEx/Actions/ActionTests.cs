@@ -112,6 +112,17 @@ public class ActionTests
     }
 
     [Fact]
+    public async Task ThenWithAction_Null_Next_Action_Returns_Error()
+    {
+        var action = new ThenWithAction<int, string>(SuccessAction.Create(1), _ => null);
+
+        var result = await action.ExecuteAsync();
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(Constants.NullNextError, result.Exception?.Message);
+    }
+
+    [Fact]
     public void SeriesAction_ConstructorRejectsNullActions()
     {
         Assert.Throws<ArgumentNullException>(() => new SeriesAction<int>(null!));

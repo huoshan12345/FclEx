@@ -144,4 +144,15 @@ public partial class OperationResultExtensionsTests
         Assert.Equal(1, result.Value);
         Assert.False(called);
     }
+
+    [Fact]
+    public void Fallback_Error_AddsElapsedFromFallback()
+    {
+        var result = Operation.Error<int>("source", TimeSpan.FromSeconds(2))
+            .Fallback(() => Operation.Success(3, TimeSpan.FromSeconds(4)));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(3, result.Value);
+        Assert.Equal(TimeSpan.FromSeconds(6), result.Elapsed);
+    }
 }

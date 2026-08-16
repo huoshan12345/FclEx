@@ -5,6 +5,13 @@ namespace System.Collections.Generic;
 
 public class MarshalToBytesEqualityComparerTests
 {
+    [StructLayout(LayoutKind.Sequential)]
+    private struct PaddedValue
+    {
+        public byte First;
+        public int Second;
+    }
+
     public static readonly IEnumerable<Type> ValueTypes = Types.BlittableTypes.Concat([
         typeof(decimal),
         typeof(TimeSpan),
@@ -59,4 +66,16 @@ public class MarshalToBytesEqualityComparerTests
         var innermost = Assert.IsType<ArgumentException>(inner.InnerException);
         Assert.Contains("is not marshalable because it is generic", innermost.Message);
     }
+
+    [Fact]
+    public void Equal_Values_With_Padding_Should_Produce_Stable_Comparison_And_Hash()
+    {
+        var comparer = MarshalToBytesEqualityComparer<PaddedValue>.Instance;
+        var x = new PaddedValue { First = 1, Second = 2 };
+        var y = new PaddedValue { First = 1, Second = 2 };
+
+        Assert.True(comparer.Equals(x, y));
+        Assert.Equal(comparer.GetHashCode(x), comparer.GetHashCode(y));
+    }
+
 }

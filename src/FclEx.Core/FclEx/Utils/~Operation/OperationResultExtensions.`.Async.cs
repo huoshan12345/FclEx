@@ -488,7 +488,7 @@ public static partial class OperationResultExtensions
     /// <summary>
     /// Awaits a task that produces operation results and merges them into a single array-valued result.
     /// </summary>
-    /// <remarks>The returned elapsed time is the wall-clock wait time around the source task.</remarks>
+    /// <remarks>The returned elapsed time is the sum of the contained operation results; waiting for the source task is not measured.</remarks>
     public static Task<OperationResult<T[]>> Merge<T, TResults>(this Task<TResults> task) where TResults : IEnumerable<OperationResult<T>>
     {
         return task.Then(m => m.Merge());

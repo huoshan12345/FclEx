@@ -329,7 +329,7 @@ public static partial class OperationResultExtensions
     /// <summary>
     /// Returns the original success result or invokes a fallback operation when the result is an error.
     /// </summary>
-    /// <remarks>The fallback result is returned as-is; elapsed times are not added by this synchronous overload.</remarks>
+    /// <remarks>When the fallback runs, its elapsed time is added to the source result's elapsed time.</remarks>
     public static OperationResult<T> Fallback<T>(this OperationResult<T> result, Func<OperationResult<T>> fallback)
     {
         Check.NotNull(fallback);

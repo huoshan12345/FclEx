@@ -19,6 +19,7 @@ public static class Optional
     /// <typeparam name="T">The type of the value that will be wrapped in the optional.</typeparam>
     /// <param name="value">The value to be wrapped in the optional.</param>
     /// <returns>An <see cref="Optional{T}"/> containing the specified value.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
     public static Optional<T> Some<T>(T value) => Check.NotNull(value);
 }
 
