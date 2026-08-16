@@ -759,6 +759,7 @@ public class OrderedIndex<TScore, TValue> : ICollection<(TScore Score, TValue Va
 
         public bool MoveNext()
         {
+            // A default range enumerable contains an enumerator with no owning index and represents an empty sequence.
             if (_orderedIndex is null)
                 return false;
 
@@ -825,6 +826,7 @@ public class OrderedIndex<TScore, TValue> : ICollection<(TScore Score, TValue Va
 
         public bool MoveNext()
         {
+            // A default range enumerable contains an enumerator with no owning index and represents an empty sequence.
             if (_orderedIndex is null)
                 return false;
 
