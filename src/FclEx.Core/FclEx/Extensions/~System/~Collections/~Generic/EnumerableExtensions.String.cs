@@ -5,14 +5,17 @@ partial class EnumerableExtensions
     public static IEnumerable<string> NotEmpty(this IEnumerable<string?> col)
         => col.Where(m => m.IsNotEmpty())!;
 
-    public static bool ContainsAny(this IEnumerable<string> enumerable, IEnumerable<string> values, StringComparison comparison = StringComparison.Ordinal)
+    public static bool AnyContainsAny(this IEnumerable<string> enumerable, IEnumerable<string> values, StringComparison comparison = StringComparison.Ordinal)
         => values.Any(m => enumerable.Any(x => x.Contains(m, comparison)));
 
-    public static bool ContainsAll(this IEnumerable<string> enumerable, IEnumerable<string> values, StringComparison comparison = StringComparison.Ordinal)
+    public static bool AnyContainsAll(this IEnumerable<string> enumerable, IEnumerable<string> values, StringComparison comparison = StringComparison.Ordinal)
         => values.All(m => enumerable.Any(x => x.Contains(m, comparison)));
 
-    public static bool ContainsAnyIgnoreCase(this IEnumerable<string> enumerable, IEnumerable<string> values)
-        => enumerable.ContainsAny(values, StringComparison.OrdinalIgnoreCase);
+    public static bool AllContainsAny(this IEnumerable<string> enumerable, IEnumerable<string> values, StringComparison comparison = StringComparison.Ordinal)
+        => values.Any(m => enumerable.All(x => x.Contains(m, comparison)));
+
+    public static bool AllContainsAll(this IEnumerable<string> enumerable, IEnumerable<string> values, StringComparison comparison = StringComparison.Ordinal)
+        => values.All(m => enumerable.All(x => x.Contains(m, comparison)));
 
     public static bool AnyContains(this IEnumerable<string> enumerable, string value, StringComparison comparison = StringComparison.Ordinal)
         => enumerable.Any(m => m.Contains(value, comparison));
