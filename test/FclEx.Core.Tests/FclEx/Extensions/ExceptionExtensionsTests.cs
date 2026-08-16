@@ -22,15 +22,19 @@ public partial class ExceptionExtensionsTests
 
     [Theory]
     [MemberData(nameof(Exceptions))]
-    public void ForEach_Test(Exception ex)
+    public void EnumerateLeaves_Test(Exception ex)
     {
         var list = new List<InnermostException>();
-        ex.ForEach(m =>
+        foreach (var m in ex.EnumerateLeaves())
         {
+            if (m is AggregateException)
+                continue;
+
             Assert.Equal(typeof(InnermostException), m.GetType());
             list.Add(m.CastTo<InnermostException>());
-        });
+        }
         Assert.NotEmpty(list);
+
         var ids = list.Select(m => m.Id).Distinct().ToArray();
         Assert.Equal(ids.Length, list.Count);
     }

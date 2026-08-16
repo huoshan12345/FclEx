@@ -34,17 +34,8 @@ public static partial class ExceptionExtensions
         }
     }
 
-    /// <summary>
-    /// Executes an action on each exception in the exception tree, including all inner exceptions
-    /// and inner exceptions in AggregateExceptions.
-    /// </summary>
-    /// <param name="ex">The root exception to start from.</param>
-    /// <param name="action">The action to execute on each exception.</param>
-    public static void ForEach(this Exception? ex, Action<Exception>? action)
+    public static IEnumerable<Exception> EnumerateLeaves(this Exception ex)
     {
-        if (ex is null || action is null)
-            return;
-
         var visited = new HashSet<Exception>();
         var q = new Queue<Exception>();
         q.Enqueue(ex);
@@ -53,7 +44,52 @@ public static partial class ExceptionExtensions
         {
             var e = q.Dequeue();
 
-            Visit(e);
+            if (e is AggregateException aEx)
+            {
+                foreach (var inner in aEx.InnerExceptions)
+                {
+                    EnqueueIfNotVisited(inner);
+                }
+            }
+            else if (e.InnerException is { } inner)
+            {
+                EnqueueIfNotVisited(inner);
+            }
+            else
+            {
+                if (visited.Add(e))
+                    yield return e;
+            }
+        }
+
+        visited.Clear();
+
+        void EnqueueIfNotVisited(Exception e)
+        {
+            if (visited.Contains(e))
+                return;
+
+            q.Enqueue(e);
+        }
+    }
+
+    /// <summary>
+    /// Enumerates through the exception and all its inner exceptions, including those in AggregateExceptions.
+    /// </summary>
+    /// <param name="ex"></param>
+    /// <returns></returns>
+    public static IEnumerable<Exception> Enumerate(this Exception ex)
+    {
+        var visited = new HashSet<Exception>();
+        var q = new Queue<Exception>();
+        q.Enqueue(ex);
+
+        while (q.Count != 0)
+        {
+            var e = q.Dequeue();
+
+            if (visited.Add(e))
+                yield return e;
 
             if (e is AggregateException aEx)
             {
@@ -67,20 +103,8 @@ public static partial class ExceptionExtensions
                 EnqueueIfNotVisited(inner);
             }
         }
-        visited.Clear();
-        return;
 
-        void Visit(Exception e)
-        {
-            try
-            {
-                action(e);
-            }
-            finally
-            {
-                visited.Add(e);
-            }
-        }
+        visited.Clear();
 
         void EnqueueIfNotVisited(Exception e)
         {
