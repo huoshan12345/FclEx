@@ -53,7 +53,7 @@ public static class ExpressionExtensions
         }
     }
 
-    public static IEnumerable<object?> GetArgumentValues(this IEnumerable<Expression> arguments)
+    public static IEnumerable<object?> Evaluate(this IEnumerable<Expression> arguments)
     {
         return arguments.Select(e => e switch
         {
