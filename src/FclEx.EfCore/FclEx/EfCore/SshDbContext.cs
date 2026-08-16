@@ -87,8 +87,8 @@ public class SshDbContext
     /// and the endpoint callbacks are not invoked. If setup fails after SSH resources are created, those resources are disposed before the exception is rethrown.
     /// </remarks>
     public static SshDbContext<T> CreateSshDbContext<T>(string connectionString, Func<string, T> createContext, ConnectionInfo? ssh,
-        Func<string, SocketEndpoint> getRemoteEndpoint,
-        Func<string, SocketEndpoint, string> createNewConnectionString,
+        Func<string, DnsEndPoint> getRemoteEndpoint,
+        Func<string, DnsEndPoint, string> createNewConnectionString,
         EventHandler<HostKeyEventArgs>? hostKeyReceived = null) where T : DbContext
     {
         if (ssh == null)
@@ -114,7 +114,7 @@ public class SshDbContext
             sshClient.AddForwardedPort(tunnel);
             tunnel.Start();
 
-            var localEndpoint = new SocketEndpoint(tunnel.BoundHost, checked((int)tunnel.BoundPort));
+            var localEndpoint = new DnsEndPoint(tunnel.BoundHost, checked((int)tunnel.BoundPort));
             var newConnectionString = createNewConnectionString(connectionString, localEndpoint);
             context = createContext(newConnectionString);
             return new(context, sshClient, tunnel);

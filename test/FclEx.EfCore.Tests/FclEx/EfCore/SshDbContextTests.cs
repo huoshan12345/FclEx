@@ -124,7 +124,7 @@ public class SshDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         Assert.Throws<ObjectDisposedException>(() => callbackFailureClient.IsConnected);
 
         SshClient? contextFailureClient = null;
-        SocketEndpoint? localEndpoint = null;
+        DnsEndPoint? localEndpoint = null;
         var connectionString = Fixture.ConnectionStrings.Get(DbDriver.Npgsql, false).Build();
         Assert.Throws<InvalidOperationException>(() => SshDbContext.CreateSshDbContext<TestDbContext>(
             connectionString,
@@ -149,9 +149,9 @@ public class SshDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
         Assert.NotNull(contextFailureClient);
         Assert.Throws<ObjectDisposedException>(() => contextFailureClient.IsConnected);
         Assert.NotNull(localEndpoint);
-        Assert.InRange(localEndpoint.Value.Port, 1, IPEndPoint.MaxPort);
+        Assert.InRange(localEndpoint.Port, 1, IPEndPoint.MaxPort);
         using var tcpClient = new TcpClient();
         await Assert.ThrowsAsync<SocketException>(() =>
-            tcpClient.ConnectAsync(localEndpoint.Value.Host, localEndpoint.Value.Port));
+            tcpClient.ConnectAsync(localEndpoint.Host, localEndpoint.Port));
     }
 }
