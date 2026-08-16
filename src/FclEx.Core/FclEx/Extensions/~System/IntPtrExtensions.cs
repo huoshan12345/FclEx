@@ -23,13 +23,13 @@ public static class IntPtrExtensions
     {
         if (IntPtr.Size == sizeof(int))
         {
-            var left = unchecked((uint)ptr.ToInt32());
-            var right = unchecked((uint)other.ToInt32());
+            var left = (uint)ptr.ToInt32();
+            var right = (uint)other.ToInt32();
             return left >= right ? left - right : right - left;
         }
 
-        var left64 = unchecked((ulong)ptr.ToInt64());
-        var right64 = unchecked((ulong)other.ToInt64());
+        var left64 = (ulong)ptr.ToInt64();
+        var right64 = (ulong)other.ToInt64();
         return left64 >= right64
             ? (nuint)(left64 - right64)
             : (nuint)(right64 - left64);
