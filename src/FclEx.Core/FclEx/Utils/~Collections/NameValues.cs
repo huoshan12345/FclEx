@@ -5,7 +5,7 @@ namespace FclEx.Utils;
 /// This generic class serves as a base for derived collection types with self-referencing generics pattern.
 /// </summary>
 /// <typeparam name="TSelf">The derived type implementing this collection for fluent method chaining</typeparam>
-public class NameValues<TSelf> : IReadOnlyCollection<KeyValuePair<string, string>> where TSelf : NameValues<TSelf>
+public abstract class NameValues<TSelf> : IReadOnlyCollection<KeyValuePair<string, string>> where TSelf : NameValues<TSelf>
 {
     /// <summary>
     /// The underlying dictionary storing multiple values per key
@@ -26,7 +26,7 @@ public class NameValues<TSelf> : IReadOnlyCollection<KeyValuePair<string, string
     /// Initializes a new instance of the NameValues collection
     /// </summary>
     /// <param name="keyComparer">The string comparer to use for key equality</param>
-    public NameValues(StringComparer keyComparer)
+    protected NameValues(StringComparer keyComparer)
     {
         _entries = new(keyComparer);
     }
