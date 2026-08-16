@@ -58,20 +58,21 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task ThenWith_WhenFinalActionFails_ReturnsFinalError()
+    public async Task ThenWith_WhenFinalActionFails_ReturnsFinalErrorAndAccumulatesElapsed()
     {
-        var (successful, _, ex, _) = await SuccessAction.Create(1)
-            .ThenWith(r => SuccessAction.Create(1 + r))
+        var (successful, _, ex, elapsed) = await SuccessAction.Create(1, TimeSpan.FromSeconds(1))
+            .ThenWith(r => SuccessAction.Create(1 + r, TimeSpan.FromSeconds(2)))
             .ThenWith((a, b) =>
             {
                 Assert.Equal(1, a);
                 Assert.Equal(2, b);
-                return ErrorAction.Create<int>("error");
+                return ErrorAction.Create<int>("error", TimeSpan.FromSeconds(3));
             })
             .ExecuteAsync();
 
         Assert.False(successful);
         Assert.Equal("error", ex?.Message);
+        Assert.Equal(TimeSpan.FromSeconds(6), elapsed);
     }
 
     [Fact]

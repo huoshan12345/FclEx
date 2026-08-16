@@ -382,6 +382,31 @@ public partial class ExtensionsTests
     }
 
     [Fact]
+    public async Task Chain_WithReferenceType_RunsEachActionAndReturnsTheLastValue()
+    {
+        var order = new List<string>();
+        IAction<string>[] actions =
+        [
+            Operation.Action<string>(_ =>
+            {
+                order.Add("first");
+                return "first";
+            }),
+            Operation.Action<string>(_ =>
+            {
+                order.Add("second");
+                return "second";
+            })
+        ];
+
+        var result = await actions.Chain().ExecuteAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("second", result.Value);
+        Assert.Equal(["first", "second"], order);
+    }
+
+    [Fact]
     public async Task CombineInSeries_ReturnsValuesInOrder()
     {
         var (success, value, _, _) = await new[]
@@ -463,6 +488,38 @@ public partial class ExtensionsTests
         Assert.False(success);
         Assert.Equal("stop", ex?.Message);
         Assert.Equal(1, attempts);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithNegativeRetryCount_ThrowsArgumentOutOfRangeException()
+    {
+        var action = ErrorAction.Create<int>("error");
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => action.ExecuteAsync(retryCount: -1));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithNoRemainingRetries_DoesNotRequestDelay()
+    {
+        var attempts = 0;
+        var delayRequested = false;
+        var action = Operation.Action<int>(_ =>
+        {
+            attempts++;
+            return Operation.Error<int>("error");
+        });
+
+        var result = await action.ExecuteAsync(
+            retryCount: 0,
+            sleepDurationProvider: _ =>
+            {
+                delayRequested = true;
+                return TimeSpan.Zero;
+            });
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(1, attempts);
+        Assert.False(delayRequested);
     }
 
     [Fact]

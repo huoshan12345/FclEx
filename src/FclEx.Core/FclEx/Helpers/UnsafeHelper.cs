@@ -5,7 +5,7 @@ public static unsafe class UnsafeHelper
     private static readonly MethodInfo _sizeof = typeof(UnsafeHelper).GetRequiredMethod(nameof(SizeOfImpl), 1);
     private static readonly ConditionalWeakTable<Type, ValueBox<int>> _cache = new();
 
-    private static readonly ConditionalWeakTable<Tuple<Type, string>, MethodInfo> _methods = new();
+    private static readonly ConditionalWeakTable<Type, ConcurrentDictionary<string, MethodInfo>> _methods = new();
 
     /// <summary>
     /// Calculates the size, in bytes, of a specified type.
@@ -133,9 +133,10 @@ public static unsafe class UnsafeHelper
 
     public static object? GetValue(IntPtr ptr, Type type)
     {
-        var method = _methods.GetValue(Tuple.Create(type, nameof(GetValue)), m =>
+        var methods = _methods.GetValue(type, _ => new());
+        var method = methods.GetOrAdd(nameof(GetValue), name =>
         {
-            var methodDef = typeof(UnsafeHelper).GetRequiredMethod(m.Item2, 1, typeof(IntPtr));
+            var methodDef = typeof(UnsafeHelper).GetRequiredMethod(name, 1, typeof(IntPtr));
             return methodDef.MakeGenericMethod(type);
         });
         return method.Invoke(null, [ptr]);

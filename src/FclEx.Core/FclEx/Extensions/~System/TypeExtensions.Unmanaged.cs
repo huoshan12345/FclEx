@@ -7,7 +7,7 @@ partial class TypeExtensions
 
     private record TypeCheckResult(bool Passed, string? ErrorMessage, string? ParamName);
 
-    private static readonly ConditionalWeakTable<Tuple<Type, string>, TypeCheckResult> _typeCheckCache = new();
+    private static readonly ConditionalWeakTable<Type, ConcurrentDictionary<string, TypeCheckResult>> _typeCheckCache = new();
 
     private static void Ensure(this Type type, TypeCheck check, string predicateName)
     {
@@ -26,7 +26,8 @@ partial class TypeExtensions
 
     private static (bool, Exception?) Check(this Type type, string checkName, Action<Type> action)
     {
-        var result = _typeCheckCache.GetValue(Tuple.Create(type, checkName), _ =>
+        var checks = _typeCheckCache.GetValue(type, _ => new());
+        var result = checks.GetOrAdd(checkName, _ =>
         {
             try
             {

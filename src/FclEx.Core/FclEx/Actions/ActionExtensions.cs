@@ -404,8 +404,15 @@ public static partial class ActionExtensions
     /// <remarks>An empty sequence succeeds with <c>default(T)</c>.</remarks>
     public static IAction<T> Chain<T>(this IEnumerable<IAction<T>> actions)
     {
-        IAction<T> seed = SuccessAction<T>.Default;
-        return actions.Aggregate(seed, (sum, next) => sum.Then(next), m => m);
+        IAction<T>? result = null;
+        // ReSharper disable once LoopCanBeConvertedToQuery
+        foreach (var action in actions)
+        {
+            result = result is null
+                ? action
+                : result.Then(_ => action);
+        }
+        return result ?? throw new ArgumentException("The actions sequence is empty.", nameof(actions));
     }
 
     /// <summary>
@@ -470,22 +477,27 @@ public static partial class ActionExtensions
     /// <param name="sleepDurationProvider">Provides the delay before each retry attempt.</param>
     /// <param name="token">The cancellation token passed to each attempt and delay.</param>
     /// <returns>The first successful result, or the last failed result.</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="retryCount"/> is negative.</exception>
     public static async Task<OperationResult<T>> ExecuteAsync<T>(this IAction<T> action,
         int retryCount,
         Func<OperationResult<T>, bool?>? retryCondition = null,
         Func<int, TimeSpan>? sleepDurationProvider = null,
         CancellationToken token = default)
     {
-        var executeCount = Math.Max(1, retryCount + 1);
+        if (retryCount < 0)
+            throw new ArgumentOutOfRangeException(nameof(retryCount), retryCount, "Retry count cannot be negative.");
 
         var result = Operation.Error<T>("not started");
         var watch = ValueStopwatch.StartNew();
-        for (var i = 1; i <= executeCount; i++)
+        for (var attempt = 0; ; attempt++)
         {
             result = await action.ExecuteAsync(token)
                 .ThenResult(m => m.Elapsed(watch.GetElapsedTime()));
 
             if (result.IsSuccess)
+                return result;
+
+            if (attempt == retryCount)
                 return result;
 
             if (retryCondition is not null)
@@ -498,12 +510,10 @@ public static partial class ActionExtensions
             if (sleepDurationProvider is null)
                 continue;
 
-            var sleepDuration = sleepDurationProvider.Invoke(i);
+            var sleepDuration = sleepDurationProvider.Invoke(attempt + 1);
             if (sleepDuration > TimeSpan.Zero)
                 await Task.Delay(sleepDuration, token);
         }
-
-        return result;
     }
 
     /// <summary>
