@@ -305,7 +305,7 @@ public static partial class ActionExtensions
         Check.NotNull(errorAction);
         return action.WhenResult(r => r.IsError, r => errorAction(r.Exception!));
     }
-    
+
     /// <summary>
     /// Re-executes the action once when the first successful value matches the condition.
     /// </summary>
@@ -404,7 +404,7 @@ public static partial class ActionExtensions
     /// <remarks>An empty sequence succeeds with <c>default(T)</c>.</remarks>
     public static IAction<T> Chain<T>(this IEnumerable<IAction<T>> actions)
     {
-        IAction<T> seed = new SuccessAction<T>(default!);
+        IAction<T> seed = SuccessAction<T>.Default;
         return actions.Aggregate(seed, (sum, next) => sum.Then(next), m => m);
     }
 
