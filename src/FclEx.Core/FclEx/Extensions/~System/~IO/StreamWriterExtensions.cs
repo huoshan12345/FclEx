@@ -7,7 +7,7 @@ public static class StreamWriterExtensions
     private static readonly MethodInfo? _methodFlushAsync = typeof(StreamWriter).GetMethod(nameof(StreamWriter.FlushAsync), 0, [typeof(CancellationToken)]);
 
     /// <summary>
-    /// Provides a cross-platform extension method for <see cref="StreamWriter.FlushAsync(CancellationToken)"/>. <br/>
+    /// Provides a cross-platform extension method for <see cref="StreamWriter.FlushAsync()"/> with a cancellation token. <br/>
     /// On .NET Standard 2.0, this overload does not exist, so reflection is used to call it if available. <br/>
     /// Falls back to <see cref="StreamWriter.FlushAsync()"/> when the cancellation-aware overload cannot be resolved.
     /// </summary>
@@ -22,7 +22,7 @@ public static class StreamWriterExtensions
         }
         else
         {
-            return writer.FlushAsync();
+            return writer.FlushAsync().WaitAsync(cancellationToken);
         }
     }
 #endif

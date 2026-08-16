@@ -2,11 +2,6 @@ namespace Xunit;
 
 public static class TestOutputHelperExtensions
 {
-    public static IDisposable SetConsole(this ITestOutputHelper output)
-    {
-        return new TestOutputWriter(output).SetConsole();
-    }
-
     public static void WriteLine(this ITestOutputHelper output)
     {
         output.WriteLine("");
