@@ -9,7 +9,7 @@ public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>
         IsCompilerGenerated = MemberInfo.IsCompilerGenerated(false);
         IsInitOnly = field.IsInitOnly;
         CanRead = true;
-        CanWrite = field.IsInitOnly == false && field.IsLiteral == false;
+        CanWrite = field is { IsInitOnly: false, IsLiteral: false };
         Getter = field.GetValue;
         Setter = field.SetValue;
         IsStatic = field.IsStatic;
@@ -38,6 +38,11 @@ public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>
         DataMemberType = property.PropertyType;
         IsInitOnly = property.IsInitOnly();
         IsIndexer = property.GetIndexParameters().Length > 0;
+        if (IsIndexer)
+        {
+            IndexerGetter = property.GetValue;
+            IndexerSetter = property.SetValue;
+        }
     }
 
     public override object[] GetCustomAttributes(bool inherit)
@@ -70,6 +75,8 @@ public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>
     public bool HasPublicGetter { get; }
     public Func<object?, object?> Getter { get; }
     public Action<object?, object?> Setter { get; }
+    public Func<object?, object?[]?, object?>? IndexerGetter { get; }
+    public Action<object?, object?, object?[]?>? IndexerSetter { get; }
 
     public object? GetValue(object? obj) => Getter(obj);
     public void SetValue(object? obj, object? value) => Setter(obj, value);
