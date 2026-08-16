@@ -4,9 +4,8 @@ public static class JsonNodeExtensions
 {
     /// <summary>
     /// Retrieves the child <see cref="JsonNode"/> at the specified <paramref name="key"/> if it exists
-    /// and is of type <typeparamref name="TNode"/>.  
-    /// If not, creates a new instance of <typeparamref name="TNode"/> using the provided <paramref name="creator"/>,
-    /// assigns it to the <paramref name="key"/> in the parent <paramref name="node"/>, and returns it.
+    /// and is of type <typeparamref name="TNode"/>. If the property is missing or contains JSON null, creates a new
+    /// instance using <paramref name="creator"/>, assigns it to the parent, and returns it.
     /// </summary>
     /// <typeparam name="TNode">The expected type of the child node.</typeparam>
     /// <param name="node">The parent <see cref="JsonNode"/> to search in.</param>
@@ -16,10 +15,20 @@ public static class JsonNodeExtensions
     /// The existing <typeparamref name="TNode"/> at the given <paramref name="key"/>, 
     /// or the newly created one if none was found.
     /// </returns>
+    /// <exception cref="InvalidOperationException">
+    /// The property exists and contains a node whose type is not <typeparamref name="TNode"/>.
+    /// </exception>
     public static TNode GetOrAdd<TNode>(this JsonNode node, string key, Func<TNode> creator) where TNode : JsonNode
     {
-        if (node[key] is TNode existing)
+        var current = node[key];
+        if (current is TNode existing)
             return existing;
+
+        if (current is not null)
+        {
+            throw new InvalidOperationException(
+                $"The JSON property '{key}' contains a node of type '{current.GetType().Name}', not '{typeof(TNode).Name}'.");
+        }
 
         var newNode = creator();
         node[key] = newNode;

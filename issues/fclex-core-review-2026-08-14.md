@@ -783,30 +783,36 @@
     位置：`src/FclEx.Core/System/Collections/Generic/MultiValueDictionary.cs:4-64` 及整个文件。`#nullable disable` 使 key、factory、comparer 和 `TryGetValue` 输出都无法表达真实的 null 契约，且 `TKey` 没有 `notnull` 约束；同一包的其他 API 已启用 nullable，消费者会得到不一致的编译期保证。应恢复 nullable，标注可选 comparer、`MaybeNullWhen(false)` 等，并给 `TKey` 加上合适约束。
     修复：移除 `#nullable disable`，为 `TKey` 增加 `notnull` 约束，并补齐 comparer 等入口的 nullable 签名。
 
-160. **[P1][待完善] `JsonValidator` 把 Unicode whitespace 和 digit 当成 JSON 词法字符**
+160. **[P1][已验证] `JsonValidator` 把 Unicode whitespace 和 digit 当成 JSON 词法字符**
 
     位置：`src/FclEx.Core/FclEx/Utils/~Text/~Json/JsonValidator.cs:13-38,153-200`。JSON whitespace 只有空格、TAB、CR、LF，数字也只能是 ASCII `0-9`；当前 `char.IsWhiteSpace`/`char.IsDigit` 会接受 NBSP、阿拉伯数字等无效 JSON。此类标准解析不应维护第二套近似语法，建议直接基于 `Utf8JsonReader`/`JsonDocument`，并把该 API 的目标明确为“完整验证”还是“快速预检”。
     方向确认：该类型定位为不依赖具体 JSON parser 的快速校验器，因此不改为 `Utf8JsonReader`/`JsonDocument`；后续应在此定位下补齐 JSON 的 ASCII whitespace/digit、转义、数值和深度等词法/结构规则。
+    验证：新增 65 个有效、无效和深度边界用例；四个目标框架均有相同的 10 个失败，分别覆盖 5 种 JSON 不允许的 Unicode whitespace 和 5 种非 ASCII 数字位置。失败 reproducer 按真实 defect 保留，其余结构、转义、数值及深度用例通过。
 
-161. **[P1][安全/可靠性] 递归 `JsonValidator` 没有最大深度，攻击者可触发进程级栈溢出**
+161. **[P1][安全/可靠性][已修复] 递归 `JsonValidator` 没有最大深度，攻击者可触发进程级栈溢出**
 
     位置：`src/FclEx.Core/FclEx/Utils/~Text/~Json/JsonValidator.cs:13-151`。对象和数组递归调用 `ParseValue`，没有深度预算；足够深的外部输入可触发不可正常捕获的 `StackOverflowException`。应使用带 `MaxDepth` 的官方解析器，或改为显式栈并要求调用方配置上限。该问题是解析器整体设计风险，不只是一个边界判断。
+    修复：新增 `MaxDepth = 64`，只为现有递归传递和检查 object/array 嵌套深度，不改变其他校验规则。测试覆盖 array/object 的第 64 层成功和第 65 层失败，并在四个目标框架通过。
 
-162. **[P1][安全/API] `TypeJsonConverter` 允许 JSON 任意解析 assembly-qualified type name**
+162. **[P1][安全/API][文档已说明] `TypeJsonConverter` 允许 JSON 任意解析 assembly-qualified type name**
 
     位置：`src/FclEx.Core/System/Text/Json/Serialization/TypeJsonConverter.cs:3-35`。读取路径调用 `Type.GetType(typeName, true, true)`，把不受信任字符串直接交给运行时类型/程序集解析；这扩大程序集加载面，也把持久化格式绑死在程序集名、版本和忽略大小写匹配上。公共 converter 应要求 allowlist/binder 或稳定的逻辑 type id；不应提供“任意 CLR Type”作为安全无感知的默认格式。
+    处理决定：保留当前行为，并在 XML 文档中明确 assembly-qualified wire format 的版本耦合、任意类型解析/程序集加载风险、仅用于可信 JSON，以及不可信输入应改用 allowlist 和稳定逻辑名称。
 
-163. **[P1] `FileSystemInfoJsonConverter.CanConvert` 与 `CreateConverter` 的支持集合不一致**
+163. **[P1][已修复] `FileSystemInfoJsonConverter.CanConvert` 与 `CreateConverter` 的支持集合不一致**
 
     位置：`src/FclEx.Core/System/Text/Json/Serialization/FileSystemInfoJsonConverter.cs:7-21`。`CanConvert` 对所有 `FileSystemInfo` 派生类返回 true，工厂却只接受精确的 `FileInfo` 和 `DirectoryInfo`，导致 serializer 选择该 factory 后再抛 `NotSupportedException`。应把 `CanConvert` 限制为两个精确类型，或真正为派生类型创建兼容 converter。
+    修复：`CanConvert` 仅对精确的 `FileInfo`/`DirectoryInfo` 返回 true；测试补充验证 `FileSystemInfo` 基类返回 false。
 
-164. **[P1] `IgnoreJsonConverterImpl<T>` 在根值写入时不输出任何 JSON token**
+164. **[P1][保留] `IgnoreJsonConverterImpl<T>` 在根值写入时不输出任何 JSON token**
 
     位置：`src/FclEx.Core/System/Text/Json/Serialization/IgnoreJsonConverter.cs:23-39`。`writer.CurrentDepth == 0` 时直接返回，根对象序列化会产生空输出而不是一个合法 JSON value；converter 的 `Write` 必须恰好写一个值。无论层级都应写 `null`，是否忽略属性应由 `JsonIgnoreAttribute`/ignore condition 决定，而不应靠 writer depth 猜测。
+    处理决定：根值产生空 payload 是该 placeholder converter 的预期语义，由 `Serialize_AsRootValue_ShouldWriteEmptyPayload` 锁定；嵌套值仍写 `null`。XML 文档已明确两种行为。
 
-165. **[P2][命名/API] `JsonNode.GetOrAdd<TNode>` 会静默覆盖类型不同的已有属性**
+165. **[P2][命名/API][已修复] `JsonNode.GetOrAdd<TNode>` 会静默覆盖类型不同的已有属性**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Text/~Json/JsonNodeExtensions.cs:19-30`。已有 key 的节点不是 `TNode` 时，方法创建新节点并赋值，原 JSON 子树被无提示丢弃；这违反 `GetOrAdd` 通常“不覆盖已有值”的语义。类型不匹配应抛清楚的异常，或者把有意替换的 API 命名为 `GetOrReplace`/`Set`。
+    修复：已有非 null 节点类型不匹配时抛 `InvalidOperationException`，保留原节点且不调用 creator；缺失或 JSON null 仍创建新节点。XML 文档和测试同步覆盖这三种路径。
 
 166. **[P1][生命周期] 修复 `ReflectionHelper` 后，其他全局 `Type` cache 仍会固定 collectible assembly**
 

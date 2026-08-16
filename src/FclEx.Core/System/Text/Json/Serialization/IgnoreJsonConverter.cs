@@ -8,6 +8,7 @@ namespace System.Text.Json.Serialization;
 /// It cannot omit a property once <see cref="JsonSerializer"/> has decided to write it; for example,
 /// <see cref="JsonIgnoreCondition.WhenWritingNull"/> checks the original CLR value, not the <see langword="null"/>
 /// emitted by this converter. Use <see cref="JsonIgnoreAttribute"/> when a property should be omitted entirely.
+/// When the converted value is the root value, the converter intentionally writes no JSON token, producing an empty payload.
 /// </remarks>
 public class IgnoreJsonConverter : JsonConverterFactory
 {

@@ -1,19 +1,24 @@
-﻿namespace FclEx.Utils;
+namespace FclEx.Utils;
 
 public static class JsonValidator
 {
+    /// <summary>
+    /// The maximum permitted number of nested JSON objects and arrays.
+    /// </summary>
+    public const int MaxDepth = 64;
+
     public static bool IsValid(string s)
     {
         var i = 0;
         SkipWhitespace(s, ref i);
 
-        var ok = ParseValue(s, ref i);
+        var ok = ParseValue(s, ref i, 0);
 
         SkipWhitespace(s, ref i);
         return ok && i == s.Length;
     }
 
-    static bool ParseValue(string s, ref int i)
+    static bool ParseValue(string s, ref int i, int depth)
     {
         SkipWhitespace(s, ref i);
 
@@ -24,8 +29,8 @@ public static class JsonValidator
 
         switch (c)
         {
-            case '{': return ParseObject(s, ref i);
-            case '[': return ParseArray(s, ref i);
+            case '{': return ParseObject(s, ref i, depth + 1);
+            case '[': return ParseArray(s, ref i, depth + 1);
             case '"': return ParseString(s, ref i);
         }
 
@@ -44,8 +49,11 @@ public static class JsonValidator
         return false;
     }
 
-    static bool ParseObject(string s, ref int i)
+    static bool ParseObject(string s, ref int i, int depth)
     {
+        if (depth > MaxDepth)
+            return false;
+
         if (!Consume(s, ref i, '{'))
             return false;
 
@@ -66,7 +74,7 @@ public static class JsonValidator
             if (!Consume(s, ref i, ':'))
                 return false;
 
-            if (!ParseValue(s, ref i))
+            if (!ParseValue(s, ref i, depth))
                 return false;
 
             SkipWhitespace(s, ref i);
@@ -79,8 +87,11 @@ public static class JsonValidator
         }
     }
 
-    static bool ParseArray(string s, ref int i)
+    static bool ParseArray(string s, ref int i, int depth)
     {
+        if (depth > MaxDepth)
+            return false;
+
         if (!Consume(s, ref i, '['))
             return false;
 
@@ -91,7 +102,7 @@ public static class JsonValidator
 
         while (true)
         {
-            if (!ParseValue(s, ref i))
+            if (!ParseValue(s, ref i, depth))
                 return false;
 
             SkipWhitespace(s, ref i);
