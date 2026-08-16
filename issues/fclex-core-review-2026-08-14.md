@@ -584,45 +584,55 @@
     位置：`src/FclEx.Core/FclEx/Utils/Optional.cs:7-53`。`Some<T>(T value)` 允许 nullable `T`，而 `HasValue` 完全由 `Value is not null` 推导，所以 API 名称承诺的“有值”可立即消失。若 null 不算值，应加 `where T : notnull` 并运行时校验；若要支持 `Some(null)`，结构必须保存独立的存在位。
     修复：`Optional.Some` 现在运行时拒绝 null，防止其创建会立刻表现为 `None` 的值；测试覆盖 null 拒绝和非 null 创建。
 
-121. **[P1] `NameIdentifier<T>` 默认缓存会永久保留所有动态名称**
+121. **[P1][不修改] `NameIdentifier<T>` 默认缓存会永久保留所有动态名称**
 
     位置：`src/FclEx.Core/FclEx/Utils/NameIdentifier.cs:28-51`。每个闭合类型都有无界静态 `ConcurrentDictionary<string,T>`，`GetOrCreate` 又默认启用缓存；用户输入、路径、租户名等高基数名称会被进程永久持有，只能由全局 `ClearCache` 粗粒度清空。interning 不应成为所有 identifier 的默认责任；应由调用方显式提供有界缓存，或仅对已知有限集合启用。
+    处理决定：这是按闭合泛型类型划分的 identifier cache；缓存的基数和清理责任由具体 identifier 类型决定，保留现有设计。
 
-122. **[P1] `NameIdentifier<T>` 没有验证工厂结果与缓存 key 一致**
+122. **[P1][已修复] `NameIdentifier<T>` 没有验证工厂结果与缓存 key 一致**
 
     位置：`src/FclEx.Core/FclEx/Utils/NameIdentifier.cs:41-46`。`T.Create(name)` 可以规范化、忽略甚至返回另一个 `Name`，但结果仍缓存到原字符串 key；同一逻辑 identifier 因不同 key 出现多个实例，`GetOrCreate(x).Name` 也可能不等于 x。要么把规范化作为显式 key selector 并在查缓存前执行，要么强制校验工厂保持名称不变。
+    修复：在缓存和非缓存路径都验证 `T.Create(name)` 的结果非 null，且其 `Name` 与输入以 ordinal 方式完全一致；违反约定时抛出 `ArgumentException`。测试覆盖两个路径。
 
-123. **[P1] `ScopedSetter<T>` 对值类型看似成功，实际修改的是丢弃的装箱副本**
+123. **[P1][已修复] `ScopedSetter<T>` 对值类型看似成功，实际修改的是丢弃的装箱副本**
 
     位置：`src/FclEx.Core/FclEx/Utils/ScopedSetter.cs:20,27-60`。泛型没有引用类型约束；当 `T` 是 struct 时 `_obj` 已是调用参数副本，反射访问还会再次装箱，临时值不会写回调用方变量。API 应限制 `where T : class`；若要支持 struct，必须改为 scoped `ref T` 设计，不能用当前持有值的 class。
+    修复：`ScopedSetter.For<T>` 和 `ScopedSetter<T>` 均添加 `where T : class`，从类型系统阻止无效的值类型用法。
 
-124. **[P1] `ScopedSetter.Dispose` 既不幂等，也不能保证完整恢复**
+124. **[P1][已修复] `ScopedSetter.Dispose` 既不幂等，也不能保证完整恢复**
 
     位置：`src/FclEx.Core/FclEx/Utils/ScopedSetter.cs:30-39`。Dispose 后没有清空/交换恢复表，第二次 Dispose 会再次覆盖对象在第一次 Dispose 后的新修改；恢复任一成员抛异常时，后续成员永远不恢复。应原子取走待恢复状态以保证最多执行一次，并在逐项恢复时收集异常或用可靠的 finally 策略完成其余恢复。
+    修复：`Dispose` 以原子交换取走恢复表，重复调用不再改变对象；逐项恢复时继续执行并收集全部失败，单个失败保留其原始异常，多个失败以 `AggregateException` 报告。Dispose 后再调用 `Set` 会抛 `ObjectDisposedException`。测试覆盖幂等和恢复失败时仍恢复其余成员。
 
-125. **[P2] `SourceBuilder.WriteUsings` 让生成源码随当前文化排序**
+125. **[P2][已修复] `SourceBuilder.WriteUsings` 让生成源码随当前文化排序**
 
     位置：`src/FclEx.Core/FclEx/Utils/SourceBuilder.cs:175-185`。无 comparer 的 `OrderBy` 对字符串使用当前文化，生成文件在不同 OS/区域设置下可能顺序不同，造成增量生成和快照结果不稳定。源码生成应使用 `StringComparer.Ordinal`（并考虑去重）保证确定性。
+    修复：已使用 `StringComparer.Ordinal` 排序，使输出不受当前文化影响。
 
-126. **[P1] `ArgumentBuilder` 会静默忽略调用方提供但未被构造器消费的参数**
+126. **[P1][待重构] `ArgumentBuilder` 会静默忽略调用方提供但未被构造器消费的参数**
 
     位置：`src/FclEx.Core/FclEx/Utils/ArgumentBuilder.cs:39-90`。到达最后一个 parameter 就把路径视为匹配，从不要求 `RemainArgIndexes` 为空；parameterless constructor 更是不论传了多少参数都直接匹配。对象可能由错误构造器创建且调用方无从发现 typo/多余依赖。默认契约应要求每个 supplied argument 恰好消费一次，除非 API 明确提供“允许剩余参数”的模式。
+    处理决定：`ArgumentBuilder` 需要整体重构；在确定新模型前，不单独处理该类及相关问题。
 
-127. **[P1] `ArgumentBuilder` 的构造器排名会偏爱更多默认参数并对歧义做非确定选择**
+127. **[P1][待重构] `ArgumentBuilder` 的构造器排名会偏爱更多默认参数并对歧义做非确定选择**
 
     位置：`src/FclEx.Core/FclEx/Utils/ArgumentBuilder.cs:17-35,77-83`。候选先按参数总数降序，再按 `UseDefaultCount` 降序，因而较长、更多参数靠默认值的构造器可能压过较短的精确匹配；完全同分时直接取反射枚举顺序的 `First()`。应优先最大化实际消费/精确匹配、最小化默认值，并在最佳候选不唯一时抛明确的 ambiguity error。
+    处理决定：随 `ArgumentBuilder` 的整体重构一并处理，暂不作局部修改。
 
-128. **[P1] `ConsoleTable` 公开可变行列，允许绕过渲染所依赖的列数不变量**
+128. **[P1][已修复] `ConsoleTable` 公开可变行列，允许绕过渲染所依赖的列数不变量**
 
     位置：`src/FclEx.Core/FclEx/Utils/~ConsoleTable/ConsoleTable.cs:3-13,15-86`。`Columns` 数组和 `Rows` 的可变 `List<object?[]>` 都直接公开，调用方可插入长度不足的 row 或修改列数；`GetColumnLength` 随后无条件访问 `row[index]` 并抛越界异常。应私有化存储、复制输入，并只通过校验列数的 `AddRow`/builder API 修改。
+    修复：行列存储改为私有；构造器和 `AddRow` 都复制输入，公开成员只提供只读视图/快照，修改只能经过会校验列数的 `AddRow`。测试覆盖输入数组后续修改不会影响表格。
 
-129. **[P0] `SynchronizationContextScope.RunAsync` 把线程局部状态跨越了 `await`**
+129. **[P0][已修复] `SynchronizationContextScope.RunAsync` 把线程局部状态跨越了 `await`**
 
     位置：`src/FclEx.Core/FclEx/Utils/~Threading/SynchronizationContextScope.cs:6-11,29-43`。`Enter` 修改当前线程的 `SynchronizationContext`，`RunAsync` 在第一次未完成 await 时就把控制权返回给调用方，原线程仍保持被替换的 context；continuation 还可能在另一线程执行并在那里“恢复”旧 context。线程局部 scope 不能跨异步挂起；应删除两个 `RunAsync`，或通过显式 scheduler/context dispatch 执行 callback，而不是临时修改调用线程。
+    修复：删除两个可跨越 `await` 的 `RunAsync` overload，仅保留同步 scope API。
 
-130. **[P1] `ReaderWriterLockSlim` 的 `IDisposable` lease 可在错误线程释放锁**
+130. **[P1][已修复] `ReaderWriterLockSlim` 的 `IDisposable` lease 可在错误线程释放锁**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Threading/ReaderWriterLockSlimExtensions.cs:3-21`。`ReaderWriterLockSlim` 的 enter/exit 是线程关联的，但返回普通 `IDisposable` 无法阻止 scope 跨 `await`、被传递或在另一线程 Dispose；此时 Exit 抛错并可能让锁永久保持。应至少用无法跨 await 的 `ref struct` lease 并明确仅同步作用域，或改用接受同步 callback 的 API。
+    修复：已移除该 `IDisposable` lease 扩展，避免暴露无法保证线程关联的抽象。
 
 131. **[P1] `TaskCompletionSource.Exception` 擅自把调用方异常替换成 base exception**
 

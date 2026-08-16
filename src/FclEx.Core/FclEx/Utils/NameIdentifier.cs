@@ -33,16 +33,30 @@ public abstract record NameIdentifier<T>(string Name) : IComparable<T> where T :
     private static readonly ConcurrentDictionary<string, T> _cache = new();
 
     /// <summary>
-    /// Gets an existing name identifier or creates a new one.  Uses a cache for efficiency.
+    /// Gets an existing name identifier or creates a new one. Uses a cache for efficiency.
     /// </summary>
     /// <param name="name">The name of the identifier.</param>
     /// <param name="useCache">A flag indicating whether to use the cache. Defaults to true.</param>
     /// <returns>An existing or new instance of the name identifier.</returns>
+    /// <exception cref="ArgumentException">The factory creates an identifier whose name differs from <paramref name="name"/>.</exception>
     public static T GetOrCreate(string name, bool useCache = true)
     {
         return useCache
-            ? _cache.GetOrAdd(name, T.Create)
-            : T.Create(name);
+            ? _cache.GetOrAdd(name, CreateChecked)
+            : CreateChecked(name);
+
+        static T CreateChecked(string name)
+        {
+            var identifier = Check.NotNull(T.Create(name));
+            if (string.Equals(identifier.Name, name, StringComparison.Ordinal) == false)
+            {
+                throw new ArgumentException(
+                    "The name identifier factory must preserve the supplied name.",
+                    nameof(name));
+            }
+
+            return identifier;
+        }
     }
 
     /// <summary>

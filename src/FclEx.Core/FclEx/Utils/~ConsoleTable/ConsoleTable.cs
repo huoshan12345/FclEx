@@ -2,16 +2,20 @@ namespace FclEx.Utils;
 
 public class ConsoleTable : IRenderable
 {
+    private readonly object?[] _columns;
     public IReadOnlyList<object?> Columns { get; }
 
     private readonly List<object?[]> _rows = [];
-    public IReadOnlyList<object?[]> Rows => _rows;
+    public IReadOnlyList<IReadOnlyList<object?>> Rows => _rows
+        .Select(m => (IReadOnlyList<object?>)Array.AsReadOnly(m))
+        .ToArray();
     public ConsoleTableOptions Options { get; }
 
     public ConsoleTable(ConsoleTableOptions options)
     {
         Options = options;
-        Columns = options.Columns.EmptyIfNull().AsArray();
+        _columns = options.Columns?.Cast<object?>().ToArray() ?? [];
+        Columns = Array.AsReadOnly(_columns);
     }
 
     public ConsoleTable AddRow(object?[] values)
@@ -26,7 +30,7 @@ public class ConsoleTable : IRenderable
         if (len != values.Length)
             throw new Exception($"The number columns in the row ({len}) does not match the values ({values.Length})");
 
-        _rows.Add(values);
+        _rows.Add(values.ToArray());
         return this;
     }
 
@@ -36,9 +40,9 @@ public class ConsoleTable : IRenderable
         var format = BuildFormat();
 
         // find the longest formatted line
-        var maxRowLength = Math.Max(0, Rows.Any() ? Rows.Max(row => string.Format(format, args: row).Length) : 0);
+        var maxRowLength = Math.Max(0, _rows.Any() ? _rows.Max(row => string.Format(format, args: row).Length) : 0);
 
-        var columnHeaders = Options.RenderColumns ? string.Format(format, args: Columns) : "";
+        var columnHeaders = Options.RenderColumns ? string.Format(format, args: _columns) : "";
         // longest line is greater of formatted columnHeader and longest row
         var longestLine = Math.Max(maxRowLength, columnHeaders.Length);
 
@@ -58,7 +62,7 @@ public class ConsoleTable : IRenderable
             builder.AppendLine(columnHeaders);
         }
 
-        foreach (var row in Rows.Select(row => string.Format(format, row)))
+        foreach (var row in _rows.Select(row => string.Format(format, row)))
         {
             RenderDivider(builder, longestLine);
             builder.AppendLine(row);
@@ -99,7 +103,7 @@ public class ConsoleTable : IRenderable
         int GetColumnLength(int index)
         {
             var column = Options.RenderColumns ? Columns[index] : null;
-            var row = Rows.Select(m => m[index]);
+            var row = _rows.Select(m => m[index]);
             return row.Append(column).Max(m => m?.ToString()?.Length) ?? 0;
         }
     }

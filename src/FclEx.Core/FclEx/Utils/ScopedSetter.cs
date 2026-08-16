@@ -22,19 +22,46 @@ public static class ScopedSetter
 /// Provides a scope-based mechanism for temporarily overriding properties
 /// of an object and restoring their original values when the scope ends.
 /// </summary>
+/// <remarks>Instances are not thread-safe and must not be used concurrently.</remarks>
 public class ScopedSetter<T>(T obj) : IDisposable where T : class
 {
     private readonly T _obj = Check.NotNull(obj);
-    private readonly Dictionary<DataMemberInfo, object?> _members = [];
+    private Dictionary<DataMemberInfo, object?>? _members = [];
 
     public void Dispose()
     {
         GC.SuppressFinalize(this);
 
-        foreach (var (member, value) in _members)
+        var members = _members;
+        _members = null;
+        if (members is null)
+            return;
+
+        List<Exception>? exceptions = null;
+        foreach (var (member, value) in members)
         {
-            member.SetValue(_obj, value);
+            try
+            {
+                member.SetValue(_obj, value);
+            }
+            catch (TargetInvocationException exception) when (exception.InnerException is not null)
+            {
+                (exceptions ??= []).Add(exception.InnerException);
+            }
+            catch (Exception exception)
+            {
+                (exceptions ??= []).Add(exception);
+            }
         }
+
+        if (exceptions is { Count: 1 })
+        {
+            exceptions[0].ReThrow();
+            return;
+        }
+
+        if (exceptions is { Count: > 1 })
+            throw new AggregateException(exceptions);
     }
 
     /// <summary>
@@ -51,10 +78,15 @@ public class ScopedSetter<T>(T obj) : IDisposable where T : class
     /// <returns>The current <see cref="ScopedSetter{T}"/> instance, to allow fluent chaining.</returns>
     public ScopedSetter<T> Set<TMember>(Expression<Func<T, TMember>> selector, TMember tempValue)
     {
+        var members = _members;
+        if (members is null)
+            throw new ObjectDisposedException(GetType().Name);
+
         var member = ExpressionHelper.GetMember(selector).ToDataMemberInfo();
         var value = member.GetValue<TMember>(_obj);
         member.SetValue(_obj, tempValue);
-        _members.TryAdd(member, value); // Only save the original value once
+        members.TryAdd(member, value); // Only save the original value once
+
         return this;
     }
 }
