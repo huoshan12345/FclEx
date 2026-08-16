@@ -440,7 +440,7 @@ public class OrderedIndex<TScore, TValue> : ICollection<(TScore Score, TValue Va
         if (start >= _count || count <= 0)
             return [];
 
-        var end = Math.Min(start + count, _count);
+        var end = (int)Math.Min((long)start + count, _count);
         var diff = end - start;
         if (diff <= 0)
             return [];
@@ -740,15 +740,14 @@ public class OrderedIndex<TScore, TValue> : ICollection<(TScore Score, TValue Va
     /// </summary>
     public struct RankRangeEnumerator : IEnumerator<(TScore Score, TValue Value)>
     {
-        private readonly OrderedIndex<TScore, TValue> _orderedIndex;
+        private readonly OrderedIndex<TScore, TValue>? _orderedIndex;
         private readonly int _version;
         private readonly Node? _start;
         private readonly int _count;
         private Node? _node;
         private int _remaining;
 
-        internal RankRangeEnumerator(OrderedIndex<TScore, TValue> orderedIndex,
-            Node? start, int count)
+        internal RankRangeEnumerator(OrderedIndex<TScore, TValue> orderedIndex, Node? start, int count)
         {
             _orderedIndex = orderedIndex;
             _version = orderedIndex._version;
@@ -760,6 +759,9 @@ public class OrderedIndex<TScore, TValue> : ICollection<(TScore Score, TValue Va
 
         public bool MoveNext()
         {
+            if (_orderedIndex is null)
+                return false;
+
             Check.VersionEqual(_orderedIndex._version, _version);
 
             if (_remaining == 0 || _node == null)
@@ -778,7 +780,8 @@ public class OrderedIndex<TScore, TValue> : ICollection<(TScore Score, TValue Va
 
         public void Reset()
         {
-            Check.VersionEqual(_orderedIndex._version, _version);
+            if (_orderedIndex is not null)
+                Check.VersionEqual(_orderedIndex._version, _version);
 
             _node = _start;
             _remaining = _count;
@@ -802,7 +805,7 @@ public class OrderedIndex<TScore, TValue> : ICollection<(TScore Score, TValue Va
     /// </summary>
     public struct ScoreRangeEnumerator : IEnumerator<(TScore Score, TValue Value)>
     {
-        private readonly OrderedIndex<TScore, TValue> _orderedIndex;
+        private readonly OrderedIndex<TScore, TValue>? _orderedIndex;
         private readonly int _version;
         private readonly Node? _start;
         private Node? _node;
@@ -822,6 +825,9 @@ public class OrderedIndex<TScore, TValue> : ICollection<(TScore Score, TValue Va
 
         public bool MoveNext()
         {
+            if (_orderedIndex is null)
+                return false;
+
             Check.VersionEqual(_orderedIndex._version, _version);
 
             _node = _node?.Levels[0].Forward;
@@ -839,7 +845,8 @@ public class OrderedIndex<TScore, TValue> : ICollection<(TScore Score, TValue Va
 
         public void Reset()
         {
-            Check.VersionEqual(_orderedIndex._version, _version);
+            if (_orderedIndex is not null)
+                Check.VersionEqual(_orderedIndex._version, _version);
 
             _node = _start;
         }

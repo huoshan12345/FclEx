@@ -91,6 +91,28 @@ public class OrderedIndexTestsBasic
     }
 
     [Fact]
+    public void RangeByRank_WhenStartAndCountWouldOverflow_ReturnsRemainingItems()
+    {
+        var idx = new OrderedIndex<int, int>();
+        for (var i = 0; i < 10; i++)
+            idx.Add(i, i);
+
+        var result = idx.RangeByRank(1, int.MaxValue).Select(x => x.Value).ToArray();
+
+        Assert.Equal(Enumerable.Range(1, 9), result);
+    }
+
+    [Fact]
+    public void RangeByRank_WhenIndexChangesAfterRangeCreation_Throws()
+    {
+        var idx = new OrderedIndex<int, int> { { 1, 1 }, { 2, 2 } };
+        var enumerator = idx.RangeByRank(0, 2).GetEnumerator();
+        idx.Add(3, 3);
+
+        Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext());
+    }
+
+    [Fact]
     public void RangeByScore_ShouldWork()
     {
         var idx = new OrderedIndex<int, int>();
@@ -101,6 +123,16 @@ public class OrderedIndexTestsBasic
         var r = idx.RangeByScore(3, 6).Select(x => x.Value).ToArray();
 
         Assert.Equal(new[] { 3, 4, 5, 6 }, r);
+    }
+
+    [Fact]
+    public void RangeByScore_WhenIndexChangesAfterRangeCreation_Throws()
+    {
+        var idx = new OrderedIndex<int, int> { { 1, 1 }, { 2, 2 } };
+        var enumerator = idx.RangeByScore(1, 2).GetEnumerator();
+        idx.Remove(1);
+
+        Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext());
     }
 
     [Fact]

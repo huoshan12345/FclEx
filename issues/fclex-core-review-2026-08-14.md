@@ -738,45 +738,55 @@
 
 说明：本轮继续排除 `Combinatorics` 目录，并先审查类型职责、生命周期、并发模型和公共 API，再看实现与命名。确认第 50 个新增问题（编号 200）后停止；以下问题未因兼容性顾虑降级或省略。
 
-151. **[P1] `CompositeDisposable<T>` 没有完整的 disposed 生命周期，重复释放、释放后添加和异常清理都未定义好**
+151. **[P1][已修复] `CompositeDisposable<T>` 没有完整的 disposed 生命周期，重复释放、释放后添加和异常清理都未定义好**
 
     位置：`src/FclEx.Core/FclEx/Utils/~Disposables/CompositeDisposable.cs:24-44`。`Dispose` 后仍保留原列表，第二次调用会再次释放全部子对象；`Add` 在释放后仍成功，新增对象永远不会被容器释放；任一子对象抛异常又会中止后续清理。这不是一个可靠的资源所有者。应原子地进入 disposed 状态、拒绝或立即释放后续 `Add`，并在尝试释放全部元素后聚合异常；若需并发使用，还要同步 `Add` 与 `Dispose`。
+    修复：以可空资源列表表示 disposed 状态；重复释放幂等，释放后添加抛 `ObjectDisposedException`，所有子对象均会得到释放机会并在最后聚合异常。该容器明确不保证线程安全，因此不引入同步开销。测试覆盖重复释放、释放后添加和异常聚合。
 
-152. **[P1] `ListEnumerator` 拒绝合法的空列表和空尾区间**
+152. **[P1][已删除] `ListEnumerator` 拒绝合法的空列表和空尾区间**
 
     位置：`src/FclEx.Core/System/Collections/Generic/ListEnumerator.cs:10-22`。构造器把 `start` 限制到 `0..Count-1`，因此默认构造空列表时连 `start = 0, length = 0` 都会抛异常，也不允许标准的 `start == Count, length == 0`。应采用 BCL 的 offset/count 规则：分别检查非负，并用 `start <= Count && length <= Count - start` 避免溢出。
+    处理决定：删除未被使用的 `ListEnumerator`，不再维护该公共枚举器。
 
-153. **[P1] `ListEnumerator.Current` 对非零起点使用了错误的有效范围**
+153. **[P1][已删除] `ListEnumerator.Current` 对非零起点使用了错误的有效范围**
 
     位置：`src/FclEx.Core/System/Collections/Generic/ListEnumerator.cs:24-42`。`_length` 保存的是区间元素数，`_i` 也是区间内索引，但校验上限写成 `_length - _start - 1`；例如 `start = 5, length = 3` 时第一次读取就失败。校验应为 `0.._length-1`，并保持枚举结束后 `Current` 的异常语义与 `IEnumerator<T>` 约定一致。
+    处理决定：随问题 152 一并删除 `ListEnumerator`。
 
-154. **[P1] `KeyValuePairEqualityComparer` 的相等与哈希使用了不同的 comparer**
+154. **[P1][已修复] `KeyValuePairEqualityComparer` 的相等与哈希使用了不同的 comparer**
 
     位置：`src/FclEx.Core/System/Collections/Generic/KeyValuePairEqualityComparer.cs:7-27`。`Equals` 使用构造器传入的 key/value comparer，`GetHashCode` 却调用 `HashCode.Combine(obj.Key, obj.Value)`，回到了默认 comparer。使用大小写不敏感等自定义 comparer 时会出现“相等对象哈希不同”，直接破坏哈希集合契约。应分别调用 `_keyComparer.GetHashCode` 和 `_valueComparer.GetHashCode` 后组合，并定义 null 值处理。
+    修复：key/value 的哈希分别由对应自定义 comparer 生成并组合，null 通过 `GetHashCodeOrDefault` 处理。测试使用大小写不敏感 comparer 验证相等对象具有相同哈希且在 `HashSet` 中只保留一项。
 
-155. **[P1] `OrderedIndex.RangeByRank` 的整数溢出会把有限区间变成几乎无限的枚举**
+155. **[P1][已修复] `OrderedIndex.RangeByRank` 的整数溢出会把有限区间变成几乎无限的枚举**
 
     位置：`src/FclEx.Core/System/Collections/Generic/OrderedIndex.cs:435-459,738-762`。`start + count` 使用 unchecked `int`；溢出后 `end - start` 可为负数，而 `RankRangeEnumerator.MoveNext` 只在 `_remaining == 0` 时停止，负数会继续递减并遍历到链表末尾。应先用 `count >= _count - start` 判断或使用更宽类型，并将停止条件写成 `_remaining <= 0` 作为防御。
+    修复：以 `long` 执行 `start + count` 后再与 `_count` 取最小值，避免 `int` 溢出；测试覆盖 `start = 1, count = int.MaxValue` 并验证返回剩余全部元素。
 
-156. **[P1] `OrderedIndex` 的 range 枚举器绕过了主枚举器的版本一致性模型**
+156. **[P1][已修复] `OrderedIndex` 的 range 枚举器绕过了主枚举器的版本一致性模型**
 
     位置：`src/FclEx.Core/System/Collections/Generic/OrderedIndex.cs:435-488,738-836`。`RankRangeEnumerator` 和 `ScoreRangeEnumerator` 只保存内部 `Node` 引用，不捕获 `_version`，也不在 `MoveNext`/`Current` 检查修改。取得 range 后执行 remove/clear 可能继续沿已脱链节点返回已删除数据；这与同一类型主枚举器的 fail-fast 行为不一致。range 应保存 owner 与版本并统一检查，或明确返回快照。
+    修复：两个 range enumerator 均保存 owner 和创建时版本，并在 `MoveNext`/`Reset` 时执行与主枚举器一致的版本检查。检查过程中发现空 range 返回的默认 struct 没有 owner，初版版本检查会触发 `NullReferenceException`；现已让默认 enumerator 保持空枚举语义。测试覆盖空 range，以及 rank range 与 score range 创建后的结构修改。
 
-157. **[P1] `MultiValueDictionary.Add` 在值集合添加失败时会留下空 key**
+157. **[P1][已修复] `MultiValueDictionary.Add` 在值集合添加失败时会留下空 key**
 
     位置：`src/FclEx.Core/System/Collections/Generic/MultiValueDictionary.cs:649-660`。新 key 路径先把空 `InnerCollectionView` 发布到字典，再调用可能由用户提供、可能抛异常的 `AddValue`。一旦添加失败，字典就残留一个与“每个 key 至少一个 value”设计不一致的空项。应先创建并填充集合，成功后再发布；或在异常路径回滚字典和版本。
+    修复：新 key 路径先创建集合并成功加入 value，之后才把集合发布到内部 dictionary。测试使用拒绝添加的自定义 collection，验证异常后不会残留 key。
 
-158. **[P1] `MultiValueDictionary.Create` 通过丢弃一次 factory 结果来“验证”后续集合**
+158. **[P1][保留] `MultiValueDictionary.Create` 通过丢弃一次 factory 结果来“验证”后续集合**
 
     位置：`src/FclEx.Core/System/Collections/Generic/MultiValueDictionary.cs:417-426,453-464` 及其他 factory overload。每个入口先调用一次 `collectionFactory()` 检查 `IsReadOnly`，然后丢弃该实例；这会触发无意义的副作用或资源泄漏，也不能保证后续返回值非 null、可写且彼此独立。应在每次实际创建集合时验证结果，并避免探测性构造；文档还把异常条件写反成“IsReadOnly 为 true”。
+    处理决定：为了在创建 `MultiValueDictionary` 时尽早报告只读 collection factory，保留当前探测行为；文档中的异常条件已修正。factory 应被视为可重复调用且无外部资源所有权的构造函数。
 
-159. **[P2][API] `MultiValueDictionary` 关闭 nullable 分析，向 nullable-enabled NuGet API 暴露 oblivious 契约**
+159. **[P2][API][已修复] `MultiValueDictionary` 关闭 nullable 分析，向 nullable-enabled NuGet API 暴露 oblivious 契约**
 
     位置：`src/FclEx.Core/System/Collections/Generic/MultiValueDictionary.cs:4-64` 及整个文件。`#nullable disable` 使 key、factory、comparer 和 `TryGetValue` 输出都无法表达真实的 null 契约，且 `TKey` 没有 `notnull` 约束；同一包的其他 API 已启用 nullable，消费者会得到不一致的编译期保证。应恢复 nullable，标注可选 comparer、`MaybeNullWhen(false)` 等，并给 `TKey` 加上合适约束。
+    修复：移除 `#nullable disable`，为 `TKey` 增加 `notnull` 约束，并补齐 comparer 等入口的 nullable 签名。
 
-160. **[P1] `JsonValidator` 把 Unicode whitespace 和 digit 当成 JSON 词法字符**
+160. **[P1][待完善] `JsonValidator` 把 Unicode whitespace 和 digit 当成 JSON 词法字符**
 
     位置：`src/FclEx.Core/FclEx/Utils/~Text/~Json/JsonValidator.cs:13-38,153-200`。JSON whitespace 只有空格、TAB、CR、LF，数字也只能是 ASCII `0-9`；当前 `char.IsWhiteSpace`/`char.IsDigit` 会接受 NBSP、阿拉伯数字等无效 JSON。此类标准解析不应维护第二套近似语法，建议直接基于 `Utf8JsonReader`/`JsonDocument`，并把该 API 的目标明确为“完整验证”还是“快速预检”。
+    方向确认：该类型定位为不依赖具体 JSON parser 的快速校验器，因此不改为 `Utf8JsonReader`/`JsonDocument`；后续应在此定位下补齐 JSON 的 ASCII whitespace/digit、转义、数值和深度等词法/结构规则。
 
 161. **[P1][安全/可靠性] 递归 `JsonValidator` 没有最大深度，攻击者可触发进程级栈溢出**
 
