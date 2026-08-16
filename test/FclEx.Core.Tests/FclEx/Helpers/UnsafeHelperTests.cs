@@ -102,7 +102,7 @@ public class UnsafeHelperTests
             var marshalSize = GetSize(type, Marshal.SizeOf);
             var unsafeSize = UnsafeSizeOf(type);
             var size = SizeOf(type);
-            table.Rows.Add([type.ShortName(), marshalSize, unsafeSize, size]);
+            table.AddRow([type.ShortName(), marshalSize, unsafeSize, size]);
         }
 
         if (TestHelper.IsRunningUnderReSharper())

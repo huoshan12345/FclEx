@@ -117,7 +117,7 @@ public class HtmlFileActionTests
         }
     }
 
-    [RetryFact(3, 200)]
+    [Fact]
     public async Task GetResponseAsync_WhenTokenIsCanceled_ReturnsCanceledTask()
     {
         var path = HttpActionTestFixtures.CreateTempFile("<html><body>raw</body></html>");
@@ -126,18 +126,19 @@ public class HtmlFileActionTests
         using var cts = new CancellationTokenSource();
         await cts.CancelAsync();
 
+        using var _ = Disposable.Create(() => File.Delete(path));
+
+#if NET5_0_OR_GREATER
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => action.GetResponseAsync(request, cts.Token));
+#else
+        // In .NET Framework, ReadLineAsync may already complete before the cancellation token is checked so OperationCanceledException may not be thrown.
         try
         {
-#if NET5_0_OR_GREATER
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => action.GetResponseAsync(request, cts.Token));
-#else
-            // In .NET Framework, ReadLineAsync may already complete before the cancellation token is checked or may not throw OperationCanceledException
             await action.GetResponseAsync(request, cts.Token);
-#endif
         }
-        finally
+        catch (OperationCanceledException ex) when (ex.CancellationToken == cts.Token)
         {
-            File.Delete(path);
         }
+#endif
     }
 }

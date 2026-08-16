@@ -2,13 +2,13 @@ namespace FclEx.Extensions;
 
 public static class SpanExtensions
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static string GetString(this Span<byte> span, Encoding? encoding = null)
     {
         return span.AsReadOnlySpan().GetString(encoding);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static ReadOnlySpan<T> AsReadOnlySpan<T>(this Span<T> span)
     {
         return span;
@@ -25,7 +25,7 @@ public static class SpanExtensions
     /// <exception cref="System.ArgumentException">
     /// Thrown when <typeparamref name="TFrom"/> or <typeparamref name="TTo"/> contains pointers.
     /// </exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static Span<TTo> Cast<TFrom, TTo>(this Span<TFrom> span)
         where TFrom : struct
         where TTo : struct

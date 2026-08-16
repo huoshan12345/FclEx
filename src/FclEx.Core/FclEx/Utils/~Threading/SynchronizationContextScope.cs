@@ -25,20 +25,4 @@ public static class SynchronizationContextScope
             action().GetAwaiter().GetResult();
         }
     }
-
-    public static async Task RunAsync(Func<Task> action, SynchronizationContext? ctx = null)
-    {
-        using (Enter(ctx))
-        {
-            await action();
-        }
-    }
-
-    public static async Task<T> RunAsync<T>(Func<Task<T>> action, SynchronizationContext? ctx = null)
-    {
-        using (Enter(ctx))
-        {
-            return await action();
-        }
-    }
 }

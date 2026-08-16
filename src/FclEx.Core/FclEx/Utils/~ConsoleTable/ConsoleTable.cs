@@ -2,14 +2,32 @@ namespace FclEx.Utils;
 
 public class ConsoleTable : IRenderable
 {
-    public object?[] Columns { get; }
-    public List<object?[]> Rows { get; } = [];
+    public IReadOnlyList<object?> Columns { get; }
+
+    private readonly List<object?[]> _rows = [];
+    public IReadOnlyList<object?[]> Rows => _rows;
     public ConsoleTableOptions Options { get; }
 
     public ConsoleTable(ConsoleTableOptions options)
     {
         Options = options;
         Columns = options.Columns.EmptyIfNull().AsArray();
+    }
+
+    public ConsoleTable AddRow(object?[] values)
+    {
+        if (values == null)
+            throw new ArgumentNullException(nameof(values));
+
+        var len = Columns.Count;
+        if (len == 0)
+            throw new Exception("Please set the columns first");
+
+        if (len != values.Length)
+            throw new Exception($"The number columns in the row ({len}) does not match the values ({values.Length})");
+
+        _rows.Add(values);
+        return this;
     }
 
     public void Render(StringBuilder builder)
@@ -62,7 +80,7 @@ public class ConsoleTable : IRenderable
         {
             using var sb = new ValueStringBuilder(1024);
 
-            for (var i = 0; i < Columns.Length; i++)
+            for (var i = 0; i < Columns.Count; i++)
             {
                 // find the longest column by searching each row
                 var len = GetColumnLength(i);
