@@ -15,5 +15,9 @@ public class FormattedException : Exception
     {
     }
 
+    /// <summary>
+    /// Gets the inner exception that is wrapped by this <see cref="FormattedException"/>.
+    /// </summary>
+    public Exception Exception => InnerException!;
     public override string ToString() => InnerException!.ToFormattedString();
 }
