@@ -2,17 +2,17 @@ namespace FclEx.Extensions;
 
 partial class InterfaceBaseInvocationExtension
 {
-    private static readonly ConcurrentDictionary<InterfaceMethodInfo, (IntPtr, MethodInfo)> MethodMap = new();
+    private static readonly ConditionalWeakTable<InterfaceMethodInfo, Tuple<IntPtr, MethodInfo>> MethodMap = new();
 
     internal static void BaseByFunctionPointer<TInterface>(this TInterface instance, Expression<Action<TInterface>> selector)
     {
-        var (invoke, invoker, args) = GetInterfaceFunc(instance, selector);
+        var (invoke, invoker, args) = instance.GetInterfaceFunc(selector);
         invoke.Invoke(invoker, args);
     }
 
     internal static TReturn BaseByFunctionPointer<TInterface, TReturn>(this TInterface instance, Expression<Func<TInterface, TReturn>> selector)
     {
-        var (invoke, invoker, args) = GetInterfaceFunc(instance, selector);
+        var (invoke, invoker, args) = instance.GetInterfaceFunc(selector);
         return invoke.Invoke(invoker, args).CastTo<TReturn>()!;
     }
 
@@ -32,7 +32,7 @@ partial class InterfaceBaseInvocationExtension
         var (method, args) = GetMethodAndArguments(selector);
         var evaluatedArguments = args.EvaluateArguments().ToArray();
         var interfaceType = typeof(TInterface);
-        var (pointer, invoke) = MethodMap.GetOrAdd(new(instance.GetType(), interfaceType, method), GetInterfaceMethodDelegate);
+        var (pointer, invoke) = MethodMap.GetValue(new(instance.GetType(), interfaceType, method), m => GetInterfaceMethodDelegate(m).ToTuple());
         var invoker = Activator.CreateInstance(invoke.DeclaringType!, instance, pointer);
         return (invoke, invoker!, evaluatedArguments);
     }

@@ -2,11 +2,11 @@ namespace FclEx.Helpers;
 
 public static class LambdaHelper
 {
-    private static readonly ConcurrentDictionary<(Type, string), LambdaExpression> _cache = new();
+    private static readonly ConditionalWeakTable<Tuple<Type, string>, LambdaExpression> _cache = new();
 
     public static LambdaExpression GetPropertyLambdaExp<T>(string propertyName)
     {
-        return _cache.GetOrAdd((typeof(T), propertyName), k =>
+        return _cache.GetValue(Tuple.Create(typeof(T), propertyName), k =>
         {
             var param = Expression.Parameter(k.Item1);
             var body = Expression.Property(param, k.Item2);

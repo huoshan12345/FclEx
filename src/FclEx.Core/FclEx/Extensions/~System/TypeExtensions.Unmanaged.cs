@@ -5,9 +5,9 @@ partial class TypeExtensions
     // Let Exception be an out parameter to provide the reason why the check did not pass.
     private delegate bool TypeCheck(Type type, [NotNullWhen(false)] out Exception? ex);
 
-    private readonly record struct TypeCheckResult(bool Passed, string? ErrorMessage, string? ParamName);
+    private record TypeCheckResult(bool Passed, string? ErrorMessage, string? ParamName);
 
-    private static readonly ConcurrentDictionary<(Type, string), TypeCheckResult> _typeCheckCache = [];
+    private static readonly ConditionalWeakTable<Tuple<Type, string>, TypeCheckResult> _typeCheckCache = new();
 
     private static void Ensure(this Type type, TypeCheck check, string predicateName)
     {
@@ -26,7 +26,7 @@ partial class TypeExtensions
 
     private static (bool, Exception?) Check(this Type type, string checkName, Action<Type> action)
     {
-        var result = _typeCheckCache.GetOrAdd((type, checkName), _ =>
+        var result = _typeCheckCache.GetValue(Tuple.Create(type, checkName), _ =>
         {
             try
             {
