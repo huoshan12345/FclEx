@@ -93,6 +93,16 @@ public static partial class DictionaryExtensions
         return dic switch
         {
             null => throw new ArgumentNullException(nameof(dic)),
+            ReadOnlyDictionary<TKey, TValue> col => col,
+            _ => new ReadOnlyDictionary<TKey, TValue>(dic)
+        };
+    }
+
+    public static IReadOnlyDictionary<TKey, TValue> AsReadOnlyDictionaryView<TKey, TValue>(this IDictionary<TKey, TValue>? dic) where TKey : notnull
+    {
+        return dic switch
+        {
+            null => throw new ArgumentNullException(nameof(dic)),
             IReadOnlyDictionary<TKey, TValue> col => col,
             _ => new ReadOnlyDictionary<TKey, TValue>(dic)
         };
