@@ -5,26 +5,21 @@ public static partial class DictionaryExtensions
     [return: NotNullIfNotNull(nameof(defaultValue))]
     public static TValue? Get<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey key, TValue? defaultValue = default)
     {
-        return dic.Get(key, k => defaultValue);
-    }
-
-    public static TValue? Get<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey key, Func<TKey, TValue?> fac)
-    {
-        return dic.TryGetValue(key, out var value) && value is not null ? value : fac(key);
+        return dic.TryGetValue(key, out var value) ? value : defaultValue;
     }
 
     [return: NotNullIfNotNull(nameof(defaultValue))]
-    public static TProp? Get<TKey, TValue, TProp>(this IDictionary<TKey, TValue> dic, TKey key, Func<TValue, TProp> selector, TProp? defaultValue = default)
-        where TProp : struct
+    public static TMember? Get<TKey, TValue, TMember>(this IDictionary<TKey, TValue> dic, TKey key, Func<TValue, TMember> selector, TMember? defaultValue = default)
+        where TMember : class
     {
-        return dic.TryGetValue(key, out var value) && value is not null ? selector(value) : defaultValue;
+        return dic.TryGetValue(key, out var value) ? selector(value) : defaultValue;
     }
 
     [return: NotNullIfNotNull(nameof(defaultValue))]
-    public static TProp? Get<TKey, TValue, TProp>(this IDictionary<TKey, TValue> dic, TKey key, Func<TValue, TProp?> selector, TProp? defaultValue = default)
-        where TProp : class
+    public static TMember? Get<TKey, TValue, TMember>(this IDictionary<TKey, TValue> dic, TKey key, Func<TValue, TMember> selector, TMember? defaultValue = default)
+        where TMember : struct
     {
-        return dic.TryGetValue(key, out var value) && value is not null ? selector(value) : defaultValue;
+        return dic.TryGetValue(key, out var value) ? selector(value) : defaultValue;
     }
 
     public static void Add<TCol, TKey, TValue>(this IDictionary<TKey, TCol> dic, TKey key, TValue? value) where TCol : ICollection<TValue?>, new()
@@ -115,7 +110,7 @@ public static partial class DictionaryExtensions
         }
         return false;
     }
-    
+
     public static bool TryAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
     {
         Check.NotNull(dictionary);

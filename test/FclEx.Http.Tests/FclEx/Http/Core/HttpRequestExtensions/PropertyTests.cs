@@ -426,7 +426,7 @@ public class PropertyTests : HttpServerTests
         Assert.NotNull(headers);
 
         var encoding = headers.Get(HttpHeaderNames.ContentEncoding);
-        var length = headers.Get(HttpHeaderNames.ContentLength, int.Parse);
+        var length = headers.Get(HttpHeaderNames.ContentLength, m => m.ToInt());
 
         var (expectedEncoding, expectedLength) = compression switch
         {
