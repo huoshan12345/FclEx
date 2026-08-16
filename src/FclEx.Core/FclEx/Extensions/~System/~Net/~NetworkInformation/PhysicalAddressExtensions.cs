@@ -16,7 +16,7 @@ public static class PhysicalAddressExtensions
     /// <returns>
     /// The underlying MAC address byte array.
     /// </returns>
-    public static IReadOnlyList<byte> AddressBytes(this PhysicalAddress obj)
+    public static ReadOnlySpan<byte> AddressBytes(this PhysicalAddress obj)
     {
 #if NET8_0_OR_GREATER
         return Address(obj);
@@ -44,8 +44,15 @@ public static class PhysicalAddressExtensions
     /// </returns>
     public static string ToFormattedString(this PhysicalAddress address, string separator = ":", bool lowerCase = false)
     {
-        return address.AddressBytes()
-            .Select(x => x.ToString(lowerCase ? "x2" : "X2"))
-            .JoinWith(separator);
+        return StringBuilderHelper.Build(m =>
+        {
+            var bytes = address.AddressBytes();
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                m.Append(bytes[i].ToString(lowerCase ? "x2" : "X2"));
+                if (i < bytes.Length - 1)
+                    m.Append(separator);
+            }
+        });
     }
 }

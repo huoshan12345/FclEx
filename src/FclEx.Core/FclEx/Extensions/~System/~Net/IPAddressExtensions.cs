@@ -16,7 +16,7 @@ public static class IPAddressExtensions
     /// <returns>
     /// The underlying IP address ushort array.
     /// </returns>
-    public static IReadOnlyList<ushort> AddressNumbers(this IPAddress obj)
+    public static ReadOnlySpan<ushort> AddressNumbers(this IPAddress obj)
     {
 #if NET8_0_OR_GREATER
         return Numbers(obj);
