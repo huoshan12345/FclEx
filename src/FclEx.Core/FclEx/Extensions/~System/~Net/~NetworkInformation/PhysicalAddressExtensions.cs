@@ -7,14 +7,15 @@ public static class PhysicalAddressExtensions
     private static extern ref byte[] Address(PhysicalAddress obj);
 #endif
     /// <summary>
-    /// Returns the internal byte array of the specified
+    /// Returns a zero-allocation, read-only view of the bytes in the specified
     /// <see cref="PhysicalAddress"/> instance.
     /// </summary>
     /// <param name="obj">
     /// The <see cref="PhysicalAddress"/> instance.
     /// </param>
     /// <returns>
-    /// The underlying MAC address byte array.
+    /// A read-only span over the underlying MAC address bytes. The span must not be retained beyond
+    /// the lifetime of <paramref name="obj"/>.
     /// </returns>
     public static ReadOnlySpan<byte> AddressBytes(this PhysicalAddress obj)
     {

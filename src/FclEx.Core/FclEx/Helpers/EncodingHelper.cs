@@ -1,5 +1,3 @@
-#pragma warning disable SYSLIB0001
-
 namespace FclEx.Helpers;
 
 public static partial class EncodingHelper
@@ -19,80 +17,64 @@ public static partial class EncodingHelper
         return GetEncoding(fs, defaultEncoding);
     }
 
+    /// <summary>
+    /// Detects an encoding from a byte-order mark at the beginning of a stream.
+    /// </summary>
+    /// <param name="stream">A readable, seekable stream to inspect.</param>
+    /// <param name="defaultEncoding">The encoding returned when the stream has no recognized byte-order mark.</param>
+    /// <returns>The encoding identified by the byte-order mark, or <paramref name="defaultEncoding"/> when no byte-order mark is present.</returns>
+    /// <exception cref="ArgumentException"><paramref name="stream"/> is not readable or seekable.</exception>
+    /// <remarks>
+    /// The stream remains open and its original position is restored before this method returns.
+    /// This method intentionally does not infer UTF-8 from the content when no byte-order mark is present.
+    /// </remarks>
     public static Encoding GetEncoding(Stream stream, Encoding? defaultEncoding = null)
     {
+        Check.NotNull(stream);
         defaultEncoding ??= Encoding.UTF8;
 
-        var bom = new byte[3];
-        var length = stream.Read(bom, 0, 3);
-        if (length > 2)
+        if (stream.CanRead == false)
+            throw new ArgumentException("The stream must be readable.", nameof(stream));
+
+        if (stream.CanSeek == false)
+            throw new ArgumentException("The stream must support seeking.", nameof(stream));
+
+        var originalPosition = stream.Position;
+        try
         {
-            if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76)
-                return Encoding.UTF7;
+            stream.Position = 0;
+            var buffer = new byte[4];
+            var count = 0;
+            while (count < buffer.Length)
+            {
+                var read = stream.Read(buffer, count, buffer.Length - count);
+                if (read == 0)
+                    break;
 
-            if (bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF)
-                return Encoding.UTF8;
+                count += read;
+            }
 
-            if (bom[0] == 0xFE && bom[1] == 0xFF && bom[2] == 0x00)
-                return Encoding.BigEndianUnicode;
+            foreach (var encoding in BomEncodings)
+            {
+                var preamble = encoding.GetPreamble();
+                if (count >= preamble.Length && buffer.AsSpan(0, preamble.Length).SequenceEqual(preamble))
+                    return encoding;
+            }
 
-            if (bom[0] == 0xFF && bom[1] == 0xFE && bom[2] == 0x41)
-                return Encoding.Unicode;
+            return defaultEncoding;
         }
-        stream.Seek(0, SeekOrigin.Begin);
-        return IsUtf8(stream)
-            ? Encoding.Utf8WithoutBom
-            : defaultEncoding;
+        finally
+        {
+            stream.Position = originalPosition;
+        }
     }
 
-    // 0XXXXXXX
-    // 110XXXXX, 10XXXXXX  
-    // 1110XXXX, 10XXXXXX, 10XXXXXX  
-    // 11110XXX, 10XXXXXX, 10XXXXXX, 10XXXXXX  
-    private static bool IsUtf8(Stream stream)
-    {
-        Check.NotNull(stream);
-
-        using var reader = new BinaryReader(stream);
-        var utf8Flag = 0;
-        var asciiFlag = 0;
-        for (; stream.Position < stream.Length;)
-        {
-            var curByte = reader.ReadByte();
-            if ((curByte & 0x80) == 0)
-            {
-                asciiFlag++; // 0XXXXXXX
-            }
-            else if ((curByte & 0xE0) == 0xC0 && stream.Position < stream.Length - 1) // 110xxxxx 10xxxxxx  
-            {
-                var buff = reader.ReadByte();
-                if ((buff & 0x80) != 0x80)
-                    return false;
-
-                utf8Flag++;
-            }
-            else if ((curByte & 0xF0) == 0xE0 && stream.Position < stream.Length - 2) // 1110xxxx 10xxxxxx 10xxxxxx  
-            {
-                var buff = reader.ReadBytes(2);
-                if ((buff[0] & 0x80) != 0x80 || (buff[1] & 0x80) != 0x80)
-                    return false;
-
-                utf8Flag++;
-            }
-            else if ((curByte & 0xF8) == 0xF0 && stream.Position < stream.Length - 3) // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx  
-            {
-                var buff = reader.ReadBytes(3);
-                if ((buff[0] & 0x80) != 0x80 || (buff[1] & 0x80) != 0x80 || (buff[2] & 0x80) != 0x80)
-                    return false;
-
-                utf8Flag++;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        return asciiFlag == stream.Length || utf8Flag > 0;
-    }
+    private static readonly Encoding[] BomEncodings =
+    [
+        new UTF32Encoding(bigEndian: true, byteOrderMark: true),
+        Encoding.UTF32,
+        Encoding.BigEndianUnicode,
+        Encoding.Unicode,
+        Encoding.UTF8,
+    ];
 }
