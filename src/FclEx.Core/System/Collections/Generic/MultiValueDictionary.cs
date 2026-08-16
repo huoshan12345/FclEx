@@ -1,7 +1,8 @@
+#pragma warning disable CS8767 // Nullability of reference types in type of parameter doesn't match implicitly implemented member (possibly because of nullability attributes).
+
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
-#nullable disable
 namespace System.Collections.Generic;
 
 [SuppressMessage("ReSharper", "InconsistentNaming")]
@@ -46,6 +47,7 @@ internal class Strings
 /// <typeparam name="TValue">The type of the value.</typeparam>
 public class MultiValueDictionary<TKey, TValue> :
     IReadOnlyDictionary<TKey, IReadOnlyCollection<TValue>>
+    where TKey : notnull
 {
     #region Variables
     /*======================================================================
@@ -107,7 +109,7 @@ public class MultiValueDictionary<TKey, TValue> :
     /// </summary>
     /// <param name="comparer">Specified comparer to use for the <typeparamref name="TKey"/>s</param>
     /// <remarks>If <paramref name="comparer"/> is set to null, then the default <see cref="IEqualityComparer" /> for <typeparamref name="TKey"/> is used.</remarks>
-    public MultiValueDictionary(IEqualityComparer<TKey> comparer)
+    public MultiValueDictionary(IEqualityComparer<TKey>? comparer)
     {
         _dictionary = new Dictionary<TKey, InnerCollectionView>(comparer);
     }
@@ -121,7 +123,7 @@ public class MultiValueDictionary<TKey, TValue> :
     /// <param name="comparer">Specified comparer to use for the <typeparamref name="TKey"/>s</param>
     /// <exception cref="ArgumentOutOfRangeException">Capacity must be >= 0</exception>
     /// <remarks>If <paramref name="comparer"/> is set to null, then the default <see cref="IEqualityComparer" /> for <typeparamref name="TKey"/> is used.</remarks>
-    public MultiValueDictionary(int capacity, IEqualityComparer<TKey> comparer)
+    public MultiValueDictionary(int capacity, IEqualityComparer<TKey>? comparer)
     {
         if (capacity < 0)
             throw new ArgumentOutOfRangeException(nameof(capacity), Strings.ArgumentOutOfRange_NeedNonNegNum);
@@ -148,7 +150,7 @@ public class MultiValueDictionary<TKey, TValue> :
     /// <param name="comparer">Specified comparer to use for the <typeparamref name="TKey"/>s</param>
     /// <exception cref="ArgumentNullException">enumerable must be non-null</exception>
     /// <remarks>If <paramref name="comparer"/> is set to null, then the default <see cref="IEqualityComparer" /> for <typeparamref name="TKey"/> is used.</remarks>
-    public MultiValueDictionary(IEnumerable<KeyValuePair<TKey, IEnumerable<TValue>>> enumerable, IEqualityComparer<TKey> comparer)
+    public MultiValueDictionary(IEnumerable<KeyValuePair<TKey, IEnumerable<TValue>>> enumerable, IEqualityComparer<TKey>? comparer)
     {
         if (enumerable == null)
             throw new ArgumentNullException(nameof(enumerable));
@@ -488,7 +490,7 @@ public class MultiValueDictionary<TKey, TValue> :
     /// in addition to being constructable through new(). The collection returned from the constructor
     /// must also not have IsReadOnly set to True by default.
     /// </remarks>
-    public static MultiValueDictionary<TKey, TValue> Create<TValueCollection>(IEqualityComparer<TKey> comparer, Func<TValueCollection> collectionFactory)
+    public static MultiValueDictionary<TKey, TValue> Create<TValueCollection>(IEqualityComparer<TKey>? comparer, Func<TValueCollection> collectionFactory)
         where TValueCollection : ICollection<TValue>
     {
         if (collectionFactory().IsReadOnly)
@@ -526,7 +528,10 @@ public class MultiValueDictionary<TKey, TValue> :
     /// in addition to being constructable through new(). The collection returned from the constructor
     /// must also not have IsReadOnly set to True by default.
     /// </remarks>
-    public static MultiValueDictionary<TKey, TValue> Create<TValueCollection>(int capacity, IEqualityComparer<TKey> comparer, Func<TValueCollection> collectionFactory)
+    public static MultiValueDictionary<TKey, TValue> Create<TValueCollection>(
+        int capacity,
+        IEqualityComparer<TKey>? comparer,
+        Func<TValueCollection> collectionFactory)
         where TValueCollection : ICollection<TValue>
     {
         if (capacity < 0)
@@ -564,7 +569,9 @@ public class MultiValueDictionary<TKey, TValue> :
     /// in addition to being constructable through new(). The collection returned from the constructor
     /// must also not have IsReadOnly set to True by default.
     /// </remarks>
-    public static MultiValueDictionary<TKey, TValue> Create<TValueCollection>(IEnumerable<KeyValuePair<TKey, IReadOnlyCollection<TValue>>> enumerable, Func<TValueCollection> collectionFactory)
+    public static MultiValueDictionary<TKey, TValue> Create<TValueCollection>(
+        IEnumerable<KeyValuePair<TKey, IReadOnlyCollection<TValue>>> enumerable,
+        Func<TValueCollection> collectionFactory)
         where TValueCollection : ICollection<TValue>
     {
         if (enumerable == null)
@@ -607,7 +614,10 @@ public class MultiValueDictionary<TKey, TValue> :
     /// in addition to being constructable through new(). The collection returned from the constructor
     /// must also not have IsReadOnly set to True by default.
     /// </remarks>
-    public static MultiValueDictionary<TKey, TValue> Create<TValueCollection>(IEnumerable<KeyValuePair<TKey, IReadOnlyCollection<TValue>>> enumerable, IEqualityComparer<TKey> comparer, Func<TValueCollection> collectionFactory)
+    public static MultiValueDictionary<TKey, TValue> Create<TValueCollection>(
+        IEnumerable<KeyValuePair<TKey, IReadOnlyCollection<TValue>>> enumerable,
+        IEqualityComparer<TKey>? comparer,
+        Func<TValueCollection> collectionFactory)
         where TValueCollection : ICollection<TValue>
     {
         if (enumerable == null)
@@ -651,7 +661,7 @@ public class MultiValueDictionary<TKey, TValue> :
         if (key == null)
             throw new ArgumentNullException(nameof(key));
 
-        if (_dictionary.TryGetValue(key, out InnerCollectionView collection))
+        if (_dictionary.TryGetValue(key, out var collection))
         {
             collection.AddValue(value);
         }
@@ -684,7 +694,7 @@ public class MultiValueDictionary<TKey, TValue> :
         if (values == null)
             throw new ArgumentNullException(nameof(values));
 
-        if (_dictionary.TryGetValue(key, out InnerCollectionView collection))
+        if (_dictionary.TryGetValue(key, out var collection))
         {
             _version++;
             collection.AddValues(values);
@@ -741,7 +751,7 @@ public class MultiValueDictionary<TKey, TValue> :
         if (key == null)
             throw new ArgumentNullException(nameof(key));
 
-        if (_dictionary.TryGetValue(key, out InnerCollectionView collection) && collection.RemoveValue(value))
+        if (_dictionary.TryGetValue(key, out var collection) && collection.RemoveValue(value))
         {
             if (collection.Count == 0)
                 _dictionary.Remove(key);
@@ -780,7 +790,7 @@ public class MultiValueDictionary<TKey, TValue> :
         if (key == null)
             throw new ArgumentNullException(nameof(key));
 
-        return (_dictionary.TryGetValue(key, out InnerCollectionView collection) && collection.Contains(value));
+        return (_dictionary.TryGetValue(key, out var collection) && collection.Contains(value));
     }
 
     /// <summary>
@@ -858,12 +868,12 @@ public class MultiValueDictionary<TKey, TValue> :
     /// <typeparamref name="TKey"/>; otherwise, <see langword="false"/>.
     /// </returns>
     /// <exception cref="ArgumentNullException"><paramref name="key"/> must be non-null</exception>
-    public bool TryGetValue(TKey key, out IReadOnlyCollection<TValue> value)
+    public bool TryGetValue(TKey key, [NotNullWhen(true)] out IReadOnlyCollection<TValue>? value)
     {
         if (key == null)
             throw new ArgumentNullException(nameof(key));
 
-        var success = _dictionary.TryGetValue(key, out InnerCollectionView collection);
+        var success = _dictionary.TryGetValue(key, out var collection);
         value = collection;
         return success;
     }
@@ -901,7 +911,7 @@ public class MultiValueDictionary<TKey, TValue> :
             if (key == null)
                 throw new ArgumentNullException(nameof(key));
 
-            if (_dictionary.TryGetValue(key, out InnerCollectionView collection))
+            if (_dictionary.TryGetValue(key, out var collection))
                 return collection;
 
             throw new KeyNotFoundException();
