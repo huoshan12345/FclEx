@@ -10,10 +10,26 @@ public class GetDataMembersTests
         public long Length { get; set; }
         public DateTime LastWriteTimeUtc { get; set; }
         public bool IsGood { get; set; }
+        public ChildModel Child { get; set; } = new();
 
         public int Field;
 
         public int GetSomething() => 42;
+    }
+
+    public class ChildModel
+    {
+        public int Id { get; set; }
+    }
+
+    public interface IIdentifiable
+    {
+        int Id { get; }
+    }
+
+    public class IdentifiableModel : IIdentifiable
+    {
+        public int Id { get; set; }
     }
 
     [Fact]
@@ -106,5 +122,44 @@ public class GetDataMembersTests
             }).ToArray());
 
         Assert.Contains("Only simple member access", ex.Message);
+    }
+
+    [Fact]
+    public void Should_Throw_When_Using_Nested_Member()
+    {
+        var ex = Assert.Throws<ArgumentException>(() =>
+            GetDataMembers<TestModel>(m => m.Child.Id).ToArray());
+
+        Assert.Contains("Only direct member access", ex.Message);
+    }
+
+    [Fact]
+    public void Should_Throw_When_Anonymous_Object_Contains_Nested_Member()
+    {
+        var ex = Assert.Throws<ArgumentException>(() =>
+            GetDataMembers<TestModel>(m => new { m.Id, ChildId = m.Child.Id }).ToArray());
+
+        Assert.Contains("Only direct member access", ex.Message);
+    }
+
+    [Fact]
+    public void Should_Throw_When_Using_Captured_Member()
+    {
+        var other = new TestModel();
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            GetDataMembers<TestModel>(m => other.Id).ToArray());
+
+        Assert.Contains("Only direct member access", ex.Message);
+    }
+
+    [Fact]
+    public void Should_Get_Direct_Interface_Member_Through_Conversion()
+    {
+        var result = GetDataMembers<IdentifiableModel>(m => ((IIdentifiable)m).Id).ToArray();
+
+        Assert.Single(result);
+        Assert.Equal(nameof(IIdentifiable.Id), result[0].Name);
+        Assert.Equal(typeof(IIdentifiable), result[0].DeclaringType);
     }
 }

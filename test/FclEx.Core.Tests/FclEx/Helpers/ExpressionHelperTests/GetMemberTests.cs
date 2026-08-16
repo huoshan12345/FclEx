@@ -101,6 +101,15 @@ public class GetMemberTests
         Assert.Contains("refers to a member that is not from type", ex.Message);
     }
 
+    [Fact]
+    public void GetMember_InterfaceMemberImplementedByType_ShouldReturnMember()
+    {
+        var member = ExpressionHelper.GetMember<InterfaceModel>(m => ((IHasProperty)m).Property);
+
+        Assert.Equal(typeof(IHasProperty), member.DeclaringType);
+        Assert.Equal(nameof(IHasProperty.Property), member.Name);
+    }
+
     public class TestModel
     {
         public int Property { get; set; }
@@ -108,5 +117,15 @@ public class GetMemberTests
         public void VoidMethod() { }
         public int IntMethod() => 1;
         public static int StaticIntMethod() => 1;
+    }
+
+    private interface IHasProperty
+    {
+        int Property { get; }
+    }
+
+    private sealed class InterfaceModel : IHasProperty
+    {
+        public int Property { get; set; }
     }
 }

@@ -75,4 +75,18 @@ public class ExpressionExtensionsTests
         var actual = list.Where(merge.Compile()).ToList();
         Assert.Equal(expected, actual);
     }
+
+    [Fact]
+    public void EvaluateArguments_ShouldEvaluateConstantsAndComputedExpressions()
+    {
+        Expression[] arguments =
+        [
+            Expression.Constant("value"),
+            Expression.Add(Expression.Constant(20), Expression.Constant(22))
+        ];
+
+        var values = arguments.EvaluateArguments().ToArray();
+
+        Assert.Equal(new object?[] { "value", 42 }, values);
+    }
 }

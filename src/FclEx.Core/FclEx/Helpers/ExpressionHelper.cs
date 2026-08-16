@@ -77,7 +77,7 @@ public static class ExpressionHelper
         if (reflectedType == null)
             throw new ArgumentException($"Expression '{expression}' does not refer to a member of a type.");
 
-        if (type != reflectedType && !type.IsAssignableFrom(reflectedType))
+        if (type != reflectedType && !reflectedType.IsAssignableFrom(type))
             throw new ArgumentException($"Expression '{expression}' refers to a member that is not from type {type.LongName()}.");
 
         return member;
@@ -215,13 +215,14 @@ public static class ExpressionHelper
             body = unary.Operand;
         }
 
+        var parameter = selector.Parameters[0];
         return body switch
         {
-            MemberExpression member => [GetDataMember(member)],
+            MemberExpression member => [GetDirectDataMember(member, parameter)],
             NewExpression newExpr => newExpr.Arguments
                 .Select(arg => arg is not MemberExpression m
                     ? throw new ArgumentException("Only simple member access is allowed: " + arg)
-                    : GetDataMember(m))
+                    : GetDirectDataMember(m, parameter))
                 .ToArray(),
             _ => throw new ArgumentException("Selector must be a member access or new expression.")
         };
@@ -233,5 +234,22 @@ public static class ExpressionHelper
         return m is not PropertyInfo && m is not FieldInfo
             ? throw new ArgumentException("Only property or field is allowed: " + m.MemberType)
             : m;
+    }
+
+    private static MemberInfo GetDirectDataMember(MemberExpression member, ParameterExpression parameter)
+    {
+        var target = member.Expression;
+        while (target is UnaryExpression
+               {
+                   NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.TypeAs
+               } conversion)
+        {
+            target = conversion.Operand;
+        }
+
+        if (target != parameter)
+            throw new ArgumentException("Only direct member access on the selector parameter is allowed: " + member);
+
+        return GetDataMember(member);
     }
 }

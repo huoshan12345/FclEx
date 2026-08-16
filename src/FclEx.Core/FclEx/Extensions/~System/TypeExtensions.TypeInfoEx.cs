@@ -67,8 +67,11 @@ partial class TypeExtensions
     /// <summary>
     /// Gets the element types exposed by arrays and enumerable types.
     /// </summary>
-    /// <param name="type"></param>
-    /// <returns></returns>
+    /// <param name="type">The type to inspect.</param>
+    /// <returns>
+    /// All distinct element types exposed through <see cref="IEnumerable{T}"/>, the array element type,
+    /// <see cref="object"/> for a non-generic enumerable, or an empty list when the type is not enumerable.
+    /// </returns>
     public static IReadOnlyList<Type> EnumerableElementTypes(this Type type)
     {
         return type.GetTypeInfoEx().EnumerableElementTypes;
@@ -143,10 +146,13 @@ partial class TypeExtensions
     }
 
     /// <summary>
-    /// Determines whether the type is an integer or floating-point numeric type, or a nullable numeric type.
+    /// Determines whether the type is a supported numeric type, or a nullable form of one.
     /// </summary>
     /// <param name="type">The type to inspect.</param>
-    /// <returns><see langword="true"/> for supported numeric types; otherwise, <see langword="false"/>.</returns>
+    /// <returns>
+    /// <see langword="true"/> for integral and binary floating-point types, <see cref="decimal"/>,
+    /// <see cref="BigInteger"/>, and their nullable forms; otherwise, <see langword="false"/>.
+    /// </returns>
     public static bool IsNumeric(this Type type)
     {
         return type.GetTypeInfoEx().IsNumeric;
@@ -156,7 +162,10 @@ partial class TypeExtensions
     /// Determines whether the type is a floating-point numeric type, or a nullable floating-point numeric type.
     /// </summary>
     /// <param name="type">The type to inspect.</param>
-    /// <returns><see langword="true"/> for <see cref="float"/>, <see cref="double"/>, <see cref="decimal"/>, and their nullable forms; otherwise, <see langword="false"/>.</returns>
+    /// <returns>
+    /// <see langword="true"/> for <see cref="float"/>, <see cref="double"/>, <c>Half</c> where available,
+    /// and their nullable forms; otherwise, <see langword="false"/>.
+    /// </returns>
     public static bool IsFloatingPoint(this Type type)
     {
         return type.GetTypeInfoEx().IsFloatingPoint;
@@ -176,17 +185,12 @@ partial class TypeExtensions
 /// <summary>
 /// Contains cached reflection metadata and derived type facts for a <see cref="Type"/>.
 /// </summary>
-/// <param name="Type">The inspected type.</param>
-/// <param name="NullableUnderlyingType">The underlying value type for <see cref="Nullable{T}"/>, or <see langword="null"/>.</param>
-/// <param name="EnumerableElementTypes">The element types exposed by arrays and enumerable types, or an empty array.</param>
-/// <param name="DefaultValue">The default CLR value for value types, or <see langword="null"/> for types without a boxed default value.</param>
-/// <param name="SimpleName">The type name without namespace or generic argument information.</param>
-/// <param name="ShortName">The type name without namespace, including formatted generic arguments.</param>
-/// <param name="LongName">The type name with namespace and formatted generic arguments.</param>
-/// <param name="IsInteger">Whether the type is an integer type or nullable integer type.</param>
-/// <param name="IsFloatingPoint">Whether the type is a floating-point type, decimal type, or nullable form of either.</param>
-public class TypeInfoEx : IEquatable<TypeInfoEx>
+public sealed class TypeInfoEx : IEquatable<TypeInfoEx>
 {
+    /// <summary>
+    /// Initializes metadata and derived type facts for the specified type.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
     public TypeInfoEx(Type type)
     {
         Type = type;
@@ -200,10 +204,11 @@ public class TypeInfoEx : IEquatable<TypeInfoEx>
         IsFloatingPoint = IsFloatingPointCore(type, NullableUnderlyingType);
         IsNullable = NullableUnderlyingType != null;
         IsEnumerable = EnumerableElementTypes.Count > 0;
+        var numericType = NullableUnderlyingType ?? type;
         IsNumeric = IsInteger
                     || IsFloatingPoint
-                    || type == typeof(decimal)
-                    || type == typeof(BigInteger);
+                    || numericType == typeof(decimal)
+                    || numericType == typeof(BigInteger);
     }
 
     /// <summary>The inspected type.</summary>
@@ -230,7 +235,7 @@ public class TypeInfoEx : IEquatable<TypeInfoEx>
     /// <summary>Whether the type is an integer type or nullable integer type.</summary>
     public readonly bool IsInteger;
 
-    /// <summary>Whether the type is a floating-point type, decimal type, or nullable form of either.</summary>
+    /// <summary>Whether the type is a binary floating-point type or a nullable form of one.</summary>
     public readonly bool IsFloatingPoint;
 
     /// <summary>Gets a value indicating whether <see cref="Type"/> is a constructed <see cref="Nullable{T}"/> value type.</summary>
@@ -239,7 +244,7 @@ public class TypeInfoEx : IEquatable<TypeInfoEx>
     /// <summary>Gets a value indicating whether <see cref="Type"/> is an array or implements <see cref="IEnumerable"/>.</summary>
     public readonly bool IsEnumerable;
 
-    /// <summary>Gets a value indicating whether <see cref="Type"/> is an integer or floating-point numeric type.</summary>
+    /// <summary>Gets a value indicating whether <see cref="Type"/> is one of the supported numeric types.</summary>
     public readonly bool IsNumeric;
 
 #if !NET5_0_OR_GREATER
@@ -321,6 +326,9 @@ public class TypeInfoEx : IEquatable<TypeInfoEx>
 
     private static string GetSimpleNameCore(Type type)
     {
+        if (type.IsArray)
+            return type.GetElementType()!.SimpleName() + GetArraySuffix(type);
+
         var name = type.Name;
 
         if (type.IsGenericType == false)
@@ -332,18 +340,101 @@ public class TypeInfoEx : IEquatable<TypeInfoEx>
 
     private static string GetShortNameCore(Type type, string simpleName)
     {
-        if (!type.IsGenericType) return type.Name;
-        var paraName = string.Join(", ", type.GenericTypeArguments!.Select(m => m.ShortName()));
-        return simpleName + "<" + paraName + ">";
+        if (type.IsArray)
+            return type.GetElementType()!.ShortName() + GetArraySuffix(type);
+
+        var genericArguments = GetOwnGenericArguments(type);
+        return genericArguments.Length == 0
+            ? simpleName
+            : simpleName + "<" + string.Join(", ", genericArguments.Select(GetGenericArgumentShortName)) + ">";
     }
 
     private static string GetLongNameCore(Type type, string shortName)
     {
+        if (type.IsArray)
+            return type.GetElementType()!.LongName() + GetArraySuffix(type);
+
+        if (type.IsNested && !type.IsGenericParameter)
+            return GetNestedLongName(type);
+
         return GetTypePrefixCore(type) + shortName;
+    }
+
+    private static string GetNestedLongName(Type type)
+    {
+        var declaringTypes = new Stack<Type>();
+        for (var current = type; current is not null; current = current.DeclaringType)
+            declaringTypes.Push(current);
+
+        var genericArguments = type.GetGenericArguments();
+        var genericArgumentIndex = 0;
+        var names = new List<string>(declaringTypes.Count);
+        Type? outermostType = null;
+
+        while (declaringTypes.Count > 0)
+        {
+            var current = declaringTypes.Pop();
+            outermostType ??= current;
+            var arity = GetDeclaredGenericArity(current);
+            var arguments = genericArguments.Skip(genericArgumentIndex).Take(arity).ToArray();
+            genericArgumentIndex += arity;
+
+            var name = GetSimpleNameCore(current);
+            if (arguments.Length > 0)
+                name += "<" + string.Join(", ", arguments.Select(GetGenericArgumentShortName)) + ">";
+
+            names.Add(name);
+        }
+
+        var prefix = outermostType!.Namespace is { } @namespace
+            ? @namespace + "."
+            : "global::";
+        return prefix + string.Join(".", names);
+    }
+
+    private static Type[] GetOwnGenericArguments(Type type)
+    {
+        var arity = GetDeclaredGenericArity(type);
+        if (arity == 0)
+            return [];
+
+        var arguments = type.GetGenericArguments();
+        return arguments.Skip(arguments.Length - arity).ToArray();
+    }
+
+    private static string GetGenericArgumentShortName(Type type)
+    {
+        // Formatting a generic parameter through the TypeInfoEx cache would re-enter formatting
+        // of its declaring open generic type before either cache entry has finished construction.
+        return type.IsGenericParameter ? type.Name : type.ShortName();
+    }
+
+    private static int GetDeclaredGenericArity(Type type)
+    {
+        var separatorIndex = type.Name.LastIndexOf('`');
+        return separatorIndex < 0
+            ? 0
+            : int.Parse(type.Name[(separatorIndex + 1)..], CultureInfo.InvariantCulture);
+    }
+
+    private static string GetArraySuffix(Type type)
+    {
+        if (type.GetArrayRank() == 1)
+            return type == type.GetElementType()!.MakeArrayType() ? "[]" : "[*]";
+
+        return "[" + new string(',', type.GetArrayRank() - 1) + "]";
     }
 
     private static string GetTypePrefixCore(Type type)
     {
+        if (type.IsGenericParameter)
+        {
+            var declaringType = type.DeclaringType!;
+            return type.DeclaringMethod is { } declaringMethod
+                ? declaringType.LongName() + "." + declaringMethod.Name + "."
+                : declaringType.LongName() + ".";
+        }
+
         if (type.IsNested)
         {
             var declaringType = type.DeclaringType!;
@@ -351,20 +442,6 @@ public class TypeInfoEx : IEquatable<TypeInfoEx>
         }
         else
         {
-            if (type.IsGenericParameter)
-            {
-                var declaringType = type.DeclaringType!;
-                if (type.DeclaringMethod != null)
-                {
-                    return declaringType.LongName()
-                           + "." + type.DeclaringMethod.Name
-                           + ".";
-                }
-                else
-                {
-                    return declaringType.LongName() + ".";
-                }
-            }
             if (type.Namespace == null)
             {
                 return "global::";

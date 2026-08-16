@@ -200,7 +200,7 @@ public static class Check
     {
         switch (left, right)
         {
-            case (null, null): throw new ArgumentNullException($"{nameof(left)} and {nameof(right)} cannot both be null.");
+            case (null, null): throw new ArgumentNullException(nameof(left), $"{nameof(left)} and {nameof(right)} cannot both be null.");
             case (null, not null):
             {
                 result = right;

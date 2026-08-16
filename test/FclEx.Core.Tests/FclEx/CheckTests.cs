@@ -6,6 +6,52 @@ namespace FclEx;
 public class CheckTests
 {
     [Fact]
+    public void TryGetSingleNonNull_BothNull_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() => Check.TryGetSingleNonNull<string>(null, null, out _));
+    }
+
+    [Theory]
+    [InlineData(null, "right", "right")]
+    [InlineData("left", null, "left")]
+    public void TryGetSingleNonNull_ExactlyOneNull_ReturnsNonNullValue(string? left, string? right, string expected)
+    {
+        var success = Check.TryGetSingleNonNull(left, right, out var result);
+
+        Assert.True(success);
+        Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public void TryGetSingleNonNull_BothNonNull_ReturnsFalse()
+    {
+        var success = Check.TryGetSingleNonNull("left", "right", out var result);
+
+        Assert.False(success);
+        Assert.Null(result);
+    }
+
+    [Theory]
+    [InlineData(null, "right", 5)]
+    [InlineData("left", null, 4)]
+    [InlineData("left", "right", 9)]
+    public void TryGetSingleNonNull_NullabilityAttributesSupportBothReturnBranches(
+        string? left,
+        string? right,
+        int expectedLength)
+    {
+        Assert.Equal(expectedLength, GetLength(left, right));
+    }
+
+    private static int GetLength(string? left, string? right)
+    {
+        if (Check.TryGetSingleNonNull(left, right, out var result))
+            return result.Length;
+
+        return left.Length + right.Length;
+    }
+
+    [Fact]
     public void NotEmpty_List()
     {
         {

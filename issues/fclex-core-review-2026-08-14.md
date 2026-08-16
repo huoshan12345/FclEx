@@ -814,45 +814,55 @@
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Text/~Json/JsonNodeExtensions.cs:19-30`。已有 key 的节点不是 `TNode` 时，方法创建新节点并赋值，原 JSON 子树被无提示丢弃；这违反 `GetOrAdd` 通常“不覆盖已有值”的语义。类型不匹配应抛清楚的异常，或者把有意替换的 API 命名为 `GetOrReplace`/`Set`。
     修复：已有非 null 节点类型不匹配时抛 `InvalidOperationException`，保留原节点且不调用 creator；缺失或 JSON null 仍创建新节点。XML 文档和测试同步覆盖这三种路径。
 
-166. **[P1][生命周期] 修复 `ReflectionHelper` 后，其他全局 `Type` cache 仍会固定 collectible assembly**
+166. **[P1][生命周期][部分修复] 修复 `ReflectionHelper` 后，其他全局 `Type` cache 仍会固定 collectible assembly**
 
     位置包括 `src/FclEx.Core/FclEx/Extensions/~System/TypeExtensions.TypeInfoEx.cs:5-20`、`TypeExtensions.Member.cs:214-230`、`src/FclEx.Core/FclEx/Helpers/UnsafeHelper.cs:6-8`、`TaskHelper.cs:206-208`、`System/Xml/XmlHelper.cs:8` 等。多个静态 `ConcurrentDictionary<Type,...>` 仍强引用插件/脚本上下文中的 Type 及反射产物，因此问题 139 的根因只在一个入口被修复。应系统盘点 Type-keyed cache，统一改为弱键、closed-generic cache 或显式限定“不支持 collectible assembly”，而不是逐个漏修。
+    检查：`TypeInfoEx`、member、task、XML、enum、marshal、type-size 等显式 Type-keyed cache 已改为 `ConditionalWeakTable`。但 `UnsafeHelper._methods`、`LambdaHelper._cache`、`TypeExtensions._typeCheckCache` 仍以 `(Type, string)` 为静态强键，两个 interface base invocation cache 也通过 `InterfaceMethodInfo` 间接强持有 Type/MethodInfo；因此本项尚不能标记为完全修复。
 
-167. **[P2][设计/命名] `Type.IsDynamic()` 无法从运行时 `Type` 回答它声称的问题**
+167. **[P2][设计/命名][已删除] `Type.IsDynamic()` 无法从运行时 `Type` 回答它声称的问题**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/TypeExtensions.cs:183-192`。`dynamic` 是使用点上的编译期元数据，运行时与 `object` 是同一个 `Type`；仅检查 Type 本身的 `DynamicAttribute` 既不能区分 `typeof(object)`，也覆盖不了成员、参数和嵌套 generic type-use。应删除该扩展，或把输入改成 `ParameterInfo`/member+attribute context 并按真实能力重新命名。
+    处理：已删除该扩展；源码和测试中均无残留调用。
 
-168. **[P2][API] `EnumerableElementType` 对实现多个 `IEnumerable<T>` 的类型返回任意一个 T**
+168. **[P2][API][已修复] `EnumerableElementType` 对实现多个 `IEnumerable<T>` 的类型返回任意一个 T**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/TypeExtensions.TypeInfoEx.cs:92-110,251-253`。实现使用 `FirstOrDefault`，但一个类型可通过多个接口暴露不同的 `IEnumerable<T>`；反射接口顺序不是这个 singular API 的选择契约。应返回全部候选、在歧义时抛异常，或要求调用方指定目标 enumerable interface。
+    修复：新增 `EnumerableElementTypes()` 返回全部候选；singular `EnumerableElementType()` 在多个候选时抛 `AmbiguousMatchException`。测试覆盖同时实现 `IEnumerable<int>` 与 `IEnumerable<string>` 的接口。
 
-169. **[P2][命名/正确性] `ShortName`/`LongName` 会重复打印嵌套泛型的外层参数**
+169. **[P2][命名/正确性][已修复] `ShortName`/`LongName` 会重复打印嵌套泛型的外层参数**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/TypeExtensions.TypeInfoEx.cs:124-167`。内层类型使用全部 `GenericTypeArguments`，同时 prefix 又格式化 declaring type；对 `Outer<T>.Inner<U>` 会把外层参数在 inner 部分再次输出。应按当前类型名反引号后的自身 arity 只消费新增参数，并补充 open generic、嵌套多层和数组组合测试。
+    修复：按每一级 metadata arity 分配泛型参数，`ShortName` 只格式化当前类型声明的参数，`LongName` 逐级格式化 declaring type；同时补齐数组 shape。开放泛型测试还发现泛型参数与 declaring type 会经 `TypeInfoEx` cache 相互递归并最终栈溢出，现改为在泛型签名中直接使用参数 metadata name。测试覆盖闭合/开放泛型、多层嵌套、仅外层泛型、框架嵌套类型及二维数组。
 
-170. **[P2][设计/API] 公共 positional `record TypeInfoEx` 可以被构造或 `with` 成自相矛盾的元数据**
+170. **[P2][设计/API][已修复] 公共 positional `record TypeInfoEx` 可以被构造或 `with` 成自相矛盾的元数据**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/TypeExtensions.TypeInfoEx.cs:336-372`。调用方可任意构造该 record；更严重的是 `with { EnumerableElementType = ... }` 只改变 primary property，不会重新执行 `IsEnumerable`/`IsNumeric` 的属性初始化器，产生互相矛盾的值。它应是由 `Type` 唯一推导的不可伪造对象：使用 sealed immutable class/internal constructor，或把派生属性改为实时计算。
+    修复：改为 sealed class，构造函数只接收 `Type` 并一次性推导全部 public readonly 字段，不能再通过 object initializer 或 `with` 制造矛盾状态；测试验证全部公共实例字段 readonly 且类型 sealed。
 
-171. **[P2][命名/API] `IsFloatingPoint` 把 `decimal` 算作浮点，`IsNumeric` 又漏掉新数值类型**
+171. **[P2][命名/API][已修复] `IsFloatingPoint` 把 `decimal` 算作浮点，`IsNumeric` 又漏掉新数值类型**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/TypeExtensions.TypeInfoEx.cs:170-190,295-323,347-372`。这与 .NET 的数值分类不一致：`decimal` 不是 binary floating point，而 `Half`、`BigInteger`、`Int128`/`UInt128` 等在可用目标上又被排除。应把名字限定到明确列举的 primitive 集合，或按 generic math 接口建立可解释的分类；文档不能把自定义集合称作通用 numeric/floating-point 判断。
+    修复：`IsFloatingPoint` 只包含 `float`、`double` 和可用目标上的 `Half`；`IsNumeric` 另包含 `decimal`、`BigInteger` 和扩展后的整数集合。检查时补上了遗漏的 `decimal?`/`BigInteger?`，并同步修正文档及 nullable 测试。
 
-172. **[P1] `ExpressionHelper.GetMember(expression, type)` 错误拒绝接口成员**
+172. **[P1][已修复] `ExpressionHelper.GetMember(expression, type)` 错误拒绝接口成员**
 
     位置：`src/FclEx.Core/FclEx/Helpers/ExpressionHelper.cs:69-83`。校验使用 `type.IsSubclassOf(reflectedType)`；类实现接口并不属于 `IsSubclassOf(interface)`，因此合法的接口成员 selector 会被判为“not from type”。应使用 `reflectedType.IsAssignableFrom(type)`，并明确选择 `DeclaringType` 还是 `ReflectedType` 作为契约。
+    修复：检查时发现初次修改把 `IsAssignableFrom` 方向写反，现已改为 `reflectedType.IsAssignableFrom(type)`；测试覆盖实现类型通过转换选择接口属性。
 
-173. **[P2][API] `GetDataMembers<T>` 没有确认返回的 member 是 T 的直接成员**
+173. **[P2][API][已修复] `GetDataMembers<T>` 没有确认返回的 member 是 T 的直接成员**
 
     位置：`src/FclEx.Core/FclEx/Helpers/ExpressionHelper.cs:209-236`。该入口允许 `x => x.Child.Name`，甚至捕获对象或静态对象的 member，并直接返回最末端字段/属性；这与方法名和其他 `GetDataMemberInfo` 的“禁止 nested”规则不一致。应验证表达式根是 selector 参数且只允许一级访问，或把方法明确命名为路径提取并返回完整 member path。
+    修复：保留单个直接成员和 `new { x.A, x.B }` 多成员形式；每个成员都必须直接以 selector 参数为接收者，仅允许中间存在类型转换。测试覆盖多成员、nested member、匿名对象中的 nested member、captured member 以及接口转换后的直接成员。
 
-174. **[P2][命名/副作用] `ExpressionExtensions.GetArgumentValues` 实际会编译并执行任意表达式**
+174. **[P2][命名/副作用][已修复] `ExpressionExtensions.GetArgumentValues` 实际会编译并执行任意表达式**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Linq/~Expressions/ExpressionExtensions.cs:56-65`。名字像读取常量，实现在非 constant 情况下会 `Compile().Invoke()`，因此可能执行方法调用、产生副作用或异常，并对未绑定参数失败。应只支持 constant/closure field 读取，或改名 `EvaluateArguments` 并明确这是执行代码的 API。
+    修复：`Evaluate` 比原名准确，但作为 `IEnumerable<Expression>` 扩展仍过宽，最终命名为 `EvaluateArguments`，同步两个调用点；XML 文档明确延迟枚举会编译执行表达式、可能有副作用或抛异常。测试覆盖 constant 与计算表达式。
 
-175. **[P2][命名/签名] `TryGetSingleNonNull` 在两个输入都为 null 时抛异常，违反 Try-pattern**
+175. **[P2][命名/签名][设计确认] `TryGetSingleNonNull` 在两个输入都为 null 时抛异常，违反 Try-pattern**
 
     位置：`src/FclEx.Core/FclEx/Check.cs:176-220`。文档一方面说“otherwise false”，另一方面又为 `(null, null)` 抛 `ArgumentNullException`；调用方不能把 `Try...` 当作完整的非抛分支。应在两个不满足“恰好一个”的情况都返回 false，或改名 `GetSingleNonNull` 并用显式结果/异常区分零个与两个。
+    设计确认：把双 null 视为调用前置条件错误，因此保留异常；单 null 返回 true 和非 null `result`，双非 null 返回 false。当前 `[NotNullWhen(true)] out result` 与两个输入上的 `[NotNullWhen(false)]` 已精确表达两个正常返回分支，是该语义下最充分的 NRT flow contract。新增行为及编译期流分析用例，并修正 `ArgumentNullException.ParamName`。
 
 176. **[P1] `ActionExtensions.Chain<T>` 对 reference type 连非空 action 序列也无法构造**
 
