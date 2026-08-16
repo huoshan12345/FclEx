@@ -49,6 +49,12 @@ public static class ArrayExtensions
         return array.AsSpan();
     }
 
+    [MethodImpl(AggressiveInlining)]
+    public static ReadOnlyCollection<T> AsReadOnly<T>(this T[] array)
+    {
+        return Array.AsReadOnly(array);
+    }
+
     /// <summary>
     /// Searches for the first element that satisfies the specified predicate.
     /// </summary>

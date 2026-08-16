@@ -1,4 +1,4 @@
-namespace FclEx.Utils.Disposables;
+namespace FclEx.Utils;
 
 public class AsyncDisposableTests
 {

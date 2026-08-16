@@ -7,8 +7,9 @@ public class ConsoleTable : IRenderable
 
     private readonly List<object?[]> _rows = [];
     public IReadOnlyList<IReadOnlyList<object?>> Rows => _rows
-        .Select(m => (IReadOnlyList<object?>)Array.AsReadOnly(m))
+        .Select(IReadOnlyList<object?> (m) => Array.AsReadOnly(m))
         .ToArray();
+
     public ConsoleTableOptions Options { get; }
 
     public ConsoleTable(ConsoleTableOptions options)
