@@ -16,8 +16,8 @@ public static class EnumExtensions
             var name = enumValue.ToString();
             return new EnumInfo(
                 name,
-                name.ToLower(),
-                name.ToUpper(),
+                name.ToLowerInvariant(),
+                name.ToUpperInvariant(),
                 enumValue.CastTo<long>(),
                 enumValue.GetAttribute<EnumMemberAttribute>()?.Value);
         }
@@ -49,7 +49,7 @@ public static class EnumExtensions
         where TEnum : struct, Enum
         where TInteger : unmanaged
     {
-        if (Unsafe.SizeOf<TEnum>() == Unsafe.SizeOf<TInteger>())
+        if (Unsafe.SizeOf<TEnum>() == Unsafe.SizeOf<TInteger>() && typeof(TInteger).IsInteger())
         {
             integer = Unsafe.As<TEnum, TInteger>(ref enumValue);
             return true;
