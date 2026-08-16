@@ -203,9 +203,9 @@ public static class TaskHelper
     private static readonly Type TypeOfVoidTaskResult = Type.GetType("System.Threading.Tasks.VoidTaskResult", true)!;
     private static readonly Type TypeOfTaskOfVoidTaskResult = typeof(Task<>).MakeGenericType(TypeOfVoidTaskResult);
 
-    private static readonly ConcurrentDictionary<Type, TaskType> _taskTypes = new();
-    private static readonly ConcurrentDictionary<Type, Func<object, object>> _resultFuncCache = new();
-    private static readonly ConcurrentDictionary<Type, Func<object, Task>> _asTaskFuncCache = new();
+    private static readonly ConditionalWeakTable<Type, ValueBox<TaskType>> _taskTypes = new();
+    private static readonly ConditionalWeakTable<Type, Func<object, object>> _resultFuncCache = new();
+    private static readonly ConditionalWeakTable<Type, Func<object, Task>> _asTaskFuncCache = new();
 
     private static TaskType GetTaskType(Type type)
     {
@@ -233,7 +233,7 @@ public static class TaskHelper
             return null;
 
         var type = value.GetType();
-        var taskType = _taskTypes.GetOrAdd(type, GetTaskType);
+        var taskType = _taskTypes.GetValue(type, m => GetTaskType(m)).Value;
 
         // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
         switch (taskType)
@@ -272,7 +272,7 @@ public static class TaskHelper
         // 'System.ValueType' does not contain a definition for 'GetAwaiter'.
         // So we have to convert ValueTask<T> to Task and then await it.
         // Please fix this logic if there is a better solution.
-        var func = _asTaskFuncCache.GetOrAdd(type, k =>
+        var func = _asTaskFuncCache.GetValue(type, k =>
         {
             var parameter = Expression.Parameter(typeof(object), "type");
             var convertedParameter = Expression.Convert(parameter, k);
@@ -313,7 +313,7 @@ public static class TaskHelper
         */
         // So we use "ExpressionWithCache" here.
         // Please fix this logic if there is a better solution.
-        var func = _resultFuncCache.GetOrAdd(type, k => CreateFuncToGetTaskResult(k));
+        var func = _resultFuncCache.GetValue(type, k => CreateFuncToGetTaskResult(k));
         return func(value);
     }
 }

@@ -211,7 +211,7 @@ partial class TypeExtensions
                ?? throw new InvalidOperationException($"Cannot find constructor({types.Select(m => m.Name).JoinWith(", ")}) in type '{type.FullName}'");
     }
 
-    private static readonly ConcurrentDictionary<Type, IReadOnlyList<FieldInfo>> _allInstanceFieldsCache = new();
+    private static readonly ConditionalWeakTable<Type, IReadOnlyList<FieldInfo>> _allInstanceFieldsCache = new();
 
     /// <summary>
     /// Retrieves all instance fields of a specified type, including fields declared in its base types.
@@ -227,7 +227,7 @@ partial class TypeExtensions
     /// </remarks>
     public static IReadOnlyList<FieldInfo> GetAllInstanceFields(this Type type)
     {
-        return _allInstanceFieldsCache.GetOrAdd(type, Impl);
+        return _allInstanceFieldsCache.GetValue(type, Impl);
 
         static IReadOnlyList<FieldInfo> Impl(Type type)
         {

@@ -2,7 +2,7 @@ namespace FclEx.Extensions;
 
 partial class TypeExtensions
 {
-    private static readonly ConcurrentDictionary<Type, TypeInfoEx> _typeInfoCache = new();
+    private static readonly ConditionalWeakTable<Type, TypeInfoEx> _typeInfoCache = new();
 
 #if !NET5_0_OR_GREATER
     private static readonly Lazy<PropertyInfo?> _isByRefLike = new(() => typeof(Type).GetProperty("IsByRefLike", BindingAttributes.Declared));
@@ -16,7 +16,7 @@ partial class TypeExtensions
     public static TypeInfoEx GetTypeInfoEx(this Type type)
     {
         FclEx.Check.NotNull(type);
-        return _typeInfoCache.GetOrAdd(type, GetTypeInfoExCore);
+        return _typeInfoCache.GetValue(type, GetTypeInfoExCore);
 
         static TypeInfoEx GetTypeInfoExCore(Type type)
         {

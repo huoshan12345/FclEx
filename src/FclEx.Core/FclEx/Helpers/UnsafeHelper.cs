@@ -3,7 +3,7 @@ namespace FclEx.Helpers;
 public static unsafe class UnsafeHelper
 {
     private static readonly MethodInfo _sizeof = typeof(UnsafeHelper).GetRequiredMethod(nameof(SizeOfImpl), 1);
-    private static readonly ConcurrentDictionary<Type, int> _cache = [];
+    private static readonly ConditionalWeakTable<Type, ValueBox<int>> _cache = new();
 
     private static readonly ConcurrentDictionary<(Type, string), MethodInfo> _methods = new();
 
@@ -19,7 +19,7 @@ public static unsafe class UnsafeHelper
     /// </remarks>
     public static int SizeOf(Type type)
     {
-        return _cache.GetOrAdd(type, m =>
+        return _cache.GetValue(type, m =>
         {
             var method = _sizeof.MakeGenericMethod(m);
             return method.Invoke<int>(null, null);

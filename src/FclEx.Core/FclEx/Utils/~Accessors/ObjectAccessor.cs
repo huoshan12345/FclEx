@@ -113,11 +113,11 @@ public static class ObjectAccessor
     public static IntPtr[] GetAllFieldAddresses(ref object instance, Type type)
     {
         Check.NotNull(instance);
-        var @delegate = _cache.GetOrAdd(type, BuildAllFieldAddressesAccessor);
+        var @delegate = _cache.GetValue(type, BuildAllFieldAddressesAccessor);
         return @delegate.Invoke(ref instance);
     }
 
-    private static readonly ConcurrentDictionary<Type, GetAllFieldAddresses> _cache = new();
+    private static readonly ConditionalWeakTable<Type, GetAllFieldAddresses> _cache = new();
 
     private static GetAllFieldAddresses BuildAllFieldAddressesAccessor(Type type)
     {

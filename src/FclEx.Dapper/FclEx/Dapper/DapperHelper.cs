@@ -19,7 +19,7 @@ public static class DapperHelper
         ["MySql.Data.MySqlClient.MySqlConnection"] = MySqlAdapter.Instance,
         ["MySqlConnector.MySqlConnection"] = MySqlConnectorAdapter.Instance,
     };
-    internal static readonly ConcurrentDictionary<Type, EntityDefinition> EntityDefinitions = new();
+    internal static readonly ConditionalWeakTable<Type, EntityDefinition> EntityDefinitions = new();
     internal static readonly ConcurrentDictionary<(Type AdapterType, string? Schema, Type EntityType), string> TableNamesWithSchema = new();
 
     internal class AssemblyLocker
@@ -39,7 +39,7 @@ public static class DapperHelper
 
     public static EntityDefinition GetEntityDefinition(Type type)
     {
-        return EntityDefinitions.GetOrAdd(type, EntityDefinition.GetDefinition);
+        return EntityDefinitions.GetValue(type, EntityDefinition.GetDefinition);
     }
 
     // Register CustomPropertyTypeMap for Type with ColumnAttribute

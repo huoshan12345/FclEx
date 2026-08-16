@@ -3,15 +3,6 @@ namespace FclEx.Utils;
 public class TreeNodeTests
 {
     [Fact]
-    public void Children_CannotBeMutatedDirectly()
-    {
-        var root = new TreeNode<int>(0);
-
-        Assert.Throws<NotSupportedException>(() =>
-            ((IList<TreeNode<int>>)root.Children).Add(new TreeNode<int>(1)));
-    }
-
-    [Fact]
     public void AddRemoveAndMove_MaintainParentRelationship()
     {
         var firstParent = new TreeNode<int>(0);

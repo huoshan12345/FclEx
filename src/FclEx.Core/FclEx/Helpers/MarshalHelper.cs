@@ -2,7 +2,7 @@ namespace FclEx.Helpers;
 
 public static class MarshalHelper
 {
-    private static readonly ConcurrentDictionary<Type, int> _sizes = [];
+    private static readonly ConditionalWeakTable<Type, ValueBox<int>> _sizes = new();
 
     public static DisposableValue<IntPtr> AllocHGlobal(int cb)
     {
@@ -16,9 +16,9 @@ public static class MarshalHelper
 
     internal static int SizeOf<T>() where T : struct
     {
-        return _sizes.GetOrAdd(typeof(T), static type =>
+        return _sizes.GetValue(typeof(T), static type =>
         {
-            ValidateInlineStructure(type, new HashSet<Type>(), "$");
+            ValidateInlineStructure(type, [], "$");
             return Marshal.SizeOf(type);
         });
     }

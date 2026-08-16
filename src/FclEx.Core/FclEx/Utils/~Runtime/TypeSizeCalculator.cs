@@ -5,7 +5,7 @@ namespace FclEx.Utils;
 /// </summary>
 public static class TypeSizeCalculator
 {
-    private static readonly ConcurrentDictionary<Type, int> _instanceFieldStorageSizes = new();
+    private static readonly ConditionalWeakTable<Type, ValueBox<int>> _instanceFieldStorageSizes = new();
 
     /// <summary>
     /// Gets the number of bytes required to store the instance fields of <paramref name="type"/>.
@@ -21,13 +21,13 @@ public static class TypeSizeCalculator
     /// <exception cref="ArgumentNullException"><paramref name="type"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException">
     /// <paramref name="type"/> is an array, interface, abstract type, open generic type, pointer, by-reference type,
-    /// or <see cref="void"/>.
+    /// or <see langword="void"/>.
     /// </exception>
     public static int GetInstanceFieldStorageSize(Type type)
     {
         Check.NotNull(type);
         ValidateType(type);
-        return _instanceFieldStorageSizes.GetOrAdd(type, CalculateInstanceFieldStorageSize);
+        return _instanceFieldStorageSizes.GetValue(type, m => CalculateInstanceFieldStorageSize(m));
     }
 
     /// <summary>
@@ -43,7 +43,7 @@ public static class TypeSizeCalculator
     /// </remarks>
     /// <exception cref="ArgumentException">
     /// <typeparamref name="T"/> is an array, interface, abstract type, open generic type, pointer, by-reference type,
-    /// or <see cref="void"/>.
+    /// or <see langword="void"/>.
     /// </exception>
     public static int GetInstanceFieldStorageSize<T>()
     {

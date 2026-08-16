@@ -25,15 +25,7 @@ public static class ReflectionHelper
 
     public static IReadOnlyList<DataMemberInfo> GetDataMembers(Type type)
     {
-        lock (_lock)
-        {
-            if (TypeDataMemberDic.TryGetValue(type, out var value))
-                return value;
-
-            value = GetDataMembersCore(type);
-            TypeDataMemberDic.Add(type, value);
-            return value;
-        }
+        return TypeDataMemberDic.GetValue(type, GetDataMembersCore);
 
         static IReadOnlyList<DataMemberInfo> GetDataMembersCore(Type type)
         {
