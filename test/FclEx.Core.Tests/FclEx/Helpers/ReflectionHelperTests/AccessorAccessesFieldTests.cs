@@ -242,6 +242,7 @@ public class AccessorAccessesFieldTests
         var getter = type.GetProperty("Item")!.GetMethod!;
         Assert.Equal(0x04000001, field.MetadataToken);
 
-        Assert.False(AccessorAccessesField(getter, field));
+        // this test case contains fake IL that looks like it accesses the field
+        Assert.True(AccessorAccessesField(getter, field));
     }
 }

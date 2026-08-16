@@ -135,9 +135,18 @@ public static class ReflectionHelper
             if (token == fieldToken)
                 return true;
 
-            var resolveField = declaringType.Module.ResolveField(token, genericTypeArgs, genericMethodArgs);
-            if (field == resolveField)
-                return true;
+            // Attempt to resolve the field token to a FieldInfo and compare it with the provided field.
+            try
+            {
+                var resolveField = declaringType.Module.ResolveField(token, genericTypeArgs, genericMethodArgs);
+                if (field == resolveField)
+                    return true;
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine("Failed to resolve field: " + ex);
+                continue;
+            }
         }
 
         return false;
