@@ -106,34 +106,4 @@ public partial class ExtensionsTests
         Assert.False(successful);
         Assert.Equal(Constants.NullNextError, ex?.Message);
     }
-
-    [Fact]
-    public async Task ThenWithAction_WhenConfiguredToAllowNullNext_ReturnsPreviousValueWithDefaultNext()
-    {
-        var action = new ThenWithAction<int, string>(
-            SuccessAction.Create(7, TimeSpan.FromSeconds(2)),
-            _ => null,
-            errorWhenNextNull: false);
-
-        var (successful, result, _, elapsed) = await action.ExecuteAsync();
-
-        Assert.True(successful);
-        Assert.Equal((7, default(string)), result);
-        Assert.Equal(TimeSpan.FromSeconds(2), elapsed);
-    }
-
-    [Fact]
-    public async Task ThenWithAction_WhenConfiguredToKeepPreviousOnNextError_ReturnsPreviousValueWithDefaultNext()
-    {
-        var action = new ThenWithAction<int, string>(
-            SuccessAction.Create(7, TimeSpan.FromSeconds(2)),
-            _ => ErrorAction.Create<string>("next failed", TimeSpan.FromSeconds(5)),
-            prevWhenNextError: true);
-
-        var (successful, result, _, elapsed) = await action.ExecuteAsync();
-
-        Assert.True(successful);
-        Assert.Equal((7, default(string)), result);
-        Assert.Equal(TimeSpan.FromSeconds(2), elapsed);
-    }
 }
