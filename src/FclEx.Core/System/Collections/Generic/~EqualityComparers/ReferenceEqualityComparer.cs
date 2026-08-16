@@ -5,7 +5,7 @@ namespace System.Collections.Generic;
 /// ignoring any <see cref="IEquatable{T}"/> or <see cref="object.Equals(object)"/>  overrides. <br/>
 /// see details via https://stackoverflow.com/questions/1890058/iequalitycomparert-that-uses-referenceequals
 /// </summary>
-public class ReferenceEqualityComparer<T> : IEqualityComparer<T>
+public class ReferenceEqualityComparer<T> : IEqualityComparer<T> where T : class
 {
     public static readonly ReferenceEqualityComparer<T> Instance = new();
 
