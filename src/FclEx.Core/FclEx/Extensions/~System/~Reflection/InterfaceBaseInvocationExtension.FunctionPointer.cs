@@ -30,7 +30,7 @@ partial class InterfaceBaseInvocationExtension
         Check.NotNull(selector);
 
         var (method, args) = GetMethodAndArguments(selector);
-        var evaluatedArguments = args.EvaluateArguments().ToArray();
+        var evaluatedArguments = args.Select(m => m.Evaluate()).ToArray();
         var interfaceType = typeof(TInterface);
         var (pointer, invoke) = MethodMap.GetValue(new(instance.GetType(), interfaceType, method), m => GetInterfaceMethodDelegate(m).ToTuple());
         var invoker = Activator.CreateInstance(invoke.DeclaringType!, instance, pointer);

@@ -71,13 +71,13 @@ public class ExpressionExtensionsTests
         Expression<Func<int, bool>> right = m => m < 8;
         var merge = left.And(right);
         var list = Enumerable.Range(1, 10).ToList();
-        var expected = list.Where(m => m > 3 && m < 8).ToList();
+        var expected = list.Where(m => m is > 3 and < 8).ToList();
         var actual = list.Where(merge.Compile()).ToList();
         Assert.Equal(expected, actual);
     }
 
     [Fact]
-    public void EvaluateArguments_ShouldEvaluateConstantsAndComputedExpressions()
+    public void EvaluateArgument_ShouldEvaluateConstantsAndComputedExpressions()
     {
         Expression[] arguments =
         [
@@ -85,8 +85,8 @@ public class ExpressionExtensionsTests
             Expression.Add(Expression.Constant(20), Expression.Constant(22))
         ];
 
-        var values = arguments.EvaluateArguments().ToArray();
+        var values = arguments.Select(m => m.Evaluate()).ToArray();
 
-        Assert.Equal(new object?[] { "value", 42 }, values);
+        Assert.Equal(["value", 42], values);
     }
 }

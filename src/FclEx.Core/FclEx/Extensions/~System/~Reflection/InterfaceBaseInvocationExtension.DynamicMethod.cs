@@ -22,7 +22,7 @@ partial class InterfaceBaseInvocationExtension
         Check.NotNull(selector);
 
         var (method, args) = GetMethodAndArguments(selector);
-        var evaluatedArguments = args.EvaluateArguments().ToArray();
+        var evaluatedArguments = args.Select(m => m.Evaluate()).ToArray();
         var func = _delegates.GetValue(new(instance.GetType(), typeof(TInterface), method), k =>
         {
             var (interfaceMethod, _) = GetInterfaceMethod(k);

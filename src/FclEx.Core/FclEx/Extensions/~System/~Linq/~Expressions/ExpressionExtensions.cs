@@ -54,21 +54,21 @@ public static class ExpressionExtensions
     }
 
     /// <summary>
-    /// Evaluates each argument expression and returns its resulting value.
+    /// Evaluates the expression and returns its resulting value.
     /// </summary>
-    /// <param name="arguments">The argument expressions to evaluate.</param>
-    /// <returns>A deferred sequence containing the value produced by each expression.</returns>
+    /// <param name="expression">The expression to evaluate.</param>
+    /// <returns>The value produced by the expression.</returns>
     /// <remarks>
-    /// Non-constant expressions are compiled and invoked. Enumerating the result can therefore execute arbitrary
+    /// Non-constant expressions are compiled and invoked. Evaluating the expression can therefore execute arbitrary
     /// user code, produce side effects, or throw exceptions. Expressions containing unbound parameters cannot be evaluated.
     /// </remarks>
-    public static IEnumerable<object?> EvaluateArguments(this IEnumerable<Expression> arguments)
+    public static object? Evaluate(this Expression expression)
     {
-        return arguments.Select(e => e switch
+        return expression switch
         {
             ConstantExpression constant => constant.Value,
-            _ => e.Convert(typeof(object)).Lambda<Func<object>>().Compile().Invoke()
-        });
+            _ => expression.Convert(typeof(object)).Lambda<Func<object>>().Compile().Invoke()
+        };
     }
 
     /// <summary>
