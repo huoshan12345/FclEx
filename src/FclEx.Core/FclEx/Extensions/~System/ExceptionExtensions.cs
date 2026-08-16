@@ -36,7 +36,7 @@ public static partial class ExceptionExtensions
 
     /// <summary>
     /// Executes an action on each exception in the exception tree, including all inner exceptions
-    /// and inner exceptions of AggregateExceptions.
+    /// and inner exceptions in AggregateExceptions.
     /// </summary>
     /// <param name="ex">The root exception to start from.</param>
     /// <param name="action">The action to execute on each exception.</param>
@@ -45,43 +45,49 @@ public static partial class ExceptionExtensions
         if (ex is null || action is null)
             return;
 
+        var visited = new HashSet<Exception>();
         var q = new Queue<Exception>();
         q.Enqueue(ex);
-        var handled = new HashSet<Exception>();
+
         while (q.Count != 0)
         {
             var e = q.Dequeue();
+
+            Visit(e);
+
             if (e is AggregateException aEx)
             {
                 foreach (var inner in aEx.InnerExceptions)
                 {
-                    EnqueueIfUnHandled(inner);
+                    EnqueueIfNotVisited(inner);
                 }
             }
-            else if (e.InnerException is not null)
+            else if (e.InnerException is { } inner)
             {
-                EnqueueIfUnHandled(e.InnerException);
-            }
-            else
-            {
-                try
-                {
-                    action(e);
-                }
-                finally
-                {
-                    handled.Add(e);
-                }
+                EnqueueIfNotVisited(inner);
             }
         }
-        handled.Clear();
+        visited.Clear();
         return;
 
-        void EnqueueIfUnHandled(Exception exception)
+        void Visit(Exception e)
         {
-            if (handled.Contains(exception))
+            try
+            {
+                action(e);
+            }
+            finally
+            {
+                visited.Add(e);
+            }
+        }
+
+        void EnqueueIfNotVisited(Exception e)
+        {
+            if (visited.Contains(e))
                 return;
-            q.Enqueue(exception);
+
+            q.Enqueue(e);
         }
     }
 
