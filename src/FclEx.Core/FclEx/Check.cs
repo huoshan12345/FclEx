@@ -193,7 +193,6 @@ public static class Check
     /// If both values are non-null, the method fails without throwing and sets <paramref name="result"/> to <see langword="default"/>.<br/>
     /// If both values are <see langword="null"/>, an <see cref="ArgumentNullException" /> will be thrown.
     /// </remarks>
-    [MethodImpl(AggressiveInlining)]
     public static bool TryGetSingleNonNull<T>(
         [NotNullWhen(false)] T? left,
         [NotNullWhen(false)] T? right,
