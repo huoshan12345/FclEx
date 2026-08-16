@@ -335,7 +335,7 @@ public static partial class OperationResultExtensions
         Check.NotNull(fallback);
 
         return result.IsError
-            ? fallback()
+            ? fallback().AddElapsed(result.Elapsed)
             : result;
     }
 
@@ -347,7 +347,7 @@ public static partial class OperationResultExtensions
         Check.NotNull(fallback);
 
         return result.IsError
-            ? Operation.Success(fallback())
+            ? Operation.Success(fallback()).AddElapsed(result.Elapsed)
             : result;
     }
 
@@ -357,7 +357,7 @@ public static partial class OperationResultExtensions
     public static OperationResult<T> Fallback<T>(this OperationResult<T> result, T fallback)
     {
         return result.IsError
-            ? Operation.Success(fallback)
+            ? Operation.Success(fallback).AddElapsed(result.Elapsed)
             : result;
     }
 
