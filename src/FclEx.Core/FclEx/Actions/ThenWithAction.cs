@@ -25,7 +25,7 @@ public class ThenWithAction<T, TNext> : IAction<(T, TNext)>
     public async Task<OperationResult<(T, TNext)>> ExecuteAsync(CancellationToken token = default)
     {
         var result = await _action.ExecuteAsync(token);
-        if (!result.IsSuccess)
+        if (result.IsSuccess == false)
             return result.Cast<(T, TNext)>();
 
         var item = result.Value!;
@@ -38,6 +38,6 @@ public class ThenWithAction<T, TNext> : IAction<(T, TNext)>
         var nextResult = await nextActor.ExecuteAsync(token);
         return nextResult.IsSuccess
             ? ((item, nextResult.Value), result.Elapsed + nextResult.Elapsed)
-            : nextResult.Cast<(T, TNext)>();
+            : nextResult.Cast<(T, TNext)>().AddElapsed(result.Elapsed);
     }
 }
