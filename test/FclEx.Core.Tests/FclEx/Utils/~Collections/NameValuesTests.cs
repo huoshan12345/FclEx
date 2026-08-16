@@ -1,4 +1,4 @@
-namespace FclEx.Utils.Collections;
+namespace FclEx.Utils;
 
 public class NameValuesTests
 {

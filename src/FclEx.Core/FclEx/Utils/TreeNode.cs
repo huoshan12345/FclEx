@@ -8,17 +8,15 @@ public static class TreeNode
 public sealed class TreeNode<T>
 {
     private readonly List<TreeNode<T>> _children = [];
-    private readonly IReadOnlyList<TreeNode<T>> _childrenView;
 
     public TreeNode(T? value)
     {
         Value = value;
-        _childrenView = _children.AsReadOnly();
     }
 
     [AllowNull]
     public T Value { get; }
-    public IReadOnlyList<TreeNode<T>> Children => _childrenView;
+    public IReadOnlyList<TreeNode<T>> Children => _children;
     public TreeNode<T>? Parent { get; private set; }
 
     public TreeNode<T> AddChild(T value)

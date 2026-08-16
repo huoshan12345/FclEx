@@ -1,6 +1,4 @@
-using System.Collections.Concurrent;
-
-namespace FclEx.Utils.Consumers;
+namespace FclEx.Utils;
 
 public class RetryingConsumerTests
 {

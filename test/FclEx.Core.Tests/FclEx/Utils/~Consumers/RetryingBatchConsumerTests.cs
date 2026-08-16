@@ -1,4 +1,4 @@
-namespace FclEx.Utils.Consumers;
+namespace FclEx.Utils;
 
 public class RetryingBatchConsumerTests
 {

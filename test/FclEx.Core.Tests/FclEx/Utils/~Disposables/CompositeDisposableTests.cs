@@ -68,7 +68,7 @@ public class CompositeDisposableTests
 
         var exception = Assert.Throws<AggregateException>(() => composite.Dispose());
 
-        Assert.Equal(new Exception[] { firstException, secondException }, exception.InnerExceptions);
+        Assert.Equal([firstException, secondException], exception.InnerExceptions);
         Assert.Equal(1, first.DisposeCount);
         Assert.Equal(1, middle.DisposeCount);
         Assert.Equal(1, last.DisposeCount);

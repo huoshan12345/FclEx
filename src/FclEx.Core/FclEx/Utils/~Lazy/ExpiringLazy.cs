@@ -118,8 +118,8 @@ public sealed class ExpiringLazy<T> : IDisposable
 
     public void Dispose()
     {
-        T? value = default;
-        var hasValue = false;
+        T? value;
+        bool hasValue;
 
         lock (_lock)
         {
@@ -136,8 +136,6 @@ public sealed class ExpiringLazy<T> : IDisposable
 
         if (hasValue)
             DisposeValue(value!);
-
-        GC.SuppressFinalize(this);
     }
 
     private static void DisposeValue(T value)
