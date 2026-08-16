@@ -380,15 +380,15 @@ public record TypeInfoEx(
     /// <summary>
     /// Gets a value indicating whether <see cref="Type"/> is a constructed <see cref="Nullable{T}"/> value type.
     /// </summary>
-    public bool IsNullable { get; } = NullableUnderlyingType != null;
+    public bool IsNullable => NullableUnderlyingType != null;
 
     /// <summary>
     /// Gets a value indicating whether <see cref="Type"/> is an array or implements <see cref="IEnumerable"/>.
     /// </summary>
-    public bool IsEnumerable { get; } = EnumerableElementTypes.Count > 0;
+    public bool IsEnumerable => EnumerableElementTypes.Count > 0;
 
     /// <summary>
     /// Gets a value indicating whether <see cref="Type"/> is an integer or floating-point numeric type.
     /// </summary>
-    public bool IsNumeric { get; } = IsInteger || IsFloatingPoint;
+    public bool IsNumeric => IsInteger || IsFloatingPoint;
 }
