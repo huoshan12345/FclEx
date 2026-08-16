@@ -77,7 +77,7 @@ public static class ExpressionHelper
         if (reflectedType == null)
             throw new ArgumentException($"Expression '{expression}' does not refer to a member of a type.");
 
-        if (type != reflectedType && !type.IsSubclassOf(reflectedType))
+        if (type != reflectedType && !type.IsAssignableFrom(reflectedType))
             throw new ArgumentException($"Expression '{expression}' refers to a member that is not from type {type.LongName()}.");
 
         return member;

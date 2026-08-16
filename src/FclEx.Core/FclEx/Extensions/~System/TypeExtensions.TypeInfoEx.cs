@@ -4,10 +4,6 @@ partial class TypeExtensions
 {
     private static readonly ConditionalWeakTable<Type, TypeInfoEx> _typeInfoCache = new();
 
-#if !NET5_0_OR_GREATER
-    private static readonly Lazy<PropertyInfo?> _isByRefLike = new(() => typeof(Type).GetProperty("IsByRefLike", BindingAttributes.Declared));
-#endif
-
     /// <summary>
     /// Gets cached reflection metadata and derived type facts used by the other type extension methods.
     /// </summary>
@@ -16,183 +12,7 @@ partial class TypeExtensions
     public static TypeInfoEx GetTypeInfoEx(this Type type)
     {
         FclEx.Check.NotNull(type);
-        return _typeInfoCache.GetValue(type, GetTypeInfoExCore);
-
-        static TypeInfoEx GetTypeInfoExCore(Type type)
-        {
-            var nullableUnderlyingType = Nullable.GetUnderlyingType(type);
-            var defaultValue = GetDefaultValueCore(type, nullableUnderlyingType);
-            var enumerableElementTypes = GetEnumerableElementTypesCore(type).NotNull().ToReadOnlyList();
-            var simpleName = GetSimpleNameCore(type);
-            var shortName = GetShortNameCore(type, simpleName);
-            var longName = GetLongNameCore(type, shortName);
-            var isInteger = IsIntegerCore(type, nullableUnderlyingType);
-            var isFloatingPoint = IsFloatingPointCore(type, nullableUnderlyingType);
-
-            return new TypeInfoEx(
-                Type: type,
-                NullableUnderlyingType: nullableUnderlyingType,
-                EnumerableElementTypes: enumerableElementTypes,
-                DefaultValue: defaultValue,
-                SimpleName: simpleName,
-                ShortName: shortName,
-                LongName: longName,
-                IsInteger: isInteger,
-                IsFloatingPoint: isFloatingPoint);
-        }
-
-        static object? GetDefaultValueCore(Type type, Type? nullableUnderlyingType)
-        {
-            /*
-                Acc_CreateGeneric = Cannot create a type for which Type.ContainsGenericParameters is true.
-                Acc_CreateAbst = Cannot create an abstract class.
-                Acc_CreateInterface = Cannot create an instance of an interface.
-                Acc_NotClassInit = Type initializer was not callable.
-                Acc_CreateGenericEx = Cannot create an instance of {0} because Type.ContainsGenericParameters is true.
-                Acc_CreateArgIterator = Cannot dynamically create an instance of ArgIterator.
-                Acc_CreateAbstEx = Cannot create an instance of {0} because it is an abstract class.
-                Acc_CreateInterfaceEx = Cannot create an instance of {0} because it is an interface.
-                Acc_CreateVoid = Cannot dynamically create an instance of System.Void.
-                Acc_ReadOnly = Cannot set a constant field.
-                Acc_RvaStatic = SkipVerification permission is needed to modify an image-based (RVA) static field.
-                Access_Void = Cannot create an instance of void.
-                Cannot create boxed ByRef-like values.
-            */
-
-            if (type.IsValueType == false
-                || nullableUnderlyingType != null
-                || type.ContainsGenericParameters
-                || type.FullName is "System.ArgIterator" or "System.RuntimeArgumentHandle" or "System.TypedReference"
-                // Byref-like structures are declared using ref struct keyword in C#. 
-#if !NET5_0_OR_GREATER
-                || IsByRefLike(type)
-#else
-                || type.IsByRefLike
-#endif
-                || type == typeof(void))
-                return null;
-
-            try
-            {
-                return ObjectHelper.GetUninitializedObject(type);
-            }
-            catch (Exception ex)
-            {
-                Trace.TraceWarning($"Failed to create instance of type {type.FullName}: {ex}");
-                return null;
-            }
-        }
-#if !NET5_0_OR_GREATER
-        static bool IsByRefLike(Type type)
-        {
-            return _isByRefLike.Value is { } field && field.GetValue<bool>(type);
-        }
-#endif
-        [SuppressMessage("ReSharper", "ConvertIfStatementToReturnStatement")]
-        static IEnumerable<Type?> GetEnumerableElementTypesCore(Type type)
-        {
-            // type is Array
-            if (type.IsArray)
-                return [type.GetElementType()!];
-
-            // type is IEnumerable<T>
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-            {
-                var t = type.GenericTypeArguments.FirstOrDefault()
-                        ?? type.GetTypeInfo().GenericTypeParameters.FirstOrDefault();
-                return [t];
-            }
-
-            // type implements IEnumerable<T>
-            if (type.GetImplementedInterfaces(typeof(IEnumerable<>)) is { Length: > 0 } iEnumerableTypes)
-                return iEnumerableTypes.Select(t => t.GenericTypeArguments[0]);
-
-            // type implements IEnumerable
-            if (type.IsAssignableTo(typeof(IEnumerable)))
-                return [typeof(object)];
-
-            return [];
-        }
-
-        static string GetSimpleNameCore(Type type)
-        {
-            var name = type.Name;
-
-            if (type.IsGenericType == false)
-                return name;
-
-            var index = name.IndexOf('`');
-            return index == -1 ? name : name[..index];
-        }
-
-        static string GetShortNameCore(Type type, string simpleName)
-        {
-            if (!type.IsGenericType) return type.Name;
-            var paraName = string.Join(", ", type.GenericTypeArguments!.Select(m => m.ShortName()));
-            return simpleName + "<" + paraName + ">";
-        }
-
-        static string GetLongNameCore(Type type, string shortName)
-        {
-            return GetTypePrefixCore(type) + shortName;
-        }
-
-        static string GetTypePrefixCore(Type type)
-        {
-            if (type.IsNested)
-            {
-                var declaringType = type.DeclaringType!;
-                return GetTypePrefixCore(declaringType) + declaringType.ShortName() + ".";
-            }
-            else
-            {
-                if (type.IsGenericParameter)
-                {
-                    var declaringType = type.DeclaringType!;
-                    if (type.DeclaringMethod != null)
-                    {
-                        return declaringType.LongName()
-                               + "." + type.DeclaringMethod.Name
-                               + ".";
-                    }
-                    else
-                    {
-                        return declaringType.LongName() + ".";
-                    }
-                }
-                if (type.Namespace == null)
-                {
-                    return "global::";
-                }
-                else
-                {
-                    return type.Namespace + ".";
-                }
-            }
-        }
-
-        static bool IsIntegerCore(Type type, Type? nullableUnderlyingType)
-        {
-            type = nullableUnderlyingType ?? type;
-            return type == typeof(long)
-                   || type == typeof(ulong)
-                   || type == typeof(int)
-                   || type == typeof(uint)
-                   || type == typeof(short)
-                   || type == typeof(ushort)
-                   || type == typeof(byte)
-                   || type == typeof(sbyte)
-                   || type == typeof(nint)
-                   || type == typeof(nuint);
-        }
-
-        static bool IsFloatingPointCore(Type type, Type? nullableUnderlyingType)
-        {
-            type = nullableUnderlyingType ?? type;
-            return type == typeof(float)
-                   || type == typeof(double)
-                   || type == typeof(decimal);
-        }
+        return _typeInfoCache.GetValue(type, m => new TypeInfoEx(m));
     }
 
     /// <summary>
@@ -272,7 +92,6 @@ partial class TypeExtensions
             _ => throw new AmbiguousMatchException($"Type '{type}' implements multiple enumerable element types: {string.Join(", ", types)}"),
         };
     }
-
 
     /// <summary>
     /// Gets the type name without namespace or generic argument information.
@@ -366,29 +185,245 @@ partial class TypeExtensions
 /// <param name="LongName">The type name with namespace and formatted generic arguments.</param>
 /// <param name="IsInteger">Whether the type is an integer type or nullable integer type.</param>
 /// <param name="IsFloatingPoint">Whether the type is a floating-point type, decimal type, or nullable form of either.</param>
-public record TypeInfoEx(
-    Type Type,
-    Type? NullableUnderlyingType,
-    IReadOnlyList<Type> EnumerableElementTypes,
-    object? DefaultValue,
-    string SimpleName,
-    string ShortName,
-    string LongName,
-    bool IsInteger,
-    bool IsFloatingPoint)
+public class TypeInfoEx : IEquatable<TypeInfoEx>
 {
-    /// <summary>
-    /// Gets a value indicating whether <see cref="Type"/> is a constructed <see cref="Nullable{T}"/> value type.
-    /// </summary>
-    public bool IsNullable => NullableUnderlyingType != null;
+    public TypeInfoEx(Type type)
+    {
+        Type = type;
+        NullableUnderlyingType = Nullable.GetUnderlyingType(type);
+        DefaultValue = GetDefaultValueCore(type, NullableUnderlyingType);
+        EnumerableElementTypes = GetEnumerableElementTypesCore(type).NotNull().ToReadOnlyList();
+        SimpleName = GetSimpleNameCore(type);
+        ShortName = GetShortNameCore(type, SimpleName);
+        LongName = GetLongNameCore(type, ShortName);
+        IsInteger = IsIntegerCore(type, NullableUnderlyingType);
+        IsFloatingPoint = IsFloatingPointCore(type, NullableUnderlyingType);
+        IsNullable = NullableUnderlyingType != null;
+        IsEnumerable = EnumerableElementTypes.Count > 0;
+        IsNumeric = IsInteger
+                    || IsFloatingPoint
+                    || type == typeof(decimal)
+                    || type == typeof(BigInteger);
+    }
 
-    /// <summary>
-    /// Gets a value indicating whether <see cref="Type"/> is an array or implements <see cref="IEnumerable"/>.
-    /// </summary>
-    public bool IsEnumerable => EnumerableElementTypes.Count > 0;
+    /// <summary>The inspected type.</summary>
+    public readonly Type Type;
 
-    /// <summary>
-    /// Gets a value indicating whether <see cref="Type"/> is an integer or floating-point numeric type.
-    /// </summary>
-    public bool IsNumeric => IsInteger || IsFloatingPoint;
+    /// <summary>The underlying value type for <see cref="Nullable{T}"/>, or <see langword="null"/>.</summary>
+    public readonly Type? NullableUnderlyingType;
+
+    /// <summary>The element types exposed by arrays and enumerable types, or an empty array.</summary>
+    public readonly IReadOnlyList<Type> EnumerableElementTypes;
+
+    /// <summary>The default CLR value for value types, or <see langword="null"/> for types without a boxed default value.</summary>
+    public readonly object? DefaultValue;
+
+    /// <summary>The type name without namespace or generic argument information.</summary>
+    public readonly string SimpleName;
+
+    /// <summary>The type name without namespace, including formatted generic arguments.</summary>
+    public readonly string ShortName;
+
+    /// <summary>The type name with namespace and formatted generic arguments.</summary>
+    public readonly string LongName;
+
+    /// <summary>Whether the type is an integer type or nullable integer type.</summary>
+    public readonly bool IsInteger;
+
+    /// <summary>Whether the type is a floating-point type, decimal type, or nullable form of either.</summary>
+    public readonly bool IsFloatingPoint;
+
+    /// <summary>Gets a value indicating whether <see cref="Type"/> is a constructed <see cref="Nullable{T}"/> value type.</summary>
+    public readonly bool IsNullable;
+
+    /// <summary>Gets a value indicating whether <see cref="Type"/> is an array or implements <see cref="IEnumerable"/>.</summary>
+    public readonly bool IsEnumerable;
+
+    /// <summary>Gets a value indicating whether <see cref="Type"/> is an integer or floating-point numeric type.</summary>
+    public readonly bool IsNumeric;
+
+#if !NET5_0_OR_GREATER
+    private static readonly Lazy<PropertyInfo?> _isByRefLike = new(() => typeof(Type).GetProperty("IsByRefLike", BindingAttributes.Declared));
+
+    private static bool IsByRefLike(Type type)
+    {
+        return _isByRefLike.Value is { } field && field.GetValue<bool>(type);
+    }
+#endif
+
+    private static object? GetDefaultValueCore(Type type, Type? nullableUnderlyingType)
+    {
+        /*
+            Acc_CreateGeneric = Cannot create a type for which Type.ContainsGenericParameters is true.
+            Acc_CreateAbst = Cannot create an abstract class.
+            Acc_CreateInterface = Cannot create an instance of an interface.
+            Acc_NotClassInit = Type initializer was not callable.
+            Acc_CreateGenericEx = Cannot create an instance of {0} because Type.ContainsGenericParameters is true.
+            Acc_CreateArgIterator = Cannot dynamically create an instance of ArgIterator.
+            Acc_CreateAbstEx = Cannot create an instance of {0} because it is an abstract class.
+            Acc_CreateInterfaceEx = Cannot create an instance of {0} because it is an interface.
+            Acc_CreateVoid = Cannot dynamically create an instance of System.Void.
+            Acc_ReadOnly = Cannot set a constant field.
+            Acc_RvaStatic = SkipVerification permission is needed to modify an image-based (RVA) static field.
+            Access_Void = Cannot create an instance of void.
+            Cannot create boxed ByRef-like values.
+        */
+
+        if (type.IsValueType == false
+            || nullableUnderlyingType != null
+            || type.ContainsGenericParameters
+            || type.FullName is "System.ArgIterator" or "System.RuntimeArgumentHandle" or "System.TypedReference"
+            // Byref-like structures are declared using ref struct keyword in C#. 
+#if !NET5_0_OR_GREATER
+            || IsByRefLike(type)
+#else
+                || type.IsByRefLike
+#endif
+            || type == typeof(void))
+            return null;
+
+        try
+        {
+            return ObjectHelper.GetUninitializedObject(type);
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceWarning($"Failed to create instance of type {type.FullName}: {ex}");
+            return null;
+        }
+    }
+
+    [SuppressMessage("ReSharper", "ConvertIfStatementToReturnStatement")]
+    private static IEnumerable<Type?> GetEnumerableElementTypesCore(Type type)
+    {
+        // type is Array
+        if (type.IsArray)
+            return [type.GetElementType()!];
+
+        // type is IEnumerable<T>
+        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+        {
+            var t = type.GenericTypeArguments.FirstOrDefault()
+                    ?? type.GetTypeInfo().GenericTypeParameters.FirstOrDefault();
+            return [t];
+        }
+
+        // type implements IEnumerable<T>
+        if (type.GetImplementedInterfaces(typeof(IEnumerable<>)) is { Length: > 0 } iEnumerableTypes)
+            return iEnumerableTypes.Select(t => t.GenericTypeArguments[0]);
+
+        // type implements IEnumerable
+        if (type.IsAssignableTo(typeof(IEnumerable)))
+            return [typeof(object)];
+
+        return [];
+    }
+
+    private static string GetSimpleNameCore(Type type)
+    {
+        var name = type.Name;
+
+        if (type.IsGenericType == false)
+            return name;
+
+        var index = name.IndexOf('`');
+        return index == -1 ? name : name[..index];
+    }
+
+    private static string GetShortNameCore(Type type, string simpleName)
+    {
+        if (!type.IsGenericType) return type.Name;
+        var paraName = string.Join(", ", type.GenericTypeArguments!.Select(m => m.ShortName()));
+        return simpleName + "<" + paraName + ">";
+    }
+
+    private static string GetLongNameCore(Type type, string shortName)
+    {
+        return GetTypePrefixCore(type) + shortName;
+    }
+
+    private static string GetTypePrefixCore(Type type)
+    {
+        if (type.IsNested)
+        {
+            var declaringType = type.DeclaringType!;
+            return GetTypePrefixCore(declaringType) + declaringType.ShortName() + ".";
+        }
+        else
+        {
+            if (type.IsGenericParameter)
+            {
+                var declaringType = type.DeclaringType!;
+                if (type.DeclaringMethod != null)
+                {
+                    return declaringType.LongName()
+                           + "." + type.DeclaringMethod.Name
+                           + ".";
+                }
+                else
+                {
+                    return declaringType.LongName() + ".";
+                }
+            }
+            if (type.Namespace == null)
+            {
+                return "global::";
+            }
+            else
+            {
+                return type.Namespace + ".";
+            }
+        }
+    }
+
+    private static bool IsIntegerCore(Type type, Type? nullableUnderlyingType)
+    {
+        type = nullableUnderlyingType ?? type;
+        return type == typeof(long)
+               || type == typeof(ulong)
+               || type == typeof(int)
+               || type == typeof(uint)
+               || type == typeof(short)
+               || type == typeof(ushort)
+               || type == typeof(byte)
+               || type == typeof(sbyte)
+               || type == typeof(nint)
+               || type == typeof(nuint)
+#if NET7_0_OR_GREATER
+               || type == typeof(Int128)
+               || type == typeof(UInt128)
+#endif
+               ;
+    }
+
+    private static bool IsFloatingPointCore(Type type, Type? nullableUnderlyingType)
+    {
+        type = nullableUnderlyingType ?? type;
+        return type == typeof(float)
+               || type == typeof(double)
+#if NET5_0_OR_GREATER
+               || type == typeof(Half)
+#endif
+               ;
+    }
+
+    public bool Equals(TypeInfoEx? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return Type == other.Type;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is null) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != GetType()) return false;
+        return Equals((TypeInfoEx)obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return Type.GetHashCode();
+    }
 }
