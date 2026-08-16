@@ -18,7 +18,7 @@ public static class JsonValidator
         return ok && i == s.Length;
     }
 
-    static bool ParseValue(string s, ref int i, int depth)
+    private static bool ParseValue(string s, ref int i, int depth)
     {
         SkipWhitespace(s, ref i);
 
@@ -34,7 +34,7 @@ public static class JsonValidator
             case '"': return ParseString(s, ref i);
         }
 
-        if (c == '-' || char.IsDigit(c))
+        if (c == '-' || c.IsAsciiDigit())
             return ParseNumber(s, ref i);
 
         if (Match(s, ref i, "true"))
@@ -43,13 +43,14 @@ public static class JsonValidator
         if (Match(s, ref i, "false"))
             return true;
 
+        // ReSharper disable once ConvertIfStatementToReturnStatement
         if (Match(s, ref i, "null"))
             return true;
 
         return false;
     }
 
-    static bool ParseObject(string s, ref int i, int depth)
+    private static bool ParseObject(string s, ref int i, int depth)
     {
         if (depth > MaxDepth)
             return false;
@@ -87,12 +88,12 @@ public static class JsonValidator
         }
     }
 
-    static bool ParseArray(string s, ref int i, int depth)
+    private static bool ParseArray(string s, ref int i, int depth)
     {
         if (depth > MaxDepth)
             return false;
 
-        if (!Consume(s, ref i, '['))
+        if (Consume(s, ref i, '[') == false)
             return false;
 
         SkipWhitespace(s, ref i);
@@ -102,7 +103,7 @@ public static class JsonValidator
 
         while (true)
         {
-            if (!ParseValue(s, ref i, depth))
+            if (ParseValue(s, ref i, depth) == false)
                 return false;
 
             SkipWhitespace(s, ref i);
@@ -110,12 +111,12 @@ public static class JsonValidator
             if (Consume(s, ref i, ']'))
                 return true;
 
-            if (!Consume(s, ref i, ','))
+            if (Consume(s, ref i, ',') == false)
                 return false;
         }
     }
 
-    static bool ParseString(string s, ref int i)
+    private static bool ParseString(string s, ref int i)
     {
         if (!Consume(s, ref i, '"'))
             return false;
@@ -142,7 +143,7 @@ public static class JsonValidator
                 {
                     for (var k = 0; k < 4; k++)
                     {
-                        if (i >= s.Length || !IsHex(s[i++]))
+                        if (i >= s.Length || s[i++].IsHex() == false)
                             return false;
                     }
                     continue;
@@ -158,11 +159,12 @@ public static class JsonValidator
         return false;
     }
 
-    static bool ParseNumber(string s, ref int i)
+    private static bool ParseNumber(string s, ref int i)
     {
         var start = i;
 
-        if (i < s.Length && s[i] == '-') i++;
+        if (i < s.Length && s[i] == '-')
+            i++;
 
         if (i >= s.Length)
             return false;
@@ -171,9 +173,10 @@ public static class JsonValidator
         {
             i++;
         }
-        else if (char.IsDigit(s[i]))
+        else if (s[i].IsAsciiDigit())
         {
-            while (i < s.Length && char.IsDigit(s[i])) i++;
+            while (i < s.Length && s[i].IsAsciiDigit())
+                i++;
         }
         else return false;
 
@@ -181,36 +184,37 @@ public static class JsonValidator
         {
             i++;
 
-            if (i >= s.Length || !char.IsDigit(s[i]))
+            if (i >= s.Length || !s[i].IsAsciiDigit())
                 return false;
 
-            while (i < s.Length && char.IsDigit(s[i]))
+            while (i < s.Length && s[i].IsAsciiDigit())
                 i++;
         }
 
         if (i < s.Length && (s[i] == 'e' || s[i] == 'E'))
         {
             i++;
+
             if (i < s.Length && (s[i] == '+' || s[i] == '-'))
                 i++;
 
-            if (i >= s.Length || !char.IsDigit(s[i]))
+            if (i >= s.Length || !s[i].IsAsciiDigit())
                 return false;
 
-            while (i < s.Length && char.IsDigit(s[i]))
+            while (i < s.Length && s[i].IsAsciiDigit())
                 i++;
         }
 
         return i > start;
     }
 
-    static void SkipWhitespace(string s, ref int i)
+    private static void SkipWhitespace(string s, ref int i)
     {
-        while (i < s.Length && char.IsWhiteSpace(s[i]))
+        while (i < s.Length && s[i].IsJsonWhitespace())
             i++;
     }
 
-    static bool Consume(string s, ref int i, char c)
+    private static bool Consume(string s, ref int i, char c)
     {
         if (i < s.Length && s[i] == c)
         {
@@ -220,7 +224,7 @@ public static class JsonValidator
         return false;
     }
 
-    static bool Match(string s, ref int i, string keyword)
+    private static bool Match(string s, ref int i, string keyword)
     {
         var len = keyword.Length;
 
@@ -236,11 +240,18 @@ public static class JsonValidator
         i += len;
         return true;
     }
+}
 
-    static bool IsHex(char c)
+file static class Extensions
+{
+    /// <summary>
+    /// Determines whether the specified character is a whitespace character according to JSON specification. <br/>
+    /// Does not include \v (Vertical Tab), \f (Form Feed), U+00A0 (NBSP), U+2003 (EM SPACE)
+    /// </summary>
+    /// <param name="c">The character to evaluate.</param>
+    /// <returns><see langword="true"/> if the character is a JSON whitespace character; otherwise, <see langword="false"/>.</returns>
+    public static bool IsJsonWhitespace(this char c)
     {
-        return c is >= '0' and <= '9'
-            or >= 'a' and <= 'f'
-            or >= 'A' and <= 'F';
+        return c is ' ' or '\t' or '\n' or '\r';
     }
 }

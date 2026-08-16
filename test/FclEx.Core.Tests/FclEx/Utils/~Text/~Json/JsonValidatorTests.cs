@@ -63,8 +63,8 @@ public class JsonValidatorTests
 
     public static TheoryData<string> JsonWithNonJsonWhitespace =>
     [
-        "\u000Bnull",
-        "null\u000C",
+        "\vnull",
+        "null\f",
         "\u0085null",
         "null\u00A0",
         "[\u20031]"
