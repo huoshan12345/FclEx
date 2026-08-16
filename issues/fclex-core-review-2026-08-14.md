@@ -634,9 +634,10 @@
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Threading/ReaderWriterLockSlimExtensions.cs:3-21`。`ReaderWriterLockSlim` 的 enter/exit 是线程关联的，但返回普通 `IDisposable` 无法阻止 scope 跨 `await`、被传递或在另一线程 Dispose；此时 Exit 抛错并可能让锁永久保持。应至少用无法跨 await 的 `ref struct` lease 并明确仅同步作用域，或改用接受同步 callback 的 API。
     修复：已移除该 `IDisposable` lease 扩展，避免暴露无法保证线程关联的抽象。
 
-131. **[P1] `TaskCompletionSource.Exception` 擅自把调用方异常替换成 base exception**
+131. **[P1][已修复] `TaskCompletionSource.Exception` 擅自把调用方异常替换成 base exception**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Threading/TaskCompletionSourceExtensions.cs:5-10,25-29`。`GetBaseException()` 会剥掉普通包装异常及单 inner 的 `AggregateException`，丢失上层语义、消息和上下文；名为 `Exception(ex)` 的 helper 理应保存传入对象。应直接 `SetException(ex)`，若确需 unwrap 则提供显式命名的独立 API。
+    修复：两个 overload 都直接调用 `SetException(ex)`，保留调用方提供的异常对象和其包装语义。
 
 132. **[P1] `StreamReaderExtensions` 在 `StreamWriter` 类型上查找读取方法**
 
@@ -646,29 +647,33 @@
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~IO/FileExtensions.cs:17-25`、`StreamWriterExtensions.cs:17-26`。`WriteAllTextAsync` 用无 token 的 `sw.WriteAsync(content)` 写完全部内容后才在 flush 检查取消；`FlushAsync(token)` fallback 又直接忽略 token。大文本操作可能在取消后继续长时间写盘却仍最终报告取消。应分块写入并在块间观察 token；无法取消底层 flush 时至少取消等待并在文档中说明 I/O 可能继续。
 
-134. **[P1] `TextWriter.SetConsole` 用可嵌套 scope 包装进程级全局状态**
+134. **[P1][已修复] `TextWriter.SetConsole` 用可嵌套 scope 包装进程级全局状态**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~IO/TextWriterExtensions.cs:3-10`。`Console.Out` 是进程全局属性；并发或非 LIFO Dispose 的两个 scope 会互相覆盖，并把过期 writer 恢复回来，没有任何同步或所有权检查。该能力不适合作为通用 `IDisposable` 扩展；应由应用启动层集中设置，测试重定向则使用串行 fixture/显式全局锁。
+    修复：已移除 `TextWriter.SetConsole`，不再为进程级全局状态提供看似局部的 scope 抽象。
 
 135. **[P0] `PhysicalAddress.AddressBytes` 公开了可替换/可修改的私有后备数组**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Net/~NetworkInformation/PhysicalAddressExtensions.cs:5-32,52-56`。NET8+ 甚至返回 `ref byte[]`，调用方可替换 `_address`；旧目标也返回同一可变数组。对象可在作为 dictionary key 后被修改，破坏 equality/hash，不同 TFM 的返回签名还不一致，并依赖私有字段名。应删除该公共 API，格式化直接使用官方 `GetAddressBytes()` 的副本；确需零复制只能限于 internal、只读且目标受控的实现。
 
-136. **[P1] 旧目标回填的 `HttpRequestException.StatusCode` 与官方 nullability 契约不同**
+136. **[P1][已修复] 旧目标回填的 `HttpRequestException.StatusCode` 与官方 nullability 契约不同**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Net/~Http/HttpRequestExceptionExtensions.cs:7-18,27-33`。官方属性是 `HttpStatusCode?`，这里却返回非 nullable enum，并用数值 0 表示不存在；调用方跨 TFM 编译时既看到不同签名，也无法区分“无状态码”和非法/默认值。回填 API 应精确匹配官方 nullable 类型与缺失语义。
+    修复：旧目标回填属性改为 `HttpStatusCode?`；工厂方法也接受 nullable status code，缺失状态码保持为 null。
 
 137. **[P1] `IsIPv6UniqueLocal` 为简单位判断依赖 `IPAddress` 私有字段布局**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Net/IPAddressExtensions.cs:48-54`、`src/FclEx.Core/FclEx/FieldInfos.cs:16-22`。旧目标实现读取 `_numbers`，字段名、元素顺序和存在性都不是 runtime 契约，在不同 Mono/.NET Framework 实现、裁剪或未来 runtime 上会失效。该判断只需官方 `GetAddressBytes()` 的首字节满足 `(b & 0xFE) == 0xFC`，没有使用反射的合理性。
 
-138. **[P1] embedded resource 的后缀匹配会在重名时任意选择第一个资源**
+138. **[P1][已修复] embedded resource 的后缀匹配会在重名时任意选择第一个资源**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Reflection/AssemblyExtensions.cs:11-18`、`src/FclEx.Core/FclEx/Helpers/ResourceHelper.cs:7-16`。两个入口都对 manifest names 做无 `StringComparison` 的 `EndsWith(name)` 并取 `FirstOrDefault`；不同命名空间含同名资源时结果依赖枚举顺序，文化比较也不适合标识符。应优先要求完整资源名；若支持短名，使用 ordinal 比较并在多个候选时抛 ambiguity error。
+    修复：两个入口统一使用内部 resolver：先做 ordinal 完整名称匹配，再允许唯一的 ordinal 后缀匹配；无匹配仍按原入口语义处理，多个后缀匹配则抛明确的 `ArgumentException`。测试使用两个同后缀嵌入资源覆盖完整名称和歧义路径。
 
-139. **[P1] `ReflectionHelper` 的全局 Type cache 会阻止 collectible assembly 卸载**
+139. **[P1][已修复] `ReflectionHelper` 的全局 Type cache 会阻止 collectible assembly 卸载**
 
     位置：`src/FclEx.Core/FclEx/Helpers/ReflectionHelper.cs:16-44`。静态 `ConcurrentDictionary<Type,...>` 强引用每个见过的 Type 及其 `MemberInfo`，插件/脚本通过 collectible `AssemblyLoadContext` 加载的程序集将永远被该 Core helper 固定。应使用 `ConditionalWeakTable<Type,...>` 或让缓存归属调用方/可卸载上下文。
+    修复：cache 改为 `ConditionalWeakTable<Type, IReadOnlyList<DataMemberInfo>>`，不再由缓存的 key 强引用 Type；同时保留同步初始化以避免重复创建值。
 
 140. **[P0] `AccessorAccessesField` 没有解码 IL 指令，可能误判或解析任意 operand 为 metadata token**
 

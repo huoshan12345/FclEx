@@ -6,7 +6,7 @@ public static class ResourceHelper
     {
         public static Stream? GetStream(Assembly assembly, string name)
         {
-            var resourceName = assembly.GetManifestResourceNames().FirstOrDefault(p => p.EndsWith(name));
+            var resourceName = assembly.ResolveManifestResourceName(name);
             var stream = resourceName == null ? null : assembly.GetManifestResourceStream(resourceName);
             return stream;
         }

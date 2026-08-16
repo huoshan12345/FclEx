@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="..\..\src\FclEx.Xunit.v3\FclEx.Xunit.v3.csproj" />
   </ItemGroup>
@@ -16,6 +16,10 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
     <PackageReference Include="Xunit.v3.Priority" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="TestData\ResourceOne\SharedResource.txt" />
+    <EmbeddedResource Include="TestData\ResourceTwo\SharedResource.txt" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <Reference Include="System.IO.Compression" />

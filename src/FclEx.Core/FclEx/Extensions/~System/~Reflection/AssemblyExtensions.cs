@@ -8,9 +8,38 @@ public enum BuildType
 
 public static class AssemblyExtensions
 {
+    /// <summary>
+    /// Resolves a manifest resource name by its complete name, or by a unique ordinal suffix.
+    /// </summary>
+    /// <param name="assembly">The assembly that contains the resource.</param>
+    /// <param name="name">The complete resource name or a suffix that uniquely identifies it.</param>
+    /// <returns>The complete manifest resource name, or <see langword="null"/> when no resource matches.</returns>
+    /// <exception cref="ArgumentException"><paramref name="name"/> is empty or matches multiple resources by suffix.</exception>
+    internal static string? ResolveManifestResourceName(this Assembly assembly, string name)
+    {
+        Check.NotEmpty(name);
+
+        var resourceNames = assembly.GetManifestResourceNames();
+        if (resourceNames.FirstOrDefault(p => string.Equals(p, name, StringComparison.Ordinal)) is { } exactMatch)
+            return exactMatch;
+
+        var suffixMatches = resourceNames
+            .Where(p => p.EndsWith(name, StringComparison.Ordinal))
+            .ToArray();
+
+        return suffixMatches.Length switch
+        {
+            0 => null,
+            1 => suffixMatches[0],
+            _ => throw new ArgumentException(
+                $"The resource name '{name}' is ambiguous. Matching resources: {string.Join(", ", suffixMatches)}.",
+                nameof(name)),
+        };
+    }
+
     public static Stream OpenResource(this Assembly assembly, string name)
     {
-        var resourceName = assembly.GetManifestResourceNames().FirstOrDefault(p => p.EndsWith(name));
+        var resourceName = assembly.ResolveManifestResourceName(name);
         if (resourceName == null)
             throw new ArgumentException($"Cannot find manifest resource name in assembly {assembly.GetName().Name} by name: " + name);
 
