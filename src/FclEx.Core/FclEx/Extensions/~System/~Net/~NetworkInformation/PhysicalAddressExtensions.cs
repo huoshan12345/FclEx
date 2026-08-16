@@ -14,8 +14,8 @@ public static class PhysicalAddressExtensions
     /// A reference to the underlying MAC address byte array.
     /// </returns>
     [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_address")]
-    public static extern ref byte[] AddressBytes(this PhysicalAddress obj);
-#else
+    private static extern ref byte[] Address(PhysicalAddress obj);
+#endif
     /// <summary>
     /// Returns the internal byte array of the specified
     /// <see cref="PhysicalAddress"/> instance.
@@ -26,11 +26,15 @@ public static class PhysicalAddressExtensions
     /// <returns>
     /// The underlying MAC address byte array.
     /// </returns>
-    public static byte[] AddressBytes(this PhysicalAddress obj)
+    public static IReadOnlyList<byte> AddressBytes(this PhysicalAddress obj)
     {
+#if NET8_0_OR_GREATER
+        return Address(obj);
+#else
         return FieldInfos.PhysicalAddress_Address.GetRequiredValue<byte[]>(obj);
-    }
 #endif
+    }
+
 
     /// <summary>
     /// Converts the specified <see cref="PhysicalAddress"/> to a formatted string.
