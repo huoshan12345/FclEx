@@ -491,8 +491,7 @@ public static partial class OperationResultExtensions
     /// <remarks>The returned elapsed time is the wall-clock wait time around the source task.</remarks>
     public static Task<OperationResult<T[]>> Merge<T, TResults>(this Task<TResults> task) where TResults : IEnumerable<OperationResult<T>>
     {
-        var watch = ValueStopwatch.StartNew();
-        return task.Then(m => m.Merge().Elapsed(watch.GetElapsedTime()));
+        return task.Then(m => m.Merge());
     }
 
     /// <summary>
