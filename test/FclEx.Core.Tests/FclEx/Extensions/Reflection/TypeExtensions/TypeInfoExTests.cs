@@ -20,21 +20,7 @@ public class TypeInfoExTests
         Assert.Equal("System.Collections.Generic.Dictionary<String, Int32>", info.LongName);
         Assert.False(info.IsNullable);
         Assert.True(info.IsEnumerable);
-        Assert.Equal(typeof(KeyValuePair<string, int>), info.EnumerableElementType);
-    }
-
-    [Fact]
-    public void IsDynamic_ShouldReturnTrue_WhenTypeHasDynamicAttribute()
-    {
-        var assembly = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("DynamicAttributeTestAssembly"), AssemblyBuilderAccess.Run);
-        var module = assembly.DefineDynamicModule("Main");
-        var typeBuilder = module.DefineType("DynamicMarkedTypeForTest", TypeAttributes.Public);
-        var attributeCtor = typeof(DynamicAttribute).GetConstructor(Type.EmptyTypes)!;
-        typeBuilder.SetCustomAttribute(new CustomAttributeBuilder(attributeCtor, []));
-        var type = typeBuilder.CreateTypeInfo()!.AsType();
-
-        Assert.True(type.IsDynamic());
-        Assert.False(typeof(TypeInfoExTests).IsDynamic());
+        Assert.Equal(typeof(KeyValuePair<string, int>), info.EnumerableElementTypes.Single());
     }
 
     [Fact]

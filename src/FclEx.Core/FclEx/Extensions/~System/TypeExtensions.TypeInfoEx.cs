@@ -22,7 +22,7 @@ partial class TypeExtensions
         {
             var nullableUnderlyingType = Nullable.GetUnderlyingType(type);
             var defaultValue = GetDefaultValueCore(type, nullableUnderlyingType);
-            var enumerableElementType = GetEnumerableElementTypeCore(type);
+            var enumerableElementTypes = GetEnumerableElementTypesCore(type).NotNull().ToReadOnlyList();
             var simpleName = GetSimpleNameCore(type);
             var shortName = GetShortNameCore(type, simpleName);
             var longName = GetLongNameCore(type, shortName);
@@ -32,7 +32,7 @@ partial class TypeExtensions
             return new TypeInfoEx(
                 Type: type,
                 NullableUnderlyingType: nullableUnderlyingType,
-                EnumerableElementType: enumerableElementType,
+                EnumerableElementTypes: enumerableElementTypes,
                 DefaultValue: defaultValue,
                 SimpleName: simpleName,
                 ShortName: shortName,
@@ -89,25 +89,29 @@ partial class TypeExtensions
         }
 #endif
         [SuppressMessage("ReSharper", "ConvertIfStatementToReturnStatement")]
-        static Type? GetEnumerableElementTypeCore(Type type)
+        static IEnumerable<Type?> GetEnumerableElementTypesCore(Type type)
         {
             // type is Array
             if (type.IsArray)
-                return type.GetElementType();
+                return [type.GetElementType()!];
 
             // type is IEnumerable<T>
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-                return type.GenericTypeArguments.FirstOrDefault() ?? type.GetTypeInfo().GenericTypeParameters.FirstOrDefault();
+            {
+                var t = type.GenericTypeArguments.FirstOrDefault()
+                        ?? type.GetTypeInfo().GenericTypeParameters.FirstOrDefault();
+                return [t];
+            }
 
             // type implements IEnumerable<T>
-            if (type.GetImplementedInterface(typeof(IEnumerable<>)) is { } iEnumerableType)
-                return iEnumerableType.GenericTypeArguments[0];
+            if (type.GetImplementedInterfaces(typeof(IEnumerable<>)) is { Length: > 0 } iEnumerableTypes)
+                return iEnumerableTypes.Select(t => t.GenericTypeArguments[0]);
 
             // type implements IEnumerable
             if (type.IsAssignableTo(typeof(IEnumerable)))
-                return typeof(object);
+                return [typeof(object)];
 
-            return null;
+            return [];
         }
 
         static string GetSimpleNameCore(Type type)
@@ -241,6 +245,16 @@ partial class TypeExtensions
     }
 
     /// <summary>
+    /// Gets the element types exposed by arrays and enumerable types.
+    /// </summary>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    public static IReadOnlyList<Type> EnumerableElementTypes(this Type type)
+    {
+        return type.GetTypeInfoEx().EnumerableElementTypes;
+    }
+
+    /// <summary>
     /// Gets the element type exposed by arrays and enumerable types.
     /// </summary>
     /// <param name="type">The type to inspect.</param>
@@ -250,8 +264,15 @@ partial class TypeExtensions
     /// </returns>
     public static Type? EnumerableElementType(this Type type)
     {
-        return type.GetTypeInfoEx().EnumerableElementType;
+        var types = type.GetTypeInfoEx().EnumerableElementTypes;
+        return types.Count switch
+        {
+            0 => null,
+            1 => types[0],
+            _ => throw new AmbiguousMatchException($"Type '{type}' implements multiple enumerable element types: {string.Join(", ", types)}"),
+        };
     }
+
 
     /// <summary>
     /// Gets the type name without namespace or generic argument information.
@@ -338,7 +359,7 @@ partial class TypeExtensions
 /// </summary>
 /// <param name="Type">The inspected type.</param>
 /// <param name="NullableUnderlyingType">The underlying value type for <see cref="Nullable{T}"/>, or <see langword="null"/>.</param>
-/// <param name="EnumerableElementType">The element type exposed by arrays and enumerable types, or <see langword="null"/>.</param>
+/// <param name="EnumerableElementTypes">The element types exposed by arrays and enumerable types, or an empty array.</param>
 /// <param name="DefaultValue">The default CLR value for value types, or <see langword="null"/> for types without a boxed default value.</param>
 /// <param name="SimpleName">The type name without namespace or generic argument information.</param>
 /// <param name="ShortName">The type name without namespace, including formatted generic arguments.</param>
@@ -348,7 +369,7 @@ partial class TypeExtensions
 public record TypeInfoEx(
     Type Type,
     Type? NullableUnderlyingType,
-    Type? EnumerableElementType,
+    IReadOnlyList<Type> EnumerableElementTypes,
     object? DefaultValue,
     string SimpleName,
     string ShortName,
@@ -364,7 +385,7 @@ public record TypeInfoEx(
     /// <summary>
     /// Gets a value indicating whether <see cref="Type"/> is an array or implements <see cref="IEnumerable"/>.
     /// </summary>
-    public bool IsEnumerable { get; } = EnumerableElementType != null;
+    public bool IsEnumerable { get; } = EnumerableElementTypes.Count > 0;
 
     /// <summary>
     /// Gets a value indicating whether <see cref="Type"/> is an integer or floating-point numeric type.
