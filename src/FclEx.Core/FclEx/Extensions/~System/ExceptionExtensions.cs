@@ -34,9 +34,14 @@ public static partial class ExceptionExtensions
         }
     }
 
+    /// <summary>
+    /// Enumerates the leaf exceptions in an exception tree.
+    /// </summary>
+    /// <param name="ex">The root exception.</param>
+    /// <returns>Each exception without child exceptions, at most once, in breadth-first order.</returns>
     public static IEnumerable<Exception> EnumerateLeaves(this Exception ex)
     {
-        var visited = new HashSet<Exception>();
+        var visited = new HashSet<Exception>(ReferenceEqualityComparer<Exception>.Instance) { ex };
         var q = new Queue<Exception>();
         q.Enqueue(ex);
 
@@ -44,43 +49,19 @@ public static partial class ExceptionExtensions
         {
             var e = q.Dequeue();
 
-            if (e is AggregateException aEx)
-            {
-                foreach (var inner in aEx.InnerExceptions)
-                {
-                    EnqueueIfNotVisited(inner);
-                }
-            }
-            else if (e.InnerException is { } inner)
-            {
-                EnqueueIfNotVisited(inner);
-            }
-            else
-            {
-                if (visited.Add(e))
-                    yield return e;
-            }
-        }
-
-        visited.Clear();
-
-        void EnqueueIfNotVisited(Exception e)
-        {
-            if (visited.Contains(e))
-                return;
-
-            q.Enqueue(e);
+            if (EnqueueChildren(e, q, visited) == false)
+                yield return e;
         }
     }
 
     /// <summary>
-    /// Enumerates through the exception and all its inner exceptions, including those in AggregateExceptions.
+    /// Enumerates an exception tree, including aggregate inner exceptions.
     /// </summary>
-    /// <param name="ex"></param>
-    /// <returns></returns>
+    /// <param name="ex">The root exception.</param>
+    /// <returns>Each exception in breadth-first order, at most once.</returns>
     public static IEnumerable<Exception> Enumerate(this Exception ex)
     {
-        var visited = new HashSet<Exception>();
+        var visited = new HashSet<Exception>(ReferenceEqualityComparer<Exception>.Instance) { ex };
         var q = new Queue<Exception>();
         q.Enqueue(ex);
 
@@ -88,31 +69,33 @@ public static partial class ExceptionExtensions
         {
             var e = q.Dequeue();
 
-            if (visited.Add(e))
-                yield return e;
-
-            if (e is AggregateException aEx)
-            {
-                foreach (var inner in aEx.InnerExceptions)
-                {
-                    EnqueueIfNotVisited(inner);
-                }
-            }
-            else if (e.InnerException is { } inner)
-            {
-                EnqueueIfNotVisited(inner);
-            }
+            yield return e;
+            EnqueueChildren(e, q, visited);
         }
+    }
 
-        visited.Clear();
-
-        void EnqueueIfNotVisited(Exception e)
+    private static bool EnqueueChildren(Exception exception, Queue<Exception> queue, HashSet<Exception> visited)
+    {
+        if (exception is AggregateException { InnerExceptions.Count: > 0 } aggregateException)
         {
-            if (visited.Contains(e))
-                return;
+            foreach (var aggregateInnerException in aggregateException.InnerExceptions)
+            {
+                if (visited.Add(aggregateInnerException))
+                    queue.Enqueue(aggregateInnerException);
+            }
 
-            q.Enqueue(e);
+            return true;
         }
+
+        if (exception.InnerException is { } innerException)
+        {
+            if (visited.Add(innerException))
+                queue.Enqueue(innerException);
+
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>

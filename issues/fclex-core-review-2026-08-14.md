@@ -694,10 +694,10 @@
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Collections/~Generic/AsyncEnumerableExtensions.cs:3-19`。`ToListAsync`/`ToArrayAsync` 只能无 token 枚举，面对无限流、慢 I/O 或调用方取消时无法通过 API 传播 cancellation；这对异步 materializer 是核心签名缺失。应增加 `CancellationToken` 并使用 `source.WithCancellation(token).ConfigureAwait(false)`，保持与常见 async LINQ 约定一致。
     修复：两个 materializer 新增可选 `CancellationToken`，并通过 `WithCancellation` 传入枚举器；测试覆盖取消传播和正常 array materialization。
 
-143. **[P1][待确认] `Exception.ForEach` 的实现并不遍历“每个异常”，且共享节点会重复执行**
+143. **[P1][已修复] `Exception.ForEach` 的实现并不遍历“每个异常”，且共享节点会重复执行**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/ExceptionExtensions.cs:37-86`。`action` 只在没有 inner 的叶节点调用，root `AggregateException` 和所有中间包装异常都被跳过，与文档相反；`handled` 又只在叶节点处理后写入，两个分支共享同一 inner 时会先重复入队并重复执行。应采用统一的 visited set，在 dequeue 时去重，并明确对每个节点（含 aggregate/container）执行一次还是只遍历 leaves，名称和文档须与选择一致。
-    验证：当前实现改为对每个节点执行 action，但既有测试仍断言只执行叶节点，筛选测试在所有目标框架失败；同时 visited 只在 dequeue 后写入，已入队的共享 inner 仍可能重复执行。需要先确认 `ForEach` 应遍历全部节点还是仅叶节点，再同步实现、文档和测试。
+    修复：移除语义模糊的 `ForEach`，改为 `Enumerate()`（完整异常树）和 `EnumerateLeaves()`（仅叶异常）。两者按广度优先、引用身份去重；共享子树在入队时即去重。测试覆盖完整树、叶节点、共享子树和普通 inner 链。
 
 144. **[P1][已修复] `Enum.Info/GetAttribute` 对未命名值和复合 flags 值抛 `NullReferenceException`**
 
