@@ -3,16 +3,6 @@ namespace FclEx.Extensions;
 public static class PhysicalAddressExtensions
 {
 #if NET8_0_OR_GREATER
-    /// <summary>
-    /// Returns a reference to the internal byte array of the specified
-    /// <see cref="PhysicalAddress"/> instance without creating a copy.
-    /// </summary>
-    /// <param name="obj">
-    /// The <see cref="PhysicalAddress"/> instance.
-    /// </param>
-    /// <returns>
-    /// A reference to the underlying MAC address byte array.
-    /// </returns>
     [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_address")]
     private static extern ref byte[] Address(PhysicalAddress obj);
 #endif
@@ -34,7 +24,6 @@ public static class PhysicalAddressExtensions
         return FieldInfos.PhysicalAddress_Address.GetRequiredValue<byte[]>(obj);
 #endif
     }
-
 
     /// <summary>
     /// Converts the specified <see cref="PhysicalAddress"/> to a formatted string.
