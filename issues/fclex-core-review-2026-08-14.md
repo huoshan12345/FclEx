@@ -549,10 +549,10 @@
     位置：`src/FclEx.Core/System/Collections/Generic/ComparerHelper.cs:25-43`，并影响 `EnumerableEqualityComparer`、`KeyEqualityComparer`、`DelegateEqualityComparer`、`MemberEqualityComparerBuilder` 等。对于声明为基类或接口的 `T`，比较器本可按成员/序列语义判定两个不同派生类型相等，该 helper 却提前返回 false；例如内容相同的数组和列表无法由序列 comparer 比较相等。helper 只应处理引用相同/null，运行时类型策略应由具体 comparer 决定。
     修复：新增 `requireSameRuntimeType` 参数，默认保持原有严格行为；传入 `false` 时，非 null 的不同运行时类型不会在 helper 中被提前判定，调用方可继续使用自身 comparer 语义。测试覆盖两种分支。
 
-114. **[P0] `MarshalToBytesEqualityComparer<T>` 的相等与哈希依赖未定义的 padding 和地址值**
+114. **[P0][不修改] `MarshalToBytesEqualityComparer<T>` 的相等与哈希依赖未定义的 padding 和地址值**
 
     位置：`src/FclEx.Core/System/Collections/Generic/~EqualityComparers/MarshalToBytesEqualityComparer.cs:3-28`、`src/FclEx.Core/FclEx/Helpers/ObjectHelper.cs:42-62`。`Marshal.SizeOf` 包含 padding，而 `StructureToPtr` 不保证覆盖新分配 native buffer 的所有 padding；同一值的字节和哈希可能不稳定。带引用 marshaling 的字段还会把指针/分配结果纳入比较，而不是比较所指内容。该 comparer 无法提供通用 `IEqualityComparer<T>` 契约，应删除，或只为明确的 blittable 布局定义受约束的 bitwise comparer。
-    复核：现已调用 `EnsureMarshalable`，并在 XML 文档中说明只适用于全部内联值数据的布局。测试确认普通带 padding 的 sequential struct 在当前目标上稳定；但 `[MarshalAs(UnmanagedType.LPStr)] string` 也会通过 `EnsureMarshalable`，两个内容相同但独立分配的字符串字段实际比较为不相等。该失败用例未保留在套件中，等待确定是否收紧 `EnsureMarshalable`/comparer 的准入范围或移除 comparer 后再处理。
+    处理决定：`ObjectHelper.MarshalToBytes` 新增默认关闭的 `clearNativeBuffer` 参数；比较器固定启用它，使 native padding 在 marshal 前归零。比较器文档明确说明 pointer-based marshaling（如 `LPStr`、`LPWStr`、`BStr`、`LPArray`、接口指针和 custom marshaler）会产生地址值，因此不能提供可靠的结构相等或可移植表示。`LPStr` struct 的复现测试表明：同一值可因不同临时地址而不等，两个独立值也可因 allocator 复用地址而相等；两项测试均保留并按已知限制标记为 skip，注明原因。不再将该限制作为当前实现的待修复问题。
 
 115. **[P1][已修复] `ThenWithAction` 可把不存在的下一值或失败伪装成成功 tuple**
 

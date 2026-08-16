@@ -39,7 +39,21 @@ public static class ObjectHelper
         return obj is null ? obj : obj.ToJson(options).FromJson<T>(options);
     }
 
-    public static byte[] MarshalToBytes<T>(T obj)
+    /// <summary>
+    /// Marshals an object to its unmanaged byte representation.
+    /// </summary>
+    /// <typeparam name="T">The type of object to marshal.</typeparam>
+    /// <param name="obj">The object to marshal.</param>
+    /// <param name="clearNativeBuffer">
+    /// Whether to initialize the native buffer to zero before marshaling. This prevents bytes left in structure padding
+    /// from a previous native allocation from appearing in the returned representation.
+    /// </param>
+    /// <returns>The unmanaged representation of <paramref name="obj"/>.</returns>
+    /// <remarks>
+    /// The returned bytes are native-layout data, not a portable serialization format. Pointer-based marshaling can
+    /// include temporary or external addresses rather than the pointed-to values.
+    /// </remarks>
+    public static byte[] MarshalToBytes<T>(T obj, bool clearNativeBuffer = false)
     {
         Check.NotNull(obj);
 
@@ -50,6 +64,9 @@ public static class ObjectHelper
         var structureInitialized = false;
         try
         {
+            if (clearNativeBuffer)
+                Marshal.Copy(bufByte, 0, ptr, length);
+
             Marshal.StructureToPtr(obj, ptr, false);
             structureInitialized = true;
             Marshal.Copy(ptr, bufByte, 0, length);

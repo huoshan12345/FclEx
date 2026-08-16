@@ -58,6 +58,8 @@ Prefer running tests with `--filter` for the changed test classes or methods bef
 
 When a new or changed test fails, do not change the implementation or weaken the test merely to make the suite pass. First determine whether the failure indicates a real implementation issue, an incorrect test assumption, an environment problem, or a legitimately wrong test case. Only modify the implementation or the test when that diagnosis supports it; otherwise, summarize the failure and ask the user how they want to proceed.
 
+When writing a test to reproduce or diagnose a real defect, keep that test in the suite even when it currently fails. A failing reproducer is debugging and regression material; do not delete, skip, weaken, or invert it merely to restore a green test run. Remove or change it only when the user explicitly requests that, or when diagnosis proves that the test expectation itself is incorrect.
+
 When `FclEx.Http` tests need a real local HTTP server, use or follow `test/FclEx.Http.Tests/FclEx/Http/HttpServerFixture.cs`.
 
 ## Review and Issue Lists
