@@ -177,7 +177,7 @@ public
     /// </summary>
     public static SourceBuilder WriteUsings(this SourceBuilder builder, IEnumerable<string> usings)
     {
-        foreach (var u in usings.OrderBy(s => s))
+        foreach (var u in usings.OrderBy(s => s, StringComparer.Ordinal))
         {
             builder.WriteUsing(u);
         }

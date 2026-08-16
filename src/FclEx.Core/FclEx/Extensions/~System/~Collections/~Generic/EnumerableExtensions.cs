@@ -815,7 +815,7 @@ public static partial class EnumerableExtensions
     {
         return (random ?? Random.Shared).Sample(source);
     }
-
+    
     extension<T>(IEnumerable<T>)
     {
         public static IEnumerable<T> operator +(IEnumerable<T> enumerable, IEnumerable<T> other)
