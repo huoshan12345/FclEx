@@ -14,8 +14,9 @@ public class UriAttribute : ValidationAttribute
         if (stringValue.IsNullOrWhiteSpace())
             return AllowEmptyStrings;
 
-        // Require an explicit scheme (e.g. "http://") to avoid platform-specific parsing
-        // where Unix may treat "/path" as an absolute file:// URI.
+        // Require the "://" scheme delimiter. Besides avoiding platform-specific parsing where
+        // Unix may treat "/path" as an absolute file URI, this intentionally rejects opaque URIs
+        // such as "mailto:user@example.com" and "urn:isbn:...".
         if (stringValue.Contains(Uri.SchemeDelimiter) == false)
             return false;
 
@@ -26,7 +27,8 @@ public class UriAttribute : ValidationAttribute
     }
 
     /// <summary>
-    /// Gets or sets the URI schemes accepted by this attribute. An empty array allows any explicit scheme.
+    /// Gets or sets the URI schemes accepted by this attribute. An empty array allows any scheme
+    /// whose URI contains the <c>://</c> scheme delimiter.
     /// </summary>
     public string[] AllowedSchemes { get; set; } = [];
 

@@ -16,6 +16,25 @@ public class ElementRequiredAttributeTests
     }
 
     [Fact]
+    public void MinLength_Negative_Should_Throw()
+    {
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(
+            () => new ElementRequiredAttribute { MinLength = -1 });
+
+        Assert.Equal("value", exception.ParamName);
+    }
+
+    [Fact]
+    public void MinLength_Zero_Should_Be_Valid_For_Empty_Value()
+    {
+        var attribute = new ElementRequiredAttribute { MinLength = 0 };
+
+        Assert.Equal(0, attribute.MinLength);
+        Assert.Null(attribute.GetValidationResult("", CreateValidationContext("TestField")));
+        Assert.Null(attribute.GetValidationResult(Array.Empty<object>(), CreateValidationContext("TestField")));
+    }
+
+    [Fact]
     public void Validate_NullValue_ReturnsSuccess()
     {
         var attribute = new ElementRequiredAttribute { MinLength = 3 };

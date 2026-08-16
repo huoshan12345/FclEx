@@ -11,6 +11,8 @@ public class DataMemberInfoTests
         public static readonly int PublicStaticField = 0;
         private readonly int PrivateField = 0;
         public readonly int PublicField = 0;
+        private const int PrivateConstant = 0;
+        public const int PublicConstant = 0;
 
         private static int PrivateStaticProperty { get; set; } = 0;
         public static int PublicStaticProperty { get; set; } = 0;
@@ -25,7 +27,7 @@ public class DataMemberInfoTests
     public void HashSet_Contains_Test()
     {
         var members = typeof(Model).GetDataMembers();
-        Assert.Equal(18, members.Count);
+        Assert.Equal(20, members.Count);
 
         var set = members.ToHashSet();
         foreach (var member in typeof(Model).GetDataMembers())
@@ -43,7 +45,7 @@ public class DataMemberInfoTests
             Assert.Equal(member.ToDataMemberInfo(), member.ToDataMemberInfo());
             count++;
         }
-        Assert.Equal(18, count);
+        Assert.Equal(20, count);
     }
 
     [Fact]
@@ -55,10 +57,10 @@ public class DataMemberInfoTests
         Assert.True(field.IsStatic);
 
         Assert.True(field.CanRead);
-        Assert.True(field.CanWrite);
+        Assert.False(field.CanWrite);
 
         Assert.False(field.HasPublicSetter);
-        Assert.False(field.HasPublicSetter);
+        Assert.False(field.HasPublicGetter);
 
         Assert.False(field.IsCompilerGenerated);
     }
@@ -72,10 +74,10 @@ public class DataMemberInfoTests
         Assert.True(field.IsStatic);
 
         Assert.True(field.CanRead);
-        Assert.True(field.CanWrite);
+        Assert.False(field.CanWrite);
 
-        Assert.True(field.HasPublicSetter);
-        Assert.True(field.HasPublicSetter);
+        Assert.False(field.HasPublicSetter);
+        Assert.True(field.HasPublicGetter);
 
         Assert.False(field.IsCompilerGenerated);
     }
@@ -89,10 +91,10 @@ public class DataMemberInfoTests
         Assert.False(field.IsStatic);
 
         Assert.True(field.CanRead);
-        Assert.True(field.CanWrite);
+        Assert.False(field.CanWrite);
 
         Assert.False(field.HasPublicSetter);
-        Assert.False(field.HasPublicSetter);
+        Assert.False(field.HasPublicGetter);
 
         Assert.False(field.IsCompilerGenerated);
     }
@@ -106,12 +108,26 @@ public class DataMemberInfoTests
         Assert.False(field.IsStatic);
 
         Assert.True(field.CanRead);
-        Assert.True(field.CanWrite);
+        Assert.False(field.CanWrite);
 
-        Assert.True(field.HasPublicSetter);
-        Assert.True(field.HasPublicSetter);
+        Assert.False(field.HasPublicSetter);
+        Assert.True(field.HasPublicGetter);
 
         Assert.False(field.IsCompilerGenerated);
+    }
+
+    [Theory]
+    [InlineData("PrivateConstant", false)]
+    [InlineData("PublicConstant", true)]
+    public void Constant_Field_Should_Not_Be_Writable(string fieldName, bool isPublic)
+    {
+        var field = typeof(Model).GetRequiredField(fieldName).ToDataMemberInfo();
+
+        Assert.True(field.CanRead);
+        Assert.False(field.CanWrite);
+        Assert.False(field.IsInitOnly);
+        Assert.False(field.HasPublicSetter);
+        Assert.Equal(isPublic, field.HasPublicGetter);
     }
 
     [Fact]
@@ -126,7 +142,7 @@ public class DataMemberInfoTests
         Assert.True(field.CanWrite);
 
         Assert.False(field.HasPublicSetter);
-        Assert.False(field.HasPublicSetter);
+        Assert.False(field.HasPublicGetter);
 
         Assert.False(field.IsCompilerGenerated);
     }
@@ -143,7 +159,7 @@ public class DataMemberInfoTests
         Assert.True(field.CanWrite);
 
         Assert.True(field.HasPublicSetter);
-        Assert.True(field.HasPublicSetter);
+        Assert.True(field.HasPublicGetter);
 
         Assert.False(field.IsCompilerGenerated);
     }

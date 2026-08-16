@@ -7,17 +7,17 @@ public class DataMemberInfo : MemberInfo, IEquatable<DataMemberInfo>
     {
         MemberInfo = Check.NotNull(field);
         IsCompilerGenerated = MemberInfo.IsCompilerGenerated(false);
+        IsInitOnly = field.IsInitOnly;
         CanRead = true;
-        CanWrite = true;
+        CanWrite = field.IsInitOnly == false && field.IsLiteral == false;
         Getter = field.GetValue;
         Setter = field.SetValue;
         IsStatic = field.IsStatic;
         IsField = true;
         IsProperty = false;
         DataMemberType = field.FieldType;
-        HasPublicSetter = field.IsPublic;
+        HasPublicSetter = field.IsPublic && CanWrite;
         HasPublicGetter = field.IsPublic;
-        IsInitOnly = field.IsInitOnly;
         IsIndexer = false;
     }
 

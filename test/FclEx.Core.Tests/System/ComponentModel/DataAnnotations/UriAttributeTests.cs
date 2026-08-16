@@ -70,6 +70,19 @@ public class UriAttributeTests
     {
         var attr = new UriAttribute();
         Assert.True(attr.IsValid("ftp://example.com"));
+        Assert.True(attr.IsValid("custom://example.com"));
+    }
+
+    [Theory]
+    [InlineData("mailto:user@example.com", "mailto")]
+    [InlineData("urn:isbn:9780131103627", "urn")]
+    public void Uri_Without_SchemeDelimiter_Should_Be_Invalid_Even_When_Scheme_Is_Allowed(
+        string value,
+        string scheme)
+    {
+        var attr = new UriAttribute { AllowedSchemes = [scheme] };
+
+        Assert.False(attr.IsValid(value));
     }
 
     [Fact]

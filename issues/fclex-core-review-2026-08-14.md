@@ -509,25 +509,30 @@
     位置：`src/FclEx.Core/FclEx/Utils/~Net/UriCreator.cs:185-197`。`a#fragment?x` 是合法相对 URI，`?x` 属于 fragment；实现却因第一个 `?` 位于 `#` 后而抛 `ArgumentException`。应先定位 `#`，只在 fragment 之前寻找 query 分隔符，或交给标准 URI 解析逻辑。
     修复：先从第一个 `#` 拆出完整 fragment，再只在 fragment 之前的 path/query 部分查找 `?`；fragment 内的所有问号均原样保留。测试同时覆盖“只有 fragment 内问号”和“正常 query 加含问号 fragment”。
 
-106. **[P1] `UriAttribute` 把 `://` 错当成所有绝对 URI 的必要条件**
+106. **[P1][不修改] `UriAttribute` 把 `://` 错当成所有绝对 URI 的必要条件**
 
     位置：`src/FclEx.Core/System/ComponentModel/DataAnnotations/UriAttribute.cs:17-31`。`mailto:user@example.com`、`urn:isbn:...` 等合法绝对 URI 有显式 scheme 但没有 `://`，即使 `AllowedSchemes` 允许也会提前失败；文档所称“任意显式 scheme”与实现不符。应先用 `Uri.TryCreate(..., Absolute)`，再检查 `uri.Scheme`，不要用层次型 URI 的分隔符替代 scheme 判断。
+    处理决定：该 attribute 的预期契约就是只接受含 `://` 的 URI，并有意排除 `mailto:`、`urn:` 等不含该分隔符的绝对 URI。实现保持不变，文档已明确这一限制，并增加回归测试固定该行为。
 
-107. **[P2] `ElementRequiredAttribute.MinLength` 可被设置为负数并使校验失效**
+107. **[P2][已修复] `ElementRequiredAttribute.MinLength` 可被设置为负数并使校验失效**
 
     位置：`src/FclEx.Core/System/ComponentModel/DataAnnotations/ElementRequiredAttribute.cs:6,27-49`。可写属性没有范围验证，负值会让所有字符串和 enumerable 都满足 `count >= MinLength`。attribute 配置应在 setter/构造器中拒绝负数；如果零是默认有效含义，也应在文档中明确。
+    修复：`MinLength` setter 现在拒绝负数，XML 文档明确零是有效值且表示不施加最小长度限制；测试覆盖负数和零值边界。
 
-108. **[P1] `FormattedException` 不是标准异常包装器，且 null 校验不会按文档生效**
+108. **[P1][已修复] `FormattedException` 不是标准异常包装器，且 null 校验不会按文档生效**
 
     位置：`src/FclEx.Core/FclEx/Utils/~Exceptions/FormattedException.cs:6-23`。基类构造器先读取 `exception.Message`，传 null 得到 `NullReferenceException` 而非声明的 `ArgumentNullException`；正常输入又只保存到自定义 `Exception` 属性，没有作为 `InnerException` 传给基类，标准日志、异常遍历和 `GetBaseException` 看不到因果链。应先通过静态 helper 校验，并调用 `base(message, exception)`；自定义属性通常可直接删除。
+    修复：包装异常现在传给基类作为标准 `InnerException`，自定义重复属性已删除，null 输入按文档抛出 `ArgumentNullException`；回归测试覆盖因果链、消息、格式化和 null 校验。
 
-109. **[P1] `SimpleException` 的“省略栈以提升性能”设计并不能阻止抛出时捕获栈**
+109. **[P1][已修复] `SimpleException` 的“省略栈以提升性能”设计并不能阻止抛出时捕获栈**
 
     位置：`src/FclEx.Core/FclEx/Utils/~Exceptions/SimpleException.cs:3-53`。覆盖 `StackTrace` 返回 null 只隐藏诊断信息，CLR 在 throw 时仍会记录栈；`[StackTraceHidden]` 也只是影响格式化。反向选项 `noStackTrace == false` 在构造时额外抓取一次栈，但异常真正抛出后又优先返回 `base.StackTrace`，这份成本通常白付。建议删除该性能承诺和栈覆盖，让“仅消息”成为格式化策略而不是异常对象状态。
+    修复：保留现有表现形式，但文档不再声称能够避免运行时捕获栈或以性能为主要目标；类型用途改为承载字符串形式的错误（常用于 `OperationResult<T>`），并明确 `noStackTrace` 只控制对外呈现。
 
-110. **[P1] `DataMemberInfo.CanWrite` 对 readonly field 返回 true**
+110. **[P1][已修复] `DataMemberInfo.CanWrite` 对 readonly field 返回 true**
 
     位置：`src/FclEx.Core/System/Reflection/DataMemberInfo.cs:6-20,61-75`。所有 field 都被标记 `CanWrite = true`，包括 `IsInitOnly` 字段；调用方按 `CanWrite` 选择 setter 后仍可能失败或绕过类型不变量。`CanWrite` 应表达实际支持的普通写入能力并排除 init-only/literal 字段，危险的反射写入若保留应独立命名。
+    修复：field 的 `CanWrite` 和 `HasPublicSetter` 现在都会排除 init-only 与 literal 字段；现有 `UnsafeWrite` flag 仍作为显式选择 readonly 反射写入的独立入口，literal 字段不会被包含。测试覆盖 public/private、static/instance readonly field 以及 public/private constant。
 
 111. **[P1] `DataMemberInfo` 的统一 getter/setter 签名无法表示 indexer**
 
