@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
-using System.Text;
-
 namespace FclEx.Utils;
 
 /// <summary>
@@ -17,14 +12,17 @@ public static class ScopedSetter
     /// <typeparam name="T">The type of the object to modify temporarily.</typeparam>
     /// <param name="obj">The object whose members will be temporarily modified.</param>
     /// <returns>A new <see cref="ScopedSetter{T}"/> instance.</returns>
-    public static ScopedSetter<T> For<T>(T obj) => new(obj);
+    public static ScopedSetter<T> For<T>(T obj) where T : class
+    {
+        return new(obj);
+    }
 }
 
 /// <summary>
 /// Provides a scope-based mechanism for temporarily overriding properties
 /// of an object and restoring their original values when the scope ends.
 /// </summary>
-public class ScopedSetter<T>(T obj) : IDisposable
+public class ScopedSetter<T>(T obj) : IDisposable where T : class
 {
     private readonly T _obj = Check.NotNull(obj);
     private readonly Dictionary<DataMemberInfo, object?> _members = [];
