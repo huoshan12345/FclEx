@@ -650,12 +650,18 @@ public class MultiValueDictionary<TKey, TValue> :
     {
         if (key == null)
             throw new ArgumentNullException(nameof(key));
-        if (!_dictionary.TryGetValue(key, out InnerCollectionView collection))
+
+        if (_dictionary.TryGetValue(key, out InnerCollectionView collection))
+        {
+            collection.AddValue(value);
+        }
+        else
         {
             collection = new InnerCollectionView(key, NewCollectionFactory());
+            collection.AddValue(value);
             _dictionary.Add(key, collection);
         }
-        collection.AddValue(value);
+
         _version++;
     }
 
