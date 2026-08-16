@@ -13,13 +13,29 @@ public static class ReflectionHelper
                                             | BindingFlags.Static
                                             | BindingFlags.DeclaredOnly;
 
-    private static readonly ConcurrentDictionary<Type, IReadOnlyList<DataMemberInfo>> TypeDataMemberDic = [];
+    private static readonly ConditionalWeakTable<Type, IReadOnlyList<DataMemberInfo>> TypeDataMemberDic = new();
+
+    private static readonly
+#if NET9_0_OR_GREATER
+            Lock
+#else
+            object
+#endif
+        _lock = new();
 
     public static IReadOnlyList<DataMemberInfo> GetDataMembers(Type type)
     {
-        return TypeDataMemberDic.GetOrAdd(type, GetDataMembersInternal);
+        lock (_lock)
+        {
+            if (TypeDataMemberDic.TryGetValue(type, out var value))
+                return value;
 
-        static IReadOnlyList<DataMemberInfo> GetDataMembersInternal(Type type)
+            value = GetDataMembersCore(type);
+            TypeDataMemberDic.Add(type, value);
+            return value;
+        }
+
+        static IReadOnlyList<DataMemberInfo> GetDataMembersCore(Type type)
         {
             if (type.IsInterface)
             {
