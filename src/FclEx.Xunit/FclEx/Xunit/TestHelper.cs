@@ -26,21 +26,6 @@ public enum EnvVarCheckOption
     NotExist,
 }
 
-public static class BuildTypeOptionExtensions
-{
-    public static BuildType? ToBuildType(this BuildTypeOption option)
-    {
-        return option switch
-        {
-            BuildTypeOption.Debug => BuildType.Debug,
-            BuildTypeOption.Release => BuildType.Release,
-            BuildTypeOption.Any => null,
-            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
-        };
-    }
-}
-
-
 public static class TestHelper
 {
     /// <summary>
@@ -73,8 +58,8 @@ public static class TestHelper
         .Where(m => m.GetReferencedAssemblies().Any(x => x.FullName == AssemblyFullName))
         .ToArray();
 
-    public static readonly BuildType[] ReferencingAssemblyBuildTypes = ReferencingAssemblies
-        .Select(m => m.GetBuildInfo().BuildType)
+    public static readonly bool[] ReferencingAssembliesJitOptimized = ReferencingAssemblies
+        .Select(m => m.IsJitOptimized())
         .Distinct()
         .ToArray();
 
@@ -95,15 +80,15 @@ public static class TestHelper
             return $"The current operating system is not any of {os.JoinWith(", ")}";
         }
 
-        if (info.RequiredBuildType.ToBuildType() is { } buildType)
+        if (info.RequiredBuildType is BuildTypeOption.Debug or BuildTypeOption.Release)
         {
-            var currentBuildType = ReferencingAssemblyBuildTypes.Contains(BuildType.Debug)
-                ? BuildType.Debug
-                : BuildType.Release;
+            var currentBuildType = ReferencingAssembliesJitOptimized.Any(m => m == false)
+                ? BuildTypeOption.Debug
+                : BuildTypeOption.Release;
 
-            if (currentBuildType != buildType)
+            if (currentBuildType != info.RequiredBuildType)
             {
-                return $"The calling assembly is not in {buildType} mode";
+                return $"The calling assembly is not in {currentBuildType} mode";
             }
         }
 

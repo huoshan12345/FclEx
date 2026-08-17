@@ -1,11 +1,5 @@
 namespace FclEx.Extensions;
 
-public enum BuildType
-{
-    Debug,
-    Release,
-}
-
 public static class AssemblyExtensions
 {
     /// <summary>
@@ -63,9 +57,8 @@ public static class AssemblyExtensions
         });
     }
 
-    public static (BuildType BuildType, bool IsJitOptimized) GetBuildInfo(this Assembly assembly)
+    public static bool IsJitOptimized(this Assembly assembly)
     {
-        BuildType buildType;
         bool isJitOptimized;
         var attr = assembly.GetCustomAttribute<DebuggableAttribute>();
         // If the 'DebuggableAttribute' is not found then it is definitely an OPTIMIZED build
@@ -75,7 +68,6 @@ public static class AssemblyExtensions
             // it's a DEBUG build; we have to check the JIT Optimization flag
             // i.e. it could have the "generate PDB" checked but have JIT Optimization enabled
             isJitOptimized = !attr.IsJITOptimizerDisabled;
-            buildType = attr.IsJITOptimizerDisabled ? BuildType.Debug : BuildType.Release;
 
             // check for Debug Output "full" or "pdb-only"
             //DebugOutput = (debuggableAttribute.DebuggingFlags &
@@ -86,20 +78,9 @@ public static class AssemblyExtensions
         else
         {
             isJitOptimized = true;
-            buildType = BuildType.Release;
         }
 
-        return (buildType, isJitOptimized);
-    }
-
-    public static bool IsDebug(this Assembly assembly)
-    {
-        return assembly.GetBuildInfo().BuildType == BuildType.Debug;
-    }
-
-    public static bool IsRelease(this Assembly assembly)
-    {
-        return assembly.GetBuildInfo().BuildType == BuildType.Release;
+        return isJitOptimized;
     }
 
     public static Type GetRequiredType(this Assembly assembly, string name, bool ignoreCase = false)
