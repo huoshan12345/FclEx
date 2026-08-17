@@ -4,24 +4,28 @@ public static class JsonHelper
 {
     private static readonly ConcurrentDictionary<JsonOptions, JsonSerializerOptions> _serializerOptions = new();
 
-    private static readonly DefaultJsonTypeInfoResolver Resolver = new()
-    {
-        Modifiers =
-        {
-            IncludeStaticMembers,
-            IgnoreEmptyValue,
-        },
-    };
+    private static readonly ReLazy<DefaultJsonTypeInfoResolver> _resolver = new(() => CreateDefaultJsonTypeInfoResolver(false));
+    private static readonly ReLazy<DefaultJsonTypeInfoResolver> _resolverIgnoreReadingNull = new(() => CreateDefaultJsonTypeInfoResolver(true));
 
-    private static readonly DefaultJsonTypeInfoResolver IgnoreReadingNullResolver = new()
+    private static DefaultJsonTypeInfoResolver Resolver => _resolver.Value;
+    private static DefaultJsonTypeInfoResolver ResolverIgnoreReadingNull => _resolverIgnoreReadingNull.Value;
+
+    private static DefaultJsonTypeInfoResolver CreateDefaultJsonTypeInfoResolver(bool ignoreReadingNull)
     {
-        Modifiers =
+        var resolver = new DefaultJsonTypeInfoResolver
         {
-            IncludeStaticMembers,
-            IgnoreEmptyValue,
-            IgnoreReadingNull,
-        },
-    };
+            Modifiers =
+            {
+                IncludeStaticMembers,
+                IgnoreEmptyValue,
+            },
+        };
+
+        if (ignoreReadingNull)
+            resolver.Modifiers.Add(IgnoreReadingNull);
+
+        return resolver;
+    }
 
     public static JsonSerializerOptions CreateOptions(JsonOptions? jsonOptions = default)
     {
@@ -68,7 +72,7 @@ public static class JsonHelper
             return JsonTypeInfoResolver_Empty;
 
         return jsonOptions.IgnoreReadingNull
-            ? IgnoreReadingNullResolver
+            ? ResolverIgnoreReadingNull
             : Resolver;
     }
 
@@ -177,5 +181,7 @@ public static class JsonHelper
     public static void ClearCache()
     {
         _serializerOptions.Clear();
+        _resolver.Recreate();
+        _resolverIgnoreReadingNull.Recreate();
     }
 }
