@@ -6,16 +6,28 @@ partial class EnumerableExtensions
         => col.Where(m => m.IsNotEmpty())!;
 
     public static bool AnyContainsAny(this IEnumerable<string> enumerable, IEnumerable<string> values, StringComparison comparison = StringComparison.Ordinal)
-        => values.Any(m => enumerable.Any(x => x.Contains(m, comparison)));
+    {
+        var items = enumerable.AsIReadOnlyCollection();
+        return values.Any(m => items.Any(x => x.Contains(m, comparison)));
+    }
 
     public static bool AnyContainsAll(this IEnumerable<string> enumerable, IEnumerable<string> values, StringComparison comparison = StringComparison.Ordinal)
-        => values.All(m => enumerable.Any(x => x.Contains(m, comparison)));
+    {
+        var items = enumerable.AsIReadOnlyCollection();
+        return values.All(m => items.Any(x => x.Contains(m, comparison)));
+    }
 
     public static bool AllContainsAny(this IEnumerable<string> enumerable, IEnumerable<string> values, StringComparison comparison = StringComparison.Ordinal)
-        => values.Any(m => enumerable.All(x => x.Contains(m, comparison)));
+    {
+        var items = enumerable.AsIReadOnlyCollection();
+        return values.Any(m => items.All(x => x.Contains(m, comparison)));
+    }
 
     public static bool AllContainsAll(this IEnumerable<string> enumerable, IEnumerable<string> values, StringComparison comparison = StringComparison.Ordinal)
-        => values.All(m => enumerable.All(x => x.Contains(m, comparison)));
+    {
+        var items = enumerable.AsIReadOnlyCollection();
+        return values.All(m => items.All(x => x.Contains(m, comparison)));
+    }
 
     public static bool AnyContains(this IEnumerable<string> enumerable, string value, StringComparison comparison = StringComparison.Ordinal)
         => enumerable.Any(m => m.Contains(value, comparison));

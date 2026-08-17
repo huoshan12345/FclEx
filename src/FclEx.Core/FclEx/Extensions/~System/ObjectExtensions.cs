@@ -27,8 +27,13 @@ public static partial class ObjectExtensions
     /// <param name="obj">The source value.</param>
     /// <returns>The converted value, or the default value of <typeparamref name="T"/> when <paramref name="obj"/> is <see langword="null"/>.</returns>
     /// <remarks>
-    /// Non-enum conversions use <see cref="Convert.ChangeType(object, Type)"/>; enum conversions use
-    /// <see cref="Enum.ToObject(Type, object)"/>. User-defined conversion operators are not invoked.
+    /// After checking whether the value is already <typeparamref name="T"/>, this method searches the runtime source
+    /// type and the target type for a public static <c>op_Implicit</c> or <c>op_Explicit</c> conversion operator.
+    /// The target type is searched first. When no matching operator exists, non-enum conversions use
+    /// <see cref="Convert.ChangeType(object, Type)"/> and enum conversions use <see cref="Enum.ToObject(Type, object)"/>.
+    /// Conversion operators are discovered and invoked through reflection; applications that use trimming or Native AOT
+    /// must preserve the applicable public operators. Exceptions thrown by an invoked operator are wrapped in
+    /// <see cref="TargetInvocationException"/>.
     /// </remarks>
     [MethodImpl(AggressiveInlining)]
     [return: NotNullIfNotNull(nameof(obj))]
