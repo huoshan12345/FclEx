@@ -85,7 +85,7 @@ public static class JsonSerializerOptionsExtensions
 
     extension(JsonSerializerOptions)
     {
-        public static JsonSerializerOptions DefaultOptions => JsonHelper.DefaultOptions;
-        public static JsonSerializerOptions WebOptions => JsonHelper.WebOptions;
+        public static JsonSerializerOptions DefaultEx => JsonHelper.DefaultOptions;
+        public static JsonSerializerOptions WebEx => JsonHelper.WebOptions;
     }
 }
