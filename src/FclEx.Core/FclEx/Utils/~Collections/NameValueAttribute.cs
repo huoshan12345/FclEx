@@ -12,5 +12,9 @@ public class NameValueAttribute(string? name) : Attribute
 
     public BoolValueConvention BoolValueConvention { get; set; }
 
+    /// <summary>
+    /// Gets or sets the standard or custom format string passed to <see cref="INameValuesBuilder.ToString{T}(T, string)"/>
+    /// when this member is added to the name-value collection.
+    /// </summary>
     public string? Format { get; set; }
 }

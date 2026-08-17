@@ -18,6 +18,17 @@ public interface INameValuesBuilder
     ;
 #endif
 
+    /// <summary>
+    /// Formats a member value for the resulting name-value collection.
+    /// </summary>
+    /// <typeparam name="T">The value type.</typeparam>
+    /// <param name="value">The value to format.</param>
+    /// <param name="format">The format specified by <see cref="NameValueAttribute.Format"/>, if any.</param>
+    /// <returns>The formatted value, or <see langword="null"/> to use an empty string.</returns>
+    /// <remarks>
+    /// The default implementation formats <see cref="IFormattable"/> values with
+    /// <see cref="CultureInfo.InvariantCulture"/>. Implementations can provide protocol-specific formatting.
+    /// </remarks>
     string? ToString<T>(T? value, string? format)
 #if NET6_0_OR_GREATER
         => DefaultNameValuesBuilder.ToString(value, format);
@@ -28,6 +39,13 @@ public interface INameValuesBuilder
 
 public static class DefaultNameValuesBuilder
 {
+    /// <summary>
+    /// Formats a value using the invariant culture when it implements <see cref="IFormattable"/>.
+    /// </summary>
+    /// <typeparam name="T">The value type.</typeparam>
+    /// <param name="value">The value to format.</param>
+    /// <param name="format">An optional standard or custom format string.</param>
+    /// <returns>The formatted value, or <see langword="null"/> when <paramref name="value"/> is <see langword="null"/>.</returns>
     public static string? ToString<T>(T? value, string? format)
     {
         return value is IFormattable formattable
@@ -102,6 +120,14 @@ public class NameValuesBuilder : INameValuesBuilder
         = NameValuesBuilderOptions.Default;
     public virtual List<KeyValuePair<string, string>> Build()
         => DefaultNameValuesBuilder.Build(this);
+
+    /// <summary>
+    /// Formats a member value using the invariant culture for <see cref="IFormattable"/> values.
+    /// </summary>
+    /// <typeparam name="T">The value type.</typeparam>
+    /// <param name="value">The value to format.</param>
+    /// <param name="format">An optional standard or custom format string.</param>
+    /// <returns>The formatted value, or <see langword="null"/> when <paramref name="value"/> is <see langword="null"/>.</returns>
     public string? ToString<T>(T? value, string? format)
         => DefaultNameValuesBuilder.ToString(value, format);
 }

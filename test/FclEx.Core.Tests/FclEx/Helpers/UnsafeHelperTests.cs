@@ -51,6 +51,24 @@ public class UnsafeHelperTests
         Assert.Throws<ArgumentException>(() => UnsafeHelper.GetValue(IntPtr.Zero, typeof(string)));
     }
 
+    [Fact]
+    public void WriteToAndReadFrom_RoundTripTheEntireUnmanagedValue()
+    {
+        using var memory = Marshal.AllocHGlobalDisposable(Unsafe.SizeOf<long>());
+        const long expected = 0x1020_3040_5060_7080;
+
+        UnsafeHelper.WriteTo(memory.Value, expected);
+
+        Assert.Equal(expected, UnsafeHelper.ReadFrom<long>(memory.Value));
+    }
+
+    [Fact]
+    public void Reinterpret_RequiresSourceAndDestinationToHaveTheSameSize()
+    {
+        Assert.Equal(1f, UnsafeHelper.Reinterpret<int, float>(0x3F80_0000));
+        Assert.Throws<InvalidOperationException>(() => UnsafeHelper.Reinterpret<int, short>(42));
+    }
+
     [Theory]
     [InlineData(typeof(object))]
     [InlineData(typeof(string))]
