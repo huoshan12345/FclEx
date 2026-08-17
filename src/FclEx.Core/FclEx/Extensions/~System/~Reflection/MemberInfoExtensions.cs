@@ -2,7 +2,7 @@ namespace FclEx.Extensions;
 
 public static class MemberInfoExtensions
 {
-    public static bool IsDefined<T>(this MemberInfo memberInfo, bool inherit = false)
+    public static bool IsDefined<T>(this MemberInfo memberInfo, bool inherit = false) where T : Attribute
     {
         return memberInfo.IsDefined(typeof(T), inherit);
     }

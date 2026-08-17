@@ -26,7 +26,7 @@ public static partial class TypeExtensions
     {
         FclEx.Check.NotNull(type);
 
-        args ??= [null];
+        args ??= [];
 
         if (args.Length == 0 && type.IsValueType)
             return Activator.CreateInstance(type)!;
