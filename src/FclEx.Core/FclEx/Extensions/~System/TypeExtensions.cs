@@ -180,7 +180,8 @@ public static partial class TypeExtensions
     [MethodImpl(AggressiveInlining)]
     public static bool Implements(this Type type, Type interfaceType)
     {
-        return type.GetImplementedInterface(interfaceType) != null;
+        return interfaceType.IsInterface
+               && (type == interfaceType || type.GetImplementedInterface(interfaceType) != null);
     }
 
     /// <summary>
