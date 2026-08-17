@@ -287,12 +287,7 @@ public static partial class EnumerableExtensions
     {
         return arrays.Prepend(source).Concat();
     }
-
-    public static IEnumerable<(T Left, T2 Right)> SelectMany<T, T2>(this IEnumerable<T> left, IEnumerable<T2> right)
-    {
-        return left.SelectMany(_ => right, (x, y) => (x, y));
-    }
-
+    
     public static IOrderedEnumerable<T> OrderBy<T, TKey>(this IEnumerable<T> enumerable, Func<T, TKey> keySelector, bool desc)
     {
         return desc
