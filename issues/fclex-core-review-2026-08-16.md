@@ -13,10 +13,10 @@
    - 说明：代码已不再提供该种比较器，README 却继续宣传它，消费者会据此寻找不存在或不应使用的 API。
    - 建议：删去该条，改为实际仍受支持的比较器及其适用边界。
 
-202. **[P1] `JsonHelper` 的全局 options/resolver 缓存会永久保留可卸载类型及调用方自定义 naming policy。**
-   - 位置：`Helpers/JsonHelper.cs` 的 `_serializerOptions`、`DefaultJsonTypeInfoResolver`。
-   - 说明：`JsonSerializerOptions` 及其 resolver 会缓存类型元数据；静态 `ConcurrentDictionary` 又以 `JsonNamingPolicy` 为键。因此插件/collectible `AssemblyLoadContext` 中的类型和 policy 会被根引用，不能卸载，且缓存无上限。这与此前将类型缓存改为弱引用的方向相冲突。
-   - 建议：不要为任意调用方类型共用永久 resolver/options；将缓存限定为有限的内置选项，或把生命周期交给调用方，并在文档中明确 collectible 类型限制。
+202. **[P1] `JsonHelper.ClearCache` 与并发 `GetOptions` 存在竞态，旧 resolver 仍可能被重新缓存。**
+   - 位置：`System/Text/Json/JsonHelper.cs` 的 `GetOptions`、`ClearCache`。
+   - 说明：`ClearCache` 已会重建内置 resolver、`DefaultEx` 和 `WebEx`，单线程下可以释放 `JsonHelper` 持有的旧 options。但若另一个线程已用旧 resolver 开始执行 `GetOptions`，它可在字典被清空后完成 `GetOrAdd` 并重新写入旧 `JsonSerializerOptions`，继续根引用其类型元数据。调用方自行持有的旧 options 也不可能由此 API 强制释放。
+   - 建议：以同一把锁或缓存世代号协调 `GetOptions` 与 `ClearCache`，保证清理完成后不会再发布旧世代的缓存项；文档同时应说明清理不影响调用方已取得的 options 实例。
 
 203. **[P2] `ITypeSerializer<TTarget>` 无法表达声明类型，不能可靠处理 `null` 与多态序列化。**
    - 位置：`Utils/~Serialization/ITypeSerializer.cs`。

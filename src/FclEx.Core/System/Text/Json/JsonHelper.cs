@@ -2,6 +2,7 @@ namespace System.Text.Json;
 
 public static class JsonHelper
 {
+    private static readonly object _cacheLock = new();
     private static readonly ConcurrentDictionary<JsonOptions, JsonSerializerOptions> _serializerOptions = new();
 
     private static readonly ReLazy<JsonSerializerOptions> _defaultOptions = new(() => GetOptions());
@@ -9,11 +10,41 @@ public static class JsonHelper
     private static readonly ReLazy<DefaultJsonTypeInfoResolver> _resolver = new(() => CreateDefaultJsonTypeInfoResolver(false));
     private static readonly ReLazy<DefaultJsonTypeInfoResolver> _resolverIgnoreReadingNull = new(() => CreateDefaultJsonTypeInfoResolver(true));
 
-    private static DefaultJsonTypeInfoResolver Resolver => _resolver.Value;
-    private static DefaultJsonTypeInfoResolver ResolverIgnoreReadingNull => _resolverIgnoreReadingNull.Value;
+    private static DefaultJsonTypeInfoResolver Resolver
+    {
+        get
+        {
+            lock (_cacheLock)
+                return _resolver.Value;
+        }
+    }
 
-    public static JsonSerializerOptions DefaultOptions => _defaultOptions.Value;
-    public static JsonSerializerOptions WebOptions => _webOptions.Value;
+    private static DefaultJsonTypeInfoResolver ResolverIgnoreReadingNull
+    {
+        get
+        {
+            lock (_cacheLock)
+                return _resolverIgnoreReadingNull.Value;
+        }
+    }
+
+    public static JsonSerializerOptions DefaultOptions
+    {
+        get
+        {
+            lock (_cacheLock)
+                return _defaultOptions.Value;
+        }
+    }
+
+    public static JsonSerializerOptions WebOptions
+    {
+        get
+        {
+            lock (_cacheLock)
+                return _webOptions.Value;
+        }
+    }
 
     private static DefaultJsonTypeInfoResolver CreateDefaultJsonTypeInfoResolver(bool ignoreReadingNull)
     {
@@ -84,12 +115,15 @@ public static class JsonHelper
     public static JsonSerializerOptions GetOptions(JsonOptions? jsonOptions = default)
     {
         jsonOptions ??= JsonOptions.Default;
-        return _serializerOptions.GetOrAdd(jsonOptions, m =>
+        lock (_cacheLock)
         {
-            var options = CreateOptions(m);
-            options.MakeReadOnly(true);
-            return options;
-        });
+            return _serializerOptions.GetOrAdd(jsonOptions, m =>
+            {
+                var options = CreateOptions(m);
+                options.MakeReadOnly(true);
+                return options;
+            });
+        }
     }
 
     /// <summary>
@@ -183,12 +217,23 @@ public static class JsonHelper
         }
     }
 
+    /// <summary>
+    /// Clears the options and resolver instances cached by <see cref="JsonHelper"/>.
+    /// </summary>
+    /// <remarks>
+    /// This method is synchronized with <see cref="GetOptions(JsonOptions?)"/> and the static options properties,
+    /// so no cached option created with a previous resolver remains published after it returns. It does not modify
+    /// options that callers obtained before the cache was cleared, including options created by <see cref="CreateOptions(JsonOptions?)"/>.
+    /// </remarks>
     public static void ClearCache()
     {
-        _serializerOptions.Clear();
-        _resolver.Recreate();
-        _resolverIgnoreReadingNull.Recreate();
-        _defaultOptions.Recreate();
-        _webOptions.Recreate();
+        lock (_cacheLock)
+        {
+            _serializerOptions.Clear();
+            _resolver.Recreate();
+            _resolverIgnoreReadingNull.Recreate();
+            _defaultOptions.Recreate();
+            _webOptions.Recreate();
+        }
     }
 }
