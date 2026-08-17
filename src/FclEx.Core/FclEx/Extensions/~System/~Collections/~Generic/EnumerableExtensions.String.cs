@@ -5,24 +5,32 @@ partial class EnumerableExtensions
     public static IEnumerable<string> NotEmpty(this IEnumerable<string?> col)
         => col.Where(m => m.IsNotEmpty())!;
 
+    /// <summary>Determines whether any source string contains any supplied value.</summary>
+    /// <remarks>The source sequence is materialized once so it may be a one-shot sequence.</remarks>
     public static bool AnyContainsAny(this IEnumerable<string> enumerable, IEnumerable<string> values, StringComparison comparison = StringComparison.Ordinal)
     {
         var items = enumerable.AsIReadOnlyCollection();
         return values.Any(m => items.Any(x => x.Contains(m, comparison)));
     }
 
+    /// <summary>Determines whether a source string exists for every supplied value.</summary>
+    /// <remarks>The source sequence is materialized once so it may be a one-shot sequence.</remarks>
     public static bool AnyContainsAll(this IEnumerable<string> enumerable, IEnumerable<string> values, StringComparison comparison = StringComparison.Ordinal)
     {
         var items = enumerable.AsIReadOnlyCollection();
         return values.All(m => items.Any(x => x.Contains(m, comparison)));
     }
 
+    /// <summary>Determines whether every source string contains at least one supplied value.</summary>
+    /// <remarks>The source sequence is materialized once so it may be a one-shot sequence.</remarks>
     public static bool AllContainsAny(this IEnumerable<string> enumerable, IEnumerable<string> values, StringComparison comparison = StringComparison.Ordinal)
     {
         var items = enumerable.AsIReadOnlyCollection();
         return values.Any(m => items.All(x => x.Contains(m, comparison)));
     }
 
+    /// <summary>Determines whether every source string contains every supplied value.</summary>
+    /// <remarks>The source sequence is materialized once so it may be a one-shot sequence.</remarks>
     public static bool AllContainsAll(this IEnumerable<string> enumerable, IEnumerable<string> values, StringComparison comparison = StringComparison.Ordinal)
     {
         var items = enumerable.AsIReadOnlyCollection();

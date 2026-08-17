@@ -55,6 +55,9 @@ public static class ReadOnlySpanExtensions
         return Marshal.ReadAsArray<T>(span, count);
     }
 
+    /// <summary>Packs Boolean values into bytes using least-significant-bit-first order.</summary>
+    /// <param name="bits">The values to pack.</param>
+    /// <returns>The packed bytes. The first value occupies bit 0 of the first byte; unused high bits in the final byte are zero.</returns>
     public static byte[] PackBits(this ReadOnlySpan<bool> bits)
     {
         var bytes = new byte[(bits.Length + 7) / 8];
@@ -66,6 +69,10 @@ public static class ReadOnlySpanExtensions
         return bytes;
     }
 
+    /// <summary>Unpacks least-significant-bit-first bytes into Boolean values.</summary>
+    /// <param name="bytes">The packed bytes.</param>
+    /// <returns>Eight Boolean values for every input byte. The first result corresponds to bit 0 of the first byte.</returns>
+    /// <remarks>The original bit count is not encoded; callers that packed a non-byte-aligned input must retain its length separately.</remarks>
     public static bool[] UnpackBits(this ReadOnlySpan<byte> bytes)
     {
         var count = bytes.Length * 8;
@@ -186,6 +193,7 @@ public static class ReadOnlySpanExtensions
         private ReadOnlySpan<char> _remaining;
         private ReadOnlySpan<char> _current;
         private bool _hasResult;
+        private bool _hasCurrent;
 
         public SplitEnumerator(
             ReadOnlySpan<char> span,
@@ -197,19 +205,27 @@ public static class ReadOnlySpanExtensions
             _options = options;
             _current = default;
             _hasResult = true;
+            _hasCurrent = false;
         }
 
         public readonly SplitEnumerator GetEnumerator() => this;
 
+        /// <summary>Gets the current split segment.</summary>
+        /// <exception cref="InvalidOperationException">Enumeration has not started or has already completed.</exception>
         // ReSharper disable once ConvertToAutoPropertyWithPrivateSetter
-        public readonly ReadOnlySpan<char> Current => _current;
+        public readonly ReadOnlySpan<char> Current => _hasCurrent
+            ? _current
+            : throw new InvalidOperationException("Enumeration has not started or has already finished.");
 
         public bool MoveNext()
         {
             while (true)
             {
                 if (_hasResult == false)
+                {
+                    _hasCurrent = false;
                     return false;
+                }
 
                 var idx = _remaining.IndexOfAny(_separators);
 
@@ -240,6 +256,7 @@ public static class ReadOnlySpanExtensions
                 }
 
                 _current = slice;
+                _hasCurrent = true;
                 return true;
             }
         }

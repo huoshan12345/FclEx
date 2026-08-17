@@ -13,4 +13,21 @@ public class StringContainsTests
         Assert.False(values.AllContainsAny(patterns));
         Assert.False(values.AllContainsAll(patterns));
     }
+
+    [Fact]
+    public void AnyContainsAll_MaterializesAOneShotSourceSequence()
+    {
+        var enumerationCount = 0;
+
+        IEnumerable<string> Values()
+        {
+            if (++enumerationCount > 1)
+                throw new InvalidOperationException("The source sequence was enumerated more than once.");
+
+            yield return "alphabet";
+        }
+
+        Assert.True(Values().AnyContainsAll(["alpha", "bet"]));
+        Assert.Equal(1, enumerationCount);
+    }
 }

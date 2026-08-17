@@ -127,4 +127,10 @@ public class DateTimeExtensionsTests
         Assert.Equal(DateTime.SpecifyKind(unspecified, DateTimeKind.Utc), unspecified.AssumeUtc());
         Assert.Equal(utc, utc.AssumeUtc());
     }
+
+    [Fact]
+    public void AddWeeks_RejectsAWeekCountWhoseDayCountExceedsDateTimeRange()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => DateTime.UnixEpoch.AddWeeks(613_566_757));
+    }
 }

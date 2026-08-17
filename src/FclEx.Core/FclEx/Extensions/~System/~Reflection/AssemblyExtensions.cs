@@ -57,6 +57,13 @@ public static class AssemblyExtensions
         });
     }
 
+    /// <summary>Returns whether the assembly's <see cref="DebuggableAttribute"/> enables JIT optimization.</summary>
+    /// <remarks>
+    /// This reads assembly metadata, not the actual runtime JIT state, and it cannot determine whether the assembly was
+    /// built with the Debug or Release MSBuild configuration. Assemblies without <see cref="DebuggableAttribute"/> are
+    /// treated as enabling optimization.
+    /// </remarks>
+    /// <param name="assembly">The assembly whose metadata to inspect.</param>
     public static bool IsJitOptimized(this Assembly assembly)
     {
         bool isJitOptimized;

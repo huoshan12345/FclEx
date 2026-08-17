@@ -93,7 +93,8 @@ partial class EnumerableExtensions
     /// <remarks>
     /// If <paramref name="token"/> is canceled, the remaining source items are still enumerated and each receives a canceled
     /// result. This preserves one result per input item, but requires a finite source because cancellation does not stop
-    /// enumeration. The selector is not invoked for those remaining items.
+    /// enumeration. The selector is not invoked for those remaining items. A positive <paramref name="interval"/> is applied
+    /// only between consecutive operations, never after the final item.
     /// </remarks>
     public static async Task<OperationIOPairs<T, TResult>> ToOperationIOPairsSerially<T, TResult>(
         this IEnumerable<T> enumerable,
@@ -108,8 +109,13 @@ partial class EnumerableExtensions
         var success = new List<IOPair<T, TResult>>();
         var failure = new List<IOPair<T, OperationResult<TResult>>>();
 
-        foreach (var item in enumerable)
+        using var enumerator = enumerable.GetEnumerator();
+        if (enumerator.MoveNext() == false)
+            return (success, failure);
+
+        while (true)
         {
+            var item = enumerator.Current;
             if (token.IsCancellationRequested)
             {
                 failure.Add((item, Operation.Cancel<TResult>()));
@@ -122,6 +128,10 @@ partial class EnumerableExtensions
                 else
                     failure.Add((item, r));
             }
+
+            if (enumerator.MoveNext() == false)
+                break;
+
             await Task.DelaySafely(interval, token);
         }
         return (success, failure);

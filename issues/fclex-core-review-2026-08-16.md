@@ -159,12 +159,12 @@
    - 说明：该名称与 LINQ `SelectMany` 的嵌套展平语义冲突，而库内已有 `CrossJoin`；调用点很容易误解并引入 O(n²) 工作。
    - 建议：移除或重命名为 `CrossJoin`/`SelfCrossJoin`，避免与 BCL LINQ 方法同名但语义不同。
 
-231. **[P1] `AnyContainsAny`、`AnyContainsAll` 等方法会重复消费输入 `IEnumerable<string>`。**
+231. **[P1][已修复] `AnyContainsAny`、`AnyContainsAll` 等方法会重复消费输入 `IEnumerable<string>`。**
    - 位置：`Extensions/~System/~Collections/~Generic/EnumerableExtensions.String.cs:8`。
    - 说明：嵌套 `Any`/`All` 会为每个 `values` 元素重新枚举 `enumerable`；一次性序列会在第一个值的比较后耗尽，结果取决于枚举器状态而非字符串关系。
    - 建议：物化较小/需要重用的一侧，或改用集合参数；不能把“可重复枚举”作为未声明前提。
 
-232. **[P2] 串行 `ToOperationIOPairsSerially` 在最后一项后仍等待 interval。**
+232. **[P2][已修复] 串行 `ToOperationIOPairsSerially` 在最后一项后仍等待 interval。**
    - 位置：`Extensions/~System/~Collections/~Generic/EnumerableExtensions.IOPair.cs:125`。
    - 说明：interval 的自然语义是两次操作之间的间隔，当前实现却把完成时间额外推迟一个 interval。
    - 建议：仅在确认后面还有下一项时延迟，或把现有行为改名为“每项完成后延迟”。
@@ -174,7 +174,7 @@
    - 说明：`long` ticks 大于 2^53 时不能由 double 精确表示，平均值可能在没有溢出的情况下错误。
    - 建议：用整数累计（必要时 `decimal`/溢出检测）计算商和余数，或清晰返回 `double` 秒数而非伪精确 `TimeSpan`。
 
-234. **[P2] `AddWeeks` 先执行 int 乘法，极端输入会悄然溢出。**
+234. **[P2][已修复] `AddWeeks` 先执行 int 乘法，极端输入会悄然溢出。**
    - 位置：`Extensions/~System/DateTimeExtensions.cs:63`。
    - 说明：`numberOfWeeks * 7` 在传入 `int` 时先以 32 位计算，随后把已损坏的天数交给 `AddDays`。
    - 建议：使用 `checked((long)numberOfWeeks * 7)`，再明确转换/报告超出 `DateTime` 可表示范围的情况。
@@ -189,22 +189,22 @@
    - 说明：列表可以合法包含 null；索引有效时方法返回 true 仍可能把 null 写入 `out value`。
    - 建议：移除该 attribute，或只对 `T : notnull` 的 API 使用它。
 
-237. **[P2] 带 group index 的 `RegexExtensions.TryMatch` 没有遵守 Try 模式。**
+237. **[P2][已修复] 带 group index 的 `RegexExtensions.TryMatch` 没有遵守 Try 模式。**
    - 位置：`Extensions/~System/~Text/~RegularExpressions/RegexExtensions.cs:48`。
    - 说明：匹配成功但 index 越界时直接索引 `Groups[groupIndex]` 并抛异常；调用者无法从 `bool` 判断失败。
    - 建议：验证 index 并返回 false，或把参数错误与匹配失败拆成 `GetRequiredGroup` 等具名方法。
 
-238. **[P2] span split 枚举器在非法 `Current` 状态返回 default 或陈旧数据。**
+238. **[P2][已修复] span split 枚举器在非法 `Current` 状态返回 default 或陈旧数据。**
    - 位置：`Extensions/~System/ReadOnlySpanExtensions.cs:208` 的 split enumerator。
    - 说明：在首次 `MoveNext` 前及其返回 false 后读取 `Current` 不会按 .NET 枚举器约定抛异常，容易掩盖错误循环。
    - 建议：跟踪有效状态并抛 `InvalidOperationException`，或明确它是非常规 ref-struct iterator 并改名。
 
-239. **[P3] `ToBytes(ReadOnlySpan<bool>)` 隐藏了 bit packing 的位序。**
+239. **[P3][已修复] `ToBytes(ReadOnlySpan<bool>)` 隐藏了 bit packing 的位序。**
    - 位置：`Extensions/~System/ReadOnlySpanExtensions.cs:58`。
    - 说明：它把八个 bool 压成一个字节且采用特定 LSB-first 顺序；`ToBytes` 容易被理解为一个 bool 一个字节，跨系统协议会错位。
    - 建议：重命名为 `PackBits`，在 API/文档声明位序，并提供对应 `UnpackBits`。
 
-240. **[P2] `BuildType`/`IsDebug`/`IsRelease` 把 JIT 标志误报为编译配置。**
+240. **[P2][已修复] `BuildType`/`IsDebug`/`IsRelease` 把 JIT 标志误报为编译配置。**
    - 位置：`Extensions/~System/~Reflection/AssemblyExtensions.cs:66`、`:95`、`:100`。
    - 说明：`DebuggableAttribute` 与 JIT 优化不能可靠还原 MSBuild 的 Debug/Release 配置；当前二元 enum 还强迫任何程序集属于其中之一。
    - 建议：只公开可观察到的 `IsJitOptimized`（最好命名为 best-effort），或把配置检测设为 nullable/未知而非事实断言。
@@ -266,6 +266,6 @@
 
 ## 建议处理顺序
 
-1. 先处理 231、245 与 246：它们涉及反射结果可靠性与并发释放。
-2. 接着统一 232–244 的公共 API 契约、命名、异常类型和边界行为。
+1. 先处理 233、235、236、245 与 246：它们涉及数值精度、类型安全、可空契约、反射结果可靠性与并发释放。
+2. 接着统一 241–244 的公共 API 契约、命名、异常类型和边界行为。
 3. 最后处理 247–251 的取消、URI、流所有权和瞬时状态 API，并为每个已确认的行为补充针对性测试。

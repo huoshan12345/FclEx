@@ -60,9 +60,14 @@ public static class DateTimeExtensions
 
     public static DateTime AddWeek(this DateTime dateTime) => dateTime.AddWeeks(1);
 
+    /// <summary>Adds the specified number of whole weeks to <paramref name="dateTime"/>.</summary>
+    /// <param name="dateTime">The date and time to adjust.</param>
+    /// <param name="numberOfWeeks">The signed number of seven-day weeks to add.</param>
+    /// <returns>The adjusted date and time.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">The resulting date is outside the range of <see cref="DateTime"/>.</exception>
     public static DateTime AddWeeks(this DateTime dateTime, int numberOfWeeks)
     {
-        return dateTime.AddDays(numberOfWeeks * 7);
+        return dateTime.AddDays(checked((long)numberOfWeeks * 7));
     }
 
     public static DateTime FirstDayOfWeek(

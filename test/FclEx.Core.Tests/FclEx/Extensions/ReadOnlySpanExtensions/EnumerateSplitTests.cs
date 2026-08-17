@@ -1,4 +1,4 @@
-namespace FclEx.Extensions.ReadOnlySpanExtensions;
+namespace FclEx.Extensions;
 
 public class EnumerateSplitTests
 {
@@ -25,6 +25,39 @@ public class EnumerateSplitTests
     public void EnumerateSplit_TrimAndRemoveEmpty_AppliesBothOptions()
     {
         Assert.Equal(["a", "b"], Split(" , a, b , ", SplitOptions.TrimAndRemoveEmpty));
+    }
+
+    [Fact]
+    public void EnumerateSplit_CurrentIsInvalidBeforeTheFirstMoveAndAfterCompletion()
+    {
+        var enumerator = "a".AsSpan().EnumerateSplit(",", SplitOptions.None);
+
+        Exception? beforeFirstMove = null;
+        try
+        {
+            _ = enumerator.Current;
+        }
+        catch (Exception ex)
+        {
+            beforeFirstMove = ex;
+        }
+
+        Assert.IsType<InvalidOperationException>(beforeFirstMove);
+        Assert.True(enumerator.MoveNext());
+        Assert.Equal("a", enumerator.Current.ToString());
+        Assert.False(enumerator.MoveNext());
+
+        Exception? afterCompletion = null;
+        try
+        {
+            _ = enumerator.Current;
+        }
+        catch (Exception ex)
+        {
+            afterCompletion = ex;
+        }
+
+        Assert.IsType<InvalidOperationException>(afterCompletion);
     }
 
     private static string[] Split(string value, SplitOptions options)

@@ -2,7 +2,13 @@ namespace FclEx.Extensions;
 
 public static class ReadOnlyListExtensions
 {
-    public static bool TryGet<T>(this IReadOnlyList<T> list, int index, [NotNullWhen(true)] out T? value) where T : notnull
+    /// <summary>Attempts to get the item at <paramref name="index"/>.</summary>
+    /// <remarks>A successful lookup may still produce <see langword="null"/> when the list contains a null item.</remarks>
+    /// <param name="list">The list to inspect.</param>
+    /// <param name="index">The zero-based item index.</param>
+    /// <param name="value">The item at <paramref name="index"/>, or <see langword="null"/> when the lookup fails or the item is null.</param>
+    /// <returns><see langword="true"/> when <paramref name="index"/> is in range; otherwise, <see langword="false"/>.</returns>
+    public static bool TryGet<T>(this IReadOnlyList<T> list, int index, [MaybeNullWhen(false)] out T value)
     {
         if (index >= 0 && index < list.Count)
         {
@@ -15,7 +21,7 @@ public static class ReadOnlyListExtensions
     }
 
     [return: NotNullIfNotNull(nameof(defaultValue))]
-    public static T? Get<T>(this IReadOnlyList<T> list, int index, T? defaultValue = default) where T : notnull
+    public static T? Get<T>(this IReadOnlyList<T> list, int index, T? defaultValue = default)
     {
         return list.TryGet(index, out var value)
             ? value

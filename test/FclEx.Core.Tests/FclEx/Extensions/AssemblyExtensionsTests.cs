@@ -26,4 +26,12 @@ public class AssemblyExtensionsTests
         Assert.Equal("name", openException.ParamName);
         Assert.Equal("name", getException.ParamName);
     }
+
+    [Fact]
+    public void IsJitOptimized_ReflectsDebuggableAttributeOptimizationSetting()
+    {
+        var attribute = Assembly.GetCustomAttribute<DebuggableAttribute>();
+
+        Assert.Equal(attribute?.IsJITOptimizerDisabled != true, Assembly.IsJitOptimized());
+    }
 }
