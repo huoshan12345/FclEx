@@ -141,21 +141,22 @@ public static class Check
     }
 
     [MethodImpl(AggressiveInlining)]
-    public static void NotEmpty<T>([NotNull] IReadOnlyCollection<T>? value, [CallerArgumentExpression(nameof(value))] string? parameterName = null)
-    {
-        NotNull(value, parameterName);
-        if (value.Count == 0)
-        {
-            var name = parameterName ?? nameof(value);
-            throw new ArgumentException($"The list argument '{name}' cannot be empty.");
-        }
-    }
-
-    [MethodImpl(AggressiveInlining)]
     public static void NotEmpty<T>([NotNull] IEnumerable<T>? value, [CallerArgumentExpression(nameof(value))] string? parameterName = null)
     {
         NotNull(value, parameterName);
-        if (value.AnyEx() == false)
+
+        var empty = false;
+
+        if (value.TryGetNonEnumeratedCount(out var count))
+        {
+            empty = count == 0;
+        }
+        else if (value.AnyEx() == false)
+        {
+            empty = true;
+        }
+
+        if (empty)
         {
             var name = parameterName ?? nameof(value);
             throw new ArgumentException($"The list argument '{name}' cannot be empty.");

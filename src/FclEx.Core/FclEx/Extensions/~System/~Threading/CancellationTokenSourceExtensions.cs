@@ -11,7 +11,7 @@ public static class CancellationTokenSourceExtensions
 
             cts.Cancel();
         }
-        catch { }
+        catch (ObjectDisposedException) { }
     }
 
 #if !NET5_0_OR_GREATER

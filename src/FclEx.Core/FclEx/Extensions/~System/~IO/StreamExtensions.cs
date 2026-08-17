@@ -25,7 +25,7 @@ public static class StreamExtensions
         Encoding? encoding = null,
         bool detectEncodingFromByteOrderMarks = true,
         int? bufferSize = null,
-        bool leaveOpen = false,
+        bool leaveOpen = true,
         CancellationToken token = default)
     {
         using var reader = new StreamReader(stream, encoding ?? Encoding.UTF8, detectEncodingFromByteOrderMarks, bufferSize ?? DefaultBufferSize, leaveOpen);

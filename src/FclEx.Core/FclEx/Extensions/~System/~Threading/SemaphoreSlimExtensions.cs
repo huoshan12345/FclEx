@@ -39,6 +39,4 @@ public static class SemaphoreSlimExtensions
                 semaphore.Release(acquiredCount);
         }
     }
-
-    public static bool IsEmpty(this SemaphoreSlim semaphore) => semaphore.CurrentCount == 0;
 }
