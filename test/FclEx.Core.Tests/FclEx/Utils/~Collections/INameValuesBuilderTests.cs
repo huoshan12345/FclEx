@@ -12,7 +12,6 @@ public class INameValuesBuilderTests
     public void Build_UsesTheFormatSpecifiedByNameValueAttribute()
     {
         var value = new FormattedBuilder().Build().Single();
-
         Assert.Equal(new KeyValuePair<string, string>("date", "2026-08-16"), value);
     }
 }

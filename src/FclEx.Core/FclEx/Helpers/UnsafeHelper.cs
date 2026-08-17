@@ -53,8 +53,7 @@ public static unsafe class UnsafeHelper
     }
 
     // code from https://benbowen.blog/post/fun_with_makeref/
-    [MethodImpl(AggressiveInlining)]
-    public static void WriteTo<T>(IntPtr dest, T value, int sizeOfT) where T : unmanaged
+    public static void WriteTo<T>(IntPtr dest, T value) where T : unmanaged
     {
         var bytePtr = (byte*)dest;
 
@@ -69,14 +68,14 @@ public static unsafe class UnsafeHelper
         // and finally cast that IntPtr to a byte* so we can use it in the copy code below.
         var valuePtr = (byte*)*((IntPtr*)&valueRef);
 
-        for (var i = 0; i < sizeOfT; ++i)
+        var size = Unsafe.SizeOf<T>();
+        for (var i = 0; i < size; ++i)
         {
             bytePtr[i] = valuePtr[i];
         }
     }
 
-    [MethodImpl(AggressiveInlining)]
-    public static T ReadFrom<T>(IntPtr source, int sizeOfT) where T : unmanaged
+    public static T ReadFrom<T>(IntPtr source) where T : unmanaged
     {
         var bytePtr = (byte*)source;
 
@@ -84,7 +83,8 @@ public static unsafe class UnsafeHelper
         var resultRef = __makeref(result);
         var resultPtr = (byte*)*((IntPtr*)&resultRef);
 
-        for (var i = 0; i < sizeOfT; ++i)
+        var size = Unsafe.SizeOf<T>();
+        for (var i = 0; i < size; ++i)
         {
             resultPtr[i] = bytePtr[i];
         }
@@ -92,11 +92,14 @@ public static unsafe class UnsafeHelper
         return result;
     }
 
-    [MethodImpl(AggressiveInlining)]
-    public static TOut Reinterpret<TIn, TOut>(TIn curValue, int sizeBytes)
+    public static TOut Reinterpret<TIn, TOut>(TIn curValue)
         where TIn : unmanaged
         where TOut : unmanaged
     {
+        var size = Unsafe.SizeOf<TIn>();
+        if (size != Unsafe.SizeOf<TOut>())
+            throw new InvalidOperationException($"Cannot reinterpret from {typeof(TIn)} to {typeof(TOut)} because their sizes differ.");
+
         var result = default(TOut);
 
         var resultRef = __makeref(result);
@@ -105,7 +108,7 @@ public static unsafe class UnsafeHelper
         var curValueRef = __makeref(curValue);
         var curValuePtr = (byte*)*((IntPtr*)&curValueRef);
 
-        for (var i = 0; i < sizeBytes; ++i)
+        for (var i = 0; i < size; ++i)
         {
             resultPtr[i] = curValuePtr[i];
         }

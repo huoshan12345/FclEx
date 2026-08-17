@@ -44,14 +44,14 @@ public static class DefaultNameValuesBuilder
 
         foreach (var member in members)
         {
-            if (member.TryGetAttribute<NameValueAttribute>(false, out var queryAttr) == false)
+            if (member.TryGetAttribute<NameValueAttribute>(false, out var nameValueAttribute) == false)
                 continue;
 
-            var omit = queryAttr.OmitOption;
+            var omit = nameValueAttribute.OmitOption;
             if (omit == Unset)
                 omit = builder.Options.OmitOption;
 
-            var name = queryAttr.Name ?? member.Name;
+            var name = nameValueAttribute.Name ?? member.Name;
             var value = member.GetValue(builder);
             var type = member.DataMemberType.UnwrapNullable();
 
@@ -68,7 +68,7 @@ public static class DefaultNameValuesBuilder
                 }
                 else if (type == typeof(bool))
                 {
-                    var convention = queryAttr.BoolValueConvention;
+                    var convention = nameValueAttribute.BoolValueConvention;
                     if (convention == BoolValueConvention.Unset)
                         convention = builder.Options.BoolValueConvention;
 
@@ -89,7 +89,7 @@ public static class DefaultNameValuesBuilder
                 continue;
             }
 
-            list.Add(new(name, builder.ToString(value, null) ?? ""));
+            list.Add(new(name, builder.ToString(value, nameValueAttribute.Format) ?? ""));
         }
 
         return list;
