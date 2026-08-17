@@ -4,11 +4,16 @@ public static class JsonHelper
 {
     private static readonly ConcurrentDictionary<JsonOptions, JsonSerializerOptions> _serializerOptions = new();
 
+    private static readonly ReLazy<JsonSerializerOptions> _defaultOptions = new(() => GetOptions());
+    private static readonly ReLazy<JsonSerializerOptions> _webOptions = new(() => GetOptions(JsonOptions.Web));
     private static readonly ReLazy<DefaultJsonTypeInfoResolver> _resolver = new(() => CreateDefaultJsonTypeInfoResolver(false));
     private static readonly ReLazy<DefaultJsonTypeInfoResolver> _resolverIgnoreReadingNull = new(() => CreateDefaultJsonTypeInfoResolver(true));
 
     private static DefaultJsonTypeInfoResolver Resolver => _resolver.Value;
     private static DefaultJsonTypeInfoResolver ResolverIgnoreReadingNull => _resolverIgnoreReadingNull.Value;
+
+    public static JsonSerializerOptions DefaultOptions => _defaultOptions.Value;
+    public static JsonSerializerOptions WebOptions => _webOptions.Value;
 
     private static DefaultJsonTypeInfoResolver CreateDefaultJsonTypeInfoResolver(bool ignoreReadingNull)
     {
@@ -183,5 +188,7 @@ public static class JsonHelper
         _serializerOptions.Clear();
         _resolver.Recreate();
         _resolverIgnoreReadingNull.Recreate();
+        _defaultOptions.Recreate();
+        _webOptions.Recreate();
     }
 }
