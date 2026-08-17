@@ -173,4 +173,9 @@ public static class JsonHelper
             };
         }
     }
+
+    public static void ClearCache()
+    {
+        _serializerOptions.Clear();
+    }
 }
