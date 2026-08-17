@@ -12,9 +12,9 @@ public sealed class StringPassthroughSerializer : IStringSerializer
         _fallbackSerializer = Check.NotNull(fallbackSerializer);
     }
 
-    public string Serialize(object? obj)
+    public string Serialize(object? obj, Type type)
     {
-        return obj as string ?? _fallbackSerializer.Serialize(obj);
+        return obj as string ?? _fallbackSerializer.Serialize(obj, type);
     }
 
     public object? Deserialize(string data, Type type)

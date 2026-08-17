@@ -12,9 +12,9 @@ public sealed class Utf8MemoryBytesSerializer : IMemoryBytesSerializer
         _stringSerializer = Check.NotNull(stringSerializer);
     }
 
-    public ReadOnlyMemory<byte> Serialize(object? obj)
+    public ReadOnlyMemory<byte> Serialize(object? obj, Type type)
     {
-        return _stringSerializer.Serialize(obj).ToBytes(Encoding.UTF8);
+        return _stringSerializer.Serialize(obj, type).ToBytes(Encoding.UTF8);
     }
 
     public object? Deserialize(ReadOnlyMemory<byte> data, Type type)
