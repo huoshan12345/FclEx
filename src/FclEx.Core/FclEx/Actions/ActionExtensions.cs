@@ -138,7 +138,7 @@ public static partial class ActionExtensions
     public static IAction<T> OnResult<T>(this IAction<T> action, Func<OperationResult<T>, Task> resultAction)
     {
         Check.NotNull(resultAction);
-        return action.ThenResult(r => Operation.ExecuteAsync(() => resultAction(r))
+        return action.ThenResult(r => Operation.ExecuteAsync(t => resultAction(r))
             .ThenResult(x => x.Then(_ => r.Elapsed(x.Elapsed))));
     }
 

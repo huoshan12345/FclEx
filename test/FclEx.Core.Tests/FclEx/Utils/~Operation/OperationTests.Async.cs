@@ -91,7 +91,7 @@ partial class OperationTests
     [Fact]
     public async Task ExecuteAsync_OperationResult_UsesOuterElapsed()
     {
-        var r = await Operation.ExecuteAsync(() => Task.FromResult(Operation.Success(TimeSpan.FromHours(1))));
+        var r = await Operation.ExecuteAsync(t => Task.FromResult(Operation.Success(TimeSpan.FromHours(1))));
 
         Assert.True(r.IsSuccess);
         Assert.NotEqual(TimeSpan.FromHours(1), r.Elapsed);
