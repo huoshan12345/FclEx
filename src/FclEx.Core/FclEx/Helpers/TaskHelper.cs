@@ -160,7 +160,8 @@ public static class TaskHelper
         {
             return await RunAsync(operation, cts.Token).NoCapture();
         }
-        catch (OperationCanceledException ex) when (ex.CancellationToken == timeoutSource.Token)
+        catch (OperationCanceledException ex) when (timeoutSource.IsCancellationRequested
+                                                    && !cancellationToken.IsCancellationRequested)
         {
             throw new TimeoutException("The operation did not complete within the specified timeout.", ex);
         }
@@ -192,7 +193,8 @@ public static class TaskHelper
         {
             await RunAsync(operation, cts.Token).NoCapture();
         }
-        catch (OperationCanceledException ex) when (ex.CancellationToken == timeoutSource.Token)
+        catch (OperationCanceledException ex) when (timeoutSource.IsCancellationRequested
+                                                    && !cancellationToken.IsCancellationRequested)
         {
             throw new TimeoutException("The operation did not complete within the specified timeout.", ex);
         }

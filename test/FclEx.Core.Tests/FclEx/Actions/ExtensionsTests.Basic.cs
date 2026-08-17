@@ -353,7 +353,7 @@ public partial class ExtensionsTests
             .ExecuteAsync(cancellation.Token);
 
         Assert.True(result.IsCanceled());
-        Assert.IsType<OperationCanceledException>(result.Exception);
+        Assert.IsType<OperationCanceledException>(result.Exception, false);
     }
 
     [Fact]

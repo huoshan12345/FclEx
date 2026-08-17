@@ -18,14 +18,11 @@ namespace System.Collections.Generic;
 public class MarshalToBytesEqualityComparer<T> : IEqualityComparer<T>
 {
     public static readonly MarshalToBytesEqualityComparer<T> Instance = new();
-
-    static MarshalToBytesEqualityComparer()
-    {
-        typeof(T).EnsureMarshalable();
-    }
-
+    
     public bool Equals(T? x, T? y)
     {
+        typeof(T).EnsureMarshalable(); // do not put it in the static constructor
+
         if (ComparerHelper.TryEquals(x, y, out var result))
             return result.Value;
 
@@ -36,6 +33,8 @@ public class MarshalToBytesEqualityComparer<T> : IEqualityComparer<T>
 
     public int GetHashCode(T? obj)
     {
+        typeof(T).EnsureMarshalable();
+
         if (obj is null)
             return 0;
 

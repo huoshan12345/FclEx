@@ -172,7 +172,14 @@ public static class RandomExtensions
         Check.NotNull(random);
         var min = minValue ?? DateTime.UnixEpoch;
         var max = maxValue ?? DateTime.MaxValue;
-        return random.NextDateTimeOffset(min, max).DateTime;
+        CheckRange(min, max);
+
+        if (min == max)
+            return min;
+
+        var ticks = random.NextInt64(min.Ticks, max.Ticks);
+        var utcValue = new DateTime(ticks, DateTimeKind.Utc);
+        return utcValue;
     }
 
     public static DateTimeOffset NextDateTimeOffset(this Random random, DateTimeOffset? minValue = null, DateTimeOffset? maxValue = null)

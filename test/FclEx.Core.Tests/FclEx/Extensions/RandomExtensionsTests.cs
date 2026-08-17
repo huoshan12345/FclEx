@@ -220,7 +220,7 @@ public class RandomExtensionsTests
     }
 
     [Fact]
-    public void NextDateTimeOffset_ShouldPreserveMinOffset()
+    public void NextDateTimeOffset_ShouldBeWithoutOffset()
     {
         var random = new Random(0);
         var min = new DateTimeOffset(2024, 1, 1, 0, 0, 0, TimeSpan.FromHours(8));
@@ -228,7 +228,7 @@ public class RandomExtensionsTests
 
         var value = random.NextDateTimeOffset(min, max);
 
-        Assert.Equal(min.Offset, value.Offset);
+        Assert.Equal(TimeSpan.Zero, value.Offset);
         Assert.True(value >= min);
         Assert.True(value < max);
     }

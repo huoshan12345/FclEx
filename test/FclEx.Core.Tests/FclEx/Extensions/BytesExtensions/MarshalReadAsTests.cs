@@ -234,7 +234,7 @@ public class MarshalReadAsTests
     [Fact]
     public void MarshalReadAs_RejectsManagedFieldsThatWouldDereferenceInputAsAPointer()
     {
-        Assert.Throws<NotSupportedException>(() => new byte[64].MarshalReadAs<PointerStringRecord>());
+        Assert.Throws<ArgumentException>(() => new byte[64].MarshalReadAs<PointerStringRecord>());
     }
 
 #if NET8_0_OR_GREATER

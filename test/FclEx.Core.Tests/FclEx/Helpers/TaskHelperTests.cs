@@ -94,7 +94,7 @@ public class TaskHelperTests
         Assert.Equal(new InternalClass(42), result);
         Assert.Equal(1, source.ConsumptionCount);
     }
-    
+
     [RetryFact]
     public async Task RunAsync_ShouldCancelTheOperationAndThrowOnTimeout()
     {
@@ -106,7 +106,7 @@ public class TaskHelperTests
                 operationToken = token;
                 await Task.Delay(Timeout.InfiniteTimeSpan, token);
             },
-            TimeSpan.FromMilliseconds(100)));
+            TimeSpan.FromMilliseconds(100), CancellationToken.None));
 
         Assert.True(operationToken.IsCancellationRequested);
     }
