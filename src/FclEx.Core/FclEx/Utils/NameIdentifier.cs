@@ -27,6 +27,9 @@ public interface INameIdentifier<out T> where T : INameIdentifier<T>
 /// <typeparam name="T">The specific type of name identifier, which must inherit from this class and implement <see cref="INameIdentifier{T}"/>.</typeparam>
 public abstract record NameIdentifier<T> : IComparable<T> where T : NameIdentifier<T>, INameIdentifier<T>
 {
+    /// <summary>Initializes an identifier with a non-null name.</summary>
+    /// <param name="name">The identifier name.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="name"/> is <see langword="null"/>.</exception>
     protected NameIdentifier(string name)
     {
         Name = Check.NotNull(name);
@@ -37,6 +40,7 @@ public abstract record NameIdentifier<T> : IComparable<T> where T : NameIdentifi
     /// </summary>
     private static readonly ConcurrentDictionary<string, T> _cache = new();
 
+    /// <summary>Gets the non-null identifier name.</summary>
     public string Name { get; init; }
 
     /// <summary>

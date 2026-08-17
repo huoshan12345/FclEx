@@ -5,15 +5,22 @@ public static class TreeNode
     public static TreeNode<T> Create<T>(T value) => new(value);
 }
 
+/// <summary>
+/// Represents a node in a mutable tree whose value has the same nullability as <typeparamref name="T"/>.
+/// </summary>
+/// <typeparam name="T">The node value type.</typeparam>
 public sealed class TreeNode<T>
 {
     private readonly List<TreeNode<T>> _children = [];
 
+    /// <summary>Initializes a node with <paramref name="value"/>.</summary>
+    /// <param name="value">The node value.</param>
     public TreeNode(T value)
     {
         Value = value;
     }
 
+    /// <summary>Gets the node value.</summary>
     public T Value { get; }
     public IReadOnlyList<TreeNode<T>> Children => _children;
     public TreeNode<T>? Parent { get; private set; }
@@ -129,6 +136,10 @@ public static class TreeNodeExtensions
         }
     }
 
+    /// <summary>Enumerates the values in breadth-first order.</summary>
+    /// <typeparam name="T">The node value type.</typeparam>
+    /// <param name="root">The root node, or <see langword="null"/> for an empty traversal.</param>
+    /// <returns>The node values with the nullability declared by <typeparamref name="T"/>.</returns>
     public static IEnumerable<T> TraversalByLevel<T>(this TreeNode<T>? root)
     {
         if (root == null)

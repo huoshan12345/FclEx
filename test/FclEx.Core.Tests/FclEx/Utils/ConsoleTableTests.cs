@@ -64,4 +64,21 @@ public class ConsoleTableTests
         Assert.Equal("first", table.Rows[0][0]);
         Assert.False(table.Rows[0] is object?[]);
     }
+
+    [Fact]
+    public void AddRow_WithoutColumns_ThrowsInvalidOperationException()
+    {
+        var table = new ConsoleTable(new());
+
+        Assert.Throws<InvalidOperationException>(() => table.AddRow(["value"]));
+    }
+
+    [Fact]
+    public void AddRow_WithWrongCellCount_ThrowsArgumentExceptionForValues()
+    {
+        var table = new ConsoleTable(new() { Columns = ["first", "second"] });
+
+        var exception = Assert.Throws<ArgumentException>(() => table.AddRow(["value"]));
+        Assert.Equal("values", exception.ParamName);
+    }
 }

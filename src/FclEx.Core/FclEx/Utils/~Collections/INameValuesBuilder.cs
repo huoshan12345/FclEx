@@ -53,6 +53,16 @@ public static class DefaultNameValuesBuilder
             : value?.ToString();
     }
 
+    /// <summary>
+    /// Builds the name-value pairs described by <see cref="NameValueAttribute"/> members on <paramref name="builder"/>.
+    /// </summary>
+    /// <param name="builder">The object whose attributed members are converted to name-value pairs.</param>
+    /// <returns>The generated pairs in member-discovery order.</returns>
+    /// <remarks>
+    /// <see cref="NameValueOmitOption.Never"/> takes precedence over every other omission flag when flags are combined.
+    /// Values are compared with the equality comparer appropriate for their declared type when
+    /// <see cref="NameValueOmitOption.WhenDefault"/> is selected.
+    /// </remarks>
     public static List<KeyValuePair<string, string>> Build(INameValuesBuilder builder)
     {
         var list = new List<KeyValuePair<string, string>>();

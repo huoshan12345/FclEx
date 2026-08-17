@@ -42,6 +42,15 @@ public static partial class DictionaryExtensions
         }
     }
 
+    /// <summary>
+    /// Adds <paramref name="value"/> to the collection associated with <paramref name="key"/>, creating that collection when needed.
+    /// </summary>
+    /// <typeparam name="TKey">The dictionary key type.</typeparam>
+    /// <typeparam name="TValue">The collection element type.</typeparam>
+    /// <typeparam name="TCol">The collection type.</typeparam>
+    /// <param name="dic">The dictionary of collections.</param>
+    /// <param name="key">The key whose collection receives the value.</param>
+    /// <param name="value">The value to add.</param>
     public static void Add<TKey, TValue, TCol>(this IDictionary<TKey, TCol> dic, TKey key, TValue value)
         where TCol : ICollection<TValue>, new()
     {

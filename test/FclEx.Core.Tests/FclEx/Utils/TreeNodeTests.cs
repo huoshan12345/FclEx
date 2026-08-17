@@ -50,4 +50,15 @@ public class TreeNodeTests
         Assert.Same(child, Assert.Single(root.Children));
         Assert.Same(grandchild, Assert.Single(child.Children));
     }
+
+    [Fact]
+    public void TraversalByLevel_PreservesTheGenericNullability()
+    {
+        var root = new TreeNode<string?>(null);
+        root.AddChild("child");
+
+        IEnumerable<string?> values = root.TraversalByLevel();
+
+        Assert.Equal([null, "child"], values);
+    }
 }

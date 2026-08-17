@@ -108,53 +108,53 @@
    - 说明：数字、日期等会使用当前文化，生成的 URI/请求参数会随服务器区域设置变化；这不是一般显示文本，而是跨边界协议值。
    - 建议：选用 `IFormattable.ToString(null, CultureInfo.InvariantCulture)`，或把 `IFormatProvider`/值格式化器作为 options 的一部分。
 
-221. **[P1] `WhenDefault` 对值类型永远可能判断失败。**
+221. **[P1][已修复] `WhenDefault` 对值类型永远可能判断失败。**
    - 位置：`Utils/~Collections/INameValuesBuilder.cs:105` 的 `DefaultNameValuesBuilder.Build`。
    - 说明：`value == type.DefaultValue()` 比较的是两个装箱后的 `object` 引用；例如 `0`、`false`、枚举默认值通常不是同一对象，因而不会被省略。
    - 建议：以 `EqualityComparer<T>.Default` 的等价逻辑比较实际值，或通过类型化 accessor 取得 default 后使用 `object.Equals`。
 
-222. **[P2] `NameValueOmitOption.Never` 与可组合 flags 的模型矛盾。**
+222. **[P2][已修复] `NameValueOmitOption.Never` 与可组合 flags 的模型矛盾。**
    - 位置：`Utils/~Collections/NameValueOmitOption.cs:16`。
    - 说明：`Never` 是普通 bit，`Never | WhenNull` 同时成立，而 builder 仍按 `WhenNull` 省略；“Never”并不能覆盖其他选项。
    - 建议：把“继承/从不省略”建模为非 flags 的独立值，或在 options 解析时拒绝冲突组合并定义优先级。
 
 ## 问题清单（223–251：公共 API、命名与实现细节）
 
-223. **[P3] `ConsoleTable.AddRow` 以通用 `Exception` 报告可预期的参数/状态错误。**
+223. **[P3][已修复] `ConsoleTable.AddRow` 以通用 `Exception` 报告可预期的参数/状态错误。**
    - 位置：`Utils/~ConsoleTable/ConsoleTable.cs:22`。
    - 建议：无列时抛 `InvalidOperationException`，单元格数不匹配时抛带 `values` 参数名的 `ArgumentException`；调用方才能正确处理。
 
-224. **[P2] `TreeNode<T>` 允许 null value，却把层序遍历声明为非空 `IEnumerable<T>`。**
+224. **[P2][已修复] `TreeNode<T>` 允许 null value，却把层序遍历声明为非空 `IEnumerable<T>`。**
    - 位置：`Utils/TreeNode.cs:132`。
    - 说明：遍历用 null-forgiving 返回 `Value`，调用方获得的 NRT 承诺不真实。
    - 建议：限制 `T : notnull`，或将所有相关返回值改为 `IEnumerable<T?>`；二者选其一并保持一致。
 
-225. **[P2] `NameIdentifier<T>` 的构造函数接受 null，却无法维持自身不变量。**
+225. **[P2][已修复] `NameIdentifier<T>` 的构造函数接受 null，却无法维持自身不变量。**
    - 位置：`Utils/NameIdentifier.cs:28`。
    - 说明：直接构造 null 后，`GetHashCode`/`ToString` 可失败；工厂路径的约束与公开构造路径不一致。
    - 建议：在主构造函数验证 `Name` 非空，或将成员和所有派生语义完整改为可空。
 
-226. **[P1] `Clamp` 未验证下界不大于上界。**
+226. **[P1][已修复] `Clamp` 未验证下界不大于上界。**
    - 位置：`Extensions/~System/ObjectExtensions.cs:15`。
    - 说明：`Clamp(10, 5, 1)` 会给出看似合法但没有定义基础的结果，和 `Math.Clamp` 的契约不同。
    - 建议：在比较前验证 `min <= max` 并抛 `ArgumentException`，或直接委托到对应 BCL API。
 
-227. **[P2] `CastTo<T>` 实际是动态绑定转换，不是名称所示的普通 cast。**
+227. **[P2][已修复] `CastTo<T>` 实际是动态绑定转换，不是名称所示的普通 cast。**
    - 位置：`Extensions/~System/ObjectExtensions.cs:7`。
    - 说明：它会运行用户定义转换并依赖 dynamic binder，在 AOT/裁剪环境也带来额外要求；调用者只从名称无法预期这些行为。
    - 建议：普通 API 用 `(T)value` 的类型转换；若要保留转换运算符支持，应命名为 `DynamicConvertTo` 并隔离到可选包。
 
-228. **[P1] `DictionaryExtensions.Add` 的两个泛型重载对常见“字典到集合”形状形成歧义。**
+228. **[P1][已修复] `DictionaryExtensions.Add` 的两个泛型重载对常见“字典到集合”形状形成歧义。**
    - 位置：`Extensions/~System/~Collections/~Generic/DictionaryExtensions.cs:25`、`:58`。
    - 说明：`Dictionary<TKey, List<TValue>>` 同时满足两组 `ICollection<T>` 约束，泛型参数顺序也相反；调用 `Add(key, value)` 难以稳定绑定。
    - 建议：保留单一明确重载，或改名为 `AddToCollection` 并固定 `TKey, TValue, TCollection` 的顺序。
 
-229. **[P2] `CrossJoin` 假定输入可重复枚举，却接受任意 `IEnumerable`。**
+229. **[P2][已修复] `CrossJoin` 假定输入可重复枚举，却接受任意 `IEnumerable`。**
    - 位置：`Extensions/~System/~Collections/~Generic/EnumerableExtensions.cs:188`。
    - 说明：右序列会为每个左元素重枚举；one-shot iterator、网络流或有副作用的 enumerable 会得到不完整/错误的笛卡尔积。
    - 建议：在入口快照需要重用的一侧，或把参数限制为 `IReadOnlyCollection` 并在文档中声明枚举要求。
 
-230. **[P2] 名为 `SelectMany` 的两序列扩展实际执行自笛卡尔积。**
+230. **[P2][已修复] 名为 `SelectMany` 的两序列扩展实际执行自笛卡尔积。**
    - 位置：`Extensions/~System/~Collections/~Generic/EnumerableExtensions.cs:290`。
    - 说明：该名称与 LINQ `SelectMany` 的嵌套展平语义冲突，而库内已有 `CrossJoin`；调用点很容易误解并引入 O(n²) 工作。
    - 建议：移除或重命名为 `CrossJoin`/`SelfCrossJoin`，避免与 BCL LINQ 方法同名但语义不同。
@@ -266,6 +266,6 @@
 
 ## 建议处理顺序
 
-1. 先处理 221、222、228、231、245 与 246：它们涉及默认值语义、调用绑定、一次性序列、反射结果可靠性和并发释放。
-2. 接着统一 223–244 的公共 API 契约、命名、异常类型和边界行为。
+1. 先处理 231、245 与 246：它们涉及反射结果可靠性与并发释放。
+2. 接着统一 232–244 的公共 API 契约、命名、异常类型和边界行为。
 3. 最后处理 247–251 的取消、URI、流所有权和瞬时状态 API，并为每个已确认的行为补充针对性测试。

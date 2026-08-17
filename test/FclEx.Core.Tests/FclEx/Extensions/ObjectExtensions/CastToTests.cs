@@ -52,6 +52,18 @@ public class CastToTests
     }
 
     [Fact]
+    public void StringToIntCastTest()
+    {
+        Assert.Equal(42, "42".CastTo<int>());
+    }
+
+    [Fact]
+    public void Clamp_RejectsAnInvertedRange()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => 10.Clamp(5, 1));
+    }
+
+    [Fact]
     public void IntToEnumCastTest()
     {
         var i = 1;

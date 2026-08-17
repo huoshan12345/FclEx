@@ -27,4 +27,15 @@ public class DictionaryExtensionsTests
 
         Assert.Null(value);
     }
+
+    [Fact]
+    public void Add_CreatesAndReusesTheCollectionForAKey()
+    {
+        IDictionary<string, List<int>> dictionary = new Dictionary<string, List<int>>();
+
+        dictionary.Add("numbers", 1);
+        dictionary.Add("numbers", 2);
+
+        Assert.Equal([1, 2], dictionary["numbers"]);
+    }
 }

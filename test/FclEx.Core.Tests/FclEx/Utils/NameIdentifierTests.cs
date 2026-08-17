@@ -22,6 +22,12 @@ public class NameIdentifierTests
     }
 
     [Fact]
+    public void Constructor_RejectsNullName()
+    {
+        Assert.Throws<ArgumentNullException>(() => new MyNameIdentifier(null!));
+    }
+
+    [Fact]
     public void GetOrCreate_ReturnsCachedInstance()
     {
         const string name = nameof(Create_ReturnsNewInstance);

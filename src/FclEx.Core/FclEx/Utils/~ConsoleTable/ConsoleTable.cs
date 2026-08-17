@@ -19,6 +19,14 @@ public class ConsoleTable : IRenderable
         Columns = Array.AsReadOnly(_columns);
     }
 
+    /// <summary>
+    /// Adds a row whose number of cells exactly matches the configured columns.
+    /// </summary>
+    /// <param name="values">The row values.</param>
+    /// <returns>This table.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="values"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException">The table has no configured columns.</exception>
+    /// <exception cref="ArgumentException"><paramref name="values"/> has a different number of cells than the columns.</exception>
     public ConsoleTable AddRow(object?[] values)
     {
         if (values == null)
@@ -26,10 +34,10 @@ public class ConsoleTable : IRenderable
 
         var len = Columns.Count;
         if (len == 0)
-            throw new Exception("Please set the columns first");
+            throw new InvalidOperationException("Please set the columns first.");
 
         if (len != values.Length)
-            throw new Exception($"The number columns in the row ({len}) does not match the values ({values.Length})");
+            throw new ArgumentException($"The number of columns ({len}) does not match the number of values ({values.Length}).", nameof(values));
 
         _rows.Add(values.ToArray());
         return this;
