@@ -47,4 +47,13 @@ public class TruncateTests
             }
         }
     }
+
+    [Fact]
+    public void MaxContentLength_ExcludesTrailingDotsFromTheLimit()
+    {
+        var result = "abcdef".Truncate(maxContentLength: 3);
+
+        Assert.Equal("abc...", result);
+        Assert.Equal(6, result.Length);
+    }
 }

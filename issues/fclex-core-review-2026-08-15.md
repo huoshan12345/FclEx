@@ -459,45 +459,55 @@
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Collections/~Generic/DictionaryExtensions.cs:5-28`。`TryGetValue` 成功后还要求 `value is not null` 才返回，因而会调用 fallback factory；这抹掉了 dictionary 对 present-null 与 absent 的重要区分，而普通名字 `Get` 没有提示。应只根据 `TryGetValue` 判断存在，或改名 `GetNonNullOrDefault` 并统一 selector overload 的契约。
     修复：仅以 `TryGetValue` 的 bool 判断 key 是否存在，present-null 不再触发 fallback。测试锁定该区别。
 
-191. **[P2][命名/所有权] `AsReadOnlyDictionary` 经常原样返回可变 `Dictionary`**
+191. **[P2][命名/所有权][已修复] `AsReadOnlyDictionary` 经常原样返回可变 `Dictionary`**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Collections/~Generic/DictionaryExtensions.cs:96-104`。`Dictionary<TKey,TValue>` 本身实现 `IReadOnlyDictionary`，因此分支直接返回原对象，调用方可向下转换并修改；名称容易被理解为获得只读 wrapper。若目标是阻止通过返回值修改，应始终包装可变 `IDictionary`；若只是接口视图，应改名 `AsReadOnlyDictionaryView` 并明确不提供 immutability。
+    修复：`AsReadOnlyDictionary` 现在始终为可变 dictionary 创建 `ReadOnlyDictionary` wrapper；原先仅返回接口视图的行为改由 `AsReadOnlyDictionaryView` 明确命名。测试验证返回对象不可通过 `IDictionary` 修改、但仍反映 owner 的后续变更。
 
-192. **[P2][运算符设计] `LinkedList` 的 `+` 同时存在纯函数和原地修改两套所有权语义**
+192. **[P2][运算符设计][已修复] `LinkedList` 的 `+` 同时存在纯函数和原地修改两套所有权语义**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Collections/~Generic/LinkedListExtensions.cs:7-65`。`list + list` 返回新实例，而 `list + item`、`list + IEnumerable` 及反向形式修改某个 operand 并返回同一实例；这与已修复的问题 79 是同类公共 API 不一致。`+` 应全部为纯运算，原地修改只由 `+=`/`Add`/`AddRange` 表达，或删除这些非直观 operator。
+    修复：四个 `+` overload 都构造并返回新 `LinkedList<T>`，不再修改任一 operand；`+=` 仍是明确的原地追加操作。测试覆盖四种 `+` 形式并验证原列表不变。
 
-193. **[P2][命名/求值时机] `Queue.Dequeue(chunkSize)` 返回 deferred enumerable，调用时并不 dequeue**
+193. **[P2][命名/求值时机][已修复] `Queue.Dequeue(chunkSize)` 返回 deferred enumerable，调用时并不 dequeue**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Collections/~Generic/QueueExtensions.cs:14-22`。只有枚举结果时才逐项删除，部分枚举只删除一部分，重复枚举还会继续删除后续项；负数又静默得到空序列。具有破坏性动作的 `Dequeue` 应立即执行并返回 array/list，同时验证 `chunkSize >= 0`；否则必须用 `EnumerateAndDequeueUpTo` 一类名称显式暴露 deferred side effect。
+    修复：参数改名为 `count`，方法立即移除至多 `count` 项并返回 materialized `T[]`；负数抛 `ArgumentOutOfRangeException`。XML 文档说明枚举返回数组不会继续修改 queue，测试覆盖即时出队和负数。
 
-194. **[P3][签名] `ConcurrentDictionary.Remove` 丢弃了原子移除结果**
+194. **[P3][签名][已修复] `ConcurrentDictionary.Remove` 丢弃了原子移除结果**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/~Collections/~Concurrent/ConcurrentDictionaryExtensions.cs:3-8`。扩展返回 `void`，内部忽略 `TryRemove` 的 bool 和 value；调用方无法知道 key 是否存在，也容易把它误认成常见 `Remove` 契约。该薄封装应删除并直接使用 `TryRemove`，或至少返回 bool/被移除值。
+    修复：`Remove` 返回 `TryRemove` 的 bool；测试覆盖首次移除成功、再次移除返回 false。
 
-195. **[P1][并发/生命周期] `Timer<T>` 和 `StatelessTimer` 的 disposed 状态有数据竞争，也不表达 callback 仍可能运行**
+195. **[P1][并发/生命周期][已修复] `Timer` 和 `Timer<T>` 的 disposed 状态有数据竞争，也不表达 callback 仍可能运行**
 
-    位置：`src/FclEx.Core/System/Threading/Timer.cs:5-24`、`StatelessTimer.cs:3-22`。`_timer` 的读写未同步，多个线程可同时看到非 null 并重复执行释放，`Available` 也不是可靠状态；底层 `Timer.Dispose()` 返回时已有 callback 仍可能运行，但 API 没有等待或说明。应以 `Interlocked.Exchange` 完成一次性 ownership 转移，并在需要强停止保证时提供等待 callback 的 async dispose/显式文档。
+    位置（修复前）：`src/FclEx.Core/System/Threading/Timer.cs:5-24`、`StatelessTimer.cs:3-22`。`_timer` 的读写未同步，多个线程可同时看到非 null 并重复执行释放，`Available` 也不是可靠状态；底层 `Timer.Dispose()` 返回时已有 callback 仍可能运行，但 API 没有等待或说明。应以 `Interlocked.Exchange` 完成一次性 ownership 转移，并在需要强停止保证时提供等待 callback 的 async dispose/显式文档。
+    修复：两个 wrapper 迁入 `FclEx.Utils`，统一命名为 `Timer` / `Timer<T>`，并由 `TimerLifetime` 使用 `Interlocked.Exchange` 取得一次性 timer ownership；`IsActive` 取代含义不明的 `Available`，仅表示尚未请求 disposal 的快照。同步 `Dispose` 不等待 callback，新增 `IAsyncDisposable.DisposeAsync` 通过 BCL `Timer.Dispose(WaitHandle)` 等待 queued/running callback 完成；XML 文档明确两种语义。`NonCapturingTimer` factory 同步迁入该命名空间。测试覆盖重复释放、状态转换，以及 generic/non-generic 两种 timer 的 async wait。
 
-196. **[P2] `ReadOnlyList<T>.ToString` 跳过 null 元素，却按原索引决定分隔符**
+196. **[P2][已修复] `ReadOnlyList<T>.ToString` 跳过 null 元素，却按原索引决定分隔符**
 
     位置：`src/FclEx.Core/System/Collections/Generic/ReadOnlyList.cs:17-31`。例如 `[a, null]` 输出 `[a, ]`，中间或开头 null 又产生不同形态；字符串不再可预测地表示元素数量。应明确把 null 输出为 `null`/空标记，或先过滤后 `Join`，不能在保留原 `isLast` 的同时跳过元素。
+    修复：不再跳过 null 元素，保留其位置并以空文本表示，因此分隔符数量与元素数量一致。测试锁定 `[first, null, last]` 的输出为 `[first, , last]`。
 
-197. **[P2][设计] `SocketEndpoint` 允许构造长期无效状态，默认值也必然无效**
+197. **[P2][已删除] `SocketEndpoint` 允许构造长期无效状态，默认值也必然无效**
 
     位置：`src/FclEx.Core/System/Net/SocketEndpoint.cs:3-18`。positional record struct 接受 null/空 Host 和任意 int Port，隐式转换到 `DnsEndPoint` 才延迟抛异常；`default(SocketEndpoint)` 也是公开可产生的无效值。应通过验证构造器/factory 建立 invariant，移除掩盖失败点的隐式转换，或直接使用已有 `DnsEndPoint`/`IPEndPoint`。
+    处理：已删除该类型；调用方应使用 BCL 的 `DnsEndPoint` 或 `IPEndPoint`。
 
-198. **[P1][并发设计] `LockHelper.DoubleCheckAndDo` 无法为任意 condition 提供正确的 double-checked locking**
+198. **[P1][已删除] `LockHelper.DoubleCheckAndDo` 无法为任意 condition 提供正确的 double-checked locking**
 
     位置：`src/FclEx.Core/FclEx/Helpers/LockHelper.cs:3-18`。第一次读取发生在 lock 外，helper 对 condition 所读状态没有 volatile/内存顺序契约；把任意 delegate 包起来并不能保证发布与可见性，反而鼓励调用方写出看似安全的竞态代码。状态、同步原语和初始化动作应由同一类型共同拥有；通用 helper 应删除，或至少只保留一次受锁检查而不声称 double-check 正确性。
+    处理：已删除 `LockHelper`；与特定 `AsyncLock` 配套的方法不属于该无约束的通用 helper，仍由其自身同步模型约束。
 
-199. **[P2][命名/时间语义] `DateTime.ToUtc` 对 `Unspecified` 只改 Kind，不做时区转换**
+199. **[P2][命名/时间语义][已修复] `DateTime.ToUtc` 对 `Unspecified` 只改 Kind，不做时区转换**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/DateTimeExtensions.cs:179-188`。`SpecifyKind(Utc)` 保留 ticks，含义是“假定该墙上时间原本就是 UTC”；这与方法名暗示的“转换到 UTC”不同，并可能造成数小时偏差。该行为应命名为 `AssumeUtc`；真正转换必须要求/使用明确 `TimeZoneInfo`，不能替调用方猜测 unspecified 的来源时区。
+    修复：改名为 `AssumeUtc`；local 值仍使用 `ToUniversalTime()`，unspecified 值仅改为 UTC kind，XML 文档明确不推断时区。Core 和 Newtonsoft.Json 的调用点及测试已同步更新。
 
-200. **[P2][命名/契约] `String.Truncate(maxLength)` 默认会返回超过 maxLength 的字符串**
+200. **[P2][命名/契约][已修复] `String.Truncate(maxLength)` 默认会返回超过 maxLength 的字符串**
 
     位置：`src/FclEx.Core/FclEx/Extensions/~System/StringExtensions.cs:37-49`。截取 `maxLength` 后再追加 `...`，最终长度是 `maxLength + 3`；参数和常见 truncate 语义通常把 max 当作最终输出上限。应把省略号计入预算（过小上限也要定义），或把参数改名 `maxContentLength` 并在文档明确输出还会增长。
+    修复：参数改名为 `maxContentLength`；XML 文档说明 `...` 不计入该上限，因此截断结果总长度会额外增加 3。测试使用命名参数锁定此契约。
 
 ## 建议处理顺序
 

@@ -32,7 +32,7 @@ public class ToNewtonsoftJsonTests
             var json = obj.ToNewtonsoftJsonCamelCase();
             var obj2 = json.ToJToken().ToObject<DateTimeTestModel>()!;
             Assert.Equal(obj.Name, obj2.Name);
-            Assert.Equal(obj.DateTime.ToUtc(), obj2.DateTime.ToUtc());
+            Assert.Equal(obj.DateTime.AssumeUtc(), obj2.DateTime.AssumeUtc());
         }
 
     }

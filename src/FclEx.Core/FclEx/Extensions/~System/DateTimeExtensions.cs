@@ -176,7 +176,14 @@ public static class DateTimeExtensions
             : string.Empty;
     }
 
-    public static DateTime ToUtc(this DateTime dateTime)
+    /// <summary>
+    /// Converts a local value to UTC and treats an unspecified value as already being UTC.
+    /// </summary>
+    /// <remarks>
+    /// For an <see cref="DateTimeKind.Unspecified"/> value, this method preserves the clock time and only changes its
+    /// <see cref="DateTime.Kind"/> to <see cref="DateTimeKind.Utc"/>. It does not infer or apply a time zone.
+    /// </remarks>
+    public static DateTime AssumeUtc(this DateTime dateTime)
     {
         return dateTime.Kind switch
         {

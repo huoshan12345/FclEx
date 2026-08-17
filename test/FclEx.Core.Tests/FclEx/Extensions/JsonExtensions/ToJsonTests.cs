@@ -32,7 +32,7 @@ public class ToJsonTests
             var json = obj.ToJson(new JsonOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
             var obj2 = json.FromJson<DateTimeTestModel>()!;
             Assert.Equal(obj.Name, obj2.Name);
-            Assert.Equal(obj.DateTime.ToUtc(), obj2.DateTime.ToUtc());
+            Assert.Equal(obj.DateTime.AssumeUtc(), obj2.DateTime.AssumeUtc());
         }
 
     }

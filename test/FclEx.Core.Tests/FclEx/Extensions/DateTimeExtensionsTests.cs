@@ -115,4 +115,16 @@ public class DateTimeExtensionsTests
 
         Assert.Throws<ArgumentException>(() => utc.ToDateTimeOffset(TimeSpan.FromHours(1)));
     }
+
+    [Fact]
+    public void AssumeUtc_ConvertsLocalAndOnlyRekindUnspecifiedValues()
+    {
+        var local = new DateTime(2024, 2, 14, 12, 34, 56, DateTimeKind.Local);
+        var unspecified = new DateTime(2024, 2, 14, 12, 34, 56, DateTimeKind.Unspecified);
+        var utc = new DateTime(2024, 2, 14, 12, 34, 56, DateTimeKind.Utc);
+
+        Assert.Equal(local.ToUniversalTime(), local.AssumeUtc());
+        Assert.Equal(DateTime.SpecifyKind(unspecified, DateTimeKind.Utc), unspecified.AssumeUtc());
+        Assert.Equal(utc, utc.AssumeUtc());
+    }
 }

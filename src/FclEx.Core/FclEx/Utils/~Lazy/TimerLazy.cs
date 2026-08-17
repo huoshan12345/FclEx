@@ -2,7 +2,7 @@ namespace FclEx.Utils;
 
 public class TimerLazy<T> : ReLazy<TimerLazy<T>, T>
 {
-    private readonly StatelessTimer _timer;
+    private readonly Timer _timer;
     private readonly object _timerCallbackLock = new();
 
     public TimerLazy(Func<T> valueFactory, TimeSpan dueTime, TimeSpan period,

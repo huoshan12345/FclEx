@@ -34,15 +34,23 @@ partial class StringExtensions
     [MethodImpl(AggressiveInlining)]
     public static string UriUnescape(this string value) => Uri.UnescapeDataString(value);
 
-    public static string Truncate(this string? str, int maxLength, bool appendTrailingDots = true)
+    /// <summary>
+    /// Limits the content portion of a string to <paramref name="maxContentLength"/> characters.
+    /// </summary>
+    /// <remarks>
+    /// When <paramref name="appendTrailingDots"/> is <see langword="true"/> and truncation occurs, the returned value
+    /// contains the retained content followed by <c>...</c>, so its total length exceeds <paramref name="maxContentLength"/>
+    /// by three characters.
+    /// </remarks>
+    public static string Truncate(this string? str, int maxContentLength, bool appendTrailingDots = true)
     {
-        if (maxLength <= 0)
+        if (maxContentLength <= 0)
             return string.Empty;
 
-        if (str.IsNullOrEmpty() || maxLength >= str.Length)
+        if (str.IsNullOrEmpty() || maxContentLength >= str.Length)
             return str ?? string.Empty;
 
-        var sub = str[..maxLength];
+        var sub = str[..maxContentLength];
         return appendTrailingDots
             ? sub + "..."
             : sub;
