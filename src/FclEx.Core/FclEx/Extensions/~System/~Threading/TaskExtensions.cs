@@ -36,7 +36,7 @@ public static partial class TaskExtensions
         /// <param name="delay">The time to delay.</param>
         /// <param name="cancellationToken">The cancellation token to observe.</param>
         /// <returns>A task that represents the delay operation.</returns>
-        public static async Task DelaySafely(TimeSpan delay, CancellationToken cancellationToken)
+        public static async Task DelaySafely(TimeSpan delay, CancellationToken cancellationToken = default)
         {
             if (delay.Ticks <= 0)
                 return;
