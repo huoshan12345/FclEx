@@ -221,10 +221,10 @@ public static class RandomExtensions
 #endif
 
     /// <summary>
-    /// Generates a random value of blittable type.
+    /// Generates a random value of marshalable type.
     /// </summary>
     /// <param name="random">The source of random numbers.</param>
-    /// <typeparam name="T">The blittable type.</typeparam>
+    /// <typeparam name="T">The marshalable type.</typeparam>
     /// <returns>The randomly generated value.</returns>
     public static T NextMarshalable<T>(this Random random)
     {
@@ -233,7 +233,7 @@ public static class RandomExtensions
         var size = Marshal.SizeOf<T>();
         var bytes = new byte[size];
         random.NextBytes(bytes);
-        using var memory = MarshalHelper.AllocHGlobal(size);
+        using var memory = Marshal.AllocHGlobalDisposable(size);
         Marshal.Copy(bytes, 0, memory.Value, size);
         return Marshal.PtrToStructure<T>(memory.Value)!;
     }

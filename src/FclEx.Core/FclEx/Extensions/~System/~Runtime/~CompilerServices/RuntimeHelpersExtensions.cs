@@ -1,4 +1,4 @@
-namespace System.Runtime.CompilerServices;
+namespace FclEx.Extensions;
 
 internal static class RuntimeHelpersExtensions
 {

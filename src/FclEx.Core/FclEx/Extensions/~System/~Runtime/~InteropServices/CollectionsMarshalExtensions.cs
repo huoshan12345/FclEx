@@ -1,4 +1,4 @@
-namespace System.Runtime.InteropServices;
+namespace FclEx.Extensions;
 
 #if !NET5_0_OR_GREATER
 public static class CollectionsMarshal;

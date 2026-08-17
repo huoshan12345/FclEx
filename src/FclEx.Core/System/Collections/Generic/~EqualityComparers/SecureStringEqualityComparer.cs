@@ -15,8 +15,8 @@ public class SecureStringEqualityComparer : IEqualityComparer<SecureString>
         if (x.Length != y.Length)
             return false;
 
-        using var disposable1 = MarshalHelper.SecureStringToBSTR(x);
-        using var disposable2 = MarshalHelper.SecureStringToBSTR(y);
+        using var disposable1 = Marshal.SecureStringToBSTRDisposable(x);
+        using var disposable2 = Marshal.SecureStringToBSTRDisposable(y);
 
         var left = (char*)disposable1.Value.ToPointer();
         var right = (char*)disposable2.Value.ToPointer();
@@ -37,7 +37,7 @@ public class SecureStringEqualityComparer : IEqualityComparer<SecureString>
     {
         Check.NotNull(obj);
 
-        using var disposable = MarshalHelper.SecureStringToBSTR(obj);
+        using var disposable = Marshal.SecureStringToBSTRDisposable(obj);
         var chars = (char*)disposable.Value.ToPointer();
 
         unchecked

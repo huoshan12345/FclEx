@@ -41,21 +41,22 @@ public static partial class BytesExtensions
     /// <see cref="UnmanagedType.ByValTStr"/>. Pointer-based managed fields are rejected so input bytes are never
     /// dereferenced as external addresses. No byte-order conversion is performed.
     /// </remarks>
-    public static T MarshalReadAs<T>(this byte[] bytes, ref int offset) where T : struct
+    public static T MarshalReadAs<T>(this byte[] bytes, ref int offset)
     {
         Check.NotNull(bytes);
         Check.NotLessThan(offset, 0);
+        typeof(T).EnsureMarshalable();
 
-        var length = MarshalHelper.SizeOf<T>();
+        var length = Marshal.SizeOf<T>();
         Check.NotLessThan(bytes.Length, checked(length + offset));
 
-        var result = MarshalHelper.Read<T>(bytes.AsSpan(offset, length));
+        var result = Marshal.ReadAs<T>(bytes.AsSpan(offset, length));
         offset += length;
         return result;
     }
 
     [MethodImpl(AggressiveInlining)]
-    public static T MarshalReadAs<T>(this byte[] bytes) where T : struct
+    public static T MarshalReadAs<T>(this byte[] bytes)
     {
         var i = 0;
         return bytes.MarshalReadAs<T>(ref i);
@@ -65,66 +66,34 @@ public static partial class BytesExtensions
     /// Uses the interop marshaler to read <paramref name="count"/> consecutive structures and advances
     /// <paramref name="offset"/> past their unmanaged representations.
     /// </summary>
-    public static T[] MarshalReadArrayAs<T>(this byte[] bytes, int count, ref int offset) where T : struct
+    public static T[] MarshalReadAsArray<T>(this byte[] bytes, int count, ref int offset)
     {
         Check.NotNull(bytes);
         Check.NotLessThan(offset, 0);
         Check.NotLessThan(count, 0);
+        typeof(T).EnsureMarshalable();
 
-        var length = MarshalHelper.SizeOf<T>();
+        var length = Marshal.SizeOf<T>();
         var totalLength = checked(length * count);
         Check.NotLessThan(bytes.Length, checked(totalLength + offset));
 
-        var result = MarshalHelper.ReadArray<T>(bytes.AsSpan(offset, totalLength), count);
+        var result = Marshal.ReadAsArray<T>(bytes.AsSpan(offset, totalLength), count);
         offset += totalLength;
         return result;
     }
 
     [MethodImpl(AggressiveInlining)]
-    public static T[] MarshalReadArrayAs<T>(this byte[] bytes) where T : struct
+    public static T[] MarshalReadAsArray<T>(this byte[] bytes)
     {
         Check.NotNull(bytes);
+        typeof(T).EnsureMarshalable();
 
-        var length = MarshalHelper.SizeOf<T>();
+        var length = Marshal.SizeOf<T>();
         if (bytes.Length % length != 0)
             throw new ArgumentException("The byte array length must be an exact multiple of the structure size.", nameof(bytes));
 
         var i = 0;
-        return bytes.MarshalReadArrayAs<T>(bytes.Length / length, ref i);
-    }
-
-    public static byte[] MarshalArrayToBytes<T>(this IReadOnlyList<T> list)
-    {
-        Check.NotNull(list);
-
-        if (list.IsEmpty())
-            return [];
-
-        var length = Marshal.SizeOf<T>();
-        var totalBytes = length * list.Count;
-        var bufByte = new byte[totalBytes];
-        using var disposable = MarshalHelper.AllocHGlobal(length);
-        var ptr = disposable.Value;
-        for (var i = 0; i < list.Count; i++)
-        {
-            var item = list[i];
-            Check.NotNull(item, nameof(list) + $"[{i}]");
-
-            var structureInitialized = false;
-            try
-            {
-                Marshal.StructureToPtr(item, ptr, false);
-                structureInitialized = true;
-                Marshal.Copy(ptr, bufByte, i * length, length);
-            }
-            finally
-            {
-                if (structureInitialized)
-                    Marshal.DestroyStructure<T>(ptr);
-            }
-        }
-
-        return bufByte;
+        return bytes.MarshalReadAsArray<T>(bytes.Length / length, ref i);
     }
 
     [MethodImpl(AggressiveInlining)]

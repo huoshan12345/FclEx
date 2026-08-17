@@ -10,6 +10,13 @@ public class MarshalReadAsTests
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    private class NativeRecordClass
+    {
+        public short Kind;
+        public int Value;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
     private unsafe struct FixedBufferRecord
     {
         public ushort Kind;
@@ -90,7 +97,23 @@ public class MarshalReadAsTests
     }
 
     [Fact]
-    public void MarshalReadArrayAs_ReadsEveryValue()
+    public void MarshalReadAs_ReadsSequentialLayoutAndAdvancesOffset_Class()
+    {
+        var expected = new NativeRecordClass { Kind = 7, Value = 123456 };
+        var bytes = Marshal.ToBytes(expected);
+        var prefixed = new byte[bytes.Length + 2];
+        bytes.CopyTo(prefixed, 2);
+        var offset = 2;
+
+        var actual = prefixed.MarshalReadAs<NativeRecordClass>(ref offset);
+
+        Assert.Equal(expected.Kind, actual.Kind);
+        Assert.Equal(expected.Value, actual.Value);
+        Assert.Equal(prefixed.Length, offset);
+    }
+
+    [Fact]
+    public void MarshalReadAsArray_ReadsEveryValue()
     {
         var expected = new[]
         {
@@ -99,25 +122,25 @@ public class MarshalReadAsTests
         };
         var bytes = MemoryMarshal.AsBytes(expected.AsSpan()).ToArray();
 
-        var actual = bytes.MarshalReadArrayAs<NativeRecord>();
+        var actual = bytes.MarshalReadAsArray<NativeRecord>();
 
         Assert.Equal(expected.Select(x => (x.Kind, x.Value)), actual.Select(x => (x.Kind, x.Value)));
     }
 
     [Fact]
-    public void MarshalReadArrayAs_RejectsTrailingPartialValue()
+    public void MarshalReadAsArray_RejectsTrailingPartialValue()
     {
         var bytes = new byte[Unsafe.SizeOf<NativeRecord>() + 1];
 
-        Assert.Throws<ArgumentException>(() => bytes.MarshalReadArrayAs<NativeRecord>());
-        Assert.Throws<ArgumentException>(() => bytes.AsReadOnlySpan().MarshalReadArrayAs<NativeRecord>());
+        Assert.Throws<ArgumentException>(() => bytes.MarshalReadAsArray<NativeRecord>());
+        Assert.Throws<ArgumentException>(() => bytes.AsReadOnlySpan().MarshalReadAsArray<NativeRecord>());
     }
 
     [Fact]
-    public void MarshalReadArrayAs_AllowsEmptyInput()
+    public void MarshalReadAsArray_AllowsEmptyInput()
     {
-        Assert.Empty(Array.Empty<byte>().MarshalReadArrayAs<NativeRecord>());
-        Assert.Empty(ReadOnlySpan<byte>.Empty.MarshalReadArrayAs<NativeRecord>());
+        Assert.Empty(Array.Empty<byte>().MarshalReadAsArray<NativeRecord>());
+        Assert.Empty(ReadOnlySpan<byte>.Empty.MarshalReadAsArray<NativeRecord>());
     }
 
     [Fact]
@@ -152,7 +175,7 @@ public class MarshalReadAsTests
     }
 
     [Fact]
-    public void MarshalReadArrayAs_ReadsEachFixedBufferIndependently()
+    public void MarshalReadAsArray_ReadsEachFixedBufferIndependently()
     {
         var expected = new[]
         {
@@ -161,7 +184,7 @@ public class MarshalReadAsTests
         };
         var bytes = MemoryMarshal.AsBytes(expected.AsSpan()).ToArray();
 
-        var actual = bytes.MarshalReadArrayAs<FixedBufferRecord>();
+        var actual = bytes.MarshalReadAsArray<FixedBufferRecord>();
 
         Assert.Equal(expected.Length, actual.Length);
         for (var i = 0; i < expected.Length; i++)
@@ -175,7 +198,7 @@ public class MarshalReadAsTests
             42,
             [1, -2, 300, short.MaxValue],
             [(7, 8), (-9, 10)]);
-        var structureBytes = new[] { expected }.MarshalArrayToBytes();
+        var structureBytes = new[] { expected }.MarshalToBytes();
         var bytes = new byte[structureBytes.Length + 3];
         structureBytes.CopyTo(bytes, 2);
         var offset = 2;
@@ -189,16 +212,16 @@ public class MarshalReadAsTests
     }
 
     [Fact]
-    public void MarshalReadArrayAs_CreatesIndependentByValArraysForEveryStructure()
+    public void MarshalReadAsArray_CreatesIndependentByValArraysForEveryStructure()
     {
         var expected = new[]
         {
             CreateByValArrayRecord(1, [1, 2, 3, 4], [(5, 6), (7, 8)]),
             CreateByValArrayRecord(2, [-1, -2, -3, -4], [(-5, 16), (-7, 18)]),
         };
-        var bytes = expected.MarshalArrayToBytes();
+        var bytes = expected.MarshalToBytes();
 
-        var actual = bytes.AsReadOnlySpan().MarshalReadArrayAs<ByValArrayRecord>();
+        var actual = bytes.AsReadOnlySpan().MarshalReadAsArray<ByValArrayRecord>();
 
         Assert.Equal(expected.Length, actual.Length);
         for (var i = 0; i < expected.Length; i++)
@@ -235,7 +258,7 @@ public class MarshalReadAsTests
     }
 
     [Fact]
-    public void MarshalReadArrayAs_ReadsInlineArraysWithoutSharingElements()
+    public void MarshalReadAsArray_ReadsInlineArraysWithoutSharingElements()
     {
         var expected = new[]
         {
@@ -250,7 +273,7 @@ public class MarshalReadAsTests
         };
         var bytes = MemoryMarshal.AsBytes(expected.AsSpan()).ToArray();
 
-        var actual = bytes.AsReadOnlySpan().MarshalReadArrayAs<InlineArrayRecord>();
+        var actual = bytes.AsReadOnlySpan().MarshalReadAsArray<InlineArrayRecord>();
 
         Assert.Equal(expected.Length, actual.Length);
         for (var i = 0; i < expected.Length; i++)

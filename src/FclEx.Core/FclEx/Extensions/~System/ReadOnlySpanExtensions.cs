@@ -33,23 +33,26 @@ public static class ReadOnlySpanExtensions
     /// Managed references are permitted only when represented inline by <see cref="UnmanagedType.ByValArray"/> or
     /// <see cref="UnmanagedType.ByValTStr"/>. Bytes after the structure are ignored. No byte-order conversion is performed.
     /// </remarks>
-    public static T MarshalReadAs<T>(this ReadOnlySpan<byte> span) where T : struct
+    public static T MarshalReadAs<T>(this ReadOnlySpan<byte> span)
     {
-        return MarshalHelper.Read<T>(span);
+        typeof(T).EnsureMarshalable();
+        return Marshal.ReadAs<T>(span);
     }
 
     /// <summary>
     /// Uses the interop marshaler to read consecutive structures from the span.
     /// </summary>
     /// <exception cref="ArgumentException">The span length is not an exact multiple of the structure size.</exception>
-    public static T[] MarshalReadArrayAs<T>(this ReadOnlySpan<byte> span) where T : struct
+    public static T[] MarshalReadAsArray<T>(this ReadOnlySpan<byte> span)
     {
-        var size = MarshalHelper.SizeOf<T>();
+        typeof(T).EnsureMarshalable();
+
+        var size = Marshal.SizeOf<T>();
         if (span.Length % size != 0)
             throw new ArgumentException("The span length must be an exact multiple of the structure size.", nameof(span));
 
         var count = span.Length / size;
-        return MarshalHelper.ReadArray<T>(span, count);
+        return Marshal.ReadAsArray<T>(span, count);
     }
 
     public static byte[] ToBytes(this ReadOnlySpan<bool> bits)

@@ -99,7 +99,7 @@ public class MarshalToBytesEqualityComparerTests
     public void MarshalToBytes_ClearNativeBuffer_Should_Clear_Padding()
     {
         var value = new PaddedValue { First = 1, Second = 2 };
-        var bytes = FclEx.Helpers.ObjectHelper.MarshalToBytes(value, clearNativeBuffer: true);
+        var bytes = Marshal.ToBytes(value, clearNativeBuffer: true);
         var secondOffset = Marshal.OffsetOf<PaddedValue>(nameof(PaddedValue.Second)).ToInt32();
 
         Assert.True(secondOffset > 1);

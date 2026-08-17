@@ -1,4 +1,4 @@
-namespace System.Runtime.InteropServices;
+namespace FclEx.Extensions;
 
 public static class OSPlatformExtensions
 {

@@ -19,26 +19,27 @@ public class MarshalToBytesEqualityComparer<T> : IEqualityComparer<T>
 {
     public static readonly MarshalToBytesEqualityComparer<T> Instance = new();
 
-    public bool Equals(T? x, T? y)
+    static MarshalToBytesEqualityComparer()
     {
         typeof(T).EnsureMarshalable();
+    }
 
+    public bool Equals(T? x, T? y)
+    {
         if (ComparerHelper.TryEquals(x, y, out var result))
             return result.Value;
 
-        var bytes1 = ObjectHelper.MarshalToBytes(x, clearNativeBuffer: true);
-        var bytes2 = ObjectHelper.MarshalToBytes(y, clearNativeBuffer: true);
+        var bytes1 = Marshal.ToBytes(x, clearNativeBuffer: true);
+        var bytes2 = Marshal.ToBytes(y, clearNativeBuffer: true);
         return bytes1.SequenceEqual(bytes2);
     }
 
     public int GetHashCode(T? obj)
     {
-        typeof(T).EnsureMarshalable();
-
         if (obj is null)
             return 0;
 
-        var bytes = ObjectHelper.MarshalToBytes(obj, clearNativeBuffer: true);
+        var bytes = Marshal.ToBytes(obj, clearNativeBuffer: true);
         return bytes.ComputeHashCode();
     }
 }
