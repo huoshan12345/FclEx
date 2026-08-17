@@ -179,7 +179,7 @@
    - 说明：`numberOfWeeks * 7` 在传入 `int` 时先以 32 位计算，随后把已损坏的天数交给 `AddDays`。
    - 建议：使用 `checked((long)numberOfWeeks * 7)`，再明确转换/报告超出 `DateTime` 可表示范围的情况。
 
-235. **[P2] `AsyncEventHandlerExtensions.GetInvocationList<T>` 用 `Unsafe.As` 谎称返回了 `T[]`。**
+235. **[P2][已修复] `AsyncEventHandlerExtensions.GetInvocationList<T>` 用 `Unsafe.As` 谎称返回了 `T[]`。**
    - 位置：`Extensions/~System/AsyncEventHandlerExtensions.cs:6`。
    - 说明：运行时对象实际是 `Delegate[]`；读似乎可行，但调用方按声明类型写回数组会产生运行时数组类型问题，API 的数组契约已被破坏。
    - 建议：使用 `.Cast<T>().ToArray()` 返回真实的 `T[]`，或只暴露 `IReadOnlyList<T>`。
@@ -266,6 +266,6 @@
 
 ## 建议处理顺序
 
-1. 先处理 235、245 与 246：它们涉及类型安全、反射结果可靠性与并发释放。
+1. 先处理 245 与 246：它们涉及反射结果可靠性与并发释放。
 2. 接着统一 241–244 的公共 API 契约、命名、异常类型和边界行为。
 3. 最后处理 247–251 的取消、URI、流所有权和瞬时状态 API，并为每个已确认的行为补充针对性测试。

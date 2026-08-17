@@ -2,6 +2,17 @@ namespace FclEx.Extensions;
 
 public static partial class AsyncEventHandlerExtensions
 {
+    /// <summary>Returns a type-safe, read-only snapshot of the delegates in an invocation list.</summary>
+    /// <typeparam name="T">The delegate type.</typeparam>
+    /// <param name="delegate">The multicast delegate whose invocation list is retrieved.</param>
+    /// <returns>A read-only view over the snapshot returned by <see cref="Delegate.GetInvocationList"/>.</returns>
+    /// <remarks>
+    /// Subsequent additions to or removals from <paramref name="delegate"/> do not affect the returned list.
+    /// The view avoids copying the snapshot array while casting each element to <typeparamref name="T"/> when accessed.
+    /// Because <see cref="Delegate"/> has a parameterless instance method with the same name, callers must explicitly
+    /// specify <typeparamref name="T"/> when using this extension-method syntax.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="delegate"/> is <see langword="null"/>.</exception>
     public static IReadOnlyList<T> GetInvocationList<T>(this T @delegate) where T : Delegate
     {
         Check.NotNull(@delegate);
