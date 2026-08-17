@@ -55,29 +55,26 @@ public static class ReadOnlySpanExtensions
         return Marshal.ReadAsArray<T>(span, count);
     }
 
-    public static byte[] ToBytes(this ReadOnlySpan<bool> bits)
+    public static byte[] PackBits(this ReadOnlySpan<bool> bits)
     {
-        var count = bits.Length;
-        var numBytes = count / 8;
-        if (count % 8 != 0)
-            numBytes++;
-
-        var bytes = new byte[numBytes];
-        int byteIndex = 0, bitIndex = 0;
-
-        foreach (var bit in bits)
+        var bytes = new byte[(bits.Length + 7) / 8];
+        for (int i = 0; i < bits.Length; i++)
         {
-            if (bit) bytes[byteIndex] |= (byte)(1 << bitIndex);
-            ++bitIndex;
-
-            if (bitIndex == 8)
-            {
-                bitIndex = 0;
-                ++byteIndex;
-            }
-
+            if (bits[i])
+                bytes[i >> 3] |= (byte)(1 << (i & 7));
         }
         return bytes;
+    }
+
+    public static bool[] UnpackBits(this ReadOnlySpan<byte> bytes)
+    {
+        var count = bytes.Length * 8;
+        var bits = new bool[count];
+        for (int i = 0; i < count; i++)
+        {
+            bits[i] = (bytes[i >> 3] & (1 << (i & 7))) != 0;
+        }
+        return bits;
     }
 
     /// <summary>
