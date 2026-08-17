@@ -54,7 +54,7 @@ public static unsafe class UnsafeHelper
 
     // code from https://benbowen.blog/post/fun_with_makeref/
     [MethodImpl(AggressiveInlining)]
-    public static void WriteTo<T>(IntPtr dest, T value, int sizeOfT) where T : struct
+    public static void WriteTo<T>(IntPtr dest, T value, int sizeOfT) where T : unmanaged
     {
         var bytePtr = (byte*)dest;
 
@@ -76,7 +76,7 @@ public static unsafe class UnsafeHelper
     }
 
     [MethodImpl(AggressiveInlining)]
-    public static T ReadFrom<T>(IntPtr source, int sizeOfT) where T : struct
+    public static T ReadFrom<T>(IntPtr source, int sizeOfT) where T : unmanaged
     {
         var bytePtr = (byte*)source;
 
@@ -94,8 +94,8 @@ public static unsafe class UnsafeHelper
 
     [MethodImpl(AggressiveInlining)]
     public static TOut Reinterpret<TIn, TOut>(TIn curValue, int sizeBytes)
-        where TIn : struct
-        where TOut : struct
+        where TIn : unmanaged
+        where TOut : unmanaged
     {
         var result = default(TOut);
 
@@ -125,7 +125,7 @@ public static unsafe class UnsafeHelper
     /// This function interprets the memory address as a pointer to a value of type <typeparamref name="T"/>.
     /// Use with caution, as dereferencing an invalid or misaligned pointer can lead to runtime errors or undefined behavior.
     /// </remarks>
-    public static T? GetValue<T>(IntPtr ptr)
+    public static T? GetValue<T>(IntPtr ptr) where T : unmanaged
     {
         var pointer = ptr.ToPointer();
         return *(T*)pointer;

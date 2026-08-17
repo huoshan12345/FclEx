@@ -8,7 +8,7 @@
 
 ## 问题清单（201–222：设计、生命周期与并发契约）
 
-201. **[P3] README 仍把已移除的 object-memory comparer 当作现有能力。**
+201. **[P3][已修复] README 仍把已移除的 object-memory comparer 当作现有能力。**
    - 位置：`src/FclEx.Core/README.md` 的 Comparers 段。
    - 说明：代码已不再提供该种比较器，README 却继续宣传它，消费者会据此寻找不存在或不应使用的 API。
    - 建议：删去该条，改为实际仍受支持的比较器及其适用边界。
@@ -18,42 +18,42 @@
    - 修复：上述路径现通过同一把锁同步；`ClearCache` 返回后，缓存中不会再保留由旧 resolver 创建的 options。`DefaultEx` 与 `WebEx` 也会随缓存重建。
    - 边界：调用方在清理前取得，或通过 `CreateOptions` 自行创建的 options 实例不会被修改或强制释放；这一点已在 `ClearCache` 文档中说明。
 
-203. **[P2] `ITypeSerializer<TTarget>` 无法表达声明类型，不能可靠处理 `null` 与多态序列化。**
+203. **[P2][已修复] `ITypeSerializer<TTarget>` 无法表达声明类型，不能可靠处理 `null` 与多态序列化。**
    - 位置：`Utils/~Serialization/ITypeSerializer.cs`。
    - 说明：`Serialize(object?)` 只接收运行时对象；当值为 `null` 时没有任何类型信息，基类/接口声明类型也会丢失。`Deserialize` 却要求类型，接口的两个方向并不对称。
    - 建议：采用 `Serialize(object? value, Type declaredType)`，或以泛型 `Serialize<T>`/`Deserialize<T>` 为主 API；旧的 object 入口只能作为明确的 runtime-type 便利方法。
 
-204. **[P1] `OperationResult<T>` 的两个隐式转换在 `T=string` 时相互冲突。**
+204. **[P1][已接受，不修改] `OperationResult<T>` 的两个隐式转换在 `T=string` 时相互冲突。**
    - 位置：`Utils/~Operation/OperationResult.cs`。
    - 说明：同时存在从 `string`（错误）和从 `T`（成功）的隐式转换；构造 `OperationResult<string>` 时，`"value"` 无法表达是成功值还是错误消息，并会导致歧义。
    - 建议：移除至少一个隐式转换，使用 `Success(value)`、`Failure(message)` 这类具名工厂；这也是更容易读懂的错误/成功边界。
 
-205. **[P2] `RepeatUntil` 把负延迟和负超时静默解释成“无限制”。**
+205. **[P2][已修复] `RepeatUntil` 把负延迟和负超时静默解释成“无限制”。**
    - 位置：`Actions/ActionExtensions.cs` 的 `RepeatUntil` 两组重载。
    - 说明：`timeout <= TimeSpan.Zero` 被转换为 `null`，负 delay 又会绕过延迟；错误配置可能变成紧凑无限循环，调用者很难诊断。
    - 建议：`null` 是唯一的“未设置超时”表示；显式验证 `delay >= 0`、`timeout > 0`，并让秒数重载保持同一规则。
 
-206. **[P2] `TaskHelper.Repeat(Func<Task<T>>, …)` 在委托同步抛错时不会返回 faulted task。**
+206. **[P2][已处理（文档说明）] `TaskHelper.Repeat(Func<Task<T>>, …)` 在委托同步抛错时不会返回 faulted task。**
    - 位置：`Helpers/TaskHelper.cs` 的 `Repeat`。
    - 说明：构造 `IEnumerable` 时立即调用委托，异常在到达 `Task.WhenAll` 前同步逸出；这与同组异步 API 的“返回可 await 的失败任务”契约不一致。
    - 建议：统一通过一个捕获同步异常的 task factory 调用委托，或明确拆出同步/异步两套 API。
 
-207. **[P1] 超时的 `TaskHelper.RunAsync` 允许底层任务在调用者离开后以未观察异常失败。**
+207. **[P1][已修复] 超时的 `TaskHelper.RunAsync` 允许底层任务在调用者离开后以未观察异常失败。**
    - 位置：`Helpers/TaskHelper.cs` 的 `RunAsync(..., TimeSpan?)`。
    - 说明：超时只取消等待，传入的 operation 可能忽略 token 并继续运行；其后续异常没有观察者。`Operation.ExecuteAsync` 又以忽略 token 的委托调用它，放大了该风险。
    - 建议：把“超时取消工作”与“仅停止等待”拆成显式 API；后一种必须为遗留任务附加异常观察，并在文档说明工作仍会继续。
 
-208. **[P2] `NextDateTime` 不定义不同 `DateTimeKind` 边界的语义。**
+208. **[P2][已修复] `NextDateTime` 不定义不同 `DateTimeKind` 边界的语义。**
    - 位置：`Extensions/~System/RandomExtensions.cs` 的 `NextDateTime`。
    - 说明：它直接比较 ticks、最后套用 `minValue.Kind`；相同 ticks 的 Local、Utc、Unspecified 代表的时间语义不同，结果也随参数顺序改变。
    - 建议：要求两个边界 Kind 相同，或改用/转为 `DateTimeOffset` 后按 instant 取样；不要静默选择一端的 Kind。
 
-209. **[P1] `NextDateTimeOffset` 在范围边缘可随机抛出越界异常。**
+209. **[P1][已修复] `NextDateTimeOffset` 在范围边缘可随机抛出越界异常。**
    - 位置：`Extensions/~System/RandomExtensions.cs` 的 `NextDateTimeOffset`。
    - 说明：实现先在 UTC ticks 上取样，再强行套用 `minValue.Offset`。靠近 `DateTimeOffset.MinValue/MaxValue` 时，该 offset 的本地钟面值可能超界，导致某些随机结果才失败。
    - 建议：返回 UTC offset 的结果，或在取样前收窄为该 offset 可表示的 instant 范围，并测试两端边界。
 
-210. **[P0] `NextMarshalable<T>` 会把随机指针字节当作托管对象结构解组。**
+210. **[P0][已修复] `NextMarshalable<T>` 会把随机指针字节当作托管对象结构解组。**
    - 位置：`Extensions/~System/RandomExtensions.cs` 的 `NextMarshalable`，以及 `TypeExtensions.Unmanaged.EnsureMarshalable`。
    - 说明：`EnsureMarshalable` 因任何 `[MarshalAs]` 就放行，包括 `LPStr`、`LPArray` 等指针形字段；`Marshal.PtrToStructure<T>` 随后可能解引用随机地址，造成访问违例或进程崩溃。
    - 建议：随机生成仅允许无引用、内联布局（或明确验证仅 `ByValArray`/`ByValTStr`）的类型；把可含指针的 interop marshal 与随机值生成彻底分开。
