@@ -187,7 +187,7 @@ public static class RandomExtensions
 
         var ticks = random.NextInt64(min.UtcTicks, max.UtcTicks);
         var utcValue = new DateTimeOffset(ticks, TimeSpan.Zero);
-        return utcValue.ToOffset(min.Offset);
+        return utcValue;
     }
 
 #if NET6_0_OR_GREATER
