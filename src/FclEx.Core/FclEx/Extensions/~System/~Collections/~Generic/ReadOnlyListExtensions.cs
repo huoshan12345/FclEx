@@ -2,7 +2,7 @@ namespace FclEx.Extensions;
 
 public static class ReadOnlyListExtensions
 {
-    public static bool TryGet<T>(this IReadOnlyList<T> list, int index, [NotNullWhen(true)] out T? value)
+    public static bool TryGet<T>(this IReadOnlyList<T> list, int index, [NotNullWhen(true)] out T? value) where T : notnull
     {
         if (index >= 0 && index < list.Count)
         {
@@ -15,7 +15,7 @@ public static class ReadOnlyListExtensions
     }
 
     [return: NotNullIfNotNull(nameof(defaultValue))]
-    public static T? Get<T>(this IReadOnlyList<T> list, int index, T? defaultValue = default)
+    public static T? Get<T>(this IReadOnlyList<T> list, int index, T? defaultValue = default) where T : notnull
     {
         return list.TryGet(index, out var value)
             ? value

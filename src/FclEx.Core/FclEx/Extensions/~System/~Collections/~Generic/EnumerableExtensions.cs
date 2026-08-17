@@ -122,7 +122,7 @@ public static partial class EnumerableExtensions
 
     public static TimeSpan Average<T>(this IEnumerable<T> source, Func<T, TimeSpan> selector)
     {
-        var ticks = (long)source.Select(m => selector(m).Ticks).Average();
+        var ticks = (long)source.Average(m => selector(m).Ticks);
         return TimeSpan.FromTicks(ticks);
     }
 
