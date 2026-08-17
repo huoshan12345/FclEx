@@ -7,7 +7,7 @@ public struct BlittableStruct
     public int Int;
     public double Double;
 
-    public override string ToString()
+    public readonly override string ToString()
     {
         return $"{nameof(BlittableStruct)}({Int}, {Double}])";
     }
@@ -33,9 +33,9 @@ public struct MarshalableStruct
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
     public byte[]? Array;
 
-    public override string ToString()
+    public readonly override string ToString()
     {
-        return $"{nameof(MarshalableStruct)}({Int}, {Char.ToLiteral()}, [{Array?.JoinWith(", ")}])";
+        return $"{nameof(MarshalableStruct)}({Int}, {Char}, [{Array?.JoinWith(", ")}])";
     }
 }
 
@@ -49,6 +49,6 @@ public class MarshalableClass
 
     public override string ToString()
     {
-        return $"{nameof(MarshalableClass)}({Int}, {Char.ToLiteral()}, [{Array?.JoinWith(", ")}])";
+        return $"{nameof(MarshalableClass)}({Int}, {Char}, [{Array?.JoinWith(", ")}])";
     }
 }
