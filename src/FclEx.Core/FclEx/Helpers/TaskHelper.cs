@@ -44,6 +44,20 @@ public static class TaskHelper
         return Task.WhenAll(tasks);
     }
 
+    /// <summary>
+    /// Invokes an asynchronous function the specified number of times and awaits all returned tasks.
+    /// </summary>
+    /// <typeparam name="TResult">The result type of each invocation.</typeparam>
+    /// <param name="action">The asynchronous function to invoke.</param>
+    /// <param name="times">The number of invocations. The value cannot be negative.</param>
+    /// <returns>A task that completes with the results after every returned task completes.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="times"/> is negative.</exception>
+    /// <remarks>
+    /// All invocations are started before the returned task is awaited. <paramref name="action"/> is invoked while
+    /// this method constructs that task set, so an exception thrown before it returns a <see cref="Task{TResult}"/>
+    /// is thrown synchronously rather than stored in the returned task.
+    /// </remarks>
     public static Task<TResult[]> Repeat<TResult>(Func<Task<TResult>> action, int times)
     {
         Check.NotNull(action);
@@ -53,6 +67,19 @@ public static class TaskHelper
         return Task.WhenAll(tasks);
     }
 
+    /// <summary>
+    /// Invokes an asynchronous action the specified number of times and awaits all returned tasks.
+    /// </summary>
+    /// <param name="action">The asynchronous action to invoke.</param>
+    /// <param name="times">The number of invocations. The value cannot be negative.</param>
+    /// <returns>A task that completes after every returned task completes.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="times"/> is negative.</exception>
+    /// <remarks>
+    /// All invocations are started before the returned task is awaited. <paramref name="action"/> is invoked while
+    /// this method constructs that task set, so an exception thrown before it returns a <see cref="Task"/> is thrown
+    /// synchronously rather than stored in the returned task.
+    /// </remarks>
     public static Task Repeat(Func<Task> action, int times)
     {
         Check.NotNull(action);

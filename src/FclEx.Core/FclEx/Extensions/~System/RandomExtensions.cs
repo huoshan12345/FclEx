@@ -167,6 +167,18 @@ public static class RandomExtensions
         return max * r + min * (1 - r);
     }
 
+    /// <summary>
+    /// Generates a random UTC <see cref="DateTime"/> within the specified range.
+    /// </summary>
+    /// <param name="random">The source of random numbers.</param>
+    /// <param name="minValue">The inclusive lower bound, or the Unix epoch when omitted.</param>
+    /// <param name="maxValue">The exclusive upper bound, or <see cref="DateTime.MaxValue"/> when omitted.</param>
+    /// <returns>A UTC value whose ticks are in the half-open interval defined by the bounds.</returns>
+    /// <remarks>
+    /// The bounds are compared by <see cref="DateTime.Ticks"/>; their <see cref="DateTime.Kind"/> values do not
+    /// affect the sampled range. Equal bounds return that value. The returned value always has
+    /// <see cref="DateTimeKind.Utc"/>.
+    /// </remarks>
     public static DateTime NextDateTime(this Random random, DateTime? minValue = null, DateTime? maxValue = null)
     {
         Check.NotNull(random);
@@ -182,6 +194,17 @@ public static class RandomExtensions
         return utcValue;
     }
 
+    /// <summary>
+    /// Generates a random UTC <see cref="DateTimeOffset"/> within the specified range.
+    /// </summary>
+    /// <param name="random">The source of random numbers.</param>
+    /// <param name="minValue">The inclusive lower bound, or the Unix epoch when omitted.</param>
+    /// <param name="maxValue">The exclusive upper bound, or <see cref="DateTimeOffset.MaxValue"/> when omitted.</param>
+    /// <returns>A UTC value in the half-open instant interval defined by the bounds.</returns>
+    /// <remarks>
+    /// Bounds are compared as instants. The returned value is normalized to the UTC offset and does not preserve the
+    /// offset of either bound. Equal bounds return that instant normalized to UTC.
+    /// </remarks>
     public static DateTimeOffset NextDateTimeOffset(this Random random, DateTimeOffset? minValue = null, DateTimeOffset? maxValue = null)
     {
         Check.NotNull(random);
@@ -190,7 +213,7 @@ public static class RandomExtensions
         CheckRange(min, max);
 
         if (min == max)
-            return min;
+            return min.ToUniversalTime();
 
         var ticks = random.NextInt64(min.UtcTicks, max.UtcTicks);
         var utcValue = new DateTimeOffset(ticks, TimeSpan.Zero);
@@ -228,7 +251,7 @@ public static class RandomExtensions
 #endif
 
     /// <summary>
-    /// Generates a random value of marshalable type.
+    /// Generates a random value of a marshalable type whose native representation contains no pointer fields.
     /// </summary>
     /// <param name="random">The source of random numbers.</param>
     /// <typeparam name="T">The marshalable type.</typeparam>
@@ -236,7 +259,7 @@ public static class RandomExtensions
     public static T NextMarshalable<T>(this Random random)
     {
         Check.NotNull(random);
-        typeof(T).EnsureMarshalable();
+        typeof(T).EnsureMarshalable(allowPointerFields: false);
         var size = Marshal.SizeOf<T>();
         var bytes = new byte[size];
         random.NextBytes(bytes);

@@ -75,6 +75,13 @@ public class RandomExtensionsTests
         Two
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct PointerMarshalableStruct
+    {
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string? Value;
+    }
+
     [Fact]
     public void NextMarshalable_Struct_Test()
     {
@@ -84,6 +91,14 @@ public class RandomExtensionsTests
             var x = random.NextMarshalable<MarshalableStruct>();
             Assert.Equal(4, x.Array?.Length);
         }
+    }
+
+    [Fact]
+    public void NextMarshalable_ShouldRejectPointerFields()
+    {
+        var random = new Random(0);
+
+        Assert.Throws<ArgumentException>(() => random.NextMarshalable<PointerMarshalableStruct>());
     }
 
     [Theory]
@@ -207,7 +222,7 @@ public class RandomExtensionsTests
     }
 
     [Fact]
-    public void NextDateTime_ShouldPreserveMinKind()
+    public void NextDateTime_ShouldReturnUtc()
     {
         var random = new Random(0);
         var min = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);

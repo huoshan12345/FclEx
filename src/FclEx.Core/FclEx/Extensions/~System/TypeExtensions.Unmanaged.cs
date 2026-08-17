@@ -62,10 +62,23 @@ partial class TypeExtensions
     /// Throws when the specified type is not marshalable.
     /// </summary>
     /// <param name="type">The type to validate.</param>
-    /// <exception cref="ArgumentException">The type is not marshalable.</exception>
-    public static void EnsureMarshalable(this Type type)
+    /// <param name="allowPointerFields">
+    /// <see langword="true"/> to allow fields whose <see cref="MarshalAsAttribute"/> representation contains a
+    /// native pointer; otherwise, only inline marshal representations are accepted.
+    /// </param>
+    /// <exception cref="ArgumentException">The type is not marshalable under the requested policy.</exception>
+    public static void EnsureMarshalable(this Type type, bool allowPointerFields = true)
     {
-        type.Ensure(IsMarshalable, "marshalable");
+        if (type.IsMarshalable(out var exception, allowPointerFields))
+            return;
+
+        if (exception is ArgumentException { ParamName: nameof(type) })
+            exception.ReThrow();
+
+        throw new ArgumentException(
+            $"The type {type.LongName()} is not marshalable due to: {exception?.Message}",
+            nameof(type),
+            exception);
     }
 
     /// <summary>
@@ -89,21 +102,19 @@ partial class TypeExtensions
     }
 
     /// <summary>
-    /// Determines whether the type can be marshalled by the runtime interop marshaler.
+    /// Determines whether the type can be marshalled by the runtime interop marshaler under a pointer-field policy.
     /// </summary>
     /// <param name="type">The type to inspect. Nullable value types are checked as their underlying value type.</param>
-    /// <param name="ex">
-    /// When the method returns <see langword="false"/>, contains the exception describing why the type is not marshalable.
+    /// <param name="allowPointerFields">
+    /// <see langword="true"/> to accept pointer-based <see cref="MarshalAsAttribute"/> forms such as
+    /// <see cref="UnmanagedType.LPStr"/> and <see cref="UnmanagedType.LPArray"/>; otherwise, rejects them.
     /// </param>
-    /// <returns><see langword="true"/> if the type is marshalable; otherwise, <see langword="false"/>.</returns>
-    /// <remarks>
-    /// The check accepts primitive and enum types, sequential or explicit-layout types whose fields are marshalable,
-    /// and fields with an explicit <see cref="MarshalAsAttribute"/>. Generic, abstract, auto-layout, string,
-    /// object, delegate, and circularly referenced types are rejected.
-    /// </remarks>
-    public static bool IsMarshalable(this Type type, [NotNullWhen(false)] out Exception? ex)
+    /// <param name="ex">When the method returns <see langword="false"/>, contains the reason the type was rejected.</param>
+    /// <returns><see langword="true"/> when the type satisfies the requested marshalability policy; otherwise, <see langword="false"/>.</returns>
+    public static bool IsMarshalable(this Type type, [NotNullWhen(false)] out Exception? ex, bool allowPointerFields = true)
     {
-        (var flag, ex) = type.Check(nameof(IsMarshalable), m => CheckMarshalable(m, null, null, null));
+        var checkName = $"{nameof(IsMarshalable)}:{allowPointerFields}";
+        (var flag, ex) = type.Check(checkName, m => CheckMarshalable(m, null, null, null, allowPointerFields));
         return flag;
     }
 
@@ -184,7 +195,7 @@ partial class TypeExtensions
         }
     }
 
-    private static void CheckMarshalable(Type type, FieldInfo? field, HashSet<Type>? visited, string? path)
+    private static void CheckMarshalable(Type type, FieldInfo? field, HashSet<Type>? visited, string? path, bool allowPointerFields = true)
     {
         type = type.UnwrapNullable();
 
@@ -197,8 +208,13 @@ partial class TypeExtensions
         if (type.IsEnum || Types.PrimitiveTypes.Contains(type))
             return;
 
-        if (field is not null && field.IsDefined(typeof(MarshalAsAttribute), false))
-            return;
+        if (field?.GetCustomAttribute<MarshalAsAttribute>(false) is { } marshalAs)
+        {
+            if (allowPointerFields || marshalAs.Value.IsInlineMarshalRepresentation(field.FieldType))
+                return;
+
+            ThrowMarshalable(type, $"marshalled as {marshalAs.Value}, which is not an inline representation", path);
+        }
 
         if (type.IsAutoLayout)
             ThrowMarshalable(type, "auto layout", path);
@@ -219,7 +235,7 @@ partial class TypeExtensions
             {
                 var name = m.GetAutoPropertyOrFieldName();
                 var fieldPath = (path ?? "$") + "." + name;
-                CheckMarshalable(m.FieldType, m, stack, fieldPath);
+                CheckMarshalable(m.FieldType, m, stack, fieldPath, allowPointerFields);
             }
 
             _ = Marshal.SizeOf(type);
@@ -228,6 +244,25 @@ partial class TypeExtensions
         {
             stack.Remove(type);
         }
+    }
+
+    private static bool IsInlineMarshalRepresentation(this UnmanagedType value, Type fieldType)
+    {
+        return value switch
+        {
+            UnmanagedType.I1 or UnmanagedType.U1 or
+            UnmanagedType.I2 or UnmanagedType.U2 or
+            UnmanagedType.I4 or UnmanagedType.U4 or
+            UnmanagedType.I8 or UnmanagedType.U8 or
+            UnmanagedType.R4 or UnmanagedType.R8 or
+            UnmanagedType.Bool or UnmanagedType.VariantBool or
+            UnmanagedType.Error or
+            UnmanagedType.SysInt or UnmanagedType.SysUInt or
+            UnmanagedType.ByValTStr => true,
+            UnmanagedType.ByValArray => fieldType.GetElementType() is { } elementType
+                                        && (elementType.IsEnum || Types.PrimitiveTypes.Contains(elementType)),
+            _ => false,
+        };
     }
 
     [DoesNotReturn]
