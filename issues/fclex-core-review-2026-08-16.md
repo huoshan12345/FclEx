@@ -209,22 +209,22 @@
    - 说明：`DebuggableAttribute` 与 JIT 优化不能可靠还原 MSBuild 的 Debug/Release 配置；当前二元 enum 还强迫任何程序集属于其中之一。
    - 建议：只公开可观察到的 `IsJitOptimized`（最好命名为 best-effort），或把配置检测设为 nullable/未知而非事实断言。
 
-241. **[P3] `MemberInfoExtensions.IsDefined<T>` 缺少 `where T : Attribute`。**
+241. **[P3][已修复] `MemberInfoExtensions.IsDefined<T>` 缺少 `where T : Attribute`。**
    - 位置：`Extensions/~System/~Reflection/MemberInfoExtensions.cs:5`。
    - 说明：签名允许传入任意类型，直到运行时才失败；相邻 attribute API 已有正确约束。
    - 建议：添加 `where T : Attribute`，使不合法调用在编译期被拒绝。
 
-242. **[P2] `MethodInfoExtensions.GetSignature` 生成的字符串并不唯一。**
+242. **[P2][已修复] `MethodInfoExtensions.GetSignature` 生成的字符串并不唯一。**
    - 位置：`Extensions/~System/~Reflection/MethodInfoExtensions.cs:14`。
    - 说明：它漏掉泛型参数个数/实参、返回类型以及 ref/out 语义；重载泛型方法可得到相同“signature”，不能用于日志关联、缓存键或查找。
    - 建议：要么命名为 `GetDisplayName`，要么依据 metadata 完整编码 generic arity、参数修饰符和返回类型。
 
-243. **[P2] `TypeExtensions.CreateObject` 把 null 的 params 数组变成“一个 null 参数”。**
+243. **[P2][已修复] `TypeExtensions.CreateObject` 把 null 的 params 数组变成“一个 null 参数”。**
    - 位置：`Extensions/~System/TypeExtensions.cs:25`。
    - 说明：`args ??= [null]` 让 `CreateObject(type, (object?[]?)null)` 的含义与空参数列表不同且极不直观，可能意外选择可空单参构造函数。
    - 建议：拒绝 null params 数组，或将其等同空数组；一个 null 实参应由调用者显式传 `new object?[] { null }`。
 
-244. **[P2] `TypeExtensions.Implements` 对接口类型自身返回 false，名称却没有表达此例外。**
+244. **[P2][已修复] `TypeExtensions.Implements` 对接口类型自身返回 false，名称却没有表达此例外。**
    - 位置：`Extensions/~System/TypeExtensions.cs:181`。
    - 说明：`typeof(IDisposable).Implements(typeof(IDisposable))` 返回 false；大多数调用者会把“implements”理解为 assignability/接口关系而不是仅“继承来的接口”。
    - 建议：改为包含自身的 `ImplementsOrIs`/`IsAssignableTo` 语义，或将现有方法重命名为 `ImplementsIndirectly`。
@@ -234,7 +234,7 @@
    - 说明：循环没有按 IL operand 长度解码，任意 operand byte 都可能恰好是 `ldfld`/`stfld`；方法名承诺的字段访问结论会出现假阳性，也漏掉 `ldflda` 等合法访问。
    - 建议：用完整 IL decoder，或删除这个不可靠的通用判断并只在受控模式下使用。
 
-246. **[P2] `TimerLifetime.BeginDispose` 在首个释放路径抛异常时可能让并发释放者自旋不止。**
+246. **[P2][已修复] `TimerLifetime.BeginDispose` 在首个释放路径抛异常时可能让并发释放者自旋不止。**
    - 位置：`Utils/~Threading/TimerLifetime.cs:14`。
    - 说明：第一个线程已将 `_timer` 交换为 null、尚未写入 `_disposeTask`；若 `DisposeAndWaitAsync` 抛出，其他线程会一直等 `_disposeTask` 被写入。
    - 建议：先发布一个 `TaskCompletionSource`，所有路径（包括异常）都完成它；不要以无限自旋等待一个可能永远不会发布的 task。
@@ -244,28 +244,27 @@
    - 说明：名字像“竞态安全地尝试取消”，实现却隐去了取消回调失败等真正需要诊断的问题；调用者无法区分已取消、已释放和回调失败。
    - 建议：只处理预期的 `ObjectDisposedException`（并返回 bool），其他异常照常传播；或命名为明确的 `CancelIgnoringExceptions`。
 
-248. **[P2] `UriParams.Render` 不能保留空键的查询参数语义。**
+248. **[P2][已处理（行为确认）] `UriParams.Render` 不能保留空键的查询参数语义。**
    - 位置：`Utils/~Net/UriParams.cs:34`。
    - 说明：空键且有值时输出 `value`，不是 `=value`；再次解析会把 value 当作键，破坏 `Parse`/`Render` 往返。现有文档还把这一行为描述成正确。
    - 建议：始终写出 `=`，或明确不支持空键并在 Add/Parse 时拒绝它。
 
-249. **[P2] `StreamExtensions.ReadAllTextAsync` 默认关闭由调用方提供的 stream。**
+249. **[P2][已修复] `StreamExtensions.ReadAllTextAsync` 默认关闭由调用方提供的 stream。**
    - 位置：`Extensions/~System/~IO/StreamExtensions.cs:24`。
    - 说明：扩展方法读取现有 stream 时通常不应取得所有权；默认 `leaveOpen=false` 让简单读取意外关闭网络流、压缩流或复用的内存流。
    - 建议：默认 `leaveOpen=true`，或采用 `ReadAllTextAndDisposeAsync` 这类明确所有权的名称。
 
-250. **[P3] `Check.NotEmpty(IEnumerable<T>)` 在验证阶段消费序列，API 未揭示这一副作用。**
+250. **[P3][已处理（文档说明）] `Check.NotEmpty(IEnumerable<T>)` 在验证阶段消费序列，API 未揭示这一副作用。**
    - 位置：`Check.cs:155`。
    - 说明：对一次性/有副作用 enumerable，检查本身就可能启动 I/O 或改变后续结果；同名的 collection 重载没有这种行为。
    - 建议：优先接受 `IReadOnlyCollection<T>`，或返回一个可安全继续枚举的物化结果，并在名称中体现枚举行为。
 
-251. **[P3] `SemaphoreSlimExtensions.IsEmpty` 将瞬时快照包装成状态判断。**
+251. **[P3][已修复] `SemaphoreSlimExtensions.IsEmpty` 将瞬时快照包装成状态判断。**
    - 位置：`Extensions/~System/~Threading/SemaphoreSlimExtensions.cs:43`。
    - 说明：`CurrentCount == 0` 在返回后立即可能变化，`IsEmpty` 这个集合式名称易被误用于“可以据此安全决策”的检查。
    - 建议：改名为 `HasNoAvailablePermitsSnapshot` 并补充文档，或不提供该竞争敏感的便利 API。
 
 ## 建议处理顺序
 
-1. 先处理 245 与 246：它们涉及反射结果可靠性与并发释放。
-2. 接着统一 241–244 的公共 API 契约、命名、异常类型和边界行为。
-3. 最后处理 247–251 的取消、URI、流所有权和瞬时状态 API，并为每个已确认的行为补充针对性测试。
+1. 先决定 245 的 IL 分析边界：完整 decoder 能消除误判，但需要单独的解码器和兼容性测试。
+2. 再处理 247 的返回契约：建议让 `TryCancel` 返回 `true`/`false` 以区分已释放与实际取消。

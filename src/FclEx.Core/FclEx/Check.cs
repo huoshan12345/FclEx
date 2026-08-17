@@ -140,6 +140,13 @@ public static class Check
         return GreaterThan(value, default!, parameterName);
     }
 
+    /// <summary>Ensures that a sequence is not empty.</summary>
+    /// <remarks>
+    /// The method first uses <see cref="Enumerable.TryGetNonEnumeratedCount{TSource}"/>. When a count is unavailable,
+    /// it enumerates the sequence until the first item is found, so validating a one-shot or side-effecting sequence
+    /// consumes that enumeration.
+    /// </remarks>
+    /// <exception cref="ArgumentException">The sequence is empty.</exception>
     [MethodImpl(AggressiveInlining)]
     public static void NotEmpty<T>([NotNull] IEnumerable<T>? value, [CallerArgumentExpression(nameof(value))] string? parameterName = null)
     {

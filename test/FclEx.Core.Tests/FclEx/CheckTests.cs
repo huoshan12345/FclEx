@@ -6,6 +6,26 @@ namespace FclEx;
 public class CheckTests
 {
     [Fact]
+    public void NotEmpty_EnumeratesASequenceWhenItsCountIsUnavailable()
+    {
+        var enumerationCount = 0;
+
+        IEnumerable<int> OneShot()
+        {
+            if (++enumerationCount > 1)
+                throw new InvalidOperationException("The sequence cannot be enumerated twice.");
+
+            yield return 1;
+        }
+
+        var values = OneShot();
+        Check.NotEmpty(values);
+
+        Assert.Equal(1, enumerationCount);
+        Assert.Throws<InvalidOperationException>(() => values.ToArray());
+    }
+
+    [Fact]
     public void TryGetSingleNonNull_BothNull_ThrowsArgumentNullException()
     {
         Assert.Throws<ArgumentNullException>(() => Check.TryGetSingleNonNull<string>(null, null, out _));

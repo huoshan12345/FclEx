@@ -21,6 +21,14 @@ public static class StreamExtensions
         return memoryStream.ToArray();
     }
 
+    /// <summary>Asynchronously reads all remaining text from a stream.</summary>
+    /// <param name="stream">The stream to read.</param>
+    /// <param name="encoding">The text encoding, or UTF-8 when <see langword="null"/>.</param>
+    /// <param name="detectEncodingFromByteOrderMarks">Whether a byte-order mark can override <paramref name="encoding"/>.</param>
+    /// <param name="bufferSize">The reader buffer size, or the library default when <see langword="null"/>.</param>
+    /// <param name="leaveOpen">Whether to leave <paramref name="stream"/> open after reading. The default is <see langword="true"/>.</param>
+    /// <param name="token">The cancellation token for the read operation.</param>
+    /// <returns>The text read from the stream's current position to its end.</returns>
     public static async Task<string> ReadAllTextAsync(this Stream stream,
         Encoding? encoding = null,
         bool detectEncodingFromByteOrderMarks = true,

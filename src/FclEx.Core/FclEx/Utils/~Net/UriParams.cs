@@ -29,7 +29,9 @@ public sealed class UriParams() : NameValues<UriParams>(StringComparer.Ordinal),
     /// <remarks>
     /// Parameters are rendered in key=value format, joined with '&amp;' characters.
     /// Both keys and values are properly URL-encoded using HttpUtility.UrlEncode.
-    /// Empty keys will render just the value, and empty values will render just the key with '='.
+    /// Empty keys render as a bare encoded value, while empty values render as the encoded key followed by '='.
+    /// This intentionally follows <see cref="HttpUtility.ParseQueryString(string)"/>'s specialized collection behavior,
+    /// even though parsing the rendered text does not preserve an empty key.
     /// </remarks>
     public void Render(StringBuilder builder)
     {

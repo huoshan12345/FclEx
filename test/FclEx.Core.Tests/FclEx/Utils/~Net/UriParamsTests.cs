@@ -311,6 +311,14 @@ public class UriParamsTests
     }
 
     [Fact]
+    public void ToString_UsesHttpUtilityCompatibleRenderingForAnEmptyKey()
+    {
+        var uriParams = new UriParams { { null, "value" } };
+
+        Assert.Equal("value", uriParams.ToString());
+    }
+
+    [Fact]
     public void Set_HandlesNullKey()
     {
         var uriParams = new UriParams();

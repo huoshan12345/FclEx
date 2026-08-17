@@ -50,10 +50,10 @@ public class BasicTests
     public class ExplicitConversionTarget;
 
     [Fact]
-    public void GetImplementedInterface_ShouldNotReturnTypeItself()
+    public void Implements_ShouldTreatAnInterfaceAsImplementingItself()
     {
         Assert.Null(typeof(ISample).GetImplementedInterface(typeof(ISample)));
-        Assert.False(typeof(ISample).Implements(typeof(ISample)));
+        Assert.True(typeof(ISample).Implements(typeof(ISample)));
     }
 
     [Fact]

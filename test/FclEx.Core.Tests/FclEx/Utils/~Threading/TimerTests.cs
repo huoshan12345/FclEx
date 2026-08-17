@@ -95,4 +95,39 @@ public class TimerTests
             await timer.DisposeAsync();
         }
     }
+
+    [Fact]
+    public async Task ConcurrentDisposeAsync_UsesOneSharedCompletionTask()
+    {
+        var callbackStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseCallback = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var timer = new Timer(
+            () =>
+            {
+                callbackStarted.TrySetResult();
+                releaseCallback.Task.GetAwaiter().GetResult();
+            },
+            TimeSpan.Zero,
+            Timeout.InfiniteTimeSpan);
+
+        try
+        {
+            var started = await Task.WhenAny(callbackStarted.Task, Task.Delay(TimeSpan.FromSeconds(5)));
+            Assert.Same(callbackStarted.Task, started);
+
+            var disposals = Enumerable.Range(0, 16)
+                .Select(_ => timer.DisposeAsync().AsTask())
+                .ToArray();
+
+            Assert.All(disposals, disposal => Assert.False(disposal.IsCompleted));
+
+            releaseCallback.TrySetResult();
+            await Task.WhenAll(disposals);
+        }
+        finally
+        {
+            releaseCallback.TrySetResult();
+            await timer.DisposeAsync();
+        }
+    }
 }

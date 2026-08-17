@@ -17,18 +17,32 @@ internal sealed class TimerLifetime(global::System.Threading.Timer timer) : IDis
         if (disposeTask is not null)
             return disposeTask;
 
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (Interlocked.CompareExchange(ref _disposeTask, completion.Task, null) is { } existingTask)
+            return existingTask;
+
         var timer = Interlocked.Exchange(ref _timer, null);
         if (timer is null)
         {
-            var spinner = new SpinWait();
-            while ((disposeTask = Volatile.Read(ref _disposeTask)) is null)
-                spinner.SpinOnce();
-            return disposeTask;
+            completion.TrySetResult();
+            return completion.Task;
         }
 
-        disposeTask = DisposeAndWaitAsync(timer);
-        Volatile.Write(ref _disposeTask, disposeTask);
-        return disposeTask;
+        _ = CompleteDisposeAsync(timer, completion);
+        return completion.Task;
+    }
+
+    private static async Task CompleteDisposeAsync(global::System.Threading.Timer timer, TaskCompletionSource completion)
+    {
+        try
+        {
+            await DisposeAndWaitAsync(timer).NoCapture();
+            completion.TrySetResult();
+        }
+        catch (Exception ex)
+        {
+            completion.TrySetException(ex);
+        }
     }
 
     private static Task DisposeAndWaitAsync(global::System.Threading.Timer timer)

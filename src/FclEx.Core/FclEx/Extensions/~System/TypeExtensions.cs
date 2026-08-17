@@ -12,7 +12,9 @@ public static partial class TypeExtensions
     /// <param name="type">The type to instantiate.</param>
     /// <param name="args">
     /// The constructor arguments. A <see langword="null"/> argument matches any reference type parameter or
-    /// <see cref="Nullable{T}"/> parameter. Omitted optional parameters are supplied from their metadata default values.
+    /// <see cref="Nullable{T}"/> parameter. A null <c>params</c> array is treated as an empty argument list; pass an
+    /// explicit one-element array to select a constructor with a null argument. Omitted optional parameters are supplied
+    /// from their metadata default values.
     /// </param>
     /// <returns>The created object.</returns>
     /// <exception cref="MissingMethodException">No public constructor matches the supplied arguments.</exception>
@@ -173,9 +175,8 @@ public static partial class TypeExtensions
     /// <see langword="true"/> if the type implements the specified interface; otherwise, <see langword="false"/>.
     /// </returns>
     /// <remarks>
-    /// This method internally uses <see cref="GetImplementedInterface"/> to perform the check.
-    /// It returns <see langword="false"/> when <paramref name="type"/> is the same interface as
-    /// <paramref name="interfaceType"/>.
+    /// This method internally uses <see cref="GetImplementedInterface"/> to perform the check and also treats an
+    /// interface as implementing itself.
     /// </remarks>
     [MethodImpl(AggressiveInlining)]
     public static bool Implements(this Type type, Type interfaceType)
