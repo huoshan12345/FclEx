@@ -6,7 +6,21 @@ public static partial class ObjectExtensions
     [return: NotNullIfNotNull(nameof(obj))]
     public static T? CastTo<T>(this object? obj)
     {
-        return obj is null ? default : (T)(dynamic)obj;
+        return obj switch
+        {
+            null => default,
+            T t => t,
+            _ => ChangeType(obj),
+        };
+
+        static T ChangeType(object obj)
+        {
+            var type = typeof(T);
+            var targetType = Nullable.GetUnderlyingType(type) ?? type;
+            return targetType.IsEnum
+                ? (T)Enum.ToObject(targetType, obj)
+                : (T)Convert.ChangeType(obj, targetType);
+        }
     }
 
     /// <summary>
@@ -14,15 +28,15 @@ public static partial class ObjectExtensions
     /// </summary>
     public static T Clamp<T>(this T value, T min, T max) where T : IComparable<T>
     {
+        Check.NotGreaterThan(min, max);
+
         var cmpMin = value.CompareTo(min);
         if (cmpMin <= 0) // value <= min
             return min;
 
         var cmpMax = value.CompareTo(max);
-        if (cmpMax >= 0) // value >= max
-            return max;
-
-        return value;
+        return cmpMax >= 0 ? // value >= max
+            max : value;
     }
 
     [MethodImpl(AggressiveInlining)]

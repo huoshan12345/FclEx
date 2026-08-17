@@ -25,12 +25,19 @@ public interface INameIdentifier<out T> where T : INameIdentifier<T>
 /// Provides a base implementation for name identifiers, including caching and comparison logic.
 /// </summary>
 /// <typeparam name="T">The specific type of name identifier, which must inherit from this class and implement <see cref="INameIdentifier{T}"/>.</typeparam>
-public abstract record NameIdentifier<T>(string Name) : IComparable<T> where T : NameIdentifier<T>, INameIdentifier<T>
+public abstract record NameIdentifier<T> : IComparable<T> where T : NameIdentifier<T>, INameIdentifier<T>
 {
+    protected NameIdentifier(string name)
+    {
+        Name = Check.NotNull(name);
+    }
+
     /// <summary>
     /// A cache of name identifiers, keyed by name.
     /// </summary>
     private static readonly ConcurrentDictionary<string, T> _cache = new();
+
+    public string Name { get; init; }
 
     /// <summary>
     /// Gets an existing name identifier or creates a new one. Uses a cache for efficiency.
@@ -75,6 +82,11 @@ public abstract record NameIdentifier<T>(string Name) : IComparable<T> where T :
             return 1;
 
         return string.Compare(Name, other.Name, StringComparison.Ordinal);
+    }
+
+    public void Deconstruct(out string Name)
+    {
+        Name = this.Name;
     }
 }
 #endif
