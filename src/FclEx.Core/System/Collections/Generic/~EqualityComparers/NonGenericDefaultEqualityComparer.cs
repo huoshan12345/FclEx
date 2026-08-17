@@ -4,7 +4,7 @@ public class NonGenericDefaultEqualityComparer : IEqualityComparer, IEqualityCom
 {
     private static readonly ConditionalWeakTable<Type, NonGenericDefaultEqualityComparer> _cache = new();
 
-    public static NonGenericDefaultEqualityComparer Create(Type type)
+    public static IEqualityComparer Create(Type type)
     {
         return _cache.GetValue(type, m => new NonGenericDefaultEqualityComparer(m));
     }

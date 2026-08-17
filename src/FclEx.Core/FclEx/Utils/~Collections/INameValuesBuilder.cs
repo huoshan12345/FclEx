@@ -100,23 +100,23 @@ public static class DefaultNameValuesBuilder
                 }
             }
 
-            if (omit.HasFlag(WhenNull) && value is null
-                || omit.HasFlag(WhenEmpty) && value is IEnumerable e && e.IsNullOrEmpty())
-            {
+            if (ShouldOmit(omit, value, type))
                 continue;
-            }
-
-            if (omit.HasFlag(WhenDefault))
-            {
-                IEqualityComparer comparer = NonGenericDefaultEqualityComparer.Create(type);
-                if (comparer.Equals(value, type.DefaultValue()))
-                    continue;
-            }
 
             list.Add(new(name, builder.ToString(value, nameValueAttribute.Format) ?? ""));
         }
 
         return list;
+
+        static bool ShouldOmit(NameValueOmitOption omit, object? value, Type type)
+        {
+            if (omit.HasFlag(Never))
+                return false;
+
+            return omit.HasFlag(WhenNull) && value is null
+                    || omit.HasFlag(WhenEmpty) && value is IEnumerable e && e.IsNullOrEmpty()
+                    || omit.HasFlag(WhenDefault) && NonGenericDefaultEqualityComparer.Create(type).Equals(value, type.DefaultValue());
+        }
     }
 }
 
