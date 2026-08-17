@@ -13,10 +13,10 @@
    - 说明：代码已不再提供该种比较器，README 却继续宣传它，消费者会据此寻找不存在或不应使用的 API。
    - 建议：删去该条，改为实际仍受支持的比较器及其适用边界。
 
-202. **[P1] `JsonHelper.ClearCache` 与并发 `GetOptions` 存在竞态，旧 resolver 仍可能被重新缓存。**
-   - 位置：`System/Text/Json/JsonHelper.cs` 的 `GetOptions`、`ClearCache`。
-   - 说明：`ClearCache` 已会重建内置 resolver、`DefaultEx` 和 `WebEx`，单线程下可以释放 `JsonHelper` 持有的旧 options。但若另一个线程已用旧 resolver 开始执行 `GetOptions`，它可在字典被清空后完成 `GetOrAdd` 并重新写入旧 `JsonSerializerOptions`，继续根引用其类型元数据。调用方自行持有的旧 options 也不可能由此 API 强制释放。
-   - 建议：以同一把锁或缓存世代号协调 `GetOptions` 与 `ClearCache`，保证清理完成后不会再发布旧世代的缓存项；文档同时应说明清理不影响调用方已取得的 options 实例。
+202. **[P1][已修复] `JsonHelper.ClearCache` 与并发 `GetOptions` 的竞态可能重新缓存旧 resolver。**
+   - 位置：`System/Text/Json/JsonHelper.cs` 的 `GetOptions`、resolver 访问、静态 options 属性与 `ClearCache`。
+   - 修复：上述路径现通过同一把锁同步；`ClearCache` 返回后，缓存中不会再保留由旧 resolver 创建的 options。`DefaultEx` 与 `WebEx` 也会随缓存重建。
+   - 边界：调用方在清理前取得，或通过 `CreateOptions` 自行创建的 options 实例不会被修改或强制释放；这一点已在 `ClearCache` 文档中说明。
 
 203. **[P2] `ITypeSerializer<TTarget>` 无法表达声明类型，不能可靠处理 `null` 与多态序列化。**
    - 位置：`Utils/~Serialization/ITypeSerializer.cs`。
