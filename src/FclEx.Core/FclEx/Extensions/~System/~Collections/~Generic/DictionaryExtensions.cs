@@ -22,19 +22,6 @@ public static partial class DictionaryExtensions
         return dic.TryGetValue(key, out var value) ? selector(value) : defaultValue;
     }
 
-    public static void Add<TCol, TKey, TValue>(this IDictionary<TKey, TCol> dic, TKey key, TValue? value) where TCol : ICollection<TValue?>, new()
-    {
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-        if (dic.TryGetValue(key, out var col) && col is not null)
-        {
-            col.Add(value);
-        }
-        else
-        {
-            dic[key] = [value];
-        }
-    }
-
     public static void AddRange<TKey, TValue>(this IDictionary<TKey, TValue> dic, IEnumerable<KeyValuePair<TKey, TValue>> pairs)
     {
         foreach (var pair in pairs)
@@ -58,7 +45,7 @@ public static partial class DictionaryExtensions
     public static void Add<TKey, TValue, TCol>(this IDictionary<TKey, TCol> dic, TKey key, TValue value)
         where TCol : ICollection<TValue>, new()
     {
-        if (!dic.TryGetValue(key, out var col))
+        if (dic.TryGetValue(key, out var col) == false)
         {
             col = [];
             dic[key] = col;
