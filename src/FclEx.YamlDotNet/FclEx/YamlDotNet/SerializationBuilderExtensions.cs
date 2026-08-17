@@ -9,7 +9,7 @@ public static class SerializationBuilderExtensions
     /// Attempts to create the converter declared by a type's <see cref="YamlTypeConverterAttribute"/>.
     /// </summary>
     /// <param name="type">The attributed type.</param>
-    /// <returns>The created converter, or <c>null</c> when no usable converter attribute is present.</returns>
+    /// <returns>The created converter, or <see langword="null"/> when no usable converter attribute is present.</returns>
     /// <remarks>This method intentionally swallows invalid converter metadata and is used for non-strict probing.</remarks>
     internal static IYamlTypeConverter? TryCreateYamlTypeConverter(this Type type)
     {

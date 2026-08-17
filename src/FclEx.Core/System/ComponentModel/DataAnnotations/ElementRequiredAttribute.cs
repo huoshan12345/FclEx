@@ -3,7 +3,24 @@ namespace System.ComponentModel.DataAnnotations;
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
 public class ElementRequiredAttribute : ValidationAttribute
 {
-    public int MinLength { get; set; }
+    private int _minLength;
+
+    /// <summary>
+    /// Gets or sets the minimum number of elements required. Zero is valid and imposes no minimum length.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The assigned value is negative.</exception>
+    public int MinLength
+    {
+        get => _minLength;
+        set
+        {
+            if (value < 0)
+                throw new ArgumentOutOfRangeException(nameof(value), value, "Minimum length cannot be negative.");
+
+            _minLength = value;
+        }
+    }
+
     public bool AllowNullElement { get; set; } = true;
 
     private const string MinLengthError = "The field {0} must be a string or array type with a minimum length of '{1}'.";

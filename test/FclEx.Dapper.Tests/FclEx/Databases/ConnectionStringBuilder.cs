@@ -48,6 +48,8 @@ public record ConnectionStringBuilder(
                 UserID = UserName,
                 Password = Password,
                 SslMode = MySqlSslMode.Required,
+                MaximumPoolSize = 16,
+                ConnectionTimeout = 30,
             }.ConnectionString,
             _ => throw new ArgumentOutOfRangeException(nameof(DbDriver), DbDriver, null),
         };

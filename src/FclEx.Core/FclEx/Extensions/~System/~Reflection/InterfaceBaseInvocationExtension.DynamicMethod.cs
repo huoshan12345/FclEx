@@ -2,7 +2,7 @@ namespace FclEx.Extensions;
 
 partial class InterfaceBaseInvocationExtension
 {
-    private static readonly ConcurrentDictionary<InterfaceMethodInfo, Delegate> _delegates = new();
+    private static readonly ConditionalWeakTable<Type, ConcurrentDictionary<InterfaceMethodInfo, Delegate>> _delegates = new();
 
     internal static void BaseByDynamicMethod<TInterface>(this TInterface instance, Expression<Action<TInterface>> selector)
     {
@@ -22,8 +22,10 @@ partial class InterfaceBaseInvocationExtension
         Check.NotNull(selector);
 
         var (method, args) = GetMethodAndArguments(selector);
-        var evaluatedArguments = args.GetArgumentValues().ToArray();
-        var func = _delegates.GetOrAdd(new(instance.GetType(), typeof(TInterface), method), k =>
+        var evaluatedArguments = args.Select(m => m.Evaluate()).ToArray();
+        var instanceType = instance.GetType();
+        var delegates = _delegates.GetValue(instanceType, _ => new());
+        var func = delegates.GetOrAdd(new(instanceType, typeof(TInterface), method), k =>
         {
             var (interfaceMethod, _) = GetInterfaceMethod(k);
             var dynamicMethod = GetDynamicMethod(k.InterfaceType, interfaceMethod, args.Select(m => m.Type));

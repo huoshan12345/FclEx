@@ -66,4 +66,18 @@ public class JsonHelperTests
         var ex = Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<TestModel>(json, options));
         Assert.Contains("The JSON value could not be converted to System.Int32", ex.Message);
     }
+
+    [Fact]
+    public void ClearCache_ShouldRecreateCachedOptions()
+    {
+        var defaultOptions = JsonSerializerOptions.DefaultEx;
+        var webOptions = JsonSerializerOptions.WebEx;
+        var customOptions = JsonHelper.GetOptions(new JsonOptions(Indented: true));
+
+        JsonHelper.ClearCache();
+
+        Assert.NotSame(defaultOptions, JsonSerializerOptions.DefaultEx);
+        Assert.NotSame(webOptions, JsonSerializerOptions.WebEx);
+        Assert.NotSame(customOptions, JsonHelper.GetOptions(new JsonOptions(Indented: true)));
+    }
 }

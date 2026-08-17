@@ -25,6 +25,7 @@ public class FileSystemInfoJsonConverterTests
 
         Assert.False(factory.CanConvert(typeof(string)));
         Assert.False(factory.CanConvert(typeof(object)));
+        Assert.False(factory.CanConvert(typeof(FileSystemInfo)));
     }
 
     [Fact]

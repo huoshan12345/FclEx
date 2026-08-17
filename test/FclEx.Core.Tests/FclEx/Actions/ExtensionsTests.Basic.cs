@@ -298,6 +298,65 @@ public partial class ExtensionsTests
         Assert.Throws<ArgumentNullException>(() => SuccessAction.Create(1).RepeatUntil(null!, 0));
     }
 
+    [RetryFact]
+    public async Task RepeatUntil_InternalTimeout_CancelsActiveAttemptAndReturnsTimeoutError()
+    {
+        CancellationToken observedToken = default;
+        var action = Operation.Action<int>(async token =>
+        {
+            observedToken = token;
+            await Task.Delay(TimeSpan.FromSeconds(30), token);
+            return 1;
+        });
+
+        var execution = action
+            .RepeatUntil(_ => false, timeout: TimeSpan.FromMilliseconds(50))
+            .ExecuteAsync(CancellationToken.None);
+
+        var completedTask = await Task.WhenAny(execution, Task.Delay(TimeSpan.FromSeconds(5), CancellationToken.None));
+
+        Assert.Same(execution, completedTask);
+        var result = await execution;
+        Assert.True(result.IsError);
+        Assert.IsType<TimeoutException>(result.Exception);
+        Assert.True(observedToken.CanBeCanceled);
+    }
+
+    [Fact]
+    public async Task RepeatUntil_InternalTimeout_CancelsDelay()
+    {
+        var attemptCount = 0;
+        var action = Operation.Action<int>(_ => ++attemptCount);
+
+        var execution = action
+            .RepeatUntil(_ => false, TimeSpan.FromSeconds(30), TimeSpan.FromMilliseconds(50))
+            .ExecuteAsync();
+        var completedTask = await Task.WhenAny(execution, Task.Delay(TimeSpan.FromSeconds(5)));
+
+        Assert.Same(execution, completedTask);
+        var result = await execution;
+        Assert.IsType<TimeoutException>(result.Exception);
+        Assert.Equal(1, attemptCount);
+    }
+
+    [Fact]
+    public async Task RepeatUntil_CallerCancellation_ReturnsCanceledResult()
+    {
+        using var cancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(50));
+        var action = Operation.Action<int>(async token =>
+        {
+            await Task.Delay(TimeSpan.FromSeconds(30), token);
+            return 1;
+        });
+
+        var result = await action
+            .RepeatUntil(_ => false, timeout: TimeSpan.FromSeconds(30))
+            .ExecuteAsync(cancellation.Token);
+
+        Assert.True(result.IsCanceled());
+        Assert.IsType<OperationCanceledException>(result.Exception, false);
+    }
+
     [Fact]
     public async Task Chain_RunsActionsInOrder()
     {
@@ -321,6 +380,31 @@ public partial class ExtensionsTests
         Assert.True(success);
         Assert.Equal(2, value);
         Assert.Equal(new[] { 1, 2 }, order);
+    }
+
+    [Fact]
+    public async Task Chain_WithReferenceType_RunsEachActionAndReturnsTheLastValue()
+    {
+        var order = new List<string>();
+        IAction<string>[] actions =
+        [
+            Operation.Action<string>(_ =>
+            {
+                order.Add("first");
+                return "first";
+            }),
+            Operation.Action<string>(_ =>
+            {
+                order.Add("second");
+                return "second";
+            })
+        ];
+
+        var result = await actions.Chain().ExecuteAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("second", result.Value);
+        Assert.Equal(["first", "second"], order);
     }
 
     [Fact]
@@ -350,14 +434,9 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task Chain_WithEmptySequence_ReturnsDefaultValue()
+    public void Chain_WithEmptySequence_ThrowsArgumentException()
     {
-        var (success, value, _, _) = await Array.Empty<IAction<int>>()
-            .Chain()
-            .ExecuteAsync();
-
-        Assert.True(success);
-        Assert.Equal(0, value);
+        Assert.Throws<ArgumentException>(() => Array.Empty<IAction<int>>().Chain());
     }
 
     [Fact]
@@ -405,6 +484,38 @@ public partial class ExtensionsTests
         Assert.False(success);
         Assert.Equal("stop", ex?.Message);
         Assert.Equal(1, attempts);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithNegativeRetryCount_ThrowsArgumentOutOfRangeException()
+    {
+        var action = ErrorAction.Create<int>("error");
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => action.ExecuteAsync(retryCount: -1));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithNoRemainingRetries_DoesNotRequestDelay()
+    {
+        var attempts = 0;
+        var delayRequested = false;
+        var action = Operation.Action<int>(_ =>
+        {
+            attempts++;
+            return Operation.Error<int>("error");
+        });
+
+        var result = await action.ExecuteAsync(
+            retryCount: 0,
+            sleepDurationProvider: _ =>
+            {
+                delayRequested = true;
+                return TimeSpan.Zero;
+            });
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(1, attempts);
+        Assert.False(delayRequested);
     }
 
     [Fact]

@@ -5,14 +5,20 @@ public class ActionTests
     [Fact]
     public async Task SuccessAction_ReturnsConfiguredValueAndElapsed()
     {
-        var (success, value, _, elapsed) = await new SuccessAction<string?>(
-                null,
+        var (success, value, _, elapsed) = await new SuccessAction<string>(
+                "value",
                 TimeSpan.FromSeconds(1))
             .ExecuteAsync();
 
         Assert.True(success);
-        Assert.Null(value);
+        Assert.Equal("value", value);
         Assert.Equal(TimeSpan.FromSeconds(1), elapsed);
+    }
+
+    [Fact]
+    public void SuccessAction_RejectsNullValue()
+    {
+        Assert.Throws<ArgumentNullException>(() => new SuccessAction<string?>(null!));
     }
 
     [Fact]
@@ -103,6 +109,17 @@ public class ActionTests
     {
         Assert.Throws<ArgumentNullException>(() => new ThenWithAction<int, string>(null!, _ => SuccessAction.Create("")));
         Assert.Throws<ArgumentNullException>(() => new ThenWithAction<int, string>(SuccessAction.Create(1), null!));
+    }
+
+    [Fact]
+    public async Task ThenWithAction_Null_Next_Action_Returns_Error()
+    {
+        var action = new ThenWithAction<int, string>(SuccessAction.Create(1), _ => null);
+
+        var result = await action.ExecuteAsync();
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(Constants.NullNextError, result.Exception?.Message);
     }
 
     [Fact]

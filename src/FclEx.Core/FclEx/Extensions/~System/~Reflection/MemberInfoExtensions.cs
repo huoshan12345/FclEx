@@ -2,7 +2,12 @@ namespace FclEx.Extensions;
 
 public static class MemberInfoExtensions
 {
-    public static bool IsDefined<T>(this MemberInfo memberInfo, bool inherit = false)
+    /// <summary>Determines whether an attribute of type <typeparamref name="T"/> is applied to a member.</summary>
+    /// <typeparam name="T">The attribute type to locate.</typeparam>
+    /// <param name="memberInfo">The member metadata to inspect.</param>
+    /// <param name="inherit">Whether to search the inheritance chain when the member kind supports it.</param>
+    /// <returns><see langword="true"/> when the attribute is defined; otherwise, <see langword="false"/>.</returns>
+    public static bool IsDefined<T>(this MemberInfo memberInfo, bool inherit = false) where T : Attribute
     {
         return memberInfo.IsDefined(typeof(T), inherit);
     }

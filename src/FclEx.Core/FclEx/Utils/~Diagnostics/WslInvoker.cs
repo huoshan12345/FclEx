@@ -6,16 +6,16 @@ public class WslInvoker : ProcessInvoker
     /// create custom wsl process
     /// </summary>
     /// <param name="fileName"></param>
-    /// <param name="argumentsConverter"></param>
-    public WslInvoker(string fileName, Func<string, string> argumentsConverter) 
-        : base(fileName, argumentsConverter)
+    /// <param name="commandArgumentFactory"></param>
+    public WslInvoker(string fileName, Func<string, IReadOnlyList<string>> commandArgumentFactory)
+        : base(fileName, commandArgumentFactory)
     {
     }
 
     /// <summary>
     /// create wsl process with default bash
     /// </summary>
-    public WslInvoker() : this("bash", text => $"-c \"{text}\"")
+    public WslInvoker() : this("bash", text => ["-c", text])
     {
     }
 
@@ -32,8 +32,10 @@ public static class WslRunnerExtensions
     /// -w translate from a WSL path to a Windows path. <br/>
     /// -m translate from a WSL path to a Windows path, with ‘/’ instead of ‘\\’.
     /// </summary>
-    public static Task<string> WslPath(this WslInvoker wsl, string path, string? options = null, Encoding? outputEncoding = null, CancellationToken cancellationToken = default)
+    public static async Task<string> WslPath(this WslInvoker wsl, string path, string? options = null, Encoding? outputEncoding = null, CancellationToken cancellationToken = default)
     {
-        return wsl.ExecuteAsync(new ProcessInvocation($"wslpath '{path}' {options}", OutputEncoding: outputEncoding, CancellationToken: cancellationToken));
+        var escapedPath = path.Replace("'", "'\\''");
+        var result = await wsl.ExecuteAsync(new ProcessInvocation($"wslpath '{escapedPath}' {options}", OutputEncoding: outputEncoding, CancellationToken: cancellationToken));
+        return result.StandardOutput;
     }
 }

@@ -6,7 +6,7 @@
 namespace System.Collections.Generic;
 
 /// <summary>Provides a double-ended queue data structure.</summary>
-/// <typeparam name="T">Type of the data stored in the dequeue.</typeparam>
+/// <typeparam name="T">The type of elements stored in the deque.</typeparam>
 [DebuggerDisplay("Count = {_size}")]
 public sealed class Deque<T> : IReadOnlyCollection<T>
 {
@@ -46,9 +46,11 @@ public sealed class Deque<T> : IReadOnlyCollection<T>
         _size++;
     }
 
+    /// <summary>Removes and returns the element at the head of the deque.</summary>
+    /// <exception cref="InvalidOperationException">The deque is empty.</exception>
     public T DequeueHead()
     {
-        Debug.Assert(!IsEmpty); // caller's responsibility to make sure there are elements remaining
+        EnsureNotEmpty();
 
         T item = _array[_head];
         _array[_head] = default!;
@@ -62,15 +64,19 @@ public sealed class Deque<T> : IReadOnlyCollection<T>
         return item;
     }
 
+    /// <summary>Returns the element at the head of the deque without removing it.</summary>
+    /// <exception cref="InvalidOperationException">The deque is empty.</exception>
     public T PeekHead()
     {
-        Debug.Assert(!IsEmpty); // caller's responsibility to make sure there are elements remaining
+        EnsureNotEmpty();
         return _array[_head];
     }
 
+    /// <summary>Returns the element at the tail of the deque without removing it.</summary>
+    /// <exception cref="InvalidOperationException">The deque is empty.</exception>
     public T PeekTail()
     {
-        Debug.Assert(!IsEmpty); // caller's responsibility to make sure there are elements remaining
+        EnsureNotEmpty();
         var index = _tail - 1;
         if (index == -1)
         {
@@ -79,9 +85,11 @@ public sealed class Deque<T> : IReadOnlyCollection<T>
         return _array[index];
     }
 
+    /// <summary>Removes and returns the element at the tail of the deque.</summary>
+    /// <exception cref="InvalidOperationException">The deque is empty.</exception>
     public T DequeueTail()
     {
-        Debug.Assert(!IsEmpty); // caller's responsibility to make sure there are elements remaining
+        EnsureNotEmpty();
 
         if (--_tail == -1)
         {
@@ -93,6 +101,59 @@ public sealed class Deque<T> : IReadOnlyCollection<T>
 
         _size--;
         return item;
+    }
+
+    /// <summary>Attempts to remove and return the element at the head of the deque.</summary>
+    public bool TryDequeueHead([MaybeNullWhen(false)] out T item)
+    {
+        if (IsEmpty)
+        {
+            item = default;
+            return false;
+        }
+
+        item = DequeueHead();
+        return true;
+    }
+
+    /// <summary>Attempts to remove and return the element at the tail of the deque.</summary>
+    public bool TryDequeueTail([MaybeNullWhen(false)] out T item)
+    {
+        if (IsEmpty)
+        {
+            item = default;
+            return false;
+        }
+
+        item = DequeueTail();
+        return true;
+    }
+
+    /// <summary>Attempts to return the element at the head of the deque without removing it.</summary>
+    public bool TryPeekHead([MaybeNullWhen(false)] out T item)
+    {
+        if (IsEmpty)
+        {
+            item = default;
+            return false;
+        }
+
+        item = _array[_head];
+        return true;
+    }
+
+    /// <summary>Attempts to return the element at the tail of the deque without removing it.</summary>
+    public bool TryPeekTail([MaybeNullWhen(false)] out T item)
+    {
+        if (IsEmpty)
+        {
+            item = default;
+            return false;
+        }
+
+        var index = _tail == 0 ? _array.Length - 1 : _tail - 1;
+        item = _array[index];
+        return true;
     }
 
     public IEnumerator<T> GetEnumerator() // meant for debug purposes only
@@ -109,6 +170,12 @@ public sealed class Deque<T> : IReadOnlyCollection<T>
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
+    }
+
+    private void EnsureNotEmpty()
+    {
+        if (IsEmpty)
+            throw new InvalidOperationException("The deque is empty.");
     }
 
     private void Grow()

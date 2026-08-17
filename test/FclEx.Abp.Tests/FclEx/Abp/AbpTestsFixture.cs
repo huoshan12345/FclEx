@@ -25,8 +25,7 @@ public class AbpTestsFixture<TModule> : CoreTestsFixture where TModule : AbpModu
                 builder.SetMinimumLevel(LogLevel);
                 builder.AddXunit();
             })
-            .AddAbp<TModule>()
-            .AddAop();
+            .AddAbp<TModule>();
 
         return services;
     }

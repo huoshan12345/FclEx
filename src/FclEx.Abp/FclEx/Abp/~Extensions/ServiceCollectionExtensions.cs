@@ -1,7 +1,5 @@
 using System;
 using System.Linq;
-using AspectCore.Extensions.DependencyInjection;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
@@ -73,12 +71,6 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<THostedService>();
         services.AddHostedService(provider => provider.GetRequiredService<THostedService>());
-        return services;
-    }
-
-    public static IServiceCollection AddAop(this IServiceCollection services)
-    {
-        services.Replace<IServiceProviderFactory<IServiceCollection>>(new DynamicProxyServiceProviderFactory());
         return services;
     }
 }

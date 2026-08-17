@@ -1,6 +1,19 @@
 namespace FclEx.Utils;
 
-public class ProcessException(int exitCode, string message) : Exception(message)
+public class ProcessException(ProcessResult result)
+    : Exception(CreateMessage(result))
 {
-    public int ExitCode { get; } = exitCode;
+    public ProcessResult Result { get; } = result;
+
+    public int ExitCode => Result.ExitCode;
+
+    private static string CreateMessage(ProcessResult result)
+    {
+        var details = result.StandardError.IsNotEmpty()
+            ? result.StandardError
+            : result.StandardOutput;
+        return details.IsNotEmpty()
+            ? $"The process exited with code {result.ExitCode}.{Environment.NewLine}{details}"
+            : $"The process exited with code {result.ExitCode}.";
+    }
 }

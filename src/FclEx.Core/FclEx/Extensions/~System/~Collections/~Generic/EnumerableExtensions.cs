@@ -120,9 +120,18 @@ public static partial class EnumerableExtensions
         return enumerable.Select(m => m.ToValueTuple());
     }
 
+    /// <summary>Calculates the arithmetic mean of selected time spans with tick precision.</summary>
+    /// <param name="source">The source sequence.</param>
+    /// <param name="selector">Selects the duration from each source item.</param>
+    /// <returns>The average duration, truncated toward zero when the exact average is between ticks.</returns>
+    /// <remarks>
+    /// Ticks are accumulated as <see cref="decimal"/> values so ordinary <see cref="long"/> tick values do not lose
+    /// precision through floating-point conversion or overflow while being summed.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException"><paramref name="source"/> is empty.</exception>
     public static TimeSpan Average<T>(this IEnumerable<T> source, Func<T, TimeSpan> selector)
     {
-        var ticks = (long)source.Select(m => selector(m).Ticks).Average();
+        var ticks = (long)source.Average(m => (decimal)selector(m).Ticks);
         return TimeSpan.FromTicks(ticks);
     }
 
@@ -132,13 +141,28 @@ public static partial class EnumerableExtensions
         return TimeSpan.FromTicks(ticks);
     }
 
+    /// <summary>
+    /// Converts up to 32 Boolean values to the corresponding signed 32-bit bit pattern.
+    /// </summary>
+    /// <remarks>
+    /// The first value is the least-significant bit. When the 32nd value is set, the returned value is negative because
+    /// that position is the sign bit of <see cref="int"/>.
+    /// </remarks>
     public static int BitsToInt(this IEnumerable<bool> bits)
     {
+        Check.NotNull(bits);
+
         var num = 0;
-        foreach (var (i, b) in bits.Index())
+        var index = 0;
+        foreach (var bit in bits)
         {
-            var bit = b ? 1 : 0;
-            num &= (bit << i);
+            if (index == 32)
+                throw new ArgumentException("The sequence must contain at most 32 bits.", nameof(bits));
+
+            if (bit)
+                num |= 1 << index;
+
+            index++;
         }
         return num;
     }
@@ -170,9 +194,15 @@ public static partial class EnumerableExtensions
         }
     }
 
+    /// <summary>Produces the Cartesian product of <paramref name="left"/> and <paramref name="right"/>.</summary>
+    /// <remarks>
+    /// <paramref name="right"/> is materialized once before the product is returned, so it may be a one-shot sequence.
+    /// The left sequence remains deferred and is enumerated when the result is enumerated.
+    /// </remarks>
     public static IEnumerable<(T1, T2)> CrossJoin<T1, T2>(this IEnumerable<T1> left, IEnumerable<T2> right)
     {
-        return left.SelectMany(m => right, static (t1, t2) => (t1, t2));
+        var items = right.AsIReadOnlyCollection();
+        return left.SelectMany(m => items, static (t1, t2) => (t1, t2));
     }
 
     public static IEnumerable<(T1, T2)> CrossJoin<T1, T2>(this IEnumerable<T1> left, Func<T1, IEnumerable<T2>> right)
@@ -271,12 +301,7 @@ public static partial class EnumerableExtensions
     {
         return arrays.Prepend(source).Concat();
     }
-
-    public static IEnumerable<(T Left, T2 Right)> SelectMany<T, T2>(this IEnumerable<T> left, IEnumerable<T2> right)
-    {
-        return left.SelectMany(_ => right, (x, y) => (x, y));
-    }
-
+    
     public static IOrderedEnumerable<T> OrderBy<T, TKey>(this IEnumerable<T> enumerable, Func<T, TKey> keySelector, bool desc)
     {
         return desc
@@ -355,13 +380,27 @@ public static partial class EnumerableExtensions
         }
     }
 
-    public static IEnumerable<IEnumerable<T>> Split<T>(this IEnumerable<T> list, int parts)
+    /// <summary>
+    /// Distributes the source elements among at most <paramref name="partitionCount"/> partitions in round-robin order.
+    /// </summary>
+    /// <remarks>
+    /// The source is enumerated when the result is enumerated. Each enumeration starts a new distribution and is
+    /// independent of every other enumeration. Empty partitions are not returned.
+    /// </remarks>
+    public static IEnumerable<IEnumerable<T>> DistributeRoundRobin<T>(this IEnumerable<T> source, int partitionCount)
     {
-        var i = 0;
-        var splits = from item in list
-                     group item by i++ % parts into part
-                     select part;
-        return splits;
+        Check.NotNull(source);
+        Check.Positive(partitionCount);
+        return DistributeRoundRobinIterator(source, partitionCount);
+
+        static IEnumerable<IEnumerable<T>> DistributeRoundRobinIterator(IEnumerable<T> source, int partitionCount)
+        {
+            var index = 0;
+            foreach (var partition in source.GroupBy(_ => index++ % partitionCount))
+            {
+                yield return partition;
+            }
+        }
     }
 
     /// <summary>
@@ -387,7 +426,7 @@ public static partial class EnumerableExtensions
     /// elements from the other sequence are yielded.
     /// </remarks>
     /// <exception cref="ArgumentNullException">
-    /// Thrown if <paramref name="first"/> or <paramref name="second"/> is <c>null</c>.
+    /// Thrown if <paramref name="first"/> or <paramref name="second"/> is <see langword="null"/>.
     /// </exception>
     /// <exception cref="ArgumentOutOfRangeException">
     /// Thrown if <paramref name="firstGrouping"/> or <paramref name="secondGrouping"/> is less than or equal to zero.
@@ -786,7 +825,7 @@ public static partial class EnumerableExtensions
     {
         return (random ?? Random.Shared).Sample(source);
     }
-
+    
     extension<T>(IEnumerable<T>)
     {
         public static IEnumerable<T> operator +(IEnumerable<T> enumerable, IEnumerable<T> other)

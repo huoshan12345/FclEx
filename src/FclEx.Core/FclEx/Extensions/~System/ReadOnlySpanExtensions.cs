@@ -5,15 +5,15 @@ public static class ReadOnlySpanExtensions
     [MethodImpl(AggressiveInlining)]
     public static bool StartsWith<T>(this ReadOnlySpan<T> span, T value) where T : IEquatable<T>
     {
-        var valueSpan = Span.Create(ref value);
-        return span.StartsWith(valueSpan);
+        return span.IsEmpty == false
+               && EqualityComparer<T>.Default.Equals(span[0], value);
     }
 
     [MethodImpl(AggressiveInlining)]
     public static bool EndsWith<T>(this ReadOnlySpan<T> span, T value) where T : IEquatable<T>
     {
-        var valueSpan = Span.Create(ref value);
-        return span.EndsWith(valueSpan);
+        return span.IsEmpty == false
+               && EqualityComparer<T>.Default.Equals(span[^1], value);
     }
 
     [MethodImpl(AggressiveInlining)]
@@ -26,65 +26,62 @@ public static class ReadOnlySpanExtensions
     public static string ToBase64(this ReadOnlySpan<byte> span) => Convert.ToBase64String(span);
 #endif
 
-    public static unsafe T MarshalTo<T>(this ReadOnlySpan<byte> span)
+    /// <summary>
+    /// Uses the interop marshaler to read a structure from the beginning of the span.
+    /// </summary>
+    /// <remarks>
+    /// Managed references are permitted only when represented inline by <see cref="UnmanagedType.ByValArray"/> or
+    /// <see cref="UnmanagedType.ByValTStr"/>. Bytes after the structure are ignored. No byte-order conversion is performed.
+    /// </remarks>
+    public static T MarshalReadAs<T>(this ReadOnlySpan<byte> span)
     {
-        var size = Marshal.SizeOf<T>();
-        Check.NotLessThan(span.Length, size);
-
-        using var disposable = MarshalHelper.AllocHGlobal(size);
-        var ptr = disposable.Value;
-
-        var buffer = new Span<byte>(ptr.ToPointer(), size);
-        span.CopyTo(buffer);
-        var obj = ptr.MarshalTo<T>();
-        return obj!;
+        typeof(T).EnsureMarshalable();
+        return Marshal.ReadAs<T>(span);
     }
 
-    public static unsafe T[] MarshalToArray<T>(this ReadOnlySpan<byte> span)
+    /// <summary>
+    /// Uses the interop marshaler to read consecutive structures from the span.
+    /// </summary>
+    /// <exception cref="ArgumentException">The span length is not an exact multiple of the structure size.</exception>
+    public static T[] MarshalReadAsArray<T>(this ReadOnlySpan<byte> span)
     {
+        typeof(T).EnsureMarshalable();
+
         var size = Marshal.SizeOf<T>();
-        Check.NotLessThan(span.Length, size);
+        if (span.Length % size != 0)
+            throw new ArgumentException("The span length must be an exact multiple of the structure size.", nameof(span));
 
-        var count = span.Length / size; // count should be >= 1
-        var total = size * count;
-
-        using var disposable = MarshalHelper.AllocHGlobal(total);
-        var ptr = disposable.Value;
-
-        var result = new T[count];
-        for (var i = 0; i < count; i++)
-        {
-            var buffer = new Span<byte>(ptr.ToPointer(), size);
-            span.Slice(i * size, size).CopyTo(buffer);
-            var obj = ptr.MarshalTo<T>();
-            result[i] = obj!;
-        }
-        return result;
+        var count = span.Length / size;
+        return Marshal.ReadAsArray<T>(span, count);
     }
 
-    public static byte[] ToBytes(this ReadOnlySpan<bool> bits)
+    /// <summary>Packs Boolean values into bytes using least-significant-bit-first order.</summary>
+    /// <param name="bits">The values to pack.</param>
+    /// <returns>The packed bytes. The first value occupies bit 0 of the first byte; unused high bits in the final byte are zero.</returns>
+    public static byte[] PackBits(this ReadOnlySpan<bool> bits)
     {
-        var count = bits.Length;
-        var numBytes = count / 8;
-        if (count % 8 != 0)
-            numBytes++;
-
-        var bytes = new byte[numBytes];
-        int byteIndex = 0, bitIndex = 0;
-
-        foreach (var bit in bits)
+        var bytes = new byte[(bits.Length + 7) / 8];
+        for (int i = 0; i < bits.Length; i++)
         {
-            if (bit) bytes[byteIndex] |= (byte)(1 << bitIndex);
-            ++bitIndex;
-
-            if (bitIndex == 8)
-            {
-                bitIndex = 0;
-                ++byteIndex;
-            }
-
+            if (bits[i])
+                bytes[i >> 3] |= (byte)(1 << (i & 7));
         }
         return bytes;
+    }
+
+    /// <summary>Unpacks least-significant-bit-first bytes into Boolean values.</summary>
+    /// <param name="bytes">The packed bytes.</param>
+    /// <returns>Eight Boolean values for every input byte. The first result corresponds to bit 0 of the first byte.</returns>
+    /// <remarks>The original bit count is not encoded; callers that packed a non-byte-aligned input must retain its length separately.</remarks>
+    public static bool[] UnpackBits(this ReadOnlySpan<byte> bytes)
+    {
+        var count = bytes.Length * 8;
+        var bits = new bool[count];
+        for (int i = 0; i < count; i++)
+        {
+            bits[i] = (bytes[i >> 3] & (1 << (i & 7))) != 0;
+        }
+        return bits;
     }
 
     /// <summary>
@@ -195,6 +192,8 @@ public static class ReadOnlySpanExtensions
         private readonly SplitOptions _options;
         private ReadOnlySpan<char> _remaining;
         private ReadOnlySpan<char> _current;
+        private bool _hasResult;
+        private bool _hasCurrent;
 
         public SplitEnumerator(
             ReadOnlySpan<char> span,
@@ -205,19 +204,28 @@ public static class ReadOnlySpanExtensions
             _separators = separators;
             _options = options;
             _current = default;
+            _hasResult = true;
+            _hasCurrent = false;
         }
 
         public readonly SplitEnumerator GetEnumerator() => this;
 
+        /// <summary>Gets the current split segment.</summary>
+        /// <exception cref="InvalidOperationException">Enumeration has not started or has already completed.</exception>
         // ReSharper disable once ConvertToAutoPropertyWithPrivateSetter
-        public readonly ReadOnlySpan<char> Current => _current;
+        public readonly ReadOnlySpan<char> Current => _hasCurrent
+            ? _current
+            : throw new InvalidOperationException("Enumeration has not started or has already finished.");
 
         public bool MoveNext()
         {
             while (true)
             {
-                if (_remaining.IsEmpty)
+                if (_hasResult == false)
+                {
+                    _hasCurrent = false;
                     return false;
+                }
 
                 var idx = _remaining.IndexOfAny(_separators);
 
@@ -227,6 +235,7 @@ public static class ReadOnlySpanExtensions
                 {
                     slice = _remaining;
                     _remaining = default;
+                    _hasResult = false;
                 }
                 else
                 {
@@ -243,13 +252,11 @@ public static class ReadOnlySpanExtensions
                 // RemoveEmptyEntries
                 if ((_options & SplitOptions.RemoveEmptyEntries) != 0 && slice.IsEmpty)
                 {
-                    if (_remaining.IsEmpty)
-                        return false;
-
-                    continue; // 跳过空项
+                    continue;
                 }
 
                 _current = slice;
+                _hasCurrent = true;
                 return true;
             }
         }

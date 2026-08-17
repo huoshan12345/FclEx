@@ -19,7 +19,8 @@ public static class Optional
     /// <typeparam name="T">The type of the value that will be wrapped in the optional.</typeparam>
     /// <param name="value">The value to be wrapped in the optional.</param>
     /// <returns>An <see cref="Optional{T}"/> containing the specified value.</returns>
-    public static Optional<T> Some<T>(T value) => value;
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
+    public static Optional<T> Some<T>(T value) => Check.NotNull(value);
 }
 
 /// <summary>
@@ -33,7 +34,7 @@ public readonly record struct Optional<T>(T? Value)
     /// Indicates whether the optional value is present (i.e., not null).
     /// </summary>
     /// <remarks>
-    /// If <c>HasValue</c> is <c>true</c>, then the <c>Value</c> property is guaranteed to be non-null.
+    /// If <c>HasValue</c> is <see langword="true"/>, then the <c>Value</c> property is guaranteed to be non-null.
     /// </remarks>
     [MemberNotNullWhen(true, nameof(Value))]
     public bool HasValue => Value is not null;

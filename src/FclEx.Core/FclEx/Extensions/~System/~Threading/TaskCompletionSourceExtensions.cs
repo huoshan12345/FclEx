@@ -2,10 +2,9 @@ namespace FclEx.Extensions;
 
 public static class TaskCompletionSourceExtensions
 {
-#if NET6_0_OR_GREATER
     public static TaskCompletionSource Exception(this TaskCompletionSource source, Exception ex)
     {
-        source.SetException(ex.GetBaseException());
+        source.SetException(ex);
         return source;
     }
 
@@ -20,11 +19,10 @@ public static class TaskCompletionSourceExtensions
         source.SetResult();
         return source;
     }
-#endif
 
     public static TaskCompletionSource<T> Exception<T>(this TaskCompletionSource<T> source, Exception ex)
     {
-        source.SetException(ex.GetBaseException());
+        source.SetException(ex);
         return source;
     }
 

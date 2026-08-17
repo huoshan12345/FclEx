@@ -8,7 +8,7 @@ public class PagedList
 
 public class PagedList<T> : IPagedList<T>
 {
-    private readonly IReadOnlyList<T> _items;
+    private readonly T[] _items;
 
     public static PagedList<T> Empty { get; } = new([], 0, 1, 0);
 
@@ -18,28 +18,36 @@ public class PagedList<T> : IPagedList<T>
     {
         Check.NotNull(items);
         Check.NotLessThan(pageIndex, 0);
+        Check.NotLessThan(pageSize, 1);
         Check.NotLessThan(totalCount, 0);
 
-        if (pageSize < 1 && totalCount > 0)
-            throw new ArgumentOutOfRangeException(nameof(pageSize), pageSize, "Value can not be less than 1.");
+        var pageCount = totalCount == 0
+            ? 0
+            : (int)(((long)totalCount + pageSize - 1) / pageSize);
+        if (pageIndex >= Math.Max(1, pageCount))
+            throw new ArgumentOutOfRangeException(nameof(pageIndex), pageIndex, "The page index must refer to an existing page.");
 
-        if (pageSize < 0 && totalCount == 0)
-            throw new ArgumentOutOfRangeException(nameof(pageSize), pageSize, "Value can not be less than 0.");
+        var offset = (long)pageIndex * pageSize;
+        var maximumItemCount = totalCount == 0
+            ? 0
+            : (int)Math.Min(pageSize, totalCount - offset);
+        if (items.Count > maximumItemCount)
+            throw new ArgumentException($"The page can contain at most {maximumItemCount} items.", nameof(items));
 
-        _items = items;
+        _items = [..items];
         PageIndex = pageIndex;
         PageNumber = pageIndex + 1;
         TotalCount = totalCount;
         PageSize = pageSize;
-        PageCount = TotalCount > 0 ? (int)Math.Ceiling(TotalCount / (double)PageSize) : 0;
+        PageCount = pageCount;
 
         HasPreviousPage = PageIndex > 0;
         HasNextPage = PageNumber < PageCount;
         IsFirstPage = PageIndex <= 0;
         IsLastPage = PageNumber >= PageCount;
 
-        ItemStart = TotalCount == 0 ? 0 : PageIndex * PageSize + 1;
-        ItemEnd = Math.Min(PageIndex * PageSize + PageSize, TotalCount);
+        ItemStart = _items.Length == 0 ? 0 : (int)offset + 1;
+        ItemEnd = _items.Length == 0 ? 0 : (int)offset + _items.Length;
     }
 
     public int PageCount { get; }
@@ -54,8 +62,8 @@ public class PagedList<T> : IPagedList<T>
     public int ItemStart { get; }
     public int ItemEnd { get; }
 
-    public IEnumerator<T> GetEnumerator() => _items.GetEnumerator();
+    public IEnumerator<T> GetEnumerator() => ((IEnumerable<T>)_items).GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-    public int Count => _items.Count;
+    public int Count => _items.Length;
     public T this[int index] => _items[index];
 }

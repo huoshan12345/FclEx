@@ -145,7 +145,15 @@ public abstract class ArrayBasedCollection<TSelf, T> : IReadOnlyCollection<T>
         ++_version;
     }
 
-    public Span<T> AsSpan() => new(_items, 0, _count);
+    /// <summary>
+    /// Returns a read-only span over the elements currently stored in the collection.
+    /// </summary>
+    /// <remarks>
+    /// The span is invalidated by any operation that changes the collection's count or capacity.
+    /// </remarks>
+    public ReadOnlySpan<T> AsReadOnlySpan() => new(_items, 0, _count);
+
+    internal Span<T> AsSpan() => new(_items, 0, _count);
 
     public Enumerator GetEnumerator() => new((TSelf)this);
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<T>)this).GetEnumerator();

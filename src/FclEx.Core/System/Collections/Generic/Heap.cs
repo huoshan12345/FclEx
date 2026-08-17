@@ -27,6 +27,7 @@ namespace System.Collections.Generic;
 public class Heap<T> : ArrayBasedCollection<Heap<T>, T>, ICollection<T>
 {
     private const int Arity = 4;
+    private const int MaxHeapHeight = 32;
 
     private readonly IComparer<T> _comparer;
 
@@ -79,11 +80,15 @@ public class Heap<T> : ArrayBasedCollection<Heap<T>, T>, ICollection<T>
     /// </summary>
     public void Push(T item)
     {
+        var index = _count;
+        var destination = FindSiftUpDestination(index, item);
+
         if (_count == _items.Length)
             Grow(_count + 1);
 
-        var index = _count++;
-        SiftUp(index, item);
+        CommitSiftUp(index, destination, item);
+        _count++;
+        _version++;
     }
 
     public void PushRange(IEnumerable<T> items)
@@ -122,23 +127,22 @@ public class Heap<T> : ArrayBasedCollection<Heap<T>, T>, ICollection<T>
     {
         EnsureNotEmpty();
 
-        var last = --_count;
-
+        var last = _count - 1;
         var root = _items[0];
-        var x = _items[last];
+
+        if (last > 0)
+        {
+            var item = _items[last];
+            Span<int> path = stackalloc int[MaxHeapHeight];
+            var pathLength = FindSiftDownPath(0, item, last, path);
+            CommitSiftDown(0, item, path[..pathLength]);
+        }
 
         if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
             _items[last] = default!;
 
-        if (last > 0)
-        {
-            SiftDown(0, x); // ShiftDown also increments version
-        }
-        else
-        {
-            ++_version;
-        }
-
+        _count = last;
+        _version++;
         return root;
     }
 
@@ -190,9 +194,7 @@ public class Heap<T> : ArrayBasedCollection<Heap<T>, T>, ICollection<T>
     /// <summary>
     /// Replaces the smallest element with the specified item and returns the previous smallest element.
     /// </summary>
-    /// <remarks>
-    /// If the heap is empty, the item is inserted and returned.
-    /// </remarks>
+    /// <exception cref="InvalidOperationException">The heap is empty.</exception>
     public T PopPush(T item)
     {
         EnsureNotEmpty();
@@ -228,63 +230,88 @@ public class Heap<T> : ArrayBasedCollection<Heap<T>, T>, ICollection<T>
 
     private static int Parent(int i) => (i - 1) / Arity;
 
-    private static int FirstChild(int i) => i * Arity + 1;
-
-    private void SiftUp(int i, T item)
+    private int FindSiftUpDestination(int index, T item)
     {
-        while (i > 0)
+        var destination = index;
+        while (destination > 0)
         {
-            var parent = Parent(i);
-            var p = _items[parent];
+            var parent = Parent(destination);
 
-            if (_comparer.Compare(item, p) >= 0)
+            if (_comparer.Compare(item, _items[parent]) >= 0)
                 break;
 
-            _items[i] = p;
-            i = parent;
+            destination = parent;
         }
 
-        _items[i] = item;
+        return destination;
+    }
 
-        ++_version;
+    private void CommitSiftUp(int index, int destination, T item)
+    {
+        while (index > destination)
+        {
+            var parent = Parent(index);
+            _items[index] = _items[parent];
+            index = parent;
+        }
+
+        _items[destination] = item;
     }
 
     private void SiftDown(int i, T item)
     {
+        Span<int> path = stackalloc int[MaxHeapHeight];
+        var pathLength = FindSiftDownPath(i, item, _count, path);
+        CommitSiftDown(i, item, path[..pathLength]);
+        _version++;
+    }
+
+    private int FindSiftDownPath(int index, T item, int count, Span<int> path)
+    {
+        var pathLength = 0;
         while (true)
         {
-            var first = FirstChild(i);
-            if (first >= _count)
+            var firstCandidate = (long)index * Arity + 1;
+            if (firstCandidate >= count)
                 break;
 
+            var first = (int)firstCandidate;
             var best = first;
             var bestValue = _items[first];
             var last = first + Arity;
 
-            if (last > _count)
-                last = _count;
+            if (last > count)
+                last = count;
 
             for (var j = first + 1; j < last; j++)
             {
                 var v = _items[j];
-                if (_comparer.Compare(_items[j], bestValue) < 0)
+                if (_comparer.Compare(v, bestValue) < 0)
                 {
                     best = j;
                     bestValue = v;
                 }
             }
 
-            var child = _items[best];
-
-            if (_comparer.Compare(child, item) >= 0)
+            if (_comparer.Compare(bestValue, item) >= 0)
                 break;
 
-            _items[i] = child;
-            i = best;
+            Debug.Assert(pathLength < path.Length);
+            path[pathLength++] = best;
+            index = best;
         }
 
-        _items[i] = item;
+        return pathLength;
+    }
 
-        ++_version;
+    private void CommitSiftDown(int index, T item, ReadOnlySpan<int> path)
+    {
+        foreach (var child in path)
+        {
+            _items[index] = _items[child];
+            index = child;
+        }
+
+        _items[index] = item;
     }
 }

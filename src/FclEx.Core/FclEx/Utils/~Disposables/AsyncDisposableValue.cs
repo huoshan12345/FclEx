@@ -1,41 +1,72 @@
 namespace FclEx.Utils;
 
-public class AsyncDisposableValue<T>(T value, Func<T, ValueTask>? disposeAction = null) : IAsyncDisposable
+public class AsyncDisposableValue<T> : IAsyncDisposable
 {
-    private volatile bool _disposed;
+    private readonly T _value;
+    private readonly Func<T, ValueTask>? _disposeAction;
+    private Task? _disposeTask;
+
+    public AsyncDisposableValue(T value, Func<T, ValueTask>? disposeAction = null)
+    {
+        _value = value;
+        _disposeAction = disposeAction;
+    }
 
     public T Value
     {
         get
         {
-            if (_disposed)
+            if (Volatile.Read(ref _disposeTask) is not null)
                 throw new ObjectDisposedException(nameof(Value));
-            return value;
+            return _value;
         }
     }
 
     public static implicit operator T(AsyncDisposableValue<T> disposable) => disposable.Value;
 
-    public readonly Func<T, ValueTask>? _disposeAction = disposeAction;
-
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
-        if (_disposed)
-            return;
+        var disposeTask = Volatile.Read(ref _disposeTask);
+        if (disposeTask is not null)
+            return new ValueTask(disposeTask);
 
-        if (_disposeAction != null)
-        {
-            await _disposeAction.Invoke(Value);
-        }
-        else if (Value is IAsyncDisposable asyncDisposable)
-        {
-            await asyncDisposable.DisposeAsync();
-        }
-        else if (Value is IDisposable disposable)
-        {
-            disposable.Dispose();
-        }
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        disposeTask = Interlocked.CompareExchange(ref _disposeTask, completion.Task, null);
+        if (disposeTask is not null)
+            return new ValueTask(disposeTask);
 
-        _disposed = true;
+        GC.SuppressFinalize(this);
+        _ = CompleteDisposalAsync(completion);
+        return new ValueTask(completion.Task);
+    }
+
+    private async Task CompleteDisposalAsync(TaskCompletionSource completion)
+    {
+        try
+        {
+            if (_disposeAction is not null)
+            {
+                await _disposeAction.Invoke(_value).NoCapture();
+            }
+            // ReSharper disable once ConvertIfStatementToSwitchStatement
+            else if (_value is IAsyncDisposable asyncDisposable)
+            {
+                await asyncDisposable.DisposeAsync().NoCapture();
+            }
+            else if (_value is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+
+            completion.TrySetResult();
+        }
+        catch (OperationCanceledException)
+        {
+            completion.TrySetCanceled();
+        }
+        catch (Exception ex)
+        {
+            completion.TrySetException(ex);
+        }
     }
 }

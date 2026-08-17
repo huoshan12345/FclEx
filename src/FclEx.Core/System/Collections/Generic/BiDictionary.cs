@@ -35,6 +35,12 @@ public class BiDictionary<TKey, TValue> : IDictionary<TKey, TValue> where TKey :
     public bool ContainsKey(TKey key) => _dic1.ContainsKey(key);
     public bool ContainsValue(TValue value) => _dic2.ContainsKey(value);
 
+    /// <summary>Gets the value associated with the specified key.</summary>
+    public TValue GetValue(TKey key) => _dic1[key];
+
+    /// <summary>Gets the key associated with the specified value.</summary>
+    public TKey GetKey(TValue value) => _dic2[value];
+
     public void Clear()
     {
         _dic1.Clear();
@@ -53,11 +59,21 @@ public class BiDictionary<TKey, TValue> : IDictionary<TKey, TValue> where TKey :
 
     public void Add(TKey key, TValue value)
     {
-        _dic1.Add(key, value);
-        _dic2.Add(value, key);
+        AddMapping(_dic1, _dic2, key, value);
     }
 
     public bool Remove(TKey key)
+    {
+        return RemoveKey(key);
+    }
+
+    public bool Remove(TValue value)
+    {
+        return RemoveValue(value);
+    }
+
+    /// <summary>Removes the mapping identified by its key.</summary>
+    public bool RemoveKey(TKey key)
     {
         if (!_dic1.Remove(key, out var value))
             return false;
@@ -66,7 +82,8 @@ public class BiDictionary<TKey, TValue> : IDictionary<TKey, TValue> where TKey :
         return true;
     }
 
-    public bool Remove(TValue value)
+    /// <summary>Removes the mapping identified by its value.</summary>
+    public bool RemoveValue(TValue value)
     {
         if (!_dic2.Remove(value, out var key))
             return false;
@@ -77,27 +94,79 @@ public class BiDictionary<TKey, TValue> : IDictionary<TKey, TValue> where TKey :
 
     public TValue this[TKey key]
     {
-        get => _dic1[key];
-        set
-        {
-            if (_dic1.TryGetValue(key, out var oldValue))
-                _dic2.Remove(oldValue);
-
-            _dic1[key] = value;
-            _dic2[value] = key;
-        }
+        get => GetValue(key);
+        set => SetValue(key, value);
     }
 
-    public TKey this[TValue v]
+    public TKey this[TValue lookupValue]
     {
-        get => _dic2[v];
-        set
-        {
-            if (_dic2.TryGetValue(v, out var oldKey))
-                _dic1.Remove(oldKey);
+        get => GetKey(lookupValue);
+        set => SetKey(lookupValue, value);
+    }
 
-            _dic1[value] = v;
-            _dic2[v] = value;
+    /// <summary>Adds or replaces the mapping identified by its key.</summary>
+    public void SetValue(TKey key, TValue value)
+    {
+        SetMapping(_dic1, _dic2, key, value, "An item with the same value has already been added.");
+    }
+
+    /// <summary>Adds or replaces the mapping identified by its value.</summary>
+    public void SetKey(TValue value, TKey key)
+    {
+        SetMapping(_dic2, _dic1, value, key, "An item with the same key has already been added.");
+    }
+
+    private static void SetMapping<TForward, TReverse>(
+        Dictionary<TForward, TReverse> forward,
+        Dictionary<TReverse, TForward> reverse,
+        TForward key,
+        TReverse value,
+        string duplicateMessage)
+        where TForward : notnull
+        where TReverse : notnull
+    {
+        if (!forward.TryGetValue(key, out var oldValue))
+        {
+            AddMapping(forward, reverse, key, value);
+            return;
+        }
+
+        if (reverse.Comparer.Equals(oldValue, value))
+            return;
+
+        if (reverse.ContainsKey(value))
+            throw new ArgumentException(duplicateMessage, nameof(value));
+
+        reverse.Add(value, key);
+        try
+        {
+            forward[key] = value;
+        }
+        catch
+        {
+            reverse.Remove(value);
+            throw;
+        }
+        reverse.Remove(oldValue);
+    }
+
+    private static void AddMapping<TForward, TReverse>(
+        Dictionary<TForward, TReverse> forward,
+        Dictionary<TReverse, TForward> reverse,
+        TForward key,
+        TReverse value)
+        where TForward : notnull
+        where TReverse : notnull
+    {
+        forward.Add(key, value);
+        try
+        {
+            reverse.Add(value, key);
+        }
+        catch
+        {
+            forward.Remove(key);
+            throw;
         }
     }
 }

@@ -43,6 +43,44 @@ public partial class DbContextExtensionsTests(EfCoreFixture fixture) : EfCoreTes
         }
     }
 
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
+    public async Task GetOrAddAsync_ObservesCancellationToken(DbDriver dbDriver)
+    {
+        await using var context = Fixture.CreateDbContext(dbDriver);
+        using var cancellation = new CancellationTokenSource();
+        await cancellation.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => context.GetOrAddAsync(
+            entity => entity.Name == "cancelled",
+            () => new EntityHasStates(),
+            cancellation.Token));
+    }
+
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
+    public async Task InsertAsync_ObservesCancellationToken(DbDriver dbDriver)
+    {
+        await using var context = Fixture.CreateDbContext(dbDriver);
+        using var cancellation = new CancellationTokenSource();
+        await cancellation.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            context.InsertAsync(new EntityHasStates(), cancellation.Token));
+    }
+
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
+    public async Task SaveAsync_ObservesCancellationToken(DbDriver dbDriver)
+    {
+        await using var context = Fixture.CreateDbContext(dbDriver);
+        using var cancellation = new CancellationTokenSource();
+        await cancellation.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            context.SaveAsync(new EntityHasStates(), cancellation.Token));
+    }
+
     private static void AssertDateTime(DbDriver dbDriver, DateTimeOffset expected, DateTimeOffset actual)
     {
         switch (dbDriver)
@@ -194,5 +232,64 @@ public partial class DbContextExtensionsTests(EfCoreFixture fixture) : EfCoreTes
 
         Assert.NotNull(result);
         Assert.Equal(entity.Id, result.Id);
+    }
+
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
+    public async Task CrudHelpers_PersistSingleAndRangeOperations(DbDriver dbDriver)
+    {
+        var single = new EntityWithAutoKey { Name = Guid.NewGuid().ToString(), Value = 1 };
+        var range = new[]
+        {
+            new EntityWithAutoKey { Name = Guid.NewGuid().ToString(), Value = 2 },
+            new EntityWithAutoKey { Name = Guid.NewGuid().ToString(), Value = 3 },
+        };
+
+        await using (var context = Fixture.CreateDbContext(dbDriver))
+        {
+            Assert.Equal(1, await context.InsertAsync(single));
+            Assert.Equal(2, await context.InsertRangeAsync(range));
+
+            single.Value = 10;
+            Assert.Equal(1, await context.UpdateAsync(single));
+
+            range[0].Value = 20;
+            range[1].Value = 30;
+            Assert.Equal(2, await context.UpdateRangeAsync(range));
+        }
+
+        var ids = new[] { single.Id, range[0].Id, range[1].Id };
+        await using (var context = Fixture.CreateDbContext(dbDriver))
+        {
+            var saved = await context.EntityWithAutoKey
+                .Where(entity => ids.Contains(entity.Id))
+                .OrderBy(entity => entity.Value)
+                .ToArrayAsync();
+
+            Assert.Equal([10, 20, 30], saved.Select(entity => entity.Value));
+            Assert.Equal(1, await context.DeleteAsync(saved[0]));
+            Assert.Equal(2, await context.DeleteRangeAsync(saved[1..]));
+        }
+
+        await using (var context = Fixture.CreateDbContext(dbDriver))
+        {
+            Assert.Empty(await context.EntityWithAutoKey.Where(entity => ids.Contains(entity.Id)).ToArrayAsync());
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
+    public async Task SoftDeleteAsync_DeletesEntityByKey(DbDriver dbDriver)
+    {
+        var entity = await CreateEntityHasStatesAsync(dbDriver);
+        await using var context = Fixture.CreateDbContext(dbDriver);
+
+        var affected = await context.EntityHasStates.SoftDeleteAsync(entity.Id);
+        var saved = await context.EntityHasStates.FindAsync(entity.Id);
+
+        Assert.Equal(1, affected);
+        Assert.NotNull(saved);
+        Assert.True(saved.IsDeleted);
+        Assert.NotEqual(default, saved.DeletedAt);
     }
 }

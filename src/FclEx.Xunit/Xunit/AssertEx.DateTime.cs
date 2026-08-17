@@ -22,7 +22,7 @@ partial class AssertEx
             if (difference >= precision)
                 return;
 
-            Assert.NotEqual(e, a, new PrecisionDateTimeOffsetComparer(precision));
+            throw NotEqualException.ForEqualValues(e, a, precision, difference);
         }
 
         public static void Equal(TimeSpan? expected, TimeSpan? actual, TimeSpan precision)

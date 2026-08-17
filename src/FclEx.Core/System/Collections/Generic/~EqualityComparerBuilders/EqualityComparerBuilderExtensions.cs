@@ -12,7 +12,7 @@ public static class EqualityComparerBuilderExtensions
         return builder.Set(DelegateEqualityComparer.Create(compareFunc, hashFunc));
     }
 
-    public static EqualityComparerBuilder<T> Reference<T>(this EqualityComparerBuilder<T> builder)
+    public static EqualityComparerBuilder<T> Reference<T>(this EqualityComparerBuilder<T> builder) where T : class
     {
         return builder.Set(ReferenceEqualityComparer<T>.Instance);
     }

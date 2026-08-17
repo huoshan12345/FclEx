@@ -22,8 +22,16 @@ public static class DirectoryInfoExtensions
         return dir;
     }
 
-    public static DirectoryInfo CreateNew(this DirectoryInfo dir)
+    /// <summary>
+    /// Deletes the directory and all of its contents if it exists, then creates an empty directory at the same path.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The directory represents a file-system root.</exception>
+    public static DirectoryInfo Recreate(this DirectoryInfo dir)
     {
+        Check.NotNull(dir);
+        if (dir.Parent is null)
+            throw new InvalidOperationException("A file-system root cannot be recreated.");
+
         dir.TryDelete(true);
         dir.Create();
         dir.Refresh();
@@ -33,20 +41,60 @@ public static class DirectoryInfoExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static DirectoryInfo Sub(this DirectoryInfo dir, string name)
     {
+        Check.NotNull(dir);
+        ValidateDirectChildName(name);
         return new(Path.Combine(dir.FullName, name));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static FileInfo File(this DirectoryInfo dir, string name)
     {
+        Check.NotNull(dir);
+        ValidateDirectChildName(name);
         return new FileInfo(Path.Combine(dir.FullName, name));
     }
 
-    private static readonly ConcurrentDictionary<string, string> _pathWithSepCache = new();
-    public static bool IsSubOf(this DirectoryInfo sub, DirectoryInfo parent)
+    /// <summary>
+    /// Determines whether <paramref name="directory"/> is lexically below <paramref name="parent"/>.
+    /// </summary>
+    /// <remarks>
+    /// The directory itself is not considered its own descendant. Symbolic links are not resolved.
+    /// Path comparison follows the current operating system: case-insensitive on Windows and case-sensitive elsewhere.
+    /// </remarks>
+    public static bool IsDescendantOf(this DirectoryInfo directory, DirectoryInfo parent)
     {
-        var path = _pathWithSepCache.GetOrAdd(parent.FullName, m => m + Path.DirectorySeparatorChar);
-        return sub.FullName.StartsWith(path, StringComparison.OrdinalIgnoreCase);
+        Check.NotNull(directory);
+        Check.NotNull(parent);
+
+        var directoryPath = Path.GetFullPath(directory.FullName);
+        var parentPath = Path.GetFullPath(parent.FullName);
+        var comparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+
+        if (string.Equals(directoryPath, parentPath, comparison))
+            return false;
+
+        if (parentPath.EndsWith(Path.DirectorySeparatorChar) == false
+            && parentPath.EndsWith(Path.AltDirectorySeparatorChar) == false)
+        {
+            parentPath += Path.DirectorySeparatorChar;
+        }
+
+        return directoryPath.StartsWith(parentPath, comparison);
+    }
+
+    private static void ValidateDirectChildName(string name)
+    {
+        Check.NotEmpty(name);
+
+        if (Path.IsPathRooted(name)
+            || name is "." or ".."
+            || name.IndexOf(Path.DirectorySeparatorChar) >= 0
+            || name.IndexOf(Path.AltDirectorySeparatorChar) >= 0)
+        {
+            throw new ArgumentException("The name must identify one direct child and cannot contain a path.", nameof(name));
+        }
     }
 
     public static bool IsEmpty(this DirectoryInfo dir)
@@ -57,7 +105,7 @@ public static class DirectoryInfoExtensions
     public static DirectoryInfo Rename(this DirectoryInfo dir, string name)
     {
         Check.NotNull(dir);
-        Check.NotEmpty(name);
+        ValidateDirectChildName(name);
 
         if (dir.Name == name)
             return dir;

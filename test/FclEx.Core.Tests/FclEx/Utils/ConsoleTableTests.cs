@@ -41,4 +41,44 @@ public class ConsoleTableTests
             TestContext.Current.TestOutputHelper?.WriteLine(sb.ToString());
         }
     }
+
+    [Fact]
+    public void Constructor_Should_Defensively_Copy_Columns()
+    {
+        object[] columns = ["first", "second"];
+        var table = new ConsoleTable(new() { Columns = columns });
+        columns[0] = "changed";
+
+        Assert.Equal("first", table.Columns[0]);
+        Assert.False(table.Columns is object?[]);
+    }
+
+    [Fact]
+    public void AddRow_Should_Defensively_Copy_Row()
+    {
+        var table = new ConsoleTable(new() { Columns = ["first", "second"] });
+        object?[] row = ["first", "second"];
+        table.AddRow(row);
+        row[0] = "changed";
+
+        Assert.Equal("first", table.Rows[0][0]);
+        Assert.False(table.Rows[0] is object?[]);
+    }
+
+    [Fact]
+    public void AddRow_WithoutColumns_ThrowsInvalidOperationException()
+    {
+        var table = new ConsoleTable(new());
+
+        Assert.Throws<InvalidOperationException>(() => table.AddRow(["value"]));
+    }
+
+    [Fact]
+    public void AddRow_WithWrongCellCount_ThrowsArgumentExceptionForValues()
+    {
+        var table = new ConsoleTable(new() { Columns = ["first", "second"] });
+
+        var exception = Assert.Throws<ArgumentException>(() => table.AddRow(["value"]));
+        Assert.Equal("values", exception.ParamName);
+    }
 }

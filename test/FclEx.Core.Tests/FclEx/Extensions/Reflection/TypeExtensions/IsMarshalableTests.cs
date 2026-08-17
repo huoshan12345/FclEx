@@ -5,6 +5,13 @@ namespace FclEx.Extensions.Reflection.TypeExtensions;
 public class IsMarshalableTests
 {
     [StructLayout(LayoutKind.Sequential)]
+    private struct PointerMarshalableStruct
+    {
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string? Value;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public struct RepeatedMarshalableFieldStruct
     {
         public MarshalableStruct First;
@@ -27,6 +34,18 @@ public class IsMarshalableTests
     public void EnsureMarshalable_ShouldThrow_WhenTypeIsNotMarshalable()
     {
         Assert.Throws<ArgumentException>(() => typeof(string).EnsureMarshalable());
+    }
+
+    [Fact]
+    public void IsMarshalable_ShouldRejectPointerFields_WhenTheyAreNotAllowed()
+    {
+        Assert.True(typeof(PointerMarshalableStruct).IsMarshalable(out _));
+
+        var result = typeof(PointerMarshalableStruct).IsMarshalable(out var exception, allowPointerFields: false);
+
+        Assert.False(result);
+        Assert.IsType<ArgumentException>(exception);
+        Assert.Throws<ArgumentException>(() => typeof(PointerMarshalableStruct).EnsureMarshalable(allowPointerFields: false));
     }
 
     [Fact]

@@ -36,6 +36,39 @@ public class UnsafeHelperTests
         Assert.Equal(Unsafe.SizeOf<CommonStruct>(), UnsafeHelper.SizeOf<CommonStruct>());
     }
 
+    [Fact]
+    public void GetValue_ReadsUnmanagedValue()
+    {
+        using var memory = Marshal.AllocHGlobalDisposable(sizeof(int));
+        Marshal.WriteInt32(memory.Value, 42);
+
+        Assert.Equal(42, UnsafeHelper.GetValue<int>(memory.Value));
+    }
+
+    [Fact]
+    public void GetValue_WithRuntimeManagedType_IsRejected()
+    {
+        Assert.Throws<ArgumentException>(() => UnsafeHelper.GetValue(IntPtr.Zero, typeof(string)));
+    }
+
+    [Fact]
+    public void WriteToAndReadFrom_RoundTripTheEntireUnmanagedValue()
+    {
+        using var memory = Marshal.AllocHGlobalDisposable(Unsafe.SizeOf<long>());
+        const long expected = 0x1020_3040_5060_7080;
+
+        UnsafeHelper.WriteTo(memory.Value, expected);
+
+        Assert.Equal(expected, UnsafeHelper.ReadFrom<long>(memory.Value));
+    }
+
+    [Fact]
+    public void Reinterpret_RequiresSourceAndDestinationToHaveTheSameSize()
+    {
+        Assert.Equal(1f, UnsafeHelper.Reinterpret<int, float>(0x3F80_0000));
+        Assert.Throws<InvalidOperationException>(() => UnsafeHelper.Reinterpret<int, short>(42));
+    }
+
     [Theory]
     [InlineData(typeof(object))]
     [InlineData(typeof(string))]
@@ -77,7 +110,7 @@ public class UnsafeHelperTests
     {
         var table = new ConsoleTable(new()
         {
-            Columns = ["Type", nameof(Marshal), nameof(Unsafe), nameof(SizeCalculator), nameof(UnsafeHelper)],
+            Columns = ["Type", nameof(Marshal), nameof(Unsafe), nameof(UnsafeHelper)],
             RenderColumns = true,
         });
 
@@ -101,9 +134,8 @@ public class UnsafeHelperTests
         {
             var marshalSize = GetSize(type, Marshal.SizeOf);
             var unsafeSize = UnsafeSizeOf(type);
-            var calculatorSize = GetSize(type, SizeCalculator.SizeOf);
             var size = SizeOf(type);
-            table.Rows.Add([type.ShortName(), marshalSize, unsafeSize, calculatorSize, size]);
+            table.AddRow([type.ShortName(), marshalSize, unsafeSize, size]);
         }
 
         if (TestHelper.IsRunningUnderReSharper())

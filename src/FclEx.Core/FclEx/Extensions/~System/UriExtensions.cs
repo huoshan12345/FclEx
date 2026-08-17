@@ -61,4 +61,12 @@ public static class UriExtensions
 
         return endIndex >= 0 ? text[..endIndex] : text;
     }
+
+    extension(Uri)
+    {
+        public static Uri New([StringSyntax(StringSyntaxAttribute.Uri, nameof(uriKind))] string uriString, UriKind uriKind = UriKind.RelativeOrAbsolute)
+        {
+            return new Uri(uriString, uriKind);
+        }
+    }
 }

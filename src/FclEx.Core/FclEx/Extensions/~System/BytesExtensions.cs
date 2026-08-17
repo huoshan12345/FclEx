@@ -6,18 +6,18 @@ namespace FclEx.Extensions;
 /// </summary>
 public static partial class BytesExtensions
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static MemoryStream ToStream(this byte[] bytes) => new(bytes);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static string GetString(this byte[] bytes, Encoding? encoding = null)
         => bytes.AsReadOnlySpan().GetString(encoding);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static string GetString(this ArraySegment<byte> bytes, Encoding? encoding = null)
         => bytes.AsReadOnlySpan().GetString(encoding);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static string ToBase64(this byte[] bytes) => Convert.ToBase64String(bytes);
 
     public static string ToHex(this byte[] bytes, bool upperCase = false)
@@ -31,90 +31,78 @@ public static partial class BytesExtensions
         return builder.ToString();
     }
 
-    public static T MarshalTo<T>(this byte[] bytes, ref int offset)
+    /// <summary>
+    /// Uses the interop marshaler to read a structure from <paramref name="bytes"/> at <paramref name="offset"/>, then
+    /// advances the offset by its unmanaged size.
+    /// </summary>
+    /// <remarks>
+    /// The structure must use sequential or explicit layout. Managed array fields are supported only when represented
+    /// inline with <see cref="UnmanagedType.ByValArray"/>; strings are supported only with
+    /// <see cref="UnmanagedType.ByValTStr"/>. Pointer-based managed fields are rejected so input bytes are never
+    /// dereferenced as external addresses. No byte-order conversion is performed.
+    /// </remarks>
+    public static T MarshalReadAs<T>(this byte[] bytes, ref int offset)
     {
         Check.NotNull(bytes);
         Check.NotLessThan(offset, 0);
+        typeof(T).EnsureMarshalable();
 
         var length = Marshal.SizeOf<T>();
-        Check.NotLessThan(bytes.Length, length + offset);
+        Check.NotLessThan(bytes.Length, checked(length + offset));
 
-        using var disposable = MarshalHelper.AllocHGlobal(length);
-        var ptr = disposable.Value;
-        Marshal.Copy(bytes, offset, ptr, length);
-        var obj = Marshal.PtrToStructure<T>(ptr);
+        var result = Marshal.ReadAs<T>(bytes.AsSpan(offset, length));
         offset += length;
-        return obj!;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T MarshalTo<T>(this byte[] bytes)
-    {
-        var i = 0;
-        return MarshalTo<T>(bytes, ref i);
-    }
-
-    public static T[] MarshalToArray<T>(this byte[] bytes, int count, ref int offset)
-    {
-        Check.NotNull(bytes);
-        Check.NotLessThan(offset, 0);
-        Check.NotLessThan(count, 1);
-
-        var length = Marshal.SizeOf<T>();
-        Check.NotLessThan(bytes.Length, length * count + offset);
-
-        var result = new T[count];
-        using var disposable = MarshalHelper.AllocHGlobal(length);
-        var ptr = disposable.Value;
-        for (var i = 0; i < count; i++)
-        {
-            Marshal.Copy(bytes, offset, ptr, length);
-            var obj = Marshal.PtrToStructure<T>(ptr);
-            offset += length;
-            result[i] = obj!;
-        }
         return result;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T[] MarshalToArray<T>(this byte[] bytes)
+    [MethodImpl(AggressiveInlining)]
+    public static T MarshalReadAs<T>(this byte[] bytes)
     {
-        var length = Marshal.SizeOf<T>();
         var i = 0;
-        return MarshalToArray<T>(bytes, bytes.Length / length, ref i);
+        return bytes.MarshalReadAs<T>(ref i);
     }
 
-    public static byte[] MarshalArrayToBytes<T>(this IReadOnlyList<T> list)
+    /// <summary>
+    /// Uses the interop marshaler to read <paramref name="count"/> consecutive structures and advances
+    /// <paramref name="offset"/> past their unmanaged representations.
+    /// </summary>
+    public static T[] MarshalReadAsArray<T>(this byte[] bytes, int count, ref int offset)
     {
-        Check.NotNull(list);
-
-        if (list.IsEmpty())
-            return [];
+        Check.NotNull(bytes);
+        Check.NotLessThan(offset, 0);
+        Check.NotLessThan(count, 0);
+        typeof(T).EnsureMarshalable();
 
         var length = Marshal.SizeOf<T>();
-        var totalBytes = length * list.Count;
-        var bufByte = new byte[totalBytes];
-        using var disposable = MarshalHelper.AllocHGlobal(length);
-        var ptr = disposable.Value;
-        for (var i = 0; i < list.Count; i++)
-        {
-            var item = list[i];
-            Check.NotNull(item, nameof(list) + $"[{i}]");
+        var totalLength = checked(length * count);
+        Check.NotLessThan(bytes.Length, checked(totalLength + offset));
 
-            Marshal.StructureToPtr(item, ptr, false);
-            Marshal.Copy(ptr, bufByte, i * length, length);
-        }
-
-        return bufByte;
+        var result = Marshal.ReadAsArray<T>(bytes.AsSpan(offset, totalLength), count);
+        offset += totalLength;
+        return result;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
+    public static T[] MarshalReadAsArray<T>(this byte[] bytes)
+    {
+        Check.NotNull(bytes);
+        typeof(T).EnsureMarshalable();
+
+        var length = Marshal.SizeOf<T>();
+        if (bytes.Length % length != 0)
+            throw new ArgumentException("The byte array length must be an exact multiple of the structure size.", nameof(bytes));
+
+        var i = 0;
+        return bytes.MarshalReadAsArray<T>(bytes.Length / length, ref i);
+    }
+
+    [MethodImpl(AggressiveInlining)]
     public static void WriteTo(this byte[] bytes, Stream stream) => stream.Write(bytes, 0, bytes.Length);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static Task WriteToAsync(this byte[] bytes, Stream stream) => stream.WriteAsync(bytes, 0, bytes.Length);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static int IndexOf(this byte[] bytes, byte[] subBytes)
     {
         return bytes.AsReadOnlySpan().IndexOf(subBytes);
@@ -170,7 +158,7 @@ public static partial class BytesExtensions
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static int ComputeHashCode(this byte[] bytes)
     {
         return bytes.AsReadOnlySpan().ComputeHashCode();

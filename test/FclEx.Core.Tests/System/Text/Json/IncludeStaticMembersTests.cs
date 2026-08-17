@@ -28,6 +28,9 @@ public class IncludeStaticMembersTests
         public const string ConstIncludedField = "Included Const Field";
 
         public const string ConstExcludedField = "Excluded Const Field";
+
+        [JsonInclude]
+        public static object MutableIncludedProperty { get; set; } = "Initial Value";
     }
 
     [Fact]
@@ -54,5 +57,25 @@ public class IncludeStaticMembersTests
         Assert.DoesNotContain("\"StaticIncludedProperty\"", json);
         Assert.DoesNotContain("\"StaticExcludedField\"", json);
         Assert.DoesNotContain("\"StaticExcludedProperty\"", json);
+    }
+
+    [Fact]
+    public void AddStaticMembers_Reads_The_Current_Value_Using_The_Declared_Member_Type()
+    {
+        try
+        {
+            TestModel.MutableIncludedProperty = "Initial Value";
+            var initialJson = JsonSerializer.Serialize(new TestModel(), _options);
+
+            TestModel.MutableIncludedProperty = 42;
+            var updatedJson = JsonSerializer.Serialize(new TestModel(), _options);
+
+            Assert.Contains("\"MutableIncludedProperty\":\"Initial Value\"", initialJson);
+            Assert.Contains("\"MutableIncludedProperty\":42", updatedJson);
+        }
+        finally
+        {
+            TestModel.MutableIncludedProperty = "Initial Value";
+        }
     }
 }

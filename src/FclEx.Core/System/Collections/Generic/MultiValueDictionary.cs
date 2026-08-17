@@ -1,7 +1,8 @@
+#pragma warning disable CS8767 // Nullability of reference types in type of parameter doesn't match implicitly implemented member (possibly because of nullability attributes).
+
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
-#nullable disable
 namespace System.Collections.Generic;
 
 [SuppressMessage("ReSharper", "InconsistentNaming")]
@@ -46,6 +47,7 @@ internal class Strings
 /// <typeparam name="TValue">The type of the value.</typeparam>
 public class MultiValueDictionary<TKey, TValue> :
     IReadOnlyDictionary<TKey, IReadOnlyCollection<TValue>>
+    where TKey : notnull
 {
     #region Variables
     /*======================================================================
@@ -107,7 +109,7 @@ public class MultiValueDictionary<TKey, TValue> :
     /// </summary>
     /// <param name="comparer">Specified comparer to use for the <typeparamref name="TKey"/>s</param>
     /// <remarks>If <paramref name="comparer"/> is set to null, then the default <see cref="IEqualityComparer" /> for <typeparamref name="TKey"/> is used.</remarks>
-    public MultiValueDictionary(IEqualityComparer<TKey> comparer)
+    public MultiValueDictionary(IEqualityComparer<TKey>? comparer)
     {
         _dictionary = new Dictionary<TKey, InnerCollectionView>(comparer);
     }
@@ -121,7 +123,7 @@ public class MultiValueDictionary<TKey, TValue> :
     /// <param name="comparer">Specified comparer to use for the <typeparamref name="TKey"/>s</param>
     /// <exception cref="ArgumentOutOfRangeException">Capacity must be >= 0</exception>
     /// <remarks>If <paramref name="comparer"/> is set to null, then the default <see cref="IEqualityComparer" /> for <typeparamref name="TKey"/> is used.</remarks>
-    public MultiValueDictionary(int capacity, IEqualityComparer<TKey> comparer)
+    public MultiValueDictionary(int capacity, IEqualityComparer<TKey>? comparer)
     {
         if (capacity < 0)
             throw new ArgumentOutOfRangeException(nameof(capacity), Strings.ArgumentOutOfRange_NeedNonNegNum);
@@ -148,7 +150,7 @@ public class MultiValueDictionary<TKey, TValue> :
     /// <param name="comparer">Specified comparer to use for the <typeparamref name="TKey"/>s</param>
     /// <exception cref="ArgumentNullException">enumerable must be non-null</exception>
     /// <remarks>If <paramref name="comparer"/> is set to null, then the default <see cref="IEqualityComparer" /> for <typeparamref name="TKey"/> is used.</remarks>
-    public MultiValueDictionary(IEnumerable<KeyValuePair<TKey, IEnumerable<TValue>>> enumerable, IEqualityComparer<TKey> comparer)
+    public MultiValueDictionary(IEnumerable<KeyValuePair<TKey, IEnumerable<TValue>>> enumerable, IEqualityComparer<TKey>? comparer)
     {
         if (enumerable == null)
             throw new ArgumentNullException(nameof(enumerable));
@@ -166,7 +168,7 @@ public class MultiValueDictionary<TKey, TValue> :
     ======================================================================*/
 
     /// <summary>
-    /// Creates a new new instance of the <see cref="MultiValueDictionary{TKey, TValue}" /> 
+    /// Creates a new instance of the <see cref="MultiValueDictionary{TKey, TValue}" /> 
     /// class that is empty, has the default initial capacity, and uses the default
     /// <see cref="IEqualityComparer{TKey}" /> for <typeparamref name="TKey"/>. The 
     /// internal dictionary will use instances of the <typeparamref name="TValueCollection"/>
@@ -179,11 +181,11 @@ public class MultiValueDictionary<TKey, TValue> :
     /// <returns>A new <see cref="MultiValueDictionary{TKey, TValue}" /> with the specified
     /// parameters.</returns>
     /// <exception cref="InvalidOperationException"><typeparamref name="TValueCollection"/> must not have
-    /// IsReadOnly set to true by default.</exception>
+    /// IsReadOnly set to <see langword="true"/> by default.</exception>
     /// <remarks>
     /// Note that <typeparamref name="TValueCollection"/> must implement <see cref="ICollection{TValue}"/>
     /// in addition to being constructable through new(). The collection returned from the constructor
-    /// must also not have IsReadOnly set to True by default.
+    /// must also not have IsReadOnly set to <see langword="true"/> by default.
     /// </remarks>
     public static MultiValueDictionary<TKey, TValue> Create<TValueCollection>()
         where TValueCollection : ICollection<TValue>, new()
@@ -393,7 +395,7 @@ public class MultiValueDictionary<TKey, TValue> :
     ======================================================================*/
 
     /// <summary>
-    /// Creates a new new instance of the <see cref="MultiValueDictionary{TKey, TValue}" /> 
+    /// Creates a new instance of the <see cref="MultiValueDictionary{TKey, TValue}" /> 
     /// class that is empty, has the default initial capacity, and uses the default
     /// <see cref="IEqualityComparer{TKey}" /> for <typeparamref name="TKey"/>. The 
     /// internal dictionary will use instances of the <typeparamref name="TValueCollection"/>
@@ -408,11 +410,11 @@ public class MultiValueDictionary<TKey, TValue> :
     /// <returns>A new <see cref="MultiValueDictionary{TKey, TValue}" /> with the specified
     /// parameters.</returns>
     /// <exception cref="InvalidOperationException"><paramref name="collectionFactory"/> must create collections with
-    /// IsReadOnly set to true by default.</exception>
+    /// IsReadOnly set to <see langword="false"/> by default.</exception>
     /// <remarks>
     /// Note that <typeparamref name="TValueCollection"/> must implement <see cref="ICollection{TValue}"/>
     /// in addition to being constructable through new(). The collection returned from the constructor
-    /// must also not have IsReadOnly set to True by default.
+    /// must also not have IsReadOnly set to <see langword="true"/> by default.
     /// </remarks>
     public static MultiValueDictionary<TKey, TValue> Create<TValueCollection>(Func<TValueCollection> collectionFactory)
         where TValueCollection : ICollection<TValue>
@@ -488,7 +490,7 @@ public class MultiValueDictionary<TKey, TValue> :
     /// in addition to being constructable through new(). The collection returned from the constructor
     /// must also not have IsReadOnly set to True by default.
     /// </remarks>
-    public static MultiValueDictionary<TKey, TValue> Create<TValueCollection>(IEqualityComparer<TKey> comparer, Func<TValueCollection> collectionFactory)
+    public static MultiValueDictionary<TKey, TValue> Create<TValueCollection>(IEqualityComparer<TKey>? comparer, Func<TValueCollection> collectionFactory)
         where TValueCollection : ICollection<TValue>
     {
         if (collectionFactory().IsReadOnly)
@@ -526,7 +528,10 @@ public class MultiValueDictionary<TKey, TValue> :
     /// in addition to being constructable through new(). The collection returned from the constructor
     /// must also not have IsReadOnly set to True by default.
     /// </remarks>
-    public static MultiValueDictionary<TKey, TValue> Create<TValueCollection>(int capacity, IEqualityComparer<TKey> comparer, Func<TValueCollection> collectionFactory)
+    public static MultiValueDictionary<TKey, TValue> Create<TValueCollection>(
+        int capacity,
+        IEqualityComparer<TKey>? comparer,
+        Func<TValueCollection> collectionFactory)
         where TValueCollection : ICollection<TValue>
     {
         if (capacity < 0)
@@ -564,7 +569,9 @@ public class MultiValueDictionary<TKey, TValue> :
     /// in addition to being constructable through new(). The collection returned from the constructor
     /// must also not have IsReadOnly set to True by default.
     /// </remarks>
-    public static MultiValueDictionary<TKey, TValue> Create<TValueCollection>(IEnumerable<KeyValuePair<TKey, IReadOnlyCollection<TValue>>> enumerable, Func<TValueCollection> collectionFactory)
+    public static MultiValueDictionary<TKey, TValue> Create<TValueCollection>(
+        IEnumerable<KeyValuePair<TKey, IReadOnlyCollection<TValue>>> enumerable,
+        Func<TValueCollection> collectionFactory)
         where TValueCollection : ICollection<TValue>
     {
         if (enumerable == null)
@@ -607,7 +614,10 @@ public class MultiValueDictionary<TKey, TValue> :
     /// in addition to being constructable through new(). The collection returned from the constructor
     /// must also not have IsReadOnly set to True by default.
     /// </remarks>
-    public static MultiValueDictionary<TKey, TValue> Create<TValueCollection>(IEnumerable<KeyValuePair<TKey, IReadOnlyCollection<TValue>>> enumerable, IEqualityComparer<TKey> comparer, Func<TValueCollection> collectionFactory)
+    public static MultiValueDictionary<TKey, TValue> Create<TValueCollection>(
+        IEnumerable<KeyValuePair<TKey, IReadOnlyCollection<TValue>>> enumerable,
+        IEqualityComparer<TKey>? comparer,
+        Func<TValueCollection> collectionFactory)
         where TValueCollection : ICollection<TValue>
     {
         if (enumerable == null)
@@ -636,7 +646,7 @@ public class MultiValueDictionary<TKey, TValue> :
     /// </summary>
     /// <param name="key">The <typeparamref name="TKey"/> of the element to add.</param>
     /// <param name="value">The <typeparamref name="TValue"/> of the element to add.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="key"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="key"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// Unlike the Add for <see cref="IDictionary" />, the <see cref="MultiValueDictionary{TKey,TValue}"/> Add will not
     /// throw any exceptions. If the given <typeparamref name="TKey"/> is already in the <see cref="MultiValueDictionary{TKey,TValue}"/>,
@@ -650,12 +660,18 @@ public class MultiValueDictionary<TKey, TValue> :
     {
         if (key == null)
             throw new ArgumentNullException(nameof(key));
-        if (!_dictionary.TryGetValue(key, out InnerCollectionView collection))
+
+        if (_dictionary.TryGetValue(key, out var collection))
+        {
+            collection.AddValue(value);
+        }
+        else
         {
             collection = new InnerCollectionView(key, NewCollectionFactory());
+            collection.AddValue(value);
             _dictionary.Add(key, collection);
         }
-        collection.AddValue(value);
+
         _version++;
     }
 
@@ -678,15 +694,21 @@ public class MultiValueDictionary<TKey, TValue> :
         if (values == null)
             throw new ArgumentNullException(nameof(values));
 
-        if (!_dictionary.TryGetValue(key, out InnerCollectionView collection))
+        if (_dictionary.TryGetValue(key, out var collection))
         {
-            collection = new InnerCollectionView(key, NewCollectionFactory());
+            _version++;
+            collection.AddValues(values);
+            return;
+        }
+
+        // Build a new value collection before publishing the key. This preserves the invariant that every key has at
+        // least one value and also leaves the dictionary unchanged if enumeration or value insertion fails.
+        collection = new InnerCollectionView(key, NewCollectionFactory());
+        collection.AddValues(values);
+
+        if (collection.Count != 0)
             _dictionary.Add(key, collection);
-        }
-        foreach (TValue value in values)
-        {
-            collection.AddValue(value);
-        }
+
         _version++;
     }
 
@@ -695,8 +717,8 @@ public class MultiValueDictionary<TKey, TValue> :
     /// from the <see cref="MultiValueDictionary{TKey,TValue}"/>.
     /// </summary>
     /// <param name="key">The <typeparamref name="TKey"/> of the elements to remove</param>
-    /// <returns><c>true</c> if the removal was successful; otherwise <c>false</c></returns>
-    /// <exception cref="ArgumentNullException"><paramref name="key"/> is <c>null</c>.</exception>
+    /// <returns><see langword="true"/> if the removal was successful; otherwise <see langword="false"/></returns>
+    /// <exception cref="ArgumentNullException"><paramref name="key"/> is <see langword="null"/>.</exception>
     public bool Remove(TKey key)
     {
         if (key == null)
@@ -717,7 +739,7 @@ public class MultiValueDictionary<TKey, TValue> :
     /// <param name="key">The <typeparamref name="TKey"/> of the element to remove</param>
     /// <param name="value">The <typeparamref name="TValue"/> of the element to remove</param>
     /// <exception cref="ArgumentNullException"><paramref name="key"/> must be non-null</exception>
-    /// <returns><c>true</c> if the removal was successful; otherwise <c>false</c></returns>
+    /// <returns><see langword="true"/> if the removal was successful; otherwise <see langword="false"/></returns>
     /// <remarks>
     /// If the <typeparamref name="TValue"/> being removed is the last one associated with its <typeparamref name="TKey"/>, then that 
     /// <typeparamref name="TKey"/> will be removed from the <see cref="MultiValueDictionary{TKey,TValue}"/> and its 
@@ -729,7 +751,7 @@ public class MultiValueDictionary<TKey, TValue> :
         if (key == null)
             throw new ArgumentNullException(nameof(key));
 
-        if (_dictionary.TryGetValue(key, out InnerCollectionView collection) && collection.RemoveValue(value))
+        if (_dictionary.TryGetValue(key, out var collection) && collection.RemoveValue(value))
         {
             if (collection.Count == 0)
                 _dictionary.Remove(key);
@@ -761,21 +783,21 @@ public class MultiValueDictionary<TKey, TValue> :
     /// </summary>
     /// <param name="key">The <typeparamref name="TKey"/> of the element.</param>
     /// <param name="value">The <typeparamref name="TValue"/> of the element.</param>
-    /// <returns><c>true</c> if found; otherwise <c>false</c></returns>
+    /// <returns><see langword="true"/> if found; otherwise <see langword="false"/></returns>
     /// <exception cref="ArgumentNullException"><paramref name="key"/> must be non-null</exception>
     public bool Contains(TKey key, TValue value)
     {
         if (key == null)
             throw new ArgumentNullException(nameof(key));
 
-        return (_dictionary.TryGetValue(key, out InnerCollectionView collection) && collection.Contains(value));
+        return (_dictionary.TryGetValue(key, out var collection) && collection.Contains(value));
     }
 
     /// <summary>
     /// Determines if the given <typeparamref name="TValue"/> exists within this <see cref="MultiValueDictionary{TKey,TValue}"/>.
     /// </summary>
     /// <param name="value">A <typeparamref name="TValue"/> to search the <see cref="MultiValueDictionary{TKey,TValue}"/> for</param>
-    /// <returns><c>true</c> if the <see cref="MultiValueDictionary{TKey,TValue}"/> contains the <paramref name="value"/>; otherwise <c>false</c></returns>      
+    /// <returns><see langword="true"/> if the <see cref="MultiValueDictionary{TKey,TValue}"/> contains the <paramref name="value"/>; otherwise <see langword="false"/></returns>      
     public bool ContainsValue(TValue value)
     {
         foreach (InnerCollectionView sublist in _dictionary.Values)
@@ -806,8 +828,8 @@ public class MultiValueDictionary<TKey, TValue> :
     /// at least one <typeparamref name="TValue"/> associated with it.
     /// </summary>
     /// <param name="key">The <typeparamref name="TKey"/> to search the <see cref="MultiValueDictionary{TKey,TValue}"/> for</param>
-    /// <returns><c>true</c> if the <see cref="MultiValueDictionary{TKey,TValue}"/> contains the requested <typeparamref name="TKey"/>;
-    /// otherwise <c>false</c>.</returns>
+    /// <returns><see langword="true"/> if the <see cref="MultiValueDictionary{TKey,TValue}"/> contains the requested <typeparamref name="TKey"/>;
+    /// otherwise <see langword="false"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="key"/> must be non-null</exception>
     public bool ContainsKey(TKey key)
     {
@@ -842,16 +864,16 @@ public class MultiValueDictionary<TKey, TValue> :
     /// <typeparamref name="TKey"/> if it is found; otherwise contains the default value of <typeparamref name="TValue"/>.
     /// </param>
     /// <returns>
-    /// <c>true</c> if the <see cref="MultiValueDictionary{TKey,TValue}"/> contains an element with the specified 
-    /// <typeparamref name="TKey"/>; otherwise, <c>false</c>.
+    /// <see langword="true"/> if the <see cref="MultiValueDictionary{TKey,TValue}"/> contains an element with the specified 
+    /// <typeparamref name="TKey"/>; otherwise, <see langword="false"/>.
     /// </returns>
     /// <exception cref="ArgumentNullException"><paramref name="key"/> must be non-null</exception>
-    public bool TryGetValue(TKey key, out IReadOnlyCollection<TValue> value)
+    public bool TryGetValue(TKey key, [NotNullWhen(true)] out IReadOnlyCollection<TValue>? value)
     {
         if (key == null)
             throw new ArgumentNullException(nameof(key));
 
-        var success = _dictionary.TryGetValue(key, out InnerCollectionView collection);
+        var success = _dictionary.TryGetValue(key, out var collection);
         value = collection;
         return success;
     }
@@ -889,7 +911,7 @@ public class MultiValueDictionary<TKey, TValue> :
             if (key == null)
                 throw new ArgumentNullException(nameof(key));
 
-            if (_dictionary.TryGetValue(key, out InnerCollectionView collection))
+            if (_dictionary.TryGetValue(key, out var collection))
                 return collection;
 
             throw new KeyNotFoundException();
@@ -1032,6 +1054,12 @@ public class MultiValueDictionary<TKey, TValue> :
 
         public void AddValue(TValue item) => _collection.Add(item);
 
+        public void AddValues(IEnumerable<TValue> items)
+        {
+            foreach (var item in items)
+                _collection.Add(item);
+        }
+
         public bool RemoveValue(TValue item) => _collection.Remove(item);
 
         #endregion
@@ -1075,7 +1103,6 @@ public class MultiValueDictionary<TKey, TValue> :
         ======================================================================*/
 
         void ICollection<TValue>.Add(TValue item) => throw new NotSupportedException(Strings.ReadOnly_Modification);
-
 
         void ICollection<TValue>.Clear() => throw new NotSupportedException(Strings.ReadOnly_Modification);
 

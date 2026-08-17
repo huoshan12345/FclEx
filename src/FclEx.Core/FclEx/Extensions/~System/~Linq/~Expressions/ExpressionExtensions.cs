@@ -53,13 +53,22 @@ public static class ExpressionExtensions
         }
     }
 
-    public static IEnumerable<object?> GetArgumentValues(this IEnumerable<Expression> arguments)
+    /// <summary>
+    /// Evaluates the expression and returns its resulting value.
+    /// </summary>
+    /// <param name="expression">The expression to evaluate.</param>
+    /// <returns>The value produced by the expression.</returns>
+    /// <remarks>
+    /// Non-constant expressions are compiled and invoked. Evaluating the expression can therefore execute arbitrary
+    /// user code, produce side effects, or throw exceptions. Expressions containing unbound parameters cannot be evaluated.
+    /// </remarks>
+    public static object? Evaluate(this Expression expression)
     {
-        return arguments.Select(e => e switch
+        return expression switch
         {
             ConstantExpression constant => constant.Value,
-            _ => e.Convert(typeof(object)).Lambda<Func<object>>().Compile().Invoke()
-        });
+            _ => expression.Convert(typeof(object)).Lambda<Func<object>>().Compile().Invoke()
+        };
     }
 
     /// <summary>

@@ -2,7 +2,7 @@ namespace FclEx.Http.Actions;
 
 internal static class HttpActionTestFixtures
 {
-    public static readonly TimeSpan Elapsed = TimeSpan.FromMilliseconds(123);
+    public static readonly TimeSpan Elapsed = TimeSpan.FromMilliseconds(500);
 
     public static HttpResponse CreateResponse(
         string responseString = "",

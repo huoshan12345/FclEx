@@ -1,150 +1,223 @@
-using static FclEx.Extensions.FileConflictOptions;
-
 namespace FclEx.Extensions;
 
 public static class FileInfoExtensions
 {
-    private const FileConflictOptions ResolutionStrategies = Cancel | ThrowOnConflict | Overwrite | AutoRename;
-
     internal const int DefaultBufferSize = 256 * 1024;
 
-    /// <summary>
-    /// Gets the base name and extension of the specified file.
-    /// </summary>
-    /// <param name="file">The file to extract the name and extension from.</param>
-    /// <returns>
-    /// A tuple where <c>Name</c> is the file name without extension,
-    /// and <c>Ext</c> is the extension (including the leading dot).
-    /// </returns>
+    /// <summary>Gets the base name and extension of the specified file.</summary>
     public static (string Name, string Ext) GetNameAndExtension(this FileInfo file)
     {
+        Check.NotNull(file);
         return PathHelper.GetNameAndExtension(file.Name);
     }
 
-    /// <summary>
-    /// Asynchronously copies the file to the specified destination.
-    /// Skips the operation if the source and destination are the same file
-    /// or if the destination already exists with identical content.
-    /// </summary>
-    /// <param name="file">The source file.</param>
-    /// <param name="dest">The destination file.</param>
-    /// <param name="bufferSize">The buffer size in bytes to use during the copy. Default is 4 KB.</param>
-    /// <param name="token"></param>
-    public static async Task<FileInfo> CopyToAsync(this FileInfo file, FileInfo dest, int bufferSize = 4 * 1024, CancellationToken token = default)
+    /// <summary>Asynchronously copies a file using the requested conflict behavior.</summary>
+    /// <remarks>
+    /// Except for <see cref="FileConflictResolution.Overwrite"/>, destination creation is atomic and never overwrites a
+    /// file created concurrently. A partially written newly-created destination is removed if copying fails.
+    /// </remarks>
+    /// <returns>The actual destination, which can differ from <paramref name="destination"/> when auto-renaming.</returns>
+    public static async Task<FileInfo> CopyToAsync(
+        this FileInfo source,
+        FileInfo destination,
+        FileTransferOptions? options = null,
+        CancellationToken cancellationToken = default)
     {
-        Check.NotNull(file);
-        Check.NotNull(dest);
-        Check.EqualTo(file.Exists, true);
+        Check.NotNull(source);
+        Check.NotNull(destination);
 
-        if (file.FullName == dest.FullName
-            || dest.Exists && FileHelper.AreFilesEqual(file, dest))
-            return dest;
+        source.Refresh();
+        Check.EqualTo(source.Exists, true);
 
-        using var _ = Disposable.Create(dest.Refresh);
+        options ??= FileTransferOptions.Default;
+        options.ValidateForCopy();
 
+        if (FileSystemInfoEqualityComparer.Auto.Equals(source, destination))
+            return destination;
+
+        if (options.ConflictResolution == FileConflictResolution.Overwrite)
+        {
+            destination.Refresh();
+            if (IsIgnoredDuplicate(source, destination, options))
+                return destination;
+
+            await CopyContentsAsync(source, destination, options.BufferSize, FileMode.Create, cancellationToken).NoCapture();
+            destination.Refresh();
+            return destination;
+        }
+
+        var candidate = destination;
+        while (DestinationExists(candidate))
+        {
+            if (IsIgnoredDuplicate(source, candidate, options))
+                return candidate;
+
+            switch (options.ConflictResolution)
+            {
+                case FileConflictResolution.Cancel:
+                    return candidate;
+                case FileConflictResolution.Throw:
+                    throw new IOException("The destination file already exists: " + candidate.FullName);
+                case FileConflictResolution.AutoRename:
+                    candidate = GetNextDestination(candidate);
+                    break;
+                default:
+                    throw new UnreachableException();
+            }
+        }
+
+        var stagingFile = await CreateStagedCopyAsync(source, candidate, options.BufferSize, cancellationToken).NoCapture();
+        var moved = false;
+        try
+        {
+            while (true)
+            {
+                try
+                {
+                    File.Move(stagingFile.FullName, candidate.FullName);
+                    moved = true;
+                    candidate.Refresh();
+                    return candidate;
+                }
+                catch (IOException) when (DestinationExists(candidate))
+                {
+                    if (IsIgnoredDuplicate(source, candidate, options))
+                        return candidate;
+
+                    switch (options.ConflictResolution)
+                    {
+                        case FileConflictResolution.Cancel:
+                            return candidate;
+                        case FileConflictResolution.Throw:
+                            throw;
+                        case FileConflictResolution.AutoRename:
+                            candidate = GetNextDestination(candidate);
+                            break;
+                        default:
+                            throw new UnreachableException();
+                    }
+                }
+            }
+        }
+        finally
+        {
+            if (moved == false)
+                TryDelete(stagingFile.FullName);
+        }
+    }
+
+    /// <summary>Asynchronously copies a file into a directory using the requested conflict behavior.</summary>
+    public static Task<FileInfo> CopyToAsync(
+        this FileInfo source,
+        DirectoryInfo destinationDirectory,
+        FileTransferOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        Check.NotNull(source);
+        Check.NotNull(destinationDirectory);
+        return source.CopyToAsync(destinationDirectory.File(source.Name), options, cancellationToken);
+    }
+
+    private static async Task<FileInfo> CreateStagedCopyAsync(
+        FileInfo source,
+        FileInfo destination,
+        int bufferSize,
+        CancellationToken cancellationToken)
+    {
+        var directoryName = destination.DirectoryName
+                            ?? throw new InvalidOperationException("The destination has no containing directory.");
+        var stagingFile = new FileInfo(Path.Combine(directoryName, $".fclex-{Guid.NewGuid():N}.tmp"));
+        await CopyContentsAsync(source, stagingFile, bufferSize, FileMode.CreateNew, cancellationToken).NoCapture();
+        return stagingFile;
+    }
+
+    private static async Task CopyContentsAsync(
+        FileInfo source,
+        FileInfo destination,
+        int bufferSize,
+        FileMode destinationMode,
+        CancellationToken cancellationToken)
+    {
+        var removeOnFailure = false;
+        try
+        {
 #if NET6_0_OR_GREATER
-        await
+            await
 #endif
-        using Stream source = new FileStream(file.FullName, FileMode.Open, FileAccess.Read);
+            using var sourceStream = new FileStream(
+                source.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, true);
 #if NET6_0_OR_GREATER
-        await
+            await
 #endif
-        using Stream destination = File.Create(dest.FullName, bufferSize);
-        await source.CopyToAsync(destination, bufferSize, token);
+            using var destinationStream = new FileStream(
+                destination.FullName, destinationMode, FileAccess.Write, FileShare.None, bufferSize, true);
+            removeOnFailure = destinationMode == FileMode.CreateNew;
+            await sourceStream.CopyToAsync(destinationStream, bufferSize, cancellationToken).NoCapture();
+        }
+        catch
+        {
+            if (removeOnFailure)
+            {
+                try
+                {
+                    File.Delete(destination.FullName);
+                }
+                catch
+                {
+                    // Preserve the exception that interrupted the copy.
+                }
+            }
 
-        return dest;
+            throw;
+        }
     }
 
-    /// <summary>
-    /// Asynchronously copies the file into the specified directory.
-    /// </summary>
-    /// <param name="file">The source file.</param>
-    /// <param name="dir">The destination directory.</param>
-    /// <param name="bufferSize">The buffer size in bytes to use during the copy. Default is 4 KB.</param>
-    /// <param name="token"></param>
-    public static Task<FileInfo> CopyToAsync(this FileInfo file, DirectoryInfo dir, int bufferSize = 4 * 1024, CancellationToken token = default)
+    private static bool DestinationExists(FileInfo destination)
     {
-        Check.NotNull(file);
-        Check.NotNull(dir);
-
-        var dest = new FileInfo(Path.Combine(dir.FullName, file.Name));
-        return file.CopyToAsync(dest, bufferSize, token);
+        destination.Refresh();
+        return destination.Exists;
     }
 
-    /// <summary>
-    /// Asynchronously copies the file to the specified destination with conflict resolution options.
-    /// </summary>
-    /// <param name="file">The source file.</param>
-    /// <param name="dest">The destination file.</param>
-    /// <param name="options">Specifies how to handle conflicts when the destination already exists.</param>
-    /// <param name="bufferSize">The buffer size in bytes to use during the copy. Default is 4 KB.</param>
-    /// <param name="token"></param>
-    public static async Task<FileInfo> CopyToAsync(this FileInfo file, FileInfo dest, FileConflictOptions options, int bufferSize = 4 * 1024, CancellationToken token = default)
+    private static bool IsIgnoredDuplicate(FileInfo source, FileInfo destination, FileTransferOptions options)
     {
-        Check.NotNull(file);
-        Check.NotNull(dest);
-
-        if (file.FullName == dest.FullName)
-            return dest;
-
-        using var _ = Disposable.Create(() =>
-        {
-            file.Refresh();
-            dest.Refresh();
-        });
-
-        if (dest.Exists == false)
-        {
-            await file.CopyToAsync(dest, bufferSize, token);
-            return dest;
-        }
-
-        if (options.HasFlag(IgnoreConflictIfDuplicate))
-        {
-            if (dest.Exists && FileHelper.AreFilesEqual(file, dest))
-            {
-                return dest;
-            }
-        }
-
-        // switch on the pure resolution strategy
-        // ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
-        switch (options & ResolutionStrategies)
-        {
-            case Cancel: break;
-            case ThrowOnConflict: throw new InvalidOperationException("File already exists: " + dest.FullName);
-            case Overwrite:
-            {
-                await file.CopyToAsync(dest, bufferSize, token);
-                break;
-            }
-            case AutoRename:
-            {
-                var newName = FileHelper.GetNextFileName(dest.Name);
-                var newDest = new FileInfo(Path.Combine(dest.DirectoryName!, newName));
-                await file.CopyToAsync(newDest, options, bufferSize, token);
-                break;
-            }
-        }
-
-        return dest;
+        return options.IgnoreConflictIfDuplicate
+               && destination.Exists
+               && TryAreFilesEqual(source, destination);
     }
 
-    /// <summary>
-    /// Asynchronously copies the file into the specified directory with conflict resolution options.
-    /// </summary>
-    /// <param name="file">The source file.</param>
-    /// <param name="dir">The destination directory.</param>
-    /// <param name="options">Specifies how to handle conflicts when the file already exists in the directory.</param>
-    /// <param name="bufferSize">The buffer size in bytes to use during the copy. Default is 4 KB.</param>
-    /// <param name="token"></param>
-    public static Task<FileInfo> CopyToAsync(this FileInfo file, DirectoryInfo dir, FileConflictOptions options, int bufferSize = 4096, CancellationToken token = default)
+    private static bool TryAreFilesEqual(FileInfo source, FileInfo destination)
     {
-        Check.NotNull(file);
-        Check.NotNull(dir);
+        try
+        {
+            return FileHelper.AreFilesEqual(source, destination);
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
 
-        var dest = new FileInfo(Path.Combine(dir.FullName, file.Name));
-        return file.CopyToAsync(dest, options, bufferSize, token);
+    private static void TryDelete(string path)
+    {
+        try
+        {
+            File.Delete(path);
+        }
+        catch
+        {
+            // Cleanup is best effort and must not hide the operation's result.
+        }
+    }
+
+    private static FileInfo GetNextDestination(FileInfo destination)
+    {
+        var directoryName = destination.DirectoryName
+                            ?? throw new InvalidOperationException("The destination has no containing directory.");
+        return new FileInfo(Path.Combine(directoryName, FileHelper.GetNextFileName(destination.Name)));
     }
 
 #if !NET5_0_OR_GREATER
@@ -155,13 +228,7 @@ public static class FileInfoExtensions
         types: [typeof(string), typeof(bool)],
         modifiers: null);
 
-    /// <summary>
-    /// Moves the file to a new location, optionally overwriting the target file.
-    /// This overload exists for .NET Standard 2.0 compatibility.
-    /// </summary>
-    /// <param name="file">The source file.</param>
-    /// <param name="destFileName">The full path of the destination file.</param>
-    /// <param name="overwrite">Whether to overwrite the file if it already exists.</param>
+    /// <summary>Moves the file to a new location, optionally overwriting the target file.</summary>
     public static void MoveTo(this FileInfo file, string destFileName, bool overwrite)
     {
         if (_methodMoveTo is { } method)
@@ -182,122 +249,122 @@ public static class FileInfoExtensions
     }
 #endif
 
-    /// <summary>
-    /// Moves the file to the specified destination with conflict resolution options.
-    /// </summary>
-    /// <param name="file">The source file.</param>
-    /// <param name="dest">The destination file.</param>
-    /// <param name="options">Specifies how to handle conflicts. Default is <see cref="FileConflictOptions.Default"/>.</param>
-    public static void MoveTo(this FileInfo file, FileInfo dest, FileConflictOptions options = Default)
+    /// <summary>Moves a file using the requested conflict behavior.</summary>
+    /// <returns>The actual destination, which can differ from <paramref name="destination"/> when auto-renaming.</returns>
+    public static FileInfo MoveTo(
+        this FileInfo source,
+        FileInfo destination,
+        FileTransferOptions? options = null)
     {
-        Check.NotNull(file);
-        Check.NotNull(dest);
-        Check.EqualTo(file.Exists, true);
+        Check.NotNull(source);
+        Check.NotNull(destination);
 
-        if (file.FullName == dest.FullName)
-            return;
+        source.Refresh();
+        Check.EqualTo(source.Exists, true);
 
-        using var _ = Disposable.Create(() =>
+        options ??= FileTransferOptions.Default;
+        options.ValidateForMove();
+
+        if (FileSystemInfoEqualityComparer.Auto.Equals(source, destination))
+            return destination;
+
+        if (options.ConflictResolution == FileConflictResolution.Overwrite)
         {
-            file.Refresh();
-            dest.Refresh();
-        });
+            destination.Refresh();
+            if (IsIgnoredDuplicate(source, destination, options))
+            {
+                source.Delete();
+                source.Refresh();
+                destination.Refresh();
+                return destination;
+            }
 
-        if (dest.Exists == false)
-        {
-            file.MoveTo(dest.FullName, false);
-            return;
+            source.MoveTo(destination.FullName, true);
+            destination.Refresh();
+            return destination;
         }
 
-        if (options.HasFlag(IgnoreConflictIfDuplicate))
+        var candidate = destination;
+        while (true)
         {
-            if (dest.Exists && FileHelper.AreFilesEqual(file, dest))
+            try
             {
-                file.Delete();
-                return;
+                source.MoveTo(candidate.FullName, false);
+                candidate.Refresh();
+                return candidate;
             }
-        }
+            catch (IOException) when (DestinationExists(candidate))
+            {
+                if (IsIgnoredDuplicate(source, candidate, options))
+                {
+                    source.Delete();
+                    source.Refresh();
+                    candidate.Refresh();
+                    return candidate;
+                }
 
-        // switch on the pure resolution strategy
-        // ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
-        switch (options & ResolutionStrategies)
-        {
-            case Cancel: return;
-            case ThrowOnConflict: throw new InvalidOperationException("File already exists: " + dest.FullName);
-            case Overwrite:
-            {
-                file.MoveTo(dest.FullName, true);
-                return;
-            }
-            case AutoRename:
-            {
-                var newName = FileHelper.GetNextFileName(dest.Name);
-                var newDest = new FileInfo(Path.Combine(dest.DirectoryName!, newName));
-                file.MoveTo(newDest, options);
-                return;
+                switch (options.ConflictResolution)
+                {
+                    case FileConflictResolution.Cancel:
+                        return candidate;
+                    case FileConflictResolution.Throw:
+                        throw;
+                    case FileConflictResolution.AutoRename:
+                        candidate = GetNextDestination(candidate);
+                        break;
+                    default:
+                        throw new UnreachableException();
+                }
             }
         }
     }
 
-    /// <summary>
-    /// Moves the file into the specified directory with conflict resolution options.
-    /// </summary>
-    /// <param name="file">The source file.</param>
-    /// <param name="dir">The destination directory.</param>
-    /// <param name="options">Specifies how to handle conflicts. Default is <see cref="FileConflictOptions.Default"/>.</param>
-    public static void MoveTo(this FileInfo file, DirectoryInfo dir, FileConflictOptions options = Default)
+    /// <summary>Moves a file into a directory using the requested conflict behavior.</summary>
+    public static FileInfo MoveTo(
+        this FileInfo source,
+        DirectoryInfo destinationDirectory,
+        FileTransferOptions? options = null)
     {
-        Check.NotNull(file);
-        Check.NotNull(dir);
-
-        var dest = new FileInfo(Path.Combine(dir.FullName, file.Name));
-        file.MoveTo(dest, options);
+        Check.NotNull(source);
+        Check.NotNull(destinationDirectory);
+        return source.MoveTo(destinationDirectory.File(source.Name), options);
     }
 
-    /// <summary>
-    /// Moves the file to a new directory and/or renames it.
-    /// </summary>
-    /// <param name="file">The source file.</param>
-    /// <param name="dir">The destination directory, or <c>null</c> to use the file’s current directory.</param>
-    /// <param name="name">The new file name.</param>
-    /// <param name="appendExt">Whether to append the original extension to the new name.</param>
-    /// <param name="options">Specifies how to handle conflicts. Default is <see cref="FileConflictOptions.Default"/>.</param>
-    public static void MoveTo(this FileInfo file, DirectoryInfo? dir, string name, bool appendExt = false, FileConflictOptions options = Default)
+    /// <summary>Moves a file to a new directory and/or gives it a new name.</summary>
+    public static FileInfo MoveTo(
+        this FileInfo source,
+        DirectoryInfo? destinationDirectory,
+        string name,
+        bool appendExtension = false,
+        FileTransferOptions? options = null)
     {
-        Check.NotNull(file);
+        Check.NotNull(source);
         Check.NotEmpty(name);
 
-        var dirPath = (dir?.FullName ?? file.DirectoryName)
-                      ?? throw new InvalidOperationException($"Both {nameof(dir)} and {nameof(file)}.{nameof(file.DirectoryName)} are null.");
+        var directory = destinationDirectory ?? source.Directory
+                        ?? throw new InvalidOperationException("The source file has no containing directory.");
+        if (appendExtension)
+            name += source.Extension;
 
-        if (appendExt)
-        {
-            var ext = Path.GetExtension(file.Name);
-            name += ext;
-        }
-
-        var dest = new FileInfo(Path.Combine(dirPath, name));
-        file.MoveTo(dest, options);
+        return source.MoveTo(directory.File(name), options);
     }
 
-    /// <summary>
-    /// Renames the file within its current directory.
-    /// </summary>
-    /// <param name="file">The source file.</param>
-    /// <param name="name">The new file name.</param>
-    /// <param name="appendExt">Whether to append the original extension to the new name.</param>
-    /// <param name="options">Specifies how to handle conflicts. Default is <see cref="FileConflictOptions.Default"/>.</param>
-    public static void Rename(this FileInfo file, string name, bool appendExt = false, FileConflictOptions options = Default)
+    /// <summary>Renames a file within its current directory.</summary>
+    public static FileInfo Rename(
+        this FileInfo source,
+        string name,
+        bool appendExtension = false,
+        FileTransferOptions? options = null)
     {
-        file.MoveTo(null, name, appendExt, options);
+        return source.MoveTo(null, name, appendExtension, options);
     }
-    
+
     public static FileInfo CopyTo(this FileInfo fileInfo, FileInfo destFileInfo, bool overwrite = false)
     {
         Check.NotNull(fileInfo);
         Check.NotNull(destFileInfo);
 
-        return fileInfo.FullName == destFileInfo.FullName
+        return FileSystemInfoEqualityComparer.Auto.Equals(fileInfo, destFileInfo)
             ? destFileInfo
             : fileInfo.CopyTo(destFileInfo.FullName, overwrite);
     }
@@ -306,7 +373,6 @@ public static class FileInfoExtensions
     {
         Check.NotNull(file);
         Check.NotNull(content);
-
         return File.WriteAllTextAsync(file.FullName, content, encoding ?? Encoding.UTF8, token);
     }
 

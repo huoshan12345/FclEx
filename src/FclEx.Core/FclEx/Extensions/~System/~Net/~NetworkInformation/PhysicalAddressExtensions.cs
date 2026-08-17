@@ -3,34 +3,28 @@ namespace FclEx.Extensions;
 public static class PhysicalAddressExtensions
 {
 #if NET8_0_OR_GREATER
-    /// <summary>
-    /// Returns a reference to the internal byte array of the specified
-    /// <see cref="PhysicalAddress"/> instance without creating a copy.
-    /// </summary>
-    /// <param name="obj">
-    /// The <see cref="PhysicalAddress"/> instance.
-    /// </param>
-    /// <returns>
-    /// A reference to the underlying MAC address byte array.
-    /// </returns>
     [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_address")]
-    public static extern ref byte[] AddressBytes(this PhysicalAddress obj);
-#else
+    private static extern ref byte[] Address(PhysicalAddress obj);
+#endif
     /// <summary>
-    /// Returns the internal byte array of the specified
+    /// Returns a zero-allocation, read-only view of the bytes in the specified
     /// <see cref="PhysicalAddress"/> instance.
     /// </summary>
     /// <param name="obj">
     /// The <see cref="PhysicalAddress"/> instance.
     /// </param>
     /// <returns>
-    /// The underlying MAC address byte array.
+    /// A read-only span over the underlying MAC address bytes. The span must not be retained beyond
+    /// the lifetime of <paramref name="obj"/>.
     /// </returns>
-    public static byte[] AddressBytes(this PhysicalAddress obj)
+    public static ReadOnlySpan<byte> AddressBytes(this PhysicalAddress obj)
     {
+#if NET8_0_OR_GREATER
+        return Address(obj);
+#else
         return FieldInfos.PhysicalAddress_Address.GetRequiredValue<byte[]>(obj);
-    }
 #endif
+    }
 
     /// <summary>
     /// Converts the specified <see cref="PhysicalAddress"/> to a formatted string.
@@ -51,8 +45,15 @@ public static class PhysicalAddressExtensions
     /// </returns>
     public static string ToFormattedString(this PhysicalAddress address, string separator = ":", bool lowerCase = false)
     {
-        return address.AddressBytes()
-            .Select(x => x.ToString(lowerCase ? "x2" : "X2"))
-            .JoinWith(separator);
+        return StringBuilderHelper.Build(m =>
+        {
+            var bytes = address.AddressBytes();
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                m.Append(bytes[i].ToString(lowerCase ? "x2" : "X2"));
+                if (i < bytes.Length - 1)
+                    m.Append(separator);
+            }
+        });
     }
 }

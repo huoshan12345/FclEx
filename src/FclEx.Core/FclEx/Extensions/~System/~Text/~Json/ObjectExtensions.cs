@@ -9,9 +9,9 @@ public static partial class ObjectExtensions
     }
 
     [MethodImpl(AggressiveInlining)]
-    public static string ToJson(this object? obj, Type inputType, JsonSerializerOptions? options = null)
+    public static string ToJson(this object? obj, Type? inputType, JsonSerializerOptions? options = null)
     {
-        return JsonSerializer.Serialize(obj, inputType, options ?? JsonHelper.GetOptions());
+        return JsonSerializer.Serialize(obj, inputType ?? obj?.GetType() ?? typeof(object), options ?? JsonHelper.GetOptions());
     }
 
     [MethodImpl(AggressiveInlining)]
@@ -21,7 +21,7 @@ public static partial class ObjectExtensions
     }
 
     [MethodImpl(AggressiveInlining)]
-    public static string ToJson(this object? obj, Type inputType, JsonOptions options)
+    public static string ToJson(this object? obj, Type? inputType, JsonOptions options)
     {
         return obj.ToJson(inputType, JsonHelper.GetOptions(options));
     }

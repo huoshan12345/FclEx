@@ -20,10 +20,7 @@ public class ReadOnlyList<T>(IReadOnlyList<T>? list = null) : IReadOnlyList<T>, 
         builder.Append('[');
         foreach (var (_, item, _, isLast) in _list.IndexEx())
         {
-            if (item is null)
-                continue;
-
-            builder.Append(item.ToString());
+            builder.Append(item?.ToString());
             if (isLast == false)
                 builder.Append(", ");
         }

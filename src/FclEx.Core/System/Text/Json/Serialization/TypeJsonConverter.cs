@@ -1,5 +1,14 @@
 namespace System.Text.Json.Serialization;
 
+/// <summary>
+/// Converts <see cref="Type"/> values to and from their assembly-qualified names.
+/// </summary>
+/// <remarks>
+/// The serialized representation is coupled to CLR type and assembly identities and is not intended as a stable,
+/// version-independent contract. Deserialization uses <see cref="Type.GetType(string, bool, bool)"/>, which can resolve
+/// and load any type named by the payload. Use this converter only with trusted JSON. Applications that accept
+/// untrusted type identifiers should use an allowlist-based converter with stable logical names instead.
+/// </remarks>
 public class TypeJsonConverter : JsonConverter<Type>
 {
     public static readonly TypeJsonConverter Instance = new();

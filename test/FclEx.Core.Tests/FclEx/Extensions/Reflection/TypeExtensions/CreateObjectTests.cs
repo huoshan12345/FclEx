@@ -134,6 +134,15 @@ public class CreateObjectTests
     }
 
     [Fact]
+    public void CreateObject_TreatsANullParamsArrayAsNoArguments()
+    {
+        var obj = typeof(AllDefaultParameterCtor).CreateObject<AllDefaultParameterCtor>((object?[]?)null!);
+
+        Assert.Equal("default", obj.Name);
+        Assert.Equal(7, obj.Count);
+    }
+
+    [Fact]
     public void CreateObject_ShouldMatchNull_ToReferenceType()
     {
         var obj = typeof(ReferenceCtor).CreateObject<ReferenceCtor>((object?)null);

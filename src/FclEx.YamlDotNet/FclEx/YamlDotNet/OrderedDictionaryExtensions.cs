@@ -13,7 +13,7 @@ public static class OrderedDictionaryExtensions
     /// <param name="dictionary">The ordered dictionary to update.</param>
     /// <param name="index1">The zero-based index of the first entry.</param>
     /// <param name="index2">The zero-based index of the second entry.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="dictionary"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="dictionary"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when either index is outside the dictionary bounds.</exception>
     public static void Swap<TKey, TValue>(this global::YamlDotNet.Helpers.IOrderedDictionary<TKey, TValue> dictionary, int index1, int index2)
         where TKey : notnull
@@ -45,7 +45,7 @@ public static class OrderedDictionaryExtensions
     /// <param name="dictionary">The ordered dictionary to update.</param>
     /// <param name="sourceIndex">The zero-based index of the entry to move.</param>
     /// <param name="destinationIndex">The zero-based index where the entry should be placed.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="dictionary"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="dictionary"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when either index is outside the dictionary bounds.</exception>
     public static void MoveAt<TKey, TValue>(this global::YamlDotNet.Helpers.IOrderedDictionary<TKey, TValue> dictionary, int sourceIndex, int destinationIndex)
         where TKey : notnull

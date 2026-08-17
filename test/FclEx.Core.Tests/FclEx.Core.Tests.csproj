@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="..\..\src\FclEx.Xunit.v3\FclEx.Xunit.v3.csproj" />
   </ItemGroup>
@@ -10,24 +10,22 @@
     <PackageReference Include="xRetry.v3" />
     <PackageReference Include="morelinq" />
     <PackageReference Include="Moq" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
     <PackageReference Include="Microsoft.Extensions.Logging" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
     <PackageReference Include="Xunit.v3.Priority" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="TestData\ResourceOne\SharedResource.txt" />
+    <EmbeddedResource Include="TestData\ResourceTwo\SharedResource.txt" />
+  </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <Reference Include="System.IO.Compression" />
+    <PackageReference Include="System.Text.Encoding.CodePages" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="xunit.runner.debug.json"
-          CopyToOutputDirectory="PreserveNewest"
-          TargetPath="xunit.runner.json"
-          Condition="'$(Configuration)' == 'Debug'" />
-    <None Include="xunit.runner.release.json"
-          CopyToOutputDirectory="PreserveNewest"
-          TargetPath="xunit.runner.json"
-          Condition="'$(Configuration)' == 'Release'" />
+    <None Include="xunit.runner.debug.json" CopyToOutputDirectory="PreserveNewest" TargetPath="xunit.runner.json" Condition="'$(Configuration)' == 'Debug'" />
+    <None Include="xunit.runner.release.json" CopyToOutputDirectory="PreserveNewest" TargetPath="xunit.runner.json" Condition="'$(Configuration)' == 'Release'" />
   </ItemGroup>
 </Project>

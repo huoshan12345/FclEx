@@ -34,38 +34,44 @@ public static class ListExtensions
     {
         Check.NotNull(list);
 
-        if (list.Count == 0)
-            return;
+        if ((uint)index > (uint)list.Count)
+            throw new ArgumentOutOfRangeException(nameof(index), index, "The index must be between zero and Count.");
 
-        Check.Between(index, 0, list.Count - 1);
-        Check.Between(count, 0, list.Count - index);
+        if (count < 0)
+            throw new ArgumentOutOfRangeException(nameof(count), count, "The count must be non-negative.");
 
-        if (count == 0)
+        if (count > list.Count - index)
+            throw new ArgumentException("The index and count must refer to a valid range in the list.", nameof(count));
+
+        if (count <= 1)
             return;
 
         comparer ??= Comparer<T>.Default;
 
         var indexes = new int[count];
+        var items = new T[count];
 
         for (var i = 0; i < count; i++)
+        {
             indexes[i] = i;
+            items[i] = list[index + i];
+        }
 
         Array.Sort(indexes, (a, b) =>
         {
-            var c = comparer.Compare(list[a], list[b]);
+            var c = comparer.Compare(items[a], items[b]);
             return c != 0 ? c : a.CompareTo(b);
         });
 
-        var temp = list.ToArray();
-
         for (var i = 0; i < count; i++)
         {
-            list[i] = temp[indexes[i]];
+            list[index + i] = items[indexes[i]];
         }
     }
 
     public static void StableSort<T>(this IList<T> list, IComparer<T>? comparer = null)
     {
+        Check.NotNull(list);
         list.StableSort(0, list.Count, comparer);
     }
 
@@ -76,46 +82,15 @@ public static class ListExtensions
         return list;
     }
 
-    public static Span<T> AsSpan<T>(this List<T>? list)
+    public static ReadOnlySpan<T> AsReadOnlySpan<T>(this List<T>? list)
     {
-#if !NET5_0_OR_GREATER
-        return list.IsNullOrEmpty()
-            ? default
-            : ListAccessor<T>.Items(list).AsSpan(0, list.Count);
-#else
         return CollectionsMarshal.AsSpan(list);
-#endif
     }
 
     public static void AddSorted<T>(this List<T> list, T value, IComparer<T>? comparer = null)
     {
         var x = list.BinarySearch(value, comparer);
         list.Insert((x >= 0) ? x : ~x, value);
-    }
-
-    public static T[] Items<T>(this List<T> list)
-    {
-        return ListAccessor<T>.Items(list);
-    }
-
-    public static void SetCount<T>(this List<T> list, int count)
-    {
-        Check.NotNegative(count);
-
-        ref var version = ref ListAccessor<T>.Version(list);
-        ++version;
-
-        ref var size = ref ListAccessor<T>.Size(list);
-        if (count > list.Capacity)
-        {
-            list.Capacity = count;
-        }
-        else if (count < size)
-        {
-            var items = ListAccessor<T>.Items(list);
-            Array.Clear(items, count, size - count);
-        }
-        size = count;
     }
 
     /// <summary>
@@ -182,17 +157,17 @@ public static class ListExtensions
         {
             var count = list.Count + other.Count;
             var result = new List<T>(count);
-            var array = result.Items();
-            list.CopyTo(array);
-            other.CopyTo(array, list.Count);
-            result.SetCount(count);
+            result.AddRange(list);
+            result.AddRange(other);
             return result;
         }
 
         public static List<T> operator +(List<T> list, T item)
         {
-            list.Add(item);
-            return list;
+            var result = new List<T>(list.Count + 1);
+            result.AddRange(list);
+            result.Add(item);
+            return result;
         }
     }
 
@@ -201,6 +176,11 @@ public static class ListExtensions
         public void operator +=(IEnumerable<T> other)
         {
             list.AddRange(other);
+        }
+
+        public void operator +=(T item)
+        {
+            list.Add(item);
         }
     }
 }

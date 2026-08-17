@@ -15,7 +15,7 @@ public class HttpServiceExtensionsBatchDownloadTests
             new()
             {
                 BaseAddress = new Uri("https://example.com/root/"),
-                ExecuteInParallel = false,
+                MaxDegreeOfParallelism = 1,
             });
 
         Assert.All(results, result => Assert.True(result.IsSuccess, result.Exception?.ToString()));
@@ -49,7 +49,7 @@ public class HttpServiceExtensionsBatchDownloadTests
     {
         var service = new CaptureDownloadRequestService();
 
-        var results = await service.BatchDownloadAsync(Array.Empty<Uri>(), new() { ExecuteInParallel = false });
+        var results = await service.BatchDownloadAsync(Array.Empty<Uri>(), new() { MaxDegreeOfParallelism = 1 });
 
         Assert.Empty(results);
         Assert.Empty(service.Requests);
@@ -69,7 +69,7 @@ public class HttpServiceExtensionsBatchDownloadTests
             new()
             {
                 BaseAddress = new Uri("https://example.com/root/"),
-                ExecuteInParallel = false,
+                MaxDegreeOfParallelism = 1,
             });
 
         Assert.All(results, result => Assert.True(result.IsSuccess, result.Exception?.ToString()));
@@ -101,7 +101,7 @@ public class HttpServiceExtensionsBatchDownloadTests
                 ReadHeadersTimeout = readHeadersTimeout,
                 ReadBufferTimeout = readBufferTimeout,
                 CancellationToken = cts.Token,
-                ExecuteInParallel = false,
+                MaxDegreeOfParallelism = 1,
             });
 
         Assert.All(results, result => Assert.True(result.IsSuccess, result.Exception?.ToString()));
@@ -131,7 +131,7 @@ public class HttpServiceExtensionsBatchDownloadTests
             ],
             new()
             {
-                ExecuteInParallel = false,
+                MaxDegreeOfParallelism = 1,
             });
 
         var result = Assert.Single(results);
@@ -165,7 +165,7 @@ public class HttpServiceExtensionsBatchDownloadTests
             {
                 Method = HttpMethod.Post,
                 Content = content,
-                ExecuteInParallel = false,
+                MaxDegreeOfParallelism = 1,
             });
 
         Assert.All(results, result => Assert.True(result.IsSuccess, result.Exception?.ToString()));

@@ -3,9 +3,9 @@ namespace FclEx.Helpers;
 public static unsafe class UnsafeHelper
 {
     private static readonly MethodInfo _sizeof = typeof(UnsafeHelper).GetRequiredMethod(nameof(SizeOfImpl), 1);
-    private static readonly ConcurrentDictionary<Type, int> _cache = [];
+    private static readonly ConditionalWeakTable<Type, ValueBox<int>> _cache = new();
 
-    private static readonly ConcurrentDictionary<(Type, string), MethodInfo> _methods = new();
+    private static readonly ConditionalWeakTable<Type, ConcurrentDictionary<string, MethodInfo>> _methods = new();
 
     /// <summary>
     /// Calculates the size, in bytes, of a specified type.
@@ -19,7 +19,7 @@ public static unsafe class UnsafeHelper
     /// </remarks>
     public static int SizeOf(Type type)
     {
-        return _cache.GetOrAdd(type, m =>
+        return _cache.GetValue(type, m =>
         {
             var method = _sizeof.MakeGenericMethod(m);
             return method.Invoke<int>(null, null);
@@ -52,9 +52,18 @@ public static unsafe class UnsafeHelper
         }
     }
 
+    /// <summary>
+    /// Writes the unmanaged representation of <paramref name="value"/> to <paramref name="dest"/>.
+    /// </summary>
+    /// <typeparam name="T">The unmanaged value type to write.</typeparam>
+    /// <param name="dest">The destination address.</param>
+    /// <param name="value">The value to write.</param>
+    /// <remarks>
+    /// Exactly <see cref="Unsafe.SizeOf{T}"/> bytes are written. The caller must ensure that
+    /// <paramref name="dest"/> is non-null, writable, suitably aligned, and points to at least that many bytes.
+    /// </remarks>
     // code from https://benbowen.blog/post/fun_with_makeref/
-    [MethodImpl(AggressiveInlining)]
-    public static void WriteTo<T>(IntPtr dest, T value, int sizeOfT) where T : struct
+    public static void WriteTo<T>(IntPtr dest, T value) where T : unmanaged
     {
         var bytePtr = (byte*)dest;
 
@@ -69,14 +78,24 @@ public static unsafe class UnsafeHelper
         // and finally cast that IntPtr to a byte* so we can use it in the copy code below.
         var valuePtr = (byte*)*((IntPtr*)&valueRef);
 
-        for (var i = 0; i < sizeOfT; ++i)
+        var size = Unsafe.SizeOf<T>();
+        for (var i = 0; i < size; ++i)
         {
             bytePtr[i] = valuePtr[i];
         }
     }
 
-    [MethodImpl(AggressiveInlining)]
-    public static T ReadFrom<T>(IntPtr source, int sizeOfT) where T : struct
+    /// <summary>
+    /// Reads an unmanaged value from <paramref name="source"/>.
+    /// </summary>
+    /// <typeparam name="T">The unmanaged value type to read.</typeparam>
+    /// <param name="source">The source address.</param>
+    /// <returns>The value represented by the bytes at <paramref name="source"/>.</returns>
+    /// <remarks>
+    /// Exactly <see cref="Unsafe.SizeOf{T}"/> bytes are read. The caller must ensure that
+    /// <paramref name="source"/> is non-null, readable, suitably aligned, and points to at least that many bytes.
+    /// </remarks>
+    public static T ReadFrom<T>(IntPtr source) where T : unmanaged
     {
         var bytePtr = (byte*)source;
 
@@ -84,7 +103,8 @@ public static unsafe class UnsafeHelper
         var resultRef = __makeref(result);
         var resultPtr = (byte*)*((IntPtr*)&resultRef);
 
-        for (var i = 0; i < sizeOfT; ++i)
+        var size = Unsafe.SizeOf<T>();
+        for (var i = 0; i < size; ++i)
         {
             resultPtr[i] = bytePtr[i];
         }
@@ -92,11 +112,25 @@ public static unsafe class UnsafeHelper
         return result;
     }
 
-    [MethodImpl(AggressiveInlining)]
-    public static TOut Reinterpret<TIn, TOut>(TIn curValue, int sizeBytes)
-        where TIn : struct
-        where TOut : struct
+    /// <summary>
+    /// Reinterprets the raw unmanaged bytes of <paramref name="curValue"/> as <typeparamref name="TOut"/>.
+    /// </summary>
+    /// <typeparam name="TIn">The unmanaged source type.</typeparam>
+    /// <typeparam name="TOut">The unmanaged destination type.</typeparam>
+    /// <param name="curValue">The source value.</param>
+    /// <returns>A value of type <typeparamref name="TOut"/> with the same byte representation.</returns>
+    /// <exception cref="InvalidOperationException">
+    /// <typeparamref name="TIn"/> and <typeparamref name="TOut"/> have different sizes.
+    /// </exception>
+    /// <remarks>No conversion, validation, byte-order adjustment, or numeric interpretation is performed.</remarks>
+    public static TOut Reinterpret<TIn, TOut>(TIn curValue)
+        where TIn : unmanaged
+        where TOut : unmanaged
     {
+        var size = Unsafe.SizeOf<TIn>();
+        if (size != Unsafe.SizeOf<TOut>())
+            throw new InvalidOperationException($"Cannot reinterpret from {typeof(TIn)} to {typeof(TOut)} because their sizes differ.");
+
         var result = default(TOut);
 
         var resultRef = __makeref(result);
@@ -105,7 +139,7 @@ public static unsafe class UnsafeHelper
         var curValueRef = __makeref(curValue);
         var curValuePtr = (byte*)*((IntPtr*)&curValueRef);
 
-        for (var i = 0; i < sizeBytes; ++i)
+        for (var i = 0; i < size; ++i)
         {
             resultPtr[i] = curValuePtr[i];
         }
@@ -116,26 +150,37 @@ public static unsafe class UnsafeHelper
     /// <summary>
     /// Dereferences a pointer and returns the value at the specified memory address.
     /// </summary>
-    /// <typeparam name="T">The type of the value being dereferenced.</typeparam>
+    /// <typeparam name="T">The unmanaged type of the value being dereferenced.</typeparam>
     /// <param name="ptr">A pointer to the memory address containing the value.</param>
     /// <returns>
     /// The value located at the memory address pointed to by <paramref name="ptr"/>.
     /// </returns>
     /// <remarks>
     /// This function interprets the memory address as a pointer to a value of type <typeparamref name="T"/>.
-    /// Use with caution, as dereferencing an invalid or misaligned pointer can lead to runtime errors or undefined behavior.
+    /// <typeparamref name="T"/> is restricted to unmanaged types so an arbitrary address cannot be interpreted as a
+    /// managed object reference. The caller remains responsible for ensuring that <paramref name="ptr"/> is non-null,
+    /// suitably aligned, readable for <typeparamref name="T"/>, and valid for the duration of this call.
     /// </remarks>
-    public static T? GetValue<T>(IntPtr ptr)
+    public static T? GetValue<T>(IntPtr ptr) where T : unmanaged
     {
         var pointer = ptr.ToPointer();
         return *(T*)pointer;
     }
-    
+
+    /// <summary>
+    /// Dereferences a pointer and returns its value as the specified unmanaged runtime type.
+    /// </summary>
+    /// <param name="ptr">A pointer to the memory address containing the value.</param>
+    /// <param name="type">The unmanaged runtime type of the value.</param>
+    /// <returns>The value located at <paramref name="ptr"/>.</returns>
+    /// <exception cref="ArgumentException"><paramref name="type"/> is not an unmanaged type.</exception>
+    /// <remarks>Has the same pointer validity, alignment, and readability requirements as <see cref="GetValue{T}(IntPtr)"/>.</remarks>
     public static object? GetValue(IntPtr ptr, Type type)
     {
-        var method = _methods.GetOrAdd((type, nameof(GetValue)), m =>
+        var methods = _methods.GetValue(type, _ => new());
+        var method = methods.GetOrAdd(nameof(GetValue), name =>
         {
-            var methodDef = typeof(UnsafeHelper).GetRequiredMethod(m.Item2, 1, typeof(IntPtr));
+            var methodDef = typeof(UnsafeHelper).GetRequiredMethod(name, 1, typeof(IntPtr));
             return methodDef.MakeGenericMethod(type);
         });
         return method.Invoke(null, [ptr]);

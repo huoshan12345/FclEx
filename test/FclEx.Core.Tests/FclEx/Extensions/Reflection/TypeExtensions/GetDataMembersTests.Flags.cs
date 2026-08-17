@@ -357,6 +357,28 @@ public partial class GetDataMembersTests
     }
 
     [Fact]
+    public void Indexer_Accessors_Should_Use_Index_Arguments()
+    {
+        var member = typeof(IndexerTestClass)
+            .GetDataMembers(DataMemberFlags.Property
+                            | DataMemberFlags.Public
+                            | DataMemberFlags.Instance
+                            | DataMemberFlags.CanRead
+                            | DataMemberFlags.Indexer
+                            | DataMemberFlags.Declared)
+            .Single(m => m.MemberInfo is PropertyInfo { } property
+                         && property.GetIndexParameters() is [var parameter]
+                         && parameter.ParameterType == typeof(int));
+
+        var instance = new IndexerTestClass();
+        Assert.NotNull(member.IndexerGetter);
+        Assert.NotNull(member.IndexerSetter);
+        Assert.Equal(3, member.IndexerGetter(instance, [3]));
+
+        member.IndexerSetter(instance, 42, [3]);
+    }
+
+    [Fact]
     public void GetDataMembers_WithIndexerAndNonPublic_Should_RespectVisibility()
     {
         var members = typeof(IndexerTestClass)

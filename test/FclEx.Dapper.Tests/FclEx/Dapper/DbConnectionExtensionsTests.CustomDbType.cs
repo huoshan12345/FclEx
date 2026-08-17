@@ -10,8 +10,6 @@ partial class DbConnectionExtensionsTests
         if (DbDrivers.Contains(DbDriver.Npgsql) == false)
             return;
 
-        using var x = output.SetConsole();
-
         using var con = Fixture.CreateDbConnection(DbDriver.Npgsql, schema);
 
         var payload = new EntityWithGuidKey
@@ -43,8 +41,6 @@ partial class DbConnectionExtensionsTests
         if (DbDrivers.Contains(DbDriver.SqlServer) == false)
             return;
 
-        using var x = output.SetConsole();
-
         using var con = Fixture.CreateDbConnection(DbDriver.SqlServer, schema);
 
         var payload = new EntityWithGuidKey
@@ -74,9 +70,7 @@ partial class DbConnectionExtensionsTests
     {
         if (DbDrivers.Contains(DbDriver.Sqlite) == false)
             return;
-
-        using var x = output.SetConsole();
-
+        
         using var con = Fixture.CreateDbConnection(DbDriver.Sqlite, null);
 
         var payload = new EntityWithGuidKey
@@ -107,8 +101,6 @@ partial class DbConnectionExtensionsTests
     {
         if (DbDrivers.Contains(DbDriver.MySql) == false)
             return;
-
-        using var x = output.SetConsole();
 
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
 

@@ -20,6 +20,16 @@ public class NStringTests
         Assert.NotEqual(new NString("test"), new NString("test2"));
     }
 
+    [Fact]
+    public void ObjectEquality_DoesNotCompareAcrossTypes()
+    {
+        object nstring = new NString("test");
+        object text = "test";
+
+        Assert.False(nstring.Equals(text));
+        Assert.False(text.Equals(nstring));
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

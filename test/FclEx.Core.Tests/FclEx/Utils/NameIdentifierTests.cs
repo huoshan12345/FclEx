@@ -8,12 +8,23 @@ public class NameIdentifierTests
         public static MyNameIdentifier Create(string name) => new(name);
     }
 
+    public sealed record NormalizingNameIdentifier(string Name) : NameIdentifier<NormalizingNameIdentifier>(Name), INameIdentifier<NormalizingNameIdentifier>
+    {
+        public static NormalizingNameIdentifier Create(string name) => new(name.Trim());
+    }
+
     [Fact]
     public void Create_ReturnsNewInstance()
     {
         const string name = nameof(Create_ReturnsNewInstance);
         var identifier = MyNameIdentifier.Create(name);
         Assert.Equal(name, identifier.Name);
+    }
+
+    [Fact]
+    public void Constructor_RejectsNullName()
+    {
+        Assert.Throws<ArgumentNullException>(() => new MyNameIdentifier(null!));
     }
 
     [Fact]
@@ -32,6 +43,17 @@ public class NameIdentifierTests
         var identifier1 = MyNameIdentifier.GetOrCreate(name, useCache: false);
         var identifier2 = MyNameIdentifier.GetOrCreate(name, useCache: false);
         Assert.NotSame(identifier1, identifier2); // Should be different instances
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void GetOrCreate_FactoryThatChangesName_ShouldThrow(bool useCache)
+    {
+        var exception = Assert.Throws<ArgumentException>(
+            () => NormalizingNameIdentifier.GetOrCreate(" name ", useCache));
+
+        Assert.Equal("name", exception.ParamName);
     }
 
     [Fact]

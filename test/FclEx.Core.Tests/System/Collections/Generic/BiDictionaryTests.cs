@@ -115,5 +115,71 @@ public class BiDictionaryTests
         var biDict = new BiDictionary<int, string> { { 1, "One" } };
 
         Assert.Throws<ArgumentException>(() => biDict.Add(2, "One"));
+
+        Assert.Single(biDict);
+        Assert.False(biDict.ContainsKey(2));
+        Assert.Equal("One", biDict[1]);
+        Assert.Equal(1, biDict["One"]);
+    }
+
+    [Fact]
+    public void KeyIndexer_DuplicateValue_ShouldThrowWithoutChangingMappings()
+    {
+        var biDict = new BiDictionary<int, string>
+        {
+            { 1, "One" },
+            { 2, "Two" },
+        };
+
+        Assert.Throws<ArgumentException>(() => biDict[1] = "Two");
+
+        Assert.Equal("One", biDict[1]);
+        Assert.Equal("Two", biDict[2]);
+        Assert.Equal(1, biDict["One"]);
+        Assert.Equal(2, biDict["Two"]);
+    }
+
+    [Fact]
+    public void ValueIndexer_DuplicateKey_ShouldThrowWithoutChangingMappings()
+    {
+        var biDict = new BiDictionary<int, string>
+        {
+            { 1, "One" },
+            { 2, "Two" },
+        };
+
+        Assert.Throws<ArgumentException>(() => biDict["One"] = 2);
+
+        Assert.Equal("One", biDict[1]);
+        Assert.Equal("Two", biDict[2]);
+        Assert.Equal(1, biDict["One"]);
+        Assert.Equal(2, biDict["Two"]);
+    }
+
+    [Fact]
+    public void NamedMethods_ShouldRemainUsableWhenKeyAndValueTypesAreTheSame()
+    {
+        var biDict = new BiDictionary<string, string>
+        {
+            { "key", "value" },
+        };
+
+        Assert.Equal("value", biDict.GetValue("key"));
+        Assert.Equal("key", biDict.GetKey("value"));
+
+        biDict.SetValue("key", "updated-value");
+        Assert.Equal("updated-value", biDict.GetValue("key"));
+        Assert.Equal("key", biDict.GetKey("updated-value"));
+
+        biDict.SetKey("updated-value", "updated-key");
+        Assert.False(biDict.ContainsKey("key"));
+        Assert.Equal("updated-value", biDict.GetValue("updated-key"));
+
+        Assert.True(biDict.RemoveValue("updated-value"));
+        Assert.Empty(biDict);
+
+        biDict.Add("another-key", "another-value");
+        Assert.True(biDict.RemoveKey("another-key"));
+        Assert.Empty(biDict);
     }
 }

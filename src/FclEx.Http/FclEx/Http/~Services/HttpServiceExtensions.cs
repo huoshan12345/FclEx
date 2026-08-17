@@ -212,6 +212,8 @@ public static class HttpServiceExtensions
     public static async Task<OperationResult<HttpFileDownloadInfo>[]> BatchDownloadAsync(this IHttpService httpService, IEnumerable<Uri> uris, BatchDownloadOptions? options = null)
     {
         var token = options?.CancellationToken ?? default;
+        var maxDegreeOfParallelism = options?.MaxDegreeOfParallelism ?? BatchDownloadOptions.DefaultMaxDegreeOfParallelism;
+        Check.Positive(maxDegreeOfParallelism);
         var readBufferTimeout = options?.ReadBufferTimeout ?? null;
         var bufferSize = options?.BufferSize ?? null;
 
@@ -220,26 +222,28 @@ public static class HttpServiceExtensions
 
         try
         {
-            return await uris.ExecuteAsync(uri =>
-            {
-                if (uri.IsAbsoluteUri == false && options?.BaseAddress is { } baseAddress)
+            return await uris.SelectConcurrentlyAsync(
+                (uri, operationToken) =>
                 {
-                    uri = baseAddress.Resolve(uri);
-                }
-                return httpService.DownloadAsync(new DownloadOptions
-                {
-                    Uri = uri,
-                    Method = options?.Method ?? HttpMethod.Get,
-                    Content = content?.Clone(),
-                    ReadHeadersTimeout = options?.ReadHeadersTimeout,
-                    BufferSize = bufferSize,
-                    ReadBufferTimeout = options?.ReadBufferTimeout,
-                    TotalTimeout = options?.TotalTimeout,
-                    CancellationToken = token,
-                    FileBaseName = null,
-                    FileExtension = null,
-                });
-            }, options?.ExecuteInParallel ?? true, options?.Concurrency, TimeSpan.Zero, token);
+                    if (uri.IsAbsoluteUri == false && options?.BaseAddress is { } baseAddress)
+                        uri = baseAddress.Resolve(uri);
+
+                    return new ValueTask<OperationResult<HttpFileDownloadInfo>>(httpService.DownloadAsync(new DownloadOptions
+                    {
+                        Uri = uri,
+                        Method = options?.Method ?? HttpMethod.Get,
+                        Content = content?.Clone(),
+                        ReadHeadersTimeout = options?.ReadHeadersTimeout,
+                        BufferSize = bufferSize,
+                        ReadBufferTimeout = options?.ReadBufferTimeout,
+                        TotalTimeout = options?.TotalTimeout,
+                        CancellationToken = operationToken,
+                        FileBaseName = null,
+                        FileExtension = null,
+                    }));
+                },
+                maxDegreeOfParallelism,
+                token);
         }
         finally
         {

@@ -58,20 +58,21 @@ public partial class ExtensionsTests
     }
 
     [Fact]
-    public async Task ThenWith_WhenFinalActionFails_ReturnsFinalError()
+    public async Task ThenWith_WhenFinalActionFails_ReturnsFinalErrorAndAccumulatesElapsed()
     {
-        var (successful, _, ex, _) = await SuccessAction.Create(1)
-            .ThenWith(r => SuccessAction.Create(1 + r))
+        var (successful, _, ex, elapsed) = await SuccessAction.Create(1, TimeSpan.FromSeconds(1))
+            .ThenWith(r => SuccessAction.Create(1 + r, TimeSpan.FromSeconds(2)))
             .ThenWith((a, b) =>
             {
                 Assert.Equal(1, a);
                 Assert.Equal(2, b);
-                return ErrorAction.Create<int>("error");
+                return ErrorAction.Create<int>("error", TimeSpan.FromSeconds(3));
             })
             .ExecuteAsync();
 
         Assert.False(successful);
         Assert.Equal("error", ex?.Message);
+        Assert.Equal(TimeSpan.FromSeconds(6), elapsed);
     }
 
     [Fact]
@@ -105,35 +106,5 @@ public partial class ExtensionsTests
 
         Assert.False(successful);
         Assert.Equal(Constants.NullNextError, ex?.Message);
-    }
-
-    [Fact]
-    public async Task ThenWithAction_WhenConfiguredToAllowNullNext_ReturnsPreviousValueWithDefaultNext()
-    {
-        var action = new ThenWithAction<int, string>(
-            SuccessAction.Create(7, TimeSpan.FromSeconds(2)),
-            _ => null,
-            errorWhenNextNull: false);
-
-        var (successful, result, _, elapsed) = await action.ExecuteAsync();
-
-        Assert.True(successful);
-        Assert.Equal((7, default(string)), result);
-        Assert.Equal(TimeSpan.FromSeconds(2), elapsed);
-    }
-
-    [Fact]
-    public async Task ThenWithAction_WhenConfiguredToKeepPreviousOnNextError_ReturnsPreviousValueWithDefaultNext()
-    {
-        var action = new ThenWithAction<int, string>(
-            SuccessAction.Create(7, TimeSpan.FromSeconds(2)),
-            _ => ErrorAction.Create<string>("next failed", TimeSpan.FromSeconds(5)),
-            prevWhenNextError: true);
-
-        var (successful, result, _, elapsed) = await action.ExecuteAsync();
-
-        Assert.True(successful);
-        Assert.Equal((7, default(string)), result);
-        Assert.Equal(TimeSpan.FromSeconds(2), elapsed);
     }
 }

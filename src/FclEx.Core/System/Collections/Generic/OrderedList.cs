@@ -137,7 +137,7 @@ public class OrderedList<T> : ArrayBasedCollection<OrderedList<T>, T>, IList<T>,
     private (int Lower, bool Equal) FindLowerBound(T item, int? lower = null, int? upper = null)
     {
         var index = LowerBound(item, lower, upper);
-        var equal = index < _count
+        var equal = index < (upper ?? _count)
                     && _comparer.Compare(_items[index], item) == 0;
 
         return (index, equal);
@@ -146,7 +146,7 @@ public class OrderedList<T> : ArrayBasedCollection<OrderedList<T>, T>, IList<T>,
     private (int Upper, bool EqualToPrev) FindUpperBound(T item, int? lower = null, int? upper = null)
     {
         var index = UpperBound(item, lower, upper);
-        var equal = index > 0
+        var equal = index > (lower ?? 0)
                     && _comparer.Compare(_items[index - 1], item) == 0;
 
         return (index, equal);
@@ -336,14 +336,15 @@ public class OrderedList<T> : ArrayBasedCollection<OrderedList<T>, T>, IList<T>,
     /// <param name="item">The value to search for.</param>
     /// <param name="lower">Optional inclusive lower bound of the search range.</param>
     /// <param name="upper">Optional exclusive upper bound of the search range.</param>
+    /// <exception cref="ArgumentOutOfRangeException">A bound is outside the range from zero through <see cref="Count"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="lower"/> is greater than <paramref name="upper"/>.</exception>
     public int UpperBound(T item, int? lower = null, int? upper = null)
     {
         // Cannot rely on List<T>.BinarySearch because it may return any matching
-        // index when duplicates exist. LowerBound must return the first element
-        // >= item, so we perform the binary search manually.
+        // index when duplicates exist. UpperBound must return the first element
+        // > item, so we perform the binary search manually.
 
-        var low = lower ?? 0;
-        var high = upper ?? _count;
+        var (low, high) = ValidateBoundRange(lower, upper);
 
         while (low < high)
         {
@@ -368,14 +369,15 @@ public class OrderedList<T> : ArrayBasedCollection<OrderedList<T>, T>, IList<T>,
     /// <param name="item">The value to search for.</param>
     /// <param name="lower">Optional inclusive lower bound of the search range.</param>
     /// <param name="upper">Optional exclusive upper bound of the search range.</param>
+    /// <exception cref="ArgumentOutOfRangeException">A bound is outside the range from zero through <see cref="Count"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="lower"/> is greater than <paramref name="upper"/>.</exception>
     public int LowerBound(T item, int? lower = null, int? upper = null)
     {
         // Cannot rely on List<T>.BinarySearch because it may return any matching
         // index when duplicates exist. LowerBound must return the first element
         // >= item, so we perform the binary search manually.
 
-        var low = lower ?? 0;
-        var high = upper ?? _count;
+        var (low, high) = ValidateBoundRange(lower, upper);
 
         while (low < high)
         {
@@ -392,6 +394,23 @@ public class OrderedList<T> : ArrayBasedCollection<OrderedList<T>, T>, IList<T>,
         }
 
         return low;
+    }
+
+    private (int Lower, int Upper) ValidateBoundRange(int? lower, int? upper)
+    {
+        var lowerValue = lower ?? 0;
+        var upperValue = upper ?? _count;
+
+        if ((uint)lowerValue > (uint)_count)
+            throw new ArgumentOutOfRangeException(nameof(lower), lower, "The lower bound must be between zero and Count.");
+
+        if ((uint)upperValue > (uint)_count)
+            throw new ArgumentOutOfRangeException(nameof(upper), upper, "The upper bound must be between zero and Count.");
+
+        if (lowerValue > upperValue)
+            throw new ArgumentException("The upper bound must be greater than or equal to the lower bound.", nameof(upper));
+
+        return (lowerValue, upperValue);
     }
 
     /// <summary>
@@ -530,17 +549,24 @@ public class OrderedList<T> : ArrayBasedCollection<OrderedList<T>, T>, IList<T>,
     public IEnumerable<T> EqualRange(T item)
     {
         var start = IndexOf(item);
+        if (start < 0)
+            yield break;
+
         var end = LastIndexOf(item);
 
-        for (var i = start; i < end; i++)
+        for (var i = start; i <= end; i++)
             yield return _items[i];
     }
 
     /// <summary>
     /// Removes all elements whose values fall within the specified range, inclusive.
     /// </summary>
+    /// <exception cref="ArgumentException"><paramref name="min"/> compares greater than <paramref name="max"/>.</exception>
     public int RemoveRange(T min, T max)
     {
+        if (_comparer.Compare(min, max) > 0)
+            throw new ArgumentException("The minimum value must compare less than or equal to the maximum value.", nameof(min));
+
         var start = LowerBound(min);
         var end = UpperBound(max);
         var count = end - start;

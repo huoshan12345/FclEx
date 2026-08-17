@@ -34,7 +34,24 @@ public class EnumerableTypeTests
         Assert.Equal(expected, elementType);
     }
 
+    [Fact]
+    public void EnumerableElementTypes_MultipleGenericEnumerableInterfaces_ReturnsAllTypes()
+    {
+        var elementTypes = typeof(IMultipleEnumerable).EnumerableElementTypes();
+
+        Assert.Equal(2, elementTypes.Count);
+        Assert.Contains(typeof(int), elementTypes);
+        Assert.Contains(typeof(string), elementTypes);
+    }
+
+    [Fact]
+    public void EnumerableElementType_MultipleGenericEnumerableInterfaces_ThrowsAmbiguousMatchException()
+    {
+        Assert.Throws<AmbiguousMatchException>(() => typeof(IMultipleEnumerable).EnumerableElementType());
+    }
+
     private interface IEmptyEnumerable : IEnumerable<object>;
 
     private interface IMyEnumerable<out T> : IEnumerable<T>;
+    private interface IMultipleEnumerable : IEnumerable<int>, IEnumerable<string>;
 }

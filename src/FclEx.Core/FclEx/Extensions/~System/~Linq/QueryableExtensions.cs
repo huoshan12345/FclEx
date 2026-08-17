@@ -1,4 +1,4 @@
-namespace FclEx.Extensions; 
+namespace FclEx.Extensions;
 
 public readonly record struct JoinResult<TOuter, TInner>(TOuter Outer, TInner Inner);
 
@@ -30,4 +30,16 @@ public static partial class QueryableExtensions
         return outer.Join(inner, outerKeySelector, innerKeySelector, (m, n) => new JoinResult<TOuter, TInner>(m, n));
     }
 
+    internal class Cache<T>
+    {
+        public static readonly IQueryable<T> Empty = Enumerable.Empty<T>().AsQueryable();
+    }
+
+    extension(Queryable)
+    {
+        public static IQueryable<T> Empty<T>()
+        {
+            return Cache<T>.Empty;
+        }
+    }
 }

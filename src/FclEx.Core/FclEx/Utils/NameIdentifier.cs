@@ -25,24 +25,49 @@ public interface INameIdentifier<out T> where T : INameIdentifier<T>
 /// Provides a base implementation for name identifiers, including caching and comparison logic.
 /// </summary>
 /// <typeparam name="T">The specific type of name identifier, which must inherit from this class and implement <see cref="INameIdentifier{T}"/>.</typeparam>
-public abstract record NameIdentifier<T>(string Name) : IComparable<T> where T : NameIdentifier<T>, INameIdentifier<T>
+public abstract record NameIdentifier<T> : IComparable<T> where T : NameIdentifier<T>, INameIdentifier<T>
 {
+    /// <summary>Initializes an identifier with a non-null name.</summary>
+    /// <param name="name">The identifier name.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="name"/> is <see langword="null"/>.</exception>
+    protected NameIdentifier(string name)
+    {
+        Name = Check.NotNull(name);
+    }
+
     /// <summary>
     /// A cache of name identifiers, keyed by name.
     /// </summary>
     private static readonly ConcurrentDictionary<string, T> _cache = new();
 
+    /// <summary>Gets the non-null identifier name.</summary>
+    public string Name { get; init; }
+
     /// <summary>
-    /// Gets an existing name identifier or creates a new one.  Uses a cache for efficiency.
+    /// Gets an existing name identifier or creates a new one. Uses a cache for efficiency.
     /// </summary>
     /// <param name="name">The name of the identifier.</param>
     /// <param name="useCache">A flag indicating whether to use the cache. Defaults to true.</param>
     /// <returns>An existing or new instance of the name identifier.</returns>
+    /// <exception cref="ArgumentException">The factory creates an identifier whose name differs from <paramref name="name"/>.</exception>
     public static T GetOrCreate(string name, bool useCache = true)
     {
         return useCache
-            ? _cache.GetOrAdd(name, T.Create)
-            : T.Create(name);
+            ? _cache.GetOrAdd(name, CreateChecked)
+            : CreateChecked(name);
+
+        static T CreateChecked(string name)
+        {
+            var identifier = Check.NotNull(T.Create(name));
+            if (string.Equals(identifier.Name, name, StringComparison.Ordinal) == false)
+            {
+                throw new ArgumentException(
+                    "The name identifier factory must preserve the supplied name.",
+                    nameof(name));
+            }
+
+            return identifier;
+        }
     }
 
     /// <summary>
@@ -61,6 +86,11 @@ public abstract record NameIdentifier<T>(string Name) : IComparable<T> where T :
             return 1;
 
         return string.Compare(Name, other.Name, StringComparison.Ordinal);
+    }
+
+    public void Deconstruct(out string Name)
+    {
+        Name = this.Name;
     }
 }
 #endif

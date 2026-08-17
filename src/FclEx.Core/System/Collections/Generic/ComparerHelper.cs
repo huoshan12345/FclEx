@@ -22,7 +22,23 @@ public static class ComparerHelper
         return result.HasValue;
     }
 
-    public static bool TryEquals<T>([NotNullWhen(false), NoEnumeration] T? x, [NotNullWhen(false), NoEnumeration] T? y, [NotNullWhen(true)] out bool? result)
+    /// <summary>
+    /// Determines equality for identical references and null values, and optionally for values whose runtime types differ.
+    /// </summary>
+    /// <typeparam name="T">The declared type of the values.</typeparam>
+    /// <param name="x">The first value.</param>
+    /// <param name="y">The second value.</param>
+    /// <param name="result">The determined result, or <see langword="null"/> when the caller must compare the values.</param>
+    /// <param name="requireSameRuntimeType">
+    /// Whether non-null values of different runtime types are immediately considered unequal. Defaults to
+    /// <see langword="true"/> to preserve the traditional strict comparison behavior.
+    /// </param>
+    /// <returns><see langword="true"/> when <paramref name="result"/> was determined; otherwise, <see langword="false"/>.</returns>
+    public static bool TryEquals<T>(
+        [NotNullWhen(false), NoEnumeration] T? x,
+        [NotNullWhen(false), NoEnumeration] T? y,
+        [NotNullWhen(true)] out bool? result,
+        bool requireSameRuntimeType = true)
     {
         result = null;
 
@@ -35,7 +51,7 @@ public static class ComparerHelper
         {
             result = false;
         }
-        else if (x.GetType() != y.GetType())
+        else if (requireSameRuntimeType && x.GetType() != y.GetType())
         {
             result = false;
         }

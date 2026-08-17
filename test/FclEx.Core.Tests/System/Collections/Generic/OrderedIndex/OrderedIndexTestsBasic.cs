@@ -91,6 +91,28 @@ public class OrderedIndexTestsBasic
     }
 
     [Fact]
+    public void RangeByRank_WhenStartAndCountWouldOverflow_ReturnsRemainingItems()
+    {
+        var idx = new OrderedIndex<int, int>();
+        for (var i = 0; i < 10; i++)
+            idx.Add(i, i);
+
+        var result = idx.RangeByRank(1, int.MaxValue).Select(x => x.Value).ToArray();
+
+        Assert.Equal(Enumerable.Range(1, 9), result);
+    }
+
+    [Fact]
+    public void RangeByRank_WhenIndexChangesAfterRangeCreation_Throws()
+    {
+        var idx = new OrderedIndex<int, int> { { 1, 1 }, { 2, 2 } };
+        var enumerator = idx.RangeByRank(0, 2).GetEnumerator();
+        idx.Add(3, 3);
+
+        Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext());
+    }
+
+    [Fact]
     public void RangeByScore_ShouldWork()
     {
         var idx = new OrderedIndex<int, int>();
@@ -101,6 +123,16 @@ public class OrderedIndexTestsBasic
         var r = idx.RangeByScore(3, 6).Select(x => x.Value).ToArray();
 
         Assert.Equal(new[] { 3, 4, 5, 6 }, r);
+    }
+
+    [Fact]
+    public void RangeByScore_WhenIndexChangesAfterRangeCreation_Throws()
+    {
+        var idx = new OrderedIndex<int, int> { { 1, 1 }, { 2, 2 } };
+        var enumerator = idx.RangeByScore(1, 2).GetEnumerator();
+        idx.Remove(1);
+
+        Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext());
     }
 
     [Fact]
@@ -116,6 +148,28 @@ public class OrderedIndexTestsBasic
 
         Assert.Equal(1, idx.Rank("a"));
         Assert.Equal(0, idx.Rank("b"));
+    }
+
+    [Fact]
+    public void UpdateScore_WhenComparerThrows_PreservesOriginalIndexAndEnumeratorVersion()
+    {
+        var comparer = new RejectingScoreComparer(99);
+        var idx = new OrderedIndex<int, string>(comparer)
+        {
+            { 10, "a" },
+            { 20, "b" },
+            { 30, "c" },
+        };
+        var enumerator = idx.GetEnumerator();
+
+        Assert.Throws<InvalidOperationException>(() => idx.UpdateScore("b", 99));
+
+        Assert.Equal([(10, "a"), (20, "b"), (30, "c")], idx.ToArray());
+        Assert.True(idx.TryGetScore("b", out var score));
+        Assert.Equal(20, score);
+        Assert.Equal(1, idx.Rank("b"));
+        Assert.True(enumerator.MoveNext());
+        Assert.Equal((10, "a"), enumerator.Current);
     }
 
     [Fact]
@@ -740,6 +794,17 @@ public class OrderedIndexTestsBasic
 
             Assert.Equal(arr[i].Value, item.Value);
             Assert.Equal(arr[i].Score, item.Score);
+        }
+    }
+
+    private sealed class RejectingScoreComparer(int rejectedScore) : IComparer<int>
+    {
+        public int Compare(int x, int y)
+        {
+            if (x == rejectedScore || y == rejectedScore)
+                throw new InvalidOperationException("The score is rejected for testing.");
+
+            return x.CompareTo(y);
         }
     }
 }

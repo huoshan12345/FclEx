@@ -28,17 +28,25 @@ public class JsonNodeExtensionsTests
     }
 
     [Fact]
-    public void GetOrAdd_CreatesAndReplacesNode_WhenKeyExistsWithWrongType()
+    public void GetOrAdd_ThrowsAndPreservesNode_WhenKeyExistsWithWrongType()
     {
+        var existing = new JsonArray(1, 2, 3);
         var obj = new JsonObject
         {
-            ["data"] = new JsonArray(1, 2, 3)
+            ["data"] = existing
         };
-        var result = obj.GetOrAdd("data", () => new JsonObject { ["key"] = "value" });
+        var creatorCalls = 0;
 
-        Assert.Same(obj["data"], result);
-        Assert.IsType<JsonObject>(result);
-        Assert.Equal("value", ((JsonObject)result)["key"]!.ToString());
+        var exception = Assert.Throws<InvalidOperationException>(() => obj.GetOrAdd("data", () =>
+        {
+            creatorCalls++;
+            return new JsonObject();
+        }));
+
+        Assert.Contains(nameof(JsonArray), exception.Message);
+        Assert.Contains(nameof(JsonObject), exception.Message);
+        Assert.Same(existing, obj["data"]);
+        Assert.Equal(0, creatorCalls);
     }
 
     [Fact]
@@ -53,14 +61,13 @@ public class JsonNodeExtensionsTests
     }
 
     [Fact]
-    public void GetOrAdd_UsesCreatorEveryTime_WhenExistingNodeIsWrongType()
+    public void GetOrAdd_CreatesNode_WhenKeyContainsJsonNull()
     {
-        var obj = new JsonObject { ["data"] = new JsonArray() };
-        var calls = 0;
-        obj.GetOrAdd("data", () => { calls++; return new JsonObject(); });
-        obj.GetOrAdd("data", () => { calls++; return new JsonObject(); });
+        var obj = new JsonObject { ["data"] = null };
 
-        Assert.Equal(1, calls); // creator should be called each time type mismatch happens
+        var result = obj.GetOrAdd("data", () => new JsonObject());
+
+        Assert.Same(result, obj["data"]);
     }
 
     [Fact]

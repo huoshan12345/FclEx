@@ -21,7 +21,7 @@ public class DapperTests(DapperTestsFixture fixture) : DatabaseTests
     ).ToTheoryData();
 
     public static readonly TheoryData<DbDriver, string?> MySqlSchemaCases = new[] { DbDriver.MySqlConnector, DbDriver.MySql }
-        .SelectMany(Schemas)
+        .CrossJoin(Schemas)
         .ToTheoryData();
 
     public static readonly TheoryData<string?> SchemaCases = Schemas.ToTheoryData();

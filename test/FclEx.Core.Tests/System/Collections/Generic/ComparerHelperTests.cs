@@ -26,6 +26,12 @@ public class ComparerHelperTests
         }
     }
 
+    private interface IValue;
+
+    private sealed class FirstValue : IValue;
+
+    private sealed class SecondValue : IValue;
+
     [Fact]
     public void TryCompare_BothNull_ReturnsTrueWithResultZero()
     {
@@ -101,5 +107,18 @@ public class ComparerHelperTests
         var obj2 = new TestModel(1);
         Assert.False(ReferenceEquals(obj1, obj2));
         Assert.False(ComparerHelper.TryEquals(obj1, obj2, out _));
+    }
+
+    [Fact]
+    public void TryEquals_DifferentRuntimeTypes_Can_Be_Left_For_The_Caller()
+    {
+        IValue x = new FirstValue();
+        IValue y = new SecondValue();
+
+        Assert.True(ComparerHelper.TryEquals(x, y, out var strictResult));
+        Assert.False(strictResult);
+
+        Assert.False(ComparerHelper.TryEquals(x, y, out var deferredResult, requireSameRuntimeType: false));
+        Assert.Null(deferredResult);
     }
 }

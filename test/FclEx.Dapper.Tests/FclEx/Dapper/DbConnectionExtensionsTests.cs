@@ -2,7 +2,7 @@
 // ReSharper disable UseAwaitUsing
 namespace FclEx.Dapper;
 
-public partial class DbConnectionExtensionsTests(ITestOutputHelper output, DapperTestsFixture fixture) : DapperTests(fixture)
+public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : DapperTests(fixture)
 {
     [Theory]
     [MemberData(nameof(DbSchemaTestCases))]

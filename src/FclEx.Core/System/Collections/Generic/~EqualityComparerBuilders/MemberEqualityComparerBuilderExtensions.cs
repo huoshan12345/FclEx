@@ -15,11 +15,11 @@ public static class MemberEqualityComparerBuilderExtensions
         return builder;
     }
 
-    private static readonly ConcurrentDictionary<Type, MethodInfo> _addMethodCache = new();
+    private static readonly ConditionalWeakTable<Type, MethodInfo> _addMethodCache = new();
 
     private static MethodInfo GetAddMethod(Type builderType)
     {
-        return _addMethodCache.GetOrAdd(builderType, t =>
+        return _addMethodCache.GetValue(builderType, t =>
         {
             var method = typeof(MemberEqualityComparerBuilder<>)
                 .MakeGenericType(t)

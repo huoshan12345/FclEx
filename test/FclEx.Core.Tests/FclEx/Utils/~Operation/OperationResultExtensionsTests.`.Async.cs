@@ -169,6 +169,43 @@ partial class OperationResultExtensionsTests
     }
 
     [Fact]
+    public async Task Merge_TaskOperationResults_DoesNot_Add_Task_Wait_Time()
+    {
+        var task = Task.Run(async () =>
+        {
+            await Task.Delay(20);
+            return new[]
+            {
+                Operation.Success(1, TimeSpan.FromSeconds(2)),
+                Operation.Success(2, TimeSpan.FromSeconds(3)),
+            };
+        });
+
+        var result = await task.Merge<int>();
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(TimeSpan.FromSeconds(5), result.Elapsed);
+    }
+
+    [Fact]
+    public async Task ToAction_With_Selector_Defers_And_Repeats_Operations()
+    {
+        var executions = 0;
+        var action = new[] { 1 }.ToAction((value, _) =>
+        {
+            executions++;
+            return Task.FromResult(Operation.Success(value));
+        }, parallel: false);
+
+        Assert.Equal(0, executions);
+
+        await action.ExecuteAsync();
+        await action.ExecuteAsync();
+
+        Assert.Equal(2, executions);
+    }
+
+    [Fact]
     public async Task ThenWith_TaskOperationResult_TaskOperationResult_AddsElapsedFromBothResults()
     {
         var result = await Task.FromResult(Operation.Success("a", TimeSpan.FromSeconds(2)))

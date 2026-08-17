@@ -59,7 +59,7 @@ public class ObjectAccessorTests
 
             var name = field.GetAutoPropertyOrFieldName();
             var offset = prevAddr == IntPtr.Zero ? 0 : address.Subtract(prevAddr);
-            table.Rows.Add([name, field.FieldType.ShortName(), address.ToHexString(), offset, expectedValue]);
+            table.AddRow([name, field.FieldType.ShortName(), address.ToHexString(), offset, expectedValue]);
         }
 
         if (TestHelper.IsRunningUnderReSharper())

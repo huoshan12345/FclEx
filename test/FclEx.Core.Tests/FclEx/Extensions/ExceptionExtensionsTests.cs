@@ -13,36 +13,46 @@ public partial class ExceptionExtensionsTests
         }
     }
 
-    public static readonly TheoryData<Exception> Exceptions = new()
+    [Fact]
+    public void Enumerate_ShouldReturnEveryExceptionOnce()
     {
-        new InnermostException(),
-        new Exception("", new Exception("", new InnermostException())),
-        new AggregateException("", new InnermostException(), new AggregateException(new InnermostException())),
-    };
+        var sharedLeaf = new InnermostException();
+        var sharedBranch = new Exception("shared", sharedLeaf);
+        var root = new AggregateException(sharedBranch, sharedBranch);
 
-    [Theory]
-    [MemberData(nameof(Exceptions))]
-    public void ForEach_Test(Exception ex)
-    {
-        var list = new List<InnermostException>();
-        ex.ForEach(m =>
-        {
-            Assert.Equal(typeof(InnermostException), m.GetType());
-            list.Add(m.CastTo<InnermostException>());
-        });
-        Assert.NotEmpty(list);
-        var ids = list.Select(m => m.Id).Distinct().ToArray();
-        Assert.Equal(ids.Length, list.Count);
+        var exceptions = root.Enumerate().ToArray();
+
+        Assert.Equal([root, sharedBranch, sharedLeaf], exceptions);
     }
 
-    [Theory]
-    [MemberData(nameof(Exceptions))]
-    public void GetInnermost_Test(Exception ex)
+    [Fact]
+    public void EnumerateLeaves_ShouldReturnOnlyLeavesOnce()
     {
-        var inner = ex.GetInnermost();
-        Assert.NotNull(inner);
-        Assert.Null(inner.InnerException);
-        Assert.Equal(typeof(InnermostException), inner.GetType());
+        var firstLeaf = new InnermostException();
+        var sharedLeaf = new InnermostException();
+        var sharedBranch = new Exception("shared", sharedLeaf);
+        var root = new AggregateException(firstLeaf, sharedBranch, sharedBranch);
+
+        var leaves = root.EnumerateLeaves().ToArray();
+
+        Assert.Equal([firstLeaf, sharedLeaf], leaves);
+    }
+
+    [Fact]
+    public void EnumerateLeaves_LeafRoot_ShouldReturnRoot()
+    {
+        var root = new InnermostException();
+
+        Assert.Equal([root], root.EnumerateLeaves());
+    }
+
+    [Fact]
+    public void GetInnermost_ShouldReturnLastExceptionInInnerExceptionChain()
+    {
+        var innermost = new InnermostException();
+        var root = new Exception("root", new Exception("middle", innermost));
+
+        Assert.Same(innermost, root.GetInnermost());
     }
 
     [Fact]

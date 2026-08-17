@@ -4,7 +4,7 @@ public static class StreamReaderExtensions
 {
 #if !NET7_0_OR_GREATER
     private static readonly MethodInfo? _methodReadToEndAsync
-        = typeof(StreamWriter).GetMethod(nameof(StreamReader.ReadToEndAsync), 0, [typeof(CancellationToken)]);
+        = typeof(StreamReader).GetMethod(nameof(StreamReader.ReadToEndAsync), 0, [typeof(CancellationToken)]);
 
     /// <summary>
     /// Provides a cross-platform extension method for <see cref="StreamReader.ReadToEndAsync()"/> with <see cref="CancellationToken"/>. <br/>
@@ -27,7 +27,7 @@ public static class StreamReaderExtensions
     }
 
     private static readonly MethodInfo? _methodReadLineAsync
-        = typeof(StreamWriter).GetMethod(nameof(StreamReader.ReadLineAsync), 0, [typeof(CancellationToken)]);
+        = typeof(StreamReader).GetMethod(nameof(StreamReader.ReadLineAsync), 0, [typeof(CancellationToken)]);
 
     /// <summary>
     /// Provides a cross-platform extension method for <see cref="StreamReader.ReadToEndAsync()"/> with <see cref="CancellationToken"/>. <br/>
@@ -38,7 +38,7 @@ public static class StreamReaderExtensions
     /// <param name="cancellationToken">A cancellation token to observe during the read operation.</param>
     /// <returns>
     /// A value task representing the asynchronous read operation, returning the next line of characters from the input stream
-    /// or <c>null</c> if the end of the input stream is reached.
+    /// or <see langword="null"/> if the end of the input stream is reached.
     /// </returns>
     public static ValueTask<string?> ReadLineAsync(this StreamReader reader, CancellationToken cancellationToken)
     {

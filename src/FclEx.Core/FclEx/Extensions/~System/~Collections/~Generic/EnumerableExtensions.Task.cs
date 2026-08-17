@@ -6,109 +6,220 @@ partial class EnumerableExtensions
 
     public static Task<T[]> WhenAll<T>(this IEnumerable<Task<T>> tasks) => Task.WhenAll(tasks);
 
-    public static async Task ExecuteSequentiallyAsync<T>(this IEnumerable<T> enumerable, Func<T, Task> operation,
-        TimeSpan interval = default, CancellationToken token = default)
+    /// <summary>
+    /// Invokes an asynchronous operation for each item in source order, optionally delaying between items.
+    /// </summary>
+    /// <remarks>Cancellation faults the returned task as canceled; it never returns a successful partial execution.</remarks>
+    public static async Task ForEachSequentiallyAsync<T>(
+        this IEnumerable<T> source,
+        Func<T, CancellationToken, ValueTask> operation,
+        TimeSpan delayBetweenItems = default,
+        CancellationToken cancellationToken = default)
     {
-        Check.NotNull(enumerable);
+        Check.NotNull(source);
         Check.NotNull(operation);
+        Check.NotLessThan(delayBetweenItems, TimeSpan.Zero);
+        cancellationToken.ThrowIfCancellationRequested();
 
-        foreach (var item in enumerable)
+        var isFirstItem = true;
+        foreach (var item in source)
         {
-            if (token.IsCancellationRequested)
-                break;
+            cancellationToken.ThrowIfCancellationRequested();
+            if (isFirstItem == false && delayBetweenItems > TimeSpan.Zero)
+                await Task.Delay(delayBetweenItems, cancellationToken).NoCapture();
 
-            await operation(item);
-
-            await TaskHelper.Delay(interval, token);
+            await operation(item, cancellationToken).NoCapture();
+            isFirstItem = false;
         }
     }
 
-    public static async Task<TResult[]> ExecuteSequentiallyAsync<T, TResult>(this IEnumerable<T> enumerable, Func<T, Task<TResult>> operation,
-        TimeSpan interval = default, CancellationToken token = default)
+    /// <summary>
+    /// Projects each item asynchronously in source order, optionally delaying between items.
+    /// </summary>
+    /// <returns>The operation results in source order.</returns>
+    /// <remarks>Cancellation faults the returned task as canceled; it never returns partial results.</remarks>
+    public static async Task<TResult[]> SelectSequentiallyAsync<T, TResult>(
+        this IEnumerable<T> source,
+        Func<T, CancellationToken, ValueTask<TResult>> operation,
+        TimeSpan delayBetweenItems = default,
+        CancellationToken cancellationToken = default)
     {
-        Check.NotNull(enumerable);
+        Check.NotNull(source);
         Check.NotNull(operation);
+        Check.NotLessThan(delayBetweenItems, TimeSpan.Zero);
+        cancellationToken.ThrowIfCancellationRequested();
 
-        var list = new List<TResult>();
-        foreach (var item in enumerable)
+        var results = new List<TResult>();
+        var isFirstItem = true;
+        foreach (var item in source)
         {
-            if (token.IsCancellationRequested)
-                break;
+            cancellationToken.ThrowIfCancellationRequested();
+            if (isFirstItem == false && delayBetweenItems > TimeSpan.Zero)
+                await Task.Delay(delayBetweenItems, cancellationToken).NoCapture();
 
-            var r = await operation(item);
-            list.Add(r);
-
-            await TaskHelper.Delay(interval, token);
+            results.Add(await operation(item, cancellationToken).NoCapture());
+            isFirstItem = false;
         }
-        return list.ToArray();
+
+        return results.ToArray();
     }
 
-    public static async Task ExecuteInParallelAsync<T>(this IEnumerable<T> enumerable, Func<T, Task> operation,
-        int? concurrency = null, TimeSpan interval = default, CancellationToken token = default)
+    /// <summary>
+    /// Invokes an asynchronous operation with a fixed maximum number of active operations.
+    /// </summary>
+    /// <remarks>
+    /// Source is enumerated lazily by the workers. Cancellation or an operation failure stops workers from claiming
+    /// additional items and completes the returned task as canceled or faulted rather than reporting partial success.
+    /// </remarks>
+    public static async Task ForEachConcurrentlyAsync<T>(
+        this IEnumerable<T> source,
+        Func<T, CancellationToken, ValueTask> operation,
+        int maxDegreeOfParallelism,
+        CancellationToken cancellationToken = default)
     {
-        Check.NotNull(enumerable);
+        Check.NotNull(source);
         Check.NotNull(operation);
+        Check.Positive(maxDegreeOfParallelism);
 
-        if (concurrency is null)
+        cancellationToken.ThrowIfCancellationRequested();
+        using var enumerator = source.GetEnumerator();
+        var gate = new object();
+        var stopRequested = false;
+        var workers = new Task[maxDegreeOfParallelism];
+
+        for (var i = 0; i < workers.Length; i++)
+            workers[i] = RunWorkerAsync();
+
+        await Task.WhenAll(workers).NoCapture();
+        return;
+
+        async Task RunWorkerAsync()
         {
-            await enumerable.Select(operation).WhenAll();
-            return;
+            try
+            {
+                while (TryTakeNext(out var item))
+                {
+                    await operation(item, cancellationToken).NoCapture();
+                }
+            }
+            catch
+            {
+                Stop();
+                throw;
+            }
         }
 
-        var size = Check.Positive(concurrency.Value, nameof(concurrency));
-
-        foreach (var batch in enumerable.Chunk(size))
+        bool TryTakeNext([MaybeNullWhen(false)] out T item)
         {
-            if (token.IsCancellationRequested)
-                break;
+            lock (gate)
+            {
+                if (stopRequested)
+                {
+                    item = default;
+                    return false;
+                }
 
-            await batch.Select(operation).WhenAll();
+                cancellationToken.ThrowIfCancellationRequested();
+                if (enumerator.MoveNext() == false)
+                {
+                    stopRequested = true;
+                    item = default;
+                    return false;
+                }
 
-            await TaskHelper.Delay(interval, token);
+                item = enumerator.Current;
+                return true;
+            }
+        }
+
+        void Stop()
+        {
+            lock (gate)
+                stopRequested = true;
         }
     }
 
-    public static async Task<TResult[]> ExecuteInParallelAsync<T, TResult>(this IEnumerable<T> enumerable, Func<T, Task<TResult>> operation,
-        int? concurrency = null, TimeSpan interval = default, CancellationToken token = default)
+    /// <summary>
+    /// Projects source items asynchronously with a fixed maximum number of active operations.
+    /// </summary>
+    /// <returns>All operation results in source order, regardless of completion order.</returns>
+    /// <remarks>
+    /// Source is enumerated lazily by the workers. Cancellation or an operation failure stops workers from claiming
+    /// additional items and completes the returned task as canceled or faulted rather than returning partial results.
+    /// </remarks>
+    public static async Task<TResult[]> SelectConcurrentlyAsync<T, TResult>(
+        this IEnumerable<T> source,
+        Func<T, CancellationToken, ValueTask<TResult>> operation,
+        int maxDegreeOfParallelism,
+        CancellationToken cancellationToken = default)
     {
-        Check.NotNull(enumerable);
+        Check.NotNull(source);
         Check.NotNull(operation);
+        Check.Positive(maxDegreeOfParallelism);
 
-        if (concurrency is null)
+        cancellationToken.ThrowIfCancellationRequested();
+        using var enumerator = source.GetEnumerator();
+        var gate = new object();
+        var results = new List<TResult>();
+        var stopRequested = false;
+        var workers = new Task[maxDegreeOfParallelism];
+
+        for (var i = 0; i < workers.Length; i++)
+            workers[i] = RunWorkerAsync();
+
+        await Task.WhenAll(workers).NoCapture();
+        return results.ToArray();
+
+        async Task RunWorkerAsync()
         {
-            return await enumerable.Select(operation).WhenAll();
+            try
+            {
+                while (TryTakeNext(out var item, out var index))
+                {
+                    var result = await operation(item, cancellationToken).NoCapture();
+                    lock (gate)
+                        results[index] = result;
+                }
+            }
+            catch
+            {
+                Stop();
+                throw;
+            }
         }
 
-        var size = Check.Positive(concurrency.Value, nameof(concurrency));
-
-        var list = new List<TResult>();
-        foreach (var batch in enumerable.Chunk(size))
+        bool TryTakeNext([MaybeNullWhen(false)] out T item, out int index)
         {
-            if (token.IsCancellationRequested)
-                break;
+            lock (gate)
+            {
+                if (stopRequested)
+                {
+                    item = default;
+                    index = -1;
+                    return false;
+                }
 
-            var rs = await batch.Select(operation).WhenAll();
-            list.AddRange(rs);
+                cancellationToken.ThrowIfCancellationRequested();
+                if (enumerator.MoveNext() == false)
+                {
+                    stopRequested = true;
+                    item = default;
+                    index = -1;
+                    return false;
+                }
 
-            await TaskHelper.Delay(interval, token);
+                item = enumerator.Current;
+                index = results.Count;
+                results.Add(default!);
+                return true;
+            }
         }
-        return list.ToArray();
-    }
 
-    public static Task ExecuteAsync<T>(this IEnumerable<T> enumerable, Func<T, Task> operation, bool executeInParallel,
-        int? concurrency = null, TimeSpan interval = default, CancellationToken token = default)
-    {
-        return executeInParallel
-            ? enumerable.ExecuteInParallelAsync(operation, concurrency, interval, token)
-            : enumerable.ExecuteSequentiallyAsync(operation, interval, token);
-    }
-
-    public static Task<TResult[]> ExecuteAsync<T, TResult>(this IEnumerable<T> enumerable, Func<T, Task<TResult>> operation, bool executeInParallel,
-        int? concurrency = null, TimeSpan interval = default, CancellationToken token = default)
-    {
-        return executeInParallel
-            ? enumerable.ExecuteInParallelAsync(operation, concurrency, interval, token)
-            : enumerable.ExecuteSequentiallyAsync(operation, interval, token);
+        void Stop()
+        {
+            lock (gate)
+                stopRequested = true;
+        }
     }
 
     public static async Task<T> WhenAny<T>(this IEnumerable<Task<T>> tasks)
@@ -116,170 +227,109 @@ partial class EnumerableExtensions
         return await (await Task.WhenAny(tasks));
     }
 
-    private static Task<T> WhenAnySuccess<T>(this IEnumerable<Task<T>> tasks, Func<T, bool> predicate, Action<TaskCompletionSource<T>> onNoResult)
+    private static async Task<(bool HasResult, T Result)> TryGetFirstSuccessfulResultAsync<T>(
+        IEnumerable<Task<T>> tasks,
+        Func<T, bool> predicate)
     {
-        var tcs = new TaskCompletionSource<T>();
-        var taskList = tasks.AsIReadOnlyList();
-        var count = taskList.Count;
-        var completedCount = 0;
-
-        foreach (var task in taskList)
+        var remainingTasks = tasks.ToList();
+        while (remainingTasks.Count > 0)
         {
-            task.ContinueWith(t =>
-            {
-                if (t.Status == TaskStatus.RanToCompletion && predicate(t.Result))
-                {
-                    tcs.TrySetResult(t.Result);
-                }
+            var completedTask = await Task.WhenAny(remainingTasks).NoCapture();
+            remainingTasks.Remove(completedTask);
 
-                if (Interlocked.Increment(ref completedCount) >= count)
-                {
-                    onNoResult(tcs);
-                }
-            });
+            if (completedTask.Status == TaskStatus.RanToCompletion)
+            {
+                var result = completedTask.Result;
+                if (predicate(result))
+                    return (true, result);
+            }
+            else if (completedTask.IsFaulted)
+            {
+                _ = completedTask.Exception;
+            }
         }
 
-        return tcs.Task;
+        return (false, default!);
     }
 
-    public static Task<T> WhenAnySuccess<T>(this IEnumerable<Task<T>> tasks, Func<T, bool> predicate, Func<T> defaultResultFunc)
+    public static async Task<T> WhenAnySuccess<T>(this IEnumerable<Task<T>> tasks, Func<T, bool> predicate, Func<T> defaultResultFunc)
     {
-        return tasks.WhenAnySuccess(predicate, tcs => tcs.TrySetResult(defaultResultFunc()));
+        Check.NotNull(tasks);
+        Check.NotNull(predicate);
+        Check.NotNull(defaultResultFunc);
+
+        var result = await TryGetFirstSuccessfulResultAsync(tasks, predicate).NoCapture();
+        return result.HasResult ? result.Result : defaultResultFunc();
     }
 
-    public static Task<T> WhenAnySuccess<T>(this IEnumerable<Task<T>> tasks, Func<T, bool> predicate)
+    public static async Task<T> WhenAnySuccess<T>(this IEnumerable<Task<T>> tasks, Func<T, bool> predicate)
     {
-        return tasks.WhenAnySuccess(predicate, tcs => tcs.SetException(new InvalidOperationException("All tasks failed")));
+        Check.NotNull(tasks);
+        Check.NotNull(predicate);
+
+        var result = await TryGetFirstSuccessfulResultAsync(tasks, predicate).NoCapture();
+        return result.HasResult
+            ? result.Result
+            : throw new InvalidOperationException("No task produced an acceptable successful result.");
     }
 
-    public static Task WhenAnySuccess(this IEnumerable<Task> tasks)
+    public static async Task WhenAnySuccess(this IEnumerable<Task> tasks)
     {
-        var tcs = new TaskCompletionSource<int>();
-        var taskList = tasks.AsIReadOnlyList();
-        var count = taskList.Count;
-        var completedCount = 0;
+        Check.NotNull(tasks);
 
-        foreach (var task in taskList)
+        var remainingTasks = tasks.ToList();
+        while (remainingTasks.Count > 0)
         {
-            task.ContinueWith(t =>
-            {
-                if (t.Status == TaskStatus.RanToCompletion)
-                {
-                    tcs.TrySetResult(default);
-                }
+            var completedTask = await Task.WhenAny(remainingTasks).NoCapture();
+            remainingTasks.Remove(completedTask);
 
-                if (Interlocked.Increment(ref completedCount) >= count)
-                {
-                    tcs.SetException(new InvalidOperationException("All tasks failed"));
-                }
-            });
+            if (completedTask.Status == TaskStatus.RanToCompletion)
+                return;
+
+            if (completedTask.IsFaulted)
+                _ = completedTask.Exception;
         }
 
-        return tcs.Task;
+        throw new InvalidOperationException("No task completed successfully.");
     }
 
-    public static Task WhenAllOrError(this IEnumerable<Task> tasks)
-    {
-        var tcs = new TaskCompletionSource<int>();
-        var taskList = tasks.AsIReadOnlyList();
-        var completedCount = 0;
-
-        foreach (var task in taskList)
-        {
-            task.ContinueWith(t =>
-            {
-                if (t.IsCanceled)
-                {
-                    tcs.TrySetCanceled();
-                }
-                else if (t.IsFaulted)
-                {
-                    tcs.TrySetException(t.Exception!.InnerExceptions);
-                }
-                else
-                {
-                    if (Interlocked.Increment(ref completedCount) == taskList.Count)
-                    {
-                        tcs.TrySetResult(0);
-                    }
-                }
-            });
-        }
-
-        return tcs.Task;
-    }
-
-#if NET6_0_OR_GREATER
-    public static Task ParallelForEachAsync<T>(this IEnumerable<T> source, ParallelOptions options, Func<T, CancellationToken, ValueTask> body)
-    {
-        return Parallel.ForEachAsync(source, options, body);
-    }
-
-    public static Task ParallelForEachAsync<T>(this IEnumerable<T> source, Func<T, CancellationToken, ValueTask> body, int maxDegreeOfParallelism = System.Threading.Tasks.Dataflow.DataflowBlockOptions.Unbounded, CancellationToken token = default)
-    {
-        return source.ParallelForEachAsync(new()
-        {
-            CancellationToken = token,
-            MaxDegreeOfParallelism = maxDegreeOfParallelism,
-            TaskScheduler = null,
-        }, body);
-    }
     /// <summary>
-    /// Executes a foreach loop on an enumerable sequence, in which iterations may run
-    /// in parallel, and returns the results of all iterations in the original order.
+    /// Completes when every task succeeds, or propagates the first observed fault or cancellation without waiting for the
+    /// other tasks to finish.
     /// </summary>
-    public static Task<TResult[]> ForEachAsync<TSource, TResult>(IEnumerable<TSource> source, ParallelOptions parallelOptions, Func<TSource, CancellationToken, ValueTask<TResult>> body)
+    /// <remarks>
+    /// This method cannot cancel the remaining tasks. If it returns early, it continues to observe their faults so they do
+    /// not become unobserved task exceptions.
+    /// </remarks>
+    public static async Task WhenAllOrError(this IEnumerable<Task> tasks)
     {
-        Check.NotNull(source);
-        Check.NotNull(parallelOptions);
-        Check.NotNull(body);
+        Check.NotNull(tasks);
 
-        List<TResult> results = [];
-
-        if (source.TryGetNonEnumeratedCount(out var count))
-            results.Capacity = count;
-
-        IEnumerable<(TSource, int)> withIndexes = source.Select((x, i) => (x, i));
-
-        return Parallel.ForEachAsync(withIndexes, parallelOptions, async (entry, ct) =>
+        var remainingTasks = new List<Task>();
+        foreach (var task in tasks)
         {
-            var (item, index) = entry;
-            var result = await body(item, ct).NoCapture();
-            lock (results)
-            {
-#if NET8_0_OR_GREATER
-                if (index >= results.Count)
-                    CollectionsMarshal.SetCount(results, index + 1);
-                results[index] = result;
-#else
-                results.Add(result);
-#endif
+            if (task is null)
+                throw new ArgumentException("The sequence cannot contain a null task.", nameof(tasks));
 
-            }
-        }).ContinueWith(t =>
+            ObserveFault(task);
+            remainingTasks.Add(task);
+        }
+
+        while (remainingTasks.Count > 0)
         {
-            TaskCompletionSource<TResult[]> tcs = new();
-            switch (t.Status)
-            {
-                case TaskStatus.RanToCompletion:
-                    lock (results)
-                    {
-                        tcs.SetResult(results.ToArray());
-                    }
-                    break;
-                case TaskStatus.Faulted:
-                    tcs.SetException(t.Exception!.InnerExceptions);
-                    break;
-                case TaskStatus.Canceled:
-                    tcs.SetCanceled(new TaskCanceledException(t).CancellationToken);
-                    break;
-                default:
-                    throw new UnreachableException();
-            }
-            Debug.Assert(tcs.Task.IsCompleted);
-            return tcs.Task;
-        }, default, TaskContinuationOptions.DenyChildAttach |
-                        TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default).Unwrap();
+            var completedTask = await Task.WhenAny(remainingTasks).NoCapture();
+            remainingTasks.Remove(completedTask);
+            await completedTask.NoCapture();
+        }
+
+        static void ObserveFault(Task task)
+        {
+            _ = task.ContinueWith(
+                static faultedTask => _ = faultedTask.Exception,
+                CancellationToken.None,
+                TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnFaulted,
+                TaskScheduler.Default);
+        }
     }
-#endif
+
 }

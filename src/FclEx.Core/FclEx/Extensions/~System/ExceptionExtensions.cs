@@ -35,54 +35,67 @@ public static partial class ExceptionExtensions
     }
 
     /// <summary>
-    /// Executes an action on each exception in the exception tree, including all inner exceptions
-    /// and inner exceptions of AggregateExceptions.
+    /// Enumerates the leaf exceptions in an exception tree.
     /// </summary>
-    /// <param name="ex">The root exception to start from.</param>
-    /// <param name="action">The action to execute on each exception.</param>
-    public static void ForEach(this Exception? ex, Action<Exception>? action)
+    /// <param name="ex">The root exception.</param>
+    /// <returns>Each exception without child exceptions, at most once, in breadth-first order.</returns>
+    public static IEnumerable<Exception> EnumerateLeaves(this Exception ex)
     {
-        if (ex is null || action is null)
-            return;
-
+        var visited = new HashSet<Exception>(ReferenceEqualityComparer<Exception>.Instance) { ex };
         var q = new Queue<Exception>();
         q.Enqueue(ex);
-        var handled = new HashSet<Exception>();
+
         while (q.Count != 0)
         {
             var e = q.Dequeue();
-            if (e is AggregateException aEx)
-            {
-                foreach (var inner in aEx.InnerExceptions)
-                {
-                    EnqueueIfUnHandled(inner);
-                }
-            }
-            else if (e.InnerException is not null)
-            {
-                EnqueueIfUnHandled(e.InnerException);
-            }
-            else
-            {
-                try
-                {
-                    action(e);
-                }
-                finally
-                {
-                    handled.Add(e);
-                }
-            }
-        }
-        handled.Clear();
-        return;
 
-        void EnqueueIfUnHandled(Exception exception)
-        {
-            if (handled.Contains(exception))
-                return;
-            q.Enqueue(exception);
+            if (EnqueueChildren(e, q, visited) == false)
+                yield return e;
         }
+    }
+
+    /// <summary>
+    /// Enumerates an exception tree, including aggregate inner exceptions.
+    /// </summary>
+    /// <param name="ex">The root exception.</param>
+    /// <returns>Each exception in breadth-first order, at most once.</returns>
+    public static IEnumerable<Exception> Enumerate(this Exception ex)
+    {
+        var visited = new HashSet<Exception>(ReferenceEqualityComparer<Exception>.Instance) { ex };
+        var q = new Queue<Exception>();
+        q.Enqueue(ex);
+
+        while (q.Count != 0)
+        {
+            var e = q.Dequeue();
+
+            yield return e;
+            EnqueueChildren(e, q, visited);
+        }
+    }
+
+    private static bool EnqueueChildren(Exception exception, Queue<Exception> queue, HashSet<Exception> visited)
+    {
+        if (exception is AggregateException { InnerExceptions.Count: > 0 } aggregateException)
+        {
+            foreach (var aggregateInnerException in aggregateException.InnerExceptions)
+            {
+                if (visited.Add(aggregateInnerException))
+                    queue.Enqueue(aggregateInnerException);
+            }
+
+            return true;
+        }
+
+        if (exception.InnerException is { } innerException)
+        {
+            if (visited.Add(innerException))
+                queue.Enqueue(innerException);
+
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -169,6 +182,11 @@ public static partial class ExceptionExtensions
     /// <param name="ex">The exception to modify.</param>
     /// <param name="message">The new message to set.</param>
     /// <returns>The exception with its message modified.</returns>
+    /// <remarks>
+    /// This method writes a non-public runtime field on <see cref="Exception"/> through reflection. Field names and
+    /// layout are runtime implementation details, so this API is not supported for trimmed, Native AOT, or future
+    /// runtimes that do not expose the expected field.
+    /// </remarks>
     public static Exception SetMessage(this Exception ex, string? message)
     {
         FieldInfos.Exception_Message.SetValue(ex, message);
@@ -181,6 +199,7 @@ public static partial class ExceptionExtensions
     /// <param name="ex">The exception to modify.</param>
     /// <param name="func">A function that takes the exception and returns a new message string.</param>
     /// <returns>The exception with its message modified.</returns>
+    /// <remarks>Uses <see cref="SetMessage(Exception, string?)"/> and has the same reflection dependency.</remarks>
     public static Exception SetMessage(this Exception ex, Func<Exception, string> func)
     {
         return ex.SetMessage(func(ex));
@@ -191,6 +210,7 @@ public static partial class ExceptionExtensions
     /// </summary>
     /// <param name="ex">The exception to examine.</param>
     /// <returns>The message of the exception.</returns>
+    /// <remarks>Reads a non-public runtime field on <see cref="Exception"/> through reflection; see <see cref="SetMessage(Exception, string?)"/> for compatibility limitations.</remarks>
     public static string? GetMessage(this Exception ex)
     {
         return FieldInfos.Exception_Message.GetValue<string>(ex);
@@ -202,6 +222,11 @@ public static partial class ExceptionExtensions
     /// <param name="ex">The exception to modify.</param>
     /// <param name="trace">The new stack trace to set. If null, a new stack trace starting from the caller will be generated.</param>
     /// <returns>The exception with its stack trace modified.</returns>
+    /// <remarks>
+    /// This method writes a non-public runtime field on <see cref="Exception"/> through reflection. Field names and
+    /// layout are runtime implementation details, so this API is not supported for trimmed, Native AOT, or future
+    /// runtimes that do not expose the expected field.
+    /// </remarks>
     public static Exception SetStackTrace(this Exception ex, string? trace = null)
     {
         trace ??= new StackTrace(1, true).ToString();
@@ -214,6 +239,7 @@ public static partial class ExceptionExtensions
     /// </summary>
     /// <param name="ex">The exception to examine.</param>
     /// <returns>The stack trace of the exception.</returns>
+    /// <remarks>Reads a non-public runtime field on <see cref="Exception"/> through reflection; see <see cref="SetStackTrace(Exception, string?)"/> for compatibility limitations.</remarks>
     public static string? GetStackTrace(this Exception ex)
     {
         return FieldInfos.Exception_StackTrace.GetValue<string>(ex);

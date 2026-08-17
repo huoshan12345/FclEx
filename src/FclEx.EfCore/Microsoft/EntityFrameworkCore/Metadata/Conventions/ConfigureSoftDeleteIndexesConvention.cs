@@ -13,8 +13,16 @@ namespace Microsoft.EntityFrameworkCore.Metadata.Conventions;
 /// </summary>
 public class ConfigureSoftDeleteIndexesConvention : IModelFinalizingConvention
 {
+    /// <summary>
+    /// Gets a reusable stateless convention instance.
+    /// </summary>
     public static readonly ConfigureSoftDeleteIndexesConvention Instance = new();
 
+    /// <summary>
+    /// Extends soft-deletable entity types' unique indexes immediately before the model is finalized.
+    /// </summary>
+    /// <param name="modelBuilder">The convention model builder.</param>
+    /// <param name="context">The convention context.</param>
     public void ProcessModelFinalizing(IConventionModelBuilder modelBuilder, IConventionContext<IConventionModelBuilder> context)
     {
         foreach (var type in modelBuilder.Metadata.GetEntityTypes())

@@ -31,7 +31,7 @@ public static class TaskHelper
         Check.NotNull(action);
         Check.NotLessThan(times, 0);
 
-        var tasks = Enumerable.Repeat(Task.Run(action), times);
+        var tasks = Enumerable.Range(0, times).Select(_ => Task.Run(action));
         return Task.WhenAll(tasks);
     }
 
@@ -40,10 +40,24 @@ public static class TaskHelper
         Check.NotNull(action);
         Check.NotLessThan(times, 0);
 
-        var tasks = Enumerable.Repeat(Task.Run(action), times);
+        var tasks = Enumerable.Range(0, times).Select(_ => Task.Run(action));
         return Task.WhenAll(tasks);
     }
 
+    /// <summary>
+    /// Invokes an asynchronous function the specified number of times and awaits all returned tasks.
+    /// </summary>
+    /// <typeparam name="TResult">The result type of each invocation.</typeparam>
+    /// <param name="action">The asynchronous function to invoke.</param>
+    /// <param name="times">The number of invocations. The value cannot be negative.</param>
+    /// <returns>A task that completes with the results after every returned task completes.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="times"/> is negative.</exception>
+    /// <remarks>
+    /// All invocations are started before the returned task is awaited. <paramref name="action"/> is invoked while
+    /// this method constructs that task set, so an exception thrown before it returns a <see cref="Task{TResult}"/>
+    /// is thrown synchronously rather than stored in the returned task.
+    /// </remarks>
     public static Task<TResult[]> Repeat<TResult>(Func<Task<TResult>> action, int times)
     {
         Check.NotNull(action);
@@ -53,6 +67,19 @@ public static class TaskHelper
         return Task.WhenAll(tasks);
     }
 
+    /// <summary>
+    /// Invokes an asynchronous action the specified number of times and awaits all returned tasks.
+    /// </summary>
+    /// <param name="action">The asynchronous action to invoke.</param>
+    /// <param name="times">The number of invocations. The value cannot be negative.</param>
+    /// <returns>A task that completes after every returned task completes.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="times"/> is negative.</exception>
+    /// <remarks>
+    /// All invocations are started before the returned task is awaited. <paramref name="action"/> is invoked while
+    /// this method constructs that task set, so an exception thrown before it returns a <see cref="Task"/> is thrown
+    /// synchronously rather than stored in the returned task.
+    /// </remarks>
     public static Task Repeat(Func<Task> action, int times)
     {
         Check.NotNull(action);
@@ -62,101 +89,162 @@ public static class TaskHelper
         return Task.WhenAll(tasks);
     }
 
-    public static Task Delay(int seconds, CancellationToken token = default)
-    {
-        return Delay(TimeSpan.FromSeconds(seconds), token);
-    }
-
-    public static Task DelayMilli(int milliSeconds, CancellationToken token = default)
-    {
-        return Delay(TimeSpan.FromMilliseconds(milliSeconds), token);
-    }
-
-    public static async Task Delay(TimeSpan span, CancellationToken token = default)
-    {
-        if (span.Ticks <= 0)
-            return;
-        try
-        {
-            await Task.Delay(span, token);
-        }
-        catch (TaskCanceledException) { }
-    }
-
-#if !NET5_0_OR_GREATER
+#if !NET6_0_OR_GREATER
     public static async Task<T> WaitAsync<T>(this Task<T> task, CancellationToken cancellationToken)
     {
-        cancellationToken.ThrowIfCancellationRequested();
+        task = Check.NotNull(task);
 
-        var tcs = new TaskCompletionSource<T>();
+        if (task.IsCompleted || cancellationToken == default)
+            return await task.NoCapture();
 
-        using (cancellationToken.Register(static state => ((TaskCompletionSource<T>)state!).TrySetResult(default!), tcs))
+        var tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        using (cancellationToken.Register((m, t) => m.TrySetCanceled(t), tcs))
         {
-            if (task != await Task.WhenAny(task, tcs.Task).ConfigureAwait(false))
-                cancellationToken.ThrowIfCancellationRequested();
+            var winner = await Task.WhenAny(task, tcs.Task).NoCapture();
+
+            if (winner != task)
+                return await winner.NoCapture();
         }
 
-        return await task.ConfigureAwait(false);
+        return await task.NoCapture();
     }
 
     public static async Task WaitAsync(this Task task, CancellationToken cancellationToken)
     {
-        cancellationToken.ThrowIfCancellationRequested();
-        
-        var tcs = new TaskCompletionSource<object?>();
+        task = Check.NotNull(task);
 
-        using (cancellationToken.Register(static state => ((TaskCompletionSource<object?>)state!).TrySetResult(null), tcs))
+        if (task.IsCompleted || cancellationToken == default)
         {
-            if (task != await Task.WhenAny(task, tcs.Task).ConfigureAwait(false))
-                cancellationToken.ThrowIfCancellationRequested();
+            await task.NoCapture();
+            return;
         }
 
-        await task;
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        using (cancellationToken.Register((m, t) => m.TrySetCanceled(t), tcs))
+        {
+            var winner = await Task.WhenAny(task, tcs.Task).NoCapture();
+
+            if (winner != task)
+            {
+                await winner.NoCapture();
+                return;
+            }
+        }
+
+        await task.NoCapture();
     }
 
     public static async Task<TResult> WaitAsync<TResult>(this Task<TResult> task, TimeSpan timeout)
     {
-        using var cts = new CancellationTokenSource(timeout);
-        return await task.WaitAsync(cts.Token);
+        if (timeout <= TimeSpan.Zero)
+        {
+            return await task.NoCapture();
+        }
+
+        using var timeoutSource = new CancellationTokenSource(timeout);
+        try
+        {
+            return await task.WaitAsync(timeoutSource.Token).NoCapture();
+        }
+        catch (OperationCanceledException ex) when (ex.CancellationToken == timeoutSource.Token)
+        {
+            throw new TimeoutException("The operation did not complete within the specified timeout.", ex);
+        }
     }
 
     public static async Task WaitAsync(this Task task, TimeSpan timeout)
     {
-        using var cts = new CancellationTokenSource(timeout);
-        await task.WaitAsync(cts.Token);
+        if (timeout <= TimeSpan.Zero)
+        {
+            await task.NoCapture();
+            return;
+        }
+
+        using var timeoutSource = new CancellationTokenSource(timeout);
+        try
+        {
+            await task.WaitAsync(timeoutSource.Token).NoCapture();
+        }
+        catch (OperationCanceledException ex) when (ex.CancellationToken == timeoutSource.Token)
+        {
+            throw new TimeoutException("The operation did not complete within the specified timeout.", ex);
+        }
     }
 #endif
 
-    public static Task<TResult> Run<TResult>(Func<Task<TResult>> task, TimeSpan? timeout = null)
+    public static async Task<TResult> RunAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, TimeSpan? timeout, CancellationToken cancellationToken)
     {
-        return timeout is { } time
-            ? Task.Run(task).WaitAsync(time)
-            : task();
+        if (timeout is not { } timeoutValue || timeoutValue <= TimeSpan.Zero)
+        {
+            return await RunAsync(operation, cancellationToken).NoCapture();
+        }
+
+        using var timeoutSource = new CancellationTokenSource(timeoutValue);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutSource.Token);
+        try
+        {
+            return await RunAsync(operation, cts.Token).NoCapture();
+        }
+        catch (OperationCanceledException ex) when (timeoutSource.IsCancellationRequested
+                                                    && !cancellationToken.IsCancellationRequested)
+        {
+            throw new TimeoutException("The operation did not complete within the specified timeout.", ex);
+        }
     }
 
-    public static Task<TResult> Run<TResult>(Func<ValueTask<TResult>> task, TimeSpan? timeout = null)
+    public static Task<TResult> RunAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, TimeSpan? timeout)
     {
-        return Run((Func<Task<TResult>>)(async () => await task().NoCapture()), timeout);
+        return RunAsync(operation, timeout, CancellationToken.None);
     }
 
-    public static Task Run(Func<Task> task, TimeSpan? timeout = null)
+    public static Task<TResult> RunAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken = default)
     {
-        return timeout is { } time
-            ? Task.Run(task).WaitAsync(time)
-            : task();
+        return cancellationToken == default
+            ? operation(cancellationToken)
+            : Task.Run(() => operation(cancellationToken), cancellationToken).WaitAsync(cancellationToken);
     }
 
-    public static Task Run(Func<ValueTask> task, TimeSpan? timeout = null)
+    public static async Task RunAsync(Func<CancellationToken, Task> operation, TimeSpan? timeout, CancellationToken cancellationToken)
     {
-        return Run((Func<Task>)(async () => await task().NoCapture()), timeout);
+        if (timeout is not { } timeoutValue || timeoutValue <= TimeSpan.Zero)
+        {
+            await RunAsync(operation, cancellationToken).NoCapture();
+            return;
+        }
+
+        using var timeoutSource = new CancellationTokenSource(timeoutValue);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutSource.Token);
+        try
+        {
+            await RunAsync(operation, cts.Token).NoCapture();
+        }
+        catch (OperationCanceledException ex) when (timeoutSource.IsCancellationRequested
+                                                    && !cancellationToken.IsCancellationRequested)
+        {
+            throw new TimeoutException("The operation did not complete within the specified timeout.", ex);
+        }
+    }
+
+    public static Task RunAsync(Func<CancellationToken, Task> operation, TimeSpan? timeout)
+    {
+        return RunAsync(operation, timeout, CancellationToken.None);
+    }
+
+    public static Task RunAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken = default)
+    {
+        return cancellationToken == default
+            ? operation(cancellationToken)
+            : Task.Run(() => operation(cancellationToken), cancellationToken).WaitAsync(cancellationToken);
     }
 
     private static readonly Type TypeOfVoidTaskResult = Type.GetType("System.Threading.Tasks.VoidTaskResult", true)!;
     private static readonly Type TypeOfTaskOfVoidTaskResult = typeof(Task<>).MakeGenericType(TypeOfVoidTaskResult);
 
-    private static readonly ConcurrentDictionary<Type, TaskType> _taskTypes = new();
-    private static readonly ConcurrentDictionary<Type, Func<object, object>> _resultFuncCache = new();
-    private static readonly ConcurrentDictionary<Type, Func<object, Task>> _asTaskFuncCache = new();
+    private static readonly ConditionalWeakTable<Type, ValueBox<TaskType>> _taskTypes = new();
+    private static readonly ConditionalWeakTable<Type, Func<object, object>> _resultFuncCache = new();
+    private static readonly ConditionalWeakTable<Type, Func<object, Task>> _asTaskFuncCache = new();
 
     private static TaskType GetTaskType(Type type)
     {
@@ -184,15 +272,19 @@ public static class TaskHelper
             return null;
 
         var type = value.GetType();
-        var taskType = _taskTypes.GetOrAdd(type, GetTaskType);
+        var taskType = _taskTypes.GetValue(type, m => GetTaskType(m)).Value;
 
         // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
         switch (taskType)
         {
             case TaskType.VoidTask:
+            {
+                await (Task)value;
+                return null;
+            }
             case TaskType.VoidValueTask:
             {
-                await (dynamic)value;
+                await (ValueTask)value;
                 return null;
             }
             case TaskType.TaskWithResult:
@@ -204,8 +296,10 @@ public static class TaskHelper
             {
                 // NOTE: we can not use "result = (object)(await (dynamic)value)" here,
                 // because when T of ValueTask<T> is non-public, we will get a RuntimeBinderException that says "'System.ValueType' does not contain a definition for 'GetAwaiter'".
-                await ValueTaskWithResultToTask(value, type);
-                return GetTaskResult(value, type);
+                var task = ValueTaskWithResultToTask(value, type);
+                await task.NoCapture();
+                var resultTaskType = typeof(Task<>).MakeGenericType(type.GetGenericArguments()[0]);
+                return GetTaskResult(task, resultTaskType);
             }
             default:
             {
@@ -221,7 +315,7 @@ public static class TaskHelper
         // 'System.ValueType' does not contain a definition for 'GetAwaiter'.
         // So we have to convert ValueTask<T> to Task and then await it.
         // Please fix this logic if there is a better solution.
-        var func = _asTaskFuncCache.GetOrAdd(type, k =>
+        var func = _asTaskFuncCache.GetValue(type, k =>
         {
             var parameter = Expression.Parameter(typeof(object), "type");
             var convertedParameter = Expression.Convert(parameter, k);
@@ -245,7 +339,7 @@ public static class TaskHelper
         return exp.Compile();
     }
 
-    // value should be Task<T> or ValueTask<T>
+    // value should be Task<T>.
     private static object GetTaskResult(object value, Type type)
     {
         // There are several ways to get the value of "Result" of Task<T> or ValueTask<T> after it is awaited.
@@ -262,7 +356,7 @@ public static class TaskHelper
         */
         // So we use "ExpressionWithCache" here.
         // Please fix this logic if there is a better solution.
-        var func = _resultFuncCache.GetOrAdd(type, k => CreateFuncToGetTaskResult(k));
+        var func = _resultFuncCache.GetValue(type, k => CreateFuncToGetTaskResult(k));
         return func(value);
     }
 }

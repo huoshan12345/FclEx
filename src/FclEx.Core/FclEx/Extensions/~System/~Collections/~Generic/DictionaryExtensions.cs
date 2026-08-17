@@ -5,39 +5,21 @@ public static partial class DictionaryExtensions
     [return: NotNullIfNotNull(nameof(defaultValue))]
     public static TValue? Get<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey key, TValue? defaultValue = default)
     {
-        return dic.Get(key, k => defaultValue);
-    }
-
-    public static TValue? Get<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey key, Func<TKey, TValue?> fac)
-    {
-        return dic.TryGetValue(key, out var value) && value is not null ? value : fac(key);
+        return dic.TryGetValue(key, out var value) ? value : defaultValue;
     }
 
     [return: NotNullIfNotNull(nameof(defaultValue))]
-    public static TProp? Get<TKey, TValue, TProp>(this IDictionary<TKey, TValue> dic, TKey key, Func<TValue, TProp> selector, TProp? defaultValue = default)
-        where TProp : struct
+    public static TMember? Get<TKey, TValue, TMember>(this IDictionary<TKey, TValue> dic, TKey key, Func<TValue, TMember> selector, TMember? defaultValue = default)
+        where TMember : class
     {
-        return dic.TryGetValue(key, out var value) && value is not null ? selector(value) : defaultValue;
+        return dic.TryGetValue(key, out var value) ? selector(value) : defaultValue;
     }
 
     [return: NotNullIfNotNull(nameof(defaultValue))]
-    public static TProp? Get<TKey, TValue, TProp>(this IDictionary<TKey, TValue> dic, TKey key, Func<TValue, TProp?> selector, TProp? defaultValue = default)
-        where TProp : class
+    public static TMember? Get<TKey, TValue, TMember>(this IDictionary<TKey, TValue> dic, TKey key, Func<TValue, TMember> selector, TMember? defaultValue = default)
+        where TMember : struct
     {
-        return dic.TryGetValue(key, out var value) && value is not null ? selector(value) : defaultValue;
-    }
-
-    public static void Add<TCol, TKey, TValue>(this IDictionary<TKey, TCol> dic, TKey key, TValue? value) where TCol : ICollection<TValue?>, new()
-    {
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-        if (dic.TryGetValue(key, out var col) && col is not null)
-        {
-            col.Add(value);
-        }
-        else
-        {
-            dic[key] = [value];
-        }
+        return dic.TryGetValue(key, out var value) ? selector(value) : defaultValue;
     }
 
     public static void AddRange<TKey, TValue>(this IDictionary<TKey, TValue> dic, IEnumerable<KeyValuePair<TKey, TValue>> pairs)
@@ -60,10 +42,19 @@ public static partial class DictionaryExtensions
         }
     }
 
+    /// <summary>
+    /// Adds <paramref name="value"/> to the collection associated with <paramref name="key"/>, creating that collection when needed.
+    /// </summary>
+    /// <typeparam name="TKey">The dictionary key type.</typeparam>
+    /// <typeparam name="TValue">The collection element type.</typeparam>
+    /// <typeparam name="TCol">The collection type.</typeparam>
+    /// <param name="dic">The dictionary of collections.</param>
+    /// <param name="key">The key whose collection receives the value.</param>
+    /// <param name="value">The value to add.</param>
     public static void Add<TKey, TValue, TCol>(this IDictionary<TKey, TCol> dic, TKey key, TValue value)
         where TCol : ICollection<TValue>, new()
     {
-        if (!dic.TryGetValue(key, out var col))
+        if (dic.TryGetValue(key, out var col) == false)
         {
             col = [];
             dic[key] = col;
@@ -93,7 +84,17 @@ public static partial class DictionaryExtensions
         return value;
     }
 
-    public static IReadOnlyDictionary<TKey, TValue> AsReadOnlyDictionary<TKey, TValue>(this IDictionary<TKey, TValue>? dic) where TKey : notnull
+    public static IReadOnlyDictionary<TKey, TValue> AsReadOnly<TKey, TValue>(this IDictionary<TKey, TValue>? dic) where TKey : notnull
+    {
+        return dic switch
+        {
+            null => throw new ArgumentNullException(nameof(dic)),
+            ReadOnlyDictionary<TKey, TValue> col => col,
+            _ => new ReadOnlyDictionary<TKey, TValue>(dic)
+        };
+    }
+
+    public static IReadOnlyDictionary<TKey, TValue> AsReadOnlyView<TKey, TValue>(this IDictionary<TKey, TValue>? dic) where TKey : notnull
     {
         return dic switch
         {
@@ -115,7 +116,7 @@ public static partial class DictionaryExtensions
         }
         return false;
     }
-    
+
     public static bool TryAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
     {
         Check.NotNull(dictionary);

@@ -2,27 +2,80 @@ namespace FclEx.Extensions;
 
 public static partial class ObjectExtensions
 {
+    private static readonly ConditionalWeakTable<Type, ConditionalWeakTable<Type, Box<MethodInfo>>> _converterCache = new();
+
+    private static MethodInfo? GetConversionOperator(Type fromType, Type toType)
+    {
+        var innerTable = _converterCache.GetOrCreateValue(fromType);
+
+        if (innerTable.TryGetValue(toType, out var holder))
+            return holder.Value;
+
+        var method = toType.FindConversionOperator(fromType, toType)
+                     ?? fromType.FindConversionOperator(fromType, toType);
+
+        innerTable.GetValue(toType, m => new Box<MethodInfo>(method));
+
+        return method;
+    }
+
+
+    /// <summary>
+    /// Returns <paramref name="obj"/> when it is already <typeparamref name="T"/>, or converts it to that type.
+    /// </summary>
+    /// <typeparam name="T">The target type.</typeparam>
+    /// <param name="obj">The source value.</param>
+    /// <returns>The converted value, or the default value of <typeparamref name="T"/> when <paramref name="obj"/> is <see langword="null"/>.</returns>
+    /// <remarks>
+    /// After checking whether the value is already <typeparamref name="T"/>, this method searches the runtime source
+    /// type and the target type for a public static <c>op_Implicit</c> or <c>op_Explicit</c> conversion operator.
+    /// The target type is searched first. When no matching operator exists, non-enum conversions use
+    /// <see cref="Convert.ChangeType(object, Type)"/> and enum conversions use <see cref="Enum.ToObject(Type, object)"/>.
+    /// Conversion operators are discovered and invoked through reflection; applications that use trimming or Native AOT
+    /// must preserve the applicable public operators. Exceptions thrown by an invoked operator are wrapped in
+    /// <see cref="TargetInvocationException"/>.
+    /// </remarks>
     [MethodImpl(AggressiveInlining)]
     [return: NotNullIfNotNull(nameof(obj))]
     public static T? CastTo<T>(this object? obj)
     {
-        return obj is null ? default : (T)(dynamic)obj;
+        return obj switch
+        {
+            null => default,
+            T t => t,
+            _ => ChangeType(obj),
+        };
+
+        static T ChangeType(object obj)
+        {
+            var type = typeof(T);
+            var targetType = Nullable.GetUnderlyingType(type) ?? type;
+            var sourceType = obj.GetType();
+
+            var conversionOperator = GetConversionOperator(sourceType, targetType);
+
+            if (conversionOperator is not null)
+                return conversionOperator.Invoke<T>(null, [obj])!;
+
+            return targetType.IsEnum
+                ? (T)Enum.ToObject(targetType, obj)
+                : (T)Convert.ChangeType(obj, targetType);
+        }
     }
 
-    /// <summary>
-    /// Returns <paramref name="value" /> clamped to the inclusive range of <paramref name="min" /> and <paramref name="max" />.
-    /// </summary>
+    /// <summary>Returns <paramref name="value" /> clamped to the inclusive range of <paramref name="min" /> and <paramref name="max" />.</summary>
+    /// <exception cref="ArgumentException"><paramref name="min"/> is greater than <paramref name="max"/>.</exception>
     public static T Clamp<T>(this T value, T min, T max) where T : IComparable<T>
     {
+        Check.NotGreaterThan(min, max);
+
         var cmpMin = value.CompareTo(min);
         if (cmpMin <= 0) // value <= min
             return min;
 
         var cmpMax = value.CompareTo(max);
-        if (cmpMax >= 0) // value >= max
-            return max;
-
-        return value;
+        return cmpMax >= 0 ? // value >= max
+            max : value;
     }
 
     [MethodImpl(AggressiveInlining)]

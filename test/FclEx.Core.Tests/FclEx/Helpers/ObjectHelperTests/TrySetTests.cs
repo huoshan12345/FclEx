@@ -12,6 +12,13 @@ public class TrySetTests
         public int InitOnlyProp { get; init; }
     }
 
+    private class BaseClass
+    {
+        public int Value { get; set; }
+    }
+
+    private sealed class DerivedClass : BaseClass;
+
     private struct TestStruct
     {
         public int Value;
@@ -140,6 +147,19 @@ public class TrySetTests
         Assert.False(r3);
 
         Assert.Equal(3, obj.IntProp);
+    }
+
+    [Fact]
+    public void Cache_Should_Distinguish_Selector_Target_Types()
+    {
+        var derived = new DerivedClass { Value = 1 };
+        BaseClass asBase = derived;
+
+        Assert.True(ObjectHelper.TrySet(derived, x => x.Value, 2));
+        Assert.True(ObjectHelper.TrySet(asBase, x => x.Value, 3));
+        Assert.True(ObjectHelper.TrySet(derived, x => x.Value, 4));
+
+        Assert.Equal(4, derived.Value);
     }
 
     [Fact]

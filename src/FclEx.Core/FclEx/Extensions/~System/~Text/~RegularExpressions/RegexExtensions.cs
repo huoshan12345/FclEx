@@ -45,10 +45,16 @@ public static class RegexExtensions
         return false;
     }
 
+    /// <summary>Attempts to get the value of a captured group from the first match.</summary>
+    /// <param name="regex">The regular expression to evaluate.</param>
+    /// <param name="input">The input to match. A <see langword="null"/> value is treated as an empty string.</param>
+    /// <param name="groupIndex">The zero-based group index.</param>
+    /// <param name="value">The group value when the method returns <see langword="true"/>; otherwise <see langword="null"/>.</param>
+    /// <returns><see langword="true"/> when the input matches and <paramref name="groupIndex"/> identifies an existing group; otherwise, <see langword="false"/>.</returns>
     public static bool TryMatch(this Regex regex, string? input, int groupIndex, [NotNullWhen(true)] out string? value)
     {
         var match = regex.Match(input ?? string.Empty);
-        if (match.Success)
+        if (match.Success && (uint)groupIndex < (uint)match.Groups.Count)
         {
             value = match.Groups[groupIndex].Value;
             return true;

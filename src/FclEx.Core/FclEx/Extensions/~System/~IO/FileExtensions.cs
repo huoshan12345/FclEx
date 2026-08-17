@@ -25,7 +25,7 @@ public static class FileExtensions
         }
 
         public static Task WriteAllTextAsync(string path, string content, CancellationToken token = default)
-            => File.WriteAllTextAsync(path, content, Encoding.UTF8, token);
+            => File.WriteAllTextAsync(path, content, Encoding.Utf8WithoutBom, token);
 
         public static async Task<string> ReadAllTextAsync(string path, Encoding encoding, CancellationToken token = default)
         {

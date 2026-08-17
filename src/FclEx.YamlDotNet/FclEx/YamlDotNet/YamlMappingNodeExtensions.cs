@@ -11,7 +11,7 @@ public static class YamlMappingNodeExtensions
     /// <typeparam name="TValue">The expected child value type.</typeparam>
     /// <param name="node">The mapping node to read from.</param>
     /// <param name="key">The YAML key node to look up.</param>
-    /// <returns>The child value, or <c>null</c> when the key is missing or the value has a different type.</returns>
+    /// <returns>The child value, or <see langword="null"/> when the key is missing or the value has a different type.</returns>
     public static TValue? GetChild<TValue>(this YamlMappingNode node, YamlNode key) where TValue : YamlNode
     {
         return node.Children.TryGetValue(key, out var value)
@@ -25,7 +25,7 @@ public static class YamlMappingNodeExtensions
     /// <typeparam name="TValue">The expected child value type.</typeparam>
     /// <param name="node">The mapping node to read from.</param>
     /// <param name="key">The scalar key value to look up.</param>
-    /// <returns>The child value, or <c>null</c> when the key is missing or the value has a different type.</returns>
+    /// <returns>The child value, or <see langword="null"/> when the key is missing or the value has a different type.</returns>
     public static TValue? GetChild<TValue>(this YamlMappingNode node, string key) where TValue : YamlNode
     {
         return node.GetChild<TValue>(new YamlScalarNode(key));
@@ -71,7 +71,7 @@ public static class YamlMappingNodeExtensions
     /// <param name="node">The mapping node to update.</param>
     /// <param name="key">The scalar key value to add.</param>
     /// <param name="value">The scalar child value to add.</param>
-    /// <param name="index">The optional zero-based insertion index. When <c>null</c>, the child is appended.</param>
+    /// <param name="index">The optional zero-based insertion index. When <see langword="null"/>, the child is appended.</param>
     /// <returns>The same mapping node instance.</returns>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="index"/> is outside the valid insertion range.</exception>
     public static YamlMappingNode AddScalarChild(this YamlMappingNode node, string key, string value, int? index = null)
@@ -194,7 +194,7 @@ public static class YamlMappingNodeExtensions
     /// <param name="valueStyle">The optional scalar style. When omitted for an existing scalar, its current style is preserved.</param>
     /// <param name="conflictBehavior">Controls how an existing non-scalar child with the same key is handled.</param>
     /// <returns>
-    /// The scalar child and whether the mapping changed. The child is <c>null</c> when a non-scalar conflict is ignored; <c>Changed</c> only reports whether the mapping was modified.
+    /// The scalar child and whether the mapping changed. The child is <see langword="null"/> when a non-scalar conflict is ignored; <c>Changed</c> only reports whether the mapping was modified.
     /// </returns>
     /// <exception cref="InvalidOperationException">Thrown when a non-scalar child exists and <paramref name="conflictBehavior"/> is <see cref="YamlScalarChildConflictBehavior.Throw"/>.</exception>
     public static (YamlScalarNode? Child, bool Changed) TrySetScalarChild(this YamlMappingNode node, string key, string value, ScalarStyle? valueStyle = null,
@@ -337,7 +337,7 @@ public static class YamlMappingNodeExtensions
     /// <param name="node">The mapping node to update.</param>
     /// <param name="match">The predicate applied to scalar keys and values assignable to <typeparamref name="TValue"/>.</param>
     /// <param name="removedNodes">The removed value nodes in their original order.</param>
-    /// <returns><c>true</c> when at least one child is removed; otherwise, <c>false</c>.</returns>
+    /// <returns><see langword="true"/> when at least one child is removed; otherwise, <see langword="false"/>.</returns>
     public static bool TryRemoveChildren<TValue>(this YamlMappingNode node, Func<YamlScalarNode, TValue, bool> match, out List<TValue> removedNodes)
     where TValue : YamlNode
     {
@@ -370,7 +370,7 @@ public static class YamlMappingNodeExtensions
     /// <param name="node">The mapping node to update.</param>
     /// <param name="key">The scalar key value to remove.</param>
     /// <param name="removedNodes">The removed value nodes in their original order.</param>
-    /// <returns><c>true</c> when at least one child is removed; otherwise, <c>false</c>.</returns>
+    /// <returns><see langword="true"/> when at least one child is removed; otherwise, <see langword="false"/>.</returns>
     public static bool TryRemoveChildren<TValue>(this YamlMappingNode node, string key, out List<TValue> removedNodes) where TValue : YamlNode
     {
         return node.TryRemoveChildren((k, v) => k.Value == key, out removedNodes);
@@ -381,7 +381,7 @@ public static class YamlMappingNodeExtensions
     /// </summary>
     /// <param name="node">The mapping node to update.</param>
     /// <param name="key">The scalar key value to remove.</param>
-    /// <returns><c>true</c> when at least one child is removed; otherwise, <c>false</c>.</returns>
+    /// <returns><see langword="true"/> when at least one child is removed; otherwise, <see langword="false"/>.</returns>
     public static bool TryRemoveChildren(this YamlMappingNode node, string key)
     {
         return node.TryRemoveChildren<YamlNode>(key, out _);
@@ -572,7 +572,7 @@ public static class YamlMappingNodeExtensions
     /// <typeparam name="TValue">The value node type to match.</typeparam>
     /// <param name="node">The mapping node to search.</param>
     /// <param name="match">The predicate applied to keys and values assignable to <typeparamref name="TValue"/>.</param>
-    /// <returns><c>true</c> when a matching child exists; otherwise, <c>false</c>.</returns>
+    /// <returns><see langword="true"/> when a matching child exists; otherwise, <see langword="false"/>.</returns>
     public static bool HasChild<TKey, TValue>(this YamlMappingNode node, Func<TKey, TValue, bool> match)
         where TKey : YamlNode
         where TValue : YamlNode
@@ -586,7 +586,7 @@ public static class YamlMappingNodeExtensions
     /// <typeparam name="TValue">The value node type to match.</typeparam>
     /// <param name="node">The mapping node to search.</param>
     /// <param name="match">The predicate applied to keys and values assignable to <typeparamref name="TValue"/>.</param>
-    /// <returns><c>true</c> when a matching child exists; otherwise, <c>false</c>.</returns>
+    /// <returns><see langword="true"/> when a matching child exists; otherwise, <see langword="false"/>.</returns>
     public static bool HasChild<TValue>(this YamlMappingNode node, Func<YamlScalarNode, TValue, bool> match)
         where TValue : YamlNode
     {
@@ -599,7 +599,7 @@ public static class YamlMappingNodeExtensions
     /// <typeparam name="TValue">The value node type to match.</typeparam>
     /// <param name="node">The mapping node to search.</param>
     /// <param name="key">The YAML key node to match by YAML node equality.</param>
-    /// <returns><c>true</c> when a matching child exists; otherwise, <c>false</c>.</returns>
+    /// <returns><see langword="true"/> when a matching child exists; otherwise, <see langword="false"/>.</returns>
     public static bool HasChild<TValue>(this YamlMappingNode node, YamlNode key) where TValue : YamlNode
     {
         return node.HasChild<YamlNode, TValue>((k, v) => Equals(k, key));
@@ -611,7 +611,7 @@ public static class YamlMappingNodeExtensions
     /// <typeparam name="TValue">The value node type to match.</typeparam>
     /// <param name="node">The mapping node to search.</param>
     /// <param name="key">The scalar key value to match.</param>
-    /// <returns><c>true</c> when a matching child exists; otherwise, <c>false</c>.</returns>
+    /// <returns><see langword="true"/> when a matching child exists; otherwise, <see langword="false"/>.</returns>
     public static bool HasChild<TValue>(this YamlMappingNode node, string key) where TValue : YamlNode
     {
         return node.HasChild<TValue>(new YamlScalarNode(key));
@@ -623,7 +623,7 @@ public static class YamlMappingNodeExtensions
     /// <param name="node">The mapping node to search.</param>
     /// <param name="key">The scalar key value to match.</param>
     /// <param name="value">The scalar child value to match.</param>
-    /// <returns><c>true</c> when a matching scalar child exists; otherwise, <c>false</c>.</returns>
+    /// <returns><see langword="true"/> when a matching scalar child exists; otherwise, <see langword="false"/>.</returns>
     public static bool HasChild(this YamlMappingNode node, string key, string value)
     {
         return node.HasChild<YamlScalarNode, YamlScalarNode>((k, v) => k.IsScalarWithValue(key) && v.Value == value);
@@ -635,7 +635,7 @@ public static class YamlMappingNodeExtensions
     /// <param name="node">The mapping node to reorder.</param>
     /// <param name="valueNode">The value node to match by YAML node equality.</param>
     /// <param name="destinationIndex">The zero-based destination index.</param>
-    /// <returns><c>true</c> when the child was moved; <c>false</c> when it was already at the destination index.</returns>
+    /// <returns><see langword="true"/> when the child was moved; <see langword="false"/> when it was already at the destination index.</returns>
     /// <exception cref="KeyNotFoundException">Thrown when no equal value node exists in the mapping.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="destinationIndex"/> is outside the mapping bounds.</exception>
     public static bool MoveChildByValue(this YamlMappingNode node, YamlNode valueNode, int destinationIndex)
@@ -657,7 +657,7 @@ public static class YamlMappingNodeExtensions
     /// <param name="node">The mapping node to reorder.</param>
     /// <param name="valueNode">The exact value node instance to move.</param>
     /// <param name="destinationIndex">The zero-based destination index.</param>
-    /// <returns><c>true</c> when the child was moved; <c>false</c> when it was already at the destination index.</returns>
+    /// <returns><see langword="true"/> when the child was moved; <see langword="false"/> when it was already at the destination index.</returns>
     /// <exception cref="KeyNotFoundException">Thrown when <paramref name="valueNode"/> is not a value instance in the mapping.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="destinationIndex"/> is outside the mapping bounds.</exception>
     public static bool MoveChildByValueReference(this YamlMappingNode node, YamlNode valueNode, int destinationIndex)
@@ -679,7 +679,7 @@ public static class YamlMappingNodeExtensions
     /// <param name="node">The mapping node to reorder.</param>
     /// <param name="keyNode">The key node to match by YAML node equality.</param>
     /// <param name="destinationIndex">The zero-based destination index.</param>
-    /// <returns><c>true</c> when the child was moved; <c>false</c> when it was already at the destination index.</returns>
+    /// <returns><see langword="true"/> when the child was moved; <see langword="false"/> when it was already at the destination index.</returns>
     /// <exception cref="KeyNotFoundException">Thrown when no equal key node exists in the mapping.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="destinationIndex"/> is outside the mapping bounds.</exception>
     public static bool MoveChildByKey(this YamlMappingNode node, YamlNode keyNode, int destinationIndex)
@@ -701,7 +701,7 @@ public static class YamlMappingNodeExtensions
     /// <param name="node">The mapping node to reorder.</param>
     /// <param name="keyNode">The exact key node instance to move.</param>
     /// <param name="destinationIndex">The zero-based destination index.</param>
-    /// <returns><c>true</c> when the child was moved; <c>false</c> when it was already at the destination index.</returns>
+    /// <returns><see langword="true"/> when the child was moved; <see langword="false"/> when it was already at the destination index.</returns>
     /// <exception cref="KeyNotFoundException">Thrown when <paramref name="keyNode"/> is not a key instance in the mapping.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="destinationIndex"/> is outside the mapping bounds.</exception>
     public static bool MoveChildByKeyReference(this YamlMappingNode node, YamlNode keyNode, int destinationIndex)
@@ -723,7 +723,7 @@ public static class YamlMappingNodeExtensions
     /// <param name="node">The mapping node to reorder.</param>
     /// <param name="key">The scalar key value of the child to move.</param>
     /// <param name="destinationIndex">The zero-based destination index.</param>
-    /// <returns><c>true</c> when the child was moved; <c>false</c> when it was already at the destination index.</returns>
+    /// <returns><see langword="true"/> when the child was moved; <see langword="false"/> when it was already at the destination index.</returns>
     /// <exception cref="KeyNotFoundException">Thrown when no child with the specified scalar key exists.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="destinationIndex"/> is outside the mapping bounds.</exception>
     public static bool MoveChildByKey(this YamlMappingNode node, string key, int destinationIndex)

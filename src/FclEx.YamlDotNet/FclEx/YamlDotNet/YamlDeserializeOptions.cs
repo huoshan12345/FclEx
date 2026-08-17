@@ -12,7 +12,7 @@ public record YamlDeserializeOptions : YamlOptions
 
     /// <summary>
     /// Gets whether YAML keys without matching .NET members should be ignored.
-    /// Set to <c>false</c> to make unmatched keys fail deserialization.
+    /// Set to <see langword="false"/> to make unmatched keys fail deserialization.
     /// </summary>
     public bool IgnoreUnmatchedProperties { get; init; } = true;
 }

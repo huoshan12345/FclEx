@@ -14,11 +14,16 @@ public class NonGenericEqualityComparerAdapter<T> : IEqualityComparer, IEquality
         _comparer = comparer ?? EqualityComparer<T>.Default;
     }
 
-    public new bool Equals(object? x, object? y)
+    private bool EqualsCore(object? x, object? y)
     {
         return ComparerHelper.TryEquals(x, y, out var result)
             ? result.Value
             : _comparer.Equals((T)x, (T)y);
+    }
+
+    public new bool Equals(object? x, object? y)
+    {
+        return EqualsCore(x, y);
     }
 
     public int GetHashCode(object obj)

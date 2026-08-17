@@ -2,26 +2,66 @@ namespace System.Text.Json;
 
 public static class JsonHelper
 {
+    private static readonly object _cacheLock = new();
     private static readonly ConcurrentDictionary<JsonOptions, JsonSerializerOptions> _serializerOptions = new();
 
-    private static readonly DefaultJsonTypeInfoResolver Resolver = new()
-    {
-        Modifiers =
-        {
-            IncludeStaticMembers,
-            IgnoreEmptyValue,
-        },
-    };
+    private static readonly ReLazy<JsonSerializerOptions> _defaultOptions = new(() => GetOptions());
+    private static readonly ReLazy<JsonSerializerOptions> _webOptions = new(() => GetOptions(JsonOptions.Web));
+    private static readonly ReLazy<DefaultJsonTypeInfoResolver> _resolver = new(() => CreateDefaultJsonTypeInfoResolver(false));
+    private static readonly ReLazy<DefaultJsonTypeInfoResolver> _resolverIgnoreReadingNull = new(() => CreateDefaultJsonTypeInfoResolver(true));
 
-    private static readonly DefaultJsonTypeInfoResolver IgnoreReadingNullResolver = new()
+    private static DefaultJsonTypeInfoResolver Resolver
     {
-        Modifiers =
+        get
         {
-            IncludeStaticMembers,
-            IgnoreEmptyValue,
-            IgnoreReadingNull,
-        },
-    };
+            lock (_cacheLock)
+                return _resolver.Value;
+        }
+    }
+
+    private static DefaultJsonTypeInfoResolver ResolverIgnoreReadingNull
+    {
+        get
+        {
+            lock (_cacheLock)
+                return _resolverIgnoreReadingNull.Value;
+        }
+    }
+
+    public static JsonSerializerOptions DefaultOptions
+    {
+        get
+        {
+            lock (_cacheLock)
+                return _defaultOptions.Value;
+        }
+    }
+
+    public static JsonSerializerOptions WebOptions
+    {
+        get
+        {
+            lock (_cacheLock)
+                return _webOptions.Value;
+        }
+    }
+
+    private static DefaultJsonTypeInfoResolver CreateDefaultJsonTypeInfoResolver(bool ignoreReadingNull)
+    {
+        var resolver = new DefaultJsonTypeInfoResolver
+        {
+            Modifiers =
+            {
+                IncludeStaticMembers,
+                IgnoreEmptyValue,
+            },
+        };
+
+        if (ignoreReadingNull)
+            resolver.Modifiers.Add(IgnoreReadingNull);
+
+        return resolver;
+    }
 
     public static JsonSerializerOptions CreateOptions(JsonOptions? jsonOptions = default)
     {
@@ -43,7 +83,7 @@ public static class JsonHelper
         };
 
         if (jsonOptions.AllowBoolFromString)
-            options.Converters.Add(BooleanJsonConverter.Instance);
+            options.Converters.Add(BooleanJsonConverter.NullAsFalse);
 
         if (jsonOptions.AddTypeConverter)
             options.Converters.Add(TypeJsonConverter.Instance);
@@ -68,19 +108,22 @@ public static class JsonHelper
             return JsonTypeInfoResolver_Empty;
 
         return jsonOptions.IgnoreReadingNull
-            ? IgnoreReadingNullResolver
+            ? ResolverIgnoreReadingNull
             : Resolver;
     }
 
     public static JsonSerializerOptions GetOptions(JsonOptions? jsonOptions = default)
     {
         jsonOptions ??= JsonOptions.Default;
-        return _serializerOptions.GetOrAdd(jsonOptions, m =>
+        lock (_cacheLock)
         {
-            var options = CreateOptions(m);
-            options.MakeReadOnly(true);
-            return options;
-        });
+            return _serializerOptions.GetOrAdd(jsonOptions, m =>
+            {
+                var options = CreateOptions(m);
+                options.MakeReadOnly(true);
+                return options;
+            });
+        }
     }
 
     /// <summary>
@@ -146,9 +189,8 @@ public static class JsonHelper
                        ?? typeInfo.Options.PropertyNamingPolicy?.ConvertName(member.Name)
                        ?? member.Name;
 
-            var value = member.GetValue(null);
-            var propertyInfo = typeInfo.CreateJsonPropertyInfo(value?.GetType() ?? member.DataMemberType, name);
-            propertyInfo.Get = (o) => value;
+            var propertyInfo = typeInfo.CreateJsonPropertyInfo(member.DataMemberType, name);
+            propertyInfo.Get = _ => member.GetValue(null);
             propertyInfo.CustomConverter = member.GetCustomAttribute<JsonConverterAttribute>()?.ConverterType is { } converterType
                 ? (JsonConverter?)Activator.CreateInstance(converterType)
                 : null;
@@ -172,6 +214,26 @@ public static class JsonHelper
                     setter(obj, value);
                 }
             };
+        }
+    }
+
+    /// <summary>
+    /// Clears the options and resolver instances cached by <see cref="JsonHelper"/>.
+    /// </summary>
+    /// <remarks>
+    /// This method is synchronized with <see cref="GetOptions(JsonOptions?)"/> and the static options properties,
+    /// so no cached option created with a previous resolver remains published after it returns. It does not modify
+    /// options that callers obtained before the cache was cleared, including options created by <see cref="CreateOptions(JsonOptions?)"/>.
+    /// </remarks>
+    public static void ClearCache()
+    {
+        lock (_cacheLock)
+        {
+            _serializerOptions.Clear();
+            _resolver.Recreate();
+            _resolverIgnoreReadingNull.Recreate();
+            _defaultOptions.Recreate();
+            _webOptions.Recreate();
         }
     }
 }

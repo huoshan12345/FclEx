@@ -2,6 +2,29 @@ namespace FclEx.Extensions;
 
 public static class IPAddressExtensions
 {
+#if NET8_0_OR_GREATER
+    [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_numbers")]
+    private static extern ref ushort[] Numbers(IPAddress obj);
+#endif
+    /// <summary>
+    /// Returns the internal ushort array of the specified
+    /// <see cref="IPAddress"/> instance.
+    /// </summary>
+    /// <param name="obj">
+    /// The <see cref="IPAddress"/> instance.
+    /// </param>
+    /// <returns>
+    /// The underlying IP address ushort array.
+    /// </returns>
+    public static ReadOnlySpan<ushort> AddressNumbers(this IPAddress obj)
+    {
+#if NET8_0_OR_GREATER
+        return Numbers(obj);
+#else
+        return FieldInfos.IPAddress_Numbers.GetRequiredValue<ushort[]>(obj);
+#endif
+    }
+
     public static bool IsLoopback(this IPAddress ip)
     {
         return IPAddress.IsLoopback(ip);
@@ -50,7 +73,7 @@ public static class IPAddressExtensions
     public static bool IsIPv6UniqueLocal(this IPAddress ip)
     {
         // return ((_numbers[0] & 0xFE00) == 0xFC00);
-        return (FieldInfos.IPAddress_Numbers.GetRequiredValue<ushort[]>(ip)[0] & 0xFE00) == 0xFC00;
+        return (ip.AddressNumbers()[0] & 0xFE00) == 0xFC00;
     }
 #endif
 

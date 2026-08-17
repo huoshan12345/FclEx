@@ -6,7 +6,8 @@ public sealed class FileSystemInfoJsonConverter : JsonConverterFactory
 
     public override bool CanConvert(Type typeToConvert)
     {
-        return typeof(FileSystemInfo).IsAssignableFrom(typeToConvert);
+        return typeToConvert == typeof(FileInfo) 
+               || typeToConvert == typeof(DirectoryInfo);
     }
 
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)

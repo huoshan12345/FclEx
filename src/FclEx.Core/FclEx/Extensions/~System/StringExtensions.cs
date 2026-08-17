@@ -34,61 +34,58 @@ partial class StringExtensions
     [MethodImpl(AggressiveInlining)]
     public static string UriUnescape(this string value) => Uri.UnescapeDataString(value);
 
-    public static string Truncate(this string? str, int maxLength, bool appendTrailingDots = true)
+    /// <summary>
+    /// Limits the content portion of a string to <paramref name="maxContentLength"/> characters.
+    /// </summary>
+    /// <remarks>
+    /// When <paramref name="appendTrailingDots"/> is <see langword="true"/> and truncation occurs, the returned value
+    /// contains the retained content followed by <c>...</c>, so its total length exceeds <paramref name="maxContentLength"/>
+    /// by three characters.
+    /// </remarks>
+    public static string Truncate(this string? str, int maxContentLength, bool appendTrailingDots = true)
     {
-        if (maxLength <= 0)
+        if (maxContentLength <= 0)
             return string.Empty;
 
-        if (str.IsNullOrEmpty() || maxLength >= str.Length)
+        if (str.IsNullOrEmpty() || maxContentLength >= str.Length)
             return str ?? string.Empty;
 
-        var sub = str[..maxLength];
+        var sub = str[..maxContentLength];
         return appendTrailingDots
             ? sub + "..."
             : sub;
     }
 
-    private static readonly Regex _regXmlProlog = new(@"^<\?xml.+\?>", RegexOptions.Compiled);
-    private static readonly Regex _regXmlStart = new(@"^<\S+>", RegexOptions.Compiled);
-    private static readonly Regex _regXmlEnd = new(@"</\S+>$", RegexOptions.Compiled);
-
-    public static bool IsPossibleXml([NotNullWhen(true)] this string? data)
+    /// <summary>
+    /// Performs a cheap, conservative precheck for whether <paramref name="text"/> could be an XML document.
+    /// </summary>
+    /// <remarks>
+    /// A <see langword="false"/> result means the text cannot be a well-formed XML document. A
+    /// <see langword="true"/> result does not establish well-formedness; use an XML parser when validation is required.
+    /// This method only checks the document envelope and does not inspect elements, attributes, entities, or nesting.
+    /// </remarks>
+    public static bool CouldBeXmlDocument([NotNullWhen(true)] this string? text)
     {
-        /*  
-            XML documents must have a root element
-            XML elements must have a closing tag
-            XML tags are case-sensitive
-            XML elements must be properly nested
-            XML attribute values must be quoted
-            
-            <?xml version="1.0" encoding="UTF-8"?> 
-            The XML prolog is optional. If it exists, it must come first in the document.
-            
-            <root>
-              <child>
-                <sub-child>.....</sub-child>
-              </child>
-            </root>
-         */
-
-        if (!data.IsNotEmpty())
+        if (string.IsNullOrEmpty(text))
             return false;
 
-        if (!_regXmlProlog.IsMatch(data) && !_regXmlStart.IsMatch(data))
-            return false;
+        var value = text!;
+        var start = 0;
+        var end = value.Length - 1;
 
-        if (!_regXmlEnd.IsMatch(data))
-            return false;
+        while (start <= end && char.IsWhiteSpace(value[start]))
+            start++;
 
-        return true;
-    }
+        if (start <= end && value[start] == '\uFEFF')
+            start++;
 
-    public static bool IsPossibleHtml([NotNullWhen(true)] this string? data)
-    {
-        if (!data.IsNotEmpty())
-            return false;
+        while (start <= end && char.IsWhiteSpace(value[start]))
+            start++;
 
-        return true;
+        while (end >= start && char.IsWhiteSpace(value[end]))
+            end--;
+
+        return start <= end && value[start] == '<' && value[end] == '>';
     }
 
     /// <summary>
@@ -100,7 +97,7 @@ partial class StringExtensions
     /// Thrown when the input string has an odd number of characters, as this is not a valid hexadecimal representation.
     /// </exception>
     /// <remarks>
-    /// This method first checks if the input string is <c>null</c> and validates the length. 
+    /// This method first checks if the input string is <see langword="null"/> and validates the length. 
     /// If the string is valid, it processes each pair of characters, converting them into their 
     /// corresponding byte values. The method supports both uppercase and lowercase hexadecimal characters.
     /// An empty input string returns an empty byte array.
@@ -132,7 +129,7 @@ partial class StringExtensions
             return hex switch
             {
                 >= 'A' and <= 'F' => hex - 'A' + 10,
-                >= 'a' and <= 'a' => hex - 'a' + 10,
+                >= 'a' and <= 'f' => hex - 'a' + 10,
                 >= '0' and <= '9' => hex - '0',
                 _ => throw new ArgumentException($"'{hex}' is not a valid hexadecimal character.", nameof(hex)),
             };

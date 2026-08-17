@@ -20,18 +20,17 @@ public static class StringInfoExtensions
         public static implicit operator UnsafeReadOnlySpan<T>(ReadOnlySpan<T> span) => new(span);
     }
 
-    public ref struct StringInfoSpanEnumerator(StringInfo si) : IEnumerator<ReadOnlySpan<char>>
+    public ref struct StringInfoSpanEnumerator(StringInfo si)
     {
         private readonly UnsafeReadOnlySpan<char> _str = si.String;
         private readonly ReadOnlySpan<int> _indexes = GetStringInfoIndexes(si) ?? [];
         private int _index = -1;
 
-        public readonly ReadOnlySpan<char> Current
-            => _index < _indexes.Length - 1
-            ? _str[_indexes[_index].._indexes[_index + 1]]
-            : _str[_indexes[_index]..];
+        public readonly ReadOnlySpan<char> Current =>
+            _index < _indexes.Length - 1
+                ? _str[_indexes[_index].._indexes[_index + 1]]
+                : _str[_indexes[_index]..];
 
-        readonly object IEnumerator.Current => throw new NotImplementedException();
         public void Dispose() => Reset();
         public bool MoveNext() => ++_index < _indexes.Length;
         public void Reset() => _index = -1;

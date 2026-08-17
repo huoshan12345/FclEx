@@ -6,6 +6,7 @@
 #pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
 
 using static FclEx.Helpers.ReflectionHelper;
+using System.Reflection.Emit;
 
 namespace FclEx.Helpers.ReflectionHelperTests;
 
@@ -212,5 +213,52 @@ public class AccessorAccessesFieldTests
 
         Assert.True(AccessorAccessesField(prop.GetMethod, field));
         Assert.True(AccessorAccessesField(prop.SetMethod, field));
+    }
+
+    private class AddressAccess
+    {
+        private int _value;
+
+        public ref int GetValueReference() => ref _value;
+    }
+
+    [Fact]
+    public void MethodUsingLdflda_ShouldAccessTheField()
+    {
+        var method = typeof(AddressAccess).GetRequiredMethod(nameof(AddressAccess.GetValueReference));
+        var field = typeof(AddressAccess).GetField("_value", Flags)!;
+
+        Assert.True(AccessorAccessesField(method, field));
+    }
+
+    [Fact]
+    public void Accessor_WithFieldTokenEmbeddedInOperand_ShouldNotAccessField()
+    {
+        var assembly = AssemblyBuilder.DefineDynamicAssembly(
+            new AssemblyName(nameof(Accessor_WithFieldTokenEmbeddedInOperand_ShouldNotAccessField)),
+            AssemblyBuilderAccess.Run);
+        var typeBuilder = assembly.DefineDynamicModule("main").DefineType("TestType");
+        var fieldBuilder = typeBuilder.DefineField("_value", typeof(int), FieldAttributes.Private);
+        var getterBuilder = typeBuilder.DefineMethod(
+            "get_Item",
+            MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig,
+            typeof(int),
+            [typeof(int), typeof(int)]);
+        var propertyBuilder = typeBuilder.DefineProperty("Item", PropertyAttributes.None, typeof(int), [typeof(int), typeof(int)]);
+        propertyBuilder.SetGetMethod(getterBuilder);
+
+        var il = getterBuilder.GetILGenerator();
+        il.Emit(OpCodes.Ldc_I4, 0x0000017B); // Its operand starts with 0x7B (ldfld).
+        il.Emit(OpCodes.Ldarg_2); // Completes the bytes of FieldDef token 0x04000001.
+        il.Emit(OpCodes.Pop);
+        il.Emit(OpCodes.Ret);
+
+        var type = typeBuilder.CreateType()!;
+        var field = type.GetField("_value", Flags)!;
+        var getter = type.GetProperty("Item")!.GetMethod!;
+        Assert.Equal(0x04000001, field.MetadataToken);
+
+        // The field token occurs inside an ldc.i4 operand; it is not an IL field-access instruction.
+        Assert.False(AccessorAccessesField(getter, field));
     }
 }

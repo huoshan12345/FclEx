@@ -41,6 +41,33 @@ public class FileHelperTests
         }
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(4095)]
+    [InlineData(4096)]
+    [InlineData(4097)]
+    [InlineData(8193)]
+    public void AreFilesEqual_ShouldCompareOnlyFileContent(int length)
+    {
+        var path1 = Path.GetTempFileName();
+        var path2 = Path.GetTempFileName();
+
+        try
+        {
+            var content = Enumerable.Range(0, length).Select(i => (byte)i).ToArray();
+            File.WriteAllBytes(path1, content);
+            File.WriteAllBytes(path2, content);
+
+            Assert.True(FileHelper.AreFilesEqual(new FileInfo(path1), new FileInfo(path2)));
+        }
+        finally
+        {
+            File.Delete(path1);
+            File.Delete(path2);
+        }
+    }
+
     [Fact]
     public void AreFilesEqual_ShouldReturnFalse_WhenContentDiffers()
     {
@@ -50,7 +77,7 @@ public class FileHelperTests
         try
         {
             File.WriteAllText(path1, "Hello World!");
-            File.WriteAllText(path2, "Goodbye World!");
+            File.WriteAllText(path2, "Hello World?");
 
             var f1 = new FileInfo(path1);
             var f2 = new FileInfo(path2);

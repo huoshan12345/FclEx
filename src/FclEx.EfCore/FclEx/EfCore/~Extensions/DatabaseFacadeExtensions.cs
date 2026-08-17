@@ -1,7 +1,11 @@
 using System.Data;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace FclEx.EfCore;
 
+/// <summary>
+/// Provides low-level relational command helpers for <see cref="DatabaseFacade"/>.
+/// </summary>
 public static class DatabaseFacadeExtensions
 {
     /// <summary>
@@ -14,60 +18,77 @@ public static class DatabaseFacadeExtensions
     /// <param name="cancellationToken">A token to observe while waiting for the operation to complete.</param>
     /// <returns>
     /// The first column of the first row in the result set cast to <typeparamref name="T"/>.
-    /// Returns <c>default</c> if the result is <c>null</c> or <see cref="DBNull"/>.
+    /// Returns <c>default</c> if the result is <see langword="null"/> or <see cref="DBNull"/>.
     /// </returns>
+    /// <remarks>
+    /// The command participates in the context's current transaction, uses the configured command timeout, and is executed
+    /// through the provider's execution strategy. A connection opened by this method is closed before the task completes.
+    /// </remarks>
     public static async Task<T?> ExecuteScalarRawAsync<T>(this DatabaseFacade database, string sql,
         IEnumerable<IDbDataParameter>? parameters = null, CancellationToken cancellationToken = default)
     {
         var connection = database.GetDbConnection();
+        var commandTimeout = database.GetCommandTimeout();
+        var commandParameters = parameters?.ToArray();
+        var strategy = database.CreateExecutionStrategy();
 
-        var shouldClose = connection.State != ConnectionState.Open;
-
-        if (shouldClose)
-            await connection.OpenAsync(cancellationToken);
-
-        var command = connection.CreateCommand();
-
-        try
+        return await strategy.ExecuteAsync(async () =>
         {
-            command.CommandText = sql;
-            command.CommandType = CommandType.Text;
-
-            if (parameters != null)
+            var shouldClose = connection.State != ConnectionState.Open;
+            try
             {
-                foreach (var p in parameters)
-                    command.Parameters.Add(p);
-            }
+                if (shouldClose)
+                    await connection.OpenAsync(cancellationToken);
 
-            var strategy = database.CreateExecutionStrategy();
+                await using var command = connection.CreateCommand();
+                command.Transaction = database.CurrentTransaction?.GetDbTransaction();
+                command.CommandText = sql;
+                command.CommandType = CommandType.Text;
 
-            return await strategy.ExecuteAsync(async () =>
-            {
-                var result = await command.ExecuteScalarAsync(cancellationToken);
+                if (commandTimeout is { } timeout)
+                    command.CommandTimeout = timeout;
 
-                switch (result)
+                if (commandParameters != null)
                 {
-                    case null or DBNull:
-                        return default;
-                    case T t:
-                        return t;
+                    foreach (var parameter in commandParameters)
+                        command.Parameters.Add(parameter);
                 }
 
-                var type = typeof(T).UnwrapNullable();
+                try
+                {
+                    var result = await command.ExecuteScalarAsync(cancellationToken);
 
-                if (type == typeof(Guid))
-                    return (T)(object)Guid.Parse(result.ToString()!);
+                    switch (result)
+                    {
+                        case null or DBNull:
+                            return default;
+                        case T t:
+                            return t;
+                    }
 
-                return Convert.ChangeType<T>(result);
-            });
-        }
-        finally
-        {
-            await command.DisposeAsync();
+                    var type = typeof(T).UnwrapNullable();
 
-            if (shouldClose)
-                await connection.CloseAsync();
-        }
+                    if (type == typeof(Guid))
+                        return (T)(object)Guid.Parse(result.ToString()!);
 
+                    var converted = type.IsEnum
+                        ? result is string name
+                            ? Enum.Parse(type, name)
+                            : Enum.ToObject(type, result)
+                        : Convert.ChangeType(result, type);
+
+                    return (T)converted;
+                }
+                finally
+                {
+                    command.Parameters.Clear();
+                }
+            }
+            finally
+            {
+                if (shouldClose && connection.State != ConnectionState.Closed)
+                    await connection.CloseAsync();
+            }
+        });
     }
 }

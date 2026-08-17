@@ -12,7 +12,9 @@ public static partial class TypeExtensions
     /// <param name="type">The type to instantiate.</param>
     /// <param name="args">
     /// The constructor arguments. A <see langword="null"/> argument matches any reference type parameter or
-    /// <see cref="Nullable{T}"/> parameter. Omitted optional parameters are supplied from their metadata default values.
+    /// <see cref="Nullable{T}"/> parameter. A null <c>params</c> array is treated as an empty argument list; pass an
+    /// explicit one-element array to select a constructor with a null argument. Omitted optional parameters are supplied
+    /// from their metadata default values.
     /// </param>
     /// <returns>The created object.</returns>
     /// <exception cref="MissingMethodException">No public constructor matches the supplied arguments.</exception>
@@ -26,7 +28,7 @@ public static partial class TypeExtensions
     {
         FclEx.Check.NotNull(type);
 
-        args ??= [null];
+        args ??= [];
 
         if (args.Length == 0 && type.IsValueType)
             return Activator.CreateInstance(type)!;
@@ -113,23 +115,55 @@ public static partial class TypeExtensions
     }
 
     /// <summary>
-    /// Finds the specified interface implemented by the given type.
+    /// Gets the single interface implemented by <paramref name="type"/> that matches
+    /// <paramref name="interfaceType"/>, either as an exact match or as a closed construction
+    /// of an open generic interface definition (e.g. <see cref="IEnumerable{T}"/>).
     /// </summary>
-    /// <param name="type">The <see cref="Type"/> to inspect.</param>
-    /// <param name="interfaceType">The interface type to find.</param>
+    /// <param name="type">The type to inspect.</param>
+    /// <param name="interfaceType">
+    /// The interface to look for. Can be a non-generic interface, a closed generic interface,
+    /// or an open generic interface definition.
+    /// </param>
     /// <returns>
-    /// The implemented interface <see cref="Type"/> if found; otherwise, <see langword="null"/>.
+    /// The matching interface type, or <see langword="null"/> if not implemented.
     /// </returns>
-    /// <remarks>
-    /// This method checks both direct interface implementations and generic interface definitions.
-    /// It does not treat <paramref name="type"/> itself as an implementation, even when
-    /// <paramref name="type"/> and <paramref name="interfaceType"/> are the same interface type.
-    /// </remarks>
+    /// <exception cref="AmbiguousMatchException">
+    /// Thrown when <paramref name="type"/> implements multiple closed constructions of the
+    /// same open generic interface (e.g. both <see cref="IComparable{T}"/> variants). Use
+    /// <see cref="GetImplementedInterfaces"/> instead in that case.
+    /// </exception>
     public static Type? GetImplementedInterface(this Type type, Type interfaceType)
     {
-        return type.GetInterfaces().FirstOrDefault(x =>
-            x == interfaceType
-            || x.IsGenericType && x.GetGenericTypeDefinition() == interfaceType);
+        var matches = type.GetImplementedInterfaces(interfaceType);
+        return matches.Length switch
+        {
+            0 => null,
+            1 => matches[0],
+            _ => throw new AmbiguousMatchException(
+                $"Type '{type}' implements multiple variants of '{interfaceType}': " +
+                $"{string.Join(", ", matches.Select(m => m.ToString()))}. " +
+                $"Use {nameof(GetImplementedInterfaces)} to retrieve all matches.")
+        };
+    }
+
+    /// <summary>
+    /// Gets all interfaces implemented by <paramref name="type"/> that match
+    /// <paramref name="interfaceType"/>, either as an exact match or as a closed construction
+    /// of an open generic interface definition.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <param name="interfaceType">
+    /// The interface to look for. Can be a non-generic interface, a closed generic interface,
+    /// or an open generic interface definition.
+    /// </param>
+    /// <returns>
+    /// An array of matching interface types. Empty if not implemented.
+    /// </returns>
+    public static Type[] GetImplementedInterfaces(this Type type, Type interfaceType)
+    {
+        return type.GetInterfaces()
+            .Where(x => x == interfaceType || x.IsGenericType && x.GetGenericTypeDefinition() == interfaceType)
+            .ToArray();
     }
 
     /// <summary>
@@ -141,14 +175,14 @@ public static partial class TypeExtensions
     /// <see langword="true"/> if the type implements the specified interface; otherwise, <see langword="false"/>.
     /// </returns>
     /// <remarks>
-    /// This method internally uses <see cref="GetImplementedInterface"/> to perform the check.
-    /// It returns <see langword="false"/> when <paramref name="type"/> is the same interface as
-    /// <paramref name="interfaceType"/>.
+    /// This method internally uses <see cref="GetImplementedInterface"/> to perform the check and also treats an
+    /// interface as implementing itself.
     /// </remarks>
     [MethodImpl(AggressiveInlining)]
     public static bool Implements(this Type type, Type interfaceType)
     {
-        return type.GetImplementedInterface(interfaceType) != null;
+        return interfaceType.IsInterface
+               && (type == interfaceType || type.GetImplementedInterface(interfaceType) != null);
     }
 
     /// <summary>
@@ -181,17 +215,6 @@ public static partial class TypeExtensions
     }
 
     /// <summary>
-    /// Determines whether the type is annotated with <see cref="DynamicAttribute"/>.
-    /// </summary>
-    /// <param name="type">The type to inspect.</param>
-    /// <returns><see langword="true"/> if the type has the dynamic marker attribute; otherwise, <see langword="false"/>.</returns>
-    [MethodImpl(AggressiveInlining)]
-    public static bool IsDynamic(this Type type)
-    {
-        return type.IsDefined<DynamicAttribute>(true);
-    }
-
-    /// <summary>
     /// Determines whether the type is marked with <see cref="CompilerGeneratedAttribute"/>.
     /// </summary>
     /// <param name="type">The type to inspect.</param>
@@ -199,7 +222,7 @@ public static partial class TypeExtensions
     [MethodImpl(AggressiveInlining)]
     public static bool IsCompilerGenerated(this Type type)
     {
-        return type.IsDefined<CompilerGeneratedAttribute>(false);
+        return type.IsDefined<CompilerGeneratedAttribute>();
     }
 
 #if !NET5_0_OR_GREATER
@@ -271,5 +294,23 @@ public static partial class TypeExtensions
                 return parameter != null && parameter.ParameterType == sourceType;
             });
 
+    }
+
+    /// <summary>
+    /// Finds a public static conversion operator method (either implicit or explicit) defined on the specified declaring type that converts from <paramref name="fromType"/> to <paramref name="toType"/>.
+    /// </summary>
+    /// <param name="declaringType">The type on which to search for the operator.</param>
+    /// <param name="fromType">The source type of the conversion.</param>
+    /// <param name="toType">The target type of the conversion.</param>
+    /// <returns>The <see cref="MethodInfo"/> representing the conversion operator if found; otherwise, <see langword="null"/>.</returns>
+    public static MethodInfo? FindConversionOperator(this Type declaringType, Type fromType, Type toType)
+    {
+        return declaringType
+            .GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .FirstOrDefault(m =>
+                m.Name is "op_Implicit" or "op_Explicit"
+                && m.ReturnType == toType
+                && m.GetParameters().Length == 1
+                && m.GetParameters()[0].ParameterType.IsAssignableFrom(fromType));
     }
 }

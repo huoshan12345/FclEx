@@ -11,7 +11,7 @@ public static class YamlHelper
     /// <summary>
     /// Gets a serializer for the specified options.
     /// </summary>
-    /// <param name="options">The serializer options. When <c>null</c>, <see cref="YamlSerializeOptions.Default"/> is used.</param>
+    /// <param name="options">The serializer options. When <see langword="null"/>, <see cref="YamlSerializeOptions.Default"/> is used.</param>
     /// <returns>A cached serializer configured with the requested options.</returns>
     /// <remarks>
     /// Serializer instances are cached by the option record value. Attribute-based converter scanning is only applied when
@@ -39,7 +39,7 @@ public static class YamlHelper
     /// <summary>
     /// Gets a deserializer for the specified options.
     /// </summary>
-    /// <param name="options">The deserializer options. When <c>null</c>, <see cref="YamlDeserializeOptions.Default"/> is used.</param>
+    /// <param name="options">The deserializer options. When <see langword="null"/>, <see cref="YamlDeserializeOptions.Default"/> is used.</param>
     /// <returns>A cached deserializer configured with the requested options.</returns>
     /// <remarks>
     /// Deserializer instances are cached by the option record value. Attribute-based converter scanning is only applied when

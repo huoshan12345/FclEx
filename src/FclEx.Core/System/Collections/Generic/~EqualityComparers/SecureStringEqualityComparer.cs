@@ -5,37 +5,49 @@ public class SecureStringEqualityComparer : IEqualityComparer<SecureString>
     public static readonly SecureStringEqualityComparer Instance = new();
 
     /// <summary>
-    /// Compares two secure strings by converting them to managed strings and using ordinal string comparison.
+    /// Compares the UTF-16 contents of two secure strings without creating managed string copies.
     /// </summary>
-    /// <remarks>
-    /// The comparison temporarily materializes each value as a managed <see cref="string" />. That copy is controlled by
-    /// the GC and cannot be cleared deterministically, so use this comparer only when that exposure is acceptable.
-    /// </remarks>
-    public bool Equals(SecureString? x, SecureString? y)
+    public unsafe bool Equals(SecureString? x, SecureString? y)
     {
         if (ComparerHelper.TryEquals(x, y, out var result))
             return result.Value;
 
-        using var disposable1 = MarshalHelper.SecureStringToBSTR(x);
-        using var disposable2 = MarshalHelper.SecureStringToBSTR(y);
+        if (x.Length != y.Length)
+            return false;
 
-        var str1 = Marshal.PtrToStringBSTR(disposable1.Value);
-        var str2 = Marshal.PtrToStringBSTR(disposable2.Value);
+        using var disposable1 = Marshal.SecureStringToBSTRDisposable(x);
+        using var disposable2 = Marshal.SecureStringToBSTRDisposable(y);
 
-        return string.Equals(str1, str2, StringComparison.Ordinal);
+        var left = (char*)disposable1.Value.ToPointer();
+        var right = (char*)disposable2.Value.ToPointer();
+
+        for (var i = 0; i < x.Length; i++)
+        {
+            if (left[i] != right[i])
+                return false;
+        }
+
+        return true;
     }
 
     /// <summary>
-    /// Computes an ordinal hash code for the secure string contents.
+    /// Computes an ordinal hash code directly from the secure string's UTF-16 contents.
     /// </summary>
-    /// <remarks>
-    /// This method temporarily materializes the value as a managed <see cref="string" />. That copy is controlled by the
-    /// GC and cannot be cleared deterministically, so use this comparer only when that exposure is acceptable.
-    /// </remarks>
-    public int GetHashCode(SecureString obj)
+    public unsafe int GetHashCode(SecureString obj)
     {
-        using var disposable = MarshalHelper.SecureStringToBSTR(obj);
-        var str = Marshal.PtrToStringBSTR(disposable.Value);
-        return str?.GetHashCode(StringComparison.Ordinal) ?? 0;
+        Check.NotNull(obj);
+
+        using var disposable = Marshal.SecureStringToBSTRDisposable(obj);
+        var chars = (char*)disposable.Value.ToPointer();
+
+        unchecked
+        {
+            var hash = 17;
+            for (var i = 0; i < obj.Length; i++)
+            {
+                hash = hash * 31 + chars[i];
+            }
+            return hash;
+        }
     }
 }

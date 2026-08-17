@@ -9,7 +9,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddOptions();
         services.AddOptionsInstance(options);
-        services.AddSingleton<IStringSerializer>(StringAsRawSerializer.Instance);
+        services.AddSingleton<IStringSerializer>(SerializerPresets.StringOrJson);
         services.AddSingleton<IRedisManager, RedisManager>();
 
         services.AddFclExCaching(configureCacheManager, s =>

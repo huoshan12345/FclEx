@@ -39,19 +39,6 @@ public static class ObjectHelper
         return obj is null ? obj : obj.ToJson(options).FromJson<T>(options);
     }
 
-    public static byte[] MarshalToBytes<T>(T obj)
-    {
-        Check.NotNull(obj);
-
-        var length = Marshal.SizeOf<T>();
-        var bufByte = new byte[length];
-        using var disposable = MarshalHelper.AllocHGlobal(length);
-        var ptr = disposable.Value;
-        Marshal.StructureToPtr(obj, ptr, false);
-        Marshal.Copy(ptr, bufByte, 0, length);
-        return bufByte;
-    }
-
     public static T? GetFieldValue<T>(object obj, string fieldName)
     {
         var field = obj.GetType().GetRequiredField(fieldName, true);
@@ -63,9 +50,6 @@ public static class ObjectHelper
         var field = obj.GetType().GetRequiredField(fieldName, true);
         return field.GetRequiredValue<T>(obj);
     }
-
-    private static readonly ConcurrentDictionary<MemberInfo, Delegate> _setterCache = new();
-    private static readonly ConcurrentDictionary<MemberInfo, Delegate> _getterCache = new();
 
     public static bool TrySet<T, TMember>(T obj, Expression<Func<T, TMember>> selector,
         TMember newValue, IEqualityComparer<TMember>? comparer = null)
@@ -81,8 +65,8 @@ public static class ObjectHelper
         Check.NotNull(selector);
 
         var member = ExpressionHelper.GetDataMember(selector);
-        var getter = (Func<T, TMember>)_getterCache.GetOrAdd(member, CreateGetter<T, TMember>);
-        var setter = (RefAction<T, TMember>)_setterCache.GetOrAdd(member, CreateSetter<T, TMember>);
+        var getter = AccessorCache<T, TMember>.Getters.GetOrAdd(member, CreateGetter<T, TMember>);
+        var setter = AccessorCache<T, TMember>.Setters.GetOrAdd(member, CreateSetter<T, TMember>);
 
         var oldValue = getter(obj);
 
@@ -128,5 +112,11 @@ public static class ObjectHelper
         return Expression
             .Lambda<RefAction<T, TMember>>(assign, objParam, valueParam)
             .Compile();
+    }
+
+    private static class AccessorCache<T, TMember>
+    {
+        public static readonly ConcurrentDictionary<MemberInfo, Func<T, TMember>> Getters = new();
+        public static readonly ConcurrentDictionary<MemberInfo, RefAction<T, TMember>> Setters = new();
     }
 }

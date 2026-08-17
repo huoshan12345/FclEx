@@ -2,9 +2,9 @@ namespace FclEx.Utils;
 
 public class DisposableValue<T>(T value, Action<T>? disposeAction = null) : IDisposable
 {
-    private volatile bool _disposed;
+    private int _disposeStarted;
 
-    public T Value => _disposed
+    public T Value => Volatile.Read(ref _disposeStarted) != 0
         ? throw new ObjectDisposedException(nameof(Value))
         : value;
 
@@ -12,7 +12,7 @@ public class DisposableValue<T>(T value, Action<T>? disposeAction = null) : IDis
 
     public void Dispose()
     {
-        if (_disposed)
+        if (Interlocked.Exchange(ref _disposeStarted, 1) != 0)
             return;
 
         GC.SuppressFinalize(this);
@@ -25,7 +25,5 @@ public class DisposableValue<T>(T value, Action<T>? disposeAction = null) : IDis
         {
             disposable.Dispose();
         }
-
-        _disposed = true;
     }
 }

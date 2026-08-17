@@ -2,9 +2,9 @@ namespace FclEx.Extensions;
 
 public static class ConcurrentDictionaryExtensions
 {
-    public static void Remove<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> dic, TKey key) where TKey : notnull
+    public static bool Remove<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> dic, TKey key) where TKey : notnull
     {
-        dic.TryRemove(key, out _);
+        return dic.TryRemove(key, out _);
     }
 
     public static ConcurrentDictionary<TKey, TValue> ToConcurrentDictionary<TKey, TValue>(

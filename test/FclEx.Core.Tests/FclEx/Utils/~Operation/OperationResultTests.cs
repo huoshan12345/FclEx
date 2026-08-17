@@ -44,21 +44,41 @@ public partial class OperationResultTests
     }
 
     [Fact]
-    public void Cast_NullSuccess_ToReferenceTarget_ReturnsSuccess()
+    public void Constructor_Rejects_Null_Success_Value()
     {
-        var result = Operation.Success<object?>(null).Cast<string?>();
-
-        Assert.True(result.IsSuccess);
-        Assert.Null(result.Value);
+        Assert.Throws<ArgumentNullException>(() =>
+        {
+            _ = new OperationResult<object?>(null!, TimeSpan.Zero);
+        });
     }
 
     [Fact]
-    public void Cast_NullSuccess_ToNonNullableValueTarget_ReturnsError()
+    public void Success_Factory_Rejects_Null_Value()
     {
-        var result = Operation.Success<object?>(null).Cast<int>();
+        Assert.Throws<ArgumentNullException>(() =>
+        {
+            _ = Operation.Success<object?>(null!);
+        });
+    }
 
-        Assert.False(result.IsSuccess);
-        Assert.IsType<InvalidCastException>(result.Exception);
+    [Fact]
+    public void Implicit_Success_Conversion_Rejects_Null_Value()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+        {
+            OperationResult<object?> result = (object?)null!;
+            _ = result;
+        });
+    }
+
+    [Fact]
+    public void Default_Value_Is_Not_A_Valid_Result()
+    {
+        OperationResult<object> result = default;
+
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.Value);
+        Assert.Null(result.Exception);
     }
 
     [Fact]

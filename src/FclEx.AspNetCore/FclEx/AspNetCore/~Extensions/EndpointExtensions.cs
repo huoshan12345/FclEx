@@ -8,18 +8,18 @@ public static class EndpointExtensions
     /// <typeparam name="T">The type of attribute to retrieve.</typeparam>
     /// <param name="endpoint">The endpoint from which to retrieve attributes.</param>
     /// <param name="combineController">
-    /// When <c>true</c>, combines the attributes from both the action and its controller.
-    /// When <c>false</c>, returns only the action's attributes if they exist, 
+    /// When <see langword="true"/>, combines the attributes from both the action and its controller.
+    /// When <see langword="false"/>, returns only the action's attributes if they exist, 
     /// or the controller's attributes if the action's attributes are absent.
     /// </param>
     /// <param name="inherit">
     /// Indicates whether to search the inheritance chain for the attributes.
-    /// Defaults to <c>true</c>.
+    /// Defaults to <see langword="true"/>.
     /// </param>
     /// <returns>
     /// An array of attributes of the specified type. If no attributes are found, an empty array is returned.
     /// </returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="endpoint"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="endpoint"/> is <see langword="null"/>.</exception>
     public static T[] GetAttributes<T>(this Endpoint endpoint, bool combineController, bool inherit = true) where T : Attribute
     {
         Check.NotNull(endpoint);

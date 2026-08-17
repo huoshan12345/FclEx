@@ -2,6 +2,9 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace FclEx.EfCore;
 
+/// <summary>
+/// Provides common persistence, synchronization, and testing operations for <see cref="DbContext"/>.
+/// </summary>
 public static partial class DbContextExtensions
 {
     /// <summary>
@@ -12,22 +15,28 @@ public static partial class DbContextExtensions
     /// <param name="context">The <see cref="DbContext"/> instance used for database operations.</param>
     /// <param name="filter">The filter expression to locate an existing entity.</param>
     /// <param name="factory">The factory function to create a new entity if no match is found.</param>
+    /// <param name="cancellationToken">A token to observe while waiting for the operation to complete.</param>
     /// <returns>The existing or newly added entity.</returns>
     /// <exception cref="ArgumentNullException">
-    /// Thrown if <paramref name="context"/>, <paramref name="filter"/>, or <paramref name="factory"/> is <c>null</c>.
+    /// Thrown if <paramref name="context"/>, <paramref name="filter"/>, or <paramref name="factory"/> is <see langword="null"/>.
     /// </exception>
-    public static async Task<T> GetOrAddAsync<T>(this DbContext context, Expression<Func<T, bool>> filter, Func<T> factory) where T : class
+    /// <remarks>
+    /// This operation is not atomic. Concurrent callers can both observe that no entity exists and then attempt
+    /// to insert one. Use a database unique constraint and handle the resulting conflict when uniqueness matters.
+    /// </remarks>
+    public static async Task<T> GetOrAddAsync<T>(this DbContext context, Expression<Func<T, bool>> filter, Func<T> factory,
+        CancellationToken cancellationToken = default) where T : class
     {
         Check.NotNull(context);
         Check.NotNull(filter);
         Check.NotNull(factory);
 
-        var entity = await context.Set<T>().FirstOrDefaultAsync(filter);
+        var entity = await context.Set<T>().FirstOrDefaultAsync(filter, cancellationToken);
         if (entity is null)
         {
             entity = factory();
             context.Add(entity);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(cancellationToken);
         }
         return entity;
     }
@@ -56,6 +65,23 @@ public static partial class DbContextExtensions
     public static async Task<T> SaveAsync<T, TKey>(this DbContext context, T entity, params IEnumerable<string> excludeOnUpdate)
         where T : class, IHasId<TKey>
     {
+        return await context.SaveAsync<T, TKey>(entity, default, excludeOnUpdate);
+    }
+
+    /// <summary>
+    /// Inserts an entity whose key is the default value, or updates an entity whose key is non-default.
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <typeparam name="TKey">The entity key type.</typeparam>
+    /// <param name="context">The context used to save the entity.</param>
+    /// <param name="entity">The entity to insert or update.</param>
+    /// <param name="cancellationToken">A token to observe while saving changes.</param>
+    /// <param name="excludeOnUpdate">Property or navigation names that should not be updated for an existing entity.</param>
+    /// <returns>The supplied entity after changes have been saved.</returns>
+    public static async Task<T> SaveAsync<T, TKey>(this DbContext context, T entity, CancellationToken cancellationToken,
+        params IEnumerable<string> excludeOnUpdate)
+        where T : class, IHasId<TKey>
+    {
         var entry = context.Entry(entity);
 
         if (EqualityComparer<TKey>.Default.Equals(entity.Id, default))
@@ -68,10 +94,10 @@ public static partial class DbContextExtensions
             entry.ExcludeFromUpdate(excludeOnUpdate);
         }
 
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(cancellationToken);
         return entity;
     }
-    
+
     /// <summary>
     /// Prevents the specified properties or navigation members from being marked as modified
     /// during an update operation.
@@ -82,7 +108,7 @@ public static partial class DbContextExtensions
     /// <returns>The same <see cref="EntityEntry{T}"/> instance for chaining.</returns>
     /// <remarks>
     /// This method sets <see cref="PropertyEntry.IsModified"/> or <see cref="NavigationEntry.IsModified"/>
-    /// to <c>false</c> for each specified member, ensuring they are not included in database update operations.
+    /// to <see langword="false"/> for each specified member, ensuring they are not included in database update operations.
     /// </remarks>
     public static EntityEntry<T> ExcludeFromUpdate<T>(this EntityEntry<T> entry, params IEnumerable<string> propertyNames) where T : class
     {
@@ -100,48 +126,132 @@ public static partial class DbContextExtensions
         return entry;
     }
 
+    /// <summary>
+    /// Inserts or updates an entity with a <see cref="long"/> key, based on whether its key is the default value.
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <param name="context">The context used to save the entity.</param>
+    /// <param name="entity">The entity to insert or update.</param>
+    /// <param name="excludeOnUpdate">Property or navigation names that should not be updated for an existing entity.</param>
+    /// <returns>The supplied entity after changes have been saved.</returns>
     public static Task<T> SaveAsync<T>(this DbContext context, T entity, params IEnumerable<string> excludeOnUpdate)
         where T : class, IHasId<long>
     {
         return context.SaveAsync<T, long>(entity, excludeOnUpdate);
     }
 
-    public static Task<int> InsertAsync<T>(this DbContext context, T item) where T : class
+    /// <summary>
+    /// Inserts or updates an entity with a <see cref="long"/> key, based on whether its key is the default value.
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <param name="context">The context used to save the entity.</param>
+    /// <param name="entity">The entity to insert or update.</param>
+    /// <param name="cancellationToken">A token to observe while saving changes.</param>
+    /// <param name="excludeOnUpdate">Property or navigation names that should not be updated for an existing entity.</param>
+    /// <returns>The supplied entity after changes have been saved.</returns>
+    public static Task<T> SaveAsync<T>(this DbContext context, T entity, CancellationToken cancellationToken,
+        params IEnumerable<string> excludeOnUpdate)
+        where T : class, IHasId<long>
+    {
+        return context.SaveAsync<T, long>(entity, cancellationToken, excludeOnUpdate);
+    }
+
+    /// <summary>
+    /// Adds an entity and immediately saves the context.
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <param name="context">The context used for the operation.</param>
+    /// <param name="item">The entity to add.</param>
+    /// <param name="cancellationToken">A token to observe while saving changes.</param>
+    /// <returns>The number of state entries written to the database.</returns>
+    public static Task<int> InsertAsync<T>(this DbContext context, T item, CancellationToken cancellationToken = default) where T : class
     {
         context.Set<T>().Add(item);
-        return context.SaveChangesAsync();
+        return context.SaveChangesAsync(cancellationToken);
     }
 
-    public static Task<int> InsertRangeAsync<T>(this DbContext context, IEnumerable<T> enumerable) where T : class
+    /// <summary>
+    /// Adds a sequence of entities and immediately saves the context.
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <param name="context">The context used for the operation.</param>
+    /// <param name="enumerable">The entities to add.</param>
+    /// <param name="cancellationToken">A token to observe while saving changes.</param>
+    /// <returns>The number of state entries written to the database.</returns>
+    public static Task<int> InsertRangeAsync<T>(this DbContext context, IEnumerable<T> enumerable, CancellationToken cancellationToken = default) where T : class
     {
         context.Set<T>().AddRange(enumerable);
-        return context.SaveChangesAsync();
+        return context.SaveChangesAsync(cancellationToken);
     }
 
-    public static Task<int> UpdateAsync<T>(this DbContext context, T item) where T : class
+    /// <summary>
+    /// Marks an entity as modified and immediately saves the context.
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <param name="context">The context used for the operation.</param>
+    /// <param name="item">The entity to update.</param>
+    /// <param name="cancellationToken">A token to observe while saving changes.</param>
+    /// <returns>The number of state entries written to the database.</returns>
+    public static Task<int> UpdateAsync<T>(this DbContext context, T item, CancellationToken cancellationToken = default) where T : class
     {
         context.Set<T>().Update(item);
-        return context.SaveChangesAsync();
+        return context.SaveChangesAsync(cancellationToken);
     }
 
-    public static Task<int> UpdateRangeAsync<T>(this DbContext context, IEnumerable<T> enumerable) where T : class
+    /// <summary>
+    /// Marks a sequence of entities as modified and immediately saves the context.
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <param name="context">The context used for the operation.</param>
+    /// <param name="enumerable">The entities to update.</param>
+    /// <param name="cancellationToken">A token to observe while saving changes.</param>
+    /// <returns>The number of state entries written to the database.</returns>
+    public static Task<int> UpdateRangeAsync<T>(this DbContext context, IEnumerable<T> enumerable, CancellationToken cancellationToken = default) where T : class
     {
         context.Set<T>().UpdateRange(enumerable);
-        return context.SaveChangesAsync();
+        return context.SaveChangesAsync(cancellationToken);
     }
 
-    public static Task<int> DeleteAsync<T>(this DbContext context, T item) where T : class
+    /// <summary>
+    /// Marks an entity for deletion and immediately saves the context.
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <param name="context">The context used for the operation.</param>
+    /// <param name="item">The entity to delete.</param>
+    /// <param name="cancellationToken">A token to observe while saving changes.</param>
+    /// <returns>The number of state entries written to the database.</returns>
+    /// <remarks>A context that applies soft-delete state rules may convert this operation into an update.</remarks>
+    public static Task<int> DeleteAsync<T>(this DbContext context, T item, CancellationToken cancellationToken = default) where T : class
     {
         context.Set<T>().Remove(item);
-        return context.SaveChangesAsync();
+        return context.SaveChangesAsync(cancellationToken);
     }
 
-    public static Task<int> DeleteRangeAsync<T>(this DbContext context, IEnumerable<T> enumerable) where T : class
+    /// <summary>
+    /// Marks a sequence of entities for deletion and immediately saves the context.
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <param name="context">The context used for the operation.</param>
+    /// <param name="enumerable">The entities to delete.</param>
+    /// <param name="cancellationToken">A token to observe while saving changes.</param>
+    /// <returns>The number of state entries written to the database.</returns>
+    /// <remarks>A context that applies soft-delete state rules may convert deletions into updates.</remarks>
+    public static Task<int> DeleteRangeAsync<T>(this DbContext context, IEnumerable<T> enumerable, CancellationToken cancellationToken = default) where T : class
     {
         context.Set<T>().RemoveRange(enumerable);
-        return context.SaveChangesAsync();
+        return context.SaveChangesAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Deletes the entity with the supplied key, using soft deletion when the entity type supports it.
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <typeparam name="TKey">The entity key type.</typeparam>
+    /// <param name="set">The entity set to query.</param>
+    /// <param name="id">The key of the entity to delete.</param>
+    /// <param name="cancellationToken">A token to observe while executing the database command.</param>
+    /// <returns>The number of rows affected.</returns>
+    /// <remarks>The operation executes directly in the database and does not synchronize tracked instances.</remarks>
     public static Task<int> SoftDeleteAsync<T, TKey>(this DbSet<T> set, TKey id, CancellationToken cancellationToken = default)
         where T : class, IHasId<TKey>
     {
@@ -168,8 +278,8 @@ public static partial class DbContextExtensions
     /// If not provided or returns null, the entity remains unchanged.
     /// </param>
     /// <param name="allowDeletion">
-    /// When <c>true</c>, any entities that exist in the database but not in the DTOs will be deleted.
-    /// Set to <c>false</c> when performing partial updates where deletion should not occur.
+    /// When <see langword="true"/>, any entities that exist in the database but not in the DTOs will be deleted.
+    /// Set to <see langword="false"/> when performing partial updates where deletion should not occur.
     /// </param>
     /// <param name="excludeOnUpdate">
     /// Names of properties or navigation properties that should not be modified during an update operation.
@@ -178,6 +288,11 @@ public static partial class DbContextExtensions
     /// An <see cref="EntityChanges{TEntity}"/> object containing
     /// all inserted, updated, and deleted entities.
     /// </returns>
+    /// <exception cref="ArgumentException">
+    /// Thrown when <paramref name="existingEntities"/> contains duplicate keys, or when
+    /// <paramref name="dtos"/> contains duplicate non-default keys. Multiple default DTO keys are allowed
+    /// because they commonly represent entities whose keys will be generated by the database.
+    /// </exception>
     public static EntityChanges<TEntity> ApplyChanges<TEntity, TDto, TKey>(
         this DbContext context,
         IEnumerable<TDto> dtos,
@@ -192,16 +307,22 @@ public static partial class DbContextExtensions
         where TKey : notnull
     {
         var set = context.Set<TEntity>();
-        var existingDic = existingEntities.GroupBy(entityKey).ToDictionary(g => g.Key, g => g.First());
+        var existingDic = ToDictionary(existingEntities, entityKey, nameof(existingEntities));
+        var keyedDtos = ToListWithUniqueKeys(dtos, dtoKey, nameof(dtos));
 
-        var changes = new EntityChanges<TEntity>();
-        foreach (var dto in dtos)
+        var inserted = new List<TEntity>();
+        var updated = new List<EntityUpdate<TEntity>>();
+        var deleted = new List<TEntity>();
+        foreach (var (key, dto) in keyedDtos)
         {
-            var key = dtoKey(dto);
             if (existingDic.TryGetValue(key, out var entity))
             {
                 var update = false;
                 TEntity? updatedEntity;
+                var restoreSoftDeletedEntity = entity is ISoftDeletable { IsDeleted: true };
+                var originalDeletedAt = entity is IHasDeletedAt hasDeletedAt
+                    ? hasDeletedAt.DeletedAt
+                    : default;
 
                 if (updateEntity is null)
                 {
@@ -213,19 +334,39 @@ public static partial class DbContextExtensions
                     update = updatedEntity is not null;
                 }
 
-                if (updatedEntity is ISoftDeletable { IsDeleted: true } deletable)
+                if (restoreSoftDeletedEntity && updatedEntity is ISoftDeletable deletable)
                 {
                     deletable.IsDeleted = false;
+                    if (updatedEntity is IHasDeletedAt updatedHasDeletedAt)
+                        updatedHasDeletedAt.DeletedAt = default;
                     update = true;
                 }
 
                 if (update && updatedEntity is not null)
                 {
                     var entry = context.Entry(entity);
+
+                    if (ReferenceEquals(updatedEntity, entity) == false)
+                    {
+                        entry.CurrentValues.SetValues(updatedEntity);
+                    }
+
                     entry.State = EntityState.Modified;
                     entry.ExcludeFromUpdate(excludeOnUpdate);
 
-                    changes.Updated.Add(new(updatedEntity, entity));
+                    if (restoreSoftDeletedEntity)
+                    {
+                        entry.Property(nameof(ISoftDeletable.IsDeleted)).OriginalValue = true;
+                        entry.Property(nameof(ISoftDeletable.IsDeleted)).IsModified = true;
+
+                        if (updatedEntity is IHasDeletedAt)
+                        {
+                            entry.Property(nameof(IHasDeletedAt.DeletedAt)).OriginalValue = originalDeletedAt;
+                            entry.Property(nameof(IHasDeletedAt.DeletedAt)).IsModified = true;
+                        }
+                    }
+
+                    updated.Add(new(updatedEntity, entity));
                 }
 
                 // // Remove matched entity from deletion candidates since it is present in the incoming DTOs.
@@ -235,7 +376,7 @@ public static partial class DbContextExtensions
             {
                 var newEntity = insertEntity(dto);
                 set.Add(newEntity);
-                changes.Inserted.Add(newEntity);
+                inserted.Add(newEntity);
             }
         }
 
@@ -244,10 +385,44 @@ public static partial class DbContextExtensions
             foreach (var (_, entity) in existingDic)
             {
                 set.Remove(entity);
-                changes.Deleted.Add(entity);
+                deleted.Add(entity);
             }
         }
-        return changes;
+        return new EntityChanges<TEntity>(inserted, updated, deleted);
+
+        static Dictionary<TKey, TValue> ToDictionary<TValue>(
+            IEnumerable<TValue> values,
+            Func<TValue, TKey> keySelector,
+            string paramName)
+        {
+            var result = new Dictionary<TKey, TValue>();
+            foreach (var value in values)
+            {
+                if (result.TryAdd(keySelector(value), value) == false)
+                    throw new ArgumentException("The collection contains duplicate keys.", paramName);
+            }
+
+            return result;
+        }
+
+        static List<(TKey Key, TValue Value)> ToListWithUniqueKeys<TValue>(
+            IEnumerable<TValue> values,
+            Func<TValue, TKey> keySelector,
+            string paramName)
+        {
+            var result = new List<(TKey Key, TValue Value)>();
+            var keys = new HashSet<TKey>();
+            foreach (var value in values)
+            {
+                var key = keySelector(value);
+                if (EqualityComparer<TKey>.Default.Equals(key, default) == false && keys.Add(key) == false)
+                    throw new ArgumentException("The collection contains duplicate keys.", paramName);
+
+                result.Add((key, value));
+            }
+
+            return result;
+        }
     }
 
     /// <summary>
@@ -269,7 +444,7 @@ public static partial class DbContextExtensions
     /// If not provided or returns null, the entity remains unchanged.
     /// </param>
     /// <param name="allowDeletion">
-    /// When <c>true</c>, any entities that exist in the database but not in <paramref name="newEntities"/> will be deleted.
+    /// When <see langword="true"/>, any entities that exist in the database but not in <paramref name="newEntities"/> will be deleted.
     /// </param>
     /// <param name="excludeOnUpdate">
     /// Names of properties or navigation properties that should not be modified during an update operation.
@@ -294,8 +469,9 @@ public static partial class DbContextExtensions
             newEntities,
             entityKey,
             existingEntities,
-            entityKey, insertEntity,
-            updateEntity,
+            entityKey,
+            insertEntity,
+            updateEntity ?? ((@new, _) => @new),
             allowDeletion,
             excludeOnUpdate);
     }

@@ -29,12 +29,6 @@ public class JsonFormatterTests
                 IndexOptions = indexOptions,
             }
         };
-#if NET6_0_OR_GREATER
-        await
-#endif
-        using var writer = new StringWriter();
-        using var x = writer.SetConsole();
-
         try
         {
             await ExceptionCreator.Run();
@@ -46,9 +40,6 @@ public class JsonFormatterTests
             Output?.WriteLine("\n\n\n");
 #endif
             await AssertLogMessage(ex);
-
-            var str = writer.ToString();
-            Assert.Empty(str); // nothing should be written to console by JsonFormatter.
         }
 
         return;

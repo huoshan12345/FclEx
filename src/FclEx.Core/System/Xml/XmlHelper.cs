@@ -5,7 +5,7 @@ namespace System.Xml;
 
 public static class XmlHelper
 {
-    private static readonly ConcurrentDictionary<Type, XmlSerializer> XmlSerializers = new();
+    private static readonly ConditionalWeakTable<Type, XmlSerializer> XmlSerializers = new();
 
     private static readonly XmlWriterSettings DefaultXmlWriterSettings = new()
     {
@@ -36,7 +36,7 @@ public static class XmlHelper
             return (T)value;
         }
 
-        var serializer = XmlSerializers.GetOrAdd(typeof(T), t => new XmlSerializer(t));
+        var serializer = XmlSerializers.GetValue(typeof(T), t => new XmlSerializer(t));
         using var reader = element.CreateReader();
         return (T)serializer.Deserialize(reader)!;
     }
@@ -47,7 +47,7 @@ public static class XmlHelper
         if (obj is null)
             return null;
 
-        var serializer = XmlSerializers.GetOrAdd(typeof(T), t => new XmlSerializer(t));
+        var serializer = XmlSerializers.GetValue(typeof(T), t => new XmlSerializer(t));
         using var writer = new StringWriter();
         using var xmlWriter = XmlWriter.Create(writer, settings ?? DefaultXmlWriterSettings);
         serializer.Serialize(xmlWriter, obj);

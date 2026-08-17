@@ -387,13 +387,15 @@ public static partial class OperationResultExtensions
     /// <summary>
     /// Converts asynchronous operation results to actions and combines them.
     /// </summary>
-    /// <param name="tasks">The tasks representing asynchronous operation results.</param>
+    /// <param name="enumerable">The enumerable items to be converted to actions.</param>
+    /// <param name="selector">A function that selects an asynchronous operation result for each item.</param>
     /// <param name="parallel">Whether the generated actions should be combined in parallel.</param>
-    public static IAction<T[]> ToAction<T>(this IEnumerable<Task<OperationResult<T>>> tasks, bool parallel)
+    public static IAction<TResult[]> ToAction<T, TResult>(this IEnumerable<T> enumerable, Func<T, CancellationToken, Task<OperationResult<TResult>>> selector, bool parallel)
     {
-        Check.NotNull(tasks);
+        Check.NotNull(enumerable);
+        Check.NotNull(selector);
 
-        var actions = tasks.Select(m => Operation.Action(t => m));
+        var actions = enumerable.Select(m => Operation.Action(t => selector(m, t)));
         return parallel ? actions.CombineInParallel() : actions.CombineInSeries();
     }
 
@@ -454,7 +456,7 @@ public static partial class OperationResultExtensions
     {
         Check.NotNull(next);
 
-        return task.Then<T, TNext>(m => Operation.ExecuteAsync(() => next(m)));
+        return task.Then<T, TNext>(m => Operation.ExecuteAsync(t => next(m)));
     }
 
     /// <summary>
@@ -464,8 +466,7 @@ public static partial class OperationResultExtensions
     public static Task<OperationResult<(T, TNext)>> ThenWith<T, TNext>(this Task<OperationResult<T>> task, Func<T, Task<TNext>> next)
     {
         Check.NotNull(next);
-
-        return task.Then<T, (T, TNext)>(m => Operation.ExecuteAsync(() => next(m).Then(x => (m, x))));
+        return task.Then<T, (T, TNext)>(m => Operation.ExecuteAsync(t => next(m).Then(x => (m, x))));
     }
 
     /// <summary>
@@ -486,11 +487,10 @@ public static partial class OperationResultExtensions
     /// <summary>
     /// Awaits a task that produces operation results and merges them into a single array-valued result.
     /// </summary>
-    /// <remarks>The returned elapsed time is the wall-clock wait time around the source task.</remarks>
+    /// <remarks>The returned elapsed time is the sum of the contained operation results; waiting for the source task is not measured.</remarks>
     public static Task<OperationResult<T[]>> Merge<T, TResults>(this Task<TResults> task) where TResults : IEnumerable<OperationResult<T>>
     {
-        var watch = ValueStopwatch.StartNew();
-        return task.Then(m => m.Merge().Elapsed(watch.GetElapsedTime()));
+        return task.Then(m => m.Merge());
     }
 
     /// <summary>

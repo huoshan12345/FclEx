@@ -9,7 +9,7 @@ public class PhysicalAddressExtensionsTests
     {
         var address = PhysicalAddress.Parse("001122AABBCC");
         var result = address.AddressBytes();
-        Assert.Equal([0x00, 0x11, 0x22, 0xAA, 0xBB, 0xCC], result);
+        Assert.Equal([0x00, 0x11, 0x22, 0xAA, 0xBB, 0xCC], result.ToArray());
     }
 
     [Theory]

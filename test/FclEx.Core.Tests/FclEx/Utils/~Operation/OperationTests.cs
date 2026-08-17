@@ -48,7 +48,7 @@ public partial class OperationTests
     public void Execute_RejectsNullAction()
     {
         Assert.Throws<ArgumentNullException>(() => { _ = Operation.Execute((Action)null!); });
-        Assert.Throws<ArgumentNullException>(() => { _ = Operation.Execute((Func<int>)null!); });
+        Assert.Throws<ArgumentNullException>(() => { _ = Operation.Execute((Func<int>?)null!); });
     }
 
     [Fact]

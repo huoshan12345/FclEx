@@ -50,10 +50,10 @@ public class BasicTests
     public class ExplicitConversionTarget;
 
     [Fact]
-    public void GetImplementedInterface_ShouldNotReturnTypeItself()
+    public void Implements_ShouldTreatAnInterfaceAsImplementingItself()
     {
         Assert.Null(typeof(ISample).GetImplementedInterface(typeof(ISample)));
-        Assert.False(typeof(ISample).Implements(typeof(ISample)));
+        Assert.True(typeof(ISample).Implements(typeof(ISample)));
     }
 
     [Fact]
@@ -149,11 +149,28 @@ public class BasicTests
     [Theory]
     [InlineData(typeof(float), true)]
     [InlineData(typeof(double), true)]
-    [InlineData(typeof(decimal), true)]
-    [InlineData(typeof(decimal?), true)]
+    [InlineData(typeof(decimal), false)]
+    [InlineData(typeof(decimal?), false)]
     [InlineData(typeof(int), false)]
+#if NET5_0_OR_GREATER
+    [InlineData(typeof(Half), true)]
+    [InlineData(typeof(Half?), true)]
+#endif
     public void IsFloatingPoint_ShouldReturnExpectedResult(Type type, bool expected)
     {
         Assert.Equal(expected, type.IsFloatingPoint());
+    }
+
+    [Theory]
+    [InlineData(typeof(int), true)]
+    [InlineData(typeof(int?), true)]
+    [InlineData(typeof(decimal), true)]
+    [InlineData(typeof(decimal?), true)]
+    [InlineData(typeof(BigInteger), true)]
+    [InlineData(typeof(BigInteger?), true)]
+    [InlineData(typeof(string), false)]
+    public void IsNumeric_ShouldReturnExpectedResult(Type type, bool expected)
+    {
+        Assert.Equal(expected, type.IsNumeric());
     }
 }

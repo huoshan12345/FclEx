@@ -4,11 +4,11 @@ public record EnumInfo(string Name, string Lower, string Upper, long Value, stri
 
 public static class EnumHelper
 {
-    private static readonly ConcurrentDictionary<Type, EnumInfo[]> _infos = new();
+    private static readonly ConditionalWeakTable<Type, EnumInfo[]> _infos = new();
 
     public static EnumInfo[] GetInfos<T>() where T : struct, Enum
     {
-        return _infos.GetOrAdd(typeof(T), m => Enum.GetValues<T>().Select(x => x.Info()).ToArray());
+        return _infos.GetValue(typeof(T), m => Enum.GetValues<T>().Select(x => x.Info()).ToArray());
     }
 
     public static bool TryParse<TEnum>([NotNullWhen(true)] string? value, bool ignoreCase, bool fromNumeric, out TEnum result) where TEnum : struct, Enum

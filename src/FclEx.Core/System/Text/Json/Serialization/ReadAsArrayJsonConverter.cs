@@ -1,51 +1,122 @@
 namespace System.Text.Json.Serialization;
 
 /// <summary>
-/// A custom JSON converter that reads a single non-array JSON element as an array containing that element.
+/// Allows sequence collection types to be read from either a JSON array or a single JSON value.
 /// </summary>
 /// <remarks>
-/// This converter is useful for scenarios where the expected input may be either a single item 
-/// or an array of items, allowing for more flexible deserialization. 
-/// Note that this converter does not alter the writing behavior; it will not write 
-/// a single element as an array element.
+/// Writing retains the behavior of the next configured converter for the collection type. Register this converter
+/// in <see cref="JsonSerializerOptions.Converters" /> or on a property. Applying it to a collection type itself with
+/// <see cref="JsonConverterAttribute" /> is not supported because public System.Text.Json APIs cannot bypass a
+/// converter declared on the target type.
+/// Strings, dictionaries, multidimensional arrays, and non-generic enumerable types are not treated as sequences.
 /// </remarks>
-public class ReadAsArrayJsonConverter : JsonConverter<object>
+public sealed class ReadAsArrayJsonConverter : JsonConverterFactory
 {
     public static readonly ReadAsArrayJsonConverter Instance = new();
 
-    public override bool CanConvert(Type typeToConvert) => true;
-
-    public override object? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override bool CanConvert(Type typeToConvert)
     {
-        var token = reader.ReadElement();
-        var typeInfo = options.GetBuiltInJsonTypeInfo(typeToConvert);
+        if (typeToConvert == typeof(string) || IsDictionary(typeToConvert))
+            return false;
 
-        if (typeToConvert == typeof(string) || typeToConvert.IsEnumerable() == false)
-            return token.Deserialize(typeInfo); // typeToConvert is not a collection type, just deserialize it with built-in typeInfo.
+        if (typeToConvert.IsArray)
+            return typeToConvert.GetArrayRank() == 1;
 
-        if (token.ValueKind == JsonValueKind.Null)
-            return default;
+        return typeToConvert.GetInterfaces().Prepend(typeToConvert).Any(static candidate =>
+            candidate.IsGenericType
+            && candidate.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+    }
 
-        if (token.ValueKind == JsonValueKind.Array)
+    public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (CanConvert(typeToConvert) == false)
+            throw new InvalidOperationException($"{typeToConvert} is not a supported sequence collection type.");
+
+        var converterAttribute = typeToConvert.GetCustomAttribute<JsonConverterAttribute>(inherit: false);
+        if (converterAttribute?.ConverterType == typeof(ReadAsArrayJsonConverter))
         {
-            return token.Deserialize(typeInfo);
+            throw new NotSupportedException(
+                $"Apply {nameof(ReadAsArrayJsonConverter)} to a property or register it in "
+                + $"{nameof(JsonSerializerOptions)}.{nameof(JsonSerializerOptions.Converters)}; applying it to "
+                + $"the collection type {typeToConvert} cannot be composed with that type's default converter.");
         }
-        else
+
+        var fallbackOptions = CreateFallbackOptions(options, typeToConvert);
+        var converterType = typeof(SequenceConverter<>).MakeGenericType(typeToConvert);
+        return (JsonConverter)Activator.CreateInstance(converterType, fallbackOptions)!;
+    }
+
+    private static bool IsDictionary(Type type)
+    {
+        return type.GetInterfaces().Prepend(type).Any(static candidate =>
+            candidate.IsGenericType
+            && (candidate.GetGenericTypeDefinition() == typeof(IDictionary<,>)
+                || candidate.GetGenericTypeDefinition() == typeof(IReadOnlyDictionary<,>)));
+    }
+
+    private static JsonSerializerOptions CreateFallbackOptions(JsonSerializerOptions options, Type excludedType)
+    {
+        var fallbackOptions = new JsonSerializerOptions(options);
+
+        for (var i = 0; i < fallbackOptions.Converters.Count; i++)
         {
-            var arrayToken = new JsonArray(token.ToJsonNode());
-            return arrayToken.Deserialize(typeInfo);
+            fallbackOptions.Converters[i] = fallbackOptions.Converters[i] switch
+            {
+                ReadAsArrayJsonConverter converter => new DelegatingConverterFactory(converter, [excludedType]),
+                DelegatingConverterFactory converter => converter.Excluding(excludedType),
+                var converter => converter,
+            };
+        }
+
+        return fallbackOptions;
+    }
+
+    private sealed class DelegatingConverterFactory : JsonConverterFactory
+    {
+        private readonly ReadAsArrayJsonConverter _converter;
+        private readonly HashSet<Type> _excludedTypes;
+
+        public DelegatingConverterFactory(ReadAsArrayJsonConverter converter, IEnumerable<Type> excludedTypes)
+        {
+            _converter = converter;
+            _excludedTypes = [.. excludedTypes];
+        }
+
+        public override bool CanConvert(Type typeToConvert)
+            => _excludedTypes.Contains(typeToConvert) == false && _converter.CanConvert(typeToConvert);
+
+        public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
+            => _converter.CreateConverter(typeToConvert, options);
+
+        public DelegatingConverterFactory Excluding(Type type)
+        {
+            var excludedTypes = new HashSet<Type>(_excludedTypes) { type };
+            return new DelegatingConverterFactory(_converter, excludedTypes);
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, object? value, JsonSerializerOptions options)
+    private sealed class SequenceConverter<TCollection> : JsonConverter<TCollection>
     {
-        if (value is null)
+        private readonly JsonSerializerOptions _fallbackOptions;
+
+        public SequenceConverter(JsonSerializerOptions fallbackOptions)
         {
-            writer.WriteNullValue();
-            return;
+            _fallbackOptions = fallbackOptions;
         }
 
-        var typeInfo = options.GetBuiltInJsonTypeInfo(value.GetType());
-        JsonSerializer.Serialize(writer, value, typeInfo);
+        public override bool HandleNull => true;
+
+        public override TCollection? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            if (reader.TokenType is JsonTokenType.StartArray or JsonTokenType.Null)
+                return JsonSerializer.Deserialize<TCollection>(ref reader, _fallbackOptions);
+
+            var token = reader.ReadElement();
+            var arrayToken = new JsonArray(token.ToJsonNode());
+            return arrayToken.Deserialize<TCollection>(_fallbackOptions);
+        }
+
+        public override void Write(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options)
+            => JsonSerializer.Serialize(writer, value, _fallbackOptions);
     }
 }

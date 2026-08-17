@@ -17,10 +17,52 @@ public interface INameValuesBuilder
 #else
     ;
 #endif
+
+    /// <summary>
+    /// Formats a member value for the resulting name-value collection.
+    /// </summary>
+    /// <typeparam name="T">The value type.</typeparam>
+    /// <param name="value">The value to format.</param>
+    /// <param name="format">The format specified by <see cref="NameValueAttribute.Format"/>, if any.</param>
+    /// <returns>The formatted value, or <see langword="null"/> to use an empty string.</returns>
+    /// <remarks>
+    /// The default implementation formats <see cref="IFormattable"/> values with
+    /// <see cref="CultureInfo.InvariantCulture"/>. Implementations can provide protocol-specific formatting.
+    /// </remarks>
+    string? ToString<T>(T? value, string? format)
+#if NET6_0_OR_GREATER
+        => DefaultNameValuesBuilder.ToString(value, format);
+#else
+    ;
+#endif
 }
 
 public static class DefaultNameValuesBuilder
 {
+    /// <summary>
+    /// Formats a value using the invariant culture when it implements <see cref="IFormattable"/>.
+    /// </summary>
+    /// <typeparam name="T">The value type.</typeparam>
+    /// <param name="value">The value to format.</param>
+    /// <param name="format">An optional standard or custom format string.</param>
+    /// <returns>The formatted value, or <see langword="null"/> when <paramref name="value"/> is <see langword="null"/>.</returns>
+    public static string? ToString<T>(T? value, string? format)
+    {
+        return value is IFormattable formattable
+            ? formattable.ToString(format, CultureInfo.InvariantCulture)
+            : value?.ToString();
+    }
+
+    /// <summary>
+    /// Builds the name-value pairs described by <see cref="NameValueAttribute"/> members on <paramref name="builder"/>.
+    /// </summary>
+    /// <param name="builder">The object whose attributed members are converted to name-value pairs.</param>
+    /// <returns>The generated pairs in member-discovery order.</returns>
+    /// <remarks>
+    /// <see cref="NameValueOmitOption.Never"/> takes precedence over every other omission flag when flags are combined.
+    /// Values are compared with the equality comparer appropriate for their declared type when
+    /// <see cref="NameValueOmitOption.WhenDefault"/> is selected.
+    /// </remarks>
     public static List<KeyValuePair<string, string>> Build(INameValuesBuilder builder)
     {
         var list = new List<KeyValuePair<string, string>>();
@@ -30,14 +72,14 @@ public static class DefaultNameValuesBuilder
 
         foreach (var member in members)
         {
-            if (member.TryGetAttribute<NameValueAttribute>(false, out var queryAttr) == false)
+            if (member.TryGetAttribute<NameValueAttribute>(false, out var nameValueAttribute) == false)
                 continue;
 
-            var omit = queryAttr.OmitOption;
+            var omit = nameValueAttribute.OmitOption;
             if (omit == Unset)
                 omit = builder.Options.OmitOption;
 
-            var name = queryAttr.Name ?? member.Name;
+            var name = nameValueAttribute.Name ?? member.Name;
             var value = member.GetValue(builder);
             var type = member.DataMemberType.UnwrapNullable();
 
@@ -54,7 +96,7 @@ public static class DefaultNameValuesBuilder
                 }
                 else if (type == typeof(bool))
                 {
-                    var convention = queryAttr.BoolValueConvention;
+                    var convention = nameValueAttribute.BoolValueConvention;
                     if (convention == BoolValueConvention.Unset)
                         convention = builder.Options.BoolValueConvention;
 
@@ -68,17 +110,23 @@ public static class DefaultNameValuesBuilder
                 }
             }
 
-            if (omit.HasFlag(WhenNull) && value is null
-                || omit.HasFlag(WhenEmpty) && value is IEnumerable e && e.IsNullOrEmpty()
-                || omit.HasFlag(WhenDefault) && value == type.DefaultValue())
-            {
+            if (ShouldOmit(omit, value, type))
                 continue;
-            }
 
-            list.Add(new(name, value?.ToString() ?? ""));
+            list.Add(new(name, builder.ToString(value, nameValueAttribute.Format) ?? ""));
         }
 
         return list;
+
+        static bool ShouldOmit(NameValueOmitOption omit, object? value, Type type)
+        {
+            if (omit.HasFlag(Never))
+                return false;
+
+            return omit.HasFlag(WhenNull) && value is null
+                    || omit.HasFlag(WhenEmpty) && value is IEnumerable e && e.IsNullOrEmpty()
+                    || omit.HasFlag(WhenDefault) && NonGenericDefaultEqualityComparer.Create(type).Equals(value, type.DefaultValue());
+        }
     }
 }
 
@@ -88,4 +136,14 @@ public class NameValuesBuilder : INameValuesBuilder
         = NameValuesBuilderOptions.Default;
     public virtual List<KeyValuePair<string, string>> Build()
         => DefaultNameValuesBuilder.Build(this);
+
+    /// <summary>
+    /// Formats a member value using the invariant culture for <see cref="IFormattable"/> values.
+    /// </summary>
+    /// <typeparam name="T">The value type.</typeparam>
+    /// <param name="value">The value to format.</param>
+    /// <param name="format">An optional standard or custom format string.</param>
+    /// <returns>The formatted value, or <see langword="null"/> when <paramref name="value"/> is <see langword="null"/>.</returns>
+    public string? ToString<T>(T? value, string? format)
+        => DefaultNameValuesBuilder.ToString(value, format);
 }

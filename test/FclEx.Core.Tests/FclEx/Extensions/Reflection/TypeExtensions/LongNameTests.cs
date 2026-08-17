@@ -13,7 +13,7 @@ public class LongNameTests
         var type = typeof(List<>).GetGenericArguments().First();
         Assert.True(type.IsGenericParameter);
         var name = type.LongName();
-        Assert.Equal("System.Collections.Generic.List<>.T", name);
+        Assert.Equal("System.Collections.Generic.List<T>.T", name);
     }
 
     [Fact]
@@ -25,6 +25,6 @@ public class LongNameTests
         var type = method.GetGenericArguments().First();
         Assert.True(type.IsGenericParameter);
         var name = type.LongName();
-        Assert.Equal(typeof(LongNameTests).FullName + ".Tester.T", name);
+        Assert.Equal(typeof(LongNameTests).FullName + ".Tester.Test.T", name);
     }
 }

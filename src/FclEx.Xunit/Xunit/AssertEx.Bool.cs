@@ -55,6 +55,5 @@ partial class AssertEx
         {
             Assert.NotEqual(default, actual, userMessage);
         }
-
     }
 }

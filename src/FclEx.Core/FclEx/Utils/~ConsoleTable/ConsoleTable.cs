@@ -2,14 +2,45 @@ namespace FclEx.Utils;
 
 public class ConsoleTable : IRenderable
 {
-    public object?[] Columns { get; }
-    public List<object?[]> Rows { get; } = [];
+    private readonly object?[] _columns;
+    public IReadOnlyList<object?> Columns { get; }
+
+    private readonly List<object?[]> _rows = [];
+    public IReadOnlyList<IReadOnlyList<object?>> Rows => _rows
+        .Select(IReadOnlyList<object?> (m) => Array.AsReadOnly(m))
+        .ToArray();
+
     public ConsoleTableOptions Options { get; }
 
     public ConsoleTable(ConsoleTableOptions options)
     {
         Options = options;
-        Columns = options.Columns.EmptyIfNull().AsArray();
+        _columns = options.Columns?.Cast<object?>().ToArray() ?? [];
+        Columns = Array.AsReadOnly(_columns);
+    }
+
+    /// <summary>
+    /// Adds a row whose number of cells exactly matches the configured columns.
+    /// </summary>
+    /// <param name="values">The row values.</param>
+    /// <returns>This table.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="values"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException">The table has no configured columns.</exception>
+    /// <exception cref="ArgumentException"><paramref name="values"/> has a different number of cells than the columns.</exception>
+    public ConsoleTable AddRow(object?[] values)
+    {
+        if (values == null)
+            throw new ArgumentNullException(nameof(values));
+
+        var len = Columns.Count;
+        if (len == 0)
+            throw new InvalidOperationException("Please set the columns first.");
+
+        if (len != values.Length)
+            throw new ArgumentException($"The number of columns ({len}) does not match the number of values ({values.Length}).", nameof(values));
+
+        _rows.Add(values.ToArray());
+        return this;
     }
 
     public void Render(StringBuilder builder)
@@ -18,9 +49,9 @@ public class ConsoleTable : IRenderable
         var format = BuildFormat();
 
         // find the longest formatted line
-        var maxRowLength = Math.Max(0, Rows.Any() ? Rows.Max(row => string.Format(format, args: row).Length) : 0);
+        var maxRowLength = Math.Max(0, _rows.Any() ? _rows.Max(row => string.Format(format, args: row).Length) : 0);
 
-        var columnHeaders = Options.RenderColumns ? string.Format(format, args: Columns) : "";
+        var columnHeaders = Options.RenderColumns ? string.Format(format, args: _columns) : "";
         // longest line is greater of formatted columnHeader and longest row
         var longestLine = Math.Max(maxRowLength, columnHeaders.Length);
 
@@ -40,7 +71,7 @@ public class ConsoleTable : IRenderable
             builder.AppendLine(columnHeaders);
         }
 
-        foreach (var row in Rows.Select(row => string.Format(format, row)))
+        foreach (var row in _rows.Select(row => string.Format(format, row)))
         {
             RenderDivider(builder, longestLine);
             builder.AppendLine(row);
@@ -62,7 +93,7 @@ public class ConsoleTable : IRenderable
         {
             using var sb = new ValueStringBuilder(1024);
 
-            for (var i = 0; i < Columns.Length; i++)
+            for (var i = 0; i < Columns.Count; i++)
             {
                 // find the longest column by searching each row
                 var len = GetColumnLength(i);
@@ -81,7 +112,7 @@ public class ConsoleTable : IRenderable
         int GetColumnLength(int index)
         {
             var column = Options.RenderColumns ? Columns[index] : null;
-            var row = Rows.Select(m => m[index]);
+            var row = _rows.Select(m => m[index]);
             return row.Append(column).Max(m => m?.ToString()?.Length) ?? 0;
         }
     }

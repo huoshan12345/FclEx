@@ -6,16 +6,21 @@ public static class EnumExtensions
 
     public static EnumInfo Info(this Enum enumValue)
     {
-        return _infos.GetOrAdd(enumValue, k =>
+        if (Enum.IsDefined(enumValue.GetType(), enumValue) == false)
+            return CreateEnumInfo(enumValue);
+
+        return _infos.GetOrAdd(enumValue, CreateEnumInfo);
+
+        static EnumInfo CreateEnumInfo(Enum enumValue)
         {
-            var name = k.ToString();
-            return new(
+            var name = enumValue.ToString();
+            return new EnumInfo(
                 name,
-                name.ToLower(),
-                name.ToUpper(),
-                k.CastTo<long>(),
-                k.GetAttribute<EnumMemberAttribute>()?.Value);
-        });
+                name.ToLowerInvariant(),
+                name.ToUpperInvariant(),
+                enumValue.CastTo<long>(),
+                enumValue.GetAttribute<EnumMemberAttribute>()?.Value);
+        }
     }
 
     public static string MemberValue(this Enum e)
@@ -44,7 +49,7 @@ public static class EnumExtensions
         where TEnum : struct, Enum
         where TInteger : unmanaged
     {
-        if (Unsafe.SizeOf<TEnum>() == Unsafe.SizeOf<TInteger>())
+        if (Unsafe.SizeOf<TEnum>() == Unsafe.SizeOf<TInteger>() && typeof(TInteger).IsInteger())
         {
             integer = Unsafe.As<TEnum, TInteger>(ref enumValue);
             return true;
@@ -93,15 +98,15 @@ public static class EnumExtensions
 
     public static bool IsValid<T>(this T value) where T : struct, Enum
     {
-        var validValues = (T[])Enum.GetValues(typeof(T));
+        var validValues = Enum.GetValues<T>();
         return validValues.Contains(value);
     }
 
     public static T? GetAttribute<T>(this Enum enumValue) where T : Attribute
     {
         var type = enumValue.GetType();
-        var field = type.GetField(enumValue.ToString())!;
-        var attr = field.GetCustomAttribute<T>(false);
+        var field = type.GetField(enumValue.ToString());
+        var attr = field?.GetCustomAttribute<T>(false);
         return attr;
     }
 

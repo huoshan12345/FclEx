@@ -140,22 +140,30 @@ public static class Check
         return GreaterThan(value, default!, parameterName);
     }
 
-    [MethodImpl(AggressiveInlining)]
-    public static void NotEmpty<T>([NotNull] IReadOnlyCollection<T>? value, [CallerArgumentExpression(nameof(value))] string? parameterName = null)
-    {
-        NotNull(value, parameterName);
-        if (value.Count == 0)
-        {
-            var name = parameterName ?? nameof(value);
-            throw new ArgumentException($"The list argument '{name}' cannot be empty.");
-        }
-    }
-
+    /// <summary>Ensures that a sequence is not empty.</summary>
+    /// <remarks>
+    /// The method first uses <see cref="Enumerable.TryGetNonEnumeratedCount{TSource}"/>. When a count is unavailable,
+    /// it enumerates the sequence until the first item is found, so validating a one-shot or side-effecting sequence
+    /// consumes that enumeration.
+    /// </remarks>
+    /// <exception cref="ArgumentException">The sequence is empty.</exception>
     [MethodImpl(AggressiveInlining)]
     public static void NotEmpty<T>([NotNull] IEnumerable<T>? value, [CallerArgumentExpression(nameof(value))] string? parameterName = null)
     {
         NotNull(value, parameterName);
-        if (value.AnyEx() == false)
+
+        var empty = false;
+
+        if (value.TryGetNonEnumeratedCount(out var count))
+        {
+            empty = count == 0;
+        }
+        else if (value.AnyEx() == false)
+        {
+            empty = true;
+        }
+
+        if (empty)
         {
             var name = parameterName ?? nameof(value);
             throw new ArgumentException($"The list argument '{name}' cannot be empty.");
@@ -193,7 +201,6 @@ public static class Check
     /// If both values are non-null, the method fails without throwing and sets <paramref name="result"/> to <see langword="default"/>.<br/>
     /// If both values are <see langword="null"/>, an <see cref="ArgumentNullException" /> will be thrown.
     /// </remarks>
-    [MethodImpl(AggressiveInlining)]
     public static bool TryGetSingleNonNull<T>(
         [NotNullWhen(false)] T? left,
         [NotNullWhen(false)] T? right,
@@ -201,7 +208,7 @@ public static class Check
     {
         switch (left, right)
         {
-            case (null, null): throw new ArgumentNullException($"{nameof(left)} and {nameof(right)} cannot both be null.");
+            case (null, null): throw new ArgumentNullException(nameof(left), $"{nameof(left)} and {nameof(right)} cannot both be null.");
             case (null, not null):
             {
                 result = right;

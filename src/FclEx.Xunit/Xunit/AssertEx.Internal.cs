@@ -29,13 +29,13 @@ public static partial class AssertEx
 {
     private static readonly HashSet<string> _emptySet = [];
 
-    private static readonly ConcurrentDictionary<Type, Func<object, object, bool>?> TypeEqualsDic = new();
+    private static readonly ConditionalWeakTable<Type, Func<object, object, bool>?> TypeEqualsDic = new();
 
     internal static Func<object, object, bool>? GetEqualsMethod(Type? type)
     {
         return type == null
             ? null
-            : TypeEqualsDic.GetOrAdd(type, GetEqualsMethodInternal);
+            : TypeEqualsDic.GetValue(type, GetEqualsMethodInternal);
 
         static Func<object, object, bool>? GetEqualsMethodInternal(Type type)
         {

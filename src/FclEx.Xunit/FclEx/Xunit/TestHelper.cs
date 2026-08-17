@@ -26,21 +26,6 @@ public enum EnvVarCheckOption
     NotExist,
 }
 
-public static class BuildTypeOptionExtensions
-{
-    public static BuildType? ToBuildType(this BuildTypeOption option)
-    {
-        return option switch
-        {
-            BuildTypeOption.Debug => BuildType.Debug,
-            BuildTypeOption.Release => BuildType.Release,
-            BuildTypeOption.Any => null,
-            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
-        };
-    }
-}
-
-
 public static class TestHelper
 {
     /// <summary>
@@ -58,7 +43,7 @@ public static class TestHelper
     /// Indicates whether the current environment is running within a GitHub Action context.
     /// </summary>
     /// <remarks>
-    /// This static readonly field evaluates to <c>true</c> if the environment variable associated
+    /// This static readonly field evaluates to <see langword="true"/> if the environment variable associated
     /// with <see cref="GithubActionEnvKey"/> ("GITHUB_ACTION") is set and contains a non-empty value.<br/>
     /// This allows for conditionally executing logic based 
     /// on whether the code is being run as part of a GitHub Action workflow.
@@ -73,8 +58,8 @@ public static class TestHelper
         .Where(m => m.GetReferencedAssemblies().Any(x => x.FullName == AssemblyFullName))
         .ToArray();
 
-    public static readonly BuildType[] ReferencingAssemblyBuildTypes = ReferencingAssemblies
-        .Select(m => m.GetBuildInfo().BuildType)
+    public static readonly bool[] ReferencingAssembliesJitOptimized = ReferencingAssemblies
+        .Select(m => m.IsJitOptimized())
         .Distinct()
         .ToArray();
 
@@ -95,15 +80,15 @@ public static class TestHelper
             return $"The current operating system is not any of {os.JoinWith(", ")}";
         }
 
-        if (info.RequiredBuildType.ToBuildType() is { } buildType)
+        if (info.RequiredBuildType is BuildTypeOption.Debug or BuildTypeOption.Release)
         {
-            var currentBuildType = ReferencingAssemblyBuildTypes.Contains(BuildType.Debug)
-                ? BuildType.Debug
-                : BuildType.Release;
+            var currentBuildType = ReferencingAssembliesJitOptimized.Any(m => m == false)
+                ? BuildTypeOption.Debug
+                : BuildTypeOption.Release;
 
-            if (currentBuildType != buildType)
+            if (currentBuildType != info.RequiredBuildType)
             {
-                return $"The calling assembly is not in {buildType} mode";
+                return $"The calling assembly is not in {currentBuildType} mode";
             }
         }
 

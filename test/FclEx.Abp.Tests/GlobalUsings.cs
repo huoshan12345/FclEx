@@ -1,9 +1,5 @@
 // Global using directives
 
-global using System.Net;
-global using System.Runtime.CompilerServices;
-global using System.Text;
-global using AspectCore.DynamicProxy;
 global using FclEx.Abp;
 global using FclEx.DependencyInjection;
 global using FclEx.Extensions;

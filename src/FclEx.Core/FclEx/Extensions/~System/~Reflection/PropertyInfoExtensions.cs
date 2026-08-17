@@ -28,7 +28,7 @@ public static class PropertyInfoExtensions
 
     /// <summary>
     /// Gets the value of the property and attempts to cast it to <typeparamref name="T"/>.
-    /// Returns <c>null</c> if the value is null.
+    /// Returns <see langword="null"/> if the value is null.
     /// </summary>
     /// <typeparam name="T">The expected type of the property value.</typeparam>
     /// <param name="property">The property metadata.</param>
@@ -68,7 +68,7 @@ public static class PropertyInfoExtensions
     /// </summary>
     /// <param name="property">The property metadata.</param>
     /// <param name="nonPublic">Whether to include non-public accessors in the check.</param>
-    /// <returns><c>true</c> if the property is static; otherwise, <c>false</c>.</returns>
+    /// <returns><see langword="true"/> if the property is static; otherwise, <see langword="false"/>.</returns>
     public static bool IsStatic(this PropertyInfo property, bool nonPublic = false)
     {
         return property.GetAccessors(nonPublic).Any(x => x.IsStatic);
