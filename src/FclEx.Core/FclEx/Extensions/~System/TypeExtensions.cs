@@ -293,4 +293,22 @@ public static partial class TypeExtensions
             });
 
     }
+
+    /// <summary>
+    /// Finds a public static conversion operator method (either implicit or explicit) defined on the specified declaring type that converts from <paramref name="fromType"/> to <paramref name="toType"/>.
+    /// </summary>
+    /// <param name="declaringType">The type on which to search for the operator.</param>
+    /// <param name="fromType">The source type of the conversion.</param>
+    /// <param name="toType">The target type of the conversion.</param>
+    /// <returns>The <see cref="MethodInfo"/> representing the conversion operator if found; otherwise, <see langword="null"/>.</returns>
+    public static MethodInfo? FindConversionOperator(this Type declaringType, Type fromType, Type toType)
+    {
+        return declaringType
+            .GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .FirstOrDefault(m =>
+                m.Name is "op_Implicit" or "op_Explicit"
+                && m.ReturnType == toType
+                && m.GetParameters().Length == 1
+                && m.GetParameters()[0].ParameterType.IsAssignableFrom(fromType));
+    }
 }

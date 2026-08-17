@@ -2,6 +2,24 @@ namespace FclEx.Extensions;
 
 public static partial class ObjectExtensions
 {
+    private static readonly ConditionalWeakTable<Type, ConditionalWeakTable<Type, Box<MethodInfo>>> _converterCache = new();
+
+    private static MethodInfo? GetConversionOperator(Type fromType, Type toType)
+    {
+        var innerTable = _converterCache.GetOrCreateValue(fromType);
+
+        if (innerTable.TryGetValue(toType, out var holder))
+            return holder.Value;
+
+        var method = toType.FindConversionOperator(fromType, toType)
+                     ?? fromType.FindConversionOperator(fromType, toType);
+
+        innerTable.GetValue(toType, m => new Box<MethodInfo>(method));
+
+        return method;
+    }
+
+
     /// <summary>
     /// Returns <paramref name="obj"/> when it is already <typeparamref name="T"/>, or converts it to that type.
     /// </summary>
@@ -27,6 +45,13 @@ public static partial class ObjectExtensions
         {
             var type = typeof(T);
             var targetType = Nullable.GetUnderlyingType(type) ?? type;
+            var sourceType = obj.GetType();
+
+            var conversionOperator = GetConversionOperator(sourceType, targetType);
+
+            if (conversionOperator is not null)
+                return conversionOperator.Invoke<T>(null, [obj])!;
+
             return targetType.IsEnum
                 ? (T)Enum.ToObject(targetType, obj)
                 : (T)Convert.ChangeType(obj, targetType);

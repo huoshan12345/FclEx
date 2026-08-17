@@ -26,13 +26,11 @@ public sealed class ValueBox<T> : IEquatable<ValueBox<T>>
 
     public override string? ToString() => Value.ToString();
 
+    private static bool Equals(T? left, T? right) => left?.Equals(right) ?? right is null;
+
     public bool Equals(ValueBox<T>? other)
     {
-        if (other is null) 
-            return false;
-        if (ReferenceEquals(this, other))
-            return true;
-        return Value.Equals(other.Value);
+        return Value.Equals(other?.Value);
     }
 
     /// <summary>
@@ -42,17 +40,17 @@ public sealed class ValueBox<T> : IEquatable<ValueBox<T>>
     /// </summary>
     public override bool Equals(object? obj)
     {
-        return ReferenceEquals(this, obj) 
+        return ReferenceEquals(this, obj)
                || obj is ValueBox<T> other && Equals(other);
     }
 
     public bool Equals(T other) => Value.Equals(other);
     public override int GetHashCode() => Value.GetHashCode();
 
-    public static bool operator ==(ValueBox<T>? left, ValueBox<T>? right) => left?.Equals(right) ?? right is null;
+    public static bool operator ==(ValueBox<T>? left, ValueBox<T>? right) => Equals(left?.Value, right?.Value);
     public static bool operator !=(ValueBox<T>? left, ValueBox<T>? right) => !(left == right);
     public static bool operator ==(ValueBox<T> left, T right) => left.Value.Equals(right);
-    public static bool operator !=(ValueBox<T> left, T right) => !(left.Value.Equals(right));
+    public static bool operator !=(ValueBox<T> left, T right) => !(left == right);
     public static bool operator ==(T left, ValueBox<T> right) => right.Value.Equals(left);
-    public static bool operator !=(T left, ValueBox<T> right) => !(right.Value.Equals(left));
+    public static bool operator !=(T left, ValueBox<T> right) => !(left == right);
 }
