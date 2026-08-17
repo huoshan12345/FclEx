@@ -9,12 +9,11 @@ public sealed class TreeNode<T>
 {
     private readonly List<TreeNode<T>> _children = [];
 
-    public TreeNode(T? value)
+    public TreeNode(T value)
     {
         Value = value;
     }
 
-    [AllowNull]
     public T Value { get; }
     public IReadOnlyList<TreeNode<T>> Children => _children;
     public TreeNode<T>? Parent { get; private set; }
@@ -45,7 +44,7 @@ public sealed class TreeNode<T>
     {
         Check.NotNull(child);
 
-        if (!_children.Remove(child))
+        if (_children.Remove(child) == false)
             return false;
 
         child.Parent = null;
@@ -91,8 +90,9 @@ public sealed class TreeNode<T>
         {
             var (left, right) = queue.Dequeue();
 
-            if (!comparer.Equals(left.Value!, right.Value!))
+            if (comparer.Equals(left.Value, right.Value) == false)
                 return false;
+
             if (left.Children.Count != right.Children.Count)
                 return false;
 
@@ -140,7 +140,7 @@ public static class TreeNodeExtensions
         while (queue.Count > 0)
         {
             var cur = queue.Dequeue();
-            yield return cur.Value!;
+            yield return cur.Value;
 
             foreach (var child in cur.Children)
             {

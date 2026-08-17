@@ -66,15 +66,18 @@ public static class ZipArchiveEntryExtensions
     {
         Check.NotNull(archive);
 
-        var root = new TreeNode<ZipArchiveEntryInfo>(default);
+        var root = new TreeNode<ZipArchiveEntryInfo>(default!);
         var entries = archive.Entries
             .Where(entry => ZipArchiveEntryInfo.NormalizePath(entry.FullName).Length != 0)
             .Select(entry => new ZipArchiveEntryInfo(entry))
             .ToArray();
+
+        // ReSharper disable once RedundantAssignment
         var explicitDirectories = entries
             .Where(entry => entry.IsDirectory)
             .GroupBy(entry => entry.FullName, StringComparer.Ordinal)
             .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
+
         var directoryNodes = new Dictionary<string, TreeNode<ZipArchiveEntryInfo>>(StringComparer.Ordinal)
         {
             [string.Empty] = root,

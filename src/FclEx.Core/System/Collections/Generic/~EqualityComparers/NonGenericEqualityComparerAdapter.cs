@@ -21,12 +21,7 @@ public class NonGenericEqualityComparerAdapter<T> : IEqualityComparer, IEquality
             : _comparer.Equals((T)x, (T)y);
     }
 
-    bool IEqualityComparer.Equals(object? x, object? y)
-    {
-        return EqualsCore(x, y);
-    }
-
-    bool IEqualityComparer<object>.Equals(object? x, object? y)
+    public new bool Equals(object? x, object? y)
     {
         return EqualsCore(x, y);
     }

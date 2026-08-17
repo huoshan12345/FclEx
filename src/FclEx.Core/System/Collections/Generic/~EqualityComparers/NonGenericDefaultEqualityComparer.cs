@@ -18,21 +18,11 @@ public class NonGenericDefaultEqualityComparer : IEqualityComparer, IEqualityCom
             .GetRequiredValue<IEqualityComparer>(null);
     }
 
-    private bool EqualsCore(object? x, object? y)
+    public new bool Equals(object? x, object? y)
     {
         return ComparerHelper.TryEquals(x, y, out var result)
             ? result.Value
             : _comparer.Equals(x, y);
-    }
-
-    bool IEqualityComparer.Equals(object? x, object? y)
-    {
-        return EqualsCore(x, y);
-    }
-
-    bool IEqualityComparer<object>.Equals(object? x, object? y)
-    {
-        return EqualsCore(x, y);
     }
 
     public int GetHashCode(object obj)
