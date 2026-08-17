@@ -10,7 +10,7 @@ public static class CancellationTokenSourceExtensions
     /// </returns>
     /// <remarks>
     /// The result is a concurrency-sensitive snapshot. A <see langword="false"/> result must not be used to infer that
-    /// another thread cannot cancel the source immediately afterwards. Exceptions from registered cancellation callbacks
+    /// another thread cannot cancel the source immediately afterward. Exceptions from registered cancellation callbacks
     /// are deliberately propagated.
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="cts"/> is <see langword="null"/>.</exception>
@@ -35,13 +35,13 @@ public static class CancellationTokenSourceExtensions
 #if !NET5_0_OR_GREATER
     public static Task CancelAsync(this CancellationTokenSource cts)
     {
-        var tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         ThreadPool.QueueUserWorkItem(_ =>
         {
             try
             {
                 cts.Cancel();
-                tcs.SetResult(0);
+                tcs.SetResult();
             }
             catch (Exception ex)
             {
