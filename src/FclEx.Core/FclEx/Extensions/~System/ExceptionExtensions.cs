@@ -182,6 +182,11 @@ public static partial class ExceptionExtensions
     /// <param name="ex">The exception to modify.</param>
     /// <param name="message">The new message to set.</param>
     /// <returns>The exception with its message modified.</returns>
+    /// <remarks>
+    /// This method writes a non-public runtime field on <see cref="Exception"/> through reflection. Field names and
+    /// layout are runtime implementation details, so this API is not supported for trimmed, Native AOT, or future
+    /// runtimes that do not expose the expected field.
+    /// </remarks>
     public static Exception SetMessage(this Exception ex, string? message)
     {
         FieldInfos.Exception_Message.SetValue(ex, message);
@@ -194,6 +199,7 @@ public static partial class ExceptionExtensions
     /// <param name="ex">The exception to modify.</param>
     /// <param name="func">A function that takes the exception and returns a new message string.</param>
     /// <returns>The exception with its message modified.</returns>
+    /// <remarks>Uses <see cref="SetMessage(Exception, string?)"/> and has the same reflection dependency.</remarks>
     public static Exception SetMessage(this Exception ex, Func<Exception, string> func)
     {
         return ex.SetMessage(func(ex));
@@ -204,6 +210,7 @@ public static partial class ExceptionExtensions
     /// </summary>
     /// <param name="ex">The exception to examine.</param>
     /// <returns>The message of the exception.</returns>
+    /// <remarks>Reads a non-public runtime field on <see cref="Exception"/> through reflection; see <see cref="SetMessage(Exception, string?)"/> for compatibility limitations.</remarks>
     public static string? GetMessage(this Exception ex)
     {
         return FieldInfos.Exception_Message.GetValue<string>(ex);
@@ -215,6 +222,11 @@ public static partial class ExceptionExtensions
     /// <param name="ex">The exception to modify.</param>
     /// <param name="trace">The new stack trace to set. If null, a new stack trace starting from the caller will be generated.</param>
     /// <returns>The exception with its stack trace modified.</returns>
+    /// <remarks>
+    /// This method writes a non-public runtime field on <see cref="Exception"/> through reflection. Field names and
+    /// layout are runtime implementation details, so this API is not supported for trimmed, Native AOT, or future
+    /// runtimes that do not expose the expected field.
+    /// </remarks>
     public static Exception SetStackTrace(this Exception ex, string? trace = null)
     {
         trace ??= new StackTrace(1, true).ToString();
@@ -227,6 +239,7 @@ public static partial class ExceptionExtensions
     /// </summary>
     /// <param name="ex">The exception to examine.</param>
     /// <returns>The stack trace of the exception.</returns>
+    /// <remarks>Reads a non-public runtime field on <see cref="Exception"/> through reflection; see <see cref="SetStackTrace(Exception, string?)"/> for compatibility limitations.</remarks>
     public static string? GetStackTrace(this Exception ex)
     {
         return FieldInfos.Exception_StackTrace.GetValue<string>(ex);

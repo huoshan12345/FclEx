@@ -27,6 +27,18 @@ public static class ReadOnlyListExtensions
         return (random ?? Random.Shared).Sample(list);
     }
 
+    /// <summary>
+    /// Marshals each item in <paramref name="list"/> to its native-layout bytes and concatenates the results.
+    /// </summary>
+    /// <typeparam name="T">The structure type to marshal.</typeparam>
+    /// <param name="list">The items to marshal.</param>
+    /// <returns>The native-layout bytes for all items in enumeration order.</returns>
+    /// <remarks>
+    /// This is an interop snapshot, not a portable or persistent serialization format. For pointer-based marshal
+    /// fields, such as <see cref="UnmanagedType.LPStr"/> and <see cref="UnmanagedType.LPArray"/>, the returned bytes
+    /// contain process-local addresses rather than the pointed-to data. Those addresses can become invalid after this
+    /// method returns and must not be persisted, sent across processes, or used for structural equality.
+    /// </remarks>
     public static byte[] MarshalToBytes<T>(this IReadOnlyList<T> list)
     {
         Check.NotNull(list);

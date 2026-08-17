@@ -38,4 +38,13 @@ public class ExpiringLazyTests
         Assert.True(value.IsDisposed);
         Assert.Throws<ObjectDisposedException>(() => lazy.Value);
     }
+
+    [Fact]
+    public void MaximumLifetime_DoesNotOverflowWhenCreatingTheFirstValue()
+    {
+        var expected = new object();
+        using var lazy = new ExpiringLazy<object>(() => expected, TimeSpan.MaxValue);
+
+        Assert.Same(expected, lazy.Value);
+    }
 }

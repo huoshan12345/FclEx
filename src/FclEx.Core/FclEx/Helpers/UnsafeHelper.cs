@@ -116,14 +116,16 @@ public static unsafe class UnsafeHelper
     /// <summary>
     /// Dereferences a pointer and returns the value at the specified memory address.
     /// </summary>
-    /// <typeparam name="T">The type of the value being dereferenced.</typeparam>
+    /// <typeparam name="T">The unmanaged type of the value being dereferenced.</typeparam>
     /// <param name="ptr">A pointer to the memory address containing the value.</param>
     /// <returns>
     /// The value located at the memory address pointed to by <paramref name="ptr"/>.
     /// </returns>
     /// <remarks>
     /// This function interprets the memory address as a pointer to a value of type <typeparamref name="T"/>.
-    /// Use with caution, as dereferencing an invalid or misaligned pointer can lead to runtime errors or undefined behavior.
+    /// <typeparamref name="T"/> is restricted to unmanaged types so an arbitrary address cannot be interpreted as a
+    /// managed object reference. The caller remains responsible for ensuring that <paramref name="ptr"/> is non-null,
+    /// suitably aligned, readable for <typeparamref name="T"/>, and valid for the duration of this call.
     /// </remarks>
     public static T? GetValue<T>(IntPtr ptr) where T : unmanaged
     {

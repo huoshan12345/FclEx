@@ -26,6 +26,8 @@ Whenever the user asks for a code review, treat API and signature design as a fi
 
 Review the purpose of each relevant class and method as well as its implementation. If an abstraction exists to solve a recognizable problem but its current responsibility, usage model, or overall design is clearly unsuitable, report that design problem and propose a more appropriate direction. If a type or member's intended purpose is unclear or appears arbitrary, ask the user what problem it is meant to solve before deciding whether its design is reasonable; do not invent an intent merely to justify the existing code.
 
+When the user addresses a batch of review findings, verify every item that the user says they corrected. During that verification, add sufficient regression tests in the matching test project and directory unless the test is demonstrably inapplicable. For every item that passes verification, complete or correct the XML documentation for the affected public API as needed; do not treat implementation verification as complete while its consumer-facing documentation is inaccurate or incomplete.
+
 ## Package Boundaries & Public API
 
 Respect the multi-package structure. Keep `FclEx.Core` focused on fundamental, broadly reusable helpers and avoid introducing dependencies on optional external ecosystems there. Put integrations with ASP.NET Core, EF Core, Dapper, Serilog, Slack, messaging, JSON libraries, YAML libraries, or test frameworks in the matching package.

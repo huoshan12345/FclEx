@@ -32,7 +32,11 @@ public static class DelegateHelper
     /// </summary>
     /// <remarks>
     /// The type is created with <see cref="AssemblyBuilder"/> and exists only at runtime. This API requires a runtime that
-    /// supports dynamic code generation and is not suitable for Native AOT scenarios.
+    /// supports dynamic code generation and is not suitable for Native AOT scenarios. Prefer
+    /// <see cref="Expression.GetDelegateType(Type[])"/> when its supported signature set is sufficient; it cannot
+    /// represent every CLR delegate signature, including signatures with by-reference parameters. Each call to this
+    /// method defines a new non-collectible runtime type, so callers should avoid repeatedly creating the same signature
+    /// or passing types from collectible assembly-load contexts.
     /// </remarks>
     public static Type MakeNewCustomDelegate(Type returnType, IEnumerable<Type> parameterTypes)
     {

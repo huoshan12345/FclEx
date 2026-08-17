@@ -19,7 +19,10 @@ public static class RetryHelper
     /// <exception cref="ArgumentOutOfRangeException">
     /// <paramref name="maxRetryCount"/> or <paramref name="retryDelay"/> is negative.
     /// </exception>
-    /// <remarks>The final exception is rethrown with its original stack trace.</remarks>
+    /// <remarks>
+    /// The final operation exception is rethrown with its original stack trace. Exceptions thrown by
+    /// <paramref name="shouldRetry"/> propagate directly and do not cause the operation exception to be retried.
+    /// </remarks>
     public static void Execute(
         Action<CancellationToken> operation,
         int maxRetryCount = 3,
@@ -79,10 +82,11 @@ public static class RetryHelper
             {
                 throw;
             }
-            catch (Exception exception) when (
-                retryCount < maxRetryCount &&
-                (shouldRetry?.Invoke(exception) ?? true))
+            catch (Exception exception)
             {
+                if (retryCount >= maxRetryCount || shouldRetry?.Invoke(exception) == false)
+                    throw;
+
                 Delay(retryDelay, cancellationToken);
             }
         }
@@ -102,7 +106,10 @@ public static class RetryHelper
     /// <exception cref="ArgumentOutOfRangeException">
     /// <paramref name="maxRetryCount"/> or <paramref name="retryDelay"/> is negative.
     /// </exception>
-    /// <remarks>The final exception is rethrown with its original stack trace.</remarks>
+    /// <remarks>
+    /// The final operation exception is rethrown with its original stack trace. Exceptions thrown by
+    /// <paramref name="shouldRetry"/> propagate directly and do not cause the operation exception to be retried.
+    /// </remarks>
     public static async Task ExecuteAsync(
         Func<CancellationToken, Task> operation,
         int maxRetryCount = 3,
@@ -162,10 +169,11 @@ public static class RetryHelper
             {
                 throw;
             }
-            catch (Exception exception) when (
-                retryCount < maxRetryCount &&
-                (shouldRetry?.Invoke(exception) ?? true))
+            catch (Exception exception)
             {
+                if (retryCount >= maxRetryCount || shouldRetry?.Invoke(exception) == false)
+                    throw;
+
                 if (retryDelay > TimeSpan.Zero)
                     await Task.Delay(retryDelay, cancellationToken).NoCapture();
             }

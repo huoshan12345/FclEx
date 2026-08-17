@@ -11,6 +11,8 @@ namespace FclEx.Utils;
 /// since the previous consumption and at least one item is pending, or when adding is completed.
 /// Failed batches containing multiple items are split recursively. Retry counting starts only after
 /// a failed segment contains one item.
+/// All notification events are invoked synchronously on the consumption loop or the caller of <see cref="StopAsync"/>.
+/// Handlers must return promptly and must not synchronously wait for the consumer to stop.
 /// </remarks>
 public sealed class RetryingBatchConsumer<T> : IAsyncDisposable
 {

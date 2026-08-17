@@ -1,17 +1,17 @@
 namespace FclEx.Utils;
 
 /// <summary>
-/// Lazily creates a value and refreshes it after the configured lifetime has elapsed.
+/// Lazily creates a value and refreshes it after the configured lifetime has elapsed according to a monotonic clock.
 /// </summary>
 /// <typeparam name="T">The type of value.</typeparam>
 public sealed class ExpiringLazy<T> : IDisposable
 {
     private readonly Func<T> _factory;
-    private readonly TimeSpan _lifetime;
+    private readonly double _lifetimeTimestampCount;
     private readonly object _lock = new();
 
     private T? _value;
-    private DateTime _expiresOn = DateTime.MinValue;
+    private long _createdAtTimestamp;
     private bool _hasValue;
     private bool _isCreating;
     private bool _isDisposed;
@@ -19,7 +19,8 @@ public sealed class ExpiringLazy<T> : IDisposable
     public ExpiringLazy(Func<T> factory, TimeSpan lifetime)
     {
         _factory = Check.NotNull(factory);
-        _lifetime = Check.GreaterThan(lifetime, TimeSpan.Zero);
+        lifetime = Check.GreaterThan(lifetime, TimeSpan.Zero);
+        _lifetimeTimestampCount = lifetime.TotalSeconds * Stopwatch.Frequency;
     }
 
     public T Value
@@ -32,7 +33,7 @@ public sealed class ExpiringLazy<T> : IDisposable
                 {
                     ThrowIfDisposed();
 
-                    if (_hasValue && _expiresOn >= DateTime.UtcNow)
+                    if (_hasValue && Stopwatch.GetTimestamp() - _createdAtTimestamp <= _lifetimeTimestampCount)
                         return _value!;
 
                     if (_isCreating == false)
@@ -52,7 +53,7 @@ public sealed class ExpiringLazy<T> : IDisposable
     private T CreateAndPublishValue()
     {
         T newValue;
-        DateTime expiresOn;
+        long createdAtTimestamp;
 
         try
         {
@@ -64,16 +65,7 @@ public sealed class ExpiringLazy<T> : IDisposable
             throw;
         }
 
-        try
-        {
-            expiresOn = DateTime.UtcNow.Add(_lifetime);
-        }
-        catch
-        {
-            CompleteCreation();
-            DisposeValue(newValue);
-            throw;
-        }
+        createdAtTimestamp = Stopwatch.GetTimestamp();
 
         T? oldValue = default;
         var hasOldValue = false;
@@ -86,7 +78,7 @@ public sealed class ExpiringLazy<T> : IDisposable
                 oldValue = _value;
                 hasOldValue = _hasValue;
                 _value = newValue;
-                _expiresOn = expiresOn;
+                _createdAtTimestamp = createdAtTimestamp;
                 _hasValue = true;
                 publishValue = true;
             }

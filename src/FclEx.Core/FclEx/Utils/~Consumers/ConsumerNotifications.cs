@@ -31,7 +31,10 @@ public sealed record DiscardedItem<T>(
     Exception Exception,
     int AttemptCount);
 
-/// <summary>Describes a failed batch or retry-segment consumption attempt.</summary>
+/// <summary>
+/// Describes a failed batch or retry-segment consumption attempt.
+/// The item list is a read-only view and does not expose the array that the consumer may retry.
+/// </summary>
 public sealed record BatchConsumptionFailure<T>(
     IReadOnlyList<T> Items,
     Exception Exception,

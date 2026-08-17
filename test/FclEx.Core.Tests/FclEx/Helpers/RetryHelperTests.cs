@@ -51,6 +51,18 @@ public class RetryHelperTests
     }
 
     [Fact]
+    public void Execute_Propagates_Exception_Thrown_By_ShouldRetry()
+    {
+        var expected = new InvalidOperationException("classifier failed");
+
+        var actual = Assert.Throws<InvalidOperationException>(() => RetryHelper.Execute(
+            _ => throw new ArgumentException("operation failed"),
+            shouldRetry: _ => throw expected));
+
+        Assert.Same(expected, actual);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_Retries_Until_The_Operation_Succeeds()
     {
         var attemptCount = 0;
@@ -63,6 +75,18 @@ public class RetryHelperTests
 
         Assert.Equal(42, result);
         Assert.Equal(3, attemptCount);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Propagates_Exception_Thrown_By_ShouldRetry()
+    {
+        var expected = new InvalidOperationException("classifier failed");
+
+        var actual = await Assert.ThrowsAsync<InvalidOperationException>(() => RetryHelper.ExecuteAsync(
+            _ => Task.FromException(new ArgumentException("operation failed")),
+            shouldRetry: _ => throw expected));
+
+        Assert.Same(expected, actual);
     }
 
     [Fact]

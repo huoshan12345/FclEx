@@ -7,6 +7,8 @@ namespace FclEx.Utils;
 /// <remarks>
 /// The consumer is single-use. Items may be enqueued before or after <see cref="StartAsync"/>,
 /// but not after <see cref="CompleteAdding"/> or stopping begins. Consumption is strictly serial.
+/// All notification events are invoked synchronously on the consumption loop or the caller of <see cref="StopAsync"/>.
+/// Handlers must return promptly and must not synchronously wait for the consumer to stop.
 /// </remarks>
 public sealed class RetryingConsumer<T> : IAsyncDisposable
 {

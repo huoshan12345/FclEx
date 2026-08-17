@@ -36,6 +36,21 @@ public class UnsafeHelperTests
         Assert.Equal(Unsafe.SizeOf<CommonStruct>(), UnsafeHelper.SizeOf<CommonStruct>());
     }
 
+    [Fact]
+    public void GetValue_ReadsUnmanagedValue()
+    {
+        using var memory = Marshal.AllocHGlobalDisposable(sizeof(int));
+        Marshal.WriteInt32(memory.Value, 42);
+
+        Assert.Equal(42, UnsafeHelper.GetValue<int>(memory.Value));
+    }
+
+    [Fact]
+    public void GetValue_WithRuntimeManagedType_IsRejected()
+    {
+        Assert.Throws<ArgumentException>(() => UnsafeHelper.GetValue(IntPtr.Zero, typeof(string)));
+    }
+
     [Theory]
     [InlineData(typeof(object))]
     [InlineData(typeof(string))]

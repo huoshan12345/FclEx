@@ -226,6 +226,39 @@ public class RetryingBatchConsumerTests
     }
 
     [Fact]
+    public async Task BatchFailureNotification_ExposesAnUnmodifiableViewOfTheRetrySegment()
+    {
+        IReadOnlyList<int>? notifiedItems = null;
+        var invocations = new List<int>();
+        var attempt = 0;
+        await using var consumer = new RetryingBatchConsumer<int>(
+            (items, _) =>
+            {
+                invocations.Add(items[0]);
+                return ++attempt == 1
+                    ? Task.FromException(new InvalidOperationException("failed"))
+                    : Task.CompletedTask;
+            },
+            batchSize: 1,
+            maxBatchInterval: TimeSpan.FromMinutes(1),
+            maxRetryCount: 1);
+        consumer.BatchFailed += (_, failure) =>
+        {
+            notifiedItems = failure.Items;
+            var list = Assert.IsAssignableFrom<IList<int>>(failure.Items);
+            Assert.Throws<NotSupportedException>(() => list[0] = 99);
+        };
+
+        consumer.Enqueue(1);
+        consumer.CompleteAdding();
+        await consumer.StartAsync();
+
+        Assert.NotNull(notifiedItems);
+        Assert.IsNotType<int[]>(notifiedItems);
+        Assert.Equal([1, 1], invocations);
+    }
+
+    [Fact]
     public async Task Cancellation_Abandons_The_Active_Segment_And_Pending_Items()
     {
         using var cancellation = new CancellationTokenSource();
