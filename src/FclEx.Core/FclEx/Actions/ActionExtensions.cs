@@ -333,13 +333,21 @@ public static partial class ActionExtensions
     /// A nonmatching success repeats and a failure is returned immediately. Caller cancellation produces
     /// a canceled result; expiration of <paramref name="timeout"/> produces an error containing a <see cref="TimeoutException"/>.
     /// </remarks>
-    public static IAction<T> RepeatUntil<T>(this IAction<T> action, Func<T, bool> until, TimeSpan delay = default, TimeSpan? timeout = null)
+    public static IAction<T> RepeatUntil<T>(
+        this IAction<T> action,
+        Func<T, bool> until,
+        TimeSpan delay = default,
+        TimeSpan? timeout = null)
     {
         Check.NotNull(until);
+        Check.NotNegative(delay);
+        if (timeout.HasValue)
+            Check.NotNegative(timeout.Value);
+
+        var effectiveTimeout = timeout > TimeSpan.Zero ? timeout : null;
 
         return Operation.Action<T>(async callerToken =>
         {
-            var effectiveTimeout = timeout > TimeSpan.Zero ? timeout : null;
             using var cancellation = callerToken.WithTimeout(effectiveTimeout);
 
             OperationResult<T> CreateTerminationResult()
