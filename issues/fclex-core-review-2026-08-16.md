@@ -169,7 +169,7 @@
    - 说明：interval 的自然语义是两次操作之间的间隔，当前实现却把完成时间额外推迟一个 interval。
    - 建议：仅在确认后面还有下一项时延迟，或把现有行为改名为“每项完成后延迟”。
 
-233. **[P2] `Average(IEnumerable<TimeSpan>)` 经由 `double` 会丢失大 ticks 值的精度。**
+233. **[P2][已修复] `Average(IEnumerable<TimeSpan>)` 经由 `double` 会丢失大 ticks 值的精度。**
    - 位置：`Extensions/~System/~Collections/~Generic/EnumerableExtensions.cs:123`。
    - 说明：`long` ticks 大于 2^53 时不能由 double 精确表示，平均值可能在没有溢出的情况下错误。
    - 建议：用整数累计（必要时 `decimal`/溢出检测）计算商和余数，或清晰返回 `double` 秒数而非伪精确 `TimeSpan`。
@@ -184,7 +184,7 @@
    - 说明：运行时对象实际是 `Delegate[]`；读似乎可行，但调用方按声明类型写回数组会产生运行时数组类型问题，API 的数组契约已被破坏。
    - 建议：使用 `.Cast<T>().ToArray()` 返回真实的 `T[]`，或只暴露 `IReadOnlyList<T>`。
 
-236. **[P2] `ReadOnlyListExtensions.TryGet` 的 `[NotNullWhen(true)]` 承诺不成立。**
+236. **[P2][已修复] `ReadOnlyListExtensions.TryGet` 的 `[NotNullWhen(true)]` 承诺不成立。**
    - 位置：`Extensions/~System/~Collections/~Generic/ReadOnlyListExtensions.cs:5`。
    - 说明：列表可以合法包含 null；索引有效时方法返回 true 仍可能把 null 写入 `out value`。
    - 建议：移除该 attribute，或只对 `T : notnull` 的 API 使用它。
@@ -266,6 +266,6 @@
 
 ## 建议处理顺序
 
-1. 先处理 233、235、236、245 与 246：它们涉及数值精度、类型安全、可空契约、反射结果可靠性与并发释放。
+1. 先处理 235、245 与 246：它们涉及类型安全、反射结果可靠性与并发释放。
 2. 接着统一 241–244 的公共 API 契约、命名、异常类型和边界行为。
 3. 最后处理 247–251 的取消、URI、流所有权和瞬时状态 API，并为每个已确认的行为补充针对性测试。

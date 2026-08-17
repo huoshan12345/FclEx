@@ -3,10 +3,10 @@ namespace FclEx.Extensions;
 public static class ReadOnlyListExtensions
 {
     /// <summary>Attempts to get the item at <paramref name="index"/>.</summary>
-    /// <remarks>A successful lookup may still produce <see langword="null"/> when the list contains a null item.</remarks>
+    /// <remarks>A successful lookup may still produce <see langword="null"/> when <typeparamref name="T"/> is nullable and the list contains a null item.</remarks>
     /// <param name="list">The list to inspect.</param>
     /// <param name="index">The zero-based item index.</param>
-    /// <param name="value">The item at <paramref name="index"/>, or <see langword="null"/> when the lookup fails or the item is null.</param>
+    /// <param name="value">The item at <paramref name="index"/>, or the default value of <typeparamref name="T"/> when the lookup fails.</param>
     /// <returns><see langword="true"/> when <paramref name="index"/> is in range; otherwise, <see langword="false"/>.</returns>
     public static bool TryGet<T>(this IReadOnlyList<T> list, int index, [MaybeNullWhen(false)] out T value)
     {
