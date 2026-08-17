@@ -24,8 +24,23 @@ public static class MethodInfoExtensions
     {
         var paras = method.GetParameters();
         var name = method.GetFullName();
-        var paraNames = paras.Select(m => m.ParameterType.LongName()).JoinWith(",");
-        return name + $"({paraNames})";
+        var paraNames = paras.Select(m => m.ParameterType.LongName());
+
+        return StringBuilderHelper.Build(m =>
+        {
+            m.Append(name);
+
+            if (method.IsGenericMethod)
+            {
+                var genericArgs = method
+                    .GetGenericArguments()
+                    .Select(x => x.LongName());
+
+                m.AppendAngleBracketed(x => x.AppendJoin(", ", genericArgs));
+            }
+
+            m.AppendCurlyBraced(x => x.AppendJoin(", ", paraNames));
+        });
     }
 
     /// <summary>Gets a process-local tag that uniquely identifies this <see cref="MethodInfo"/> object.</summary>
@@ -48,7 +63,7 @@ public static class MethodInfoExtensions
     {
         return method.DeclaringType == null
             ? method.Name
-            : $"{method.DeclaringType.Namespace}.{method.DeclaringType.ShortName()}.{method.Name}";
+            : $"{method.DeclaringType.LongName()}.{method.Name}";
     }
 
     [MethodImpl(AggressiveInlining)]
