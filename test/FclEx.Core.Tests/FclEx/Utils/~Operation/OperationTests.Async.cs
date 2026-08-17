@@ -5,8 +5,8 @@ partial class OperationTests
     [RetryFact(3, 100)]
     public async Task ExecuteAsync_Timeout_Test()
     {
-        var (success, exception, elapsed) = await Operation.ExecuteAsync(()
-            => Task.Delay(TimeSpan.FromSeconds(5)), TimeSpan.FromSeconds(0.1));
+        var (success, exception, elapsed) = await Operation.ExecuteAsync(t
+            => Task.Delay(TimeSpan.FromSeconds(5), t), TimeSpan.FromSeconds(0.1));
 
         Assert.False(success);
         Assert.True(elapsed < TimeSpan.FromSeconds(1.5), () => $"Expected {nameof(elapsed)} < {TimeSpan.FromSeconds(1.5)}, but was {elapsed}");
@@ -16,9 +16,9 @@ partial class OperationTests
     [RetryFact(3, 100)]
     public async Task ExecuteAsync_Timeout_Success_Test()
     {
-        var (success, result, exception, elapsed) = await Operation.ExecuteAsync(async () =>
+        var (success, result, exception, elapsed) = await Operation.ExecuteAsync(async t =>
         {
-            await Task.Delay(TimeSpan.FromSeconds(0.1));
+            await Task.Delay(TimeSpan.FromSeconds(0.1), t);
             return 1;
         }, TimeSpan.FromSeconds(10));
 
@@ -34,7 +34,7 @@ partial class OperationTests
         var invokedThreadId = 0;
         var completion = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        var execution = Operation.ExecuteAsync(async () =>
+        var execution = Operation.ExecuteAsync(async t =>
         {
             invokedThreadId = Environment.CurrentManagedThreadId;
             return await completion.Task;
@@ -50,7 +50,7 @@ partial class OperationTests
     [RetryFact(3, 100)]
     public async Task ExecuteAsync_Timeout_MoveSynchronousDelegateBodyToTheThreadPool()
     {
-        var (success, _, elapsed) = await Operation.ExecuteAsync(() =>
+        var (success, _, elapsed) = await Operation.ExecuteAsync(t =>
         {
             ThreadHelper.Sleep(1);
             return Task.CompletedTask;
@@ -63,7 +63,7 @@ partial class OperationTests
     [RetryFact(3, 100)]
     public async Task ExecuteAsync_Timeout_SyncBody_Success_Test()
     {
-        var (success, result, exception, elapsed) = await Operation.ExecuteAsync(() =>
+        var (success, result, exception, elapsed) = await Operation.ExecuteAsync(t =>
         {
             ThreadHelper.Sleep(0.1);
             return Task.FromResult(1);
@@ -77,7 +77,7 @@ partial class OperationTests
     [RetryFact(3, 100)]
     public async Task ExecuteValueAsync_OperationResult_Timeout_Test()
     {
-        var (success, _, exception, elapsed) = await Operation.ExecuteValueAsync(async () =>
+        var (success, _, exception, elapsed) = await Operation.ExecuteValueAsync(async t =>
         {
             await Task.Delay(TimeSpan.FromSeconds(5));
             return Operation.Success(1);

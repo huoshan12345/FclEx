@@ -7,11 +7,12 @@ public static partial class Operation
     /// </summary>
     /// <param name="action">The operation to execute.</param>
     /// <param name="timeout">The optional maximum wait time.</param>
+    /// <param name="cancellationToken">The cancellation token to observe.</param>
     /// <returns>A task that resolves to the operation result. Timeout returns an error result but does not cancel already-started synchronous work.</returns>
-    public static Task<OperationResult> ExecuteAsync(Action action, TimeSpan? timeout = null)
+    public static Task<OperationResult> ExecuteAsync(Action action, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Check.NotNull(action);
-        return ExecuteAsync(() => Task.Run(action), timeout);
+        return ExecuteAsync(t => Task.Run(action, t), timeout, cancellationToken);
     }
 
     /// <summary>
@@ -19,11 +20,12 @@ public static partial class Operation
     /// </summary>
     /// <param name="action">The operation-result factory to execute.</param>
     /// <param name="timeout">The optional maximum wait time.</param>
+    /// <param name="cancellationToken">The cancellation token to observe.</param>
     /// <returns>A task that resolves to the flattened result. Timeout returns an error result but does not cancel already-started synchronous work.</returns>
-    public static Task<OperationResult> ExecuteAsync(Func<OperationResult> action, TimeSpan? timeout = null)
+    public static Task<OperationResult> ExecuteAsync(Func<OperationResult> action, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Check.NotNull(action);
-        return ExecuteAsync(() => Task.Run(action), timeout);
+        return ExecuteAsync(t => Task.Run(action, t), timeout, cancellationToken);
     }
 
     /// <summary>
@@ -31,15 +33,16 @@ public static partial class Operation
     /// </summary>
     /// <param name="action">The asynchronous operation to execute.</param>
     /// <param name="timeout">The optional maximum wait time.</param>
+    /// <param name="cancellationToken">The cancellation token to observe.</param>
     /// <returns>A task that resolves to the operation result. Timeout returns an error result and does not cancel the original task unless the task observes cancellation independently.</returns>
-    public static async Task<OperationResult> ExecuteAsync(Func<Task> action, TimeSpan? timeout = null)
+    public static async Task<OperationResult> ExecuteAsync(Func<CancellationToken, Task> action, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Check.NotNull(action);
 
         var watch = ValueStopwatch.StartNew();
         try
         {
-            await TaskHelper.RunAsync(t => action(), timeout).NoCapture();
+            await TaskHelper.RunAsync(t => action(t), timeout, cancellationToken).NoCapture();
             return Success(watch.GetElapsedTime());
         }
         catch (Exception ex)
@@ -53,10 +56,11 @@ public static partial class Operation
     /// </summary>
     /// <param name="action">The asynchronous operation-result factory to execute.</param>
     /// <param name="timeout">The optional maximum wait time.</param>
+    /// <param name="cancellationToken">The cancellation token to observe.</param>
     /// <returns>A task that resolves to the flattened result. The outer execution elapsed time is used when flattening.</returns>
-    public static Task<OperationResult> ExecuteAsync(Func<Task<OperationResult>> action, TimeSpan? timeout = null)
+    public static Task<OperationResult> ExecuteAsync(Func<CancellationToken, Task<OperationResult>> action, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        return ExecuteAsync<OperationResult>(action, timeout).Then(m => m.Flatten());
+        return ExecuteAsync<OperationResult>(action, timeout, cancellationToken).Then(m => m.Flatten());
     }
 
     /// <summary>
@@ -65,11 +69,12 @@ public static partial class Operation
     /// <typeparam name="T">The value type returned by the operation.</typeparam>
     /// <param name="action">The operation to execute.</param>
     /// <param name="timeout">The optional maximum wait time.</param>
+    /// <param name="cancellationToken">The cancellation token to observe.</param>
     /// <returns>A task that resolves to the operation result. Timeout returns an error result but does not cancel already-started synchronous work.</returns>
-    public static Task<OperationResult<T>> ExecuteAsync<T>(Func<T> action, TimeSpan? timeout = null)
+    public static Task<OperationResult<T>> ExecuteAsync<T>(Func<T> action, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Check.NotNull(action);
-        return ExecuteAsync(() => Task.Run(action), timeout);
+        return ExecuteAsync(t => Task.Run(action, t), timeout, cancellationToken);
     }
 
     /// <summary>
@@ -78,11 +83,12 @@ public static partial class Operation
     /// <typeparam name="T">The value type returned by the inner result.</typeparam>
     /// <param name="action">The operation-result factory to execute.</param>
     /// <param name="timeout">The optional maximum wait time.</param>
+    /// <param name="cancellationToken">The cancellation token to observe.</param>
     /// <returns>A task that resolves to the flattened result. Timeout returns an error result but does not cancel already-started synchronous work.</returns>
-    public static Task<OperationResult<T>> ExecuteAsync<T>(Func<OperationResult<T>> action, TimeSpan? timeout = null)
+    public static Task<OperationResult<T>> ExecuteAsync<T>(Func<OperationResult<T>> action, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Check.NotNull(action);
-        return ExecuteAsync(() => Task.Run(action), timeout);
+        return ExecuteAsync(t => Task.Run(action, t), timeout, cancellationToken);
     }
 
     /// <summary>
@@ -91,11 +97,12 @@ public static partial class Operation
     /// <typeparam name="T">The value type returned by the inner result.</typeparam>
     /// <param name="action">The asynchronous operation-result factory to execute.</param>
     /// <param name="timeout">The optional maximum wait time.</param>
+    /// <param name="cancellationToken"></param>
     /// <returns>A task that resolves to the flattened result. The outer execution elapsed time is used when flattening.</returns>
-    public static Task<OperationResult<T>> ExecuteAsync<T>(Func<Task<OperationResult<T>>> action, TimeSpan? timeout = null)
+    public static Task<OperationResult<T>> ExecuteAsync<T>(Func<CancellationToken, Task<OperationResult<T>>> action, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Check.NotNull(action);
-        return ExecuteAsync<OperationResult<T>>(action, timeout).Then(m => m.Flatten());
+        return ExecuteAsync<OperationResult<T>>(action, timeout, cancellationToken).Then(m => m.Flatten());
     }
 
     /// <summary>
@@ -104,15 +111,16 @@ public static partial class Operation
     /// <typeparam name="T">The value type returned by the operation.</typeparam>
     /// <param name="action">The asynchronous operation to execute.</param>
     /// <param name="timeout">The optional maximum wait time.</param>
+    /// <param name="cancellationToken">The cancellation token to observe.</param>
     /// <returns>A task that resolves to the operation result. Timeout returns an error result and does not cancel the original task unless the task observes cancellation independently.</returns>
-    public static async Task<OperationResult<T>> ExecuteAsync<T>(Func<Task<T>> action, TimeSpan? timeout = null)
+    public static async Task<OperationResult<T>> ExecuteAsync<T>(Func<CancellationToken, Task<T>> action, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Check.NotNull(action);
 
         var watch = ValueStopwatch.StartNew();
         try
         {
-            var result = await TaskHelper.RunAsync(t => action(), timeout).NoCapture();
+            var result = await TaskHelper.RunAsync(t => action(t), timeout, cancellationToken).NoCapture();
             return (result, watch.GetElapsedTime());
         }
         catch (Exception ex)
@@ -127,10 +135,11 @@ public static partial class Operation
     /// <typeparam name="T">The value type returned by the operation.</typeparam>
     /// <param name="action">The asynchronous operation to execute.</param>
     /// <param name="timeout">The optional maximum wait time.</param>
+    /// <param name="cancellationToken">The cancellation token to observe.</param>
     /// <returns>A value task that resolves to the operation result.</returns>
-    public static async ValueTask<OperationResult<T>> ExecuteValueAsync<T>(Func<ValueTask<T>> action, TimeSpan? timeout = null)
+    public static async ValueTask<OperationResult<T>> ExecuteValueAsync<T>(Func<CancellationToken, ValueTask<T>> action, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        return await ExecuteAsync(() => action().AsTask(), timeout).NoCapture();
+        return await ExecuteAsync(t => action(t).AsTask(), timeout, cancellationToken).NoCapture();
     }
 
     /// <summary>
@@ -138,10 +147,11 @@ public static partial class Operation
     /// </summary>
     /// <param name="action">The asynchronous operation to execute.</param>
     /// <param name="timeout">The optional maximum wait time.</param>
+    /// <param name="cancellationToken">The cancellation token to observe.</param>
     /// <returns>A value task that resolves to the operation result.</returns>
-    public static async ValueTask<OperationResult> ExecuteValueAsync(Func<ValueTask> action, TimeSpan? timeout = null)
+    public static async ValueTask<OperationResult> ExecuteValueAsync(Func<CancellationToken, ValueTask> action, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        return await ExecuteAsync(() => action().AsTask(), timeout).NoCapture();
+        return await ExecuteAsync(t => action(t).AsTask(), timeout, cancellationToken).NoCapture();
     }
 
     /// <summary>
@@ -149,10 +159,11 @@ public static partial class Operation
     /// </summary>
     /// <param name="action">The asynchronous operation-result factory to execute.</param>
     /// <param name="timeout">The optional maximum wait time.</param>
+    /// <param name="cancellationToken">The cancellation token to observe.</param>
     /// <returns>A value task that resolves to the flattened result. The outer execution elapsed time is used when flattening.</returns>
-    public static async ValueTask<OperationResult> ExecuteValueAsync(Func<ValueTask<OperationResult>> action, TimeSpan? timeout = null)
+    public static async ValueTask<OperationResult> ExecuteValueAsync(Func<CancellationToken, ValueTask<OperationResult>> action, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        return await ExecuteAsync(() => action().AsTask(), timeout).NoCapture();
+        return await ExecuteAsync(t => action(t).AsTask(), timeout, cancellationToken).NoCapture();
     }
 
     /// <summary>
@@ -161,9 +172,10 @@ public static partial class Operation
     /// <typeparam name="T">The value type returned by the inner result.</typeparam>
     /// <param name="action">The asynchronous operation-result factory to execute.</param>
     /// <param name="timeout">The optional maximum wait time.</param>
+    /// <param name="cancellationToken">The cancellation token to observe.</param>
     /// <returns>A value task that resolves to the flattened result. The outer execution elapsed time is used when flattening.</returns>
-    public static async ValueTask<OperationResult<T>> ExecuteValueAsync<T>(Func<ValueTask<OperationResult<T>>> action, TimeSpan? timeout = null)
+    public static async ValueTask<OperationResult<T>> ExecuteValueAsync<T>(Func<CancellationToken, ValueTask<OperationResult<T>>> action, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        return await ExecuteAsync(() => action().AsTask(), timeout).NoCapture();
+        return await ExecuteAsync(t => action(t).AsTask(), timeout, cancellationToken).NoCapture();
     }
 }

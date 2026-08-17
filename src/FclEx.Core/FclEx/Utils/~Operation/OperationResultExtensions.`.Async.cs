@@ -456,7 +456,7 @@ public static partial class OperationResultExtensions
     {
         Check.NotNull(next);
 
-        return task.Then<T, TNext>(m => Operation.ExecuteAsync(() => next(m)));
+        return task.Then<T, TNext>(m => Operation.ExecuteAsync(t => next(m)));
     }
 
     /// <summary>
@@ -466,8 +466,7 @@ public static partial class OperationResultExtensions
     public static Task<OperationResult<(T, TNext)>> ThenWith<T, TNext>(this Task<OperationResult<T>> task, Func<T, Task<TNext>> next)
     {
         Check.NotNull(next);
-
-        return task.Then<T, (T, TNext)>(m => Operation.ExecuteAsync(() => next(m).Then(x => (m, x))));
+        return task.Then<T, (T, TNext)>(m => Operation.ExecuteAsync(t => next(m).Then(x => (m, x))));
     }
 
     /// <summary>

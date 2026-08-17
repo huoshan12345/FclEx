@@ -18,7 +18,7 @@ public class TimeoutTests(RedisUnreachableTestsFixture fixture) : RedisUnreachab
     {
         var options = Services.GetOptions<RedisOptions>().DbOptions;
         var timeout = options.ConnectionTimeout;
-        var (successful, _, _, elapsed) = await Operation.ExecuteAsync(() => EasyCachingProvider.GetAsync<string>("test"), TimeSpan.FromMilliseconds(timeout)).Unwrap();
+        var (successful, _, _, elapsed) = await Operation.ExecuteAsync(t => EasyCachingProvider.GetAsync<string>("test", t), TimeSpan.FromMilliseconds(timeout)).Unwrap();
         Assert.False(successful);
         Assert.True(elapsed.TotalMilliseconds < timeout + 500, elapsed.TotalSeconds.ToString(CultureInfo.InvariantCulture));
     }

@@ -147,18 +147,18 @@ public static class TaskHelper
     }
 #endif
 
-    public static async Task<TResult> RunAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, TimeSpan? timeout = null)
+    public static async Task<TResult> RunAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, TimeSpan? timeout, CancellationToken cancellationToken)
     {
         if (timeout is not { } timeoutValue || timeoutValue <= TimeSpan.Zero)
         {
-            return await RunAsync(operation, CancellationToken.None).NoCapture();
+            return await RunAsync(operation, cancellationToken).NoCapture();
         }
 
         using var timeoutSource = new CancellationTokenSource(timeoutValue);
-        var token = timeoutSource.Token;
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutSource.Token);
         try
         {
-            return await RunAsync(operation, token).NoCapture();
+            return await RunAsync(operation, cts.Token).NoCapture();
         }
         catch (OperationCanceledException ex) when (ex.CancellationToken == timeoutSource.Token)
         {
@@ -166,26 +166,31 @@ public static class TaskHelper
         }
     }
 
-    public static Task<TResult> RunAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken)
+    public static Task<TResult> RunAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, TimeSpan? timeout)
+    {
+        return RunAsync(operation, timeout, CancellationToken.None);
+    }
+
+    public static Task<TResult> RunAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken = default)
     {
         return cancellationToken == default
             ? operation(cancellationToken)
             : Task.Run(() => operation(cancellationToken), cancellationToken).WaitAsync(cancellationToken);
     }
 
-    public static async Task RunAsync(Func<CancellationToken, Task> operation, TimeSpan? timeout = null)
+    public static async Task RunAsync(Func<CancellationToken, Task> operation, TimeSpan? timeout, CancellationToken cancellationToken)
     {
         if (timeout is not { } timeoutValue || timeoutValue <= TimeSpan.Zero)
         {
-            await RunAsync(operation, CancellationToken.None).NoCapture();
+            await RunAsync(operation, cancellationToken).NoCapture();
             return;
         }
 
         using var timeoutSource = new CancellationTokenSource(timeoutValue);
-        var token = timeoutSource.Token;
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutSource.Token);
         try
         {
-            await RunAsync(operation, token).NoCapture();
+            await RunAsync(operation, cts.Token).NoCapture();
         }
         catch (OperationCanceledException ex) when (ex.CancellationToken == timeoutSource.Token)
         {
@@ -193,7 +198,12 @@ public static class TaskHelper
         }
     }
 
-    public static Task RunAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken)
+    public static Task RunAsync(Func<CancellationToken, Task> operation, TimeSpan? timeout)
+    {
+        return RunAsync(operation, timeout, CancellationToken.None);
+    }
+
+    public static Task RunAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken = default)
     {
         return cancellationToken == default
             ? operation(cancellationToken)

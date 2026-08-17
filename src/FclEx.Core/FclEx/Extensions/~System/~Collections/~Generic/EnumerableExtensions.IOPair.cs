@@ -13,10 +13,10 @@ partial class EnumerableExtensions
         return new(successItems, failureItems);
     }
 
-    public static async Task<OperationIOPairs<T, TResult>> ToOperationIOPairs<T, TResult>(this IEnumerable<T> enumerable, Func<T, Task<TResult>> selector)
+    public static async Task<OperationIOPairs<T, TResult>> ToOperationIOPairs<T, TResult>(this IEnumerable<T> enumerable, Func<T, Task<TResult>> selector, CancellationToken token = default)
     {
         var results = await enumerable
-            .Select(m => Operation.ExecuteAsync(() => selector(m)).ToIOPair(m))
+            .Select(m => Operation.ExecuteAsync(t => selector(m), cancellationToken: token).ToIOPair(m))
             .WhenAll();
 
         var (success, failure) = results.Partition(m => m.Output.IsSuccess);
@@ -56,7 +56,7 @@ partial class EnumerableExtensions
             }
             else
             {
-                var rs = await batch.Select(async m => (m, await Operation.ExecuteAsync(() => taskSelector(m)))).WhenAll();
+                var rs = await batch.Select(async m => (m, await Operation.ExecuteAsync(t => taskSelector(m), cancellationToken: token))).WhenAll();
                 foreach (var (i, o) in rs)
                 {
                     if (o.IsSuccess)
@@ -75,7 +75,7 @@ partial class EnumerableExtensions
         int batchSize,
         CancellationToken token = default)
     {
-        return enumerable.ToOperationIOPairs(m => Operation.ExecuteAsync(() => taskSelector(m)), batchSize, token);
+        return enumerable.ToOperationIOPairs(m => Operation.ExecuteAsync(t => taskSelector(m), cancellationToken: token), batchSize, token);
     }
 
     public static Task<OperationIOPairs<T, TResult>> ToOperationIOPairsSerially<T, TResult>(
@@ -84,7 +84,7 @@ partial class EnumerableExtensions
         TimeSpan interval = default,
         CancellationToken token = default)
     {
-        return enumerable.ToOperationIOPairsSerially(m => Operation.ExecuteAsync(() => taskSelector(m)), interval, token);
+        return enumerable.ToOperationIOPairsSerially(m => Operation.ExecuteAsync(t => taskSelector(m), cancellationToken: token), interval, token);
     }
 
     /// <summary>
@@ -116,7 +116,7 @@ partial class EnumerableExtensions
             }
             else
             {
-                var r = await Operation.ExecuteAsync(() => taskSelector(item));
+                var r = await Operation.ExecuteAsync(t => taskSelector(item), cancellationToken: token);
                 if (r.IsSuccess)
                     success.Add((item, r.Value!));
                 else

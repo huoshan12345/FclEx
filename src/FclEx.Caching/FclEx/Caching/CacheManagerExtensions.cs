@@ -7,15 +7,16 @@ public static class CacheManagerExtensions
         string cacheName,
         string cacheKey,
         Func<Task<OperationResult<T>>> factory,
-        TimeSpan? expiration = null)
+        TimeSpan? expiration = null,
+        CancellationToken cancellationToken = default)
     {
-        return Operation.ExecuteAsync(() =>
+        return Operation.ExecuteAsync(t =>
         {
             var cache = cacheManager.GetCache<T>(cacheName);
             return cache.TryGet(cacheKey, out var obj)
                 ? Operation.Success(obj)
-                : factory().OnValue((o, t) => cache.TrySet(cacheKey, o, expiration));
-        });
+                : factory().OnValue(v => cache.TrySet(cacheKey, v, expiration));
+        }, cancellationToken: cancellationToken);
     }
 
     public static Task<OperationResult<T>> GetOrCreateAsync<T>(
@@ -23,9 +24,10 @@ public static class CacheManagerExtensions
         string cacheName,
         string cacheKey,
         Func<Task<T>> factory,
-        TimeSpan? expiration = null)
+        TimeSpan? expiration = null,
+        CancellationToken cancellationToken = default)
     {
-        return cacheManager.GetOrCreateAsync(cacheName, cacheKey, () => Operation.ExecuteAsync(factory), expiration);
+        return cacheManager.GetOrCreateAsync(cacheName, cacheKey, () => Operation.ExecuteAsync(t => factory(), cancellationToken: cancellationToken), expiration, cancellationToken);
     }
 
     public static Task<OperationResult<T>> SetAsync<T>(
@@ -33,14 +35,15 @@ public static class CacheManagerExtensions
         string cacheName,
         string cacheKey,
         Func<Task<OperationResult<T>>> factory,
-        TimeSpan? expiration = null)
+        TimeSpan? expiration = null,
+        CancellationToken cancellationToken = default)
     {
-        return Operation.ExecuteAsync(() =>
+        return Operation.ExecuteAsync(t =>
         {
             var cache = cacheManager.GetCache<T>(cacheName);
-            var result = factory().OnValue((o, t) => cache.TrySet(cacheKey, o, expiration));
+            var result = factory().OnValue(v => cache.TrySet(cacheKey, v, expiration));
             return result;
-        });
+        }, cancellationToken: cancellationToken);
     }
 
     public static Task<OperationResult<T>> SetAsync<T>(
@@ -48,8 +51,9 @@ public static class CacheManagerExtensions
         string cacheName,
         string cacheKey,
         Func<Task<T>> factory,
-        TimeSpan? expiration = null)
+        TimeSpan? expiration = null,
+        CancellationToken cancellationToken = default)
     {
-        return cacheManager.SetAsync(cacheName, cacheKey, () => Operation.ExecuteAsync(factory), expiration);
+        return cacheManager.SetAsync(cacheName, cacheKey, () => Operation.ExecuteAsync(t => factory(), cancellationToken: cancellationToken), expiration, cancellationToken);
     }
 }
