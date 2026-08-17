@@ -172,7 +172,7 @@ public sealed class RetryingBatchConsumer<T> : IAsyncDisposable
 
             _started = true;
             _runCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            _completion = Task.Run(() => ConsumeLoopAsync(_runCancellation.Token));
+            _completion = Task.Run(() => ConsumeLoopAsync(_runCancellation.Token), CancellationToken.None);
             return _completion;
         }
     }
@@ -207,7 +207,8 @@ public sealed class RetryingBatchConsumer<T> : IAsyncDisposable
         ExceptionDispatchInfo? cancellationFailure = null;
         try
         {
-            cancellation?.Cancel();
+            if (cancellation is not null)
+                await cancellation.CancelAsync().NoCapture();
         }
         catch (Exception ex)
         {
@@ -216,7 +217,7 @@ public sealed class RetryingBatchConsumer<T> : IAsyncDisposable
 
         _signal.Pulse();
         if (abandoned is not null && abandoned.Count > 0)
-            Notify(ItemsAbandoned, abandoned, nameof(ItemsAbandoned));
+            Notify(ItemsAbandoned, abandoned.AsReadOnly(), nameof(ItemsAbandoned));
 
         await completion.NoCapture();
         cancellationFailure?.Throw();
@@ -278,9 +279,10 @@ public sealed class RetryingBatchConsumer<T> : IAsyncDisposable
 
                 activeSegment = segment;
                 _sinceLastConsumption = ValueStopwatch.StartNew();
+                var items = segment.Items.AsReadOnly();
                 try
                 {
-                    await _consumeAsync(segment.Items, cancellationToken).NoCapture();
+                    await _consumeAsync(items, cancellationToken).NoCapture();
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
@@ -293,7 +295,7 @@ public sealed class RetryingBatchConsumer<T> : IAsyncDisposable
                     Notify(
                         BatchFailed,
                         new BatchConsumptionFailure<T>(
-                            segment.Items,
+                            items,
                             ex,
                             segment.SingletonRetryCount,
                             action),
@@ -305,7 +307,7 @@ public sealed class RetryingBatchConsumer<T> : IAsyncDisposable
                         Notify(
                             ItemDiscarded,
                             new DiscardedBatchItem<T>(
-                                segment.Items[0],
+                                items[0],
                                 ex,
                                 segment.SingletonRetryCount),
                             nameof(ItemDiscarded));
@@ -318,8 +320,8 @@ public sealed class RetryingBatchConsumer<T> : IAsyncDisposable
                     continue;
                 }
 
-                Metrics.RecordConsumed(segment.Items.Length);
-                Notify(BatchConsumed, segment.Items, nameof(BatchConsumed));
+                Metrics.RecordConsumed(items.Count);
+                Notify(BatchConsumed, items, nameof(BatchConsumed));
                 activeSegment = null;
             }
         }
@@ -342,7 +344,7 @@ public sealed class RetryingBatchConsumer<T> : IAsyncDisposable
             }
 
             if (abandoned.Count > 0)
-                Notify(ItemsAbandoned, abandoned, nameof(ItemsAbandoned));
+                Notify(ItemsAbandoned, abandoned.AsReadOnly(), nameof(ItemsAbandoned));
         }
     }
 

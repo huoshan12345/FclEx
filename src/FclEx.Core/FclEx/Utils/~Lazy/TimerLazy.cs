@@ -19,6 +19,8 @@ public class TimerLazy<T> : ReLazy<TimerLazy<T>, T>
 
     public override void Dispose()
     {
+        GC.SuppressFinalize(this);
+
         _timer.Dispose();
 
         lock (_timerCallbackLock)
