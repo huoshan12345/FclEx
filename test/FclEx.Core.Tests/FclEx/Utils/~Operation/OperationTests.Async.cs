@@ -79,7 +79,7 @@ partial class OperationTests
     {
         var (success, _, exception, elapsed) = await Operation.ExecuteValueAsync(async t =>
         {
-            await Task.Delay(TimeSpan.FromSeconds(5));
+            await Task.Delay(TimeSpan.FromSeconds(5), CancellationToken.None);
             return Operation.Success(1);
         }, TimeSpan.FromSeconds(0.1));
 
