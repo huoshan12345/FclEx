@@ -14,9 +14,7 @@ public sealed class StringPassthroughSerializer : IStringSerializer
 
     public string Serialize(object? obj)
     {
-        return obj is string value
-            ? value
-            : _fallbackSerializer.Serialize(obj);
+        return obj as string ?? _fallbackSerializer.Serialize(obj);
     }
 
     public object? Deserialize(string data, Type type)
