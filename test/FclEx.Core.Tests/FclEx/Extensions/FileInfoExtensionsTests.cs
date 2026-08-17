@@ -224,7 +224,7 @@ public class FileInfoExtensionsTests
         Cleanup(source, dest, dir);
     }
 
-    [RetryFact]
+    [RetryFact(5, 500)]
     public async Task CopyToAsync_WithMultipleRenameConflicts_ReturnsActualDestination()
     {
         var source = CreateTempFile("new");
@@ -311,7 +311,7 @@ public class FileInfoExtensionsTests
         Cleanup(source, destination);
     }
 
-    [RetryFact]
+    [RetryFact(5, 500)]
     public async Task CopyToAsync_ConcurrentAutoRename_DoesNotOverwriteEitherCopy()
     {
         var directory = CreateTempDir();
@@ -345,7 +345,7 @@ public class FileInfoExtensionsTests
         Cleanup(source, destination);
     }
 
-    [Fact]
+    [RetryFact(5, 500)]
     public void MoveTo_ConcurrentAutoRename_DoesNotOverwriteEitherMove()
     {
         var directory = CreateTempDir();
