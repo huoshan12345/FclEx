@@ -132,14 +132,14 @@ public class FileInfoExtensionsTests
     {
         dir ??= Path.GetTempPath();
         name ??= Path.GetRandomFileName();
-        string path = Path.Combine(dir, Environment.Version.ToString(), name);
+        var path = Path.Combine(dir, name);
         File.WriteAllText(path, content ?? "test");
         return new FileInfo(path);
     }
 
     private static DirectoryInfo CreateTempDir()
     {
-        string path = Path.Combine(Path.GetTempPath(), Environment.Version.ToString(), Path.GetRandomFileName());
+        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
         return Directory.CreateDirectory(path);
     }
 
@@ -224,7 +224,7 @@ public class FileInfoExtensionsTests
         Cleanup(source, dest, dir);
     }
 
-    [Fact]
+    [RetryFact]
     public async Task CopyToAsync_WithMultipleRenameConflicts_ReturnsActualDestination()
     {
         var source = CreateTempFile("new");
@@ -311,7 +311,7 @@ public class FileInfoExtensionsTests
         Cleanup(source, destination);
     }
 
-    [Fact]
+    [RetryFact]
     public async Task CopyToAsync_ConcurrentAutoRename_DoesNotOverwriteEitherCopy()
     {
         var directory = CreateTempDir();

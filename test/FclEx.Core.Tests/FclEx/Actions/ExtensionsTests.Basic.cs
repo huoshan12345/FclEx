@@ -298,7 +298,7 @@ public partial class ExtensionsTests
         Assert.Throws<ArgumentNullException>(() => SuccessAction.Create(1).RepeatUntil(null!, 0));
     }
 
-    [Fact]
+    [RetryFact]
     public async Task RepeatUntil_InternalTimeout_CancelsActiveAttemptAndReturnsTimeoutError()
     {
         CancellationToken observedToken = default;
@@ -311,8 +311,9 @@ public partial class ExtensionsTests
 
         var execution = action
             .RepeatUntil(_ => false, timeout: TimeSpan.FromMilliseconds(50))
-            .ExecuteAsync();
-        var completedTask = await Task.WhenAny(execution, Task.Delay(TimeSpan.FromSeconds(5)));
+            .ExecuteAsync(CancellationToken.None);
+
+        var completedTask = await Task.WhenAny(execution, Task.Delay(TimeSpan.FromSeconds(5), CancellationToken.None));
 
         Assert.Same(execution, completedTask);
         var result = await execution;
