@@ -11,4 +11,6 @@ public class NameValueAttribute(string? name) : Attribute
     public NameValueOmitOption OmitOption { get; set; }
 
     public BoolValueConvention BoolValueConvention { get; set; }
+
+    public string? Format { get; set; }
 }

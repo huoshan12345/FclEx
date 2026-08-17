@@ -17,10 +17,24 @@ public interface INameValuesBuilder
 #else
     ;
 #endif
+
+    string? ToString<T>(T? value, string? format)
+#if NET6_0_OR_GREATER
+        => DefaultNameValuesBuilder.ToString(value, format);
+#else
+    ;
+#endif
 }
 
 public static class DefaultNameValuesBuilder
 {
+    public static string? ToString<T>(T? value, string? format)
+    {
+        return value is IFormattable formattable
+            ? formattable.ToString(format, CultureInfo.InvariantCulture)
+            : value?.ToString();
+    }
+
     public static List<KeyValuePair<string, string>> Build(INameValuesBuilder builder)
     {
         var list = new List<KeyValuePair<string, string>>();
@@ -75,7 +89,7 @@ public static class DefaultNameValuesBuilder
                 continue;
             }
 
-            list.Add(new(name, value?.ToString() ?? ""));
+            list.Add(new(name, builder.ToString(value, null) ?? ""));
         }
 
         return list;
@@ -88,4 +102,6 @@ public class NameValuesBuilder : INameValuesBuilder
         = NameValuesBuilderOptions.Default;
     public virtual List<KeyValuePair<string, string>> Build()
         => DefaultNameValuesBuilder.Build(this);
+    public string? ToString<T>(T? value, string? format)
+        => DefaultNameValuesBuilder.ToString(value, format);
 }
