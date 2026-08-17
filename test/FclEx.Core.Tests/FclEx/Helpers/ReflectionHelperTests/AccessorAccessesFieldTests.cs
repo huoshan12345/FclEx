@@ -215,6 +215,22 @@ public class AccessorAccessesFieldTests
         Assert.True(AccessorAccessesField(prop.SetMethod, field));
     }
 
+    private class AddressAccess
+    {
+        private int _value;
+
+        public ref int GetValueReference() => ref _value;
+    }
+
+    [Fact]
+    public void MethodUsingLdflda_ShouldAccessTheField()
+    {
+        var method = typeof(AddressAccess).GetRequiredMethod(nameof(AddressAccess.GetValueReference));
+        var field = typeof(AddressAccess).GetField("_value", Flags)!;
+
+        Assert.True(AccessorAccessesField(method, field));
+    }
+
     [Fact]
     public void Accessor_WithFieldTokenEmbeddedInOperand_ShouldNotAccessField()
     {
@@ -242,7 +258,7 @@ public class AccessorAccessesFieldTests
         var getter = type.GetProperty("Item")!.GetMethod!;
         Assert.Equal(0x04000001, field.MetadataToken);
 
-        // this test case contains fake IL that looks like it accesses the field
-        Assert.True(AccessorAccessesField(getter, field));
+        // The field token occurs inside an ldc.i4 operand; it is not an IL field-access instruction.
+        Assert.False(AccessorAccessesField(getter, field));
     }
 }

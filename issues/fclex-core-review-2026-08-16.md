@@ -229,7 +229,7 @@
    - 说明：`typeof(IDisposable).Implements(typeof(IDisposable))` 返回 false；大多数调用者会把“implements”理解为 assignability/接口关系而不是仅“继承来的接口”。
    - 建议：改为包含自身的 `ImplementsOrIs`/`IsAssignableTo` 语义，或将现有方法重命名为 `ImplementsIndirectly`。
 
-245. **[P2] `ReflectionHelper.AccessorAccessesField` 逐字节扫描 IL，会把操作数误识别为 opcode。**
+245. **[P2][已修复] `ReflectionHelper.AccessorAccessesField` 逐字节扫描 IL，会把操作数误识别为 opcode。**
    - 位置：`Helpers/ReflectionHelper.cs:91`。
    - 说明：循环没有按 IL operand 长度解码，任意 operand byte 都可能恰好是 `ldfld`/`stfld`；方法名承诺的字段访问结论会出现假阳性，也漏掉 `ldflda` 等合法访问。
    - 建议：用完整 IL decoder，或删除这个不可靠的通用判断并只在受控模式下使用。
@@ -239,7 +239,7 @@
    - 说明：第一个线程已将 `_timer` 交换为 null、尚未写入 `_disposeTask`；若 `DisposeAndWaitAsync` 抛出，其他线程会一直等 `_disposeTask` 被写入。
    - 建议：先发布一个 `TaskCompletionSource`，所有路径（包括异常）都完成它；不要以无限自旋等待一个可能永远不会发布的 task。
 
-247. **[P2] `CancellationTokenSource.TryCancel` 无差别吞掉回调异常和对象生命周期错误。**
+247. **[P2][已修复] `CancellationTokenSource.TryCancel` 无差别吞掉回调异常和对象生命周期错误。**
    - 位置：`Extensions/~System/~Threading/CancellationTokenSourceExtensions.cs:5`。
    - 说明：名字像“竞态安全地尝试取消”，实现却隐去了取消回调失败等真正需要诊断的问题；调用者无法区分已取消、已释放和回调失败。
    - 建议：只处理预期的 `ObjectDisposedException`（并返回 bool），其他异常照常传播；或命名为明确的 `CancelIgnoringExceptions`。
@@ -266,5 +266,4 @@
 
 ## 建议处理顺序
 
-1. 先决定 245 的 IL 分析边界：完整 decoder 能消除误判，但需要单独的解码器和兼容性测试。
-2. 再处理 247 的返回契约：建议让 `TryCancel` 返回 `true`/`false` 以区分已释放与实际取消。
+本清单中的 201–251 项均已处理或按明确约定记录行为限制。

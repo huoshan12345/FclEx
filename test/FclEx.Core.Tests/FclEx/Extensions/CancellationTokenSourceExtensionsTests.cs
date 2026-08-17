@@ -17,6 +17,15 @@ public class CancellationTokenSourceExtensionsTests
         var source = new CancellationTokenSource();
         source.Dispose();
 
-        source.TryCancel();
+        Assert.False(source.TryCancel());
+    }
+
+    [Fact]
+    public void TryCancel_ReturnsTrueOnlyForTheFirstObservedCancellation()
+    {
+        using var source = new CancellationTokenSource();
+
+        Assert.True(source.TryCancel());
+        Assert.False(source.TryCancel());
     }
 }

@@ -2,16 +2,34 @@ namespace FclEx.Extensions;
 
 public static class CancellationTokenSourceExtensions
 {
-    public static void TryCancel(this CancellationTokenSource cts)
+    /// <summary>Attempts to request cancellation without throwing when the source has already been disposed.</summary>
+    /// <param name="cts">The cancellation source to cancel.</param>
+    /// <returns>
+    /// <see langword="true"/> when <see cref="CancellationTokenSource.Cancel()"/> was invoked; <see langword="false"/>
+    /// when cancellation had already been observed or the source was disposed.
+    /// </returns>
+    /// <remarks>
+    /// The result is a concurrency-sensitive snapshot. A <see langword="false"/> result must not be used to infer that
+    /// another thread cannot cancel the source immediately afterwards. Exceptions from registered cancellation callbacks
+    /// are deliberately propagated.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="cts"/> is <see langword="null"/>.</exception>
+    public static bool TryCancel(this CancellationTokenSource cts)
     {
+        Check.NotNull(cts);
+
         try
         {
             if (cts.IsCancellationRequested)
-                return;
+                return false;
 
             cts.Cancel();
+            return true;
         }
-        catch (ObjectDisposedException) { }
+        catch (ObjectDisposedException)
+        {
+            return false;
+        }
     }
 
 #if !NET5_0_OR_GREATER
