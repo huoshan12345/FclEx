@@ -132,7 +132,7 @@ public class FileInfoExtensionsTests
     {
         dir ??= Path.GetTempPath();
         name ??= Path.GetRandomFileName();
-        string path = Path.Combine(dir, name);
+        string path = Path.Combine(dir, Environment.Version.ToString(), name);
         File.WriteAllText(path, content ?? "test");
         return new FileInfo(path);
     }
