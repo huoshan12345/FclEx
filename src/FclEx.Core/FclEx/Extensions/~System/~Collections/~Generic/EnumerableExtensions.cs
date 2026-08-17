@@ -187,7 +187,8 @@ public static partial class EnumerableExtensions
 
     public static IEnumerable<(T1, T2)> CrossJoin<T1, T2>(this IEnumerable<T1> left, IEnumerable<T2> right)
     {
-        return left.SelectMany(m => right, static (t1, t2) => (t1, t2));
+        var items = right.AsIReadOnlyCollection();
+        return left.SelectMany(m => items, static (t1, t2) => (t1, t2));
     }
 
     public static IEnumerable<(T1, T2)> CrossJoin<T1, T2>(this IEnumerable<T1> left, Func<T1, IEnumerable<T2>> right)
