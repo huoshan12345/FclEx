@@ -7,7 +7,7 @@ public class DictionaryExtensionsTests
     {
         IDictionary<string, int> dictionary = new Dictionary<string, int> { ["one"] = 1 };
 
-        var readOnly = dictionary.AsReadOnlyDictionary();
+        var readOnly = dictionary.AsReadOnly();
 
         Assert.NotSame(dictionary, readOnly);
         Assert.Throws<NotSupportedException>(() => ((IDictionary<string, int>)readOnly).Add("two", 2));

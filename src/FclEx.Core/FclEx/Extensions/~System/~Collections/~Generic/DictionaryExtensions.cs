@@ -75,7 +75,7 @@ public static partial class DictionaryExtensions
         return value;
     }
 
-    public static IReadOnlyDictionary<TKey, TValue> AsReadOnlyDictionary<TKey, TValue>(this IDictionary<TKey, TValue>? dic) where TKey : notnull
+    public static IReadOnlyDictionary<TKey, TValue> AsReadOnly<TKey, TValue>(this IDictionary<TKey, TValue>? dic) where TKey : notnull
     {
         return dic switch
         {
@@ -85,7 +85,7 @@ public static partial class DictionaryExtensions
         };
     }
 
-    public static IReadOnlyDictionary<TKey, TValue> AsReadOnlyDictionaryView<TKey, TValue>(this IDictionary<TKey, TValue>? dic) where TKey : notnull
+    public static IReadOnlyDictionary<TKey, TValue> AsReadOnlyView<TKey, TValue>(this IDictionary<TKey, TValue>? dic) where TKey : notnull
     {
         return dic switch
         {
