@@ -170,21 +170,15 @@ public static class RandomExtensions
     public static DateTime NextDateTime(this Random random, DateTime? minValue = null, DateTime? maxValue = null)
     {
         Check.NotNull(random);
-        var min = minValue ?? DateTimeExtensions.UnixEpoch;
+        var min = minValue ?? DateTime.UnixEpoch;
         var max = maxValue ?? DateTime.MaxValue;
-        CheckRange(min, max);
-
-        if (min == max)
-            return min;
-
-        var ticks = random.NextInt64(min.Ticks, max.Ticks);
-        return new DateTime(ticks, min.Kind);
+        return random.NextDateTimeOffset(min, max).DateTime;
     }
 
     public static DateTimeOffset NextDateTimeOffset(this Random random, DateTimeOffset? minValue = null, DateTimeOffset? maxValue = null)
     {
         Check.NotNull(random);
-        var min = minValue ?? DateTimeOffset.FromUnixTimeSeconds(0);
+        var min = minValue ?? DateTimeOffset.UnixEpoch;
         var max = maxValue ?? DateTimeOffset.MaxValue;
         CheckRange(min, max);
 

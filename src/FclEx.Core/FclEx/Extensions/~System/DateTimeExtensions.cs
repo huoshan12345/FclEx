@@ -7,6 +7,11 @@ public static class DateTimeExtensions
     public const string ShortTimeFormat = "yyyyMMddHHmmss";
     public const string CommonTimeFormat = "yyyy-MM-dd HH:mm:ss";
 
+    extension(DateTime)
+    {
+        public static DateTime UnixEpoch => UnixEpoch;
+    }
+
     /// <summary>
     /// Converts a <see cref="DateTime"/> to a <see cref="DateTimeOffset"/>.
     /// </summary>

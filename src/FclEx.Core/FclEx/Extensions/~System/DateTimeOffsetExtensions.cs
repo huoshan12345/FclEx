@@ -4,6 +4,15 @@ public static class DateTimeOffsetExtensions
 {
     private static readonly TimeSpan ChinaStandardTimeOffset = TimeSpan.FromHours(8);
 
+    public static readonly DateTimeOffset UnixEpoch = DateTimeOffset.FromUnixTimeSeconds(0);
+
+    extension(DateTimeOffset)
+    {
+#if !NET5_0_OR_GREATER
+        public static DateTimeOffset UnixEpoch => UnixEpoch;
+#endif
+    }
+
     /// <summary>
     /// Converts an instant to China Standard Time (UTC+08:00) while preserving the represented instant.
     /// </summary>
