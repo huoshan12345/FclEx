@@ -278,9 +278,13 @@ public static class TaskHelper
         switch (taskType)
         {
             case TaskType.VoidTask:
+            {
+                await (Task)value;
+                return null;
+            }
             case TaskType.VoidValueTask:
             {
-                await (dynamic)value;
+                await (ValueTask)value;
                 return null;
             }
             case TaskType.TaskWithResult:
