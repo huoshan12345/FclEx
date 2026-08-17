@@ -101,10 +101,16 @@ public static class DefaultNameValuesBuilder
             }
 
             if (omit.HasFlag(WhenNull) && value is null
-                || omit.HasFlag(WhenEmpty) && value is IEnumerable e && e.IsNullOrEmpty()
-                || omit.HasFlag(WhenDefault) && value == type.DefaultValue())
+                || omit.HasFlag(WhenEmpty) && value is IEnumerable e && e.IsNullOrEmpty())
             {
                 continue;
+            }
+
+            if (omit.HasFlag(WhenDefault))
+            {
+                IEqualityComparer comparer = NonGenericDefaultEqualityComparer.Create(type);
+                if (comparer.Equals(value, type.DefaultValue()))
+                    continue;
             }
 
             list.Add(new(name, builder.ToString(value, nameValueAttribute.Format) ?? ""));
