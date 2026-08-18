@@ -37,29 +37,50 @@ public static class ChangeTrackerExtensions
                 case EntityState.Modified:
                 {
                     if (entity is IHasUpdatedAt hasUpdatedAt)
-                    {
                         hasUpdatedAt.UpdatedAt = now;
-                        entry.Property(nameof(IHasUpdatedAt.UpdatedAt)).IsModified = true;
-                    }
 
                     var exclude = new HashSet<string>();
 
+                    var isDeletable = false;
+                    var deletingSoftDeletedEntity = false;
                     var restoringSoftDeletedEntity = false;
                     if (entity is ISoftDeletable deletable)
                     {
-                        // Ignore direct updates to true, but persist the false transition used to restore an entity.
+                        isDeletable = true;
                         if (deletable.IsDeleted)
                         {
-                            exclude.Add(nameof(ISoftDeletable.IsDeleted));
+                            if (Equals(entry.Property(nameof(ISoftDeletable.IsDeleted)).OriginalValue, false))
+                            {
+                                // update IsDeleted from false to true.
+                                deletingSoftDeletedEntity = true;
+                            }
                         }
                         else
                         {
-                            restoringSoftDeletedEntity = Equals(entry.Property(nameof(ISoftDeletable.IsDeleted)).OriginalValue, true);
+                            // setting IsDeleted to false means the entity is being restored from a soft-deleted state
+                            // updating IsDeleted from true/false to false.
+                            restoringSoftDeletedEntity = true;
                         }
                     }
 
-                    if (entity is IHasDeletedAt && restoringSoftDeletedEntity == false)
-                        exclude.Add(nameof(IHasDeletedAt.DeletedAt));
+                    if (entity is IHasDeletedAt hasDeletedAt)
+                    {
+                        if (restoringSoftDeletedEntity)
+                        {
+                            hasDeletedAt.DeletedAt = default; // Reset DeletedAt when restoring
+                        }
+                        else if (deletingSoftDeletedEntity && hasDeletedAt.DeletedAt == default)
+                        {
+                            // deleting but DeletedAt is not set, set it to now
+                            hasDeletedAt.DeletedAt = now;
+                        }
+                        else if (isDeletable)
+                        {
+                            // If the entity is soft-deletable but not being deleted or restored, exclude DeletedAt from being modified
+                            // updating IsDeleted from true to true.
+                            exclude.Add(nameof(IHasDeletedAt.DeletedAt));
+                        }
+                    }
 
                     if (entity is IHasCreatedAt)
                         exclude.Add(nameof(IHasCreatedAt.CreatedAt));
@@ -78,17 +99,17 @@ public static class ChangeTrackerExtensions
                         entry.State = EntityState.Modified;
                         deletable.IsDeleted = true;
 
-                        var exclude = new HashSet<string> { nameof(ISoftDeletable.IsDeleted) };
+                        var updatePropertyNames = new HashSet<string> { nameof(ISoftDeletable.IsDeleted) };
 
                         if (entity is IHasDeletedAt hasDeletedAt)
                         {
                             hasDeletedAt.DeletedAt = now;
-                            exclude.Add(nameof(IHasDeletedAt.DeletedAt));
+                            updatePropertyNames.Add(nameof(IHasDeletedAt.DeletedAt));
                         }
 
                         foreach (var property in entry.Properties)
                         {
-                            if (exclude.Contains(property.Metadata.Name))
+                            if (updatePropertyNames.Contains(property.Metadata.ClrType.Name))
                                 continue;
 
                             property.IsModified = false;

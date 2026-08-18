@@ -497,6 +497,7 @@ public static partial class DbContextExtensions
             {
                 foreach (var entity in entities)
                 {
+                    // removing does not check duplicate keys
                     set.Remove(entity);
                     deleted.Add(entity);
                 }
