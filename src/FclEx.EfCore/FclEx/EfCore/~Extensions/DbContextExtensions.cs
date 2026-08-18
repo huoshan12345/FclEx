@@ -471,7 +471,7 @@ public static partial class DbContextExtensions
             existingEntities,
             entityKey,
             insertEntity,
-            updateEntity ?? ((@new, _) => @new),
+            updateEntity,
             allowDeletion,
             excludeOnUpdate);
     }
