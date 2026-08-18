@@ -101,7 +101,7 @@ public static class HttpResponseExtensions
 
         if (fileName.IsNotEmpty())
         {
-            var (name, ext) = PathHelper.GetNameAndExtension(fileName);
+            var (name, ext) = Path.GetNameAndExtension(fileName);
             baseName ??= name;
             extension ??= ext;
         }

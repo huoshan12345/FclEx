@@ -1,12 +1,12 @@
-namespace FclEx.Helpers;
+namespace FclEx.Extensions;
 
-public class DelegateHelperTests
+public class DelegateExtensionsTests
 {
     [Fact]
     public void MakeNewCustomDelegate_CreatesInvocableDelegateType()
     {
-        var delegateType = DelegateHelper.MakeNewCustomDelegate(typeof(int), [typeof(int)]);
-        var method = typeof(DelegateHelperTests).GetMethod(nameof(Increment), BindingFlags.Static | BindingFlags.NonPublic)!;
+        var delegateType = Delegate.MakeNewCustomDelegate(typeof(int), [typeof(int)]);
+        var method = typeof(DelegateExtensionsTests).GetMethod(nameof(Increment), BindingFlags.Static | BindingFlags.NonPublic)!;
 
         var @delegate = Delegate.CreateDelegate(delegateType, method);
 

@@ -2,16 +2,16 @@ namespace FclEx.Helpers;
 
 public static class TypeHelper
 {
-    public static readonly IReadOnlyCollection<Type> ActionTypes = AssemblyHelper.AssemblyOfAction
+    public static readonly IReadOnlyCollection<Type> ActionTypes = typeof(Action).Assembly
         .GetExportedTypes()
         .Where(m => m.SimpleName() == nameof(Action))
         .ToHashSet();
 
     public static readonly IReadOnlyDictionary<int, Type> ActionTypeDic = ActionTypes.ToDictionary(m => m.GetTypeInfo().GenericTypeParameters.Length);
 
-    public static readonly IReadOnlyCollection<Type> FuncTypes = AssemblyHelper.AssemblyOfFunc
+    public static readonly IReadOnlyCollection<Type> FuncTypes = typeof(Func<>).Assembly
         .GetExportedTypes()
-        .Where(m => m.SimpleName() == nameof(Func<int>))
+        .Where(m => m.SimpleName() == nameof(Func<>))
         .ToHashSet();
 
     public static readonly IReadOnlyDictionary<int, Type> FuncTypeDic = FuncTypes.ToDictionary(m => m.GetTypeInfo().GenericTypeParameters.Length);

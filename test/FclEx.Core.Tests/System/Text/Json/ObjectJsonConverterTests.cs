@@ -1,7 +1,5 @@
 namespace System.Text.Json;
 
-using System.Globalization;
-
 public class ObjectJsonConverterTests
 {
     private static JsonSerializerOptions CreateOptions()

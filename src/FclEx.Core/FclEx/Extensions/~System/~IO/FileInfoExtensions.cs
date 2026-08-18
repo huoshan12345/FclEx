@@ -8,7 +8,7 @@ public static class FileInfoExtensions
     public static (string Name, string Ext) GetNameAndExtension(this FileInfo file)
     {
         Check.NotNull(file);
-        return PathHelper.GetNameAndExtension(file.Name);
+        return Path.GetNameAndExtension(file.Name);
     }
 
     /// <summary>Asynchronously copies a file using the requested conflict behavior.</summary>
@@ -189,7 +189,7 @@ public static class FileInfoExtensions
     {
         try
         {
-            return FileHelper.AreFilesEqual(source, destination);
+            return File.AreFilesEqual(source, destination);
         }
         catch (IOException)
         {
@@ -217,7 +217,7 @@ public static class FileInfoExtensions
     {
         var directoryName = destination.DirectoryName
                             ?? throw new InvalidOperationException("The destination has no containing directory.");
-        return new FileInfo(Path.Combine(directoryName, FileHelper.GetNextFileName(destination.Name)));
+        return new FileInfo(Path.Combine(directoryName, Path.GetNextFileName(destination.Name)));
     }
 
 #if !NET5_0_OR_GREATER

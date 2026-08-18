@@ -66,7 +66,7 @@ public static class NewtonsoftJsonExtensions
         {
             JTokenType.Null => defaultValue,
             JTokenType.Integer => token.ToObject<long>().CastTo<T>(),
-            JTokenType.String => EnumHelper.Parse(token.ToString(), defaultValue),
+            JTokenType.String => Enum.Parse(token.ToString(), defaultValue),
             _ => defaultValue,
         };
     }
@@ -80,7 +80,7 @@ public static class NewtonsoftJsonExtensions
         };
         return token.ToObject<XmlDocument>(JsonSerializer.Create(new JsonSerializerSettings
         {
-            Converters = new JsonConverter[] { converter }
+            Converters = [converter]
         }))!;
     }
 
@@ -93,7 +93,7 @@ public static class NewtonsoftJsonExtensions
         };
         return token.ToObject<XDocument>(JsonSerializer.Create(new JsonSerializerSettings
         {
-            Converters = new JsonConverter[] { converter }
+            Converters = [converter]
         }))!;
     }
 

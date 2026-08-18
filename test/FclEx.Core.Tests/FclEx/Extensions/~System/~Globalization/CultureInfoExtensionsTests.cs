@@ -1,15 +1,13 @@
-using System.Globalization;
+namespace FclEx.Extensions;
 
-namespace FclEx.Helpers;
-
-public class CultureInfoHelperTests
+public class CultureInfoExtensionsTests
 {
     [Fact]
     public void DateTime_TryParseExact_Test()
     {
         const string str = "Thu, 31-Dec-37 23:55:55 GMT";
         const string format = "ddd, d-MMM-yy HH:mm:ss Z";
-        var parsed = (DateTime.TryParseExact(str, format, CultureInfoHelper.TwoDigitYear,
+        var parsed = (DateTime.TryParseExact(str, format, CultureInfo.TwoDigitYear,
             DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal,
             out var time));
         Assert.True(parsed);

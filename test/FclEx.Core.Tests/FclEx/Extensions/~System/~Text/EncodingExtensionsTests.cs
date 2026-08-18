@@ -1,7 +1,25 @@
-namespace FclEx.Helpers;
+﻿namespace FclEx.Extensions;
 
-public class EncodingHelperTests
+public class EncodingExtensionsTests
 {
+    [Fact]
+    public void Utf8WithoutBom_ShouldReturnUtf8EncodingWithoutPreamble()
+    {
+        var encoding = Encoding.Utf8WithoutBom;
+
+        Assert.Equal("utf-8", encoding.WebName);
+        Assert.Empty(encoding.GetPreamble());
+    }
+
+    [Fact]
+    public void Utf8WithoutBom_ShouldReturnCachedInstance()
+    {
+        var first = Encoding.Utf8WithoutBom;
+        var second = Encoding.Utf8WithoutBom;
+
+        Assert.Same(first, second);
+    }
+    
     public static TheoryData<byte[], int> BomTestData => new()
     {
         { Encoding.UTF8.GetPreamble().Append((byte)'a').ToArray(), Encoding.UTF8.CodePage },
@@ -17,7 +35,7 @@ public class EncodingHelperTests
     {
         using var stream = new MemoryStream(bytes);
 
-        var encoding = EncodingHelper.GetEncoding(stream);
+        var encoding = Encoding.GetEncoding(stream);
 
         Assert.Equal(expectedCodePage, encoding.CodePage);
     }
@@ -28,7 +46,7 @@ public class EncodingHelperTests
         using var stream = new MemoryStream(Encoding.UTF8.GetPreamble().Append((byte)'a').ToArray());
         stream.Position = 1;
 
-        _ = EncodingHelper.GetEncoding(stream);
+        _ = Encoding.GetEncoding(stream);
 
         Assert.Equal(1, stream.Position);
         Assert.True(stream.CanRead);
@@ -39,7 +57,7 @@ public class EncodingHelperTests
     {
         using var stream = new NonSeekableStream([1]);
 
-        var exception = Assert.Throws<ArgumentException>(() => EncodingHelper.GetEncoding(stream));
+        var exception = Assert.Throws<ArgumentException>(() => Encoding.GetEncoding(stream));
 
         Assert.Equal("stream", exception.ParamName);
     }

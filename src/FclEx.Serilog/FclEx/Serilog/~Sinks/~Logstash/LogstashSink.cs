@@ -7,8 +7,8 @@ public class LogstashSink : IBatchedLogEventSink
 
     public async Task EmitBatchAsync(IReadOnlyCollection<LogEvent> events)
     {
-        var strs = events.Select(m => m.ToString(_formatter)).ToList();
-        await _input.SendAsync(strs);
+        var strings = events.Select(m => m.ToString(_formatter)).ToList();
+        await _input.SendAsync(strings);
     }
 
     public Task OnEmptyBatchAsync()
@@ -19,7 +19,7 @@ public class LogstashSink : IBatchedLogEventSink
     public LogstashSink(LogstashSinkOptions options)
     {
         var uri = new Uri(options.Uri);
-        var type = EnumHelper.Parse(uri.Scheme, LogstashInputType.Tcp);
+        var type = Enum.Parse(uri.Scheme, LogstashInputType.Tcp);
         _input = LogstashInputFactory.Create(type, uri);
         _formatter = options.Formatter ?? new JsonFormatter();
     }

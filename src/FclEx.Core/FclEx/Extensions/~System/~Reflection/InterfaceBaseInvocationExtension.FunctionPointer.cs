@@ -19,7 +19,7 @@ partial class InterfaceBaseInvocationExtension
     private static (IntPtr pointer, MethodInfo invoke) GetInterfaceMethodDelegate(InterfaceMethodInfo info)
     {
         var (interfaceMethod, paraTypes) = GetInterfaceMethod(info);
-        var delegateType = DelegateHelper.MakeNewCustomDelegate(info.Method.ReturnType, paraTypes);
+        var delegateType = Delegate.MakeNewCustomDelegate(info.Method.ReturnType, paraTypes);
         var pointer = interfaceMethod.MethodHandle.GetFunctionPointer();
         return (pointer, delegateType.GetMethod(nameof(Action.Invoke))!);
     }

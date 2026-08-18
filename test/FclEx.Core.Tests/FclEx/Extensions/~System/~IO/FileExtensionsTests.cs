@@ -1,21 +1,24 @@
-namespace FclEx.Helpers;
+﻿namespace FclEx.Extensions;
 
-public class FileHelperTests
+public class FileExtensionsTests
 {
-    [Theory]
-    [InlineData(".txt", "_1.txt")]
-    [InlineData("x", "x_1")]
-    [InlineData("x_1", "x_2")]
-    [InlineData("x.txt", "x_1.txt")]
-    [InlineData("x.txt.txt", "x.txt_1.txt")]
-    [InlineData("x_.txt", "x_1.txt")]
-    [InlineData("x_2.txt.txt", "x_2.txt_1.txt")]
-    [InlineData("x._1.txt", "x._2.txt")]
-    [InlineData("x_1.txt", "x_2.txt")]
-    public void GetNextFileName_Test(string fileName, string expected)
+    [Fact]
+    public async Task WriteAllTextAsync_WithDefaultEncoding_WritesUtf8WithoutBom()
     {
-        var newName = FileHelper.GetNextFileName(fileName);
-        Assert.Equal(expected, newName);
+        var path = Path.GetTempFileName();
+
+        try
+        {
+            await File.WriteAllTextAsync(path, "text");
+
+            var bytes = await File.ReadAllBytesAsync(path);
+            Assert.False(bytes.Take(Encoding.UTF8.GetPreamble().Length).SequenceEqual(Encoding.UTF8.GetPreamble()));
+            Assert.Equal("text"u8, bytes);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     [Fact]
@@ -32,7 +35,7 @@ public class FileHelperTests
             var f1 = new FileInfo(path1);
             var f2 = new FileInfo(path2);
 
-            Assert.True(FileHelper.AreFilesEqual(f1, f2));
+            Assert.True(File.AreFilesEqual(f1, f2));
         }
         finally
         {
@@ -59,7 +62,7 @@ public class FileHelperTests
             File.WriteAllBytes(path1, content);
             File.WriteAllBytes(path2, content);
 
-            Assert.True(FileHelper.AreFilesEqual(new FileInfo(path1), new FileInfo(path2)));
+            Assert.True(File.AreFilesEqual(new FileInfo(path1), new FileInfo(path2)));
         }
         finally
         {
@@ -82,7 +85,7 @@ public class FileHelperTests
             var f1 = new FileInfo(path1);
             var f2 = new FileInfo(path2);
 
-            Assert.False(FileHelper.AreFilesEqual(f1, f2));
+            Assert.False(File.AreFilesEqual(f1, f2));
         }
         finally
         {
@@ -105,7 +108,7 @@ public class FileHelperTests
             var f1 = new FileInfo(path1);
             var f2 = new FileInfo(path2);
 
-            Assert.False(FileHelper.AreFilesEqual(f1, f2));
+            Assert.False(File.AreFilesEqual(f1, f2));
         }
         finally
         {
@@ -120,7 +123,7 @@ public class FileHelperTests
         var missingFile = new FileInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
         var tempFile = new FileInfo(Path.GetTempFileName());
 
-        Assert.ThrowsAny<Exception>(() => FileHelper.AreFilesEqual(missingFile, tempFile));
+        Assert.ThrowsAny<Exception>(() => File.AreFilesEqual(missingFile, tempFile));
 
         File.Delete(tempFile.FullName);
     }

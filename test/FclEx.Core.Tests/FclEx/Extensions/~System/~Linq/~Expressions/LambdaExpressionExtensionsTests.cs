@@ -1,9 +1,9 @@
-namespace FclEx.Helpers;
+namespace FclEx.Extensions;
 
-public class LambdaHelperTests
+public class LambdaExpressionExtensionsTests
 {
     [Fact]
-    public void GetPropertyLambdaExp_ShouldRetainEntryForTheLifetimeOfItsType()
+    public void PropertyOrField_ShouldRetainEntryForTheLifetimeOfItsType()
     {
         var first = GetNameSelector();
 
@@ -19,7 +19,7 @@ public class LambdaHelperTests
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static LambdaExpression GetNameSelector()
     {
-        return LambdaHelper.GetPropertyLambdaExp<Model>(nameof(Model.Name));
+        return LambdaExpression.PropertyOrField<Model>(nameof(Model.Name));
     }
 
     private sealed class Model
