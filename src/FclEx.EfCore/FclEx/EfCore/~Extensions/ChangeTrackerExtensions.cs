@@ -109,7 +109,7 @@ public static class ChangeTrackerExtensions
 
                         foreach (var property in entry.Properties)
                         {
-                            if (updatePropertyNames.Contains(property.Metadata.ClrType.Name))
+                            if (updatePropertyNames.Contains(property.Metadata.Name))
                                 continue;
 
                             property.IsModified = false;
