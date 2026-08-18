@@ -27,19 +27,26 @@ public static class ChangeTrackerExtensions
                 case EntityState.Added:
                 {
                     if (entity is IHasCreatedAt hasCreatedAt)
+                    {
                         hasCreatedAt.CreatedAt = now;
+                        entry.Property(nameof(IHasCreatedAt.CreatedAt)).IsModified = true;
+                    }
 
                     if (entity is IHasUpdatedAt hasUpdatedAt)
+                    {
                         hasUpdatedAt.UpdatedAt = now;
+                        entry.Property(nameof(IHasUpdatedAt.UpdatedAt)).IsModified = true;
+                    }
 
                     break;
                 }
                 case EntityState.Modified:
                 {
                     if (entity is IHasUpdatedAt hasUpdatedAt)
+                    {
                         hasUpdatedAt.UpdatedAt = now;
-
-                    var exclude = new HashSet<string>();
+                        entry.Property(nameof(IHasUpdatedAt.UpdatedAt)).IsModified = true;
+                    }
 
                     var isDeletable = false;
                     var deletingSoftDeletedEntity = false;
@@ -47,6 +54,7 @@ public static class ChangeTrackerExtensions
                     if (entity is ISoftDeletable deletable)
                     {
                         isDeletable = true;
+
                         if (deletable.IsDeleted)
                         {
                             if (Equals(entry.Property(nameof(ISoftDeletable.IsDeleted)).OriginalValue, false))
@@ -65,29 +73,29 @@ public static class ChangeTrackerExtensions
 
                     if (entity is IHasDeletedAt hasDeletedAt)
                     {
+                        var property = entry.Property(nameof(IHasDeletedAt.DeletedAt));
                         if (restoringSoftDeletedEntity)
                         {
                             hasDeletedAt.DeletedAt = default; // Reset DeletedAt when restoring
+                            property.IsModified = true;
                         }
                         else if (deletingSoftDeletedEntity && hasDeletedAt.DeletedAt == default)
                         {
                             // deleting but DeletedAt is not set, set it to now
                             hasDeletedAt.DeletedAt = now;
+                            property.IsModified = true;
                         }
                         else if (isDeletable)
                         {
                             // If the entity is soft-deletable but not being deleted or restored, exclude DeletedAt from being modified
                             // updating IsDeleted from true to true.
-                            exclude.Add(nameof(IHasDeletedAt.DeletedAt));
+                            property.IsModified = false;
                         }
                     }
 
                     if (entity is IHasCreatedAt)
-                        exclude.Add(nameof(IHasCreatedAt.CreatedAt));
-
-                    foreach (var name in exclude)
                     {
-                        entry.Property(name).IsModified = false;
+                        entry.Property(nameof(IHasCreatedAt.CreatedAt)).IsModified = false;
                     }
 
                     break;
@@ -109,10 +117,7 @@ public static class ChangeTrackerExtensions
 
                         foreach (var property in entry.Properties)
                         {
-                            if (updatePropertyNames.Contains(property.Metadata.Name))
-                                continue;
-
-                            property.IsModified = false;
+                            property.IsModified = updatePropertyNames.Contains(property.Metadata.Name);
                         }
                     }
                     break;

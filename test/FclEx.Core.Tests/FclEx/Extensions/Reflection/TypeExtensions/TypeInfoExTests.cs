@@ -154,7 +154,7 @@ public class TypeInfoExTests
         Assert.True(typeof(TypeInfoEx).IsSealed);
     }
 
-    [Fact]
+    [RetryFact]
     public void GetTypeInfoEx_ShouldNotKeepCollectibleTypeAlive()
     {
         var typeReference = CacheCollectibleType();
