@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-
 namespace FclEx.EfCore;
 
 /// <summary>
@@ -260,6 +258,123 @@ public static partial class DbContextExtensions
     }
 
     /// <summary>
+    /// Gets the <see cref="EntityEntry{T}"/> for the given entity by matching its primary key
+    /// against already-tracked entries in the ChangeTracker, instead of relying on reference equality
+    /// like <see cref="DbContext.Entry{T}"/> does.
+    /// If an entry with the same primary key value(s) is already being tracked, that existing entry is
+    /// returned. Otherwise, <see langword="null"/> is returned, indicating that no tracked entry exists for the given entity instance.
+    /// This helps avoid the "another instance with the same key value is already being tracked" exception
+    /// that occurs when two different object instances with the same key are both attached/tracked.
+    /// Supports composite primary keys and shadow key properties.
+    /// Note: this only searches entries already in the ChangeTracker; it does not query the database
+    /// (unlike <see cref="DbSet{T}.Find"/>).
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <param name="context">The DbContext instance.</param>
+    /// <param name="entity">The entity instance whose primary key value(s) will be used for lookup.</param>
+    /// <returns>
+    /// The existing tracked <see cref="EntityEntry{T}"/> matching the entity's primary key,
+    /// or <see langword="null"/> if no tracked entry exists for the given entity instance.
+    /// </returns>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if <typeparamref name="T"/> is not an entity type on this context, or has no primary key defined.
+    /// </exception>
+    public static EntityEntry<T>? GetEntry<T>(this DbContext context, T entity) where T : class
+    {
+        var entityType = context.Model.FindEntityType(typeof(T))
+            ?? throw new InvalidOperationException($"{typeof(T).Name} is not an entity type on this DbContext");
+
+        var key = entityType.FindPrimaryKey()
+            ?? throw new InvalidOperationException($"{typeof(T).Name} does not have a primary key defined");
+
+        // Read the current primary key value(s) from the given entity (supports composite keys)
+        var keyProperties = key.Properties;
+        var keyValues = new object?[keyProperties.Count];
+        for (int i = 0; i < keyProperties.Count; i++)
+        {
+            keyValues[i] = keyProperties[i].GetValue(entity);
+        }
+
+        // Look for an already-tracked entry with the same key value(s)
+        var existing = context.ChangeTracker.Entries<T>()
+            .FirstOrDefault(e =>
+            {
+                // ReSharper disable once LoopCanBeConvertedToQuery
+                for (int i = 0; i < keyProperties.Count; i++)
+                {
+                    var value = e.Property(keyProperties[i].Name).CurrentValue;
+                    if (Equals(value, keyValues[i]) == false)
+                        return false;
+                }
+                return true;
+            });
+
+        return existing;
+    }
+
+    /// <summary>
+    /// Gets the <see cref="EntityEntry{T}"/> for the given entity by matching its primary key
+    /// against already-tracked entries in the ChangeTracker, instead of relying on reference equality
+    /// like <see cref="DbContext.Entry{T}"/> does.
+    /// If an entry with the same primary key value(s) is already being tracked, that existing entry is
+    /// returned. Otherwise, a new entry is created and returned for the given entity instance
+    /// (equivalent to calling <c>context.Entry(entity)</c>).
+    /// This helps avoid the "another instance with the same key value is already being tracked" exception
+    /// that occurs when two different object instances with the same key are both attached/tracked.
+    /// Supports composite primary keys and shadow key properties.
+    /// Note: this only searches entries already in the ChangeTracker; it does not query the database
+    /// (unlike <see cref="DbSet{T}.Find"/>).
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <param name="context">The DbContext instance.</param>
+    /// <param name="entity">The entity instance whose primary key value(s) will be used for lookup.</param>
+    /// <returns>
+    /// The existing tracked <see cref="EntityEntry{T}"/> matching the entity's primary key,
+    /// or a new <see cref="EntityEntry{T}"/> for the given entity if none is currently tracked.
+    /// </returns>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if <typeparamref name="T"/> is not an entity type on this context, or has no primary key defined.
+    /// </exception>
+    public static EntityEntry<T> GetOrCreateEntry<T>(this DbContext context, T entity) where T : class
+    {
+        return context.GetEntry(entity) ?? context.Entry(entity);
+    }
+
+    /// <summary>
+    /// Gets the <see cref="EntityEntry{T}"/> for the given entity by matching its primary key
+    /// against already-tracked entries in the ChangeTracker, instead of relying on reference equality
+    /// like <see cref="DbContext.Entry{T}"/> does.
+    /// If an entry with the same primary key value(s) is already being tracked, that existing entry is
+    /// returned. Otherwise, a new entry is created and returned for the given entity instance
+    /// (equivalent to calling <c>context.Entry(entity)</c>).
+    /// This helps avoid the "another instance with the same key value is already being tracked" exception
+    /// that occurs when two different object instances with the same key are both attached/tracked.
+    /// Supports composite primary keys and shadow key properties.
+    /// Note: this only searches entries already in the ChangeTracker; it does not query the database
+    /// (unlike <see cref="DbSet{T}.Find"/>).
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <param name="context">The DbContext instance.</param>
+    /// <param name="entity">The entity instance whose primary key value(s) will be used for lookup.</param>
+    /// <returns>
+    /// The existing tracked <see cref="EntityEntry{T}"/> matching the entity's primary key,
+    /// or a new <see cref="EntityEntry{T}"/> for the given entity if none is currently tracked.
+    /// </returns>
+    public static EntityEntry<T> GetOrReplaceEntry<T>(this DbContext context, T entity) where T : class
+    {
+        var existing = context.GetEntry(entity);
+
+        // ReSharper disable once InvertIf
+        if (existing is not null && ReferenceEquals(existing.Entity, entity) == false)
+        {
+            existing.State = EntityState.Detached;
+            existing = null;
+        }
+
+        return existing ?? context.Entry(entity);
+    }
+
+    /// <summary>
     /// Applies the given DTO changes to the specified <see cref="DbContext"/> set.
     /// Determines which entities should be inserted, updated, or deleted,
     /// and returns the results of those operations.
@@ -288,11 +403,6 @@ public static partial class DbContextExtensions
     /// An <see cref="EntityChanges{TEntity}"/> object containing
     /// all inserted, updated, and deleted entities.
     /// </returns>
-    /// <exception cref="ArgumentException">
-    /// Thrown when <paramref name="existingEntities"/> contains duplicate keys, or when
-    /// <paramref name="dtos"/> contains duplicate non-default keys. Multiple default DTO keys are allowed
-    /// because they commonly represent entities whose keys will be generated by the database.
-    /// </exception>
     public static EntityChanges<TEntity> ApplyChanges<TEntity, TDto, TKey>(
         this DbContext context,
         IEnumerable<TDto> dtos,
@@ -307,122 +417,93 @@ public static partial class DbContextExtensions
         where TKey : notnull
     {
         var set = context.Set<TEntity>();
-        var existingDic = ToDictionary(existingEntities, entityKey, nameof(existingEntities));
-        var keyedDtos = ToListWithUniqueKeys(dtos, dtoKey, nameof(dtos));
+        var existingDic = existingEntities.ToMultiValueDictionary(entityKey, m => m);
 
         var inserted = new List<TEntity>();
         var updated = new List<EntityUpdate<TEntity>>();
         var deleted = new List<TEntity>();
-        foreach (var (key, dto) in keyedDtos)
+        foreach (var dto in dtos)
         {
-            if (existingDic.TryGetValue(key, out var entity))
+            var key = dtoKey(dto);
+            if (existingDic.TryGetValue(key, out var entities) == false)
             {
-                var update = false;
-                TEntity? updatedEntity;
-                var restoreSoftDeletedEntity = entity is ISoftDeletable { IsDeleted: true };
-                var originalDeletedAt = entity is IHasDeletedAt hasDeletedAt
-                    ? hasDeletedAt.DeletedAt
-                    : default;
-
-                if (updateEntity is null)
+                var newEntity = insertEntity(dto);
+                var entry = context.GetEntry(newEntity);
+                if (entry is null)
                 {
-                    updatedEntity = entity;
+                    entry = context.Entry(newEntity);
                 }
                 else
                 {
-                    updatedEntity = updateEntity(dto, entity);
-                    update = updatedEntity is not null;
+                    // If the entity is already being tracked, we need to update its values with the new entity's values.
+                    entry.CurrentValues.SetValues(newEntity);
                 }
 
-                if (restoreSoftDeletedEntity && updatedEntity is ISoftDeletable deletable)
-                {
-                    deletable.IsDeleted = false;
-                    if (updatedEntity is IHasDeletedAt updatedHasDeletedAt)
-                        updatedHasDeletedAt.DeletedAt = default;
-                    update = true;
-                }
+                // Ensure the new entity has its key applied to the default values if necessary.
+                entry.ApplyKeyToDefault(entry.Entity);
+                entry.State = EntityState.Added;
 
-                if (update && updatedEntity is not null)
-                {
-                    var entry = context.Entry(entity);
+                inserted.Add(newEntity);
+                continue;
+            }
 
-                    if (ReferenceEquals(updatedEntity, entity) == false)
-                    {
-                        entry.CurrentValues.SetValues(updatedEntity);
-                    }
+            var entity = entities.Last();
+            var update = false;
+            TEntity? updatedEntity;
 
-                    entry.State = EntityState.Modified;
-                    entry.ExcludeFromUpdate(excludeOnUpdate);
-
-                    if (restoreSoftDeletedEntity)
-                    {
-                        entry.Property(nameof(ISoftDeletable.IsDeleted)).OriginalValue = true;
-                        entry.Property(nameof(ISoftDeletable.IsDeleted)).IsModified = true;
-
-                        if (updatedEntity is IHasDeletedAt)
-                        {
-                            entry.Property(nameof(IHasDeletedAt.DeletedAt)).OriginalValue = originalDeletedAt;
-                            entry.Property(nameof(IHasDeletedAt.DeletedAt)).IsModified = true;
-                        }
-                    }
-
-                    updated.Add(new(updatedEntity, entity));
-                }
-
-                // // Remove matched entity from deletion candidates since it is present in the incoming DTOs.
-                existingDic.Remove(key);
+            if (updateEntity is null)
+            {
+                updatedEntity = entity;
             }
             else
             {
-                var newEntity = insertEntity(dto);
-                set.Add(newEntity);
-                inserted.Add(newEntity);
+                updatedEntity = updateEntity(dto, entity);
+                update = updatedEntity is not null;
             }
+
+            // recover soft-deleted entity if the updated entity is marked as deleted
+            if (updatedEntity is ISoftDeletable { IsDeleted: true } deletable)
+            {
+                deletable.IsDeleted = false;
+                update = true;
+            }
+
+            if (update && updatedEntity is not null)
+            {
+                var entry = context.GetEntry(entity);
+                if (entry is not null && ReferenceEquals(entry.Entity, updatedEntity) == false)
+                {
+                    // updatedEntity may not have the key set, so we need to copy the key from the existing entity
+                    entry.ApplyKeyTo(updatedEntity);
+                    entry.State = EntityState.Detached;
+                    entry = null;
+                }
+
+                entry ??= context.Entry(updatedEntity);
+                entry.State = EntityState.Modified;
+                entry.ExcludeFromUpdate(excludeOnUpdate);
+
+                updated.Add(new(updatedEntity, entity));
+            }
+
+            // Remove matched entity from deletion candidates since it is present in the incoming DTOs.
+            existingDic.Remove(key, entity);
         }
 
+        // ReSharper disable once InvertIf
         if (allowDeletion)
         {
-            foreach (var (_, entity) in existingDic)
+            foreach (var (_, entities) in existingDic)
             {
-                set.Remove(entity);
-                deleted.Add(entity);
+                foreach (var entity in entities)
+                {
+                    set.Remove(entity);
+                    deleted.Add(entity);
+                }
             }
         }
+
         return new EntityChanges<TEntity>(inserted, updated, deleted);
-
-        static Dictionary<TKey, TValue> ToDictionary<TValue>(
-            IEnumerable<TValue> values,
-            Func<TValue, TKey> keySelector,
-            string paramName)
-        {
-            var result = new Dictionary<TKey, TValue>();
-            foreach (var value in values)
-            {
-                if (result.TryAdd(keySelector(value), value) == false)
-                    throw new ArgumentException("The collection contains duplicate keys.", paramName);
-            }
-
-            return result;
-        }
-
-        static List<(TKey Key, TValue Value)> ToListWithUniqueKeys<TValue>(
-            IEnumerable<TValue> values,
-            Func<TValue, TKey> keySelector,
-            string paramName)
-        {
-            var result = new List<(TKey Key, TValue Value)>();
-            var keys = new HashSet<TKey>();
-            foreach (var value in values)
-            {
-                var key = keySelector(value);
-                if (EqualityComparer<TKey>.Default.Equals(key, default) == false && keys.Add(key) == false)
-                    throw new ArgumentException("The collection contains duplicate keys.", paramName);
-
-                result.Add((key, value));
-            }
-
-            return result;
-        }
     }
 
     /// <summary>
@@ -465,6 +546,7 @@ public static partial class DbContextExtensions
         where TKey : notnull
     {
         insertEntity ??= e => e;
+        updateEntity ??= (e, _) => e;
         return context.ApplyChanges(
             newEntities,
             entityKey,

@@ -10,7 +10,7 @@ partial class DbContextExtensionsTests
         var dtos = new[]
         {
             new EntityHasStates { Name = "Alice" },
-            new EntityHasStates { Name = "Bob" }
+            new EntityHasStates { Name = "Bob" },
         };
 
         var result = context.ApplyChanges(
@@ -273,7 +273,7 @@ partial class DbContextExtensionsTests
 
     [Theory]
     [MemberData(nameof(DbDriverCases))]
-    public async Task ApplyChanges_ShouldRejectDuplicateDtoKeysBeforeTrackingChanges(DbDriver dbDriver)
+    public async Task ApplyChanges_ShouldAllowDuplicateDtoKeysBeforeTrackingChanges(DbDriver dbDriver)
     {
         await using var context = Fixture.CreateDbContext(dbDriver);
         var existing = new EntityHasStates { Id = 42, Name = "Existing" };
@@ -283,16 +283,15 @@ partial class DbContextExtensionsTests
             new EntityHasStates { Id = 42, Name = "Second" },
         };
 
-        var exception = Assert.Throws<ArgumentException>(() => context.ApplyChanges(
+        context.ApplyChanges(
             dtos,
             dto => dto.Id,
             [existing],
             entity => entity.Id,
             dto => dto,
-            (dto, entity) => dto));
+            (dto, entity) => dto);
 
-        Assert.Equal("dtos", exception.ParamName);
-        Assert.Empty(context.ChangeTracker.Entries());
+        Assert.Single(context.ChangeTracker.Entries());
         Assert.Equal("Existing", existing.Name);
     }
 
@@ -310,7 +309,7 @@ partial class DbContextExtensionsTests
         var changes = context.ApplyChanges(
             dtos,
             dto => dto.Id,
-            Array.Empty<EntityHasStates>(),
+            [],
             entity => entity.Id,
             dto => new EntityHasStates { Name = dto.Name });
 
