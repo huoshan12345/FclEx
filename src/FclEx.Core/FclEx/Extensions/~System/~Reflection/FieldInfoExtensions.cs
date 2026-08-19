@@ -84,4 +84,13 @@ public static class FieldInfoExtensions
         // not visible: private, internal(Assembly), private protected(FamANDAssem)
         return (field.Attributes & FieldAttributes.FieldAccessMask) <= FieldAttributes.Assembly;
     }
+
+    extension(FieldInfo)
+    {
+        [MethodImpl(AggressiveInlining)]
+        public static string GetAutoBackingFieldName(string propertyName)
+        {
+            return $"<{propertyName}>k__BackingField";
+        }
+    }
 }

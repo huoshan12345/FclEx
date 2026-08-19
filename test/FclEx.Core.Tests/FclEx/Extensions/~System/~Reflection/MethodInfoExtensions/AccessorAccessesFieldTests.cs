@@ -5,10 +5,7 @@
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 #pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
 
-using static FclEx.Helpers.ReflectionHelper;
-using System.Reflection.Emit;
-
-namespace FclEx.Helpers.ReflectionHelperTests;
+namespace FclEx.Extensions.MethodInfoExtensions;
 
 public class AccessorAccessesFieldTests
 {
@@ -24,10 +21,7 @@ public class AccessorAccessesFieldTests
     {
         var prop = typeof(Simple).GetProperty(nameof(Simple.Value))!;
         var field = typeof(Simple).GetField("<Value>k__BackingField", Flags)!;
-
-        var getter = prop.GetMethod!;
-
-        Assert.True(AccessorAccessesField(getter, field));
+        Assert.True(prop.GetMethod!.AccessesField(field));
     }
 
     [Fact]
@@ -35,10 +29,7 @@ public class AccessorAccessesFieldTests
     {
         var prop = typeof(Simple).GetProperty(nameof(Simple.Value))!;
         var field = typeof(Simple).GetField("<Value>k__BackingField", Flags)!;
-
-        var setter = prop.SetMethod!;
-
-        Assert.True(AccessorAccessesField(setter, field));
+        Assert.True(prop.SetMethod!.AccessesField(field));
     }
 
     private struct StructType
@@ -52,7 +43,7 @@ public class AccessorAccessesFieldTests
         var prop = typeof(StructType).GetProperty("Value")!;
         var field = typeof(StructType).GetField("<Value>k__BackingField", Flags)!;
 
-        Assert.True(AccessorAccessesField(prop.GetMethod!, field));
+        Assert.True(prop.GetMethod!.AccessesField(field));
     }
 
     private class StaticType
@@ -66,7 +57,7 @@ public class AccessorAccessesFieldTests
         var prop = typeof(StaticType).GetProperty("Value", BindingFlags.Public | BindingFlags.Static)!;
         var field = typeof(StaticType).GetField("<Value>k__BackingField", BindingFlags.NonPublic | BindingFlags.Static)!;
 
-        Assert.True(AccessorAccessesField(prop.GetMethod!, field));
+        Assert.True(prop.GetMethod!.AccessesField(field));
     }
 
     private class Generic<T>
@@ -80,7 +71,7 @@ public class AccessorAccessesFieldTests
         var prop = typeof(Generic<>).GetProperty("Value")!;
         var field = typeof(Generic<>).GetField("<Value>k__BackingField", Flags)!;
 
-        Assert.True(AccessorAccessesField(prop.GetMethod!, field));
+        Assert.True(prop.GetMethod!.AccessesField(field));
     }
 
     [Fact]
@@ -89,7 +80,7 @@ public class AccessorAccessesFieldTests
         var prop = typeof(Generic<int>).GetProperty("Value")!;
         var field = typeof(Generic<int>).GetField("<Value>k__BackingField", Flags)!;
 
-        Assert.True(AccessorAccessesField(prop.GetMethod!, field));
+        Assert.True(prop.GetMethod!.AccessesField(field));
     }
 
     private class GenericMixed<T>
@@ -103,7 +94,7 @@ public class AccessorAccessesFieldTests
         var prop = typeof(GenericMixed<int>).GetProperty("Id")!;
         var field = typeof(GenericMixed<int>).GetField("<Id>k__BackingField", Flags)!;
 
-        Assert.True(AccessorAccessesField(prop.GetMethod!, field));
+        Assert.True(prop.GetMethod!.AccessesField(field));
     }
 
     private class Base
@@ -121,7 +112,7 @@ public class AccessorAccessesFieldTests
         var prop = typeof(Derived).GetProperty("Value")!;
         var field = typeof(Base).GetField("<Value>k__BackingField", Flags)!;
 
-        Assert.True(AccessorAccessesField(prop.GetMethod!, field));
+        Assert.True(prop.GetMethod!.AccessesField(field));
     }
 
     [Fact]
@@ -146,7 +137,7 @@ public class AccessorAccessesFieldTests
 
         foreach (var field in fields)
         {
-            Assert.Equal(backingFields.Contains(field), AccessorAccessesField(getter, field), () => field.Name);
+            Assert.Equal(backingFields.Contains(field), getter.AccessesField(field), () => field.Name);
         }
     }
 
@@ -168,7 +159,7 @@ public class AccessorAccessesFieldTests
 
         var getter = prop.GetMethod!;
 
-        Assert.True(AccessorAccessesField(getter, field));
+        Assert.True(getter.AccessesField(field));
     }
 
     private class ExplicitImpl : IReadOnlyCollection<int>
@@ -191,7 +182,7 @@ public class AccessorAccessesFieldTests
 
         var field = typeof(ExplicitImpl).GetField("_count", Flags)!;
 
-        Assert.True(AccessorAccessesField(prop, field));
+        Assert.True(prop.AccessesField(field));
     }
 
     private class NonAuto
@@ -211,8 +202,8 @@ public class AccessorAccessesFieldTests
         var prop = typeof(NonAuto).GetProperty("Value")!;
         var field = typeof(NonAuto).GetField("_x", Flags)!;
 
-        Assert.True(AccessorAccessesField(prop.GetMethod, field));
-        Assert.True(AccessorAccessesField(prop.SetMethod, field));
+        Assert.True(prop.GetMethod!.AccessesField(field));
+        Assert.True(prop.SetMethod!.AccessesField(field));
     }
 
     private class AddressAccess
@@ -228,7 +219,7 @@ public class AccessorAccessesFieldTests
         var method = typeof(AddressAccess).GetRequiredMethod(nameof(AddressAccess.GetValueReference));
         var field = typeof(AddressAccess).GetField("_value", Flags)!;
 
-        Assert.True(AccessorAccessesField(method, field));
+        Assert.True(method.AccessesField(field));
     }
 
     [Fact]
@@ -259,6 +250,6 @@ public class AccessorAccessesFieldTests
         Assert.Equal(0x04000001, field.MetadataToken);
 
         // The field token occurs inside an ldc.i4 operand; it is not an IL field-access instruction.
-        Assert.False(AccessorAccessesField(getter, field));
+        Assert.False(getter.AccessesField(field));
     }
 }

@@ -1,5 +1,3 @@
-using System.Reflection.Emit;
-
 namespace FclEx.Extensions.Reflection.TypeExtensions;
 
 [CompilerGenerated]

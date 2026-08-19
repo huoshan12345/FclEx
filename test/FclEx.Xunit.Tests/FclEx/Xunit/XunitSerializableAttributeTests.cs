@@ -1,5 +1,3 @@
-using static FclEx.Helpers.ReflectionHelper;
-
 namespace FclEx.Xunit;
 
 public partial class XunitSerializableAttributeTests
@@ -147,9 +145,9 @@ public partial class XunitSerializableAttributeTests
         var info = CreateSerializationInfo();
         serializable.Serialize(info);
 
-        Assert.Equal(original.Id, info.GetValue<int>(GetAutoBackingFieldName(nameof(original.Id))));
-        Assert.Equal(original.Name, info.GetValue<string>(GetAutoBackingFieldName(nameof(original.Name))));
-        Assert.Equal(original.Addresses, info.GetValue<string[]>(GetAutoBackingFieldName(nameof(original.Addresses))));
+        Assert.Equal(original.Id, info.GetValue<int>(FieldInfo.GetAutoBackingFieldName(nameof(original.Id))));
+        Assert.Equal(original.Name, info.GetValue<string>(FieldInfo.GetAutoBackingFieldName(nameof(original.Name))));
+        Assert.Equal(original.Addresses, info.GetValue<string[]>(FieldInfo.GetAutoBackingFieldName(nameof(original.Addresses))));
 
         var deserialized = new T();
         deserialized.Deserialize(info);

@@ -63,7 +63,7 @@ partial class TypeExtensions
     /// <exception cref="InvalidOperationException">No matching backing field is found.</exception>
     public static FieldInfo GetAutoPropertyBackingField(this Type type, string propertyName, bool searchBaseTypes = false)
     {
-        var name = ReflectionHelper.GetAutoBackingFieldName(propertyName);
+        var name = FieldInfo.GetAutoBackingFieldName(propertyName);
         return type.GetField(name, searchBaseTypes)
                ?? throw new InvalidOperationException($"Cannot find backing field for property '{propertyName}' in type '{type.FullName}'");
     }

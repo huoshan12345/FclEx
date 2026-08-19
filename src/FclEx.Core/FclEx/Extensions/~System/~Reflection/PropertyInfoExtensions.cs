@@ -1,5 +1,3 @@
-using static FclEx.Helpers.ReflectionHelper;
-
 namespace FclEx.Extensions;
 
 public static class PropertyInfoExtensions
@@ -141,7 +139,7 @@ public static class PropertyInfoExtensions
         if (property.DeclaringType is not { } type)
             return false;
 
-        var fieldName = GetAutoBackingFieldName(property.Name);
+        var fieldName = FieldInfo.GetAutoBackingFieldName(property.Name);
         var f = type.GetField(fieldName, BindingFlags.Declared);
         if (f is null)
             return false;
