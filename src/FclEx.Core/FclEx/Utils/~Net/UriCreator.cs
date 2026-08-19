@@ -22,7 +22,12 @@ public class UriCreator
         _builder.Query = string.Empty;
     }
 
-    public UriCreator(string? scheme, string? host, int port = -1, string? path = null)
+    public UriCreator(string? scheme, string? host, string? path)
+    : this(scheme ?? "", host ?? "", -1, path ?? "") // do not pass null to UriBuilder, it will be filled with default values, which is not what we want.
+    {
+    }
+
+    public UriCreator(string? scheme, string? host, int port, string? path = null) // do not set port optional, because it will conflict with the constructor that takes a Uri and a relativeUri.
         : this(new UriBuilder(scheme ?? "", host ?? "", port, path ?? "")) // do not pass null to UriBuilder, it will be filled with default values, which is not what we want.
     {
     }
@@ -32,8 +37,8 @@ public class UriCreator
     {
     }
 
-    public UriCreator(string uri) // do not add second string parameter, otherwise it will be ambiguous with the constructor that takes (string scheme, string host, int port, string path)
-        : this(new Uri(uri, UriKind.RelativeOrAbsolute))
+    public UriCreator(string uri, string? relativeUri = null)
+        : this(new Uri(uri, UriKind.RelativeOrAbsolute), relativeUri)
     {
     }
 

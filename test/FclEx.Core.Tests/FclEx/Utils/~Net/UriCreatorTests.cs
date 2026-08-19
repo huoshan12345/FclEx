@@ -5,7 +5,7 @@ public class UriCreatorTests
     [Fact]
     public void Constructor_WithoutSchemeHost_ShouldInitializeUriBuilderCorrectly()
     {
-        var creator = new UriCreator("", "");
+        var creator = new UriCreator("", "", -1);
         Assert.Equal("", creator.Scheme);
         Assert.Equal("", creator.Host);
         Assert.Equal(-1, creator.Port);
@@ -152,7 +152,7 @@ public class UriCreatorTests
     [Fact]
     public void Host_SetWithIpv4_ShouldUpdateHost()
     {
-        var creator = new UriCreator("http", "example.com")
+        var creator = new UriCreator("http", "example.com", -1)
         {
             Host = "192.168.1.1",
         };
