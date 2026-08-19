@@ -1,23 +1,10 @@
-using System.Reflection.Emit;
-
 namespace FclEx.Helpers;
 
 public static class ReflectionHelper
 {
     private static readonly OpCode?[] _oneByteOpCodes = new OpCode?[byte.MaxValue + 1];
     private static readonly OpCode?[] _twoByteOpCodes = new OpCode?[byte.MaxValue + 1];
-
-    private const BindingFlags VisibleToDerived = BindingFlags.Public
-                                            | BindingFlags.NonPublic
-                                            | BindingFlags.Instance
-                                            | BindingFlags.Static
-                                            | BindingFlags.FlattenHierarchy;
-
-    private const BindingFlags DeclaredNonPublic = BindingFlags.NonPublic
-                                            | BindingFlags.Instance
-                                            | BindingFlags.Static
-                                            | BindingFlags.DeclaredOnly;
-
+    
     static ReflectionHelper()
     {
         foreach (var field in typeof(OpCodes).GetFields(BindingFlags.Public | BindingFlags.Static))
@@ -25,16 +12,14 @@ public static class ReflectionHelper
             if (field.GetValue(null) is not OpCode opcode)
                 continue;
 
-            var value = unchecked((ushort)opcode.Value);
+            var value = (ushort)opcode.Value;
             if (opcode.Size == 1)
                 _oneByteOpCodes[value] = opcode;
             else if (opcode.Size == 2 && value >> 8 == 0xFE)
                 _twoByteOpCodes[(byte)value] = opcode;
         }
     }
-
-    private static readonly ConditionalWeakTable<Type, IReadOnlyList<DataMemberInfo>> TypeDataMemberDic = new();
-
+    
     private static readonly
 #if NET9_0_OR_GREATER
             Lock
@@ -42,57 +27,6 @@ public static class ReflectionHelper
             object
 #endif
         _lock = new();
-
-    public static IReadOnlyList<DataMemberInfo> GetDataMembers(Type type)
-    {
-        return TypeDataMemberDic.GetValue(type, GetDataMembersCore);
-
-        static IReadOnlyList<DataMemberInfo> GetDataMembersCore(Type type)
-        {
-            if (type.IsInterface)
-            {
-                var members = type.GetInterfaces()
-                    .Prepend(type)
-                    .Select(GetDeclaredDataMembers)
-                    .SelectMany(m => m);
-                return members.ToReadOnlyList();
-            }
-
-            var list = new List<DataMemberInfo>(GetVisibleDataMembers(type));
-
-            var baseType = type.BaseType;
-            while (baseType is not null)
-            {
-                var members = GetNotVisibleToDerivedDataMembers(baseType);
-                list.AddRange(members);
-                baseType = baseType.BaseType;
-            }
-
-            return list.ToReadOnlyList();
-        }
-
-        static IEnumerable<DataMemberInfo> GetDeclaredDataMembers(Type type)
-        {
-            return type.GetMembers(BindingAttributes.Declared)
-                .Where(m => m is PropertyInfo or FieldInfo)
-                .Select(m => m.ToDataMemberInfo());
-        }
-
-        static IEnumerable<DataMemberInfo> GetVisibleDataMembers(Type type)
-        {
-            return type.GetMembers(VisibleToDerived)
-                .Where(m => m is PropertyInfo or FieldInfo)
-                .Select(m => m.ToDataMemberInfo());
-        }
-
-        static IEnumerable<DataMemberInfo> GetNotVisibleToDerivedDataMembers(Type type)
-        {
-            return type.GetMembers(DeclaredNonPublic)
-                .Where(m => m is PropertyInfo property && property.IsNotVisibleToDerived()
-                            || m is FieldInfo field && field.IsNotVisibleToDerived())
-                .Select(m => m.ToDataMemberInfo());
-        }
-    }
 
     public static string GetAutoBackingFieldName(string propertyName)
     {

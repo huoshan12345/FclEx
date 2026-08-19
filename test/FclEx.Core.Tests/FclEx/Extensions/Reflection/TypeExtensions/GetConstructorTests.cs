@@ -14,6 +14,7 @@ public class GetConstructorTests
         public NoDefaultCtorClass(int x) { }
     }
 
+    // ReSharper disable once ClassCannotBeInstantiated
     public class PrivateDefaultCtorClass
     {
         private PrivateDefaultCtorClass() { }

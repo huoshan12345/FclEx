@@ -142,7 +142,7 @@ public static class PropertyInfoExtensions
             return false;
 
         var fieldName = GetAutoBackingFieldName(property.Name);
-        var f = type.GetField(fieldName, BindingAttributes.Declared);
+        var f = type.GetField(fieldName, BindingFlags.Declared);
         if (f is null)
             return false;
 

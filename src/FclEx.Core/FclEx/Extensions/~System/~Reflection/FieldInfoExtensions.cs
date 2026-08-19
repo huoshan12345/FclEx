@@ -56,7 +56,7 @@ public static class FieldInfoExtensions
         if (Regexes.AutoPropertyBackingField.TryMatch(field.Name, 1, out var name) == false)
             return false;
 
-        var p = type.GetProperty(name, BindingAttributes.Declared);
+        var p = type.GetProperty(name, BindingFlags.Declared);
         if (p is null)
             return false;
 

@@ -1,9 +1,9 @@
-using static System.Reflection.BindingAttributes;
-
 namespace FclEx.Extensions;
 
 partial class TypeExtensions
 {
+    private static readonly ConditionalWeakTable<Type, IReadOnlyList<DataMemberInfo>> TypeDataMemberDic = new();
+
     private static T? GetMember<T>(this Type type, Func<Type, T?> selector, bool searchBaseTypes) where T : MemberInfo
     {
         var t = type;
@@ -31,7 +31,7 @@ partial class TypeExtensions
     /// <returns>The matching field, or <see langword="null"/> when no field is found.</returns>
     public static FieldInfo? GetField(this Type type, string name, bool searchBaseTypes)
     {
-        return type.GetMember(m => m.GetField(name, Declared), searchBaseTypes);
+        return type.GetMember(m => m.GetField(name, BindingFlags.Declared), searchBaseTypes);
     }
 
     /// <summary>
@@ -80,7 +80,7 @@ partial class TypeExtensions
     /// <returns>The matching property, or <see langword="null"/> when no property is found.</returns>
     public static PropertyInfo? GetProperty(this Type type, string name, bool searchBaseTypes)
     {
-        return type.GetMember(m => m.GetProperty(name, Declared), searchBaseTypes);
+        return type.GetMember(m => m.GetProperty(name, BindingFlags.Declared), searchBaseTypes);
     }
 
     /// <summary>
@@ -116,7 +116,7 @@ partial class TypeExtensions
     /// </remarks>
     public static MethodInfo? GetMethod(this Type type, string name, bool searchBaseTypes)
     {
-        return type.GetMember(m => m.GetMethod(name, Declared), searchBaseTypes);
+        return type.GetMember(m => m.GetMethod(name, BindingFlags.Declared), searchBaseTypes);
     }
 
     /// <summary>
@@ -152,7 +152,7 @@ partial class TypeExtensions
     {
         return type.GetMember(t =>
         {
-            return t.GetMethods(Declared)
+            return t.GetMethods(BindingFlags.Declared)
                 .Where(m => m.Name == name)
                 .Select(m => (Method: m, Params: m.GetParameters(), Args: m.GetGenericArguments()))
                 .Where(x => x.Args.Length == genericArgumentCount
@@ -247,7 +247,56 @@ partial class TypeExtensions
     /// Fields and properties declared by the type and its relevant base/interface hierarchy, as discovered by
     /// <see cref="ReflectionHelper.GetDataMembers(Type)"/>.
     /// </returns>
-    public static IReadOnlyList<DataMemberInfo> GetDataMembers(this Type type) => ReflectionHelper.GetDataMembers(type);
+    public static IReadOnlyList<DataMemberInfo> GetDataMembers(this Type type)
+    {
+        return TypeDataMemberDic.GetValue(type, GetDataMembersCore);
+
+        static IReadOnlyList<DataMemberInfo> GetDataMembersCore(Type type)
+        {
+            if (type.IsInterface)
+            {
+                var members = type.GetInterfaces()
+                    .Prepend(type)
+                    .Select(GetDeclaredDataMembers)
+                    .SelectMany(m => m);
+                return members.ToReadOnlyList();
+            }
+
+            var list = new List<DataMemberInfo>(GetVisibleDataMembers(type));
+
+            var baseType = type.BaseType;
+            while (baseType is not null)
+            {
+                var members = GetNotVisibleToDerivedDataMembers(baseType);
+                list.AddRange(members);
+                baseType = baseType.BaseType;
+            }
+
+            return list.ToReadOnlyList();
+        }
+
+        static IEnumerable<DataMemberInfo> GetDeclaredDataMembers(Type type)
+        {
+            return type.GetMembers(BindingFlags.Declared)
+                .Where(m => m is PropertyInfo or FieldInfo)
+                .Select(m => m.ToDataMemberInfo());
+        }
+
+        static IEnumerable<DataMemberInfo> GetVisibleDataMembers(Type type)
+        {
+            return type.GetMembers(BindingFlags.VisibleToDerived)
+                .Where(m => m is PropertyInfo or FieldInfo)
+                .Select(m => m.ToDataMemberInfo());
+        }
+
+        static IEnumerable<DataMemberInfo> GetNotVisibleToDerivedDataMembers(Type type)
+        {
+            return type.GetMembers(BindingFlags.DeclaredNonPublic)
+                .Where(m => m is PropertyInfo property && property.IsNotVisibleToDerived()
+                            || m is FieldInfo field && field.IsNotVisibleToDerived())
+                .Select(m => m.ToDataMemberInfo());
+        }
+    }
 
     /// <summary>
     /// Retrieves data members from the specified type using the supplied flag filters.
@@ -383,7 +432,7 @@ partial class TypeExtensions
     /// <param name="type">The type to inspect.</param>
     /// <param name="name">The field or property name.</param>
     /// <returns>The matching data member, or <see langword="null"/> when no member is found.</returns>
-    public static DataMemberInfo? GetDataMember(this Type type, string name) => ReflectionHelper.GetDataMembers(type).FirstOrDefault(m => m.Name == name);
+    public static DataMemberInfo? GetDataMember(this Type type, string name) => type.GetDataMembers().FirstOrDefault(m => m.Name == name);
 
     /// <summary>
     /// Retrieves the first data member with the specified name and throws when it cannot be found.
@@ -397,8 +446,6 @@ partial class TypeExtensions
         return type.GetDataMember(name) ?? throw new InvalidOperationException($"Cannot find field or property '{name}' in type '{type.FullName}'");
     }
 
-    private const BindingFlags ParameterlessCtorFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-
     /// <summary>
     /// Retrieves the public or non-public parameterless constructor of the specified type, if available.
     /// </summary>
@@ -408,7 +455,7 @@ partial class TypeExtensions
     /// </returns>
     public static ConstructorInfo? GetParameterlessConstructor(this Type type)
     {
-        var ctors = type.GetConstructors(ParameterlessCtorFlags);
+        var ctors = type.GetConstructors(BindingFlags.DeclaredInstance);
         if (ctors.Length == 0)
             return null;
 
@@ -430,7 +477,7 @@ partial class TypeExtensions
     /// </exception>
     public static ConstructorInfo GetRequiredParameterlessConstructor(this Type type)
     {
-        var ctors = type.GetConstructors(ParameterlessCtorFlags);
+        var ctors = type.GetConstructors(BindingFlags.DeclaredInstance);
         if (ctors.Length == 0)
             throw new ArgumentException($"The type '{type.LongName()}' does not have any constructors.");
 

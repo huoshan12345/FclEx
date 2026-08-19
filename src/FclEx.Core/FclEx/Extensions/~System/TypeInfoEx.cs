@@ -92,7 +92,7 @@ public sealed class TypeInfoEx : IEquatable<TypeInfoEx>
 file static class Extensions
 {
 #if !NET5_0_OR_GREATER
-    private static readonly Lazy<PropertyInfo?> _isByRefLike = new(() => typeof(Type).GetProperty("IsByRefLike", BindingAttributes.Declared));
+    private static readonly Lazy<PropertyInfo?> _isByRefLike = new(() => typeof(Type).GetProperty("IsByRefLike", BindingFlags.Declared));
 
     private static bool IsByRefLike(Type type)
     {
