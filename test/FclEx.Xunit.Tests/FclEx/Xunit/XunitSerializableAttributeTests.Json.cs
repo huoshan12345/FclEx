@@ -133,7 +133,7 @@ partial class XunitSerializableAttributeTests
         var info = CreateSerializationInfo();
         original.Serialize(info);
 
-        var deserialized = ObjectHelper.GetUninitializedObject<TModel>();
+        var deserialized = RuntimeHelpers.GetUninitializedObject<TModel>();
         deserialized.Deserialize(info);
 
 #if FCLEX_XUNIT_V3

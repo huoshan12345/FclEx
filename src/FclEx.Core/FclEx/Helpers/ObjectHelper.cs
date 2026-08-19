@@ -2,20 +2,6 @@ namespace FclEx.Helpers;
 
 public static class ObjectHelper
 {
-    public static object GetUninitializedObject(Type type)
-    {
-#if !NET5_0_OR_GREATER
-        return FormatterServices.GetUninitializedObject(type);
-#else
-        return RuntimeHelpers.GetUninitializedObject(type);
-#endif
-    }
-
-    public static T GetUninitializedObject<T>()
-    {
-        return (T)GetUninitializedObject(typeof(T));
-    }
-
     private static long _nextId;
     // ReSharper disable once UseCollectionExpression
     private static readonly ConditionalWeakTable<object, object> _objectIds = new();

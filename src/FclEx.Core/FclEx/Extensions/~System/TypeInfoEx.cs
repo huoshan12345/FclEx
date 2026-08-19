@@ -133,7 +133,7 @@ file static class Extensions
 
         try
         {
-            return ObjectHelper.GetUninitializedObject(type);
+            return RuntimeHelpers.GetUninitializedObject(type);
         }
         catch (Exception ex)
         {

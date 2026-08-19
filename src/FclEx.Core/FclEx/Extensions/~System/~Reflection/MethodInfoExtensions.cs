@@ -1,6 +1,6 @@
 namespace FclEx.Extensions;
 
-public static class MethodInfoExtensions
+public static partial class MethodInfoExtensions
 {
     private static readonly ConditionalWeakTable<MethodInfo, ValueBox<long>> _runtimeIdentityTags = new();
     private static long _lastRuntimeIdentityTag;
@@ -97,4 +97,10 @@ public static class MethodInfoExtensions
         return (T)method.CreateDelegate(typeof(T), target);
     }
 #endif
+
+    extension(MethodInfo)
+    {
+        public static MethodInfo Of(Action action) => action.Method;
+        public static MethodInfo Of<TResult>(Func<TResult> func) => func.Method;
+    }
 }

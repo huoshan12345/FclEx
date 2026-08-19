@@ -3,7 +3,13 @@ namespace FclEx.Utils;
 public class TimerLazy<T> : ReLazy<TimerLazy<T>, T>
 {
     private readonly Timer _timer;
-    private readonly object _timerCallbackLock = new();
+    private static readonly
+#if NET9_0_OR_GREATER
+        Lock
+#else
+        object
+#endif
+    _lock = new();
 
     public TimerLazy(Func<T> valueFactory, TimeSpan dueTime, TimeSpan period,
         Action<TimerLazy<T>, T>? discardValueHandler = null)
@@ -23,7 +29,7 @@ public class TimerLazy<T> : ReLazy<TimerLazy<T>, T>
 
         _timer.Dispose();
 
-        lock (_timerCallbackLock)
+        lock (_lock)
         {
             base.Dispose();
         }
@@ -31,7 +37,7 @@ public class TimerLazy<T> : ReLazy<TimerLazy<T>, T>
 
     private void OnTimer()
     {
-        lock (_timerCallbackLock)
+        lock (_lock)
         {
             TryRecreate();
         }

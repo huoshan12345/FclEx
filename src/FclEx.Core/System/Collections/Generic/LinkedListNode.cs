@@ -1,6 +1,6 @@
-namespace FclEx.Helpers;
+﻿namespace System.Collections.Generic;
 
-public static class LinkedListNodeHelper
+public static class LinkedListNode
 {
     public static LinkedListNode<T> Create<T>(T item)
     {
