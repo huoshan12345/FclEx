@@ -2,7 +2,7 @@ namespace FclEx.Extensions;
 
 public static class PathExtensions
 {
-    private static readonly Regex FileNumberSuffix = new(@"_(\d+)$", RegexOptions.Compiled);
+    private static readonly Regex FileNumberSuffix = new(@"_(\d*)$", RegexOptions.Compiled);
 
     extension(Path)
     {

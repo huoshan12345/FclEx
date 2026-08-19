@@ -12,31 +12,6 @@ public static class ObjectHelper
             : (long)_objectIds.GetValue(obj, _ => Interlocked.Increment(ref _nextId));
     }
 
-    [MethodImpl(AggressiveInlining)]
-    public static DisposableValue<GCHandle> ToGCHandle(object? obj, GCHandleType type)
-    {
-        return Disposable.FromValue(GCHandle.Alloc(obj, type), m => m.Free());
-    }
-
-    [MethodImpl(AggressiveInlining)]
-    [return: NotNullIfNotNull(nameof(obj))]
-    public static T? CloneByJson<T>(T? obj, JsonSerializerOptions? options = null)
-    {
-        return obj is null ? obj : obj.ToJson(options).FromJson<T>(options);
-    }
-
-    public static T? GetFieldValue<T>(object obj, string fieldName)
-    {
-        var field = obj.GetType().GetRequiredField(fieldName, true);
-        return field.GetValue<T>(obj);
-    }
-
-    public static T GetRequiredFieldValue<T>(object obj, string fieldName)
-    {
-        var field = obj.GetType().GetRequiredField(fieldName, true);
-        return field.GetRequiredValue<T>(obj);
-    }
-
     public static bool TrySet<T, TMember>(T obj, Expression<Func<T, TMember>> selector,
         TMember newValue, IEqualityComparer<TMember>? comparer = null)
         where T : class

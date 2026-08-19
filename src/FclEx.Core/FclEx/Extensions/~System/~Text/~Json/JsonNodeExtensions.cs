@@ -56,7 +56,32 @@ public static class JsonNodeExtensions
             _ => node.ToJsonString(options),
         };
     }
+    
+    public static JsonElement? ToJsonElement(this JsonNode node, JsonSerializerOptions? options = null)
+    {
+        return node.Deserialize<JsonElement>(options);
+    }
 
+    public static JsonElement? ToJsonElement(this JsonNode node, JsonOptions options)
+    {
+        return node.ToJsonElement(JsonHelper.GetOptions(options));
+    }
+
+    public static string ToJsonString(this JsonNode node, JsonOptions options)
+    {
+        return node.ToJsonString(JsonHelper.GetOptions(options));
+    }
+
+    public static T? ToObject<T>(this JsonNode node, JsonSerializerOptions? options = null)
+    {
+        return node.Deserialize<T>(options ?? JsonHelper.GetOptions());
+    }
+
+    public static T? ToObject<T>(this JsonNode node, JsonOptions options)
+    {
+        return node.ToObject<T>(JsonHelper.GetOptions(options));
+    }
+    
     extension(JsonNode)
     {
         public static JsonNode? From<T>(T obj, JsonSerializerOptions? options = null)

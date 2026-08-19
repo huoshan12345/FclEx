@@ -92,5 +92,17 @@ public static class FieldInfoExtensions
         {
             return $"<{propertyName}>k__BackingField";
         }
+
+        public static T? GetValue<T>(object obj, string fieldName)
+        {
+            var field = obj.GetType().GetRequiredField(fieldName, true);
+            return field.GetValue<T>(obj);
+        }
+
+        public static T GetRequiredValue<T>(object obj, string fieldName)
+        {
+            var field = obj.GetType().GetRequiredField(fieldName, true);
+            return field.GetRequiredValue<T>(obj);
+        }
     }
 }
