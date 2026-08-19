@@ -1,8 +1,8 @@
 using FclEx.TestModels;
 
-namespace FclEx.Helpers;
+namespace FclEx.Extensions;
 
-public class UnsafeHelperTests
+public class UnsafeExtensionsTests
 {
     public static readonly ReadOnlyHashSet<Type> CommonValueTypes =
     [
@@ -19,9 +19,8 @@ public class UnsafeHelperTests
 
     public static readonly TheoryData<Type> BuiltInValueTypeCases = CommonValueTypes.ToTheoryData();
 
-    private static readonly MethodInfo _sizeOfTTest = typeof(UnsafeHelperTests).GetRequiredMethod(nameof(SizeOf_T_Test), 1);
-    private static readonly MethodInfo _sizeOf = typeof(UnsafeHelper).GetRequiredMethod(nameof(UnsafeHelper.SizeOf), 1);
-    private static readonly MethodInfo _unsafeSizeOf = typeof(Unsafe).GetRequiredMethod(nameof(Unsafe.SizeOf), 1);
+    private static readonly MethodInfo _sizeOfTTest = typeof(UnsafeExtensionsTests).GetRequiredMethod(nameof(SizeOf_T_Test), 1);
+    private static readonly MethodInfo _sizeOf = typeof(UnsafeExtensions).GetRequiredMethod(nameof(UnsafeExtensions.SizeOf));
 
     [Theory]
     [MemberData(nameof(BuiltInValueTypeCases))]
@@ -33,7 +32,7 @@ public class UnsafeHelperTests
     [Fact]
     public void SizeOf_Struct_Test()
     {
-        Assert.Equal(Unsafe.SizeOf<CommonStruct>(), UnsafeHelper.SizeOf<CommonStruct>());
+        Assert.Equal(Unsafe.SizeOf<CommonStruct>(), Unsafe.SizeOf<CommonStruct>());
     }
 
     [Fact]
@@ -42,31 +41,13 @@ public class UnsafeHelperTests
         using var memory = Marshal.AllocHGlobalDisposable(sizeof(int));
         Marshal.WriteInt32(memory.Value, 42);
 
-        Assert.Equal(42, UnsafeHelper.GetValue<int>(memory.Value));
+        Assert.Equal(42, Unsafe.GetValue<int>(memory.Value));
     }
 
     [Fact]
     public void GetValue_WithRuntimeManagedType_IsRejected()
     {
-        Assert.Throws<ArgumentException>(() => UnsafeHelper.GetValue(IntPtr.Zero, typeof(string)));
-    }
-
-    [Fact]
-    public void WriteToAndReadFrom_RoundTripTheEntireUnmanagedValue()
-    {
-        using var memory = Marshal.AllocHGlobalDisposable(Unsafe.SizeOf<long>());
-        const long expected = 0x1020_3040_5060_7080;
-
-        UnsafeHelper.WriteTo(memory.Value, expected);
-
-        Assert.Equal(expected, UnsafeHelper.ReadFrom<long>(memory.Value));
-    }
-
-    [Fact]
-    public void Reinterpret_RequiresSourceAndDestinationToHaveTheSameSize()
-    {
-        Assert.Equal(1f, UnsafeHelper.Reinterpret<int, float>(0x3F80_0000));
-        Assert.Throws<InvalidOperationException>(() => UnsafeHelper.Reinterpret<int, short>(42));
+        Assert.Throws<ArgumentException>(() => Unsafe.GetValue(IntPtr.Zero, typeof(string)));
     }
 
     [Theory]
@@ -76,7 +57,7 @@ public class UnsafeHelperTests
     [InlineData(typeof(List<int>))]
     public unsafe void SizeOf_ReferenceType_Test(Type type)
     {
-        var size = SizeOf(type);
+        var size = Unsafe.SizeOf(type);
         Assert.Equal(sizeof(IntPtr), size); // 8 for 64-bit
     }
 
@@ -85,24 +66,14 @@ public class UnsafeHelperTests
     [InlineData(typeof(Dictionary<,>))]
     public void SizeOf_OpenGeneric_Test(Type type)
     {
-        Assert.Throws<InvalidOperationException>(() => SizeOf(type));
+        Assert.Throws<InvalidOperationException>(() => Unsafe.SizeOf(type));
     }
 
     private static unsafe int SizeOf_T_Test<T>()
     {
         var size = sizeof(T);
-        Assert.Equal(size, UnsafeHelper.SizeOf<T>());
+        Assert.Equal(size, Unsafe.SizeOf<T>());
         return size;
-    }
-
-    private static int SizeOf(Type type)
-    {
-        return _sizeOf.MakeGenericMethod(type).Invoke<int>(null, null);
-    }
-
-    private static int UnsafeSizeOf(Type type)
-    {
-        return _unsafeSizeOf.MakeGenericMethod(type).Invoke<int>(null, null);
     }
 
     [LocalOnlyFact]
@@ -110,7 +81,7 @@ public class UnsafeHelperTests
     {
         var table = new ConsoleTable(new()
         {
-            Columns = ["Type", nameof(Marshal), nameof(Unsafe), nameof(UnsafeHelper)],
+            Columns = ["Type", nameof(Marshal), nameof(Unsafe)],
             RenderColumns = true,
         });
 
@@ -133,9 +104,8 @@ public class UnsafeHelperTests
         foreach (var type in types)
         {
             var marshalSize = GetSize(type, Marshal.SizeOf);
-            var unsafeSize = UnsafeSizeOf(type);
-            var size = SizeOf(type);
-            table.AddRow([type.ShortName(), marshalSize, unsafeSize, size]);
+            var size = Unsafe.SizeOf(type);
+            table.AddRow([type.ShortName(), marshalSize, size]);
         }
 
         if (TestHelper.IsRunningUnderReSharper())

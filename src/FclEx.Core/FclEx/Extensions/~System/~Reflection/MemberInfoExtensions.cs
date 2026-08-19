@@ -27,4 +27,15 @@ public static class MemberInfoExtensions
         return memberInfo.IsDefined<CompilerGeneratedAttribute>(inherit);
     }
 
+    internal static Type GetDataMemberType(this MemberInfo member)
+    {
+        return member switch
+        {
+            PropertyInfo propInfo => propInfo.PropertyType,
+            FieldInfo fieldInfo => fieldInfo.FieldType,
+            DataMemberInfo dataMemberInfo => dataMemberInfo.DataMemberType,
+            _ => throw new ArgumentException($"MemberInfo '{member.Name}' refers to neither a field nor a property.")
+        };
+    }
+
 }

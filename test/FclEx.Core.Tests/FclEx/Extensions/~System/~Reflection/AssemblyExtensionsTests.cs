@@ -21,10 +21,7 @@ public class AssemblyExtensionsTests
     public void ResourceLookup_AmbiguousSuffix_ShouldThrow(string name)
     {
         var openException = Assert.Throws<ArgumentException>(() => Assembly.OpenResource(name));
-        var getException = Assert.Throws<ArgumentException>(() => ResourceHelper.Embedded.GetStream(Assembly, name));
-
         Assert.Equal("name", openException.ParamName);
-        Assert.Equal("name", getException.ParamName);
     }
 
     [Fact]

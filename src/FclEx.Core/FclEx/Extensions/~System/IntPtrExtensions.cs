@@ -66,12 +66,12 @@ public static class IntPtrExtensions
             var args = type.GetGenericArguments();
             var def = type.GetGenericTypeDefinition();
 
-            if (TypeHelper.ActionTypes.Contains(def) && def.Assembly == typeof(Action).Assembly)
+            if (Types.ActionTypes.Contains(def) && def.Assembly == typeof(Action).Assembly)
             {
                 return (T)address.ToDelegate(typeof(void), args);
             }
 
-            if (TypeHelper.FuncTypes.Contains(def) && def.Assembly == typeof(Func<>).Assembly)
+            if (Types.FuncTypes.Contains(def) && def.Assembly == typeof(Func<>).Assembly)
             {
                 return (T)address.ToDelegate(args.Last(), args.Take(args.Length - 1));
             }

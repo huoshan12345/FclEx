@@ -1,4 +1,4 @@
-namespace FclEx.Helpers.ObjectHelperTests;
+namespace FclEx.Extensions.ObjectExtensions;
 
 public class GetObjectIdTests
 {
@@ -6,7 +6,7 @@ public class GetObjectIdTests
     public void GetObjectId_SameInstance()
     {
         var obj = new object();
-        Assert.Equal(ObjectHelper.GetObjectId(obj), ObjectHelper.GetObjectId(obj));
+        Assert.Equal(object.GetObjectId(obj), object.GetObjectId(obj));
     }
 
     [Fact]
@@ -14,6 +14,6 @@ public class GetObjectIdTests
     {
         var obj = new object();
         var obj2 = new object();
-        Assert.NotEqual(ObjectHelper.GetObjectId(obj), ObjectHelper.GetObjectId(obj2));
+        Assert.NotEqual(object.GetObjectId(obj), object.GetObjectId(obj2));
     }
 }

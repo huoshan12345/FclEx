@@ -82,7 +82,7 @@ public class ScopedSetter<T>(T obj) : IDisposable where T : class
         if (members is null)
             throw new ObjectDisposedException(GetType().Name);
 
-        var member = ExpressionHelper.GetMember(selector).ToDataMemberInfo();
+        var member = Expression.GetMember(selector).ToDataMemberInfo();
         var value = member.GetValue<TMember>(_obj);
         member.SetValue(_obj, tempValue);
         members.TryAdd(member, value); // Only save the original value once

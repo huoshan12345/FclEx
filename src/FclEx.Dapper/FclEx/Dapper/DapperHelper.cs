@@ -143,7 +143,7 @@ public static class DapperHelper
 
     public static string GetQuotedColumnName<T>(IDbConnection connection, Expression<Func<T, object?>> selector)
     {
-        var member = ExpressionHelper.GetMember(selector);
+        var member = Expression.GetMember(selector);
         return GetQuotedColumnName(GetSqlAdapter(connection), typeof(T), member.Name);
     }
 

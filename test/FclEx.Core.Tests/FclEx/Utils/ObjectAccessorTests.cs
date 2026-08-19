@@ -45,7 +45,7 @@ public class ObjectAccessorTests
 
         foreach (var ((field, address), (_, prevAddr)) in fields.Zip(addresses).OrderBy(m => m.Second.ToInt64()).WithPrevious())
         {
-            var value = UnsafeHelper.GetValue(address, field.FieldType);
+            var value = Unsafe.GetValue(address, field.FieldType);
             var expectedValue = field.GetValue(obj);
 
             try

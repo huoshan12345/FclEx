@@ -52,7 +52,7 @@ partial class OperationTests
     {
         var (success, _, elapsed) = await Operation.ExecuteAsync(t =>
         {
-            ThreadHelper.Sleep(1);
+            Thread.SleepSafely(TimeSpan.FromSeconds(1));
             return Task.CompletedTask;
         }, TimeSpan.FromSeconds(0.01));
 
@@ -65,7 +65,7 @@ partial class OperationTests
     {
         var (success, result, exception, elapsed) = await Operation.ExecuteAsync(t =>
         {
-            ThreadHelper.Sleep(0.1);
+            Thread.SleepSafely(TimeSpan.FromSeconds(0.1));
             return Task.FromResult(1);
         }, TimeSpan.FromSeconds(1));
 

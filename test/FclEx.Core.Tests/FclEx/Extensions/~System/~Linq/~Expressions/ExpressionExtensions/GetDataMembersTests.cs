@@ -1,6 +1,4 @@
-using static FclEx.Helpers.ExpressionHelper;
-
-namespace FclEx.Helpers.ExpressionHelperTests;
+namespace FclEx.Extensions.ExpressionExtensions;
 
 public class GetDataMembersTests
 {
@@ -35,7 +33,7 @@ public class GetDataMembersTests
     [Fact]
     public void Should_Get_Single_Property()
     {
-        var result = GetDataMembers<TestModel>(m => m.Id).ToArray();
+        var result = Expression.GetDataMembers<TestModel>(m => m.Id).ToArray();
 
         Assert.Single(result);
         Assert.Equal(nameof(TestModel.Id), result[0].Name);
@@ -45,7 +43,7 @@ public class GetDataMembersTests
     [Fact]
     public void Should_Get_Multiple_Properties()
     {
-        var result = GetDataMembers<TestModel>(m => new
+        var result = Expression.GetDataMembers<TestModel>(m => new
         {
             m.Id,
             m.Length,
@@ -64,7 +62,7 @@ public class GetDataMembersTests
     [Fact]
     public void Should_Get_Field()
     {
-        var result = GetDataMembers<TestModel>(m => m.Field).ToArray();
+        var result = Expression.GetDataMembers<TestModel>(m => m.Field).ToArray();
 
         Assert.Single(result);
         Assert.Equal(nameof(TestModel.Field), result[0].Name);
@@ -74,7 +72,7 @@ public class GetDataMembersTests
     [Fact]
     public void Should_Handle_Boxing()
     {
-        var result = GetDataMembers<TestModel>(m => (object)m.Id).ToArray();
+        var result = Expression.GetDataMembers<TestModel>(m => (object)m.Id).ToArray();
 
         Assert.Single(result);
         Assert.Equal(nameof(TestModel.Id), result[0].Name);
@@ -84,7 +82,7 @@ public class GetDataMembersTests
     public void Should_Throw_When_Using_MethodCall()
     {
         var ex = Assert.Throws<ArgumentException>(() =>
-            GetDataMembers<TestModel>(m => m.GetSomething()).ToArray());
+            Expression.GetDataMembers<TestModel>(m => m.GetSomething()).ToArray());
 
         Assert.Contains("Selector must", ex.Message);
     }
@@ -93,7 +91,7 @@ public class GetDataMembersTests
     public void Should_Throw_When_Using_Constant()
     {
         var ex = Assert.Throws<ArgumentException>(() =>
-            GetDataMembers<TestModel>(m => 123).ToArray());
+            Expression.GetDataMembers<TestModel>(m => 123).ToArray());
 
         Assert.Contains("Selector must", ex.Message);
     }
@@ -102,7 +100,7 @@ public class GetDataMembersTests
     public void Should_Throw_When_Using_Computed_Expression()
     {
         var ex = Assert.Throws<ArgumentException>(() =>
-            GetDataMembers<TestModel>(m => new
+            Expression.GetDataMembers<TestModel>(m => new
             {
                 m.Id,
                 X = m.Length + 1
@@ -115,7 +113,7 @@ public class GetDataMembersTests
     public void Should_Throw_When_Using_Method_In_New()
     {
         var ex = Assert.Throws<ArgumentException>(() =>
-            GetDataMembers<TestModel>(m => new
+            Expression.GetDataMembers<TestModel>(m => new
             {
                 m.Id,
                 Something = m.GetSomething()
@@ -128,7 +126,7 @@ public class GetDataMembersTests
     public void Should_Throw_When_Using_Nested_Member()
     {
         var ex = Assert.Throws<ArgumentException>(() =>
-            GetDataMembers<TestModel>(m => m.Child.Id).ToArray());
+            Expression.GetDataMembers<TestModel>(m => m.Child.Id).ToArray());
 
         Assert.Contains("Only direct member access", ex.Message);
     }
@@ -137,7 +135,7 @@ public class GetDataMembersTests
     public void Should_Throw_When_Anonymous_Object_Contains_Nested_Member()
     {
         var ex = Assert.Throws<ArgumentException>(() =>
-            GetDataMembers<TestModel>(m => new { m.Id, ChildId = m.Child.Id }).ToArray());
+            Expression.GetDataMembers<TestModel>(m => new { m.Id, ChildId = m.Child.Id }).ToArray());
 
         Assert.Contains("Only direct member access", ex.Message);
     }
@@ -148,7 +146,7 @@ public class GetDataMembersTests
         var other = new TestModel();
 
         var ex = Assert.Throws<ArgumentException>(() =>
-            GetDataMembers<TestModel>(m => other.Id).ToArray());
+            Expression.GetDataMembers<TestModel>(m => other.Id).ToArray());
 
         Assert.Contains("Only direct member access", ex.Message);
     }
@@ -156,7 +154,7 @@ public class GetDataMembersTests
     [Fact]
     public void Should_Get_Direct_Interface_Member_Through_Conversion()
     {
-        var result = GetDataMembers<IdentifiableModel>(m => ((IIdentifiable)m).Id).ToArray();
+        var result = Expression.GetDataMembers<IdentifiableModel>(m => ((IIdentifiable)m).Id).ToArray();
 
         Assert.Single(result);
         Assert.Equal(nameof(IIdentifiable.Id), result[0].Name);

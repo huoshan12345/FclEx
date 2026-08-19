@@ -106,7 +106,7 @@ public static class MemberEqualityComparerBuilderExtensions
     public static MemberEqualityComparerBuilder<T> AddAllDataMembers<T>(this MemberEqualityComparerBuilder<T> builder,
         bool includeNonPublic = false, params Expression<Func<T, object?>>[] members)
     {
-        var memberInfos = members.SelectMany(ExpressionHelper.GetDataMembers);
+        var memberInfos = members.SelectMany(Expression.GetDataMembers);
         return builder.AddAllDataMembers(includeNonPublic, memberInfos);
     }
 }

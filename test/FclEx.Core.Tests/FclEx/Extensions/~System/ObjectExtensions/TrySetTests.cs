@@ -1,5 +1,5 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Local
-namespace FclEx.Helpers.ObjectHelperTests;
+namespace FclEx.Extensions.ObjectExtensions;
 
 public class TrySetTests
 {
@@ -42,7 +42,7 @@ public class TrySetTests
     public void Should_Set_Property_When_Value_Different()
     {
         var obj = new TestClass { IntProp = 1 };
-        var result = ObjectHelper.TrySet(obj, x => x.IntProp, 2);
+        var result = object.TrySet(obj, x => x.IntProp, 2);
 
         Assert.True(result);
         Assert.Equal(2, obj.IntProp);
@@ -52,7 +52,7 @@ public class TrySetTests
     public void Should_Not_Set_When_Value_Same()
     {
         var obj = new TestClass { IntProp = 1 };
-        var result = ObjectHelper.TrySet(obj, x => x.IntProp, 1);
+        var result = object.TrySet(obj, x => x.IntProp, 1);
 
         Assert.False(result);
         Assert.Equal(1, obj.IntProp);
@@ -63,7 +63,7 @@ public class TrySetTests
     {
         var obj = new TestClass { StrProp = "abc" };
         var comparer = StringComparer.OrdinalIgnoreCase;
-        var result = ObjectHelper.TrySet(obj, x => x.StrProp, "ABC", comparer);
+        var result = object.TrySet(obj, x => x.StrProp, "ABC", comparer);
 
         Assert.False(result);
         Assert.Equal("abc", obj.StrProp);
@@ -73,7 +73,7 @@ public class TrySetTests
     public void Should_Set_Field()
     {
         var obj = new TestClass { Field = 10 };
-        var result = ObjectHelper.TrySet(obj, x => x.Field, 20);
+        var result = object.TrySet(obj, x => x.Field, 20);
 
         Assert.True(result);
         Assert.Equal(20, obj.Field);
@@ -85,7 +85,7 @@ public class TrySetTests
         var obj = new TestClass();
 
         Assert.Throws<InvalidOperationException>(() =>
-            ObjectHelper.TrySet(obj, x => x.ReadOnlyProp, 100));
+            object.TrySet(obj, x => x.ReadOnlyProp, 100));
     }
 
     [Fact]
@@ -94,14 +94,14 @@ public class TrySetTests
         var obj = new TestClass { InitOnlyProp = 5 };
 
         Assert.Throws<InvalidOperationException>(() =>
-            ObjectHelper.TrySet(obj, x => x.InitOnlyProp, 10));
+            object.TrySet(obj, x => x.InitOnlyProp, 10));
     }
 
     [Fact]
     public void Should_Handle_Null_Value()
     {
         var obj = new TestClass { StrProp = "abc" };
-        var result = ObjectHelper.TrySet(obj, x => x.StrProp, null);
+        var result = object.TrySet(obj, x => x.StrProp, null);
 
         Assert.True(result);
         Assert.Null(obj.StrProp);
@@ -111,7 +111,7 @@ public class TrySetTests
     public void Should_Not_Set_When_Both_Null()
     {
         var obj = new TestClass { StrProp = null };
-        var result = ObjectHelper.TrySet(obj, x => x.StrProp, null);
+        var result = object.TrySet(obj, x => x.StrProp, null);
 
         Assert.False(result);
         Assert.Null(obj.StrProp);
@@ -121,7 +121,7 @@ public class TrySetTests
     public void Should_Throw_When_Obj_Is_Null()
     {
         Assert.Throws<ArgumentNullException>(() =>
-            ObjectHelper.TrySet<TestClass, int>(null!, x => x.IntProp, 1));
+            object.TrySet<TestClass, int>(null!, x => x.IntProp, 1));
     }
 
     [Fact]
@@ -130,7 +130,7 @@ public class TrySetTests
         var obj = new TestClass();
 
         Assert.Throws<ArgumentNullException>(() =>
-            ObjectHelper.TrySet<TestClass, int>(obj, null!, 1));
+            object.TrySet<TestClass, int>(obj, null!, 1));
     }
 
     [Fact]
@@ -138,9 +138,9 @@ public class TrySetTests
     {
         var obj = new TestClass { IntProp = 1 };
 
-        var r1 = ObjectHelper.TrySet(obj, x => x.IntProp, 2);
-        var r2 = ObjectHelper.TrySet(obj, x => x.IntProp, 3);
-        var r3 = ObjectHelper.TrySet(obj, x => x.IntProp, 3);
+        var r1 = object.TrySet(obj, x => x.IntProp, 2);
+        var r2 = object.TrySet(obj, x => x.IntProp, 3);
+        var r3 = object.TrySet(obj, x => x.IntProp, 3);
 
         Assert.True(r1);
         Assert.True(r2);
@@ -155,9 +155,9 @@ public class TrySetTests
         var derived = new DerivedClass { Value = 1 };
         BaseClass asBase = derived;
 
-        Assert.True(ObjectHelper.TrySet(derived, x => x.Value, 2));
-        Assert.True(ObjectHelper.TrySet(asBase, x => x.Value, 3));
-        Assert.True(ObjectHelper.TrySet(derived, x => x.Value, 4));
+        Assert.True(object.TrySet(derived, x => x.Value, 2));
+        Assert.True(object.TrySet(asBase, x => x.Value, 3));
+        Assert.True(object.TrySet(derived, x => x.Value, 4));
 
         Assert.Equal(4, derived.Value);
     }
@@ -167,7 +167,7 @@ public class TrySetTests
     {
         var obj = new TestStruct { Value = 1 };
 
-        var result = ObjectHelper.TrySet(ref obj, x => x.Value, 2);
+        var result = object.TrySet(ref obj, x => x.Value, 2);
 
         Assert.True(result);
         Assert.Equal(2, obj.Value);
@@ -178,8 +178,8 @@ public class TrySetTests
     {
         var obj = new TestStruct { Value = 1 };
 
-        ObjectHelper.TrySet(ref obj, x => x.Value, 2);
-        ObjectHelper.TrySet(ref obj, x => x.Value, 3);
+        object.TrySet(ref obj, x => x.Value, 2);
+        object.TrySet(ref obj, x => x.Value, 3);
 
         Assert.Equal(3, obj.Value);
     }
@@ -189,7 +189,7 @@ public class TrySetTests
     {
         var obj = new TestStruct { Value = 5 };
 
-        var result = ObjectHelper.TrySet(ref obj, x => x.Value, 5);
+        var result = object.TrySet(ref obj, x => x.Value, 5);
 
         Assert.False(result);
         Assert.Equal(5, obj.Value);
@@ -203,7 +203,7 @@ public class TrySetTests
             Inner = new TestStruct { Value = 1 }
         };
 
-        var ex = Assert.Throws<ArgumentException>(() => ObjectHelper.TrySet(ref obj, x => x.Inner.Value, 2));
+        var ex = Assert.Throws<ArgumentException>(() => object.TrySet(ref obj, x => x.Inner.Value, 2));
         Assert.Contains("must not reference a nested member", ex.Message);
     }
 
@@ -215,7 +215,7 @@ public class TrySetTests
             Inner = new TestStruct { Value = 1 }
         };
 
-        var result = ObjectHelper.TrySet(ref obj.Inner, x => x.Value, 2);
+        var result = object.TrySet(ref obj.Inner, x => x.Value, 2);
 
         Assert.True(result);
         Assert.Equal(2, obj.Inner.Value);
@@ -231,7 +231,7 @@ public class TrySetTests
 
         var newInner = new TestStruct { Value = 99 };
 
-        var result = ObjectHelper.TrySet(ref obj, x => x.Inner, newInner);
+        var result = object.TrySet(ref obj, x => x.Inner, newInner);
 
         Assert.True(result);
         Assert.Equal(99, obj.Inner.Value);
@@ -242,7 +242,7 @@ public class TrySetTests
     {
         var obj = new TestStruct();
 
-        var result = ObjectHelper.TrySet(ref obj, x => x.Value, 10);
+        var result = object.TrySet(ref obj, x => x.Value, 10);
 
         Assert.True(result);
         Assert.Equal(10, obj.Value);
@@ -258,7 +258,7 @@ public class TrySetTests
 
         var comparer = new CustomComparer();
 
-        var result = ObjectHelper.TrySet(ref obj, x => x.Inner, new TestStruct { Value = 105 }, comparer);
+        var result = object.TrySet(ref obj, x => x.Inner, new TestStruct { Value = 105 }, comparer);
 
         Assert.False(result);
         Assert.Equal(100, obj.Inner.Value);

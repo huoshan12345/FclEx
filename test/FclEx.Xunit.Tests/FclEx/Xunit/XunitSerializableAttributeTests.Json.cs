@@ -39,7 +39,7 @@ public class SelectorJsonConverter<T> : JsonConverter<Expression<Func<T, object?
             return;
         }
 
-        var member = ExpressionHelper.GetDataMember(value);
+        var member = Expression.GetDataMember(value);
         var info = new SelectorInfo(value.Parameters[0].Name, member.Name);
 
         writer.WriteStringValue(info.ToString());

@@ -313,4 +313,14 @@ public static partial class TypeExtensions
                 && m.GetParameters().Length == 1
                 && m.GetParameters()[0].ParameterType.IsAssignableFrom(fromType));
     }
+
+    extension(Type)
+    {
+        public static Type GetRequiredType(string name) => Type.GetType(name) ?? throw new InvalidOperationException($"Cannot find type '{name}'");
+
+        public static Type? GetType(string name, string assemblyName) => Type.GetType($"{name}, {assemblyName}");
+
+        public static Type GetRequiredType(string name, string assemblyName)
+            => Type.GetType($"{name}, {assemblyName}") ?? throw new InvalidOperationException($"Cannot find type '{name}'");
+    }
 }

@@ -1,14 +1,14 @@
 using FclEx.TestModels;
 
-namespace FclEx.Helpers.ExpressionHelperTests;
+namespace FclEx.Extensions.ExpressionExtensions;
 
-public class ToObjectSelectorTests
+public class ObjectSelectorTests
 {
     [Fact]
     public void ToObjectSelector_ShouldConvertValueTypeSelector()
     {
         Expression<Func<Person, int>> selector = p => p.Age;
-        var converted = ExpressionHelper.ToObjectSelector(selector);
+        var converted = Expression.ObjectSelector(selector);
 
         var func = converted.Compile();
         var person = new Person { Age = 25 };
@@ -21,7 +21,7 @@ public class ToObjectSelectorTests
     public void ToObjectSelector_ShouldKeepReferenceTypeSelector()
     {
         Expression<Func<Person, string>> selector = p => p.Name;
-        var converted = ExpressionHelper.ToObjectSelector(selector);
+        var converted = Expression.ObjectSelector(selector);
 
         var func = converted.Compile();
         var person = new Person { Name = "Bob" };
@@ -33,7 +33,7 @@ public class ToObjectSelectorTests
     public void ToObjectSelector_ShouldHandleObjectMemberWithoutExtraConvert()
     {
         Expression<Func<Person, object>> selector = p => p.Name;
-        var converted = ExpressionHelper.ToObjectSelector(selector);
+        var converted = Expression.ObjectSelector(selector);
 
         // Expression should not wrap in Convert if already object
         Assert.Equal(selector.Body.ToString(), converted.Body.ToString());
@@ -43,7 +43,7 @@ public class ToObjectSelectorTests
     public void ToObjectSelector_ShouldReturnNullForNullableValue()
     {
         Expression<Func<Person, int?>> selector = p => null;
-        var converted = ExpressionHelper.ToObjectSelector(selector);
+        var converted = Expression.ObjectSelector(selector);
 
         var func = converted.Compile();
         var person = new Person();

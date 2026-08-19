@@ -46,6 +46,24 @@ internal static class ThrowHelper
     internal static void ThrowVersionCheckFailed() =>
         throw new InvalidOperationException(SR.InvalidOperation_EnumFailedVersion);
 
+    [DoesNotReturn]
+    internal static void ThrowArgumentOutOfRangeException(string? paramName)
+    {
+        throw new ArgumentOutOfRangeException(paramName);
+    }
+
+    [DoesNotReturn]
+    internal static void ThrowArgumentNullException(string? paramName)
+    {
+        throw new ArgumentNullException(paramName);
+    }
+
+    [DoesNotReturn]
+    internal static void ThrowArgumentException_DestinationTooShort()
+    {
+        throw new ArgumentException(SR.Argument_DestinationTooShort, "destination");
+    }
+
 #if !NET8_0_OR_GREATER
     public static void ThrowIfNull([NotNull] object? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
     {
@@ -96,5 +114,6 @@ internal static class ThrowHelper
     [DoesNotReturn]
     private static void ThrowLess<T>(T value, T other, string? paramName) =>
         throw new ArgumentOutOfRangeException(paramName, value, SR.Format(SR.ArgumentOutOfRange_Generic_MustBeGreaterOrEqual, paramName, value, other));
+
 #endif
 }

@@ -1,11 +1,11 @@
-namespace FclEx.Helpers.ExpressionHelperTests;
+namespace FclEx.Extensions.ExpressionExtensions;
 
 public class GetMemberTests
 {
     [Fact]
     public void GetMember_Field_Test()
     {
-        var memberInfo = ExpressionHelper.GetMember<TestModel>(m => m.Field);
+        var memberInfo = Expression.GetMember<TestModel>(m => m.Field);
 
         Assert.Equal(typeof(TestModel), memberInfo.DeclaringType);
         Assert.Equal(nameof(TestModel.Field), memberInfo.Name);
@@ -17,7 +17,7 @@ public class GetMemberTests
     [Fact]
     public void GetMember_Property_Test()
     {
-        var memberInfo = ExpressionHelper.GetMember<TestModel>(m => m.Property);
+        var memberInfo = Expression.GetMember<TestModel>(m => m.Property);
 
         Assert.Equal(typeof(TestModel), memberInfo.DeclaringType);
         Assert.Equal(nameof(TestModel.Property), memberInfo.Name);
@@ -29,7 +29,7 @@ public class GetMemberTests
     [Fact]
     public void GetMember_VoidMethod_Test()
     {
-        var memberInfo = ExpressionHelper.GetMember<TestModel>(m => m.VoidMethod());
+        var memberInfo = Expression.GetMember<TestModel>(m => m.VoidMethod());
 
         Assert.Equal(typeof(TestModel), memberInfo.DeclaringType);
         Assert.Equal(nameof(TestModel.VoidMethod), memberInfo.Name);
@@ -41,7 +41,7 @@ public class GetMemberTests
     [Fact]
     public void GetMember_IntMethod_Test()
     {
-        var memberInfo = ExpressionHelper.GetMember<TestModel>(m => m.IntMethod());
+        var memberInfo = Expression.GetMember<TestModel>(m => m.IntMethod());
 
         Assert.Equal(typeof(TestModel), memberInfo.DeclaringType);
         Assert.Equal(nameof(TestModel.IntMethod), memberInfo.Name);
@@ -53,7 +53,7 @@ public class GetMemberTests
     [Fact]
     public void GetMember_StaticIntMethod_Test()
     {
-        var memberInfo = ExpressionHelper.GetMember<TestModel>(m => TestModel.StaticIntMethod());
+        var memberInfo = Expression.GetMember<TestModel>(m => TestModel.StaticIntMethod());
 
         Assert.Equal(typeof(TestModel), memberInfo.DeclaringType);
         Assert.Equal(nameof(TestModel.StaticIntMethod), memberInfo.Name);
@@ -66,7 +66,7 @@ public class GetMemberTests
     public void GetMember_Field_NonMember_Test()
     {
         var obj = new { Age = 1 };
-        var ex = Assert.Throws<ArgumentException>(() => ExpressionHelper.GetMember<TestModel>(m => obj.Age));
+        var ex = Assert.Throws<ArgumentException>(() => Expression.GetMember<TestModel>(m => obj.Age));
         Assert.Contains("refers to a member that is not from type", ex.Message);
     }
 
@@ -75,7 +75,7 @@ public class GetMemberTests
     {
         // ReSharper disable once ConvertToConstant.Local
         var value = 1; // do not use const.
-        var ex = Assert.Throws<ArgumentException>(() => ExpressionHelper.GetMember<TestModel>(m => value));
+        var ex = Assert.Throws<ArgumentException>(() => Expression.GetMember<TestModel>(m => value));
         Assert.Contains("refers to a member that is not from type", ex.Message);
     }
 
@@ -83,28 +83,28 @@ public class GetMemberTests
     public void GetMember_Field_NonMember_ConstValue_Test()
     {
         const int value = 1;
-        var ex = Assert.Throws<ArgumentException>(() => ExpressionHelper.GetMember<TestModel>(m => value));
+        var ex = Assert.Throws<ArgumentException>(() => Expression.GetMember<TestModel>(m => value));
         Assert.Contains("does not refer to a member", ex.Message);
     }
 
     [Fact]
     public void GetMember_Property_NonMember_Test()
     {
-        var ex = Assert.Throws<ArgumentException>(() => ExpressionHelper.GetMember<TestModel>(m => "test".Length));
+        var ex = Assert.Throws<ArgumentException>(() => Expression.GetMember<TestModel>(m => "test".Length));
         Assert.Contains("refers to a member that is not from type", ex.Message);
     }
 
     [Fact]
     public void GetMember_NonMemberMethod_Test()
     {
-        var ex = Assert.Throws<ArgumentException>(() => ExpressionHelper.GetMember<TestModel>(m => string.IsNullOrEmpty("")));
+        var ex = Assert.Throws<ArgumentException>(() => Expression.GetMember<TestModel>(m => string.IsNullOrEmpty("")));
         Assert.Contains("refers to a member that is not from type", ex.Message);
     }
 
     [Fact]
     public void GetMember_InterfaceMemberImplementedByType_ShouldReturnMember()
     {
-        var member = ExpressionHelper.GetMember<InterfaceModel>(m => ((IHasProperty)m).Property);
+        var member = Expression.GetMember<InterfaceModel>(m => ((IHasProperty)m).Property);
 
         Assert.Equal(typeof(IHasProperty), member.DeclaringType);
         Assert.Equal(nameof(IHasProperty.Property), member.Name);

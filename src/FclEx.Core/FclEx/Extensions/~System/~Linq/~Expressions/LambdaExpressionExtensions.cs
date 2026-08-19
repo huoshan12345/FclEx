@@ -6,9 +6,8 @@ public static class LambdaExpressionExtensions
 
     extension(LambdaExpression)
     {
-        public static LambdaExpression PropertyOrField<T>(string propertyOrFieldName)
+        public static LambdaExpression PropertyOrField(Type type, string propertyOrFieldName)
         {
-            var type = typeof(T);
             var expressions = _cache.GetValue(type, _ => new());
             return expressions.GetOrAdd(propertyOrFieldName, name =>
             {
@@ -17,6 +16,11 @@ public static class LambdaExpressionExtensions
                 var exp = Expression.Lambda(body, param);
                 return exp;
             });
+        }
+
+        public static LambdaExpression PropertyOrField<T>(string propertyOrFieldName)
+        {
+            return LambdaExpression.PropertyOrField(typeof(T), propertyOrFieldName);
         }
     }
 }
