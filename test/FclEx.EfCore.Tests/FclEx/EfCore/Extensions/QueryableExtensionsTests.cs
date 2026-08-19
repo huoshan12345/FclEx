@@ -52,7 +52,7 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
 
         string CreateKeyword(string raw)
         {
-            return StringBuilderHelper.Build(m =>
+            return StringBuilder.Build(m =>
             {
                 m.Append(raw);
                 if (containsPercentSign)
@@ -65,7 +65,7 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
 
         string CreateName(int number)
         {
-            return StringBuilderHelper.Build(m =>
+            return StringBuilder.Build(m =>
             {
                 m.Append("_prefix_");
                 m.Append(CreateKeyword(number.ToString()));

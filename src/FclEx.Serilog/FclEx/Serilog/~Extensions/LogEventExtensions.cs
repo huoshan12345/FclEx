@@ -1,4 +1,3 @@
-using System.Text;
 using FclEx.Logging;
 using Serilog.Parsing;
 using static FclEx.Serilog.Fields;
@@ -14,7 +13,7 @@ public static class LogEventExtensions
 
     public static string RenderMessage(this LogEvent logEvent, string? format = null, IFormatProvider? formatProvider = null)
     {
-        using var disposable = StringBuilderHelper.GetCached();
+        using var disposable = StringBuilder.GetCached();
         var sw = new StringWriter(disposable.Value);
         RenderMessage(logEvent, sw, format, formatProvider);
         return sw.ToString();
@@ -86,7 +85,7 @@ public static class LogEventExtensions
 
     public static string ToString(this LogEvent logEvent, ITextFormatter formatter)
     {
-        using var disposable = StringBuilderHelper.GetCached();
+        using var disposable = StringBuilder.GetCached();
         var sw = new StringWriter(disposable.Value);
         formatter.Format(logEvent, sw);
         var str = sw.ToString();

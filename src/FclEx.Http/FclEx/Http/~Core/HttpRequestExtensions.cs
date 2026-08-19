@@ -48,7 +48,7 @@ public static partial class HttpRequestExtensions
     /// </summary>
     public static string Dump(this HttpRequest request, IEnumerable<Cookie> cookies)
     {
-        using var disposable = StringBuilderHelper.GetCached();
+        using var disposable = StringBuilder.GetCached();
         var builder = disposable.Value;
 
         builder.Append(request.Method);

@@ -276,7 +276,7 @@ partial class TypeExtensions
     [DoesNotReturn]
     private static void Throw(Type type, string checkName, string? reason, string? path)
     {
-        var error = StringBuilderHelper.Build(m =>
+        var error = StringBuilder.Build(m =>
         {
             m.Append($"The type '{type.LongName()}'");
             if (path.IsNotEmpty())

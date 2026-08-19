@@ -236,7 +236,7 @@ public static class TimeSpanExtensions
         if (days == 0 && hours == 0 && minutes == 0 && seconds == 0)
             return "0s";
 
-        using var disposable = StringBuilderHelper.GetCached();
+        using var disposable = StringBuilder.GetCached();
         var builder = disposable.Value;
         if (negative)
         {

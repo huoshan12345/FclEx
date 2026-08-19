@@ -5,7 +5,7 @@ public static partial class EnumerableExtensions
     [MethodImpl(AggressiveInlining)]
     public static string JoinWith<T>(this IEnumerable<T> enumerable, string? separator)
     {
-        return StringBuilderHelper.Build(m => m.AppendJoin(separator, enumerable));
+        return StringBuilder.Build(m => m.AppendJoin(separator, enumerable));
     }
 
     public static SortedSet<T> ToSortedSet<T>(this IEnumerable<T> enumerable, IComparer<T>? comparer = null)

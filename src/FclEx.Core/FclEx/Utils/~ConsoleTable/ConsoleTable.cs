@@ -119,6 +119,6 @@ public class ConsoleTable : IRenderable
 
     public override string ToString()
     {
-        return StringBuilderHelper.Build(Render);
+        return StringBuilder.Build(Render);
     }
 }

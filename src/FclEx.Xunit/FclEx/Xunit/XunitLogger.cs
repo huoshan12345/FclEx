@@ -55,7 +55,7 @@ public class XunitLogger : ILogger
         if (string.IsNullOrEmpty(message) && exception == null)
             return;
 
-        using var x = StringBuilderHelper.GetCached();
+        using var x = StringBuilder.GetCached();
         var builder = x.Value;
 
         builder.AppendSquareBracketed(_name);

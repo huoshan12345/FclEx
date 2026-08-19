@@ -118,7 +118,7 @@ partial class XunitSerializableAttributeTests
 
         public override string ToString()
         {
-            return StringBuilderHelper.Build(m =>
+            return StringBuilder.Build(m =>
             {
                 m.AppendSquareBracketed(x => x.AppendJoin(", ", SourceFiles.Select(a => a.Name)));
                 m.Append(", ");

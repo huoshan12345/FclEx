@@ -198,7 +198,7 @@ public static partial class MethodInfoExtensions
         var name = method.GetFullName();
         var paraNames = paras.Select(m => m.ParameterType.LongName());
 
-        return StringBuilderHelper.Build(m =>
+        return StringBuilder.Build(m =>
         {
             m.Append(name);
 

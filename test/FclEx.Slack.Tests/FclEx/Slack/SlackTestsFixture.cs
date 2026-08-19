@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Configuration;
 using SlackNet;
-using SlackNet.WebApi;
 
 namespace FclEx.Slack;
 

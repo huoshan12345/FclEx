@@ -42,7 +42,7 @@ public static partial class Operation
         var watch = ValueStopwatch.StartNew();
         try
         {
-            await TaskHelper.RunAsync(t => action(t), timeout, cancellationToken).NoCapture();
+            await Task.RunAsync(t => action(t), timeout, cancellationToken).NoCapture();
             return Success(watch.GetElapsedTime());
         }
         catch (Exception ex)
@@ -120,7 +120,7 @@ public static partial class Operation
         var watch = ValueStopwatch.StartNew();
         try
         {
-            var result = await TaskHelper.RunAsync(t => action(t), timeout, cancellationToken).NoCapture();
+            var result = await Task.RunAsync(t => action(t), timeout, cancellationToken).NoCapture();
             return (result, watch.GetElapsedTime());
         }
         catch (Exception ex)

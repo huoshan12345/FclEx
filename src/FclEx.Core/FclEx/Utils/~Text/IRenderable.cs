@@ -21,6 +21,6 @@ public static class RenderableExtensions
 {
     public static string RenderToString(this IRenderable renderable)
     {
-        return StringBuilderHelper.Build(renderable.Render);
+        return StringBuilder.Build(renderable.Render);
     }
 }

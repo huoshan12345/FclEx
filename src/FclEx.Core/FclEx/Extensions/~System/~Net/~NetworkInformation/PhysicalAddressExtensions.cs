@@ -45,7 +45,7 @@ public static class PhysicalAddressExtensions
     /// </returns>
     public static string ToFormattedString(this PhysicalAddress address, string separator = ":", bool lowerCase = false)
     {
-        return StringBuilderHelper.Build(m =>
+        return StringBuilder.Build(m =>
         {
             var bytes = address.AddressBytes();
             for (int i = 0; i < bytes.Length; i++)

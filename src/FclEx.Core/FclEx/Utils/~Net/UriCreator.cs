@@ -168,7 +168,7 @@ public class UriCreator
             return uri;
         }
 
-        var str = StringBuilderHelper.Build(m =>
+        var str = StringBuilder.Build(m =>
         {
             m.Append(Path);
             if (Query.IsNotEmpty())

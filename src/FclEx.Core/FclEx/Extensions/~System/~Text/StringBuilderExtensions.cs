@@ -2,6 +2,37 @@ namespace FclEx.Extensions;
 
 public static partial class StringBuilderExtensions
 {
+    extension(StringBuilder)
+    {
+        /// <summary>
+        /// Builds a string using a thread-local cached <see cref="StringBuilder"/> instance.
+        /// </summary>
+        /// <param name="action">The action that operates on the <see cref="StringBuilder"/>.</param>
+        /// <returns>The resulting string.</returns>
+        public static string Build(Action<StringBuilder> action)
+        {
+            using var disposable = GetCached();
+            var builder = disposable.Value;
+            action(builder);
+            return builder.ToString();
+        }
+
+        /// <summary>
+        /// Acquires a thread-local cached <see cref="StringBuilder"/> instance with the specified capacity,
+        /// wrapped in a <see cref="DisposableValue{T}"/> for automatic release back to the cache upon disposal.
+        /// </summary>
+        /// <param name="capacity">
+        /// The minimum capacity of the <see cref="StringBuilder"/> to acquire. Defaults to 16.
+        /// </param>
+        /// <returns>
+        /// A <see cref="DisposableValue{T}"/> containing a <see cref="StringBuilder"/>. Disposing the value releases the instance back to the cache.
+        /// </returns>
+        public static DisposableValue<StringBuilder> GetCached(int capacity = 16) // == StringBuilder.DefaultCapacity
+        {
+            return Disposable.FromValue(StringBuilderCache.Acquire(capacity), StringBuilderCache.Release);
+        }
+    }
+
     public static StringBuilder AppendIf(this StringBuilder builder, object? value, bool condition)
     {
         if (condition)
@@ -33,7 +64,7 @@ public static partial class StringBuilderExtensions
     {
         return builder.Append('\r');
     }
-    
+
     /// <summary>
     /// Appends the specified text to the StringBuilder if the total length does not exceed the specified limit.
     /// </summary>
@@ -111,7 +142,6 @@ public static partial class StringBuilderExtensions
         var startIndex = builder.Length - span.Length;
         return startIndex >= 0 && builder.Equals(span, startIndex);
     }
-
 
 #if !NET5_0_OR_GREATER
     public static StringBuilder AppendJoin<T>(this StringBuilder builder, string? separator, IEnumerable<T> values)

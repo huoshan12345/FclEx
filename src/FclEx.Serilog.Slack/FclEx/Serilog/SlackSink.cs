@@ -118,7 +118,7 @@ public class SlackSink : IBatchedLogEventSink
         if (logEvent.Exception is null)
             return;
 
-        var json = StringBuilderHelper.Build(m =>
+        var json = StringBuilder.Build(m =>
         {
             var writer = new StringWriter(m);
             _formatter.Format(logEvent, writer);

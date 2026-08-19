@@ -2,6 +2,7 @@
 
 global using System.Linq.Expressions;
 global using System.Reflection;
+global using System.Text;
 global using Dapper;
 global using FclEx.Dapper;
 global using FclEx.Domain;

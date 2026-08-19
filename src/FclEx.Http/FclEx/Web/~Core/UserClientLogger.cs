@@ -42,7 +42,7 @@ public class UserClientLogger<TAccount> : ILogger where TAccount : IUserAccount
             var values = _values.GetValue<object?[]?>(state);
             var originalMessage = _originalMessage.GetRequiredValue<string>(state);
             var format = originalMessage == NullFormat ? null : originalMessage;
-            var newFormat = StringBuilderHelper.Build(m => AppendAccountName(m, name).Append(format));
+            var newFormat = StringBuilder.Build(m => AppendAccountName(m, name).Append(format));
             var newState = _typeFormattedLogValues.CreateObject(newFormat, values).CastTo<TState>();
             _logger.Log(logLevel, eventId, newState, exception, formatter);
         }

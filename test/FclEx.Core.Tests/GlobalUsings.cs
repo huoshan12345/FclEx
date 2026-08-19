@@ -27,4 +27,5 @@ global using static FclEx.Tests.Conditions;
 global using System.Collections.Tests;
 global using System.Globalization;
 global using System.Reflection.Emit;
+global using System.Threading.Tasks.Sources;
 global using FclEx.Actions;
