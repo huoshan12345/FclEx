@@ -10,12 +10,7 @@ public class UriCreator
     private static Regex Ipv4HostPort { get; } = new(@"^([0-9]{3}\.[0-9]{3}\.[0-9]{3}\.[0-9]{3})(?::(\d+))?$", RegexOptions.Compiled);
     private static Regex Ipv6HostPort { get; } = new(@"^(\[[^\[^\]]+\])(?::(\d+))?$", RegexOptions.Compiled);
     private static Regex HostPort { get; } = new(@"^([-\w\.]+):(\d+)$", RegexOptions.Compiled);
-
-    public UriCreator(string? scheme = null, string? host = null, int port = -1, string? path = null)
-        : this(new UriBuilder(scheme ?? "", host ?? "", port, path ?? ""))
-    {
-    }
-
+    
     public UriCreator(UriBuilder builder)
     {
         _builder = builder;
@@ -23,18 +18,21 @@ public class UriCreator
         _builder.Query = string.Empty;
     }
 
-    public UriCreator(string uri)
-        : this(new Uri(uri, UriKind.RelativeOrAbsolute))
+    public UriCreator(string? scheme = null, string? host = null, int port = -1, string? path = null)
+        : this(new UriBuilder(scheme ?? "", host ?? "", port, path ?? ""))
     {
     }
 
-    public UriCreator(Uri uri)
+    public UriCreator(Uri uri, string? relativeUri = null)
     {
         Check.NotNull(uri);
 
         if (uri.IsAbsoluteUri)
         {
-            _builder = new UriBuilder(uri);
+            var u = relativeUri is null
+                ? uri
+                : new Uri(uri, relativeUri);
+            _builder = new UriBuilder(u);
         }
         else
         {
@@ -50,6 +48,11 @@ public class UriCreator
 
         Query = UriParams.Parse(_builder.Query);
         _builder.Query = string.Empty;
+    }
+
+    public UriCreator(string uri, string? relativeUri = null)
+        : this(new Uri(uri, UriKind.RelativeOrAbsolute), relativeUri)
+    {
     }
 
     private readonly UriBuilder _builder;

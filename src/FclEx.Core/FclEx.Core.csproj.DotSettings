@@ -40,6 +40,7 @@
 	<s:Boolean x:Key="/Default/CodeInspection/NamespaceProvider/NamespaceFoldersToSkip/=fclex_005Cextensions_005C_007Esystem_005C_007Ecollections/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/CodeInspection/NamespaceProvider/NamespaceFoldersToSkip/=fclex_005Cextensions_005C_007Esystem_005C_007Ecollections_005C_007Econcurrent/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/CodeInspection/NamespaceProvider/NamespaceFoldersToSkip/=fclex_005Cextensions_005C_007Esystem_005C_007Ecollections_005C_007Egeneric/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/CodeInspection/NamespaceProvider/NamespaceFoldersToSkip/=fclex_005Cextensions_005C_007Esystem_005C_007Ecollections_005C_007Egeneric_005C_007Eenumerableextensions/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/CodeInspection/NamespaceProvider/NamespaceFoldersToSkip/=fclex_005Cextensions_005C_007Esystem_005C_007Ecollections_005C_007Especialized/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/CodeInspection/NamespaceProvider/NamespaceFoldersToSkip/=fclex_005Cextensions_005C_007Esystem_005C_007Ecomponentmodel/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/CodeInspection/NamespaceProvider/NamespaceFoldersToSkip/=fclex_005Cextensions_005C_007Esystem_005C_007Ediagnostics/@EntryIndexedValue">True</s:Boolean>
