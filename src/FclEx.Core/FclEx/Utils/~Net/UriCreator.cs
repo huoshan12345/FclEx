@@ -10,20 +10,34 @@ public class UriCreator
     private static Regex Ipv4HostPort { get; } = new(@"^([0-9]{3}\.[0-9]{3}\.[0-9]{3}\.[0-9]{3})(?::(\d+))?$", RegexOptions.Compiled);
     private static Regex Ipv6HostPort { get; } = new(@"^(\[[^\[^\]]+\])(?::(\d+))?$", RegexOptions.Compiled);
     private static Regex HostPort { get; } = new(@"^([-\w\.]+):(\d+)$", RegexOptions.Compiled);
-    
+
+    private readonly UriBuilder _builder;
+
     public UriCreator(UriBuilder builder)
     {
-        _builder = builder;
+        Check.NotNull(builder);
+
         Query = UriParams.Parse(builder.Query);
+        _builder = builder;
         _builder.Query = string.Empty;
     }
 
-    public UriCreator(string? scheme = null, string? host = null, int port = -1, string? path = null)
-        : this(new UriBuilder(scheme ?? "", host ?? "", port, path ?? ""))
+    public UriCreator(string? scheme, string? host, int port = -1, string? path = null)
+        : this(new UriBuilder(scheme ?? "", host ?? "", port, path ?? "")) // do not pass null to UriBuilder, it will be filled with default values, which is not what we want.
     {
     }
 
     public UriCreator(Uri uri, string? relativeUri = null)
+        : this(CreateUriBuilder(uri, relativeUri))
+    {
+    }
+
+    public UriCreator(string uri) // do not add second string parameter, otherwise it will be ambiguous with the constructor that takes (string scheme, string host, int port, string path)
+        : this(new Uri(uri, UriKind.RelativeOrAbsolute))
+    {
+    }
+
+    private static UriBuilder CreateUriBuilder(Uri uri, string? relativeUri = null)
     {
         Check.NotNull(uri);
 
@@ -32,30 +46,20 @@ public class UriCreator
             var u = relativeUri is null
                 ? uri
                 : new Uri(uri, relativeUri);
-            _builder = new UriBuilder(u);
+            return new UriBuilder(u);
         }
-        else
+
+        // host can be set later.
+        var str = uri.ToString();
+        var (path, query, fragment) = SplitUri(str);
+
+        // do not pass null to UriBuilder, it will be filled with default values, which is not what we want.
+        return new UriBuilder("", "", 80, path)
         {
-            // host can be set later.
-            var str = uri.ToString();
-            var (path, query, fragment) = SplitUri(str);
-            _builder = new UriBuilder(Uri.UriSchemeHttp, "", 80, path)
-            {
-                Query = query,
-                Fragment = fragment,
-            };
-        }
-
-        Query = UriParams.Parse(_builder.Query);
-        _builder.Query = string.Empty;
+            Query = query,
+            Fragment = fragment,
+        };
     }
-
-    public UriCreator(string uri, string? relativeUri = null)
-        : this(new Uri(uri, UriKind.RelativeOrAbsolute), relativeUri)
-    {
-    }
-
-    private readonly UriBuilder _builder;
 
     public string Scheme
     {
