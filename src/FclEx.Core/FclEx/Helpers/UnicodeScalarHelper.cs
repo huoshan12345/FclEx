@@ -4,15 +4,15 @@
 namespace FclEx.Helpers;
 
 /// <summary>
-/// Helpers for unicode scalars.
+/// Helpers for Unicode scalars.
 /// </summary>
 // ReSharper disable once PartialTypeWithSinglePart
 public static partial class UnicodeScalarHelper
 {
     /// <summary>
-    /// Detects if the passed unicode scalar corresponds to a well known emoji.
+    /// Detects if the passed Unicode scalar corresponds to a well known emoji.
     /// </summary>
     /// <param name="unicodeScalar">Unicode scalar to check.</param>
-    /// <returns>True if the passed unicode scalar is an emoji, false otherwise.</returns>
+    /// <returns>True if the passed Unicode scalar is an emoji, false otherwise.</returns>
     public static partial bool IsEmoji(int unicodeScalar);
 }

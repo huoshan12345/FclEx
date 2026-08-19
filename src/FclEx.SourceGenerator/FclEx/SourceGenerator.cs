@@ -24,7 +24,7 @@ public class SourceGenerator : IIncrementalGenerator
                 "FclEx.Core" =>
                 [
                     ..BytesExtensionsSource.Generate(),
-                    MethodSource.Generate(),
+                    MethodInfoExtensionsSource.Generate(),
                     TypeExtensionsSource.Generate(),
                     ValueTupleExtensionsSource.Generate(),
                     TupleExtensionsSource.Generate(),

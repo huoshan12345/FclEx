@@ -24,7 +24,7 @@ public class ReturnValueCacheAttribute : AbstractInterceptorAttribute
     // null instance means a static key
     private string GetKey(MethodInfo method, object? instance, object?[] parameters, char? separator)
     {
-        return StringBuilderHelper.Build(m =>
+        return StringBuilder.Build(m =>
         {
             m.Append(method.GetSignature());
             if (method.IsStatic == false && _isStatic != true)

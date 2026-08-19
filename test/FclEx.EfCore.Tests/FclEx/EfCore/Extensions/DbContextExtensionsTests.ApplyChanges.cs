@@ -10,7 +10,7 @@ partial class DbContextExtensionsTests
         var dtos = new[]
         {
             new EntityHasStates { Name = "Alice" },
-            new EntityHasStates { Name = "Bob" }
+            new EntityHasStates { Name = "Bob" },
         };
 
         var result = context.ApplyChanges(
@@ -67,7 +67,51 @@ partial class DbContextExtensionsTests
 
     [Theory]
     [MemberData(nameof(DbDriverCases))]
-    public async Task ApplyChanges_ShouldPersistReplacementReturnedByUpdateEntity(DbDriver dbDriver)
+    public async Task ApplyChanges_UpdateInPlace_ShouldPersistReplacementReturnedByUpdateEntity(DbDriver dbDriver)
+    {
+        var existing = await CreateEntityHasStatesAsync(dbDriver);
+
+        await using (var context = Fixture.CreateDbContext(dbDriver))
+        {
+            var tracked = await context.EntityHasStates.SingleAsync(e => e.Id == existing.Id);
+            var dtos = new[]
+            {
+                new EntityHasStates { Id = existing.Id, Name = "Replacement" }
+            };
+
+            var result = context.ApplyChanges(
+                dtos,
+                dto => dto.Id,
+                [tracked],
+                entity => entity.Id,
+                dto => dto,
+                (dto, e) =>
+                {
+                    e.Name = dto.Name;
+                    return e;
+                });
+
+            Assert.Single(result.Updated);
+            Assert.Equal("Replacement", result.Updated[0].New.Name);
+            Assert.Same(tracked, result.Updated[0].New);
+            Assert.Same(tracked, result.Updated[0].Existing);
+            Assert.Equal("Replacement", tracked.Name);
+            Assert.Equal(EntityState.Modified, context.Entry(tracked).State);
+
+            await context.SaveChangesAsync();
+        }
+
+        await using var verificationContext = Fixture.CreateDbContext(dbDriver);
+        var persisted = await verificationContext.EntityHasStates
+            .AsNoTracking()
+            .SingleAsync(e => e.Id == existing.Id);
+
+        Assert.Equal("Replacement", persisted.Name);
+    }
+
+    [Theory]
+    [MemberData(nameof(DbDriverCases))]
+    public async Task ApplyChanges_UpdateOutOfPlace_ShouldNotChangeTrackedEntry(DbDriver dbDriver)
     {
         var existing = await CreateEntityHasStatesAsync(dbDriver);
 
@@ -95,8 +139,8 @@ partial class DbContextExtensionsTests
             Assert.Equal("Replacement", result.Updated[0].New.Name);
             Assert.NotSame(tracked, result.Updated[0].New);
             Assert.Same(tracked, result.Updated[0].Existing);
-            Assert.Equal("Replacement", tracked.Name);
-            Assert.Equal(EntityState.Modified, context.Entry(tracked).State);
+            Assert.NotEqual("Replacement", tracked.Name);
+            Assert.Equal(EntityState.Detached, context.Entry(tracked).State);
 
             await context.SaveChangesAsync();
         }
@@ -208,11 +252,13 @@ partial class DbContextExtensionsTests
 
         Assert.Empty(result.Inserted);
         Assert.Single(result.Updated);
-        Assert.False(result.Updated[0].New.IsDeleted);
-        Assert.Equal(default, result.Updated[0].New.DeletedAt);
 
         var count = await context.SaveChangesAsync();
         Assert.Equal(1, count);
+
+        // after saving, the entity should no longer be soft deleted
+        Assert.False(result.Updated[0].New.IsDeleted);
+        Assert.Equal(default, result.Updated[0].New.DeletedAt);
 
         await using var verificationContext = Fixture.CreateDbContext(dbDriver);
         var restored = await verificationContext.EntityHasStates
@@ -273,7 +319,7 @@ partial class DbContextExtensionsTests
 
     [Theory]
     [MemberData(nameof(DbDriverCases))]
-    public async Task ApplyChanges_ShouldRejectDuplicateDtoKeysBeforeTrackingChanges(DbDriver dbDriver)
+    public async Task ApplyChanges_ShouldAllowDuplicateDtoKeysBeforeTrackingChanges(DbDriver dbDriver)
     {
         await using var context = Fixture.CreateDbContext(dbDriver);
         var existing = new EntityHasStates { Id = 42, Name = "Existing" };
@@ -283,16 +329,16 @@ partial class DbContextExtensionsTests
             new EntityHasStates { Id = 42, Name = "Second" },
         };
 
-        var exception = Assert.Throws<ArgumentException>(() => context.ApplyChanges(
+        context.ApplyChanges(
             dtos,
             dto => dto.Id,
             [existing],
             entity => entity.Id,
             dto => dto,
-            (dto, entity) => dto));
+            (dto, entity) => dto,
+            allowDeletion: true);
 
-        Assert.Equal("dtos", exception.ParamName);
-        Assert.Empty(context.ChangeTracker.Entries());
+        Assert.Single(context.ChangeTracker.Entries());
         Assert.Equal("Existing", existing.Name);
     }
 
@@ -310,7 +356,7 @@ partial class DbContextExtensionsTests
         var changes = context.ApplyChanges(
             dtos,
             dto => dto.Id,
-            Array.Empty<EntityHasStates>(),
+            [],
             entity => entity.Id,
             dto => new EntityHasStates { Name = dto.Name });
 
@@ -320,7 +366,7 @@ partial class DbContextExtensionsTests
 
     [Theory]
     [MemberData(nameof(DbDriverCases))]
-    public async Task ApplyChanges_ShouldRejectDuplicateExistingEntityKeys(DbDriver dbDriver)
+    public async Task ApplyChanges_ShouldAllowDuplicateExistingEntityKeys(DbDriver dbDriver)
     {
         await using var context = Fixture.CreateDbContext(dbDriver);
         var existing = new[]
@@ -329,15 +375,18 @@ partial class DbContextExtensionsTests
             new EntityHasStates { Id = 42, Name = "Second" },
         };
 
-        var exception = Assert.Throws<ArgumentException>(() => context.ApplyChanges(
+        context.ApplyChanges(
             Array.Empty<EntityHasStates>(),
             dto => dto.Id,
             existing,
             entity => entity.Id,
-            dto => dto));
+            dto => dto,
+            allowDeletion: true);
 
-        Assert.Equal("existingEntities", exception.ParamName);
-        Assert.Empty(context.ChangeTracker.Entries());
+        var entries = context.ChangeTracker.Entries<EntityHasStates>().ToList();
+        Assert.DoesNotContain(entries, m => m.State == EntityState.Added);
+        Assert.DoesNotContain(entries, m => m.State == EntityState.Modified);
+        Assert.Single(entries, m => m.State == EntityState.Deleted);
     }
 
     [Theory]

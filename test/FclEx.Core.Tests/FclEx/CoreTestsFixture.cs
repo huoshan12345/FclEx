@@ -55,7 +55,7 @@ public class CoreTestsFixture : IAsyncLifetime
             return null;
 
         // used to ensure every test assembly uses unique service, such as database.
-        return StringBuilderHelper.Build(m =>
+        return StringBuilder.Build(m =>
         {
             if (str.IsNotEmpty())
             {

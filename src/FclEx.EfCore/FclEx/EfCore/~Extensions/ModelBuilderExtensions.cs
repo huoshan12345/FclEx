@@ -30,17 +30,17 @@ public static class ModelBuilderExtensions
     /// </summary>
     /// <typeparam name="T">The type for which the filter is expressed.</typeparam>
     /// <param name="modelBuilder">The model builder.</param>
-    /// <param name="type">The entity type that may receive the filter.</param>
+    /// <param name="entityType">The entity type that may receive the filter.</param>
     /// <param name="filter">The filter to adapt, or <see langword="null"/> to make no change.</param>
     /// <returns>The same model builder.</returns>
-    /// <remarks>A non-null filter is ignored when <paramref name="type"/>'s CLR type is not assignable to <typeparamref name="T"/>.</remarks>
-    public static ModelBuilder HasQueryFilter<T>(this ModelBuilder modelBuilder, IMutableEntityType type, Expression<Func<T, bool>>? filter)
+    /// <remarks>A non-null filter is ignored when <paramref name="entityType"/>'s CLR type is not assignable to <typeparamref name="T"/>.</remarks>
+    public static ModelBuilder HasQueryFilter<T>(this ModelBuilder modelBuilder, IMutableEntityType entityType, Expression<Func<T, bool>>? filter)
     {
-        if (filter is null || type.ClrType.IsAssignableTo(typeof(T)) == false)
+        if (filter is null || entityType.ClrType.IsAssignableTo(typeof(T)) == false)
             return modelBuilder;
 
-        var builder = modelBuilder.Entity(type.ClrType);
-        var lambda = GetLambdaExpression(filter, type.ClrType);
+        var builder = modelBuilder.Entity(entityType.ClrType);
+        var lambda = GetLambdaExpression(filter, entityType.ClrType);
         builder.HasQueryFilter(lambda);
         return modelBuilder;
     }
@@ -51,17 +51,17 @@ public static class ModelBuilderExtensions
     /// </summary>
     /// <typeparam name="T">The type for which the filter is expressed.</typeparam>
     /// <param name="modelBuilder">The model builder.</param>
-    /// <param name="type">The entity type that may receive the filter.</param>
+    /// <param name="entityType">The entity type that may receive the filter.</param>
     /// <param name="filterKey">The EF Core filter name, or <see langword="null"/> to configure the unnamed filter.</param>
     /// <param name="filter">The filter to adapt, or <see langword="null"/> to make no change.</param>
     /// <returns>The same model builder.</returns>
-    public static ModelBuilder HasQueryFilter<T>(this ModelBuilder modelBuilder, IMutableEntityType type, string? filterKey, Expression<Func<T, bool>>? filter)
+    public static ModelBuilder HasQueryFilter<T>(this ModelBuilder modelBuilder, IMutableEntityType entityType, string? filterKey, Expression<Func<T, bool>>? filter)
     {
-        if (filter is null || type.ClrType.IsAssignableTo(typeof(T)) == false)
+        if (filter is null || entityType.ClrType.IsAssignableTo(typeof(T)) == false)
             return modelBuilder;
 
-        var builder = modelBuilder.Entity(type.ClrType);
-        var lambda = GetLambdaExpression(filter, type.ClrType);
+        var builder = modelBuilder.Entity(entityType.ClrType);
+        var lambda = GetLambdaExpression(filter, entityType.ClrType);
 
         if (filterKey is null)
         {
@@ -73,6 +73,31 @@ public static class ModelBuilderExtensions
         }
 
         return modelBuilder;
-    }    
+    }
+
+    /// <summary>
+    /// Applies a query filter for the <see cref="ISoftDeletable"/> interface to a compatible mutable entity type.
+    /// </summary>
+    /// <param name="modelBuilder">The model builder.</param>
+    /// <param name="entityType">The entity type that may receive the filter.</param>
+    /// <param name="filterKey">The EF Core filter name, or <see langword="null"/> to configure the unnamed filter.</param>
+    /// <returns>The same model builder.</returns>
+    public static ModelBuilder HasSoftDeletableFilter(this ModelBuilder modelBuilder, IMutableEntityType entityType, string? filterKey = null)
+    {
+        return modelBuilder.HasQueryFilter<ISoftDeletable>(entityType, filterKey ?? nameof(ISoftDeletable), m => m.IsDeleted == false);
+    }
+
+    /// <summary>
+    /// Applies a query filter for the <see cref="IDisableable"/> interface to a compatible mutable entity type.
+    /// </summary>
+    /// <param name="modelBuilder">The model builder.</param>
+    /// <param name="entityType">The entity type that may receive the filter.</param>
+    /// <param name="filterKey">The EF Core filter name, or <see langword="null"/> to configure the unnamed filter.</param>
+    /// <returns>The same model builder.</returns>
+    public static ModelBuilder HasDisableableFilter(this ModelBuilder modelBuilder, IMutableEntityType entityType, string? filterKey = null)
+    {
+        return modelBuilder.HasQueryFilter<IDisableable>(entityType, filterKey ?? nameof(IDisableable), m => m.IsDisabled == false);
+    }
+
 #endif
 }

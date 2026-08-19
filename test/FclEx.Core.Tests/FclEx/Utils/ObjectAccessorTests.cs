@@ -45,7 +45,7 @@ public class ObjectAccessorTests
 
         foreach (var ((field, address), (_, prevAddr)) in fields.Zip(addresses).OrderBy(m => m.Second.ToInt64()).WithPrevious())
         {
-            var value = UnsafeHelper.GetValue(address, field.FieldType);
+            var value = Unsafe.GetValue(address, field.FieldType);
             var expectedValue = field.GetValue(obj);
 
             try
@@ -78,7 +78,7 @@ public class ObjectAccessorTests
             Int = random.Next(),
         };
 
-        using var _ = ObjectHelper.ToGCHandle(obj, GCHandleType.Pinned);
+        using var _ = GCHandle.Create(obj, GCHandleType.Pinned);
         var addresses = ObjectAccessor.GetAllFieldAddresses(ref obj);
         GetAllFieldAddresses_Test(ref obj, addresses);
     }
@@ -107,7 +107,7 @@ public class ObjectAccessorTests
             Int = random.Next(),
         };
 
-        using var _ = ObjectHelper.ToGCHandle(obj, GCHandleType.Pinned);
+        using var _ = GCHandle.Create(obj, GCHandleType.Pinned);
         var addresses = ObjectAccessor.GetAllFieldAddresses(ref obj, obj.GetType());
         GetAllFieldAddresses_Test(ref obj, addresses);
     }
@@ -122,7 +122,7 @@ public class ObjectAccessorTests
             Int = random.Next(),
         };
 
-        using var _ = ObjectHelper.ToGCHandle(obj, GCHandleType.Pinned);
+        using var _ = GCHandle.Create(obj, GCHandleType.Pinned);
         var addresses = ObjectAccessor.GetAllFieldAddresses(ref obj, obj.GetType());
         GetAllFieldAddresses_Test(ref obj, addresses);
     }

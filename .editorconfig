@@ -89,3 +89,6 @@ dotnet_diagnostic.IDE0028.severity = silent
 
 # IDE0320: Make anonymous function static
 dotnet_diagnostic.IDE0320.severity = silent
+
+# IDE0008: Use explicit type instead of 'var'
+dotnet_diagnostic.IDE0008.severity = none

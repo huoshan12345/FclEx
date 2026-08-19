@@ -566,7 +566,7 @@ file static class HeapTestExtensions
     {
         public static void AssertHeapInvariant(Heap<int> heap)
         {
-            var items = ObjectHelper.GetRequiredFieldValue<int[]>(heap, "_items");
+            var items = FieldInfo.GetRequiredValue<int[]>(heap, "_items");
             var count = heap.Count;
 
             // 1. Verify the heap property: parent <= child

@@ -32,4 +32,5 @@ public static class SR
     public const string InvalidOperation_EnumNotStarted = "Enumeration has not started. Call MoveNext.";
     public const string Arg_CannotBeNaN = "TimeSpan does not accept floating point Not-a-Number values.";
     public const string Overflow_TimeSpanTooLong = "TimeSpan overflowed because the duration is too long.";
+    public const string Argument_DestinationTooShort = "Destination is too short.";
 }

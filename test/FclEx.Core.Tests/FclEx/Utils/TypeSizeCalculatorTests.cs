@@ -36,13 +36,13 @@ public class TypeSizeCalculatorTests
     [Fact]
     public void GetInstanceFieldStorageSize_ValueType_ReturnsInlineManagedSize()
     {
-        Assert.Equal(UnsafeHelper.SizeOf<SampleStruct>(), TypeSizeCalculator.GetInstanceFieldStorageSize<SampleStruct>());
+        Assert.Equal(Unsafe.SizeOf<SampleStruct>(), TypeSizeCalculator.GetInstanceFieldStorageSize<SampleStruct>());
     }
 
     [Fact]
     public void GetInstanceFieldStorageSize_ReferenceType_SumsInheritedAndDeclaredFields()
     {
-        var expected = sizeof(long) + sizeof(int) + UnsafeHelper.SizeOf<SampleStruct>() + IntPtr.Size;
+        var expected = sizeof(long) + sizeof(int) + Unsafe.SizeOf<SampleStruct>() + IntPtr.Size;
 
         Assert.Equal(expected, TypeSizeCalculator.GetInstanceFieldStorageSize<SampleClass>());
     }
@@ -57,7 +57,7 @@ public class TypeSizeCalculatorTests
     public void GetInstanceFieldStorageSize_String_SumsItsDeclaredFields()
     {
         var expected = typeof(string).GetAllInstanceFields().Sum(field =>
-            field.FieldType.IsValueType ? UnsafeHelper.SizeOf(field.FieldType) : IntPtr.Size);
+            field.FieldType.IsValueType ? Unsafe.SizeOf(field.FieldType) : IntPtr.Size);
 
         Assert.Equal(expected, TypeSizeCalculator.GetInstanceFieldStorageSize<string>());
     }

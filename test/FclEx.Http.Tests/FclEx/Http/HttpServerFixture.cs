@@ -47,8 +47,7 @@ public class HttpServerFixture : CoreTestsFixture
     public static readonly bool HasApiServer = true;
     private WebApplication? _app;
 
-    private static readonly Lazy<string> VisitorHtml = new(() =>
-        ResourceHelper.Embedded.ReadString(typeof(HttpServerFixture).Assembly, "visitor.html"));
+    private static readonly Lazy<string> VisitorHtml = new(() => typeof(HttpServerFixture).Assembly.ReadResourceAsString("visitor.html"));
     private static readonly Encoding Gb2312 = Encoding.GetEncoding("gb2312");
 
     private static SymmetricSecurityKey GetSecurityKey()

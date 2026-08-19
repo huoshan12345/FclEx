@@ -7,7 +7,7 @@ namespace FclEx.Utils;
 /// <typeparam name="TSelf"></typeparam>
 public class PooledStringBuilder<TSelf> : IDisposable where TSelf : PooledStringBuilder<TSelf>, new()
 {
-    protected readonly DisposableValue<StringBuilder> _builder = StringBuilderHelper.GetCached();
+    protected readonly DisposableValue<StringBuilder> _builder = StringBuilder.GetCached();
 
     // ReSharper disable once VirtualMemberNeverOverridden.Global
     public virtual StringBuilder Builder => _builder.Value;

@@ -651,7 +651,7 @@ namespace FclEx.Http
                                         }
                                         // Try to parse the date with the known formats with 2-digit years.
                                         else if (DateTime.TryParseExact(CheckQuoted(_tokenizer.Value), 
-                                                     HttpConstants.CookieDateTimeFormats, CultureInfoHelper.TwoDigitYear, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AdjustToUniversal, out expires))
+                                                     HttpConstants.CookieDateTimeFormats, CultureInfo.TwoDigitYear, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AdjustToUniversal, out expires))
                                         {
                                             cookie!.Expires = expires;
                                         }

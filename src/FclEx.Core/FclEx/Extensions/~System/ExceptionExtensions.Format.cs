@@ -133,7 +133,7 @@ partial class ExceptionExtensions
 
         var (infos, _) = exception.BuildTree();
 
-        return StringBuilderHelper.Build(m =>
+        return StringBuilder.Build(m =>
         {
             foreach (var info in infos)
             {

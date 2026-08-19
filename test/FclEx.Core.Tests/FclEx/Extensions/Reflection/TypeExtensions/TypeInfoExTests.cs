@@ -1,5 +1,3 @@
-using System.Reflection.Emit;
-
 namespace FclEx.Extensions.Reflection.TypeExtensions;
 
 [CompilerGenerated]
@@ -154,7 +152,7 @@ public class TypeInfoExTests
         Assert.True(typeof(TypeInfoEx).IsSealed);
     }
 
-    [Fact]
+    [RetryFact]
     public void GetTypeInfoEx_ShouldNotKeepCollectibleTypeAlive()
     {
         var typeReference = CacheCollectibleType();

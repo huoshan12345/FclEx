@@ -56,7 +56,7 @@ public static class FieldInfoExtensions
         if (Regexes.AutoPropertyBackingField.TryMatch(field.Name, 1, out var name) == false)
             return false;
 
-        var p = type.GetProperty(name, BindingAttributes.Declared);
+        var p = type.GetProperty(name, BindingFlags.Declared);
         if (p is null)
             return false;
 
@@ -83,5 +83,26 @@ public static class FieldInfoExtensions
         // visible: public, protected(Family), protected internal(FamORAssem)
         // not visible: private, internal(Assembly), private protected(FamANDAssem)
         return (field.Attributes & FieldAttributes.FieldAccessMask) <= FieldAttributes.Assembly;
+    }
+
+    extension(FieldInfo)
+    {
+        [MethodImpl(AggressiveInlining)]
+        public static string GetAutoBackingFieldName(string propertyName)
+        {
+            return $"<{propertyName}>k__BackingField";
+        }
+
+        public static T? GetValue<T>(object obj, string fieldName)
+        {
+            var field = obj.GetType().GetRequiredField(fieldName, true);
+            return field.GetValue<T>(obj);
+        }
+
+        public static T GetRequiredValue<T>(object obj, string fieldName)
+        {
+            var field = obj.GetType().GetRequiredField(fieldName, true);
+            return field.GetRequiredValue<T>(obj);
+        }
     }
 }

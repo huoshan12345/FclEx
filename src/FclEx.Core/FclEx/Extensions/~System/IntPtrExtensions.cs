@@ -55,7 +55,7 @@ public static class IntPtrExtensions
 
     public static Delegate ToDelegate(this IntPtr address, Type returnType, IEnumerable<Type> parameters)
     {
-        return Marshal.GetDelegateForFunctionPointer(address, DelegateHelper.MakeNewCustomDelegate(returnType, parameters));
+        return Marshal.GetDelegateForFunctionPointer(address, Delegate.MakeNewCustomDelegate(returnType, parameters));
     }
 
     public static T ToDelegate<T>(this IntPtr address) where T : Delegate
@@ -66,12 +66,12 @@ public static class IntPtrExtensions
             var args = type.GetGenericArguments();
             var def = type.GetGenericTypeDefinition();
 
-            if (TypeHelper.ActionTypes.Contains(def) && def.Assembly == AssemblyHelper.AssemblyOfAction)
+            if (Types.ActionTypes.Contains(def) && def.Assembly == typeof(Action).Assembly)
             {
                 return (T)address.ToDelegate(typeof(void), args);
             }
 
-            if (TypeHelper.FuncTypes.Contains(def) && def.Assembly == AssemblyHelper.AssemblyOfFunc)
+            if (Types.FuncTypes.Contains(def) && def.Assembly == typeof(Func<>).Assembly)
             {
                 return (T)address.ToDelegate(args.Last(), args.Take(args.Length - 1));
             }

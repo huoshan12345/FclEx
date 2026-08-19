@@ -375,7 +375,7 @@ public static class ElementExtensions
 
     private static string EscapeCssString(string value)
     {
-        using var disposable = StringBuilderHelper.GetCached();
+        using var disposable = StringBuilder.GetCached();
         var builder = disposable.Value;
 
         foreach (var c in value)
@@ -423,7 +423,7 @@ public static class ElementExtensions
     /// </summary>
     public static string OwnText(this IElement element)
     {
-        using var disposable = StringBuilderHelper.GetCached();
+        using var disposable = StringBuilder.GetCached();
         var builder = disposable.Value;
 
         foreach (var node in element.ChildNodes.OfType<IText>())

@@ -53,7 +53,7 @@ partial class AssertExTests
     public void EveryMemberEqual_Success()
     {
         var src = CreateTestModel(false);
-        var dest = ObjectHelper.CloneByJson(src);
+        var dest = JsonSerializer.Clone(src);
         Assert.MembersEqual(src, dest);
     }
 
@@ -94,7 +94,7 @@ partial class AssertExTests
     public void EveryMemberEqual_ExcludeMembers_Success()
     {
         var src = CreateTestModel(false);
-        var dest = ObjectHelper.CloneByJson(src);
+        var dest = JsonSerializer.Clone(src);
         Assert.NotNull(dest);
         dest.Int++;
 
@@ -106,7 +106,7 @@ partial class AssertExTests
     public void EveryMemberEqual_Nested_Success()
     {
         var src = CreateTestModel(true);
-        var dest = ObjectHelper.CloneByJson(src);
+        var dest = JsonSerializer.Clone(src);
         Assert.MembersEqual(src, dest);
     }
 
@@ -115,7 +115,7 @@ partial class AssertExTests
     {
         var src = CreateTestModel(true);
         {
-            var dest = ObjectHelper.CloneByJson(src);
+            var dest = JsonSerializer.Clone(src);
             Assert.NotNull(dest);
             dest.Int++;
             Assert.Throws<EqualException>(() => Assert.MembersEqual(src, dest));
@@ -123,7 +123,7 @@ partial class AssertExTests
         }
 
         {
-            var dest = ObjectHelper.CloneByJson(src);
+            var dest = JsonSerializer.Clone(src);
             Assert.NotNull(dest);
             dest.Int++;
 

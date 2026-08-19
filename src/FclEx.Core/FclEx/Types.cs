@@ -47,4 +47,14 @@ public static class Types
         ..IntegerTypes,
         ..FloatingTypes,
     ];
+
+    public static readonly ReadOnlyHashSet<Type> ActionTypes = typeof(Action).Assembly
+        .GetExportedTypes()
+        .Where(m => m.SimpleName() == nameof(Action))
+        .ToReadOnlySet();
+
+    public static readonly ReadOnlyHashSet<Type> FuncTypes = typeof(Func<>).Assembly
+        .GetExportedTypes()
+        .Where(m => m.SimpleName() == nameof(Func<>))
+        .ToReadOnlySet();
 }

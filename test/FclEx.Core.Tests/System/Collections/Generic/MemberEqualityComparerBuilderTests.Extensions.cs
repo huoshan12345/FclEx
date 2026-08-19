@@ -18,7 +18,7 @@ partial class MemberEqualityComparerBuilderTests
         {
             var path = random.NextBoolean() ? null : random.NextString(10);
             var x = new TestModel(random.Next(), random.NextBoolean(), random.NextInt64(), random.NextString(10), path);
-            var y = ObjectHelper.CloneByJson(x);
+            var y = JsonSerializer.Clone(x);
             Assert.Equal(x, y);
 
             Assert.Equal(x, y, comparer);

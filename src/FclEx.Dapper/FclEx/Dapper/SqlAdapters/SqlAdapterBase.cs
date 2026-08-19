@@ -25,7 +25,7 @@ public abstract class SqlAdapterBase<TSelf> : ISqlAdapter where TSelf : SqlAdapt
     protected virtual string GetQuotedName(string name)
     {
         var (prefix, suffix) = QuotationMarks;
-        return StringBuilderHelper.Build(m => m.Append(prefix).Append(name).Append(suffix));
+        return StringBuilder.Build(m => m.Append(prefix).Append(name).Append(suffix));
     }
 
     public virtual string GetQuotedTableName(string name)

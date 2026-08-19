@@ -1,5 +1,3 @@
-using SlackNet.WebApi;
-
 namespace FclEx.Slack;
 
 public class ChatApiTest : SlackTests
@@ -28,7 +26,7 @@ public class ChatApiTest : SlackTests
     [RetryFact]
     public async Task PostMessage_CodeBlock_Test()
     {
-        using var disposable = StringBuilderHelper.GetCached();
+        using var disposable = StringBuilder.GetCached();
         var builder = disposable.Value;
 
         builder.AppendLine("```");

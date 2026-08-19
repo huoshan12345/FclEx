@@ -50,8 +50,6 @@ public class AbpCoreUsingsSource
 
         builder.WriteLine();
         builder.WriteLine("global using Check = FclEx.Check;");
-        builder.WriteLine("global using FileHelper = FclEx.Helpers.FileHelper;");
-        builder.WriteLine("global using ObjectHelper = FclEx.Helpers.ObjectHelper;");
 
         return new SourceInfo(true, "AbpCoreUsings.cs", builder.ToString());
     }

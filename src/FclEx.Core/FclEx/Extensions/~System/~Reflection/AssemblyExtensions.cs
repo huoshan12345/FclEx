@@ -9,7 +9,7 @@ public static class AssemblyExtensions
     /// <param name="name">The complete resource name or a suffix that uniquely identifies it.</param>
     /// <returns>The complete manifest resource name, or <see langword="null"/> when no resource matches.</returns>
     /// <exception cref="ArgumentException"><paramref name="name"/> is empty or matches multiple resources by suffix.</exception>
-    internal static string? ResolveManifestResourceName(this Assembly assembly, string name)
+    public static string? ResolveManifestResourceName(this Assembly assembly, string name)
     {
         Check.NotEmpty(name);
 
@@ -41,22 +41,36 @@ public static class AssemblyExtensions
                ?? throw new InvalidOperationException($"Cannot find manifest resource stream in assembly {assembly.GetName().Name} by name: " + resourceName);
     }
 
-    public static T ReadResource<T>(this Assembly assembly, string name, Func<Stream, T> func)
+    public static T ReadResourceAs<T>(this Assembly assembly, string name, Func<Stream, T> func)
     {
-        using var resource = OpenResource(assembly, name);
+        using var resource = assembly.OpenResource(name);
         return func(resource);
     }
 
-    public static string ReadResource(this Assembly assembly, string name, Encoding? encoding = null)
+    public static string ReadResourceAsString(this Assembly assembly, string name, Encoding? encoding = null)
     {
-        encoding ??= Encoding.UTF8;
-        return ReadResource(assembly, name, s =>
+        return assembly.ReadResourceAs(name, s =>
         {
-            using var sr = new StreamReader(s, encoding);
+            using var sr = new StreamReader(s, encoding ?? Encoding.UTF8);
             return sr.ReadToEnd();
         });
     }
 
+    public static string[] ReadResourceAsLines(this Assembly assembly, string resourceName, StringSplitOptions options, Encoding? encoding = null)
+    {
+        return assembly.ReadResourceAsString(resourceName, encoding).SplitToLines(options);
+    }
+
+    public static string[] ReadResourceAsLines(this Assembly assembly, string resourceName, SplitOptions options = SplitOptions.TrimAndRemoveEmpty, Encoding? encoding = null)
+    {
+        return assembly.ReadResourceAsLines(resourceName, options.ToStringSplitOptions(), encoding);
+    }
+
+    public static byte[] ReadResourceAsBytes(this Assembly assembly, string resourceName)
+    {
+        return assembly.ReadResourceAs(resourceName, s => s.ReadAllBytes());
+    }
+    
     /// <summary>Returns whether the assembly's <see cref="DebuggableAttribute"/> enables JIT optimization.</summary>
     /// <remarks>
     /// This reads assembly metadata, not the actual runtime JIT state, and it cannot determine whether the assembly was

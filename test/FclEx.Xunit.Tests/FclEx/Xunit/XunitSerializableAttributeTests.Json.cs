@@ -39,7 +39,7 @@ public class SelectorJsonConverter<T> : JsonConverter<Expression<Func<T, object?
             return;
         }
 
-        var member = ExpressionHelper.GetDataMember(value);
+        var member = Expression.GetDataMember(value);
         var info = new SelectorInfo(value.Parameters[0].Name, member.Name);
 
         writer.WriteStringValue(info.ToString());
@@ -118,7 +118,7 @@ partial class XunitSerializableAttributeTests
 
         public override string ToString()
         {
-            return StringBuilderHelper.Build(m =>
+            return StringBuilder.Build(m =>
             {
                 m.AppendSquareBracketed(x => x.AppendJoin(", ", SourceFiles.Select(a => a.Name)));
                 m.Append(", ");
@@ -133,7 +133,7 @@ partial class XunitSerializableAttributeTests
         var info = CreateSerializationInfo();
         original.Serialize(info);
 
-        var deserialized = ObjectHelper.GetUninitializedObject<TModel>();
+        var deserialized = RuntimeHelpers.GetUninitializedObject<TModel>();
         deserialized.Deserialize(info);
 
 #if FCLEX_XUNIT_V3

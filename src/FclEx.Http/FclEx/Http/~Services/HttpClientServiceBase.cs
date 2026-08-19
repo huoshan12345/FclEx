@@ -131,7 +131,7 @@ public abstract class HttpClientServiceBase : HttpServiceBase
             if (encoding is not null)
             {
                 // Byte-order-mark (BOM) characters may be present even if a charset was specified.
-                bomLength = EncodingHelper.GetPreambleLength(buffer, encoding);
+                bomLength = encoding.GetPreambleLength(buffer);
             }
         }
 
@@ -139,7 +139,7 @@ public abstract class HttpClientServiceBase : HttpServiceBase
         // then check for a BOM in the data to figure out the encoding.
         if (encoding == null)
         {
-            if (!EncodingHelper.TryDetectEncoding(buffer, out encoding, out bomLength))
+            if (Encoding.TryDetectEncoding(buffer, out encoding, out bomLength) == false)
             {
                 // We already checked to see if the data had a UTF8 BOM in TryDetectEncoding
                 // and DefaultStringEncoding is UTF8, so the bomLength is 0.

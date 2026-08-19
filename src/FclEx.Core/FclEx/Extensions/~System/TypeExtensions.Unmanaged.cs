@@ -177,7 +177,7 @@ partial class TypeExtensions
                 elementType.CheckBlittable(visited, path); // check if element type is pinnable as well.
 
                 var array = Array.CreateInstance(elementType, 1);
-                var entry = ObjectHelper.GetUninitializedObject(elementType);
+                var entry = RuntimeHelpers.GetUninitializedObject(elementType);
                 array.SetValue(entry, 0);
                 instance = array;
             }
@@ -188,7 +188,7 @@ partial class TypeExtensions
             }
             else
             {
-                instance = ObjectHelper.GetUninitializedObject(type);
+                instance = RuntimeHelpers.GetUninitializedObject(type);
             }
 
             GCHandle.Alloc(instance, GCHandleType.Pinned).Free();
@@ -276,7 +276,7 @@ partial class TypeExtensions
     [DoesNotReturn]
     private static void Throw(Type type, string checkName, string? reason, string? path)
     {
-        var error = StringBuilderHelper.Build(m =>
+        var error = StringBuilder.Build(m =>
         {
             m.Append($"The type '{type.LongName()}'");
             if (path.IsNotEmpty())

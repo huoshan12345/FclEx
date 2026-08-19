@@ -67,13 +67,13 @@ public static class TypeSizeCalculator
     private static int CalculateInstanceFieldStorageSize(Type type)
     {
         if (type.IsValueType)
-            return UnsafeHelper.SizeOf(type);
+            return Unsafe.SizeOf(type);
 
         var size = 0;
         foreach (var field in type.GetAllInstanceFields())
         {
             var fieldSize = field.FieldType.IsValueType
-                ? UnsafeHelper.SizeOf(field.FieldType)
+                ? Unsafe.SizeOf(field.FieldType)
                 : IntPtr.Size;
             size = checked(size + fieldSize);
         }
