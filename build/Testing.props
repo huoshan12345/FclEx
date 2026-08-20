@@ -1,6 +1,7 @@
 <Project>
   <PropertyGroup>
     <IsWindows Condition="'$(OS)' == 'Windows_NT'">true</IsWindows>
+    <IsWindows Condition="'$(OS)' != 'Windows_NT'">false</IsWindows>
     <TargetFrameworkVersion>$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(IsTestProject)' != 'false'">
