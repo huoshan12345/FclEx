@@ -3,20 +3,13 @@
     <IsWindows Condition="'$(OS)' == 'Windows_NT'">true</IsWindows>
     <TargetFrameworkVersion>$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <EnableNETAnalyzers>False</EnableNETAnalyzers>
-    <AnalysisLevel>none</AnalysisLevel>
-    <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
-    <RunAnalyzersDuringLiveAnalysis>false</RunAnalyzersDuringLiveAnalysis>
-    <RunAnalyzers>false</RunAnalyzers>
+  <PropertyGroup Condition="'$(IsTestProject)' != 'false'">
+    <OutputType>Exe</OutputType>
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-trx</TestingPlatformCommandLineArguments>
   </PropertyGroup>
-
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
-    <OutputType Condition="'$(IsTestProject)' != 'false'">Exe</OutputType>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
-
   <ItemGroup>
     <Content Include="appsettings*.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -25,10 +18,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-
-  <PropertyGroup Condition="'$(IsTestProject)' != 'false'">
-    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-trx</TestingPlatformCommandLineArguments>
-  </PropertyGroup>
   <ItemGroup Condition="'$(IsTestProject)' != 'false'">
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
   </ItemGroup>

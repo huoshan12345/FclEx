@@ -23,9 +23,9 @@
     <PackageVersion Include="Serilog.Sinks.XUnit3" Version="2.1.0" />
     <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
     <PackageVersion Include="xRetry.v3" Version="1.0.0-rc3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="[3.1.5, 4.0.0)" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
     <PackageVersion Include="Xunit.v3.Priority" Version="1.1.18" />
-    <PackageVersion Include="xunit.v3" Version="[3.2.2, 4.0.0)" />
+    <PackageVersion Include="xunit.v3" Version="4.0.0" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <PackageVersion Include="Npgsql" Version="[8.0.9, 9.0.0)" />
