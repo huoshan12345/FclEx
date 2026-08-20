@@ -74,6 +74,8 @@ public class SshDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [LocalOnlyFact]
     public async Task Connect_WithSsh_Test()
     {
+        Assert.SkipUnlessIncluded(DbDriver.Npgsql);
+
         // ensure key is copied to ssh server.
         var info = new PrivateKeyConnectionInfo("127.0.0.1", 22, "root", new PrivateKeyFile(SshKeyPath));
         var hostKeyReceived = false;

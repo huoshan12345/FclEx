@@ -9,10 +9,8 @@
     <PackageReference Include="Microsoft.Extensions.Logging" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
     <PackageReference Include="Moq" />
-    <PackageReference Include="Xunit.v3.Priority" />
     <PackageReference Include="morelinq" />
     <PackageReference Include="xunit.runner.visualstudio" />
-    <!--xunit.v3 is required to discover tests when a test project is running using dotnet command.-->
     <PackageReference Include="xunit.v3" />
   </ItemGroup>
   <ItemGroup>
