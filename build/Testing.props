@@ -27,4 +27,10 @@
   <ItemGroup Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 8.0))">
     <PackageReference Include="PolySharp" PrivateAssets="all" />
   </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="Xunit.v3.ParallelizationAttribute" Condition="$(IsTestProject)">
+      <_Parameter1>Mode = Xunit.Sdk.ParallelMode.All</_Parameter1>
+      <_Parameter1_IsLiteral>true</_Parameter1_IsLiteral>
+    </AssemblyAttribute>
+  </ItemGroup>
 </Project>

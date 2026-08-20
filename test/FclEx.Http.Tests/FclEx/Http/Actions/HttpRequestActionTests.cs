@@ -5,8 +5,7 @@ public class HttpRequestActionTests : HttpServerTests
     [Fact]
     public async Task ExecuteAsync_WhenActionsAreChained_PassesPreviousResultToNextRequest()
     {
-        if (HasApiServer == false)
-            return;
+        Assert.SkipUnlessHasApiServer();
 
         var path = new Uri(TestApiPaths.Post, UriKind.RelativeOrAbsolute);
         var (successful, data, ex, _) = await HttpRequest.Post(path)

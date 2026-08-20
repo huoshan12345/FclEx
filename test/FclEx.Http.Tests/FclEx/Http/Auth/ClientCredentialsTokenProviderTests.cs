@@ -1,5 +1,5 @@
-using System.Collections.Concurrent;
 using Duende.IdentityModel.Client;
+using System.Collections.Concurrent;
 
 namespace FclEx.Http.Auth;
 
@@ -44,8 +44,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     [Fact]
     public async Task GetTokenAsync_ReturnsAccessTokenWithRequestedScope()
     {
-        if (HasApiServer == false)
-            return;
+        Assert.SkipUnlessHasApiServer();
 
         const string scope = "api";
         var provider = CreateTestTokenProvider();
@@ -59,8 +58,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     [Fact]
     public async Task GetTokenAsync_WhenScopeMatchesCachedToken_UsesCachedToken()
     {
-        if (HasApiServer == false)
-            return;
+        Assert.SkipUnlessHasApiServer();
 
         var handler = new MutateTokenResponseHandler();
         var provider = CreateTestTokenProvider(handler);
@@ -74,8 +72,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     [Fact]
     public async Task GetTokenAsync_WhenScopesDiffer_CachesEachScopeSeparately()
     {
-        if (HasApiServer == false)
-            return;
+        Assert.SkipUnlessHasApiServer();
 
         var handler = new MutateTokenResponseHandler();
         var provider = CreateTestTokenProvider(handler);
@@ -88,8 +85,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     [Fact]
     public async Task GetTokenAsync_WhenCachedTokenExpires_RequestsNewToken()
     {
-        if (HasApiServer == false)
-            return;
+        Assert.SkipUnlessHasApiServer();
 
         var handler = new MutateTokenResponseHandler((_, _, _, m) => m[OidcConstants.TokenResponse.ExpiresIn] = 1);
         var provider = CreateTestTokenProvider(handler);
@@ -103,8 +99,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     [Fact]
     public async Task GetTokenAsync_WhenConcurrentRequestsUseSameScope_SendsSingleTokenRequest()
     {
-        if (HasApiServer == false)
-            return;
+        Assert.SkipUnlessHasApiServer();
 
         const string scope = "api";
         var handler = new MutateTokenResponseHandler();
@@ -126,8 +121,7 @@ public class ClientCredentialsTokenProviderTests : AuthTests
     [Fact]
     public async Task GetTokenAsync_WhenForceRefreshIsRequested_RequestsNewToken()
     {
-        if (HasApiServer == false)
-            return;
+        Assert.SkipUnlessHasApiServer();
 
         var handler = new MutateTokenResponseHandler();
         var provider = CreateTestTokenProvider(handler);

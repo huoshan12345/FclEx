@@ -287,7 +287,7 @@ public class ClientCreatorTests
 
         public Task<FclEx.Http.HttpResponse> SendAsync(FclEx.Http.HttpRequest request, CancellationToken token = default)
         {
-            return Task.FromResult(FclEx.Http.HttpResponse.FromError(request, new NotSupportedException()));
+            return Task.FromResult(HttpResponse.FromError(request, new NotSupportedException()));
         }
 
         public void AddCookie(Cookie cookie, Uri? uri = null, bool overrideDomain = false)

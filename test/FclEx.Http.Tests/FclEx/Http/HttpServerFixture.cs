@@ -1,3 +1,7 @@
+#if NET8_0_OR_GREATER
+using Microsoft.AspNetCore.Http;
+#endif
+
 namespace FclEx.Http;
 
 public class TestApiPaths
@@ -232,11 +236,14 @@ public class HttpServerFixture : CoreTestsFixture
 
     public override async ValueTask DisposeAsync()
     {
+        GC.SuppressFinalize(this);
+
+        await base.DisposeAsync();
+
 #if NET8_0_OR_GREATER
         TestHttp.Dispose();
         if (_app is not null)
             await _app.DisposeAsync();
 #endif
-        await base.DisposeAsync();
     }
 }

@@ -143,18 +143,18 @@ public class PropertyTests : HttpServerTests
     }
 
     [Theory]
-    [InlineData(nameof(global::FclEx.Http.HttpRequestExtensions.ReadAsString), HttpContentType.String)]
-    [InlineData(nameof(global::FclEx.Http.HttpRequestExtensions.ReadAsBytes), HttpContentType.Bytes)]
-    [InlineData(nameof(global::FclEx.Http.HttpRequestExtensions.ReadAsStream), HttpContentType.Stream)]
+    [InlineData(nameof(Http.HttpRequestExtensions.ReadAsString), HttpContentType.String)]
+    [InlineData(nameof(Http.HttpRequestExtensions.ReadAsBytes), HttpContentType.Bytes)]
+    [InlineData(nameof(Http.HttpRequestExtensions.ReadAsStream), HttpContentType.Stream)]
     public void ReadAsShortcuts_SetResponseContentType(string methodName, HttpContentType expected)
     {
         var request = HttpRequest.Get("http://localhost");
 
         _ = methodName switch
         {
-            nameof(global::FclEx.Http.HttpRequestExtensions.ReadAsString) => request.ReadAsString(),
-            nameof(global::FclEx.Http.HttpRequestExtensions.ReadAsBytes) => request.ReadAsBytes(),
-            nameof(global::FclEx.Http.HttpRequestExtensions.ReadAsStream) => request.ReadAsStream(),
+            nameof(Http.HttpRequestExtensions.ReadAsString) => request.ReadAsString(),
+            nameof(Http.HttpRequestExtensions.ReadAsBytes) => request.ReadAsBytes(),
+            nameof(Http.HttpRequestExtensions.ReadAsStream) => request.ReadAsStream(),
             _ => throw new ArgumentOutOfRangeException(nameof(methodName), methodName, null),
         };
 
@@ -248,8 +248,7 @@ public class PropertyTests : HttpServerTests
     [InlineData(false)]
     public async Task CharSet_WhenConfigured_DecodesResponseWithSpecifiedEncoding(bool value)
     {
-        if (HasApiServer == false)
-            return;
+        Assert.SkipUnlessHasApiServer();
 
         var (_, testUrl, charset, keyword) = CharSetTestCase;
 
@@ -292,8 +291,7 @@ public class PropertyTests : HttpServerTests
     [InlineData(false)]
     public async Task FallbackCharSet_WhenConfigured_DecodesResponseWhenHeadersDoNotProvideCharset(bool value)
     {
-        if (HasApiServer == false)
-            return;
+        Assert.SkipUnlessHasApiServer();
 
         var (_, testUrl, charset, keyword) = CharSetTestCase;
 
@@ -332,10 +330,10 @@ public class PropertyTests : HttpServerTests
     }
 
     [Theory]
-    [InlineData(nameof(global::FclEx.Http.HttpRequestExtensions.CharSet))]
-    [InlineData(nameof(global::FclEx.Http.HttpRequestExtensions.TryCharSet))]
-    [InlineData(nameof(global::FclEx.Http.HttpRequestExtensions.FallbackCharSet))]
-    [InlineData(nameof(global::FclEx.Http.HttpRequestExtensions.TryFallbackCharSet))]
+    [InlineData(nameof(Http.HttpRequestExtensions.CharSet))]
+    [InlineData(nameof(Http.HttpRequestExtensions.TryCharSet))]
+    [InlineData(nameof(Http.HttpRequestExtensions.FallbackCharSet))]
+    [InlineData(nameof(Http.HttpRequestExtensions.TryFallbackCharSet))]
     public void CharSetMethods_UseCorrectParameterName(string methodName)
     {
         var method = typeof(global::FclEx.Http.HttpRequestExtensions)
@@ -350,8 +348,7 @@ public class PropertyTests : HttpServerTests
     [InlineData(false)]
     public async Task DetectCharSet_WhenEnabled_DetectsCharsetFromResponseBody(bool value)
     {
-        if (HasApiServer == false)
-            return;
+        Assert.SkipUnlessHasApiServer();
 
         var (_, testUrl, _, keyword) = CharSetTestCase;
 
@@ -370,12 +367,10 @@ public class PropertyTests : HttpServerTests
     [MemberData(nameof(CompressionMethods))]
     public async Task Compression_WhenRemoteServerReceivesRequest_RoundTripsCompressedJson(CompressionMethod compression)
     {
-        if (HasApiServer == false)
-            return;
+        Assert.SkipUnlessHasApiServer();
 
 #if NET6_0_OR_GREATER
-        if (compression == CompressionMethod.Brotli) // the website does not support
-            return;
+        Assert.SkipWhen(compression == CompressionMethod.Brotli, "The website does not support Brotli compression.");
 #endif
 
         var random = new Random();
@@ -402,11 +397,9 @@ public class PropertyTests : HttpServerTests
     [MemberData(nameof(CompressionMethods))]
     public async Task Compression_WhenLocalServerReceivesRequest_RoundTripsCompressedJson(CompressionMethod compression)
     {
-        if (HasApiServer == false)
-            return;
-
-        if (compression != CompressionMethod.None && Environment.Version.Major < 7)
-            return; // test server in aspnet 6.0 has not configured decompression.
+        Assert.SkipUnlessHasApiServer();
+        Assert.SkipWhen(compression != CompressionMethod.None && Environment.Version.Major < 7,
+            "The test server in ASP.NET 6.0 has not configured decompression.");
 
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 100).ToDictionary(m => m.ToString(), m => random.NextString(5));

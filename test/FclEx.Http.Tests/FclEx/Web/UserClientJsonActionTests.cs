@@ -97,13 +97,13 @@ public class UserClientJsonActionTests : WebTests
         string responseString = "",
         HttpStatusCode statusCode = HttpStatusCode.OK)
     {
-        var request = FclEx.Http.HttpRequest.Get("https://example.com/json");
+        var request = HttpRequest.Get("https://example.com/json");
         var response = new FclEx.Http.HttpResponse(request);
         typeof(FclEx.Http.HttpResponse)
-            .GetProperty(nameof(FclEx.Http.HttpResponse.ResponseString))!
+            .GetProperty(nameof(HttpResponse.ResponseString))!
             .SetValue(response, responseString);
         typeof(FclEx.Http.HttpResponse)
-            .GetProperty(nameof(FclEx.Http.HttpResponse.StatusCode))!
+            .GetProperty(nameof(HttpResponse.StatusCode))!
             .SetValue(response, statusCode);
         return response;
     }

@@ -1,6 +1,3 @@
-using MySql.Data.MySqlClient;
-using Npgsql;
-
 namespace FclEx.EfCore;
 
 public class SchemaDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)

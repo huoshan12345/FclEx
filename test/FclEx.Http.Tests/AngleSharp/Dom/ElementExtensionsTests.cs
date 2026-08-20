@@ -381,5 +381,5 @@ public class ElementExtensionsTests
         Assert.Null(actual);
     }
 
-    private static string HtmlEncode(string value) => System.Net.WebUtility.HtmlEncode(value);
+    private static string HtmlEncode(string value) => WebUtility.HtmlEncode(value);
 }

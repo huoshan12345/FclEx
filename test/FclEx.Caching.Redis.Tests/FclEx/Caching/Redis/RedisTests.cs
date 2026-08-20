@@ -2,11 +2,9 @@ using EasyCaching.Core.Serialization;
 
 namespace FclEx.Caching.Redis;
 
-[EnableParallelization]
 [CollectionDefinition(nameof(AbpRedisTestsCollection))]
 public class AbpRedisTestsCollection : ICollectionFixture<RedisTestsFixture>;
 
-[EnableParallelization]
 [Collection(nameof(AbpRedisTestsCollection))]
 public class RedisTests(RedisTestsFixture fixture)
 {

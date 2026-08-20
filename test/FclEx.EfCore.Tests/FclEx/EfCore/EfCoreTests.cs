@@ -1,10 +1,8 @@
 namespace FclEx.EfCore;
 
-[EnableParallelization]
 [CollectionDefinition(nameof(EfCoreTestsCollection))]
 public class EfCoreTestsCollection : ICollectionFixture<EfCoreFixture>;
 
-[EnableParallelization]
 [Collection(nameof(EfCoreTestsCollection))]
 public class EfCoreTests(EfCoreFixture fixture) : DatabaseTests
 {

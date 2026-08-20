@@ -7,8 +7,7 @@ public class TimeoutTests : HttpServerTests
     [InlineData(0.3)]
     public async Task ReadHeadersTimeout_WhenServerDelaysHeaders_CancelsNearConfiguredTimeout(double timeoutSeconds)
     {
-        if (HasApiServer == false)
-            return;
+        Assert.SkipUnlessHasApiServer();
 
         var http = HttpClientService.Create(m =>
         {

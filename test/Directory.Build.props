@@ -14,12 +14,6 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <ItemGroup>
-    <AssemblyAttribute Include="Xunit.v3.ParallelizationAttribute" Condition="$(IsTestProject)">
-      <_Parameter1>Mode = Xunit.Sdk.ParallelMode.All</_Parameter1>
-      <_Parameter1_IsLiteral>true</_Parameter1_IsLiteral>
-    </AssemblyAttribute>
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)..\src\FclEx.Core\FclExUsings.cs" />
   </ItemGroup>
 </Project>
