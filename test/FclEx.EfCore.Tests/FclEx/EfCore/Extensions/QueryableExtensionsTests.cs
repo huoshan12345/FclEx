@@ -92,7 +92,8 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
             .ContainsAny(e => e.Name, ["a_b"], escapeEscapeCharacter: escapeEscapeCharacter)
             .ToListAsync();
 
-        Assert.Collection(result, entity => Assert.Equal(literalMatch.Id, entity.Id));
+        var entity = Assert.Single(result);
+        Assert.Equal(literalMatch.Id, entity.Id);
     }
 
     [Theory]
@@ -115,14 +116,14 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
         Output?.WriteLine(query.ToQueryString());
         var result = await query.ToListAsync();
 
-        Assert.Collection(result, entity => Assert.Equal(literalMatch.Id, entity.Id));
+        var entity = Assert.Single(result);
+        Assert.Equal(literalMatch.Id, entity.Id);
     }
 
     [Fact]
     public async Task ContainsAny_ShouldTreatSqlServerBracketAsLiteral()
     {
-        if (DbDrivers.Contains(DbDriver.SqlServer) == false)
-            return;
+        Assert.SkipUnlessIncluded(DbDriver.SqlServer);
 
         await using var context = Fixture.CreateDbContext(DbDriver.SqlServer);
 
@@ -137,7 +138,8 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
             .ContainsAny(e => e.Name, ["a[bc]d"])
             .ToListAsync();
 
-        Assert.Collection(result, entity => Assert.Equal(literalMatch.Id, entity.Id));
+        var entity = Assert.Single(result);
+        Assert.Equal(literalMatch.Id, entity.Id);
     }
 
     [Theory]

@@ -5,8 +5,7 @@ public class DataAnnotationTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [Fact]
     public async Task TableName_TableAttribute_Test()
     {
-        if (DbDrivers.Contains(DbDriver.Npgsql) == false)
-            return;
+        Assert.SkipUnlessIncluded(DbDriver.Npgsql);
 
         await using var context = Fixture.CreateDbContext(DbDriver.Npgsql);
         var e = new HasTableAttributeEntity();
@@ -21,8 +20,7 @@ public class DataAnnotationTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [Fact]
     public async Task IEntity_Id_AutoIncrement_Test()
     {
-        if (DbDrivers.Contains(DbDriver.Npgsql) == false)
-            return;
+        Assert.SkipUnlessIncluded(DbDriver.Npgsql);
 
         await using var context = Fixture.CreateDbContext(DbDriver.Npgsql);
         var e = new EntityWithIdAndIndex
@@ -37,8 +35,7 @@ public class DataAnnotationTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [Fact]
     public async Task IEntity_Id_PrimaryKey_Test()
     {
-        if (DbDrivers.Contains(DbDriver.Npgsql) == false)
-            return;
+        Assert.SkipUnlessIncluded(DbDriver.Npgsql);
 
         await using var context = Fixture.CreateDbContext(DbDriver.Npgsql);
         var entityType = context.Model.FindEntityType(typeof(EntityWithIdAndIndex));
@@ -66,8 +63,7 @@ public class DataAnnotationTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [Fact]
     public async Task IEntity_Indexes_Test()
     {
-        if (DbDrivers.Contains(DbDriver.Npgsql) == false)
-            return;
+        Assert.SkipUnlessIncluded(DbDriver.Npgsql);
 
         await using var context = Fixture.CreateDbContext(DbDriver.Npgsql);
         var entityType = context.Model.FindEntityType(typeof(EntityWithIdAndIndex));

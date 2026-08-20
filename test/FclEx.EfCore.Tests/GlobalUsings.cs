@@ -16,4 +16,5 @@ global using Xunit.Sdk;
 global using FclEx.Xunit;
 global using FclEx.Databases;
 global using FclEx.EfCore;
+global using FclEx.Tests;
 global using static FclEx.Dapper.DapperTestsFixture;

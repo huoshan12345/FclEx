@@ -29,6 +29,6 @@ public class ContainsAnyTests
 
         var exception = Assert.Throws<ArgumentNullException>(() => new[] { 1 }.ContainsAny(searchFor!));
 
-        Assert.Equal("searchFor", exception.ParamName);
+        Assert.Equal("values", exception.ParamName);
     }
 }
