@@ -49,7 +49,7 @@
     <PackageVersion Include="Volo.Abp.Core" Version="10.6.0" />
     <PackageVersion Include="YamlDotNet" Version="18.1.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />
-    <PackageVersion Include="xunit.v3.assert" Version="[3.2.2, 4.0.0)" />
-    <PackageVersion Include="xunit.v3.extensibility.core" Version="[3.2.2, 4.0.0)" />
+    <PackageVersion Include="xunit.v3.assert" Version="4.0.0" />
+    <PackageVersion Include="xunit.v3.extensibility.core" Version="4.0.0" />
   </ItemGroup>
 </Project>

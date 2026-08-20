@@ -26,6 +26,9 @@
     </Content>
   </ItemGroup>
 
+  <PropertyGroup Condition="'$(IsTestProject)' != 'false'">
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-trx</TestingPlatformCommandLineArguments>
+  </PropertyGroup>
   <ItemGroup Condition="'$(IsTestProject)' != 'false'">
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
   </ItemGroup>

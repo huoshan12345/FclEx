@@ -16,7 +16,6 @@
     <File Path="build/BlockedCompilePackages.targets" />
     <File Path="build/EmitGeneratedFiles.props" />
     <File Path="build/Testing.props" />
-    <File Path="build/Testing.targets" />
   </Folder>
   <Folder Name="/config/">
     <File Path=".editorconfig" />

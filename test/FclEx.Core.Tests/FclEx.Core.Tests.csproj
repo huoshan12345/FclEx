@@ -4,6 +4,7 @@
   </ItemGroup>
   <ItemGroup>
     <!--xunit.v3 is required to discover tests when a test project is running using dotnet command.-->
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Meziantou.Xunit.v3.ParallelTestFramework" />
