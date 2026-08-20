@@ -11,9 +11,4 @@ global using FclEx.Helpers;
 global using FclEx.Utils;
 global using Xunit;
 global using Xunit.Sdk;
-
-#if FCLEX_XUNIT_V3
 global using Xunit.v3;
-#else
-global using Xunit.Abstractions;
-#endif

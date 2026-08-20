@@ -1,7 +1,7 @@
 namespace Xunit;
 
 [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
-public class ConditionalTheoryAttribute : TheoryAttribute
+public class ConditionalFactAttribute : FactAttribute
 {
     public OSPlatformType[]? AllowedOSPlatforms { get; set; }
     public BuildTypeOption BuildType { get; set; }
@@ -9,14 +9,10 @@ public class ConditionalTheoryAttribute : TheoryAttribute
     public string? EnvVarValue { get; set; }
     public EnvVarCheckOption EnvVarCheckOption { get; set; }
 
-#if FCLEX_XUNIT_V3
-    public ConditionalTheoryAttribute(
+    public ConditionalFactAttribute(
          [CallerFilePath] string? sourceFilePath = null,
          [CallerLineNumber] int sourceLineNumber = -1)
          : base(sourceFilePath, sourceLineNumber)
-#else
-    public ConditionalTheoryAttribute()
-#endif
     {
         Skip = TestHelper.GetSkipReason(new(null, BuildType, AllowedOSPlatforms, EnvVarKey, EnvVarValue, EnvVarCheckOption));
     }

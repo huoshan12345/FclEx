@@ -17,11 +17,7 @@ internal static class XunitSerializableAttributeSource
         "System",
         "System.Reflection",
         "System.Runtime.CompilerServices",
-#if FCLEX_XUNIT_V3
         "Xunit.Sdk",
-#else
-        "Xunit.Abstractions",
-#endif
     ];
 
     private static string GetTypeDef(INamedTypeSymbol typeSymbol)
@@ -180,19 +176,12 @@ internal static class XunitSerializableAttributeSource
         return ($"{fileName}.g.cs", str);
     }
 
-    private const string IXunitSerializableInterfaceName =
-#if FCLEX_XUNIT_V3
-   "Xunit.Sdk.IXunitSerializable";
-#else
-    "Xunit.Abstractions.IXunitSerializable";
-#endif
-
     private static bool IfBaseTypeImplementsIXunitSerializable(INamedTypeSymbol typeSymbol)
     {
         var baseType = typeSymbol.BaseType;
         while (baseType != null)
         {
-            if (baseType.AllInterfaces.Any(i => i.ToDisplayString() == IXunitSerializableInterfaceName))
+            if (baseType.AllInterfaces.Any(i => i.ToDisplayString() == "Xunit.Sdk.IXunitSerializable"))
                 return true;
 
             if (baseType.GetAttributes().Any(m => m.AttributeClass?.ToDisplayString() == AttributeName))

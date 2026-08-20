@@ -5,7 +5,6 @@ namespace Xunit;
 
 public static class XunitSerializationInfoExtensions
 {
-#if FCLEX_XUNIT_V3
     private static bool TryGetJsonSerializerOptions(DataMemberInfo dataMember, [NotNullWhen(true)] out JsonSerializerOptions? options)
     {
         options = null;
@@ -41,7 +40,6 @@ public static class XunitSerializationInfoExtensions
 
         return true;
     }
-#endif
 
     extension(IXunitSerializationInfo info)
     {
@@ -59,9 +57,6 @@ public static class XunitSerializationInfoExtensions
             var name = member.Name;
             var type = member.DataMemberType;
 
-#if !FCLEX_XUNIT_V3
-            info.AddValue(name, value, type);
-#else
             if (SerializationHelper.Instance.IsSerializable(value, type))
             {
                 info.AddValue(name, value, type);
@@ -78,7 +73,6 @@ public static class XunitSerializationInfoExtensions
 
             info.AddValue($"{name}__json", json, typeof(string));
             info.AddValue($"{name}__type", type.AssemblyQualifiedName);
-#endif
         }
 
         public object? GetValue(FieldInfo member)
@@ -91,10 +85,6 @@ public static class XunitSerializationInfoExtensions
         {
             var name = member.Name;
             var type = member.DataMemberType;
-
-#if !FCLEX_XUNIT_V3
-            return info.GetValue(name, type);
-#else
             var value = info.GetValue(name);
 
             // ReSharper disable once InvertIf
@@ -113,7 +103,6 @@ public static class XunitSerializationInfoExtensions
             }
 
             return value;
-#endif
         }
     }
 }

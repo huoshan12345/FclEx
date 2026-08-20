@@ -84,11 +84,14 @@ dotnet_diagnostic.IDE0060.severity = none
 # IDE0270: Use coalesce expression
 dotnet_diagnostic.IDE0270.severity = silent
 
-# IDE0028: Use collection expression
-dotnet_diagnostic.IDE0028.severity = silent
-
 # IDE0320: Make anonymous function static
 dotnet_diagnostic.IDE0320.severity = silent
 
 # IDE0008: Use explicit type instead of 'var'
 dotnet_diagnostic.IDE0008.severity = none
+
+# IDE0028: Use collection expression
+dotnet_diagnostic.IDE0028.severity = silent
+
+# IDE0306: Use collection expression for new
+dotnet_diagnostic.IDE0306.severity = silent

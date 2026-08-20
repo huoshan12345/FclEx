@@ -122,19 +122,9 @@ public partial class XunitSerializableAttributeTests
         public T Value { get; } = value;
     }
 
-
-#if !FCLEX_XUNIT_V3
-    private static readonly Type _serializationHelper = typeof(SerializationHelper).Assembly.GetRequiredType("Xunit.Serialization.XunitSerializationInfo");
-    private static readonly ConstructorInfo _serializationHelperConstructor = _serializationHelper.GetRequiredConstructor(typeof(IXunitSerializable));
-#endif
-
     private static IXunitSerializationInfo CreateSerializationInfo()
     {
-#if FCLEX_XUNIT_V3
         return new XunitSerializationInfo(SerializationHelper.Instance);
-#else
-        return _serializationHelperConstructor.Invoke<IXunitSerializationInfo>([null]);
-#endif
     }
 
     private static void Test<T>(Func<int, string, string[], IEnumerable<int>, List<string>, T> creator, Action<T, T>? action = null) where T : ITestType, IXunitSerializable, new()

@@ -11,6 +11,8 @@ global using System.Reflection;
 global using System.Runtime.CompilerServices;
 global using System.Runtime.InteropServices;
 global using System.Text;
+global using System.Text.Json;
+global using System.Text.Json.Serialization;
 global using FclEx.Extensions;
 global using FclEx.Utils;
 global using FclEx.Xunit;
@@ -18,11 +20,4 @@ global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Logging;
 global using Xunit;
 global using Xunit.Sdk;
-
-#if FCLEX_XUNIT_V3
 global using Xunit.v3;
-global using System.Text.Json;
-global using System.Text.Json.Serialization;
-#else
-global using Xunit.Abstractions;
-#endif

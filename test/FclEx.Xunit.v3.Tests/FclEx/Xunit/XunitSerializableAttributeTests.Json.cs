@@ -136,7 +136,6 @@ partial class XunitSerializableAttributeTests
         var deserialized = RuntimeHelpers.GetUninitializedObject<TModel>();
         deserialized.Deserialize(info);
 
-#if FCLEX_XUNIT_V3
         if (checkSelector)
         {
             Assert.Equal(original.Selector?.ToString(), deserialized.Selector?.ToString());
@@ -145,9 +144,6 @@ partial class XunitSerializableAttributeTests
         {
             Assert.Null(deserialized.Selector);
         }
-#else
-        Assert.Equal(original.Selector, deserialized.Selector);
-#endif
 
         Assert.Equal(original.Type, deserialized.Type);
         Assert.Equal(original.Value, deserialized.Value);

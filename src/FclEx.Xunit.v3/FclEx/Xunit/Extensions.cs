@@ -13,7 +13,7 @@ public static partial class Extensions
     {
         return factory.AddXunit(() => output, consoleFallback);
     }
-    
+
     public static ILoggingBuilder AddXunit(this ILoggingBuilder builder, Func<ITestOutputHelper> outputResolver, bool consoleFallback = true)
     {
         builder.Services.AddSingleton<ILoggerProvider>(new XunitLoggerProvider(outputResolver, consoleFallback));
@@ -25,7 +25,6 @@ public static partial class Extensions
         return builder.AddXunit(() => output, consoleFallback);
     }
 
-#if FCLEX_XUNIT_V3
     private static ITestOutputHelper? GetOutput()
     {
         return TestContext.Current.TestOutputHelper;
@@ -47,5 +46,4 @@ public static partial class Extensions
         builder.Services.AddXunitLogging(consoleFallback);
         return builder;
     }
-#endif
 }

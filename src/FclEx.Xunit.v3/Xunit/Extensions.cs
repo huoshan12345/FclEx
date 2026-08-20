@@ -1,5 +1,3 @@
-#pragma warning disable IDE0306 // Simplify collection initialization
-
 namespace Xunit;
 
 public static class Extensions
@@ -21,11 +19,9 @@ public static class Extensions
         return new(enumerable);
     }
 
-#if FCLEX_XUNIT_V3
     public static void Add<T>(this TheoryData<T> data, T item)
     {
         data.Add(new(item));
     }
-#endif
 
 }

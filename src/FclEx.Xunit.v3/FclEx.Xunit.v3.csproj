@@ -1,8 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <IsTestProject>false</IsTestProject>
-    <DefineConstants>$(DefineConstants);FCLEX_XUNIT_V3</DefineConstants>
     <Description>xUnit v3 variant of the FclEx test helper package.</Description>
   </PropertyGroup>
   <ItemGroup>
@@ -13,10 +12,8 @@
     <ProjectReference Include="..\FclEx.Logging\FclEx.Logging.csproj" />
     <ProjectReference Include="..\FclEx.SourceGenerator\FclEx.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\FclEx.Xunit.v3.SourceGenerator\FclEx.Xunit.v3.SourceGenerator.csproj" ReferenceOutputAssembly="false" />
-    <None Include="..\FclEx.Xunit.v3.SourceGenerator\bin\$(Configuration)\netstandard2.0\FclEx.Xunit.v3.SourceGenerator.dll" PackagePath="analyzers\dotnet\cs" Pack="true" Visible="false" />
+    <None Include="..\FclEx.Xunit.v3.SourceGenerator\bin\$(Configuration)\netstandard2.0\FclEx.Xunit.v3.SourceGenerator.dll"
+          PackagePath="analyzers\dotnet\cs" Pack="true" Visible="false" />
   </ItemGroup>
   <Import Project="..\..\build\EmitGeneratedFiles.props" />
-  <ItemGroup>
-    <Compile Include="..\FclEx.Xunit\**\*.cs" Exclude="..\FclEx.Xunit\obj\**\*;..\FclEx.Xunit\bin\**\*" />
-  </ItemGroup>
 </Project>

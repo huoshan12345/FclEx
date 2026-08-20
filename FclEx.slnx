@@ -49,10 +49,8 @@
     <Project Path="src/FclEx.Serilog/FclEx.Serilog.csproj" />
     <Project Path="src/FclEx.Slack/FclEx.Slack.csproj" />
     <Project Path="src/FclEx.SourceGenerator/FclEx.SourceGenerator.csproj" />
-    <Project Path="src/FclEx.Xunit.SourceGenerator/FclEx.Xunit.SourceGenerator.csproj" />
     <Project Path="src/FclEx.Xunit.v3.SourceGenerator/FclEx.Xunit.v3.SourceGenerator.csproj" />
     <Project Path="src/FclEx.Xunit.v3/FclEx.Xunit.v3.csproj" />
-    <Project Path="src/FclEx.Xunit/FclEx.Xunit.csproj" />
     <Project Path="src/FclEx.YamlDotNet/FclEx.YamlDotNet.csproj" />
   </Folder>
   <Folder Name="/test/">
@@ -76,7 +74,6 @@
     <Project Path="test/FclEx.Serilog.Slack.Tests/FclEx.Serilog.Slack.Tests.csproj" />
     <Project Path="test/FclEx.Serilog.Tests/FclEx.Serilog.Tests.csproj" />
     <Project Path="test/FclEx.Slack.Tests/FclEx.Slack.Tests.csproj" />
-    <Project Path="test/FclEx.Xunit.Tests/FclEx.Xunit.Tests.csproj" />
     <Project Path="test/FclEx.Xunit.v3.Tests/FclEx.Xunit.v3.Tests.csproj" />
     <Project Path="test/FclEx.YamlDotNet.Tests/FclEx.YamlDotNet.Tests.csproj" />
   </Folder>

@@ -1,21 +1,13 @@
-using FclEx.Helpers;
-
 namespace FclEx.Xunit;
 
 public class XunitLogger : ILogger
 {
+    private static readonly FieldInfo? _fieldToCheckDisposed = typeof(TestOutputHelper)
+        .GetField("state", BindingFlags.NonPublic | BindingFlags.Instance);
+
     private readonly string _name;
     private readonly Func<ITestOutputHelper?> _outputResolver;
     private readonly bool _consoleFallback;
-
-    private const string CheckDisposedFieldName =
-#if FCLEX_XUNIT_V3
-        "state";
-#else
-        "buffer";
-#endif
-
-    private static readonly FieldInfo? _fieldToCheckDisposed = typeof(TestOutputHelper).GetField(CheckDisposedFieldName, BindingFlags.NonPublic | BindingFlags.Instance);
 
     public XunitLogger(string name, Func<ITestOutputHelper?> outputResolver, bool consoleFallback)
     {
