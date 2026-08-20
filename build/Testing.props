@@ -3,8 +3,9 @@
     <IsWindows>$([MSBuild]::IsOSPlatform('Windows'))</IsWindows>
     <Is64BitOS>$([System.Environment]::Is64BitOperatingSystem)</Is64BitOS>
     <TargetFrameworkVersion>$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
+    <IsTestProject Condition="'$(IsTestProject)' == ''">true</IsTestProject>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(IsTestProject)' != 'false'">
+  <PropertyGroup Condition="$(IsTestProject)">
     <OutputType>Exe</OutputType>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-trx</TestingPlatformCommandLineArguments>
   </PropertyGroup>
@@ -20,7 +21,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <ItemGroup Condition="'$(IsTestProject)' != 'false'">
+  <ItemGroup Condition="$(IsTestProject)">
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
   </ItemGroup>
   <ItemGroup Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 8.0))">

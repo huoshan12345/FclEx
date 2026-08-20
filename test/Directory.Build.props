@@ -14,13 +14,9 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <ItemGroup>
-    <__DisableParallel Include="FclEx.Core.Tests" />
-    <__DisableParallel Include="FclEx.Xunit.Tests" />
-    <__DisableParallel Include="FclEx.Xunit.v3.Tests" />
-    <AssemblyAttribute Include="Xunit.TestFramework"
-                       Condition="@( __DisableParallel->AnyHaveMetadataValue('Identity', '$(MSBuildProjectName)')) != 'true' ">
-      <_Parameter1>Meziantou.Xunit.v3.ParallelTestFramework</_Parameter1>
-      <_Parameter1_TypeName>System.Type</_Parameter1_TypeName>
+    <AssemblyAttribute Include="Xunit.v3.ParallelizationAttribute" Condition="$(IsTestProject)">
+      <_Parameter1>Mode = Xunit.Sdk.ParallelMode.All</_Parameter1>
+      <_Parameter1_IsLiteral>true</_Parameter1_IsLiteral>
     </AssemblyAttribute>
   </ItemGroup>
   <ItemGroup>

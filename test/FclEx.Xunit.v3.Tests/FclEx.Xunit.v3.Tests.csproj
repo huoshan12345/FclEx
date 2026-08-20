@@ -2,7 +2,6 @@
   <ItemGroup>
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
-    <PackageReference Include="Meziantou.Xunit.v3.ParallelTestFramework" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\FclEx.Xunit.v3\FclEx.Xunit.v3.csproj" />
