@@ -36,7 +36,7 @@ public static partial class EnumerableExtensions
     /// <param name="predicate">The predicate function that defines the condition to exclude.</param>
     /// <returns>An IEnumerable containing elements that do not satisfy the predicate.</returns>
     [MethodImpl(AggressiveInlining)]
-    public static IEnumerable<T> Not<T>(this IEnumerable<T> enumerable, Func<T, bool> predicate)
+    public static IEnumerable<T> WhereNot<T>(this IEnumerable<T> enumerable, Func<T, bool> predicate)
         => enumerable.Where(m => predicate(m) == false);
 
     [MethodImpl(AggressiveInlining)]

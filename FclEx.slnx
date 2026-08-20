@@ -11,6 +11,7 @@
     <File Path="build/encrypt.ps1" />
     <File Path="build/pack.ps1" />
     <File Path="build/pkg.version" />
+    <File Path="global.json" />
   </Folder>
   <Folder Name="/build/msbuild/">
     <File Path="build/BlockedCompilePackages.targets" />

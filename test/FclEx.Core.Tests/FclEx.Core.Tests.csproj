@@ -8,7 +8,6 @@
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Meziantou.Xunit.v3.ParallelTestFramework" />
-    <PackageReference Include="xRetry.v3" />
     <PackageReference Include="morelinq" />
     <PackageReference Include="Moq" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" />

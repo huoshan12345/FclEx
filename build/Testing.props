@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
-    <IsWindows Condition="'$(OS)' == 'Windows_NT'">true</IsWindows>
-    <IsWindows Condition="'$(OS)' != 'Windows_NT'">false</IsWindows>
+    <IsWindows>$([MSBuild]::IsOSPlatform('Windows'))</IsWindows>
+    <Is64BitOS>$([System.Environment]::Is64BitOperatingSystem)</Is64BitOS>
     <TargetFrameworkVersion>$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(IsTestProject)' != 'false'">
@@ -10,7 +10,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <Prefer32Bit>false</Prefer32Bit>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="$(Is64BitOS)">win-x64</RuntimeIdentifier>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="appsettings*.json">
