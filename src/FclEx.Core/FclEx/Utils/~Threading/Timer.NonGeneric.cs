@@ -1,7 +1,7 @@
 namespace FclEx.Utils;
 
 /// <summary>
-/// Invokes a parameterless callback on a <see cref="global::System.Threading.Timer"/> schedule.
+/// Invokes a parameterless callback on a <see cref="System.Threading.Timer"/> schedule.
 /// </summary>
 /// <remarks>
 /// The timer starts during construction. <see cref="Dispose"/> prevents future callbacks but does not wait for a callback
@@ -14,7 +14,7 @@ public sealed class Timer : IDisposable, IAsyncDisposable
     public Timer(Action callback, TimeSpan dueTime, TimeSpan period)
     {
         Check.NotNull(callback);
-        _lifetime = new(new global::System.Threading.Timer(_ => callback(), null, dueTime, period));
+        _lifetime = new(new System.Threading.Timer(_ => callback(), null, dueTime, period));
     }
 
     /// <summary>Gets a snapshot of whether disposal has not yet been requested.</summary>

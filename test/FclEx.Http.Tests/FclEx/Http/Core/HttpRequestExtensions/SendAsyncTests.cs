@@ -33,8 +33,7 @@ public class SendAsyncTests : HttpServerTests
     [InlineData(false)]
     public async Task SendAsync_WithIpVersionPolicy_UsesRequestedAddressFamily(bool ipv6)
     {
-        if (ipv6 && _supportsIPv6 == false)
-            return;
+        Assert.SkipWhen(ipv6 && _supportsIPv6 == false, "IPv6 is not supported on this machine.");
 
         using var http = HttpClientService.Create(m =>
         {
@@ -84,8 +83,7 @@ public class SendAsyncTests : HttpServerTests
     [Fact]
     public async Task SendAsync_WithFormContent_PostsEncodedFormValues()
     {
-        if (HasApiServer == false)
-            return;
+        Assert.SkipUnlessHasApiServer();
 
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 3).ToDictionary(m => m.ToString(), m => random.NextString(5));
@@ -106,8 +104,7 @@ public class SendAsyncTests : HttpServerTests
     [Fact]
     public async Task SendAsync_WithJsonContent_PostsSerializedJson()
     {
-        if (HasApiServer == false)
-            return;
+        Assert.SkipUnlessHasApiServer();
 
         var list = Enumerable.Range(1, 10).ToList();
         var response = await HttpRequest.Post(TestApiPaths.Post)
@@ -135,8 +132,7 @@ public class SendAsyncTests : HttpServerTests
     [InlineData("ISO-8859-1")]
     public async Task SendAsync_WhenResponseSpecifiesCharset_UsesMatchingEncoding(string charSet)
     {
-        if (HasApiServer == false)
-            return;
+        Assert.SkipUnlessHasApiServer();
 
         var response = await HttpRequest.Post(TestApiPaths.Charset)
             .AddQueryParam("charset", charSet)
@@ -165,8 +161,7 @@ public class SendAsyncTests : HttpServerTests
     [Fact]
     public async Task SendAsync_WhenResponseRedirects_TracksVisitedUris()
     {
-        if (HasApiServer == false)
-            return;
+        Assert.SkipUnlessHasApiServer();
 
         var url = TestUrls.First();
         var response = await HttpRequest.Get(TestApiPaths.Redirect)

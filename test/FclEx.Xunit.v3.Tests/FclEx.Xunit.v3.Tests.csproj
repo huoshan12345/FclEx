@@ -1,18 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <DefineConstants>$(DefineConstants);FCLEX_XUNIT_V3</DefineConstants>
-  </PropertyGroup>
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
-    <PackageReference Include="Meziantou.Xunit.v3.ParallelTestFramework" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\FclEx.Xunit.v3\FclEx.Xunit.v3.csproj" />
     <ProjectReference Include="..\..\src\FclEx.Xunit.v3.SourceGenerator\FclEx.Xunit.v3.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="..\FclEx.Xunit.Tests\**\*.cs" Exclude="..\FclEx.Xunit.Tests\obj\**\*;..\FclEx.Xunit.Tests\bin\**\*" />
   </ItemGroup>
   <Import Project="..\..\build\EmitGeneratedFiles.props" />
 </Project>

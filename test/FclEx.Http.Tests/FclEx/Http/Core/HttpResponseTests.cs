@@ -375,8 +375,7 @@ public class HttpResponseTests : HttpServerTests
     [Fact]
     public async Task TaskReadJsonAs_WhenResponseTaskSucceeds_DeserializesJson()
     {
-        if (HasApiServer == false)
-            return;
+        Assert.SkipUnlessHasApiServer();
 
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 3).ToDictionary(m => m.ToString(), m => random.NextString(5));
@@ -389,13 +388,11 @@ public class HttpResponseTests : HttpServerTests
         Assert.True(actual.IsSuccess, actual.Exception?.ToString());
         Assert.Equal(expected, actual.Value);
     }
-
-
+    
     [Fact]
     public async Task TaskReadJsonAsRequired_WhenResponseTaskSucceeds_ReturnsDeserializedJson()
     {
-        if (HasApiServer == false)
-            return;
+        Assert.SkipUnlessHasApiServer();
 
         var random = new Random(1024);
         var expected = Enumerable.Range(1, 3).ToDictionary(m => m.ToString(), m => random.NextString(5));

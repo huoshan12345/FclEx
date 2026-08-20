@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <!-- Prevents the DLL from going into the lib folder -->
@@ -6,7 +6,6 @@
     <LangVersion>latest</LangVersion>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <IsPackable>false</IsPackable>
-    <DefineConstants>$(DefineConstants);FCLEX_XUNIT_V3</DefineConstants>
     <Description>xUnit v3 source generator for FclEx xUnit serialization helpers.</Description>
   </PropertyGroup>
   <ItemGroup>
@@ -33,9 +32,6 @@
       <__RelativePath>$([System.String]::new('%(__RelativePath)').Substring(%(__SlashIndex)))</__RelativePath>
       <Link>%(__RelativePath)</Link>
     </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="..\FclEx.Xunit.SourceGenerator\**\*.cs" Exclude="..\FclEx.Xunit.SourceGenerator\obj\**\*;..\FclEx.Xunit.SourceGenerator\bin\**\*" />
   </ItemGroup>
   <!--<Target Name="DumpCompileLinks" BeforeTargets="CoreCompile">
     <Message Importance="High" Text="__RelativePath: %(Compile.__RelativePath)" />

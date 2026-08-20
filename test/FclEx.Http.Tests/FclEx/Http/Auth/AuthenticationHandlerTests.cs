@@ -20,8 +20,7 @@ public class AuthenticationHandlerTests : AuthTests
     [Fact]
     public async Task SendAsync_WhenTokenIsNotRequiredAndNoAuthorizationIsSent_ReturnsUnauthorized()
     {
-        if (HasApiServer == false)
-            return;
+        Assert.SkipUnlessHasApiServer();
 
         var client = CreateHttpClient([RequiredScope], requireToken: false);
         var request = new HttpRequestMessage(HttpMethod.Get, TestUri.WithPath(TestApiPaths.AuthTest));
@@ -32,8 +31,7 @@ public class AuthenticationHandlerTests : AuthTests
     [Fact]
     public async Task SendAsync_WhenRequiredScopeIsGranted_ReturnsOk()
     {
-        if (HasApiServer == false)
-            return;
+        Assert.SkipUnlessHasApiServer();
 
         var client = CreateHttpClient([RequiredScope]);
         var request = new HttpRequestMessage(HttpMethod.Get, TestUri.WithPath(TestApiPaths.AuthTest));
@@ -44,8 +42,7 @@ public class AuthenticationHandlerTests : AuthTests
     [Fact]
     public async Task SendAsync_WhenWrongScopeIsGranted_ReturnsForbidden()
     {
-        if (HasApiServer == false)
-            return;
+        Assert.SkipUnlessHasApiServer();
 
         var client = CreateHttpClient([RequiredScope + "-1"]);
         var request = new HttpRequestMessage(HttpMethod.Get, TestUri.WithPath(TestApiPaths.AuthTest));
@@ -56,8 +53,7 @@ public class AuthenticationHandlerTests : AuthTests
     [Fact]
     public async Task SendAsync_WhenMultipleRequestsUseSameScope_ReusesCachedToken()
     {
-        if (HasApiServer == false)
-            return;
+        Assert.SkipUnlessHasApiServer();
 
         var handler = new MutateTokenResponseHandler();
         var client = CreateHttpClient([RequiredScope], handler);
@@ -75,8 +71,7 @@ public class AuthenticationHandlerTests : AuthTests
     [Fact]
     public async Task SendAsync_WhenFirstTokenIsRejected_RetriesWithForceRefresh()
     {
-        if (HasApiServer == false)
-            return;
+        Assert.SkipUnlessHasApiServer();
 
         var handler = new MutateTokenResponseHandler((h, req, res, json) =>
         {
@@ -97,8 +92,7 @@ public class AuthenticationHandlerTests : AuthTests
     [Fact]
     public async Task SendAsync_WhenRetryTokenIsRejected_DoesNotRetryAgain()
     {
-        if (HasApiServer == false)
-            return;
+        Assert.SkipUnlessHasApiServer();
 
         var handler = new MutateTokenResponseHandler((h, req, res, json) =>
         {

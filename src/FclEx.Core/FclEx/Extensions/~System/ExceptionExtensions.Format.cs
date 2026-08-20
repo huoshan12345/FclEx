@@ -112,7 +112,7 @@ partial class ExceptionExtensions
             : trace
                 .SplitToLines(StringSplitOptions.RemoveEmptyEntries) // NOTE: Do not use StringSplitOptions.TrimEntries here, because we need to trim "   at " prefix later.
                 .Select(m => m.TrimStart("   at ").TrimStart()) // see https://source.dot.net/#System.Private.CoreLib/src/libraries/System.Private.CoreLib/src/System/Diagnostics/StackTrace.cs,226
-                .Not(stackTraceLineFilter)
+                .WhereNot(stackTraceLineFilter)
                 .Reverse() // reverse frames to be more readable (from the outermost to the innermost).
                 .ToArray();
 

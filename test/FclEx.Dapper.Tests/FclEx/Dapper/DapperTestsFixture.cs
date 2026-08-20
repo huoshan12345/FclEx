@@ -74,9 +74,11 @@ public class DapperTestsFixture : CoreTestsFixture
         return ConnectionStrings.Get(dbDriver, database, isUser).CreateDbConnection();
     }
 
+    public virtual string?[] CurrentSchemas => Schemas;
+
     public override async ValueTask InitializeAsync()
     {
-        foreach (var (dbDriver, schema) in DbDrivers.CrossJoin(Schemas))
+        foreach (var (dbDriver, schema) in DbDrivers.CrossJoin(CurrentSchemas))
         {
             using var con = CreateDbConnection(dbDriver, schema);
             await FixAutoIncrement<EntityWithAutoKey>(con, dbDriver, schema);

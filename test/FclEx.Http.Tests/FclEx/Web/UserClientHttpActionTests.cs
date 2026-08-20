@@ -43,7 +43,7 @@ public class UserClientHttpActionTests : WebTests
         var client = new TestUserClient(ServiceProvider.GetRequiredService<ILoggerFactory>());
         var action = new NonEnforcingUserClientHttpAction(client);
 
-        var result = await ((FclEx.Actions.IAction<string>)action).ExecuteAsync();
+        var result = await ((Actions.IAction<string>)action).ExecuteAsync();
 
         Assert.True(result.IsSuccess, result.Exception?.ToString());
         Assert.Equal("accepted", result.Value);
@@ -61,7 +61,7 @@ public class UserClientHttpActionTests : WebTests
         var action = new ServiceBackedUserClientHttpAction(client);
         using var cts = new CancellationTokenSource();
 
-        var result = await ((FclEx.Actions.IAction<string>)action).ExecuteAsync(cts.Token);
+        var result = await action.ExecuteAsync(cts.Token);
 
         Assert.True(result.IsSuccess, result.Exception?.ToString());
         Assert.Equal("handled", result.Value);
@@ -85,7 +85,7 @@ public class UserClientHttpActionTests : WebTests
         };
         var action = new ServiceBackedUserClientHttpAction(client);
 
-        var result = await ((FclEx.Actions.IAction<string>)action).ExecuteAsync();
+        var result = await action.ExecuteAsync();
 
         Assert.True(result.IsError);
         Assert.Same(exception, result.Exception);
@@ -105,31 +105,31 @@ public class UserClientHttpActionTests : WebTests
         Assert.Contains("NotFound", result.Exception.Message);
     }
 
-    private static FclEx.Http.HttpResponse CreateResponse(
+    private static HttpResponse CreateResponse(
         string responseString = "",
         HttpStatusCode statusCode = HttpStatusCode.OK,
         Exception? exception = null)
     {
-        var request = FclEx.Http.HttpRequest.Get("https://example.com/source");
+        var request = HttpRequest.Get("https://example.com/source");
         var response = exception is null
-            ? new FclEx.Http.HttpResponse(request)
-            : FclEx.Http.HttpResponse.FromError(request, exception);
-        typeof(FclEx.Http.HttpResponse)
-            .GetProperty(nameof(FclEx.Http.HttpResponse.ResponseString))!
+            ? new HttpResponse(request)
+            : HttpResponse.FromError(request, exception);
+        typeof(HttpResponse)
+            .GetProperty(nameof(HttpResponse.ResponseString))!
             .SetValue(response, responseString);
-        typeof(FclEx.Http.HttpResponse)
-            .GetProperty(nameof(FclEx.Http.HttpResponse.StatusCode))!
+        typeof(HttpResponse)
+            .GetProperty(nameof(HttpResponse.StatusCode))!
             .SetValue(response, statusCode);
         return response;
     }
 
-    private sealed class CaptureHttpService(FclEx.Http.HttpResponse response) : IHttpService
+    private sealed class CaptureHttpService(HttpResponse response) : IHttpService
     {
-        public List<FclEx.Http.HttpRequest> Requests { get; } = [];
+        public List<HttpRequest> Requests { get; } = [];
 
         public List<CancellationToken> Tokens { get; } = [];
 
-        public Task<FclEx.Http.HttpResponse> SendAsync(FclEx.Http.HttpRequest request, CancellationToken token = default)
+        public Task<HttpResponse> SendAsync(HttpRequest request, CancellationToken token = default)
         {
             Requests.Add(request);
             Tokens.Add(token);
@@ -162,13 +162,13 @@ public class UserClientHttpActionTests : WebTests
 
         public override HttpMethod Method { get; } = HttpMethod.Put;
 
-        public override void ModifyRequest(FclEx.Http.HttpRequest request)
+        public override void ModifyRequest(HttpRequest request)
         {
             ModifyRequestCallCount++;
             request.SetHeader("X-Modified", "yes");
         }
 
-        public override OperationResult<string> GetResult(FclEx.Http.HttpResponse response)
+        public override OperationResult<string> GetResult(HttpResponse response)
         {
             GetResultCallCount++;
             return Operation.Success(response.ResponseString);
@@ -184,16 +184,16 @@ public class UserClientHttpActionTests : WebTests
 
         public override bool EnsureSuccessStatusCode => false;
 
-        public override OperationResult<string> GetResult(FclEx.Http.HttpResponse response)
+        public override OperationResult<string> GetResult(HttpResponse response)
         {
             return Operation.Success("accepted");
         }
 
-        public override Task<FclEx.Http.HttpResponse> GetResponseAsync(FclEx.Http.HttpRequest request, CancellationToken token = default)
+        public override Task<HttpResponse> GetResponseAsync(HttpRequest request, CancellationToken token = default)
         {
-            var response = new FclEx.Http.HttpResponse(request);
-            typeof(FclEx.Http.HttpResponse)
-                .GetProperty(nameof(FclEx.Http.HttpResponse.StatusCode))!
+            var response = new HttpResponse(request);
+            typeof(HttpResponse)
+                .GetProperty(nameof(HttpResponse.StatusCode))!
                 .SetValue(response, HttpStatusCode.NotFound);
             return Task.FromResult(response);
         }
@@ -206,7 +206,7 @@ public class UserClientHttpActionTests : WebTests
 
         public override HttpMethod Method { get; } = HttpMethod.Post;
 
-        public override OperationResult<string> GetResult(FclEx.Http.HttpResponse response)
+        public override OperationResult<string> GetResult(HttpResponse response)
         {
             return Operation.Success("ok");
         }

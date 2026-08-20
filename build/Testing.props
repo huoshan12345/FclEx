@@ -1,22 +1,18 @@
 <Project>
   <PropertyGroup>
-    <IsWindows Condition="'$(OS)' == 'Windows_NT'">true</IsWindows>
+    <IsWindows>$([MSBuild]::IsOSPlatform('Windows'))</IsWindows>
+    <Is64BitOS>$([System.Environment]::Is64BitOperatingSystem)</Is64BitOS>
     <TargetFrameworkVersion>$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
+    <IsTestProject Condition="'$(IsTestProject)' == ''">true</IsTestProject>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <EnableNETAnalyzers>False</EnableNETAnalyzers>
-    <AnalysisLevel>none</AnalysisLevel>
-    <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
-    <RunAnalyzersDuringLiveAnalysis>false</RunAnalyzersDuringLiveAnalysis>
-    <RunAnalyzers>false</RunAnalyzers>
+  <PropertyGroup Condition="$(IsTestProject)">
+    <OutputType>Exe</OutputType>
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-trx</TestingPlatformCommandLineArguments>
   </PropertyGroup>
-
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
-    <OutputType Condition="'$(IsTestProject)' != 'false'">Exe</OutputType>
     <Prefer32Bit>false</Prefer32Bit>
+    <RuntimeIdentifier Condition="$(Is64BitOS)">win-x64</RuntimeIdentifier>
   </PropertyGroup>
-
   <ItemGroup>
     <Content Include="appsettings*.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -25,11 +21,16 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-
-  <ItemGroup Condition="'$(IsTestProject)' != 'false'">
+  <ItemGroup Condition="$(IsTestProject)">
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
   </ItemGroup>
   <ItemGroup Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 8.0))">
     <PackageReference Include="PolySharp" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="Xunit.v3.ParallelizationAttribute" Condition="$(IsTestProject)">
+      <_Parameter1>Mode = Xunit.Sdk.ParallelMode.All</_Parameter1>
+      <_Parameter1_IsLiteral>true</_Parameter1_IsLiteral>
+    </AssemblyAttribute>
   </ItemGroup>
 </Project>

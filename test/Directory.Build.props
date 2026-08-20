@@ -6,27 +6,14 @@
     <Nullable>enable</Nullable>
     <NoWarn>$(NoWarn);xUnit2013;xUnit1041;NU1901;NU1902;NU1903;NU1904;xUnit1051;AD0001;CS8500;NU1900</NoWarn>
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
-    <TargetFrameworks Condition="'$(IsWindows)' == 'true'">$(TargetFrameworks);net472;</TargetFrameworks>
+    <TargetFrameworks Condition="$(IsWindows)">$(TargetFrameworks);net472;</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
     <SuppressTfmSupportBuildErrors>true</SuppressTfmSupportBuildErrors>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
-
-  <ItemGroup>
-    <__DisableParallel Include="FclEx.Core.Tests" />
-    <__DisableParallel Include="FclEx.Xunit.Tests" />
-    <__DisableParallel Include="FclEx.Xunit.v3.Tests" />
-    <AssemblyAttribute Include="Xunit.TestFramework"
-                       Condition="@( __DisableParallel->AnyHaveMetadataValue('Identity', '$(MSBuildProjectName)')) != 'true' ">
-      <_Parameter1>Meziantou.Xunit.v3.ParallelTestFramework</_Parameter1>
-      <_Parameter1_TypeName>System.Type</_Parameter1_TypeName>
-    </AssemblyAttribute>
-  </ItemGroup>
-
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)..\src\FclEx.Core\FclExUsings.cs" />
   </ItemGroup>
-
 </Project>

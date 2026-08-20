@@ -1,10 +1,8 @@
 ﻿namespace FclEx.Aop;
 
-[EnableParallelization]
 [CollectionDefinition(nameof(AopTestsCollection))]
 public class AopTestsCollection : ICollectionFixture<AopTestsFixture>;
 
-[EnableParallelization]
 [Collection(nameof(AopTestsCollection))]
 public class AopTests
 {

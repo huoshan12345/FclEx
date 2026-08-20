@@ -1,5 +1,4 @@
 <Project>
-  <Import Project="../build/Testing.targets" />
   <Import Project="../build/BlockedCompilePackages.targets" />
   <PropertyGroup>
     <!--Empty RootNamespace does not work in Directory.Build.props, so put it in this file as a workaround-->

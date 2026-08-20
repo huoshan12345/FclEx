@@ -15,8 +15,7 @@ public class DatabaseFacadeExtensionsTests(EfCoreFixture fixture) : EfCoreTests(
     [Fact]
     public async Task ExecuteScalarRawAsync_UsesCurrentSqlServerTransaction()
     {
-        if (DbDrivers.Contains(DbDriver.SqlServer) == false)
-            return;
+        Assert.SkipUnlessIncluded(DbDriver.SqlServer);
 
         await using var context = Fixture.CreateDbContext(DbDriver.SqlServer);
         await using var transaction = await context.Database.BeginTransactionAsync();

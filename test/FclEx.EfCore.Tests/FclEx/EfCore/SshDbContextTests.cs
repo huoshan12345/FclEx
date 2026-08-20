@@ -62,8 +62,7 @@ public class SshDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [Fact]
     public async Task Connect_WithoutSsh_Test()
     {
-        if (DbDrivers.Contains(DbDriver.Npgsql) == false)
-            return;
+        Assert.SkipUnlessIncluded(DbDriver.Npgsql);
 
         await using var ctx = CreateNpgsqlContext(null, (_, _) =>
             Assert.Fail("The host-key handler must not run when SSH is disabled."));
@@ -75,6 +74,8 @@ public class SshDbContextTests(EfCoreFixture fixture) : EfCoreTests(fixture)
     [LocalOnlyFact]
     public async Task Connect_WithSsh_Test()
     {
+        Assert.SkipUnlessIncluded(DbDriver.Npgsql);
+
         // ensure key is copied to ssh server.
         var info = new PrivateKeyConnectionInfo("127.0.0.1", 22, "root", new PrivateKeyFile(SshKeyPath));
         var hostKeyReceived = false;
