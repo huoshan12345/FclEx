@@ -13,7 +13,7 @@ public class DbContextExtensionsApplyChangesSqliteTests
         var changes = context.ApplyChanges(
             Array.Empty<ItemDto>(),
             dto => dto.Code,
-            Array.Empty<Item>(),
+            [],
             entity => entity.Code,
             dto => new Item { Code = dto.Code, Name = dto.Name });
 
@@ -32,7 +32,7 @@ public class DbContextExtensionsApplyChangesSqliteTests
             var changes = context.ApplyChanges(
                 [new ItemDto("new", "New")],
                 dto => dto.Code,
-                Array.Empty<Item>(),
+                [],
                 entity => entity.Code,
                 dto => new Item { Id = 123, Code = dto.Code, Name = dto.Name });
 
@@ -416,7 +416,7 @@ public class DbContextExtensionsApplyChangesSqliteTests
             var changes = context.ApplyChanges(
                 [new ManualKeyDto("manual-id", "Manual")],
                 dto => dto.Id,
-                Array.Empty<ManualKeyItem>(),
+                [],
                 entity => entity.Id,
                 dto => new ManualKeyItem { Id = dto.Id, Name = dto.Name });
 
