@@ -2,7 +2,7 @@ using Microsoft.Data.Sqlite;
 
 namespace FclEx.EfCore.Extensions;
 
-public class DbContextExtensionsApplyChangesSqliteTests
+public partial class DbContextExtensionsApplyChangesSqliteTests
 {
     [Fact]
     public async Task EmptySets_ShouldProduceNoChanges()
