@@ -207,9 +207,9 @@ public partial class ApplyChangesSqliteTests
         Assert.Equal("insert", inserted.Code);
         Assert.Equal("update", updated.Code);
         Assert.Equal("delete", deleted.Code);
-        Assert.Equal(EntityState.Added, context.GetOrCreateEntry(inserted).State);
-        Assert.Equal(EntityState.Modified, context.GetOrCreateEntry(updated).State);
-        Assert.Equal(EntityState.Deleted, context.GetOrCreateEntry(deleted).State);
+        Assert.Equal(EntityState.Added, context.Entry(inserted).State);
+        Assert.Equal(EntityState.Modified, context.Entry(updated).State);
+        Assert.Equal(EntityState.Deleted, context.Entry(deleted).State);
     }
 
     private static void AssertParentIsNotPendingModification(ApplyChangesDbContext context)
