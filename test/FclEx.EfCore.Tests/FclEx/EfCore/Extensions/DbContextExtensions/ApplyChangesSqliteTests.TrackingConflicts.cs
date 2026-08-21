@@ -1,6 +1,6 @@
-namespace FclEx.EfCore.Extensions;
+namespace FclEx.EfCore.Extensions.DbContextExtensions;
 
-public partial class DbContextExtensionsApplyChangesSqliteTests
+public partial class ApplyChangesSqliteTests
 {
     [Fact]
     public async Task DtoOverload_ShouldNotOverwriteDetachedParentWhenTrackedChildIsUpdated()
