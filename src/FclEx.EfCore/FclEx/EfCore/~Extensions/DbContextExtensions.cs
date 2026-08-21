@@ -454,7 +454,7 @@ public static partial class DbContextExtensions
                 }
 
                 // Ensure the new entity has its key applied to the default values if necessary.
-                entry.ApplyKeyToDefault(entry.Entity);
+                // entry.ApplyKeyToDefault(entry.Entity);
                 entry.State = EntityState.Added;
 
                 inserted.Add(newEntity);
