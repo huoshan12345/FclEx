@@ -399,7 +399,10 @@ public static partial class DbContextExtensions
     /// <param name="dtoKey">Function to extract the key from a DTO.</param>
     /// <param name="existingEntities">The existing entities retrieved from the database.</param>
     /// <param name="entityKey">Function to extract the key from an entity.</param>
-    /// <param name="insertEntity">Function to map a DTO to a new entity instance for insertion.</param>
+    /// <param name="insertEntity">
+    /// Function to map a DTO to a new entity instance for insertion. Primary-key values returned by this function
+    /// are preserved; key generation and validation are delegated to EF Core and the database provider.
+    /// </param>
     /// <param name="updateEntity">
     /// Optional function that maps a DTO and an existing entity to an updated entity.
     /// If not provided or returns null, the entity remains unchanged.
@@ -453,8 +456,6 @@ public static partial class DbContextExtensions
                     entry.CurrentValues.SetValues(newEntity);
                 }
 
-                // Ensure the new entity has its key applied to the default values if necessary.
-                // entry.ApplyKeyToDefault(entry.Entity);
                 entry.State = EntityState.Added;
 
                 inserted.Add(newEntity);
@@ -485,12 +486,21 @@ public static partial class DbContextExtensions
             // ReSharper disable once InvertIf
             if (update && updatedEntity is not null)
             {
-                var existingEntry = context.GetEntry(entity);
-                existingEntry?.State = EntityState.Detached;
+                EntityEntry<TEntity> entry;
+                if (ReferenceEquals(entity, updatedEntity))
+                {
+                    // An in-place update already retains every key value, including shadow primary keys.
+                    entry = context.Entry(entity);
+                }
+                else
+                {
+                    var existingEntry = context.GetEntry(entity);
+                    existingEntry?.State = EntityState.Detached;
 
-                context.ApplyKeyTo(entity, updatedEntity); // 更新主键
-                var entry = context.GetEntry(updatedEntity);
-                entry ??= context.Entry(updatedEntity);
+                    context.ApplyKeyTo(entity, updatedEntity);
+                    entry = context.GetEntry(updatedEntity) ?? context.Entry(updatedEntity);
+                }
+
                 entry.SetKeyUnmodified();
                 entry.State = EntityState.Modified;
                 entry.ExcludeFromUpdate(excludeOnUpdate);
@@ -531,7 +541,8 @@ public static partial class DbContextExtensions
     /// <param name="entityKey">Function to extract the key from an entity.</param>
     /// <param name="insertEntity">
     /// Optional function to create a new entity from a source entity.
-    /// Defaults to the identity function (<c>e =&gt; e</c>).
+    /// Defaults to the identity function (<c>e =&gt; e</c>). Primary-key values are preserved;
+    /// key generation and validation are delegated to EF Core and the database provider.
     /// </param>
     /// <param name="updateEntity">
     /// Optional function that maps a DTO and an existing entity to an updated entity.

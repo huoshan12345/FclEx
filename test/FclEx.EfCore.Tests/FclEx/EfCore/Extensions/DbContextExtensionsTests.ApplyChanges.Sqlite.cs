@@ -24,7 +24,33 @@ public class DbContextExtensionsApplyChangesSqliteTests
     }
 
     [Fact]
-    public async Task DtoOverload_ShouldInsertEntityWithGeneratedKey()
+    public async Task DtoOverload_ShouldGenerateKeyWhenInsertedEntityHasDefaultKey()
+    {
+        await using var database = await SqliteTestDatabase.CreateAsync();
+        await using (var context = database.CreateContext())
+        {
+            var changes = context.ApplyChanges(
+                [new ItemDto("new", "New")],
+                dto => dto.Code,
+                [],
+                entity => entity.Code,
+                dto => new Item { Code = dto.Code, Name = dto.Name });
+
+            var inserted = Assert.Single(changes.Inserted);
+            Assert.Equal(EntityState.Added, context.Entry(inserted).State);
+
+            await context.SaveChangesAsync();
+            Assert.True(inserted.Id > 0);
+        }
+
+        await using var verificationContext = database.CreateContext();
+        var persisted = await verificationContext.Items.AsNoTracking().SingleAsync();
+        Assert.Equal("new", persisted.Code);
+        Assert.Equal("New", persisted.Name);
+    }
+
+    [Fact]
+    public async Task DtoOverload_ShouldPreserveExplicitGeneratedKeyOnInsert()
     {
         await using var database = await SqliteTestDatabase.CreateAsync();
         await using (var context = database.CreateContext())
@@ -37,15 +63,16 @@ public class DbContextExtensionsApplyChangesSqliteTests
                 dto => new Item { Id = 123, Code = dto.Code, Name = dto.Name });
 
             var inserted = Assert.Single(changes.Inserted);
+            Assert.Equal(123, inserted.Id);
             Assert.Equal(EntityState.Added, context.Entry(inserted).State);
 
             await context.SaveChangesAsync();
-            Assert.NotEqual(123, inserted.Id);
-            Assert.True(inserted.Id > 0);
+            Assert.Equal(123, inserted.Id);
         }
 
         await using var verificationContext = database.CreateContext();
         var persisted = await verificationContext.Items.AsNoTracking().SingleAsync();
+        Assert.Equal(123, persisted.Id);
         Assert.Equal("new", persisted.Code);
         Assert.Equal("New", persisted.Name);
     }
