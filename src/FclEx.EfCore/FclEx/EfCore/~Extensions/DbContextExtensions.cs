@@ -485,6 +485,9 @@ public static partial class DbContextExtensions
             // ReSharper disable once InvertIf
             if (update && updatedEntity is not null)
             {
+                var existingEntry = context.GetEntry(entity);
+                existingEntry?.State = EntityState.Detached;
+
                 context.ApplyKeyTo(entity, updatedEntity); // 更新主键
                 var entry = context.GetEntry(updatedEntity);
                 entry ??= context.Entry(updatedEntity);
