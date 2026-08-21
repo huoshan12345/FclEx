@@ -156,14 +156,12 @@ public partial class ApplyChangesSqliteTests
                     new Child
                     {
                         ParentId = parent.Id,
-                        Parent = parent,
                         Code = "update",
                         Name = "After",
                     },
                     new Child
                     {
                         ParentId = parent.Id,
-                        Parent = parent,
                         Code = "insert",
                         Name = "Insert",
                     },
@@ -184,14 +182,11 @@ public partial class ApplyChangesSqliteTests
             dto => new Child
             {
                 ParentId = parent.Id,
-                Parent = parent,
                 Code = dto.Code,
                 Name = dto.Name,
             },
             (dto, child) =>
             {
-                child.ParentId = parent.Id;
-                child.Parent = parent;
                 child.Name = dto.Name;
                 return child;
             },
