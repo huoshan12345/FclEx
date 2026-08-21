@@ -434,7 +434,7 @@ public static partial class DbContextExtensions
         var inserted = new List<TEntity>();
         var updated = new List<EntityUpdate<TEntity>>();
         var deleted = new List<TEntity>();
-        var existingToUpdate = new HashSet<TEntity>();
+        var existingToKeep = new HashSet<TEntity>();
 
         foreach (var dto in dtos)
         {
@@ -492,8 +492,9 @@ public static partial class DbContextExtensions
                 entry.State = EntityState.Modified;
                 entry.ExcludeFromUpdate(excludeOnUpdate);
                 updated.Add(new(updatedEntity, entity));
-                existingToUpdate.Add(entity);
             }
+
+            existingToKeep.Add(entity);
         }
 
         // ReSharper disable once InvertIf
@@ -503,7 +504,7 @@ public static partial class DbContextExtensions
             {
                 foreach (var entity in entities)
                 {
-                    if (existingToUpdate.Contains(entity))
+                    if (existingToKeep.Contains(entity))
                         continue;
 
                     set.Remove(entity);
