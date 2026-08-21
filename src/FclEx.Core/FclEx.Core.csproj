@@ -27,7 +27,4 @@
     <Content Include="FclExUsings.cs" Pack="true" BuildAction="None" PackagePath="content/" />
     <Content Include="FclEx.Core.targets" Pack="true" BuildAction="None" PackagePath="buildTransitive/" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="System\Text\Unicode\" />
-  </ItemGroup>
 </Project>

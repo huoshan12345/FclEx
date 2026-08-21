@@ -299,6 +299,9 @@ public static partial class DbContextExtensions
         var existing = context.ChangeTracker.Entries<T>()
             .FirstOrDefault(e =>
             {
+                if (ReferenceEquals(e.Entity, entity))
+                    return true;
+
                 // ReSharper disable once LoopCanBeConvertedToQuery
                 for (int i = 0; i < keyProperties.Count; i++)
                 {
@@ -416,6 +419,8 @@ public static partial class DbContextExtensions
         where TEntity : class
         where TKey : notnull
     {
+        context.ChangeTracker.DetectChanges();
+
         var set = context.Set<TEntity>();
         var existingDic = existingEntities.ToMultiValueDictionary(entityKey, m => m);
 
