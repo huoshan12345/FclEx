@@ -1,0 +1,24 @@
+<Project>
+  <PropertyGroup>
+    <Authors>huoshan12345</Authors>
+    <Copyright>huoshan12345</Copyright>
+    <Description>Some basic useful extensions and helpers for C# fundamental class libraries</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageLicenseFile>LICENSE.TXT</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/huoshan12345/FclEx</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>extensions;helpers</PackageTags>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/huoshan12345/FclEx</RepositoryUrl>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ProjectReadmePath>$(MSBuildProjectDirectory)\README.md</ProjectReadmePath>
+    <FallbackReadmePath>$(MSBuildThisFileDirectory)..\README.md</FallbackReadmePath>
+    <PackageReadmePath Condition="Exists('$(ProjectReadmePath)')">$(ProjectReadmePath)</PackageReadmePath>
+    <PackageReadmePath Condition="'$(PackageReadmePath)' == ''">$(FallbackReadmePath)</PackageReadmePath>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="$(PackageReadmePath)" Pack="true" PackagePath="\" Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory)..\LICENSE.TXT" Pack="true" PackagePath="\" Visible="false"/>
+  </ItemGroup>
+</Project>

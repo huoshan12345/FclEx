@@ -1,18 +1,35 @@
 <Project>
-  <Import Project="../build/Testing.props" />
   <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Is64BitOS>$([System.Environment]::Is64BitOperatingSystem)</Is64BitOS>
     <IsPackable>false</IsPackable>
     <LangVersion>latest</LangVersion>
-    <Nullable>enable</Nullable>
     <NoWarn>$(NoWarn);xUnit2013;xUnit1041;NU1901;NU1902;NU1903;NU1904;xUnit1051;AD0001;CS8500;NU1900</NoWarn>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup>
+    <IsWindows>$([MSBuild]::IsOSPlatform('Windows'))</IsWindows>
+    <TargetFrameworkVersion>$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup>
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <TargetFrameworks Condition="$(IsWindows)">$(TargetFrameworks);net472;</TargetFrameworks>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
-    <SuppressTfmSupportBuildErrors>true</SuppressTfmSupportBuildErrors>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <Prefer32Bit>false</Prefer32Bit>
+    <RuntimeIdentifier Condition="$(Is64BitOS)">win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="appsettings*.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\**\*.*">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)..\src\FclEx.Core\FclExUsings.cs" />
   </ItemGroup>

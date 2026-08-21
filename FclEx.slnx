@@ -16,7 +16,7 @@
   <Folder Name="/build/msbuild/">
     <File Path="build/BlockedCompilePackages.targets" />
     <File Path="build/EmitGeneratedFiles.props" />
-    <File Path="build/Testing.props" />
+    <File Path="build/Package.props" />
   </Folder>
   <Folder Name="/config/">
     <File Path=".editorconfig" />

@@ -3,5 +3,21 @@
   <PropertyGroup>
     <!--Empty RootNamespace does not work in Directory.Build.props, so put it in this file as a workaround-->
     <RootNamespace></RootNamespace>
+    <IsTestProject Condition="'$(IsTestProject)' == ''">true</IsTestProject>
   </PropertyGroup>
+  <PropertyGroup Condition="$(IsTestProject)">
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-trx</TestingPlatformCommandLineArguments>
+  </PropertyGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="Xunit.v3.ParallelizationAttribute" Condition="$(IsTestProject)">
+      <_Parameter1>Mode = Xunit.Sdk.ParallelMode.All</_Parameter1>
+      <_Parameter1_IsLiteral>true</_Parameter1_IsLiteral>
+    </AssemblyAttribute>
+  </ItemGroup>
+  <ItemGroup Condition="$(IsTestProject)">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+  </ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 8.0))">
+    <PackageReference Include="PolySharp" PrivateAssets="all" />
+  </ItemGroup>
 </Project>

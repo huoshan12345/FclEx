@@ -1,55 +1,20 @@
 <Project>
+  <Import Project="..\build\Package.props" />
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net472;net8.0;net9.0;net10.0</TargetFrameworks>
-    <Nullable>enable</Nullable>
-    <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <NoWarn>$(NoWarn);CS1591;CS8500;NU1900;NU5104</NoWarn>
-    <WarningsAsErrors>CS8785</WarningsAsErrors>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Description>Some basic useful extensions and helpers for C# fundamental class libraries</Description>
-    <PackageTags>extensions;helpers</PackageTags>
-    <PackageProjectUrl>https://github.com/huoshan12345/FclEx</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/huoshan12345/FclEx</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <Authors>huoshan12345</Authors>
-    <Copyright>huoshan12345</Copyright>
-    <!--NOTE: GetTargetFrameworkVersion('netstandard2.0') is 0.0-->
-    <TargetFrameworkVersion>$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
-    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageLicenseFile>LICENSE.TXT</PackageLicenseFile>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <LangVersion>latest</LangVersion>
+    <NoWarn>$(NoWarn);CS1591;CS8500;NU1900;NU5104</NoWarn>
+    <Nullable>enable</Nullable>
+    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
+    <WarningsAsErrors>CS8785</WarningsAsErrors>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <EnableNETAnalyzers>False</EnableNETAnalyzers>
-    <AnalysisLevel>none</AnalysisLevel>
-    <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
-    <RunAnalyzersDuringLiveAnalysis>false</RunAnalyzersDuringLiveAnalysis>
-    <RunAnalyzers>false</RunAnalyzers>
-  </PropertyGroup>
-
-  <ItemGroup Condition="$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), 8.0))">
-    <PackageReference Include="PolySharp" PrivateAssets="all" />
-  </ItemGroup>
-
   <PropertyGroup>
-    <ProjectReadmePath>$(MSBuildProjectDirectory)\README.md</ProjectReadmePath>
-    <FallbackReadmePath>$(MSBuildThisFileDirectory)..\README.md</FallbackReadmePath>
-    <PackageReadmePath Condition="Exists('$(ProjectReadmePath)')">$(ProjectReadmePath)</PackageReadmePath>
-    <PackageReadmePath Condition="'$(PackageReadmePath)' == ''">$(FallbackReadmePath)</PackageReadmePath>
+    <IsWindows>$([MSBuild]::IsOSPlatform('Windows'))</IsWindows>
+    <TargetFrameworkVersion>$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 2))</TargetFrameworkVersion>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Include="$(PackageReadmePath)" Pack="true" PackagePath="\" Visible="false" />
-    <None Include="$(MSBuildThisFileDirectory)..\LICENSE.TXT" Pack="true" PackagePath="\" Visible="false"/>
-  </ItemGroup>
-
-  <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-      <_Parameter1>$(AssemblyName).Tests</_Parameter1>
-    </AssemblyAttribute>
-  </ItemGroup>
-
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <TargetFrameworks Condition="$(IsWindows)">$(TargetFrameworks);net472;</TargetFrameworks>
+  </PropertyGroup>
 </Project>
