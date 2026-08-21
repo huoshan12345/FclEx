@@ -415,9 +415,17 @@ public static partial class DbContextExtensions
     /// Names of properties or navigation properties that should not be modified during an update operation.
     /// </param>
     /// <returns>
-    /// An <see cref="EntityChanges{TEntity}"/> object containing
-    /// all inserted, updated, and deleted entities.
+    /// An <see cref="EntityChanges{TEntity}"/> containing the entity instances to which this context applied
+    /// the insert, update, and delete states. <see cref="EntityChanges{TEntity}.Updated"/> retains the entity
+    /// matched from <paramref name="existingEntities"/> as <see cref="EntityUpdate{TEntity}.Existing"/>.
     /// </returns>
+    /// <remarks>
+    /// When a different instance with the same primary key is already tracked, the returned inserted entity,
+    /// updated <see cref="EntityUpdate{TEntity}.New"/> entity, or deleted entity is the instance represented by
+    /// the context entry, not necessarily the instance supplied by a mapping function or
+    /// <paramref name="existingEntities"/>. Calling <see cref="DbContext.SaveChanges()"/> may subsequently change
+    /// entry states; for example, a successfully deleted entity is normally detached.
+    /// </remarks>
     public static EntityChanges<TEntity> ApplyChanges<TEntity, TDto, TKey>(
         this DbContext context,
         IEnumerable<TDto> dtos,
@@ -458,7 +466,7 @@ public static partial class DbContextExtensions
 
                 entry.State = EntityState.Added;
 
-                inserted.Add(newEntity);
+                inserted.Add(entry.Entity);
                 continue;
             }
 
@@ -560,8 +568,17 @@ public static partial class DbContextExtensions
     /// Names of properties or navigation properties that should not be modified during an update operation.
     /// </param>
     /// <returns>
-    /// An <see cref="EntityChanges{TEntity}"/> describing inserted, updated, and deleted entities.
+    /// An <see cref="EntityChanges{TEntity}"/> containing the entity instances to which this context applied
+    /// the insert, update, and delete states. <see cref="EntityChanges{TEntity}.Updated"/> retains the entity
+    /// matched from <paramref name="existingEntities"/> as <see cref="EntityUpdate{TEntity}.Existing"/>.
     /// </returns>
+    /// <remarks>
+    /// When a different instance with the same primary key is already tracked, the returned inserted entity,
+    /// updated <see cref="EntityUpdate{TEntity}.New"/> entity, or deleted entity is the instance represented by
+    /// the context entry, not necessarily the instance supplied by <paramref name="newEntities"/> or a mapping
+    /// function. Calling <see cref="DbContext.SaveChanges()"/> may subsequently change entry states; for example,
+    /// a successfully deleted entity is normally detached.
+    /// </remarks>
     public static EntityChanges<TEntity> ApplyChanges<TEntity, TKey>(
         this DbContext context,
         IEnumerable<TEntity> newEntities,
