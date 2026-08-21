@@ -377,6 +377,15 @@ public static partial class DbContextExtensions
         return existing ?? context.Entry(entity);
     }
 
+    public static DbContext ApplyKeyTo<T>(this DbContext context, T source, T target, Func<IProperty, object?, object?>? transform = null) where T : class
+    {
+        var entityType = context.Model.FindEntityType(typeof(T))
+            ?? throw new InvalidOperationException($"{typeof(T).Name} is not an entity type on this DbContext");
+
+        entityType.ApplyKeyTo(source, target, transform);
+        return context;
+    }
+
     /// <summary>
     /// Applies the given DTO changes to the specified <see cref="DbContext"/> set.
     /// Determines which entities should be inserted, updated, or deleted,
@@ -419,14 +428,14 @@ public static partial class DbContextExtensions
         where TEntity : class
         where TKey : notnull
     {
-        context.ChangeTracker.DetectChanges();
-
         var set = context.Set<TEntity>();
         var existingDic = existingEntities.ToMultiValueDictionary(entityKey, m => m);
 
         var inserted = new List<TEntity>();
         var updated = new List<EntityUpdate<TEntity>>();
         var deleted = new List<TEntity>();
+        var existingToUpdate = new HashSet<TEntity>();
+
         foreach (var dto in dtos)
         {
             var key = dtoKey(dto);
@@ -473,26 +482,18 @@ public static partial class DbContextExtensions
                 update = true;
             }
 
+            // ReSharper disable once InvertIf
             if (update && updatedEntity is not null)
             {
-                var entry = context.GetEntry(entity);
-                if (entry is not null && ReferenceEquals(entry.Entity, updatedEntity) == false)
-                {
-                    // updatedEntity may not have the key set, so we need to copy the key from the existing entity
-                    entry.ApplyKeyTo(updatedEntity);
-                    entry.State = EntityState.Detached;
-                    entry = null;
-                }
-
+                context.ApplyKeyTo(entity, updatedEntity); // 更新主键
+                var entry = context.GetEntry(updatedEntity);
                 entry ??= context.Entry(updatedEntity);
+                entry.SetKeyUnmodified();
                 entry.State = EntityState.Modified;
                 entry.ExcludeFromUpdate(excludeOnUpdate);
-
                 updated.Add(new(updatedEntity, entity));
+                existingToUpdate.Add(entity);
             }
-
-            // Remove matched entity from deletion candidates since it is present in the incoming DTOs.
-            existingDic.Remove(key, entity);
         }
 
         // ReSharper disable once InvertIf
@@ -502,7 +503,9 @@ public static partial class DbContextExtensions
             {
                 foreach (var entity in entities)
                 {
-                    // removing does not check duplicate keys
+                    if (existingToUpdate.Contains(entity))
+                        continue;
+
                     set.Remove(entity);
                     deleted.Add(entity);
                 }
