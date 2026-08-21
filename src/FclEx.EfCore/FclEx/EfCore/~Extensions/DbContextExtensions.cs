@@ -491,6 +491,10 @@ public static partial class DbContextExtensions
                 {
                     // An in-place update already retains every key value, including shadow primary keys.
                     entry = context.GetOrCreateEntry(entity);
+                    if (ReferenceEquals(entry.Entity, entity) == false)
+                    {
+                        entry.CurrentValues.SetValues(entity);
+                    }
                 }
                 else
                 {
@@ -504,7 +508,7 @@ public static partial class DbContextExtensions
                 entry.SetKeyUnmodified();
                 entry.State = EntityState.Modified;
                 entry.ExcludeFromUpdate(excludeOnUpdate);
-                updated.Add(new(updatedEntity, entity));
+                updated.Add(new(entry.Entity, entity));
             }
 
             existingToKeep.Add(entity);
@@ -522,7 +526,7 @@ public static partial class DbContextExtensions
 
                     var entry = context.GetOrCreateEntry(entity);
                     entry.State = EntityState.Deleted;
-                    deleted.Add(entity);
+                    deleted.Add(entry.Entity);
                 }
             }
         }
