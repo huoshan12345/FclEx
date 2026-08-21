@@ -128,6 +128,8 @@ partial class ApplyChangesSqliteTests
             _connection = connection;
             _options = new DbContextOptionsBuilder<ApplyChangesDbContext>()
                 .UseSqlite(connection)
+                .EnableSensitiveDataLogging()
+                .LogTo(m => TestContext.Current.TestOutputHelper?.WriteLine(m), LogLevel.Information)
                 .Options;
         }
 

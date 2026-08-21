@@ -21,4 +21,5 @@ global using FclEx.Databases;
 global using FclEx.EfCore;
 global using FclEx.Tests;
 global using Microsoft.Data.Sqlite;
+global using Microsoft.Extensions.Logging;
 global using static FclEx.Dapper.DapperTestsFixture;
