@@ -299,6 +299,9 @@ public static partial class DbContextExtensions
         var existing = context.ChangeTracker.Entries<T>()
             .FirstOrDefault(e =>
             {
+                if (ReferenceEquals(e.Entity, entity))
+                    return true;
+
                 // ReSharper disable once LoopCanBeConvertedToQuery
                 for (int i = 0; i < keyProperties.Count; i++)
                 {
@@ -374,6 +377,15 @@ public static partial class DbContextExtensions
         return existing ?? context.Entry(entity);
     }
 
+    public static DbContext ApplyKeyTo<T>(this DbContext context, T source, T target, Func<IProperty, object?, object?>? transform = null) where T : class
+    {
+        var entityType = context.Model.FindEntityType(typeof(T))
+            ?? throw new InvalidOperationException($"{typeof(T).Name} is not an entity type on this DbContext");
+
+        entityType.ApplyKeyTo(source, target, transform);
+        return context;
+    }
+
     /// <summary>
     /// Applies the given DTO changes to the specified <see cref="DbContext"/> set.
     /// Determines which entities should be inserted, updated, or deleted,
@@ -387,7 +399,10 @@ public static partial class DbContextExtensions
     /// <param name="dtoKey">Function to extract the key from a DTO.</param>
     /// <param name="existingEntities">The existing entities retrieved from the database.</param>
     /// <param name="entityKey">Function to extract the key from an entity.</param>
-    /// <param name="insertEntity">Function to map a DTO to a new entity instance for insertion.</param>
+    /// <param name="insertEntity">
+    /// Function to map a DTO to a new entity instance for insertion. Primary-key values returned by this function
+    /// are preserved; key generation and validation are delegated to EF Core and the database provider.
+    /// </param>
     /// <param name="updateEntity">
     /// Optional function that maps a DTO and an existing entity to an updated entity.
     /// If not provided or returns null, the entity remains unchanged.
@@ -400,9 +415,17 @@ public static partial class DbContextExtensions
     /// Names of properties or navigation properties that should not be modified during an update operation.
     /// </param>
     /// <returns>
-    /// An <see cref="EntityChanges{TEntity}"/> object containing
-    /// all inserted, updated, and deleted entities.
+    /// An <see cref="EntityChanges{TEntity}"/> containing the entity instances to which this context applied
+    /// the insert, update, and delete states. <see cref="EntityChanges{TEntity}.Updated"/> retains the entity
+    /// matched from <paramref name="existingEntities"/> as <see cref="EntityUpdate{TEntity}.Existing"/>.
     /// </returns>
+    /// <remarks>
+    /// When a different instance with the same primary key is already tracked, the returned inserted entity,
+    /// updated <see cref="EntityUpdate{TEntity}.New"/> entity, or deleted entity is the instance represented by
+    /// the context entry, not necessarily the instance supplied by a mapping function or
+    /// <paramref name="existingEntities"/>. Calling <see cref="DbContext.SaveChanges()"/> may subsequently change
+    /// entry states; for example, a successfully deleted entity is normally detached.
+    /// </remarks>
     public static EntityChanges<TEntity> ApplyChanges<TEntity, TDto, TKey>(
         this DbContext context,
         IEnumerable<TDto> dtos,
@@ -422,6 +445,8 @@ public static partial class DbContextExtensions
         var inserted = new List<TEntity>();
         var updated = new List<EntityUpdate<TEntity>>();
         var deleted = new List<TEntity>();
+        var existingToKeep = new HashSet<TEntity>();
+
         foreach (var dto in dtos)
         {
             var key = dtoKey(dto);
@@ -439,11 +464,9 @@ public static partial class DbContextExtensions
                     entry.CurrentValues.SetValues(newEntity);
                 }
 
-                // Ensure the new entity has its key applied to the default values if necessary.
-                entry.ApplyKeyToDefault(entry.Entity);
                 entry.State = EntityState.Added;
 
-                inserted.Add(newEntity);
+                inserted.Add(entry.Entity);
                 continue;
             }
 
@@ -468,26 +491,35 @@ public static partial class DbContextExtensions
                 update = true;
             }
 
+            // ReSharper disable once InvertIf
             if (update && updatedEntity is not null)
             {
-                var entry = context.GetEntry(entity);
-                if (entry is not null && ReferenceEquals(entry.Entity, updatedEntity) == false)
+                EntityEntry<TEntity> entry;
+                if (ReferenceEquals(entity, updatedEntity))
                 {
-                    // updatedEntity may not have the key set, so we need to copy the key from the existing entity
-                    entry.ApplyKeyTo(updatedEntity);
-                    entry.State = EntityState.Detached;
-                    entry = null;
+                    // An in-place update already retains every key value, including shadow primary keys.
+                    entry = context.GetOrCreateEntry(entity);
+                    if (ReferenceEquals(entry.Entity, entity) == false)
+                    {
+                        entry.CurrentValues.SetValues(entity);
+                    }
+                }
+                else
+                {
+                    var existingEntry = context.GetEntry(entity);
+                    existingEntry?.State = EntityState.Detached;
+
+                    context.ApplyKeyTo(entity, updatedEntity);
+                    entry = context.GetOrCreateEntry(updatedEntity);
                 }
 
-                entry ??= context.Entry(updatedEntity);
+                entry.SetKeyUnmodified();
                 entry.State = EntityState.Modified;
                 entry.ExcludeFromUpdate(excludeOnUpdate);
-
-                updated.Add(new(updatedEntity, entity));
+                updated.Add(new(entry.Entity, entity));
             }
 
-            // Remove matched entity from deletion candidates since it is present in the incoming DTOs.
-            existingDic.Remove(key, entity);
+            existingToKeep.Add(entity);
         }
 
         // ReSharper disable once InvertIf
@@ -497,9 +529,12 @@ public static partial class DbContextExtensions
             {
                 foreach (var entity in entities)
                 {
-                    // removing does not check duplicate keys
-                    set.Remove(entity);
-                    deleted.Add(entity);
+                    if (existingToKeep.Contains(entity))
+                        continue;
+
+                    var entry = context.GetOrCreateEntry(entity);
+                    entry.State = EntityState.Deleted;
+                    deleted.Add(entry.Entity);
                 }
             }
         }
@@ -519,7 +554,8 @@ public static partial class DbContextExtensions
     /// <param name="entityKey">Function to extract the key from an entity.</param>
     /// <param name="insertEntity">
     /// Optional function to create a new entity from a source entity.
-    /// Defaults to the identity function (<c>e =&gt; e</c>).
+    /// Defaults to the identity function (<c>e =&gt; e</c>). Primary-key values are preserved;
+    /// key generation and validation are delegated to EF Core and the database provider.
     /// </param>
     /// <param name="updateEntity">
     /// Optional function that maps a DTO and an existing entity to an updated entity.
@@ -532,8 +568,17 @@ public static partial class DbContextExtensions
     /// Names of properties or navigation properties that should not be modified during an update operation.
     /// </param>
     /// <returns>
-    /// An <see cref="EntityChanges{TEntity}"/> describing inserted, updated, and deleted entities.
+    /// An <see cref="EntityChanges{TEntity}"/> containing the entity instances to which this context applied
+    /// the insert, update, and delete states. <see cref="EntityChanges{TEntity}.Updated"/> retains the entity
+    /// matched from <paramref name="existingEntities"/> as <see cref="EntityUpdate{TEntity}.Existing"/>.
     /// </returns>
+    /// <remarks>
+    /// When a different instance with the same primary key is already tracked, the returned inserted entity,
+    /// updated <see cref="EntityUpdate{TEntity}.New"/> entity, or deleted entity is the instance represented by
+    /// the context entry, not necessarily the instance supplied by <paramref name="newEntities"/> or a mapping
+    /// function. Calling <see cref="DbContext.SaveChanges()"/> may subsequently change entry states; for example,
+    /// a successfully deleted entity is normally detached.
+    /// </remarks>
     public static EntityChanges<TEntity> ApplyChanges<TEntity, TKey>(
         this DbContext context,
         IEnumerable<TEntity> newEntities,

@@ -7,14 +7,14 @@ public class WebProxyEqualityComparerTests
     [Fact]
     public void Equals_WhenBothProxiesAreEmpty_ReturnsTrue()
     {
-        Assert.True(Comparer.Equals(WebProxyHelper.Empty, new WebProxy()));
+        Assert.True(Comparer.Equals(WebProxy.Empty, new WebProxy()));
     }
 
     [Fact]
     public void GetHashCode_WhenBothProxiesAreEmpty_ReturnsSameHashCode()
     {
         Assert.Equal(
-            Comparer.GetHashCode(WebProxyHelper.Empty), 
+            Comparer.GetHashCode(WebProxy.Empty), 
             Comparer.GetHashCode(new WebProxy()));
     }
 
@@ -22,8 +22,8 @@ public class WebProxyEqualityComparerTests
     public void Equals_WhenProxyAddressesMatch_ReturnsTrue()
     {
         var uri = new Uri("http://127.0.0.1:8888");
-        var proxy1 = WebProxyHelper.Create(uri);
-        var proxy2 = WebProxyHelper.Create(uri);
+        var proxy1 = WebProxy.Create(uri);
+        var proxy2 = WebProxy.Create(uri);
 
         Assert.True(Comparer.Equals(proxy1, proxy2));
     }
@@ -32,8 +32,8 @@ public class WebProxyEqualityComparerTests
     public void GetHashCode_WhenProxyAddressesMatch_ReturnsSameHashCode()
     {
         var uri = new Uri("http://127.0.0.1:8888");
-        var proxy1 = WebProxyHelper.Create(uri);
-        var proxy2 = WebProxyHelper.Create(uri);
+        var proxy1 = WebProxy.Create(uri);
+        var proxy2 = WebProxy.Create(uri);
 
         Assert.Equal(
             Comparer.GetHashCode(proxy1),
@@ -44,8 +44,8 @@ public class WebProxyEqualityComparerTests
     public void InterfaceComparer_UsesWebProxyValueEquality()
     {
         var uri = new Uri("http://127.0.0.1:8888");
-        IWebProxy proxy1 = WebProxyHelper.Create(uri)!;
-        IWebProxy proxy2 = WebProxyHelper.Create(uri)!;
+        IWebProxy proxy1 = WebProxy.Create(uri)!;
+        IWebProxy proxy2 = WebProxy.Create(uri)!;
 
         Assert.True(WebProxyInterfaceEqualityComparer.Instance.Equals(proxy1, proxy2));
         Assert.Equal(
@@ -56,8 +56,8 @@ public class WebProxyEqualityComparerTests
     [Fact]
     public void Equals_WhenNetworkCredentialsHaveSameValues_UsesCredentialValueEquality()
     {
-        var proxy1 = WebProxyHelper.Create("http://user:pass@127.0.0.1:8888");
-        var proxy2 = WebProxyHelper.Create(
+        var proxy1 = WebProxy.Create("http://user:pass@127.0.0.1:8888");
+        var proxy2 = WebProxy.Create(
             new Uri("http://127.0.0.1:8888"),
             credentials: new NetworkCredential("user", "pass"));
 
@@ -68,10 +68,10 @@ public class WebProxyEqualityComparerTests
     [Fact]
     public void Equals_WhenBypassListDiffersOnlyByCase_TreatsBypassListAsEqual()
     {
-        var proxy1 = WebProxyHelper.Create(
+        var proxy1 = WebProxy.Create(
             new Uri("http://127.0.0.1:8888"),
             bypassList: ["LOCALHOST", "EXAMPLE\\.COM"]);
-        var proxy2 = WebProxyHelper.Create(
+        var proxy2 = WebProxy.Create(
             new Uri("http://127.0.0.1:8888"),
             bypassList: ["localhost", "example\\.com"]);
 
@@ -81,10 +81,10 @@ public class WebProxyEqualityComparerTests
     [Fact]
     public void GetHashCode_WhenBypassListDiffersOnlyByCase_ReturnsSameHashCode()
     {
-        var proxy1 = WebProxyHelper.Create(
+        var proxy1 = WebProxy.Create(
             new Uri("http://127.0.0.1:8888"),
             bypassList: ["LOCALHOST", "EXAMPLE\\.COM"]);
-        var proxy2 = WebProxyHelper.Create(
+        var proxy2 = WebProxy.Create(
             new Uri("http://127.0.0.1:8888"),
             bypassList: ["localhost", "example\\.com"]);
 
@@ -95,8 +95,8 @@ public class WebProxyEqualityComparerTests
     public void Equals_WhenBypassProxyOnLocalDiffers_ReturnsFalse()
     {
         var uri = new Uri("http://127.0.0.1:8888");
-        var proxy1 = WebProxyHelper.Create(uri, bypassOnLocal: true);
-        var proxy2 = WebProxyHelper.Create(uri, bypassOnLocal: false);
+        var proxy1 = WebProxy.Create(uri, bypassOnLocal: true);
+        var proxy2 = WebProxy.Create(uri, bypassOnLocal: false);
 
         Assert.False(Comparer.Equals(proxy1, proxy2));
     }

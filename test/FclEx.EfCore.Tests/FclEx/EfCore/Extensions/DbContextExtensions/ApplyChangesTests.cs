@@ -1,6 +1,6 @@
-namespace FclEx.EfCore.Extensions;
+﻿namespace FclEx.EfCore.Extensions.DbContextExtensions;
 
-partial class DbContextExtensionsTests
+public class ApplyChangesTests(EfCoreFixture fixture) : EfCoreTests(fixture)
 {
     [Theory]
     [MemberData(nameof(DbDriverCases))]
@@ -435,4 +435,5 @@ partial class DbContextExtensionsTests
         var count = await context.SaveChangesAsync();
         Assert.Equal(3, count);
     }
+
 }

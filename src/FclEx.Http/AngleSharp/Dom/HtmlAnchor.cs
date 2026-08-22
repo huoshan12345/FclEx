@@ -47,5 +47,5 @@ public class HtmlAnchor
     /// <summary>
     /// Empty anchor wrapper backed by a parsed <c>&lt;a&gt;</c> element.
     /// </summary>
-    public static readonly HtmlAnchor Empty = new(HtmlHelper.Parse("<a></a>").QuerySelector<IHtmlAnchorElement>("a")!);
+    public static readonly HtmlAnchor Empty = new(HtmlParser.Parse("<a></a>").QuerySelector<IHtmlAnchorElement>("a")!);
 }

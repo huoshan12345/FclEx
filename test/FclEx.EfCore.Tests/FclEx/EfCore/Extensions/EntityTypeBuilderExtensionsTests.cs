@@ -1,3 +1,4 @@
+// ReSharper disable PropertyCanBeMadeInitOnly.Local
 namespace FclEx.EfCore.Extensions;
 
 public class EntityTypeBuilderExtensionsTests

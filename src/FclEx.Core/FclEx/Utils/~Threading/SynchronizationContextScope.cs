@@ -7,7 +7,7 @@ public static class SynchronizationContextScope
     {
         var current = SynchronizationContext.Current;
         ctx.Set();
-        return Disposable.Create(() => current.Set());
+        return Disposable.Create(current.Set);
     }
 
     public static T Run<T>(Func<Task<T>> action, SynchronizationContext? ctx = null)

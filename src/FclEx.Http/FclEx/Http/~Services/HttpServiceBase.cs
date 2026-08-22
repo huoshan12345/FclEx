@@ -114,7 +114,7 @@ public abstract class HttpServiceBase : IHttpService
 
         try
         {
-            var cookies = CookieHelper.Parse(cookieStr);
+            var cookies = Cookie.Parse(cookieStr);
             foreach (var (success, cookie, ex, _) in cookies)
             {
                 if (success)

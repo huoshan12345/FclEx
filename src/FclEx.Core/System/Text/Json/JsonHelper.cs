@@ -2,19 +2,24 @@ namespace System.Text.Json;
 
 public static class JsonHelper
 {
-    private static readonly object _cacheLock = new();
+    private static readonly
+#if NET9_0_OR_GREATER
+        Lock
+#else
+        object
+#endif
+    _lock = new();
     private static readonly ConcurrentDictionary<JsonOptions, JsonSerializerOptions> _serializerOptions = new();
-
-    private static readonly ReLazy<JsonSerializerOptions> _defaultOptions = new(() => GetOptions());
-    private static readonly ReLazy<JsonSerializerOptions> _webOptions = new(() => GetOptions(JsonOptions.Web));
-    private static readonly ReLazy<DefaultJsonTypeInfoResolver> _resolver = new(() => CreateDefaultJsonTypeInfoResolver(false));
-    private static readonly ReLazy<DefaultJsonTypeInfoResolver> _resolverIgnoreReadingNull = new(() => CreateDefaultJsonTypeInfoResolver(true));
+    private static readonly ResettableLazy<JsonSerializerOptions> _defaultOptions = new(() => GetOptions());
+    private static readonly ResettableLazy<JsonSerializerOptions> _webOptions = new(() => GetOptions(JsonOptions.Web));
+    private static readonly ResettableLazy<DefaultJsonTypeInfoResolver> _resolver = new(() => CreateDefaultJsonTypeInfoResolver(false));
+    private static readonly ResettableLazy<DefaultJsonTypeInfoResolver> _resolverIgnoreReadingNull = new(() => CreateDefaultJsonTypeInfoResolver(true));
 
     private static DefaultJsonTypeInfoResolver Resolver
     {
         get
         {
-            lock (_cacheLock)
+            lock (_lock)
                 return _resolver.Value;
         }
     }
@@ -23,7 +28,7 @@ public static class JsonHelper
     {
         get
         {
-            lock (_cacheLock)
+            lock (_lock)
                 return _resolverIgnoreReadingNull.Value;
         }
     }
@@ -32,7 +37,7 @@ public static class JsonHelper
     {
         get
         {
-            lock (_cacheLock)
+            lock (_lock)
                 return _defaultOptions.Value;
         }
     }
@@ -41,7 +46,7 @@ public static class JsonHelper
     {
         get
         {
-            lock (_cacheLock)
+            lock (_lock)
                 return _webOptions.Value;
         }
     }
@@ -115,7 +120,7 @@ public static class JsonHelper
     public static JsonSerializerOptions GetOptions(JsonOptions? jsonOptions = default)
     {
         jsonOptions ??= JsonOptions.Default;
-        lock (_cacheLock)
+        lock (_lock)
         {
             return _serializerOptions.GetOrAdd(jsonOptions, m =>
             {
@@ -227,13 +232,13 @@ public static class JsonHelper
     /// </remarks>
     public static void ClearCache()
     {
-        lock (_cacheLock)
+        lock (_lock)
         {
             _serializerOptions.Clear();
-            _resolver.Recreate();
-            _resolverIgnoreReadingNull.Recreate();
-            _defaultOptions.Recreate();
-            _webOptions.Recreate();
+            _resolver.Reset();
+            _resolverIgnoreReadingNull.Reset();
+            _defaultOptions.Reset();
+            _webOptions.Reset();
         }
     }
 }

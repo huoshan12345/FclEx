@@ -33,7 +33,7 @@ public static class UserClientFactoryExtensions
         where TClient : IUserClient<TAccount>
         where TAccount : IUserAccount
     {
-        return factory.Create(account, WebProxyHelper.Create(proxy));
+        return factory.Create(account, WebProxy.Create(proxy));
     }
 
     /// <summary>
@@ -52,7 +52,7 @@ public static class UserClientFactoryExtensions
         where TClient : IUserClient<TAccount>
         where TAccount : IUserAccount
     {
-        return factory.Create(account, WebProxyHelper.Create(proxy));
+        return factory.Create(account, WebProxy.Create(proxy));
     }
 
     /// <summary>

@@ -51,7 +51,7 @@ partial class HttpRequestExtensions
     /// </summary>
     public static HttpRequest JsonContent(this HttpRequest request, object data, JsonSerializerOptions? options = null)
     {
-        request.Content = HttpContentHelper.ToJsonContent(data, options);
+        request.Content = HttpContent.Json(data, options);
         return request;
     }
 

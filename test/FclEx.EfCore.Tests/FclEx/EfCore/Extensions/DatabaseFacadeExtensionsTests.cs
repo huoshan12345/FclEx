@@ -1,8 +1,3 @@
-using System.Data;
-using System.Data.Common;
-using System.Diagnostics.CodeAnalysis;
-using Microsoft.Data.Sqlite;
-
 namespace FclEx.EfCore.Extensions;
 
 public class DatabaseFacadeExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixture)

@@ -5,7 +5,7 @@ public class LoginOptionsTests
     [Fact]
     public void Constructor_SetsAllValues()
     {
-        var proxy = WebProxyHelper.Create("http://127.0.0.1:8888");
+        var proxy = WebProxy.Create("http://127.0.0.1:8888");
 
         var options = new LoginOptions(
             Login: true,

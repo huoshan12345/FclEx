@@ -29,7 +29,7 @@ public partial class HttpClientServiceTests
         {
             HandlerOptions = new SocketsHttpHandlerOptions
             {
-                Proxy = WebProxyHelper.Create("http://127.0.0.1:18080"),
+                Proxy = WebProxy.Create("http://127.0.0.1:18080"),
             },
         };
         var provider = HttpClientService.GetProvider(options);

@@ -200,7 +200,7 @@ public class HttpClientService : HttpClientServiceBase
     /// </summary>
     public static HttpClientService Create(Uri? proxy, bool useCookie = true, ILoggerFactory? loggerFactory = null)
     {
-        return Create(WebProxyHelper.Create(proxy), useCookie, loggerFactory);
+        return Create(WebProxy.Create(proxy), useCookie, loggerFactory);
     }
 
     /// <summary>
@@ -208,7 +208,7 @@ public class HttpClientService : HttpClientServiceBase
     /// </summary>
     public static HttpClientService Create(string? proxy, bool useCookie = true, ILoggerFactory? loggerFactory = null)
     {
-        return Create(WebProxyHelper.Create(proxy), useCookie, loggerFactory);
+        return Create(WebProxy.Create(proxy), useCookie, loggerFactory);
     }
 
     /// <summary>

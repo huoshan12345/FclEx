@@ -33,7 +33,7 @@ public class MemberComparerBuilder<T> : IComparerBuilder<T>
     {
         return (x, y) =>
         {
-            if (ComparerHelper.TryCompare(x, y, out var result))
+            if (Comparer.TryCompare(x, y, out var result))
                 return result.Value;
 
             // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
@@ -72,7 +72,7 @@ public class MemberComparerBuilder<T> : IComparerBuilder<T>
             var l = _selector(x);
             var r = _selector(y);
 
-            if (ComparerHelper.TryCompare(l, r, out var result))
+            if (Comparer.TryCompare(l, r, out var result))
                 return _desc
                     ? -result.Value
                     : result.Value;

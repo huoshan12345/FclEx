@@ -19,7 +19,7 @@ public static partial class EnumerableExtensions
 
     public static TimeSpan Sum<T>(this IEnumerable<T> source, Func<T, TimeSpan> selector)
     {
-        var ticks = source.Select(m => selector(m).Ticks).Sum();
+        var ticks = source.Sum(m => selector(m).Ticks);
         return TimeSpan.FromTicks(ticks);
     }
 

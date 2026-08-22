@@ -42,7 +42,7 @@ public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
     /// <remarks>The file content is expected to be JSON previously written by <see cref="SaveCookies"/>.</remarks>
     public virtual async Task<IList<SimpleCookie>> ReadCookies(IUserAccount account)
     {
-        using var _ = await GetLock(account).LockAsync();
+        using var _ = await GetLock(account).AcquireAsync();
 
         var path = GetCookiesFilePath(account);
         if (File.Exists(path))
@@ -70,7 +70,7 @@ public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
     /// <remarks>Cookies are written as indented JSON to the path returned by <see cref="GetCookiesFilePath"/>.</remarks>
     public virtual async Task SaveCookies(TClient client)
     {
-        using var _ = await GetLock(client.Account).LockAsync();
+        using var _ = await GetLock(client.Account).AcquireAsync();
 
         var cookies = client.HttpService.GetAllSimpleCookies();
         var str = cookies.ToJson(new JsonOptions(true));
@@ -89,7 +89,7 @@ public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
     /// <param name="proxy">An optional proxy address string for the client's HTTP service.</param>
     /// <returns>The created or cached client.</returns>
     public virtual Task<TClient> CreateClient(TAccount account, bool login, bool fakeLogin = true, bool useCache = false, bool readCookie = true, string? proxy = null)
-        => CreateClient(account, new LoginOptions(login, fakeLogin, useCache, readCookie, WebProxyHelper.Create(proxy)));
+        => CreateClient(account, new LoginOptions(login, fakeLogin, useCache, readCookie, WebProxy.Create(proxy)));
 
     /// <summary>
     /// Creates or reuses a client using the supplied login options.
@@ -98,7 +98,7 @@ public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
     /// <param name="options">Client creation, cookie, proxy, and login options.</param>
     /// <returns>The created or cached client.</returns>
     /// <remarks>
-    /// If a cached client is already online, no login method is called. Otherwise fake login runs first when enabled;
+    /// If a cached client is already online, no login method is called. Otherwise, fake login runs first when enabled;
     /// real login runs only if the client is still offline and <see cref="LoginOptions.Login"/> is enabled. Cookies are
     /// saved only after a successful real login.
     /// </remarks>
@@ -155,7 +155,7 @@ public class ClientCreator<TClient>(IServiceProvider provider) : ClientCreator<T
     protected static readonly Random Random = new();
 
     /// <summary>
-    /// Creates an offline client with a random user name and password.
+    /// Creates an offline client with a random username and password.
     /// </summary>
     /// <param name="userNameLength">The random user-name length.</param>
     /// <param name="passwordLength">The random password length.</param>

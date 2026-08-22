@@ -23,7 +23,7 @@ public class MarshalToBytesEqualityComparer<T> : IEqualityComparer<T>
     {
         typeof(T).EnsureMarshalable(); // do not put it in the static constructor
 
-        if (ComparerHelper.TryEquals(x, y, out var result))
+        if (Comparer.TryEquals(x, y, out var result))
             return result.Value;
 
         var bytes1 = Marshal.ToBytes(x, clearNativeBuffer: true);

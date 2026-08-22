@@ -37,4 +37,17 @@ public static class EntityEntryExtensions
     {
         return entry.ApplyKeyTo(entity, (property, value) => property.ClrType.DefaultValue());
     }
+
+    public static void SetKeyUnmodified<T>(this EntityEntry<T> entry) where T : class
+    {
+        var key = entry.Metadata.FindPrimaryKey()
+            ?? throw new InvalidOperationException($"{typeof(T).Name} does not have a primary key defined");
+
+        foreach (var property in key.Properties)
+        {
+            var propertyEntry = entry.Property(property);
+            propertyEntry.IsModified = false;
+            propertyEntry.IsTemporary = false;
+        }
+    }
 }

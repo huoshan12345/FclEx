@@ -16,7 +16,7 @@ public class NonGenericEqualityComparerAdapter<T> : IEqualityComparer, IEquality
 
     private bool EqualsCore(object? x, object? y)
     {
-        return ComparerHelper.TryEquals(x, y, out var result)
+        return Comparer.TryEquals(x, y, out var result)
             ? result.Value
             : _comparer.Equals((T)x, (T)y);
     }

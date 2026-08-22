@@ -29,10 +29,9 @@ public static partial class EnumerableExtensions
 
     public static async Task ForEachAsync<T>(this IEnumerable<T> source, Func<int, T, Task> action)
     {
-        var i = 0;
-        foreach (var item in source)
+        foreach (var (i, item) in source.Index())
         {
-            await action(i++, item);
+            await action(i, item);
         }
     }
 }

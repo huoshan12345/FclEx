@@ -17,7 +17,7 @@ public class EnumerableComparer<T>(IComparer<T>? itemComparer = null) : ICompare
 
     public int Compare(IEnumerable<T>? x, IEnumerable<T>? y)
     {
-        if (ComparerHelper.TryCompare(x, y, out var result))
+        if (Comparer.TryCompare(x, y, out var result))
             return result.Value;
 
         using var e1 = x.GetEnumerator();

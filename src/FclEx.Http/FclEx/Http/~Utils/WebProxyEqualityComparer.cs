@@ -23,7 +23,7 @@ public class WebProxyEqualityComparer : IEqualityComparer<WebProxy>
 
     public bool Equals(WebProxy? x, WebProxy? y)
     {
-        if (ComparerHelper.TryEquals(x, y, out var result))
+        if (Comparer.TryEquals(x, y, out var result))
             return result.Value;
 
         return AddressComparer.Equals(x.Address, y.Address)

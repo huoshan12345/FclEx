@@ -203,7 +203,7 @@ public class ClientCreatorTests
             proxy: "http://127.0.0.1:8888");
 
         Assert.True(WebProxyInterfaceEqualityComparer.Instance.Equals(
-            WebProxyHelper.Create("http://127.0.0.1:8888"),
+            WebProxy.Create("http://127.0.0.1:8888"),
             client.HttpService.Proxy));
     }
 

@@ -6,7 +6,7 @@ public static class SafeCounterExtensions
     /// Sets this counter to 0 and returns the original value, as an atomic operation.
     /// </summary>
     /// <returns>The original value.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static int Reset(this SafeCounter counter) => counter.Set(0);
 
     /// <summary>

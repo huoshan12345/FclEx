@@ -15,14 +15,14 @@ public class SafeCounter
     /// Increments this counter, as an atomic operation.
     /// </summary>
     /// <returns>The incremented value.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public int Increment() => Interlocked.Increment(ref _value);
 
     /// <summary>
     /// Decrements this counter, as an atomic operation.
     /// </summary>
     /// <returns>The decremented value.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public int Decrement() => Interlocked.Decrement(ref _value);
 
     /// <summary>
@@ -30,7 +30,7 @@ public class SafeCounter
     /// </summary>
     /// <param name="value"></param>
     /// <returns>The new value.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public int Add(int value) => Interlocked.Add(ref _value, value);
 
     /// <summary>
@@ -38,7 +38,7 @@ public class SafeCounter
     /// </summary>
     /// <param name="value"></param>
     /// <returns>The original value</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public int Set(int value) => Interlocked.Exchange(ref _value, value);
 
     /// <summary>

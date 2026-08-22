@@ -21,6 +21,7 @@ public static class NonCapturingTimer
 
     private static TTimer CreateTimer<TTimer>(Func<TTimer> create)
     {
+        // Don't capture the current ExecutionContext and its AsyncLocals onto the timer
         var restoreFlow = false;
         try
         {

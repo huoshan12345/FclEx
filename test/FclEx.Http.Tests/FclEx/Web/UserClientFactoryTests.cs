@@ -153,7 +153,7 @@ public class UserClientFactoryTests : WebTests
         var client = factory.Create(account);
         Assert.Null(client.HttpService.Proxy);
 
-        var proxy = WebProxyHelper.Create("http://localhost:8888");
+        var proxy = WebProxy.Create("http://localhost:8888");
         client = factory.Create(account, proxy);
         Assert.Equal(proxy, client.HttpService.Proxy);
     }
@@ -169,7 +169,7 @@ public class UserClientFactoryTests : WebTests
         var client = factory.Create(account, proxy);
 
         Assert.True(WebProxyInterfaceEqualityComparer.Instance.Equals(
-            WebProxyHelper.Create(proxy),
+            WebProxy.Create(proxy),
             client.HttpService.Proxy));
     }
 
@@ -183,7 +183,7 @@ public class UserClientFactoryTests : WebTests
         var client = factory.Create(account, proxy);
 
         Assert.True(WebProxyInterfaceEqualityComparer.Instance.Equals(
-            WebProxyHelper.Create(proxy),
+            WebProxy.Create(proxy),
             client.HttpService.Proxy));
     }
 

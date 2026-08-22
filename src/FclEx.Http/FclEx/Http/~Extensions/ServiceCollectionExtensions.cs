@@ -12,7 +12,7 @@ public static class ServiceCollectionExtensions
     {
         options ??= new();
         return services.AddHttpClient(name, httpClient => ConfigureHttpClient(httpClient, options))
-            .ConfigurePrimaryHttpMessageHandler(() => HttpClientHelper.CreateSocketsHttpHandler(options.HandlerOptions))
+            .ConfigurePrimaryHttpMessageHandler(() => HttpMessageHandler.CreateSocketsHttpHandler(options.HandlerOptions))
             .AddRetryPolicy(options.RetryPolicyOptions);
     }
 
@@ -28,7 +28,7 @@ public static class ServiceCollectionExtensions
         }).ConfigurePrimaryHttpMessageHandler(serviceProvider =>
         {
             var options = optionsFactory(serviceProvider);
-            return HttpClientHelper.CreateSocketsHttpHandler(options.HandlerOptions);
+            return HttpMessageHandler.CreateSocketsHttpHandler(options.HandlerOptions);
         }).AddRetryPolicy(m => optionsFactory(m).RetryPolicyOptions);
     }
 

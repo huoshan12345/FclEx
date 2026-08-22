@@ -11,7 +11,7 @@ public class HttpClientOptionsEqualityComparer : IEqualityComparer<HttpClientOpt
 
     public bool Equals(HttpClientOptions? x, HttpClientOptions? y)
     {
-        if (ComparerHelper.TryEquals(x, y, out var result))
+        if (Comparer.TryEquals(x, y, out var result))
             return result.Value;
 
         return HandlerOptionsComparer.Equals(x.HandlerOptions, y.HandlerOptions)

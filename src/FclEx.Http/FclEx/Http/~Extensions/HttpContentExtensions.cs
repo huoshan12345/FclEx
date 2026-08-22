@@ -40,7 +40,7 @@ public static class HttpContentExtensions
 
     /// <summary>
     /// Reads content into a seekable <see cref="MemoryStream"/>.
-    /// The method preallocates from Content-Length when available and throws when that length exceeds <see cref="int.MaxValue"/>.
+    /// The method pre-allocates from Content-Length when available and throws when that length exceeds <see cref="int.MaxValue"/>.
     /// </summary>
     public static async Task<MemoryStream> ReadAsStreamAsync(this HttpContent content, int? bufferSize, TimeSpan? bufferTransferTimeout, CancellationToken token)
     {
@@ -103,7 +103,7 @@ public static class HttpContentExtensions
     /// <see cref="CompressionMethod.None"/> returns the original content instance unchanged.
     /// </summary>
     public static HttpContent ToCompressed(this HttpContent content, CompressionMethod compressionMethod, CompressionLevel compressionLevel = CompressionLevel.Optimal,
-        TimeSpan? timeout = null, int ?bufferSize = null, CancellationToken token = default)
+        TimeSpan? timeout = null, int? bufferSize = null, CancellationToken token = default)
     {
         return compressionMethod switch
         {
@@ -137,7 +137,7 @@ public static class HttpContentExtensions
         /// <summary>
         /// Creates UTF-8 JSON string content from an existing JSON payload.
         /// </summary>
-        public static HttpContent FromJson(string json)
+        public static StringContent FromJson(string json)
         {
             return new StringContent(json, Encoding.UTF8, MediaTypes.Json);
         }
@@ -145,10 +145,27 @@ public static class HttpContentExtensions
         /// <summary>
         /// Serializes an object to JSON and returns UTF-8 JSON string content.
         /// </summary>
-        public static HttpContent Json<T>(T obj, JsonSerializerOptions? options = null)
+        public static StringContent Json<T>(T obj, JsonSerializerOptions? options = null)
         {
             var json = obj.ToJson(options);
             return new StringContent(json, Encoding.UTF8, MediaTypes.Json);
+        }
+
+        /// <summary>
+        /// Serializes an object to JSON and returns UTF-8 JSON string content.
+        /// </summary>
+        public static StringContent Json(object obj, JsonSerializerOptions? options = null)
+        {
+            var json = obj.ToJson(null, options);
+            return HttpContent.FromJson(json);
+        }
+
+        /// <summary>
+        /// Creates UTF-8 string content and wraps it in GZip compression for sending.
+        /// </summary>
+        public static GZipContent GZip(string content, string contentType = MediaTypes.Text)
+        {
+            return new StringContent(content, Encoding.UTF8, contentType).ToGZip();
         }
     }
 }

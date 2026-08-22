@@ -21,7 +21,7 @@ public class DelegateEqualityComparer<T> : IEqualityComparer<T>
 
     public bool Equals(T? x, T? y)
     {
-        return ComparerHelper.TryEquals(x, y, out var result) 
+        return Comparer.TryEquals(x, y, out var result) 
             ? result.Value : 
             _compareFunc(x, y);
     }

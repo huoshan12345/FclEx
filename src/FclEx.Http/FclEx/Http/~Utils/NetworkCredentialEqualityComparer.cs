@@ -12,7 +12,7 @@ public class NetworkCredentialEqualityComparer : IEqualityComparer<NetworkCreden
 
     public bool Equals(NetworkCredential? x, NetworkCredential? y)
     {
-        if (ComparerHelper.TryEquals(x, y, out var result))
+        if (Comparer.TryEquals(x, y, out var result))
             return result.Value;
 
         return x.UserName == y.UserName

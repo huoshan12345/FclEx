@@ -24,7 +24,7 @@ public sealed class FileSystemInfoEqualityComparer : IEqualityComparer<FileSyste
     public bool Equals(FileSystemInfo? x, FileSystemInfo? y)
     {
         // ReSharper disable once ConvertIfStatementToReturnStatement
-        if (ComparerHelper.TryEquals(x, y, out var result))
+        if (Comparer.TryEquals(x, y, out var result))
             return result.Value;
 
         return _comparer.Equals(x.FullName, y.FullName);

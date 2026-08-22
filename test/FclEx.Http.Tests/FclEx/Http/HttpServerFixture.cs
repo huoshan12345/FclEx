@@ -38,7 +38,7 @@ public class HttpServerFixture : CoreTestsFixture
         "http://cp.cloudflare.com/generate_204",
     ];
 
-    public static IWebProxy DefaultProxy { get; } = WebProxyHelper.Create(GetDefaultProxyUrl());
+    public static IWebProxy DefaultProxy { get; } = WebProxy.Create(GetDefaultProxyUrl());
 
     public static readonly IReadOnlyList<SimpleCookie> SimpleCookies
         = File.ReadAllText(Path.Combine("TestData", "SimpleCookies.json"))

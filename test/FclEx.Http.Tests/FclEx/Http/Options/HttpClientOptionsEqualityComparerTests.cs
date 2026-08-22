@@ -103,7 +103,7 @@ public class HttpClientOptionsEqualityComparerTests
             HandlerOptions = new SocketsHttpHandlerOptions
             {
                 ConnectTimeout = TimeSpan.FromSeconds(3),
-                Proxy = WebProxyHelper.Create("http://127.0.0.1:8888"),
+                Proxy = WebProxy.Create("http://127.0.0.1:8888"),
             },
             RetryPolicyOptions = new HttpClientRetryPolicyOptions
             {
