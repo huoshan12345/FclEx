@@ -16,7 +16,7 @@ public class WebProxyInterfaceEqualityComparer : IEqualityComparer<IWebProxy>
 
     public bool Equals(IWebProxy? x, IWebProxy? y)
     {
-        if (ComparerHelper.TryEquals(x, y, out var result))
+        if (Comparer.TryEquals(x, y, out var result))
             return result.Value;
 
         if (x is WebProxy wx && y is WebProxy wy)

@@ -9,7 +9,7 @@ public class SocketsHttpHandlerOptionsEqualityComparer : IEqualityComparer<Socke
 
     public bool Equals(SocketsHttpHandlerOptions? x, SocketsHttpHandlerOptions? y)
     {
-        if (ComparerHelper.TryEquals(x, y, out var result))
+        if (Comparer.TryEquals(x, y, out var result))
             return result.Value;
 
         return x.ConnectTimeout.Equals(y.ConnectTimeout)

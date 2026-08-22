@@ -13,7 +13,7 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
     public void Create_WithStringProxy_ConfiguresServiceProxy(string? proxy)
     {
         var http = HttpClientService.Create(proxy);
-        Assert.Equal(WebProxyHelper.Create(proxy).CastTo<WebProxy>().Address, http.Proxy.CastTo<WebProxy>()!.Address);
+        Assert.Equal(WebProxy.Create(proxy).CastTo<WebProxy>().Address, http.Proxy.CastTo<WebProxy>()!.Address);
     }
 
     [Fact]
@@ -127,11 +127,11 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
     public void GetFactory_WhenProxyOptionsAreEquivalent_ReusesFactory()
     {
         var uri = new Uri("http://127.0.0.1:8888");
-        var fac1 = GetFactory(new() { HandlerOptions = new() { Proxy = WebProxyHelper.Create(uri) } });
-        var fac2 = GetFactory(new() { HandlerOptions = new() { Proxy = WebProxyHelper.Create(uri) } });
+        var fac1 = GetFactory(new() { HandlerOptions = new() { Proxy = WebProxy.Create(uri) } });
+        var fac2 = GetFactory(new() { HandlerOptions = new() { Proxy = WebProxy.Create(uri) } });
         Assert.Equal(fac1, fac2, ReferenceEqualityComparer.Instance);
-        CheckProxy(fac1.CreateClient(), WebProxyHelper.Create(uri));
-        CheckProxy(fac2.CreateClient(), WebProxyHelper.Create(uri));
+        CheckProxy(fac1.CreateClient(), WebProxy.Create(uri));
+        CheckProxy(fac2.CreateClient(), WebProxy.Create(uri));
     }
 
     [Fact]
@@ -144,7 +144,7 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
             CheckProxy(client, null);
         }
         {
-            var proxy = WebProxyHelper.Create("http://127.0.0.1:8888");
+            var proxy = WebProxy.Create("http://127.0.0.1:8888");
             http.Proxy = proxy;
             var client = http.CreateHttpClientContext().Client;
             CheckProxy(client, proxy);
@@ -183,10 +183,10 @@ public partial class HttpClientServiceTests(ITestOutputHelper output)
     public void GetFactory_WhenProxyOptionsDiffer_CreatesDifferentFactories()
     {
         var uri = new Uri("http://127.0.0.1:8888");
-        var fac1 = GetFactory(new() { HandlerOptions = new() { Proxy = WebProxyHelper.Create(uri) } });
+        var fac1 = GetFactory(new() { HandlerOptions = new() { Proxy = WebProxy.Create(uri) } });
         var fac2 = GetFactory(new() { HandlerOptions = new() { Proxy = null } });
         Assert.NotEqual(fac1, fac2, ReferenceEqualityComparer.Instance);
-        CheckProxy(fac1.CreateClient(), WebProxyHelper.Create(uri));
+        CheckProxy(fac1.CreateClient(), WebProxy.Create(uri));
         CheckProxy(fac2.CreateClient(), null);
     }
 

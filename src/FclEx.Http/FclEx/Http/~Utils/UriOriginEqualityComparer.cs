@@ -13,7 +13,7 @@ public class UriOriginEqualityComparer : IEqualityComparer<Uri>
 
     public bool Equals(Uri? x, Uri? y)
     {
-        if (ComparerHelper.TryEquals(x, y, out var result))
+        if (Comparer.TryEquals(x, y, out var result))
             return result.Value;
 
         return string.Equals(x.Host, y.Host, StringComparison.OrdinalIgnoreCase)

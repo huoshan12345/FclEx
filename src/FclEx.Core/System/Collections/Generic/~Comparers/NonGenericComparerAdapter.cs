@@ -16,7 +16,7 @@ public class NonGenericComparerAdapter<T> : IComparer
 
     public int Compare(object? x, object? y)
     {
-        return ComparerHelper.TryCompare(x, y, out var result)
+        return Comparer.TryCompare(x, y, out var result)
             ? result.Value
             : _comparer.Compare((T)x, (T)y);
     }

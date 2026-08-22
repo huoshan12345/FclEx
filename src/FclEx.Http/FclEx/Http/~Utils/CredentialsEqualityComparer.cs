@@ -16,7 +16,7 @@ public class CredentialsEqualityComparer : IEqualityComparer<ICredentials>
 
     public bool Equals(ICredentials? x, ICredentials? y)
     {
-        if (ComparerHelper.TryEquals(x, y, out var result))
+        if (Comparer.TryEquals(x, y, out var result))
             return result.Value;
 
         if (x is NetworkCredential nx && y is NetworkCredential ny)

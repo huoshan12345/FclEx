@@ -20,7 +20,7 @@ public class NonGenericDefaultEqualityComparer : IEqualityComparer, IEqualityCom
 
     public new bool Equals(object? x, object? y)
     {
-        return ComparerHelper.TryEquals(x, y, out var result)
+        return Comparer.TryEquals(x, y, out var result)
             ? result.Value
             : _comparer.Equals(x, y);
     }

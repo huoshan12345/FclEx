@@ -19,7 +19,7 @@ public class DelegateComparer<T> : IComparer<T>
 
     public int Compare(T? x, T? y)
     {
-        return ComparerHelper.TryCompare(x, y, out var result)
+        return Comparer.TryCompare(x, y, out var result)
             ? result.Value
             : _comparison(x, y);
     }

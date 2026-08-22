@@ -40,11 +40,11 @@ public class SocketsHttpHandlerOptionsEqualityComparerTests
     {
         var options1 = new SocketsHttpHandlerOptions
         {
-            Proxy = WebProxyHelper.Create("http://user:pass@127.0.0.1:8888")
+            Proxy = WebProxy.Create("http://user:pass@127.0.0.1:8888")
         };
         var options2 = new SocketsHttpHandlerOptions
         {
-            Proxy = WebProxyHelper.Create(
+            Proxy = WebProxy.Create(
                 new Uri("http://127.0.0.1:8888"),
                 credentials: new NetworkCredential("user", "pass"))
         };
@@ -70,7 +70,7 @@ public class SocketsHttpHandlerOptionsEqualityComparerTests
         yield return Diff(m => m.PooledConnectionLifetime = TimeSpan.FromMinutes(5));
         yield return Diff(m => m.PooledConnectionIdleTimeout = TimeSpan.FromMinutes(6));
         yield return Diff(m => m.DisableServerCertificateValidation = true);
-        yield return Diff(m => m.Proxy = WebProxyHelper.Create("http://127.0.0.1:9999"));
+        yield return Diff(m => m.Proxy = WebProxy.Create("http://127.0.0.1:9999"));
     }
 
     private static object[] Diff(Action<SocketsHttpHandlerOptions> mutate)
@@ -93,7 +93,7 @@ public class SocketsHttpHandlerOptionsEqualityComparerTests
             PooledConnectionLifetime = TimeSpan.FromMinutes(1),
             PooledConnectionIdleTimeout = TimeSpan.FromMinutes(2),
             DisableServerCertificateValidation = false,
-            Proxy = WebProxyHelper.Create("http://user:pass@127.0.0.1:8888")
+            Proxy = WebProxy.Create("http://user:pass@127.0.0.1:8888")
         };
     }
 }

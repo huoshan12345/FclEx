@@ -1,6 +1,6 @@
-namespace System.Collections.Generic;
+namespace FclEx.Extensions;
 
-public class ComparerHelperTests
+public class ComparerExtensions
 {
     public class TestModel(int value)
     {
@@ -35,21 +35,21 @@ public class ComparerHelperTests
     [Fact]
     public void TryCompare_BothNull_ReturnsTrueWithResultZero()
     {
-        Assert.True(ComparerHelper.TryCompare<string>(null, null, out var result));
+        Assert.True(Comparer.TryCompare<string>(null, null, out var result));
         Assert.Equal(0, result);
     }
 
     [Fact]
     public void TryCompare_XNull_ReturnsTrueWithResultNegativeOne()
     {
-        Assert.True(ComparerHelper.TryCompare<string>(null, "test", out var result));
+        Assert.True(Comparer.TryCompare<string>(null, "test", out var result));
         Assert.Equal(-1, result);
     }
 
     [Fact]
     public void TryCompare_YNull_ReturnsTrueWithResultOne()
     {
-        Assert.True(ComparerHelper.TryCompare<string>("test", null, out var result));
+        Assert.True(Comparer.TryCompare<string>("test", null, out var result));
         Assert.Equal(1, result);
     }
 
@@ -57,7 +57,7 @@ public class ComparerHelperTests
     public void TryCompare_ReferenceEquals_ReturnsTrueWithResultZero()
     {
         var obj = new object();
-        Assert.True(ComparerHelper.TryCompare(obj, obj, out var result));
+        Assert.True(Comparer.TryCompare(obj, obj, out var result));
         Assert.Equal(0, result);
     }
 
@@ -67,28 +67,28 @@ public class ComparerHelperTests
         var obj1 = new TestModel(1);
         var obj2 = new TestModel(1);
         Assert.False(ReferenceEquals(obj1, obj2));
-        Assert.True(ComparerHelper.TryCompare(obj1, obj1, out var result));
+        Assert.True(Comparer.TryCompare(obj1, obj1, out var result));
         Assert.Equal(0, result);
     }
 
     [Fact]
     public void TryEquals_BothNull_ReturnsTrueWithResultTrue()
     {
-        Assert.True(ComparerHelper.TryEquals<string>(null, null, out var result));
+        Assert.True(Comparer.TryEquals<string>(null, null, out var result));
         Assert.True(result);
     }
 
     [Fact]
     public void TryEquals_XNull_ReturnsTrueWithResultFalse()
     {
-        Assert.True(ComparerHelper.TryEquals<string>(null, "test", out var result));
+        Assert.True(Comparer.TryEquals<string>(null, "test", out var result));
         Assert.False(result);
     }
 
     [Fact]
     public void TryEquals_YNull_ReturnsTrueWithResultFalse()
     {
-        Assert.True(ComparerHelper.TryEquals<string>("test", null, out var result));
+        Assert.True(Comparer.TryEquals<string>("test", null, out var result));
         Assert.False(result);
     }
 
@@ -96,7 +96,7 @@ public class ComparerHelperTests
     public void TryEquals_ReferenceEquals_ReturnsTrueWithResultTrue()
     {
         var obj = new object();
-        Assert.True(ComparerHelper.TryEquals(obj, obj, out var result));
+        Assert.True(Comparer.TryEquals(obj, obj, out var result));
         Assert.True(result);
     }
 
@@ -106,7 +106,7 @@ public class ComparerHelperTests
         var obj1 = new TestModel(1);
         var obj2 = new TestModel(1);
         Assert.False(ReferenceEquals(obj1, obj2));
-        Assert.False(ComparerHelper.TryEquals(obj1, obj2, out _));
+        Assert.False(Comparer.TryEquals(obj1, obj2, out _));
     }
 
     [Fact]
@@ -115,10 +115,10 @@ public class ComparerHelperTests
         IValue x = new FirstValue();
         IValue y = new SecondValue();
 
-        Assert.True(ComparerHelper.TryEquals(x, y, out var strictResult));
+        Assert.True(Comparer.TryEquals(x, y, out var strictResult));
         Assert.False(strictResult);
 
-        Assert.False(ComparerHelper.TryEquals(x, y, out var deferredResult, requireSameRuntimeType: false));
+        Assert.False(Comparer.TryEquals(x, y, out var deferredResult, requireSameRuntimeType: false));
         Assert.Null(deferredResult);
     }
 }

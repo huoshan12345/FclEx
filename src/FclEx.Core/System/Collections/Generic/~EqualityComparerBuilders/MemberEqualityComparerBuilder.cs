@@ -27,7 +27,7 @@ public class MemberEqualityComparerBuilder<T> : IEqualityComparerBuilder<T>
     {
         return (x, y) =>
         {
-            if (ComparerHelper.TryEquals(x, y, out var result))
+            if (Comparer.TryEquals(x, y, out var result))
                 return result.Value;
 
             // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
@@ -82,7 +82,7 @@ public class MemberEqualityComparerBuilder<T> : IEqualityComparerBuilder<T>
         {
             var vx = _selector(x);
             var vy = _selector(y);
-            return ComparerHelper.TryEquals(vx, vy, out var result)
+            return Comparer.TryEquals(vx, vy, out var result)
                 ? result.Value
                 : _comparer.Equals(vx, vy);
         }

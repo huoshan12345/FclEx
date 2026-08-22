@@ -4,7 +4,7 @@ public sealed class FileExtensionEqualityComparer : IEqualityComparer<string>
 {
     public bool Equals(string? x, string? y)
     {
-        if (ComparerHelper.TryEquals(x, y, out var result))
+        if (Comparer.TryEquals(x, y, out var result))
             return result.Value;
 
         return StringComparer.OrdinalIgnoreCase.Equals(Path.GetExtension(x), Path.GetExtension(y));

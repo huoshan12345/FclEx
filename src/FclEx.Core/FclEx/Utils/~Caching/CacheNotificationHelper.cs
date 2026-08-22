@@ -14,7 +14,7 @@ internal static class CacheNotificationHelper
         List<Exception>? exceptions = null;
         foreach (var notification in notifications)
         {
-            foreach (EventHandler<CacheEntryRemovedEventArgs<TKey, TValue>> handler in handlers.GetInvocationList())
+            foreach (var handler in handlers.GetInvocationList<EventHandler<CacheEntryRemovedEventArgs<TKey, TValue>>>())
             {
                 try
                 {

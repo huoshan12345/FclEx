@@ -20,7 +20,7 @@ public class EnumerableEqualityComparer<T>(IEqualityComparer<T>? itemComparer = 
 
     public bool Equals(IEnumerable<T>? x, IEnumerable<T>? y)
     {
-        if (ComparerHelper.TryEquals(x, y, out var result))
+        if (Comparer.TryEquals(x, y, out var result))
             return result.Value;
 
 #if NET6_0_OR_GREATER

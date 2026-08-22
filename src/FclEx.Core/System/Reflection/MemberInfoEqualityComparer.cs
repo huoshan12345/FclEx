@@ -6,7 +6,7 @@ public class MemberInfoEqualityComparer : IEqualityComparer<MemberInfo>
 
     public bool Equals(MemberInfo? x, MemberInfo? y)
     {
-        if (ComparerHelper.TryEquals(x, y, out var result))
+        if (Comparer.TryEquals(x, y, out var result))
             return result.Value;
 
         return (x, y) switch

@@ -3,9 +3,9 @@ namespace FclEx.Http.Proxy;
 public class WebProxyExtTests
 {
     [Fact]
-    public void WebProxyHelper_IsStaticUtilityClass()
+    public void WebProxy_IsStaticUtilityClass()
     {
-        var type = typeof(WebProxyHelper);
+        var type = typeof(WebProxy);
 
         Assert.True(type.IsAbstract);
         Assert.True(type.IsSealed);
@@ -22,7 +22,7 @@ public class WebProxyExtTests
             Password = password.UriEscape()
         };
 
-        var proxy = WebProxyHelper.Create(uriBuilder.Uri);
+        var proxy = WebProxy.Create(uriBuilder.Uri);
         var auth = proxy.Credentials.CastTo<NetworkCredential>()!;
         Assert.Equal(userName, auth.UserName);
         Assert.Equal(password, auth.Password);
@@ -31,7 +31,7 @@ public class WebProxyExtTests
     [Fact]
     public void Create_WithAuthUri_RemovesUserInfoFromProxyAddress()
     {
-        var proxy = WebProxyHelper.Create("http://user:pass@127.0.0.1:8888/proxy");
+        var proxy = WebProxy.Create("http://user:pass@127.0.0.1:8888/proxy");
 
         Assert.Equal(new Uri("http://127.0.0.1:8888/proxy"), proxy.Address);
     }
@@ -41,7 +41,7 @@ public class WebProxyExtTests
     {
         var credentials = new NetworkCredential("explicit-user", "explicit-pass");
 
-        var proxy = WebProxyHelper.Create("http://uri-user:uri-pass@127.0.0.1:8888", credentials: credentials);
+        var proxy = WebProxy.Create("http://uri-user:uri-pass@127.0.0.1:8888", credentials: credentials);
 
         Assert.Same(credentials, proxy.Credentials);
         Assert.Equal(new Uri("http://uri-user:uri-pass@127.0.0.1:8888/"), proxy.Address);
@@ -52,7 +52,7 @@ public class WebProxyExtTests
     [InlineData("")]
     public void Create_WhenAddressIsNullOrEmpty_ReturnsProxyWithoutAddress(string? address)
     {
-        var proxy = WebProxyHelper.Create(address);
+        var proxy = WebProxy.Create(address);
 
         Assert.Null(proxy.Address);
     }
@@ -62,7 +62,7 @@ public class WebProxyExtTests
     {
         string[] bypassList = [@".*\.local", @"127\.0\.0\.1"];
 
-        var proxy = WebProxyHelper.Create(
+        var proxy = WebProxy.Create(
             "http://127.0.0.1:8888",
             bypassOnLocal: true,
             bypassList: bypassList);

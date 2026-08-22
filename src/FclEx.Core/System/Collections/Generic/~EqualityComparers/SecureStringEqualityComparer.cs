@@ -9,7 +9,7 @@ public class SecureStringEqualityComparer : IEqualityComparer<SecureString>
     /// </summary>
     public unsafe bool Equals(SecureString? x, SecureString? y)
     {
-        if (ComparerHelper.TryEquals(x, y, out var result))
+        if (Comparer.TryEquals(x, y, out var result))
             return result.Value;
 
         if (x.Length != y.Length)

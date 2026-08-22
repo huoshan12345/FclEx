@@ -79,7 +79,7 @@ public class ServiceCollectionExtensionsTests
     [Fact]
     public void AddHttpClientWithPolly_WhenOptionsFactoryIsUsed_AppliesHandlerOptions()
     {
-        var proxy = WebProxyHelper.Create("http://127.0.0.1:8888");
+        var proxy = WebProxy.Create("http://127.0.0.1:8888");
         var services = new ServiceCollection();
         services.AddSingleton(new ClientOptionsProvider
         {
