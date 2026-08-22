@@ -38,7 +38,7 @@ public static class DirectoryInfoExtensions
         return dir;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static DirectoryInfo Sub(this DirectoryInfo dir, string name)
     {
         Check.NotNull(dir);
@@ -46,7 +46,7 @@ public static class DirectoryInfoExtensions
         return new(Path.Combine(dir.FullName, name));
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public static FileInfo File(this DirectoryInfo dir, string name)
     {
         Check.NotNull(dir);
