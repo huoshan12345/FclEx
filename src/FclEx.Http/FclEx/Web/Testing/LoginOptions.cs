@@ -11,7 +11,7 @@ namespace FclEx.Web.Testing;
 /// <param name="CancellationToken">The cancellation token to cancel the login operation.</param>
 public readonly record struct LoginOptions(
     bool Login,
-    bool FakeLogin,
+    bool? FakeLogin,
     bool UseCache,
     bool ReadCookie,
     IWebProxy? Proxy = null,

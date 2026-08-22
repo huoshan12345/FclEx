@@ -59,8 +59,8 @@ public static class DefaultPipelineAction
     /// <typeparam name="T">The action value type.</typeparam>
     /// <param name="action">The pipeline action.</param>
     /// <returns>The short type name of the action.</returns>
-    public static string GetName<T>(IPipelineAction<T> action) 
-        => action.GetType().ShortName();
+    public static string GetName<T>(IPipelineAction<T> action)
+        => action.GetType().LongName();
 
     /// <summary>
     /// Converts a cancellation exception into a canceled result.
