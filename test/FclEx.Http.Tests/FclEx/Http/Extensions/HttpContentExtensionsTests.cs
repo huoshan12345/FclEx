@@ -6,9 +6,7 @@ public class HttpContentExtensionsTests
     public async Task ReadAsByteArrayAsync_ReturnsContentBytes()
     {
         using var content = new StringContent("hello", Encoding.UTF8, MediaTypes.Text);
-
         var bytes = await content.ReadAsByteArrayAsync(1, TimeSpan.FromSeconds(1), CancellationToken.None);
-
         Assert.Equal("hello", Encoding.UTF8.GetString(bytes));
     }
 
@@ -16,9 +14,7 @@ public class HttpContentExtensionsTests
     public async Task ReadAsStreamAsync_ReturnsMemoryStreamPositionedAtBeginning()
     {
         using var content = new StringContent("hello", Encoding.UTF8, MediaTypes.Text);
-
         using var stream = await content.ReadAsStreamAsync(2, TimeSpan.FromSeconds(1), CancellationToken.None);
-
         Assert.Equal(0, stream.Position);
         Assert.Equal("hello", Encoding.UTF8.GetString(stream.ToArray()));
     }
@@ -39,9 +35,7 @@ public class HttpContentExtensionsTests
     public async Task ToBufferedContentAsync_WhenContentIsNull_ReturnsNull()
     {
         HttpContent? content = null;
-
         var buffered = await content.ToBufferedContentAsync();
-
         Assert.Null(buffered);
     }
 
@@ -50,9 +44,7 @@ public class HttpContentExtensionsTests
     {
         using var source = new StringContent("payload", Encoding.UTF8, MediaTypes.Text);
         using var buffered = await source.ToBufferedContentAsync();
-
         var result = await buffered.ToBufferedContentAsync();
-
         Assert.Same(buffered, result);
     }
 
@@ -60,10 +52,8 @@ public class HttpContentExtensionsTests
     public void ToCompressed_WhenCompressionMethodIsUnknown_ThrowsArgumentOutOfRangeException()
     {
         using var content = new StringContent("payload");
-
         var ex = Assert.Throws<ArgumentOutOfRangeException>(() =>
             content.ToCompressed((CompressionMethod)999));
-
         Assert.Equal("compressionMethod", ex.ParamName);
     }
 
@@ -71,9 +61,7 @@ public class HttpContentExtensionsTests
     public void ToCompressed_WhenCompressionMethodIsNone_ReturnsOriginalContent()
     {
         using var content = new StringContent("payload");
-
         var result = content.ToCompressed(CompressionMethod.None);
-
         Assert.Same(content, result);
     }
 
@@ -95,8 +83,44 @@ public class HttpContentExtensionsTests
     {
         using var source = new StringContent("payload");
         using var content = source.ToCompressed(CompressionMethod.Deflate);
-
         Assert.IsType<DeflateContent>(content);
+    }
+    
+    [Fact]
+    public async Task FromJson_CreatesUtf8JsonStringContent()
+    {
+        using var content = HttpContent.FromJson("""{"name":"fclex"}""");
+
+        Assert.Equal("""{"name":"fclex"}""", await content.ReadAsStringAsync());
+        Assert.Equal(MediaTypes.Json, content.Headers.ContentType?.MediaType);
+        Assert.Equal(Encoding.UTF8.WebName, content.Headers.ContentType?.CharSet);
+    }
+
+    [Fact]
+    public async Task ToJsonContent_SerializesObjectWithProvidedOptions()
+    {
+        var options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        };
+
+        using var content = HttpContent.Json(new JsonModel("alice", 3), options);
+
+        Assert.Equal("""{"name":"alice","value":3}""", await content.ReadAsStringAsync());
+        Assert.Equal(MediaTypes.Json, content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task ToGZipContent_CreatesGZipContentWithSourceContentType()
+    {
+        using var content = HttpContent.GZip("payload", MediaTypes.Json);
+        using var destination = new MemoryStream();
+
+        await content.CopyToAsync(destination);
+
+        Assert.Contains("gzip", content.Headers.ContentEncoding);
+        Assert.Equal(MediaTypes.Json, content.Headers.ContentType?.MediaType);
+        Assert.NotEmpty(destination.ToArray());
     }
 
 #if NET6_0_OR_GREATER
@@ -105,7 +129,6 @@ public class HttpContentExtensionsTests
     {
         using var source = new StringContent("payload");
         using var content = source.ToCompressed(CompressionMethod.Brotli);
-
         Assert.IsType<BrotliContent>(content);
     }
 #endif
@@ -114,9 +137,7 @@ public class HttpContentExtensionsTests
     public async Task FromJson_CreatesUtf8JsonContent()
     {
         using var content = HttpContent.FromJson("""{"name":"fclex"}""");
-
         var json = await content.ReadAsStringAsync();
-
         Assert.Equal("""{"name":"fclex"}""", json);
         Assert.Equal(MediaTypes.Json, content.Headers.ContentType?.MediaType);
         Assert.Equal(Encoding.UTF8.WebName, content.Headers.ContentType?.CharSet);
@@ -126,9 +147,7 @@ public class HttpContentExtensionsTests
     public async Task Json_SerializesObjectAsUtf8JsonContent()
     {
         using var content = HttpContent.Json(new JsonModel("fclex", 1));
-
         var json = await content.ReadAsStringAsync();
-
         Assert.Equal("""{"Name":"fclex","Value":1}""", json);
         Assert.Equal(MediaTypes.Json, content.Headers.ContentType?.MediaType);
         Assert.Equal(Encoding.UTF8.WebName, content.Headers.ContentType?.CharSet);

@@ -1,15 +1,13 @@
-using System.Net.Http.Headers;
-
 namespace FclEx.Http.Services;
 
 public partial class HttpClientServiceTests
 {
     [Theory]
     [InlineData("""<meta charset="utf-8">""", "utf-8")]
-    [InlineData("""<meta charset='gb2312'>""", "gb2312")]
-    [InlineData("""<meta charset=utf-8>""", "utf-8")]
+    [InlineData("<meta charset='gb2312'>", "gb2312")]
+    [InlineData("<meta charset=utf-8>", "utf-8")]
     [InlineData("""<meta http-equiv="Content-Type" content="text/html; charset=gb2312">""", "gb2312")]
-    [InlineData("""<meta content='text/html; charset=utf-8' http-equiv='Content-Type'>""", "utf-8")]
+    [InlineData("<meta content='text/html; charset=utf-8' http-equiv='Content-Type'>", "utf-8")]
     public void GetMetaCharSet_ParsesCommonMetaForms(string html, string expected)
     {
         var actual = HtmlHelper.GetMetaCharSet(html);
@@ -22,11 +20,11 @@ public partial class HttpClientServiceTests
     {
         var regexes = Regexes.CharSet;
 
-        Assert.IsAssignableFrom<IReadOnlyList<System.Text.RegularExpressions.Regex>>(regexes);
+        Assert.IsType<IReadOnlyList<Regex>>(regexes, exactMatch: false);
 
-        if (regexes is IList<System.Text.RegularExpressions.Regex> mutableList)
+        if (regexes is IList<Regex> mutableList)
         {
-            Assert.Throws<NotSupportedException>(() => mutableList[0] = new System.Text.RegularExpressions.Regex(".*"));
+            Assert.Throws<NotSupportedException>(() => mutableList[0] = new Regex(".*"));
         }
     }
 

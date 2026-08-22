@@ -14,7 +14,7 @@ public class NewRelicSink : IBatchedLogEventSink
     {
         _endpointUrl = endpointUrl;
         _formatter = formatter ?? new JsonFormatter();
-        var handler = HttpClientHelper.CreateSocketsHttpHandler();
+        var handler = HttpMessageHandler.CreateSocketsHttpHandler();
 
         // for fiddler
         //handler.UseProxy = true;
@@ -34,7 +34,7 @@ public class NewRelicSink : IBatchedLogEventSink
             var body = Serialize(events, _formatter);
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, _endpointUrl)
             {
-                Content = HttpContentHelper.ToGZipContent(body, MediaTypes.Json),
+                Content = HttpContent.GZip(body, MediaTypes.Json),
             };
 
             using var response = await _httpClient.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead);

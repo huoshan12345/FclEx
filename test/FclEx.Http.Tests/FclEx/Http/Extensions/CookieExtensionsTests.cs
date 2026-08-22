@@ -1,11 +1,11 @@
-namespace FclEx.Http.Helpers;
+﻿namespace FclEx.Http.Extensions;
 
-public class CookieHelperTests
+public class CookieExtensionsTests
 {
     [Fact]
     public void Parse_WhenCookieStringIsEmpty_ReturnsNoResults()
     {
-        var results = CookieHelper.Parse("");
+        var results = Cookie.Parse("");
 
         Assert.Empty(results);
     }
@@ -13,7 +13,7 @@ public class CookieHelperTests
     [Fact]
     public void Parse_WhenCookieHasEmptyValue_PreservesEmptyValueAndAttributes()
     {
-        var result = Assert.Single(CookieHelper.Parse("sid=; Path=/account; Secure; HttpOnly"));
+        var result = Assert.Single(Cookie.Parse("sid=; Path=/account; Secure; HttpOnly"));
 
         Assert.True(result.IsSuccess);
         Assert.Equal("sid", result.Value!.Name);
@@ -26,7 +26,7 @@ public class CookieHelperTests
     [Fact]
     public void Parse_WhenAttributeAppearsMoreThanOnce_UsesFirstAttributeValue()
     {
-        var result = Assert.Single(CookieHelper.Parse("sid=abc; Path=/first; Path=/second"));
+        var result = Assert.Single(Cookie.Parse("sid=abc; Path=/first; Path=/second"));
 
         Assert.True(result.IsSuccess);
         Assert.Equal("/first", result.Value!.Path);
@@ -35,7 +35,7 @@ public class CookieHelperTests
     [Fact]
     public void Parse_WhenExpiresUsesTwoDigitYearWithHyphen_ParsesCookie()
     {
-        var result = Assert.Single(CookieHelper.Parse("sid=abc; Expires=Wed, 09-Nov-99 23:12:40 GMT"));
+        var result = Assert.Single(Cookie.Parse("sid=abc; Expires=Wed, 09-Nov-99 23:12:40 GMT"));
 
         Assert.True(result.IsSuccess);
         Assert.Equal("sid", result.Value!.Name);
@@ -46,7 +46,7 @@ public class CookieHelperTests
     [Fact]
     public void Parse_WhenExpiresContainsComma_DoesNotTreatDateCommaAsNextCookie()
     {
-        var results = CookieHelper.Parse("sid=abc; Expires=Wed, 09 Nov 2030 23:12:40 GMT, theme=dark");
+        var results = Cookie.Parse("sid=abc; Expires=Wed, 09 Nov 2030 23:12:40 GMT, theme=dark").ToList();
 
         Assert.Equal(2, results.Count);
         Assert.True(results[0].IsSuccess, results[0].Exception?.ToString());
@@ -60,7 +60,7 @@ public class CookieHelperTests
     {
         var before = DateTime.UtcNow;
 
-        var result = Assert.Single(CookieHelper.Parse("sid=abc; Max-Age=60"));
+        var result = Assert.Single(Cookie.Parse("sid=abc; Max-Age=60"));
 
         Assert.True(result.IsSuccess, result.Exception?.ToString());
         Assert.InRange(result.Value!.Expires, before.AddSeconds(55), DateTime.UtcNow.AddSeconds(65));
@@ -69,7 +69,7 @@ public class CookieHelperTests
     [Fact]
     public void Parse_WhenDomainIsQuoted_RemovesQuotes()
     {
-        var result = Assert.Single(CookieHelper.Parse("sid=abc; Domain=\".example.com\""));
+        var result = Assert.Single(Cookie.Parse("sid=abc; Domain=\".example.com\""));
 
         Assert.True(result.IsSuccess, result.Exception?.ToString());
         Assert.Equal(".example.com", result.Value!.Domain);
@@ -78,7 +78,7 @@ public class CookieHelperTests
     [Fact]
     public void Parse_WhenExpiresIsInvalid_ReturnsErrorForIgnoredCookie()
     {
-        var result = Assert.Single(CookieHelper.Parse("sid=abc; Expires=not-a-date"));
+        var result = Assert.Single(Cookie.Parse("sid=abc; Expires=not-a-date"));
 
         Assert.True(result.IsError);
         Assert.Contains("empty name", result.Exception!.Message);

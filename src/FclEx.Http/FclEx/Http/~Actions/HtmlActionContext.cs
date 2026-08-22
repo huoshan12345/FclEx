@@ -17,7 +17,7 @@ public readonly struct HtmlActionContext
         Response = response;
         Html = html;
         HtmlSelector = htmlSelector;
-        Element = HtmlHelper.Parse(html).DocumentElement;
+        Element = HtmlParser.Parse(html).DocumentElement;
         ResultElements = htmlSelector == null
             ? Enumerable.Repeat(Element, 1).ToCollection()
             : Element.QuerySelectorAll(htmlSelector)!;

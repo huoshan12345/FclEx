@@ -5,7 +5,7 @@ public class ParentNodeExtensionsTests
     [Fact]
     public void RemoveJsCss_RemovesScriptAndStyleDescendantsAndReturnsSameNode()
     {
-        var document = HtmlHelper.Parse("""
+        var document = HtmlParser.Parse("""
                                         <html>
                                         <head>
                                             <style>.hidden { display: none; }</style>

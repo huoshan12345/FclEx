@@ -6,7 +6,7 @@ namespace System.Net.Http;
 
 public class AllowExternalHandler(bool allowAutoRedirect = true) : DelegatingHandler
 {
-    private readonly HttpClient _httpClient = HttpClientHelper.Create();
+    private readonly HttpClient _httpClient = HttpClient.Create();
     private const int MaxRedirects = 10;
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)

@@ -1,5 +1,3 @@
-using System.Net.Http.Headers;
-
 namespace FclEx.Http.Auth;
 
 public class AuthenticationHandlerTests : AuthTests

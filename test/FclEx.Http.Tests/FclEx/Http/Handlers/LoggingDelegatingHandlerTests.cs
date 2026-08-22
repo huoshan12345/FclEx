@@ -1,5 +1,3 @@
-using System.Net.Http.Headers;
-
 namespace FclEx.Http.Handlers;
 
 public class LoggingDelegatingHandlerTests

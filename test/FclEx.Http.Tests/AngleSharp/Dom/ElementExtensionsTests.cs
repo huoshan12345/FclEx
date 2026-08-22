@@ -5,7 +5,7 @@ public class ElementExtensionsTests
     [Fact]
     public void AttributeShortcuts_ReturnAttributeValuesAndHandleNullElement()
     {
-        var document = HtmlHelper.Parse("""<html><body><input href="/next" type="text" value="alice" title="Name"></body></html>""");
+        var document = HtmlParser.Parse("""<html><body><input href="/next" type="text" value="alice" title="Name"></body></html>""");
         var element = document.QuerySelector("input");
 
         Assert.Equal("/next", element.Href());
@@ -23,7 +23,7 @@ public class ElementExtensionsTests
     [Fact]
     public void GetAnchor_WhenElementOrSelectedChildIsAnchor_ReturnsHtmlAnchor()
     {
-        var document = HtmlHelper.Parse("""<html><body><div><a href="/next?x=1" title="Next">Continue</a></div></body></html>""");
+        var document = HtmlParser.Parse("""<html><body><div><a href="/next?x=1" title="Next">Continue</a></div></body></html>""");
         var element = document.QuerySelector("div");
 
         var anchor = element.GetAnchor("a");
@@ -39,7 +39,7 @@ public class ElementExtensionsTests
     [Fact]
     public void GetAnchor_WhenElementIsNotAnchorAndNoSelectorIsProvided_ReturnsNull()
     {
-        var document = HtmlHelper.Parse("""<html><body><div>not a link</div></body></html>""");
+        var document = HtmlParser.Parse("""<html><body><div>not a link</div></body></html>""");
 
         var anchor = document.QuerySelector("div").GetAnchor();
 
@@ -49,7 +49,7 @@ public class ElementExtensionsTests
     [Fact]
     public void GetFormData_WhenFormDoesNotExist_ReturnsNull()
     {
-        var document = HtmlHelper.Parse("""<html><body><div></div></body></html>""");
+        var document = HtmlParser.Parse("""<html><body><div></div></body></html>""");
 
         var formData = document.Body.GetFormData("form", new Uri("https://example.com"));
 
@@ -88,7 +88,7 @@ public class ElementExtensionsTests
                             </html>
                             """;
 
-        var document = HtmlHelper.Parse(html);
+        var document = HtmlParser.Parse(html);
         var formData = document.Body.GetFormData("form", new Uri("http://www.example.com"));
 
         Assert.NotNull(formData);
@@ -161,7 +161,7 @@ public class ElementExtensionsTests
                             </html>
                             """;
 
-        var document = HtmlHelper.Parse(html);
+        var document = HtmlParser.Parse(html);
         var formData = document.Body.GetFormData("form", new Uri("https://www.example.com/page"));
 
         Assert.NotNull(formData);
@@ -199,7 +199,7 @@ public class ElementExtensionsTests
                             </html>
                             """;
 
-        var document = HtmlHelper.Parse(html);
+        var document = HtmlParser.Parse(html);
         var formData = document.Body.GetFormData("form", new Uri("https://www.example.com/current?x=1"));
 
         Assert.NotNull(formData);
@@ -224,7 +224,7 @@ public class ElementExtensionsTests
                      </body>
                      </html>
                      """;
-        var document = HtmlHelper.Parse(html);
+        var document = HtmlParser.Parse(html);
 
         var result = document.Body.QueryId(prefix);
 
@@ -244,7 +244,7 @@ public class ElementExtensionsTests
                      </body>
                      </html>
                      """;
-        var document = HtmlHelper.Parse(html);
+        var document = HtmlParser.Parse(html);
 
         var result = document.Body.QueryId(prefix);
 
@@ -255,7 +255,7 @@ public class ElementExtensionsTests
     [Fact]
     public void QueryId_WhenNoElementMatches_ReturnsError()
     {
-        var document = HtmlHelper.Parse("<html><body><div id=\"other\"></div></body></html>");
+        var document = HtmlParser.Parse("<html><body><div id=\"other\"></div></body></html>");
 
         var result = document.Body.QueryId("missing'prefix");
 
@@ -265,7 +265,7 @@ public class ElementExtensionsTests
     [Fact]
     public void QueryHref_WhenHrefIsInvalid_ReturnsError()
     {
-        var document = HtmlHelper.Parse("""<html><body><a href="http://[">broken</a></body></html>""");
+        var document = HtmlParser.Parse("""<html><body><a href="http://[">broken</a></body></html>""");
 
         var result = document.Body.QueryHref("a", new Uri("https://example.com"));
 
@@ -276,7 +276,7 @@ public class ElementExtensionsTests
     [Fact]
     public void QueryData_UsesFirstSelectorThatMatches()
     {
-        var document = HtmlHelper.Parse("""<html><body><span class="second">value</span></body></html>""");
+        var document = HtmlParser.Parse("""<html><body><span class="second">value</span></body></html>""");
 
         var result = document.Body.QueryData([".missing", ".second"], element => element.TextContent);
 
@@ -288,7 +288,7 @@ public class ElementExtensionsTests
     [Fact]
     public void QueryData_WhenSelectorIsNull_UsesRootElement()
     {
-        var document = HtmlHelper.Parse("""<html><body><main>root</main></body></html>""");
+        var document = HtmlParser.Parse("""<html><body><main>root</main></body></html>""");
         var root = document.QuerySelector("main");
 
         var result = root.QueryData(static element => element.TextContent);
@@ -301,7 +301,7 @@ public class ElementExtensionsTests
     [Fact]
     public void QueryOwnText_ReturnsOnlyDirectTextAndTrimsByDefault()
     {
-        var document = HtmlHelper.Parse("""<html><body><div> hello <span>ignored</span> world </div></body></html>""");
+        var document = HtmlParser.Parse("""<html><body><div> hello <span>ignored</span> world </div></body></html>""");
 
         var result = document.Body.QueryOwnText("div");
 
@@ -312,7 +312,7 @@ public class ElementExtensionsTests
     [Fact]
     public void QueryOwnText_WhenTextIsEmptyAndRequired_ReturnsError()
     {
-        var document = HtmlHelper.Parse("""<html><body><div><span>child text</span></div></body></html>""");
+        var document = HtmlParser.Parse("""<html><body><div><span>child text</span></div></body></html>""");
 
         var result = document.Body.QueryOwnText("div");
 
@@ -323,7 +323,7 @@ public class ElementExtensionsTests
     [Fact]
     public void QueryAttribute_WhenAttributeIsMissingOrEmpty_ReturnsErrorUnlessEmptyIsAllowed()
     {
-        var document = HtmlHelper.Parse("""<html><body><a href="">empty</a><span>none</span></body></html>""");
+        var document = HtmlParser.Parse("""<html><body><a href="">empty</a><span>none</span></body></html>""");
 
         var missing = document.Body.QueryAttribute("span", "href");
         var emptyRequired = document.Body.QueryAttribute("a", "href");
@@ -340,7 +340,7 @@ public class ElementExtensionsTests
     [Fact]
     public void QueryHref_ResolvesRelativeHrefAgainstBaseUri()
     {
-        var document = HtmlHelper.Parse("""<html><body><a href="../next?q=1">next</a></body></html>""");
+        var document = HtmlParser.Parse("""<html><body><a href="../next?q=1">next</a></body></html>""");
 
         var result = document.Body.QueryHref("a", new Uri("https://example.com/root/page"));
 
@@ -354,7 +354,7 @@ public class ElementExtensionsTests
     [InlineData("""<meta data-x="1" http-equiv="refresh" content="0; Url='https://example.com/a?b=1'">""", "https://example.com/a?b=1")]
     public void GetMetaRefreshUrl_ParsesRefreshMetaTagWithFlexibleHtml(string metaTag, string expected)
     {
-        var document = HtmlHelper.Parse($"""
+        var document = HtmlParser.Parse($"""
                                         <html>
                                         <head>{metaTag}</head>
                                         <body></body>
@@ -369,7 +369,7 @@ public class ElementExtensionsTests
     [Fact]
     public void GetMetaRefreshUrl_WhenRefreshMetaTagHasNoUrl_ReturnsNull()
     {
-        var document = HtmlHelper.Parse("""
+        var document = HtmlParser.Parse("""
                                         <html>
                                         <head><meta http-equiv="refresh" content="5"></head>
                                         <body></body>

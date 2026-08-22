@@ -1,7 +1,7 @@
 namespace FclEx.Http;
 
 /// <summary>
-/// Options used by <see cref="HttpClientHelper.CreateSocketsHttpHandler"/> when constructing a <see cref="SocketsHttpHandler"/>.
+/// Options used by <see cref="HttpMessageHandler.CreateSocketsHttpHandler"/> when constructing a <see cref="SocketsHttpHandler"/>.
 /// The type is a record so callers can use <c>with</c> expressions when deriving client-specific handler settings.
 /// </summary>
 public record SocketsHttpHandlerOptions // use record so that with expression can be used

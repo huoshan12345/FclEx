@@ -7,7 +7,7 @@ public class HtmlAnchorTests
     [Fact]
     public void Constructor_ParsesPathQueryTextAndTitle()
     {
-        var document = HtmlHelper.Parse("""<html><body><a href="/items?id=42&tag=a" title="Details">Open</a></body></html>""");
+        var document = HtmlParser.Parse("""<html><body><a href="/items?id=42&tag=a" title="Details">Open</a></body></html>""");
         var element = document.QuerySelector<IHtmlAnchorElement>("a");
         Assert.NotNull(element);
 
