@@ -8,6 +8,8 @@
     <Nullable>enable</Nullable>
     <OutputType>Exe</OutputType>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
   <PropertyGroup>
     <Is64BitOS>$([System.Environment]::Is64BitOperatingSystem)</Is64BitOS>
