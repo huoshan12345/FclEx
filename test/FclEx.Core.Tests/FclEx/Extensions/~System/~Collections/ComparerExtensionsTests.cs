@@ -1,6 +1,6 @@
 namespace FclEx.Extensions;
 
-public class ComparerExtensions
+public class ComparerExtensionsTests
 {
     public class TestModel(int value)
     {
