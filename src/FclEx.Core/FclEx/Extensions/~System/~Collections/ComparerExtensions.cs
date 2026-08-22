@@ -30,10 +30,8 @@ public static class ComparerExtensions
         {
             result = null;
 
-            if (default(T) is not null)
-                return false; // short-circuit for value types, which cannot be null and cannot be compared by reference equality
-
-            if (ReferenceEquals(x, y))
+            // check if T is a reference type first to avoid boxing value types for the ReferenceEquals check
+            if (default(T) is null && ReferenceEquals(x, y))
             {
                 result = 0;
             }
