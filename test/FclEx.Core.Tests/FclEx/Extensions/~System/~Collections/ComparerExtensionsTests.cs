@@ -69,6 +69,50 @@ public class ComparerExtensionsTests
         Assert.False(ReferenceEquals(obj1, obj2));
         Assert.True(Comparer.TryCompare(obj1, obj1, out var result));
         Assert.Equal(0, result);
+
+        Assert.False(Comparer.TryCompare(obj1, obj2, out result));
+        Assert.Null(result);
+    }
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(1, 1)]
+    [InlineData(int.MinValue, int.MaxValue)]
+    public void TryCompare_NonNullableValueTypes_DefersValueComparison(int x, int y)
+    {
+        Assert.False(Comparer.TryCompare(x, y, out var result));
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void TryCompare_NullableValueTypes_BothNull_ReturnsTrueWithResultZero()
+    {
+        Assert.True(Comparer.TryCompare<int?>(null, null, out var result));
+        Assert.Equal(0, result);
+    }
+
+    [Fact]
+    public void TryCompare_NullableValueTypes_XNull_ReturnsTrueWithResultNegativeOne()
+    {
+        Assert.True(Comparer.TryCompare<int?>(null, 0, out var result));
+        Assert.Equal(-1, result);
+    }
+
+    [Fact]
+    public void TryCompare_NullableValueTypes_YNull_ReturnsTrueWithResultOne()
+    {
+        Assert.True(Comparer.TryCompare<int?>(0, null, out var result));
+        Assert.Equal(1, result);
+    }
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(1, 1)]
+    [InlineData(int.MinValue, int.MaxValue)]
+    public void TryCompare_NullableValueTypes_WithValues_DefersValueComparison(int? x, int? y)
+    {
+        Assert.False(Comparer.TryCompare(x, y, out var result));
+        Assert.Null(result);
     }
 
     [Fact]
@@ -106,7 +150,8 @@ public class ComparerExtensionsTests
         var obj1 = new TestModel(1);
         var obj2 = new TestModel(1);
         Assert.False(ReferenceEquals(obj1, obj2));
-        Assert.False(Comparer.TryEquals(obj1, obj2, out _));
+        Assert.False(Comparer.TryEquals(obj1, obj2, out var result));
+        Assert.Null(result);
     }
 
     [Fact]
@@ -120,5 +165,56 @@ public class ComparerExtensionsTests
 
         Assert.False(Comparer.TryEquals(x, y, out var deferredResult, requireSameRuntimeType: false));
         Assert.Null(deferredResult);
+    }
+
+    [Fact]
+    public void TryEquals_SameRuntimeType_WithRuntimeTypeCheckDisabled_DefersValueComparison()
+    {
+        IValue x = new FirstValue();
+        IValue y = new FirstValue();
+
+        Assert.False(Comparer.TryEquals(x, y, out var result, requireSameRuntimeType: false));
+        Assert.Null(result);
+    }
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(1, 1)]
+    [InlineData(int.MinValue, int.MaxValue)]
+    public void TryEquals_NonNullableValueTypes_DefersValueComparison(int x, int y)
+    {
+        Assert.False(Comparer.TryEquals(x, y, out var result));
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void TryEquals_NullableValueTypes_BothNull_ReturnsTrueWithResultTrue()
+    {
+        Assert.True(Comparer.TryEquals<int?>(null, null, out var result));
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void TryEquals_NullableValueTypes_XNull_ReturnsTrueWithResultFalse()
+    {
+        Assert.True(Comparer.TryEquals<int?>(null, 0, out var result));
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void TryEquals_NullableValueTypes_YNull_ReturnsTrueWithResultFalse()
+    {
+        Assert.True(Comparer.TryEquals<int?>(0, null, out var result));
+        Assert.False(result);
+    }
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(1, 1)]
+    [InlineData(int.MinValue, int.MaxValue)]
+    public void TryEquals_NullableValueTypes_WithValues_DefersValueComparison(int? x, int? y)
+    {
+        Assert.False(Comparer.TryEquals(x, y, out var result));
+        Assert.Null(result);
     }
 }

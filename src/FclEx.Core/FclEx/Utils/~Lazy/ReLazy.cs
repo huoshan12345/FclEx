@@ -2,7 +2,13 @@ namespace FclEx.Utils;
 
 public class ReLazy<TSelf, T> : IDisposable where TSelf : ReLazy<TSelf, T>
 {
-    private readonly object _lock = new();
+    private readonly
+#if NET9_0_OR_GREATER
+        Lock
+#else
+        object
+#endif
+    _lock = new();
     private readonly Action<TSelf, T>? _discardValueHandler;
 
     private Lazy<T> _lazy;
