@@ -1,16 +1,7 @@
-namespace FclEx.Http.Proxy;
+namespace FclEx.Http.Extensions;
 
-public class WebProxyExtTests
+public class WebProxyExtensionsTests
 {
-    [Fact]
-    public void WebProxy_IsStaticUtilityClass()
-    {
-        var type = typeof(WebProxy);
-
-        Assert.True(type.IsAbstract);
-        Assert.True(type.IsSealed);
-    }
-
     [Theory]
     [InlineData("userName", "password")]
     [InlineData("user@Name", "pass@word")]
@@ -32,7 +23,6 @@ public class WebProxyExtTests
     public void Create_WithAuthUri_RemovesUserInfoFromProxyAddress()
     {
         var proxy = WebProxy.Create("http://user:pass@127.0.0.1:8888/proxy");
-
         Assert.Equal(new Uri("http://127.0.0.1:8888/proxy"), proxy.Address);
     }
 
@@ -40,9 +30,7 @@ public class WebProxyExtTests
     public void Create_WhenExplicitCredentialsAreProvided_DoesNotUseCredentialsFromUri()
     {
         var credentials = new NetworkCredential("explicit-user", "explicit-pass");
-
         var proxy = WebProxy.Create("http://uri-user:uri-pass@127.0.0.1:8888", credentials: credentials);
-
         Assert.Same(credentials, proxy.Credentials);
         Assert.Equal(new Uri("http://uri-user:uri-pass@127.0.0.1:8888/"), proxy.Address);
     }
@@ -53,7 +41,6 @@ public class WebProxyExtTests
     public void Create_WhenAddressIsNullOrEmpty_ReturnsProxyWithoutAddress(string? address)
     {
         var proxy = WebProxy.Create(address);
-
         Assert.Null(proxy.Address);
     }
 

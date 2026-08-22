@@ -42,7 +42,7 @@ public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
     /// <remarks>The file content is expected to be JSON previously written by <see cref="SaveCookies"/>.</remarks>
     public virtual async Task<IList<SimpleCookie>> ReadCookies(IUserAccount account)
     {
-        using var _ = await GetLock(account).LockAsync();
+        using var _ = await GetLock(account).AcquireAsync();
 
         var path = GetCookiesFilePath(account);
         if (File.Exists(path))
@@ -70,7 +70,7 @@ public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
     /// <remarks>Cookies are written as indented JSON to the path returned by <see cref="GetCookiesFilePath"/>.</remarks>
     public virtual async Task SaveCookies(TClient client)
     {
-        using var _ = await GetLock(client.Account).LockAsync();
+        using var _ = await GetLock(client.Account).AcquireAsync();
 
         var cookies = client.HttpService.GetAllSimpleCookies();
         var str = cookies.ToJson(new JsonOptions(true));

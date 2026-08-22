@@ -153,7 +153,7 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
             return Operation.Success();
         }
 
-        using var _ = await LoginLocker.LockAsync(token);
+        using var _ = await LoginLocker.AcquireAsync(token);
 
         if (this.IsOnline)
         {
@@ -199,7 +199,7 @@ public abstract class UserClient<TAccount> : IUserClient<TAccount>, IDisposable 
     /// <inheritdoc />
     public async Task WaitLoginAsync(CancellationToken token = default)
     {
-        using (await LoginLocker.LockAsync(token)) { }
+        using (await LoginLocker.AcquireAsync(token)) { }
     }
 
     /// <inheritdoc />
