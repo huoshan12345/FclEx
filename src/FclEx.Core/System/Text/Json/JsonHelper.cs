@@ -10,10 +10,10 @@ public static class JsonHelper
 #endif
     _lock = new();
     private static readonly ConcurrentDictionary<JsonOptions, JsonSerializerOptions> _serializerOptions = new();
-    private static readonly ReLazy<JsonSerializerOptions> _defaultOptions = new(() => GetOptions());
-    private static readonly ReLazy<JsonSerializerOptions> _webOptions = new(() => GetOptions(JsonOptions.Web));
-    private static readonly ReLazy<DefaultJsonTypeInfoResolver> _resolver = new(() => CreateDefaultJsonTypeInfoResolver(false));
-    private static readonly ReLazy<DefaultJsonTypeInfoResolver> _resolverIgnoreReadingNull = new(() => CreateDefaultJsonTypeInfoResolver(true));
+    private static readonly ResettableLazy<JsonSerializerOptions> _defaultOptions = new(() => GetOptions());
+    private static readonly ResettableLazy<JsonSerializerOptions> _webOptions = new(() => GetOptions(JsonOptions.Web));
+    private static readonly ResettableLazy<DefaultJsonTypeInfoResolver> _resolver = new(() => CreateDefaultJsonTypeInfoResolver(false));
+    private static readonly ResettableLazy<DefaultJsonTypeInfoResolver> _resolverIgnoreReadingNull = new(() => CreateDefaultJsonTypeInfoResolver(true));
 
     private static DefaultJsonTypeInfoResolver Resolver
     {
@@ -235,10 +235,10 @@ public static class JsonHelper
         lock (_lock)
         {
             _serializerOptions.Clear();
-            _resolver.Recreate();
-            _resolverIgnoreReadingNull.Recreate();
-            _defaultOptions.Recreate();
-            _webOptions.Recreate();
+            _resolver.Reset();
+            _resolverIgnoreReadingNull.Reset();
+            _defaultOptions.Reset();
+            _webOptions.Reset();
         }
     }
 }
