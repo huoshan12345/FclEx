@@ -1,4 +1,4 @@
-﻿// ReSharper disable PropertyCanBeMadeInitOnly.Local
+// ReSharper disable PropertyCanBeMadeInitOnly.Local
 
 namespace FclEx.EfCore.Extensions.DbContextExtensions;
 
@@ -71,6 +71,18 @@ partial class ApplyChangesSqliteTests
 
         public DbSet<ShadowKeyItem> ShadowKeyItems => Set<ShadowKeyItem>();
 
+        public DbSet<Article> Articles => Set<Article>();
+
+        public DbSet<Tag> Tags => Set<Tag>();
+
+        public DbSet<ArticleTag> ArticleTags => Set<ArticleTag>();
+
+        public DbSet<GraphRoot> GraphRoots => Set<GraphRoot>();
+
+        public DbSet<GraphBranch> GraphBranches => Set<GraphBranch>();
+
+        public DbSet<GraphLeaf> GraphLeaves => Set<GraphLeaf>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Item>(builder =>
@@ -115,6 +127,8 @@ partial class ApplyChangesSqliteTests
                 builder.Property(entity => entity.Code).IsRequired();
                 builder.Property(entity => entity.Name).IsRequired();
             });
+
+            ConfigureRelationshipModels(modelBuilder);
         }
     }
 
