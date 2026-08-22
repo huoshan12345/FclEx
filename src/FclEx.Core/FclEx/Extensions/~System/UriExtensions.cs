@@ -68,5 +68,12 @@ public static class UriExtensions
         {
             return new Uri(uriString, uriKind);
         }
+
+        public static Uri? TryNew([StringSyntax(StringSyntaxAttribute.Uri, nameof(uriKind))] string? uriString, UriKind uriKind = UriKind.RelativeOrAbsolute)
+        {
+            return uriString is null
+                ? null
+                : new Uri(uriString, uriKind);
+        }
     }
 }

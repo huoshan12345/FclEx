@@ -22,10 +22,51 @@ public static class HttpServiceExtensions
     /// <summary>
     /// Adds a cookie to the service cookie container, optionally scoped by the supplied URL.
     /// </summary>
-    public static void AddCookie(this IHttpService http, Cookie cookie, string? url = null)
+    public static void AddCookie(this IHttpService http, Cookie cookie, string? url = null, bool overrideDomain = false)
     {
-        var uri = url == null ? null : new Uri(url);
-        http.AddCookie(cookie, uri);
+        http.AddCookie(cookie, Uri.TryNew(url), overrideDomain);
+    }
+
+    public static string GetCookieHeader(this IHttpService http, Uri uri)
+    {
+        var cookies = http.GetCookies(uri);
+        return StringBuilder.Build(m =>
+        {
+            foreach (var (_, item, _, isLast) in cookies.IndexEx())
+            {
+                m.Append(item.Name);
+                m.Append('=');
+                m.Append(item.Value);
+
+                if (isLast == false)
+                    m.Append("; ");
+            }
+        });
+    }
+
+    public static void SetCookie(this IHttpService http, Uri uri, string cookieStr, Action<Exception>? onError = null)
+    {
+        foreach (var item in Cookie.Parse(cookieStr))
+        {
+            if (item.IsSuccess)
+            {
+                http.AddCookie(item.Value, uri);
+            }
+            else
+            {
+                onError?.Invoke(item.Exception);
+            }
+        }
+    }
+
+    public static void AddCookie(this IHttpService http, Uri? uri, Cookie cookie, bool overrideDomain = false)
+    {
+        http.AddCookie(cookie, uri, overrideDomain);
+    }
+
+    public static void AddCookie(this IHttpService http, string? uri, Cookie cookie, bool overrideDomain = false)
+    {
+        http.AddCookie(cookie, uri, overrideDomain);
     }
 
     /// <summary>
