@@ -10,13 +10,6 @@ public enum OSPlatformType
 
 public static class OSPlatformTypeExtensions
 {
-    public static OSPlatform FreeBSD { get; } =
-#if !NET5_0_OR_GREATER
-        OSPlatform.Create("FREEBSD");
-#else
-        OSPlatform.FreeBSD;
-#endif
-
     public static OSPlatform ToOSPlatform(this OSPlatformType type)
     {
         return type switch
@@ -24,7 +17,7 @@ public static class OSPlatformTypeExtensions
             OSPlatformType.Windows => OSPlatform.Windows,
             OSPlatformType.Linux => OSPlatform.Linux,
             OSPlatformType.OSX => OSPlatform.OSX,
-            OSPlatformType.FreeBSD => FreeBSD,
+            OSPlatformType.FreeBSD => OSPlatform.FreeBSD,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
     }
