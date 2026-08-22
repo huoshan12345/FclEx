@@ -87,9 +87,19 @@ public class ClientCreator<TClient, TAccount>(IServiceProvider provider)
     /// <param name="useCache">Whether an existing cached client for the account can be reused.</param>
     /// <param name="readCookie">Whether saved cookies should be loaded into a newly created client.</param>
     /// <param name="proxy">An optional proxy address string for the client's HTTP service.</param>
+    /// <param name="cancellation">The cancellation token to cancel the client creation operation.</param>
     /// <returns>The created or cached client.</returns>
-    public virtual Task<TClient> CreateClient(TAccount account, bool login, bool fakeLogin = true, bool useCache = false, bool readCookie = true, string? proxy = null)
-        => CreateClient(account, new LoginOptions(login, fakeLogin, useCache, readCookie, WebProxy.Create(proxy)));
+    public virtual Task<TClient> CreateClient(
+        TAccount account,
+        bool login,
+        bool fakeLogin = true,
+        bool useCache = false,
+        bool readCookie = true,
+        string? proxy = null,
+        CancellationToken cancellation = default)
+    {
+        return CreateClient(account, new LoginOptions(login, fakeLogin, useCache, readCookie, WebProxy.Create(proxy), cancellation));
+    }
 
     /// <summary>
     /// Creates or reuses a client using the supplied login options.
