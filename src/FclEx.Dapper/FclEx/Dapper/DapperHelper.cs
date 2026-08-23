@@ -1,17 +1,8 @@
-using System.Transactions;
-
 namespace FclEx.Dapper;
 
 public static class DapperHelper
 {
-    private static volatile bool _isDapperInitialized = false;
-
-    static DapperHelper()
-    {
-        Initialize();
-    }
-
-    internal static readonly ConcurrentDictionary<string, ISqlAdapter> Adapters = new()
+    private static readonly ConcurrentDictionary<string, ISqlAdapter> _adapters = new()
     {
         ["Npgsql.NpgsqlConnection"] = NpgsqlAdapter.Instance,
         ["Microsoft.Data.SqlClient.SqlConnection"] = SqlServerAdapter.Instance,
@@ -19,101 +10,141 @@ public static class DapperHelper
         ["MySql.Data.MySqlClient.MySqlConnection"] = MySqlAdapter.Instance,
         ["MySqlConnector.MySqlConnection"] = MySqlConnectorAdapter.Instance,
     };
-    internal static readonly ConditionalWeakTable<Type, EntityDefinition> EntityDefinitions = new();
-    internal static readonly ConcurrentDictionary<(Type AdapterType, string? Schema, Type EntityType), string> TableNamesWithSchema = new();
+    private static readonly ConditionalWeakTable<Type, EntityDefinition> _definitions = new();
+    private static readonly ConcurrentDictionary<(Type AdapterType, string? Schema, Type EntityType), string> _tableFullNames = new();
+    private static readonly Dictionary<Type, ColumnMappingRegistrationState> _registrations = new();
 
-    internal class AssemblyLocker
-    {
-        public
+    private static readonly
 #if NET9_0_OR_GREATER
-            Lock
+        Lock
 #else
-            object
+        object
 #endif
-            LockObj
-        { get; } = new();
+    _lock = new();
 
-        public bool Initialized { get; set; } = false;
+    /// <summary>
+    /// Creates an explicit configuration builder for FclEx-owned Dapper type maps.
+    /// </summary>
+    /// <remarks>
+    /// Creating or otherwise accessing <see cref="DapperHelper"/> does not scan assemblies or modify
+    /// Dapper's process-wide type maps. Call <see cref="FclExDapperConfigurationBuilder.Apply"/> to apply
+    /// the selected mappings and retain the returned registration for as long as they are required.
+    /// </remarks>
+    /// <returns>A new configuration builder with no mappings selected.</returns>
+    public static FclExDapperConfigurationBuilder CreateConfiguration()
+    {
+        return new FclExDapperConfigurationBuilder();
     }
-    internal static readonly ConcurrentDictionary<Assembly, AssemblyLocker> Lockers = new();
 
     public static EntityDefinition GetEntityDefinition(Type type)
     {
-        return EntityDefinitions.GetValue(type, EntityDefinition.GetDefinition);
+        return _definitions.GetValue(type, EntityDefinition.GetDefinition);
     }
 
-    // Register CustomPropertyTypeMap for Type with ColumnAttribute
-    // And make column name case-insensitive.
-    public static void RegisterColumnMapping(params Type[] types)
+    internal static FclExDapperRegistration ApplyColumnMappings(
+        IReadOnlyCollection<Type> entityTypes,
+        DapperRegistrationConflictBehavior conflictBehavior)
     {
-        if (types.IsNullOrEmpty())
-            return;
-
-        foreach (var entityType in types)
+        if (conflictBehavior is not DapperRegistrationConflictBehavior.Throw
+            and not DapperRegistrationConflictBehavior.KeepExisting
+            and not DapperRegistrationConflictBehavior.Replace)
         {
-            var map = new CustomPropertyTypeMap(entityType, (t, name) =>
-                GetEntityDefinition(t).Fields.FirstOrDefault(p => p.FieldName == name)?.PropertyInfo!);
-            SqlMapper.SetTypeMap(entityType, map);
+            throw new ArgumentOutOfRangeException(nameof(conflictBehavior), conflictBehavior, null);
         }
-    }
 
-    public static void Initialize(Assembly assembly)
-    {
-        var locker = Lockers.GetOrAdd(assembly, m => new());
-
-        if (locker.Initialized)
-            return;
-
-        lock (locker.LockObj)
+        lock (_lock)
         {
-            if (locker.Initialized)
-                return;
-
-            if (assembly.GetName().Name?.StartsWith("Microsoft.TestPlatform.") == true)
+            // Detect every conflict before mutating Dapper so Throw never leaves a partially applied configuration.
+            foreach (var entityType in entityTypes)
             {
-                // Skip test platform assemblies to avoid the error "Could not load type 'System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute' from assembly 'Microsoft.TestPlatform.CoreUtilities'".
-                locker.Initialized = true;
-                return;
+                if (TryGetActiveColumnMapping(entityType, out _))
+                    continue;
+
+                var currentMap = SqlMapper.GetTypeMap(entityType);
+                if (currentMap is not DefaultTypeMap && conflictBehavior == DapperRegistrationConflictBehavior.Throw)
+                {
+                    throw new InvalidOperationException(
+                        $"A custom Dapper type map is already registered for '{entityType.FullName}'. " +
+                        $"Use {nameof(DapperRegistrationConflictBehavior)}.{nameof(DapperRegistrationConflictBehavior.KeepExisting)} " +
+                        $"or {nameof(DapperRegistrationConflictBehavior)}.{nameof(DapperRegistrationConflictBehavior.Replace)} explicitly.");
+                }
             }
 
-            var types = assembly.ExportedTypes.ToList();
-            var typesWithColumn = types.Where(m => m.GetCustomAttribute<TableAttribute>() != null
-                                                   || m.GetProperties().Any(x => x.GetCustomAttribute<ColumnAttribute>() != null)).ToArray();
-            RegisterColumnMapping(typesWithColumn);
+            var registrations = new List<ColumnMappingRegistrationState>(entityTypes.Count);
+            foreach (var entityType in entityTypes)
+            {
+                if (TryGetActiveColumnMapping(entityType, out var activeRegistration))
+                {
+                    activeRegistration.ReferenceCount++;
+                    registrations.Add(activeRegistration);
+                    continue;
+                }
 
-            locker.Initialized = true;
+                // A stale entry means another component replaced our map while a registration was alive.
+                _registrations.Remove(entityType);
+
+                var currentMap = SqlMapper.GetTypeMap(entityType);
+                if (currentMap is not DefaultTypeMap && conflictBehavior == DapperRegistrationConflictBehavior.KeepExisting)
+                    continue;
+
+                var map = new CustomPropertyTypeMap(entityType, (type, columnName) =>
+                    GetEntityDefinition(type).Fields.FirstOrDefault(field => field.FieldName == columnName)?.PropertyInfo!);
+                var registration = new ColumnMappingRegistrationState(
+                    entityType,
+                    currentMap is DefaultTypeMap ? null : currentMap,
+                    map);
+
+                SqlMapper.SetTypeMap(entityType, map);
+                _registrations.Add(entityType, registration);
+                registrations.Add(registration);
+            }
+
+            return new FclExDapperRegistration(registrations);
         }
     }
 
-    public static void Initialize()
+    internal static void ReleaseColumnMappings(IReadOnlyCollection<ColumnMappingRegistrationState> registrations)
     {
-        if (_isDapperInitialized)
-            return;
-
-        _isDapperInitialized = true;
-
-        SqlMapper.AddTypeHandler(new GuidTypeHandler());
-        //SqlMapper.AddTypeHandler(new DateTimeHandler());
-
-        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies().Where(p => !p.IsDynamic))
+        lock (_lock)
         {
-            Initialize(assembly);
+            foreach (var registration in registrations)
+            {
+                if (!_registrations.TryGetValue(registration.EntityType, out var activeRegistration)
+                    || !ReferenceEquals(activeRegistration, registration))
+                {
+                    continue;
+                }
+
+                registration.ReferenceCount--;
+                if (registration.ReferenceCount > 0)
+                    continue;
+
+                _registrations.Remove(registration.EntityType);
+                if (ReferenceEquals(SqlMapper.GetTypeMap(registration.EntityType), registration.AppliedMap))
+                    SqlMapper.SetTypeMap(registration.EntityType, registration.PreviousMap);
+            }
         }
+    }
+
+    private static bool TryGetActiveColumnMapping(Type entityType, out ColumnMappingRegistrationState registration)
+    {
+        return _registrations.TryGetValue(entityType, out registration!)
+               && ReferenceEquals(SqlMapper.GetTypeMap(entityType), registration.AppliedMap);
     }
 
     public static ISqlAdapter RegisterSqlAdapter(Type connectionType, ISqlAdapter adapter)
     {
-        return Adapters[connectionType.FullName!] = adapter;
+        return _adapters[connectionType.FullName!] = adapter;
     }
 
     public static ISqlAdapter GetSqlAdapter(IDbConnection connection)
     {
-        return Adapters.GetOrAdd(connection.GetType().FullName!, conName => throw new ArgumentException("Unsupported connection type: " + conName));
+        return _adapters.GetOrAdd(connection.GetType().FullName!, conName => throw new ArgumentException("Unsupported connection type: " + conName));
     }
-    
+
     public static string GetTableNameWithSchema(ISqlAdapter sqlAdapter, string? schema, Type entityType)
     {
-        return TableNamesWithSchema.GetOrAdd((sqlAdapter.GetType(), schema, entityType), k =>
+        return _tableFullNames.GetOrAdd((sqlAdapter.GetType(), schema, entityType), k =>
         {
             var tableName = GetEntityDefinition(k.EntityType).TableName;
             return k.Schema == null || sqlAdapter.SupportSchema == false
@@ -147,12 +178,14 @@ public static class DapperHelper
         return GetQuotedColumnName(GetSqlAdapter(connection), typeof(T), member.Name);
     }
 
-    public static TransactionScope CreateAsyncTransactionScope(System.Transactions.IsolationLevel isolationLevel = System.Transactions.IsolationLevel.ReadCommitted)
+    public static TransactionScope CreateAsyncTransactionScope(
+        System.Transactions.IsolationLevel isolationLevel = System.Transactions.IsolationLevel.ReadCommitted,
+        TimeSpan? timeout = null)
     {
         var transactionOptions = new TransactionOptions
         {
             IsolationLevel = isolationLevel,
-            Timeout = TransactionManager.MaximumTimeout
+            Timeout = timeout ?? TransactionManager.MaximumTimeout,
         };
         return new TransactionScope(TransactionScopeOption.Required, transactionOptions, TransactionScopeAsyncFlowOption.Enabled);
     }

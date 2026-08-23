@@ -8,19 +8,23 @@
 
 本轮共登记 45 项，没有超过 50 项上限。优先级含义：P0 为可能破坏数据一致性的设计；P1 为高概率错误、资源泄漏或主要公共契约缺陷；P2 为中等风险 API/兼容性问题；P3 为命名、文档与可维护性问题。
 
-验证状态：执行 `dotnet build src/FclEx.Dapper/FclEx.Dapper.csproj -c Release --no-restore`，`netstandard2.0`、`net472`、`net8.0`、`net9.0`、`net10.0` 全部构建成功，0 warning、0 error。本报告以源码和契约审查为主；未运行依赖外部数据库的完整测试集，也未修改生产代码。
+初次验证状态：执行 `dotnet build src/FclEx.Dapper/FclEx.Dapper.csproj -c Release --no-restore`，`netstandard2.0`、`net472`、`net8.0`、`net9.0`、`net10.0` 全部构建成功，0 warning、0 error。初次审查以源码和契约为主，当时未运行依赖外部数据库的完整测试集，也未修改生产代码。
+
+后续处理（2026-08-23）：issue 1、2 已按下述记录修改，同时解决了与 issue 2 重叠的 issue 6、37。生产项目五个目标框架和测试项目四个目标框架均构建成功；不依赖外部数据库的 `FclExDapperConfigurationTests`、`DbConnectionExtensionsApiTests`、`SqliteMigrationTests` 在 `net472`、`net8.0`、`net9.0`、`net10.0` 共运行 36 个测试实例，全部通过。外部 provider 测试仍未运行。
 
 ## 问题清单（1–12：整体设计、职责与生命周期）
 
-1. **[P0] 多连接 `DoTransactionAsync` 暗示原子事务，但顺序提交必然允许部分提交。**
+1. **[P0][已修复 2026-08-23] 多连接 `DoTransactionAsync` 暗示原子事务，但顺序提交必然允许部分提交。**
    - 位置：`FclEx/Dapper/~Extensions/DbConnectionExtensions.Dapper.cs:44-61`。
    - 说明：多个本地事务先同时创建，随后逐个 `CommitAsync`。如果第一个提交成功、第二个提交失败，前者已经无法回滚；后续对全部事务调用 rollback 不能恢复原子性。方法名称和单连接重载让调用方很容易把它当作跨连接事务边界。
    - 建议：删除该重载，或改名为明确的 best-effort coordination API 并返回每个连接的提交结果。真正的原子需求应使用 `TransactionScope`/provider 支持的分布式事务，或由业务实现 outbox/saga；不能用顺序 commit 模拟。
+   - 处理：已直接删除 `IReadOnlyList<DbConnection>` 多连接重载，保留两个单连接本地事务重载。该修改会使现有多连接调用无法编译，属于有意的 breaking change；未用 `TransactionScope` 制造 provider 均支持分布式事务的错误承诺。
 
-2. **[P1] 包初始化会静默修改进程级 Dapper 状态，生命周期和所有权不可控。**
+2. **[P1][已修复 2026-08-23] 包初始化会静默修改进程级 Dapper 状态，生命周期和所有权不可控。**
    - 位置：`DapperHelper.cs:9-12,47-57,88-101`。
    - 说明：首次触碰 `DapperHelper` 就注册全局 `GuidTypeHandler`、扫描程序集并调用 `SqlMapper.SetTypeMap`；这可能覆盖宿主已注册的 type map/handler，也没有撤销或冲突检测。一个工具方法不应隐式重配整个进程的 Dapper。
    - 建议：改为显式 `ConfigureFclExDapper`/builder 注册；默认不扫描、不覆盖已有映射，并为冲突策略、幂等性和测试隔离提供明确选项。
+   - 处理：已删除静态构造、无参/程序集 `Initialize` 及 `RegisterColumnMapping`，不再自动扫描 `AppDomain`、注册 `GuidTypeHandler` 或覆盖 type map。新增 `DapperHelper.CreateConfiguration()` builder；调用方显式选择类型或程序集后再 `Apply()`。默认冲突策略为 `Throw`，且先检查全部冲突再应用；另提供 `KeepExisting`、`Replace`。等价注册采用引用计数，释放最后一个 `FclExDapperRegistration` 时恢复原 type map，便于测试隔离。
 
 3. **[P1] CRUD 映射模型借用了 DataAnnotations，却只实现其中一部分语义。**
    - 位置：`EntityDefinition.cs:23-47`、`FieldDefinition.cs:3-11`。
@@ -37,10 +41,11 @@
    - 说明：连接查找忽略 assembly identity，只比较字符串；代理/重试包装器和 provider 派生类型不会命中，两个程序集中的同名类型又会冲突。这与公开的可扩展 adapter 模型不匹配。
    - 建议：至少以 `Type` 为键并按可赋值关系/有序 predicate 解析；对包装连接提供 unwrap 契约，注册时检测歧义，不要把类型身份降级为字符串。
 
-6. **[P1] 自动程序集扫描既脆弱又依赖加载顺序。**
+6. **[P1][已修复 2026-08-23] 自动程序集扫描既脆弱又依赖加载顺序。**
    - 位置：`DapperHelper.cs:60-101`。
    - 说明：静态初始化只扫描当时已加载的程序集，后来加载的插件不会自动映射；`assembly.ExportedTypes` 的异常还可能把 `DapperHelper` 静态构造永久置于失败状态。针对 `Microsoft.TestPlatform.*` 的硬编码跳过进一步说明该模型不稳健。
    - 建议：移除 AppDomain 全扫描，要求调用方显式传入实体类型/程序集；扫描失败应产生可诊断的逐程序集结果，不能从静态构造函数传播。
+   - 处理：已移除 AppDomain 全扫描和静态构造路径。`AddColumnMappingsFromAssembly` 只在调用方显式传入程序集时同步检查该程序集，异常直接归属于该次配置调用。
 
 7. **[P2] 多组静态缓存没有容量、清理或可卸载程序集策略。**
    - 位置：`DapperHelper.cs:22-23,38`、`DbConnectionExtensions.cs:18-22`。
@@ -90,8 +95,8 @@
     - 建议：重命名为 `DapperCommandOptions`/`CrudCommandOptions`，使用具名属性和验证，并统一供 connection/transaction 重载使用。
 
 16. **[P2] `DoTransactionAsync` 名称不自然，默认 `ReadUncommitted` 又偏离常见安全默认值。**
-    - 位置：`DbConnectionExtensions.Dapper.cs:5,25,44`。
-    - 说明：`DoTransactionAsync` 没表达“在事务中执行回调”；三个重载默认 dirty-read 隔离级别，而 `CreateAsyncTransactionScope` 默认 `ReadCommitted`，同一包内部也不一致。
+    - 位置：`DbConnectionExtensions.Dapper.cs:5,25`。
+    - 说明：`DoTransactionAsync` 没表达“在事务中执行回调”；保留的两个单连接重载默认 dirty-read 隔离级别，而 `CreateAsyncTransactionScope` 默认 `ReadCommitted`，同一包内部也不一致。
     - 建议：使用 `ExecuteInTransactionAsync`，默认采用 provider/ADO.NET 默认隔离级别或 `ReadCommitted`；非默认隔离必须由调用方显式选择。
 
 17. **[P2] `TryOpenAsync`、`TryRollbackAsync` 不符合 .NET Try 模式。**
@@ -196,10 +201,11 @@
     - 说明：两个同类型但配置不同的自定义 adapter 会共享首个实例生成的引用结果；这与公开允许传入任意 `ISqlAdapter` 实例的 `CommandInfo` 冲突。
     - 建议：若 adapter 实例决定行为，缓存键使用稳定的 adapter identity/configuration key；若类型决定行为，则禁止有状态实例并在接口契约中声明。
 
-37. **[P2] `_isDapperInitialized` 的 check-then-set 不是线程安全的一次初始化。**
+37. **[P2][已修复 2026-08-23] `_isDapperInitialized` 的 check-then-set 不是线程安全的一次初始化。**
     - 位置：`DapperHelper.cs:7,88-101`。
     - 说明：`volatile` 只保证可见性，两个线程仍可同时看到 false、同时写 true 并重复执行 handler 注册和程序集循环。
     - 建议：使用 `Lazy<T>`、静态构造的单一初始化路径或 `Interlocked.CompareExchange`；显式配置后则可直接删除这组全局状态。
+    - 处理：显式配置重构已删除 `_isDapperInitialized` 及一次性隐式初始化；type map 注册和引用计数在专用锁内协调。
 
 38. **[P2] column mapping 注释声称大小写不敏感，代码却使用大小写敏感比较。**
     - 位置：`DapperHelper.cs:45-56`。

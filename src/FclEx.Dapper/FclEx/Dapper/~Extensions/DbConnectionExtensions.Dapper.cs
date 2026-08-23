@@ -41,26 +41,6 @@ partial class DbConnectionExtensions
         }
     }
 
-    public static async Task DoTransactionAsync(this IReadOnlyList<DbConnection> cons, Func<IReadOnlyList<DbTransaction>, Task> action, IsolationLevel level = IsolationLevel.ReadUncommitted)
-    {
-        var trans = await cons.Select(m => m.BeginTransactionAsync(level)).WhenAll();
-        try
-        {
-            await action(trans);
-            foreach (var tran in trans)
-                await tran.CommitAsync();
-        }
-        catch (Exception ex)
-        {
-            await trans.TryRollbackAsync(ex);
-        }
-        finally
-        {
-            foreach (var tran in trans)
-                await tran.DisposeAsync();
-        }
-    }
-
     public static Task TryOpenAsync(this DbConnection con, CancellationToken token = default)
     {
         if (con.State == ConnectionState.Open)
