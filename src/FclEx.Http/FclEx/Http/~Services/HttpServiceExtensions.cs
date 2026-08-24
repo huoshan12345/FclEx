@@ -269,7 +269,7 @@ public static class HttpServiceExtensions
                     if (uri.IsAbsoluteUri == false && options?.BaseAddress is { } baseAddress)
                         uri = baseAddress.Resolve(uri);
 
-                    return new ValueTask<OperationResult<HttpFileDownloadInfo>>(httpService.DownloadAsync(new DownloadOptions
+                    return httpService.DownloadAsync(new DownloadOptions
                     {
                         Uri = uri,
                         Method = options?.Method ?? HttpMethod.Get,
@@ -281,7 +281,7 @@ public static class HttpServiceExtensions
                         CancellationToken = operationToken,
                         FileBaseName = null,
                         FileExtension = null,
-                    }));
+                    });
                 },
                 maxDegreeOfParallelism,
                 token);
