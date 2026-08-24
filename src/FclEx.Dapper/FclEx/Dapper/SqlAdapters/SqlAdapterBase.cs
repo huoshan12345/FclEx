@@ -40,13 +40,15 @@ public abstract class SqlAdapterBase<TSelf> : ISqlAdapter where TSelf : SqlAdapt
 
     protected abstract DbParameterCreator BuildParameterCreator();
 
-    public virtual DbParameter CreateParameter(string name, object? value, string? type = null)
+    /// <inheritdoc />
+    public virtual DbParameter CreateParameter(string name, object? value, string? storeTypeName = null)
     {
         value ??= DBNull.Value;
-        return _creator.Value.Invoke(name, value, type);
+        return _creator.Value.Invoke(name, value, storeTypeName);
     }
 
-    public virtual ValueTask<IAsyncDisposable> EnableIdentityInsertAsync<T>(string? schema, IDbCommand cmd)
+    /// <inheritdoc />
+    public virtual ValueTask<IAsyncDisposable> EnableIdentityInsertAsync(string quotedTableName, IDbCommand command)
     {
         return AsyncDisposable.EmptyValueTask;
     }
@@ -58,7 +60,7 @@ public abstract class SqlAdapterBase<TSelf> : ISqlAdapter where TSelf : SqlAdapt
 
         var paraOfName = Expression.Parameter(typeof(string));
         var paraOfValue = Expression.Parameter(typeof(object));
-        var paraOfType = Expression.Parameter(typeof(string));
+        var parameterOfStoreTypeName = Expression.Parameter(typeof(string));
 
         var obj = Expression.New(ctor, paraOfName, paraOfValue);
         var result = Expression.Variable(type, "result");
@@ -68,19 +70,37 @@ public abstract class SqlAdapterBase<TSelf> : ISqlAdapter where TSelf : SqlAdapt
         };
 
         var propOfDbType = type.GetRequiredProperty(dbTypePropName);
-        var methodOfEnumParse = typeof(Enum).GetRequiredMethod(nameof(Enum.Parse), 0, typeof(Type), typeof(string), typeof(bool));
-        var enumParse = Expression.Call(null, methodOfEnumParse, Expression.Constant(propOfDbType.PropertyType), paraOfType, Expression.Constant(true));
-        var convert = Expression.Convert(enumParse, propOfDbType.PropertyType);
+        var parsedType = Expression.Variable(typeof(object), "parsedType");
+        var tryParseEnum = typeof(SqlAdapterBase<TSelf>).GetRequiredMethod(nameof(TryParseEnum), 0, typeof(Type), typeof(string));
+        var parse = Expression.Assign(parsedType,
+            Expression.Call(null, tryParseEnum, Expression.Constant(propOfDbType.PropertyType), parameterOfStoreTypeName));
+        expList.Add(parse);
+        var convert = Expression.Convert(parsedType, propOfDbType.PropertyType);
         var property = Expression.Property(result, propOfDbType);
         var assignExp = Expression.Assign(property, convert);
-        var nullCheck = Expression.ReferenceNotEqual(paraOfType, Expression.Constant(null, typeof(string)));
+        var nullCheck = Expression.ReferenceNotEqual(parsedType, Expression.Constant(null, typeof(object)));
         var ifThen = Expression.IfThen(nullCheck, assignExp);
         expList.Add(ifThen);
         expList.Add(result);
-        var final = Expression.Block([result], expList);
+        var final = Expression.Block([result, parsedType], expList);
 #if DEBUG
         // final.Enumerate().ForEach(e => Console.WriteLine(e.ToString()));
 #endif
-        return Expression.Lambda<DbParameterCreator>(final, paraOfName, paraOfValue, paraOfType).Compile();
+        return Expression.Lambda<DbParameterCreator>(final, paraOfName, paraOfValue, parameterOfStoreTypeName).Compile();
+    }
+
+    private static object? TryParseEnum(Type enumType, string? value)
+    {
+        if (value is null)
+            return null;
+
+        try
+        {
+            return Enum.Parse(enumType, value, true);
+        }
+        catch (ArgumentException)
+        {
+            return null;
+        }
     }
 }

@@ -28,12 +28,14 @@ public sealed class FclExDapperRegistration : IDisposable
 }
 
 internal sealed class ColumnMappingRegistrationState(
-    Type entityType,
+    EntityMapping mapping,
     SqlMapper.ITypeMap? previousMap,
-    SqlMapper.ITypeMap appliedMap)
+    SqlMapper.ITypeMap appliedMap,
+    ColumnMappingRegistrationState? previousRegistration)
 {
-    public Type EntityType { get; } = entityType;
+    public EntityMapping Mapping { get; } = mapping;
     public SqlMapper.ITypeMap? PreviousMap { get; } = previousMap;
     public SqlMapper.ITypeMap AppliedMap { get; } = appliedMap;
+    public ColumnMappingRegistrationState? PreviousRegistration { get; } = previousRegistration;
     public int ReferenceCount { get; set; } = 1;
 }

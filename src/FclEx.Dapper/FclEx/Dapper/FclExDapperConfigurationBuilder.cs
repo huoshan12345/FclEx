@@ -6,11 +6,24 @@ namespace FclEx.Dapper;
 public sealed class FclExDapperConfigurationBuilder
 {
     private readonly HashSet<Type> _entityTypes = new();
+    private IEntityMappingSource _mappingSource = DapperHelper.DefaultEntityMappingSource;
+
+    /// <summary>
+    /// Selects the mapping source used to build the registered Dapper type maps.
+    /// </summary>
+    /// <param name="mappingSource">The source that owns the mappings for all selected entity types.</param>
+    /// <returns>This builder.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="mappingSource"/> is <see langword="null"/>.</exception>
+    public FclExDapperConfigurationBuilder UseEntityMappingSource(IEntityMappingSource mappingSource)
+    {
+        _mappingSource = mappingSource ?? throw new ArgumentNullException(nameof(mappingSource));
+        return this;
+    }
 
     /// <summary>
     /// Adds the mapping for one entity type.
     /// </summary>
-    /// <typeparam name="TEntity">The entity type whose DataAnnotations column names should be used by Dapper.</typeparam>
+    /// <typeparam name="TEntity">The entity type whose selected-source mapping should be used by Dapper.</typeparam>
     /// <returns>This builder.</returns>
     public FclExDapperConfigurationBuilder AddColumnMapping<TEntity>()
     {
@@ -20,7 +33,7 @@ public sealed class FclExDapperConfigurationBuilder
     /// <summary>
     /// Adds mappings for the specified entity types.
     /// </summary>
-    /// <param name="entityTypes">Entity types whose DataAnnotations column names should be used by Dapper.</param>
+    /// <param name="entityTypes">Entity types whose selected-source mappings should be used by Dapper.</param>
     /// <returns>This builder.</returns>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="entityTypes"/> or one of its elements is <see langword="null"/>.
@@ -73,6 +86,10 @@ public sealed class FclExDapperConfigurationBuilder
     /// A registration that keeps the applied mappings active. Dispose it to release this configuration and,
     /// when this is the last equivalent registration, restore the type maps that preceded it.
     /// </returns>
+    /// <remarks>
+    /// Mapping construction completes before Dapper is modified. The selected <see cref="IEntityMappingSource"/>
+    /// must return stable mapping instances as required by its contract.
+    /// </remarks>
     /// <exception cref="InvalidOperationException">
     /// An existing custom type map conflicts with the configuration and <paramref name="conflictBehavior"/>
     /// is <see cref="DapperRegistrationConflictBehavior.Throw"/>.
@@ -81,6 +98,6 @@ public sealed class FclExDapperConfigurationBuilder
     public FclExDapperRegistration Apply(
         DapperRegistrationConflictBehavior conflictBehavior = DapperRegistrationConflictBehavior.Throw)
     {
-        return DapperHelper.ApplyColumnMappings(_entityTypes, conflictBehavior);
+        return DapperHelper.ApplyColumnMappings(_entityTypes, _mappingSource, conflictBehavior);
     }
 }

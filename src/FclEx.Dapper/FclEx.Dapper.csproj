@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Description>Dapper and ADO.NET helpers for CRUD operations, local transactions, dynamic parameters, SQL adapters, type handlers, and explicit column mapping.</Description>
+    <Description>Dapper and ADO.NET helpers for CRUD operations, local transactions, dynamic parameters, SQL adapters, type handlers, and explicit entity mapping sources.</Description>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Dapper" />

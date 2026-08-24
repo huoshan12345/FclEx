@@ -14,11 +14,10 @@ public class SqlServerAdapter : SqlAdapterBase<SqlServerAdapter>
         return BuildParameterCreator("Microsoft.Data.SqlClient.SqlParameter, Microsoft.Data.SqlClient", "SqlDbType");
     }
 
-    public override async ValueTask<IAsyncDisposable> EnableIdentityInsertAsync<T>(string? schema, IDbCommand cmd)
+    public override async ValueTask<IAsyncDisposable> EnableIdentityInsertAsync(string quotedTableName, IDbCommand command)
     {
-        Check.NotNull(cmd.Connection);
-        var tableName = DapperHelper.GetTableNameWithSchema(this, schema, typeof(T));
-        await cmd.Connection.ExecuteAsync($"SET IDENTITY_INSERT {tableName} ON");
-        return AsyncDisposable.Create(() => cmd.Connection.ExecuteAsync($"SET IDENTITY_INSERT {tableName} OFF"));
+        Check.NotNull(command.Connection);
+        await command.Connection.ExecuteAsync($"SET IDENTITY_INSERT {quotedTableName} ON");
+        return AsyncDisposable.Create(() => command.Connection.ExecuteAsync($"SET IDENTITY_INSERT {quotedTableName} OFF"));
     }
 }

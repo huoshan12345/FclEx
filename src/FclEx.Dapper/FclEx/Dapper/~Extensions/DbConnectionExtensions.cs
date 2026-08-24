@@ -6,11 +6,24 @@ using static FclEx.Dapper.DapperHelper;
 namespace FclEx.Dapper;
 
 internal readonly record struct SqlInfo(string Sql, IReadOnlyList<DbParameter> Params);
-internal readonly record struct EntitySqlKey(ISqlAdapter SqlAdapter, string? Schema, Type EntityType);
-internal readonly record struct InsertColumnsKey(ISqlAdapter SqlAdapter, string? Schema, Type EntityType, bool IncludeAutoKey);
-internal readonly record struct InsertValuesKey(Type EntityType, int Count, bool IncludeAutoKey);
+internal readonly record struct EntitySqlKey(ISqlAdapter SqlAdapter, string? Schema, EntityMapping Mapping);
+internal readonly record struct InsertColumnsKey(ISqlAdapter SqlAdapter, string? Schema, EntityMapping Mapping, bool IncludeAutoKey);
+internal readonly record struct InsertValuesKey(EntityMapping Mapping, int Count, bool IncludeAutoKey);
 
-public readonly record struct CommandInfo(int? TimeoutSeconds = null, DbTransaction? Transaction = null, ISqlAdapter? SqlAdapter = null);
+/// <summary>
+/// Provides execution, provider, and entity-mapping options for an FclEx.Dapper command.
+/// </summary>
+/// <param name="TimeoutSeconds">The optional command timeout in seconds.</param>
+/// <param name="Transaction">The optional local transaction assigned to the command.</param>
+/// <param name="SqlAdapter">An optional SQL adapter overriding connection-type resolution.</param>
+/// <param name="EntityMappingSource">
+/// An optional entity mapping source. <see cref="DapperHelper.DefaultEntityMappingSource"/> is used when omitted.
+/// </param>
+public readonly record struct CommandInfo(
+    int? TimeoutSeconds = null,
+    DbTransaction? Transaction = null,
+    ISqlAdapter? SqlAdapter = null,
+    IEntityMappingSource? EntityMappingSource = null);
 
 public static partial class DbConnectionExtensions
 {
@@ -37,11 +50,13 @@ public static partial class DbConnectionExtensions
     public static async Task<dynamic?> InsertAsync<T>(this DbConnection con, T entity, string? schema = null, bool returnId = true, bool includeAutoKey = false, CommandInfo commandInfo = default)
         where T : class
     {
-        var value = await con.ExecuteAsync(commandInfo, m => GetInsertSql(m, schema, entity, returnId, includeAutoKey), async (a, m) =>
+        var mapping = GetEntityMapping(typeof(T), commandInfo.EntityMappingSource);
+        var value = await con.ExecuteAsync(commandInfo, m => GetInsertSql(m, schema, entity, mapping, returnId, includeAutoKey), async (a, m) =>
         {
-            if (includeAutoKey && EntityDefinition<T>.Definition.HasAutoKey())
+            if (includeAutoKey && mapping.GeneratedKeys.Count > 0)
             {
-                await using var x = await a.EnableIdentityInsertAsync<T>(schema, m);
+                var tableName = GetTableNameWithSchema(a, schema, mapping);
+                await using var x = await a.EnableIdentityInsertAsync(tableName, m);
                 return await m.ExecuteScalarAsync();
             }
             else
@@ -70,11 +85,13 @@ public static partial class DbConnectionExtensions
         if (entities.IsNullOrEmpty())
             return Task.FromResult(0);
 
-        return con.ExecuteAsync(commandInfo, m => GetBulkInsertSql(m, schema, entities, includeAutoKey), async (a, m) =>
+        var mapping = GetEntityMapping(typeof(T), commandInfo.EntityMappingSource);
+        return con.ExecuteAsync(commandInfo, m => GetBulkInsertSql(m, schema, entities, mapping, includeAutoKey), async (a, m) =>
         {
-            if (includeAutoKey && EntityDefinition<T>.Definition.HasAutoKey())
+            if (includeAutoKey && mapping.GeneratedKeys.Count > 0)
             {
-                await using var x = await a.EnableIdentityInsertAsync<T>(schema, m);
+                var tableName = GetTableNameWithSchema(a, schema, mapping);
+                await using var x = await a.EnableIdentityInsertAsync(tableName, m);
                 return await m.ExecuteNonQueryAsync();
             }
             else
@@ -89,21 +106,24 @@ public static partial class DbConnectionExtensions
         return ParaNames.GetOrAdd((column, row), _ => $"@{column}_{row}");
     }
 
-    internal static SqlInfo GetBulkInsertSql<T>(ISqlAdapter sqlAdapter, string? schema, IReadOnlyCollection<T> entities, bool includeAutoKey)
+    internal static SqlInfo GetBulkInsertSql<T>(
+        ISqlAdapter sqlAdapter,
+        string? schema,
+        IReadOnlyCollection<T> entities,
+        EntityMapping mapping,
+        bool includeAutoKey)
     {
-        var entityType = typeof(T);
-        var def = GetEntityDefinition(entityType);
-        var columns = GetInsertColumnsSql(sqlAdapter, schema, entityType, includeAutoKey);
-        var values = GetInsertValuesSql(entityType, entities.Count, includeAutoKey);
+        var columns = GetInsertColumnsSql(sqlAdapter, schema, mapping, includeAutoKey);
+        var values = GetInsertValuesSql(mapping, entities.Count, includeAutoKey);
 
         var paras = new List<DbParameter>();
         foreach (var (i, item) in entities.Index())
         {
-            foreach (var field in def.InsertFields(includeAutoKey))
+            foreach (var property in mapping.GetInsertProperties(includeAutoKey))
             {
-                var paraName = GetParameterName(field.PropertyInfo.Name, i);
-                var value = field.PropertyInfo.GetValue(item);
-                var para = sqlAdapter.CreateParameter(paraName, value, field.DbType);
+                var paraName = GetParameterName(property.Property.Name, i);
+                var value = property.Property.GetValue(item);
+                var para = sqlAdapter.CreateParameter(paraName, value, property.StoreTypeName);
                 paras.Add(para);
             }
         }
@@ -116,19 +136,18 @@ public static partial class DbConnectionExtensions
         return new(sb.ToString(), paras);
     }
 
-    internal static string GetInsertColumnsSql(ISqlAdapter sqlAdapter, string? schema, Type entityType, bool includeAutoKey)
+    internal static string GetInsertColumnsSql(ISqlAdapter sqlAdapter, string? schema, EntityMapping mapping, bool includeAutoKey)
     {
-        return InsertColumnsSqls.GetOrAdd(new(sqlAdapter, schema, entityType, includeAutoKey), k => CreateInsertColumnsSql(k));
+        return InsertColumnsSqls.GetOrAdd(new(sqlAdapter, schema, mapping, includeAutoKey), key => CreateInsertColumnsSql(key));
 
         static string CreateInsertColumnsSql(InsertColumnsKey key)
         {
-            var (sqlAdapter, schema, entityType, includeAutoKey) = key;
-            var def = GetEntityDefinition(entityType);
-            var tableName = GetTableNameWithSchema(sqlAdapter, schema, def.EntityType);
+            var (sqlAdapter, schema, mapping, includeAutoKey) = key;
+            var tableName = GetTableNameWithSchema(sqlAdapter, schema, mapping);
             var sbColumnList = new StringBuilder(1024);
-            foreach (var (_, field, _, isLast) in def.InsertFields(includeAutoKey).IndexEx())
+            foreach (var (_, property, _, isLast) in mapping.GetInsertProperties(includeAutoKey).IndexEx())
             {
-                sbColumnList.Append(sqlAdapter.GetQuotedColumnName(field.FieldName));
+                sbColumnList.Append(sqlAdapter.GetQuotedColumnName(property.ColumnName));
                 if (isLast == false)
                 {
                     sbColumnList.Append(", ");
@@ -139,22 +158,21 @@ public static partial class DbConnectionExtensions
         }
     }
 
-    internal static string GetInsertValuesSql(Type entityType, int count, bool includeAutoKey)
+    internal static string GetInsertValuesSql(EntityMapping mapping, int count, bool includeAutoKey)
     {
-        return InsertValuesSqls.GetOrAdd(new(entityType, count, includeAutoKey), k => CreateInsertValuesSql(k));
+        return InsertValuesSqls.GetOrAdd(new(mapping, count, includeAutoKey), key => CreateInsertValuesSql(key));
 
         static string CreateInsertValuesSql(InsertValuesKey key)
         {
-            var (entityType, count, includeAutoKey) = key;
+            var (mapping, count, includeAutoKey) = key;
             var sbParameterList = new StringBuilder(1024);
-            var def = GetEntityDefinition(entityType);
 
             for (var i = 0; i < count; i++)
             {
                 sbParameterList.Append('(');
-                foreach (var (_, field, _, isLast) in def.InsertFields(includeAutoKey).IndexEx())
+                foreach (var (_, property, _, isLast) in mapping.GetInsertProperties(includeAutoKey).IndexEx())
                 {
-                    var paraName = GetParameterName(field.PropertyInfo.Name, i);
+                    var paraName = GetParameterName(property.Property.Name, i);
                     sbParameterList.Append(paraName);
 
                     if (isLast == false)
@@ -173,17 +191,22 @@ public static partial class DbConnectionExtensions
         }
     }
 
-    internal static SqlInfo GetInsertSql<T>(ISqlAdapter sqlAdapter, string? schema, T entity, bool returnId, bool includeAutoKey)
+    internal static SqlInfo GetInsertSql<T>(
+        ISqlAdapter sqlAdapter,
+        string? schema,
+        T entity,
+        EntityMapping mapping,
+        bool returnId,
+        bool includeAutoKey)
     {
-        var (sql, paras) = GetBulkInsertSql(sqlAdapter, schema, [entity], includeAutoKey);
+        var (sql, paras) = GetBulkInsertSql(sqlAdapter, schema, [entity], mapping, includeAutoKey);
 
         // when auto key is inserted, id cannot be returned.
         // ReSharper disable once InvertIf
         if (includeAutoKey == false && returnId)
         {
-            var def = GetEntityDefinition(typeof(T));
             // ReSharper disable once InvertIf
-            if (def.AutoKeys.Count == 1)
+            if (mapping.GeneratedKeys.Count == 1)
             {
                 // only return id when entity has single auto key.
                 using var sb = new ValueStringBuilder(1024);
@@ -211,18 +234,21 @@ public static partial class DbConnectionExtensions
     public static Task<T?> GetAsync<T>(this DbConnection connection, object id, string? schema = null, CommandInfo commandInfo = default)
     {
         var adapter = commandInfo.SqlAdapter ?? GetSqlAdapter(connection);
-        var sql = GetSqls.GetOrAdd(new(adapter, schema, typeof(T)), k => CreateGetSql(k));
+        var mapping = GetEntityMapping(typeof(T), commandInfo.EntityMappingSource);
+        var sql = GetSqls.GetOrAdd(new(adapter, schema, mapping), key => CreateGetSql(key));
         var dynParams = new DynamicParameters();
         dynParams.Add("@id", id);
         return connection.QueryFirstOrDefaultAsync<T?>(sql, dynParams, commandInfo.Transaction, commandInfo.TimeoutSeconds);
 
         static string CreateGetSql(EntitySqlKey key)
         {
-            var (sqlAdapter, schema, entityType) = key;
-            var keyField = GetSingleKey(entityType);
-            var name = GetTableNameWithSchema(sqlAdapter, schema, entityType);
-            var keyName = sqlAdapter.GetQuotedColumnName(keyField.FieldName);
-            return $"SELECT * FROM {name} WHERE {keyName} = @id";
+            var (sqlAdapter, schema, mapping) = key;
+            var keyProperty = GetSingleKey(mapping);
+            var tableName = GetTableNameWithSchema(sqlAdapter, schema, mapping);
+            var keyName = sqlAdapter.GetQuotedColumnName(keyProperty.ColumnName);
+            var selectColumns = string.Join(", ", mapping.Properties.Select(property =>
+                $"{sqlAdapter.GetQuotedColumnName(property.ColumnName)} AS {sqlAdapter.GetQuotedColumnName(property.Property.Name)}"));
+            return $"SELECT {selectColumns} FROM {tableName} WHERE {keyName} = @id";
         }
     }
 
@@ -239,29 +265,29 @@ public static partial class DbConnectionExtensions
     public static Task<int> DeleteAsync<T>(this DbConnection con, object id, string? schema = null, CommandInfo commandInfo = default)
     {
         var adapter = commandInfo.SqlAdapter ?? GetSqlAdapter(con);
-        var sql = DeleteSqls.GetOrAdd(new(adapter, schema, typeof(T)), k => CreateDeleteSql(k));
+        var mapping = GetEntityMapping(typeof(T), commandInfo.EntityMappingSource);
+        var sql = DeleteSqls.GetOrAdd(new(adapter, schema, mapping), key => CreateDeleteSql(key));
         var dynParams = new DynamicParameters();
         dynParams.Add("@id", id);
         return con.ExecuteAsync(sql, dynParams, commandInfo.Transaction, commandInfo.TimeoutSeconds);
 
         static string CreateDeleteSql(EntitySqlKey key)
         {
-            var (sqlAdapter, schema, entityType) = key;
-            var keyField = GetSingleKey(entityType);
-            var name = GetTableNameWithSchema(sqlAdapter, schema, entityType);
-            var keyName = sqlAdapter.GetQuotedColumnName(keyField.FieldName);
-            return $"DELETE FROM {name} WHERE {keyName} = @id";
+            var (sqlAdapter, schema, mapping) = key;
+            var keyProperty = GetSingleKey(mapping);
+            var tableName = GetTableNameWithSchema(sqlAdapter, schema, mapping);
+            var keyName = sqlAdapter.GetQuotedColumnName(keyProperty.ColumnName);
+            return $"DELETE FROM {tableName} WHERE {keyName} = @id";
         }
     }
 
-    private static FieldDefinition GetSingleKey(Type type)
+    private static PropertyMapping GetSingleKey(EntityMapping mapping)
     {
-        var def = GetEntityDefinition(type);
-        var keys = def.Keys;
+        var keys = mapping.Keys;
         if (keys.Count > 1)
-            throw new DataException($"Only supports an entity with a single [Key] property. [Key] Count: {keys.Count}");
+            throw new DataException($"Only entities with a single mapped key are supported. Key count: {keys.Count}");
         if (keys.Count == 0)
-            throw new DataException("Only supports an entity with a [Key] property");
+            throw new DataException("Only entities with a mapped key are supported.");
         return keys[0];
     }
 

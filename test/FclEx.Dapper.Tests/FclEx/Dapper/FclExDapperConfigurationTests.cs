@@ -11,7 +11,7 @@ public class FclExDapperConfigurationTests
     {
         var hadGuidTypeHandler = SqlMapper.HasTypeHandler(typeof(Guid));
 
-        _ = DapperHelper.GetEntityDefinition(typeof(FirstEntity));
+        _ = DapperHelper.GetEntityMapping(typeof(FirstEntity));
 
         Assert.Equal(hadGuidTypeHandler, SqlMapper.HasTypeHandler(typeof(Guid)));
     }
@@ -116,13 +116,45 @@ public class FclExDapperConfigurationTests
     }
 
     [Fact]
+    public void Apply_DifferentMappingSource_CanReplaceAndRestoreNestedRegistration()
+    {
+        ResetTypeMap<SourceMappedEntity>();
+        var firstMapping = CreateEntityMapping<SourceMappedEntity>("first_column");
+        var secondMapping = CreateEntityMapping<SourceMappedEntity>("second_column");
+
+        try
+        {
+            var first = DapperHelper.CreateConfiguration()
+                .UseEntityMappingSource(new SingleEntityMappingSource(firstMapping))
+                .AddColumnMapping<SourceMappedEntity>()
+                .Apply();
+            var second = DapperHelper.CreateConfiguration()
+                .UseEntityMappingSource(new SingleEntityMappingSource(secondMapping))
+                .AddColumnMapping<SourceMappedEntity>()
+                .Apply(DapperRegistrationConflictBehavior.Replace);
+
+            Assert.Equal(nameof(SourceMappedEntity.Value),
+                SqlMapper.GetTypeMap(typeof(SourceMappedEntity)).GetMember("SECOND_COLUMN")?.Property?.Name);
+
+            first.Dispose();
+            second.Dispose();
+
+            Assert.IsType<DefaultTypeMap>(SqlMapper.GetTypeMap(typeof(SourceMappedEntity)));
+        }
+        finally
+        {
+            ResetTypeMap<SourceMappedEntity>();
+        }
+    }
+
+    [Fact]
     public void AddColumnMappingsFromAssembly_OnlyRunsWhenExplicitlyRequested()
     {
         ResetTypeMap<AssemblyMappedEntity>();
 
         try
         {
-            _ = DapperHelper.GetEntityDefinition(typeof(AssemblyMappedEntity));
+            _ = DapperHelper.GetEntityMapping(typeof(AssemblyMappedEntity));
             Assert.IsType<DefaultTypeMap>(SqlMapper.GetTypeMap(typeof(AssemblyMappedEntity)));
 
             using var registration = DapperHelper.CreateConfiguration()
@@ -140,6 +172,15 @@ public class FclExDapperConfigurationTests
     private static CustomPropertyTypeMap CreateMap<TEntity>()
     {
         return new CustomPropertyTypeMap(typeof(TEntity), (_, _) => null!);
+    }
+
+    private static EntityMapping CreateEntityMapping<TEntity>(string columnName)
+    {
+        var type = typeof(TEntity);
+        return new EntityMapping(
+            type,
+            type.Name,
+            [new PropertyMapping(type.GetRequiredProperty(nameof(SourceMappedEntity.Value)), columnName)]);
     }
 
     private static void ResetTypeMap<TEntity>()
@@ -161,6 +202,21 @@ public class FclExDapperConfigurationTests
     {
         [Column("stored_name")]
         public string? Name { get; set; }
+    }
+
+    private sealed class SourceMappedEntity
+    {
+        public string? Value { get; set; }
+    }
+
+    private sealed class SingleEntityMappingSource(EntityMapping mapping) : IEntityMappingSource
+    {
+        public EntityMapping GetMapping(Type entityType)
+        {
+            return entityType == mapping.EntityType
+                ? mapping
+                : throw new KeyNotFoundException($"No mapping is registered for '{entityType.FullName}'.");
+        }
     }
 }
 
