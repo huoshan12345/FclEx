@@ -12,15 +12,9 @@ public class AsyncDisposableValue<T> : IAsyncDisposable
         _disposeAction = disposeAction;
     }
 
-    public T Value
-    {
-        get
-        {
-            if (Volatile.Read(ref _disposeTask) is not null)
-                throw new ObjectDisposedException(nameof(Value));
-            return _value;
-        }
-    }
+    public T Value => Volatile.Read(ref _disposeTask) is not null
+        ? throw new ObjectDisposedException(nameof(Value))
+        : _value;
 
     public static implicit operator T(AsyncDisposableValue<T> disposable) => disposable.Value;
 

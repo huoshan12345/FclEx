@@ -12,7 +12,7 @@ partial class EnumerableExtensions
     /// <remarks>Cancellation faults the returned task as canceled; it never returns a successful partial execution.</remarks>
     public static async Task ForEachSequentiallyAsync<T>(
         this IEnumerable<T> source,
-        Func<T, CancellationToken, ValueTask> operation,
+        Func<T, CancellationToken, Task> operation,
         TimeSpan delayBetweenItems = default,
         CancellationToken cancellationToken = default)
     {
@@ -40,7 +40,7 @@ partial class EnumerableExtensions
     /// <remarks>Cancellation faults the returned task as canceled; it never returns partial results.</remarks>
     public static async Task<TResult[]> SelectSequentiallyAsync<T, TResult>(
         this IEnumerable<T> source,
-        Func<T, CancellationToken, ValueTask<TResult>> operation,
+        Func<T, CancellationToken, Task<TResult>> operation,
         TimeSpan delayBetweenItems = default,
         CancellationToken cancellationToken = default)
     {
@@ -73,7 +73,7 @@ partial class EnumerableExtensions
     /// </remarks>
     public static async Task ForEachConcurrentlyAsync<T>(
         this IEnumerable<T> source,
-        Func<T, CancellationToken, ValueTask> operation,
+        Func<T, CancellationToken, Task> operation,
         int maxDegreeOfParallelism,
         CancellationToken cancellationToken = default)
     {
@@ -109,6 +109,7 @@ partial class EnumerableExtensions
             }
         }
 
+        [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
         bool TryTakeNext([MaybeNullWhen(false)] out T item)
         {
             lock (gate)
@@ -149,7 +150,7 @@ partial class EnumerableExtensions
     /// </remarks>
     public static async Task<TResult[]> SelectConcurrentlyAsync<T, TResult>(
         this IEnumerable<T> source,
-        Func<T, CancellationToken, ValueTask<TResult>> operation,
+        Func<T, CancellationToken, Task<TResult>> operation,
         int maxDegreeOfParallelism,
         CancellationToken cancellationToken = default)
     {
@@ -188,6 +189,7 @@ partial class EnumerableExtensions
             }
         }
 
+        [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
         bool TryTakeNext([MaybeNullWhen(false)] out T item, out int index)
         {
             lock (gate)
