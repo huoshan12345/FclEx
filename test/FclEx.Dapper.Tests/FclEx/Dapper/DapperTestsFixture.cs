@@ -9,8 +9,6 @@ namespace FclEx.Dapper;
 
 public class DapperTestsFixture : CoreTestsFixture
 {
-    private readonly FclExDapperRegistration _dapperRegistration;
-
     public static readonly DbDriver[] DbDrivers = GetDbProviderTypes();
     public static readonly DatabasesConfig Databases = Config.GetSection("Databases").Get<DatabasesConfig>()!;
 
@@ -24,9 +22,6 @@ public class DapperTestsFixture : CoreTestsFixture
 
     public DapperTestsFixture()
     {
-        _dapperRegistration = DapperHelper.CreateConfiguration()
-            .AddColumnMappingsFromAssembly(Assembly)
-            .Apply();
         DefaultUser = new(WithAssemblyInfo(UserName), UserPassword, WithAssemblyInfo(UserSchema));
         ConnectionStrings = new(Databases, WithAssemblyInfo(DbName), DefaultUser);
     }
@@ -87,12 +82,6 @@ public class DapperTestsFixture : CoreTestsFixture
             using var con = CreateDbConnection(dbDriver, schema);
             await FixAutoIncrement<EntityWithAutoKey>(con, dbDriver, schema);
         }
-    }
-
-    public override ValueTask DisposeAsync()
-    {
-        _dapperRegistration.Dispose();
-        return base.DisposeAsync();
     }
 
     public static Task<int> FixAutoIncrement<T>(IDbConnection con, DbDriver dbDriver, string? schema)

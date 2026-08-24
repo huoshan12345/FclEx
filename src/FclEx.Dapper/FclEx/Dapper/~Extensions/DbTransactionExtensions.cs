@@ -35,18 +35,6 @@ public static class DbTransactionExtensions
         await tran.RollbackAsync();
     }
 
-    public static async Task TryRollbackAsync(this IEnumerable<DbTransaction> trans, Exception commitException)
-    {
-        // Ensure that every transaction will be roll-backed.
-        var results = await trans.Select(m => Operation.ExecuteAsync(m.TryRollbackAsync)).WhenAll();
-        var errors = results.Where(m => m.IsError).ToArray();
-        if (errors.Any())
-        {
-            throw new AggregateException(errors.Select(m => m.Exception!).Append(commitException));
-        }
-        else commitException.ReThrow();
-    }
-
     /// <summary>
     /// Inserts an entity into table asynchronously. <br/>
     /// Returns identity only if entity has an auto-increment key and includeAutoKey is <see langword="false"/>, otherwise returns <see langword="null"/>.
@@ -60,7 +48,14 @@ public static class DbTransactionExtensions
     /// <param name="timeoutSeconds"></param>
     /// <param name="sqlAdapter"></param>
     /// <returns></returns>
-    public static Task<dynamic?> InsertAsync<T>(this DbTransaction tran, T entity, string? schema = null, bool returnId = true, bool includeAutoKey = false, int? timeoutSeconds = null, ISqlAdapter? sqlAdapter = null)
+    public static Task<dynamic?> InsertAsync<T>(
+        this DbTransaction tran, 
+        T entity, 
+        string? schema = null, 
+        bool returnId = true, 
+        bool includeAutoKey = false,
+        int? timeoutSeconds = null, 
+        ISqlAdapter? sqlAdapter = null)
         where T : class
     {
         return tran.Connection!.InsertAsync(entity, schema, returnId, includeAutoKey, new(timeoutSeconds, tran, sqlAdapter));
@@ -77,7 +72,13 @@ public static class DbTransactionExtensions
     /// <param name="timeoutSeconds"></param>
     /// <param name="sqlAdapter"></param>
     /// <returns></returns>
-    public static Task<int> BulkInsertAsync<T>(this DbTransaction tran, IReadOnlyCollection<T> entities, string? schema = null, bool includeAutoKey = false, int? timeoutSeconds = null, ISqlAdapter? sqlAdapter = null)
+    public static Task<int> BulkInsertAsync<T>(
+        this DbTransaction tran,
+        IReadOnlyCollection<T> entities,
+        string? schema = null, 
+        bool includeAutoKey = false, 
+        int? timeoutSeconds = null, 
+        ISqlAdapter? sqlAdapter = null)
         where T : class
     {
         return tran.Connection!.BulkInsertAsync(entities, schema, includeAutoKey, new(timeoutSeconds, tran, sqlAdapter));

@@ -9,13 +9,14 @@ Dapper and ADO.NET helpers for FclEx.
 - Dynamic-parameter utilities.
 - SQL adapter abstractions for provider-specific SQL fragments.
 - Type-handler helpers for custom Dapper mappings.
-- An explicit `IEntityMappingSource` contract shared by CRUD SQL generation and Dapper column mapping.
+- An explicit `IEntityMappingSource` contract for CRUD SQL generation and caching.
 
 ## Usage Notes
 
 - This package depends on Dapper and `FclEx.Core`.
 - The APIs stay close to ADO.NET and Dapper concepts rather than introducing a full repository framework.
-- FclEx does not scan loaded assemblies or register Dapper type maps and type handlers automatically.
+- Future changes follow the package's [design principles](DESIGN.md).
+- CRUD operations do not scan assemblies or modify Dapper's process-wide type maps and type handlers.
 - Some tests expect local database services to be available.
 
 ## Entity Mapping
@@ -45,17 +46,6 @@ Here `ApplicationEntityMappingSource` is an application-owned implementation tha
 
 An `IEntityMappingSource` must return the same `EntityMapping` instance whenever the same entity type is requested. SQL caches use mapping identity so multiple mapping sources can safely map one CLR type differently.
 
-## Explicit Dapper Column Mapping
+FclEx-generated queries alias database columns back to CLR property names, so CRUD operations do not require a global Dapper type map. Applications that configure raw Dapper queries or type handlers own those process-wide settings.
 
-FclEx CRUD queries alias database columns back to CLR property names and do not require a global Dapper type map. Register one only when raw Dapper queries should also use the selected entity mapping:
-
-```csharp
-var dapperRegistration = DapperHelper.CreateConfiguration()
-    .UseEntityMappingSource(mappings)
-    .AddColumnMapping<Order>()
-    .Apply();
-```
-
-Keep the returned `FclExDapperRegistration` alive while the mappings are required and dispose it during application or test teardown. Applying the same FclEx configuration is reference counted. If another component already owns a custom type map, `Apply()` throws before changing any selected mapping; pass `KeepExisting` or `Replace` explicitly to choose a different conflict policy.
-
-`GuidTypeHandler` and `DateTimeHandler` remain available for explicit registration through Dapper, but FclEx does not install them as process-wide defaults.
+`GuidTypeHandler` and `DateTimeHandler` remain available for explicit registration through Dapper.

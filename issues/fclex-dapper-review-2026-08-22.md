@@ -4,17 +4,19 @@
 
 本轮审查了 `src/FclEx.Dapper` 的全部生产代码、项目文件和包级 README，并对照 `test/FclEx.Dapper.Tests` 检查了现有覆盖。`issues` 目录此前只有 FclEx.Core 的审查记录，没有可复用或需要避开的 FclEx.Dapper issue。
 
-`FclEx.Dapper` 作为“小型 Dapper/ADO.NET 扩展包”有存在价值，但当前实现同时承担实体元数据、CRUD SQL 生成、provider 方言、Dapper 全局配置以及多连接事务协调，职责跨度已经超过 README 所描述的薄扩展层。建议保留单连接的 ADO.NET/Dapper 便利方法；把 CRUD 映射改成显式配置、无全局扫描的独立子系统；删除或重新设计多连接“事务”；把 provider 能力通过明确方言接口或 provider 子包表达。
+`FclEx.Dapper` 的定位是轻量 Dapper/ADO.NET 扩展，重点封装重复的 CRUD 操作，并缓存实体映射生成的 SQL。实体元数据只应覆盖现有操作需要的表、列、键和值生成信息。Dapper 全局配置、多连接事务协调和 ORM 式数据模型不应进入核心 CRUD 路径。后续改进以包级 [Design Principles](../src/FclEx.Dapper/DESIGN.md) 为边界。
 
-本轮共登记 45 项，没有超过 50 项上限。优先级含义：P0 为可能破坏数据一致性的设计；P1 为高概率错误、资源泄漏或主要公共契约缺陷；P2 为中等风险 API/兼容性问题；P3 为命名、文档与可维护性问题。
+本轮初次登记 45 项。2026-08-24 按包级设计原则复核后移除 1 项缺少当前支持目标依据的 Native AOT 议题，保留 44 项。为避免已有讨论和处理记录错指问题，保留原 issue 编号。优先级含义：P0 为可能破坏数据一致性的设计；P1 为高概率错误、资源泄漏或主要公共契约缺陷；P2 为中等风险 API/兼容性问题；P3 为命名、文档与可维护性问题。
 
 初次验证状态：执行 `dotnet build src/FclEx.Dapper/FclEx.Dapper.csproj -c Release --no-restore`，`netstandard2.0`、`net472`、`net8.0`、`net9.0`、`net10.0` 全部构建成功，0 warning、0 error。初次审查以源码和契约为主，当时未运行依赖外部数据库的完整测试集，也未修改生产代码。
 
 后续处理（2026-08-23）：issue 1、2 已按下述记录修改，同时解决了与 issue 2 重叠的 issue 6、37。生产项目五个目标框架和测试项目四个目标框架均构建成功；不依赖外部数据库的 `FclExDapperConfigurationTests`、`DbConnectionExtensionsApiTests`、`SqliteMigrationTests` 在 `net472`、`net8.0`、`net9.0`、`net10.0` 共运行 36 个测试实例，全部通过。外部 provider 测试仍未运行。
 
-后续处理（2026-08-24）：新增独立 `IEntityMappingSource` 契约并让 CRUD SQL、SQL 缓存、表/列解析和显式 Dapper type map 共用 `EntityMapping`，解决 issue 3 以及重叠的 issue 19、21、26、27、28、29、30、38。`EntityDefinition`、`FieldDefinition` 和 `GetEntityDefinition` 已删除，属于有意的 breaking change。生产项目五个目标框架构建成功；`EntityMappingTests`、`FclExDapperConfigurationTests`、`SqliteMigrationTests` 在四个测试目标框架共运行 48 个测试实例，全部通过。外部 provider 测试仍未运行。
+后续处理（2026-08-24）：新增独立 `IEntityMappingSource` 契约并让 CRUD SQL、SQL 缓存和表/列解析共用 `EntityMapping`，解决 issue 3 以及重叠的 issue 19、21、26、27、28、29、30、38。`EntityDefinition`、`FieldDefinition` 和 `GetEntityDefinition` 已删除，属于有意的 breaking change。生产项目五个目标框架构建成功；当时的 `EntityMappingTests`、`FclExDapperConfigurationTests`、`SqliteMigrationTests` 在四个测试目标框架共运行 48 个测试实例，全部通过。外部 provider 测试仍未运行。
 
-## 问题清单（1–12：整体设计、职责与生命周期）
+架构收敛（2026-08-24）：删除 `FclExDapperConfigurationBuilder`、`FclExDapperRegistration`、`DapperRegistrationConflictBehavior` 及全部 FclEx-owned `SqlMapper.SetTypeMap` 状态，测试 fixture 不再扫描程序集或安装全局映射。生产与测试项目的所有目标框架构建通过，0 warning、0 error；`EntityMappingTests` 和 `SqliteMigrationTests` 共 24 个测试实例通过，raw Dapper 无全局映射回归用例在 `net10.0` 运行 24 个实例通过。完整外部 provider 测试运行 492 个实例，其中 65 个因既有异常文本断言、跨目标共享数据库的主键冲突及 MySQL 连接上限失败，本次未修改这些独立问题。
+
+## 问题清单：整体设计、职责与生命周期
 
 1. **[P0][已修复 2026-08-23] 多连接 `DoTransactionAsync` 暗示原子事务，但顺序提交必然允许部分提交。**
    - 位置：`FclEx/Dapper/~Extensions/DbConnectionExtensions.Dapper.cs:44-61`。
@@ -25,35 +27,35 @@
 2. **[P1][已修复 2026-08-23] 包初始化会静默修改进程级 Dapper 状态，生命周期和所有权不可控。**
    - 位置：`DapperHelper.cs:9-12,47-57,88-101`。
    - 说明：首次触碰 `DapperHelper` 就注册全局 `GuidTypeHandler`、扫描程序集并调用 `SqlMapper.SetTypeMap`；这可能覆盖宿主已注册的 type map/handler，也没有撤销或冲突检测。一个工具方法不应隐式重配整个进程的 Dapper。
-   - 建议：改为显式 `ConfigureFclExDapper`/builder 注册；默认不扫描、不覆盖已有映射，并为冲突策略、幂等性和测试隔离提供明确选项。
-   - 处理：已删除静态构造、无参/程序集 `Initialize` 及 `RegisterColumnMapping`，不再自动扫描 `AppDomain`、注册 `GuidTypeHandler` 或覆盖 type map。新增 `DapperHelper.CreateConfiguration()` builder；调用方显式选择类型或程序集后再 `Apply()`。默认冲突策略为 `Throw`，且先检查全部冲突再应用；另提供 `KeepExisting`、`Replace`。等价注册采用引用计数，释放最后一个 `FclExDapperRegistration` 时恢复原 type map，便于测试隔离。
+   - 建议：删除核心 CRUD 路径中的隐式全局配置。raw Dapper 如需 type map 或 handler，由应用通过 Dapper API 显式配置，并且不自动扫描或覆盖宿主配置。
+   - 处理：已删除静态构造、无参/程序集 `Initialize`、`RegisterColumnMapping` 以及后续过渡期的 `CreateConfiguration` builder/registration。核心包不再扫描 `AppDomain`、注册 `GuidTypeHandler` 或调用 `SqlMapper.SetTypeMap`；raw Dapper 的全局配置由应用负责。
 
 3. **[P1][已修复 2026-08-24] CRUD 映射模型借用了 DataAnnotations，却只实现其中一部分语义。**
    - 位置：`EntityDefinition.cs:23-47`、`FieldDefinition.cs:3-11`。
    - 说明：实现读取 `[Table]`、`[Column]`、`[Key]` 和部分 `[DatabaseGenerated]`，因此 API 看起来遵守 DataAnnotations 映射契约；实际上 schema、`[NotMapped]`、computed、只读/索引器等均未正确处理。消费者无法知道哪些约定可信。
-   - 建议：定义独立、完整的映射契约（例如 `IEntityMapProvider`），或明确承诺并完整实现所采用的 DataAnnotations 子集；不要让属性名称暗示比实际更完整的兼容性。
+   - 建议：定义只覆盖现有 CRUD SQL 所需元数据的独立映射契约，或明确记录支持的 DataAnnotations 子集；不要引入关系、跟踪等未被当前操作消费的 ORM 元数据。
    - 处理：新增 `IEntityMappingSource`、不可变 `EntityMapping`/`PropertyMapping` 和 `DatabaseValueGeneration`。CRUD 通过 `CommandInfo.EntityMappingSource` 接收自定义 source，默认使用 `DataAnnotationsEntityMappingSource`；后者明确支持 `Table`、`Column`、`Key`、`NotMapped` 和全部 `DatabaseGeneratedOption`，并采用可验证的 persistent scalar property 规则。SQL 缓存按 mapping identity 隔离，自定义 source 必须为同一实体返回稳定映射实例。
 
 4. **[P1] `ISqlAdapter` 把 provider 方言简化成少量字符串，无法可靠表达生成键、批量写入和能力差异。**
    - 位置：`SqlAdapters/ISqlAdapter.cs:3-10`。
    - 说明：接口只有引用名称、参数创建、schema 布尔值和一段 `SelectIdentitySql`，但调用方实际需要表达 `RETURNING`/`OUTPUT`、参数上限、默认值插入、identity override、批次大小等能力。当前抽象迫使通用 CRUD 层拼接并不通用的 SQL。
-   - 建议：以操作为中心设计方言接口，例如生成完整 insert command、返回键策略、最大批次、identity override scope；或者把 CRUD 实现放进各 provider adapter，而不是暴露零散 SQL 片段。
+   - 建议：保持 `ISqlAdapter` 轻量，只补充现有 Insert/BulkInsert/Get/Delete 确实需要的能力，例如返回键语法、安全批次大小和 explicit identity 行为；不要扩张成完整 provider 框架。
 
 5. **[P1] adapter 注册按连接类型的 `FullName` 精确匹配，包装连接、派生连接和同名类型均不可靠。**
    - 位置：`DapperHelper.cs:14-21,104-111`。
    - 说明：连接查找忽略 assembly identity，只比较字符串；代理/重试包装器和 provider 派生类型不会命中，两个程序集中的同名类型又会冲突。这与公开的可扩展 adapter 模型不匹配。
-   - 建议：至少以 `Type` 为键并按可赋值关系/有序 predicate 解析；对包装连接提供 unwrap 契约，注册时检测歧义，不要把类型身份降级为字符串。
+   - 建议：以 `Type` 为键并按可赋值关系解析；无法识别的包装连接由调用方显式传入 adapter，不要把类型身份降级为字符串。
 
 6. **[P1][已修复 2026-08-23] 自动程序集扫描既脆弱又依赖加载顺序。**
    - 位置：`DapperHelper.cs:60-101`。
    - 说明：静态初始化只扫描当时已加载的程序集，后来加载的插件不会自动映射；`assembly.ExportedTypes` 的异常还可能把 `DapperHelper` 静态构造永久置于失败状态。针对 `Microsoft.TestPlatform.*` 的硬编码跳过进一步说明该模型不稳健。
    - 建议：移除 AppDomain 全扫描，要求调用方显式传入实体类型/程序集；扫描失败应产生可诊断的逐程序集结果，不能从静态构造函数传播。
-   - 处理：已移除 AppDomain 全扫描和静态构造路径。`AddColumnMappingsFromAssembly` 只在调用方显式传入程序集时同步检查该程序集，异常直接归属于该次配置调用。
+   - 处理：已移除 AppDomain 全扫描、静态构造路径和后续过渡期的显式程序集扫描 API。
 
-7. **[P2] 多组静态缓存没有容量、清理或可卸载程序集策略。**
+7. **[P2] 部分静态 SQL 缓存的键空间无界，可能长期持有动态输入。**
    - 位置：`DapperHelper.cs:22-23,38`、`DbConnectionExtensions.cs:18-22`。
-   - 说明：虽然实体主缓存用了 `ConditionalWeakTable`，`Lockers`、表名缓存和 CRUD SQL 缓存仍以 `Assembly`、`Type`、任意 schema 字符串及 adapter 实例为强键；`ParaNames` 还会为每个列名/行号永久增长。插件和多租户动态 schema 场景会持续占用内存。
-   - 建议：把缓存绑定到显式配置实例的生命周期；对动态 schema/批次 SQL采用有界缓存或不缓存，并避免以 collectible `Assembly`/`Type` 为全局强键。
+   - 说明：静态缓存符合避免重复创建 SQL 字符串的目标，但表名和 CRUD SQL 缓存会强引用任意 schema 字符串及 adapter 实例；`ParaNames` 还会为每个列名/行号永久增长。动态 schema 和任意批次数量会持续扩大键空间。
+   - 建议：继续为稳定的 operation、mapping 和 adapter 组合使用静态缓存；对动态 schema、批次大小等开放输入采用有界缓存或直接生成，并确保 cache key 包含所有影响 SQL 的值。
 
 8. **[P1] 数据库异步 API 没有端到端取消契约。**
    - 位置：`DbConnectionExtensions.cs:37-84,211-245,268-295`、`DbConnectionExtensions.Dapper.cs:5-60`、`DbTransactionExtensions.cs:63-113`。
@@ -72,19 +74,14 @@
 
 11. **[P2] adapter 的公开扩展模型与 singleton/CRTP 实现互相矛盾。**
     - 位置：`SqlAdapterBase.cs:8-22`、各具体 adapter 类型。
-    - 说明：具体 adapter 是公开、非 sealed、可实例化类型，同时基类又提供 `TSelf Instance` singleton，并让缓存有时按实例、有时按类型识别。外部继承、多个配置实例及单例假设无法同时成立。
-    - 建议：若 adapter 无状态，具体类 sealed 且只公开 singleton；若需要外部扩展，移除 CRTP singleton，定义稳定的实例身份/配置生命周期和缓存契约。
+    - 说明：具体 adapter 是公开、非 sealed、可实例化类型，同时基类又提供 `TSelf Instance` singleton，并让缓存有时按实例、有时按类型识别。外部继承、有状态自定义实例及单例假设无法同时成立。
+    - 建议：内置无状态 adapter 使用 sealed singleton；自定义 adapter 必须提供稳定的缓存身份，或禁止状态影响 SQL 生成。
 
-12. **[P2] 反射构造 provider 参数和 `Expression.Compile` 没有 trimming/Native AOT 契约。**
-    - 位置：`SqlAdapterBase.cs:54-84`、`DapperHelper.cs:79-81`。
-    - 说明：字符串 `Type.GetType`、反射查 constructor/property、程序集扫描和运行时表达式编译均需要额外保留信息；代码没有相关 annotation，也没有 README 限制。Native AOT 不支持运行时代码生成，并对动态加载/反射有明确限制。
-    - 建议：以注册的 `Func<string, object?, string?, DbParameter>` factory 替代字符串反射；如暂不支持 trimming/AOT，应在项目元数据和 README 明确声明。参考：[Native AOT limitations](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/#limitations-of-native-aot-deployment)。
+## 问题清单：公共 API、签名与命名
 
-## 问题清单（13–24：公共 API、签名与命名）
-
-13. **[P1] `InsertAsync` 返回 `dynamic?`，生成键类型既不安全也不适合 AOT。**
+13. **[P1] `InsertAsync` 返回 `dynamic?`，调用方无法获得编译期生成键类型检查。**
     - 位置：`DbConnectionExtensions.cs:37-54`、`DbTransactionExtensions.cs:63-66`。
-    - 说明：调用方只有在运行时才能发现 provider 返回的是 `decimal`、`long` 还是其他类型；注释所谓“先转 dynamic 以便转换”只是把转换失败推迟到调用点，并引入 runtime binder。
+    - 说明：调用方只有在运行时才能发现 provider 返回的是 `decimal`、`long` 还是其他类型；注释所谓“先转 dynamic 以便转换”只是把转换失败推迟到调用点。
     - 建议：提供 `InsertAsync<TEntity, TKey>`/`InsertAndGetKeyAsync<TKey>`，由 adapter 将结果转换为明确的 `TKey`；无返回键的插入应单独返回 affected rows。
 
 14. **[P2] `returnId` 与 `includeAutoKey` 两个相邻布尔参数形成难读且存在非法组合的 API。**
@@ -94,7 +91,7 @@
 
 15. **[P2] `CommandInfo` 名称过于宽泛，且把不完整的执行选项固化为公共 positional record。**
     - 位置：`DbConnectionExtensions.cs:13`。
-    - 说明：它实际是 FclEx CRUD command options，却没有 cancellation、command behavior、buffering 等语义；`TimeoutSeconds` 不验证负值，`Transaction` 与连接是否匹配也未验证。
+    - 说明：它实际是 FclEx CRUD command options，却没有 cancellation；`TimeoutSeconds` 不验证负值，`Transaction` 与连接是否匹配也未验证。
     - 建议：重命名为 `DapperCommandOptions`/`CrudCommandOptions`，使用具名属性和验证，并统一供 connection/transaction 重载使用。
 
 16. **[P2] `DoTransactionAsync` 名称不自然，默认 `ReadUncommitted` 又偏离常见安全默认值。**
@@ -144,7 +141,7 @@
     - 说明：默认 1433 使其实际面向 SQL Server，但只按第一个逗号切分；`tcp:` 前缀、named instance、IPv6、LocalDB 和错误端口均没有明确语义，非法端口还会静默回退到 1433。
     - 建议：若只支持 `host[,port]`，重命名并严格验证；若目标是 SQL Server connection string，则使用 provider 的 connection-string builder/官方解析能力，不自行猜测。
 
-## 问题清单（25–43：实现正确性与 provider 行为）
+## 问题清单：实现正确性与 provider 行为
 
 25. **[P1] insert/bulk 内部创建的 `DbCommand` 从未释放。**
     - 位置：`DbConnectionExtensions.cs:273-279`。
@@ -215,13 +212,13 @@
     - 位置：`DapperHelper.cs:7,88-101`。
     - 说明：`volatile` 只保证可见性，两个线程仍可同时看到 false、同时写 true 并重复执行 handler 注册和程序集循环。
     - 建议：使用 `Lazy<T>`、静态构造的单一初始化路径或 `Interlocked.CompareExchange`；显式配置后则可直接删除这组全局状态。
-    - 处理：显式配置重构已删除 `_isDapperInitialized` 及一次性隐式初始化；type map 注册和引用计数在专用锁内协调。
+    - 处理：已删除 `_isDapperInitialized` 及所有 FclEx-owned type map 注册和恢复状态。
 
 38. **[P2][已修复 2026-08-24] column mapping 注释声称大小写不敏感，代码却使用大小写敏感比较。**
     - 位置：`DapperHelper.cs:45-56`。
     - 说明：`p.FieldName == name` 是 ordinal case-sensitive；provider 返回不同 casing 时找不到属性，与注释和常见数据库行为不一致。
     - 建议：采用 `StringComparer.OrdinalIgnoreCase`，并在同名不同大小写产生歧义时明确报错；添加 alias 与 casing 组合测试。
-    - 处理：`EntityMapping` 以 `StringComparer.OrdinalIgnoreCase` 同时索引 property/column identifiers，构造时拒绝跨属性歧义；Dapper type map 和 helper 共用该解析，测试覆盖大写 alias 查询。
+    - 处理：`EntityMapping` 以 `StringComparer.OrdinalIgnoreCase` 同时索引 property/column identifiers，构造时拒绝跨属性歧义；CRUD SQL 和 helper 共用该解析，测试覆盖大写 alias 查询。
 
 39. **[P1] 单连接事务在 rollback 失败时会丢失原始业务/commit 异常。**
     - 位置：`DbConnectionExtensions.Dapper.cs:12-21,32-40`。
@@ -246,9 +243,9 @@
 43. **[P2] `RegisterSqlAdapter` 实际是无条件全局替换，却没有冲突或缓存失效契约。**
     - 位置：`DapperHelper.cs:104-111`。
     - 说明：同一连接类型的现有 adapter 会被静默覆盖，返回值还是刚写入的新 adapter，而不是旧值或注册结果；并发测试/宿主模块无法安全协调，表名缓存也可能保留旧实例产生的结果。
-    - 建议：区分 `TryAddSqlAdapter` 与 `ReplaceSqlAdapter`，返回明确结果/旧值；替换时使相关缓存失效，或把 registry 放入可独立创建的配置实例。
+    - 建议：区分 `TryAddSqlAdapter` 与 `ReplaceSqlAdapter`，返回明确结果或旧值；替换时清理受影响的静态 SQL 缓存。
 
-## 问题清单（44–45：测试与消费者文档）
+## 问题清单：测试与消费者文档
 
 44. **[P2] provider 测试通过 early return 伪装成成功，SQLite 主路径基本未执行。**
     - 位置：`DapperTestsFixture.cs:40-57`、`DbConnectionExtensionsTests.CustomDbType.cs:8-13,39-44,69-74,100-105`。
@@ -257,12 +254,12 @@
 
 45. **[P3] README 没有说明包最重要的运行时契约和限制。**
     - 位置：`src/FclEx.Dapper/README.md`。
-    - 说明：文档只列能力名称，没有 provider 支持/安装方式、adapter 注册、DataAnnotations 子集、单键限制、全局 Dapper mutation、连接所有权、批量上限、identity 行为或 AOT 状态；Description 还宣传 type handlers，却未说明 `DateTimeHandler` 并未注册。
+    - 说明：文档只列能力名称，没有 provider 支持/安装方式、adapter 注册、DataAnnotations 子集、单键限制、全局 Dapper mutation、连接所有权、批量上限或 identity 行为；Description 还宣传 type handlers，却未说明 `DateTimeHandler` 并未注册。
     - 建议：整体设计收敛后补一套最小可运行示例和兼容性表，并明确副作用、限制及 provider-specific 行为；根 README、包 README 和项目 Description 同步更新。
 
 ## 建议的处理顺序
 
 1. 先决定删除/替换多连接事务（issue 1），并修复 command 释放、rollback 异常和生成键正确性（25、31、39）。
-2. 再确定 CRUD 子系统的长期边界：显式配置、完整 metadata contract、provider dialect 能力和取消/连接生命周期（2–12）。
+2. 再确定 CRUD 扩展的长期边界：最小且稳定的 metadata contract、SQL 缓存键、adapter 能力和取消/连接生命周期（2–11）。
 3. 在该设计上重塑返回键、options、事务及 adapter API（13–24），避免为即将替换的签名补兼容性包袱。
 4. 最后处理具体映射/SQL 缺陷和命名文档，并把 SQLite memory 测试扩展为不依赖外部服务的回归层（26–45）。

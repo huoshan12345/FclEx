@@ -1,7 +1,7 @@
 namespace FclEx.Dapper;
 
 /// <summary>
-/// Provides the entity mappings consumed by FclEx.Dapper CRUD and Dapper type-map integration.
+/// Provides the entity mappings used to generate FclEx.Dapper CRUD SQL and parameters.
 /// </summary>
 /// <remarks>
 /// An implementation must return the same immutable <see cref="EntityMapping"/> instance for repeated
