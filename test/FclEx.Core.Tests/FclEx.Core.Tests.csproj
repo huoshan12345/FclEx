@@ -25,4 +25,7 @@
     <None Include="xunit.runner.debug.json" CopyToOutputDirectory="PreserveNewest" TargetPath="xunit.runner.json" Condition="'$(Configuration)' == 'Debug'" />
     <None Include="xunit.runner.release.json" CopyToOutputDirectory="PreserveNewest" TargetPath="xunit.runner.json" Condition="'$(Configuration)' == 'Release'" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="TestData\json-path-comparison\" />
+  </ItemGroup>
 </Project>

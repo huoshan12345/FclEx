@@ -69,20 +69,14 @@ public static class HttpResponseExtensions
 
         static T Deserialize(string str, string? path, JsonSerializerOptions? options)
         {
-            using var doc = JsonDocument.Parse(str, new()
+            var root = JsonNode.Parse(str, new JsonNodeOptions
             {
-                AllowTrailingCommas = options?.AllowTrailingCommas ?? false,
-                CommentHandling = options?.ReadCommentHandling ?? JsonCommentHandling.Disallow,
-                MaxDepth = options?.MaxDepth ?? 0,
+                PropertyNameCaseInsensitive = options?.PropertyNameCaseInsensitive ?? false,
             });
+            var node = root.SelectNodes(path).FirstOrDefault();
 
-            var element = path.IsNullOrEmpty()
-                ? doc.RootElement
-                : doc.SelectElement(path);
-
-            return element.HasValue
-                ? element.Value.Deserialize<T>(options)!
-                : throw new InvalidOperationException("The path does not exist in json: " + path);
+            return node.Deserialize<T>(options) 
+                   ?? throw new InvalidOperationException("The path does not exist in json: " + path);
         }
     }
 

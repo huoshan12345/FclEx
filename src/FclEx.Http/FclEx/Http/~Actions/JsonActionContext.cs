@@ -18,14 +18,9 @@ public readonly struct JsonActionContext
         Response = response;
         Json = json;
         JsonPath = jsonPath;
-        using var jsonDocument = JsonDocument.Parse(json);
-        Token = jsonDocument.RootElement.Clone();
-        ResultTokens = jsonPath == null
-            ? [Token]
-            : jsonDocument.RootElement.SelectElements(jsonPath, false)
-                .NotNull()
-                .Select(token => token.Clone())
-                .AsIReadOnlyList();
+        var root = JsonNode.Parse(json);
+        Token = root;
+        ResultTokens = root.SelectNodes(jsonPath);
     }
 
     /// <summary>
@@ -46,33 +41,15 @@ public readonly struct JsonActionContext
     /// <summary>
     /// Gets the root JSON token.
     /// </summary>
-    public JsonElement Token { get; }
+    public JsonNode? Token { get; }
 
     /// <summary>
     /// Gets the selected result tokens.
     /// </summary>
-    public IReadOnlyList<JsonElement> ResultTokens { get; }
+    public IEnumerable<JsonNode?> ResultTokens { get; }
 
     /// <summary>
     /// Gets the first selected result token, or <see langword="null"/> when no token matched.
     /// </summary>
-    public JsonElement? ResultToken => TryGetResultToken(out var token) ? token : null;
-
-    /// <summary>
-    /// Gets the first selected result token, if any.
-    /// </summary>
-    /// <param name="token">The first selected result token, or the default value when no token matched.</param>
-    /// <returns><see langword="true"/> when a result token exists; otherwise, <see langword="false"/>.</returns>
-    /// <remarks>Use this method instead of <c>FirstOrDefault</c>, because <see cref="JsonElement"/> is a struct and its default value does not indicate whether a token matched.</remarks>
-    public bool TryGetResultToken(out JsonElement token)
-    {
-        if (ResultTokens.Count > 0)
-        {
-            token = ResultTokens[0];
-            return true;
-        }
-
-        token = default;
-        return false;
-    }
+    public JsonNode? ResultToken => ResultTokens.FirstOrDefault();
 }

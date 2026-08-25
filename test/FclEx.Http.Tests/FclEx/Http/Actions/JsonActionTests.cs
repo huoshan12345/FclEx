@@ -119,7 +119,7 @@ public class JsonActionTests
 
         Assert.True(result.IsSuccess, result.Exception?.ToString());
         Assert.Equal("items[*].id", result.Value!.JsonPath);
-        Assert.Equal([1, 2], result.Value.ResultTokens.Select(token => token.GetInt32()));
+        Assert.Equal([1, 2], result.Value.ResultTokens.Select(token => token?.GetValue<int>()));
     }
 
     [Fact]

@@ -40,6 +40,7 @@
     <PackageVersion Include="SlackNet.AspNetCore" Version="0.17.11" />
     <PackageVersion Include="StackExchange.Redis" Version="3.1.31" />
     <PackageVersion Include="StandardSocketsHttpHandler" Version="2.2.0.10" />
+    <PackageVersion Include="System.Collections.Immutable" Version="10.0.5" />
     <PackageVersion Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.16.0" />
     <PackageVersion Include="System.Reflection.Emit" Version="4.7.0" />

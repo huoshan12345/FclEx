@@ -56,7 +56,7 @@ public static class JsonNodeExtensions
             _ => node.ToJsonString(options),
         };
     }
-    
+
     public static JsonElement? ToJsonElement(this JsonNode node, JsonSerializerOptions? options = null)
     {
         return node.Deserialize<JsonElement>(options);
@@ -81,7 +81,24 @@ public static class JsonNodeExtensions
     {
         return node.ToObject<T>(JsonHelper.GetOptions(options));
     }
-    
+
+    /// <summary>
+    /// Selects nodes matching the specified JSONPath.
+    /// </summary>
+    /// <param name="root">The JSON value against which the path is evaluated.</param>
+    /// <param name="jsonPath">
+    /// The JSONPath expression. When <see langword="null"/>, the root node is returned.
+    /// </param>
+    /// <returns>The nodes matched by the path.</returns>
+    public static IEnumerable<JsonNode?> SelectNodes(this JsonNode? root, string? jsonPath)
+    {
+        if (jsonPath is null)
+            return [root];
+
+        var path = Json.Path.JsonPath.Parse(jsonPath);
+        return path.Evaluate(root).Matches.Select(m => m.Value);
+    }
+
     extension(JsonNode)
     {
         public static JsonNode? From<T>(T obj, JsonSerializerOptions? options = null)

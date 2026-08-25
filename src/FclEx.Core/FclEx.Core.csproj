@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Description>Foundational extensions, operation results, action pipelines, domain entity contracts, collection helpers, JSON/XML helpers, and general utilities.</Description>
   </PropertyGroup>
@@ -6,6 +6,7 @@
     <PackageReference Include="System.Text.Json" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <PackageReference Include="System.Collections.Immutable" />
     <PackageReference Include="System.ComponentModel.Annotations" />
     <PackageReference Include="System.Reflection.Emit" />
     <PackageReference Include="System.Reflection.Emit.Lightweight" />
@@ -13,6 +14,7 @@
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <PackageReference Include="Microsoft.Bcl.HashCode" />
+    <PackageReference Include="System.Collections.Immutable" />
     <PackageReference Include="System.ComponentModel.Annotations" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.Net.Http" />

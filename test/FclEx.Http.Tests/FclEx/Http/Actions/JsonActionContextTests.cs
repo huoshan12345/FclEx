@@ -13,8 +13,7 @@ public class JsonActionContextTests
         Assert.Null(context.JsonPath);
         Assert.Equal("""{"value":42}""", context.Json);
         Assert.Single(context.ResultTokens);
-        Assert.True(context.TryGetResultToken(out var token));
-        Assert.Equal(42, token.GetProperty("value").GetInt32());
+        Assert.Equal(42, context.ResultToken?["value"]?.GetValue<int>());
     }
 
     [Fact]
@@ -24,7 +23,7 @@ public class JsonActionContextTests
 
         var context = new JsonActionContext(response, """{"value":42}""", "missing");
 
-        Assert.Equal(42, context.Token.GetProperty("value").GetInt32());
+        Assert.Equal(42, context.ResultToken?["value"]?.GetValue<int>());
         Assert.Empty(context.ResultTokens);
         Assert.Null(context.ResultToken);
     }
@@ -35,7 +34,7 @@ public class JsonActionContextTests
         var response = HttpActionTestFixtures.CreateResponse();
         var context = new JsonActionContext(response, """{"items":[{"id":1},{"id":2}]}""", "items[*].id");
 
-        Assert.Equal([1, 2], context.ResultTokens.Select(token => token.GetInt32()));
+        Assert.Equal([1, 2], context.ResultTokens.Select(token => token?.GetValue<int>()));
     }
 
     [Fact]
@@ -44,7 +43,7 @@ public class JsonActionContextTests
         var response = HttpActionTestFixtures.CreateResponse();
         var context = new JsonActionContext(response, """{"data":{"count":3}}""", "data.count");
 
-        Assert.Equal(3, context.Token.GetProperty("data").GetProperty("count").GetInt32());
+        Assert.Equal(3, context.ResultToken?["data"]?["count"]?.GetValue<int>());
     }
 
     [Fact]
@@ -63,11 +62,7 @@ public class JsonActionContextTests
     {
         var response = HttpActionTestFixtures.CreateResponse();
         var context = new JsonActionContext(response, """{"data":{"count":3}}""", "missing.count");
-
-        var found = context.TryGetResultToken(out var token);
-
-        Assert.False(found);
-        Assert.Equal(default, token);
+        Assert.Equal(default, context.ResultToken);
     }
 
     [Fact]
@@ -75,10 +70,6 @@ public class JsonActionContextTests
     {
         var response = HttpActionTestFixtures.CreateResponse();
         var context = new JsonActionContext(response, """{"items":[{"id":1},{"id":2}]}""", "items[*].id");
-
-        var found = context.TryGetResultToken(out var token);
-
-        Assert.True(found);
-        Assert.Equal(1, token.GetInt32());
+        Assert.Equal(1, context.ResultToken?.GetValue<int>());
     }
 }
