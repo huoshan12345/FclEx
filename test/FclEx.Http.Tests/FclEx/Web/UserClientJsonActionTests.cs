@@ -8,7 +8,7 @@ public class UserClientJsonActionTests : WebTests
         var client = new TestUserClient(ServiceProvider.GetRequiredService<ILoggerFactory>());
         var action = new CountJsonAction(client)
         {
-            JsonPathValue = "data.count",
+            JsonPathValue = "$.data.count",
         };
         var response = CreateResponse("""{"data":{"count":3}}""");
 
@@ -37,14 +37,14 @@ public class UserClientJsonActionTests : WebTests
         var client = new TestUserClient(ServiceProvider.GetRequiredService<ILoggerFactory>());
         var action = new CountJsonAction(client)
         {
-            JsonPathValue = "missing.count",
+            JsonPathValue = "$.missing.count",
         };
         var response = CreateResponse("""{"data":{"count":3}}""");
 
         var result = action.GetResult(response);
 
         Assert.True(result.IsError);
-        Assert.Contains("missing.count", result.Exception!.Message);
+        Assert.Contains("$.missing.count", result.Exception.Message);
     }
 
     [Fact]
@@ -66,14 +66,14 @@ public class UserClientJsonActionTests : WebTests
         var client = new TestUserClient(ServiceProvider.GetRequiredService<ILoggerFactory>());
         var action = new CountJsonAction(client)
         {
-            JsonPathValue = "items[*].id",
+            JsonPathValue = "$.items[*].id",
         };
         var response = CreateResponse();
 
         var result = action.CreateContext(response, """{"items":[{"id":1},{"id":2}]}""");
 
         Assert.True(result.IsSuccess, result.Exception?.ToString());
-        Assert.Equal([1, 2], result.Value!.ResultTokens.Select(m => m?.GetValue<int>()));
+        Assert.Equal([1, 2], result.Value.ResultTokens.Select(m => m?.GetValue<int>()));
     }
 
     [Fact]

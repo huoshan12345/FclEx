@@ -187,17 +187,18 @@ public class CburgmerFeatureValidationTests
         PathResult? actual = null;
 
         Exception? exception = null;
-        var time = Debugger.IsAttached ? int.MaxValue : 100;
-        var evaluationTask = Task.Run(
-            () => Evaluate(testCase.JsonString, testCase.PathString),
-            TestContext.Current.CancellationToken);
-        var timeoutTask = Task.Delay(time, TestContext.Current.CancellationToken);
-        if (await Task.WhenAny(evaluationTask, timeoutTask) != evaluationTask)
-            throw new OperationCanceledException(TestContext.Current.CancellationToken);
+        var time = Debugger.IsAttached
+            ? int.MaxValue
+            : TestHelper.IsGithubAction
+                ? 1000
+                : 100;
+
+        using var cts = TestContext.Current.CancellationToken.WithTimeout(TimeSpan.FromMilliseconds(time));
 
         try
         {
-            actual = await evaluationTask;
+            actual = await Task.Run(() => Evaluate(testCase.JsonString, testCase.PathString), cts.Token)
+                .WaitAsync(cts.Token);
         }
         catch (Exception e)
         {
@@ -214,8 +215,11 @@ public class CburgmerFeatureValidationTests
             if (exception != null)
             {
                 if (_notSupported.Contains(testCase.PathString))
+                {
                     Assert.Skip("This case will not be supported.");
-                throw exception;
+                }
+
+                exception.ReThrow();
             }
 
             if (testCase.Consensus == null)
@@ -224,26 +228,27 @@ public class CburgmerFeatureValidationTests
             Assert.Fail($"Could not parse path: {testCase.PathString}");
         }
 
-        Console.WriteLine($"Actual (values): {JsonSerializer.Serialize(actual!.Matches!.Select(x => x.Value), _linearSerializerOptions)}");
+        Console.WriteLine($"Actual (values): {JsonSerializer.Serialize(actual.Matches.Select(x => x.Value), _linearSerializerOptions)}");
         Console.WriteLine();
         Console.WriteLine($"Actual: {JsonSerializer.Serialize(actual, _serializerOptions)}");
+
         if (testCase.Consensus == null)
+        {
             Assert.Skip("Test case has no consensus result.  Cannot validate.");
+        }
         else
         {
             if (testCase.Consensus == "NOT_SUPPORTED") return;
             var expected = JsonNode.Parse(testCase.Consensus);
-            Assert.True(expected!.AsArray().All(v => actual.Matches!.Any(m => JsonNodeEqualityComparer.Instance.Equals(v, m.Value))));
+            Assert.True(expected!.AsArray().All(v => actual.Matches.Any(m => JsonNodeEqualityComparer.Instance.Equals(v, m.Value))));
         }
     }
 
-    private static PathResult? Evaluate(string jsonString, string pathString)
+    private static PathResult Evaluate(string jsonString, string pathString)
     {
         var o = JsonNode.Parse(jsonString);
-
         var path = JsonPath.Parse(pathString, _parsingOptions);
         var results = path.Evaluate(o);
-
         return results;
     }
 }

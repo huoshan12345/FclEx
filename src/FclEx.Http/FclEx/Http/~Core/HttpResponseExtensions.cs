@@ -73,10 +73,11 @@ public static class HttpResponseExtensions
             {
                 PropertyNameCaseInsensitive = options?.PropertyNameCaseInsensitive ?? false,
             });
-            var node = root.SelectNodes(path).FirstOrDefault();
+            var node = root.SelectNodes(path).FirstOrDefault()
+                       ?? throw new KeyNotFoundException("The path does not exist in json: " + path);
 
-            return node.Deserialize<T>(options) 
-                   ?? throw new InvalidOperationException("The path does not exist in json: " + path);
+            return node.Deserialize<T>(options)
+                ?? throw new InvalidOperationException("The value is null for path: " + path);
         }
     }
 

@@ -142,7 +142,7 @@ public class HttpResponseTests : HttpServerTests
     {
         var response = CreateResponse("""{"data":{"count":3}}""");
 
-        var actual = response.ReadJsonAs<int>("data.count");
+        var actual = response.ReadJsonAs<int>("$.data.count");
 
         Assert.True(actual.IsSuccess, actual.Exception?.ToString());
         Assert.Equal(3, actual.Value);
@@ -153,10 +153,10 @@ public class HttpResponseTests : HttpServerTests
     {
         var response = CreateResponse("""{"data":{"count":3}}""");
 
-        var actual = response.ReadJsonAs<int>("missing.count");
+        var actual = response.ReadJsonAs<int>("$.missing.count");
 
         Assert.True(actual.IsError);
-        Assert.Contains("missing.count", actual.Exception!.Message);
+        Assert.Contains("missing.count", actual.Exception.Message);
     }
 
     [Fact]
@@ -164,7 +164,7 @@ public class HttpResponseTests : HttpServerTests
     {
         var response = CreateResponse("""{"data":}""");
 
-        var actual = response.ReadJsonAs<int>("data.count");
+        var actual = response.ReadJsonAs<int>("$.data.count");
 
         Assert.True(actual.IsError);
         Assert.Contains(actual.Exception.EnumerateInner(), m => m is JsonException);
@@ -198,7 +198,7 @@ public class HttpResponseTests : HttpServerTests
     {
         var response = CreateResponse("""{"data":{"count":"abc"}}""");
 
-        var actual = response.ReadJsonAs<int>("data.count");
+        var actual = response.ReadJsonAs<int>("$.data.count");
 
         Assert.True(actual.IsError);
         Assert.Contains(actual.Exception.EnumerateInner(), m => m is JsonException);
