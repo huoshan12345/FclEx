@@ -168,10 +168,19 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
             .ContainsAny(e => e.Name, [keyword], escapeEscapeCharacter: escapeEscapeCharacter)
             .ToQueryString();
 
-        Output?.WriteLine(sql);
-        Assert.Matches(@"LIKE\s+@\w+", sql);
-        Assert.DoesNotContain($"LIKE '%{keyword}%'", sql);
-        Assert.DoesNotContain($"LIKE N'%{keyword}%'", sql);
+        if (dbDriver.IsMySql())
+        {
+            // The MySQL providers used by this test project inline LIKE patterns in the generated SQL.
+            // Oracle's provider receives a constant expression to support its escaped escape character,
+            // while Pomelo and Microting inline the pattern even when it is captured or wrapped in EF.Parameter.
+            Assert.Matches($@"LIKE '%{keyword}%' ESCAPE '\\\\'", sql);
+        }
+        else
+        {
+            Assert.Matches(@"LIKE\s+@\w+", sql);
+            Assert.DoesNotContain($"LIKE '%{keyword}%'", sql);
+            Assert.DoesNotContain($"LIKE N'%{keyword}%'", sql);
+        }
     }
 
     [Fact]
