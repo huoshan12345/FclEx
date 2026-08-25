@@ -7,16 +7,12 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
         public string? Id { get; set; }
     }
 
-    public static readonly TheoryData<DbDriver, bool> ContainsAnyTestCases = DbDrivers
+    public static readonly TheoryData<DbDriver, bool> ContainsAnyCases = DbDrivers
         .CrossJoin([true, false])
         .ToTheoryData();
 
-    public static readonly TheoryData<DbDriver> ParameterizedPatternDbDriverCases = DbDrivers
-        .Where(driver => driver.IsMySql() == false)
-        .ToTheoryData();
-
     [Theory]
-    [MemberData(nameof(ContainsAnyTestCases))]
+    [MemberData(nameof(ContainsAnyCases))]
     public async Task ContainsAny_Test(DbDriver dbDriver, bool containsPercentSign)
     {
         await using var context = Fixture.CreateDbContext(dbDriver);
@@ -161,7 +157,7 @@ public class QueryableExtensionsTests(EfCoreFixture fixture) : EfCoreTests(fixtu
     }
 
     [Theory]
-    [MemberData(nameof(ParameterizedPatternDbDriverCases))]
+    [MemberData(nameof(DbDriverCases))]
     public void ContainsAny_ShouldParameterizePatterns(DbDriver dbDriver)
     {
         using var context = Fixture.CreateDbContext(dbDriver);
