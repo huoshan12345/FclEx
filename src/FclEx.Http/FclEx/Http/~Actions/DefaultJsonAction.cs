@@ -66,6 +66,6 @@ public static class DefaultJsonAction
     {
         return context.ResultToken is { } token
             ? token.ToObject<T>()!
-            : nameof(context.ResultToken) + " is null";
+            : $"{nameof(context.ResultToken)} is null";
     }
 }
