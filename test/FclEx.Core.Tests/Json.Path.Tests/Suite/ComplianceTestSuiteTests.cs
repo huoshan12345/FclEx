@@ -10,8 +10,8 @@ namespace Json.Path.Tests.Suite;
 
 public class ComplianceTestSuiteTests
 {
-	private const string _testsFile = @"../../../../../ref-repos/jsonpath-compliance-test-suite/cts.json";
-	private static readonly string[] _notSupported = [];
+    private static readonly string _testsFile = Directories.TestData.CombineFile("jsonpath-compliance-test-suite", "cts.json").FullName;
+    private static readonly string[] _notSupported = [];
 
 	//  - id: array_index
 	//    pathSegment: $[2]

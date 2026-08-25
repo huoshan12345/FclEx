@@ -17,13 +17,13 @@ public class JsonActionContextTests
     }
 
     [Fact]
-    public void Constructor_WhenPathMatchesNothing_KeepsRootTokenAndEmptyResultTokens()
+    public void Constructor_WhenPathMatchesNothing_KeepsEmptyResultTokens()
     {
         var response = HttpActionTestFixtures.CreateResponse();
 
-        var context = new JsonActionContext(response, """{"value":42}""", "missing");
+        var context = new JsonActionContext(response, """{"value":42}""", "$.missing");
 
-        Assert.Equal(42, context.ResultToken?["value"]?.GetValue<int>());
+        Assert.Equal(42, context.Token?["value"]?.GetValue<int>());
         Assert.Empty(context.ResultTokens);
         Assert.Null(context.ResultToken);
     }
@@ -32,7 +32,7 @@ public class JsonActionContextTests
     public void ResultTokens_WhenParserDocumentIsDisposed_RemainReadable()
     {
         var response = HttpActionTestFixtures.CreateResponse();
-        var context = new JsonActionContext(response, """{"items":[{"id":1},{"id":2}]}""", "items[*].id");
+        var context = new JsonActionContext(response, """{"items":[{"id":1},{"id":2}]}""", "$.items[*].id");
 
         Assert.Equal([1, 2], context.ResultTokens.Select(token => token?.GetValue<int>()));
     }
@@ -41,16 +41,16 @@ public class JsonActionContextTests
     public void Token_WhenParserDocumentIsDisposed_RemainsReadable()
     {
         var response = HttpActionTestFixtures.CreateResponse();
-        var context = new JsonActionContext(response, """{"data":{"count":3}}""", "data.count");
+        var context = new JsonActionContext(response, """{"data":{"count":3}}""", "$.data.count");
 
-        Assert.Equal(3, context.ResultToken?["data"]?["count"]?.GetValue<int>());
+        Assert.Equal(3, context.Token?["data"]?["count"]?.GetValue<int>());
     }
 
     [Fact]
     public void ResultToken_WhenPathDoesNotMatch_ReturnsNull()
     {
         var response = HttpActionTestFixtures.CreateResponse();
-        var context = new JsonActionContext(response, """{"data":{"count":3}}""", "missing.count");
+        var context = new JsonActionContext(response, """{"data":{"count":3}}""", "$.missing.count");
 
         var resultToken = context.ResultToken;
 
@@ -61,7 +61,7 @@ public class JsonActionContextTests
     public void TryGetResultToken_WhenPathDoesNotMatch_ReturnsFalse()
     {
         var response = HttpActionTestFixtures.CreateResponse();
-        var context = new JsonActionContext(response, """{"data":{"count":3}}""", "missing.count");
+        var context = new JsonActionContext(response, """{"data":{"count":3}}""", "$.missing.count");
         Assert.Equal(default, context.ResultToken);
     }
 
@@ -69,7 +69,7 @@ public class JsonActionContextTests
     public void TryGetResultToken_WhenPathMatches_ReturnsFirstToken()
     {
         var response = HttpActionTestFixtures.CreateResponse();
-        var context = new JsonActionContext(response, """{"items":[{"id":1},{"id":2}]}""", "items[*].id");
+        var context = new JsonActionContext(response, """{"items":[{"id":1},{"id":2}]}""", "$.items[*].id");
         Assert.Equal(1, context.ResultToken?.GetValue<int>());
     }
 }

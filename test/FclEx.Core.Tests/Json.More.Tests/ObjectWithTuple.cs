@@ -1,5 +1,3 @@
-using System;
-
 namespace Json.More.Tests;
 
 public class ObjectWithTuple : IEquatable<ObjectWithTuple>

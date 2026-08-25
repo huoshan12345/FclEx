@@ -6,7 +6,7 @@ public class ExtensionsTests
     public async Task ReadJsonAs_ReadsPathFromSuccessfulHttpResponseAction()
     {
         var response = HttpActionTestFixtures.CreateResponse("""{"data":{"name":"fclex"}}""");
-        var action = Operation.SuccessAction(response).ReadJsonAs<string>("data.name");
+        var action = Operation.SuccessAction(response).ReadJsonAs<string>("$.data.name");
 
         var result = await action.ExecuteAsync();
 
