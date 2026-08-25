@@ -175,7 +175,7 @@ public class CburgmerFeatureValidationTests
         }
     }
 
-    [Theory]
+    [Theory(DisableParallelization = true)]
     [MemberData(nameof(TestCases))]
     public async Task Run(CburgmerTestCase testCase)
     {

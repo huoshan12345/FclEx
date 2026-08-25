@@ -34,6 +34,34 @@ public class OptionalTests
     }
 
     [Fact]
+    public void None_ForNonNullableValueType_ShouldNotHaveValue()
+    {
+        var optional = Optional.None<int>();
+
+        Assert.False(optional.HasValue);
+        Assert.Equal(0, optional.Value);
+        Assert.NotEqual(new Optional<int>(0), optional);
+    }
+
+    [Fact]
+    public void Constructor_WithDefaultValueTypeValue_ShouldHaveValue()
+    {
+        var optional = new Optional<int>(0);
+
+        Assert.True(optional.HasValue);
+        Assert.Equal(0, optional.Value);
+    }
+
+    [Fact]
+    public void ValueInitializer_ShouldUpdatePresenceState()
+    {
+        var optional = Optional.Some("value") with { Value = null };
+
+        Assert.False(optional.HasValue);
+        Assert.Null(optional.Value);
+    }
+
+    [Fact]
     public void ImplicitConversion_FromNullableValue_ShouldCreateOptionalWithValue()
     {
         int? nullableValue = 10;
