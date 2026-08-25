@@ -41,11 +41,8 @@ public class DapperTestsFixture : CoreTestsFixture
     {
         return TestHelper.IsGithubAction
             ? TestHelper.IsWindows
-                ? [DbDriver.Npgsql]
-                : [
-                    DbDriver.MySqlConnector,
-                    DbDriver.Npgsql,
-                ]
+                ? [DbDriver.MySqlConnector,]
+                : [DbDriver.Npgsql,]
             : [
                 DbDriver.MySql,
                 DbDriver.MySqlConnector,

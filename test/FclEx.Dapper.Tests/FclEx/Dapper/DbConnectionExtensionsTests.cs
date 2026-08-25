@@ -215,7 +215,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
     {
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
         var ex = await Assert.ThrowsAsync<DataException>(() => con.DeleteAsync<EntityWithoutKey>(0, schema));
-        Assert.Contains("Only supports an entity with a [Key] property", ex.Message);
+        Assert.Contains("Only entities with a mapped key are supported", ex.Message);
     }
 
     [Theory]
