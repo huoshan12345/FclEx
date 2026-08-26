@@ -24,13 +24,15 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
         Assert.Equal(id, e.Id);
     }
 
-    [Theory]
+    [Theory(DisableParallelization = true)]
     [MemberData(nameof(DbSchemaTestCases))]
     public async Task InsertAsync_EntityWithAutoKey_IncludeAutoKey_Test(DbDriver dbDriver, string? schema)
     {
         Assert.SkipIfInGithubAction(); 
 
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
+        await FixAutoIncrement<EntityWithAutoKey>(con, dbDriver, schema);
+
         var maxId = await GetMaxId<EntityWithAutoKey>(con, schema) + 1;
 
         var entity = new EntityWithAutoKey
@@ -120,13 +122,15 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
         }
     }
 
-    [Theory]
+    [Theory(DisableParallelization = true)]
     [MemberData(nameof(BulkInsertTestCases))]
     public async Task BulkInsertAsync_EntityWithAutoKey_IncludeAutoKey_Test(DbDriver dbDriver, string? schema, int count)
     {
         Assert.SkipIfInGithubAction();
 
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
+        await FixAutoIncrement<EntityWithAutoKey>(con, dbDriver, schema);
+
         var tableName = DapperHelper.GetTableNameWithSchema(con, schema, typeof(EntityWithAutoKey));
         var maxId = await GetMaxId<EntityWithAutoKey>(con, schema) + 1;
 
