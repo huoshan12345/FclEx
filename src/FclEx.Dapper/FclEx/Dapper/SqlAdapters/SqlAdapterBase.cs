@@ -78,8 +78,13 @@ public abstract class SqlAdapterBase<TSelf> : ISqlAdapter where TSelf : SqlAdapt
         return _creator.Value.Invoke(name, value, storeTypeName);
     }
 
-    public virtual ValueTask<IAsyncDisposable> BeginExplicitIdentityInsertAsync(string quotedTableName, DbCommand command)
+    /// <inheritdoc />
+    public virtual ValueTask<IAsyncDisposable> BeginExplicitIdentityInsertAsync(
+        string quotedTableName,
+        DbCommand command,
+        CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         return AsyncDisposable.EmptyValueTask;
     }
 

@@ -23,11 +23,13 @@ internal readonly record struct InsertSqlKey(
 /// <param name="EntityMappingSource">
 /// An optional entity mapping source. <see cref="DapperHelper.DefaultEntityMappingSource"/> is used when omitted.
 /// </param>
+/// <param name="CancellationToken">The token used to cancel connection opening and command execution.</param>
 public readonly record struct CommandInfo(
     int? TimeoutSeconds = null,
     DbTransaction? Transaction = null,
     ISqlAdapter? SqlAdapter = null,
-    IEntityMappingSource? EntityMappingSource = null);
+    IEntityMappingSource? EntityMappingSource = null,
+    CancellationToken CancellationToken = default);
 
 public static partial class DbConnectionExtensions
 {
@@ -65,18 +67,17 @@ public static partial class DbConnectionExtensions
     }
 
     /// <summary>
-    /// Inserts an entity into table asynchronously. <br/>
-    /// Returns identity only if entity has an auto-increment key and includeAutoKey is <see langword="false"/>, otherwise returns <see langword="null"/>.
+    /// Inserts one mapped entity and optionally returns its single database-generated key.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="con"></param>
-    /// <param name="schema"></param>
-    /// <param name="entity"></param>
-    /// <param name="returnId"></param>
-    /// <param name="includeAutoKey"></param>
-    /// <param name="commandInfo"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException"></exception>
+    /// <typeparam name="T">The mapped entity type.</typeparam>
+    /// <param name="con">The connection used to execute the insert.</param>
+    /// <param name="entity">The entity whose mapped values are inserted.</param>
+    /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
+    /// <param name="returnId">Whether to return the single generated key when one is mapped.</param>
+    /// <param name="includeAutoKey">Whether to insert a mapped generated key explicitly.</param>
+    /// <param name="commandInfo">Command execution, adapter, mapping, transaction, and cancellation options.</param>
+    /// <returns>The generated key when requested and supported; otherwise <see langword="null"/>.</returns>
+    /// <exception cref="OperationCanceledException"><see cref="CommandInfo.CancellationToken"/> is cancelled.</exception>
     public static async Task<dynamic?> InsertAsync<T>(this DbConnection con, T entity, string? schema = null, bool returnId = true, bool includeAutoKey = false, CommandInfo commandInfo = default)
         where T : class
     {
@@ -94,12 +95,15 @@ public static partial class DbConnectionExtensions
             if (includeAutoKey && mapping.GeneratedKeys.Count > 0)
             {
                 var tableName = GetTableNameWithSchema(a, schema, mapping);
-                await using var x = await a.BeginExplicitIdentityInsertAsync(tableName, m);
-                return await m.ExecuteScalarAsync();
+                await using var x = await a.BeginExplicitIdentityInsertAsync(
+                    tableName,
+                    m,
+                    commandInfo.CancellationToken);
+                return await m.ExecuteScalarAsync(commandInfo.CancellationToken);
             }
             else
             {
-                return await m.ExecuteScalarAsync();
+                return await m.ExecuteScalarAsync(commandInfo.CancellationToken);
             }
         });
         // we cast value to dynamic first so that we can converting the value to a different type, such as long -> int or decimal -> long.
@@ -109,14 +113,15 @@ public static partial class DbConnectionExtensions
     /// <summary>
     /// Inserts entities into table asynchronously and returns affected rows.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="con"></param>
-    /// <param name="schema"></param>
-    /// <param name="entities"></param>
-    /// <param name="includeAutoKey"></param>
-    /// <param name="commandInfo"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException"></exception>
+    /// <typeparam name="T">The mapped entity type.</typeparam>
+    /// <param name="con">The connection used to execute the batched inserts.</param>
+    /// <param name="entities">The entities to insert.</param>
+    /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
+    /// <param name="includeAutoKey">Whether to insert mapped generated keys explicitly.</param>
+    /// <param name="commandInfo">Command execution, adapter, mapping, transaction, and cancellation options.</param>
+    /// <returns>The total affected rows reported by all batches, or zero for an empty collection.</returns>
+    /// <exception cref="NotSupportedException">The mapped row shape cannot be represented by the selected adapter.</exception>
+    /// <exception cref="OperationCanceledException"><see cref="CommandInfo.CancellationToken"/> is cancelled.</exception>
     public static async Task<int> BulkInsertAsync<T>(this DbConnection con, IReadOnlyCollection<T> entities, string? schema = null, bool includeAutoKey = false, CommandInfo commandInfo = default)
         where T : class
     {
@@ -141,7 +146,7 @@ public static partial class DbConnectionExtensions
         // batches share one command text; normally it contains only the full batch size and the final remainder.
         Dictionary<InsertSqlKey, string>? localInsertSqls = useGlobalSqlCache ? null : new();
 
-        await con.TryOpenAsync();
+        await con.TryOpenAsync(commandInfo.CancellationToken);
 
         async Task<int> ExecuteBatchesAsync()
         {
@@ -177,7 +182,7 @@ public static partial class DbConnectionExtensions
                 useGlobalSqlCache,
                 localInsertSqls);
             using var command = con.CreateCommand(sql, parameters, commandInfo.TimeoutSeconds, commandInfo.Transaction);
-            return await command.ExecuteNonQueryAsync();
+            return await command.ExecuteNonQueryAsync(commandInfo.CancellationToken);
         }
 
         if (includeAutoKey && mapping.GeneratedKeys.Count > 0)
@@ -190,7 +195,10 @@ public static partial class DbConnectionExtensions
             }
 
             var tableName = GetTableNameWithSchema(sqlAdapter, schema, mapping);
-            await using var scope = await sqlAdapter.BeginExplicitIdentityInsertAsync(tableName, command);
+            await using var scope = await sqlAdapter.BeginExplicitIdentityInsertAsync(
+                tableName,
+                command,
+                commandInfo.CancellationToken);
             return await ExecuteBatchesAsync();
         }
 
@@ -359,15 +367,16 @@ public static partial class DbConnectionExtensions
     }
 
     /// <summary>
-    /// Get an entity by id
+    /// Gets one mapped entity by its single key.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="connection"></param>
-    /// <param name="schema"></param>
-    /// <param name="id"></param>
-    /// <param name="commandInfo"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException"></exception>
+    /// <typeparam name="T">The mapped entity type.</typeparam>
+    /// <param name="connection">The connection used to execute the query.</param>
+    /// <param name="id">The key value to find.</param>
+    /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
+    /// <param name="commandInfo">Command execution, adapter, mapping, transaction, and cancellation options.</param>
+    /// <returns>The matching entity, or <see langword="null"/> when no row matches.</returns>
+    /// <exception cref="DataException">The mapping does not define exactly one key.</exception>
+    /// <exception cref="OperationCanceledException"><see cref="CommandInfo.CancellationToken"/> is cancelled.</exception>
     public static Task<T?> GetAsync<T>(this DbConnection connection, object id, string? schema = null, CommandInfo commandInfo = default)
     {
         var adapter = commandInfo.SqlAdapter ?? GetSqlAdapter(connection);
@@ -378,7 +387,12 @@ public static partial class DbConnectionExtensions
             : CreateGetSql(key, schema);
         var dynParams = new DynamicParameters();
         dynParams.Add("@id", id);
-        return connection.QueryFirstOrDefaultAsync<T?>(sql, dynParams, commandInfo.Transaction, commandInfo.TimeoutSeconds);
+        return connection.QueryFirstOrDefaultAsync<T?>(new CommandDefinition(
+            sql,
+            dynParams,
+            commandInfo.Transaction,
+            commandInfo.TimeoutSeconds,
+            cancellationToken: commandInfo.CancellationToken));
 
         static string CreateGetSql(EntitySqlKey key, string? schema)
         {
@@ -393,15 +407,16 @@ public static partial class DbConnectionExtensions
     }
 
     /// <summary>
-    /// Delete an entity by id
+    /// Deletes one mapped entity by its single key.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="con"></param>
-    /// <param name="schema"></param>
-    /// <param name="id"></param>
-    /// <param name="commandInfo"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException"></exception>
+    /// <typeparam name="T">The mapped entity type.</typeparam>
+    /// <param name="con">The connection used to execute the delete.</param>
+    /// <param name="id">The key value to delete.</param>
+    /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
+    /// <param name="commandInfo">Command execution, adapter, mapping, transaction, and cancellation options.</param>
+    /// <returns>The affected row count.</returns>
+    /// <exception cref="DataException">The mapping does not define exactly one key.</exception>
+    /// <exception cref="OperationCanceledException"><see cref="CommandInfo.CancellationToken"/> is cancelled.</exception>
     public static Task<int> DeleteAsync<T>(this DbConnection con, object id, string? schema = null, CommandInfo commandInfo = default)
     {
         var adapter = commandInfo.SqlAdapter ?? GetSqlAdapter(con);
@@ -412,7 +427,12 @@ public static partial class DbConnectionExtensions
             : CreateDeleteSql(key, schema);
         var dynParams = new DynamicParameters();
         dynParams.Add("@id", id);
-        return con.ExecuteAsync(sql, dynParams, commandInfo.Transaction, commandInfo.TimeoutSeconds);
+        return con.ExecuteAsync(new CommandDefinition(
+            sql,
+            dynParams,
+            commandInfo.Transaction,
+            commandInfo.TimeoutSeconds,
+            cancellationToken: commandInfo.CancellationToken));
 
         static string CreateDeleteSql(EntitySqlKey key, string? schema)
         {
@@ -444,7 +464,7 @@ public static partial class DbConnectionExtensions
         var adapter = commandInfo.SqlAdapter ?? GetSqlAdapter(con);
         var (sql, paras) = sqlFunc(adapter);
         var cmd = con.CreateCommand(sql, paras, commandInfo.TimeoutSeconds, commandInfo.Transaction);
-        await con.TryOpenAsync();
+        await con.TryOpenAsync(commandInfo.CancellationToken);
         return await func(adapter, cmd);
     }
 

@@ -17,6 +17,7 @@ Dapper and ADO.NET helpers for FclEx.
 - The APIs stay close to ADO.NET and Dapper concepts rather than introducing a full repository framework.
 - Future changes follow the package's [design principles](DESIGN.md).
 - CRUD operations do not scan assemblies or modify Dapper's process-wide type maps and type handlers.
+- Pass a `CancellationToken` through `CommandInfo` for connection CRUD, or through the final parameter of transaction CRUD. Transaction callbacks can receive the same token directly.
 - Some tests expect local database services to be available.
 
 ## Entity Mapping

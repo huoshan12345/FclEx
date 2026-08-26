@@ -40,11 +40,26 @@ public class SqlServerAdapter : SqlAdapterBase<SqlServerAdapter>
         return BuildParameterCreator("Microsoft.Data.SqlClient.SqlParameter, Microsoft.Data.SqlClient", "SqlDbType");
     }
 
-    public override async ValueTask<IAsyncDisposable> BeginExplicitIdentityInsertAsync(string quotedTableName, DbCommand command)
+    /// <inheritdoc />
+    public override async ValueTask<IAsyncDisposable> BeginExplicitIdentityInsertAsync(
+        string quotedTableName,
+        DbCommand command,
+        CancellationToken cancellationToken = default)
     {
         var connection = command.Connection ?? throw new InvalidOperationException("The command must have a connection.");
         var transaction = command.Transaction;
-        await connection.ExecuteAsync($"SET IDENTITY_INSERT {quotedTableName} ON", transaction: transaction);
-        return AsyncDisposable.Create(() => connection.ExecuteAsync($"SET IDENTITY_INSERT {quotedTableName} OFF", transaction: transaction));
+        await connection.ExecuteAsync(new CommandDefinition(
+            $"SET IDENTITY_INSERT {quotedTableName} ON",
+            transaction: transaction,
+            cancellationToken: cancellationToken));
+
+        // Disabling IDENTITY_INSERT is cleanup. It must still run after the caller's token is cancelled.
+        return AsyncDisposable.Create(async () =>
+        {
+            await connection.ExecuteAsync(new CommandDefinition(
+                $"SET IDENTITY_INSERT {quotedTableName} OFF",
+                transaction: transaction,
+                cancellationToken: CancellationToken.None));
+        });
     }
 }

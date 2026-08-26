@@ -60,10 +60,11 @@
    - 建议：继续为稳定的 operation、mapping 和 adapter 组合使用静态缓存；对动态 schema、批次大小等开放输入采用有界缓存或直接生成，并确保 cache key 包含所有影响 SQL 的值。
    - 处理：完整 CRUD SQL 只在 canonical path（未提供调用级 schema/adapter override）进入进程级缓存，key 由稳定的 adapter、mapping、操作选项和受 500 行上限约束的批次行数组成。调用级 override 直接生成 SQL；bulk 在一次调用内以批次形状局部复用，因此重复 full batch 不会重复构造字符串。删除独立表名缓存，参数名改为有界位置 key（column index、row index）；替换已注册 adapter 时移除旧实例对应的 SQL 条目。
 
-8. **[P1] 数据库异步 API 没有端到端取消契约。**
+8. **[P1][已修复 2026-08-26] 数据库异步 API 没有端到端取消契约。**
    - 位置：`DbConnectionExtensions.cs:37-84,211-245,268-295`、`DbConnectionExtensions.Dapper.cs:5-60`、`DbTransactionExtensions.cs:63-113`。
    - 说明：插入、批量插入、查询、删除、事务回调和 commit/rollback 均不接收 `CancellationToken`；只有底层 `TryOpenAsync` 和 `IDbCommand` 扩展孤立地支持 token，调用者无法取消真实工作。
    - 建议：把 token 放入每个异步公共签名或明确的 command options，并传到 open、execute、commit、rollback 和用户回调；不要只取消连接打开。
+   - 处理：`CommandInfo.CancellationToken` 现在统一控制 connection CRUD 的 open 和 command execution，transaction CRUD 在末尾接收 token 并转发到同一 options。事务 helper 新增接收 `(DbTransaction, CancellationToken)` 的回调 overload，并将 token 传到 open、begin、callback 和 commit；回调完成后再次检查取消以避免在已取消时提交。rollback 在 token 尚可用时接收该 token，取消已经发生时则作为不可取消的 cleanup 执行，防止跳过回滚。explicit identity setup 同样接收 token，而 cleanup 始终执行。
 
 9. **[P1][已修复 2026-08-26] `BulkInsertAsync` 生成一个无限增长的多值 INSERT，没有 provider 批次策略。**
    - 位置：`DbConnectionExtensions.cs:67-117,142-173`。
@@ -234,7 +235,7 @@
 
 40. **[P2] `IDbCommand.Execute*Async` 对非 `DbCommand` 实现同步阻塞，Async 名称没有真实保证。**
     - 位置：`DbCommandExtensions.cs:5-16`。
-    - 说明：fallback 在调用线程直接执行 `ExecuteScalar`/`ExecuteNonQuery`，传入 cancellation token 也完全无效；调用者无法从签名判断会阻塞。
+    - 说明：fallback 在调用线程直接执行 `ExecuteScalar`/`ExecuteNonQuery`；现在会在同步调用开始前检查 cancellation token，但执行开始后仍无法取消，调用者也无法从 Async 签名判断会阻塞。
     - 建议：把扩展限定为 `DbCommand`；对只有 `IDbCommand` 的实现提供明确命名的同步兼容方法，不要用 `Task.FromResult` 包装同步 I/O 冒充异步。
 
 41. **[P2] `DateTimeHandler` 的名称掩盖了“把原 ticks 重新解释为 UTC”的破坏性语义。**
