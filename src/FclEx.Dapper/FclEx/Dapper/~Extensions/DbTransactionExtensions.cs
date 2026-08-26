@@ -86,17 +86,18 @@ public static class DbTransactionExtensions
     /// <param name="cancellationToken">The token used to cancel command execution.</param>
     /// <returns>The generated key converted to <typeparamref name="TKey"/> when requested and supported; otherwise the default value.</returns>
     public static Task<TKey?> InsertAsync<TEntity, TKey>(
-        this DbTransaction tran, 
+        this DbTransaction tran,
         TEntity entity,
-        string? schema = null, 
-        bool returnId = true, 
+        string? schema = null,
+        bool returnId = true,
         bool includeAutoKey = false,
         int? timeoutSeconds = null,
         ISqlAdapter? sqlAdapter = null,
         CancellationToken cancellationToken = default)
         where TEntity : class
     {
-        return tran.Connection!.InsertAsync<TEntity, TKey>(
+        var con = Check.NotNull(tran.Connection, nameof(tran.Connection));
+        return con.InsertAsync<TEntity, TKey>(
             entity,
             schema,
             returnId,
@@ -106,6 +107,40 @@ public static class DbTransactionExtensions
                 Transaction: tran,
                 SqlAdapter: sqlAdapter,
                 CancellationToken: cancellationToken));
+    }
+
+    /// <summary>
+    /// Inserts one mapped entity through this transaction and returns its generated key as a long.
+    /// </summary>
+    /// <typeparam name="TEntity">The mapped entity type.</typeparam>
+    /// <param name="tran">The transaction assigned to the insert command.</param>
+    /// <param name="entity">The entity whose mapped values are inserted.</param>
+    /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
+    /// <param name="returnId">Whether to return the single generated key when one is mapped.</param>
+    /// <param name="includeAutoKey">Whether to insert a mapped generated key explicitly.</param>
+    /// <param name="timeoutSeconds">The optional command timeout in seconds.</param>
+    /// <param name="sqlAdapter">An optional SQL adapter overriding connection-type resolution.</param>
+    /// <param name="cancellationToken">The token used to cancel command execution.</param>
+    /// <returns>The generated key converted to <see langword="long"/> when requested and supported; otherwise the default value.</returns>
+    public static Task<long> InsertAsync<TEntity>(
+        this DbTransaction tran,
+        TEntity entity,
+        string? schema = null,
+        bool returnId = true,
+        bool includeAutoKey = false,
+        int? timeoutSeconds = null,
+        ISqlAdapter? sqlAdapter = null,
+        CancellationToken cancellationToken = default)
+        where TEntity : class
+    {
+        return tran.InsertAsync<TEntity, long>(
+            entity,
+            schema,
+            returnId,
+            includeAutoKey,
+            timeoutSeconds,
+            sqlAdapter,
+            cancellationToken);
     }
 
     /// <summary>
@@ -123,8 +158,8 @@ public static class DbTransactionExtensions
     public static Task<int> BulkInsertAsync<T>(
         this DbTransaction tran,
         IReadOnlyCollection<T> entities,
-        string? schema = null, 
-        bool includeAutoKey = false, 
+        string? schema = null,
+        bool includeAutoKey = false,
         int? timeoutSeconds = null,
         ISqlAdapter? sqlAdapter = null,
         CancellationToken cancellationToken = default)

@@ -80,7 +80,13 @@ public static partial class DbConnectionExtensions
     /// <param name="commandInfo">Command execution, adapter, mapping, transaction, and cancellation options.</param>
     /// <returns>The generated key converted to <typeparamref name="TKey"/> when requested and supported; otherwise the default value.</returns>
     /// <exception cref="OperationCanceledException"><see cref="CommandInfo.CancellationToken"/> is cancelled.</exception>
-    public static async Task<TKey?> InsertAsync<TEntity, TKey>(this DbConnection con, TEntity entity, string? schema = null, bool returnId = true, bool includeAutoKey = false, CommandInfo commandInfo = default)
+    public static async Task<TKey?> InsertAsync<TEntity, TKey>(
+        this DbConnection con,
+        TEntity entity,
+        string? schema = null,
+        bool returnId = true,
+        bool includeAutoKey = false,
+        CommandInfo commandInfo = default)
         where TEntity : class
     {
         var mapping = GetEntityMapping(typeof(TEntity), commandInfo.EntityMappingSource);
@@ -109,6 +115,30 @@ public static partial class DbConnectionExtensions
             }
         });
         return ConvertGeneratedKey<TKey>(value);
+    }
+
+    /// <summary>
+    /// Inserts one mapped entity and returns its single database-generated key as a long.
+    /// </summary>
+    /// <typeparam name="TEntity">The mapped entity type.</typeparam>
+    /// <param name="con">The connection used to execute the insert. A connection opened here is closed before return.</param>
+    /// <param name="entity">The entity whose mapped values are inserted.</param>
+    /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
+    /// <param name="returnId">Whether to return the single generated key when one is mapped.</param>
+    /// <param name="includeAutoKey">Whether to insert a mapped generated key explicitly.</param>
+    /// <param name="commandInfo">Command execution, adapter, mapping, transaction, and cancellation options.</param>
+    /// <returns>The generated key converted to <see langword="long"/> when requested and supported; otherwise the default value.</returns>
+    /// <exception cref="OperationCanceledException"><see cref="CommandInfo.CancellationToken"/> is cancelled.</exception>
+    public static Task<long> InsertAsync<TEntity>(
+        this DbConnection con,
+        TEntity entity,
+        string? schema = null,
+        bool returnId = true,
+        bool includeAutoKey = false,
+        CommandInfo commandInfo = default)
+        where TEntity : class
+    {
+        return con.InsertAsync<TEntity, long>(entity, schema, returnId, includeAutoKey, commandInfo);
     }
 
     private static TKey? ConvertGeneratedKey<TKey>(object? value)
