@@ -1,3 +1,4 @@
+using System.Globalization;
 using static FclEx.Dapper.DapperHelper;
 
 // ReSharper disable RedundantCast
@@ -69,19 +70,20 @@ public static partial class DbConnectionExtensions
     /// <summary>
     /// Inserts one mapped entity and optionally returns its single database-generated key.
     /// </summary>
-    /// <typeparam name="T">The mapped entity type.</typeparam>
+    /// <typeparam name="TEntity">The mapped entity type.</typeparam>
+    /// <typeparam name="TKey">The generated-key type requested by the caller.</typeparam>
     /// <param name="con">The connection used to execute the insert. A connection opened here is closed before return.</param>
     /// <param name="entity">The entity whose mapped values are inserted.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
     /// <param name="returnId">Whether to return the single generated key when one is mapped.</param>
     /// <param name="includeAutoKey">Whether to insert a mapped generated key explicitly.</param>
     /// <param name="commandInfo">Command execution, adapter, mapping, transaction, and cancellation options.</param>
-    /// <returns>The generated key when requested and supported; otherwise <see langword="null"/>.</returns>
+    /// <returns>The generated key converted to <typeparamref name="TKey"/> when requested and supported; otherwise the default value.</returns>
     /// <exception cref="OperationCanceledException"><see cref="CommandInfo.CancellationToken"/> is cancelled.</exception>
-    public static async Task<dynamic?> InsertAsync<T>(this DbConnection con, T entity, string? schema = null, bool returnId = true, bool includeAutoKey = false, CommandInfo commandInfo = default)
-        where T : class
+    public static async Task<TKey?> InsertAsync<TEntity, TKey>(this DbConnection con, TEntity entity, string? schema = null, bool returnId = true, bool includeAutoKey = false, CommandInfo commandInfo = default)
+        where TEntity : class
     {
-        var mapping = GetEntityMapping(typeof(T), commandInfo.EntityMappingSource);
+        var mapping = GetEntityMapping(typeof(TEntity), commandInfo.EntityMappingSource);
         var useGlobalSqlCache = CanUseGlobalSqlCache(schema, commandInfo);
         var value = await con.ExecuteAsync(commandInfo, m => GetInsertSql(
             m,
@@ -106,8 +108,25 @@ public static partial class DbConnectionExtensions
                 return await m.ExecuteScalarAsync(commandInfo.CancellationToken);
             }
         });
-        // we cast value to dynamic first so that we can converting the value to a different type, such as long -> int or decimal -> long.
-        return (dynamic?)value;
+        return ConvertGeneratedKey<TKey>(value);
+    }
+
+    private static TKey? ConvertGeneratedKey<TKey>(object? value)
+    {
+        if (value is null or DBNull)
+            return default;
+        if (value is TKey key)
+            return key;
+
+        var keyType = Nullable.GetUnderlyingType(typeof(TKey)) ?? typeof(TKey);
+        if (keyType.IsEnum)
+        {
+            if (value is float or double or decimal)
+                value = Convert.ChangeType(value, Enum.GetUnderlyingType(keyType), CultureInfo.InvariantCulture);
+            return (TKey)Enum.ToObject(keyType, value);
+        }
+
+        return (TKey)Convert.ChangeType(value, keyType, CultureInfo.InvariantCulture);
     }
 
     /// <summary>

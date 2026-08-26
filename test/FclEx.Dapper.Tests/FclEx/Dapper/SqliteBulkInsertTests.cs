@@ -113,7 +113,7 @@ public class SqliteBulkInsertTests
         var commandInfo = new CommandInfo(SqlAdapter: adapter);
         var mapping = DapperHelper.GetEntityMapping(typeof(CacheRow));
 
-        var insertedId = await connection.InsertAsync(
+        var insertedId = await connection.InsertAsync<CacheRow, object>(
             new CacheRow { Id = 2, Name = "two" },
             includeAutoKey: true,
             commandInfo: commandInfo);
@@ -142,10 +142,38 @@ public class SqliteBulkInsertTests
         await connection.ExecuteAsync(
             "CREATE TABLE default_rows (id INTEGER PRIMARY KEY AUTOINCREMENT);");
 
-        var id = (long?)await connection.InsertAsync(new DefaultRow());
+        var id = await connection.InsertAsync<DefaultRow, long>(new DefaultRow());
 
-        Assert.NotNull(id);
+        Assert.Equal(1, id);
         Assert.Equal(1, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM default_rows"));
+    }
+
+    [Fact]
+    public async Task InsertAsync_ProviderScalar_IsConvertedToRequestedKeyType()
+    {
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await connection.ExecuteAsync(
+            "CREATE TABLE int_key_rows (id INTEGER PRIMARY KEY AUTOINCREMENT);");
+
+        var id = await connection.InsertAsync<IntKeyRow, int>(new IntKeyRow());
+
+        Assert.Equal(1, id);
+    }
+
+    [Fact]
+    public async Task TransactionInsertAsync_ReturnsRequestedKeyType()
+    {
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await connection.ExecuteAsync(
+            "CREATE TABLE int_key_rows (id INTEGER PRIMARY KEY AUTOINCREMENT);");
+        using var transaction = connection.BeginTransaction();
+
+        var id = await transaction.InsertAsync<IntKeyRow, int>(new IntKeyRow());
+        transaction.Commit();
+
+        Assert.Equal(1, id);
     }
 
     [Fact]
@@ -179,6 +207,15 @@ public class SqliteBulkInsertTests
         [Column("id")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Id { get; set; }
+    }
+
+    [Table("int_key_rows")]
+    private sealed class IntKeyRow
+    {
+        [Key]
+        [Column("id")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id { get; set; }
     }
 
     [Table("cache_rows")]

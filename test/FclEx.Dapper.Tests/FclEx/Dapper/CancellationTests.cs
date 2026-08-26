@@ -14,7 +14,7 @@ public class CancellationTests
             "INSERT INTO cancellable_rows (id, name) VALUES (1, 'one');");
         var commandInfo = new CommandInfo(CancellationToken: new(true));
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.InsertAsync(
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.InsertAsync<CancellableRow, object>(
             new CancellableRow { Id = 2, Name = "two" },
             includeAutoKey: true,
             commandInfo: commandInfo));

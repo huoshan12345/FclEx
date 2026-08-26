@@ -14,8 +14,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
             Name = Guid.NewGuid().ToString(),
         };
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
-        var id = (long?)await con.InsertAsync(entity, schema);
-        Assert.NotNull(id);
+        var id = await con.InsertAsync<EntityWithAutoKey, int>(entity, schema);
 
         var e = await con.GetAsync<EntityWithAutoKey>(id, schema);
         Assert.NotNull(e);
@@ -42,7 +41,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
             Name = Guid.NewGuid().ToString(),
         };
 
-        await con.InsertAsync(entity, schema, includeAutoKey: true);
+        await con.InsertAsync<EntityWithAutoKey, object>(entity, schema, includeAutoKey: true);
 
         // need to delete the inserted data with specified id to avoid affecting sequence of auto key generation in later tests
         await using var _ = AsyncDisposable.Create(async () =>
@@ -71,7 +70,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
             Order = null,
         };
 
-        var value = await con.InsertAsync(entity, schema);
+        var value = await con.InsertAsync<EntityWithGuidKey, object>(entity, schema);
         Assert.Null(value);
 
         var e = await con.GetAsync<EntityWithGuidKey>(entity.Id, schema);
@@ -90,7 +89,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
             Name = Guid.NewGuid().ToString(),
             Value = 1
         };
-        await con.InsertAsync(entity, schema);
+        await con.InsertAsync<EntityWithoutKey, object>(entity, schema);
 
         var tableName = DapperHelper.GetTableNameWithSchema(con, schema, typeof(EntityWithoutKey));
         var sql = $"select * from {tableName} where {DapperHelper.GetQuotedColumnName<EntityWithoutKey>(con, m => m.Name)} = @Name";
@@ -179,7 +178,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
             Value = 1,
         };
 
-        await con.InsertAsync(entity, schema);
+        await con.InsertAsync<EntityWithGuidKey, object>(entity, schema);
 
         var e = await con.GetAsync<EntityWithGuidKey>(entity.Id, schema);
         Assert.NotNull(e);
@@ -241,17 +240,15 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
 
         var (id, id2) = await con.DoTransactionAsync(async tran =>
         {
-            var id = (long?)await tran.InsertAsync(entity, schema);
-            var id2 = (long?)await tran.InsertAsync(entity2, schema);
+            var id = await tran.InsertAsync<EntityWithAutoKey, int>(entity, schema);
+            var id2 = await tran.InsertAsync<EntityWithAutoKey, int>(entity2, schema);
             return (id1: id, id2);
         });
 
-        Assert.NotNull(id);
         var e = await con.GetAsync<EntityWithAutoKey>(id, schema);
         Assert.NotNull(e);
         Assert.Equal(entity.Name, e.Name);
 
-        Assert.NotNull(id2);
         var e2 = await con.GetAsync<EntityWithAutoKey>(id2, schema);
         Assert.NotNull(e2);
         Assert.Equal(entity2.Name, e2.Name);
@@ -268,7 +265,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
         var id = Guid.NewGuid();
         await Assert.ThrowsAsync<InvalidOperationException>(() => con.DoTransactionAsync(async tran =>
         {
-            await tran.InsertAsync(new EntityWithGuidKey
+            await tran.InsertAsync<EntityWithGuidKey, object>(new EntityWithGuidKey
             {
                 Id = id,
                 Value = 100,

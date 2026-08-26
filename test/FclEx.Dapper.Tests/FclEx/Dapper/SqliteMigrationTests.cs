@@ -19,10 +19,9 @@ public class SqliteMigrationTests
             Value = 42,
         };
 
-        var id = (long?)await connection.InsertAsync(entity);
-        Assert.NotNull(id);
+        var id = await connection.InsertAsync<SqliteMigrationTestEntity, long>(entity);
 
-        var persisted = await connection.GetAsync<SqliteMigrationTestEntity>(id.Value);
+        var persisted = await connection.GetAsync<SqliteMigrationTestEntity>(id);
         Assert.NotNull(persisted);
         Assert.Equal(entity.Name, persisted.Name);
         Assert.Equal(entity.Value, persisted.Value);

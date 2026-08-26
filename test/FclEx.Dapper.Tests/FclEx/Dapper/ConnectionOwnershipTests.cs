@@ -11,10 +11,10 @@ public class ConnectionOwnershipTests
         using var connection = database.CreateConnection();
         var first = new SqliteMigrationTestEntity { Name = "first", Value = 1 };
 
-        var firstId = (long?)await connection.InsertAsync(first);
+        var firstId = await connection.InsertAsync<SqliteMigrationTestEntity, long>(first);
         Assert.Equal(ConnectionState.Closed, connection.State);
 
-        var persisted = await connection.GetAsync<SqliteMigrationTestEntity>(firstId!.Value);
+        var persisted = await connection.GetAsync<SqliteMigrationTestEntity>(firstId);
         Assert.Equal(ConnectionState.Closed, connection.State);
         Assert.Equal(first.Name, persisted?.Name);
 
@@ -25,11 +25,11 @@ public class ConnectionOwnershipTests
             ]);
         Assert.Equal(ConnectionState.Closed, connection.State);
 
-        await connection.DeleteAsync<SqliteMigrationTestEntity>(firstId.Value);
+        await connection.DeleteAsync<SqliteMigrationTestEntity>(firstId);
         Assert.Equal(ConnectionState.Closed, connection.State);
 
         await connection.OpenAsync();
-        await connection.InsertAsync(new SqliteMigrationTestEntity { Name = "open", Value = 4 });
+        await connection.InsertAsync<SqliteMigrationTestEntity, long>(new SqliteMigrationTestEntity { Name = "open", Value = 4 });
         Assert.Equal(ConnectionState.Open, connection.State);
         await connection.BulkInsertAsync(
             [new SqliteMigrationTestEntity { Name = "open-bulk", Value = 5 }]);
@@ -43,11 +43,11 @@ public class ConnectionOwnershipTests
         using var connection = database.CreateConnection();
 
         await Assert.ThrowsAnyAsync<DbException>(() =>
-            connection.InsertAsync(new MissingTableEntity { Value = 1 }));
+            connection.InsertAsync<MissingTableEntity, object>(new MissingTableEntity { Value = 1 }));
         Assert.Equal(ConnectionState.Closed, connection.State);
 
         var commandInfo = new CommandInfo(CancellationToken: new(true));
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.InsertAsync(
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.InsertAsync<SqliteMigrationTestEntity, long>(
             new SqliteMigrationTestEntity { Name = "cancelled", Value = 2 },
             commandInfo: commandInfo));
         Assert.Equal(ConnectionState.Closed, connection.State);

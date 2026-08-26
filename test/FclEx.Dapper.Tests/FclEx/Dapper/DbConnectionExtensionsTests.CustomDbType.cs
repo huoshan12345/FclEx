@@ -22,8 +22,7 @@ partial class DbConnectionExtensionsTests
             Json = payload.ToJson(),
         };
 
-        var id = (long?)await con.InsertAsync(entity, schema);
-        Assert.NotNull(id);
+        var id = await con.InsertAsync<EntityWithPostgresqlJsonb, int>(entity, schema);
 
         var e = await con.GetAsync<EntityWithPostgresqlJsonb>(id, schema);
         Assert.NotNull(e);
@@ -53,8 +52,7 @@ partial class DbConnectionExtensionsTests
             Xml = XmlHelper.Serialize(payload),
         };
 
-        var id = (long?)await con.InsertAsync(entity, schema);
-        Assert.NotNull(id);
+        var id = await con.InsertAsync<EntityWithSqlServerXml, int>(entity, schema);
 
         var e = await con.GetAsync<EntityWithSqlServerXml>(id, schema);
         Assert.NotNull(e);
@@ -83,8 +81,7 @@ partial class DbConnectionExtensionsTests
             Blob = payload.ToJson().ToBytes(),
         };
 
-        var id = (long?)await con.InsertAsync(entity);
-        Assert.NotNull(id);
+        var id = await con.InsertAsync<EntityWithSqliteBlob, int>(entity);
 
         var e = await con.GetAsync<EntityWithSqliteBlob>(id);
         Assert.NotNull(e);
@@ -114,8 +111,7 @@ partial class DbConnectionExtensionsTests
             Blob = payload.ToJson().ToBytes(),
         };
 
-        var id = (long?)await con.InsertAsync(entity, schema);
-        Assert.NotNull(id);
+        var id = await con.InsertAsync<EntityWithMySqlBlob, int>(entity, schema);
 
         var e = await con.GetAsync<EntityWithMySqlBlob>(id, schema);
         Assert.NotNull(e);

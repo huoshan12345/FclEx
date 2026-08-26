@@ -4,7 +4,7 @@ This document guides the long-term development and review of FclEx.Dapper. Imple
 
 ## Purpose
 
-FclEx.Dapper extends Dapper with focused helpers for recurring database operations such as `InsertAsync<T>`, `BulkInsertAsync<T>`, `GetAsync<T>`, and `DeleteAsync<T>`. The package should reduce repetitive SQL and ADO.NET code while preserving Dapper's direct, transparent programming model.
+FclEx.Dapper extends Dapper with focused helpers for recurring database operations such as `InsertAsync<TEntity, TKey>`, `BulkInsertAsync<T>`, `GetAsync<T>`, and `DeleteAsync<T>`. The package should reduce repetitive SQL and ADO.NET code while preserving Dapper's direct, transparent programming model.
 
 EF Core-style change tracking, relationship management, LINQ translation, migrations, and unit-of-work management stay outside the package.
 

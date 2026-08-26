@@ -74,7 +74,8 @@ public static class DbTransactionExtensions
     /// <summary>
     /// Inserts one mapped entity through this transaction and optionally returns its generated key.
     /// </summary>
-    /// <typeparam name="T">The mapped entity type.</typeparam>
+    /// <typeparam name="TEntity">The mapped entity type.</typeparam>
+    /// <typeparam name="TKey">The generated-key type requested by the caller.</typeparam>
     /// <param name="tran">The transaction assigned to the insert command.</param>
     /// <param name="entity">The entity whose mapped values are inserted.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
@@ -83,19 +84,19 @@ public static class DbTransactionExtensions
     /// <param name="timeoutSeconds">The optional command timeout in seconds.</param>
     /// <param name="sqlAdapter">An optional SQL adapter overriding connection-type resolution.</param>
     /// <param name="cancellationToken">The token used to cancel command execution.</param>
-    /// <returns>The generated key when requested and supported; otherwise <see langword="null"/>.</returns>
-    public static Task<dynamic?> InsertAsync<T>(
+    /// <returns>The generated key converted to <typeparamref name="TKey"/> when requested and supported; otherwise the default value.</returns>
+    public static Task<TKey?> InsertAsync<TEntity, TKey>(
         this DbTransaction tran, 
-        T entity, 
+        TEntity entity,
         string? schema = null, 
         bool returnId = true, 
         bool includeAutoKey = false,
         int? timeoutSeconds = null,
         ISqlAdapter? sqlAdapter = null,
         CancellationToken cancellationToken = default)
-        where T : class
+        where TEntity : class
     {
-        return tran.Connection!.InsertAsync(
+        return tran.Connection!.InsertAsync<TEntity, TKey>(
             entity,
             schema,
             returnId,

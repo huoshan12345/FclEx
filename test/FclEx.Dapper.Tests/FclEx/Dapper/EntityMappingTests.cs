@@ -77,8 +77,8 @@ public class EntityMappingTests
             Ignored = "must not be inserted",
         };
 
-        var id = (long?)await connection.InsertAsync(entity, commandInfo: commandInfo);
-        var persisted = await connection.GetAsync<CustomMappedEntity>(id!.Value, commandInfo: commandInfo);
+        var id = await connection.InsertAsync<CustomMappedEntity, long>(entity, commandInfo: commandInfo);
+        var persisted = await connection.GetAsync<CustomMappedEntity>(id, commandInfo: commandInfo);
 
         Assert.NotNull(persisted);
         Assert.Equal(entity.Name, persisted.Name);
@@ -94,8 +94,8 @@ public class EntityMappingTests
             mapped => mapped.Name,
             source));
 
-        Assert.Equal(1, await connection.DeleteAsync<CustomMappedEntity>(id.Value, commandInfo: commandInfo));
-        Assert.Null(await connection.GetAsync<CustomMappedEntity>(id.Value, commandInfo: commandInfo));
+        Assert.Equal(1, await connection.DeleteAsync<CustomMappedEntity>(id, commandInfo: commandInfo));
+        Assert.Null(await connection.GetAsync<CustomMappedEntity>(id, commandInfo: commandInfo));
         Assert.Same(originalTypeMap, SqlMapper.GetTypeMap(typeof(CustomMappedEntity)));
     }
 
@@ -126,15 +126,15 @@ public class EntityMappingTests
             );
             """);
 
-        var firstId = (long?)await connection.InsertAsync(
+        var firstId = await connection.InsertAsync<CustomMappedEntity, long>(
             new CustomMappedEntity { Name = "first" },
             commandInfo: firstCommand);
-        var secondId = (long?)await connection.InsertAsync(
+        var secondId = await connection.InsertAsync<CustomMappedEntity, long>(
             new CustomMappedEntity { Name = "second" },
             commandInfo: secondCommand);
 
-        var first = await connection.GetAsync<CustomMappedEntity>(firstId!.Value, commandInfo: firstCommand);
-        var second = await connection.GetAsync<CustomMappedEntity>(secondId!.Value, commandInfo: secondCommand);
+        var first = await connection.GetAsync<CustomMappedEntity>(firstId, commandInfo: firstCommand);
+        var second = await connection.GetAsync<CustomMappedEntity>(secondId, commandInfo: secondCommand);
 
         Assert.NotNull(first);
         Assert.Equal("first", first.Name);

@@ -42,7 +42,7 @@ var orderMapping = new EntityMapping(
 
 IEntityMappingSource mappings = new ApplicationEntityMappingSource(orderMapping);
 var commandInfo = new CommandInfo(EntityMappingSource: mappings);
-await connection.InsertAsync(order, commandInfo: commandInfo);
+var orderId = await connection.InsertAsync<Order, long>(order, commandInfo: commandInfo);
 ```
 
 Here `ApplicationEntityMappingSource` is an application-owned implementation that returns `orderMapping` for `Order` and throws for unknown entity types.

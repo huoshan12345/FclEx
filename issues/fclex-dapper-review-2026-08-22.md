@@ -85,10 +85,11 @@
 
 ## 问题清单：公共 API、签名与命名
 
-13. **[P1] `InsertAsync` 返回 `dynamic?`，调用方无法获得编译期生成键类型检查。**
+13. **[P1][已修复 2026-08-26] `InsertAsync` 返回 `dynamic?`，调用方无法获得编译期生成键类型检查。**
     - 位置：`DbConnectionExtensions.cs:37-54`、`DbTransactionExtensions.cs:63-66`。
     - 说明：调用方只有在运行时才能发现 provider 返回的是 `decimal`、`long` 还是其他类型；注释所谓“先转 dynamic 以便转换”只是把转换失败推迟到调用点。
-    - 建议：提供 `InsertAsync<TEntity, TKey>`/`InsertAndGetKeyAsync<TKey>`，由 adapter 将结果转换为明确的 `TKey`；无返回键的插入应单独返回 affected rows。
+    - 建议：提供 `InsertAsync<TEntity, TKey>`/`InsertAndGetKeyAsync<TKey>`，由扩展将结果转换为明确的 `TKey`；无返回键的插入应单独返回 affected rows。
+    - 处理：connection 和 transaction API 均改为 `InsertAsync<TEntity, TKey>`，返回 `Task<TKey?>`；标量结果在扩展内部按目标键类型完成数值和枚举转换，不再向调用方暴露 `dynamic`。
 
 14. **[P2] `returnId` 与 `includeAutoKey` 两个相邻布尔参数形成难读且存在非法组合的 API。**
     - 位置：`DbConnectionExtensions.cs:37`、`DbTransactionExtensions.cs:63`。
