@@ -15,23 +15,6 @@ internal readonly record struct InsertSqlKey(
     bool ReturnGeneratedKey,
     int RowCount);
 
-/// <summary>
-/// Provides execution, provider, and entity-mapping options for an FclEx.Dapper command.
-/// </summary>
-/// <param name="TimeoutSeconds">The optional command timeout in seconds.</param>
-/// <param name="Transaction">The optional local transaction assigned to the command.</param>
-/// <param name="SqlAdapter">An optional SQL adapter overriding connection-type resolution.</param>
-/// <param name="EntityMappingSource">
-/// An optional entity mapping source. <see cref="DapperHelper.DefaultEntityMappingSource"/> is used when omitted.
-/// </param>
-/// <param name="CancellationToken">The token used to cancel connection opening and command execution.</param>
-public readonly record struct CommandInfo(
-    int? TimeoutSeconds = null,
-    DbTransaction? Transaction = null,
-    ISqlAdapter? SqlAdapter = null,
-    IEntityMappingSource? EntityMappingSource = null,
-    CancellationToken CancellationToken = default);
-
 public static partial class DbConnectionExtensions
 {
     // This limit bounds both command size and the row-number dimension of the process-wide INSERT SQL cache.
@@ -59,12 +42,12 @@ public static partial class DbConnectionExtensions
             InsertSqls.TryRemove(key, out _);
     }
 
-    private static bool CanUseGlobalSqlCache(string? schema, CommandInfo commandInfo)
+    private static bool CanUseGlobalSqlCache(string? schema, CommandOptions commandOptions)
     {
         // A null schema selects the schema in the stable mapping. A null adapter override selects either a
         // private built-in adapter or a registered adapter whose replacement invalidates these caches. Mapping sources
         // are required to return stable mappings, so their mapping instances are safe parts of the cache key.
-        return schema is null && commandInfo.SqlAdapter is null;
+        return schema is null && commandOptions.SqlAdapter is null;
     }
 
     /// <summary>
@@ -76,15 +59,15 @@ public static partial class DbConnectionExtensions
     /// <param name="entity">The entity whose mapped values are inserted.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
     /// <param name="returnGeneratedKey">Whether to return the single generated key when one is mapped.</param>
-    /// <param name="commandInfo">Command execution, adapter, mapping, transaction, and cancellation options.</param>
+    /// <param name="commandOptions">Command execution, adapter, mapping, transaction, and cancellation options.</param>
     /// <returns>The generated key converted to <typeparamref name="TKey"/> when requested and supported; otherwise the default value.</returns>
-    /// <exception cref="OperationCanceledException"><see cref="CommandInfo.CancellationToken"/> is cancelled.</exception>
+    /// <exception cref="OperationCanceledException"><see cref="CommandOptions.CancellationToken"/> is cancelled.</exception>
     public static Task<TKey?> InsertAsync<TEntity, TKey>(
         this DbConnection con,
         TEntity entity,
         string? schema = null,
         bool returnGeneratedKey = true,
-        CommandInfo commandInfo = default)
+        CommandOptions commandOptions = default)
         where TEntity : class
     {
         return InsertCoreAsync<TEntity, TKey>(
@@ -93,7 +76,7 @@ public static partial class DbConnectionExtensions
             schema,
             returnGeneratedKey,
             false,
-            commandInfo);
+            commandOptions);
     }
 
     /// <summary>
@@ -104,18 +87,18 @@ public static partial class DbConnectionExtensions
     /// <param name="entity">The entity whose mapped values are inserted.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
     /// <param name="returnGeneratedKey">Whether to return the single generated key when one is mapped.</param>
-    /// <param name="commandInfo">Command execution, adapter, mapping, transaction, and cancellation options.</param>
+    /// <param name="commandOptions">Command execution, adapter, mapping, transaction, and cancellation options.</param>
     /// <returns>The generated key converted to <see langword="long"/> when requested and supported; otherwise the default value.</returns>
-    /// <exception cref="OperationCanceledException"><see cref="CommandInfo.CancellationToken"/> is cancelled.</exception>
+    /// <exception cref="OperationCanceledException"><see cref="CommandOptions.CancellationToken"/> is cancelled.</exception>
     public static Task<long> InsertAsync<TEntity>(
         this DbConnection con,
         TEntity entity,
         string? schema = null,
         bool returnGeneratedKey = true,
-        CommandInfo commandInfo = default)
+        CommandOptions commandOptions = default)
         where TEntity : class
     {
-        return con.InsertAsync<TEntity, long>(entity, schema, returnGeneratedKey, commandInfo);
+        return con.InsertAsync<TEntity, long>(entity, schema, returnGeneratedKey, commandOptions);
     }
 
     /// <summary>
@@ -125,18 +108,18 @@ public static partial class DbConnectionExtensions
     /// <param name="con">The connection used to execute the insert. A connection opened here is closed before return.</param>
     /// <param name="entity">The entity containing the generated key values to insert.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
-    /// <param name="commandInfo">Command execution, adapter, mapping, transaction, and cancellation options.</param>
+    /// <param name="commandOptions">Command execution, adapter, mapping, transaction, and cancellation options.</param>
     /// <returns>A task representing the insert operation.</returns>
     /// <exception cref="DataException">The entity mapping does not contain a database-generated key.</exception>
-    /// <exception cref="OperationCanceledException"><see cref="CommandInfo.CancellationToken"/> is cancelled.</exception>
+    /// <exception cref="OperationCanceledException"><see cref="CommandOptions.CancellationToken"/> is cancelled.</exception>
     public static async Task InsertWithExplicitKeysAsync<TEntity>(
         this DbConnection con,
         TEntity entity,
         string? schema = null,
-        CommandInfo commandInfo = default)
+        CommandOptions commandOptions = default)
         where TEntity : class
     {
-        await InsertCoreAsync<TEntity, object>(con, entity, schema, false, true, commandInfo);
+        await InsertCoreAsync<TEntity, object>(con, entity, schema, false, true, commandOptions);
     }
 
     private static async Task<TKey?> InsertCoreAsync<TEntity, TKey>(
@@ -145,18 +128,18 @@ public static partial class DbConnectionExtensions
         string? schema,
         bool returnGeneratedKey,
         bool includeGeneratedKeys,
-        CommandInfo commandInfo)
+        CommandOptions commandOptions)
         where TEntity : class
     {
-        var mapping = GetEntityMapping(typeof(TEntity), commandInfo.EntityMappingSource);
+        var mapping = GetEntityMapping(typeof(TEntity), commandOptions.EntityMappingSource);
         if (includeGeneratedKeys && mapping.GeneratedKeys.Count == 0)
             throw new DataException($"Entity '{mapping.EntityType.FullName}' does not have a database-generated key.");
 
         var shouldReturnGeneratedKey = returnGeneratedKey
                                        && includeGeneratedKeys == false
                                        && mapping.GeneratedKeys.Count == 1;
-        var useGlobalSqlCache = CanUseGlobalSqlCache(schema, commandInfo);
-        var value = await con.ExecuteAsync(commandInfo, m => GetInsertSql(
+        var useGlobalSqlCache = CanUseGlobalSqlCache(schema, commandOptions);
+        var value = await con.ExecuteAsync(commandOptions, m => GetInsertSql(
             m,
             schema,
             entity,
@@ -171,7 +154,7 @@ public static partial class DbConnectionExtensions
                 await using var x = await a.BeginExplicitIdentityInsertAsync(
                     tableName,
                     m,
-                    commandInfo.CancellationToken);
+                    commandOptions.CancellationToken);
                 return await ExecuteCommandAsync(m);
             }
 
@@ -180,9 +163,9 @@ public static partial class DbConnectionExtensions
             async Task<object?> ExecuteCommandAsync(DbCommand command)
             {
                 if (shouldReturnGeneratedKey)
-                    return await command.ExecuteScalarAsync(commandInfo.CancellationToken);
+                    return await command.ExecuteScalarAsync(commandOptions.CancellationToken);
 
-                await command.ExecuteNonQueryAsync(commandInfo.CancellationToken);
+                await command.ExecuteNonQueryAsync(commandOptions.CancellationToken);
                 return null;
             }
         });
@@ -215,19 +198,20 @@ public static partial class DbConnectionExtensions
     /// <param name="entities">The entities to insert.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
     /// <param name="includeAutoKey">Whether to insert mapped generated keys explicitly.</param>
-    /// <param name="commandInfo">Command execution, adapter, mapping, transaction, and cancellation options.</param>
+    /// <param name="commandOptions">Command execution, adapter, mapping, transaction, and cancellation options.</param>
     /// <returns>The total affected rows reported by all batches, or zero for an empty collection.</returns>
     /// <exception cref="NotSupportedException">The mapped row shape cannot be represented by the selected adapter.</exception>
-    /// <exception cref="OperationCanceledException"><see cref="CommandInfo.CancellationToken"/> is cancelled.</exception>
-    public static async Task<int> BulkInsertAsync<T>(this DbConnection con, IReadOnlyCollection<T> entities, string? schema = null, bool includeAutoKey = false, CommandInfo commandInfo = default)
+    /// <exception cref="OperationCanceledException"><see cref="CommandOptions.CancellationToken"/> is cancelled.</exception>
+    public static async Task<int> BulkInsertAsync<T>(this DbConnection con, IReadOnlyCollection<T> entities, string? schema = null, bool includeAutoKey = false, CommandOptions commandOptions = default)
         where T : class
     {
         if (entities.IsNullOrEmpty())
             return 0;
 
         var initialState = con.State;
-        var sqlAdapter = commandInfo.SqlAdapter ?? GetSqlAdapter(con);
-        var mapping = GetEntityMapping(typeof(T), commandInfo.EntityMappingSource);
+        commandOptions.ValidateFor(con);
+        var sqlAdapter = commandOptions.SqlAdapter ?? GetSqlAdapter(con);
+        var mapping = GetEntityMapping(typeof(T), commandOptions.EntityMappingSource);
         var insertProperties = mapping.GetInsertProperties(includeAutoKey);
         if (insertProperties.Count == 0 && entities.Count > 1)
         {
@@ -238,7 +222,7 @@ public static partial class DbConnectionExtensions
         var batchSize = insertProperties.Count == 0
             ? 1
             : Math.Min(DefaultInsertBatchSize, sqlAdapter.GetMaxInsertBatchSize(insertProperties.Count));
-        var useGlobalSqlCache = CanUseGlobalSqlCache(schema, commandInfo);
+        var useGlobalSqlCache = CanUseGlobalSqlCache(schema, commandOptions);
 
         // Override paths do not enter process-wide caches. A small call-local cache still makes identical full
         // batches share one command text; normally it contains only the full batch size and the final remainder.
@@ -277,19 +261,19 @@ public static partial class DbConnectionExtensions
                 includeAutoKey,
                 useGlobalSqlCache,
                 localInsertSqls);
-            using var command = con.CreateCommand(sql, parameters, commandInfo.TimeoutSeconds, commandInfo.Transaction);
-            return await command.ExecuteNonQueryAsync(commandInfo.CancellationToken);
+            using var command = con.CreateCommand(sql, parameters, commandOptions.TimeoutSeconds, commandOptions.Transaction);
+            return await command.ExecuteNonQueryAsync(commandOptions.CancellationToken);
         }
 
         try
         {
-            await con.TryOpenAsync(commandInfo.CancellationToken);
+            await con.TryOpenAsync(commandOptions.CancellationToken);
 
             if (includeAutoKey && mapping.GeneratedKeys.Count > 0)
             {
                 using var command = con.CreateCommand();
-                command.Transaction = commandInfo.Transaction;
-                if (commandInfo.TimeoutSeconds is { } timeout)
+                command.Transaction = commandOptions.Transaction;
+                if (commandOptions.TimeoutSeconds is { } timeout)
                 {
                     command.CommandTimeout = timeout;
                 }
@@ -298,7 +282,7 @@ public static partial class DbConnectionExtensions
                 await using var scope = await sqlAdapter.BeginExplicitIdentityInsertAsync(
                     tableName,
                     command,
-                    commandInfo.CancellationToken);
+                    commandOptions.CancellationToken);
                 return await ExecuteBatchesAsync();
             }
 
@@ -475,16 +459,17 @@ public static partial class DbConnectionExtensions
     /// <param name="connection">The connection used to execute the query. Dapper restores its initial open/closed state.</param>
     /// <param name="id">The key value to find.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
-    /// <param name="commandInfo">Command execution, adapter, mapping, transaction, and cancellation options.</param>
+    /// <param name="commandOptions">Command execution, adapter, mapping, transaction, and cancellation options.</param>
     /// <returns>The matching entity, or <see langword="null"/> when no row matches.</returns>
     /// <exception cref="DataException">The mapping does not define exactly one key.</exception>
-    /// <exception cref="OperationCanceledException"><see cref="CommandInfo.CancellationToken"/> is cancelled.</exception>
-    public static Task<T?> GetAsync<T>(this DbConnection connection, object id, string? schema = null, CommandInfo commandInfo = default)
+    /// <exception cref="OperationCanceledException"><see cref="CommandOptions.CancellationToken"/> is cancelled.</exception>
+    public static Task<T?> GetAsync<T>(this DbConnection connection, object id, string? schema = null, CommandOptions commandOptions = default)
     {
-        var adapter = commandInfo.SqlAdapter ?? GetSqlAdapter(connection);
-        var mapping = GetEntityMapping(typeof(T), commandInfo.EntityMappingSource);
+        commandOptions.ValidateFor(connection);
+        var adapter = commandOptions.SqlAdapter ?? GetSqlAdapter(connection);
+        var mapping = GetEntityMapping(typeof(T), commandOptions.EntityMappingSource);
         var key = new EntitySqlKey(adapter, mapping);
-        var sql = CanUseGlobalSqlCache(schema, commandInfo)
+        var sql = CanUseGlobalSqlCache(schema, commandOptions)
             ? GetSqls.GetOrAdd(key, static cacheKey => CreateGetSql(cacheKey, null))
             : CreateGetSql(key, schema);
         var dynParams = new DynamicParameters();
@@ -492,9 +477,9 @@ public static partial class DbConnectionExtensions
         return connection.QueryFirstOrDefaultAsync<T?>(new CommandDefinition(
             sql,
             dynParams,
-            commandInfo.Transaction,
-            commandInfo.TimeoutSeconds,
-            cancellationToken: commandInfo.CancellationToken));
+            commandOptions.Transaction,
+            commandOptions.TimeoutSeconds,
+            cancellationToken: commandOptions.CancellationToken));
 
         static string CreateGetSql(EntitySqlKey key, string? schema)
         {
@@ -515,16 +500,17 @@ public static partial class DbConnectionExtensions
     /// <param name="con">The connection used to execute the delete. Dapper restores its initial open/closed state.</param>
     /// <param name="id">The key value to delete.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
-    /// <param name="commandInfo">Command execution, adapter, mapping, transaction, and cancellation options.</param>
+    /// <param name="commandOptions">Command execution, adapter, mapping, transaction, and cancellation options.</param>
     /// <returns>The affected row count.</returns>
     /// <exception cref="DataException">The mapping does not define exactly one key.</exception>
-    /// <exception cref="OperationCanceledException"><see cref="CommandInfo.CancellationToken"/> is cancelled.</exception>
-    public static Task<int> DeleteAsync<T>(this DbConnection con, object id, string? schema = null, CommandInfo commandInfo = default)
+    /// <exception cref="OperationCanceledException"><see cref="CommandOptions.CancellationToken"/> is cancelled.</exception>
+    public static Task<int> DeleteAsync<T>(this DbConnection con, object id, string? schema = null, CommandOptions commandOptions = default)
     {
-        var adapter = commandInfo.SqlAdapter ?? GetSqlAdapter(con);
-        var mapping = GetEntityMapping(typeof(T), commandInfo.EntityMappingSource);
+        commandOptions.ValidateFor(con);
+        var adapter = commandOptions.SqlAdapter ?? GetSqlAdapter(con);
+        var mapping = GetEntityMapping(typeof(T), commandOptions.EntityMappingSource);
         var key = new EntitySqlKey(adapter, mapping);
-        var sql = CanUseGlobalSqlCache(schema, commandInfo)
+        var sql = CanUseGlobalSqlCache(schema, commandOptions)
             ? DeleteSqls.GetOrAdd(key, static cacheKey => CreateDeleteSql(cacheKey, null))
             : CreateDeleteSql(key, schema);
         var dynParams = new DynamicParameters();
@@ -532,9 +518,9 @@ public static partial class DbConnectionExtensions
         return con.ExecuteAsync(new CommandDefinition(
             sql,
             dynParams,
-            commandInfo.Transaction,
-            commandInfo.TimeoutSeconds,
-            cancellationToken: commandInfo.CancellationToken));
+            commandOptions.Transaction,
+            commandOptions.TimeoutSeconds,
+            cancellationToken: commandOptions.CancellationToken));
 
         static string CreateDeleteSql(EntitySqlKey key, string? schema)
         {
@@ -556,20 +542,21 @@ public static partial class DbConnectionExtensions
         return keys[0];
     }
 
-    internal static Task<T> ExecuteAsync<T>(this DbConnection con, CommandInfo commandInfo, Func<ISqlAdapter, SqlInfo> sqlFunc, Func<DbCommand, Task<T>> func)
+    internal static Task<T> ExecuteAsync<T>(this DbConnection con, CommandOptions commandOptions, Func<ISqlAdapter, SqlInfo> sqlFunc, Func<DbCommand, Task<T>> func)
     {
-        return con.ExecuteAsync(commandInfo, sqlFunc, (_, m) => func(m));
+        return con.ExecuteAsync(commandOptions, sqlFunc, (_, m) => func(m));
     }
 
-    internal static async Task<T> ExecuteAsync<T>(this DbConnection con, CommandInfo commandInfo, Func<ISqlAdapter, SqlInfo> sqlFunc, Func<ISqlAdapter, DbCommand, Task<T>> func)
+    internal static async Task<T> ExecuteAsync<T>(this DbConnection con, CommandOptions commandOptions, Func<ISqlAdapter, SqlInfo> sqlFunc, Func<ISqlAdapter, DbCommand, Task<T>> func)
     {
+        commandOptions.ValidateFor(con);
         var initialState = con.State;
         try
         {
-            var adapter = commandInfo.SqlAdapter ?? GetSqlAdapter(con);
+            var adapter = commandOptions.SqlAdapter ?? GetSqlAdapter(con);
             var (sql, paras) = sqlFunc(adapter);
-            var cmd = con.CreateCommand(sql, paras, commandInfo.TimeoutSeconds, commandInfo.Transaction);
-            await con.TryOpenAsync(commandInfo.CancellationToken);
+            var cmd = con.CreateCommand(sql, paras, commandOptions.TimeoutSeconds, commandOptions.Transaction);
+            await con.TryOpenAsync(commandOptions.CancellationToken);
             return await func(adapter, cmd);
         }
         finally

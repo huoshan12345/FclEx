@@ -56,7 +56,7 @@ public class EntityMappingTests
     {
         var mapping = CreateCustomMapping();
         var source = new SingleEntityMappingSource(mapping);
-        var commandInfo = new CommandInfo(EntityMappingSource: source);
+        var commandOptions = new CommandOptions { EntityMappingSource = source };
         var originalTypeMap = SqlMapper.GetTypeMap(typeof(CustomMappedEntity));
         Assert.IsType<DefaultTypeMap>(originalTypeMap);
         using var connection = new SqliteConnection("Data Source=:memory:");
@@ -77,8 +77,8 @@ public class EntityMappingTests
             Ignored = "must not be inserted",
         };
 
-        var id = await connection.InsertAsync<CustomMappedEntity, long>(entity, commandInfo: commandInfo);
-        var persisted = await connection.GetAsync<CustomMappedEntity>(id, commandInfo: commandInfo);
+        var id = await connection.InsertAsync<CustomMappedEntity, long>(entity, commandOptions: commandOptions);
+        var persisted = await connection.GetAsync<CustomMappedEntity>(id, commandOptions: commandOptions);
 
         Assert.NotNull(persisted);
         Assert.Equal(entity.Name, persisted.Name);
@@ -94,8 +94,8 @@ public class EntityMappingTests
             mapped => mapped.Name,
             source));
 
-        Assert.Equal(1, await connection.DeleteAsync<CustomMappedEntity>(id, commandInfo: commandInfo));
-        Assert.Null(await connection.GetAsync<CustomMappedEntity>(id, commandInfo: commandInfo));
+        Assert.Equal(1, await connection.DeleteAsync<CustomMappedEntity>(id, commandOptions: commandOptions));
+        Assert.Null(await connection.GetAsync<CustomMappedEntity>(id, commandOptions: commandOptions));
         Assert.Same(originalTypeMap, SqlMapper.GetTypeMap(typeof(CustomMappedEntity)));
     }
 
@@ -104,8 +104,14 @@ public class EntityMappingTests
     {
         var firstMapping = CreateCustomMapping("first_rows", "first_id", "first_name");
         var secondMapping = CreateCustomMapping("second_rows", "second_id", "second_name");
-        var firstCommand = new CommandInfo(EntityMappingSource: new SingleEntityMappingSource(firstMapping));
-        var secondCommand = new CommandInfo(EntityMappingSource: new SingleEntityMappingSource(secondMapping));
+        var firstOptions = new CommandOptions
+        {
+            EntityMappingSource = new SingleEntityMappingSource(firstMapping),
+        };
+        var secondOptions = new CommandOptions
+        {
+            EntityMappingSource = new SingleEntityMappingSource(secondMapping),
+        };
         var originalTypeMap = SqlMapper.GetTypeMap(typeof(CustomMappedEntity));
         Assert.IsType<DefaultTypeMap>(originalTypeMap);
         using var connection = new SqliteConnection("Data Source=:memory:");
@@ -128,13 +134,13 @@ public class EntityMappingTests
 
         var firstId = await connection.InsertAsync<CustomMappedEntity, long>(
             new CustomMappedEntity { Name = "first" },
-            commandInfo: firstCommand);
+            commandOptions: firstOptions);
         var secondId = await connection.InsertAsync<CustomMappedEntity, long>(
             new CustomMappedEntity { Name = "second" },
-            commandInfo: secondCommand);
+            commandOptions: secondOptions);
 
-        var first = await connection.GetAsync<CustomMappedEntity>(firstId, commandInfo: firstCommand);
-        var second = await connection.GetAsync<CustomMappedEntity>(secondId, commandInfo: secondCommand);
+        var first = await connection.GetAsync<CustomMappedEntity>(firstId, commandOptions: firstOptions);
+        var second = await connection.GetAsync<CustomMappedEntity>(secondId, commandOptions: secondOptions);
 
         Assert.NotNull(first);
         Assert.Equal("first", first.Name);

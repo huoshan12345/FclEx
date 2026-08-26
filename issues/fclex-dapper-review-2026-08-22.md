@@ -34,7 +34,7 @@
    - 位置：`EntityDefinition.cs:23-47`、`FieldDefinition.cs:3-11`。
    - 说明：实现读取 `[Table]`、`[Column]`、`[Key]` 和部分 `[DatabaseGenerated]`，因此 API 看起来遵守 DataAnnotations 映射契约；实际上 schema、`[NotMapped]`、computed、只读/索引器等均未正确处理。消费者无法知道哪些约定可信。
    - 建议：定义只覆盖现有 CRUD SQL 所需元数据的独立映射契约，或明确记录支持的 DataAnnotations 子集；不要引入关系、跟踪等未被当前操作消费的 ORM 元数据。
-   - 处理：新增 `IEntityMappingSource`、不可变 `EntityMapping`/`PropertyMapping` 和 `DatabaseValueGeneration`。CRUD 通过 `CommandInfo.EntityMappingSource` 接收自定义 source，默认使用 `DataAnnotationsEntityMappingSource`；后者明确支持 `Table`、`Column`、`Key`、`NotMapped` 和全部 `DatabaseGeneratedOption`，并采用可验证的 persistent scalar property 规则。SQL 缓存按 mapping identity 隔离，自定义 source 必须为同一实体返回稳定映射实例。
+   - 处理：新增 `IEntityMappingSource`、不可变 `EntityMapping`/`PropertyMapping` 和 `DatabaseValueGeneration`。CRUD 通过 `CommandOptions.EntityMappingSource` 接收自定义 source，默认使用 `DataAnnotationsEntityMappingSource`；后者明确支持 `Table`、`Column`、`Key`、`NotMapped` 和全部 `DatabaseGeneratedOption`，并采用可验证的 persistent scalar property 规则。SQL 缓存按 mapping identity 隔离，自定义 source 必须为同一实体返回稳定映射实例。
 
 4. **[P1][已修复 2026-08-26] `ISqlAdapter` 把 provider 方言简化成少量字符串，无法可靠表达生成键、批量写入和能力差异。**
    - 位置：`SqlAdapters/ISqlAdapter.cs:3-10`。
@@ -46,7 +46,7 @@
    - 位置：`DapperHelper.cs:14-21,104-111`。
    - 说明：连接查找忽略 assembly identity，只比较字符串；代理/重试包装器和 provider 派生类型不会命中，两个程序集中的同名类型又会冲突。这与公开的可扩展 adapter 模型不匹配。
    - 建议：以 `Type` 为键并按可赋值关系解析；无法识别的包装连接由调用方显式传入 adapter，不要把类型身份降级为字符串。
-   - 处理：显式注册改为以 `Type` 为键的 `RegisteredAdapters`，解析时优先精确注册，再选择最具体的可赋值注册；多个不可比较注册同时命中时明确报错。内置 provider 以 assembly simple name 和完整类型名共同识别，并沿实际连接的基类链匹配，因此无需引用可选 provider 包也能支持派生连接。组合 wrapper 仍要求显式注册或通过 `CommandInfo.SqlAdapter` 指定。解析结果不另设缓存，注册替换会立即生效。
+   - 处理：显式注册改为以 `Type` 为键的 `RegisteredAdapters`，解析时优先精确注册，再选择最具体的可赋值注册；多个不可比较注册同时命中时明确报错。内置 provider 以 assembly simple name 和完整类型名共同识别，并沿实际连接的基类链匹配，因此无需引用可选 provider 包也能支持派生连接。组合 wrapper 仍要求显式注册或通过 `CommandOptions.SqlAdapter` 指定。解析结果不另设缓存，注册替换会立即生效。
 
 6. **[P1][已修复 2026-08-23] 自动程序集扫描既脆弱又依赖加载顺序。**
    - 位置：`DapperHelper.cs:60-101`。
@@ -64,7 +64,7 @@
    - 位置：`DbConnectionExtensions.cs:37-84,211-245,268-295`、`DbConnectionExtensions.Dapper.cs:5-60`、`DbTransactionExtensions.cs:63-113`。
    - 说明：插入、批量插入、查询、删除、事务回调和 commit/rollback 均不接收 `CancellationToken`；只有底层 `TryOpenAsync` 和 `IDbCommand` 扩展孤立地支持 token，调用者无法取消真实工作。
    - 建议：把 token 放入每个异步公共签名或明确的 command options，并传到 open、execute、commit、rollback 和用户回调；不要只取消连接打开。
-   - 处理：`CommandInfo.CancellationToken` 现在统一控制 connection CRUD 的 open 和 command execution，transaction CRUD 在末尾接收 token 并转发到同一 options。事务 helper 新增接收 `(DbTransaction, CancellationToken)` 的回调 overload，并将 token 传到 open、begin、callback 和 commit；回调完成后再次检查取消以避免在已取消时提交。rollback 在 token 尚可用时接收该 token，取消已经发生时则作为不可取消的 cleanup 执行，防止跳过回滚。explicit identity setup 同样接收 token，而 cleanup 始终执行。
+   - 处理：`CommandOptions.CancellationToken` 现在统一控制 connection CRUD 的 open 和 command execution，transaction CRUD 在末尾接收 token 并转发到同一 options。事务 helper 新增接收 `(DbTransaction, CancellationToken)` 的回调 overload，并将 token 传到 open、begin、callback 和 commit；回调完成后再次检查取消以避免在已取消时提交。rollback 在 token 尚可用时接收该 token，取消已经发生时则作为不可取消的 cleanup 执行，防止跳过回滚。explicit identity setup 同样接收 token，而 cleanup 始终执行。
 
 9. **[P1][已修复 2026-08-26] `BulkInsertAsync` 生成一个无限增长的多值 INSERT，没有 provider 批次策略。**
    - 位置：`DbConnectionExtensions.cs:67-117,142-173`。
@@ -97,10 +97,11 @@
     - 建议：拆成具名操作（普通 insert、insert explicit identity、insert and return key），或以枚举/options 表达互斥策略并在入口验证。
     - 处理：保留默认返回 `long` 的便利重载和 `InsertAsync<TEntity, TKey>`；`returnId` 重命名为 `returnGeneratedKey`，显式写入数据库生成键的路径拆为 `InsertWithExplicitKeysAsync`。connection 和 transaction API 保持对应，不再公开两个可形成非法组合的布尔参数。
 
-15. **[P2] `CommandInfo` 名称过于宽泛，且把不完整的执行选项固化为公共 positional record。**
+15. **[P2][已修复 2026-08-26] `CommandInfo` 名称过于宽泛，且把执行选项固化为公共 positional record。**
     - 位置：`DbConnectionExtensions.cs:13`。
-    - 说明：它实际是 FclEx CRUD command options，却没有 cancellation；`TimeoutSeconds` 不验证负值，`Transaction` 与连接是否匹配也未验证。
-    - 建议：重命名为 `DapperCommandOptions`/`CrudCommandOptions`，使用具名属性和验证，并统一供 connection/transaction 重载使用。
+    - 说明：它实际是 FclEx CRUD command options；positional constructor 随属性增加而变得脆弱，`TimeoutSeconds` 不验证负值，`Transaction` 与连接是否匹配也未验证。
+    - 建议：采用准确的 options 命名、具名 init properties 和集中验证，避免每个 CRUD 方法重复实现相同约束。
+    - 处理：类型重命名为 `CommandOptions`，改为带 init properties 的 `readonly record struct`，并公开 `ValidateFor(DbConnection)`。验证统一拒绝负 timeout、已脱离 connection 的 transaction，以及属于其他 connection 的 transaction；connection CRUD 的共享执行入口和独立 Get/Delete/Bulk 路径调用该方法，transaction 重载只负责构造 options 并转发。
 
 16. **[P2] `DoTransactionAsync` 名称不自然，默认 `ReadUncommitted` 又偏离常见安全默认值。**
     - 位置：`DbConnectionExtensions.Dapper.cs:5,25`。
@@ -114,7 +115,7 @@
 
 18. **[P2] connection 与 transaction CRUD 重载形状重复且已经发生能力漂移。**
     - 位置：`DbConnectionExtensions.cs:37-245`、`DbTransactionExtensions.cs:50-114`。
-    - 说明：transaction 重载把 `CommandInfo` 拆成 timeout/adapter 参数；后续增加 cancellation 或其他选项必须维护两套签名，调用体验也不一致。
+    - 说明：transaction 重载把 `CommandOptions` 拆成 timeout/adapter 参数；后续增加 cancellation 或其他选项必须维护两套签名，调用体验也不一致。
     - 建议：让 transaction 重载接收同一 options 类型并仅注入 transaction，或抽象一个内部 command context 后由薄重载转发。
 
 19. **[P2][已修复 2026-08-24] `ISqlAdapter.EnableIdentityInsertAsync<T>` 把泛型实体、命令和 scope 生命周期混在方言接口中。**
@@ -216,7 +217,7 @@
 
 36. **[P2][已修复 2026-08-26] 表名缓存只按 adapter 类型区分，却在 factory 中捕获具体 adapter 实例。**
     - 位置：`DapperHelper.cs:23,114-122`。
-    - 说明：两个同类型但配置不同的自定义 adapter 会共享首个实例生成的引用结果；这与公开允许传入任意 `ISqlAdapter` 实例的 `CommandInfo` 冲突。
+    - 说明：两个同类型但配置不同的自定义 adapter 会共享首个实例生成的引用结果；这与公开允许传入任意 `ISqlAdapter` 实例的 `CommandOptions` 冲突。
     - 建议：若 adapter 实例决定行为，缓存键使用稳定的 adapter identity/configuration key；若类型决定行为，则禁止有状态实例并在接口契约中声明。
     - 处理：删除独立表名缓存；canonical CRUD SQL cache 以 adapter 实例作为 key 的一部分，调用级 adapter override 不进入全局缓存，因此不会跨实例错误复用引用结果或永久保留临时实例。
 

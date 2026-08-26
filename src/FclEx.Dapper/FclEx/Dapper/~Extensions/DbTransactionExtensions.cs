@@ -99,11 +99,13 @@ public static class DbTransactionExtensions
             entity,
             schema,
             returnGeneratedKey,
-            new(
-                TimeoutSeconds: timeoutSeconds,
-                Transaction: tran,
-                SqlAdapter: sqlAdapter,
-                CancellationToken: cancellationToken));
+            new CommandOptions
+            {
+                TimeoutSeconds = timeoutSeconds,
+                Transaction = tran,
+                SqlAdapter = sqlAdapter,
+                CancellationToken = cancellationToken,
+            });
     }
 
     /// <summary>
@@ -163,11 +165,13 @@ public static class DbTransactionExtensions
         return con.InsertWithExplicitKeysAsync(
             entity,
             schema,
-            new(
-                TimeoutSeconds: timeoutSeconds,
-                Transaction: tran,
-                SqlAdapter: sqlAdapter,
-                CancellationToken: cancellationToken));
+            new CommandOptions
+            {
+                TimeoutSeconds = timeoutSeconds,
+                Transaction = tran,
+                SqlAdapter = sqlAdapter,
+                CancellationToken = cancellationToken,
+            });
     }
 
     /// <summary>
@@ -192,15 +196,18 @@ public static class DbTransactionExtensions
         CancellationToken cancellationToken = default)
         where T : class
     {
-        return tran.Connection!.BulkInsertAsync(
+        var con = Check.NotNull(tran.Connection, nameof(tran.Connection));
+        return con.BulkInsertAsync(
             entities,
             schema,
             includeAutoKey,
-            new(
-                TimeoutSeconds: timeoutSeconds,
-                Transaction: tran,
-                SqlAdapter: sqlAdapter,
-                CancellationToken: cancellationToken));
+            new CommandOptions
+            {
+                TimeoutSeconds = timeoutSeconds,
+                Transaction = tran,
+                SqlAdapter = sqlAdapter,
+                CancellationToken = cancellationToken,
+            });
     }
 
     /// <summary>
@@ -222,14 +229,17 @@ public static class DbTransactionExtensions
         ISqlAdapter? sqlAdapter = null,
         CancellationToken cancellationToken = default)
     {
-        return tran.Connection!.GetAsync<T>(
+        var con = Check.NotNull(tran.Connection, nameof(tran.Connection));
+        return con.GetAsync<T>(
             id,
             schema,
-            new(
-                TimeoutSeconds: timeoutSeconds,
-                Transaction: tran,
-                SqlAdapter: sqlAdapter,
-                CancellationToken: cancellationToken));
+            new CommandOptions
+            {
+                TimeoutSeconds = timeoutSeconds,
+                Transaction = tran,
+                SqlAdapter = sqlAdapter,
+                CancellationToken = cancellationToken,
+            });
     }
 
     /// <summary>
@@ -251,13 +261,16 @@ public static class DbTransactionExtensions
         ISqlAdapter? sqlAdapter = null,
         CancellationToken cancellationToken = default)
     {
-        return tran.Connection!.DeleteAsync<T>(
+        var con = Check.NotNull(tran.Connection, nameof(tran.Connection));
+        return con.DeleteAsync<T>(
             id,
             schema,
-            new(
-                TimeoutSeconds: timeoutSeconds,
-                Transaction: tran,
-                SqlAdapter: sqlAdapter,
-                CancellationToken: cancellationToken));
+            new CommandOptions
+            {
+                TimeoutSeconds = timeoutSeconds,
+                Transaction = tran,
+                SqlAdapter = sqlAdapter,
+                CancellationToken = cancellationToken,
+            });
     }
 }

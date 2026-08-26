@@ -5,27 +5,27 @@ namespace FclEx.Dapper;
 public class CancellationTests
 {
     [Fact]
-    public async Task CrudAsync_PreCanceledCommandInfo_CancelsWithoutChangingRows()
+    public async Task CrudAsync_PreCanceledCommandOptions_CancelsWithoutChangingRows()
     {
         using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
         await connection.ExecuteAsync(
             "CREATE TABLE cancellable_rows (id INTEGER PRIMARY KEY, name TEXT NOT NULL);" +
             "INSERT INTO cancellable_rows (id, name) VALUES (1, 'one');");
-        var commandInfo = new CommandInfo(CancellationToken: new(true));
+        var commandOptions = new CommandOptions { CancellationToken = new(true) };
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.InsertAsync<CancellableRow, object>(
             new CancellableRow { Id = 2, Name = "two" },
             returnGeneratedKey: false,
-            commandInfo: commandInfo));
+            commandOptions: commandOptions));
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.BulkInsertAsync(
             [new CancellableRow { Id = 3, Name = "three" }],
             includeAutoKey: true,
-            commandInfo: commandInfo));
+            commandOptions: commandOptions));
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            connection.GetAsync<CancellableRow>(1, commandInfo: commandInfo));
+            connection.GetAsync<CancellableRow>(1, commandOptions: commandOptions));
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            connection.DeleteAsync<CancellableRow>(1, commandInfo: commandInfo));
+            connection.DeleteAsync<CancellableRow>(1, commandOptions: commandOptions));
 
         Assert.Equal(1, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM cancellable_rows"));
     }

@@ -82,7 +82,7 @@ public class SqliteBulkInsertTests
 
         var affectedRows = await connection.BulkInsertAsync(
             entities,
-            commandInfo: new(SqlAdapter: adapter));
+            commandOptions: new() { SqlAdapter = adapter });
 
         Assert.Equal(entities.Length, affectedRows);
         Assert.Equal(2, adapter.BuildCount);
@@ -110,15 +110,15 @@ public class SqliteBulkInsertTests
             "CREATE TABLE cache_rows (id INTEGER PRIMARY KEY, name TEXT NOT NULL);" +
             "INSERT INTO cache_rows (id, name) VALUES (1, 'one');");
         var adapter = new SqliteAdapter();
-        var commandInfo = new CommandInfo(SqlAdapter: adapter);
+        var commandOptions = new CommandOptions { SqlAdapter = adapter };
         var mapping = DapperHelper.GetEntityMapping(typeof(CacheRow));
 
         await connection.InsertAsync<CacheRow, object>(
             new CacheRow { Id = 2, Name = "two" },
             returnGeneratedKey: false,
-            commandInfo: commandInfo);
-        var row = await connection.GetAsync<CacheRow>(1, commandInfo: commandInfo);
-        var deleted = await connection.DeleteAsync<CacheRow>(1, commandInfo: commandInfo);
+            commandOptions: commandOptions);
+        var row = await connection.GetAsync<CacheRow>(1, commandOptions: commandOptions);
+        var deleted = await connection.DeleteAsync<CacheRow>(1, commandOptions: commandOptions);
 
         Assert.Equal("one", row?.Name);
         Assert.Equal(1, deleted);
