@@ -13,13 +13,13 @@ public class SqlAdapterTests
         int parameterCountPerRow,
         int expected)
     {
-        Assert.Equal(expected, SqlServerAdapter.Instance.GetMaxInsertBatchSize(parameterCountPerRow));
+        Assert.Equal(expected, new SqlServerAdapter().GetMaxInsertBatchSize(parameterCountPerRow));
     }
 
     [Fact]
     public void SqlServer_BuildInsertCommandText_PlacesOutputBeforeValues()
     {
-        var sql = SqlServerAdapter.Instance.BuildInsertCommandText(
+        var sql = new SqlServerAdapter().BuildInsertCommandText(
             "[dbo].[Users]",
             "[Name], [Age]",
             "(@Name_0, @Age_0)",
@@ -36,7 +36,7 @@ public class SqlAdapterTests
     [Fact]
     public void Npgsql_BuildInsertCommandText_ReturnsMappedKey()
     {
-        var sql = NpgsqlAdapter.Instance.BuildInsertCommandText(
+        var sql = new NpgsqlAdapter().BuildInsertCommandText(
             "\"Users\"",
             "\"Name\"",
             "(@Name_0)",
@@ -53,7 +53,7 @@ public class SqlAdapterTests
     [Fact]
     public void Sqlite_BuildInsertCommandText_AppendsGeneratedKeyQuery()
     {
-        var sql = SqliteAdapter.Instance.BuildInsertCommandText(
+        var sql = new SqliteAdapter().BuildInsertCommandText(
             "\"Users\"",
             "\"Name\"",
             "(@Name_0)",
@@ -81,7 +81,7 @@ public class SqlAdapterTests
 
     public static TheoryData<ISqlAdapter> MySqlAdapters => new()
     {
-        MySqlAdapter.Instance,
-        MySqlConnectorAdapter.Instance,
+        new MySqlAdapter(),
+        new MySqlConnectorAdapter(),
     };
 }

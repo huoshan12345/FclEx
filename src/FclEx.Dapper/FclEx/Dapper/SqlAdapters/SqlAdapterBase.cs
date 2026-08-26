@@ -5,7 +5,7 @@ public readonly record struct QuotationMarks(char Prefix, char Suffix)
     public QuotationMarks(char mark) : this(mark, mark) { }
 }
 
-public abstract class SqlAdapterBase<TSelf> : ISqlAdapter where TSelf : SqlAdapterBase<TSelf>, new()
+public abstract class SqlAdapterBase : ISqlAdapter
 {
     protected readonly Lazy<DbParameterCreator> _creator;
 
@@ -13,8 +13,6 @@ public abstract class SqlAdapterBase<TSelf> : ISqlAdapter where TSelf : SqlAdapt
     {
         _creator = new(BuildParameterCreator, true);
     }
-
-    public static readonly TSelf Instance = new();
 
     public virtual bool SupportsSchemas { get; } = true;
 
@@ -106,7 +104,7 @@ public abstract class SqlAdapterBase<TSelf> : ISqlAdapter where TSelf : SqlAdapt
 
         var propOfDbType = type.GetRequiredProperty(dbTypePropName);
         var parsedType = Expression.Variable(typeof(object), "parsedType");
-        var tryParseEnum = typeof(SqlAdapterBase<TSelf>).GetRequiredMethod(nameof(TryParseEnum), 0, typeof(Type), typeof(string));
+        var tryParseEnum = typeof(SqlAdapterBase).GetRequiredMethod(nameof(TryParseEnum), 0, typeof(Type), typeof(string));
         var parse = Expression.Assign(parsedType,
             Expression.Call(null, tryParseEnum, Expression.Constant(propOfDbType.PropertyType), parameterOfStoreTypeName));
         expList.Add(parse);

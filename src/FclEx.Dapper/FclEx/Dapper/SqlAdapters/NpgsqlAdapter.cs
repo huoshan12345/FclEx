@@ -3,7 +3,7 @@ namespace FclEx.Dapper.SqlAdapters;
 /// <summary>
 /// Adapter for Npgsql
 /// </summary>
-public class NpgsqlAdapter : SqlAdapterBase<NpgsqlAdapter>
+public class NpgsqlAdapter : SqlAdapterBase
 {
     private const int MaxParametersPerCommand = 65535;
 

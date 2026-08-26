@@ -1,5 +1,12 @@
 namespace FclEx.Dapper.SqlAdapters;
 
+/// <summary>
+/// Defines provider-specific SQL generation and parameter behavior used by FclEx.Dapper CRUD operations.
+/// </summary>
+/// <remarks>
+/// An adapter registered with <see cref="DapperHelper.RegisterSqlAdapter(Type, ISqlAdapter)"/> must keep all
+/// SQL-affecting behavior stable while registered because generated SQL is cached by adapter instance.
+/// </remarks>
 public interface ISqlAdapter
 {
     bool SupportsSchemas { get; }

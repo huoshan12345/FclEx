@@ -3,7 +3,7 @@ namespace FclEx.Dapper.SqlAdapters;
 /// <summary>
 /// Adapter for Microsoft.Data.SqlClient
 /// </summary>
-public class SqlServerAdapter : SqlAdapterBase<SqlServerAdapter>
+public class SqlServerAdapter : SqlAdapterBase
 {
     private const int MaxParametersPerCommand = 2100;
     private const int MaxRowsPerValuesClause = 1000;

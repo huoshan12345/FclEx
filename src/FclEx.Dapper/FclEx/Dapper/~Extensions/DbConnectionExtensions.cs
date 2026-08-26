@@ -61,7 +61,7 @@ public static partial class DbConnectionExtensions
     private static bool CanUseGlobalSqlCache(string? schema, CommandInfo commandInfo)
     {
         // A null schema selects the schema in the stable mapping. A null adapter override selects either a
-        // built-in singleton or a registered adapter whose replacement invalidates these caches. Mapping sources
+        // private built-in adapter or a registered adapter whose replacement invalidates these caches. Mapping sources
         // are required to return stable mappings, so their mapping instances are safe parts of the cache key.
         return schema is null && commandInfo.SqlAdapter is null;
     }

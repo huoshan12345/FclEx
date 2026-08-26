@@ -6,12 +6,13 @@ public static class DapperHelper
     private static readonly IReadOnlyDictionary<(string AssemblyName, string TypeName), ISqlAdapter> BuiltInAdapters =
         new Dictionary<(string AssemblyName, string TypeName), ISqlAdapter>
     {
-        [("Npgsql", "Npgsql.NpgsqlConnection")] = NpgsqlAdapter.Instance,
-        [("Microsoft.Data.SqlClient", "Microsoft.Data.SqlClient.SqlConnection")] = SqlServerAdapter.Instance,
-        [("Microsoft.Data.Sqlite", "Microsoft.Data.Sqlite.SqliteConnection")] = SqliteAdapter.Instance,
-        [("MySql.Data", "MySql.Data.MySqlClient.MySqlConnection")] = MySqlAdapter.Instance,
-        [("MySqlConnector", "MySqlConnector.MySqlConnection")] = MySqlConnectorAdapter.Instance,
+        [("Npgsql", "Npgsql.NpgsqlConnection")] = new NpgsqlAdapter(),
+        [("Microsoft.Data.SqlClient", "Microsoft.Data.SqlClient.SqlConnection")] = new SqlServerAdapter(),
+        [("Microsoft.Data.Sqlite", "Microsoft.Data.Sqlite.SqliteConnection")] = new SqliteAdapter(),
+        [("MySql.Data", "MySql.Data.MySqlClient.MySqlConnection")] = new MySqlAdapter(),
+        [("MySqlConnector", "MySqlConnector.MySqlConnection")] = new MySqlConnectorAdapter(),
     };
+
     /// <summary>
     /// Gets the default mapping source used when an operation does not specify one.
     /// </summary>

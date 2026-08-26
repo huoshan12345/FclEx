@@ -9,7 +9,7 @@ public class EntityMappingTests
     public void CreateParameter_UnrecognizedStoreTypeName_AllowsProviderInference()
     {
         var parameter = Assert.IsType<SqliteParameter>(
-            SqliteAdapter.Instance.CreateParameter("@value", "text", "varchar(200)"));
+            new SqliteAdapter().CreateParameter("@value", "text", "varchar(200)"));
 
         Assert.Equal(SqliteType.Text, parameter.SqliteType);
     }
@@ -18,6 +18,7 @@ public class EntityMappingTests
     public void DataAnnotationsSource_BuildsCompletePersistentMapping()
     {
         var source = new DataAnnotationsEntityMappingSource();
+        var adapter = new NpgsqlAdapter();
 
         var mapping = source.GetMapping(typeof(AnnotatedEntity));
 
@@ -35,12 +36,12 @@ public class EntityMappingTests
             mapping.FindProperty(nameof(AnnotatedEntity.Computed))?.ValueGeneration);
         Assert.Equal(nameof(AnnotatedEntity.Name), mapping.FindProperty("DISPLAY_NAME")?.Property.Name);
         Assert.Equal("\"audit\".\"annotated_rows\"", DapperHelper.GetTableNameWithSchema(
-            NpgsqlAdapter.Instance,
+            adapter,
             null,
             typeof(AnnotatedEntity),
             source));
         Assert.Equal("\"override\".\"annotated_rows\"", DapperHelper.GetTableNameWithSchema(
-            NpgsqlAdapter.Instance,
+            adapter,
             "override",
             typeof(AnnotatedEntity),
             source));

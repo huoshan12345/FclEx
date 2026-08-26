@@ -3,7 +3,7 @@ namespace FclEx.Dapper.SqlAdapters;
 /// <summary>
 /// Adapter for MySqlConnector
 /// </summary>
-public class MySqlConnectorAdapter : SqlAdapterBase<MySqlConnectorAdapter>
+public class MySqlConnectorAdapter : SqlAdapterBase
 {
     private const int MaxParametersPerCommand = 65535;
 

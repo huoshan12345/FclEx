@@ -26,9 +26,10 @@ public class SqliteBulkInsertTests
     public void GetInsertCommandText_SameInputs_ReturnsCachedCommandText()
     {
         var mapping = DapperHelper.GetEntityMapping(typeof(BatchRow));
+        var adapter = new SqliteAdapter();
 
         var first = DbConnectionExtensions.GetInsertCommandText(
-            SqliteAdapter.Instance,
+            adapter,
             null,
             mapping,
             false,
@@ -36,7 +37,7 @@ public class SqliteBulkInsertTests
             499,
             true);
         var second = DbConnectionExtensions.GetInsertCommandText(
-            SqliteAdapter.Instance,
+            adapter,
             null,
             mapping,
             false,
@@ -51,10 +52,11 @@ public class SqliteBulkInsertTests
     public void GetInsertCommandText_SchemaOverride_DoesNotEnterGlobalCache()
     {
         var mapping = CreateBatchRowMapping();
-        var key = new InsertSqlKey(NpgsqlAdapter.Instance, mapping, false, false, 1);
+        var adapter = new NpgsqlAdapter();
+        var key = new InsertSqlKey(adapter, mapping, false, false, 1);
 
         var sql = DbConnectionExtensions.GetInsertCommandText(
-            NpgsqlAdapter.Instance,
+            adapter,
             "tenant_cache_test",
             mapping,
             false,

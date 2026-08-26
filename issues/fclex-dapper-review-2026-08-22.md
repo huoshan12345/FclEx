@@ -78,10 +78,10 @@
     - 建议：记录初始状态，并只关闭由本方法打开的连接；或要求调用方传入已打开连接并在入口验证。两种模型应选一并写入文档。
     - 处理：FclEx 自己打开连接的 Insert、BulkInsert 和 transaction helper 现在记录入口状态，并在 `finally` 中仅把原本为 Closed 的连接恢复为 Closed；原本已打开的连接保持打开。Get/Delete 使用的 Dapper async execution 本身已采用相同的 `wasClosed` 所有权模型。测试覆盖成功、异常和取消路径。
 
-11. **[P3][已更新 2026-08-26] `SqlAdapterBase<TSelf>.Instance` 的命名和具体 adapter 的继承边界仍不清楚。**
-    - 位置：`SqlAdapterBase.cs:8-22`、各具体 adapter 类型。
-    - 说明：issue 7 后 SQL cache 已统一按 adapter 实例区分，调用级 adapter override 也不进入全局缓存，因此原先“缓存有时按实例、有时按类型识别”的证据已失效。剩余问题较轻：`new()` 约束要求公开构造函数，说明 `Instance` 实际是 shared default 而非被强制的 singleton；继承具体 adapter 时又会继承一个返回基类 adapter 的静态 `Instance`。另外，注册后进入 SQL cache 的 adapter 若改变影响 SQL 生成的状态，仍会得到陈旧 SQL。
-    - 建议：明确选择并记录扩展模型。若允许实例化和继承，考虑把 `Instance` 重命名为 `Default`/`Shared`，并规定注册 adapter 的 SQL 生成行为在注册期间不可变；若内置 adapter 不支持继承，则将其 sealed，并要求自定义 provider 直接实现 `ISqlAdapter` 或继承 `SqlAdapterBase<TSelf>`。
+11. **[P3][已修复 2026-08-26] `SqlAdapterBase<TSelf>.Instance` 的命名和具体 adapter 的继承边界不清楚。**
+    - 位置：`SqlAdapterBase.cs`、各具体 adapter 类型。
+    - 说明：issue 7 后 SQL cache 已统一按 adapter 实例区分，公开 shared instance 和仅用于创建它的 CRTP 泛型、`new()` 约束不再表达必要的设计约束。注册后进入 SQL cache 的 adapter 若改变影响 SQL 生成的状态，仍会得到陈旧 SQL。
+    - 处理：删除公开 `Instance`，将基类简化为非泛型 `SqlAdapterBase`，并由 `DapperHelper` 在私有只读映射中持有内置 adapter 实例。自定义 adapter 可直接实例化和注册；`ISqlAdapter` 契约同时明确，注册期间所有影响 SQL 生成的行为必须保持稳定。
 
 ## 问题清单：公共 API、签名与命名
 

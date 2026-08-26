@@ -3,7 +3,7 @@ namespace FclEx.Dapper.SqlAdapters;
 /// <summary>
 /// Adapter for Microsoft.Data.Sqlite
 /// </summary>
-public class SqliteAdapter : SqlAdapterBase<SqliteAdapter>
+public class SqliteAdapter : SqlAdapterBase
 {
     private const int MaxParametersPerCommand = 999;
 

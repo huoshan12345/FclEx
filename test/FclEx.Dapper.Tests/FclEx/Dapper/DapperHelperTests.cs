@@ -9,25 +9,29 @@ public class DapperHelperTests
     [Fact]
     public void GetSqlAdapter_DerivedConnection_UsesMostSpecificRegistration()
     {
-        DapperHelper.RegisterSqlAdapter<RegisteredBaseConnection>(SqliteAdapter.Instance);
-        DapperHelper.RegisterSqlAdapter(typeof(RegisteredMiddleConnection), NpgsqlAdapter.Instance);
+        var baseAdapter = new SqliteAdapter();
+        var middleAdapter = new NpgsqlAdapter();
+        DapperHelper.RegisterSqlAdapter<RegisteredBaseConnection>(baseAdapter);
+        DapperHelper.RegisterSqlAdapter(typeof(RegisteredMiddleConnection), middleAdapter);
         using var connection = new RegisteredDerivedConnection();
 
         var adapter = DapperHelper.GetSqlAdapter(connection);
 
-        Assert.Same(NpgsqlAdapter.Instance, adapter);
+        Assert.Same(middleAdapter, adapter);
     }
 
     [Fact]
     public void GetSqlAdapter_ReplacedRegistration_IsImmediatelyVisible()
     {
-        DapperHelper.RegisterSqlAdapter<ReplaceableBaseConnection>(SqliteAdapter.Instance);
+        var firstAdapter = new SqliteAdapter();
+        var replacementAdapter = new SqlServerAdapter();
+        DapperHelper.RegisterSqlAdapter<ReplaceableBaseConnection>(firstAdapter);
         using var connection = new ReplaceableDerivedConnection();
-        Assert.Same(SqliteAdapter.Instance, DapperHelper.GetSqlAdapter(connection));
+        Assert.Same(firstAdapter, DapperHelper.GetSqlAdapter(connection));
 
-        DapperHelper.RegisterSqlAdapter<ReplaceableBaseConnection>(SqlServerAdapter.Instance);
+        DapperHelper.RegisterSqlAdapter<ReplaceableBaseConnection>(replacementAdapter);
 
-        Assert.Same(SqlServerAdapter.Instance, DapperHelper.GetSqlAdapter(connection));
+        Assert.Same(replacementAdapter, DapperHelper.GetSqlAdapter(connection));
     }
 
     [Fact]
@@ -47,7 +51,7 @@ public class DapperHelperTests
             true);
         Assert.True(DbConnectionExtensions.InsertSqls.ContainsKey(key));
 
-        DapperHelper.RegisterSqlAdapter<CacheReplacementConnection>(SqlServerAdapter.Instance);
+        DapperHelper.RegisterSqlAdapter<CacheReplacementConnection>(new SqlServerAdapter());
 
         Assert.False(DbConnectionExtensions.InsertSqls.ContainsKey(key));
     }
@@ -55,8 +59,8 @@ public class DapperHelperTests
     [Fact]
     public void GetSqlAdapter_IncomparableRegistrations_Throws()
     {
-        DapperHelper.RegisterSqlAdapter<IFirstConnection>(SqliteAdapter.Instance);
-        DapperHelper.RegisterSqlAdapter<ISecondConnection>(NpgsqlAdapter.Instance);
+        DapperHelper.RegisterSqlAdapter<IFirstConnection>(new SqliteAdapter());
+        DapperHelper.RegisterSqlAdapter<ISecondConnection>(new NpgsqlAdapter());
         using var connection = new AmbiguousConnection();
 
         var exception = Assert.Throws<InvalidOperationException>(() =>
@@ -73,14 +77,14 @@ public class DapperHelperTests
 
         var adapter = DapperHelper.GetSqlAdapter(connection);
 
-        Assert.Same(SqliteAdapter.Instance, adapter);
+        Assert.IsType<SqliteAdapter>(adapter);
     }
 
     [Fact]
     public void RegisterSqlAdapter_NonConnectionType_Throws()
     {
         Assert.Throws<ArgumentException>(() =>
-            DapperHelper.RegisterSqlAdapter(typeof(string), SqliteAdapter.Instance));
+            DapperHelper.RegisterSqlAdapter(typeof(string), new SqliteAdapter()));
     }
 
     private class RegisteredBaseConnection : TestConnection { }
