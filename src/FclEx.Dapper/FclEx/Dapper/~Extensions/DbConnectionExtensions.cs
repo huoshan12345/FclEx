@@ -75,46 +75,25 @@ public static partial class DbConnectionExtensions
     /// <param name="con">The connection used to execute the insert. A connection opened here is closed before return.</param>
     /// <param name="entity">The entity whose mapped values are inserted.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
-    /// <param name="returnId">Whether to return the single generated key when one is mapped.</param>
-    /// <param name="includeAutoKey">Whether to insert a mapped generated key explicitly.</param>
+    /// <param name="returnGeneratedKey">Whether to return the single generated key when one is mapped.</param>
     /// <param name="commandInfo">Command execution, adapter, mapping, transaction, and cancellation options.</param>
     /// <returns>The generated key converted to <typeparamref name="TKey"/> when requested and supported; otherwise the default value.</returns>
     /// <exception cref="OperationCanceledException"><see cref="CommandInfo.CancellationToken"/> is cancelled.</exception>
-    public static async Task<TKey?> InsertAsync<TEntity, TKey>(
+    public static Task<TKey?> InsertAsync<TEntity, TKey>(
         this DbConnection con,
         TEntity entity,
         string? schema = null,
-        bool returnId = true,
-        bool includeAutoKey = false,
+        bool returnGeneratedKey = true,
         CommandInfo commandInfo = default)
         where TEntity : class
     {
-        var mapping = GetEntityMapping(typeof(TEntity), commandInfo.EntityMappingSource);
-        var useGlobalSqlCache = CanUseGlobalSqlCache(schema, commandInfo);
-        var value = await con.ExecuteAsync(commandInfo, m => GetInsertSql(
-            m,
-            schema,
+        return InsertCoreAsync<TEntity, TKey>(
+            con,
             entity,
-            mapping,
-            returnId,
-            includeAutoKey,
-            useGlobalSqlCache), async (a, m) =>
-        {
-            if (includeAutoKey && mapping.GeneratedKeys.Count > 0)
-            {
-                var tableName = GetTableNameWithSchema(a, schema, mapping);
-                await using var x = await a.BeginExplicitIdentityInsertAsync(
-                    tableName,
-                    m,
-                    commandInfo.CancellationToken);
-                return await m.ExecuteScalarAsync(commandInfo.CancellationToken);
-            }
-            else
-            {
-                return await m.ExecuteScalarAsync(commandInfo.CancellationToken);
-            }
-        });
-        return ConvertGeneratedKey<TKey>(value);
+            schema,
+            returnGeneratedKey,
+            false,
+            commandInfo);
     }
 
     /// <summary>
@@ -124,8 +103,7 @@ public static partial class DbConnectionExtensions
     /// <param name="con">The connection used to execute the insert. A connection opened here is closed before return.</param>
     /// <param name="entity">The entity whose mapped values are inserted.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
-    /// <param name="returnId">Whether to return the single generated key when one is mapped.</param>
-    /// <param name="includeAutoKey">Whether to insert a mapped generated key explicitly.</param>
+    /// <param name="returnGeneratedKey">Whether to return the single generated key when one is mapped.</param>
     /// <param name="commandInfo">Command execution, adapter, mapping, transaction, and cancellation options.</param>
     /// <returns>The generated key converted to <see langword="long"/> when requested and supported; otherwise the default value.</returns>
     /// <exception cref="OperationCanceledException"><see cref="CommandInfo.CancellationToken"/> is cancelled.</exception>
@@ -133,12 +111,82 @@ public static partial class DbConnectionExtensions
         this DbConnection con,
         TEntity entity,
         string? schema = null,
-        bool returnId = true,
-        bool includeAutoKey = false,
+        bool returnGeneratedKey = true,
         CommandInfo commandInfo = default)
         where TEntity : class
     {
-        return con.InsertAsync<TEntity, long>(entity, schema, returnId, includeAutoKey, commandInfo);
+        return con.InsertAsync<TEntity, long>(entity, schema, returnGeneratedKey, commandInfo);
+    }
+
+    /// <summary>
+    /// Inserts one mapped entity while explicitly supplying its database-generated key values.
+    /// </summary>
+    /// <typeparam name="TEntity">The mapped entity type.</typeparam>
+    /// <param name="con">The connection used to execute the insert. A connection opened here is closed before return.</param>
+    /// <param name="entity">The entity containing the generated key values to insert.</param>
+    /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
+    /// <param name="commandInfo">Command execution, adapter, mapping, transaction, and cancellation options.</param>
+    /// <returns>A task representing the insert operation.</returns>
+    /// <exception cref="DataException">The entity mapping does not contain a database-generated key.</exception>
+    /// <exception cref="OperationCanceledException"><see cref="CommandInfo.CancellationToken"/> is cancelled.</exception>
+    public static async Task InsertWithExplicitKeysAsync<TEntity>(
+        this DbConnection con,
+        TEntity entity,
+        string? schema = null,
+        CommandInfo commandInfo = default)
+        where TEntity : class
+    {
+        await InsertCoreAsync<TEntity, object>(con, entity, schema, false, true, commandInfo);
+    }
+
+    private static async Task<TKey?> InsertCoreAsync<TEntity, TKey>(
+        DbConnection con,
+        TEntity entity,
+        string? schema,
+        bool returnGeneratedKey,
+        bool includeGeneratedKeys,
+        CommandInfo commandInfo)
+        where TEntity : class
+    {
+        var mapping = GetEntityMapping(typeof(TEntity), commandInfo.EntityMappingSource);
+        if (includeGeneratedKeys && mapping.GeneratedKeys.Count == 0)
+            throw new DataException($"Entity '{mapping.EntityType.FullName}' does not have a database-generated key.");
+
+        var shouldReturnGeneratedKey = returnGeneratedKey
+                                       && includeGeneratedKeys == false
+                                       && mapping.GeneratedKeys.Count == 1;
+        var useGlobalSqlCache = CanUseGlobalSqlCache(schema, commandInfo);
+        var value = await con.ExecuteAsync(commandInfo, m => GetInsertSql(
+            m,
+            schema,
+            entity,
+            mapping,
+            shouldReturnGeneratedKey,
+            includeGeneratedKeys,
+            useGlobalSqlCache), async (a, m) =>
+        {
+            if (includeGeneratedKeys)
+            {
+                var tableName = GetTableNameWithSchema(a, schema, mapping);
+                await using var x = await a.BeginExplicitIdentityInsertAsync(
+                    tableName,
+                    m,
+                    commandInfo.CancellationToken);
+                return await ExecuteCommandAsync(m);
+            }
+
+            return await ExecuteCommandAsync(m);
+
+            async Task<object?> ExecuteCommandAsync(DbCommand command)
+            {
+                if (shouldReturnGeneratedKey)
+                    return await command.ExecuteScalarAsync(commandInfo.CancellationToken);
+
+                await command.ExecuteNonQueryAsync(commandInfo.CancellationToken);
+                return null;
+            }
+        });
+        return ConvertGeneratedKey<TKey>(value);
     }
 
     private static TKey? ConvertGeneratedKey<TKey>(object? value)
@@ -396,22 +444,19 @@ public static partial class DbConnectionExtensions
         string? schema,
         T entity,
         EntityMapping mapping,
-        bool returnId,
-        bool includeAutoKey,
+        bool returnGeneratedKey,
+        bool includeGeneratedKeys,
         bool useGlobalSqlCache)
     {
-        var returnGeneratedKey = includeAutoKey == false
-                                 && returnId
-                                 && mapping.GeneratedKeys.Count == 1;
         var sql = GetInsertCommandText(
             sqlAdapter,
             schema,
             mapping,
-            includeAutoKey,
+            includeGeneratedKeys,
             returnGeneratedKey,
             1,
             useGlobalSqlCache);
-        var insertProperties = mapping.GetInsertProperties(includeAutoKey);
+        var insertProperties = mapping.GetInsertProperties(includeGeneratedKeys);
         var paras = new List<DbParameter>(insertProperties.Count);
         foreach (var (column, property) in insertProperties.Index())
         {

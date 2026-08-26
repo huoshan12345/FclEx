@@ -79,8 +79,7 @@ public static class DbTransactionExtensions
     /// <param name="tran">The transaction assigned to the insert command.</param>
     /// <param name="entity">The entity whose mapped values are inserted.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
-    /// <param name="returnId">Whether to return the single generated key when one is mapped.</param>
-    /// <param name="includeAutoKey">Whether to insert a mapped generated key explicitly.</param>
+    /// <param name="returnGeneratedKey">Whether to return the single generated key when one is mapped.</param>
     /// <param name="timeoutSeconds">The optional command timeout in seconds.</param>
     /// <param name="sqlAdapter">An optional SQL adapter overriding connection-type resolution.</param>
     /// <param name="cancellationToken">The token used to cancel command execution.</param>
@@ -89,8 +88,7 @@ public static class DbTransactionExtensions
         this DbTransaction tran,
         TEntity entity,
         string? schema = null,
-        bool returnId = true,
-        bool includeAutoKey = false,
+        bool returnGeneratedKey = true,
         int? timeoutSeconds = null,
         ISqlAdapter? sqlAdapter = null,
         CancellationToken cancellationToken = default)
@@ -100,8 +98,7 @@ public static class DbTransactionExtensions
         return con.InsertAsync<TEntity, TKey>(
             entity,
             schema,
-            returnId,
-            includeAutoKey,
+            returnGeneratedKey,
             new(
                 TimeoutSeconds: timeoutSeconds,
                 Transaction: tran,
@@ -116,8 +113,7 @@ public static class DbTransactionExtensions
     /// <param name="tran">The transaction assigned to the insert command.</param>
     /// <param name="entity">The entity whose mapped values are inserted.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
-    /// <param name="returnId">Whether to return the single generated key when one is mapped.</param>
-    /// <param name="includeAutoKey">Whether to insert a mapped generated key explicitly.</param>
+    /// <param name="returnGeneratedKey">Whether to return the single generated key when one is mapped.</param>
     /// <param name="timeoutSeconds">The optional command timeout in seconds.</param>
     /// <param name="sqlAdapter">An optional SQL adapter overriding connection-type resolution.</param>
     /// <param name="cancellationToken">The token used to cancel command execution.</param>
@@ -126,8 +122,7 @@ public static class DbTransactionExtensions
         this DbTransaction tran,
         TEntity entity,
         string? schema = null,
-        bool returnId = true,
-        bool includeAutoKey = false,
+        bool returnGeneratedKey = true,
         int? timeoutSeconds = null,
         ISqlAdapter? sqlAdapter = null,
         CancellationToken cancellationToken = default)
@@ -136,11 +131,43 @@ public static class DbTransactionExtensions
         return tran.InsertAsync<TEntity, long>(
             entity,
             schema,
-            returnId,
-            includeAutoKey,
+            returnGeneratedKey,
             timeoutSeconds,
             sqlAdapter,
             cancellationToken);
+    }
+
+    /// <summary>
+    /// Inserts one mapped entity through this transaction while explicitly supplying its database-generated key values.
+    /// </summary>
+    /// <typeparam name="TEntity">The mapped entity type.</typeparam>
+    /// <param name="tran">The transaction assigned to the insert command.</param>
+    /// <param name="entity">The entity containing the generated key values to insert.</param>
+    /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
+    /// <param name="timeoutSeconds">The optional command timeout in seconds.</param>
+    /// <param name="sqlAdapter">An optional SQL adapter overriding connection-type resolution.</param>
+    /// <param name="cancellationToken">The token used to cancel command execution.</param>
+    /// <returns>A task representing the insert operation.</returns>
+    /// <exception cref="DataException">The entity mapping does not contain a database-generated key.</exception>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> is cancelled.</exception>
+    public static Task InsertWithExplicitKeysAsync<TEntity>(
+        this DbTransaction tran,
+        TEntity entity,
+        string? schema = null,
+        int? timeoutSeconds = null,
+        ISqlAdapter? sqlAdapter = null,
+        CancellationToken cancellationToken = default)
+        where TEntity : class
+    {
+        var con = Check.NotNull(tran.Connection, nameof(tran.Connection));
+        return con.InsertWithExplicitKeysAsync(
+            entity,
+            schema,
+            new(
+                TimeoutSeconds: timeoutSeconds,
+                Transaction: tran,
+                SqlAdapter: sqlAdapter,
+                CancellationToken: cancellationToken));
     }
 
     /// <summary>

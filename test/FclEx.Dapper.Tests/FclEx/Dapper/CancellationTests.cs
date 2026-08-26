@@ -16,7 +16,7 @@ public class CancellationTests
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.InsertAsync<CancellableRow, object>(
             new CancellableRow { Id = 2, Name = "two" },
-            includeAutoKey: true,
+            returnGeneratedKey: false,
             commandInfo: commandInfo));
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connection.BulkInsertAsync(
             [new CancellableRow { Id = 3, Name = "three" }],

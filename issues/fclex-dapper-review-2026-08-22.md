@@ -88,13 +88,14 @@
 13. **[P1][已修复 2026-08-26] `InsertAsync` 返回 `dynamic?`，调用方无法获得编译期生成键类型检查。**
     - 位置：`DbConnectionExtensions.cs:37-54`、`DbTransactionExtensions.cs:63-66`。
     - 说明：调用方只有在运行时才能发现 provider 返回的是 `decimal`、`long` 还是其他类型；注释所谓“先转 dynamic 以便转换”只是把转换失败推迟到调用点。
-    - 建议：提供 `InsertAsync<TEntity, TKey>`/`InsertAndGetKeyAsync<TKey>`，由扩展将结果转换为明确的 `TKey`；无返回键的插入应单独返回 affected rows。
+    - 建议：提供 `InsertAsync<TEntity, TKey>`/`InsertAndGetKeyAsync<TKey>`，由扩展将结果转换为明确的 `TKey`；无返回键的路径不应继续依赖 dynamic 或 scalar result。
     - 处理：connection 和 transaction API 均改为 `InsertAsync<TEntity, TKey>`，返回 `Task<TKey?>`；标量结果在扩展内部按目标键类型完成数值和枚举转换，不再向调用方暴露 `dynamic`。
 
-14. **[P2] `returnId` 与 `includeAutoKey` 两个相邻布尔参数形成难读且存在非法组合的 API。**
-    - 位置：`DbConnectionExtensions.cs:37`、`DbTransactionExtensions.cs:63`。
+14. **[P2][已修复 2026-08-26] `returnId` 与 `includeAutoKey` 两个相邻布尔参数形成难读且存在非法组合的 API。**
+    - 位置：`DbConnectionExtensions.InsertAsync`、`DbTransactionExtensions.InsertAsync`。
     - 说明：位置调用如 `InsertAsync(entity, schema, false, true)` 无法自解释；`includeAutoKey=true` 时 `returnId=true` 又会被静默忽略。
     - 建议：拆成具名操作（普通 insert、insert explicit identity、insert and return key），或以枚举/options 表达互斥策略并在入口验证。
+    - 处理：保留默认返回 `long` 的便利重载和 `InsertAsync<TEntity, TKey>`；`returnId` 重命名为 `returnGeneratedKey`，显式写入数据库生成键的路径拆为 `InsertWithExplicitKeysAsync`。connection 和 transaction API 保持对应，不再公开两个可形成非法组合的布尔参数。
 
 15. **[P2] `CommandInfo` 名称过于宽泛，且把不完整的执行选项固化为公共 positional record。**
     - 位置：`DbConnectionExtensions.cs:13`。
@@ -193,7 +194,7 @@
 
 32. **[P1] 显式插入 identity key 不维护 provider sequence，后续自动键可能冲突。**
     - 位置：`DbConnectionExtensions.cs:40-50,73-83`；测试侧 `DapperTestsFixture.cs:87-102`。
-    - 说明：`includeAutoKey` 对非 SQL Server provider 不做序列修正；现有测试不得不在 PostgreSQL 上额外执行 `setval`，说明公共操作没有封装其自身后置条件。
+    - 说明：单实体 `InsertWithExplicitKeysAsync` 和批量插入的 `includeAutoKey` 路径对非 SQL Server provider 不做序列修正；现有测试不得不在 PostgreSQL 上额外执行 `setval`，说明公共操作没有封装其自身后置条件。
     - 建议：把 explicit identity insert 作为 provider 能力实现并明确 sequence 行为；不支持安全维护的 provider 应拒绝该选项，而不是要求调用方猜测补救步骤。
 
 33. **[P1][已修复 2026-08-26] 只有 generated 列的实体会生成无效 INSERT。**
@@ -202,10 +203,11 @@
     - 建议：adapter 提供 default-row insert 语法；bulk 情况需定义是否支持多行默认值并添加边界测试。
     - 处理：SQL Server、PostgreSQL 和 SQLite 生成 `DEFAULT VALUES`，MySQL adapters 生成 `() VALUES ()`。单实体路径支持返回生成键；多个 default-only 实体的 bulk 路径明确抛出 `NotSupportedException`，不会逐行执行。
 
-34. **[P2] 不请求返回键时仍使用 `ExecuteScalarAsync`，丢失 affected-row 契约。**
+34. **[P2][已修复 2026-08-26] 不请求返回键时仍使用 `ExecuteScalarAsync`。**
     - 位置：`DbConnectionExtensions.cs:37-53,176-198`。
-    - 说明：`returnId=false` 或没有 auto key 时 SQL 只有 INSERT，却仍走 scalar execute 并返回 null；这掩盖实际写入行数，也依赖 provider 对无结果 scalar 的行为。
-    - 建议：无返回值路径使用 `ExecuteNonQueryAsync` 并返回 affected rows；返回键路径使用专门、强类型的方法。
+    - 说明：不请求生成键或映射没有 generated key 时，SQL 只有 INSERT，却仍走 scalar execute 并返回 null，依赖 provider 对无结果 scalar 的行为。
+    - 建议：无返回值路径使用 `ExecuteNonQueryAsync`；单行插入无需公开通常恒为 1 且可能受 provider 配置影响的 affected rows，数据库失败直接抛出异常。
+    - 处理：只有实际请求且映射恰好包含一个 generated key 时使用 `ExecuteScalarAsync`；其余单行插入和 `InsertWithExplicitKeysAsync` 均使用 `ExecuteNonQueryAsync`，并不公开 affected rows。
 
 35. **[P2] identifier quoting 只包围名称，不转义结束符。**
     - 位置：`SqlAdapterBase.cs:22-38`、`DapperHelper.cs:114-121`。

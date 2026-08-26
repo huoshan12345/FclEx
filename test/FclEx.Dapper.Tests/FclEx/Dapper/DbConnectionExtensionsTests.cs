@@ -25,7 +25,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
 
     [Theory(DisableParallelization = true)]
     [MemberData(nameof(DbSchemaTestCases))]
-    public async Task InsertAsync_EntityWithAutoKey_IncludeAutoKey_Test(DbDriver dbDriver, string? schema)
+    public async Task InsertWithExplicitKeysAsync_EntityWithAutoKey_Test(DbDriver dbDriver, string? schema)
     {
         Assert.SkipIfInGithubAction(); 
 
@@ -41,7 +41,7 @@ public partial class DbConnectionExtensionsTests(DapperTestsFixture fixture) : D
             Name = Guid.NewGuid().ToString(),
         };
 
-        await con.InsertAsync<EntityWithAutoKey, object>(entity, schema, includeAutoKey: true);
+        await con.InsertWithExplicitKeysAsync(entity, schema);
 
         // need to delete the inserted data with specified id to avoid affecting sequence of auto key generation in later tests
         await using var _ = AsyncDisposable.Create(async () =>

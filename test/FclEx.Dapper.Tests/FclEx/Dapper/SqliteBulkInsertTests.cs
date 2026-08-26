@@ -113,14 +113,13 @@ public class SqliteBulkInsertTests
         var commandInfo = new CommandInfo(SqlAdapter: adapter);
         var mapping = DapperHelper.GetEntityMapping(typeof(CacheRow));
 
-        var insertedId = await connection.InsertAsync<CacheRow, object>(
+        await connection.InsertAsync<CacheRow, object>(
             new CacheRow { Id = 2, Name = "two" },
-            includeAutoKey: true,
+            returnGeneratedKey: false,
             commandInfo: commandInfo);
         var row = await connection.GetAsync<CacheRow>(1, commandInfo: commandInfo);
         var deleted = await connection.DeleteAsync<CacheRow>(1, commandInfo: commandInfo);
 
-        Assert.Null(insertedId);
         Assert.Equal("one", row?.Name);
         Assert.Equal(1, deleted);
         Assert.DoesNotContain(
@@ -174,6 +173,35 @@ public class SqliteBulkInsertTests
         transaction.Commit();
 
         Assert.Equal(1, id);
+    }
+
+    [Fact]
+    public async Task TransactionInsertWithExplicitKeysAsync_InsertsSuppliedKey()
+    {
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await connection.ExecuteAsync(
+            "CREATE TABLE int_key_rows (id INTEGER PRIMARY KEY AUTOINCREMENT);");
+        using var transaction = connection.BeginTransaction();
+
+        await transaction.InsertWithExplicitKeysAsync(new IntKeyRow { Id = 42 });
+        transaction.Commit();
+
+        Assert.Equal(42, await connection.ExecuteScalarAsync<int>("SELECT id FROM int_key_rows"));
+    }
+
+    [Fact]
+    public async Task InsertWithExplicitKeysAsync_WithoutGeneratedKey_ThrowsBeforeExecuting()
+    {
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await connection.ExecuteAsync(
+            "CREATE TABLE cache_rows (id INTEGER PRIMARY KEY, name TEXT NOT NULL);");
+
+        await Assert.ThrowsAsync<DataException>(() => connection.InsertWithExplicitKeysAsync(
+            new CacheRow { Id = 1, Name = "one" }));
+
+        Assert.Equal(0, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM cache_rows"));
     }
 
     [Fact]

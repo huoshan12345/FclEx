@@ -42,10 +42,12 @@ var orderMapping = new EntityMapping(
 
 IEntityMappingSource mappings = new ApplicationEntityMappingSource(orderMapping);
 var commandInfo = new CommandInfo(EntityMappingSource: mappings);
-var orderId = await connection.InsertAsync<Order, long>(order, commandInfo: commandInfo);
+var orderId = await connection.InsertAsync(order, commandInfo: commandInfo);
 ```
 
 Here `ApplicationEntityMappingSource` is an application-owned implementation that returns `orderMapping` for `Order` and throws for unknown entity types.
+
+`InsertAsync<TEntity>` returns a generated key as `long` for the common identity-key case. Use `InsertAsync<TEntity, TKey>` for another key type, or `InsertWithExplicitKeysAsync` when importing an entity whose database-generated key value must be inserted explicitly.
 
 An `IEntityMappingSource` must return the same `EntityMapping` instance whenever the same entity type is requested. SQL caches use mapping identity so multiple mapping sources can safely map one CLR type differently.
 
