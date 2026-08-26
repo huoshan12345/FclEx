@@ -72,15 +72,16 @@
    - 建议：adapter 暴露安全批次大小并分批执行；对真正的高吞吐场景使用 `SqlBulkCopy`、COPY 等 provider 能力。参考：[SQL Server capacity](https://learn.microsoft.com/en-us/sql/sql-server/maximum-capacity-specifications-for-sql-server)、[SQLite limits](https://www.sqlite.org/limits.html)。
    - 处理：`BulkInsertAsync` 现在根据 adapter 的安全批次大小和内部批次上限执行有界多行 INSERT，每批复用按行数缓存的完整 SQL。SQL Server 同时考虑 2,100 参数和 1,000 行 `VALUES` 限制，SQLite 使用保守的 999 参数限制；批量操作不会静默退化成逐行命令。
 
-10. **[P2] 连接所有权不一致：方法会隐式打开调用方连接，却从不恢复原状态。**
+10. **[P2][已修复 2026-08-26] 连接所有权不一致：方法会隐式打开调用方连接，却从不恢复原状态。**
     - 位置：`DbConnectionExtensions.cs:273-279`、`DbConnectionExtensions.Dapper.cs:5-35,64-69`。
     - 说明：关闭的连接会被自动打开并留在 Open；原本已打开的连接也保持 Open。API 没有说明谁负责关闭，使短生命周期调用泄漏连接，而调用方仅从方法名看不出状态会变化。
     - 建议：记录初始状态，并只关闭由本方法打开的连接；或要求调用方传入已打开连接并在入口验证。两种模型应选一并写入文档。
+    - 处理：FclEx 自己打开连接的 Insert、BulkInsert 和 transaction helper 现在记录入口状态，并在 `finally` 中仅把原本为 Closed 的连接恢复为 Closed；原本已打开的连接保持打开。Get/Delete 使用的 Dapper async execution 本身已采用相同的 `wasClosed` 所有权模型。测试覆盖成功、异常和取消路径。
 
-11. **[P2] adapter 的公开扩展模型与 singleton/CRTP 实现互相矛盾。**
+11. **[P3][已更新 2026-08-26] `SqlAdapterBase<TSelf>.Instance` 的命名和具体 adapter 的继承边界仍不清楚。**
     - 位置：`SqlAdapterBase.cs:8-22`、各具体 adapter 类型。
-    - 说明：具体 adapter 是公开、非 sealed、可实例化类型，同时基类又提供 `TSelf Instance` singleton，并让缓存有时按实例、有时按类型识别。外部继承、有状态自定义实例及单例假设无法同时成立。
-    - 建议：内置无状态 adapter 使用 sealed singleton；自定义 adapter 必须提供稳定的缓存身份，或禁止状态影响 SQL 生成。
+    - 说明：issue 7 后 SQL cache 已统一按 adapter 实例区分，调用级 adapter override 也不进入全局缓存，因此原先“缓存有时按实例、有时按类型识别”的证据已失效。剩余问题较轻：`new()` 约束要求公开构造函数，说明 `Instance` 实际是 shared default 而非被强制的 singleton；继承具体 adapter 时又会继承一个返回基类 adapter 的静态 `Instance`。另外，注册后进入 SQL cache 的 adapter 若改变影响 SQL 生成的状态，仍会得到陈旧 SQL。
+    - 建议：明确选择并记录扩展模型。若允许实例化和继承，考虑把 `Instance` 重命名为 `Default`/`Shared`，并规定注册 adapter 的 SQL 生成行为在注册期间不可变；若内置 adapter 不支持继承，则将其 sealed，并要求自定义 provider 直接实现 `ISqlAdapter` 或继承 `SqlAdapterBase<TSelf>`。
 
 ## 问题清单：公共 API、签名与命名
 

@@ -70,7 +70,7 @@ public static partial class DbConnectionExtensions
     /// Inserts one mapped entity and optionally returns its single database-generated key.
     /// </summary>
     /// <typeparam name="T">The mapped entity type.</typeparam>
-    /// <param name="con">The connection used to execute the insert.</param>
+    /// <param name="con">The connection used to execute the insert. A connection opened here is closed before return.</param>
     /// <param name="entity">The entity whose mapped values are inserted.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
     /// <param name="returnId">Whether to return the single generated key when one is mapped.</param>
@@ -114,7 +114,7 @@ public static partial class DbConnectionExtensions
     /// Inserts entities into table asynchronously and returns affected rows.
     /// </summary>
     /// <typeparam name="T">The mapped entity type.</typeparam>
-    /// <param name="con">The connection used to execute the batched inserts.</param>
+    /// <param name="con">The connection used to execute the batches. A connection opened here is closed before return.</param>
     /// <param name="entities">The entities to insert.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
     /// <param name="includeAutoKey">Whether to insert mapped generated keys explicitly.</param>
@@ -128,6 +128,7 @@ public static partial class DbConnectionExtensions
         if (entities.IsNullOrEmpty())
             return 0;
 
+        var initialState = con.State;
         var sqlAdapter = commandInfo.SqlAdapter ?? GetSqlAdapter(con);
         var mapping = GetEntityMapping(typeof(T), commandInfo.EntityMappingSource);
         var insertProperties = mapping.GetInsertProperties(includeAutoKey);
@@ -145,8 +146,6 @@ public static partial class DbConnectionExtensions
         // Override paths do not enter process-wide caches. A small call-local cache still makes identical full
         // batches share one command text; normally it contains only the full batch size and the final remainder.
         Dictionary<InsertSqlKey, string>? localInsertSqls = useGlobalSqlCache ? null : new();
-
-        await con.TryOpenAsync(commandInfo.CancellationToken);
 
         async Task<int> ExecuteBatchesAsync()
         {
@@ -185,24 +184,33 @@ public static partial class DbConnectionExtensions
             return await command.ExecuteNonQueryAsync(commandInfo.CancellationToken);
         }
 
-        if (includeAutoKey && mapping.GeneratedKeys.Count > 0)
+        try
         {
-            using var command = con.CreateCommand();
-            command.Transaction = commandInfo.Transaction;
-            if (commandInfo.TimeoutSeconds is { } timeout)
+            await con.TryOpenAsync(commandInfo.CancellationToken);
+
+            if (includeAutoKey && mapping.GeneratedKeys.Count > 0)
             {
-                command.CommandTimeout = timeout;
+                using var command = con.CreateCommand();
+                command.Transaction = commandInfo.Transaction;
+                if (commandInfo.TimeoutSeconds is { } timeout)
+                {
+                    command.CommandTimeout = timeout;
+                }
+
+                var tableName = GetTableNameWithSchema(sqlAdapter, schema, mapping);
+                await using var scope = await sqlAdapter.BeginExplicitIdentityInsertAsync(
+                    tableName,
+                    command,
+                    commandInfo.CancellationToken);
+                return await ExecuteBatchesAsync();
             }
 
-            var tableName = GetTableNameWithSchema(sqlAdapter, schema, mapping);
-            await using var scope = await sqlAdapter.BeginExplicitIdentityInsertAsync(
-                tableName,
-                command,
-                commandInfo.CancellationToken);
             return await ExecuteBatchesAsync();
         }
-
-        return await ExecuteBatchesAsync();
+        finally
+        {
+            RestoreInitialConnectionState(con, initialState);
+        }
     }
 
     internal static string GetParameterName(int column, int row)
@@ -370,7 +378,7 @@ public static partial class DbConnectionExtensions
     /// Gets one mapped entity by its single key.
     /// </summary>
     /// <typeparam name="T">The mapped entity type.</typeparam>
-    /// <param name="connection">The connection used to execute the query.</param>
+    /// <param name="connection">The connection used to execute the query. Dapper restores its initial open/closed state.</param>
     /// <param name="id">The key value to find.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
     /// <param name="commandInfo">Command execution, adapter, mapping, transaction, and cancellation options.</param>
@@ -410,7 +418,7 @@ public static partial class DbConnectionExtensions
     /// Deletes one mapped entity by its single key.
     /// </summary>
     /// <typeparam name="T">The mapped entity type.</typeparam>
-    /// <param name="con">The connection used to execute the delete.</param>
+    /// <param name="con">The connection used to execute the delete. Dapper restores its initial open/closed state.</param>
     /// <param name="id">The key value to delete.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
     /// <param name="commandInfo">Command execution, adapter, mapping, transaction, and cancellation options.</param>
@@ -461,11 +469,27 @@ public static partial class DbConnectionExtensions
 
     internal static async Task<T> ExecuteAsync<T>(this DbConnection con, CommandInfo commandInfo, Func<ISqlAdapter, SqlInfo> sqlFunc, Func<ISqlAdapter, DbCommand, Task<T>> func)
     {
-        var adapter = commandInfo.SqlAdapter ?? GetSqlAdapter(con);
-        var (sql, paras) = sqlFunc(adapter);
-        var cmd = con.CreateCommand(sql, paras, commandInfo.TimeoutSeconds, commandInfo.Transaction);
-        await con.TryOpenAsync(commandInfo.CancellationToken);
-        return await func(adapter, cmd);
+        var initialState = con.State;
+        try
+        {
+            var adapter = commandInfo.SqlAdapter ?? GetSqlAdapter(con);
+            var (sql, paras) = sqlFunc(adapter);
+            var cmd = con.CreateCommand(sql, paras, commandInfo.TimeoutSeconds, commandInfo.Transaction);
+            await con.TryOpenAsync(commandInfo.CancellationToken);
+            return await func(adapter, cmd);
+        }
+        finally
+        {
+            RestoreInitialConnectionState(con, initialState);
+        }
+    }
+
+    private static void RestoreInitialConnectionState(DbConnection connection, ConnectionState initialState)
+    {
+        // The extensions borrow their caller-owned connection. Restore Closed only when this operation observed
+        // Closed before opening it; an already-open connection remains owned and managed by the caller.
+        if (initialState == ConnectionState.Closed && connection.State != ConnectionState.Closed)
+            connection.Close();
     }
 
     public static DbCommand CreateCommand(this DbConnection con, string sql, IEnumerable<DbParameter>? paras = null, int? timeoutSeconds = null, DbTransaction? transaction = null)

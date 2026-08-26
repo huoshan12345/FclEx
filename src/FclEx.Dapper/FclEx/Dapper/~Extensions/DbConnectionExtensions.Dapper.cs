@@ -6,7 +6,7 @@ partial class DbConnectionExtensions
     /// Executes an asynchronous callback in a local database transaction and commits it when the callback succeeds.
     /// </summary>
     /// <typeparam name="T">The callback result type.</typeparam>
-    /// <param name="con">The connection on which the transaction is created.</param>
+    /// <param name="con">The connection on which the transaction is created. A connection opened here is closed before return.</param>
     /// <param name="action">The work executed inside the transaction.</param>
     /// <param name="level">The transaction isolation level.</param>
     /// <param name="cancellationToken">The token used to cancel opening, transaction creation, and commit.</param>
@@ -27,7 +27,7 @@ partial class DbConnectionExtensions
     /// Executes a cancellable asynchronous callback in a local database transaction and commits it when the callback succeeds.
     /// </summary>
     /// <typeparam name="T">The callback result type.</typeparam>
-    /// <param name="con">The connection on which the transaction is created.</param>
+    /// <param name="con">The connection on which the transaction is created. A connection opened here is closed before return.</param>
     /// <param name="action">The work executed inside the transaction. It receives the operation cancellation token.</param>
     /// <param name="level">The transaction isolation level.</param>
     /// <param name="cancellationToken">The token used for the complete transaction operation.</param>
@@ -41,33 +41,41 @@ partial class DbConnectionExtensions
         if (action is null)
             throw new ArgumentNullException(nameof(action));
 
-        await con.TryOpenAsync(cancellationToken);
-#if NET5_0_OR_GREATER
-        await
-#endif
-        using var tran = await con.BeginTransactionAsync(level, cancellationToken);
+        var initialState = con.State;
         try
         {
-            var result = await action(tran, cancellationToken);
-            cancellationToken.ThrowIfCancellationRequested();
-            await tran.CommitAsync(cancellationToken);
-            return result;
+            await con.TryOpenAsync(cancellationToken);
+#if NET5_0_OR_GREATER
+            await
+#endif
+            using var tran = await con.BeginTransactionAsync(level, cancellationToken);
+            try
+            {
+                var result = await action(tran, cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                await tran.CommitAsync(cancellationToken);
+                return result;
+            }
+            catch
+            {
+                // Rollback is cleanup: once cancellation has been requested, using the cancelled token would skip it.
+                var rollbackToken = cancellationToken.IsCancellationRequested
+                    ? CancellationToken.None
+                    : cancellationToken;
+                await tran.TryRollbackAsync(rollbackToken);
+                throw;
+            }
         }
-        catch
+        finally
         {
-            // Rollback is cleanup: once cancellation has been requested, using the cancelled token would skip it.
-            var rollbackToken = cancellationToken.IsCancellationRequested
-                ? CancellationToken.None
-                : cancellationToken;
-            await tran.TryRollbackAsync(rollbackToken);
-            throw;
+            RestoreInitialConnectionState(con, initialState);
         }
     }
 
     /// <summary>
     /// Executes an asynchronous callback in a local database transaction and commits it when the callback succeeds.
     /// </summary>
-    /// <param name="con">The connection on which the transaction is created.</param>
+    /// <param name="con">The connection on which the transaction is created. A connection opened here is closed before return.</param>
     /// <param name="action">The work executed inside the transaction.</param>
     /// <param name="level">The transaction isolation level.</param>
     /// <param name="cancellationToken">The token used to cancel opening, transaction creation, and commit.</param>
@@ -87,7 +95,7 @@ partial class DbConnectionExtensions
     /// <summary>
     /// Executes a cancellable asynchronous callback in a local database transaction and commits it when the callback succeeds.
     /// </summary>
-    /// <param name="con">The connection on which the transaction is created.</param>
+    /// <param name="con">The connection on which the transaction is created. A connection opened here is closed before return.</param>
     /// <param name="action">The work executed inside the transaction. It receives the operation cancellation token.</param>
     /// <param name="level">The transaction isolation level.</param>
     /// <param name="cancellationToken">The token used for the complete transaction operation.</param>
