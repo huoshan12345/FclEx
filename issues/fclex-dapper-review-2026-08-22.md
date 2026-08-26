@@ -42,10 +42,11 @@
    - 建议：保持 `ISqlAdapter` 轻量，只补充现有 Insert/BulkInsert/Get/Delete 确实需要的能力，例如返回键语法、安全批次大小和 explicit identity 行为；不要扩张成完整 provider 框架。
    - 处理：删除 `SelectIdentitySql`，新增统一服务单行和多行 INSERT 的 `BuildInsertCommandText`、`GetMaxInsertBatchSize` 以及显式 identity scope。通用层继续负责映射、参数、拆批、执行和最终 SQL 缓存；adapter 只表达实际方言差异。
 
-5. **[P1] adapter 注册按连接类型的 `FullName` 精确匹配，包装连接、派生连接和同名类型均不可靠。**
+5. **[P1][已修复 2026-08-26] adapter 注册按连接类型的 `FullName` 精确匹配，包装连接、派生连接和同名类型均不可靠。**
    - 位置：`DapperHelper.cs:14-21,104-111`。
    - 说明：连接查找忽略 assembly identity，只比较字符串；代理/重试包装器和 provider 派生类型不会命中，两个程序集中的同名类型又会冲突。这与公开的可扩展 adapter 模型不匹配。
    - 建议：以 `Type` 为键并按可赋值关系解析；无法识别的包装连接由调用方显式传入 adapter，不要把类型身份降级为字符串。
+   - 处理：显式注册改为以 `Type` 为键的 `RegisteredAdapters`，解析时优先精确注册，再选择最具体的可赋值注册；多个不可比较注册同时命中时明确报错。内置 provider 以 assembly simple name 和完整类型名共同识别，并沿实际连接的基类链匹配，因此无需引用可选 provider 包也能支持派生连接。组合 wrapper 仍要求显式注册或通过 `CommandInfo.SqlAdapter` 指定。解析结果不另设缓存，注册替换会立即生效。
 
 6. **[P1][已修复 2026-08-23] 自动程序集扫描既脆弱又依赖加载顺序。**
    - 位置：`DapperHelper.cs:60-101`。

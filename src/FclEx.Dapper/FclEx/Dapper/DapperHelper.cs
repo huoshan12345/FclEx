@@ -2,13 +2,15 @@ namespace FclEx.Dapper;
 
 public static class DapperHelper
 {
-    private static readonly ConcurrentDictionary<string, ISqlAdapter> _adapters = new()
+    private static readonly ConcurrentDictionary<Type, ISqlAdapter> RegisteredAdapters = new();
+    private static readonly IReadOnlyDictionary<(string AssemblyName, string TypeName), ISqlAdapter> BuiltInAdapters =
+        new Dictionary<(string AssemblyName, string TypeName), ISqlAdapter>
     {
-        ["Npgsql.NpgsqlConnection"] = NpgsqlAdapter.Instance,
-        ["Microsoft.Data.SqlClient.SqlConnection"] = SqlServerAdapter.Instance,
-        ["Microsoft.Data.Sqlite.SqliteConnection"] = SqliteAdapter.Instance,
-        ["MySql.Data.MySqlClient.MySqlConnection"] = MySqlAdapter.Instance,
-        ["MySqlConnector.MySqlConnection"] = MySqlConnectorAdapter.Instance,
+        [("Npgsql", "Npgsql.NpgsqlConnection")] = NpgsqlAdapter.Instance,
+        [("Microsoft.Data.SqlClient", "Microsoft.Data.SqlClient.SqlConnection")] = SqlServerAdapter.Instance,
+        [("Microsoft.Data.Sqlite", "Microsoft.Data.Sqlite.SqliteConnection")] = SqliteAdapter.Instance,
+        [("MySql.Data", "MySql.Data.MySqlClient.MySqlConnection")] = MySqlAdapter.Instance,
+        [("MySqlConnector", "MySqlConnector.MySqlConnection")] = MySqlConnectorAdapter.Instance,
     };
     private static readonly ConcurrentDictionary<(ISqlAdapter Adapter, string? Schema, EntityMapping Mapping), string> _tableFullNames = new();
 
@@ -42,14 +44,96 @@ public static class DapperHelper
         return mapping;
     }
 
-    public static ISqlAdapter RegisterSqlAdapter(Type connectionType, ISqlAdapter adapter)
+    public static void RegisterSqlAdapter(Type connectionType, ISqlAdapter adapter)
     {
-        return _adapters[connectionType.FullName!] = adapter;
+        if (connectionType is null)
+            throw new ArgumentNullException(nameof(connectionType));
+        if (adapter is null)
+            throw new ArgumentNullException(nameof(adapter));
+        if (!typeof(IDbConnection).IsAssignableFrom(connectionType))
+        {
+            throw new ArgumentException(
+                $"'{connectionType.FullName}' does not implement {nameof(IDbConnection)}.",
+                nameof(connectionType));
+        }
+
+        RegisteredAdapters[connectionType] = adapter;
+    }
+
+    public static void RegisterSqlAdapter<TConnection>(ISqlAdapter adapter)
+        where TConnection : IDbConnection
+    {
+        RegisterSqlAdapter(typeof(TConnection), adapter);
     }
 
     public static ISqlAdapter GetSqlAdapter(IDbConnection connection)
     {
-        return _adapters.GetOrAdd(connection.GetType().FullName!, conName => throw new ArgumentException("Unsupported connection type: " + conName));
+        if (connection is null)
+            throw new ArgumentNullException(nameof(connection));
+
+        var connectionType = connection.GetType();
+        var registeredAdapter = GetRegisteredSqlAdapter(connectionType);
+        if (registeredAdapter is not null)
+            return registeredAdapter;
+
+        for (var type = connectionType; type is not null; type = type.BaseType)
+        {
+            var assemblyName = type.Assembly.GetName().Name;
+            var typeName = type.FullName;
+            if (assemblyName is not null
+                && typeName is not null
+                && BuiltInAdapters.TryGetValue((assemblyName, typeName), out var builtInAdapter))
+            {
+                return builtInAdapter;
+            }
+        }
+
+        throw new NotSupportedException(
+            $"No SQL adapter is registered for connection type '{connectionType.AssemblyQualifiedName}'.");
+    }
+
+    private static ISqlAdapter? GetRegisteredSqlAdapter(Type connectionType)
+    {
+        if (RegisteredAdapters.TryGetValue(connectionType, out var exactAdapter))
+            return exactAdapter;
+        if (RegisteredAdapters.IsEmpty)
+            return null;
+
+        List<KeyValuePair<Type, ISqlAdapter>>? mostSpecificAdapters = null;
+        foreach (var candidate in RegisteredAdapters)
+        {
+            if (!candidate.Key.IsAssignableFrom(connectionType))
+                continue;
+
+            mostSpecificAdapters ??= [];
+            var candidateIsLessSpecific = false;
+            for (var i = mostSpecificAdapters.Count - 1; i >= 0; i--)
+            {
+                var existing = mostSpecificAdapters[i];
+                if (candidate.Key.IsAssignableFrom(existing.Key))
+                {
+                    candidateIsLessSpecific = true;
+                    break;
+                }
+
+                if (existing.Key.IsAssignableFrom(candidate.Key))
+                    mostSpecificAdapters.RemoveAt(i);
+            }
+
+            if (!candidateIsLessSpecific)
+                mostSpecificAdapters.Add(candidate);
+        }
+
+        if (mostSpecificAdapters is null)
+            return null;
+        if (mostSpecificAdapters.Count == 1)
+            return mostSpecificAdapters[0].Value;
+
+        var registrations = string.Join(", ", mostSpecificAdapters
+            .Select(candidate => candidate.Key.AssemblyQualifiedName)
+            .OrderBy(name => name, StringComparer.Ordinal));
+        throw new InvalidOperationException(
+            $"Multiple SQL adapter registrations match connection type '{connectionType.AssemblyQualifiedName}': {registrations}.");
     }
 
     /// <summary>
