@@ -54,10 +54,11 @@
    - 建议：移除 AppDomain 全扫描，要求调用方显式传入实体类型/程序集；扫描失败应产生可诊断的逐程序集结果，不能从静态构造函数传播。
    - 处理：已移除 AppDomain 全扫描、静态构造路径和后续过渡期的显式程序集扫描 API。
 
-7. **[P2] 部分静态 SQL 缓存的键空间无界，可能长期持有动态输入。**
+7. **[P2][已修复 2026-08-26] 部分静态 SQL 缓存的键空间无界，可能长期持有动态输入。**
    - 位置：`DapperHelper.cs:22-23,38`、`DbConnectionExtensions.cs:18-22`。
    - 说明：静态缓存符合避免重复创建 SQL 字符串的目标，但表名和 CRUD SQL 缓存会强引用任意 schema 字符串及 adapter 实例；`ParaNames` 还会为每个列名/行号永久增长。动态 schema 和任意批次数量会持续扩大键空间。
    - 建议：继续为稳定的 operation、mapping 和 adapter 组合使用静态缓存；对动态 schema、批次大小等开放输入采用有界缓存或直接生成，并确保 cache key 包含所有影响 SQL 的值。
+   - 处理：完整 CRUD SQL 只在 canonical path（未提供调用级 schema/adapter override）进入进程级缓存，key 由稳定的 adapter、mapping、操作选项和受 500 行上限约束的批次行数组成。调用级 override 直接生成 SQL；bulk 在一次调用内以批次形状局部复用，因此重复 full batch 不会重复构造字符串。删除独立表名缓存，参数名改为有界位置 key（column index、row index）；替换已注册 adapter 时移除旧实例对应的 SQL 条目。
 
 8. **[P1] 数据库异步 API 没有端到端取消契约。**
    - 位置：`DbConnectionExtensions.cs:37-84,211-245,268-295`、`DbConnectionExtensions.Dapper.cs:5-60`、`DbTransactionExtensions.cs:63-113`。
@@ -208,10 +209,11 @@
     - 说明：表/列/schema 中若含 `]`、`"` 或反引号，会生成非法 SQL；schema 又是每次公共调用传入的字符串，若来自外部输入还可能扩大为 SQL 注入边界。
     - 建议：每个 adapter 正确 escape identifier 结束符，并明确 schema/table name 只能来自可信配置；不要把任意用户输入当 identifier。
 
-36. **[P2] 表名缓存只按 adapter 类型区分，却在 factory 中捕获具体 adapter 实例。**
+36. **[P2][已修复 2026-08-26] 表名缓存只按 adapter 类型区分，却在 factory 中捕获具体 adapter 实例。**
     - 位置：`DapperHelper.cs:23,114-122`。
     - 说明：两个同类型但配置不同的自定义 adapter 会共享首个实例生成的引用结果；这与公开允许传入任意 `ISqlAdapter` 实例的 `CommandInfo` 冲突。
     - 建议：若 adapter 实例决定行为，缓存键使用稳定的 adapter identity/configuration key；若类型决定行为，则禁止有状态实例并在接口契约中声明。
+    - 处理：删除独立表名缓存；canonical CRUD SQL cache 以 adapter 实例作为 key 的一部分，调用级 adapter override 不进入全局缓存，因此不会跨实例错误复用引用结果或永久保留临时实例。
 
 37. **[P2][已修复 2026-08-23] `_isDapperInitialized` 的 check-then-set 不是线程安全的一次初始化。**
     - 位置：`DapperHelper.cs:7,88-101`。
@@ -245,10 +247,10 @@
     - 说明：非 nullable Guid 的数据库 NULL 应是映射错误，而不是合法的全零 GUID；同时 ADO.NET 常用 `DBNull.Value` 表示数据库 NULL，该分支又不会覆盖它，行为不一致。
     - 建议：让 null/`DBNull` 明确失败；nullable Guid 交给 nullable 映射处理。若保留宽松转换，应使用显式命名和 opt-in 注册。
 
-43. **[P2] `RegisterSqlAdapter` 实际是无条件全局替换，却没有冲突或缓存失效契约。**
+43. **[P2] `RegisterSqlAdapter` 实际是无条件全局替换，却没有明确的冲突契约。**
     - 位置：`DapperHelper.cs:104-111`。
-    - 说明：同一连接类型的现有 adapter 会被静默覆盖，返回值还是刚写入的新 adapter，而不是旧值或注册结果；并发测试/宿主模块无法安全协调，表名缓存也可能保留旧实例产生的结果。
-    - 建议：区分 `TryAddSqlAdapter` 与 `ReplaceSqlAdapter`，返回明确结果或旧值；替换时清理受影响的静态 SQL 缓存。
+    - 说明：同一连接类型的现有 adapter 会被静默覆盖，方法没有返回旧值或注册结果，并发宿主模块无法明确协调注册所有权。替换现在会移除旧 adapter 对应的 CRUD SQL cache，缓存失效已不再是本 issue 的未解决部分。
+    - 建议：区分 `TryAddSqlAdapter` 与 `ReplaceSqlAdapter`，或通过返回值明确告知调用方是新增还是替换以及被替换的 adapter。
 
 ## 问题清单：测试与消费者文档
 

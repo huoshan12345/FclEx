@@ -31,6 +31,28 @@ public class DapperHelperTests
     }
 
     [Fact]
+    public void RegisterSqlAdapter_Replacement_RemovesOldAdapterSql()
+    {
+        var oldAdapter = new SqliteAdapter();
+        var mapping = DapperHelper.GetEntityMapping(typeof(CacheEntity));
+        var key = new InsertSqlKey(oldAdapter, mapping, false, false, 1);
+        DapperHelper.RegisterSqlAdapter<CacheReplacementConnection>(oldAdapter);
+        DbConnectionExtensions.GetInsertCommandText(
+            oldAdapter,
+            null,
+            mapping,
+            false,
+            false,
+            1,
+            true);
+        Assert.True(DbConnectionExtensions.InsertSqls.ContainsKey(key));
+
+        DapperHelper.RegisterSqlAdapter<CacheReplacementConnection>(SqlServerAdapter.Instance);
+
+        Assert.False(DbConnectionExtensions.InsertSqls.ContainsKey(key));
+    }
+
+    [Fact]
     public void GetSqlAdapter_IncomparableRegistrations_Throws()
     {
         DapperHelper.RegisterSqlAdapter<IFirstConnection>(SqliteAdapter.Instance);
@@ -67,6 +89,13 @@ public class DapperHelperTests
 
     private class ReplaceableBaseConnection : TestConnection { }
     private sealed class ReplaceableDerivedConnection : ReplaceableBaseConnection { }
+
+    private sealed class CacheReplacementConnection : TestConnection { }
+
+    private sealed class CacheEntity
+    {
+        public int Id { get; set; }
+    }
 
     private interface IFirstConnection : IDbConnection { }
     private interface ISecondConnection : IDbConnection { }

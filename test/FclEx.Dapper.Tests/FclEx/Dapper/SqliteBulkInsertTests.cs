@@ -33,16 +33,103 @@ public class SqliteBulkInsertTests
             mapping,
             false,
             false,
-            499);
+            499,
+            true);
         var second = DbConnectionExtensions.GetInsertCommandText(
             SqliteAdapter.Instance,
             null,
             mapping,
             false,
             false,
-            499);
+            499,
+            true);
 
         Assert.Same(first, second);
+    }
+
+    [Fact]
+    public void GetInsertCommandText_SchemaOverride_DoesNotEnterGlobalCache()
+    {
+        var mapping = CreateBatchRowMapping();
+        var key = new InsertSqlKey(NpgsqlAdapter.Instance, mapping, false, false, 1);
+
+        var sql = DbConnectionExtensions.GetInsertCommandText(
+            NpgsqlAdapter.Instance,
+            "tenant_cache_test",
+            mapping,
+            false,
+            false,
+            1,
+            false);
+
+        Assert.Contains("\"tenant_cache_test\".\"batch_rows\"", sql);
+        Assert.False(DbConnectionExtensions.InsertSqls.ContainsKey(key));
+    }
+
+    [Fact]
+    public async Task BulkInsertAsync_AdapterOverride_ReusesCommandTextWithinCall()
+    {
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await connection.ExecuteAsync(
+            "CREATE TABLE batch_rows (name TEXT NOT NULL, value INTEGER NOT NULL);");
+        var entities = Enumerable.Range(1, 5)
+            .Select(value => new BatchRow { Name = $"row-{value}", Value = value })
+            .ToArray();
+        var adapter = new TwoRowSqliteAdapter();
+
+        var affectedRows = await connection.BulkInsertAsync(
+            entities,
+            commandInfo: new(SqlAdapter: adapter));
+
+        Assert.Equal(entities.Length, affectedRows);
+        Assert.Equal(2, adapter.BuildCount);
+        Assert.DoesNotContain(
+            DbConnectionExtensions.InsertSqls.Keys,
+            key => ReferenceEquals(key.SqlAdapter, adapter));
+    }
+
+    [Fact]
+    public void GetParameterName_UsesBoundedPositionsInsteadOfPropertyNames()
+    {
+        var first = DbConnectionExtensions.GetParameterName(3, 4);
+        var second = DbConnectionExtensions.GetParameterName(3, 4);
+
+        Assert.Equal("@p3_4", first);
+        Assert.Same(first, second);
+    }
+
+    [Fact]
+    public async Task CrudAsync_AdapterOverride_DoesNotEnterGlobalCaches()
+    {
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await connection.ExecuteAsync(
+            "CREATE TABLE cache_rows (id INTEGER PRIMARY KEY, name TEXT NOT NULL);" +
+            "INSERT INTO cache_rows (id, name) VALUES (1, 'one');");
+        var adapter = new SqliteAdapter();
+        var commandInfo = new CommandInfo(SqlAdapter: adapter);
+        var mapping = DapperHelper.GetEntityMapping(typeof(CacheRow));
+
+        var insertedId = await connection.InsertAsync(
+            new CacheRow { Id = 2, Name = "two" },
+            includeAutoKey: true,
+            commandInfo: commandInfo);
+        var row = await connection.GetAsync<CacheRow>(1, commandInfo: commandInfo);
+        var deleted = await connection.DeleteAsync<CacheRow>(1, commandInfo: commandInfo);
+
+        Assert.Null(insertedId);
+        Assert.Equal("one", row?.Name);
+        Assert.Equal(1, deleted);
+        Assert.DoesNotContain(
+            DbConnectionExtensions.InsertSqls.Keys,
+            key => ReferenceEquals(key.SqlAdapter, adapter));
+        Assert.DoesNotContain(
+            DbConnectionExtensions.GetSqls.Keys,
+            key => ReferenceEquals(key.SqlAdapter, adapter));
+        Assert.DoesNotContain(
+            DbConnectionExtensions.DeleteSqls.Keys,
+            key => ReferenceEquals(key.SqlAdapter, adapter));
     }
 
     [Fact]
@@ -90,5 +177,51 @@ public class SqliteBulkInsertTests
         [Column("id")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Id { get; set; }
+    }
+
+    [Table("cache_rows")]
+    private sealed class CacheRow
+    {
+        [Key]
+        [Column("id")]
+        public int Id { get; set; }
+
+        [Column("name")]
+        public string Name { get; set; } = "";
+    }
+
+    private static EntityMapping CreateBatchRowMapping()
+    {
+        return new(
+            typeof(BatchRow),
+            "batch_rows",
+            [
+                new(typeof(BatchRow).GetProperty(nameof(BatchRow.Name))!, "name"),
+                new(typeof(BatchRow).GetProperty(nameof(BatchRow.Value))!, "value"),
+            ]);
+    }
+
+    private sealed class TwoRowSqliteAdapter : SqliteAdapter
+    {
+        public int BuildCount { get; private set; }
+
+        public override int GetMaxInsertBatchSize(int parameterCountPerRow)
+        {
+            return 2;
+        }
+
+        public override string BuildInsertCommandText(
+            string quotedTableName,
+            string? columnListSql,
+            string? valueRowsSql,
+            string? quotedGeneratedKeyColumn)
+        {
+            BuildCount++;
+            return base.BuildInsertCommandText(
+                quotedTableName,
+                columnListSql,
+                valueRowsSql,
+                quotedGeneratedKeyColumn);
+        }
     }
 }

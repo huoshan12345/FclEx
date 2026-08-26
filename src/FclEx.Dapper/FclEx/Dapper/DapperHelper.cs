@@ -12,8 +12,6 @@ public static class DapperHelper
         [("MySql.Data", "MySql.Data.MySqlClient.MySqlConnection")] = MySqlAdapter.Instance,
         [("MySqlConnector", "MySqlConnector.MySqlConnection")] = MySqlConnectorAdapter.Instance,
     };
-    private static readonly ConcurrentDictionary<(ISqlAdapter Adapter, string? Schema, EntityMapping Mapping), string> _tableFullNames = new();
-
     /// <summary>
     /// Gets the default mapping source used when an operation does not specify one.
     /// </summary>
@@ -57,7 +55,22 @@ public static class DapperHelper
                 nameof(connectionType));
         }
 
-        RegisteredAdapters[connectionType] = adapter;
+        ISqlAdapter? replacedAdapter = null;
+        RegisteredAdapters.AddOrUpdate(
+            connectionType,
+            adapter,
+            (_, current) =>
+            {
+                replacedAdapter = current;
+                return adapter;
+            });
+
+        if (replacedAdapter is not null
+            && !ReferenceEquals(replacedAdapter, adapter)
+            && !RegisteredAdapters.Values.Any(registered => ReferenceEquals(registered, replacedAdapter)))
+        {
+            DbConnectionExtensions.RemoveSqlCacheEntries(replacedAdapter);
+        }
     }
 
     public static void RegisterSqlAdapter<TConnection>(ISqlAdapter adapter)
@@ -156,10 +169,12 @@ public static class DapperHelper
     internal static string GetTableNameWithSchema(ISqlAdapter sqlAdapter, string? schema, EntityMapping mapping)
     {
         var effectiveSchema = sqlAdapter.SupportsSchemas ? schema ?? mapping.Schema : null;
-        return _tableFullNames.GetOrAdd((sqlAdapter, effectiveSchema, mapping), key =>
-            key.Schema is null
-                ? key.Adapter.GetQuotedTableName(key.Mapping.TableName)
-                : $"{key.Adapter.GetQuotedTableName(key.Schema)}.{key.Adapter.GetQuotedTableName(key.Mapping.TableName)}");
+
+        // Complete CRUD command texts already cache the quoted table name on the stable path. Keeping a second
+        // process-wide table-name cache would retain every per-call schema override and ad-hoc adapter indefinitely.
+        return effectiveSchema is null
+            ? sqlAdapter.GetQuotedTableName(mapping.TableName)
+            : $"{sqlAdapter.GetQuotedTableName(effectiveSchema)}.{sqlAdapter.GetQuotedTableName(mapping.TableName)}";
     }
 
     /// <summary>

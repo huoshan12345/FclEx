@@ -6,10 +6,9 @@ using static FclEx.Dapper.DapperHelper;
 namespace FclEx.Dapper;
 
 internal readonly record struct SqlInfo(string Sql, IReadOnlyList<DbParameter> Params);
-internal readonly record struct EntitySqlKey(ISqlAdapter SqlAdapter, string? Schema, EntityMapping Mapping);
+internal readonly record struct EntitySqlKey(ISqlAdapter SqlAdapter, EntityMapping Mapping);
 internal readonly record struct InsertSqlKey(
     ISqlAdapter SqlAdapter,
-    string? Schema,
     EntityMapping Mapping,
     bool IncludeAutoKey,
     bool ReturnGeneratedKey,
@@ -32,13 +31,38 @@ public readonly record struct CommandInfo(
 
 public static partial class DbConnectionExtensions
 {
+    // This limit bounds both command size and the row-number dimension of the process-wide INSERT SQL cache.
     private const int DefaultInsertBatchSize = 500;
 
-    // ReSharper disable once InconsistentNaming
+    // These process-wide caches are reserved for the canonical path: a registered or built-in adapter plus the
+    // schema stored in a stable EntityMapping. Per-call schema and adapter overrides are intentionally excluded.
     internal static readonly ConcurrentDictionary<EntitySqlKey, string> GetSqls = new();
     internal static readonly ConcurrentDictionary<EntitySqlKey, string> DeleteSqls = new();
     internal static readonly ConcurrentDictionary<InsertSqlKey, string> InsertSqls = new();
-    internal static readonly ConcurrentDictionary<(string column, int row), string> ParaNames = new();
+
+    // Positional parameter names avoid retaining every CLR property name. Rows are bounded by
+    // DefaultInsertBatchSize, so this cache grows only to the widest mapped INSERT seen by the process.
+    internal static readonly ConcurrentDictionary<(int Column, int Row), string> ParameterNames = new();
+
+    internal static void RemoveSqlCacheEntries(ISqlAdapter sqlAdapter)
+    {
+        // Adapter registration is a rare configuration change. Remove only entries for the replaced adapter so
+        // its instance can be collected without disrupting hot SQL cached for unrelated connection providers.
+        foreach (var key in GetSqls.Keys.Where(key => ReferenceEquals(key.SqlAdapter, sqlAdapter)))
+            GetSqls.TryRemove(key, out _);
+        foreach (var key in DeleteSqls.Keys.Where(key => ReferenceEquals(key.SqlAdapter, sqlAdapter)))
+            DeleteSqls.TryRemove(key, out _);
+        foreach (var key in InsertSqls.Keys.Where(key => ReferenceEquals(key.SqlAdapter, sqlAdapter)))
+            InsertSqls.TryRemove(key, out _);
+    }
+
+    private static bool CanUseGlobalSqlCache(string? schema, CommandInfo commandInfo)
+    {
+        // A null schema selects the schema in the stable mapping. A null adapter override selects either a
+        // built-in singleton or a registered adapter whose replacement invalidates these caches. Mapping sources
+        // are required to return stable mappings, so their mapping instances are safe parts of the cache key.
+        return schema is null && commandInfo.SqlAdapter is null;
+    }
 
     /// <summary>
     /// Inserts an entity into table asynchronously. <br/>
@@ -57,7 +81,15 @@ public static partial class DbConnectionExtensions
         where T : class
     {
         var mapping = GetEntityMapping(typeof(T), commandInfo.EntityMappingSource);
-        var value = await con.ExecuteAsync(commandInfo, m => GetInsertSql(m, schema, entity, mapping, returnId, includeAutoKey), async (a, m) =>
+        var useGlobalSqlCache = CanUseGlobalSqlCache(schema, commandInfo);
+        var value = await con.ExecuteAsync(commandInfo, m => GetInsertSql(
+            m,
+            schema,
+            entity,
+            mapping,
+            returnId,
+            includeAutoKey,
+            useGlobalSqlCache), async (a, m) =>
         {
             if (includeAutoKey && mapping.GeneratedKeys.Count > 0)
             {
@@ -103,6 +135,11 @@ public static partial class DbConnectionExtensions
         var batchSize = insertProperties.Count == 0
             ? 1
             : Math.Min(DefaultInsertBatchSize, sqlAdapter.GetMaxInsertBatchSize(insertProperties.Count));
+        var useGlobalSqlCache = CanUseGlobalSqlCache(schema, commandInfo);
+
+        // Override paths do not enter process-wide caches. A small call-local cache still makes identical full
+        // batches share one command text; normally it contains only the full batch size and the final remainder.
+        Dictionary<InsertSqlKey, string>? localInsertSqls = useGlobalSqlCache ? null : new();
 
         await con.TryOpenAsync();
 
@@ -131,7 +168,14 @@ public static partial class DbConnectionExtensions
 
         async Task<int> ExecuteBatchAsync(IReadOnlyCollection<T> batch)
         {
-            var (sql, parameters) = GetBulkInsertSql(sqlAdapter, schema, batch, mapping, includeAutoKey);
+            var (sql, parameters) = GetBulkInsertSql(
+                sqlAdapter,
+                schema,
+                batch,
+                mapping,
+                includeAutoKey,
+                useGlobalSqlCache,
+                localInsertSqls);
             using var command = con.CreateCommand(sql, parameters, commandInfo.TimeoutSeconds, commandInfo.Transaction);
             return await command.ExecuteNonQueryAsync();
         }
@@ -153,9 +197,9 @@ public static partial class DbConnectionExtensions
         return await ExecuteBatchesAsync();
     }
 
-    internal static string GetParameterName(string column, int row)
+    internal static string GetParameterName(int column, int row)
     {
-        return ParaNames.GetOrAdd((column, row), _ => $"@{column}_{row}");
+        return ParameterNames.GetOrAdd((column, row), static key => $"@p{key.Column}_{key.Row}");
     }
 
     internal static SqlInfo GetBulkInsertSql<T>(
@@ -163,16 +207,26 @@ public static partial class DbConnectionExtensions
         string? schema,
         IReadOnlyCollection<T> entities,
         EntityMapping mapping,
-        bool includeAutoKey)
+        bool includeAutoKey,
+        bool useGlobalSqlCache,
+        IDictionary<InsertSqlKey, string>? localInsertSqls)
     {
         var insertProperties = mapping.GetInsertProperties(includeAutoKey);
-        var sql = GetInsertCommandText(sqlAdapter, schema, mapping, includeAutoKey, false, entities.Count);
+        var sql = GetInsertCommandText(
+            sqlAdapter,
+            schema,
+            mapping,
+            includeAutoKey,
+            false,
+            entities.Count,
+            useGlobalSqlCache,
+            localInsertSqls);
         var paras = new List<DbParameter>(insertProperties.Count * entities.Count);
         foreach (var (i, item) in entities.Index())
         {
-            foreach (var property in insertProperties)
+            foreach (var (column, property) in insertProperties.Index())
             {
-                var paraName = GetParameterName(property.Property.Name, i);
+                var paraName = GetParameterName(column, i);
                 var value = property.Property.GetValue(item);
                 var para = sqlAdapter.CreateParameter(paraName, value, property.StoreTypeName);
                 paras.Add(para);
@@ -188,21 +242,41 @@ public static partial class DbConnectionExtensions
         EntityMapping mapping,
         bool includeAutoKey,
         bool returnGeneratedKey,
-        int rowCount)
+        int rowCount,
+        bool useGlobalSqlCache,
+        IDictionary<InsertSqlKey, string>? localInsertSqls = null)
     {
         if (rowCount <= 0)
             throw new ArgumentOutOfRangeException(nameof(rowCount));
+        if (rowCount > DefaultInsertBatchSize)
+            throw new ArgumentOutOfRangeException(nameof(rowCount));
+        if (useGlobalSqlCache && schema is not null)
+            throw new ArgumentException("A per-call schema override cannot be stored in the global SQL cache.", nameof(schema));
 
         if (includeAutoKey || mapping.GeneratedKeys.Count != 1)
             returnGeneratedKey = false;
 
-        return InsertSqls.GetOrAdd(
-            new(sqlAdapter, schema, mapping, includeAutoKey, returnGeneratedKey, rowCount),
-            static key => CreateInsertCommandText(key));
-
-        static string CreateInsertCommandText(InsertSqlKey key)
+        var key = new InsertSqlKey(sqlAdapter, mapping, includeAutoKey, returnGeneratedKey, rowCount);
+        if (useGlobalSqlCache)
         {
-            var (sqlAdapter, schema, mapping, includeAutoKey, returnGeneratedKey, rowCount) = key;
+            // The global key deliberately omits schema: this branch only represents the schema embedded in the
+            // stable mapping. That invariant prevents arbitrary schema strings from becoming permanent keys.
+            return InsertSqls.GetOrAdd(key, static cacheKey => CreateInsertCommandText(cacheKey, null));
+        }
+
+        if (localInsertSqls is not null && localInsertSqls.TryGetValue(key, out var cachedSql))
+            return cachedSql;
+
+        // The local dictionary also omits schema because it belongs to one BulkInsertAsync call, whose schema is
+        // fixed. It is discarded with that call and therefore cannot retain either the schema or adapter long term.
+        var sql = CreateInsertCommandText(key, schema);
+        if (localInsertSqls is not null)
+            localInsertSqls[key] = sql;
+        return sql;
+
+        static string CreateInsertCommandText(InsertSqlKey key, string? schema)
+        {
+            var (sqlAdapter, mapping, includeAutoKey, returnGeneratedKey, rowCount) = key;
             var tableName = GetTableNameWithSchema(sqlAdapter, schema, mapping);
             var insertProperties = mapping.GetInsertProperties(includeAutoKey);
             if (insertProperties.Count == 0)
@@ -228,9 +302,9 @@ public static partial class DbConnectionExtensions
             for (var i = 0; i < rowCount; i++)
             {
                 sbParameterList.Append('(');
-                foreach (var (_, property, _, isLast) in insertProperties.IndexEx())
+                foreach (var (column, _, _, isLast) in insertProperties.IndexEx())
                 {
-                    var paraName = GetParameterName(property.Property.Name, i);
+                    var paraName = GetParameterName(column, i);
                     sbParameterList.Append(paraName);
 
                     if (isLast == false)
@@ -258,17 +332,25 @@ public static partial class DbConnectionExtensions
         T entity,
         EntityMapping mapping,
         bool returnId,
-        bool includeAutoKey)
+        bool includeAutoKey,
+        bool useGlobalSqlCache)
     {
         var returnGeneratedKey = includeAutoKey == false
                                  && returnId
                                  && mapping.GeneratedKeys.Count == 1;
-        var sql = GetInsertCommandText(sqlAdapter, schema, mapping, includeAutoKey, returnGeneratedKey, 1);
+        var sql = GetInsertCommandText(
+            sqlAdapter,
+            schema,
+            mapping,
+            includeAutoKey,
+            returnGeneratedKey,
+            1,
+            useGlobalSqlCache);
         var insertProperties = mapping.GetInsertProperties(includeAutoKey);
         var paras = new List<DbParameter>(insertProperties.Count);
-        foreach (var property in insertProperties)
+        foreach (var (column, property) in insertProperties.Index())
         {
-            var paraName = GetParameterName(property.Property.Name, 0);
+            var paraName = GetParameterName(column, 0);
             var value = property.Property.GetValue(entity);
             paras.Add(sqlAdapter.CreateParameter(paraName, value, property.StoreTypeName));
         }
@@ -290,14 +372,17 @@ public static partial class DbConnectionExtensions
     {
         var adapter = commandInfo.SqlAdapter ?? GetSqlAdapter(connection);
         var mapping = GetEntityMapping(typeof(T), commandInfo.EntityMappingSource);
-        var sql = GetSqls.GetOrAdd(new(adapter, schema, mapping), key => CreateGetSql(key));
+        var key = new EntitySqlKey(adapter, mapping);
+        var sql = CanUseGlobalSqlCache(schema, commandInfo)
+            ? GetSqls.GetOrAdd(key, static cacheKey => CreateGetSql(cacheKey, null))
+            : CreateGetSql(key, schema);
         var dynParams = new DynamicParameters();
         dynParams.Add("@id", id);
         return connection.QueryFirstOrDefaultAsync<T?>(sql, dynParams, commandInfo.Transaction, commandInfo.TimeoutSeconds);
 
-        static string CreateGetSql(EntitySqlKey key)
+        static string CreateGetSql(EntitySqlKey key, string? schema)
         {
-            var (sqlAdapter, schema, mapping) = key;
+            var (sqlAdapter, mapping) = key;
             var keyProperty = GetSingleKey(mapping);
             var tableName = GetTableNameWithSchema(sqlAdapter, schema, mapping);
             var keyName = sqlAdapter.GetQuotedColumnName(keyProperty.ColumnName);
@@ -321,14 +406,17 @@ public static partial class DbConnectionExtensions
     {
         var adapter = commandInfo.SqlAdapter ?? GetSqlAdapter(con);
         var mapping = GetEntityMapping(typeof(T), commandInfo.EntityMappingSource);
-        var sql = DeleteSqls.GetOrAdd(new(adapter, schema, mapping), key => CreateDeleteSql(key));
+        var key = new EntitySqlKey(adapter, mapping);
+        var sql = CanUseGlobalSqlCache(schema, commandInfo)
+            ? DeleteSqls.GetOrAdd(key, static cacheKey => CreateDeleteSql(cacheKey, null))
+            : CreateDeleteSql(key, schema);
         var dynParams = new DynamicParameters();
         dynParams.Add("@id", id);
         return con.ExecuteAsync(sql, dynParams, commandInfo.Transaction, commandInfo.TimeoutSeconds);
 
-        static string CreateDeleteSql(EntitySqlKey key)
+        static string CreateDeleteSql(EntitySqlKey key, string? schema)
         {
-            var (sqlAdapter, schema, mapping) = key;
+            var (sqlAdapter, mapping) = key;
             var keyProperty = GetSingleKey(mapping);
             var tableName = GetTableNameWithSchema(sqlAdapter, schema, mapping);
             var keyName = sqlAdapter.GetQuotedColumnName(keyProperty.ColumnName);
