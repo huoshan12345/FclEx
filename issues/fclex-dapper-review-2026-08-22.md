@@ -36,10 +36,11 @@
    - 建议：定义只覆盖现有 CRUD SQL 所需元数据的独立映射契约，或明确记录支持的 DataAnnotations 子集；不要引入关系、跟踪等未被当前操作消费的 ORM 元数据。
    - 处理：新增 `IEntityMappingSource`、不可变 `EntityMapping`/`PropertyMapping` 和 `DatabaseValueGeneration`。CRUD 通过 `CommandInfo.EntityMappingSource` 接收自定义 source，默认使用 `DataAnnotationsEntityMappingSource`；后者明确支持 `Table`、`Column`、`Key`、`NotMapped` 和全部 `DatabaseGeneratedOption`，并采用可验证的 persistent scalar property 规则。SQL 缓存按 mapping identity 隔离，自定义 source 必须为同一实体返回稳定映射实例。
 
-4. **[P1] `ISqlAdapter` 把 provider 方言简化成少量字符串，无法可靠表达生成键、批量写入和能力差异。**
+4. **[P1][已修复 2026-08-26] `ISqlAdapter` 把 provider 方言简化成少量字符串，无法可靠表达生成键、批量写入和能力差异。**
    - 位置：`SqlAdapters/ISqlAdapter.cs:3-10`。
    - 说明：接口只有引用名称、参数创建、schema 布尔值和一段 `SelectIdentitySql`，但调用方实际需要表达 `RETURNING`/`OUTPUT`、参数上限、默认值插入、identity override、批次大小等能力。当前抽象迫使通用 CRUD 层拼接并不通用的 SQL。
    - 建议：保持 `ISqlAdapter` 轻量，只补充现有 Insert/BulkInsert/Get/Delete 确实需要的能力，例如返回键语法、安全批次大小和 explicit identity 行为；不要扩张成完整 provider 框架。
+   - 处理：删除 `SelectIdentitySql`，新增统一服务单行和多行 INSERT 的 `BuildInsertCommandText`、`GetMaxInsertBatchSize` 以及显式 identity scope。通用层继续负责映射、参数、拆批、执行和最终 SQL 缓存；adapter 只表达实际方言差异。
 
 5. **[P1] adapter 注册按连接类型的 `FullName` 精确匹配，包装连接、派生连接和同名类型均不可靠。**
    - 位置：`DapperHelper.cs:14-21,104-111`。
@@ -62,10 +63,11 @@
    - 说明：插入、批量插入、查询、删除、事务回调和 commit/rollback 均不接收 `CancellationToken`；只有底层 `TryOpenAsync` 和 `IDbCommand` 扩展孤立地支持 token，调用者无法取消真实工作。
    - 建议：把 token 放入每个异步公共签名或明确的 command options，并传到 open、execute、commit、rollback 和用户回调；不要只取消连接打开。
 
-9. **[P1] `BulkInsertAsync` 生成一个无限增长的多值 INSERT，没有 provider 批次策略。**
+9. **[P1][已修复 2026-08-26] `BulkInsertAsync` 生成一个无限增长的多值 INSERT，没有 provider 批次策略。**
    - 位置：`DbConnectionExtensions.cs:67-117,142-173`。
    - 说明：参数数等于“行数 × 插入列数”，SQL 和参数列表全部一次性分配。SQL Server 的参数容量为 2,100；SQLite 默认 host parameter 上限在新版本为 32,766、旧版本为 999。当前 API 会在正常大集合上突然失败或造成大额分配。
    - 建议：adapter 暴露安全批次大小并分批执行；对真正的高吞吐场景使用 `SqlBulkCopy`、COPY 等 provider 能力。参考：[SQL Server capacity](https://learn.microsoft.com/en-us/sql/sql-server/maximum-capacity-specifications-for-sql-server)、[SQLite limits](https://www.sqlite.org/limits.html)。
+   - 处理：`BulkInsertAsync` 现在根据 adapter 的安全批次大小和内部批次上限执行有界多行 INSERT，每批复用按行数缓存的完整 SQL。SQL Server 同时考虑 2,100 参数和 1,000 行 `VALUES` 限制，SQLite 使用保守的 999 参数限制；批量操作不会静默退化成逐行命令。
 
 10. **[P2] 连接所有权不一致：方法会隐式打开调用方连接，却从不恢复原状态。**
     - 位置：`DbConnectionExtensions.cs:273-279`、`DbConnectionExtensions.Dapper.cs:5-35,64-69`。
@@ -178,20 +180,22 @@
     - 建议：不要复用 `ColumnAttribute.TypeName` 传参数 enum；定义 adapter-specific parameter type map，或根据 CLR 值让 provider 推断。参考：[ColumnAttribute.TypeName](https://learn.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations.schema.columnattribute.typename)。
     - 处理：映射契约将其保存为语义准确的 `PropertyMapping.StoreTypeName`，adapter 仅在名称可识别为自身 provider enum 时显式设置参数类型；`varchar(200)` 等非 enum store type 不再抛出 `Enum.Parse` 异常，而是让 provider 根据 CLR 值推断。测试覆盖 SQLite 对未识别 store type 的推断路径。
 
-31. **[P1] PostgreSQL 用 `LASTVAL()` 返回生成键，可能得到其他 sequence 的值。**
+31. **[P1][已修复 2026-08-26] PostgreSQL 用 `LASTVAL()` 返回生成键，可能得到其他 sequence 的值。**
     - 位置：`SqlAdapters/NpgsqlAdapter.cs:8`、`DbConnectionExtensions.cs:176-194`。
     - 说明：`lastval()` 返回当前 session 最近一次 `nextval` 的值，不绑定当前表或列；INSERT trigger 若调用另一条 sequence，返回值就不是实体主键。
     - 建议：为 PostgreSQL 生成 `INSERT ... RETURNING <quoted key column>`，不要追加 session-global 查询。参考：[PostgreSQL sequence functions](https://www.postgresql.org/docs/current/functions-sequence.html)。
+    - 处理：`NpgsqlAdapter.BuildInsertCommandText` 将映射中的 quoted generated-key column 作为 `RETURNING` 子句附加到 INSERT，不再调用 `LASTVAL()`。
 
 32. **[P1] 显式插入 identity key 不维护 provider sequence，后续自动键可能冲突。**
     - 位置：`DbConnectionExtensions.cs:40-50,73-83`；测试侧 `DapperTestsFixture.cs:87-102`。
     - 说明：`includeAutoKey` 对非 SQL Server provider 不做序列修正；现有测试不得不在 PostgreSQL 上额外执行 `setval`，说明公共操作没有封装其自身后置条件。
     - 建议：把 explicit identity insert 作为 provider 能力实现并明确 sequence 行为；不支持安全维护的 provider 应拒绝该选项，而不是要求调用方猜测补救步骤。
 
-33. **[P1] 只有 generated 列的实体会生成无效 INSERT。**
+33. **[P1][已修复 2026-08-26] 只有 generated 列的实体会生成无效 INSERT。**
     - 位置：`DbConnectionExtensions.cs:119-173`。
     - 说明：当可插入列为空时，代码生成 `INSERT INTO table () values` 和空参数 tuple；不同 provider 的正确形式通常是 `DEFAULT VALUES` 或专用语法。
     - 建议：adapter 提供 default-row insert 语法；bulk 情况需定义是否支持多行默认值并添加边界测试。
+    - 处理：SQL Server、PostgreSQL 和 SQLite 生成 `DEFAULT VALUES`，MySQL adapters 生成 `() VALUES ()`。单实体路径支持返回生成键；多个 default-only 实体的 bulk 路径明确抛出 `NotSupportedException`，不会逐行执行。
 
 34. **[P2] 不请求返回键时仍使用 `ExecuteScalarAsync`，丢失 affected-row 契约。**
     - 位置：`DbConnectionExtensions.cs:37-53,176-198`。

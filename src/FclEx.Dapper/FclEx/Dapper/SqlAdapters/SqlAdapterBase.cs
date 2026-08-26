@@ -16,8 +16,7 @@ public abstract class SqlAdapterBase<TSelf> : ISqlAdapter where TSelf : SqlAdapt
 
     public static readonly TSelf Instance = new();
 
-    public virtual bool SupportSchema { get; } = true;
-    public abstract string SelectIdentitySql { get; }
+    public virtual bool SupportsSchemas { get; } = true;
 
     protected abstract QuotationMarks QuotationMarks { get; }
 
@@ -38,17 +37,48 @@ public abstract class SqlAdapterBase<TSelf> : ISqlAdapter where TSelf : SqlAdapt
         return GetQuotedName(name);
     }
 
+    public abstract int GetMaxInsertBatchSize(int parameterCountPerRow);
+
+    public virtual string BuildInsertCommandText(
+        string quotedTableName,
+        string? columnListSql,
+        string? valueRowsSql,
+        string? quotedGeneratedKeyColumn)
+    {
+        if ((columnListSql is null) != (valueRowsSql is null))
+            throw new ArgumentException("The column list and value rows must either both be supplied or both be null.");
+        if (quotedGeneratedKeyColumn is not null)
+            throw new NotSupportedException($"'{GetType().FullName}' does not support generated-key retrieval.");
+
+        return columnListSql is null
+            ? $"INSERT INTO {quotedTableName}{Environment.NewLine}DEFAULT VALUES"
+            : $"INSERT INTO {quotedTableName} ({columnListSql}){Environment.NewLine}VALUES{Environment.NewLine}{valueRowsSql}";
+    }
+
     protected abstract DbParameterCreator BuildParameterCreator();
 
-    /// <inheritdoc />
+    protected static int CalculateMaxInsertBatchSize(int parameterCountPerRow, int maxParameterCount)
+    {
+        if (parameterCountPerRow <= 0)
+            throw new ArgumentOutOfRangeException(nameof(parameterCountPerRow));
+
+        var rowCount = maxParameterCount / parameterCountPerRow;
+        if (rowCount == 0)
+        {
+            throw new NotSupportedException(
+                $"A row requiring {parameterCountPerRow} parameters exceeds the limit of {maxParameterCount} parameters per command.");
+        }
+
+        return rowCount;
+    }
+
     public virtual DbParameter CreateParameter(string name, object? value, string? storeTypeName = null)
     {
         value ??= DBNull.Value;
         return _creator.Value.Invoke(name, value, storeTypeName);
     }
 
-    /// <inheritdoc />
-    public virtual ValueTask<IAsyncDisposable> EnableIdentityInsertAsync(string quotedTableName, IDbCommand command)
+    public virtual ValueTask<IAsyncDisposable> BeginExplicitIdentityInsertAsync(string quotedTableName, DbCommand command)
     {
         return AsyncDisposable.EmptyValueTask;
     }

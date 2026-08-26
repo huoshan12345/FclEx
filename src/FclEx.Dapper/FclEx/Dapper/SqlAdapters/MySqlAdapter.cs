@@ -5,10 +5,30 @@ namespace FclEx.Dapper.SqlAdapters;
 /// </summary>
 public class MySqlAdapter : SqlAdapterBase<MySqlAdapter>
 {
-    public override bool SupportSchema { get; } = false;
-    public override string SelectIdentitySql { get; } = "SELECT LAST_INSERT_ID()";
+    private const int MaxParametersPerCommand = 65535;
+
+    public override bool SupportsSchemas { get; } = false;
 
     protected override QuotationMarks QuotationMarks { get; } = new('`');
+
+    public override int GetMaxInsertBatchSize(int parameterCountPerRow)
+    {
+        return CalculateMaxInsertBatchSize(parameterCountPerRow, MaxParametersPerCommand);
+    }
+
+    public override string BuildInsertCommandText(
+        string quotedTableName,
+        string? columnListSql,
+        string? valueRowsSql,
+        string? quotedGeneratedKeyColumn)
+    {
+        var sql = columnListSql is null && valueRowsSql is null
+            ? $"INSERT INTO {quotedTableName} () VALUES ()"
+            : base.BuildInsertCommandText(quotedTableName, columnListSql, valueRowsSql, null);
+        return quotedGeneratedKeyColumn is null
+            ? sql
+            : $"{sql};{Environment.NewLine}SELECT LAST_INSERT_ID()";
+    }
 
     protected override DbParameterCreator BuildParameterCreator()
     {

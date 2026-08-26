@@ -1,21 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text.Encodings.Web;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using Json.More;
 
 namespace Json.Path.Tests.Suite;
 
 /// <summary>
 /// These are a set of tests that GitHub user cburgmer uses to check all JSON Path implementations
-/// for feature support.  Adding the suite here ensures that I support them all.
+/// for feature support. Adding the suite here ensures that I support them all.
 /// </summary>
 /// <remarks>This is from cburgmer's amazing reporting site: https://cburgmer.github.io/json-path-comparison/</remarks>
 public class CburgmerFeatureValidationTests

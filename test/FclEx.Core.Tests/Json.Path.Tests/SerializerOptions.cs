@@ -1,6 +1,3 @@
-using System.Text.Encodings.Web;
-using System.Text.Json;
-
 namespace Json.Path.Tests;
 
 public static class SerializerOptions

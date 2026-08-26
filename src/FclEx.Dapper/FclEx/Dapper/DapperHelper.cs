@@ -71,7 +71,7 @@ public static class DapperHelper
 
     internal static string GetTableNameWithSchema(ISqlAdapter sqlAdapter, string? schema, EntityMapping mapping)
     {
-        var effectiveSchema = sqlAdapter.SupportSchema ? schema ?? mapping.Schema : null;
+        var effectiveSchema = sqlAdapter.SupportsSchemas ? schema ?? mapping.Schema : null;
         return _tableFullNames.GetOrAdd((sqlAdapter, effectiveSchema, mapping), key =>
             key.Schema is null
                 ? key.Adapter.GetQuotedTableName(key.Mapping.TableName)

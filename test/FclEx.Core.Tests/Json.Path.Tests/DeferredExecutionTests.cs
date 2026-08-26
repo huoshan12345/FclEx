@@ -1,5 +1,3 @@
-using System.Text.Json.Nodes;
-
 namespace Json.Path.Tests;
 
 public class DeferredExecutionTests

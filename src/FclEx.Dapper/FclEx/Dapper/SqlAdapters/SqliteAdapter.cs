@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace FclEx.Dapper.SqlAdapters;
 
 /// <summary>
@@ -11,10 +5,28 @@ namespace FclEx.Dapper.SqlAdapters;
 /// </summary>
 public class SqliteAdapter : SqlAdapterBase<SqliteAdapter>
 {
-    public override bool SupportSchema { get; } = false;
-    public override string SelectIdentitySql { get; } = "SELECT last_insert_rowid()";
+    private const int MaxParametersPerCommand = 999;
+
+    public override bool SupportsSchemas { get; } = false;
 
     protected override QuotationMarks QuotationMarks { get; } = new('"');
+
+    public override int GetMaxInsertBatchSize(int parameterCountPerRow)
+    {
+        return CalculateMaxInsertBatchSize(parameterCountPerRow, MaxParametersPerCommand);
+    }
+
+    public override string BuildInsertCommandText(
+        string quotedTableName,
+        string? columnListSql,
+        string? valueRowsSql,
+        string? quotedGeneratedKeyColumn)
+    {
+        var sql = base.BuildInsertCommandText(quotedTableName, columnListSql, valueRowsSql, null);
+        return quotedGeneratedKeyColumn is null
+            ? sql
+            : $"{sql};{Environment.NewLine}SELECT last_insert_rowid()";
+    }
 
     protected override DbParameterCreator BuildParameterCreator()
     {

@@ -1,5 +1,3 @@
-using System;
-
 namespace Json.Path.Tests;
 
 public class JsonPointerTests
