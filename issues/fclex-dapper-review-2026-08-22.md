@@ -152,11 +152,11 @@
 
 ## 问题清单：实现正确性与 provider 行为
 
-25. **[P1] insert/bulk 内部创建的 `DbCommand` 从未释放。**
+25. **[P1][已修复 2026-08-27] insert/bulk 内部创建的 `DbCommand` 从未释放。**
     - 位置：`DbConnectionExtensions.cs:273-279`。
     - 说明：`CreateCommand` 后直接 await 执行并返回，没有 `using`/`await using`；command 及其 provider 参数可能持有 native handle、连接引用和缓冲区，异常路径同样泄漏。
     - 建议：在内部执行方法中以跨目标兼容方式保证 command 始终释放，并增加 fake command 回归测试验证成功、open 失败和 execute 失败路径。
-    - 复查（2026-08-27）：bulk 路径创建的 command 已使用 `using`，但单实体 insert/get/delete 共用的内部 `ExecuteAsync` 仍未释放 `CreateCommand` 返回的 command，因此本 issue 尚未完整修复。
+    - 处理：bulk 路径和单实体 insert/get/delete 共用的内部 `ExecuteAsync` 均在 command 的完整生命周期使用 `using`；回归测试验证成功、连接打开失败和命令执行失败时都会释放 command。
 
 26. **[P1][已修复 2026-08-24] 表达式版 `GetQuotedColumnName` 对带 `[Column]` 的属性必然按错误名字查找。**
     - 位置：`DapperHelper.cs:130-147`。
