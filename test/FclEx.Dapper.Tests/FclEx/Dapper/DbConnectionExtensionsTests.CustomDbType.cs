@@ -7,8 +7,7 @@ partial class DbConnectionExtensionsTests
     [MemberData(nameof(SchemaCases))]
     public async Task InsertAsync_EntityWithPostgresqlJsonb_Test(string? schema)
     {
-        if (DbDrivers.Contains(DbDriver.Npgsql) == false)
-            return;
+        Assert.SkipUnlessIncluded(DbDriver.Npgsql);
 
         using var con = Fixture.CreateDbConnection(DbDriver.Npgsql, schema);
 
@@ -37,8 +36,7 @@ partial class DbConnectionExtensionsTests
     [MemberData(nameof(SchemaCases))]
     public async Task InsertAsync_EntityWithSqlServerXml_Test(string? schema)
     {
-        if (DbDrivers.Contains(DbDriver.SqlServer) == false)
-            return;
+        Assert.SkipUnlessIncluded(DbDriver.SqlServer);
 
         using var con = Fixture.CreateDbConnection(DbDriver.SqlServer, schema);
 
@@ -66,9 +64,8 @@ partial class DbConnectionExtensionsTests
     [LocalOnlyFact]
     public async Task InsertAsync_EntityWithSqliteBlob_Test()
     {
-        if (DbDrivers.Contains(DbDriver.Sqlite) == false)
-            return;
-        
+        Assert.SkipUnlessIncluded(DbDriver.Sqlite);
+
         using var con = Fixture.CreateDbConnection(DbDriver.Sqlite, null);
 
         var payload = new EntityWithGuidKey
@@ -96,8 +93,7 @@ partial class DbConnectionExtensionsTests
     [MemberData(nameof(MySqlSchemaCases))]
     public async Task InsertAsync_EntityWithMySqlBlob_Test(DbDriver dbDriver, string? schema)
     {
-        if (DbDrivers.Contains(DbDriver.MySql) == false)
-            return;
+        Assert.SkipUnlessIncluded(DbDriver.MySql);
 
         using var con = Fixture.CreateDbConnection(dbDriver, schema);
 
