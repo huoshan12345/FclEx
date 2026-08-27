@@ -6,53 +6,53 @@ public static class DbTransactionExtensions
     /// <summary>
     /// Commits the transaction after checking for cancellation on target frameworks without native async commit.
     /// </summary>
-    /// <param name="tran">The transaction to commit.</param>
+    /// <param name="transaction">The transaction to commit.</param>
     /// <param name="cancellationToken">The token checked before the synchronous commit begins.</param>
     /// <returns>A completed task after the commit finishes.</returns>
-    public static Task CommitAsync(this DbTransaction tran, CancellationToken cancellationToken = default)
+    public static Task CommitAsync(this DbTransaction transaction, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        tran.Commit();
+        transaction.Commit();
         return Task.CompletedTask;
     }
 
     /// <summary>
     /// Rolls back the transaction after checking for cancellation on target frameworks without native async rollback.
     /// </summary>
-    /// <param name="tran">The transaction to roll back.</param>
+    /// <param name="transaction">The transaction to roll back.</param>
     /// <param name="cancellationToken">The token checked before the synchronous rollback begins.</param>
     /// <returns>A completed task after the rollback finishes.</returns>
-    public static Task RollbackAsync(this DbTransaction tran, CancellationToken cancellationToken = default)
+    public static Task RollbackAsync(this DbTransaction transaction, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        tran.Rollback();
+        transaction.Rollback();
         return Task.CompletedTask;
     }
 
     /// <summary>
     /// Begins a transaction after checking for cancellation on target frameworks without native asynchronous creation.
     /// </summary>
-    /// <param name="con">The connection on which the transaction is created.</param>
+    /// <param name="connection">The connection on which the transaction is created.</param>
     /// <param name="level">The transaction isolation level.</param>
     /// <param name="cancellationToken">The token checked before transaction creation begins.</param>
     /// <returns>The created transaction.</returns>
     public static Task<DbTransaction> BeginTransactionAsync(
-        this DbConnection con,
+        this DbConnection connection,
         IsolationLevel level = IsolationLevel.ReadUncommitted,
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(con.BeginTransaction(level));
+        return Task.FromResult(connection.BeginTransaction(level));
     }
 
     /// <summary>
     /// Asynchronously compatible disposal for target frameworks without native asynchronous transaction disposal.
     /// </summary>
-    /// <param name="tran">The transaction to dispose.</param>
+    /// <param name="transaction">The transaction to dispose.</param>
     /// <returns>A completed value task after synchronous disposal.</returns>
-    public static ValueTask DisposeAsync(this DbTransaction tran)
+    public static ValueTask DisposeAsync(this DbTransaction transaction)
     {
-        tran.Dispose();
+        transaction.Dispose();
         return ValueTask.CompletedTask;
     }
 #endif
@@ -60,15 +60,15 @@ public static class DbTransactionExtensions
     /// <summary>
     /// Rolls back the transaction when it is still associated with an open connection.
     /// </summary>
-    /// <param name="tran">The transaction to roll back.</param>
+    /// <param name="transaction">The transaction to roll back.</param>
     /// <param name="cancellationToken">The token used to cancel rollback.</param>
     /// <returns>A task representing rollback, or a completed task when rollback is no longer possible.</returns>
-    public static async Task TryRollbackAsync(this DbTransaction tran, CancellationToken cancellationToken = default)
+    public static async Task TryRollbackAsync(this DbTransaction transaction, CancellationToken cancellationToken = default)
     {
-        if (tran.Connection is not { State: ConnectionState.Open })
+        if (transaction.Connection is not { State: ConnectionState.Open })
             return;
 
-        await tran.RollbackAsync(cancellationToken);
+        await transaction.RollbackAsync(cancellationToken);
     }
 
     /// <summary>
@@ -76,22 +76,22 @@ public static class DbTransactionExtensions
     /// </summary>
     /// <typeparam name="TEntity">The mapped entity type.</typeparam>
     /// <typeparam name="TKey">The generated-key type requested by the caller.</typeparam>
-    /// <param name="tran">The transaction assigned to the insert command.</param>
+    /// <param name="transaction">The transaction assigned to the insert command.</param>
     /// <param name="entity">The entity whose mapped values are inserted.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
     /// <param name="returnGeneratedKey">Whether to return the single generated key when one is mapped.</param>
     /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
     /// <returns>The generated key converted to <typeparamref name="TKey"/> when requested and supported; otherwise the default value.</returns>
     public static Task<TKey?> InsertAsync<TEntity, TKey>(
-        this DbTransaction tran,
+        this DbTransaction transaction,
         TEntity entity,
         string? schema = null,
         bool returnGeneratedKey = true,
         CommandOptions commandOptions = default)
         where TEntity : class
     {
-        var boundOptions = commandOptions.BindTransaction(tran);
-        return tran.Connection!.InsertAsync<TEntity, TKey>(
+        var boundOptions = commandOptions.BindTransaction(transaction);
+        return transaction.Connection!.InsertAsync<TEntity, TKey>(
             entity,
             schema,
             returnGeneratedKey,
@@ -102,21 +102,21 @@ public static class DbTransactionExtensions
     /// Inserts one mapped entity through this transaction and returns its generated key as a long.
     /// </summary>
     /// <typeparam name="TEntity">The mapped entity type.</typeparam>
-    /// <param name="tran">The transaction assigned to the insert command.</param>
+    /// <param name="transaction">The transaction assigned to the insert command.</param>
     /// <param name="entity">The entity whose mapped values are inserted.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
     /// <param name="returnGeneratedKey">Whether to return the single generated key when one is mapped.</param>
     /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
     /// <returns>The generated key converted to <see langword="long"/> when requested and supported; otherwise the default value.</returns>
     public static Task<long> InsertAsync<TEntity>(
-        this DbTransaction tran,
+        this DbTransaction transaction,
         TEntity entity,
         string? schema = null,
         bool returnGeneratedKey = true,
         CommandOptions commandOptions = default)
         where TEntity : class
     {
-        return tran.InsertAsync<TEntity, long>(
+        return transaction.InsertAsync<TEntity, long>(
             entity,
             schema,
             returnGeneratedKey,
@@ -127,7 +127,7 @@ public static class DbTransactionExtensions
     /// Inserts one mapped entity through this transaction while explicitly supplying its database-generated key values.
     /// </summary>
     /// <typeparam name="TEntity">The mapped entity type.</typeparam>
-    /// <param name="tran">The transaction assigned to the insert command.</param>
+    /// <param name="transaction">The transaction assigned to the insert command.</param>
     /// <param name="entity">The entity containing the generated key values to insert.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
     /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
@@ -135,14 +135,14 @@ public static class DbTransactionExtensions
     /// <exception cref="DataException">The entity mapping does not contain a database-generated key.</exception>
     /// <exception cref="OperationCanceledException"><see cref="CommandOptions.CancellationToken"/> is cancelled.</exception>
     public static Task InsertWithExplicitKeysAsync<TEntity>(
-        this DbTransaction tran,
+        this DbTransaction transaction,
         TEntity entity,
         string? schema = null,
         CommandOptions commandOptions = default)
         where TEntity : class
     {
-        var boundOptions = commandOptions.BindTransaction(tran);
-        return tran.Connection!.InsertWithExplicitKeysAsync(
+        var boundOptions = commandOptions.BindTransaction(transaction);
+        return transaction.Connection!.InsertWithExplicitKeysAsync(
             entity,
             schema,
             boundOptions);
@@ -152,22 +152,22 @@ public static class DbTransactionExtensions
     /// Inserts entities into table asynchronously and returns affected rows.
     /// </summary>
     /// <typeparam name="T">The mapped entity type.</typeparam>
-    /// <param name="tran">The transaction assigned to every insert command.</param>
+    /// <param name="transaction">The transaction assigned to every insert command.</param>
     /// <param name="entities">The entities to insert.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
     /// <param name="includeAutoKey">Whether to insert mapped generated keys explicitly.</param>
     /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
     /// <returns>The total affected rows reported by all batches, or zero for an empty collection.</returns>
     public static Task<int> BulkInsertAsync<T>(
-        this DbTransaction tran,
+        this DbTransaction transaction,
         IReadOnlyCollection<T> entities,
         string? schema = null,
         bool includeAutoKey = false,
         CommandOptions commandOptions = default)
         where T : class
     {
-        var boundOptions = commandOptions.BindTransaction(tran);
-        return tran.Connection!.BulkInsertAsync(
+        var boundOptions = commandOptions.BindTransaction(transaction);
+        return transaction.Connection!.BulkInsertAsync(
             entities,
             schema,
             includeAutoKey,
@@ -178,19 +178,19 @@ public static class DbTransactionExtensions
     /// Gets one mapped entity by its single key through this transaction.
     /// </summary>
     /// <typeparam name="T">The mapped entity type.</typeparam>
-    /// <param name="tran">The transaction assigned to the query.</param>
+    /// <param name="transaction">The transaction assigned to the query.</param>
     /// <param name="id">The key value to find.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
     /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
     /// <returns>The matching entity, or <see langword="null"/> when no row matches.</returns>
     public static Task<T?> GetAsync<T>(
-        this DbTransaction tran,
+        this DbTransaction transaction,
         object id,
         string? schema = null,
         CommandOptions commandOptions = default)
     {
-        var boundOptions = commandOptions.BindTransaction(tran);
-        return tran.Connection!.GetAsync<T>(
+        var boundOptions = commandOptions.BindTransaction(transaction);
+        return transaction.Connection!.GetAsync<T>(
             id,
             schema,
             boundOptions);
@@ -200,19 +200,19 @@ public static class DbTransactionExtensions
     /// Deletes one mapped entity by its single key through this transaction.
     /// </summary>
     /// <typeparam name="T">The mapped entity type.</typeparam>
-    /// <param name="tran">The transaction assigned to the delete command.</param>
+    /// <param name="transaction">The transaction assigned to the delete command.</param>
     /// <param name="id">The key value to delete.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
     /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
     /// <returns>The affected row count.</returns>
     public static Task<int> DeleteAsync<T>(
-        this DbTransaction tran,
+        this DbTransaction transaction,
         object id,
         string? schema = null,
         CommandOptions commandOptions = default)
     {
-        var boundOptions = commandOptions.BindTransaction(tran);
-        return tran.Connection!.DeleteAsync<T>(
+        var boundOptions = commandOptions.BindTransaction(transaction);
+        return transaction.Connection!.DeleteAsync<T>(
             id,
             schema,
             boundOptions);

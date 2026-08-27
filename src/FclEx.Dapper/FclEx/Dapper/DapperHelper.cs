@@ -253,14 +253,14 @@ public static class DapperHelper
         return GetQuotedColumnName(GetSqlAdapter(connection), typeof(T), member.Name, mappingSource);
     }
 
-    public static TransactionScope CreateAsyncTransactionScope(
-        System.Transactions.IsolationLevel isolationLevel = System.Transactions.IsolationLevel.ReadCommitted,
-        TimeSpan? timeout = null)
+    public static TransactionScope CreateTransactionScope(
+        TimeSpan timeout,
+        System.Transactions.IsolationLevel isolationLevel = System.Transactions.IsolationLevel.ReadCommitted)
     {
         var transactionOptions = new TransactionOptions
         {
             IsolationLevel = isolationLevel,
-            Timeout = timeout ?? TransactionManager.MaximumTimeout,
+            Timeout = timeout,
         };
         return new TransactionScope(TransactionScopeOption.Required, transactionOptions, TransactionScopeAsyncFlowOption.Enabled);
     }

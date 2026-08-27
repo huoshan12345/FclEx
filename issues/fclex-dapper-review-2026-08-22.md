@@ -121,10 +121,11 @@
     - 建议：传入明确的 quoted table identifier 和执行 context，或让 adapter 生成 before/after commands；以专门 scope 类型记录 cleanup 行为和异常策略。
     - 处理：移除无意义泛型和 schema/entity lookup；新签名接收已经由 mapping source 解析并引用的完整表名以及 command。返回 scope 的 cleanup 设计仍保留，异常策略可在后续 adapter 方言重构中继续收敛。
 
-20. **[P2] `CreateAsyncTransactionScope` 的名称只表达 async flow，却隐藏“使用机器最大超时”的策略。**
+20. **[P2][已修复 2026-08-27] `CreateAsyncTransactionScope` 的名称只表达 async flow，却隐藏“使用机器最大超时”的策略。**
     - 位置：`DapperHelper.cs:150-157`。
     - 说明：该方法没有异步工作；`Async` 仅指 `TransactionScopeAsyncFlowOption.Enabled`。它把 timeout 固定成 `TransactionManager.MaximumTimeout`，可能让挂起事务远超调用方预期。
     - 建议：改名为 `CreateTransactionScopeWithAsyncFlow`，接受显式 timeout/option，默认遵循平台默认事务配置。
+    - 处理：方法重命名为 `CreateTransactionScope`；`timeout` 改为必填的非空 `TimeSpan`，不再隐式使用 `TransactionManager.MaximumTimeout`。创建的 scope 仍显式启用 async flow，隔离级别默认保持 `ReadCommitted`。
 
 21. **[P2][已修复 2026-08-24] 元数据命名没有准确表达数据库概念。**
     - 位置：`EntityDefinition.cs:15-21,53-62`、`FieldDefinition.cs:3-11`。
@@ -132,20 +133,22 @@
     - 建议：采用 `TableName`/`ColumnName`、`ColumnDefinition`、`IdentityKeys`、`IsIdentity`、`GetInsertableColumns` 等准确术语。
     - 处理：删除旧 metadata 类型；新契约使用 `EntityMapping.TableName/Schema/Properties/Keys/GeneratedKeys/InsertProperties`、`PropertyMapping.ColumnName/ValueGeneration/StoreTypeName` 和 `GetInsertProperties`，不再使用 Alias、Field 或语义不完整的 IsGenerated。
 
-22. **[P3] 多个公共参数使用内部式缩写，降低 API 可读性。**
-    - 位置：`DbConnectionExtensions.cs` 的 `con`/`paras`，`DbTransactionExtensions.cs` 的 `tran`，`DbConnectionExtensions.Dapper.cs` 的 `cons`。
-    - 说明：这些名字会进入 IntelliSense 和生成文档，不符合 `connection`、`parameters`、`transaction`、`connections` 的公共 API 习惯。
+22. **[P3][已修复 2026-08-27] 多个公共参数使用内部式缩写，降低 API 可读性。**
+    - 位置：`DbConnectionExtensions.cs` 的 `con`/`paras`，`DbTransactionExtensions.cs` 的 `tran`，`DbConnectionExtensions.Dapper.cs` 的 `con`。
+    - 说明：这些名字会进入 IntelliSense 和生成文档，不符合 `connection`、`parameters`、`transaction` 的公共 API 习惯。
     - 建议：完整命名所有公开参数；内部局部变量可另行决定是否精简。
+    - 处理：保留内部局部变量命名不变；所有公开 extension 参数中的 `con`、`paras` 和 `tran` 分别改为 `connection`、`parameters` 和 `transaction`。
 
 23. **[P3] 大部分公共 API 没有消费者可用的 XML 文档。**
     - 位置：`src/FclEx.Dapper` 全部公共类型；现有 CRUD 文档的 `<param>`/`<returns>` 基本为空。
     - 说明：生成键类型、连接状态、schema 解释、映射属性、异常、批量限制、全局注册副作用均未说明；当前 0 warning 只是项目没有把缺失文档当作错误。
     - 建议：先确定公共面，再为保留 API 补齐行为、参数、返回、连接所有权、失败模式和 provider 差异；实现细节类型应改为 internal 而不是补表面文档。
 
-24. **[P2] `SqlConnectionHelper.ParseEndpoint` 名称和解析能力均不足以表达 SQL Server data source。**
+24. **[P2][已修复 2026-08-27] `SqlConnectionHelper.ParseEndpoint` 名称和解析能力均不足以表达 SQL Server data source。**
     - 位置：`SqlConnectionHelper.cs:3-11`。
     - 说明：默认 1433 使其实际面向 SQL Server，但只按第一个逗号切分；`tcp:` 前缀、named instance、IPv6、LocalDB 和错误端口均没有明确语义，非法端口还会静默回退到 1433。
     - 建议：若只支持 `host[,port]`，重命名并严格验证；若目标是 SQL Server connection string，则使用 provider 的 connection-string builder/官方解析能力，不自行猜测。
+    - 处理：直接删除 `SqlConnectionHelper` 和 `ParseEndpoint`，不再由该通用 Dapper 扩展包维护不完整的 SQL Server data source 解析规则。
 
 ## 问题清单：实现正确性与 provider 行为
 

@@ -7,6 +7,41 @@ namespace FclEx.Dapper;
 public class DapperHelperTests
 {
     [Fact]
+    public async Task CreateTransactionScope_RequiresTimeoutAndEnablesAsyncFlow()
+    {
+        var method = typeof(DapperHelper).GetMethod(
+            nameof(DapperHelper.CreateTransactionScope),
+            [typeof(TimeSpan), typeof(System.Transactions.IsolationLevel)]);
+        Assert.NotNull(method);
+        var timeoutParameter = Assert.Single(method.GetParameters(), parameter => parameter.Name == "timeout");
+        Assert.False(timeoutParameter.HasDefaultValue);
+        Assert.Equal(typeof(TimeSpan), timeoutParameter.ParameterType);
+
+        using var scope = DapperHelper.CreateTransactionScope(TimeSpan.FromSeconds(30));
+        var transactionId = System.Transactions.Transaction.Current?.TransactionInformation.LocalIdentifier;
+        Assert.NotNull(transactionId);
+
+        await Task.Yield();
+
+        Assert.Equal(
+            transactionId,
+            System.Transactions.Transaction.Current?.TransactionInformation.LocalIdentifier);
+        scope.Complete();
+    }
+
+    [Fact]
+    public void PublicExtensionMethods_UseCompleteParameterNames()
+    {
+        var abbreviatedNames = new HashSet<string>(["con", "tran", "cons", "paras"], StringComparer.Ordinal);
+        var parameterNames = new[] { typeof(DbConnectionExtensions), typeof(DbTransactionExtensions) }
+            .SelectMany(type => type.GetMethods())
+            .SelectMany(method => method.GetParameters())
+            .Select(parameter => parameter.Name);
+
+        Assert.DoesNotContain(parameterNames, name => name is not null && abbreviatedNames.Contains(name));
+    }
+
+    [Fact]
     public void GetSqlAdapter_DerivedConnection_UsesMostSpecificRegistration()
     {
         var baseAdapter = new SqliteAdapter();
