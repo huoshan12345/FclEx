@@ -122,6 +122,24 @@ public class DapperHelperTests
             DapperHelper.RegisterSqlAdapter(typeof(string), new SqliteAdapter()));
     }
 
+    [Fact]
+    public void TryRegisterSqlAdapter_ExistingExactRegistration_ReturnsFalseWithoutReplacing()
+    {
+        var registeredAdapter = new SqliteAdapter();
+
+        Assert.True(DapperHelper.TryRegisterSqlAdapter<TryRegisterConnection>(registeredAdapter));
+        Assert.False(DapperHelper.TryRegisterSqlAdapter(typeof(TryRegisterConnection), new SqlServerAdapter()));
+        using var connection = new TryRegisterConnection();
+        Assert.Same(registeredAdapter, DapperHelper.GetSqlAdapter(connection));
+    }
+
+    [Fact]
+    public void TryRegisterSqlAdapter_NonConnectionType_Throws()
+    {
+        Assert.Throws<ArgumentException>(() =>
+            DapperHelper.TryRegisterSqlAdapter(typeof(string), new SqliteAdapter()));
+    }
+
     private class RegisteredBaseConnection : TestConnection { }
     private class RegisteredMiddleConnection : RegisteredBaseConnection { }
     private sealed class RegisteredDerivedConnection : RegisteredMiddleConnection { }
@@ -130,6 +148,7 @@ public class DapperHelperTests
     private sealed class ReplaceableDerivedConnection : ReplaceableBaseConnection { }
 
     private sealed class CacheReplacementConnection : TestConnection { }
+    private sealed class TryRegisterConnection : TestConnection { }
 
     private sealed class CacheEntity
     {

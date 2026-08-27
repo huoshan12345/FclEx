@@ -112,7 +112,11 @@ public static partial class DbConnectionExtensions
     /// <returns>A task representing the insert operation.</returns>
     /// <exception cref="DataException">The entity mapping does not contain a database-generated key.</exception>
     /// <exception cref="OperationCanceledException"><see cref="CommandOptions.CancellationToken"/> is cancelled.</exception>
-    public static async Task InsertWithExplicitKeysAsync<TEntity>(
+    /// <remarks>
+    /// This operation does not advance or reset a provider identity, sequence, or auto-increment counter.
+    /// The caller must keep that state consistent so later generated keys do not conflict with the inserted values.
+    /// </remarks>
+    public static async Task InsertWithExplicitGeneratedKeysAsync<TEntity>(
         this DbConnection connection,
         TEntity entity,
         string? schema = null,
@@ -202,6 +206,11 @@ public static partial class DbConnectionExtensions
     /// <returns>The total affected rows reported by all batches, or zero for an empty collection.</returns>
     /// <exception cref="NotSupportedException">The mapped row shape cannot be represented by the selected adapter.</exception>
     /// <exception cref="OperationCanceledException"><see cref="CommandOptions.CancellationToken"/> is cancelled.</exception>
+    /// <remarks>
+    /// When <paramref name="includeAutoKey"/> is <see langword="true"/>, this operation does not advance or reset a
+    /// provider identity, sequence, or auto-increment counter. The caller must keep that state consistent so later
+    /// generated keys do not conflict with the inserted values.
+    /// </remarks>
     public static async Task<int> BulkInsertAsync<T>(this DbConnection connection, IReadOnlyCollection<T> entities, string? schema = null, bool includeAutoKey = false, CommandOptions commandOptions = default)
         where T : class
     {

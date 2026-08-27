@@ -95,7 +95,7 @@
     - 位置：`DbConnectionExtensions.InsertAsync`、`DbTransactionExtensions.InsertAsync`。
     - 说明：位置调用如 `InsertAsync(entity, schema, false, true)` 无法自解释；`includeAutoKey=true` 时 `returnId=true` 又会被静默忽略。
     - 建议：拆成具名操作（普通 insert、insert explicit identity、insert and return key），或以枚举/options 表达互斥策略并在入口验证。
-    - 处理：保留默认返回 `long` 的便利重载和 `InsertAsync<TEntity, TKey>`；`returnId` 重命名为 `returnGeneratedKey`，显式写入数据库生成键的路径拆为 `InsertWithExplicitKeysAsync`。connection 和 transaction API 保持对应，不再公开两个可形成非法组合的布尔参数。
+    - 处理：保留默认返回 `long` 的便利重载和 `InsertAsync<TEntity, TKey>`；`returnId` 重命名为 `returnGeneratedKey`，显式写入数据库生成键的路径拆为 `InsertWithExplicitGeneratedKeysAsync`。connection 和 transaction API 保持对应，不再公开两个可形成非法组合的布尔参数。
 
 15. **[P2][已修复 2026-08-26] `CommandInfo` 名称过于宽泛，且把执行选项固化为公共 positional record。**
     - 位置：`DbConnectionExtensions.cs:13`。
@@ -156,6 +156,7 @@
     - 位置：`DbConnectionExtensions.cs:273-279`。
     - 说明：`CreateCommand` 后直接 await 执行并返回，没有 `using`/`await using`；command 及其 provider 参数可能持有 native handle、连接引用和缓冲区，异常路径同样泄漏。
     - 建议：在内部执行方法中以跨目标兼容方式保证 command 始终释放，并增加 fake command 回归测试验证成功、open 失败和 execute 失败路径。
+    - 复查（2026-08-27）：bulk 路径创建的 command 已使用 `using`，但单实体 insert/get/delete 共用的内部 `ExecuteAsync` 仍未释放 `CreateCommand` 返回的 command，因此本 issue 尚未完整修复。
 
 26. **[P1][已修复 2026-08-24] 表达式版 `GetQuotedColumnName` 对带 `[Column]` 的属性必然按错误名字查找。**
     - 位置：`DapperHelper.cs:130-147`。
@@ -193,10 +194,11 @@
     - 建议：为 PostgreSQL 生成 `INSERT ... RETURNING <quoted key column>`，不要追加 session-global 查询。参考：[PostgreSQL sequence functions](https://www.postgresql.org/docs/current/functions-sequence.html)。
     - 处理：`NpgsqlAdapter.BuildInsertCommandText` 将映射中的 quoted generated-key column 作为 `RETURNING` 子句附加到 INSERT，不再调用 `LASTVAL()`。
 
-32. **[P1] 显式插入 identity key 不维护 provider sequence，后续自动键可能冲突。**
+32. **[P1][已修复 2026-08-27] 显式插入 identity key 不维护 provider sequence，后续自动键可能冲突。**
     - 位置：`DbConnectionExtensions.cs:40-50,73-83`；测试侧 `DapperTestsFixture.cs:87-102`。
-    - 说明：单实体 `InsertWithExplicitKeysAsync` 和批量插入的 `includeAutoKey` 路径对非 SQL Server provider 不做序列修正；现有测试不得不在 PostgreSQL 上额外执行 `setval`，说明公共操作没有封装其自身后置条件。
+    - 说明：单实体 `InsertWithExplicitGeneratedKeysAsync` 和批量插入的 `includeAutoKey` 路径对非 SQL Server provider 不做序列修正；现有测试不得不在 PostgreSQL 上额外执行 `setval`，说明公共操作没有封装其自身后置条件。
     - 建议：把 explicit identity insert 作为 provider 能力实现并明确 sequence 行为；不支持安全维护的 provider 应拒绝该选项，而不是要求调用方猜测补救步骤。
+    - 处理：API 重命名为 `InsertWithExplicitGeneratedKeysAsync`，明确表达只显式写入 database-generated key；单实体和 `BulkInsertAsync(..., includeAutoKey: true)` 的 XML 文档及 README 均声明不会推进或重置 identity/sequence/auto-increment，调用者必须维护该状态并避免后续自动键冲突。
 
 33. **[P1][已修复 2026-08-26] 只有 generated 列的实体会生成无效 INSERT。**
     - 位置：`DbConnectionExtensions.cs:119-173`。
@@ -208,7 +210,7 @@
     - 位置：`DbConnectionExtensions.cs:37-53,176-198`。
     - 说明：不请求生成键或映射没有 generated key 时，SQL 只有 INSERT，却仍走 scalar execute 并返回 null，依赖 provider 对无结果 scalar 的行为。
     - 建议：无返回值路径使用 `ExecuteNonQueryAsync`；单行插入无需公开通常恒为 1 且可能受 provider 配置影响的 affected rows，数据库失败直接抛出异常。
-    - 处理：只有实际请求且映射恰好包含一个 generated key 时使用 `ExecuteScalarAsync`；其余单行插入和 `InsertWithExplicitKeysAsync` 均使用 `ExecuteNonQueryAsync`，并不公开 affected rows。
+    - 处理：只有实际请求且映射恰好包含一个 generated key 时使用 `ExecuteScalarAsync`；其余单行插入和 `InsertWithExplicitGeneratedKeysAsync` 均使用 `ExecuteNonQueryAsync`，并不公开 affected rows。
 
 35. **[P2] identifier quoting 只包围名称，不转义结束符。**
     - 位置：`SqlAdapterBase.cs:22-38`、`DapperHelper.cs:114-121`。
@@ -233,30 +235,35 @@
     - 建议：采用 `StringComparer.OrdinalIgnoreCase`，并在同名不同大小写产生歧义时明确报错；添加 alias 与 casing 组合测试。
     - 处理：`EntityMapping` 以 `StringComparer.OrdinalIgnoreCase` 同时索引 property/column identifiers，构造时拒绝跨属性歧义；CRUD SQL 和 helper 共用该解析，测试覆盖大写 alias 查询。
 
-39. **[P1] 单连接事务在 rollback 失败时会丢失原始业务/commit 异常。**
+39. **[P1][已修复 2026-08-27] 单连接事务在 rollback 失败时会丢失原始业务/commit 异常。**
     - 位置：`DbConnectionExtensions.Dapper.cs:12-21,32-40`。
     - 说明：catch 中先 await `TryRollbackAsync`；如果 rollback 自身抛错，后面的 bare `throw` 不会执行，调用方只看到 rollback 异常。
     - 建议：分别捕获原始异常与 rollback 异常；无 rollback 错误时用 `ExceptionDispatchInfo` 保留原异常，有两者时抛包含两者的 `AggregateException`/专用异常。
+    - 处理：rollback 成功时继续用 bare `throw` 保留原始异常和堆栈；rollback 也失败时抛出按顺序包含 operation/commit 异常与 rollback 异常的 `AggregateException`，并以 fake transaction 回归测试验证两者均可见。
 
-40. **[P2] `IDbCommand.Execute*Async` 对非 `DbCommand` 实现同步阻塞，Async 名称没有真实保证。**
+40. **[P2][已修复 2026-08-27] `IDbCommand.Execute*Async` 对非 `DbCommand` 实现同步阻塞，Async 名称没有真实保证。**
     - 位置：`DbCommandExtensions.cs:5-16`。
     - 说明：fallback 在调用线程直接执行 `ExecuteScalar`/`ExecuteNonQuery`；现在会在同步调用开始前检查 cancellation token，但执行开始后仍无法取消，调用者也无法从 Async 签名判断会阻塞。
     - 建议：把扩展限定为 `DbCommand`；对只有 `IDbCommand` 的实现提供明确命名的同步兼容方法，不要用 `Task.FromResult` 包装同步 I/O 冒充异步。
+    - 处理：保留 `IDbCommand` 兼容面，但非 `DbCommand` fallback 改为在线程池执行，不再阻塞调用线程；文档明确只有 `DbCommand` 路径使用 provider 原生异步，fallback 的 cancellation 只能在同步 I/O 开始前生效。回归测试验证调用会先返回未完成的 task，而不是同步等待命令结束。
 
-41. **[P2] `DateTimeHandler` 的名称掩盖了“把原 ticks 重新解释为 UTC”的破坏性语义。**
+41. **[P2][已修复 2026-08-27] `DateTimeHandler` 的名称掩盖了“把原 ticks 重新解释为 UTC”的破坏性语义。**
     - 位置：`DateTimeHandler.cs:3-15`、`DapperHelper.cs:95-96`。
     - 说明：`DateTime.SpecifyKind` 不做时区转换，只改 `Kind`；如果 provider 返回 Local 值，代表的 instant 会改变。类型名只说 DateTime handler，未表达 `AssumeUtc`，而该公开类型目前又没有被默认注册，消费者无法判断它是支持能力还是遗留代码。
     - 建议：若确需该策略，重命名为 `AssumeUtcDateTimeTypeHandler` 并严格限定输入 Kind；否则删除。README 应明确默认是否注册以及时间语义。
+    - 处理：类型移至 `Dapper` namespace 并重命名为 opt-in 的 `AssumeUtcDateTimeTypeHandler`；Local 值通过 `ToUniversalTime` 保持 instant，Unspecified 值才保留 ticks 并标记为 UTC，README 不再引用旧名称。测试覆盖 Local 转换语义。
 
 42. **[P2] `GuidTypeHandler` 把 `null` 映射为 `Guid.Empty`，会混淆缺失值与真实空 GUID。**
     - 位置：`GuidTypeHandler.cs:5-19`。
     - 说明：非 nullable Guid 的数据库 NULL 应是映射错误，而不是合法的全零 GUID；同时 ADO.NET 常用 `DBNull.Value` 表示数据库 NULL，该分支又不会覆盖它，行为不一致。
     - 建议：让 null/`DBNull` 明确失败；nullable Guid 交给 nullable 映射处理。若保留宽松转换，应使用显式命名和 opt-in 注册。
+    - 复查（2026-08-27）：`GuidTypeHandler` 已对 null/`DBNull` 明确抛出 `InvalidCastException`，原问题已修正；但新增的 `NullableGuidTypeHandler` 不应保留。Dapper 注册 value-type handler 时会把同一实例同时写入 `Guid` 与 `Guid?`，所以两种 handler 不是独立配置，后注册者会覆盖两者；此外 nullable handler 的 `SetValue(null)` 当前写入 CLR null 而不是 `DBNull.Value`。在移除该冗余类型前暂不关闭本 issue。
 
-43. **[P2] `RegisterSqlAdapter` 实际是无条件全局替换，却没有明确的冲突契约。**
+43. **[P2][已修复 2026-08-27] `RegisterSqlAdapter` 实际是无条件全局替换，却没有明确的冲突契约。**
     - 位置：`DapperHelper.cs:104-111`。
     - 说明：同一连接类型的现有 adapter 会被静默覆盖，方法没有返回旧值或注册结果，并发宿主模块无法明确协调注册所有权。替换现在会移除旧 adapter 对应的 CRUD SQL cache，缓存失效已不再是本 issue 的未解决部分。
     - 建议：区分 `TryAddSqlAdapter` 与 `ReplaceSqlAdapter`，或通过返回值明确告知调用方是新增还是替换以及被替换的 adapter。
+    - 处理：`RegisterSqlAdapter` 保持无条件新增或替换，并继续清理被替换 adapter 的 SQL cache；新增 `TryRegisterSqlAdapter` 的 Type 与泛型重载，只在 exact connection type 尚未注册时返回 `true` 并添加，冲突时返回 `false` 且保留原 adapter。
 
 ## 问题清单：测试与消费者文档
 

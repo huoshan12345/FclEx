@@ -43,18 +43,17 @@ public static class DapperHelper
         return mapping;
     }
 
+    /// <summary>
+    /// Registers or replaces the adapter explicitly associated with a connection type.
+    /// </summary>
+    /// <param name="connectionType">The connection type to register.</param>
+    /// <param name="adapter">The adapter to use for the connection type and its assignable derived types.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="connectionType"/> or <paramref name="adapter"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="connectionType"/> does not implement <see cref="IDbConnection"/>.</exception>
+    /// <remarks>An existing registration for the exact connection type is replaced.</remarks>
     public static void RegisterSqlAdapter(Type connectionType, ISqlAdapter adapter)
     {
-        if (connectionType is null)
-            throw new ArgumentNullException(nameof(connectionType));
-        if (adapter is null)
-            throw new ArgumentNullException(nameof(adapter));
-        if (!typeof(IDbConnection).IsAssignableFrom(connectionType))
-        {
-            throw new ArgumentException(
-                $"'{connectionType.FullName}' does not implement {nameof(IDbConnection)}.",
-                nameof(connectionType));
-        }
+        ValidateSqlAdapterRegistration(connectionType, adapter);
 
         ISqlAdapter? replacedAdapter = null;
         RegisteredAdapters.AddOrUpdate(
@@ -74,10 +73,44 @@ public static class DapperHelper
         }
     }
 
+    /// <summary>
+    /// Registers or replaces the adapter explicitly associated with a connection type.
+    /// </summary>
+    /// <typeparam name="TConnection">The connection type to register.</typeparam>
+    /// <param name="adapter">The adapter to use for the connection type and its assignable derived types.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="adapter"/> is null.</exception>
+    /// <remarks>An existing registration for the exact connection type is replaced.</remarks>
     public static void RegisterSqlAdapter<TConnection>(ISqlAdapter adapter)
         where TConnection : IDbConnection
     {
         RegisterSqlAdapter(typeof(TConnection), adapter);
+    }
+
+    /// <summary>
+    /// Registers an adapter for an exact connection type when that type has no existing explicit registration.
+    /// </summary>
+    /// <param name="connectionType">The connection type to register.</param>
+    /// <param name="adapter">The adapter to use for the connection type and its assignable derived types.</param>
+    /// <returns><see langword="true"/> when the adapter was added; <see langword="false"/> when the exact connection type was already registered.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="connectionType"/> or <paramref name="adapter"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="connectionType"/> does not implement <see cref="IDbConnection"/>.</exception>
+    public static bool TryRegisterSqlAdapter(Type connectionType, ISqlAdapter adapter)
+    {
+        ValidateSqlAdapterRegistration(connectionType, adapter);
+        return RegisteredAdapters.TryAdd(connectionType, adapter);
+    }
+
+    /// <summary>
+    /// Registers an adapter for an exact connection type when that type has no existing explicit registration.
+    /// </summary>
+    /// <typeparam name="TConnection">The connection type to register.</typeparam>
+    /// <param name="adapter">The adapter to use for the connection type and its assignable derived types.</param>
+    /// <returns><see langword="true"/> when the adapter was added; <see langword="false"/> when the exact connection type was already registered.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="adapter"/> is null.</exception>
+    public static bool TryRegisterSqlAdapter<TConnection>(ISqlAdapter adapter)
+        where TConnection : IDbConnection
+    {
+        return TryRegisterSqlAdapter(typeof(TConnection), adapter);
     }
 
     public static ISqlAdapter GetSqlAdapter(IDbConnection connection)
@@ -148,6 +181,20 @@ public static class DapperHelper
             .OrderBy(name => name, StringComparer.Ordinal));
         throw new InvalidOperationException(
             $"Multiple SQL adapter registrations match connection type '{connectionType.AssemblyQualifiedName}': {registrations}.");
+    }
+
+    private static void ValidateSqlAdapterRegistration(Type connectionType, ISqlAdapter adapter)
+    {
+        if (connectionType is null)
+            throw new ArgumentNullException(nameof(connectionType));
+        if (adapter is null)
+            throw new ArgumentNullException(nameof(adapter));
+        if (!typeof(IDbConnection).IsAssignableFrom(connectionType))
+        {
+            throw new ArgumentException(
+                $"'{connectionType.FullName}' does not implement {nameof(IDbConnection)}.",
+                nameof(connectionType));
+        }
     }
 
     /// <summary>

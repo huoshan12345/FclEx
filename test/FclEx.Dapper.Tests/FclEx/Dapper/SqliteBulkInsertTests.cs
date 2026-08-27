@@ -176,7 +176,7 @@ public class SqliteBulkInsertTests
     }
 
     [Fact]
-    public async Task TransactionInsertWithExplicitKeysAsync_InsertsSuppliedKey()
+    public async Task TransactionInsertWithExplicitGeneratedKeysAsync_InsertsSuppliedKey()
     {
         using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
@@ -184,21 +184,21 @@ public class SqliteBulkInsertTests
             "CREATE TABLE int_key_rows (id INTEGER PRIMARY KEY AUTOINCREMENT);");
         using var transaction = connection.BeginTransaction();
 
-        await transaction.InsertWithExplicitKeysAsync(new IntKeyRow { Id = 42 });
+        await transaction.InsertWithExplicitGeneratedKeysAsync(new IntKeyRow { Id = 42 });
         transaction.Commit();
 
         Assert.Equal(42, await connection.ExecuteScalarAsync<int>("SELECT id FROM int_key_rows"));
     }
 
     [Fact]
-    public async Task InsertWithExplicitKeysAsync_WithoutGeneratedKey_ThrowsBeforeExecuting()
+    public async Task InsertWithExplicitGeneratedKeysAsync_WithoutGeneratedKey_ThrowsBeforeExecuting()
     {
         using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
         await connection.ExecuteAsync(
             "CREATE TABLE cache_rows (id INTEGER PRIMARY KEY, name TEXT NOT NULL);");
 
-        await Assert.ThrowsAsync<DataException>(() => connection.InsertWithExplicitKeysAsync(
+        await Assert.ThrowsAsync<DataException>(() => connection.InsertWithExplicitGeneratedKeysAsync(
             new CacheRow { Id = 1, Name = "one" }));
 
         Assert.Equal(0, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM cache_rows"));

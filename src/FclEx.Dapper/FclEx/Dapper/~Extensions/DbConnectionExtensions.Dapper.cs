@@ -11,6 +11,7 @@ partial class DbConnectionExtensions
     /// <param name="level">The transaction isolation level. The default is <see cref="IsolationLevel.ReadCommitted"/>.</param>
     /// <param name="cancellationToken">The token used to cancel opening, transaction creation, and commit.</param>
     /// <returns>The callback result.</returns>
+    /// <exception cref="AggregateException">The operation or commit failed and rollback also failed. Both exceptions are available in <see cref="AggregateException.InnerExceptions"/>.</exception>
     public static Task<T> ExecuteInTransactionAsync<T>(
         this DbConnection connection,
         Func<DbTransaction, Task<T>> action,
@@ -32,6 +33,7 @@ partial class DbConnectionExtensions
     /// <param name="level">The transaction isolation level. The default is <see cref="IsolationLevel.ReadCommitted"/>.</param>
     /// <param name="cancellationToken">The token used for the complete transaction operation.</param>
     /// <returns>The callback result.</returns>
+    /// <exception cref="AggregateException">The operation or commit failed and rollback also failed. Both exceptions are available in <see cref="AggregateException.InnerExceptions"/>.</exception>
     public static async Task<T> ExecuteInTransactionAsync<T>(
         this DbConnection connection,
         Func<DbTransaction, CancellationToken, Task<T>> action,
@@ -56,13 +58,24 @@ partial class DbConnectionExtensions
                 await tran.CommitAsync(cancellationToken);
                 return result;
             }
-            catch
+            catch (Exception operationException)
             {
                 // Rollback is cleanup: once cancellation has been requested, using the cancelled token would skip it.
                 var rollbackToken = cancellationToken.IsCancellationRequested
                     ? CancellationToken.None
                     : cancellationToken;
-                await tran.TryRollbackAsync(rollbackToken);
+                try
+                {
+                    await tran.TryRollbackAsync(rollbackToken);
+                }
+                catch (Exception rollbackException)
+                {
+                    throw new AggregateException(
+                        "The transaction operation failed and rollback also failed.",
+                        operationException,
+                        rollbackException);
+                }
+
                 throw;
             }
         }
@@ -80,6 +93,7 @@ partial class DbConnectionExtensions
     /// <param name="level">The transaction isolation level. The default is <see cref="IsolationLevel.ReadCommitted"/>.</param>
     /// <param name="cancellationToken">The token used to cancel opening, transaction creation, and commit.</param>
     /// <returns>A task representing the transaction operation.</returns>
+    /// <exception cref="AggregateException">The operation or commit failed and rollback also failed. Both exceptions are available in <see cref="AggregateException.InnerExceptions"/>.</exception>
     public static Task ExecuteInTransactionAsync(
         this DbConnection connection,
         Func<DbTransaction, Task> action,
@@ -100,6 +114,7 @@ partial class DbConnectionExtensions
     /// <param name="level">The transaction isolation level. The default is <see cref="IsolationLevel.ReadCommitted"/>.</param>
     /// <param name="cancellationToken">The token used for the complete transaction operation.</param>
     /// <returns>A task representing the transaction operation.</returns>
+    /// <exception cref="AggregateException">The operation or commit failed and rollback also failed. Both exceptions are available in <see cref="AggregateException.InnerExceptions"/>.</exception>
     public static async Task ExecuteInTransactionAsync(
         this DbConnection connection,
         Func<DbTransaction, CancellationToken, Task> action,

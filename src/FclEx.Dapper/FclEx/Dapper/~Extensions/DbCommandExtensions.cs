@@ -14,7 +14,7 @@ public static class DbCommandExtensions
             return dbCommand.ExecuteScalarAsync(cancellationToken);
 
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.RunAsync(t => Task.Run<object?>(() => command.ExecuteScalar(), cancellationToken), cancellationToken);
+        return Task.Run<object?>(() => command.ExecuteScalar(), cancellationToken);
     }
 
     /// <summary>
@@ -29,6 +29,6 @@ public static class DbCommandExtensions
             return dbCommand.ExecuteNonQueryAsync(cancellationToken);
 
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.RunAsync(t => Task.Run(() => command.ExecuteNonQuery(), cancellationToken), cancellationToken);
+        return Task.Run(() => command.ExecuteNonQuery(), cancellationToken);
     }
 }

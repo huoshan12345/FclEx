@@ -1,4 +1,5 @@
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 
 namespace FclEx.Dapper;
 
@@ -98,9 +99,67 @@ public class ConnectionOwnershipTests
         Assert.Equal(ConnectionState.Open, connection.State);
     }
 
+    [Fact]
+    public async Task ExecuteInTransactionAsync_RollbackFailure_PreservesBothExceptions()
+    {
+        var operationException = new InvalidOperationException("operation failed");
+        var rollbackException = new DataException("rollback failed");
+        using var connection = new RollbackFailureConnection(rollbackException);
+
+        var exception = await Assert.ThrowsAsync<AggregateException>(() =>
+            connection.ExecuteInTransactionAsync(_ => Task.FromException(operationException)));
+
+        Assert.Collection(
+            exception.InnerExceptions,
+            inner => Assert.Same(operationException, inner),
+            inner => Assert.Same(rollbackException, inner));
+    }
+
     [Table("missing_connection_ownership_table")]
     private sealed class MissingTableEntity
     {
         public int Value { get; set; }
+    }
+
+    private sealed class RollbackFailureConnection(Exception rollbackException) : DbConnection
+    {
+        [AllowNull]
+        public override string ConnectionString { get; set; } = "";
+        public override string Database => "test";
+        public override string DataSource => "test";
+        public override string ServerVersion => "1";
+        public override ConnectionState State => ConnectionState.Open;
+
+        public override void ChangeDatabase(string databaseName) { }
+
+        public override void Close() { }
+
+        public override void Open() { }
+
+        protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
+        {
+            return new RollbackFailureTransaction(this, isolationLevel, rollbackException);
+        }
+
+        protected override DbCommand CreateDbCommand()
+        {
+            throw new NotSupportedException();
+        }
+    }
+
+    private sealed class RollbackFailureTransaction(
+        DbConnection connection,
+        IsolationLevel isolationLevel,
+        Exception rollbackException) : DbTransaction
+    {
+        public override IsolationLevel IsolationLevel => isolationLevel;
+        protected override DbConnection DbConnection => connection;
+
+        public override void Commit() { }
+
+        public override void Rollback()
+        {
+            throw rollbackException;
+        }
     }
 }

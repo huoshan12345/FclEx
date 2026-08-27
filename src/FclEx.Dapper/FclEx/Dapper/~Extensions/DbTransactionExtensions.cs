@@ -134,7 +134,11 @@ public static class DbTransactionExtensions
     /// <returns>A task representing the insert operation.</returns>
     /// <exception cref="DataException">The entity mapping does not contain a database-generated key.</exception>
     /// <exception cref="OperationCanceledException"><see cref="CommandOptions.CancellationToken"/> is cancelled.</exception>
-    public static Task InsertWithExplicitKeysAsync<TEntity>(
+    /// <remarks>
+    /// This operation does not advance or reset a provider identity, sequence, or auto-increment counter.
+    /// The caller must keep that state consistent so later generated keys do not conflict with the inserted values.
+    /// </remarks>
+    public static Task InsertWithExplicitGeneratedKeysAsync<TEntity>(
         this DbTransaction transaction,
         TEntity entity,
         string? schema = null,
@@ -142,7 +146,7 @@ public static class DbTransactionExtensions
         where TEntity : class
     {
         var boundOptions = commandOptions.BindTransaction(transaction);
-        return transaction.Connection!.InsertWithExplicitKeysAsync(
+        return transaction.Connection!.InsertWithExplicitGeneratedKeysAsync(
             entity,
             schema,
             boundOptions);
@@ -158,6 +162,11 @@ public static class DbTransactionExtensions
     /// <param name="includeAutoKey">Whether to insert mapped generated keys explicitly.</param>
     /// <param name="commandOptions">Command execution, adapter, mapping, and cancellation options. The receiver transaction is assigned automatically.</param>
     /// <returns>The total affected rows reported by all batches, or zero for an empty collection.</returns>
+    /// <remarks>
+    /// When <paramref name="includeAutoKey"/> is <see langword="true"/>, this operation does not advance or reset a
+    /// provider identity, sequence, or auto-increment counter. The caller must keep that state consistent so later
+    /// generated keys do not conflict with the inserted values.
+    /// </remarks>
     public static Task<int> BulkInsertAsync<T>(
         this DbTransaction transaction,
         IReadOnlyCollection<T> entities,

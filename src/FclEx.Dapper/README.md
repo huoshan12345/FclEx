@@ -47,10 +47,12 @@ var orderId = await connection.InsertAsync(order, commandOptions: commandOptions
 
 Here `ApplicationEntityMappingSource` is an application-owned implementation that returns `orderMapping` for `Order` and throws for unknown entity types.
 
-`InsertAsync<TEntity>` returns a generated key as `long` for the common identity-key case. Use `InsertAsync<TEntity, TKey>` for another key type, or `InsertWithExplicitKeysAsync` when importing an entity whose database-generated key value must be inserted explicitly.
+`InsertAsync<TEntity>` returns a generated key as `long` for the common identity-key case. Use `InsertAsync<TEntity, TKey>` for another key type, or `InsertWithExplicitGeneratedKeysAsync` when importing an entity whose database-generated key value must be inserted explicitly.
+
+`InsertWithExplicitGeneratedKeysAsync` and `BulkInsertAsync(..., includeAutoKey: true)` do not advance or reset provider identity, sequence, or auto-increment state. The caller must maintain that state so later database-generated keys do not conflict with the explicitly inserted values.
 
 An `IEntityMappingSource` must return the same `EntityMapping` instance whenever the same entity type is requested. SQL caches use mapping identity so multiple mapping sources can safely map one CLR type differently.
 
 FclEx-generated queries alias database columns back to CLR property names, so CRUD operations do not require a global Dapper type map. Applications that configure raw Dapper queries or type handlers own those process-wide settings.
 
-`GuidTypeHandler` and `DateTimeHandler` remain available for explicit registration through Dapper.
+`GuidTypeHandler` and `AssumeUtcDateTimeTypeHandler` remain available for explicit registration through Dapper.
