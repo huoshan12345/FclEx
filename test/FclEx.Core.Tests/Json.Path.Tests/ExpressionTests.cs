@@ -2,19 +2,20 @@ using Json.More;
 
 namespace Json.Path.Tests;
 
+[TestClass(DisableParallelization = true)]
 public class ExpressionTests
 {
-	[Theory]
-	[InlineData("$[?(@.foo==(4+5))]", "[{\"foo\": 9}]")]
-	[InlineData("$[?(@.foo==2*(4+5))]", "[{\"foo\": 18}]")]
-	[InlineData("$[?(@.foo==2+(4+5))]", "[{\"foo\": 11}]")]
-	[InlineData("$[?(@.foo==2-(4+5))]", "[{\"foo\": -7}]")]
-	[InlineData("$[?(@.foo==2*4+5)]", "[{\"foo\": 13}]")]
-	[InlineData("$[?(@.foo==2+4*5)]", "[{\"foo\": 22}]")]
-	public void OrderOfOperations(string pathString, string expectedString)
-	{
-		var target = JsonNode.Parse(
-			"""
+    [Theory]
+    [InlineData("$[?(@.foo==(4+5))]", "[{\"foo\": 9}]")]
+    [InlineData("$[?(@.foo==2*(4+5))]", "[{\"foo\": 18}]")]
+    [InlineData("$[?(@.foo==2+(4+5))]", "[{\"foo\": 11}]")]
+    [InlineData("$[?(@.foo==2-(4+5))]", "[{\"foo\": -7}]")]
+    [InlineData("$[?(@.foo==2*4+5)]", "[{\"foo\": 13}]")]
+    [InlineData("$[?(@.foo==2+4*5)]", "[{\"foo\": 22}]")]
+    public void OrderOfOperations(string pathString, string expectedString)
+    {
+        var target = JsonNode.Parse(
+            """
 			[
 			  {"foo": 9},
 			  {"foo": 18},
@@ -25,33 +26,35 @@ public class ExpressionTests
 			]
 			""");
 
-		var path = JsonPath.Parse(pathString, new PathParsingOptions { AllowMathOperations = true });
-		var expected = JsonNode.Parse(expectedString);
+        var path = JsonPath.Parse(pathString, new PathParsingOptions { AllowMathOperations = true });
+        var expected = JsonNode.Parse(expectedString);
 
-		var actual = path.Evaluate(target).Matches.Select(x => x.Value).ToJsonArray();
+        var actual = path.Evaluate(target).Matches.Select(x => x.Value).ToJsonArray();
 
-		Assert.True(expected.IsEquivalentTo(actual));
-	}
+        Assert.True(expected.IsEquivalentTo(actual));
+    }
 
-	public class NoOpFunction : NodelistFunctionDefinition
-	{
-		public override string Name => "noop";
+    public class NoOpFunction : NodelistFunctionDefinition
+    {
+        public override string Name => "noop";
 
-		public NodeList? Evaluate(NodeList? nodeList)
-		{
-			return nodeList;
-		}
-	}
+#pragma warning disable CA1822 // Mark members as static
+        public NodeList? Evaluate(NodeList? nodeList)
+#pragma warning restore CA1822 // Mark members as static
+        {
+            return nodeList;
+        }
+    }
 
-	[Fact]
-	public void ExpressionWithNoOpFunctionWorks()
-	{
-		FunctionRepository.RegisterNodelistFunction<NoOpFunction>();
+    [Fact]
+    public void ExpressionWithNoOpFunctionWorks()
+    {
+        FunctionRepository.RegisterNodelistFunction<NoOpFunction>();
 
-		// should do the same thing as $[?@.*]
-		var path = JsonPath.Parse("$[?noop(@.*)]");
-		var data = JsonNode.Parse(
-			"""
+        // should do the same thing as $[?@.*]
+        var path = JsonPath.Parse("$[?noop(@.*)]");
+        var data = JsonNode.Parse(
+            """
 			[
 			  {"foo": 9},
 			  {"foo": 18, "bar": false},
@@ -63,8 +66,8 @@ public class ExpressionTests
 			]
 			""");
 
-		var expected = JsonNode.Parse(
-			"""
+        var expected = JsonNode.Parse(
+            """
 			[
 			  {"foo": 9},
 			  {"foo": 18, "bar": false},
@@ -72,20 +75,20 @@ public class ExpressionTests
 			]
 			""");
 
-		var actual = path.Evaluate(data).Matches.Select(x => x.Value).ToJsonArray();
+        var actual = path.Evaluate(data).Matches.Select(x => x.Value).ToJsonArray();
 
-		Assert.True(expected.IsEquivalentTo(actual));
-	}
+        Assert.True(expected.IsEquivalentTo(actual));
+    }
 
-	[Fact]
-	public void ExpressionWithNestedNoOpFunctionWorks()
-	{
-		FunctionRepository.RegisterNodelistFunction<NoOpFunction>();
+    [Fact]
+    public void ExpressionWithNestedNoOpFunctionWorks()
+    {
+        FunctionRepository.RegisterNodelistFunction<NoOpFunction>();
 
-		// should do the same thing as $[?@.*]
-		var path = JsonPath.Parse("$[?noop(noop(noop(@.*)))]");
-		var data = JsonNode.Parse(
-			"""
+        // should do the same thing as $[?@.*]
+        var path = JsonPath.Parse("$[?noop(noop(noop(@.*)))]");
+        var data = JsonNode.Parse(
+            """
 			[
 			  {"foo": 9},
 			  {"foo": 18, "bar": false},
@@ -97,8 +100,8 @@ public class ExpressionTests
 			]
 			""");
 
-		var expected = JsonNode.Parse(
-			"""
+        var expected = JsonNode.Parse(
+            """
 			[
 			  {"foo": 9},
 			  {"foo": 18, "bar": false},
@@ -106,8 +109,8 @@ public class ExpressionTests
 			]
 			""");
 
-		var actual = path.Evaluate(data).Matches.Select(x => x.Value).ToJsonArray();
+        var actual = path.Evaluate(data).Matches.Select(x => x.Value).ToJsonArray();
 
-		Assert.True(expected.IsEquivalentTo(actual));
-	}
+        Assert.True(expected.IsEquivalentTo(actual));
+    }
 }

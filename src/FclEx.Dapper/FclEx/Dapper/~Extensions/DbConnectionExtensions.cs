@@ -261,6 +261,9 @@ public static partial class DbConnectionExtensions
                 includeAutoKey,
                 useGlobalSqlCache,
                 localInsertSqls);
+#if NET5_0_OR_GREATER
+            await
+#endif
             using var command = connection.CreateCommand(sql, parameters, commandOptions.TimeoutSeconds, commandOptions.Transaction);
             return await command.ExecuteNonQueryAsync(commandOptions.CancellationToken);
         }
@@ -271,6 +274,9 @@ public static partial class DbConnectionExtensions
 
             if (includeAutoKey && mapping.GeneratedKeys.Count > 0)
             {
+#if NET5_0_OR_GREATER
+                await
+#endif
                 using var command = connection.CreateCommand();
                 command.Transaction = commandOptions.Transaction;
                 if (commandOptions.TimeoutSeconds is { } timeout)
@@ -367,8 +373,7 @@ public static partial class DbConnectionExtensions
         // The local dictionary also omits schema because it belongs to one BulkInsertAsync call, whose schema is
         // fixed. It is discarded with that call and therefore cannot retain either the schema or adapter long term.
         var sql = CreateInsertCommandText(key, schema);
-        if (localInsertSqls is not null)
-            localInsertSqls[key] = sql;
+        localInsertSqls?[key] = sql;
         return sql;
 
         static string CreateInsertCommandText(InsertSqlKey key, string? schema)
@@ -497,7 +502,7 @@ public static partial class DbConnectionExtensions
     /// Deletes one mapped entity by its single key.
     /// </summary>
     /// <typeparam name="T">The mapped entity type.</typeparam>
-    /// <param name="connection">The connection used to execute the delete. Dapper restores its initial open/closed state.</param>
+    /// <param name="connection">The connection used to execute the deletion. Dapper restores its initial open/closed state.</param>
     /// <param name="id">The key value to delete.</param>
     /// <param name="schema">An optional schema overriding the schema in the entity mapping.</param>
     /// <param name="commandOptions">Command execution, adapter, mapping, transaction, and cancellation options.</param>
