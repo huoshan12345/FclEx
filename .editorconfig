@@ -65,3 +65,6 @@ dotnet_diagnostic.IDE0028.severity = silent
 
 # IDE0306: Use collection expression for new
 dotnet_diagnostic.IDE0306.severity = silent
+
+# CS8763: A method marked [DoesNotReturn] should not return.
+dotnet_diagnostic.CS8763.severity = none

@@ -8,13 +8,13 @@ public static class DbCommandExtensions
     /// <param name="command">The command to execute.</param>
     /// <param name="cancellationToken">The token used to cancel native asynchronous execution or checked before fallback execution.</param>
     /// <returns>The first column of the first result row, or <see langword="null"/> when no result is returned.</returns>
-    public static async Task<object?> ExecuteScalarAsync(this IDbCommand command, CancellationToken cancellationToken = default)
+    public static Task<object?> ExecuteScalarAsync(this IDbCommand command, CancellationToken cancellationToken = default)
     {
         if (command is DbCommand dbCommand)
-            return await dbCommand.ExecuteScalarAsync(cancellationToken);
+            return dbCommand.ExecuteScalarAsync(cancellationToken);
 
         cancellationToken.ThrowIfCancellationRequested();
-        return command.ExecuteScalar();
+        return Task.RunAsync(t => Task.Run<object?>(() => command.ExecuteScalar(), cancellationToken), cancellationToken);
     }
 
     /// <summary>
@@ -29,6 +29,6 @@ public static class DbCommandExtensions
             return dbCommand.ExecuteNonQueryAsync(cancellationToken);
 
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(command.ExecuteNonQuery());
+        return Task.RunAsync(t => Task.Run(() => command.ExecuteNonQuery(), cancellationToken), cancellationToken);
     }
 }
